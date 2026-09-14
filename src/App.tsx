@@ -1,538 +1,424 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { ArrowRight, Menu, Search, X } from "lucide-react";
-import { capture } from "./analytics";
-import { publicObjects, type PublicObject } from "./publicObjects";
 
 const primaryNav = [
   ["STORIES", "/stories"],
-  ["EXPLORE", "/explore"],
-  ["LIVE", "/live"],
-  ["ARCHIVE", "/archive"],
+  ["WIKI", "/wiki"],
   ["LATTICE", "/lattice"],
+  ["TRANSMISSIONS", "/transmissions"],
+  ["STORE", "/store"],
 ] as const;
 
 const utilityNav = [
-  ["TRANSMISSIONS", "/transmissions"],
-  ["STORE", "/store"],
-  ["ABOUT", "/about"],
+  ["SEARCH", "/search"],
+  ["RHENLINK", "/rhenlink"],
 ] as const;
 
-function AnevumMark() {
-  return (
-    <span className="brand-mark" aria-hidden="true">
-      <span />
-      <span />
-      <span />
-    </span>
-  );
-}
-
-function TrackedLink({
-  href,
-  event,
-  properties,
-  className,
-  children,
-}: {
+type LinkProps = {
   href: string;
-  event: string;
-  properties?: Record<string, string>;
   className?: string;
   children: React.ReactNode;
-}) {
+  onNavigate?: () => void;
+};
+
+function navigate(href: string) {
+  if (window.location.pathname === href) return;
+  window.history.pushState({}, "", href);
+  window.dispatchEvent(new PopStateEvent("popstate"));
+  window.scrollTo({ top: 0, behavior: "auto" });
+}
+
+function SiteLink({ href, className, children, onNavigate }: LinkProps) {
   return (
     <a
       href={href}
       className={className}
-      onClick={() => capture(event, { destination: href, ...properties })}
+      onClick={(event) => {
+        if (
+          event.button !== 0 ||
+          event.metaKey ||
+          event.ctrlKey ||
+          event.shiftKey ||
+          event.altKey
+        ) {
+          return;
+        }
+        event.preventDefault();
+        navigate(href);
+        onNavigate?.();
+      }}
     >
       {children}
     </a>
   );
 }
 
-function Header({ onSearch }: { onSearch: () => void }) {
-  const [menuOpen, setMenuOpen] = useState(false);
+function AnevumMark() {
+  return (
+    <span className="anevum-mark" aria-hidden="true">
+      <i />
+      <i />
+      <i />
+    </span>
+  );
+}
+
+function Header({ pathname }: { pathname: string }) {
+  const [open, setOpen] = useState(false);
+
+  useEffect(() => setOpen(false), [pathname]);
 
   return (
     <>
-      <header className="topbar">
-        <a className="brand" href="/" aria-label="ANEVUM home">
+      <header className="site-header">
+        <SiteLink href="/" className="brand" onNavigate={() => setOpen(false)}>
           <AnevumMark />
-          <span className="brand-word">ANEVUM</span>
-        </a>
+          <span>ANEVUM</span>
+        </SiteLink>
 
-        <nav className="desktop-nav" aria-label="Primary navigation">
+        <nav className="desktop-primary" aria-label="Primary navigation">
           {primaryNav.map(([label, href]) => (
-            <a key={label} href={href}>{label}</a>
+            <SiteLink
+              key={href}
+              href={href}
+              className={pathname === href || pathname.startsWith(`${href}/`) ? "active" : undefined}
+            >
+              {label}
+            </SiteLink>
           ))}
         </nav>
 
-        <div className="topbar-actions">
-          <nav className="utility-nav" aria-label="Utility navigation">
-            {utilityNav.map(([label, href]) => (
-              <a key={label} href={href}>{label}</a>
-            ))}
-          </nav>
-          <button className="icon-button" onClick={onSearch} aria-label="Search released ANEVUM objects">
-            <Search size={17} />
-          </button>
-          <a className="account-link" href="/account">ACCOUNT</a>
-          <button
-            className="mobile-menu-button"
-            aria-label={menuOpen ? "Close navigation" : "Open navigation"}
-            onClick={() => setMenuOpen((value) => !value)}
-          >
-            {menuOpen ? <X size={21} /> : <Menu size={21} />}
-          </button>
-        </div>
+        <nav className="desktop-utility" aria-label="Utilities">
+          {utilityNav.map(([label, href]) => (
+            <SiteLink
+              key={href}
+              href={href}
+              className={pathname === href ? "active" : undefined}
+            >
+              {label === "SEARCH" ? <Search size={14} aria-hidden="true" /> : null}
+              {label}
+            </SiteLink>
+          ))}
+        </nav>
+
+        <button
+          className="menu-toggle"
+          type="button"
+          aria-label={open ? "Close navigation" : "Open navigation"}
+          aria-expanded={open}
+          onClick={() => setOpen((value) => !value)}
+        >
+          {open ? <X size={21} /> : <Menu size={21} />}
+        </button>
       </header>
 
-      {menuOpen && (
-        <nav className="mobile-nav" aria-label="Mobile navigation">
-          {[...primaryNav, ...utilityNav, ["ACCOUNT", "/account"] as const].map(([label, href]) => (
-            <a key={label} href={href} onClick={() => setMenuOpen(false)}>{label}</a>
+      {open ? (
+        <nav className="mobile-menu" aria-label="Mobile navigation">
+          {[...primaryNav, ...utilityNav].map(([label, href]) => (
+            <SiteLink key={href} href={href} onNavigate={() => setOpen(false)}>
+              <span>{label}</span>
+              <ArrowRight size={16} aria-hidden="true" />
+            </SiteLink>
           ))}
-          <button onClick={() => { setMenuOpen(false); onSearch(); }}>
-            SEARCH
-          </button>
         </nav>
-      )}
+      ) : null}
     </>
   );
 }
 
-function SearchOverlay({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const [query, setQuery] = useState("");
-
-  useEffect(() => {
-    if (!open) return;
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onClose();
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [open, onClose]);
-
-  const results = useMemo(() => {
-    const normalized = query.trim().toLowerCase();
-    if (!normalized) return publicObjects;
-    return publicObjects.filter((item) =>
-      `${item.title} ${item.type} ${item.summary}`.toLowerCase().includes(normalized),
-    );
-  }, [query]);
-
-  if (!open) return null;
-
+function PageIntro({ eyebrow, title, body }: { eyebrow: string; title: string; body: string }) {
   return (
-    <div className="search-overlay" role="dialog" aria-modal="true" aria-label="Search public ANEVUM records">
-      <button className="search-backdrop" aria-label="Close search" onClick={onClose} />
-      <div className="search-panel">
-        <div className="search-panel-head">
-          <div>
-            <p className="kicker">RELEASED OBJECT SEARCH</p>
-            <h2>Search ANEVUM</h2>
-          </div>
-          <button className="icon-button" onClick={onClose} aria-label="Close search"><X size={18} /></button>
-        </div>
-        <label className="search-input-wrap">
-          <Search size={17} />
-          <input
-            autoFocus
-            value={query}
-            onChange={(event) => { setQuery(event.target.value); capture("search_used", { query: event.target.value }); }}
-            placeholder="Search released public objects"
-          />
-        </label>
-        <div className="search-results">
-          {results.map((item) => (
-            <a key={item.id} href={item.route} className="search-result">
-              <span>{item.type}</span>
-              <strong>{item.title}</strong>
-              <p>{item.summary}</p>
-              <ArrowRight size={15} />
-            </a>
-          ))}
-          {results.length === 0 && <p className="empty-state">No released public object matches that search.</p>}
-        </div>
-      </div>
-    </div>
+    <section className="page-intro">
+      <p className="eyebrow">{eyebrow}</p>
+      <h1>{title}</h1>
+      <p className="intro-copy">{body}</p>
+    </section>
   );
 }
 
-function FirstVisitReveal() {
-  const [visible, setVisible] = useState(false);
-  const [wordmarkVisible, setWordmarkVisible] = useState(false);
-
-  useEffect(() => {
-    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const seen = window.localStorage.getItem("anevum:first-visit-reveal") === "seen";
-    if (reduced || seen) return;
-
-    setVisible(true);
-    const wordmarkTimer = window.setTimeout(() => setWordmarkVisible(true), 420);
-    const closeTimer = window.setTimeout(() => {
-      window.localStorage.setItem("anevum:first-visit-reveal", "seen");
-      setVisible(false);
-    }, 1900);
-
-    return () => {
-      window.clearTimeout(wordmarkTimer);
-      window.clearTimeout(closeTimer);
-    };
-  }, []);
-
-  if (!visible) return null;
-
-  const skip = () => {
-    window.localStorage.setItem("anevum:first-visit-reveal", "seen");
-    setVisible(false);
-  };
-
-  return (
-    <div className={`first-reveal ${wordmarkVisible ? "reveal-wordmark" : ""}`}>
-      <div className="reveal-center">
-        <AnevumMark />
-        <div className="reveal-copy">
-          <strong>ANEVUM</strong>
-          <span>STORIES // WORLDS // RECORDS // LIFE</span>
-        </div>
-      </div>
-      <button onClick={skip}>SKIP</button>
-    </div>
-  );
-}
-
-const byId = (id: string) => publicObjects.find((item) => item.id === id)!;
-
-function StartCard({ object, action }: { object: PublicObject; action: string }) {
-  return (
-    <TrackedLink
-      href={object.route}
-      event="home_object_opened"
-      properties={{ object_id: object.id, object_type: object.type, source_section: "start_here" }}
-      className="start-card"
-    >
-      <div className="start-card-top">
-        <span>{object.type}</span>
-        <span className="release-dot" />
-      </div>
-      <h3>{object.title.replace("LATTICE / IREN // ORDINARY LIFE", "LATTICE / IREN")}</h3>
-      <p>{object.summary}</p>
-      <span className="start-card-action">{action} <ArrowRight size={14} /></span>
-    </TrackedLink>
-  );
-}
-
-function HomePage() {
-  const serein = byId("place.serein-skygate");
-  const talin = byId("person.talin-vel");
-  const roads = byId("science.roads-skygates");
-  const latticeIren = byId("transmission.lattice-iren-ordinary-life");
-
+function FrontDoor() {
   return (
     <main>
-      <section className="hero section-pad">
-        <div className="hero-grid">
-          <div className="hero-copy">
-            <p className="kicker">CURRENT SIGNAL</p>
-            <h1 className="locked-hero-title">ANEVUM <span>// INITIAL PUBLIC STATE</span></h1>
-            <p className="hero-statement">Stories. Worlds. Records. A place inside them.</p>
-            <p className="hero-lede">Read the stories. Explore the worlds. Build a life inside the universe.</p>
-            <div className="hero-actions">
-              <TrackedLink href="/explore" event="home_explore_clicked" className="primary-button">
-                EXPLORE <ArrowRight size={16} />
-              </TrackedLink>
-              <TrackedLink href="/stories" event="home_stories_clicked" className="text-link">STORIES</TrackedLink>
-              <TrackedLink href="/lattice" event="home_lattice_clicked" className="text-link blue-text">ENTER LATTICE</TrackedLink>
-            </div>
-          </div>
-
-          <div className="signal-stage" aria-hidden="true">
-            <div className="orbit orbit-one" />
-            <div className="orbit orbit-two" />
-            <div className="relational-core">
-              <span /><span /><span /><span /><span /><span /><span /><span /><span />
-            </div>
+      <section className="front-hero">
+        <div className="hero-atmosphere" aria-hidden="true" />
+        <div className="hero-copy">
+          <p className="eyebrow">ANEVUM / STORY UNIVERSE</p>
+          <h1>Stories first.<br />A universe beyond the page.</h1>
+          <p>
+            Enter through the current story, then move outward into the released record,
+            the connected universe, and the identity that follows you through it.
+          </p>
+          <div className="hero-actions">
+            <SiteLink href="/stories/reply" className="button primary">ENTER REPLY</SiteLink>
+            <SiteLink href="/wiki" className="button secondary">ENTER THE UNIVERSE</SiteLink>
           </div>
         </div>
       </section>
 
-      <section className="stories-section section-pad">
-        <div className="story-panel pure-structure">
-          <div className="story-atmosphere" />
-          <div className="story-copy wide-story-copy">
-            <p className="kicker">FOUNDING STORY UNIVERSE</p>
-            <div className="story-wordmark">TRANSCOSMIC</div>
-            <h2>Human civilization already spans connected worlds.</h2>
+      <section className="reply-feature section-frame">
+        <div className="section-label">CURRENT STORY</div>
+        <div className="reply-grid">
+          <div>
+            <p className="eyebrow">BOOK I</p>
+            <h2>REPLY</h2>
+          </div>
+          <div className="feature-copy">
             <p>
-              Roads move people between paired endpoints. Skygates turn those connections into ordinary infrastructure.
-              LATTICE carries identity and information across the network. IREN helps people plan, translate, learn,
-              research and coordinate without governing their choices.
+              The public front door into ANEVUM. This shell is ready for the final approved
+              synopsis, release state, art, and reader actions in the next story build pass.
             </p>
-            <p>TRANSCOSMIC begins here: inside the mature civilization, before the reader knows how the first door was built.</p>
-            <p className="closing-line">Explore the present. Discover the history later.</p>
-            <TrackedLink href="/stories/transcosmic" event="story_present_opened" className="primary-button muted">
-              ENTER THE PRESENT <ArrowRight size={16} />
-            </TrackedLink>
-          </div>
-          <div className="story-object relational-figure" aria-hidden="true">
-            <div className="figure-ring figure-ring-a" />
-            <div className="figure-ring figure-ring-b" />
-            <div className="figure-axis" />
+            <SiteLink href="/stories/reply" className="text-link">OPEN STORY <ArrowRight size={15} /></SiteLink>
           </div>
         </div>
       </section>
 
-      <section className="present-section section-pad">
+      <section className="universe-section section-frame">
         <div className="section-heading">
           <div>
-            <p className="kicker">CURRENT STORY WORLD</p>
-            <h2>THE TRANSCOSMIC PRESENT</h2>
+            <p className="eyebrow">THE UNIVERSE</p>
+            <h2>Knowledge and relationship.</h2>
           </div>
-          <p>Human civilization already spans connected worlds. The story begins after the impossible became infrastructure.</p>
+          <p>Two public depths, built from one released canon layer.</p>
         </div>
-        <div className="present-copy-grid">
-          <p>
-            The first public story doorway begins with ordinary life: families, jobs, schools, transit, maintenance,
-            arguments and inherited systems inside a civilization that no longer remembers the Road as impossible.
-          </p>
-          <div>
-            <p>The first question is not how humanity built it. It is what people become after they inherit it.</p>
-            <TrackedLink href="/stories/transcosmic" event="story_present_opened" className="inline-action">
-              ENTER THE PRESENT <ArrowRight size={15} />
-            </TrackedLink>
-          </div>
+
+        <div className="depth-grid">
+          <SiteLink href="/wiki" className="depth-card wiki-card">
+            <span className="card-index">01</span>
+            <div>
+              <p className="eyebrow">WIKI.ANEVUM</p>
+              <h3>The canonical universe.</h3>
+              <p>Search and read the released record.</p>
+            </div>
+            <ArrowRight aria-hidden="true" />
+          </SiteLink>
+
+          <SiteLink href="/lattice" className="depth-card lattice-card">
+            <span className="card-index">02</span>
+            <div>
+              <p className="eyebrow">LATTICE.ANEVUM</p>
+              <h3>The universe as a place.</h3>
+              <p>Follow relationships between released people, worlds, events, and ideas.</p>
+            </div>
+            <ArrowRight aria-hidden="true" />
+          </SiteLink>
         </div>
       </section>
 
-      <section className="start-section section-pad">
-        <div className="section-heading compact-heading">
-          <div>
-            <p className="kicker">START HERE</p>
-            <h2>A PLACE. A PERSON. THE SYSTEMS AROUND THEM.</h2>
-          </div>
+      <section className="from-anevum section-frame">
+        <div>
+          <p className="eyebrow">FROM ANEVUM</p>
+          <h2>Transmissions from the work.</h2>
         </div>
-        <div className="start-grid">
-          <StartCard object={serein} action="ENTER SEREIN SKYGATE" />
-          <StartCard object={talin} action="ACCESS TALIN VEL" />
-          <StartCard object={roads} action="HOW THE NETWORK MOVES" />
-          <StartCard object={latticeIren} action="ENTER THE NETWORK" />
-        </div>
-      </section>
-
-      <section className="explore-section section-pad">
-        <div className="explorer-window">
-          <div className="explorer-copy">
-            <p className="kicker">EXPLORE</p>
-            <h2>MOVE THROUGH THE RELEASED UNIVERSE.</h2>
-            <p>Explore approved public canon spatially instead of reading a flat index. Begin at Serein Skygate. Move outward only as the public record opens.</p>
-            <div className="breadcrumb">RHEL SYSTEM <span>→</span> VEYRA <span>→</span> SEREIN SKYGATE</div>
-            <TrackedLink href="/explore" event="home_explore_clicked" className="primary-button muted">
-              OPEN EXPLORER <ArrowRight size={16} />
-            </TrackedLink>
-          </div>
-          <div className="explorer-map" aria-label="Explorer preview with Serein Skygate selected">
-            <div className="map-orbit" />
-            <div className="map-node selected-node"><span>SEREIN SKYGATE</span></div>
-            <div className="map-mask" />
-          </div>
-        </div>
-      </section>
-
-      <section className="archive-section section-pad">
-        <div className="section-heading compact-heading">
-          <div>
-            <p className="kicker">ARCHIVE</p>
-            <h2>OPEN RECORDS</h2>
-          </div>
-        </div>
-        <div className="archive-list">
-          {[serein, talin, roads].map((item) => (
-            <a key={item.id} href={item.route} className="archive-row">
-              <span>{item.type}</span>
-              <strong>{item.title}</strong>
-              <ArrowRight size={15} />
-            </a>
-          ))}
-        </div>
-        <a className="inline-action archive-open" href="/archive">OPEN ARCHIVE <ArrowRight size={15} /></a>
-      </section>
-
-      <section className="transmission-section section-pad">
-        <div className="transmission-card">
-          <p className="kicker">TRANSMISSION 00</p>
-          <h2>ENTER ANEVUM // TRANSCOSMIC</h2>
-          <p className="transmission-body">The present comes first. The history is still there.</p>
-          <p className="closing-line">Explore the present. Discover the history later.</p>
-          <TrackedLink href="/transmissions/enter-anevum-transcosmic" event="transmission_opened" className="primary-button muted">
-            OPEN TRANSMISSION <ArrowRight size={16} />
-          </TrackedLink>
-        </div>
-      </section>
-
-      <section className="lattice-section section-pad">
-        <div className="lattice-field" aria-hidden="true">
-          {Array.from({ length: 9 }).map((_, index) => <span key={index} />)}
-        </div>
-        <div className="lattice-copy">
-          <p className="kicker">LATTICE // MEMBER LAYER</p>
-          <h2>YOUR IDENTITY INSIDE ANEVUM.</h2>
-          <p>
-            LATTICE will connect identity, saves, collection, rooms and future persistent experiences across ANEVUM.
-            Public member access is not open in this foundation build.
-          </p>
-          <a className="primary-button blue" href="/lattice">VIEW LATTICE</a>
-        </div>
-      </section>
-
-      <section className="about-strip section-pad">
-        <p>ANEVUM is the public home for stories, worlds, records and interactive experiences created by Devon Akins. TRANSCOSMIC is its founding story universe.</p>
-        <a href="/about">ABOUT ANEVUM <ArrowRight size={15} /></a>
+        <SiteLink href="/transmissions" className="text-link">VIEW TRANSMISSIONS <ArrowRight size={15} /></SiteLink>
       </section>
     </main>
   );
 }
 
-function ObjectRoute({ object }: { object: PublicObject }) {
+function Stories() {
   return (
-    <main className="route-page section-pad">
-      <div className="route-geometry" aria-hidden="true"><span /><span /></div>
-      <div className="route-copy">
-        <p className="kicker">{object.type} // PUBLIC RECORD</p>
-        <h1>{object.title}</h1>
-        <p>{object.summary}</p>
-        {object.id === "story.transcosmic-present" && (
-          <p className="route-secondary">The story begins after the impossible became infrastructure.</p>
-        )}
-        <a className="inline-action" href="/">RETURN TO ANEVUM <ArrowRight size={15} /></a>
+    <main className="route-shell">
+      <PageIntro
+        eyebrow="STORIES"
+        title="The stories are the doorway."
+        body="Generation 1 begins with REPLY. This route shell is ready for the final story index composition."
+      />
+      <SiteLink href="/stories/reply" className="route-feature">
+        <span>BOOK I</span>
+        <strong>REPLY</strong>
+        <ArrowRight aria-hidden="true" />
+      </SiteLink>
+    </main>
+  );
+}
+
+function Reply() {
+  return (
+    <main className="route-shell story-shell">
+      <PageIntro
+        eyebrow="ANEVUM / BOOK I"
+        title="REPLY"
+        body="Permanent story-detail route established. Final art, approved public synopsis, availability, and released-universe handoffs will be implemented in the story pass."
+      />
+      <div className="story-placeholder" aria-hidden="true" />
+    </main>
+  );
+}
+
+function WikiHome() {
+  return (
+    <main className="route-shell wiki-shell">
+      <PageIntro
+        eyebrow="WIKI.ANEVUM"
+        title="The canonical universe."
+        body="A public reference layer for publication-cleared people, worlds, locations, technologies, events, objects, and concepts."
+      />
+      <div className="wiki-search-shell">
+        <Search size={18} />
+        <span>SEARCH THE RELEASED RECORD</span>
+      </div>
+      <div className="skeleton-grid" aria-label="Future released record regions">
+        <div><span>FEATURED RECORDS</span></div>
+        <div><span>RECENTLY RELEASED</span></div>
+        <div><span>BROWSE BY TYPE</span></div>
       </div>
     </main>
   );
 }
 
-function TruthStateRoute({ label, headline, body }: { label: string; headline: string; body: string }) {
+function WikiRecord({ slug }: { slug: string }) {
   return (
-    <main className="route-page section-pad truth-route">
-      <div className="route-copy">
-        <p className="kicker">{label}</p>
-        <h1>{headline}</h1>
-        <p>{body}</p>
-        <a className="inline-action" href="/">RETURN TO ANEVUM <ArrowRight size={15} /></a>
+    <main className="route-shell record-shell">
+      <PageIntro
+        eyebrow="WIKI.ANEVUM / RECORD"
+        title="Record route ready."
+        body={`Dynamic public-record route established for “${slug || "record"}”. No fictional content is populated until the release-gated public object layer is connected.`}
+      />
+    </main>
+  );
+}
+
+function Lattice() {
+  return (
+    <main className="route-shell lattice-shell">
+      <PageIntro
+        eyebrow="LATTICE.ANEVUM"
+        title="The universe as a place."
+        body="A relational field for moving through the released universe. The graph, focus panel, and record handoffs will be built against the shared public object model."
+      />
+      <div className="lattice-stage" aria-hidden="true">
+        <span className="node node-a" />
+        <span className="node node-b" />
+        <span className="node node-c" />
+        <span className="node node-focus"><i /></span>
+        <span className="trace trace-a" />
+        <span className="trace trace-b" />
+        <span className="trace trace-c" />
       </div>
     </main>
   );
 }
 
-function ArchiveRoute() {
-  const archiveItems = publicObjects.filter((item) => ["PLACE", "PERSON", "SCIENCE"].includes(item.type));
+function SearchPage() {
   return (
-    <main className="route-page route-list-page section-pad">
-      <div className="route-copy wide-route-copy">
-        <p className="kicker">ARCHIVE</p>
-        <h1>OPEN RECORDS</h1>
-        <p>Only released public objects appear here.</p>
-        <div className="archive-list route-list">
-          {archiveItems.map((item) => (
-            <a key={item.id} href={item.route} className="archive-row">
-              <span>{item.type}</span><strong>{item.title}</strong><ArrowRight size={15} />
-            </a>
-          ))}
-        </div>
-      </div>
+    <main className="route-shell search-shell-page">
+      <PageIntro
+        eyebrow="SEARCH"
+        title="Search ANEVUM."
+        body="This permanent route will search only released public stories, records, and transmissions."
+      />
+      <label className="search-field-shell">
+        <Search size={18} />
+        <input aria-label="Search ANEVUM" placeholder="Search" disabled />
+      </label>
     </main>
   );
 }
 
-function StoriesRoute() {
-  return <ObjectRoute object={byId("story.transcosmic-present")} />;
-}
-
-function TransmissionsRoute() {
-  const transmissions = publicObjects.filter((item) => item.type === "TRANSMISSION" || item.type === "IN-UNIVERSE RECORD");
+function Transmissions() {
   return (
-    <main className="route-page route-list-page section-pad">
-      <div className="route-copy wide-route-copy">
-        <p className="kicker">TRANSMISSIONS</p>
-        <h1>PUBLIC SIGNALS</h1>
-        <div className="archive-list route-list">
-          {transmissions.map((item) => (
-            <a key={item.id} href={item.route} className="archive-row">
-              <span>{item.type}</span><strong>{item.title}</strong><ArrowRight size={15} />
-            </a>
-          ))}
-        </div>
-      </div>
+    <main className="route-shell">
+      <PageIntro
+        eyebrow="TRANSMISSIONS"
+        title="From ANEVUM."
+        body="Editorial transmissions, development notes, and outward-facing company communication will live here."
+      />
     </main>
   );
 }
 
-function RouteContent() {
-  const path = window.location.pathname.replace(/\/$/, "") || "/";
-  const object = publicObjects.find((item) => item.route === path);
-  if (object) return <ObjectRoute object={object} />;
-
-  switch (path) {
-    case "/": return <HomePage />;
-    case "/stories": return <StoriesRoute />;
-    case "/explore": return <ObjectRoute object={byId("place.serein-skygate")} />;
-    case "/archive": return <ArchiveRoute />;
-    case "/transmissions": return <TransmissionsRoute />;
-    case "/lattice":
-      return <TruthStateRoute label="LATTICE // MEMBER LAYER" headline="YOUR IDENTITY INSIDE ANEVUM." body="LATTICE will connect identity, saves, collection, rooms and future persistent experiences across ANEVUM. Public member access is not open in this foundation build." />;
-    case "/live":
-      return <TruthStateRoute label="LIVE" headline="LIVE // DEVELOPMENT ACCESS NOT OPEN." body="This route exists in the application shell, but no playable persistent loop is public yet." />;
-    case "/store":
-      return <TruthStateRoute label="STORE" headline="STORE // NOT OPEN." body="No prices, inventory, checkout or purchase actions are presented until a real product path exists." />;
-    case "/account":
-      return <TruthStateRoute label="ACCOUNT" headline="IDENTITY ACCESS IS NOT OPEN." body="This route is reserved for the real account and identity system. No account state or sign-in success is fabricated." />;
-    case "/about":
-      return <TruthStateRoute label="ABOUT ANEVUM" headline="STORIES. WORLDS. RECORDS. INTERACTIVE EXPERIENCES." body="ANEVUM is the public home for stories, worlds, records and interactive experiences created by Devon Akins. TRANSCOSMIC is its founding story universe." />;
-    default:
-      return <TruthStateRoute label="ANEVUM" headline="PUBLIC RECORD NOT AVAILABLE." body="This route does not resolve to a released public object in the foundation build." />;
-  }
-}
-
-function Footer() {
+function Store() {
   return (
-    <footer className="footer section-pad">
-      <div>
-        <a className="brand footer-brand" href="/">
-          <AnevumMark />
-          <span className="brand-word">ANEVUM</span>
-        </a>
-        <nav className="footer-nav" aria-label="Footer navigation">
-          <a href="/stories">STORIES</a>
-          <a href="/explore">EXPLORE</a>
-          <a href="/archive">ARCHIVE</a>
-          <a href="/transmissions">TRANSMISSIONS</a>
-          <a href="/lattice">LATTICE</a>
-          <a href="/about">ABOUT</a>
-          <a href="/live">LIVE</a>
-          <a href="/store">STORE</a>
-        </nav>
-      </div>
-      <div className="footer-meta">
-        <span>© 2026 ANEVUM</span>
-        <span>INITIAL PUBLIC STATE</span>
-      </div>
-    </footer>
+    <main className="route-shell">
+      <PageIntro
+        eyebrow="STORE"
+        title="Objects from ANEVUM."
+        body="The permanent commerce route is established. No inventory, price, or checkout claim will appear until a real product is sale-ready."
+      />
+    </main>
   );
 }
+
+function Rhenlink() {
+  return (
+    <main className="route-shell rhenlink-shell">
+      <PageIntro
+        eyebrow="RHENLINK"
+        title="Your persistent identity."
+        body="Profile, Saved, Collections, progress, and other member systems will appear here only when backed by the existing verified member backend."
+      />
+    </main>
+  );
+}
+
+function NotFound() {
+  return (
+    <main className="route-shell">
+      <PageIntro
+        eyebrow="404"
+        title="Nothing is published here."
+        body="This route is not part of the current public ANEVUM surface."
+      />
+      <SiteLink href="/" className="button secondary">RETURN HOME</SiteLink>
+    </main>
+  );
+}
+
+function usePathname() {
+  const [pathname, setPathname] = useState(window.location.pathname);
+
+  useEffect(() => {
+    const sync = () => setPathname(window.location.pathname);
+    window.addEventListener("popstate", sync);
+    return () => window.removeEventListener("popstate", sync);
+  }, []);
+
+  return pathname;
+}
+
+function RouteView({ pathname }: { pathname: string }) {
+  if (pathname === "/") return <FrontDoor />;
+  if (pathname === "/stories") return <Stories />;
+  if (pathname === "/stories/reply") return <Reply />;
+  if (pathname === "/wiki") return <WikiHome />;
+  if (pathname.startsWith("/wiki/")) return <WikiRecord slug={decodeURIComponent(pathname.slice(6))} />;
+  if (pathname === "/lattice") return <Lattice />;
+  if (pathname === "/search") return <SearchPage />;
+  if (pathname === "/transmissions") return <Transmissions />;
+  if (pathname === "/store") return <Store />;
+  if (pathname === "/rhenlink") return <Rhenlink />;
+  return <NotFound />;
+}
+
+const titleForPath = (pathname: string) => {
+  if (pathname === "/") return "ANEVUM";
+  if (pathname === "/stories") return "Stories — ANEVUM";
+  if (pathname === "/stories/reply") return "REPLY — ANEVUM";
+  if (pathname.startsWith("/wiki")) return "WIKI — ANEVUM";
+  if (pathname === "/lattice") return "LATTICE — ANEVUM";
+  if (pathname === "/search") return "Search — ANEVUM";
+  if (pathname === "/transmissions") return "Transmissions — ANEVUM";
+  if (pathname === "/store") return "Store — ANEVUM";
+  if (pathname === "/rhenlink") return "RHENLINK — ANEVUM";
+  return "ANEVUM";
+};
 
 export default function App() {
-  const [searchOpen, setSearchOpen] = useState(false);
+  const pathname = usePathname();
+
+  useEffect(() => {
+    document.title = titleForPath(pathname);
+  }, [pathname]);
 
   return (
-    <div className="site-shell">
-      <div className="ambient ambient-one" />
-      <div className="ambient ambient-two" />
-      <div className="grain" />
-      <FirstVisitReveal />
-      <Header onSearch={() => setSearchOpen(true)} />
-      <RouteContent />
-      <Footer />
-      <SearchOverlay open={searchOpen} onClose={() => setSearchOpen(false)} />
+    <div className="site-root">
+      <Header pathname={pathname} />
+      <RouteView pathname={pathname} />
+      <footer className="site-footer">
+        <SiteLink href="/" className="footer-brand"><AnevumMark /> ANEVUM</SiteLink>
+        <span>STORIES / UNIVERSE / IDENTITY</span>
+        <span>DEVON AKINS</span>
+      </footer>
     </div>
   );
 }
