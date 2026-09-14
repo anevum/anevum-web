@@ -5,6 +5,7 @@ import "./styles.css";
 import "./frontdoor.css";
 import "./records.css";
 import "./reply.css";
+import "./locked.css";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
