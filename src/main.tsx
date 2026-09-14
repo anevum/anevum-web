@@ -7,6 +7,7 @@ import "./records.css";
 import "./reply.css";
 import "./locked.css";
 import "./production.css";
+import "./canonVisuals.css";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
