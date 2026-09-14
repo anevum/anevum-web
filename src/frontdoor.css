@@ -1,0 +1,401 @@
+/* ANEVUM nextgen visual convergence pass 01.
+   This file intentionally overrides the foundation styles without replacing
+   route structure or publication-gated content. */
+
+:root {
+  --anevum-ink: #050607;
+  --anevum-panel: #0b0e10;
+  --anevum-panel-soft: #111518;
+  --anevum-bone: #eee9df;
+  --anevum-blue: #4d7fff;
+  --anevum-gold: #ae9257;
+  --anevum-hairline: rgba(238, 233, 223, 0.14);
+  --anevum-hairline-strong: rgba(238, 233, 223, 0.24);
+}
+
+.site-header {
+  background: linear-gradient(180deg, rgba(5, 6, 7, 0.94), rgba(5, 6, 7, 0.78));
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.015);
+}
+
+.brand {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 0.8rem;
+  letter-spacing: 0.28em;
+}
+
+.front-hero {
+  min-height: min(88vh, 980px);
+  isolation: isolate;
+  background: #050607;
+}
+
+.front-hero::before,
+.front-hero::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+}
+
+.front-hero::before {
+  z-index: 1;
+  inset: auto -8vw -26vw auto;
+  width: min(74vw, 920px);
+  aspect-ratio: 1;
+  border: 1px solid rgba(238, 233, 223, 0.12);
+  border-radius: 50%;
+  box-shadow:
+    0 0 0 5vw rgba(238, 233, 223, 0.012),
+    0 0 0 11vw rgba(77, 127, 255, 0.018),
+    inset 0 0 90px rgba(77, 127, 255, 0.045);
+}
+
+.front-hero::after {
+  z-index: 1;
+  right: clamp(30px, 8vw, 150px);
+  top: 19%;
+  width: clamp(90px, 12vw, 180px);
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(174, 146, 87, 0.5), transparent);
+  box-shadow:
+    0 56px 0 rgba(238, 233, 223, 0.07),
+    0 112px 0 rgba(238, 233, 223, 0.035);
+}
+
+.hero-atmosphere {
+  background:
+    linear-gradient(180deg, rgba(5, 6, 7, 0.02), rgba(5, 6, 7, 0.28) 52%, #050607 100%),
+    radial-gradient(ellipse at 78% 27%, rgba(227, 229, 216, 0.16), transparent 12%),
+    radial-gradient(ellipse at 72% 38%, rgba(77, 127, 255, 0.13), transparent 26%),
+    radial-gradient(ellipse at 42% 17%, rgba(65, 91, 108, 0.2), transparent 36%),
+    radial-gradient(ellipse at 27% 52%, rgba(19, 49, 63, 0.33), transparent 43%),
+    linear-gradient(122deg, #061017 0%, #091013 38%, #07090a 68%, #050607 100%);
+}
+
+.hero-atmosphere::before {
+  opacity: 0.54;
+  filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.08));
+}
+
+.hero-atmosphere::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  opacity: 0.26;
+  background-image:
+    linear-gradient(rgba(255,255,255,.018) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.018) 1px, transparent 1px);
+  background-size: 84px 84px;
+  mask-image: linear-gradient(180deg, rgba(0,0,0,.28), transparent 78%);
+}
+
+.hero-copy {
+  z-index: 3;
+  max-width: 980px;
+  margin-bottom: clamp(66px, 8vw, 118px);
+}
+
+.hero-copy .eyebrow {
+  color: rgba(238, 233, 223, 0.62);
+}
+
+.hero-copy h1 {
+  max-width: 930px;
+  text-wrap: balance;
+  font-size: clamp(3.7rem, 8.2vw, 8.9rem);
+  line-height: 0.88;
+  letter-spacing: -0.052em;
+  text-shadow: 0 14px 48px rgba(0, 0, 0, 0.36);
+}
+
+.hero-copy > p:not(.eyebrow) {
+  max-width: 670px;
+  color: rgba(238, 233, 223, 0.72);
+}
+
+.hero-actions {
+  margin-top: 38px;
+}
+
+.button {
+  min-height: 48px;
+  padding-inline: 21px;
+  transition:
+    border-color 150ms ease,
+    background 150ms ease,
+    color 150ms ease,
+    transform 150ms ease;
+}
+
+.button:hover {
+  transform: translateY(-1px);
+}
+
+.button.primary {
+  background: var(--anevum-bone);
+  border-color: var(--anevum-bone);
+}
+
+.button.primary:hover {
+  background: #fffdf8;
+}
+
+.button.secondary {
+  backdrop-filter: blur(12px);
+  background: rgba(5, 6, 7, 0.48);
+}
+
+.reply-feature {
+  position: relative;
+  overflow: hidden;
+  min-height: 570px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  background:
+    linear-gradient(90deg, rgba(5, 6, 7, 0.97) 0%, rgba(5, 6, 7, 0.92) 40%, rgba(5, 6, 7, 0.58) 100%),
+    radial-gradient(circle at 82% 48%, rgba(77, 127, 255, 0.17), transparent 16%),
+    radial-gradient(circle at 78% 48%, rgba(236, 232, 222, 0.1), transparent 28%),
+    linear-gradient(135deg, #070a0d, #12171b 54%, #060707);
+}
+
+.reply-feature::before {
+  content: "";
+  position: absolute;
+  right: clamp(-130px, -8vw, -20px);
+  top: 50%;
+  width: min(48vw, 650px);
+  aspect-ratio: 1;
+  border: 1px solid rgba(238, 233, 223, 0.14);
+  border-radius: 50%;
+  transform: translateY(-50%);
+  box-shadow:
+    inset 0 0 70px rgba(77, 127, 255, 0.06),
+    0 0 0 42px rgba(255, 255, 255, 0.009),
+    0 0 0 82px rgba(77, 127, 255, 0.012);
+}
+
+.reply-feature::after {
+  content: "";
+  position: absolute;
+  right: 18%;
+  top: 22%;
+  bottom: 22%;
+  width: 1px;
+  background: linear-gradient(transparent, rgba(174, 146, 87, 0.38), transparent);
+}
+
+.reply-feature > * {
+  position: relative;
+  z-index: 2;
+}
+
+.reply-grid {
+  align-items: center;
+}
+
+.reply-grid h2 {
+  font-size: clamp(5.8rem, 12vw, 13.4rem);
+  letter-spacing: -0.065em;
+  text-shadow: 0 20px 60px rgba(0,0,0,.35);
+}
+
+.feature-copy {
+  padding: clamp(22px, 3vw, 44px);
+  border-left: 1px solid var(--anevum-hairline-strong);
+  background: linear-gradient(90deg, rgba(5,6,7,.28), transparent);
+  backdrop-filter: blur(4px);
+}
+
+.universe-section {
+  background:
+    radial-gradient(circle at 80% 0%, rgba(77, 127, 255, 0.055), transparent 35%),
+    #050607;
+}
+
+.section-heading h2 {
+  max-width: 760px;
+  text-wrap: balance;
+}
+
+.depth-grid {
+  background: var(--anevum-hairline);
+  gap: 1px;
+  border-color: var(--anevum-hairline);
+}
+
+.depth-card {
+  min-height: 430px;
+  border: 0 !important;
+  padding: clamp(26px, 3vw, 42px);
+  background: #090b0d;
+}
+
+.depth-card::after {
+  content: "";
+  position: absolute;
+  inset: 18px;
+  border: 1px solid rgba(238, 233, 223, 0.055);
+  pointer-events: none;
+}
+
+.wiki-card::before {
+  background:
+    linear-gradient(180deg, rgba(5,6,7,.02), rgba(5,6,7,.92)),
+    repeating-linear-gradient(90deg, transparent 0 56px, rgba(238,233,223,.018) 57px 58px),
+    radial-gradient(circle at 66% 30%, rgba(238,233,223,.16), transparent 22%),
+    linear-gradient(128deg, #172225, #0b1215 58%, #050607);
+}
+
+.lattice-card::before {
+  background:
+    linear-gradient(180deg, rgba(5,6,7,.02), rgba(5,6,7,.93)),
+    radial-gradient(circle at 68% 34%, rgba(77,127,255,.28) 0 3px, transparent 4px),
+    radial-gradient(circle at 47% 48%, rgba(238,233,223,.13) 0 2px, transparent 3px),
+    radial-gradient(circle at 82% 63%, rgba(174,146,87,.24) 0 2px, transparent 3px),
+    linear-gradient(128deg, #0c1218, #07090c 62%, #050607);
+}
+
+.depth-card h3 {
+  max-width: 560px;
+  font-size: clamp(2.7rem, 4.7vw, 5.2rem);
+}
+
+.depth-card > svg {
+  transition: transform 180ms ease;
+}
+
+.depth-card:hover > svg {
+  transform: translate(4px, -4px);
+}
+
+.from-anevum {
+  min-height: 320px;
+  background:
+    linear-gradient(110deg, rgba(77,127,255,.04), transparent 42%),
+    linear-gradient(180deg, #080a0b, #050607);
+}
+
+.from-anevum::before {
+  content: "BOOKS  •  KNOWLEDGE  •  DISCOVERY  •  BELONGING";
+  position: absolute;
+  left: var(--page-pad);
+  right: var(--page-pad);
+  top: 30px;
+  color: rgba(238,233,223,.24);
+  font-size: .58rem;
+  letter-spacing: .22em;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.from-anevum {
+  position: relative;
+}
+
+.site-footer {
+  border-top-color: rgba(238, 233, 223, 0.08);
+  background: #040505;
+}
+
+.route-shell {
+  background:
+    radial-gradient(circle at 82% 7%, rgba(77,127,255,.045), transparent 30%),
+    transparent;
+}
+
+.page-intro h1 {
+  max-width: 1100px;
+  text-wrap: balance;
+}
+
+.lattice-stage {
+  box-shadow: inset 0 0 120px rgba(77, 127, 255, 0.025);
+}
+
+@media (max-width: 980px) {
+  .front-hero {
+    min-height: 82vh;
+  }
+
+  .front-hero::before {
+    width: 88vw;
+    right: -35vw;
+    bottom: -18vw;
+  }
+
+  .reply-feature {
+    min-height: 520px;
+  }
+
+  .reply-feature::before {
+    width: 70vw;
+    opacity: 0.72;
+  }
+
+  .feature-copy {
+    padding-left: 24px;
+  }
+}
+
+@media (max-width: 720px) {
+  .front-hero {
+    min-height: 78vh;
+  }
+
+  .front-hero::after {
+    display: none;
+  }
+
+  .hero-copy {
+    margin-bottom: 56px;
+  }
+
+  .hero-copy h1 {
+    font-size: clamp(3.5rem, 15vw, 5.9rem);
+  }
+
+  .reply-feature {
+    min-height: 0;
+    padding-top: 76px;
+    padding-bottom: 76px;
+  }
+
+  .reply-feature::before {
+    top: 26%;
+    right: -42vw;
+    width: 108vw;
+  }
+
+  .reply-grid {
+    gap: 54px;
+  }
+
+  .feature-copy {
+    padding: 24px 0 0;
+    border-top: 1px solid var(--anevum-hairline-strong);
+    border-left: 0;
+  }
+
+  .depth-card {
+    min-height: 360px;
+  }
+
+  .from-anevum::before {
+    white-space: normal;
+    line-height: 1.8;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .button,
+  .depth-card::before,
+  .depth-card > svg {
+    transition: none !important;
+  }
+
+  .button:hover,
+  .depth-card:hover > svg {
+    transform: none;
+  }
+}
