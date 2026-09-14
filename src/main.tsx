@@ -4,6 +4,7 @@ import App from "./App";
 import "./styles.css";
 import "./frontdoor.css";
 import "./records.css";
+import "./reply.css";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
