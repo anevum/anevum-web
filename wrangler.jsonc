@@ -8,6 +8,10 @@
     {
       "pattern": "anevum.com/*",
       "zone_name": "anevum.com"
+    },
+    {
+      "pattern": "wiki.anevum.com",
+      "custom_domain": true
     }
   ],
   "assets": {
