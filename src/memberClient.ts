@@ -1,0 +1,116 @@
+export type MemberUser = {
+  id: string;
+  email?: string;
+  user_metadata?: Record<string, unknown>;
+};
+
+export type MemberSession = {
+  access_token: string;
+  refresh_token?: string;
+  expires_in?: number;
+  user: MemberUser;
+};
+
+const projectUrl = (import.meta.env.VITE_SUPABASE_URL || "https://mfntzxheldzdvlokyntk.supabase.co").replace(/\/$/, "");
+const publicKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || import.meta.env.VITE_SUPABASE_ANON_KEY || "";
+const storageKey = "anevum.rhenlink.session.v1";
+
+export const memberBackend = {
+  projectUrl,
+  configured: Boolean(publicKey),
+};
+
+function headers(token?: string) {
+  return {
+    "Content-Type": "application/json",
+    apikey: publicKey,
+    Authorization: `Bearer ${token || publicKey}`,
+  };
+}
+
+async function request<T>(path: string, init: RequestInit): Promise<T> {
+  if (!publicKey) throw new Error("RHENLINK backend is not configured in this build.");
+  const response = await fetch(`${projectUrl}${path}`, init);
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    const message = payload?.msg || payload?.message || payload?.error_description || payload?.error || `Request failed (${response.status})`;
+    throw new Error(String(message));
+  }
+  return payload as T;
+}
+
+export function loadSession(): MemberSession | null {
+  try {
+    const value = localStorage.getItem(storageKey);
+    return value ? JSON.parse(value) as MemberSession : null;
+  } catch {
+    return null;
+  }
+}
+
+function saveSession(session: MemberSession | null) {
+  if (session) localStorage.setItem(storageKey, JSON.stringify(session));
+  else localStorage.removeItem(storageKey);
+  window.dispatchEvent(new Event("anevum-member-session"));
+}
+
+export async function signUp(input: { email: string; password: string; handle: string; displayName: string }) {
+  const redirectTo = `${window.location.origin}/rhenlink`;
+  const payload = await request<Partial<MemberSession> & { user?: MemberUser }>(`/auth/v1/signup?redirect_to=${encodeURIComponent(redirectTo)}`, {
+    method: "POST",
+    headers: headers(),
+    body: JSON.stringify({
+      email: input.email.trim(),
+      password: input.password,
+      data: {
+        rhenlink_handle: input.handle.trim().toLowerCase(),
+        display_name: input.displayName.trim(),
+        product: "RHENLINK",
+      },
+    }),
+  });
+
+  if (payload.access_token && payload.user) {
+    const session = payload as MemberSession;
+    saveSession(session);
+    return { status: "signed-in" as const, session };
+  }
+  return { status: "confirmation-required" as const, user: payload.user || null };
+}
+
+export async function signIn(email: string, password: string) {
+  const session = await request<MemberSession>("/auth/v1/token?grant_type=password", {
+    method: "POST",
+    headers: headers(),
+    body: JSON.stringify({ email: email.trim(), password }),
+  });
+  saveSession(session);
+  return session;
+}
+
+export async function refreshSession(session: MemberSession) {
+  if (!session.refresh_token) return session;
+  const next = await request<MemberSession>("/auth/v1/token?grant_type=refresh_token", {
+    method: "POST",
+    headers: headers(),
+    body: JSON.stringify({ refresh_token: session.refresh_token }),
+  });
+  saveSession(next);
+  return next;
+}
+
+export async function signOut() {
+  const session = loadSession();
+  if (session?.access_token && publicKey) {
+    await fetch(`${projectUrl}/auth/v1/logout`, { method: "POST", headers: headers(session.access_token) }).catch(() => undefined);
+  }
+  saveSession(null);
+}
+
+export function displayIdentity(session: MemberSession | null) {
+  const metadata = session?.user?.user_metadata || {};
+  return {
+    handle: String(metadata.rhenlink_handle || ""),
+    displayName: String(metadata.display_name || session?.user?.email || ""),
+  };
+}
