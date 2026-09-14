@@ -2,7 +2,8 @@ import { useMemo, useState } from "react";
 import { ArrowLeft, BookOpen, Layers3, Map, Search } from "lucide-react";
 import { publicObjects, getPublicObjectBySlug, searchPublicObjects } from "./publicObjects";
 import { getWikiDetail } from "./wikiDetails";
-import { Button, Link, RecordCard, SyncStamp, VisualArt } from "./ui";
+import { CanonVisual } from "./CanonVisuals";
+import { Button, Link, RecordCard, SyncStamp } from "./ui";
 
 function TypeIndex({ onSelect }: { onSelect: (value: string) => void }) {
   const entries = [
@@ -33,6 +34,7 @@ export function WikiHome() {
   const [section, setSection] = useState("ALL");
   const results = useMemo(() => searchPublicObjects(query, section), [query, section]);
   const lead = getPublicObjectBySlug("merva")!;
+  const serein = getPublicObjectBySlug("greater-serein")!;
   const featured = ["merva", "ovara", "neral", "connected-worlds", "veyra", "ione"]
     .map((slug) => getPublicObjectBySlug(slug))
     .filter(Boolean);
@@ -40,7 +42,7 @@ export function WikiHome() {
   return (
     <main className="wiki-page production-wiki">
       <section className="wiki-hero production-wiki-hero">
-        <VisualArt visualKey="serein" />
+        <CanonVisual record={serein} className="wiki-hero-canon-visual" />
         <div className="wiki-hero-texture" aria-hidden="true" />
         <div className="wiki-hero-copy">
           <p className="eyebrow">WIKI.ANEVUM / PUBLIC CANON</p>
@@ -64,7 +66,7 @@ export function WikiHome() {
       </section>
 
       <section className="section wiki-feature-stage">
-        <div className="wiki-feature-image"><VisualArt visualKey={lead.visualKey} /></div>
+        <div className="wiki-feature-image"><CanonVisual record={lead} /></div>
         <div className="wiki-feature-copy">
           <span className="meta">FEATURED / {lead.type}</span>
           <h2>{lead.title}</h2>
@@ -143,7 +145,7 @@ export function WikiRecord({ slug }: { slug: string }) {
   return (
     <main className="record-page production-record-page">
       <section className="record-hero production-record-hero">
-        <VisualArt visualKey={record.visualKey} label={`Public visual treatment for ${record.title}`} />
+        <CanonVisual record={record} className="record-hero-canon-visual" />
         <div className="record-hero-grain" aria-hidden="true" />
         <div className="record-hero-copy">
           <Link href="/wiki" className="back"><ArrowLeft size={14} /> WIKI.ANEVUM</Link>
@@ -168,6 +170,10 @@ export function WikiRecord({ slug }: { slug: string }) {
             <h2>{detail?.lead || record.summary}</h2>
           </div>
           {record.facts?.length ? <div className="fact-grid editorial-facts">{record.facts.map(([key, value]) => <div key={key}><span>{key}</span><strong>{value}</strong></div>)}</div> : null}
+          <div className="wiki-inline-visual">
+            <CanonVisual record={record} />
+            <div className="wiki-inline-visual-caption"><span>VISUAL RECORD</span><strong>{record.title}</strong><small>{record.visualStatus} / publication-safe study</small></div>
+          </div>
           <RecordContents slug={slug} />
           {!detail ? <div className="wiki-curated-summary"><p>{record.summary}</p><p>This record is currently published at {record.renderMode.toLowerCase()} depth. Additional private source material is not projected into the public Wiki.</p></div> : null}
           <div className="publication-note production-publication-note"><span>PUBLICATION BOUNDARY</span><p>{record.publicNote}</p></div>
