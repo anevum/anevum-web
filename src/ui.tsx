@@ -1,6 +1,6 @@
 import { useEffect, useId, useState, type ReactNode } from "react";
 import { ArrowRight, CircleUserRound, Menu, Search, X } from "lucide-react";
-import { PUBLIC_SYNC, type PublicObject, type VisualKey } from "./publicObjects";
+import { PUBLIC_SYNC, publicObjects, type PublicObject, type VisualKey } from "./publicObjects";
 
 export type LinkProps = {
   href: string;
@@ -95,7 +95,7 @@ export function SyncStamp() {
   return (
     <div className="sync-stamp">
       <span>PUBLIC CANON</span>
-      <strong>{PUBLIC_SYNC.count} RELEASED RECORDS</strong>
+      <strong>{publicObjects.length} RELEASED RECORDS</strong>
       <small>RECONCILED {PUBLIC_SYNC.syncedAt}</small>
     </div>
   );
