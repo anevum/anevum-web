@@ -1,5 +1,12 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ArrowRight, Menu, Search, X } from "lucide-react";
+import {
+  featuredPublicObjects,
+  getPublicObjectBySlug,
+  publicObjects,
+  searchPublicObjects,
+  type PublicObject,
+} from "./publicObjects";
 
 const primaryNav = [
   ["STORIES", "/stories"],
@@ -136,6 +143,40 @@ function PageIntro({ eyebrow, title, body }: { eyebrow: string; title: string; b
   );
 }
 
+function RecordCard({ record }: { record: PublicObject }) {
+  return (
+    <SiteLink href={record.route} className="record-card">
+      <div className="record-card-topline">
+        <span>{record.section}</span>
+        <span>{record.renderMode}</span>
+      </div>
+      <div>
+        <p className="eyebrow">{record.type}</p>
+        <h3>{record.title}</h3>
+        <p>{record.summary}</p>
+      </div>
+      <div className="record-card-action">
+        <span>OPEN RECORD</span>
+        <ArrowRight size={16} aria-hidden="true" />
+      </div>
+    </SiteLink>
+  );
+}
+
+function RecordGrid({ records }: { records: PublicObject[] }) {
+  if (!records.length) {
+    return <div className="record-empty">No released record matches this search.</div>;
+  }
+
+  return (
+    <div className="record-grid">
+      {records.map((record) => (
+        <RecordCard key={record.id} record={record} />
+      ))}
+    </div>
+  );
+}
+
 function FrontDoor() {
   return (
     <main>
@@ -164,8 +205,8 @@ function FrontDoor() {
           </div>
           <div className="feature-copy">
             <p>
-              The public front door into ANEVUM. This shell is ready for the final approved
-              synopsis, release state, art, and reader actions in the next story build pass.
+              The current story at the center of ANEVUM. The public experience begins with
+              opening-state orientation and expands only as canon is cleared for release.
             </p>
             <SiteLink href="/stories/reply" className="text-link">OPEN STORY <ArrowRight size={15} /></SiteLink>
           </div>
@@ -204,6 +245,17 @@ function FrontDoor() {
         </div>
       </section>
 
+      <section className="released-preview section-frame">
+        <div className="section-heading">
+          <div>
+            <p className="eyebrow">RELEASED RECORD</p>
+            <h2>What is public now.</h2>
+          </div>
+          <SiteLink href="/wiki" className="text-link">OPEN WIKI <ArrowRight size={15} /></SiteLink>
+        </div>
+        <RecordGrid records={featuredPublicObjects.slice(0, 4)} />
+      </section>
+
       <section className="from-anevum section-frame">
         <div>
           <p className="eyebrow">FROM ANEVUM</p>
@@ -221,7 +273,7 @@ function Stories() {
       <PageIntro
         eyebrow="STORIES"
         title="The stories are the doorway."
-        body="Generation 1 begins with REPLY. This route shell is ready for the final story index composition."
+        body="ANEVUM begins with REPLY. The story remains the primary entrance; the Wiki and Lattice reveal only the universe material already cleared for public release."
       />
       <SiteLink href="/stories/reply" className="route-feature">
         <span>BOOK I</span>
@@ -233,47 +285,107 @@ function Stories() {
 }
 
 function Reply() {
+  const storyRecords = publicObjects.filter((record) =>
+    ["ovara", "merva", "neral", "serein-skygate"].includes(record.slug),
+  );
+
   return (
     <main className="route-shell story-shell">
       <PageIntro
         eyebrow="ANEVUM / BOOK I"
         title="REPLY"
-        body="Permanent story-detail route established. Final art, approved public synopsis, availability, and released-universe handoffs will be implemented in the story pass."
+        body="REPLY opens across Veyran and Ovaran viewpoints. This public surface remains inside the pre-release disclosure window and contains only opening-state, spoiler-safe orientation."
       />
       <div className="story-placeholder" aria-hidden="true" />
+      <section className="story-records">
+        <div className="record-section-heading">
+          <p className="eyebrow">OPENING-STATE RECORDS</p>
+          <h2>Enter the world without leaving the safe window.</h2>
+        </div>
+        <RecordGrid records={storyRecords} />
+      </section>
     </main>
   );
 }
 
 function WikiHome() {
+  const [query, setQuery] = useState("");
+  const records = useMemo(() => searchPublicObjects(query), [query]);
+
   return (
     <main className="route-shell wiki-shell">
       <PageIntro
         eyebrow="WIKI.ANEVUM"
-        title="The canonical universe."
-        body="A public reference layer for publication-cleared people, worlds, locations, technologies, events, objects, and concepts."
+        title="The known record."
+        body="People. Worlds. Places. Events. Ideas. Only records cleared through ANEVUM's public release gates appear here."
       />
-      <div className="wiki-search-shell">
-        <Search size={18} />
-        <span>SEARCH THE RELEASED RECORD</span>
-      </div>
-      <div className="skeleton-grid" aria-label="Future released record regions">
-        <div><span>FEATURED RECORDS</span></div>
-        <div><span>RECENTLY RELEASED</span></div>
-        <div><span>BROWSE BY TYPE</span></div>
-      </div>
+      <label className="record-search">
+        <Search size={18} aria-hidden="true" />
+        <input
+          aria-label="Search the released record"
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+          placeholder="Search the released record"
+        />
+        <span>{records.length} RECORDS</span>
+      </label>
+      <section className="wiki-records">
+        <div className="record-section-heading compact">
+          <p className="eyebrow">PUBLIC NOW</p>
+          <h2>{query ? "Search results." : "Released records."}</h2>
+        </div>
+        <RecordGrid records={records} />
+      </section>
     </main>
   );
 }
 
 function WikiRecord({ slug }: { slug: string }) {
+  const record = getPublicObjectBySlug(slug);
+
+  if (!record) {
+    return (
+      <main className="route-shell record-shell">
+        <PageIntro
+          eyebrow="WIKI.ANEVUM / RECORD"
+          title="Nothing is released here."
+          body="No public record exists at this route. Unreleased and restricted canon is not exposed by fallback labels or private-source metadata."
+        />
+        <SiteLink href="/wiki" className="button secondary">RETURN TO WIKI</SiteLink>
+      </main>
+    );
+  }
+
   return (
     <main className="route-shell record-shell">
-      <PageIntro
-        eyebrow="WIKI.ANEVUM / RECORD"
-        title="Record route ready."
-        body={`Dynamic public-record route established for “${slug || "record"}”. No fictional content is populated until the release-gated public object layer is connected.`}
-      />
+      <section className="record-detail-hero">
+        <div>
+          <p className="eyebrow">WIKI.ANEVUM / {record.section}</p>
+          <h1>{record.title}</h1>
+        </div>
+        <div className="record-status">
+          <span>{record.type}</span>
+          <span>{record.renderMode}</span>
+          <span>{record.spoilerLevel}</span>
+          <span>{record.publicWindow}</span>
+        </div>
+      </section>
+      <div className="record-detail-grid">
+        <p className="record-summary">{record.summary}</p>
+        <aside>
+          <p className="eyebrow">PUBLICATION STATE</p>
+          <dl>
+            <div><dt>Window</dt><dd>{record.publicWindow}</dd></div>
+            <div><dt>REPLY gate</dt><dd>{record.replyGate}</dd></div>
+            <div><dt>Render</dt><dd>{record.renderMode}</dd></div>
+            <div><dt>Spoiler level</dt><dd>{record.spoilerLevel}</dd></div>
+          </dl>
+        </aside>
+      </div>
+      <div className="record-actions">
+        <SiteLink href="/lattice" className="button secondary">EXPLORE CONNECTIONS</SiteLink>
+        <SiteLink href="/wiki" className="text-link">BACK TO WIKI <ArrowRight size={15} /></SiteLink>
+      </div>
     </main>
   );
 }
@@ -284,7 +396,7 @@ function Lattice() {
       <PageIntro
         eyebrow="LATTICE.ANEVUM"
         title="The universe as a place."
-        body="A relational field for moving through the released universe. The graph, focus panel, and record handoffs will be built against the shared public object model."
+        body="A relational field for moving through the released universe. Only publication-cleared records can become nodes."
       />
       <div className="lattice-stage" aria-hidden="true">
         <span className="node node-a" />
@@ -295,22 +407,52 @@ function Lattice() {
         <span className="trace trace-b" />
         <span className="trace trace-c" />
       </div>
+      <section className="lattice-record-strip">
+        <div className="record-section-heading compact">
+          <p className="eyebrow">RELEASED NODES</p>
+          <h2>Start from a real record.</h2>
+        </div>
+        <div className="lattice-links">
+          {featuredPublicObjects.slice(0, 6).map((record) => (
+            <SiteLink key={record.id} href={record.route}>
+              <span>{record.type}</span>
+              <strong>{record.title}</strong>
+              <ArrowRight size={15} aria-hidden="true" />
+            </SiteLink>
+          ))}
+        </div>
+      </section>
     </main>
   );
 }
 
 function SearchPage() {
+  const [query, setQuery] = useState("");
+  const results = useMemo(() => searchPublicObjects(query), [query]);
+
   return (
     <main className="route-shell search-shell-page">
       <PageIntro
         eyebrow="SEARCH"
         title="Search ANEVUM."
-        body="This permanent route will search only released public stories, records, and transmissions."
+        body="Search currently indexes the released public record. Restricted and unpublished canon never appears as a fallback result."
       />
-      <label className="search-field-shell">
+      <label className="search-field-shell active-search">
         <Search size={18} />
-        <input aria-label="Search ANEVUM" placeholder="Search" disabled />
+        <input
+          aria-label="Search ANEVUM"
+          placeholder="Search released records"
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+        />
       </label>
+      <section className="search-results">
+        <div className="record-section-heading compact">
+          <p className="eyebrow">{query ? "MATCHES" : "INDEX"}</p>
+          <h2>{results.length} released records.</h2>
+        </div>
+        <RecordGrid records={results} />
+      </section>
     </main>
   );
 }
@@ -333,7 +475,7 @@ function Store() {
       <PageIntro
         eyebrow="STORE"
         title="Objects from ANEVUM."
-        body="The permanent commerce route is established. No inventory, price, or checkout claim will appear until a real product is sale-ready."
+        body="The permanent commerce route is established. No inventory, price, or checkout claim appears until a real product is sale-ready."
       />
     </main>
   );
@@ -394,7 +536,11 @@ const titleForPath = (pathname: string) => {
   if (pathname === "/") return "ANEVUM";
   if (pathname === "/stories") return "Stories — ANEVUM";
   if (pathname === "/stories/reply") return "REPLY — ANEVUM";
-  if (pathname.startsWith("/wiki")) return "WIKI — ANEVUM";
+  if (pathname.startsWith("/wiki/")) {
+    const record = getPublicObjectBySlug(decodeURIComponent(pathname.slice(6)));
+    return record ? `${record.title} — WIKI.ANEVUM` : "WIKI — ANEVUM";
+  }
+  if (pathname === "/wiki") return "WIKI — ANEVUM";
   if (pathname === "/lattice") return "LATTICE — ANEVUM";
   if (pathname === "/search") return "Search — ANEVUM";
   if (pathname === "/transmissions") return "Transmissions — ANEVUM";
@@ -416,7 +562,7 @@ export default function App() {
       <RouteView pathname={pathname} />
       <footer className="site-footer">
         <SiteLink href="/" className="footer-brand"><AnevumMark /> ANEVUM</SiteLink>
-        <span>STORIES / UNIVERSE / IDENTITY</span>
+        <span>BOOKS • KNOWLEDGE • DISCOVERY • BELONGING</span>
         <span>DEVON AKINS</span>
       </footer>
     </div>
