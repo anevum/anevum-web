@@ -2,6 +2,7 @@ export type MemberUser = {
   id: string;
   email?: string;
   user_metadata?: Record<string, unknown>;
+  app_metadata?: Record<string, unknown>;
 };
 
 export type MemberSession = {
