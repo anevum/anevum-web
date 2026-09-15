@@ -2,7 +2,6 @@ import { useState, type FormEvent } from "react";
 import { Eye, Search, Sparkles } from "lucide-react";
 import { Button, Link, navigate } from "./ui";
 import { BrandArt, type BrandArtVariant } from "./BrandArt";
-import { HomePortalRail } from "./ExperienceChrome";
 
 const homeSurfaces: Array<{ label: string; note: string; href: string; variant: BrandArtVariant }> = [
   { label: "STORIES", note: "Books, characters, and the narrative beyond.", href: "/stories", variant: "signal" },
@@ -24,7 +23,6 @@ export function FrontDoor() {
           <p>Books at the center. Knowledge, discovery, identity, and a larger universe opening outward from the story.</p>
           <div className="actions"><Button href="/stories/reply">DISCOVER REPLY</Button><Button href="/lattice" quiet>ENTER THE UNIVERSE</Button></div>
         </div>
-        <HomePortalRail />
         <div className="hero-caption"><span>A UNIVERSE IN STORY.</span><b>A STORY IN EVERYTHING.</b></div>
       </section>
 
