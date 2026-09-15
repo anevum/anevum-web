@@ -11,8 +11,6 @@ export type LinkProps = {
 };
 
 const WIKI_HOST = "wiki.anevum.com";
-const LATTICE_HOST = "lattice.anevum.com";
-const COMMAND_HOST = "command.anevum.com";
 const ROOT_HOST = "anevum.com";
 
 function isProductionAnevumHost(hostname: string) {
@@ -28,15 +26,9 @@ export function resolveSystemHref(href: string) {
     const relative = href === "/wiki" ? "/" : href.slice(5) || "/";
     return host === WIKI_HOST ? relative : `https://${WIKI_HOST}${relative}`;
   }
-  if (href === "/lattice" || href.startsWith("/lattice/")) {
-    const relative = href === "/lattice" ? "/" : href.slice(8) || "/";
-    return host === LATTICE_HOST ? relative : `https://${LATTICE_HOST}${relative}`;
+  if (href === "/lattice" || href.startsWith("/lattice/") || href === "/command" || href.startsWith("/command/") || href === "/rhenlink") {
+    return host === ROOT_HOST ? href : `https://${ROOT_HOST}${href}`;
   }
-  if (href === "/command" || href.startsWith("/command/")) {
-    const relative = href === "/command" ? "/" : href.slice(8) || "/";
-    return host === COMMAND_HOST ? relative : `https://${COMMAND_HOST}${relative}`;
-  }
-  if (href === "/rhenlink") return host === ROOT_HOST ? href : `https://${ROOT_HOST}/rhenlink`;
 
   if (href === "/" || href === "/stories" || href.startsWith("/stories/") || href === "/search" || href === "/transmissions" || href === "/store") {
     return host === ROOT_HOST ? href : `https://${ROOT_HOST}${href}`;
