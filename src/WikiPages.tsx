@@ -1,31 +1,145 @@
 import { useMemo, useState } from "react";
-import { ArrowLeft, BookOpen, Layers3, Map, Search } from "lucide-react";
-import { publicObjects, getPublicObjectBySlug, searchPublicObjects } from "./publicObjects";
+import { ArrowLeft, ExternalLink, Search } from "lucide-react";
+import { publicObjects, getPublicObjectBySlug, searchPublicObjects, type PublicObject } from "./publicObjects";
 import { getWikiDetail } from "./wikiDetails";
 import { CanonVisual } from "./CanonVisuals";
-import { Button, Link, RecordCard, SyncStamp } from "./ui";
+import { Link, SyncStamp } from "./ui";
 
-function TypeIndex({ onSelect }: { onSelect: (value: string) => void }) {
-  const entries = [
-    ["WORLDS", "PLANET", "Planetary records and inhabited worlds"],
-    ["PLACES", "SETTLEMENT", "Cities, regions, facilities and gate-cities"],
-    ["PEOPLE", "PERSON", "Released character and historical-person records"],
-    ["SYSTEMS", "TECHNOLOGY", "Infrastructure, interfaces and engineered systems"],
-    ["SCIENCE", "THEORY", "Scientific and conceptual records"],
-    ["ARCHIVE", "ARCHIVE", "Released historical fragments and events"],
-  ] as const;
+const WIKI_HOST = "wiki.anevum.com";
+
+function onWikiHost() {
+  return typeof window !== "undefined" && window.location.hostname.toLowerCase() === WIKI_HOST;
+}
+
+function wikiHomeHref() {
+  return onWikiHost() ? "/" : "/wiki";
+}
+
+function wikiHref(record: PublicObject) {
+  return onWikiHost() ? record.sourceRoute : record.route;
+}
+
+function headingId(value: string) {
+  return value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+}
+
+const sectionCounts = {
+  ALL: publicObjects.length,
+  UNIVERSE: publicObjects.filter((record) => record.section === "UNIVERSE").length,
+  ATLAS: publicObjects.filter((record) => record.section === "ATLAS").length,
+  ARCHIVE: publicObjects.filter((record) => record.section === "ARCHIVE").length,
+};
+
+export function WikiHeader() {
+  return (
+    <header className="wiki-site-header">
+      <div className="wiki-site-header-inner">
+        <Link href={wikiHomeHref()} className="wiki-site-brand">
+          <span className="wiki-site-wordmark">WIKI.ANEVUM</span>
+          <span className="wiki-site-subtitle">PUBLIC CANON ENCYCLOPEDIA</span>
+        </Link>
+        <nav className="wiki-site-utilities" aria-label="Wiki utilities">
+          <Link href={wikiHomeHref()} className="wiki-utility-link">MAIN PAGE</Link>
+          <a href="https://anevum.com" className="wiki-utility-link">ANEVUM.COM <ExternalLink size={11} /></a>
+        </nav>
+      </div>
+    </header>
+  );
+}
+
+function WikiSidebar({ record, activeSection = "ALL", onSection }: { record?: PublicObject; activeSection?: string; onSection?: (value: string) => void }) {
+  const detail = record ? getWikiDetail(record.slug) : undefined;
+  const coreRecords = ["merva", "ovara", "neral", "veyra", "connected-worlds"]
+    .map((slug) => getPublicObjectBySlug(slug))
+    .filter(Boolean) as PublicObject[];
 
   return (
-    <div className="wiki-type-index">
-      {entries.map(([label, query, description], index) => (
-        <button type="button" key={label} onClick={() => onSelect(query)}>
-          <span className="wiki-type-number">0{index + 1}</span>
-          <span className="wiki-type-mark" aria-hidden="true"><i /><i /></span>
-          <strong>{label}</strong>
-          <small>{description}</small>
-        </button>
-      ))}
-    </div>
+    <aside className="wiki-sidebar">
+      <div className="wiki-sidebar-group">
+        <span className="wiki-sidebar-label">NAVIGATION</span>
+        <Link href={wikiHomeHref()} className="wiki-sidebar-link">Main page</Link>
+        <a href="#all-records" className="wiki-sidebar-link">All released records</a>
+      </div>
+
+      <div className="wiki-sidebar-group">
+        <span className="wiki-sidebar-label">BROWSE</span>
+        {(["ALL", "UNIVERSE", "ATLAS", "ARCHIVE"] as const).map((value) => (
+          onSection ? (
+            <button key={value} type="button" className={`wiki-sidebar-link wiki-sidebar-button ${activeSection === value ? "active" : ""}`} onClick={() => onSection(value)}>
+              <span>{value === "ALL" ? "All records" : value.charAt(0) + value.slice(1).toLowerCase()}</span>
+              <small>{sectionCounts[value]}</small>
+            </button>
+          ) : (
+            <Link key={value} href={`${wikiHomeHref()}#all-records`} className="wiki-sidebar-link">
+              <span>{value === "ALL" ? "All records" : value.charAt(0) + value.slice(1).toLowerCase()}</span>
+              <small>{sectionCounts[value]}</small>
+            </Link>
+          )
+        ))}
+      </div>
+
+      {record && detail ? (
+        <div className="wiki-sidebar-group wiki-toc">
+          <span className="wiki-sidebar-label">CONTENTS</span>
+          <a href="#overview" className="wiki-sidebar-link">Overview</a>
+          {detail.sections.map((section, index) => (
+            <a key={section.title} href={`#${headingId(section.title)}`} className="wiki-sidebar-link">
+              <span>{index + 1}. {section.title}</span>
+            </a>
+          ))}
+        </div>
+      ) : null}
+
+      {!record ? (
+        <div className="wiki-sidebar-group">
+          <span className="wiki-sidebar-label">CORE RECORDS</span>
+          {coreRecords.map((item) => <Link key={item.id} href={wikiHref(item)} className="wiki-sidebar-link">{item.title}</Link>)}
+        </div>
+      ) : null}
+
+      <div className="wiki-sidebar-source">
+        <span>CANON AUTHORITY</span>
+        <p>Live Transcosmic Canon Wiki + Website Publishing Queue.</p>
+      </div>
+    </aside>
+  );
+}
+
+function WikiSearch({ query, setQuery }: { query: string; setQuery: (value: string) => void }) {
+  return (
+    <label className="wiki-native-search">
+      <Search size={15} />
+      <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search WIKI.ANEVUM" aria-label="Search released canon" />
+      {query ? <button type="button" onClick={() => setQuery("")}>Clear</button> : null}
+    </label>
+  );
+}
+
+function WikiRecordRow({ record }: { record: PublicObject }) {
+  return (
+    <Link href={wikiHref(record)} className="wiki-record-row">
+      <div className="wiki-record-row-title">
+        <strong>{record.title}</strong>
+        <span>{record.type}</span>
+      </div>
+      <p>{record.summary}</p>
+      <div className="wiki-record-row-meta">
+        <span>{record.section}</span>
+        <span>{record.renderMode}</span>
+        <span>{record.spoilerLevel}</span>
+      </div>
+    </Link>
+  );
+}
+
+function WikiPortal({ title, description, section, onSelect }: { title: string; description: string; section: "UNIVERSE" | "ATLAS" | "ARCHIVE"; onSelect: (value: string) => void }) {
+  const count = sectionCounts[section];
+  return (
+    <button type="button" className="wiki-portal" onClick={() => onSelect(section)}>
+      <span>{title}</span>
+      <p>{description}</p>
+      <small>{count} released {count === 1 ? "record" : "records"}</small>
+    </button>
   );
 }
 
@@ -34,63 +148,75 @@ export function WikiHome() {
   const [section, setSection] = useState("ALL");
   const results = useMemo(() => searchPublicObjects(query, section), [query, section]);
   const lead = getPublicObjectBySlug("merva")!;
-  const serein = getPublicObjectBySlug("greater-serein")!;
-  const featured = ["merva", "ovara", "neral", "connected-worlds", "veyra", "ione"]
-    .map((slug) => getPublicObjectBySlug(slug))
-    .filter(Boolean);
+
+  function selectSection(value: string) {
+    setSection(value);
+    requestAnimationFrame(() => document.getElementById("all-records")?.scrollIntoView({ behavior: "smooth", block: "start" }));
+  }
 
   return (
-    <main className="wiki-page production-wiki">
-      <section className="wiki-hero production-wiki-hero">
-        <CanonVisual record={serein} className="wiki-hero-canon-visual" />
-        <div className="wiki-hero-texture" aria-hidden="true" />
-        <div className="wiki-hero-copy">
-          <p className="eyebrow">WIKI.ANEVUM / PUBLIC CANON</p>
-          <h1>The known record.</h1>
-          <p className="wiki-hero-deck">People. Worlds. Places. Events. Ideas.</p>
-          <p className="wiki-hero-intro">A reader-facing encyclopedia built from the live Transcosmic Canon Wiki. Only records that clear the current publication gates appear here.</p>
-          <label className="wiki-search production-wiki-search">
-            <Search size={18} />
-            <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search the released universe..." aria-label="Search released canon" />
-          </label>
-        </div>
-        <SyncStamp />
-      </section>
+    <main className="wiki-native-page">
+      <div className="wiki-native-layout">
+        <WikiSidebar activeSection={section} onSection={selectSection} />
 
-      <section className="section wiki-index-section">
-        <div className="section-head compact-head">
-          <div><p className="eyebrow">EXPLORE BY TYPE</p><h2>Different paths through one record.</h2></div>
-          <p>The public Wiki is not a mirror of the private workspace. It is the deliberately released layer of the universe.</p>
-        </div>
-        <TypeIndex onSelect={(value) => { setQuery(value); window.scrollTo({ top: 1040, behavior: "smooth" }); }} />
-      </section>
+        <div className="wiki-native-content">
+          <header className="wiki-main-page-header">
+            <div>
+              <p className="wiki-kicker">WIKI.ANEVUM</p>
+              <h1>Main Page</h1>
+              <p className="wiki-main-deck">The released reference encyclopedia for the ANEVUM universe.</p>
+            </div>
+            <SyncStamp />
+          </header>
 
-      <section className="section wiki-feature-stage">
-        <div className="wiki-feature-image"><CanonVisual record={lead} /></div>
-        <div className="wiki-feature-copy">
-          <span className="meta">FEATURED / {lead.type}</span>
-          <h2>{lead.title}</h2>
-          <p>{lead.summary}</p>
-          <div className="wiki-feature-metadata"><span>FULL PUBLIC RECORD</span><span>REPLY ERA</span><span>OPENING STATE</span></div>
-          <Button href={lead.route}>OPEN MERVA</Button>
-        </div>
-      </section>
+          <WikiSearch query={query} setQuery={setQuery} />
 
-      <section className="section wiki-browser production-wiki-browser">
-        <div className="wiki-filterbar">
-          <div className="filter-tabs">
-            {["ALL", "UNIVERSE", "ATLAS", "ARCHIVE"].map((value) => <button type="button" key={value} className={section === value ? "active" : ""} onClick={() => setSection(value)}>{value}</button>)}
+          <div className="wiki-home-columns">
+            <section className="wiki-box wiki-featured-article">
+              <div className="wiki-box-title"><span>Featured article</span><small>{lead.type}</small></div>
+              <div className="wiki-featured-layout">
+                <div className="wiki-featured-visual"><CanonVisual record={lead} /></div>
+                <div>
+                  <h2><Link href={wikiHref(lead)}>{lead.title}</Link></h2>
+                  <p>{lead.summary}</p>
+                  <Link href={wikiHref(lead)} className="wiki-inline-link">Read full record →</Link>
+                </div>
+              </div>
+            </section>
+
+            <section className="wiki-box wiki-about-box">
+              <div className="wiki-box-title"><span>About this wiki</span><small>PUBLIC CANON</small></div>
+              <p>WIKI.ANEVUM is a reader-facing encyclopedia, not a mirror of ANEVUM's private canon workspace. A record appears here only after its source and publication state clear the current public release gates.</p>
+              <dl className="wiki-stat-list">
+                <div><dt>Released records</dt><dd>{publicObjects.length}</dd></div>
+                <div><dt>Universe</dt><dd>{sectionCounts.UNIVERSE}</dd></div>
+                <div><dt>Atlas</dt><dd>{sectionCounts.ATLAS}</dd></div>
+                <div><dt>Archive</dt><dd>{sectionCounts.ARCHIVE}</dd></div>
+              </dl>
+            </section>
           </div>
-          <span>{results.length} RELEASED RECORDS</span>
-        </div>
-        {query ? <div className="wiki-query-state"><span>FILTER</span><strong>{query}</strong><button type="button" onClick={() => setQuery("")}>CLEAR</button></div> : null}
-        <div className="record-grid wiki-grid">{results.map((record) => <RecordCard key={record.id} record={record} />)}</div>
-      </section>
 
-      <section className="section wiki-featured-row">
-        <div className="section-head compact-head"><div><p className="eyebrow">CORE PUBLIC RECORDS</p><h2>Start with the worlds around REPLY.</h2></div><Button href="/lattice" quiet>MOVE THROUGH LATTICE</Button></div>
-        <div className="wiki-core-strip">{featured.map((record) => record ? <RecordCard key={record.id} record={record} compact /> : null)}</div>
-      </section>
+          <section className="wiki-box wiki-browse-box">
+            <div className="wiki-box-title"><span>Browse the encyclopedia</span><small>BY RECORD FAMILY</small></div>
+            <div className="wiki-portals">
+              <WikiPortal title="Universe" description="People, technology, institutions, science and civilization." section="UNIVERSE" onSelect={selectSection} />
+              <WikiPortal title="Atlas" description="Worlds, cities, regions, moons and inhabited infrastructure." section="ATLAS" onSelect={selectSection} />
+              <WikiPortal title="Archive" description="Released historical records, facilities and events." section="ARCHIVE" onSelect={selectSection} />
+            </div>
+          </section>
+
+          <section className="wiki-record-index" id="all-records">
+            <div className="wiki-index-heading">
+              <div><p className="wiki-kicker">PUBLIC INDEX</p><h2>{section === "ALL" ? "All released records" : `${section.charAt(0) + section.slice(1).toLowerCase()} records`}</h2></div>
+              <span>{results.length} entries</span>
+            </div>
+            {query ? <p className="wiki-search-state">Showing results for <strong>{query}</strong>.</p> : null}
+            <div className="wiki-record-list">
+              {results.length ? results.map((record) => <WikiRecordRow key={record.id} record={record} />) : <p className="wiki-no-results">No released record matches this search.</p>}
+            </div>
+          </section>
+        </div>
+      </div>
     </main>
   );
 }
@@ -99,39 +225,34 @@ function RecordContents({ slug }: { slug: string }) {
   const detail = getWikiDetail(slug);
   if (!detail) return null;
   return (
-    <div className="wiki-prose-sections">
+    <div className="wiki-article-sections">
       {detail.sections.map((section, index) => (
-        <section key={section.title} className="wiki-prose-section">
-          <span className="wiki-section-index">{String(index + 1).padStart(2, "0")}</span>
-          <div>
-            <h2>{section.title}</h2>
-            {section.body.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}
-            {section.items?.length ? <ul>{section.items.map((item) => <li key={item}>{item}</li>)}</ul> : null}
-          </div>
+        <section key={section.title} id={headingId(section.title)} className="wiki-article-section">
+          <h2><span>{index + 1}</span>{section.title}</h2>
+          {section.body.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}
+          {section.items?.length ? <ul>{section.items.map((item) => <li key={item}>{item}</li>)}</ul> : null}
         </section>
       ))}
     </div>
   );
 }
 
-function RecordRail({ slug }: { slug: string }) {
-  const record = getPublicObjectBySlug(slug)!;
-  const detail = getWikiDetail(slug);
+function WikiInfobox({ record }: { record: PublicObject }) {
+  const detail = getWikiDetail(record.slug);
   return (
-    <aside className="wiki-record-rail">
-      <div className="wiki-rail-block">
-        <span className="rail-label">RECORD</span>
-        <dl>
-          <div><dt>Type</dt><dd>{record.type}</dd></div>
-          <div><dt>Section</dt><dd>{record.section}</dd></div>
-          <div><dt>Render</dt><dd>{record.renderMode}</dd></div>
-          <div><dt>Window</dt><dd>{record.publicWindow}</dd></div>
-          <div><dt>Visual</dt><dd>{record.visualStatus}</dd></div>
-        </dl>
-      </div>
-      {detail ? <div className="wiki-rail-block source-state"><span className="rail-label">SOURCE STATE</span><strong>{detail.sourceState}</strong><small>{detail.sourceLabel}</small></div> : null}
-      <Button href="/lattice">EXPLORE CONNECTIONS</Button>
-      <Button href="/rhenlink" quiet>SAVE WITH RHENLINK</Button>
+    <aside className="wiki-infobox">
+      <div className="wiki-infobox-title">{record.title}</div>
+      <div className="wiki-infobox-visual"><CanonVisual record={record} /></div>
+      <div className="wiki-infobox-caption">Publication-safe visual study · {record.visualStatus.toLowerCase()}</div>
+      <dl>
+        {record.facts?.map(([key, value]) => <div key={key}><dt>{key}</dt><dd>{value}</dd></div>)}
+        <div><dt>Type</dt><dd>{record.type}</dd></div>
+        <div><dt>Section</dt><dd>{record.section}</dd></div>
+        <div><dt>Render mode</dt><dd>{record.renderMode}</dd></div>
+        <div><dt>Spoiler level</dt><dd>{record.spoilerLevel}</dd></div>
+        {detail ? <div><dt>Source state</dt><dd>{detail.sourceState}</dd></div> : null}
+      </dl>
+      {detail ? <div className="wiki-infobox-source"><span>{detail.sourceLabel}</span></div> : null}
     </aside>
   );
 }
@@ -140,59 +261,86 @@ export function WikiRecord({ slug }: { slug: string }) {
   const record = getPublicObjectBySlug(slug);
   if (!record) return <WikiMissing />;
   const detail = getWikiDetail(slug);
-  const neighbors = publicObjects.filter((item) => item.id !== record.id && (item.section === record.section || item.type === record.type)).slice(0, 4);
+  const neighbors = publicObjects.filter((item) => item.id !== record.id && (item.section === record.section || item.type === record.type)).slice(0, 5);
 
   return (
-    <main className="record-page production-record-page">
-      <section className="record-hero production-record-hero">
-        <CanonVisual record={record} className="record-hero-canon-visual" />
-        <div className="record-hero-grain" aria-hidden="true" />
-        <div className="record-hero-copy">
-          <Link href="/wiki" className="back"><ArrowLeft size={14} /> WIKI.ANEVUM</Link>
-          <p className="eyebrow">{record.section} / {record.type}</p>
-          <h1>{record.title}</h1>
-          <p className="record-deck">{detail?.lead || record.summary}</p>
-          <div className="badges"><span>{record.renderMode}</span><span>{record.spoilerLevel}</span>{detail ? <span>LIVE WIKI SOURCE</span> : null}</div>
-        </div>
-        <div className="record-hero-index"><span>{record.section}</span><strong>{record.id.toUpperCase()}</strong></div>
-      </section>
+    <main className="wiki-native-page wiki-record-page-native">
+      <div className="wiki-native-layout">
+        <WikiSidebar record={record} />
 
-      <div className="record-subnav">
-        <span><BookOpen size={14} /> ARTICLE</span>
-        <span><Layers3 size={14} /> CONNECTED RECORDS</span>
-        <span><Map size={14} /> VISUAL RECORD</span>
-      </div>
+        <article className="wiki-native-content wiki-article">
+          <nav className="wiki-breadcrumbs" aria-label="Breadcrumb">
+            <Link href={wikiHomeHref()}><ArrowLeft size={12} /> Main page</Link>
+            <span>/</span>
+            <span>{record.section.charAt(0) + record.section.slice(1).toLowerCase()}</span>
+            <span>/</span>
+            <span>{record.title}</span>
+          </nav>
 
-      <section className="section wiki-record-layout">
-        <article className="wiki-record-article">
-          <div className="wiki-record-lead">
-            <p className="eyebrow">PUBLIC CANON</p>
-            <h2>{detail?.lead || record.summary}</h2>
+          <header className="wiki-article-header">
+            <p className="wiki-kicker">{record.section} · {record.type}</p>
+            <h1>{record.title}</h1>
+            <div className="wiki-article-status">
+              <span>{record.renderMode}</span>
+              <span>{record.spoilerLevel}</span>
+              <span>PUBLIC CANON</span>
+            </div>
+          </header>
+
+          <div className="wiki-article-grid">
+            <div className="wiki-article-body">
+              <section id="overview" className="wiki-article-lead">
+                <p>{detail?.lead || record.summary}</p>
+              </section>
+
+              <RecordContents slug={slug} />
+
+              {!detail ? (
+                <section className="wiki-article-section">
+                  <h2>Overview</h2>
+                  <p>{record.summary}</p>
+                  <p>This record is currently published at {record.renderMode.toLowerCase()} depth. Additional private source material is not projected into the public Wiki.</p>
+                </section>
+              ) : null}
+
+              <section className="wiki-publication-boundary">
+                <h2>Publication boundary</h2>
+                <p>{record.publicNote}</p>
+              </section>
+            </div>
+
+            <WikiInfobox record={record} />
           </div>
-          {record.facts?.length ? <div className="fact-grid editorial-facts">{record.facts.map(([key, value]) => <div key={key}><span>{key}</span><strong>{value}</strong></div>)}</div> : null}
-          <div className="wiki-inline-visual">
-            <CanonVisual record={record} />
-            <div className="wiki-inline-visual-caption"><span>VISUAL RECORD</span><strong>{record.title}</strong><small>{record.visualStatus} / publication-safe study</small></div>
-          </div>
-          <RecordContents slug={slug} />
-          {!detail ? <div className="wiki-curated-summary"><p>{record.summary}</p><p>This record is currently published at {record.renderMode.toLowerCase()} depth. Additional private source material is not projected into the public Wiki.</p></div> : null}
-          <div className="publication-note production-publication-note"><span>PUBLICATION BOUNDARY</span><p>{record.publicNote}</p></div>
+
+          <section className="wiki-related-records">
+            <div className="wiki-index-heading"><div><p className="wiki-kicker">SEE ALSO</p><h2>Related released records</h2></div></div>
+            <div className="wiki-related-list">
+              {neighbors.map((item) => (
+                <Link key={item.id} href={wikiHref(item)}>
+                  <strong>{item.title}</strong>
+                  <span>{item.type}</span>
+                </Link>
+              ))}
+            </div>
+          </section>
         </article>
-        <RecordRail slug={slug} />
-      </section>
-
-      <section className="section related production-related">
-        <div className="section-head compact-head"><div><p className="eyebrow">CONNECTED PUBLIC RECORDS</p><h2>Continue through the universe.</h2></div><Button href="/lattice" quiet>OPEN LATTICE</Button></div>
-        <div className="record-grid four">{neighbors.map((item) => <RecordCard key={item.id} record={item} />)}</div>
-      </section>
+      </div>
     </main>
   );
 }
 
 export function WikiMissing() {
   return (
-    <main className="route-main">
-      <section className="section empty-state"><span>WIKI.ANEVUM</span><h1>Nothing is released here.</h1><p>The public Wiki does not fall back to private canon when a route is unavailable.</p><Button href="/wiki" quiet>RETURN TO WIKI</Button></section>
+    <main className="wiki-native-page">
+      <div className="wiki-native-layout">
+        <WikiSidebar />
+        <section className="wiki-native-content wiki-missing">
+          <p className="wiki-kicker">WIKI.ANEVUM</p>
+          <h1>Page not released</h1>
+          <p>The public Wiki does not fall back to private canon when a route is unavailable.</p>
+          <Link href={wikiHomeHref()} className="wiki-small-action">Return to main page</Link>
+        </section>
+      </div>
     </main>
   );
 }
