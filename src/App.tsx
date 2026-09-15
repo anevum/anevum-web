@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import ReplyLaunch from "./ReplyLaunch";
-import { BookPage, StoryPage, StorePage } from "./LaunchPages";
+import { BookPage, StoryPage } from "./LaunchPages";
 import { Launch404 } from "./Launch404";
 import { Rhenlink } from "./RhenlinkV2";
 import { AuthBridgePage, SystemSessionBridge } from "./AuthBridge";
@@ -73,14 +73,6 @@ function publicMeta(pathname: string, knownPublicRoute: boolean) {
         ogTitle: "The Story of REPLY",
         ogType: "article",
       };
-    case "/store":
-      return {
-        title: "ANEVUM Store — REPLY",
-        description: "The ANEVUM store begins with REPLY by Devon Akins. Edition and purchase details appear only when they are live.",
-        canonical: "https://anevum.com/store",
-        ogTitle: "ANEVUM Store — REPLY",
-        ogType: "website",
-      };
     case "/rhenlink":
       return {
         title: "RHENLINK — ANEVUM Identity",
@@ -108,8 +100,7 @@ export default function App() {
   const rhenlinkRoute = hostname === ROOT_HOST && routePath === "/rhenlink";
   const bookRoute = hostname === ROOT_HOST && routePath === "/the-book";
   const storyRoute = hostname === ROOT_HOST && routePath === "/the-story";
-  const storeRoute = hostname === ROOT_HOST && routePath === "/store";
-  const knownPublicRoute = routePath === "/" || rhenlinkRoute || bookRoute || storyRoute || storeRoute;
+  const knownPublicRoute = routePath === "/" || rhenlinkRoute || bookRoute || storyRoute;
   const notFoundRoute = hostname === ROOT_HOST && !bridgeRoute && !commandRoute && !knownPublicRoute;
 
   useEffect(() => {
@@ -191,7 +182,6 @@ export default function App() {
 
   if (bookRoute) return <><BookPage /><AchievementLayer /></>;
   if (storyRoute) return <><StoryPage /><AchievementLayer /></>;
-  if (storeRoute) return <><StorePage /><AchievementLayer /></>;
   if (notFoundRoute) return <><Launch404 /><AchievementLayer /></>;
 
   return (
