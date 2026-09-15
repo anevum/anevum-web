@@ -2,7 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App";
 import { installRuntimeFixes } from "./runtimeFixes";
-import "./styles.css";
+import "./baseV2.css";
 import "./moderatedWiki.css";
 import "./systemShell.css";
 import "./publicV2.css";
