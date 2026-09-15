@@ -8,6 +8,7 @@ import "./systemShell.css";
 import "./publicV2.css";
 import "./brandArt.css";
 import "./latticeV2.css";
+import "./rhenlinkV2.css";
 import "./publicIsolation.css";
 
 installRuntimeFixes();
