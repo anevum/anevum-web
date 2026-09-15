@@ -9,6 +9,7 @@ import "./locked.css";
 import "./production.css";
 import "./canonVisuals.css";
 import "./wikiNative.css";
+import "./wikiMember.css";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
