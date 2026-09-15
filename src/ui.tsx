@@ -140,58 +140,99 @@ export function VisualArt({ visualKey, className = "", label }: { visualKey: Vis
   const id = useId().replace(/:/g, "");
   const isWorld = ["veyra", "ovara", "neral", "ione"].includes(visualKey);
   const isCity = ["merva", "serein", "cape", "continuance"].includes(visualKey);
-  const isGate = ["skygate", "road", "connected"].includes(visualKey);
+  const isGate = ["skygate", "road"].includes(visualKey);
+  const isConnection = visualKey === "connected";
   const isField = ["grainit", "iren", "event", "deep-three"].includes(visualKey);
+  const warm = visualKey === "ovara" || visualKey === "event";
+
+  const stars = Array.from({ length: 56 }, (_, index) => ({
+    x: 22 + ((index * 173) % 1154),
+    y: 18 + ((index * 97) % 470),
+    r: index % 11 === 0 ? 1.8 : index % 4 === 0 ? 1.1 : .65,
+    o: index % 5 === 0 ? .62 : .29,
+  }));
 
   return (
     <svg className={`visual-art ${className}`} data-visual={visualKey} viewBox="0 0 1200 760" role={label ? "img" : undefined} aria-label={label} aria-hidden={label ? undefined : true}>
       <defs>
-        <linearGradient id={`${id}-space`} x1="0" x2="1" y1="0" y2="1"><stop offset="0" stopColor="#020405" /><stop offset=".48" stopColor="#0c1317" /><stop offset="1" stopColor="#030506" /></linearGradient>
-        <radialGradient id={`${id}-planet`} cx="33%" cy="25%" r="78%"><stop offset="0" stopColor="#d6ddd9" /><stop offset=".16" stopColor="#76909a" /><stop offset=".42" stopColor="#24414b" /><stop offset=".72" stopColor="#0b1a20" /><stop offset="1" stopColor="#020405" /></radialGradient>
-        <radialGradient id={`${id}-warm`} cx="38%" cy="26%" r="80%"><stop offset="0" stopColor="#d9cfb2" /><stop offset=".22" stopColor="#846f50" /><stop offset=".54" stopColor="#352d25" /><stop offset="1" stopColor="#050505" /></radialGradient>
-        <linearGradient id={`${id}-link`} x1="0" x2="1"><stop offset="0" stopColor="#4da8ff" stopOpacity="0" /><stop offset=".5" stopColor="#4da8ff" stopOpacity=".9" /><stop offset="1" stopColor="#4da8ff" stopOpacity="0" /></linearGradient>
-        <pattern id={`${id}-grain`} width="37" height="37" patternUnits="userSpaceOnUse"><circle cx="3" cy="5" r=".9" fill="#f2efe8" fillOpacity=".16" /><circle cx="28" cy="22" r=".65" fill="#f2efe8" fillOpacity=".1" /></pattern>
-        <filter id={`${id}-blur`}><feGaussianBlur stdDeviation="22" /></filter>
+        <linearGradient id={`${id}-space`} x1="0" x2="1" y1="0" y2="1"><stop offset="0" stopColor="#010407" /><stop offset=".46" stopColor="#07131a" /><stop offset="1" stopColor="#020609" /></linearGradient>
+        <radialGradient id={`${id}-planet`} cx="31%" cy="23%" r="79%"><stop offset="0" stopColor="#e1ece9" /><stop offset=".12" stopColor="#9eb7bd" /><stop offset=".31" stopColor="#446c78" /><stop offset=".55" stopColor="#173442" /><stop offset=".77" stopColor="#08151c" /><stop offset="1" stopColor="#010305" /></radialGradient>
+        <radialGradient id={`${id}-warm`} cx="31%" cy="22%" r="80%"><stop offset="0" stopColor="#f2dec0" /><stop offset=".18" stopColor="#b8986c" /><stop offset=".43" stopColor="#5b4735" /><stop offset=".72" stopColor="#1c1715" /><stop offset="1" stopColor="#020304" /></radialGradient>
+        <radialGradient id={`${id}-moon`} cx="34%" cy="28%" r="76%"><stop offset="0" stopColor="#d5d7d3" /><stop offset=".34" stopColor="#777f80" /><stop offset=".72" stopColor="#232a2e" /><stop offset="1" stopColor="#050709" /></radialGradient>
+        <radialGradient id={`${id}-sun`} cx="50%" cy="50%" r="50%"><stop offset="0" stopColor="#fff6de" /><stop offset=".12" stopColor="#f3c98f" stopOpacity=".9" /><stop offset=".45" stopColor="#b57b45" stopOpacity=".22" /><stop offset="1" stopColor="#b57b45" stopOpacity="0" /></radialGradient>
+        <linearGradient id={`${id}-terrain`} x1="0" x2="0" y1="0" y2="1"><stop offset="0" stopColor="#17242b" /><stop offset=".42" stopColor="#0b1216" /><stop offset="1" stopColor="#020405" /></linearGradient>
+        <linearGradient id={`${id}-water`} x1="0" x2="1"><stop offset="0" stopColor="#07131a" /><stop offset=".47" stopColor="#17313c" /><stop offset=".73" stopColor="#243d43" /><stop offset="1" stopColor="#0a151a" /></linearGradient>
+        <linearGradient id={`${id}-link`} x1="0" x2="1"><stop offset="0" stopColor="#6fc0ff" stopOpacity="0" /><stop offset=".5" stopColor="#9bd4ff" stopOpacity=".76" /><stop offset="1" stopColor="#6fc0ff" stopOpacity="0" /></linearGradient>
+        <filter id={`${id}-glow`}><feGaussianBlur stdDeviation="14" /></filter>
+        <filter id={`${id}-soft`}><feGaussianBlur stdDeviation="4" /></filter>
+        <pattern id={`${id}-grain`} width="28" height="28" patternUnits="userSpaceOnUse"><circle cx="3" cy="5" r=".7" fill="#fff" fillOpacity=".05" /><circle cx="20" cy="17" r=".5" fill="#fff" fillOpacity=".035" /></pattern>
       </defs>
+
       <rect width="1200" height="760" fill={`url(#${id}-space)`} />
-      <rect width="1200" height="760" fill={`url(#${id}-grain)`} opacity=".72" />
-      <path d="M0 620 C235 545 405 575 620 535 C835 495 1018 430 1200 465 L1200 760 L0 760Z" fill="#05090b" />
-      <path d="M0 633 C260 590 438 616 650 588 C868 558 1010 518 1200 528" fill="none" stroke="#b79a5d" strokeOpacity=".12" />
+      {stars.map((star, index) => <circle key={index} cx={star.x} cy={star.y} r={star.r} fill="#edf6f7" fillOpacity={star.o} />)}
+      <rect width="1200" height="760" fill={`url(#${id}-grain)`} opacity=".8" />
 
       {isWorld ? <g>
-        <circle cx="800" cy="340" r={visualKey === "ione" ? 214 : 304} fill={visualKey === "ovara" ? `url(#${id}-warm)` : `url(#${id}-planet)`} />
-        <path d="M566 300 C650 245 732 250 800 290 C870 331 918 319 1004 270" fill="none" stroke="#e8eeec" strokeOpacity=".11" strokeWidth="22" strokeLinecap="round" />
-        <path d="M575 400 C680 365 770 430 858 392 C922 364 970 374 1015 398" fill="none" stroke="#4da8ff" strokeOpacity=".1" strokeWidth="10" strokeLinecap="round" />
-        <circle cx="1030" cy="118" r={visualKey === "ione" ? 18 : 34} fill="#c1c4c1" fillOpacity=".58" />
-        <ellipse cx="800" cy="340" rx="330" ry="112" fill="none" stroke="#f2efe8" strokeOpacity=".08" strokeWidth="2" transform="rotate(-13 800 340)" />
+        <circle cx="816" cy="328" r={visualKey === "ione" ? 218 : 315} fill={warm ? `url(#${id}-warm)` : `url(#${id}-planet)`} />
+        <circle cx="816" cy="328" r={visualKey === "ione" ? 220 : 318} fill="none" stroke="#a6dbf2" strokeOpacity=".11" strokeWidth="8" />
+        <path d="M574 243 C656 210 706 247 762 238 C829 227 867 179 945 200 C1001 216 1034 256 1070 279" fill="none" stroke="#f4f8f5" strokeOpacity=".14" strokeWidth="27" strokeLinecap="round" filter={`url(#${id}-soft)`} />
+        <path d="M566 344 C644 307 700 335 760 358 C825 384 900 361 967 329 C1010 308 1042 319 1081 338" fill="none" stroke="#eff7f6" strokeOpacity=".12" strokeWidth="18" strokeLinecap="round" filter={`url(#${id}-soft)`} />
+        <path d="M628 439 C698 406 766 421 827 447 C896 477 961 457 1034 414" fill="none" stroke="#c7e6ef" strokeOpacity=".09" strokeWidth="12" strokeLinecap="round" />
+        <circle cx="1048" cy="130" r={visualKey === "ione" ? 24 : 46} fill={`url(#${id}-moon)`} />
+      </g> : null}
+
+      {isConnection ? <g>
+        <circle cx="847" cy="310" r="228" fill={`url(#${id}-planet)`} opacity=".95" />
+        <circle cx="1037" cy="185" r="48" fill={`url(#${id}-moon)`} />
+        <g opacity=".6">
+          <ellipse cx="778" cy="326" rx="342" ry="162" fill="none" stroke="#87bcd3" strokeOpacity=".15" transform="rotate(-12 778 326)" />
+          <ellipse cx="778" cy="326" rx="420" ry="218" fill="none" stroke="#87bcd3" strokeOpacity=".09" transform="rotate(9 778 326)" />
+          <circle cx="455" cy="389" r="17" fill="#aac4ce" /><circle cx="642" cy="165" r="10" fill="#e4c697" /><circle cx="1080" cy="421" r="13" fill="#aac4ce" />
+          <path d="M455 389 C548 312 602 217 642 165 M642 165 C710 202 766 234 847 310 M847 310 C930 350 997 392 1080 421" fill="none" stroke="#78b9e5" strokeOpacity=".33" strokeWidth="2" />
+        </g>
+      </g> : null}
+
+      {isGate ? <g opacity=".9">
+        <circle cx="840" cy="322" r="249" fill="none" stroke="#60727a" strokeOpacity=".14" strokeWidth="72" />
+        <circle cx="840" cy="322" r="249" fill="none" stroke="#9fc1cf" strokeOpacity=".22" strokeWidth="3" />
+        <circle cx="840" cy="322" r="205" fill="#07131a" />
+        <circle cx="840" cy="322" r="163" fill={`url(#${id}-planet)`} opacity=".72" />
+        <path d="M588 322H1092" stroke={`url(#${id}-link)`} strokeWidth="2" opacity=".35" />
+        <g fill="#b7c7cd" fillOpacity=".2">{Array.from({ length: 20 }).map((_, i) => { const a = (i / 20) * Math.PI * 2; return <rect key={i} x={836 + Math.cos(a) * 249} y={318 + Math.sin(a) * 249} width="8" height="8" rx="1" transform={`rotate(${i * 18} ${840 + Math.cos(a) * 249} ${322 + Math.sin(a) * 249})`} />; })}</g>
       </g> : null}
 
       {isCity ? <g>
-        <path d="M95 636 H1120" stroke="#617078" strokeOpacity=".18" />
-        <path d="M124 630V495H208V630M225 630V392H304V630M326 630V470H410V630M430 630V320H518V630M538 630V438H614V630M636 630V245H724V630M744 630V356H830V630M850 630V430H932V630M954 630V285H1034V630M1056 630V482H1120" fill="none" stroke="#7e8f97" strokeOpacity=".42" strokeWidth="2" />
-        <path d="M60 664 C260 590 460 680 653 617 C820 563 1012 593 1200 520" fill="none" stroke="#4da8ff" strokeOpacity=".23" strokeWidth="12" />
-        <path d="M60 680 C320 650 505 720 710 667 C904 618 1030 646 1200 612" fill="none" stroke="#b79a5d" strokeOpacity=".09" strokeWidth="3" />
-        {visualKey === "continuance" ? <g><rect x="710" y="120" width="138" height="510" fill="#0f171a" stroke="#718189" strokeOpacity=".5" /><rect x="737" y="74" width="82" height="556" fill="#151f23" /><line x1="778" y1="74" x2="778" y2="18" stroke="#b79a5d" strokeOpacity=".38" /></g> : null}
-      </g> : null}
-
-      {isGate ? <g>
-        <circle cx="790" cy="360" r="255" fill="none" stroke="#9facb2" strokeOpacity=".18" strokeWidth="66" />
-        <circle cx="790" cy="360" r="255" fill="none" stroke="#4da8ff" strokeOpacity=".5" strokeWidth="2" strokeDasharray="8 15" />
-        <circle cx="790" cy="360" r="176" fill="#061017" stroke="#d6e0e4" strokeOpacity=".17" />
-        <ellipse cx="790" cy="360" rx="105" ry="176" fill="none" stroke="#4da8ff" strokeOpacity=".35" />
-        <path d="M520 360 H1060" stroke={`url(#${id}-link)`} strokeWidth="3" />
-        {Array.from({ length: 18 }).map((_, i) => { const a = (i / 18) * Math.PI * 2; return <circle key={i} cx={790 + Math.cos(a) * 255} cy={360 + Math.sin(a) * 255} r="5" fill="#d4dde0" fillOpacity=".42" />; })}
+        <circle cx="886" cy="210" r="170" fill={`url(#${id}-planet)`} opacity=".38" />
+        <path d="M0 550 C180 482 321 526 455 487 C638 434 752 489 913 454 C1021 430 1103 395 1200 382 L1200 760 L0 760Z" fill={`url(#${id}-terrain)`} />
+        <path d="M0 625 C192 588 302 615 447 590 C602 564 724 607 860 580 C1004 551 1081 527 1200 516 L1200 760 L0 760Z" fill="#030608" />
+        <path d="M48 624 C210 584 337 626 481 587 C617 551 744 587 881 552 C989 525 1087 526 1190 494" fill="none" stroke="#7fbbe2" strokeOpacity=".18" strokeWidth="5" />
+        <g fill="#111a1f" stroke="#75909b" strokeOpacity=".18">
+          <path d="M276 594l16-118 24-18 18 136z" /><path d="M355 602l20-184 31-12 13 192z" /><path d="M452 586l18-92 34-28 21 115z" /><path d="M554 574l25-212 36-22 24 226z" /><path d="M672 572l17-146 34-24 26 166z" /><path d="M775 558l22-105 30-20 19 119z" />
+        </g>
       </g> : null}
 
       {isField ? <g>
-        <circle cx="785" cy="365" r="280" fill="#4da8ff" fillOpacity=".04" filter={`url(#${id}-blur)`} />
-        {Array.from({ length: 15 }).map((_, i) => <path key={i} d={`M160 ${150 + i * 32} C390 ${56 + i * 25}, 650 ${290 + i * 11}, 1080 ${105 + i * 37}`} fill="none" stroke={i % 4 === 0 ? "#4da8ff" : "#c6cdd0"} strokeOpacity={i % 4 === 0 ? .3 : .1} strokeWidth={i % 4 === 0 ? 2 : 1} />)}
-        {visualKey === "event" ? <path d="M265 560 L430 420 L565 482 L690 250 L834 370 L1010 180" fill="none" stroke="#b79a5d" strokeOpacity=".56" strokeWidth="2" /> : null}
-        {visualKey === "deep-three" ? <g><circle cx="835" cy="430" r="122" fill="none" stroke="#f2efe8" strokeOpacity=".13" /><circle cx="835" cy="430" r="70" fill="none" stroke="#4da8ff" strokeOpacity=".25" /></g> : null}
+        <circle cx="810" cy="340" r="275" fill="#67b9eb" fillOpacity=".055" filter={`url(#${id}-glow)`} />
+        {Array.from({ length: 14 }).map((_, i) => <path key={i} d={`M110 ${145 + i * 35} C350 ${62 + i * 26}, 648 ${274 + i * 12}, 1125 ${104 + i * 39}`} fill="none" stroke={i % 4 === 0 ? "#7bc8ff" : "#b8c8cf"} strokeOpacity={i % 4 === 0 ? .25 : .075} strokeWidth={i % 4 === 0 ? 2 : 1} />)}
+        {visualKey === "event" ? <path d="M212 574 L385 448 L534 494 L681 275 L836 389 L1043 198" fill="none" stroke="#c6a46d" strokeOpacity=".5" strokeWidth="2" /> : null}
+        {visualKey === "deep-three" ? <g><circle cx="834" cy="427" r="125" fill="none" stroke="#e9eeee" strokeOpacity=".12" /><circle cx="834" cy="427" r="72" fill="none" stroke="#76c1f5" strokeOpacity=".24" /></g> : null}
       </g> : null}
 
-      {visualKey === "person" ? <g><circle cx="795" cy="245" r="116" fill="#1a2226" stroke="#7d9099" strokeOpacity=".28" /><path d="M540 690 C555 500 642 414 795 414 C945 414 1030 500 1048 690Z" fill="#10171a" stroke="#5e727b" strokeOpacity=".28" /><circle cx="795" cy="245" r="182" fill="none" stroke="#4da8ff" strokeOpacity=".08" /></g> : null}
-      <rect x="38" y="38" width="1124" height="684" fill="none" stroke="#f2efe8" strokeOpacity=".04" />
+      {visualKey === "person" ? <g>
+        <circle cx="812" cy="251" r="111" fill="#151d21" stroke="#80929a" strokeOpacity=".22" />
+        <path d="M554 695 C573 504 664 414 812 414 C960 414 1048 504 1067 695Z" fill="#0c1215" stroke="#657982" strokeOpacity=".23" />
+        <circle cx="812" cy="251" r="176" fill="none" stroke="#70bdf0" strokeOpacity=".075" />
+      </g> : null}
+
+      {!isCity ? <g>
+        <path d="M0 603 C150 545 274 590 390 536 C497 486 609 526 718 506 C831 485 940 429 1044 452 C1101 465 1153 451 1200 428 L1200 760 L0 760Z" fill={`url(#${id}-terrain)`} />
+        <path d="M0 655 C174 625 318 657 474 621 C626 586 734 620 884 587 C1016 558 1101 559 1200 534 L1200 760 L0 760Z" fill="#020405" />
+        <path d="M0 614 C146 579 270 613 405 570 C543 526 663 552 798 537 C940 521 1059 467 1200 470" fill="none" stroke="#c2a875" strokeOpacity=".095" strokeWidth="2" />
+        <ellipse cx="856" cy="612" rx="332" ry="44" fill={`url(#${id}-water)`} opacity=".38" />
+        <circle cx="1090" cy="484" r="120" fill={`url(#${id}-sun)`} opacity=".5" />
+      </g> : null}
+
+      <rect x="25" y="25" width="1150" height="710" fill="none" stroke="#e7efef" strokeOpacity=".035" />
     </svg>
   );
 }
