@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from "react";
-import { ArrowRight, Bookmark, Layers3, LogIn, LogOut, Orbit, Trophy } from "lucide-react";
+import { ArrowRight, Bookmark, Layers3, LogIn, LogOut, Trophy } from "lucide-react";
 import { BrandArt } from "./BrandArt";
 import { Button } from "./ui";
 import {
@@ -119,7 +119,8 @@ export function Rhenlink() {
         <div>
           <div className="rhen-brand-lockup"><RhenMark /><span><strong>RHENLINK</strong><small>YOUR PERSISTENT IDENTITY</small></span></div>
           <h1>One identity.<br />Many worlds.</h1>
-          <p>Your saves, discoveries, progress, and achievements travel with you across ANEVUM.</p>
+          <p>Keep your ANEVUM identity, progress, and achievements together as the universe expands.</p>
+          <div className="actions"><Button href="/" quiet>RETURN TO REPLY</Button></div>
         </div>
       </section>
 
@@ -138,21 +139,21 @@ export function Rhenlink() {
             </div>
 
             <div className="identity-modules">
-              <div><Bookmark size={16} /><span>SAVED</span><strong>{progress.savedRecordIds.length}</strong><small>public records connected to your identity</small></div>
+              <div><Bookmark size={16} /><span>SAVED</span><strong>{progress.savedRecordIds.length}</strong><small>items connected to your identity</small></div>
               <div><Layers3 size={16} /><span>LEVEL</span><strong>{String(memberLevel(progress)).padStart(2, "0")}</strong><small>{memberXP(progress)} accumulated XP</small></div>
-              <div><Trophy size={16} /><span>ACHIEVEMENTS</span><strong>{progress.achievements.length}/{ACHIEVEMENTS.length}</strong><small>earned through real exploration</small></div>
+              <div><Trophy size={16} /><span>ACHIEVEMENTS</span><strong>{progress.achievements.length}/{ACHIEVEMENTS.length}</strong><small>earned through exploration</small></div>
             </div>
 
             <div className="rhenlink-destination-grid">
-              <Button href="/lattice">ENTER LATTICE</Button>
-              <Button href="/wiki/saved" quiet>OPEN SAVED WIKI PAGES</Button>
+              <Button href="/#top">RETURN TO REPLY</Button>
+              <Button href="/#world" quiet>OPEN THE STORY</Button>
             </div>
 
             <ProfileProgressSummary progress={progress} />
 
             <div className="rhenlink-manifesto-card">
               <BrandArt variant="horizon" />
-              <div><span>A WIDER YOU</span><h3>Your identity travels with you.</h3><p>RHENLINK connects your public exploration without changing what becomes canon. Publication authority remains separate from member progress.</p><Button href="/lattice" quiet>EXPLORE ANEVUM</Button></div>
+              <div><span>YOUR PLACE IN ANEVUM</span><h3>Your identity travels with you.</h3><p>RHENLINK is the first persistent layer of ANEVUM. Your profile and progress can grow without turning the book launch into a dashboard.</p><Button href="/" quiet>RETURN TO REPLY</Button></div>
             </div>
           </div>
         ) : (
@@ -160,9 +161,9 @@ export function Rhenlink() {
             <div className="auth-intro">
               <span className="meta">ACCOUNT → RHENLINK → ANEVUM</span>
               <h2>Claim your place in the network.</h2>
-              <p>RHENLINK is ANEVUM’s persistent member identity. It connects saves, discoveries, XP, and achievements without exposing privileged credentials in the browser.</p>
+              <p>RHENLINK is ANEVUM’s persistent member identity. Create one profile for your progress and achievements as new parts of ANEVUM become available.</p>
               <div className="rhen-flow"><span>01</span><strong>CREATE</strong><i /><span>02</span><strong>CONFIRM</strong><i /><span>03</span><strong>EXPLORE</strong></div>
-              <div className={`backend-state ${memberBackend.configured ? "ready" : "blocked"}`}><i />{memberBackend.configured ? "MEMBER AUTH READY" : "MEMBER AUTH CONNECTION REQUIRED"}</div>
+              <div className={`backend-state ${memberBackend.configured ? "ready" : "blocked"}`}><i />{memberBackend.configured ? "RHENLINK READY" : "RHENLINK TEMPORARILY UNAVAILABLE"}</div>
             </div>
 
             <div className="auth-card production-auth-card">
@@ -183,7 +184,7 @@ export function Rhenlink() {
                 </form>
               )}
               {status ? <p className="auth-status" role="status">{status}</p> : null}
-              {!memberBackend.configured ? <p className="auth-config-note">The member interface is ready, but registration remains disabled until the existing Supabase project's public publishable key is restored to the production build.</p> : null}
+              {!memberBackend.configured ? <p className="auth-config-note">Account creation is temporarily unavailable. The rest of the REPLY launch site remains available.</p> : null}
             </div>
           </div>
         )}
