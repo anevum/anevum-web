@@ -8,6 +8,7 @@ export type MemberSession = {
   access_token: string;
   refresh_token?: string;
   expires_in?: number;
+  saved_at?: number;
   user: MemberUser;
 };
 
@@ -16,6 +17,8 @@ const defaultPublishableKey = "sb_publishable_XfkgeXau2-6XOPzoXF-Nnw_FSnx0Sae";
 const projectUrl = (import.meta.env.VITE_SUPABASE_URL || defaultProjectUrl).replace(/\/$/, "");
 const publicKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || import.meta.env.VITE_SUPABASE_ANON_KEY || defaultPublishableKey;
 const storageKey = "anevum.rhenlink.session.v1";
+const sharedCookieKey = "anevum_rhenlink_session_v1";
+let metadataWriteQueue: Promise<unknown> = Promise.resolve();
 
 export const memberBackend = {
   projectUrl,
@@ -43,19 +46,114 @@ async function request<T>(path: string, init: RequestInit): Promise<T> {
   return payload as T;
 }
 
-export function loadSession(): MemberSession | null {
+function sharedCookieAttributes(maxAge: number) {
+  const host = window.location.hostname.toLowerCase();
+  const domain = host === "anevum.com" || host.endsWith(".anevum.com") ? "; Domain=.anevum.com" : "";
+  const secure = window.location.protocol === "https:" ? "; Secure" : "";
+  return `Path=/; Max-Age=${maxAge}; SameSite=Lax${domain}${secure}`;
+}
+
+function identityMetadata(metadata: Record<string, unknown> | undefined) {
+  return {
+    rhenlink_handle: metadata?.rhenlink_handle,
+    display_name: metadata?.display_name,
+    product: metadata?.product,
+  };
+}
+
+function writeSharedCookie(session: MemberSession | null) {
+  if (typeof document === "undefined") return;
+  if (!session) {
+    document.cookie = `${sharedCookieKey}=; ${sharedCookieAttributes(0)}`;
+    return;
+  }
+
+  const shared: MemberSession = {
+    access_token: session.access_token,
+    refresh_token: session.refresh_token,
+    expires_in: session.expires_in,
+    saved_at: session.saved_at || Date.now(),
+    user: {
+      id: session.user.id,
+      email: session.user.email,
+      user_metadata: identityMetadata(session.user.user_metadata),
+    },
+  };
+  document.cookie = `${sharedCookieKey}=${encodeURIComponent(JSON.stringify(shared))}; ${sharedCookieAttributes(60 * 60 * 24 * 30)}`;
+}
+
+function readSharedCookie(): MemberSession | null {
+  if (typeof document === "undefined") return null;
+  const entry = document.cookie.split("; ").find((part) => part.startsWith(`${sharedCookieKey}=`));
+  if (!entry) return null;
   try {
-    const value = localStorage.getItem(storageKey);
-    return value ? JSON.parse(value) as MemberSession : null;
+    return JSON.parse(decodeURIComponent(entry.slice(sharedCookieKey.length + 1))) as MemberSession;
   } catch {
     return null;
   }
 }
 
-function saveSession(session: MemberSession | null) {
-  if (session) localStorage.setItem(storageKey, JSON.stringify(session));
-  else localStorage.removeItem(storageKey);
+export function loadSession(): MemberSession | null {
+  try {
+    const value = localStorage.getItem(storageKey);
+    if (value) return JSON.parse(value) as MemberSession;
+  } catch {
+    // Fall through to the shared ANEVUM subdomain cookie.
+  }
+  return readSharedCookie();
+}
+
+export function saveSession(session: MemberSession | null) {
+  if (session) {
+    const next = { ...session, saved_at: Date.now() };
+    localStorage.setItem(storageKey, JSON.stringify(next));
+    writeSharedCookie(next);
+  } else {
+    localStorage.removeItem(storageKey);
+    writeSharedCookie(null);
+  }
   window.dispatchEvent(new Event("anevum-member-session"));
+}
+
+export async function syncCurrentUser(session = loadSession()) {
+  if (!session) return null;
+  try {
+    const user = await request<MemberUser>("/auth/v1/user", {
+      method: "GET",
+      headers: headers(session.access_token),
+    });
+    const next = { ...session, user };
+    saveSession(next);
+    return next;
+  } catch (error) {
+    if (!session.refresh_token) throw error;
+    const refreshed = await refreshSession(session);
+    const user = await request<MemberUser>("/auth/v1/user", {
+      method: "GET",
+      headers: headers(refreshed.access_token),
+    });
+    const next = { ...refreshed, user };
+    saveSession(next);
+    return next;
+  }
+}
+
+export function updateMemberMetadata(patch: Record<string, unknown>) {
+  const work = metadataWriteQueue.then(async () => {
+    const session = loadSession();
+    if (!session) throw new Error("Sign in with RHENLINK to update member data.");
+    const metadata = { ...(session.user.user_metadata || {}), ...patch };
+    const user = await request<MemberUser>("/auth/v1/user", {
+      method: "PUT",
+      headers: headers(session.access_token),
+      body: JSON.stringify({ data: metadata }),
+    });
+    const next = { ...session, user };
+    saveSession(next);
+    return next;
+  });
+  metadataWriteQueue = work.catch(() => undefined);
+  return work;
 }
 
 export async function signUp(input: { email: string; password: string; handle: string; displayName: string }) {
