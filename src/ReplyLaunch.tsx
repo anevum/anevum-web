@@ -1,4 +1,5 @@
 import { ArrowDown, ArrowRight, BookOpen, ExternalLink } from "lucide-react";
+import { LaunchTerminal } from "./LaunchTerminal";
 
 type Edition = {
   label: string;
@@ -85,9 +86,12 @@ export default function ReplyLaunch() {
           <a href="#book">THE BOOK</a>
           <a href="#world">THE STORY</a>
           <a href="#author">AUTHOR</a>
+          <a href="/rhenlink">RHENLINK</a>
         </nav>
         {firstPurchase ? <ExternalAction href={firstPurchase}>BUY REPLY</ExternalAction> : <a className="reply-launch-header-link" href="#book">REPLY</a>}
       </header>
+
+      <LaunchTerminal />
 
       <main id="top">
         <section className="reply-launch-hero" aria-labelledby="reply-title">
@@ -109,7 +113,7 @@ export default function ReplyLaunch() {
         <section className="reply-launch-statement" id="book">
           <p>ONE MEASUREMENT.</p>
           <h2>A larger universe begins with something small enough to ignore.</h2>
-          <p>For Nali, her sister Kerin, and the people on the other side, contact opens possibilities that reach far beyond travel.</p>
+          <p>Contact opens possibilities that reach far beyond travel while leaving each person with a life, a family, and choices of their own.</p>
         </section>
 
         <section className="reply-launch-story" id="world">
@@ -131,7 +135,7 @@ export default function ReplyLaunch() {
             <p className="reply-launch-kicker">THE BOOK</p>
             <h2>Built to be read. Made to be kept.</h2>
             <p>REPLY is the first Transcosmic novel: a human-scale science-fiction story about contact, work, family, intelligence, possibility and belonging.</p>
-            {firstPurchase ? <ExternalAction href={firstPurchase}>CHOOSE AN EDITION</ExternalAction> : null}
+            {firstPurchase ? <ExternalAction href={firstPurchase}>CHOOSE AN EDITION</ExternalAction> : <p className="reply-launch-availability">AVAILABILITY DETAILS WILL APPEAR HERE WHEN ANNOUNCED.</p>}
           </div>
           <BookObject />
         </section>
@@ -167,7 +171,7 @@ export default function ReplyLaunch() {
       <footer className="reply-launch-footer">
         <a href="#top"><strong>ANEVUM</strong><small>A UNIVERSE IN STORY.</small></a>
         <p>REPLY / THE TRANSCOSMIC / BOOK ONE</p>
-        <span>DEVON AKINS</span>
+        <span><a href="/rhenlink">RHENLINK</a> · DEVON AKINS</span>
       </footer>
     </div>
   );
