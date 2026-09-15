@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /command
+Disallow: /auth-bridge
+
+Sitemap: https://anevum.com/sitemap.xml
