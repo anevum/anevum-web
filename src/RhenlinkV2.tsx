@@ -1,6 +1,7 @@
-import { useEffect, useState, type FormEvent } from "react";
-import { ArrowRight, Bookmark, Layers3, LogIn, LogOut, Trophy } from "lucide-react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { ArrowRight, Award, Bookmark, Edit3, Layers3, LockKeyhole, LogIn, LogOut, Save, Trophy, X } from "lucide-react";
 import { BrandArt } from "./BrandArt";
+import { LaunchTerminal } from "./LaunchTerminal";
 import { Button } from "./ui";
 import {
   displayIdentity,
@@ -9,10 +10,11 @@ import {
   signIn,
   signOut,
   signUp,
+  updateMemberMetadata,
   type MemberSession,
 } from "./memberClient";
-import { ACHIEVEMENTS, loadMemberProgress, memberLevel, memberXP, onMemberProgressChange, type MemberProgress } from "./memberState";
-import { ProfileProgressSummary } from "./MemberChrome";
+import { ACHIEVEMENTS, loadMemberProgress, onMemberProgressChange, type MemberProgress } from "./memberState";
+import { networkLevelDetails } from "./networkProgress";
 
 function blankProgress(): MemberProgress {
   return { version: 1, savedRecordIds: [], visitedRoutes: [], achievements: [], updatedAt: new Date(0).toISOString() };
@@ -52,12 +54,25 @@ function RhenMark() {
   );
 }
 
+function profileCopy(session: MemberSession | null) {
+  const metadata = session?.user.user_metadata || {};
+  return {
+    title: String(metadata.rhenlink_title || ""),
+    statusLine: String(metadata.rhenlink_status || ""),
+    bio: String(metadata.rhenlink_bio || ""),
+  };
+}
+
 export function Rhenlink() {
   const [mode, setMode] = useState<"create" | "signin">("create");
   const { session, setSession, progress } = useRhenlinkState();
   const [status, setStatus] = useState("");
   const [busy, setBusy] = useState(false);
+  const [editing, setEditing] = useState(false);
   const identity = displayIdentity(session);
+  const profile = profileCopy(session);
+  const level = networkLevelDetails(progress);
+  const unlocked = useMemo(() => new Map(progress.achievements.map((achievement) => [achievement.id, achievement])), [progress.achievements]);
 
   async function handleCreate(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -104,22 +119,54 @@ export function Rhenlink() {
     }
   }
 
+  async function handleProfileSave(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!session) return;
+    setBusy(true);
+    setStatus("");
+    const form = new FormData(event.currentTarget);
+    const handle = String(form.get("handle") || "").trim().toLowerCase();
+    if (!/^[a-z0-9][a-z0-9_]{2,20}$/.test(handle)) {
+      setStatus("RHENLINK handles use 3–21 lowercase letters, numbers, or underscores.");
+      setBusy(false);
+      return;
+    }
+    try {
+      const next = await updateMemberMetadata({
+        rhenlink_handle: handle,
+        display_name: String(form.get("displayName") || "").trim(),
+        rhenlink_title: String(form.get("title") || "").trim().slice(0, 60),
+        rhenlink_status: String(form.get("statusLine") || "").trim().slice(0, 100),
+        rhenlink_bio: String(form.get("bio") || "").trim().slice(0, 320),
+      });
+      setSession(next);
+      setEditing(false);
+      setStatus("Profile updated across RHENLINK.");
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : "Could not update RHENLINK profile.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function handleSignOut() {
     setBusy(true);
     await signOut();
     setSession(null);
+    setEditing(false);
     setStatus("Signed out.");
     setBusy(false);
   }
 
   return (
     <main className="rhenlink-page production-rhenlink rhenlink-v2">
+      <LaunchTerminal />
       <section className="rhenlink-hero production-rhenlink-hero">
         <BrandArt variant="identity" />
         <div>
           <div className="rhen-brand-lockup"><RhenMark /><span><strong>RHENLINK</strong><small>YOUR PERSISTENT IDENTITY</small></span></div>
-          <h1>One identity.<br />Many worlds.</h1>
-          <p>Keep your ANEVUM identity, progress, and achievements together as the universe expands.</p>
+          <h1>{session ? "Your place in ANEVUM." : "One identity.\nMany worlds."}</h1>
+          <p>{session ? "Your profile, Network Level, XP, achievements, and saved progress travel together with your RHENLINK." : "Create one persistent ANEVUM identity for your progress and achievements as the universe expands."}</p>
           <div className="actions"><Button href="/" quiet>RETURN TO REPLY</Button></div>
         </div>
       </section>
@@ -128,32 +175,86 @@ export function Rhenlink() {
         {session ? (
           <div className="identity-dashboard production-identity-dashboard rhenlink-profile-card">
             <div className="rhenlink-profile-head">
-              <div className="rhenlink-orb"><BrandArt variant="identity" /></div>
+              <div className="rhenlink-level-artifact" aria-label={`Network Level ${level.level}, rank ${level.rankMark}`}>
+                <BrandArt variant="identity" />
+                <i className="artifact-ring ring-a" /><i className="artifact-ring ring-b" />
+                <span className="artifact-rank">{level.rankMark}</span>
+                <small>LEVEL {String(level.level).padStart(2, "0")}</small>
+              </div>
               <div className="rhenlink-profile-copy">
                 <span className="meta">RHENLINK / RESOLVED</span>
                 <h2>{identity.displayName || "Member"}</h2>
                 <p className="handle">@{identity.handle || "member"}</p>
+                {profile.title ? <p className="rhenlink-title">{profile.title}</p> : null}
+                {profile.statusLine ? <p className="rhenlink-status-line">“{profile.statusLine}”</p> : null}
+                {profile.bio ? <p className="rhenlink-bio">{profile.bio}</p> : <p className="rhenlink-bio empty">Add a short profile note to make this identity yours.</p>}
                 <p className="identity-email">{session.user.email}</p>
               </div>
-              <button type="button" className="button quiet native rhenlink-signout" onClick={handleSignOut} disabled={busy}><LogOut size={14} /> SIGN OUT</button>
+              <div className="rhenlink-profile-actions">
+                <button type="button" className="button quiet native" onClick={() => setEditing((value) => !value)}><Edit3 size={14} /> {editing ? "CLOSE" : "EDIT PROFILE"}</button>
+                <button type="button" className="button quiet native" onClick={handleSignOut} disabled={busy}><LogOut size={14} /> SIGN OUT</button>
+              </div>
             </div>
 
-            <div className="identity-modules">
+            {editing ? (
+              <form className="rhenlink-profile-editor" onSubmit={handleProfileSave}>
+                <header><div><span className="meta">IDENTITY PROFILE</span><h3>Edit RHENLINK</h3></div><button type="button" onClick={() => setEditing(false)} aria-label="Close profile editor"><X size={16} /></button></header>
+                <div className="profile-editor-grid">
+                  <label>DISPLAY NAME<input name="displayName" defaultValue={identity.displayName} maxLength={80} required /></label>
+                  <label>HANDLE<div className="handle-input"><span>@</span><input name="handle" defaultValue={identity.handle} autoCapitalize="none" autoCorrect="off" required /></div></label>
+                  <label>TITLE<input name="title" defaultValue={profile.title} maxLength={60} placeholder="Reader, founder, explorer…" /></label>
+                  <label>STATUS LINE<input name="statusLine" defaultValue={profile.statusLine} maxLength={100} placeholder="A line that follows your identity." /></label>
+                  <label className="editor-bio">BIO<textarea name="bio" defaultValue={profile.bio} maxLength={320} rows={4} placeholder="A short public-facing note about you." /></label>
+                </div>
+                <div className="profile-editor-actions"><button className="auth-submit" type="submit" disabled={busy}><Save size={14} /> {busy ? "SAVING..." : "SAVE PROFILE"}</button></div>
+              </form>
+            ) : null}
+
+            <div className="identity-modules rhenlink-stat-grid">
               <div><Bookmark size={16} /><span>SAVED</span><strong>{progress.savedRecordIds.length}</strong><small>items connected to your identity</small></div>
-              <div><Layers3 size={16} /><span>LEVEL</span><strong>{String(memberLevel(progress)).padStart(2, "0")}</strong><small>{memberXP(progress)} accumulated XP</small></div>
-              <div><Trophy size={16} /><span>ACHIEVEMENTS</span><strong>{progress.achievements.length}/{ACHIEVEMENTS.length}</strong><small>earned through exploration</small></div>
+              <div><Layers3 size={16} /><span>NETWORK LEVEL</span><strong>{String(level.level).padStart(2, "0")}</strong><small>{level.rankMark} · participation rank</small></div>
+              <div><Trophy size={16} /><span>ACHIEVEMENTS</span><strong>{progress.achievements.length}/{ACHIEVEMENTS.length}</strong><small>earned through real activity</small></div>
+              <div><Award size={16} /><span>XP</span><strong>{level.xp}</strong><small>{level.remaining} XP to Level {Math.min(100, level.level + 1)}</small></div>
             </div>
+
+            <section className="rhenlink-progression-showcase" aria-labelledby="network-level-title">
+              <div className="network-level-copy">
+                <span className="meta">NETWORK LEVEL / LONG-TERM PARTICIPATION</span>
+                <h3 id="network-level-title">Level {String(level.level).padStart(2, "0")} <em>{level.rankMark}</em></h3>
+                <p>Level reflects participation across ANEVUM. It does not represent authority, status, popularity, skill, or purchase value.</p>
+                <div className="network-xp-line"><span>{level.xp} XP</span><span>{level.nextThreshold} XP / NEXT LEVEL</span></div>
+                <div className="network-xp-track" role="progressbar" aria-label="XP progress to next level" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(level.percent)}><i style={{ width: `${level.percent}%` }} /></div>
+                {level.nextArtifact ? <div className="network-next-artifact"><LockKeyhole size={14} /><span><small>NEXT ACHIEVEMENT</small><strong>{level.nextArtifact.title}</strong><em>+{level.nextArtifact.xp} XP</em></span></div> : null}
+              </div>
+              <div className="network-level-object" aria-hidden="true"><BrandArt variant="identity" /><i /><b>{level.rankMark}</b><small>{String(level.level).padStart(2, "0")}</small></div>
+            </section>
+
+            <section className="rhenlink-achievement-section" aria-labelledby="achievement-title">
+              <header><div><span className="meta">ACHIEVEMENT RECORD</span><h3 id="achievement-title">Milestones with a memory.</h3></div><small>{progress.achievements.length} EARNED</small></header>
+              <div className="rhenlink-achievement-grid">
+                {ACHIEVEMENTS.map((achievement) => {
+                  const earned = unlocked.get(achievement.id);
+                  return (
+                    <article key={achievement.id} className={earned ? "earned" : "locked"}>
+                      <div className="achievement-artifact-icon">{earned ? <Award size={20} /> : <LockKeyhole size={18} />}</div>
+                      <span>{achievement.tier}</span>
+                      <strong>{achievement.title}</strong>
+                      <p>{achievement.description}</p>
+                      <footer><b>+{achievement.xp} XP</b><small>{earned ? new Date(earned.unlockedAt).toLocaleDateString() : "LOCKED"}</small></footer>
+                    </article>
+                  );
+                })}
+              </div>
+            </section>
 
             <div className="rhenlink-destination-grid">
               <Button href="/the-book">OPEN THE BOOK</Button>
               <Button href="/the-story" quiet>OPEN THE STORY</Button>
             </div>
 
-            <ProfileProgressSummary progress={progress} />
-
             <div className="rhenlink-manifesto-card">
               <BrandArt variant="horizon" />
-              <div><span>YOUR PLACE IN ANEVUM</span><h3>Your identity travels with you.</h3><p>RHENLINK is the first persistent layer of ANEVUM. Your profile and progress can grow without turning the book launch into a dashboard.</p><Button href="/store" quiet>OPEN THE STORE</Button></div>
+              <div><span>YOUR PLACE IN ANEVUM</span><h3>Your identity travels with you.</h3><p>RHENLINK keeps one member identity while the public universe grows around the books.</p></div>
             </div>
           </div>
         ) : (
@@ -162,7 +263,7 @@ export function Rhenlink() {
               <span className="meta">ACCOUNT → RHENLINK → ANEVUM</span>
               <h2>Claim your place in the network.</h2>
               <p>RHENLINK is ANEVUM’s persistent member identity. Create one profile for your progress and achievements as new parts of ANEVUM become available.</p>
-              <div className="rhen-flow"><span>01</span><strong>CREATE</strong><i /><span>02</span><strong>CONFIRM</strong><i /><span>03</span><strong>EXPLORE</strong></div>
+              <div className="rhen-flow"><span>01</span><strong>CREATE</strong><i /><span>02</span><strong>CONFIRM</strong><i /><span>03</span><strong>RETURN</strong></div>
               <div className={`backend-state ${memberBackend.configured ? "ready" : "blocked"}`}><i />{memberBackend.configured ? "RHENLINK READY" : "RHENLINK TEMPORARILY UNAVAILABLE"}</div>
             </div>
 
