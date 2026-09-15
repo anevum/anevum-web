@@ -12,12 +12,19 @@ export type MemberSession = {
   user: MemberUser;
 };
 
+export type SharedIdentity = {
+  userId: string;
+  email?: string;
+  handle: string;
+  displayName: string;
+};
+
 const defaultProjectUrl = "https://mfntzxheldzdvlokyntk.supabase.co";
 const defaultPublishableKey = "sb_publishable_XfkgeXau2-6XOPzoXF-Nnw_FSnx0Sae";
 const projectUrl = (import.meta.env.VITE_SUPABASE_URL || defaultProjectUrl).replace(/\/$/, "");
 const publicKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || import.meta.env.VITE_SUPABASE_ANON_KEY || defaultPublishableKey;
 const storageKey = "anevum.rhenlink.session.v1";
-const sharedCookieKey = "anevum_rhenlink_session_v1";
+const sharedIdentityCookieKey = "anevum_rhenlink_identity_v1";
 let metadataWriteQueue: Promise<unknown> = Promise.resolve();
 
 export const memberBackend = {
@@ -53,41 +60,28 @@ function sharedCookieAttributes(maxAge: number) {
   return `Path=/; Max-Age=${maxAge}; SameSite=Lax${domain}${secure}`;
 }
 
-function identityMetadata(metadata: Record<string, unknown> | undefined) {
-  return {
-    rhenlink_handle: metadata?.rhenlink_handle,
-    display_name: metadata?.display_name,
-    product: metadata?.product,
-  };
-}
-
-function writeSharedCookie(session: MemberSession | null) {
+function writeSharedIdentityCookie(session: MemberSession | null) {
   if (typeof document === "undefined") return;
   if (!session) {
-    document.cookie = `${sharedCookieKey}=; ${sharedCookieAttributes(0)}`;
+    document.cookie = `${sharedIdentityCookieKey}=; ${sharedCookieAttributes(0)}`;
     return;
   }
-
-  const shared: MemberSession = {
-    access_token: session.access_token,
-    refresh_token: session.refresh_token,
-    expires_in: session.expires_in,
-    saved_at: session.saved_at || Date.now(),
-    user: {
-      id: session.user.id,
-      email: session.user.email,
-      user_metadata: identityMetadata(session.user.user_metadata),
-    },
+  const identity = displayIdentity(session);
+  const shared: SharedIdentity = {
+    userId: session.user.id,
+    email: session.user.email,
+    handle: identity.handle,
+    displayName: identity.displayName,
   };
-  document.cookie = `${sharedCookieKey}=${encodeURIComponent(JSON.stringify(shared))}; ${sharedCookieAttributes(60 * 60 * 24 * 30)}`;
+  document.cookie = `${sharedIdentityCookieKey}=${encodeURIComponent(JSON.stringify(shared))}; ${sharedCookieAttributes(60 * 60 * 24 * 30)}`;
 }
 
-function readSharedCookie(): MemberSession | null {
+export function loadSharedIdentity(): SharedIdentity | null {
   if (typeof document === "undefined") return null;
-  const entry = document.cookie.split("; ").find((part) => part.startsWith(`${sharedCookieKey}=`));
+  const entry = document.cookie.split("; ").find((part) => part.startsWith(`${sharedIdentityCookieKey}=`));
   if (!entry) return null;
   try {
-    return JSON.parse(decodeURIComponent(entry.slice(sharedCookieKey.length + 1))) as MemberSession;
+    return JSON.parse(decodeURIComponent(entry.slice(sharedIdentityCookieKey.length + 1))) as SharedIdentity;
   } catch {
     return null;
   }
@@ -96,21 +90,20 @@ function readSharedCookie(): MemberSession | null {
 export function loadSession(): MemberSession | null {
   try {
     const value = localStorage.getItem(storageKey);
-    if (value) return JSON.parse(value) as MemberSession;
+    return value ? JSON.parse(value) as MemberSession : null;
   } catch {
-    // Fall through to the shared ANEVUM subdomain cookie.
+    return null;
   }
-  return readSharedCookie();
 }
 
 export function saveSession(session: MemberSession | null) {
   if (session) {
     const next = { ...session, saved_at: Date.now() };
     localStorage.setItem(storageKey, JSON.stringify(next));
-    writeSharedCookie(next);
+    writeSharedIdentityCookie(next);
   } else {
     localStorage.removeItem(storageKey);
-    writeSharedCookie(null);
+    writeSharedIdentityCookie(null);
   }
   window.dispatchEvent(new Event("anevum-member-session"));
 }
