@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { Eye, Search, Sparkles } from "lucide-react";
 import { featuredPublicObjects, getPublicObjectBySlug, searchPublicObjects } from "./publicObjects";
 import { Button, Link, RecordCard, SyncStamp, VisualArt } from "./ui";
+import { HomePortalRail } from "./ExperienceChrome";
 
 export function FrontDoor() {
   const lead = getPublicObjectBySlug("merva")!;
@@ -17,6 +18,7 @@ export function FrontDoor() {
           <p>Books at the center. Knowledge, discovery and belonging expanding outward from what is actually released.</p>
           <div className="actions"><Button href="/stories/reply">DISCOVER REPLY</Button><Button href="/wiki" quiet>ENTER THE UNIVERSE</Button></div>
         </div>
+        <HomePortalRail />
         <div className="hero-caption"><span>THE TRANSCOSMIC</span><b>BOOKS · KNOWLEDGE · DISCOVERY · BELONGING</b></div>
       </section>
 
