@@ -83,12 +83,13 @@ export default function ReplyLaunch() {
           <small>A UNIVERSE IN STORY.</small>
         </a>
         <nav aria-label="REPLY launch navigation">
-          <a href="#book">THE BOOK</a>
-          <a href="#world">THE STORY</a>
+          <a href="/the-book">THE BOOK</a>
+          <a href="/the-story">THE STORY</a>
+          <a href="/store">STORE</a>
           <a href="#author">AUTHOR</a>
           <a href="/rhenlink">RHENLINK</a>
         </nav>
-        {firstPurchase ? <ExternalAction href={firstPurchase}>BUY REPLY</ExternalAction> : <a className="reply-launch-header-link" href="#book">REPLY</a>}
+        {firstPurchase ? <ExternalAction href={firstPurchase}>BUY REPLY</ExternalAction> : <a className="reply-launch-header-link" href="/the-book">REPLY</a>}
       </header>
 
       <LaunchTerminal />
@@ -102,18 +103,20 @@ export default function ReplyLaunch() {
             <p className="reply-launch-authorline">A NOVEL BY DEVON AKINS</p>
             <p className="reply-launch-deck">On Ovara, a worker refuses to dismiss a measurement she cannot explain. The answer leads to a civilization already living across worlds.</p>
             <div className="reply-launch-actions">
-              {firstPurchase ? <ExternalAction href={firstPurchase}>BUY REPLY</ExternalAction> : <ExternalAction href="#book">DISCOVER REPLY</ExternalAction>}
+              {firstPurchase ? <ExternalAction href={firstPurchase}>BUY REPLY</ExternalAction> : <ExternalAction href="/the-book">DISCOVER REPLY</ExternalAction>}
+              <ExternalAction href="/the-story" quiet>ENTER THE STORY</ExternalAction>
               {sampleUrl ? <ExternalAction href={sampleUrl} quiet><BookOpen size={15} strokeWidth={1.5} /> READ AN EXCERPT</ExternalAction> : null}
             </div>
           </div>
           <BookObject />
-          <a className="reply-launch-scroll" href="#book" aria-label="Continue to book details"><span>ENTER THE STORY</span><ArrowDown size={15} /></a>
+          <a className="reply-launch-scroll" href="#book" aria-label="Continue to book details"><span>CONTINUE</span><ArrowDown size={15} /></a>
         </section>
 
         <section className="reply-launch-statement" id="book">
           <p>ONE MEASUREMENT.</p>
           <h2>A larger universe begins with something small enough to ignore.</h2>
           <p>Contact opens possibilities that reach far beyond travel while leaving each person with a life, a family, and choices of their own.</p>
+          <div className="reply-launch-actions"><ExternalAction href="/the-book">OPEN THE BOOK</ExternalAction></div>
         </section>
 
         <section className="reply-launch-story" id="world">
@@ -127,6 +130,7 @@ export default function ReplyLaunch() {
               <article><span>02</span><strong>THE ANSWER</strong><p>What follows is not empty distance, but people already living beyond a single world.</p></article>
               <article><span>03</span><strong>THE CHOICE</strong><p>Expanded possibility does not remove the intimate question of how to live.</p></article>
             </div>
+            <div className="reply-launch-actions"><ExternalAction href="/the-story" quiet>OPEN THE STORY PAGE</ExternalAction></div>
           </div>
         </section>
 
@@ -136,6 +140,7 @@ export default function ReplyLaunch() {
             <h2>Built to be read. Made to be kept.</h2>
             <p>REPLY is the first Transcosmic novel: a human-scale science-fiction story about contact, work, family, intelligence, possibility and belonging.</p>
             {firstPurchase ? <ExternalAction href={firstPurchase}>CHOOSE AN EDITION</ExternalAction> : <p className="reply-launch-availability">AVAILABILITY DETAILS WILL APPEAR HERE WHEN ANNOUNCED.</p>}
+            <div className="reply-launch-actions"><ExternalAction href="/store" quiet>OPEN THE STORE</ExternalAction></div>
           </div>
           <BookObject />
         </section>
@@ -171,7 +176,7 @@ export default function ReplyLaunch() {
       <footer className="reply-launch-footer">
         <a href="#top"><strong>ANEVUM</strong><small>A UNIVERSE IN STORY.</small></a>
         <p>REPLY / THE TRANSCOSMIC / BOOK ONE</p>
-        <span><a href="/rhenlink">RHENLINK</a> · DEVON AKINS</span>
+        <span><a href="/store">STORE</a> · <a href="/rhenlink">RHENLINK</a> · DEVON AKINS</span>
       </footer>
     </div>
   );
