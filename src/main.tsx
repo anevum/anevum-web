@@ -14,6 +14,7 @@ import "./wikiMember.css";
 import "./runtimeFixes.css";
 import "./experience.css";
 import "./moderatedWiki.css";
+import "./systemShell.css";
 
 installRuntimeFixes();
 
