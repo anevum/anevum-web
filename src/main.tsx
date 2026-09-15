@@ -3,22 +3,9 @@ import ReactDOM from "react-dom/client";
 import App from "./App";
 import { installRuntimeFixes } from "./runtimeFixes";
 import "./styles.css";
-import "./frontdoor.css";
-import "./records.css";
-import "./reply.css";
-import "./locked.css";
-import "./production.css";
-import "./canonVisuals.css";
-import "./wikiNative.css";
-import "./wikiMember.css";
-import "./runtimeFixes.css";
-import "./experience.css";
 import "./moderatedWiki.css";
 import "./systemShell.css";
-import "./mobileCompact.css";
-import "./editorialShell.css";
-import "./referenceConvergence.css";
-import "./surfaceConvergence.css";
+import "./publicV2.css";
 
 installRuntimeFixes();
 
