@@ -139,8 +139,8 @@ function titleFor(pathname: string, hostname: string, surface: SystemSurface) {
 }
 
 function canonicalFor(pathname: string, hostname: string, surface: SystemSurface) {
-  if (surface === "command") return `https://command.anevum.com${pathname === "/command" ? "/" : pathname}`;
-  if (surface === "lattice" && (hostname === LATTICE_HOST || pathname === "/lattice")) return "https://lattice.anevum.com/";
+  if (surface === "command") return "https://anevum.com/command";
+  if (surface === "lattice") return "https://anevum.com/lattice";
   if (surface === "rhenlink") return "https://anevum.com/rhenlink";
   if (surface === "wiki") {
     const wikiHost = hostname === WIKI_HOST;
