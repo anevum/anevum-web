@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Grid3X3, Link2, Orbit } from "lucide-react";
-import { Button, VisualArt } from "./ui";
+import { Button } from "./ui";
+import { BrandArt } from "./BrandArt";
 import { displayIdentity, loadSession, type MemberSession } from "./memberClient";
 import { loadMemberProgress, memberLevel, memberXP, onMemberProgressChange, type MemberProgress } from "./memberState";
 import { loadPublishedWikiPages, WikiBackendUnavailable, type WikiPage } from "./wikiClient";
@@ -81,7 +82,7 @@ export function Lattice() {
   return (
     <main className="lattice-page production-lattice lattice-v2">
       <section className="lattice-intro production-lattice-intro">
-        <VisualArt visualKey="connected" />
+        <BrandArt variant="relations" />
         <div>
           <p className="eyebrow">LATTICE.ANEVUM</p>
           <h1>The universe as a place.</h1>
@@ -136,7 +137,7 @@ export function Lattice() {
         <aside className="graph-inspector production-inspector">
           {selected ? (
             <>
-              <VisualArt visualKey="connected" />
+              <BrandArt variant="relations" />
               <span className="meta">FOCUS / {categoryLabel(selected)}</span>
               <h2>{selected.title}</h2>
               <p>{selected.summary}</p>
