@@ -13,6 +13,7 @@ import "./wikiNative.css";
 import "./wikiMember.css";
 import "./runtimeFixes.css";
 import "./experience.css";
+import "./memberChrome.css";
 
 installRuntimeFixes();
 
