@@ -5,6 +5,7 @@ import { AchievementLayer } from "./MemberChrome";
 import { trackMemberRoute } from "./memberState";
 import { CommandHome } from "./CommandPage";
 import { UnifiedSystemShell, type SystemSurface } from "./SystemShell";
+import { AuthBridgePage, SystemSessionBridge } from "./AuthBridge";
 import {
   ModeratedWikiArticle,
   ModeratedWikiHome,
@@ -14,6 +15,7 @@ import {
   WikiSavedPage,
 } from "./ModeratedWiki";
 
+const ROOT_HOST = "anevum.com";
 const WIKI_HOST = "wiki.anevum.com";
 const LATTICE_HOST = "lattice.anevum.com";
 const COMMAND_HOST = "command.anevum.com";
@@ -168,13 +170,14 @@ function memberRouteFor(pathname: string, hostname: string, surface: SystemSurfa
 
 export default function App() {
   const { pathname, hostname } = useLocationState();
+  const bridgeRoute = hostname === ROOT_HOST && pathname === "/auth-bridge";
   const surface = useMemo(() => surfaceFor(pathname, hostname), [pathname, hostname]);
   const canonical = useMemo(() => canonicalFor(pathname, hostname, surface), [pathname, hostname, surface]);
   const memberRoute = useMemo(() => memberRouteFor(pathname, hostname, surface), [pathname, hostname, surface]);
 
   useEffect(() => {
-    document.title = titleFor(pathname, hostname, surface);
-    document.documentElement.dataset.surface = surface;
+    document.title = bridgeRoute ? "ANEVUM Identity Bridge" : titleFor(pathname, hostname, surface);
+    document.documentElement.dataset.surface = bridgeRoute ? "bridge" : surface;
     document.documentElement.dataset.host = hostname;
 
     let canonicalLink = document.querySelector<HTMLLinkElement>('link[rel="canonical"]');
@@ -183,7 +186,7 @@ export default function App() {
       canonicalLink.rel = "canonical";
       document.head.appendChild(canonicalLink);
     }
-    canonicalLink.href = canonical;
+    canonicalLink.href = bridgeRoute ? "https://anevum.com/auth-bridge" : canonical;
 
     let robots = document.querySelector<HTMLMetaElement>('meta[name="robots"]');
     if (!robots) {
@@ -191,21 +194,25 @@ export default function App() {
       robots.name = "robots";
       document.head.appendChild(robots);
     }
-    robots.content = surface === "command" ? "noindex,nofollow,noarchive" : "index,follow";
+    robots.content = bridgeRoute || surface === "command" ? "noindex,nofollow,noarchive" : "index,follow";
 
     const ogUrl = document.querySelector<HTMLMetaElement>('meta[property="og:url"]');
-    if (ogUrl) ogUrl.content = canonical;
-  }, [pathname, hostname, canonical, surface]);
+    if (ogUrl) ogUrl.content = bridgeRoute ? "https://anevum.com/auth-bridge" : canonical;
+  }, [pathname, hostname, canonical, surface, bridgeRoute]);
 
   useEffect(() => {
+    if (bridgeRoute) return;
     const recordRoute = () => trackMemberRoute(memberRoute);
     recordRoute();
     window.addEventListener("anevum-member-session", recordRoute);
     return () => window.removeEventListener("anevum-member-session", recordRoute);
-  }, [memberRoute]);
+  }, [memberRoute, bridgeRoute]);
+
+  if (bridgeRoute) return <AuthBridgePage />;
 
   return (
     <div className="app-shell production-shell unified-runtime-shell">
+      <SystemSessionBridge hostname={hostname} />
       <UnifiedSystemShell surface={surface} pathname={pathname} hostname={hostname}>
         <Route pathname={pathname} hostname={hostname} />
       </UnifiedSystemShell>
