@@ -1,21 +1,10 @@
 import type { MemberSession } from "./memberClient";
+import { loadMemberProgress, onMemberProgressChange, toggleMemberSave } from "./memberState";
 
-const prefix = "anevum.rhenlink.wiki-saved.v1";
 const eventName = "anevum-wiki-saves";
 
-function keyFor(session: MemberSession) {
-  return `${prefix}:${session.user.id}`;
-}
-
 export function loadWikiSaves(session: MemberSession | null): string[] {
-  if (!session) return [];
-  try {
-    const raw = localStorage.getItem(keyFor(session));
-    const value = raw ? JSON.parse(raw) : [];
-    return Array.isArray(value) ? value.filter((item): item is string => typeof item === "string") : [];
-  } catch {
-    return [];
-  }
+  return session ? loadMemberProgress(session).savedRecordIds : [];
 }
 
 export function isWikiSaved(session: MemberSession | null, recordId: string) {
@@ -23,22 +12,23 @@ export function isWikiSaved(session: MemberSession | null, recordId: string) {
 }
 
 export function toggleWikiSave(session: MemberSession, recordId: string) {
-  const current = loadWikiSaves(session);
-  const next = current.includes(recordId)
-    ? current.filter((id) => id !== recordId)
-    : [...current, recordId];
-  localStorage.setItem(keyFor(session), JSON.stringify(next));
+  const next = toggleMemberSave(session, recordId);
   window.dispatchEvent(new Event(eventName));
   return next;
 }
 
 export function onWikiSavesChange(listener: () => void) {
-  window.addEventListener(eventName, listener);
-  return () => window.removeEventListener(eventName, listener);
+  const relay = () => listener();
+  window.addEventListener(eventName, relay);
+  const removeProgressListener = onMemberProgressChange(relay);
+  return () => {
+    window.removeEventListener(eventName, relay);
+    removeProgressListener();
+  };
 }
 
 export const wikiSavePersistence = {
-  mode: "device" as const,
-  label: "Saved on this device",
-  detail: "RHENLINK cloud persistence activates after the member database is verified.",
+  mode: "rhenlink" as const,
+  label: "Synced to RHENLINK",
+  detail: "Saved records follow your signed-in RHENLINK through ANEVUM.",
 };
