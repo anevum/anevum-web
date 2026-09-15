@@ -86,7 +86,6 @@ export default function ReplyLaunch() {
         <nav aria-label="REPLY launch navigation">
           <a href="/the-book">THE BOOK</a>
           <a href="/the-story">THE STORY</a>
-          <a href="/store">STORE</a>
           <a href="#author">AUTHOR</a>
           <a href="/rhenlink">RHENLINK</a>
         </nav>
@@ -141,7 +140,7 @@ export default function ReplyLaunch() {
             <h2>Built to be read. Made to be kept.</h2>
             <p>REPLY is the first Transcosmic novel: a human-scale science-fiction story about contact, work, family, intelligence, possibility and belonging.</p>
             {firstPurchase ? <ExternalAction href={firstPurchase}>CHOOSE AN EDITION</ExternalAction> : <p className="reply-launch-availability">AVAILABILITY DETAILS WILL APPEAR HERE WHEN ANNOUNCED.</p>}
-            <div className="reply-launch-actions"><ExternalAction href="/store" quiet>OPEN THE STORE</ExternalAction></div>
+            <div className="reply-launch-actions"><ExternalAction href="/the-book" quiet>OPEN THE BOOK PAGE</ExternalAction></div>
           </div>
           <BookObject />
         </section>
@@ -177,7 +176,7 @@ export default function ReplyLaunch() {
       <footer className="reply-launch-footer">
         <a href="#top"><strong>ANEVUM</strong><small>A UNIVERSE IN STORY.</small></a>
         <p>REPLY / THE TRANSCOSMIC / BOOK ONE</p>
-        <span><a href="/store">STORE</a> · <a href="/rhenlink">RHENLINK</a> · DEVON AKINS</span>
+        <span><a href="/rhenlink">RHENLINK</a> · DEVON AKINS</span>
       </footer>
     </div>
   );
