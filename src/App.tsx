@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import ReplyLaunch from "./ReplyLaunch";
 import { BookPage, StoryPage, StorePage } from "./LaunchPages";
+import { Launch404 } from "./Launch404";
 import { Rhenlink } from "./RhenlinkV2";
 import { AuthBridgePage, SystemSessionBridge } from "./AuthBridge";
 import { CommandHome } from "./CommandPage";
@@ -10,6 +11,11 @@ import { UnifiedSystemShell } from "./SystemShell";
 
 const ROOT_HOST = "anevum.com";
 const COMMAND_HOST = "command.anevum.com";
+
+function normalizePath(pathname: string) {
+  if (!pathname || pathname === "/") return "/";
+  return pathname.replace(/\/+$/, "") || "/";
+}
 
 function useLocationState() {
   const [location, setLocation] = useState(() => ({
@@ -39,7 +45,17 @@ function ensureMeta(selector: string, attribute: "name" | "property", key: strin
   return element;
 }
 
-function publicMeta(pathname: string) {
+function publicMeta(pathname: string, knownPublicRoute: boolean) {
+  if (!knownPublicRoute) {
+    return {
+      title: "Signal Lost — ANEVUM",
+      description: "This ANEVUM route does not resolve or is not public yet.",
+      canonical: `https://anevum.com${pathname}`,
+      ogTitle: "Signal Lost — ANEVUM",
+      ogType: "website",
+    };
+  }
+
   switch (pathname) {
     case "/the-book":
       return {
@@ -47,6 +63,7 @@ function publicMeta(pathname: string) {
         description: "REPLY is The Transcosmic Book One, a science-fiction novel by Devon Akins and the first publication from ANEVUM.",
         canonical: "https://anevum.com/the-book",
         ogTitle: "REPLY — The Book",
+        ogType: "book",
       };
     case "/the-story":
       return {
@@ -54,6 +71,7 @@ function publicMeta(pathname: string) {
         description: "Enter the spoiler-light public story doorway into REPLY, The Transcosmic Book One by Devon Akins.",
         canonical: "https://anevum.com/the-story",
         ogTitle: "The Story of REPLY",
+        ogType: "article",
       };
     case "/store":
       return {
@@ -61,6 +79,7 @@ function publicMeta(pathname: string) {
         description: "The ANEVUM store begins with REPLY by Devon Akins. Edition and purchase details appear only when they are live.",
         canonical: "https://anevum.com/store",
         ogTitle: "ANEVUM Store — REPLY",
+        ogType: "website",
       };
     case "/rhenlink":
       return {
@@ -68,6 +87,7 @@ function publicMeta(pathname: string) {
         description: "RHENLINK is the persistent member identity for ANEVUM.",
         canonical: "https://anevum.com/rhenlink",
         ogTitle: "RHENLINK — ANEVUM",
+        ogType: "website",
       };
     default:
       return {
@@ -75,22 +95,25 @@ function publicMeta(pathname: string) {
         description: "REPLY, the first Transcosmic novel by Devon Akins. A worker follows a measurement she cannot explain into a civilization already living across worlds.",
         canonical: "https://anevum.com/",
         ogTitle: "REPLY by Devon Akins",
+        ogType: "book",
       };
   }
 }
 
 export default function App() {
   const { pathname, hostname } = useLocationState();
-  const bridgeRoute = hostname === ROOT_HOST && pathname === "/auth-bridge";
-  const commandRoute = hostname === COMMAND_HOST || pathname === "/command";
-  const rhenlinkRoute = hostname === ROOT_HOST && pathname === "/rhenlink";
-  const bookRoute = hostname === ROOT_HOST && pathname === "/the-book";
-  const storyRoute = hostname === ROOT_HOST && pathname === "/the-story";
-  const storeRoute = hostname === ROOT_HOST && pathname === "/store";
-  const knownPublicRoute = pathname === "/" || rhenlinkRoute || bookRoute || storyRoute || storeRoute;
+  const routePath = normalizePath(pathname);
+  const bridgeRoute = hostname === ROOT_HOST && routePath === "/auth-bridge";
+  const commandRoute = hostname === COMMAND_HOST || routePath === "/command";
+  const rhenlinkRoute = hostname === ROOT_HOST && routePath === "/rhenlink";
+  const bookRoute = hostname === ROOT_HOST && routePath === "/the-book";
+  const storyRoute = hostname === ROOT_HOST && routePath === "/the-story";
+  const storeRoute = hostname === ROOT_HOST && routePath === "/store";
+  const knownPublicRoute = routePath === "/" || rhenlinkRoute || bookRoute || storyRoute || storeRoute;
+  const notFoundRoute = hostname === ROOT_HOST && !bridgeRoute && !commandRoute && !knownPublicRoute;
 
   useEffect(() => {
-    const meta = publicMeta(pathname);
+    const meta = publicMeta(routePath, knownPublicRoute);
     const canonicalUrl = commandRoute ? "https://command.anevum.com/" : meta.canonical;
 
     document.documentElement.dataset.surface = bridgeRoute
@@ -99,7 +122,9 @@ export default function App() {
         ? "command"
         : rhenlinkRoute
           ? "rhenlink"
-          : "reply";
+          : notFoundRoute
+            ? "not-found"
+            : "reply";
     document.documentElement.dataset.host = hostname;
     document.title = bridgeRoute ? "ANEVUM Identity Bridge" : commandRoute ? "ANEVUM COMMAND" : meta.title;
 
@@ -125,15 +150,22 @@ export default function App() {
     ogDescription.content = commandRoute ? "Private ANEVUM operations interface." : meta.description;
     const ogUrl = ensureMeta('meta[property="og:url"]', "property", "og:url");
     ogUrl.content = bridgeRoute ? "https://anevum.com/auth-bridge" : canonicalUrl;
-  }, [pathname, hostname, bridgeRoute, commandRoute, rhenlinkRoute, knownPublicRoute]);
+    const ogType = ensureMeta('meta[property="og:type"]', "property", "og:type");
+    ogType.content = commandRoute ? "website" : meta.ogType;
+
+    const twitterTitle = ensureMeta('meta[name="twitter:title"]', "name", "twitter:title");
+    twitterTitle.content = commandRoute ? "ANEVUM COMMAND" : meta.ogTitle;
+    const twitterDescription = ensureMeta('meta[name="twitter:description"]', "name", "twitter:description");
+    twitterDescription.content = commandRoute ? "Private ANEVUM operations interface." : meta.description;
+  }, [routePath, hostname, bridgeRoute, commandRoute, rhenlinkRoute, knownPublicRoute, notFoundRoute]);
 
   useEffect(() => {
     if (bridgeRoute || commandRoute || hostname !== ROOT_HOST || !knownPublicRoute) return;
-    const recordRoute = () => trackMemberRoute(pathname || "/");
+    const recordRoute = () => trackMemberRoute(routePath);
     recordRoute();
     window.addEventListener("anevum-member-session", recordRoute);
     return () => window.removeEventListener("anevum-member-session", recordRoute);
-  }, [hostname, pathname, bridgeRoute, commandRoute, knownPublicRoute]);
+  }, [hostname, routePath, bridgeRoute, commandRoute, knownPublicRoute]);
 
   if (bridgeRoute) return <AuthBridgePage />;
 
@@ -141,7 +173,7 @@ export default function App() {
     return (
       <div className="unified-runtime-shell">
         <SystemSessionBridge hostname={hostname} />
-        <UnifiedSystemShell surface="command" pathname={pathname} hostname={hostname}>
+        <UnifiedSystemShell surface="command" pathname={routePath} hostname={hostname}>
           <CommandHome />
         </UnifiedSystemShell>
       </div>
@@ -160,6 +192,7 @@ export default function App() {
   if (bookRoute) return <><BookPage /><AchievementLayer /></>;
   if (storyRoute) return <><StoryPage /><AchievementLayer /></>;
   if (storeRoute) return <><StorePage /><AchievementLayer /></>;
+  if (notFoundRoute) return <><Launch404 /><AchievementLayer /></>;
 
   return (
     <>
