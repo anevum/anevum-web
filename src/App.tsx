@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { FrontDoor, NotFound, Reply, SearchPage, Store, Stories, Transmissions } from "./PublicPages";
-import { Lattice, Rhenlink } from "./MemberPages";
+import { Rhenlink } from "./MemberPages";
+import { Lattice } from "./LatticeV2";
 import { AchievementLayer } from "./MemberChrome";
 import { trackMemberRoute } from "./memberState";
 import { CommandHome } from "./CommandPage";
