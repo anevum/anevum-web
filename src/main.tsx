@@ -16,6 +16,7 @@ import "./experience.css";
 import "./moderatedWiki.css";
 import "./systemShell.css";
 import "./mobileCompact.css";
+import "./editorialShell.css";
 
 installRuntimeFixes();
 
