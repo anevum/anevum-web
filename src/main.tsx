@@ -6,6 +6,7 @@ import "./styles.css";
 import "./moderatedWiki.css";
 import "./systemShell.css";
 import "./publicV2.css";
+import "./publicIsolation.css";
 
 installRuntimeFixes();
 
