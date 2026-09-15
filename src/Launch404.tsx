@@ -4,6 +4,7 @@ import { LaunchTerminal } from "./LaunchTerminal";
 export function Launch404() {
   return (
     <div className="launch-404-page">
+      <a className="launch-skip-link" href="#main-content">SKIP TO CONTENT</a>
       <header className="reply-launch-header launch-404-header">
         <a className="reply-launch-brand" href="/" aria-label="ANEVUM home">
           <strong>ANEVUM</strong>
