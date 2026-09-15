@@ -62,5 +62,15 @@ export function SystemSessionBridge({ hostname }: { hostname: string }) {
   }, [enabled, hostname]);
 
   if (!enabled) return null;
-  return <iframe ref={frameRef} className="system-auth-bridge" src={`${ROOT_ORIGIN}/auth-bridge`} title="ANEVUM identity bridge" tabIndex={-1} onLoad={() => frameRef.current?.contentWindow?.postMessage({ type: "ANEVUM_SESSION_REQUEST" } satisfies SessionRequest, ROOT_ORIGIN)} />;
+  return (
+    <iframe
+      ref={frameRef}
+      src={`${ROOT_ORIGIN}/auth-bridge`}
+      title="ANEVUM identity bridge"
+      tabIndex={-1}
+      aria-hidden="true"
+      style={{ position: "fixed", left: -10000, top: -10000, width: 1, height: 1, border: 0, opacity: 0, pointerEvents: "none" }}
+      onLoad={() => frameRef.current?.contentWindow?.postMessage({ type: "ANEVUM_SESSION_REQUEST" } satisfies SessionRequest, ROOT_ORIGIN)}
+    />
+  );
 }
