@@ -77,6 +77,7 @@ function AtmosphericArt() {
 export default function ReplyLaunch() {
   return (
     <div className="reply-launch-site">
+      <a className="launch-skip-link" href="#main-content">SKIP TO CONTENT</a>
       <header className="reply-launch-header">
         <a className="reply-launch-brand" href="#top" aria-label="ANEVUM home">
           <strong>ANEVUM</strong>
@@ -94,8 +95,8 @@ export default function ReplyLaunch() {
 
       <LaunchTerminal />
 
-      <main id="top">
-        <section className="reply-launch-hero" aria-labelledby="reply-title">
+      <main id="main-content">
+        <section className="reply-launch-hero" id="top" aria-labelledby="reply-title">
           <AtmosphericArt />
           <div className="reply-launch-hero-copy">
             <p className="reply-launch-kicker">THE TRANSCOSMIC / BOOK ONE</p>
