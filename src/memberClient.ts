@@ -11,8 +11,10 @@ export type MemberSession = {
   user: MemberUser;
 };
 
-const projectUrl = (import.meta.env.VITE_SUPABASE_URL || "https://mfntzxheldzdvlokyntk.supabase.co").replace(/\/$/, "");
-const publicKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || import.meta.env.VITE_SUPABASE_ANON_KEY || "";
+const defaultProjectUrl = "https://mfntzxheldzdvlokyntk.supabase.co";
+const defaultPublishableKey = "sb_publishable_XfkgeXau2-6XOPzoXF-Nnw_FSnx0Sae";
+const projectUrl = (import.meta.env.VITE_SUPABASE_URL || defaultProjectUrl).replace(/\/$/, "");
+const publicKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || import.meta.env.VITE_SUPABASE_ANON_KEY || defaultPublishableKey;
 const storageKey = "anevum.rhenlink.session.v1";
 
 export const memberBackend = {
@@ -21,11 +23,13 @@ export const memberBackend = {
 };
 
 function headers(token?: string) {
-  return {
+  const requestHeaders: Record<string, string> = {
     "Content-Type": "application/json",
     apikey: publicKey,
-    Authorization: `Bearer ${token || publicKey}`,
   };
+
+  if (token) requestHeaders.Authorization = `Bearer ${token}`;
+  return requestHeaders;
 }
 
 async function request<T>(path: string, init: RequestInit): Promise<T> {
