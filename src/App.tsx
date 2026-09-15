@@ -5,6 +5,8 @@ import { FrontDoor, NotFound, Reply, SearchPage, Store, Stories, Transmissions }
 import { WikiHeader, WikiHome, WikiMissing, WikiRecord, WikiRhenlink, WikiSaved } from "./WikiPages";
 import { Lattice, Rhenlink } from "./MemberPages";
 import { InterfaceStrip, MobileDock } from "./ExperienceChrome";
+import { AchievementLayer, RhenlinkIdentityCard } from "./MemberChrome";
+import { trackMemberRoute } from "./memberState";
 
 const WIKI_HOST = "wiki.anevum.com";
 
@@ -33,6 +35,14 @@ function wikiRecordForPath(pathname: string) {
   if (singleSegment) return getPublicObjectBySlug(decodeURIComponent(singleSegment));
 
   return undefined;
+}
+
+function memberRouteFor(pathname: string, hostname: string) {
+  if (hostname !== WIKI_HOST) return pathname;
+  if (pathname === "/" || pathname === "/wiki" || pathname === "/search") return "/wiki";
+  const record = wikiRecordForPath(pathname);
+  if (record) return `/wiki/${record.slug}`;
+  return pathname;
 }
 
 function Route({ pathname, hostname }: { pathname: string; hostname: string }) {
@@ -105,6 +115,7 @@ export default function App() {
   const { pathname, hostname } = useLocationState();
   const wikiHost = hostname === WIKI_HOST;
   const canonical = useMemo(() => canonicalFor(pathname, hostname), [pathname, hostname]);
+  const memberRoute = useMemo(() => memberRouteFor(pathname, hostname), [pathname, hostname]);
 
   useEffect(() => {
     document.title = titleFor(pathname, hostname);
@@ -122,6 +133,13 @@ export default function App() {
     if (ogUrl) ogUrl.content = canonical;
   }, [pathname, hostname, canonical, wikiHost]);
 
+  useEffect(() => {
+    const recordRoute = () => trackMemberRoute(memberRoute);
+    recordRoute();
+    window.addEventListener("anevum-member-session", recordRoute);
+    return () => window.removeEventListener("anevum-member-session", recordRoute);
+  }, [memberRoute]);
+
   const headerPath = wikiHost && pathname === "/" ? "/wiki" : pathname;
 
   return (
@@ -131,6 +149,8 @@ export default function App() {
       <Route pathname={pathname} hostname={hostname} />
       {!wikiHost ? <Footer /> : null}
       {!wikiHost ? <MobileDock pathname={pathname} /> : null}
+      <RhenlinkIdentityCard />
+      <AchievementLayer />
     </div>
   );
 }
