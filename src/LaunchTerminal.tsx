@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ArrowRight, Command, LogIn, Menu, Terminal, UserRound, X } from "lucide-react";
 import { displayIdentity, loadSession, type MemberSession } from "./memberClient";
-import { loadMemberProgress, memberLevelDetails, onMemberProgressChange, type MemberProgress } from "./memberState";
+import { loadMemberProgress, onMemberProgressChange, type MemberProgress } from "./memberState";
+import { networkLevelDetails } from "./networkProgress";
 
 type TerminalTarget = {
   command: string;
@@ -14,8 +15,7 @@ const targets: TerminalTarget[] = [
   { command: "reply", label: "REPLY", description: "Return to the launch homepage.", href: "/#top" },
   { command: "story", label: "THE STORY", description: "Open the spoiler-light story doorway.", href: "/the-story" },
   { command: "book", label: "THE BOOK", description: "Open the publication page for REPLY.", href: "/the-book" },
-  { command: "store", label: "STORE", description: "View the current ANEVUM publication state.", href: "/store" },
-  { command: "rhenlink", label: "RHENLINK", description: "Open your persistent ANEVUM identity.", href: "/rhenlink" },
+  { command: "rhenlink", label: "RHENLINK", description: "Open or establish your persistent ANEVUM identity.", href: "/rhenlink" },
 ];
 
 function emptyProgress(): MemberProgress {
@@ -34,7 +34,7 @@ export function LaunchTerminal() {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const triggerRef = useRef<HTMLButtonElement | null>(null);
   const identity = displayIdentity(session);
-  const level = memberLevelDetails(progress);
+  const level = networkLevelDetails(progress);
 
   useEffect(() => {
     const sync = () => {
@@ -117,8 +117,8 @@ export function LaunchTerminal() {
       navigate("/#top");
       return;
     }
-    if (command === "buy") {
-      navigate("/store");
+    if (command === "buy" || command === "edition" || command === "availability") {
+      navigate("/the-book");
       return;
     }
     if (command === "profile" || command === "identity" || command === "signin" || command === "login") {
