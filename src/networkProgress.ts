@@ -26,12 +26,12 @@ export function rankMarkForLevel(level: number) {
 
 export function networkLevelDetails(progress: MemberProgress): NetworkLevelDetails {
   const xp = memberXP(progress);
-  const level = Math.max(1, Math.floor(xp / XP_PER_LEVEL) + 1);
-  const currentFloor = (level - 1) * XP_PER_LEVEL;
-  const nextThreshold = level * XP_PER_LEVEL;
-  const intoLevel = Math.max(0, xp - currentFloor);
+  const level = Math.min(100, Math.floor(xp / XP_PER_LEVEL));
+  const currentFloor = level * XP_PER_LEVEL;
+  const nextThreshold = level >= 100 ? currentFloor : (level + 1) * XP_PER_LEVEL;
+  const intoLevel = level >= 100 ? XP_PER_LEVEL : Math.max(0, xp - currentFloor);
   const neededForLevel = XP_PER_LEVEL;
-  const remaining = Math.max(0, nextThreshold - xp);
+  const remaining = level >= 100 ? 0 : Math.max(0, nextThreshold - xp);
   const unlocked = new Set(progress.achievements.map((achievement) => achievement.id));
   const nextArtifact = ACHIEVEMENTS.find((achievement) => !unlocked.has(achievement.id)) || null;
 
@@ -44,7 +44,7 @@ export function networkLevelDetails(progress: MemberProgress): NetworkLevelDetai
     intoLevel,
     neededForLevel,
     remaining,
-    percent: Math.min(100, Math.max(0, (intoLevel / neededForLevel) * 100)),
+    percent: level >= 100 ? 100 : Math.min(100, Math.max(0, (intoLevel / neededForLevel) * 100)),
     nextArtifact,
   };
 }
