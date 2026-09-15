@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { getPublicObjectBySlug, publicObjects } from "./publicObjects";
 import { Footer, Header } from "./ui";
 import { FrontDoor, NotFound, Reply, SearchPage, Store, Stories, Transmissions } from "./PublicPages";
-import { WikiHeader, WikiHome, WikiMissing, WikiRecord } from "./WikiPages";
+import { WikiHeader, WikiHome, WikiMissing, WikiRecord, WikiRhenlink, WikiSaved } from "./WikiPages";
 import { Lattice, Rhenlink } from "./MemberPages";
 
 const WIKI_HOST = "wiki.anevum.com";
@@ -39,6 +39,8 @@ function Route({ pathname, hostname }: { pathname: string; hostname: string }) {
 
   if (wikiHost) {
     if (pathname === "/" || pathname === "/wiki" || pathname === "/search") return <WikiHome />;
+    if (pathname === "/rhenlink") return <WikiRhenlink />;
+    if (pathname === "/saved") return <WikiSaved />;
     const record = wikiRecordForPath(pathname);
     return record ? <WikiRecord slug={record.slug} /> : <WikiMissing />;
   }
@@ -59,6 +61,8 @@ function Route({ pathname, hostname }: { pathname: string; hostname: string }) {
 function titleFor(pathname: string, hostname: string) {
   if (hostname === WIKI_HOST) {
     if (pathname === "/" || pathname === "/wiki" || pathname === "/search") return "WIKI.ANEVUM — Public Canon Encyclopedia";
+    if (pathname === "/rhenlink") return "RHENLINK — WIKI.ANEVUM";
+    if (pathname === "/saved") return "Saved Records — WIKI.ANEVUM";
     const record = wikiRecordForPath(pathname);
     return record ? `${record.title} — WIKI.ANEVUM` : "WIKI.ANEVUM";
   }
@@ -81,6 +85,8 @@ function titleFor(pathname: string, hostname: string) {
 function canonicalFor(pathname: string, hostname: string) {
   if (hostname === WIKI_HOST) {
     if (pathname === "/" || pathname === "/wiki" || pathname === "/search") return "https://wiki.anevum.com/";
+    if (pathname === "/rhenlink") return "https://anevum.com/rhenlink";
+    if (pathname === "/saved") return "https://wiki.anevum.com/saved";
     const record = wikiRecordForPath(pathname);
     if (record) return `https://wiki.anevum.com${record.sourceRoute}`;
     return `https://wiki.anevum.com${pathname}`;
