@@ -1,0 +1,12 @@
+html[data-surface="rhenlink"] body{overflow:auto;background:#03070a;color:#f4f1e9}
+html[data-surface="rhenlink"] #root{min-height:100%}
+.launch-rhenlink-shell{min-height:100vh;background:radial-gradient(circle at 74% -8%,rgba(89,156,190,.09),transparent 30%),linear-gradient(180deg,#020609,#03070a 46%,#020609);color:var(--v2-ink)}
+.launch-rhenlink-shell .rhenlink-page{min-height:100vh}
+.launch-rhenlink-shell .rhenlink-hero{border-left:1px solid var(--v2-line);border-right:1px solid var(--v2-line)}
+.launch-rhenlink-shell .rhenlink-hero>.brand-art{position:absolute;inset:0;width:100%;height:100%;opacity:.88}
+.launch-rhenlink-shell .rhenlink-hero:after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(2,6,9,.96),rgba(2,6,9,.58) 50%,rgba(2,6,9,.16)),linear-gradient(0deg,rgba(2,6,9,.78),transparent 44%)}
+.launch-rhenlink-shell .rhenlink-hero>div:not(.brand-art){position:relative;z-index:2}
+.reply-launch-availability{margin:24px 0 0;color:#77868d;font:650 .46rem/1.55 ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.14em}
+.reply-launch-footer>span a{color:#9fb0b7;text-decoration:none}.reply-launch-footer>span a:hover{color:#eef2f3}
+@media(max-width:820px){.launch-rhenlink-shell .rhenlink-hero{border-left:0;border-right:0}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto!important}.reply-launch-action{transition:none!important}}
