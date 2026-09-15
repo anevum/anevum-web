@@ -1,0 +1,24 @@
+/* Public/runtime isolation. COMMAND owns a fixed app viewport; every other surface owns a normal document. */
+html[data-surface]:not([data-surface="command"]),
+html[data-surface]:not([data-surface="command"]) body,
+html[data-surface]:not([data-surface="command"]) #root{
+  min-height:100%;
+  height:auto;
+  overflow:visible;
+  background:#03070a;
+}
+html[data-surface]:not([data-surface="command"]) body{
+  overflow-x:hidden;
+  overflow-y:auto;
+}
+html[data-surface]:not([data-surface="command"]) .unified-runtime-shell{
+  min-height:100vh;
+  height:auto;
+  overflow:visible;
+}
+html[data-surface]:not([data-surface="command"]) .app-shell{
+  overflow:visible;
+}
+html[data-surface="command"] body{
+  overflow:hidden;
+}
