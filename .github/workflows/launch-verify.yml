@@ -3,7 +3,7 @@ name: Launch Verify
 on:
   push:
     branches:
-      - launch-v3-integrate
+      - "launch-*"
       - main
   pull_request:
     branches:
