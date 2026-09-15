@@ -1,12 +1,19 @@
 import { useEffect, useMemo, useState } from "react";
-import { getPublicObjectBySlug, publicObjects } from "./publicObjects";
 import { Footer, Header } from "./ui";
 import { FrontDoor, NotFound, Reply, SearchPage, Store, Stories, Transmissions } from "./PublicPages";
-import { WikiHeader, WikiHome, WikiMissing, WikiRecord, WikiRhenlink, WikiSaved } from "./WikiPages";
 import { Lattice, Rhenlink } from "./MemberPages";
 import { InterfaceStrip, MobileDock } from "./ExperienceChrome";
 import { AchievementLayer, RhenlinkIdentityCard } from "./MemberChrome";
 import { trackMemberRoute } from "./memberState";
+import {
+  CommunityWikiHeader,
+  ModeratedWikiArticle,
+  ModeratedWikiHome,
+  WikiAdminPage,
+  WikiContributionPage,
+  WikiMissing,
+  WikiSavedPage,
+} from "./ModeratedWiki";
 
 const WIKI_HOST = "wiki.anevum.com";
 
@@ -23,44 +30,50 @@ function useLocationState() {
   return { pathname, hostname };
 }
 
-function wikiRecordForPath(pathname: string) {
-  if (pathname.startsWith("/wiki/")) {
-    return getPublicObjectBySlug(decodeURIComponent(pathname.slice(6)));
-  }
-
-  const byPublishedRoute = publicObjects.find((record) => record.sourceRoute === pathname);
-  if (byPublishedRoute) return byPublishedRoute;
-
-  const singleSegment = pathname.match(/^\/([^/]+)\/?$/)?.[1];
-  if (singleSegment) return getPublicObjectBySlug(decodeURIComponent(singleSegment));
-
-  return undefined;
+function wikiSlug(pathname: string, wikiHost: boolean) {
+  const prefix = wikiHost ? "" : "/wiki";
+  const relative = prefix ? pathname.slice(prefix.length) : pathname;
+  const match = relative.match(/^\/([^/]+)\/?$/);
+  return match?.[1] ? decodeURIComponent(match[1]) : "";
 }
 
-function memberRouteFor(pathname: string, hostname: string) {
-  if (hostname !== WIKI_HOST) return pathname;
-  if (pathname === "/" || pathname === "/wiki" || pathname === "/search") return "/wiki";
-  const record = wikiRecordForPath(pathname);
-  if (record) return `/wiki/${record.slug}`;
-  return pathname;
+function wikiEditSlug(pathname: string, wikiHost: boolean) {
+  const prefix = wikiHost ? "" : "/wiki";
+  const relative = prefix ? pathname.slice(prefix.length) : pathname;
+  const match = relative.match(/^\/([^/]+)\/edit\/?$/);
+  return match?.[1] ? decodeURIComponent(match[1]) : "";
+}
+
+function isWikiSurface(pathname: string, hostname: string) {
+  return hostname === WIKI_HOST || pathname === "/wiki" || pathname.startsWith("/wiki/");
 }
 
 function Route({ pathname, hostname }: { pathname: string; hostname: string }) {
   const wikiHost = hostname === WIKI_HOST;
 
   if (wikiHost) {
-    if (pathname === "/" || pathname === "/wiki" || pathname === "/search") return <WikiHome />;
-    if (pathname === "/rhenlink") return <WikiRhenlink />;
-    if (pathname === "/saved") return <WikiSaved />;
-    const record = wikiRecordForPath(pathname);
-    return record ? <WikiRecord slug={record.slug} /> : <WikiMissing />;
+    if (pathname === "/" || pathname === "/wiki" || pathname === "/search") return <ModeratedWikiHome />;
+    if (pathname === "/new") return <WikiContributionPage />;
+    if (pathname === "/admin") return <WikiAdminPage />;
+    if (pathname === "/saved") return <WikiSavedPage />;
+    if (pathname === "/rhenlink") return <Rhenlink />;
+    const editSlug = wikiEditSlug(pathname, true);
+    if (editSlug) return <WikiContributionPage editSlug={editSlug} />;
+    const slug = wikiSlug(pathname, true);
+    return slug ? <ModeratedWikiArticle slug={slug} /> : <WikiMissing />;
   }
 
   if (pathname === "/") return <FrontDoor />;
   if (pathname === "/stories") return <Stories />;
   if (pathname === "/stories/reply") return <Reply />;
-  if (pathname === "/wiki") return <WikiHome />;
-  if (pathname.startsWith("/wiki/")) return <WikiRecord slug={decodeURIComponent(pathname.slice(6))} />;
+  if (pathname === "/wiki") return <ModeratedWikiHome />;
+  if (pathname === "/wiki/new") return <WikiContributionPage />;
+  if (pathname === "/wiki/admin") return <WikiAdminPage />;
+  if (pathname === "/wiki/saved") return <WikiSavedPage />;
+  const editSlug = wikiEditSlug(pathname, false);
+  if (editSlug) return <WikiContributionPage editSlug={editSlug} />;
+  const slug = pathname.startsWith("/wiki/") ? wikiSlug(pathname, false) : "";
+  if (slug) return <ModeratedWikiArticle slug={slug} />;
   if (pathname === "/lattice") return <Lattice />;
   if (pathname === "/rhenlink") return <Rhenlink />;
   if (pathname === "/search") return <SearchPage />;
@@ -70,21 +83,17 @@ function Route({ pathname, hostname }: { pathname: string; hostname: string }) {
 }
 
 function titleFor(pathname: string, hostname: string) {
-  if (hostname === WIKI_HOST) {
-    if (pathname === "/" || pathname === "/wiki" || pathname === "/search") return "WIKI.ANEVUM — Public Canon Encyclopedia";
-    if (pathname === "/rhenlink") return "RHENLINK — WIKI.ANEVUM";
-    if (pathname === "/saved") return "Saved Records — WIKI.ANEVUM";
-    const record = wikiRecordForPath(pathname);
-    return record ? `${record.title} — WIKI.ANEVUM` : "WIKI.ANEVUM";
+  const wikiHost = hostname === WIKI_HOST;
+  if (isWikiSurface(pathname, hostname)) {
+    if ((wikiHost && (pathname === "/" || pathname === "/wiki" || pathname === "/search")) || (!wikiHost && pathname === "/wiki")) return "WIKI.ANEVUM — Public Collaborative Encyclopedia";
+    if (pathname.endsWith("/new")) return "Propose a Page — WIKI.ANEVUM";
+    if (pathname.endsWith("/admin")) return "Wiki Administration — ANEVUM";
+    if (pathname.endsWith("/saved")) return "Saved Pages — WIKI.ANEVUM";
+    const slug = wikiEditSlug(pathname, wikiHost) || wikiSlug(pathname, wikiHost);
+    return slug ? `${slug.replace(/-/g, " ")} — WIKI.ANEVUM` : "WIKI.ANEVUM";
   }
-
   if (pathname === "/") return "ANEVUM";
   if (pathname === "/stories/reply") return "REPLY — ANEVUM";
-  if (pathname === "/wiki") return "WIKI.ANEVUM — Public Canon Encyclopedia";
-  if (pathname.startsWith("/wiki/")) {
-    const record = getPublicObjectBySlug(decodeURIComponent(pathname.slice(6)));
-    return record ? `${record.title} — WIKI.ANEVUM` : "WIKI.ANEVUM";
-  }
   if (pathname === "/lattice") return "LATTICE.ANEVUM — The Universe as a Place";
   if (pathname === "/rhenlink") return "RHENLINK — ANEVUM";
   if (pathname === "/search") return "Search — ANEVUM";
@@ -94,32 +103,35 @@ function titleFor(pathname: string, hostname: string) {
 }
 
 function canonicalFor(pathname: string, hostname: string) {
-  if (hostname === WIKI_HOST) {
-    if (pathname === "/" || pathname === "/wiki" || pathname === "/search") return "https://wiki.anevum.com/";
-    if (pathname === "/rhenlink") return "https://anevum.com/rhenlink";
-    if (pathname === "/saved") return "https://wiki.anevum.com/saved";
-    const record = wikiRecordForPath(pathname);
-    if (record) return `https://wiki.anevum.com${record.sourceRoute}`;
-    return `https://wiki.anevum.com${pathname}`;
-  }
-
-  if (pathname === "/wiki") return "https://wiki.anevum.com/";
-  if (pathname.startsWith("/wiki/")) {
-    const record = getPublicObjectBySlug(decodeURIComponent(pathname.slice(6)));
-    if (record) return `https://wiki.anevum.com${record.sourceRoute}`;
+  const wikiHost = hostname === WIKI_HOST;
+  if (isWikiSurface(pathname, hostname)) {
+    if ((wikiHost && (pathname === "/" || pathname === "/wiki" || pathname === "/search")) || (!wikiHost && pathname === "/wiki")) return "https://wiki.anevum.com/";
+    if (pathname.endsWith("/new") || pathname.endsWith("/admin") || pathname.endsWith("/saved") || pathname.endsWith("/edit")) return `https://anevum.com${wikiHost ? `/wiki${pathname}` : pathname}`;
+    const slug = wikiSlug(pathname, wikiHost);
+    if (slug) return `https://wiki.anevum.com/${encodeURIComponent(slug)}`;
   }
   return `https://anevum.com${pathname}`;
 }
 
+function memberRouteFor(pathname: string, hostname: string) {
+  const wikiHost = hostname === WIKI_HOST;
+  if (!isWikiSurface(pathname, hostname)) return pathname;
+  if ((wikiHost && pathname === "/") || (!wikiHost && pathname === "/wiki")) return "/wiki";
+  const editSlug = wikiEditSlug(pathname, wikiHost);
+  if (editSlug) return `/wiki/${editSlug}/edit`;
+  const slug = wikiSlug(pathname, wikiHost);
+  return slug ? `/wiki/${slug}` : wikiHost ? `/wiki${pathname}` : pathname;
+}
+
 export default function App() {
   const { pathname, hostname } = useLocationState();
-  const wikiHost = hostname === WIKI_HOST;
+  const wikiSurface = isWikiSurface(pathname, hostname);
   const canonical = useMemo(() => canonicalFor(pathname, hostname), [pathname, hostname]);
   const memberRoute = useMemo(() => memberRouteFor(pathname, hostname), [pathname, hostname]);
 
   useEffect(() => {
     document.title = titleFor(pathname, hostname);
-    document.documentElement.dataset.surface = wikiHost ? "wiki" : "anevum";
+    document.documentElement.dataset.surface = wikiSurface ? "wiki" : "anevum";
 
     let canonicalLink = document.querySelector<HTMLLinkElement>('link[rel="canonical"]');
     if (!canonicalLink) {
@@ -131,7 +143,7 @@ export default function App() {
 
     const ogUrl = document.querySelector<HTMLMetaElement>('meta[property="og:url"]');
     if (ogUrl) ogUrl.content = canonical;
-  }, [pathname, hostname, canonical, wikiHost]);
+  }, [pathname, hostname, canonical, wikiSurface]);
 
   useEffect(() => {
     const recordRoute = () => trackMemberRoute(memberRoute);
@@ -140,15 +152,13 @@ export default function App() {
     return () => window.removeEventListener("anevum-member-session", recordRoute);
   }, [memberRoute]);
 
-  const headerPath = wikiHost && pathname === "/" ? "/wiki" : pathname;
-
   return (
-    <div className={`app-shell production-shell ${wikiHost ? "wiki-surface-shell" : "anevum-surface-shell"}`}>
-      {wikiHost ? <WikiHeader /> : <Header pathname={headerPath} />}
-      {!wikiHost ? <InterfaceStrip pathname={pathname} /> : null}
+    <div className={`app-shell production-shell ${wikiSurface ? "wiki-surface-shell" : "anevum-surface-shell"}`}>
+      {wikiSurface ? <CommunityWikiHeader /> : <Header pathname={pathname} />}
+      {!wikiSurface ? <InterfaceStrip pathname={pathname} /> : null}
       <Route pathname={pathname} hostname={hostname} />
-      {!wikiHost ? <Footer /> : null}
-      {!wikiHost ? <MobileDock pathname={pathname} /> : null}
+      {!wikiSurface ? <Footer /> : null}
+      {!wikiSurface ? <MobileDock pathname={pathname} /> : null}
       <RhenlinkIdentityCard />
       <AchievementLayer />
     </div>

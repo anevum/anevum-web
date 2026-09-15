@@ -1,11 +1,9 @@
-import { useMemo, useState } from "react";
+import { useState, type FormEvent } from "react";
 import { Eye, Search, Sparkles } from "lucide-react";
-import { featuredPublicObjects, getPublicObjectBySlug, searchPublicObjects } from "./publicObjects";
-import { Button, Link, RecordCard, SyncStamp, VisualArt } from "./ui";
+import { Button, Link, VisualArt, navigate } from "./ui";
 import { HomePortalRail } from "./ExperienceChrome";
 
 export function FrontDoor() {
-  const lead = getPublicObjectBySlug("merva")!;
   return (
     <main className="production-home">
       <section className="home-hero production-home-hero">
@@ -15,8 +13,8 @@ export function FrontDoor() {
         <div className="hero-copy">
           <p className="eyebrow">ANEVUM / STORIES FIRST</p>
           <h1>A universe in story.<br /><em>A story in everything.</em></h1>
-          <p>Books at the center. Knowledge, discovery and belonging expanding outward from what is actually released.</p>
-          <div className="actions"><Button href="/stories/reply">DISCOVER REPLY</Button><Button href="/wiki" quiet>ENTER THE UNIVERSE</Button></div>
+          <p>Books at the center. Knowledge, discovery and belonging expanding outward through deliberately published work.</p>
+          <div className="actions"><Button href="/stories/reply">DISCOVER REPLY</Button><Button href="/wiki" quiet>OPEN WIKI</Button></div>
         </div>
         <HomePortalRail />
         <div className="hero-caption"><span>THE TRANSCOSMIC</span><b>BOOKS · KNOWLEDGE · DISCOVERY · BELONGING</b></div>
@@ -28,7 +26,7 @@ export function FrontDoor() {
           <h2>REPLY</h2>
           <p className="byline">DEVON AKINS</p>
           <p className="story-lead">Humanity receives a reply.</p>
-          <p>The first published doorway into ANEVUM. The public surface stays inside the current spoiler-safe opening state while the book is in production.</p>
+          <p>The first published doorway into ANEVUM. The public story surface remains spoiler-safe while the book is in production.</p>
           <div className="actions"><Button href="/stories/reply">DISCOVER THE BOOK</Button><span className="production-state">IN PRODUCTION</span></div>
         </div>
         <div className="book-visual production-book-visual">
@@ -39,17 +37,16 @@ export function FrontDoor() {
       </section>
 
       <section className="section two-doors production-two-doors">
-        <div className="section-head"><div><p className="eyebrow">THE UNIVERSE</p><h2>Read it. Then move through it.</h2></div><p>WIKI is the public canonical record. LATTICE is the same released universe expressed relationally as a navigable place.</p></div>
+        <div className="section-head"><div><p className="eyebrow">THE UNIVERSE</p><h2>Read it. Then move through it.</h2></div><p>WIKI is now the moderated public encyclopedia. LATTICE remains the relational universe surface built around published material and RHENLINK identity.</p></div>
         <div className="door-grid">
-          <Link href="/wiki" className="door-card"><VisualArt visualKey="veyra" /><div><span>KNOWLEDGE</span><h3>WIKI.ANEVUM</h3><p>People, worlds, places, events and ideas released from the live canon system.</p><b>OPEN WIKI</b></div></Link>
-          <Link href="/lattice" className="door-card"><VisualArt visualKey="connected" /><div><span>DISCOVERY</span><h3>LATTICE.ANEVUM</h3><p>Move through public records spatially and establish your persistent identity with RHENLINK.</p><b>ENTER LATTICE</b></div></Link>
+          <Link href="/wiki" className="door-card"><VisualArt visualKey="veyra" /><div><span>KNOWLEDGE</span><h3>WIKI.ANEVUM</h3><p>A public encyclopedia that begins blank. Members propose pages and edits; administrators decide what becomes published.</p><b>OPEN WIKI</b></div></Link>
+          <Link href="/lattice" className="door-card"><VisualArt visualKey="connected" /><div><span>DISCOVERY</span><h3>LATTICE.ANEVUM</h3><p>Move through ANEVUM spatially and establish your persistent identity with RHENLINK.</p><b>ENTER LATTICE</b></div></Link>
         </div>
       </section>
 
       <section className="section released-strip production-released-strip">
-        <div className="section-head"><div><p className="eyebrow">THE PUBLIC RECORD</p><h2>Canon you can enter now.</h2></div><SyncStamp /></div>
-        <div className="record-grid four">{featuredPublicObjects.slice(0, 4).map((record) => <RecordCard key={record.id} record={record} />)}</div>
-        <div className="wide-feature production-wide-feature"><VisualArt visualKey={lead.visualKey} /><div><p className="eyebrow">OPENING-STATE PLACE</p><h3>{lead.title}</h3><p>{lead.summary}</p><Button href={lead.route} quiet>READ THE RECORD</Button></div></div>
+        <div className="section-head"><div><p className="eyebrow">PUBLIC KNOWLEDGE</p><h2>Nothing is published by accident.</h2></div><p>The new WIKI does not mirror private canon automatically. Every public page enters through proposal, administrator review and permanent revision history.</p></div>
+        <div className="wide-feature production-wide-feature"><VisualArt visualKey="connected" /><div><p className="eyebrow">WIKI GENERATION 1</p><h3>Start from zero.</h3><p>The encyclopedia can grow deliberately without exposing private development material or treating old hard-coded records as permanent infrastructure.</p><Button href="/wiki" quiet>ENTER THE WIKI</Button></div></div>
       </section>
     </main>
   );
@@ -65,27 +62,28 @@ export function Stories() {
 }
 
 export function Reply() {
-  const records = ["ovara", "merva", "neral", "serein-skygate"].map((slug) => getPublicObjectBySlug(slug)).filter(Boolean);
   return (
     <main className="route-main production-reply-page">
-      <section className="reply-hero production-reply-hero"><VisualArt visualKey="road" /><div className="reply-hero-copy"><p className="eyebrow">THE TRANSCOSMIC / BOOK ONE</p><h1>REPLY</h1><p className="byline">DEVON AKINS</p><p className="story-lead">Humanity receives a reply.</p><p>The story page remains intentionally inside the public opening-state window while the manuscript and release package are in production.</p><div className="actions"><Button href="/wiki">EXPLORE THE RELEASED WORLD</Button><Button href="/lattice" quiet>OPEN LATTICE</Button></div></div></section>
-      <section className="section"><div className="section-head"><div><p className="eyebrow">AROUND THE OPENING STORY</p><h2>Released records, not spoilers.</h2></div><p>These are current publication-cleared records from the live canon system.</p></div><div className="record-grid four">{records.map((record) => record ? <RecordCard key={record.id} record={record} /> : null)}</div></section>
+      <section className="reply-hero production-reply-hero"><VisualArt visualKey="road" /><div className="reply-hero-copy"><p className="eyebrow">THE TRANSCOSMIC / BOOK ONE</p><h1>REPLY</h1><p className="byline">DEVON AKINS</p><p className="story-lead">Humanity receives a reply.</p><p>The story page remains intentionally inside the public opening-state window while the manuscript and release package are in production.</p><div className="actions"><Button href="/wiki">OPEN THE PUBLIC WIKI</Button><Button href="/lattice" quiet>OPEN LATTICE</Button></div></div></section>
+      <section className="section"><div className="section-head"><div><p className="eyebrow">PUBLIC REFERENCE</p><h2>The wiki now grows by approval.</h2></div><p>Story-facing reference pages will appear only after they are proposed and accepted into WIKI.ANEVUM. Private canon is not exposed as filler.</p></div><div className="actions"><Button href="/wiki">OPEN WIKI</Button><Button href="/wiki/new" quiet>PROPOSE A PAGE</Button></div></section>
     </main>
   );
 }
 
 export function SearchPage() {
   const [query, setQuery] = useState("");
-  const results = useMemo(() => searchPublicObjects(query), [query]);
+  function submit(event: FormEvent) {
+    event.preventDefault();
+    const value = query.trim();
+    navigate(value ? `/wiki?query=${encodeURIComponent(value)}` : "/wiki");
+  }
   return (
     <main className="search-page production-search-page">
       <section className="section search-shell">
         <p className="eyebrow">SEARCH.ANEVUM</p>
-        <h1>Find what connects.</h1>
-        <p className="search-deck">Search the released public record only. Private canon never appears in results, autocomplete or fallback states.</p>
-        <label className="search-big"><Search /><input autoFocus value={query} onChange={(event) => setQuery(event.target.value)} placeholder="World, person, place, system, idea..." aria-label="Search ANEVUM" /></label>
-        <div className="search-count">{results.length} PUBLIC RESULTS</div>
-        <div className="search-results">{results.map((record) => <RecordCard key={record.id} record={record} compact />)}</div>
+        <h1>Find what is public.</h1>
+        <p className="search-deck">Universe reference search now resolves through the moderated public Wiki. Private canon never appears in search results or autocomplete.</p>
+        <form onSubmit={submit}><label className="search-big"><Search /><input autoFocus value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search published wiki pages..." aria-label="Search ANEVUM" /></label><div className="actions"><button type="submit" className="button native">SEARCH WIKI</button></div></form>
       </section>
     </main>
   );
