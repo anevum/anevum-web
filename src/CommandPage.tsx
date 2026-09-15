@@ -16,7 +16,7 @@ function useCommandSession() {
 
 const modules = [
   { code: "WIKI", title: "Publication Control", detail: "Review contributor submissions and control what becomes public record.", href: "/wiki", icon: BookOpenText },
-  { code: "LATTICE", title: "Relation Runtime", detail: "Inspect the public relational surface and its RHENLINK-aware state.", href: "https://lattice.anevum.com/", icon: Orbit },
+  { code: "LATTICE", title: "Relation Runtime", detail: "Inspect the public relational surface and its RHENLINK-aware state.", href: "https://anevum.com/lattice", icon: Orbit },
   { code: "RHENLINK", title: "Identity Layer", detail: "Resolve your own member identity and verify authenticated product behavior.", href: "https://anevum.com/rhenlink", icon: CircleUserRound },
   { code: "GITHUB", title: "Production Source", detail: "The current permanent implementation is built from the ANEVUM GitHub main branch.", href: "https://github.com/anevum/anevum-web", icon: GitBranch },
 ] as const;
@@ -79,12 +79,12 @@ export function CommandHome() {
       </div>
 
       <div className="command-event-stream">
-        <div className="command-event-head"><span>OPERATING MODEL</span><strong>ONE SYSTEM / MULTIPLE SURFACES</strong></div>
+        <div className="command-event-head"><span>OPERATING MODEL</span><strong>ONE SYSTEM / STABLE ENTRY POINTS</strong></div>
         <div><time>01</time><span>anevum.com</span><p>Public root and story surface.</p></div>
         <div><time>02</time><span>wiki.anevum.com</span><p>Moderated public knowledge surface.</p></div>
-        <div><time>03</time><span>lattice.anevum.com</span><p>Relational spatial surface.</p></div>
-        <div><time>04</time><span>RHENLINK</span><p>Persistent identity across the system.</p></div>
-        <div><time>05</time><span>command.anevum.com</span><p>Private control and moderation surface.</p></div>
+        <div><time>03</time><span>anevum.com/lattice</span><p>Relational spatial surface.</p></div>
+        <div><time>04</time><span>anevum.com/rhenlink</span><p>Persistent identity across the system.</p></div>
+        <div><time>05</time><span>anevum.com/command</span><p>Private control and moderation surface.</p></div>
       </div>
     </section>
   );
