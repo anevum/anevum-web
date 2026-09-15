@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from "react";
-import { ArrowRight, CircleUserRound, Grid3X3, LogIn, LogOut } from "lucide-react";
+import { ArrowRight, Grid3X3, LogIn, LogOut } from "lucide-react";
 import { featuredPublicObjects } from "./publicObjects";
 import { Button, VisualArt } from "./ui";
 import {
@@ -11,6 +11,8 @@ import {
   signUp,
   type MemberSession,
 } from "./memberClient";
+import { ACHIEVEMENTS, loadMemberProgress, memberLevel, memberXP, onMemberProgressChange, type MemberProgress } from "./memberState";
+import { ProfileProgressSummary } from "./MemberChrome";
 
 function useMemberSession() {
   const [session, setSession] = useState<MemberSession | null>(() => loadSession());
@@ -20,6 +22,19 @@ function useMemberSession() {
     return () => window.removeEventListener("anevum-member-session", sync);
   }, []);
   return [session, setSession] as const;
+}
+
+function blankProgress(): MemberProgress {
+  return { version: 1, savedRecordIds: [], visitedRoutes: [], achievements: [], updatedAt: new Date(0).toISOString() };
+}
+
+function useMemberProgress(session: MemberSession | null) {
+  const [progress, setProgress] = useState<MemberProgress>(() => session ? loadMemberProgress(session) : blankProgress());
+  useEffect(() => {
+    setProgress(session ? loadMemberProgress(session) : blankProgress());
+    return onMemberProgressChange(setProgress);
+  }, [session?.user.id]);
+  return progress;
 }
 
 function RhenMark() {
@@ -36,6 +51,7 @@ export function Lattice() {
   const nodes = featuredPublicObjects.slice(0, 9);
   const [selected, setSelected] = useState(nodes[0]);
   const [session] = useMemberSession();
+  const progress = useMemberProgress(session);
   const identity = displayIdentity(session);
 
   return (
@@ -76,7 +92,11 @@ export function Lattice() {
               <Button href="/rhenlink">CREATE RHENLINK</Button>
             </div>
           ) : (
-            <div className="lattice-join connected"><span>RHENLINK ACTIVE</span><strong>@{identity.handle || "member"}</strong><p>Your authenticated identity is active in this browser.</p></div>
+            <div className="lattice-join connected">
+              <span>RHENLINK ACTIVE / LEVEL {memberLevel(progress)}</span>
+              <strong>@{identity.handle || "member"}</strong>
+              <p>{memberXP(progress)} XP · {progress.savedRecordIds.length} saved · {progress.achievements.length} achievements</p>
+            </div>
           )}
         </aside>
       </section>
@@ -87,6 +107,7 @@ export function Lattice() {
 export function Rhenlink() {
   const [mode, setMode] = useState<"create" | "signin">("create");
   const [session, setSession] = useMemberSession();
+  const progress = useMemberProgress(session);
   const [status, setStatus] = useState("");
   const [busy, setBusy] = useState(false);
   const identity = displayIdentity(session);
@@ -152,7 +173,7 @@ export function Rhenlink() {
         <div>
           <div className="rhen-brand-lockup"><RhenMark /><span><strong>RHENLINK</strong><small>YOUR PLACE IN THE NETWORK.</small></span></div>
           <h1>Your persistent identity.</h1>
-          <p>One identity across ANEVUM. A handle can represent you publicly; the underlying account remains the stable member link for LATTICE and future member systems.</p>
+          <p>One identity across ANEVUM. Your saves, discoveries, XP and achievements now move with the signed-in RHENLINK instead of living as disconnected page state.</p>
         </div>
       </section>
 
@@ -164,11 +185,12 @@ export function Rhenlink() {
             <p className="handle">@{identity.handle || "member"}</p>
             <p className="identity-email">{session.user.email}</p>
             <div className="identity-modules">
-              <div><span>SAVED</span><strong>—</strong><small>persistence activates after member schema verification</small></div>
-              <div><span>COLLECTIONS</span><strong>—</strong><small>persistence activates after member schema verification</small></div>
-              <div><span>ACHIEVEMENTS</span><strong>—</strong><small>persistence activates after member schema verification</small></div>
+              <div><span>SAVED</span><strong>{progress.savedRecordIds.length}</strong><small>canon records connected to your RHENLINK</small></div>
+              <div><span>LEVEL</span><strong>{String(memberLevel(progress)).padStart(2, "0")}</strong><small>{memberXP(progress)} accumulated XP</small></div>
+              <div><span>ACHIEVEMENTS</span><strong>{progress.achievements.length}/{ACHIEVEMENTS.length}</strong><small>unlock through real exploration and saves</small></div>
             </div>
-            <div className="actions"><Button href="/lattice">ENTER LATTICE</Button><button type="button" className="button quiet native" onClick={handleSignOut} disabled={busy}><LogOut size={14} /> SIGN OUT</button></div>
+            <ProfileProgressSummary progress={progress} />
+            <div className="actions"><Button href="/lattice">ENTER LATTICE</Button><Button href="/wiki" quiet>OPEN SAVED RECORDS</Button><button type="button" className="button quiet native" onClick={handleSignOut} disabled={busy}><LogOut size={14} /> SIGN OUT</button></div>
           </div>
         ) : (
           <div className="auth-layout production-auth-layout">
