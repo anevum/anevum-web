@@ -1,9 +1,20 @@
-import { useMemo, useState } from "react";
-import { ArrowLeft, ExternalLink, Search } from "lucide-react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { ArrowLeft, Bookmark, Check, ExternalLink, LogIn, LogOut, Search, UserRound } from "lucide-react";
 import { publicObjects, getPublicObjectBySlug, searchPublicObjects, type PublicObject } from "./publicObjects";
 import { getWikiDetail } from "./wikiDetails";
+import { getWikiSections } from "./wikiSupplement";
 import { CanonVisual } from "./CanonVisuals";
-import { Link, SyncStamp } from "./ui";
+import { Link, SyncStamp, navigate } from "./ui";
+import {
+  displayIdentity,
+  loadSession,
+  memberBackend,
+  signIn,
+  signOut,
+  signUp,
+  type MemberSession,
+} from "./memberClient";
+import { loadWikiSaves, onWikiSavesChange, toggleWikiSave, wikiSavePersistence } from "./wikiMember";
 
 const WIKI_HOST = "wiki.anevum.com";
 
@@ -19,8 +30,35 @@ function wikiHref(record: PublicObject) {
   return onWikiHost() ? record.sourceRoute : record.route;
 }
 
+function rhenlinkHref(returnPath?: string) {
+  const base = "/rhenlink";
+  return returnPath ? `${base}?return=${encodeURIComponent(returnPath)}` : base;
+}
+
 function headingId(value: string) {
   return value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+}
+
+function useWikiMember() {
+  const [session, setSession] = useState<MemberSession | null>(() => loadSession());
+  const [saved, setSaved] = useState<string[]>(() => loadWikiSaves(loadSession()));
+
+  useEffect(() => {
+    const syncSession = () => {
+      const next = loadSession();
+      setSession(next);
+      setSaved(loadWikiSaves(next));
+    };
+    const syncSaves = () => setSaved(loadWikiSaves(loadSession()));
+    window.addEventListener("anevum-member-session", syncSession);
+    const removeSaveListener = onWikiSavesChange(syncSaves);
+    return () => {
+      window.removeEventListener("anevum-member-session", syncSession);
+      removeSaveListener();
+    };
+  }, []);
+
+  return { session, setSession, saved, setSaved, identity: displayIdentity(session) };
 }
 
 const sectionCounts = {
@@ -31,6 +69,7 @@ const sectionCounts = {
 };
 
 export function WikiHeader() {
+  const { session, saved, identity } = useWikiMember();
   return (
     <header className="wiki-site-header">
       <div className="wiki-site-header-inner">
@@ -40,6 +79,14 @@ export function WikiHeader() {
         </Link>
         <nav className="wiki-site-utilities" aria-label="Wiki utilities">
           <Link href={wikiHomeHref()} className="wiki-utility-link">MAIN PAGE</Link>
+          {session ? (
+            <>
+              <Link href="/saved" className="wiki-utility-link wiki-rhenlink-state"><Bookmark size={12} /> SAVED {saved.length}</Link>
+              <Link href="/rhenlink" className="wiki-utility-link wiki-rhenlink-state"><UserRound size={12} /> @{identity.handle || "member"}</Link>
+            </>
+          ) : (
+            <Link href="/rhenlink" className="wiki-utility-link wiki-rhenlink-state"><UserRound size={12} /> RHENLINK</Link>
+          )}
           <a href="https://anevum.com" className="wiki-utility-link">ANEVUM.COM <ExternalLink size={11} /></a>
         </nav>
       </div>
@@ -49,6 +96,8 @@ export function WikiHeader() {
 
 function WikiSidebar({ record, activeSection = "ALL", onSection }: { record?: PublicObject; activeSection?: string; onSection?: (value: string) => void }) {
   const detail = record ? getWikiDetail(record.slug) : undefined;
+  const sections = record ? getWikiSections(record.slug, detail?.sections || []) : [];
+  const { session, saved, identity } = useWikiMember();
   const coreRecords = ["merva", "ovara", "neral", "veyra", "connected-worlds"]
     .map((slug) => getPublicObjectBySlug(slug))
     .filter(Boolean) as PublicObject[];
@@ -58,7 +107,7 @@ function WikiSidebar({ record, activeSection = "ALL", onSection }: { record?: Pu
       <div className="wiki-sidebar-group">
         <span className="wiki-sidebar-label">NAVIGATION</span>
         <Link href={wikiHomeHref()} className="wiki-sidebar-link">Main page</Link>
-        <a href="#all-records" className="wiki-sidebar-link">All released records</a>
+        <Link href={`${wikiHomeHref()}#all-records`} className="wiki-sidebar-link">All released records</Link>
       </div>
 
       <div className="wiki-sidebar-group">
@@ -78,12 +127,12 @@ function WikiSidebar({ record, activeSection = "ALL", onSection }: { record?: Pu
         ))}
       </div>
 
-      {record && detail ? (
+      {record && sections.length ? (
         <div className="wiki-sidebar-group wiki-toc">
           <span className="wiki-sidebar-label">CONTENTS</span>
           <a href="#overview" className="wiki-sidebar-link">Overview</a>
-          {detail.sections.map((section, index) => (
-            <a key={section.title} href={`#${headingId(section.title)}`} className="wiki-sidebar-link">
+          {sections.map((section, index) => (
+            <a key={`${section.title}-${index}`} href={`#${headingId(section.title)}`} className="wiki-sidebar-link">
               <span>{index + 1}. {section.title}</span>
             </a>
           ))}
@@ -96,6 +145,18 @@ function WikiSidebar({ record, activeSection = "ALL", onSection }: { record?: Pu
           {coreRecords.map((item) => <Link key={item.id} href={wikiHref(item)} className="wiki-sidebar-link">{item.title}</Link>)}
         </div>
       ) : null}
+
+      <div className="wiki-sidebar-group wiki-rhenlink-sidebar">
+        <span className="wiki-sidebar-label">RHENLINK</span>
+        {session ? (
+          <>
+            <Link href="/rhenlink" className="wiki-sidebar-link"><span>@{identity.handle || "member"}</span><small>active</small></Link>
+            <Link href="/saved" className="wiki-sidebar-link"><span>Saved records</span><small>{saved.length}</small></Link>
+          </>
+        ) : (
+          <Link href={rhenlinkHref(record ? wikiHref(record) : wikiHomeHref())} className="wiki-sidebar-link"><span>Sign in / create</span><small>RHENLINK</small></Link>
+        )}
+      </div>
 
       <div className="wiki-sidebar-source">
         <span>CANON AUTHORITY</span>
@@ -146,6 +207,7 @@ function WikiPortal({ title, description, section, onSelect }: { title: string; 
 export function WikiHome() {
   const [query, setQuery] = useState("");
   const [section, setSection] = useState("ALL");
+  const { session, saved, identity } = useWikiMember();
   const results = useMemo(() => searchPublicObjects(query, section), [query, section]);
   const lead = getPublicObjectBySlug("merva")!;
 
@@ -170,6 +232,12 @@ export function WikiHome() {
           </header>
 
           <WikiSearch query={query} setQuery={setQuery} />
+
+          {session ? (
+            <div className="wiki-member-strip"><UserRound size={14} /><span>RHENLINK</span><strong>@{identity.handle || "member"}</strong><Link href="/saved">{saved.length} saved {saved.length === 1 ? "record" : "records"}</Link></div>
+          ) : (
+            <div className="wiki-member-strip"><UserRound size={14} /><span>RHENLINK</span><strong>Make the Wiki yours.</strong><Link href={rhenlinkHref(wikiHomeHref())}>Sign in or create a link</Link></div>
+          )}
 
           <div className="wiki-home-columns">
             <section className="wiki-box wiki-featured-article">
@@ -223,11 +291,12 @@ export function WikiHome() {
 
 function RecordContents({ slug }: { slug: string }) {
   const detail = getWikiDetail(slug);
-  if (!detail) return null;
+  const sections = getWikiSections(slug, detail?.sections || []);
+  if (!sections.length) return null;
   return (
     <div className="wiki-article-sections">
-      {detail.sections.map((section, index) => (
-        <section key={section.title} id={headingId(section.title)} className="wiki-article-section">
+      {sections.map((section, index) => (
+        <section key={`${section.title}-${index}`} id={headingId(section.title)} className="wiki-article-section">
           <h2><span>{index + 1}</span>{section.title}</h2>
           {section.body.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}
           {section.items?.length ? <ul>{section.items.map((item) => <li key={item}>{item}</li>)}</ul> : null}
@@ -237,8 +306,28 @@ function RecordContents({ slug }: { slug: string }) {
   );
 }
 
+function WikiSaveControl({ record }: { record: PublicObject }) {
+  const { session, saved, setSaved } = useWikiMember();
+  const active = saved.includes(record.id);
+  if (!session) {
+    return <Link href={rhenlinkHref(wikiHref(record))} className="wiki-save-control"><Bookmark size={13} /> SAVE WITH RHENLINK</Link>;
+  }
+  return (
+    <button
+      type="button"
+      className={`wiki-save-control ${active ? "active" : ""}`}
+      onClick={() => setSaved(toggleWikiSave(session, record.id))}
+      aria-pressed={active}
+    >
+      {active ? <Check size={13} /> : <Bookmark size={13} />}
+      {active ? "SAVED TO RHENLINK" : "SAVE TO RHENLINK"}
+    </button>
+  );
+}
+
 function WikiInfobox({ record }: { record: PublicObject }) {
   const detail = getWikiDetail(record.slug);
+  const { session } = useWikiMember();
   return (
     <aside className="wiki-infobox">
       <div className="wiki-infobox-title">{record.title}</div>
@@ -253,6 +342,10 @@ function WikiInfobox({ record }: { record: PublicObject }) {
         {detail ? <div><dt>Source state</dt><dd>{detail.sourceState}</dd></div> : null}
       </dl>
       {detail ? <div className="wiki-infobox-source"><span>{detail.sourceLabel}</span></div> : null}
+      <div className="wiki-infobox-member">
+        <WikiSaveControl record={record} />
+        {session ? <small>{wikiSavePersistence.label}. Cloud sync is pending member-database verification.</small> : <small>Sign in with RHENLINK to keep a reading list on this device.</small>}
+      </div>
     </aside>
   );
 }
@@ -261,6 +354,7 @@ export function WikiRecord({ slug }: { slug: string }) {
   const record = getPublicObjectBySlug(slug);
   if (!record) return <WikiMissing />;
   const detail = getWikiDetail(slug);
+  const sections = getWikiSections(slug, detail?.sections || []);
   const neighbors = publicObjects.filter((item) => item.id !== record.id && (item.section === record.section || item.type === record.type)).slice(0, 5);
 
   return (
@@ -284,6 +378,7 @@ export function WikiRecord({ slug }: { slug: string }) {
               <span>{record.renderMode}</span>
               <span>{record.spoilerLevel}</span>
               <span>PUBLIC CANON</span>
+              <span>{sections.length} SECTIONS</span>
             </div>
           </header>
 
@@ -295,7 +390,7 @@ export function WikiRecord({ slug }: { slug: string }) {
 
               <RecordContents slug={slug} />
 
-              {!detail ? (
+              {!sections.length ? (
                 <section className="wiki-article-section">
                   <h2>Overview</h2>
                   <p>{record.summary}</p>
@@ -324,6 +419,142 @@ export function WikiRecord({ slug }: { slug: string }) {
             </div>
           </section>
         </article>
+      </div>
+    </main>
+  );
+}
+
+function safeReturnPath() {
+  if (typeof window === "undefined") return wikiHomeHref();
+  const value = new URLSearchParams(window.location.search).get("return") || "";
+  return value.startsWith("/") && !value.startsWith("//") ? value : wikiHomeHref();
+}
+
+export function WikiRhenlink() {
+  const [mode, setMode] = useState<"signin" | "create">("signin");
+  const { session, setSession, identity, saved } = useWikiMember();
+  const [status, setStatus] = useState("");
+  const [busy, setBusy] = useState(false);
+  const returnPath = safeReturnPath();
+
+  async function handleSignIn(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setBusy(true);
+    setStatus("");
+    const form = new FormData(event.currentTarget);
+    try {
+      const next = await signIn(String(form.get("email") || ""), String(form.get("password") || ""));
+      setSession(next);
+      navigate(returnPath);
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : "Could not sign in.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function handleCreate(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setBusy(true);
+    setStatus("");
+    const form = new FormData(event.currentTarget);
+    const handle = String(form.get("handle") || "").trim().toLowerCase();
+    if (!/^[a-z0-9][a-z0-9_]{2,20}$/.test(handle)) {
+      setStatus("Handles use 3–21 lowercase letters, numbers, or underscores.");
+      setBusy(false);
+      return;
+    }
+    try {
+      const result = await signUp({
+        email: String(form.get("email") || ""),
+        password: String(form.get("password") || ""),
+        handle,
+        displayName: String(form.get("displayName") || ""),
+      });
+      if (result.status === "signed-in") {
+        setSession(result.session);
+        navigate(returnPath);
+      } else {
+        setStatus("Account created. Confirm your email, then return here to sign in.");
+      }
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : "Could not create RHENLINK.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function handleSignOut() {
+    setBusy(true);
+    await signOut();
+    setSession(null);
+    setStatus("Signed out from WIKI.ANEVUM.");
+    setBusy(false);
+  }
+
+  return (
+    <main className="wiki-native-page">
+      <div className="wiki-native-layout">
+        <WikiSidebar />
+        <section className="wiki-native-content wiki-member-page">
+          <p className="wiki-kicker">RHENLINK / WIKI.ANEVUM</p>
+          <h1>{session ? "Wiki identity" : "Connect your RHENLINK"}</h1>
+          <p className="wiki-member-deck">RHENLINK is the member identity layer used by ANEVUM and LATTICE. On the Wiki it gives released records a persistent member context: saved reading, collections and later achievement/history features.</p>
+
+          {session ? (
+            <div className="wiki-member-account">
+              <div className="wiki-member-account-id"><UserRound size={30} /><div><strong>{identity.displayName || "Member"}</strong><span>@{identity.handle || "member"}</span><small>{session.user.email}</small></div></div>
+              <dl><div><dt>Saved records</dt><dd>{saved.length}</dd></div><div><dt>Current persistence</dt><dd>{wikiSavePersistence.label}</dd></div><div><dt>Cloud member state</dt><dd>Awaiting database verification</dd></div></dl>
+              <div className="wiki-member-actions"><Link href="/saved" className="wiki-small-action"><Bookmark size={13} /> View saved records</Link><button type="button" className="wiki-small-action" onClick={handleSignOut} disabled={busy}><LogOut size={13} /> Sign out</button></div>
+            </div>
+          ) : (
+            <div className="wiki-auth-shell">
+              <div className="wiki-auth-tabs"><button type="button" className={mode === "signin" ? "active" : ""} onClick={() => setMode("signin")}>SIGN IN</button><button type="button" className={mode === "create" ? "active" : ""} onClick={() => setMode("create")}>CREATE RHENLINK</button></div>
+              {!memberBackend.configured ? <div className="wiki-auth-blocked"><strong>Member backend connection required.</strong><p>The Wiki integration is installed, but account creation and sign-in remain disabled until the existing ANEVUM Supabase project's public publishable key is present in the production build.</p></div> : null}
+              {mode === "signin" ? (
+                <form className="wiki-auth-form" onSubmit={handleSignIn}>
+                  <label>Email<input name="email" type="email" required autoComplete="email" /></label>
+                  <label>Password<input name="password" type="password" required autoComplete="current-password" /></label>
+                  <button type="submit" disabled={busy || !memberBackend.configured}>{busy ? "SIGNING IN..." : "SIGN IN"}<LogIn size={13} /></button>
+                </form>
+              ) : (
+                <form className="wiki-auth-form" onSubmit={handleCreate}>
+                  <label>Display name<input name="displayName" required autoComplete="name" /></label>
+                  <label>RHENLINK handle<input name="handle" required autoCapitalize="none" autoCorrect="off" placeholder="yourname" /></label>
+                  <label>Email<input name="email" type="email" required autoComplete="email" /></label>
+                  <label>Password<input name="password" type="password" minLength={8} required autoComplete="new-password" /></label>
+                  <button type="submit" disabled={busy || !memberBackend.configured}>{busy ? "CREATING..." : "CREATE RHENLINK"}<UserRound size={13} /></button>
+                </form>
+              )}
+              {status ? <p className="wiki-auth-status" role="status">{status}</p> : null}
+            </div>
+          )}
+        </section>
+      </div>
+    </main>
+  );
+}
+
+export function WikiSaved() {
+  const { session, saved, identity } = useWikiMember();
+  const records = publicObjects.filter((record) => saved.includes(record.id));
+  return (
+    <main className="wiki-native-page">
+      <div className="wiki-native-layout">
+        <WikiSidebar />
+        <section className="wiki-native-content wiki-saved-page">
+          <p className="wiki-kicker">RHENLINK / READING LIST</p>
+          <h1>Saved records</h1>
+          {!session ? (
+            <div className="wiki-empty-saved"><p>Sign in with RHENLINK to build a Wiki reading list.</p><Link href={rhenlinkHref("/saved")} className="wiki-small-action"><UserRound size={13} /> Connect RHENLINK</Link></div>
+          ) : (
+            <>
+              <p className="wiki-saved-deck">@{identity.handle || "member"} · {records.length} saved {records.length === 1 ? "record" : "records"} · {wikiSavePersistence.label.toLowerCase()}</p>
+              {records.length ? <div className="wiki-record-list">{records.map((record) => <WikiRecordRow key={record.id} record={record} />)}</div> : <div className="wiki-empty-saved"><p>No records saved yet. Open any article and choose “Save to RHENLINK.”</p><Link href={wikiHomeHref()} className="wiki-small-action">Browse the Wiki</Link></div>}
+              <p className="wiki-persistence-note">{wikiSavePersistence.detail}</p>
+            </>
+          )}
+        </section>
       </div>
     </main>
   );
