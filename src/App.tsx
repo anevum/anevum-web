@@ -4,6 +4,7 @@ import { Footer, Header } from "./ui";
 import { FrontDoor, NotFound, Reply, SearchPage, Store, Stories, Transmissions } from "./PublicPages";
 import { WikiHeader, WikiHome, WikiMissing, WikiRecord, WikiRhenlink, WikiSaved } from "./WikiPages";
 import { Lattice, Rhenlink } from "./MemberPages";
+import { InterfaceStrip, MobileDock } from "./ExperienceChrome";
 
 const WIKI_HOST = "wiki.anevum.com";
 
@@ -124,10 +125,12 @@ export default function App() {
   const headerPath = wikiHost && pathname === "/" ? "/wiki" : pathname;
 
   return (
-    <div className={`app-shell production-shell ${wikiHost ? "wiki-surface-shell" : ""}`}>
+    <div className={`app-shell production-shell ${wikiHost ? "wiki-surface-shell" : "anevum-surface-shell"}`}>
       {wikiHost ? <WikiHeader /> : <Header pathname={headerPath} />}
+      {!wikiHost ? <InterfaceStrip pathname={pathname} /> : null}
       <Route pathname={pathname} hostname={hostname} />
       {!wikiHost ? <Footer /> : null}
+      {!wikiHost ? <MobileDock pathname={pathname} /> : null}
     </div>
   );
 }
