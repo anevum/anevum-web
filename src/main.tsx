@@ -11,6 +11,7 @@ import "./memberChrome.css";
 import "./replyLaunch.css";
 import "./launchTerminal.css";
 import "./launchIntegration.css";
+import "./launchPages.css";
 
 installRuntimeFixes();
 
