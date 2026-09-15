@@ -1,0 +1,153 @@
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Award, Bookmark, ChevronRight, CircleUserRound, Sparkles, X } from "lucide-react";
+import { Link } from "./ui";
+import { displayIdentity, loadSession, loadSharedIdentity, type MemberSession, type SharedIdentity } from "./memberClient";
+import {
+  ACHIEVEMENTS,
+  hydrateMemberProgress,
+  loadMemberProgress,
+  memberLevel,
+  memberXP,
+  onAchievementUnlocked,
+  onMemberProgressChange,
+  type AchievementDefinition,
+  type MemberProgress,
+} from "./memberState";
+
+function emptyProgress(): MemberProgress {
+  return { version: 1, savedRecordIds: [], visitedRoutes: [], achievements: [], updatedAt: new Date(0).toISOString() };
+}
+
+function useMemberChromeState() {
+  const [session, setSession] = useState<MemberSession | null>(() => loadSession());
+  const [sharedIdentity, setSharedIdentity] = useState<SharedIdentity | null>(() => loadSharedIdentity());
+  const [progress, setProgress] = useState<MemberProgress>(() => loadMemberProgress(loadSession()));
+
+  useEffect(() => {
+    const syncSession = () => {
+      const next = loadSession();
+      setSession(next);
+      setSharedIdentity(loadSharedIdentity());
+      setProgress(next ? loadMemberProgress(next) : emptyProgress());
+    };
+    const removeProgress = onMemberProgressChange(setProgress);
+    window.addEventListener("anevum-member-session", syncSession);
+    return () => {
+      removeProgress();
+      window.removeEventListener("anevum-member-session", syncSession);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!session) return;
+    hydrateMemberProgress(session).then(setProgress).catch(() => undefined);
+  }, [session?.user.id]);
+
+  return { session, sharedIdentity, progress };
+}
+
+function identityLabel(session: MemberSession | null, sharedIdentity: SharedIdentity | null) {
+  if (session) return displayIdentity(session);
+  return {
+    handle: sharedIdentity?.handle || "",
+    displayName: sharedIdentity?.displayName || "",
+  };
+}
+
+export function RhenlinkIdentityCard() {
+  const { session, sharedIdentity, progress } = useMemberChromeState();
+  const identity = identityLabel(session, sharedIdentity);
+  const authenticated = Boolean(session);
+  const level = memberLevel(progress);
+  const xp = memberXP(progress);
+
+  if (!session && !sharedIdentity) {
+    return (
+      <Link href="/rhenlink" className="rhenlink-follower rhenlink-follower-offline" ariaLabel="Create a RHENLINK">
+        <span className="rhenlink-follower-mark"><CircleUserRound size={19} /></span>
+        <span className="rhenlink-follower-copy"><small>RHENLINK</small><strong>CLAIM YOUR ID</strong></span>
+        <ChevronRight size={15} />
+      </Link>
+    );
+  }
+
+  return (
+    <Link href="/rhenlink" className={`rhenlink-follower ${authenticated ? "online" : "linked"}`} ariaLabel="Open your RHENLINK profile">
+      <span className="rhenlink-follower-mark"><CircleUserRound size={19} /></span>
+      <span className="rhenlink-follower-copy">
+        <small>{authenticated ? `RHENLINK / LEVEL ${level}` : "RHENLINK / LINKED"}</small>
+        <strong>@{identity.handle || "member"}</strong>
+        <em>{authenticated ? `${xp} XP · ${progress.savedRecordIds.length} SAVED · ${progress.achievements.length}/${ACHIEVEMENTS.length} ACHIEVEMENTS` : identity.displayName}</em>
+      </span>
+      <span className="rhenlink-follower-pulse" aria-hidden="true" />
+      <ChevronRight size={15} />
+    </Link>
+  );
+}
+
+export function AchievementLayer() {
+  const [queue, setQueue] = useState<AchievementDefinition[]>([]);
+  const [active, setActive] = useState<AchievementDefinition | null>(null);
+  const timerRef = useRef<number | null>(null);
+
+  useEffect(() => onAchievementUnlocked((achievement) => {
+    setQueue((current) => current.some((item) => item.id === achievement.id) || active?.id === achievement.id ? current : [...current, achievement]);
+  }), [active?.id]);
+
+  useEffect(() => {
+    if (active || queue.length === 0) return;
+    const [next, ...rest] = queue;
+    setActive(next);
+    setQueue(rest);
+  }, [active, queue]);
+
+  useEffect(() => {
+    if (!active) return;
+    if (timerRef.current) window.clearTimeout(timerRef.current);
+    timerRef.current = window.setTimeout(() => setActive(null), 4200);
+    return () => {
+      if (timerRef.current) window.clearTimeout(timerRef.current);
+    };
+  }, [active]);
+
+  if (!active) return null;
+
+  return (
+    <div className="achievement-layer" role="status" aria-live="polite">
+      <div className="achievement-burst" aria-hidden="true"><i /><i /><i /><i /><i /><i /></div>
+      <div className="achievement-panel">
+        <button type="button" onClick={() => setActive(null)} aria-label="Dismiss achievement"><X size={15} /></button>
+        <div className="achievement-emblem"><Sparkles size={22} /><Award size={35} /></div>
+        <span className="achievement-kicker">ACHIEVEMENT UNLOCKED / {active.tier}</span>
+        <strong>{active.title}</strong>
+        <p>{active.description}</p>
+        <div className="achievement-xp"><span>RHENLINK PROGRESS</span><b>+{active.xp} XP</b></div>
+      </div>
+    </div>
+  );
+}
+
+export function ProfileProgressSummary({ progress }: { progress: MemberProgress }) {
+  const xp = memberXP(progress);
+  const level = memberLevel(progress);
+  const unlocked = useMemo(() => new Set(progress.achievements.map((item) => item.id)), [progress.achievements]);
+  const levelBase = (level - 1) * 150;
+  const levelProgress = Math.min(150, Math.max(0, xp - levelBase));
+
+  return (
+    <div className="profile-progress-summary">
+      <div className="profile-level-row"><span>RHENLINK LEVEL</span><strong>{String(level).padStart(2, "0")}</strong><small>{xp} XP</small></div>
+      <div className="profile-xp-track"><i style={{ width: `${(levelProgress / 150) * 100}%` }} /></div>
+      <div className="profile-achievement-grid">
+        {ACHIEVEMENTS.map((achievement) => (
+          <div key={achievement.id} className={unlocked.has(achievement.id) ? "unlocked" : "locked"} title={achievement.description}>
+            <Award size={15} />
+            <span>{achievement.title}</span>
+            <small>{unlocked.has(achievement.id) ? `${achievement.xp} XP` : "LOCKED"}</small>
+          </div>
+        ))}
+      </div>
+      <div className="profile-saved-line"><Bookmark size={14} /><span>{progress.savedRecordIds.length} saved canon {progress.savedRecordIds.length === 1 ? "record" : "records"}</span></div>
+    </div>
+  );
+}
