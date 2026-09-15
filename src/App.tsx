@@ -3,6 +3,8 @@ import ReplyLaunch from "./ReplyLaunch";
 import { Rhenlink } from "./RhenlinkV2";
 import { AuthBridgePage, SystemSessionBridge } from "./AuthBridge";
 import { CommandHome } from "./CommandPage";
+import { AchievementLayer } from "./MemberChrome";
+import { trackMemberRoute } from "./memberState";
 import { UnifiedSystemShell } from "./SystemShell";
 
 const ROOT_HOST = "anevum.com";
@@ -97,6 +99,15 @@ export default function App() {
     ogUrl.content = bridgeRoute ? "https://anevum.com/auth-bridge" : canonicalUrl;
   }, [pathname, hostname, bridgeRoute, commandRoute, rhenlinkRoute]);
 
+  useEffect(() => {
+    if (bridgeRoute || commandRoute || hostname !== ROOT_HOST) return;
+    const currentRoute = rhenlinkRoute ? "/rhenlink" : "/";
+    const recordRoute = () => trackMemberRoute(currentRoute);
+    recordRoute();
+    window.addEventListener("anevum-member-session", recordRoute);
+    return () => window.removeEventListener("anevum-member-session", recordRoute);
+  }, [hostname, bridgeRoute, commandRoute, rhenlinkRoute]);
+
   if (bridgeRoute) return <AuthBridgePage />;
 
   if (commandRoute) {
@@ -112,12 +123,17 @@ export default function App() {
 
   if (rhenlinkRoute) {
     return (
-      <div className="unified-runtime-shell">
-        <SystemSessionBridge hostname={hostname} />
+      <div className="editorial-shell editorial-surface-rhenlink launch-rhenlink-shell">
         <Rhenlink />
+        <AchievementLayer />
       </div>
     );
   }
 
-  return <ReplyLaunch />;
+  return (
+    <>
+      <ReplyLaunch />
+      <AchievementLayer />
+    </>
+  );
 }
