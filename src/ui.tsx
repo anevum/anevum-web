@@ -10,16 +10,59 @@ export type LinkProps = {
   ariaLabel?: string;
 };
 
+const WIKI_HOST = "wiki.anevum.com";
+const LATTICE_HOST = "lattice.anevum.com";
+const COMMAND_HOST = "command.anevum.com";
+const ROOT_HOST = "anevum.com";
+
+function isProductionAnevumHost(hostname: string) {
+  return hostname === ROOT_HOST || hostname.endsWith(".anevum.com");
+}
+
+export function resolveSystemHref(href: string) {
+  if (typeof window === "undefined" || !href.startsWith("/") || href.startsWith("//")) return href;
+  const host = window.location.hostname.toLowerCase();
+  if (!isProductionAnevumHost(host)) return href;
+
+  if (href === "/wiki" || href.startsWith("/wiki/")) {
+    const relative = href === "/wiki" ? "/" : href.slice(5) || "/";
+    return host === WIKI_HOST ? relative : `https://${WIKI_HOST}${relative}`;
+  }
+  if (href === "/lattice" || href.startsWith("/lattice/")) {
+    const relative = href === "/lattice" ? "/" : href.slice(8) || "/";
+    return host === LATTICE_HOST ? relative : `https://${LATTICE_HOST}${relative}`;
+  }
+  if (href === "/command" || href.startsWith("/command/")) {
+    const relative = href === "/command" ? "/" : href.slice(8) || "/";
+    return host === COMMAND_HOST ? relative : `https://${COMMAND_HOST}${relative}`;
+  }
+  if (href === "/rhenlink") return host === ROOT_HOST ? href : `https://${ROOT_HOST}/rhenlink`;
+
+  if (href === "/" || href === "/stories" || href.startsWith("/stories/") || href === "/search" || href === "/transmissions" || href === "/store") {
+    return host === ROOT_HOST ? href : `https://${ROOT_HOST}${href}`;
+  }
+
+  return href;
+}
+
 export function navigate(href: string) {
-  if (window.location.pathname !== href) window.history.pushState({}, "", href);
+  const resolved = resolveSystemHref(href);
+  const target = new URL(resolved, window.location.href);
+  if (target.origin !== window.location.origin) {
+    window.location.assign(target.toString());
+    return;
+  }
+  const next = `${target.pathname}${target.search}${target.hash}`;
+  if (`${window.location.pathname}${window.location.search}${window.location.hash}` !== next) window.history.pushState({}, "", next);
   window.dispatchEvent(new PopStateEvent("popstate"));
   window.scrollTo({ top: 0, behavior: "auto" });
 }
 
 export function Link({ href, className, children, onNavigate, ariaLabel }: LinkProps) {
+  const resolvedHref = typeof window === "undefined" ? href : resolveSystemHref(href);
   return (
     <a
-      href={href}
+      href={resolvedHref}
       className={className}
       aria-label={ariaLabel}
       onClick={(event) => {
