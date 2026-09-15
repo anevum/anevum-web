@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { ArrowLeft, Bookmark, Check, ExternalLink, LogIn, LogOut, Search, UserRound } from "lucide-react";
-import { publicObjects, getPublicObjectBySlug, searchPublicObjects, type PublicObject } from "./publicObjects";
+import { publicObjects, getPublicObjectBySlug, type PublicObject } from "./publicObjects";
 import { getWikiDetail } from "./wikiDetails";
 import { getWikiSections } from "./wikiSupplement";
+import { getRelatedPublicObjects } from "./wikiRelations";
 import { CanonVisual } from "./CanonVisuals";
 import { Link, SyncStamp, navigate } from "./ui";
 import {
@@ -37,6 +38,31 @@ function rhenlinkHref(returnPath?: string) {
 
 function headingId(value: string) {
   return value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+}
+
+function searchableRecordText(record: PublicObject) {
+  const detail = getWikiDetail(record.slug);
+  const sections = getWikiSections(record.slug, detail?.sections || []);
+  return [
+    record.title,
+    record.type,
+    record.section,
+    record.summary,
+    record.publicWindow,
+    record.renderMode,
+    record.spoilerLevel,
+    ...(record.facts || []).flat(),
+    detail?.lead || "",
+    ...sections.flatMap((section) => [section.title, ...section.body, ...(section.items || [])]),
+  ].join(" ").toLowerCase();
+}
+
+function searchWikiRecords(query: string, section: string) {
+  const normalized = query.trim().toLowerCase();
+  return publicObjects.filter((record) => {
+    const sectionMatch = section === "ALL" || record.section === section;
+    return sectionMatch && (!normalized || searchableRecordText(record).includes(normalized));
+  });
 }
 
 function useWikiMember() {
@@ -170,7 +196,7 @@ function WikiSearch({ query, setQuery }: { query: string; setQuery: (value: stri
   return (
     <label className="wiki-native-search">
       <Search size={15} />
-      <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search WIKI.ANEVUM" aria-label="Search released canon" />
+      <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search titles, article text, facts and released canon..." aria-label="Search released canon" />
       {query ? <button type="button" onClick={() => setQuery("")}>Clear</button> : null}
     </label>
   );
@@ -208,7 +234,7 @@ export function WikiHome() {
   const [query, setQuery] = useState("");
   const [section, setSection] = useState("ALL");
   const { session, saved, identity } = useWikiMember();
-  const results = useMemo(() => searchPublicObjects(query, section), [query, section]);
+  const results = useMemo(() => searchWikiRecords(query, section), [query, section]);
   const lead = getPublicObjectBySlug("merva")!;
 
   function selectSection(value: string) {
@@ -278,7 +304,7 @@ export function WikiHome() {
               <div><p className="wiki-kicker">PUBLIC INDEX</p><h2>{section === "ALL" ? "All released records" : `${section.charAt(0) + section.slice(1).toLowerCase()} records`}</h2></div>
               <span>{results.length} entries</span>
             </div>
-            {query ? <p className="wiki-search-state">Showing results for <strong>{query}</strong>.</p> : null}
+            {query ? <p className="wiki-search-state">Showing full-article results for <strong>{query}</strong>.</p> : null}
             <div className="wiki-record-list">
               {results.length ? results.map((record) => <WikiRecordRow key={record.id} record={record} />) : <p className="wiki-no-results">No released record matches this search.</p>}
             </div>
@@ -355,7 +381,7 @@ export function WikiRecord({ slug }: { slug: string }) {
   if (!record) return <WikiMissing />;
   const detail = getWikiDetail(slug);
   const sections = getWikiSections(slug, detail?.sections || []);
-  const neighbors = publicObjects.filter((item) => item.id !== record.id && (item.section === record.section || item.type === record.type)).slice(0, 5);
+  const neighbors = getRelatedPublicObjects(record.slug, 6);
 
   return (
     <main className="wiki-native-page wiki-record-page-native">
