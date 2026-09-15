@@ -5,6 +5,7 @@ import { AchievementLayer } from "./MemberChrome";
 import { trackMemberRoute } from "./memberState";
 import { CommandHome } from "./CommandPage";
 import { UnifiedSystemShell, type SystemSurface } from "./SystemShell";
+import { EditorialShell } from "./EditorialShell";
 import { AuthBridgePage, SystemSessionBridge } from "./AuthBridge";
 import {
   ModeratedWikiArticle,
@@ -118,12 +119,12 @@ function Route({ pathname, hostname }: { pathname: string; hostname: string }) {
 
 function titleFor(pathname: string, hostname: string, surface: SystemSurface) {
   if (surface === "command") return pathname === "/wiki" || pathname === "/wiki/admin" ? "Wiki Moderation — ANEVUM COMMAND" : "ANEVUM COMMAND — Control Plane";
-  if (surface === "lattice") return "LATTICE.ANEVUM — Relational Universe";
+  if (surface === "lattice") return "LATTICE.ANEVUM — The Universe as a Place";
   if (surface === "rhenlink") return "RHENLINK — ANEVUM Identity";
   if (surface === "wiki") {
     const wikiHost = hostname === WIKI_HOST;
     const root = wikiHost ? pathname === "/" || pathname === "/wiki" || pathname === "/search" : pathname === "/wiki";
-    if (root) return "WIKI.ANEVUM — Public Collaborative Encyclopedia";
+    if (root) return "WIKI.ANEVUM — The Public Record";
     if (pathname.endsWith("/new")) return "Propose a Page — WIKI.ANEVUM";
     if (pathname.endsWith("/admin")) return "Wiki Administration — ANEVUM";
     if (pathname.endsWith("/saved")) return "Saved Pages — WIKI.ANEVUM";
@@ -135,7 +136,7 @@ function titleFor(pathname: string, hostname: string, surface: SystemSurface) {
   if (pathname === "/search") return "Search — ANEVUM";
   if (pathname === "/transmissions") return "Transmissions — ANEVUM";
   if (pathname === "/store") return "Store — ANEVUM";
-  return "ANEVUM — Unified Interface";
+  return "ANEVUM — A Universe in Story";
 }
 
 function canonicalFor(pathname: string, hostname: string, surface: SystemSurface) {
@@ -210,12 +211,16 @@ export default function App() {
 
   if (bridgeRoute) return <AuthBridgePage />;
 
+  const route = <Route pathname={pathname} hostname={hostname} />;
+
   return (
     <div className="app-shell production-shell unified-runtime-shell">
       <SystemSessionBridge hostname={hostname} />
-      <UnifiedSystemShell surface={surface} pathname={pathname} hostname={hostname}>
-        <Route pathname={pathname} hostname={hostname} />
-      </UnifiedSystemShell>
+      {surface === "command" ? (
+        <UnifiedSystemShell surface={surface} pathname={pathname} hostname={hostname}>{route}</UnifiedSystemShell>
+      ) : (
+        <EditorialShell surface={surface} pathname={pathname}>{route}</EditorialShell>
+      )}
       <AchievementLayer />
     </div>
   );
