@@ -19,9 +19,9 @@ const surfaces = [
   { id: "anevum" as const, label: "ANEVUM", code: "ROOT", href: "https://anevum.com/", icon: House },
   { id: "stories" as const, label: "STORIES", code: "STORY", href: "https://anevum.com/stories", icon: LibraryBig },
   { id: "wiki" as const, label: "WIKI", code: "KNOW", href: "https://wiki.anevum.com/", icon: BookOpenText },
-  { id: "lattice" as const, label: "LATTICE", code: "SPACE", href: "https://lattice.anevum.com/", icon: Orbit },
+  { id: "lattice" as const, label: "LATTICE", code: "SPACE", href: "https://anevum.com/lattice", icon: Orbit },
   { id: "rhenlink" as const, label: "RHENLINK", code: "IDENT", href: "https://anevum.com/rhenlink", icon: CircleUserRound },
-  { id: "command" as const, label: "COMMAND", code: "CTRL", href: "https://command.anevum.com/", icon: Command },
+  { id: "command" as const, label: "COMMAND", code: "CTRL", href: "https://anevum.com/command", icon: Command },
 ];
 
 const surfaceMeta: Record<SystemSurface, { eyebrow: string; detail: string; access: string }> = {
@@ -54,9 +54,9 @@ function resolveCommand(raw: string) {
   if (["wiki new", "new page", "propose"].includes(command)) return "https://wiki.anevum.com/new";
   if (["wiki saved", "saved"].includes(command)) return "https://wiki.anevum.com/saved";
   if (["wiki admin", "moderation"].includes(command)) return "https://wiki.anevum.com/admin";
-  if (["lattice", "space", "explore"].includes(command)) return "https://lattice.anevum.com/";
+  if (["lattice", "space", "explore"].includes(command)) return "https://anevum.com/lattice";
   if (["rhenlink", "profile", "identity", "id"].includes(command)) return "https://anevum.com/rhenlink";
-  if (["command", "cmd", "control"].includes(command)) return "https://command.anevum.com/";
+  if (["command", "cmd", "control"].includes(command)) return "https://anevum.com/command";
   if (command === "search") return "https://anevum.com/search";
   if (command.startsWith("wiki ")) {
     const slug = command.slice(5).trim().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
@@ -175,11 +175,11 @@ export function UnifiedSystemShell({
         <div className="system-side-module system-quick-module">
           <span>QUICK COMMANDS</span>
           <button type="button" onClick={() => go("https://wiki.anevum.com/")}><BookOpenText size={13} />wiki</button>
-          <button type="button" onClick={() => go("https://lattice.anevum.com/")}><Orbit size={13} />lattice</button>
-          <button type="button" onClick={() => go("https://command.anevum.com/")}><Terminal size={13} />command</button>
+          <button type="button" onClick={() => go("https://anevum.com/lattice")}><Orbit size={13} />lattice</button>
+          <button type="button" onClick={() => go("https://anevum.com/command")}><Terminal size={13} />command</button>
           <button type="button" onClick={() => go("https://anevum.com/search")}><Search size={13} />search</button>
         </div>
-        <div className="system-side-module system-host-module"><span>HOST</span><code>{hostname}</code><small>ONE REACT RUNTIME / MULTIPLE ENTRY DOMAINS</small></div>
+        <div className="system-side-module system-host-module"><span>HOST</span><code>{hostname}</code><small>ONE REACT RUNTIME / STABLE ROUTE ENTRY POINTS</small></div>
       </aside>
 
       <form className="system-console" onSubmit={runCommand}>
