@@ -14,12 +14,12 @@
       "custom_domain": true
     },
     {
-      "pattern": "lattice.anevum.com",
-      "custom_domain": true
+      "pattern": "lattice.anevum.com/*",
+      "zone_name": "anevum.com"
     },
     {
-      "pattern": "command.anevum.com",
-      "custom_domain": true
+      "pattern": "command.anevum.com/*",
+      "zone_name": "anevum.com"
     }
   ],
   "assets": {
