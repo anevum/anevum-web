@@ -10,6 +10,7 @@ import "./rhenlinkV2.css";
 import "./memberChrome.css";
 import "./replyLaunch.css";
 import "./launchTerminal.css";
+import "./launchIntegration.css";
 
 installRuntimeFixes();
 
