@@ -25,6 +25,7 @@ const metadataKey = "anevum_member_v1";
 const localPrefix = "anevum.rhenlink.member-state.v1";
 const changeEvent = "anevum-member-progress";
 const achievementEvent = "anevum-achievement-unlocked";
+const xpPerLevel = 150;
 
 export const ACHIEVEMENTS: AchievementDefinition[] = [
   { id: "signal-acquired", title: "SIGNAL ACQUIRED", description: "Establish a RHENLINK identity inside ANEVUM.", xp: 50, tier: "SIGNAL" },
@@ -104,12 +105,12 @@ function qualifies(definition: AchievementDefinition, progress: MemberProgress) 
   const routes = progress.visitedRoutes;
   switch (definition.id) {
     case "signal-acquired": return true;
-    case "first-reply": return routes.includes("/stories/reply");
+    case "first-reply": return routes.includes("/") || routes.includes("/stories/reply");
     case "open-the-record": return routes.some((route) => route.startsWith("/wiki/") && route.length > 6);
     case "enter-the-lattice": return routes.includes("/lattice");
     case "hold-the-thread": return progress.savedRecordIds.length >= 1;
     case "constellation": return progress.savedRecordIds.length >= 5;
-    case "transcosmic-path": return routes.includes("/stories/reply") && routes.some((route) => route === "/wiki" || route.startsWith("/wiki/")) && routes.includes("/lattice");
+    case "transcosmic-path": return (routes.includes("/") || routes.includes("/stories/reply")) && routes.some((route) => route === "/wiki" || route.startsWith("/wiki/")) && routes.includes("/lattice");
     case "wayfinder": return routes.length >= 10;
     default: return false;
   }
@@ -213,7 +214,20 @@ export function memberXP(progress: MemberProgress) {
 }
 
 export function memberLevel(progress: MemberProgress) {
-  return Math.max(1, Math.floor(memberXP(progress) / 150) + 1);
+  return Math.max(1, Math.floor(memberXP(progress) / xpPerLevel) + 1);
+}
+
+export function memberLevelDetails(progress: MemberProgress) {
+  const xp = memberXP(progress);
+  const level = Math.max(1, Math.floor(xp / xpPerLevel) + 1);
+  const levelBase = (level - 1) * xpPerLevel;
+  const percent = Math.min(100, Math.max(0, ((xp - levelBase) / xpPerLevel) * 100));
+  return {
+    level,
+    xp,
+    percent,
+    rankMark: `L${String(level).padStart(2, "0")}`,
+  };
 }
 
 export function getAchievement(id: string) {
