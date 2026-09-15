@@ -45,9 +45,9 @@ function LaunchHeader({ active }: { active: LaunchSection }) {
         <small>A UNIVERSE IN STORY.</small>
       </a>
       <nav aria-label="ANEVUM launch navigation">
-        <a className={active === "book" ? "active" : ""} href="/the-book">THE BOOK</a>
-        <a className={active === "story" ? "active" : ""} href="/the-story">THE STORY</a>
-        <a className={active === "store" ? "active" : ""} href="/store">STORE</a>
+        <a aria-current={active === "book" ? "page" : undefined} className={active === "book" ? "active" : ""} href="/the-book">THE BOOK</a>
+        <a aria-current={active === "story" ? "page" : undefined} className={active === "story" ? "active" : ""} href="/the-story">THE STORY</a>
+        <a aria-current={active === "store" ? "page" : undefined} className={active === "store" ? "active" : ""} href="/store">STORE</a>
         <a href="/rhenlink">RHENLINK</a>
       </nav>
       <a className="reply-launch-header-link" href="/">REPLY</a>
@@ -108,9 +108,10 @@ function BookObject({ large = false }: { large?: boolean }) {
 function PageShell({ active, children }: { active: LaunchSection; children: React.ReactNode }) {
   return (
     <div className={`launch-page launch-page-${active}`}>
+      <a className="launch-skip-link" href="#main-content">SKIP TO CONTENT</a>
       <LaunchHeader active={active} />
       <LaunchTerminal />
-      <main>{children}</main>
+      <main id="main-content">{children}</main>
       <LaunchFooter />
     </div>
   );
