@@ -11,10 +11,10 @@ type TerminalTarget = {
 };
 
 const targets: TerminalTarget[] = [
-  { command: "reply", label: "REPLY", description: "Return to the book launch hero.", href: "/#top" },
-  { command: "story", label: "THE STORY", description: "Read the public story introduction.", href: "/#world" },
-  { command: "book", label: "THE BOOK", description: "See the physical-book presentation.", href: "/#book" },
-  { command: "buy", label: "BOOK / BUY", description: "View the book and any live purchase options.", href: "/#book" },
+  { command: "reply", label: "REPLY", description: "Return to the launch homepage.", href: "/#top" },
+  { command: "story", label: "THE STORY", description: "Open the spoiler-light story doorway.", href: "/the-story" },
+  { command: "book", label: "THE BOOK", description: "Open the publication page for REPLY.", href: "/the-book" },
+  { command: "store", label: "STORE", description: "View the current ANEVUM publication state.", href: "/store" },
   { command: "rhenlink", label: "RHENLINK", description: "Open your persistent ANEVUM identity.", href: "/rhenlink" },
 ];
 
@@ -115,6 +115,10 @@ export function LaunchTerminal() {
     }
     if (command === "home") {
       navigate("/#top");
+      return;
+    }
+    if (command === "buy") {
+      navigate("/store");
       return;
     }
     if (command === "profile" || command === "identity" || command === "signin" || command === "login") {
