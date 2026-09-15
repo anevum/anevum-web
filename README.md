@@ -1,72 +1,65 @@
 # ANEVUM Web
 
-Permanent public web application for ANEVUM.
+Permanent public ANEVUM web application.
 
-## Production authority
+Production source: this repository, branch `main`.
+Hosting: Cloudflare Workers + static assets from `dist`.
+Production domain: `https://anevum.com`.
+Wiki surface: `https://wiki.anevum.com`.
 
-This repository is the company-owned source of truth for the ANEVUM public web application.
-
-- Production branch: `main`
-- Active development branch at cutover: `nextgen`
-- Preserved pre-cutover rollback branch: `legacy-main-2026-09-14`
-- Hosting/deployment: Cloudflare Workers + static assets from `dist`
-- Public production domain: `https://anevum.com`
-- Build command: `npm run build`
-- Production deployment command used by Cloudflare Builds: `npx wrangler deploy`
-- Non-production branch upload: `npx wrangler versions upload`
-
-Do not create a replacement repository or a second ANEVUM frontend without an explicit architectural decision.
-
-## Canon and publication authority
-
-The live ANEVUM Canon Wiki remains the authority for fictional truth:
-
-https://app.notion.com/p/3ae88cc2ef14818e8f0dd5b8399fb017?v=3b788cc2ef1480c2b0c3000c26172161&source=copy_link
-
-The public website is not a direct mirror of private Notion. Only publication-cleared records may be projected into the client. Unreleased material must not leak through routes, search, metadata, graph nodes, payloads, labels, errors, analytics, or imagery.
-
-## Product architecture
-
-- `anevum.com` — public story/company front door
-- WIKI — released canonical record
-- LATTICE — relational discovery/member application layer
-- RHENLINK — persistent member identity beneath LATTICE
-- Supabase project `mfntzxheldzdvlokyntk` — existing member/auth persistence target; do not replace without an explicit architectural reason
-- ANEVUM Command remains private and is not a public route in this application
-
-## Visual system
-
-Current production direction uses the locked ANEVUM editorial/cinematic system:
-
-- Deep Black `#050505`
-- Carbon `#07090A`
-- Graphite `#15191A`
-- Mineral White `#F2EFE8`
-- Mineral Bone `#E4E0D7`
-- LATTICE Link Blue `#4DA8FF` — contextual only
-- relational gold/copper — sparse contextual use
-
-Avoid neon cyberpunk, fake terminals, generic HUDs, generic SaaS dashboard styling, and fabricated canon imagery.
-
-## Development
-
-```bash
-npm install
-npm run dev
-```
-
-Production check:
+## Build
 
 ```bash
 npm run build
 ```
 
-Changes should normally be made in bounded components/content sources, verified in preview, then promoted to `main`. Git history is the rollback record; do not overwrite production without preserving a recoverable commit.
+## Deploy
 
-## Public content sync
+```bash
+npx wrangler deploy
+```
 
-`src/publicObjects.ts` currently contains the publication-safe projection reconciled against the live Website Publishing Queue. The next infrastructure step is to replace manual snapshot maintenance with a server/build-side Notion publication sync that still enforces the public gates and never exposes private workspace access to the browser.
+## Architecture
 
-## RHENLINK
+- `anevum.com` — ANEVUM front door
+- `WIKI.ANEVUM` — moderated public collaborative encyclopedia
+- `LATTICE` — relational/member universe layer
+- `RHENLINK` — member identity and progress layer
+- ANEVUM Command — private company/operations environment
 
-The React signup/sign-in surface is wired to the existing member Supabase project through public client credentials only. Production must provide `VITE_SUPABASE_PUBLISHABLE_KEY` (or legacy `VITE_SUPABASE_ANON_KEY`) in the build environment before member registration is considered operational. Never place a service-role key in the frontend.
+The private Transcosmic Canon Wiki remains the authoritative internal canon source. Public wiki publication is a separate editorial act; private canon is never mirrored automatically.
+
+Canonical source:
+https://app.notion.com/p/3ae88cc2ef14818e8f0dd5b8399fb017?v=3b788cc2ef1480c2b0c3000c26172161&source=copy_link
+
+## Moderated Wiki Generation 1
+
+The former hard-coded public canon index is being replaced by a real moderated wiki.
+
+The public wiki begins with zero published pages. Signed-in RHENLINK members can propose new pages and edits. Those proposals remain private to the submitter and administrators until an administrator approves them. Approval creates a permanent revision and promotes it to the public page.
+
+Repository implementation:
+
+- `src/ModeratedWiki.tsx` — public wiki, contribution flow, saves, history and admin moderation UI
+- `src/wikiClient.ts` — Supabase Data API client for wiki operations
+- `src/moderatedWiki.css` — wiki interaction/design system
+- `supabase/migrations/20260915_public_moderated_wiki_v1.sql` — schema, RLS and moderation transaction
+- `docs/WIKI_MODERATION.md` — workflow, security and administrator bootstrap
+
+The migration must be applied to the existing ANEVUM member Supabase project before submissions, saves and moderation can persist. The frontend fails safely to an empty public wiki if the database objects are unavailable.
+
+## Member backend
+
+Existing ANEVUM member/Auth project:
+
+`mfntzxheldzdvlokyntk`
+
+The browser uses only the Supabase publishable key. Never expose `service_role` or `sb_secret_...` credentials in client code.
+
+## Production principles
+
+- Current actual implementation outranks historical plans.
+- GitHub `main` is the website source of truth.
+- Public canon is deliberately published, never inferred from private development data.
+- Administrator authority is stored in protected Supabase `app_metadata`, never user-editable `user_metadata`.
+- RLS remains enabled on exposed member/wiki tables.
