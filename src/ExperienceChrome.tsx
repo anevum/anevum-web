@@ -52,11 +52,11 @@ export function HomePortalRail() {
 }
 
 const mobileEntries = [
-  { href: "/", label: "HOME", icon: Home },
-  { href: "/stories", label: "STORIES", icon: PanelsTopLeft },
-  { href: "/wiki", label: "WIKI", icon: BookOpenText },
+  { href: "/", label: "HOME", icon: Home, primary: false },
+  { href: "/stories", label: "STORIES", icon: PanelsTopLeft, primary: false },
+  { href: "/wiki", label: "WIKI", icon: BookOpenText, primary: false },
   { href: "/lattice", label: "LATTICE", icon: Orbit, primary: true },
-  { href: "/rhenlink", label: "RHENLINK", icon: CircleUserRound },
+  { href: "/rhenlink", label: "RHENLINK", icon: CircleUserRound, primary: false },
 ] as const;
 
 function isActive(pathname: string, href: string) {
