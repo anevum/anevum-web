@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { getPublicObjectBySlug, publicObjects } from "./publicObjects";
 import { Footer, Header } from "./ui";
 import { FrontDoor, NotFound, Reply, SearchPage, Store, Stories, Transmissions } from "./PublicPages";
-import { WikiHome, WikiRecord } from "./WikiPages";
+import { WikiHeader, WikiHome, WikiMissing, WikiRecord } from "./WikiPages";
 import { Lattice, Rhenlink } from "./MemberPages";
 
 const WIKI_HOST = "wiki.anevum.com";
@@ -38,10 +38,9 @@ function Route({ pathname, hostname }: { pathname: string; hostname: string }) {
   const wikiHost = hostname === WIKI_HOST;
 
   if (wikiHost) {
-    if (pathname === "/" || pathname === "/wiki") return <WikiHome />;
-    if (pathname === "/search") return <SearchPage />;
+    if (pathname === "/" || pathname === "/wiki" || pathname === "/search") return <WikiHome />;
     const record = wikiRecordForPath(pathname);
-    return record ? <WikiRecord slug={record.slug} /> : <NotFound />;
+    return record ? <WikiRecord slug={record.slug} /> : <WikiMissing />;
   }
 
   if (pathname === "/") return <FrontDoor />;
@@ -59,14 +58,14 @@ function Route({ pathname, hostname }: { pathname: string; hostname: string }) {
 
 function titleFor(pathname: string, hostname: string) {
   if (hostname === WIKI_HOST) {
-    if (pathname === "/" || pathname === "/wiki") return "WIKI.ANEVUM — The Known Record";
+    if (pathname === "/" || pathname === "/wiki" || pathname === "/search") return "WIKI.ANEVUM — Public Canon Encyclopedia";
     const record = wikiRecordForPath(pathname);
     return record ? `${record.title} — WIKI.ANEVUM` : "WIKI.ANEVUM";
   }
 
   if (pathname === "/") return "ANEVUM";
   if (pathname === "/stories/reply") return "REPLY — ANEVUM";
-  if (pathname === "/wiki") return "WIKI.ANEVUM — The Known Record";
+  if (pathname === "/wiki") return "WIKI.ANEVUM — Public Canon Encyclopedia";
   if (pathname.startsWith("/wiki/")) {
     const record = getPublicObjectBySlug(decodeURIComponent(pathname.slice(6)));
     return record ? `${record.title} — WIKI.ANEVUM` : "WIKI.ANEVUM";
@@ -81,10 +80,9 @@ function titleFor(pathname: string, hostname: string) {
 
 function canonicalFor(pathname: string, hostname: string) {
   if (hostname === WIKI_HOST) {
-    if (pathname === "/" || pathname === "/wiki") return "https://wiki.anevum.com/";
+    if (pathname === "/" || pathname === "/wiki" || pathname === "/search") return "https://wiki.anevum.com/";
     const record = wikiRecordForPath(pathname);
     if (record) return `https://wiki.anevum.com${record.sourceRoute}`;
-    if (pathname === "/search") return "https://wiki.anevum.com/search";
     return `https://wiki.anevum.com${pathname}`;
   }
 
@@ -98,11 +96,12 @@ function canonicalFor(pathname: string, hostname: string) {
 
 export default function App() {
   const { pathname, hostname } = useLocationState();
+  const wikiHost = hostname === WIKI_HOST;
   const canonical = useMemo(() => canonicalFor(pathname, hostname), [pathname, hostname]);
 
   useEffect(() => {
     document.title = titleFor(pathname, hostname);
-    document.documentElement.dataset.surface = hostname === WIKI_HOST ? "wiki" : "anevum";
+    document.documentElement.dataset.surface = wikiHost ? "wiki" : "anevum";
 
     let canonicalLink = document.querySelector<HTMLLinkElement>('link[rel="canonical"]');
     if (!canonicalLink) {
@@ -114,15 +113,15 @@ export default function App() {
 
     const ogUrl = document.querySelector<HTMLMetaElement>('meta[property="og:url"]');
     if (ogUrl) ogUrl.content = canonical;
-  }, [pathname, hostname, canonical]);
+  }, [pathname, hostname, canonical, wikiHost]);
 
-  const headerPath = hostname === WIKI_HOST && pathname === "/" ? "/wiki" : pathname;
+  const headerPath = wikiHost && pathname === "/" ? "/wiki" : pathname;
 
   return (
-    <div className="app-shell production-shell">
-      <Header pathname={headerPath} />
+    <div className={`app-shell production-shell ${wikiHost ? "wiki-surface-shell" : ""}`}>
+      {wikiHost ? <WikiHeader /> : <Header pathname={headerPath} />}
       <Route pathname={pathname} hostname={hostname} />
-      <Footer />
+      {!wikiHost ? <Footer /> : null}
     </div>
   );
 }
