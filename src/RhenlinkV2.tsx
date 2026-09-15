@@ -145,15 +145,15 @@ export function Rhenlink() {
             </div>
 
             <div className="rhenlink-destination-grid">
-              <Button href="/#top">RETURN TO REPLY</Button>
-              <Button href="/#world" quiet>OPEN THE STORY</Button>
+              <Button href="/the-book">OPEN THE BOOK</Button>
+              <Button href="/the-story" quiet>OPEN THE STORY</Button>
             </div>
 
             <ProfileProgressSummary progress={progress} />
 
             <div className="rhenlink-manifesto-card">
               <BrandArt variant="horizon" />
-              <div><span>YOUR PLACE IN ANEVUM</span><h3>Your identity travels with you.</h3><p>RHENLINK is the first persistent layer of ANEVUM. Your profile and progress can grow without turning the book launch into a dashboard.</p><Button href="/" quiet>RETURN TO REPLY</Button></div>
+              <div><span>YOUR PLACE IN ANEVUM</span><h3>Your identity travels with you.</h3><p>RHENLINK is the first persistent layer of ANEVUM. Your profile and progress can grow without turning the book launch into a dashboard.</p><Button href="/store" quiet>OPEN THE STORE</Button></div>
             </div>
           </div>
         ) : (
