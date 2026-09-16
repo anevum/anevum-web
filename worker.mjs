@@ -20,6 +20,23 @@ const ROOT_PUBLIC_PATHS = new Set(["/", ...ROOT_META_SHELLS.keys()]);
 const WIKI_PRIVATE_PATHS = new Set(["/new", "/saved", "/admin"]);
 const wikiBySlug = new Map(canonProjectionRecords.map((record) => [record.slug, record]));
 
+function normalizePath(pathname) {
+  if (!pathname || pathname === "/") return "/";
+  return pathname.replace(/\/+$/, "") || "/";
+}
+
+function safeDecode(value) {
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return "";
+  }
+}
+
+function isHtml(response) {
+  return response.headers.get("content-type")?.includes("text/html") === true;
+}
+
 function assetRequest(request, pathname) {
   const url = new URL(request.url);
   url.pathname = pathname;
@@ -59,9 +76,9 @@ function structuredData(value) {
 }
 
 function rewriteHtml(response, meta) {
-  if (!response.headers.get("content-type")?.includes("text/html")) return response;
+  if (!isHtml(response)) return response;
 
-  let rewriter = new HTMLRewriter()
+  const rewriter = new HTMLRewriter()
     .on("title", content(meta.title))
     .on('meta[name="description"]', attribute("content", meta.description))
     .on('meta[name="robots"]', attribute("content", meta.robots))
@@ -109,7 +126,8 @@ function wikiMeta(pathname) {
     };
   }
 
-  const record = wikiBySlug.get(decodeURIComponent(normalized));
+  const slug = safeDecode(normalized);
+  const record = slug ? wikiBySlug.get(slug) : null;
   if (!record) {
     return {
       title: "Record Not Released — ANEVUM Wiki",
@@ -165,7 +183,7 @@ export default {
   async fetch(request, env) {
     const url = new URL(request.url);
     const host = url.hostname.toLowerCase();
-    const pathname = url.pathname === "" ? "/" : url.pathname;
+    const pathname = normalizePath(url.pathname);
 
     let response;
 
@@ -178,7 +196,7 @@ export default {
     if (host === WIKI_HOST) {
       const meta = wikiMeta(pathname);
       response = rewriteHtml(response, meta);
-      if (meta.robots.startsWith("noindex")) {
+      if (meta.robots.startsWith("noindex") && isHtml(response)) {
         response = withHeaders(response, { "X-Robots-Tag": "noindex, nofollow, noarchive" });
       }
       return response;
@@ -189,7 +207,9 @@ export default {
     }
 
     if (host === COMMAND_HOST) {
+      const html = isHtml(response);
       response = rewriteHtml(response, COMMAND_META);
+      if (!html) return response;
       return withHeaders(response, {
         "X-Robots-Tag": "noindex, nofollow, noarchive",
         "Cache-Control": "private, no-store",
@@ -198,11 +218,12 @@ export default {
 
     if (host === ROOT_HOST) {
       if (pathname === "/rhenlink" || pathname === "/auth-bridge" || !ROOT_PUBLIC_PATHS.has(pathname)) {
-        return withHeaders(response, { "X-Robots-Tag": "noindex, follow, noarchive" });
+        if (isHtml(response)) return withHeaders(response, { "X-Robots-Tag": "noindex, follow, noarchive" });
       }
       return response;
     }
 
-    return withHeaders(response, { "X-Robots-Tag": "noindex, nofollow, noarchive" });
+    if (isHtml(response)) return withHeaders(response, { "X-Robots-Tag": "noindex, nofollow, noarchive" });
+    return response;
   },
 };
