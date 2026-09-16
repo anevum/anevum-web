@@ -1,0 +1,348 @@
+/* Mobile launch safety layer.
+   Loaded last so the public launch surfaces remain usable on real phones,
+   especially iOS Safari where fixed + clipped + animated compositor layers
+   can leave the hero painted outside the visual viewport. */
+
+html,
+body,
+#root{
+  width:100%;
+  max-width:100%;
+}
+
+html{
+  -webkit-text-size-adjust:100%;
+}
+
+html[data-surface="reply"],
+html[data-surface="rhenlink"],
+html[data-surface="not-found"],
+html[data-surface="reply"] body,
+html[data-surface="rhenlink"] body,
+html[data-surface="not-found"] body,
+html[data-surface="reply"] #root,
+html[data-surface="rhenlink"] #root,
+html[data-surface="not-found"] #root{
+  max-width:100%;
+  overflow-x:hidden!important;
+}
+
+.reply-launch-site,
+.launch-page,
+.launch-rhenlink-shell,
+.launch-404-page{
+  width:100%;
+  max-width:100%;
+  overflow-x:hidden!important;
+}
+
+.reply-launch-header{
+  width:100%;
+  max-width:100vw;
+}
+
+@media(max-width:980px){
+  .reply-launch-site,
+  .launch-page,
+  .launch-rhenlink-shell,
+  .launch-404-page{
+    isolation:auto;
+  }
+
+  .reply-launch-header{
+    left:0!important;
+    right:0!important;
+    width:100%!important;
+    min-width:0!important;
+    max-width:100vw!important;
+    grid-template-columns:minmax(0,1fr) auto!important;
+    gap:12px!important;
+    padding-left:max(16px,env(safe-area-inset-left,0px))!important;
+    padding-right:max(16px,env(safe-area-inset-right,0px))!important;
+    overflow:hidden;
+  }
+
+  .reply-launch-header nav{
+    display:none!important;
+  }
+
+  .reply-launch-brand{
+    min-width:0;
+    max-width:100%;
+    padding-left:0!important;
+    transform:none!important;
+  }
+
+  .reply-launch-brand:before{
+    display:none!important;
+  }
+
+  .reply-launch-brand strong{
+    display:block;
+    max-width:100%;
+    font-size:1.08rem!important;
+    letter-spacing:.26em!important;
+    white-space:nowrap;
+  }
+
+  .reply-launch-header-link{
+    justify-self:end!important;
+    white-space:nowrap;
+  }
+
+  .launch-page main,
+  .reply-launch-site main{
+    width:100%;
+    max-width:100%;
+  }
+
+  .launch-page-hero,
+  .reply-launch-hero,
+  .launch-page-grid-section,
+  .launch-page-signal-section,
+  .launch-page-editions,
+  .launch-page-availability,
+  .launch-page-store-feature,
+  .launch-page-story-sequence,
+  .reply-launch-statement,
+  .reply-launch-story,
+  .reply-launch-object,
+  .reply-launch-buy,
+  .reply-launch-author,
+  .reply-launch-footer{
+    width:100%!important;
+    max-width:100%!important;
+  }
+
+  .launch-terminal-trigger,
+  .launch-identity-pill{
+    max-width:calc(100vw - 20px);
+  }
+}
+
+@media(max-width:760px){
+  /* Prefer stable painting over desktop compositing tricks on phones. */
+  .reply-launch-site:before,
+  .reply-launch-site:after,
+  .launch-page:before,
+  .launch-page:after,
+  .launch-404-page:before,
+  .launch-404-page:after,
+  .reply-launch-hero:before,
+  .launch-page-hero:before{
+    display:none!important;
+  }
+
+  .reply-launch-header,
+  .launch-terminal-trigger,
+  .launch-identity-pill{
+    -webkit-backdrop-filter:none!important;
+    backdrop-filter:none!important;
+  }
+
+  .reply-launch-header{
+    background:rgba(2,6,8,.97)!important;
+  }
+
+  .launch-terminal-trigger,
+  .launch-identity-pill{
+    background:rgba(3,8,11,.96)!important;
+  }
+
+  /* Put the important hero information back in normal document flow. */
+  .launch-page-hero,
+  .reply-launch-hero{
+    min-height:0!important;
+    height:auto!important;
+    display:flex!important;
+    flex-direction:column!important;
+    align-items:stretch!important;
+    justify-content:flex-start!important;
+    padding:112px 18px 64px!important;
+    overflow:hidden!important;
+  }
+
+  .launch-page-hero-copy,
+  .reply-launch-hero-copy{
+    position:relative!important;
+    z-index:6!important;
+    width:100%!important;
+    max-width:100%!important;
+    margin:0!important;
+    padding:0!important;
+    opacity:1!important;
+    visibility:visible!important;
+    transform:none!important;
+    translate:none!important;
+  }
+
+  .launch-page-hero-copy:after,
+  .reply-launch-hero-copy:after{
+    display:none!important;
+  }
+
+  .launch-page-hero h1{
+    max-width:100%;
+    margin-top:8px!important;
+    font-size:clamp(4rem,20vw,5.35rem)!important;
+    line-height:.86!important;
+    letter-spacing:.06em!important;
+    overflow-wrap:normal;
+  }
+
+  .launch-page-story-hero h1,
+  .launch-page-store-hero h1{
+    font-size:clamp(3rem,15vw,4.2rem)!important;
+    line-height:.92!important;
+    letter-spacing:.01em!important;
+  }
+
+  .reply-launch-hero h1{
+    max-width:100%;
+    font-size:clamp(4.55rem,22vw,5.8rem)!important;
+    line-height:.8!important;
+    letter-spacing:.1em!important;
+  }
+
+  .launch-page-deck,
+  .reply-launch-deck{
+    max-width:100%!important;
+    font-size:1rem!important;
+    line-height:1.58!important;
+  }
+
+  .reply-launch-actions{
+    width:100%;
+    align-items:stretch;
+  }
+
+  .reply-launch-action{
+    max-width:100%;
+  }
+
+  /* Absolute book placement created large blank hero areas on iPhone.
+     Keep the 3D object, but let it participate in page flow. */
+  .launch-page-book-stage.large,
+  .reply-launch-hero>.reply-book-stage{
+    position:relative!important;
+    inset:auto!important;
+    right:auto!important;
+    bottom:auto!important;
+    justify-self:auto!important;
+    flex:none;
+    width:min(230px,68vw)!important;
+    margin:52px auto 10px!important;
+    opacity:1!important;
+    visibility:visible!important;
+    transform:none!important;
+  }
+
+  .launch-page-story-mark,
+  .launch-page-store-mark{
+    position:relative!important;
+    inset:auto!important;
+    right:auto!important;
+    bottom:auto!important;
+    width:min(190px,58vw)!important;
+    margin:48px auto 8px!important;
+    opacity:.82!important;
+  }
+
+  .launch-page-book,
+  .reply-book-object,
+  .launch-page-world,
+  .reply-atmosphere-world,
+  .launch-page-signal,
+  .reply-atmosphere-measure{
+    animation:none!important;
+  }
+
+  .launch-page-book{
+    transform:rotateY(-7deg) rotateZ(-1.5deg)!important;
+  }
+
+  .reply-book-object{
+    transform:rotateY(-8deg) rotateZ(-1.5deg)!important;
+  }
+
+  .launch-page-atmosphere,
+  .reply-atmosphere{
+    transform:none!important;
+    backface-visibility:hidden;
+  }
+
+  .launch-page-hero:after,
+  .reply-launch-hero:after{
+    z-index:1!important;
+    background:
+      linear-gradient(180deg,rgba(2,6,8,.34) 0%,rgba(2,6,8,.74) 44%,rgba(2,6,8,.96) 100%)!important;
+  }
+
+  .launch-page-book-stage,
+  .reply-book-stage,
+  .launch-page-story-mark,
+  .launch-page-store-mark{
+    z-index:5!important;
+  }
+
+  .launch-terminal-trigger{
+    left:max(10px,env(safe-area-inset-left,0px))!important;
+  }
+
+  .launch-identity-pill{
+    right:max(10px,env(safe-area-inset-right,0px))!important;
+  }
+
+  .launch-page-grid-section,
+  .launch-page-editions,
+  .launch-page-availability,
+  .launch-page-store-feature,
+  .reply-launch-statement,
+  .reply-launch-story-copy,
+  .reply-launch-object,
+  .reply-launch-buy,
+  .reply-launch-author{
+    padding-left:18px!important;
+    padding-right:18px!important;
+  }
+
+  .launch-page-signal-copy,
+  .launch-page-story-sequence article>div{
+    padding-left:18px!important;
+    padding-right:18px!important;
+  }
+
+  .reply-launch-scroll{
+    display:none!important;
+  }
+}
+
+@media(max-width:430px){
+  .reply-launch-header{
+    padding-left:max(14px,env(safe-area-inset-left,0px))!important;
+    padding-right:max(14px,env(safe-area-inset-right,0px))!important;
+  }
+
+  .reply-launch-brand strong{
+    font-size:1rem!important;
+    letter-spacing:.22em!important;
+  }
+
+  .reply-launch-header-link{
+    font-size:.43rem!important;
+    letter-spacing:.13em!important;
+  }
+
+  .launch-page-hero,
+  .reply-launch-hero{
+    padding-left:16px!important;
+    padding-right:16px!important;
+  }
+}
+
+@media(prefers-reduced-motion:reduce){
+  .launch-page *,
+  .reply-launch-site *{
+    scroll-behavior:auto!important;
+  }
+}
