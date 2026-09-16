@@ -1,0 +1,221 @@
+/* ANEVUM launch editorial contrast.
+   Keeps the cinematic entry dark, then opens into tactile publication surfaces.
+   No lore-specific symbols or unapproved world marks are introduced here. */
+
+:root{
+  --reply-paper:#e9e2d4;
+  --reply-paper-soft:#ded6c6;
+  --reply-paper-ink:#172227;
+  --reply-paper-muted:#59666a;
+  --reply-paper-dim:#7a807c;
+  --reply-paper-line:rgba(26,43,50,.17);
+  --reply-paper-blue:#315d6d;
+  --reply-paper-warm:#9a7e55;
+}
+
+/* Give the opening more atmosphere and less black-screen weight. */
+.reply-launch-site,
+.launch-page{
+  background:
+    radial-gradient(circle at 74% 0%,rgba(118,172,188,.13),transparent 29%),
+    linear-gradient(180deg,#071218 0%,#020608 40%,#020608 100%);
+}
+.reply-atmosphere{
+  background:
+    radial-gradient(circle at 74% 32%,rgba(205,190,153,.16),transparent 18%),
+    radial-gradient(circle at 61% 42%,rgba(128,187,205,.16),transparent 34%),
+    linear-gradient(124deg,#07151b 0%,#102a34 58%,#071116 100%);
+}
+.reply-launch-hero:after{
+  background:
+    linear-gradient(90deg,rgba(3,9,12,.92) 0%,rgba(3,9,12,.64) 36%,rgba(3,9,12,.14) 69%,rgba(3,9,12,.05) 100%),
+    linear-gradient(0deg,rgba(3,8,10,.76) 0%,transparent 36%);
+}
+.reply-atmosphere.supplied img{filter:saturate(.88) contrast(1.02) brightness(.94)}
+.reply-atmosphere-glow{
+  background:
+    radial-gradient(circle at 58% 42%,rgba(229,206,160,.17),transparent 22%),
+    radial-gradient(circle,rgba(156,201,218,.21),rgba(69,115,134,.055) 45%,transparent 70%);
+}
+
+.launch-page-atmosphere{
+  background:
+    radial-gradient(circle at 78% 25%,rgba(216,197,154,.12),transparent 19%),
+    radial-gradient(circle at 66% 49%,rgba(146,199,218,.18),transparent 35%),
+    linear-gradient(135deg,#0a2029,#041015 68%);
+}
+.launch-page-atmosphere.supplied img{filter:saturate(.88) contrast(1.03) brightness(.9)}
+.launch-page-hero:after{
+  background:
+    linear-gradient(90deg,rgba(3,9,12,.92),rgba(3,9,12,.63) 42%,rgba(3,9,12,.11) 76%),
+    linear-gradient(0deg,rgba(3,8,10,.72),transparent 38%);
+}
+
+/* Homepage editorial opening. */
+.reply-launch-statement{
+  color:var(--reply-paper-ink);
+  border-color:var(--reply-paper-line);
+  background:
+    radial-gradient(circle at 78% 20%,rgba(154,126,85,.11),transparent 27%),
+    linear-gradient(180deg,#eee8dc,var(--reply-paper));
+}
+.reply-launch-statement>p:first-child{color:var(--reply-paper-warm)}
+.reply-launch-statement>p:last-child{color:var(--reply-paper-muted)}
+
+.reply-launch-story{border-color:var(--reply-paper-line);background:var(--reply-paper)}
+.reply-launch-story-art{border-color:var(--reply-paper-line)}
+.reply-launch-story-copy{
+  color:var(--reply-paper-ink);
+  background:
+    linear-gradient(135deg,rgba(255,255,255,.3),transparent 45%),
+    var(--reply-paper);
+}
+.reply-launch-story-copy .reply-launch-kicker{color:var(--reply-paper-warm)}
+.reply-launch-story-copy>p:not(.reply-launch-kicker){color:var(--reply-paper-muted)}
+.reply-launch-beats{border-color:var(--reply-paper-line);background:rgba(255,255,255,.16)}
+.reply-launch-beats article{border-color:var(--reply-paper-line)}
+.reply-launch-beats span{color:var(--reply-paper-warm)}
+.reply-launch-beats strong{color:var(--reply-paper-ink)}
+.reply-launch-beats p{color:var(--reply-paper-muted)}
+
+.reply-launch-object{
+  color:var(--reply-paper-ink);
+  border-color:var(--reply-paper-line);
+  background:
+    radial-gradient(circle at 76% 46%,rgba(49,93,109,.1),transparent 29%),
+    linear-gradient(145deg,#e5dece,#f0eadf 67%,#ddd3c1);
+}
+.reply-launch-object-copy .reply-launch-kicker{color:var(--reply-paper-warm)}
+.reply-launch-object-copy>p:not(.reply-launch-kicker){color:var(--reply-paper-muted)}
+.reply-launch-availability{color:#77684e}
+
+.reply-launch-buy{
+  color:var(--reply-paper-ink);
+  border-color:var(--reply-paper-line);
+  background:#dcd4c4;
+}
+.reply-launch-buy .reply-launch-kicker{color:var(--reply-paper-warm)}
+.reply-launch-editions{border-color:var(--reply-paper-line);background:rgba(255,255,255,.18)}
+.reply-launch-editions>a{border-color:var(--reply-paper-line);background:rgba(248,244,235,.55);color:var(--reply-paper-ink)}
+.reply-launch-editions>a:hover{background:rgba(255,255,255,.8)}
+.reply-launch-editions span{color:var(--reply-paper-muted)}
+.reply-launch-editions svg{color:var(--reply-paper-blue)}
+
+.reply-launch-author{
+  color:var(--reply-paper-ink);
+  border-color:var(--reply-paper-line);
+  background:
+    linear-gradient(90deg,rgba(255,255,255,.15),transparent 38%),
+    #eee8dc;
+}
+.reply-launch-author .reply-launch-kicker{color:var(--reply-paper-warm)}
+.reply-launch-author>div:last-child>p:not(.reply-launch-kicker){color:var(--reply-paper-muted)}
+.reply-launch-author-mark{
+  border-color:var(--reply-paper-line);
+  color:var(--reply-paper-ink);
+  background:radial-gradient(circle at 36% 30%,#d5c7aa,#b9a57d 58%,#756b5b);
+  box-shadow:0 26px 60px rgba(37,42,41,.13);
+}
+.reply-launch-author-mark span{color:#1d2b30}
+.reply-launch-footer{
+  color:#687375;
+  border-color:var(--reply-paper-line);
+  background:#d8d0c1;
+}
+.reply-launch-footer strong{color:#29353a}
+
+/* Public book/story/store pages: editorial fields alternate with cinematic fields. */
+.launch-page-grid-section{
+  color:var(--reply-paper-ink);
+  border-color:var(--reply-paper-line);
+  background:
+    radial-gradient(circle at 15% 15%,rgba(255,255,255,.22),transparent 31%),
+    var(--reply-paper);
+}
+.launch-page-grid-section .reply-launch-kicker,
+.launch-page-editions .reply-launch-kicker,
+.launch-page-availability .reply-launch-kicker,
+.launch-page-store-feature .reply-launch-kicker{color:var(--reply-paper-warm)}
+.launch-page-section-copy>p:not(.reply-launch-kicker){color:var(--reply-paper-muted)}
+.launch-page-metadata{border-color:var(--reply-paper-line);background:rgba(255,255,255,.23)}
+.launch-page-metadata>div{border-color:var(--reply-paper-line)}
+.launch-page-metadata dt{color:#7f745f}
+.launch-page-metadata dd{color:var(--reply-paper-ink)}
+
+.launch-page-editions{
+  color:var(--reply-paper-ink);
+  border-color:var(--reply-paper-line);
+  background:#dcd4c4;
+}
+.launch-page-edition-list{border-color:var(--reply-paper-line)}
+.launch-page-edition-list>a{border-color:var(--reply-paper-line);background:rgba(248,244,235,.56);color:var(--reply-paper-ink)}
+.launch-page-edition-list>a:hover{background:rgba(255,255,255,.82)}
+.launch-page-edition-list span{color:var(--reply-paper-muted)}
+
+.launch-page-availability{
+  color:var(--reply-paper-ink);
+  border-color:var(--reply-paper-line);
+  background:
+    radial-gradient(circle at 80% 48%,rgba(49,93,109,.11),transparent 30%),
+    #eee8dc;
+}
+.launch-page-availability>p:not(.reply-launch-kicker){color:var(--reply-paper-muted)}
+
+.launch-page-story-sequence{border-color:var(--reply-paper-line)}
+.launch-page-story-sequence article{
+  color:var(--reply-paper-ink);
+  border-color:var(--reply-paper-line);
+  background:linear-gradient(110deg,#eee8dc,#dfd6c6);
+}
+.launch-page-story-sequence article>span{border-color:var(--reply-paper-line);color:#9a7e55}
+.launch-page-story-sequence small{color:#806f55}
+.launch-page-story-sequence p{color:var(--reply-paper-muted)}
+.launch-page-context-card{border-color:var(--reply-paper-line);background:rgba(255,255,255,.25);color:var(--reply-paper-ink)}
+.launch-page-context-card>span{color:#826f52}
+.launch-page-context-card>p{color:var(--reply-paper-muted)}
+
+.launch-page-store-feature{
+  color:var(--reply-paper-ink);
+  border-color:var(--reply-paper-line);
+  background:
+    radial-gradient(circle at 25% 50%,rgba(49,93,109,.09),transparent 24%),
+    var(--reply-paper);
+}
+.launch-page-store-copy>p{color:var(--reply-paper-muted)}
+.launch-page-store-copy .launch-page-byline{color:#665b4a}
+.launch-page-store-status{border-color:var(--reply-paper-line)!important;background:rgba(255,255,255,.22)!important}
+.launch-page-store-status span{color:#826f52!important}
+.launch-page-store-status strong{color:var(--reply-paper-ink)!important}
+.launch-page-store-status p{color:var(--reply-paper-muted)!important}
+
+/* Buttons on paper use a dark publication-object treatment, not white-on-cream. */
+.reply-launch-statement .reply-launch-action,
+.reply-launch-story-copy .reply-launch-action,
+.reply-launch-object .reply-launch-action,
+.reply-launch-buy .reply-launch-action,
+.reply-launch-author .reply-launch-action,
+.launch-page-grid-section .reply-launch-action,
+.launch-page-editions .reply-launch-action,
+.launch-page-availability .reply-launch-action,
+.launch-page-store-feature .reply-launch-action{
+  border-color:#1d2a2f;
+  background:#1d2a2f;
+  color:#f2eee4!important;
+}
+.reply-launch-story-copy .reply-launch-action.quiet,
+.reply-launch-object .reply-launch-action.quiet,
+.launch-page-grid-section .reply-launch-action.quiet,
+.launch-page-availability .reply-launch-action.quiet,
+.launch-page-store-feature .reply-launch-action.quiet{
+  border-color:rgba(29,42,47,.32);
+  background:transparent;
+  color:#25343a!important;
+}
+
+/* Keep the signal/measurement bands cinematic so the page breathes between light surfaces. */
+.launch-page-signal-section{border-color:rgba(220,235,242,.13);background:#061117}
+.launch-page-signal-section>.launch-page-atmosphere{border-color:rgba(220,235,242,.13)}
+
+@media(max-width:980px){
+  .reply-launch-story-art{border-color:var(--reply-paper-line)}
+}
