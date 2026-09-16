@@ -142,6 +142,16 @@ export default function App() {
   const notFoundRoute = hostname === ROOT_HOST && !bridgeRoute && !commandRoute && !knownRootPublicRoute;
   const wikiPath = wikiSurfacePath(hostname, routePath);
   const wikiPrivatePath = wikiPath === "/new" || wikiPath === "/saved" || wikiPath === "/admin" || wikiPath.endsWith("/edit");
+  const memberRoute = wikiRoute
+    ? (wikiPath === "/" ? "/wiki" : `/wiki${wikiPath}`)
+    : latticeRoute
+      ? "/lattice"
+      : routePath;
+  const trackableMemberSurface = !bridgeRoute && !commandRoute && !wikiPrivatePath && (
+    (hostname === ROOT_HOST && knownRootPublicRoute)
+    || (hostname === WIKI_HOST && wikiRoute)
+    || (hostname === LATTICE_HOST && latticeRoute)
+  );
 
   useEffect(() => {
     const rootMeta = rootPublicMeta(routePath, knownRootPublicRoute);
@@ -219,12 +229,12 @@ export default function App() {
   }, [routePath, hostname, bridgeRoute, commandRoute, wikiRoute, latticeRoute, rhenlinkRoute, knownRootPublicRoute, notFoundRoute, wikiPath, wikiPrivatePath]);
 
   useEffect(() => {
-    if (bridgeRoute || commandRoute || wikiRoute || latticeRoute || hostname !== ROOT_HOST || !knownRootPublicRoute) return;
-    const recordRoute = () => trackMemberRoute(routePath);
+    if (!trackableMemberSurface) return;
+    const recordRoute = () => trackMemberRoute(memberRoute);
     recordRoute();
     window.addEventListener("anevum-member-session", recordRoute);
     return () => window.removeEventListener("anevum-member-session", recordRoute);
-  }, [hostname, routePath, bridgeRoute, commandRoute, wikiRoute, latticeRoute, knownRootPublicRoute]);
+  }, [memberRoute, trackableMemberSurface]);
 
   if (bridgeRoute) return <AuthBridgePage />;
 
@@ -246,6 +256,7 @@ export default function App() {
         <UnifiedSystemShell surface="wiki" pathname={wikiPath} hostname={hostname}>
           {wikiContent(wikiPath)}
         </UnifiedSystemShell>
+        <AchievementLayer />
       </div>
     );
   }
@@ -257,6 +268,7 @@ export default function App() {
         <UnifiedSystemShell surface="lattice" pathname={routePath} hostname={hostname}>
           <Lattice />
         </UnifiedSystemShell>
+        <AchievementLayer />
       </div>
     );
   }
