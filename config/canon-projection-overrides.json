@@ -1,102 +1,168 @@
 {
   "records": {
     "/atlas/ovara/merva": {
+      "id": "atlas.merva",
       "slug": "merva",
       "visualKey": "merva",
+      "summary": "The principal Ovaran city of REPLY, in the Ordan Republic and Kesra Basin: a lived-in city shaped by canals, water storage and reclamation systems, transit, industry, clinics, markets, family life and precision technical work.",
+      "publicNote": "Opening-state geography, climate, districts, transit, daily life, civic layers and water/infrastructure character are public. Later contact-site transformation remains withheld.",
       "facts": [["World", "Ovara"], ["State", "Ordan Republic"], ["Region", "Kesra Basin"], ["Population", "~7.8 million"]]
     },
     "/universe/people/nali-solan": {
+      "id": "universe.nali-solan",
       "slug": "nali-solan",
       "visualKey": "person",
+      "summary": "A 29-year-old precision instrumentation and calibration specialist in Merva, Ovara, exacting about traceability, physical failure and what a technician can honestly sign their name to.",
+      "publicNote": "Age, home, profession, practical worldview and ordinary-life context are public. Discovery consequences, later contact role and end state remain withheld.",
       "facts": [["Age", "29"], ["Home", "Merva"], ["World", "Ovara"], ["Field", "Precision metrology"]]
     },
     "/atlas/neral": {
+      "id": "atlas.neral-reply-era",
       "slug": "neral",
       "visualKey": "neral",
+      "summary": "An inhabited human world in the Irsen System and the other established planetary endpoint of the mature Veyra–Neral network: sovereign, culturally distinct and connected by mature Road/Skygate infrastructure.",
+      "publicNote": "Current-era world orientation and ordinary connected-world life are public. Founding-era Elias/Jon Zero history is not part of this public record.",
       "facts": [["System", "Irsen"], ["Status", "Sovereign inhabited world"], ["Connection", "Mature Road/Skygate network"]]
     },
     "/atlas/ovara": {
+      "id": "atlas.ovara",
       "slug": "ovara",
       "visualKey": "ovara",
+      "summary": "A technologically mature, politically plural human world in the Helor System. REPLY enters Ovara through the Kesra Basin and Merva, where infrastructure, science, ordinary work and civic life shape the opening civilization.",
+      "publicNote": "High-level geography, climate, 29-state political plurality, multiple cultural regions and ordinary technology are public. Contact outcomes remain withheld.",
       "facts": [["System", "Helor"], ["Sovereign states", "29"], ["Opening lens", "Kesra Basin / Merva"]]
     },
     "/universe/people/rena-sol": {
+      "id": "universe.rena-sol",
       "slug": "rena-sol",
       "visualKey": "person",
+      "summary": "A 118-year-old Human Systems Scientist in Greater Serein whose work focuses on cognitive metrology, group decision systems, corrigibility and the effects of prestige on judgment.",
+      "publicNote": "Age, mature-network setting, profession, correction/privacy themes and ordinary family context are public. Later institutional and contact-process roles remain withheld.",
       "facts": [["Age", "118"], ["Home", "Greater Serein"], ["Field", "Human Systems Science"]]
     },
     "/universe/connected-worlds": {
+      "id": "universe.connected-worlds",
       "slug": "connected-worlds",
       "visualKey": "connected",
+      "summary": "The mature Veyra–Neral civilization in which inhabited Skygates and a reciprocal Road support ordinary interworld travel while both worlds remain sovereign and culturally distinct.",
+      "publicNote": "The current REPLY-era concept of mature connected-world civilization is public. Stale future-book framing and founding-history explanations are omitted.",
       "facts": [["Worlds", "Veyra / Neral"], ["Infrastructure", "Road + inhabited Skygates"], ["Political rule", "Separate sovereignty"]]
     },
     "/universe/science/grainit": {
+      "id": "universe.grainit",
       "slug": "grainit",
-      "visualKey": "grainit"
+      "visualKey": "grainit",
+      "summary": "Devon Akins's exploratory covariant finite-resolution and quasilocal geometry program for quantum gravity. A grainit is a resolution-bounded geometric datum; fictional transport extensions remain separate.",
+      "publicNote": "Only the high-level public science explainer is released. A grainit is not a literal particle, cube, graph node or transport channel."
     },
     "/universe/technology/iren": {
+      "id": "universe.iren",
       "slug": "iren",
-      "visualKey": "iren"
+      "visualKey": "iren",
+      "summary": "The mature civilization's provenance-aware artificial-intelligence interface and intelligence layer, used across learning, research, planning, public systems and daily life without replacing legitimate human authority.",
+      "publicNote": "Ordinary use, provenance, uncertainty and bounded authority are public. Deep implementation history and later-era doctrine remain withheld."
     },
     "/universe/people/lio-sol": {
+      "id": "universe.lio-sol",
       "slug": "lio-sol",
       "visualKey": "person",
+      "summary": "A 76-year-old Greater Serein public-garden conservator and horticultural restoration specialist who provides an ordinary-life view of the mature connected-world civilization.",
+      "publicNote": "Age, work and ordinary mature-life context are public. Later travel and family-arc resolution remain withheld.",
       "facts": [["Age", "76"], ["Home", "Greater Serein"], ["Work", "Garden conservation"]]
     },
     "/atlas/serein-skygate": {
+      "id": "atlas.serein-skygate",
       "slug": "serein-skygate",
-      "visualKey": "skygate"
+      "visualKey": "skygate",
+      "summary": "Veyra's inhabited orbital gate-city and mature Road endpoint serving Greater Serein, presented through ordinary civic, transit and infrastructure life.",
+      "publicNote": "Current-era gate-city orientation is public. Founding chronology and later-series development remain withheld."
     },
     "/universe/people/talin-vel": {
+      "id": "universe.talin-vel",
       "slug": "talin-vel",
       "visualKey": "person",
+      "summary": "A 30-year-old gateborn boundary-metrology specialist. The public record is restricted to Talin's opening identity and ordinary professional context.",
+      "publicNote": "Opening identity only. First-visitor and later crossing material remain withheld by the release window.",
       "facts": [["Age", "30"], ["Identity", "Gateborn"], ["Field", "Boundary metrology"]]
     },
     "/universe/institutions/continuance": {
+      "id": "universe.continuance",
       "slug": "continuance-institute",
-      "visualKey": "continuance"
+      "visualKey": "continuance",
+      "summary": "A large mature-era scientific and engineering institution with a Cape Serein presence, public mission, distinct staff culture and bounded institutional authority.",
+      "publicNote": "Current mature-era institution, Cape presence and public mission are released. Classified human-transfer history and later outcomes remain withheld."
     },
     "/universe/technology/open-road": {
+      "id": "universe.open-road",
       "slug": "open-road",
-      "visualKey": "road"
+      "visualKey": "road",
+      "summary": "A mature two-ended interworld connection maintained by paired Skygates and used for ordinary passenger and freight movement between connected worlds.",
+      "publicNote": "Ordinary current-era transit is public. Founding ancestry, old series progression and future institutional detail are withheld."
     },
     "/universe/technology/skygate": {
+      "id": "universe.skygate",
       "slug": "skygate-megastructure",
-      "visualKey": "skygate"
+      "visualKey": "skygate",
+      "summary": "An inhabited orbital ring-city built around a Road boundary, combining habitation, transit, civic services, maintenance, freight and utility systems.",
+      "publicNote": "Current-era infrastructure, habitation, transit, utilities and civic life are public. Founding chronology and later-series industrial detail are withheld."
     },
     "/archive/events/d3-17": {
+      "id": "archive.d3-17",
       "slug": "d3-17",
-      "visualKey": "event"
+      "visualKey": "event",
+      "summary": "A teaser-level historical record of an Old Meridian accident and research incident. Its later meaning, classified provenance and consequences remain withheld.",
+      "publicNote": "Only the opening-era incident and approved scientific/data language are public. The ultimate meaning and later consequences remain sealed."
     },
     "/atlas/neral-skygate": {
+      "id": "atlas.neral-skygate",
       "slug": "neral-skygate",
-      "visualKey": "skygate"
+      "visualKey": "skygate",
+      "summary": "The Neran orbital gate-city at the far end of the mature Veyra–Neral Road, preserving a distinct Neran civic and architectural lineage while interoperating technically with Serein Skygate.",
+      "publicNote": "Current-era gate-city distinction and Road role are public. Founding history and unreconciled arrival-era material are withheld."
     },
     "/archive/deep-three": {
+      "id": "archive.deep-three",
       "slug": "deep-three",
-      "visualKey": "deep-three"
+      "visualKey": "deep-three",
+      "summary": "A curated public archive record of a Veyran lunar research station and scientific artifact. Classified anomaly, transfer and later historical interpretation remain withheld.",
+      "publicNote": "Public representation remains historical/scientific only. Hidden anomaly infrastructure and transfer-development history are withheld."
     },
     "/atlas/ione": {
+      "id": "atlas.ione",
       "slug": "ione",
       "visualKey": "ione",
+      "summary": "Veyra's large tidally locked moon: an airless rocky body with ancient highlands, basaltic plains, impact basins and polar cold traps, presented publicly at physical and scientific depth only.",
+      "publicNote": "Only the physical/scientific lunar overview is public. Classified Deep Three and D3-17 lineage remains withheld.",
       "facts": [["Radius", "~1,900 km"], ["Gravity", "~0.18 Vg"], ["Rotation", "Tidally locked"], ["Atmosphere", "Negligible"]]
     },
     "/atlas/veyra/cape-serein": {
+      "id": "atlas.cape-serein",
       "slug": "cape-serein",
-      "visualKey": "cape"
+      "visualKey": "cape",
+      "summary": "A coastal district of Greater Serein built across black cliffs, marsh causeways, observation ground and engineered shelves, including the Continuance Institute campus.",
+      "publicNote": "Current-era coast, research district, weather, infrastructure and Continuance campus context are public. Superseded arrival chronology is not."
     },
     "/atlas/veyra/greater-serein": {
+      "id": "atlas.greater-serein",
       "slug": "greater-serein",
-      "visualKey": "serein"
+      "visualKey": "serein",
+      "summary": "A dense coastal metropolis and city-region containing Cape Serein, Westbank, Low Harrow, Southbank District, Old Meridian and the Serein basin.",
+      "publicNote": "Current-era geography, districts, infrastructure and ordinary mature-life context are public. Obsolete prior-draft chronology is not."
     },
     "/atlas/veyra": {
+      "id": "atlas.veyra",
       "slug": "veyra",
       "visualKey": "veyra",
+      "summary": "A geologically active, ocean-dominated terrestrial planet orbiting Rhel, with a nitrogen-oxygen atmosphere, strong magnetic field, active plate tectonics and one large moon, Ione.",
+      "publicNote": "A current-era planetary overview is public. The definitive planetary map is not yet approved, so the website must not invent coastlines or definitive geography.",
       "facts": [["Radius", "~6,510 km"], ["Ocean coverage", "~68%"], ["Day", "24 standard hours"], ["Year", "365.242 days"], ["Moon", "Ione"]]
     },
     "/universe/characters/elias-venn": {
+      "id": "universe.elias-venn",
       "slug": "elias-venn",
-      "visualKey": "person"
+      "visualKey": "person",
+      "summary": "A historical Veyran researcher whose public record is restricted to spoiler-safe identity, personality and background. Later classified history and Road-era consequences remain withheld.",
+      "publicNote": "Only spoiler-safe historical identity/background material is public. Later classified history and long Road legacy remain withheld."
     }
   },
   "relations": [
