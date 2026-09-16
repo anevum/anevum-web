@@ -3,7 +3,7 @@ import { Award, Bookmark, ChevronRight, CircleUserRound, Sparkles, X } from "luc
 import { Link } from "./ui";
 import { displayIdentity, loadSession, loadSharedIdentity, type MemberSession, type SharedIdentity } from "./memberClient";
 import {
-  ACHIEVEMENTS,
+  CURRENT_ACHIEVEMENTS,
   hydrateMemberProgress,
   loadMemberProgress,
   onAchievementUnlocked,
@@ -53,11 +53,17 @@ function identityLabel(session: MemberSession | null, sharedIdentity: SharedIden
   };
 }
 
+function currentUnlockedCount(progress: MemberProgress) {
+  const currentIds = new Set(CURRENT_ACHIEVEMENTS.map((achievement) => achievement.id));
+  return progress.achievements.filter((achievement) => currentIds.has(achievement.id)).length;
+}
+
 export function RhenlinkIdentityCard() {
   const { session, sharedIdentity, progress } = useMemberChromeState();
   const identity = identityLabel(session, sharedIdentity);
   const authenticated = Boolean(session);
   const level = networkLevelDetails(progress);
+  const currentUnlocked = currentUnlockedCount(progress);
 
   if (!session && !sharedIdentity) {
     return (
@@ -75,7 +81,7 @@ export function RhenlinkIdentityCard() {
       <span className="rhenlink-follower-copy">
         <small>{authenticated ? `RHENLINK / ${level.rankMark}` : "RHENLINK / LINKED"}</small>
         <strong>@{identity.handle || "member"}</strong>
-        <em>{authenticated ? `${level.xp} XP · ${Math.round(level.percent)}% TO LEVEL ${Math.min(100, level.level + 1)} · ${progress.achievements.length}/${ACHIEVEMENTS.length} ACHIEVEMENTS` : identity.displayName}</em>
+        <em>{authenticated ? `${level.xp} XP · ${Math.round(level.percent)}% TO LEVEL ${Math.min(100, level.level + 1)} · ${currentUnlocked}/${CURRENT_ACHIEVEMENTS.length} LAUNCH ARTIFACTS` : identity.displayName}</em>
       </span>
       <span className="rhenlink-follower-pulse" aria-hidden="true" />
       <ChevronRight size={15} />
@@ -89,6 +95,7 @@ export function AchievementLayer() {
   const timerRef = useRef<number | null>(null);
 
   useEffect(() => onAchievementUnlocked((achievement) => {
+    if (achievement.availableNow === false) return;
     setQueue((current) => current.some((item) => item.id === achievement.id) || active?.id === achievement.id ? current : [...current, achievement]);
   }), [active?.id]);
 
@@ -134,7 +141,7 @@ export function ProfileProgressSummary({ progress }: { progress: MemberProgress 
       <div className="profile-level-row"><span>NETWORK LEVEL</span><strong>{String(level.level).padStart(2, "0")}</strong><small>{level.rankMark} · {level.xp} XP</small></div>
       <div className="profile-xp-track"><i style={{ width: `${level.percent}%` }} /></div>
       <div className="profile-achievement-grid">
-        {ACHIEVEMENTS.map((achievement) => (
+        {CURRENT_ACHIEVEMENTS.map((achievement) => (
           <div key={achievement.id} className={unlocked.has(achievement.id) ? "unlocked" : "locked"} title={achievement.description}>
             <Award size={15} />
             <span>{achievement.title}</span>
