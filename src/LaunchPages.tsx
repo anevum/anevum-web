@@ -16,6 +16,8 @@ const ebookUrl = import.meta.env.VITE_REPLY_EBOOK_URL || buyUrl;
 const sampleUrl = import.meta.env.VITE_REPLY_SAMPLE_URL || "";
 const coverUrl = import.meta.env.VITE_REPLY_COVER_URL || "";
 const heroImageUrl = import.meta.env.VITE_REPLY_HERO_IMAGE_URL || "";
+const releaseLabel = String(import.meta.env.VITE_REPLY_RELEASE_LABEL || "").trim();
+const releaseInterestHref = "/rhenlink?intent=reply-release";
 
 const editions: Edition[] = [
   { label: "Hardcover", note: "Print edition", href: hardcoverUrl },
@@ -47,6 +49,7 @@ function LaunchHeader({ active }: { active: LaunchSection }) {
       <nav aria-label="ANEVUM launch navigation">
         <a aria-current={active === "book" ? "page" : undefined} className={active === "book" ? "active" : ""} href="/the-book">THE BOOK</a>
         <a aria-current={active === "story" ? "page" : undefined} className={active === "story" ? "active" : ""} href="/the-story">THE STORY</a>
+        <a aria-current={active === "store" ? "page" : undefined} className={active === "store" ? "active" : ""} href="/store">STORE</a>
         <a href="/rhenlink">RHENLINK</a>
       </nav>
       <a className="reply-launch-header-link" href="/">REPLY</a>
@@ -59,7 +62,7 @@ function LaunchFooter() {
     <footer className="reply-launch-footer launch-page-footer">
       <a href="/"><strong>ANEVUM</strong><small>A UNIVERSE IN STORY.</small></a>
       <p>REPLY / THE TRANSCOSMIC / BOOK ONE</p>
-      <span><a href="/rhenlink">RHENLINK</a> · DEVON AKINS</span>
+      <span><a href="/store">STORE</a> · <a href="/rhenlink">RHENLINK</a> · DEVON AKINS</span>
     </footer>
   );
 }
@@ -118,6 +121,7 @@ function PageShell({ active, children }: { active: LaunchSection; children: Reac
 
 export function BookPage() {
   const firstPurchase = editions[0]?.href || "";
+  const availability = editions.length ? "Available editions listed below" : releaseLabel || "Release details are being finalized";
 
   return (
     <PageShell active="book">
@@ -130,6 +134,7 @@ export function BookPage() {
           <p className="launch-page-deck">A worker follows a measurement she cannot explain into a civilization already living across worlds.</p>
           <div className="reply-launch-actions">
             {firstPurchase ? <Action href={firstPurchase}>BUY REPLY</Action> : <Action href="/the-story">ENTER THE STORY</Action>}
+            {!firstPurchase ? <Action href={releaseInterestHref} quiet>GET RELEASE UPDATES</Action> : null}
             {sampleUrl ? <Action href={sampleUrl} quiet><BookOpen size={15} strokeWidth={1.5} /> READ AN EXCERPT</Action> : null}
           </div>
         </div>
@@ -146,7 +151,7 @@ export function BookPage() {
           <div><dt>AUTHOR</dt><dd>Devon Akins</dd></div>
           <div><dt>SERIES</dt><dd>The Transcosmic</dd></div>
           <div><dt>SEQUENCE</dt><dd>Book One</dd></div>
-          <div><dt>AVAILABILITY</dt><dd>{editions.length ? "Available editions listed below" : "Not yet announced"}</dd></div>
+          <div><dt>AVAILABILITY</dt><dd>{availability}</dd></div>
         </dl>
       </section>
 
@@ -177,8 +182,8 @@ export function BookPage() {
         <section className="launch-page-availability" aria-labelledby="book-availability-title">
           <p className="reply-launch-kicker">PUBLICATION STATUS</p>
           <h2 id="book-availability-title">REPLY is approaching publication.</h2>
-          <p>Edition, retailer, pricing, and release details will appear here when they are formally announced.</p>
-          <Action href="/rhenlink" quiet>OPEN RHENLINK</Action>
+          <p>{releaseLabel ? `${releaseLabel}. Purchase links will appear here when the editions are live.` : "Edition, retailer, pricing, and release details are being finalized. Purchase links will appear here only when they are live."}</p>
+          <Action href={releaseInterestHref}>GET REPLY RELEASE UPDATES</Action>
         </section>
       )}
     </PageShell>
@@ -224,7 +229,7 @@ export function StoryPage() {
           <span>PUBLIC CANON STATE</span>
           <strong>BOOK ONE</strong>
           <p>This page stays intentionally spoiler-light. Deeper records will unlock as material is published.</p>
-          <Action href="/rhenlink" quiet>OPEN RHENLINK</Action>
+          <Action href={releaseInterestHref} quiet>GET RELEASE UPDATES</Action>
         </div>
       </section>
     </PageShell>
@@ -239,8 +244,8 @@ export function StorePage() {
         <div className="launch-page-hero-copy">
           <p className="reply-launch-kicker">ANEVUM / STORE</p>
           <h1 id="store-page-title">THE FIRST OBJECT.</h1>
-          <p className="launch-page-deck">REPLY is the first ANEVUM publication. This store will remain intentionally quiet until real editions are available.</p>
-          <div className="reply-launch-actions"><Action href="/the-book">VIEW REPLY</Action></div>
+          <p className="launch-page-deck">REPLY is the first ANEVUM publication. The store opens around real editions, not placeholder products.</p>
+          <div className="reply-launch-actions"><Action href="/the-book">VIEW REPLY</Action>{!editions.length ? <Action href={releaseInterestHref} quiet>GET RELEASE UPDATES</Action> : null}</div>
         </div>
         <div className="launch-page-store-mark" aria-hidden="true"><Store size={56} strokeWidth={0.8} /><span>PUBLICATION 001</span></div>
       </section>
@@ -259,7 +264,7 @@ export function StorePage() {
           ) : (
             <div className="launch-page-store-status">
               <span>STATUS / PRE-RELEASE</span>
-              <strong>Availability has not yet been announced.</strong>
+              <strong>{releaseLabel || "Release details are being finalized."}</strong>
               <p>Edition, price, and purchase links will appear here only when they are live.</p>
             </div>
           )}
@@ -270,7 +275,7 @@ export function StorePage() {
         <p className="reply-launch-kicker">STORE PRINCIPLE</p>
         <h2>No placeholders pretending to be products.</h2>
         <p>The ANEVUM store grows with released work. Until REPLY can actually be ordered, this page presents the book and its publication state without fake pricing or checkout.</p>
-        <Action href="/rhenlink" quiet>OPEN RHENLINK</Action>
+        <Action href={editions.length ? "/the-book" : releaseInterestHref}>{editions.length ? "VIEW REPLY" : "GET REPLY RELEASE UPDATES"}</Action>
       </section>
     </PageShell>
   );
