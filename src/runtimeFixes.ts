@@ -26,9 +26,11 @@ function canonicalSurfaceRedirect() {
   const path = window.location.pathname.replace(/\/+$/, "") || "/";
   if (hostname !== ROOT_HOST && !hostname.endsWith(".anevum.com")) return false;
 
+  // This alias is same-origin, so normalize it synchronously before React reads
+  // window.location. That keeps old bookmarks/crawlers out of the 404 surface.
   if (hostname === ROOT_HOST && (path === "/stories" || path.startsWith("/stories/"))) {
-    window.location.replace(`https://${ROOT_HOST}/the-book${window.location.search}${window.location.hash}`);
-    return true;
+    window.history.replaceState({}, "", `/the-book${window.location.search}${window.location.hash}`);
+    return false;
   }
 
   if (hostname === ROOT_HOST && (path === "/wiki" || path.startsWith("/wiki/"))) {
