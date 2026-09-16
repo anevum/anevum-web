@@ -42,7 +42,7 @@
 
 .command-state-grid{
   display:grid;
-  grid-template-columns:repeat(5,minmax(0,1fr));
+  grid-template-columns:repeat(4,minmax(0,1fr));
 }
 
 .command-state-card{
@@ -52,7 +52,8 @@
   border-right:1px solid var(--sys-line);
   overflow:hidden;
 }
-.command-state-card:last-child{border-right:0}
+.command-state-card:nth-child(4n){border-right:0}
+.command-state-card:nth-child(n+5){border-top:1px solid var(--sys-line)}
 .command-state-card:before{
   content:"";
   position:absolute;
@@ -82,7 +83,10 @@
 .command-state-card.state-locked:before{background:#a9b7bd}
 .command-state-card.state-canonical:before{background:#72d5a5}
 .command-state-card.state-working:before{background:#c7a66a}
+.command-state-card.state-unresolved:before{background:#c47d74}
+.command-state-card.state-exploratory:before{background:#9f84cc}
 .command-state-card.state-superseded:before{background:#4a5357}
+.command-state-card.state-archived:before{background:#343d42}
 
 .command-data-warning{
   margin:0;
@@ -142,7 +146,9 @@
 .command-record-row em.state-locked{border-color:rgba(169,183,189,.24);color:#a9b7bd}
 .command-record-row em.state-canonical{border-color:rgba(114,213,165,.28);color:#8bd9b2}
 .command-record-row em.state-working{border-color:rgba(199,166,106,.28);color:#c7a66a}
-.command-record-row em.state-superseded{color:#566066}
+.command-record-row em.state-unresolved{border-color:rgba(196,125,116,.28);color:#c98e87}
+.command-record-row em.state-exploratory{border-color:rgba(159,132,204,.28);color:#b4a0d8}
+.command-record-row em.state-superseded,.command-record-row em.state-archived{color:#566066}
 .command-record-row>small{color:#49574f;font-size:.35rem;letter-spacing:.1em}
 .command-record-row>a,
 .command-record-row>b{
@@ -163,13 +169,11 @@
   letter-spacing:.13em;
 }
 
-/* Wiki mounted in SystemShell: standalone Wiki header is redundant there. */
 .surface-wiki .community-wiki-header{display:none!important}
 .surface-wiki .community-wiki-page{min-height:100%;background:transparent}
 .surface-wiki .community-wiki-hero{margin:0;max-width:none;border-left:0;border-right:0}
 .surface-wiki .community-wiki-shell{max-width:none}
 
-/* Lattice relation lines come directly from wiki_links and sit below nodes. */
 .lattice-link-layer{
   position:absolute;
   inset:0;
@@ -199,9 +203,10 @@
 }
 
 @media(max-width:1180px){
-  .command-state-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
-  .command-state-card:nth-child(3){border-right:0}
-  .command-state-card:nth-child(n+4){border-top:1px solid var(--sys-line)}
+  .command-state-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .command-state-card{border-right:1px solid var(--sys-line)!important}
+  .command-state-card:nth-child(2n){border-right:0!important}
+  .command-state-card:nth-child(n+3){border-top:1px solid var(--sys-line)}
   .command-record-row{grid-template-columns:72px 78px minmax(150px,1fr) 110px 70px}
   .command-record-row>a,.command-record-row>b{display:none}
 }
@@ -209,11 +214,9 @@
 @media(max-width:760px){
   .command-canon-panel,.command-record-panel{margin-left:12px;margin-right:12px}
   .command-canon-panel>header,.command-record-panel>header{grid-template-columns:1fr;gap:13px;padding:18px}
-  .command-state-grid{grid-template-columns:1fr 1fr}
-  .command-state-card{min-height:155px;border-top:1px solid var(--sys-line);border-right:1px solid var(--sys-line)!important}
-  .command-state-card:nth-child(2n){border-right:0!important}
-  .command-state-card:first-child,.command-state-card:nth-child(2){border-top:0}
-  .command-state-card:last-child{grid-column:1/-1;border-right:0!important}
+  .command-state-grid{grid-template-columns:1fr}
+  .command-state-card{min-height:145px;border-right:0!important;border-top:1px solid var(--sys-line)!important}
+  .command-state-card:first-child{border-top:0!important}
   .command-state-card>strong{font-size:2.2rem;margin-top:15px}
   .command-record-row{grid-template-columns:65px minmax(0,1fr) auto;gap:9px;padding:10px 12px}
   .command-record-row>span,.command-record-row>small{display:none}
