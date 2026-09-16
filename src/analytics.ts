@@ -1,4 +1,4 @@
-export type AnalyticsSurface = "reply" | "book" | "story" | "store" | "rhenlink" | "wiki" | "lattice" | "legal";
+export type AnalyticsSurface = "reply" | "book" | "story" | "store" | "rhenlink" | "about" | "wiki" | "lattice" | "legal";
 export type AnalyticsProperties = Record<string, string | number | boolean | null | undefined>;
 
 type PostHogClient = typeof import("posthog-js")["default"];
