@@ -1,13 +1,6 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { lazy, Suspense, useEffect, useState, type ReactNode } from "react";
 import ReplyLaunch from "./ReplyLaunch";
-import { BookPage, StorePage, StoryPage } from "./LaunchPages";
-import { Launch404 } from "./Launch404";
-import { Rhenlink } from "./RhenlinkV2";
-import { Lattice } from "./LatticeV2";
 import { AuthBridgePage, SystemSessionBridge } from "./AuthBridge";
-import { CommandHome } from "./CommandPage";
-import { CanonicalWikiArticle, CanonicalWikiHome } from "./CanonicalWiki";
-import { WikiAdminPage, WikiContributionPage, WikiSavedPage } from "./ModeratedWiki";
 import { AchievementLayer } from "./MemberChrome";
 import { ContactPage, PrivacyPage, PublicLegalStrip, RhenlinkAccountNotice, TermsPage } from "./LegalPages";
 import { capturePageView, type AnalyticsSurface } from "./analytics";
@@ -15,11 +8,32 @@ import { getCanonProjectionRecord } from "./canonProjection";
 import { trackMemberRoute } from "./memberState";
 import { UnifiedSystemShell } from "./SystemShell";
 
+const BookPage = lazy(() => import("./LaunchPages").then((module) => ({ default: module.BookPage })));
+const StoryPage = lazy(() => import("./LaunchPages").then((module) => ({ default: module.StoryPage })));
+const StorePage = lazy(() => import("./LaunchPages").then((module) => ({ default: module.StorePage })));
+const Launch404 = lazy(() => import("./Launch404").then((module) => ({ default: module.Launch404 })));
+const Rhenlink = lazy(() => import("./RhenlinkV2").then((module) => ({ default: module.Rhenlink })));
+const Lattice = lazy(() => import("./LatticeV2").then((module) => ({ default: module.Lattice })));
+const CommandHome = lazy(() => import("./CommandPage").then((module) => ({ default: module.CommandHome })));
+const CanonicalWikiArticle = lazy(() => import("./CanonicalWiki").then((module) => ({ default: module.CanonicalWikiArticle })));
+const CanonicalWikiHome = lazy(() => import("./CanonicalWiki").then((module) => ({ default: module.CanonicalWikiHome })));
+const WikiAdminPage = lazy(() => import("./ModeratedWiki").then((module) => ({ default: module.WikiAdminPage })));
+const WikiContributionPage = lazy(() => import("./ModeratedWiki").then((module) => ({ default: module.WikiContributionPage })));
+const WikiSavedPage = lazy(() => import("./ModeratedWiki").then((module) => ({ default: module.WikiSavedPage })));
+
 const ROOT_HOST = "anevum.com";
 const WIKI_HOST = "wiki.anevum.com";
 const LATTICE_HOST = "lattice.anevum.com";
 const COMMAND_HOST = "command.anevum.com";
 const STRUCTURED_DATA_ID = "anevum-structured-data";
+
+function DeferredSurface({ children }: { children: ReactNode }) {
+  return (
+    <Suspense fallback={<div className="runtime-route-loading" role="status" aria-live="polite"><span>ANEVUM</span><strong>RESOLVING SURFACE</strong></div>}>
+      {children}
+    </Suspense>
+  );
+}
 
 function normalizePath(pathname: string) {
   if (!pathname || pathname === "/") return "/";
@@ -344,36 +358,42 @@ export default function App() {
 
   if (commandRoute) {
     return (
-      <div className="unified-runtime-shell">
-        <SystemSessionBridge hostname={hostname} />
-        <UnifiedSystemShell surface="command" pathname={routePath} hostname={hostname}>
-          <CommandHome />
-        </UnifiedSystemShell>
-      </div>
+      <DeferredSurface>
+        <div className="unified-runtime-shell">
+          <SystemSessionBridge hostname={hostname} />
+          <UnifiedSystemShell surface="command" pathname={routePath} hostname={hostname}>
+            <CommandHome />
+          </UnifiedSystemShell>
+        </div>
+      </DeferredSurface>
     );
   }
 
   if (wikiRoute) {
     return (
-      <div className="unified-runtime-shell">
-        <SystemSessionBridge hostname={hostname} />
-        <UnifiedSystemShell surface="wiki" pathname={wikiPath} hostname={hostname}>
-          {wikiContent(wikiPath)}
-        </UnifiedSystemShell>
-        <AchievementLayer />
-      </div>
+      <DeferredSurface>
+        <div className="unified-runtime-shell">
+          <SystemSessionBridge hostname={hostname} />
+          <UnifiedSystemShell surface="wiki" pathname={wikiPath} hostname={hostname}>
+            {wikiContent(wikiPath)}
+          </UnifiedSystemShell>
+          <AchievementLayer />
+        </div>
+      </DeferredSurface>
     );
   }
 
   if (latticeRoute) {
     return (
-      <div className="unified-runtime-shell">
-        <SystemSessionBridge hostname={hostname} />
-        <UnifiedSystemShell surface="lattice" pathname={routePath} hostname={hostname}>
-          <Lattice />
-        </UnifiedSystemShell>
-        <AchievementLayer />
-      </div>
+      <DeferredSurface>
+        <div className="unified-runtime-shell">
+          <SystemSessionBridge hostname={hostname} />
+          <UnifiedSystemShell surface="lattice" pathname={routePath} hostname={hostname}>
+            <Lattice />
+          </UnifiedSystemShell>
+          <AchievementLayer />
+        </div>
+      </DeferredSurface>
     );
   }
 
@@ -383,19 +403,21 @@ export default function App() {
 
   if (rhenlinkRoute) {
     return (
-      <div className="editorial-shell editorial-surface-rhenlink launch-rhenlink-shell">
-        <Rhenlink />
-        <RhenlinkAccountNotice />
-        <PublicLegalStrip />
-        <AchievementLayer />
-      </div>
+      <DeferredSurface>
+        <div className="editorial-shell editorial-surface-rhenlink launch-rhenlink-shell">
+          <Rhenlink />
+          <RhenlinkAccountNotice />
+          <PublicLegalStrip />
+          <AchievementLayer />
+        </div>
+      </DeferredSurface>
     );
   }
 
-  if (bookRoute) return <><BookPage /><PublicLegalStrip /><AchievementLayer /></>;
-  if (storyRoute) return <><StoryPage /><PublicLegalStrip /><AchievementLayer /></>;
-  if (storeRoute) return <><StorePage /><PublicLegalStrip /><AchievementLayer /></>;
-  if (notFoundRoute) return <><Launch404 /><AchievementLayer /></>;
+  if (bookRoute) return <DeferredSurface><BookPage /><PublicLegalStrip /><AchievementLayer /></DeferredSurface>;
+  if (storyRoute) return <DeferredSurface><StoryPage /><PublicLegalStrip /><AchievementLayer /></DeferredSurface>;
+  if (storeRoute) return <DeferredSurface><StorePage /><PublicLegalStrip /><AchievementLayer /></DeferredSurface>;
+  if (notFoundRoute) return <DeferredSurface><Launch404 /><AchievementLayer /></DeferredSurface>;
 
   return (
     <>
