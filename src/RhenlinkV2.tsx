@@ -4,6 +4,7 @@ import { BrandArt } from "./BrandArt";
 import { LaunchTerminal } from "./LaunchTerminal";
 import { Button } from "./ui";
 import {
+  consumeAuthRedirect,
   displayIdentity,
   loadSession,
   memberBackend,
@@ -26,6 +27,18 @@ function useRhenlinkState() {
     const current = loadSession();
     return current ? loadMemberProgress(current) : blankProgress();
   });
+
+  useEffect(() => {
+    let cancelled = false;
+    consumeAuthRedirect().then((result) => {
+      if (cancelled || !result || result.status !== "signed-in") return;
+      setSession(result.session);
+      setProgress(loadMemberProgress(result.session));
+    }).catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     const sync = () => {
