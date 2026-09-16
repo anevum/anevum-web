@@ -1,15 +1,26 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import ReplyLaunch from "./ReplyLaunch";
 import { BookPage, StoryPage } from "./LaunchPages";
 import { Launch404 } from "./Launch404";
 import { Rhenlink } from "./RhenlinkV2";
+import { Lattice } from "./LatticeV2";
 import { AuthBridgePage, SystemSessionBridge } from "./AuthBridge";
 import { CommandHome } from "./CommandPage";
+import {
+  CommunityWikiHeader,
+  ModeratedWikiArticle,
+  ModeratedWikiHome,
+  WikiAdminPage,
+  WikiContributionPage,
+  WikiSavedPage,
+} from "./ModeratedWiki";
 import { AchievementLayer } from "./MemberChrome";
 import { trackMemberRoute } from "./memberState";
 import { UnifiedSystemShell } from "./SystemShell";
 
 const ROOT_HOST = "anevum.com";
+const WIKI_HOST = "wiki.anevum.com";
+const LATTICE_HOST = "lattice.anevum.com";
 const COMMAND_HOST = "command.anevum.com";
 
 function normalizePath(pathname: string) {
@@ -45,7 +56,7 @@ function ensureMeta(selector: string, attribute: "name" | "property", key: strin
   return element;
 }
 
-function publicMeta(pathname: string, knownPublicRoute: boolean) {
+function rootPublicMeta(pathname: string, knownPublicRoute: boolean) {
   if (!knownPublicRoute) {
     return {
       title: "Signal Lost — ANEVUM",
@@ -92,32 +103,86 @@ function publicMeta(pathname: string, knownPublicRoute: boolean) {
   }
 }
 
+function wikiSurfacePath(hostname: string, routePath: string) {
+  if (hostname === WIKI_HOST) return routePath;
+  if (routePath === "/wiki") return "/";
+  if (routePath.startsWith("/wiki/")) return routePath.slice(5) || "/";
+  return "/";
+}
+
+function wikiContent(pathname: string): ReactNode {
+  if (pathname === "/") return <ModeratedWikiHome />;
+  if (pathname === "/new") return <WikiContributionPage />;
+  if (pathname === "/saved") return <WikiSavedPage />;
+  if (pathname === "/admin") return <WikiAdminPage />;
+
+  const normalized = pathname.replace(/^\/+|\/+$/g, "");
+  if (normalized.endsWith("/edit")) {
+    const slug = normalized.slice(0, -5).replace(/\/$/, "");
+    return <WikiContributionPage editSlug={decodeURIComponent(slug)} />;
+  }
+  return <ModeratedWikiArticle slug={decodeURIComponent(normalized)} />;
+}
+
 export default function App() {
   const { pathname, hostname } = useLocationState();
   const routePath = normalizePath(pathname);
+
   const bridgeRoute = hostname === ROOT_HOST && routePath === "/auth-bridge";
-  const commandRoute = hostname === COMMAND_HOST || routePath === "/command";
+  const commandRoute = hostname === COMMAND_HOST || (hostname === ROOT_HOST && routePath === "/command");
+  const wikiRoute = hostname === WIKI_HOST || (hostname === ROOT_HOST && (routePath === "/wiki" || routePath.startsWith("/wiki/")));
+  const latticeRoute = hostname === LATTICE_HOST || (hostname === ROOT_HOST && routePath === "/lattice");
   const rhenlinkRoute = hostname === ROOT_HOST && routePath === "/rhenlink";
   const bookRoute = hostname === ROOT_HOST && routePath === "/the-book";
   const storyRoute = hostname === ROOT_HOST && routePath === "/the-story";
-  const knownPublicRoute = routePath === "/" || rhenlinkRoute || bookRoute || storyRoute;
-  const notFoundRoute = hostname === ROOT_HOST && !bridgeRoute && !commandRoute && !knownPublicRoute;
+  const knownRootPublicRoute = routePath === "/" || rhenlinkRoute || bookRoute || storyRoute || wikiRoute || latticeRoute;
+  const notFoundRoute = hostname === ROOT_HOST && !bridgeRoute && !commandRoute && !knownRootPublicRoute;
+  const wikiPath = wikiSurfacePath(hostname, routePath);
+  const wikiPrivatePath = wikiPath === "/new" || wikiPath === "/saved" || wikiPath === "/admin" || wikiPath.endsWith("/edit");
 
   useEffect(() => {
-    const meta = publicMeta(routePath, knownPublicRoute);
-    const canonicalUrl = commandRoute ? "https://command.anevum.com/" : meta.canonical;
+    const rootMeta = rootPublicMeta(routePath, knownRootPublicRoute);
+    const meta = commandRoute
+      ? {
+          title: "ANEVUM COMMAND",
+          description: "Private ANEVUM operations interface for Wiki state, Lattice, RHENLINK and system control.",
+          canonical: "https://command.anevum.com/",
+          ogTitle: "ANEVUM COMMAND",
+          ogType: "website",
+        }
+      : wikiRoute
+        ? {
+            title: wikiPath === "/" ? "ANEVUM Wiki" : "ANEVUM Wiki Record",
+            description: "The canonical ANEVUM knowledge surface and record-state authority.",
+            canonical: `https://wiki.anevum.com${wikiPath === "/" ? "/" : wikiPath}`,
+            ogTitle: "ANEVUM Wiki",
+            ogType: "website",
+          }
+        : latticeRoute
+          ? {
+              title: "Lattice — ANEVUM",
+              description: "ANEVUM records expressed as a relational navigation surface, subordinate to the live Wiki.",
+              canonical: "https://lattice.anevum.com/",
+              ogTitle: "Lattice — ANEVUM",
+              ogType: "website",
+            }
+          : rootMeta;
 
     document.documentElement.dataset.surface = bridgeRoute
       ? "bridge"
       : commandRoute
         ? "command"
-        : rhenlinkRoute
-          ? "rhenlink"
-          : notFoundRoute
-            ? "not-found"
-            : "reply";
+        : wikiRoute
+          ? "wiki"
+          : latticeRoute
+            ? "lattice"
+            : rhenlinkRoute
+              ? "rhenlink"
+              : notFoundRoute
+                ? "not-found"
+                : "reply";
     document.documentElement.dataset.host = hostname;
-    document.title = bridgeRoute ? "ANEVUM Identity Bridge" : commandRoute ? "ANEVUM COMMAND" : meta.title;
+    document.title = bridgeRoute ? "ANEVUM Identity Bridge" : meta.title;
 
     let canonical = document.querySelector<HTMLLinkElement>('link[rel="canonical"]');
     if (!canonical) {
@@ -125,38 +190,38 @@ export default function App() {
       canonical.rel = "canonical";
       document.head.appendChild(canonical);
     }
-    canonical.href = bridgeRoute ? "https://anevum.com/auth-bridge" : canonicalUrl;
+    canonical.href = bridgeRoute ? "https://anevum.com/auth-bridge" : meta.canonical;
 
     const robots = ensureMeta('meta[name="robots"]', "name", "robots");
-    robots.content = bridgeRoute || commandRoute || rhenlinkRoute || hostname !== ROOT_HOST || !knownPublicRoute
+    robots.content = bridgeRoute || commandRoute || rhenlinkRoute || notFoundRoute || wikiPrivatePath
       ? "noindex,follow,noarchive"
       : "index,follow,max-image-preview:large";
 
     const description = ensureMeta('meta[name="description"]', "name", "description");
-    description.content = commandRoute ? "Private ANEVUM operations interface." : meta.description;
+    description.content = meta.description;
 
     const ogTitle = ensureMeta('meta[property="og:title"]', "property", "og:title");
-    ogTitle.content = commandRoute ? "ANEVUM COMMAND" : meta.ogTitle;
+    ogTitle.content = meta.ogTitle;
     const ogDescription = ensureMeta('meta[property="og:description"]', "property", "og:description");
-    ogDescription.content = commandRoute ? "Private ANEVUM operations interface." : meta.description;
+    ogDescription.content = meta.description;
     const ogUrl = ensureMeta('meta[property="og:url"]', "property", "og:url");
-    ogUrl.content = bridgeRoute ? "https://anevum.com/auth-bridge" : canonicalUrl;
+    ogUrl.content = bridgeRoute ? "https://anevum.com/auth-bridge" : meta.canonical;
     const ogType = ensureMeta('meta[property="og:type"]', "property", "og:type");
-    ogType.content = commandRoute ? "website" : meta.ogType;
+    ogType.content = meta.ogType;
 
     const twitterTitle = ensureMeta('meta[name="twitter:title"]', "name", "twitter:title");
-    twitterTitle.content = commandRoute ? "ANEVUM COMMAND" : meta.ogTitle;
+    twitterTitle.content = meta.ogTitle;
     const twitterDescription = ensureMeta('meta[name="twitter:description"]', "name", "twitter:description");
-    twitterDescription.content = commandRoute ? "Private ANEVUM operations interface." : meta.description;
-  }, [routePath, hostname, bridgeRoute, commandRoute, rhenlinkRoute, knownPublicRoute, notFoundRoute]);
+    twitterDescription.content = meta.description;
+  }, [routePath, hostname, bridgeRoute, commandRoute, wikiRoute, latticeRoute, rhenlinkRoute, knownRootPublicRoute, notFoundRoute, wikiPath, wikiPrivatePath]);
 
   useEffect(() => {
-    if (bridgeRoute || commandRoute || hostname !== ROOT_HOST || !knownPublicRoute) return;
+    if (bridgeRoute || commandRoute || wikiRoute || latticeRoute || hostname !== ROOT_HOST || !knownRootPublicRoute) return;
     const recordRoute = () => trackMemberRoute(routePath);
     recordRoute();
     window.addEventListener("anevum-member-session", recordRoute);
     return () => window.removeEventListener("anevum-member-session", recordRoute);
-  }, [hostname, routePath, bridgeRoute, commandRoute, knownPublicRoute]);
+  }, [hostname, routePath, bridgeRoute, commandRoute, wikiRoute, latticeRoute, knownRootPublicRoute]);
 
   if (bridgeRoute) return <AuthBridgePage />;
 
@@ -166,6 +231,29 @@ export default function App() {
         <SystemSessionBridge hostname={hostname} />
         <UnifiedSystemShell surface="command" pathname={routePath} hostname={hostname}>
           <CommandHome />
+        </UnifiedSystemShell>
+      </div>
+    );
+  }
+
+  if (wikiRoute) {
+    return (
+      <div className="unified-runtime-shell">
+        <SystemSessionBridge hostname={hostname} />
+        <UnifiedSystemShell surface="wiki" pathname={wikiPath} hostname={hostname}>
+          <CommunityWikiHeader />
+          {wikiContent(wikiPath)}
+        </UnifiedSystemShell>
+      </div>
+    );
+  }
+
+  if (latticeRoute) {
+    return (
+      <div className="unified-runtime-shell">
+        <SystemSessionBridge hostname={hostname} />
+        <UnifiedSystemShell surface="lattice" pathname={routePath} hostname={hostname}>
+          <Lattice />
         </UnifiedSystemShell>
       </div>
     );
