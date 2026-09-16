@@ -11,7 +11,7 @@
     "canon:validate": "node scripts/sync-canon-projection.mjs --validate-config",
     "canon:check": "node scripts/sync-canon-projection.mjs --check",
     "canon:sync": "node scripts/sync-canon-projection.mjs --write",
-    "build": "npm run canon:validate && tsc --noEmit && vite build",
+    "build": "npm run canon:validate && tsc --noEmit && vite build && node scripts/render-route-metadata.mjs",
     "preview": "vite preview",
     "deploy": "wrangler deploy"
   },
