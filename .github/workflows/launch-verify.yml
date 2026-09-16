@@ -29,6 +29,9 @@ jobs:
       - name: Install dependencies
         run: npm install --no-audit --no-fund
 
+      - name: Verify runtime host contract
+        run: npm run runtime:verify
+
       - name: Production build
         run: npm run build
 
@@ -46,8 +49,8 @@ jobs:
           echo "Entry JS: ${JS_BYTES} bytes"
           echo "Entry CSS: ${CSS_BYTES} bytes"
 
-          test "$JS_BYTES" -le 450000 || { echo "Entry JS exceeds 450 KB launch budget"; exit 1; }
-          test "$CSS_BYTES" -le 225000 || { echo "Entry CSS exceeds 225 KB launch budget"; exit 1; }
+          test "$JS_BYTES" -le 350000 || { echo "Entry JS exceeds 350 KB launch budget"; exit 1; }
+          test "$CSS_BYTES" -le 185000 || { echo "Entry CSS exceeds 185 KB launch budget"; exit 1; }
 
       - name: Verify static route metadata
         shell: bash
@@ -89,7 +92,7 @@ jobs:
             sleep 1
           done
 
-          for route in / /the-book /the-story /store /rhenlink /about /privacy /terms /contact; do
+          for route in / /the-book /the-story /store /rhenlink /about /privacy /terms /contact /wiki /lattice /command /route-that-does-not-exist; do
             echo "Checking ${route}"
             curl --fail --silent --show-error "http://127.0.0.1:4173${route}" > /dev/null
           done

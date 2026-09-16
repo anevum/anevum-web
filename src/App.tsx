@@ -6,6 +6,7 @@ import { ContactPage, PrivacyPage, PublicLegalStrip, RhenlinkAccountNotice, Term
 import { capturePageView, type AnalyticsSurface } from "./analytics";
 import { getCanonProjectionRecord } from "./canonProjection";
 import { trackMemberRoute } from "./memberState";
+import { COMMAND_HOST, LATTICE_HOST, normalizeRuntimePath, resolveRuntimeHostname, ROOT_HOST, safeDecodeRouteValue, WIKI_HOST } from "./runtimeHost";
 import { UnifiedSystemShell } from "./SystemShell";
 
 const BookPage = lazy(() => import("./LaunchPages").then((module) => ({ default: module.BookPage })));
@@ -22,10 +23,6 @@ const WikiAdminPage = lazy(() => import("./ModeratedWiki").then((module) => ({ d
 const WikiContributionPage = lazy(() => import("./ModeratedWiki").then((module) => ({ default: module.WikiContributionPage })));
 const WikiSavedPage = lazy(() => import("./ModeratedWiki").then((module) => ({ default: module.WikiSavedPage })));
 
-const ROOT_HOST = "anevum.com";
-const WIKI_HOST = "wiki.anevum.com";
-const LATTICE_HOST = "lattice.anevum.com";
-const COMMAND_HOST = "command.anevum.com";
 const STRUCTURED_DATA_ID = "anevum-structured-data";
 
 function DeferredSurface({ children }: { children: ReactNode }) {
@@ -36,21 +33,16 @@ function DeferredSurface({ children }: { children: ReactNode }) {
   );
 }
 
-function normalizePath(pathname: string) {
-  if (!pathname || pathname === "/") return "/";
-  return pathname.replace(/\/+$/, "") || "/";
-}
-
 function useLocationState() {
   const [location, setLocation] = useState(() => ({
     pathname: window.location.pathname,
-    hostname: window.location.hostname.toLowerCase(),
+    hostname: resolveRuntimeHostname(window.location.hostname),
   }));
 
   useEffect(() => {
     const sync = () => setLocation({
       pathname: window.location.pathname,
-      hostname: window.location.hostname.toLowerCase(),
+      hostname: resolveRuntimeHostname(window.location.hostname),
     });
     window.addEventListener("popstate", sync);
     return () => window.removeEventListener("popstate", sync);
@@ -199,14 +191,14 @@ function wikiContent(pathname: string): ReactNode {
   const normalized = pathname.replace(/^\/+|\/+$/g, "");
   if (normalized.endsWith("/edit")) {
     const slug = normalized.slice(0, -5).replace(/\/$/, "");
-    return <WikiContributionPage editSlug={decodeURIComponent(slug)} />;
+    return <WikiContributionPage editSlug={safeDecodeRouteValue(slug)} />;
   }
-  return <CanonicalWikiArticle slug={decodeURIComponent(normalized)} />;
+  return <CanonicalWikiArticle slug={safeDecodeRouteValue(normalized)} />;
 }
 
 export default function App() {
   const { pathname, hostname } = useLocationState();
-  const routePath = normalizePath(pathname);
+  const routePath = normalizeRuntimePath(pathname);
 
   const bridgeRoute = hostname === ROOT_HOST && routePath === "/auth-bridge";
   const commandRoute = hostname === COMMAND_HOST || (hostname === ROOT_HOST && routePath === "/command");
@@ -226,7 +218,7 @@ export default function App() {
   const notFoundRoute = hostname === ROOT_HOST && !bridgeRoute && !commandRoute && !knownRootPublicRoute;
   const wikiPath = wikiSurfacePath(hostname, routePath);
   const wikiPrivatePath = wikiPath === "/new" || wikiPath === "/saved" || wikiPath === "/admin" || wikiPath.endsWith("/edit");
-  const wikiSlug = !wikiPrivatePath && wikiPath !== "/" ? decodeURIComponent(wikiPath.replace(/^\/+|\/+$/g, "")) : "";
+  const wikiSlug = !wikiPrivatePath && wikiPath !== "/" ? safeDecodeRouteValue(wikiPath.replace(/^\/+|\/+$/g, "")) : "";
   const wikiRecord = wikiSlug ? getCanonProjectionRecord(wikiSlug) : null;
   const memberRoute = wikiRoute
     ? (wikiPath === "/" ? "/wiki" : `/wiki${wikiPath}`)
