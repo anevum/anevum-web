@@ -1,30 +1,17 @@
 import { type PointerEvent as ReactPointerEvent } from "react";
 import { ArrowDown, ArrowRight, BookOpen, ExternalLink } from "lucide-react";
 import { capturePurchaseOutbound } from "./analytics";
+import { replyLaunchConfig } from "./launchConfig";
 import { LaunchTerminal } from "./LaunchTerminal";
 
-type Edition = {
-  label: string;
-  note: string;
-  href: string;
-};
-
-const buyUrl = import.meta.env.VITE_REPLY_BUY_URL || "";
-const hardcoverUrl = import.meta.env.VITE_REPLY_HARDCOVER_URL || buyUrl;
-const paperbackUrl = import.meta.env.VITE_REPLY_PAPERBACK_URL || buyUrl;
-const ebookUrl = import.meta.env.VITE_REPLY_EBOOK_URL || buyUrl;
-const sampleUrl = import.meta.env.VITE_REPLY_SAMPLE_URL || "";
-const coverUrl = import.meta.env.VITE_REPLY_COVER_URL || "";
-const heroImageUrl = import.meta.env.VITE_REPLY_HERO_IMAGE_URL || "";
-
-const editions: Edition[] = [
-  { label: "Hardcover", note: "Print edition", href: hardcoverUrl },
-  { label: "Paperback", note: "Print edition", href: paperbackUrl },
-  { label: "eBook", note: "Digital edition", href: ebookUrl },
-].filter((edition) => Boolean(edition.href));
-
-const firstEdition = editions[0];
-const firstPurchase = firstEdition?.href || "";
+const {
+  primaryPurchaseUrl,
+  primaryPurchaseLabel,
+  editions,
+  sampleUrl,
+  coverUrl,
+  heroImageUrl,
+} = replyLaunchConfig;
 
 function releaseInterestHref(source: string) {
   return `/rhenlink?intent=reply-release&source=${encodeURIComponent(source)}`;
@@ -138,8 +125,8 @@ export default function ReplyLaunch() {
           <a href="#author">AUTHOR</a>
           <a href="/rhenlink">RHENLINK</a>
         </nav>
-        {firstPurchase && firstEdition ? (
-          <PurchaseAction href={firstPurchase} edition={firstEdition.label} source="home-header">BUY REPLY</PurchaseAction>
+        {primaryPurchaseUrl ? (
+          <PurchaseAction href={primaryPurchaseUrl} edition={primaryPurchaseLabel} source="home-header">BUY REPLY</PurchaseAction>
         ) : (
           <a className="reply-launch-header-link" href={releaseInterestHref("home-header")}>GET UPDATES</a>
         )}
@@ -156,8 +143,8 @@ export default function ReplyLaunch() {
             <p className="reply-launch-authorline">A NOVEL BY DEVON AKINS</p>
             <p className="reply-launch-deck">On Ovara, a worker refuses to dismiss a measurement she cannot explain. The answer leads to a civilization already living across worlds.</p>
             <div className="reply-launch-actions">
-              {firstPurchase && firstEdition ? (
-                <PurchaseAction href={firstPurchase} edition={firstEdition.label} source="home-hero">BUY REPLY</PurchaseAction>
+              {primaryPurchaseUrl ? (
+                <PurchaseAction href={primaryPurchaseUrl} edition={primaryPurchaseLabel} source="home-hero">BUY REPLY</PurchaseAction>
               ) : (
                 <ExternalAction href="/the-book">DISCOVER REPLY</ExternalAction>
               )}
@@ -196,8 +183,8 @@ export default function ReplyLaunch() {
             <p className="reply-launch-kicker">THE BOOK</p>
             <h2>Built to be read. Made to be kept.</h2>
             <p>REPLY is the first Transcosmic novel: a human-scale science-fiction story about contact, work, family, intelligence, possibility and belonging.</p>
-            {firstPurchase && firstEdition ? (
-              <PurchaseAction href={firstPurchase} edition={firstEdition.label} source="home-object">CHOOSE AN EDITION</PurchaseAction>
+            {primaryPurchaseUrl ? (
+              <PurchaseAction href={primaryPurchaseUrl} edition={primaryPurchaseLabel} source="home-object">BUY REPLY</PurchaseAction>
             ) : (
               <>
                 <p className="reply-launch-availability">EDITION AND RETAILER DETAILS ARE BEING FINALIZED.</p>
