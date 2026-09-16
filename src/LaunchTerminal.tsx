@@ -17,6 +17,7 @@ const targets: TerminalTarget[] = [
   { command: "book", label: "THE BOOK", description: "Open the publication page for REPLY.", href: "/the-book" },
   { command: "store", label: "STORE", description: "Open the official REPLY availability surface.", href: "/store" },
   { command: "rhenlink", label: "RHENLINK", description: "Open or establish your persistent ANEVUM identity.", href: "/rhenlink" },
+  { command: "about", label: "ABOUT ANEVUM", description: "See how REPLY, Wiki, Lattice and RHENLINK fit together.", href: "/about" },
   { command: "wiki", label: "WIKI", description: "Browse records cleared by the live ANEVUM Wiki release gate.", href: "https://wiki.anevum.com/" },
   { command: "lattice", label: "LATTICE", description: "Enter the relational map of released ANEVUM records.", href: "https://lattice.anevum.com/" },
 ];
@@ -171,6 +172,10 @@ export function LaunchTerminal() {
     }
     if (command === "profile" || command === "identity" || command === "signin" || command === "login") {
       navigate("/rhenlink");
+      return;
+    }
+    if (command === "company" || command === "anevum") {
+      navigate("/about");
       return;
     }
     if (command === "records" || command === "canon") {

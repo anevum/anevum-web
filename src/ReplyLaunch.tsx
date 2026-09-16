@@ -123,6 +123,7 @@ export default function ReplyLaunch() {
           <a href="/the-story">THE STORY</a>
           <a href="/store">STORE</a>
           <a href="#author">AUTHOR</a>
+          <a href="/about">ABOUT</a>
           <a href="/rhenlink">RHENLINK</a>
         </nav>
         {primaryPurchaseUrl ? (
@@ -227,7 +228,7 @@ export default function ReplyLaunch() {
       <footer className="reply-launch-footer">
         <a href="#top"><strong>ANEVUM</strong><small>A UNIVERSE IN STORY.</small></a>
         <p>REPLY / THE TRANSCOSMIC / BOOK ONE</p>
-        <span><a href="/store">STORE</a> · <a href="/rhenlink">RHENLINK</a> · DEVON AKINS</span>
+        <span><a href="/about">ABOUT</a> · <a href="/store">STORE</a> · <a href="/rhenlink">RHENLINK</a> · DEVON AKINS</span>
       </footer>
     </div>
   );
