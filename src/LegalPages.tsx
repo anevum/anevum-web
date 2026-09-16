@@ -1,5 +1,7 @@
-import { ArrowLeft, ExternalLink, ShieldCheck } from "lucide-react";
+import { ArrowLeft, ExternalLink, Mail, MapPin, ShieldCheck, UserRound } from "lucide-react";
 import { LaunchTerminal } from "./LaunchTerminal";
+import { emailHref, legalPublicConfig, legalPublicConfigured } from "./legalConfig";
+import type { ReactNode } from "react";
 
 const effectiveDate = "September 16, 2026";
 
@@ -23,12 +25,12 @@ function LegalFooter() {
       <a href="/terms">TERMS</a>
       <a href="/contact">CONTACT</a>
       <a href="/rhenlink">RHENLINK</a>
-      <span>ANEVUM / REPLY</span>
+      <span>{legalPublicConfig.legalName || "ANEVUM"} / REPLY</span>
     </footer>
   );
 }
 
-function LegalShell({ label, title, intro, children }: { label: string; title: string; intro: string; children: React.ReactNode }) {
+function LegalShell({ label, title, intro, children }: { label: string; title: string; intro: string; children: ReactNode }) {
   return (
     <div className="legal-page">
       <LaunchTerminal />
@@ -47,7 +49,7 @@ function LegalShell({ label, title, intro, children }: { label: string; title: s
   );
 }
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+function Section({ title, children }: { title: string; children: ReactNode }) {
   return <section className="legal-section"><h2>{title}</h2>{children}</section>;
 }
 
@@ -83,11 +85,24 @@ export function PrivacyPage() {
       </Section>
 
       <Section title="Children">
-        <p>RHENLINK and the interactive ANEVUM account features are not intended for children under 13. Do not create a RHENLINK for a child under 13 or provide personal information about a child under 13 through the service.</p>
+        <p>RHENLINK and the interactive ANEVUM account features are not intended for children under {legalPublicConfig.minimumAge}. Do not create a RHENLINK for a child under {legalPublicConfig.minimumAge} or provide personal information about a child under that age through the service.</p>
       </Section>
 
       <Section title="Retention, access, and deletion">
-        <p>Account and progress information may be retained while a RHENLINK remains active and as reasonably necessary to operate, secure, and maintain the service. ANEVUM is still finalizing the public account-request and deletion channel. The current status is published on the <a href="/contact">Contact page</a>; no private contact address is fabricated here.</p>
+        <p>Account and progress information may be retained while a RHENLINK remains active and as reasonably necessary to operate, secure, and maintain the service.</p>
+        {legalPublicConfigured.accountRequests ? (
+          <p>Account access or deletion requests can be started through the <a href={legalPublicConfig.accountRequestUrl}>account request channel</a>.</p>
+        ) : (
+          <p>ANEVUM is still finalizing the public account-request and deletion channel. The current status is published on the <a href="/contact">Contact page</a>; no private contact address is fabricated here.</p>
+        )}
+      </Section>
+
+      <Section title="Privacy contact">
+        {legalPublicConfigured.contact ? (
+          <p>Privacy questions can be sent to <a href={emailHref(legalPublicConfig.privacyEmail)}>{legalPublicConfig.privacyEmail}</a>.</p>
+        ) : (
+          <p>The approved public privacy email has not yet been configured. ANEVUM will publish the real address rather than expose a private or invented mailbox.</p>
+        )}
       </Section>
 
       <Section title="Changes to this notice">
@@ -134,30 +149,34 @@ export function TermsPage() {
       </Section>
 
       <Section title="Age">
-        <p>RHENLINK is not intended for children under 13. By creating an account, you represent that you are at least 13 years old.</p>
+        <p>RHENLINK is not intended for children under {legalPublicConfig.minimumAge}. By creating an account, you represent that you are at least {legalPublicConfig.minimumAge} years old.</p>
       </Section>
 
-      <Section title="Operating entity and governing terms">
-        <p>The final public operating-entity, postal-address, and governing-law language has not yet been approved for publication. ANEVUM will not invent those details in code. They must be added before these launch terms are treated as the final commerce-era legal terms.</p>
+      <Section title="Operating identity">
+        {legalPublicConfigured.entity ? <p>The public operating name configured for this service is {legalPublicConfig.legalName}.</p> : <p>The final public operating-entity name has not yet been configured for publication.</p>}
+        {legalPublicConfigured.mailing ? <p>Public mailing address: {legalPublicConfig.mailingAddress}.</p> : <p>The public mailing address has not yet been configured. ANEVUM will not invent one in code.</p>}
+        <p>Additional governing-law language should be added only after the operating entity and jurisdiction are approved.</p>
       </Section>
     </LegalShell>
   );
 }
 
 export function ContactPage() {
+  const contactReady = legalPublicConfigured.contact || legalPublicConfigured.accountRequests || legalPublicConfigured.mailing;
   return (
     <LegalShell
       label="CONTACT"
-      title="A public contact channel is being finalized."
-      intro="ANEVUM will publish a real support and privacy-request channel here rather than expose an unapproved private address or invent a business contact."
+      title={contactReady ? "Contact ANEVUM." : "A public contact channel is being finalized."}
+      intro={contactReady ? "Use the approved channels below for product support, privacy questions, or account requests." : "ANEVUM will publish a real support and privacy-request channel here rather than expose an unapproved private address or invent a business contact."}
     >
-      <Section title="Current status">
-        <p>The website does not currently publish an approved support email, privacy email, business mailing address, or account-deletion mailbox. Those values require an explicit owner decision before they are exposed publicly.</p>
-        <p>Until that channel is published, do not send sensitive personal information through unofficial social accounts, community posts, Wiki submissions, or public issue trackers.</p>
-      </Section>
-
-      <Section title="What this page will support">
-        <p>The approved contact channel will cover account access and deletion requests, privacy questions, release-update questions, technical support, rights or content concerns, and general ANEVUM correspondence.</p>
+      <Section title="Approved channels">
+        <div className="legal-route-grid">
+          {legalPublicConfig.supportEmail ? <a href={emailHref(legalPublicConfig.supportEmail)}><Mail size={14} /><strong>SUPPORT</strong><span>{legalPublicConfig.supportEmail}</span></a> : null}
+          {legalPublicConfig.privacyEmail ? <a href={emailHref(legalPublicConfig.privacyEmail)}><ShieldCheck size={14} /><strong>PRIVACY</strong><span>{legalPublicConfig.privacyEmail}</span></a> : null}
+          {legalPublicConfig.accountRequestUrl ? <a href={legalPublicConfig.accountRequestUrl}><UserRound size={14} /><strong>ACCOUNT REQUESTS</strong><span>Access or deletion requests</span><ExternalLink size={13} /></a> : null}
+          {legalPublicConfig.mailingAddress ? <div><MapPin size={14} /><strong>MAIL</strong><span>{legalPublicConfig.mailingAddress}</span></div> : null}
+        </div>
+        {!contactReady ? <p>The website does not currently publish an approved support email, privacy email, business mailing address, or account-deletion channel. Those values require an explicit owner decision before they are exposed publicly.</p> : null}
       </Section>
 
       <Section title="Product routes">
@@ -174,7 +193,7 @@ export function ContactPage() {
 export function PublicLegalStrip() {
   return (
     <nav className="public-legal-strip" aria-label="Legal and contact links">
-      <span>ANEVUM</span>
+      <span>{legalPublicConfig.legalName || "ANEVUM"}</span>
       <a href="/privacy">PRIVACY</a>
       <a href="/terms">TERMS</a>
       <a href="/contact">CONTACT</a>
@@ -186,7 +205,7 @@ export function RhenlinkAccountNotice() {
   return (
     <aside className="rhenlink-account-notice" aria-label="RHENLINK account terms">
       <strong>RHENLINK ACCOUNT NOTICE</strong>
-      <p>RHENLINK is intended for people age 13 and older. Creating or using a RHENLINK means you accept the <a href="/terms">Terms</a> and acknowledge the <a href="/privacy">Privacy notice</a>. REPLY release updates remain a separate opt-in preference and are not enabled merely by creating an account.</p>
+      <p>RHENLINK is intended for people age {legalPublicConfig.minimumAge} and older. Creating or using a RHENLINK means you accept the <a href="/terms">Terms</a> and acknowledge the <a href="/privacy">Privacy notice</a>. REPLY release updates remain a separate opt-in preference and are not enabled merely by creating an account.</p>
     </aside>
   );
 }
