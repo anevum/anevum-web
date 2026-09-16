@@ -63,7 +63,7 @@ jobs:
             sleep 1
           done
 
-          for route in / /the-book /the-story /store /rhenlink /privacy /terms /contact; do
+          for route in / /the-book /the-story /store /rhenlink /about /privacy /terms /contact; do
             echo "Checking ${route}"
             curl --fail --silent --show-error "http://127.0.0.1:4173${route}" > /dev/null
           done

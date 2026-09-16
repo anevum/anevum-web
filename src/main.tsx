@@ -25,6 +25,7 @@ import "./launchVisualV3.css";
 import "./mobileLaunchFix.css";
 import "./launchEditorialLight.css";
 import "./legal.css";
+import "./about.css";
 import "./runtimeBoundary.css";
 
 installRuntimeFixes();
