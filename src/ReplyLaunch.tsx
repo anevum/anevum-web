@@ -1,5 +1,6 @@
 import { type PointerEvent as ReactPointerEvent } from "react";
 import { ArrowDown, ArrowRight, BookOpen, ExternalLink } from "lucide-react";
+import { capturePurchaseOutbound } from "./analytics";
 import { LaunchTerminal } from "./LaunchTerminal";
 
 type Edition = {
@@ -22,20 +23,34 @@ const editions: Edition[] = [
   { label: "eBook", note: "Digital edition", href: ebookUrl },
 ].filter((edition) => Boolean(edition.href));
 
-const firstPurchase = editions[0]?.href || "";
+const firstEdition = editions[0];
+const firstPurchase = firstEdition?.href || "";
 
-function ExternalAction({ href, children, quiet = false }: { href: string; children: React.ReactNode; quiet?: boolean }) {
+function releaseInterestHref(source: string) {
+  return `/rhenlink?intent=reply-release&source=${encodeURIComponent(source)}`;
+}
+
+function destinationHost(href: string) {
+  try { return new URL(href).hostname.replace(/^www\./, ""); } catch { return "external"; }
+}
+
+function ExternalAction({ href, children, quiet = false, onClick }: { href: string; children: React.ReactNode; quiet?: boolean; onClick?: () => void }) {
   const external = /^https?:\/\//i.test(href);
   return (
     <a
       className={`reply-launch-action${quiet ? " quiet" : ""}`}
       href={href}
+      onClick={onClick}
       {...(external ? { target: "_blank", rel: "noreferrer" } : {})}
     >
       <span>{children}</span>
       {external ? <ExternalLink size={14} strokeWidth={1.5} /> : <ArrowRight size={15} strokeWidth={1.5} />}
     </a>
   );
+}
+
+function PurchaseAction({ href, edition, source, children }: { href: string; edition: string; source: string; children: React.ReactNode }) {
+  return <ExternalAction href={href} onClick={() => capturePurchaseOutbound({ edition, destination: destinationHost(href), source })}>{children}</ExternalAction>;
 }
 
 function BookObject() {
@@ -119,10 +134,15 @@ export default function ReplyLaunch() {
         <nav aria-label="REPLY launch navigation">
           <a href="/the-book">THE BOOK</a>
           <a href="/the-story">THE STORY</a>
+          <a href="/store">STORE</a>
           <a href="#author">AUTHOR</a>
           <a href="/rhenlink">RHENLINK</a>
         </nav>
-        {firstPurchase ? <ExternalAction href={firstPurchase}>BUY REPLY</ExternalAction> : <a className="reply-launch-header-link" href="/the-book">REPLY</a>}
+        {firstPurchase && firstEdition ? (
+          <PurchaseAction href={firstPurchase} edition={firstEdition.label} source="home-header">BUY REPLY</PurchaseAction>
+        ) : (
+          <a className="reply-launch-header-link" href={releaseInterestHref("home-header")}>GET UPDATES</a>
+        )}
       </header>
 
       <LaunchTerminal />
@@ -136,7 +156,11 @@ export default function ReplyLaunch() {
             <p className="reply-launch-authorline">A NOVEL BY DEVON AKINS</p>
             <p className="reply-launch-deck">On Ovara, a worker refuses to dismiss a measurement she cannot explain. The answer leads to a civilization already living across worlds.</p>
             <div className="reply-launch-actions">
-              {firstPurchase ? <ExternalAction href={firstPurchase}>BUY REPLY</ExternalAction> : <ExternalAction href="/the-book">DISCOVER REPLY</ExternalAction>}
+              {firstPurchase && firstEdition ? (
+                <PurchaseAction href={firstPurchase} edition={firstEdition.label} source="home-hero">BUY REPLY</PurchaseAction>
+              ) : (
+                <ExternalAction href="/the-book">DISCOVER REPLY</ExternalAction>
+              )}
               <ExternalAction href="/the-story" quiet>ENTER THE STORY</ExternalAction>
               {sampleUrl ? <ExternalAction href={sampleUrl} quiet><BookOpen size={15} strokeWidth={1.5} /> READ AN EXCERPT</ExternalAction> : null}
             </div>
@@ -172,8 +196,15 @@ export default function ReplyLaunch() {
             <p className="reply-launch-kicker">THE BOOK</p>
             <h2>Built to be read. Made to be kept.</h2>
             <p>REPLY is the first Transcosmic novel: a human-scale science-fiction story about contact, work, family, intelligence, possibility and belonging.</p>
-            {firstPurchase ? <ExternalAction href={firstPurchase}>CHOOSE AN EDITION</ExternalAction> : <p className="reply-launch-availability">AVAILABILITY DETAILS WILL APPEAR HERE WHEN ANNOUNCED.</p>}
-            <div className="reply-launch-actions"><ExternalAction href="/the-book" quiet>OPEN THE BOOK PAGE</ExternalAction></div>
+            {firstPurchase && firstEdition ? (
+              <PurchaseAction href={firstPurchase} edition={firstEdition.label} source="home-object">CHOOSE AN EDITION</PurchaseAction>
+            ) : (
+              <>
+                <p className="reply-launch-availability">EDITION AND RETAILER DETAILS ARE BEING FINALIZED.</p>
+                <div className="reply-launch-actions"><ExternalAction href={releaseInterestHref("home-object")}>GET RELEASE UPDATES</ExternalAction></div>
+              </>
+            )}
+            <div className="reply-launch-actions"><ExternalAction href="/the-book" quiet>OPEN THE BOOK PAGE</ExternalAction><ExternalAction href="/store" quiet>OPEN THE STORE</ExternalAction></div>
           </div>
           <BookObject />
         </section>
@@ -186,7 +217,7 @@ export default function ReplyLaunch() {
             </div>
             <div className="reply-launch-editions">
               {editions.map((edition) => (
-                <a href={edition.href} target="_blank" rel="noreferrer" key={`${edition.label}-${edition.href}`}>
+                <a href={edition.href} target="_blank" rel="noreferrer" key={`${edition.label}-${edition.href}`} onClick={() => capturePurchaseOutbound({ edition: edition.label, destination: destinationHost(edition.href), source: "home-editions" })}>
                   <span>{edition.note}</span>
                   <strong>{edition.label}</strong>
                   <ArrowRight size={17} strokeWidth={1.35} />
@@ -209,7 +240,7 @@ export default function ReplyLaunch() {
       <footer className="reply-launch-footer">
         <a href="#top"><strong>ANEVUM</strong><small>A UNIVERSE IN STORY.</small></a>
         <p>REPLY / THE TRANSCOSMIC / BOOK ONE</p>
-        <span><a href="/rhenlink">RHENLINK</a> · DEVON AKINS</span>
+        <span><a href="/store">STORE</a> · <a href="/rhenlink">RHENLINK</a> · DEVON AKINS</span>
       </footer>
     </div>
   );
