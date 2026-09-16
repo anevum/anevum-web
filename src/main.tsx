@@ -22,6 +22,7 @@ import "./launchPages.css";
 import "./launchPolish.css";
 import "./launchVisualV3.css";
 import "./mobileLaunchFix.css";
+import "./launchEditorialLight.css";
 
 installRuntimeFixes();
 
