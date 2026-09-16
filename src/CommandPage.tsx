@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
-import { BookOpenText, CheckCircle2, CircleUserRound, Database, GitBranch, LockKeyhole, Orbit, RadioTower } from "lucide-react";
+import { AlertTriangle, BarChart3, BookOpenText, CheckCircle2, CircleDashed, CircleUserRound, Database, GitBranch, LockKeyhole, Orbit, RadioTower, Rocket, ShieldCheck } from "lucide-react";
 import { loadSession, syncCurrentUser, type MemberSession } from "./memberClient";
 import { CANON_LIFECYCLE_COUNTS, CANON_PROJECTION_SYNC } from "./canonProjection";
+import { getLaunchReadiness, launchReadinessSummary, type LaunchReadinessState } from "./launchReadiness";
 import {
   WIKI_CANON_STATES,
   WikiBackendUnavailable,
@@ -45,6 +46,12 @@ const stateDescriptions: Record<(typeof WIKI_CANON_STATES)[number], string> = {
 
 type SurfaceState = "idle" | "loading" | "ready" | "unavailable" | "error";
 
+function ReadinessIcon({ state }: { state: LaunchReadinessState }) {
+  if (state === "ready") return <ShieldCheck size={17} />;
+  if (state === "pending" || state === "stale") return <AlertTriangle size={17} />;
+  return <CircleDashed size={17} />;
+}
+
 export function CommandHome() {
   const session = useCommandSession();
   const admin = isWikiAdmin(session);
@@ -54,6 +61,8 @@ export function CommandHome() {
   const [moderationState, setModerationState] = useState<SurfaceState>("idle");
   const [canonError, setCanonError] = useState("");
   const [moderationError, setModerationError] = useState("");
+  const readiness = useMemo(() => getLaunchReadiness(), []);
+  const readinessSummary = useMemo(() => launchReadinessSummary(readiness), [readiness]);
 
   useEffect(() => {
     if (!admin) {
@@ -141,9 +150,30 @@ export function CommandHome() {
       <div className="command-metrics">
         <div><Database size={16} /><span>WIKI AUTHORITY</span><strong>{canonState === "ready" ? "RESOLVED" : canonState.toUpperCase()}</strong><small>Notion Canon + Publishing Queue</small></div>
         <div><BookOpenText size={16} /><span>PRODUCT RECORDS</span><strong>{canonState === "ready" ? productVisible : "—"}</strong><small>{CANON_PROJECTION_SYNC.queueCount} released at last sync</small></div>
-        <div><Orbit size={16} /><span>LATTICE SOURCE</span><strong>WIKI ONLY</strong><small>No parallel lore store</small></div>
+        <div><Rocket size={16} /><span>LAUNCH GATE</span><strong>{readinessSummary.criticalReady}/{readinessSummary.criticalTotal}</strong><small>{readinessSummary.complete ? "Critical launch systems resolved" : `${readinessSummary.blocking.length} critical configuration gaps`}</small></div>
         <div><CheckCircle2 size={16} /><span>COMMUNITY QUEUE</span><strong>{moderationState === "ready" ? queue.length : moderationState === "unavailable" ? "OFF" : "—"}</strong><small>{moderationState === "unavailable" ? "Optional proposal backend not configured" : "Pending proposals"}</small></div>
       </div>
+
+      <section className="command-readiness-panel" aria-labelledby="command-readiness-title">
+        <header>
+          <div><span>REPLY / LAUNCH READINESS</span><h2 id="command-readiness-title">What still blocks publication readiness.</h2></div>
+          <div className={`command-readiness-score ${readinessSummary.complete ? "ready" : "pending"}`}><Rocket size={20} /><strong>{readinessSummary.criticalReady}/{readinessSummary.criticalTotal}</strong><small>CRITICAL SYSTEMS READY</small></div>
+        </header>
+        <div className="command-readiness-grid">
+          {readiness.map((item) => (
+            <article key={item.id} className={`command-readiness-item ${item.state} ${item.critical ? "critical" : "optional"}`}>
+              <div className="command-readiness-state"><ReadinessIcon state={item.state} /><span>{item.state.toUpperCase()}</span></div>
+              <h3>{item.label}</h3>
+              <p>{item.detail}</p>
+              <footer>
+                <small>{item.critical ? "LAUNCH CRITICAL" : "NON-BLOCKING"}</small>
+                {item.actionHref ? <a href={item.actionHref}>{item.actionLabel || "OPEN"} ↗</a> : null}
+              </footer>
+            </article>
+          ))}
+        </div>
+        <div className="command-readiness-note"><BarChart3 size={15} /><p>Configuration values are reduced to readiness state here. COMMAND does not expose project tokens, authentication keys, private Notion credentials, or member identity data.</p></div>
+      </section>
 
       <section className="command-canon-panel" aria-labelledby="command-canon-title">
         <header>
