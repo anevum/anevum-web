@@ -5,7 +5,10 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc --noEmit && vite build",
+    "canon:validate": "node scripts/sync-canon-projection.mjs --validate-config",
+    "canon:check": "node scripts/sync-canon-projection.mjs --check",
+    "canon:sync": "node scripts/sync-canon-projection.mjs --write",
+    "build": "npm run canon:validate && tsc --noEmit && vite build",
     "preview": "vite preview",
     "deploy": "wrangler deploy"
   },
