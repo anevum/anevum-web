@@ -1,7 +1,7 @@
 import { analyticsConfigured } from "./analytics";
 import { CANON_PROJECTION_SYNC } from "./canonProjection";
-import { legalPublicConfigured } from "./legalConfig";
-import { replyLaunchConfigured } from "./launchConfig";
+import { legalPublicConfigured, legalPublicRejected } from "./legalConfig";
+import { replyLaunchConfigured, replyLaunchRejected } from "./launchConfig";
 import { memberBackend } from "./memberClient";
 
 export type LaunchReadinessState = "ready" | "pending" | "optional" | "stale";
@@ -25,6 +25,7 @@ function projectionAgeDays() {
 export function getLaunchReadiness(): LaunchReadinessItem[] {
   const ageDays = projectionAgeDays();
   const canonFresh = CANON_PROJECTION_SYNC.queueCount > 0 && ageDays <= 1;
+  const legalConfigRejected = Object.values(legalPublicRejected).some(Boolean);
 
   return [
     {
@@ -53,8 +54,10 @@ export function getLaunchReadiness(): LaunchReadinessItem[] {
       state: replyLaunchConfigured.purchase ? "ready" : "pending",
       critical: true,
       detail: replyLaunchConfigured.purchase
-        ? (replyLaunchConfigured.editionSpecific ? "Edition-specific purchase destinations are configured." : "A general live purchase destination is configured without inventing edition-specific links.")
-        : "Pre-release mode is active; no purchase destination is configured yet.",
+        ? `${replyLaunchConfigured.editionSpecific ? "Edition-specific purchase destinations are configured." : "A general live purchase destination is configured without inventing edition-specific links."}${replyLaunchRejected.purchase ? " One or more additional purchase URL values were rejected as unsafe or malformed." : ""}`
+        : replyLaunchRejected.purchase
+          ? "A purchase URL was supplied but rejected. Production purchase destinations must be valid HTTPS URLs without embedded credentials."
+          : "Pre-release mode is active; no purchase destination is configured yet.",
       actionHref: "https://anevum.com/store",
       actionLabel: "OPEN STORE",
     },
@@ -63,7 +66,11 @@ export function getLaunchReadiness(): LaunchReadinessItem[] {
       label: "Official REPLY cover",
       state: replyLaunchConfigured.cover ? "ready" : "pending",
       critical: true,
-      detail: replyLaunchConfigured.cover ? "The production book surface is using a configured cover asset." : "The book surface is still using its neutral fallback presentation instead of the final cover.",
+      detail: replyLaunchConfigured.cover
+        ? "The production book surface is using a configured cover asset."
+        : replyLaunchRejected.cover
+          ? "A cover value was supplied but rejected. Cover assets must use HTTPS or a same-origin absolute path."
+          : "The book surface is still using its neutral fallback presentation instead of the final cover.",
       actionHref: "https://anevum.com/the-book",
       actionLabel: "OPEN BOOK",
     },
@@ -74,7 +81,9 @@ export function getLaunchReadiness(): LaunchReadinessItem[] {
       critical: true,
       detail: legalPublicConfigured.launch
         ? "Public entity, support/privacy contacts, mailing address and account-request channel are configured."
-        : "Legal pages are built, but one or more owner-approved public entity/contact/address/request values are still missing.",
+        : legalConfigRejected
+          ? "One or more public email/account-request values were supplied but rejected as unsafe or malformed; missing approved values still block launch readiness."
+          : "Legal pages are built, but one or more owner-approved public entity/contact/address/request values are still missing.",
       actionHref: "https://anevum.com/contact",
       actionLabel: "OPEN CONTACT",
     },
@@ -104,14 +113,22 @@ export function getLaunchReadiness(): LaunchReadinessItem[] {
       label: "Book sample",
       state: replyLaunchConfigured.sample ? "ready" : "optional",
       critical: false,
-      detail: replyLaunchConfigured.sample ? "A public sample/excerpt destination is configured." : "No sample is configured yet; this does not block purchase readiness.",
+      detail: replyLaunchConfigured.sample
+        ? "A public sample/excerpt destination is configured."
+        : replyLaunchRejected.sample
+          ? "A sample destination was supplied but rejected. Use HTTPS or a same-origin absolute path."
+          : "No sample is configured yet; this does not block purchase readiness.",
     },
     {
       id: "hero-art",
       label: "Book hero art",
       state: replyLaunchConfigured.hero ? "ready" : "optional",
       critical: false,
-      detail: replyLaunchConfigured.hero ? "A production hero image is configured." : "The book surface is using the neutral atmospheric fallback; no unapproved lore art is being substituted.",
+      detail: replyLaunchConfigured.hero
+        ? "A production hero image is configured."
+        : replyLaunchRejected.hero
+          ? "A hero-art value was supplied but rejected. Use HTTPS or a same-origin absolute path."
+          : "The book surface is using the neutral atmospheric fallback; no unapproved lore art is being substituted.",
     },
   ];
 }
