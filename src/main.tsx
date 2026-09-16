@@ -14,6 +14,7 @@ import "./launchIntegration.css";
 import "./launchPages.css";
 import "./launchPolish.css";
 import "./launchVisualV3.css";
+import "./mobileLaunchFix.css";
 
 installRuntimeFixes();
 
