@@ -1,3 +1,4 @@
+import { type PointerEvent as ReactPointerEvent } from "react";
 import { ArrowDown, ArrowRight, BookOpen, ExternalLink } from "lucide-react";
 import { LaunchTerminal } from "./LaunchTerminal";
 
@@ -38,10 +39,30 @@ function ExternalAction({ href, children, quiet = false }: { href: string; child
 }
 
 function BookObject() {
+  function move(event: ReactPointerEvent<HTMLDivElement>) {
+    if (event.pointerType === "touch" || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const stage = event.currentTarget;
+    const rect = stage.getBoundingClientRect();
+    const px = (event.clientX - rect.left) / rect.width - 0.5;
+    const py = (event.clientY - rect.top) / rect.height - 0.5;
+    stage.style.setProperty("--reply-light-x", `${(px + 0.5) * 100}%`);
+    stage.style.setProperty("--reply-light-y", `${(py + 0.5) * 100}%`);
+    const book = stage.querySelector<HTMLElement>(".reply-book-object");
+    if (book) book.style.transform = `rotateX(${py * -5}deg) rotateY(${-10 + px * 8}deg) rotateZ(-2deg)`;
+  }
+
+  function reset(event: ReactPointerEvent<HTMLDivElement>) {
+    const stage = event.currentTarget;
+    stage.style.setProperty("--reply-light-x", "72%");
+    stage.style.setProperty("--reply-light-y", "18%");
+    const book = stage.querySelector<HTMLElement>(".reply-book-object");
+    if (book) book.style.transform = "";
+  }
+
   return (
-    <div className="reply-book-stage" aria-label="REPLY book presentation">
+    <div className="reply-book-stage" aria-label="REPLY book presentation" onPointerMove={move} onPointerLeave={reset}>
       <div className="reply-book-shadow" aria-hidden="true" />
-      <div className="reply-book-object">
+      <div className="reply-book-object" style={{ transition: "transform 380ms cubic-bezier(.16,1,.3,1)" }}>
         <div className="reply-book-spine" aria-hidden="true"><span>REPLY</span><small>DEVON AKINS</small></div>
         <div className="reply-book-cover">
           {coverUrl ? <img src={coverUrl} alt="REPLY by Devon Akins" /> : (
@@ -52,6 +73,18 @@ function BookObject() {
               <small>DEVON AKINS</small>
             </>
           )}
+          <div
+            aria-hidden="true"
+            style={{
+              position: "absolute",
+              inset: 0,
+              zIndex: 1,
+              pointerEvents: "none",
+              opacity: 0.58,
+              background: "radial-gradient(44% 32% at var(--reply-light-x,72%) var(--reply-light-y,18%),rgba(225,242,248,.22),transparent 72%)",
+              mixBlendMode: "screen",
+            }}
+          />
         </div>
       </div>
     </div>
