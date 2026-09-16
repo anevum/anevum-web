@@ -1,4 +1,4 @@
-import { ACHIEVEMENTS, memberXP, type AchievementDefinition, type MemberProgress } from "./memberState";
+import { CURRENT_ACHIEVEMENTS, memberXP, type AchievementDefinition, type MemberProgress } from "./memberState";
 
 const ROMAN = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X"] as const;
 const XP_PER_LEVEL = 150;
@@ -33,7 +33,7 @@ export function networkLevelDetails(progress: MemberProgress): NetworkLevelDetai
   const neededForLevel = XP_PER_LEVEL;
   const remaining = level >= 100 ? 0 : Math.max(0, nextThreshold - xp);
   const unlocked = new Set(progress.achievements.map((achievement) => achievement.id));
-  const nextArtifact = ACHIEVEMENTS.find((achievement) => !unlocked.has(achievement.id)) || null;
+  const nextArtifact = CURRENT_ACHIEVEMENTS.find((achievement) => !unlocked.has(achievement.id)) || null;
 
   return {
     level,
