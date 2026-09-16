@@ -4,3 +4,5 @@ Disallow: /command
 Disallow: /auth-bridge
 
 Sitemap: https://anevum.com/sitemap.xml
+Sitemap: https://wiki.anevum.com/wiki-sitemap.xml
+Sitemap: https://lattice.anevum.com/lattice-sitemap.xml
