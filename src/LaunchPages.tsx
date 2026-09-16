@@ -47,7 +47,6 @@ function LaunchHeader({ active }: { active: LaunchSection }) {
       <nav aria-label="ANEVUM launch navigation">
         <a aria-current={active === "book" ? "page" : undefined} className={active === "book" ? "active" : ""} href="/the-book">THE BOOK</a>
         <a aria-current={active === "story" ? "page" : undefined} className={active === "story" ? "active" : ""} href="/the-story">THE STORY</a>
-        <a aria-current={active === "store" ? "page" : undefined} className={active === "store" ? "active" : ""} href="/store">STORE</a>
         <a href="/rhenlink">RHENLINK</a>
       </nav>
       <a className="reply-launch-header-link" href="/">REPLY</a>
@@ -179,7 +178,7 @@ export function BookPage() {
           <p className="reply-launch-kicker">PUBLICATION STATUS</p>
           <h2 id="book-availability-title">REPLY is approaching publication.</h2>
           <p>Edition, retailer, pricing, and release details will appear here when they are formally announced.</p>
-          <Action href="/store" quiet>OPEN THE STORE</Action>
+          <Action href="/rhenlink" quiet>OPEN RHENLINK</Action>
         </section>
       )}
     </PageShell>
