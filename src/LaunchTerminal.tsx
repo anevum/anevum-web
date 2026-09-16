@@ -31,10 +31,19 @@ export function LaunchTerminal() {
   });
   const [value, setValue] = useState("");
   const [message, setMessage] = useState("SYSTEM READY");
+  const [bootStep, setBootStep] = useState(4);
+  const [activeIndex, setActiveIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement | null>(null);
   const triggerRef = useRef<HTMLButtonElement | null>(null);
   const identity = displayIdentity(session);
   const level = networkLevelDetails(progress);
+
+  const bootLines = useMemo(() => [
+    "BOOT // PUBLIC LAUNCH NODE",
+    `IDENTITY // ${session ? "RESOLVED" : "GUEST"}`,
+    `ROUTE // ${window.location.pathname || "/"}`,
+    message,
+  ], [session, message]);
 
   useEffect(() => {
     const sync = () => {
@@ -74,17 +83,28 @@ export function LaunchTerminal() {
     if (!open) return;
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
-    const frame = window.setTimeout(() => inputRef.current?.focus(), 100);
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    setBootStep(reducedMotion ? bootLines.length : 1);
+    setActiveIndex(0);
+    const frame = window.setTimeout(() => inputRef.current?.focus(), reducedMotion ? 0 : 100);
+    const timers = reducedMotion
+      ? []
+      : bootLines.slice(1).map((_, index) => window.setTimeout(() => setBootStep(index + 2), 150 * (index + 1)));
     return () => {
       window.clearTimeout(frame);
+      timers.forEach((timer) => window.clearTimeout(timer));
       document.body.style.overflow = previousOverflow;
     };
-  }, [open]);
+  }, [open, bootLines.length]);
 
   const filtered = useMemo(() => {
     const normalized = value.trim().toLowerCase();
     if (!normalized) return targets;
     return targets.filter((target) => target.command.includes(normalized) || target.label.toLowerCase().includes(normalized));
+  }, [value]);
+
+  useEffect(() => {
+    setActiveIndex(0);
   }, [value]);
 
   function navigate(href: string) {
@@ -107,7 +127,11 @@ export function LaunchTerminal() {
 
   function execute(raw: string) {
     const command = raw.trim().toLowerCase();
-    if (!command) return;
+    if (!command) {
+      const selected = filtered[activeIndex];
+      if (selected) navigate(selected.href);
+      return;
+    }
     if (command === "close" || command === "exit") {
       setOpen(false);
       triggerRef.current?.focus();
@@ -131,6 +155,21 @@ export function LaunchTerminal() {
       return;
     }
     setMessage(`UNKNOWN COMMAND // ${command.toUpperCase()}`);
+    setBootStep(bootLines.length);
+  }
+
+  function handleInputKeyDown(event: React.KeyboardEvent<HTMLInputElement>) {
+    if (event.key === "ArrowDown") {
+      event.preventDefault();
+      setActiveIndex((current) => filtered.length ? (current + 1) % filtered.length : 0);
+    } else if (event.key === "ArrowUp") {
+      event.preventDefault();
+      setActiveIndex((current) => filtered.length ? (current - 1 + filtered.length) % filtered.length : 0);
+    } else if (event.key === "Enter" && !value.trim()) {
+      event.preventDefault();
+      const selected = filtered[activeIndex];
+      if (selected) navigate(selected.href);
+    }
   }
 
   return (
@@ -158,11 +197,10 @@ export function LaunchTerminal() {
               <button type="button" onClick={() => { setOpen(false); triggerRef.current?.focus(); }} aria-label="Close menu"><X size={18} strokeWidth={1.4} /></button>
             </header>
 
-            <div className="terminal-boot" aria-hidden="true">
-              <span>BOOT // PUBLIC LAUNCH NODE</span>
-              <span>IDENTITY // {session ? "RESOLVED" : "GUEST"}</span>
-              <span>ROUTE // {window.location.pathname || "/"}</span>
-              <span>{message}</span>
+            <div className="terminal-boot" aria-live="polite">
+              {bootLines.map((line, index) => (
+                <span key={`${index}-${line}`} className={index < bootStep ? "resolved" : "pending"}><i aria-hidden="true">{index === bootStep - 1 ? "›" : "·"}</i>{line}</span>
+              ))}
             </div>
 
             {session ? (
@@ -175,9 +213,18 @@ export function LaunchTerminal() {
               <a className="terminal-auth-card" href="/rhenlink"><LogIn size={18} /><span><small>IDENTITY UNRESOLVED</small><strong>CREATE OR SIGN IN TO RHENLINK</strong></span><ArrowRight size={17} /></a>
             )}
 
-            <nav className="terminal-route-list" aria-label="Launch destinations">
+            <nav id="anevum-terminal-routes" className="terminal-route-list" aria-label="Launch destinations" role="listbox">
               {targets.map((target, index) => (
-                <button type="button" key={target.command} onClick={() => navigate(target.href)}>
+                <button
+                  id={`anevum-terminal-route-${index}`}
+                  type="button"
+                  role="option"
+                  aria-selected={activeIndex === index && !value.trim()}
+                  className={activeIndex === index && !value.trim() ? "selected" : ""}
+                  key={target.command}
+                  onMouseEnter={() => { if (!value.trim()) setActiveIndex(index); }}
+                  onClick={() => navigate(target.href)}
+                >
                   <span className="terminal-route-index">{String(index + 1).padStart(2, "0")}</span>
                   <span><strong>{target.label}</strong><small>{target.description}</small></span>
                   <ArrowRight size={16} strokeWidth={1.35} />
@@ -188,18 +235,29 @@ export function LaunchTerminal() {
             <form className="terminal-command-line" onSubmit={(event) => { event.preventDefault(); execute(value); }}>
               <Command size={15} strokeWidth={1.4} />
               <span>ANEVUM://</span>
-              <input ref={inputRef} value={value} onChange={(event) => setValue(event.target.value)} placeholder="type a command" autoComplete="off" spellCheck={false} aria-label="ANEVUM command" />
+              <input
+                ref={inputRef}
+                value={value}
+                onChange={(event) => setValue(event.target.value)}
+                onKeyDown={handleInputKeyDown}
+                placeholder="type a command"
+                autoComplete="off"
+                spellCheck={false}
+                aria-label="ANEVUM command"
+                aria-controls="anevum-terminal-routes"
+                aria-activedescendant={!value.trim() ? `anevum-terminal-route-${activeIndex}` : undefined}
+              />
               <button type="submit">RUN</button>
             </form>
 
             {value ? (
-              <div className="terminal-suggestions">
-                {filtered.slice(0, 4).map((target) => <button type="button" key={target.command} onClick={() => navigate(target.href)}><code>{target.command}</code><span>{target.label}</span></button>)}
+              <div className="terminal-suggestions" role="listbox" aria-label="Matching destinations">
+                {filtered.slice(0, 4).map((target, index) => <button type="button" role="option" aria-selected={activeIndex === index} className={activeIndex === index ? "selected" : ""} key={target.command} onMouseEnter={() => setActiveIndex(index)} onClick={() => navigate(target.href)}><code>{target.command}</code><span>{target.label}</span></button>)}
                 {!filtered.length ? <span>NO MATCHING ROUTE</span> : null}
               </div>
             ) : null}
 
-            <footer><span>ESC // CLOSE</span><span>/ // OPEN</span><span>⌘K // TOGGLE</span></footer>
+            <footer><span>↑↓ // SELECT</span><span>ENTER // OPEN</span><span>ESC // CLOSE</span><span>⌘K // TOGGLE</span></footer>
           </aside>
         </div>
       ) : null}
