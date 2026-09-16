@@ -170,3 +170,23 @@ export function ContactPage() {
     </LegalShell>
   );
 }
+
+export function PublicLegalStrip() {
+  return (
+    <nav className="public-legal-strip" aria-label="Legal and contact links">
+      <span>ANEVUM</span>
+      <a href="/privacy">PRIVACY</a>
+      <a href="/terms">TERMS</a>
+      <a href="/contact">CONTACT</a>
+    </nav>
+  );
+}
+
+export function RhenlinkAccountNotice() {
+  return (
+    <aside className="rhenlink-account-notice" aria-label="RHENLINK account terms">
+      <strong>RHENLINK ACCOUNT NOTICE</strong>
+      <p>RHENLINK is intended for people age 13 and older. Creating or using a RHENLINK means you accept the <a href="/terms">Terms</a> and acknowledge the <a href="/privacy">Privacy notice</a>. REPLY release updates remain a separate opt-in preference and are not enabled merely by creating an account.</p>
+    </aside>
+  );
+}

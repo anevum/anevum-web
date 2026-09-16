@@ -1,6 +1,6 @@
 import posthog from "posthog-js";
 
-export type AnalyticsSurface = "reply" | "book" | "story" | "store" | "rhenlink" | "wiki" | "lattice";
+export type AnalyticsSurface = "reply" | "book" | "story" | "store" | "rhenlink" | "wiki" | "lattice" | "legal";
 export type AnalyticsProperties = Record<string, string | number | boolean | null | undefined>;
 
 const projectToken = String(import.meta.env.VITE_POSTHOG_PROJECT_TOKEN || "").trim();

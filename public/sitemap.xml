@@ -1,15 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url>
-    <loc>https://anevum.com/</loc>
-  </url>
-  <url>
-    <loc>https://anevum.com/the-book</loc>
-  </url>
-  <url>
-    <loc>https://anevum.com/the-story</loc>
-  </url>
-  <url>
-    <loc>https://anevum.com/store</loc>
-  </url>
+  <url><loc>https://anevum.com/</loc></url>
+  <url><loc>https://anevum.com/the-book</loc></url>
+  <url><loc>https://anevum.com/the-story</loc></url>
+  <url><loc>https://anevum.com/store</loc></url>
+  <url><loc>https://anevum.com/privacy</loc></url>
+  <url><loc>https://anevum.com/terms</loc></url>
+  <url><loc>https://anevum.com/contact</loc></url>
 </urlset>

@@ -9,6 +9,7 @@ import { CommandHome } from "./CommandPage";
 import { CanonicalWikiArticle, CanonicalWikiHome } from "./CanonicalWiki";
 import { WikiAdminPage, WikiContributionPage, WikiSavedPage } from "./ModeratedWiki";
 import { AchievementLayer } from "./MemberChrome";
+import { ContactPage, PrivacyPage, PublicLegalStrip, RhenlinkAccountNotice, TermsPage } from "./LegalPages";
 import { capturePageView, type AnalyticsSurface } from "./analytics";
 import { getCanonProjectionRecord } from "./canonProjection";
 import { trackMemberRoute } from "./memberState";
@@ -124,6 +125,30 @@ function rootPublicMeta(pathname: string, knownPublicRoute: boolean) {
         ogTitle: "RHENLINK — ANEVUM",
         ogType: "website",
       };
+    case "/privacy":
+      return {
+        title: "Privacy — ANEVUM",
+        description: "How the current ANEVUM website and RHENLINK member system use account, progress, release-preference, and optional analytics data.",
+        canonical: "https://anevum.com/privacy",
+        ogTitle: "Privacy — ANEVUM",
+        ogType: "website",
+      };
+    case "/terms":
+      return {
+        title: "Terms — ANEVUM",
+        description: "Launch-era terms for the ANEVUM website, RHENLINK, Wiki, Lattice, progression systems, and external REPLY purchase links.",
+        canonical: "https://anevum.com/terms",
+        ogTitle: "Terms — ANEVUM",
+        ogType: "website",
+      };
+    case "/contact":
+      return {
+        title: "Contact — ANEVUM",
+        description: "Current public contact and support status for ANEVUM, REPLY, and RHENLINK.",
+        canonical: "https://anevum.com/contact",
+        ogTitle: "Contact — ANEVUM",
+        ogType: "website",
+      };
     default:
       return {
         title: "REPLY by Devon Akins — ANEVUM",
@@ -168,7 +193,12 @@ export default function App() {
   const bookRoute = hostname === ROOT_HOST && routePath === "/the-book";
   const storyRoute = hostname === ROOT_HOST && routePath === "/the-story";
   const storeRoute = hostname === ROOT_HOST && routePath === "/store";
-  const knownRootPublicRoute = routePath === "/" || rhenlinkRoute || bookRoute || storyRoute || storeRoute || wikiRoute || latticeRoute;
+  const privacyRoute = hostname === ROOT_HOST && routePath === "/privacy";
+  const termsRoute = hostname === ROOT_HOST && routePath === "/terms";
+  const contactRoute = hostname === ROOT_HOST && routePath === "/contact";
+  const legalRoute = privacyRoute || termsRoute || contactRoute;
+  const rootMemberRoute = routePath === "/" || rhenlinkRoute || bookRoute || storyRoute || storeRoute;
+  const knownRootPublicRoute = rootMemberRoute || legalRoute || wikiRoute || latticeRoute;
   const notFoundRoute = hostname === ROOT_HOST && !bridgeRoute && !commandRoute && !knownRootPublicRoute;
   const wikiPath = wikiSurfacePath(hostname, routePath);
   const wikiPrivatePath = wikiPath === "/new" || wikiPath === "/saved" || wikiPath === "/admin" || wikiPath.endsWith("/edit");
@@ -180,7 +210,7 @@ export default function App() {
       ? "/lattice"
       : routePath;
   const trackableMemberSurface = !bridgeRoute && !commandRoute && !wikiPrivatePath && (
-    (hostname === ROOT_HOST && knownRootPublicRoute)
+    (hostname === ROOT_HOST && rootMemberRoute)
     || (hostname === WIKI_HOST && wikiRoute)
     || (hostname === LATTICE_HOST && latticeRoute)
   );
@@ -196,7 +226,9 @@ export default function App() {
             ? "story"
             : storeRoute
               ? "store"
-              : "reply";
+              : legalRoute
+                ? "legal"
+                : "reply";
   const trackableAnalyticsSurface = !bridgeRoute && !commandRoute && !notFoundRoute && !wikiPrivatePath && (
     (hostname === ROOT_HOST && knownRootPublicRoute)
     || (hostname === WIKI_HOST && wikiRoute)
@@ -241,9 +273,11 @@ export default function App() {
             ? "lattice"
             : rhenlinkRoute
               ? "rhenlink"
-              : notFoundRoute
-                ? "not-found"
-                : "reply";
+              : legalRoute
+                ? "legal"
+                : notFoundRoute
+                  ? "not-found"
+                  : "reply";
     document.documentElement.dataset.host = hostname;
     document.title = bridgeRoute ? "ANEVUM Identity Bridge" : meta.title;
 
@@ -291,7 +325,7 @@ export default function App() {
     } else {
       setStructuredData(null);
     }
-  }, [routePath, hostname, bridgeRoute, commandRoute, wikiRoute, latticeRoute, rhenlinkRoute, knownRootPublicRoute, notFoundRoute, wikiPath, wikiPrivatePath, wikiRecord]);
+  }, [routePath, hostname, bridgeRoute, commandRoute, wikiRoute, latticeRoute, rhenlinkRoute, legalRoute, knownRootPublicRoute, notFoundRoute, wikiPath, wikiPrivatePath, wikiRecord]);
 
   useEffect(() => {
     if (!trackableAnalyticsSurface) return;
@@ -343,23 +377,30 @@ export default function App() {
     );
   }
 
+  if (privacyRoute) return <PrivacyPage />;
+  if (termsRoute) return <TermsPage />;
+  if (contactRoute) return <ContactPage />;
+
   if (rhenlinkRoute) {
     return (
       <div className="editorial-shell editorial-surface-rhenlink launch-rhenlink-shell">
         <Rhenlink />
+        <RhenlinkAccountNotice />
+        <PublicLegalStrip />
         <AchievementLayer />
       </div>
     );
   }
 
-  if (bookRoute) return <><BookPage /><AchievementLayer /></>;
-  if (storyRoute) return <><StoryPage /><AchievementLayer /></>;
-  if (storeRoute) return <><StorePage /><AchievementLayer /></>;
+  if (bookRoute) return <><BookPage /><PublicLegalStrip /><AchievementLayer /></>;
+  if (storyRoute) return <><StoryPage /><PublicLegalStrip /><AchievementLayer /></>;
+  if (storeRoute) return <><StorePage /><PublicLegalStrip /><AchievementLayer /></>;
   if (notFoundRoute) return <><Launch404 /><AchievementLayer /></>;
 
   return (
     <>
       <ReplyLaunch />
+      <PublicLegalStrip />
       <AchievementLayer />
     </>
   );
