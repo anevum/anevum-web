@@ -5,6 +5,7 @@ const ROOT = resolve(process.cwd());
 const CONFIG_PATH = resolve(ROOT, "config/canon-projection-overrides.json");
 const PUBLIC_OBJECTS_PATH = resolve(ROOT, "src/publicObjects.ts");
 const CANON_PROJECTION_PATH = resolve(ROOT, "src/canonProjection.ts");
+const WIKI_SITEMAP_PATH = resolve(ROOT, "public/wiki-sitemap.xml");
 
 const NOTION_VERSION = "2025-09-03";
 const PUBLISHING_QUEUE_DATA_SOURCE_ID = process.env.NOTION_PUBLISHING_QUEUE_DATA_SOURCE_ID || "11bead82-0bfa-45cd-bccb-53b35dacdfdf";
@@ -278,6 +279,14 @@ function renderCanonProjection(records, counts, relations, syncedAt) {
   return `import { publicObjects, type PublicObject } from \"./publicObjects\";\n\nexport type CanonLifecycleState =\n  | \"Source-Locked\"\n  | \"Locked\"\n  | \"Canonical\"\n  | \"Working\"\n  | \"Unresolved\"\n  | \"Exploratory\"\n  | \"Superseded\"\n  | \"Archived\";\n\nexport type FreezeState = \"Ready\" | \"Intentional Open\" | \"Blocking\" | \"Superseded\";\n\nexport type CanonProjectionRecord = PublicObject & {\n  canonState: CanonLifecycleState;\n  freezeState: FreezeState;\n};\n\nexport type CanonProjectionRelation = {\n  id: string;\n  fromSlug: string;\n  toSlug: string;\n  relation: \"located-in\" | \"member-of\" | \"connected-to\" | \"contains\" | \"operates-through\";\n};\n\nexport const CANON_PROJECTION_SYNC = ${JSON.stringify({ source: SOURCE_LABEL, syncedAt, queueCount: records.length, policy: POLICY_LABEL }, null, 2)} as const;\n\nexport const CANON_LIFECYCLE_COUNTS: Record<CanonLifecycleState, number> = ${JSON.stringify(counts, null, 2)};\n\nconst stateBySlug: Record<string, CanonLifecycleState> = ${JSON.stringify(stateBySlug, null, 2)};\n\nconst freezeBySlug: Record<string, FreezeState> = ${JSON.stringify(freezeBySlug, null, 2)};\n\nexport const canonProjectionRecords: CanonProjectionRecord[] = publicObjects.map((record) => ({\n  ...record,\n  canonState: stateBySlug[record.slug] || \"Unresolved\",\n  freezeState: freezeBySlug[record.slug] || \"Blocking\",\n}));\n\n// Relations are separately publication-approved and filtered to the current released record set.\nexport const canonProjectionRelations: CanonProjectionRelation[] = ${JSON.stringify(safeRelations, null, 2)} as CanonProjectionRelation[];\n\nexport function getCanonProjectionRecord(slug: string) {\n  return canonProjectionRecords.find((record) => record.slug === slug) || null;\n}\n`;
 }
 
+function renderWikiSitemap(records, syncedAt) {
+  const entries = [
+    `  <url>\n    <loc>https://wiki.anevum.com/</loc>\n    <lastmod>${syncedAt}</lastmod>\n  </url>`,
+    ...records.map((record) => `  <url>\n    <loc>https://wiki.anevum.com/${record.slug}</loc>\n    <lastmod>${syncedAt}</lastmod>\n  </url>`),
+  ];
+  return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${entries.join("\n")}\n</urlset>\n`;
+}
+
 async function writeAtomically(path, content) {
   const temporary = `${path}.tmp`;
   await writeFile(temporary, content, "utf8");
@@ -305,16 +314,18 @@ async function main() {
   const syncedAt = new Date().toISOString().slice(0, 10);
   const publicSource = renderPublicObjects(records, syncedAt);
   const canonSource = renderCanonProjection(records, counts, config.relations, syncedAt);
+  const wikiSitemap = renderWikiSitemap(records, syncedAt);
   const currentPublic = await readFile(PUBLIC_OBJECTS_PATH, "utf8");
   const currentCanon = await readFile(CANON_PROJECTION_PATH, "utf8");
-  const changed = currentPublic !== publicSource || currentCanon !== canonSource;
+  const currentWikiSitemap = await readFile(WIKI_SITEMAP_PATH, "utf8").catch(() => "");
+  const changed = currentPublic !== publicSource || currentCanon !== canonSource || currentWikiSitemap !== wikiSitemap;
 
   console.log(`Resolved ${records.length} release-safe Wiki records from ${queueRows.length} queue rows and ${canonRows.length} canon rows.`);
   console.log(`Lifecycle counts: ${JSON.stringify(counts)}`);
 
   if (checkOnly) {
-    if (changed) fail("Live Notion projection differs from the checked-in production projection.");
-    console.log("Checked-in projection matches live Notion state.");
+    if (changed) fail("Live Notion projection differs from the checked-in production projection or Wiki sitemap.");
+    console.log("Checked-in projection and Wiki sitemap match live Notion state.");
     return;
   }
 
@@ -325,7 +336,8 @@ async function main() {
 
   await writeAtomically(PUBLIC_OBJECTS_PATH, publicSource);
   await writeAtomically(CANON_PROJECTION_PATH, canonSource);
-  console.log("Updated src/publicObjects.ts and src/canonProjection.ts.");
+  await writeAtomically(WIKI_SITEMAP_PATH, wikiSitemap);
+  console.log("Updated src/publicObjects.ts, src/canonProjection.ts and public/wiki-sitemap.xml.");
 }
 
 main().catch((error) => {
