@@ -9,18 +9,52 @@ on:
     branches:
       - main
 
+concurrency:
+  group: launch-verify-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 12
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
+
       - name: Install dependencies
         run: npm install --no-audit --no-fund
+
       - name: Production build
         run: npm run build
+
+      - name: Smoke built public routes
+        shell: bash
+        run: |
+          npm run preview -- --host 127.0.0.1 --port 4173 > /tmp/anevum-vite-preview.log 2>&1 &
+          PREVIEW_PID=$!
+          trap 'kill $PREVIEW_PID 2>/dev/null || true' EXIT
+
+          for attempt in {1..20}; do
+            if curl --fail --silent http://127.0.0.1:4173/ > /dev/null; then
+              break
+            fi
+            sleep 1
+          done
+
+          for route in / /the-book /the-story /store /rhenlink /privacy /terms /contact; do
+            echo "Checking ${route}"
+            curl --fail --silent --show-error "http://127.0.0.1:4173${route}" > /dev/null
+          done
+
+      - name: Upload production build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: anevum-launch-dist-${{ github.sha }}
+          path: dist
+          if-no-files-found: error
+          retention-days: 7

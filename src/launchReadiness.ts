@@ -1,5 +1,6 @@
 import { analyticsConfigured } from "./analytics";
 import { CANON_PROJECTION_SYNC } from "./canonProjection";
+import { legalPublicConfigured } from "./legalConfig";
 import { replyLaunchConfigured } from "./launchConfig";
 import { memberBackend } from "./memberClient";
 
@@ -65,6 +66,17 @@ export function getLaunchReadiness(): LaunchReadinessItem[] {
       detail: replyLaunchConfigured.cover ? "The production book surface is using a configured cover asset." : "The book surface is still using its neutral fallback presentation instead of the final cover.",
       actionHref: "https://anevum.com/the-book",
       actionLabel: "OPEN BOOK",
+    },
+    {
+      id: "public-legal-contact",
+      label: "Public legal/contact configuration",
+      state: legalPublicConfigured.launch ? "ready" : "pending",
+      critical: true,
+      detail: legalPublicConfigured.launch
+        ? "Public entity, support/privacy contacts, mailing address and account-request channel are configured."
+        : "Legal pages are built, but one or more owner-approved public entity/contact/address/request values are still missing.",
+      actionHref: "https://anevum.com/contact",
+      actionLabel: "OPEN CONTACT",
     },
     {
       id: "ownership-verification",
