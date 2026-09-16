@@ -6,7 +6,6 @@ import {
   House,
   LibraryBig,
   Orbit,
-  Search,
   Terminal,
 } from "lucide-react";
 import { RhenlinkIdentityCard } from "./MemberChrome";
@@ -17,20 +16,20 @@ export type SystemSurface = "anevum" | "stories" | "wiki" | "lattice" | "rhenlin
 
 const surfaces = [
   { id: "anevum" as const, label: "ANEVUM", code: "ROOT", href: "https://anevum.com/", icon: House },
-  { id: "stories" as const, label: "STORIES", code: "STORY", href: "https://anevum.com/stories", icon: LibraryBig },
-  { id: "wiki" as const, label: "WIKI", code: "KNOW", href: "https://wiki.anevum.com/", icon: BookOpenText },
-  { id: "lattice" as const, label: "LATTICE", code: "SPACE", href: "https://anevum.com/lattice", icon: Orbit },
+  { id: "stories" as const, label: "REPLY", code: "STORY", href: "https://anevum.com/the-book", icon: LibraryBig },
+  { id: "wiki" as const, label: "WIKI", code: "TRUTH", href: "https://wiki.anevum.com/", icon: BookOpenText },
+  { id: "lattice" as const, label: "LATTICE", code: "SPACE", href: "https://lattice.anevum.com/", icon: Orbit },
   { id: "rhenlink" as const, label: "RHENLINK", code: "IDENT", href: "https://anevum.com/rhenlink", icon: CircleUserRound },
-  { id: "command" as const, label: "COMMAND", code: "CTRL", href: "https://anevum.com/command", icon: Command },
+  { id: "command" as const, label: "COMMAND", code: "CTRL", href: "https://command.anevum.com/", icon: Command },
 ];
 
 const surfaceMeta: Record<SystemSurface, { eyebrow: string; detail: string; access: string }> = {
   anevum: { eyebrow: "PUBLIC FRONT DOOR", detail: "Story, knowledge, place and identity converge here.", access: "PUBLIC" },
   stories: { eyebrow: "STORY SURFACE", detail: "Published narrative remains the center of the universe.", access: "PUBLIC" },
-  wiki: { eyebrow: "KNOWLEDGE SURFACE", detail: "Moderated public encyclopedia. Publication is admin-gated.", access: "PUBLIC / MODERATED" },
-  lattice: { eyebrow: "RELATIONAL SURFACE", detail: "The released universe expressed as a navigable relation space.", access: "PUBLIC + RHENLINK" },
+  wiki: { eyebrow: "CANONICAL KNOWLEDGE", detail: "The live ANEVUM Wiki is the record authority for every downstream surface.", access: "PUBLIC / MODERATED" },
+  lattice: { eyebrow: "RELATIONAL SURFACE", detail: "Wiki-approved records expressed as navigable relation space.", access: "PUBLIC + RHENLINK" },
   rhenlink: { eyebrow: "IDENTITY SURFACE", detail: "Persistent member identity, saves, XP and achievements.", access: "MEMBER" },
-  command: { eyebrow: "OPERATIONS SURFACE", detail: "Private ANEVUM control plane and publication operations.", access: "ADMIN" },
+  command: { eyebrow: "OPERATIONS SURFACE", detail: "Private control plane for Wiki state, Lattice, RHENLINK and runtime operations.", access: "ADMIN" },
 };
 
 function go(href: string) {
@@ -48,16 +47,16 @@ function resolveCommand(raw: string) {
   if (!command) return null;
 
   if (["home", "root", "anevum"].includes(command)) return "https://anevum.com/";
-  if (["stories", "story"].includes(command)) return "https://anevum.com/stories";
-  if (["reply", "book", "book one"].includes(command)) return "https://anevum.com/stories/reply";
-  if (["wiki", "knowledge"].includes(command)) return "https://wiki.anevum.com/";
+  if (["stories", "story", "the story"].includes(command)) return "https://anevum.com/the-story";
+  if (["reply", "book", "book one", "the book"].includes(command)) return "https://anevum.com/the-book";
+  if (["wiki", "knowledge", "truth", "canon"].includes(command)) return "https://wiki.anevum.com/";
   if (["wiki new", "new page", "propose"].includes(command)) return "https://wiki.anevum.com/new";
   if (["wiki saved", "saved"].includes(command)) return "https://wiki.anevum.com/saved";
   if (["wiki admin", "moderation"].includes(command)) return "https://wiki.anevum.com/admin";
-  if (["lattice", "space", "explore"].includes(command)) return "https://anevum.com/lattice";
+  if (["lattice", "space", "explore", "relations"].includes(command)) return "https://lattice.anevum.com/";
   if (["rhenlink", "profile", "identity", "id"].includes(command)) return "https://anevum.com/rhenlink";
-  if (["command", "cmd", "control"].includes(command)) return "https://anevum.com/command";
-  if (command === "search") return "https://anevum.com/search";
+  if (["command", "cmd", "control", "operations"].includes(command)) return "https://command.anevum.com/";
+  if (command === "search") return "https://wiki.anevum.com/";
   if (command.startsWith("wiki ")) {
     const slug = command.slice(5).trim().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
     return slug ? `https://wiki.anevum.com/${slug}` : "https://wiki.anevum.com/";
@@ -174,12 +173,12 @@ export function UnifiedSystemShell({
         <div className="system-identity-slot"><RhenlinkIdentityCard /></div>
         <div className="system-side-module system-quick-module">
           <span>QUICK COMMANDS</span>
-          <button type="button" onClick={() => go("https://wiki.anevum.com/")}><BookOpenText size={13} />wiki</button>
-          <button type="button" onClick={() => go("https://anevum.com/lattice")}><Orbit size={13} />lattice</button>
-          <button type="button" onClick={() => go("https://anevum.com/command")}><Terminal size={13} />command</button>
-          <button type="button" onClick={() => go("https://anevum.com/search")}><Search size={13} />search</button>
+          <button type="button" onClick={() => go("https://wiki.anevum.com/")}><BookOpenText size={13} />wiki / canonical record</button>
+          <button type="button" onClick={() => go("https://lattice.anevum.com/")}><Orbit size={13} />lattice / relations</button>
+          <button type="button" onClick={() => go("https://anevum.com/rhenlink")}><CircleUserRound size={13} />rhenlink / identity</button>
+          <button type="button" onClick={() => go("https://command.anevum.com/")}><Terminal size={13} />command / control</button>
         </div>
-        <div className="system-side-module system-host-module"><span>HOST</span><code>{hostname}</code><small>ONE REACT RUNTIME / STABLE ROUTE ENTRY POINTS</small></div>
+        <div className="system-side-module system-host-module"><span>HOST</span><code>{hostname}</code><small>ONE REACT RUNTIME / WIKI-AUTHORITATIVE DATA FLOW</small></div>
       </aside>
 
       <form className="system-console" onSubmit={runCommand}>
