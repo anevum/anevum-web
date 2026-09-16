@@ -1,6 +1,6 @@
 import { useEffect, useState, type ReactNode } from "react";
 import ReplyLaunch from "./ReplyLaunch";
-import { BookPage, StoryPage } from "./LaunchPages";
+import { BookPage, StorePage, StoryPage } from "./LaunchPages";
 import { Launch404 } from "./Launch404";
 import { Rhenlink } from "./RhenlinkV2";
 import { Lattice } from "./LatticeV2";
@@ -78,6 +78,14 @@ function rootPublicMeta(pathname: string, knownPublicRoute: boolean) {
         ogTitle: "The Story of REPLY",
         ogType: "article",
       };
+    case "/store":
+      return {
+        title: "ANEVUM Store — REPLY",
+        description: "Official availability and editions for REPLY, The Transcosmic Book One by Devon Akins.",
+        canonical: "https://anevum.com/store",
+        ogTitle: "ANEVUM Store — REPLY",
+        ogType: "website",
+      };
     case "/rhenlink":
       return {
         title: "RHENLINK — ANEVUM Identity",
@@ -129,7 +137,8 @@ export default function App() {
   const rhenlinkRoute = hostname === ROOT_HOST && routePath === "/rhenlink";
   const bookRoute = hostname === ROOT_HOST && routePath === "/the-book";
   const storyRoute = hostname === ROOT_HOST && routePath === "/the-story";
-  const knownRootPublicRoute = routePath === "/" || rhenlinkRoute || bookRoute || storyRoute || wikiRoute || latticeRoute;
+  const storeRoute = hostname === ROOT_HOST && routePath === "/store";
+  const knownRootPublicRoute = routePath === "/" || rhenlinkRoute || bookRoute || storyRoute || storeRoute || wikiRoute || latticeRoute;
   const notFoundRoute = hostname === ROOT_HOST && !bridgeRoute && !commandRoute && !knownRootPublicRoute;
   const wikiPath = wikiSurfacePath(hostname, routePath);
   const wikiPrivatePath = wikiPath === "/new" || wikiPath === "/saved" || wikiPath === "/admin" || wikiPath.endsWith("/edit");
@@ -263,6 +272,7 @@ export default function App() {
 
   if (bookRoute) return <><BookPage /><AchievementLayer /></>;
   if (storyRoute) return <><StoryPage /><AchievementLayer /></>;
+  if (storeRoute) return <><StorePage /><AchievementLayer /></>;
   if (notFoundRoute) return <><Launch404 /><AchievementLayer /></>;
 
   return (
