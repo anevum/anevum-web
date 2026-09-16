@@ -4,7 +4,14 @@ import { Button } from "./ui";
 import { BrandArt } from "./BrandArt";
 import { displayIdentity, loadSession, type MemberSession } from "./memberClient";
 import { loadMemberProgress, memberLevel, memberXP, onMemberProgressChange, type MemberProgress } from "./memberState";
-import { loadPublishedWikiPages, WikiBackendUnavailable, type WikiPage } from "./wikiClient";
+import {
+  loadPublishedWikiLinks,
+  loadPublishedWikiPages,
+  wikiCanonState,
+  WikiBackendUnavailable,
+  type WikiLink,
+  type WikiPage,
+} from "./wikiClient";
 
 function blankProgress(): MemberProgress {
   return { version: 1, savedRecordIds: [], visitedRoutes: [], achievements: [], updatedAt: new Date(0).toISOString() };
@@ -54,17 +61,21 @@ export function Lattice() {
   const { session, progress } = useMemberState();
   const identity = displayIdentity(session);
   const [pages, setPages] = useState<WikiPage[]>([]);
+  const [links, setLinks] = useState<WikiLink[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [backendReady, setBackendReady] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
-    loadPublishedWikiPages()
-      .then((next) => {
+    Promise.all([loadPublishedWikiPages(), loadPublishedWikiLinks()])
+      .then(([nextPages, nextLinks]) => {
         if (cancelled) return;
-        setPages(next.slice(0, 9));
-        setSelectedId((current) => current || next[0]?.id || null);
+        const visible = nextPages.slice(0, 9);
+        const visibleIds = new Set(visible.map((page) => page.id));
+        setPages(visible);
+        setLinks(nextLinks.filter((link) => visibleIds.has(link.from_page_id) && visibleIds.has(link.to_page_id)));
+        setSelectedId((current) => current && visibleIds.has(current) ? current : visible[0]?.id || null);
         setBackendReady(true);
       })
       .catch((error) => {
@@ -72,12 +83,14 @@ export function Lattice() {
         if (error instanceof WikiBackendUnavailable) setBackendReady(false);
         else console.error(error);
         setPages([]);
+        setLinks([]);
       })
       .finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
   }, []);
 
   const selected = useMemo(() => pages.find((page) => page.id === selectedId) || pages[0] || null, [pages, selectedId]);
+  const positionById = useMemo(() => new Map(pages.map((page, index) => [page.id, nodePositions[index] || nodePositions[nodePositions.length - 1]])), [pages]);
 
   return (
     <main className="lattice-page production-lattice lattice-v2">
@@ -86,10 +99,10 @@ export function Lattice() {
         <div>
           <p className="eyebrow">LATTICE.ANEVUM</p>
           <h1>The universe as a place.</h1>
-          <p>Explore only what ANEVUM has actually published. Every visible node originates in the moderated public Wiki; private canon and rejected drafts never become LATTICE content.</p>
+          <p>Lattice is a relational view of the live ANEVUM Wiki. Every visible node and connection resolves from Wiki-authorized records; Working and Superseded material never becomes current product truth here.</p>
           <div className="actions">
             {session ? <Button href="/rhenlink">OPEN @{identity.handle || "RHENLINK"}</Button> : <Button href="/rhenlink">CLAIM YOUR RHENLINK</Button>}
-            <Button href="/wiki" quiet>OPEN THE PUBLIC RECORD</Button>
+            <Button href="https://wiki.anevum.com/" quiet>OPEN THE CANONICAL RECORD</Button>
           </div>
         </div>
       </section>
@@ -98,6 +111,18 @@ export function Lattice() {
         <div className="graph-panel production-graph-panel">
           <div className="graph-orbit orbit-a" aria-hidden="true" />
           <div className="graph-orbit orbit-b" aria-hidden="true" />
+
+          {links.length ? (
+            <svg className="lattice-link-layer" aria-hidden="true" preserveAspectRatio="none">
+              {links.map((link) => {
+                const from = positionById.get(link.from_page_id);
+                const to = positionById.get(link.to_page_id);
+                if (!from || !to) return null;
+                const focused = Boolean(selectedId && (link.from_page_id === selectedId || link.to_page_id === selectedId));
+                return <line key={link.id} className={focused ? "is-focused" : ""} x1={`${from[0]}%`} y1={`${from[1]}%`} x2={`${to[0]}%`} y2={`${to[1]}%`} />;
+              })}
+            </svg>
+          ) : null}
 
           {pages.map((page, index) => {
             const [left, top] = nodePositions[index] || nodePositions[nodePositions.length - 1];
@@ -111,7 +136,7 @@ export function Lattice() {
               >
                 <i />
                 <strong>{page.title}</strong>
-                <small>{categoryLabel(page)}</small>
+                <small>{categoryLabel(page)} · {wikiCanonState(page).toUpperCase()}</small>
               </button>
             );
           })}
@@ -119,18 +144,19 @@ export function Lattice() {
           {!loading && pages.length === 0 ? (
             <div className="lattice-empty-core">
               <Orbit size={30} strokeWidth={1.1} />
-              <span>PUBLIC RELATION SPACE / 000</span>
-              <strong>{backendReady ? "No published nodes yet." : "Publication database pending."}</strong>
-              <p>{backendReady ? "LATTICE will populate as administrator-approved Wiki pages become public." : "The interface is ready, but the checked-in public Wiki migration still needs to be applied before published records can exist."}</p>
-              <Button href="/wiki" quiet>OPEN WIKI</Button>
+              <span>WIKI RELATION SPACE / 000</span>
+              <strong>{backendReady ? "No product-visible nodes yet." : "Canonical database unavailable."}</strong>
+              <p>{backendReady ? "Lattice will populate only when the live Wiki exposes records in a product-visible lifecycle state." : "Lattice is withholding universe material because it cannot resolve the Wiki authority. It will not fall back to another lore source."}</p>
+              <Button href="https://wiki.anevum.com/" quiet>OPEN WIKI</Button>
             </div>
           ) : null}
 
           {loading ? (
-            <div className="lattice-empty-core loading"><Grid3X3 size={25} strokeWidth={1.15} /><span>RESOLVING PUBLIC GRAPH</span><strong>Loading approved records.</strong></div>
+            <div className="lattice-empty-core loading"><Grid3X3 size={25} strokeWidth={1.15} /><span>RESOLVING WIKI GRAPH</span><strong>Loading canonical records and relations.</strong></div>
           ) : null}
 
-          <div className="graph-legend"><Grid3X3 size={15} /><span>APPROVED PUBLIC NODES / {pages.length}</span></div>
+          <div className="graph-legend"><Grid3X3 size={15} /><span>WIKI-AUTHORIZED NODES / {pages.length}</span></div>
+          <div className="lattice-link-count">RELATIONS / {links.length}</div>
           <div className="graph-caption">RELATION IS THE NAVIGATION.</div>
         </div>
 
@@ -141,11 +167,11 @@ export function Lattice() {
               <span className="meta">FOCUS / {categoryLabel(selected)}</span>
               <h2>{selected.title}</h2>
               <p>{selected.summary}</p>
-              <Button href={`/wiki/${encodeURIComponent(selected.slug)}`}>OPEN RECORD</Button>
+              <Button href={`https://wiki.anevum.com/${encodeURIComponent(selected.slug)}`}>OPEN CANONICAL RECORD</Button>
               <div className="lattice-join connected">
-                <span>PUBLICATION STATE</span>
-                <strong>ADMIN APPROVED</strong>
-                <p>This node exists because its current Wiki revision has passed publication review.</p>
+                <span>WIKI LIFECYCLE STATE</span>
+                <strong>{wikiCanonState(selected).toUpperCase()}</strong>
+                <p>Lattice preserves the state returned by the live Wiki. It does not promote, rewrite, or independently canonize this record.</p>
               </div>
             </>
           ) : (
@@ -153,8 +179,8 @@ export function Lattice() {
               <Link2 size={24} strokeWidth={1.15} />
               <span className="meta">NO FOCUS</span>
               <h2>A graph earns its nodes.</h2>
-              <p>ANEVUM does not preload private canon into LATTICE. Approved Wiki publication creates the public relational layer.</p>
-              <Button href="/wiki" quiet>VIEW WIKI</Button>
+              <p>ANEVUM does not preload parallel lore into Lattice. The live Wiki creates the relational layer.</p>
+              <Button href="https://wiki.anevum.com/" quiet>VIEW WIKI</Button>
             </div>
           )}
 
