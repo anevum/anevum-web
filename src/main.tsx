@@ -12,6 +12,7 @@ import "./canonicalWiki.css";
 import "./latticeV2.css";
 import "./brandArt.css";
 import "./rhenlinkV2.css";
+import "./replyRelease.css";
 import "./memberChrome.css";
 import "./replyLaunch.css";
 import "./launchTerminal.css";
