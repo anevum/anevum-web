@@ -13,7 +13,7 @@ import {
   updateMemberMetadata,
   type MemberSession,
 } from "./memberClient";
-import { ACHIEVEMENTS, loadMemberProgress, onMemberProgressChange, type MemberProgress } from "./memberState";
+import { CURRENT_ACHIEVEMENTS, loadMemberProgress, onMemberProgressChange, type MemberProgress } from "./memberState";
 import { networkLevelDetails } from "./networkProgress";
 
 function blankProgress(): MemberProgress {
@@ -73,6 +73,7 @@ export function Rhenlink() {
   const profile = profileCopy(session);
   const level = networkLevelDetails(progress);
   const unlocked = useMemo(() => new Map(progress.achievements.map((achievement) => [achievement.id, achievement])), [progress.achievements]);
+  const currentUnlockedCount = useMemo(() => CURRENT_ACHIEVEMENTS.filter((achievement) => unlocked.has(achievement.id)).length, [unlocked]);
 
   async function handleCreate(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -213,7 +214,7 @@ export function Rhenlink() {
             <div className="identity-modules rhenlink-stat-grid">
               <div><Bookmark size={16} /><span>SAVED</span><strong>{progress.savedRecordIds.length}</strong><small>items connected to your identity</small></div>
               <div><Layers3 size={16} /><span>NETWORK LEVEL</span><strong>{String(level.level).padStart(2, "0")}</strong><small>{level.rankMark} · participation rank</small></div>
-              <div><Trophy size={16} /><span>ACHIEVEMENTS</span><strong>{progress.achievements.length}/{ACHIEVEMENTS.length}</strong><small>earned through real activity</small></div>
+              <div><Trophy size={16} /><span>LAUNCH ARTIFACTS</span><strong>{currentUnlockedCount}/{CURRENT_ACHIEVEMENTS.length}</strong><small>earned through current release activity</small></div>
               <div><Award size={16} /><span>XP</span><strong>{level.xp}</strong><small>{level.remaining} XP to Level {Math.min(100, level.level + 1)}</small></div>
             </div>
 
@@ -224,15 +225,15 @@ export function Rhenlink() {
                 <p>Level reflects participation across ANEVUM. It does not represent authority, status, popularity, skill, or purchase value.</p>
                 <div className="network-xp-line"><span>{level.xp} XP</span><span>{level.nextThreshold} XP / NEXT LEVEL</span></div>
                 <div className="network-xp-track" role="progressbar" aria-label="XP progress to next level" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(level.percent)}><i style={{ width: `${level.percent}%` }} /></div>
-                {level.nextArtifact ? <div className="network-next-artifact"><LockKeyhole size={14} /><span><small>NEXT ACHIEVEMENT</small><strong>{level.nextArtifact.title}</strong><em>+{level.nextArtifact.xp} XP</em></span></div> : null}
+                {level.nextArtifact ? <div className="network-next-artifact"><LockKeyhole size={14} /><span><small>NEXT ARTIFACT</small><strong>{level.nextArtifact.title}</strong><em>+{level.nextArtifact.xp} XP</em></span></div> : <div className="network-next-artifact"><Award size={14} /><span><small>BOOK ONE PATH</small><strong>ALL CURRENT ARTIFACTS ACQUIRED</strong><em>{currentUnlockedCount}/{CURRENT_ACHIEVEMENTS.length}</em></span></div>}
               </div>
               <div className="network-level-object" aria-hidden="true"><BrandArt variant="identity" /><i /><b>{level.rankMark}</b><small>{String(level.level).padStart(2, "0")}</small></div>
             </section>
 
             <section className="rhenlink-achievement-section" aria-labelledby="achievement-title">
-              <header><div><span className="meta">ACHIEVEMENT RECORD</span><h3 id="achievement-title">Milestones with a memory.</h3></div><small>{progress.achievements.length} EARNED</small></header>
+              <header><div><span className="meta">BOOK ONE ARTIFACT RECORD</span><h3 id="achievement-title">Milestones with a memory.</h3></div><small>{currentUnlockedCount}/{CURRENT_ACHIEVEMENTS.length} EARNED</small></header>
               <div className="rhenlink-achievement-grid">
-                {ACHIEVEMENTS.map((achievement) => {
+                {CURRENT_ACHIEVEMENTS.map((achievement) => {
                   const earned = unlocked.get(achievement.id);
                   return (
                     <article key={achievement.id} className={earned ? "earned" : "locked"}>
