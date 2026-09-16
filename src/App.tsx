@@ -9,6 +9,7 @@ import { CommandHome } from "./CommandPage";
 import { CanonicalWikiArticle, CanonicalWikiHome } from "./CanonicalWiki";
 import { WikiAdminPage, WikiContributionPage, WikiSavedPage } from "./ModeratedWiki";
 import { AchievementLayer } from "./MemberChrome";
+import { getCanonProjectionRecord } from "./canonProjection";
 import { trackMemberRoute } from "./memberState";
 import { UnifiedSystemShell } from "./SystemShell";
 
@@ -16,6 +17,7 @@ const ROOT_HOST = "anevum.com";
 const WIKI_HOST = "wiki.anevum.com";
 const LATTICE_HOST = "lattice.anevum.com";
 const COMMAND_HOST = "command.anevum.com";
+const STRUCTURED_DATA_ID = "anevum-structured-data";
 
 function normalizePath(pathname: string) {
   if (!pathname || pathname === "/") return "/";
@@ -48,6 +50,33 @@ function ensureMeta(selector: string, attribute: "name" | "property", key: strin
     document.head.appendChild(element);
   }
   return element;
+}
+
+function setStructuredData(value: Record<string, unknown> | null) {
+  let script = document.getElementById(STRUCTURED_DATA_ID) as HTMLScriptElement | null;
+  if (!value) {
+    script?.remove();
+    return;
+  }
+  if (!script) {
+    script = document.createElement("script");
+    script.id = STRUCTURED_DATA_ID;
+    script.type = "application/ld+json";
+    document.head.appendChild(script);
+  }
+  script.textContent = JSON.stringify(value);
+}
+
+function replyBookSchema() {
+  return {
+    "@context": "https://schema.org",
+    "@type": "Book",
+    name: "REPLY",
+    url: "https://anevum.com/the-book",
+    description: "REPLY is The Transcosmic Book One, a science-fiction novel by Devon Akins and the first publication from ANEVUM.",
+    author: { "@type": "Person", name: "Devon Akins" },
+    isPartOf: { "@type": "BookSeries", name: "The Transcosmic" },
+  };
 }
 
 function rootPublicMeta(pathname: string, knownPublicRoute: boolean) {
@@ -142,6 +171,8 @@ export default function App() {
   const notFoundRoute = hostname === ROOT_HOST && !bridgeRoute && !commandRoute && !knownRootPublicRoute;
   const wikiPath = wikiSurfacePath(hostname, routePath);
   const wikiPrivatePath = wikiPath === "/new" || wikiPath === "/saved" || wikiPath === "/admin" || wikiPath.endsWith("/edit");
+  const wikiSlug = !wikiPrivatePath && wikiPath !== "/" ? decodeURIComponent(wikiPath.replace(/^\/+|\/+$/g, "")) : "";
+  const wikiRecord = wikiSlug ? getCanonProjectionRecord(wikiSlug) : null;
   const memberRoute = wikiRoute
     ? (wikiPath === "/" ? "/wiki" : `/wiki${wikiPath}`)
     : latticeRoute
@@ -165,11 +196,11 @@ export default function App() {
         }
       : wikiRoute
         ? {
-            title: wikiPath === "/" ? "ANEVUM Wiki" : "ANEVUM Wiki Record",
-            description: "The publication-safe surface of the live ANEVUM Wiki and its canonical lifecycle state.",
+            title: wikiRecord ? `${wikiRecord.title} — ANEVUM Wiki` : "ANEVUM Wiki",
+            description: wikiRecord?.summary || "The publication-safe surface of the live ANEVUM Wiki and its canonical lifecycle state.",
             canonical: `https://wiki.anevum.com${wikiPath === "/" ? "/" : wikiPath}`,
-            ogTitle: "ANEVUM Wiki",
-            ogType: "website",
+            ogTitle: wikiRecord ? `${wikiRecord.title} — ANEVUM Wiki` : "ANEVUM Wiki",
+            ogType: wikiRecord ? "article" : "website",
           }
         : latticeRoute
           ? {
@@ -226,7 +257,22 @@ export default function App() {
     twitterTitle.content = meta.ogTitle;
     const twitterDescription = ensureMeta('meta[name="twitter:description"]', "name", "twitter:description");
     twitterDescription.content = meta.description;
-  }, [routePath, hostname, bridgeRoute, commandRoute, wikiRoute, latticeRoute, rhenlinkRoute, knownRootPublicRoute, notFoundRoute, wikiPath, wikiPrivatePath]);
+
+    if (hostname === ROOT_HOST && (routePath === "/" || routePath === "/the-book")) {
+      setStructuredData(replyBookSchema());
+    } else if (wikiRoute && wikiRecord) {
+      setStructuredData({
+        "@context": "https://schema.org",
+        "@type": "Article",
+        headline: wikiRecord.title,
+        description: wikiRecord.summary,
+        url: `https://wiki.anevum.com/${wikiRecord.slug}`,
+        isPartOf: { "@type": "WebSite", name: "ANEVUM Wiki", url: "https://wiki.anevum.com/" },
+      });
+    } else {
+      setStructuredData(null);
+    }
+  }, [routePath, hostname, bridgeRoute, commandRoute, wikiRoute, latticeRoute, rhenlinkRoute, knownRootPublicRoute, notFoundRoute, wikiPath, wikiPrivatePath, wikiRecord]);
 
   useEffect(() => {
     if (!trackableMemberSurface) return;
