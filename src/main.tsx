@@ -3,6 +3,7 @@ import ReactDOM from "react-dom/client";
 import App from "./App";
 import { RuntimeBoundary } from "./RuntimeBoundary";
 import { installRuntimeFixes } from "./runtimeFixes";
+import { COMMAND_HOST, LATTICE_HOST, normalizeRuntimePath, resolveRuntimeHostname, ROOT_HOST, WIKI_HOST } from "./runtimeHost";
 import "./baseV2.css";
 import "./production.css";
 import "./systemShell.css";
@@ -21,19 +22,9 @@ import "./launchEditorialLight.css";
 import "./legal.css";
 import "./runtimeBoundary.css";
 
-const ROOT_HOST = "anevum.com";
-const WIKI_HOST = "wiki.anevum.com";
-const LATTICE_HOST = "lattice.anevum.com";
-const COMMAND_HOST = "command.anevum.com";
-
-function normalizePath(pathname: string) {
-  if (!pathname || pathname === "/") return "/";
-  return pathname.replace(/\/+$/, "") || "/";
-}
-
 function routeStyleImports() {
-  const hostname = window.location.hostname.toLowerCase();
-  const pathname = normalizePath(window.location.pathname);
+  const hostname = resolveRuntimeHostname(window.location.hostname);
+  const pathname = normalizeRuntimePath(window.location.pathname);
   const styles: Promise<unknown>[] = [];
 
   const wikiRoute = hostname === WIKI_HOST || (hostname === ROOT_HOST && (pathname === "/wiki" || pathname.startsWith("/wiki/")));
