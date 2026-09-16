@@ -1,29 +1,19 @@
 import { ArrowRight, BookOpen, ExternalLink, Orbit, Store } from "lucide-react";
 import { capturePurchaseOutbound } from "./analytics";
+import { replyLaunchConfig } from "./launchConfig";
 import { LaunchTerminal } from "./LaunchTerminal";
 
 type LaunchSection = "book" | "story" | "store";
 
-type Edition = {
-  label: string;
-  note: string;
-  href: string;
-};
-
-const buyUrl = import.meta.env.VITE_REPLY_BUY_URL || "";
-const hardcoverUrl = import.meta.env.VITE_REPLY_HARDCOVER_URL || buyUrl;
-const paperbackUrl = import.meta.env.VITE_REPLY_PAPERBACK_URL || buyUrl;
-const ebookUrl = import.meta.env.VITE_REPLY_EBOOK_URL || buyUrl;
-const sampleUrl = import.meta.env.VITE_REPLY_SAMPLE_URL || "";
-const coverUrl = import.meta.env.VITE_REPLY_COVER_URL || "";
-const heroImageUrl = import.meta.env.VITE_REPLY_HERO_IMAGE_URL || "";
-const releaseLabel = String(import.meta.env.VITE_REPLY_RELEASE_LABEL || "").trim();
-
-const editions: Edition[] = [
-  { label: "Hardcover", note: "Print edition", href: hardcoverUrl },
-  { label: "Paperback", note: "Print edition", href: paperbackUrl },
-  { label: "eBook", note: "Digital edition", href: ebookUrl },
-].filter((edition) => Boolean(edition.href));
+const {
+  primaryPurchaseUrl,
+  primaryPurchaseLabel,
+  editions,
+  sampleUrl,
+  coverUrl,
+  heroImageUrl,
+  releaseLabel,
+} = replyLaunchConfig;
 
 function releaseInterestHref(source: string) {
   return `/rhenlink?intent=reply-release&source=${encodeURIComponent(source)}`;
@@ -133,9 +123,11 @@ function PageShell({ active, children }: { active: LaunchSection; children: Reac
 }
 
 export function BookPage() {
-  const firstEdition = editions[0];
-  const firstPurchase = firstEdition?.href || "";
-  const availability = editions.length ? "Available editions listed below" : releaseLabel || "Release details are being finalized";
+  const availability = editions.length
+    ? "Available editions listed below"
+    : primaryPurchaseUrl
+      ? "Available to order"
+      : releaseLabel || "Release details are being finalized";
 
   return (
     <PageShell active="book">
@@ -147,8 +139,8 @@ export function BookPage() {
           <p className="launch-page-byline">A NOVEL BY DEVON AKINS</p>
           <p className="launch-page-deck">A worker follows a measurement she cannot explain into a civilization already living across worlds.</p>
           <div className="reply-launch-actions">
-            {firstPurchase && firstEdition ? <PurchaseAction edition={firstEdition.label} href={firstPurchase} source="book-hero">BUY REPLY</PurchaseAction> : <Action href="/the-story">ENTER THE STORY</Action>}
-            {!firstPurchase ? <Action href={releaseInterestHref("book-hero")} quiet>GET RELEASE UPDATES</Action> : null}
+            {primaryPurchaseUrl ? <PurchaseAction edition={primaryPurchaseLabel} href={primaryPurchaseUrl} source="book-hero">BUY REPLY</PurchaseAction> : <Action href="/the-story">ENTER THE STORY</Action>}
+            {!primaryPurchaseUrl ? <Action href={releaseInterestHref("book-hero")} quiet>GET RELEASE UPDATES</Action> : null}
             {sampleUrl ? <Action href={sampleUrl} quiet><BookOpen size={15} strokeWidth={1.5} /> READ AN EXCERPT</Action> : null}
           </div>
         </div>
@@ -191,6 +183,13 @@ export function BookPage() {
               </a>
             ))}
           </div>
+        </section>
+      ) : primaryPurchaseUrl ? (
+        <section className="launch-page-availability" aria-labelledby="book-order-title">
+          <p className="reply-launch-kicker">READ REPLY</p>
+          <h2 id="book-order-title">REPLY is available.</h2>
+          <p>The configured purchase destination contains the current ordering and edition details.</p>
+          <PurchaseAction edition={primaryPurchaseLabel} href={primaryPurchaseUrl} source="book-availability">BUY REPLY</PurchaseAction>
         </section>
       ) : (
         <section className="launch-page-availability" aria-labelledby="book-availability-title">
@@ -259,7 +258,7 @@ export function StorePage() {
           <p className="reply-launch-kicker">ANEVUM / STORE</p>
           <h1 id="store-page-title">THE FIRST OBJECT.</h1>
           <p className="launch-page-deck">REPLY is the first ANEVUM publication. The store opens around real editions, not placeholder products.</p>
-          <div className="reply-launch-actions"><Action href="/the-book">VIEW REPLY</Action>{!editions.length ? <Action href={releaseInterestHref("store-hero")} quiet>GET RELEASE UPDATES</Action> : null}</div>
+          <div className="reply-launch-actions"><Action href="/the-book">VIEW REPLY</Action>{!primaryPurchaseUrl ? <Action href={releaseInterestHref("store-hero")} quiet>GET RELEASE UPDATES</Action> : null}</div>
         </div>
         <div className="launch-page-store-mark" aria-hidden="true"><Store size={56} strokeWidth={0.8} /><span>PUBLICATION 001</span></div>
       </section>
@@ -275,6 +274,8 @@ export function StorePage() {
             <div className="launch-page-store-links">
               {editions.map((edition) => <PurchaseAction href={edition.href} edition={edition.label} source="store-editions" key={`${edition.label}-${edition.href}`}>{edition.label.toUpperCase()}</PurchaseAction>)}
             </div>
+          ) : primaryPurchaseUrl ? (
+            <div className="launch-page-store-links"><PurchaseAction href={primaryPurchaseUrl} edition={primaryPurchaseLabel} source="store-primary">BUY REPLY</PurchaseAction></div>
           ) : (
             <div className="launch-page-store-status">
               <span>STATUS / PRE-RELEASE</span>
@@ -289,7 +290,7 @@ export function StorePage() {
         <p className="reply-launch-kicker">STORE PRINCIPLE</p>
         <h2>No placeholders pretending to be products.</h2>
         <p>The ANEVUM store grows with released work. Until REPLY can actually be ordered, this page presents the book and its publication state without fake pricing or checkout.</p>
-        <Action href={editions.length ? "/the-book" : releaseInterestHref("store-footer")}>{editions.length ? "VIEW REPLY" : "GET REPLY RELEASE UPDATES"}</Action>
+        <Action href={primaryPurchaseUrl ? "/the-book" : releaseInterestHref("store-footer")}>{primaryPurchaseUrl ? "VIEW REPLY" : "GET REPLY RELEASE UPDATES"}</Action>
       </section>
     </PageShell>
   );
