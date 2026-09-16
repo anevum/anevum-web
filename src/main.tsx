@@ -1,6 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App";
+import { RuntimeBoundary } from "./RuntimeBoundary";
 import { installRuntimeFixes } from "./runtimeFixes";
 import "./baseV2.css";
 import "./production.css";
@@ -24,11 +25,14 @@ import "./launchVisualV3.css";
 import "./mobileLaunchFix.css";
 import "./launchEditorialLight.css";
 import "./legal.css";
+import "./runtimeBoundary.css";
 
 installRuntimeFixes();
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
-    <App />
+    <RuntimeBoundary>
+      <App />
+    </RuntimeBoundary>
   </React.StrictMode>,
 );
