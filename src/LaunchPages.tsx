@@ -1,4 +1,5 @@
 import { ArrowRight, BookOpen, ExternalLink, Orbit, Store } from "lucide-react";
+import { capturePurchaseOutbound } from "./analytics";
 import { LaunchTerminal } from "./LaunchTerminal";
 
 type LaunchSection = "book" | "story" | "store";
@@ -17,7 +18,6 @@ const sampleUrl = import.meta.env.VITE_REPLY_SAMPLE_URL || "";
 const coverUrl = import.meta.env.VITE_REPLY_COVER_URL || "";
 const heroImageUrl = import.meta.env.VITE_REPLY_HERO_IMAGE_URL || "";
 const releaseLabel = String(import.meta.env.VITE_REPLY_RELEASE_LABEL || "").trim();
-const releaseInterestHref = "/rhenlink?intent=reply-release";
 
 const editions: Edition[] = [
   { label: "Hardcover", note: "Print edition", href: hardcoverUrl },
@@ -25,18 +25,31 @@ const editions: Edition[] = [
   { label: "eBook", note: "Digital edition", href: ebookUrl },
 ].filter((edition) => Boolean(edition.href));
 
-function Action({ href, children, quiet = false }: { href: string; children: React.ReactNode; quiet?: boolean }) {
+function releaseInterestHref(source: string) {
+  return `/rhenlink?intent=reply-release&source=${encodeURIComponent(source)}`;
+}
+
+function destinationHost(href: string) {
+  try { return new URL(href).hostname.replace(/^www\./, ""); } catch { return "external"; }
+}
+
+function Action({ href, children, quiet = false, onClick }: { href: string; children: React.ReactNode; quiet?: boolean; onClick?: () => void }) {
   const external = /^https?:\/\//i.test(href);
   return (
     <a
       className={`reply-launch-action${quiet ? " quiet" : ""}`}
       href={href}
+      onClick={onClick}
       {...(external ? { target: "_blank", rel: "noreferrer" } : {})}
     >
       <span>{children}</span>
       {external ? <ExternalLink size={14} strokeWidth={1.5} /> : <ArrowRight size={15} strokeWidth={1.5} />}
     </a>
   );
+}
+
+function PurchaseAction({ edition, href, source, children }: { edition: string; href: string; source: string; children: React.ReactNode }) {
+  return <Action href={href} onClick={() => capturePurchaseOutbound({ edition, destination: destinationHost(href), source })}>{children}</Action>;
 }
 
 function LaunchHeader({ active }: { active: LaunchSection }) {
@@ -120,7 +133,8 @@ function PageShell({ active, children }: { active: LaunchSection; children: Reac
 }
 
 export function BookPage() {
-  const firstPurchase = editions[0]?.href || "";
+  const firstEdition = editions[0];
+  const firstPurchase = firstEdition?.href || "";
   const availability = editions.length ? "Available editions listed below" : releaseLabel || "Release details are being finalized";
 
   return (
@@ -133,8 +147,8 @@ export function BookPage() {
           <p className="launch-page-byline">A NOVEL BY DEVON AKINS</p>
           <p className="launch-page-deck">A worker follows a measurement she cannot explain into a civilization already living across worlds.</p>
           <div className="reply-launch-actions">
-            {firstPurchase ? <Action href={firstPurchase}>BUY REPLY</Action> : <Action href="/the-story">ENTER THE STORY</Action>}
-            {!firstPurchase ? <Action href={releaseInterestHref} quiet>GET RELEASE UPDATES</Action> : null}
+            {firstPurchase && firstEdition ? <PurchaseAction edition={firstEdition.label} href={firstPurchase} source="book-hero">BUY REPLY</PurchaseAction> : <Action href="/the-story">ENTER THE STORY</Action>}
+            {!firstPurchase ? <Action href={releaseInterestHref("book-hero")} quiet>GET RELEASE UPDATES</Action> : null}
             {sampleUrl ? <Action href={sampleUrl} quiet><BookOpen size={15} strokeWidth={1.5} /> READ AN EXCERPT</Action> : null}
           </div>
         </div>
@@ -172,7 +186,7 @@ export function BookPage() {
           </div>
           <div className="launch-page-edition-list">
             {editions.map((edition) => (
-              <a href={edition.href} target="_blank" rel="noreferrer" key={`${edition.label}-${edition.href}`}>
+              <a href={edition.href} target="_blank" rel="noreferrer" key={`${edition.label}-${edition.href}`} onClick={() => capturePurchaseOutbound({ edition: edition.label, destination: destinationHost(edition.href), source: "book-editions" })}>
                 <span>{edition.note}</span><strong>{edition.label}</strong><ArrowRight size={17} strokeWidth={1.35} />
               </a>
             ))}
@@ -183,7 +197,7 @@ export function BookPage() {
           <p className="reply-launch-kicker">PUBLICATION STATUS</p>
           <h2 id="book-availability-title">REPLY is approaching publication.</h2>
           <p>{releaseLabel ? `${releaseLabel}. Purchase links will appear here when the editions are live.` : "Edition, retailer, pricing, and release details are being finalized. Purchase links will appear here only when they are live."}</p>
-          <Action href={releaseInterestHref}>GET REPLY RELEASE UPDATES</Action>
+          <Action href={releaseInterestHref("book-availability")}>GET REPLY RELEASE UPDATES</Action>
         </section>
       )}
     </PageShell>
@@ -229,7 +243,7 @@ export function StoryPage() {
           <span>PUBLIC CANON STATE</span>
           <strong>BOOK ONE</strong>
           <p>This page stays intentionally spoiler-light. Deeper records will unlock as material is published.</p>
-          <Action href={releaseInterestHref} quiet>GET RELEASE UPDATES</Action>
+          <Action href={releaseInterestHref("story-context")} quiet>GET RELEASE UPDATES</Action>
         </div>
       </section>
     </PageShell>
@@ -245,7 +259,7 @@ export function StorePage() {
           <p className="reply-launch-kicker">ANEVUM / STORE</p>
           <h1 id="store-page-title">THE FIRST OBJECT.</h1>
           <p className="launch-page-deck">REPLY is the first ANEVUM publication. The store opens around real editions, not placeholder products.</p>
-          <div className="reply-launch-actions"><Action href="/the-book">VIEW REPLY</Action>{!editions.length ? <Action href={releaseInterestHref} quiet>GET RELEASE UPDATES</Action> : null}</div>
+          <div className="reply-launch-actions"><Action href="/the-book">VIEW REPLY</Action>{!editions.length ? <Action href={releaseInterestHref("store-hero")} quiet>GET RELEASE UPDATES</Action> : null}</div>
         </div>
         <div className="launch-page-store-mark" aria-hidden="true"><Store size={56} strokeWidth={0.8} /><span>PUBLICATION 001</span></div>
       </section>
@@ -259,7 +273,7 @@ export function StorePage() {
           <p>A human-scale science-fiction novel about contact, work, family, intelligence, possibility, and belonging.</p>
           {editions.length ? (
             <div className="launch-page-store-links">
-              {editions.map((edition) => <Action href={edition.href} key={`${edition.label}-${edition.href}`}>{edition.label.toUpperCase()}</Action>)}
+              {editions.map((edition) => <PurchaseAction href={edition.href} edition={edition.label} source="store-editions" key={`${edition.label}-${edition.href}`}>{edition.label.toUpperCase()}</PurchaseAction>)}
             </div>
           ) : (
             <div className="launch-page-store-status">
@@ -275,7 +289,7 @@ export function StorePage() {
         <p className="reply-launch-kicker">STORE PRINCIPLE</p>
         <h2>No placeholders pretending to be products.</h2>
         <p>The ANEVUM store grows with released work. Until REPLY can actually be ordered, this page presents the book and its publication state without fake pricing or checkout.</p>
-        <Action href={editions.length ? "/the-book" : releaseInterestHref}>{editions.length ? "VIEW REPLY" : "GET REPLY RELEASE UPDATES"}</Action>
+        <Action href={editions.length ? "/the-book" : releaseInterestHref("store-footer")}>{editions.length ? "VIEW REPLY" : "GET REPLY RELEASE UPDATES"}</Action>
       </section>
     </PageShell>
   );
