@@ -7,8 +7,27 @@ function scrollToCurrentHash() {
   });
 }
 
+function resetHorizontalViewport() {
+  window.requestAnimationFrame(() => {
+    const top = window.scrollY;
+    const scrollingElement = document.scrollingElement;
+    if (scrollingElement && scrollingElement.scrollLeft !== 0) scrollingElement.scrollLeft = 0;
+    if (window.scrollX !== 0) window.scrollTo({ left: 0, top, behavior: "auto" });
+  });
+}
+
 export function installRuntimeFixes() {
-  window.addEventListener("popstate", scrollToCurrentHash);
-  window.addEventListener("hashchange", scrollToCurrentHash);
+  const syncViewport = () => {
+    resetHorizontalViewport();
+    scrollToCurrentHash();
+  };
+
+  window.addEventListener("popstate", syncViewport);
+  window.addEventListener("hashchange", syncViewport);
+  window.addEventListener("pageshow", resetHorizontalViewport);
+  window.addEventListener("orientationchange", resetHorizontalViewport);
+  window.addEventListener("resize", resetHorizontalViewport, { passive: true });
+
+  resetHorizontalViewport();
   scrollToCurrentHash();
 }
