@@ -8,6 +8,7 @@ import "./systemShell.css";
 import "./commandIntegration.css";
 import "./publicV2.css";
 import "./moderatedWiki.css";
+import "./canonicalWiki.css";
 import "./latticeV2.css";
 import "./brandArt.css";
 import "./rhenlinkV2.css";
