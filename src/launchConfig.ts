@@ -13,11 +13,10 @@ const hardcoverUrl = envValue(import.meta.env.VITE_REPLY_HARDCOVER_URL);
 const paperbackUrl = envValue(import.meta.env.VITE_REPLY_PAPERBACK_URL);
 const ebookUrl = envValue(import.meta.env.VITE_REPLY_EBOOK_URL);
 
-const editions: ReplyEdition[] = [
-  hardcoverUrl ? { label: "Hardcover" as const, note: "Print edition", href: hardcoverUrl } : null,
-  paperbackUrl ? { label: "Paperback" as const, note: "Print edition", href: paperbackUrl } : null,
-  ebookUrl ? { label: "eBook" as const, note: "Digital edition", href: ebookUrl } : null,
-].filter((edition): edition is ReplyEdition => Boolean(edition));
+const editions: ReplyEdition[] = [];
+if (hardcoverUrl) editions.push({ label: "Hardcover", note: "Print edition", href: hardcoverUrl });
+if (paperbackUrl) editions.push({ label: "Paperback", note: "Print edition", href: paperbackUrl });
+if (ebookUrl) editions.push({ label: "eBook", note: "Digital edition", href: ebookUrl });
 
 export const replyLaunchConfig = {
   generalBuyUrl,
