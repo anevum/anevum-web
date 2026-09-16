@@ -25,6 +25,13 @@ function emptyProgress(): MemberProgress {
   return { version: 1, savedRecordIds: [], visitedRoutes: [], achievements: [], updatedAt: new Date(0).toISOString() };
 }
 
+function focusableElements(container: HTMLElement | null) {
+  if (!container) return [] as HTMLElement[];
+  return Array.from(container.querySelectorAll<HTMLElement>(
+    'a[href],button:not([disabled]),input:not([disabled]),textarea:not([disabled]),select:not([disabled]),[tabindex]:not([tabindex="-1"])',
+  )).filter((element) => !element.hasAttribute("hidden") && element.getAttribute("aria-hidden") !== "true");
+}
+
 export function LaunchTerminal() {
   const [open, setOpen] = useState(false);
   const [session, setSession] = useState<MemberSession | null>(() => loadSession());
@@ -38,6 +45,7 @@ export function LaunchTerminal() {
   const [activeIndex, setActiveIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement | null>(null);
   const triggerRef = useRef<HTMLButtonElement | null>(null);
+  const panelRef = useRef<HTMLElement | null>(null);
   const identity = displayIdentity(session);
   const level = networkLevelDetails(progress);
 
@@ -76,6 +84,18 @@ export function LaunchTerminal() {
         event.preventDefault();
         setOpen(false);
         triggerRef.current?.focus();
+      } else if (event.key === "Tab" && open) {
+        const focusable = focusableElements(panelRef.current);
+        if (!focusable.length) return;
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        if (event.shiftKey && document.activeElement === first) {
+          event.preventDefault();
+          last.focus();
+        } else if (!event.shiftKey && document.activeElement === last) {
+          event.preventDefault();
+          first.focus();
+        }
       }
     };
     window.addEventListener("keydown", onKey);
@@ -105,6 +125,7 @@ export function LaunchTerminal() {
     if (!normalized) return targets;
     return targets.filter((target) => target.command.includes(normalized) || target.label.toLowerCase().includes(normalized));
   }, [value]);
+  const visibleSuggestions = useMemo(() => filtered.slice(0, 4), [filtered]);
 
   useEffect(() => {
     setActiveIndex(0);
@@ -131,7 +152,7 @@ export function LaunchTerminal() {
   function execute(raw: string) {
     const command = raw.trim().toLowerCase();
     if (!command) {
-      const selected = filtered[activeIndex];
+      const selected = targets[activeIndex];
       if (selected) navigate(selected.href);
       return;
     }
@@ -160,9 +181,14 @@ export function LaunchTerminal() {
       navigate("https://lattice.anevum.com/");
       return;
     }
-    const match = targets.find((target) => target.command === command || target.label.toLowerCase() === command);
-    if (match) {
-      navigate(match.href);
+    const exact = targets.find((target) => target.command === command || target.label.toLowerCase() === command);
+    if (exact) {
+      navigate(exact.href);
+      return;
+    }
+    const selected = visibleSuggestions[activeIndex];
+    if (selected) {
+      navigate(selected.href);
       return;
     }
     setMessage(`UNKNOWN COMMAND // ${command.toUpperCase()}`);
@@ -170,18 +196,23 @@ export function LaunchTerminal() {
   }
 
   function handleInputKeyDown(event: React.KeyboardEvent<HTMLInputElement>) {
+    const optionCount = value.trim() ? visibleSuggestions.length : targets.length;
     if (event.key === "ArrowDown") {
       event.preventDefault();
-      setActiveIndex((current) => filtered.length ? (current + 1) % filtered.length : 0);
+      setActiveIndex((current) => optionCount ? (current + 1) % optionCount : 0);
     } else if (event.key === "ArrowUp") {
       event.preventDefault();
-      setActiveIndex((current) => filtered.length ? (current - 1 + filtered.length) % filtered.length : 0);
-    } else if (event.key === "Enter" && !value.trim()) {
+      setActiveIndex((current) => optionCount ? (current - 1 + optionCount) % optionCount : 0);
+    } else if (event.key === "Enter") {
       event.preventDefault();
-      const selected = filtered[activeIndex];
-      if (selected) navigate(selected.href);
+      execute(value);
     }
   }
+
+  const typedValue = Boolean(value.trim());
+  const activeDescendant = typedValue
+    ? (visibleSuggestions[activeIndex] ? `anevum-terminal-suggestion-${activeIndex}` : undefined)
+    : `anevum-terminal-route-${activeIndex}`;
 
   return (
     <>
@@ -202,9 +233,9 @@ export function LaunchTerminal() {
       {open ? (
         <div className="launch-terminal-overlay is-open">
           <button type="button" className="launch-terminal-backdrop" onClick={() => { setOpen(false); triggerRef.current?.focus(); }} aria-label="Close terminal menu" />
-          <aside className="launch-terminal-panel" role="dialog" aria-modal="true" aria-label="ANEVUM terminal navigation">
+          <aside ref={panelRef} className="launch-terminal-panel" role="dialog" aria-modal="true" aria-labelledby="anevum-terminal-title">
             <header>
-              <div className="terminal-brand"><Terminal size={18} strokeWidth={1.4} /><span><strong>ANEVUM://</strong><small>NAVIGATION TERMINAL</small></span></div>
+              <div className="terminal-brand"><Terminal size={18} strokeWidth={1.4} /><span><strong id="anevum-terminal-title">ANEVUM://</strong><small>NAVIGATION TERMINAL</small></span></div>
               <button type="button" onClick={() => { setOpen(false); triggerRef.current?.focus(); }} aria-label="Close menu"><X size={18} strokeWidth={1.4} /></button>
             </header>
 
@@ -224,16 +255,17 @@ export function LaunchTerminal() {
               <a className="terminal-auth-card" href="/rhenlink"><LogIn size={18} /><span><small>IDENTITY UNRESOLVED</small><strong>CREATE OR SIGN IN TO RHENLINK</strong></span><ArrowRight size={17} /></a>
             )}
 
-            <nav id="anevum-terminal-routes" className="terminal-route-list" aria-label="Launch destinations" role="listbox">
+            <nav id="anevum-terminal-routes" className="terminal-route-list" aria-label="Launch destinations" role="listbox" aria-hidden={typedValue}>
               {targets.map((target, index) => (
                 <button
                   id={`anevum-terminal-route-${index}`}
                   type="button"
                   role="option"
-                  aria-selected={activeIndex === index && !value.trim()}
-                  className={activeIndex === index && !value.trim() ? "selected" : ""}
+                  tabIndex={typedValue ? -1 : 0}
+                  aria-selected={!typedValue && activeIndex === index}
+                  className={!typedValue && activeIndex === index ? "selected" : ""}
                   key={target.command}
-                  onMouseEnter={() => { if (!value.trim()) setActiveIndex(index); }}
+                  onMouseEnter={() => { if (!typedValue) setActiveIndex(index); }}
                   onClick={() => navigate(target.href)}
                 >
                   <span className="terminal-route-index">{String(index + 1).padStart(2, "0")}</span>
@@ -254,17 +286,33 @@ export function LaunchTerminal() {
                 placeholder="type a command"
                 autoComplete="off"
                 spellCheck={false}
+                role="combobox"
                 aria-label="ANEVUM command"
-                aria-controls="anevum-terminal-routes"
-                aria-activedescendant={!value.trim() ? `anevum-terminal-route-${activeIndex}` : undefined}
+                aria-autocomplete="list"
+                aria-expanded={typedValue}
+                aria-controls={typedValue ? "anevum-terminal-suggestions" : "anevum-terminal-routes"}
+                aria-activedescendant={activeDescendant}
               />
               <button type="submit">RUN</button>
             </form>
 
-            {value ? (
-              <div className="terminal-suggestions" role="listbox" aria-label="Matching destinations">
-                {filtered.slice(0, 4).map((target, index) => <button type="button" role="option" aria-selected={activeIndex === index} className={activeIndex === index ? "selected" : ""} key={target.command} onMouseEnter={() => setActiveIndex(index)} onClick={() => navigate(target.href)}><code>{target.command}</code><span>{target.label}</span></button>)}
-                {!filtered.length ? <span>NO MATCHING ROUTE</span> : null}
+            {typedValue ? (
+              <div id="anevum-terminal-suggestions" className="terminal-suggestions" role="listbox" aria-label="Matching destinations">
+                {visibleSuggestions.map((target, index) => (
+                  <button
+                    id={`anevum-terminal-suggestion-${index}`}
+                    type="button"
+                    role="option"
+                    aria-selected={activeIndex === index}
+                    className={activeIndex === index ? "selected" : ""}
+                    key={target.command}
+                    onMouseEnter={() => setActiveIndex(index)}
+                    onClick={() => navigate(target.href)}
+                  >
+                    <code>{target.command}</code><span>{target.label}</span>
+                  </button>
+                ))}
+                {!visibleSuggestions.length ? <span>NO MATCHING ROUTE</span> : null}
               </div>
             ) : null}
 
