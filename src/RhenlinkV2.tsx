@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { ArrowRight, Award, Bell, Bookmark, CircleUserRound, Edit3, Layers3, LockKeyhole, LogIn, LogOut, Save, Trophy, X } from "lucide-react";
+import { capture } from "./analytics";
 import { BrandArt } from "./BrandArt";
 import { LaunchTerminal } from "./LaunchTerminal";
 import { Button } from "./ui";
@@ -31,6 +32,12 @@ function releaseIntentRequested() {
     return true;
   }
   try { return localStorage.getItem(replyReleaseIntentKey) === "1"; } catch { return false; }
+}
+
+function releaseIntentSource() {
+  if (typeof window === "undefined") return "direct";
+  const value = new URLSearchParams(window.location.search).get("source") || "direct";
+  return /^[a-z0-9-]{1,48}$/i.test(value) ? value.toLowerCase() : "other";
 }
 
 function useRhenlinkState() {
@@ -85,6 +92,7 @@ export function Rhenlink() {
   const [busy, setBusy] = useState(false);
   const [editing, setEditing] = useState(false);
   const [releaseIntent, setReleaseIntent] = useState(() => releaseIntentRequested());
+  const [releaseSource] = useState(() => releaseIntentSource());
   const identity = displayIdentity(session);
   const profile = profileCopy(session);
   const level = networkLevelDetails(progress);
@@ -93,8 +101,11 @@ export function Rhenlink() {
   const currentUnlockedCount = useMemo(() => CURRENT_ACHIEVEMENTS.filter((achievement) => unlocked.has(achievement.id)).length, [unlocked]);
 
   useEffect(() => {
-    if (new URLSearchParams(window.location.search).get("intent") === "reply-release") setReleaseIntent(true);
-  }, []);
+    if (new URLSearchParams(window.location.search).get("intent") === "reply-release") {
+      setReleaseIntent(true);
+      capture("reply release interest opened", { source: releaseSource }, "rhenlink");
+    }
+  }, [releaseSource]);
 
   async function handleCreate(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -180,9 +191,10 @@ export function Rhenlink() {
       const next = await updateMemberMetadata({
         reply_release_updates: enable,
         reply_release_updates_at: enable ? new Date().toISOString() : null,
-        reply_release_updates_source: enable ? "reply-release-flow" : null,
+        reply_release_updates_source: enable ? releaseSource : null,
       });
       setSession(next);
+      capture(enable ? "reply release updates enabled" : "reply release updates disabled", { source: releaseSource }, "rhenlink");
       if (enable) {
         try { localStorage.removeItem(replyReleaseIntentKey); } catch { /* local persistence is optional */ }
         setReleaseIntent(false);
