@@ -32,6 +32,23 @@ jobs:
       - name: Production build
         run: npm run build
 
+      - name: Enforce launch asset budgets
+        shell: bash
+        run: |
+          ENTRY_JS=$(grep -oE '/assets/[^" ]+\.js' dist/index.html | head -n 1 | sed 's#^/#dist/#')
+          ENTRY_CSS=$(grep -oE '/assets/[^" ]+\.css' dist/index.html | head -n 1 | sed 's#^/#dist/#')
+
+          test -f "$ENTRY_JS"
+          test -f "$ENTRY_CSS"
+
+          JS_BYTES=$(wc -c < "$ENTRY_JS")
+          CSS_BYTES=$(wc -c < "$ENTRY_CSS")
+          echo "Entry JS: ${JS_BYTES} bytes"
+          echo "Entry CSS: ${CSS_BYTES} bytes"
+
+          test "$JS_BYTES" -le 450000 || { echo "Entry JS exceeds 450 KB launch budget"; exit 1; }
+          test "$CSS_BYTES" -le 225000 || { echo "Entry CSS exceeds 225 KB launch budget"; exit 1; }
+
       - name: Smoke built public routes
         shell: bash
         run: |
