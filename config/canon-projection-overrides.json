@@ -1,0 +1,124 @@
+{
+  "records": {
+    "/atlas/ovara/merva": {
+      "slug": "merva",
+      "visualKey": "merva",
+      "facts": [["World", "Ovara"], ["State", "Ordan Republic"], ["Region", "Kesra Basin"], ["Population", "~7.8 million"]]
+    },
+    "/universe/people/nali-solan": {
+      "slug": "nali-solan",
+      "visualKey": "person",
+      "facts": [["Age", "29"], ["Home", "Merva"], ["World", "Ovara"], ["Field", "Precision metrology"]]
+    },
+    "/atlas/neral": {
+      "slug": "neral",
+      "visualKey": "neral",
+      "facts": [["System", "Irsen"], ["Status", "Sovereign inhabited world"], ["Connection", "Mature Road/Skygate network"]]
+    },
+    "/atlas/ovara": {
+      "slug": "ovara",
+      "visualKey": "ovara",
+      "facts": [["System", "Helor"], ["Sovereign states", "29"], ["Opening lens", "Kesra Basin / Merva"]]
+    },
+    "/universe/people/rena-sol": {
+      "slug": "rena-sol",
+      "visualKey": "person",
+      "facts": [["Age", "118"], ["Home", "Greater Serein"], ["Field", "Human Systems Science"]]
+    },
+    "/universe/connected-worlds": {
+      "slug": "connected-worlds",
+      "visualKey": "connected",
+      "facts": [["Worlds", "Veyra / Neral"], ["Infrastructure", "Road + inhabited Skygates"], ["Political rule", "Separate sovereignty"]]
+    },
+    "/universe/science/grainit": {
+      "slug": "grainit",
+      "visualKey": "grainit"
+    },
+    "/universe/technology/iren": {
+      "slug": "iren",
+      "visualKey": "iren"
+    },
+    "/universe/people/lio-sol": {
+      "slug": "lio-sol",
+      "visualKey": "person",
+      "facts": [["Age", "76"], ["Home", "Greater Serein"], ["Work", "Garden conservation"]]
+    },
+    "/atlas/serein-skygate": {
+      "slug": "serein-skygate",
+      "visualKey": "skygate"
+    },
+    "/universe/people/talin-vel": {
+      "slug": "talin-vel",
+      "visualKey": "person",
+      "facts": [["Age", "30"], ["Identity", "Gateborn"], ["Field", "Boundary metrology"]]
+    },
+    "/universe/institutions/continuance": {
+      "slug": "continuance-institute",
+      "visualKey": "continuance"
+    },
+    "/universe/technology/open-road": {
+      "slug": "open-road",
+      "visualKey": "road"
+    },
+    "/universe/technology/skygate": {
+      "slug": "skygate-megastructure",
+      "visualKey": "skygate"
+    },
+    "/archive/events/d3-17": {
+      "slug": "d3-17",
+      "visualKey": "event"
+    },
+    "/atlas/neral-skygate": {
+      "slug": "neral-skygate",
+      "visualKey": "skygate"
+    },
+    "/archive/deep-three": {
+      "slug": "deep-three",
+      "visualKey": "deep-three"
+    },
+    "/atlas/ione": {
+      "slug": "ione",
+      "visualKey": "ione",
+      "facts": [["Radius", "~1,900 km"], ["Gravity", "~0.18 Vg"], ["Rotation", "Tidally locked"], ["Atmosphere", "Negligible"]]
+    },
+    "/atlas/veyra/cape-serein": {
+      "slug": "cape-serein",
+      "visualKey": "cape"
+    },
+    "/atlas/veyra/greater-serein": {
+      "slug": "greater-serein",
+      "visualKey": "serein"
+    },
+    "/atlas/veyra": {
+      "slug": "veyra",
+      "visualKey": "veyra",
+      "facts": [["Radius", "~6,510 km"], ["Ocean coverage", "~68%"], ["Day", "24 standard hours"], ["Year", "365.242 days"], ["Moon", "Ione"]]
+    },
+    "/universe/characters/elias-venn": {
+      "slug": "elias-venn",
+      "visualKey": "person"
+    }
+  },
+  "relations": [
+    {"id":"merva-ovara","fromSlug":"merva","toSlug":"ovara","relation":"located-in"},
+    {"id":"nali-merva","fromSlug":"nali-solan","toSlug":"merva","relation":"located-in"},
+    {"id":"nali-ovara","fromSlug":"nali-solan","toSlug":"ovara","relation":"located-in"},
+    {"id":"rena-serein","fromSlug":"rena-sol","toSlug":"greater-serein","relation":"located-in"},
+    {"id":"lio-serein","fromSlug":"lio-sol","toSlug":"greater-serein","relation":"located-in"},
+    {"id":"cape-serein-region","fromSlug":"cape-serein","toSlug":"greater-serein","relation":"located-in"},
+    {"id":"cape-continuance","fromSlug":"continuance-institute","toSlug":"cape-serein","relation":"located-in"},
+    {"id":"serein-gate-veyra","fromSlug":"serein-skygate","toSlug":"veyra","relation":"located-in"},
+    {"id":"serein-gate-region","fromSlug":"serein-skygate","toSlug":"greater-serein","relation":"connected-to"},
+    {"id":"neral-gate-world","fromSlug":"neral-skygate","toSlug":"neral","relation":"located-in"},
+    {"id":"open-road-serein","fromSlug":"open-road","toSlug":"serein-skygate","relation":"operates-through"},
+    {"id":"open-road-neral","fromSlug":"open-road","toSlug":"neral-skygate","relation":"operates-through"},
+    {"id":"connected-road","fromSlug":"connected-worlds","toSlug":"open-road","relation":"connected-to"},
+    {"id":"connected-veyra","fromSlug":"connected-worlds","toSlug":"veyra","relation":"connected-to"},
+    {"id":"connected-neral","fromSlug":"connected-worlds","toSlug":"neral","relation":"connected-to"},
+    {"id":"skygate-serein","fromSlug":"skygate-megastructure","toSlug":"serein-skygate","relation":"contains"},
+    {"id":"skygate-neral","fromSlug":"skygate-megastructure","toSlug":"neral-skygate","relation":"contains"},
+    {"id":"ione-veyra","fromSlug":"ione","toSlug":"veyra","relation":"located-in"},
+    {"id":"deep-three-ione","fromSlug":"deep-three","toSlug":"ione","relation":"located-in"},
+    {"id":"greater-serein-veyra","fromSlug":"greater-serein","toSlug":"veyra","relation":"located-in"}
+  ]
+}
