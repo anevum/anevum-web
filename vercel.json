@@ -1,10 +1,62 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
+  "rewrites": [
+    {
+      "source": "/the-book",
+      "destination": "/__meta/the-book.html",
+      "has": [{ "type": "host", "value": "anevum.com" }]
+    },
+    {
+      "source": "/the-story",
+      "destination": "/__meta/the-story.html",
+      "has": [{ "type": "host", "value": "anevum.com" }]
+    },
+    {
+      "source": "/store",
+      "destination": "/__meta/store.html",
+      "has": [{ "type": "host", "value": "anevum.com" }]
+    },
+    {
+      "source": "/rhenlink",
+      "destination": "/__meta/rhenlink.html",
+      "has": [{ "type": "host", "value": "anevum.com" }]
+    },
+    {
+      "source": "/about",
+      "destination": "/__meta/about.html",
+      "has": [{ "type": "host", "value": "anevum.com" }]
+    },
+    {
+      "source": "/privacy",
+      "destination": "/__meta/privacy.html",
+      "has": [{ "type": "host", "value": "anevum.com" }]
+    },
+    {
+      "source": "/terms",
+      "destination": "/__meta/terms.html",
+      "has": [{ "type": "host", "value": "anevum.com" }]
+    },
+    {
+      "source": "/contact",
+      "destination": "/__meta/contact.html",
+      "has": [{ "type": "host", "value": "anevum.com" }]
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ],
   "headers": [
     {
       "source": "/assets/(.*)",
       "headers": [
         { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
+      ]
+    },
+    {
+      "source": "/__meta/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" }
       ]
     },
     {
