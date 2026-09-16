@@ -15,7 +15,10 @@ const targets: TerminalTarget[] = [
   { command: "reply", label: "REPLY", description: "Return to the launch homepage.", href: "/#top" },
   { command: "story", label: "THE STORY", description: "Open the spoiler-light story doorway.", href: "/the-story" },
   { command: "book", label: "THE BOOK", description: "Open the publication page for REPLY.", href: "/the-book" },
+  { command: "store", label: "STORE", description: "Open the official REPLY availability surface.", href: "/store" },
   { command: "rhenlink", label: "RHENLINK", description: "Open or establish your persistent ANEVUM identity.", href: "/rhenlink" },
+  { command: "wiki", label: "WIKI", description: "Browse records cleared by the live ANEVUM Wiki release gate.", href: "https://wiki.anevum.com/" },
+  { command: "lattice", label: "LATTICE", description: "Enter the relational map of released ANEVUM records.", href: "https://lattice.anevum.com/" },
 ];
 
 function emptyProgress(): MemberProgress {
@@ -142,11 +145,19 @@ export function LaunchTerminal() {
       return;
     }
     if (command === "buy" || command === "edition" || command === "availability") {
-      navigate("/the-book");
+      navigate("/store");
       return;
     }
     if (command === "profile" || command === "identity" || command === "signin" || command === "login") {
       navigate("/rhenlink");
+      return;
+    }
+    if (command === "records" || command === "canon") {
+      navigate("https://wiki.anevum.com/");
+      return;
+    }
+    if (command === "map" || command === "world") {
+      navigate("https://lattice.anevum.com/");
       return;
     }
     const match = targets.find((target) => target.command === command || target.label.toLowerCase() === command);
