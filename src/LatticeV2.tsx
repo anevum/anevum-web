@@ -41,6 +41,18 @@ function useMemberState() {
   return { session, progress };
 }
 
+const coreSlugs = [
+  "connected-worlds",
+  "open-road",
+  "serein-skygate",
+  "veyra",
+  "neral-skygate",
+  "neral",
+  "ovara",
+  "merva",
+  "nali-solan",
+] as const;
+
 const nodePositions = [
   [50, 49],
   [50, 18],
@@ -62,6 +74,7 @@ export function Lattice() {
   const identity = displayIdentity(session);
   const [pages, setPages] = useState<WikiPage[]>([]);
   const [links, setLinks] = useState<WikiLink[]>([]);
+  const [releasedCount, setReleasedCount] = useState(0);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [backendReady, setBackendReady] = useState(true);
@@ -71,8 +84,10 @@ export function Lattice() {
     Promise.all([loadPublishedWikiPages(), loadPublishedWikiLinks()])
       .then(([nextPages, nextLinks]) => {
         if (cancelled) return;
-        const visible = nextPages.slice(0, 9);
+        const pageBySlug = new Map(nextPages.map((page) => [page.slug, page]));
+        const visible = coreSlugs.map((slug) => pageBySlug.get(slug)).filter((page): page is WikiPage => Boolean(page));
         const visibleIds = new Set(visible.map((page) => page.id));
+        setReleasedCount(nextPages.length);
         setPages(visible);
         setLinks(nextLinks.filter((link) => visibleIds.has(link.from_page_id) && visibleIds.has(link.to_page_id)));
         setSelectedId((current) => current && visibleIds.has(current) ? current : visible[0]?.id || null);
@@ -82,6 +97,7 @@ export function Lattice() {
         if (cancelled) return;
         if (error instanceof WikiBackendUnavailable) setBackendReady(false);
         else console.error(error);
+        setReleasedCount(0);
         setPages([]);
         setLinks([]);
       })
@@ -99,7 +115,7 @@ export function Lattice() {
         <div>
           <p className="eyebrow">LATTICE.ANEVUM</p>
           <h1>The universe as a place.</h1>
-          <p>Lattice is a relational view of the live ANEVUM Wiki. Every visible node and connection resolves from Wiki-authorized records; Working and Superseded material never becomes current product truth here.</p>
+          <p>Lattice is a relational view of the live ANEVUM Wiki. This core map uses Wiki-cleared records and publication-safe relationships only; the full released set remains available in WIKI.ANEVUM.</p>
           <div className="actions">
             {session ? <Button href="/rhenlink">OPEN @{identity.handle || "RHENLINK"}</Button> : <Button href="/rhenlink">CLAIM YOUR RHENLINK</Button>}
             <Button href="https://wiki.anevum.com/" quiet>OPEN THE CANONICAL RECORD</Button>
@@ -155,7 +171,7 @@ export function Lattice() {
             <div className="lattice-empty-core loading"><Grid3X3 size={25} strokeWidth={1.15} /><span>RESOLVING WIKI GRAPH</span><strong>Loading canonical records and relations.</strong></div>
           ) : null}
 
-          <div className="graph-legend"><Grid3X3 size={15} /><span>WIKI-AUTHORIZED NODES / {pages.length}</span></div>
+          <div className="graph-legend"><Grid3X3 size={15} /><span>CORE MAP / {pages.length} OF {releasedCount} RELEASED</span></div>
           <div className="lattice-link-count">RELATIONS / {links.length}</div>
           <div className="graph-caption">RELATION IS THE NAVIGATION.</div>
         </div>
