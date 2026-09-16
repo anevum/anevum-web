@@ -1,5 +1,6 @@
 import { analyticsConfigured } from "./analytics";
 import { CANON_PROJECTION_SYNC } from "./canonProjection";
+import { replyLaunchConfigured } from "./launchConfig";
 import { memberBackend } from "./memberClient";
 
 export type LaunchReadinessState = "ready" | "pending" | "optional" | "stale";
@@ -13,25 +14,6 @@ export type LaunchReadinessItem = {
   actionHref?: string;
   actionLabel?: string;
 };
-
-function configured(value: unknown) {
-  return Boolean(String(value || "").trim());
-}
-
-const buyUrl = String(import.meta.env.VITE_REPLY_BUY_URL || "").trim();
-const hardcoverUrl = String(import.meta.env.VITE_REPLY_HARDCOVER_URL || "").trim();
-const paperbackUrl = String(import.meta.env.VITE_REPLY_PAPERBACK_URL || "").trim();
-const ebookUrl = String(import.meta.env.VITE_REPLY_EBOOK_URL || "").trim();
-const releaseLabel = String(import.meta.env.VITE_REPLY_RELEASE_LABEL || "").trim();
-const coverUrl = String(import.meta.env.VITE_REPLY_COVER_URL || "").trim();
-const sampleUrl = String(import.meta.env.VITE_REPLY_SAMPLE_URL || "").trim();
-const heroImageUrl = String(import.meta.env.VITE_REPLY_HERO_IMAGE_URL || "").trim();
-
-export const replyEditionLinksConfigured = [buyUrl, hardcoverUrl, paperbackUrl, ebookUrl].some(configured);
-export const replyReleaseLabelConfigured = configured(releaseLabel);
-export const replyCoverConfigured = configured(coverUrl);
-export const replySampleConfigured = configured(sampleUrl);
-export const replyHeroConfigured = configured(heroImageUrl);
 
 function projectionAgeDays() {
   const timestamp = Date.parse(`${CANON_PROJECTION_SYNC.syncedAt}T00:00:00Z`);
@@ -67,20 +49,29 @@ export function getLaunchReadiness(): LaunchReadinessItem[] {
     {
       id: "purchase-links",
       label: "REPLY purchase links",
-      state: replyEditionLinksConfigured ? "ready" : "pending",
+      state: replyLaunchConfigured.purchase ? "ready" : "pending",
       critical: true,
-      detail: replyEditionLinksConfigured ? "At least one live edition/purchase destination is configured." : "Pre-release mode is active; no edition destination is configured yet.",
+      detail: replyLaunchConfigured.purchase
+        ? (replyLaunchConfigured.editionSpecific ? "Edition-specific purchase destinations are configured." : "A general live purchase destination is configured without inventing edition-specific links.")
+        : "Pre-release mode is active; no purchase destination is configured yet.",
       actionHref: "https://anevum.com/store",
       actionLabel: "OPEN STORE",
     },
     {
       id: "official-cover",
       label: "Official REPLY cover",
-      state: replyCoverConfigured ? "ready" : "pending",
+      state: replyLaunchConfigured.cover ? "ready" : "pending",
       critical: true,
-      detail: replyCoverConfigured ? "The production book surface is using a configured cover asset." : "The book surface is still using its neutral fallback presentation instead of the final cover.",
+      detail: replyLaunchConfigured.cover ? "The production book surface is using a configured cover asset." : "The book surface is still using its neutral fallback presentation instead of the final cover.",
       actionHref: "https://anevum.com/the-book",
       actionLabel: "OPEN BOOK",
+    },
+    {
+      id: "ownership-verification",
+      label: "Verified ownership XP",
+      state: "pending",
+      critical: true,
+      detail: "No authenticated server-side purchase/code verifier is implemented yet. Purchase XP remains unavailable rather than allowing self-claimed ownership.",
     },
     {
       id: "analytics",
@@ -92,23 +83,23 @@ export function getLaunchReadiness(): LaunchReadinessItem[] {
     {
       id: "release-label",
       label: "Release messaging",
-      state: replyReleaseLabelConfigured ? "ready" : "optional",
+      state: replyLaunchConfigured.releaseLabel ? "ready" : "optional",
       critical: false,
-      detail: replyReleaseLabelConfigured ? "A public release label is configured." : "No release date/label is being published; the site correctly stays in generic pre-release mode.",
+      detail: replyLaunchConfigured.releaseLabel ? "A public release label is configured." : "No release date/label is being published; the site correctly stays in generic pre-release mode.",
     },
     {
       id: "sample",
       label: "Book sample",
-      state: replySampleConfigured ? "ready" : "optional",
+      state: replyLaunchConfigured.sample ? "ready" : "optional",
       critical: false,
-      detail: replySampleConfigured ? "A public sample/excerpt destination is configured." : "No sample is configured yet; this does not block purchase readiness.",
+      detail: replyLaunchConfigured.sample ? "A public sample/excerpt destination is configured." : "No sample is configured yet; this does not block purchase readiness.",
     },
     {
       id: "hero-art",
       label: "Book hero art",
-      state: replyHeroConfigured ? "ready" : "optional",
+      state: replyLaunchConfigured.hero ? "ready" : "optional",
       critical: false,
-      detail: replyHeroConfigured ? "A production hero image is configured." : "The book surface is using the neutral atmospheric fallback; no unapproved lore art is being substituted.",
+      detail: replyLaunchConfigured.hero ? "A production hero image is configured." : "The book surface is using the neutral atmospheric fallback; no unapproved lore art is being substituted.",
     },
   ];
 }
