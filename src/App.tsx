@@ -9,6 +9,7 @@ import { CommandHome } from "./CommandPage";
 import { CanonicalWikiArticle, CanonicalWikiHome } from "./CanonicalWiki";
 import { WikiAdminPage, WikiContributionPage, WikiSavedPage } from "./ModeratedWiki";
 import { AchievementLayer } from "./MemberChrome";
+import { capturePageView, type AnalyticsSurface } from "./analytics";
 import { getCanonProjectionRecord } from "./canonProjection";
 import { trackMemberRoute } from "./memberState";
 import { UnifiedSystemShell } from "./SystemShell";
@@ -183,6 +184,24 @@ export default function App() {
     || (hostname === WIKI_HOST && wikiRoute)
     || (hostname === LATTICE_HOST && latticeRoute)
   );
+  const analyticsSurface: AnalyticsSurface = wikiRoute
+    ? "wiki"
+    : latticeRoute
+      ? "lattice"
+      : rhenlinkRoute
+        ? "rhenlink"
+        : bookRoute
+          ? "book"
+          : storyRoute
+            ? "story"
+            : storeRoute
+              ? "store"
+              : "reply";
+  const trackableAnalyticsSurface = !bridgeRoute && !commandRoute && !notFoundRoute && !wikiPrivatePath && (
+    (hostname === ROOT_HOST && knownRootPublicRoute)
+    || (hostname === WIKI_HOST && wikiRoute)
+    || (hostname === LATTICE_HOST && latticeRoute)
+  );
 
   useEffect(() => {
     const rootMeta = rootPublicMeta(routePath, knownRootPublicRoute);
@@ -273,6 +292,11 @@ export default function App() {
       setStructuredData(null);
     }
   }, [routePath, hostname, bridgeRoute, commandRoute, wikiRoute, latticeRoute, rhenlinkRoute, knownRootPublicRoute, notFoundRoute, wikiPath, wikiPrivatePath, wikiRecord]);
+
+  useEffect(() => {
+    if (!trackableAnalyticsSurface) return;
+    capturePageView(analyticsSurface, routePath);
+  }, [analyticsSurface, routePath, trackableAnalyticsSurface]);
 
   useEffect(() => {
     if (!trackableMemberSurface) return;
