@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
-import { ArrowRight, Award, Bookmark, Edit3, Layers3, LockKeyhole, LogIn, LogOut, Save, Trophy, X } from "lucide-react";
+import { ArrowRight, Award, Bell, Bookmark, CircleUserRound, Edit3, Layers3, LockKeyhole, LogIn, LogOut, Save, Trophy, X } from "lucide-react";
 import { BrandArt } from "./BrandArt";
 import { LaunchTerminal } from "./LaunchTerminal";
 import { Button } from "./ui";
@@ -17,8 +17,20 @@ import {
 import { CURRENT_ACHIEVEMENTS, loadMemberProgress, onMemberProgressChange, type MemberProgress } from "./memberState";
 import { networkLevelDetails } from "./networkProgress";
 
+const replyReleaseIntentKey = "anevum.reply.release-intent.v1";
+
 function blankProgress(): MemberProgress {
   return { version: 1, savedRecordIds: [], visitedRoutes: [], achievements: [], updatedAt: new Date(0).toISOString() };
+}
+
+function releaseIntentRequested() {
+  if (typeof window === "undefined") return false;
+  const queryIntent = new URLSearchParams(window.location.search).get("intent") === "reply-release";
+  if (queryIntent) {
+    try { localStorage.setItem(replyReleaseIntentKey, "1"); } catch { /* local persistence is optional */ }
+    return true;
+  }
+  try { return localStorage.getItem(replyReleaseIntentKey) === "1"; } catch { return false; }
 }
 
 function useRhenlinkState() {
@@ -57,16 +69,6 @@ function useRhenlinkState() {
   return { session, setSession, progress };
 }
 
-function RhenMark() {
-  return (
-    <svg className="rhen-mark" viewBox="0 0 96 96" aria-hidden="true">
-      <path d="M20 16H49L64 31V65L49 80H20L35 65V31Z" fill="none" stroke="currentColor" strokeWidth="5" strokeLinejoin="round" />
-      <path d="M38 31H76L60 48L76 65H38" fill="none" stroke="currentColor" strokeWidth="3" strokeLinejoin="round" />
-      <circle cx="60" cy="48" r="5" fill="currentColor" />
-    </svg>
-  );
-}
-
 function profileCopy(session: MemberSession | null) {
   const metadata = session?.user.user_metadata || {};
   return {
@@ -82,11 +84,17 @@ export function Rhenlink() {
   const [status, setStatus] = useState("");
   const [busy, setBusy] = useState(false);
   const [editing, setEditing] = useState(false);
+  const [releaseIntent, setReleaseIntent] = useState(() => releaseIntentRequested());
   const identity = displayIdentity(session);
   const profile = profileCopy(session);
   const level = networkLevelDetails(progress);
+  const releaseUpdatesEnabled = session?.user.user_metadata?.reply_release_updates === true;
   const unlocked = useMemo(() => new Map(progress.achievements.map((achievement) => [achievement.id, achievement])), [progress.achievements]);
   const currentUnlockedCount = useMemo(() => CURRENT_ACHIEVEMENTS.filter((achievement) => unlocked.has(achievement.id)).length, [unlocked]);
+
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get("intent") === "reply-release") setReleaseIntent(true);
+  }, []);
 
   async function handleCreate(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -106,9 +114,9 @@ export function Rhenlink() {
       const result = await signUp({ email, password, handle, displayName });
       if (result.status === "signed-in") {
         setSession(result.session);
-        setStatus("RHENLINK established. Your member session is active.");
+        setStatus(releaseIntent ? "RHENLINK established. Choose below whether to attach REPLY release updates." : "RHENLINK established. Your member session is active.");
       } else {
-        setStatus("Account created. Confirm your email, then return here to sign in.");
+        setStatus(releaseIntent ? "Account created. Confirm your email, return to RHENLINK, then choose whether to attach REPLY release updates." : "Account created. Confirm your email, then return here to sign in.");
       }
     } catch (error) {
       setStatus(error instanceof Error ? error.message : "Could not create RHENLINK.");
@@ -125,7 +133,7 @@ export function Rhenlink() {
     try {
       const next = await signIn(String(form.get("email") || ""), String(form.get("password") || ""));
       setSession(next);
-      setStatus("RHENLINK resolved. Session restored.");
+      setStatus(releaseIntent ? "RHENLINK resolved. Choose below whether to attach REPLY release updates." : "RHENLINK resolved. Session restored.");
     } catch (error) {
       setStatus(error instanceof Error ? error.message : "Could not sign in.");
     } finally {
@@ -163,6 +171,32 @@ export function Rhenlink() {
     }
   }
 
+  async function toggleReplyReleaseUpdates() {
+    if (!session) return;
+    setBusy(true);
+    setStatus("");
+    const enable = !releaseUpdatesEnabled;
+    try {
+      const next = await updateMemberMetadata({
+        reply_release_updates: enable,
+        reply_release_updates_at: enable ? new Date().toISOString() : null,
+        reply_release_updates_source: enable ? "reply-release-flow" : null,
+      });
+      setSession(next);
+      if (enable) {
+        try { localStorage.removeItem(replyReleaseIntentKey); } catch { /* local persistence is optional */ }
+        setReleaseIntent(false);
+        setStatus("REPLY release-update preference saved to RHENLINK.");
+      } else {
+        setStatus("REPLY release-update preference removed from RHENLINK.");
+      }
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : "Could not update REPLY release preference.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function handleSignOut() {
     setBusy(true);
     await signOut();
@@ -178,9 +212,9 @@ export function Rhenlink() {
       <section className="rhenlink-hero production-rhenlink-hero">
         <BrandArt variant="identity" />
         <div>
-          <div className="rhen-brand-lockup"><RhenMark /><span><strong>RHENLINK</strong><small>YOUR PERSISTENT IDENTITY</small></span></div>
-          <h1>{session ? "Your place in ANEVUM." : "One identity.\nMany worlds."}</h1>
-          <p>{session ? "Your profile, Network Level, XP, achievements, and saved progress travel together with your RHENLINK." : "Create one persistent ANEVUM identity for your progress and achievements as the universe expands."}</p>
+          <div className="rhen-brand-lockup"><CircleUserRound size={42} strokeWidth={1.1} aria-hidden="true" /><span><strong>RHENLINK</strong><small>YOUR PERSISTENT IDENTITY</small></span></div>
+          <h1>{session ? "Your place in ANEVUM." : releaseIntent ? "Keep REPLY connected." : "One identity.\nMany worlds."}</h1>
+          <p>{session ? "Your profile, Network Level, XP, achievements, and saved progress travel together with your RHENLINK." : releaseIntent ? "Create or resolve your RHENLINK, then explicitly choose whether you want REPLY release updates attached to this identity." : "Create one persistent ANEVUM identity for your progress and achievements as the universe expands."}</p>
           <div className="actions"><Button href="/" quiet>RETURN TO REPLY</Button></div>
         </div>
       </section>
@@ -224,6 +258,20 @@ export function Rhenlink() {
               </form>
             ) : null}
 
+            {releaseIntent || releaseUpdatesEnabled ? (
+              <section className={`rhenlink-release-interest ${releaseUpdatesEnabled ? "enabled" : "pending"}`} aria-labelledby="reply-release-interest-title">
+                <Bell size={22} strokeWidth={1.25} aria-hidden="true" />
+                <div>
+                  <span className="meta">REPLY / RELEASE UPDATES</span>
+                  <h3 id="reply-release-interest-title">{releaseUpdatesEnabled ? "Release updates are attached to this RHENLINK." : "Keep REPLY attached to this RHENLINK."}</h3>
+                  <p>{releaseUpdatesEnabled ? "Your preference is saved on this identity. Release notices can use the email attached to your RHENLINK when notification delivery is active." : "This does not happen automatically. Choose below if you want your RHENLINK marked for REPLY release notices."}</p>
+                </div>
+                <button type="button" className="button native" onClick={toggleReplyReleaseUpdates} disabled={busy}>{releaseUpdatesEnabled ? "REMOVE RELEASE UPDATES" : "ADD RELEASE UPDATES"}</button>
+              </section>
+            ) : null}
+
+            {status ? <p className="rhenlink-inline-status" role="status">{status}</p> : null}
+
             <div className="identity-modules rhenlink-stat-grid">
               <div><Bookmark size={16} /><span>SAVED</span><strong>{progress.savedRecordIds.length}</strong><small>items connected to your identity</small></div>
               <div><Layers3 size={16} /><span>NETWORK LEVEL</span><strong>{String(level.level).padStart(2, "0")}</strong><small>{level.rankMark} · participation rank</small></div>
@@ -263,7 +311,7 @@ export function Rhenlink() {
 
             <div className="rhenlink-destination-grid">
               <Button href="/the-book">OPEN THE BOOK</Button>
-              <Button href="/the-story" quiet>OPEN THE STORY</Button>
+              <Button href="/store" quiet>OPEN THE STORE</Button>
             </div>
 
             <div className="rhenlink-manifesto-card">
@@ -274,10 +322,10 @@ export function Rhenlink() {
         ) : (
           <div className="auth-layout production-auth-layout">
             <div className="auth-intro">
-              <span className="meta">ACCOUNT → RHENLINK → ANEVUM</span>
-              <h2>Claim your place in the network.</h2>
-              <p>RHENLINK is ANEVUM’s persistent member identity. Create one profile for your progress and achievements as new parts of ANEVUM become available.</p>
-              <div className="rhen-flow"><span>01</span><strong>CREATE</strong><i /><span>02</span><strong>CONFIRM</strong><i /><span>03</span><strong>RETURN</strong></div>
+              <span className="meta">{releaseIntent ? "REPLY → RHENLINK → RELEASE UPDATES" : "ACCOUNT → RHENLINK → ANEVUM"}</span>
+              <h2>{releaseIntent ? "Keep REPLY connected to your identity." : "Claim your place in the network."}</h2>
+              <p>{releaseIntent ? "Create or sign in to RHENLINK first. Release updates are opt-in: once your identity is resolved, you can explicitly add or remove the REPLY release preference." : "RHENLINK is ANEVUM’s persistent member identity. Create one profile for your progress and achievements as new parts of ANEVUM become available."}</p>
+              <div className="rhen-flow"><span>01</span><strong>{releaseIntent ? "RESOLVE" : "CREATE"}</strong><i /><span>02</span><strong>{releaseIntent ? "CHOOSE" : "CONFIRM"}</strong><i /><span>03</span><strong>{releaseIntent ? "CONNECT" : "RETURN"}</strong></div>
               <div className={`backend-state ${memberBackend.configured ? "ready" : "blocked"}`}><i />{memberBackend.configured ? "RHENLINK READY" : "RHENLINK TEMPORARILY UNAVAILABLE"}</div>
             </div>
 
