@@ -68,6 +68,13 @@ jobs:
           grep -Fq 'id="anevum-structured-data"' dist/index.html
           grep -Fq 'id="anevum-structured-data"' dist/__meta/the-book.html
 
+      - name: Validate Cloudflare production bundle
+        shell: bash
+        run: |
+          rm -rf .wrangler-dry-run
+          npx wrangler deploy --dry-run --outdir .wrangler-dry-run
+          test -d .wrangler-dry-run
+
       - name: Smoke built public routes
         shell: bash
         run: |
