@@ -27,6 +27,7 @@ const localPrefix = "anevum.rhenlink.member-state.v1";
 const changeEvent = "anevum-member-progress";
 const achievementEvent = "anevum-achievement-unlocked";
 const xpPerLevel = 150;
+const rankRoman = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X"] as const;
 
 export const ACHIEVEMENTS: AchievementDefinition[] = [
   { id: "signal-acquired", title: "SIGNAL ACQUIRED", description: "Establish a RHENLINK identity inside ANEVUM.", xp: 50, tier: "SIGNAL", availableNow: true },
@@ -222,20 +223,28 @@ export function memberXP(progress: MemberProgress) {
   return ACHIEVEMENTS.reduce((total, item) => total + (unlocked.has(item.id) ? item.xp : 0), 0);
 }
 
+function rankMarkForLevel(level: number) {
+  if (level <= 0) return "Ø";
+  const clamped = Math.max(1, Math.min(100, level));
+  const tier = rankRoman[Math.ceil(clamped / 10) - 1] || "X";
+  const index = ((clamped - 1) % 10) + 1;
+  return `${tier}·${String(index).padStart(2, "0")}`;
+}
+
 export function memberLevel(progress: MemberProgress) {
-  return Math.max(1, Math.floor(memberXP(progress) / xpPerLevel) + 1);
+  return Math.min(100, Math.floor(memberXP(progress) / xpPerLevel));
 }
 
 export function memberLevelDetails(progress: MemberProgress) {
   const xp = memberXP(progress);
-  const level = Math.max(1, Math.floor(xp / xpPerLevel) + 1);
-  const levelBase = (level - 1) * xpPerLevel;
-  const percent = Math.min(100, Math.max(0, ((xp - levelBase) / xpPerLevel) * 100));
+  const level = Math.min(100, Math.floor(xp / xpPerLevel));
+  const levelBase = level * xpPerLevel;
+  const percent = level >= 100 ? 100 : Math.min(100, Math.max(0, ((xp - levelBase) / xpPerLevel) * 100));
   return {
     level,
     xp,
     percent,
-    rankMark: `L${String(level).padStart(2, "0")}`,
+    rankMark: rankMarkForLevel(level),
   };
 }
 
