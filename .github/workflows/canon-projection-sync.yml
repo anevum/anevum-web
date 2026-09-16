@@ -52,12 +52,12 @@ jobs:
 
       - name: Commit projection drift
         run: |
-          if git diff --quiet -- src/publicObjects.ts src/canonProjection.ts; then
+          if git diff --quiet -- src/publicObjects.ts src/canonProjection.ts public/wiki-sitemap.xml; then
             echo "Live Notion projection already matches production."
             exit 0
           fi
           git config user.name "ANEVUM Canon Sync"
           git config user.email "actions@users.noreply.github.com"
-          git add src/publicObjects.ts src/canonProjection.ts
+          git add src/publicObjects.ts src/canonProjection.ts public/wiki-sitemap.xml
           git commit -m "Sync live ANEVUM canon projection"
           git push origin HEAD:main
