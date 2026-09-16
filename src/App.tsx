@@ -6,14 +6,8 @@ import { Rhenlink } from "./RhenlinkV2";
 import { Lattice } from "./LatticeV2";
 import { AuthBridgePage, SystemSessionBridge } from "./AuthBridge";
 import { CommandHome } from "./CommandPage";
-import {
-  CommunityWikiHeader,
-  ModeratedWikiArticle,
-  ModeratedWikiHome,
-  WikiAdminPage,
-  WikiContributionPage,
-  WikiSavedPage,
-} from "./ModeratedWiki";
+import { CanonicalWikiArticle, CanonicalWikiHome } from "./CanonicalWiki";
+import { WikiAdminPage, WikiContributionPage, WikiSavedPage } from "./ModeratedWiki";
 import { AchievementLayer } from "./MemberChrome";
 import { trackMemberRoute } from "./memberState";
 import { UnifiedSystemShell } from "./SystemShell";
@@ -111,7 +105,7 @@ function wikiSurfacePath(hostname: string, routePath: string) {
 }
 
 function wikiContent(pathname: string): ReactNode {
-  if (pathname === "/") return <ModeratedWikiHome />;
+  if (pathname === "/") return <CanonicalWikiHome />;
   if (pathname === "/new") return <WikiContributionPage />;
   if (pathname === "/saved") return <WikiSavedPage />;
   if (pathname === "/admin") return <WikiAdminPage />;
@@ -121,7 +115,7 @@ function wikiContent(pathname: string): ReactNode {
     const slug = normalized.slice(0, -5).replace(/\/$/, "");
     return <WikiContributionPage editSlug={decodeURIComponent(slug)} />;
   }
-  return <ModeratedWikiArticle slug={decodeURIComponent(normalized)} />;
+  return <CanonicalWikiArticle slug={decodeURIComponent(normalized)} />;
 }
 
 export default function App() {
@@ -153,7 +147,7 @@ export default function App() {
       : wikiRoute
         ? {
             title: wikiPath === "/" ? "ANEVUM Wiki" : "ANEVUM Wiki Record",
-            description: "The canonical ANEVUM knowledge surface and record-state authority.",
+            description: "The publication-safe surface of the live ANEVUM Wiki and its canonical lifecycle state.",
             canonical: `https://wiki.anevum.com${wikiPath === "/" ? "/" : wikiPath}`,
             ogTitle: "ANEVUM Wiki",
             ogType: "website",
@@ -241,7 +235,6 @@ export default function App() {
       <div className="unified-runtime-shell">
         <SystemSessionBridge hostname={hostname} />
         <UnifiedSystemShell surface="wiki" pathname={wikiPath} hostname={hostname}>
-          <CommunityWikiHeader />
           {wikiContent(wikiPath)}
         </UnifiedSystemShell>
       </div>
