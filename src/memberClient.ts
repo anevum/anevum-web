@@ -20,6 +20,11 @@ export type SharedIdentity = {
   displayName: string;
 };
 
+export type AuthRedirectResult =
+  | { status: "signed-in"; session: MemberSession }
+  | { status: "error"; message: string }
+  | null;
+
 const defaultProjectUrl = "https://mfntzxheldzdvlokyntk.supabase.co";
 const defaultPublishableKey = "sb_publishable_XfkgeXau2-6XOPzoXF-Nnw_FSnx0Sae";
 const projectUrl = (import.meta.env.VITE_SUPABASE_URL || defaultProjectUrl).replace(/\/$/, "");
@@ -201,6 +206,42 @@ export async function signOut() {
     await fetch(`${projectUrl}/auth/v1/logout`, { method: "POST", headers: headers(session.access_token) }).catch(() => undefined);
   }
   saveSession(null);
+}
+
+export async function consumeAuthRedirect(): Promise<AuthRedirectResult> {
+  if (typeof window === "undefined" || !window.location.hash) return null;
+  const params = new URLSearchParams(window.location.hash.slice(1));
+  const errorMessage = params.get("error_description") || params.get("error");
+  const accessToken = params.get("access_token");
+
+  if (!errorMessage && !accessToken) return null;
+
+  const cleanUrl = `${window.location.pathname}${window.location.search}`;
+  window.history.replaceState({}, document.title, cleanUrl);
+
+  if (errorMessage) return { status: "error", message: errorMessage };
+  if (!accessToken) return null;
+
+  try {
+    const user = await request<MemberUser>("/auth/v1/user", {
+      method: "GET",
+      headers: headers(accessToken),
+    });
+    const expiresValue = Number(params.get("expires_in") || 0);
+    const session: MemberSession = {
+      access_token: accessToken,
+      refresh_token: params.get("refresh_token") || undefined,
+      expires_in: Number.isFinite(expiresValue) && expiresValue > 0 ? expiresValue : undefined,
+      user,
+    };
+    saveSession(session);
+    return { status: "signed-in", session };
+  } catch (error) {
+    return {
+      status: "error",
+      message: error instanceof Error ? error.message : "RHENLINK confirmation could not be completed.",
+    };
+  }
 }
 
 export function displayIdentity(session: MemberSession | null) {
