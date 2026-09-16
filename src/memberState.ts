@@ -34,13 +34,14 @@ export const ACHIEVEMENTS: AchievementDefinition[] = [
   { id: "first-reply", title: "FIRST REPLY", description: "Enter REPLY through the public ANEVUM launch.", xp: 30, tier: "PATH", availableNow: true },
   { id: "open-the-book", title: "OPEN THE BOOK", description: "Open the publication page for REPLY.", xp: 35, tier: "DISCOVERY", availableNow: true },
   { id: "enter-the-story", title: "ENTER THE STORY", description: "Open the spoiler-light story doorway for REPLY.", xp: 40, tier: "PATH", availableNow: true },
+  { id: "publication-001", title: "PUBLICATION 001", description: "Enter the ANEVUM Store and inspect the first publication surface.", xp: 30, tier: "DISCOVERY", availableNow: true },
   { id: "launch-path", title: "COMPLETE THE SIGNAL", description: "Move through REPLY, the book, the story, and your RHENLINK identity.", xp: 95, tier: "CONSTELLATION", availableNow: true },
-  { id: "open-the-record", title: "OPEN THE RECORD", description: "Enter a released WIKI record.", xp: 35, tier: "DISCOVERY", availableNow: false },
-  { id: "enter-the-lattice", title: "ENTER THE LATTICE", description: "Enter the relational universe for the first time.", xp: 50, tier: "PATH", availableNow: false },
-  { id: "hold-the-thread", title: "HOLD THE THREAD", description: "Save your first released canon record.", xp: 40, tier: "DISCOVERY", availableNow: false },
-  { id: "constellation", title: "CONSTELLATION", description: "Build a personal constellation of five saved records.", xp: 100, tier: "CONSTELLATION", availableNow: false },
-  { id: "transcosmic-path", title: "TRANSCOSMIC PATH", description: "Move through story, knowledge and place with one RHENLINK.", xp: 120, tier: "CONSTELLATION", availableNow: false },
-  { id: "wayfinder", title: "WAYFINDER", description: "Visit ten distinct ANEVUM routes.", xp: 100, tier: "CONSTELLATION", availableNow: false },
+  { id: "open-the-record", title: "OPEN THE RECORD", description: "Enter a released WIKI record.", xp: 35, tier: "DISCOVERY", availableNow: true },
+  { id: "enter-the-lattice", title: "ENTER THE LATTICE", description: "Enter the relational universe for the first time.", xp: 50, tier: "PATH", availableNow: true },
+  { id: "hold-the-thread", title: "HOLD THE THREAD", description: "Save your first released canon record.", xp: 40, tier: "DISCOVERY", availableNow: true },
+  { id: "constellation", title: "CONSTELLATION", description: "Build a personal constellation of five saved records.", xp: 100, tier: "CONSTELLATION", availableNow: true },
+  { id: "transcosmic-path", title: "TRANSCOSMIC PATH", description: "Move through story, knowledge and place with one RHENLINK.", xp: 120, tier: "CONSTELLATION", availableNow: true },
+  { id: "wayfinder", title: "WAYFINDER", description: "Visit ten distinct ANEVUM routes.", xp: 100, tier: "CONSTELLATION", availableNow: true },
 ];
 
 export const CURRENT_ACHIEVEMENTS = ACHIEVEMENTS.filter((achievement) => achievement.availableNow !== false);
@@ -115,6 +116,7 @@ function qualifies(definition: AchievementDefinition, progress: MemberProgress) 
     case "first-reply": return routes.includes("/") || routes.includes("/stories/reply");
     case "open-the-book": return routes.includes("/the-book");
     case "enter-the-story": return routes.includes("/the-story");
+    case "publication-001": return routes.includes("/store");
     case "launch-path": return routes.includes("/") && routes.includes("/the-book") && routes.includes("/the-story") && routes.includes("/rhenlink");
     case "open-the-record": return routes.some((route) => route.startsWith("/wiki/") && route.length > 6);
     case "enter-the-lattice": return routes.includes("/lattice");
