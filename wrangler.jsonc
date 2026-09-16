@@ -1,7 +1,8 @@
 {
   "$schema": "./node_modules/wrangler/config-schema.json",
   "name": "anevum-web-nextgen",
-  "compatibility_date": "2026-09-07",
+  "main": "./worker.mjs",
+  "compatibility_date": "2026-09-16",
   "workers_dev": true,
   "preview_urls": true,
   "routes": [
@@ -12,10 +13,20 @@
     {
       "pattern": "wiki.anevum.com",
       "custom_domain": true
+    },
+    {
+      "pattern": "lattice.anevum.com",
+      "custom_domain": true
+    },
+    {
+      "pattern": "command.anevum.com",
+      "custom_domain": true
     }
   ],
   "assets": {
     "directory": "./dist",
+    "binding": "ASSETS",
+    "run_worker_first": true,
     "not_found_handling": "single-page-application"
   }
 }
