@@ -11,6 +11,7 @@ import { UnifiedSystemShell } from "./SystemShell";
 const BookPage = lazy(() => import("./LaunchPages").then((module) => ({ default: module.BookPage })));
 const StoryPage = lazy(() => import("./LaunchPages").then((module) => ({ default: module.StoryPage })));
 const StorePage = lazy(() => import("./LaunchPages").then((module) => ({ default: module.StorePage })));
+const AboutPage = lazy(() => import("./AboutPage").then((module) => ({ default: module.AboutPage })));
 const Launch404 = lazy(() => import("./Launch404").then((module) => ({ default: module.Launch404 })));
 const Rhenlink = lazy(() => import("./RhenlinkV2").then((module) => ({ default: module.Rhenlink })));
 const Lattice = lazy(() => import("./LatticeV2").then((module) => ({ default: module.Lattice })));
@@ -139,6 +140,14 @@ function rootPublicMeta(pathname: string, knownPublicRoute: boolean) {
         ogTitle: "RHENLINK — ANEVUM",
         ogType: "website",
       };
+    case "/about":
+      return {
+        title: "About ANEVUM — Stories First",
+        description: "How ANEVUM connects REPLY, the canonical Wiki, Lattice and RHENLINK while keeping finished stories at the center.",
+        canonical: "https://anevum.com/about",
+        ogTitle: "About ANEVUM",
+        ogType: "website",
+      };
     case "/privacy":
       return {
         title: "Privacy — ANEVUM",
@@ -207,12 +216,13 @@ export default function App() {
   const bookRoute = hostname === ROOT_HOST && routePath === "/the-book";
   const storyRoute = hostname === ROOT_HOST && routePath === "/the-story";
   const storeRoute = hostname === ROOT_HOST && routePath === "/store";
+  const aboutRoute = hostname === ROOT_HOST && routePath === "/about";
   const privacyRoute = hostname === ROOT_HOST && routePath === "/privacy";
   const termsRoute = hostname === ROOT_HOST && routePath === "/terms";
   const contactRoute = hostname === ROOT_HOST && routePath === "/contact";
   const legalRoute = privacyRoute || termsRoute || contactRoute;
   const rootMemberRoute = routePath === "/" || rhenlinkRoute || bookRoute || storyRoute || storeRoute;
-  const knownRootPublicRoute = rootMemberRoute || legalRoute || wikiRoute || latticeRoute;
+  const knownRootPublicRoute = rootMemberRoute || aboutRoute || legalRoute || wikiRoute || latticeRoute;
   const notFoundRoute = hostname === ROOT_HOST && !bridgeRoute && !commandRoute && !knownRootPublicRoute;
   const wikiPath = wikiSurfacePath(hostname, routePath);
   const wikiPrivatePath = wikiPath === "/new" || wikiPath === "/saved" || wikiPath === "/admin" || wikiPath.endsWith("/edit");
@@ -240,9 +250,11 @@ export default function App() {
             ? "story"
             : storeRoute
               ? "store"
-              : legalRoute
-                ? "legal"
-                : "reply";
+              : aboutRoute
+                ? "about"
+                : legalRoute
+                  ? "legal"
+                  : "reply";
   const trackableAnalyticsSurface = !bridgeRoute && !commandRoute && !notFoundRoute && !wikiPrivatePath && (
     (hostname === ROOT_HOST && knownRootPublicRoute)
     || (hostname === WIKI_HOST && wikiRoute)
@@ -287,11 +299,13 @@ export default function App() {
             ? "lattice"
             : rhenlinkRoute
               ? "rhenlink"
-              : legalRoute
-                ? "legal"
-                : notFoundRoute
-                  ? "not-found"
-                  : "reply";
+              : aboutRoute
+                ? "about"
+                : legalRoute
+                  ? "legal"
+                  : notFoundRoute
+                    ? "not-found"
+                    : "reply";
     document.documentElement.dataset.host = hostname;
     document.title = bridgeRoute ? "ANEVUM Identity Bridge" : meta.title;
 
@@ -339,7 +353,7 @@ export default function App() {
     } else {
       setStructuredData(null);
     }
-  }, [routePath, hostname, bridgeRoute, commandRoute, wikiRoute, latticeRoute, rhenlinkRoute, legalRoute, knownRootPublicRoute, notFoundRoute, wikiPath, wikiPrivatePath, wikiRecord]);
+  }, [routePath, hostname, bridgeRoute, commandRoute, wikiRoute, latticeRoute, rhenlinkRoute, aboutRoute, legalRoute, knownRootPublicRoute, notFoundRoute, wikiPath, wikiPrivatePath, wikiRecord]);
 
   useEffect(() => {
     if (!trackableAnalyticsSurface) return;
@@ -397,6 +411,7 @@ export default function App() {
     );
   }
 
+  if (aboutRoute) return <DeferredSurface><AboutPage /></DeferredSurface>;
   if (privacyRoute) return <PrivacyPage />;
   if (termsRoute) return <TermsPage />;
   if (contactRoute) return <ContactPage />;
