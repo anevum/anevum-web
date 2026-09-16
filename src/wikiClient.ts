@@ -1,5 +1,7 @@
 import { loadSession, type MemberSession } from "./memberClient";
 
+export type WikiCanonState = "Source-Locked" | "Locked" | "Canonical" | "Working" | "Superseded";
+
 export type WikiCategory = {
   id: string;
   label: string;
@@ -14,6 +16,9 @@ export type WikiPage = {
   category_id: string;
   summary: string;
   status: "draft" | "published" | "archived";
+  canon_state?: string | null;
+  canonical_state?: string | null;
+  source_status?: string | null;
   current_revision_id: string | null;
   created_by?: string | null;
   created_at: string;
@@ -62,8 +67,16 @@ export type WikiArticle = {
   history: WikiRevision[];
 };
 
+export type WikiLink = {
+  id: string;
+  from_page_id: string;
+  to_page_id: string;
+  relation: string;
+  created_at: string;
+};
+
 export class WikiBackendUnavailable extends Error {
-  constructor(message = "The public wiki database is not initialized yet.") {
+  constructor(message = "The ANEVUM Wiki database is not available to this runtime yet.") {
     super(message);
     this.name = "WikiBackendUnavailable";
   }
@@ -74,6 +87,9 @@ const defaultPublishableKey = "sb_publishable_XfkgeXau2-6XOPzoXF-Nnw_FSnx0Sae";
 const projectUrl = (import.meta.env.VITE_SUPABASE_URL || defaultProjectUrl).replace(/\/$/, "");
 const publicKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || import.meta.env.VITE_SUPABASE_ANON_KEY || defaultPublishableKey;
 const restUrl = `${projectUrl}/rest/v1`;
+
+export const WIKI_CANON_STATES: readonly WikiCanonState[] = ["Source-Locked", "Locked", "Canonical", "Working", "Superseded"];
+const PRODUCT_VISIBLE_STATES = new Set<WikiCanonState>(["Source-Locked", "Locked", "Canonical"]);
 
 export const FALLBACK_WIKI_CATEGORIES: WikiCategory[] = [
   { id: "universe", label: "Universe", description: "People, science, technology, institutions and concepts.", sort_order: 10 },
@@ -120,6 +136,43 @@ export function isWikiAdmin(session = loadSession()) {
   return metadata.wiki_admin === true || metadata.role === "admin" || metadata.role === "wiki_admin";
 }
 
+function normalizeStateValue(value: unknown) {
+  return String(value || "").trim().toLowerCase().replace(/[\s_]+/g, "-");
+}
+
+export function wikiCanonState(page: Pick<WikiPage, "status" | "canon_state" | "canonical_state" | "source_status">): WikiCanonState {
+  const raw = normalizeStateValue(page.canon_state || page.canonical_state || page.source_status);
+  if (raw === "source-locked" || raw === "sourcelocked") return "Source-Locked";
+  if (raw === "locked") return "Locked";
+  if (raw === "canonical" || raw === "canon") return "Canonical";
+  if (raw === "working" || raw === "work-in-progress" || raw === "wip" || raw === "draft") return "Working";
+  if (raw === "superseded" || raw === "archived" || raw === "obsolete") return "Superseded";
+
+  // Compatibility with the first checked-in public Wiki schema. The live Wiki
+  // remains authoritative; this fallback only prevents older rows from being
+  // promoted beyond the state implied by their publication status.
+  if (page.status === "archived") return "Superseded";
+  if (page.status === "draft") return "Working";
+  return "Canonical";
+}
+
+export function isWikiProductVisible(page: WikiPage) {
+  return page.status === "published" && PRODUCT_VISIBLE_STATES.has(wikiCanonState(page));
+}
+
+export function wikiStateCounts(pages: WikiPage[]) {
+  return WIKI_CANON_STATES.reduce<Record<WikiCanonState, number>>((counts, state) => {
+    counts[state] = pages.filter((page) => wikiCanonState(page) === state).length;
+    return counts;
+  }, {
+    "Source-Locked": 0,
+    Locked: 0,
+    Canonical: 0,
+    Working: 0,
+    Superseded: 0,
+  });
+}
+
 export async function loadWikiCategories() {
   try {
     const rows = await rest<WikiCategory[]>("/wiki_categories?select=id,label,description,sort_order&order=sort_order.asc");
@@ -131,14 +184,25 @@ export async function loadWikiCategories() {
 }
 
 export async function loadPublishedWikiPages() {
-  return rest<WikiPage[]>("/wiki_pages?select=id,slug,title,category_id,summary,status,current_revision_id,created_at,updated_at,published_at&status=eq.published&order=title.asc");
+  const rows = await rest<WikiPage[]>("/wiki_pages?select=*&status=eq.published&order=title.asc");
+  return rows.filter(isWikiProductVisible);
+}
+
+export async function loadWikiControlPages() {
+  const session = loadSession();
+  if (!session || !isWikiAdmin(session)) throw new Error("Wiki administrator access required.");
+  return rest<WikiPage[]>("/wiki_pages?select=*&order=updated_at.desc", {}, session);
+}
+
+export async function loadPublishedWikiLinks() {
+  return rest<WikiLink[]>("/wiki_links?select=*&order=created_at.asc");
 }
 
 export async function loadWikiArticle(slug: string): Promise<WikiArticle | null> {
-  const pages = await rest<WikiPage[]>(`/wiki_pages?select=id,slug,title,category_id,summary,status,current_revision_id,created_at,updated_at,published_at&slug=eq.${encodeURIComponent(slug)}&status=eq.published&limit=1`);
+  const pages = await rest<WikiPage[]>(`/wiki_pages?select=*&slug=eq.${encodeURIComponent(slug)}&status=eq.published&limit=1`);
   const page = pages[0];
-  if (!page || !page.current_revision_id) return null;
-  const revisions = await rest<WikiRevision[]>(`/wiki_revisions?select=id,page_id,revision_no,title,summary,body_md,category_id,change_summary,author_id,status,created_at,reviewed_by,reviewed_at&page_id=eq.${page.id}&status=eq.approved&order=revision_no.desc`);
+  if (!page || !page.current_revision_id || !isWikiProductVisible(page)) return null;
+  const revisions = await rest<WikiRevision[]>(`/wiki_revisions?select=*&page_id=eq.${page.id}&status=eq.approved&order=revision_no.desc`);
   const revision = revisions.find((item) => item.id === page.current_revision_id) || revisions[0];
   return revision ? { page, revision, history: revisions } : null;
 }
