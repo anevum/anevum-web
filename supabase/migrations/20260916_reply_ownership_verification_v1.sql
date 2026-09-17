@@ -115,6 +115,64 @@ $$;
 revoke all on function public.redeem_publication_code(text) from public;
 grant execute on function public.redeem_publication_code(text) to authenticated;
 
+create or replace function public.issue_publication_claim_codes(
+  p_count integer default 1,
+  p_edition text default 'REPLY',
+  p_xp_award integer default 250,
+  p_expires_at timestamptz default null
+)
+returns table (
+  claim_code text,
+  claim_edition text,
+  claim_xp integer,
+  claim_expires_at timestamptz
+)
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_index integer;
+  v_raw text;
+  v_display text;
+  v_normalized text;
+begin
+  if not public.is_wiki_admin() then
+    raise exception 'admin required' using errcode = '42501';
+  end if;
+  if p_count < 1 or p_count > 100 then
+    raise exception 'claim code count must be between 1 and 100' using errcode = '22023';
+  end if;
+  if p_xp_award < 0 or p_xp_award > 5000 then
+    raise exception 'xp award must be between 0 and 5000' using errcode = '22023';
+  end if;
+  if length(trim(coalesce(p_edition, ''))) < 1 or length(trim(p_edition)) > 80 then
+    raise exception 'edition label is required' using errcode = '22023';
+  end if;
+
+  for v_index in 1..p_count loop
+    v_raw := upper(encode(extensions.gen_random_bytes(8), 'hex'));
+    v_display := 'REPLY-' || substr(v_raw, 1, 4) || '-' || substr(v_raw, 5, 4) || '-' || substr(v_raw, 9, 4) || '-' || substr(v_raw, 13, 4);
+    v_normalized := upper(regexp_replace(v_display, '[^A-Za-z0-9]', '', 'g'));
+
+    insert into public.publication_claim_codes (publication_id, code_hash, edition, xp_award, expires_at)
+    values (
+      'reply-book-1',
+      encode(extensions.digest(v_normalized, 'sha256'), 'hex'),
+      trim(p_edition),
+      p_xp_award,
+      p_expires_at
+    );
+
+    return query select v_display, trim(p_edition), p_xp_award, p_expires_at;
+  end loop;
+end;
+$$;
+
+revoke all on function public.issue_publication_claim_codes(integer, text, integer, timestamptz) from public;
+grant execute on function public.issue_publication_claim_codes(integer, text, integer, timestamptz) to authenticated;
+
 comment on table public.publication_claim_codes is 'Server-authoritative hashed publication ownership claim codes. Never expose code hashes publicly.';
 comment on table public.member_publication_claims is 'Verified publication ownership claims attached to RHENLINK users.';
 comment on function public.redeem_publication_code(text) is 'Redeems one hashed publication claim code for the authenticated user and returns the verified reward.';
+comment on function public.issue_publication_claim_codes(integer, text, integer, timestamptz) is 'Admin-only one-time claim-code issuance. Plaintext codes are returned only during issuance; only hashes are stored.';
