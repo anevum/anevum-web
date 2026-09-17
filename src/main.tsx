@@ -36,7 +36,7 @@ function routeStyleImports() {
   }
   if (latticeRoute) styles.push(import("./latticeV2.css"));
   if (commandRoute) styles.push(import("./commandIntegration.css"), import("./commandReadiness.css"));
-  if (hostname === ROOT_HOST && pathname === "/rhenlink") styles.push(import("./rhenlinkV2.css"));
+  if (hostname === ROOT_HOST && pathname === "/rhenlink") styles.push(import("./rhenlinkV2.css"), import("./rhenlinkOwnership.css"));
   if (hostname === ROOT_HOST && pathname === "/about") styles.push(import("./about.css"));
 
   return styles;
