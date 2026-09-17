@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { AlertTriangle, BarChart3, BookOpenText, CheckCircle2, CircleDashed, CircleUserRound, Database, GitBranch, LockKeyhole, Orbit, RadioTower, Rocket, ShieldCheck } from "lucide-react";
 import { loadSession, syncCurrentUser, type MemberSession } from "./memberClient";
+import { CommandFinance } from "./CommandFinance";
 import { CANON_LIFECYCLE_COUNTS, CANON_PROJECTION_SYNC } from "./canonProjection";
 import { getLaunchReadiness, launchReadinessSummary, type LaunchReadinessState } from "./launchReadiness";
 import {
@@ -153,6 +154,8 @@ export function CommandHome() {
         <div><Rocket size={16} /><span>LAUNCH GATE</span><strong>{readinessSummary.criticalReady}/{readinessSummary.criticalTotal}</strong><small>{readinessSummary.complete ? "Critical launch systems resolved" : `${readinessSummary.blocking.length} critical configuration gaps`}</small></div>
         <div><CheckCircle2 size={16} /><span>COMMUNITY QUEUE</span><strong>{moderationState === "ready" ? queue.length : moderationState === "unavailable" ? "OFF" : "—"}</strong><small>{moderationState === "unavailable" ? "Optional proposal backend not configured" : "Pending proposals"}</small></div>
       </div>
+
+      <CommandFinance session={session} />
 
       <section className="command-readiness-panel" aria-labelledby="command-readiness-title">
         <header>
