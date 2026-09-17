@@ -84,3 +84,21 @@ body,
 #root{
   background:var(--anevum-bg);
 }
+
+/* Surface identity stays within the brand palette instead of becoming rainbow chrome. */
+.surface-command .system-content-frame{
+  background:
+    linear-gradient(rgba(77,143,175,.016) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(77,143,175,.012) 1px,transparent 1px),
+    #030506;
+  background-size:28px 28px;
+}
+.surface-command .system-rail>a.active:before,
+.surface-rhenlink .system-rail>a.active:before{background:var(--anevum-blue-bright)}
+.surface-command .system-rail>a.active svg,
+.surface-rhenlink .system-rail>a.active svg{color:var(--anevum-blue-bright)}
+.surface-command .system-top-status{color:#68777d}
+.surface-command .command-canon-panel,
+.surface-command .command-record-panel{background:linear-gradient(145deg,rgba(7,12,15,.94),rgba(3,7,9,.98))}
+.surface-command .command-record-row:hover{background:rgba(77,143,175,.035)}
+.surface-command .command-record-row>a{color:var(--anevum-blue-bright)}
