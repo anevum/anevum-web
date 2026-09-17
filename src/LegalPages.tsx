@@ -3,7 +3,7 @@ import { LaunchTerminal } from "./LaunchTerminal";
 import { emailHref, legalPublicConfig, legalPublicConfigured } from "./legalConfig";
 import type { ReactNode } from "react";
 
-const effectiveDate = "September 16, 2026";
+const legalNoticeLabel = legalPublicConfigured.launch ? "PUBLIC NOTICE" : "PRE-PUBLICATION NOTICE";
 
 function LegalHeader({ label }: { label: string }) {
   return (
@@ -40,7 +40,7 @@ function LegalShell({ label, title, intro, children }: { label: string; title: s
           <p>{label}</p>
           <h1>{title}</h1>
           <div className="legal-intro"><ShieldCheck size={18} aria-hidden="true" /><span>{intro}</span></div>
-          <small>EFFECTIVE {effectiveDate.toUpperCase()}</small>
+          <small>{legalNoticeLabel}</small>
         </section>
         <div className="legal-document">{children}</div>
       </main>
@@ -106,7 +106,7 @@ export function PrivacyPage() {
       </Section>
 
       <Section title="Changes to this notice">
-        <p>This notice may change as ANEVUM adds or removes product capabilities. Material changes should be reflected by an updated effective date and should remain consistent with the behavior of the live product.</p>
+        <p>This notice may change as ANEVUM adds or removes product capabilities. Material changes should be reflected in the published notice and should remain consistent with the behavior of the live product.</p>
       </Section>
     </LegalShell>
   );
