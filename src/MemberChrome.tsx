@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Award, Bookmark, ChevronRight, CircleUserRound, Sparkles, X } from "lucide-react";
 import { Link } from "./ui";
-import { displayIdentity, loadSession, loadSharedIdentity, type MemberSession, type SharedIdentity } from "./memberClient";
+import { displayIdentity, fetchPublicationClaims, loadSession, loadSharedIdentity, type MemberSession, type PublicationClaim, type SharedIdentity } from "./memberClient";
 import {
   CURRENT_ACHIEVEMENTS,
   hydrateMemberProgress,
@@ -17,10 +17,15 @@ function emptyProgress(): MemberProgress {
   return { version: 1, savedRecordIds: [], visitedRoutes: [], achievements: [], updatedAt: new Date(0).toISOString() };
 }
 
+function verifiedClaimXP(claims: PublicationClaim[]) {
+  return claims.reduce((total, claim) => total + Math.max(0, Number(claim.xp_awarded) || 0), 0);
+}
+
 function useMemberChromeState() {
   const [session, setSession] = useState<MemberSession | null>(() => loadSession());
   const [sharedIdentity, setSharedIdentity] = useState<SharedIdentity | null>(() => loadSharedIdentity());
   const [progress, setProgress] = useState<MemberProgress>(() => loadMemberProgress(loadSession()));
+  const [claims, setClaims] = useState<PublicationClaim[]>([]);
 
   useEffect(() => {
     const syncSession = () => {
@@ -28,6 +33,7 @@ function useMemberChromeState() {
       setSession(next);
       setSharedIdentity(loadSharedIdentity());
       setProgress(next ? loadMemberProgress(next) : emptyProgress());
+      if (!next) setClaims([]);
     };
     const removeProgress = onMemberProgressChange(setProgress);
     window.addEventListener("anevum-member-session", syncSession);
@@ -42,7 +48,27 @@ function useMemberChromeState() {
     hydrateMemberProgress(session).then(setProgress).catch(() => undefined);
   }, [session?.user.id]);
 
-  return { session, sharedIdentity, progress };
+  useEffect(() => {
+    let cancelled = false;
+    const refreshClaims = () => {
+      const active = loadSession();
+      if (!active) {
+        if (!cancelled) setClaims([]);
+        return;
+      }
+      fetchPublicationClaims(active)
+        .then((next) => { if (!cancelled) setClaims(next); })
+        .catch(() => { if (!cancelled) setClaims([]); });
+    };
+    refreshClaims();
+    window.addEventListener("anevum-publication-claim", refreshClaims);
+    return () => {
+      cancelled = true;
+      window.removeEventListener("anevum-publication-claim", refreshClaims);
+    };
+  }, [session?.user.id]);
+
+  return { session, sharedIdentity, progress, claims };
 }
 
 function identityLabel(session: MemberSession | null, sharedIdentity: SharedIdentity | null) {
@@ -59,11 +85,13 @@ function currentUnlockedCount(progress: MemberProgress) {
 }
 
 export function RhenlinkIdentityCard() {
-  const { session, sharedIdentity, progress } = useMemberChromeState();
+  const { session, sharedIdentity, progress, claims } = useMemberChromeState();
   const identity = identityLabel(session, sharedIdentity);
   const authenticated = Boolean(session);
-  const level = networkLevelDetails(progress);
+  const ownershipXP = verifiedClaimXP(claims);
+  const level = networkLevelDetails(progress, ownershipXP);
   const currentUnlocked = currentUnlockedCount(progress);
+  const replyVerified = claims.some((claim) => claim.publication_id === "reply-book-1");
 
   if (!session && !sharedIdentity) {
     return (
@@ -81,7 +109,7 @@ export function RhenlinkIdentityCard() {
       <span className="rhenlink-follower-copy">
         <small>{authenticated ? `RHENLINK / ${level.rankMark}` : "RHENLINK / LINKED"}</small>
         <strong>@{identity.handle || "member"}</strong>
-        <em>{authenticated ? `${level.xp} XP · ${Math.round(level.percent)}% TO LEVEL ${Math.min(100, level.level + 1)} · ${currentUnlocked}/${CURRENT_ACHIEVEMENTS.length} LAUNCH ARTIFACTS` : identity.displayName}</em>
+        <em>{authenticated ? `${level.xp} XP · ${Math.round(level.percent)}% TO LEVEL ${Math.min(100, level.level + 1)} · ${currentUnlocked}/${CURRENT_ACHIEVEMENTS.length} LAUNCH ARTIFACTS${replyVerified ? " · REPLY VERIFIED" : ""}` : identity.displayName}</em>
       </span>
       <span className="rhenlink-follower-pulse" aria-hidden="true" />
       <ChevronRight size={15} />
@@ -132,8 +160,8 @@ export function AchievementLayer() {
   );
 }
 
-export function ProfileProgressSummary({ progress }: { progress: MemberProgress }) {
-  const level = networkLevelDetails(progress);
+export function ProfileProgressSummary({ progress, verifiedBonusXP = 0 }: { progress: MemberProgress; verifiedBonusXP?: number }) {
+  const level = networkLevelDetails(progress, verifiedBonusXP);
   const unlocked = useMemo(() => new Set(progress.achievements.map((item) => item.id)), [progress.achievements]);
 
   return (
