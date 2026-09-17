@@ -32,6 +32,21 @@ jobs:
       - name: Verify runtime host contract
         run: npm run runtime:verify
 
+      - name: Verify ownership backend contract
+        shell: bash
+        run: |
+          OWNERSHIP_MIGRATION=supabase/migrations/20260916_reply_ownership_verification_v1.sql
+          test -f "$OWNERSHIP_MIGRATION"
+          grep -Fq 'create table public.publication_claim_codes' "$OWNERSHIP_MIGRATION"
+          grep -Fq 'create table public.member_publication_claims' "$OWNERSHIP_MIGRATION"
+          grep -Fq 'create or replace function public.redeem_publication_code' "$OWNERSHIP_MIGRATION"
+          grep -Fq 'create or replace function public.issue_publication_claim_codes' "$OWNERSHIP_MIGRATION"
+          grep -Fq 'revoke all on public.publication_claim_codes from anon, authenticated' "$OWNERSHIP_MIGRATION"
+          grep -Fq 'grant select on public.member_publication_claims to authenticated' "$OWNERSHIP_MIGRATION"
+          grep -Fq 'fetchPublicationClaims' src/memberClient.ts
+          grep -Fq 'redeemPublicationCode' src/memberClient.ts
+          grep -Fq 'rhenlink-ownership-verification' src/RhenlinkV2.tsx
+
       - name: Production build
         run: npm run build
 

@@ -92,7 +92,9 @@ export function getLaunchReadiness(): LaunchReadinessItem[] {
       label: "Verified ownership XP",
       state: "pending",
       critical: true,
-      detail: "No authenticated server-side purchase/code verifier is implemented yet. Purchase XP remains unavailable rather than allowing self-claimed ownership.",
+      detail: "The authenticated server-side claim verifier and RHENLINK redemption flow are built. Production remains pending until the Supabase migration is applied and one-time REPLY claim codes are issued through the approved purchase or edition workflow.",
+      actionHref: "https://anevum.com/rhenlink",
+      actionLabel: "OPEN RHENLINK",
     },
     {
       id: "analytics",
