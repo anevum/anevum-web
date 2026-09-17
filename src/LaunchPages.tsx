@@ -112,7 +112,7 @@ function BookObject({ large = false }: { large?: boolean }) {
 
 function PageShell({ active, children }: { active: LaunchSection; children: React.ReactNode }) {
   return (
-    <div className={`launch-page launch-page-${active}`}>
+    <div className={`launch-page launch-page-route-${active}`}>
       <a className="launch-skip-link" href="#main-content">SKIP TO CONTENT</a>
       <LaunchHeader active={active} />
       <LaunchTerminal />
