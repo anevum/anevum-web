@@ -21,8 +21,13 @@ assert.equal(normalizeRuntimePath(""), "/");
 assert.equal(normalizeRuntimePath("/"), "/");
 assert.equal(normalizeRuntimePath("/the-book/"), "/the-book");
 assert.equal(normalizeRuntimePath("/wiki/ovara///"), "/wiki/ovara");
+assert.equal(normalizeRuntimePath("/__meta/the-book"), "/the-book");
+assert.equal(normalizeRuntimePath("/__meta/the-book.html"), "/the-book");
+assert.equal(normalizeRuntimePath("/__meta/rhenlink"), "/rhenlink");
+assert.equal(normalizeRuntimePath("/__meta/about.html"), "/about");
+assert.equal(normalizeRuntimePath("/__meta/not-a-public-route.html"), "/__meta/not-a-public-route.html");
 
 assert.equal(safeDecodeRouteValue("Rhenlink%20Record"), "Rhenlink Record");
 assert.equal(safeDecodeRouteValue("bad%ZZslug"), "");
 
-console.log("Runtime host contract valid: production hosts preserved, preview/local hosts resolve to ANEVUM root.");
+console.log("Runtime host contract valid: production hosts preserved, preview/local hosts resolve to ANEVUM root, and metadata rewrites restore public paths.");
