@@ -90,18 +90,20 @@ export function getLaunchReadiness(): LaunchReadinessItem[] {
     {
       id: "ownership-verification",
       label: "Verified ownership XP",
-      state: "pending",
-      critical: true,
-      detail: "The authenticated server-side claim verifier and RHENLINK redemption flow are built. Production remains pending until the Supabase migration is applied and one-time REPLY claim codes are issued through the approved purchase or edition workflow.",
+      state: "optional",
+      critical: false,
+      detail: "Verified ownership is a post-launch enhancement. The claim-code backend and RHENLINK redemption flow can remain inactive until a trusted purchase workflow is ready; it does not block the REPLY website launch.",
       actionHref: "https://anevum.com/rhenlink",
       actionLabel: "OPEN RHENLINK",
     },
     {
       id: "analytics",
       label: "Launch analytics",
-      state: analyticsConfigured ? "ready" : "pending",
-      critical: true,
-      detail: analyticsConfigured ? "Privacy-light funnel analytics are configured for production." : "Instrumentation is built but inert until a production PostHog browser project token is configured.",
+      state: analyticsConfigured ? "ready" : "optional",
+      critical: false,
+      detail: analyticsConfigured
+        ? "Privacy-light funnel analytics are configured for production."
+        : "Instrumentation is built but intentionally optional; the site can launch with analytics disabled until a production PostHog browser project token is selected.",
     },
     {
       id: "release-label",
