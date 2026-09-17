@@ -1,6 +1,8 @@
 /* ANEVUM authoritative color system.
-   Loaded after surface styles so all major UI families share one palette.
-   Surfaces may vary in depth and density, but not in brand temperature. */
+   One brand palette, two materials:
+   - cinematic graphite for entry, identity, canon and system interfaces
+   - cool editorial ivory for reading, publication and explanatory surfaces
+   The ivory is deliberately neutral/cool rather than yellow-beige. */
 
 :root{
   --anevum-bg:#030506;
@@ -13,11 +15,21 @@
   --anevum-dim:#6f7578;
   --anevum-line:rgba(226,235,239,.14);
   --anevum-line-strong:rgba(226,235,239,.27);
-  --anevum-blue:#4da8ff;
-  --anevum-blue-soft:#8fc9e1;
-  --anevum-gold:#b49a66;
 
-  /* REPLY / launch surfaces */
+  --anevum-paper:#e8e6df;
+  --anevum-paper-raised:#f1efe9;
+  --anevum-paper-soft:#ddd9d0;
+  --anevum-paper-ink:#172126;
+  --anevum-paper-muted:#5c686d;
+  --anevum-paper-dim:#7a817f;
+  --anevum-paper-line:rgba(23,33,38,.16);
+
+  --anevum-blue:#4d8faf;
+  --anevum-blue-soft:#769fb2;
+  --anevum-blue-bright:#8fc9e1;
+  --anevum-gold:#9a815a;
+
+  /* REPLY dark/chrome surfaces */
   --reply-bg:var(--anevum-bg);
   --reply-panel:var(--anevum-raised);
   --reply-panel-soft:var(--anevum-panel);
@@ -26,10 +38,20 @@
   --reply-dim:var(--anevum-dim);
   --reply-line:var(--anevum-line);
   --reply-line-strong:var(--anevum-line-strong);
-  --reply-blue:var(--anevum-blue-soft);
+  --reply-blue:var(--anevum-blue-bright);
   --reply-warm:var(--anevum-gold);
 
-  /* Editorial / RHENLINK / WIKI / LATTICE surfaces */
+  /* REPLY editorial surfaces */
+  --reply-paper:var(--anevum-paper);
+  --reply-paper-soft:var(--anevum-paper-soft);
+  --reply-paper-ink:var(--anevum-paper-ink);
+  --reply-paper-muted:var(--anevum-paper-muted);
+  --reply-paper-dim:var(--anevum-paper-dim);
+  --reply-paper-line:var(--anevum-paper-line);
+  --reply-paper-blue:var(--anevum-blue);
+  --reply-paper-warm:var(--anevum-gold);
+
+  /* RHENLINK / WIKI / LATTICE public-system surfaces */
   --v2-bg:var(--anevum-bg);
   --v2-panel:var(--anevum-raised);
   --v2-panel-2:var(--anevum-panel);
@@ -38,7 +60,7 @@
   --v2-dim:var(--anevum-dim);
   --v2-line:var(--anevum-line);
   --v2-line-strong:var(--anevum-line-strong);
-  --v2-blue:var(--anevum-blue-soft);
+  --v2-blue:var(--anevum-blue-bright);
   --v2-blue-strong:var(--anevum-blue);
   --v2-warm:var(--anevum-gold);
 
