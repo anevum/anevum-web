@@ -36,7 +36,7 @@ function routeStyleImports() {
     styles.push(import("./canonicalWiki.css"), import("./moderatedWiki.css"));
   }
   if (latticeRoute) styles.push(import("./latticeV2.css"));
-  if (commandRoute) styles.push(import("./commandIntegration.css"), import("./commandReadiness.css"));
+  if (commandRoute) styles.push(import("./commandIntegration.css"), import("./commandReadiness.css"), import("./commandFinance.css"));
   if (hostname === ROOT_HOST && pathname === "/rhenlink") styles.push(import("./rhenlinkV2.css"), import("./rhenlinkOwnership.css"));
   if (hostname === ROOT_HOST && pathname === "/about") styles.push(import("./about.css"));
 
