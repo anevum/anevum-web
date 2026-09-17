@@ -20,6 +20,13 @@ export type SharedIdentity = {
   displayName: string;
 };
 
+export type PublicationClaim = {
+  publication_id: string;
+  edition: string;
+  xp_awarded: number;
+  claimed_at: string;
+};
+
 export type AuthRedirectResult =
   | { status: "signed-in"; session: MemberSession }
   | { status: "error"; message: string }
@@ -206,6 +213,28 @@ export async function signOut() {
     await fetch(`${projectUrl}/auth/v1/logout`, { method: "POST", headers: headers(session.access_token) }).catch(() => undefined);
   }
   saveSession(null);
+}
+
+export async function fetchPublicationClaims(session = loadSession()) {
+  if (!session) return [] as PublicationClaim[];
+  return request<PublicationClaim[]>(
+    "/rest/v1/member_publication_claims?select=publication_id,edition,xp_awarded,claimed_at&order=claimed_at.desc",
+    { method: "GET", headers: headers(session.access_token) },
+  );
+}
+
+export async function redeemPublicationCode(code: string, session = loadSession()) {
+  if (!session) throw new Error("Sign in with RHENLINK before verifying a copy of REPLY.");
+  const normalized = code.trim();
+  if (!normalized) throw new Error("Enter the verification code supplied with your copy of REPLY.");
+  const claims = await request<PublicationClaim[]>("/rest/v1/rpc/redeem_publication_code", {
+    method: "POST",
+    headers: headers(session.access_token),
+    body: JSON.stringify({ p_code: normalized }),
+  });
+  const claim = claims[0];
+  if (!claim) throw new Error("REPLY ownership could not be verified.");
+  return claim;
 }
 
 export async function consumeAuthRedirect(): Promise<AuthRedirectResult> {
