@@ -7,13 +7,16 @@ import { Button } from "./ui";
 import {
   consumeAuthRedirect,
   displayIdentity,
+  fetchPublicationClaims,
   loadSession,
   memberBackend,
+  redeemPublicationCode,
   signIn,
   signOut,
   signUp,
   updateMemberMetadata,
   type MemberSession,
+  type PublicationClaim,
 } from "./memberClient";
 import { CURRENT_ACHIEVEMENTS, loadMemberProgress, onMemberProgressChange, type MemberProgress } from "./memberState";
 import { networkLevelDetails } from "./networkProgress";
@@ -38,6 +41,10 @@ function releaseIntentSource() {
   if (typeof window === "undefined") return "direct";
   const value = new URLSearchParams(window.location.search).get("source") || "direct";
   return /^[a-z0-9-]{1,48}$/i.test(value) ? value.toLowerCase() : "other";
+}
+
+function verifiedClaimXP(claims: PublicationClaim[]) {
+  return claims.reduce((total, claim) => total + Math.max(0, Number(claim.xp_awarded) || 0), 0);
 }
 
 function useRhenlinkState() {
@@ -93,9 +100,13 @@ export function Rhenlink() {
   const [editing, setEditing] = useState(false);
   const [releaseIntent, setReleaseIntent] = useState(() => releaseIntentRequested());
   const [releaseSource] = useState(() => releaseIntentSource());
+  const [claims, setClaims] = useState<PublicationClaim[]>([]);
+  const [ownershipBackendAvailable, setOwnershipBackendAvailable] = useState<boolean | null>(null);
   const identity = displayIdentity(session);
   const profile = profileCopy(session);
-  const level = networkLevelDetails(progress);
+  const ownershipXP = verifiedClaimXP(claims);
+  const level = networkLevelDetails(progress, ownershipXP);
+  const replyClaim = claims.find((claim) => claim.publication_id === "reply-book-1") || null;
   const releaseUpdatesEnabled = session?.user.user_metadata?.reply_release_updates === true;
   const unlocked = useMemo(() => new Map(progress.achievements.map((achievement) => [achievement.id, achievement])), [progress.achievements]);
   const currentUnlockedCount = useMemo(() => CURRENT_ACHIEVEMENTS.filter((achievement) => unlocked.has(achievement.id)).length, [unlocked]);
@@ -106,6 +117,27 @@ export function Rhenlink() {
       capture("reply release interest opened", { source: releaseSource }, "rhenlink");
     }
   }, [releaseSource]);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!session) {
+      setClaims([]);
+      setOwnershipBackendAvailable(null);
+      return;
+    }
+    fetchPublicationClaims(session)
+      .then((next) => {
+        if (cancelled) return;
+        setClaims(next);
+        setOwnershipBackendAvailable(true);
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setClaims([]);
+        setOwnershipBackendAvailable(false);
+      });
+    return () => { cancelled = true; };
+  }, [session?.user.id]);
 
   async function handleCreate(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -209,10 +241,32 @@ export function Rhenlink() {
     }
   }
 
+  async function handleOwnershipClaim(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!session || replyClaim) return;
+    setBusy(true);
+    setStatus("");
+    const form = new FormData(event.currentTarget);
+    try {
+      const claim = await redeemPublicationCode(String(form.get("ownershipCode") || ""), session);
+      setClaims((current) => [claim, ...current.filter((item) => item.publication_id !== claim.publication_id)]);
+      setOwnershipBackendAvailable(true);
+      window.dispatchEvent(new Event("anevum-publication-claim"));
+      capture("reply ownership verified", { edition: claim.edition, xp: claim.xp_awarded }, "rhenlink");
+      setStatus(`REPLY ownership verified. +${claim.xp_awarded} XP added to this RHENLINK.`);
+      event.currentTarget.reset();
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : "Could not verify this REPLY ownership code.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function handleSignOut() {
     setBusy(true);
     await signOut();
     setSession(null);
+    setClaims([]);
     setEditing(false);
     setStatus("Signed out.");
     setBusy(false);
@@ -226,7 +280,7 @@ export function Rhenlink() {
         <div>
           <div className="rhen-brand-lockup"><CircleUserRound size={42} strokeWidth={1.1} aria-hidden="true" /><span><strong>RHENLINK</strong><small>YOUR PERSISTENT IDENTITY</small></span></div>
           <h1>{session ? "Your place in ANEVUM." : releaseIntent ? "Keep REPLY connected." : "One identity.\nMany worlds."}</h1>
-          <p>{session ? "Your profile, Network Level, XP, achievements, and saved progress travel together with your RHENLINK." : releaseIntent ? "Create or resolve your RHENLINK, then explicitly choose whether you want REPLY release updates attached to this identity." : "Create one persistent ANEVUM identity for your progress and achievements as the universe expands."}</p>
+          <p>{session ? "Your profile, Network Level, XP, achievements, verified publications, and saved progress travel together with your RHENLINK." : releaseIntent ? "Create or resolve your RHENLINK, then explicitly choose whether you want REPLY release updates attached to this identity." : "Create one persistent ANEVUM identity for your progress and achievements as the universe expands."}</p>
           <div className="actions"><Button href="/" quiet>RETURN TO REPLY</Button></div>
         </div>
       </section>
@@ -282,20 +336,41 @@ export function Rhenlink() {
               </section>
             ) : null}
 
+            <section className={`rhenlink-ownership-verification ${replyClaim ? "verified" : ownershipBackendAvailable ? "ready" : "staged"}`} aria-labelledby="reply-ownership-title">
+              <div className="rhenlink-ownership-mark"><Award size={23} strokeWidth={1.25} aria-hidden="true" /></div>
+              <div className="rhenlink-ownership-copy">
+                <span className="meta">REPLY / VERIFIED OWNERSHIP</span>
+                <h3 id="reply-ownership-title">{replyClaim ? "This RHENLINK holds a verified copy of REPLY." : "Attach verified REPLY ownership to this identity."}</h3>
+                {replyClaim ? (
+                  <p>{replyClaim.edition} · verified {new Date(replyClaim.claimed_at).toLocaleDateString()} · +{replyClaim.xp_awarded} XP. This record is server-verified and cannot be created by self-claiming ownership.</p>
+                ) : ownershipBackendAvailable ? (
+                  <p>Enter the ownership code supplied through an approved REPLY purchase or edition flow. A valid code can be redeemed once and binds the verified publication record to this RHENLINK.</p>
+                ) : (
+                  <p>The ownership verifier is staged but not active on the current backend yet. No ownership XP is awarded until the server verification service is live.</p>
+                )}
+              </div>
+              {!replyClaim && ownershipBackendAvailable ? (
+                <form className="rhenlink-ownership-form" onSubmit={handleOwnershipClaim}>
+                  <label htmlFor="reply-ownership-code">VERIFICATION CODE</label>
+                  <div><input id="reply-ownership-code" name="ownershipCode" minLength={8} maxLength={80} autoCapitalize="characters" autoCorrect="off" spellCheck={false} required placeholder="REPLY-XXXX-XXXX" /><button type="submit" disabled={busy}>{busy ? "VERIFYING..." : "VERIFY COPY"}</button></div>
+                </form>
+              ) : null}
+            </section>
+
             {status ? <p className="rhenlink-inline-status" role="status">{status}</p> : null}
 
             <div className="identity-modules rhenlink-stat-grid">
               <div><Bookmark size={16} /><span>SAVED</span><strong>{progress.savedRecordIds.length}</strong><small>items connected to your identity</small></div>
               <div><Layers3 size={16} /><span>NETWORK LEVEL</span><strong>{String(level.level).padStart(2, "0")}</strong><small>{level.rankMark} · participation rank</small></div>
               <div><Trophy size={16} /><span>LAUNCH ARTIFACTS</span><strong>{currentUnlockedCount}/{CURRENT_ACHIEVEMENTS.length}</strong><small>earned through current release activity</small></div>
-              <div><Award size={16} /><span>XP</span><strong>{level.xp}</strong><small>{level.remaining} XP to Level {Math.min(100, level.level + 1)}</small></div>
+              <div><Award size={16} /><span>XP</span><strong>{level.xp}</strong><small>{ownershipXP ? `${ownershipXP} verified-publication XP · ` : ""}{level.remaining} XP to Level {Math.min(100, level.level + 1)}</small></div>
             </div>
 
             <section className="rhenlink-progression-showcase" aria-labelledby="network-level-title">
               <div className="network-level-copy">
                 <span className="meta">NETWORK LEVEL / LONG-TERM PARTICIPATION</span>
                 <h3 id="network-level-title">Level {String(level.level).padStart(2, "0")} <em>{level.rankMark}</em></h3>
-                <p>Level reflects participation across ANEVUM. It does not represent authority, status, popularity, skill, or purchase value.</p>
+                <p>Level reflects participation across ANEVUM. Verified publication XP is added only after server-side ownership verification. Network Level does not represent authority, status, popularity, skill, or purchase value.</p>
                 <div className="network-xp-line"><span>{level.xp} XP</span><span>{level.nextThreshold} XP / NEXT LEVEL</span></div>
                 <div className="network-xp-track" role="progressbar" aria-label="XP progress to next level" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(level.percent)}><i style={{ width: `${level.percent}%` }} /></div>
                 {level.nextArtifact ? <div className="network-next-artifact"><LockKeyhole size={14} /><span><small>NEXT ARTIFACT</small><strong>{level.nextArtifact.title}</strong><em>+{level.nextArtifact.xp} XP</em></span></div> : <div className="network-next-artifact"><Award size={14} /><span><small>BOOK ONE PATH</small><strong>ALL CURRENT ARTIFACTS ACQUIRED</strong><em>{currentUnlockedCount}/{CURRENT_ACHIEVEMENTS.length}</em></span></div>}
