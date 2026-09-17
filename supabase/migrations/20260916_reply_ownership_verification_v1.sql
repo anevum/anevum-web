@@ -37,6 +37,7 @@ alter table public.publication_claim_codes enable row level security;
 alter table public.member_publication_claims enable row level security;
 
 revoke all on public.publication_claim_codes from anon, authenticated;
+revoke all on public.member_publication_claims from anon, authenticated;
 grant select on public.member_publication_claims to authenticated;
 
 create policy member_publication_claims_owner_read on public.member_publication_claims
