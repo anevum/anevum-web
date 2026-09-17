@@ -24,8 +24,9 @@ export function rankMarkForLevel(level: number) {
   return `${tier}·${String(index).padStart(2, "0")}`;
 }
 
-export function networkLevelDetails(progress: MemberProgress): NetworkLevelDetails {
-  const xp = memberXP(progress);
+export function networkLevelDetails(progress: MemberProgress, verifiedBonusXP = 0): NetworkLevelDetails {
+  const bonusXP = Number.isFinite(verifiedBonusXP) ? Math.max(0, Math.floor(verifiedBonusXP)) : 0;
+  const xp = memberXP(progress) + bonusXP;
   const level = Math.min(100, Math.floor(xp / XP_PER_LEVEL));
   const currentFloor = level * XP_PER_LEVEL;
   const nextThreshold = level >= 100 ? currentFloor : (level + 1) * XP_PER_LEVEL;
