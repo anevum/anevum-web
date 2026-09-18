@@ -50,16 +50,16 @@ function resolveCommand(raw: string) {
   if (["stories", "story", "the story"].includes(command)) return "https://anevum.com/the-story";
   if (["reply", "book", "book one", "the book"].includes(command)) return "https://anevum.com/the-book";
   if (["wiki", "knowledge", "truth", "canon"].includes(command)) return "https://anevum.com/wiki";
-  if (["wiki new", "new page", "propose"].includes(command)) return "https://anevum.com/wikinew";
-  if (["wiki saved", "saved"].includes(command)) return "https://anevum.com/wikisaved";
-  if (["wiki admin", "moderation"].includes(command)) return "https://anevum.com/wikiadmin";
+  if (["wiki new", "new page", "propose"].includes(command)) return "https://anevum.com/wiki/new";
+  if (["wiki saved", "saved"].includes(command)) return "https://anevum.com/wiki/saved";
+  if (["wiki admin", "moderation"].includes(command)) return "https://anevum.com/wiki/admin";
   if (["lattice", "space", "explore", "relations"].includes(command)) return "https://anevum.com/lattice";
   if (["rhenlink", "profile", "identity", "id"].includes(command)) return "https://anevum.com/rhenlink";
   if (["command", "cmd", "control", "operations"].includes(command)) return "https://anevum.com/command";
   if (command === "search") return "https://anevum.com/wiki";
   if (command.startsWith("wiki ")) {
     const slug = command.slice(5).trim().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
-    return slug ? `https://anevum.com/wiki${slug}` : "https://anevum.com/wiki";
+    return slug ? `https://anevum.com/wiki/${slug}` : "https://anevum.com/wiki";
   }
   return null;
 }
