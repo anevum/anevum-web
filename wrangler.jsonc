@@ -17,6 +17,10 @@
     {
       "pattern": "lattice.anevum.com",
       "custom_domain": true
+    },
+    {
+      "pattern": "command.anevum.com/*",
+      "zone_name": "anevum.com"
     }
 ],
   "assets": {
