@@ -115,14 +115,27 @@ export class FinanceBackendUnavailable extends Error {
 export async function loadFinanceSnapshot(session: MemberSession | null = loadSession()) {
   if (!session?.access_token) throw new FinanceBackendUnavailable("RHENLINK administrator session required.");
 
-  const response = await fetch(`${financeApiBase}/v1/finance/snapshot`, {
-    method: "GET",
-    cache: "no-store",
-    headers: {
-      Accept: "application/json",
-      Authorization: `Bearer ${session.access_token}`,
-    },
-  });
+  const controller = new AbortController();
+  const timeout = window.setTimeout(() => controller.abort(), 8_000);
+  let response: Response;
+  try {
+    response = await fetch(`${financeApiBase}/v1/finance/snapshot`, {
+      method: "GET",
+      cache: "no-store",
+      signal: controller.signal,
+      headers: {
+        Accept: "application/json",
+        Authorization: `Bearer ${session.access_token}`,
+      },
+    });
+  } catch (cause) {
+    if (cause instanceof DOMException && cause.name === "AbortError") {
+      throw new FinanceBackendUnavailable("Finance API timed out after 8 seconds.");
+    }
+    throw cause;
+  } finally {
+    window.clearTimeout(timeout);
+  }
 
   const payload = await response.json().catch(() => null) as FinanceSnapshot | { detail?: string } | null;
   if (!response.ok) {
