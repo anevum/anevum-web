@@ -17,12 +17,8 @@
     {
       "pattern": "lattice.anevum.com",
       "custom_domain": true
-    },
-    {
-      "pattern": "command.anevum.com",
-      "custom_domain": true
     }
-  ],
+],
   "assets": {
     "directory": "./dist",
     "binding": "ASSETS",
