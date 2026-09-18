@@ -7,7 +7,7 @@ import { getLaunchReadiness, launchReadinessSummary, type LaunchReadinessState }
 import {
   WIKI_CANON_STATES,
   WikiBackendUnavailable,
-  isWikiAdmin,
+  isCommandAdmin,
   isWikiProductVisible,
   loadPendingWikiSubmissions,
   loadWikiControlPages,
@@ -55,7 +55,7 @@ function ReadinessIcon({ state }: { state: LaunchReadinessState }) {
 
 export function CommandHome() {
   const session = useCommandSession();
-  const admin = isWikiAdmin(session);
+  const admin = isCommandAdmin(session);
   const [pages, setPages] = useState<WikiPage[]>([]);
   const [queue, setQueue] = useState<WikiSubmission[]>([]);
   const [canonState, setCanonState] = useState<SurfaceState>("idle");
