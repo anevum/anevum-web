@@ -123,6 +123,24 @@ export function Rhenlink() {
   }, [releaseSource]);
 
   useEffect(() => {
+    if (session || requestedMode !== "signin") return;
+
+    // The RHENLINK page is lazy-loaded. Browser hash scrolling can fire before
+    // this component mounts, leaving mobile users at the hero and making the
+    // SIGN IN action appear to loop back to the same page. Scroll only after
+    // the auth section has actually been committed to the DOM.
+    const frame = window.requestAnimationFrame(() => {
+      const auth = document.getElementById("rhenlink-auth");
+      if (!auth) return;
+      auth.scrollIntoView({ block: "start", behavior: "auto" });
+      const email = auth.querySelector<HTMLInputElement>('input[name="email"]');
+      window.setTimeout(() => email?.focus({ preventScroll: true }), 80);
+    });
+
+    return () => window.cancelAnimationFrame(frame);
+  }, [requestedMode, session]);
+
+  useEffect(() => {
     if (!session || !returnTarget) return;
     const targetUrl = createRhenlinkHandoffUrl(returnTarget, session);
     if (!targetUrl) return;
