@@ -172,7 +172,7 @@ const LATTICE_META = {
 const COMMAND_META = {
   title: "ANEVUM COMMAND",
   description: "Private ANEVUM company cockpit for publishing, product, canon, identity, finance and infrastructure.",
-  canonical: "https://command.anevum.com/",
+  canonical: "https://anevum.com/command",
   ogTitle: "ANEVUM COMMAND",
   ogType: "website",
   robots: "noindex,nofollow,noarchive",
