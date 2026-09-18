@@ -32,12 +32,18 @@ export type AuthRedirectResult =
   | { status: "error"; message: string }
   | null;
 
+export type RhenlinkReturnTarget = "command";
+
 const defaultProjectUrl = "https://mfntzxheldzdvlokyntk.supabase.co";
 const defaultPublishableKey = "sb_publishable_XfkgeXau2-6XOPzoXF-Nnw_FSnx0Sae";
 const projectUrl = (import.meta.env.VITE_SUPABASE_URL || defaultProjectUrl).replace(/\/$/, "");
 const publicKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || import.meta.env.VITE_SUPABASE_ANON_KEY || defaultPublishableKey;
 const storageKey = "anevum.rhenlink.session.v1";
 const sharedIdentityCookieKey = "anevum_rhenlink_identity_v1";
+const rhenlinkHandoffMarker = "anevum-rhenlink-v1";
+const rhenlinkReturnTargets: Record<RhenlinkReturnTarget, string> = {
+  command: "https://command.anevum.com/",
+};
 let metadataWriteQueue: Promise<unknown> = Promise.resolve();
 
 export const memberBackend = {
@@ -235,6 +241,61 @@ export async function redeemPublicationCode(code: string, session = loadSession(
   const claim = claims[0];
   if (!claim) throw new Error("REPLY ownership could not be verified.");
   return claim;
+}
+
+export function resolveRhenlinkReturnTarget(): RhenlinkReturnTarget | null {
+  if (typeof window === "undefined") return null;
+  const requested = new URLSearchParams(window.location.search).get("return");
+  return requested === "command" ? "command" : null;
+}
+
+export function createRhenlinkHandoffUrl(target: RhenlinkReturnTarget, session = loadSession()) {
+  if (!session) return null;
+  const url = new URL(rhenlinkReturnTargets[target]);
+  const handoff = new URLSearchParams({
+    handoff: rhenlinkHandoffMarker,
+    access_token: session.access_token,
+  });
+  if (session.refresh_token) handoff.set("refresh_token", session.refresh_token);
+  if (session.expires_in) handoff.set("expires_in", String(session.expires_in));
+  url.hash = handoff.toString();
+  return url.toString();
+}
+
+export async function consumeRhenlinkHandoff(): Promise<AuthRedirectResult> {
+  if (typeof window === "undefined" || !window.location.hash) return null;
+  const params = new URLSearchParams(window.location.hash.slice(1));
+  if (params.get("handoff") !== rhenlinkHandoffMarker) return null;
+
+  const accessToken = params.get("access_token");
+  const refreshToken = params.get("refresh_token") || undefined;
+  const expiresValue = Number(params.get("expires_in") || 0);
+
+  // Remove bearer material from the visible URL before making any network request.
+  const cleanUrl = `${window.location.pathname}${window.location.search}`;
+  window.history.replaceState({}, document.title, cleanUrl);
+
+  if (!accessToken) return { status: "error", message: "RHENLINK handoff did not include an access token." };
+
+  try {
+    const user = await request<MemberUser>("/auth/v1/user", {
+      method: "GET",
+      headers: headers(accessToken),
+    });
+    const session: MemberSession = {
+      access_token: accessToken,
+      refresh_token: refreshToken,
+      expires_in: Number.isFinite(expiresValue) && expiresValue > 0 ? expiresValue : undefined,
+      user,
+    };
+    saveSession(session);
+    return { status: "signed-in", session };
+  } catch (error) {
+    return {
+      status: "error",
+      message: error instanceof Error ? error.message : "RHENLINK handoff could not be completed.",
+    };
+  }
 }
 
 export async function consumeAuthRedirect(): Promise<AuthRedirectResult> {
