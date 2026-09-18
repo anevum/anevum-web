@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
-import { AlertTriangle, BarChart3, BookOpenText, CheckCircle2, CircleDashed, CircleUserRound, Database, GitBranch, LockKeyhole, Orbit, RadioTower, Rocket, ShieldCheck } from "lucide-react";
+import { AlertTriangle, BarChart3, BookOpenText, CheckCircle2, CircleDashed, CircleUserRound, Database, GitBranch, Landmark, Layers3, LockKeyhole, Orbit, RadioTower, Rocket, ShieldCheck, WalletCards } from "lucide-react";
 import { loadSession, syncCurrentUser, type MemberSession } from "./memberClient";
+import { CommandFinance } from "./CommandFinance";
 import { CANON_LIFECYCLE_COUNTS, CANON_PROJECTION_SYNC } from "./canonProjection";
 import { getLaunchReadiness, launchReadinessSummary, type LaunchReadinessState } from "./launchReadiness";
 import {
@@ -27,10 +28,10 @@ function useCommandSession() {
 }
 
 const modules = [
-  { code: "WIKI", title: "Canonical Database", detail: "Inspect the released projection of the live Notion canon authority and its lifecycle state.", href: "https://wiki.anevum.com/", icon: BookOpenText },
-  { code: "LATTICE", title: "Relation Runtime", detail: "Navigate only Wiki-cleared records and publication-safe relationships.", href: "https://lattice.anevum.com/", icon: Orbit },
-  { code: "RHENLINK", title: "Identity Layer", detail: "Resolve persistent identity, progression and authenticated product behavior.", href: "https://anevum.com/rhenlink", icon: CircleUserRound },
-  { code: "GITHUB", title: "Production Source", detail: "The active implementation is built from the ANEVUM GitHub main branch.", href: "https://github.com/anevum/anevum-web", icon: GitBranch },
+  { code: "COMPANY", title: "Company OS", detail: "Durable operating authority for priorities, release state, system roles and locked decisions.", href: "https://app.notion.com/p/3d988cc2ef148197b161c6bad5c71325", icon: Landmark },
+  { code: "CANON", title: "Live Wiki", detail: "Fictional canon authority. Command reads controlled projections without turning canon into the company operating system.", href: "https://wiki.anevum.com/", icon: BookOpenText },
+  { code: "MEMBER", title: "LATTICE + RHENLINK", detail: "Member experience and durable identity. LATTICE consumes approved content; RHENLINK carries identity across ANEVUM.", href: "https://lattice.anevum.com/", icon: Orbit },
+  { code: "SOURCE", title: "Production Source", detail: "GitHub implementation for the public site, member surfaces, Wiki projection and Command.", href: "https://github.com/anevum/anevum-web", icon: GitBranch },
 ] as const;
 
 const stateDescriptions: Record<(typeof WIKI_CANON_STATES)[number], string> = {
@@ -141,18 +142,31 @@ export function CommandHome() {
       <header className="command-home-header">
         <div>
           <span>ANEVUM COMMAND</span>
-          <h1>Control plane.</h1>
-          <p>One authenticated operational surface. The live Notion Wiki is truth; Command observes the product-safe projection and the systems that consume it.</p>
+          <h1>Company cockpit.</h1>
+          <p>One private operating view across publishing, product, canon, identity, finance and infrastructure. Each source keeps its authority; COMMAND brings their state together.</p>
         </div>
         <div className="command-health"><i /><strong>ADMIN LINK RESOLVED</strong><small>{session.user.email}</small></div>
       </header>
 
-      <div className="command-metrics">
-        <div><Database size={16} /><span>WIKI AUTHORITY</span><strong>{canonState === "ready" ? "RESOLVED" : canonState.toUpperCase()}</strong><small>Notion Canon + Publishing Queue</small></div>
-        <div><BookOpenText size={16} /><span>PRODUCT RECORDS</span><strong>{canonState === "ready" ? productVisible : "—"}</strong><small>{CANON_PROJECTION_SYNC.queueCount} released at last sync</small></div>
-        <div><Rocket size={16} /><span>LAUNCH GATE</span><strong>{readinessSummary.criticalReady}/{readinessSummary.criticalTotal}</strong><small>{readinessSummary.complete ? "Critical launch systems resolved" : `${readinessSummary.blocking.length} critical configuration gaps`}</small></div>
-        <div><CheckCircle2 size={16} /><span>COMMUNITY QUEUE</span><strong>{moderationState === "ready" ? queue.length : moderationState === "unavailable" ? "OFF" : "—"}</strong><small>{moderationState === "unavailable" ? "Optional proposal backend not configured" : "Pending proposals"}</small></div>
+      <section className="command-operating-map" aria-label="ANEVUM operating authorities">
+        <article><Landmark size={18} /><span>OPERATIONS</span><strong>COMPANY OS</strong><p>Priorities, release state, system roles and durable decisions.</p></article>
+        <article><BookOpenText size={18} /><span>FICTION</span><strong>LIVE WIKI</strong><p>Canon authority and publication-controlled source material.</p></article>
+        <article><Layers3 size={18} /><span>PRODUCT</span><strong>ANEVUM + LATTICE</strong><p>Public story experience plus the authenticated member layer.</p></article>
+        <article><CircleUserRound size={18} /><span>IDENTITY</span><strong>RHENLINK</strong><p>One member identity shared across authorized ANEVUM surfaces.</p></article>
+        <article><WalletCards size={18} /><span>CAPITAL</span><strong>FINANCE</strong><p>Cash flow and IBKR telemetry live inside COMMAND.</p></article>
+      </section>
+
+      <div className="command-metrics command-cohesive-metrics">
+        <div><Landmark size={16} /><span>OPERATING AUTHORITY</span><strong>COMPANY OS</strong><small>Company state remains separate from fictional canon</small></div>
+        <div><Database size={16} /><span>CANON AUTHORITY</span><strong>{canonState === "ready" ? "RESOLVED" : canonState.toUpperCase()}</strong><small>Live Wiki + publication gate</small></div>
+        <div><Rocket size={16} /><span>RELEASE SYSTEM</span><strong>{readinessSummary.criticalReady}/{readinessSummary.criticalTotal}</strong><small>{readinessSummary.complete ? "Critical launch systems resolved" : `${readinessSummary.blocking.length} critical configuration gaps`}</small></div>
+        <div><CheckCircle2 size={16} /><span>PUBLIC CANON</span><strong>{canonState === "ready" ? productVisible : "—"}</strong><small>{CANON_PROJECTION_SYNC.queueCount} records at last projection sync</small></div>
       </div>
+
+      <div className="command-section-label"><span>01 / CAPITAL</span><strong>Finance is a module inside COMMAND, not a separate control system.</strong></div>
+      <CommandFinance session={session} />
+
+      <div className="command-section-label"><span>02 / RELEASE</span><strong>Publishing readiness stays tied to company operations.</strong></div>
 
       <section className="command-readiness-panel" aria-labelledby="command-readiness-title">
         <header>
@@ -177,8 +191,8 @@ export function CommandHome() {
 
       <section className="command-canon-panel" aria-labelledby="command-canon-title">
         <header>
-          <div><span>CANON LIFECYCLE / MASTER WIKI SNAPSHOT</span><h2 id="command-canon-title">Wiki state is preserved end to end.</h2></div>
-          <p>Command does not confuse canon state with website release state. A record can be canonical or source-locked in the master Wiki and still remain hidden until the Website Publishing Queue releases it.</p>
+          <div><span>04 / CANON CONTROL</span><h2 id="command-canon-title">Wiki state is preserved end to end.</h2></div>
+          <p>Canon state and website release state remain separate. LATTICE and the public Wiki consume approved projections; Company OS continues to govern company operations.</p>
         </header>
         <div className="command-state-grid">
           {WIKI_CANON_STATES.map((state) => (
@@ -195,7 +209,9 @@ export function CommandHome() {
         {moderationState === "error" ? <p className="command-data-warning">COMMUNITY LAYER / {moderationError}</p> : null}
       </section>
 
-      <div className="command-module-grid">
+      <div className="command-section-label"><span>03 / SYSTEM LAYERS</span><strong>One company, multiple authoritative layers.</strong></div>
+
+      <div className="command-module-grid command-layer-grid">
         {modules.map((module) => {
           const Icon = module.icon;
           return (
@@ -230,12 +246,12 @@ export function CommandHome() {
       </section>
 
       <div className="command-event-stream">
-        <div className="command-event-head"><span>OPERATING MODEL</span><strong>ONE RUNTIME / WIKI-AUTHORITATIVE DATA FLOW</strong></div>
-        <div><time>01</time><span>anevum.com</span><p>Public story and launch surface.</p></div>
-        <div><time>02</time><span>wiki.anevum.com</span><p>Browser-safe release projection of the live canonical Notion Wiki.</p></div>
-        <div><time>03</time><span>lattice.anevum.com</span><p>Relational interpretation of Wiki-cleared records only.</p></div>
-        <div><time>04</time><span>anevum.com/rhenlink</span><p>Persistent identity, saves and progression across the system.</p></div>
-        <div><time>05</time><span>command.anevum.com</span><p>Private control and observability surface.</p></div>
+        <div className="command-event-head"><span>SYSTEM CONTRACT</span><strong>ONE ANEVUM / CLEAR AUTHORITY BOUNDARIES</strong></div>
+        <div><time>01</time><span>Company OS</span><p>Runs the company: priorities, release state, operating decisions and system roles.</p></div>
+        <div><time>02</time><span>Live Wiki</span><p>Owns fictional truth and feeds release-controlled projections.</p></div>
+        <div><time>03</time><span>ANEVUM Web</span><p>One implementation presents public, member, Wiki and Command surfaces.</p></div>
+        <div><time>04</time><span>RHENLINK</span><p>Provides identity continuity without becoming a second company or user system.</p></div>
+        <div><time>05</time><span>COMMAND</span><p>Aggregates operating state and telemetry without replacing source systems.</p></div>
       </div>
     </section>
   );
