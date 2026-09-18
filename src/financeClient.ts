@@ -39,8 +39,9 @@ export type FinanceSnapshot = {
     connected: boolean;
     host: string;
     port: number;
+    reason?: string | null;
   };
-  account: {
+  account: ({
     account: string;
     netLiquidation: number;
     totalCash: number;
@@ -56,7 +57,7 @@ export type FinanceSnapshot = {
     unrealizedPnl: number;
     realizedPnl: number;
     cashPercent: number;
-  };
+  } | null);
   positions: Array<{
     contract: {
       symbol: string;
@@ -134,5 +135,5 @@ export async function loadFinanceSnapshot(session: MemberSession | null = loadSe
 
 export const financeBackend = {
   baseUrl: financeApiBase,
-  refreshMs: 15_000,
+  refreshMs: 5_000,
 };

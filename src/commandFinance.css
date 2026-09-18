@@ -413,3 +413,93 @@
   .finance-integrity{grid-template-columns:auto 1fr}
   .finance-integrity>small{grid-column:1 / -1;text-align:left}
 }
+
+
+.finance-live-grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:12px;
+  padding:16px 20px 20px;
+  border-bottom:1px solid var(--sys-line);
+}
+.finance-live-card{
+  min-width:0;
+  border:1px solid var(--sys-line);
+  background:rgba(255,255,255,.012);
+}
+.finance-live-card>header{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:14px;
+  padding:14px 15px 10px;
+  border-bottom:1px solid rgba(202,220,228,.05);
+}
+.finance-live-card>header span,
+.finance-live-card footer,
+.finance-live-stats span,
+.finance-live-price small{
+  color:#52635b;
+  font-size:.34rem;
+  letter-spacing:.1em;
+}
+.finance-live-card>header strong{
+  display:block;
+  margin-top:5px;
+  color:#c6d2cc;
+  font-size:.8rem;
+  letter-spacing:.08em;
+}
+.finance-live-card>header em{
+  font-style:normal;
+  font-size:.52rem;
+  letter-spacing:.05em;
+}
+.finance-live-card>header em.positive{color:#8bd9b2}
+.finance-live-card>header em.negative{color:#c98e87}
+.finance-live-price{
+  display:flex;
+  justify-content:space-between;
+  align-items:end;
+  gap:12px;
+  padding:17px 15px 15px;
+}
+.finance-live-price>strong{
+  color:#d4ded9;
+  font:400 1.8rem/1 Georgia,"Times New Roman",serif;
+}
+.finance-live-stats{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  border-top:1px solid rgba(202,220,228,.05);
+}
+.finance-live-stats>div{
+  min-width:0;
+  padding:12px;
+  border-right:1px solid rgba(202,220,228,.05);
+}
+.finance-live-stats>div:last-child{border-right:0}
+.finance-live-stats strong{
+  display:block;
+  margin-top:5px;
+  overflow:hidden;
+  color:#9eaea6;
+  font-size:.51rem;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.finance-live-card>footer{
+  display:flex;
+  gap:14px;
+  padding:9px 12px;
+  border-top:1px solid rgba(202,220,228,.05);
+}
+.finance-live-card>footer span:last-child{margin-left:auto}
+
+@media(max-width:760px){
+  .finance-live-grid{grid-template-columns:1fr;padding:12px}
+  .finance-live-stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .finance-live-stats>div:nth-child(2){border-right:0}
+  .finance-live-stats>div:nth-child(n+3){border-top:1px solid rgba(202,220,228,.05)}
+  .finance-live-price>strong{font-size:1.45rem}
+}
