@@ -238,7 +238,7 @@ export function CommandHome() {
               <strong>{page.title}</strong>
               <em className={`record-state state-${state.toLowerCase().replace(/[^a-z]+/g, "-")}`}>{state}</em>
               <small>{page.freeze_state?.toUpperCase() || page.status.toUpperCase()}</small>
-              {isWikiProductVisible(page) ? <a href={`https://anevum.com/wiki${encodeURIComponent(page.slug)}`}>OPEN ↗</a> : <b>CONTROL ONLY</b>}
+              {isWikiProductVisible(page) ? <a href={`https://anevum.com/wiki/${encodeURIComponent(page.slug)}`}>OPEN ↗</a> : <b>CONTROL ONLY</b>}
             </div>
           );
         }) : null}
