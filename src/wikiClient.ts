@@ -158,6 +158,18 @@ export function isWikiAdmin(session = loadSession()) {
   return metadata.wiki_admin === true || metadata.role === "admin" || metadata.role === "wiki_admin";
 }
 
+export function isCommandAdmin(session = loadSession()) {
+  const metadata = session?.user?.app_metadata || {};
+  const role = String(metadata.role || "").trim().toLowerCase();
+  return metadata.command_admin === true
+    || metadata.wiki_admin === true
+    || role === "owner"
+    || role === "founder"
+    || role === "admin"
+    || role === "command_admin"
+    || role === "wiki_admin";
+}
+
 function normalizeStateValue(value: unknown) {
   return String(value || "").trim().toLowerCase().replace(/[\s_]+/g, "-");
 }

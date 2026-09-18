@@ -42,7 +42,7 @@ const storageKey = "anevum.rhenlink.session.v1";
 const sharedIdentityCookieKey = "anevum_rhenlink_identity_v1";
 const rhenlinkHandoffMarker = "anevum-rhenlink-v1";
 const rhenlinkReturnTargets: Record<RhenlinkReturnTarget, string> = {
-  command: "https://command.anevum.com/",
+  command: "https://anevum.com/command",
 };
 let metadataWriteQueue: Promise<unknown> = Promise.resolve();
 

@@ -20,7 +20,7 @@ const surfaces = [
   { id: "wiki" as const, label: "WIKI", code: "CANON", href: "https://wiki.anevum.com/", icon: BookOpenText },
   { id: "lattice" as const, label: "LATTICE", code: "MEMBER", href: "https://lattice.anevum.com/", icon: Orbit },
   { id: "rhenlink" as const, label: "RHENLINK", code: "IDENT", href: "https://anevum.com/rhenlink", icon: CircleUserRound },
-  { id: "command" as const, label: "COMMAND", code: "OPS", href: "https://command.anevum.com/", icon: Command },
+  { id: "command" as const, label: "COMMAND", code: "OPS", href: "https://anevum.com/command", icon: Command },
 ];
 
 const surfaceMeta: Record<SystemSurface, { eyebrow: string; detail: string; access: string }> = {
