@@ -17,8 +17,8 @@ export type SystemSurface = "anevum" | "stories" | "wiki" | "lattice" | "rhenlin
 const surfaces = [
   { id: "anevum" as const, label: "ANEVUM", code: "ROOT", href: "https://anevum.com/", icon: House },
   { id: "stories" as const, label: "REPLY", code: "STORY", href: "https://anevum.com/the-book", icon: LibraryBig },
-  { id: "wiki" as const, label: "WIKI", code: "CANON", href: "https://wiki.anevum.com/", icon: BookOpenText },
-  { id: "lattice" as const, label: "LATTICE", code: "MEMBER", href: "https://lattice.anevum.com/", icon: Orbit },
+  { id: "wiki" as const, label: "WIKI", code: "CANON", href: "https://anevum.com/wiki", icon: BookOpenText },
+  { id: "lattice" as const, label: "LATTICE", code: "MEMBER", href: "https://anevum.com/lattice", icon: Orbit },
   { id: "rhenlink" as const, label: "RHENLINK", code: "IDENT", href: "https://anevum.com/rhenlink", icon: CircleUserRound },
   { id: "command" as const, label: "COMMAND", code: "OPS", href: "https://anevum.com/command", icon: Command },
 ];
@@ -49,17 +49,17 @@ function resolveCommand(raw: string) {
   if (["home", "root", "anevum"].includes(command)) return "https://anevum.com/";
   if (["stories", "story", "the story"].includes(command)) return "https://anevum.com/the-story";
   if (["reply", "book", "book one", "the book"].includes(command)) return "https://anevum.com/the-book";
-  if (["wiki", "knowledge", "truth", "canon"].includes(command)) return "https://wiki.anevum.com/";
-  if (["wiki new", "new page", "propose"].includes(command)) return "https://wiki.anevum.com/new";
-  if (["wiki saved", "saved"].includes(command)) return "https://wiki.anevum.com/saved";
-  if (["wiki admin", "moderation"].includes(command)) return "https://wiki.anevum.com/admin";
-  if (["lattice", "space", "explore", "relations"].includes(command)) return "https://lattice.anevum.com/";
+  if (["wiki", "knowledge", "truth", "canon"].includes(command)) return "https://anevum.com/wiki";
+  if (["wiki new", "new page", "propose"].includes(command)) return "https://anevum.com/wikinew";
+  if (["wiki saved", "saved"].includes(command)) return "https://anevum.com/wikisaved";
+  if (["wiki admin", "moderation"].includes(command)) return "https://anevum.com/wikiadmin";
+  if (["lattice", "space", "explore", "relations"].includes(command)) return "https://anevum.com/lattice";
   if (["rhenlink", "profile", "identity", "id"].includes(command)) return "https://anevum.com/rhenlink";
-  if (["command", "cmd", "control", "operations"].includes(command)) return "https://command.anevum.com/";
-  if (command === "search") return "https://wiki.anevum.com/";
+  if (["command", "cmd", "control", "operations"].includes(command)) return "https://anevum.com/command";
+  if (command === "search") return "https://anevum.com/wiki";
   if (command.startsWith("wiki ")) {
     const slug = command.slice(5).trim().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
-    return slug ? `https://wiki.anevum.com/${slug}` : "https://wiki.anevum.com/";
+    return slug ? `https://anevum.com/wiki${slug}` : "https://anevum.com/wiki";
   }
   return null;
 }
@@ -173,10 +173,10 @@ export function UnifiedSystemShell({
         <div className="system-identity-slot"><RhenlinkIdentityCard /></div>
         <div className="system-side-module system-quick-module">
           <span>QUICK COMMANDS</span>
-          <button type="button" onClick={() => go("https://wiki.anevum.com/")}><BookOpenText size={13} />wiki / canonical record</button>
-          <button type="button" onClick={() => go("https://lattice.anevum.com/")}><Orbit size={13} />lattice / relations</button>
+          <button type="button" onClick={() => go("https://anevum.com/wiki")}><BookOpenText size={13} />wiki / canonical record</button>
+          <button type="button" onClick={() => go("https://anevum.com/lattice")}><Orbit size={13} />lattice / relations</button>
           <button type="button" onClick={() => go("https://anevum.com/rhenlink")}><CircleUserRound size={13} />rhenlink / identity</button>
-          <button type="button" onClick={() => go("https://command.anevum.com/")}><Terminal size={13} />command / control</button>
+          <button type="button" onClick={() => go("https://anevum.com/command")}><Terminal size={13} />command / control</button>
         </div>
         <div className="system-side-module system-host-module"><span>HOST</span><code>{hostname}</code><small>ONE ANEVUM RUNTIME / CLEAR SOURCE AUTHORITY</small></div>
       </aside>
