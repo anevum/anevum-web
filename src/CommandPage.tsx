@@ -29,8 +29,8 @@ function useCommandSession() {
 
 const modules = [
   { code: "COMPANY", title: "Company OS", detail: "Durable operating authority for priorities, release state, system roles and locked decisions.", href: "https://app.notion.com/p/3d988cc2ef148197b161c6bad5c71325", icon: Landmark },
-  { code: "CANON", title: "Live Wiki", detail: "Fictional canon authority. Command reads controlled projections without turning canon into the company operating system.", href: "https://wiki.anevum.com/", icon: BookOpenText },
-  { code: "MEMBER", title: "LATTICE + RHENLINK", detail: "Member experience and durable identity. LATTICE consumes approved content; RHENLINK carries identity across ANEVUM.", href: "https://lattice.anevum.com/", icon: Orbit },
+  { code: "CANON", title: "Live Wiki", detail: "Fictional canon authority. Command reads controlled projections without turning canon into the company operating system.", href: "https://anevum.com/wiki", icon: BookOpenText },
+  { code: "MEMBER", title: "LATTICE + RHENLINK", detail: "Member experience and durable identity. LATTICE consumes approved content; RHENLINK carries identity across ANEVUM.", href: "https://anevum.com/lattice", icon: Orbit },
   { code: "SOURCE", title: "Production Source", detail: "GitHub implementation for the public site, member surfaces, Wiki projection and Command.", href: "https://github.com/anevum/anevum-web", icon: GitBranch },
 ] as const;
 
@@ -238,7 +238,7 @@ export function CommandHome() {
               <strong>{page.title}</strong>
               <em className={`record-state state-${state.toLowerCase().replace(/[^a-z]+/g, "-")}`}>{state}</em>
               <small>{page.freeze_state?.toUpperCase() || page.status.toUpperCase()}</small>
-              {isWikiProductVisible(page) ? <a href={`https://wiki.anevum.com/${encodeURIComponent(page.slug)}`}>OPEN ↗</a> : <b>CONTROL ONLY</b>}
+              {isWikiProductVisible(page) ? <a href={`https://anevum.com/wiki${encodeURIComponent(page.slug)}`}>OPEN ↗</a> : <b>CONTROL ONLY</b>}
             </div>
           );
         }) : null}
