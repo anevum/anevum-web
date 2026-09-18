@@ -21,37 +21,57 @@ function resetHorizontalViewport() {
   });
 }
 
-function canonicalSurfaceRedirect() {
-  const hostname = window.location.hostname.toLowerCase();
-  const path = window.location.pathname.replace(/\/+$/, "") || "/";
-  if (hostname !== ROOT_HOST && !hostname.endsWith(".anevum.com")) return false;
+export function resolveCanonicalRuntimeTarget(
+  rawHostname: string,
+  rawPathname: string,
+  search = "",
+  hash = "",
+) {
+  const hostname = String(rawHostname || "").trim().toLowerCase();
+  const path = String(rawPathname || "/").replace(/\/+$/, "") || "/";
 
-  // This alias is same-origin, so normalize it synchronously before React reads
-  // window.location. That keeps old bookmarks/crawlers out of the 404 surface.
-  if (hostname === ROOT_HOST && (path === "/stories" || path.startsWith("/stories/"))) {
-    window.history.replaceState({}, "", `/the-book${window.location.search}${window.location.hash}`);
+  if (hostname === ROOT_HOST) {
+    // Same-origin Wiki, LATTICE and COMMAND routes are canonical now.
+    // Never bounce them back to subdomains or RHENLINK storage will fork.
+    if (path === "/stories" || path.startsWith("/stories/")) {
+      return `/the-book${search}${hash}`;
+    }
+    return null;
+  }
+
+  if (hostname === WIKI_HOST) {
+    const targetPath = path === "/" ? "/wiki" : `/wiki${path}`;
+    return `https://${ROOT_HOST}${targetPath}${search}${hash}`;
+  }
+
+  if (hostname === LATTICE_HOST) {
+    const targetPath = path === "/" ? "/lattice" : `/lattice${path}`;
+    return `https://${ROOT_HOST}${targetPath}${search}${hash}`;
+  }
+
+  if (hostname === COMMAND_HOST) {
+    return `https://${ROOT_HOST}/command${search}${hash}`;
+  }
+
+  return null;
+}
+
+function canonicalSurfaceRedirect() {
+  const target = resolveCanonicalRuntimeTarget(
+    window.location.hostname,
+    window.location.pathname,
+    window.location.search,
+    window.location.hash,
+  );
+  if (!target) return false;
+
+  if (target.startsWith("/")) {
+    window.history.replaceState({}, "", target);
     return false;
   }
 
-  if (hostname === ROOT_HOST && (path === "/wiki" || path.startsWith("/wiki/"))) {
-    const relative = path === "/wiki" ? "/" : path.slice(5) || "/";
-    window.location.replace(`https://${WIKI_HOST}${relative}${window.location.search}${window.location.hash}`);
-    return true;
-  }
-
-  if (hostname === ROOT_HOST && (path === "/lattice" || path.startsWith("/lattice/"))) {
-    const relative = path === "/lattice" ? "/" : path.slice(8) || "/";
-    window.location.replace(`https://${LATTICE_HOST}${relative}${window.location.search}${window.location.hash}`);
-    return true;
-  }
-
-  if (hostname === ROOT_HOST && (path === "/command" || path.startsWith("/command/"))) {
-    const relative = path === "/command" ? "/" : path.slice(8) || "/";
-    window.location.replace(`https://${COMMAND_HOST}${relative}${window.location.search}${window.location.hash}`);
-    return true;
-  }
-
-  return false;
+  window.location.replace(target);
+  return true;
 }
 
 export function installRuntimeFixes() {
