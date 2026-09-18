@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Activity, ArrowDownRight, ArrowUpRight, Banknote, Gauge, RefreshCw, ShieldCheck, WalletCards } from "lucide-react";
 import { financeBackend, loadFinanceSnapshot, type FinanceChartPoint, type FinanceSnapshot, type FinanceStrategySetup } from "./financeClient";
 import { type MemberSession } from "./memberClient";
@@ -88,8 +88,11 @@ export function CommandFinance({ session }: { session: MemberSession }) {
   const [clock, setClock] = useState(() => Date.now());
   const [autoRefresh, setAutoRefresh] = useState(true);
   const [lastRefresh, setLastRefresh] = useState<Date | null>(null);
+  const refreshInFlight = useRef(false);
 
   async function refresh(silent = false) {
+    if (refreshInFlight.current) return;
+    refreshInFlight.current = true;
     if (!silent) setState("loading");
     try {
       const next = await loadFinanceSnapshot(session);
@@ -103,6 +106,8 @@ export function CommandFinance({ session }: { session: MemberSession }) {
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Finance data could not be resolved.");
       setState("error");
+    } finally {
+      refreshInFlight.current = false;
     }
   }
 
