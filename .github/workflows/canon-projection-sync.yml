@@ -31,16 +31,20 @@ jobs:
       - name: Install dependencies
         run: npm install --ignore-scripts --no-audit --no-fund
 
-      - name: Verify Notion sync credential
+      - name: Check Notion sync credential
+        id: notion-credential
         env:
           NOTION_API_TOKEN: ${{ secrets.NOTION_API_TOKEN }}
         run: |
           if [ -z "$NOTION_API_TOKEN" ]; then
-            echo "::error::Repository secret NOTION_API_TOKEN is required for automated canon projection sync."
-            exit 1
+            echo "available=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::Automated canon projection sync is paused because repository secret NOTION_API_TOKEN is not configured."
+          else
+            echo "available=true" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Resolve live canon projection
+        if: steps.notion-credential.outputs.available == 'true'
         env:
           NOTION_API_TOKEN: ${{ secrets.NOTION_API_TOKEN }}
           NOTION_PUBLISHING_QUEUE_DATA_SOURCE_ID: 11bead82-0bfa-45cd-bccb-53b35dacdfdf
@@ -48,9 +52,11 @@ jobs:
         run: npm run canon:sync
 
       - name: Verify generated production build
+        if: steps.notion-credential.outputs.available == 'true'
         run: npm run build
 
       - name: Commit projection drift
+        if: steps.notion-credential.outputs.available == 'true'
         run: |
           if git diff --quiet -- src/publicObjects.ts src/canonProjection.ts public/wiki-sitemap.xml; then
             echo "Live Notion projection already matches production."
