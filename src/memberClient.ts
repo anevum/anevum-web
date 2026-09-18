@@ -169,7 +169,7 @@ export function updateMemberMetadata(patch: Record<string, unknown>) {
 }
 
 export async function signUp(input: { email: string; password: string; handle: string; displayName: string }) {
-  const redirectTo = `${window.location.origin}/rhenlink`;
+  const redirectTo = `${window.location.origin}/rhenlink${window.location.search}`;
   const payload = await request<Partial<MemberSession> & { user?: MemberUser }>(`/auth/v1/signup?redirect_to=${encodeURIComponent(redirectTo)}`, {
     method: "POST",
     headers: headers(),
