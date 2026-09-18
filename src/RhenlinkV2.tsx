@@ -6,11 +6,13 @@ import { LaunchTerminal } from "./LaunchTerminal";
 import { Button } from "./ui";
 import {
   consumeAuthRedirect,
+  createRhenlinkHandoffUrl,
   displayIdentity,
   fetchPublicationClaims,
   loadSession,
   memberBackend,
   redeemPublicationCode,
+  resolveRhenlinkReturnTarget,
   signIn,
   signOut,
   signUp,
@@ -93,7 +95,8 @@ function profileCopy(session: MemberSession | null) {
 }
 
 export function Rhenlink() {
-  const [mode, setMode] = useState<"create" | "signin">("create");
+  const returnTarget = useMemo(() => resolveRhenlinkReturnTarget(), []);
+  const [mode, setMode] = useState<"create" | "signin">(() => returnTarget ? "signin" : "create");
   const { session, setSession, progress } = useRhenlinkState();
   const [status, setStatus] = useState("");
   const [busy, setBusy] = useState(false);
@@ -117,6 +120,15 @@ export function Rhenlink() {
       capture("reply release interest opened", { source: releaseSource }, "rhenlink");
     }
   }, [releaseSource]);
+
+  useEffect(() => {
+    if (!session || !returnTarget) return;
+    const targetUrl = createRhenlinkHandoffUrl(returnTarget, session);
+    if (!targetUrl) return;
+    setStatus("RHENLINK resolved. Returning to COMMAND.");
+    const timer = window.setTimeout(() => window.location.replace(targetUrl), 80);
+    return () => window.clearTimeout(timer);
+  }, [returnTarget, session?.access_token]);
 
   useEffect(() => {
     let cancelled = false;

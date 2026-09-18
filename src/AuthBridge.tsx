@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { loadSession, saveSession, type MemberSession } from "./memberClient";
+import { consumeRhenlinkHandoff, loadSession, saveSession, type MemberSession } from "./memberClient";
 
 const ROOT_ORIGIN = "https://anevum.com";
 const TRUSTED_SURFACE_ORIGINS = new Set([
@@ -41,15 +41,17 @@ export function SystemSessionBridge({ hostname }: { hostname: string }) {
   useEffect(() => {
     if (!enabled) return;
 
+    void consumeRhenlinkHandoff().catch(() => undefined);
+
     const request = () => frameRef.current?.contentWindow?.postMessage({ type: "ANEVUM_SESSION_REQUEST" } satisfies SessionRequest, ROOT_ORIGIN);
     const receive = (event: MessageEvent) => {
       if (event.origin !== ROOT_ORIGIN || !isSessionResponse(event.data)) return;
       const current = loadSession();
       const next = event.data.session;
-      if (!next) {
-        if (current) saveSession(null);
-        return;
-      }
+      // A null iframe response is not authoritative on browsers that isolate
+      // embedded-origin storage (notably mobile Safari). Never erase a valid
+      // surface session merely because the hidden bridge cannot see root storage.
+      if (!next) return;
       if (!current || current.access_token !== next.access_token || current.user.id !== next.user.id) saveSession(next);
     };
 
