@@ -99,7 +99,7 @@ function wikiMeta(pathname) {
     return {
       title: "ANEVUM Wiki",
       description: "The publication-safe surface of the live ANEVUM Wiki and its canonical lifecycle state.",
-      canonical: "https://wiki.anevum.com/",
+      canonical: "https://anevum.com/wiki",
       ogTitle: "ANEVUM Wiki",
       ogType: "website",
       robots: "index,follow,max-image-preview:large",
@@ -107,7 +107,7 @@ function wikiMeta(pathname) {
         "@context": "https://schema.org",
         "@type": "WebSite",
         name: "ANEVUM Wiki",
-        url: "https://wiki.anevum.com/",
+        url: "https://anevum.com/wiki",
       },
     };
   }
@@ -118,7 +118,7 @@ function wikiMeta(pathname) {
     return {
       title: "ANEVUM Wiki — Private Workspace",
       description: "Authenticated ANEVUM Wiki contribution and moderation workspace.",
-      canonical: `https://wiki.anevum.com${pathname}`,
+      canonical: `https://anevum.com/wiki${pathname === "/" ? "" : pathname}`,
       ogTitle: "ANEVUM Wiki",
       ogType: "website",
       robots: "noindex,follow,noarchive",
@@ -132,7 +132,7 @@ function wikiMeta(pathname) {
     return {
       title: "Record Not Released — ANEVUM Wiki",
       description: "This ANEVUM Wiki record is not part of the current publication-safe release projection.",
-      canonical: `https://wiki.anevum.com${pathname}`,
+      canonical: `https://anevum.com/wiki${pathname === "/" ? "" : pathname}`,
       ogTitle: "ANEVUM Wiki",
       ogType: "website",
       robots: "noindex,follow,noarchive",
@@ -140,7 +140,7 @@ function wikiMeta(pathname) {
     };
   }
 
-  const canonical = `https://wiki.anevum.com/${record.slug}`;
+  const canonical = `https://anevum.com/wiki/${record.slug}`;
   return {
     title: `${record.title} — ANEVUM Wiki`,
     description: record.summary,
@@ -154,7 +154,7 @@ function wikiMeta(pathname) {
       headline: record.title,
       description: record.summary,
       url: canonical,
-      isPartOf: { "@type": "WebSite", name: "ANEVUM Wiki", url: "https://wiki.anevum.com/" },
+      isPartOf: { "@type": "WebSite", name: "ANEVUM Wiki", url: "https://anevum.com/wiki" },
     },
   };
 }
@@ -162,7 +162,7 @@ function wikiMeta(pathname) {
 const LATTICE_META = {
   title: "Lattice — ANEVUM",
   description: "ANEVUM's member and relational discovery layer, connecting release-cleared records with RHENLINK identity.",
-  canonical: "https://lattice.anevum.com/",
+  canonical: "https://anevum.com/lattice",
   ogTitle: "Lattice — ANEVUM",
   ogType: "website",
   robots: "index,follow,max-image-preview:large",
@@ -184,6 +184,20 @@ export default {
     const url = new URL(request.url);
     const host = url.hostname.toLowerCase();
     const pathname = normalizePath(url.pathname);
+
+    // Legacy subdomains are aliases only. Redirect into the single ANEVUM
+    // origin so RHENLINK local storage and authenticated state cannot fork.
+    if (host === WIKI_HOST) {
+      const targetPath = pathname === "/" ? "/wiki" : `/wiki${pathname}`;
+      return Response.redirect(`https://${ROOT_HOST}${targetPath}${url.search}`, 308);
+    }
+    if (host === LATTICE_HOST) {
+      const targetPath = pathname === "/" ? "/lattice" : `/lattice${pathname}`;
+      return Response.redirect(`https://${ROOT_HOST}${targetPath}${url.search}`, 308);
+    }
+    if (host === COMMAND_HOST) {
+      return Response.redirect(`https://${ROOT_HOST}/command${url.search}`, 308);
+    }
 
     let response;
 
@@ -217,6 +231,30 @@ export default {
     }
 
     if (host === ROOT_HOST) {
+      if (pathname === "/wiki" || pathname.startsWith("/wiki/")) {
+        const wikiPath = pathname === "/wiki" ? "/" : pathname.slice(5) || "/";
+        const meta = wikiMeta(wikiPath);
+        response = rewriteHtml(response, meta);
+        if (meta.robots.startsWith("noindex") && isHtml(response)) {
+          return withHeaders(response, { "X-Robots-Tag": "noindex, nofollow, noarchive" });
+        }
+        return response;
+      }
+
+      if (pathname === "/lattice" || pathname.startsWith("/lattice/")) {
+        return rewriteHtml(response, LATTICE_META);
+      }
+
+      if (pathname === "/command" || pathname.startsWith("/command/")) {
+        const html = isHtml(response);
+        response = rewriteHtml(response, COMMAND_META);
+        if (!html) return response;
+        return withHeaders(response, {
+          "X-Robots-Tag": "noindex, nofollow, noarchive",
+          "Cache-Control": "private, no-store",
+        });
+      }
+
       if (pathname === "/rhenlink" || pathname === "/auth-bridge" || !ROOT_PUBLIC_PATHS.has(pathname)) {
         if (isHtml(response)) return withHeaders(response, { "X-Robots-Tag": "noindex, follow, noarchive" });
       }

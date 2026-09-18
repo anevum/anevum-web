@@ -7,7 +7,7 @@ const systems = [
     label: "WIKI",
     title: "The canonical record.",
     copy: "The live ANEVUM Wiki is the source of truth for universe material. The public Wiki is a release-safe projection of records cleared for publication; it is not a second canon database.",
-    href: "https://wiki.anevum.com/",
+    href: "/wiki",
     external: true,
     icon: ShieldCheck,
   },
@@ -15,7 +15,7 @@ const systems = [
     label: "LATTICE",
     title: "The relationships between released records.",
     copy: "Lattice turns publication-cleared Wiki records into a relational navigation surface. It can reveal connections between released material, but it does not create or override canon.",
-    href: "https://lattice.anevum.com/",
+    href: "/lattice",
     external: true,
     icon: Network,
   },
@@ -56,7 +56,7 @@ export function AboutPage() {
             <p>ANEVUM is an independent home for original stories and the systems that let those stories expand into a connected universe without replacing the books that began it.</p>
             <div className="about-actions">
               <a href="/the-book"><BookOpen size={15} /> BEGIN WITH REPLY <ArrowRight size={15} /></a>
-              <a href="https://wiki.anevum.com/">OPEN THE WIKI <ExternalLink size={14} /></a>
+              <a href="/wiki">OPEN THE WIKI <ExternalLink size={14} /></a>
             </div>
           </div>
           <div className="about-statement" aria-label="ANEVUM publishing principle">

@@ -118,7 +118,7 @@ export function Lattice() {
           <p>Lattice is a relational view of the live ANEVUM Wiki. This core map uses Wiki-cleared records and publication-safe relationships only; the full released set remains available in WIKI.ANEVUM.</p>
           <div className="actions">
             {session ? <Button href="/rhenlink">OPEN @{identity.handle || "RHENLINK"}</Button> : <Button href="/rhenlink">CLAIM YOUR RHENLINK</Button>}
-            <Button href="https://wiki.anevum.com/" quiet>OPEN THE CANONICAL RECORD</Button>
+            <Button href="/wiki" quiet>OPEN THE CANONICAL RECORD</Button>
           </div>
         </div>
       </section>
@@ -163,7 +163,7 @@ export function Lattice() {
               <span>WIKI RELATION SPACE / 000</span>
               <strong>{backendReady ? "No product-visible nodes yet." : "Canonical database unavailable."}</strong>
               <p>{backendReady ? "Lattice will populate only when the live Wiki exposes records in a product-visible lifecycle state." : "Lattice is withholding universe material because it cannot resolve the Wiki authority. It will not fall back to another lore source."}</p>
-              <Button href="https://wiki.anevum.com/" quiet>OPEN WIKI</Button>
+              <Button href="/wiki" quiet>OPEN WIKI</Button>
             </div>
           ) : null}
 
@@ -183,7 +183,7 @@ export function Lattice() {
               <span className="meta">FOCUS / {categoryLabel(selected)}</span>
               <h2>{selected.title}</h2>
               <p>{selected.summary}</p>
-              <Button href={`https://wiki.anevum.com/${encodeURIComponent(selected.slug)}`}>OPEN CANONICAL RECORD</Button>
+              <Button href={`/wiki/${encodeURIComponent(selected.slug)}`}>OPEN CANONICAL RECORD</Button>
               <div className="lattice-join connected">
                 <span>WIKI LIFECYCLE STATE</span>
                 <strong>{wikiCanonState(selected).toUpperCase()}</strong>
@@ -196,7 +196,7 @@ export function Lattice() {
               <span className="meta">NO FOCUS</span>
               <h2>A graph earns its nodes.</h2>
               <p>ANEVUM does not preload parallel lore into Lattice. The live Wiki creates the relational layer.</p>
-              <Button href="https://wiki.anevum.com/" quiet>VIEW WIKI</Button>
+              <Button href="/wiki" quiet>VIEW WIKI</Button>
             </div>
           )}
 

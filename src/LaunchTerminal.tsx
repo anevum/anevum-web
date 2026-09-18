@@ -18,8 +18,8 @@ const targets: TerminalTarget[] = [
   { command: "store", label: "STORE", description: "Open the official REPLY availability surface.", href: "/store" },
   { command: "rhenlink", label: "RHENLINK", description: "Open or establish your persistent ANEVUM identity.", href: "/rhenlink" },
   { command: "about", label: "ABOUT ANEVUM", description: "See how REPLY, Wiki, Lattice and RHENLINK fit together.", href: "/about" },
-  { command: "wiki", label: "WIKI", description: "Browse records cleared by the live ANEVUM Wiki release gate.", href: "https://wiki.anevum.com/" },
-  { command: "lattice", label: "LATTICE", description: "Enter the relational map of released ANEVUM records.", href: "https://lattice.anevum.com/" },
+  { command: "wiki", label: "WIKI", description: "Browse records cleared by the live ANEVUM Wiki release gate.", href: "/wiki" },
+  { command: "lattice", label: "LATTICE", description: "Enter the relational map of released ANEVUM records.", href: "/lattice" },
 ];
 
 function emptyProgress(): MemberProgress {
@@ -179,11 +179,11 @@ export function LaunchTerminal() {
       return;
     }
     if (command === "records" || command === "canon") {
-      navigate("https://wiki.anevum.com/");
+      navigate("/wiki");
       return;
     }
     if (command === "map" || command === "world") {
-      navigate("https://lattice.anevum.com/");
+      navigate("/lattice");
       return;
     }
     const exact = targets.find((target) => target.command === command || target.label.toLowerCase() === command);

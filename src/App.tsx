@@ -213,7 +213,7 @@ export default function App() {
   const termsRoute = hostname === ROOT_HOST && routePath === "/terms";
   const contactRoute = hostname === ROOT_HOST && routePath === "/contact";
   const legalRoute = privacyRoute || termsRoute || contactRoute;
-  const rootMemberRoute = routePath === "/" || rhenlinkRoute || bookRoute || storyRoute || storeRoute;
+  const rootMemberRoute = routePath === "/" || rhenlinkRoute || bookRoute || storyRoute || storeRoute || wikiRoute || latticeRoute;
   const knownRootPublicRoute = rootMemberRoute || aboutRoute || legalRoute || wikiRoute || latticeRoute;
   const notFoundRoute = hostname === ROOT_HOST && !bridgeRoute && !commandRoute && !knownRootPublicRoute;
   const wikiPath = wikiSurfacePath(hostname, routePath);
@@ -267,7 +267,7 @@ export default function App() {
         ? {
             title: wikiRecord ? `${wikiRecord.title} — ANEVUM Wiki` : "ANEVUM Wiki",
             description: wikiRecord?.summary || "The publication-safe surface of the live ANEVUM Wiki and its canonical lifecycle state.",
-            canonical: `https://wiki.anevum.com${wikiPath === "/" ? "/" : wikiPath}`,
+            canonical: `https://anevum.com/wiki${wikiPath === "/" ? "" : wikiPath}`,
             ogTitle: wikiRecord ? `${wikiRecord.title} — ANEVUM Wiki` : "ANEVUM Wiki",
             ogType: wikiRecord ? "article" : "website",
           }
@@ -275,7 +275,7 @@ export default function App() {
           ? {
               title: "Lattice — ANEVUM",
               description: "ANEVUM's member and relational discovery layer, connecting release-cleared records with RHENLINK identity.",
-              canonical: "https://lattice.anevum.com/",
+              canonical: "https://anevum.com/lattice",
               ogTitle: "Lattice — ANEVUM",
               ogType: "website",
             }
@@ -339,8 +339,8 @@ export default function App() {
         "@type": "Article",
         headline: wikiRecord.title,
         description: wikiRecord.summary,
-        url: `https://wiki.anevum.com/${wikiRecord.slug}`,
-        isPartOf: { "@type": "WebSite", name: "ANEVUM Wiki", url: "https://wiki.anevum.com/" },
+        url: `https://anevum.com/wiki/${wikiRecord.slug}`,
+        isPartOf: { "@type": "WebSite", name: "ANEVUM Wiki", url: "https://anevum.com/wiki" },
       });
     } else {
       setStructuredData(null);
