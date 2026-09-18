@@ -49,6 +49,7 @@ export function LaunchTerminal() {
   const panelRef = useRef<HTMLElement | null>(null);
   const identity = displayIdentity(session);
   const level = networkLevelDetails(progress);
+  const identityHref = session ? "/rhenlink" : "/rhenlink?mode=signin#rhenlink-auth";
 
   const bootLines = useMemo(() => [
     "BOOT // PUBLIC LAUNCH NODE",
@@ -170,7 +171,11 @@ export function LaunchTerminal() {
       navigate("/store");
       return;
     }
-    if (command === "profile" || command === "identity" || command === "signin" || command === "login") {
+    if (command === "signin" || command === "login") {
+      navigate("/rhenlink?mode=signin#rhenlink-auth");
+      return;
+    }
+    if (command === "profile" || command === "identity") {
       navigate("/rhenlink");
       return;
     }
@@ -227,7 +232,7 @@ export function LaunchTerminal() {
         <kbd>⌘K</kbd>
       </button>
 
-      <a className={`launch-identity-pill ${session ? "resolved" : "unresolved"}`} href="/rhenlink">
+      <a className={`launch-identity-pill ${session ? "resolved" : "unresolved"}`} href={identityHref}>
         {session ? <UserRound size={16} strokeWidth={1.4} /> : <LogIn size={16} strokeWidth={1.4} />}
         <span>
           <small>{session ? `RHENLINK // ${level.rankMark}` : "RHENLINK"}</small>
@@ -257,7 +262,7 @@ export function LaunchTerminal() {
                 <div className="terminal-profile-level"><small>LEVEL {String(level.level).padStart(2, "0")}</small><strong>{level.xp.toLocaleString()} XP</strong><i><b style={{ width: `${level.percent}%` }} /></i></div>
               </a>
             ) : (
-              <a className="terminal-auth-card" href="/rhenlink"><LogIn size={18} /><span><small>IDENTITY UNRESOLVED</small><strong>CREATE OR SIGN IN TO RHENLINK</strong></span><ArrowRight size={17} /></a>
+              <a className="terminal-auth-card" href="/rhenlink?mode=signin#rhenlink-auth"><LogIn size={18} /><span><small>IDENTITY UNRESOLVED</small><strong>SIGN IN OR CREATE RHENLINK</strong></span><ArrowRight size={17} /></a>
             )}
 
             <nav id="anevum-terminal-routes" className="terminal-route-list" aria-label="Launch destinations" role="listbox" aria-hidden={typedValue}>
