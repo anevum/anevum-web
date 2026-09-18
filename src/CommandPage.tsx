@@ -119,7 +119,7 @@ export function CommandHome() {
         <span>COMMAND / AUTHORIZATION REQUIRED</span>
         <h1>Private control plane.</h1>
         <p>COMMAND is part of the same ANEVUM runtime, but operational controls resolve only after RHENLINK authentication.</p>
-        <a href="https://anevum.com/rhenlink">RESOLVE RHENLINK →</a>
+        <a href="https://anevum.com/rhenlink?return=command">RESOLVE RHENLINK →</a>
       </section>
     );
   }
