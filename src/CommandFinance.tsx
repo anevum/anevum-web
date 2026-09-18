@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Activity, ArrowDownRight, ArrowRight, ArrowUpRight, Banknote, CircleDollarSign, Gauge, LineChart, RefreshCw, ShieldCheck, WalletCards } from "lucide-react";
+import { Activity, ArrowDownRight, ArrowUpRight, Banknote, Gauge, RefreshCw, ShieldCheck, WalletCards } from "lucide-react";
 import { financeBackend, loadFinanceSnapshot, type FinanceChartPoint, type FinanceSnapshot, type FinanceStrategySetup } from "./financeClient";
 import { type MemberSession } from "./memberClient";
 
