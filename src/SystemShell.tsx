@@ -29,7 +29,7 @@ const surfaceMeta: Record<SystemSurface, { eyebrow: string; detail: string; acce
   wiki: { eyebrow: "CANONICAL KNOWLEDGE", detail: "The live ANEVUM Wiki is the record authority for every downstream surface.", access: "PUBLIC / MODERATED" },
   lattice: { eyebrow: "RELATIONAL SURFACE", detail: "Wiki-approved records expressed as navigable relation space.", access: "PUBLIC + RHENLINK" },
   rhenlink: { eyebrow: "IDENTITY SURFACE", detail: "Persistent member identity, saves, XP and achievements.", access: "MEMBER" },
-  command: { eyebrow: "OPERATIONS SURFACE", detail: "Private control plane for Wiki state, Lattice, RHENLINK and runtime operations.", access: "ADMIN" },
+  command: { eyebrow: "COMPANY OPERATIONS", detail: "Private cockpit unifying publishing, product, canon, identity, finance and infrastructure state.", access: "ADMIN" },
 };
 
 function go(href: string) {
