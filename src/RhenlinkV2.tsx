@@ -96,7 +96,8 @@ function profileCopy(session: MemberSession | null) {
 
 export function Rhenlink() {
   const returnTarget = useMemo(() => resolveRhenlinkReturnTarget(), []);
-  const [mode, setMode] = useState<"create" | "signin">(() => returnTarget ? "signin" : "create");
+  const requestedMode = useMemo(() => new URLSearchParams(window.location.search).get("mode"), []);
+  const [mode, setMode] = useState<"create" | "signin">(() => returnTarget || requestedMode === "signin" ? "signin" : "create");
   const { session, setSession, progress } = useRhenlinkState();
   const [status, setStatus] = useState("");
   const [busy, setBusy] = useState(false);
@@ -297,7 +298,7 @@ export function Rhenlink() {
         </div>
       </section>
 
-      <section className="rhenlink-shell section production-rhenlink-shell">
+      <section id="rhenlink-auth" className="rhenlink-shell section production-rhenlink-shell">
         {session ? (
           <div className="identity-dashboard production-identity-dashboard rhenlink-profile-card">
             <div className="rhenlink-profile-head">
