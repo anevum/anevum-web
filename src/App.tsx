@@ -258,7 +258,7 @@ export default function App() {
     const meta = commandRoute
       ? {
           title: "ANEVUM COMMAND",
-          description: "Private ANEVUM operations interface for Wiki state, Lattice, RHENLINK and system control.",
+          description: "Private ANEVUM company cockpit for publishing, product, canon, identity, finance and infrastructure.",
           canonical: "https://command.anevum.com/",
           ogTitle: "ANEVUM COMMAND",
           ogType: "website",
@@ -274,7 +274,7 @@ export default function App() {
         : latticeRoute
           ? {
               title: "Lattice — ANEVUM",
-              description: "ANEVUM records expressed as a relational navigation surface, subordinate to the live Wiki.",
+              description: "ANEVUM's member and relational discovery layer, connecting release-cleared records with RHENLINK identity.",
               canonical: "https://lattice.anevum.com/",
               ogTitle: "Lattice — ANEVUM",
               ogType: "website",
