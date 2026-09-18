@@ -98,6 +98,7 @@ export function Rhenlink() {
   const returnTarget = useMemo(() => resolveRhenlinkReturnTarget(), []);
   const requestedMode = useMemo(() => new URLSearchParams(window.location.search).get("mode"), []);
   const [mode, setMode] = useState<"create" | "signin">(() => returnTarget || requestedMode === "signin" ? "signin" : "create");
+  const [signinEntry, setSigninEntry] = useState(() => requestedMode === "signin");
   const { session, setSession, progress } = useRhenlinkState();
   const [status, setStatus] = useState("");
   const [busy, setBusy] = useState(false);
@@ -123,12 +124,10 @@ export function Rhenlink() {
   }, [releaseSource]);
 
   useEffect(() => {
-    if (session || requestedMode !== "signin") return;
+    if (session || !signinEntry) return;
 
-    // The RHENLINK page is lazy-loaded. Browser hash scrolling can fire before
-    // this component mounts, leaving mobile users at the hero and making the
-    // SIGN IN action appear to loop back to the same page. Scroll only after
-    // the auth section has actually been committed to the DOM.
+    // RHENLINK is lazy-loaded. Perform the sign-in transition only after the
+    // auth UI exists, rather than relying on Safari's early hash scroll.
     const frame = window.requestAnimationFrame(() => {
       const auth = document.getElementById("rhenlink-auth");
       if (!auth) return;
@@ -138,7 +137,19 @@ export function Rhenlink() {
     });
 
     return () => window.cancelAnimationFrame(frame);
-  }, [requestedMode, session]);
+  }, [signinEntry, session]);
+
+  useEffect(() => {
+    const openSignIn = () => {
+      if (session) return;
+      setMode("signin");
+      setSigninEntry(true);
+      window.history.replaceState({}, "", "/rhenlink?mode=signin#rhenlink-auth");
+    };
+
+    window.addEventListener("anevum-rhenlink-signin", openSignIn);
+    return () => window.removeEventListener("anevum-rhenlink-signin", openSignIn);
+  }, [session]);
 
   useEffect(() => {
     if (!session || !returnTarget) return;
@@ -306,15 +317,17 @@ export function Rhenlink() {
   return (
     <main className="rhenlink-page production-rhenlink rhenlink-v2">
       <LaunchTerminal />
-      <section className="rhenlink-hero production-rhenlink-hero">
-        <BrandArt variant="identity" />
-        <div>
-          <div className="rhen-brand-lockup"><CircleUserRound size={42} strokeWidth={1.1} aria-hidden="true" /><span><strong>RHENLINK</strong><small>YOUR PERSISTENT IDENTITY</small></span></div>
-          <h1>{session ? "Your place in ANEVUM." : releaseIntent ? "Keep REPLY connected." : "One identity.\nMany worlds."}</h1>
-          <p>{session ? "Your profile, Network Level, XP, achievements, verified publications, and saved progress travel together with your RHENLINK." : releaseIntent ? "Create or resolve your RHENLINK, then explicitly choose whether you want REPLY release updates attached to this identity." : "Create one persistent ANEVUM identity for your progress and achievements as the universe expands."}</p>
-          <div className="actions"><Button href="/" quiet>RETURN TO REPLY</Button></div>
-        </div>
-      </section>
+      {session || !signinEntry ? (
+        <section className="rhenlink-hero production-rhenlink-hero">
+          <BrandArt variant="identity" />
+          <div>
+            <div className="rhen-brand-lockup"><CircleUserRound size={42} strokeWidth={1.1} aria-hidden="true" /><span><strong>RHENLINK</strong><small>YOUR PERSISTENT IDENTITY</small></span></div>
+            <h1>{session ? "Your place in ANEVUM." : releaseIntent ? "Keep REPLY connected." : "One identity.\nMany worlds."}</h1>
+            <p>{session ? "Your profile, Network Level, XP, achievements, verified publications, and saved progress travel together with your RHENLINK." : releaseIntent ? "Create or resolve your RHENLINK, then explicitly choose whether you want REPLY release updates attached to this identity." : "Create one persistent ANEVUM identity for your progress and achievements as the universe expands."}</p>
+            <div className="actions"><Button href="/" quiet>RETURN TO REPLY</Button></div>
+          </div>
+        </section>
+      ) : null}
 
       <section id="rhenlink-auth" className="rhenlink-shell section production-rhenlink-shell">
         {session ? (
