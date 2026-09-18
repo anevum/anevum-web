@@ -60,7 +60,7 @@ export function CanonicalWikiHome() {
           <h1>The live record.<br /><em>Released deliberately.</em></h1>
           <p>WIKI.ANEVUM is the browser-safe publication surface of the live Transcosmic Canon Wiki. Canon lifecycle and website release state stay separate: only records cleared by the Website Publishing Queue appear here.</p>
           <div className="canonical-wiki-actions">
-            <a className="wiki-primary-action" href="https://lattice.anevum.com/"><Orbit size={15} /> OPEN LATTICE</a>
+            <a className="wiki-primary-action" href="/lattice"><Orbit size={15} /> OPEN LATTICE</a>
             {session ? <a className="wiki-member-state" href="https://anevum.com/rhenlink"><UserRound size={13} /> @{identity.handle || "member"}</a> : <a className="wiki-member-state" href="https://anevum.com/rhenlink">CREATE RHENLINK</a>}
           </div>
         </div>
@@ -208,7 +208,7 @@ export function CanonicalWikiArticle({ slug }: { slug: string }) {
                 <Bookmark size={14} fill={saved ? "currentColor" : "none"} /> {saved ? "SAVED TO RHENLINK" : "SAVE TO RHENLINK"}
               </button>
             ) : <a href="https://anevum.com/rhenlink" className="wiki-save-button"><Bookmark size={14} /> SAVE WITH RHENLINK</a>}
-            <a href="https://lattice.anevum.com/" className="wiki-edit-button"><Orbit size={14} /> VIEW IN LATTICE</a>
+            <a href="/lattice" className="wiki-edit-button"><Orbit size={14} /> VIEW IN LATTICE</a>
           </div>
         </header>
 
