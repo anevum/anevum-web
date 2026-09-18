@@ -158,10 +158,19 @@ export function isWikiAdmin(session = loadSession()) {
   return metadata.wiki_admin === true || metadata.role === "admin" || metadata.role === "wiki_admin";
 }
 
+const COMMAND_FOUNDER_EMAIL = "devon@anevum.com";
+
 export function isCommandAdmin(session = loadSession()) {
   const metadata = session?.user?.app_metadata || {};
   const role = String(metadata.role || "").trim().toLowerCase();
-  return metadata.command_admin === true
+  const email = String(session?.user?.email || "").trim().toLowerCase();
+
+  // Founder recovery path: RHENLINK has already authenticated this Supabase
+  // identity, so COMMAND can restore the founder control surface even when
+  // the production account is missing its server-managed app_metadata claim.
+  // Sensitive downstream APIs still validate the bearer token independently.
+  return email === COMMAND_FOUNDER_EMAIL
+    || metadata.command_admin === true
     || metadata.wiki_admin === true
     || role === "owner"
     || role === "founder"
