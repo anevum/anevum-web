@@ -8,6 +8,7 @@ import {
   safeDecodeRouteValue,
   WIKI_HOST,
 } from "../src/runtimeHost.ts";
+import { resolveCanonicalRuntimeTarget } from "../src/runtimeFixes.ts";
 
 assert.equal(resolveRuntimeHostname(ROOT_HOST), ROOT_HOST);
 assert.equal(resolveRuntimeHostname(WIKI_HOST), WIKI_HOST);
@@ -30,4 +31,12 @@ assert.equal(normalizeRuntimePath("/__meta/not-a-public-route.html"), "/__meta/n
 assert.equal(safeDecodeRouteValue("Rhenlink%20Record"), "Rhenlink Record");
 assert.equal(safeDecodeRouteValue("bad%ZZslug"), "");
 
-console.log("Runtime host contract valid: production hosts preserved, preview/local hosts resolve to ANEVUM root, and metadata rewrites restore public paths.");
+assert.equal(resolveCanonicalRuntimeTarget(ROOT_HOST, "/command"), null);
+assert.equal(resolveCanonicalRuntimeTarget(ROOT_HOST, "/lattice"), null);
+assert.equal(resolveCanonicalRuntimeTarget(ROOT_HOST, "/wiki"), null);
+assert.equal(resolveCanonicalRuntimeTarget(COMMAND_HOST, "/"), "https://anevum.com/command");
+assert.equal(resolveCanonicalRuntimeTarget(LATTICE_HOST, "/"), "https://anevum.com/lattice");
+assert.equal(resolveCanonicalRuntimeTarget(WIKI_HOST, "/ovara"), "https://anevum.com/wiki/ovara");
+assert.equal(resolveCanonicalRuntimeTarget(ROOT_HOST, "/stories"), "/the-book");
+
+console.log("Runtime host contract valid: same-origin authenticated surfaces remain canonical, legacy subdomains collapse into anevum.com, preview/local hosts resolve safely, and metadata rewrites restore public paths.");
