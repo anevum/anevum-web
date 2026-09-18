@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { loadSession, saveSession, type MemberSession } from "./memberClient";
+import { consumeRhenlinkHandoff, loadSession, saveSession, type MemberSession } from "./memberClient";
 
 const ROOT_ORIGIN = "https://anevum.com";
 const TRUSTED_SURFACE_ORIGINS = new Set([
@@ -40,6 +40,8 @@ export function SystemSessionBridge({ hostname }: { hostname: string }) {
 
   useEffect(() => {
     if (!enabled) return;
+
+    void consumeRhenlinkHandoff().catch(() => undefined);
 
     const request = () => frameRef.current?.contentWindow?.postMessage({ type: "ANEVUM_SESSION_REQUEST" } satisfies SessionRequest, ROOT_ORIGIN);
     const receive = (event: MessageEvent) => {
