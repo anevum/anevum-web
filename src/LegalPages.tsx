@@ -183,7 +183,7 @@ export function ContactPage() {
         <div className="legal-route-grid">
           <a href="/rhenlink"><strong>RHENLINK</strong><span>Identity and account state</span></a>
           <a href="/the-book"><strong>REPLY</strong><span>Book and release information</span></a>
-          <a href="https://wiki.anevum.com/"><strong>WIKI</strong><span>Released canonical reference</span><ExternalLink size={13} /></a>
+          <a href="/wiki"><strong>WIKI</strong><span>Released canonical reference</span><ExternalLink size={13} /></a>
         </div>
       </Section>
     </LegalShell>
