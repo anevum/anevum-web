@@ -17,19 +17,19 @@ export type SystemSurface = "anevum" | "stories" | "wiki" | "lattice" | "rhenlin
 const surfaces = [
   { id: "anevum" as const, label: "ANEVUM", code: "ROOT", href: "https://anevum.com/", icon: House },
   { id: "stories" as const, label: "REPLY", code: "STORY", href: "https://anevum.com/the-book", icon: LibraryBig },
-  { id: "wiki" as const, label: "WIKI", code: "TRUTH", href: "https://wiki.anevum.com/", icon: BookOpenText },
-  { id: "lattice" as const, label: "LATTICE", code: "SPACE", href: "https://lattice.anevum.com/", icon: Orbit },
+  { id: "wiki" as const, label: "WIKI", code: "CANON", href: "https://wiki.anevum.com/", icon: BookOpenText },
+  { id: "lattice" as const, label: "LATTICE", code: "MEMBER", href: "https://lattice.anevum.com/", icon: Orbit },
   { id: "rhenlink" as const, label: "RHENLINK", code: "IDENT", href: "https://anevum.com/rhenlink", icon: CircleUserRound },
-  { id: "command" as const, label: "COMMAND", code: "CTRL", href: "https://command.anevum.com/", icon: Command },
+  { id: "command" as const, label: "COMMAND", code: "OPS", href: "https://command.anevum.com/", icon: Command },
 ];
 
 const surfaceMeta: Record<SystemSurface, { eyebrow: string; detail: string; access: string }> = {
   anevum: { eyebrow: "PUBLIC FRONT DOOR", detail: "Story, knowledge, place and identity converge here.", access: "PUBLIC" },
   stories: { eyebrow: "STORY SURFACE", detail: "Published narrative remains the center of the universe.", access: "PUBLIC" },
-  wiki: { eyebrow: "CANONICAL KNOWLEDGE", detail: "The live ANEVUM Wiki is the record authority for every downstream surface.", access: "PUBLIC / MODERATED" },
-  lattice: { eyebrow: "RELATIONAL SURFACE", detail: "Wiki-approved records expressed as navigable relation space.", access: "PUBLIC + RHENLINK" },
+  wiki: { eyebrow: "CANON AUTHORITY", detail: "The live Wiki owns fictional truth and publishes approved projections into ANEVUM.", access: "PUBLIC / MODERATED" },
+  lattice: { eyebrow: "MEMBER EXPERIENCE", detail: "LATTICE turns approved ANEVUM content, identity and relationships into a persistent member layer.", access: "PUBLIC + RHENLINK" },
   rhenlink: { eyebrow: "IDENTITY SURFACE", detail: "Persistent member identity, saves, XP and achievements.", access: "MEMBER" },
-  command: { eyebrow: "OPERATIONS SURFACE", detail: "Private control plane for Wiki state, Lattice, RHENLINK and runtime operations.", access: "ADMIN" },
+  command: { eyebrow: "COMPANY OPERATIONS", detail: "Private cockpit unifying publishing, product, canon, identity, finance and infrastructure state.", access: "ADMIN" },
 };
 
 function go(href: string) {
@@ -140,7 +140,7 @@ export function UnifiedSystemShell({
       </header>
 
       <aside className="system-rail" aria-label="ANEVUM system surfaces">
-        <div className="system-rail-label">SURFACES</div>
+        <div className="system-rail-label">ANEVUM LAYERS</div>
         {surfaces.map((entry, index) => {
           const Icon = entry.icon;
           const active = entry.id === surface;
@@ -178,7 +178,7 @@ export function UnifiedSystemShell({
           <button type="button" onClick={() => go("https://anevum.com/rhenlink")}><CircleUserRound size={13} />rhenlink / identity</button>
           <button type="button" onClick={() => go("https://command.anevum.com/")}><Terminal size={13} />command / control</button>
         </div>
-        <div className="system-side-module system-host-module"><span>HOST</span><code>{hostname}</code><small>ONE REACT RUNTIME / WIKI-AUTHORITATIVE DATA FLOW</small></div>
+        <div className="system-side-module system-host-module"><span>HOST</span><code>{hostname}</code><small>ONE ANEVUM RUNTIME / CLEAR SOURCE AUTHORITY</small></div>
       </aside>
 
       <form className="system-console" onSubmit={runCommand}>
