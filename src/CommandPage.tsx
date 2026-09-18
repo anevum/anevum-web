@@ -139,7 +139,7 @@ export function CommandHome() {
 
   return (
     <section className="command-home">
-      <header className="command-home-header">
+      <header className="command-home-header command-cohesive-header">
         <div>
           <span>ANEVUM COMMAND</span>
           <h1>Company cockpit.</h1>
@@ -191,7 +191,7 @@ export function CommandHome() {
 
       <section className="command-canon-panel" aria-labelledby="command-canon-title">
         <header>
-          <div><span>04 / CANON CONTROL</span><h2 id="command-canon-title">Wiki state is preserved end to end.</h2></div>
+          <div><span>03 / CANON CONTROL</span><h2 id="command-canon-title">Wiki state is preserved end to end.</h2></div>
           <p>Canon state and website release state remain separate. LATTICE and the public Wiki consume approved projections; Company OS continues to govern company operations.</p>
         </header>
         <div className="command-state-grid">
@@ -209,7 +209,7 @@ export function CommandHome() {
         {moderationState === "error" ? <p className="command-data-warning">COMMUNITY LAYER / {moderationError}</p> : null}
       </section>
 
-      <div className="command-section-label"><span>03 / SYSTEM LAYERS</span><strong>One company, multiple authoritative layers.</strong></div>
+      <div className="command-section-label"><span>04 / SYSTEM LAYERS</span><strong>One company, multiple authoritative layers.</strong></div>
 
       <div className="command-module-grid command-layer-grid">
         {modules.map((module) => {
