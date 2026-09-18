@@ -232,7 +232,15 @@ export function LaunchTerminal() {
         <kbd>⌘K</kbd>
       </button>
 
-      <a className={`launch-identity-pill ${session ? "resolved" : "unresolved"}`} href={identityHref}>
+      <a
+        className={`launch-identity-pill ${session ? "resolved" : "unresolved"}`}
+        href={identityHref}
+        onClick={(event) => {
+          if (session || window.location.pathname !== "/rhenlink") return;
+          event.preventDefault();
+          window.dispatchEvent(new Event("anevum-rhenlink-signin"));
+        }}
+      >
         {session ? <UserRound size={16} strokeWidth={1.4} /> : <LogIn size={16} strokeWidth={1.4} />}
         <span>
           <small>{session ? `RHENLINK // ${level.rankMark}` : "RHENLINK"}</small>
