@@ -213,7 +213,7 @@ export default function App() {
   const termsRoute = hostname === ROOT_HOST && routePath === "/terms";
   const contactRoute = hostname === ROOT_HOST && routePath === "/contact";
   const legalRoute = privacyRoute || termsRoute || contactRoute;
-  const rootMemberRoute = routePath === "/" || rhenlinkRoute || bookRoute || storyRoute || storeRoute;
+  const rootMemberRoute = routePath === "/" || rhenlinkRoute || bookRoute || storyRoute || storeRoute || wikiRoute || latticeRoute;
   const knownRootPublicRoute = rootMemberRoute || aboutRoute || legalRoute || wikiRoute || latticeRoute;
   const notFoundRoute = hostname === ROOT_HOST && !bridgeRoute && !commandRoute && !knownRootPublicRoute;
   const wikiPath = wikiSurfacePath(hostname, routePath);
