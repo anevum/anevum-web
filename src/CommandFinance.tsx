@@ -84,7 +84,8 @@ export function CommandFinance({ session }: { session: MemberSession }) {
   const [snapshot, setSnapshot] = useState<FinanceSnapshot | null>(null);
   const [state, setState] = useState<FinanceState>("idle");
   const [error, setError] = useState("");
-  const [selectedSymbol, setSelectedSymbol] = useState("SPY");
+  const [selectedSymbol, setSelectedSymbol] = useState("QQQM");
+  const [clock, setClock] = useState(() => Date.now());
   const [autoRefresh, setAutoRefresh] = useState(true);
   const [lastRefresh, setLastRefresh] = useState<Date | null>(null);
 
@@ -97,7 +98,7 @@ export function CommandFinance({ session }: { session: MemberSession }) {
       setError("");
       setState("ready");
       if (!next.strategy.setups.some((setup) => setup.symbol === selectedSymbol)) {
-        setSelectedSymbol(next.strategy.setups[0]?.symbol || "SPY");
+        setSelectedSymbol(next.strategy.setups[0]?.symbol || "QQQM");
       }
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Finance data could not be resolved.");
@@ -113,7 +114,12 @@ export function CommandFinance({ session }: { session: MemberSession }) {
     if (!autoRefresh) return;
     const timer = window.setInterval(() => void refresh(true), financeBackend.refreshMs);
     return () => window.clearInterval(timer);
-  }, [autoRefresh, session.access_token, selectedSymbol]);
+  }, [autoRefresh, session.access_token]);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setClock(Date.now()), 1000);
+    return () => window.clearInterval(timer);
+  }, []);
 
   const selectedSetup = useMemo(
     () => snapshot?.strategy.setups.find((setup) => setup.symbol === selectedSymbol) || snapshot?.strategy.setups[0] || null,
@@ -123,19 +129,26 @@ export function CommandFinance({ session }: { session: MemberSession }) {
   const account = snapshot?.account;
   const positions = snapshot?.positions || [];
   const setups = snapshot?.strategy.setups || [];
+  const quotes = snapshot?.quotes || [];
   const signalCount = setups.filter((setup) => setup.signal === "ENTRY" || setup.signal === "EXIT").length;
+  const generatedAt = snapshot?.generatedAt ? new Date(snapshot.generatedAt).getTime() : 0;
+  const ageSeconds = generatedAt ? Math.max(0, Math.floor((clock - generatedAt) / 1000)) : null;
+  const fresh = Boolean(snapshot?.gateway.connected && ageSeconds != null && ageSeconds <= 20);
+  const grossPositions = positions.reduce((sum, position) => sum + Math.abs(position.marketValue || 0), 0);
+  const totalValue = account?.netLiquidation || (grossPositions + (account?.settledCash || 0));
+  const portfolioPnl = positions.reduce((sum, position) => sum + (position.unrealizedPnl || 0), 0);
 
   return (
     <section className="command-finance-panel" aria-labelledby="command-finance-title">
       <header className="finance-head">
         <div>
           <span>FINANCE / TRADING SYSTEM</span>
-          <h2 id="command-finance-title">Capital, risk and strategy in one mobile control surface.</h2>
-          <p>Stripe → Revolut → IBKR. IBKR is live-connected in read-only mode; strategy calculations are deterministic and no order-placement route exists.</p>
+          <h2 id="command-finance-title">Live investment portfolio.</h2>
+          <p>Read-only IBKR telemetry for balances, holdings, quotes, unrealized P&amp;L and daily trend context. No order-placement endpoint exists.</p>
         </div>
         <div className="finance-controls">
-          <div className={`finance-link-state ${snapshot?.gateway.connected ? "online" : "offline"}`}><i /><span>{snapshot?.gateway.connected ? "IBKR LIVE" : state.toUpperCase()}</span></div>
-          <button type="button" className={autoRefresh ? "active" : ""} onClick={() => setAutoRefresh((value) => !value)}>{autoRefresh ? "AUTO 15S" : "AUTO OFF"}</button>
+          <div className={`finance-link-state ${fresh ? "online" : "offline"}`}><i /><span>{fresh ? "IBKR LIVE" : snapshot?.gateway.connected ? "IBKR STALE" : "IBKR OFFLINE"}</span></div>
+          <button type="button" className={autoRefresh ? "active" : ""} onClick={() => setAutoRefresh((value) => !value)}>{autoRefresh ? "AUTO 5S" : "AUTO OFF"}</button>
           <button type="button" onClick={() => void refresh()} disabled={state === "loading"}><RefreshCw size={14} className={state === "loading" ? "spin" : ""} />REFRESH</button>
         </div>
       </header>
@@ -148,28 +161,52 @@ export function CommandFinance({ session }: { session: MemberSession }) {
           <div className="finance-source-strip">
             <div><span>SOURCE</span><strong>IBKR GATEWAY</strong><small>READ-ONLY / PORT {snapshot.gateway.port}</small></div>
             <div><span>MODE</span><strong>{snapshot.mode}</strong><small>NO ORDER ENDPOINT</small></div>
-            <div><span>UPDATED</span><strong>{lastRefresh ? lastRefresh.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" }) : "—"}</strong><small>{autoRefresh ? "15 SEC REFRESH" : "MANUAL REFRESH"}</small></div>
-            <div><span>ACTIVE SIGNALS</span><strong>{signalCount}</strong><small>ENTRY / EXIT ONLY</small></div>
+            <div><span>LIVE AGE</span><strong>{ageSeconds == null ? "—" : `${ageSeconds}s`}</strong><small>{autoRefresh ? "5 SEC REFRESH" : "MANUAL REFRESH"}</small></div>
+            <div><span>POSITIONS</span><strong>{positions.length}</strong><small>{signalCount} STRATEGY ALERTS</small></div>
           </div>
 
           <div className="finance-metrics">
             <article><WalletCards size={17} /><span>NET LIQUIDATION</span><strong>{money(account?.netLiquidation)}</strong><small>Account equity</small></article>
             <article><Banknote size={17} /><span>SETTLED CASH</span><strong>{money(account?.settledCash)}</strong><small>{number(account?.cashPercent)}% cash</small></article>
             <article><Gauge size={17} /><span>BUYING POWER</span><strong>{money(account?.buyingPower)}</strong><small>{money(account?.availableFunds)} available</small></article>
-            <article className={(account?.unrealizedPnl || 0) >= 0 ? "positive" : "negative"}><Activity size={17} /><span>UNREALIZED P&L</span><strong>{money(account?.unrealizedPnl)}</strong><small>{money(account?.realizedPnl)} realized</small></article>
+            <article className={portfolioPnl >= 0 ? "positive" : "negative"}><Activity size={17} /><span>OPEN P&amp;L</span><strong>{money(portfolioPnl)}</strong><small>{money(account?.realizedPnl)} realized</small></article>
           </div>
 
-          <div className="finance-flow">
-            <article className="source-live"><CircleDollarSign size={18} /><span>01 / STRIPE</span><strong>PAYMENT SOURCE</strong><small>Account connected to ChatGPT; Command API credential not installed yet.</small></article>
-            <ArrowRight size={18} />
-            <article className="source-manual"><WalletCards size={18} /><span>02 / REVOLUT</span><strong>TRANSFER LEG</strong><small>Tracked/reconciled until a supported Revolut API connection is available.</small></article>
-            <ArrowRight size={18} />
-            <article className="source-live"><LineChart size={18} /><span>03 / IBKR</span><strong>{money(account?.netLiquidation)}</strong><small>Live read-only account + strategy telemetry.</small></article>
-          </div>
+          <section className="finance-live-grid" aria-label="Live holdings summary">
+            {positions.map((position) => {
+              const quote = quotes.find((item) => item.symbol === position.contract.symbol);
+              const allocation = totalValue ? (position.marketValue / totalValue) * 100 : 0;
+              const costValue = position.averageCost * Math.abs(position.quantity);
+              const returnPct = costValue ? (position.unrealizedPnl / costValue) * 100 : 0;
+              return (
+                <article key={position.contract.conId || position.contract.symbol} className="finance-live-card">
+                  <header>
+                    <div><span>HOLDING</span><strong>{position.contract.symbol}</strong></div>
+                    <em className={position.unrealizedPnl >= 0 ? "positive" : "negative"}>{position.unrealizedPnl >= 0 ? "+" : ""}{number(returnPct, 2)}%</em>
+                  </header>
+                  <div className="finance-live-price"><strong>{money(quote?.last ?? position.marketPrice)}</strong><small>{number(position.quantity, 6)} SHARES</small></div>
+                  <div className="finance-live-stats">
+                    <div><span>VALUE</span><strong>{money(position.marketValue)}</strong></div>
+                    <div><span>AVG COST</span><strong>{money(position.averageCost)}</strong></div>
+                    <div><span>OPEN P&amp;L</span><strong>{money(position.unrealizedPnl)}</strong></div>
+                    <div><span>ALLOCATION</span><strong>{number(allocation, 1)}%</strong></div>
+                  </div>
+                  <footer><span>BID {money(quote?.bid)}</span><span>ASK {money(quote?.ask)}</span><span>IBKR</span></footer>
+                </article>
+              );
+            })}
+            {!positions.length ? <div className="finance-message compact">NO LIVE POSITIONS RESOLVED</div> : null}
+          </section>
+
+          {!snapshot.gateway.connected ? (
+            <div className="finance-message error compact">
+              IBKR Gateway is offline. {snapshot.gateway.reason || "Approve the current IBKR authentication / two-factor request, then refresh COMMAND."}
+            </div>
+          ) : null}
 
           <section className="finance-strategy">
             <header>
-              <div><span>{snapshot.strategy.name.toUpperCase()}</span><strong>DAILY SWING ENGINE</strong></div>
+              <div><span>{snapshot.strategy.name.toUpperCase()}</span><strong>HOLDINGS + TREND MONITOR</strong></div>
               <small>MAX PLANNED LOSS {money(snapshot.strategy.rules.maxPlannedLossUsd)} / POSITION BUDGET {money(snapshot.strategy.rules.positionBudgetUsd)}</small>
             </header>
             <div className="finance-symbol-tabs" role="tablist" aria-label="Strategy symbols">
