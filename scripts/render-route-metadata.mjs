@@ -41,7 +41,7 @@ const routes = [
     file: "stories-reply.html",
     title: "REPLY — The Book | ANEVUM",
     description: "REPLY is The Transcosmic Book One, a science-fiction novel by Devon Akins and the first publication from ANEVUM.",
-    canonical: "https://anevum.com/stories/reply",
+    canonical: "https://anevum.com/the-book",
     ogTitle: "REPLY — The Book",
     ogType: "book",
     robots: "index,follow,max-image-preview:large",

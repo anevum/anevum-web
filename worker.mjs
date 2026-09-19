@@ -26,6 +26,33 @@ const ROOT_PUBLIC_PATHS = new Set(["/", ...ROOT_META_SHELLS.keys()]);
 const WIKI_PRIVATE_PATHS = new Set(["/new", "/saved", "/admin"]);
 const wikiBySlug = new Map(canonProjectionRecords.map((record) => [record.slug, record]));
 
+const replyBookSchema = {
+  "@context": "https://schema.org",
+  "@type": "Book",
+  name: "REPLY",
+  url: "https://anevum.com/the-book",
+  description: "REPLY is The Transcosmic Book One, a science-fiction novel by Devon Akins and the first publication from ANEVUM.",
+  author: { "@type": "Person", name: "Devon Akins" },
+  isPartOf: { "@type": "BookSeries", name: "The Transcosmic" },
+};
+
+const ROOT_ROUTE_META = new Map([
+  ["/stories", { title: "Stories — ANEVUM", description: "Enter ANEVUM through its stories. REPLY is Publication 001 and the first Transcosmic novel by Devon Akins.", canonical: "https://anevum.com/stories", ogTitle: "Stories — ANEVUM", ogType: "website", robots: "index,follow,max-image-preview:large" }],
+  ["/stories/reply", { title: "REPLY — The Book | ANEVUM", description: "REPLY is The Transcosmic Book One, a science-fiction novel by Devon Akins and the first publication from ANEVUM.", canonical: "https://anevum.com/the-book", ogTitle: "REPLY — The Book", ogType: "book", robots: "index,follow,max-image-preview:large", structuredData: replyBookSchema }],
+  ["/explore", { title: "Explore the Universe — ANEVUM", description: "Move through release-cleared ANEVUM people, places, institutions, technologies, events, and concepts by relationship.", canonical: "https://anevum.com/explore", ogTitle: "Explore — ANEVUM", ogType: "website", robots: "index,follow,max-image-preview:large" }],
+  ["/archive", { title: "Archive — ANEVUM", description: "Search and filter the publication-safe ANEVUM record.", canonical: "https://anevum.com/archive", ogTitle: "Archive — ANEVUM", ogType: "website", robots: "index,follow,max-image-preview:large" }],
+  ["/transmissions", { title: "Transmissions — ANEVUM", description: "Official ANEVUM publication updates, essays, production notes, and announcements.", canonical: "https://anevum.com/transmissions", ogTitle: "Transmissions — ANEVUM", ogType: "website", robots: "index,follow,max-image-preview:large" }],
+  ["/search", { title: "Search — ANEVUM", description: "Search the publication-safe ANEVUM Archive and public Wiki.", canonical: "https://anevum.com/search", ogTitle: "Search — ANEVUM", ogType: "website", robots: "index,follow,max-image-preview:large" }],
+  ["/the-book", { title: "REPLY — The Book | ANEVUM", description: "REPLY is The Transcosmic Book One, a science-fiction novel by Devon Akins and the first publication from ANEVUM.", canonical: "https://anevum.com/the-book", ogTitle: "REPLY — The Book", ogType: "book", robots: "index,follow,max-image-preview:large", structuredData: replyBookSchema }],
+  ["/the-story", { title: "The Story of REPLY | ANEVUM", description: "Enter the spoiler-light public story doorway into REPLY, The Transcosmic Book One by Devon Akins.", canonical: "https://anevum.com/the-story", ogTitle: "The Story of REPLY", ogType: "article", robots: "index,follow,max-image-preview:large" }],
+  ["/store", { title: "ANEVUM Store — REPLY", description: "Official availability and editions for REPLY, The Transcosmic Book One by Devon Akins.", canonical: "https://anevum.com/store", ogTitle: "ANEVUM Store — REPLY", ogType: "website", robots: "index,follow,max-image-preview:large" }],
+  ["/rhenlink", { title: "RHENLINK — ANEVUM Identity", description: "RHENLINK is the persistent member identity for ANEVUM.", canonical: "https://anevum.com/rhenlink", ogTitle: "RHENLINK — ANEVUM", ogType: "website", robots: "noindex,follow,noarchive" }],
+  ["/about", { title: "About ANEVUM — Stories First", description: "How ANEVUM connects REPLY, the canonical Wiki, Lattice and RHENLINK while keeping finished stories at the center.", canonical: "https://anevum.com/about", ogTitle: "About ANEVUM", ogType: "website", robots: "index,follow,max-image-preview:large" }],
+  ["/privacy", { title: "Privacy — ANEVUM", description: "How the current ANEVUM website and RHENLINK member system use account, progress, release-preference, and optional analytics data.", canonical: "https://anevum.com/privacy", ogTitle: "Privacy — ANEVUM", ogType: "website", robots: "index,follow,max-image-preview:large" }],
+  ["/terms", { title: "Terms — ANEVUM", description: "Launch-era terms for the ANEVUM website, RHENLINK, Wiki, Lattice, progression systems, and external REPLY purchase links.", canonical: "https://anevum.com/terms", ogTitle: "Terms — ANEVUM", ogType: "website", robots: "index,follow,max-image-preview:large" }],
+  ["/contact", { title: "Contact — ANEVUM", description: "Current public contact and support status for ANEVUM, REPLY, and RHENLINK.", canonical: "https://anevum.com/contact", ogTitle: "Contact — ANEVUM", ogType: "website", robots: "index,follow,max-image-preview:large" }],
+]);
+
 function normalizePath(pathname) {
   if (!pathname || pathname === "/") return "/";
   return pathname.replace(/\/+$/, "") || "/";
@@ -786,8 +813,8 @@ export default {
 
     let response;
 
-    if (host === ROOT_HOST && ROOT_META_SHELLS.has(pathname)) {
-      response = await env.ASSETS.fetch(assetRequest(request, ROOT_META_SHELLS.get(pathname)));
+    if (host === ROOT_HOST && ROOT_ROUTE_META.has(pathname)) {
+      response = await env.ASSETS.fetch(assetRequest(request, "/"));
     } else {
       response = await env.ASSETS.fetch(request);
     }
@@ -816,6 +843,15 @@ export default {
     }
 
     if (host === ROOT_HOST) {
+      if (ROOT_ROUTE_META.has(pathname)) {
+        const meta = ROOT_ROUTE_META.get(pathname);
+        response = rewriteHtml(response, meta);
+        if (meta.robots.startsWith("noindex") && isHtml(response)) {
+          return withHeaders(response, { "X-Robots-Tag": "noindex, follow, noarchive" });
+        }
+        return response;
+      }
+
       if (pathname === "/wiki" || pathname.startsWith("/wiki/")) {
         const wikiPath = pathname === "/wiki" ? "/" : pathname.slice(5) || "/";
         const meta = wikiMeta(wikiPath);
