@@ -24,7 +24,7 @@ function routeStyleImports() {
   const wikiRoute = hostname === WIKI_HOST || (hostname === ROOT_HOST && (pathname === "/wiki" || pathname.startsWith("/wiki/")));
   const latticeRoute = hostname === LATTICE_HOST || (hostname === ROOT_HOST && pathname === "/lattice");
   const commandRoute = hostname === COMMAND_HOST || (hostname === ROOT_HOST && pathname === "/command");
-  const replyRoute = hostname === ROOT_HOST && (pathname === "/the-book" || pathname === "/stories/reply" || pathname === "/the-story" || pathname === "/store");
+  const replyRoute = hostname === ROOT_HOST && (pathname === "/" || pathname === "/the-book" || pathname === "/stories/reply" || pathname === "/the-story" || pathname === "/store");
 
   if (wikiRoute) {
     styles.push(import("./canonicalWiki.css"), import("./moderatedWiki.css"));
