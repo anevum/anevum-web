@@ -16,12 +16,20 @@ import {
   signIn,
   signOut,
   signUp,
+  syncCurrentUser,
   updateMemberMetadata,
   type MemberSession,
   type PublicationClaim,
 } from "./memberClient";
 import { CURRENT_ACHIEVEMENTS, loadMemberProgress, onMemberProgressChange, type MemberProgress } from "./memberState";
 import { networkLevelDetails } from "./networkProgress";
+import {
+  loadMemberNotifications,
+  loadReleaseUpdateStatus,
+  markMemberNotificationRead,
+  saveReleaseUpdatePreference,
+  type MemberNotification,
+} from "./notificationsClient";
 
 const replyReleaseIntentKey = "anevum.reply.release-intent.v1";
 
@@ -106,12 +114,14 @@ export function Rhenlink() {
   const [releaseSource] = useState(() => releaseIntentSource());
   const [claims, setClaims] = useState<PublicationClaim[]>([]);
   const [ownershipBackendAvailable, setOwnershipBackendAvailable] = useState<boolean | null>(null);
+  const [releaseUpdatesEnabled, setReleaseUpdatesEnabled] = useState(() => session?.user.user_metadata?.reply_release_updates === true);
+  const [notifications, setNotifications] = useState<MemberNotification[]>([]);
   const identity = displayIdentity(session);
   const profile = profileCopy(session);
   const ownershipXP = verifiedClaimXP(claims);
   const level = networkLevelDetails(progress, ownershipXP);
   const replyClaim = claims.find((claim) => claim.publication_id === "reply-book-1") || null;
-  const releaseUpdatesEnabled = session?.user.user_metadata?.reply_release_updates === true;
+  const unreadNotifications = notifications.filter((notification) => !notification.read_at).length;
   const unlocked = useMemo(() => new Map(progress.achievements.map((achievement) => [achievement.id, achievement])), [progress.achievements]);
   const currentUnlockedCount = useMemo(() => CURRENT_ACHIEVEMENTS.filter((achievement) => unlocked.has(achievement.id)).length, [unlocked]);
 
@@ -149,6 +159,32 @@ export function Rhenlink() {
         setClaims([]);
         setOwnershipBackendAvailable(false);
       });
+    return () => { cancelled = true; };
+  }, [session?.user.id]);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!session) {
+      setReleaseUpdatesEnabled(false);
+      setNotifications([]);
+      return;
+    }
+
+    setReleaseUpdatesEnabled(session.user.user_metadata?.reply_release_updates === true);
+    loadReleaseUpdateStatus(session)
+      .then((next) => {
+        if (!cancelled) setReleaseUpdatesEnabled(next.enabled);
+      })
+      .catch(() => undefined);
+
+    loadMemberNotifications(session)
+      .then((next) => {
+        if (!cancelled) setNotifications(next);
+      })
+      .catch(() => {
+        if (!cancelled) setNotifications([]);
+      });
+
     return () => { cancelled = true; };
   }, [session?.user.id]);
 
@@ -233,17 +269,17 @@ export function Rhenlink() {
     setStatus("");
     const enable = !releaseUpdatesEnabled;
     try {
-      const next = await updateMemberMetadata({
-        reply_release_updates: enable,
-        reply_release_updates_at: enable ? new Date().toISOString() : null,
-        reply_release_updates_source: enable ? releaseSource : null,
-      });
-      setSession(next);
+      const preference = await saveReleaseUpdatePreference(enable, releaseSource, session);
+      setReleaseUpdatesEnabled(preference.enabled);
+      const next = await syncCurrentUser(session).catch(() => null);
+      if (next) setSession(next);
       capture(enable ? "reply release updates enabled" : "reply release updates disabled", { source: releaseSource }, "rhenlink");
       if (enable) {
         try { localStorage.removeItem(replyReleaseIntentKey); } catch { /* local persistence is optional */ }
         setReleaseIntent(false);
-        setStatus("REPLY release-update preference saved to RHENLINK.");
+        setStatus(preference.emailDeliveryConfigured
+          ? "REPLY release updates are active for this RHENLINK."
+          : "REPLY release-update preference saved. Email delivery is still being activated.");
       } else {
         setStatus("REPLY release-update preference removed from RHENLINK.");
       }
@@ -251,6 +287,16 @@ export function Rhenlink() {
       setStatus(error instanceof Error ? error.message : "Could not update REPLY release preference.");
     } finally {
       setBusy(false);
+    }
+  }
+
+  async function handleNotificationRead(id: string) {
+    if (!session) return;
+    try {
+      const updated = await markMemberNotificationRead(id, session);
+      setNotifications((current) => current.map((notification) => notification.id === id ? updated : notification));
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : "Could not update this RHENLINK notice.");
     }
   }
 
@@ -348,6 +394,27 @@ export function Rhenlink() {
                 <button type="button" className="button native" onClick={toggleReplyReleaseUpdates} disabled={busy}>{releaseUpdatesEnabled ? "REMOVE RELEASE UPDATES" : "ADD RELEASE UPDATES"}</button>
               </section>
             ) : null}
+
+            <section className="rhenlink-notification-center" aria-labelledby="rhenlink-notices-title">
+              <header>
+                <span id="rhenlink-notices-title">RHENLINK / NOTICES</span>
+                <strong>{unreadNotifications ? `${unreadNotifications} UNREAD` : "UP TO DATE"}</strong>
+              </header>
+              {notifications.length ? notifications.map((notification) => (
+                <article key={notification.id} className={`rhenlink-notice ${notification.read_at ? "read" : "unread"}`}>
+                  <i aria-hidden="true" />
+                  <div>
+                    <h4>{notification.title}</h4>
+                    <p>{notification.body}</p>
+                    <footer>
+                      <time>{new Date(notification.created_at).toLocaleDateString()}</time>
+                      {notification.action_url ? <a href={notification.action_url}>{notification.action_label || "OPEN"} ↗</a> : null}
+                    </footer>
+                  </div>
+                  {!notification.read_at ? <button type="button" onClick={() => handleNotificationRead(notification.id)}>MARK READ</button> : null}
+                </article>
+              )) : <div className="rhenlink-notice-empty">No RHENLINK notices yet. Release communications that belong to this identity will appear here.</div>}
+            </section>
 
             <section className={`rhenlink-ownership-verification ${replyClaim ? "verified" : ownershipBackendAvailable ? "ready" : "staged"}`} aria-labelledby="reply-ownership-title">
               <div className="rhenlink-ownership-mark"><Award size={23} strokeWidth={1.25} aria-hidden="true" /></div>
