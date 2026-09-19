@@ -52,7 +52,12 @@ export function SystemSessionBridge({ hostname }: { hostname: string }) {
       // embedded-origin storage (notably mobile Safari). Never erase a valid
       // surface session merely because the hidden bridge cannot see root storage.
       if (!next) return;
-      if (!current || current.access_token !== next.access_token || current.user.id !== next.user.id) saveSession(next);
+      if (!current) {
+        saveSession(next);
+        return;
+      }
+      if (current.user.id === next.user.id && (current.saved_at || 0) > (next.saved_at || 0)) return;
+      if (current.access_token !== next.access_token || current.user.id !== next.user.id) saveSession(next);
     };
 
     window.addEventListener("message", receive);

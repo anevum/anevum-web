@@ -45,6 +45,7 @@ const rhenlinkReturnTargets: Record<RhenlinkReturnTarget, string> = {
   command: "https://anevum.com/command",
 };
 let metadataWriteQueue: Promise<unknown> = Promise.resolve();
+let sessionRefreshPromise: Promise<MemberSession> | null = null;
 
 export const memberBackend = {
   projectUrl,
@@ -61,15 +62,64 @@ function headers(token?: string) {
   return requestHeaders;
 }
 
+class MemberApiError extends Error {
+  status: number;
+
+  constructor(message: string, status: number) {
+    super(message);
+    this.name = "MemberApiError";
+    this.status = status;
+  }
+}
+
 async function request<T>(path: string, init: RequestInit): Promise<T> {
   if (!publicKey) throw new Error("RHENLINK backend is not configured in this build.");
   const response = await fetch(`${projectUrl}${path}`, init);
   const payload = await response.json().catch(() => ({}));
   if (!response.ok) {
     const message = payload?.msg || payload?.message || payload?.error_description || payload?.error || `Request failed (${response.status})`;
-    throw new Error(String(message));
+    throw new MemberApiError(String(message), response.status);
   }
   return payload as T;
+}
+
+function isUnauthorized(error: unknown) {
+  return error instanceof MemberApiError && error.status === 401;
+}
+
+function latestStoredSession(session: MemberSession) {
+  const stored = loadSession();
+  if (!stored || stored.user.id !== session.user.id) return session;
+  return (stored.saved_at || 0) >= (session.saved_at || 0) ? stored : session;
+}
+
+function sessionExpiresSoon(session: MemberSession, skewMs = 60_000) {
+  if (!session.saved_at || !session.expires_in) return false;
+  return Date.now() >= session.saved_at + session.expires_in * 1000 - skewMs;
+}
+
+async function withFreshSession<T>(
+  session: MemberSession,
+  operation: (activeSession: MemberSession) => Promise<T>,
+): Promise<T> {
+  let activeSession = latestStoredSession(session);
+
+  if (activeSession.refresh_token && sessionExpiresSoon(activeSession)) {
+    activeSession = await refreshSession(activeSession);
+  }
+
+  try {
+    return await operation(activeSession);
+  } catch (error) {
+    if (!isUnauthorized(error)) throw error;
+    if (!activeSession.refresh_token) {
+      saveSession(null);
+      throw new Error("Your RHENLINK session has expired. Sign in again.");
+    }
+
+    activeSession = await refreshSession(activeSession);
+    return operation(activeSession);
+  }
 }
 
 function sharedCookieAttributes(maxAge: number) {
@@ -129,40 +179,33 @@ export function saveSession(session: MemberSession | null) {
 
 export async function syncCurrentUser(session = loadSession()) {
   if (!session) return null;
-  try {
+  return withFreshSession(session, async (activeSession) => {
     const user = await request<MemberUser>("/auth/v1/user", {
       method: "GET",
-      headers: headers(session.access_token),
+      headers: headers(activeSession.access_token),
     });
-    const next = { ...session, user };
+    const next = { ...activeSession, user };
     saveSession(next);
     return next;
-  } catch (error) {
-    if (!session.refresh_token) throw error;
-    const refreshed = await refreshSession(session);
-    const user = await request<MemberUser>("/auth/v1/user", {
-      method: "GET",
-      headers: headers(refreshed.access_token),
-    });
-    const next = { ...refreshed, user };
-    saveSession(next);
-    return next;
-  }
+  });
 }
 
 export function updateMemberMetadata(patch: Record<string, unknown>) {
   const work = metadataWriteQueue.then(async () => {
     const session = loadSession();
     if (!session) throw new Error("Sign in with RHENLINK to update member data.");
-    const metadata = { ...(session.user.user_metadata || {}), ...patch };
-    const user = await request<MemberUser>("/auth/v1/user", {
-      method: "PUT",
-      headers: headers(session.access_token),
-      body: JSON.stringify({ data: metadata }),
+
+    return withFreshSession(session, async (activeSession) => {
+      const metadata = { ...(activeSession.user.user_metadata || {}), ...patch };
+      const user = await request<MemberUser>("/auth/v1/user", {
+        method: "PUT",
+        headers: headers(activeSession.access_token),
+        body: JSON.stringify({ data: metadata }),
+      });
+      const next = { ...activeSession, user };
+      saveSession(next);
+      return next;
     });
-    const next = { ...session, user };
-    saveSession(next);
-    return next;
   });
   metadataWriteQueue = work.catch(() => undefined);
   return work;
@@ -202,15 +245,31 @@ export async function signIn(email: string, password: string) {
   return session;
 }
 
-export async function refreshSession(session: MemberSession) {
-  if (!session.refresh_token) return session;
-  const next = await request<MemberSession>("/auth/v1/token?grant_type=refresh_token", {
-    method: "POST",
-    headers: headers(),
-    body: JSON.stringify({ refresh_token: session.refresh_token }),
-  });
-  saveSession(next);
-  return next;
+export function refreshSession(session: MemberSession) {
+  if (!session.refresh_token) return Promise.resolve(session);
+  if (sessionRefreshPromise) return sessionRefreshPromise;
+
+  sessionRefreshPromise = (async () => {
+    try {
+      const next = await request<MemberSession>("/auth/v1/token?grant_type=refresh_token", {
+        method: "POST",
+        headers: headers(),
+        body: JSON.stringify({ refresh_token: session.refresh_token }),
+      });
+      saveSession(next);
+      return next;
+    } catch (error) {
+      if (error instanceof MemberApiError && (error.status === 400 || error.status === 401)) {
+        saveSession(null);
+        throw new Error("Your RHENLINK session has expired. Sign in again.");
+      }
+      throw error;
+    } finally {
+      sessionRefreshPromise = null;
+    }
+  })();
+
+  return sessionRefreshPromise;
 }
 
 export async function signOut() {
@@ -223,9 +282,11 @@ export async function signOut() {
 
 export async function fetchPublicationClaims(session = loadSession()) {
   if (!session) return [] as PublicationClaim[];
-  return request<PublicationClaim[]>(
-    "/rest/v1/member_publication_claims?select=publication_id,edition,xp_awarded,claimed_at&order=claimed_at.desc",
-    { method: "GET", headers: headers(session.access_token) },
+  return withFreshSession(session, (activeSession) =>
+    request<PublicationClaim[]>(
+      "/rest/v1/member_publication_claims?select=publication_id,edition,xp_awarded,claimed_at&order=claimed_at.desc",
+      { method: "GET", headers: headers(activeSession.access_token) },
+    ),
   );
 }
 
@@ -233,11 +294,14 @@ export async function redeemPublicationCode(code: string, session = loadSession(
   if (!session) throw new Error("Sign in with RHENLINK before verifying a copy of REPLY.");
   const normalized = code.trim();
   if (!normalized) throw new Error("Enter the verification code supplied with your copy of REPLY.");
-  const claims = await request<PublicationClaim[]>("/rest/v1/rpc/redeem_publication_code", {
-    method: "POST",
-    headers: headers(session.access_token),
-    body: JSON.stringify({ p_code: normalized }),
-  });
+
+  const claims = await withFreshSession(session, (activeSession) =>
+    request<PublicationClaim[]>("/rest/v1/rpc/redeem_publication_code", {
+      method: "POST",
+      headers: headers(activeSession.access_token),
+      body: JSON.stringify({ p_code: normalized }),
+    }),
+  );
   const claim = claims[0];
   if (!claim) throw new Error("REPLY ownership could not be verified.");
   return claim;
@@ -291,6 +355,22 @@ export async function consumeRhenlinkHandoff(): Promise<AuthRedirectResult> {
     saveSession(session);
     return { status: "signed-in", session };
   } catch (error) {
+    if (isUnauthorized(error) && refreshToken) {
+      try {
+        const session = await request<MemberSession>("/auth/v1/token?grant_type=refresh_token", {
+          method: "POST",
+          headers: headers(),
+          body: JSON.stringify({ refresh_token: refreshToken }),
+        });
+        saveSession(session);
+        return { status: "signed-in", session };
+      } catch (refreshError) {
+        return {
+          status: "error",
+          message: refreshError instanceof Error ? refreshError.message : "RHENLINK session has expired. Sign in again.",
+        };
+      }
+    }
     return {
       status: "error",
       message: error instanceof Error ? error.message : "RHENLINK handoff could not be completed.",
