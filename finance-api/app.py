@@ -9,6 +9,7 @@ import httpx
 from fastapi import FastAPI, Header, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from ib_async import IB
+from alpaca_worker import register_alpaca
 
 app = FastAPI(title="ANEVUM Finance Telemetry", version="3.0")
 
@@ -31,7 +32,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=ALLOWED_ORIGINS,
     allow_credentials=False,
-    allow_methods=["GET", "OPTIONS"],
+    allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["Authorization", "Content-Type", "Accept"],
     max_age=600,
 )
@@ -339,3 +340,6 @@ async def health():
 async def finance_snapshot(authorization: str | None = Header(default=None)):
     await require_command_admin(authorization)
     return await asyncio.to_thread(cached_snapshot)
+
+
+register_alpaca(app, require_command_admin)
