@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { AlertTriangle, BarChart3, BookOpenText, CheckCircle2, CircleDashed, CircleUserRound, Database, GitBranch, Landmark, Layers3, LockKeyhole, Orbit, RadioTower, Rocket, ShieldCheck, WalletCards } from "lucide-react";
 import { loadSession, syncCurrentUser, type MemberSession } from "./memberClient";
 import { CommandFinance } from "./CommandFinance";
+import { CommandReleaseUpdates } from "./CommandReleaseUpdates";
 import { CANON_LIFECYCLE_COUNTS, CANON_PROJECTION_SYNC } from "./canonProjection";
 import { getLaunchReadiness, launchReadinessSummary, type LaunchReadinessState } from "./launchReadiness";
 import {
@@ -167,6 +168,8 @@ export function CommandHome() {
       <CommandFinance session={session} />
 
       <div className="command-section-label"><span>02 / RELEASE</span><strong>Publishing readiness stays tied to company operations.</strong></div>
+
+      <CommandReleaseUpdates session={session} />
 
       <section className="command-readiness-panel" aria-labelledby="command-readiness-title">
         <header>
