@@ -63,7 +63,7 @@ function ReleaseCountdown() {
       {released ? (
         <div className="reply-release-live">AVAILABLE NOW</div>
       ) : (
-        <div className="reply-countdown" aria-live="polite">
+        <div className="reply-countdown">
           <div><strong>{String(days).padStart(2, "0")}</strong><span>DAYS</span></div>
           <div><strong>{String(hours).padStart(2, "0")}</strong><span>HOURS</span></div>
           <div><strong>{String(minutes).padStart(2, "0")}</strong><span>MINUTES</span></div>
@@ -197,7 +197,7 @@ export default function ReplyLaunch() {
           </div>
           <div className="reply-reciprocal-copy">
             <p className="reply-launch-kicker">THE REPLY</p>
-            <h2>First contact is not the end of ordinary life.</h2>
+            <h2 id="reciprocal-title">First contact is not the end of ordinary life.</h2>
             <p>It changes the scale of what ordinary can mean. Work, family, medicine, distance, intelligence, purpose and death remain personal even when civilization becomes larger than one world.</p>
             <div className="reply-launch-actions">
               <ExternalAction href="/the-story">ENTER THE STORY</ExternalAction>
