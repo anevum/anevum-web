@@ -18,7 +18,7 @@ Set these as Cloudflare Worker secrets/variables; never expose them through Vite
 - `SUPABASE_SERVICE_ROLE_KEY` — server-only key used to enumerate opted-in Auth users and write notification telemetry.
 - `RESEND_API_KEY` — Resend server API key.
 - `RESEND_FROM` — verified sender, for example `ANEVUM <updates@anevum.com>`.
-- `NOTIFICATION_UNSUBSCRIBE_SECRET` — long random value used to sign one-click unsubscribe links.
+- `NOTIFICATION_UNSUBSCRIBE_SECRET` — long random value used to sign one-click unsubscribe links.\n- `NOTIFICATION_MAILING_ADDRESS` — valid public postal address included in commercial release email footers.
 
 Optional:
 
