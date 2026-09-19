@@ -6,9 +6,10 @@ import type { SystemSurface } from "./SystemShell";
 type PublicSurface = Exclude<SystemSurface, "command">;
 
 const primary = [
+  ["HOME", "/"],
   ["STORIES", "/stories"],
-  ["UNIVERSE", "/lattice"],
-  ["WIKI", "/wiki"],
+  ["EXPLORE", "/explore"],
+  ["ARCHIVE", "/archive"],
   ["TRANSMISSIONS", "/transmissions"],
   ["STORE", "/store"],
 ] as const;
@@ -16,8 +17,8 @@ const primary = [
 const surfaceCopy: Record<PublicSurface, { label: string; subtitle: string; nav: readonly (readonly [string, string])[] }> = {
   anevum: {
     label: "ANEVUM",
-    subtitle: "A UNIVERSE IN STORY. A STORY IN EVERYTHING.",
-    nav: [["EXPLORE", "/lattice"], ["WORLDS", "/wiki"], ["SEARCH", "/search"]],
+    subtitle: "A UNIVERSE IN STORY.",
+    nav: [["PUBLIC WIKI", "/wiki"], ["LATTICE", "/lattice"], ["SEARCH", "/search"]],
   },
   stories: {
     label: "ANEVUM / STORIES",
@@ -59,9 +60,9 @@ export function EditorialShell({ surface, pathname, children }: { surface: Publi
         <div className="editorial-masthead">
           <Link href="/" className="editorial-brand" ariaLabel="ANEVUM home">
             <Mark />
-            <span className="editorial-wordmark"><strong>ANEVUM</strong><small>STORIES · WORLDS · PEOPLE · CONNECTIONS</small></span>
+            <span className="editorial-wordmark"><strong>ANEVUM</strong><small>A UNIVERSE IN STORY.</small></span>
           </Link>
-          <div className="editorial-manifesto"><span>A UNIVERSE IN STORY. A STORY IN EVERYTHING.</span><small>BOOKS · KNOWLEDGE · DISCOVERY · BELONGING</small></div>
+          <div className="editorial-manifesto"><span>STORY → DISCOVERY → DEPTH → RELATIONSHIP</span><small>INDEPENDENT PUBLISHER · STORY UNIVERSE</small></div>
           <nav className="editorial-primary-nav" aria-label="Primary navigation">
             {primary.map(([label, href]) => <Link key={href} href={href} className={routeActive(pathname, href) ? "active" : ""}>{label}</Link>)}
           </nav>

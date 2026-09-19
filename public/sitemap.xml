@@ -1,6 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url><loc>https://anevum.com/</loc></url>
+  <url><loc>https://anevum.com/stories</loc></url>
+  <url><loc>https://anevum.com/stories/reply</loc></url>
+  <url><loc>https://anevum.com/explore</loc></url>
+  <url><loc>https://anevum.com/archive</loc></url>
+  <url><loc>https://anevum.com/transmissions</loc></url>
   <url><loc>https://anevum.com/the-book</loc></url>
   <url><loc>https://anevum.com/the-story</loc></url>
   <url><loc>https://anevum.com/store</loc></url>

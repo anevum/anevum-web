@@ -1,5 +1,4 @@
 import { lazy, Suspense, useEffect, useState, type ReactNode } from "react";
-import ReplyLaunch from "./ReplyLaunch";
 import { AuthBridgePage, SystemSessionBridge } from "./AuthBridge";
 import { AchievementLayer } from "./MemberChrome";
 import { ContactPage, PrivacyPage, PublicLegalStrip, RhenlinkAccountNotice, TermsPage } from "./LegalPages";
@@ -8,6 +7,8 @@ import { getCanonProjectionRecord } from "./canonProjection";
 import { trackMemberRoute } from "./memberState";
 import { COMMAND_HOST, LATTICE_HOST, normalizeRuntimePath, resolveRuntimeHostname, ROOT_HOST, safeDecodeRouteValue, WIKI_HOST } from "./runtimeHost";
 import { UnifiedSystemShell } from "./SystemShell";
+import { EditorialShell } from "./EditorialShell";
+import { ArchivePage, ExplorePage, FrontDoor, SearchPage, Stories, Transmissions } from "./PublicPages";
 
 const BookPage = lazy(() => import("./LaunchPages").then((module) => ({ default: module.BookPage })));
 const StoryPage = lazy(() => import("./LaunchPages").then((module) => ({ default: module.StoryPage })));
@@ -101,6 +102,7 @@ function rootPublicMeta(pathname: string, knownPublicRoute: boolean) {
 
   switch (pathname) {
     case "/the-book":
+    case "/stories/reply":
       return {
         title: "REPLY — The Book | ANEVUM",
         description: "REPLY is The Transcosmic Book One, a science-fiction novel by Devon Akins and the first publication from ANEVUM.",
@@ -122,6 +124,46 @@ function rootPublicMeta(pathname: string, knownPublicRoute: boolean) {
         description: "Official availability and editions for REPLY, The Transcosmic Book One by Devon Akins.",
         canonical: "https://anevum.com/store",
         ogTitle: "ANEVUM Store — REPLY",
+        ogType: "website",
+      };
+    case "/stories":
+      return {
+        title: "Stories — ANEVUM",
+        description: "Enter ANEVUM through its stories. REPLY is Publication 001 and the first Transcosmic novel by Devon Akins.",
+        canonical: "https://anevum.com/stories",
+        ogTitle: "Stories — ANEVUM",
+        ogType: "website",
+      };
+    case "/explore":
+      return {
+        title: "Explore the Universe — ANEVUM",
+        description: "Move through release-cleared ANEVUM people, places, institutions, technologies, events, and concepts by relationship.",
+        canonical: "https://anevum.com/explore",
+        ogTitle: "Explore — ANEVUM",
+        ogType: "website",
+      };
+    case "/archive":
+      return {
+        title: "Archive — ANEVUM",
+        description: "Search and filter the publication-safe ANEVUM record.",
+        canonical: "https://anevum.com/archive",
+        ogTitle: "Archive — ANEVUM",
+        ogType: "website",
+      };
+    case "/transmissions":
+      return {
+        title: "Transmissions — ANEVUM",
+        description: "Official ANEVUM publication updates, essays, production notes, and announcements.",
+        canonical: "https://anevum.com/transmissions",
+        ogTitle: "Transmissions — ANEVUM",
+        ogType: "website",
+      };
+    case "/search":
+      return {
+        title: "Search — ANEVUM",
+        description: "Search the publication-safe ANEVUM Archive and public Wiki.",
+        canonical: "https://anevum.com/search",
+        ogTitle: "Search — ANEVUM",
         ogType: "website",
       };
     case "/rhenlink":
@@ -166,11 +208,11 @@ function rootPublicMeta(pathname: string, knownPublicRoute: boolean) {
       };
     default:
       return {
-        title: "REPLY by Devon Akins — ANEVUM",
-        description: "REPLY, the first Transcosmic novel by Devon Akins. A worker follows a measurement she cannot explain into a civilization already living across worlds.",
+        title: "ANEVUM — A Universe in Story",
+        description: "ANEVUM is an independent publisher and story universe. Enter through REPLY, Publication 001 and the first Transcosmic novel by Devon Akins.",
         canonical: "https://anevum.com/",
-        ogTitle: "REPLY by Devon Akins",
-        ogType: "book",
+        ogTitle: "ANEVUM — A Universe in Story",
+        ogType: "website",
       };
   }
 }
@@ -208,12 +250,19 @@ export default function App() {
   const bookRoute = hostname === ROOT_HOST && routePath === "/the-book";
   const storyRoute = hostname === ROOT_HOST && routePath === "/the-story";
   const storeRoute = hostname === ROOT_HOST && routePath === "/store";
+  const storiesRoute = hostname === ROOT_HOST && routePath === "/stories";
+  const storyBookRoute = hostname === ROOT_HOST && routePath === "/stories/reply";
+  const exploreRoute = hostname === ROOT_HOST && routePath === "/explore";
+  const archiveRoute = hostname === ROOT_HOST && routePath === "/archive";
+  const transmissionsRoute = hostname === ROOT_HOST && routePath === "/transmissions";
+  const searchRoute = hostname === ROOT_HOST && routePath === "/search";
   const aboutRoute = hostname === ROOT_HOST && routePath === "/about";
   const privacyRoute = hostname === ROOT_HOST && routePath === "/privacy";
   const termsRoute = hostname === ROOT_HOST && routePath === "/terms";
   const contactRoute = hostname === ROOT_HOST && routePath === "/contact";
   const legalRoute = privacyRoute || termsRoute || contactRoute;
-  const rootMemberRoute = routePath === "/" || rhenlinkRoute || bookRoute || storyRoute || storeRoute || wikiRoute || latticeRoute;
+  const editorialRoute = routePath === "/" || storiesRoute || exploreRoute || archiveRoute || transmissionsRoute || searchRoute;
+  const rootMemberRoute = editorialRoute || rhenlinkRoute || bookRoute || storyBookRoute || storyRoute || storeRoute || wikiRoute || latticeRoute;
   const knownRootPublicRoute = rootMemberRoute || aboutRoute || legalRoute || wikiRoute || latticeRoute;
   const notFoundRoute = hostname === ROOT_HOST && !bridgeRoute && !commandRoute && !knownRootPublicRoute;
   const wikiPath = wikiSurfacePath(hostname, routePath);
@@ -331,7 +380,7 @@ export default function App() {
     const twitterDescription = ensureMeta('meta[name="twitter:description"]', "name", "twitter:description");
     twitterDescription.content = meta.description;
 
-    if (hostname === ROOT_HOST && (routePath === "/" || routePath === "/the-book")) {
+    if (hostname === ROOT_HOST && (routePath === "/the-book" || routePath === "/stories/reply")) {
       setStructuredData(replyBookSchema());
     } else if (wikiRoute && wikiRecord) {
       setStructuredData({
@@ -421,16 +470,23 @@ export default function App() {
     );
   }
 
+  if (storyBookRoute) return <DeferredSurface><BookPage /><PublicLegalStrip /><AchievementLayer /></DeferredSurface>;
   if (bookRoute) return <DeferredSurface><BookPage /><PublicLegalStrip /><AchievementLayer /></DeferredSurface>;
   if (storyRoute) return <DeferredSurface><StoryPage /><PublicLegalStrip /><AchievementLayer /></DeferredSurface>;
   if (storeRoute) return <DeferredSurface><StorePage /><PublicLegalStrip /><AchievementLayer /></DeferredSurface>;
   if (notFoundRoute) return <DeferredSurface><Launch404 /><AchievementLayer /></DeferredSurface>;
 
-  return (
-    <>
-      <ReplyLaunch />
-      <PublicLegalStrip />
-      <AchievementLayer />
-    </>
-  );
+  const editorialContent = storiesRoute
+    ? <Stories />
+    : exploreRoute
+      ? <ExplorePage />
+      : archiveRoute
+        ? <ArchivePage />
+        : transmissionsRoute
+          ? <Transmissions />
+          : searchRoute
+            ? <SearchPage />
+            : <FrontDoor />;
+
+  return <><EditorialShell surface={storiesRoute ? "stories" : "anevum"} pathname={routePath}>{editorialContent}</EditorialShell><PublicLegalStrip /><AchievementLayer /></>;
 }

@@ -6,6 +6,12 @@ const LATTICE_HOST = "lattice.anevum.com";
 const COMMAND_HOST = "command.anevum.com";
 
 const ROOT_META_SHELLS = new Map([
+  ["/stories", "/__meta/stories.html"],
+  ["/stories/reply", "/__meta/stories-reply.html"],
+  ["/explore", "/__meta/explore.html"],
+  ["/archive", "/__meta/archive.html"],
+  ["/transmissions", "/__meta/transmissions.html"],
+  ["/search", "/__meta/search.html"],
   ["/the-book", "/__meta/the-book.html"],
   ["/the-story", "/__meta/the-story.html"],
   ["/store", "/__meta/store.html"],
