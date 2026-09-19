@@ -6,6 +6,12 @@ export const COMMAND_HOST = "command.anevum.com";
 const KNOWN_RUNTIME_HOSTS = new Set([ROOT_HOST, WIKI_HOST, LATTICE_HOST, COMMAND_HOST]);
 const META_ROUTE_PREFIX = "/__meta/";
 const META_PUBLIC_ROUTES = new Set([
+  "stories",
+  "stories-reply",
+  "explore",
+  "archive",
+  "transmissions",
+  "search",
   "the-book",
   "the-story",
   "store",

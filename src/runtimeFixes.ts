@@ -33,9 +33,6 @@ export function resolveCanonicalRuntimeTarget(
   if (hostname === ROOT_HOST) {
     // Same-origin Wiki, LATTICE and COMMAND routes are canonical now.
     // Never bounce them back to subdomains or RHENLINK storage will fork.
-    if (path === "/stories" || path.startsWith("/stories/")) {
-      return `/the-book${search}${hash}`;
-    }
     return null;
   }
 

@@ -37,6 +37,7 @@ assert.equal(resolveCanonicalRuntimeTarget(ROOT_HOST, "/wiki"), null);
 assert.equal(resolveCanonicalRuntimeTarget(COMMAND_HOST, "/"), "https://anevum.com/command");
 assert.equal(resolveCanonicalRuntimeTarget(LATTICE_HOST, "/"), "https://anevum.com/lattice");
 assert.equal(resolveCanonicalRuntimeTarget(WIKI_HOST, "/ovara"), "https://anevum.com/wiki/ovara");
-assert.equal(resolveCanonicalRuntimeTarget(ROOT_HOST, "/stories"), "/the-book");
+assert.equal(resolveCanonicalRuntimeTarget(ROOT_HOST, "/stories"), null);
+assert.equal(resolveCanonicalRuntimeTarget(ROOT_HOST, "/stories/reply"), null);
 
 console.log("Runtime host contract valid: same-origin authenticated surfaces remain canonical, legacy subdomains collapse into anevum.com, preview/local hosts resolve safely, and metadata rewrites restore public paths.");
