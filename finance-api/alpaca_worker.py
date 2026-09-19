@@ -480,8 +480,116 @@ class AlpacaAutomation:
             signal["symbol"], float(signal["price"]), capital
         )
 
+    async def _wait_for_order_terminal(self, order_id: str, timeout_seconds: int = 30):
+        deadline = asyncio.get_running_loop().time() + timeout_seconds
+        last = None
+        while asyncio.get_running_loop().time() < deadline:
+            last = await self._request(
+                "GET", f"{self.trading_base}/v2/orders/{order_id}"
+            )
+            status = str((last or {}).get("status") or "").lower()
+            if status in {
+                "filled", "canceled", "expired", "rejected",
+                "replaced", "done_for_day"
+            }:
+                return last
+            await asyncio.sleep(1)
+        return last
+
+    async def paper_self_test(self):
+        if self.mode != "paper":
+            raise RuntimeError("Self-test is hard-locked to Alpaca paper mode.")
+        if not self.api_key or not self.api_secret:
+            raise RuntimeError("Alpaca paper credentials are missing.")
+
+        before = await self.account()
+        client_base = f"{CLIENT_PREFIX}selftest-{datetime.now(UTC):%Y%m%d-%H%M%S}"
+
+        buy = await self._request(
+            "POST",
+            f"{self.trading_base}/v2/orders",
+            body={
+                "symbol": "BTC/USD",
+                "qty": "0.0001",
+                "side": "buy",
+                "type": "market",
+                "time_in_force": "gtc",
+                "client_order_id": f"{client_base}-buy",
+            },
+            ok=(200, 201),
+        )
+        buy_id = str((buy or {}).get("id") or "")
+        if not buy_id:
+            raise RuntimeError("Paper self-test buy returned no order id.")
+
+        buy_final = await self._wait_for_order_terminal(buy_id)
+        if str((buy_final or {}).get("status") or "").lower() != "filled":
+            try:
+                await self._request(
+                    "DELETE",
+                    f"{self.trading_base}/v2/orders/{buy_id}",
+                    ok=(204, 422),
+                )
+            except Exception:
+                pass
+            raise RuntimeError(
+                f"Paper self-test buy did not fill: {(buy_final or {}).get('status')}"
+            )
+
+        filled_qty = str((buy_final or {}).get("filled_qty") or "0.0001")
+        sell = await self._request(
+            "POST",
+            f"{self.trading_base}/v2/orders",
+            body={
+                "symbol": "BTC/USD",
+                "qty": filled_qty,
+                "side": "sell",
+                "type": "market",
+                "time_in_force": "gtc",
+                "client_order_id": f"{client_base}-sell",
+            },
+            ok=(200, 201),
+        )
+        sell_id = str((sell or {}).get("id") or "")
+        if not sell_id:
+            raise RuntimeError("Paper self-test sell returned no order id.")
+
+        sell_final = await self._wait_for_order_terminal(sell_id)
+        if str((sell_final or {}).get("status") or "").lower() != "filled":
+            raise RuntimeError(
+                f"Paper self-test sell did not fill: {(sell_final or {}).get('status')}"
+            )
+
+        after = await self.account()
+        result = {
+            "completedAt": datetime.now(UTC).isoformat(),
+            "mode": self.mode,
+            "symbol": "BTC/USD",
+            "quantity": filled_qty,
+            "buyStatus": (buy_final or {}).get("status"),
+            "buyAverageFillPrice": (buy_final or {}).get("filled_avg_price"),
+            "sellStatus": (sell_final or {}).get("status"),
+            "sellAverageFillPrice": (sell_final or {}).get("filled_avg_price"),
+            "equityBefore": before.get("equity"),
+            "equityAfter": after.get("equity"),
+            "cashBefore": before.get("cash"),
+            "cashAfter": after.get("cash"),
+        }
+        self.state["paperSelfTest"] = result
+        log.warning("ALPACA PAPER SELF-TEST COMPLETED: %s", result)
+        return result
+
     async def loop(self):
         await asyncio.sleep(3)
+        if _bool("ALPACA_SELF_TEST_ON_START", False):
+            try:
+                await self.paper_self_test()
+            except Exception as exc:
+                self.state["paperSelfTest"] = {
+                    "completedAt": datetime.now(UTC).isoformat(),
+                    "error": f"{type(exc).__name__}: {exc}",
+                }
+                log.exception("ALPACA PAPER SELF-TEST FAILED")
         while True:
             try:
                 await self.cycle()
