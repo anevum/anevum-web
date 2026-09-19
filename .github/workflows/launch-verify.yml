@@ -70,6 +70,12 @@ jobs:
       - name: Verify static route metadata
         shell: bash
         run: |
+          test -f dist/__meta/stories.html
+          test -f dist/__meta/stories-reply.html
+          test -f dist/__meta/explore.html
+          test -f dist/__meta/archive.html
+          test -f dist/__meta/transmissions.html
+          test -f dist/__meta/search.html
           test -f dist/__meta/the-book.html
           test -f dist/__meta/the-story.html
           test -f dist/__meta/store.html
@@ -79,11 +85,14 @@ jobs:
           test -f dist/__meta/terms.html
           test -f dist/__meta/contact.html
 
+          grep -Fq '<title>ANEVUM — A Universe in Story</title>' dist/index.html
+          grep -Fq '<title>Stories — ANEVUM</title>' dist/__meta/stories.html
+          grep -Fq '<title>Explore the Universe — ANEVUM</title>' dist/__meta/explore.html
           grep -Fq '<title>REPLY — The Book | ANEVUM</title>' dist/__meta/the-book.html
           grep -Fq 'href="https://anevum.com/the-book"' dist/__meta/the-book.html
           grep -Fq 'content="noindex,follow,noarchive"' dist/__meta/rhenlink.html
           grep -Fq '<title>About ANEVUM — Stories First</title>' dist/__meta/about.html
-          grep -Fq 'id="anevum-structured-data"' dist/index.html
+          ! grep -Fq 'id="anevum-structured-data"' dist/index.html
           grep -Fq 'id="anevum-structured-data"' dist/__meta/the-book.html
 
       - name: Validate Cloudflare production bundle
@@ -107,7 +116,7 @@ jobs:
             sleep 1
           done
 
-          for route in / /the-book /the-story /store /rhenlink /about /privacy /terms /contact /wiki /lattice /command /route-that-does-not-exist; do
+          for route in / /stories /stories/reply /explore /archive /transmissions /search /the-book /the-story /store /rhenlink /about /privacy /terms /contact /wiki /lattice /command /route-that-does-not-exist; do
             echo "Checking ${route}"
             curl --fail --silent --show-error "http://127.0.0.1:4173${route}" > /dev/null
           done
