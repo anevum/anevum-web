@@ -259,7 +259,7 @@ function commandAdmin(user) {
   const metadata = user?.app_metadata || {};
   const role = String(metadata.role || "").trim().toLowerCase();
   const email = String(user?.email || "").trim().toLowerCase();
-  return email === "devon@anevum.com"
+  return (email === "devon@anevum.com" && Boolean(user?.email_confirmed_at))
     || metadata.command_admin === true
     || metadata.wiki_admin === true
     || role === "owner"
