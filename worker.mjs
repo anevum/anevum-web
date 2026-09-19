@@ -406,6 +406,7 @@ function providerConfigured(env) {
     && env.RESEND_API_KEY
     && env.RESEND_FROM
     && env.NOTIFICATION_UNSUBSCRIBE_SECRET
+    && env.NOTIFICATION_MAILING_ADDRESS
   );
 }
 
@@ -557,16 +558,16 @@ function validateCampaignInput(value) {
   return { subject, title, body, actionLabel, actionUrl };
 }
 
-function releaseEmailHtml(input, unsubscribeUrl) {
+function releaseEmailHtml(input, unsubscribeUrl, env) {
   const action = input.actionUrl && input.actionLabel
     ? `<p style="margin:28px 0"><a href="${escapeHtml(input.actionUrl)}" style="display:inline-block;border:1px solid #9fb4bc;padding:12px 18px;color:#e6edef;text-decoration:none;font:600 12px Arial,sans-serif;letter-spacing:1.4px">${escapeHtml(input.actionLabel)}</a></p>`
     : "";
-  return `<!doctype html><html><body style="margin:0;background:#071014;color:#d8e1e4"><div style="max-width:640px;margin:0 auto;padding:48px 28px;font-family:Arial,sans-serif"><p style="margin:0 0 12px;color:#78919b;font-size:11px;letter-spacing:2px">ANEVUM / REPLY RELEASE UPDATE</p><h1 style="margin:0 0 24px;color:#edf2f3;font:400 36px/1.08 Georgia,serif">${escapeHtml(input.title)}</h1><div style="white-space:pre-wrap;color:#aebec4;font-size:16px;line-height:1.7">${escapeHtml(input.body)}</div>${action}<hr style="margin:36px 0 22px;border:0;border-top:1px solid #24383f"><p style="color:#6f858e;font-size:12px;line-height:1.6">You asked to receive REPLY release updates through your RHENLINK. <a href="${escapeHtml(unsubscribeUrl)}" style="color:#9bb8c3">Remove REPLY release updates</a>.</p></div></body></html>`;
+  return `<!doctype html><html><body style="margin:0;background:#071014;color:#d8e1e4"><div style="max-width:640px;margin:0 auto;padding:48px 28px;font-family:Arial,sans-serif"><p style="margin:0 0 12px;color:#78919b;font-size:11px;letter-spacing:2px">ANEVUM / REPLY RELEASE UPDATE</p><h1 style="margin:0 0 24px;color:#edf2f3;font:400 36px/1.08 Georgia,serif">${escapeHtml(input.title)}</h1><div style="white-space:pre-wrap;color:#aebec4;font-size:16px;line-height:1.7">${escapeHtml(input.body)}</div>${action}<hr style="margin:36px 0 22px;border:0;border-top:1px solid #24383f"><p style="color:#6f858e;font-size:12px;line-height:1.6">Commercial release notice from ANEVUM. You asked to receive REPLY release updates through your RHENLINK. <a href="${escapeHtml(unsubscribeUrl)}" style="color:#9bb8c3">Remove REPLY release updates</a>.<br><br>${escapeHtml(String(env.NOTIFICATION_MAILING_ADDRESS || ""))}</p></div></body></html>`;
 }
 
 function releaseEmailText(input, unsubscribeUrl) {
   const action = input.actionUrl && input.actionLabel ? `\n\n${input.actionLabel}: ${input.actionUrl}` : "";
-  return `${input.title}\n\n${input.body}${action}\n\nYou asked to receive REPLY release updates through your RHENLINK. Remove updates: ${unsubscribeUrl}`;
+  return `${input.title}\n\n${input.body}${action}\n\nCommercial release notice from ANEVUM. You asked to receive REPLY release updates through your RHENLINK.\nRemove updates: ${unsubscribeUrl}`;
 }
 
 async function sendResendBatch(env, campaignId, users, input, batchIndex) {
@@ -577,7 +578,7 @@ async function sendResendBatch(env, campaignId, users, input, batchIndex) {
       from: String(env.RESEND_FROM),
       to: [String(user.email)],
       subject: input.subject,
-      html: releaseEmailHtml(input, unsubscribeUrl),
+      html: releaseEmailHtml(input, unsubscribeUrl, env),
       text: releaseEmailText(input, unsubscribeUrl),
       headers: {
         "List-Unsubscribe": `<${unsubscribeUrl}>`,
@@ -690,7 +691,7 @@ async function handleCommandReleaseSummary(request, env) {
 async function handleCommandReleaseSend(request, env) {
   const { user: adminUser } = await requireCommandAdmin(request, env);
   if (!providerConfigured(env)) {
-    throw new ApiError(503, "Email delivery requires SUPABASE_SERVICE_ROLE_KEY, RESEND_API_KEY, RESEND_FROM, and NOTIFICATION_UNSUBSCRIBE_SECRET.");
+    throw new ApiError(503, "Email delivery requires SUPABASE_SERVICE_ROLE_KEY, RESEND_API_KEY, RESEND_FROM, NOTIFICATION_UNSUBSCRIBE_SECRET, and NOTIFICATION_MAILING_ADDRESS.");
   }
   const payload = await request.json().catch(() => ({}));
   if (payload.confirm !== RELEASE_CONFIRMATION) throw new ApiError(400, "Explicit release-send confirmation is required.");
