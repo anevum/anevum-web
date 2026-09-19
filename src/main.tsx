@@ -9,16 +9,7 @@ import "./production.css";
 import "./systemShell.css";
 import "./publicV2.css";
 import "./brandArt.css";
-import "./replyRelease.css";
 import "./memberChrome.css";
-import "./replyLaunch.css";
-import "./launchTerminal.css";
-import "./launchIntegration.css";
-import "./launchPages.css";
-import "./launchPolish.css";
-import "./launchVisualV3.css";
-import "./mobileLaunchFix.css";
-import "./launchEditorialLight.css";
 import "./legal.css";
 import "./anevumTheme.css";
 import "./runtimeBoundary.css";
@@ -33,12 +24,24 @@ function routeStyleImports() {
   const wikiRoute = hostname === WIKI_HOST || (hostname === ROOT_HOST && (pathname === "/wiki" || pathname.startsWith("/wiki/")));
   const latticeRoute = hostname === LATTICE_HOST || (hostname === ROOT_HOST && pathname === "/lattice");
   const commandRoute = hostname === COMMAND_HOST || (hostname === ROOT_HOST && pathname === "/command");
+  const replyRoute = hostname === ROOT_HOST && (pathname === "/the-book" || pathname === "/stories/reply" || pathname === "/the-story" || pathname === "/store");
 
   if (wikiRoute) {
     styles.push(import("./canonicalWiki.css"), import("./moderatedWiki.css"));
   }
   if (latticeRoute) styles.push(import("./latticeV2.css"));
   if (commandRoute) styles.push(import("./commandIntegration.css"), import("./commandReadiness.css"), import("./commandFinance.css"), import("./commandCohesion.css"));
+  if (replyRoute) styles.push(
+    import("./replyRelease.css"),
+    import("./replyLaunch.css"),
+    import("./launchTerminal.css"),
+    import("./launchIntegration.css"),
+    import("./launchPages.css"),
+    import("./launchPolish.css"),
+    import("./launchVisualV3.css"),
+    import("./mobileLaunchFix.css"),
+    import("./launchEditorialLight.css"),
+  );
   if (hostname === ROOT_HOST && pathname === "/rhenlink") styles.push(import("./rhenlinkV2.css"), import("./rhenlinkOwnership.css"));
   if (hostname === ROOT_HOST && pathname === "/about") styles.push(import("./about.css"));
 
