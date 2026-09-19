@@ -10,6 +10,7 @@ import { UnifiedSystemShell } from "./SystemShell";
 import { EditorialShell } from "./EditorialShell";
 import { ArchivePage, ExplorePage, FrontDoor, SearchPage, Stories, Transmissions } from "./PublicPages";
 
+const ReplyLaunch = lazy(() => import("./ReplyLaunch"));
 const BookPage = lazy(() => import("./LaunchPages").then((module) => ({ default: module.BookPage })));
 const StoryPage = lazy(() => import("./LaunchPages").then((module) => ({ default: module.StoryPage })));
 const StorePage = lazy(() => import("./LaunchPages").then((module) => ({ default: module.StorePage })));
@@ -101,6 +102,14 @@ function rootPublicMeta(pathname: string, knownPublicRoute: boolean) {
   }
 
   switch (pathname) {
+    case "/":
+      return {
+        title: "REPLY — A Transcosmic Novel | ANEVUM",
+        description: "REPLY is the first Transcosmic novel by Devon Akins, arriving November 17, 2026 from ANEVUM.",
+        canonical: "https://anevum.com/",
+        ogTitle: "REPLY — A Transcosmic Novel",
+        ogType: "book",
+      };
     case "/the-book":
     case "/stories/reply":
       return {
@@ -242,6 +251,7 @@ export default function App() {
   const { pathname, hostname } = useLocationState();
   const routePath = normalizeRuntimePath(pathname);
 
+  const homeRoute = hostname === ROOT_HOST && routePath === "/";
   const bridgeRoute = hostname === ROOT_HOST && routePath === "/auth-bridge";
   const commandRoute = hostname === COMMAND_HOST || (hostname === ROOT_HOST && routePath === "/command");
   const wikiRoute = hostname === WIKI_HOST || (hostname === ROOT_HOST && (routePath === "/wiki" || routePath.startsWith("/wiki/")));
@@ -261,8 +271,8 @@ export default function App() {
   const termsRoute = hostname === ROOT_HOST && routePath === "/terms";
   const contactRoute = hostname === ROOT_HOST && routePath === "/contact";
   const legalRoute = privacyRoute || termsRoute || contactRoute;
-  const editorialRoute = routePath === "/" || storiesRoute || exploreRoute || archiveRoute || transmissionsRoute || searchRoute;
-  const rootMemberRoute = editorialRoute || rhenlinkRoute || bookRoute || storyBookRoute || storyRoute || storeRoute || wikiRoute || latticeRoute;
+  const editorialRoute = storiesRoute || exploreRoute || archiveRoute || transmissionsRoute || searchRoute;
+  const rootMemberRoute = homeRoute || editorialRoute || rhenlinkRoute || bookRoute || storyBookRoute || storyRoute || storeRoute || wikiRoute || latticeRoute;
   const knownRootPublicRoute = rootMemberRoute || aboutRoute || legalRoute || wikiRoute || latticeRoute;
   const notFoundRoute = hostname === ROOT_HOST && !bridgeRoute && !commandRoute && !knownRootPublicRoute;
   const wikiPath = wikiSurfacePath(hostname, routePath);
@@ -380,7 +390,7 @@ export default function App() {
     const twitterDescription = ensureMeta('meta[name="twitter:description"]', "name", "twitter:description");
     twitterDescription.content = meta.description;
 
-    if (hostname === ROOT_HOST && (routePath === "/the-book" || routePath === "/stories/reply")) {
+    if (hostname === ROOT_HOST && (routePath === "/" || routePath === "/the-book" || routePath === "/stories/reply")) {
       setStructuredData(replyBookSchema());
     } else if (wikiRoute && wikiRecord) {
       setStructuredData({
@@ -470,6 +480,7 @@ export default function App() {
     );
   }
 
+  if (homeRoute) return <DeferredSurface><ReplyLaunch /></DeferredSurface>;
   if (storyBookRoute) return <DeferredSurface><BookPage /><PublicLegalStrip /><AchievementLayer /></DeferredSurface>;
   if (bookRoute) return <DeferredSurface><BookPage /><PublicLegalStrip /><AchievementLayer /></DeferredSurface>;
   if (storyRoute) return <DeferredSurface><StoryPage /><PublicLegalStrip /><AchievementLayer /></DeferredSurface>;

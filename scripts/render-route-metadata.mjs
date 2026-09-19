@@ -19,12 +19,13 @@ const routes = [
   {
     path: "/",
     file: "index.html",
-    title: "ANEVUM — A Universe in Story",
-    description: "ANEVUM is an independent publisher and story universe. Enter through REPLY, Publication 001 and the first Transcosmic novel by Devon Akins.",
+    title: "REPLY — A Transcosmic Novel | ANEVUM",
+    description: "REPLY is the first Transcosmic novel by Devon Akins, arriving November 17, 2026 from ANEVUM.",
     canonical: "https://anevum.com/",
-    ogTitle: "ANEVUM — A Universe in Story",
-    ogType: "website",
+    ogTitle: "REPLY — A Transcosmic Novel",
+    ogType: "book",
     robots: "index,follow,max-image-preview:large",
+    structuredData: bookSchema,
   },
   {
     path: "/stories",
