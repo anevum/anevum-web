@@ -85,14 +85,14 @@ jobs:
           test -f dist/__meta/terms.html
           test -f dist/__meta/contact.html
 
-          grep -Fq '<title>ANEVUM — A Universe in Story</title>' dist/index.html
+          grep -Fq '<title>REPLY — A Transcosmic Novel | ANEVUM</title>' dist/index.html
           grep -Fq '<title>Stories — ANEVUM</title>' dist/__meta/stories.html
           grep -Fq '<title>Explore the Universe — ANEVUM</title>' dist/__meta/explore.html
           grep -Fq '<title>REPLY — The Book | ANEVUM</title>' dist/__meta/the-book.html
           grep -Fq 'href="https://anevum.com/the-book"' dist/__meta/the-book.html
           grep -Fq 'content="noindex,follow,noarchive"' dist/__meta/rhenlink.html
           grep -Fq '<title>About ANEVUM — Stories First</title>' dist/__meta/about.html
-          ! grep -Fq 'id="anevum-structured-data"' dist/index.html
+          grep -Fq 'id="anevum-structured-data"' dist/index.html
           grep -Fq 'id="anevum-structured-data"' dist/__meta/the-book.html
 
       - name: Validate Cloudflare production bundle
