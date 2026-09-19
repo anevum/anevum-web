@@ -565,9 +565,9 @@ function releaseEmailHtml(input, unsubscribeUrl, env) {
   return `<!doctype html><html><body style="margin:0;background:#071014;color:#d8e1e4"><div style="max-width:640px;margin:0 auto;padding:48px 28px;font-family:Arial,sans-serif"><p style="margin:0 0 12px;color:#78919b;font-size:11px;letter-spacing:2px">ANEVUM / REPLY RELEASE UPDATE</p><h1 style="margin:0 0 24px;color:#edf2f3;font:400 36px/1.08 Georgia,serif">${escapeHtml(input.title)}</h1><div style="white-space:pre-wrap;color:#aebec4;font-size:16px;line-height:1.7">${escapeHtml(input.body)}</div>${action}<hr style="margin:36px 0 22px;border:0;border-top:1px solid #24383f"><p style="color:#6f858e;font-size:12px;line-height:1.6">Commercial release notice from ANEVUM. You asked to receive REPLY release updates through your RHENLINK. <a href="${escapeHtml(unsubscribeUrl)}" style="color:#9bb8c3">Remove REPLY release updates</a>.<br><br>${escapeHtml(String(env.NOTIFICATION_MAILING_ADDRESS || ""))}</p></div></body></html>`;
 }
 
-function releaseEmailText(input, unsubscribeUrl) {
+function releaseEmailText(input, unsubscribeUrl, env) {
   const action = input.actionUrl && input.actionLabel ? `\n\n${input.actionLabel}: ${input.actionUrl}` : "";
-  return `${input.title}\n\n${input.body}${action}\n\nCommercial release notice from ANEVUM. You asked to receive REPLY release updates through your RHENLINK.\nRemove updates: ${unsubscribeUrl}`;
+  return `${input.title}\n\n${input.body}${action}\n\nCommercial release notice from ANEVUM. You asked to receive REPLY release updates through your RHENLINK.\nRemove updates: ${unsubscribeUrl}\n\n${String(env.NOTIFICATION_MAILING_ADDRESS || "")}`;
 }
 
 async function sendResendBatch(env, campaignId, users, input, batchIndex) {
@@ -579,7 +579,7 @@ async function sendResendBatch(env, campaignId, users, input, batchIndex) {
       to: [String(user.email)],
       subject: input.subject,
       html: releaseEmailHtml(input, unsubscribeUrl, env),
-      text: releaseEmailText(input, unsubscribeUrl),
+      text: releaseEmailText(input, unsubscribeUrl, env),
       headers: {
         "List-Unsubscribe": `<${unsubscribeUrl}>`,
         "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
