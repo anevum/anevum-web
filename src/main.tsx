@@ -22,6 +22,7 @@ import "./launchEditorialLight.css";
 import "./legal.css";
 import "./anevumTheme.css";
 import "./runtimeBoundary.css";
+import "./notifications.css";
 
 function routeStyleImports() {
   const hostname = resolveRuntimeHostname(window.location.hostname);
