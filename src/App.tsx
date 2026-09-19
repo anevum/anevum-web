@@ -102,6 +102,14 @@ function rootPublicMeta(pathname: string, knownPublicRoute: boolean) {
   }
 
   switch (pathname) {
+    case "/":
+      return {
+        title: "REPLY — A Transcosmic Novel | ANEVUM",
+        description: "REPLY is the first Transcosmic novel by Devon Akins, arriving November 17, 2026 from ANEVUM.",
+        canonical: "https://anevum.com/",
+        ogTitle: "REPLY — A Transcosmic Novel",
+        ogType: "book",
+      };
     case "/the-book":
     case "/stories/reply":
       return {
@@ -263,8 +271,8 @@ export default function App() {
   const termsRoute = hostname === ROOT_HOST && routePath === "/terms";
   const contactRoute = hostname === ROOT_HOST && routePath === "/contact";
   const legalRoute = privacyRoute || termsRoute || contactRoute;
-  const editorialRoute = routePath === "/" || storiesRoute || exploreRoute || archiveRoute || transmissionsRoute || searchRoute;
-  const rootMemberRoute = editorialRoute || rhenlinkRoute || bookRoute || storyBookRoute || storyRoute || storeRoute || wikiRoute || latticeRoute;
+  const editorialRoute = storiesRoute || exploreRoute || archiveRoute || transmissionsRoute || searchRoute;
+  const rootMemberRoute = homeRoute || editorialRoute || rhenlinkRoute || bookRoute || storyBookRoute || storyRoute || storeRoute || wikiRoute || latticeRoute;
   const knownRootPublicRoute = rootMemberRoute || aboutRoute || legalRoute || wikiRoute || latticeRoute;
   const notFoundRoute = hostname === ROOT_HOST && !bridgeRoute && !commandRoute && !knownRootPublicRoute;
   const wikiPath = wikiSurfacePath(hostname, routePath);
