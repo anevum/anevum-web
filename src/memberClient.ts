@@ -355,6 +355,22 @@ export async function consumeRhenlinkHandoff(): Promise<AuthRedirectResult> {
     saveSession(session);
     return { status: "signed-in", session };
   } catch (error) {
+    if (isUnauthorized(error) && refreshToken) {
+      try {
+        const session = await request<MemberSession>("/auth/v1/token?grant_type=refresh_token", {
+          method: "POST",
+          headers: headers(),
+          body: JSON.stringify({ refresh_token: refreshToken }),
+        });
+        saveSession(session);
+        return { status: "signed-in", session };
+      } catch (refreshError) {
+        return {
+          status: "error",
+          message: refreshError instanceof Error ? refreshError.message : "RHENLINK session has expired. Sign in again.",
+        };
+      }
+    }
     return {
       status: "error",
       message: error instanceof Error ? error.message : "RHENLINK handoff could not be completed.",
