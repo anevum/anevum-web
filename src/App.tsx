@@ -10,7 +10,8 @@ import { UnifiedSystemShell } from "./SystemShell";
 import { EditorialShell } from "./EditorialShell";
 import { ArchivePage, ExplorePage, FrontDoor, SearchPage, Stories, Transmissions } from "./PublicPages";
 
-const ReplyLaunch = lazy(() => import("./ReplyLaunch"));\nconst BookPage = lazy(() => import("./LaunchPages").then((module) => ({ default: module.BookPage })));
+const ReplyLaunch = lazy(() => import("./ReplyLaunch"));
+const BookPage = lazy(() => import("./LaunchPages").then((module) => ({ default: module.BookPage })));
 const StoryPage = lazy(() => import("./LaunchPages").then((module) => ({ default: module.StoryPage })));
 const StorePage = lazy(() => import("./LaunchPages").then((module) => ({ default: module.StorePage })));
 const AboutPage = lazy(() => import("./AboutPage").then((module) => ({ default: module.AboutPage })));
@@ -242,7 +243,8 @@ export default function App() {
   const { pathname, hostname } = useLocationState();
   const routePath = normalizeRuntimePath(pathname);
 
-  const homeRoute = hostname === ROOT_HOST && routePath === "/";\n  const bridgeRoute = hostname === ROOT_HOST && routePath === "/auth-bridge";
+  const homeRoute = hostname === ROOT_HOST && routePath === "/";
+  const bridgeRoute = hostname === ROOT_HOST && routePath === "/auth-bridge";
   const commandRoute = hostname === COMMAND_HOST || (hostname === ROOT_HOST && routePath === "/command");
   const wikiRoute = hostname === WIKI_HOST || (hostname === ROOT_HOST && (routePath === "/wiki" || routePath.startsWith("/wiki/")));
   const latticeRoute = hostname === LATTICE_HOST || (hostname === ROOT_HOST && routePath === "/lattice");
@@ -470,7 +472,8 @@ export default function App() {
     );
   }
 
-  if (homeRoute) return <DeferredSurface><ReplyLaunch /></DeferredSurface>;\n  if (storyBookRoute) return <DeferredSurface><BookPage /><PublicLegalStrip /><AchievementLayer /></DeferredSurface>;
+  if (homeRoute) return <DeferredSurface><ReplyLaunch /></DeferredSurface>;
+  if (storyBookRoute) return <DeferredSurface><BookPage /><PublicLegalStrip /><AchievementLayer /></DeferredSurface>;
   if (bookRoute) return <DeferredSurface><BookPage /><PublicLegalStrip /><AchievementLayer /></DeferredSurface>;
   if (storyRoute) return <DeferredSurface><StoryPage /><PublicLegalStrip /><AchievementLayer /></DeferredSurface>;
   if (storeRoute) return <DeferredSurface><StorePage /><PublicLegalStrip /><AchievementLayer /></DeferredSurface>;
