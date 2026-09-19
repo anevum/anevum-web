@@ -1,8 +1,7 @@
-import { type PointerEvent as ReactPointerEvent } from "react";
+import { useEffect, useState, type PointerEvent as ReactPointerEvent } from "react";
 import { ArrowDown, ArrowRight, BookOpen, ExternalLink } from "lucide-react";
 import { capturePurchaseOutbound } from "./analytics";
 import { replyLaunchConfig } from "./launchConfig";
-import { LaunchTerminal } from "./LaunchTerminal";
 
 const {
   primaryPurchaseUrl,
@@ -13,9 +12,7 @@ const {
   heroImageUrl,
 } = replyLaunchConfig;
 
-function releaseInterestHref(source: string) {
-  return `/rhenlink?intent=reply-release&source=${encodeURIComponent(source)}`;
-}
+const REPLY_RELEASE_AT = "2026-11-17T00:00:00-05:00";
 
 function destinationHost(href: string) {
   try { return new URL(href).hostname.replace(/^www\./, ""); } catch { return "external"; }
@@ -38,6 +35,43 @@ function ExternalAction({ href, children, quiet = false, onClick }: { href: stri
 
 function PurchaseAction({ href, edition, source, children }: { href: string; edition: string; source: string; children: React.ReactNode }) {
   return <ExternalAction href={href} onClick={() => capturePurchaseOutbound({ edition, destination: destinationHost(href), source })}>{children}</ExternalAction>;
+}
+
+function ReleaseCountdown() {
+  const [now, setNow] = useState(() => Date.now());
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => window.clearInterval(timer);
+  }, []);
+
+  const remaining = Math.max(0, new Date(REPLY_RELEASE_AT).getTime() - now);
+  const totalSeconds = Math.floor(remaining / 1000);
+  const days = Math.floor(totalSeconds / 86400);
+  const hours = Math.floor((totalSeconds % 86400) / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+  const released = remaining === 0;
+
+  return (
+    <section className="reply-release-lockup" aria-label="REPLY publication countdown">
+      <div>
+        <p className="reply-launch-kicker">PUBLICATION 001</p>
+        <h2>{released ? "REPLY is now available." : "November 17, 2026"}</h2>
+        <p>{released ? "The first Transcosmic novel has entered the world." : "The first Transcosmic novel arrives this fall."}</p>
+      </div>
+      {released ? (
+        <div className="reply-release-live">AVAILABLE NOW</div>
+      ) : (
+        <div className="reply-countdown" aria-live="polite">
+          <div><strong>{String(days).padStart(2, "0")}</strong><span>DAYS</span></div>
+          <div><strong>{String(hours).padStart(2, "0")}</strong><span>HOURS</span></div>
+          <div><strong>{String(minutes).padStart(2, "0")}</strong><span>MINUTES</span></div>
+          <div><strong>{String(seconds).padStart(2, "0")}</strong><span>SECONDS</span></div>
+        </div>
+      )}
+    </section>
+  );
 }
 
 function BookObject() {
@@ -111,7 +145,7 @@ function AtmosphericArt() {
 
 export default function ReplyLaunch() {
   return (
-    <div className="reply-launch-site">
+    <div className="reply-launch-site reply-launch-mode">
       <a className="launch-skip-link" href="#main-content">SKIP TO CONTENT</a>
       <header className="reply-launch-header">
         <a className="reply-launch-brand" href="#top" aria-label="ANEVUM home">
@@ -119,21 +153,17 @@ export default function ReplyLaunch() {
           <small>A UNIVERSE IN STORY.</small>
         </a>
         <nav aria-label="REPLY launch navigation">
-          <a href="/the-book">THE BOOK</a>
-          <a href="/the-story">THE STORY</a>
+          <a href="/the-book">REPLY</a>
+          <a href="/the-story">STORY</a>
+          <a href="/wiki">WIKI</a>
           <a href="/store">STORE</a>
-          <a href="#author">AUTHOR</a>
-          <a href="/about">ABOUT</a>
-          <a href="/rhenlink">RHENLINK</a>
         </nav>
         {primaryPurchaseUrl ? (
           <PurchaseAction href={primaryPurchaseUrl} edition={primaryPurchaseLabel} source="home-header">BUY REPLY</PurchaseAction>
         ) : (
-          <a className="reply-launch-header-link" href={releaseInterestHref("home-header")}>GET UPDATES</a>
+          <span className="reply-launch-header-date">NOV 17 · 2026</span>
         )}
       </header>
-
-      <LaunchTerminal />
 
       <main id="main-content">
         <section className="reply-launch-hero" id="top" aria-labelledby="reply-title">
@@ -147,52 +177,48 @@ export default function ReplyLaunch() {
               {primaryPurchaseUrl ? (
                 <PurchaseAction href={primaryPurchaseUrl} edition={primaryPurchaseLabel} source="home-hero">BUY REPLY</PurchaseAction>
               ) : (
-                <ExternalAction href="/the-book">DISCOVER REPLY</ExternalAction>
+                <ExternalAction href="/the-book">ENTER REPLY</ExternalAction>
               )}
-              <ExternalAction href="/the-story" quiet>ENTER THE STORY</ExternalAction>
+              <ExternalAction href="/the-story" quiet>THE STORY</ExternalAction>
               {sampleUrl ? <ExternalAction href={sampleUrl} quiet><BookOpen size={15} strokeWidth={1.5} /> READ AN EXCERPT</ExternalAction> : null}
             </div>
           </div>
           <BookObject />
-          <a className="reply-launch-scroll" href="#book" aria-label="Continue to book details"><span>CONTINUE</span><ArrowDown size={15} /></a>
+          <a className="reply-launch-scroll" href="#release" aria-label="Continue to REPLY release"><span>CONTINUE</span><ArrowDown size={15} /></a>
         </section>
 
-        <section className="reply-launch-statement" id="book">
-          <p>ONE MEASUREMENT.</p>
-          <h2>A larger universe begins with something small enough to ignore.</h2>
-          <p>Contact opens possibilities that reach far beyond travel while leaving each person with a life, a family, and choices of their own.</p>
-          <div className="reply-launch-actions"><ExternalAction href="/the-book">OPEN THE BOOK</ExternalAction></div>
-        </section>
+        <div id="release"><ReleaseCountdown /></div>
 
-        <section className="reply-launch-story" id="world">
-          <div className="reply-launch-story-art"><AtmosphericArt /><span>THE ANSWER CHANGES THE SCALE OF A LIFE.</span></div>
-          <div className="reply-launch-story-copy">
-            <p className="reply-launch-kicker">REPLY</p>
-            <h2>The first door into ANEVUM.</h2>
-            <p>Work can change. Families can imagine longer futures. An intelligence can become part of daily life. Yet a larger universe still leaves each person with a life to choose.</p>
-            <div className="reply-launch-beats" aria-label="Story themes">
-              <article><span>01</span><strong>THE MEASUREMENT</strong><p>A problem that should be ordinary refuses to become one.</p></article>
-              <article><span>02</span><strong>THE ANSWER</strong><p>What follows is not empty distance, but people already living beyond a single world.</p></article>
-              <article><span>03</span><strong>THE CHOICE</strong><p>Expanded possibility does not remove the intimate question of how to live.</p></article>
+        <section className="reply-reciprocal" aria-labelledby="reciprocal-title">
+          <div className="reply-reciprocal-field" aria-hidden="true">
+            <div className="reply-signal reply-signal-left"><i /><span>ONE WORLD</span></div>
+            <div className="reply-reciprocal-line"><b /><b /><b /></div>
+            <div className="reply-signal reply-signal-right"><i /><span>ANOTHER ANSWERS</span></div>
+          </div>
+          <div className="reply-reciprocal-copy">
+            <p className="reply-launch-kicker">THE REPLY</p>
+            <h2>First contact is not the end of ordinary life.</h2>
+            <p>It changes the scale of what ordinary can mean. Work, family, medicine, distance, intelligence, purpose and death remain personal even when civilization becomes larger than one world.</p>
+            <div className="reply-launch-actions">
+              <ExternalAction href="/the-story">ENTER THE STORY</ExternalAction>
+              <ExternalAction href="/wiki" quiet>OPEN THE PUBLIC WIKI</ExternalAction>
             </div>
-            <div className="reply-launch-actions"><ExternalAction href="/the-story" quiet>OPEN THE STORY PAGE</ExternalAction></div>
           </div>
         </section>
 
-        <section className="reply-launch-object">
+        <section className="reply-launch-object" id="book">
           <div className="reply-launch-object-copy">
-            <p className="reply-launch-kicker">THE BOOK</p>
-            <h2>Built to be read. Made to be kept.</h2>
-            <p>REPLY is the first Transcosmic novel: a human-scale science-fiction story about contact, work, family, intelligence, possibility and belonging.</p>
+            <p className="reply-launch-kicker">THE OBJECT</p>
+            <h2>The book is the first doorway.</h2>
+            <p>REPLY is the first Transcosmic novel and the first commercial publication from ANEVUM: a human-scale science-fiction story about contact, work, family, intelligence, possibility and belonging.</p>
             {primaryPurchaseUrl ? (
               <PurchaseAction href={primaryPurchaseUrl} edition={primaryPurchaseLabel} source="home-object">BUY REPLY</PurchaseAction>
             ) : (
-              <>
-                <p className="reply-launch-availability">EDITION AND RETAILER DETAILS ARE BEING FINALIZED.</p>
-                <div className="reply-launch-actions"><ExternalAction href={releaseInterestHref("home-object")}>GET RELEASE UPDATES</ExternalAction></div>
-              </>
+              <div className="reply-launch-actions">
+                <ExternalAction href="/the-book">BOOK DETAILS</ExternalAction>
+                <ExternalAction href="/store" quiet>OPEN STORE</ExternalAction>
+              </div>
             )}
-            <div className="reply-launch-actions"><ExternalAction href="/the-book" quiet>OPEN THE BOOK PAGE</ExternalAction><ExternalAction href="/store" quiet>OPEN THE STORE</ExternalAction></div>
           </div>
           <BookObject />
         </section>
@@ -215,6 +241,18 @@ export default function ReplyLaunch() {
           </section>
         ) : null}
 
+        <section className="reply-launch-depth">
+          <div>
+            <p className="reply-launch-kicker">BEYOND THE BOOK</p>
+            <h2>REPLY begins the Transcosmic. ANEVUM keeps the universe open.</h2>
+          </div>
+          <div className="reply-launch-depth-links">
+            <a href="/wiki"><span>PUBLIC WIKI</span><strong>Follow the released record.</strong><ArrowRight size={17} /></a>
+            <a href="/the-story"><span>STORY</span><strong>Enter without the lore dump.</strong><ArrowRight size={17} /></a>
+            <a href="/store"><span>STORE</span><strong>The book first. Objects when they are ready.</strong><ArrowRight size={17} /></a>
+          </div>
+        </section>
+
         <section className="reply-launch-author" id="author">
           <div className="reply-launch-author-mark" aria-hidden="true"><span>DA</span></div>
           <div>
@@ -228,7 +266,7 @@ export default function ReplyLaunch() {
       <footer className="reply-launch-footer">
         <a href="#top"><strong>ANEVUM</strong><small>A UNIVERSE IN STORY.</small></a>
         <p>REPLY / THE TRANSCOSMIC / BOOK ONE</p>
-        <span><a href="/about">ABOUT</a> · <a href="/store">STORE</a> · <a href="/rhenlink">RHENLINK</a> · DEVON AKINS</span>
+        <span><a href="/about">ABOUT</a> · <a href="/wiki">WIKI</a> · <a href="/store">STORE</a> · <a href="/privacy">PRIVACY</a> · <a href="/terms">TERMS</a></span>
       </footer>
     </div>
   );
