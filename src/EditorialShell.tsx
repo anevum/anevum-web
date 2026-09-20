@@ -12,6 +12,7 @@ const primary = [
   ["ARCHIVE", "/archive"],
   ["TRANSMISSIONS", "/transmissions"],
   ["STORE", "/store"],
+  ["COMMAND", "/command"],
 ] as const;
 
 const surfaceCopy: Record<PublicSurface, { label: string; subtitle: string; nav: readonly (readonly [string, string])[] }> = {

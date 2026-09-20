@@ -1,6 +1,7 @@
 import { useEffect, useState, type PointerEvent as ReactPointerEvent } from "react";
 import { ArrowDown, ArrowRight, BookOpen, ExternalLink } from "lucide-react";
 import { capturePurchaseOutbound } from "./analytics";
+import "./commandOverview.css";
 import { replyLaunchConfig } from "./launchConfig";
 
 const {
@@ -152,6 +153,7 @@ export default function ReplyLaunch() {
           <strong>ANEVUM</strong>
           <small>A UNIVERSE IN STORY.</small>
         </a>
+        <a className="reply-command-access" href="/command">COMMAND</a>
         <nav aria-label="REPLY launch navigation">
           <a href="/the-book">REPLY</a>
           <a href="/the-story">STORY</a>

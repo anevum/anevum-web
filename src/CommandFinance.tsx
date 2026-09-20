@@ -1,3 +1,4 @@
+import { CompanyFinanceOverview } from "./CompanyFinanceOverview";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Activity, ArrowDownRight, ArrowUpRight, Banknote, Gauge, RefreshCw, ShieldCheck, WalletCards } from "lucide-react";
 import { financeBackend, loadFinanceSnapshot, type FinanceChartPoint, type FinanceSnapshot, type FinanceStrategySetup } from "./financeClient";
@@ -80,7 +81,7 @@ function StrategyChart({ setup }: { setup: FinanceStrategySetup }) {
   );
 }
 
-export function CommandFinance({ session }: { session: MemberSession }) {
+function InvestmentDetails({ session }: { session: MemberSession }) {
   const [snapshot, setSnapshot] = useState<FinanceSnapshot | null>(null);
   const [state, setState] = useState<FinanceState>("idle");
   const [error, setError] = useState("");
@@ -276,4 +277,9 @@ export function CommandFinance({ session }: { session: MemberSession }) {
       ) : null}
     </section>
   );
+}
+
+export function CommandFinance({session}:{session:MemberSession}) {
+ const [details,setDetails]=useState(false);
+ return <><CompanyFinanceOverview session={session} onAuth={()=>{window.location.href='/rhenlink?return=command'}}/><div className="finance-detail-toggle"><button type="button" aria-expanded={details} onClick={()=>setDetails(x=>!x)}>{details?'Hide investment detail':'Open investment detail & strategy'}</button></div>{details&&<InvestmentDetails session={session}/>}</>;
 }
