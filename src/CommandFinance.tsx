@@ -6,6 +6,22 @@ import { type MemberSession } from "./memberClient";
 
 type FinanceState = "idle" | "loading" | "ready" | "error";
 
+type WatchTone = "positive" | "negative" | "neutral";
+type WatchEvent = {
+  id: string;
+  at: number;
+  tone: WatchTone;
+  symbol?: string;
+  label: string;
+  value: string;
+  detail: string;
+};
+type TickMove = {
+  priceDelta: number;
+  pnlDelta: number;
+  valueDelta: number;
+};
+
 function money(value: number | null | undefined) {
   if (value == null || !Number.isFinite(value)) return "—";
   return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 2 }).format(value);
@@ -14,6 +30,150 @@ function money(value: number | null | undefined) {
 function number(value: number | null | undefined, digits = 2) {
   if (value == null || !Number.isFinite(value)) return "—";
   return value.toLocaleString(undefined, { maximumFractionDigits: digits });
+}
+
+function signedMoney(value: number | null | undefined) {
+  if (value == null || !Number.isFinite(value)) return "—";
+  const formatted = money(Math.abs(value));
+  return value > 0 ? `+${formatted}` : value < 0 ? `-${formatted}` : formatted;
+}
+
+function elapsed(seconds: number) {
+  const safe = Math.max(0, Math.floor(seconds));
+  const hours = Math.floor(safe / 3600);
+  const minutes = Math.floor((safe % 3600) / 60);
+  const secs = safe % 60;
+  return hours > 0
+    ? `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(secs).padStart(2, "0")}`
+    : `${String(minutes).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
+}
+
+function buildWatchEvents(previous: FinanceSnapshot | null, next: FinanceSnapshot): WatchEvent[] {
+  const at = Number.isFinite(Date.parse(next.generatedAt)) ? Date.parse(next.generatedAt) : Date.now();
+  const events: WatchEvent[] = [];
+
+  if (!previous) {
+    events.push({
+      id: `${at}-watch-online`,
+      at,
+      tone: next.gateway.connected ? "positive" : "negative",
+      label: next.gateway.connected ? "LIVE WATCH CONNECTED" : "LIVE WATCH OFFLINE",
+      value: next.account ? money(next.account.netLiquidation) : "NO ACCOUNT DATA",
+      detail: next.gateway.connected ? "IBKR telemetry session started." : (next.gateway.reason || "IBKR gateway unavailable."),
+    });
+    next.positions.forEach((position) => {
+      events.push({
+        id: `${at}-${position.contract.symbol}-start`,
+        at,
+        tone: position.unrealizedPnl > 0 ? "positive" : position.unrealizedPnl < 0 ? "negative" : "neutral",
+        symbol: position.contract.symbol,
+        label: "POSITION WATCH",
+        value: money(position.marketPrice),
+        detail: `${number(position.quantity, 6)} shares · ${money(position.marketValue)} value · ${signedMoney(position.unrealizedPnl)} open P&L`,
+      });
+    });
+    return events;
+  }
+
+  if (previous.gateway.connected !== next.gateway.connected) {
+    events.push({
+      id: `${at}-gateway`,
+      at,
+      tone: next.gateway.connected ? "positive" : "negative",
+      label: next.gateway.connected ? "IBKR CONNECTION RESTORED" : "IBKR CONNECTION LOST",
+      value: next.gateway.connected ? "ONLINE" : "OFFLINE",
+      detail: next.gateway.reason || "Gateway connection state changed.",
+    });
+  }
+
+  if (previous.account && next.account) {
+    const netDelta = next.account.netLiquidation - previous.account.netLiquidation;
+    if (Math.abs(netDelta) >= 0.01) {
+      events.push({
+        id: `${at}-account-net`,
+        at,
+        tone: netDelta > 0 ? "positive" : "negative",
+        label: "PORTFOLIO VALUE",
+        value: money(next.account.netLiquidation),
+        detail: `${signedMoney(netDelta)} since prior 5-second sample`,
+      });
+    }
+
+    const cashDelta = next.account.settledCash - previous.account.settledCash;
+    if (Math.abs(cashDelta) >= 0.01) {
+      events.push({
+        id: `${at}-account-cash`,
+        at,
+        tone: cashDelta > 0 ? "positive" : "negative",
+        label: "SETTLED CASH",
+        value: money(next.account.settledCash),
+        detail: `${signedMoney(cashDelta)} since prior sample`,
+      });
+    }
+  }
+
+  const previousPositions = new Map(previous.positions.map((position) => [position.contract.symbol, position]));
+  const nextPositions = new Map(next.positions.map((position) => [position.contract.symbol, position]));
+
+  next.positions.forEach((position) => {
+    const prior = previousPositions.get(position.contract.symbol);
+    if (!prior) {
+      events.push({
+        id: `${at}-${position.contract.symbol}-opened`,
+        at,
+        tone: "positive",
+        symbol: position.contract.symbol,
+        label: "POSITION DETECTED",
+        value: `${number(position.quantity, 6)} shares`,
+        detail: `${money(position.marketValue)} market value at ${money(position.marketPrice)}`,
+      });
+      return;
+    }
+
+    const quantityDelta = position.quantity - prior.quantity;
+    if (Math.abs(quantityDelta) > 0.0000001) {
+      events.push({
+        id: `${at}-${position.contract.symbol}-size`,
+        at,
+        tone: quantityDelta > 0 ? "positive" : "negative",
+        symbol: position.contract.symbol,
+        label: "POSITION SIZE",
+        value: `${number(position.quantity, 6)} shares`,
+        detail: `${quantityDelta > 0 ? "+" : ""}${number(quantityDelta, 6)} shares since prior sample`,
+      });
+    }
+
+    const priceDelta = position.marketPrice - prior.marketPrice;
+    const pnlDelta = position.unrealizedPnl - prior.unrealizedPnl;
+    if (Math.abs(priceDelta) >= 0.0001 || Math.abs(pnlDelta) >= 0.005) {
+      const tone: WatchTone = pnlDelta > 0 ? "positive" : pnlDelta < 0 ? "negative" : priceDelta > 0 ? "positive" : priceDelta < 0 ? "negative" : "neutral";
+      events.push({
+        id: `${at}-${position.contract.symbol}-tick`,
+        at,
+        tone,
+        symbol: position.contract.symbol,
+        label: "LIVE TICK",
+        value: money(position.marketPrice),
+        detail: `${signedMoney(priceDelta)} price · ${signedMoney(pnlDelta)} open P&L tick · ${signedMoney(position.unrealizedPnl)} total open P&L`,
+      });
+    }
+  });
+
+  previous.positions.forEach((position) => {
+    if (!nextPositions.has(position.contract.symbol)) {
+      events.push({
+        id: `${at}-${position.contract.symbol}-closed`,
+        at,
+        tone: "neutral",
+        symbol: position.contract.symbol,
+        label: "POSITION CLEARED",
+        value: "0 shares",
+        detail: `Previous market value ${money(position.marketValue)} no longer appears in the live portfolio.`,
+      });
+    }
+  });
+
+  return events.slice(0, 12);
 }
 
 function signalClass(signal?: string) {
@@ -89,7 +249,11 @@ function InvestmentDetails({ session }: { session: MemberSession }) {
   const [clock, setClock] = useState(() => Date.now());
   const [autoRefresh, setAutoRefresh] = useState(true);
   const [lastRefresh, setLastRefresh] = useState<Date | null>(null);
+  const [watchEvents, setWatchEvents] = useState<WatchEvent[]>([]);
+  const [tickMoves, setTickMoves] = useState<Record<string, TickMove>>({});
   const refreshInFlight = useRef(false);
+  const previousSnapshotRef = useRef<FinanceSnapshot | null>(null);
+  const watchStartedAtRef = useRef(Date.now());
 
   async function refresh(silent = false) {
     if (refreshInFlight.current) return;
@@ -97,6 +261,26 @@ function InvestmentDetails({ session }: { session: MemberSession }) {
     if (!silent) setState("loading");
     try {
       const next = await loadFinanceSnapshot(session);
+      const previous = previousSnapshotRef.current;
+      const nextMoves: Record<string, TickMove> = {};
+      if (previous) {
+        const priorPositions = new Map(previous.positions.map((position) => [position.contract.symbol, position]));
+        next.positions.forEach((position) => {
+          const prior = priorPositions.get(position.contract.symbol);
+          if (!prior) return;
+          nextMoves[position.contract.symbol] = {
+            priceDelta: position.marketPrice - prior.marketPrice,
+            pnlDelta: position.unrealizedPnl - prior.unrealizedPnl,
+            valueDelta: position.marketValue - prior.marketValue,
+          };
+        });
+      }
+      const nextEvents = buildWatchEvents(previous, next);
+      if (nextEvents.length) {
+        setWatchEvents((current) => [...nextEvents, ...current].slice(0, 80));
+      }
+      setTickMoves(nextMoves);
+      previousSnapshotRef.current = next;
       setSnapshot(next);
       setLastRefresh(new Date());
       setError("");
@@ -113,6 +297,10 @@ function InvestmentDetails({ session }: { session: MemberSession }) {
   }
 
   useEffect(() => {
+    previousSnapshotRef.current = null;
+    watchStartedAtRef.current = Date.now();
+    setWatchEvents([]);
+    setTickMoves({});
     void refresh();
   }, [session.access_token]);
 
@@ -143,6 +331,7 @@ function InvestmentDetails({ session }: { session: MemberSession }) {
   const grossPositions = positions.reduce((sum, position) => sum + Math.abs(position.marketValue || 0), 0);
   const totalValue = account?.netLiquidation || (grossPositions + (account?.settledCash || 0));
   const portfolioPnl = positions.reduce((sum, position) => sum + (position.unrealizedPnl || 0), 0);
+  const watchRuntime = elapsed((clock - watchStartedAtRef.current) / 1000);
 
   return (
     <section className="command-finance-panel" aria-labelledby="command-finance-title">
@@ -177,6 +366,57 @@ function InvestmentDetails({ session }: { session: MemberSession }) {
             <article><Gauge size={17} /><span>BUYING POWER</span><strong>{money(account?.buyingPower)}</strong><small>{money(account?.availableFunds)} available</small></article>
             <article className={portfolioPnl >= 0 ? "positive" : "negative"}><Activity size={17} /><span>OPEN P&amp;L</span><strong>{money(portfolioPnl)}</strong><small>{money(account?.realizedPnl)} realized</small></article>
           </div>
+
+          <section className="finance-watch" aria-labelledby="finance-watch-title">
+            <header className="finance-watch-head">
+              <div>
+                <span>PORTFOLIO LIVE WATCH</span>
+                <strong id="finance-watch-title">MARK-TO-MARKET FEED</strong>
+              </div>
+              <div className="finance-watch-status">
+                <span className={fresh ? "live" : "stale"}><i />{fresh ? "STREAMING" : "STALE"}</span>
+                <small>5 SEC SAMPLE · SESSION {watchRuntime} · {watchEvents.length} EVENTS</small>
+              </div>
+            </header>
+
+            <div className="finance-watch-layout">
+              <div className="finance-watch-table">
+                <div className="finance-watch-row finance-watch-columns">
+                  <span>ASSET</span><span>LAST / TICK</span><span>POSITION VALUE</span><span>OPEN P&amp;L / TICK</span>
+                </div>
+                {positions.map((position) => {
+                  const move = tickMoves[position.contract.symbol];
+                  const priceTone = !move || Math.abs(move.priceDelta) < 0.0001 ? "neutral" : move.priceDelta > 0 ? "positive" : "negative";
+                  const pnlTone = !move || Math.abs(move.pnlDelta) < 0.005 ? "neutral" : move.pnlDelta > 0 ? "positive" : "negative";
+                  return (
+                    <div className="finance-watch-row" key={`watch-${position.contract.conId || position.contract.symbol}`}>
+                      <div><strong>{position.contract.symbol}</strong><small>{number(position.quantity, 6)} SHARES</small></div>
+                      <div><strong>{money(position.marketPrice)}</strong><small className={priceTone}>{move ? signedMoney(move.priceDelta) : "INITIAL"}</small></div>
+                      <div><strong>{money(position.marketValue)}</strong><small>{move ? `${signedMoney(move.valueDelta)} TICK` : "LIVE VALUE"}</small></div>
+                      <div><strong className={position.unrealizedPnl >= 0 ? "positive" : "negative"}>{signedMoney(position.unrealizedPnl)}</strong><small className={pnlTone}>{move ? `${signedMoney(move.pnlDelta)} TICK` : "INITIAL"}</small></div>
+                    </div>
+                  );
+                })}
+                {!positions.length ? <div className="finance-message compact">NO POSITIONS TO WATCH</div> : null}
+              </div>
+
+              <div className="finance-watch-tape" aria-live="polite">
+                <div className="finance-watch-tape-head"><span>SESSION TAPE</span><small>NEWEST FIRST</small></div>
+                <div className="finance-watch-events">
+                  {watchEvents.length ? watchEvents.map((event) => (
+                    <article className={`finance-watch-event ${event.tone}`} key={event.id}>
+                      <time>{new Date(event.at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}</time>
+                      <div>
+                        <span>{event.symbol ? `${event.symbol} · ${event.label}` : event.label}</span>
+                        <strong>{event.value}</strong>
+                        <small>{event.detail}</small>
+                      </div>
+                    </article>
+                  )) : <div className="finance-watch-empty">WAITING FOR NEXT LIVE SAMPLE…</div>}
+                </div>
+              </div>
+            </div>
+          </section>
 
           <section className="finance-live-grid" aria-label="Live holdings summary">
             {positions.map((position) => {
