@@ -778,7 +778,7 @@ async function apiRoute(request, env, url, pathname) {
   }
   if (pathname === "/api/command/release-updates" && request.method === "GET") return handleCommandReleaseSummary(request, env);
   if (pathname === "/api/command/release-updates/send" && request.method === "POST") return handleCommandReleaseSend(request, env);
-  if (pathname === "/release-updates/unsubscribe") return handleReleaseUnsubscribe(request, env, url);\n  if (pathname === "/api/internal/release-delivery-test") return handleOneTimeReleaseDeliveryTest(request, env, url);
+  if (pathname === "/release-updates/unsubscribe") return handleReleaseUnsubscribe(request, env, url);
   return null;
 }
 
