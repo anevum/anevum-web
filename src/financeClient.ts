@@ -102,8 +102,7 @@ export type FinanceSnapshot = {
   };
 };
 
-const defaultFinanceApi = "https://ibkr-runner-production.up.railway.app";
-const financeApiBase = String(import.meta.env.VITE_COMMAND_FINANCE_API || defaultFinanceApi).replace(/\/$/, "");
+const financeApiBase = "https://ibkr-runner-production.up.railway.app";
 
 export class FinanceBackendUnavailable extends Error {
   constructor(message: string) {
