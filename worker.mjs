@@ -760,6 +760,43 @@ async function handleCommandReleaseSend(request, env) {
   }, failedCount === users.length ? 502 : 200);
 }
 
+
+const ONE_TIME_RELEASE_TEST_KEY_HASH = "89353261b75d13e41aacd66f46e18258bd15907a4b9d6471607d93cecff36a5c";
+const ONE_TIME_RELEASE_TEST_ID = "reply-release-test-2026-09-20";
+
+async function releaseTestKeyHash(value) {
+  const digest = new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(String(value || ""))));
+  return Array.from(digest).map((byte) => byte.toString(16).padStart(2, "0")).join("");
+}
+
+async function handleOneTimeReleaseDeliveryTest(request, env, url) {
+  if (request.method !== "GET") throw new ApiError(405, "Method not allowed.");
+  const suppliedKey = url.searchParams.get("key") || "";
+  if ((await releaseTestKeyHash(suppliedKey)) !== ONE_TIME_RELEASE_TEST_KEY_HASH) {
+    throw new ApiError(404, "Not found.");
+  }
+  if (!providerConfigured(env)) {
+    throw new ApiError(503, "Production release email delivery is not fully configured.");
+  }
+
+  const users = await optedInReleaseUsers(env);
+  const target = users.length === 1 ? String(users[0]?.email || "").trim().toLowerCase() : "";
+  if (users.length !== 1 || target !== "devon@anevum.com") {
+    throw new ApiError(409, "Safety check failed: the test requires exactly one opted-in subscriber at devon@anevum.com.");
+  }
+
+  const input = {
+    subject: "[TEST] REPLY release update delivery",
+    title: "ANEVUM release-update test",
+    body: "This is a delivery test from the live ANEVUM REPLY release-update system. If this reached your inbox, the production subscriber and email-delivery path is working.",
+    actionLabel: "VIEW REPLY",
+    actionUrl: "https://anevum.com/the-book",
+  };
+
+  await sendResendBatch(env, ONE_TIME_RELEASE_TEST_ID, users, input, 0);
+  return jsonResponse({ ok: true, subscriberCount: 1, recipient: "devon@anevum.com" });
+}
+
 async function handleReleaseUnsubscribe(request, env, url) {
   if (request.method !== "GET" && request.method !== "POST") throw new ApiError(405, "Method not allowed.");
   const userId = await verifyUnsubscribeToken(url.searchParams.get("token"), env);
@@ -777,7 +814,7 @@ async function apiRoute(request, env, url, pathname) {
   }
   if (pathname === "/api/command/release-updates" && request.method === "GET") return handleCommandReleaseSummary(request, env);
   if (pathname === "/api/command/release-updates/send" && request.method === "POST") return handleCommandReleaseSend(request, env);
-  if (pathname === "/release-updates/unsubscribe") return handleReleaseUnsubscribe(request, env, url);
+  if (pathname === "/release-updates/unsubscribe") return handleReleaseUnsubscribe(request, env, url);\n  if (pathname === "/api/internal/release-delivery-test") return handleOneTimeReleaseDeliveryTest(request, env, url);
   return null;
 }
 
