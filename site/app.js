@@ -17,21 +17,22 @@ function mark(){
 }
 
 const navItems = [
-  ["REPLY","/the-book"],
+  ["BOOKS","/books"],
   ["EXPLORE","/explore"],
   ["STORE","/store"],
   ["ABOUT","/about"]
 ];
 
 const searchItems = [
+  {title:"Books",note:"ANEVUM catalog and forthcoming titles",route:"/books"},
   {title:"REPLY",note:"The Transcosmic / Book One",route:"/the-book"},
-  {title:"Explore",note:"Wiki, Lattice and released Transcosmic material",route:"/explore"},
-  {title:"Public Wiki",note:"Released people, places, ideas and records",route:"/wiki"},
-  {title:"Lattice",note:"Relational discovery layer",route:"/lattice"},
-  {title:"Store",note:"Books and ANEVUM objects",route:"/store"},
-  {title:"RHENLINK",note:"Account, release updates and reader identity",route:"/rhenlink"},
-  {title:"About ANEVUM",note:"What ANEVUM is and what it is building",route:"/about"},
-  {title:"Contact",note:"Reach ANEVUM directly",route:"/contact"}
+  {title:"Explore",note:"Reader resources for released ANEVUM books",route:"/explore"},
+  {title:"Public Wiki",note:"Released reference material",route:"/wiki"},
+  {title:"Lattice",note:"Connections across released material",route:"/lattice"},
+  {title:"Store",note:"Books, editions and future ANEVUM releases",route:"/store"},
+  {title:"RHENLINK",note:"Reader account and release updates",route:"/rhenlink"},
+  {title:"About ANEVUM",note:"The publisher and its catalog",route:"/about"},
+  {title:"Contact",note:"Publishing and reader contact",route:"/contact"}
 ];
 
 function routeHref(route){
@@ -60,10 +61,10 @@ function shell(content){
   '<button class="menu-button" id="menuButton" aria-label="Menu" aria-expanded="false">'+icons.menu+'</button></div></div>'+
   '<nav class="mobile-panel" id="mobilePanel" aria-label="Mobile navigation">'+mobile+'</nav></header>'+
   '<main id="main" class="page">'+content+'</main>'+
-  '<footer class="site-footer"><div class="footer-inner"><span>ANEVUM / IDEAS, GIVEN FORM.</span><div class="footer-links">'+
+  '<footer class="site-footer"><div class="footer-inner"><span>ANEVUM / INDEPENDENT PUBLISHER</span><div class="footer-links">'+
+  '<a href="'+routeHref("/books")+'" data-route="/books">Books</a>'+
+  '<a href="'+routeHref("/about")+'" data-route="/about">About</a>'+
   '<a href="'+routeHref("/contact")+'" data-route="/contact">Contact</a>'+
-  '<a href="mailto:devon@anevum.com">Email</a>'+
-  '<a href="https://command.anevum.com">Private Command</a>'+
   '<a href="'+routeHref("/rhenlink")+'" data-route="/rhenlink">RHENLINK</a></div></div></footer>'+
   '<div class="search-panel" id="searchPanel" role="dialog" aria-modal="true" aria-label="Search ANEVUM">'+
   '<div class="search-box"><div class="search-top"><input id="searchInput" autocomplete="off" placeholder="Search ANEVUM…" aria-label="Search ANEVUM"/><button class="icon-button" id="searchClose" aria-label="Close search">'+icons.close+'</button></div><div class="search-results" id="searchResults"></div></div></div>';
@@ -74,26 +75,34 @@ function button(label,route,secondary=false){
 }
 
 function home(){
-  return '<section class="hero hero-ideas">'+
-    '<div class="hero-copy"><p class="eyebrow">ANEVUM / INDEPENDENT PUBLISHER</p>'+
-    '<h1>Ideas,<span>given form.</span></h1>'+
-    '<p class="hero-deck">ANEVUM turns strong ideas into finished work. Books are the public core. The tools and systems around them exist to help the work go further—not to become a maze of separate brands.</p>'+
-    '<div class="action-row">'+button("Discover REPLY","/the-book")+button("What is ANEVUM?","/about",true)+'</div>'+
-    '<div class="hero-proof"><span>PUBLICATION 001</span><strong>REPLY</strong><em>THE TRANSCOSMIC · BOOK ONE</em></div></div>'+
-    '<div class="idea-object" aria-hidden="true"><div class="idea-halo halo-one"></div><div class="idea-halo halo-two"></div><div class="idea-axis"></div><div class="idea-core"></div><div class="idea-object-copy"><span>IDEA</span><span>WORK</span><span>RELEASE</span></div></div>'+
+  return '<section class="publisher-hero">'+
+    '<div class="publisher-hero-copy"><p class="eyebrow">INDEPENDENT PUBLISHER</p>'+
+    '<h1>ANEVUM<span>Books first.</span></h1>'+
+    '<p class="hero-deck">ANEVUM publishes original fiction and nonfiction, beginning with REPLY by Devon Akins. The job is simple: make the books good, publish them well, and give readers a clear place to find what comes next.</p>'+
+    '<div class="action-row">'+button("View the catalog","/books")+button("Discover REPLY","/the-book",true)+'</div>'+
+    '<div class="publisher-meta"><span>FOUNDED 2026</span><span>INDEPENDENT</span><span>PUBLICATION 001 IN DEVELOPMENT</span></div></div>'+
+    '<div class="publisher-mark-panel" aria-hidden="true">'+mark()+'<strong>ANEVUM</strong><span>INDEPENDENT PUBLISHER</span></div>'+
   '</section>'+
-  '<section class="thesis-band"><p class="section-kicker">THE ANEVUM THESIS</p><h2>When the tools become abundant, choosing what deserves to exist matters more.</h2><p>AI can compress the cost of research, iteration, and production. It does not decide what is worth making or finish the work for us. ANEVUM is built around the part that remains scarce: ideas, judgment, and follow-through.</p></section>'+
-  '<section class="section reply-panel"><div class="book-card"><small>THE TRANSCOSMIC / BOOK ONE</small><strong>REPLY</strong><span>DEVON AKINS</span></div><div class="reply-copy"><p class="section-kicker">PUBLICATION 001</p><h2>The first idea we are taking all the way.</h2><p>REPLY is the current public priority: finish the book, make the release worth noticing, and give readers a clear path into The Transcosmic. Everything else on ANEVUM should support that job.</p><div class="action-row">'+button("Explore REPLY","/the-book")+button("Get release updates","/rhenlink",true)+'</div></div></section>'+
-  '<section class="section"><div class="section-head"><div><p class="section-kicker">ONE COMPANY</p><h2>Three layers. One direction.</h2></div><p>ANEVUM can experiment widely without making the public identity confusing. The rule is simple: the work at the center stays clear.</p></div>'+
-    '<div class="company-grid">'+
-      '<div class="company-pillar"><span>01 / PUBLIC CORE</span><h3>Publishing</h3><p>Books and finished stories come first. They are the product, the proof, and the reason the rest of the company exists.</p></div>'+
-      '<div class="company-pillar"><span>02 / READER LAYER</span><h3>Reader systems</h3><p>Wiki, Lattice, RHENLINK, and the Store help readers discover, understand, revisit, and support released work.</p></div>'+
-      '<div class="company-pillar"><span>03 / CREATIVE R&amp;D</span><h3>Creative R&amp;D</h3><p>New formats, publishing workflows, visual experiments, and software are explored only when they can make the books or the reader experience better.</p></div>'+
-    '</div>'+
-  '</section>'+
-  '<section class="section work-section"><div class="section-head"><div><p class="section-kicker">THE OPERATING RULE</p><h2>Ideas only matter when they become work.</h2></div><p>The site should reinforce the same sequence the company follows. No endless expansion before the current thing is finished.</p></div>'+
-    '<div class="work-cycle"><div><span>01</span><strong>IDEA</strong></div><div><span>02</span><strong>BUILD</strong></div><div><span>03</span><strong>FINISH</strong></div><div><span>04</span><strong>RELEASE</strong></div><div><span>05</span><strong>LEARN</strong></div></div>'+
-  '</section>';
+  '<section class="section featured-book"><div class="book-card featured-cover"><small>THE TRANSCOSMIC / BOOK ONE</small><strong>REPLY</strong><span>DEVON AKINS</span></div>'+
+    '<div class="featured-copy"><p class="section-kicker">FEATURED TITLE / PUBLICATION 001</p><h2>REPLY</h2><p>First contact begins with a measurement nobody can explain—and reaches into ordinary lives before anyone is ready for what comes next. REPLY is the first book in The Transcosmic and the first publication from ANEVUM.</p>'+
+    '<div class="book-facts"><div><span>AUTHOR</span><strong>Devon Akins</strong></div><div><span>SERIES</span><strong>The Transcosmic</strong></div><div><span>STATUS</span><strong>In development</strong></div></div>'+
+    '<div class="action-row">'+button("Book details","/the-book")+button("Release updates","/rhenlink",true)+'</div></div></section>'+
+  '<section class="section catalog-preview"><div class="section-head"><div><p class="section-kicker">THE CATALOG</p><h2>A publishing list built one book at a time.</h2></div><p>ANEVUM is not trying to look larger than it is. The catalog begins with REPLY and expands when the next book is ready to deserve a place beside it.</p></div>'+
+    '<div class="catalog-row"><div class="catalog-number">001</div><div><span class="catalog-type">NOVEL / THE TRANSCOSMIC</span><h3>REPLY</h3><p>Devon Akins</p></div><div class="catalog-state">IN DEVELOPMENT</div><a href="'+routeHref("/the-book")+'" data-route="/the-book">View title '+icons.arrow+'</a></div>'+
+    '<div class="catalog-row muted"><div class="catalog-number">NEXT</div><div><span class="catalog-type">ANEVUM CATALOG</span><h3>Forthcoming</h3><p>Additional titles will be announced when they are ready.</p></div><div class="catalog-state">UNANNOUNCED</div><span></span></div>'+
+    '<div class="action-row">'+button("View all books","/books",true)+'</div></section>'+
+  '<section class="section publisher-statement"><p class="section-kicker">THE PUBLISHER</p><h2>ANEVUM exists to publish books, not to become a maze of projects.</h2><div class="publisher-columns"><p>We develop work in-house, take the time to make it worth reading, and build the release around the book rather than around constant platform expansion.</p><p>Reader tools such as Wiki, Lattice, and RHENLINK are secondary. They are there to support finished books and the people who read them.</p></div><div class="action-row">'+button("About ANEVUM","/about",true)+'</div></section>'+
+  '<section class="section reader-resources"><div class="section-head"><div><p class="section-kicker">FOR READERS</p><h2>Go deeper when you want to.</h2></div><p>The books remain the front door. These resources are optional layers for readers who want release updates or more context.</p></div>'+
+    '<div class="resource-grid">'+
+      '<a href="'+routeHref("/explore")+'" data-route="/explore"><span>EXPLORE</span><strong>Wiki and Lattice</strong><p>Released reference material and connections across the books.</p></a>'+
+      '<a href="'+routeHref("/rhenlink")+'" data-route="/rhenlink"><span>RHENLINK</span><strong>Reader account</strong><p>Manage release updates and future reader features.</p></a>'+
+      '<a href="'+routeHref("/store")+'" data-route="/store"><span>STORE</span><strong>Books and editions</strong><p>Purchase links and editions when they are actually available.</p></a>'+
+    '</div></section>';
+}
+function booksPage(){
+  return '<section class="route-hero books-hero"><p class="eyebrow">ANEVUM BOOKS</p><h1>The catalog.</h1><p>ANEVUM is building its publishing list deliberately. Titles appear here when they are real enough to stand behind.</p></section>'+
+  '<section class="route-section"><div class="catalog-row catalog-row-large"><div class="catalog-number">001</div><div><span class="catalog-type">NOVEL / THE TRANSCOSMIC</span><h2>REPLY</h2><p>By Devon Akins. First contact, family, work, intelligence, mortality, and the consequences of discovering that humanity is not alone in the way it expected.</p></div><div class="catalog-state">IN DEVELOPMENT</div><a class="button secondary" href="'+routeHref("/the-book")+'" data-route="/the-book">View book '+icons.arrow+'</a></div></section>'+
+  '<section class="route-section forthcoming-block"><p class="section-kicker">FORTHCOMING</p><h2>More books will follow. They do not need placeholder identities yet.</h2><p>Future fiction, nonfiction, and visual publishing projects will join the catalog only when their titles, formats, and release plans are ready to be public.</p></section>';
 }
 function toolCard(num,title,copy,route){
   return '<a class="tool-card" href="'+routeHref(route)+'" data-route="'+route+'"><span class="num">'+num+'</span><h3>'+title+'</h3><p>'+copy+'</p><span class="card-link">Open '+icons.arrow+'</span></a>';
@@ -123,14 +132,15 @@ function latticePage(){
   '<section class="route-section"><h2>The job of Lattice.</h2><div class="info-grid"><div class="info-card"><strong>See relationships</strong><p>Move from one released record to related people, places, events and ideas.</p></div><div class="info-card"><strong>Keep context</strong><p>Use RHENLINK to retain reader identity and eventually saved discoveries.</p></div><div class="info-card"><strong>Stay subordinate to story</strong><p>The books remain the center; Lattice makes depth easier to navigate after interest already exists.</p></div></div></section>';
 }
 function storePage(){
-  return '<section class="route-hero"><p class="eyebrow">ANEVUM STORE</p><h1>Books first. Objects when they earn a place.</h1><p>The Store is the commercial surface for finished ANEVUM work. REPLY comes first; physical objects and merchandise remain supporting products rather than a second business competing for attention.</p><div class="action-row">'+button("View REPLY","/the-book")+button("Release updates","/rhenlink",true)+'</div></section>'+
-  '<section class="route-section"><div class="store-feature"><div><p class="section-kicker">FIRST PRODUCT</p><h2>REPLY</h2><p>Publication 001. Purchase links will appear only when there is a verified finished edition to order.</p></div><div class="store-status"><span>STATUS</span><strong>Preparing release</strong><small>No placeholder checkout.</small></div></div></section>'+
-  '<section class="route-section"><p class="section-kicker">LATER</p><div class="info-grid"><div class="info-card"><strong>Special editions</strong><p>Only after the standard edition and reader demand justify them.</p></div><div class="info-card"><strong>Books beyond REPLY</strong><p>Future fiction, nonfiction, and visual publishing projects can share the same store without creating new brands.</p></div><div class="info-card"><strong>Objects</strong><p>Merchandise should extend finished ideas, not become a reason to delay them.</p></div></div></section>';
+  return '<section class="route-hero"><p class="eyebrow">ANEVUM STORE</p><h1>Books and editions.</h1><p>The Store exists to make ANEVUM publications easy to find and buy. REPLY is the first priority. Special editions and related objects come later, after the books justify them.</p><div class="action-row">'+button("View REPLY","/the-book")+button("Release updates","/rhenlink",true)+'</div></section>'+
+  '<section class="route-section"><div class="store-feature"><div><p class="section-kicker">PUBLICATION 001</p><h2>REPLY</h2><p>Retailer and edition links will appear when the finished edition is available to order.</p></div><div class="store-status"><span>AVAILABILITY</span><strong>Not yet on sale</strong><small>No placeholder checkout.</small></div></div></section>'+
+  '<section class="route-section"><p class="section-kicker">PUBLISHING FIRST</p><div class="info-grid"><div class="info-card"><strong>Standard editions</strong><p>The main print edition comes first.</p></div><div class="info-card"><strong>Special editions</strong><p>Produced only when the book and demand justify them.</p></div><div class="info-card"><strong>Related objects</strong><p>Secondary to the catalog, never a substitute for it.</p></div></div></section>';
 }
 function aboutPage(){
-  return '<section class="route-hero"><p class="eyebrow">ABOUT ANEVUM</p><h1>Ideas, given form.</h1><p>ANEVUM is an independent publisher and creative company founded by Devon Akins. Its job is not to collect projects. Its job is to turn worthwhile ideas into finished work people can actually read, use, explore, or own.</p></section>'+
-  '<section class="route-section"><p class="section-kicker">WHAT COMES FIRST</p><h2>Publishing is the center.</h2><div class="company-grid company-grid-route"><div class="company-pillar"><span>PUBLISHING</span><h3>Books</h3><p>Original fiction and nonfiction are the clearest public expression of ANEVUM. Finished releases outrank platform expansion.</p></div><div class="company-pillar"><span>READER SYSTEMS</span><h3>Reader infrastructure</h3><p>Wiki, Lattice, RHENLINK, and commerce exist to make the books easier to discover, understand, revisit, and support.</p></div><div class="company-pillar"><span>CREATIVE R&amp;D</span><h3>Creative experiments</h3><p>New formats, publishing workflows, visual reconstruction, and software can be explored when they directly strengthen finished work or the reader experience.</p></div></div></section>'+
-  '<section class="route-section"><div class="thesis-band compact"><p class="section-kicker">WHY IDEAS</p><h2>Making is getting cheaper. Deciding what is worth making is not.</h2><p>ANEVUM uses modern tools aggressively, including AI, but the standard is still human: choose well, develop deeply, finish the work, and put something real into the world.</p></div></section>';
+  return '<section class="route-hero"><p class="eyebrow">ABOUT ANEVUM</p><h1>Independent publishing, kept deliberate.</h1><p>ANEVUM is an independent publisher founded by Devon Akins. It exists to develop, publish, and support books—not to turn every experiment into a public-facing business.</p></section>'+
+  '<section class="route-section"><div class="publisher-about-grid"><div><p class="section-kicker">WHAT WE PUBLISH</p><h2>Original fiction and nonfiction.</h2><p>ANEVUM begins with The Transcosmic and REPLY, while leaving room for future books that fit the same standard of serious development, strong ideas, and finished execution.</p></div><div><p class="section-kicker">HOW WE WORK</p><h2>One book at a time.</h2><p>The current catalog is developed in-house. We would rather release a smaller list we can stand behind than manufacture the appearance of a large publishing program.</p></div></div></section>'+
+  '<section class="route-section"><p class="section-kicker">FOUNDER / AUTHOR</p><h2>Devon Akins</h2><p class="story-copy">Devon Akins founded ANEVUM as the publishing home for his books and the worlds, research, and reader resources that grow from them. REPLY is the first ANEVUM publication and the opening book of The Transcosmic.</p></section>'+
+  '<section class="route-section"><p class="section-kicker">READER RESOURCES</p><div class="info-grid"><div class="info-card"><strong>Wiki</strong><p>Publication-safe reference material tied to released books.</p></div><div class="info-card"><strong>Lattice</strong><p>A relational way to move through released people, places, events, and ideas.</p></div><div class="info-card"><strong>RHENLINK</strong><p>Reader identity, release preferences, and future account features.</p></div></div></section>';
 }
 function contactPage(){
   return '<section class="route-hero"><p class="eyebrow">CONTACT</p><h1>Reach ANEVUM.</h1><p>For reader questions, publishing inquiries, corrections, or support, use the public company email.</p><div class="action-row"><a class="button" href="mailto:devon@anevum.com">devon@anevum.com'+icons.arrow+'</a></div></section>';
@@ -219,6 +229,7 @@ function render(){
   const route=currentRoute();
   let content;
   if(route==="/")content=home();
+  else if(route==="/books")content=booksPage();
   else if(route==="/the-book"||route==="/reply"||route==="/stories/reply")content=bookPage();
   else if(route==="/explore")content=explorePage();
   else if(route==="/wiki")content=wikiPage();
@@ -233,7 +244,8 @@ function render(){
   bindRoute();
   window.scrollTo(0,0);
   const titles={
-    "/":"ANEVUM — Ideas, given form.",
+    "/":"ANEVUM — Independent Publisher",
+    "/books":"Books — ANEVUM",
     "/the-book":"REPLY — ANEVUM",
     "/reply":"REPLY — ANEVUM",
     "/stories/reply":"REPLY — ANEVUM",
