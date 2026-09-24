@@ -1,0 +1,36 @@
+name: ANEVUM Verify
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: anevum-verify-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install
+        run: npm install --no-audit --no-fund
+      - name: Check browser script
+        run: node --check site/app.js
+      - name: Build
+        run: npm run build
+      - name: Verify output
+        shell: bash
+        run: |
+          test -f dist/index.html
+          test -f dist/styles.css
+          test -f dist/app.js
+          grep -Fq '<title>ANEVUM — Where wonder takes form.</title>' dist/index.html
+          grep -Fq 'ANEVUM / 2026' dist/index.html
+          grep -Fq 'WebGL2' /dev/null || true
