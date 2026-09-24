@@ -257,9 +257,10 @@ function authPage(){
     const meta=session.user.user_metadata||{};
     const display=meta.display_name||meta.rhenlink_handle||session.user.email||"RHENLINK member";
     const enabled=meta.reply_release_updates===true;
+    const commandShortcut=isCommandAdmin(session)?'<div class="action-row"><a class="button secondary" href="'+routeHref("/command")+'" data-route="/command">Open Command'+icons.arrow+'</a></div>':"";
     return '<section class="route-hero"><p class="eyebrow">RHENLINK</p><h1>'+escapeHtml(display)+'</h1><p>Your ANEVUM reader identity is active.</p></section>'+
     '<section class="route-section auth-wrap"><div class="account-card"><h2>Reader preferences</h2><div class="switch-row"><div><strong>REPLY release updates</strong><p>Store this preference on your RHENLINK identity.</p></div><label class="switch"><input id="releaseToggle" type="checkbox" '+(enabled?'checked':'')+'/><span></span></label></div><p id="accountStatus" class="form-status"></p><button class="button secondary" id="signOutButton" type="button">Sign out</button></div>'+
-    '<div class="account-card"><h2>Account</h2><p>'+escapeHtml(session.user.email||"")+'</p><p class="form-status">RHENLINK keeps account and release preference separate from the public site design.</p></div></section>';
+    '<div class="account-card"><h2>Account</h2><p>'+escapeHtml(session.user.email||"")+'</p><p class="form-status">RHENLINK keeps account and release preference separate from the public site design.</p>'+commandShortcut+'</div></section>';
   }
   return '<section class="route-hero"><p class="eyebrow">RHENLINK</p><h1>Your ANEVUM identity.</h1><p>Create one account for release preferences and future reader features. Sign-in is handled by the existing ANEVUM Supabase project.</p></section>'+
   '<section class="route-section auth-wrap"><div class="auth-card"><div class="auth-tabs"><button id="createTab" class="active" type="button">Create</button><button id="signinTab" type="button">Sign in</button></div>'+
@@ -276,13 +277,17 @@ function commandPage(){
     return '<section class="route-hero command-gate"><p class="eyebrow">ANEVUM COMMAND</p><h1>Administrator access required.</h1><p>Your RHENLINK is authenticated, but this identity does not carry COMMAND authorization.</p></section>';
   }
   return '<section class="command-console" aria-live="polite">'+
-    '<header class="command-console-head"><div><p class="eyebrow">ANEVUM COMMAND / CAPITAL</p><h1>Trading console.</h1><p>Live scanner telemetry, account state, execution controls, and decision history. Strategy decisions remain tied to completed market bars even though this screen refreshes more frequently.</p></div>'+
+    '<header class="command-console-head"><div><p class="eyebrow">ANEVUM COMMAND / CAPITAL</p><h1>Live trading.</h1><p>Broker account state, actual bot fills, open-position movement, rolling momentum/VWAP scanner telemetry, and the bot decision stream in one private screen.</p></div>'+
     '<div class="command-connection"><span id="cmdLiveDot"></span><strong id="cmdMode">CONNECTING</strong><small id="cmdUpdated">Waiting for trader…</small></div></header>'+
     '<section class="command-account-grid">'+
       '<article><span>EQUITY</span><strong id="cmdEquity">—</strong><small id="cmdDayPnl">Today —</small></article>'+
       '<article><span>CASH</span><strong id="cmdCash">—</strong><small id="cmdBuyingPower">Buying power —</small></article>'+
       '<article><span>MARKET</span><strong id="cmdMarket">—</strong><small id="cmdWindow">Entry window —</small></article>'+
       '<article><span>BOT</span><strong id="cmdBot">—</strong><small id="cmdAttempts">Entries —</small></article>'+
+    '</section>'+
+    '<section class="command-performance-grid">'+
+      '<article class="command-panel"><div class="command-panel-head"><div><span>TODAY</span><strong id="cmdTodayResult">Waiting for fills…</strong></div><small id="cmdWinLoss">—</small></div><div id="cmdEquityPath" class="command-equity-path"><div class="command-empty">Account path appears after the first refresh.</div></div></article>'+
+      '<article class="command-panel"><div class="command-panel-head"><div><span>COMPLETED BOT TRADES</span><strong id="cmdTradeCount">0 round trips</strong></div><small>Broker fill prices</small></div><div id="cmdTrades" class="command-trade-list"><div class="command-empty">No completed bot trades yet.</div></div></article>'+
     '</section>'+
     '<section class="command-control-bar"><div><span>EXECUTION CONTROLS</span><p id="cmdControlStatus">Controls act on the live bot and require administrator authorization.</p></div><div class="command-control-actions">'+
       '<button class="button secondary" id="cmdEntryToggle" type="button" disabled>Loading…</button>'+
@@ -291,12 +296,83 @@ function commandPage(){
     '</div></section>'+
     '<section class="command-active-grid">'+
       '<article class="command-panel"><div class="command-panel-head"><span>ACTIVE POSITION</span><strong id="cmdPositionTitle">FLAT</strong></div><div id="cmdPositionBody" class="command-empty">No open position.</div></article>'+
-      '<article class="command-panel"><div class="command-panel-head"><span>ORDER STATE</span><strong id="cmdOrderCount">0 OPEN</strong></div><div id="cmdOrders" class="command-order-list"><div class="command-empty">No ANEVUM orders yet.</div></div></article>'+
+      '<article class="command-panel"><div class="command-panel-head"><span>ORDER TAPE</span><strong id="cmdOrderCount">0 OPEN</strong></div><div id="cmdOrders" class="command-order-list"><div class="command-empty">No ANEVUM orders yet.</div></div></article>'+
     '</section>'+
-    '<section class="command-panel command-scanner-panel"><div class="command-panel-head"><div><span>LIVE SCANNER</span><strong>20 candidates / one position maximum</strong></div><small id="cmdScanTime">Waiting for first scan…</small></div><div id="commandScanner" class="command-scanner-grid"></div></section>'+
-    '<section class="command-panel"><div class="command-panel-head"><div><span>DECISION FEED</span><strong>State changes from the scanner and controls</strong></div><small>Newest first</small></div><div id="cmdDecisionFeed" class="command-decision-feed"><div class="command-empty">Waiting for decision history…</div></div></section>'+
+    '<section class="command-panel command-scanner-panel"><div class="command-panel-head"><div><span>LIVE SCANNER</span><strong id="cmdScannerSummary">Waiting for strategy…</strong></div><small id="cmdScanTime">Waiting for first scan…</small></div><div id="commandScanner" class="command-scanner-grid"></div></section>'+
+    '<section class="command-panel"><div class="command-panel-head"><div><span>DECISION FEED</span><strong>What the bot is doing and why</strong></div><small>Newest first</small></div><div id="cmdDecisionFeed" class="command-decision-feed"><div class="command-empty">Waiting for decision history…</div></div></section>'+
     '<p id="cmdError" class="command-error" role="status"></p>'+
   '</section>';
+}
+
+function completedBotTrades(orders){
+  const fills=(Array.isArray(orders)?orders:[]).filter(order=>{
+    const qty=Number(order.filled_qty);
+    const price=Number(order.filled_avg_price);
+    return qty>0&&price>0&&(order.filled_at||order.submitted_at);
+  }).slice().sort((a,b)=>new Date(a.filled_at||a.submitted_at)-new Date(b.filled_at||b.submitted_at));
+  const openBuys=new Map();
+  const trades=[];
+  for(const order of fills){
+    const symbol=String(order.symbol||"").toUpperCase();
+    const side=String(order.side||"").toLowerCase();
+    if(side==="buy"){
+      openBuys.set(symbol,order);
+      continue;
+    }
+    if(side!=="sell")continue;
+    const buy=openBuys.get(symbol);
+    if(!buy)continue;
+    const buyPrice=Number(buy.filled_avg_price);
+    const sellPrice=Number(order.filled_avg_price);
+    const qty=Math.min(Number(buy.filled_qty)||0,Number(order.filled_qty)||0);
+    if(!(buyPrice>0&&sellPrice>0&&qty>0))continue;
+    const pnl=(sellPrice-buyPrice)*qty;
+    trades.push({
+      symbol,
+      buyPrice,
+      sellPrice,
+      qty,
+      pnl,
+      returnPct:(sellPrice-buyPrice)/buyPrice,
+      openedAt:buy.filled_at||buy.submitted_at,
+      closedAt:order.filled_at||order.submitted_at
+    });
+    openBuys.delete(symbol);
+  }
+  return trades;
+}
+
+function commandEquityChart(startEquity,currentEquity,trades){
+  const start=Number(startEquity);
+  const current=Number(currentEquity);
+  if(!Number.isFinite(start)||!Number.isFinite(current))return '<div class="command-empty">Equity data unavailable.</div>';
+  const points=[{label:"Start",value:start}];
+  let running=start;
+  trades.forEach((trade,index)=>{
+    running+=Number(trade.pnl)||0;
+    points.push({label:trade.symbol+" "+(index+1),value:running});
+  });
+  if(Math.abs(current-points[points.length-1].value)>.0001)points.push({label:"Now",value:current});
+  else points[points.length-1].label="Now";
+
+  let lo=Math.min(...points.map(p=>p.value));
+  let hi=Math.max(...points.map(p=>p.value));
+  if(hi===lo){hi+=.05;lo-=.05}
+  const pad=(hi-lo)*.18||.05;
+  lo-=pad;hi+=pad;
+  const width=520,height=150,left=18,right=18,top=16,bottom=28;
+  const x=index=>points.length===1?width/2:left+index*(width-left-right)/(points.length-1);
+  const y=value=>top+(hi-value)*(height-top-bottom)/(hi-lo);
+  const coords=points.map((p,index)=>x(index).toFixed(1)+","+y(p.value).toFixed(1)).join(" ");
+  const dots=points.map((p,index)=>'<circle cx="'+x(index).toFixed(1)+'" cy="'+y(p.value).toFixed(1)+'" r="3.5"></circle>').join("");
+  const labels=points.map((p,index)=>'<text x="'+x(index).toFixed(1)+'" y="'+(height-8)+'" text-anchor="'+(index===0?"start":index===points.length-1?"end":"middle")+'">'+escapeHtml(p.label)+'</text>').join("");
+  return '<div class="command-chart-summary"><span>Start <b>'+money(start)+'</b></span><span>Now <b>'+money(current)+'</b></span><span>Move <b class="'+(current>start?"positive":current<start?"negative":"")+'">'+money(current-start)+'</b></span></div>'+
+    '<svg class="command-equity-chart" viewBox="0 0 '+width+' '+height+'" role="img" aria-label="Today account equity path"><polyline points="'+coords+'"></polyline>'+dots+labels+'</svg>';
+}
+
+function commandPercentNumber(value){
+  const n=Number(value);
+  return Number.isFinite(n)?n:null;
 }
 
 function renderCommandSnapshot(data){
@@ -337,22 +413,53 @@ function renderCommandSnapshot(data){
   const attemptsEl=document.getElementById("cmdAttempts");
   if(attemptsEl)attemptsEl.textContent=(risk.entries_remaining??"—")+" of "+(risk.max_daily_orders??"—")+" entries remain";
 
+  const completedTrades=completedBotTrades(recentOrders);
+  const realizedPnl=completedTrades.reduce((sum,trade)=>sum+(Number(trade.pnl)||0),0);
+  const wins=completedTrades.filter(trade=>trade.pnl>0).length;
+  const losses=completedTrades.filter(trade=>trade.pnl<0).length;
+  const todayResult=document.getElementById("cmdTodayResult");
+  if(todayResult){
+    todayResult.textContent=(realizedPnl>=0?"+":"")+money(realizedPnl).replace("-$","$-")+" realized";
+    todayResult.className=realizedPnl>0?"positive":realizedPnl<0?"negative":"";
+  }
+  const winLoss=document.getElementById("cmdWinLoss");
+  if(winLoss)winLoss.textContent=wins+"W / "+losses+"L";
+  const tradeCount=document.getElementById("cmdTradeCount");
+  if(tradeCount)tradeCount.textContent=completedTrades.length+" round trip"+(completedTrades.length===1?"":"s");
+  const tradeList=document.getElementById("cmdTrades");
+  if(tradeList)tradeList.innerHTML=completedTrades.length?completedTrades.slice().reverse().map(trade=>
+    '<div class="command-trade-row"><time>'+commandTime(trade.closedAt)+'</time><strong>'+escapeHtml(trade.symbol)+'</strong><span>'+money(trade.buyPrice)+' → '+money(trade.sellPrice)+'</span><b class="'+(trade.pnl>0?"positive":trade.pnl<0?"negative":"")+'">'+(trade.pnl>=0?"+":"")+money(trade.pnl).replace("-$","$-")+' / '+pct(trade.returnPct)+'</b></div>'
+  ).join(""):'<div class="command-empty">No completed bot trades yet.</div>';
+  const equityPath=document.getElementById("cmdEquityPath");
+  if(equityPath)equityPath.innerHTML=commandEquityChart(account.last_equity,account.equity,completedTrades);
+
   const position=positions[0];
   const positionTitle=document.getElementById("cmdPositionTitle");
   const positionBody=document.getElementById("cmdPositionBody");
   if(position&&positionTitle&&positionBody){
     positionTitle.textContent=String(position.symbol||"POSITION");
     const pl=Number(position.unrealized_pl);
+    const entry=Number(position.avg_entry_price);
+    const stopPct=Number(strategy.stop_pct);
+    const targetPct=Number(strategy.target_pct);
+    const stop=Number.isFinite(entry)&&Number.isFinite(stopPct)?entry*(1-stopPct):null;
+    const target=Number.isFinite(entry)&&Number.isFinite(targetPct)?entry*(1+targetPct):null;
+    const buy=recentOrders.find(order=>String(order.symbol||"").toUpperCase()===String(position.symbol||"").toUpperCase()&&String(order.side||"").toLowerCase()==="buy"&&order.filled_avg_price);
+    const openedAt=buy?.filled_at||buy?.submitted_at;
+    const heldMinutes=openedAt?Math.max(0,Math.floor((Date.now()-new Date(openedAt).getTime())/60000)):null;
+    const tvSymbol=encodeURIComponent(String(position.symbol||""));
     positionBody.className="command-position";
     positionBody.innerHTML='<div><span>MARKET VALUE</span><strong>'+money(position.market_value)+'</strong></div>'+
       '<div><span>ENTRY</span><strong>'+money(position.avg_entry_price)+'</strong></div>'+
       '<div><span>CURRENT</span><strong>'+money(position.current_price)+'</strong></div>'+
       '<div><span>QTY</span><strong>'+escapeHtml(position.qty||"—")+'</strong></div>'+
-      '<div><span>UNREALIZED P&L</span><strong class="'+(pl>0?"positive":pl<0?"negative":"")+'">'+money(position.unrealized_pl)+' / '+pct(position.unrealized_plpc)+'</strong></div>';
+      '<div><span>STOP / TARGET</span><strong>'+money(stop)+' / '+money(target)+'</strong></div>'+
+      '<div><span>TIME HELD</span><strong>'+(heldMinutes===null?"—":heldMinutes+" min")+'</strong></div>'+
+      '<div class="command-position-pnl"><span>UNREALIZED P&L</span><strong class="'+(pl>0?"positive":pl<0?"negative":"")+'">'+money(position.unrealized_pl)+' / '+pct(position.unrealized_plpc)+'</strong><a href="https://www.tradingview.com/chart/?symbol='+tvSymbol+'" target="_blank" rel="noopener">Open '+escapeHtml(position.symbol||"symbol")+' in TradingView ↗</a></div>';
   }else if(positionTitle&&positionBody){
     positionTitle.textContent="FLAT";
     positionBody.className="command-empty";
-    positionBody.textContent="No open position.";
+    positionBody.textContent="No open position. The scanner is looking for the next qualified setup.";
   }
 
   const orderCount=document.getElementById("cmdOrderCount");
@@ -365,6 +472,9 @@ function renderCommandSnapshot(data){
   }).join(""):'<div class="command-empty">No ANEVUM orders yet.</div>';
 
   const ordered=(strategy.scan_symbols||Object.keys(scanner)).filter(symbol=>scanner[symbol]);
+  const readyCount=ordered.filter(symbol=>scanner[symbol]?.action==="buy").length;
+  const scannerSummary=document.getElementById("cmdScannerSummary");
+  if(scannerSummary)scannerSummary.textContent=ordered.length+" symbols / "+readyCount+" qualified / one position maximum";
   const scannerEl=document.getElementById("commandScanner");
   if(scannerEl)scannerEl.innerHTML=ordered.map(symbol=>{
     const row=scanner[symbol]||{};
@@ -373,7 +483,28 @@ function renderCommandSnapshot(data){
     const confirmations=meta.confirmations||{};
     const ready=row.action==="buy";
     const reason=String(row.reason||"waiting");
-    const state=ready?"ready":reason.includes("too wide")||reason.includes("too extended")?"blocked":"waiting";
+    const rolling=("momentum_pct" in meta)||("fast_above_slow" in checks);
+    const state=ready?"ready":reason.includes("blocked")||reason.includes("spread")?"blocked":"waiting";
+    if(rolling){
+      const momentum=commandPercentNumber(meta.momentum_pct);
+      const edge=commandPercentNumber(meta.vwap_edge_pct);
+      const momentumLabel=momentum===null?"—":(momentum*100).toFixed(3)+"%";
+      const edgeLabel=edge===null?"—":(edge*100).toFixed(3)+"%";
+      const confirmationNames=Object.keys(confirmations);
+      return '<article class="command-symbol-card '+state+'">'+
+        '<header><strong>'+escapeHtml(symbol)+'</strong><span>'+(ready?"QUALIFIED":"SCANNING")+'</span></header>'+
+        '<div class="command-symbol-price"><b>'+money(meta.current_close)+'</b><small>momentum '+momentumLabel+' · VWAP edge '+edgeLabel+'</small></div>'+
+        '<div class="command-symbol-levels"><span>FAST AVG <b>'+money(meta.fast_average)+'</b></span><span>SLOW AVG <b>'+money(meta.slow_average)+'</b></span><span>VWAP <b>'+money(meta.session_vwap)+'</b></span></div>'+
+        '<div class="command-checks">'+
+          commandCheck("Trend",checks.fast_above_slow)+
+          commandCheck("Rising",checks.rising)+
+          commandCheck("Momentum",checks.momentum_ok)+
+          commandCheck("VWAP",checks.vwap_ok)+
+          confirmationNames.map(name=>commandConfirmation(name,confirmations[name])).join("")+
+        '</div>'+
+        '<p>'+escapeHtml(reason)+'</p>'+
+      '</article>';
+    }
     const dist=Number(meta.distance_to_breakout_pct);
     const distLabel=Number.isFinite(dist)?(dist*100).toFixed(2)+"%":"—";
     return '<article class="command-symbol-card '+state+'">'+
@@ -384,8 +515,7 @@ function renderCommandSnapshot(data){
         commandCheck("OR width",checks.opening_range_ok)+
         commandCheck("VWAP",checks.above_vwap)+
         commandCheck("Breakout",checks.fresh_breakout)+
-        commandConfirmation("QQQ",confirmations.QQQ)+
-        commandConfirmation("SMH",confirmations.SMH)+
+        Object.keys(confirmations).map(name=>commandConfirmation(name,confirmations[name])).join("")+
       '</div>'+
       '<p>'+escapeHtml(reason)+'</p>'+
     '</article>';
