@@ -34,4 +34,4 @@ jobs:
           grep -Fq '<title>ANEVUM</title>' dist/index.html
           grep -Fq 'RHENLINK' dist/app.js
           grep -Fq 'searchItems' dist/app.js
-          grep -Fq 'Current focus: REPLY.' dist/app.js
+          grep -Fq 'Ideas, given form.' dist/app.js
