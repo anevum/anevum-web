@@ -69,6 +69,21 @@ function shell(content){
   '<div class="search-box"><div class="search-top"><input id="searchInput" autocomplete="off" placeholder="Search ANEVUM…" aria-label="Search ANEVUM"/><button class="icon-button" id="searchClose" aria-label="Close search">'+icons.close+'</button></div><div class="search-results" id="searchResults"></div></div></div>';
 }
 
+function commandShell(content){
+  const session=loadSession();
+  const email=session?.user?.email||"RHENLINK";
+  return '<div class="command-app-shell">'+
+    '<header class="command-topbar">'+
+      '<div class="command-topbrand"><a href="'+routeHref("/")+'" data-route="/">'+mark()+'<span>ANEVUM</span></a><i></i><strong>COMMAND</strong></div>'+
+      '<nav class="command-topnav" aria-label="Command sections">'+
+        '<a href="#cmd-overview">Overview</a><a href="#cmd-scanner">Scanner</a><a href="#cmd-feed">Feed</a><a href="#cmd-trades">Trades</a><a href="#cmd-system">System</a>'+
+      '</nav>'+
+      '<div class="command-topaccount"><span class="command-source-pill"><b></b>ALPACA DATA</span><a href="'+routeHref("/rhenlink")+'" data-route="/rhenlink">'+escapeHtml(email)+'</a></div>'+
+    '</header>'+
+    '<main id="main" class="command-workspace">'+content+'</main>'+
+  '</div>';
+}
+
 function button(label,route,secondary=false){
   return '<a class="button'+(secondary?' secondary':'')+'" href="'+routeHref(route)+'" data-route="'+route+'">'+label+icons.arrow+'</a>';
 }
@@ -271,35 +286,57 @@ function authPage(){
 function commandPage(){
   const session=loadSession();
   if(!session?.user){
-    return '<section class="route-hero command-gate"><p class="eyebrow">ANEVUM COMMAND</p><h1>Private control plane.</h1><p>Trading telemetry and controls require your RHENLINK administrator identity.</p><div class="action-row">'+button("Resolve RHENLINK","/rhenlink")+'</div></section>';
+    return '<section class="command-access-gate"><div class="command-gate-mark">'+mark()+'</div><p>ANEVUM COMMAND</p><h1>Private operations portal.</h1><span>Connect your RHENLINK administrator identity to access Alpaca account data and bot telemetry.</span><a class="button" href="'+routeHref("/rhenlink")+'" data-route="/rhenlink">Resolve RHENLINK'+icons.arrow+'</a></section>';
   }
   if(!isCommandAdmin(session)){
-    return '<section class="route-hero command-gate"><p class="eyebrow">ANEVUM COMMAND</p><h1>Administrator access required.</h1><p>Your RHENLINK is authenticated, but this identity does not carry COMMAND authorization.</p></section>';
+    return '<section class="command-access-gate"><div class="command-gate-mark">'+mark()+'</div><p>ANEVUM COMMAND</p><h1>Administrator access required.</h1><span>This RHENLINK is authenticated but is not authorized for the private trading portal.</span></section>';
   }
-  return '<section class="command-console" aria-live="polite">'+
-    '<header class="command-console-head"><div><p class="eyebrow">ANEVUM COMMAND / CAPITAL</p><h1>Live trading.</h1><p>Broker account state, actual bot fills, open-position movement, rolling momentum/VWAP scanner telemetry, and the bot decision stream in one private screen.</p></div>'+
-    '<div class="command-connection"><span id="cmdLiveDot"></span><strong id="cmdMode">CONNECTING</strong><small id="cmdUpdated">Waiting for trader…</small></div></header>'+
-    '<section class="command-account-grid">'+
-      '<article><span>EQUITY</span><strong id="cmdEquity">—</strong><small id="cmdDayPnl">Today —</small></article>'+
+  return '<section class="command-console command-v2" aria-live="polite">'+
+    '<section id="cmd-overview" class="command-v2-hero">'+
+      '<div><p class="command-kicker">PRIVATE OPERATIONS / LIVE CAPITAL</p><h1>Command</h1><p class="command-v2-deck">One screen for the Alpaca account, automated trader, live scanner, fills, and decision feed.</p></div>'+
+      '<div class="command-connection command-v2-connection"><span id="cmdLiveDot"></span><div><strong id="cmdMode">CONNECTING</strong><small id="cmdUpdated">Waiting for bot heartbeat…</small></div><button id="cmdRefresh" class="command-refresh" type="button" aria-label="Refresh Command">↻</button></div>'+
+    '</section>'+
+    '<section class="command-v2-stats">'+
+      '<article class="hero-stat"><span>TOTAL EQUITY</span><strong id="cmdEquity">—</strong><small id="cmdDayPnl">Today —</small></article>'+
       '<article><span>CASH</span><strong id="cmdCash">—</strong><small id="cmdBuyingPower">Buying power —</small></article>'+
       '<article><span>MARKET</span><strong id="cmdMarket">—</strong><small id="cmdWindow">Entry window —</small></article>'+
       '<article><span>BOT</span><strong id="cmdBot">—</strong><small id="cmdAttempts">Entries —</small></article>'+
+      '<article><span>POSITION</span><strong id="cmdPositionMini">—</strong><small id="cmdPositionMiniPnl">No open position</small></article>'+
     '</section>'+
-    '<section class="command-performance-grid">'+
-      '<article class="command-panel"><div class="command-panel-head"><div><span>TODAY</span><strong id="cmdTodayResult">Waiting for fills…</strong></div><small id="cmdWinLoss">—</small></div><div id="cmdEquityPath" class="command-equity-path"><div class="command-empty">Account path appears after the first refresh.</div></div></article>'+
-      '<article class="command-panel"><div class="command-panel-head"><div><span>COMPLETED BOT TRADES</span><strong id="cmdTradeCount">0 round trips</strong></div><small>Broker fill prices</small></div><div id="cmdTrades" class="command-trade-list"><div class="command-empty">No completed bot trades yet.</div></div></article>'+
+    '<section class="command-v2-grid">'+
+      '<div class="command-v2-primary">'+
+        '<article id="cmd-scanner" class="command-panel command-v2-panel command-scanner-panel">'+
+          '<div class="command-panel-head"><div><span>LIVE SCANNER</span><strong id="cmdScannerSummary">Waiting for strategy…</strong></div><small id="cmdScanTime">Waiting for first scan…</small></div>'+
+          '<div class="command-scan-header"><span>SYMBOL</span><span>PRICE</span><span>MOMENTUM</span><span>VWAP EDGE</span><span>CHECKS</span><span>STATUS</span></div>'+
+          '<div id="commandScanner" class="command-scanner-list"><div class="command-empty">Connecting to scanner…</div></div>'+
+        '</article>'+
+        '<div class="command-performance-grid command-v2-performance">'+
+          '<article class="command-panel command-v2-panel"><div class="command-panel-head"><div><span>ACCOUNT PATH</span><strong id="cmdTodayResult">Waiting for fills…</strong></div><small id="cmdWinLoss">—</small></div><div id="cmdEquityPath" class="command-equity-path"><div class="command-empty">Account path appears after the first refresh.</div></div></article>'+
+          '<article id="cmd-trades" class="command-panel command-v2-panel"><div class="command-panel-head"><div><span>COMPLETED TRADES</span><strong id="cmdTradeCount">0 round trips</strong></div><small>Alpaca fills</small></div><div id="cmdTrades" class="command-trade-list"><div class="command-empty">No completed bot trades yet.</div></div></article>'+
+        '</div>'+
+        '<article class="command-panel command-v2-panel"><div class="command-panel-head"><div><span>ORDER TAPE</span><strong id="cmdOrderCount">0 OPEN</strong></div><small>Bot-tagged Alpaca orders</small></div><div id="cmdOrders" class="command-order-list"><div class="command-empty">No ANEVUM orders yet.</div></div></article>'+
+      '</div>'+
+      '<aside class="command-v2-side">'+
+        '<article class="command-panel command-v2-panel command-position-panel"><div class="command-panel-head"><div><span>ACTIVE POSITION</span><strong id="cmdPositionTitle">FLAT</strong></div><small>Live from Alpaca</small></div><div id="cmdPositionBody" class="command-empty">No open position.</div></article>'+
+        '<article id="cmd-feed" class="command-panel command-v2-panel command-feed-panel"><div class="command-panel-head"><div><span>LIVE FEED</span><strong>Bot decisions + orders</strong></div><small>Newest first</small></div><div id="cmdDecisionFeed" class="command-decision-feed"><div class="command-empty">Waiting for bot activity…</div></div></article>'+
+        '<article id="cmd-system" class="command-panel command-v2-panel"><div class="command-panel-head"><div><span>BOT SYSTEM</span><strong id="cmdSystemHeadline">Connecting…</strong></div><small id="cmdHeartbeat">—</small></div>'+
+          '<div class="command-system-grid">'+
+            '<div><span>STRATEGY</span><strong id="cmdStrategyName">—</strong></div>'+
+            '<div><span>DATA FEED</span><strong id="cmdDataFeed">—</strong></div>'+
+            '<div><span>FUNDING</span><strong id="cmdFunding">—</strong></div>'+
+            '<div><span>DAILY LOSS LIMIT</span><strong id="cmdLossLimit">—</strong></div>'+
+            '<div><span>ORDER SIZE</span><strong id="cmdOrderSize">—</strong></div>'+
+            '<div><span>LAST DECISION</span><strong id="cmdLastDecision">—</strong></div>'+
+          '</div>'+
+          '<p id="cmdLastError" class="command-system-error"></p>'+
+        '</article>'+
+        '<section class="command-control-bar command-v2-controls"><div><span>EXECUTION CONTROLS</span><p id="cmdControlStatus">Controls act on the live bot and require administrator authorization.</p></div><div class="command-control-actions">'+
+          '<button class="button secondary" id="cmdEntryToggle" type="button" disabled>Loading…</button>'+
+          '<button class="button secondary" id="cmdCancelOrders" type="button" disabled>Cancel pending orders</button>'+
+          '<button class="button command-danger" id="cmdClosePosition" type="button" disabled>Close bot position</button>'+
+        '</div></section>'+
+      '</aside>'+
     '</section>'+
-    '<section class="command-control-bar"><div><span>EXECUTION CONTROLS</span><p id="cmdControlStatus">Controls act on the live bot and require administrator authorization.</p></div><div class="command-control-actions">'+
-      '<button class="button secondary" id="cmdEntryToggle" type="button" disabled>Loading…</button>'+
-      '<button class="button secondary" id="cmdCancelOrders" type="button" disabled>Cancel pending orders</button>'+
-      '<button class="button command-danger" id="cmdClosePosition" type="button" disabled>Close bot position</button>'+
-    '</div></section>'+
-    '<section class="command-active-grid">'+
-      '<article class="command-panel"><div class="command-panel-head"><span>ACTIVE POSITION</span><strong id="cmdPositionTitle">FLAT</strong></div><div id="cmdPositionBody" class="command-empty">No open position.</div></article>'+
-      '<article class="command-panel"><div class="command-panel-head"><span>ORDER TAPE</span><strong id="cmdOrderCount">0 OPEN</strong></div><div id="cmdOrders" class="command-order-list"><div class="command-empty">No ANEVUM orders yet.</div></div></article>'+
-    '</section>'+
-    '<section class="command-panel command-scanner-panel"><div class="command-panel-head"><div><span>LIVE SCANNER</span><strong id="cmdScannerSummary">Waiting for strategy…</strong></div><small id="cmdScanTime">Waiting for first scan…</small></div><div id="commandScanner" class="command-scanner-grid"></div></section>'+
-    '<section class="command-panel"><div class="command-panel-head"><div><span>DECISION FEED</span><strong>What the bot is doing and why</strong></div><small>Newest first</small></div><div id="cmdDecisionFeed" class="command-decision-feed"><div class="command-empty">Waiting for decision history…</div></div></section>'+
     '<p id="cmdError" class="command-error" role="status"></p>'+
   '</section>';
 }
@@ -375,6 +412,32 @@ function commandPercentNumber(value){
   return Number.isFinite(n)?n:null;
 }
 
+function commandActivityItems(history,orders){
+  const decisions=(Array.isArray(history)?history:[]).map(item=>({
+    at:item.at,
+    symbol:item.symbol||item.kind||"BOT",
+    label:String(item.action||"DECISION").toUpperCase(),
+    message:item.reason||item.message||"",
+    kind:"decision"
+  }));
+  const orderItems=(Array.isArray(orders)?orders:[]).map(order=>{
+    const side=String(order.side||"").toUpperCase();
+    const status=String(order.status||"").toUpperCase();
+    const price=order.filled_avg_price?money(order.filled_avg_price):"";
+    return {
+      at:order.filled_at||order.submitted_at,
+      symbol:order.symbol||"ORDER",
+      label:(side+" "+status).trim(),
+      message:price?"Broker fill "+price:"Order "+status.toLowerCase(),
+      kind:"order"
+    };
+  });
+  return decisions.concat(orderItems)
+    .filter(item=>item.at)
+    .sort((a,b)=>new Date(b.at)-new Date(a.at))
+    .slice(0,60);
+}
+
 function renderCommandSnapshot(data){
   const account=data.account||{};
   const bot=data.bot||{};
@@ -434,6 +497,14 @@ function renderCommandSnapshot(data){
   if(equityPath)equityPath.innerHTML=commandEquityChart(account.last_equity,account.equity,completedTrades);
 
   const position=positions[0];
+  const mini=document.getElementById("cmdPositionMini");
+  const miniPnl=document.getElementById("cmdPositionMiniPnl");
+  if(mini)mini.textContent=position?String(position.symbol||"OPEN"):"FLAT";
+  if(miniPnl){
+    const miniPl=Number(position?.unrealized_pl);
+    miniPnl.textContent=position?money(position.unrealized_pl)+" / "+pct(position.unrealized_plpc):"No open position";
+    miniPnl.className=Number.isFinite(miniPl)?(miniPl>0?"positive":miniPl<0?"negative":""):"";
+  }
   const positionTitle=document.getElementById("cmdPositionTitle");
   const positionBody=document.getElementById("cmdPositionBody");
   if(position&&positionTitle&&positionBody){
@@ -474,7 +545,7 @@ function renderCommandSnapshot(data){
   const ordered=(strategy.scan_symbols||Object.keys(scanner)).filter(symbol=>scanner[symbol]);
   const readyCount=ordered.filter(symbol=>scanner[symbol]?.action==="buy").length;
   const scannerSummary=document.getElementById("cmdScannerSummary");
-  if(scannerSummary)scannerSummary.textContent=ordered.length+" symbols / "+readyCount+" qualified / one position maximum";
+  if(scannerSummary)scannerSummary.textContent=ordered.length+" symbols · "+readyCount+" qualified · one position maximum";
   const scannerEl=document.getElementById("commandScanner");
   if(scannerEl)scannerEl.innerHTML=ordered.map(symbol=>{
     const row=scanner[symbol]||{};
@@ -485,49 +556,70 @@ function renderCommandSnapshot(data){
     const reason=String(row.reason||"waiting");
     const rolling=("momentum_pct" in meta)||("fast_above_slow" in checks);
     const state=ready?"ready":reason.includes("blocked")||reason.includes("spread")?"blocked":"waiting";
+    const price=money(meta.current_close);
     if(rolling){
       const momentum=commandPercentNumber(meta.momentum_pct);
       const edge=commandPercentNumber(meta.vwap_edge_pct);
       const momentumLabel=momentum===null?"—":(momentum*100).toFixed(3)+"%";
       const edgeLabel=edge===null?"—":(edge*100).toFixed(3)+"%";
-      const confirmationNames=Object.keys(confirmations);
-      return '<article class="command-symbol-card '+state+'">'+
-        '<header><strong>'+escapeHtml(symbol)+'</strong><span>'+(ready?"QUALIFIED":"SCANNING")+'</span></header>'+
-        '<div class="command-symbol-price"><b>'+money(meta.current_close)+'</b><small>momentum '+momentumLabel+' · VWAP edge '+edgeLabel+'</small></div>'+
-        '<div class="command-symbol-levels"><span>FAST AVG <b>'+money(meta.fast_average)+'</b></span><span>SLOW AVG <b>'+money(meta.slow_average)+'</b></span><span>VWAP <b>'+money(meta.session_vwap)+'</b></span></div>'+
-        '<div class="command-checks">'+
-          commandCheck("Trend",checks.fast_above_slow)+
-          commandCheck("Rising",checks.rising)+
-          commandCheck("Momentum",checks.momentum_ok)+
-          commandCheck("VWAP",checks.vwap_ok)+
-          confirmationNames.map(name=>commandConfirmation(name,confirmations[name])).join("")+
-        '</div>'+
-        '<p>'+escapeHtml(reason)+'</p>'+
+      const checkValues=[
+        checks.fast_above_slow,
+        checks.rising,
+        checks.momentum_ok,
+        checks.vwap_ok,
+        ...Object.values(confirmations).filter(v=>!String(v?.reason||"").includes("self-confirmation skipped")).map(v=>v?.ok)
+      ];
+      const passCount=checkValues.filter(Boolean).length;
+      const totalChecks=checkValues.length;
+      return '<article class="command-scan-row '+state+'">'+
+        '<div class="command-scan-symbol"><b>'+escapeHtml(symbol)+'</b><small>'+escapeHtml(reason)+'</small></div>'+
+        '<strong>'+price+'</strong>'+
+        '<span class="'+(momentum!==null&&momentum>=0?"positive":"")+'">'+momentumLabel+'</span>'+
+        '<span class="'+(edge!==null&&edge>=0?"positive":"")+'">'+edgeLabel+'</span>'+
+        '<span class="command-scan-checks">'+passCount+'/'+totalChecks+' passed</span>'+
+        '<span class="command-scan-state">'+(ready?"QUALIFIED":"SCANNING")+'</span>'+
       '</article>';
     }
     const dist=Number(meta.distance_to_breakout_pct);
-    const distLabel=Number.isFinite(dist)?(dist*100).toFixed(2)+"%":"—";
-    return '<article class="command-symbol-card '+state+'">'+
-      '<header><strong>'+escapeHtml(symbol)+'</strong><span>'+escapeHtml(String(row.action||"hold").toUpperCase())+'</span></header>'+
-      '<div class="command-symbol-price"><b>'+money(meta.current_close)+'</b><small>to OR high '+distLabel+'</small></div>'+
-      '<div class="command-symbol-levels"><span>OR H <b>'+money(meta.opening_range_high)+'</b></span><span>OR L <b>'+money(meta.opening_range_low)+'</b></span><span>VWAP <b>'+money(meta.session_vwap)+'</b></span></div>'+
-      '<div class="command-checks">'+
-        commandCheck("OR width",checks.opening_range_ok)+
-        commandCheck("VWAP",checks.above_vwap)+
-        commandCheck("Breakout",checks.fresh_breakout)+
-        Object.keys(confirmations).map(name=>commandConfirmation(name,confirmations[name])).join("")+
-      '</div>'+
-      '<p>'+escapeHtml(reason)+'</p>'+
+    return '<article class="command-scan-row '+state+'">'+
+      '<div class="command-scan-symbol"><b>'+escapeHtml(symbol)+'</b><small>'+escapeHtml(reason)+'</small></div>'+
+      '<strong>'+price+'</strong>'+
+      '<span>OR '+(Number.isFinite(dist)?(dist*100).toFixed(2)+"%":"—")+'</span>'+
+      '<span>'+pct((Number(meta.current_close)-Number(meta.session_vwap))/Number(meta.session_vwap),3)+'</span>'+
+      '<span class="command-scan-checks">Opening range</span>'+
+      '<span class="command-scan-state">'+escapeHtml(String(row.action||"hold").toUpperCase())+'</span>'+
     '</article>';
   }).join("")||'<div class="command-empty">Scanner has not published a completed cycle yet.</div>';
 
   const scanTime=document.getElementById("cmdScanTime");
   if(scanTime)scanTime.textContent="Strategy "+commandTime(bot.last_strategy_at);
   const feed=document.getElementById("cmdDecisionFeed");
-  const history=Array.isArray(data.history)?data.history.slice(0,40):[];
-  if(feed)feed.innerHTML=history.length?history.map(item=>
-    '<div class="command-decision-row"><time>'+commandTime(item.at)+'</time><strong>'+escapeHtml(item.symbol||item.kind||"SYSTEM")+'</strong><span>'+escapeHtml(String(item.action||"").toUpperCase())+'</span><p>'+escapeHtml(item.reason||item.message||"")+'</p></div>'
-  ).join(""):'<div class="command-empty">No decision changes recorded since the current bot process started.</div>';
+  const activity=commandActivityItems(data.history,recentOrders);
+  if(feed)feed.innerHTML=activity.length?activity.map(item=>
+    '<div class="command-feed-row '+item.kind+'"><time>'+commandTime(item.at)+'</time><div><strong>'+escapeHtml(item.symbol)+'</strong><span>'+escapeHtml(item.label)+'</span></div><p>'+escapeHtml(item.message)+'</p></div>'
+  ).join(""):'<div class="command-empty">No bot activity recorded since this process started.</div>';
+
+  const strategyName=document.getElementById("cmdStrategyName");
+  if(strategyName)strategyName.textContent=String(strategy.name||"rolling_momentum_vwap");
+  const dataFeed=document.getElementById("cmdDataFeed");
+  if(dataFeed)dataFeed.textContent=String(strategy.data_feed||"—").toUpperCase();
+  const funding=document.getElementById("cmdFunding");
+  if(funding){
+    funding.textContent=bot.funding_ready?"READY":"NOT READY";
+    funding.className=bot.funding_ready?"positive":"negative";
+  }
+  const lossLimit=document.getElementById("cmdLossLimit");
+  if(lossLimit)lossLimit.textContent=money(risk.max_daily_loss);
+  const orderSize=document.getElementById("cmdOrderSize");
+  if(orderSize)orderSize.textContent=money(strategy.order_notional);
+  const lastDecision=document.getElementById("cmdLastDecision");
+  if(lastDecision)lastDecision.textContent=String(bot.last_decision||"—");
+  const lastError=document.getElementById("cmdLastError");
+  if(lastError)lastError.textContent=bot.last_error?"ERROR: "+bot.last_error:"No runtime error";
+  const systemHeadline=document.getElementById("cmdSystemHeadline");
+  if(systemHeadline)systemHeadline.textContent=(bot.execution_authorized&&bot.bot_armed&&!bot.runtime_paused)?"AUTONOMOUS / LIVE":"CHECK REQUIRED";
+  const heartbeat=document.getElementById("cmdHeartbeat");
+  if(heartbeat)heartbeat.textContent="Heartbeat "+commandTime(data.observed_at||data.market?.timestamp);
 
   const toggle=document.getElementById("cmdEntryToggle");
   if(toggle){
@@ -562,6 +654,7 @@ async function refreshCommand(){
 
 function bindCommand(){
   if(!isCommandAdmin(loadSession()))return;
+  document.getElementById("cmdRefresh")?.addEventListener("click",()=>refreshCommand());
   const toggle=document.getElementById("cmdEntryToggle");
   toggle?.addEventListener("click",async()=>{
     const enabled=toggle.dataset.enabled==="true";
@@ -610,8 +703,15 @@ function render(){
   else if(route==="/about")content=aboutPage();
   else if(route==="/contact")content=contactPage();
   else content=notFound();
-  APP.innerHTML=shell(content);
-  bindShell();
+  APP.innerHTML=route==="/command"?commandShell(content):shell(content);
+  if(route!=="/command")bindShell();
+  else{
+    document.querySelectorAll("[data-route]").forEach(el=>el.addEventListener("click",e=>{
+      if(e.metaKey||e.ctrlKey||e.shiftKey||e.altKey)return;
+      e.preventDefault();
+      navigate(el.dataset.route);
+    }));
+  }
   bindRoute();
   window.scrollTo(0,0);
   document.title=(route==="/"?"ANEVUM":route==="/the-book"?"REPLY — ANEVUM":route==="/command"?"COMMAND — ANEVUM":route.slice(1).toUpperCase()+" — ANEVUM");
