@@ -237,3 +237,35 @@ button{color:inherit}
 .command-decision-row p{margin:0;color:rgba(242,239,232,.62);line-height:1.4}
 .command-error{min-height:20px;margin:0;color:#efadad;font-size:.82rem}
 .command-gate{min-height:52vh}
+
+@media(max-width:900px){
+  .command-console-head{grid-template-columns:1fr;align-items:start}
+  .command-connection{min-width:0;width:100%}
+  .command-account-grid{grid-template-columns:1fr 1fr}
+  .command-account-grid article{border-right:1px solid var(--line);border-bottom:1px solid var(--line)}
+  .command-account-grid article:nth-child(2n){border-right:0}
+  .command-account-grid article:nth-last-child(-n+2){border-bottom:0}
+  .command-control-bar{align-items:flex-start;flex-direction:column}
+  .command-control-actions{justify-content:flex-start}
+  .command-active-grid{grid-template-columns:1fr}
+}
+@media(max-width:620px){
+  .command-console-head{padding-top:8px}
+  .command-account-grid{grid-template-columns:1fr}
+  .command-account-grid article{border-right:0;border-bottom:1px solid var(--line)}
+  .command-account-grid article:nth-child(2n){border-right:0}
+  .command-account-grid article:nth-last-child(-n+2){border-bottom:1px solid var(--line)}
+  .command-account-grid article:last-child{border-bottom:0}
+  .command-control-actions{width:100%;display:grid;grid-template-columns:1fr}
+  .command-control-actions .button{width:100%}
+  .command-scanner-grid{grid-template-columns:1fr;padding:8px}
+  .command-symbol-levels{grid-template-columns:1fr 1fr 1fr}
+  .command-order-row{grid-template-columns:72px 48px minmax(80px,1fr);gap:7px;padding:11px 12px}
+  .command-order-row span:nth-of-type(2){display:none}
+  .command-order-row b{grid-column:3;text-align:right}
+  .command-decision-row{grid-template-columns:70px 54px minmax(0,1fr);gap:7px;padding:10px 12px}
+  .command-decision-row span{display:none}
+  .command-decision-row p{grid-column:3}
+  .command-position{grid-template-columns:1fr 1fr}
+  .command-panel-head{align-items:flex-start;flex-direction:column}
+}
