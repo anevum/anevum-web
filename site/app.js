@@ -87,12 +87,12 @@ function home(){
   '<section class="section"><div class="section-head"><div><p class="section-kicker">ONE COMPANY</p><h2>Three layers. One direction.</h2></div><p>ANEVUM can experiment widely without making the public identity confusing. The rule is simple: the work at the center stays clear.</p></div>'+
     '<div class="company-grid">'+
       '<div class="company-pillar"><span>01 / PUBLIC CORE</span><h3>Publishing</h3><p>Books and finished stories come first. They are the product, the proof, and the reason the rest of the company exists.</p></div>'+
-      '<div class="company-pillar"><span>02 / READER LAYER</span><h3>World systems</h3><p>Wiki, Lattice, RHENLINK, and the Store deepen released work without asking the reader to understand the machinery behind it.</p></div>'+
-      '<div class="company-pillar"><span>03 / INTERNAL LAYER</span><h3>R&amp;D and operations</h3><p>Automation, analytics, financial tools, and other experiments help ANEVUM operate and compound. They stay internal until one earns a real public purpose.</p></div>'+
+      '<div class="company-pillar"><span>02 / READER LAYER</span><h3>Reader systems</h3><p>Wiki, Lattice, RHENLINK, and the Store help readers discover, understand, revisit, and support released work.</p></div>'+
+      '<div class="company-pillar"><span>03 / CREATIVE R&amp;D</span><h3>Creative R&amp;D</h3><p>New formats, publishing workflows, visual experiments, and software are explored only when they can make the books or the reader experience better.</p></div>'+
     '</div>'+
   '</section>'+
   '<section class="section work-section"><div class="section-head"><div><p class="section-kicker">THE OPERATING RULE</p><h2>Ideas only matter when they become work.</h2></div><p>The site should reinforce the same sequence the company follows. No endless expansion before the current thing is finished.</p></div>'+
-    '<div class="work-cycle"><div><span>01</span><strong>IDEA</strong></div><div><span>02</span><strong>BUILD</strong></div><div><span>03</span><strong>FINISH</strong></div><div><span>04</span><strong>RELEASE</strong></div><div><span>05</span><strong>COMPOUND</strong></div></div>'+
+    '<div class="work-cycle"><div><span>01</span><strong>IDEA</strong></div><div><span>02</span><strong>BUILD</strong></div><div><span>03</span><strong>FINISH</strong></div><div><span>04</span><strong>RELEASE</strong></div><div><span>05</span><strong>LEARN</strong></div></div>'+
   '</section>';
 }
 function toolCard(num,title,copy,route){
