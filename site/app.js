@@ -63,7 +63,7 @@ function shell(content){
   '<footer class="site-footer"><div class="footer-inner"><span>ANEVUM / 2026</span><div class="footer-links">'+
   '<a href="'+routeHref("/contact")+'" data-route="/contact">Contact</a>'+
   '<a href="mailto:devon@anevum.com">Email</a>'+
-  '<a href="https://command.anevum.com">Command</a>'+
+  '<a href="/command" data-route="/command">Command</a>'+
   '<a href="'+routeHref("/rhenlink")+'" data-route="/rhenlink">RHENLINK</a></div></div></footer>'+
   '<div class="search-panel" id="searchPanel" role="dialog" aria-modal="true" aria-label="Search ANEVUM">'+
   '<div class="search-box"><div class="search-top"><input id="searchInput" autocomplete="off" placeholder="Search ANEVUM…" aria-label="Search ANEVUM"/><button class="icon-button" id="searchClose" aria-label="Close search">'+icons.close+'</button></div><div class="search-results" id="searchResults"></div></div></div>';
@@ -183,6 +183,74 @@ async function signOut(){
   saveSession(null);
 }
 
+
+let commandPollTimer=null;
+let commandPollInFlight=false;
+
+function stopCommandPolling(){
+  if(commandPollTimer){
+    clearInterval(commandPollTimer);
+    commandPollTimer=null;
+  }
+  commandPollInFlight=false;
+}
+
+function isCommandAdmin(session=loadSession()){
+  const user=session?.user;
+  if(!user)return false;
+  const meta=user.app_metadata||{};
+  const role=String(meta.role||"").trim().toLowerCase();
+  const email=String(user.email||"").trim().toLowerCase();
+  const confirmed=Boolean(user.email_confirmed_at||user.confirmed_at);
+  return (email==="devon@anevum.com"&&confirmed)
+    || meta.command_admin===true
+    || meta.wiki_admin===true
+    || ["owner","founder","admin","command_admin","wiki_admin"].includes(role);
+}
+
+async function commandApi(path,init={}){
+  const session=loadSession();
+  if(!session?.access_token)throw new Error("Resolve RHENLINK before using COMMAND.");
+  const res=await fetch("/api/command/trader"+path,{
+    method:init.method||"GET",
+    headers:{
+      "Content-Type":"application/json",
+      "Authorization":"Bearer "+session.access_token,
+      ...(init.headers||{})
+    },
+    body:init.body
+  });
+  const payload=await res.json().catch(()=>({}));
+  if(!res.ok)throw new Error(payload.detail||payload.message||"COMMAND trader request failed.");
+  return payload;
+}
+
+function money(value){
+  const n=Number(value);
+  return Number.isFinite(n)?new Intl.NumberFormat("en-US",{style:"currency",currency:"USD",minimumFractionDigits:2,maximumFractionDigits:2}).format(n):"—";
+}
+function pct(value,digits=2){
+  const n=Number(value);
+  return Number.isFinite(n)?(n*100).toFixed(digits)+"%":"—";
+}
+function commandTime(value){
+  if(!value)return"—";
+  const d=new Date(value);
+  return Number.isNaN(d.getTime())?"—":d.toLocaleTimeString([],{hour:"numeric",minute:"2-digit",second:"2-digit"});
+}
+function commandCheck(label,value){
+  const state=value===true?"pass":value===false?"fail":"pending";
+  const mark=value===true?"✓":value===false?"×":"·";
+  return '<span class="command-check '+state+'"><b>'+mark+'</b>'+escapeHtml(label)+'</span>';
+}
+function commandConfirmation(label,value){
+  if(!value)return commandCheck(label,null);
+  if(String(value.reason||"").includes("self-confirmation skipped")){
+    return '<span class="command-check pending"><b>·</b>'+escapeHtml(label)+' self</span>';
+  }
+  return commandCheck(label,value.ok===true);
+}
+
 function authPage(){
   const session=loadSession();
   if(session?.user){
@@ -199,11 +267,207 @@ function authPage(){
   '<form id="signinForm" hidden><div class="field"><label>Email</label><input name="email" type="email" required autocomplete="email"/></div><div class="field"><label>Password</label><input name="password" type="password" required autocomplete="current-password"/></div><div class="action-row"><button class="button" type="submit">Sign in</button></div></form><p id="authStatus" class="form-status"></p></div>'+
   '<div class="account-card"><h2>What RHENLINK does now</h2><div class="info-card"><strong>Release preference</strong><p>Opt in to REPLY release updates on your identity.</p></div><div class="info-card" style="margin-top:10px"><strong>Persistent account</strong><p>One account can later hold saves, purchases, achievements and reading progress.</p></div></div></section>';
 }
+function commandPage(){
+  const session=loadSession();
+  if(!session?.user){
+    return '<section class="route-hero command-gate"><p class="eyebrow">ANEVUM COMMAND</p><h1>Private control plane.</h1><p>Trading telemetry and controls require your RHENLINK administrator identity.</p><div class="action-row">'+button("Resolve RHENLINK","/rhenlink")+'</div></section>';
+  }
+  if(!isCommandAdmin(session)){
+    return '<section class="route-hero command-gate"><p class="eyebrow">ANEVUM COMMAND</p><h1>Administrator access required.</h1><p>Your RHENLINK is authenticated, but this identity does not carry COMMAND authorization.</p></section>';
+  }
+  return '<section class="command-console" aria-live="polite">'+
+    '<header class="command-console-head"><div><p class="eyebrow">ANEVUM COMMAND / CAPITAL</p><h1>Trading console.</h1><p>Live scanner telemetry, account state, execution controls, and decision history. Strategy decisions remain tied to completed market bars even though this screen refreshes more frequently.</p></div>'+
+    '<div class="command-connection"><span id="cmdLiveDot"></span><strong id="cmdMode">CONNECTING</strong><small id="cmdUpdated">Waiting for trader…</small></div></header>'+
+    '<section class="command-account-grid">'+
+      '<article><span>EQUITY</span><strong id="cmdEquity">—</strong><small id="cmdDayPnl">Today —</small></article>'+
+      '<article><span>CASH</span><strong id="cmdCash">—</strong><small id="cmdBuyingPower">Buying power —</small></article>'+
+      '<article><span>MARKET</span><strong id="cmdMarket">—</strong><small id="cmdWindow">Entry window —</small></article>'+
+      '<article><span>BOT</span><strong id="cmdBot">—</strong><small id="cmdAttempts">Entries —</small></article>'+
+    '</section>'+
+    '<section class="command-control-bar"><div><span>EXECUTION CONTROLS</span><p id="cmdControlStatus">Controls act on the live bot and require administrator authorization.</p></div><div class="command-control-actions">'+
+      '<button class="button secondary" id="cmdEntryToggle" type="button" disabled>Loading…</button>'+
+      '<button class="button secondary" id="cmdCancelOrders" type="button" disabled>Cancel pending orders</button>'+
+      '<button class="button command-danger" id="cmdClosePosition" type="button" disabled>Close bot position</button>'+
+    '</div></section>'+
+    '<section class="command-active-grid">'+
+      '<article class="command-panel"><div class="command-panel-head"><span>ACTIVE POSITION</span><strong id="cmdPositionTitle">FLAT</strong></div><div id="cmdPositionBody" class="command-empty">No open position.</div></article>'+
+      '<article class="command-panel"><div class="command-panel-head"><span>ORDER STATE</span><strong id="cmdOrderCount">0 OPEN</strong></div><div id="cmdOrders" class="command-order-list"><div class="command-empty">No ANEVUM orders yet.</div></div></article>'+
+    '</section>'+
+    '<section class="command-panel command-scanner-panel"><div class="command-panel-head"><div><span>LIVE SCANNER</span><strong>20 candidates / one position maximum</strong></div><small id="cmdScanTime">Waiting for first scan…</small></div><div id="commandScanner" class="command-scanner-grid"></div></section>'+
+    '<section class="command-panel"><div class="command-panel-head"><div><span>DECISION FEED</span><strong>State changes from the scanner and controls</strong></div><small>Newest first</small></div><div id="cmdDecisionFeed" class="command-decision-feed"><div class="command-empty">Waiting for decision history…</div></div></section>'+
+    '<p id="cmdError" class="command-error" role="status"></p>'+
+  '</section>';
+}
+
+function renderCommandSnapshot(data){
+  const account=data.account||{};
+  const bot=data.bot||{};
+  const strategy=data.strategy||{};
+  const risk=data.risk||{};
+  const positions=Array.isArray(data.positions)?data.positions:[];
+  const openOrders=Array.isArray(data.open_orders)?data.open_orders:[];
+  const recentOrders=Array.isArray(data.recent_orders)?data.recent_orders:[];
+  const scanner=data.scanner||{};
+
+  const mode=document.getElementById("cmdMode");
+  const liveDot=document.getElementById("cmdLiveDot");
+  if(mode)mode.textContent=String(data.mode||"—").toUpperCase()+" / "+(bot.bot_armed?"ARMED":"DISARMED");
+  if(liveDot)liveDot.className=(bot.execution_authorized&&bot.bot_armed&&!bot.runtime_paused)?"online":"offline";
+  const updated=document.getElementById("cmdUpdated");
+  if(updated)updated.textContent="Console refresh "+new Date().toLocaleTimeString();
+
+  const equityEl=document.getElementById("cmdEquity");
+  if(equityEl)equityEl.textContent=money(account.equity);
+  const day=Number(account.day_pnl);
+  const dayEl=document.getElementById("cmdDayPnl");
+  if(dayEl){
+    dayEl.textContent="Today "+money(account.day_pnl);
+    dayEl.className=Number.isFinite(day)?(day>0?"positive":day<0?"negative":""):"";
+  }
+  const cashEl=document.getElementById("cmdCash");
+  if(cashEl)cashEl.textContent=money(account.cash);
+  const bpEl=document.getElementById("cmdBuyingPower");
+  if(bpEl)bpEl.textContent="Buying power "+money(account.buying_power);
+  const marketEl=document.getElementById("cmdMarket");
+  if(marketEl)marketEl.textContent=data.market?.is_open?"OPEN":"CLOSED";
+  const windowEl=document.getElementById("cmdWindow");
+  if(windowEl)windowEl.textContent="Entries "+(strategy.entry_start||"—")+"–"+(strategy.entry_cutoff||"—")+" ET";
+  const botEl=document.getElementById("cmdBot");
+  if(botEl)botEl.textContent=bot.entries_enabled?"WATCHING":"ENTRY LOCK";
+  const attemptsEl=document.getElementById("cmdAttempts");
+  if(attemptsEl)attemptsEl.textContent=(risk.entries_remaining??"—")+" of "+(risk.max_daily_orders??"—")+" entries remain";
+
+  const position=positions[0];
+  const positionTitle=document.getElementById("cmdPositionTitle");
+  const positionBody=document.getElementById("cmdPositionBody");
+  if(position&&positionTitle&&positionBody){
+    positionTitle.textContent=String(position.symbol||"POSITION");
+    const pl=Number(position.unrealized_pl);
+    positionBody.className="command-position";
+    positionBody.innerHTML='<div><span>MARKET VALUE</span><strong>'+money(position.market_value)+'</strong></div>'+
+      '<div><span>ENTRY</span><strong>'+money(position.avg_entry_price)+'</strong></div>'+
+      '<div><span>CURRENT</span><strong>'+money(position.current_price)+'</strong></div>'+
+      '<div><span>QTY</span><strong>'+escapeHtml(position.qty||"—")+'</strong></div>'+
+      '<div><span>UNREALIZED P&L</span><strong class="'+(pl>0?"positive":pl<0?"negative":"")+'">'+money(position.unrealized_pl)+' / '+pct(position.unrealized_plpc)+'</strong></div>';
+  }else if(positionTitle&&positionBody){
+    positionTitle.textContent="FLAT";
+    positionBody.className="command-empty";
+    positionBody.textContent="No open position.";
+  }
+
+  const orderCount=document.getElementById("cmdOrderCount");
+  if(orderCount)orderCount.textContent=openOrders.length+" OPEN";
+  const ordersEl=document.getElementById("cmdOrders");
+  const shown=recentOrders.slice(0,8);
+  if(ordersEl)ordersEl.innerHTML=shown.length?shown.map(order=>{
+    const fill=order.filled_avg_price?money(order.filled_avg_price):"—";
+    return '<div class="command-order-row"><time>'+commandTime(order.filled_at||order.submitted_at)+'</time><strong>'+escapeHtml(order.symbol||"—")+'</strong><span>'+escapeHtml(String(order.side||"").toUpperCase())+'</span><span>'+escapeHtml(String(order.status||"").toUpperCase())+'</span><b>'+fill+'</b></div>';
+  }).join(""):'<div class="command-empty">No ANEVUM orders yet.</div>';
+
+  const ordered=(strategy.scan_symbols||Object.keys(scanner)).filter(symbol=>scanner[symbol]);
+  const scannerEl=document.getElementById("commandScanner");
+  if(scannerEl)scannerEl.innerHTML=ordered.map(symbol=>{
+    const row=scanner[symbol]||{};
+    const meta=row.metadata||{};
+    const checks=meta.checks||{};
+    const confirmations=meta.confirmations||{};
+    const ready=row.action==="buy";
+    const reason=String(row.reason||"waiting");
+    const state=ready?"ready":reason.includes("too wide")||reason.includes("too extended")?"blocked":"waiting";
+    const dist=Number(meta.distance_to_breakout_pct);
+    const distLabel=Number.isFinite(dist)?(dist*100).toFixed(2)+"%":"—";
+    return '<article class="command-symbol-card '+state+'">'+
+      '<header><strong>'+escapeHtml(symbol)+'</strong><span>'+escapeHtml(String(row.action||"hold").toUpperCase())+'</span></header>'+
+      '<div class="command-symbol-price"><b>'+money(meta.current_close)+'</b><small>to OR high '+distLabel+'</small></div>'+
+      '<div class="command-symbol-levels"><span>OR H <b>'+money(meta.opening_range_high)+'</b></span><span>OR L <b>'+money(meta.opening_range_low)+'</b></span><span>VWAP <b>'+money(meta.session_vwap)+'</b></span></div>'+
+      '<div class="command-checks">'+
+        commandCheck("OR width",checks.opening_range_ok)+
+        commandCheck("VWAP",checks.above_vwap)+
+        commandCheck("Breakout",checks.fresh_breakout)+
+        commandConfirmation("QQQ",confirmations.QQQ)+
+        commandConfirmation("SMH",confirmations.SMH)+
+      '</div>'+
+      '<p>'+escapeHtml(reason)+'</p>'+
+    '</article>';
+  }).join("")||'<div class="command-empty">Scanner has not published a completed cycle yet.</div>';
+
+  const scanTime=document.getElementById("cmdScanTime");
+  if(scanTime)scanTime.textContent="Strategy "+commandTime(bot.last_strategy_at);
+  const feed=document.getElementById("cmdDecisionFeed");
+  const history=Array.isArray(data.history)?data.history.slice(0,40):[];
+  if(feed)feed.innerHTML=history.length?history.map(item=>
+    '<div class="command-decision-row"><time>'+commandTime(item.at)+'</time><strong>'+escapeHtml(item.symbol||item.kind||"SYSTEM")+'</strong><span>'+escapeHtml(String(item.action||"").toUpperCase())+'</span><p>'+escapeHtml(item.reason||item.message||"")+'</p></div>'
+  ).join(""):'<div class="command-empty">No decision changes recorded since the current bot process started.</div>';
+
+  const toggle=document.getElementById("cmdEntryToggle");
+  if(toggle){
+    toggle.disabled=false;
+    toggle.dataset.enabled=String(Boolean(bot.entries_enabled));
+    toggle.textContent=bot.entries_enabled?"Disable new entries":"Enable new entries";
+  }
+  const cancel=document.getElementById("cmdCancelOrders");
+  if(cancel)cancel.disabled=openOrders.length===0||positions.length>0;
+  const close=document.getElementById("cmdClosePosition");
+  if(close)close.disabled=positions.length===0;
+  const controlStatus=document.getElementById("cmdControlStatus");
+  if(controlStatus)controlStatus.textContent=bot.entries_enabled
+    ?"New entries are permitted when every strategy and risk condition passes."
+    :"New entries are disabled. Monitoring and existing-position management continue.";
+}
+
+async function refreshCommand(){
+  if(commandPollInFlight||currentRoute()!=="/command")return;
+  commandPollInFlight=true;
+  const error=document.getElementById("cmdError");
+  try{
+    const data=await commandApi("/status");
+    if(currentRoute()==="/command")renderCommandSnapshot(data);
+    if(error)error.textContent="";
+  }catch(err){
+    if(error)error.textContent=err.message;
+  }finally{
+    commandPollInFlight=false;
+  }
+}
+
+function bindCommand(){
+  if(!isCommandAdmin(loadSession()))return;
+  const toggle=document.getElementById("cmdEntryToggle");
+  toggle?.addEventListener("click",async()=>{
+    const enabled=toggle.dataset.enabled==="true";
+    const verb=enabled?"disable":"enable";
+    if(!confirm((enabled?"Disable":"Enable")+" new live entries? Monitoring and position management will continue."))return;
+    toggle.disabled=true;
+    try{
+      await commandApi("/entries/"+verb,{method:"POST",body:"{}"});
+      await refreshCommand();
+    }catch(err){
+      document.getElementById("cmdError").textContent=err.message;
+      toggle.disabled=false;
+    }
+  });
+  document.getElementById("cmdCancelOrders")?.addEventListener("click",async e=>{
+    if(!confirm("Cancel pending ANEVUM orders while the account is flat?"))return;
+    e.currentTarget.disabled=true;
+    try{await commandApi("/orders/cancel",{method:"POST",body:"{}"});await refreshCommand();}
+    catch(err){document.getElementById("cmdError").textContent=err.message;e.currentTarget.disabled=false;}
+  });
+  document.getElementById("cmdClosePosition")?.addEventListener("click",async e=>{
+    if(!confirm("Close the bot-managed live position at market? This also disables new entries."))return;
+    e.currentTarget.disabled=true;
+    try{await commandApi("/position/close",{method:"POST",body:"{}"});await refreshCommand();}
+    catch(err){document.getElementById("cmdError").textContent=err.message;e.currentTarget.disabled=false;}
+  });
+  refreshCommand();
+  commandPollTimer=setInterval(refreshCommand,3000);
+}
+
 function escapeHtml(value){
   return String(value??"").replace(/[&<>"']/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[ch]));
 }
 
 function render(){
+  stopCommandPolling();
   const route=currentRoute();
   let content;
   if(route==="/")content=home();
@@ -212,6 +476,7 @@ function render(){
   else if(route==="/lattice")content=latticePage();
   else if(route==="/store")content=storePage();
   else if(route==="/rhenlink")content=authPage();
+  else if(route==="/command")content=commandPage();
   else if(route==="/about")content=aboutPage();
   else if(route==="/contact")content=contactPage();
   else content=notFound();
@@ -219,7 +484,7 @@ function render(){
   bindShell();
   bindRoute();
   window.scrollTo(0,0);
-  document.title=(route==="/"?"ANEVUM":route==="/the-book"?"REPLY — ANEVUM":route.slice(1).toUpperCase()+" — ANEVUM");
+  document.title=(route==="/"?"ANEVUM":route==="/the-book"?"REPLY — ANEVUM":route==="/command"?"COMMAND — ANEVUM":route.slice(1).toUpperCase()+" — ANEVUM");
 }
 
 function navigate(route){
@@ -263,6 +528,10 @@ function bindShell(){
 }
 function bindRoute(){
   const route=currentRoute();
+  if(route==="/command"){
+    bindCommand();
+    return;
+  }
   if(route!=="/rhenlink")return;
   const session=loadSession();
   if(session?.user){
