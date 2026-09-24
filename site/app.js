@@ -60,7 +60,7 @@ function shell(content){
   '<button class="menu-button" id="menuButton" aria-label="Menu" aria-expanded="false">'+icons.menu+'</button></div></div>'+
   '<nav class="mobile-panel" id="mobilePanel" aria-label="Mobile navigation">'+mobile+'</nav></header>'+
   '<main id="main" class="page">'+content+'</main>'+
-  '<footer class="site-footer"><div class="footer-inner"><span>ANEVUM / 2026</span><div class="footer-links">'+
+  '<footer class="site-footer"><div class="footer-inner"><span>ANEVUM / IDEAS, GIVEN FORM.</span><div class="footer-links">'+
   '<a href="'+routeHref("/contact")+'" data-route="/contact">Contact</a>'+
   '<a href="mailto:devon@anevum.com">Email</a>'+
   '<a href="https://command.anevum.com">Command</a>'+
@@ -74,27 +74,26 @@ function button(label,route,secondary=false){
 }
 
 function home(){
-  return '<section class="hero">'+
-    '<div><p class="eyebrow">INDEPENDENT PUBLISHER · STORY UNIVERSE</p>'+
-    '<h1>ANEVUM<span>Current focus: REPLY.</span></h1>'+
-    '<p class="hero-deck">ANEVUM publishes original stories and builds the reader tools around them. The first priority is REPLY, The Transcosmic Book One; the Wiki, Lattice, RHENLINK, and Store exist to support the books rather than compete with them.</p>'+
-    '<div class="action-row">'+button("Open REPLY","/the-book")+button("Get release updates","/rhenlink",true)+'</div></div>'+
-    '<div class="hero-object" aria-hidden="true"><div class="gate"></div><div class="hero-object-copy"><strong>REPLY</strong><span>THE TRANSCOSMIC<br/>BOOK ONE</span></div></div>'+
+  return '<section class="hero hero-ideas">'+
+    '<div class="hero-copy"><p class="eyebrow">ANEVUM / INDEPENDENT PUBLISHER</p>'+
+    '<h1>Ideas,<span>given form.</span></h1>'+
+    '<p class="hero-deck">ANEVUM turns strong ideas into finished work. Books are the public core. The tools and systems around them exist to help the work go further—not to become a maze of separate brands.</p>'+
+    '<div class="action-row">'+button("Discover REPLY","/the-book")+button("What is ANEVUM?","/about",true)+'</div>'+
+    '<div class="hero-proof"><span>PUBLICATION 001</span><strong>REPLY</strong><em>THE TRANSCOSMIC · BOOK ONE</em></div></div>'+
+    '<div class="idea-object" aria-hidden="true"><div class="idea-halo halo-one"></div><div class="idea-halo halo-two"></div><div class="idea-axis"></div><div class="idea-core"></div><div class="idea-object-copy"><span>IDEA</span><span>WORK</span><span>RELEASE</span></div></div>'+
   '</section>'+
-  '<section class="status-strip" aria-label="ANEVUM current status">'+
-    '<div><span class="status-label">PUBLICATION</span><strong>REPLY / Book One</strong></div>'+
-    '<div><span class="status-label">READER SYSTEM</span><strong>RHENLINK connected</strong></div>'+
-    '<div><span class="status-label">SITE PRIORITY</span><strong>Useful first, cinematic second</strong></div>'+
-  '</section>'+
-  '<section class="section"><div class="section-head"><div><p class="section-kicker">USE THE SITE</p><h2>Everything has a job.</h2></div><p>No decorative dead ends. Each surface below should either help someone understand the book, explore released material, keep their place, or buy something real.</p></div>'+
-    '<div class="tool-grid">'+
-      toolCard("01","REPLY","Book details, story entry, publication status.","/the-book")+
-      toolCard("02","WIKI","Public reference material and released canon.","/wiki")+
-      toolCard("03","LATTICE","Explore relationships across the public universe.","/lattice")+
-      toolCard("04","RHENLINK","Account, release updates, identity and progress.","/rhenlink")+
+  '<section class="thesis-band"><p class="section-kicker">THE ANEVUM THESIS</p><h2>When the tools become abundant, choosing what deserves to exist matters more.</h2><p>AI can compress the cost of research, iteration, and production. It does not decide what is worth making or finish the work for us. ANEVUM is built around the part that remains scarce: ideas, judgment, and follow-through.</p></section>'+
+  '<section class="section reply-panel"><div class="book-card"><small>THE TRANSCOSMIC / BOOK ONE</small><strong>REPLY</strong><span>DEVON AKINS</span></div><div class="reply-copy"><p class="section-kicker">PUBLICATION 001</p><h2>The first idea we are taking all the way.</h2><p>REPLY is the current public priority: finish the book, make the release worth noticing, and give readers a clear path into The Transcosmic. Everything else on ANEVUM should support that job.</p><div class="action-row">'+button("Explore REPLY","/the-book")+button("Get release updates","/rhenlink",true)+'</div></div></section>'+
+  '<section class="section"><div class="section-head"><div><p class="section-kicker">ONE COMPANY</p><h2>Three layers. One direction.</h2></div><p>ANEVUM can experiment widely without making the public identity confusing. The rule is simple: the work at the center stays clear.</p></div>'+
+    '<div class="company-grid">'+
+      '<div class="company-pillar"><span>01 / PUBLIC CORE</span><h3>Publishing</h3><p>Books and finished stories come first. They are the product, the proof, and the reason the rest of the company exists.</p></div>'+
+      '<div class="company-pillar"><span>02 / READER LAYER</span><h3>World systems</h3><p>Wiki, Lattice, RHENLINK, and the Store deepen released work without asking the reader to understand the machinery behind it.</p></div>'+
+      '<div class="company-pillar"><span>03 / INTERNAL LAYER</span><h3>R&amp;D and operations</h3><p>Automation, analytics, financial tools, and other experiments help ANEVUM operate and compound. They stay internal until one earns a real public purpose.</p></div>'+
     '</div>'+
   '</section>'+
-  '<section class="section reply-panel"><div class="book-card"><small>THE TRANSCOSMIC / BOOK ONE</small><strong>REPLY</strong><span>DEVON AKINS</span></div><div class="reply-copy"><p class="section-kicker">PUBLICATION 001</p><h2>REPLY is the reason the site exists right now.</h2><p>The homepage does not need to explain the whole universe. It needs to get a reader to the book, let them understand what it is, let them ask to hear when it is available, and give interested readers somewhere deeper to go.</p><div class="action-row">'+button("Book page","/the-book")+button("Release updates","/rhenlink",true)+'</div></div></section>';
+  '<section class="section work-section"><div class="section-head"><div><p class="section-kicker">THE OPERATING RULE</p><h2>Ideas only matter when they become work.</h2></div><p>The site should reinforce the same sequence the company follows. No endless expansion before the current thing is finished.</p></div>'+
+    '<div class="work-cycle"><div><span>01</span><strong>IDEA</strong></div><div><span>02</span><strong>BUILD</strong></div><div><span>03</span><strong>FINISH</strong></div><div><span>04</span><strong>RELEASE</strong></div><div><span>05</span><strong>COMPOUND</strong></div></div>'+
+  '</section>';
 }
 function toolCard(num,title,copy,route){
   return '<a class="tool-card" href="'+routeHref(route)+'" data-route="'+route+'"><span class="num">'+num+'</span><h3>'+title+'</h3><p>'+copy+'</p><span class="card-link">Open '+icons.arrow+'</span></a>';
@@ -117,8 +116,9 @@ function storePage(){
   '<section class="route-section"><div class="empty-state"><strong>REPLY is the first store priority.</strong><br/>Verified edition and purchase links will be added here when they are live. Fourthwall merchandise remains secondary to getting the book right.</div></section>';
 }
 function aboutPage(){
-  return '<section class="route-hero"><p class="eyebrow">ABOUT ANEVUM</p><h1>Books first.</h1><p>ANEVUM is an independent publishing and creative company founded by Devon Akins. It develops stories, public world-reference tools, reader identity, and physical objects around finished creative work.</p></section>'+
-  '<section class="route-section"><div class="info-grid"><div class="info-card"><strong>Stories</strong><p>Finished books are the primary product and the source of truth for what deserves expansion.</p></div><div class="info-card"><strong>Reader tools</strong><p>Wiki, Lattice and RHENLINK help readers go deeper without forcing the story to become a manual.</p></div><div class="info-card"><strong>Objects</strong><p>Print editions and merchandise support the stories rather than becoming a separate brand maze.</p></div></div></section>';
+  return '<section class="route-hero"><p class="eyebrow">ABOUT ANEVUM</p><h1>Ideas, given form.</h1><p>ANEVUM is an independent publisher and creative company founded by Devon Akins. Its job is not to collect projects. Its job is to turn worthwhile ideas into finished work people can actually read, use, explore, or own.</p></section>'+
+  '<section class="route-section"><p class="section-kicker">WHAT COMES FIRST</p><h2>Publishing is the center.</h2><div class="company-grid company-grid-route"><div class="company-pillar"><span>STORIES</span><h3>Books</h3><p>Original fiction and nonfiction are the clearest public expression of ANEVUM. Finished releases outrank platform expansion.</p></div><div class="company-pillar"><span>SYSTEMS</span><h3>Reader infrastructure</h3><p>Wiki, Lattice, RHENLINK, and commerce exist to make the books easier to discover, understand, revisit, and support.</p></div><div class="company-pillar"><span>EXPERIMENTS</span><h3>Internal R&amp;D</h3><p>Software, automation, analytics, and financial systems can improve how the company operates. An experiment only becomes a public product when it has proven a reason to exist.</p></div></div></section>'+
+  '<section class="route-section"><div class="thesis-band compact"><p class="section-kicker">WHY IDEAS</p><h2>Making is getting cheaper. Deciding what is worth making is not.</h2><p>ANEVUM uses modern tools aggressively, including AI, but the standard is still human: choose well, develop deeply, finish the work, and put something real into the world.</p></div></section>';
 }
 function contactPage(){
   return '<section class="route-hero"><p class="eyebrow">CONTACT</p><h1>Reach ANEVUM.</h1><p>For reader questions, publishing inquiries, corrections, or support, use the public company email.</p><div class="action-row"><a class="button" href="mailto:devon@anevum.com">devon@anevum.com'+icons.arrow+'</a></div></section>';
