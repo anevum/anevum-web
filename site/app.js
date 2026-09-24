@@ -232,7 +232,20 @@ function render(){
   bindShell();
   bindRoute();
   window.scrollTo(0,0);
-  document.title=(route==="/"?"ANEVUM":route==="/the-book"?"REPLY — ANEVUM":route.slice(1).toUpperCase()+" — ANEVUM");
+  const titles={
+    "/":"ANEVUM — Ideas, given form.",
+    "/the-book":"REPLY — ANEVUM",
+    "/reply":"REPLY — ANEVUM",
+    "/stories/reply":"REPLY — ANEVUM",
+    "/explore":"Explore — ANEVUM",
+    "/wiki":"Wiki — ANEVUM",
+    "/lattice":"Lattice — ANEVUM",
+    "/store":"Store — ANEVUM",
+    "/rhenlink":"RHENLINK — ANEVUM",
+    "/about":"About — ANEVUM",
+    "/contact":"Contact — ANEVUM"
+  };
+  document.title=titles[route]||"ANEVUM";
 }
 
 function navigate(route){
