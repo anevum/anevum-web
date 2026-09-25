@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /command
+Disallow: /private
+Disallow: /rhenlink
+
+Sitemap: https://anevum.com/sitemap.xml

@@ -1,4 +1,5 @@
 const TRADER_BASE = "https://alpaca-trader-production-bf3e.up.railway.app";
+const PUBLIC_TRADING_FEED = "https://mfntzxheldzdvlokyntk.supabase.co/functions/v1/trading-public-feed";
 
 class ApiError extends Error {
   constructor(status, message) {
@@ -25,7 +26,7 @@ function bearerToken(request) {
 
 async function proxyTrader(request, upstreamPath) {
   const token = bearerToken(request);
-  if (!token) throw new ApiError(401, "Resolve RHENLINK before using COMMAND.");
+  if (!token) throw new ApiError(401, "Private authentication is required before using Command.");
 
   const response = await fetch(TRADER_BASE + upstreamPath, {
     method: request.method,
@@ -43,6 +44,22 @@ async function proxyTrader(request, upstreamPath) {
     catch { payload = { message: raw }; }
   }
   return jsonResponse(payload, response.status);
+}
+
+async function publicTradingFeed() {
+  const response = await fetch(PUBLIC_TRADING_FEED, {
+    method: "GET",
+    headers: { Accept: "application/json" }
+  });
+  const raw = await response.text();
+  return new Response(raw, {
+    status: response.status,
+    headers: {
+      "Content-Type": "application/json; charset=utf-8",
+      "Cache-Control": "public, max-age=2, s-maxage=2, stale-while-revalidate=3",
+      "X-Content-Type-Options": "nosniff"
+    }
+  });
 }
 
 async function commandApi(request, pathname) {
@@ -64,16 +81,16 @@ async function commandApi(request, pathname) {
   return null;
 }
 
-function withSecurityHeaders(response, pathname) {
+function withSecurityHeaders(response, pathname, hostname) {
   const headers = new Headers(response.headers);
   headers.set("X-Content-Type-Options", "nosniff");
   headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
   headers.set("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
   headers.set("Cross-Origin-Opener-Policy", "same-origin");
   headers.set("X-Frame-Options", "DENY");
-  const privateOrArchived = pathname.startsWith("/command") || pathname.startsWith("/rhenlink") || pathname.startsWith("/wiki") || pathname.startsWith("/lattice") || pathname.startsWith("/store") || pathname.startsWith("/reply") || pathname.startsWith("/the-book") || pathname.startsWith("/stories/");
-  if (privateOrArchived) headers.set("X-Robots-Tag", "noindex, nofollow, noarchive");
-  if (pathname.startsWith("/command")) headers.set("Cache-Control", "private, no-store");
+  const privateOrArchived = pathname.startsWith("/command") || pathname.startsWith("/private") || pathname.startsWith("/rhenlink") || pathname.startsWith("/wiki/archive") || pathname.startsWith("/lattice") || pathname.startsWith("/store") || pathname.startsWith("/reply") || pathname.startsWith("/the-book") || pathname.startsWith("/stories/");
+  if (privateOrArchived || hostname !== "anevum.com") headers.set("X-Robots-Tag", "noindex, nofollow, noarchive");
+  if (pathname.startsWith("/command") || pathname.startsWith("/private")) headers.set("Cache-Control", "private, no-store");
 
   return new Response(response.body, {
     status: response.status,
@@ -87,7 +104,19 @@ export default {
     const url = new URL(request.url);
     const pathname = url.pathname.replace(/\/+$/, "") || "/";
 
+    if (pathname === "/api/public/trading/live") {
+      if (request.method !== "GET") return jsonResponse({ message: "Method not allowed." }, 405);
+      try {
+        return await publicTradingFeed();
+      } catch (error) {
+        return jsonResponse({ message: error instanceof Error ? error.message : "Public trading feed failed." }, 502);
+      }
+    }
+
     if (pathname.startsWith("/api/command/trader/")) {
+      if (request.method !== "GET" && url.hostname !== "anevum.com") {
+        return jsonResponse({ message: "Live Command controls are disabled outside production." }, 403);
+      }
       try {
         const response = await commandApi(request, pathname);
         if (response) return response;
@@ -100,6 +129,6 @@ export default {
 
     const response = await env.ASSETS.fetch(request);
     if (!response.headers.get("content-type")?.includes("text/html")) return response;
-    return withSecurityHeaders(response, pathname);
+    return withSecurityHeaders(response, pathname, url.hostname);
   }
 };

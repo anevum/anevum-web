@@ -13,7 +13,7 @@ concurrency:
 jobs:
   verify:
     runs-on: ubuntu-latest
-    timeout-minutes: 8
+    timeout-minutes: 12
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -21,17 +21,62 @@ jobs:
           node-version: 22
       - name: Install
         run: npm install --no-audit --no-fund
-      - name: Check browser script
-        run: node --check site/app.js
-      - name: Build
+      - name: Typecheck and build
         run: npm run build
-      - name: Verify output
+      - name: Verify React and Cloudflare output
         shell: bash
         run: |
-          test -f dist/index.html
-          test -f dist/styles.css
-          test -f dist/app.js
-          grep -Fq '<title>ANEVUM — The Small-Capital Experiment</title>' dist/index.html
-          grep -Fq 'RHENLINK' dist/app.js
-          grep -Fq 'searchItems' dist/app.js\n          grep -Fq 'The record, not the pitch.' dist/app.js
-          grep -Fq 'Can a tiny account' dist/app.js
+          test -f dist/client/index.html
+          test -n "$(find dist -name wrangler.json -print -quit)"
+          grep -Fq 'ANEVUM' dist/client/index.html
+      - id: preview
+        if: github.event_name == 'pull_request'
+        name: Create or update Cloudflare Preview
+        shell: bash
+        run: |
+          set -o pipefail
+          output="$(npx wrangler preview --name "pr-${{ github.event.pull_request.number }}" --json)"
+          printf '%s\n' "$output"
+          json="$(printf '%s\n' "$output" | sed -n '/^{/,$p')"
+          preview_url="$(printf '%s' "$json" | jq -er '.preview.urls[0]')"
+          echo "preview_url=$preview_url" >> "$GITHUB_OUTPUT"
+          echo "### Cloudflare Preview" >> "$GITHUB_STEP_SUMMARY"
+          echo "$preview_url" >> "$GITHUB_STEP_SUMMARY"
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      - name: Probe preview routes and indexing policy
+        if: github.event_name == 'pull_request'
+        shell: bash
+        run: |
+          base="${{ steps.preview.outputs.preview_url }}"
+          for path in / /work /record /notes /wiki /private /command; do
+            curl --fail --show-error --silent "$base$path" > /dev/null
+          done
+          curl --fail --show-error --silent "$base/api/public/trading/live" | jq -e '.ok == true and .source == "canonical_trading_log" and (.equity | length > 0) and (.positions | all((.current_price == null or .current_price > 0) and (.current_price != null or .estimated_unrealized_pnl == null)))' > /dev/null
+          curl --fail --show-error --silent --head "$base/" | grep -qi 'x-robots-tag:.*noindex'
+      - name: Capture browser QA
+        if: github.event_name == 'pull_request'
+        shell: bash
+        run: |
+          base="${{ steps.preview.outputs.preview_url }}"
+          mkdir -p "$RUNNER_TEMP/anevum-visuals"
+          google-chrome --headless --no-sandbox --disable-gpu --hide-scrollbars --virtual-time-budget=5000 --window-size=1440,1200 --screenshot="$RUNNER_TEMP/anevum-visuals/home-desktop.png" "$base/"
+          google-chrome --headless --no-sandbox --disable-gpu --hide-scrollbars --virtual-time-budget=5000 --window-size=390,844 --screenshot="$RUNNER_TEMP/anevum-visuals/home-mobile.png" "$base/"
+          google-chrome --headless --no-sandbox --disable-gpu --hide-scrollbars --virtual-time-budget=5000 --window-size=1440,1200 --screenshot="$RUNNER_TEMP/anevum-visuals/current-desktop.png" "$base/#current"
+          google-chrome --headless --no-sandbox --disable-gpu --hide-scrollbars --virtual-time-budget=5000 --window-size=1440,1200 --screenshot="$RUNNER_TEMP/anevum-visuals/proof-desktop.png" "$base/#proof"
+          google-chrome --headless --no-sandbox --disable-gpu --hide-scrollbars --virtual-time-budget=5000 --window-size=390,844 --screenshot="$RUNNER_TEMP/anevum-visuals/current-mobile.png" "$base/#current"
+          google-chrome --headless --no-sandbox --disable-gpu --hide-scrollbars --virtual-time-budget=5000 --window-size=390,844 --screenshot="$RUNNER_TEMP/anevum-visuals/ideas-mobile.png" "$base/#ideas"
+          google-chrome --headless --no-sandbox --disable-gpu --hide-scrollbars --virtual-time-budget=5000 --window-size=390,844 --screenshot="$RUNNER_TEMP/anevum-visuals/other-mobile.png" "$base/#other"
+          google-chrome --headless --no-sandbox --disable-gpu --virtual-time-budget=5000 --dump-dom "$base/" > "$RUNNER_TEMP/anevum-visuals/home-rendered.html"
+          grep -Fq 'portal-frame' "$RUNNER_TEMP/anevum-visuals/home-rendered.html"
+          grep -Fq 'portal-view-home' "$RUNNER_TEMP/anevum-visuals/home-rendered.html"
+          grep -Fq 'CANONICAL LOG' "$RUNNER_TEMP/anevum-visuals/home-rendered.html"
+      - name: Upload browser QA
+        if: github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: anevum-preview-visuals
+          path: ${{ runner.temp }}/anevum-visuals
+          retention-days: 3
+
