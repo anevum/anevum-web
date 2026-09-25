@@ -120,3 +120,113 @@ export async function fetchCommandStatus(session: RhenSession): Promise<CommandS
 
   return payload;
 }
+
+
+export type LiveTradingAccount = {
+  observed_at?: string;
+  equity?: number | string;
+  last_equity?: number | string;
+  cash?: number | string;
+  buying_power?: number | string;
+  realized_pnl?: number | string | null;
+  unrealized_pnl?: number | string | null;
+  gross_exposure?: number | string;
+  net_exposure?: number | string;
+  drawdown_pct?: number | string;
+  open_positions?: number | string;
+};
+
+export type LiveScannerEvent = {
+  type?: string | null;
+  at?: string | null;
+  symbol?: string | null;
+  strategy_version?: string | null;
+  action?: string | null;
+  reason?: string | null;
+  quality_score?: number | null;
+  price?: number | null;
+  momentum_pct?: number | null;
+  vwap_edge_pct?: number | null;
+  spread_pct?: number | null;
+  bar_age_seconds?: number | null;
+  relative_volume_ratio?: number | null;
+  confirmation_passes?: number | null;
+  regime_passes?: number | null;
+};
+
+export type LivePosition = {
+  symbol?: string;
+  side?: string;
+  status?: string;
+  opened_at?: string;
+  qty?: number | string;
+  avg_entry_price?: number | string;
+  current_price?: number | string | null;
+  estimated_unrealized_pnl?: number | string | null;
+};
+
+export type LiveClosedPosition = {
+  symbol?: string;
+  side?: string;
+  status?: string;
+  opened_at?: string;
+  closed_at?: string;
+  qty?: number | string;
+  avg_entry_price?: number | string;
+  avg_exit_price?: number | string;
+  realized_pnl?: number | string;
+  net_pnl?: number | string;
+  exit_reason?: string;
+};
+
+export type LiveOrder = {
+  symbol?: string;
+  side?: string;
+  order_type?: string;
+  order_class?: string | null;
+  status?: string;
+  qty?: number | string;
+  filled_qty?: number | string;
+  filled_avg_price?: number | string;
+  submitted_at?: string;
+  filled_at?: string;
+  canceled_at?: string | null;
+};
+
+export type LiveTradingFeed = {
+  ok: boolean;
+  generated_at?: string;
+  source?: string;
+  live?: boolean;
+  freshness_seconds?: number | null;
+  account?: LiveTradingAccount | null;
+  equity?: PublicEquityRow[];
+  scanner?: {
+    at?: string | null;
+    symbols_evaluated?: number;
+    ready_symbols?: string[];
+    top_hold_reasons?: Array<{ reason: string; count: number }>;
+    candidates?: LiveScannerEvent[];
+  };
+  positions?: LivePosition[];
+  recent_closed_positions?: LiveClosedPosition[];
+  recent_orders?: LiveOrder[];
+  events?: LiveScannerEvent[];
+};
+
+export async function fetchLiveTradingFeed(): Promise<LiveTradingFeed> {
+  const response = await fetch("/api/public/trading/live", {
+    headers: { Accept: "application/json" },
+    cache: "no-store"
+  });
+  const payload = (await response.json().catch(() => ({}))) as LiveTradingFeed & {
+    message?: string;
+    error?: string;
+  };
+
+  if (!response.ok || !payload.ok) {
+    throw new Error(payload.message || payload.error || "Live trading feed unavailable.");
+  }
+
+  return payload;
+}
