@@ -14,25 +14,47 @@ export function PublicShell({ children }: { children: ReactNode }) {
   const [active, setActive] = useState("intro");
 
   useEffect(() => {
-    const root = document.querySelector(".deck-scroll");
-    const nodes = sections
-      .map(([id]) => document.getElementById(id))
-      .filter((node): node is HTMLElement => Boolean(node));
+    const root = document.querySelector<HTMLElement>(".deck-scroll");
+    if (!root) return;
 
-    if (!root || !nodes.length) return;
+    let frame = 0;
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const visible = entries
-          .filter((entry) => entry.isIntersecting)
-          .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
-        if (visible?.target.id) setActive(visible.target.id);
-      },
-      { root, threshold: [0.35, 0.55, 0.75] }
-    );
+    function update() {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => {
+        const nodes = sections
+          .map(([id]) => document.getElementById(id))
+          .filter((node): node is HTMLElement => Boolean(node));
 
-    nodes.forEach((node) => observer.observe(node));
-    return () => observer.disconnect();
+        if (!nodes.length) return;
+
+        const focus = root.scrollTop + root.clientHeight * 0.48;
+        let best = nodes[0];
+        let distance = Number.POSITIVE_INFINITY;
+
+        for (const node of nodes) {
+          const center = node.offsetTop + node.offsetHeight / 2;
+          const nextDistance = Math.abs(center - focus);
+          if (nextDistance < distance) {
+            best = node;
+            distance = nextDistance;
+          }
+        }
+
+        setActive(best.id);
+      });
+    }
+
+    root.addEventListener("scroll", update, { passive: true });
+    const mutations = new MutationObserver(update);
+    mutations.observe(root, { childList: true, subtree: true });
+    update();
+
+    return () => {
+      root.removeEventListener("scroll", update);
+      mutations.disconnect();
+      cancelAnimationFrame(frame);
+    };
   }, []);
 
   const current = Math.max(0, sections.findIndex(([id]) => id === active)) + 1;
