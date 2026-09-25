@@ -1,17 +1,18 @@
-import { useEffect } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { PublicShell } from "./components/Shell";
-import About from "./pages/About";
-import Archive from "./pages/Archive";
-import Command from "./pages/Command";
-import Home from "./pages/Home";
-import Lab from "./pages/Lab";
-import Notes from "./pages/Notes";
-import NotFound from "./pages/NotFound";
-import Record from "./pages/Record";
-import Rhenlink from "./pages/Rhenlink";
-import Wiki from "./pages/Wiki";
-import Work from "./pages/Work";
+
+const About = lazy(() => import("./pages/About"));
+const Archive = lazy(() => import("./pages/Archive"));
+const Command = lazy(() => import("./pages/Command"));
+const Home = lazy(() => import("./pages/Home"));
+const Lab = lazy(() => import("./pages/Lab"));
+const Notes = lazy(() => import("./pages/Notes"));
+const NotFound = lazy(() => import("./pages/NotFound"));
+const Record = lazy(() => import("./pages/Record"));
+const Rhenlink = lazy(() => import("./pages/Rhenlink"));
+const Wiki = lazy(() => import("./pages/Wiki"));
+const Work = lazy(() => import("./pages/Work"));
 
 const titles: Record<string, string> = {
   "/": "ANEVUM — Devon Akins",
@@ -37,30 +38,36 @@ function RouteEffects() {
   return null;
 }
 
+function RouteLoader() {
+  return <div className="route-loader"><span>ANEVUM</span><i /></div>;
+}
+
 function PublicRoutes() {
   return (
     <PublicShell>
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/work" element={<Work />} />
-        <Route path="/lab" element={<Lab />} />
-        <Route path="/record" element={<Record />} />
-        <Route path="/notes" element={<Notes />} />
-        <Route path="/wiki" element={<Wiki />} />
-        <Route path="/wiki/archive/transcosmic" element={<Archive />} />
-        <Route path="/about" element={<About />} />
-        <Route path="/rhenlink" element={<Rhenlink />} />
-        <Route path="/proof" element={<Navigate to="/record" replace />} />
-        <Route path="/research" element={<Navigate to="/lab" replace />} />
-        <Route path="/method" element={<Navigate to="/work" replace />} />
-        <Route path="/the-book" element={<Navigate to="/wiki/archive/transcosmic" replace />} />
-        <Route path="/reply" element={<Navigate to="/wiki/archive/transcosmic" replace />} />
-        <Route path="/stories/reply" element={<Navigate to="/wiki/archive/transcosmic" replace />} />
-        <Route path="/universe" element={<Navigate to="/wiki/archive/transcosmic" replace />} />
-        <Route path="/lattice" element={<Navigate to="/wiki/archive/transcosmic" replace />} />
-        <Route path="/store" element={<Navigate to="/wiki/archive/transcosmic" replace />} />
-        <Route path="*" element={<NotFound />} />
-      </Routes>
+      <Suspense fallback={<RouteLoader />}>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/work" element={<Work />} />
+          <Route path="/lab" element={<Lab />} />
+          <Route path="/record" element={<Record />} />
+          <Route path="/notes" element={<Notes />} />
+          <Route path="/wiki" element={<Wiki />} />
+          <Route path="/wiki/archive/transcosmic" element={<Archive />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/rhenlink" element={<Rhenlink />} />
+          <Route path="/proof" element={<Navigate to="/record" replace />} />
+          <Route path="/research" element={<Navigate to="/lab" replace />} />
+          <Route path="/method" element={<Navigate to="/work" replace />} />
+          <Route path="/the-book" element={<Navigate to="/wiki/archive/transcosmic" replace />} />
+          <Route path="/reply" element={<Navigate to="/wiki/archive/transcosmic" replace />} />
+          <Route path="/stories/reply" element={<Navigate to="/wiki/archive/transcosmic" replace />} />
+          <Route path="/universe" element={<Navigate to="/wiki/archive/transcosmic" replace />} />
+          <Route path="/lattice" element={<Navigate to="/wiki/archive/transcosmic" replace />} />
+          <Route path="/store" element={<Navigate to="/wiki/archive/transcosmic" replace />} />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </Suspense>
     </PublicShell>
   );
 }
@@ -71,7 +78,11 @@ export default function App() {
   return (
     <>
       <RouteEffects />
-      {location.pathname === "/command" ? <Command /> : <PublicRoutes />}
+      {location.pathname === "/command" ? (
+        <Suspense fallback={<RouteLoader />}><Command /></Suspense>
+      ) : (
+        <PublicRoutes />
+      )}
     </>
   );
 }
