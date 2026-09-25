@@ -1,7 +1,7 @@
 User-agent: *
 Allow: /
 Disallow: /command
+Disallow: /private
 Disallow: /rhenlink
-Disallow: /wiki/archive/
 
 Sitemap: https://anevum.com/sitemap.xml
