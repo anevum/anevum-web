@@ -1,9 +1,25 @@
 {
+  "id": "/",
   "name": "ANEVUM",
   "short_name": "ANEVUM",
+  "description": "Devon Akins's personal systems and live proof.",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
-  "background_color": "#070b12",
-  "theme_color": "#070b12",
-  "icons": []
+  "background_color": "#05080d",
+  "theme_color": "#05080d",
+  "icons": [
+    {
+      "src": "/anevum-touch-v3.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/favicon.svg?v=3",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
 }
