@@ -21,6 +21,7 @@ const navItems = [
   ["PROOF","/proof"],
   ["SYSTEM","/method"],
   ["RESEARCH","/research"],
+  ["WIKI","/wiki"],
   ["ABOUT","/about"]
 ];
 
@@ -29,6 +30,8 @@ const searchItems = [
   {title:"Proof Ledger",note:"Equity record, strategy versions, runs, and closed trades",route:"/proof"},
   {title:"System",note:"How ANEVUM observes, qualifies, risks, executes, and reviews",route:"/method"},
   {title:"Research",note:"What is being measured, tested, and improved",route:"/research"},
+  {title:"ANEVUM Wiki",note:"Working map of current systems, projects, decisions, and archives",route:"/wiki"},
+  {title:"Transcosmic Archive",note:"Preserved earlier publishing and Transcosmic material",route:"/wiki/archive/transcosmic"},
   {title:"Command",note:"Private operations portal and live bot telemetry",route:"/command"},
   {title:"RHENLINK",note:"ANEVUM identity and private access",route:"/rhenlink"},
   {title:"About ANEVUM",note:"Why one person is building this in public",route:"/about"},
@@ -181,17 +184,41 @@ function methodPage(){
   '</div></section>'+
   '<section class="route-section"><div class="boundary-grid"><article><span>PUBLIC</span><strong>Sanitized evidence</strong><p>Equity history, closed trades, strategy versions, and methodology can be published automatically.</p></article><article><span>PRIVATE</span><strong>Command</strong><p>Credentials, raw broker IDs, scanner internals, controls, and sensitive account state stay behind authenticated access.</p></article></div></section>';
 }
-function legacyFocusPage(label){
-  return '<section class="route-hero"><p class="eyebrow">CREATIVE ARCHIVE</p><h1>'+label+'</h1><p>ANEVUM’s earlier publishing and Transcosmic work is preserved. It is not being deleted; it is simply not the active operating focus of this site.</p><div class="action-row">'+button("Current experiment","/")+button("Proof ledger","/proof",true)+'</div></section>';
+function wikiCard(label,title,copy,route){
+  return '<a class="info-card" href="'+routeHref(route)+'" data-route="'+route+'"><span>'+label+'</span><strong>'+title+'</strong><p>'+copy+'</p></a>';
 }
-function bookPage(){return legacyFocusPage("REPLY");}
-function wikiPage(){return legacyFocusPage("Wiki");}
-function latticePage(){return legacyFocusPage("Lattice");}
-function storePage(){return legacyFocusPage("Store");}
+function wikiPage(){
+  return '<section class="route-hero"><p class="eyebrow">ANEVUM WIKI</p><h1>The working map of ANEVUM.</h1><p>ANEVUM is Devon Akins’s personal umbrella project and online home: a place to document active systems, experiments, decisions, projects, and the evidence they produce. Automated trading is the current primary build, not the permanent definition of ANEVUM.</p><div class="action-row">'+button("Current system","/method")+button("Open Command","/command",true)+'</div></section>'+
+  '<section class="route-section"><div class="section-head"><div><p class="section-kicker">CURRENT</p><h2>What ANEVUM is working on now.</h2></div><p>The wiki follows the work as it changes. Current material stays easy to find; retired directions move to Archive instead of being erased or left mixed into active documentation.</p></div><div class="info-grid">'+
+    wikiCard("ACTIVE","Automated Capital System","The current primary engineering project: market observation, qualification, risk, execution, telemetry, review, and controlled scaling.","/method")+
+    wikiCard("EVIDENCE","Proof Ledger","Canonical public account snapshots, closed trades, strategy versions, and experiment history.","/proof")+
+    wikiCard("RESEARCH","Trading Research","Measurements, hypotheses, execution questions, and the evidence required before claims or scaling.","/research")+
+    wikiCard("PRIVATE","Command","Authenticated operating console for the live bot, scanner, positions, orders, controls, and telemetry.","/command")+
+    wikiCard("IDENTITY","RHENLINK","The persistent ANEVUM identity and access layer used for preferences and permission-gated tools.","/rhenlink")+
+    wikiCard("ARCHIVE","Transcosmic","Earlier publishing, REPLY, worldbuilding, Wiki/Lattice, and related creative-site material preserved together in one archive.","/wiki/archive/transcosmic")+
+  '</div></section>'+
+  '<section class="route-section"><div class="boundary-grid"><article><span>ACTIVE</span><strong>Current source of truth</strong><p>Material that describes what ANEVUM is building, testing, or operating now.</p></article><article><span>ARCHIVE</span><strong>Preserved, not current</strong><p>Older projects and identities remain accessible without competing with present work.</p></article></div></section>'+
+  '<section class="route-section archive-note"><div><p class="section-kicker">OPERATING RULE</p><h2>Keep history. Keep the present clean.</h2></div><p>When ANEVUM changes direction, old work moves into a named archive rather than being deleted or silently rewritten. That keeps the site useful as both a current command map and a long-term record of what was built.</p></section>';
+}
+function transcosmicArchivePage(){
+  return '<section class="route-hero"><p class="eyebrow">WIKI / ARCHIVE / TRANSCOSMIC</p><h1>Transcosmic Archive</h1><p>This folder preserves ANEVUM’s earlier publishing identity and the public-facing material built around The Transcosmic. It is historical material, not the current definition or operating focus of ANEVUM.</p><div class="action-row">'+button("Back to Wiki","/wiki")+button("Current experiment","/",true)+'</div></section>'+
+  '<section class="route-section"><div class="section-head"><div><p class="section-kicker">ARCHIVED 2026-09-25</p><h2>One folder for the creative era.</h2></div><p>REPLY, The Transcosmic, the publishing-first ANEVUM identity, the old public Wiki/Lattice concept, and related store/release surfaces are grouped here instead of remaining scattered through active navigation.</p></div><div class="info-grid">'+
+    '<article class="info-card"><span>PUBLICATION</span><strong>REPLY</strong><p>The former intended first publication and public entry point into The Transcosmic.</p></article>'+
+    '<article class="info-card"><span>UNIVERSE</span><strong>The Transcosmic</strong><p>The shared fictional setting that previously anchored ANEVUM’s public identity.</p></article>'+
+    '<article class="info-card"><span>TOOLS</span><strong>Wiki + Lattice</strong><p>Earlier reader-reference and relationship-exploration concepts associated with released creative material.</p></article>'+
+    '<article class="info-card"><span>PUBLISHING</span><strong>ANEVUM Books</strong><p>The retired publisher-first framing. The publishing side can be renamed and separated later without losing its history.</p></article>'+
+    '<article class="info-card"><span>COMMERCE</span><strong>Store + Editions</strong><p>Earlier plans for book editions, release surfaces, and related creative products.</p></article>'+
+    '<article class="info-card"><span>STATUS</span><strong>Archived</strong><p>Preserved for continuity and possible future reuse. Nothing in this folder should be treated as the current ANEVUM operating model.</p></article>'+
+  '</div></section>'+
+  '<section class="route-section archive-note"><div><p class="section-kicker">PRESERVATION</p><h2>Archived does not mean abandoned.</h2></div><p>The material remains part of Devon Akins’s creative history and intellectual property. Moving it here separates it from the current ANEVUM project while keeping the work recoverable if the publishing side returns under a new name.</p></section>';
+}
+function bookPage(){return transcosmicArchivePage();}
+function latticePage(){return transcosmicArchivePage();}
+function storePage(){return transcosmicArchivePage();}
 function aboutPage(){
   return '<section class="route-hero about-experiment"><p class="eyebrow">ABOUT ANEVUM</p><h1>One person. Family capital. A system that has to prove itself.</h1><p>ANEVUM is an independent experiment founded by Devon Akins. Right now it is not a fund, brokerage, signal service, or outside-capital manager. It is a quantitative system being built to research and trade the founder’s own small family account—and to document what actually happens.</p></section>'+
   '<section class="route-section"><div class="info-grid"><div class="info-card"><span>WHY</span><strong>Grow capability before capital</strong><p>The first objective is a trustworthy process: automation, measurement, risk control, and reproducible evidence.</p></div><div class="info-card"><span>HOW</span><strong>Build in public</strong><p>Publish safe aggregate results and strategy history so claims can be checked against the record.</p></div><div class="info-card"><span>WHAT NEXT</span><strong>Let evidence decide</strong><p>If the system proves useful, software and research products can grow from it later. That decision has not been forced early.</p></div></div></section>'+
-  '<section class="route-section archive-note"><div><p class="section-kicker">THE CREATIVE WORK</p><h2>The Transcosmic is preserved.</h2></div><p>ANEVUM’s fiction, worldbuilding, and publishing material remains part of its archive and intellectual property. The current trading experiment does not require deleting years of creative work; it only changes what receives active operating attention now.</p></section>';
+  '<section class="route-section archive-note"><div><p class="section-kicker">HISTORY</p><h2>Past work has a home.</h2></div><p>Retired creative and publishing material is preserved in the Wiki Archive so ANEVUM can change direction without deleting its history or mixing obsolete material into current operations. <a href="'+routeHref("/wiki/archive/transcosmic")+'" data-route="/wiki/archive/transcosmic">Open the archive →</a></p></section>';
 }
 function contactPage(){
   return '<section class="route-hero"><p class="eyebrow">CONTACT</p><h1>Reach ANEVUM.</h1><p>For technical, research, media, or company inquiries, use the public ANEVUM email.</p><div class="action-row"><a class="button" href="mailto:devon@anevum.com">devon@anevum.com'+icons.arrow+'</a></div></section>';
@@ -881,10 +908,9 @@ function render(){
   else if(route==="/proof")content=proofPage();
   else if(route==="/research")content=researchPage();
   else if(route==="/method")content=methodPage();
-  else if(route==="/the-book"||route==="/reply"||route==="/stories/reply")content=bookPage();
   else if(route==="/wiki")content=wikiPage();
-  else if(route==="/lattice")content=latticePage();
-  else if(route==="/store")content=storePage();
+  else if(route==="/wiki/archive/transcosmic")content=transcosmicArchivePage();
+  else if(route==="/the-book"||route==="/reply"||route==="/stories/reply"||route==="/universe"||route==="/lattice"||route==="/store")content=transcosmicArchivePage();
   else if(route==="/rhenlink")content=authPage();
   else if(route==="/command")content=commandPage();
   else if(route==="/about")content=aboutPage();
@@ -902,7 +928,7 @@ function render(){
   bindRoute();
   if(route==="/"||route==="/proof")bindPublicExperiment();
   window.scrollTo(0,0);
-  document.title=(route==="/"?"ANEVUM — The Small-Capital Experiment":route==="/proof"?"PROOF LEDGER — ANEVUM":route==="/command"?"COMMAND — ANEVUM":route.slice(1).toUpperCase()+" — ANEVUM");
+  document.title=(route==="/"?"ANEVUM — The Small-Capital Experiment":route==="/proof"?"PROOF LEDGER — ANEVUM":route==="/wiki"?"WIKI — ANEVUM":route==="/wiki/archive/transcosmic"?"TRANSCOSMIC ARCHIVE — ANEVUM":route==="/command"?"COMMAND — ANEVUM":route.slice(1).toUpperCase()+" — ANEVUM");
 }
 
 function navigate(route){
