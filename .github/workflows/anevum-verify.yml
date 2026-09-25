@@ -66,8 +66,8 @@ jobs:
           google-chrome --headless --no-sandbox --disable-gpu --hide-scrollbars --virtual-time-budget=5000 --window-size=1440,1200 --screenshot="$RUNNER_TEMP/anevum-visuals/proof-desktop.png" "$base/#proof"
           google-chrome --headless --no-sandbox --disable-gpu --hide-scrollbars --virtual-time-budget=5000 --window-size=390,844 --screenshot="$RUNNER_TEMP/anevum-visuals/current-mobile.png" "$base/#current"
           google-chrome --headless --no-sandbox --disable-gpu --virtual-time-budget=5000 --dump-dom "$base/" > "$RUNNER_TEMP/anevum-visuals/home-rendered.html"
-          grep -Fq 'Here&#39;s what' "$RUNNER_TEMP/anevum-visuals/home-rendered.html"
           grep -Fq 'portal-frame' "$RUNNER_TEMP/anevum-visuals/home-rendered.html"
+          grep -Fq 'portal-view-home' "$RUNNER_TEMP/anevum-visuals/home-rendered.html"
       - name: Upload browser QA
         if: github.event_name == 'pull_request'
         uses: actions/upload-artifact@v4
