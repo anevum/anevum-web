@@ -408,6 +408,11 @@ button{color:inherit}
   .auth-explainer>div{grid-template-columns:35px 1fr}
   .auth-explainer p{grid-column:2}
 }
+
+.route-loader{min-height:42vh;display:flex;align-items:center;justify-content:center;gap:12px;color:#5f6e7a;font-size:.58rem;letter-spacing:.17em}
+.route-loader i{width:5px;height:5px;border-radius:50%;background:var(--blue);animation:anevum-pulse 1.2s ease-in-out infinite}
+@keyframes anevum-pulse{0%,100%{opacity:.28;transform:scale(.8)}50%{opacity:1;transform:scale(1.15)}}
+
 @media(prefers-reduced-motion:reduce){
   html{scroll-behavior:auto}
   *,*:before,*:after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important}
