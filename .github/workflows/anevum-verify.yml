@@ -45,15 +45,31 @@ jobs:
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-      - name: Probe preview routes and indexing policy
+      - name: Probe preview routes and public privacy contract
         if: github.event_name == 'pull_request'
         shell: bash
         run: |
           base="${{ steps.preview.outputs.preview_url }}"
-          for path in / /work /record /notes /wiki /private /command; do
+          for path in / /private /command; do
             curl --fail --show-error --silent "$base$path" > /dev/null
           done
-          curl --fail --show-error --silent "$base/api/public/trading/live" | jq -e '.ok == true and .source == "canonical_trading_log" and (.equity | length > 0) and (.positions | all((.current_price == null or .current_price > 0) and (.current_price != null or .estimated_unrealized_pnl == null)))' > /dev/null
+
+          feed="$(curl --fail --show-error --silent "$base/api/public/trading/live")"
+          printf '%s' "$feed" | jq -e '
+            .ok == true and
+            .source == "anevum_public_telemetry" and
+            (.telemetry | type == "object") and
+            (.events | type == "array") and
+            (has("account") | not) and
+            (has("positions") | not) and
+            (has("recent_closed_positions") | not) and
+            (has("recent_orders") | not) and
+            (has("equity") | not) and
+            ([.events[] | has("symbol")] | any | not) and
+            ([.events[] | has("price")] | any | not) and
+            ([.events[] | has("reason")] | any | not)
+          ' > /dev/null
+
           curl --fail --show-error --silent --head "$base/" | grep -qi 'x-robots-tag:.*noindex'
       - name: Capture browser QA
         if: github.event_name == 'pull_request'
@@ -61,17 +77,15 @@ jobs:
         run: |
           base="${{ steps.preview.outputs.preview_url }}"
           mkdir -p "$RUNNER_TEMP/anevum-visuals"
-          google-chrome --headless --no-sandbox --disable-gpu --hide-scrollbars --virtual-time-budget=5000 --window-size=1440,1200 --screenshot="$RUNNER_TEMP/anevum-visuals/home-desktop.png" "$base/"
-          google-chrome --headless --no-sandbox --disable-gpu --hide-scrollbars --virtual-time-budget=5000 --window-size=390,844 --screenshot="$RUNNER_TEMP/anevum-visuals/home-mobile.png" "$base/"
-          google-chrome --headless --no-sandbox --disable-gpu --hide-scrollbars --virtual-time-budget=5000 --window-size=1440,1200 --screenshot="$RUNNER_TEMP/anevum-visuals/current-desktop.png" "$base/#current"
-          google-chrome --headless --no-sandbox --disable-gpu --hide-scrollbars --virtual-time-budget=5000 --window-size=1440,1200 --screenshot="$RUNNER_TEMP/anevum-visuals/proof-desktop.png" "$base/#proof"
-          google-chrome --headless --no-sandbox --disable-gpu --hide-scrollbars --virtual-time-budget=5000 --window-size=390,844 --screenshot="$RUNNER_TEMP/anevum-visuals/current-mobile.png" "$base/#current"
-          google-chrome --headless --no-sandbox --disable-gpu --hide-scrollbars --virtual-time-budget=5000 --window-size=390,844 --screenshot="$RUNNER_TEMP/anevum-visuals/ideas-mobile.png" "$base/#ideas"
-          google-chrome --headless --no-sandbox --disable-gpu --hide-scrollbars --virtual-time-budget=5000 --window-size=390,844 --screenshot="$RUNNER_TEMP/anevum-visuals/other-mobile.png" "$base/#other"
-          google-chrome --headless --no-sandbox --disable-gpu --virtual-time-budget=5000 --dump-dom "$base/" > "$RUNNER_TEMP/anevum-visuals/home-rendered.html"
-          grep -Fq 'portal-frame' "$RUNNER_TEMP/anevum-visuals/home-rendered.html"
-          grep -Fq 'portal-view-home' "$RUNNER_TEMP/anevum-visuals/home-rendered.html"
-          grep -Fq 'CANONICAL LOG' "$RUNNER_TEMP/anevum-visuals/home-rendered.html"
+          google-chrome --headless --no-sandbox --disable-gpu --hide-scrollbars --virtual-time-budget=6000 --window-size=1440,1200 --screenshot="$RUNNER_TEMP/anevum-visuals/home-desktop.png" "$base/#top"
+          google-chrome --headless --no-sandbox --disable-gpu --hide-scrollbars --virtual-time-budget=6000 --window-size=390,844 --screenshot="$RUNNER_TEMP/anevum-visuals/home-mobile.png" "$base/#top"
+          google-chrome --headless --no-sandbox --disable-gpu --hide-scrollbars --virtual-time-budget=6000 --window-size=1440,1200 --screenshot="$RUNNER_TEMP/anevum-visuals/demo-desktop.png" "$base/#demo"
+          google-chrome --headless --no-sandbox --disable-gpu --hide-scrollbars --virtual-time-budget=6000 --window-size=390,844 --screenshot="$RUNNER_TEMP/anevum-visuals/demo-mobile.png" "$base/#demo"
+          google-chrome --headless --no-sandbox --disable-gpu --virtual-time-budget=6000 --dump-dom "$base/" > "$RUNNER_TEMP/anevum-visuals/home-rendered.html"
+          grep -Fq 'public-frame' "$RUNNER_TEMP/anevum-visuals/home-rendered.html"
+          grep -Fq 'landing-hero' "$RUNNER_TEMP/anevum-visuals/home-rendered.html"
+          grep -Fq 'ANEVUM // PUBLIC CONSOLE' "$RUNNER_TEMP/anevum-visuals/home-rendered.html"
+          grep -Fq 'PUBLIC / SANITIZED' "$RUNNER_TEMP/anevum-visuals/home-rendered.html"
       - name: Upload browser QA
         if: github.event_name == 'pull_request'
         uses: actions/upload-artifact@v4
@@ -79,4 +93,3 @@ jobs:
           name: anevum-preview-visuals
           path: ${{ runner.temp }}/anevum-visuals
           retention-days: 3
-
