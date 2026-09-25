@@ -74,10 +74,12 @@ export default function PrivateAccess() {
     const form = new FormData(event.currentTarget);
     setStatus("Creating private account…");
     try {
+      const email = String(form.get("email") || "");
+      const displayName = String(form.get("displayName") || "");
       const complete = await signUp({
-        displayName: String(form.get("displayName") || ""),
-        handle: String(form.get("handle") || ""),
-        email: String(form.get("email") || ""),
+        displayName,
+        handle: email.split("@")[0].toLowerCase().replace(/[^a-z0-9_-]/g, "") || displayName.toLowerCase().replace(/[^a-z0-9_-]/g, ""),
+        email,
         password: String(form.get("password") || "")
       });
       if (!complete) {
@@ -117,7 +119,6 @@ export default function PrivateAccess() {
         ) : (
           <form className="private-form" onSubmit={submitCreate}>
             <label><span>Name</span><input name="displayName" autoComplete="name" required /></label>
-            <label><span>Handle</span><input name="handle" autoComplete="username" autoCapitalize="none" required /></label>
             <label><span>Email</span><input name="email" type="email" autoComplete="email" required /></label>
             <label><span>Password</span><input name="password" type="password" minLength={8} autoComplete="new-password" required /></label>
             <button className="private-primary" type="submit">Create account <b>↗</b></button>
