@@ -17,20 +17,19 @@ function mark(){
 }
 
 const navItems = [
-  ["REPLY","/the-book"],
-  ["WIKI","/wiki"],
-  ["LATTICE","/lattice"],
-  ["STORE","/store"],
+  ["SYSTEM","/"],
+  ["RESEARCH","/research"],
+  ["METHOD","/method"],
   ["ABOUT","/about"]
 ];
 
 const searchItems = [
-  {title:"REPLY",note:"The Transcosmic / Book One",route:"/the-book"},
-  {title:"Public Wiki",note:"Released people, places, ideas and records",route:"/wiki"},
-  {title:"Lattice",note:"Relational discovery layer",route:"/lattice"},
-  {title:"Store",note:"Books and ANEVUM objects",route:"/store"},
-  {title:"RHENLINK",note:"Account, release updates and reader identity",route:"/rhenlink"},
-  {title:"About ANEVUM",note:"What ANEVUM is and what it is building",route:"/about"},
+  {title:"System",note:"How the ANEVUM trading system is structured",route:"/"},
+  {title:"Research",note:"What is being measured, tested, and improved",route:"/research"},
+  {title:"Method",note:"Rules, risk controls, execution, and review",route:"/method"},
+  {title:"Command",note:"Private operations portal and live telemetry",route:"/command"},
+  {title:"RHENLINK",note:"ANEVUM identity and development preferences",route:"/rhenlink"},
+  {title:"About ANEVUM",note:"Independent quantitative trading and research",route:"/about"},
   {title:"Contact",note:"Reach ANEVUM directly",route:"/contact"}
 ];
 
@@ -53,18 +52,18 @@ function shell(content){
   const mobile = navItems.map(([label,route])=>'<a class="nav-link" href="'+routeHref(route)+'" data-route="'+route+'"><span>'+label+'</span>'+icons.arrow+'</a>').join("");
   return '<a class="skip-link" href="#main">Skip to content</a>'+
   '<header class="site-header"><div class="header-inner">'+
-  '<a class="brand" href="'+routeHref("/")+'" data-route="/">'+mark()+'<strong>ANEVUM</strong></a>'+
+  '<a class="brand" href="'+routeHref("/")+'" data-route="/">'+mark()+'<strong>ANEVUM</strong><span class="brand-mode">SYSTEMS</span></a>'+
   '<nav class="primary-nav" aria-label="Primary">'+desktop+'</nav>'+
   '<div class="header-actions"><button class="icon-button" id="searchButton" aria-label="Search">'+icons.search+'</button>'+
   '<a class="rhenlink-button" href="'+routeHref("/rhenlink")+'" data-route="/rhenlink">'+icons.user+'<span>RHENLINK</span></a>'+
   '<button class="menu-button" id="menuButton" aria-label="Menu" aria-expanded="false">'+icons.menu+'</button></div></div>'+
   '<nav class="mobile-panel" id="mobilePanel" aria-label="Mobile navigation">'+mobile+'</nav></header>'+
   '<main id="main" class="page">'+content+'</main>'+
-  '<footer class="site-footer"><div class="footer-inner"><span>ANEVUM / 2026</span><div class="footer-links">'+
+  '<footer class="site-footer"><div class="footer-inner"><div><strong>ANEVUM</strong><span>Systematic trading research and automated execution.</span></div><div class="footer-links">'+
+  '<a href="'+routeHref("/research")+'" data-route="/research">Research</a>'+
+  '<a href="'+routeHref("/method")+'" data-route="/method">Method</a>'+
   '<a href="'+routeHref("/contact")+'" data-route="/contact">Contact</a>'+
-  '<a href="mailto:devon@anevum.com">Email</a>'+
-  '<a href="/command" data-route="/command">Command</a>'+
-  '<a href="'+routeHref("/rhenlink")+'" data-route="/rhenlink">RHENLINK</a></div></div></footer>'+
+  '<a href="/command" data-route="/command">Command</a></div><small>Trading involves risk. Public pages do not display private account data or imply guaranteed returns.</small></div></footer>'+
   '<div class="search-panel" id="searchPanel" role="dialog" aria-modal="true" aria-label="Search ANEVUM">'+
   '<div class="search-box"><div class="search-top"><input id="searchInput" autocomplete="off" placeholder="Search ANEVUM…" aria-label="Search ANEVUM"/><button class="icon-button" id="searchClose" aria-label="Close search">'+icons.close+'</button></div><div class="search-results" id="searchResults"></div></div></div>';
 }
@@ -89,54 +88,77 @@ function button(label,route,secondary=false){
 }
 
 function home(){
-  return '<section class="hero">'+
-    '<div><p class="eyebrow">INDEPENDENT PUBLISHER · STORY UNIVERSE</p>'+
-    '<h1>ANEVUM<span>Current focus: REPLY.</span></h1>'+
-    '<p class="hero-deck">ANEVUM publishes original stories and builds the reader tools around them. The first priority is REPLY, The Transcosmic Book One; the Wiki, Lattice, RHENLINK, and Store exist to support the books rather than compete with them.</p>'+
-    '<div class="action-row">'+button("Open REPLY","/the-book")+button("Get release updates","/rhenlink",true)+'</div></div>'+
-    '<div class="hero-object" aria-hidden="true"><div class="gate"></div><div class="hero-object-copy"><strong>REPLY</strong><span>THE TRANSCOSMIC<br/>BOOK ONE</span></div></div>'+
-  '</section>'+
-  '<section class="status-strip" aria-label="ANEVUM current status">'+
-    '<div><span class="status-label">PUBLICATION</span><strong>REPLY / Book One</strong></div>'+
-    '<div><span class="status-label">READER SYSTEM</span><strong>RHENLINK connected</strong></div>'+
-    '<div><span class="status-label">SITE PRIORITY</span><strong>Useful first, cinematic second</strong></div>'+
-  '</section>'+
-  '<section class="section"><div class="section-head"><div><p class="section-kicker">USE THE SITE</p><h2>Everything has a job.</h2></div><p>No decorative dead ends. Each surface below should either help someone understand the book, explore released material, keep their place, or buy something real.</p></div>'+
-    '<div class="tool-grid">'+
-      toolCard("01","REPLY","Book details, story entry, publication status.","/the-book")+
-      toolCard("02","WIKI","Public reference material and released canon.","/wiki")+
-      toolCard("03","LATTICE","Explore relationships across the public universe.","/lattice")+
-      toolCard("04","RHENLINK","Account, release updates, identity and progress.","/rhenlink")+
+  return '<section class="quant-hero">'+
+    '<div class="quant-hero-copy"><p class="eyebrow">ANEVUM / SYSTEMATIC TRADING</p>'+
+    '<h1>Build the system.<br/><span>Measure everything.</span></h1>'+
+    '<p class="hero-deck">ANEVUM develops automated trading systems that turn market data into rules-based decisions, risk-controlled execution, and a recorded feedback loop. The objective is not prediction. It is a process that can be tested, audited, and improved.</p>'+
+    '<div class="action-row">'+button("Explore the research","/research")+button("Private Command","/command",true)+'</div>'+
+    '<div class="hero-principles"><span><b>01</b> OBSERVE</span><span><b>02</b> QUALIFY</span><span><b>03</b> EXECUTE</span><span><b>04</b> REVIEW</span></div></div>'+
+    '<div class="quant-terminal" aria-label="ANEVUM system overview">'+
+      '<div class="terminal-top"><span><i></i> ACTIVE BUILD</span><b>LIVE-CAPITAL TESTING</b></div>'+
+      '<div class="terminal-chart"><svg viewBox="0 0 640 260" role="img" aria-label="Decorative market signal trace"><path class="gridline" d="M0 52H640M0 104H640M0 156H640M0 208H640M106 0V260M212 0V260M318 0V260M424 0V260M530 0V260"/><path class="trace-shadow" d="M0 201 C55 194 72 170 112 176 S178 214 220 168 S282 116 320 132 S376 166 420 120 S492 76 530 96 S590 54 640 66"/><path class="trace" d="M0 201 C55 194 72 170 112 176 S178 214 220 168 S282 116 320 132 S376 166 420 120 S492 76 530 96 S590 54 640 66"/><circle cx="640" cy="66" r="5"/></svg></div>'+
+      '<div class="terminal-readout"><div><span>BROKER</span><strong>ALPACA</strong></div><div><span>UNIVERSE</span><strong>U.S. EQUITIES</strong></div><div><span>EXECUTION</span><strong>AUTOMATED</strong></div><div><span>CONTROL</span><strong>COMMAND</strong></div></div>'+
     '</div>'+
   '</section>'+
-  '<section class="section reply-panel"><div class="book-card"><small>THE TRANSCOSMIC / BOOK ONE</small><strong>REPLY</strong><span>DEVON AKINS</span></div><div class="reply-copy"><p class="section-kicker">PUBLICATION 001</p><h2>REPLY is the reason the site exists right now.</h2><p>The homepage does not need to explain the whole universe. It needs to get a reader to the book, let them understand what it is, let them ask to hear when it is available, and give interested readers somewhere deeper to go.</p><div class="action-row">'+button("Book page","/the-book")+button("Release updates","/rhenlink",true)+'</div></div></section>';
+  '<section class="status-strip" aria-label="ANEVUM operating model">'+
+    '<div><span class="status-label">RESEARCH</span><strong>Signal quality before scale</strong></div>'+
+    '<div><span class="status-label">RISK</span><strong>Capital protection is part of the strategy</strong></div>'+
+    '<div><span class="status-label">OPERATIONS</span><strong>Every decision leaves telemetry</strong></div>'+
+  '</section>'+
+  '<section class="section system-section"><div class="section-head"><div><p class="section-kicker">THE LOOP</p><h2>One closed system.</h2></div><p>Each layer exists to answer a specific question. What is happening? Does it match the setup? How much can be risked? What happened after execution? What should change next?</p></div>'+
+    '<div class="system-loop">'+
+      systemCard("01","Market data","Observe price, volume, spread, trend, momentum, and session context without forcing a trade.")+
+      systemCard("02","Signal engine","Translate observations into explicit conditions. A setup either qualifies or it does not.")+
+      systemCard("03","Risk gates","Limit exposure, entries, losses, and position sizing before an order can exist.")+
+      systemCard("04","Execution","Send and manage orders through the broker only after strategy and risk conditions pass.")+
+      systemCard("05","Telemetry","Record scans, decisions, orders, fills, P&L, errors, and system state.")+
+      systemCard("06","Research loop","Use completed runs to test assumptions, identify failure modes, and revise the strategy.")+
+    '</div>'+
+  '</section>'+
+  '<section class="section thesis-section"><div><p class="section-kicker">OPERATING PRINCIPLE</p><h2>The edge is not a prediction.<br/>It is disciplined iteration.</h2></div><div class="thesis-copy"><p>A profitable system cannot be inferred from a few trades. ANEVUM treats live results as evidence to be accumulated, not marketing material. The work is to improve expectancy, execution quality, robustness, and risk control without confusing activity with progress.</p><a href="'+routeHref("/method")+'" data-route="/method">Read the operating method '+icons.arrow+'</a></div></section>'+
+  '<section class="section public-private"><div class="section-head"><div><p class="section-kicker">PUBLIC / PRIVATE</p><h2>Show the work. Protect the account.</h2></div><p>The public site explains the system and research discipline. Live capital, order controls, raw strategy telemetry, and account-level details remain inside the protected Command portal.</p></div>'+
+    '<div class="boundary-grid"><article><span>PUBLIC</span><strong>Research framework</strong><p>Architecture, principles, development notes, and what ANEVUM is testing.</p></article><article><span>PRIVATE</span><strong>Command</strong><p>Broker balances, live positions, scanner state, fills, controls, and execution telemetry.</p></article></div>'+
+  '</section>';
 }
-function toolCard(num,title,copy,route){
-  return '<a class="tool-card" href="'+routeHref(route)+'" data-route="'+route+'"><span class="num">'+num+'</span><h3>'+title+'</h3><p>'+copy+'</p><span class="card-link">Open '+icons.arrow+'</span></a>';
+function systemCard(num,title,copy){
+  return '<article class="system-card"><span>'+num+'</span><h3>'+title+'</h3><p>'+copy+'</p></article>';
 }
-function bookPage(){
-  return '<section class="route-hero"><p class="eyebrow">THE TRANSCOSMIC / BOOK ONE</p><h1>REPLY</h1><p>ANEVUM’s first publication. Release details will be shown here only when they are locked and useful to readers.</p><div class="action-row">'+button("Get release updates","/rhenlink")+button("Explore the public Wiki","/wiki",true)+'</div></section>'+
-  '<section class="route-section"><div class="info-grid"><div class="info-card"><span>AUTHOR</span><strong>Devon Akins</strong><p>Founder of ANEVUM and author of REPLY.</p></div><div class="info-card"><span>SERIES</span><strong>The Transcosmic</strong><p>Book One is the public entry point.</p></div><div class="info-card"><span>STATUS</span><strong>Release preparation</strong><p>Purchase links appear only when there is a verified place to buy the finished edition.</p></div></div></section>'+
-  '<section class="route-section"><h2>What this page will do.</h2><div class="info-grid"><div class="info-card"><strong>Understand the book</strong><p>Clear synopsis, genre, themes, edition details and spoiler-light entry.</p></div><div class="info-card"><strong>Read or buy</strong><p>Excerpt and purchase actions become primary as soon as they are available.</p></div><div class="info-card"><strong>Stay connected</strong><p>RHENLINK stores release-update preference so readers do not have to keep checking the site.</p></div></div></section>';
+function researchPage(){
+  return '<section class="route-hero research-hero"><p class="eyebrow">RESEARCH</p><h1>Test the process, not the story.</h1><p>ANEVUM is currently focused on short-horizon U.S. equity systems. The active work studies rolling momentum, price relative to VWAP, confirmation signals, execution quality, and risk constraints as one integrated process.</p></section>'+
+  '<section class="route-section"><div class="section-head"><div><p class="section-kicker">MEASUREMENT</p><h2>What matters after the trade.</h2></div><p>A result is useful only when it can be compared across enough observations to separate signal from noise.</p></div><div class="metric-grid">'+
+    '<article><strong>Expectancy</strong><p>Average outcome per trade after wins, losses, and costs.</p></article>'+
+    '<article><strong>Payoff ratio</strong><p>Average win relative to average loss, not win rate in isolation.</p></article>'+
+    '<article><strong>Drawdown</strong><p>How much capital the system gives back before recovering.</p></article>'+
+    '<article><strong>Slippage</strong><p>The gap between modeled entry or exit and the actual fill.</p></article>'+
+    '<article><strong>Exposure</strong><p>How much capital and time are placed at risk across concurrent positions.</p></article>'+
+    '<article><strong>Throughput</strong><p>How often qualified opportunities appear without lowering standards to create activity.</p></article>'+
+  '</div></section>'+
+  '<section class="route-section research-note"><p class="section-kicker">CURRENT PHASE</p><h2>Live-capital testing is data collection.</h2><p>The system is being evaluated with real fills and real constraints, but early gains or losses are not treated as proof of a durable edge. Scaling belongs after a strategy demonstrates repeatability across a meaningful sample and under realistic execution costs.</p></section>';
 }
-function wikiPage(){
-  return '<section class="route-hero"><p class="eyebrow">PUBLIC KNOWLEDGE</p><h1>Wiki</h1><p>The public Wiki is for material that has actually been released. Private development canon stays private until publication makes it appropriate to expose.</p><div class="action-row"><a class="button" href="https://wiki.anevum.com">Open wiki.anevum.com'+icons.arrow+'</a></div></section>'+
-  '<section class="route-section"><h2>Built for reference, not spoilers.</h2><div class="info-grid"><div class="info-card"><strong>Searchable</strong><p>Readers should be able to find a person, place, institution, technology, event, or concept quickly.</p></div><div class="info-card"><strong>Release-gated</strong><p>Public pages should reflect what the books have earned the right to reveal.</p></div><div class="info-card"><strong>Connected</strong><p>Wiki records feed naturally into Lattice rather than becoming two conflicting sources of truth.</p></div></div></section>';
+function methodPage(){
+  return '<section class="route-hero"><p class="eyebrow">METHOD</p><h1>Rules before orders.</h1><p>ANEVUM separates market observation, strategy qualification, risk authorization, broker execution, and post-trade review so a failure in one layer is visible instead of hidden inside a single black box.</p></section>'+
+  '<section class="route-section"><div class="method-stack">'+
+    '<article><span>01 / OBSERVE</span><h2>Read the market.</h2><p>Collect the data needed by the strategy and reject incomplete or stale inputs.</p></article>'+
+    '<article><span>02 / QUALIFY</span><h2>Require a setup.</h2><p>Signals must satisfy defined conditions. The scanner can watch continuously without manufacturing a reason to trade.</p></article>'+
+    '<article><span>03 / AUTHORIZE</span><h2>Pass risk gates.</h2><p>Position sizing, loss limits, entry limits, funding state, and execution state are checked before an order is allowed.</p></article>'+
+    '<article><span>04 / EXECUTE</span><h2>Use the broker deliberately.</h2><p>Orders are tagged, tracked, and reconciled against broker state. The execution layer does not rewrite the strategy after the fact.</p></article>'+
+    '<article><span>05 / REVIEW</span><h2>Learn from completed runs.</h2><p>Telemetry links the signal, decision, order, fill, and outcome so changes can be based on evidence rather than memory.</p></article>'+
+  '</div></section>'+
+  '<section class="route-section"><div class="boundary-grid"><article><span>NON-NEGOTIABLE</span><strong>No guaranteed-return logic</strong><p>No strategy can guarantee a target balance or remove market risk. ANEVUM optimizes process quality and risk-adjusted results, not promises.</p></article><article><span>SCALING RULE</span><strong>Evidence before capital</strong><p>Increase complexity, symbols, or capital only when the data supports the change and the failure modes are understood.</p></article></div></section>';
 }
-function latticePage(){
-  return '<section class="route-hero"><p class="eyebrow">RELATIONAL EXPLORATION</p><h1>Lattice</h1><p>Lattice is the navigable relationship layer around released ANEVUM material: not another lore dump, but a way to see how public records connect.</p><div class="action-row"><a class="button" href="https://lattice.anevum.com">Open Lattice'+icons.arrow+'</a>'+button("Open Wiki","/wiki",true)+'</div></section>'+
-  '<section class="route-section"><h2>The job of Lattice.</h2><div class="info-grid"><div class="info-card"><strong>See relationships</strong><p>Move from one released record to related people, places, events and ideas.</p></div><div class="info-card"><strong>Keep context</strong><p>Use RHENLINK to retain reader identity and eventually saved discoveries.</p></div><div class="info-card"><strong>Stay subordinate to story</strong><p>The books remain the center; Lattice makes depth easier to navigate after interest already exists.</p></div></div></section>';
+function legacyFocusPage(label){
+  return '<section class="route-hero"><p class="eyebrow">ARCHIVED DIRECTION</p><h1>'+label+'</h1><p>This section belongs to ANEVUM’s earlier publishing build. It remains preserved, but it is not part of the company’s current operating focus.</p><div class="action-row">'+button("Current system","/")+button("Research","/research",true)+'</div></section>';
 }
-function storePage(){
-  return '<section class="route-hero"><p class="eyebrow">ANEVUM STORE</p><h1>Real products only.</h1><p>The Store will list REPLY and later ANEVUM objects when they can actually be ordered. No fake checkout buttons, placeholder pricing, or dead merch cards.</p><div class="action-row">'+button("View REPLY","/the-book")+button("Get release updates","/rhenlink",true)+'</div></section>'+
-  '<section class="route-section"><div class="empty-state"><strong>REPLY is the first store priority.</strong><br/>Verified edition and purchase links will be added here when they are live. Fourthwall merchandise remains secondary to getting the book right.</div></section>';
-}
+function bookPage(){return legacyFocusPage("REPLY");}
+function wikiPage(){return legacyFocusPage("Wiki");}
+function latticePage(){return legacyFocusPage("Lattice");}
+function storePage(){return legacyFocusPage("Store");}
 function aboutPage(){
-  return '<section class="route-hero"><p class="eyebrow">ABOUT ANEVUM</p><h1>Books first.</h1><p>ANEVUM is an independent publishing and creative company founded by Devon Akins. It develops stories, public world-reference tools, reader identity, and physical objects around finished creative work.</p></section>'+
-  '<section class="route-section"><div class="info-grid"><div class="info-card"><strong>Stories</strong><p>Finished books are the primary product and the source of truth for what deserves expansion.</p></div><div class="info-card"><strong>Reader tools</strong><p>Wiki, Lattice and RHENLINK help readers go deeper without forcing the story to become a manual.</p></div><div class="info-card"><strong>Objects</strong><p>Print editions and merchandise support the stories rather than becoming a separate brand maze.</p></div></div></section>';
+  return '<section class="route-hero"><p class="eyebrow">ABOUT ANEVUM</p><h1>Quantitative systems, built in public.</h1><p>ANEVUM is an independent quantitative trading and research company founded by Devon Akins. It develops automated market systems, operates them under explicit risk controls, and uses their telemetry to drive the next research cycle.</p></section>'+
+  '<section class="route-section"><div class="info-grid"><div class="info-card"><span>BUILD</span><strong>Trading systems</strong><p>Rules-based software for market observation, qualification, execution, and position management.</p></div><div class="info-card"><span>MEASURE</span><strong>Operational telemetry</strong><p>Scanner states, decisions, fills, outcomes, and system health are recorded rather than inferred.</p></div><div class="info-card"><span>IMPROVE</span><strong>Research loop</strong><p>Strategy changes are evaluated against evidence with risk and execution quality kept in view.</p></div></div></section>';
 }
 function contactPage(){
-  return '<section class="route-hero"><p class="eyebrow">CONTACT</p><h1>Reach ANEVUM.</h1><p>For reader questions, publishing inquiries, corrections, or support, use the public company email.</p><div class="action-row"><a class="button" href="mailto:devon@anevum.com">devon@anevum.com'+icons.arrow+'</a></div></section>';
+  return '<section class="route-hero"><p class="eyebrow">CONTACT</p><h1>Reach ANEVUM.</h1><p>For company, research, technical, or business inquiries, use the public ANEVUM email.</p><div class="action-row"><a class="button" href="mailto:devon@anevum.com">devon@anevum.com'+icons.arrow+'</a></div></section>';
 }
 function notFound(){
   return '<section class="route-hero"><p class="eyebrow">404</p><h1>Nothing here yet.</h1><p>This route is not part of the current public ANEVUM site.</p><div class="action-row">'+button("Return home","/")+'</div></section>';
@@ -271,17 +293,17 @@ function authPage(){
   if(session?.user){
     const meta=session.user.user_metadata||{};
     const display=meta.display_name||meta.rhenlink_handle||session.user.email||"RHENLINK member";
-    const enabled=meta.reply_release_updates===true;
+    const enabled=meta.anevum_system_updates===true;
     const commandShortcut=isCommandAdmin(session)?'<div class="action-row"><a class="button secondary" href="'+routeHref("/command")+'" data-route="/command">Open Command'+icons.arrow+'</a></div>':"";
-    return '<section class="route-hero"><p class="eyebrow">RHENLINK</p><h1>'+escapeHtml(display)+'</h1><p>Your ANEVUM reader identity is active.</p></section>'+
-    '<section class="route-section auth-wrap"><div class="account-card"><h2>Reader preferences</h2><div class="switch-row"><div><strong>REPLY release updates</strong><p>Store this preference on your RHENLINK identity.</p></div><label class="switch"><input id="releaseToggle" type="checkbox" '+(enabled?'checked':'')+'/><span></span></label></div><p id="accountStatus" class="form-status"></p><button class="button secondary" id="signOutButton" type="button">Sign out</button></div>'+
-    '<div class="account-card"><h2>Account</h2><p>'+escapeHtml(session.user.email||"")+'</p><p class="form-status">RHENLINK keeps account and release preference separate from the public site design.</p>'+commandShortcut+'</div></section>';
+    return '<section class="route-hero"><p class="eyebrow">RHENLINK</p><h1>'+escapeHtml(display)+'</h1><p>Your ANEVUM identity is active.</p></section>'+
+    '<section class="route-section auth-wrap"><div class="account-card"><h2>Preferences</h2><div class="switch-row"><div><strong>ANEVUM development updates</strong><p>Store this preference on your RHENLINK identity.</p></div><label class="switch"><input id="releaseToggle" type="checkbox" '+(enabled?'checked':'')+'/><span></span></label></div><p id="accountStatus" class="form-status"></p><button class="button secondary" id="signOutButton" type="button">Sign out</button></div>'+
+    '<div class="account-card"><h2>Account</h2><p>'+escapeHtml(session.user.email||"")+'</p><p class="form-status">RHENLINK remains the identity layer for ANEVUM and gates administrator access to Command.</p>'+commandShortcut+'</div></section>';
   }
-  return '<section class="route-hero"><p class="eyebrow">RHENLINK</p><h1>Your ANEVUM identity.</h1><p>Create one account for release preferences and future reader features. Sign-in is handled by the existing ANEVUM Supabase project.</p></section>'+
+  return '<section class="route-hero"><p class="eyebrow">RHENLINK</p><h1>Your ANEVUM identity.</h1><p>Create one account for ANEVUM preferences and authenticated tools. Administrator access to the private trading portal is permission-gated separately.</p></section>'+
   '<section class="route-section auth-wrap"><div class="auth-card"><div class="auth-tabs"><button id="createTab" class="active" type="button">Create</button><button id="signinTab" type="button">Sign in</button></div>'+
   '<form id="createForm"><div class="field"><label>Display name</label><input name="displayName" required autocomplete="name"/></div><div class="field"><label>RHENLINK handle</label><input name="handle" required autocomplete="username" autocapitalize="none"/></div><div class="field"><label>Email</label><input name="email" type="email" required autocomplete="email"/></div><div class="field"><label>Password</label><input name="password" type="password" minlength="8" required autocomplete="new-password"/></div><div class="action-row"><button class="button" type="submit">Create RHENLINK</button></div></form>'+
   '<form id="signinForm" hidden><div class="field"><label>Email</label><input name="email" type="email" required autocomplete="email"/></div><div class="field"><label>Password</label><input name="password" type="password" required autocomplete="current-password"/></div><div class="action-row"><button class="button" type="submit">Sign in</button></div></form><p id="authStatus" class="form-status"></p></div>'+
-  '<div class="account-card"><h2>What RHENLINK does now</h2><div class="info-card"><strong>Release preference</strong><p>Opt in to REPLY release updates on your identity.</p></div><div class="info-card" style="margin-top:10px"><strong>Persistent account</strong><p>One account can later hold saves, purchases, achievements and reading progress.</p></div></div></section>';
+  '<div class="account-card"><h2>What RHENLINK does now</h2><div class="info-card"><strong>Identity</strong><p>One authenticated account for ANEVUM preferences and future member tools.</p></div><div class="info-card" style="margin-top:10px"><strong>Command gate</strong><p>Approved administrator identities can enter the private trading operations portal.</p></div></div></section>';
 }
 function commandPage(){
   const session=loadSession();
@@ -694,6 +716,8 @@ function render(){
   const route=currentRoute();
   let content;
   if(route==="/")content=home();
+  else if(route==="/research")content=researchPage();
+  else if(route==="/method")content=methodPage();
   else if(route==="/the-book"||route==="/reply"||route==="/stories/reply")content=bookPage();
   else if(route==="/wiki")content=wikiPage();
   else if(route==="/lattice")content=latticePage();
@@ -714,7 +738,7 @@ function render(){
   }
   bindRoute();
   window.scrollTo(0,0);
-  document.title=(route==="/"?"ANEVUM":route==="/the-book"?"REPLY — ANEVUM":route==="/command"?"COMMAND — ANEVUM":route.slice(1).toUpperCase()+" — ANEVUM");
+  document.title=(route==="/"?"ANEVUM — SYSTEMATIC TRADING":route==="/command"?"COMMAND — ANEVUM":route.slice(1).toUpperCase()+" — ANEVUM");
 }
 
 function navigate(route){
@@ -769,8 +793,8 @@ function bindRoute(){
       const status=document.getElementById("accountStatus");
       status.textContent="Saving…";
       try{
-        await updateMetadata({reply_release_updates:e.target.checked,reply_release_updates_at:new Date().toISOString(),reply_release_updates_source:"anevum-web"});
-        status.textContent=e.target.checked?"REPLY release updates enabled.":"REPLY release updates disabled.";
+        await updateMetadata({anevum_system_updates:e.target.checked,anevum_system_updates_at:new Date().toISOString(),anevum_system_updates_source:"anevum-web"});
+        status.textContent=e.target.checked?"ANEVUM development updates enabled.":"ANEVUM development updates disabled.";
       }catch(err){
         e.target.checked=!e.target.checked;
         status.textContent=err.message;
@@ -800,7 +824,7 @@ function bindRoute(){
       const payload=await signUp(createForm);
       if(payload.access_token&&payload.user){
         saveSession(payload);
-        await updateMetadata({reply_release_updates:true,reply_release_updates_at:new Date().toISOString(),reply_release_updates_source:"rhenlink-create"});
+        await updateMetadata({anevum_system_updates:true,anevum_system_updates_at:new Date().toISOString(),anevum_system_updates_source:"rhenlink-create"});
         render();
       }else{
         status.textContent="Check your email to confirm the RHENLINK, then sign in.";
