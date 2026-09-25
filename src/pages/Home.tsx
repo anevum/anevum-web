@@ -1,5 +1,6 @@
-import { motion } from "motion/react";
-import { useMemo } from "react";
+import { AnimatePresence, motion } from "motion/react";
+import { useEffect, useMemo, useState } from "react";
+import { useLocation } from "react-router-dom";
 import Mark from "../components/Mark";
 import { useLiveTrading } from "../hooks/useLiveTrading";
 
@@ -53,7 +54,23 @@ const updates = [
 ];
 
 export default function Home() {
+  const location = useLocation();
+  const [showIntro, setShowIntro] = useState(true);
   const { data, loading, error } = useLiveTrading(5000);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => setShowIntro(false), 1750);
+    return () => window.clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    const id = location.hash.replace("#", "");
+    if (!id) return;
+    const timer = window.setTimeout(() => {
+      document.getElementById(id)?.scrollIntoView({ behavior: "auto", block: "start" });
+    }, 80);
+    return () => window.clearTimeout(timer);
+  }, [location.hash]);
   const telemetry = data?.telemetry;
   const events = data?.events || [];
   const activity = data?.activity || [];
@@ -68,29 +85,33 @@ export default function Home() {
 
   return (
     <>
-      <motion.div
-        className="anevum-intro"
-        initial={{ opacity: 1 }}
-        animate={{ opacity: 0, pointerEvents: "none" }}
-        transition={{ delay: 1.35, duration: 0.65, ease: [0.7, 0, 0.3, 1] }}
-        aria-hidden="true"
-      >
-        <motion.div
-          className="anevum-intro-mark"
-          initial={{ opacity: 0, scale: 0.82 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.8, ease: [0.2, 0.8, 0.2, 1] }}
-        >
-          <Mark />
-          <motion.span
-            initial={{ opacity: 0, letterSpacing: "0.5em" }}
-            animate={{ opacity: 1, letterSpacing: "0.32em" }}
-            transition={{ delay: 0.35, duration: 0.7 }}
+      <AnimatePresence>
+        {showIntro ? (
+          <motion.div
+            className="anevum-intro"
+            initial={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.42, ease: [0.7, 0, 0.3, 1] }}
+            aria-hidden="true"
           >
-            ANEVUM
-          </motion.span>
-        </motion.div>
-      </motion.div>
+            <motion.div
+              className="anevum-intro-mark"
+              initial={{ opacity: 0, scale: 0.82 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.72, ease: [0.2, 0.8, 0.2, 1] }}
+            >
+              <Mark />
+              <motion.span
+                initial={{ opacity: 0, letterSpacing: "0.5em" }}
+                animate={{ opacity: 1, letterSpacing: "0.32em" }}
+                transition={{ delay: 0.28, duration: 0.62 }}
+              >
+                ANEVUM
+              </motion.span>
+            </motion.div>
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
 
       <motion.div
         className="public-page"
