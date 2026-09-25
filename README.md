@@ -6,14 +6,15 @@ ANEVUM is Devon Akins's personal home online. The public site is intentionally s
 
 ## Public experience
 
-The public site is a scroll-snap presentation rather than a conventional multi-page portal.
+The public site is a fixed no-scroll portal with five views:
 
-1. What ANEVUM is
-2. What Devon is working on now
-3. How the current system works
-4. The evidence
-5. What he is thinking about
-6. Other projects currently in limbo
+1. Home
+2. Current
+3. Proof
+4. Ideas
+5. Other
+
+Current and Proof are live data products, not mock dashboards. The browser polls a same-origin Cloudflare Worker endpoint every five seconds. That Worker proxies a read-only Supabase Edge Function which queries the canonical private trading event ledger, account snapshots, positions, and orders server-side. Secrets and private database access never reach the browser.
 
 Older project routes redirect into the relevant section of the single public experience.
 
@@ -35,8 +36,9 @@ Authentication is not a public feature.
 - Cloudflare Workers + Static Assets
 - React Router
 - Motion for restrained transitions
-- Supabase for private identity and sanitized public telemetry
-- Railway-hosted trading system behind authenticated Worker proxy routes
+- Supabase for private identity, canonical trading logs, and a sanitized read-only public telemetry Edge Function
+- Cloudflare Worker same-origin proxy for the public telemetry feed
+- Railway-hosted trading system behind authenticated private Command routes
 
 ## Development
 
