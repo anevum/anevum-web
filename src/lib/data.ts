@@ -122,75 +122,16 @@ export async function fetchCommandStatus(session: RhenSession): Promise<CommandS
 }
 
 
-export type LiveTradingAccount = {
-  observed_at?: string;
-  equity?: number | string;
-  last_equity?: number | string;
-  cash?: number | string;
-  buying_power?: number | string;
-  realized_pnl?: number | string | null;
-  unrealized_pnl?: number | string | null;
-  gross_exposure?: number | string;
-  net_exposure?: number | string;
-  drawdown_pct?: number | string;
-  open_positions?: number | string;
-};
-
-export type LiveScannerEvent = {
-  type?: string | null;
+export type PublicTelemetryEvent = {
   at?: string | null;
-  symbol?: string | null;
-  strategy_version?: string | null;
-  action?: string | null;
-  reason?: string | null;
-  quality_score?: number | null;
-  price?: number | null;
-  momentum_pct?: number | null;
-  vwap_edge_pct?: number | null;
-  spread_pct?: number | null;
-  bar_age_seconds?: number | null;
-  relative_volume_ratio?: number | null;
-  confirmation_passes?: number | null;
-  regime_passes?: number | null;
+  type?: string | null;
+  kind?: string | null;
+  label?: string | null;
 };
 
-export type LivePosition = {
-  symbol?: string;
-  side?: string;
-  status?: string;
-  opened_at?: string;
-  qty?: number | string;
-  avg_entry_price?: number | string;
-  current_price?: number | string | null;
-  estimated_unrealized_pnl?: number | string | null;
-};
-
-export type LiveClosedPosition = {
-  symbol?: string;
-  side?: string;
-  status?: string;
-  opened_at?: string;
-  closed_at?: string;
-  qty?: number | string;
-  avg_entry_price?: number | string;
-  avg_exit_price?: number | string;
-  realized_pnl?: number | string;
-  net_pnl?: number | string;
-  exit_reason?: string;
-};
-
-export type LiveOrder = {
-  symbol?: string;
-  side?: string;
-  order_type?: string;
-  order_class?: string | null;
-  status?: string;
-  qty?: number | string;
-  filled_qty?: number | string;
-  filled_avg_price?: number | string;
-  submitted_at?: string;
-  filled_at?: string;
-  canceled_at?: string | null;
+export type PublicActivityBucket = {
+  at?: string | null;
+  count?: number | string;
 };
 
 export type LiveTradingFeed = {
@@ -198,28 +139,29 @@ export type LiveTradingFeed = {
   generated_at?: string;
   source?: string;
   live?: boolean;
+  state?: string;
   freshness_seconds?: number | null;
   active_strategy?: {
     version_id?: string;
     strategy_name?: string;
     environment?: string;
     status?: string;
-    hypothesis?: string;
     activated_at?: string;
   } | null;
-  account?: LiveTradingAccount | null;
-  equity?: PublicEquityRow[];
-  scanner?: {
-    latest_change_at?: string | null;
-    symbols_tracked?: number;
-    ready_symbols?: string[];
-    top_hold_reasons?: Array<{ reason: string; count: number }>;
-    candidates?: LiveScannerEvent[];
+  telemetry?: {
+    events_60m?: number;
+    scan_events_10m?: number;
+    symbols_10m?: number;
+    execution_events_2h?: number;
+    reconciliations_2h?: number;
+    errors_2h?: number;
   };
-  positions?: LivePosition[];
-  recent_closed_positions?: LiveClosedPosition[];
-  recent_orders?: LiveOrder[];
-  events?: LiveScannerEvent[];
+  activity?: PublicActivityBucket[];
+  events?: PublicTelemetryEvent[];
+  disclosure?: {
+    level?: string;
+    public_fields?: string[];
+  };
 };
 
 export async function fetchLiveTradingFeed(): Promise<LiveTradingFeed> {
