@@ -61,7 +61,7 @@ export default function Home() {
         </div>
         <div className="hero-baseline">
           <span>Independent work</span>
-          <span>St. Cloud, Florida</span>
+          <span>Built in public</span>
           <span>Updated as the work changes</span>
         </div>
       </section>
