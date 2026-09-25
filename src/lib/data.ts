@@ -199,11 +199,19 @@ export type LiveTradingFeed = {
   source?: string;
   live?: boolean;
   freshness_seconds?: number | null;
+  active_strategy?: {
+    version_id?: string;
+    strategy_name?: string;
+    environment?: string;
+    status?: string;
+    hypothesis?: string;
+    activated_at?: string;
+  } | null;
   account?: LiveTradingAccount | null;
   equity?: PublicEquityRow[];
   scanner?: {
-    at?: string | null;
-    symbols_evaluated?: number;
+    latest_change_at?: string | null;
+    symbols_tracked?: number;
     ready_symbols?: string[];
     top_hold_reasons?: Array<{ reason: string; count: number }>;
     candidates?: LiveScannerEvent[];
