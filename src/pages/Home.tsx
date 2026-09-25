@@ -1,4 +1,5 @@
 import { motion } from "motion/react";
+import type { ReactNode } from "react";
 import EquityChart from "../components/EquityChart";
 import Mark from "../components/Mark";
 import { usePublicRecord } from "../hooks/usePublicRecord";
@@ -9,7 +10,7 @@ function Reveal({
   className = "",
   delay = 0
 }: {
-  children: React.ReactNode;
+  children: ReactNode;
   className?: string;
   delay?: number;
 }) {
