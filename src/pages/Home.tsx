@@ -207,12 +207,15 @@ export default function Home() {
               </header>
               <div className="position-live-body">
                 {positions.length ? positions.slice(0, 5).map((position) => {
-                  const pnl = number(position.estimated_unrealized_pnl);
+                  const rawMark = number(position.current_price);
+                  const mark = rawMark != null && rawMark > 0 ? rawMark : null;
+                  const rawPnl = number(position.estimated_unrealized_pnl);
+                  const pnl = mark == null ? null : rawPnl;
                   return (
                     <div className="position-live-row" key={position.symbol}>
                       <div><strong>{position.symbol}</strong><span>{String(position.side || "").toUpperCase()}</span></div>
                       <div><span>ENTRY</span><strong>{money(position.avg_entry_price)}</strong></div>
-                      <div><span>MARK</span><strong>{money(position.current_price)}</strong></div>
+                      <div><span>MARK</span><strong>{money(mark)}</strong></div>
                       <b className={pnl != null && pnl > 0 ? "positive" : pnl != null && pnl < 0 ? "negative" : ""}>{pnl == null ? "—" : signedMoney(pnl)}</b>
                     </div>
                   );
