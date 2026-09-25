@@ -71,7 +71,7 @@ function withSecurityHeaders(response, pathname) {
   headers.set("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
   headers.set("Cross-Origin-Opener-Policy", "same-origin");
   headers.set("X-Frame-Options", "DENY");
-  const privateOrArchived = pathname.startsWith("/command") || pathname.startsWith("/rhenlink") || pathname.startsWith("/wiki") || pathname.startsWith("/lattice") || pathname.startsWith("/store") || pathname.startsWith("/reply") || pathname.startsWith("/the-book") || pathname.startsWith("/stories/");
+  const privateOrArchived = pathname.startsWith("/command") || pathname.startsWith("/rhenlink") || pathname.startsWith("/wiki/archive") || pathname.startsWith("/lattice") || pathname.startsWith("/store") || pathname.startsWith("/reply") || pathname.startsWith("/the-book") || pathname.startsWith("/stories/");
   if (privateOrArchived) headers.set("X-Robots-Tag", "noindex, nofollow, noarchive");
   if (pathname.startsWith("/command")) headers.set("Cache-Control", "private, no-store");
 
@@ -88,6 +88,9 @@ export default {
     const pathname = url.pathname.replace(/\/+$/, "") || "/";
 
     if (pathname.startsWith("/api/command/trader/")) {
+      if (request.method !== "GET" && url.hostname !== "anevum.com") {
+        return jsonResponse({ message: "Live Command controls are disabled outside production." }, 403);
+      }
       try {
         const response = await commandApi(request, pathname);
         if (response) return response;
