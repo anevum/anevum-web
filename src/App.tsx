@@ -16,16 +16,8 @@ function RouteEffects() {
   const location = useLocation();
 
   useEffect(() => {
-    if (location.pathname === "/") {
-      const hash = location.hash.replace("#", "");
-      if (hash) {
-        requestAnimationFrame(() => document.getElementById(hash)?.scrollIntoView());
-      }
-    } else {
-      window.scrollTo(0, 0);
-    }
     document.title = titles[location.pathname] || "ANEVUM";
-  }, [location.pathname, location.hash]);
+  }, [location.pathname]);
 
   return null;
 }
@@ -53,16 +45,16 @@ export default function App() {
         <Route path="/private" element={<Suspense fallback={<Loader />}><PrivateAccess /></Suspense>} />
         <Route path="/command" element={<Suspense fallback={<Loader />}><Command /></Suspense>} />
         <Route path="/rhenlink" element={<Navigate to="/" replace />} />
-        <Route path="/work" element={<Navigate to="/#now" replace />} />
-        <Route path="/lab" element={<Navigate to="/#system" replace />} />
-        <Route path="/record" element={<Navigate to="/#evidence" replace />} />
-        <Route path="/notes" element={<Navigate to="/#mind" replace />} />
+        <Route path="/work" element={<Navigate to="/#current" replace />} />
+        <Route path="/lab" element={<Navigate to="/#current" replace />} />
+        <Route path="/record" element={<Navigate to="/#proof" replace />} />
+        <Route path="/notes" element={<Navigate to="/#ideas" replace />} />
         <Route path="/wiki" element={<Navigate to="/#other" replace />} />
         <Route path="/wiki/archive/transcosmic" element={<Navigate to="/#other" replace />} />
         <Route path="/about" element={<Navigate to="/" replace />} />
-        <Route path="/proof" element={<Navigate to="/#evidence" replace />} />
-        <Route path="/research" element={<Navigate to="/#mind" replace />} />
-        <Route path="/method" element={<Navigate to="/#system" replace />} />
+        <Route path="/proof" element={<Navigate to="/#proof" replace />} />
+        <Route path="/research" element={<Navigate to="/#ideas" replace />} />
+        <Route path="/method" element={<Navigate to="/#current" replace />} />
         <Route path="/the-book" element={<Navigate to="/#other" replace />} />
         <Route path="/reply" element={<Navigate to="/#other" replace />} />
         <Route path="/stories/reply" element={<Navigate to="/#other" replace />} />
