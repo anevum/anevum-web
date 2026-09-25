@@ -1,10 +1,30 @@
 import { motion } from "motion/react";
-import { Link } from "react-router-dom";
 import EquityChart from "../components/EquityChart";
 import Mark from "../components/Mark";
-import ProjectRow from "../components/ProjectRow";
 import { usePublicRecord } from "../hooks/usePublicRecord";
 import { money, signedMoney } from "../lib/format";
+
+function Reveal({
+  children,
+  className = "",
+  delay = 0
+}: {
+  children: React.ReactNode;
+  className?: string;
+  delay?: number;
+}) {
+  return (
+    <motion.div
+      className={className}
+      initial={{ opacity: 0, y: 28 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ amount: 0.35, once: true }}
+      transition={{ duration: 0.7, delay, ease: [0.18, 0.75, 0.25, 1] }}
+    >
+      {children}
+    </motion.div>
+  );
+}
 
 export default function Home() {
   const { data, loading, error } = usePublicRecord();
@@ -20,198 +40,183 @@ export default function Home() {
 
   return (
     <>
-      <section className="home-hero">
-        <div className="hero-grid">
-          <motion.div
-            className="hero-copy"
-            initial={{ opacity: 0, y: 22 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.65, ease: [0.2, 0.75, 0.25, 1] }}
-          >
-            <p className="kicker">DEVON AKINS / WORKING ARCHIVE</p>
-            <h1>Build.<br />Test.<br /><span>Keep the record.</span></h1>
-            <p className="hero-deck">
-              ANEVUM is where I keep the things I am actually building: systems, experiments,
-              software, markets, writing, research, and the evidence left behind.
+      <section id="intro" className="deck-section intro-slide">
+        <div className="slide-grid hero-slide-grid">
+          <Reveal className="slide-copy">
+            <p className="slide-kicker">DEVON AKINS / ANEVUM</p>
+            <h1>This is what<br />I&apos;m working on.</h1>
+            <p className="slide-lede">
+              I tend to build things that sound stranger when I explain them out loud than they do
+              when you can actually see the system, the work, and the evidence.
             </p>
-            <div className="hero-actions">
-              <Link className="primary-link" to="/work">Explore the work <span>↗</span></Link>
-              <Link className="text-link" to="/record">Open the record <span>→</span></Link>
+            <p className="slide-note">So this site is the explanation.</p>
+          </Reveal>
+
+          <Reveal className="hero-object" delay={0.12}>
+            <div className="hero-orbit orbit-a" />
+            <div className="hero-orbit orbit-b" />
+            <div className="hero-axis horizontal" />
+            <div className="hero-axis vertical" />
+            <Mark />
+            <span className="signal s1" />
+            <span className="signal s2" />
+            <span className="signal s3" />
+          </Reveal>
+        </div>
+        <div className="slide-index"><span>01</span><p>Start here</p></div>
+      </section>
+
+      <section id="now" className="deck-section now-slide">
+        <div className="slide-grid">
+          <Reveal className="slide-copy">
+            <p className="slide-kicker">RIGHT NOW</p>
+            <h2>I&apos;m building a small autonomous trading system.</h2>
+            <p className="slide-lede">
+              The experiment is simple to describe: start with very little capital, let software
+              observe the market, make only rule-based decisions, record everything, then improve
+              the system from what actually happened.
+            </p>
+          </Reveal>
+
+          <Reveal className="now-card" delay={0.1}>
+            <div className="now-card-head">
+              <span className="live-pill"><i /> LIVE EXPERIMENT</span>
+              <span>{active?.version_id || "CURRENT STRATEGY"}</span>
             </div>
-          </motion.div>
-
-          <motion.div
-            className="hero-instrument"
-            initial={{ opacity: 0, scale: 0.985 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.8, delay: 0.12 }}
-            aria-hidden="true"
-          >
-            <div className="instrument-orbit orbit-one" />
-            <div className="instrument-orbit orbit-two" />
-            <div className="instrument-axis axis-x" />
-            <div className="instrument-axis axis-y" />
-            <Mark className="instrument-mark" />
-            <span className="instrument-point p1" />
-            <span className="instrument-point p2" />
-            <span className="instrument-point p3" />
-            <div className="instrument-label top">ANV / 2026</div>
-            <div className="instrument-label bottom">SYSTEMS IN MOTION</div>
-          </motion.div>
-        </div>
-        <div className="hero-baseline">
-          <span>Independent work</span>
-          <span>Built in public</span>
-          <span>Updated as the work changes</span>
-        </div>
-      </section>
-
-      <section className="section current-section">
-        <div className="section-heading">
-          <div>
-            <p className="kicker">CURRENTLY</p>
-            <h2>The active build.</h2>
-          </div>
-          <p>
-            ANEVUM is not permanently defined by one project. This is simply the work receiving
-            the most attention now.
-          </p>
-        </div>
-
-        <article className="current-project">
-          <div className="current-project-top">
-            <div>
-              <span className="status-live"><i /> ACTIVE / LIVE CAPITAL</span>
-              <h3>Automated Capital System</h3>
-              <p>
-                An autonomous trading system being developed around market observation,
-                qualification, risk controls, execution, telemetry, and continuous review.
-              </p>
+            <div className="now-big-number">
+              <span>CURRENT PUBLIC EQUITY</span>
+              <strong>{loading ? "—" : money(current)}</strong>
+              <small className={change && change > 0 ? "positive" : change && change < 0 ? "negative" : ""}>
+                {change === null ? "waiting for record" : signedMoney(change) + " from public start"}
+              </small>
             </div>
-            <Link to="/work" className="round-link" aria-label="Open Automated Capital System">↗</Link>
-          </div>
-
-          <div className="current-telemetry">
-            <div className="telemetry-chart">
-              {loading ? <div className="chart-empty">Connecting to public record…</div> : <EquityChart rows={data.equity} compact />}
+            <div className="now-card-foot">
+              <span>{data.trades.length} closed trades recorded</span>
+              <span>{error ? "record unavailable" : "public data connected"}</span>
             </div>
-            <div className="telemetry-stats">
-              <div>
-                <span>CURRENT EQUITY</span>
-                <strong>{money(current)}</strong>
-              </div>
-              <div>
-                <span>PUBLIC MOVE</span>
-                <strong className={change && change > 0 ? "positive" : change && change < 0 ? "negative" : ""}>
-                  {change === null ? "—" : signedMoney(change)}
-                </strong>
-              </div>
-              <div>
-                <span>CLOSED TRADES</span>
-                <strong>{data.trades.length || "—"}</strong>
-              </div>
-              <div>
-                <span>STRATEGY</span>
-                <strong className="small-stat">
-                  {active?.strategy_name || active?.version_id || "—"}
-                </strong>
-              </div>
+          </Reveal>
+        </div>
+        <div className="slide-index"><span>02</span><p>What I am doing</p></div>
+      </section>
+
+      <section id="system" className="deck-section system-slide">
+        <Reveal className="system-heading">
+          <p className="slide-kicker">THE SYSTEM</p>
+          <h2>It is not “AI picks stocks.”</h2>
+          <p>
+            It is a loop I can inspect, measure, change, and eventually decide whether it deserves
+            more capital.
+          </p>
+        </Reveal>
+
+        <Reveal className="system-flow" delay={0.08}>
+          {[
+            ["01", "Observe", "Watch many symbols and market conditions."],
+            ["02", "Qualify", "Reject anything that does not meet the strategy."],
+            ["03", "Risk", "Decide how much exposure the account can tolerate."],
+            ["04", "Execute", "Send the permitted order through the broker."],
+            ["05", "Record", "Keep the decision, fill, P&L, and account state."],
+            ["06", "Review", "Use the record to decide what actually needs changing."]
+          ].map(([number, title, copy]) => (
+            <article key={number}>
+              <span>{number}</span>
+              <strong>{title}</strong>
+              <p>{copy}</p>
+            </article>
+          ))}
+        </Reveal>
+
+        <div className="slide-index"><span>03</span><p>How it works</p></div>
+      </section>
+
+      <section id="evidence" className="deck-section evidence-slide">
+        <div className="evidence-layout">
+          <Reveal className="evidence-copy">
+            <p className="slide-kicker">EVIDENCE</p>
+            <h2>I don&apos;t want the pitch. I want the record.</h2>
+            <p>
+              A tiny gain is not proof. A tiny loss is not failure. The useful part is building a
+              clean enough record that the system can eventually be judged by something better than
+              excitement.
+            </p>
+          </Reveal>
+
+          <Reveal className="evidence-panel" delay={0.08}>
+            <div className="evidence-chart">
+              {loading ? <div className="chart-empty">Connecting to public record…</div> : <EquityChart rows={data.equity} />}
             </div>
-          </div>
+            <div className="evidence-stats">
+              <div><span>START</span><strong>{money(start)}</strong></div>
+              <div><span>NOW</span><strong>{money(current)}</strong></div>
+              <div><span>MOVE</span><strong className={change && change > 0 ? "positive" : change && change < 0 ? "negative" : ""}>{change === null ? "—" : signedMoney(change)}</strong></div>
+              <div><span>TRADES</span><strong>{data.trades.length}</strong></div>
+            </div>
+          </Reveal>
+        </div>
 
-          <div className="current-project-foot">
-            <span>{error || "Public telemetry is a sanitized record, not a promise of future performance."}</span>
-            <Link to="/record">View evidence <span>→</span></Link>
-          </div>
-        </article>
+        <div className="evidence-caption">
+          <span>LIVE PUBLIC RECORD</span>
+          <p>{error || "Sanitized telemetry. No promise of future performance."}</p>
+        </div>
+        <div className="slide-index"><span>04</span><p>What has happened</p></div>
       </section>
 
-      <section className="section">
-        <div className="section-heading">
-          <div>
-            <p className="kicker">WORK</p>
-            <h2>A workshop, not a résumé.</h2>
-          </div>
-          <p>
-            Projects remain visible by state: active work stays prominent; older directions move
-            into the archive instead of disappearing.
-          </p>
+      <section id="mind" className="deck-section mind-slide">
+        <Reveal className="mind-heading">
+          <p className="slide-kicker">ON MY MIND</p>
+          <h2>The questions matter more than the branding.</h2>
+        </Reveal>
+
+        <div className="thoughts">
+          {[
+            ["01", "Can something useful grow from almost nothing?", "Not by pretending risk disappears, but by making every dollar force better engineering."],
+            ["02", "How much autonomy should I actually give the system?", "Execution can be automated. Changing the rules should still require evidence and deliberate review."],
+            ["03", "What would count as proof?", "Enough trades, enough time, visible drawdowns, realistic costs, and results that survive more than one good day."]
+          ].map(([number, title, copy], index) => (
+            <Reveal className="thought" delay={index * 0.06} key={number}>
+              <span>{number}</span>
+              <h3>{title}</h3>
+              <p>{copy}</p>
+            </Reveal>
+          ))}
         </div>
 
-        <div className="project-list">
-          <ProjectRow
-            index="01"
-            status="ACTIVE"
-            title="Automated Capital System"
-            description="Algorithmic market observation, execution, telemetry, risk, and capital-scaling research."
-            meta={["SOFTWARE", "MARKETS", "AUTOMATION"]}
-            to="/work"
-          />
-          <ProjectRow
-            index="02"
-            status="ACTIVE"
-            title="ANEVUM"
-            description="The infrastructure and public record that connects projects, identity, experiments, and operations."
-            meta={["WEB", "SYSTEMS", "ARCHIVE"]}
-            to="/wiki"
-          />
-          <ProjectRow
-            index="03"
-            status="ARCHIVED"
-            title="The Transcosmic"
-            description="Fiction, REPLY, cosmology, publishing development, and the earlier ANEVUM creative era."
-            meta={["WRITING", "WORLDBUILDING", "PUBLISHING"]}
-            to="/wiki/archive/transcosmic"
-          />
-        </div>
-        <Link className="section-end-link" to="/work">View all work <span>↗</span></Link>
+        <div className="slide-index"><span>05</span><p>What I am thinking about</p></div>
       </section>
 
-      <section className="section split-section">
-        <div className="split-title">
-          <p className="kicker">LAB</p>
-          <h2>Ideas earn their place through testing.</h2>
-          <Link className="text-link" to="/lab">Enter the lab <span>→</span></Link>
-        </div>
-        <div className="experiment-preview">
-          <div className="experiment-id">ANV–EXP–001</div>
-          <span className="status-live"><i /> RUNNING</span>
-          <h3>Small-capital autonomous trading</h3>
-          <p>
-            Can a rules-based automated system create a repeatable process for growing a very
-            small account without pretending early results are proof?
-          </p>
-          <div className="experiment-fields">
-            <span><b>METHOD</b> Live execution + public ledger</span>
-            <span><b>STATE</b> Evidence collection</span>
-            <span><b>RULE</b> Failures remain visible</span>
-          </div>
-        </div>
-      </section>
+      <section id="other" className="deck-section other-slide">
+        <div className="other-layout">
+          <Reveal className="other-copy">
+            <p className="slide-kicker">OTHER PROJECTS</p>
+            <h2>Not gone.<br />Just not now.</h2>
+            <p>
+              I make a lot of things. Keeping them here lets me stop pretending they all deserve
+              attention at the same time.
+            </p>
+          </Reveal>
 
-      <section className="section record-preview">
-        <div className="section-heading">
-          <div>
-            <p className="kicker">RECORD</p>
-            <h2>Output over intention.</h2>
-          </div>
-          <p>
-            The record is a chronological trail of releases, experiments, revisions, results,
-            and failures. It is what remains after the planning is over.
-          </p>
+          <Reveal className="limbo-list" delay={0.08}>
+            <details>
+              <summary><span>01</span><div><strong>The Transcosmic</strong><small>FICTION / WORLDBUILDING / LIMBO</small></div><b>+</b></summary>
+              <p>REPLY, the Transcosmic universe, Continuance, cosmology, and the publishing work around them are preserved. They are simply not the active project right now.</p>
+            </details>
+            <details>
+              <summary><span>02</span><div><strong>Publishing experiments</strong><small>BOOKS / VISUAL HISTORY / LIMBO</small></div><b>+</b></summary>
+              <p>Book concepts, premium history projects, special editions, and earlier publishing infrastructure remain part of the archive without defining ANEVUM.</p>
+            </details>
+            <details>
+              <summary><span>03</span><div><strong>Whatever comes next</strong><small>OPEN SLOT</small></div><b>+</b></summary>
+              <p>ANEVUM is deliberately broad enough to survive the next thing I become interested in without needing another identity reset.</p>
+            </details>
+          </Reveal>
         </div>
-        <div className="record-lines">
-          <article><time>25 SEP 2026</time><div><strong>React rebuild opened</strong><p>ANEVUM moves toward a permanent personal-work architecture.</p></div><span>WEB</span></article>
-          <article><time>24 SEP 2026</time><div><strong>Live capital system connected</strong><p>Broker execution, telemetry, and private Command were joined into one operating loop.</p></div><span>SYSTEM</span></article>
-          <article><time>24 SEP 2026</time><div><strong>First live test recorded</strong><p>The automated strategy began producing real execution evidence.</p></div><span>LAB</span></article>
-        </div>
-        <Link className="section-end-link" to="/record">Open the full record <span>↗</span></Link>
-      </section>
 
-      <section className="closing-statement">
-        <Mark />
-        <p>ANEVUM changes when the work changes.</p>
-        <span>The archive remains.</span>
+        <Reveal className="closing-line">
+          <Mark />
+          <p>If I sent you this link, this is what I meant.</p>
+        </Reveal>
+
+        <div className="slide-index"><span>06</span><p>Everything else</p></div>
       </section>
     </>
   );
