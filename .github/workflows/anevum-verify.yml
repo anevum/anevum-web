@@ -31,7 +31,7 @@ jobs:
           test -f dist/index.html
           test -f dist/styles.css
           test -f dist/app.js
-          grep -Fq '<title>ANEVUM — Systematic Trading</title>' dist/index.html
+          grep -Fq '<title>ANEVUM — The Small-Capital Experiment</title>' dist/index.html
           grep -Fq 'RHENLINK' dist/app.js
-          grep -Fq 'searchItems' dist/app.js\n          grep -Fq 'Rules before orders.' dist/app.js
-          grep -Fq 'Build the system.' dist/app.js
+          grep -Fq 'searchItems' dist/app.js\n          grep -Fq 'The record, not the pitch.' dist/app.js
+          grep -Fq 'Can a tiny account' dist/app.js
