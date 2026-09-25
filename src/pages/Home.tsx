@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from "motion/react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useState } from "react";
 import { useLocation } from "react-router-dom";
 import Mark from "../components/Mark";
 import { useLiveTrading } from "../hooks/useLiveTrading";
@@ -63,13 +63,23 @@ export default function Home() {
     return () => window.clearTimeout(timer);
   }, []);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const id = location.hash.replace("#", "");
     if (!id) return;
-    const timer = window.setTimeout(() => {
-      document.getElementById(id)?.scrollIntoView({ behavior: "auto", block: "start" });
-    }, 80);
-    return () => window.clearTimeout(timer);
+
+    const target = document.getElementById(id);
+    if (!target) return;
+
+    const root = document.documentElement;
+    const previousBehavior = root.style.scrollBehavior;
+    root.style.scrollBehavior = "auto";
+    const y = target.getBoundingClientRect().top + window.scrollY - 76;
+    window.scrollTo(0, Math.max(0, y));
+
+    const frame = window.requestAnimationFrame(() => {
+      root.style.scrollBehavior = previousBehavior;
+    });
+    return () => window.cancelAnimationFrame(frame);
   }, [location.hash]);
   const telemetry = data?.telemetry;
   const events = data?.events || [];
