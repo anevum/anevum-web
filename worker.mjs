@@ -1,4 +1,5 @@
 const TRADER_BASE = "https://alpaca-trader-production-bf3e.up.railway.app";
+const PUBLIC_TRADING_FEED = "https://mfntzxheldzdvlokyntk.supabase.co/functions/v1/trading-public-feed";
 
 class ApiError extends Error {
   constructor(status, message) {
@@ -45,6 +46,22 @@ async function proxyTrader(request, upstreamPath) {
   return jsonResponse(payload, response.status);
 }
 
+async function publicTradingFeed() {
+  const response = await fetch(PUBLIC_TRADING_FEED, {
+    method: "GET",
+    headers: { Accept: "application/json" }
+  });
+  const raw = await response.text();
+  return new Response(raw, {
+    status: response.status,
+    headers: {
+      "Content-Type": "application/json; charset=utf-8",
+      "Cache-Control": "public, max-age=2, s-maxage=2, stale-while-revalidate=3",
+      "X-Content-Type-Options": "nosniff"
+    }
+  });
+}
+
 async function commandApi(request, pathname) {
   if (pathname === "/api/command/trader/status" && request.method === "GET") {
     return proxyTrader(request, "/v1/command/status");
@@ -86,6 +103,15 @@ export default {
   async fetch(request, env) {
     const url = new URL(request.url);
     const pathname = url.pathname.replace(/\/+$/, "") || "/";
+
+    if (pathname === "/api/public/trading/live") {
+      if (request.method !== "GET") return jsonResponse({ message: "Method not allowed." }, 405);
+      try {
+        return await publicTradingFeed();
+      } catch (error) {
+        return jsonResponse({ message: error instanceof Error ? error.message : "Public trading feed failed." }, 502);
+      }
+    }
 
     if (pathname.startsWith("/api/command/trader/")) {
       if (request.method !== "GET" && url.hostname !== "anevum.com") {
