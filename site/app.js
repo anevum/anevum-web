@@ -17,19 +17,21 @@ function mark(){
 }
 
 const navItems = [
-  ["SYSTEM","/"],
+  ["EXPERIMENT","/"],
+  ["PROOF","/proof"],
+  ["SYSTEM","/method"],
   ["RESEARCH","/research"],
-  ["METHOD","/method"],
   ["ABOUT","/about"]
 ];
 
 const searchItems = [
-  {title:"System",note:"How the ANEVUM trading system is structured",route:"/"},
+  {title:"The Experiment",note:"The sub-$100 live-capital experiment",route:"/"},
+  {title:"Proof Ledger",note:"Equity record, strategy versions, runs, and closed trades",route:"/proof"},
+  {title:"System",note:"How ANEVUM observes, qualifies, risks, executes, and reviews",route:"/method"},
   {title:"Research",note:"What is being measured, tested, and improved",route:"/research"},
-  {title:"Method",note:"Rules, risk controls, execution, and review",route:"/method"},
-  {title:"Command",note:"Private operations portal and live telemetry",route:"/command"},
-  {title:"RHENLINK",note:"ANEVUM identity and development preferences",route:"/rhenlink"},
-  {title:"About ANEVUM",note:"Independent quantitative trading and research",route:"/about"},
+  {title:"Command",note:"Private operations portal and live bot telemetry",route:"/command"},
+  {title:"RHENLINK",note:"ANEVUM identity and private access",route:"/rhenlink"},
+  {title:"About ANEVUM",note:"Why one person is building this in public",route:"/about"},
   {title:"Contact",note:"Reach ANEVUM directly",route:"/contact"}
 ];
 
@@ -59,11 +61,11 @@ function shell(content){
   '<button class="menu-button" id="menuButton" aria-label="Menu" aria-expanded="false">'+icons.menu+'</button></div></div>'+
   '<nav class="mobile-panel" id="mobilePanel" aria-label="Mobile navigation">'+mobile+'</nav></header>'+
   '<main id="main" class="page">'+content+'</main>'+
-  '<footer class="site-footer"><div class="footer-inner"><div><strong>ANEVUM</strong><span>Systematic trading research and automated execution.</span></div><div class="footer-links">'+
+  '<footer class="site-footer"><div class="footer-inner"><div><strong>ANEVUM</strong><span>A small-capital quantitative experiment, built in public.</span></div><div class="footer-links">'+
+  '<a href="'+routeHref("/proof")+'" data-route="/proof">Proof</a>'+
   '<a href="'+routeHref("/research")+'" data-route="/research">Research</a>'+
-  '<a href="'+routeHref("/method")+'" data-route="/method">Method</a>'+
-  '<a href="'+routeHref("/contact")+'" data-route="/contact">Contact</a>'+
-  '<a href="/command" data-route="/command">Command</a></div><small>Trading involves risk. Public pages do not display private account data or imply guaranteed returns.</small></div></footer>'+
+  '<a href="'+routeHref("/about")+'" data-route="/about">About</a>'+
+  '<a href="/command" data-route="/command">Command</a></div><small>ANEVUM trades its own capital. Nothing on this site is a promise of returns or investment advice. Losses and failed experiments remain part of the public record.</small></div></footer>'+
   '<div class="search-panel" id="searchPanel" role="dialog" aria-modal="true" aria-label="Search ANEVUM">'+
   '<div class="search-box"><div class="search-top"><input id="searchInput" autocomplete="off" placeholder="Search ANEVUM…" aria-label="Search ANEVUM"/><button class="icon-button" id="searchClose" aria-label="Close search">'+icons.close+'</button></div><div class="search-results" id="searchResults"></div></div></div>';
 }
@@ -88,77 +90,111 @@ function button(label,route,secondary=false){
 }
 
 function home(){
-  return '<section class="quant-hero">'+
-    '<div class="quant-hero-copy"><p class="eyebrow">ANEVUM / SYSTEMATIC TRADING</p>'+
-    '<h1>Build the system.<br/><span>Measure everything.</span></h1>'+
-    '<p class="hero-deck">ANEVUM develops automated trading systems that turn market data into rules-based decisions, risk-controlled execution, and a recorded feedback loop. The objective is not prediction. It is a process that can be tested, audited, and improved.</p>'+
-    '<div class="action-row">'+button("Explore the research","/research")+button("Private Command","/command",true)+'</div>'+
-    '<div class="hero-principles"><span><b>01</b> OBSERVE</span><span><b>02</b> QUALIFY</span><span><b>03</b> EXECUTE</span><span><b>04</b> REVIEW</span></div></div>'+
-    '<div class="quant-terminal" aria-label="ANEVUM system overview">'+
-      '<div class="terminal-top"><span><i></i> ACTIVE BUILD</span><b>LIVE-CAPITAL TESTING</b></div>'+
-      '<div class="terminal-chart"><svg viewBox="0 0 640 260" role="img" aria-label="Decorative market signal trace"><path class="gridline" d="M0 52H640M0 104H640M0 156H640M0 208H640M106 0V260M212 0V260M318 0V260M424 0V260M530 0V260"/><path class="trace-shadow" d="M0 201 C55 194 72 170 112 176 S178 214 220 168 S282 116 320 132 S376 166 420 120 S492 76 530 96 S590 54 640 66"/><path class="trace" d="M0 201 C55 194 72 170 112 176 S178 214 220 168 S282 116 320 132 S376 166 420 120 S492 76 530 96 S590 54 640 66"/><circle cx="640" cy="66" r="5"/></svg></div>'+
-      '<div class="terminal-readout"><div><span>BROKER</span><strong>ALPACA</strong></div><div><span>UNIVERSE</span><strong>U.S. EQUITIES</strong></div><div><span>EXECUTION</span><strong>AUTOMATED</strong></div><div><span>CONTROL</span><strong>COMMAND</strong></div></div>'+
+  return '<section class="experiment-hero">'+
+    '<div class="experiment-copy"><p class="eyebrow">PUBLIC LIVE-CAPITAL EXPERIMENT / STARTED BELOW $100</p>'+
+    '<h1>Can a tiny account<br/><span>become something bigger?</span></h1>'+
+    '<p class="hero-deck">ANEVUM is one person building an automated trading system for his own family capital. The idea is deliberately small: start with less than $100, let software make rules-based decisions, and publish the evidence instead of asking anyone to believe the pitch.</p>'+
+    '<div class="action-row">'+button("See the proof ledger","/proof")+button("How the system works","/method",true)+'</div>'+
+    '<div class="experiment-trust"><span><b></b> REAL CAPITAL</span><span>AUTOMATED EXECUTION</span><span>LOSSES STAY ON THE RECORD</span></div>'+
+    '</div>'+
+    '<aside class="experiment-live-card" aria-label="Live experiment summary">'+
+      '<div class="experiment-live-head"><span><i></i> PUBLIC RECORD</span><b data-public="freshness">CONNECTING</b></div>'+
+      '<div class="experiment-balance"><span>CURRENT EQUITY</span><strong data-public="current-equity">—</strong><small data-public="equity-move">Loading verified data…</small></div>'+
+      '<div class="experiment-chart" data-public="equity-chart"><div class="experiment-chart-empty">Loading the public equity record…</div></div>'+
+      '<div class="experiment-card-grid">'+
+        '<div><span>START</span><strong data-public="start-equity">—</strong></div>'+
+        '<div><span>SNAPSHOTS</span><strong data-public="snapshot-count">—</strong></div>'+
+        '<div><span>CLOSED TRADES</span><strong data-public="trade-count">—</strong></div>'+
+        '<div><span>STRATEGY</span><strong data-public="active-strategy">—</strong></div>'+
+      '</div>'+
+    '</aside>'+
+  '</section>'+
+  '<section class="experiment-stats" aria-label="Public experiment metrics">'+
+    '<article><span>STARTING RECORD</span><strong data-public="start-equity">—</strong><small>The first canonical public snapshot</small></article>'+
+    '<article><span>CURRENT EQUITY</span><strong data-public="current-equity">—</strong><small data-public="equity-move-short">—</small></article>'+
+    '<article><span>MAX DRAWDOWN</span><strong data-public="max-drawdown">—</strong><small>Observed in the public record</small></article>'+
+    '<article><span>VERIFIED CLOSED TRADES</span><strong data-public="trade-count">—</strong><small data-public="win-loss">Canonical ledger only</small></article>'+
+  '</section>'+
+  '<section class="section experiment-idea"><div class="section-head"><div><p class="section-kicker">THE IDEA</p><h2>Do the experiment first.<br/>Make the claim later.</h2></div><p>The public site is not a sales page for a magic bot. It is the lab notebook. Equity snapshots, strategy versions, completed runs, and closed trades are published automatically from a sanitized copy of the real telemetry.</p></div>'+
+    '<div class="evidence-grid">'+
+      evidenceCard("PROVEN","The plumbing works","Market data, automated decision logic, live broker execution, telemetry, and public reporting can operate as one system.")+
+      evidenceCard("TESTING","The trading edge","Positive long-term expectancy, robustness across market regimes, and scalable risk-adjusted returns still require evidence.")+
+      evidenceCard("RULE","Nothing disappears","A losing trade, drawdown, rejected strategy, or failed hypothesis remains part of the record instead of being edited out.")+
     '</div>'+
   '</section>'+
-  '<section class="status-strip" aria-label="ANEVUM operating model">'+
-    '<div><span class="status-label">RESEARCH</span><strong>Signal quality before scale</strong></div>'+
-    '<div><span class="status-label">RISK</span><strong>Capital protection is part of the strategy</strong></div>'+
-    '<div><span class="status-label">OPERATIONS</span><strong>Every decision leaves telemetry</strong></div>'+
-  '</section>'+
-  '<section class="section system-section"><div class="section-head"><div><p class="section-kicker">THE LOOP</p><h2>One closed system.</h2></div><p>Each layer exists to answer a specific question. What is happening? Does it match the setup? How much can be risked? What happened after execution? What should change next?</p></div>'+
-    '<div class="system-loop">'+
-      systemCard("01","Market data","Observe price, volume, spread, trend, momentum, and session context without forcing a trade.")+
-      systemCard("02","Signal engine","Translate observations into explicit conditions. A setup either qualifies or it does not.")+
-      systemCard("03","Risk gates","Limit exposure, entries, losses, and position sizing before an order can exist.")+
-      systemCard("04","Execution","Send and manage orders through the broker only after strategy and risk conditions pass.")+
-      systemCard("05","Telemetry","Record scans, decisions, orders, fills, P&L, errors, and system state.")+
-      systemCard("06","Research loop","Use completed runs to test assumptions, identify failure modes, and revise the strategy.")+
+  '<section class="section experiment-flow"><div><p class="section-kicker">THE MACHINE</p><h2>Five layers.<br/>One record.</h2></div>'+
+    '<div class="flow-rail">'+
+      flowStep("01","SCAN","Watch a defined universe for measurable setups.")+
+      flowStep("02","QUALIFY","Require explicit signal and confirmation rules.")+
+      flowStep("03","RISK","Gate size, exposure, loss limits, and account state.")+
+      flowStep("04","EXECUTE","Place and manage real broker orders automatically.")+
+      flowStep("05","PUBLISH","Copy safe aggregate results into the public proof ledger.")+
     '</div>'+
   '</section>'+
-  '<section class="section thesis-section"><div><p class="section-kicker">OPERATING PRINCIPLE</p><h2>The edge is not a prediction.<br/>It is disciplined iteration.</h2></div><div class="thesis-copy"><p>A profitable system cannot be inferred from a few trades. ANEVUM treats live results as evidence to be accumulated, not marketing material. The work is to improve expectancy, execution quality, robustness, and risk control without confusing activity with progress.</p><a href="'+routeHref("/method")+'" data-route="/method">Read the operating method '+icons.arrow+'</a></div></section>'+
-  '<section class="section public-private"><div class="section-head"><div><p class="section-kicker">PUBLIC / PRIVATE</p><h2>Show the work. Protect the account.</h2></div><p>The public site explains the system and research discipline. Live capital, order controls, raw strategy telemetry, and account-level details remain inside the protected Command portal.</p></div>'+
-    '<div class="boundary-grid"><article><span>PUBLIC</span><strong>Research framework</strong><p>Architecture, principles, development notes, and what ANEVUM is testing.</p></article><article><span>PRIVATE</span><strong>Command</strong><p>Broker balances, live positions, scanner state, fills, controls, and execution telemetry.</p></article></div>'+
-  '</section>';
+  '<section class="section experiment-cta"><div><p class="section-kicker">FOLLOW THE RECORD</p><h2>You do not have to believe the idea.</h2><p>Watch what the system actually does. The public record updates from the trading telemetry without a weekly manual rewrite.</p></div><div class="action-row">'+button("Open proof ledger","/proof")+button("Read the research","/research",true)+'</div></section>';
+}
+function evidenceCard(label,title,copy){
+  return '<article class="evidence-card"><span>'+label+'</span><h3>'+title+'</h3><p>'+copy+'</p></article>';
+}
+function flowStep(num,title,copy){
+  return '<article class="flow-step"><b>'+num+'</b><div><strong>'+title+'</strong><p>'+copy+'</p></div></article>';
+}
+function proofPage(){
+  return '<section class="route-hero proof-hero"><p class="eyebrow">PROOF LEDGER</p><h1>The record, not the pitch.</h1><p>This page is generated from sanitized copies of ANEVUM’s canonical trading telemetry. Private broker identifiers, credentials, raw control state, and sensitive account details are never published.</p><div class="proof-freshness"><i></i><span data-public="freshness-long">Loading public record…</span></div></section>'+
+  '<section class="route-section proof-overview">'+
+    '<div class="experiment-stats proof-stats">'+
+      '<article><span>STARTING RECORD</span><strong data-public="start-equity">—</strong><small data-public="first-observed">—</small></article>'+
+      '<article><span>CURRENT EQUITY</span><strong data-public="current-equity">—</strong><small data-public="equity-move-short">—</small></article>'+
+      '<article><span>MAX DRAWDOWN</span><strong data-public="max-drawdown">—</strong><small>Since public recording began</small></article>'+
+      '<article><span>CLOSED TRADES</span><strong data-public="trade-count">—</strong><small data-public="win-loss">—</small></article>'+
+    '</div>'+
+    '<article class="proof-chart-card"><div class="proof-card-head"><div><span>EQUITY RECORD</span><strong data-public="snapshot-count">— snapshots</strong></div><small>Canonical public snapshots</small></div><div class="proof-chart-large" data-public="equity-chart"><div class="experiment-chart-empty">Loading equity history…</div></div></article>'+
+  '</section>'+
+  '<section class="route-section"><div class="section-head"><div><p class="section-kicker">STRATEGY LEDGER</p><h2>Every version has a reason.</h2></div><p>Live and shadow versions stay visible so changes can be traced back to an explicit hypothesis rather than hindsight.</p></div><div id="publicStrategyLedger" class="strategy-ledger"><div class="proof-empty">Loading strategy versions…</div></div></section>'+
+  '<section class="route-section"><div class="section-head"><div><p class="section-kicker">CLOSED TRADES</p><h2>Wins and losses use the same table.</h2></div><p>Only closed positions written to the canonical ledger appear here. If the ledger has none, the site says none.</p></div><div id="publicTradeLedger" class="trade-ledger"><div class="proof-empty">Loading closed trades…</div></div></section>'+
+  '<section class="route-section proof-standard"><div><p class="section-kicker">EVIDENCE STANDARD</p><h2>What would actually count as success?</h2></div><div class="proof-standard-list"><p><b>01</b><span>A meaningful sample of completed trades—not one green afternoon.</span></p><p><b>02</b><span>Positive expectancy after costs and realistic execution.</span></p><p><b>03</b><span>Drawdowns that remain inside explicit risk limits.</span></p><p><b>04</b><span>Performance that survives different market conditions and strategy revisions.</span></p></div></section>';
 }
 function systemCard(num,title,copy){
   return '<article class="system-card"><span>'+num+'</span><h3>'+title+'</h3><p>'+copy+'</p></article>';
 }
 function researchPage(){
-  return '<section class="route-hero research-hero"><p class="eyebrow">RESEARCH</p><h1>Test the process, not the story.</h1><p>ANEVUM is currently focused on short-horizon U.S. equity systems. The active work studies rolling momentum, price relative to VWAP, confirmation signals, execution quality, and risk constraints as one integrated process.</p></section>'+
-  '<section class="route-section"><div class="section-head"><div><p class="section-kicker">MEASUREMENT</p><h2>What matters after the trade.</h2></div><p>A result is useful only when it can be compared across enough observations to separate signal from noise.</p></div><div class="metric-grid">'+
-    '<article><strong>Expectancy</strong><p>Average outcome per trade after wins, losses, and costs.</p></article>'+
-    '<article><strong>Payoff ratio</strong><p>Average win relative to average loss, not win rate in isolation.</p></article>'+
-    '<article><strong>Drawdown</strong><p>How much capital the system gives back before recovering.</p></article>'+
-    '<article><strong>Slippage</strong><p>The gap between modeled entry or exit and the actual fill.</p></article>'+
-    '<article><strong>Exposure</strong><p>How much capital and time are placed at risk across concurrent positions.</p></article>'+
-    '<article><strong>Throughput</strong><p>How often qualified opportunities appear without lowering standards to create activity.</p></article>'+
+  return '<section class="route-hero research-hero"><p class="eyebrow">RESEARCH</p><h1>Find out why it moved.</h1><p>ANEVUM treats each run as an experiment. The question is not whether a trade happened to win; it is whether the rules produce repeatable results under real execution, costs, and risk limits.</p></section>'+
+  '<section class="route-section"><div class="section-head"><div><p class="section-kicker">MEASUREMENT</p><h2>The numbers that matter.</h2></div><p>The public record will become more useful as the sample grows. These are the measurements used to judge the system rather than cherry-picking account balance alone.</p></div><div class="metric-grid">'+
+    '<article><strong>Expectancy</strong><p>Average net outcome per completed trade across both wins and losses.</p></article>'+
+    '<article><strong>Payoff ratio</strong><p>Average winning trade relative to the average losing trade.</p></article>'+
+    '<article><strong>Drawdown</strong><p>How far equity falls from a previous high before recovering.</p></article>'+
+    '<article><strong>Execution quality</strong><p>Whether modeled entries and exits survive real spreads, timing, and fills.</p></article>'+
+    '<article><strong>Exposure</strong><p>How much family capital is actually at risk at one time.</p></article>'+
+    '<article><strong>Robustness</strong><p>Whether results persist after strategy changes and different market conditions.</p></article>'+
   '</div></section>'+
-  '<section class="route-section research-note"><p class="section-kicker">CURRENT PHASE</p><h2>Live-capital testing is data collection.</h2><p>The system is being evaluated with real fills and real constraints, but early gains or losses are not treated as proof of a durable edge. Scaling belongs after a strategy demonstrates repeatability across a meaningful sample and under realistic execution costs.</p></section>';
+  '<section class="route-section research-note"><p class="section-kicker">CURRENT PHASE</p><h2>Build the sample before scaling the story.</h2><p>The account is intentionally small. Early results are engineering evidence, not statistical proof of a durable trading edge. Capital and complexity should scale only after the data earns it.</p></section>';
 }
 function methodPage(){
-  return '<section class="route-hero"><p class="eyebrow">METHOD</p><h1>Rules before orders.</h1><p>ANEVUM separates market observation, strategy qualification, risk authorization, broker execution, and post-trade review so a failure in one layer is visible instead of hidden inside a single black box.</p></section>'+
+  return '<section class="route-hero"><p class="eyebrow">THE SYSTEM</p><h1>Rules before orders.</h1><p>ANEVUM separates observation, qualification, risk authorization, execution, telemetry, and review so every decision has a traceable reason and every failure has somewhere specific to look.</p></section>'+
   '<section class="route-section"><div class="method-stack">'+
-    '<article><span>01 / OBSERVE</span><h2>Read the market.</h2><p>Collect the data needed by the strategy and reject incomplete or stale inputs.</p></article>'+
-    '<article><span>02 / QUALIFY</span><h2>Require a setup.</h2><p>Signals must satisfy defined conditions. The scanner can watch continuously without manufacturing a reason to trade.</p></article>'+
-    '<article><span>03 / AUTHORIZE</span><h2>Pass risk gates.</h2><p>Position sizing, loss limits, entry limits, funding state, and execution state are checked before an order is allowed.</p></article>'+
-    '<article><span>04 / EXECUTE</span><h2>Use the broker deliberately.</h2><p>Orders are tagged, tracked, and reconciled against broker state. The execution layer does not rewrite the strategy after the fact.</p></article>'+
-    '<article><span>05 / REVIEW</span><h2>Learn from completed runs.</h2><p>Telemetry links the signal, decision, order, fill, and outcome so changes can be based on evidence rather than memory.</p></article>'+
+    '<article><span>01 / OBSERVE</span><h2>Read the market.</h2><p>Collect the data required by the active strategy and reject incomplete or stale inputs.</p></article>'+
+    '<article><span>02 / QUALIFY</span><h2>Require a setup.</h2><p>The scanner can watch continuously without inventing a reason to trade. A setup either passes the rules or it does not.</p></article>'+
+    '<article><span>03 / AUTHORIZE</span><h2>Protect the account.</h2><p>Position size, exposure, loss limits, funding state, and execution state are checked before an order is allowed.</p></article>'+
+    '<article><span>04 / EXECUTE</span><h2>Use the broker deliberately.</h2><p>Orders are tagged, tracked, reconciled, and connected back to the strategy version that produced them.</p></article>'+
+    '<article><span>05 / RECORD</span><h2>Leave evidence.</h2><p>Snapshots, runs, strategy versions, positions, fills, and incidents build a record that can be tested later.</p></article>'+
+    '<article><span>06 / REVIEW</span><h2>Change one thing for a reason.</h2><p>Revisions are treated as experiments with a hypothesis instead of invisible tuning after the outcome is known.</p></article>'+
   '</div></section>'+
-  '<section class="route-section"><div class="boundary-grid"><article><span>NON-NEGOTIABLE</span><strong>No guaranteed-return logic</strong><p>No strategy can guarantee a target balance or remove market risk. ANEVUM optimizes process quality and risk-adjusted results, not promises.</p></article><article><span>SCALING RULE</span><strong>Evidence before capital</strong><p>Increase complexity, symbols, or capital only when the data supports the change and the failure modes are understood.</p></article></div></section>';
+  '<section class="route-section"><div class="boundary-grid"><article><span>PUBLIC</span><strong>Sanitized evidence</strong><p>Equity history, closed trades, strategy versions, and methodology can be published automatically.</p></article><article><span>PRIVATE</span><strong>Command</strong><p>Credentials, raw broker IDs, scanner internals, controls, and sensitive account state stay behind authenticated access.</p></article></div></section>';
 }
 function legacyFocusPage(label){
-  return '<section class="route-hero"><p class="eyebrow">ARCHIVED DIRECTION</p><h1>'+label+'</h1><p>This section belongs to ANEVUM’s earlier publishing build. It remains preserved, but it is not part of the company’s current operating focus.</p><div class="action-row">'+button("Current system","/")+button("Research","/research",true)+'</div></section>';
+  return '<section class="route-hero"><p class="eyebrow">CREATIVE ARCHIVE</p><h1>'+label+'</h1><p>ANEVUM’s earlier publishing and Transcosmic work is preserved. It is not being deleted; it is simply not the active operating focus of this site.</p><div class="action-row">'+button("Current experiment","/")+button("Proof ledger","/proof",true)+'</div></section>';
 }
 function bookPage(){return legacyFocusPage("REPLY");}
 function wikiPage(){return legacyFocusPage("Wiki");}
 function latticePage(){return legacyFocusPage("Lattice");}
 function storePage(){return legacyFocusPage("Store");}
 function aboutPage(){
-  return '<section class="route-hero"><p class="eyebrow">ABOUT ANEVUM</p><h1>Quantitative systems, built in public.</h1><p>ANEVUM is an independent quantitative trading and research company founded by Devon Akins. It develops automated market systems, operates them under explicit risk controls, and uses their telemetry to drive the next research cycle.</p></section>'+
-  '<section class="route-section"><div class="info-grid"><div class="info-card"><span>BUILD</span><strong>Trading systems</strong><p>Rules-based software for market observation, qualification, execution, and position management.</p></div><div class="info-card"><span>MEASURE</span><strong>Operational telemetry</strong><p>Scanner states, decisions, fills, outcomes, and system health are recorded rather than inferred.</p></div><div class="info-card"><span>IMPROVE</span><strong>Research loop</strong><p>Strategy changes are evaluated against evidence with risk and execution quality kept in view.</p></div></div></section>';
+  return '<section class="route-hero about-experiment"><p class="eyebrow">ABOUT ANEVUM</p><h1>One person. Family capital. A system that has to prove itself.</h1><p>ANEVUM is an independent experiment founded by Devon Akins. Right now it is not a fund, brokerage, signal service, or outside-capital manager. It is a quantitative system being built to research and trade the founder’s own small family account—and to document what actually happens.</p></section>'+
+  '<section class="route-section"><div class="info-grid"><div class="info-card"><span>WHY</span><strong>Grow capability before capital</strong><p>The first objective is a trustworthy process: automation, measurement, risk control, and reproducible evidence.</p></div><div class="info-card"><span>HOW</span><strong>Build in public</strong><p>Publish safe aggregate results and strategy history so claims can be checked against the record.</p></div><div class="info-card"><span>WHAT NEXT</span><strong>Let evidence decide</strong><p>If the system proves useful, software and research products can grow from it later. That decision has not been forced early.</p></div></div></section>'+
+  '<section class="route-section archive-note"><div><p class="section-kicker">THE CREATIVE WORK</p><h2>The Transcosmic is preserved.</h2></div><p>ANEVUM’s fiction, worldbuilding, and publishing material remains part of its archive and intellectual property. The current trading experiment does not require deleting years of creative work; it only changes what receives active operating attention now.</p></section>';
 }
 function contactPage(){
-  return '<section class="route-hero"><p class="eyebrow">CONTACT</p><h1>Reach ANEVUM.</h1><p>For company, research, technical, or business inquiries, use the public ANEVUM email.</p><div class="action-row"><a class="button" href="mailto:devon@anevum.com">devon@anevum.com'+icons.arrow+'</a></div></section>';
+  return '<section class="route-hero"><p class="eyebrow">CONTACT</p><h1>Reach ANEVUM.</h1><p>For technical, research, media, or company inquiries, use the public ANEVUM email.</p><div class="action-row"><a class="button" href="mailto:devon@anevum.com">devon@anevum.com'+icons.arrow+'</a></div></section>';
 }
 function notFound(){
   return '<section class="route-hero"><p class="eyebrow">404</p><h1>Nothing here yet.</h1><p>This route is not part of the current public ANEVUM site.</p><div class="action-row">'+button("Return home","/")+'</div></section>';
@@ -182,6 +218,131 @@ async function api(path,init={}){
   if(!res.ok)throw new Error(payload.message||payload.msg||payload.error_description||payload.error||"Request failed");
   return payload;
 }
+async function publicTable(table,query){
+  return api("/rest/v1/"+table+"?"+query,{method:"GET",headers:{"Accept":"application/json"}});
+}
+async function fetchPublicExperiment(){
+  const [equity,strategies,runs,trades]=await Promise.all([
+    publicTable("trading_public_equity","select=observed_at,equity,realized_pnl,unrealized_pnl,drawdown_pct,open_positions&order=observed_at.asc&limit=1000"),
+    publicTable("trading_public_strategies","select=version_id,strategy_name,status,environment,hypothesis,activated_at,retired_at,created_at&order=created_at.desc&limit=100"),
+    publicTable("trading_public_runs","select=public_id,strategy_version_id,environment,status,started_at,ended_at,starting_equity,ending_equity,deposits,withdrawals&order=started_at.desc&limit=100"),
+    publicTable("trading_public_trades","select=public_id,strategy_version_id,symbol,side,opened_at,closed_at,qty,avg_entry_price,avg_exit_price,realized_pnl,net_pnl,exit_reason&order=closed_at.desc&limit=250")
+  ]);
+  return {equity,strategies,runs,trades};
+}
+function compactMoney(value){
+  const n=Number(value);
+  return Number.isFinite(n)?new Intl.NumberFormat("en-US",{style:"currency",currency:"USD",minimumFractionDigits:2,maximumFractionDigits:2}).format(n):"—";
+}
+function signedMoney(value){
+  const n=Number(value);
+  if(!Number.isFinite(n))return "—";
+  return (n>0?"+":"")+compactMoney(n);
+}
+function publicDate(value){
+  if(!value)return "—";
+  const d=new Date(value);
+  return Number.isNaN(d.getTime())?"—":d.toLocaleString([],{month:"short",day:"numeric",year:"numeric",hour:"numeric",minute:"2-digit"});
+}
+function publicEquitySvg(rows){
+  const clean=(Array.isArray(rows)?rows:[]).map(row=>({at:row.observed_at,value:Number(row.equity)})).filter(x=>Number.isFinite(x.value));
+  if(!clean.length)return '<div class="experiment-chart-empty">No public equity snapshots yet.</div>';
+  let lo=Math.min(...clean.map(x=>x.value));
+  let hi=Math.max(...clean.map(x=>x.value));
+  if(hi===lo){hi+=0.05;lo-=0.05}
+  const width=760,height=260,left=18,right=18,top=18,bottom=26;
+  const x=i=>clean.length===1?width/2:left+i*(width-left-right)/(clean.length-1);
+  const y=v=>top+(hi-v)*(height-top-bottom)/(hi-lo);
+  const points=clean.map((p,i)=>x(i).toFixed(1)+","+y(p.value).toFixed(1)).join(" ");
+  const first=clean[0],last=clean[clean.length-1];
+  return '<svg class="public-equity-svg" viewBox="0 0 '+width+' '+height+'" role="img" aria-label="Public account equity over time">'+
+    '<defs><linearGradient id="publicEquityFade" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stop-color="currentColor" stop-opacity=".18"/><stop offset="100%" stop-color="currentColor" stop-opacity="0"/></linearGradient></defs>'+
+    '<path class="public-grid" d="M18 54H742M18 104H742M18 154H742M18 204H742"/>'+
+    '<polyline class="public-equity-shadow" points="'+points+'"></polyline>'+
+    '<polyline class="public-equity-line" points="'+points+'"></polyline>'+
+    '<circle class="public-equity-dot" cx="'+x(clean.length-1).toFixed(1)+'" cy="'+y(last.value).toFixed(1)+'" r="4.5"></circle>'+
+    '<text class="public-chart-label" x="18" y="252">'+escapeHtml(publicDate(first.at))+'</text>'+
+    '<text class="public-chart-label" x="742" y="252" text-anchor="end">'+escapeHtml(publicDate(last.at))+'</text>'+
+  '</svg>';
+}
+function setPublicText(key,value,className){
+  document.querySelectorAll('[data-public="'+key+'"]').forEach(el=>{
+    el.textContent=value;
+    if(className!==undefined)el.className=className;
+  });
+}
+function renderPublicExperiment(data){
+  const equity=Array.isArray(data.equity)?data.equity:[];
+  const strategies=Array.isArray(data.strategies)?data.strategies:[];
+  const trades=Array.isArray(data.trades)?data.trades:[];
+  const first=equity[0]||{};
+  const last=equity[equity.length-1]||{};
+  const start=Number(first.equity);
+  const current=Number(last.equity);
+  const move=Number.isFinite(start)&&Number.isFinite(current)?current-start:null;
+  const movePct=Number.isFinite(move)&&start?move/start:null;
+  const maxDd=equity.reduce((m,row)=>Math.max(m,Number(row.drawdown_pct)||0),0);
+  const wins=trades.filter(t=>Number(t.net_pnl??t.realized_pnl)>0).length;
+  const losses=trades.filter(t=>Number(t.net_pnl??t.realized_pnl)<0).length;
+  const active=strategies.find(s=>s.environment==="live"&&["active","limited_live","scaled"].includes(s.status))||
+    strategies.find(s=>s.environment==="live")||strategies[0];
+  setPublicText("start-equity",compactMoney(start));
+  setPublicText("current-equity",compactMoney(current));
+  const moveClass=move>0?"positive":move<0?"negative":"";
+  setPublicText("equity-move",Number.isFinite(move)?signedMoney(move)+" since the public record began"+(Number.isFinite(movePct)?" · "+(movePct*100).toFixed(2)+"%":""):"Waiting for enough data",moveClass);
+  setPublicText("equity-move-short",Number.isFinite(move)?signedMoney(move)+(Number.isFinite(movePct)?" · "+(movePct*100).toFixed(2)+"%":""):"—",moveClass);
+  setPublicText("snapshot-count",equity.length.toLocaleString());
+  setPublicText("trade-count",trades.length.toLocaleString());
+  setPublicText("win-loss",trades.length?wins+" wins · "+losses+" losses":"No canonical closed trades yet");
+  setPublicText("max-drawdown",(maxDd*100).toFixed(2)+"%");
+  setPublicText("active-strategy",active?String(active.strategy_name||active.version_id).replaceAll("_"," ").toUpperCase():"—");
+  setPublicText("first-observed",first.observed_at?"Since "+publicDate(first.observed_at):"—");
+  const age=last.observed_at?Math.max(0,Date.now()-new Date(last.observed_at).getTime()):null;
+  const fresh=age===null?"NO DATA":age<120000?"LIVE":age<3600000?"RECENT":"RECORDED";
+  setPublicText("freshness",fresh);
+  setPublicText("freshness-long",last.observed_at?"Latest public snapshot: "+publicDate(last.observed_at):"No public snapshot yet");
+  document.querySelectorAll('[data-public="equity-chart"]').forEach(el=>el.innerHTML=publicEquitySvg(equity));
+
+  const strategyLedger=document.getElementById("publicStrategyLedger");
+  if(strategyLedger){
+    strategyLedger.innerHTML=strategies.length?strategies.map(s=>
+      '<article class="strategy-ledger-row"><div><span>'+escapeHtml(String(s.environment||"").toUpperCase())+'</span><strong>'+escapeHtml(s.version_id)+'</strong></div><div><b>'+escapeHtml(String(s.status||"").replaceAll("_"," ").toUpperCase())+'</b><p>'+escapeHtml(s.hypothesis||"No public hypothesis recorded.")+'</p></div><time>'+escapeHtml(publicDate(s.activated_at||s.created_at))+'</time></article>'
+    ).join(""):'<div class="proof-empty">No strategy versions have been published yet.</div>';
+  }
+  const tradeLedger=document.getElementById("publicTradeLedger");
+  if(tradeLedger){
+    tradeLedger.innerHTML=trades.length?
+      '<div class="trade-ledger-head"><span>CLOSED</span><span>SYMBOL</span><span>SIDE</span><span>ENTRY → EXIT</span><span>NET P&L</span><span>EXIT</span></div>'+
+      trades.map(t=>{
+        const pnl=Number(t.net_pnl??t.realized_pnl);
+        return '<article class="trade-ledger-row"><time>'+escapeHtml(publicDate(t.closed_at))+'</time><strong>'+escapeHtml(t.symbol)+'</strong><span>'+escapeHtml(String(t.side||"").toUpperCase())+'</span><span>'+compactMoney(t.avg_entry_price)+' → '+compactMoney(t.avg_exit_price)+'</span><b class="'+(pnl>0?"positive":pnl<0?"negative":"")+'">'+signedMoney(pnl)+'</b><span>'+escapeHtml(t.exit_reason||"—")+'</span></article>';
+      }).join("")
+      :'<div class="proof-empty"><strong>No canonical closed trades yet.</strong><span>The ledger will populate automatically when a position is closed and recorded by the trading system.</span></div>';
+  }
+}
+let publicExperimentPollTimer=null;
+let publicExperimentInFlight=false;
+function stopPublicExperimentPolling(){
+  if(publicExperimentPollTimer){clearInterval(publicExperimentPollTimer);publicExperimentPollTimer=null}
+}
+async function hydratePublicExperiment(){
+  if(publicExperimentInFlight||!["/","/proof"].includes(currentRoute()))return;
+  publicExperimentInFlight=true;
+  try{
+    const data=await fetchPublicExperiment();
+    if(["/","/proof"].includes(currentRoute()))renderPublicExperiment(data);
+  }catch(err){
+    setPublicText("freshness","DATA ERROR","negative");
+    setPublicText("freshness-long","Public record unavailable: "+err.message);
+  }finally{
+    publicExperimentInFlight=false;
+  }
+}
+function bindPublicExperiment(){
+  hydratePublicExperiment();
+  publicExperimentPollTimer=setInterval(hydratePublicExperiment,60000);
+}
+
 async function currentUser(session){
   if(!session?.access_token)return null;
   try{
@@ -713,9 +874,11 @@ function escapeHtml(value){
 
 function render(){
   stopCommandPolling();
+  stopPublicExperimentPolling();
   const route=currentRoute();
   let content;
   if(route==="/")content=home();
+  else if(route==="/proof")content=proofPage();
   else if(route==="/research")content=researchPage();
   else if(route==="/method")content=methodPage();
   else if(route==="/the-book"||route==="/reply"||route==="/stories/reply")content=bookPage();
@@ -737,8 +900,9 @@ function render(){
     }));
   }
   bindRoute();
+  if(route==="/"||route==="/proof")bindPublicExperiment();
   window.scrollTo(0,0);
-  document.title=(route==="/"?"ANEVUM — SYSTEMATIC TRADING":route==="/command"?"COMMAND — ANEVUM":route.slice(1).toUpperCase()+" — ANEVUM");
+  document.title=(route==="/"?"ANEVUM — The Small-Capital Experiment":route==="/proof"?"PROOF LEDGER — ANEVUM":route==="/command"?"COMMAND — ANEVUM":route.slice(1).toUpperCase()+" — ANEVUM");
 }
 
 function navigate(route){
