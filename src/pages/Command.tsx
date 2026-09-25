@@ -61,8 +61,8 @@ export default function Command() {
         <Mark />
         <span>ANEVUM COMMAND</span>
         <h1>Private operations.</h1>
-        <p>Connect a RHENLINK administrator identity to open Command.</p>
-        <Link className="primary-link" to="/rhenlink">Resolve RHENLINK <b>↗</b></Link>
+        <p>Sign in through the private ANEVUM entrance to open Command.</p>
+        <Link className="primary-link" to="/private">Private access <b>↗</b></Link>
       </div>
     );
   }
