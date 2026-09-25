@@ -1,8 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url>
-    <loc>https://anevum.com/</loc>
-    <changefreq>weekly</changefreq>
-    <priority>1.0</priority>
-  </url>
+  <url><loc>https://anevum.com/</loc></url>
+  <url><loc>https://anevum.com/reply</loc></url>
+  <url><loc>https://anevum.com/books</loc></url>
+  <url><loc>https://anevum.com/universe</loc></url>
+  <url><loc>https://anevum.com/about</loc></url>
+  <url><loc>https://anevum.com/contact</loc></url>
+  <url><loc>https://anevum.com/rhenlink</loc></url>
 </urlset>
