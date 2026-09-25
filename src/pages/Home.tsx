@@ -47,6 +47,7 @@ function Scene({
 }
 
 function number(value: unknown) {
+  if (value === null || value === undefined || value === "") return null;
   const n = Number(value);
   return Number.isFinite(n) ? n : null;
 }
@@ -92,6 +93,7 @@ export default function Home() {
   const recentClosed = data?.recent_closed_positions || [];
   const events = data?.events || [];
   const strategyVersion =
+    data?.active_strategy?.version_id ||
     scannerRows.find((row) => row.strategy_version)?.strategy_version ||
     events.find((row) => row.strategy_version)?.strategy_version ||
     "—";
@@ -127,7 +129,7 @@ export default function Home() {
           <div className="home-live-grid">
             <div><span>OPEN</span><strong>{account?.open_positions ?? positions.length}</strong></div>
             <div><span>EXPOSURE</span><strong>{money(account?.gross_exposure)}</strong></div>
-            <div><span>LAST SCAN</span><strong>{clockTime(data?.scanner?.at)}</strong></div>
+            <div><span>LAST SCAN</span><strong>{clockTime(data?.scanner?.latest_change_at)}</strong></div>
             <div><span>EVENT</span><strong>{latestEvent ? eventLabel(latestEvent) : "—"}</strong></div>
           </div>
         </div>
@@ -180,7 +182,7 @@ export default function Home() {
           <div className="live-grid">
             <section className="live-panel live-scanner">
               <header>
-                <div><span>SCANNER CHANGES</span><strong>{clockTime(data?.scanner?.at)}</strong></div>
+                <div><span>SCANNER CHANGES</span><strong>{clockTime(data?.scanner?.latest_change_at)}</strong></div>
                 <small>{scannerRows.length} recent symbols</small>
               </header>
               <div className="live-table-head">
