@@ -1,4 +1,5 @@
 import { AnimatePresence, motion } from "motion/react";
+import type { ReactNode } from "react";
 import { useLocation } from "react-router-dom";
 import EquityChart from "../components/EquityChart";
 import Mark from "../components/Mark";
@@ -26,7 +27,7 @@ function Scene({
 }: {
   id: ViewId;
   active: ViewId;
-  children: React.ReactNode;
+  children: ReactNode;
 }) {
   if (id !== active) return null;
 
