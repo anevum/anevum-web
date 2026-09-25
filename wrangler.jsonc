@@ -2,9 +2,10 @@
   "$schema": "./node_modules/wrangler/config-schema.json",
   "name": "anevum-web-nextgen",
   "main": "./worker.mjs",
-  "compatibility_date": "2026-09-23",
+  "compatibility_date": "2026-09-25",
   "workers_dev": true,
   "preview_urls": true,
+  "previews": {},
   "routes": [
     {
       "pattern": "anevum.com/*",
@@ -12,7 +13,6 @@
     }
   ],
   "assets": {
-    "directory": "./dist",
     "binding": "ASSETS",
     "run_worker_first": true,
     "not_found_handling": "single-page-application"
