@@ -1,23 +1,29 @@
-export function money(value: unknown) {
+function numeric(value: unknown) {
+  if (value === null || value === undefined || value === "") return null;
   const n = Number(value);
-  return Number.isFinite(n)
-    ? new Intl.NumberFormat("en-US", {
+  return Number.isFinite(n) ? n : null;
+}
+
+export function money(value: unknown) {
+  const n = numeric(value);
+  return n === null
+    ? "—"
+    : new Intl.NumberFormat("en-US", {
         style: "currency",
         currency: "USD",
         minimumFractionDigits: 2,
         maximumFractionDigits: 2
-      }).format(n)
-    : "—";
+      }).format(n);
 }
 
 export function signedMoney(value: unknown) {
-  const n = Number(value);
-  return Number.isFinite(n) ? (n > 0 ? "+" : "") + money(n) : "—";
+  const n = numeric(value);
+  return n === null ? "—" : (n > 0 ? "+" : "") + money(n);
 }
 
 export function percent(value: unknown, digits = 2) {
-  const n = Number(value);
-  return Number.isFinite(n) ? (n * 100).toFixed(digits) + "%" : "—";
+  const n = numeric(value);
+  return n === null ? "—" : (n * 100).toFixed(digits) + "%";
 }
 
 export function dateTime(value: unknown) {
