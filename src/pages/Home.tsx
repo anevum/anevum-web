@@ -40,10 +40,23 @@ export default function Home() {
 
     const resolve = () => {
       const target = document.getElementById(id);
-      if (target) {
-        target.scrollIntoView({ block: "start" });
+      const root = document.querySelector<HTMLElement>(".deck-scroll");
+
+      if (target && root) {
+        const previousSnap = root.style.scrollSnapType;
+        const previousBehavior = root.style.scrollBehavior;
+        root.style.scrollSnapType = "none";
+        root.style.scrollBehavior = "auto";
+        root.scrollTo({ top: target.offsetTop, behavior: "auto" });
+
+        timer = window.setTimeout(() => {
+          root.style.scrollSnapType = previousSnap;
+          root.style.scrollBehavior = previousBehavior;
+          root.scrollTo({ top: target.offsetTop, behavior: "auto" });
+        }, 60);
         return;
       }
+
       attempts += 1;
       if (attempts < 10) timer = window.setTimeout(resolve, 50);
     };
