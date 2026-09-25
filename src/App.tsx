@@ -7,7 +7,7 @@ const Home = lazy(() => import("./pages/Home"));
 const PrivateAccess = lazy(() => import("./pages/Rhenlink"));
 
 const titles: Record<string, string> = {
-  "/": "ANEVUM — Devon Akins",
+  "/": "ANEVUM — Live System",
   "/private": "Private — ANEVUM",
   "/command": "Command — ANEVUM"
 };
@@ -44,23 +44,23 @@ export default function App() {
         <Route path="/" element={<PublicExperience />} />
         <Route path="/private" element={<Suspense fallback={<Loader />}><PrivateAccess /></Suspense>} />
         <Route path="/command" element={<Suspense fallback={<Loader />}><Command /></Suspense>} />
-        <Route path="/rhenlink" element={<Navigate to="/" replace />} />
-        <Route path="/work" element={<Navigate to="/#current" replace />} />
-        <Route path="/lab" element={<Navigate to="/#current" replace />} />
-        <Route path="/record" element={<Navigate to="/#proof" replace />} />
-        <Route path="/notes" element={<Navigate to="/#ideas" replace />} />
-        <Route path="/wiki" element={<Navigate to="/#other" replace />} />
-        <Route path="/wiki/archive/transcosmic" element={<Navigate to="/#other" replace />} />
+        <Route path="/rhenlink" element={<Navigate to="/private" replace />} />
+        <Route path="/work" element={<Navigate to="/#system" replace />} />
+        <Route path="/lab" element={<Navigate to="/#demo" replace />} />
+        <Route path="/record" element={<Navigate to="/#demo" replace />} />
+        <Route path="/notes" element={<Navigate to="/#updates" replace />} />
+        <Route path="/wiki" element={<Navigate to="/#architecture" replace />} />
+        <Route path="/wiki/archive/transcosmic" element={<Navigate to="/#architecture" replace />} />
         <Route path="/about" element={<Navigate to="/" replace />} />
-        <Route path="/proof" element={<Navigate to="/#proof" replace />} />
-        <Route path="/research" element={<Navigate to="/#ideas" replace />} />
-        <Route path="/method" element={<Navigate to="/#current" replace />} />
-        <Route path="/the-book" element={<Navigate to="/#other" replace />} />
-        <Route path="/reply" element={<Navigate to="/#other" replace />} />
-        <Route path="/stories/reply" element={<Navigate to="/#other" replace />} />
-        <Route path="/universe" element={<Navigate to="/#other" replace />} />
-        <Route path="/lattice" element={<Navigate to="/#other" replace />} />
-        <Route path="/store" element={<Navigate to="/#other" replace />} />
+        <Route path="/proof" element={<Navigate to="/#demo" replace />} />
+        <Route path="/research" element={<Navigate to="/#architecture" replace />} />
+        <Route path="/method" element={<Navigate to="/#architecture" replace />} />
+        <Route path="/the-book" element={<Navigate to="/#updates" replace />} />
+        <Route path="/reply" element={<Navigate to="/#updates" replace />} />
+        <Route path="/stories/reply" element={<Navigate to="/#updates" replace />} />
+        <Route path="/universe" element={<Navigate to="/#architecture" replace />} />
+        <Route path="/lattice" element={<Navigate to="/#updates" replace />} />
+        <Route path="/store" element={<Navigate to="/#updates" replace />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </>
