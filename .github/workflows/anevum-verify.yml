@@ -37,7 +37,8 @@ jobs:
           set -o pipefail
           output="$(npx wrangler preview --name "pr-${{ github.event.pull_request.number }}" --json)"
           printf '%s\n' "$output"
-          preview_url="$(printf '%s' "$output" | jq -er '.preview.urls[0]')"
+          json="$(printf '%s\n' "$output" | sed -n '/^{/,$p')"
+          preview_url="$(printf '%s' "$json" | jq -er '.preview.urls[0]')"
           echo "preview_url=$preview_url" >> "$GITHUB_OUTPUT"
           echo "### Cloudflare Preview" >> "$GITHUB_STEP_SUMMARY"
           echo "$preview_url" >> "$GITHUB_STEP_SUMMARY"
