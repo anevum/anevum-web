@@ -3,8 +3,9 @@ import type { ReactNode } from "react";
 import { useLocation } from "react-router-dom";
 import EquityChart from "../components/EquityChart";
 import Mark from "../components/Mark";
-import { usePublicRecord } from "../hooks/usePublicRecord";
-import { money, signedMoney } from "../lib/format";
+import { useLiveTrading } from "../hooks/useLiveTrading";
+import { clockTime, money, percent, signedMoney } from "../lib/format";
+import type { LiveScannerEvent } from "../lib/data";
 
 type ViewId = "home" | "current" | "proof" | "ideas" | "other";
 
@@ -45,20 +46,60 @@ function Scene({
   );
 }
 
+function number(value: unknown) {
+  const n = Number(value);
+  return Number.isFinite(n) ? n : null;
+}
+
+function metric(value: number | null, digits = 2) {
+  return value == null ? "—" : value.toFixed(digits);
+}
+
+function ageLabel(value: number | null | undefined) {
+  if (value == null || !Number.isFinite(value)) return "unknown age";
+  if (value < 60) return Math.round(value) + "s ago";
+  return Math.floor(value / 60) + "m " + Math.round(value % 60) + "s ago";
+}
+
+function eventLabel(event: LiveScannerEvent) {
+  const symbol = event.symbol || "SYSTEM";
+  const action = String(event.action || event.type || "event").toUpperCase();
+  return symbol + " / " + action;
+}
+
 export default function Home() {
   const location = useLocation();
   const activeView = viewFromHash(location.hash);
-  const { data, loading, error } = usePublicRecord();
+  const { data, loading, error } = useLiveTrading(5000);
 
-  const first = data.equity[0];
-  const last = data.equity[data.equity.length - 1];
-  const start = Number(first?.equity);
-  const current = Number(last?.equity);
-  const change = Number.isFinite(start) && Number.isFinite(current) ? current - start : null;
-  const strategy =
-    data.strategies.find((item) => item.environment === "live" && item.status === "active") ||
-    data.strategies.find((item) => item.environment === "live") ||
-    data.strategies[0];
+  const account = data?.account;
+  const equityRows = data?.equity || [];
+  const first = equityRows[0];
+  const sessionStart = number(first?.equity);
+  const current = number(account?.equity);
+  const lastEquity = number(account?.last_equity);
+  const sessionMove =
+    sessionStart != null && current != null ? current - sessionStart : null;
+  const dayMove =
+    lastEquity != null && current != null ? current - lastEquity : null;
+  const scannerCandidates = data?.scanner?.candidates || [];
+  const scannerFallback = (data?.events || [])
+    .filter((event) => event.type === "scan")
+    .slice(0, 8);
+  const scannerRows =
+    scannerCandidates.length > 0 ? scannerCandidates.slice(0, 8) : scannerFallback;
+  const positions = data?.positions || [];
+  const recentClosed = data?.recent_closed_positions || [];
+  const events = data?.events || [];
+  const strategyVersion =
+    scannerRows.find((row) => row.strategy_version)?.strategy_version ||
+    events.find((row) => row.strategy_version)?.strategy_version ||
+    "—";
+  const freshness = data?.freshness_seconds;
+  const feedState = loading ? "CONNECTING" : data?.live ? "LIVE" : "STALE";
+  const liveClass = data?.live ? "is-live" : data ? "is-stale" : "";
+  const latestEvent = events[0];
+  const topReasons = data?.scanner?.top_hold_reasons || [];
 
   return (
     <AnimatePresence mode="wait">
@@ -67,97 +108,187 @@ export default function Home() {
           <p className="portal-kicker">DEVON AKINS / PERSONAL PROJECT</p>
           <h1>Here&apos;s what<br />I&apos;m doing.</h1>
           <p>
-            ANEVUM is the easiest way to show people what I&apos;m building without turning it into
-            a long explanation.
+            A live window into the systems I am actually building, testing, and running.
           </p>
         </div>
 
-        <div className="home-visual" aria-hidden="true">
-          <div className="visual-ring ring-a" />
-          <div className="visual-ring ring-b" />
-          <div className="visual-ring ring-c" />
-          <div className="visual-axis axis-x" />
-          <div className="visual-axis axis-y" />
-          <Mark />
-          <span className="visual-dot dot-a" />
-          <span className="visual-dot dot-b" />
-          <span className="visual-dot dot-c" />
-          <div className="visual-label label-a">BUILD</div>
-          <div className="visual-label label-b">TEST</div>
-          <div className="visual-label label-c">PROVE</div>
+        <div className="home-live-card">
+          <header>
+            <span className={"feed-state " + liveClass}><i /> {feedState}</span>
+            <time>{data ? ageLabel(freshness) : "waiting for canonical log"}</time>
+          </header>
+          <div className="home-live-equity">
+            <span>ACCOUNT EQUITY</span>
+            <strong>{loading ? "—" : money(current)}</strong>
+            <small className={dayMove != null && dayMove > 0 ? "positive" : dayMove != null && dayMove < 0 ? "negative" : ""}>
+              {dayMove == null ? "—" : signedMoney(dayMove) + " vs prior close"}
+            </small>
+          </div>
+          <div className="home-live-grid">
+            <div><span>OPEN</span><strong>{account?.open_positions ?? positions.length}</strong></div>
+            <div><span>EXPOSURE</span><strong>{money(account?.gross_exposure)}</strong></div>
+            <div><span>LAST SCAN</span><strong>{clockTime(data?.scanner?.at)}</strong></div>
+            <div><span>EVENT</span><strong>{latestEvent ? eventLabel(latestEvent) : "—"}</strong></div>
+          </div>
         </div>
 
         <div className="home-mini">
-          <span>NOW</span>
-          <strong>Autonomous capital system</strong>
+          <span>CANONICAL LOG</span>
+          <strong>{error || "Refreshes every 5 seconds"}</strong>
         </div>
       </Scene>
 
       <Scene id="current" active={activeView}>
-        <div className="current-title">
-          <p className="portal-kicker">CURRENT PROJECT</p>
-          <h2>Small capital.<br />Autonomous system.</h2>
-          <p>Observe. Qualify. Risk. Execute. Record. Review.</p>
-        </div>
+        <div className="live-dashboard">
+          <header className="live-dashboard-head">
+            <div>
+              <p className="portal-kicker">CURRENT / CANONICAL TELEMETRY</p>
+              <h2>Live system.</h2>
+            </div>
+            <div className="live-head-state">
+              <span className={"feed-state " + liveClass}><i /> {feedState}</span>
+              <time>{ageLabel(freshness)}</time>
+              <small>{strategyVersion}</small>
+            </div>
+          </header>
 
-        <div className="system-visual">
-          <div className="system-core">
-            <span>PUBLIC EQUITY</span>
-            <strong>{loading ? "—" : money(current)}</strong>
-            <small className={change && change > 0 ? "positive" : change && change < 0 ? "negative" : ""}>
-              {change === null ? "collecting data" : signedMoney(change)}
-            </small>
+          <div className="live-metrics">
+            <article>
+              <span>EQUITY</span>
+              <strong>{money(current)}</strong>
+              <small className={dayMove != null && dayMove > 0 ? "positive" : dayMove != null && dayMove < 0 ? "negative" : ""}>
+                {dayMove == null ? "—" : signedMoney(dayMove) + " day"}
+              </small>
+            </article>
+            <article>
+              <span>CASH</span>
+              <strong>{money(account?.cash)}</strong>
+              <small>BP {money(account?.buying_power)}</small>
+            </article>
+            <article>
+              <span>EXPOSURE</span>
+              <strong>{money(account?.gross_exposure)}</strong>
+              <small>{account?.open_positions ?? positions.length} open</small>
+            </article>
+            <article>
+              <span>DRAWDOWN</span>
+              <strong>{percent(account?.drawdown_pct)}</strong>
+              <small>snapshot {clockTime(account?.observed_at)}</small>
+            </article>
           </div>
 
-          {[
-            ["observe", "OBSERVE"],
-            ["qualify", "QUALIFY"],
-            ["risk", "RISK"],
-            ["execute", "EXECUTE"],
-            ["record", "RECORD"],
-            ["review", "REVIEW"]
-          ].map(([key, label], index) => (
-            <div className={"system-node node-" + (index + 1)} key={key}>
-              <i />
-              <span>{label}</span>
-            </div>
-          ))}
+          <div className="live-grid">
+            <section className="live-panel live-scanner">
+              <header>
+                <div><span>SCANNER CHANGES</span><strong>{clockTime(data?.scanner?.at)}</strong></div>
+                <small>{scannerRows.length} recent symbols</small>
+              </header>
+              <div className="live-table-head">
+                <span>SYMBOL</span><span>PRICE</span><span>QUALITY</span><span>DECISION</span>
+              </div>
+              <div className="live-table-body">
+                {scannerRows.length ? scannerRows.slice(0, 7).map((row, index) => (
+                  <div className="live-scan-row" key={(row.symbol || "row") + String(row.at) + index}>
+                    <strong>{row.symbol || "—"}</strong>
+                    <span>{row.price == null ? "—" : money(row.price)}</span>
+                    <span>{row.quality_score == null ? "—" : metric(row.quality_score, 1)}</span>
+                    <p title={row.reason || ""}>{row.reason || String(row.action || "—")}</p>
+                  </div>
+                )) : <div className="live-empty">{loading ? "Connecting to scanner log…" : "No recent scanner changes."}</div>}
+              </div>
+            </section>
 
-          <div className="system-orbit orbit-outer" />
-          <div className="system-orbit orbit-inner" />
-        </div>
+            <section className="live-panel live-positions">
+              <header>
+                <div><span>OPEN POSITIONS</span><strong>{positions.length}</strong></div>
+                <small>canonical ledger</small>
+              </header>
+              <div className="position-live-body">
+                {positions.length ? positions.slice(0, 5).map((position) => {
+                  const pnl = number(position.estimated_unrealized_pnl);
+                  return (
+                    <div className="position-live-row" key={position.symbol}>
+                      <div><strong>{position.symbol}</strong><span>{String(position.side || "").toUpperCase()}</span></div>
+                      <div><span>ENTRY</span><strong>{money(position.avg_entry_price)}</strong></div>
+                      <div><span>MARK</span><strong>{money(position.current_price)}</strong></div>
+                      <b className={pnl != null && pnl > 0 ? "positive" : pnl != null && pnl < 0 ? "negative" : ""}>{pnl == null ? "—" : signedMoney(pnl)}</b>
+                    </div>
+                  );
+                }) : <div className="live-empty">No open positions in the canonical ledger.</div>}
+              </div>
+            </section>
 
-        <div className="current-meta">
-          <div><span>STATE</span><strong>LIVE</strong></div>
-          <div><span>TRADES</span><strong>{data.trades.length}</strong></div>
-          <div><span>STRATEGY</span><strong>{strategy?.version_id || strategy?.strategy_name || "CURRENT"}</strong></div>
+            <section className="live-panel live-reasons">
+              <header>
+                <div><span>WHY IT SAID NO</span><strong>latest changes</strong></div>
+                <small>actual scan reasons</small>
+              </header>
+              <div className="reason-live-body">
+                {topReasons.length ? topReasons.slice(0, 5).map((item) => (
+                  <div className="reason-live-row" key={item.reason}>
+                    <strong>{item.count}</strong><p>{item.reason}</p>
+                  </div>
+                )) : <div className="live-empty">No rejection summary in the latest change set.</div>}
+              </div>
+            </section>
+
+            <section className="live-panel live-events">
+              <header>
+                <div><span>RECENT LOG</span><strong>canonical events</strong></div>
+                <small>newest first</small>
+              </header>
+              <div className="event-live-body">
+                {events.length ? events.slice(0, 6).map((event, index) => (
+                  <div className="event-live-row" key={(event.symbol || "event") + String(event.at) + index}>
+                    <time>{clockTime(event.at)}</time>
+                    <strong>{event.symbol || String(event.type || "SYSTEM").toUpperCase()}</strong>
+                    <p>{event.reason || String(event.action || event.type || "recorded")}</p>
+                  </div>
+                )) : <div className="live-empty">{error || "Waiting for event log."}</div>}
+              </div>
+            </section>
+          </div>
         </div>
       </Scene>
 
       <Scene id="proof" active={activeView}>
         <div className="proof-head">
           <div>
-            <p className="portal-kicker">PROOF</p>
-            <h2>The record,<br />not the pitch.</h2>
+            <p className="portal-kicker">PROOF / ACCOUNT SNAPSHOTS</p>
+            <h2>Actual equity.<br />Actual time.</h2>
           </div>
           <div className="proof-callout">
-            <span>EARLY DATA</span>
-            <p>A gain is not proof. A loss is not failure. The sample is the experiment.</p>
+            <span>{feedState} / {ageLabel(freshness)}</span>
+            <p>Each point is a persisted account snapshot from the canonical trading ledger.</p>
           </div>
         </div>
 
         <div className="proof-chart">
-          {loading ? <div className="chart-empty">Connecting to public record…</div> : <EquityChart rows={data.equity} />}
+          {loading ? <div className="chart-empty">Connecting to canonical snapshots…</div> : <EquityChart rows={equityRows} />}
         </div>
 
         <div className="proof-stats">
-          <div><span>START</span><strong>{money(start)}</strong></div>
+          <div><span>SESSION START</span><strong>{money(sessionStart)}</strong></div>
           <div><span>NOW</span><strong>{money(current)}</strong></div>
-          <div><span>MOVE</span><strong className={change && change > 0 ? "positive" : change && change < 0 ? "negative" : ""}>{change === null ? "—" : signedMoney(change)}</strong></div>
-          <div><span>CLOSED</span><strong>{data.trades.length}</strong></div>
+          <div><span>SESSION MOVE</span><strong className={sessionMove != null && sessionMove > 0 ? "positive" : sessionMove != null && sessionMove < 0 ? "negative" : ""}>{sessionMove == null ? "—" : signedMoney(sessionMove)}</strong></div>
+          <div><span>RECENT CLOSES</span><strong>{recentClosed.length}</strong></div>
         </div>
 
-        <div className="proof-foot">{error || "Sanitized live telemetry. No promise of future performance."}</div>
+        <div className="proof-close-tape">
+          {recentClosed.slice(0, 4).map((position) => {
+            const pnl = number(position.net_pnl ?? position.realized_pnl);
+            return (
+              <div key={(position.symbol || "") + String(position.closed_at)}>
+                <time>{clockTime(position.closed_at)}</time>
+                <strong>{position.symbol || "—"}</strong>
+                <span>{money(position.avg_entry_price)} → {money(position.avg_exit_price)}</span>
+                <b className={pnl != null && pnl > 0 ? "positive" : pnl != null && pnl < 0 ? "negative" : ""}>{pnl == null ? "—" : signedMoney(pnl)}</b>
+              </div>
+            );
+          })}
+        </div>
+
+        <div className="proof-foot">{error || "Source: canonical trading log · automatic 5-second refresh"}</div>
       </Scene>
 
       <Scene id="ideas" active={activeView}>
