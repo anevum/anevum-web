@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /command
+Disallow: /rhenlink
+Disallow: /wiki/archive/
+
+Sitemap: https://anevum.com/sitemap.xml
