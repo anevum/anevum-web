@@ -57,7 +57,30 @@ export function PublicShell({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  const current = Math.max(0, sections.findIndex(([id]) => id === active)) + 1;
+  const activeIndex = Math.max(0, sections.findIndex(([id]) => id === active));
+  const current = activeIndex + 1;
+
+  useEffect(() => {
+    function onKey(event: KeyboardEvent) {
+      const forward = ["ArrowDown", "ArrowRight", "PageDown", " "].includes(event.key);
+      const backward = ["ArrowUp", "ArrowLeft", "PageUp"].includes(event.key);
+      if (!forward && !backward) return;
+
+      const nextIndex = forward
+        ? Math.min(sections.length - 1, activeIndex + 1)
+        : Math.max(0, activeIndex - 1);
+
+      if (nextIndex === activeIndex) return;
+      event.preventDefault();
+      document.getElementById(sections[nextIndex][0])?.scrollIntoView({
+        behavior: "smooth",
+        block: "start"
+      });
+    }
+
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [activeIndex]);
 
   function goTo(id: string) {
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
