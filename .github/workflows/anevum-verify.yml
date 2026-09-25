@@ -21,12 +21,6 @@ jobs:
           node-version: 22
       - name: Install
         run: npm install --no-audit --no-fund
-      - name: Export generated lockfile
-        uses: actions/upload-artifact@v4
-        with:
-          name: anevum-generated-lockfile
-          path: package-lock.json
-          retention-days: 1
       - name: Typecheck and build
         run: npm run build
       - name: Verify React and Cloudflare output
