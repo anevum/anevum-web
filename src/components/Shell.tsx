@@ -1,199 +1,83 @@
-import { AnimatePresence, motion } from "motion/react";
-import { useEffect, useMemo, useState, type ReactNode } from "react";
-import { Link, NavLink, useLocation } from "react-router-dom";
-import { useAuth } from "../auth/AuthProvider";
+import { useEffect, useState, type ReactNode } from "react";
 import Mark from "./Mark";
 
-const nav = [
-  ["Work", "/work"],
-  ["Lab", "/lab"],
-  ["Record", "/record"],
-  ["Notes", "/notes"],
-  ["Wiki", "/wiki"],
-  ["About", "/about"]
-] as const;
-
-const searchEntries = [
-  ["ANEVUM", "Home and current work", "/"],
-  ["Work", "Projects, systems, and active builds", "/work"],
-  ["Lab", "Experiments and hypotheses", "/lab"],
-  ["Record", "Results, changes, and public evidence", "/record"],
-  ["Notes", "Working ideas and longer-form thinking", "/notes"],
-  ["Wiki", "Structured map of ANEVUM", "/wiki"],
-  ["Transcosmic Archive", "Preserved creative and publishing work", "/wiki/archive/transcosmic"],
-  ["About", "Devon Akins and why ANEVUM exists", "/about"],
-  ["RHENLINK", "Identity and authenticated access", "/rhenlink"],
-  ["Command", "Private operating console", "/command"]
+const sections = [
+  ["intro", "Start"],
+  ["now", "Now"],
+  ["system", "How"],
+  ["evidence", "Evidence"],
+  ["mind", "Mind"],
+  ["other", "Other"]
 ] as const;
 
 export function PublicShell({ children }: { children: ReactNode }) {
-  const location = useLocation();
-  const { commandAdmin } = useAuth();
-  const [mobileOpen, setMobileOpen] = useState(false);
-  const [searchOpen, setSearchOpen] = useState(false);
-  const [query, setQuery] = useState("");
+  const [active, setActive] = useState("intro");
 
   useEffect(() => {
-    setMobileOpen(false);
-    setSearchOpen(false);
-    setQuery("");
-  }, [location.pathname]);
+    const root = document.querySelector(".deck-scroll");
+    const nodes = sections
+      .map(([id]) => document.getElementById(id))
+      .filter((node): node is HTMLElement => Boolean(node));
 
-  useEffect(() => {
-    function onKey(event: KeyboardEvent) {
-      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
-        event.preventDefault();
-        setSearchOpen(true);
-      }
-      if (event.key === "Escape") {
-        setSearchOpen(false);
-        setMobileOpen(false);
-      }
-    }
-    document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
+    if (!root || !nodes.length) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries
+          .filter((entry) => entry.isIntersecting)
+          .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+        if (visible?.target.id) setActive(visible.target.id);
+      },
+      { root, threshold: [0.35, 0.55, 0.75] }
+    );
+
+    nodes.forEach((node) => observer.observe(node));
+    return () => observer.disconnect();
   }, []);
 
-  const results = useMemo(() => {
-    const term = query.trim().toLowerCase();
-    return searchEntries.filter(
-      ([title, note]) => !term || (title + " " + note).toLowerCase().includes(term)
-    );
-  }, [query]);
+  const current = Math.max(0, sections.findIndex(([id]) => id === active)) + 1;
+
+  function goTo(id: string) {
+    document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
 
   return (
-    <div className="site-frame">
-      <a className="skip-link" href="#content">Skip to content</a>
-
-      <header className="site-header">
-        <div className="header-inner">
-          <Link className="brand" to="/" aria-label="ANEVUM home">
-            <Mark />
-            <span>ANEVUM</span>
-          </Link>
-
-          <nav className="desktop-nav" aria-label="Primary navigation">
-            {nav.map(([label, route]) => (
-              <NavLink key={route} to={route} className={({ isActive }) => (isActive ? "active" : "")}>
-                {label}
-              </NavLink>
-            ))}
-          </nav>
-
-          <div className="header-tools">
-            <button
-              className="quiet-button search-trigger"
-              onClick={() => setSearchOpen(true)}
-              type="button"
-            >
-              <span>Search</span>
-              <kbd>⌘K</kbd>
-            </button>
-            <Link className="identity-link" to="/rhenlink">RHENLINK</Link>
-            {commandAdmin && <Link className="command-link" to="/command">Command</Link>}
-            <button
-              className="menu-trigger"
-              type="button"
-              aria-label="Toggle navigation"
-              aria-expanded={mobileOpen}
-              onClick={() => setMobileOpen((value) => !value)}
-            >
-              <span />
-              <span />
-            </button>
-          </div>
+    <div className="deck-frame">
+      <header className="deck-header">
+        <button className="deck-brand" type="button" onClick={() => goTo("intro")} aria-label="ANEVUM home">
+          <Mark />
+          <span>ANEVUM</span>
+        </button>
+        <div className="deck-progress">
+          <span>{String(current).padStart(2, "0")}</span>
+          <i />
+          <span>{String(sections.length).padStart(2, "0")}</span>
         </div>
-
-        <AnimatePresence>
-          {mobileOpen && (
-            <motion.nav
-              className="mobile-nav"
-              aria-label="Mobile navigation"
-              initial={{ opacity: 0, y: -12 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -12 }}
-            >
-              {nav.map(([label, route]) => (
-                <Link key={route} to={route}>{label}<span>↗</span></Link>
-              ))}
-              <Link to="/rhenlink">RHENLINK<span>↗</span></Link>
-              {commandAdmin && <Link to="/command">Command<span>↗</span></Link>}
-            </motion.nav>
-          )}
-        </AnimatePresence>
       </header>
 
-      <main id="content" className="site-main">{children}</main>
-
-      <footer className="site-footer">
-        <div className="footer-grid">
-          <div className="footer-brand">
-            <Mark />
-            <div>
-              <strong>ANEVUM</strong>
-              <span>Devon Akins / Working archive</span>
-            </div>
-          </div>
-          <div className="footer-links">
-            <Link to="/work">Work</Link>
-            <Link to="/record">Record</Link>
-            <Link to="/wiki">Wiki</Link>
-            <Link to="/about">About</Link>
-          </div>
-          <p>Systems, experiments, writing, research, and the record of what gets built.</p>
-        </div>
-        <div className="footer-base">
-          <span>ANEVUM / 2026</span>
-          <span>Independent work</span>
-        </div>
-      </footer>
-
-      <AnimatePresence>
-        {searchOpen && (
-          <motion.div
-            className="search-overlay"
-            role="dialog"
-            aria-modal="true"
-            aria-label="Search ANEVUM"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onMouseDown={(event) => {
-              if (event.target === event.currentTarget) setSearchOpen(false);
-            }}
+      <nav className="deck-rail" aria-label="Page sections">
+        {sections.map(([id, label], index) => (
+          <button
+            key={id}
+            type="button"
+            className={active === id ? "active" : ""}
+            onClick={() => goTo(id)}
+            aria-label={"Go to " + label}
+            aria-current={active === id ? "page" : undefined}
           >
-            <motion.div
-              className="search-dialog"
-              initial={{ opacity: 0, y: 18, scale: 0.985 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 10, scale: 0.99 }}
-            >
-              <div className="search-field">
-                <span>⌕</span>
-                <input
-                  autoFocus
-                  value={query}
-                  onChange={(event) => setQuery(event.target.value)}
-                  placeholder="Search ANEVUM"
-                  aria-label="Search ANEVUM"
-                />
-                <button type="button" onClick={() => setSearchOpen(false)}>Esc</button>
-              </div>
-              <div className="search-results">
-                {results.map(([title, note, route]) => (
-                  <Link key={route} to={route}>
-                    <div>
-                      <strong>{title}</strong>
-                      <span>{note}</span>
-                    </div>
-                    <b>↗</b>
-                  </Link>
-                ))}
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+            <i />
+            <span>{label}</span>
+            <b>{String(index + 1).padStart(2, "0")}</b>
+          </button>
+        ))}
+      </nav>
+
+      <main className="deck-scroll">{children}</main>
+
+      <div className="deck-hint" aria-hidden="true">
+        <span>SCROLL</span>
+        <i />
+      </div>
     </div>
   );
 }
