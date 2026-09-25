@@ -54,3 +54,21 @@ jobs:
             curl --fail --show-error --silent "$base$path" > /dev/null
           done
           curl --fail --show-error --silent --head "$base/" | grep -qi 'x-robots-tag:.*noindex'
+      - name: Capture browser QA
+        if: github.event_name == 'pull_request'
+        shell: bash
+        run: |
+          base="${{ steps.preview.outputs.preview_url }}"
+          mkdir -p "$RUNNER_TEMP/anevum-visuals"
+          google-chrome --headless --no-sandbox --disable-gpu --hide-scrollbars --virtual-time-budget=5000 --window-size=1440,1200 --screenshot="$RUNNER_TEMP/anevum-visuals/home-desktop.png" "$base/"
+          google-chrome --headless --no-sandbox --disable-gpu --hide-scrollbars --virtual-time-budget=5000 --window-size=390,844 --screenshot="$RUNNER_TEMP/anevum-visuals/home-mobile.png" "$base/"
+          google-chrome --headless --no-sandbox --disable-gpu --virtual-time-budget=5000 --dump-dom "$base/" > "$RUNNER_TEMP/anevum-visuals/home-rendered.html"
+          grep -Fq 'Build.' "$RUNNER_TEMP/anevum-visuals/home-rendered.html"
+      - name: Upload browser QA
+        if: github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: anevum-preview-visuals
+          path: ${{ runner.temp }}/anevum-visuals
+          retention-days: 3
+
