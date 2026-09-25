@@ -25,7 +25,7 @@ function bearerToken(request) {
 
 async function proxyTrader(request, upstreamPath) {
   const token = bearerToken(request);
-  if (!token) throw new ApiError(401, "Resolve RHENLINK before using COMMAND.");
+  if (!token) throw new ApiError(401, "Private authentication is required before using Command.");
 
   const response = await fetch(TRADER_BASE + upstreamPath, {
     method: request.method,
