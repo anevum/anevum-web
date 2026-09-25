@@ -61,11 +61,11 @@ function shell(content){
   '<button class="menu-button" id="menuButton" aria-label="Menu" aria-expanded="false">'+icons.menu+'</button></div></div>'+
   '<nav class="mobile-panel" id="mobilePanel" aria-label="Mobile navigation">'+mobile+'</nav></header>'+
   '<main id="main" class="page">'+content+'</main>'+
-  '<footer class="site-footer"><div class="footer-inner"><div><strong>ANEVUM</strong><span>Systematic trading research and automated execution.</span></div><div class="footer-links">'+
+  '<footer class="site-footer"><div class="footer-inner"><div><strong>ANEVUM</strong><span>A small-capital quantitative experiment, built in public.</span></div><div class="footer-links">'+
+  '<a href="'+routeHref("/proof")+'" data-route="/proof">Proof</a>'+
   '<a href="'+routeHref("/research")+'" data-route="/research">Research</a>'+
-  '<a href="'+routeHref("/method")+'" data-route="/method">Method</a>'+
-  '<a href="'+routeHref("/contact")+'" data-route="/contact">Contact</a>'+
-  '<a href="/command" data-route="/command">Command</a></div><small>Trading involves risk. Public pages do not display private account data or imply guaranteed returns.</small></div></footer>'+
+  '<a href="'+routeHref("/about")+'" data-route="/about">About</a>'+
+  '<a href="/command" data-route="/command">Command</a></div><small>ANEVUM trades its own capital. Nothing on this site is a promise of returns or investment advice. Losses and failed experiments remain part of the public record.</small></div></footer>'+
   '<div class="search-panel" id="searchPanel" role="dialog" aria-modal="true" aria-label="Search ANEVUM">'+
   '<div class="search-box"><div class="search-top"><input id="searchInput" autocomplete="off" placeholder="Search ANEVUM…" aria-label="Search ANEVUM"/><button class="icon-button" id="searchClose" aria-label="Close search">'+icons.close+'</button></div><div class="search-results" id="searchResults"></div></div></div>';
 }
