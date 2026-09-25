@@ -1,5 +1,6 @@
 import { motion } from "motion/react";
-import type { ReactNode } from "react";
+import { useEffect, type ReactNode } from "react";
+import { useLocation } from "react-router-dom";
 import EquityChart from "../components/EquityChart";
 import Mark from "../components/Mark";
 import { usePublicRecord } from "../hooks/usePublicRecord";
@@ -17,10 +18,9 @@ function Reveal({
   return (
     <motion.div
       className={className}
-      initial={{ opacity: 0, y: 28 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ amount: 0.35, once: true }}
-      transition={{ duration: 0.7, delay, ease: [0.18, 0.75, 0.25, 1] }}
+      initial={{ opacity: 0, y: 24 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.65, delay, ease: [0.18, 0.75, 0.25, 1] }}
     >
       {children}
     </motion.div>
@@ -28,7 +28,29 @@ function Reveal({
 }
 
 export default function Home() {
+  const location = useLocation();
   const { data, loading, error } = usePublicRecord();
+
+  useEffect(() => {
+    const id = location.hash.replace("#", "");
+    if (!id) return;
+
+    let attempts = 0;
+    let timer = 0;
+
+    const resolve = () => {
+      const target = document.getElementById(id);
+      if (target) {
+        target.scrollIntoView({ block: "start" });
+        return;
+      }
+      attempts += 1;
+      if (attempts < 10) timer = window.setTimeout(resolve, 50);
+    };
+
+    resolve();
+    return () => window.clearTimeout(timer);
+  }, [location.hash]);
   const first = data.equity[0];
   const last = data.equity[data.equity.length - 1];
   const start = Number(first?.equity);
