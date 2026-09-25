@@ -6,6 +6,9 @@ on:
   pull_request:
     branches: [main]
 
+permissions:
+  contents: read
+
 concurrency:
   group: anevum-verify-${{ github.ref }}
   cancel-in-progress: true
@@ -13,7 +16,7 @@ concurrency:
 jobs:
   verify:
     runs-on: ubuntu-latest
-    timeout-minutes: 8
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -21,17 +24,11 @@ jobs:
           node-version: 22
       - name: Install
         run: npm install --no-audit --no-fund
-      - name: Check browser script
-        run: node --check site/app.js
-      - name: Build
+      - name: Typecheck and build
         run: npm run build
-      - name: Verify output
+      - name: Verify React and Cloudflare output
         shell: bash
         run: |
-          test -f dist/index.html
-          test -f dist/styles.css
-          test -f dist/app.js
-          grep -Fq '<title>ANEVUM — The Small-Capital Experiment</title>' dist/index.html
-          grep -Fq 'RHENLINK' dist/app.js
-          grep -Fq 'searchItems' dist/app.js\n          grep -Fq 'The record, not the pitch.' dist/app.js
-          grep -Fq 'Can a tiny account' dist/app.js
+          test -f dist/client/index.html
+          test -f dist/wrangler.json
+          grep -Fq 'ANEVUM' dist/client/index.html
