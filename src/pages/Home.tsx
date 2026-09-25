@@ -55,7 +55,7 @@ const updates = [
 
 export default function Home() {
   const location = useLocation();
-  const [showIntro, setShowIntro] = useState(true);
+  const [showIntro, setShowIntro] = useState(() => !window.location.hash);
   const { data, loading, error } = useLiveTrading(5000);
 
   useEffect(() => {
@@ -113,13 +113,7 @@ export default function Home() {
         ) : null}
       </AnimatePresence>
 
-      <motion.div
-        className="public-page"
-        id="top"
-        initial={{ opacity: 0, scale: 0.992 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ delay: 1.45, duration: 0.8, ease: [0.2, 0.75, 0.25, 1] }}
-      >
+      <div className="public-page" id="top">
         <section className="landing-hero">
           <div className="hero-orbit hero-orbit-a" />
           <div className="hero-orbit hero-orbit-b" />
@@ -371,7 +365,7 @@ export default function Home() {
             <span>OPERATOR</span><i />
           </a>
         </footer>
-      </motion.div>
+      </div>
     </>
   );
 }
