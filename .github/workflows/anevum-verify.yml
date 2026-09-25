@@ -77,8 +77,8 @@ jobs:
         run: |
           base="${{ steps.preview.outputs.preview_url }}"
           mkdir -p "$RUNNER_TEMP/anevum-visuals"
-          google-chrome --headless --no-sandbox --disable-gpu --hide-scrollbars --virtual-time-budget=6000 --window-size=1440,1200 --screenshot="$RUNNER_TEMP/anevum-visuals/home-desktop.png" "$base/"
-          google-chrome --headless --no-sandbox --disable-gpu --hide-scrollbars --virtual-time-budget=6000 --window-size=390,844 --screenshot="$RUNNER_TEMP/anevum-visuals/home-mobile.png" "$base/"
+          google-chrome --headless --no-sandbox --disable-gpu --hide-scrollbars --virtual-time-budget=6000 --window-size=1440,1200 --screenshot="$RUNNER_TEMP/anevum-visuals/home-desktop.png" "$base/#top"
+          google-chrome --headless --no-sandbox --disable-gpu --hide-scrollbars --virtual-time-budget=6000 --window-size=390,844 --screenshot="$RUNNER_TEMP/anevum-visuals/home-mobile.png" "$base/#top"
           google-chrome --headless --no-sandbox --disable-gpu --hide-scrollbars --virtual-time-budget=6000 --window-size=1440,1200 --screenshot="$RUNNER_TEMP/anevum-visuals/demo-desktop.png" "$base/#demo"
           google-chrome --headless --no-sandbox --disable-gpu --hide-scrollbars --virtual-time-budget=6000 --window-size=390,844 --screenshot="$RUNNER_TEMP/anevum-visuals/demo-mobile.png" "$base/#demo"
           google-chrome --headless --no-sandbox --disable-gpu --virtual-time-budget=6000 --dump-dom "$base/" > "$RUNNER_TEMP/anevum-visuals/home-rendered.html"
