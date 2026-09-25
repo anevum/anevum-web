@@ -14,8 +14,9 @@ export function PublicShell({ children }: { children: ReactNode }) {
   const [active, setActive] = useState("intro");
 
   useEffect(() => {
-    const root = document.querySelector<HTMLElement>(".deck-scroll");
-    if (!root) return;
+    const found = document.querySelector<HTMLElement>(".deck-scroll");
+    if (!found) return;
+    const root = found;
 
     let frame = 0;
 
