@@ -71,7 +71,8 @@ function withSecurityHeaders(response, pathname) {
   headers.set("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
   headers.set("Cross-Origin-Opener-Policy", "same-origin");
   headers.set("X-Frame-Options", "DENY");
-  if (pathname !== "/") headers.set("X-Robots-Tag", "noindex, nofollow, noarchive");
+  const privateOrArchived = pathname.startsWith("/command") || pathname.startsWith("/rhenlink") || pathname.startsWith("/wiki") || pathname.startsWith("/lattice") || pathname.startsWith("/store") || pathname.startsWith("/reply") || pathname.startsWith("/the-book") || pathname.startsWith("/stories/");
+  if (privateOrArchived) headers.set("X-Robots-Tag", "noindex, nofollow, noarchive");
   if (pathname.startsWith("/command")) headers.set("Cache-Control", "private, no-store");
 
   return new Response(response.body, {
