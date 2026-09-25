@@ -64,7 +64,7 @@ async function commandApi(request, pathname) {
   return null;
 }
 
-function withSecurityHeaders(response, pathname) {
+function withSecurityHeaders(response, pathname, hostname) {
   const headers = new Headers(response.headers);
   headers.set("X-Content-Type-Options", "nosniff");
   headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
@@ -72,7 +72,7 @@ function withSecurityHeaders(response, pathname) {
   headers.set("Cross-Origin-Opener-Policy", "same-origin");
   headers.set("X-Frame-Options", "DENY");
   const privateOrArchived = pathname.startsWith("/command") || pathname.startsWith("/rhenlink") || pathname.startsWith("/wiki/archive") || pathname.startsWith("/lattice") || pathname.startsWith("/store") || pathname.startsWith("/reply") || pathname.startsWith("/the-book") || pathname.startsWith("/stories/");
-  if (privateOrArchived) headers.set("X-Robots-Tag", "noindex, nofollow, noarchive");
+  if (privateOrArchived || hostname !== "anevum.com") headers.set("X-Robots-Tag", "noindex, nofollow, noarchive");
   if (pathname.startsWith("/command")) headers.set("Cache-Control", "private, no-store");
 
   return new Response(response.body, {
@@ -103,6 +103,6 @@ export default {
 
     const response = await env.ASSETS.fetch(request);
     if (!response.headers.get("content-type")?.includes("text/html")) return response;
-    return withSecurityHeaders(response, pathname);
+    return withSecurityHeaders(response, pathname, url.hostname);
   }
 };
