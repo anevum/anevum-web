@@ -1,68 +1,71 @@
-# ANEVUM
+# ANEVUM Web
 
-Production source for https://anevum.com.
+ANEVUM's public website and private operator interface.
 
-ANEVUM is Devon Akins's personal home online. The public site is intentionally simple: a single interactive story that explains what Devon is working on now, why it matters to him, and what evidence exists.
+## Product boundary
 
-## Public experience
+### Public — `/`
 
-The public site is a fixed no-scroll portal with five views:
+The public site is an intentionally limited observability surface. It may show:
 
-1. Home
-2. Current
-3. Proof
-4. Ideas
-5. Other
+- runtime state and telemetry freshness
+- active public version identifier
+- aggregate scan/event activity
+- anonymized event classes
+- architecture and methodology
+- public release/update notes
 
-Current and Proof are live data products, not mock dashboards. The browser polls a same-origin Cloudflare Worker endpoint every five seconds. That Worker proxies a read-only Supabase Edge Function which queries the canonical private trading event ledger, account snapshots, positions, and orders server-side. Secrets and private database access never reach the browser.
+It must **not** expose:
 
-Older project routes redirect into the relevant section of the single public experience.
+- account equity, cash, buying power, or deposits
+- open positions or orders
+- traded symbols or prices
+- individual trade history or P&L
+- exact entry/exit rules
+- quality scores, thresholds, risk limits, or reproducible strategy parameters
+- broker credentials, tokens, or private database records
 
-## Private access
+The browser reads `/api/public/trading/live`, which proxies the sanitized `trading-public-feed` Supabase Edge Function.
 
-Authentication is not a public feature.
+CI treats this as a contract and fails if the public response regains blocked trading fields.
 
-- There is no public login link or account navigation.
-- `/private` is the single unlinked entrance for Devon and Brandi.
-- Account creation does not grant administrator permissions.
-- `/command` remains permission-gated.
-- Private routes are excluded from indexing and caching.
+### Operator — `/command`
 
-## Architecture
+The Command surface contains private operator telemetry. Production access is intended to sit behind Cloudflare Access and is also gated by ANEVUM/Supabase administrator authorization inside the application.
+
+The public footer contains only a low-prominence `OPERATOR` entrance. Search engines are instructed not to index the operator/private routes.
+
+### Private auth — `/private`
+
+Existing application authentication remains available as a secondary gate for Command. It is not part of the public navigation.
+
+## Public data hardening
+
+The historical public trading projection tables remain in the database for continuity, but anonymous and ordinary authenticated Data API roles no longer have direct `SELECT` access. The lockdown applied on September 25, 2026 is recorded in:
+
+`database/lock_down_public_trading_projection.sql`
+
+The only trading data intentionally published to unauthenticated visitors is the sanitized Edge Function payload used by the live demo.
+
+## Stack
 
 - React 19 + TypeScript
 - Vite
-- Cloudflare Vite plugin
-- Cloudflare Workers + Static Assets
-- React Router
-- Motion for restrained transitions
-- Supabase for private identity, canonical trading logs, and a sanitized read-only public telemetry Edge Function
-- Cloudflare Worker same-origin proxy for the public telemetry feed
-- Railway-hosted trading system behind authenticated private Command routes
+- Cloudflare Workers / static assets
+- Supabase for application data and telemetry
+- GitHub Actions verification and production deployment
 
-## Development
+## Commands
 
 ```bash
 npm install
+npm run check
+npm run build
 npm run dev
 ```
 
-## Verification
-
-```bash
-npm run check
-npm run build
-npm run preview
-```
-
-Pull requests create isolated Cloudflare previews and run route, browser-render, desktop, and mobile screenshot checks before production merge.
-
 ## Deployment
 
-`main` is production. Feature work stays on preview branches until reviewed.
+Production is deployed from `main` by `.github/workflows/deploy-production.yml`.
 
-```bash
-npm run deploy
-```
-
-The Transcosmic source archive remains preserved under `site/wiki/archive/transcosmic/`, but it is no longer part of the primary public navigation.
+Pull requests run `.github/workflows/anevum-verify.yml`, which performs typechecking, a production build, a Cloudflare preview, privacy probes, and desktop/mobile browser captures.
