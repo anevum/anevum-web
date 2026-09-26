@@ -1,186 +1,118 @@
-import { motion } from "motion/react";
-import Mark from "../components/Mark";
+import { AnimatePresence, motion } from "motion/react";
+import { useState } from "react";
 import { useLiveTrading } from "../hooks/useLiveTrading";
 
-function ageLabel(value?: number | null) {
-  if (value == null || !Number.isFinite(value)) return "awaiting telemetry";
-  if (value < 60) return Math.max(0, Math.round(value)) + "s ago";
-  return Math.floor(value / 60) + "m ago";
-}
+type SystemTab = "overview" | "pipeline" | "architecture" | "boundary";
 
-function shortVersion(value?: string | null) {
-  if (!value) return "UNVERSIONED";
-  return String(value).replace(/^strategy[-_ ]?/i, "").toUpperCase();
-}
+const tabs: [SystemTab, string][] = [
+  ["overview", "Overview"],
+  ["pipeline", "Pipeline"],
+  ["architecture", "Architecture"],
+  ["boundary", "Boundary"]
+];
 
 const pipeline = [
-  ["01", "Observe", "Sample the configured market universe and normalize incoming market data into a consistent internal form."],
-  ["02", "Evaluate", "Apply the active strategy version. Candidate structures that do not meet its rules are rejected."],
-  ["03", "Risk gate", "Check capital, exposure, timing, execution state, and other safety constraints before an order can exist."],
-  ["04", "Execute", "Submit approved orders through the broker interface and track the complete order lifecycle."],
-  ["05", "Reconcile", "Compare broker records with the internal ledger so the research record reflects what actually happened."],
-  ["06", "Analyze", "Tag completed observations, measure excursions, replay historical sessions, and decide what should change next."]
+  ["01", "Observe", "Sample the configured market universe and normalize incoming market data."],
+  ["02", "Evaluate", "Apply the active strategy version and reject candidates that do not meet its rules."],
+  ["03", "Risk gate", "Check capital, exposure, timing, execution state, and safety constraints."],
+  ["04", "Execute", "Submit approved orders through the broker interface and track the lifecycle."],
+  ["05", "Reconcile", "Compare broker truth with the internal ledger and isolate mismatches."],
+  ["06", "Analyze", "Tag outcomes, calculate excursions, replay sessions, and decide what changes next."]
 ];
 
-const operating = [
-  ["Market session", "The trader scans continuously, evaluates candidates, applies risk gates, executes only approved orders, and records telemetry."],
-  ["Execution record", "Order and position state are persisted so later analysis can distinguish intended behavior from broker reality."],
-  ["Post-close", "Reconciliation, tagging, MFE/MAE analysis, replay, and session review are performed on the completed dataset."],
-  ["Research branch", "New strategy ideas are tested offline against historical data. Production remains unchanged while those candidates are evaluated."],
-  ["Promotion", "A candidate must survive reproducible configuration, chronological validation, realistic friction, holdouts, and replay parity before it can replace production."],
-  ["Scaling", "Additional capital and simultaneous exposure remain downstream of edge validation rather than being used to hide weak expectancy."]
-];
-
-const layers = [
-  ["Public interface", "React + TypeScript", "anevum.com exposes a limited observability surface: runtime state, version identity, aggregate event activity, architecture, and public development records."],
-  ["Edge and access", "Cloudflare", "Serves the website and Worker API, applies security headers, proxies public telemetry, and protects the private Command surface."],
-  ["Canonical data", "Supabase", "Stores application and trading records. A dedicated Edge Function emits the sanitized public trading feed."],
-  ["Trader runtime", "Railway", "Runs the production trading service separately from the public website and exposes protected operational endpoints."],
-  ["Broker and market data", "Alpaca", "Provides brokerage execution and the market-data source used by the live trader and historical research corpus."],
-  ["Source and verification", "GitHub + Actions", "Tracks source and research changes, runs type checks and production builds, performs privacy probes and browser captures, and deploys main."]
+const architecture = [
+  ["Interface", "React + TypeScript", "Public live, system, and research surfaces."],
+  ["Edge", "Cloudflare", "Site delivery, Worker API, security headers, and private route protection."],
+  ["Data", "Supabase", "Canonical application/trading records and sanitized public telemetry."],
+  ["Runtime", "Railway", "Production trader service and protected operational endpoints."],
+  ["Broker", "Alpaca", "Broker execution and market data used by live and historical systems."],
+  ["Verification", "GitHub Actions", "Type checks, builds, deployment, and source/version history."]
 ];
 
 export default function System() {
+  const [tab, setTab] = useState<SystemTab>("overview");
   const { data, loading } = useLiveTrading(5000);
-  const version = data?.active_strategy?.version_id || data?.active_strategy?.strategy_name;
   const state = loading ? "CONNECTING" : data?.state || (data?.live ? "RUNNING" : "STALE");
   const stateClass = data?.live ? "is-live" : data ? "is-stale" : "";
 
   return (
-    <div className="docs-page">
-      <motion.section
-        className="docs-hero"
-        initial={{ opacity: 0, y: 24 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: .65, ease: [0.2, 0.8, 0.2, 1] }}
-      >
-        <div className="docs-hero-mark"><Mark /></div>
+    <section className="compact-page workspace-screen">
+      <header className="workspace-heading">
         <div>
-          <p className="docs-eyebrow">SYSTEM / CURRENT ARCHITECTURE</p>
-          <h1>How ANEVUM works.</h1>
-          <p className="docs-lead">
-            ANEVUM is a personal research system for automated market observation, rule evaluation,
-            risk gating, broker execution, reconciliation, and post-trade analysis. The live path is
-            deterministic: production decisions do not depend on an AI-model call for every market event.
-          </p>
+          <p className="compact-eyebrow">SYSTEM / HOW IT WORKS</p>
+          <h1>System</h1>
         </div>
-        <div className="docs-live-card">
+        <div className="workspace-heading-status">
           <span className={"runtime-state " + stateClass}><i />{state}</span>
-          <div><small>ACTIVE VERSION</small><strong>{shortVersion(version)}</strong></div>
-          <div><small>TELEMETRY</small><strong>{ageLabel(data?.freshness_seconds)}</strong></div>
+          <div><small>LIVE PATH</small><strong>DETERMINISTIC</strong></div>
+          <div><small>RESEARCH</small><strong>ISOLATED</strong></div>
         </div>
-      </motion.section>
+      </header>
 
-      <section className="docs-section">
-        <div className="docs-section-label"><span>01</span><strong>PURPOSE</strong></div>
-        <div className="docs-prose docs-prose-large">
-          <p>
-            The system is built to test whether a small account can be operated by a disciplined,
-            measurable process that improves from evidence instead of impulse.
-          </p>
-          <p>
-            The goal is not constant activity and it is not to make every trade win. The goal is to
-            discover a reproducible edge, execute it consistently, measure it correctly, and refuse
-            to scale until the evidence supports scaling.
-          </p>
-        </div>
-      </section>
-
-      <section className="docs-section">
-        <div className="docs-section-label"><span>02</span><strong>PIPELINE</strong></div>
-        <div className="pipeline-stack">
-          {pipeline.map(([number, title, body], index) => (
-            <motion.article
-              className="pipeline-card"
-              key={number}
-              initial={{ opacity: 0, x: -14 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true, amount: .45 }}
-              transition={{ duration: .4, delay: index * .04 }}
-            >
-              <span>{number}</span>
-              <div><h2>{title}</h2><p>{body}</p></div>
-              <i />
-            </motion.article>
+      <div className="workspace-layout">
+        <aside className="workspace-tabs" aria-label="System sections">
+          {tabs.map(([id, label], index) => (
+            <button key={id} className={tab === id ? "active" : ""} onClick={() => setTab(id)}>
+              <span>0{index + 1}</span><strong>{label}</strong>
+            </button>
           ))}
-        </div>
-      </section>
+        </aside>
 
-      <section className="docs-section">
-        <div className="docs-section-label"><span>03</span><strong>OPERATING PROCESS</strong></div>
-        <div className="process-grid">
-          {operating.map(([title, body], index) => (
-            <motion.article
-              className="glass-card"
-              key={title}
-              initial={{ opacity: 0, y: 16 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, amount: .3 }}
-              transition={{ duration: .45, delay: index * .04 }}
-            >
-              <span>{String(index + 1).padStart(2, "0")}</span>
-              <h3>{title}</h3>
-              <p>{body}</p>
-            </motion.article>
-          ))}
-        </div>
-      </section>
+        <div className="workspace-content">
+          <AnimatePresence mode="wait">
+            {tab === "overview" && (
+              <motion.div className="workspace-view overview-view" key="overview" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
+                <div className="compact-title-block">
+                  <span>WHAT ANEVUM IS</span>
+                  <h2>A measurable automated trading research system.</h2>
+                  <p>
+                    It observes markets, evaluates candidates, applies risk gates, executes approved orders,
+                    reconciles broker activity, and stores enough evidence to determine whether the process deserves to survive.
+                  </p>
+                </div>
+                <div className="compact-info-grid">
+                  <article><span>OBJECTIVE</span><strong>Reproducible positive expectancy</strong><p>Find an edge that remains useful outside the sample that produced it.</p></article>
+                  <article><span>PRODUCTION</span><strong>Rule-based execution</strong><p>Live decisions do not require an AI-model call for every market event.</p></article>
+                  <article><span>RESEARCH</span><strong>Offline validation</strong><p>New strategy ideas remain separate until they survive promotion gates.</p></article>
+                  <article><span>SCALING</span><strong>Evidence first</strong><p>Additional capital and simultaneous exposure remain downstream of edge validation.</p></article>
+                </div>
+              </motion.div>
+            )}
 
-      <section className="docs-section">
-        <div className="docs-section-label"><span>04</span><strong>ARCHITECTURE</strong></div>
-        <div className="architecture-stack">
-          {layers.map(([title, tool, body], index) => (
-            <motion.article
-              key={title}
-              initial={{ opacity: 0, scale: .985 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true, amount: .35 }}
-              transition={{ duration: .4, delay: index * .035 }}
-            >
-              <div><span>{String(index + 1).padStart(2, "0")}</span><strong>{title}</strong></div>
-              <b>{tool}</b>
-              <p>{body}</p>
-            </motion.article>
-          ))}
-        </div>
-      </section>
+            {tab === "pipeline" && (
+              <motion.div className="workspace-view" key="pipeline" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
+                <div className="compact-title-block"><span>OPERATING PIPELINE</span><h2>Six stages. One evidence loop.</h2></div>
+                <div className="pipeline-compact-grid">
+                  {pipeline.map(([number, title, body]) => (
+                    <article key={number}><span>{number}</span><div><strong>{title}</strong><p>{body}</p></div></article>
+                  ))}
+                </div>
+              </motion.div>
+            )}
 
-      <section className="docs-section docs-split">
-        <div>
-          <div className="docs-section-label"><span>05</span><strong>PUBLIC BOUNDARY</strong></div>
-          <div className="docs-prose">
-            <p>
-              The public site is an observability layer, not the trading console. It may show runtime state,
-              telemetry freshness, public version identity, aggregate event activity, architecture,
-              methodology, and release notes.
-            </p>
-            <p>
-              Account equity, cash, buying power, positions, orders, traded symbols, prices, individual
-              trade history, P&amp;L, exact entry and exit rules, thresholds, risk limits, credentials,
-              and private database records stay outside the public interface.
-            </p>
-          </div>
-        </div>
-        <div>
-          <div className="docs-section-label"><span>06</span><strong>PRODUCTION VS RESEARCH</strong></div>
-          <div className="docs-prose">
-            <p>
-              Production and research are deliberately separated. Research can test ideas, repair data,
-              replay historical sessions, or reject entire strategy families without silently changing
-              what is running live.
-            </p>
-            <p>
-              Production changes only after the research evidence passes its promotion gates. Capital
-              scaling follows the same rule.
-            </p>
-          </div>
-        </div>
-      </section>
+            {tab === "architecture" && (
+              <motion.div className="workspace-view" key="architecture" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
+                <div className="compact-title-block"><span>ARCHITECTURE</span><h2>The current production stack.</h2></div>
+                <div className="architecture-compact-grid">
+                  {architecture.map(([layer, tool, body], index) => (
+                    <article key={layer}><span>0{index + 1}</span><div><small>{layer}</small><strong>{tool}</strong><p>{body}</p></div></article>
+                  ))}
+                </div>
+              </motion.div>
+            )}
 
-      <footer className="docs-footer">
-        <span>ANEVUM / SYSTEM DOCUMENTATION</span>
-        <a href="/research">Research &amp; development →</a>
-      </footer>
-    </div>
+            {tab === "boundary" && (
+              <motion.div className="workspace-view boundary-view" key="boundary" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
+                <div className="compact-title-block"><span>PUBLIC / PRIVATE BOUNDARY</span><h2>The site explains the system without exposing the strategy.</h2></div>
+                <div className="boundary-columns">
+                  <article><span>PUBLIC</span><ul><li>Runtime state</li><li>Telemetry freshness</li><li>Aggregate event activity</li><li>Architecture and methodology</li><li>Research and release notes</li></ul></article>
+                  <article><span>PRIVATE</span><ul><li>Account values and buying power</li><li>Open positions and orders</li><li>Symbols, prices, and individual trades</li><li>Exact entry / exit thresholds</li><li>Risk parameters and credentials</li></ul></article>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      </div>
+    </section>
   );
 }
