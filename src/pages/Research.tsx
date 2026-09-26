@@ -12,7 +12,7 @@ const tabs: [ResearchTab, string][] = [
 ];
 
 const stateItems = [
-  ["Production", "The live baseline remains separate from experimental strategy work."],
+  ["Production", "RHEN's live baseline remains separate from experimental strategy work."],
   ["Bottleneck", "Discover a reproducible entry edge; account size is not treated as the current bottleneck."],
   ["Research", "Edge Discovery v1 is testing independent families against a larger historical corpus."],
   ["Corpus integrity", "Coverage is checked by development window and symbol before research conclusions are trusted."],
@@ -61,7 +61,7 @@ export default function Research() {
     <section className="compact-page workspace-screen research-workspace">
       <header className="workspace-heading">
         <div>
-          <p className="compact-eyebrow">RESEARCH / DEVELOPMENT RECORD</p>
+          <p className="compact-eyebrow">RHEN / RESEARCH</p>
           <h1>Research</h1>
         </div>
         <div className="workspace-heading-status">
