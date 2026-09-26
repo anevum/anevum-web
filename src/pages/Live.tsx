@@ -95,7 +95,7 @@ export default function Live() {
                 const count = Number(row.count) || 0;
                 const height = Math.max(8, (count / activityMax) * 100);
                 return <i key={(row.at || "") + index} style={{ height: height + "%" }} />;
-              }) : Array.from({ length: 8 }).map((_, index) => <i key={index} />);
+              }) : Array.from({ length: 8 }).map((_, index) => <i key={index} />)
               }
             </div>
           </article>
