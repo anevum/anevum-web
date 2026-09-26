@@ -70,6 +70,7 @@ export default function System() {
   const { data, loading } = useLiveTrading(5000);
   const state = loading ? "CONNECTING" : data?.state || (data?.live ? "RUNNING" : "STALE");
   const stateClass = data?.live ? "is-live" : data ? "is-stale" : "";
+  const researchStatus = data?.research?.current_status || "OFFLINE";
 
   return (
     <section className="compact-page workspace-screen story-workspace system-story">
@@ -84,7 +85,7 @@ export default function System() {
         <div className="workspace-heading-status story-status">
           <span className={"runtime-state " + stateClass}><i />{state}</span>
           <div><small>LIVE LOOP</small><strong>RULE-BASED</strong></div>
-          <div><small>LEARNING</small><strong>OFFLINE</strong></div>
+          <div><small>RESEARCH</small><strong>{researchStatus}</strong></div>
         </div>
       </header>
 
