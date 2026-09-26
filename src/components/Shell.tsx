@@ -11,7 +11,6 @@ const nav = [
 
 export function PublicShell({ children }: { children: ReactNode }) {
   const location = useLocation();
-  const home = location.pathname === "/";
 
   return (
     <div className="public-frame compact-public-frame">
@@ -37,13 +36,6 @@ export function PublicShell({ children }: { children: ReactNode }) {
 
         <div className="header-spacer" aria-hidden="true" />
       </header>
-
-      {!home ? (
-        <Link className="return-home" to="/" aria-label="Return to ANEVUM home">
-          <span>←</span>
-          <strong>HOME</strong>
-        </Link>
-      ) : null}
 
       <Link
         className="command-dock"
