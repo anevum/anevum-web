@@ -89,6 +89,12 @@ export default function Command() {
   const recentOrders = list(snapshot?.recent_orders);
   const scanner = record(snapshot?.scanner);
   const history = list(snapshot?.history);
+  const research = record(snapshot?.research);
+  const latestDaily = record(research.latest_daily);
+  const latestWeekly = record(research.latest_weekly);
+  const latestResearch = Object.keys(latestDaily).length ? latestDaily : latestWeekly;
+  const researchClassification = record(latestResearch.classification);
+  const researchMetrics = record(latestResearch.metrics);
   const position = positions[0];
   const dayPnl = number(account.day_pnl);
 
@@ -105,7 +111,7 @@ export default function Command() {
     <div className="command-shell">
       <header className="command-header">
         <Link to="/" className="command-brand"><Mark /><span>ANEVUM</span><i /><strong>RHEN COMMAND</strong></Link>
-        <nav><a href="#overview">Overview</a><a href="#scanner">Scanner</a><a href="#orders">Orders</a><a href="#system">System</a></nav>
+        <nav><a href="#overview">Overview</a><a href="#scanner">Scanner</a><a href="#orders">Orders</a><a href="#research">Research</a><a href="#system">System</a></nav>
         <div className="command-account"><span><i /> READ / LIVE</span><small>{session.user.email}</small></div>
       </header>
 
@@ -179,6 +185,30 @@ export default function Command() {
                   <div className="wide"><span>UNREALIZED P&L</span><strong className={number(position.unrealized_pl) && number(position.unrealized_pl)! > 0 ? "positive" : number(position.unrealized_pl) && number(position.unrealized_pl)! < 0 ? "negative" : ""}>{money(position.unrealized_pl)} / {percent(position.unrealized_plpc)}</strong></div>
                 </div>
               ) : <div className="command-empty">No open position.</div>}
+            </article>
+
+            <article id="research" className="command-panel">
+              <header><div><span>RESEARCH</span><strong>{text(researchClassification.classification || research.status, "AWAITING REVIEW")}</strong></div><small>{text(latestResearch.session || latestResearch.week_end, "No recap yet")}</small></header>
+              <div className="feed-body">
+                <div className="feed-row">
+                  <time>FOCUS</time>
+                  <div><strong>Next action</strong><span>OFFLINE</span></div>
+                  <p>{text(research.current_focus || latestResearch.next_offline_research_action, "Awaiting the next post-close research review.")}</p>
+                </div>
+                <div className="feed-row">
+                  <time>REVIEW</time>
+                  <div><strong>Conclusion</strong><span>{text(researchClassification.classification, "PENDING")}</span></div>
+                  <p>{text(researchClassification.reason || latestResearch.summary, "No completed research conclusion has been recorded yet.")}</p>
+                </div>
+              </div>
+              <div className="system-grid">
+                <div><span>TRADES</span><strong>{text(researchMetrics.trade_count)}</strong></div>
+                <div><span>WINS / LOSSES</span><strong>{text(researchMetrics.wins)} / {text(researchMetrics.losses)}</strong></div>
+                <div><span>EXPECTANCY</span><strong>{money(researchMetrics.expectancy)}</strong></div>
+                <div><span>PROFIT FACTOR</span><strong>{text(researchMetrics.profit_factor)}</strong></div>
+                <div><span>AVG MFE</span><strong>{text(researchMetrics.average_mfe_pct)}%</strong></div>
+                <div><span>AVG MAE</span><strong>{text(researchMetrics.average_mae_pct)}%</strong></div>
+              </div>
             </article>
 
             <article className="command-panel">
