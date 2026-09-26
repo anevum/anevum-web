@@ -5492,3 +5492,341 @@ a{color:inherit;text-decoration:none}
     animation:none!important;
   }
 }
+
+
+/* ==========================================================================
+   SYSTEM + RESEARCH / READABILITY PASS
+   Preserve the single-screen shell, but never shrink explanatory text into
+   unreadable microtype. Dense mobile tabs may scroll inside the content panel.
+   ========================================================================== */
+
+.story-heading-copy{font-size:.9rem}
+.story-tabs button strong{font-size:.82rem}
+.story-tabs button small{font-size:.56rem}
+.story-tabs button>span{font-size:.5rem}
+
+.story-kicker{font-size:.54rem}
+.story-title-row>p{font-size:.86rem}
+
+.story-hero-card>p,
+.research-question>p{
+  font-size:.9rem;
+  line-height:1.58;
+}
+.idea-sequence span{font-size:.4rem}
+.idea-sequence strong{font-size:.72rem}
+.idea-principles strong{font-size:.86rem}
+.idea-principles p{font-size:.72rem;line-height:1.48}
+
+.flow-number{font-size:.42rem}
+.flow-copy strong{font-size:.84rem}
+.flow-copy p{font-size:.72rem;line-height:1.45}
+.flow-io small{font-size:.38rem}
+.flow-io b{font-size:.5rem}
+
+.brand-line span{font-size:.42rem}
+.machine-node strong{font-size:.78rem}
+.machine-node p{font-size:.66rem;line-height:1.42}
+
+.guardrail-lane header span{font-size:.44rem}
+.guardrail-lane header strong{font-size:.8rem}
+.guardrail-lane>p{font-size:.74rem;line-height:1.5}
+.guardrail-chain b{font-size:.42rem}
+.guardrail-gate span{font-size:.39rem}
+.guardrail-gate strong{font-size:.74rem}
+.guardrail-gate p{font-size:.57rem}
+.public-private-strip span{font-size:.39rem}
+.public-private-strip p{font-size:.56rem;line-height:1.42}
+
+.question-line span{font-size:.39rem}
+.question-line strong{font-size:.64rem}
+.now-card>span{font-size:.4rem}
+.now-card strong{font-size:.83rem}
+.now-card p{font-size:.7rem;line-height:1.45}
+
+.gate-number{font-size:.42rem}
+.gate-rung small{font-size:.36rem}
+.gate-rung strong{font-size:.72rem}
+.gate-rung p{font-size:.63rem;line-height:1.36}
+.gate-rung>b{font-size:.37rem}
+
+.hunt-radar b{font-size:.55rem}
+.hunt-copy span{font-size:.4rem}
+.hunt-copy p{font-size:.72rem;line-height:1.48}
+.family-row span{font-size:.39rem}
+.family-row strong{font-size:.44rem}
+.hunt-evidence-strip span{font-size:.36rem}
+.hunt-evidence-strip strong{font-size:.62rem}
+.hunt-evidence-strip p{font-size:.47rem;line-height:1.34}
+
+.note-marker span{font-size:.41rem}
+.note-body small{font-size:.35rem}
+.note-body strong{font-size:.71rem}
+.note-body p{font-size:.62rem;line-height:1.38}
+
+.tool-core strong{font-size:.36rem}
+.tool-node strong{font-size:.72rem}
+.tool-node p{font-size:.62rem;line-height:1.38}
+
+@media(max-width:900px){
+  .story-tabs button strong{font-size:.66rem}
+  .machine-node p{font-size:.54rem}
+  .guardrail-chain b{font-size:.37rem}
+  .tool-node p{font-size:.5rem}
+}
+
+@media(max-width:760px){
+  .story-content{
+    overflow-y:auto;
+    overscroll-behavior:contain;
+    -webkit-overflow-scrolling:touch;
+  }
+  .story-view{
+    height:auto;
+    min-height:100%;
+    overflow:visible;
+    padding:12px;
+  }
+
+  .story-heading h1{font-size:1.95rem}
+  .story-tabs button>span{font-size:.5rem}
+  .story-tabs button strong{font-size:.68rem}
+  .research-tabs button strong{font-size:.62rem}
+  .story-kicker{font-size:.52rem}
+  .story-title-row>p{font-size:.54rem;line-height:1.4}
+
+  .story-hero-card>p,
+  .research-question>p{
+    font-size:.78rem;
+    line-height:1.52;
+  }
+  .idea-sequence span{font-size:.44rem}
+  .idea-sequence strong{font-size:.62rem}
+  .idea-principles strong{font-size:.72rem}
+  .idea-principles p{
+    -webkit-line-clamp:3;
+    font-size:.62rem;
+    line-height:1.4;
+  }
+
+  .flow-track{
+    height:auto;
+    min-height:0;
+    grid-template-rows:none;
+  }
+  .flow-number{font-size:.46rem}
+  .flow-copy strong{font-size:.72rem}
+  .flow-copy p{font-size:.6rem;line-height:1.4}
+  .flow-io small{font-size:.4rem}
+  .flow-io b{font-size:.52rem}
+
+  .machine-map{
+    height:auto;
+    min-height:0;
+    grid-auto-rows:minmax(110px,auto);
+    grid-template-rows:none;
+  }
+  .machine-node strong{font-size:.72rem}
+  .machine-node p{font-size:.6rem;line-height:1.4}
+  .brand-line span{font-size:.46rem}
+
+  .guardrail-map{
+    height:auto;
+    min-height:0;
+    grid-template-columns:1fr;
+    gap:6px;
+  }
+  .guardrail-gate{
+    min-height:88px;
+    border-left:1px dashed rgba(128,191,230,.18);
+    border-right:1px dashed rgba(128,191,230,.18);
+  }
+  .guardrail-gate:before{width:28px;height:28px}
+  .guardrail-lane header span{font-size:.48rem}
+  .guardrail-lane header strong{font-size:.7rem}
+  .guardrail-lane>p{font-size:.6rem;line-height:1.44}
+  .guardrail-chain{
+    display:flex;
+    flex-wrap:wrap;
+    justify-content:flex-start;
+    gap:4px 7px;
+    padding-top:8px;
+  }
+  .guardrail-chain b{font-size:.46rem}
+  .guardrail-chain i{transform:none;font-size:.46rem}
+  .guardrail-gate span{font-size:.44rem}
+  .guardrail-gate strong{font-size:.62rem}
+  .guardrail-gate p{display:block;font-size:.52rem;line-height:1.4}
+  .public-private-strip{
+    grid-template-columns:1fr;
+  }
+  .public-private-strip span{font-size:.44rem}
+  .public-private-strip p{font-size:.56rem;line-height:1.4}
+
+  .research-question .question-line{
+    min-height:40px;
+    grid-template-columns:48px 1fr;
+  }
+  .question-line span{font-size:.44rem}
+  .question-line strong{font-size:.58rem}
+  .now-card>span{font-size:.44rem}
+  .now-card strong{font-size:.68rem}
+  .now-card p{
+    -webkit-line-clamp:3;
+    font-size:.58rem;
+    line-height:1.4;
+  }
+
+  .gate-ladder{
+    height:auto;
+    min-height:0;
+    grid-template-columns:1fr;
+    grid-template-rows:none;
+  }
+  .gate-rung,
+  .gate-rung:nth-child(odd),
+  .gate-rung:nth-child(even){
+    grid-template-columns:26px minmax(0,1fr);
+    padding:8px;
+  }
+  .gate-number{font-size:.44rem}
+  .gate-rung small{font-size:.4rem}
+  .gate-rung strong{font-size:.66rem}
+  .gate-rung p{
+    -webkit-line-clamp:unset;
+    overflow:visible;
+    display:block;
+    font-size:.58rem;
+    line-height:1.4;
+  }
+
+  .edge-hunt-board{
+    height:auto;
+    min-height:0;
+    grid-template-rows:none;
+  }
+  .edge-hunt-core{
+    grid-template-columns:96px minmax(0,1fr);
+  }
+  .hunt-copy span{font-size:.44rem}
+  .hunt-copy strong{font-size:1rem}
+  .hunt-copy p{font-size:.58rem;line-height:1.4}
+  .family-row span{font-size:.42rem}
+  .hunt-evidence-strip{
+    grid-template-columns:1fr 1fr;
+  }
+  .hunt-evidence-strip span{font-size:.42rem}
+  .hunt-evidence-strip strong{font-size:.58rem}
+  .hunt-evidence-strip p{
+    -webkit-line-clamp:unset;
+    display:block;
+    overflow:visible;
+    font-size:.54rem;
+    line-height:1.38;
+  }
+
+  .field-notes{
+    height:auto;
+    min-height:0;
+    grid-template-columns:1fr;
+    grid-template-rows:none;
+  }
+  .field-notes article{
+    grid-template-columns:58px minmax(0,1fr);
+    padding:8px;
+  }
+  .note-marker span{font-size:.44rem}
+  .note-body small{font-size:.38rem}
+  .note-body strong{font-size:.66rem}
+  .note-body p{
+    -webkit-line-clamp:unset;
+    display:block;
+    overflow:visible;
+    font-size:.56rem;
+    line-height:1.4;
+  }
+
+  .tool-constellation{
+    height:auto;
+    min-height:0;
+    grid-template-rows:none;
+    grid-auto-rows:minmax(100px,auto);
+  }
+  .tool-node strong{font-size:.68rem}
+  .tool-node p{
+    -webkit-line-clamp:unset;
+    display:block;
+    overflow:visible;
+    font-size:.39rem;
+    line-height:1.3;
+  }
+}
+
+@media(max-width:430px){
+  .story-tabs button strong{font-size:.64rem}
+  .research-tabs button strong{font-size:.58rem}
+  .story-hero-card h2,
+  .research-question h2{font-size:1.42rem}
+  .story-hero-card>p,
+  .research-question>p{font-size:.76rem}
+  .idea-principles p,
+  .now-card p{-webkit-line-clamp:3}
+}
+
+
+/* Final mobile legibility floor: secondary copy should read like copy, not metadata. */
+@media(max-width:760px){
+  .story-tabs button strong{font-size:.72rem}
+  .research-tabs button strong{font-size:.66rem}
+  .story-tabs button>span{font-size:.52rem}
+
+  .idea-principles strong,
+  .now-card strong,
+  .machine-node strong,
+  .flow-copy strong,
+  .gate-rung strong,
+  .note-body strong,
+  .tool-node strong{font-size:.78rem}
+
+  .idea-principles p,
+  .now-card p,
+  .machine-node p,
+  .flow-copy p,
+  .guardrail-lane>p,
+  .guardrail-gate p,
+  .public-private-strip p,
+  .gate-rung p,
+  .hunt-copy p,
+  .hunt-evidence-strip p,
+  .note-body p,
+  .tool-node p{
+    font-size:.68rem;
+    line-height:1.42;
+  }
+
+  .idea-principles article>span,
+  .now-card>span,
+  .brand-line span,
+  .guardrail-lane header span,
+  .public-private-strip span,
+  .gate-rung small,
+  .hunt-copy span,
+  .hunt-evidence-strip span,
+  .note-marker span{
+    font-size:.5rem;
+  }
+
+  .question-line span,
+  .family-row span{font-size:.5rem}
+  .question-line strong{font-size:.68rem}
+  .guardrail-lane header strong{font-size:.78rem}
+  .guardrail-chain b{font-size:.52rem}
+  .guardrail-gate span{font-size:.5rem}
+  .guardrail-gate strong{font-size:.72rem}
+  .flow-number,
+  .gate-number{font-size:.5rem}
+  .flow-io small{font-size:.44rem}
+  .flow-io b{font-size:.58rem}
+  .note-body small{font-size:.44rem}
+  .hunt-evidence-strip strong{font-size:.7rem}
+}
