@@ -14,10 +14,12 @@ import {
   refreshCurrentUser,
   saveSession,
   sendMagicLinkRequest,
+  sendPasswordResetRequest,
   signInRequest,
   signOutRequest,
   signUpRequest,
   updateMetadataRequest,
+  updatePasswordRequest,
   type RhenSession
 } from "../lib/auth";
 
@@ -27,9 +29,11 @@ type AuthValue = {
   commandAdmin: boolean;
   signIn(email: string, password: string): Promise<void>;
   sendMagicLink(email: string): Promise<void>;
+  sendPasswordReset(email: string): Promise<void>;
   signUp(input: { displayName: string; handle: string; email: string; password: string }): Promise<boolean>;
   signOut(): Promise<void>;
   updateMetadata(patch: Record<string, unknown>): Promise<void>;
+  updatePassword(password: string): Promise<void>;
 };
 
 const AuthContext = createContext<AuthValue | null>(null);
@@ -86,6 +90,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await sendMagicLinkRequest(email);
   }, []);
 
+  const sendPasswordReset = useCallback(async (email: string) => {
+    await sendPasswordResetRequest(email);
+  }, []);
+
   const signUp = useCallback(async (input: {
     displayName: string;
     handle: string;
@@ -119,6 +127,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [session]
   );
 
+  const updatePassword = useCallback(
+    async (password: string) => {
+      if (!session) throw new Error("Open the password recovery link first.");
+      const next = await updatePasswordRequest(session, password);
+      setSession(next);
+    },
+    [session]
+  );
+
   const value = useMemo<AuthValue>(
     () => ({
       session,
@@ -126,11 +143,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       commandAdmin: isCommandAdmin(session),
       signIn,
       sendMagicLink,
+      sendPasswordReset,
       signUp,
       signOut,
-      updateMetadata
+      updateMetadata,
+      updatePassword
     }),
-    [session, loading, signIn, sendMagicLink, signUp, signOut, updateMetadata]
+    [
+      session,
+      loading,
+      signIn,
+      sendMagicLink,
+      sendPasswordReset,
+      signUp,
+      signOut,
+      updateMetadata,
+      updatePassword
+    ]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
