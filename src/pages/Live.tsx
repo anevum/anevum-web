@@ -38,8 +38,8 @@ export default function Live() {
     <section className="compact-page workspace-screen live-screen">
       <header className="workspace-heading">
         <div>
-          <p className="compact-eyebrow">LIVE / PUBLIC TELEMETRY</p>
-          <h1>Runtime</h1>
+          <p className="compact-eyebrow">RHEN / PUBLIC TELEMETRY</p>
+          <h1>RHEN</h1>
         </div>
         <div className="workspace-heading-status">
           <span className={"runtime-state " + stateClass}><i />{state}</span>
@@ -57,7 +57,7 @@ export default function Live() {
           <div className="live-console-body">
             <div className="console-line system-line">
               <time>{timeLabel(data?.generated_at)}</time>
-              <strong>SYSTEM</strong>
+              <strong>RHEN</strong>
               <p>Public telemetry connected. Sensitive trading data is excluded.</p>
             </div>
             {events.length ? events.slice(0, 11).map((event, index) => (
