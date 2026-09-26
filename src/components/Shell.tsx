@@ -18,9 +18,9 @@ export function PublicShell({ children }: { children: ReactNode }) {
       <UniverseBackground />
 
       <header className="public-header compact-public-header">
-        <Link className="public-brand" to="/" aria-label="ANEVUM home">
+        <Link className={"public-brand " + (!home ? "public-brand-home" : "")} to="/" aria-label="ANEVUM home">
           <Mark />
-          <span>ANEVUM</span>
+          <span>{home ? "ANEVUM" : "← HOME"}</span>
         </Link>
 
         <nav className="public-nav public-nav-main" aria-label="Primary navigation">
@@ -46,13 +46,6 @@ export function PublicShell({ children }: { children: ReactNode }) {
           <span className="command-hatch-label">COMMAND</span>
         </Link>
       </header>
-
-      {!home ? (
-        <Link className="return-home" to="/" aria-label="Return to ANEVUM home">
-          <span>←</span>
-          <strong>HOME</strong>
-        </Link>
-      ) : null}
 
       <main className="public-stage compact-public-stage">{children}</main>
     </div>
