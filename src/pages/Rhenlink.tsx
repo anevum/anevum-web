@@ -18,10 +18,6 @@ export default function PrivateAccess() {
   const [mode, setMode] = useState<"signin" | "create">("signin");
   const [status, setStatus] = useState("");
   const [signInEmail, setSignInEmail] = useState("");
-  const [resetMode, setResetMode] = useState(() => {
-    if (typeof window === "undefined") return false;
-    return new URLSearchParams(window.location.search).get("reset") === "1";
-  });
 
   if (loading) {
     return (
@@ -49,15 +45,13 @@ export default function PrivateAccess() {
     setStatus("Updating password…");
     try {
       await updatePassword(password);
-      window.history.replaceState({}, document.title, "/private");
-      setResetMode(false);
       setStatus("");
     } catch (reason) {
       setStatus(reason instanceof Error ? reason.message : "Could not update the password.");
     }
   }
 
-  if (resetMode) {
+  if (session?.auth_type === "recovery") {
     return (
       <main className="private-screen">
         <section className="private-panel">
@@ -69,38 +63,20 @@ export default function PrivateAccess() {
           <div className="private-intro">
             <p>PASSWORD RECOVERY</p>
             <h1>Set a new password.</h1>
-            <span>
-              {session?.user
-                ? "This will replace the password for your ANEVUM private account."
-                : "Open the newest recovery link from your email to continue."}
-            </span>
+            <span>This will replace the password for your ANEVUM private account.</span>
           </div>
 
-          {session?.user ? (
-            <form className="private-form" onSubmit={submitNewPassword}>
-              <label>
-                <span>New password</span>
-                <input name="password" type="password" minLength={8} autoComplete="new-password" required />
-              </label>
-              <label>
-                <span>Confirm password</span>
-                <input name="confirmPassword" type="password" minLength={8} autoComplete="new-password" required />
-              </label>
-              <button className="private-primary" type="submit">Update password <b>↗</b></button>
-            </form>
-          ) : (
-            <button
-              className="private-secondary"
-              type="button"
-              onClick={() => {
-                window.history.replaceState({}, document.title, "/private");
-                setResetMode(false);
-                setStatus("");
-              }}
-            >
-              Back to sign in
-            </button>
-          )}
+          <form className="private-form" onSubmit={submitNewPassword}>
+            <label>
+              <span>New password</span>
+              <input name="password" type="password" minLength={8} autoComplete="new-password" required />
+            </label>
+            <label>
+              <span>Confirm password</span>
+              <input name="confirmPassword" type="password" minLength={8} autoComplete="new-password" required />
+            </label>
+            <button className="private-primary" type="submit">Update password <b>↗</b></button>
+          </form>
 
           <p className="private-status">{status}</p>
           <footer>
