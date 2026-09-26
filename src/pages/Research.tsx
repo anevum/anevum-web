@@ -73,7 +73,7 @@ export default function Research() {
         </aside>
 
         <div className="workspace-content story-content">
-          <AnimatePresence mode="wait">
+          <AnimatePresence mode="wait" initial={false}>
             {tab === "now" && (
               <motion.div
                 className="workspace-view story-view"
