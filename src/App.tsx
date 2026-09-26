@@ -4,12 +4,14 @@ import { PublicShell } from "./components/Shell";
 
 const Command = lazy(() => import("./pages/Command"));
 const Home = lazy(() => import("./pages/Home"));
+const Live = lazy(() => import("./pages/Live"));
 const System = lazy(() => import("./pages/System"));
 const Research = lazy(() => import("./pages/Research"));
 const PrivateAccess = lazy(() => import("./pages/Rhenlink"));
 
 const titles: Record<string, string> = {
-  "/": "ANEVUM — Live System",
+  "/": "ANEVUM",
+  "/live": "Live — ANEVUM",
   "/system": "System — ANEVUM",
   "/research": "Research — ANEVUM",
   "/private": "Private — ANEVUM",
@@ -21,7 +23,6 @@ function RouteEffects() {
 
   useEffect(() => {
     document.title = titles[location.pathname] || "ANEVUM";
-    window.scrollTo(0, 0);
   }, [location.pathname]);
 
   return null;
@@ -34,9 +35,7 @@ function Loader() {
 function PublicExperience({ children }: { children: ReactNode }) {
   return (
     <PublicShell>
-      <Suspense fallback={<Loader />}>
-        {children}
-      </Suspense>
+      <Suspense fallback={<Loader />}>{children}</Suspense>
     </PublicShell>
   );
 }
@@ -47,6 +46,7 @@ export default function App() {
       <RouteEffects />
       <Routes>
         <Route path="/" element={<PublicExperience><Home /></PublicExperience>} />
+        <Route path="/live" element={<PublicExperience><Live /></PublicExperience>} />
         <Route path="/system" element={<PublicExperience><System /></PublicExperience>} />
         <Route path="/research" element={<PublicExperience><Research /></PublicExperience>} />
 
@@ -61,7 +61,7 @@ export default function App() {
         <Route path="/wiki" element={<Navigate to="/system" replace />} />
         <Route path="/wiki/archive/transcosmic" element={<Navigate to="/research" replace />} />
         <Route path="/about" element={<Navigate to="/system" replace />} />
-        <Route path="/proof" element={<Navigate to="/research" replace />} />
+        <Route path="/proof" element={<Navigate to="/live" replace />} />
         <Route path="/method" element={<Navigate to="/system" replace />} />
         <Route path="/the-book" element={<Navigate to="/research" replace />} />
         <Route path="/reply" element={<Navigate to="/research" replace />} />
