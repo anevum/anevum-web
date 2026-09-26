@@ -25,6 +25,7 @@ export default function Live() {
   const telemetry = data?.telemetry;
   const events = data?.events || [];
   const activity = data?.activity || [];
+  const research = data?.research;
   const version = data?.active_strategy?.version_id || data?.active_strategy?.strategy_name;
   const state = loading ? "CONNECTING" : data?.state || (data?.live ? "RUNNING" : "STALE");
   const stateClass = data?.live ? "is-live" : data ? "is-stale" : "";
@@ -98,6 +99,11 @@ export default function Live() {
               }) : Array.from({ length: 8 }).map((_, index) => <i key={index} />)
               }
             </div>
+          </article>
+
+          <article className="compact-panel disclosure-card">
+            <span>RESEARCH / {research?.current_status || "AWAITING REVIEW"}</span>
+            <p>{research?.current_focus || "The next research focus will appear here when RHEN records a material finding or post-close review."}</p>
           </article>
 
           <article className="compact-panel disclosure-card">
