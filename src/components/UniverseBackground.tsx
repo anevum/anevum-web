@@ -1,3 +1,5 @@
+import type { CSSProperties } from "react";
+
 const spokes = Array.from({ length: 16 });
 const nodes = Array.from({ length: 12 });
 const ticks = Array.from({ length: 24 });
@@ -37,7 +39,7 @@ export default function UniverseBackground() {
             <span
               className="engine-spoke"
               key={"spoke-" + index}
-              style={{ "--angle": index * 22.5 + "deg" } as React.CSSProperties}
+              style={{ "--angle": index * 22.5 + "deg" } as CSSProperties}
             />
           ))}
         </div>
@@ -47,7 +49,7 @@ export default function UniverseBackground() {
             <span
               className="engine-tick"
               key={"tick-" + index}
-              style={{ "--angle": index * 15 + "deg" } as React.CSSProperties}
+              style={{ "--angle": index * 15 + "deg" } as CSSProperties}
             />
           ))}
         </div>
@@ -60,7 +62,7 @@ export default function UniverseBackground() {
               style={{
                 "--angle": index * 30 + "deg",
                 "--delay": -(index * 0.37) + "s"
-              } as React.CSSProperties}
+              } as CSSProperties}
             />
           ))}
         </div>
