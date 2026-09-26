@@ -18,9 +18,9 @@ export function PublicShell({ children }: { children: ReactNode }) {
       <UniverseBackground />
 
       <header className="public-header compact-public-header">
-        <Link className={"public-brand " + (!home ? "public-brand-home" : "")} to="/" aria-label="ANEVUM home">
+        <Link className="public-brand" to="/" aria-label="ANEVUM home">
           <Mark />
-          <span>{home ? "ANEVUM" : "← HOME"}</span>
+          <span>ANEVUM</span>
         </Link>
 
         <nav className="public-nav public-nav-main" aria-label="Primary navigation">
@@ -35,17 +35,26 @@ export function PublicShell({ children }: { children: ReactNode }) {
           ))}
         </nav>
 
-        <Link
-          className="command-hatch"
-          to="/command"
-          rel="nofollow"
-          aria-label="Open Command login"
-          title="Command login"
-        >
-          <span className="command-hatch-dot" />
-          <span className="command-hatch-label">COMMAND</span>
-        </Link>
+        <div className="header-spacer" aria-hidden="true" />
       </header>
+
+      {!home ? (
+        <Link className="return-home" to="/" aria-label="Return to ANEVUM home">
+          <span>←</span>
+          <strong>HOME</strong>
+        </Link>
+      ) : null}
+
+      <Link
+        className="command-dock"
+        to="/command"
+        rel="nofollow"
+        aria-label="Open Command login"
+        title="Command login"
+      >
+        <span className="command-dock-dot" />
+        <strong>COMMAND</strong>
+      </Link>
 
       <main className="public-stage compact-public-stage">{children}</main>
     </div>
