@@ -1,13 +1,6 @@
 import { type ReactNode } from "react";
 import Mark from "./Mark";
 
-const links = [
-  ["system", "System"],
-  ["demo", "Live demo"],
-  ["architecture", "Architecture"],
-  ["updates", "Updates"]
-] as const;
-
 export function PublicShell({ children }: { children: ReactNode }) {
   return (
     <div className="public-frame">
@@ -17,15 +10,11 @@ export function PublicShell({ children }: { children: ReactNode }) {
           <span>ANEVUM</span>
         </a>
 
-        <nav className="public-nav" aria-label="Public navigation">
-          {links.map(([id, label]) => (
-            <a key={id} href={"#" + id}>{label}</a>
-          ))}
-        </nav>
+        <div className="public-mode">PUBLIC SYSTEM</div>
 
-        <a className="public-status-link" href="#system">
+        <a className="public-status-link" href="/command">
           <i />
-          <span>LIVE SYSTEM</span>
+          <span>OPERATOR</span>
         </a>
       </header>
 
