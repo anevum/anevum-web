@@ -135,7 +135,7 @@ export default function System() {
                     </article>
                     <article>
                       <span>02</span>
-                      <div><strong>Production is boring on purpose.</strong><p>The live trader follows explicit rules. New ideas are not allowed to mutate the running system mid-session.</p></div>
+                      <div><strong>Production is boring on purpose.</strong><p>RHEN follows explicit rules. New ideas are not allowed to mutate the running system mid-session.</p></div>
                     </article>
                     <article>
                       <span>03</span>
