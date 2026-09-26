@@ -3499,3 +3499,42 @@ a{color:inherit;text-decoration:none}
     top:56px;
   }
 }
+
+
+/* Explicit internal Home control */
+.public-brand-home{
+  color:#9eb1bd;
+}
+.public-brand-home span{
+  color:#8da4b3;
+  font-size:.43rem;
+  font-weight:700;
+  letter-spacing:.12em;
+}
+.public-brand-home:hover span{
+  color:#d4e1e8;
+}
+@media(max-width:760px){
+  .compact-public-header .public-brand-home{
+    min-width:62px;
+    gap:6px;
+  }
+  .compact-public-header .public-brand-home span{
+    display:inline;
+    font-size:.31rem;
+    letter-spacing:.08em;
+    white-space:nowrap;
+  }
+  .compact-public-header .public-brand-home .anevum-mark{
+    width:18px;
+    height:18px;
+  }
+}
+@media(max-width:430px){
+  .compact-public-header .public-brand-home{
+    min-width:54px;
+  }
+  .compact-public-header .public-brand-home span{
+    font-size:.28rem;
+  }
+}
