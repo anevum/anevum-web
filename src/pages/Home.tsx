@@ -24,12 +24,12 @@ function shortVersion(value?: string | null) {
 }
 
 const architecture = [
-  ["01", "Observe", "Continuously sample the permitted market universe and normalize incoming market data."],
-  ["02", "Evaluate", "Apply the current strategy version and reject structures that do not meet its entry rules."],
-  ["03", "Risk gate", "Check capital, exposure, timing, and execution constraints before an order can exist."],
-  ["04", "Execute", "Send approved orders through the broker interface and track their complete lifecycle."],
-  ["05", "Reconcile", "Compare broker truth with the internal ledger so the system knows what actually happened."],
-  ["06", "Learn", "Persist results for post-close analysis, MFE/MAE work, tagging, and the next strategy revision."]
+  ["01", "Observe", "Sample the configured market universe and normalize incoming market data."],
+  ["02", "Evaluate", "Apply the active strategy rules and reject setups that do not meet entry criteria."],
+  ["03", "Risk gate", "Verify available capital, exposure, timing, and execution constraints."],
+  ["04", "Execute", "Submit approved orders through the broker interface and track order state."],
+  ["05", "Reconcile", "Compare broker records with the internal ledger and resolve discrepancies."],
+  ["06", "Analyze", "Store outcomes for post-close analysis, MFE/MAE measurement, tagging, and strategy revision."]
 ];
 
 const updates = [
@@ -134,15 +134,15 @@ export default function Home() {
               <Mark />
               <span className="hero-mark-glow" />
             </div>
-            <p className="hero-eyebrow">ANEVUM / LIVE RESEARCH SYSTEM</p>
-            <h1>Build it.<br />Run it. Learn.</h1>
+            <p className="hero-eyebrow">ANEVUM / LIVE SYSTEM STATUS</p>
+            <h1>Automated market research<br />and execution.</h1>
             <p className="hero-copy">
-              A live experiment in automated capital growth: observe the system,
-              understand how it works, and follow each version as the evidence changes it.
+              ANEVUM is a personal research system that scans markets, applies versioned trading rules,
+              executes approved orders, reconciles broker activity, and records results for analysis.
             </p>
             <div className="hero-actions">
-              <a className="hero-primary" href="#demo">Open live demo <span>↓</span></a>
-              <a className="hero-secondary" href="#architecture">How it works</a>
+              <a className="hero-primary" href="#demo">View live status <span>↓</span></a>
+              <a className="hero-secondary" href="#architecture">System architecture</a>
             </div>
           </div>
 
@@ -152,25 +152,25 @@ export default function Home() {
             <span>{ageLabel(data?.freshness_seconds)}</span>
           </div>
           <a className="scroll-cue" href="#system" aria-label="Continue to system overview">
-            <span>EXPLORE</span><i />
+            <span>SYSTEM</span><i />
           </a>
         </section>
 
         <section className="public-section system-section" id="system">
           <div className="section-heading">
-            <p>01 / THE SYSTEM</p>
-            <h2>What is<br />ANEVUM doing?</h2>
+            <p>01 / SYSTEM OVERVIEW</p>
+            <h2>What the system<br />does.</h2>
           </div>
           <div className="system-copy-grid">
             <p className="system-lead">
-              ANEVUM is a continuously running research and execution system built to test
-              a simple question: can a very small pool of capital be grown through disciplined,
-              automated decision-making rather than impulsive trading?
+              ANEVUM runs a versioned automated trading process. It scans a defined market universe,
+              evaluates potential entries, applies risk constraints, sends approved orders, and records
+              the full lifecycle of each decision.
             </p>
             <p>
-              The machine scans, evaluates, rejects, executes, reconciles, and records.
-              The goal is not to make every trade win. The goal is to build a process that
-              can measure its own mistakes, preserve what works, and improve version by version.
+              The current objective is to determine whether the process has positive expectancy under
+              real trading conditions. Results are measured from reconciled broker data. Strategy changes
+              are made from completed data rather than isolated wins or losses.
             </p>
           </div>
 
@@ -205,11 +205,11 @@ export default function Home() {
 
         <section className="public-section demo-section" id="demo">
           <div className="section-heading demo-heading">
-            <p>02 / LIVE DEMO</p>
-            <h2>Watch the machine<br />without opening the vault.</h2>
+            <p>02 / LIVE STATUS</p>
+            <h2>Public runtime<br />view.</h2>
             <span>
-              Public telemetry is intentionally limited. Exact account value, positions,
-              symbols, pricing, trade history, strategy thresholds, and risk parameters stay private.
+              This page exposes operational telemetry only. Account value, open positions, symbols,
+              prices, trade history, strategy thresholds, and risk parameters remain private.
             </span>
           </div>
 
@@ -226,7 +226,7 @@ export default function Home() {
                 <div className="console-line system-line">
                   <time>{timeLabel(data?.generated_at)}</time>
                   <strong>SYSTEM</strong>
-                  <p>Public telemetry session established. Sensitive trading data withheld.</p>
+                  <p>Public telemetry connected. Sensitive trading data excluded.</p>
                 </div>
                 {events.length ? events.slice(0, 12).map((event, index) => (
                   <motion.div
@@ -289,8 +289,8 @@ export default function Home() {
                   <span>EXECUTION EVENTS / 2H</span>
                   <strong>{telemetry?.execution_events_2h ?? "—"}</strong>
                   <p>
-                    This counts execution-related lifecycle events. It does not reveal
-                    whether a position exists, what was traded, or whether the event was profitable.
+                    Count of execution-related lifecycle events during the last two hours.
+                    It does not disclose positions, symbols, prices, or profitability.
                   </p>
                 </div>
               </article>
@@ -300,11 +300,10 @@ export default function Home() {
 
         <section className="public-section architecture-section" id="architecture">
           <div className="section-heading architecture-heading">
-            <p>03 / ARCHITECTURE</p>
-            <h2>Six stages.<br />One feedback loop.</h2>
+            <p>03 / PROCESS</p>
+            <h2>Processing<br />pipeline.</h2>
             <span>
-              The public model shows the operating logic without publishing the rules needed
-              to reproduce the strategy.
+              This diagram shows the operating sequence. Exact strategy rules and thresholds are not published.
             </span>
           </div>
 
@@ -324,13 +323,13 @@ export default function Home() {
 
           <div className="feedback-loop">
             <div>
-              <span>THE IMPORTANT PART</span>
-              <h3>The bot is not the strategy.</h3>
+              <span>MEASUREMENT</span>
+              <h3>Strategy code is one part of the system.</h3>
             </div>
             <p>
-              The durable asset is the measurement loop around it: complete data, reconciliation,
-              tagging, excursion analysis, and disciplined versioning. Code executes the current
-              idea. The record determines whether that idea deserves to survive.
+              The system also depends on data completeness, broker reconciliation, trade tagging,
+              MFE/MAE analysis, and version control. Each strategy version is kept or changed based
+              on the record produced by those layers.
             </p>
           </div>
         </section>
@@ -338,10 +337,10 @@ export default function Home() {
         <section className="public-section updates-section" id="updates">
           <div className="section-heading updates-heading">
             <p>04 / VERSION RECORD</p>
-            <h2>Change is<br />part of the product.</h2>
+            <h2>System<br />changes.</h2>
             <span>
-              ANEVUM is meant to remain inspectable as it evolves. Public releases record
-              meaningful system changes without exposing private implementation details.
+              This record documents material changes to the public system and trading infrastructure.
+              Private implementation details and strategy parameters are omitted.
             </span>
           </div>
 
@@ -368,8 +367,8 @@ export default function Home() {
             <div><strong>ANEVUM</strong><span>Personal research system by Devon Akins</span></div>
           </div>
           <p>
-            This public interface demonstrates system behavior and development.
-            It is not a trading signal, financial product, or performance promise.
+            Public system status for the ANEVUM trading research project.
+            This interface does not provide trading signals, investment advice, or performance guarantees.
           </p>
           <a className="operator-link" href="/command" rel="nofollow">
             <span>OPERATOR</span><i />
