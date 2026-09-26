@@ -12,6 +12,7 @@ import {
   loadSession,
   refreshCurrentUser,
   saveSession,
+  sendMagicLinkRequest,
   signInRequest,
   signOutRequest,
   signUpRequest,
@@ -24,6 +25,7 @@ type AuthValue = {
   loading: boolean;
   commandAdmin: boolean;
   signIn(email: string, password: string): Promise<void>;
+  sendMagicLink(email: string): Promise<void>;
   signUp(input: { displayName: string; handle: string; email: string; password: string }): Promise<boolean>;
   signOut(): Promise<void>;
   updateMetadata(patch: Record<string, unknown>): Promise<void>;
@@ -58,6 +60,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const next = await signInRequest(email, password);
     saveSession(next);
     setSession(next);
+  }, []);
+
+  const sendMagicLink = useCallback(async (email: string) => {
+    await sendMagicLinkRequest(email);
   }, []);
 
   const signUp = useCallback(async (input: {
@@ -99,11 +105,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       loading,
       commandAdmin: isCommandAdmin(session),
       signIn,
+      sendMagicLink,
       signUp,
       signOut,
       updateMetadata
     }),
-    [session, loading, signIn, signUp, signOut, updateMetadata]
+    [session, loading, signIn, sendMagicLink, signUp, signOut, updateMetadata]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
