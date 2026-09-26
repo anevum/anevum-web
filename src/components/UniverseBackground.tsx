@@ -1,4 +1,5 @@
 import type { CSSProperties } from "react";
+import Mark from "./Mark";
 
 const spokes = Array.from({ length: 16 });
 const nodes = Array.from({ length: 12 });
@@ -70,7 +71,7 @@ export default function UniverseBackground() {
         <div className="engine-core">
           <span className="engine-core-ring" />
           <span className="engine-core-light" />
-          <span className="engine-core-mark" />
+          <span className="engine-core-mark"><Mark /></span>
         </div>
 
         <span className="engine-beacon engine-beacon-a" />
