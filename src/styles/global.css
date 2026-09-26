@@ -5772,3 +5772,61 @@ a{color:inherit;text-decoration:none}
   .idea-principles p,
   .now-card p{-webkit-line-clamp:3}
 }
+
+
+/* Final mobile legibility floor: secondary copy should read like copy, not metadata. */
+@media(max-width:760px){
+  .story-tabs button strong{font-size:.72rem}
+  .research-tabs button strong{font-size:.66rem}
+  .story-tabs button>span{font-size:.52rem}
+
+  .idea-principles strong,
+  .now-card strong,
+  .machine-node strong,
+  .flow-copy strong,
+  .gate-rung strong,
+  .note-body strong,
+  .tool-node strong{font-size:.78rem}
+
+  .idea-principles p,
+  .now-card p,
+  .machine-node p,
+  .flow-copy p,
+  .guardrail-lane>p,
+  .guardrail-gate p,
+  .public-private-strip p,
+  .gate-rung p,
+  .hunt-copy p,
+  .hunt-evidence-strip p,
+  .note-body p,
+  .tool-node p{
+    font-size:.68rem;
+    line-height:1.42;
+  }
+
+  .idea-principles article>span,
+  .now-card>span,
+  .brand-line span,
+  .guardrail-lane header span,
+  .public-private-strip span,
+  .gate-rung small,
+  .hunt-copy span,
+  .hunt-evidence-strip span,
+  .note-marker span{
+    font-size:.5rem;
+  }
+
+  .question-line span,
+  .family-row span{font-size:.5rem}
+  .question-line strong{font-size:.68rem}
+  .guardrail-lane header strong{font-size:.78rem}
+  .guardrail-chain b{font-size:.52rem}
+  .guardrail-gate span{font-size:.5rem}
+  .guardrail-gate strong{font-size:.72rem}
+  .flow-number,
+  .gate-number{font-size:.5rem}
+  .flow-io small{font-size:.44rem}
+  .flow-io b{font-size:.58rem}
+  .note-body small{font-size:.44rem}
+  .hunt-evidence-strip strong{font-size:.7rem}
+}
