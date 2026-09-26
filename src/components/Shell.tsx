@@ -1,47 +1,47 @@
 import { type ReactNode } from "react";
-import { useLocation } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import Mark from "./Mark";
 import UniverseBackground from "./UniverseBackground";
 
 const nav = [
-  ["/", "Live"],
+  ["/", "Home"],
+  ["/live", "Live"],
   ["/system", "System"],
   ["/research", "Research"]
 ] as const;
 
 export function PublicShell({ children }: { children: ReactNode }) {
   const location = useLocation();
-  const home = location.pathname === "/";
 
   return (
-    <div className={"public-frame " + (home ? "public-frame-home" : "public-frame-docs")}>
+    <div className="public-frame compact-public-frame">
       <UniverseBackground />
 
-      <header className="public-header">
-        <a className="public-brand" href="/" aria-label="ANEVUM home">
+      <header className="public-header compact-public-header">
+        <Link className="public-brand" to="/" aria-label="ANEVUM home">
           <Mark />
           <span>ANEVUM</span>
-        </a>
+        </Link>
 
         <nav className="public-nav public-nav-main" aria-label="Primary navigation">
           {nav.map(([href, label]) => (
-            <a
+            <Link
               key={href}
-              href={href}
+              to={href}
               className={location.pathname === href ? "active" : ""}
             >
               {label}
-            </a>
+            </Link>
           ))}
         </nav>
 
-        <a className="public-status-link" href="/command" rel="nofollow">
+        <Link className="public-status-link" to="/command" rel="nofollow">
           <i />
           <span>OPERATOR</span>
-        </a>
+        </Link>
       </header>
 
-      <main className="public-stage">{children}</main>
+      <main className="public-stage compact-public-stage">{children}</main>
     </div>
   );
 }
