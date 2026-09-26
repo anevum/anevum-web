@@ -3733,3 +3733,56 @@ a{color:inherit;text-decoration:none}
     height:5px;
   }
 }
+
+
+/* Command access moved into the top navigation */
+.command-nav{
+  justify-self:end;
+  min-height:30px;
+  display:inline-flex;
+  align-items:center;
+  gap:7px;
+  padding:0 8px;
+  color:#4e626f;
+  border:1px solid transparent;
+  border-radius:7px;
+  transition:
+    color .2s ease,
+    border-color .2s ease,
+    background .2s ease;
+}
+.command-nav:hover{
+  color:#9eb0bb;
+  border-color:rgba(151,202,234,.11);
+  background:rgba(5,13,20,.34);
+}
+.command-nav-dot{
+  width:5px;
+  height:5px;
+  border-radius:50%;
+  background:#527995;
+  box-shadow:0 0 8px rgba(96,153,190,.24);
+  opacity:.7;
+}
+.command-nav span:last-child{
+  font-size:.36rem;
+  font-weight:680;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+}
+
+@media(max-width:760px){
+  .command-nav{
+    min-height:28px;
+    padding:0 4px;
+    gap:5px;
+  }
+  .command-nav span:last-child{
+    display:none;
+  }
+  .command-nav-dot{
+    width:6px;
+    height:6px;
+    opacity:.9;
+  }
+}
