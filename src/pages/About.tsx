@@ -24,7 +24,7 @@ export default function About() {
             New interests do not require a new identity. Old interests do not need to be deleted.
           </p>
           <p>
-            The current primary engineering project is an automated capital system. Earlier work
+            The current primary engineering project is RHEN, an automated market research and execution system. Earlier work
             includes the Transcosmic fiction universe and publishing development. Future projects
             can take entirely different forms without forcing another structural reset.
           </p>
