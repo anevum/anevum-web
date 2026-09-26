@@ -4,9 +4,10 @@ import { useAuth } from "../auth/AuthProvider";
 import Mark from "../components/Mark";
 
 export default function PrivateAccess() {
-  const { session, loading, commandAdmin, signIn, signUp, signOut } = useAuth();
+  const { session, loading, commandAdmin, signIn, sendMagicLink, signUp, signOut } = useAuth();
   const [mode, setMode] = useState<"signin" | "create">("signin");
   const [status, setStatus] = useState("");
+  const [signInEmail, setSignInEmail] = useState("");
 
   if (loading) {
     return (
@@ -62,10 +63,25 @@ export default function PrivateAccess() {
     const form = new FormData(event.currentTarget);
     setStatus("Resolving access…");
     try {
-      await signIn(String(form.get("email") || ""), String(form.get("password") || ""));
+      await signIn(signInEmail, String(form.get("password") || ""));
       setStatus("");
     } catch (reason) {
       setStatus(reason instanceof Error ? reason.message : "Could not sign in.");
+    }
+  }
+
+  async function emailSignInLink() {
+    if (!signInEmail.trim()) {
+      setStatus("Enter your email first.");
+      return;
+    }
+
+    setStatus("Sending secure sign-in link…");
+    try {
+      await sendMagicLink(signInEmail);
+      setStatus("Check your email for a secure sign-in link.");
+    } catch (reason) {
+      setStatus(reason instanceof Error ? reason.message : "Could not send the sign-in link.");
     }
   }
 
@@ -83,8 +99,9 @@ export default function PrivateAccess() {
         password: String(form.get("password") || "")
       });
       if (!complete) {
+        setSignInEmail(email);
         setMode("signin");
-        setStatus("Confirm the account by email, then sign in.");
+        setStatus("If this is a new account, check your email for the confirmation link. If you have used this email before, use the email sign-in link below.");
       }
     } catch (reason) {
       setStatus(reason instanceof Error ? reason.message : "Could not create account.");
@@ -112,9 +129,20 @@ export default function PrivateAccess() {
 
         {mode === "signin" ? (
           <form className="private-form" onSubmit={submitSignIn}>
-            <label><span>Email</span><input name="email" type="email" autoComplete="email" required /></label>
+            <label>
+              <span>Email</span>
+              <input
+                name="email"
+                type="email"
+                autoComplete="email"
+                value={signInEmail}
+                onChange={(event) => setSignInEmail(event.target.value)}
+                required
+              />
+            </label>
             <label><span>Password</span><input name="password" type="password" autoComplete="current-password" required /></label>
             <button className="private-primary" type="submit">Sign in <b>↗</b></button>
+            <button className="private-secondary" type="button" onClick={emailSignInLink}>Email me a sign-in link</button>
           </form>
         ) : (
           <form className="private-form" onSubmit={submitCreate}>
