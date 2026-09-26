@@ -99,7 +99,7 @@ export default function System() {
         </aside>
 
         <div className="workspace-content story-content">
-          <AnimatePresence mode="wait">
+          <AnimatePresence mode="wait" initial={false}>
             {tab === "idea" && (
               <motion.div
                 className="workspace-view story-view"
@@ -113,7 +113,7 @@ export default function System() {
                     <span className="story-kicker">THE QUESTION</span>
                     <h2>Can a tiny account become a better machine instead of just making bigger bets?</h2>
                     <p>
-                      ANEVUM started as a personal attempt to automate capital growth. The important part is not whether a bot can place trades.
+                      RHEN began as a personal attempt to automate capital growth inside ANEVUM. The important part is not whether a bot can place trades.
                       That is easy. The hard part is building a process that can prove when it has an edge, admit when it does not, and improve
                       without rewriting the evidence to make itself look successful.
                     </p>
