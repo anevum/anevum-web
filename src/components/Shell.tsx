@@ -34,19 +34,17 @@ export function PublicShell({ children }: { children: ReactNode }) {
           ))}
         </nav>
 
-        <div className="header-spacer" aria-hidden="true" />
+        <Link
+          className="command-nav"
+          to="/command"
+          rel="nofollow"
+          aria-label="Open Command login"
+          title="Command login"
+        >
+          <span className="command-nav-dot" />
+          <span>Command</span>
+        </Link>
       </header>
-
-      <Link
-        className="command-dock"
-        to="/command"
-        rel="nofollow"
-        aria-label="Open Command login"
-        title="Command login"
-      >
-        <span className="command-dock-dot" />
-        <strong>COMMAND</strong>
-      </Link>
 
       <main className="public-stage compact-public-stage">{children}</main>
     </div>
