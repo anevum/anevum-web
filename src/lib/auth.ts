@@ -244,9 +244,11 @@ export function isCommandAdmin(session: RhenSession | null) {
   const confirmed = Boolean(user.email_confirmed_at || user.confirmed_at);
 
   return (
-    (email === "devon@anevum.com" && confirmed) ||
-    meta.command_admin === true ||
-    meta.wiki_admin === true ||
-    ["owner", "founder", "admin", "command_admin", "wiki_admin"].includes(role)
+    confirmed &&
+    (
+      meta.command_admin === true ||
+      meta.wiki_admin === true ||
+      ["owner", "founder", "admin", "command_admin", "wiki_admin"].includes(role)
+    )
   );
 }
