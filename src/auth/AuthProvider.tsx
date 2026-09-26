@@ -8,6 +8,7 @@ import {
   type ReactNode
 } from "react";
 import {
+  consumeAuthRedirect,
   isCommandAdmin,
   loadSession,
   refreshCurrentUser,
@@ -39,17 +40,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let active = true;
-    const current = loadSession();
-    if (!current) {
-      setLoading(false);
-      return;
+
+    async function resolveSession() {
+      try {
+        const redirected = await consumeAuthRedirect();
+        if (!active) return;
+        if (redirected) {
+          setSession(redirected);
+          setLoading(false);
+          return;
+        }
+
+        const current = loadSession();
+        if (!current) {
+          setLoading(false);
+          return;
+        }
+
+        const next = await refreshCurrentUser(current);
+        if (!active) return;
+        setSession(next);
+        setLoading(false);
+      } catch {
+        if (!active) return;
+        saveSession(null);
+        setSession(null);
+        setLoading(false);
+      }
     }
 
-    refreshCurrentUser(current).then((next) => {
-      if (!active) return;
-      setSession(next);
-      setLoading(false);
-    });
+    void resolveSession();
 
     return () => {
       active = false;
