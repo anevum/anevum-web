@@ -24,7 +24,7 @@ const architecture = [
   ["Interface", "React + TypeScript", "Public live, system, and research surfaces."],
   ["Edge", "Cloudflare", "Site delivery, Worker API, security headers, and private route protection."],
   ["Data", "Supabase", "Canonical application/trading records and sanitized public telemetry."],
-  ["Runtime", "Railway", "Production trader service and protected operational endpoints."],
+  ["Runtime", "Railway", "RHEN production service and protected operational endpoints."],
   ["Broker", "Alpaca", "Broker execution and market data used by live and historical systems."],
   ["Verification", "GitHub Actions", "Type checks, builds, deployment, and source/version history."]
 ];
@@ -63,7 +63,7 @@ export default function System() {
             {tab === "overview" && (
               <motion.div className="workspace-view overview-view" key="overview" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
                 <div className="compact-title-block">
-                  <span>WHAT ANEVUM IS</span>
+                  <span>WHAT RHEN IS</span>
                   <h2>A measurable automated trading research system.</h2>
                   <p>
                     It observes markets, evaluates candidates, applies risk gates, executes approved orders,
