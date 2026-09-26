@@ -1,5 +1,6 @@
 import { AnimatePresence, motion } from "motion/react";
 import { useState } from "react";
+import { useLiveTrading } from "../hooks/useLiveTrading";
 
 type ResearchTab = "now" | "method" | "hunt" | "notes" | "toolbox";
 
@@ -22,7 +23,7 @@ const gates = [
   ["08", "Decide", "Promote a robust survivor or reject the family and preserve that rejection as useful evidence."]
 ];
 
-const logs = [
+const fallbackLogs = [
   ["SEP 26", "Corpus integrity", "Built a dedicated diagnostic for every development window and symbol: bar count, trading days, first/last timestamp, pagination completion, missing sessions, and coverage ratio."],
   ["SEP 25", "Edge Discovery v1", "Expanded the historical corpus and changed the goal from tuning one strategy to eliminating whole entry families."],
   ["SEP 25", "Data quality first", "Reconciliation, identity validation, tagging, MFE/MAE, pagination completeness, and replay parity moved ahead of scaling."],
@@ -30,6 +31,13 @@ const logs = [
   ["SEP 25", "Scaling lock", "More simultaneous exposure remained blocked until the entry logic could survive reproducible validation."],
   ["SEP 24", "Live baseline", "Established Alpaca execution, continuous scanning, telemetry, and the private operator surface."]
 ];
+
+function journalDate(value?: string | null) {
+  if (!value) return "NOW";
+  const stamp = new Date(value);
+  if (Number.isNaN(stamp.getTime())) return "NOW";
+  return stamp.toLocaleDateString("en-US", { month: "short", day: "2-digit" }).toUpperCase();
+}
 
 const toolsList = [
   ["Alpaca", "MARKET + BROKER", "https://www.google.com/s2/favicons?domain=alpaca.markets&sz=64", "Provides live execution, broker truth, and the market data used by live and historical systems."],
@@ -44,6 +52,19 @@ const toolsList = [
 
 export default function Research() {
   const [tab, setTab] = useState<ResearchTab>("now");
+  const { data } = useLiveTrading(10000);
+  const researchState = data?.research;
+  const latestDaily = researchState?.latest_daily;
+  const currentFocus = researchState?.current_focus || "Finish the corpus audit, then let elimination happen.";
+  const currentStatus = researchState?.current_status || "INVESTIGATE";
+  const currentSummary = latestDaily?.summary ||
+    "The current entry families still have to demonstrate reproducible positive expectancy before RHEN is allowed to scale.";
+  const journalLogs = (researchState?.journal || []).slice(0, 8).map((entry) => [
+    journalDate(entry.at),
+    entry.title || String(entry.type || "Research checkpoint").replaceAll("_", " "),
+    entry.summary || entry.focus || entry.next_action || "Research checkpoint recorded."
+  ]);
+  const logs = journalLogs.length ? journalLogs : fallbackLogs;
 
   return (
     <section className="compact-page workspace-screen story-workspace research-story">
@@ -84,13 +105,9 @@ export default function Research() {
               >
                 <div className="research-now-layout">
                   <section className="research-question">
-                    <span className="story-kicker">THE CURRENT BOTTLENECK</span>
-                    <h2>Does the entry logic contain a reproducible edge at all?</h2>
-                    <p>
-                      The account is small, but capital is not the main research problem right now. Before RHEN is allowed to scale,
-                      the entry structure has to produce positive expectancy that survives different dates, symbols, friction assumptions,
-                      and data checks.
-                    </p>
+                    <span className="story-kicker">CURRENT RESEARCH FOCUS</span>
+                    <h2>{currentFocus}</h2>
+                    <p>{currentSummary}</p>
                     <div className="question-line">
                       <span>IF YES</span><strong>Promote carefully → measure live → scale only after evidence persists.</strong>
                     </div>
@@ -101,9 +118,9 @@ export default function Research() {
 
                   <div className="research-now-side">
                     <article className="now-card is-known">
-                      <span>WHAT WE KNOW</span>
-                      <strong>The machine can run.</strong>
-                      <p>Scanning, execution, telemetry, reconciliation, reporting, and controlled deployment are engineering problems we can solve.</p>
+                      <span>LATEST REVIEW</span>
+                      <strong>{latestDaily?.title || "The machine can run."}</strong>
+                      <p>{latestDaily?.summary || "Scanning, execution, telemetry, reconciliation, reporting, and controlled deployment are operating as measurable engineering systems."}</p>
                     </article>
                     <article className="now-card is-unknown">
                       <span>WHAT WE DO NOT KNOW</span>
@@ -111,9 +128,9 @@ export default function Research() {
                       <p>A strategy does not earn promotion because it looks clever, worked once, or made money on a single session.</p>
                     </article>
                     <article className="now-card is-next">
-                      <span>WHAT HAPPENS NEXT</span>
-                      <strong>Finish the corpus audit, then let elimination happen.</strong>
-                      <p>The result can be a survivor or five rejections. Either outcome moves the project forward.</p>
+                      <span>RESEARCH STATE</span>
+                      <strong>{currentStatus}</strong>
+                      <p>{currentFocus}</p>
                     </article>
                   </div>
                 </div>
