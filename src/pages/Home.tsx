@@ -153,7 +153,7 @@ export default function Home() {
                     const count = Number(row.count) || 0;
                     const height = Math.max(8, (count / activityMax) * 100);
                     return <i key={(row.at || "") + index} style={{ height: height + "%" }} />;
-                  }) : Array.from({ length: 6 }).map((_, index) => <i key={index} />);
+                  }) : Array.from({ length: 6 }).map((_, index) => <i key={index} />)
                   }
                 </div>
               </div>
