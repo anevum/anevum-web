@@ -99,6 +99,7 @@ export type CommandSnapshot = {
   recent_orders?: Record<string, unknown>[];
   scanner?: Record<string, Record<string, unknown>>;
   history?: Record<string, unknown>[];
+  research?: Record<string, unknown>;
 };
 
 export async function fetchCommandStatus(session: RhenSession): Promise<CommandSnapshot> {
@@ -134,6 +135,20 @@ export type PublicActivityBucket = {
   count?: number | string;
 };
 
+export type PublicResearchEntry = {
+  at?: string | null;
+  type?: string | null;
+  title?: string | null;
+  summary?: string | null;
+  classification?: string | null;
+  focus?: string | null;
+  next_action?: string | null;
+  session?: string | null;
+  week_start?: string | null;
+  week_end?: string | null;
+  warnings?: string[];
+};
+
 export type LiveTradingFeed = {
   ok: boolean;
   generated_at?: string;
@@ -158,6 +173,14 @@ export type LiveTradingFeed = {
   };
   activity?: PublicActivityBucket[];
   events?: PublicTelemetryEvent[];
+  research?: {
+    current_focus?: string | null;
+    current_status?: string | null;
+    last_updated_at?: string | null;
+    latest_daily?: PublicResearchEntry | null;
+    latest_weekly?: PublicResearchEntry | null;
+    journal?: PublicResearchEntry[];
+  };
   disclosure?: {
     level?: string;
     public_fields?: string[];
