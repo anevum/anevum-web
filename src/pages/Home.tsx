@@ -33,8 +33,8 @@ const architecture = [
 const latestUpdate = {
   date: "SEP 25 2026",
   version: "PUBLIC 3.1",
-  title: "Single-screen public interface",
-  body: "The public site is condensed into one fixed viewport. Runtime telemetry remains live while private trading data stays excluded."
+  title: "System and research documentation added",
+  body: "The live page remains fixed to one viewport. Detailed architecture, research, development logs, resources, and process documentation now live on separate public pages."
 };
 
 export default function Home() {
@@ -189,7 +189,7 @@ export default function Home() {
               <strong>{latestUpdate.title}</strong>
               <p>{latestUpdate.body}</p>
             </div>
-            <a href="/command" rel="nofollow">OPERATOR <i /></a>
+            <a href="/research">RESEARCH <i /></a>
           </section>
         </div>
       </div>
