@@ -43,7 +43,7 @@ const logs = [
 
 const resources = [
   ["Alpaca", "Broker + market data", "Live brokerage execution and the market-data source used by the production and historical research systems."],
-  ["Railway", "Trader runtime", "Runs the production trading service and isolated research jobs outside the public website."],
+  ["Railway", "RHEN runtime", "Runs the RHEN production trading service and isolated research jobs outside the public website."],
   ["Supabase", "Canonical data + telemetry", "Stores application and trading records and publishes the sanitized public telemetry feed through an Edge Function."],
   ["Cloudflare", "Web edge + access", "Serves anevum.com, runs the Worker API, applies security headers, and protects private operator surfaces."],
   ["GitHub", "Source + version history", "Holds the website and trading-system source, branches, commits, research changes, and historical implementation record."],
