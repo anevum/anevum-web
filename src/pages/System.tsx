@@ -57,12 +57,12 @@ const flowStages = [
 ];
 
 const machineNodes = [
-  ["MARKET", "Alpaca data", "https://alpaca.markets/favicon.ico", "Prices, bars, quotes, and broker truth enter here."],
-  ["RHEN", "Railway", "https://railway.com/favicon.ico", "The always-on service scans, evaluates, risk-checks, and executes."],
-  ["RECORD", "Supabase", "https://supabase.com/favicon.ico", "Canonical records and sanitized public telemetry live here."],
-  ["PUBLIC", "Cloudflare + React", "https://www.cloudflare.com/favicon.ico", "anevum.com shows what the system is doing without exposing private account details."],
-  ["SOURCE", "GitHub", "https://github.com/favicon.ico", "Every meaningful code change is versioned so the machine has a history."],
-  ["RESEARCH", "OpenAI / ChatGPT", "https://openai.com/favicon.ico", "Ideas are tested away from live execution before they can be promoted."]
+  ["MARKET", "Alpaca data", "https://www.google.com/s2/favicons?domain=alpaca.markets&sz=64", "Prices, bars, quotes, and broker truth enter here."],
+  ["RHEN", "Railway", "https://www.google.com/s2/favicons?domain=railway.com&sz=64", "The always-on service scans, evaluates, risk-checks, and executes."],
+  ["RECORD", "Supabase", "https://www.google.com/s2/favicons?domain=supabase.com&sz=64", "Canonical records and sanitized public telemetry live here."],
+  ["PUBLIC", "Cloudflare + React", "https://www.google.com/s2/favicons?domain=cloudflare.com&sz=64", "anevum.com shows what the system is doing without exposing private account details."],
+  ["SOURCE", "GitHub", "https://www.google.com/s2/favicons?domain=github.com&sz=64", "Every meaningful code change is versioned so the machine has a history."],
+  ["RESEARCH", "OpenAI / ChatGPT", "https://www.google.com/s2/favicons?domain=openai.com&sz=64", "Ideas are tested away from live execution before they can be promoted."]
 ];
 
 export default function System() {
@@ -203,7 +203,7 @@ export default function System() {
                   {machineNodes.map(([label, tool, icon, body], index) => (
                     <article key={label} className={"machine-node node-" + (index + 1)}>
                       <div className="brand-line">
-                        <img src={icon} alt="" aria-hidden="true" />
+                        <img src={icon} alt="" aria-hidden="true" referrerPolicy="no-referrer" />
                         <span>{label}</span>
                       </div>
                       <strong>{tool}</strong>
