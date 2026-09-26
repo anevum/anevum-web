@@ -101,19 +101,57 @@ export async function consumeAuthRedirect(): Promise<RhenSession | null> {
   return next;
 }
 
+export async function refreshSessionRequest(refreshToken: string) {
+  const next = await request<RhenSession>("/auth/v1/token?grant_type=refresh_token", {
+    method: "POST",
+    body: JSON.stringify({ refresh_token: refreshToken })
+  });
+  saveSession(next);
+  return next;
+}
+
 export async function refreshCurrentUser(session: RhenSession) {
   if (!session.access_token) return null;
+
+  let current = session;
+  const now = Math.floor(Date.now() / 1000);
+
+  if (current.refresh_token && current.expires_at && current.expires_at <= now + 60) {
+    try {
+      current = await refreshSessionRequest(current.refresh_token);
+    } catch {
+      saveSession(null);
+      return null;
+    }
+  }
+
   try {
     const user = await request<RhenUser>("/auth/v1/user", {
       method: "GET",
-      token: session.access_token
+      token: current.access_token
     });
-    const next = { ...session, user };
+    const next = { ...current, user };
     saveSession(next);
     return next;
   } catch {
-    saveSession(null);
-    return null;
+    if (!current.refresh_token) {
+      saveSession(null);
+      return null;
+    }
+
+    try {
+      const refreshed = await refreshSessionRequest(current.refresh_token);
+      const user = await request<RhenUser>("/auth/v1/user", {
+        method: "GET",
+        token: refreshed.access_token
+      });
+      const next = { ...refreshed, user };
+      saveSession(next);
+      return next;
+    } catch {
+      saveSession(null);
+      return null;
+    }
   }
 }
 
@@ -131,6 +169,14 @@ export async function sendMagicLinkRequest(email: string) {
       email: email.trim(),
       create_user: false
     })
+  });
+}
+
+export async function sendPasswordResetRequest(email: string) {
+  const redirect = AUTH_RETURN_URL + "?reset=1";
+  return request<Record<string, never>>("/auth/v1/recover?redirect_to=" + encodeURIComponent(redirect), {
+    method: "POST",
+    body: JSON.stringify({ email: email.trim() })
   });
 }
 
@@ -160,6 +206,17 @@ export async function updateMetadataRequest(session: RhenSession, patch: Record<
     method: "PUT",
     token: session.access_token,
     body: JSON.stringify({ data })
+  });
+  const next = { ...session, user };
+  saveSession(next);
+  return next;
+}
+
+export async function updatePasswordRequest(session: RhenSession, password: string) {
+  const user = await request<RhenUser>("/auth/v1/user", {
+    method: "PUT",
+    token: session.access_token,
+    body: JSON.stringify({ password })
   });
   const next = { ...session, user };
   saveSession(next);
