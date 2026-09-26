@@ -1,12 +1,12 @@
 # ANEVUM Web
 
-ANEVUM's public website and private operator interface.
+ANEVUM's public website and private operator interface for RHEN, the active automated market research and execution system.
 
 ## Product boundary
 
 ### Public — `/`
 
-The public site is an intentionally limited observability surface. It may show:
+The public site is an intentionally limited RHEN observability surface. It may show:
 
 - runtime state and telemetry freshness
 - active public version identifier
