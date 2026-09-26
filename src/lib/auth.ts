@@ -1,6 +1,7 @@
 export const SUPABASE_URL = "https://mfntzxheldzdvlokyntk.supabase.co";
 export const SUPABASE_KEY = "sb_publishable_XfkgeXau2-6XOPzoXF-Nnw_FSnx0Sae";
 export const SESSION_KEY = "anevum.rhenlink.session.v2";
+export const AUTH_RETURN_URL = "https://anevum.com/private";
 
 export type RhenUser = {
   id?: string;
@@ -97,8 +98,7 @@ export async function signInRequest(email: string, password: string) {
 }
 
 export async function sendMagicLinkRequest(email: string) {
-  const redirect = window.location.origin + "/rhenlink";
-  return request<Record<string, never>>("/auth/v1/otp?redirect_to=" + encodeURIComponent(redirect), {
+  return request<Record<string, never>>("/auth/v1/otp?redirect_to=" + encodeURIComponent(AUTH_RETURN_URL), {
     method: "POST",
     body: JSON.stringify({
       email: email.trim(),
@@ -113,8 +113,7 @@ export async function signUpRequest(input: {
   email: string;
   password: string;
 }) {
-  const redirect = window.location.origin + "/rhenlink";
-  return request<RhenSession>("/auth/v1/signup?redirect_to=" + encodeURIComponent(redirect), {
+  return request<RhenSession>("/auth/v1/signup?redirect_to=" + encodeURIComponent(AUTH_RETURN_URL), {
     method: "POST",
     body: JSON.stringify({
       email: input.email.trim(),
