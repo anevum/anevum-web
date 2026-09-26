@@ -26,6 +26,7 @@ export default function Live() {
   const events = data?.events || [];
   const activity = data?.activity || [];
   const research = data?.research;
+  const scan = data?.operational?.latest_scan;
   const version = data?.active_strategy?.version_id || data?.active_strategy?.strategy_name;
   const state = loading ? "CONNECTING" : data?.state || (data?.live ? "RUNNING" : "STALE");
   const stateClass = data?.live ? "is-live" : data ? "is-stale" : "";
@@ -40,7 +41,7 @@ export default function Live() {
       <header className="workspace-heading">
         <div>
           <p className="compact-eyebrow">RHEN / PUBLIC TELEMETRY</p>
-          <h1>RHEN</h1>
+          <h1>Live</h1>
         </div>
         <div className="workspace-heading-status">
           <span className={"runtime-state " + stateClass}><i />{state}</span>
@@ -52,14 +53,17 @@ export default function Live() {
       <div className="live-layout">
         <article className="compact-panel live-console-panel">
           <header className="compact-panel-head">
-            <div><span>EVENT FEED</span><small>{error || "SANITIZED PUBLIC EVENTS"}</small></div>
+            <div><span>EVENT FEED</span><small>{error || "SANITIZED DURABLE TELEMETRY"}</small></div>
             <b>REFRESH 5S</b>
           </header>
           <div className="live-console-body">
             <div className="console-line system-line">
               <time>{timeLabel(data?.generated_at)}</time>
               <strong>RHEN</strong>
-              <p>Public telemetry connected. Sensitive trading data is excluded.</p>
+              <p>
+                Public telemetry connected. Events are real system records; account value, symbols,
+                fills, orders, P&amp;L, thresholds, sizing, and risk parameters are excluded.
+              </p>
             </div>
             {events.length ? events.slice(0, 11).map((event, index) => (
               <motion.div
@@ -73,7 +77,7 @@ export default function Live() {
                 <p>{event.label || "System telemetry event recorded."}</p>
               </motion.div>
             )) : (
-              <div className="one-console-empty">{loading ? "Connecting…" : "No recent events."}</div>
+              <div className="one-console-empty">{loading ? "Connecting…" : "No recent public events."}</div>
             )}
           </div>
         </article>
@@ -88,29 +92,44 @@ export default function Live() {
 
           <article className="compact-panel activity-compact">
             <header className="compact-panel-head">
-              <div><span>ACTIVITY</span><small>LAST 60 MINUTES</small></div>
+              <div><span>TELEMETRY ACTIVITY</span><small>EVENT COUNT / 10-MINUTE BUCKET</small></div>
               <b>{telemetry?.events_60m ?? "—"}</b>
             </header>
-            <div className="compact-activity-bars">
-              {activity.length ? activity.map((row, index) => {
-                const count = Number(row.count) || 0;
-                const height = Math.max(8, (count / activityMax) * 100);
-                return <i key={(row.at || "") + index} style={{ height: height + "%" }} />;
-              }) : Array.from({ length: 8 }).map((_, index) => <i key={index} />)
-              }
-            </div>
+            {activity.length ? (
+              <div className="compact-activity-bars" aria-label="Real telemetry event activity over the last hour">
+                {activity.map((row, index) => {
+                  const count = Number(row.count) || 0;
+                  const height = Math.max(5, (count / activityMax) * 100);
+                  return <i key={(row.at || "") + index} title={count + " events"} style={{ height: height + "%" }} />;
+                })}
+              </div>
+            ) : (
+              <div className="command-empty">No telemetry buckets are available. No placeholder chart is shown.</div>
+            )}
           </article>
 
           <article className="compact-panel disclosure-card">
-            <span>RESEARCH / {research?.current_status || "AWAITING REVIEW"}</span>
-            <p>{research?.current_focus || "The next research focus will appear here when RHEN records a material finding or post-close review."}</p>
-          </article>
-
-          <article className="compact-panel disclosure-card">
-            <span>PUBLIC BOUNDARY</span>
+            <span>MARKET / {String(scan?.market_session || "UNKNOWN").toUpperCase()}</span>
             <p>
-              Runtime state and aggregate activity are public. Account value, positions, symbols,
-              prices, trade history, P&amp;L, strategy thresholds, and risk parameters are not.
+              Latest scan: {scan?.cycle_outcome || "No durable scan cycle is available."}
+              {scan?.degraded ? " The latest cycle is marked degraded." : ""}
+            </p>
+          </article>
+
+          <article className="compact-panel disclosure-card">
+            <span>NEXT RESEARCH / {String(research?.current_status || "UNRECORDED").replaceAll("_", " ").toUpperCase()}</span>
+            <p>
+              {research?.next_direction?.subject || "No next research direction is recorded."}
+              {research?.next_direction?.executed === false ? " Defined, not run." : ""}
+            </p>
+          </article>
+
+          <article className="compact-panel disclosure-card">
+            <span>WHAT THE COUNTS MEAN</span>
+            <p>
+              Events count durable system telemetry, scans count completed scan records, symbols count
+              recently observed public scan identities in aggregate, and reconciliation counts broker-ledger checks.
+              None of these numbers is a trade or profit count.
             </p>
           </article>
         </aside>

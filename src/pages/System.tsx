@@ -2,90 +2,56 @@ import { AnimatePresence, motion } from "motion/react";
 import { useState } from "react";
 import { useLiveTrading } from "../hooks/useLiveTrading";
 
-type SystemTab = "idea" | "flow" | "machine" | "guardrails";
+type SystemTab = "chain" | "machine" | "evidence" | "guardrails";
 
 const tabs: [SystemTab, string, string][] = [
-  ["idea", "The idea", "What this is"],
-  ["flow", "The loop", "How a trade moves"],
-  ["machine", "The machine", "What actually runs"],
-  ["guardrails", "Guardrails", "Live vs. research"]
+  ["chain", "Evidence chain", "What becomes durable"],
+  ["machine", "Architecture", "What actually runs"],
+  ["evidence", "Meaning", "Trades and rejections"],
+  ["guardrails", "Guardrails", "Live vs. analytics"]
 ];
 
 const flowStages = [
-  {
-    n: "01",
-    title: "Watch",
-    plain: "The system continuously looks through its configured market universe.",
-    input: "Market data",
-    output: "Candidates"
-  },
-  {
-    n: "02",
-    title: "Question",
-    plain: "Each candidate has to match the current strategy rules. Most are supposed to fail here.",
-    input: "Candidates",
-    output: "Qualified setups"
-  },
-  {
-    n: "03",
-    title: "Risk check",
-    plain: "Before money moves, the system checks capital, exposure, timing, order state, and safety limits.",
-    input: "Qualified setups",
-    output: "Approved actions"
-  },
-  {
-    n: "04",
-    title: "Act",
-    plain: "Approved orders are sent to Alpaca, then tracked from submission through fill or cancellation.",
-    input: "Approved actions",
-    output: "Broker events"
-  },
-  {
-    n: "05",
-    title: "Tell the truth",
-    plain: "Broker records are reconciled against the internal ledger so the website never learns from a fictional trade history.",
-    input: "Broker events",
-    output: "Clean record"
-  },
-  {
-    n: "06",
-    title: "Learn",
-    plain: "Outcomes are tagged, measured, replayed, and compared. Research can propose a change; production does not improvise one.",
-    input: "Clean record",
-    output: "Evidence"
-  }
-];
+  ["01", "Market observation", "Alpaca market data enters RHEN.", "Market data", "Scan cycle"],
+  ["02", "Candidate evaluation", "Each scan records what was evaluated. Most candidates are expected to stop here.", "Scan cycle", "Candidate / rejection"],
+  ["03", "Signal + intent", "Only a qualified candidate can produce a signal and then an order intent.", "Qualified candidate", "Signal / order intent"],
+  ["04", "Broker lifecycle", "Authorized intents become broker orders and fills, with reconciliation against broker truth.", "Order intent", "Order / fill"],
+  ["05", "Position + exit", "Fills become positions. Exits close the lifecycle and remain attributable to the strategy version.", "Fill", "Position / exit"],
+  ["06", "Post-event outcome", "After the event, RHEN measures forward outcomes and can attempt live-vs-offline reconstruction.", "Recorded decision", "Analytics evidence"],
+  ["07", "Daily report", "The canonical close report summarizes one captured session without rewriting the underlying ledger.", "Session evidence", "Daily report"],
+  ["08", "Weekly decision", "Weekly reporting aggregates canonical daily reports, states completeness, opens questions, and records decisions.", "Daily reports", "Question / decision"]
+] as const;
 
 const machineNodes = [
-  ["MARKET", "Alpaca data", "https://www.google.com/s2/favicons?domain=alpaca.markets&sz=64", "Prices, bars, quotes, and broker truth enter here."],
-  ["RHEN", "Railway", "https://www.google.com/s2/favicons?domain=railway.com&sz=64", "The always-on service scans, evaluates, risk-checks, and executes."],
-  ["RECORD", "Supabase", "https://www.google.com/s2/favicons?domain=supabase.com&sz=64", "Canonical records and sanitized public telemetry live here."],
-  ["PUBLIC", "Cloudflare + React", "https://www.google.com/s2/favicons?domain=cloudflare.com&sz=64", "anevum.com shows what the system is doing without exposing private account details."],
-  ["SOURCE", "GitHub", "https://www.google.com/s2/favicons?domain=github.com&sz=64", "Every meaningful code change is versioned so the machine has a history."],
-  ["RESEARCH", "OpenAI / ChatGPT", "https://www.google.com/s2/favicons?domain=openai.com&sz=64", "Ideas are tested away from live execution before they can be promoted."]
+  ["MARKET", "Alpaca", "https://www.google.com/s2/favicons?domain=alpaca.markets&sz=64", "Market and broker data. Broker state remains the external execution truth."],
+  ["RHEN", "Railway", "https://www.google.com/s2/favicons?domain=railway.com&sz=64", "The production RHEN service scans, evaluates, executes, reconciles, and reports."],
+  ["LEDGER", "Supabase", "https://www.google.com/s2/favicons?domain=supabase.com&sz=64", "Canonical scan, candidate, signal, order, fill, position, outcome, report, and decision records."],
+  ["WEB", "Cloudflare", "https://www.google.com/s2/favicons?domain=cloudflare.com&sz=64", "ANEVUM serves the public sanitized projection and the authenticated Command proxy."],
+  ["SOURCE", "GitHub", "https://www.google.com/s2/favicons?domain=github.com&sz=64", "Source and deployment history tie runtime behavior to versioned code."],
+  ["RESEARCH", "Offline research + reports", "https://www.google.com/s2/favicons?domain=python.org&sz=64", "Historical tests and canonical reports analyze evidence without changing live decisions."]
 ];
 
 export default function System() {
-  const [tab, setTab] = useState<SystemTab>("idea");
+  const [tab, setTab] = useState<SystemTab>("chain");
   const { data, loading } = useLiveTrading(5000);
   const state = loading ? "CONNECTING" : data?.state || (data?.live ? "RUNNING" : "STALE");
   const stateClass = data?.live ? "is-live" : data ? "is-stale" : "";
-  const researchStatus = data?.research?.current_status || "OFFLINE";
+  const researchStatus = data?.research?.current_status || "UNRECORDED";
 
   return (
     <section className="compact-page workspace-screen story-workspace system-story">
       <header className="workspace-heading story-heading">
         <div>
           <p className="compact-eyebrow">RHEN / SYSTEM</p>
-          <h1>How it works</h1>
+          <h1>How evidence moves</h1>
           <p className="story-heading-copy">
-            RHEN is the automated trading system inside ANEVUM: built to measure itself, expose its mistakes, and earn the right to scale.
+            RHEN separates observation, live decisions, broker truth, post-event analytics, and research conclusions so one layer cannot quietly rewrite another.
           </p>
         </div>
         <div className="workspace-heading-status story-status">
           <span className={"runtime-state " + stateClass}><i />{state}</span>
-          <div><small>LIVE LOOP</small><strong>RULE-BASED</strong></div>
-          <div><small>RESEARCH</small><strong>{researchStatus}</strong></div>
+          <div><small>LIVE STRATEGY</small><strong>{data?.active_strategy?.version_id || "UNRECORDED"}</strong></div>
+          <div><small>NEXT RESEARCH</small><strong>{String(researchStatus).replaceAll("_", " ").toUpperCase()}</strong></div>
         </div>
       </header>
 
@@ -101,82 +67,19 @@ export default function System() {
 
         <div className="workspace-content story-content">
           <AnimatePresence mode="wait" initial={false}>
-            {tab === "idea" && (
-              <motion.div
-                className="workspace-view story-view"
-                key="idea"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -6 }}
-              >
-                <div className="system-idea-grid">
-                  <section className="story-hero-card">
-                    <span className="story-kicker">THE QUESTION</span>
-                    <h2>Can a tiny account become a better machine instead of just making bigger bets?</h2>
-                    <p>
-                      RHEN began as a personal attempt to automate capital growth inside ANEVUM. The important part is not whether a bot can place trades.
-                      That is easy. The hard part is building a process that can prove when it has an edge, admit when it does not, and improve
-                      without rewriting the evidence to make itself look successful.
-                    </p>
-                    <div className="idea-sequence" aria-label="Core system loop">
-                      {["Observe", "Decide", "Act", "Measure", "Learn"].map((item, index) => (
-                        <div key={item}>
-                          <span>{String(index + 1).padStart(2, "0")}</span>
-                          <strong>{item}</strong>
-                          {index < 4 && <i aria-hidden="true">→</i>}
-                        </div>
-                      ))}
-                    </div>
-                  </section>
-
-                  <aside className="idea-principles">
-                    <article>
-                      <span>01</span>
-                      <div><strong>Evidence beats confidence.</strong><p>A good story about a trade is not the same thing as a repeatable statistical advantage.</p></div>
-                    </article>
-                    <article>
-                      <span>02</span>
-                      <div><strong>Production is boring on purpose.</strong><p>RHEN follows explicit rules. New ideas are not allowed to mutate the running system mid-session.</p></div>
-                    </article>
-                    <article>
-                      <span>03</span>
-                      <div><strong>Scaling comes last.</strong><p>More capital and more simultaneous exposure only matter after the entry logic survives realistic testing.</p></div>
-                    </article>
-                  </aside>
-                </div>
-              </motion.div>
-            )}
-
-            {tab === "flow" && (
-              <motion.div
-                className="workspace-view story-view"
-                key="flow"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -6 }}
-              >
+            {tab === "chain" && (
+              <motion.div className="workspace-view story-view" key="chain" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}>
                 <div className="story-title-row">
-                  <div>
-                    <span className="story-kicker">ONE TRADE, END TO END</span>
-                    <h2>Nothing jumps straight from a chart to a buy button.</h2>
-                  </div>
-                  <p>Every stage narrows the set of possible actions and leaves evidence behind.</p>
+                  <div><span className="story-kicker">CANONICAL EVIDENCE CHAIN</span><h2>Every stage has a different meaning.</h2></div>
+                  <p>Not every candidate travels through every stage. A rejection is a recorded decision, not a missing trade.</p>
                 </div>
-
-                <div className="flow-track">
+                <div className="flow-track rhen-flow-track">
                   <div className="flow-beam" aria-hidden="true"><i /></div>
-                  {flowStages.map((stage) => (
-                    <article key={stage.n} className="flow-stage">
-                      <span className="flow-number">{stage.n}</span>
-                      <div className="flow-copy">
-                        <strong>{stage.title}</strong>
-                        <p>{stage.plain}</p>
-                      </div>
-                      <div className="flow-io">
-                        <small>IN</small><b>{stage.input}</b>
-                        <i>→</i>
-                        <small>OUT</small><b>{stage.output}</b>
-                      </div>
+                  {flowStages.map(([n, title, plain, input, output]) => (
+                    <article key={n} className="flow-stage">
+                      <span className="flow-number">{n}</span>
+                      <div className="flow-copy"><strong>{title}</strong><p>{plain}</p></div>
+                      <div className="flow-io"><small>IN</small><b>{input}</b><i>→</i><small>OUT</small><b>{output}</b></div>
                     </article>
                   ))}
                 </div>
@@ -184,85 +87,63 @@ export default function System() {
             )}
 
             {tab === "machine" && (
-              <motion.div
-                className="workspace-view story-view"
-                key="machine"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -6 }}
-              >
+              <motion.div className="workspace-view story-view" key="machine" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}>
                 <div className="story-title-row">
-                  <div>
-                    <span className="story-kicker">THE ACTUAL MACHINE</span>
-                    <h2>Six pieces, each with one job.</h2>
-                  </div>
-                  <p>The website is only the window. RHEN, the broker, the record, research, and source history are separate parts.</p>
+                  <div><span className="story-kicker">PRODUCTION ARCHITECTURE</span><h2>The website is a window, not the trading engine.</h2></div>
+                  <p>Private Command requests stay behind authentication; public pages consume only a sanitized projection.</p>
                 </div>
-
                 <div className="machine-map">
                   <div className="machine-orbit" aria-hidden="true" />
                   {machineNodes.map(([label, tool, icon, body], index) => (
                     <article key={label} className={"machine-node node-" + (index + 1)}>
-                      <div className="brand-line">
-                        <img src={icon} alt="" aria-hidden="true" referrerPolicy="no-referrer" />
-                        <span>{label}</span>
-                      </div>
-                      <strong>{tool}</strong>
-                      <p>{body}</p>
+                      <div className="brand-line"><img src={icon} alt="" aria-hidden="true" referrerPolicy="no-referrer" /><span>{label}</span></div>
+                      <strong>{tool}</strong><p>{body}</p>
                     </article>
                   ))}
-                  <div className="machine-core">
-                    <span>RHEN</span>
-                    <strong>LIVE TRADING SYSTEM</strong>
-                    <i />
-                  </div>
+                  <div className="machine-core"><span>RHEN</span><strong>CANONICAL SYSTEM</strong><i /></div>
+                </div>
+              </motion.div>
+            )}
+
+            {tab === "evidence" && (
+              <motion.div className="workspace-view story-view" key="evidence" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}>
+                <div className="story-title-row">
+                  <div><span className="story-kicker">WHAT COUNTS AS EVIDENCE</span><h2>No trade is required for an observation to matter.</h2></div>
+                  <p>RHEN preserves both actions and non-actions so later analysis can distinguish selection quality from execution quality.</p>
+                </div>
+                <div className="rhen-state-grid">
+                  <article><span>CANDIDATE</span><strong>Observed</strong><p>A market observation reached candidate evaluation. It may still be rejected.</p></article>
+                  <article><span>REJECTION</span><strong>Valid evidence</strong><p>A rejected candidate records why no live action followed. Rejection is not a telemetry gap.</p></article>
+                  <article><span>FORWARD OUTCOME</span><strong>Analytics only</strong><p>After enough future data exists, RHEN measures what happened after a candidate. It does not retroactively create a trade.</p></article>
+                  <article><span>REPLAY / COMPARISON</span><strong>Analytics only</strong><p>Live-vs-offline reconstruction checks consistency when decision-time inputs exist. It cannot modify the original live decision.</p></article>
+                  <article><span>DAILY REPORT</span><strong>Canonical session view</strong><p>The close report summarizes captured evidence and states warnings instead of filling gaps with guesses.</p></article>
+                  <article><span>WEEKLY REPORT</span><strong>Cross-session view</strong><p>Weekly evidence is explicitly COMPLETE, PARTIAL, or INCOMPLETE based on canonical daily coverage.</p></article>
                 </div>
               </motion.div>
             )}
 
             {tab === "guardrails" && (
-              <motion.div
-                className="workspace-view story-view"
-                key="guardrails"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -6 }}
-              >
+              <motion.div className="workspace-view story-view" key="guardrails" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}>
                 <div className="story-title-row">
-                  <div>
-                    <span className="story-kicker">WHY IT DOES NOT SELF-EDIT LIVE</span>
-                    <h2>RHEN and the laboratory are deliberately separated.</h2>
-                  </div>
-                  <p>Learning is useful only when it cannot quietly change the rules that produced the evidence.</p>
+                  <div><span className="story-kicker">LIVE / RESEARCH SEPARATION</span><h2>Post-event knowledge cannot leak backward into live decisions.</h2></div>
+                  <p>Forward outcomes, replay, daily reports, and weekly reports are read-only analytics layers.</p>
                 </div>
-
                 <div className="guardrail-map">
                   <section className="guardrail-lane live-lane">
-                    <header><span>LIVE</span><strong>Production loop</strong></header>
-                    <p>Deterministic rules run against real market data and real capital. The job is consistency, not creativity.</p>
-                    <div className="guardrail-chain">
-                      <b>SCAN</b><i>→</i><b>FILTER</b><i>→</i><b>RISK</b><i>→</i><b>EXECUTE</b><i>→</i><b>RECORD</b>
-                    </div>
+                    <header><span>LIVE</span><strong>Production decisions</strong></header>
+                    <p>The active version receives current market and account state, then follows the already-authorized rules.</p>
+                    <div className="guardrail-chain"><b>OBSERVE</b><i>→</i><b>EVALUATE</b><i>→</i><b>RISK</b><i>→</i><b>EXECUTE</b><i>→</i><b>RECORD</b></div>
                   </section>
-
-                  <div className="guardrail-gate">
-                    <span>PROMOTION GATE</span>
-                    <strong>Evidence must cross this line.</strong>
-                    <p>No single good day, attractive chart, or clever idea is enough.</p>
-                  </div>
-
+                  <div className="guardrail-gate"><span>ONE-WAY EVIDENCE</span><strong>Future data stays future data.</strong><p>Analytics may inform a later research decision; it cannot rewrite the live event that already happened.</p></div>
                   <section className="guardrail-lane lab-lane">
-                    <header><span>LAB</span><strong>Research loop</strong></header>
-                    <p>Historical data is audited, replayed, stressed, and split into development, validation, and untouched holdout periods.</p>
-                    <div className="guardrail-chain">
-                      <b>AUDIT</b><i>→</i><b>TEST</b><i>→</i><b>BREAK</b><i>→</i><b>RETEST</b><i>→</i><b>DECIDE</b>
-                    </div>
+                    <header><span>ANALYTICS</span><strong>Evidence after the fact</strong></header>
+                    <p>Outcomes, reconstruction, reports, and research decisions consume durable records without sending trading instructions.</p>
+                    <div className="guardrail-chain"><b>OUTCOME</b><i>→</i><b>REPLAY</b><i>→</i><b>REPORT</b><i>→</i><b>QUESTION</b><i>→</i><b>DECIDE</b></div>
                   </section>
                 </div>
-
                 <div className="public-private-strip">
-                  <div><span>PUBLIC WINDOW</span><p>Runtime state, sanitized activity, method, architecture, research direction, and development history.</p></div>
-                  <div><span>PRIVATE OPERATOR DATA</span><p>Account values, exact symbols, orders, thresholds, risk parameters, credentials, and strategy-sensitive details.</p></div>
+                  <div><span>PUBLIC</span><p>Sanitized runtime state, strategy identity, aggregate activity, research state, evidence availability, and system history.</p></div>
+                  <div><span>PRIVATE / COMMAND</span><p>Account, P&amp;L, positions, orders, fills, symbols, detailed reports, execution-sensitive parameters, and incidents.</p></div>
                 </div>
               </motion.div>
             )}

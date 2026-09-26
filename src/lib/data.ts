@@ -1,127 +1,4 @@
-import { SUPABASE_KEY, SUPABASE_URL, type RhenSession } from "./auth";
-
-export type PublicEquityRow = {
-  observed_at?: string;
-  equity?: number | string;
-  realized_pnl?: number | string;
-  unrealized_pnl?: number | string;
-  drawdown_pct?: number | string;
-  open_positions?: number | string;
-};
-
-export type PublicStrategy = {
-  version_id?: string;
-  strategy_name?: string;
-  status?: string;
-  environment?: string;
-  hypothesis?: string;
-  activated_at?: string;
-  retired_at?: string;
-  created_at?: string;
-};
-
-export type PublicTrade = {
-  public_id?: string;
-  strategy_version_id?: string;
-  symbol?: string;
-  side?: string;
-  opened_at?: string;
-  closed_at?: string;
-  qty?: number | string;
-  avg_entry_price?: number | string;
-  avg_exit_price?: number | string;
-  realized_pnl?: number | string;
-  net_pnl?: number | string;
-  exit_reason?: string;
-};
-
-export type PublicRun = {
-  public_id?: string;
-  strategy_version_id?: string;
-  environment?: string;
-  status?: string;
-  started_at?: string;
-  ended_at?: string;
-  starting_equity?: number | string;
-  ending_equity?: number | string;
-  deposits?: number | string;
-  withdrawals?: number | string;
-};
-
-export type PublicRecord = {
-  equity: PublicEquityRow[];
-  strategies: PublicStrategy[];
-  trades: PublicTrade[];
-  runs: PublicRun[];
-};
-
-async function publicTable<T>(table: string, query: string) {
-  const response = await fetch(SUPABASE_URL + "/rest/v1/" + table + "?" + query, {
-    headers: { Accept: "application/json", apikey: SUPABASE_KEY }
-  });
-  const payload = (await response.json().catch(() => [])) as T[];
-  if (!response.ok) throw new Error("Public record request failed.");
-  return payload;
-}
-
-export async function fetchPublicRecord(): Promise<PublicRecord> {
-  const [equity, strategies, runs, trades] = await Promise.all([
-    publicTable<PublicEquityRow>(
-      "trading_public_equity",
-      "select=observed_at,equity,realized_pnl,unrealized_pnl,drawdown_pct,open_positions&order=observed_at.asc&limit=1000"
-    ),
-    publicTable<PublicStrategy>(
-      "trading_public_strategies",
-      "select=version_id,strategy_name,status,environment,hypothesis,activated_at,retired_at,created_at&order=created_at.desc&limit=100"
-    ),
-    publicTable<PublicRun>(
-      "trading_public_runs",
-      "select=public_id,strategy_version_id,environment,status,started_at,ended_at,starting_equity,ending_equity,deposits,withdrawals&order=started_at.desc&limit=100"
-    ),
-    publicTable<PublicTrade>(
-      "trading_public_trades",
-      "select=public_id,strategy_version_id,symbol,side,opened_at,closed_at,qty,avg_entry_price,avg_exit_price,realized_pnl,net_pnl,exit_reason&order=closed_at.desc&limit=250"
-    )
-  ]);
-  return { equity, strategies, runs, trades };
-}
-
-export type CommandSnapshot = {
-  mode?: string;
-  observed_at?: string;
-  account?: Record<string, unknown>;
-  bot?: Record<string, unknown>;
-  strategy?: Record<string, unknown>;
-  risk?: Record<string, unknown>;
-  market?: Record<string, unknown>;
-  positions?: Record<string, unknown>[];
-  open_orders?: Record<string, unknown>[];
-  recent_orders?: Record<string, unknown>[];
-  scanner?: Record<string, Record<string, unknown>>;
-  history?: Record<string, unknown>[];
-  research?: Record<string, unknown>;
-};
-
-export async function fetchCommandStatus(session: RhenSession): Promise<CommandSnapshot> {
-  const response = await fetch("/api/command/trader/status", {
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: "Bearer " + session.access_token
-    }
-  });
-
-  const payload = (await response.json().catch(() => ({}))) as CommandSnapshot & {
-    detail?: string;
-    message?: string;
-  };
-
-  if (!response.ok) {
-    throw new Error(payload.detail || payload.message || "Command status request failed.");
-  }
-
-  return payload;
-}
-
+import type { RhenSession } from "./auth";
 
 export type PublicTelemetryEvent = {
   at?: string | null;
@@ -149,6 +26,60 @@ export type PublicResearchEntry = {
   warnings?: string[];
 };
 
+export type PublicResearchDecision = {
+  at?: string | null;
+  decision_key?: string | null;
+  status?: string | null;
+  decision_type?: string | null;
+  subject?: string | null;
+  conclusion?: string | null;
+  methodology_version?: string | null;
+  families?: string[];
+  observation_interval?: string | null;
+  primary_forward_horizon_minutes?: number | null;
+  implemented?: boolean;
+  executed?: boolean;
+};
+
+export type PublicResearchQuestion = {
+  research_question_id?: string;
+  status?: string;
+  question?: string;
+  why_it_matters?: string;
+  sample_size?: number;
+  created_on?: string;
+  created_at?: string;
+};
+
+export type PublicEvidenceCount = {
+  horizon_minutes?: number;
+  status?: string;
+  count?: number;
+  match_state?: string;
+};
+
+export type PublicWeeklySummary = {
+  report_version?: string;
+  period_start?: string;
+  period_end?: string;
+  completeness_state?: string;
+  expected_session_count?: number;
+  included_session_count?: number;
+  missing_session_count?: number;
+  included_sessions?: string[];
+  missing_sessions?: string[];
+  generated_at?: string;
+};
+
+export type PublicStrategyHistory = {
+  version_id?: string;
+  strategy_name?: string;
+  environment?: string;
+  status?: string;
+  activated_at?: string;
+  retired_at?: string | null;
+};
+
 export type LiveTradingFeed = {
   ok: boolean;
   generated_at?: string;
@@ -163,6 +94,7 @@ export type LiveTradingFeed = {
     status?: string;
     activated_at?: string;
   } | null;
+  strategy_history?: PublicStrategyHistory[];
   telemetry?: {
     events_60m?: number;
     scan_events_10m?: number;
@@ -173,12 +105,31 @@ export type LiveTradingFeed = {
   };
   activity?: PublicActivityBucket[];
   events?: PublicTelemetryEvent[];
+  operational?: {
+    latest_scan?: {
+      observed_at?: string;
+      market_session?: string;
+      cycle_outcome?: string;
+      data_status?: string;
+      degraded?: boolean;
+    } | null;
+  };
   research?: {
     current_focus?: string | null;
     current_status?: string | null;
     last_updated_at?: string | null;
+    next_direction?: PublicResearchDecision | null;
+    completed_decisions?: PublicResearchDecision[];
+    active_questions?: PublicResearchQuestion[];
     latest_daily?: PublicResearchEntry | null;
     latest_weekly?: PublicResearchEntry | null;
+    latest_weekly_summary?: PublicWeeklySummary | null;
+    evidence?: {
+      candidate_forward_outcomes?: PublicEvidenceCount[];
+      live_offline_comparison?: PublicEvidenceCount[];
+      analytics_only?: boolean;
+    };
+    limitations?: string[];
     journal?: PublicResearchEntry[];
   };
   disclosure?: {
@@ -186,6 +137,91 @@ export type LiveTradingFeed = {
     public_fields?: string[];
   };
 };
+
+export type CommandSnapshot = {
+  mode?: string;
+  observed_at?: string;
+  account?: Record<string, unknown>;
+  bot?: Record<string, unknown>;
+  strategy?: Record<string, unknown>;
+  risk?: Record<string, unknown>;
+  market?: Record<string, unknown>;
+  positions?: Record<string, unknown>[];
+  open_orders?: Record<string, unknown>[];
+  recent_orders?: Record<string, unknown>[];
+  scanner?: Record<string, Record<string, unknown>>;
+  history?: Record<string, unknown>[];
+  research?: Record<string, unknown>;
+};
+
+export type CommandEvidence = {
+  ok?: boolean;
+  evidence_version?: string;
+  generated_at?: string;
+  latest_daily?: Record<string, unknown> | null;
+  latest_weekly?: Record<string, unknown> | null;
+  research_questions?: Record<string, unknown>[];
+  weekly_decisions?: Record<string, unknown>[];
+  research_decisions?: Record<string, unknown>[];
+  post_event_evidence?: {
+    forward_outcomes?: Record<string, unknown>[];
+    live_offline?: Record<string, unknown>[];
+    analytics_only?: boolean;
+  };
+  provenance?: {
+    runtime?: Record<string, unknown> | null;
+    latest_scan_cycle?: Record<string, unknown> | null;
+  };
+  telemetry_health?: Record<string, unknown> | null;
+};
+
+async function authenticatedJson<T>(
+  path: string,
+  session: RhenSession
+): Promise<T> {
+  const response = await fetch(path, {
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+      Authorization: "Bearer " + session.access_token
+    },
+    cache: "no-store"
+  });
+
+  const payload = (await response.json().catch(() => ({}))) as T & {
+    detail?: string;
+    message?: string;
+  };
+
+  if (!response.ok) {
+    throw new Error(payload.detail || payload.message || "Command request failed.");
+  }
+  return payload;
+}
+
+export function fetchCommandStatus(session: RhenSession): Promise<CommandSnapshot> {
+  return authenticatedJson<CommandSnapshot>("/api/command/trader/status", session);
+}
+
+export function fetchCommandEvidence(session: RhenSession): Promise<CommandEvidence> {
+  return authenticatedJson<CommandEvidence>("/api/command/trader/evidence", session);
+}
+
+export function fetchCommandDailyReport(
+  session: RhenSession,
+  reportSession?: string
+): Promise<Record<string, unknown>> {
+  const query = reportSession ? "?session=" + encodeURIComponent(reportSession) : "";
+  return authenticatedJson<Record<string, unknown>>("/api/command/trader/reports/daily" + query, session);
+}
+
+export function fetchCommandWeeklyReport(
+  session: RhenSession,
+  weekEnd?: string
+): Promise<Record<string, unknown>> {
+  const query = weekEnd ? "?week_end=" + encodeURIComponent(weekEnd) : "";
+  return authenticatedJson<Record<string, unknown>>("/api/command/trader/reports/weekly" + query, session);
+}
 
 export async function fetchLiveTradingFeed(): Promise<LiveTradingFeed> {
   const response = await fetch("/api/public/trading/live", {

@@ -59,7 +59,8 @@ async function proxyTrader(request, upstreamPath) {
   if (!token) throw new ApiError(401, "Private authentication is required before using Command.");
   await assertCommandAdmin(token);
 
-  const response = await fetch(TRADER_BASE + upstreamPath, {
+  const requestUrl = new URL(request.url);
+  const response = await fetch(TRADER_BASE + upstreamPath + requestUrl.search, {
     method: request.method,
     headers: {
       Authorization: "Bearer " + token,
@@ -96,6 +97,15 @@ async function publicTradingFeed() {
 async function commandApi(request, pathname) {
   if (pathname === "/api/command/trader/status" && request.method === "GET") {
     return proxyTrader(request, "/v1/command/status");
+  }
+  if (pathname === "/api/command/trader/reports/daily" && request.method === "GET") {
+    return proxyTrader(request, "/v1/command/reports/daily");
+  }
+  if (pathname === "/api/command/trader/reports/weekly" && request.method === "GET") {
+    return proxyTrader(request, "/v1/command/reports/weekly");
+  }
+  if (pathname === "/api/command/trader/evidence" && request.method === "GET") {
+    return proxyTrader(request, "/v1/command/evidence");
   }
   if (pathname === "/api/command/trader/entries/disable" && request.method === "POST") {
     return proxyTrader(request, "/v1/command/entries/disable");
