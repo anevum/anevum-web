@@ -12,6 +12,9 @@
 .command-account>span{display:flex;align-items:center;gap:7px;padding:6px 8px;border:1px solid rgba(123,178,223,.18);border-radius:99px;color:#86a8bf;font-size:.52rem;letter-spacing:.09em}
 .command-account>span i{width:5px;height:5px;border-radius:50%;background:#83ca9f}
 .command-account small{font-size:.6rem}
+.command-account-actions{display:flex;align-items:center;gap:2px;margin-left:2px;padding-left:8px;border-left:1px solid rgba(232,238,243,.11)}
+.command-account-actions a,.command-account-actions button{padding:6px 7px;border:0;border-radius:6px;background:transparent;color:#566572;font-size:.5rem;letter-spacing:.07em;text-transform:uppercase;cursor:pointer}
+.command-account-actions a:hover,.command-account-actions button:hover{background:rgba(255,255,255,.04);color:#aebbc5}
 .command-main{width:min(calc(100% - 36px),1480px);margin:auto;padding:32px 0 70px}
 .command-hero{display:grid;grid-template-columns:1fr auto;gap:35px;align-items:end;padding:22px 0 28px}
 .command-hero p{margin:0 0 9px;color:#52606d;font-size:.55rem;letter-spacing:.14em}
@@ -82,7 +85,10 @@
   .command-header{height:58px;padding:0 12px}
   .command-brand>span{font-size:.61rem}
   .command-account>small{display:none}
+  .command-account{gap:6px}
   .command-account>span{font-size:.47rem}
+  .command-account-actions{gap:0;margin-left:0;padding-left:4px}
+  .command-account-actions a,.command-account-actions button{padding:6px 5px;font-size:.44rem}
   .command-main{width:min(calc(100% - 20px),1480px);padding-top:18px}
   .command-hero{grid-template-columns:1fr;align-items:start;gap:20px}
   .command-connection{min-width:0;width:100%}
@@ -96,6 +102,9 @@
   .order-row b{grid-column:4;text-align:left}
 }
 @media(max-width:480px){
+  .command-brand>strong{display:none}
+  .command-account>span{padding:6px}
+  .command-account-actions a,.command-account-actions button{font-size:.42rem;padding:6px 4px}
   .scanner-row{grid-template-columns:65px 1fr 76px}
   .scanner-row p{grid-column:1/-1;white-space:normal}
   .feed-row{grid-template-columns:62px 75px 1fr}
