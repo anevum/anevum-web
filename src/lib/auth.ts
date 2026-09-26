@@ -96,6 +96,17 @@ export async function signInRequest(email: string, password: string) {
   });
 }
 
+export async function sendMagicLinkRequest(email: string) {
+  const redirect = window.location.origin + "/rhenlink";
+  return request<Record<string, never>>("/auth/v1/otp?redirect_to=" + encodeURIComponent(redirect), {
+    method: "POST",
+    body: JSON.stringify({
+      email: email.trim(),
+      create_user: false
+    })
+  });
+}
+
 export async function signUpRequest(input: {
   displayName: string;
   handle: string;
