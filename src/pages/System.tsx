@@ -57,12 +57,12 @@ const flowStages = [
 ];
 
 const machineNodes = [
-  ["MARKET", "Alpaca data", "Prices, bars, quotes, and broker truth enter here."],
-  ["TRADER", "Railway", "The always-on service scans, evaluates, risk-checks, and executes."],
-  ["RECORD", "Supabase", "Canonical records and sanitized public telemetry live here."],
-  ["PUBLIC", "Cloudflare + React", "anevum.com shows what the system is doing without exposing private account details."],
-  ["SOURCE", "GitHub", "Every meaningful code change is versioned so the machine has a history."],
-  ["RESEARCH", "Offline jobs + ChatGPT", "Ideas are tested away from live execution before they can be promoted."]
+  ["MARKET", "Alpaca data", "https://alpaca.markets/favicon.ico", "Prices, bars, quotes, and broker truth enter here."],
+  ["TRADER", "Railway", "https://railway.com/favicon.ico", "The always-on service scans, evaluates, risk-checks, and executes."],
+  ["RECORD", "Supabase", "https://supabase.com/favicon.ico", "Canonical records and sanitized public telemetry live here."],
+  ["PUBLIC", "Cloudflare + React", "https://www.cloudflare.com/favicon.ico", "anevum.com shows what the system is doing without exposing private account details."],
+  ["SOURCE", "GitHub", "https://github.com/favicon.ico", "Every meaningful code change is versioned so the machine has a history."],
+  ["RESEARCH", "OpenAI / ChatGPT", "https://openai.com/favicon.ico", "Ideas are tested away from live execution before they can be promoted."]
 ];
 
 export default function System() {
@@ -200,9 +200,12 @@ export default function System() {
 
                 <div className="machine-map">
                   <div className="machine-orbit" aria-hidden="true" />
-                  {machineNodes.map(([label, tool, body], index) => (
+                  {machineNodes.map(([label, tool, icon, body], index) => (
                     <article key={label} className={"machine-node node-" + (index + 1)}>
-                      <span>{label}</span>
+                      <div className="brand-line">
+                        <img src={icon} alt="" aria-hidden="true" />
+                        <span>{label}</span>
+                      </div>
                       <strong>{tool}</strong>
                       <p>{body}</p>
                     </article>
