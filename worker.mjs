@@ -1,5 +1,7 @@
 const TRADER_BASE = "https://alpaca-trader-production-bf3e.up.railway.app";
 const PUBLIC_TRADING_FEED = "https://mfntzxheldzdvlokyntk.supabase.co/functions/v1/trading-public-feed";
+const SUPABASE_AUTH_USER = "https://mfntzxheldzdvlokyntk.supabase.co/auth/v1/user";
+const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_XfkgeXau2-6XOPzoXF-Nnw_FSnx0Sae";
 
 class ApiError extends Error {
   constructor(status, message) {
@@ -24,9 +26,38 @@ function bearerToken(request) {
   return value.startsWith("Bearer ") ? value.slice(7).trim() : "";
 }
 
+async function assertCommandAdmin(token) {
+  const response = await fetch(SUPABASE_AUTH_USER, {
+    method: "GET",
+    headers: {
+      Authorization: "Bearer " + token,
+      apikey: SUPABASE_PUBLISHABLE_KEY,
+      Accept: "application/json"
+    }
+  });
+
+  if (!response.ok) {
+    throw new ApiError(401, "Private authentication is invalid or expired.");
+  }
+
+  const user = await response.json();
+  const meta = user && user.app_metadata && typeof user.app_metadata === "object"
+    ? user.app_metadata
+    : {};
+  const role = String(meta.role || "").trim().toLowerCase();
+  const allowed =
+    meta.command_admin === true ||
+    ["owner", "founder", "admin", "command_admin"].includes(role);
+
+  if (!allowed) {
+    throw new ApiError(403, "Administrator authorization is required for Command.");
+  }
+}
+
 async function proxyTrader(request, upstreamPath) {
   const token = bearerToken(request);
   if (!token) throw new ApiError(401, "Private authentication is required before using Command.");
+  await assertCommandAdmin(token);
 
   const response = await fetch(TRADER_BASE + upstreamPath, {
     method: request.method,
