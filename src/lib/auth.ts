@@ -18,6 +18,7 @@ export type RhenSession = {
   expires_in?: number;
   expires_at?: number;
   token_type?: string;
+  auth_type?: string;
   user?: RhenUser;
   saved_at?: number;
 };
@@ -86,6 +87,7 @@ export async function consumeAuthRedirect(): Promise<RhenSession | null> {
     access_token: accessToken,
     refresh_token: params.get("refresh_token") || undefined,
     token_type: params.get("token_type") || "bearer",
+    auth_type: params.get("type") || undefined,
     expires_in: expiresIn,
     expires_at: expiresIn ? Math.floor(Date.now() / 1000) + expiresIn : undefined
   };
@@ -173,8 +175,7 @@ export async function sendMagicLinkRequest(email: string) {
 }
 
 export async function sendPasswordResetRequest(email: string) {
-  const redirect = AUTH_RETURN_URL + "?reset=1";
-  return request<Record<string, never>>("/auth/v1/recover?redirect_to=" + encodeURIComponent(redirect), {
+  return request<Record<string, never>>("/auth/v1/recover?redirect_to=" + encodeURIComponent(AUTH_RETURN_URL), {
     method: "POST",
     body: JSON.stringify({ email: email.trim() })
   });
@@ -218,7 +219,7 @@ export async function updatePasswordRequest(session: RhenSession, password: stri
     token: session.access_token,
     body: JSON.stringify({ password })
   });
-  const next = { ...session, user };
+  const next = { ...session, auth_type: undefined, user };
   saveSession(next);
   return next;
 }
