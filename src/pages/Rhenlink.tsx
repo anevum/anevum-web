@@ -11,11 +11,9 @@ export default function PrivateAccess() {
     signIn,
     sendMagicLink,
     sendPasswordReset,
-    signUp,
     signOut,
     updatePassword
   } = useAuth();
-  const [mode, setMode] = useState<"signin" | "create">("signin");
   const [status, setStatus] = useState("");
   const [signInEmail, setSignInEmail] = useState("");
 
@@ -170,28 +168,6 @@ export default function PrivateAccess() {
     }
   }
 
-  async function submitCreate(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const form = new FormData(event.currentTarget);
-    setStatus("Creating private account…");
-    try {
-      const email = String(form.get("email") || "");
-      const displayName = String(form.get("displayName") || "");
-      const complete = await signUp({
-        displayName,
-        handle: email.split("@")[0].toLowerCase().replace(/[^a-z0-9_-]/g, "") || displayName.toLowerCase().replace(/[^a-z0-9_-]/g, ""),
-        email,
-        password: String(form.get("password") || "")
-      });
-      if (!complete) {
-        setSignInEmail(email);
-        setMode("signin");
-        setStatus("If this is a new account, check your email for the confirmation link. If you have used this email before, sign in or reset the password.");
-      }
-    } catch (reason) {
-      setStatus(reason instanceof Error ? reason.message : "Could not create account.");
-    }
-  }
 
   return (
     <main className="private-screen">
@@ -203,45 +179,31 @@ export default function PrivateAccess() {
 
         <div className="private-intro">
           <p>PRIVATE ACCESS</p>
-          <h1>{mode === "signin" ? "Welcome back." : "Create access."}</h1>
+          <h1>Welcome back.</h1>
           <span>This area is not part of the public ANEVUM experience.</span>
         </div>
 
-        <div className="private-tabs">
-          <button className={mode === "signin" ? "active" : ""} type="button" onClick={() => { setMode("signin"); setStatus(""); }}>Sign in</button>
-          <button className={mode === "create" ? "active" : ""} type="button" onClick={() => { setMode("create"); setStatus(""); }}>Create</button>
-        </div>
-
-        {mode === "signin" ? (
-          <form className="private-form" onSubmit={submitSignIn}>
-            <label>
-              <span>Email</span>
-              <input
-                name="email"
-                type="email"
-                autoComplete="email"
-                value={signInEmail}
-                onChange={(event) => setSignInEmail(event.target.value)}
-                required
-              />
-            </label>
-            <label><span>Password</span><input name="password" type="password" autoComplete="current-password" required /></label>
-            <button className="private-primary" type="submit">Sign in <b>↗</b></button>
-            <button className="private-secondary" type="button" onClick={emailPasswordReset}>Forgot password</button>
-            <button className="private-secondary" type="button" onClick={emailSignInLink}>Email me a sign-in link</button>
-          </form>
-        ) : (
-          <form className="private-form" onSubmit={submitCreate}>
-            <label><span>Name</span><input name="displayName" autoComplete="name" required /></label>
-            <label><span>Email</span><input name="email" type="email" autoComplete="email" required /></label>
-            <label><span>Password</span><input name="password" type="password" minLength={8} autoComplete="new-password" required /></label>
-            <button className="private-primary" type="submit">Create account <b>↗</b></button>
-          </form>
-        )}
+        <form className="private-form" onSubmit={submitSignIn}>
+          <label>
+            <span>Email</span>
+            <input
+              name="email"
+              type="email"
+              autoComplete="email"
+              value={signInEmail}
+              onChange={(event) => setSignInEmail(event.target.value)}
+              required
+            />
+          </label>
+          <label><span>Password</span><input name="password" type="password" autoComplete="current-password" required /></label>
+          <button className="private-primary" type="submit">Sign in <b>↗</b></button>
+          <button className="private-secondary" type="button" onClick={emailPasswordReset}>Forgot password</button>
+          <button className="private-secondary" type="button" onClick={emailSignInLink}>Email me a sign-in link</button>
+        </form>
 
         <p className="private-status">{status}</p>
         <footer>
-          <span>Creating an account does not grant administrator access.</span>
+          <span>Private access is restricted to approved ANEVUM administrator accounts.</span>
         </footer>
       </section>
     </main>
