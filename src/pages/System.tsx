@@ -58,7 +58,7 @@ const flowStages = [
 
 const machineNodes = [
   ["MARKET", "Alpaca data", "https://alpaca.markets/favicon.ico", "Prices, bars, quotes, and broker truth enter here."],
-  ["TRADER", "Railway", "https://railway.com/favicon.ico", "The always-on service scans, evaluates, risk-checks, and executes."],
+  ["RHEN", "Railway", "https://railway.com/favicon.ico", "The always-on service scans, evaluates, risk-checks, and executes."],
   ["RECORD", "Supabase", "https://supabase.com/favicon.ico", "Canonical records and sanitized public telemetry live here."],
   ["PUBLIC", "Cloudflare + React", "https://www.cloudflare.com/favicon.ico", "anevum.com shows what the system is doing without exposing private account details."],
   ["SOURCE", "GitHub", "https://github.com/favicon.ico", "Every meaningful code change is versioned so the machine has a history."],
@@ -195,7 +195,7 @@ export default function System() {
                     <span className="story-kicker">THE ACTUAL MACHINE</span>
                     <h2>Six pieces, each with one job.</h2>
                   </div>
-                  <p>The website is only the window. The trader, broker, record, research, and source history are separate parts.</p>
+                  <p>The website is only the window. RHEN, the broker, the record, research, and source history are separate parts.</p>
                 </div>
 
                 <div className="machine-map">
@@ -211,8 +211,8 @@ export default function System() {
                     </article>
                   ))}
                   <div className="machine-core">
-                    <span>ANEVUM</span>
-                    <strong>MEASURE → DECIDE → VERIFY</strong>
+                    <span>RHEN</span>
+                    <strong>LIVE TRADING SYSTEM</strong>
                     <i />
                   </div>
                 </div>
@@ -230,7 +230,7 @@ export default function System() {
                 <div className="story-title-row">
                   <div>
                     <span className="story-kicker">WHY IT DOES NOT SELF-EDIT LIVE</span>
-                    <h2>The trader and the laboratory are deliberately separated.</h2>
+                    <h2>RHEN and the laboratory are deliberately separated.</h2>
                   </div>
                   <p>Learning is useful only when it cannot quietly change the rules that produced the evidence.</p>
                 </div>
