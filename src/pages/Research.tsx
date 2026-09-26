@@ -32,14 +32,14 @@ const logs = [
 ];
 
 const toolsList = [
-  ["Alpaca", "MARKET + BROKER", "https://alpaca.markets/favicon.ico", "Provides live execution, broker truth, and the market data used by live and historical systems."],
-  ["Railway", "RUNTIME", "https://railway.com/favicon.ico", "Keeps RHEN running independently of the public website and hosts isolated research jobs."],
-  ["Supabase", "RECORD", "https://supabase.com/favicon.ico", "Stores canonical application/trading records and the sanitized telemetry that can be exposed publicly."],
-  ["Cloudflare", "EDGE", "https://www.cloudflare.com/favicon.ico", "Serves anevum.com, handles Worker APIs and security, and protects private operator surfaces."],
-  ["GitHub", "SOURCE", "https://github.com/favicon.ico", "Preserves the code and implementation history so every meaningful system change is traceable."],
-  ["GitHub Actions", "VERIFY", "https://github.com/favicon.ico", "Checks builds and deployment assumptions before changes are allowed to become production code."],
-  ["React + TypeScript", "INTERFACE", "https://react.dev/favicon.ico", "Powers the public explanation and the private operator application."],
-  ["OpenAI / ChatGPT", "RESEARCH + ENGINEERING", "https://openai.com/favicon.ico", "Used for offline analysis, research, implementation, and documentation—not as a required live trading decision call."]
+  ["Alpaca", "MARKET + BROKER", "https://www.google.com/s2/favicons?domain=alpaca.markets&sz=64", "Provides live execution, broker truth, and the market data used by live and historical systems."],
+  ["Railway", "RUNTIME", "https://www.google.com/s2/favicons?domain=railway.com&sz=64", "Keeps RHEN running independently of the public website and hosts isolated research jobs."],
+  ["Supabase", "RECORD", "https://www.google.com/s2/favicons?domain=supabase.com&sz=64", "Stores canonical application/trading records and the sanitized telemetry that can be exposed publicly."],
+  ["Cloudflare", "EDGE", "https://www.google.com/s2/favicons?domain=cloudflare.com&sz=64", "Serves anevum.com, handles Worker APIs and security, and protects private operator surfaces."],
+  ["GitHub", "SOURCE", "https://www.google.com/s2/favicons?domain=github.com&sz=64", "Preserves the code and implementation history so every meaningful system change is traceable."],
+  ["GitHub Actions", "VERIFY", "https://www.google.com/s2/favicons?domain=github.com&sz=64", "Checks builds and deployment assumptions before changes are allowed to become production code."],
+  ["React + TypeScript", "INTERFACE", "https://www.google.com/s2/favicons?domain=react.dev&sz=64", "Powers the public explanation and the private operator application."],
+  ["OpenAI / ChatGPT", "RESEARCH + ENGINEERING", "https://www.google.com/s2/favicons?domain=openai.com&sz=64", "Used for offline analysis, research, implementation, and documentation—not as a required live trading decision call."]
 ];
 
 export default function Research() {
@@ -263,7 +263,7 @@ export default function Research() {
                   {toolsList.map(([name, role, icon, body], index) => (
                     <article key={name} className={"tool-node tool-" + (index + 1)}>
                       <div className="brand-line">
-                        <img src={icon} alt="" aria-hidden="true" />
+                        <img src={icon} alt="" aria-hidden="true" referrerPolicy="no-referrer" />
                         <span>{role}</span>
                       </div>
                       <strong>{name}</strong>
