@@ -4,15 +4,109 @@ import { useAuth } from "../auth/AuthProvider";
 import Mark from "../components/Mark";
 
 export default function PrivateAccess() {
-  const { session, loading, commandAdmin, signIn, sendMagicLink, signUp, signOut } = useAuth();
+  const {
+    session,
+    loading,
+    commandAdmin,
+    signIn,
+    sendMagicLink,
+    sendPasswordReset,
+    signUp,
+    signOut,
+    updatePassword
+  } = useAuth();
   const [mode, setMode] = useState<"signin" | "create">("signin");
   const [status, setStatus] = useState("");
   const [signInEmail, setSignInEmail] = useState("");
+  const [resetMode, setResetMode] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return new URLSearchParams(window.location.search).get("reset") === "1";
+  });
 
   if (loading) {
     return (
       <main className="private-screen">
         <div className="private-loading"><Mark /><span>PRIVATE</span><p>Resolving access…</p></div>
+      </main>
+    );
+  }
+
+  async function submitNewPassword(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const form = new FormData(event.currentTarget);
+    const password = String(form.get("password") || "");
+    const confirmPassword = String(form.get("confirmPassword") || "");
+
+    if (password.length < 8) {
+      setStatus("Use at least 8 characters.");
+      return;
+    }
+    if (password !== confirmPassword) {
+      setStatus("The passwords do not match.");
+      return;
+    }
+
+    setStatus("Updating password…");
+    try {
+      await updatePassword(password);
+      window.history.replaceState({}, document.title, "/private");
+      setResetMode(false);
+      setStatus("");
+    } catch (reason) {
+      setStatus(reason instanceof Error ? reason.message : "Could not update the password.");
+    }
+  }
+
+  if (resetMode) {
+    return (
+      <main className="private-screen">
+        <section className="private-panel">
+          <header className="private-panel-head">
+            <Link className="private-brand" to="/"><Mark /><span>ANEVUM</span></Link>
+            <span>PRIVATE</span>
+          </header>
+
+          <div className="private-intro">
+            <p>PASSWORD RECOVERY</p>
+            <h1>Set a new password.</h1>
+            <span>
+              {session?.user
+                ? "This will replace the password for your ANEVUM private account."
+                : "Open the newest recovery link from your email to continue."}
+            </span>
+          </div>
+
+          {session?.user ? (
+            <form className="private-form" onSubmit={submitNewPassword}>
+              <label>
+                <span>New password</span>
+                <input name="password" type="password" minLength={8} autoComplete="new-password" required />
+              </label>
+              <label>
+                <span>Confirm password</span>
+                <input name="confirmPassword" type="password" minLength={8} autoComplete="new-password" required />
+              </label>
+              <button className="private-primary" type="submit">Update password <b>↗</b></button>
+            </form>
+          ) : (
+            <button
+              className="private-secondary"
+              type="button"
+              onClick={() => {
+                window.history.replaceState({}, document.title, "/private");
+                setResetMode(false);
+                setStatus("");
+              }}
+            >
+              Back to sign in
+            </button>
+          )}
+
+          <p className="private-status">{status}</p>
+          <footer>
+            <span>Password recovery links are single-use. Use the newest email if an older link has expired.</span>
+          </footer>
+        </section>
       </main>
     );
   }
@@ -85,6 +179,21 @@ export default function PrivateAccess() {
     }
   }
 
+  async function emailPasswordReset() {
+    if (!signInEmail.trim()) {
+      setStatus("Enter your email first.");
+      return;
+    }
+
+    setStatus("Sending password recovery email…");
+    try {
+      await sendPasswordReset(signInEmail);
+      setStatus("Check your email for the password recovery link.");
+    } catch (reason) {
+      setStatus(reason instanceof Error ? reason.message : "Could not send the password recovery email.");
+    }
+  }
+
   async function submitCreate(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
@@ -101,7 +210,7 @@ export default function PrivateAccess() {
       if (!complete) {
         setSignInEmail(email);
         setMode("signin");
-        setStatus("If this is a new account, check your email for the confirmation link. If you have used this email before, use the email sign-in link below.");
+        setStatus("If this is a new account, check your email for the confirmation link. If you have used this email before, sign in or reset the password.");
       }
     } catch (reason) {
       setStatus(reason instanceof Error ? reason.message : "Could not create account.");
@@ -142,6 +251,7 @@ export default function PrivateAccess() {
             </label>
             <label><span>Password</span><input name="password" type="password" autoComplete="current-password" required /></label>
             <button className="private-primary" type="submit">Sign in <b>↗</b></button>
+            <button className="private-secondary" type="button" onClick={emailPasswordReset}>Forgot password</button>
             <button className="private-secondary" type="button" onClick={emailSignInLink}>Email me a sign-in link</button>
           </form>
         ) : (
