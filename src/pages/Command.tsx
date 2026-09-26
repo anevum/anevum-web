@@ -136,8 +136,23 @@ export default function Command() {
   const dailyForward = record(daily.candidate_forward_evidence);
   const dailyForwardStatus = record(dailyForward.status);
   const dailyConsistency = record(daily.live_vs_offline_consistency);
-  const weeklyFindings = record(weekly.findings);
-  const confirmedFacts = list(weeklyFindings.confirmed_facts);
+  const weeklyEvidenceStability = record(weekly.evidence_stability);
+  const confirmedFacts = list(weeklyEvidenceStability.confirmed_facts);
+  const includedWeeklySessions = Array.isArray(weekly.included_trading_sessions)
+    ? weekly.included_trading_sessions
+    : Array.isArray(weekly.included_sessions)
+      ? weekly.included_sessions
+      : [];
+  const missingWeeklySessions = Array.isArray(weekly.missing_trading_sessions)
+    ? weekly.missing_trading_sessions
+    : Array.isArray(weekly.missing_sessions)
+      ? weekly.missing_sessions
+      : [];
+  const expectedWeeklySessions = Array.isArray(weekly.expected_trading_sessions)
+    ? weekly.expected_trading_sessions
+    : Array.isArray(weekly.expected_sessions)
+      ? weekly.expected_sessions
+      : [];
   const weeklyWarnings = Array.isArray(weekly.warnings) ? weekly.warnings.map(String) : [];
   const weeklyQuestions = evidence?.research_questions || list(weekly.research_questions);
   const weeklyDecisions = evidence?.weekly_decisions || list(weekly.decisions);
@@ -262,10 +277,11 @@ export default function Command() {
                 <>
                   <div className="command-metric-grid">
                     <div><span>PERIOD</span><strong>{text(weekly.period_start)} → {text(weekly.period_end)}</strong></div>
-                    <div><span>INCLUDED</span><strong>{Array.isArray(weekly.included_sessions) ? weekly.included_sessions.length : "—"}</strong></div>
-                    <div><span>MISSING</span><strong>{Array.isArray(weekly.missing_sessions) ? weekly.missing_sessions.length : "—"}</strong></div>
-                    <div><span>INCLUDED SESSIONS</span><strong>{arrayText(weekly.included_sessions)}</strong></div>
-                    <div><span>MISSING SESSIONS</span><strong>{arrayText(weekly.missing_sessions)}</strong></div>
+                    <div><span>INCLUDED</span><strong>{includedWeeklySessions.length}</strong></div>
+                    <div><span>MISSING</span><strong>{missingWeeklySessions.length}</strong></div>
+                    <div><span>EXPECTED</span><strong>{expectedWeeklySessions.length}</strong></div>
+                    <div><span>INCLUDED SESSIONS</span><strong>{arrayText(includedWeeklySessions)}</strong></div>
+                    <div><span>MISSING SESSIONS</span><strong>{arrayText(missingWeeklySessions)}</strong></div>
                     <div><span>REPORT KEY</span><strong>{text(weekly.report_key)}</strong></div>
                   </div>
                   <div className="command-fact-list">
