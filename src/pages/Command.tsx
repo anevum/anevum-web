@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthProvider";
 import Mark from "../components/Mark";
 import { fetchCommandStatus, type CommandSnapshot } from "../lib/data";
@@ -25,10 +25,16 @@ function number(value: unknown) {
 }
 
 export default function Command() {
-  const { session, loading, commandAdmin } = useAuth();
+  const { session, loading, commandAdmin, signOut } = useAuth();
+  const navigate = useNavigate();
   const [snapshot, setSnapshot] = useState<CommandSnapshot | null>(null);
   const [error, setError] = useState("");
   const [refreshing, setRefreshing] = useState(false);
+
+  const handleSignOut = useCallback(async () => {
+    await signOut();
+    navigate("/", { replace: true });
+  }, [signOut, navigate]);
 
   const refresh = useCallback(async () => {
     if (!session || !commandAdmin) return;
@@ -112,7 +118,14 @@ export default function Command() {
       <header className="command-header">
         <Link to="/" className="command-brand"><Mark /><span>ANEVUM</span><i /><strong>RHEN COMMAND</strong></Link>
         <nav><a href="#overview">Overview</a><a href="#scanner">Scanner</a><a href="#orders">Orders</a><a href="#research">Research</a><a href="#system">System</a></nav>
-        <div className="command-account"><span><i /> READ / LIVE</span><small>{session.user.email}</small></div>
+        <div className="command-account">
+          <span><i /> READ / LIVE</span>
+          <small>{session.user.email}</small>
+          <div className="command-account-actions">
+            <Link to="/" title="Return to public ANEVUM">Public</Link>
+            <button type="button" onClick={handleSignOut} title="Sign out of Command">Sign out</button>
+          </div>
+        </div>
       </header>
 
       <main className="command-main">
