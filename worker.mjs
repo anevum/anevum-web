@@ -135,6 +135,11 @@ export default {
     const url = new URL(request.url);
     const pathname = url.pathname.replace(/\/+$/, "") || "/";
 
+    if (url.hostname === "anevum.com" && url.protocol !== "https:") {
+      url.protocol = "https:";
+      return Response.redirect(url.toString(), 308);
+    }
+
     if (pathname === "/api/public/trading/live") {
       if (request.method !== "GET") return jsonResponse({ message: "Method not allowed." }, 405);
       try {
