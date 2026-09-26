@@ -32,14 +32,14 @@ const logs = [
 ];
 
 const toolsList = [
-  ["Alpaca", "MARKET + BROKER", "Provides live execution, broker truth, and the market data used by live and historical systems."],
-  ["Railway", "RUNTIME", "Keeps RHEN running independently of the public website and hosts isolated research jobs."],
-  ["Supabase", "RECORD", "Stores canonical application/trading records and the sanitized telemetry that can be exposed publicly."],
-  ["Cloudflare", "EDGE", "Serves anevum.com, handles Worker APIs and security, and protects private operator surfaces."],
-  ["GitHub", "SOURCE", "Preserves the code and implementation history so every meaningful system change is traceable."],
-  ["GitHub Actions", "VERIFY", "Checks builds and deployment assumptions before changes are allowed to become production code."],
-  ["React + TypeScript", "INTERFACE", "Powers the public explanation and the private operator application."],
-  ["OpenAI / ChatGPT", "RESEARCH + ENGINEERING", "Used for offline analysis, research, implementation, and documentation—not as a required live trading decision call."]
+  ["Alpaca", "MARKET + BROKER", "https://alpaca.markets/favicon.ico", "Provides live execution, broker truth, and the market data used by live and historical systems."],
+  ["Railway", "RUNTIME", "https://railway.com/favicon.ico", "Keeps RHEN running independently of the public website and hosts isolated research jobs."],
+  ["Supabase", "RECORD", "https://supabase.com/favicon.ico", "Stores canonical application/trading records and the sanitized telemetry that can be exposed publicly."],
+  ["Cloudflare", "EDGE", "https://www.cloudflare.com/favicon.ico", "Serves anevum.com, handles Worker APIs and security, and protects private operator surfaces."],
+  ["GitHub", "SOURCE", "https://github.com/favicon.ico", "Preserves the code and implementation history so every meaningful system change is traceable."],
+  ["GitHub Actions", "VERIFY", "https://github.com/favicon.ico", "Checks builds and deployment assumptions before changes are allowed to become production code."],
+  ["React + TypeScript", "INTERFACE", "https://react.dev/favicon.ico", "Powers the public explanation and the private operator application."],
+  ["OpenAI / ChatGPT", "RESEARCH + ENGINEERING", "https://openai.com/favicon.ico", "Used for offline analysis, research, implementation, and documentation—not as a required live trading decision call."]
 ];
 
 export default function Research() {
@@ -260,9 +260,12 @@ export default function Research() {
                     <strong>TRADING SYSTEM</strong>
                     <i />
                   </div>
-                  {toolsList.map(([name, role, body], index) => (
+                  {toolsList.map(([name, role, icon, body], index) => (
                     <article key={name} className={"tool-node tool-" + (index + 1)}>
-                      <span>{role}</span>
+                      <div className="brand-line">
+                        <img src={icon} alt="" aria-hidden="true" />
+                        <span>{role}</span>
+                      </div>
                       <strong>{name}</strong>
                       <p>{body}</p>
                     </article>
