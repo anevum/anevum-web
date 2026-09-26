@@ -74,6 +74,33 @@ export function saveSession(session: RhenSession | null) {
   }
 }
 
+export async function consumeAuthRedirect(): Promise<RhenSession | null> {
+  if (typeof window === "undefined" || !window.location.hash) return null;
+
+  const params = new URLSearchParams(window.location.hash.slice(1));
+  const accessToken = params.get("access_token");
+  if (!accessToken) return null;
+
+  const expiresIn = Number(params.get("expires_in") || 0) || undefined;
+  const session: RhenSession = {
+    access_token: accessToken,
+    refresh_token: params.get("refresh_token") || undefined,
+    token_type: params.get("token_type") || "bearer",
+    expires_in: expiresIn,
+    expires_at: expiresIn ? Math.floor(Date.now() / 1000) + expiresIn : undefined
+  };
+
+  const user = await request<RhenUser>("/auth/v1/user", {
+    method: "GET",
+    token: accessToken
+  });
+  const next = { ...session, user };
+  saveSession(next);
+
+  window.history.replaceState({}, document.title, window.location.pathname + window.location.search);
+  return next;
+}
+
 export async function refreshCurrentUser(session: RhenSession) {
   if (!session.access_token) return null;
   try {
