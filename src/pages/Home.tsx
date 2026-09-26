@@ -81,10 +81,10 @@ export default function Home() {
           transition={{ duration: .62, delay: .08 }}
         >
           <div className="landing-mark"><Mark /></div>
-          <p className="compact-eyebrow">ANEVUM / PUBLIC SYSTEM</p>
-          <h1>Automated market research, execution, and evidence.</h1>
+          <p className="compact-eyebrow">ANEVUM / RHEN</p>
+          <h1>RHEN — automated market research, execution, and evidence.</h1>
           <p className="landing-description">
-            ANEVUM is a personal research system that observes markets, applies versioned rules,
+            RHEN is ANEVUM's automated market research and execution system. It observes markets and applies versioned rules,
             executes approved trades, reconciles broker activity, and tests whether the process has a reproducible edge.
           </p>
         </motion.div>
