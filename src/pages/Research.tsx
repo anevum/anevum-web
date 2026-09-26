@@ -1,152 +1,275 @@
 import { AnimatePresence, motion } from "motion/react";
 import { useState } from "react";
 
-type ResearchTab = "state" | "process" | "edge" | "log" | "resources";
+type ResearchTab = "now" | "method" | "hunt" | "notes" | "toolbox";
 
-const tabs: [ResearchTab, string][] = [
-  ["state", "State"],
-  ["process", "Process"],
-  ["edge", "Edge Discovery"],
-  ["log", "Development"],
-  ["resources", "Resources"]
+const tabs: [ResearchTab, string, string][] = [
+  ["now", "Right now", "Where the work is"],
+  ["method", "The method", "How ideas survive"],
+  ["hunt", "Edge hunt", "What is being tested"],
+  ["notes", "Field notes", "What changed"],
+  ["toolbox", "Toolbox", "What we use"]
 ];
 
-const stateItems = [
-  ["Production", "The live baseline remains separate from experimental strategy work."],
-  ["Bottleneck", "Discover a reproducible entry edge; account size is not treated as the current bottleneck."],
-  ["Research", "Edge Discovery v1 is testing independent families against a larger historical corpus."],
-  ["Corpus integrity", "Coverage is checked by development window and symbol before research conclusions are trusted."],
-  ["Data quality", "Reconciliation, tagging, MFE/MAE, pagination completeness, and replay parity are part of the quality gate."],
-  ["Promotion", "No strategy or scaling change moves live because of one strong day or one attractive backtest."],
-  ["Failure rule", "If the current families fail, reject them and design a genuinely new family."]
-];
-
-const researchProcess = [
-  ["01", "Capture", "Collect market, scanner, execution, and broker records without rewriting the evidence after the fact."],
-  ["02", "Audit", "Measure bars, trading days, first/last timestamps, pagination completion, missing sessions, and coverage ratio."],
-  ["03", "Reconcile", "Match broker truth to the internal ledger and isolate malformed or ambiguous records."],
-  ["04", "Enrich", "Add identity tags, context, and excursion measurements including MFE/MAE."],
-  ["05", "Replay", "Run historical sessions through research logic and check that replay behavior matches the intended live rules."],
-  ["06", "Discover", "Test independent strategy families instead of repeatedly optimizing one losing structure."],
-  ["07", "Validate", "Use chronological development, validation, friction, and untouched holdout gates."],
-  ["08", "Decide", "Promote a robust survivor or reject the family and preserve the rejection as evidence."]
+const gates = [
+  ["01", "Capture", "Keep the raw market, scanner, execution, and broker records. Do not clean away inconvenient outcomes."],
+  ["02", "Audit", "Check bar counts, represented trading days, first and last timestamps, pagination, missing sessions, and coverage."],
+  ["03", "Reconcile", "Make the internal ledger agree with broker truth before using the dataset to judge a strategy."],
+  ["04", "Enrich", "Add identity tags, context, and MFE/MAE so winners and losers can be compared structurally."],
+  ["05", "Replay", "Run historical sessions through the same intended logic and look for parity failures."],
+  ["06", "Challenge", "Test independent strategy families instead of repeatedly tuning one favorite idea."],
+  ["07", "Validate", "Use chronological development, validation, friction, and untouched holdout periods."],
+  ["08", "Decide", "Promote a robust survivor or reject the family and preserve that rejection as useful evidence."]
 ];
 
 const logs = [
-  ["SEP 26", "CORPUS INTEGRITY", "Added a dedicated corpus diagnostic for every development window and symbol: bar count, trading days, first/last timestamp, pagination completion, missing sessions, and coverage ratio."],
-  ["SEP 25", "EDGE DISCOVERY", "Expanded the historical corpus and moved the research program to family-level elimination."],
-  ["SEP 25", "DATA QUALITY", "Reconciliation, identity validation, tagging, MFE/MAE, pagination completeness, and replay parity moved ahead of scaling."],
-  ["SEP 25", "STRATEGY 004", "Candidate filters remained offline after failing to demonstrate robust positive expectancy."],
-  ["SEP 25", "SCALING", "Additional simultaneous exposure remained locked behind reproducible edge evidence."],
-  ["SEP 24", "PRODUCTION", "Live Alpaca execution, continuous scanning, telemetry, and the private Command surface were established."]
+  ["SEP 26", "Corpus integrity", "Built a dedicated diagnostic for every development window and symbol: bar count, trading days, first/last timestamp, pagination completion, missing sessions, and coverage ratio."],
+  ["SEP 25", "Edge Discovery v1", "Expanded the historical corpus and changed the goal from tuning one strategy to eliminating whole entry families."],
+  ["SEP 25", "Data quality first", "Reconciliation, identity validation, tagging, MFE/MAE, pagination completeness, and replay parity moved ahead of scaling."],
+  ["SEP 25", "Strategy 004", "Candidate filters stayed offline after they failed to demonstrate robust positive expectancy."],
+  ["SEP 25", "Scaling lock", "More simultaneous exposure remained blocked until the entry logic could survive reproducible validation."],
+  ["SEP 24", "Live baseline", "Established Alpaca execution, continuous scanning, telemetry, and the private operator surface."]
 ];
 
-const resources = [
-  ["Alpaca", "Broker + market data", "Live brokerage execution and the market-data source used by the production and historical research systems."],
-  ["Railway", "Trader runtime", "Runs the production trading service and isolated research jobs outside the public website."],
-  ["Supabase", "Canonical data + telemetry", "Stores application and trading records and publishes the sanitized public telemetry feed through an Edge Function."],
-  ["Cloudflare", "Web edge + access", "Serves anevum.com, runs the Worker API, applies security headers, and protects private operator surfaces."],
-  ["GitHub", "Source + version history", "Holds the website and trading-system source, branches, commits, research changes, and historical implementation record."],
-  ["GitHub Actions", "Verification + deployment", "Runs type checks, builds, route/privacy verification, and production deployment from main."],
-  ["React / TypeScript", "Public application", "Powers the public interface and private operator application."],
-  ["Vite / Wrangler", "Build + Cloudflare packaging", "Builds the frontend and packages the Cloudflare Worker/static asset deployment."],
-  ["Motion", "Interface motion", "Handles restrained page, tab, and panel animation while keeping content usable without motion."],
-  ["OpenAI / ChatGPT", "Research + engineering", "Used for offline analysis, engineering, documentation, and research workflows; it is not required in the deterministic live decision loop."]
+const toolsList = [
+  ["Alpaca", "MARKET + BROKER", "Provides live execution, broker truth, and the market data used by live and historical systems."],
+  ["Railway", "RUNTIME", "Keeps RHEN running independently of the public website and hosts isolated research jobs."],
+  ["Supabase", "RECORD", "Stores canonical application/trading records and the sanitized telemetry that can be exposed publicly."],
+  ["Cloudflare", "EDGE", "Serves anevum.com, handles Worker APIs and security, and protects private operator surfaces."],
+  ["GitHub", "SOURCE", "Preserves the code and implementation history so every meaningful system change is traceable."],
+  ["GitHub Actions", "VERIFY", "Checks builds and deployment assumptions before changes are allowed to become production code."],
+  ["React + TypeScript", "INTERFACE", "Powers the public explanation and the private operator application."],
+  ["OpenAI / ChatGPT", "RESEARCH + ENGINEERING", "Used for offline analysis, research, implementation, and documentation—not as a required live trading decision call."]
 ];
 
 export default function Research() {
-  const [tab, setTab] = useState<ResearchTab>("state");
+  const [tab, setTab] = useState<ResearchTab>("now");
 
   return (
-    <section className="compact-page workspace-screen research-workspace">
-      <header className="workspace-heading">
+    <section className="compact-page workspace-screen story-workspace research-story">
+      <header className="workspace-heading story-heading">
         <div>
-          <p className="compact-eyebrow">RESEARCH / DEVELOPMENT RECORD</p>
-          <h1>Research</h1>
+          <p className="compact-eyebrow">ANEVUM / RESEARCH</p>
+          <h1>The lab</h1>
+          <p className="story-heading-copy">
+            This is where RHEN is allowed to be wrong. Ideas are broken here before they are trusted with more capital.
+          </p>
         </div>
-        <div className="workspace-heading-status">
+        <div className="workspace-heading-status story-status">
           <div><small>PROGRAM</small><strong>EDGE DISCOVERY V1</strong></div>
+          <div><small>BOTTLENECK</small><strong>ENTRY EDGE</strong></div>
           <div><small>SCALING</small><strong>LOCKED</strong></div>
-          <div><small>PRODUCTION</small><strong>ISOLATED</strong></div>
         </div>
       </header>
 
-      <div className="workspace-layout">
-        <aside className="workspace-tabs research-tabs" aria-label="Research sections">
-          {tabs.map(([id, label], index) => (
+      <div className="workspace-layout story-layout">
+        <aside className="workspace-tabs story-tabs research-tabs" aria-label="Research sections">
+          {tabs.map(([id, label, hint], index) => (
             <button key={id} className={tab === id ? "active" : ""} onClick={() => setTab(id)}>
-              <span>{String(index + 1).padStart(2, "0")}</span><strong>{label}</strong>
+              <span>{String(index + 1).padStart(2, "0")}</span>
+              <div><strong>{label}</strong><small>{hint}</small></div>
             </button>
           ))}
         </aside>
 
-        <div className="workspace-content">
+        <div className="workspace-content story-content">
           <AnimatePresence mode="wait">
-            {tab === "state" && (
-              <motion.div className="workspace-view" key="state" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
-                <div className="compact-title-block"><span>CURRENT STATE</span><h2>What is happening now.</h2></div>
-                <div className="research-state-grid">
-                  {stateItems.map(([title, body]) => <article key={title}><span>{title}</span><p>{body}</p></article>)}
-                </div>
-              </motion.div>
-            )}
+            {tab === "now" && (
+              <motion.div
+                className="workspace-view story-view"
+                key="now"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -6 }}
+              >
+                <div className="research-now-layout">
+                  <section className="research-question">
+                    <span className="story-kicker">THE CURRENT BOTTLENECK</span>
+                    <h2>Does the entry logic contain a reproducible edge at all?</h2>
+                    <p>
+                      The account is small, but capital is not the main research problem right now. Before RHEN is allowed to scale,
+                      the entry structure has to produce positive expectancy that survives different dates, symbols, friction assumptions,
+                      and data checks.
+                    </p>
+                    <div className="question-line">
+                      <span>IF YES</span><strong>Promote carefully → measure live → scale only after evidence persists.</strong>
+                    </div>
+                    <div className="question-line is-no">
+                      <span>IF NO</span><strong>Kill the family → keep the evidence → design from new premises.</strong>
+                    </div>
+                  </section>
 
-            {tab === "process" && (
-              <motion.div className="workspace-view" key="process" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
-                <div className="compact-title-block">
-                  <span>RESEARCH PROCESS</span>
-                  <h2>Evidence moves through eight gates.</h2>
-                  <p>Bad data is rejected before strategy conclusions are allowed to depend on it.</p>
-                </div>
-                <div className="research-process-grid">
-                  {researchProcess.map(([number, title, body]) => (
-                    <article key={number}>
-                      <span>{number}</span>
-                      <div><strong>{title}</strong><p>{body}</p></div>
+                  <div className="research-now-side">
+                    <article className="now-card is-known">
+                      <span>WHAT WE KNOW</span>
+                      <strong>The machine can run.</strong>
+                      <p>Scanning, execution, telemetry, reconciliation, reporting, and controlled deployment are engineering problems we can solve.</p>
                     </article>
-                  ))}
-                </div>
-              </motion.div>
-            )}
-
-            {tab === "edge" && (
-              <motion.div className="workspace-view" key="edge" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
-                <div className="compact-title-block"><span>EDGE DISCOVERY V1</span><h2>Five families. No forced winner.</h2><p>Each family survives only if the evidence forces us to keep it.</p></div>
-                <div className="edge-compact-layout">
-                  <article className="edge-primary-card"><span>PRIMARY QUESTION</span><strong>Does any entry family survive realistic chronological validation?</strong><p>If none survives, all five are rejected and the next strategy family is designed from new premises.</p></article>
-                  <div className="edge-fact-grid">
-                    <article><span>CORPUS</span><strong>JAN–JUL 2026</strong></article>
-                    <article><span>UNIVERSE</span><strong>36 + 3</strong></article>
-                    <article><span>DATA</span><strong>ALPACA IEX</strong></article>
-                    <article><span>FAMILIES</span><strong>5</strong></article>
-                    <article><span>FRICTION</span><strong>3 MODELS</strong></article>
-                    <article><span>OUTPUT</span><strong>SURVIVE / REJECT</strong></article>
+                    <article className="now-card is-unknown">
+                      <span>WHAT WE DO NOT KNOW</span>
+                      <strong>Whether the current entry families deserve capital.</strong>
+                      <p>A strategy does not earn promotion because it looks clever, worked once, or made money on a single session.</p>
+                    </article>
+                    <article className="now-card is-next">
+                      <span>WHAT HAPPENS NEXT</span>
+                      <strong>Finish the corpus audit, then let elimination happen.</strong>
+                      <p>The result can be a survivor or five rejections. Either outcome moves the project forward.</p>
+                    </article>
                   </div>
                 </div>
               </motion.div>
             )}
 
-            {tab === "log" && (
-              <motion.div className="workspace-view" key="log" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
-                <div className="compact-title-block"><span>DEVELOPMENT LOG</span><h2>Recent material changes.</h2></div>
-                <div className="log-compact-list">
-                  {logs.map(([date, type, body]) => <article key={date + type}><time>{date}</time><span>{type}</span><p>{body}</p></article>)}
+            {tab === "method" && (
+              <motion.div
+                className="workspace-view story-view"
+                key="method"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -6 }}
+              >
+                <div className="story-title-row">
+                  <div>
+                    <span className="story-kicker">THE RESEARCH LADDER</span>
+                    <h2>An idea has to survive eight chances to die.</h2>
+                  </div>
+                  <p>The order matters. A beautiful backtest built on incomplete or mismatched data is still bad evidence.</p>
+                </div>
+
+                <div className="gate-ladder">
+                  <div className="gate-spine" aria-hidden="true"><i /></div>
+                  {gates.map(([number, title, body], index) => (
+                    <article key={number} className="gate-rung">
+                      <span className="gate-number">{number}</span>
+                      <div>
+                        <small>{index < 4 ? "DATA TRUST" : index < 7 ? "STRATEGY TEST" : "DECISION"}</small>
+                        <strong>{title}</strong>
+                        <p>{body}</p>
+                      </div>
+                      <b>{index === 7 ? "SURVIVE / REJECT" : "PASS →"}</b>
+                    </article>
+                  ))}
                 </div>
               </motion.div>
             )}
 
-            {tab === "resources" && (
-              <motion.div className="workspace-view" key="resources" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
-                <div className="compact-title-block"><span>RESOURCE REGISTRY</span><h2>What the system currently uses.</h2></div>
-                <div className="resource-compact-grid">
-                  {resources.map(([name, role, body], index) => (
-                    <article key={name}>
-                      <span>{String(index + 1).padStart(2, "0")}</span>
-                      <small>{role}</small>
+            {tab === "hunt" && (
+              <motion.div
+                className="workspace-view story-view"
+                key="hunt"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -6 }}
+              >
+                <div className="story-title-row">
+                  <div>
+                    <span className="story-kicker">EDGE DISCOVERY V1</span>
+                    <h2>Five families enter. None is promised a future.</h2>
+                  </div>
+                  <p>The research program is designed to eliminate weak structures, not keep optimizing until something looks good.</p>
+                </div>
+
+                <div className="edge-hunt-board">
+                  <section className="edge-hunt-core">
+                    <div className="hunt-radar" aria-hidden="true">
+                      <i className="ring r1" />
+                      <i className="ring r2" />
+                      <i className="ring r3" />
+                      <i className="sweep" />
+                      <b>EDGE?</b>
+                    </div>
+                    <div className="hunt-copy">
+                      <span>PRIMARY TEST</span>
+                      <strong>Can any entry family remain useful outside the sample that suggested it?</strong>
+                      <p>If the answer is no, that is not a failed research program. It is the program doing its job.</p>
+                    </div>
+                  </section>
+
+                  <div className="family-row" aria-label="Five independent strategy families under evaluation">
+                    {["A", "B", "C", "D", "E"].map((family) => (
+                      <article key={family}>
+                        <span>FAMILY {family}</span>
+                        <strong>UNDER TEST</strong>
+                        <i />
+                      </article>
+                    ))}
+                  </div>
+
+                  <div className="hunt-evidence-strip">
+                    <article><span>CORPUS</span><strong>JAN–JUL 2026</strong><p>Historical development window currently being audited and expanded.</p></article>
+                    <article><span>UNIVERSE</span><strong>36 + 3</strong><p>The main symbol universe plus benchmark/context symbols.</p></article>
+                    <article><span>DATA</span><strong>ALPACA IEX</strong><p>Sparsity is being measured rather than automatically treated as corruption.</p></article>
+                    <article><span>STRESS</span><strong>3 FRICTION MODELS</strong><p>Any apparent advantage has to survive more realistic execution assumptions.</p></article>
+                    <article><span>VERDICT</span><strong>SURVIVE / REJECT</strong><p>No “almost good enough” promotion category exists.</p></article>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+
+            {tab === "notes" && (
+              <motion.div
+                className="workspace-view story-view"
+                key="notes"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -6 }}
+              >
+                <div className="story-title-row">
+                  <div>
+                    <span className="story-kicker">FIELD NOTES</span>
+                    <h2>The project should leave a trail.</h2>
+                  </div>
+                  <p>Not every change is progress. These notes record material shifts in what we believe, test, or refuse to do.</p>
+                </div>
+
+                <div className="field-notes">
+                  <div className="notes-line" aria-hidden="true" />
+                  {logs.map(([date, type, body], index) => (
+                    <article key={date + type}>
+                      <div className="note-marker"><i /><span>{date}</span></div>
+                      <div className="note-body">
+                        <small>{String(logs.length - index).padStart(2, "0")}</small>
+                        <strong>{type}</strong>
+                        <p>{body}</p>
+                      </div>
+                    </article>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+
+            {tab === "toolbox" && (
+              <motion.div
+                className="workspace-view story-view"
+                key="toolbox"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -6 }}
+              >
+                <div className="story-title-row">
+                  <div>
+                    <span className="story-kicker">THE TOOLBOX</span>
+                    <h2>Every service exists because it owns a specific piece of truth.</h2>
+                  </div>
+                  <p>This is not a stack for its own sake. Each tool either executes, records, verifies, exposes, or helps investigate the system.</p>
+                </div>
+
+                <div className="tool-constellation">
+                  <div className="tool-core">
+                    <span>RHEN</span>
+                    <strong>TRADING SYSTEM</strong>
+                    <i />
+                  </div>
+                  {toolsList.map(([name, role, body], index) => (
+                    <article key={name} className={"tool-node tool-" + (index + 1)}>
+                      <span>{role}</span>
                       <strong>{name}</strong>
                       <p>{body}</p>
                     </article>
                   ))}
+                  <svg className="tool-lines" viewBox="0 0 1000 520" preserveAspectRatio="none" aria-hidden="true">
+                    <path d="M500 260 L180 90 M500 260 L500 65 M500 260 L820 90 M500 260 L900 260 M500 260 L820 430 M500 260 L500 455 M500 260 L180 430 M500 260 L100 260" />
+                  </svg>
                 </div>
               </motion.div>
             )}
