@@ -52,14 +52,14 @@ export default function Command() {
   }, [session, commandAdmin, refresh]);
 
   if (loading) {
-    return <div className="command-gate"><Mark /><span>ANEVUM COMMAND</span><h1>Resolving identity.</h1></div>;
+    return <div className="command-gate"><Mark /><span>ANEVUM / RHEN COMMAND</span><h1>Resolving identity.</h1></div>;
   }
 
   if (!session?.user) {
     return (
       <div className="command-gate">
         <Mark />
-        <span>ANEVUM COMMAND</span>
+        <span>ANEVUM / RHEN COMMAND</span>
         <h1>Private operations.</h1>
         <p>Sign in through the private ANEVUM entrance to open Command.</p>
         <Link className="primary-link" to="/private">Private access <b>↗</b></Link>
@@ -71,7 +71,7 @@ export default function Command() {
     return (
       <div className="command-gate">
         <Mark />
-        <span>ANEVUM COMMAND</span>
+        <span>ANEVUM / RHEN COMMAND</span>
         <h1>Administrator access required.</h1>
         <p>This RHENLINK is authenticated but is not authorized for the private operations console.</p>
         <Link className="text-link" to="/">Return to ANEVUM <b>→</b></Link>
@@ -104,7 +104,7 @@ export default function Command() {
   return (
     <div className="command-shell">
       <header className="command-header">
-        <Link to="/" className="command-brand"><Mark /><span>ANEVUM</span><i /><strong>COMMAND</strong></Link>
+        <Link to="/" className="command-brand"><Mark /><span>ANEVUM</span><i /><strong>RHEN COMMAND</strong></Link>
         <nav><a href="#overview">Overview</a><a href="#scanner">Scanner</a><a href="#orders">Orders</a><a href="#system">System</a></nav>
         <div className="command-account"><span><i /> READ / LIVE</span><small>{session.user.email}</small></div>
       </header>
@@ -127,7 +127,7 @@ export default function Command() {
           <article><span>TOTAL EQUITY</span><strong>{money(account.equity)}</strong><small className={dayPnl && dayPnl > 0 ? "positive" : dayPnl && dayPnl < 0 ? "negative" : ""}>Today {money(account.day_pnl)}</small></article>
           <article><span>CASH</span><strong>{money(account.cash)}</strong><small>Buying power {money(account.buying_power)}</small></article>
           <article><span>MARKET</span><strong>{market.is_open ? "OPEN" : "CLOSED"}</strong><small>{text(strategy.entry_start)}–{text(strategy.entry_cutoff)} ET</small></article>
-          <article><span>BOT</span><strong>{bot.entries_enabled ? "WATCHING" : "ENTRY LOCK"}</strong><small>{text(risk.entries_remaining)} entries remain</small></article>
+          <article><span>RHEN</span><strong>{bot.entries_enabled ? "WATCHING" : "ENTRY LOCK"}</strong><small>{text(risk.entries_remaining)} entries remain</small></article>
           <article><span>POSITION</span><strong>{position ? text(position.symbol) : "FLAT"}</strong><small>{position ? money(position.unrealized_pl) + " / " + percent(position.unrealized_plpc) : "No open position"}</small></article>
         </section>
 
@@ -162,7 +162,7 @@ export default function Command() {
                     <span>{text(order.status).toUpperCase()}</span>
                     <b>{order.filled_avg_price ? money(order.filled_avg_price) : "—"}</b>
                   </div>
-                )) : <div className="command-empty">No recent ANEVUM orders.</div>}
+                )) : <div className="command-empty">No recent RHEN orders.</div>}
               </div>
             </article>
           </div>
@@ -187,7 +187,7 @@ export default function Command() {
                 {history.length ? history.slice().reverse().slice(0, 16).map((item, index) => (
                   <div className="feed-row" key={text(item.at, String(index))}>
                     <time>{clockTime(item.at)}</time>
-                    <div><strong>{text(item.symbol || item.kind, "BOT")}</strong><span>{text(item.action, "decision").toUpperCase()}</span></div>
+                    <div><strong>{text(item.symbol || item.kind, "RHEN")}</strong><span>{text(item.action, "decision").toUpperCase()}</span></div>
                     <p>{text(item.reason || item.message, "Recorded")}</p>
                   </div>
                 )) : <div className="command-empty">No runtime decisions recorded in this process.</div>}
