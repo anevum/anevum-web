@@ -142,8 +142,8 @@ export default function System() {
                   </section>
                 </div>
                 <div className="public-private-strip">
-                  <div><span>PUBLIC</span><p>Sanitized runtime state, strategy identity, aggregate activity, research state, evidence availability, and system history.</p></div>
-                  <div><span>PRIVATE / COMMAND</span><p>Account, P&amp;L, positions, orders, fills, symbols, detailed reports, execution-sensitive parameters, and incidents.</p></div>
+                  <div><span>PUBLIC</span><p>Sanitized runtime state, strategy identity, aggregate activity, normalized performance, research state, evidence availability, and system history.</p></div>
+                  <div><span>PRIVATE / COMMAND</span><p>Raw account values, positions, orders, fills, symbols, individual trade detail, detailed reports, execution-sensitive parameters, and incidents.</p></div>
                 </div>
               </motion.div>
             )}
