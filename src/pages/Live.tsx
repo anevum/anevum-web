@@ -1,5 +1,6 @@
 import { motion } from "motion/react";
 import { useMemo } from "react";
+import { RhenSectionLabel } from "../components/RhenMark";
 import { useLiveTrading } from "../hooks/useLiveTrading";
 
 function timeLabel(value?: string | null) {
@@ -40,7 +41,7 @@ export default function Live() {
     <section className="compact-page workspace-screen live-screen">
       <header className="workspace-heading">
         <div>
-          <p className="compact-eyebrow">RHEN / LIVE OPERATIONS</p>
+          <RhenSectionLabel context="LIVE OPERATIONS" />
           <h1>Operations</h1>
         </div>
         <div className="workspace-heading-status">
