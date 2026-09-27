@@ -583,6 +583,22 @@
   overflow:visible;
   grid-auto-rows:auto;
 }
+.command-page-overview .command-primary,
+.command-page-overview .command-side,
+.command-page-live .command-primary,
+.command-page-live .command-side{
+  grid-template-rows:auto;
+}
+.command-page-performance .command-primary{
+  grid-template-rows:auto;
+}
+.command-page-evidence .command-primary,
+.command-page-research .command-primary{
+  grid-template-rows:auto;
+}
+.command-page-system .command-side{
+  grid-template-rows:auto;
+}
 .command-grid .command-panel{
   height:auto;
   min-height:0;
