@@ -98,7 +98,7 @@ function PerformanceCurve({ rows }: { rows: { at?: string | null; return_pct?: n
 
 export default function Performance() {
   const [tab, setTab] = useState<PerformanceTab>("record");
-  const { data, loading, error } = useLiveTrading(15000);
+  const { data, loading, error } = useLiveTrading(3000);
   const performance = data?.performance;
   const activeVersion = data?.active_strategy?.version_id || "UNRECORDED";
   const sample = String(performance?.sample_state || "UNAVAILABLE").replaceAll("_", " ");
