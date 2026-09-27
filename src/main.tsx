@@ -6,6 +6,7 @@ import { AuthProvider } from "./auth/AuthProvider";
 import "./styles/global.css";
 import "./styles/performance.css";
 import "./styles/command.css";
+import "./styles/command-v2.css";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
