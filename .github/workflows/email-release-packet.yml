@@ -17,23 +17,35 @@ permissions:
 jobs:
   email:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 8
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Resolve release packet
-        id: packet
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install PDF renderer
+        run: pip install "weasyprint==68.0"
+      - name: Resolve release
+        id: release
         shell: bash
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             slug="${{ inputs.slug }}"
-            packet="$(node -e 'const fs=require("fs");const slug=process.argv[1];const rows=JSON.parse(fs.readFileSync("src/data/releases.json","utf8"));const r=rows.find(x=>x.slug===slug);if(!r)process.exit(2);process.stdout.write("public"+r.pdfPath)' "$slug")"
           else
             version="${GITHUB_REF_NAME#rhen-v}"
-            packet="$(node -e 'const fs=require("fs");const v=process.argv[1];const rows=JSON.parse(fs.readFileSync("src/data/releases.json","utf8"));const r=rows.find(x=>x.version===v);if(!r)process.exit(2);process.stdout.write("public"+r.pdfPath)' "$version")"
+            slug="$(node -e 'const fs=require("fs");const v=process.argv[1];const rows=JSON.parse(fs.readFileSync("src/data/releases.json","utf8"));const r=rows.find(x=>x.version===v);if(!r)process.exit(2);process.stdout.write(r.slug)' "$version")"
           fi
+          echo "slug=$slug" >> "$GITHUB_OUTPUT"
+      - name: Render release packet
+        run: python scripts/render-release-packets.py --slug "${{ steps.release.outputs.slug }}"
+      - name: Resolve generated PDF
+        id: packet
+        shell: bash
+        run: |
+          packet="$(node -e 'const fs=require("fs");const slug=process.argv[1];const rows=JSON.parse(fs.readFileSync("src/data/releases.json","utf8"));const r=rows.find(x=>x.slug===slug);if(!r)process.exit(2);process.stdout.write("public"+r.pdfPath)' "${{ steps.release.outputs.slug }}")"
           test -f "$packet" || { echo "Release packet does not exist: $packet"; exit 1; }
           echo "path=$packet" >> "$GITHUB_OUTPUT"
       - name: Email release packet
