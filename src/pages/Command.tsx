@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthProvider";
 import Mark from "../components/Mark";
+import RhenMark from "../components/RhenMark";
 import UniverseBackground from "../components/UniverseBackground";
 import CommandPerformance from "../components/CommandPerformance";
 import { useLiveTrading } from "../hooks/useLiveTrading";
@@ -98,13 +99,13 @@ export default function Command() {
   }, [session, commandAdmin, refresh]);
 
   if (loading) {
-    return <div className="command-gate"><Mark /><span>ANEVUM / RHEN COMMAND</span><h1>Resolving identity.</h1></div>;
+    return <div className="command-gate"><RhenMark /><span>ANEVUM / RHEN COMMAND</span><h1>Resolving identity.</h1></div>;
   }
 
   if (!session?.user) {
     return (
       <div className="command-gate">
-        <Mark />
+        <RhenMark />
         <span>ANEVUM / RHEN COMMAND</span>
         <h1>Private operations.</h1>
         <p>Sign in through the private ANEVUM entrance to open Command.</p>
@@ -116,7 +117,7 @@ export default function Command() {
   if (!commandAdmin) {
     return (
       <div className="command-gate">
-        <Mark />
+        <RhenMark />
         <span>ANEVUM / RHEN COMMAND</span>
         <h1>Administrator access required.</h1>
         <p>This RHENLINK is authenticated but is not authorized for the private operations console.</p>
@@ -191,7 +192,7 @@ export default function Command() {
     <div className={`command-shell command-page-${commandPage}`}>
       <UniverseBackground />
       <header className="command-header">
-        <Link to="/" className="command-brand"><Mark /><span>ANEVUM</span><i /><strong>RHEN COMMAND</strong></Link>
+        <Link to="/" className="command-brand"><Mark /><span>ANEVUM</span><i /><span className="command-rhen-lockup"><RhenMark decorative /><strong>RHEN COMMAND</strong></span></Link>
         <nav aria-label="Command sections">
           <Link className={commandPage === "overview" ? "active" : ""} to="/command/overview">Overview</Link>
           <Link className={commandPage === "live" ? "active" : ""} to="/command/live">Live</Link>
