@@ -59,7 +59,7 @@ jobs:
         shell: bash
         run: |
           base="${{ steps.preview.outputs.preview_url }}"
-          for path in / /live /system /research /record /releases /releases/rhen-0-8-2-aurora /private /command; do
+          for path in / /live /performance /system /research /record /releases /releases/rhen-0-8-2-aurora /private /command; do
             curl --fail --show-error --silent "$base$path" > /dev/null
           done
           curl --fail --show-error --silent "$base/releases/RHEN-0.8.2-AURORA.pdf" > "$RUNNER_TEMP/aurora.pdf"
@@ -71,11 +71,23 @@ jobs:
             .source == "anevum_public_telemetry" and
             (.telemetry | type == "object") and
             (.events | type == "array") and
+            (.performance | type == "object") and
+            (.performance.methodology_version == "PUBLIC-PERFORMANCE-v1") and
+            (.performance.curve | type == "array") and
+            (.performance.closed_trades | type == "number") and
+            (.performance.external_cash_flows_present | type == "boolean") and
             (has("account") | not) and
             (has("positions") | not) and
             (has("recent_closed_positions") | not) and
             (has("recent_orders") | not) and
             (has("equity") | not) and
+            (.performance | has("equity") | not) and
+            (.performance | has("first_equity") | not) and
+            (.performance | has("latest_equity") | not) and
+            (.performance | has("net_realized_pnl") | not) and
+            (.performance | has("deposits") | not) and
+            (.performance | has("withdrawals") | not) and
+            ([.performance.curve[] | has("equity")] | any | not) and
             ([.events[] | has("symbol")] | any | not) and
             ([.events[] | has("price")] | any | not) and
             ([.events[] | has("reason")] | any | not)
@@ -90,11 +102,16 @@ jobs:
           mkdir -p "$RUNNER_TEMP/anevum-visuals"
           google-chrome --headless --no-sandbox --disable-gpu --hide-scrollbars --virtual-time-budget=6000 --window-size=1440,1000 --screenshot="$RUNNER_TEMP/anevum-visuals/home-desktop.png" "$base/"
           google-chrome --headless --no-sandbox --disable-gpu --hide-scrollbars --virtual-time-budget=6000 --window-size=390,844 --screenshot="$RUNNER_TEMP/anevum-visuals/home-mobile.png" "$base/"
+          google-chrome --headless --no-sandbox --disable-gpu --hide-scrollbars --virtual-time-budget=6000 --window-size=1440,1000 --screenshot="$RUNNER_TEMP/anevum-visuals/performance-desktop.png" "$base/performance"
+          google-chrome --headless --no-sandbox --disable-gpu --hide-scrollbars --virtual-time-budget=6000 --window-size=390,844 --screenshot="$RUNNER_TEMP/anevum-visuals/performance-mobile.png" "$base/performance"
           google-chrome --headless --no-sandbox --disable-gpu --hide-scrollbars --virtual-time-budget=6000 --window-size=1440,1000 --screenshot="$RUNNER_TEMP/anevum-visuals/release-desktop.png" "$base/releases/rhen-0-8-2-aurora"
           google-chrome --headless --no-sandbox --disable-gpu --hide-scrollbars --virtual-time-budget=6000 --window-size=390,844 --screenshot="$RUNNER_TEMP/anevum-visuals/release-mobile.png" "$base/releases/rhen-0-8-2-aurora"
           google-chrome --headless --no-sandbox --disable-gpu --virtual-time-budget=6000 --dump-dom "$base/" > "$RUNNER_TEMP/anevum-visuals/home-rendered.html"
+          google-chrome --headless --no-sandbox --disable-gpu --virtual-time-budget=6000 --dump-dom "$base/performance" > "$RUNNER_TEMP/anevum-visuals/performance-rendered.html"
           google-chrome --headless --no-sandbox --disable-gpu --virtual-time-budget=6000 --dump-dom "$base/releases/rhen-0-8-2-aurora" > "$RUNNER_TEMP/anevum-visuals/release-rendered.html"
           grep -Fq 'landing-screen' "$RUNNER_TEMP/anevum-visuals/home-rendered.html"
+          grep -Fq 'performance-workspace' "$RUNNER_TEMP/anevum-visuals/performance-rendered.html"
+          grep -Fq 'PUBLIC-PERFORMANCE-v1' "$RUNNER_TEMP/anevum-visuals/performance-rendered.html"
           grep -Fq 'release-detail' "$RUNNER_TEMP/anevum-visuals/release-rendered.html"
       - name: Upload browser QA
         if: github.event_name == 'pull_request'
