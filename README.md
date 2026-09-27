@@ -6,21 +6,24 @@ ANEVUM's public website and private operator interface for RHEN, the active auto
 
 ### Public — `/`
 
-The public site is an intentionally limited RHEN observability surface. It may show:
+The public site is an intentionally limited RHEN observability and evidence surface. It may show:
 
 - runtime state and telemetry freshness
-- active public version identifier
+- active public version identifier and version history
 - aggregate scan/event activity
 - anonymized event classes
-- architecture and methodology
-- public release/update notes
+- normalized live percentage performance and drawdown
+- aggregate live trade count, wins/losses, win rate, and sample duration
+- architecture, methodology, research state, and public release/update notes
+
+The public performance contract is `PUBLIC-PERFORMANCE-v1`. Percentages are computed server-side from RHEN's durable broker-derived ledger. Live results are separated from shadow, replay, backtest, and development evidence. If external deposits or withdrawals are detected, normalized return and the public curve fail closed until a correct flow-adjusted methodology can be applied.
 
 It must **not** expose:
 
-- account equity, cash, buying power, or deposits
+- raw account equity, cash, buying power, deposits, or withdrawals
 - open positions or orders
-- traded symbols or prices
-- individual trade history or P&L
+- traded symbols, prices, quantities, or fills
+- individual trade history or dollar P&L
 - exact entry/exit rules
 - quality scores, thresholds, risk limits, or reproducible strategy parameters
 - broker credentials, tokens, or private database records
@@ -45,7 +48,7 @@ The historical public trading projection tables remain in the database for conti
 
 `database/lock_down_public_trading_projection.sql`
 
-The only trading data intentionally published to unauthenticated visitors is the sanitized Edge Function payload used by the live demo.
+The only trading data intentionally published to unauthenticated visitors is the sanitized Edge Function payload used by the public RHEN surfaces. Raw projection tables remain inaccessible to browser roles. The function returns normalized percentages/counts and a downsampled normalized curve, not dollar balances or trade-level execution detail.
 
 ## Stack
 
