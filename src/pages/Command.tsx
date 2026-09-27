@@ -182,6 +182,9 @@ export default function Command() {
   const dailyWins = Math.max(0, number(dailyMetrics.wins) || 0);
   const dailyLosses = Math.max(0, number(dailyMetrics.losses) || 0);
   const dailyClosed = Math.max(1, dailyWins + dailyLosses);
+  const readinessState = text(researchReadiness?.state, "UNAVAILABLE").toUpperCase();
+  const readinessBlockers = researchReadiness?.blockers || [];
+  const gptReady = researchReadiness?.gpt_would_run_now === true;
 
   const scanRows = useMemo(() => {
     const preferred = Array.isArray(strategy.scan_symbols)
