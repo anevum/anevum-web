@@ -1,6 +1,9 @@
 import { AnimatePresence, motion } from "motion/react";
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { useLiveTrading } from "../hooks/useLiveTrading";
+import { latestRhenRelease } from "../data/releases";
+import "../styles/releases.css";
 
 type RecordTab = "timeline" | "versions" | "evidence";
 
@@ -26,6 +29,7 @@ export default function Record() {
   const weekly = data?.research?.latest_weekly_summary;
   const terminal = data?.research?.completed_decisions || [];
   const next = data?.research?.next_direction;
+  const latestRelease = latestRhenRelease();
 
   return (
     <section className="compact-page workspace-screen story-workspace record-story">
@@ -107,6 +111,7 @@ export default function Record() {
                   <article><span>NEXT DIRECTION</span><strong>{next?.status ? String(next.status).replaceAll("_", " ").toUpperCase() : "UNRECORDED"}</strong><p>{next?.subject || "No next research direction recorded."}</p></article>
                   <article><span>WEEKLY REPORT</span><strong>{weekly?.completeness_state || "UNAVAILABLE"}</strong><p>{weekly?.report_version || "No version"} · {weekly?.included_session_count ?? 0}/{weekly?.expected_session_count ?? 0} canonical daily sessions represented.</p></article>
                   <article><span>PRIVATE BY DESIGN</span><strong>CAPITAL + TRADES</strong><p>Equity, P&amp;L, positions, symbols, fills, orders, and trade history are not part of the public projection.</p></article>
+                  <article className="record-release-card"><span>RELEASE PROGRAM</span><strong>{latestRelease.codename} / {latestRelease.version}</strong><p>{latestRelease.releaseClass}. Named releases preserve architecture, verification, limitations, and a downloadable archival packet.</p><Link to="/releases">OPEN RELEASE ARCHIVE ↗</Link></article>
                 </div>
               </motion.div>
             )}

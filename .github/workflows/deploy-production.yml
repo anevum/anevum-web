@@ -21,6 +21,13 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install PDF renderer
+        run: pip install "weasyprint==68.0"
+      - name: Render RHEN release packets
+        run: python scripts/render-release-packets.py
       - name: Install
         run: npm install --no-audit --no-fund
       - name: Build

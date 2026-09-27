@@ -7,7 +7,8 @@ const nav = [
   ["/live", "Live"],
   ["/system", "System"],
   ["/research", "Research"],
-  ["/record", "Record"]
+  ["/record", "Record"],
+  ["/releases", "Releases"]
 ] as const;
 
 export function PublicShell({ children }: { children: ReactNode }) {
@@ -21,7 +22,7 @@ export function PublicShell({ children }: { children: ReactNode }) {
         </Link>
         <nav className="public-nav public-nav-main" aria-label="Primary navigation">
           {nav.map(([href, label]) => (
-            <Link key={href} to={href} className={location.pathname === href ? "active" : ""}>{label}</Link>
+            <Link key={href} to={href} className={location.pathname === href || (href === "/releases" && location.pathname.startsWith("/releases/")) ? "active" : ""}>{label}</Link>
           ))}
         </nav>
         <Link className="command-nav" to="/command" rel="nofollow" aria-label="Open Command login" title="Command login">
