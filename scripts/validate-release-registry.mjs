@@ -137,6 +137,11 @@ for (const file of liveStateSurfaces) {
   }
 }
 
+const rendererSource = fs.readFileSync(path.join(ROOT, "scripts", "render-release-packets.py"), "utf8");
+if (rendererSource.includes("currentSlug") || rendererSource.includes("current_slug")) {
+  errors.push("Release packet renderer must not depend on the moving current-release pointer.");
+}
+
 if (process.env.GITHUB_EVENT_NAME === "push" && process.env.GITHUB_REF_NAME?.startsWith("rhen-v")) {
   const tagVersion = process.env.GITHUB_REF_NAME.slice("rhen-v".length);
   if (!versions.has(tagVersion)) errors.push("Publication tag has no matching registered release version.");

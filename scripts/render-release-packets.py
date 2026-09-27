@@ -60,7 +60,7 @@ def cards(items: list[dict], cols: int = 2) -> str:
         f"<div class='card'><span class='label'>{e(item.get('label',''))}</span><strong>{e(item.get('title',''))}</strong><p>{e(item.get('body',''))}</p></div>" for item in items
     ) + "</div>"
 
-def build_html(r: dict, current_slug: str) -> str:
+def build_html(r: dict) -> str:
     title = f"RHEN {r['version']} - {r['codename']}"
     badge_html = "".join(f"<span class='badge'>{e(x)}</span>" for x in r.get("badges", []))
     capability = r.get("capabilities", [])
@@ -79,7 +79,7 @@ def build_html(r: dict, current_slug: str) -> str:
     pages.append(page(f"""
       <div class='kicker'>01 / Abstract</div><div class='section-head'><h2>{e(r['headline'])}</h2><div class='meta'>{e(r['releaseClass'])}</div></div>
       <p class='bigquote'>{e(r['thesis'])}</p><div class='rule'></div><p class='lede'>{e(r['abstract'])}</p>
-      <div class='statrow'><div class='stat'><small>System</small><b>RHEN {e(r['version'])}</b></div><div class='stat'><small>Lifecycle</small><b>{e(r['lifecycle'])}</b></div><div class='stat'><small>Strategy</small><b>{e(r['activeStrategy'].split(' / ')[0])}</b></div><div class='stat'><small>Status</small><b>{'CURRENT' if r['slug'] == current_slug else 'ARCHIVED'}</b></div></div>
+      <div class='statrow'><div class='stat'><small>System</small><b>RHEN {e(r['version'])}</b></div><div class='stat'><small>Lifecycle</small><b>{e(r['lifecycle'])}</b></div><div class='stat'><small>Strategy</small><b>{e(r['activeStrategy'].split(' / ')[0])}</b></div><div class='stat'><small>Status</small><b>FROZEN SNAPSHOT</b></div></div>
       <div style='margin-top:18px'>{cards(capability[:2], 2)}</div>
       <div class='callout'><b>Release discipline</b><p>This packet describes the system as it existed at a frozen release boundary. It does not imply that unreleased research, predictive models, or experiments have production authority.</p></div>
     """, title, 2))
@@ -124,7 +124,6 @@ def main() -> int:
     args = parser.parse_args()
     registry = json.loads(args.data.read_text(encoding="utf-8"))
     releases = registry.get("releases", [])
-    current_slug = registry.get("currentSlug", "")
     if args.slug:
         releases = [r for r in releases if r.get("slug") == args.slug]
         if not releases:
@@ -132,7 +131,7 @@ def main() -> int:
     args.out_dir.mkdir(parents=True, exist_ok=True)
     for release in releases:
         out_path = args.out_dir / filename_for(release)
-        HTML(string=build_html(release, current_slug), base_url=str(ROOT)).write_pdf(out_path)
+        HTML(string=build_html(release), base_url=str(ROOT)).write_pdf(out_path)
         print(out_path)
     return 0
 
