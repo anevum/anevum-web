@@ -220,7 +220,7 @@ export default function Command() {
               : commandPage === "live"
                 ? "Live scanner, orders, broker position, and runtime decisions."
                 : commandPage === "performance"
-                  ? "Daily and weekly operating performance with visual outcome summaries."
+                  ? "Live normalized performance synchronized with the public record, plus private daily and weekly operating evidence."
                   : commandPage === "evidence"
                     ? "Post-event evidence and live-versus-offline comparisons."
                     : commandPage === "research"
