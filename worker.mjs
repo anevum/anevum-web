@@ -122,6 +122,43 @@ async function commandApi(request, pathname) {
   return null;
 }
 
+async function withPublicRouteMetadata(response, pathname) {
+  const routes = {
+    "/performance": {
+      title: "RHEN Performance — ANEVUM",
+      description: "RHEN's broker-derived live performance record: normalized returns, drawdown, sample size, methodology, and public/private evidence boundary.",
+      url: "https://anevum.com/performance"
+    }
+  };
+  const meta = routes[pathname];
+  if (!meta) return response;
+
+  let html = await response.text();
+  const setMeta = (source, attribute, key, value) => {
+    const pattern = new RegExp('<meta\\s+' + attribute + '="' + key + '"\\s+content="[^"]*"\\s*\\/?>', 'i');
+    return source.replace(pattern, '<meta ' + attribute + '="' + key + '" content="' + value + '" />');
+  };
+
+  html = setMeta(html, "name", "description", meta.description);
+  html = setMeta(html, "property", "og:title", meta.title);
+  html = setMeta(html, "property", "og:description", meta.description);
+  html = setMeta(html, "property", "og:url", meta.url);
+  html = setMeta(html, "name", "twitter:title", meta.title);
+  html = setMeta(html, "name", "twitter:description", meta.description);
+  html = html.replace(/<link\s+rel="canonical"\s+href="[^"]*"\s*\/?\s*>/i, '<link rel="canonical" href="' + meta.url + '" />');
+  html = html.replace(/<title>[^<]*<\/title>/i, '<title>' + meta.title + '</title>');
+
+  const headers = new Headers(response.headers);
+  headers.set("Content-Type", "text/html; charset=utf-8");
+  headers.delete("Content-Length");
+
+  return new Response(html, {
+    status: response.status,
+    statusText: response.statusText,
+    headers
+  });
+}
+
 function withSecurityHeaders(response, pathname, hostname) {
   const headers = new Headers(response.headers);
   headers.set("X-Content-Type-Options", "nosniff");
@@ -173,8 +210,9 @@ export default {
       }
     }
 
-    const response = await env.ASSETS.fetch(request);
+    let response = await env.ASSETS.fetch(request);
     if (!response.headers.get("content-type")?.includes("text/html")) return response;
+    response = await withPublicRouteMetadata(response, pathname);
     return withSecurityHeaders(response, pathname, url.hostname);
   }
 };
