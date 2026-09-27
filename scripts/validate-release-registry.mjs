@@ -100,7 +100,7 @@ if (process.env.GITHUB_EVENT_NAME === "push" && process.env.GITHUB_REF_NAME?.sta
 
 if (process.env.GITHUB_BASE_REF) {
   try {
-    const baseText = execFileSync("git", ["show", process.env.GITHUB_BASE_REF + ":src/data/releases.json"], { cwd: ROOT, encoding: "utf8" });
+    const baseRef = "origin/" + process.env.GITHUB_BASE_REF;\n    const baseText = execFileSync("git", ["show", baseRef + ":src/data/releases.json"], { cwd: ROOT, encoding: "utf8" });
     const base = JSON.parse(baseText);
     const baseReleases = Array.isArray(base) ? base : base.releases;
     const bySlug = new Map(registry.releases.map((r) => [r.slug, r]));
