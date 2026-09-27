@@ -347,3 +347,197 @@
   .scanner-row p{font-size:.58rem}
   .command-two-column{grid-template-columns:1fr}
 }
+
+
+/* Command mobile overflow hardening ------------------------------------ */
+/*
+ * Keep Command itself locked to the visual viewport. On small screens the
+ * content region, not the document, owns vertical overflow. This avoids
+ * panels continuing below the iOS viewport after accounting for the safe
+ * area, two-row Command header, page heading, and live-state control.
+ */
+.command-shell{
+  --command-safe-top:var(--safe-top);
+  position:fixed;
+  inset:0;
+  width:100%;
+  height:100dvh;
+  min-height:0;
+  overflow:hidden;
+}
+.command-header{flex:0 0 auto}
+.command-main{
+  height:calc(100dvh - 62px - var(--command-safe-top));
+  min-height:0;
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+}
+.command-hero{flex:0 0 auto}
+.command-shell .command-stats{flex:0 0 auto}
+.command-grid{
+  flex:1 1 auto;
+  min-height:0;
+  height:auto;
+}
+
+/* Every routed desktop view must remain inside the Command content track. */
+.command-primary,.command-side{
+  min-height:0;
+  height:100%;
+}
+.command-page-performance .command-primary,
+.command-page-evidence .command-primary,
+.command-page-research .command-primary,
+.command-page-system .command-side{
+  min-height:0;
+  height:100%;
+}
+
+/* Long single panels scroll internally on larger layouts. */
+.command-page-performance .command-panel-daily,
+.command-page-performance .command-panel-weekly,
+.command-page-evidence .command-panel-post-event,
+.command-page-research .command-panel-research,
+.command-page-system .command-panel-telemetry{
+  min-height:0;
+  max-height:100%;
+  overflow:auto;
+  overscroll-behavior:contain;
+}
+
+/* Mobile: keep each Command route inside one screen. The route grid is
+ * height-bounded; only the contents of dense panels scroll internally. */
+@media(max-width:720px){
+  .command-shell{
+    height:100dvh;
+    min-height:0;
+    overflow:hidden;
+  }
+  .command-main{
+    height:calc(100dvh - 104px - var(--command-safe-top));
+    min-height:0;
+    padding:8px 0 max(8px,var(--safe-bottom));
+    gap:8px;
+    overflow:hidden;
+  }
+  .command-hero{
+    flex:0 0 54px;
+    min-height:54px;
+  }
+  .command-shell .command-stats{
+    flex:0 0 auto;
+    max-height:112px;
+    min-height:0;
+  }
+  .command-grid{
+    flex:1 1 auto;
+    min-height:0;
+    height:auto;
+    overflow:hidden;
+  }
+  .command-primary,.command-side{
+    min-height:0;
+    height:100%;
+    overflow:hidden;
+  }
+  .command-grid .command-panel{
+    min-height:0;
+    max-height:100%;
+    overflow:hidden;
+  }
+
+  /* Rows with many records scroll inside their own card. */
+  .scanner-body,.order-body,.feed-body{
+    flex:1 1 auto;
+    min-height:0;
+    max-height:none;
+    overflow-y:auto;
+    overscroll-behavior:contain;
+    -webkit-overflow-scrolling:touch;
+  }
+
+  /* Report/research/system cards own their overflow instead of extending the
+   * document below the viewport. */
+  .command-panel-daily,
+  .command-panel-weekly,
+  .command-panel-post-event,
+  .command-panel-research,
+  .command-panel-telemetry,
+  .command-panel-boundary{
+    min-height:0;
+    overflow-y:auto!important;
+    overscroll-behavior:contain;
+    -webkit-overflow-scrolling:touch;
+  }
+  .command-panel-research>.command-two-column,
+  .command-panel-research>.command-list-stack{
+    overflow:visible;
+  }
+  .system-grid,.position-grid{
+    min-height:0;
+    overflow-y:auto;
+    overscroll-behavior:contain;
+  }
+}
+
+@media(max-width:480px){
+  /* Overview and Live each contain four bounded cards. All four tracks share
+   * the exact remaining viewport height rather than using intrinsic heights. */
+  .command-page-overview .command-grid,
+  .command-page-live .command-grid{
+    display:grid;
+    grid-template-columns:1fr;
+    grid-template-rows:repeat(4,minmax(0,1fr));
+    min-height:0;
+    overflow:hidden;
+  }
+  .command-page-overview .command-primary,
+  .command-page-overview .command-side,
+  .command-page-live .command-primary,
+  .command-page-live .command-side{
+    display:contents;
+  }
+
+  .command-page-performance .command-grid,
+  .command-page-evidence .command-grid,
+  .command-page-research .command-grid,
+  .command-page-system .command-grid{
+    min-height:0;
+    overflow:hidden;
+  }
+  .command-page-performance .command-primary{
+    height:100%;
+    min-height:0;
+    grid-template-columns:1fr;
+    grid-template-rows:repeat(2,minmax(0,1fr));
+  }
+  .command-page-evidence .command-primary,
+  .command-page-research .command-primary{
+    height:100%;
+    min-height:0;
+    grid-template-rows:minmax(0,1fr);
+  }
+  .command-page-system .command-side{
+    height:100%;
+    min-height:0;
+    grid-template-columns:1fr;
+    grid-template-rows:minmax(0,1.25fr) minmax(0,.75fr);
+  }
+  .command-page-system .command-panel-telemetry,
+  .command-page-system .command-panel-boundary{grid-column:1}
+}
+
+/* Standalone iOS uses a larger reserved top band. Keep the remaining
+ * Command viewport calculation in sync with that band. */
+@media (display-mode:standalone){
+  .command-shell{--command-safe-top:max(var(--safe-top),34px)}
+}
+@media (display-mode:standalone) and (orientation:landscape) and (max-height:500px){
+  .command-shell{--command-safe-top:max(var(--safe-top),46px)}
+}
+@supports (-webkit-touch-callout:none){
+  @media (orientation:landscape) and (max-height:500px){
+    .command-shell{--command-safe-top:max(var(--safe-top),46px)}
+  }
+}
