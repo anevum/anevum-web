@@ -90,8 +90,8 @@ jobs:
           google-chrome --headless --no-sandbox --disable-gpu --virtual-time-budget=6000 --dump-dom "$base/research" > "$RUNNER_TEMP/anevum-visuals/research-rendered.html"
           grep -Fq 'landing-screen' "$RUNNER_TEMP/anevum-visuals/home-rendered.html"
           grep -Fq 'live-screen' "$RUNNER_TEMP/anevum-visuals/live-rendered.html"
-          grep -Fq 'How it works' "$RUNNER_TEMP/anevum-visuals/system-rendered.html"
-          grep -Fq 'The lab' "$RUNNER_TEMP/anevum-visuals/research-rendered.html"
+          grep -Fq 'system-story' "$RUNNER_TEMP/anevum-visuals/system-rendered.html"
+          grep -Fq 'research-story' "$RUNNER_TEMP/anevum-visuals/research-rendered.html"
       - name: Upload browser QA
         if: github.event_name == 'pull_request'
         uses: actions/upload-artifact@v4

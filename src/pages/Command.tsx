@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthProvider";
 import Mark from "../components/Mark";
 import {
@@ -43,6 +43,13 @@ function arrayText(value: unknown) {
 export default function Command() {
   const { session, loading, commandAdmin, signOut } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const commandPage = (() => {
+    const segment = location.pathname.split("/")[2];
+    return ["overview", "live", "performance", "evidence", "research", "system"].includes(segment)
+      ? segment
+      : "overview";
+  })();
   const [snapshot, setSnapshot] = useState<CommandSnapshot | null>(null);
   const [evidence, setEvidence] = useState<CommandEvidence | null>(null);
   const [dailyReport, setDailyReport] = useState<Record<string, unknown> | null>(null);
@@ -161,6 +168,11 @@ export default function Command() {
   const rejectedResearch = researchDecisions.filter((row) => row.decision_type === "terminal_rejection");
   const forwardRows = evidence?.post_event_evidence?.forward_outcomes || [];
   const comparisonRows = evidence?.post_event_evidence?.live_offline || [];
+  const maxForwardCount = Math.max(1, ...forwardRows.map((row) => number(row.count) || 0));
+  const maxComparisonCount = Math.max(1, ...comparisonRows.map((row) => number(row.count) || 0));
+  const dailyWins = Math.max(0, number(dailyMetrics.wins) || 0);
+  const dailyLosses = Math.max(0, number(dailyMetrics.losses) || 0);
+  const dailyClosed = Math.max(1, dailyWins + dailyLosses);
 
   const scanRows = useMemo(() => {
     const preferred = Array.isArray(strategy.scan_symbols)
@@ -172,12 +184,16 @@ export default function Command() {
   }, [scanner, strategy.scan_symbols]);
 
   return (
-    <div className="command-shell">
+    <div className={`command-shell command-page-${commandPage}`}>
       <header className="command-header">
         <Link to="/" className="command-brand"><Mark /><span>ANEVUM</span><i /><strong>RHEN COMMAND</strong></Link>
-        <nav>
-          <a href="#live">Live</a><a href="#telemetry">Telemetry</a><a href="#daily">Daily</a>
-          <a href="#weekly">Weekly</a><a href="#post-event">Evidence</a><a href="#research">Research</a>
+        <nav aria-label="Command sections">
+          <Link className={commandPage === "overview" ? "active" : ""} to="/command/overview">Overview</Link>
+          <Link className={commandPage === "live" ? "active" : ""} to="/command/live">Live</Link>
+          <Link className={commandPage === "performance" ? "active" : ""} to="/command/performance">Performance</Link>
+          <Link className={commandPage === "evidence" ? "active" : ""} to="/command/evidence">Evidence</Link>
+          <Link className={commandPage === "research" ? "active" : ""} to="/command/research">Research</Link>
+          <Link className={commandPage === "system" ? "active" : ""} to="/command/system">System</Link>
         </nav>
         <div className="command-account">
           <span><i /> READ / LIVE</span>
@@ -192,9 +208,19 @@ export default function Command() {
       <main className="command-main">
         <section id="live" className="command-hero">
           <div>
-            <p>PRIVATE OPERATIONS / CANONICAL EVIDENCE</p>
-            <h1>Command</h1>
-            <span>Read-only operating console for live broker state, durable telemetry, canonical reports, post-event evidence, provenance, and research decisions.</span>
+            <p>PRIVATE OPERATIONS / {commandPage.toUpperCase()}</p>
+            <h1>{commandPage === "overview" ? "Command" : commandPage.charAt(0).toUpperCase() + commandPage.slice(1)}</h1>
+            <span>{commandPage === "overview"
+              ? "RHEN at a glance: capital, market state, active strategy, position, and current operating evidence."
+              : commandPage === "live"
+                ? "Live scanner, orders, broker position, and runtime decisions."
+                : commandPage === "performance"
+                  ? "Daily and weekly operating performance with visual outcome summaries."
+                  : commandPage === "evidence"
+                    ? "Post-event evidence and live-versus-offline comparisons."
+                    : commandPage === "research"
+                      ? "Canonical research direction, rejected families, open questions, and decisions."
+                      : "Telemetry, provenance, runtime health, and Command boundaries."}</span>
           </div>
           <div className="command-connection">
             <i className={bot.bot_armed && bot.execution_authorized && !bot.runtime_paused ? "online" : ""} />
@@ -203,7 +229,7 @@ export default function Command() {
           </div>
         </section>
 
-        <section className="command-stats">
+        <section className="command-stats command-view-overview command-view-performance">
           <article><span>TOTAL EQUITY</span><strong>{money(account.equity)}</strong><small className={dayPnl && dayPnl > 0 ? "positive" : dayPnl && dayPnl < 0 ? "negative" : ""}>Today {money(account.day_pnl)}</small></article>
           <article><span>CASH</span><strong>{money(account.cash)}</strong><small>Buying power {money(account.buying_power)}</small></article>
           <article><span>MARKET</span><strong>{market.is_open ? "OPEN" : "CLOSED"}</strong><small>{text(latestScan.market_session, "runtime")}</small></article>
@@ -213,7 +239,7 @@ export default function Command() {
 
         <section className="command-grid">
           <div className="command-primary">
-            <article className="command-panel">
+            <article className="command-panel command-view-overview command-view-live command-panel-scanner">
               <header><div><span>LIVE SCANNER</span><strong>{scanRows.length} symbols observed in runtime snapshot</strong></div><small>{clockTime(bot.last_strategy_at)}</small></header>
               <div className="scanner-head"><span>SYMBOL</span><span>PRICE</span><span>ACTION</span><span>REASON</span></div>
               <div className="scanner-body">
@@ -229,7 +255,7 @@ export default function Command() {
               </div>
             </article>
 
-            <article className="command-panel">
+            <article className="command-panel command-view-live command-panel-orders">
               <header><div><span>ORDER TAPE</span><strong>{openOrders.length} open / {recentOrders.length} recent</strong></div><small>Private broker telemetry</small></header>
               <div className="order-body">
                 {recentOrders.length ? recentOrders.slice(0, 12).map((order, index) => (
@@ -242,7 +268,7 @@ export default function Command() {
               </div>
             </article>
 
-            <article id="daily" className="command-panel command-evidence-panel">
+            <article id="daily" className="command-panel command-evidence-panel command-view-overview command-view-performance command-panel-daily">
               <header><div><span>CANONICAL DAILY REPORT</span><strong>{text(daily.session, "No daily report")}</strong></div><small>{text(daily.report_version)}</small></header>
               {Object.keys(daily).length ? (
                 <>
@@ -253,6 +279,14 @@ export default function Command() {
                     <div><span>EXPECTANCY</span><strong>{money(dailyMetrics.expectancy)}</strong></div>
                     <div><span>PROFIT FACTOR</span><strong>{text(dailyMetrics.profit_factor)}</strong></div>
                     <div><span>AVG MFE / MAE</span><strong>{text(dailyMetrics.average_mfe_pct)}% / {text(dailyMetrics.average_mae_pct)}%</strong></div>
+                  </div>
+                  <div className="command-outcome-viz" aria-label={dailyWins + " wins and " + dailyLosses + " losses"}>
+                    <div><span>WINS</span><strong>{dailyWins}</strong></div>
+                    <div className="command-outcome-track">
+                      <i className="wins" style={{ width: ((dailyWins / dailyClosed) * 100) + "%" }} />
+                      <i className="losses" style={{ width: ((dailyLosses / dailyClosed) * 100) + "%" }} />
+                    </div>
+                    <div><strong>{dailyLosses}</strong><span>LOSSES</span></div>
                   </div>
                   <div className="command-summary-block">
                     <span>FINDING</span><strong>{text(dailyClass.reason || daily.summary)}</strong>
@@ -271,7 +305,7 @@ export default function Command() {
               ) : <div className="command-empty">No canonical daily report is available.</div>}
             </article>
 
-            <article id="weekly" className="command-panel command-evidence-panel">
+            <article id="weekly" className="command-panel command-evidence-panel command-view-performance command-panel-weekly">
               <header><div><span>CANONICAL WEEKLY REPORT</span><strong>{text(weekly.completeness_state, "No weekly report")}</strong></div><small>{text(weekly.report_version)}</small></header>
               {Object.keys(weekly).length ? (
                 <>
@@ -292,25 +326,31 @@ export default function Command() {
               ) : <div className="command-empty">No canonical weekly report is available.</div>}
             </article>
 
-            <article id="post-event" className="command-panel command-evidence-panel">
+            <article id="post-event" className="command-panel command-evidence-panel command-view-evidence command-panel-post-event">
               <header><div><span>POST-EVENT EVIDENCE</span><strong>{evidence?.post_event_evidence?.analytics_only ? "ANALYTICS ONLY" : "UNAVAILABLE"}</strong></div><small>{text(evidence?.evidence_version)}</small></header>
               <div className="command-two-column">
                 <div>
                   <span className="command-subhead">CANDIDATE FORWARD OUTCOMES</span>
                   {forwardRows.length ? forwardRows.map((row, index) => (
-                    <p className="command-evidence-row" key={index}><b>{text(row.horizon_minutes)}M</b><span>{text(row.status)}</span><strong>{text(row.count)}</strong></p>
+                    <div className="command-evidence-bar-row" key={index}>
+                      <p className="command-evidence-row"><b>{text(row.horizon_minutes)}M</b><span>{text(row.status)}</span><strong>{text(row.count)}</strong></p>
+                      <div className="command-evidence-track"><i style={{ width: (((number(row.count) || 0) / maxForwardCount) * 100) + "%" }} /></div>
+                    </div>
                   )) : <p className="command-empty">No forward-outcome summary.</p>}
                 </div>
                 <div>
                   <span className="command-subhead">LIVE VS. OFFLINE</span>
                   {comparisonRows.length ? comparisonRows.map((row, index) => (
-                    <p className="command-evidence-row" key={index}><b>{text(row.session)}</b><span>{text(row.match_state)}</span><strong>{text(row.count)}</strong></p>
+                    <div className="command-evidence-bar-row" key={index}>
+                      <p className="command-evidence-row"><b>{text(row.session)}</b><span>{text(row.match_state)}</span><strong>{text(row.count)}</strong></p>
+                      <div className="command-evidence-track"><i style={{ width: (((number(row.count) || 0) / maxComparisonCount) * 100) + "%" }} /></div>
+                    </div>
                   )) : <p className="command-empty">No comparison summary.</p>}
                 </div>
               </div>
             </article>
 
-            <article id="research" className="command-panel command-evidence-panel">
+            <article id="research" className="command-panel command-evidence-panel command-view-research command-panel-research">
               <header><div><span>RESEARCH STATE</span><strong>{text(nextResearch?.subject, "No next experiment recorded")}</strong></div><small>{text(nextResearch?.status)}</small></header>
               <div className="command-summary-block">
                 <span>NEXT EXPERIMENT</span>
@@ -341,7 +381,7 @@ export default function Command() {
           </div>
 
           <aside className="command-side">
-            <article className="command-panel">
+            <article className="command-panel command-view-overview command-view-live command-panel-position">
               <header><div><span>ACTIVE POSITION</span><strong>{position ? text(position.symbol) : "FLAT"}</strong></div><small>Live from broker</small></header>
               {position ? (
                 <div className="position-grid">
@@ -354,7 +394,7 @@ export default function Command() {
               ) : <div className="command-empty">No open position.</div>}
             </article>
 
-            <article id="telemetry" className="command-panel">
+            <article id="telemetry" className="command-panel command-view-overview command-view-system command-panel-telemetry">
               <header><div><span>TELEMETRY + PROVENANCE</span><strong>{text(runtime.system_version, "RHEN")}</strong></div><small>{text(evidence?.generated_at)}</small></header>
               <div className="system-grid">
                 <div><span>RUN</span><strong>{text(runtime.run_id)}</strong></div>
@@ -370,7 +410,7 @@ export default function Command() {
               </div>
             </article>
 
-            <article className="command-panel">
+            <article className="command-panel command-view-live command-panel-feed">
               <header><div><span>LIVE FEED</span><strong>Recent runtime decisions</strong></div><small>Process state</small></header>
               <div className="feed-body">
                 {history.length ? history.slice().reverse().slice(0, 16).map((item, index) => (
@@ -383,7 +423,7 @@ export default function Command() {
               </div>
             </article>
 
-            <article className="command-panel">
+            <article className="command-panel command-view-system command-panel-boundary">
               <header><div><span>READ-ONLY BOUNDARY</span><strong>OBSERVATIONAL</strong></div><small>Command</small></header>
               <div className="command-summary-block">
                 <span>THIS SURFACE</span>
