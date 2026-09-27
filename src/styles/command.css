@@ -357,6 +357,7 @@
  * area, two-row Command header, page heading, and live-state control.
  */
 .command-shell{
+  --command-safe-top:var(--safe-top);
   position:fixed;
   inset:0;
   width:100%;
@@ -513,8 +514,14 @@
 
 /* Standalone iOS uses a larger reserved top band. Keep the remaining
  * Command viewport calculation in sync with that band. */
-@media (display-mode:standalone) and (max-width:720px){
-  .command-main{
-    height:calc(100dvh - 104px - max(var(--safe-top),34px));
+@media (display-mode:standalone){
+  .command-shell{--command-safe-top:max(var(--safe-top),34px)}
+}
+@media (display-mode:standalone) and (orientation:landscape) and (max-height:500px){
+  .command-shell{--command-safe-top:max(var(--safe-top),46px)}
+}
+@supports (-webkit-touch-callout:none){
+  @media (orientation:landscape) and (max-height:500px){
+    .command-shell{--command-safe-top:max(var(--safe-top),46px)}
   }
 }
