@@ -4,12 +4,12 @@ import Mark from "./Mark";
 import UniverseBackground from "./UniverseBackground";
 
 const nav = [
-  ["/live", "Live"],
+  ["/live", "Operations"],
   ["/performance", "Performance"],
-  ["/system", "System"],
   ["/research", "Research"],
-  ["/record", "Record"],
-  ["/releases", "Releases"]
+  ["/system", "System"],
+  ["/releases", "Releases"],
+  ["/record", "Record"]
 ] as const;
 
 export function PublicShell({ children }: { children: ReactNode }) {

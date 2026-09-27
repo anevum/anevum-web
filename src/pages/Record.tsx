@@ -38,7 +38,7 @@ export default function Record() {
           <p className="compact-eyebrow">RHEN / PUBLIC RECORD</p>
           <h1>Record</h1>
           <p className="story-heading-copy">
-            A sanitized history of system versions, canonical research decisions, report state, and evidence milestones. Capital, P&amp;L, symbols, fills, and trade history remain private.
+            A sanitized history of system versions, canonical research decisions, report state, and evidence milestones. Normalized aggregate performance is public; raw capital, symbols, fills, and reconstructable trade detail remain private.
           </p>
         </div>
         <div className="workspace-heading-status story-status">
@@ -104,13 +104,13 @@ export default function Record() {
               <motion.div className="workspace-view story-view" key="evidence" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}>
                 <div className="story-title-row">
                   <div><span className="story-kicker">PUBLIC EVIDENCE STANDARD</span><h2>The record shows state and decisions, not private capital.</h2></div>
-                  <p>Account performance remains in Command and the canonical private ledger.</p>
+                  <p>Normalized live performance is published separately; raw account values and execution-level records remain in Command and the canonical private ledger.</p>
                 </div>
                 <div className="rhen-state-grid">
                   <article><span>RESEARCH DECISIONS</span><strong>{terminal.length}</strong><p>Terminal research decisions are preserved, including rejected lanes.</p></article>
                   <article><span>NEXT DIRECTION</span><strong>{next?.status ? String(next.status).replaceAll("_", " ").toUpperCase() : "UNRECORDED"}</strong><p>{next?.subject || "No next research direction recorded."}</p></article>
                   <article><span>WEEKLY REPORT</span><strong>{weekly?.completeness_state || "UNAVAILABLE"}</strong><p>{weekly?.report_version || "No version"} · {weekly?.included_session_count ?? 0}/{weekly?.expected_session_count ?? 0} canonical daily sessions represented.</p></article>
-                  <article><span>PRIVATE BY DESIGN</span><strong>CAPITAL + TRADES</strong><p>Equity, P&amp;L, positions, symbols, fills, orders, and trade history are not part of the public projection.</p></article>
+                  <article><span>PRIVATE BY DESIGN</span><strong>RAW CAPITAL + EXECUTION</strong><p>Account values, positions, symbols, prices, quantities, fills, orders, and individual trade records are excluded even while normalized aggregate performance is public.</p></article>
                   <article className="record-release-card"><span>RELEASE PROGRAM</span><strong>{latestRelease.codename} / {latestRelease.version}</strong><p>{latestRelease.releaseClass}. Named releases preserve architecture, verification, limitations, and a downloadable archival packet.</p><Link to="/releases">OPEN RELEASE ARCHIVE ↗</Link></article>
                 </div>
               </motion.div>

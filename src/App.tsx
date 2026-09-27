@@ -16,7 +16,7 @@ const PrivateAccess = lazy(() => import("./pages/Rhenlink"));
 
 const titles: Record<string, string> = {
   "/": "ANEVUM",
-  "/live": "Live — ANEVUM",
+  "/live": "Operations — ANEVUM",
   "/system": "System — ANEVUM",
   "/research": "Research — ANEVUM",
   "/record": "Record — ANEVUM",

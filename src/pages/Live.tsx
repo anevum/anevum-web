@@ -40,8 +40,8 @@ export default function Live() {
     <section className="compact-page workspace-screen live-screen">
       <header className="workspace-heading">
         <div>
-          <p className="compact-eyebrow">RHEN / PUBLIC TELEMETRY</p>
-          <h1>Live</h1>
+          <p className="compact-eyebrow">RHEN / LIVE OPERATIONS</p>
+          <h1>Operations</h1>
         </div>
         <div className="workspace-heading-status">
           <span className={"runtime-state " + stateClass}><i />{state}</span>

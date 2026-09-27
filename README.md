@@ -1,12 +1,12 @@
 # ANEVUM Web
 
-ANEVUM's public website and private operator interface for RHEN, the active automated market research and execution system.
+ANEVUM's operating website and private Command interface. RHEN is the current flagship autonomous market research, execution, evidence, and learning system; the site architecture is intentionally broader than RHEN so ANEVUM can add future systems, agents, infrastructure, releases, and business lines without another structural redesign.
 
 ## Product boundary
 
 ### Public — `/`
 
-The public site is an intentionally limited RHEN observability and evidence surface. It may show:
+The public site presents ANEVUM as the operating company and RHEN as its current flagship. RHEN-specific pages remain an intentionally limited observability and evidence surface. It may show:
 
 - runtime state and telemetry freshness
 - active public version identifier and version history
@@ -34,9 +34,11 @@ CI treats this as a contract and fails if the public response regains blocked tr
 
 ### Operator — `/command`
 
+Command shares the public site's single-viewport visual system: the animated universe background remains fixed, the outer document never scrolls, and dense private content scrolls inside the central workspace. The Performance route consumes the same `PUBLIC-PERFORMANCE-v1` feed as the public Performance page, so the public and private normalized record cannot drift into separate copies.
+
 The Command surface contains private operator telemetry. Production access is intended to sit behind Cloudflare Access and is also gated by ANEVUM/Supabase administrator authorization inside the application.
 
-The public footer contains only a low-prominence `OPERATOR` entrance. Search engines are instructed not to index the operator/private routes.
+The public header contains a low-prominence Command entrance. Search engines are instructed not to index the operator/private routes.
 
 ### Private auth — `/private`
 
