@@ -11,9 +11,9 @@ const tabs: [PerformanceTab, string, string][] = [
   ["boundary", "Boundary", "Public versus private data"]
 ];
 
-function pct(value?: number | null, digits = 2) {
+function pct(value?: number | null, digits = 2, signed = true) {
   if (value == null || !Number.isFinite(value)) return "—";
-  const sign = value > 0 ? "+" : "";
+  const sign = signed && value > 0 ? "+" : "";
   return sign + value.toFixed(digits) + "%";
 }
 
@@ -159,7 +159,7 @@ export default function Performance() {
                       </article>
                       <article>
                         <span>MAX DRAWDOWN</span>
-                        <strong>{pct(performance?.max_drawdown_pct)}</strong>
+                        <strong>{pct(performance?.max_drawdown_pct, 2, false)}</strong>
                         <small>Tracked account peak-to-trough measure</small>
                       </article>
                     </div>
@@ -167,7 +167,7 @@ export default function Performance() {
 
                   <aside className="performance-side-stack">
                     <article><span>CLOSED LIVE TRADES</span><strong>{performance?.closed_trades ?? "—"}</strong><p>{performance?.wins ?? "—"} wins · {performance?.losses ?? "—"} losses</p></article>
-                    <article><span>WIN RATE</span><strong>{pct(performance?.win_rate_pct, 1)}</strong><p>Descriptive only. Current sample is intentionally labeled {sample.toLowerCase()}.</p></article>
+                    <article><span>WIN RATE</span><strong>{pct(performance?.win_rate_pct, 1, false)}</strong><p>Descriptive only. Current sample is intentionally labeled {sample.toLowerCase()}.</p></article>
                     <article><span>TRADING SESSIONS</span><strong>{performance?.trading_sessions ?? "—"}</strong><p>Duration matters more than a single strong or weak session.</p></article>
                     <article><span>STATUS</span><strong>{String(performance?.status || "UNAVAILABLE").replaceAll("_", " ")}</strong><p>No outside capital is accepted or managed through this public site.</p></article>
                   </aside>
