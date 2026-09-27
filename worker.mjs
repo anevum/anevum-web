@@ -81,6 +81,22 @@ async function proxyTrader(request, upstreamPath) {
   return jsonResponse(payload, response.status);
 }
 
+async function publicResearchReadiness() {
+  const response = await fetch(RESEARCH_BASE + "/v1/readiness/public", {
+    method: "GET",
+    headers: { Accept: "application/json" }
+  });
+  const raw = await response.text();
+  return new Response(raw, {
+    status: response.status,
+    headers: {
+      "Content-Type": "application/json; charset=utf-8",
+      "Cache-Control": "public, max-age=2, s-maxage=2, stale-while-revalidate=3",
+      "X-Content-Type-Options": "nosniff"
+    }
+  });
+}
+
 async function publicTradingFeed() {
   const response = await fetch(PUBLIC_TRADING_FEED, {
     method: "GET",
