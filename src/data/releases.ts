@@ -1,7 +1,5 @@
 import releaseRegistry from "./releases.json";
 
-export type ReleaseStatus = "current" | "archived";
-
 export type RhenRelease = {
   slug: string;
   version: string;
@@ -9,7 +7,6 @@ export type RhenRelease = {
   lifecycle: string;
   releaseClass: string;
   date: string;
-  status: ReleaseStatus;
   headline: string;
   abstract: string;
   thesis: string;
@@ -29,7 +26,7 @@ export type RhenRelease = {
 };
 
 type RhenReleaseRegistry = {
-  schemaVersion: number;
+  schemaVersion: 2;
   currentSlug: string;
   releases: RhenRelease[];
 };
@@ -54,20 +51,22 @@ export function rhenReleaseBySlug(slug?: string) {
   return rhenReleases.find((release) => release.slug === slug);
 }
 
-export function nextPatchVersion(version: string) {
+function semverParts(version: string) {
   const match = /^(\d+)\.(\d+)\.(\d+)$/.exec(version);
-  if (!match) return version + " + patch";
-  return [match[1], match[2], String(Number(match[3]) + 1)].join(".");
+  return match ? [Number(match[1]), Number(match[2]), Number(match[3])] : null;
+}
+
+export function nextPatchVersion(version: string) {
+  const parts = semverParts(version);
+  return parts ? [parts[0], parts[1], parts[2] + 1].join(".") : version + " + patch";
 }
 
 export function nextMinorVersion(version: string) {
-  const match = /^(\d+)\.(\d+)\.(\d+)$/.exec(version);
-  if (!match) return "next minor";
-  return [match[1], String(Number(match[2]) + 1), "0"].join(".");
+  const parts = semverParts(version);
+  return parts ? [parts[0], parts[1] + 1, 0].join(".") : "next minor";
 }
 
 export function nextMajorVersion(version: string) {
-  const match = /^(\d+)\.(\d+)\.(\d+)$/.exec(version);
-  if (!match) return "next major";
-  return [String(Number(match[1]) + 1), "0", "0"].join(".");
+  const parts = semverParts(version);
+  return parts ? [parts[0] + 1, 0, 0].join(".") : "next major";
 }
