@@ -205,6 +205,26 @@ export type CommandEvidence = {
   telemetry_health?: Record<string, unknown> | null;
 };
 
+export type ResearchReadinessBlocker = {
+  scope?: string | null;
+  code?: string | null;
+  reason_codes?: string[];
+};
+
+export type ResearchReadiness = {
+  state?: string;
+  cadence?: string;
+  gpt_would_run_now?: boolean;
+  blocker_count?: number;
+  blockers?: ResearchReadinessBlocker[];
+  strategy_question_count?: number;
+  trigger_reference?: string | null;
+  evidence_cutoff?: string | null;
+  read_only?: boolean;
+  model_invoked?: boolean;
+  persisted?: boolean;
+};
+
 async function authenticatedJson<T>(
   path: string,
   session: RhenSession
@@ -251,6 +271,21 @@ export function fetchCommandWeeklyReport(
 ): Promise<Record<string, unknown>> {
   const query = weekEnd ? "?week_end=" + encodeURIComponent(weekEnd) : "";
   return authenticatedJson<Record<string, unknown>>("/api/command/trader/reports/weekly" + query, session);
+}
+
+export async function fetchResearchReadiness(): Promise<ResearchReadiness> {
+  const response = await fetch("/api/public/research/readiness", {
+    headers: { Accept: "application/json" },
+    cache: "no-store"
+  });
+  const payload = (await response.json().catch(() => ({}))) as ResearchReadiness & {
+    message?: string;
+    detail?: string;
+  };
+  if (!response.ok) {
+    throw new Error(payload.message || payload.detail || "Research readiness unavailable.");
+  }
+  return payload;
 }
 
 export async function fetchLiveTradingFeed(): Promise<LiveTradingFeed> {
