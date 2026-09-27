@@ -10,8 +10,10 @@ import {
   fetchCommandEvidence,
   fetchCommandStatus,
   fetchCommandWeeklyReport,
+  fetchResearchReadiness,
   type CommandEvidence,
-  type CommandSnapshot
+  type CommandSnapshot,
+  type ResearchReadiness
 } from "../lib/data";
 import { clockTime, money, percent } from "../lib/format";
 
@@ -57,6 +59,7 @@ export default function Command() {
   const [evidence, setEvidence] = useState<CommandEvidence | null>(null);
   const [dailyReport, setDailyReport] = useState<Record<string, unknown> | null>(null);
   const [weeklyReport, setWeeklyReport] = useState<Record<string, unknown> | null>(null);
+  const [researchReadiness, setResearchReadiness] = useState<ResearchReadiness | null>(null);
   const [error, setError] = useState("");
   const [refreshing, setRefreshing] = useState(false);
   const { data: publicFeed, error: publicFeedError } = useLiveTrading(3000);
@@ -70,9 +73,10 @@ export default function Command() {
     if (!session || !commandAdmin) return;
     setRefreshing(true);
     try {
-      const [nextSnapshot, nextEvidence] = await Promise.all([
+      const [nextSnapshot, nextEvidence, nextReadiness] = await Promise.all([
         fetchCommandStatus(session),
-        fetchCommandEvidence(session)
+        fetchCommandEvidence(session),
+        fetchResearchReadiness().catch(() => null)
       ]);
       const [daily, weekly] = await Promise.all([
         fetchCommandDailyReport(session).catch(() => null),
@@ -82,6 +86,7 @@ export default function Command() {
       setEvidence(nextEvidence);
       setDailyReport(daily || record(nextEvidence.latest_daily));
       setWeeklyReport(weekly || record(nextEvidence.latest_weekly));
+      setResearchReadiness(nextReadiness);
       setError("");
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "Command evidence unavailable.");
