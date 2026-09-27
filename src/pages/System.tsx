@@ -1,5 +1,6 @@
 import { AnimatePresence, motion } from "motion/react";
 import { useState } from "react";
+import RhenMark, { RhenSectionLabel } from "../components/RhenMark";
 import { useLiveTrading } from "../hooks/useLiveTrading";
 
 type SystemTab = "chain" | "machine" | "evidence" | "guardrails";
@@ -42,7 +43,7 @@ export default function System() {
     <section className="compact-page workspace-screen story-workspace system-story">
       <header className="workspace-heading story-heading">
         <div>
-          <p className="compact-eyebrow">RHEN / SYSTEM</p>
+          <RhenSectionLabel context="SYSTEM" />
           <h1>How evidence moves</h1>
           <p className="story-heading-copy">
             RHEN separates observation, live decisions, broker truth, post-event analytics, and research conclusions so one layer cannot quietly rewrite another.
@@ -100,7 +101,7 @@ export default function System() {
                       <strong>{tool}</strong><p>{body}</p>
                     </article>
                   ))}
-                  <div className="machine-core"><span>RHEN</span><strong>CANONICAL SYSTEM</strong><i /></div>
+                  <div className="machine-core"><RhenMark decorative /><span className="rhen-core-word">RHEN</span><strong>CANONICAL SYSTEM</strong><i /></div>
                 </div>
               </motion.div>
             )}
