@@ -20,7 +20,7 @@ const titles: Record<string, string> = {
   "/system": "System — ANEVUM",
   "/research": "Research — ANEVUM",
   "/record": "Record — ANEVUM",
-  "/performance": "Performance — ANEVUM",
+  "/performance": "RHEN Performance — ANEVUM",
   "/releases": "RHEN Releases — ANEVUM",
   "/private": "Private — ANEVUM",
 };
