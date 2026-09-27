@@ -80,6 +80,34 @@ export type PublicStrategyHistory = {
   retired_at?: string | null;
 };
 
+export type PublicPerformancePoint = {
+  at?: string | null;
+  return_pct?: number | null;
+};
+
+export type PublicPerformance = {
+  methodology_version?: string;
+  basis?: string;
+  status?: string;
+  sample_state?: string;
+  tracking_started_at?: string | null;
+  last_observed_at?: string | null;
+  first_trade_at?: string | null;
+  last_trade_at?: string | null;
+  snapshot_count?: number;
+  trading_sessions?: number;
+  closed_trades?: number;
+  wins?: number;
+  losses?: number;
+  win_rate_pct?: number | null;
+  account_return_pct?: number | null;
+  realized_return_pct?: number | null;
+  max_drawdown_pct?: number | null;
+  external_cash_flows_present?: boolean;
+  curve?: PublicPerformancePoint[];
+  limitations?: string[];
+};
+
 export type LiveTradingFeed = {
   ok: boolean;
   generated_at?: string;
@@ -132,9 +160,11 @@ export type LiveTradingFeed = {
     limitations?: string[];
     journal?: PublicResearchEntry[];
   };
+  performance?: PublicPerformance;
   disclosure?: {
     level?: string;
     public_fields?: string[];
+    excluded_fields?: string[];
   };
 };
 

@@ -9,6 +9,7 @@ const Live = lazy(() => import("./pages/Live"));
 const System = lazy(() => import("./pages/System"));
 const Research = lazy(() => import("./pages/Research"));
 const Record = lazy(() => import("./pages/Record"));
+const Performance = lazy(() => import("./pages/Performance"));
 const Releases = lazy(() => import("./pages/Releases"));
 const ReleaseDetail = lazy(() => import("./pages/ReleaseDetail"));
 const PrivateAccess = lazy(() => import("./pages/Rhenlink"));
@@ -19,6 +20,7 @@ const titles: Record<string, string> = {
   "/system": "System — ANEVUM",
   "/research": "Research — ANEVUM",
   "/record": "Record — ANEVUM",
+  "/performance": "RHEN Performance — ANEVUM",
   "/releases": "RHEN Releases — ANEVUM",
   "/private": "Private — ANEVUM",
 };
@@ -54,6 +56,7 @@ export default function App() {
         <Route path="/system" element={<PublicExperience><System /></PublicExperience>} />
         <Route path="/research" element={<PublicExperience><Research /></PublicExperience>} />
         <Route path="/record" element={<PublicExperience><Record /></PublicExperience>} />
+        <Route path="/performance" element={<PublicExperience><Performance /></PublicExperience>} />
         <Route path="/releases" element={<PublicExperience><Releases /></PublicExperience>} />
         <Route path="/releases/:slug" element={<PublicExperience><ReleaseDetail /></PublicExperience>} />
 
@@ -67,7 +70,7 @@ export default function App() {
         <Route path="/wiki" element={<Navigate to="/system" replace />} />
         <Route path="/wiki/archive/transcosmic" element={<Navigate to="/record" replace />} />
         <Route path="/about" element={<Navigate to="/system" replace />} />
-        <Route path="/proof" element={<Navigate to="/live" replace />} />
+        <Route path="/proof" element={<Navigate to="/performance" replace />} />
         <Route path="/method" element={<Navigate to="/system" replace />} />
         <Route path="/the-book" element={<Navigate to="/record" replace />} />
         <Route path="/reply" element={<Navigate to="/record" replace />} />

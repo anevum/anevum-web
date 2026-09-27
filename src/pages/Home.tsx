@@ -17,16 +17,16 @@ function shortVersion(value?: string | null) {
 
 const destinations = [
   {
-    href: "/live",
+    href: "/performance",
     index: "01",
-    title: "Live",
-    description: "Runtime telemetry, event feed, activity, and current system state."
+    title: "Performance",
+    description: "Normalized live results, drawdown, sample size, methodology, and disclosure boundary."
   },
   {
-    href: "/system",
+    href: "/live",
     index: "02",
-    title: "System",
-    description: "Architecture, operating pipeline, process, and public data boundary."
+    title: "Live",
+    description: "Runtime telemetry, event feed, activity, and current system state."
   },
   {
     href: "/research",

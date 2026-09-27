@@ -5,6 +5,7 @@ import UniverseBackground from "./UniverseBackground";
 
 const nav = [
   ["/live", "Live"],
+  ["/performance", "Performance"],
   ["/system", "System"],
   ["/research", "Research"],
   ["/record", "Record"],
