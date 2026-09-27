@@ -224,6 +224,7 @@ export type ResearchReadiness = {
   strategy_question_count?: number;
   ready_strategy_question_count?: number;
   waiting_strategy_question_count?: number;
+  waiting_requirements?: string[];
   trigger_reference?: string | null;
   evidence_cutoff?: string | null;
   read_only?: boolean;
