@@ -1,0 +1,44 @@
+name: Publish RHEN Release Packet Email
+
+on:
+  push:
+    tags:
+      - "rhen-v*"
+  workflow_dispatch:
+    inputs:
+      slug:
+        description: "Release slug from src/data/releases.json"
+        required: true
+        default: "rhen-0-8-2-aurora"
+
+permissions:
+  contents: read
+
+jobs:
+  email:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Resolve release packet
+        id: packet
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            slug="${{ inputs.slug }}"
+            packet="$(node -e 'const fs=require("fs");const slug=process.argv[1];const rows=JSON.parse(fs.readFileSync("src/data/releases.json","utf8"));const r=rows.find(x=>x.slug===slug);if(!r)process.exit(2);process.stdout.write("public"+r.pdfPath)' "$slug")"
+          else
+            version="${GITHUB_REF_NAME#rhen-v}"
+            packet="$(node -e 'const fs=require("fs");const v=process.argv[1];const rows=JSON.parse(fs.readFileSync("src/data/releases.json","utf8"));const r=rows.find(x=>x.version===v);if(!r)process.exit(2);process.stdout.write("public"+r.pdfPath)' "$version")"
+          fi
+          test -f "$packet" || { echo "Release packet does not exist: $packet"; exit 1; }
+          echo "path=$packet" >> "$GITHUB_OUTPUT"
+      - name: Email release packet
+        env:
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          RELEASE_EMAIL_TO: ${{ vars.RELEASE_EMAIL_TO }}
+          RELEASE_EMAIL_FROM: ${{ vars.RELEASE_EMAIL_FROM }}
+        run: node scripts/email-release-packet.mjs "${{ steps.packet.outputs.path }}"
