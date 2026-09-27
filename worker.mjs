@@ -247,6 +247,15 @@ export default {
       }
     }
 
+    if (pathname === "/api/public/research/readiness") {
+      if (request.method !== "GET") return jsonResponse({ message: "Method not allowed." }, 405);
+      try {
+        return await publicResearchReadiness();
+      } catch (error) {
+        return jsonResponse({ message: error instanceof Error ? error.message : "Research readiness unavailable." }, 502);
+      }
+    }
+
     if (pathname.startsWith("/api/command/trader/")) {
       if (request.method !== "GET" && url.hostname !== "anevum.com") {
         return jsonResponse({ message: "Live Command controls are disabled outside production." }, 403);
