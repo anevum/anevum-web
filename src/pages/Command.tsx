@@ -381,7 +381,6 @@ export default function Command() {
               </div>
               <div className="command-summary-block">
                 <span>NEXT EXPERIMENT</span>
-                <span>NEXT EXPERIMENT</span>
                 <strong>{text(nextResearch?.conclusion, "No canonical next-direction decision.")}</strong>
                 <p>Experiment execution is not available from Command in this task.</p>
               </div>
