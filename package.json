@@ -9,9 +9,11 @@
   "scripts": {
     "dev": "vite",
     "check": "tsc --noEmit",
-    "build": "npm run check && vite build",
+    "build": "npm run sync:releases && npm run check && vite build",
     "preview": "vite preview",
-    "deploy": "npm run build && wrangler deploy"
+    "deploy": "npm run build && wrangler deploy",
+    "sync:releases": "node scripts/sync-release-artifacts.mjs",
+    "validate:releases": "node scripts/validate-release-registry.mjs"
   },
   "dependencies": {
     "motion": "13.4.3",
