@@ -1,5 +1,11 @@
 import { Link } from "react-router-dom";
-import { rhenReleases } from "../data/releases";
+import {
+  archivedRhenReleases,
+  currentRhenRelease,
+  nextMajorVersion,
+  nextMinorVersion,
+  nextPatchVersion
+} from "../data/releases";
 import "../styles/releases.css";
 
 function displayDate(value: string) {
@@ -8,7 +14,8 @@ function displayDate(value: string) {
 }
 
 export default function Releases() {
-  const [latest, ...archive] = rhenReleases;
+  const current = currentRhenRelease();
+  const archive = archivedRhenReleases();
   return (
     <section className="release-index docs-page">
       <header className="release-index-hero">
@@ -22,28 +29,26 @@ export default function Releases() {
         <div className="release-index-mark" aria-hidden="true"><span>R</span><i /></div>
       </header>
 
-      {latest && (
-        <Link className="release-feature" to={`/releases/${latest.slug}`}>
-          <div className="release-feature-meta">
-            <span>CURRENT RELEASE</span>
-            <strong>RHEN {latest.version}</strong>
-            <small>{displayDate(latest.date)}</small>
-          </div>
-          <div className="release-feature-title">
-            <span>{latest.lifecycle}</span>
-            <h2>{latest.codename}</h2>
-            <p>{latest.headline}</p>
-          </div>
-          <div className="release-feature-arrow">OPEN <i>↗</i></div>
-        </Link>
-      )}
+      <Link className="release-feature" to={`/releases/${current.slug}`}>
+        <div className="release-feature-meta">
+          <span>CURRENT RELEASE</span>
+          <strong>RHEN {current.version}</strong>
+          <small>{displayDate(current.date)}</small>
+        </div>
+        <div className="release-feature-title">
+          <span>{current.lifecycle}</span>
+          <h2>{current.codename}</h2>
+          <p>{current.headline}</p>
+        </div>
+        <div className="release-feature-arrow">OPEN <i>↗</i></div>
+      </Link>
 
       <section className="release-standard">
         <div className="release-section-label"><span>01</span><strong>THE RELEASE STANDARD</strong></div>
         <div className="release-standard-grid">
-          <article><small>PATCH</small><strong>0.8.3</strong><p>Bug fixes, telemetry corrections, documentation, and operational hardening. Normally retains the active codename.</p></article>
-          <article><small>MINOR</small><strong>0.9.0</strong><p>A meaningful capability or operating-model change. Receives release notes and normally a new codename.</p></article>
-          <article><small>MAJOR</small><strong>1.0.0</strong><p>A generational milestone with a full release packet, immutable manifest, evidence summary, limitations, and new codename.</p></article>
+          <article><small>PATCH</small><strong>{nextPatchVersion(current.version)}</strong><p>Bug fixes, telemetry corrections, documentation, and operational hardening. Normally retains the active codename.</p></article>
+          <article><small>MINOR</small><strong>{nextMinorVersion(current.version)}</strong><p>A meaningful capability or operating-model change. Receives release notes and normally a new codename.</p></article>
+          <article><small>MAJOR</small><strong>{nextMajorVersion(current.version)}</strong><p>A generational milestone with a full release packet, immutable manifest, evidence summary, limitations, and new codename.</p></article>
         </div>
       </section>
 
@@ -53,7 +58,7 @@ export default function Releases() {
           <Link key={release.slug} to={`/releases/${release.slug}`} className="release-archive-row">
             <span>RHEN {release.version}</span><strong>{release.codename}</strong><small>{release.lifecycle}</small><time>{displayDate(release.date)}</time>
           </Link>
-        )) : <div className="release-empty">AURORA establishes the archive. Future named releases will appear here.</div>}
+        )) : <div className="release-empty">{current.codename} is the first registered release. Future named releases will appear here automatically.</div>}
       </section>
     </section>
   );
