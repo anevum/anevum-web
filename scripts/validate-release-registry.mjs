@@ -16,61 +16,89 @@ if (!registry.releases.length) errors.push("Release registry must contain at lea
 
 const slugs = new Set();
 const versions = new Set();
-let currentCount = 0;
 
 for (const release of registry.releases) {
-  for (const key of required) if (release[key] == null) errors.push(release.slug + ": missing " + key);
+  for (const key of required) {
+    if (release[key] == null) errors.push((release.slug || "<unknown>") + ": missing " + key);
+  }
   if (slugs.has(release.slug)) errors.push("Duplicate release slug: " + release.slug);
   slugs.add(release.slug);
   if (versions.has(release.version)) errors.push("Duplicate release version: " + release.version);
   versions.add(release.version);
   if (!/^\d+\.\d+\.\d+$/.test(release.version)) errors.push(release.slug + ": version must be semver x.y.z");
-  if (release.status === "current") currentCount += 1;
+  if (!/^[a-z0-9-]+$/.test(release.slug)) errors.push(release.slug + ": slug must be lowercase kebab-case");
+  if (!release.sourceCommit || !/^[0-9a-f]{40}$/i.test(release.sourceCommit)) errors.push(release.slug + ": sourceCommit must be a full SHA");
   const expectedPdf = "/releases/RHEN-" + release.version + "-" + release.codename.toUpperCase().replace(/[^A-Z0-9_-]/g, "-") + ".pdf";
   if (release.pdfPath !== expectedPdf) errors.push(release.slug + ": pdfPath does not match version/codename-derived path");
-  if (!release.sourceCommit || release.sourceCommit.length !== 40) errors.push(release.slug + ": sourceCommit must be a full SHA");
 }
 
 const current = currentRelease(registry);
-if (currentCount !== 1) errors.push("Exactly one snapshot must retain status=current for historical readability.");
-if (current.status !== "current") errors.push("currentSlug must point at the snapshot whose status is current.");
+if (!slugs.has(registry.currentSlug)) errors.push("currentSlug does not resolve to a registered release.");
 
-const generated = JSON.parse(fs.readFileSync(path.join(ROOT, "public", "release-registry.json"), "utf8"));
-if (generated.currentSlug !== registry.currentSlug) errors.push("Generated release-registry.json currentSlug drifted.");
-if (generated.currentPdfPath !== current.pdfPath) errors.push("Generated release-registry.json currentPdfPath drifted.");
+const generatedRegistryPath = path.join(ROOT, "public", "release-registry.json");
+const sitemapPath = path.join(ROOT, "public", "sitemap.xml");
+if (!fs.existsSync(generatedRegistryPath)) errors.push("Generated public/release-registry.json is missing.");
+if (!fs.existsSync(sitemapPath)) errors.push("Generated public/sitemap.xml is missing.");
+
+if (fs.existsSync(generatedRegistryPath)) {
+  const generated = JSON.parse(fs.readFileSync(generatedRegistryPath, "utf8"));
+  if (generated.schemaVersion !== registry.schemaVersion) errors.push("Generated registry schemaVersion drifted.");
+  if (generated.currentSlug !== registry.currentSlug) errors.push("Generated registry currentSlug drifted.");
+  if (generated.currentVersion !== current.version) errors.push("Generated registry currentVersion drifted.");
+  if (generated.currentCodename !== current.codename) errors.push("Generated registry currentCodename drifted.");
+  if (generated.currentLifecycle !== current.lifecycle) errors.push("Generated registry currentLifecycle drifted.");
+  if (generated.currentReleaseClass !== current.releaseClass) errors.push("Generated registry currentReleaseClass drifted.");
+  if (generated.currentPdfPath !== current.pdfPath) errors.push("Generated registry currentPdfPath drifted.");
+
+  for (const release of registry.releases) {
+    const route = "/releases/" + release.slug;
+    if (!generated.releaseRoutes.includes(route)) errors.push("Generated route missing for " + release.slug);
+  }
+}
+
 for (const release of registry.releases) {
-  if (!generated.releaseRoutes.includes("/releases/" + release.slug)) errors.push("Generated route missing for " + release.slug);
   const packet = path.join(ROOT, "public", release.pdfPath.replace(/^\//, ""));
   if (!fs.existsSync(packet) || fs.statSync(packet).size === 0) errors.push("Generated PDF missing or empty: " + release.pdfPath);
 }
 
-const sitemap = fs.readFileSync(path.join(ROOT, "public", "sitemap.xml"), "utf8");
-for (const release of registry.releases) {
-  const url = "https://anevum.com/releases/" + release.slug;
-  if (!sitemap.includes(url)) errors.push("Sitemap missing " + url);
+if (fs.existsSync(sitemapPath)) {
+  const sitemap = fs.readFileSync(sitemapPath, "utf8");
+  for (const release of registry.releases) {
+    const url = "https://anevum.com/releases/" + release.slug;
+    if (!sitemap.includes(url)) errors.push("Sitemap missing " + url);
+  }
 }
 
-const forbiddenValues = [];
+const forbiddenValues = new Set();
 for (const release of registry.releases) {
-  forbiddenValues.push(
+  [
     release.version,
     release.codename,
     release.lifecycle,
+    release.releaseClass,
     release.sourceCommit,
+    release.sourceCommit?.slice(0, 8),
     release.productionDeployment,
     release.shadowDeployment,
     release.preopenDeployment,
     release.activeStrategy,
+    release.activeStrategy?.split(" / ")[0],
     release.slug,
     release.pdfPath
-  );
+  ].filter(Boolean).forEach((value) => forbiddenValues.add(String(value)));
 }
+
 const allowPaths = new Set([
   "src/data/releases.json",
   "docs/RHEN_RELEASE_PROGRAM.md"
 ]);
-const scanRoots = ["src","scripts",".github","worker.mjs","index.html","public"];
+const generatedPaths = new Set([
+  "public/release-registry.json",
+  "public/sitemap.xml"
+]);
+const scanRoots = ["src", "scripts", ".github", "worker.mjs", "index.html", "public"];
 const files = [];
+
 function walk(target) {
   const full = path.join(ROOT, target);
   if (!fs.existsSync(full)) return;
@@ -84,37 +112,41 @@ function walk(target) {
 for (const root of scanRoots) walk(root);
 
 for (const file of files) {
-  if (allowPaths.has(file)) continue;
-  if (file === "public/release-registry.json" || file === "public/sitemap.xml") continue;
+  if (allowPaths.has(file) || generatedPaths.has(file)) continue;
   if (/\.(png|jpg|jpeg|ico|pdf|map)$/.test(file)) continue;
   const text = fs.readFileSync(path.join(ROOT, file), "utf8");
-  for (const value of forbiddenValues.filter(Boolean)) {
-    if (text.includes(String(value))) errors.push("Release identity literal duplicated outside registry: " + value + " in " + file);
+  for (const value of forbiddenValues) {
+    if (text.includes(value)) {
+      errors.push("Release identity literal duplicated outside canonical registry: " + value + " in " + file);
+    }
   }
 }
 
 if (process.env.GITHUB_EVENT_NAME === "push" && process.env.GITHUB_REF_NAME?.startsWith("rhen-v")) {
   const tagVersion = process.env.GITHUB_REF_NAME.slice("rhen-v".length);
-  if (tagVersion !== current.version && !versions.has(tagVersion)) errors.push("Publication tag has no matching release version.");
+  if (!versions.has(tagVersion)) errors.push("Publication tag has no matching registered release version.");
 }
 
 if (process.env.GITHUB_BASE_REF) {
   try {
-    const baseRef = "origin/" + process.env.GITHUB_BASE_REF;\n    const baseText = execFileSync("git", ["show", baseRef + ":src/data/releases.json"], { cwd: ROOT, encoding: "utf8" });
-    const base = JSON.parse(baseText);
-    const baseReleases = Array.isArray(base) ? base : base.releases;
-    const bySlug = new Map(registry.releases.map((r) => [r.slug, r]));
+    const baseRef = "origin/" + process.env.GITHUB_BASE_REF;
+    const baseText = execFileSync("git", ["show", baseRef + ":src/data/releases.json"], { cwd: ROOT, encoding: "utf8" });
+    const baseRegistry = JSON.parse(baseText);
+    const baseReleases = Array.isArray(baseRegistry) ? baseRegistry : baseRegistry.releases;
+    const bySlug = new Map(registry.releases.map((release) => [release.slug, release]));
+
+    const normalize = (value) => {
+      const copy = structuredClone(value);
+      delete copy.status;
+      return copy;
+    };
+
     for (const prior of baseReleases || []) {
       const now = bySlug.get(prior.slug);
       if (!now) {
         errors.push("Published release snapshot removed: " + prior.slug);
         continue;
       }
-      const normalize = (value) => {
-        const copy = structuredClone(value);
-        delete copy.status;
-        return copy;
-      };
       if (JSON.stringify(normalize(prior)) !== JSON.stringify(normalize(now))) {
         errors.push("Published release snapshot mutated: " + prior.slug + ". Historical snapshots are immutable.");
       }
@@ -128,4 +160,8 @@ if (errors.length) {
   console.error(errors.map((error) => "- " + error).join("\n"));
   process.exit(1);
 }
-console.log("RHEN release registry invariants passed for " + current.version + " " + current.codename + ".");
+
+console.log(
+  "RHEN release registry invariants passed for current pointer " +
+  current.version + " " + current.codename + " with " + registry.releases.length + " immutable snapshot(s)."
+);
