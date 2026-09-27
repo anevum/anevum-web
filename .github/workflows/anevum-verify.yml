@@ -16,6 +16,8 @@ jobs:
     timeout-minutes: 12
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -24,18 +26,25 @@ jobs:
           python-version: "3.12"
       - name: Install PDF renderer
         run: pip install "weasyprint==68.0"
+      - name: Synchronize RHEN release artifacts
+        run: node scripts/sync-release-artifacts.mjs
       - name: Render RHEN release packets
         run: python scripts/render-release-packets.py
+      - name: Validate RHEN release registry
+        run: node scripts/validate-release-registry.mjs
       - name: Install
         run: npm install --no-audit --no-fund
       - name: Typecheck and build
         run: npm run build
-      - name: Verify React, release packet, and Cloudflare output
+      - name: Verify React, generated release artifacts, and Cloudflare output
         shell: bash
         run: |
           test -f dist/client/index.html
-          test -f dist/client/releases/RHEN-0.8.2-AURORA.pdf
-          test -s dist/client/releases/RHEN-0.8.2-AURORA.pdf
+          current_pdf="$(jq -r '.currentPdfPath' public/release-registry.json)"
+          test -f "dist/client$current_pdf"
+          test -s "dist/client$current_pdf"
+          test -f dist/client/sitemap.xml
+          test -f dist/client/release-registry.json
           test -n "$(find dist -name wrangler.json -print -quit)"
           grep -Fq 'ANEVUM' dist/client/index.html
       - id: preview
@@ -54,21 +63,35 @@ jobs:
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-      - name: Probe preview routes and public privacy contract
+      - name: Probe preview routes, release synchronization, and public privacy contract
         if: github.event_name == 'pull_request'
         shell: bash
         run: |
           base="${{ steps.preview.outputs.preview_url }}"
-          for path in / /live /performance /system /research /record /releases /releases/rhen-0-8-2-aurora /private /command /command/performance; do
+          current_slug="$(jq -r '.currentSlug' public/release-registry.json)"
+          current_pdf="$(jq -r '.currentPdfPath' public/release-registry.json)"
+          current_version="$(jq -r '.currentVersion' public/release-registry.json)"
+          current_codename="$(jq -r '.currentCodename' public/release-registry.json)"
+
+          for path in / /live /performance /system /research /record /releases "/releases/$current_slug" /private /command /command/performance; do
             curl --fail --show-error --silent "$base$path" > /dev/null
           done
-          curl --fail --show-error --silent "$base/releases/RHEN-0.8.2-AURORA.pdf" > "$RUNNER_TEMP/aurora.pdf"
-          test -s "$RUNNER_TEMP/aurora.pdf"
+
+          curl --fail --show-error --silent "$base$current_pdf" > "$RUNNER_TEMP/current-release.pdf"
+          test -s "$RUNNER_TEMP/current-release.pdf"
+
+          release_html="$(curl --fail --show-error --silent "$base/releases/$current_slug")"
+          printf '%s' "$release_html" | grep -Fq "<meta property=\"og:title\" content=\"RHEN $current_version — $current_codename — ANEVUM\" />"
+          printf '%s' "$release_html" | grep -Fq "<meta property=\"og:url\" content=\"https://anevum.com/releases/$current_slug\" />"
+          printf '%s' "$release_html" | grep -Fq "<link rel=\"canonical\" href=\"https://anevum.com/releases/$current_slug\" />"
 
           performance_html="$(curl --fail --show-error --silent "$base/performance")"
           printf '%s' "$performance_html" | grep -Fq '<meta property="og:title" content="RHEN Performance — ANEVUM" />'
           printf '%s' "$performance_html" | grep -Fq '<meta property="og:url" content="https://anevum.com/performance" />'
           printf '%s' "$performance_html" | grep -Fq '<link rel="canonical" href="https://anevum.com/performance" />'
+
+          sitemap="$(curl --fail --show-error --silent "$base/sitemap.xml")"
+          printf '%s' "$sitemap" | grep -Fq "https://anevum.com/releases/$current_slug"
 
           feed="$(curl --fail --show-error --silent "$base/api/public/trading/live")"
           printf '%s' "$feed" | jq -e '
@@ -104,16 +127,17 @@ jobs:
         shell: bash
         run: |
           base="${{ steps.preview.outputs.preview_url }}"
+          current_slug="$(jq -r '.currentSlug' public/release-registry.json)"
           mkdir -p "$RUNNER_TEMP/anevum-visuals"
           google-chrome --headless --no-sandbox --disable-gpu --hide-scrollbars --virtual-time-budget=6000 --window-size=1440,1000 --screenshot="$RUNNER_TEMP/anevum-visuals/home-desktop.png" "$base/"
           google-chrome --headless --no-sandbox --disable-gpu --hide-scrollbars --virtual-time-budget=6000 --window-size=390,844 --screenshot="$RUNNER_TEMP/anevum-visuals/home-mobile.png" "$base/"
           google-chrome --headless --no-sandbox --disable-gpu --hide-scrollbars --virtual-time-budget=6000 --window-size=1440,1000 --screenshot="$RUNNER_TEMP/anevum-visuals/performance-desktop.png" "$base/performance"
           google-chrome --headless --no-sandbox --disable-gpu --hide-scrollbars --virtual-time-budget=6000 --window-size=390,844 --screenshot="$RUNNER_TEMP/anevum-visuals/performance-mobile.png" "$base/performance"
-          google-chrome --headless --no-sandbox --disable-gpu --hide-scrollbars --virtual-time-budget=6000 --window-size=1440,1000 --screenshot="$RUNNER_TEMP/anevum-visuals/release-desktop.png" "$base/releases/rhen-0-8-2-aurora"
-          google-chrome --headless --no-sandbox --disable-gpu --hide-scrollbars --virtual-time-budget=6000 --window-size=390,844 --screenshot="$RUNNER_TEMP/anevum-visuals/release-mobile.png" "$base/releases/rhen-0-8-2-aurora"
+          google-chrome --headless --no-sandbox --disable-gpu --hide-scrollbars --virtual-time-budget=6000 --window-size=1440,1000 --screenshot="$RUNNER_TEMP/anevum-visuals/release-desktop.png" "$base/releases/$current_slug"
+          google-chrome --headless --no-sandbox --disable-gpu --hide-scrollbars --virtual-time-budget=6000 --window-size=390,844 --screenshot="$RUNNER_TEMP/anevum-visuals/release-mobile.png" "$base/releases/$current_slug"
           google-chrome --headless --no-sandbox --disable-gpu --virtual-time-budget=6000 --dump-dom "$base/" > "$RUNNER_TEMP/anevum-visuals/home-rendered.html"
           google-chrome --headless --no-sandbox --disable-gpu --virtual-time-budget=6000 --dump-dom "$base/performance" > "$RUNNER_TEMP/anevum-visuals/performance-rendered.html"
-          google-chrome --headless --no-sandbox --disable-gpu --virtual-time-budget=6000 --dump-dom "$base/releases/rhen-0-8-2-aurora" > "$RUNNER_TEMP/anevum-visuals/release-rendered.html"
+          google-chrome --headless --no-sandbox --disable-gpu --virtual-time-budget=6000 --dump-dom "$base/releases/$current_slug" > "$RUNNER_TEMP/anevum-visuals/release-rendered.html"
           grep -Fq 'landing-screen' "$RUNNER_TEMP/anevum-visuals/home-rendered.html"
           grep -Fq 'ANEVUM / OPERATING COMPANY' "$RUNNER_TEMP/anevum-visuals/home-rendered.html"
           grep -Fq 'Build systems. Prove them. Scale what works.' "$RUNNER_TEMP/anevum-visuals/home-rendered.html"

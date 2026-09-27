@@ -7,9 +7,9 @@ on:
   workflow_dispatch:
     inputs:
       slug:
-        description: "Release slug from src/data/releases.json"
-        required: true
-        default: "rhen-0-8-2-aurora"
+        description: "Optional release slug. Leave blank to use the current registry pointer."
+        required: false
+        default: ""
 
 permissions:
   contents: read
@@ -20,6 +20,8 @@ jobs:
     timeout-minutes: 8
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -28,29 +30,30 @@ jobs:
           python-version: "3.12"
       - name: Install PDF renderer
         run: pip install "weasyprint==68.0"
+      - name: Synchronize RHEN release artifacts
+        run: node scripts/sync-release-artifacts.mjs
+      - name: Render all registered packets
+        run: python scripts/render-release-packets.py
+      - name: Validate publication registry
+        run: node scripts/validate-release-registry.mjs
       - name: Resolve release
         id: release
         shell: bash
         run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ -n "${{ inputs.slug }}" ]; then
             slug="${{ inputs.slug }}"
-          else
+          elif [ "${{ github.event_name }}" = "push" ]; then
             version="${GITHUB_REF_NAME#rhen-v}"
-            slug="$(node -e 'const fs=require("fs");const v=process.argv[1];const rows=JSON.parse(fs.readFileSync("src/data/releases.json","utf8"));const r=rows.find(x=>x.version===v);if(!r)process.exit(2);process.stdout.write(r.slug)' "$version")"
+            slug="$(RELEASE_FIELD=slug node scripts/release-cli.mjs version "$version")"
+          else
+            slug="$(RELEASE_FIELD=slug node scripts/release-cli.mjs current)"
           fi
+          pdf="$(RELEASE_FIELD=pdfPath node scripts/release-cli.mjs slug "$slug")"
           echo "slug=$slug" >> "$GITHUB_OUTPUT"
-      - name: Render release packet
-        run: python scripts/render-release-packets.py --slug "${{ steps.release.outputs.slug }}"
-      - name: Resolve generated PDF
-        id: packet
-        shell: bash
-        run: |
-          packet="$(node -e 'const fs=require("fs");const slug=process.argv[1];const rows=JSON.parse(fs.readFileSync("src/data/releases.json","utf8"));const r=rows.find(x=>x.slug===slug);if(!r)process.exit(2);process.stdout.write("public"+r.pdfPath)' "${{ steps.release.outputs.slug }}")"
-          test -f "$packet" || { echo "Release packet does not exist: $packet"; exit 1; }
-          echo "path=$packet" >> "$GITHUB_OUTPUT"
+          echo "packet=public$pdf" >> "$GITHUB_OUTPUT"
       - name: Email release packet
         env:
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
           RELEASE_EMAIL_TO: ${{ vars.RELEASE_EMAIL_TO }}
           RELEASE_EMAIL_FROM: ${{ vars.RELEASE_EMAIL_FROM }}
-        run: node scripts/email-release-packet.mjs "${{ steps.packet.outputs.path }}"
+        run: node scripts/email-release-packet.mjs "${{ steps.release.outputs.packet }}" "${{ steps.release.outputs.slug }}"

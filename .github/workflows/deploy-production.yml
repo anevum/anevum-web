@@ -18,6 +18,8 @@ jobs:
     timeout-minutes: 12
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -26,8 +28,12 @@ jobs:
           python-version: "3.12"
       - name: Install PDF renderer
         run: pip install "weasyprint==68.0"
+      - name: Synchronize RHEN release artifacts
+        run: node scripts/sync-release-artifacts.mjs
       - name: Render RHEN release packets
         run: python scripts/render-release-packets.py
+      - name: Validate RHEN release registry
+        run: node scripts/validate-release-registry.mjs
       - name: Install
         run: npm install --no-audit --no-fund
       - name: Build

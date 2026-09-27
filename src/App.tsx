@@ -2,6 +2,7 @@ import { lazy, Suspense, useEffect, type ReactNode } from "react";
 import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { OverflowPan } from "./components/OverflowPan";
 import { PublicShell } from "./components/Shell";
+import { currentRhenRelease, rhenReleaseBySlug } from "./data/releases";
 
 const Command = lazy(() => import("./pages/Command"));
 const Home = lazy(() => import("./pages/Home"));
@@ -28,11 +29,27 @@ const titles: Record<string, string> = {
 function RouteEffects() {
   const location = useLocation();
   useEffect(() => {
-    document.title = location.pathname.startsWith("/command")
-      ? "Command — ANEVUM"
-      : location.pathname.startsWith("/releases/")
-        ? "RHEN Release — ANEVUM"
-        : titles[location.pathname] || "ANEVUM";
+    if (location.pathname.startsWith("/command")) {
+      document.title = "Command — ANEVUM";
+      return;
+    }
+
+    if (location.pathname === "/releases") {
+      const current = currentRhenRelease();
+      document.title = `RHEN Releases — ${current.version} ${current.codename} — ANEVUM`;
+      return;
+    }
+
+    if (location.pathname.startsWith("/releases/")) {
+      const slug = location.pathname.slice("/releases/".length);
+      const release = rhenReleaseBySlug(slug);
+      document.title = release
+        ? `RHEN ${release.version} — ${release.codename} — ANEVUM`
+        : "RHEN Releases — ANEVUM";
+      return;
+    }
+
+    document.title = titles[location.pathname] || "ANEVUM";
   }, [location.pathname]);
   return null;
 }

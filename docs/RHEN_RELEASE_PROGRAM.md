@@ -16,6 +16,31 @@ Keep these identifiers separate:
 
 A system release must never imply that a research experiment, predictive model, or strategy version has been promoted when it has not.
 
+
+## Single-source synchronization contract
+
+The canonical release registry is `src/data/releases.json`.
+
+It contains two different kinds of data:
+
+- `currentSlug` is the mutable pointer to the release that should be presented as current.
+- `releases[]` contains immutable historical release snapshots. Once a release has been published, its version, codename, lifecycle, source commit, deployments, strategy-at-freeze, changelog, limitations, and packet identity must not be rewritten.
+
+All release-aware surfaces derive from this registry:
+
+- current release card and archive ordering;
+- release detail routes and browser titles;
+- server-side canonical/Open Graph/Twitter metadata for release routes;
+- generated PDF packet identity and manifest;
+- generated sitemap release URLs;
+- generated public release-registry metadata;
+- release email subject, body, attachment filename, and tag resolution;
+- CI route/PDF/metadata assertions.
+
+Current operating state is intentionally separate. Home, Operations, Performance, System, Research, Record strategy history, and Command use live public/private telemetry for active strategy, runtime, provenance, reporting, and evidence. A historical release snapshot must never override a newer live runtime state.
+
+CI enforces the boundary. It fails if a published snapshot is mutated or removed, a release is missing required identity fields, a release route/PDF/sitemap entry is missing, a publication tag has no registered version, or a frozen release identity literal is duplicated outside the registry.
+
 ## Version policy
 
 ### Patch: `x.y.Z`
