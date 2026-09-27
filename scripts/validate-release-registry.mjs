@@ -7,11 +7,11 @@ const ROOT = path.resolve(new URL("..", import.meta.url).pathname);
 const registry = loadReleaseRegistry();
 const errors = [];
 const required = [
-  "slug","version","codename","lifecycle","releaseClass","date","status","headline","abstract","thesis",
+  "slug","version","codename","lifecycle","releaseClass","date","headline","abstract","thesis",
   "sourceCommit","activeStrategy","pdfPath","badges","capabilities","architecture","verification","limitations","changelog","next"
 ];
 
-if (registry.schemaVersion !== 1) errors.push("Unsupported release registry schemaVersion.");
+if (registry.schemaVersion !== 2) errors.push("Unsupported release registry schemaVersion.");
 if (!registry.releases.length) errors.push("Release registry must contain at least one release.");
 
 const slugs = new Set();
@@ -110,7 +110,12 @@ if (process.env.GITHUB_BASE_REF) {
         errors.push("Published release snapshot removed: " + prior.slug);
         continue;
       }
-      if (JSON.stringify(prior) !== JSON.stringify(now)) {
+      const normalize = (value) => {
+        const copy = structuredClone(value);
+        delete copy.status;
+        return copy;
+      };
+      if (JSON.stringify(normalize(prior)) !== JSON.stringify(normalize(now))) {
         errors.push("Published release snapshot mutated: " + prior.slug + ". Historical snapshots are immutable.");
       }
     }
