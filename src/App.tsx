@@ -18,13 +18,14 @@ const titles: Record<string, string> = {
   "/research": "Research — ANEVUM",
   "/record": "Record — ANEVUM",
   "/private": "Private — ANEVUM",
-  "/command": "Command — ANEVUM"
 };
 
 function RouteEffects() {
   const location = useLocation();
   useEffect(() => {
-    document.title = titles[location.pathname] || "ANEVUM";
+    document.title = location.pathname.startsWith("/command")
+      ? "Command — ANEVUM"
+      : titles[location.pathname] || "ANEVUM";
   }, [location.pathname]);
   return null;
 }
@@ -50,7 +51,7 @@ export default function App() {
         <Route path="/record" element={<PublicExperience><Record /></PublicExperience>} />
 
         <Route path="/private" element={<Suspense fallback={<Loader />}><PrivateAccess /></Suspense>} />
-        <Route path="/command" element={<Suspense fallback={<Loader />}><Command /></Suspense>} />
+        <Route path="/command/*" element={<Suspense fallback={<Loader />}><Command /></Suspense>} />
         <Route path="/rhenlink" element={<Navigate to="/private" replace />} />
 
         <Route path="/work" element={<Navigate to="/research" replace />} />
