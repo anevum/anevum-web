@@ -185,6 +185,8 @@ export default function Command() {
   const dailyClosed = Math.max(1, dailyWins + dailyLosses);
   const readinessState = text(researchReadiness?.state, "UNAVAILABLE").toUpperCase();
   const readinessBlockers = researchReadiness?.blockers || [];
+  const readinessLimitations = researchReadiness?.limitations || [];
+  const readinessMonitors = researchReadiness?.monitors || [];
   const gptReady = researchReadiness?.gpt_would_run_now === true;
 
   const scanRows = useMemo(() => {
@@ -370,15 +372,27 @@ export default function Command() {
               <div className="command-metric-grid compact">
                 <div><span>READINESS</span><strong>{readinessState}</strong></div>
                 <div><span>GPT NOW</span><strong>{gptReady ? "RUN" : "HOLD"}</strong></div>
-                <div><span>BLOCKERS</span><strong>{researchReadiness?.blocker_count ?? "—"}</strong></div>
-                <div><span>STRATEGY QUESTIONS</span><strong>{researchReadiness?.strategy_question_count ?? "—"}</strong></div>
+                <div><span>ACTIVE BLOCKERS</span><strong>{researchReadiness?.blocker_count ?? "—"}</strong></div>
+                <div><span>KNOWN LIMITATIONS</span><strong>{researchReadiness?.limitation_count ?? "—"}</strong></div>
+                <div><span>MONITORS</span><strong>{researchReadiness?.monitor_count ?? "—"}</strong></div>
+                <div><span>READY QUESTIONS</span><strong>{researchReadiness?.ready_strategy_question_count ?? "—"}</strong></div>
+                <div><span>WAITING QUESTIONS</span><strong>{researchReadiness?.waiting_strategy_question_count ?? "—"}</strong></div>
                 <div><span>EVIDENCE SESSION</span><strong>{text(researchReadiness?.trigger_reference)}</strong></div>
                 <div><span>EVIDENCE CUTOFF</span><strong>{clockTime(researchReadiness?.evidence_cutoff)}</strong></div>
               </div>
               <div className="command-warning-list">
-                {readinessBlockers.length ? readinessBlockers.map((blocker, index) => (
-                  <p key={index}><b>{text(blocker.scope).toUpperCase()} / {text(blocker.code).toUpperCase()}</b> · {arrayText(blocker.reason_codes)}</p>
-                )) : <p>{gptReady ? "No deterministic blocker is preventing semantic review." : "No blocker details are currently available."}</p>}
+                {readinessBlockers.map((row, index) => (
+                  <p key={"blocker-" + index}><b>BLOCKER / {text(row.code).toUpperCase()}</b> · {arrayText(row.reason_codes)}</p>
+                ))}
+                {readinessLimitations.map((row, index) => (
+                  <p key={"limitation-" + index}><b>LIMITATION / {text(row.code).toUpperCase()}</b> · {arrayText(row.reason_codes)}</p>
+                ))}
+                {readinessMonitors.map((row, index) => (
+                  <p key={"monitor-" + index}><b>MONITOR / {text(row.code).toUpperCase()}</b> · {arrayText(row.reason_codes)}</p>
+                ))}
+                {!readinessBlockers.length && !readinessLimitations.length && !readinessMonitors.length ? (
+                  <p>{gptReady ? "No deterministic blocker is preventing semantic review." : "No readiness details are currently available."}</p>
+                ) : null}
               </div>
               <div className="command-summary-block">
                 <span>NEXT EXPERIMENT</span>
