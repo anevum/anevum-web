@@ -1,8 +1,12 @@
 import fs from "node:fs/promises";
-import path from "node:path";
+import { currentRelease, loadReleaseRegistry, releaseBySlug } from "./release-registry.mjs";
 
 const pdfPath = process.argv[2];
-if (!pdfPath) throw new Error("Usage: node scripts/email-release-packet.mjs <pdf-path>");
+const requestedSlug = process.argv[3];
+if (!pdfPath) throw new Error("Usage: node scripts/email-release-packet.mjs <pdf-path> [release-slug]");
+
+const registry = loadReleaseRegistry();
+const release = requestedSlug ? releaseBySlug(requestedSlug, registry) : currentRelease(registry);
 
 const apiKey = String(process.env.RESEND_API_KEY || "").trim();
 if (!apiKey) {
@@ -12,10 +16,7 @@ if (!apiKey) {
 
 const recipient = String(process.env.RELEASE_EMAIL_TO || "devon@anevum.com").trim();
 const sender = String(process.env.RELEASE_EMAIL_FROM || "RHEN Releases <onboarding@resend.dev>").trim();
-const filename = path.basename(pdfPath);
-const match = filename.match(/^RHEN-([0-9.]+)-([A-Z0-9_-]+)\.pdf$/i);
-const version = match?.[1] || "release";
-const codename = (match?.[2] || "packet").replaceAll("_", " ").toUpperCase();
+const filename = release.pdfPath.split("/").pop();
 const attachment = await fs.readFile(pdfPath);
 
 const response = await fetch("https://api.resend.com/emails", {
@@ -27,8 +28,8 @@ const response = await fetch("https://api.resend.com/emails", {
   body: JSON.stringify({
     from: sender,
     to: [recipient],
-    subject: `RHEN ${version} - ${codename} release packet`,
-    html: `<div style="font-family:Arial,sans-serif;background:#050a11;color:#dfe8ee;padding:28px"><div style="font-size:11px;letter-spacing:.16em;color:#6f91a7">ANEVUM / RHEN RELEASE PROGRAM</div><h1 style="margin:14px 0 12px">RHEN ${version} - ${codename}</h1><p style="color:#8fa3b1;line-height:1.6">A named RHEN release has been published. The archival release packet is attached.</p><p style="color:#637b8b;font-size:12px">This email is generated from the same canonical release record used by anevum.com.</p></div>`,
+    subject: `RHEN ${release.version} - ${release.codename} release packet`,
+    html: `<div style="font-family:Arial,sans-serif;background:#050a11;color:#dfe8ee;padding:28px"><div style="font-size:11px;letter-spacing:.16em;color:#6f91a7">ANEVUM / RHEN RELEASE PROGRAM</div><h1 style="margin:14px 0 12px">RHEN ${release.version} - ${release.codename}</h1><p style="color:#8fa3b1;line-height:1.6">${release.releaseClass}. The archival release packet is attached.</p><p style="color:#637b8b;font-size:12px">Generated from the same canonical release snapshot used by anevum.com.</p></div>`,
     attachments: [{ filename, content: attachment.toString("base64") }]
   })
 });
