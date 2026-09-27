@@ -781,6 +781,7 @@
   .command-main{width:min(calc(100% - 20px),1480px)}
   .command-shell .command-stats{grid-template-columns:1fr 1fr}
   .command-stats article:last-child{grid-column:1/-1}
+  .command-page-system .system-grid{grid-template-columns:1fr}
   .scanner-head{display:none}
   .scanner-row{
     grid-template-columns:68px 82px 72px;
@@ -796,8 +797,9 @@
     gap:7px;
   }
   .order-row b{
-    grid-column:4;
-    text-align:left;
+    grid-column:2/-1;
+    text-align:right;
+    padding-top:2px;
   }
   .feed-row{
     grid-template-columns:60px 78px 1fr;
