@@ -124,7 +124,6 @@ def main() -> int:
     args = parser.parse_args()
     registry = json.loads(args.data.read_text(encoding="utf-8"))
     releases = registry.get("releases", [])
-    current_slug = registry.get("currentSlug", "")
     if args.slug:
         releases = [r for r in releases if r.get("slug") == args.slug]
         if not releases:
