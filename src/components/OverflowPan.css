@@ -1,0 +1,9 @@
+.overflow-pan-active {
+  text-overflow: clip !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .overflow-pan-active {
+    text-overflow: ellipsis !important;
+  }
+}
