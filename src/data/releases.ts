@@ -1,4 +1,4 @@
-import releaseData from "./releases.json";
+import releaseRegistry from "./releases.json";
 
 export type ReleaseStatus = "current" | "archived";
 
@@ -28,12 +28,46 @@ export type RhenRelease = {
   next: string;
 };
 
-export const rhenReleases = releaseData as RhenRelease[];
+type RhenReleaseRegistry = {
+  schemaVersion: number;
+  currentSlug: string;
+  releases: RhenRelease[];
+};
 
-export function latestRhenRelease() {
-  return rhenReleases[0];
+export const rhenReleaseRegistry = releaseRegistry as RhenReleaseRegistry;
+export const rhenReleases = rhenReleaseRegistry.releases;
+
+export function currentRhenRelease() {
+  const release = rhenReleases.find((item) => item.slug === rhenReleaseRegistry.currentSlug);
+  if (!release) throw new Error("RHEN current release pointer is invalid.");
+  return release;
+}
+
+export const latestRhenRelease = currentRhenRelease;
+
+export function archivedRhenReleases() {
+  const current = currentRhenRelease();
+  return rhenReleases.filter((release) => release.slug !== current.slug);
 }
 
 export function rhenReleaseBySlug(slug?: string) {
   return rhenReleases.find((release) => release.slug === slug);
+}
+
+export function nextPatchVersion(version: string) {
+  const match = /^(\d+)\.(\d+)\.(\d+)$/.exec(version);
+  if (!match) return version + " + patch";
+  return [match[1], match[2], String(Number(match[3]) + 1)].join(".");
+}
+
+export function nextMinorVersion(version: string) {
+  const match = /^(\d+)\.(\d+)\.(\d+)$/.exec(version);
+  if (!match) return "next minor";
+  return [match[1], String(Number(match[2]) + 1), "0"].join(".");
+}
+
+export function nextMajorVersion(version: string) {
+  const match = /^(\d+)\.(\d+)\.(\d+)$/.exec(version);
+  if (!match) return "next major";
+  return [String(Number(match[1]) + 1), "0", "0"].join(".");
 }
