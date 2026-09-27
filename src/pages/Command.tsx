@@ -365,8 +365,22 @@ export default function Command() {
             </article>
 
             <article id="research" className="command-panel command-evidence-panel command-view-research command-panel-research">
-              <header><div><span>RESEARCH STATE</span><strong>{text(nextResearch?.subject, "No next experiment recorded")}</strong></div><small>{text(nextResearch?.status)}</small></header>
+              <header><div><span>RESEARCH STATE</span><strong>{readinessState}</strong></div><small>{gptReady ? "GPT READY" : "GPT HELD"}</small></header>
+              <div className="command-metric-grid compact">
+                <div><span>READINESS</span><strong>{readinessState}</strong></div>
+                <div><span>GPT NOW</span><strong>{gptReady ? "RUN" : "HOLD"}</strong></div>
+                <div><span>BLOCKERS</span><strong>{researchReadiness?.blocker_count ?? "—"}</strong></div>
+                <div><span>STRATEGY QUESTIONS</span><strong>{researchReadiness?.strategy_question_count ?? "—"}</strong></div>
+                <div><span>EVIDENCE SESSION</span><strong>{text(researchReadiness?.trigger_reference)}</strong></div>
+                <div><span>EVIDENCE CUTOFF</span><strong>{clockTime(researchReadiness?.evidence_cutoff)}</strong></div>
+              </div>
+              <div className="command-warning-list">
+                {readinessBlockers.length ? readinessBlockers.map((blocker, index) => (
+                  <p key={index}><b>{text(blocker.scope).toUpperCase()} / {text(blocker.code).toUpperCase()}</b> · {arrayText(blocker.reason_codes)}</p>
+                )) : <p>{gptReady ? "No deterministic blocker is preventing semantic review." : "No blocker details are currently available."}</p>}
+              </div>
               <div className="command-summary-block">
+                <span>NEXT EXPERIMENT</span>
                 <span>NEXT EXPERIMENT</span>
                 <strong>{text(nextResearch?.conclusion, "No canonical next-direction decision.")}</strong>
                 <p>Experiment execution is not available from Command in this task.</p>
