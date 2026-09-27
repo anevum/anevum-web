@@ -217,7 +217,13 @@ export type ResearchReadiness = {
   gpt_would_run_now?: boolean;
   blocker_count?: number;
   blockers?: ResearchReadinessBlocker[];
+  limitation_count?: number;
+  limitations?: ResearchReadinessBlocker[];
+  monitor_count?: number;
+  monitors?: ResearchReadinessBlocker[];
   strategy_question_count?: number;
+  ready_strategy_question_count?: number;
+  waiting_strategy_question_count?: number;
   trigger_reference?: string | null;
   evidence_cutoff?: string | null;
   read_only?: boolean;
