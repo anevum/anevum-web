@@ -1,80 +1,248 @@
-[
-  {
-    "slug": "rhen-0-8-2-aurora",
-    "version": "0.8.2",
-    "codename": "AURORA",
-    "lifecycle": "Operational Beta I",
-    "releaseClass": "First Live Evidence Release",
-    "date": "2026-09-27",
-    "status": "current",
-    "headline": "From construction to observation.",
-    "abstract": "AURORA marks the point where RHEN stops being primarily a system under construction and becomes a system expected to produce controlled, reconstructable live evidence. The live executor remains deterministic while evidence, reporting, research, and pre-open observation are separated into bounded layers.",
-    "thesis": "AURORA's first responsibility is to prove that RHEN can operate safely, leave a complete evidence trail, and distinguish operational defects from strategy outcomes.",
-    "sourceCommit": "a5ef17a101430c1a179850f32223313bc9df8bb6",
-    "productionDeployment": "ef8209c0-4cd6-427e-b6a5-2e1fba4b81f5",
-    "shadowDeployment": "d408a930-6bb9-4f3b-b353-a832633f9cfd",
-    "preopenDeployment": "e3460644-a8a2-4fea-b549-941705cf5340",
-    "activeStrategy": "LIVE-2026-09-25-003 / rolling_momentum_vwap",
-    "pdfPath": "/releases/RHEN-0.8.2-AURORA.pdf",
-    "badges": ["LIVE EXECUTOR", "SHADOW RESEARCH", "PROTECTED STAGES"],
-    "capabilities": [
-      {"label":"EXECUTION","title":"Guarded deterministic live trading","body":"RHEN owns production decisions, risk gates, sizing, reconciliation, order submission, and position management. Research has no production execution authority."},
-      {"label":"EVIDENCE","title":"Canonical decision and outcome telemetry","body":"Runs, cycles, candidates, rejection reasons, order intents, fills, exits, incidents, provenance, forward outcomes, and MFE/MAE can be preserved for reconstruction."},
-      {"label":"REPORTING","title":"Daily and weekly operating research","body":"Post-close and weekly reports expose candidate funnels, consistency warnings, evidence gaps, outcome summaries, and durable research questions."},
-      {"label":"RESEARCH","title":"Research Agent proposal and freeze foundation","body":"Deterministic proposal checks, availability-only feasibility, methodology freeze, exact authorization, and protected-stage workflow controls exist without an active LLM runtime."},
-      {"label":"PRE-OPEN","title":"Shadow market-state observation","body":"Pre-Open State v1 records context before the U.S. session and realized outcomes later. It is shadow-only and has no live-order authority."},
-      {"label":"SAFETY","title":"Research cannot silently become production","body":"Development, validation, and holdout openings require exact durable authorization. A semantic recommendation alone cannot change experiment workflow state."}
-    ],
-    "architecture": [
-      {"label":"01","title":"Broker + market data","body":"Account, order, position, clock, and configured market-data state."},
-      {"label":"02","title":"Live executor","body":"Exclusive production execution, risk, sizing, reconciliation, and position authority."},
-      {"label":"03","title":"Canonical evidence","body":"Durable telemetry that can reconstruct why an opportunity was accepted, rejected, or exited."},
-      {"label":"04","title":"Reporting","body":"Daily and weekly synthesis of operating state, evidence quality, and research questions."},
-      {"label":"05","title":"Research Agent foundation","body":"Bounded experiment design and authorization infrastructure, still dormant as a runtime agent."},
-      {"label":"06","title":"Pre-Open State v1","body":"Independent shadow collection of pre-open context and later outcomes."}
-    ],
-    "verification": [
-      {"label":"SOURCE","value":"a5ef17a1","body":"Canonical release source commit."},
-      {"label":"STRATEGY","value":"LIVE-2026-09-25-003","body":"Active live strategy identity at release freeze."},
-      {"label":"INCIDENTS","value":"0 unresolved","body":"No unresolved operational incidents at the Sunday release freeze."},
-      {"label":"STAGE TWO","value":"76 / 255 tests","body":"Focused Research Agent tests and full implementation-baseline suite reported passing."}
-    ],
-    "limitations": [
-      {"title":"Small clean live sample","body":"The current architecture has not yet accumulated a long cross-session evidence history. One session cannot establish profitability or robustness."},
-      {"title":"IEX feed constraints","body":"The configured basic equity feed is not consolidated SIP coverage. Research preserves feed identity instead of silently substituting another source."},
-      {"title":"Research Agent runtime not active","body":"No LLM provider, research-agent Railway service, scheduler, or autonomous protected-stage opening exists in AURORA."},
-      {"title":"No promoted Pre-Open predictive model","body":"The pre-open layer collects evidence only. No released predictive model influences live execution."}
-    ],
-    "changelog": [
-      {"pr":1,"title":"Replace SMA bot with SPY opening-range VWAP strategy"},
-      {"pr":3,"title":"Add multi-symbol opening-range scanner"},
-      {"pr":4,"title":"Add RHENLINK-protected Command trading controls"},
-      {"pr":5,"title":"Add aggressive rolling intraday trading mode"},
-      {"pr":6,"title":"Fix fractional live execution and add decision telemetry"},
-      {"pr":7,"title":"Live Test 002: bounded concurrent trading"},
-      {"pr":12,"title":"Add durable trading event persistence"},
-      {"pr":13,"title":"Canonical broker ledger and reconciliation"},
-      {"pr":14,"title":"Startup reconciliation, duplicate-order recovery, and orphan detection"},
-      {"pr":15,"title":"Protect ambiguous exit submissions from duplicate sells"},
-      {"pr":16,"title":"Add equity-aware small-capital allocator"},
-      {"pr":18,"title":"Add quality-ranked correlation-aware allocation"},
-      {"pr":19,"title":"Add isolated historical replay laboratory"},
-      {"pr":20,"title":"Add multi-period strategy tournament and leaderboard"},
-      {"pr":21,"title":"Add minimum opportunity quality gate"},
-      {"pr":22,"title":"Replace fixed trade counts with portfolio risk capacity"},
-      {"pr":23,"title":"Add self-refreshing dynamic equity universe"},
-      {"pr":24,"title":"Strategy v3: regime-aware momentum and owned trade attribution"},
-      {"pr":27,"title":"Exit Engine v2: protective stops, profit capture, thesis exits"},
-      {"pr":37,"title":"Add deterministic post-close improvement reporting"},
-      {"pr":38,"title":"Repair canonical RHEN runtime provenance"},
-      {"pr":39,"title":"Activate RHEN canonical decision telemetry"},
-      {"pr":40,"title":"Close out RHEN canonical telemetry source reconciliation"},
-      {"pr":41,"title":"Add canonical RHEN weekly operating and research report"},
-      {"pr":43,"title":"Add RHEN post-event outcome and replay evidence"},
-      {"pr":44,"title":"Add deterministic Research Agent v1 foundation"},
-      {"pr":47,"title":"Add RHEN Pre-Open State v1 shadow research layer"},
-      {"pr":48,"title":"Add Research Agent proposal and freeze foundation"}
-    ],
-    "next": "The next named release should correspond to a real capability boundary. Research Agent activation is a likely 0.9.0-class milestone; ordinary fixes remain patch releases under AURORA."
-  }
-]
+{
+  "schemaVersion": 1,
+  "currentSlug": "rhen-0-8-2-aurora",
+  "releases": [
+    {
+      "slug": "rhen-0-8-2-aurora",
+      "version": "0.8.2",
+      "codename": "AURORA",
+      "lifecycle": "Operational Beta I",
+      "releaseClass": "First Live Evidence Release",
+      "date": "2026-09-27",
+      "status": "current",
+      "headline": "From construction to observation.",
+      "abstract": "AURORA marks the point where RHEN stops being primarily a system under construction and becomes a system expected to produce controlled, reconstructable live evidence. The live executor remains deterministic while evidence, reporting, research, and pre-open observation are separated into bounded layers.",
+      "thesis": "AURORA's first responsibility is to prove that RHEN can operate safely, leave a complete evidence trail, and distinguish operational defects from strategy outcomes.",
+      "sourceCommit": "a5ef17a101430c1a179850f32223313bc9df8bb6",
+      "productionDeployment": "ef8209c0-4cd6-427e-b6a5-2e1fba4b81f5",
+      "shadowDeployment": "d408a930-6bb9-4f3b-b353-a832633f9cfd",
+      "preopenDeployment": "e3460644-a8a2-4fea-b549-941705cf5340",
+      "activeStrategy": "LIVE-2026-09-25-003 / rolling_momentum_vwap",
+      "pdfPath": "/releases/RHEN-0.8.2-AURORA.pdf",
+      "badges": [
+        "LIVE EXECUTOR",
+        "SHADOW RESEARCH",
+        "PROTECTED STAGES"
+      ],
+      "capabilities": [
+        {
+          "label": "EXECUTION",
+          "title": "Guarded deterministic live trading",
+          "body": "RHEN owns production decisions, risk gates, sizing, reconciliation, order submission, and position management. Research has no production execution authority."
+        },
+        {
+          "label": "EVIDENCE",
+          "title": "Canonical decision and outcome telemetry",
+          "body": "Runs, cycles, candidates, rejection reasons, order intents, fills, exits, incidents, provenance, forward outcomes, and MFE/MAE can be preserved for reconstruction."
+        },
+        {
+          "label": "REPORTING",
+          "title": "Daily and weekly operating research",
+          "body": "Post-close and weekly reports expose candidate funnels, consistency warnings, evidence gaps, outcome summaries, and durable research questions."
+        },
+        {
+          "label": "RESEARCH",
+          "title": "Research Agent proposal and freeze foundation",
+          "body": "Deterministic proposal checks, availability-only feasibility, methodology freeze, exact authorization, and protected-stage workflow controls exist without an active LLM runtime."
+        },
+        {
+          "label": "PRE-OPEN",
+          "title": "Shadow market-state observation",
+          "body": "Pre-Open State v1 records context before the U.S. session and realized outcomes later. It is shadow-only and has no live-order authority."
+        },
+        {
+          "label": "SAFETY",
+          "title": "Research cannot silently become production",
+          "body": "Development, validation, and holdout openings require exact durable authorization. A semantic recommendation alone cannot change experiment workflow state."
+        }
+      ],
+      "architecture": [
+        {
+          "label": "01",
+          "title": "Broker + market data",
+          "body": "Account, order, position, clock, and configured market-data state."
+        },
+        {
+          "label": "02",
+          "title": "Live executor",
+          "body": "Exclusive production execution, risk, sizing, reconciliation, and position authority."
+        },
+        {
+          "label": "03",
+          "title": "Canonical evidence",
+          "body": "Durable telemetry that can reconstruct why an opportunity was accepted, rejected, or exited."
+        },
+        {
+          "label": "04",
+          "title": "Reporting",
+          "body": "Daily and weekly synthesis of operating state, evidence quality, and research questions."
+        },
+        {
+          "label": "05",
+          "title": "Research Agent foundation",
+          "body": "Bounded experiment design and authorization infrastructure, still dormant as a runtime agent."
+        },
+        {
+          "label": "06",
+          "title": "Pre-Open State v1",
+          "body": "Independent shadow collection of pre-open context and later outcomes."
+        }
+      ],
+      "verification": [
+        {
+          "label": "SOURCE",
+          "value": "a5ef17a1",
+          "body": "Canonical release source commit."
+        },
+        {
+          "label": "STRATEGY",
+          "value": "LIVE-2026-09-25-003",
+          "body": "Active live strategy identity at release freeze."
+        },
+        {
+          "label": "INCIDENTS",
+          "value": "0 unresolved",
+          "body": "No unresolved operational incidents at the Sunday release freeze."
+        },
+        {
+          "label": "STAGE TWO",
+          "value": "76 / 255 tests",
+          "body": "Focused Research Agent tests and full implementation-baseline suite reported passing."
+        }
+      ],
+      "limitations": [
+        {
+          "title": "Small clean live sample",
+          "body": "The current architecture has not yet accumulated a long cross-session evidence history. One session cannot establish profitability or robustness."
+        },
+        {
+          "title": "IEX feed constraints",
+          "body": "The configured basic equity feed is not consolidated SIP coverage. Research preserves feed identity instead of silently substituting another source."
+        },
+        {
+          "title": "Research Agent runtime not active",
+          "body": "No LLM provider, research-agent Railway service, scheduler, or autonomous protected-stage opening exists in AURORA."
+        },
+        {
+          "title": "No promoted Pre-Open predictive model",
+          "body": "The pre-open layer collects evidence only. No released predictive model influences live execution."
+        }
+      ],
+      "changelog": [
+        {
+          "pr": 1,
+          "title": "Replace SMA bot with SPY opening-range VWAP strategy"
+        },
+        {
+          "pr": 3,
+          "title": "Add multi-symbol opening-range scanner"
+        },
+        {
+          "pr": 4,
+          "title": "Add RHENLINK-protected Command trading controls"
+        },
+        {
+          "pr": 5,
+          "title": "Add aggressive rolling intraday trading mode"
+        },
+        {
+          "pr": 6,
+          "title": "Fix fractional live execution and add decision telemetry"
+        },
+        {
+          "pr": 7,
+          "title": "Live Test 002: bounded concurrent trading"
+        },
+        {
+          "pr": 12,
+          "title": "Add durable trading event persistence"
+        },
+        {
+          "pr": 13,
+          "title": "Canonical broker ledger and reconciliation"
+        },
+        {
+          "pr": 14,
+          "title": "Startup reconciliation, duplicate-order recovery, and orphan detection"
+        },
+        {
+          "pr": 15,
+          "title": "Protect ambiguous exit submissions from duplicate sells"
+        },
+        {
+          "pr": 16,
+          "title": "Add equity-aware small-capital allocator"
+        },
+        {
+          "pr": 18,
+          "title": "Add quality-ranked correlation-aware allocation"
+        },
+        {
+          "pr": 19,
+          "title": "Add isolated historical replay laboratory"
+        },
+        {
+          "pr": 20,
+          "title": "Add multi-period strategy tournament and leaderboard"
+        },
+        {
+          "pr": 21,
+          "title": "Add minimum opportunity quality gate"
+        },
+        {
+          "pr": 22,
+          "title": "Replace fixed trade counts with portfolio risk capacity"
+        },
+        {
+          "pr": 23,
+          "title": "Add self-refreshing dynamic equity universe"
+        },
+        {
+          "pr": 24,
+          "title": "Strategy v3: regime-aware momentum and owned trade attribution"
+        },
+        {
+          "pr": 27,
+          "title": "Exit Engine v2: protective stops, profit capture, thesis exits"
+        },
+        {
+          "pr": 37,
+          "title": "Add deterministic post-close improvement reporting"
+        },
+        {
+          "pr": 38,
+          "title": "Repair canonical RHEN runtime provenance"
+        },
+        {
+          "pr": 39,
+          "title": "Activate RHEN canonical decision telemetry"
+        },
+        {
+          "pr": 40,
+          "title": "Close out RHEN canonical telemetry source reconciliation"
+        },
+        {
+          "pr": 41,
+          "title": "Add canonical RHEN weekly operating and research report"
+        },
+        {
+          "pr": 43,
+          "title": "Add RHEN post-event outcome and replay evidence"
+        },
+        {
+          "pr": 44,
+          "title": "Add deterministic Research Agent v1 foundation"
+        },
+        {
+          "pr": 47,
+          "title": "Add RHEN Pre-Open State v1 shadow research layer"
+        },
+        {
+          "pr": 48,
+          "title": "Add Research Agent proposal and freeze foundation"
+        }
+      ],
+      "next": "The next named release should correspond to a real capability boundary. Research Agent activation is a likely 0.9.0-class milestone; ordinary fixes remain patch releases under AURORA."
+    }
+  ]
+}
