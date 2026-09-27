@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "currentSlug": "rhen-0-8-2-aurora",
   "releases": [
     {
@@ -9,7 +9,6 @@
       "lifecycle": "Operational Beta I",
       "releaseClass": "First Live Evidence Release",
       "date": "2026-09-27",
-      "status": "current",
       "headline": "From construction to observation.",
       "abstract": "AURORA marks the point where RHEN stops being primarily a system under construction and becomes a system expected to produce controlled, reconstructable live evidence. The live executor remains deterministic while evidence, reporting, research, and pre-open observation are separated into bounded layers.",
       "thesis": "AURORA's first responsibility is to prove that RHEN can operate safely, leave a complete evidence trail, and distinguish operational defects from strategy outcomes.",
