@@ -377,6 +377,7 @@ export default function Command() {
                 <div><span>MONITORS</span><strong>{researchReadiness?.monitor_count ?? "—"}</strong></div>
                 <div><span>READY QUESTIONS</span><strong>{researchReadiness?.ready_strategy_question_count ?? "—"}</strong></div>
                 <div><span>WAITING QUESTIONS</span><strong>{researchReadiness?.waiting_strategy_question_count ?? "—"}</strong></div>
+                <div><span>WAITING ON</span><strong>{arrayText(researchReadiness?.waiting_requirements)}</strong></div>
                 <div><span>EVIDENCE SESSION</span><strong>{text(researchReadiness?.trigger_reference)}</strong></div>
                 <div><span>EVIDENCE CUTOFF</span><strong>{clockTime(researchReadiness?.evidence_cutoff)}</strong></div>
               </div>
