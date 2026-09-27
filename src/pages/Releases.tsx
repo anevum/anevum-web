@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import RhenMark, { RhenSectionLabel } from "../components/RhenMark";
 import {
   archivedRhenReleases,
   currentRhenRelease,
@@ -20,13 +21,13 @@ export default function Releases() {
     <section className="release-index docs-page">
       <header className="release-index-hero">
         <div>
-          <p className="release-eyebrow">RHEN / RELEASE PROGRAM</p>
+          <RhenSectionLabel context="RELEASE PROGRAM" />
           <h1>Releases</h1>
           <p>
             Named system milestones that preserve what RHEN was, what changed, what was verified, what remained unknown, and why the next version exists.
           </p>
         </div>
-        <div className="release-index-mark" aria-hidden="true"><span>R</span><i /></div>
+        <div className="release-index-mark" aria-hidden="true"><RhenMark decorative /></div>
       </header>
 
       <Link className="release-feature" to={`/releases/${current.slug}`}>

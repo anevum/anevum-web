@@ -1,4 +1,5 @@
 import { Link, Navigate, useParams } from "react-router-dom";
+import RhenMark from "../components/RhenMark";
 import { rhenReleaseBySlug } from "../data/releases";
 import "../styles/releases.css";
 
@@ -17,7 +18,7 @@ export default function ReleaseDetail() {
       <header className="release-hero">
         <div className="release-hero-copy">
           <Link className="release-back" to="/releases">RHEN / RELEASES</Link>
-          <div className="release-version">RHEN {release.version} / {release.releaseClass}</div>
+          <div className="release-hero-rhen"><RhenMark decorative /><div className="release-version">RHEN {release.version} / {release.releaseClass}</div></div>
           <h1>{release.codename}</h1>
           <p>{release.abstract}</p>
           <div className="release-badges">{release.badges.map((badge) => <span key={badge}>{badge}</span>)}</div>

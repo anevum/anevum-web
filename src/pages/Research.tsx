@@ -1,5 +1,6 @@
 import { AnimatePresence, motion } from "motion/react";
 import { useState } from "react";
+import { RhenSectionLabel } from "../components/RhenMark";
 import { useLiveTrading } from "../hooks/useLiveTrading";
 
 type ResearchTab = "state" | "completed" | "evidence" | "questions" | "limits";
@@ -48,7 +49,7 @@ export default function Research() {
     <section className="compact-page workspace-screen story-workspace research-story">
       <header className="workspace-heading story-heading">
         <div>
-          <p className="compact-eyebrow">RHEN / RESEARCH</p>
+          <RhenSectionLabel context="RESEARCH" />
           <h1>Research</h1>
           <p className="story-heading-copy">
             Production keeps running its active strategy. Research preserves failed ideas, evidence gaps, open questions, and the next experiment without pretending an unrun experiment has results.

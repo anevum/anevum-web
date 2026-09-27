@@ -1,5 +1,6 @@
 import { AnimatePresence, motion } from "motion/react";
 import { useMemo, useState } from "react";
+import { RhenSectionLabel } from "../components/RhenMark";
 import { useLiveTrading } from "../hooks/useLiveTrading";
 
 type PerformanceTab = "record" | "method" | "path" | "boundary";
@@ -107,7 +108,7 @@ export default function Performance() {
     <section className="compact-page workspace-screen story-workspace performance-workspace">
       <header className="workspace-heading story-heading">
         <div>
-          <p className="compact-eyebrow">RHEN / LIVE PERFORMANCE EVIDENCE</p>
+          <RhenSectionLabel context="LIVE PERFORMANCE EVIDENCE" />
           <h1>Performance</h1>
           <p className="story-heading-copy">
             A sanitized record derived from the live broker ledger. Losses remain in the record.

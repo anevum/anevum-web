@@ -1,0 +1,340 @@
+/* RHEN identity ---------------------------------------------------------
+ * RHEN is ANEVUM's autonomous trading and research system.
+ * Brand system: Deep Space #0A1224, Navy Core #0F274A,
+ * Electric Blue #1E4FA7, Luminance #6FD1FF.
+ */
+
+:root{
+  --rhen-deep-space:#0A1224;
+  --rhen-navy:#0F274A;
+  --rhen-electric:#1E4FA7;
+  --rhen-luminance:#6FD1FF;
+  --rhen-text:#C9D7EA;
+  --rhen-muted:#6B7B93;
+  --rhen-surface:#1A2436;
+  --rhen-panel:#0E1626;
+}
+
+.rhen-mark{
+  width:56px;
+  height:auto;
+  overflow:visible;
+  color:var(--rhen-luminance);
+  filter:drop-shadow(0 0 12px rgba(111,209,255,.18));
+}
+.rhen-mark path{
+  fill:none;
+  stroke:currentColor;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+  vector-effect:non-scaling-stroke;
+}
+.rhen-mark .rhen-ring{stroke-width:1.45;opacity:.92}
+.rhen-mark .rhen-axis{stroke-width:1.3;opacity:.95}
+.rhen-mark .rhen-wing{stroke-width:1.15;opacity:.88}
+.rhen-mark .rhen-inner{stroke-width:.82;opacity:.7}
+.rhen-mark .rhen-horizon{stroke-width:.82;opacity:.58}
+.rhen-mark .rhen-star path{stroke-width:1;opacity:.95}
+.rhen-mark .rhen-star path:last-child{fill:currentColor;stroke:none;opacity:.9}
+
+.rhen-section-label{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  min-height:34px;
+  margin-bottom:6px;
+}
+.rhen-section-label .rhen-section-mark{
+  width:29px;
+  flex:0 0 29px;
+  color:#87d4ff;
+  filter:drop-shadow(0 0 10px rgba(111,209,255,.15));
+}
+.rhen-section-label>div{display:grid;gap:3px}
+.rhen-section-label span{
+  color:#7899ad;
+  font-size:.46rem;
+  font-weight:760;
+  letter-spacing:.17em;
+}
+.rhen-section-label small{
+  color:#445d70;
+  font-size:.31rem;
+  font-weight:650;
+  letter-spacing:.12em;
+}
+
+/* ANEVUM -> RHEN homepage reveal */
+.anevum-rhen-reveal{
+  position:relative;
+  width:min(100%,720px);
+  min-height:355px;
+  display:grid;
+  justify-items:center;
+  align-content:center;
+  text-align:center;
+  isolation:isolate;
+}
+.anevum-rhen-reveal:before{
+  content:"";
+  position:absolute;
+  z-index:-2;
+  left:50%;
+  bottom:90px;
+  width:min(46vw,580px);
+  height:210px;
+  transform:translateX(-50%);
+  border-radius:50%;
+  background:
+    radial-gradient(ellipse at 50% 100%,rgba(30,79,167,.22),transparent 55%),
+    radial-gradient(ellipse at 50% 100%,rgba(111,209,255,.09),transparent 70%);
+  filter:blur(8px);
+  opacity:.78;
+}
+.anevum-presents{
+  display:flex;
+  align-items:center;
+  gap:9px;
+  color:#9fb0bc;
+  opacity:0;
+  animation:rhenFadeUp .55s .08s ease forwards;
+}
+.anevum-presents .anevum-mark{width:23px;height:23px;color:#cbd7df}
+.anevum-presents>span{
+  color:#d0d9df;
+  font-size:.58rem;
+  font-weight:760;
+  letter-spacing:.3em;
+}
+.anevum-presents>i{
+  width:34px;
+  height:1px;
+  background:linear-gradient(90deg,rgba(201,215,234,.08),rgba(111,209,255,.55));
+}
+.anevum-presents>small{
+  color:#587084;
+  font-size:.34rem;
+  font-weight:720;
+  letter-spacing:.2em;
+}
+
+.rhen-hero-sigil{
+  position:relative;
+  width:250px;
+  height:178px;
+  margin:10px 0 -3px;
+  display:grid;
+  place-items:center;
+}
+.rhen-hero-sigil:before{
+  content:"";
+  position:absolute;
+  left:50%;
+  bottom:18px;
+  width:360px;
+  height:74px;
+  transform:translateX(-50%);
+  border-top:1px solid rgba(111,209,255,.34);
+  border-radius:50% 50% 0 0;
+  background:radial-gradient(ellipse at 50% 0,rgba(30,79,167,.2),transparent 65%);
+  box-shadow:0 -8px 24px rgba(30,79,167,.09);
+  opacity:0;
+  animation:rhenHorizon .9s .38s ease forwards;
+}
+.rhen-hero-sigil:after{
+  content:"";
+  position:absolute;
+  left:50%;
+  top:4px;
+  width:1px;
+  height:150px;
+  transform:translateX(-50%) scaleY(0);
+  transform-origin:bottom;
+  background:linear-gradient(180deg,rgba(111,209,255,0),rgba(111,209,255,.95) 45%,rgba(111,209,255,.18));
+  box-shadow:0 0 18px rgba(111,209,255,.65);
+  animation:rhenBeam .85s .34s cubic-bezier(.2,.8,.2,1) forwards;
+}
+.rhen-hero-sigil .rhen-mark{
+  width:205px;
+  position:relative;
+  z-index:2;
+  color:#d8f1ff;
+  filter:
+    drop-shadow(0 0 8px rgba(111,209,255,.38))
+    drop-shadow(0 0 28px rgba(30,79,167,.22));
+}
+.rhen-hero-sigil .rhen-ring,
+.rhen-hero-sigil .rhen-wing,
+.rhen-hero-sigil .rhen-inner,
+.rhen-hero-sigil .rhen-horizon{
+  stroke-dasharray:260;
+  stroke-dashoffset:260;
+  animation:rhenDraw 1.05s .24s cubic-bezier(.35,.65,.25,1) forwards;
+}
+.rhen-hero-sigil .rhen-axis{
+  stroke-dasharray:110;
+  stroke-dashoffset:110;
+  animation:rhenDraw .8s .45s ease forwards;
+}
+.rhen-hero-sigil .rhen-star{
+  opacity:0;
+  transform-origin:60px 15px;
+  animation:rhenStar .7s .86s ease forwards;
+}
+
+.rhen-wordmark{
+  margin-left:.42em;
+  color:#e7f2f8;
+  font-size:clamp(2rem,3.7vw,3.25rem);
+  font-weight:430;
+  line-height:1;
+  letter-spacing:.42em;
+  text-indent:.42em;
+  text-shadow:0 0 24px rgba(111,209,255,.12);
+  opacity:0;
+  transform:translateY(8px);
+  animation:rhenFadeUp .55s .78s ease forwards;
+}
+.rhen-tagline{
+  margin-top:13px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:11px;
+  color:#7895aa;
+  font-size:.42rem;
+  font-weight:680;
+  letter-spacing:.22em;
+  opacity:0;
+  animation:rhenFadeUp .55s .94s ease forwards;
+}
+.rhen-tagline i{color:#4f82a6;font-style:normal}
+.rhen-positioning{
+  max-width:610px;
+  margin:19px auto 0;
+  color:#7f8f9a;
+  font-size:clamp(.72rem,.95vw,.88rem);
+  line-height:1.62;
+  opacity:0;
+  animation:rhenFadeUp .55s 1.06s ease forwards;
+}
+.anevum-home-principles{
+  opacity:0;
+  animation:rhenFadeUp .55s 1.18s ease forwards;
+}
+.anevum-home-copy>.landing-description{
+  opacity:0;
+  animation:rhenFadeUp .55s 1.08s ease forwards;
+}
+
+/* RHEN marks in product surfaces */
+.release-index-mark .rhen-mark{
+  width:108px;
+  color:#a5dcfa;
+}
+.release-hero-rhen{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin-bottom:17px;
+}
+.release-hero-rhen .rhen-mark{width:38px;color:#93d7fb}
+.release-hero-rhen .release-version{margin:0}
+
+.machine-core .rhen-mark{
+  width:68px;
+  color:#a3ddfb;
+  filter:drop-shadow(0 0 16px rgba(111,209,255,.26));
+}
+.machine-core>.rhen-core-word{
+  margin-top:3px;
+  color:#d6e7f0;
+  font-size:.74rem;
+  font-weight:600;
+  letter-spacing:.25em;
+  text-indent:.25em;
+}
+
+.command-rhen-lockup{
+  display:flex!important;
+  align-items:center;
+  gap:6px;
+  color:#7da7c1!important;
+  font-size:inherit!important;
+  font-weight:inherit!important;
+  letter-spacing:normal!important;
+}
+.command-rhen-lockup .rhen-mark{
+  width:20px;
+  flex:0 0 20px;
+  color:#86c9ec;
+}
+.command-rhen-lockup strong{
+  color:#678397;
+  font-size:.46rem;
+  font-weight:700;
+  letter-spacing:.13em;
+  white-space:nowrap;
+}
+.command-gate .rhen-mark{
+  width:76px;
+  margin-bottom:22px;
+  color:#8ed5fb;
+  filter:drop-shadow(0 0 28px rgba(111,209,255,.2));
+}
+
+@keyframes rhenDraw{to{stroke-dashoffset:0}}
+@keyframes rhenBeam{to{transform:translateX(-50%) scaleY(1)}}
+@keyframes rhenHorizon{to{opacity:1}}
+@keyframes rhenStar{
+  0%{opacity:0;transform:scale(.5)}
+  65%{opacity:1;transform:scale(1.4)}
+  100%{opacity:1;transform:scale(1)}
+}
+@keyframes rhenFadeUp{
+  to{opacity:1;transform:translateY(0)}
+}
+
+@media(max-width:900px){
+  .anevum-rhen-reveal{min-height:320px}
+  .rhen-hero-sigil{width:220px;height:155px}
+  .rhen-hero-sigil .rhen-mark{width:178px}
+  .rhen-hero-sigil:before{width:300px}
+}
+@media(max-width:640px){
+  .rhen-section-label small{display:none}
+  .rhen-section-label{gap:8px}
+  .rhen-section-label .rhen-section-mark{width:25px;flex-basis:25px}
+  .anevum-rhen-reveal{min-height:300px}
+  .anevum-presents>i{width:24px}
+  .anevum-presents>small{font-size:.3rem}
+  .rhen-hero-sigil{width:190px;height:138px;margin-top:5px}
+  .rhen-hero-sigil .rhen-mark{width:160px}
+  .rhen-hero-sigil:before{width:250px;height:58px}
+  .rhen-wordmark{font-size:2.05rem;letter-spacing:.32em;text-indent:.32em}
+  .rhen-tagline{gap:7px;font-size:.34rem;letter-spacing:.14em}
+  .rhen-positioning{font-size:.68rem}
+  .command-rhen-lockup strong{display:none}
+}
+@media(prefers-reduced-motion:reduce){
+  .anevum-presents,
+  .rhen-wordmark,
+  .rhen-tagline,
+  .rhen-positioning,
+  .anevum-home-principles,
+  .anevum-home-copy>.landing-description,
+  .rhen-hero-sigil:before,
+  .rhen-hero-sigil:after,
+  .rhen-hero-sigil .rhen-ring,
+  .rhen-hero-sigil .rhen-wing,
+  .rhen-hero-sigil .rhen-inner,
+  .rhen-hero-sigil .rhen-horizon,
+  .rhen-hero-sigil .rhen-axis,
+  .rhen-hero-sigil .rhen-star{
+    animation:none!important;
+    opacity:1!important;
+    transform:none!important;
+    stroke-dashoffset:0!important;
+  }
+  .rhen-hero-sigil:after{transform:translateX(-50%) scaleY(1)!important}
+}
