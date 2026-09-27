@@ -4,6 +4,7 @@ import { BrowserRouter } from "react-router-dom";
 import App from "./App";
 import { AuthProvider } from "./auth/AuthProvider";
 import "./styles/global.css";
+import "./styles/site-v2.css";
 import "./styles/performance.css";
 import "./styles/command.css";
 import "./styles/command-v2.css";
