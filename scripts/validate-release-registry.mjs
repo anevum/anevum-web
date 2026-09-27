@@ -122,6 +122,21 @@ for (const file of files) {
   }
 }
 
+const liveStateSurfaces = [
+  "src/pages/Home.tsx",
+  "src/pages/Live.tsx",
+  "src/pages/Performance.tsx",
+  "src/pages/System.tsx",
+  "src/pages/Research.tsx",
+  "src/pages/Command.tsx"
+];
+for (const file of liveStateSurfaces) {
+  const source = fs.readFileSync(path.join(ROOT, file), "utf8");
+  if (/from\s+["'][^"']*data\/releases["']/.test(source)) {
+    errors.push("Live current-state surface must use telemetry, not frozen release snapshots: " + file);
+  }
+}
+
 if (process.env.GITHUB_EVENT_NAME === "push" && process.env.GITHUB_REF_NAME?.startsWith("rhen-v")) {
   const tagVersion = process.env.GITHUB_REF_NAME.slice("rhen-v".length);
   if (!versions.has(tagVersion)) errors.push("Publication tag has no matching registered release version.");
