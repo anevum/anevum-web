@@ -23,3 +23,30 @@
 @media(max-width:650px){.release-index,.release-detail{padding-top:84px}.release-index-hero{min-height:250px}.release-index-hero h1{font-size:3.8rem}.release-feature{margin-top:24px;margin-bottom:68px}.release-feature-title h2{font-size:3.7rem}.release-capability-grid,.release-verification-grid,.release-changelog{grid-template-columns:1fr}.release-architecture article{grid-template-columns:38px 1fr}.release-architecture p{grid-column:2}.release-archive-row{grid-template-columns:90px 1fr}.release-archive-row small{display:none}.release-hero{min-height:510px}.release-hero h1{font-size:4.8rem}.release-thesis{padding:64px 0 74px}.release-standard,.release-archive,.release-section{padding:56px 0}}
 .record-release-card a{display:inline-block;margin-top:18px;color:#8cb6d1;font-size:.44rem;font-weight:760;letter-spacing:.1em;text-transform:uppercase}
 .record-release-card a:hover{color:#c6dce9}
+
+
+/* Release pages use the same bounded ANEVUM viewport. The document does not
+ * scroll; release content scrolls inside the public stage. */
+.release-index,.release-detail{
+  position:relative;
+  z-index:3;
+  width:min(calc(100% - 48px),var(--max));
+  height:100dvh;
+  min-height:0;
+  margin:0 auto;
+  padding:78px 0 max(18px,var(--safe-bottom));
+  overflow-y:auto;
+  overflow-x:hidden;
+  overscroll-behavior:contain;
+  -webkit-overflow-scrolling:touch;
+  scrollbar-width:thin;
+  scrollbar-color:rgba(128,151,168,.22) transparent;
+}
+.release-index::-webkit-scrollbar,.release-detail::-webkit-scrollbar{width:6px}
+.release-index::-webkit-scrollbar-thumb,.release-detail::-webkit-scrollbar-thumb{border-radius:999px;background:rgba(128,151,168,.2)}
+@media(max-width:760px){
+  .release-index,.release-detail{
+    width:calc(100% - 18px);
+    padding:61px 0 max(12px,var(--safe-bottom));
+  }
+}
