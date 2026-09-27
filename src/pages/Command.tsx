@@ -2,6 +2,9 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthProvider";
 import Mark from "../components/Mark";
+import UniverseBackground from "../components/UniverseBackground";
+import CommandPerformance from "../components/CommandPerformance";
+import { useLiveTrading } from "../hooks/useLiveTrading";
 import {
   fetchCommandDailyReport,
   fetchCommandEvidence,
@@ -56,6 +59,7 @@ export default function Command() {
   const [weeklyReport, setWeeklyReport] = useState<Record<string, unknown> | null>(null);
   const [error, setError] = useState("");
   const [refreshing, setRefreshing] = useState(false);
+  const { data: publicFeed, error: publicFeedError } = useLiveTrading(5000);
 
   const handleSignOut = useCallback(async () => {
     await signOut();
@@ -185,6 +189,7 @@ export default function Command() {
 
   return (
     <div className={`command-shell command-page-${commandPage}`}>
+      <UniverseBackground />
       <header className="command-header">
         <Link to="/" className="command-brand"><Mark /><span>ANEVUM</span><i /><strong>RHEN COMMAND</strong></Link>
         <nav aria-label="Command sections">
@@ -239,6 +244,7 @@ export default function Command() {
 
         <section className="command-grid">
           <div className="command-primary">
+            <CommandPerformance performance={publicFeed?.performance} feedError={publicFeedError} />
             <article className="command-panel command-view-overview command-view-live command-panel-scanner">
               <header><div><span>LIVE SCANNER</span><strong>{scanRows.length} symbols observed in runtime snapshot</strong></div><small>{clockTime(bot.last_strategy_at)}</small></header>
               <div className="scanner-head"><span>SYMBOL</span><span>PRICE</span><span>ACTION</span><span>REASON</span></div>
