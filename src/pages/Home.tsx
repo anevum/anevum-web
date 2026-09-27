@@ -2,6 +2,7 @@ import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import Mark from "../components/Mark";
+import RhenMark from "../components/RhenMark";
 import { useLiveTrading } from "../hooks/useLiveTrading";
 
 function ageLabel(value?: number | null) {
@@ -81,14 +82,25 @@ export default function Home() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: .62, delay: .06 }}
         >
-          <div className="landing-mark"><Mark /></div>
-          <p className="compact-eyebrow">ANEVUM / OPERATING COMPANY</p>
-          <h1>Build systems. Prove them. Scale what works.</h1>
-          <p className="landing-description">
-            ANEVUM builds and operates autonomous systems around real work. RHEN is the current flagship:
-            a live market research, execution, evidence, and learning system. We preserve what happens,
-            reject what fails, and expand people, agents, infrastructure, and scope only when the evidence justifies it.
-          </p>
+          <div className="anevum-rhen-reveal" aria-label="ANEVUM presents RHEN">
+            <div className="anevum-presents">
+              <Mark />
+              <span>ANEVUM</span>
+              <i />
+              <small>PRESENTS</small>
+            </div>
+            <div className="rhen-hero-sigil" aria-hidden="true">
+              <RhenMark decorative />
+            </div>
+            <div className="rhen-wordmark">RHEN</div>
+            <div className="rhen-tagline">
+              <span>OBSERVE</span><i>//</i><span>DISCOVER</span><i>//</i><span>EXECUTE</span>
+            </div>
+            <p className="rhen-positioning">
+              ANEVUM's autonomous trading and research system. Built on evidence, disciplined by
+              durable records, and designed to evolve only when the evidence supports the change.
+            </p>
+          </div>
           <div className="anevum-home-principles" aria-label="ANEVUM operating principles">
             <span>REAL SYSTEMS</span><i />
             <span>DURABLE EVIDENCE</span><i />
