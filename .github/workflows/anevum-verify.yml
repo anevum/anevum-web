@@ -19,14 +19,23 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install PDF renderer
+        run: pip install "weasyprint==68.0"
+      - name: Render RHEN release packets
+        run: python scripts/render-release-packets.py
       - name: Install
         run: npm install --no-audit --no-fund
       - name: Typecheck and build
         run: npm run build
-      - name: Verify React and Cloudflare output
+      - name: Verify React, release packet, and Cloudflare output
         shell: bash
         run: |
           test -f dist/client/index.html
+          test -f dist/client/releases/RHEN-0.8.2-AURORA.pdf
+          test -s dist/client/releases/RHEN-0.8.2-AURORA.pdf
           test -n "$(find dist -name wrangler.json -print -quit)"
           grep -Fq 'ANEVUM' dist/client/index.html
       - id: preview
@@ -50,9 +59,11 @@ jobs:
         shell: bash
         run: |
           base="${{ steps.preview.outputs.preview_url }}"
-          for path in / /live /system /research /record /private /command; do
+          for path in / /live /system /research /record /releases /releases/rhen-0-8-2-aurora /private /command; do
             curl --fail --show-error --silent "$base$path" > /dev/null
           done
+          curl --fail --show-error --silent "$base/releases/RHEN-0.8.2-AURORA.pdf" > "$RUNNER_TEMP/aurora.pdf"
+          test -s "$RUNNER_TEMP/aurora.pdf"
 
           feed="$(curl --fail --show-error --silent "$base/api/public/trading/live")"
           printf '%s' "$feed" | jq -e '
@@ -79,19 +90,12 @@ jobs:
           mkdir -p "$RUNNER_TEMP/anevum-visuals"
           google-chrome --headless --no-sandbox --disable-gpu --hide-scrollbars --virtual-time-budget=6000 --window-size=1440,1000 --screenshot="$RUNNER_TEMP/anevum-visuals/home-desktop.png" "$base/"
           google-chrome --headless --no-sandbox --disable-gpu --hide-scrollbars --virtual-time-budget=6000 --window-size=390,844 --screenshot="$RUNNER_TEMP/anevum-visuals/home-mobile.png" "$base/"
-          google-chrome --headless --no-sandbox --disable-gpu --hide-scrollbars --virtual-time-budget=6000 --window-size=1440,1000 --screenshot="$RUNNER_TEMP/anevum-visuals/live-desktop.png" "$base/live"
-          google-chrome --headless --no-sandbox --disable-gpu --hide-scrollbars --virtual-time-budget=6000 --window-size=1440,1000 --screenshot="$RUNNER_TEMP/anevum-visuals/system-desktop.png" "$base/system"
-          google-chrome --headless --no-sandbox --disable-gpu --hide-scrollbars --virtual-time-budget=6000 --window-size=390,844 --screenshot="$RUNNER_TEMP/anevum-visuals/system-mobile.png" "$base/system"
-          google-chrome --headless --no-sandbox --disable-gpu --hide-scrollbars --virtual-time-budget=6000 --window-size=1440,1000 --screenshot="$RUNNER_TEMP/anevum-visuals/research-desktop.png" "$base/research"
-          google-chrome --headless --no-sandbox --disable-gpu --hide-scrollbars --virtual-time-budget=6000 --window-size=390,844 --screenshot="$RUNNER_TEMP/anevum-visuals/research-mobile.png" "$base/research"
+          google-chrome --headless --no-sandbox --disable-gpu --hide-scrollbars --virtual-time-budget=6000 --window-size=1440,1000 --screenshot="$RUNNER_TEMP/anevum-visuals/release-desktop.png" "$base/releases/rhen-0-8-2-aurora"
+          google-chrome --headless --no-sandbox --disable-gpu --hide-scrollbars --virtual-time-budget=6000 --window-size=390,844 --screenshot="$RUNNER_TEMP/anevum-visuals/release-mobile.png" "$base/releases/rhen-0-8-2-aurora"
           google-chrome --headless --no-sandbox --disable-gpu --virtual-time-budget=6000 --dump-dom "$base/" > "$RUNNER_TEMP/anevum-visuals/home-rendered.html"
-          google-chrome --headless --no-sandbox --disable-gpu --virtual-time-budget=6000 --dump-dom "$base/live" > "$RUNNER_TEMP/anevum-visuals/live-rendered.html"
-          google-chrome --headless --no-sandbox --disable-gpu --virtual-time-budget=6000 --dump-dom "$base/system" > "$RUNNER_TEMP/anevum-visuals/system-rendered.html"
-          google-chrome --headless --no-sandbox --disable-gpu --virtual-time-budget=6000 --dump-dom "$base/research" > "$RUNNER_TEMP/anevum-visuals/research-rendered.html"
+          google-chrome --headless --no-sandbox --disable-gpu --virtual-time-budget=6000 --dump-dom "$base/releases/rhen-0-8-2-aurora" > "$RUNNER_TEMP/anevum-visuals/release-rendered.html"
           grep -Fq 'landing-screen' "$RUNNER_TEMP/anevum-visuals/home-rendered.html"
-          grep -Fq 'live-screen' "$RUNNER_TEMP/anevum-visuals/live-rendered.html"
-          grep -Fq 'system-story' "$RUNNER_TEMP/anevum-visuals/system-rendered.html"
-          grep -Fq 'research-story' "$RUNNER_TEMP/anevum-visuals/research-rendered.html"
+          grep -Fq 'release-detail' "$RUNNER_TEMP/anevum-visuals/release-rendered.html"
       - name: Upload browser QA
         if: github.event_name == 'pull_request'
         uses: actions/upload-artifact@v4
