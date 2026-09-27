@@ -1,5 +1,6 @@
 import { lazy, Suspense, useEffect, type ReactNode } from "react";
 import { Navigate, Route, Routes, useLocation } from "react-router-dom";
+import { OverflowPan } from "./components/OverflowPan";
 import { PublicShell } from "./components/Shell";
 
 const Command = lazy(() => import("./pages/Command"));
@@ -40,6 +41,7 @@ export default function App() {
   return (
     <>
       <RouteEffects />
+      <OverflowPan />
       <Routes>
         <Route path="/" element={<PublicExperience><Home /></PublicExperience>} />
         <Route path="/live" element={<PublicExperience><Live /></PublicExperience>} />
