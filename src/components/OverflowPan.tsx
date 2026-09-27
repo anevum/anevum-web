@@ -10,6 +10,7 @@ type PanState = {
   phaseStarted: number;
   restMs: number;
   travelMs: number;
+  pausedAt?: number;
 };
 
 const MIN_OVERFLOW_PX = 3;
@@ -49,6 +50,7 @@ export function OverflowPan() {
   useEffect(() => {
     const states = new Map<HTMLElement, PanState>();
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const hoverCapable = window.matchMedia("(hover: hover)");
     let animationFrame = 0;
     let scanFrame = 0;
 
@@ -145,6 +147,20 @@ export function OverflowPan() {
           state.phase = "rest";
           state.phaseStarted = now;
           return;
+        }
+
+        const interacting =
+          element.contains(document.activeElement) ||
+          (hoverCapable.matches && element.matches(":hover"));
+
+        if (interacting) {
+          if (state.pausedAt === undefined) state.pausedAt = now;
+          return;
+        }
+
+        if (state.pausedAt !== undefined) {
+          state.phaseStarted += now - state.pausedAt;
+          state.pausedAt = undefined;
         }
 
         if (now < state.phaseStarted) return;
