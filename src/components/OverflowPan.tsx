@@ -1,0 +1,225 @@
+import { useEffect } from "react";
+import "./OverflowPan.css";
+
+type PanPhase = "rest" | "forward" | "end" | "back";
+
+type PanState = {
+  element: HTMLElement;
+  maxScroll: number;
+  phase: PanPhase;
+  phaseStarted: number;
+  restMs: number;
+  travelMs: number;
+};
+
+const MIN_OVERFLOW_PX = 3;
+const END_HOLD_MS = 1400;
+const MIN_TRAVEL_MS = 2800;
+const MAX_TRAVEL_MS = 9000;
+const PX_PER_SECOND = 16;
+
+function textHash(value: string) {
+  let hash = 0;
+  for (let i = 0; i < value.length; i += 1) {
+    hash = (hash * 31 + value.charCodeAt(i)) >>> 0;
+  }
+  return hash;
+}
+
+function readableText(element: HTMLElement) {
+  return (element.textContent || "").replace(/\s+/g, " ").trim();
+}
+
+function restDuration(element: HTMLElement) {
+  return 2600 + (textHash(readableText(element)) % 3600);
+}
+
+function travelDuration(maxScroll: number) {
+  const natural = (maxScroll / PX_PER_SECOND) * 1000;
+  return Math.max(MIN_TRAVEL_MS, Math.min(MAX_TRAVEL_MS, natural));
+}
+
+function easeInOut(value: number) {
+  return value < 0.5
+    ? 2 * value * value
+    : 1 - Math.pow(-2 * value + 2, 2) / 2;
+}
+
+export function OverflowPan() {
+  useEffect(() => {
+    const states = new Map<HTMLElement, PanState>();
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+    let animationFrame = 0;
+    let scanFrame = 0;
+
+    function removeGeneratedTitle(element: HTMLElement) {
+      if (element.dataset.overflowPanTitle === "1") {
+        element.removeAttribute("title");
+        delete element.dataset.overflowPanTitle;
+      }
+    }
+
+    function resetElement(element: HTMLElement, removeTitle = false) {
+      element.classList.remove("overflow-pan-active");
+      element.scrollLeft = 0;
+      if (removeTitle) removeGeneratedTitle(element);
+    }
+
+    function addGeneratedTitle(element: HTMLElement) {
+      if (element.hasAttribute("title")) return;
+      const text = readableText(element);
+      if (!text) return;
+      element.title = text;
+      element.dataset.overflowPanTitle = "1";
+    }
+
+    function inspect(element: HTMLElement) {
+      const wasActive = element.classList.contains("overflow-pan-active");
+      if (wasActive) element.classList.remove("overflow-pan-active");
+
+      const style = window.getComputedStyle(element);
+      const isEllipsis = style.textOverflow === "ellipsis";
+      const maxScroll = Math.max(0, element.scrollWidth - element.clientWidth);
+
+      if (!isEllipsis || element.clientWidth === 0 || maxScroll < MIN_OVERFLOW_PX) {
+        states.delete(element);
+        resetElement(element, true);
+        return;
+      }
+
+      addGeneratedTitle(element);
+
+      const existing = states.get(element);
+      if (existing) {
+        existing.maxScroll = maxScroll;
+        existing.travelMs = travelDuration(maxScroll);
+        if (wasActive && !reducedMotion.matches && existing.phase !== "rest") {
+          element.classList.add("overflow-pan-active");
+        }
+        return;
+      }
+
+      const hash = textHash(readableText(element));
+      states.set(element, {
+        element,
+        maxScroll,
+        phase: "rest",
+        phaseStarted: performance.now() + (hash % 1700),
+        restMs: restDuration(element),
+        travelMs: travelDuration(maxScroll)
+      });
+    }
+
+    function scan() {
+      const current = new Set<HTMLElement>();
+      document.body.querySelectorAll<HTMLElement>("*").forEach((element) => {
+        current.add(element);
+        inspect(element);
+      });
+
+      states.forEach((state, element) => {
+        if (!current.has(element) || !element.isConnected) {
+          states.delete(element);
+          resetElement(element, true);
+        }
+      });
+    }
+
+    function scheduleScan() {
+      if (scanFrame) return;
+      scanFrame = window.requestAnimationFrame(() => {
+        scanFrame = 0;
+        scan();
+      });
+    }
+
+    function tick(now: number) {
+      states.forEach((state, element) => {
+        if (!element.isConnected) {
+          states.delete(element);
+          return;
+        }
+
+        if (reducedMotion.matches) {
+          resetElement(element);
+          state.phase = "rest";
+          state.phaseStarted = now;
+          return;
+        }
+
+        if (now < state.phaseStarted) return;
+
+        const elapsed = now - state.phaseStarted;
+
+        if (state.phase === "rest") {
+          resetElement(element);
+          if (elapsed >= state.restMs) {
+            state.phase = "forward";
+            state.phaseStarted = now;
+            element.classList.add("overflow-pan-active");
+          }
+          return;
+        }
+
+        if (state.phase === "forward") {
+          element.classList.add("overflow-pan-active");
+          const progress = Math.min(1, elapsed / state.travelMs);
+          element.scrollLeft = state.maxScroll * easeInOut(progress);
+          if (progress >= 1) {
+            element.scrollLeft = state.maxScroll;
+            state.phase = "end";
+            state.phaseStarted = now;
+          }
+          return;
+        }
+
+        if (state.phase === "end") {
+          element.classList.add("overflow-pan-active");
+          element.scrollLeft = state.maxScroll;
+          if (elapsed >= END_HOLD_MS) {
+            state.phase = "back";
+            state.phaseStarted = now;
+          }
+          return;
+        }
+
+        element.classList.add("overflow-pan-active");
+        const progress = Math.min(1, elapsed / state.travelMs);
+        element.scrollLeft = state.maxScroll * (1 - easeInOut(progress));
+        if (progress >= 1) {
+          resetElement(element);
+          state.phase = "rest";
+          state.phaseStarted = now;
+          state.restMs = restDuration(element);
+        }
+      });
+
+      animationFrame = window.requestAnimationFrame(tick);
+    }
+
+    const observer = new MutationObserver(scheduleScan);
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true,
+      characterData: true
+    });
+
+    window.addEventListener("resize", scheduleScan, { passive: true });
+    reducedMotion.addEventListener("change", scheduleScan);
+
+    scheduleScan();
+    animationFrame = window.requestAnimationFrame(tick);
+
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("resize", scheduleScan);
+      reducedMotion.removeEventListener("change", scheduleScan);
+      window.cancelAnimationFrame(animationFrame);
+      if (scanFrame) window.cancelAnimationFrame(scanFrame);
+      states.forEach((state) => resetElement(state.element, true));
+      states.clear();
+    };
+  }, []);
+
+  return null;
+}
