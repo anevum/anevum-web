@@ -1,4 +1,4 @@
-const TRADER_BASE = "https://alpaca-trader-production-bf3e.up.railway.app";
+import releaseRegistry from "./src/data/releases.json";\n\nconst TRADER_BASE = "https://alpaca-trader-production-bf3e.up.railway.app";
 const PUBLIC_TRADING_FEED = "https://mfntzxheldzdvlokyntk.supabase.co/functions/v1/trading-public-feed";
 const SUPABASE_AUTH_USER = "https://mfntzxheldzdvlokyntk.supabase.co/auth/v1/user";
 const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_XfkgeXau2-6XOPzoXF-Nnw_FSnx0Sae";
@@ -122,15 +122,47 @@ async function commandApi(request, pathname) {
   return null;
 }
 
-async function withPublicRouteMetadata(response, pathname) {
-  const routes = {
-    "/performance": {
+function currentReleaseSnapshot() {
+  return releaseRegistry.releases.find((release) => release.slug === releaseRegistry.currentSlug) || null;
+}
+
+function publicRouteMetadata(pathname) {
+  if (pathname === "/performance") {
+    return {
       title: "RHEN Performance — ANEVUM",
       description: "RHEN's broker-derived live performance record: normalized returns, drawdown, sample size, methodology, and public/private evidence boundary.",
       url: "https://anevum.com/performance"
+    };
+  }
+
+  if (pathname === "/releases") {
+    const current = currentReleaseSnapshot();
+    return {
+      title: current ? `RHEN Releases — ${current.version} ${current.codename} — ANEVUM` : "RHEN Releases — ANEVUM",
+      description: current
+        ? `RHEN release archive. Current named release: ${current.version} ${current.codename}, ${current.lifecycle}.`
+        : "RHEN named release archive, manifests, verification state, limitations, and release packets.",
+      url: "https://anevum.com/releases"
+    };
+  }
+
+  if (pathname.startsWith("/releases/")) {
+    const slug = pathname.slice("/releases/".length);
+    const release = releaseRegistry.releases.find((item) => item.slug === slug);
+    if (release) {
+      return {
+        title: `RHEN ${release.version} — ${release.codename} — ANEVUM`,
+        description: `${release.releaseClass}. ${release.abstract}`,
+        url: `https://anevum.com/releases/${release.slug}`
+      };
     }
-  };
-  const meta = routes[pathname];
+  }
+
+  return null;
+}
+
+async function withPublicRouteMetadata(response, pathname) {
+  const meta = publicRouteMetadata(pathname);
   if (!meta) return response;
 
   let html = await response.text();
