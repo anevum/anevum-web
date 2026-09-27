@@ -9,6 +9,8 @@ const Live = lazy(() => import("./pages/Live"));
 const System = lazy(() => import("./pages/System"));
 const Research = lazy(() => import("./pages/Research"));
 const Record = lazy(() => import("./pages/Record"));
+const Releases = lazy(() => import("./pages/Releases"));
+const ReleaseDetail = lazy(() => import("./pages/ReleaseDetail"));
 const PrivateAccess = lazy(() => import("./pages/Rhenlink"));
 
 const titles: Record<string, string> = {
@@ -17,6 +19,7 @@ const titles: Record<string, string> = {
   "/system": "System — ANEVUM",
   "/research": "Research — ANEVUM",
   "/record": "Record — ANEVUM",
+  "/releases": "RHEN Releases — ANEVUM",
   "/private": "Private — ANEVUM",
 };
 
@@ -25,7 +28,9 @@ function RouteEffects() {
   useEffect(() => {
     document.title = location.pathname.startsWith("/command")
       ? "Command — ANEVUM"
-      : titles[location.pathname] || "ANEVUM";
+      : location.pathname.startsWith("/releases/")
+        ? "RHEN Release — ANEVUM"
+        : titles[location.pathname] || "ANEVUM";
   }, [location.pathname]);
   return null;
 }
@@ -49,6 +54,8 @@ export default function App() {
         <Route path="/system" element={<PublicExperience><System /></PublicExperience>} />
         <Route path="/research" element={<PublicExperience><Research /></PublicExperience>} />
         <Route path="/record" element={<PublicExperience><Record /></PublicExperience>} />
+        <Route path="/releases" element={<PublicExperience><Releases /></PublicExperience>} />
+        <Route path="/releases/:slug" element={<PublicExperience><ReleaseDetail /></PublicExperience>} />
 
         <Route path="/private" element={<Suspense fallback={<Loader />}><PrivateAccess /></Suspense>} />
         <Route path="/command/*" element={<Suspense fallback={<Loader />}><Command /></Suspense>} />
