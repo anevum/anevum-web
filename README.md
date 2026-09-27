@@ -38,7 +38,7 @@ Command shares the public site's single-viewport visual system: the animated uni
 
 The Command surface contains private operator telemetry. Production access is intended to sit behind Cloudflare Access and is also gated by ANEVUM/Supabase administrator authorization inside the application.
 
-The public footer contains only a low-prominence `OPERATOR` entrance. Search engines are instructed not to index the operator/private routes.
+The public header contains a low-prominence Command entrance. Search engines are instructed not to index the operator/private routes.
 
 ### Private auth — `/private`
 
