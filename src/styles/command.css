@@ -347,3 +347,174 @@
   .scanner-row p{font-size:.58rem}
   .command-two-column{grid-template-columns:1fr}
 }
+
+
+/* Command mobile overflow hardening ------------------------------------ */
+/*
+ * Keep Command itself locked to the visual viewport. On small screens the
+ * content region, not the document, owns vertical overflow. This avoids
+ * panels continuing below the iOS viewport after accounting for the safe
+ * area, two-row Command header, page heading, and live-state control.
+ */
+.command-shell{
+  position:fixed;
+  inset:0;
+  width:100%;
+  height:100dvh;
+  min-height:0;
+  overflow:hidden;
+}
+.command-header{flex:0 0 auto}
+.command-main{
+  height:calc(100dvh - 62px - var(--command-safe-top));
+  min-height:0;
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+}
+.command-hero{flex:0 0 auto}
+.command-shell .command-stats{flex:0 0 auto}
+.command-grid{
+  flex:1 1 auto;
+  min-height:0;
+  height:auto;
+}
+
+/* Every routed desktop view must remain inside the Command content track. */
+.command-primary,.command-side{
+  min-height:0;
+  height:100%;
+}
+.command-page-performance .command-primary,
+.command-page-evidence .command-primary,
+.command-page-research .command-primary,
+.command-page-system .command-side{
+  min-height:0;
+  height:100%;
+}
+
+/* Long single panels scroll internally on larger layouts. */
+.command-page-performance .command-panel-daily,
+.command-page-performance .command-panel-weekly,
+.command-page-evidence .command-panel-post-event,
+.command-page-research .command-panel-research,
+.command-page-system .command-panel-telemetry{
+  min-height:0;
+  max-height:100%;
+  overflow:auto;
+  overscroll-behavior:contain;
+}
+
+/* Mobile: one bounded Command content viewport. Panels stack at their
+ * natural readable height inside this region, so nothing can spill into the
+ * browser page or behind the bottom safe area. */
+@media(max-width:720px){
+  .command-shell{
+    height:100dvh;
+    min-height:0;
+    overflow:hidden;
+  }
+  .command-main{
+    height:calc(100dvh - 104px - var(--command-safe-top));
+    min-height:0;
+    padding:8px 0 max(8px,var(--safe-bottom));
+    gap:8px;
+    overflow:hidden;
+  }
+  .command-hero{
+    flex:0 0 54px;
+    min-height:54px;
+  }
+  .command-shell .command-stats{
+    flex:0 0 auto;
+    max-height:112px;
+  }
+  .command-grid{
+    display:flex;
+    flex:1 1 auto;
+    flex-direction:column;
+    gap:8px;
+    min-height:0;
+    height:auto;
+    overflow-x:hidden;
+    overflow-y:auto;
+    padding-bottom:max(2px,var(--safe-bottom));
+    overscroll-behavior:contain;
+    -webkit-overflow-scrolling:touch;
+    scrollbar-width:none;
+  }
+  .command-grid::-webkit-scrollbar{display:none}
+
+  /* Remove nested grid track sizing on phones. Those fractional tracks were
+   * forcing otherwise-empty panels to become hundreds of pixels tall. */
+  .command-grid>.command-primary,
+  .command-grid>.command-side{
+    display:contents!important;
+    height:auto!important;
+    min-height:0!important;
+  }
+  .command-grid .command-panel{
+    flex:0 0 auto;
+    width:100%;
+    height:auto;
+    min-height:0;
+    max-height:none;
+  }
+
+  /* Let the outer bounded content region own scrolling on mobile. */
+  .command-page-performance .command-panel-daily,
+  .command-page-performance .command-panel-weekly,
+  .command-page-evidence .command-panel-post-event,
+  .command-page-research .command-panel-research,
+  .command-page-system .command-panel-telemetry{
+    max-height:none;
+    overflow:hidden;
+  }
+  .command-page-research .command-panel-research>.command-two-column,
+  .command-page-research .command-panel-research>.command-list-stack{
+    overflow:visible;
+  }
+
+  /* Keep data-heavy sublists useful without allowing a single list to
+   * consume an unbounded amount of vertical space. */
+  .scanner-body,.order-body,.feed-body{
+    max-height:min(38dvh,360px);
+    overflow-y:auto;
+    overscroll-behavior:contain;
+    -webkit-overflow-scrolling:touch;
+  }
+
+  /* Route-specific wrappers no longer create additional implicit rows. */
+  .command-page-overview .command-grid,
+  .command-page-live .command-grid,
+  .command-page-performance .command-grid,
+  .command-page-evidence .command-grid,
+  .command-page-research .command-grid,
+  .command-page-system .command-grid{
+    grid-template-columns:none;
+    grid-template-rows:none;
+  }
+}
+
+@media(max-width:480px){
+  .command-main{width:min(calc(100% - 20px),1480px)}
+  .command-grid{gap:8px}
+  .command-grid .command-panel{margin:0}
+  .command-page-overview .command-grid,
+  .command-page-live .command-grid{
+    grid-template-rows:none;
+  }
+  .command-page-performance .command-primary,
+  .command-page-system .command-side{
+    grid-template-columns:none;
+    grid-template-rows:none;
+  }
+}
+
+/* Standalone iOS uses a larger reserved top band. Keep the remaining
+ * Command viewport calculation in sync with that band. */
+@media (display-mode:standalone) and (max-width:720px){
+  .command-main{
+    height:calc(100dvh - 104px - max(var(--safe-top),34px));
+  }
+}
