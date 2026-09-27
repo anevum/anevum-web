@@ -59,7 +59,7 @@ export default function Command() {
   const [weeklyReport, setWeeklyReport] = useState<Record<string, unknown> | null>(null);
   const [error, setError] = useState("");
   const [refreshing, setRefreshing] = useState(false);
-  const { data: publicFeed, error: publicFeedError } = useLiveTrading(5000);
+  const { data: publicFeed, error: publicFeedError } = useLiveTrading(3000);
 
   const handleSignOut = useCallback(async () => {
     await signOut();
