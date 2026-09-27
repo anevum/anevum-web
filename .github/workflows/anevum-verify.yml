@@ -65,6 +65,11 @@ jobs:
           curl --fail --show-error --silent "$base/releases/RHEN-0.8.2-AURORA.pdf" > "$RUNNER_TEMP/aurora.pdf"
           test -s "$RUNNER_TEMP/aurora.pdf"
 
+          performance_html="$(curl --fail --show-error --silent "$base/performance")"
+          printf '%s' "$performance_html" | grep -Fq '<meta property="og:title" content="RHEN Performance — ANEVUM" />'
+          printf '%s' "$performance_html" | grep -Fq '<meta property="og:url" content="https://anevum.com/performance" />'
+          printf '%s' "$performance_html" | grep -Fq '<link rel="canonical" href="https://anevum.com/performance" />'
+
           feed="$(curl --fail --show-error --silent "$base/api/public/trading/live")"
           printf '%s' "$feed" | jq -e '
             .ok == true and
