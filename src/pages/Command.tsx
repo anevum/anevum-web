@@ -193,7 +193,10 @@ export default function Command() {
   const readinessLimitations = researchReadiness?.limitations || [];
   const readinessMonitors = researchReadiness?.monitors || [];
   const gptReady = researchReadiness?.gpt_would_run_now === true;
-  const theoryProblem = theoryProgram?.problems.find((row) => row.status === "ACTIVE") || theoryProgram?.problems[0];
+  const theoryProblem =
+    theoryProgram?.problems.find((row) => row.problem_id === theoryProgram.program.current_problem_id) ||
+    [...(theoryProgram?.problems || [])].reverse().find((row) => row.status === "ACTIVE") ||
+    theoryProgram?.problems[0];
   const theoryConjectures = theoryProblem?.conjectures || [];
   const openTheoryConjectures = theoryConjectures.filter((row) => row.status === "OPEN");
 
