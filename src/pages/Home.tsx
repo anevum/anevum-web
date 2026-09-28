@@ -133,7 +133,7 @@ export default function Home() {
             className="anevum-home-rhen-card-v2"
             initial={{ opacity: 0, x: 18 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: .62, delay: .14 }}
+            transition={{ duration: reduceMotion ? 0 : .62, delay: reduceMotion ? 0 : 5.18 }}
           >
             <div className="anevum-home-rhen-orbit-v2" aria-hidden="true">
               <span /><span /><span />
