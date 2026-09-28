@@ -487,7 +487,7 @@ export default function Command() {
             <article className="command-panel command-view-live command-panel-feed">
               <header><div><span>LIVE FEED</span><strong>Recent runtime decisions</strong></div><small>Process state</small></header>
               <div className="feed-body">
-                {history.length ? history.slice().reverse().slice(0, 16).map((item, index) => (
+                {history.length ? history.slice(0, 16).map((item, index) => (
                   <div className="feed-row" key={text(item.at, String(index))}>
                     <time>{clockTime(item.at)}</time>
                     <div><strong>{text(item.symbol || item.kind, "RHEN")}</strong><span>{text(item.action, "decision").toUpperCase()}</span></div>
