@@ -26,6 +26,9 @@ from public, anon, authenticated;
 create index if not exists trading_performance_epochs_started_idx
   on private.trading_performance_epochs(started_at desc);
 
+create index if not exists trading_performance_epochs_baseline_snapshot_idx
+  on private.trading_performance_epochs(baseline_snapshot_id);
+
 create unique index if not exists trading_performance_epochs_one_active_idx
   on private.trading_performance_epochs ((1))
   where ended_at is null;
