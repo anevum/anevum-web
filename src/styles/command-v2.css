@@ -564,3 +564,202 @@
 @media(display-mode:standalone) and (orientation:landscape) and (max-height:500px){
   .command-shell{--command-safe-top:max(var(--safe-top),46px)}
 }
+
+
+/* Command scroll-first readability correction ---------------------------
+ * Command is an operations surface, not a single-screen public exhibit.
+ * Let routed pages grow naturally so iOS has one predictable vertical scroll
+ * instead of several tiny nested scroll regions competing for touch input.
+ */
+.command-shell{
+  position:relative!important;
+  inset:auto!important;
+  height:auto!important;
+  min-height:100dvh!important;
+  overflow:visible!important;
+}
+.command-header{
+  position:sticky!important;
+  top:0!important;
+}
+.command-main{
+  height:auto!important;
+  min-height:calc(100dvh - 64px - var(--command-safe-top))!important;
+  display:block!important;
+  overflow:visible!important;
+  padding-bottom:max(56px,calc(var(--safe-bottom) + 28px))!important;
+}
+.command-hero{margin-bottom:9px!important}
+.command-shell .command-stats{margin-bottom:9px!important}
+.command-grid{
+  height:auto!important;
+  max-height:none!important;
+  overflow:visible!important;
+}
+.command-primary,.command-side{
+  height:auto!important;
+  max-height:none!important;
+  overflow:visible!important;
+  grid-auto-rows:auto!important;
+}
+.command-page-overview .command-primary,
+.command-page-overview .command-side,
+.command-page-live .command-primary,
+.command-page-live .command-side,
+.command-page-performance .command-primary,
+.command-page-evidence .command-primary,
+.command-page-research .command-primary,
+.command-page-system .command-side{
+  grid-template-rows:auto!important;
+}
+.command-grid .command-panel{
+  height:auto!important;
+  max-height:none!important;
+}
+.command-panel-daily,
+.command-panel-weekly,
+.command-panel-post-event,
+.command-panel-research,
+.command-panel-telemetry,
+.command-panel-boundary{
+  max-height:none!important;
+}
+.command-page-research .command-panel-research>.command-two-column,
+.command-page-research .command-panel-research>.command-list-stack{
+  min-height:auto!important;
+  overflow:visible!important;
+}
+
+/* Phones use the document as the only vertical scroller. This removes the
+ * compressed four-track Live layout and the tiny independently scrollable
+ * Research sections that were difficult to operate with a thumb.
+ */
+@media(max-width:760px){
+  .command-main{
+    height:auto!important;
+    min-height:calc(100dvh - 100px - var(--command-safe-top))!important;
+    padding:10px 0 max(44px,calc(var(--safe-bottom) + 24px))!important;
+    overflow:visible!important;
+  }
+  .command-grid,
+  .command-page-overview .command-grid,
+  .command-page-live .command-grid,
+  .command-page-performance .command-grid,
+  .command-page-evidence .command-grid,
+  .command-page-research .command-grid,
+  .command-page-system .command-grid{
+    display:block!important;
+    height:auto!important;
+    min-height:0!important;
+    overflow:visible!important;
+  }
+  .command-grid>.command-primary,
+  .command-grid>.command-side,
+  .command-page-overview .command-primary,
+  .command-page-overview .command-side,
+  .command-page-live .command-primary,
+  .command-page-live .command-side,
+  .command-page-performance .command-primary,
+  .command-page-evidence .command-primary,
+  .command-page-research .command-primary,
+  .command-page-system .command-side{
+    display:grid!important;
+    height:auto!important;
+    min-height:0!important;
+    grid-template-columns:1fr!important;
+    grid-template-rows:none!important;
+    grid-auto-rows:auto!important;
+    gap:9px!important;
+    overflow:visible!important;
+  }
+  .command-grid>.command-side{margin-top:9px!important}
+
+  .command-grid .command-panel{
+    width:100%!important;
+    height:auto!important;
+    min-height:0!important;
+    max-height:none!important;
+  }
+  .scanner-body,.order-body,.feed-body{
+    max-height:none!important;
+    min-height:0!important;
+    overflow:visible!important;
+    overscroll-behavior:auto!important;
+    -webkit-overflow-scrolling:auto!important;
+  }
+
+  .command-panel>header{
+    min-height:58px!important;
+    padding:11px 13px!important;
+    align-items:end!important;
+  }
+  .command-panel>header strong{font-size:.7rem!important;line-height:1.3}
+  .command-panel>header small{font-size:.54rem!important}
+  .command-stats span,
+  .command-panel header span,
+  .position-grid span,
+  .system-grid span{font-size:.44rem!important}
+
+  .scanner-row{
+    min-height:48px;
+    padding:11px 13px!important;
+    font-size:.66rem!important;
+  }
+  .scanner-row strong{font-size:.7rem!important}
+  .scanner-row b{font-size:.58rem!important}
+  .order-row{
+    min-height:48px;
+    padding:11px 13px!important;
+    font-size:.64rem!important;
+  }
+  .feed-row{
+    min-height:52px;
+    padding:11px 13px!important;
+    font-size:.63rem!important;
+  }
+  .feed-row strong{font-size:.66rem!important}
+  .feed-row span{font-size:.52rem!important}
+  .feed-row p{font-size:.61rem!important;line-height:1.5}
+
+  .command-empty{
+    padding:18px 13px!important;
+    font-size:.65rem!important;
+    line-height:1.55;
+  }
+  .position-grid>div,.system-grid>div,
+  .command-metric-grid>div{padding:14px!important}
+  .position-grid strong,.system-grid strong,
+  .command-metric-grid strong{font-size:.69rem!important;line-height:1.35}
+  .command-metric-grid span,
+  .command-summary-block>span,
+  .command-subhead{font-size:.46rem!important;line-height:1.35}
+
+  .command-summary-block{padding:14px!important;gap:8px!important}
+  .command-summary-block strong{font-size:.73rem!important;line-height:1.5}
+  .command-summary-block p{font-size:.65rem!important;line-height:1.55}
+
+  .command-two-column{grid-template-columns:1fr!important}
+  .command-two-column>div{padding:14px!important}
+  .command-list-stack{padding:14px!important}
+  .command-list-item{padding:12px 0!important}
+  .command-list-item strong{font-size:.68rem!important;line-height:1.4}
+  .command-list-item p{font-size:.63rem!important;line-height:1.55}
+  .command-list-item small{font-size:.54rem!important;line-height:1.45}
+  .command-warning-list p{padding:11px 13px!important;font-size:.62rem!important;line-height:1.5}
+
+  .command-page-research .command-panel-research{
+    overflow:hidden!important;
+  }
+  .command-page-research .command-panel-research>.command-two-column,
+  .command-page-research .command-panel-research>.command-list-stack{
+    height:auto!important;
+    max-height:none!important;
+    overflow:visible!important;
+  }
+}
+
+@media(max-width:480px){
+  .command-grid{padding:8px!important}
+  .command-metric-grid,
+  .command-metric-grid.compact{grid-template-columns:1fr 1fr!important}
+}
