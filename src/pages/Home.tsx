@@ -91,6 +91,7 @@ export default function Home() {
   const stateClass = data?.live ? "is-live" : data ? "is-stale" : "";
   const research = String(data?.research?.current_status || "UNRECORDED").replaceAll("_", " ").toUpperCase();
   const performance = data?.performance;
+  const october = document.documentElement.dataset.seasonalTheme === "oct";
   const activeTheoryProblem =
     theoryProgram?.problems.find((row) => row.problem_id === theoryProgram.program.current_problem_id) ||
     [...(theoryProgram?.problems || [])].reverse().find((row) => row.status === "ACTIVE") ||
@@ -120,8 +121,15 @@ export default function Home() {
         ) : null}
       </AnimatePresence>
 
-      <section className="anevum-home-v2">
+      <section className={"anevum-home-v2" + (october ? " october-home" : "")}>
         <section className="anevum-home-hero-v2">
+          {october ? (
+            <div className="october-hero-art" aria-hidden="true">
+              <div className="october-pumpkin-core"><i /><b /><span /></div>
+              <div className="october-orbit october-orbit-a" />
+              <div className="october-orbit october-orbit-b" />
+            </div>
+          ) : null}
           <motion.div
             className="anevum-home-hero-copy-v2"
             initial={{ opacity: 0, y: 20 }}
@@ -132,33 +140,43 @@ export default function Home() {
               <Mark />
               <span>ANEVUM</span>
               <i />
-              <small>SYSTEMS // RESEARCH // THEORY</small>
+              <small>{october ? "OCTOBER // SPOOKY SYSTEMS" : "SYSTEMS // RESEARCH // THEORY"}</small>
             </div>
 
             <div className="anevum-home-title-v2">
-              <span>BUILD.</span>
-              <span>OBSERVE.</span>
-              <span>PROVE.</span>
+              {october ? (
+                <>
+                  <span>SPOOKY</span>
+                  <span>SYSTEMS.</span>
+                </>
+              ) : (
+                <>
+                  <span>BUILD.</span>
+                  <span>OBSERVE.</span>
+                  <span>PROVE.</span>
+                </>
+              )}
             </div>
 
             <p className="anevum-home-lead-v2">
-              ANEVUM is a working laboratory for autonomous systems, market research, mathematics,
-              and durable evidence. RHEN is the first live operating system inside it.
+              {october
+                ? "Same systems. Darker universe. ANEVUM is still the live laboratory for RHEN, research, mathematics, and durable evidence — now running its October skin."
+                : "ANEVUM is a working laboratory for autonomous systems, market research, mathematics, and durable evidence. RHEN is the first live operating system inside it."}
             </p>
 
             <div className="anevum-home-actions-v2">
               <Link className="anevum-home-primary-v2" to="/performance">
-                See the record <b>↗</b>
+                {october ? "Enter the record" : "See the record"} <b>↗</b>
               </Link>
               <Link className="anevum-home-secondary-v2" to="/system">
-                Explore the system <b>→</b>
+                {october ? "Explore RHEN" : "Explore the system"} <b>→</b>
               </Link>
             </div>
 
             <div className="anevum-home-principles-v2">
-              <span>REAL SYSTEMS</span><i />
-              <span>DURABLE EVIDENCE</span><i />
-              <span>CONTROLLED SCALE</span>
+              <span>{october ? "LIVE SYSTEMS" : "REAL SYSTEMS"}</span><i />
+              <span>{october ? "DARKER INTERFACE" : "DURABLE EVIDENCE"}</span><i />
+              <span>{october ? "SAME EVIDENCE" : "CONTROLLED SCALE"}</span>
             </div>
           </motion.div>
 
