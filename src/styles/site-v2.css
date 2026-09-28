@@ -121,7 +121,79 @@
 }
 .theory-heading-status strong{max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .theory-layout{grid-template-columns:180px minmax(0,1fr)}
-.theory-content{position:relative;overflow:hidden!important}
+.theory-content{
+  position:relative;
+  overflow:hidden!important;
+  display:grid;
+  grid-template-rows:38px minmax(0,1fr);
+}
+.theory-problem-switcher{
+  min-width:0;
+  padding:4px 8px;
+  display:grid;
+  grid-template-columns:58px minmax(0,1fr) auto;
+  align-items:center;
+  gap:7px;
+  border-bottom:1px solid rgba(207,229,242,.055);
+  background:rgba(3,9,15,.42);
+}
+.theory-problem-switcher>span{
+  color:#55778c;
+  font-size:.34rem;
+  font-weight:760;
+  letter-spacing:.12em;
+}
+.theory-problem-switcher>div{
+  min-width:0;
+  display:flex;
+  gap:4px;
+  overflow:hidden;
+}
+.theory-problem-switcher button{
+  min-width:0;
+  max-width:260px;
+  height:28px;
+  padding:0 7px;
+  display:grid;
+  grid-template-columns:auto minmax(0,1fr) auto;
+  align-items:center;
+  gap:6px;
+  border:1px solid rgba(207,229,242,.055);
+  border-radius:6px;
+  color:#667c89;
+  background:rgba(4,11,18,.5);
+  cursor:pointer;
+}
+.theory-problem-switcher button.active{
+  border-color:rgba(131,198,239,.24);
+  color:#c0d1db;
+  background:rgba(13,31,44,.68);
+}
+.theory-problem-switcher button b{
+  color:#6b91a7;
+  font-size:.35rem;
+  font-weight:680;
+  white-space:nowrap;
+}
+.theory-problem-switcher button small{
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  font-size:.39rem;
+}
+.theory-problem-switcher button i{
+  color:#56798e;
+  font-size:.27rem;
+  font-style:normal;
+  letter-spacing:.06em;
+}
+.theory-problem-switcher>strong{
+  color:#5c7d91;
+  font-size:.31rem;
+  font-weight:680;
+  letter-spacing:.08em;
+  white-space:nowrap;
+}
 .theory-error{
   position:absolute;
   z-index:4;
@@ -540,7 +612,28 @@
     gap:4px;
   }
   .theory-tabs button{min-height:45px}
-  .theory-content{overflow:hidden!important}
+  .theory-content{
+    overflow:hidden!important;
+    grid-template-rows:34px minmax(0,1fr);
+  }
+  .theory-problem-switcher{
+    padding:3px 5px;
+    grid-template-columns:44px minmax(0,1fr) auto;
+    gap:4px;
+  }
+  .theory-problem-switcher>span{font-size:.28rem}
+  .theory-problem-switcher>div{gap:3px}
+  .theory-problem-switcher button{
+    height:26px;
+    max-width:170px;
+    padding:0 5px;
+    grid-template-columns:auto minmax(0,1fr);
+    gap:4px;
+  }
+  .theory-problem-switcher button b{font-size:.3rem}
+  .theory-problem-switcher button small{font-size:.34rem}
+  .theory-problem-switcher button i{display:none}
+  .theory-problem-switcher>strong{font-size:.27rem}
   .theory-view{
     height:100%;
     min-height:0;
@@ -684,6 +777,12 @@
 
 @media(max-width:430px){
   .theory-heading h1{font-size:1.62rem}
+  .theory-problem-switcher{
+    grid-template-columns:38px minmax(0,1fr) auto;
+  }
+  .theory-problem-switcher button small{display:none}
+  .theory-problem-switcher button{max-width:92px;grid-template-columns:1fr}
+  .theory-problem-switcher button b{text-align:center}
   .theory-heading-copy{font-size:.5rem}
   .theory-title-row h2{max-width:255px;font-size:1rem}
   .theory-tabs button strong{font-size:.58rem}

@@ -41,13 +41,23 @@ function formulaDisplay(value?: string) {
     .replaceAll("}", "");
 }
 
-function activeProblem(feed: TheoryProgramFeed | null): TheoryProblem | null {
-  return feed?.problems.find((problem) => problem.status === "ACTIVE") || feed?.problems[0] || null;
+function defaultProblem(feed: TheoryProgramFeed | null): TheoryProblem | null {
+  if (!feed) return null;
+  const canonical = feed.program.current_problem_id
+    ? feed.problems.find((problem) => problem.problem_id === feed.program.current_problem_id)
+    : null;
+  return canonical || [...feed.problems].reverse().find((problem) => problem.status === "ACTIVE") || feed.problems[0] || null;
+}
+
+function resolveProblem(feed: TheoryProgramFeed | null, selectedProblemId: string): TheoryProblem | null {
+  if (!feed) return null;
+  return feed.problems.find((problem) => problem.problem_id === selectedProblemId) || defaultProblem(feed);
 }
 
 export default function Theory() {
   const [tab, setTab] = useState<TheoryTab>("problem");
   const [problemFocus, setProblemFocus] = useState<ProblemFocus>("model");
+  const [selectedProblemId, setSelectedProblemId] = useState("");
   const [selectedConjectureId, setSelectedConjectureId] = useState("");
   const [selectedWorkstreamId, setSelectedWorkstreamId] = useState("");
   const [selectedStandardId, setSelectedStandardId] = useState("");
@@ -63,6 +73,15 @@ export default function Theory() {
         const next = await fetchTheoryProgram();
         if (!active) return;
         setData(next);
+        setSelectedProblemId((current) => {
+          if (current && next.problems.some((problem) => problem.problem_id === current)) return current;
+          return (
+            next.program.current_problem_id ||
+            [...next.problems].reverse().find((problem) => problem.status === "ACTIVE")?.problem_id ||
+            next.problems[0]?.problem_id ||
+            ""
+          );
+        });
         setError("");
       } catch (reason) {
         if (!active) return;
@@ -78,7 +97,8 @@ export default function Theory() {
     };
   }, []);
 
-  const problem = activeProblem(data);
+  const problem = resolveProblem(data, selectedProblemId);
+  const activeProblems = (data?.problems || []).filter((row) => row.status === "ACTIVE");
   const conjectures = problem?.conjectures || [];
   const workstreams = problem?.workstreams || [];
   const standards = data?.program.standards || [];
@@ -135,6 +155,32 @@ export default function Theory() {
         </aside>
 
         <div className="workspace-content story-content theory-content">
+          <div className="theory-problem-switcher" aria-label="Theory problems">
+            <span>PROBLEM</span>
+            <div>
+              {(data?.problems || []).map((row) => (
+                <button
+                  type="button"
+                  key={row.problem_id}
+                  className={problem?.problem_id === row.problem_id ? "active" : ""}
+                  aria-pressed={problem?.problem_id === row.problem_id}
+                  onClick={() => {
+                    setSelectedProblemId(row.problem_id);
+                    setProblemFocus("model");
+                    setSelectedConjectureId("");
+                    setSelectedWorkstreamId("");
+                    setSelectedStandardId("");
+                    setSelectedResultId("");
+                  }}
+                >
+                  <b>{row.problem_id}</b>
+                  <small>{row.title}</small>
+                  <i>{row.status}</i>
+                </button>
+              ))}
+            </div>
+            <strong>{activeProblems.length} ACTIVE</strong>
+          </div>
           {error ? <div className="theory-error">{error}</div> : null}
 
           {tab === "problem" ? (
