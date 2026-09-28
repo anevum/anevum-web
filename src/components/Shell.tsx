@@ -7,6 +7,7 @@ const nav = [
   ["/live", "Operations"],
   ["/performance", "Performance"],
   ["/research", "Research"],
+  ["/theory", "Theory"],
   ["/system", "System"],
   ["/releases", "Releases"],
   ["/record", "Record"]
