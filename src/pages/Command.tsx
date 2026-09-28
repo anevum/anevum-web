@@ -12,9 +12,11 @@ import {
   fetchCommandStatus,
   fetchCommandWeeklyReport,
   fetchResearchReadiness,
+  fetchTheoryProgram,
   type CommandEvidence,
   type CommandSnapshot,
-  type ResearchReadiness
+  type ResearchReadiness,
+  type TheoryProgramFeed
 } from "../lib/data";
 import { clockTime, money, percent } from "../lib/format";
 
@@ -61,6 +63,7 @@ export default function Command() {
   const [dailyReport, setDailyReport] = useState<Record<string, unknown> | null>(null);
   const [weeklyReport, setWeeklyReport] = useState<Record<string, unknown> | null>(null);
   const [researchReadiness, setResearchReadiness] = useState<ResearchReadiness | null>(null);
+  const [theoryProgram, setTheoryProgram] = useState<TheoryProgramFeed | null>(null);
   const [error, setError] = useState("");
   const [refreshing, setRefreshing] = useState(false);
   const { data: publicFeed, error: publicFeedError } = useLiveTrading(3000);
@@ -74,10 +77,11 @@ export default function Command() {
     if (!session || !commandAdmin) return;
     setRefreshing(true);
     try {
-      const [nextSnapshot, nextEvidence, nextReadiness] = await Promise.all([
+      const [nextSnapshot, nextEvidence, nextReadiness, nextTheory] = await Promise.all([
         fetchCommandStatus(session),
         fetchCommandEvidence(session),
-        fetchResearchReadiness().catch(() => null)
+        fetchResearchReadiness().catch(() => null),
+        fetchTheoryProgram().catch(() => null)
       ]);
       const [daily, weekly] = await Promise.all([
         fetchCommandDailyReport(session).catch(() => null),
@@ -88,6 +92,7 @@ export default function Command() {
       setDailyReport(daily || record(nextEvidence.latest_daily));
       setWeeklyReport(weekly || record(nextEvidence.latest_weekly));
       setResearchReadiness(nextReadiness);
+      setTheoryProgram(nextTheory);
       setError("");
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "Command evidence unavailable.");
@@ -188,6 +193,9 @@ export default function Command() {
   const readinessLimitations = researchReadiness?.limitations || [];
   const readinessMonitors = researchReadiness?.monitors || [];
   const gptReady = researchReadiness?.gpt_would_run_now === true;
+  const theoryProblem = theoryProgram?.problems.find((row) => row.status === "ACTIVE") || theoryProgram?.problems[0];
+  const theoryConjectures = theoryProblem?.conjectures || [];
+  const openTheoryConjectures = theoryConjectures.filter((row) => row.status === "OPEN");
 
   const scanRows = useMemo(() => {
     const preferred = Array.isArray(strategy.scan_symbols)
@@ -399,6 +407,26 @@ export default function Command() {
                 <span>NEXT EXPERIMENT</span>
                 <strong>{text(nextResearch?.conclusion, "No canonical next-direction decision.")}</strong>
                 <p>Experiment execution is not available from Command in this task.</p>
+              </div>
+              <div className="command-two-column">
+                <div>
+                  <span className="command-subhead">MATHEMATICS &amp; THEORY</span>
+                  <div className="command-list-item">
+                    <strong>{text(theoryProblem?.problem_id)} · {text(theoryProblem?.title)}</strong>
+                    <p>{text(theoryProblem?.question, "Canonical theory registry unavailable.")}</p>
+                    <small>Registry {theoryProgram?.registry_hash ? theoryProgram.registry_hash.slice(0, 12) : "—"} · Production authority: NONE</small>
+                  </div>
+                </div>
+                <div>
+                  <span className="command-subhead">OPEN CONJECTURES</span>
+                  {openTheoryConjectures.length ? openTheoryConjectures.map((row) => (
+                    <div className="command-list-item" key={row.conjecture_id}>
+                      <strong>{row.conjecture_id} · {row.title}</strong>
+                      <p>{row.statement}</p>
+                      <small>Novelty: {row.novelty_state} · Status: {row.status}</small>
+                    </div>
+                  )) : <div className="command-empty">No open theory conjectures are recorded.</div>}
+                </div>
               </div>
               <div className="command-two-column">
                 <div>
