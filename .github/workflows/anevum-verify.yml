@@ -167,7 +167,8 @@ jobs:
           grep -Fq 'release-detail' "$RUNNER_TEMP/anevum-visuals/release-rendered.html"
           grep -Fq 'theory-page' "$RUNNER_TEMP/anevum-visuals/theory-rendered.html"
           grep -Fq 'ATP-001' "$RUNNER_TEMP/anevum-visuals/theory-rendered.html"
-          grep -Fq 'theory-public-frame' "$RUNNER_TEMP/anevum-visuals/theory-rendered.html"
+          grep -Fq 'compact-public-frame' "$RUNNER_TEMP/anevum-visuals/theory-rendered.html"
+          grep -Fq 'theory-subnav' "$RUNNER_TEMP/anevum-visuals/theory-rendered.html"
       - name: Upload browser QA
         if: github.event_name == 'pull_request'
         uses: actions/upload-artifact@v4
