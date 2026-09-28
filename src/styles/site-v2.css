@@ -315,3 +315,21 @@
   .theory-workstream-list article{grid-template-columns:72px minmax(0,1fr)}
   .theory-workstream-list article>b{display:none}
 }
+
+.theory-results{
+  padding:11px 12px;
+  display:grid;
+  gap:7px;
+  border:1px solid rgba(111,209,255,.08);
+  border-radius:8px;
+  background:rgba(4,14,23,.5);
+}
+.theory-results>span{color:#5c7d91;font-size:.38rem;font-weight:760;letter-spacing:.14em}
+.theory-results article{padding:9px 0;border-top:1px solid rgba(207,229,242,.05);display:grid;gap:6px}
+.theory-results article:first-of-type{border-top:0}
+.theory-results header{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:9px;align-items:center}
+.theory-results header b{color:#69a1bf;font-size:.36rem;font-weight:660}
+.theory-results header strong{color:#b4c7d1;font-size:.59rem;font-weight:590}
+.theory-results header i{padding:3px 6px;border:1px solid rgba(111,209,255,.12);border-radius:999px;color:#75a3bc;font-size:.31rem;font-style:normal;letter-spacing:.08em}
+.theory-results p{margin:0;color:#778993;font-size:.54rem;line-height:1.5}
+.theory-results footer{color:#586d79;font-size:.47rem;line-height:1.45}
