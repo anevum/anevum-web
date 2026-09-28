@@ -3,7 +3,9 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import Mark from "../components/Mark";
 import RhenMark from "../components/RhenMark";
+import { currentRhenRelease } from "../data/releases";
 import { useLiveTrading } from "../hooks/useLiveTrading";
+import { fetchTheoryProgram, type TheoryProgramFeed } from "../lib/data";
 
 function ageLabel(value?: number | null) {
   if (value == null || !Number.isFinite(value)) return "awaiting";
@@ -16,40 +18,85 @@ function shortVersion(value?: string | null) {
   return String(value).replace(/^strategy[-_ ]?/i, "").toUpperCase();
 }
 
+function percentLabel(value?: number | null) {
+  if (value == null || !Number.isFinite(value)) return "—";
+  const sign = value > 0 ? "+" : "";
+  return sign + value.toFixed(2) + "%";
+}
+
 const destinations = [
   {
     href: "/performance",
     index: "01",
     title: "Performance",
-    description: "The live broker-derived record: normalized returns, drawdown, sample size, and methodology."
+    description: "Broker-derived returns, drawdown, sample size, methodology, and the evidence boundary."
   },
   {
     href: "/live",
     index: "02",
     title: "Operations",
-    description: "RHEN runtime telemetry, current system state, activity, and the evidence being generated now."
+    description: "Current runtime state, telemetry, activity, and what RHEN is observing now."
   },
   {
     href: "/research",
     index: "03",
     title: "Research",
-    description: "Experiments, rejected ideas, active questions, durable decisions, and the next direction."
+    description: "Experiments, rejected ideas, open questions, evidence gaps, and durable decisions."
+  },
+  {
+    href: "/theory",
+    index: "04",
+    title: "Mathematics & Theory",
+    description: "Formal models, conjectures, proof targets, and the mathematical research program."
+  },
+  {
+    href: "/system",
+    index: "05",
+    title: "System",
+    description: "Architecture, boundaries, telemetry layers, data flow, and operating constraints."
+  },
+  {
+    href: "/releases",
+    index: "06",
+    title: "Releases",
+    description: "Versioned RHEN releases, immutable snapshots, verification, and change history."
   }
 ];
 
 export default function Home() {
   const [showIntro, setShowIntro] = useState(true);
+  const [theoryProgram, setTheoryProgram] = useState<TheoryProgramFeed | null>(null);
   const { data, loading } = useLiveTrading(5000);
+  const release = currentRhenRelease();
 
   useEffect(() => {
-    const timer = window.setTimeout(() => setShowIntro(false), 1050);
+    const timer = window.setTimeout(() => setShowIntro(false), 900);
     return () => window.clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+    fetchTheoryProgram()
+      .then((program) => {
+        if (active) setTheoryProgram(program);
+      })
+      .catch(() => {
+        if (active) setTheoryProgram(null);
+      });
+    return () => {
+      active = false;
+    };
   }, []);
 
   const version = data?.active_strategy?.version_id || data?.active_strategy?.strategy_name;
   const state = loading ? "CONNECTING" : data?.state || (data?.live ? "RUNNING" : "STALE");
   const stateClass = data?.live ? "is-live" : data ? "is-stale" : "";
   const research = String(data?.research?.current_status || "UNRECORDED").replaceAll("_", " ").toUpperCase();
+  const performance = data?.performance;
+  const activeTheoryProblem =
+    theoryProgram?.problems.find((row) => row.problem_id === theoryProgram.program.current_problem_id) ||
+    [...(theoryProgram?.problems || [])].reverse().find((row) => row.status === "ACTIVE") ||
+    theoryProgram?.problems[0];
 
   return (
     <>
@@ -75,75 +122,175 @@ export default function Home() {
         ) : null}
       </AnimatePresence>
 
-      <section className="compact-page landing-screen anevum-home">
-        <motion.div
-          className="landing-copy anevum-home-copy"
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: .62, delay: .06 }}
-        >
-          <div className="anevum-rhen-reveal" aria-label="ANEVUM presents RHEN">
-            <div className="anevum-presents">
+      <section className="anevum-home-v2">
+        <section className="anevum-home-hero-v2">
+          <motion.div
+            className="anevum-home-hero-copy-v2"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: .65, delay: .05 }}
+          >
+            <div className="anevum-home-lockup-v2">
               <Mark />
               <span>ANEVUM</span>
               <i />
-              <small>PRESENTS</small>
+              <small>SYSTEMS // RESEARCH // THEORY</small>
             </div>
-            <div className="rhen-hero-sigil" aria-hidden="true">
+
+            <div className="anevum-home-title-v2">
+              <span>BUILD.</span>
+              <span>OBSERVE.</span>
+              <span>PROVE.</span>
+            </div>
+
+            <p className="anevum-home-lead-v2">
+              ANEVUM is a working laboratory for autonomous systems, market research, mathematics,
+              and durable evidence. RHEN is the first live operating system inside it.
+            </p>
+
+            <div className="anevum-home-actions-v2">
+              <Link className="anevum-home-primary-v2" to="/performance">
+                See the record <b>↗</b>
+              </Link>
+              <Link className="anevum-home-secondary-v2" to="/system">
+                Explore the system <b>→</b>
+              </Link>
+            </div>
+
+            <div className="anevum-home-principles-v2">
+              <span>REAL SYSTEMS</span><i />
+              <span>DURABLE EVIDENCE</span><i />
+              <span>CONTROLLED SCALE</span>
+            </div>
+          </motion.div>
+
+          <motion.aside
+            className="anevum-home-rhen-card-v2"
+            initial={{ opacity: 0, x: 18 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: .62, delay: .14 }}
+          >
+            <div className="anevum-home-rhen-orbit-v2" aria-hidden="true">
+              <span /><span /><span />
               <RhenMark decorative />
             </div>
-            <div className="rhen-wordmark">RHEN</div>
-            <div className="rhen-tagline">
-              <span>OBSERVE</span><i>//</i><span>DISCOVER</span><i>//</i><span>EXECUTE</span>
+            <div className="anevum-home-rhen-card-head-v2">
+              <div>
+                <small>FLAGSHIP SYSTEM</small>
+                <strong>RHEN</strong>
+              </div>
+              <span className={"runtime-state " + stateClass}><i />{state}</span>
             </div>
-            <p className="rhen-positioning">
-              ANEVUM's autonomous trading and research system. Built on evidence, disciplined by
-              durable records, and designed to evolve only when the evidence supports the change.
+            <div className="anevum-home-rhen-metrics-v2">
+              <div><small>ACTIVE VERSION</small><strong>{shortVersion(version)}</strong></div>
+              <div><small>RETURN</small><strong>{percentLabel(performance?.account_return_pct)}</strong></div>
+              <div><small>CLOSED TRADES</small><strong>{performance?.closed_trades ?? "—"}</strong></div>
+              <div><small>SESSIONS</small><strong>{performance?.trading_sessions ?? "—"}</strong></div>
+            </div>
+            <div className="anevum-home-rhen-card-foot-v2">
+              <span>TELEMETRY {ageLabel(data?.freshness_seconds)} AGO</span>
+              <span>{research}</span>
+            </div>
+          </motion.aside>
+        </section>
+
+        <section className="anevum-home-status-v2" aria-label="Current ANEVUM state">
+          <div><small>LIVE SYSTEM</small><strong>RHEN</strong></div>
+          <div><small>RELEASE</small><strong>{release.version} // {release.codename}</strong></div>
+          <div><small>LIFECYCLE</small><strong>{release.lifecycle}</strong></div>
+          <div><small>RESEARCH</small><strong>{research}</strong></div>
+          <div><small>TELEMETRY</small><strong>{ageLabel(data?.freshness_seconds)} AGO</strong></div>
+        </section>
+
+        <section className="anevum-home-section-v2">
+          <div className="anevum-home-section-head-v2">
+            <div>
+              <span>01 // CURRENT WORK</span>
+              <h2>What is moving now.</h2>
+            </div>
+            <p>
+              The public site is a live view into the work: operational evidence, current research,
+              formal theory, and versioned system changes.
             </p>
           </div>
-          <div className="anevum-home-principles" aria-label="ANEVUM operating principles">
-            <span>REAL SYSTEMS</span><i />
-            <span>DURABLE EVIDENCE</span><i />
-            <span>CONTROLLED SCALE</span>
-          </div>
-        </motion.div>
 
-        <motion.div
-          className="landing-destinations"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: .6, delay: .18 }}
-        >
-          <div className="anevum-home-section-label">
-            <span>CURRENT OPERATION</span>
-            <strong>RHEN</strong>
-          </div>
-          {destinations.map((item, index) => (
-            <motion.div
-              key={item.href}
-              initial={{ opacity: 0, y: 14 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: .4, delay: .22 + index * .06 }}
-            >
-              <Link className="destination-card" to={item.href}>
-                <span>{item.index}</span>
-                <div>
-                  <strong>{item.title}</strong>
-                  <p>{item.description}</p>
-                </div>
+          <div className="anevum-home-current-grid-v2">
+            <Link className="anevum-home-project-card-v2 is-rhen" to="/releases">
+              <div className="anevum-home-project-card-top-v2">
+                <span>RHEN // {release.version}</span>
+                <b>{release.lifecycle}</b>
+              </div>
+              <div>
+                <RhenMark decorative />
+                <h3>{release.codename}</h3>
+                <p>{release.headline}</p>
+              </div>
+              <footer>
+                <span>{release.releaseClass}</span>
                 <i>→</i>
-              </Link>
-            </motion.div>
-          ))}
-        </motion.div>
+              </footer>
+            </Link>
 
-        <div className="landing-status">
-          <div><span className={"runtime-state " + stateClass}><i />{state}</span></div>
-          <div><small>FLAGSHIP</small><strong>RHEN</strong></div>
-          <div><small>ACTIVE VERSION</small><strong>{shortVersion(version)}</strong></div>
-          <div><small>TELEMETRY</small><strong>{ageLabel(data?.freshness_seconds)} AGO</strong></div>
-          <div><small>RESEARCH</small><strong>{research}</strong></div>
-        </div>
+            <Link className="anevum-home-project-card-v2 is-theory" to="/theory">
+              <div className="anevum-home-project-card-top-v2">
+                <span>MATHEMATICS // THEORY</span>
+                <b>{theoryProgram?.program.status || "ACTIVE"}</b>
+              </div>
+              <div>
+                <div className="anevum-home-equation-v2">ΔVₜ + Rₜ(π)</div>
+                <h3>{activeTheoryProblem?.problem_id || "THEORY"}</h3>
+                <p>{activeTheoryProblem?.title || "Formal mathematical research and model development."}</p>
+              </div>
+              <footer>
+                <span>{activeTheoryProblem?.status || "PROGRAM"}</span>
+                <i>→</i>
+              </footer>
+            </Link>
+          </div>
+        </section>
+
+        <section className="anevum-home-section-v2 anevum-home-explore-v2">
+          <div className="anevum-home-section-head-v2">
+            <div>
+              <span>02 // EXPLORE</span>
+              <h2>Follow the evidence.</h2>
+            </div>
+            <p>
+              Each surface answers a different question. Nothing important is hidden behind a
+              single marketing page.
+            </p>
+          </div>
+
+          <div className="anevum-home-destination-grid-v2">
+            {destinations.map((item, index) => (
+              <motion.div
+                key={item.href}
+                initial={{ opacity: 0, y: 14 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-60px" }}
+                transition={{ duration: .38, delay: index * .04 }}
+              >
+                <Link className="anevum-home-destination-v2" to={item.href}>
+                  <span>{item.index}</span>
+                  <div>
+                    <strong>{item.title}</strong>
+                    <p>{item.description}</p>
+                  </div>
+                  <i>↗</i>
+                </Link>
+              </motion.div>
+            ))}
+          </div>
+        </section>
+
+        <section className="anevum-home-record-v2">
+          <div>
+            <span>03 // RECORD</span>
+            <strong>The work should leave a trail.</strong>
+            <p>Research decisions, releases, evidence, and archived work remain inspectable rather than disappearing into a feed.</p>
+          </div>
+          <Link to="/record">Open the record <b>→</b></Link>
+        </section>
       </section>
     </>
   );
