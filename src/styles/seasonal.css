@@ -266,3 +266,77 @@ html,body,#root,.public-frame,.public-page{
   0%,100%{filter:drop-shadow(0 0 14px rgba(232,124,40,.18)) drop-shadow(0 0 34px rgba(232,124,40,.06))}
   50%{filter:drop-shadow(0 0 17px rgba(246,142,55,.3)) drop-shadow(0 0 44px rgba(232,124,40,.11))}
 }
+
+
+/* October homepage signature --------------------------------------------- */
+:root[data-seasonal-theme="oct"] .anevum-home-hero-v2{
+  position:relative;
+}
+
+:root[data-seasonal-theme="oct"] .anevum-home-lockup-v2:after{
+  content:"OCT // SPOOKY SYSTEMS";
+  display:inline-flex;
+  align-items:center;
+  min-height:22px;
+  margin-left:10px;
+  padding:0 8px;
+  border:1px solid rgba(234,145,73,.18);
+  border-radius:999px;
+  color:#c98b59;
+  background:rgba(25,12,6,.34);
+  box-shadow:inset 0 0 18px rgba(226,111,29,.035);
+  font-size:.36rem;
+  font-weight:720;
+  letter-spacing:.12em;
+  white-space:nowrap;
+}
+
+:root[data-seasonal-theme="oct"] .anevum-home-hero-v2:after{
+  content:"";
+  position:absolute;
+  z-index:0;
+  right:clamp(-92px,-4vw,-42px);
+  top:50%;
+  width:clamp(240px,31vw,480px);
+  aspect-ratio:1;
+  transform:translateY(-50%);
+  border-radius:50%;
+  pointer-events:none;
+  opacity:.23;
+  background:
+    radial-gradient(circle at 50% 50%,rgba(255,171,72,.34) 0 2.5%,transparent 3.2%),
+    radial-gradient(ellipse at 36% 46%,rgba(255,143,45,.62) 0 4.5%,transparent 5.4%),
+    radial-gradient(ellipse at 64% 46%,rgba(255,143,45,.62) 0 4.5%,transparent 5.4%),
+    conic-gradient(
+      from 0deg,
+      transparent 0 8%,
+      rgba(238,126,40,.38) 8.5% 9.1%,
+      transparent 9.6% 16%,
+      rgba(90,148,203,.22) 16.5% 17.1%,
+      transparent 17.6% 25%,
+      rgba(238,126,40,.34) 25.5% 26.1%,
+      transparent 26.6% 100%
+    ),
+    radial-gradient(circle at center,transparent 0 31%,rgba(239,126,39,.36) 31.5% 32%,transparent 32.5% 39%,rgba(83,137,188,.22) 39.5% 40%,transparent 40.5% 49%,rgba(237,129,45,.25) 49.5% 50%,transparent 50.5%),
+    radial-gradient(circle at center,rgba(14,9,7,.95) 0 55%,rgba(32,16,8,.78) 56% 62%,transparent 63%);
+  filter:
+    drop-shadow(0 0 32px rgba(231,112,31,.19))
+    drop-shadow(0 0 80px rgba(231,112,31,.08));
+}
+
+:root[data-seasonal-theme="oct"] .anevum-home-hero-v2 > *{
+  position:relative;
+  z-index:1;
+}
+
+@media(max-width:760px){
+  :root[data-seasonal-theme="oct"] .anevum-home-lockup-v2:after{
+    display:none;
+  }
+  :root[data-seasonal-theme="oct"] .anevum-home-hero-v2:after{
+    width:280px;
+    right:-150px;
+    top:42%;
+    opacity:.14;
+  }
+}
