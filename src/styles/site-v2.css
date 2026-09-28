@@ -333,3 +333,195 @@
 .theory-results header i{padding:3px 6px;border:1px solid rgba(111,209,255,.12);border-radius:999px;color:#75a3bc;font-size:.31rem;font-style:normal;letter-spacing:.08em}
 .theory-results p{margin:0;color:#778993;font-size:.54rem;line-height:1.5}
 .theory-results footer{color:#586d79;font-size:.47rem;line-height:1.45}
+
+
+/* Theory layout repair ---------------------------------------------------
+ * The Theory page combines .compact-page with .theory-page. The original
+ * theory padding shorthand zeroed out the compact shell's fixed-header and
+ * safe-area offset, putting the page beneath iOS chrome/navigation. Keep the
+ * desktop workspace compact, but let the long research document use normal
+ * document scrolling on phones.
+ */
+.theory-page{
+  padding-top:calc(78px + var(--safe-top));
+  padding-bottom:max(16px,var(--safe-bottom));
+}
+
+@media(max-width:700px){
+  .theory-public-frame,
+  .theory-public-stage{
+    height:auto;
+    min-height:100dvh;
+    overflow:visible;
+  }
+
+  .theory-page{
+    height:auto;
+    min-height:100dvh;
+    display:block;
+    padding-top:calc(61px + var(--safe-top));
+    padding-bottom:max(18px,var(--safe-bottom));
+  }
+
+  .theory-heading{
+    gap:12px;
+    padding:7px 4px 13px;
+  }
+
+  .theory-heading h1{
+    max-width:100%;
+    margin:8px 0 8px;
+    font-size:clamp(1.82rem,8.4vw,2.15rem);
+    line-height:.96;
+  }
+
+  .theory-heading>div>p{
+    max-width:100%;
+    font-size:.68rem;
+    line-height:1.52;
+  }
+
+  .theory-heading-status{
+    grid-template-columns:1fr 1fr;
+  }
+
+  .theory-heading-status>div{
+    min-height:62px;
+    padding:11px 12px;
+  }
+
+  .theory-heading-status>div:nth-child(2n){
+    border-right:0;
+  }
+
+  .theory-heading-status>div:nth-child(-n+2){
+    border-bottom:1px solid rgba(207,229,242,.06);
+  }
+
+  .theory-heading-status small{font-size:.42rem}
+  .theory-heading-status strong{font-size:.64rem}
+
+  .theory-workspace{
+    display:block;
+    padding:11px 0 0;
+  }
+
+  .theory-tabs{
+    display:grid;
+    grid-template-columns:repeat(4,minmax(0,1fr));
+    gap:5px;
+    overflow:visible;
+    margin-bottom:8px;
+  }
+
+  .theory-tabs button{
+    min-width:0;
+    min-height:50px;
+    padding:7px 6px;
+    grid-template-columns:16px minmax(0,1fr);
+    gap:4px;
+  }
+
+  .theory-tabs button>span{font-size:.42rem}
+  .theory-tabs button strong{font-size:.54rem}
+  .theory-tabs button small{display:none}
+
+  .theory-content{
+    min-height:0;
+    overflow:visible;
+    scrollbar-width:none;
+  }
+
+  .theory-content::-webkit-scrollbar{display:none}
+
+  .theory-view{
+    padding:14px 12px 18px;
+    gap:14px;
+  }
+
+  .theory-title-row{
+    gap:12px;
+  }
+
+  .theory-title-row h2{
+    font-size:clamp(1.35rem,6.2vw,1.72rem);
+    line-height:1.06;
+  }
+
+  .theory-title-row>b{
+    flex:0 0 auto;
+    margin-top:1px;
+    font-size:.43rem;
+  }
+
+  .theory-question,
+  .theory-intro{
+    font-size:.78rem;
+    line-height:1.58;
+  }
+
+  .theory-equations article{
+    padding:14px 12px;
+  }
+
+  .theory-equations code{
+    font-size:.72rem;
+    white-space:normal;
+    overflow-wrap:anywhere;
+  }
+
+  .theory-equations p,
+  .theory-two-column p,
+  .theory-conjecture-list>article>p,
+  .theory-conjecture-list footer p,
+  .theory-track-grid p,
+  .theory-workstream-list p,
+  .theory-standards p,
+  .theory-provenance p,
+  .theory-boundary p,
+  .theory-results p{
+    font-size:.68rem;
+    line-height:1.48;
+  }
+
+  .theory-workstream-list article{
+    grid-template-columns:70px minmax(0,1fr);
+  }
+
+  .theory-domain-line,
+  .theory-target{
+    align-items:flex-start;
+    flex-direction:column;
+    gap:6px;
+  }
+}
+
+@media(max-width:430px){
+  .theory-page{
+    padding-top:calc(59px + var(--safe-top));
+  }
+
+  .theory-heading h1{
+    font-size:clamp(1.72rem,8.2vw,1.95rem);
+  }
+
+  .theory-tabs button{
+    min-height:46px;
+    grid-template-columns:1fr;
+    justify-items:center;
+    text-align:center;
+  }
+
+  .theory-tabs button>span{
+    display:none;
+  }
+
+  .theory-tabs button strong{
+    font-size:.5rem;
+  }
+
+  .theory-title-row{
+    display:grid;
+    grid-template-columns:minmax(0,1fr) auto;
+  }
+}
