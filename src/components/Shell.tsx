@@ -2,16 +2,9 @@ import { type ReactNode } from "react";
 import { Link, useLocation } from "react-router-dom";
 import Mark from "./Mark";
 import UniverseBackground from "./UniverseBackground";
+import publicRoutes from "../data/public-routes.json";
 
-const nav = [
-  ["/live", "Operations"],
-  ["/performance", "Performance"],
-  ["/research", "Research"],
-  ["/theory", "Theory"],
-  ["/system", "System"],
-  ["/releases", "Releases"],
-  ["/record", "Record"]
-] as const;
+const nav = publicRoutes.filter((route) => route.nav);
 
 export function PublicShell({ children }: { children: ReactNode }) {
   const location = useLocation();
@@ -23,7 +16,7 @@ export function PublicShell({ children }: { children: ReactNode }) {
           <Mark /><span>ANEVUM</span>
         </Link>
         <nav className="public-nav public-nav-main" aria-label="Primary navigation">
-          {nav.map(([href, label]) => (
+          {nav.map(({ path: href, label }) => (
             <Link key={href} to={href} className={location.pathname === href || (href === "/releases" && location.pathname.startsWith("/releases/")) ? "active" : ""}>{label}</Link>
           ))}
         </nav>
