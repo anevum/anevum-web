@@ -188,6 +188,18 @@ export type TheoryWorkstream = {
   objective: string;
 };
 
+export type TheoryResult = {
+  result_id: string;
+  title: string;
+  status: string;
+  claim_class: string;
+  novelty_state: string;
+  statement: string;
+  scope: string;
+  artifact_path: string;
+  model_path?: string;
+};
+
 export type TheoryConjecture = {
   conjecture_id: string;
   title: string;
@@ -219,6 +231,7 @@ export type TheoryProblem = {
   non_claims: string[];
   workstreams: TheoryWorkstream[];
   conjectures: TheoryConjecture[];
+  results?: TheoryResult[];
   success_criteria: string[];
 };
 
