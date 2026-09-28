@@ -63,6 +63,10 @@ for (const release of registry.releases) {
 
 if (fs.existsSync(sitemapPath)) {
   const sitemap = fs.readFileSync(sitemapPath, "utf8");
+  for (const route of ["/", "/live", "/performance", "/system", "/research", "/theory", "/record", "/releases"]) {
+    const url = "https://anevum.com" + (route === "/" ? "/" : route);
+    if (!sitemap.includes(url)) errors.push("Sitemap missing " + url);
+  }
   for (const release of registry.releases) {
     const url = "https://anevum.com/releases/" + release.slug;
     if (!sitemap.includes(url)) errors.push("Sitemap missing " + url);
@@ -128,6 +132,7 @@ const liveStateSurfaces = [
   "src/pages/Performance.tsx",
   "src/pages/System.tsx",
   "src/pages/Research.tsx",
+  "src/pages/Theory.tsx",
   "src/pages/Command.tsx"
 ];
 for (const file of liveStateSurfaces) {
