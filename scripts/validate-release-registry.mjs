@@ -6,6 +6,8 @@ import { currentRelease, loadReleaseRegistry } from "./release-registry.mjs";
 const ROOT = path.resolve(new URL("..", import.meta.url).pathname);
 const registry = loadReleaseRegistry();
 const errors = [];
+const publicRoutes = JSON.parse(fs.readFileSync(path.join(ROOT, "src", "data", "public-routes.json"), "utf8"));
+const staticPublicRoutes = publicRoutes.filter((route) => route.sitemap).map((route) => route.path);
 const required = [
   "slug","version","codename","lifecycle","releaseClass","date","headline","abstract","thesis",
   "sourceCommit","activeStrategy","pdfPath","badges","capabilities","architecture","verification","limitations","changelog","next"
@@ -63,7 +65,7 @@ for (const release of registry.releases) {
 
 if (fs.existsSync(sitemapPath)) {
   const sitemap = fs.readFileSync(sitemapPath, "utf8");
-  for (const route of ["/", "/live", "/performance", "/system", "/research", "/theory", "/record", "/releases"]) {
+  for (const route of staticPublicRoutes) {
     const url = "https://anevum.com" + (route === "/" ? "/" : route);
     if (!sitemap.includes(url)) errors.push("Sitemap missing " + url);
   }
