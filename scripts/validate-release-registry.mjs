@@ -8,6 +8,14 @@ const registry = loadReleaseRegistry();
 const errors = [];
 const publicRoutes = JSON.parse(fs.readFileSync(path.join(ROOT, "src", "data", "public-routes.json"), "utf8"));
 const staticPublicRoutes = publicRoutes.filter((route) => route.sitemap).map((route) => route.path);
+const appSource = fs.readFileSync(path.join(ROOT, "src", "App.tsx"), "utf8");
+for (const route of staticPublicRoutes) {
+  const routeLiteral = 'path="' + route + '"';
+  if (!appSource.includes(routeLiteral)) {
+    errors.push("Canonical public route missing from React router: " + route);
+  }
+}
+
 const required = [
   "slug","version","codename","lifecycle","releaseClass","date","headline","abstract","thesis",
   "sourceCommit","activeStrategy","pdfPath","badges","capabilities","architecture","verification","limitations","changelog","next"

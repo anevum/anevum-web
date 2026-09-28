@@ -24,21 +24,31 @@ function pretty(value: string) {
 
 function formulaDisplay(value?: string) {
   return String(value || "—")
+    .replace(/\\operatorname\{([^}]+)\}/g, "$1")
+    .replace(/\\text\{([^}]+)\}/g, "$1")
     .replaceAll("\\mathbb{E}", "E")
     .replaceAll("\\mathcal{R}", "R")
     .replaceAll("\\max", "max")
+    .replaceAll("\\min", "min")
     .replaceAll("\\sum", "Σ")
     .replaceAll("\\lambda", "λ")
     .replaceAll("\\theta", "θ")
+    .replaceAll("\\alpha", "α")
     .replaceAll("\\pi", "π")
+    .replaceAll("\\le", "≤")
+    .replaceAll("\\ge", "≥")
     .replaceAll("\\lVert", "‖")
     .replaceAll("\\rVert", "‖")
     .replaceAll("\\left", "")
     .replaceAll("\\right", "")
+    .replaceAll("\\qquad", "   ")
+    .replaceAll("\\quad", "  ")
     .replaceAll("\\;", " ")
     .replaceAll("\\,", " ")
     .replaceAll("{", "")
-    .replaceAll("}", "");
+    .replaceAll("}", "")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 function defaultProblem(feed: TheoryProgramFeed | null): TheoryProblem | null {

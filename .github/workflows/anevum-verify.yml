@@ -98,10 +98,12 @@ jobs:
 
           theory_feed="$(curl --fail --show-error --silent "$base/api/public/theory")"
           printf '%s' "$theory_feed" | jq -e '
+            . as $root |
             .schema_version == "anevum-theory-registry-v1" and
             .program.status == "ACTIVE" and
+            (.program.current_problem_id | type == "string" and length > 0) and
             (.problems | type == "array") and
-            ([.problems[].problem_id] | index("ATP-001") != null) and
+            ([.problems[].problem_id] | index($root.program.current_problem_id) != null) and
             .authority.theory_can_change_live_trading == false and
             .authority.theory_can_open_protected_research_stages == false and
             .authority.theory_can_claim_novelty_without_review == false
@@ -145,6 +147,7 @@ jobs:
         run: |
           base="${{ steps.preview.outputs.preview_url }}"
           current_slug="$(jq -r '.currentSlug' public/release-registry.json)"
+          current_theory_problem="$(curl --fail --show-error --silent "$base/api/public/theory" | jq -er '.program.current_problem_id')"
           mkdir -p "$RUNNER_TEMP/anevum-visuals"
           google-chrome --headless --no-sandbox --disable-gpu --hide-scrollbars --virtual-time-budget=6000 --window-size=1440,1000 --screenshot="$RUNNER_TEMP/anevum-visuals/home-desktop.png" "$base/"
           google-chrome --headless --no-sandbox --disable-gpu --hide-scrollbars --virtual-time-budget=6000 --window-size=390,844 --screenshot="$RUNNER_TEMP/anevum-visuals/home-mobile.png" "$base/"
@@ -167,7 +170,7 @@ jobs:
           grep -Fq 'PUBLIC-PERFORMANCE-v1' "$RUNNER_TEMP/anevum-visuals/performance-rendered.html"
           grep -Fq 'release-detail' "$RUNNER_TEMP/anevum-visuals/release-rendered.html"
           grep -Fq 'theory-page' "$RUNNER_TEMP/anevum-visuals/theory-rendered.html"
-          grep -Fq 'ATP-001' "$RUNNER_TEMP/anevum-visuals/theory-rendered.html"
+          grep -Fq "$current_theory_problem" "$RUNNER_TEMP/anevum-visuals/theory-rendered.html"
           grep -Fq 'compact-public-frame' "$RUNNER_TEMP/anevum-visuals/theory-rendered.html"
           grep -Fq 'theory-subnav' "$RUNNER_TEMP/anevum-visuals/theory-rendered.html"
       - name: Upload browser QA
