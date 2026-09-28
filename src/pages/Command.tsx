@@ -79,7 +79,7 @@ export default function Command() {
     try {
       const [nextSnapshot, nextEvidence, nextReadiness, nextTheory] = await Promise.all([
         fetchCommandStatus(session),
-        fetchCommandEvidence(session),
+        fetchCommandEvidence(session).catch(() => null),
         fetchResearchReadiness().catch(() => null),
         fetchTheoryProgram().catch(() => null)
       ]);
@@ -88,9 +88,9 @@ export default function Command() {
         fetchCommandWeeklyReport(session).catch(() => null)
       ]);
       setSnapshot(nextSnapshot);
-      setEvidence(nextEvidence);
-      setDailyReport(daily || record(nextEvidence.latest_daily));
-      setWeeklyReport(weekly || record(nextEvidence.latest_weekly));
+      if (nextEvidence) setEvidence(nextEvidence);
+      setDailyReport(daily || record(nextEvidence?.latest_daily));
+      setWeeklyReport(weekly || record(nextEvidence?.latest_weekly));
       setResearchReadiness(nextReadiness);
       setTheoryProgram(nextTheory);
       setError("");
@@ -147,6 +147,14 @@ export default function Command() {
   const history = list(snapshot?.history);
   const position = positions[0];
   const dayPnl = number(account.day_pnl);
+  const armedKnown = typeof bot.bot_armed === "boolean";
+  const runtimeArmed = bot.bot_armed === true;
+  const runtimeAuthorized = bot.execution_authorized === true;
+  const runtimePaused = bot.runtime_paused === true;
+  const runtimeStatusLabel =
+    snapshot && armedKnown
+      ? text(snapshot.mode).toUpperCase() + " / " + (runtimeArmed ? "ARMED" : "DISARMED")
+      : "STATUS UNKNOWN";
 
   const runtime = record(evidence?.provenance?.runtime);
   const latestScan = record(evidence?.provenance?.latest_scan_cycle);
@@ -250,8 +258,8 @@ export default function Command() {
                       : "Telemetry, provenance, runtime health, and Command boundaries."}</span>
           </div>
           <div className="command-connection">
-            <i className={bot.bot_armed && bot.execution_authorized && !bot.runtime_paused ? "online" : ""} />
-            <div><strong>{text(snapshot?.mode).toUpperCase()} / {bot.bot_armed ? "ARMED" : "DISARMED"}</strong><small>{error || "Updated " + clockTime(snapshot?.observed_at)}</small></div>
+            <i className={snapshot && armedKnown && runtimeArmed && runtimeAuthorized && !runtimePaused ? "online" : ""} />
+            <div><strong>{runtimeStatusLabel}</strong><small>{error || (snapshot ? "Updated " + clockTime(snapshot.observed_at) : "Waiting for live runtime status")}</small></div>
             <button type="button" onClick={refresh} disabled={refreshing} aria-label="Refresh Command">↻</button>
           </div>
         </section>
