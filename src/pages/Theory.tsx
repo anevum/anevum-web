@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { fetchTheoryProgram, type TheoryProblem, type TheoryProgramFeed } from "../lib/data";
 
 type TheoryTab = "problem" | "conjectures" | "workstreams" | "standards";
@@ -44,7 +44,8 @@ export default function Theory() {
   const standards = data?.program.standards || [];
   const tracks = data?.program.tracks || [];
   const openConjectures = conjectures.filter((row) => row.status === "OPEN").length;
-  const domainLine = useMemo(() => (problem?.domains || []).map(pretty).join(" · "), [problem?.domains]);
+  const domainLine = (problem?.domains || []).map(pretty).join(" · ");
+  const baselineResults = problem?.results || [];
 
   return (
     <section className="compact-page theory-page">
@@ -117,6 +118,19 @@ export default function Theory() {
                   {(problem?.non_claims || []).map((item, index) => <p key={item}><b>{index + 1}</b>{item}</p>)}
                 </article>
               </div>
+
+              {baselineResults.length ? (
+                <div className="theory-results">
+                  <span>DERIVED BASELINES</span>
+                  {baselineResults.map((row) => (
+                    <article key={row.result_id}>
+                      <header><b>{row.result_id}</b><strong>{row.title}</strong><i>{row.claim_class}</i></header>
+                      <p>{row.statement}</p>
+                      <footer>{row.scope}</footer>
+                    </article>
+                  ))}
+                </div>
+              ) : null}
 
               <div className="theory-domain-line">
                 <span>DOMAINS</span><p>{domainLine || "Loading…"}</p>
