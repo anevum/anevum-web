@@ -1542,6 +1542,7 @@
 /* RHEN launch sequence --------------------------------------------------- */
 .anevum-home-launch-hero{
   position:relative;
+  width:100%!important;
   max-width:780px;
   padding:24px 0 58px;
 }
