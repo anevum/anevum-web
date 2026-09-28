@@ -932,3 +932,615 @@ html,body,#root,.public-frame,.public-page{
 @media (prefers-reduced-motion:reduce){
   .seasonal-easter-eggs{display:none}
 }
+
+
+/* =======================================================================
+   OCTOBER 2026 // SPOOKY SYSTEMS — FULL INTERFACE OVERRIDE
+   Mirrors the approved visual concept while preserving real ANEVUM data.
+   ======================================================================= */
+
+:root[data-seasonal-theme="oct"]{
+  --oct-orange:#ff7a16;
+  --oct-orange-hot:#ff9c3d;
+  --oct-amber:#ffc16c;
+  --oct-blue:#43a9ff;
+  --oct-green:#42dba1;
+  --oct-ink:#03070d;
+  --oct-panel:rgba(4,10,17,.84);
+  --oct-panel-hot:rgba(16,10,8,.82);
+  --oct-border:rgba(255,126,35,.34);
+  --oct-border-soft:rgba(255,153,76,.14);
+  --oct-text:#edf5fa;
+  --oct-muted:#8798a6;
+}
+
+:root[data-seasonal-theme="oct"] body{
+  color:var(--oct-text);
+  background:
+    radial-gradient(circle at 50% -10%,rgba(255,110,24,.16),transparent 38rem),
+    radial-gradient(circle at 83% 42%,rgba(48,118,183,.10),transparent 35rem),
+    linear-gradient(180deg,#02050a 0%,#060708 48%,#02050a 100%);
+}
+
+/* Header / navigation */
+:root[data-seasonal-theme="oct"] .compact-public-header,
+:root[data-seasonal-theme="oct"] .command-header{
+  border-bottom:1px solid rgba(255,125,34,.32)!important;
+  background:
+    linear-gradient(180deg,rgba(2,5,10,.985),rgba(3,7,12,.90) 72%,rgba(3,7,12,.12))!important;
+  box-shadow:
+    0 1px 0 rgba(255,179,96,.05),
+    0 18px 40px rgba(0,0,0,.3),
+    0 10px 40px rgba(255,98,12,.025);
+}
+:root[data-seasonal-theme="oct"] .public-brand span,
+:root[data-seasonal-theme="oct"] .command-brand>span{
+  color:#f4f7f8;
+  letter-spacing:.24em;
+}
+:root[data-seasonal-theme="oct"] .public-nav-main a{
+  position:relative;
+  color:#728596;
+}
+:root[data-seasonal-theme="oct"] .public-nav-main a:after{
+  content:"";
+  position:absolute;
+  left:12%;
+  right:12%;
+  bottom:-8px;
+  height:1px;
+  transform:scaleX(0);
+  transform-origin:center;
+  background:linear-gradient(90deg,transparent,#ff7b18,transparent);
+  box-shadow:0 0 10px rgba(255,120,25,.75);
+  transition:transform .22s ease;
+}
+:root[data-seasonal-theme="oct"] .public-nav-main a:hover:after,
+:root[data-seasonal-theme="oct"] .public-nav-main a.active:after{transform:scaleX(1)}
+:root[data-seasonal-theme="oct"] .command-nav{
+  padding:8px 12px;
+  border:1px solid rgba(255,131,38,.28);
+  border-radius:8px;
+  background:rgba(22,12,7,.42);
+  box-shadow:inset 0 0 18px rgba(255,105,18,.035);
+}
+
+/* Shared HUD corners */
+:root[data-seasonal-theme="oct"] .compact-panel,
+:root[data-seasonal-theme="oct"] .workspace-content,
+:root[data-seasonal-theme="oct"] .workspace-tabs button,
+:root[data-seasonal-theme="oct"] .compact-stat,
+:root[data-seasonal-theme="oct"] .destination-card,
+:root[data-seasonal-theme="oct"] .anevum-home-rhen-card-v2,
+:root[data-seasonal-theme="oct"] .anevum-home-project-card-v2,
+:root[data-seasonal-theme="oct"] .anevum-home-destination-v2,
+:root[data-seasonal-theme="oct"] .anevum-home-record-v2,
+:root[data-seasonal-theme="oct"] .anevum-home-status-v2,
+:root[data-seasonal-theme="oct"] .command-panel,
+:root[data-seasonal-theme="oct"] .command-stats,
+:root[data-seasonal-theme="oct"] .command-connection,
+:root[data-seasonal-theme="oct"] .release-feature,
+:root[data-seasonal-theme="oct"] .release-standard-grid article,
+:root[data-seasonal-theme="oct"] .release-archive-row,
+:root[data-seasonal-theme="oct"] .performance-chart-wrap,
+:root[data-seasonal-theme="oct"] .performance-metric-strip article,
+:root[data-seasonal-theme="oct"] .performance-side-stack article,
+:root[data-seasonal-theme="oct"] .performance-method-grid article,
+:root[data-seasonal-theme="oct"] .performance-boundary-grid article,
+:root[data-seasonal-theme="oct"] .rhen-state-grid article,
+:root[data-seasonal-theme="oct"] .evidence-summary-grid article,
+:root[data-seasonal-theme="oct"] .research-question-list article,
+:root[data-seasonal-theme="oct"] .research-limitation-list article,
+:root[data-seasonal-theme="oct"] .record-version-list article,
+:root[data-seasonal-theme="oct"] .theory-focus-card,
+:root[data-seasonal-theme="oct"] .theory-equations article,
+:root[data-seasonal-theme="oct"] .theory-track-grid article{
+  position:relative;
+  border-color:var(--oct-border-soft)!important;
+  background:
+    linear-gradient(145deg,rgba(4,10,17,.91),rgba(8,9,12,.82))!important;
+  box-shadow:
+    inset 0 1px rgba(255,220,180,.025),
+    inset 0 0 24px rgba(255,114,20,.012),
+    0 18px 56px rgba(0,0,0,.22)!important;
+}
+:root[data-seasonal-theme="oct"] .compact-panel:before,
+:root[data-seasonal-theme="oct"] .workspace-content:before,
+:root[data-seasonal-theme="oct"] .anevum-home-rhen-card-v2:before,
+:root[data-seasonal-theme="oct"] .anevum-home-project-card-v2:before,
+:root[data-seasonal-theme="oct"] .anevum-home-destination-v2:before,
+:root[data-seasonal-theme="oct"] .command-panel:before,
+:root[data-seasonal-theme="oct"] .release-feature:before,
+:root[data-seasonal-theme="oct"] .performance-chart-wrap:before{
+  content:"";
+  position:absolute;
+  z-index:2;
+  inset:-1px;
+  pointer-events:none;
+  border-radius:inherit;
+  background:
+    linear-gradient(90deg,var(--oct-orange),var(--oct-orange)) 0 0/18px 1px no-repeat,
+    linear-gradient(180deg,var(--oct-orange),var(--oct-orange)) 0 0/1px 18px no-repeat,
+    linear-gradient(270deg,var(--oct-orange),var(--oct-orange)) 100% 0/18px 1px no-repeat,
+    linear-gradient(180deg,var(--oct-orange),var(--oct-orange)) 100% 0/1px 18px no-repeat,
+    linear-gradient(90deg,var(--oct-orange),var(--oct-orange)) 0 100%/18px 1px no-repeat,
+    linear-gradient(0deg,var(--oct-orange),var(--oct-orange)) 0 100%/1px 18px no-repeat,
+    linear-gradient(270deg,var(--oct-orange),var(--oct-orange)) 100% 100%/18px 1px no-repeat,
+    linear-gradient(0deg,var(--oct-orange),var(--oct-orange)) 100% 100%/1px 18px no-repeat;
+  opacity:.58;
+  filter:drop-shadow(0 0 5px rgba(255,119,24,.22));
+}
+
+/* Home */
+:root[data-seasonal-theme="oct"] .october-home{
+  background:
+    linear-gradient(180deg,rgba(3,7,12,.04),rgba(3,7,12,.26));
+}
+:root[data-seasonal-theme="oct"] .anevum-home-hero-v2{
+  position:relative;
+  min-height:min(720px,72vh);
+  overflow:hidden;
+  border-bottom:1px solid rgba(255,128,34,.16);
+}
+:root[data-seasonal-theme="oct"] .anevum-home-hero-copy-v2{
+  position:relative;
+  z-index:4;
+  width:min(49%,710px);
+}
+:root[data-seasonal-theme="oct"] .anevum-home-lockup-v2{
+  color:#f0a25f;
+}
+:root[data-seasonal-theme="oct"] .anevum-home-title-v2{
+  gap:0!important;
+}
+:root[data-seasonal-theme="oct"] .anevum-home-title-v2 span{
+  font-size:clamp(3.6rem,7.8vw,8.8rem)!important;
+  line-height:.78!important;
+  letter-spacing:-.065em!important;
+  text-transform:uppercase;
+}
+:root[data-seasonal-theme="oct"] .anevum-home-title-v2 span:first-child{
+  color:#ff8a25!important;
+  text-shadow:
+    0 0 10px rgba(255,109,18,.28),
+    0 0 32px rgba(255,94,8,.15),
+    0 16px 45px rgba(0,0,0,.4);
+}
+:root[data-seasonal-theme="oct"] .anevum-home-title-v2 span:last-child{
+  color:#ddecf6!important;
+  text-shadow:
+    0 0 16px rgba(87,169,233,.12),
+    0 12px 42px rgba(0,0,0,.35);
+}
+:root[data-seasonal-theme="oct"] .anevum-home-lead-v2{
+  max-width:590px;
+  color:#9aa9b4!important;
+  font-size:clamp(.78rem,1.05vw,1rem);
+}
+:root[data-seasonal-theme="oct"] .anevum-home-primary-v2{
+  border:1px solid rgba(255,139,44,.8)!important;
+  background:linear-gradient(180deg,#35190a,#1c0d06)!important;
+  color:#ffe0bd!important;
+  box-shadow:
+    inset 0 0 18px rgba(255,122,25,.09),
+    0 0 0 1px rgba(255,111,14,.15),
+    0 0 25px rgba(255,100,10,.17)!important;
+}
+:root[data-seasonal-theme="oct"] .anevum-home-secondary-v2{
+  border:1px solid rgba(89,163,221,.28)!important;
+  color:#abcfe8!important;
+  background:rgba(4,14,24,.56)!important;
+}
+:root[data-seasonal-theme="oct"] .anevum-home-principles-v2{
+  color:#7a8b97;
+}
+:root[data-seasonal-theme="oct"] .october-hero-art{
+  position:absolute;
+  z-index:1;
+  right:-2%;
+  top:4%;
+  width:min(58vw,800px);
+  aspect-ratio:1;
+  pointer-events:none;
+}
+:root[data-seasonal-theme="oct"] .october-pumpkin-core{
+  position:absolute;
+  inset:9%;
+  border-radius:50%;
+  background:
+    radial-gradient(circle at 50% 19%,#fff4c8 0 1.2%,#ff9d29 1.5% 3%,transparent 3.5%),
+    radial-gradient(ellipse at 33% 48%,#ffb241 0 4.5%,#ff6e0e 5% 7%,transparent 7.5%),
+    radial-gradient(ellipse at 67% 48%,#ffb241 0 4.5%,#ff6e0e 5% 7%,transparent 7.5%),
+    linear-gradient(135deg,transparent 39%,#ff941e 39.5% 43%,transparent 43.5%) 42% 64%/18% 18% no-repeat,
+    linear-gradient(225deg,transparent 39%,#ff941e 39.5% 43%,transparent 43.5%) 58% 64%/18% 18% no-repeat,
+    radial-gradient(circle at center,#0a0c10 0 50%,rgba(18,19,23,.98) 51% 58%,transparent 59%),
+    conic-gradient(from 0deg,transparent 0 4%,rgba(255,122,21,.85) 4.5% 5.2%,transparent 5.7% 12%,rgba(55,149,223,.5) 12.5% 13%,transparent 13.5% 20%,rgba(255,122,21,.8) 20.5% 21.3%,transparent 22% 100%);
+  border:1px solid rgba(255,139,44,.55);
+  box-shadow:
+    inset 0 0 0 12px rgba(255,103,8,.035),
+    inset 0 0 65px rgba(255,83,0,.08),
+    0 0 30px rgba(255,106,11,.30),
+    0 0 90px rgba(255,98,4,.12);
+  animation:october-core-float 8s ease-in-out infinite;
+}
+:root[data-seasonal-theme="oct"] .october-pumpkin-core:before{
+  content:"";
+  position:absolute;
+  inset:19%;
+  border-radius:50%;
+  border:1px solid rgba(255,139,45,.46);
+  box-shadow:
+    0 0 0 24px rgba(255,122,21,.025),
+    0 0 0 48px rgba(45,130,195,.018);
+}
+:root[data-seasonal-theme="oct"] .october-pumpkin-core:after{
+  content:"";
+  position:absolute;
+  left:29%;
+  right:29%;
+  bottom:24%;
+  height:17%;
+  background:
+    linear-gradient(135deg,transparent 28%,#ff9d2e 30% 43%,transparent 45%) 0 0/20% 100% repeat-x;
+  filter:drop-shadow(0 0 9px rgba(255,118,21,.8));
+}
+:root[data-seasonal-theme="oct"] .october-pumpkin-core i,
+:root[data-seasonal-theme="oct"] .october-pumpkin-core b,
+:root[data-seasonal-theme="oct"] .october-pumpkin-core span{
+  position:absolute;
+  left:50%;
+  top:50%;
+  transform:translate(-50%,-50%);
+  border-radius:50%;
+  pointer-events:none;
+}
+:root[data-seasonal-theme="oct"] .october-pumpkin-core i{
+  width:118%;
+  height:118%;
+  border:1px solid rgba(255,132,37,.34);
+  animation:engine-spin-cw 38s linear infinite;
+}
+:root[data-seasonal-theme="oct"] .october-pumpkin-core b{
+  width:137%;
+  height:84%;
+  border:1px solid rgba(63,154,222,.22);
+  transform:translate(-50%,-50%) rotate(18deg);
+  animation:october-orbit-rock 14s ease-in-out infinite;
+}
+:root[data-seasonal-theme="oct"] .october-pumpkin-core span{
+  width:8%;
+  height:8%;
+  background:radial-gradient(circle,#fff6c8 0 8%,#ff9e32 15%,rgba(255,101,10,.3) 50%,transparent 72%);
+  box-shadow:0 0 18px rgba(255,124,22,.55);
+}
+:root[data-seasonal-theme="oct"] .october-orbit{
+  position:absolute;
+  left:50%;
+  top:50%;
+  width:91%;
+  height:91%;
+  transform:translate(-50%,-50%);
+  border:1px solid rgba(255,130,35,.16);
+  border-radius:50%;
+}
+:root[data-seasonal-theme="oct"] .october-orbit-a{animation:engine-spin-cw 28s linear infinite}
+:root[data-seasonal-theme="oct"] .october-orbit-b{
+  width:76%;
+  height:110%;
+  border-color:rgba(70,158,224,.12);
+  animation:engine-spin-ccw 36s linear infinite;
+}
+:root[data-seasonal-theme="oct"] .anevum-home-rhen-card-v2{
+  z-index:3;
+  background:
+    radial-gradient(circle at 50% 15%,rgba(255,112,16,.07),transparent 14rem),
+    linear-gradient(145deg,rgba(6,11,18,.92),rgba(3,7,12,.88))!important;
+}
+:root[data-seasonal-theme="oct"] .anevum-home-rhen-card-head-v2 strong,
+:root[data-seasonal-theme="oct"] .anevum-home-project-card-v2 h3,
+:root[data-seasonal-theme="oct"] .anevum-home-section-head-v2 h2{
+  color:#f2f6f8;
+}
+:root[data-seasonal-theme="oct"] .anevum-home-section-head-v2>div>span{
+  color:#db7c36;
+}
+:root[data-seasonal-theme="oct"] .anevum-home-destination-v2:hover,
+:root[data-seasonal-theme="oct"] .anevum-home-project-card-v2:hover{
+  border-color:rgba(255,136,41,.4)!important;
+  transform:translateY(-2px);
+  box-shadow:
+    inset 0 0 32px rgba(255,112,14,.025),
+    0 24px 68px rgba(0,0,0,.3),
+    0 0 25px rgba(255,105,12,.04)!important;
+}
+
+/* Workspaces */
+:root[data-seasonal-theme="oct"] .workspace-heading{
+  border-bottom:1px solid rgba(255,126,34,.08);
+}
+:root[data-seasonal-theme="oct"] .workspace-heading h1{
+  font-size:clamp(2.5rem,4.4vw,4.7rem);
+}
+:root[data-seasonal-theme="oct"] .story-kicker,
+:root[data-seasonal-theme="oct"] .compact-eyebrow,
+:root[data-seasonal-theme="oct"] .rhen-section-label{
+  color:#d78343!important;
+}
+:root[data-seasonal-theme="oct"] .workspace-heading-status>div,
+:root[data-seasonal-theme="oct"] .workspace-heading-status>span{
+  border-color:rgba(255,139,46,.15)!important;
+  background:linear-gradient(145deg,rgba(7,14,22,.84),rgba(11,8,7,.72))!important;
+}
+:root[data-seasonal-theme="oct"] .workspace-tabs button{
+  overflow:hidden;
+}
+:root[data-seasonal-theme="oct"] .workspace-tabs button:after{
+  content:"";
+  position:absolute;
+  top:0;bottom:0;left:0;
+  width:2px;
+  background:#ff7d1b;
+  opacity:0;
+  box-shadow:0 0 12px rgba(255,123,24,.55);
+}
+:root[data-seasonal-theme="oct"] .workspace-tabs button.active:after{opacity:1}
+:root[data-seasonal-theme="oct"] .workspace-tabs button span{color:#b56f3c}
+:root[data-seasonal-theme="oct"] .workspace-tabs button.active span{color:#ff9c50}
+
+/* Live telemetry + charts */
+:root[data-seasonal-theme="oct"] .compact-activity-bars{
+  position:relative;
+  background:
+    linear-gradient(rgba(255,136,43,.025) 1px,transparent 1px) 0 0/100% 25%,
+    linear-gradient(90deg,rgba(63,153,220,.018) 1px,transparent 1px) 0 0/12.5% 100%;
+}
+:root[data-seasonal-theme="oct"] .compact-activity-bars i{
+  background:linear-gradient(180deg,#ff9d43,rgba(255,105,12,.12))!important;
+  border-color:rgba(255,138,41,.35)!important;
+  box-shadow:0 0 10px rgba(255,111,14,.12)!important;
+}
+:root[data-seasonal-theme="oct"] .performance-chart-wrap,
+:root[data-seasonal-theme="oct"] .command-performance-chart{
+  background:
+    linear-gradient(rgba(255,126,34,.04) 1px,transparent 1px) 0 0/100% 25%,
+    linear-gradient(90deg,rgba(57,154,225,.025) 1px,transparent 1px) 0 0/10% 100%,
+    linear-gradient(145deg,rgba(3,10,17,.95),rgba(6,9,13,.88))!important;
+}
+:root[data-seasonal-theme="oct"] .performance-line,
+:root[data-seasonal-theme="oct"] .command-performance-line{
+  stroke:#ff7c19!important;
+  filter:drop-shadow(0 0 4px rgba(255,120,22,.75));
+}
+:root[data-seasonal-theme="oct"] .performance-zero,
+:root[data-seasonal-theme="oct"] .command-performance-zero{
+  stroke:rgba(72,166,227,.27)!important;
+}
+:root[data-seasonal-theme="oct"] .performance-chart-head span,
+:root[data-seasonal-theme="oct"] .command-performance-chart-head span{
+  color:#d17c3e!important;
+}
+:root[data-seasonal-theme="oct"] .is-positive{color:#54d9a8!important}
+:root[data-seasonal-theme="oct"] .is-negative{color:#dc7777!important}
+
+/* System diagrams */
+:root[data-seasonal-theme="oct"] .flow-beam{
+  background:linear-gradient(180deg,rgba(255,121,21,.08),rgba(255,121,21,.5),rgba(255,121,21,.08))!important;
+  box-shadow:0 0 14px rgba(255,115,18,.12);
+}
+:root[data-seasonal-theme="oct"] .flow-stage,
+:root[data-seasonal-theme="oct"] .machine-node{
+  border-color:rgba(255,140,47,.13)!important;
+  background:linear-gradient(145deg,rgba(6,13,21,.84),rgba(10,8,8,.72))!important;
+}
+:root[data-seasonal-theme="oct"] .flow-number{color:#f08b43!important}
+:root[data-seasonal-theme="oct"] .machine-core{
+  border-color:rgba(255,132,37,.3)!important;
+  box-shadow:0 0 35px rgba(255,104,10,.08)!important;
+}
+
+/* Research / record / theory */
+:root[data-seasonal-theme="oct"] .research-family-list article,
+:root[data-seasonal-theme="oct"] .research-status-strip,
+:root[data-seasonal-theme="oct"] .field-notes article,
+:root[data-seasonal-theme="oct"] .theory-problem-switcher,
+:root[data-seasonal-theme="oct"] .theory-subnav,
+:root[data-seasonal-theme="oct"] .theory-target,
+:root[data-seasonal-theme="oct"] .theory-provenance,
+:root[data-seasonal-theme="oct"] .theory-boundary{
+  border-color:rgba(255,141,48,.12)!important;
+  background:rgba(5,11,18,.72)!important;
+}
+:root[data-seasonal-theme="oct"] .theory-equations code{
+  color:#ffd1a3!important;
+  text-shadow:0 0 12px rgba(255,124,25,.07);
+}
+:root[data-seasonal-theme="oct"] .note-marker i{
+  background:#ff8324!important;
+  box-shadow:0 0 10px rgba(255,126,30,.4)!important;
+}
+:root[data-seasonal-theme="oct"] .notes-line{
+  background:linear-gradient(180deg,transparent,#ff7f20 15%,#ff7f20 85%,transparent)!important;
+  opacity:.24;
+}
+
+/* Releases */
+:root[data-seasonal-theme="oct"] .release-index-hero,
+:root[data-seasonal-theme="oct"] .release-hero{
+  position:relative;
+  border-bottom:1px solid rgba(255,131,39,.12);
+}
+:root[data-seasonal-theme="oct"] .release-index-hero h1,
+:root[data-seasonal-theme="oct"] .release-hero h1{
+  color:#f0f4f7;
+  text-shadow:0 0 25px rgba(255,112,14,.06);
+}
+:root[data-seasonal-theme="oct"] .release-index-mark,
+:root[data-seasonal-theme="oct"] .release-hero-rhen{
+  color:#ef984f;
+  filter:drop-shadow(0 0 20px rgba(255,118,18,.15));
+}
+:root[data-seasonal-theme="oct"] .release-section-label span,
+:root[data-seasonal-theme="oct"] .release-feature-meta span,
+:root[data-seasonal-theme="oct"] .release-feature-title>span{
+  color:#dc7e3b!important;
+}
+:root[data-seasonal-theme="oct"] .release-feature-arrow,
+:root[data-seasonal-theme="oct"] .record-release-card a{
+  color:#ff9b4e!important;
+}
+
+/* Command */
+:root[data-seasonal-theme="oct"] .command-shell{
+  --command-oct-line:rgba(255,139,46,.12);
+}
+:root[data-seasonal-theme="oct"] .command-main{
+  position:relative;
+}
+:root[data-seasonal-theme="oct"] .command-main:before{
+  content:"OCTOBER // SPOOKY SYSTEMS";
+  position:absolute;
+  top:6px;
+  right:0;
+  z-index:2;
+  color:#8e5d3c;
+  font-size:.4rem;
+  letter-spacing:.14em;
+}
+:root[data-seasonal-theme="oct"] .scanner-row,
+:root[data-seasonal-theme="oct"] .order-row,
+:root[data-seasonal-theme="oct"] .feed-row{
+  border-bottom-color:rgba(255,137,44,.07)!important;
+}
+:root[data-seasonal-theme="oct"] .scanner-row.qualified{
+  background:rgba(255,117,19,.025)!important;
+}
+:root[data-seasonal-theme="oct"] .scanner-row.qualified b{
+  color:#f2a663!important;
+}
+:root[data-seasonal-theme="oct"] .command-panel>header{
+  border-bottom-color:rgba(255,138,45,.1)!important;
+}
+:root[data-seasonal-theme="oct"] .command-account>span{
+  border-color:rgba(255,142,50,.2)!important;
+  color:#d39361!important;
+}
+
+/* Easter eggs: visible enough to discover, still non-blocking */
+:root[data-seasonal-theme="oct"] .seasonal-easter-eggs{
+  z-index:9998;
+}
+:root[data-seasonal-theme="oct"] .seasonal-floater-ghost{
+  width:30px!important;
+  height:42px!important;
+  opacity:.9;
+  background:
+    radial-gradient(circle at 35% 40%,rgba(255,124,29,.96) 0 2px,transparent 2.6px),
+    radial-gradient(circle at 65% 40%,rgba(255,124,29,.96) 0 2px,transparent 2.6px),
+    radial-gradient(ellipse at 50% 42%,rgba(75,160,230,.22),rgba(21,78,124,.1) 50%,transparent 72%),
+    linear-gradient(180deg,rgba(219,238,250,.86),rgba(111,184,232,.16))!important;
+  filter:
+    drop-shadow(0 0 5px rgba(68,163,230,.6))
+    drop-shadow(0 0 12px rgba(255,117,20,.22))!important;
+}
+:root[data-seasonal-theme="oct"] .seasonal-peeker-eyes{
+  width:48px!important;
+  height:18px!important;
+  padding:3px 5px;
+  border-radius:20px 20px 0 0;
+  background:rgba(1,4,8,.78);
+  filter:drop-shadow(0 0 9px rgba(255,125,27,.24))!important;
+}
+:root[data-seasonal-theme="oct"] .seasonal-peeker-eyes i{
+  width:15px!important;
+  height:8px!important;
+  background:
+    radial-gradient(circle at 55% 48%,#130a05 0 2px,transparent 2.3px),
+    radial-gradient(ellipse at center,#ffc259 0 43%,#ff7c18 46% 63%,transparent 66%)!important;
+  box-shadow:0 0 8px rgba(255,120,21,.3);
+}
+:root[data-seasonal-theme="oct"] .seasonal-floater{
+  animation-duration:var(--egg-duration)!important;
+}
+:root[data-seasonal-theme="oct"] .seasonal-peeker{
+  animation-duration:var(--peek-duration)!important;
+}
+
+/* little eyes can appear from module edges */
+:root[data-seasonal-theme="oct"] .compact-panel:nth-of-type(3):after,
+:root[data-seasonal-theme="oct"] .command-panel:nth-of-type(4):after,
+:root[data-seasonal-theme="oct"] .performance-side-stack article:nth-child(2):after,
+:root[data-seasonal-theme="oct"] .theory-focus-card:nth-of-type(2):after{
+  content:"••";
+  position:absolute;
+  z-index:5;
+  right:16px;
+  top:-8px;
+  color:#ff9f43;
+  letter-spacing:4px;
+  font-size:14px;
+  line-height:1;
+  text-shadow:0 0 7px rgba(255,115,14,.8);
+  opacity:0;
+  animation:october-module-eyes 19s ease-in-out infinite;
+}
+:root[data-seasonal-theme="oct"] .command-panel:nth-of-type(4):after{animation-delay:-7s}
+:root[data-seasonal-theme="oct"] .performance-side-stack article:nth-child(2):after{animation-delay:-12s}
+
+/* divider rail treatment */
+:root[data-seasonal-theme="oct"] .anevum-home-section-v2:before,
+:root[data-seasonal-theme="oct"] .release-standard:before,
+:root[data-seasonal-theme="oct"] .release-archive:before{
+  content:"";
+  display:block;
+  width:100%;
+  height:16px;
+  margin-bottom:18px;
+  background:
+    radial-gradient(circle at 50% 50%,#ffb34f 0 2px,#ff7412 2.5px 4px,transparent 4.5px),
+    linear-gradient(90deg,transparent 0 8%,rgba(255,116,18,.18) 10%,rgba(255,121,20,.62) 48%,rgba(255,121,20,.62) 52%,rgba(255,116,18,.18) 90%,transparent 92%) center/100% 1px no-repeat;
+  filter:drop-shadow(0 0 8px rgba(255,112,15,.14));
+}
+
+@keyframes october-core-float{
+  0%,100%{transform:translate3d(0,0,0) scale(.98)}
+  50%{transform:translate3d(0,-10px,0) scale(1.015)}
+}
+@keyframes october-orbit-rock{
+  0%,100%{transform:translate(-50%,-50%) rotate(12deg)}
+  50%{transform:translate(-50%,-50%) rotate(27deg)}
+}
+@keyframes october-module-eyes{
+  0%,72%,100%{opacity:0;transform:translateY(7px)}
+  76%{opacity:.9;transform:translateY(0)}
+  78%{opacity:.16}
+  80%{opacity:.9}
+  84%{opacity:.9;transform:translateY(0)}
+  88%{opacity:0;transform:translateY(7px)}
+}
+
+@media(max-width:1050px){
+  :root[data-seasonal-theme="oct"] .october-hero-art{
+    right:-12%;
+    width:min(64vw,680px);
+    opacity:.68;
+  }
+  :root[data-seasonal-theme="oct"] .anevum-home-hero-copy-v2{width:58%}
+}
+@media(max-width:760px){
+  :root[data-seasonal-theme="oct"] .anevum-home-hero-v2{
+    min-height:0;
+  }
+  :root[data-seasonal-theme="oct"] .anevum-home-hero-copy-v2{
+    width:100%;
+    z-index:4;
+  }
+  :root[data-seasonal-theme="oct"] .october-hero-art{
+    width:360px;
+    right:-190px;
+    top:10%;
+    opacity:.28;
+  }
+  :root[data-seasonal-theme="oct"] .anevum-home-title-v2 span{
+    font-size:clamp(2.8rem,14vw,4.5rem)!important;
+  }
+}
