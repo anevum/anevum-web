@@ -1,4 +1,4 @@
-import { motion } from "motion/react";
+import { motion, useReducedMotion } from "motion/react";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import RhenMark from "../components/RhenMark";
@@ -63,6 +63,7 @@ const destinations = [
 ];
 
 export default function Home() {
+  const reduceMotion = Boolean(useReducedMotion());
   const [theoryProgram, setTheoryProgram] = useState<TheoryProgramFeed | null>(null);
   const { data, loading } = useLiveTrading(5000);
 
@@ -109,7 +110,7 @@ export default function Home() {
               className="anevum-home-launch-actions"
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: .5, delay: 5.05 }}
+              transition={{ duration: reduceMotion ? 0 : .5, delay: reduceMotion ? 0 : 5.05 }}
             >
               <div className="anevum-home-actions-v2">
                 <Link className="anevum-home-primary-v2" to="/performance">
