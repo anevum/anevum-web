@@ -65,7 +65,7 @@ function BrandMark({ id }: { id: string }) {
       return (
         <img
           className="service-brand-image"
-          src="https://a.slack-edge.com/4a5c4/marketing/img/meta/slack_hash_256.png"
+          src="https://a.slack-edge.com/80588/marketing/img/meta/slack_hash_256.png"
           alt=""
           aria-hidden="true"
           draggable={false}
