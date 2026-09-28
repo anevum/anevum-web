@@ -168,6 +168,79 @@ export type LiveTradingFeed = {
   };
 };
 
+export type TheoryStandard = {
+  standard_id: string;
+  name: string;
+  rule: string;
+};
+
+export type TheoryTrack = {
+  track_id: string;
+  name: string;
+  status: string;
+  scope: string;
+};
+
+export type TheoryWorkstream = {
+  workstream_id: string;
+  title: string;
+  status: string;
+  objective: string;
+};
+
+export type TheoryConjecture = {
+  conjecture_id: string;
+  title: string;
+  status: string;
+  novelty_state: string;
+  statement: string;
+  falsification: string;
+};
+
+export type TheoryProblem = {
+  problem_id: string;
+  title: string;
+  status: string;
+  visibility: string;
+  started_on: string;
+  question: string;
+  domains: string[];
+  formalization: {
+    latent_state?: string;
+    observation?: string;
+    action?: string;
+    policy?: string;
+    objective_latex?: string;
+    variation_latex?: string;
+    dynamic_regret_latex?: string;
+    target_bound?: string;
+  };
+  assumptions: string[];
+  non_claims: string[];
+  workstreams: TheoryWorkstream[];
+  conjectures: TheoryConjecture[];
+  success_criteria: string[];
+};
+
+export type TheoryProgramFeed = {
+  schema_version: string;
+  registry_hash: string;
+  program: {
+    program_id: string;
+    name: string;
+    status: string;
+    purpose: string;
+    standards: TheoryStandard[];
+    tracks: TheoryTrack[];
+  };
+  problems: TheoryProblem[];
+  authority: {
+    theory_can_change_live_trading: boolean;
+    theory_can_open_protected_research_stages: boolean;
+    theory_can_claim_novelty_without_review: boolean;
+  };
+};
+
 export type CommandSnapshot = {
   mode?: string;
   observed_at?: string;
@@ -291,6 +364,21 @@ export async function fetchResearchReadiness(): Promise<ResearchReadiness> {
   };
   if (!response.ok) {
     throw new Error(payload.message || payload.detail || "Research readiness unavailable.");
+  }
+  return payload;
+}
+
+export async function fetchTheoryProgram(): Promise<TheoryProgramFeed> {
+  const response = await fetch("/api/public/theory", {
+    headers: { Accept: "application/json" },
+    cache: "no-store"
+  });
+  const payload = (await response.json().catch(() => ({}))) as TheoryProgramFeed & {
+    message?: string;
+    detail?: string;
+  };
+  if (!response.ok || !payload.program) {
+    throw new Error(payload.message || payload.detail || "Theory program unavailable.");
   }
   return payload;
 }
