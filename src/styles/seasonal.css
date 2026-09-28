@@ -1,0 +1,113 @@
+/* Calendar-driven visual skin. Layout, spacing, typography, and behavior are unchanged. */
+
+:root{
+  --season-accent:var(--blue);
+  --season-accent-bright:var(--blue-bright);
+  --season-glow:rgba(127,184,227,.12);
+  --season-glow-soft:rgba(127,184,227,.045);
+  --season-bg-a:#03070c;
+  --season-bg-b:#050b12;
+  --season-line:rgba(226,236,243,.11);
+}
+
+:root[data-seasonal-theme="jan"]{
+  --season-accent:#9dc9e8;--season-accent-bright:#d9efff;
+  --season-glow:rgba(123,184,226,.15);--season-glow-soft:rgba(123,184,226,.05);
+  --season-bg-a:#02070c;--season-bg-b:#07131c;
+}
+:root[data-seasonal-theme="feb"]{
+  --season-accent:#cf8d91;--season-accent-bright:#f0c0c4;
+  --season-glow:rgba(204,102,112,.12);--season-glow-soft:rgba(204,102,112,.038);
+  --season-bg-a:#070509;--season-bg-b:#13090f;
+}
+:root[data-seasonal-theme="mar"]{
+  --season-accent:#88c5a3;--season-accent-bright:#c8ecd7;
+  --season-glow:rgba(105,194,145,.12);--season-glow-soft:rgba(105,194,145,.04);
+  --season-bg-a:#03090a;--season-bg-b:#071510;
+}
+:root[data-seasonal-theme="apr"]{
+  --season-accent:#8fb7d8;--season-accent-bright:#d1e6f7;
+  --season-glow:rgba(120,169,211,.14);--season-glow-soft:rgba(120,169,211,.045);
+  --season-bg-a:#03080d;--season-bg-b:#08131d;
+}
+:root[data-seasonal-theme="may"]{
+  --season-accent:#79bd8d;--season-accent-bright:#bce2c6;
+  --season-glow:rgba(83,177,112,.13);--season-glow-soft:rgba(83,177,112,.04);
+  --season-bg-a:#030908;--season-bg-b:#09150d;
+}
+:root[data-seasonal-theme="jun"]{
+  --season-accent:#d5b56f;--season-accent-bright:#f0d99f;
+  --season-glow:rgba(216,173,78,.13);--season-glow-soft:rgba(216,173,78,.04);
+  --season-bg-a:#080804;--season-bg-b:#171307;
+}
+:root[data-seasonal-theme="jul"]{
+  --season-accent:#b992d8;--season-accent-bright:#dfc8f3;
+  --season-glow:rgba(150,104,206,.14);--season-glow-soft:rgba(150,104,206,.04);
+  --season-bg-a:#05050a;--season-bg-b:#0d0a18;
+}
+:root[data-seasonal-theme="aug"]{
+  --season-accent:#d08c68;--season-accent-bright:#edb99d;
+  --season-glow:rgba(209,111,72,.13);--season-glow-soft:rgba(209,111,72,.04);
+  --season-bg-a:#080604;--season-bg-b:#160c08;
+}
+:root[data-seasonal-theme="sep"]{
+  --season-accent:#c49a68;--season-accent-bright:#e7c39b;
+  --season-glow:rgba(190,132,70,.13);--season-glow-soft:rgba(190,132,70,.04);
+  --season-bg-a:#070604;--season-bg-b:#120d07;
+}
+:root[data-seasonal-theme="oct"]{
+  --season-accent:#db873f;--season-accent-bright:#ffc27f;
+  --season-glow:rgba(231,103,24,.17);--season-glow-soft:rgba(231,103,24,.055);
+  --season-bg-a:#080504;--season-bg-b:#160906;
+  --season-line:rgba(247,173,105,.13);
+}
+:root[data-seasonal-theme="nov"]{
+  --season-accent:#b47758;--season-accent-bright:#d7aa8f;
+  --season-glow:rgba(163,90,60,.12);--season-glow-soft:rgba(163,90,60,.04);
+  --season-bg-a:#060504;--season-bg-b:#100b08;
+}
+:root[data-seasonal-theme="dec"]{
+  --season-accent:#7fb3be;--season-accent-bright:#c8e7eb;
+  --season-glow:rgba(89,162,172,.13);--season-glow-soft:rgba(89,162,172,.04);
+  --season-bg-a:#020708;--season-bg-b:#061214;
+}
+
+:root{
+  --blue:var(--season-accent);
+  --blue-bright:var(--season-accent-bright);
+  --line:var(--season-line);
+}
+
+html,body,#root,.public-frame,.public-page{
+  background-color:var(--season-bg-a);
+}
+
+.public-frame:before{
+  content:"";
+  position:fixed;
+  z-index:-1;
+  inset:0;
+  pointer-events:none;
+  background:
+    radial-gradient(circle at 50% 18%,var(--season-glow),transparent 32rem),
+    radial-gradient(circle at 82% 78%,var(--season-glow-soft),transparent 28rem),
+    linear-gradient(180deg,var(--season-bg-a),var(--season-bg-b) 58%,var(--season-bg-a));
+}
+
+.public-brand .anevum-mark,
+.hero-mark-wrap,
+.telemetry-ring .anevum-mark{
+  filter:drop-shadow(0 0 34px var(--season-glow));
+}
+
+:root[data-seasonal-theme="oct"] .public-frame:after{
+  content:"";
+  position:fixed;
+  z-index:-1;
+  inset:0;
+  pointer-events:none;
+  opacity:.22;
+  background:
+    radial-gradient(circle at 14% 82%,rgba(219,135,63,.08),transparent 11rem),
+    radial-gradient(circle at 88% 20%,rgba(219,135,63,.06),transparent 9rem);
+}
