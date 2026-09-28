@@ -4,6 +4,9 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+  schedule:
+    # Monthly rebuild refreshes the calendar theme and generated IREN avatar asset.
+    - cron: "17 6 1 * *"
 
 permissions:
   contents: read
@@ -38,6 +41,12 @@ jobs:
         run: npm install --no-audit --no-fund
       - name: Build
         run: npm run build
+      - name: Verify seasonal avatar output
+        run: |
+          test -s public/iren-profile-current.png
+          test -s public/iren-profile-current.json
+          test -s dist/client/iren-profile-current.png
+          test -s dist/client/iren-profile-current.json
       - name: Deploy to Cloudflare Workers
         uses: cloudflare/wrangler-action@v3
         with:
