@@ -9,6 +9,7 @@ const Home = lazy(() => import("./pages/Home"));
 const Live = lazy(() => import("./pages/Live"));
 const System = lazy(() => import("./pages/System"));
 const Research = lazy(() => import("./pages/Research"));
+const Theory = lazy(() => import("./pages/Theory"));
 const Record = lazy(() => import("./pages/Record"));
 const Performance = lazy(() => import("./pages/Performance"));
 const Releases = lazy(() => import("./pages/Releases"));
@@ -20,6 +21,7 @@ const titles: Record<string, string> = {
   "/live": "Operations — ANEVUM",
   "/system": "System — ANEVUM",
   "/research": "Research — ANEVUM",
+  "/theory": "Mathematics & Theory — ANEVUM",
   "/record": "Record — ANEVUM",
   "/performance": "RHEN Performance — ANEVUM",
   "/releases": "RHEN Releases — ANEVUM",
@@ -72,6 +74,7 @@ export default function App() {
         <Route path="/live" element={<PublicExperience><Live /></PublicExperience>} />
         <Route path="/system" element={<PublicExperience><System /></PublicExperience>} />
         <Route path="/research" element={<PublicExperience><Research /></PublicExperience>} />
+        <Route path="/theory" element={<PublicExperience><Theory /></PublicExperience>} />
         <Route path="/record" element={<PublicExperience><Record /></PublicExperience>} />
         <Route path="/performance" element={<PublicExperience><Performance /></PublicExperience>} />
         <Route path="/releases" element={<PublicExperience><Releases /></PublicExperience>} />
