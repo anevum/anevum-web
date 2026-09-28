@@ -97,6 +97,22 @@ async function publicResearchReadiness() {
   });
 }
 
+async function publicTheory() {
+  const response = await fetch(RESEARCH_BASE + "/v1/theory/public", {
+    method: "GET",
+    headers: { Accept: "application/json" }
+  });
+  const raw = await response.text();
+  return new Response(raw, {
+    status: response.status,
+    headers: {
+      "Content-Type": "application/json; charset=utf-8",
+      "Cache-Control": "public, max-age=30, s-maxage=30, stale-while-revalidate=60",
+      "X-Content-Type-Options": "nosniff"
+    }
+  });
+}
+
 async function publicTradingFeed() {
   const response = await fetch(PUBLIC_TRADING_FEED, {
     method: "GET",
@@ -146,6 +162,14 @@ function currentReleaseSnapshot() {
 }
 
 function publicRouteMetadata(pathname) {
+  if (pathname === "/theory") {
+    return {
+      title: "Mathematics & Theory — ANEVUM",
+      description: "ANEVUM's public mathematics and theory program: formal problems, conjectures, assumptions, falsification criteria, workstreams, and the boundary between theory and RHEN production.",
+      url: "https://anevum.com/theory"
+    };
+  }
+
   if (pathname === "/performance") {
     return {
       title: "RHEN Performance — ANEVUM",
@@ -253,6 +277,15 @@ export default {
         return await publicResearchReadiness();
       } catch (error) {
         return jsonResponse({ message: error instanceof Error ? error.message : "Research readiness unavailable." }, 502);
+      }
+    }
+
+    if (pathname === "/api/public/theory") {
+      if (request.method !== "GET") return jsonResponse({ message: "Method not allowed." }, 405);
+      try {
+        return await publicTheory();
+      } catch (error) {
+        return jsonResponse({ message: error instanceof Error ? error.message : "Theory program unavailable." }, 502);
       }
     }
 
