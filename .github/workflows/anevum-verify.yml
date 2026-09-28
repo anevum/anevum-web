@@ -73,7 +73,8 @@ jobs:
           current_version="$(jq -r '.currentVersion' public/release-registry.json)"
           current_codename="$(jq -r '.currentCodename' public/release-registry.json)"
 
-          for path in / /live /performance /system /research /theory /record /releases "/releases/$current_slug" /private /command /command/performance; do
+          public_routes="$(node --input-type=module -e 'import fs from "node:fs"; const routes=JSON.parse(fs.readFileSync("src/data/public-routes.json","utf8")); process.stdout.write(routes.filter((route)=>route.sitemap).map((route)=>route.path).join(" "))')"
+          for path in $public_routes "/releases/$current_slug" /private /command /command/performance; do
             curl --fail --show-error --silent "$base$path" > /dev/null
           done
 
@@ -167,7 +168,8 @@ jobs:
           grep -Fq 'release-detail' "$RUNNER_TEMP/anevum-visuals/release-rendered.html"
           grep -Fq 'theory-page' "$RUNNER_TEMP/anevum-visuals/theory-rendered.html"
           grep -Fq 'ATP-001' "$RUNNER_TEMP/anevum-visuals/theory-rendered.html"
-          grep -Fq 'theory-public-frame' "$RUNNER_TEMP/anevum-visuals/theory-rendered.html"
+          grep -Fq 'compact-public-frame' "$RUNNER_TEMP/anevum-visuals/theory-rendered.html"
+          grep -Fq 'theory-subnav' "$RUNNER_TEMP/anevum-visuals/theory-rendered.html"
       - name: Upload browser QA
         if: github.event_name == 'pull_request'
         uses: actions/upload-artifact@v4

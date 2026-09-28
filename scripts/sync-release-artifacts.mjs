@@ -6,7 +6,8 @@ const ROOT = path.resolve(new URL("..", import.meta.url).pathname);
 const registry = loadReleaseRegistry();
 const current = currentRelease(registry);
 
-const staticRoutes = ["/", "/live", "/performance", "/system", "/research", "/record", "/releases"];
+const publicRoutes = JSON.parse(fs.readFileSync(path.join(ROOT, "src", "data", "public-routes.json"), "utf8"));
+const staticRoutes = publicRoutes.filter((route) => route.sitemap).map((route) => route.path);
 const releaseRoutes = registry.releases.map((release) => "/releases/" + release.slug);
 const routes = [...staticRoutes, ...releaseRoutes];
 

@@ -1,0 +1,10 @@
+[
+  {"path":"/","label":"Home","nav":false,"sitemap":true},
+  {"path":"/live","label":"Operations","nav":true,"sitemap":true},
+  {"path":"/performance","label":"Performance","nav":true,"sitemap":true},
+  {"path":"/research","label":"Research","nav":true,"sitemap":true},
+  {"path":"/theory","label":"Theory","nav":true,"sitemap":true},
+  {"path":"/system","label":"System","nav":true,"sitemap":true},
+  {"path":"/releases","label":"Releases","nav":true,"sitemap":true},
+  {"path":"/record","label":"Record","nav":true,"sitemap":true}
+]
