@@ -243,6 +243,7 @@ export type TheoryProgramFeed = {
     name: string;
     status: string;
     purpose: string;
+    current_problem_id?: string;
     standards: TheoryStandard[];
     tracks: TheoryTrack[];
   };
