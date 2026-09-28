@@ -1,8 +1,8 @@
-import { AnimatePresence, motion } from "motion/react";
+import { motion, useReducedMotion } from "motion/react";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import Mark from "../components/Mark";
 import RhenMark from "../components/RhenMark";
+import RhenLaunchSequence from "../components/RhenLaunchSequence";
 import { useLiveTrading } from "../hooks/useLiveTrading";
 import { fetchTheoryProgram, type TheoryProgramFeed } from "../lib/data";
 
@@ -63,14 +63,9 @@ const destinations = [
 ];
 
 export default function Home() {
-  const [showIntro, setShowIntro] = useState(true);
+  const reduceMotion = Boolean(useReducedMotion());
   const [theoryProgram, setTheoryProgram] = useState<TheoryProgramFeed | null>(null);
   const { data, loading } = useLiveTrading(5000);
-
-  useEffect(() => {
-    const timer = window.setTimeout(() => setShowIntro(false), 900);
-    return () => window.clearTimeout(timer);
-  }, []);
 
   useEffect(() => {
     let active = true;
@@ -99,28 +94,6 @@ export default function Home() {
 
   return (
     <>
-      <AnimatePresence>
-        {showIntro ? (
-          <motion.div
-            className="anevum-intro"
-            initial={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: .32 }}
-            aria-hidden="true"
-          >
-            <motion.div
-              className="anevum-intro-mark"
-              initial={{ opacity: 0, scale: .88 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: .58, ease: [0.2, 0.8, 0.2, 1] }}
-            >
-              <Mark />
-              <span>ANEVUM</span>
-            </motion.div>
-          </motion.div>
-        ) : null}
-      </AnimatePresence>
-
       <section className={"anevum-home-v2" + (october ? " october-home" : "")}>
         <section className="anevum-home-hero-v2">
           {october ? (
@@ -130,61 +103,37 @@ export default function Home() {
               <div className="october-orbit october-orbit-b" />
             </div>
           ) : null}
-          <motion.div
-            className="anevum-home-hero-copy-v2"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: .65, delay: .05 }}
-          >
-            <div className="anevum-home-lockup-v2">
-              <Mark />
-              <span>ANEVUM</span>
-              <i />
-              <small>{october ? "OCTOBER // SPOOKY SYSTEMS" : "SYSTEMS // RESEARCH // THEORY"}</small>
-            </div>
+          <div className="anevum-home-hero-copy-v2 anevum-home-launch-hero">
+            <RhenLaunchSequence />
 
-            <div className="anevum-home-title-v2">
-              {october ? (
-                <>
-                  <span>SPOOKY</span>
-                  <span>SYSTEMS.</span>
-                </>
-              ) : (
-                <>
-                  <span>BUILD.</span>
-                  <span>OBSERVE.</span>
-                  <span>PROVE.</span>
-                </>
-              )}
-            </div>
+            <motion.div
+              className="anevum-home-launch-actions"
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: reduceMotion ? 0 : .5, delay: reduceMotion ? 0 : 5.05 }}
+            >
+              <div className="anevum-home-actions-v2">
+                <Link className="anevum-home-primary-v2" to="/performance">
+                  See the record <b>↗</b>
+                </Link>
+                <Link className="anevum-home-secondary-v2" to="/system">
+                  Explore RHEN <b>→</b>
+                </Link>
+              </div>
 
-            <p className="anevum-home-lead-v2">
-              {october
-                ? "Same systems. Darker universe. ANEVUM is still the live laboratory for RHEN, research, mathematics, and durable evidence — now running its October skin."
-                : "ANEVUM is a working laboratory for autonomous systems, market research, mathematics, and durable evidence. RHEN is the first live operating system inside it."}
-            </p>
-
-            <div className="anevum-home-actions-v2">
-              <Link className="anevum-home-primary-v2" to="/performance">
-                {october ? "Enter the record" : "See the record"} <b>↗</b>
-              </Link>
-              <Link className="anevum-home-secondary-v2" to="/system">
-                {october ? "Explore RHEN" : "Explore the system"} <b>→</b>
-              </Link>
-            </div>
-
-            <div className="anevum-home-principles-v2">
-              <span>{october ? "LIVE SYSTEMS" : "REAL SYSTEMS"}</span><i />
-              <span>{october ? "DARKER INTERFACE" : "DURABLE EVIDENCE"}</span><i />
-              <span>{october ? "SAME EVIDENCE" : "CONTROLLED SCALE"}</span>
-            </div>
-          </motion.div>
+              <div className="anevum-home-principles-v2">
+                <span>LIVE SYSTEMS</span><i />
+                <span>DURABLE EVIDENCE</span><i />
+                <span>CONTROLLED SCALE</span>
+              </div>
+            </motion.div>
+          </div>
 
           <motion.aside
             className="anevum-home-rhen-card-v2"
             initial={{ opacity: 0, x: 18 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: .62, delay: .14 }}
+            transition={{ duration: reduceMotion ? 0 : .62, delay: reduceMotion ? 0 : 5.18 }}
           >
             <div className="anevum-home-rhen-orbit-v2" aria-hidden="true">
               <span /><span /><span />
