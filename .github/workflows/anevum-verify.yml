@@ -73,7 +73,7 @@ jobs:
           current_version="$(jq -r '.currentVersion' public/release-registry.json)"
           current_codename="$(jq -r '.currentCodename' public/release-registry.json)"
 
-          for path in / /live /performance /system /research /record /releases "/releases/$current_slug" /private /command /command/performance; do
+          for path in / /live /performance /system /research /theory /record /releases "/releases/$current_slug" /private /command /command/performance; do
             curl --fail --show-error --silent "$base$path" > /dev/null
           done
 
@@ -89,6 +89,22 @@ jobs:
           printf '%s' "$performance_html" | grep -Fq '<meta property="og:title" content="RHEN Performance — ANEVUM" />'
           printf '%s' "$performance_html" | grep -Fq '<meta property="og:url" content="https://anevum.com/performance" />'
           printf '%s' "$performance_html" | grep -Fq '<link rel="canonical" href="https://anevum.com/performance" />'
+
+          theory_html="$(curl --fail --show-error --silent "$base/theory")"
+          printf '%s' "$theory_html" | grep -Fq '<meta property="og:title" content="Mathematics & Theory — ANEVUM" />'
+          printf '%s' "$theory_html" | grep -Fq '<meta property="og:url" content="https://anevum.com/theory" />'
+          printf '%s' "$theory_html" | grep -Fq '<link rel="canonical" href="https://anevum.com/theory" />'
+
+          theory_feed="$(curl --fail --show-error --silent "$base/api/public/theory")"
+          printf '%s' "$theory_feed" | jq -e '
+            .schema_version == "anevum-theory-registry-v1" and
+            .program.status == "ACTIVE" and
+            (.problems | type == "array") and
+            ([.problems[].problem_id] | index("ATP-001") != null) and
+            .authority.theory_can_change_live_trading == false and
+            .authority.theory_can_open_protected_research_stages == false and
+            .authority.theory_can_claim_novelty_without_review == false
+          ' > /dev/null
 
           sitemap="$(curl --fail --show-error --silent "$base/sitemap.xml")"
           printf '%s' "$sitemap" | grep -Fq "https://anevum.com/releases/$current_slug"
@@ -135,9 +151,12 @@ jobs:
           google-chrome --headless --no-sandbox --disable-gpu --hide-scrollbars --virtual-time-budget=6000 --window-size=390,844 --screenshot="$RUNNER_TEMP/anevum-visuals/performance-mobile.png" "$base/performance"
           google-chrome --headless --no-sandbox --disable-gpu --hide-scrollbars --virtual-time-budget=6000 --window-size=1440,1000 --screenshot="$RUNNER_TEMP/anevum-visuals/release-desktop.png" "$base/releases/$current_slug"
           google-chrome --headless --no-sandbox --disable-gpu --hide-scrollbars --virtual-time-budget=6000 --window-size=390,844 --screenshot="$RUNNER_TEMP/anevum-visuals/release-mobile.png" "$base/releases/$current_slug"
+          google-chrome --headless --no-sandbox --disable-gpu --hide-scrollbars --virtual-time-budget=6000 --window-size=1440,1000 --screenshot="$RUNNER_TEMP/anevum-visuals/theory-desktop.png" "$base/theory"
+          google-chrome --headless --no-sandbox --disable-gpu --hide-scrollbars --virtual-time-budget=6000 --window-size=390,844 --screenshot="$RUNNER_TEMP/anevum-visuals/theory-mobile.png" "$base/theory"
           google-chrome --headless --no-sandbox --disable-gpu --virtual-time-budget=6000 --dump-dom "$base/" > "$RUNNER_TEMP/anevum-visuals/home-rendered.html"
           google-chrome --headless --no-sandbox --disable-gpu --virtual-time-budget=6000 --dump-dom "$base/performance" > "$RUNNER_TEMP/anevum-visuals/performance-rendered.html"
           google-chrome --headless --no-sandbox --disable-gpu --virtual-time-budget=6000 --dump-dom "$base/releases/$current_slug" > "$RUNNER_TEMP/anevum-visuals/release-rendered.html"
+          google-chrome --headless --no-sandbox --disable-gpu --virtual-time-budget=6000 --dump-dom "$base/theory" > "$RUNNER_TEMP/anevum-visuals/theory-rendered.html"
           grep -Fq 'landing-screen' "$RUNNER_TEMP/anevum-visuals/home-rendered.html"
           grep -Fq 'anevum-rhen-reveal' "$RUNNER_TEMP/anevum-visuals/home-rendered.html"
           grep -Fq 'ANEVUM' "$RUNNER_TEMP/anevum-visuals/home-rendered.html"
@@ -146,6 +165,9 @@ jobs:
           grep -Fq 'performance-workspace' "$RUNNER_TEMP/anevum-visuals/performance-rendered.html"
           grep -Fq 'PUBLIC-PERFORMANCE-v1' "$RUNNER_TEMP/anevum-visuals/performance-rendered.html"
           grep -Fq 'release-detail' "$RUNNER_TEMP/anevum-visuals/release-rendered.html"
+          grep -Fq 'theory-page' "$RUNNER_TEMP/anevum-visuals/theory-rendered.html"
+          grep -Fq 'ATP-001' "$RUNNER_TEMP/anevum-visuals/theory-rendered.html"
+          grep -Fq 'theory-public-frame' "$RUNNER_TEMP/anevum-visuals/theory-rendered.html"
       - name: Upload browser QA
         if: github.event_name == 'pull_request'
         uses: actions/upload-artifact@v4
