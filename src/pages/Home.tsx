@@ -3,7 +3,6 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import Mark from "../components/Mark";
 import RhenMark from "../components/RhenMark";
-import { currentRhenRelease } from "../data/releases";
 import { useLiveTrading } from "../hooks/useLiveTrading";
 import { fetchTheoryProgram, type TheoryProgramFeed } from "../lib/data";
 
@@ -67,7 +66,6 @@ export default function Home() {
   const [showIntro, setShowIntro] = useState(true);
   const [theoryProgram, setTheoryProgram] = useState<TheoryProgramFeed | null>(null);
   const { data, loading } = useLiveTrading(5000);
-  const release = currentRhenRelease();
 
   useEffect(() => {
     const timer = window.setTimeout(() => setShowIntro(false), 900);
@@ -196,8 +194,8 @@ export default function Home() {
 
         <section className="anevum-home-status-v2" aria-label="Current ANEVUM state">
           <div><small>LIVE SYSTEM</small><strong>RHEN</strong></div>
-          <div><small>RELEASE</small><strong>{release.version} // {release.codename}</strong></div>
-          <div><small>LIFECYCLE</small><strong>{release.lifecycle}</strong></div>
+          <div><small>ACTIVE VERSION</small><strong>{shortVersion(version)}</strong></div>
+          <div><small>STRATEGY</small><strong>{data?.active_strategy?.strategy_name || "UNRECORDED"}</strong></div>
           <div><small>RESEARCH</small><strong>{research}</strong></div>
           <div><small>TELEMETRY</small><strong>{ageLabel(data?.freshness_seconds)} AGO</strong></div>
         </section>
@@ -217,16 +215,16 @@ export default function Home() {
           <div className="anevum-home-current-grid-v2">
             <Link className="anevum-home-project-card-v2 is-rhen" to="/releases">
               <div className="anevum-home-project-card-top-v2">
-                <span>RHEN // {release.version}</span>
-                <b>{release.lifecycle}</b>
+                <span>RHEN // {shortVersion(version)}</span>
+                <b>{data?.active_strategy?.status || state}</b>
               </div>
               <div>
                 <RhenMark decorative />
-                <h3>{release.codename}</h3>
-                <p>{release.headline}</p>
+                <h3>{data?.active_strategy?.strategy_name || "RHEN"}</h3>
+                <p>Live execution, telemetry, evidence generation, and bounded research operating from the current production state.</p>
               </div>
               <footer>
-                <span>{release.releaseClass}</span>
+                <span>LIVE SYSTEM // CANONICAL TELEMETRY</span>
                 <i>→</i>
               </footer>
             </Link>
