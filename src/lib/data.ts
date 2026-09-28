@@ -104,6 +104,8 @@ export type PublicPerformance = {
   realized_return_pct?: number | null;
   max_drawdown_pct?: number | null;
   external_cash_flows_present?: boolean;
+  baseline_reason?: string | null;
+  baseline_reset?: boolean;
   curve?: PublicPerformancePoint[];
   limitations?: string[];
 };

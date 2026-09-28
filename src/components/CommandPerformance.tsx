@@ -48,7 +48,7 @@ export default function CommandPerformance({
       <header>
         <div>
           <span>PUBLIC PERFORMANCE / AUTO-SYNC</span>
-          <strong>{performance?.methodology_version || "PUBLIC-PERFORMANCE-v1"}</strong>
+          <strong>{performance?.methodology_version || "PUBLIC-PERFORMANCE-v2"}</strong>
         </div>
         <small>{feedError || sample}</small>
       </header>

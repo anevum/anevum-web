@@ -141,7 +141,7 @@ export default function Performance() {
                     <span className="story-kicker">LIVE / PERSONAL CAPITAL / BROKER-DERIVED</span>
                     <h2>The public record starts with what actually happened.</h2>
                   </div>
-                  <p>{error || (loading ? "Loading durable performance evidence…" : "Tracking began " + dateLabel(performance?.tracking_started_at, true) + ".")}</p>
+                  <p>{error || (loading ? "Loading durable performance evidence…" : (performance?.baseline_reset ? "Current post-cash-flow baseline set " : "Tracking began ") + dateLabel(performance?.tracking_started_at, true) + ".")}</p>
                 </div>
 
                 <div className="performance-record-grid">
@@ -151,12 +151,12 @@ export default function Performance() {
                       <article>
                         <span>TRACKED ACCOUNT</span>
                         <strong className={stateClass(performance?.account_return_pct)}>{pct(performance?.account_return_pct)}</strong>
-                        <small>From first tracked account snapshot</small>
+                        <small>From current performance baseline</small>
                       </article>
                       <article>
                         <span>RHEN REALIZED</span>
                         <strong className={stateClass(performance?.realized_return_pct)}>{pct(performance?.realized_return_pct)}</strong>
-                        <small>Closed live RHEN trades / starting equity</small>
+                        <small>Current-epoch realized P&amp;L / baseline equity</small>
                       </article>
                       <article>
                         <span>MAX DRAWDOWN</span>
@@ -184,14 +184,14 @@ export default function Performance() {
             {tab === "method" && (
               <motion.div className="workspace-view story-view performance-view" key="method" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}>
                 <div className="story-title-row">
-                  <div><span className="story-kicker">PUBLIC-PERFORMANCE-v1</span><h2>Performance is generated from the durable live ledger.</h2></div>
+                  <div><span className="story-kicker">PUBLIC-PERFORMANCE-v2</span><h2>Performance is generated from the durable live ledger.</h2></div>
                   <p>Public percentages are computed server-side from locked telemetry; the browser never receives the underlying account values.</p>
                 </div>
                 <div className="performance-method-grid">
                   <article><span>01 / SOURCE</span><strong>Broker-derived live telemetry</strong><p>RHEN reconciles execution and account state into durable records. The public feed reads those records rather than screenshots or manually entered results.</p></article>
                   <article><span>02 / SCOPE</span><strong>Live is separate from research</strong><p>Only live strategy versions contribute to the RHEN realized metric. Shadow runs, backtests, replay laboratories, and development experiments remain research evidence.</p></article>
-                  <article><span>03 / BASELINE</span><strong>Normalized, not dollar-denominated</strong><p>The tracked-account curve indexes the first public account snapshot to 0%. Raw equity, cash, buying power, trade prices, quantities, and symbols remain private.</p></article>
-                  <article><span>04 / CASH FLOWS</span><strong>Fail closed on deposits or withdrawals</strong><p>If external cash flows appear, normalized return is withheld until a proper flow-adjusted methodology can be applied rather than publishing a misleading percentage.</p></article>
+                  <article><span>03 / BASELINE</span><strong>Normalized, not dollar-denominated</strong><p>The tracked-account curve indexes the active performance epoch to 0%. Raw equity, cash, buying power, trade prices, quantities, and symbols remain private.</p></article>
+                  <article><span>04 / CASH FLOWS</span><strong>Cash flows create explicit boundaries</strong><p>Deposits and withdrawals create a new performance epoch at the first post-flow broker snapshot. The new balance becomes 0% without deleting prior history or treating owner cash movement as trading profit or loss.</p></article>
                   <article><span>05 / LOSSES</span><strong>No selective deletion</strong><p>Losing live trades remain in aggregate results. Strategy retirement creates a version boundary; it does not erase the prior live record.</p></article>
                   <article><span>06 / FUTURE COMPLIANCE</span><strong>Performance marketing is a later legal gate</strong><p>If ANEVUM ever offers regulated advisory services, the public presentation will require a compliance review, fee-aware net performance treatment, recordkeeping, and any other then-applicable requirements.</p></article>
                 </div>
