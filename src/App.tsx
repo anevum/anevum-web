@@ -1,6 +1,7 @@
 import { lazy, Suspense, useEffect, type ReactNode } from "react";
 import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { OverflowPan } from "./components/OverflowPan";
+import SeasonalEasterEggs from "./components/SeasonalEasterEggs";
 import { PublicShell } from "./components/Shell";
 import { currentRhenRelease, rhenReleaseBySlug } from "./data/releases";
 
@@ -69,6 +70,7 @@ export default function App() {
     <>
       <RouteEffects />
       <OverflowPan />
+      <SeasonalEasterEggs />
       <Routes>
         <Route path="/" element={<PublicExperience><Home /></PublicExperience>} />
         <Route path="/live" element={<PublicExperience><Live /></PublicExperience>} />
