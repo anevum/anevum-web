@@ -15,8 +15,9 @@ const nav = [
 
 export function PublicShell({ children }: { children: ReactNode }) {
   const location = useLocation();
+  const isTheory = location.pathname === "/theory";
   return (
-    <div className="public-frame compact-public-frame">
+    <div className={"public-frame compact-public-frame" + (isTheory ? " theory-public-frame" : "")}>
       <UniverseBackground />
       <header className="public-header compact-public-header">
         <Link className="public-brand" to="/" aria-label="ANEVUM home">
@@ -31,7 +32,7 @@ export function PublicShell({ children }: { children: ReactNode }) {
           <span className="command-nav-dot" /><span>Command</span>
         </Link>
       </header>
-      <main className="public-stage compact-public-stage">{children}</main>
+      <main className={"public-stage compact-public-stage" + (isTheory ? " theory-public-stage" : "")}>{children}</main>
     </div>
   );
 }
