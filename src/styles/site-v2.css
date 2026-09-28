@@ -803,3 +803,737 @@
   .theory-equations article{padding:6px 8px}
   .theory-equations p{-webkit-line-clamp:1}
 }
+
+
+/* ANEVUM public scroll-first + homepage v2 -------------------------------
+ * Public pages now favor readable vertical flow over forced single-viewport
+ * compression. The animated universe remains fixed behind the document.
+ */
+.compact-public-frame,
+.compact-public-stage{
+  height:auto!important;
+  min-height:100dvh!important;
+  overflow:visible!important;
+}
+.compact-page{
+  height:auto!important;
+  min-height:100dvh!important;
+  overflow:visible!important;
+  padding-bottom:max(48px,calc(var(--safe-bottom) + 28px))!important;
+}
+.workspace-screen{
+  grid-template-rows:auto auto!important;
+}
+.workspace-layout{
+  min-height:0!important;
+  grid-template-rows:auto!important;
+  align-items:start;
+}
+.workspace-content{
+  min-height:0!important;
+  overflow:visible!important;
+}
+.workspace-view{
+  height:auto!important;
+  min-height:0!important;
+  overflow:visible!important;
+}
+
+/* Home ------------------------------------------------------------------ */
+.anevum-home-v2{
+  position:relative;
+  z-index:3;
+  width:min(calc(100% - 48px),var(--max));
+  margin:0 auto;
+  padding:104px 0 max(78px,calc(var(--safe-bottom) + 42px));
+}
+.anevum-home-hero-v2{
+  min-height:min(820px,calc(100dvh - 104px));
+  display:grid;
+  grid-template-columns:minmax(0,1.08fr) minmax(360px,.72fr);
+  gap:clamp(42px,7vw,110px);
+  align-items:center;
+  border-bottom:1px solid rgba(205,226,239,.09);
+}
+.anevum-home-hero-copy-v2{
+  max-width:780px;
+  padding:48px 0 70px;
+}
+.anevum-home-lockup-v2{
+  display:flex;
+  align-items:center;
+  gap:11px;
+  margin-bottom:32px;
+  color:#9fb4c2;
+}
+.anevum-home-lockup-v2 .anevum-mark{
+  width:31px;
+  height:31px;
+  color:#bfd3df;
+  filter:drop-shadow(0 0 22px rgba(132,195,235,.18));
+}
+.anevum-home-lockup-v2>span{
+  font-size:.67rem;
+  font-weight:780;
+  letter-spacing:.27em;
+}
+.anevum-home-lockup-v2>i{
+  width:36px;
+  height:1px;
+  background:linear-gradient(90deg,rgba(134,189,224,.5),rgba(134,189,224,.08));
+}
+.anevum-home-lockup-v2>small{
+  color:#536b7b;
+  font-size:.43rem;
+  font-weight:720;
+  letter-spacing:.13em;
+}
+.anevum-home-title-v2{
+  display:grid;
+  margin-left:-.04em;
+  color:#e0e8ec;
+  font-size:clamp(4.6rem,8.2vw,9.1rem);
+  font-weight:500;
+  line-height:.77;
+  letter-spacing:-.075em;
+}
+.anevum-home-title-v2 span:nth-child(2){
+  color:#9cb7c7;
+}
+.anevum-home-title-v2 span:nth-child(3){
+  color:#62869d;
+}
+.anevum-home-lead-v2{
+  max-width:720px;
+  margin:34px 0 0;
+  color:#82939e;
+  font-size:clamp(.9rem,1.15vw,1.07rem);
+  line-height:1.72;
+}
+.anevum-home-actions-v2{
+  display:flex;
+  align-items:center;
+  gap:9px;
+  margin-top:30px;
+}
+.anevum-home-primary-v2,
+.anevum-home-secondary-v2{
+  min-height:46px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:28px;
+  padding:0 15px 0 17px;
+  border-radius:8px;
+  font-size:.64rem;
+  font-weight:720;
+  letter-spacing:.055em;
+}
+.anevum-home-primary-v2{
+  color:#071019;
+  background:#dce7ed;
+  border:1px solid #dce7ed;
+}
+.anevum-home-secondary-v2{
+  color:#8093a0;
+  background:rgba(4,10,16,.42);
+  border:1px solid rgba(205,226,239,.1);
+  backdrop-filter:blur(12px);
+}
+.anevum-home-primary-v2 b,
+.anevum-home-secondary-v2 b{font-size:.9rem;font-weight:500}
+.anevum-home-principles-v2{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin-top:25px;
+  color:#506979;
+  font-size:.4rem;
+  font-weight:730;
+  letter-spacing:.13em;
+}
+.anevum-home-principles-v2 i{
+  width:20px;
+  height:1px;
+  background:linear-gradient(90deg,rgba(129,185,222,.46),rgba(129,185,222,.06));
+}
+
+.anevum-home-rhen-card-v2{
+  position:relative;
+  min-height:520px;
+  display:grid;
+  grid-template-rows:auto 1fr auto;
+  padding:22px;
+  overflow:hidden;
+  border:1px solid rgba(158,204,234,.13);
+  border-radius:18px;
+  background:
+    radial-gradient(circle at 50% 40%,rgba(73,128,165,.08),transparent 34%),
+    linear-gradient(150deg,rgba(10,22,33,.74),rgba(4,9,15,.64));
+  box-shadow:
+    inset 0 1px rgba(255,255,255,.026),
+    0 30px 100px rgba(0,0,0,.22),
+    0 0 90px rgba(67,125,166,.04);
+  backdrop-filter:blur(18px);
+}
+.anevum-home-rhen-card-v2:before{
+  content:"";
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  background:
+    linear-gradient(rgba(255,255,255,.012) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(255,255,255,.012) 1px,transparent 1px);
+  background-size:54px 54px;
+  mask-image:radial-gradient(circle at center,black,transparent 78%);
+}
+.anevum-home-rhen-orbit-v2{
+  position:absolute;
+  inset:68px 16px 110px;
+  display:grid;
+  place-items:center;
+  pointer-events:none;
+}
+.anevum-home-rhen-orbit-v2>span{
+  position:absolute;
+  border:1px solid rgba(135,193,231,.095);
+  border-radius:50%;
+}
+.anevum-home-rhen-orbit-v2>span:nth-child(1){width:84%;aspect-ratio:1}
+.anevum-home-rhen-orbit-v2>span:nth-child(2){width:68%;aspect-ratio:1;transform:rotate(24deg) scaleY(.52)}
+.anevum-home-rhen-orbit-v2>span:nth-child(3){width:50%;aspect-ratio:1;transform:rotate(-18deg) scaleX(.58)}
+.anevum-home-rhen-orbit-v2 .rhen-mark{
+  width:122px;
+  height:122px;
+  color:#86bddf;
+  opacity:.82;
+  filter:
+    drop-shadow(0 0 14px rgba(125,190,231,.32))
+    drop-shadow(0 0 46px rgba(82,148,190,.14));
+}
+.anevum-home-rhen-card-head-v2,
+.anevum-home-rhen-card-foot-v2{
+  position:relative;
+  z-index:2;
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:16px;
+}
+.anevum-home-rhen-card-head-v2>div{
+  display:grid;
+  gap:3px;
+}
+.anevum-home-rhen-card-head-v2 small,
+.anevum-home-rhen-metrics-v2 small{
+  color:#536d80;
+  font-size:.4rem;
+  letter-spacing:.13em;
+}
+.anevum-home-rhen-card-head-v2 strong{
+  color:#cbd9e0;
+  font-size:1.1rem;
+  font-weight:610;
+  letter-spacing:.14em;
+}
+.anevum-home-rhen-card-head-v2 .runtime-state{
+  font-size:.45rem!important;
+  letter-spacing:.09em;
+}
+.anevum-home-rhen-metrics-v2{
+  position:relative;
+  z-index:2;
+  align-self:end;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:1px;
+  margin-top:auto;
+  overflow:hidden;
+  border:1px solid rgba(207,228,241,.075);
+  border-radius:11px;
+  background:rgba(207,228,241,.06);
+}
+.anevum-home-rhen-metrics-v2>div{
+  min-width:0;
+  min-height:78px;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  gap:7px;
+  padding:12px;
+  background:rgba(3,9,15,.88);
+}
+.anevum-home-rhen-metrics-v2 strong{
+  overflow:hidden;
+  text-overflow:ellipsis;
+  color:#b5c5cd;
+  font-size:1.02rem;
+  font-weight:550;
+  letter-spacing:-.02em;
+  white-space:nowrap;
+}
+.anevum-home-rhen-card-foot-v2{
+  align-items:center;
+  margin-top:16px;
+  padding-top:14px;
+  border-top:1px solid rgba(207,228,241,.07);
+  color:#536b79;
+  font-size:.4rem;
+  letter-spacing:.09em;
+}
+
+.anevum-home-status-v2{
+  min-height:70px;
+  display:grid;
+  grid-template-columns:.75fr 1fr 1.15fr 1fr .8fr;
+  border:1px solid rgba(207,228,241,.085);
+  border-top:0;
+  border-radius:0 0 14px 14px;
+  overflow:hidden;
+  background:rgba(3,9,15,.48);
+  backdrop-filter:blur(14px);
+}
+.anevum-home-status-v2>div{
+  min-width:0;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  gap:5px;
+  padding:0 15px;
+  border-right:1px solid rgba(207,228,241,.065);
+}
+.anevum-home-status-v2>div:last-child{border-right:0}
+.anevum-home-status-v2 small{
+  color:#4d6372;
+  font-size:.37rem;
+  letter-spacing:.12em;
+}
+.anevum-home-status-v2 strong{
+  overflow:hidden;
+  text-overflow:ellipsis;
+  color:#95a7b2;
+  font-size:.54rem;
+  font-weight:620;
+  white-space:nowrap;
+}
+
+.anevum-home-section-v2{
+  padding:132px 0;
+  border-bottom:1px solid rgba(207,228,241,.085);
+}
+.anevum-home-section-head-v2{
+  display:grid;
+  grid-template-columns:minmax(0,.9fr) minmax(320px,.7fr);
+  gap:64px;
+  align-items:end;
+  margin-bottom:50px;
+}
+.anevum-home-section-head-v2>div>span,
+.anevum-home-record-v2>div>span{
+  color:#526f82;
+  font-size:.43rem;
+  font-weight:740;
+  letter-spacing:.14em;
+}
+.anevum-home-section-head-v2 h2{
+  margin:10px 0 0;
+  font-size:clamp(3.1rem,5.8vw,6.2rem);
+  line-height:.9;
+  letter-spacing:-.06em;
+  font-weight:510;
+}
+.anevum-home-section-head-v2>p{
+  max-width:560px;
+  margin:0 0 4px;
+  color:#758691;
+  font-size:.79rem;
+  line-height:1.68;
+}
+
+.anevum-home-current-grid-v2{
+  display:grid;
+  grid-template-columns:1.15fr .85fr;
+  gap:10px;
+}
+.anevum-home-project-card-v2{
+  min-height:360px;
+  display:grid;
+  grid-template-rows:auto 1fr auto;
+  padding:20px;
+  overflow:hidden;
+  border:1px solid rgba(207,228,241,.09);
+  border-radius:14px;
+  background:linear-gradient(145deg,rgba(8,19,29,.68),rgba(4,10,16,.54));
+  box-shadow:inset 0 1px rgba(255,255,255,.018),0 24px 70px rgba(0,0,0,.12);
+  transition:transform .22s ease,border-color .22s ease,background .22s ease;
+}
+.anevum-home-project-card-v2:hover{
+  transform:translateY(-3px);
+  border-color:rgba(151,202,234,.2);
+  background:linear-gradient(145deg,rgba(11,25,38,.78),rgba(4,11,18,.6));
+}
+.anevum-home-project-card-top-v2{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:15px;
+  color:#536c7c;
+  font-size:.4rem;
+  letter-spacing:.11em;
+}
+.anevum-home-project-card-top-v2 b{
+  color:#7195aa;
+  font-size:.37rem;
+  font-weight:650;
+}
+.anevum-home-project-card-v2>div:nth-child(2){
+  align-self:center;
+}
+.anevum-home-project-card-v2.is-rhen .rhen-mark{
+  width:74px;
+  height:74px;
+  margin-bottom:22px;
+  color:#7fb8dc;
+  filter:drop-shadow(0 0 26px rgba(111,180,224,.16));
+}
+.anevum-home-project-card-v2 h3{
+  margin:0 0 10px;
+  color:#d0dbe1;
+  font-size:clamp(2rem,3.6vw,3.8rem);
+  line-height:.9;
+  letter-spacing:-.055em;
+  font-weight:520;
+}
+.anevum-home-project-card-v2 p{
+  max-width:560px;
+  margin:0;
+  color:#71828d;
+  font-size:.72rem;
+  line-height:1.6;
+}
+.anevum-home-project-card-v2 footer{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:18px;
+  padding-top:16px;
+  border-top:1px solid rgba(207,228,241,.06);
+  color:#536b7b;
+  font-size:.4rem;
+  letter-spacing:.08em;
+}
+.anevum-home-project-card-v2 footer i{
+  color:#7eb4d4;
+  font-size:.9rem;
+  font-style:normal;
+}
+.anevum-home-equation-v2{
+  margin-bottom:28px;
+  color:#7fb4d3;
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+  font-size:clamp(1.4rem,2.2vw,2rem);
+  letter-spacing:-.035em;
+  text-shadow:0 0 20px rgba(112,178,219,.14);
+}
+
+.anevum-home-explore-v2{
+  padding-bottom:114px;
+}
+.anevum-home-destination-grid-v2{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:8px;
+}
+.anevum-home-destination-v2{
+  min-height:200px;
+  height:100%;
+  display:grid;
+  grid-template-columns:34px minmax(0,1fr) auto;
+  gap:14px;
+  align-items:start;
+  padding:19px;
+  border:1px solid rgba(207,228,241,.08);
+  border-radius:12px;
+  background:rgba(4,10,16,.48);
+  backdrop-filter:blur(12px);
+  transition:transform .2s ease,border-color .2s ease,background .2s ease;
+}
+.anevum-home-destination-v2:hover{
+  transform:translateY(-2px);
+  border-color:rgba(151,202,234,.18);
+  background:rgba(8,19,29,.62);
+}
+.anevum-home-destination-v2>span{
+  color:#4a6476;
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+  font-size:.43rem;
+}
+.anevum-home-destination-v2 strong{
+  display:block;
+  margin:28px 0 9px;
+  color:#bac8cf;
+  font-size:1.2rem;
+  font-weight:560;
+}
+.anevum-home-destination-v2 p{
+  margin:0;
+  color:#697b87;
+  font-size:.65rem;
+  line-height:1.55;
+}
+.anevum-home-destination-v2>i{
+  color:#6fa8ca;
+  font-size:.78rem;
+  font-style:normal;
+}
+.anevum-home-record-v2{
+  min-height:230px;
+  display:grid;
+  grid-template-columns:1fr auto;
+  gap:40px;
+  align-items:center;
+  padding:50px 0 10px;
+}
+.anevum-home-record-v2>div{
+  max-width:720px;
+  display:grid;
+  gap:10px;
+}
+.anevum-home-record-v2 strong{
+  color:#bdc9cf;
+  font-size:clamp(1.8rem,3.1vw,3rem);
+  font-weight:520;
+  letter-spacing:-.04em;
+}
+.anevum-home-record-v2 p{
+  max-width:650px;
+  margin:0;
+  color:#6f818c;
+  font-size:.72rem;
+  line-height:1.62;
+}
+.anevum-home-record-v2>a{
+  min-height:44px;
+  display:flex;
+  align-items:center;
+  gap:26px;
+  padding:0 15px;
+  border:1px solid rgba(207,228,241,.1);
+  border-radius:8px;
+  color:#8da2af;
+  background:rgba(4,10,16,.42);
+  font-size:.58rem;
+  letter-spacing:.05em;
+}
+.anevum-home-record-v2>a b{font-size:.85rem;font-weight:500}
+
+/* Mobile public pages keep their structure, but stop shrinking text to fit
+ * everything into a single viewport. */
+@media(max-width:760px){
+  .compact-public-frame,
+  .compact-public-stage{
+    height:auto!important;
+    min-height:100dvh!important;
+    overflow:visible!important;
+  }
+  .compact-page{
+    width:calc(100% - 18px)!important;
+    height:auto!important;
+    min-height:100dvh!important;
+    padding:72px 0 max(48px,calc(var(--safe-bottom) + 30px))!important;
+    overflow:visible!important;
+  }
+  .workspace-screen{display:block!important}
+  .workspace-heading{
+    min-height:0!important;
+    margin-bottom:14px;
+    padding:10px 3px 0!important;
+    align-items:flex-end!important;
+  }
+  .workspace-heading h1{font-size:2.45rem!important}
+  .workspace-layout{
+    display:grid!important;
+    grid-template-columns:1fr!important;
+    grid-template-rows:auto auto!important;
+    gap:8px!important;
+  }
+  .workspace-tabs{
+    position:sticky;
+    z-index:12;
+    top:56px;
+    grid-template-columns:repeat(4,minmax(90px,1fr))!important;
+    overflow-x:auto;
+    padding:6px 0;
+    background:linear-gradient(180deg,rgba(2,6,11,.96),rgba(2,6,11,.86) 80%,transparent);
+    scrollbar-width:none;
+  }
+  .workspace-tabs::-webkit-scrollbar{display:none}
+  .workspace-tabs button{
+    min-height:48px!important;
+    padding:5px 7px!important;
+  }
+  .workspace-tabs button span{font-size:.34rem!important}
+  .workspace-tabs button strong{font-size:.48rem!important}
+  .workspace-content,
+  .workspace-view{
+    height:auto!important;
+    min-height:0!important;
+    overflow:visible!important;
+  }
+  .workspace-view{padding:16px!important}
+
+  .anevum-home-v2{
+    width:calc(100% - 20px);
+    padding:78px 0 max(54px,calc(var(--safe-bottom) + 30px));
+  }
+  .anevum-home-hero-v2{
+    min-height:0;
+    grid-template-columns:1fr;
+    gap:22px;
+    padding:34px 0 42px;
+  }
+  .anevum-home-hero-copy-v2{padding:0}
+  .anevum-home-lockup-v2{margin-bottom:24px}
+  .anevum-home-lockup-v2 .anevum-mark{width:27px;height:27px}
+  .anevum-home-lockup-v2>span{font-size:.58rem}
+  .anevum-home-lockup-v2>small{font-size:.36rem}
+  .anevum-home-title-v2{
+    font-size:clamp(4rem,19vw,6.4rem);
+    line-height:.79;
+  }
+  .anevum-home-lead-v2{
+    margin-top:24px;
+    font-size:.83rem;
+    line-height:1.65;
+  }
+  .anevum-home-actions-v2{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:7px;
+    margin-top:24px;
+  }
+  .anevum-home-primary-v2,
+  .anevum-home-secondary-v2{
+    width:100%;
+    min-height:44px;
+    gap:12px;
+    padding:0 12px;
+    font-size:.58rem;
+  }
+  .anevum-home-principles-v2{display:none}
+  .anevum-home-rhen-card-v2{
+    min-height:430px;
+    padding:17px;
+    border-radius:14px;
+  }
+  .anevum-home-rhen-orbit-v2{inset:62px 10px 105px}
+  .anevum-home-rhen-orbit-v2 .rhen-mark{width:102px;height:102px}
+  .anevum-home-rhen-card-head-v2 small,
+  .anevum-home-rhen-metrics-v2 small{font-size:.35rem}
+  .anevum-home-rhen-card-head-v2 strong{font-size:.95rem}
+  .anevum-home-rhen-metrics-v2>div{min-height:70px;padding:10px}
+  .anevum-home-rhen-metrics-v2 strong{font-size:.9rem}
+  .anevum-home-rhen-card-foot-v2{font-size:.35rem}
+
+  .anevum-home-status-v2{
+    grid-template-columns:1fr 1fr;
+    border-top:1px solid rgba(207,228,241,.085);
+    border-radius:10px;
+    margin-top:10px;
+  }
+  .anevum-home-status-v2>div{
+    min-height:62px;
+    border-bottom:1px solid rgba(207,228,241,.06);
+  }
+  .anevum-home-status-v2>div:nth-child(even){border-right:0}
+  .anevum-home-status-v2>div:last-child{
+    grid-column:1/-1;
+    border-bottom:0;
+  }
+
+  .anevum-home-section-v2{padding:88px 0}
+  .anevum-home-section-head-v2{
+    grid-template-columns:1fr;
+    gap:20px;
+    margin-bottom:32px;
+  }
+  .anevum-home-section-head-v2 h2{
+    font-size:clamp(3rem,14vw,4.8rem);
+  }
+  .anevum-home-section-head-v2>p{
+    font-size:.72rem;
+    line-height:1.6;
+  }
+  .anevum-home-current-grid-v2{
+    grid-template-columns:1fr;
+  }
+  .anevum-home-project-card-v2{
+    min-height:310px;
+    padding:17px;
+  }
+  .anevum-home-project-card-v2 h3{
+    font-size:2.65rem;
+  }
+  .anevum-home-destination-grid-v2{
+    grid-template-columns:1fr;
+  }
+  .anevum-home-destination-v2{
+    min-height:150px;
+    padding:16px;
+  }
+  .anevum-home-destination-v2 strong{
+    margin-top:16px;
+    font-size:1.05rem;
+  }
+  .anevum-home-destination-v2 p{font-size:.62rem}
+  .anevum-home-record-v2{
+    min-height:0;
+    grid-template-columns:1fr;
+    gap:24px;
+    padding:46px 0 0;
+  }
+  .anevum-home-record-v2>a{
+    width:100%;
+    justify-content:space-between;
+  }
+
+  /* Theory was previously forced into a viewport-sized app layout. Let it
+   * participate in the same public document scroll model on phones. */
+  .theory-page{
+    height:auto!important;
+    min-height:100dvh!important;
+    overflow:visible!important;
+  }
+  .theory-layout,
+  .theory-content,
+  .theory-view,
+  .theory-panel-body,
+  .theory-model-panel,
+  .theory-two-column,
+  .theory-result-panel,
+  .theory-workstream-panel,
+  .theory-standard-panel,
+  .theory-scope-panel{
+    height:auto!important;
+    min-height:0!important;
+    overflow:visible!important;
+  }
+  .theory-layout{
+    grid-template-rows:auto auto!important;
+  }
+  .theory-content{
+    grid-template-rows:auto auto!important;
+  }
+  .theory-view{
+    grid-template-rows:auto!important;
+  }
+}
+
+@media(max-width:430px){
+  .anevum-home-actions-v2{grid-template-columns:1fr}
+  .anevum-home-lockup-v2>i{width:22px}
+  .anevum-home-lockup-v2>small{display:none}
+  .anevum-home-title-v2{font-size:clamp(3.55rem,18vw,5.4rem)}
+  .anevum-home-rhen-card-v2{min-height:400px}
+  .anevum-home-status-v2>div{padding:0 11px}
+}
