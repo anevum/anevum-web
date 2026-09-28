@@ -1,4 +1,5 @@
 import { motion, useReducedMotion } from "motion/react";
+import { useEffect, useRef, useState } from "react";
 import RhenMark from "./RhenMark";
 
 type LaunchService = {
@@ -98,9 +99,30 @@ function BrandMark({ id }: { id: string }) {
 
 export default function RhenLaunchSequence() {
   const reduceMotion = Boolean(useReducedMotion());
+  const stageRef = useRef<HTMLDivElement | null>(null);
+  const [stageSize, setStageSize] = useState({ width: 0, height: 0 });
+
+  useEffect(() => {
+    const node = stageRef.current;
+    if (!node) return;
+
+    const updateSize = () => {
+      const rect = node.getBoundingClientRect();
+      setStageSize({ width: rect.width, height: rect.height });
+    };
+
+    updateSize();
+    const observer = new ResizeObserver(updateSize);
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, []);
+
+  const px = (percent: number, axis: "x" | "y") =>
+    (axis === "x" ? stageSize.width : stageSize.height) * percent / 100;
 
   return (
     <div
+      ref={stageRef}
       className={"rhen-launch-sequence rhen-launch-sequence-v2" + (reduceMotion ? " is-reduced-motion" : "")}
       role="img"
       aria-label="ANEVUM presents RHEN, assembled from the connected services behind the system."
@@ -108,27 +130,27 @@ export default function RhenLaunchSequence() {
       <div className="rhen-launch-deep-glow" aria-hidden="true" />
       <div className="rhen-launch-grid" aria-hidden="true" />
 
-      {!reduceMotion ? (
+      {!reduceMotion && stageSize.width > 0 ? (
         <>
           <motion.div
             className="rhen-launch-shockwave rhen-launch-shockwave-a"
             initial={{ opacity: 0, scale: 0.2 }}
             animate={{ opacity: [0, 0.8, 0], scale: [0.2, 1, 1.24] }}
-            transition={{ delay: 0.24, duration: 1.55, ease: "easeOut" }}
+            transition={{ delay: 0.3, duration: 2.2, ease: "easeOut" }}
             aria-hidden="true"
           />
           <motion.div
             className="rhen-launch-shockwave rhen-launch-shockwave-b"
             initial={{ opacity: 0, scale: 0.2 }}
             animate={{ opacity: [0, 0.42, 0], scale: [0.2, 1, 1.42] }}
-            transition={{ delay: 0.52, duration: 1.7, ease: "easeOut" }}
+            transition={{ delay: 0.75, duration: 2.4, ease: "easeOut" }}
             aria-hidden="true"
           />
           <motion.div
             className="rhen-launch-core"
             initial={{ opacity: 0, scale: 0.15 }}
             animate={{ opacity: [0, 1, 1, 0], scale: [0.15, 1.06, 0.8, 0.2] }}
-            transition={{ duration: 3.95, times: [0, 0.18, 0.7, 1], ease: "easeInOut" }}
+            transition={{ duration: 6.8, times: [0, 0.16, 0.76, 1], ease: "easeInOut" }}
             aria-hidden="true"
           >
             <i />
@@ -138,14 +160,14 @@ export default function RhenLaunchSequence() {
             className="rhen-launch-orbit rhen-launch-orbit-outer"
             initial={{ opacity: 0, scale: 0.55, rotate: -18 }}
             animate={{ opacity: [0, 0.75, 0.42, 0], scale: [0.55, 1, 1.02, 0.78], rotate: [-18, 8, 24, 48] }}
-            transition={{ duration: 4.15, times: [0, 0.3, 0.72, 1], ease: "easeInOut" }}
+            transition={{ duration: 7.0, times: [0, 0.25, 0.78, 1], ease: "easeInOut" }}
             aria-hidden="true"
           />
           <motion.div
             className="rhen-launch-orbit rhen-launch-orbit-inner"
             initial={{ opacity: 0, scale: 0.55, rotate: 24 }}
             animate={{ opacity: [0, 0.56, 0.3, 0], scale: [0.55, 1, 0.92, 0.7], rotate: [24, -8, -26, -44] }}
-            transition={{ duration: 4.05, delay: 0.1, times: [0, 0.3, 0.72, 1], ease: "easeInOut" }}
+            transition={{ duration: 6.9, delay: 0.15, times: [0, 0.25, 0.78, 1], ease: "easeInOut" }}
             aria-hidden="true"
           />
 
@@ -166,7 +188,7 @@ export default function RhenLaunchSequence() {
                 y2={service.wheel[1]}
                 initial={{ opacity: 0, pathLength: 0 }}
                 animate={{ opacity: [0, 0.88, 0.38, 0], pathLength: [0, 1, 1, 1] }}
-                transition={{ duration: 3.15, delay: 0.48 + index * 0.055, times: [0, 0.34, 0.77, 1], ease: "easeInOut" }}
+                transition={{ duration: 5.6, delay: 0.75 + index * 0.08, times: [0, 0.28, 0.78, 1], ease: "easeInOut" }}
               />
             ))}
             {launchServices.map((service, index) => {
@@ -182,7 +204,7 @@ export default function RhenLaunchSequence() {
                     y2={next.wheel[1]}
                     initial={{ opacity: 0, pathLength: 0 }}
                     animate={{ opacity: [0, 0.76, 0.42, 0], pathLength: [0, 1, 1, 1] }}
-                    transition={{ duration: 2.75, delay: 1.03 + index * 0.06, times: [0, 0.35, 0.78, 1], ease: "easeInOut" }}
+                    transition={{ duration: 4.8, delay: 2.1 + index * 0.08, times: [0, 0.28, 0.82, 1], ease: "easeInOut" }}
                   />
                   <motion.line
                     className="rhen-launch-edge rhen-launch-edge-faint"
@@ -192,7 +214,7 @@ export default function RhenLaunchSequence() {
                     y2={skip.wheel[1]}
                     initial={{ opacity: 0, pathLength: 0 }}
                     animate={{ opacity: [0, 0.26, 0.18, 0], pathLength: [0, 1, 1, 1] }}
-                    transition={{ duration: 2.5, delay: 1.3 + index * 0.04, times: [0, 0.35, 0.8, 1], ease: "easeInOut" }}
+                    transition={{ duration: 4.4, delay: 2.4 + index * 0.06, times: [0, 0.28, 0.82, 1], ease: "easeInOut" }}
                   />
                 </g>
               );
@@ -202,7 +224,7 @@ export default function RhenLaunchSequence() {
               d="M50 16V84 M38 29Q50 13 62 29 M38 29Q28 48 39 64 M62 29Q72 48 61 64 M39 64Q50 77 61 64 M28 80Q50 69 72 80"
               initial={{ opacity: 0, pathLength: 0 }}
               animate={{ opacity: [0, 0.95, 0.72, 0], pathLength: [0, 1, 1, 1] }}
-              transition={{ delay: 3.02, duration: 1.55, times: [0, 0.4, 0.74, 1], ease: "easeInOut" }}
+              transition={{ delay: 6.15, duration: 2.15, times: [0, 0.34, 0.78, 1], ease: "easeInOut" }}
             />
           </svg>
 
@@ -222,7 +244,7 @@ export default function RhenLaunchSequence() {
                 x: [0, particle.driftX, particle.driftX * 1.7],
                 y: [8, particle.driftY, particle.driftY * 1.55]
               }}
-              transition={{ delay: 0.55 + particle.delay, duration: 2.7 + (particle.id % 4) * 0.25, ease: "easeOut" }}
+              transition={{ delay: 1 + particle.delay * 1.35, duration: 4.5 + (particle.id % 4) * 0.32, ease: "easeOut" }}
               aria-hidden="true"
             />
           ))}
@@ -231,17 +253,17 @@ export default function RhenLaunchSequence() {
             <motion.div
               key={service.id}
               className={"rhen-launch-node brand-" + service.id}
-              initial={{ left: "50%", top: "50%", opacity: 0, scale: 0.18 }}
+              initial={{ x: px(50, "x"), y: px(50, "y"), opacity: 0, scale: 0.18 }}
               animate={{
-                left: ["50%", service.wheel[0] + "%", service.wheel[0] + "%", service.mark[0] + "%", service.mark[0] + "%"],
-                top: ["50%", service.wheel[1] + "%", service.wheel[1] + "%", service.mark[1] + "%", service.mark[1] + "%"],
+                x: [px(50, "x"), px(service.wheel[0], "x"), px(service.wheel[0], "x"), px(service.mark[0], "x"), px(service.mark[0], "x")],
+                y: [px(50, "y"), px(service.wheel[1], "y"), px(service.wheel[1], "y"), px(service.mark[1], "y"), px(service.mark[1], "y")],
                 opacity: [0, 1, 1, 0.92, 0],
                 scale: [0.18, 1.08, 1, 0.72, 0.12]
               }}
               transition={{
-                duration: 4.62,
-                delay: 0.22 + index * 0.045,
-                times: [0, 0.24, 0.57, 0.84, 1],
+                duration: 8.0,
+                delay: 0.35 + index * 0.07,
+                times: [0, 0.24, 0.64, 0.86, 1],
                 ease: [0.22, 0.8, 0.2, 1]
               }}
               aria-hidden="true"
@@ -262,14 +284,14 @@ export default function RhenLaunchSequence() {
             className="rhen-launch-energy-beam"
             initial={{ opacity: 0, scaleX: 0 }}
             animate={{ opacity: [0, 1, 0], scaleX: [0, 1, 1.2] }}
-            transition={{ delay: 4.08, duration: 0.92, times: [0, 0.28, 1], ease: "easeOut" }}
+            transition={{ delay: 7.15, duration: 1.35, times: [0, 0.3, 1], ease: "easeOut" }}
             aria-hidden="true"
           />
           <motion.div
             className="rhen-launch-flare"
             initial={{ opacity: 0, scale: 0.2 }}
             animate={{ opacity: [0, 1, 0.22], scale: [0.2, 1.35, 0.8] }}
-            transition={{ delay: 4.02, duration: 1.2, times: [0, 0.34, 1], ease: "easeOut" }}
+            transition={{ delay: 7.1, duration: 1.65, times: [0, 0.34, 1], ease: "easeOut" }}
             aria-hidden="true"
           />
         </>
@@ -279,7 +301,7 @@ export default function RhenLaunchSequence() {
         className="rhen-launch-mark"
         initial={reduceMotion ? false : { opacity: 0, scale: 0.42, filter: "blur(8px)" }}
         animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
-        transition={{ delay: reduceMotion ? 0 : 4.18, duration: reduceMotion ? 0 : 0.82, ease: [0.16, 0.88, 0.2, 1] }}
+        transition={{ delay: reduceMotion ? 0 : 7.55, duration: reduceMotion ? 0 : 1.0, ease: [0.16, 0.88, 0.2, 1] }}
         aria-hidden="true"
       >
         <div className="rhen-launch-mark-aura" />
@@ -290,7 +312,7 @@ export default function RhenLaunchSequence() {
         className="rhen-launch-presents"
         initial={reduceMotion ? false : { opacity: 0, y: 12, letterSpacing: "0.42em" }}
         animate={{ opacity: 1, y: 0, letterSpacing: "0.24em" }}
-        transition={{ delay: reduceMotion ? 0 : 4.86, duration: reduceMotion ? 0 : 0.62, ease: "easeOut" }}
+        transition={{ delay: reduceMotion ? 0 : 8.65, duration: reduceMotion ? 0 : 0.75, ease: "easeOut" }}
       >
         ANEVUM PRESENTS…
       </motion.div>
@@ -299,7 +321,7 @@ export default function RhenLaunchSequence() {
         className="rhen-launch-name"
         initial={reduceMotion ? false : { opacity: 0, scale: 0.38, y: 30, filter: "blur(10px)" }}
         animate={{ opacity: 1, scale: 1, y: 0, filter: "blur(0px)" }}
-        transition={{ delay: reduceMotion ? 0 : 5.32, duration: reduceMotion ? 0 : 0.9, ease: [0.12, 0.9, 0.2, 1] }}
+        transition={{ delay: reduceMotion ? 0 : 9.8, duration: reduceMotion ? 0 : 1.0, ease: [0.12, 0.9, 0.2, 1] }}
       >
         <span>RHEN</span>
       </motion.div>
