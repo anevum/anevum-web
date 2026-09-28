@@ -340,3 +340,152 @@ html,body,#root,.public-frame,.public-page{
     opacity:.14;
   }
 }
+
+
+/* Seasonal ambient surprise layer --------------------------------------- */
+.seasonal-easter-eggs{
+  position:fixed;
+  inset:0;
+  z-index:9999;
+  pointer-events:none;
+  overflow:hidden;
+  contain:layout paint;
+}
+
+.seasonal-floater,
+.seasonal-peeker{
+  position:absolute;
+  display:block;
+  pointer-events:none;
+  will-change:transform,opacity;
+}
+
+.seasonal-floater{
+  left:var(--egg-left);
+  bottom:-12vh;
+  opacity:0;
+  transform:translate3d(0,0,0) scale(var(--egg-scale));
+  animation:seasonal-float-up var(--egg-duration) linear var(--egg-delay) infinite;
+}
+
+.seasonal-floater-ghost{
+  width:22px;
+  height:30px;
+  border-radius:48% 48% 38% 38%;
+  background:
+    radial-gradient(circle at 34% 39%,rgba(9,10,13,.86) 0 1.7px,transparent 2px),
+    radial-gradient(circle at 66% 39%,rgba(9,10,13,.86) 0 1.7px,transparent 2px),
+    linear-gradient(180deg,rgba(248,242,226,.72),rgba(230,224,209,.2));
+  filter:drop-shadow(0 0 10px rgba(255,176,93,.08));
+  clip-path:polygon(0 0,100% 0,100% 76%,83% 92%,66% 78%,50% 96%,34% 79%,17% 92%,0 76%);
+}
+
+.seasonal-floater-snow,
+.seasonal-floater-firefly,
+.seasonal-floater-mote,
+.seasonal-floater-spark,
+.seasonal-floater-ember{
+  width:4px;
+  height:4px;
+  border-radius:50%;
+  background:var(--season-accent-bright);
+  box-shadow:0 0 8px var(--season-glow);
+}
+
+.seasonal-floater-petal,
+.seasonal-floater-leaf{
+  width:7px;
+  height:12px;
+  border-radius:80% 20% 80% 20%;
+  background:var(--season-accent);
+  opacity:.1;
+}
+
+.seasonal-floater-rain{
+  width:1px;
+  height:18px;
+  background:linear-gradient(180deg,transparent,var(--season-accent-bright));
+}
+
+.seasonal-floater-haze{
+  width:42px;
+  height:8px;
+  border-radius:50%;
+  background:var(--season-glow-soft);
+  filter:blur(7px);
+}
+
+.seasonal-peeker{
+  left:var(--peek-left);
+  top:var(--peek-top);
+  width:34px;
+  height:14px;
+  opacity:0;
+  transform:scale(var(--peek-scale));
+  animation:seasonal-peek var(--peek-duration) ease-in-out var(--peek-delay) infinite;
+}
+
+.seasonal-peeker-eyes{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  filter:drop-shadow(0 0 8px rgba(242,148,66,.18));
+}
+
+.seasonal-peeker-eyes i{
+  display:block;
+  width:12px;
+  height:7px;
+  border-radius:70% 20% 70% 20%;
+  background:
+    radial-gradient(circle at 54% 50%,#130a05 0 1.8px,transparent 2px),
+    radial-gradient(ellipse at center,#f6a85d 0 58%,rgba(233,125,43,.28) 60%,transparent 72%);
+}
+
+.seasonal-peeker-glint{
+  width:12px;
+  height:12px;
+  border-radius:50%;
+  background:radial-gradient(circle,var(--season-accent-bright) 0 8%,var(--season-glow) 12%,transparent 62%);
+}
+
+:root:not([data-seasonal-theme="oct"]) .seasonal-peeker{
+  opacity:0;
+  animation-name:seasonal-glint;
+}
+
+:root[data-seasonal-theme="oct"] .seasonal-floater{
+  mix-blend-mode:screen;
+}
+
+@keyframes seasonal-float-up{
+  0%{opacity:0;transform:translate3d(0,8vh,0) scale(var(--egg-scale))}
+  8%{opacity:.07}
+  54%{opacity:.11;transform:translate3d(var(--egg-drift),-52vh,0) scale(var(--egg-scale))}
+  92%{opacity:.045}
+  100%{opacity:0;transform:translate3d(calc(var(--egg-drift) * -.35),-118vh,0) scale(calc(var(--egg-scale) * .92))}
+}
+
+@keyframes seasonal-peek{
+  0%,76%,100%{opacity:0;transform:scale(var(--peek-scale))}
+  79%{opacity:.04}
+  81%{opacity:.22;transform:scale(calc(var(--peek-scale) * 1.04))}
+  84%{opacity:.08}
+  86%{opacity:.18}
+  89%{opacity:0}
+}
+
+@keyframes seasonal-glint{
+  0%,88%,100%{opacity:0}
+  91%{opacity:.12}
+  94%{opacity:0}
+}
+
+@media (max-width:760px){
+  .seasonal-floater:nth-child(even){display:none}
+  .seasonal-peeker:nth-child(n+5){display:none}
+}
+
+@media (prefers-reduced-motion:reduce){
+  .seasonal-easter-eggs{display:none}
+}
