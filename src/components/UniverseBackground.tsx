@@ -4,6 +4,7 @@ import Mark from "./Mark";
 const spokes = Array.from({ length: 16 });
 const nodes = Array.from({ length: 12 });
 const ticks = Array.from({ length: 24 });
+const embers = Array.from({ length: 28 });
 
 export default function UniverseBackground() {
   return (
@@ -16,6 +17,30 @@ export default function UniverseBackground() {
       <div className="universe-stars universe-stars-mid" />
       <div className="universe-stars universe-stars-near" />
       <div className="universe-stars universe-stars-cross" />
+
+      <div className="october-atmosphere">
+        <div className="october-scanlines" />
+        <div className="october-web october-web-a" />
+        <div className="october-web october-web-b" />
+        <div className="october-fog october-fog-a" />
+        <div className="october-fog october-fog-b" />
+        <div className="october-fog october-fog-c" />
+        <div className="october-iren-art" />
+        <div className="october-embers">
+          {embers.map((_, index) => (
+            <span
+              key={"ember-" + index}
+              style={{
+                "--ember-x": ((index * 37) % 97) + "%",
+                "--ember-size": 1 + (index % 4) * 0.8 + "px",
+                "--ember-delay": -(index * 0.63) + "s",
+                "--ember-duration": 10 + (index % 7) * 1.9 + "s",
+                "--ember-drift": -28 + (index % 9) * 7 + "px"
+              } as CSSProperties}
+            />
+          ))}
+        </div>
+      </div>
 
       <div className="universe-engine">
         <div className="engine-halo" />
