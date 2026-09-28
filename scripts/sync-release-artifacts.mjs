@@ -6,7 +6,7 @@ const ROOT = path.resolve(new URL("..", import.meta.url).pathname);
 const registry = loadReleaseRegistry();
 const current = currentRelease(registry);
 
-const staticRoutes = ["/", "/live", "/performance", "/system", "/research", "/record", "/releases"];
+const staticRoutes = ["/", "/live", "/performance", "/system", "/research", "/theory", "/record", "/releases"];
 const releaseRoutes = registry.releases.map((release) => "/releases/" + release.slug);
 const routes = [...staticRoutes, ...releaseRoutes];
 
