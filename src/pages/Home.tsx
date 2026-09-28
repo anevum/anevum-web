@@ -110,7 +110,7 @@ export default function Home() {
               className="anevum-home-launch-actions"
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: reduceMotion ? 0 : .5, delay: reduceMotion ? 0 : 6.18 }}
+              transition={{ duration: reduceMotion ? 0 : .5, delay: reduceMotion ? 0 : 10.95 }}
             >
               <div className="anevum-home-actions-v2">
                 <Link className="anevum-home-primary-v2" to="/performance">
@@ -133,7 +133,7 @@ export default function Home() {
             className="anevum-home-rhen-card-v2"
             initial={{ opacity: 0, x: 18 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: reduceMotion ? 0 : .62, delay: reduceMotion ? 0 : 6.28 }}
+            transition={{ duration: reduceMotion ? 0 : .62, delay: reduceMotion ? 0 : 11.1 }}
           >
             <div className="anevum-home-rhen-orbit-v2" aria-hidden="true">
               <span /><span /><span />
