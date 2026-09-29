@@ -64,7 +64,8 @@ export default function Command() {
   const [weeklyReport, setWeeklyReport] = useState<Record<string, unknown> | null>(null);
   const [researchReadiness, setResearchReadiness] = useState<ResearchReadiness | null>(null);
   const [theoryProgram, setTheoryProgram] = useState<TheoryProgramFeed | null>(null);
-  const [error, setError] = useState("");
+  const [statusError, setStatusError] = useState("");
+  const [evidenceError, setEvidenceError] = useState("");
   const [refreshing, setRefreshing] = useState(false);
   const { data: publicFeed, error: publicFeedError } = useLiveTrading(3000);
 
@@ -76,29 +77,51 @@ export default function Command() {
   const refresh = useCallback(async () => {
     if (!session || !commandAdmin) return;
     setRefreshing(true);
-    try {
-      const [nextSnapshot, nextEvidence, nextReadiness, nextTheory] = await Promise.all([
-        fetchCommandStatus(session),
-        fetchCommandEvidence(session),
-        fetchResearchReadiness().catch(() => null),
-        fetchTheoryProgram().catch(() => null)
-      ]);
+
+    const [statusResult, evidenceResult, readinessResult, theoryResult] = await Promise.allSettled([
+      fetchCommandStatus(session),
+      fetchCommandEvidence(session),
+      fetchResearchReadiness(),
+      fetchTheoryProgram()
+    ]);
+
+    if (statusResult.status === "fulfilled") {
+      setSnapshot(statusResult.value);
+      setStatusError("");
+    } else {
+      setStatusError(
+        statusResult.reason instanceof Error
+          ? statusResult.reason.message
+          : "Live status unavailable."
+      );
+    }
+
+    if (evidenceResult.status === "fulfilled") {
+      const nextEvidence = evidenceResult.value;
+      setEvidence(nextEvidence);
+      setEvidenceError("");
+
       const [daily, weekly] = await Promise.all([
         fetchCommandDailyReport(session).catch(() => null),
         fetchCommandWeeklyReport(session).catch(() => null)
       ]);
-      setSnapshot(nextSnapshot);
-      setEvidence(nextEvidence);
       setDailyReport(daily || record(nextEvidence.latest_daily));
       setWeeklyReport(weekly || record(nextEvidence.latest_weekly));
-      setResearchReadiness(nextReadiness);
-      setTheoryProgram(nextTheory);
-      setError("");
-    } catch (reason) {
-      setError(reason instanceof Error ? reason.message : "Command evidence unavailable.");
-    } finally {
-      setRefreshing(false);
+    } else {
+      setEvidenceError(
+        evidenceResult.reason instanceof Error
+          ? evidenceResult.reason.message
+          : "Command evidence unavailable."
+      );
     }
+
+    setResearchReadiness(
+      readinessResult.status === "fulfilled" ? readinessResult.value : null
+    );
+    setTheoryProgram(
+      theoryResult.status === "fulfilled" ? theoryResult.value : null
+    );
+    setRefreshing(false);
   }, [session, commandAdmin]);
 
   useEffect(() => {
@@ -250,8 +273,27 @@ export default function Command() {
                       : "Telemetry, provenance, runtime health, and Command boundaries."}</span>
           </div>
           <div className="command-connection">
-            <i className={bot.bot_armed && bot.execution_authorized && !bot.runtime_paused ? "online" : ""} />
-            <div><strong>{text(snapshot?.mode).toUpperCase()} / {bot.bot_armed ? "ARMED" : "DISARMED"}</strong><small>{error || "Updated " + clockTime(snapshot?.observed_at)}</small></div>
+            <i className={snapshot && bot.bot_armed && bot.execution_authorized && !bot.runtime_paused ? "online" : ""} />
+            <div>
+              <strong>
+                {snapshot ? text(snapshot.mode).toUpperCase() : "LIVE"} / {
+                  !snapshot
+                    ? "STATUS UNAVAILABLE"
+                    : bot.runtime_paused
+                      ? "PAUSED"
+                      : bot.bot_armed
+                        ? "ARMED"
+                        : "DISARMED"
+                }
+              </strong>
+              <small>
+                {statusError
+                  ? "Live status degraded · " + statusError
+                  : evidenceError
+                    ? "Live status OK · evidence degraded"
+                    : "Updated " + clockTime(snapshot?.observed_at)}
+              </small>
+            </div>
             <button type="button" onClick={refresh} disabled={refreshing} aria-label="Refresh Command">↻</button>
           </div>
         </section>
