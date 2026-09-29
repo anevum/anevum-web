@@ -140,7 +140,7 @@ jobs:
             ([.events[] | has("reason")] | any | not)
           ' > /dev/null
 
-          curl --fail --show-error --silent --head "$base/" | grep -qi 'x-robots-tag:.*noindex'
+          curl --fail --show-error --silent --dump-header - --output /dev/null "$base/" | grep -qi 'x-robots-tag:.*noindex'
       - name: Capture browser QA
         if: github.event_name == 'pull_request'
         shell: bash
