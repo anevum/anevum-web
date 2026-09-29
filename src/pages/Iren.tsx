@@ -100,20 +100,36 @@ export default function Iren() {
     setTheory(nextTheory);
 
     if (!session || !commandAdmin) return;
+
+    // Private status is the authoritative unlock signal. Evidence and reports are
+    // supplemental surfaces and must not make a healthy founder session look broken.
     try {
-      const [nextSnapshot, nextEvidence, nextDaily, nextWeekly] = await Promise.all([
-        fetchCommandStatus(session),
-        fetchCommandEvidence(session),
-        fetchCommandDailyReport(session).catch(() => null),
-        fetchCommandWeeklyReport(session).catch(() => null)
-      ]);
+      const nextSnapshot = await fetchCommandStatus(session);
       setSnapshot(nextSnapshot);
-      setEvidence(nextEvidence);
-      setDaily(nextDaily || rec(nextEvidence.latest_daily));
-      setWeekly(nextWeekly || rec(nextEvidence.latest_weekly));
       setPrivateError("");
     } catch (error) {
       setPrivateError(error instanceof Error ? error.message : "Private telemetry unavailable.");
+      return;
+    }
+
+    const [evidenceResult, dailyResult, weeklyResult] = await Promise.allSettled([
+      fetchCommandEvidence(session),
+      fetchCommandDailyReport(session),
+      fetchCommandWeeklyReport(session)
+    ]);
+
+    if (evidenceResult.status === "fulfilled") {
+      setEvidence(evidenceResult.value);
+    }
+    if (dailyResult.status === "fulfilled") {
+      setDaily(dailyResult.value);
+    } else if (evidenceResult.status === "fulfilled") {
+      setDaily(rec(evidenceResult.value.latest_daily));
+    }
+    if (weeklyResult.status === "fulfilled") {
+      setWeekly(weeklyResult.value);
+    } else if (evidenceResult.status === "fulfilled") {
+      setWeekly(rec(evidenceResult.value.latest_weekly));
     }
   }, [session, commandAdmin]);
 
