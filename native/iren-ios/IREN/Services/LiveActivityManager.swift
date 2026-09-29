@@ -57,8 +57,9 @@ final class LiveActivityManager: ObservableObject {
     }
 
     func registerCurrentPushToken(accessToken: String?) async {
+        guard let activity = Activity<RHENActivityAttributes>.activities.first else { return }
+        observePushToken(for: activity, accessToken: accessToken)
         guard let token = pushTokenHex,
-              let activity = Activity<RHENActivityAttributes>.activities.first,
               let accessToken else { return }
         do {
             let result = try await RHENAPI.registerLiveActivityToken(
