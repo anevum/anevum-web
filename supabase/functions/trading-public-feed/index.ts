@@ -403,7 +403,8 @@ Deno.serve(async (req) => {
     const wins = numberOrZero(performance.wins);
     const losses = numberOrZero(performance.losses);
     const tradingSessions = numberOrZero(performance.trading_sessions);
-    const externalCashFlowsPresent = performance.external_cash_flows_present === true || String(performance.external_cash_flows_present || "") === "true";\n    const baselineReset = false;
+    const externalCashFlowsPresent = performance.external_cash_flows_present === true || String(performance.external_cash_flows_present || "") === "true";
+    const baselineReset = false;
     const sampleState =
       closedTrades >= 100 && tradingSessions >= 20
         ? "LONGER_HISTORY"
