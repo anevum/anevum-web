@@ -244,6 +244,48 @@ struct RHENWidgetSnapshot: Codable, Hashable, Sendable {
     var generatedAt: Date
     var hasPrivateDetail: Bool
 
+    init(
+        state: String,
+        live: Bool,
+        marketState: String,
+        freshnessSeconds: Double?,
+        accountReturnPct: Double?,
+        realizedReturnPct: Double?,
+        maxDrawdownPct: Double?,
+        performancePoints: [Double],
+        events60m: Int,
+        symbols10m: Int,
+        executionEvents2h: Int,
+        errors2h: Int,
+        openPositions: Int,
+        pendingOrders: Int,
+        positions: [RHENPositionDigest],
+        activity: [RHENActivityDigest],
+        strategy: String,
+        generatedAt: Date,
+        hasPrivateDetail: Bool
+    ) {
+        self.state = state
+        self.live = live
+        self.marketState = marketState
+        self.freshnessSeconds = freshnessSeconds
+        self.accountReturnPct = accountReturnPct
+        self.realizedReturnPct = realizedReturnPct
+        self.maxDrawdownPct = maxDrawdownPct
+        self.performancePoints = performancePoints
+        self.events60m = events60m
+        self.symbols10m = symbols10m
+        self.executionEvents2h = executionEvents2h
+        self.errors2h = errors2h
+        self.openPositions = openPositions
+        self.pendingOrders = pendingOrders
+        self.positions = positions
+        self.activity = activity
+        self.strategy = strategy
+        self.generatedAt = generatedAt
+        self.hasPrivateDetail = hasPrivateDetail
+    }
+
     static let placeholder = RHENWidgetSnapshot(
         state: "CONNECTING",
         live: false,
