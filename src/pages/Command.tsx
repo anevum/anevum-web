@@ -273,17 +273,21 @@ export default function Command() {
                       : "Telemetry, provenance, runtime health, and Command boundaries."}</span>
           </div>
           <div className="command-connection">
-            <i className={snapshot && bot.bot_armed && bot.execution_authorized && !bot.runtime_paused ? "online" : ""} />
+            <i className={!statusError && snapshot && bot.bot_armed && bot.execution_authorized && !bot.runtime_paused ? "online" : ""} />
             <div>
               <strong>
                 {snapshot ? text(snapshot.mode).toUpperCase() : "LIVE"} / {
                   !snapshot
                     ? "STATUS UNAVAILABLE"
-                    : bot.runtime_paused
-                      ? "PAUSED"
-                      : bot.bot_armed
-                        ? "ARMED"
-                        : "DISARMED"
+                    : statusError
+                      ? bot.bot_armed
+                        ? "LAST KNOWN ARMED"
+                        : "LAST KNOWN DISARMED"
+                      : bot.runtime_paused
+                        ? "PAUSED"
+                        : bot.bot_armed
+                          ? "ARMED"
+                          : "DISARMED"
                 }
               </strong>
               <small>
