@@ -11,6 +11,7 @@ import "./styles/rhen-brand.css";
 import "./styles/command.css";
 import "./styles/command-v2.css";
 import "./styles/seasonal.css";
+import "./styles/iren.css";
 
 applySeasonalTheme();
 
