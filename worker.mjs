@@ -116,7 +116,10 @@ async function publicTheory() {
 async function publicTradingFeed() {
   const response = await fetch(PUBLIC_TRADING_FEED, {
     method: "GET",
-    headers: { Accept: "application/json" }
+    headers: {
+      Accept: "application/json",
+      apikey: SUPABASE_PUBLISHABLE_KEY
+    }
   });
   const raw = await response.text();
   return new Response(raw, {
