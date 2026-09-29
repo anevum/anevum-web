@@ -304,8 +304,9 @@ export default {
     }
 
     let response = await env.ASSETS.fetch(request);
-    if (!response.headers.get("content-type")?.includes("text/html")) return response;
-    response = await withPublicRouteMetadata(response, pathname);
+    if (response.headers.get("content-type")?.includes("text/html")) {
+      response = await withPublicRouteMetadata(response, pathname);
+    }
     return withSecurityHeaders(response, pathname, url.hostname);
   }
 };
