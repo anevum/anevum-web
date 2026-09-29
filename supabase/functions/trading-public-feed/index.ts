@@ -5,8 +5,8 @@ if (!connectionString) throw new Error("SUPABASE_DB_URL is not configured");
 
 const sql = postgres(connectionString, {
   prepare: false,
-  max: 3,
-  idle_timeout: 20,
+  max: 1,
+  idle_timeout: 1,
   connect_timeout: 10,
 });
 
@@ -218,142 +218,164 @@ Deno.serve(async (req) => {
 
 
     const [performanceRows, performanceCurveRows] = await Promise.all([
-      sql.unsafe(`with active_epoch as (
-          select epoch_id, baseline_snapshot_id, started_at, reason
-          from private.trading_performance_epochs
-          where ended_at is null
-          order by started_at desc
+      sql.unsafe(`with baseline as (
+          select
+            observed_at as tracking_started_at,
+            equity::numeric as first_equity
+          from public.trading_public_equity
+          order by observed_at asc
           limit 1
         ),
-        baseline as (
-          select
-            e.epoch_id,
-            e.started_at as tracking_started_at,
-            e.reason as baseline_reason,
-            p.equity::numeric as first_equity
-          from active_epoch e
-          join public.trading_public_equity p
-            on p.snapshot_id = e.baseline_snapshot_id
+        latest_equity as (
+          select observed_at as last_observed_at, equity::numeric as latest_equity
+          from public.trading_public_equity
+          order by observed_at desc
+          limit 1
         ),
-        epoch_equity as (
-          select p.observed_at, p.equity::numeric
-          from public.trading_public_equity p
-          cross join baseline b
-          where p.observed_at >= b.tracking_started_at
-        ),
-        drawdowns as (
+        cash_flow_candidates as (
           select
+            nullif(payload->'cash_flow_accounting'->>'session_date','')::date as session_date,
+            nullif(payload->'cash_flow_accounting'->>'net_external_cash_flow','')::numeric as net_external_cash_flow,
+            coalesce(payload->'cash_flow_accounting'->>'source','') as source,
             observed_at,
-            equity,
-            max(equity) over (
-              order by observed_at
-              rows between unbounded preceding and current row
-            ) as peak_equity
-          from epoch_equity
+            row_number() over (
+              partition by nullif(payload->'cash_flow_accounting'->>'session_date','')::date
+              order by
+                case when payload->'cash_flow_accounting'->>'source' = 'alpaca_account_activities' then 0 else 1 end,
+                observed_at desc
+            ) as rn
+          from private.trading_account_snapshots
+          where payload->'cash_flow_accounting'->>'session_date' is not null
+            and payload->'cash_flow_accounting'->>'net_external_cash_flow' is not null
         ),
-        equity as (
+        cash_flows as (
           select
-            b.tracking_started_at,
-            b.baseline_reason,
-            b.first_equity,
-            max(e.observed_at) as last_observed_at,
-            (array_agg(e.equity order by e.observed_at desc))[1]::numeric as latest_equity,
-            count(e.*)::int as snapshot_count,
-            coalesce(max(
-              case when d.peak_equity > 0
-                then (d.peak_equity - d.equity) / d.peak_equity
-                else 0 end
-            ), 0)::numeric as max_drawdown_fraction
-          from baseline b
-          left join epoch_equity e on true
-          left join drawdowns d on d.observed_at = e.observed_at
-          group by b.tracking_started_at, b.baseline_reason, b.first_equity
+            coalesce(sum(net_external_cash_flow) filter (where rn=1),0)::numeric as net_external_cash_flow,
+            count(*) filter (where rn=1 and net_external_cash_flow <> 0)::int as cash_flow_sessions
+          from cash_flow_candidates
         ),
-        trades as (
+        live_trades as (
+          select
+            t.opened_at,
+            t.closed_at,
+            coalesce(t.net_pnl,t.realized_pnl,0)::numeric as pnl
+          from public.trading_public_trades t
+          join public.trading_public_strategies s
+            on s.version_id=t.strategy_version_id
+          where s.environment='live'
+            and t.closed_at is not null
+        ),
+        realized_curve as (
+          select
+            closed_at,
+            sum(pnl) over (
+              order by closed_at
+              rows between unbounded preceding and current row
+            ) as cumulative_pnl
+          from live_trades
+        ),
+        realized_drawdown as (
+          select
+            closed_at,
+            cumulative_pnl,
+            max(cumulative_pnl) over (
+              order by closed_at
+              rows between unbounded preceding and current row
+            ) as peak_pnl
+          from realized_curve
+        ),
+        trade_summary as (
           select
             count(*)::int as closed_trades,
-            count(*) filter (where coalesce(t.net_pnl, t.realized_pnl, 0) > 0)::int as wins,
-            count(*) filter (where coalesce(t.net_pnl, t.realized_pnl, 0) < 0)::int as losses,
-            count(distinct (t.closed_at at time zone 'America/New_York')::date)::int as trading_sessions,
-            min(t.opened_at) as first_trade_at,
-            max(t.closed_at) as last_trade_at
-          from public.trading_public_trades t
-          join public.trading_public_strategies s on s.version_id = t.strategy_version_id
-          where s.environment = 'live'
+            count(*) filter (where pnl > 0)::int as wins,
+            count(*) filter (where pnl < 0)::int as losses,
+            count(distinct (closed_at at time zone 'America/New_York')::date)::int as trading_sessions,
+            min(opened_at) as first_trade_at,
+            max(closed_at) as last_trade_at,
+            coalesce(sum(pnl),0)::numeric as net_realized_pnl
+          from live_trades
         ),
-        epoch_trades as (
-          select
-            coalesce(sum(coalesce(t.net_pnl, t.realized_pnl, 0)), 0)::numeric as net_realized_pnl
-          from public.trading_public_trades t
-          join public.trading_public_strategies s on s.version_id = t.strategy_version_id
-          cross join baseline b
-          where s.environment = 'live'
-            and t.closed_at >= b.tracking_started_at
+        equity_count as (
+          select count(*)::int as snapshot_count
+          from public.trading_public_equity
         )
         select
-          equity.tracking_started_at,
-          equity.last_observed_at,
-          equity.first_equity,
-          equity.latest_equity,
-          equity.max_drawdown_fraction,
-          equity.snapshot_count,
-          equity.baseline_reason,
-          trades.closed_trades,
-          trades.wins,
-          trades.losses,
-          trades.trading_sessions,
-          trades.first_trade_at,
-          trades.last_trade_at,
+          b.tracking_started_at,
+          le.last_observed_at,
+          b.first_equity,
+          le.latest_equity,
+          ec.snapshot_count,
+          'cash_flow_neutral_adjustment'::text as baseline_reason,
+          (cf.cash_flow_sessions > 0) as external_cash_flows_present,
+          ts.closed_trades,
+          ts.wins,
+          ts.losses,
+          ts.trading_sessions,
+          ts.first_trade_at,
+          ts.last_trade_at,
           case
-            when equity.first_equity > 0 and equity.latest_equity is not null
-              then ((equity.latest_equity / equity.first_equity) - 1) * 100
+            when b.first_equity > 0
+              then ((le.latest_equity - cf.net_external_cash_flow) / b.first_equity - 1) * 100
             else null
           end as account_return_pct,
           case
-            when equity.first_equity > 0
-              then (epoch_trades.net_realized_pnl / equity.first_equity) * 100
+            when b.first_equity > 0
+              then (ts.net_realized_pnl / b.first_equity) * 100
             else null
-          end as realized_return_pct
-        from equity cross join trades cross join epoch_trades`),
-      sql.unsafe(`with active_epoch as (
-          select baseline_snapshot_id, started_at
-          from private.trading_performance_epochs
-          where ended_at is null
-          order by started_at desc
+          end as realized_return_pct,
+          case
+            when b.first_equity > 0
+              then coalesce((
+                select max(greatest(peak_pnl - cumulative_pnl,0))
+                from realized_drawdown
+              ),0) / b.first_equity
+            else null
+          end as max_drawdown_fraction
+        from baseline b
+        cross join latest_equity le
+        cross join cash_flows cf
+        cross join trade_summary ts
+        cross join equity_count ec`),
+      sql.unsafe(`with baseline as (
+          select observed_at as tracking_started_at, equity::numeric as first_equity
+          from public.trading_public_equity
+          order by observed_at asc
           limit 1
         ),
-        baseline as (
-          select e.started_at, p.equity::numeric as first_equity
-          from active_epoch e
-          join public.trading_public_equity p
-            on p.snapshot_id = e.baseline_snapshot_id
-        ),
-        ordered as (
+        live_trades as (
           select
-            p.observed_at,
-            p.equity,
-            row_number() over (order by p.observed_at) as rn,
-            count(*) over () as n
-          from public.trading_public_equity p
-          cross join baseline b
-          where p.observed_at >= b.started_at
+            t.closed_at,
+            coalesce(t.net_pnl,t.realized_pnl,0)::numeric as pnl
+          from public.trading_public_trades t
+          join public.trading_public_strategies s
+            on s.version_id=t.strategy_version_id
+          where s.environment='live'
+            and t.closed_at is not null
         ),
-        sampled as (
-          select *
-          from ordered
-          where rn = 1
-             or rn = n
-             or mod(rn - 1, greatest(1, ceil(n / 72.0)::int)) = 0
+        curve as (
+          select
+            closed_at,
+            sum(pnl) over (
+              order by closed_at
+              rows between unbounded preceding and current row
+            ) as cumulative_pnl
+          from live_trades
         )
-        select
-          sampled.observed_at as at,
-          case
-            when baseline.first_equity > 0
-              then ((sampled.equity / baseline.first_equity) - 1) * 100
-            else null
-          end as return_pct
-        from sampled cross join baseline
-        order by sampled.observed_at asc`),
+        select at, return_pct
+        from (
+          select b.tracking_started_at as at, 0::numeric as return_pct
+          from baseline b
+          union all
+          select
+            c.closed_at as at,
+            case when b.first_equity > 0
+              then (c.cumulative_pnl / b.first_equity) * 100
+              else null
+            end as return_pct
+          from curve c
+          cross join baseline b
+        ) q
+        order by at asc`),
     ]);
 
     const strategy = strategyRows[0] ?? null;
@@ -381,7 +403,7 @@ Deno.serve(async (req) => {
     const wins = numberOrZero(performance.wins);
     const losses = numberOrZero(performance.losses);
     const tradingSessions = numberOrZero(performance.trading_sessions);
-    const baselineReset = String(performance.baseline_reason || "") === "external_cash_flow";
+    const externalCashFlowsPresent = performance.external_cash_flows_present === true || String(performance.external_cash_flows_present || "") === "true";\n    const baselineReset = false;
     const sampleState =
       closedTrades >= 100 && tradingSessions >= 20
         ? "LONGER_HISTORY"
@@ -493,8 +515,8 @@ Deno.serve(async (req) => {
       },
 
       performance: {
-        methodology_version: "PUBLIC-PERFORMANCE-v2",
-        basis: "broker_derived_live_ledger_with_cash_flow_epochs",
+        methodology_version: "PUBLIC-PERFORMANCE-v3",
+        basis: "cash_flow_neutral_account_plus_realized_live_trade_ledger",
         status: "TRACKING",
         sample_state: sampleState,
         tracking_started_at: performance.tracking_started_at || null,
@@ -510,16 +532,15 @@ Deno.serve(async (req) => {
         account_return_pct: accountReturnPct,
         realized_return_pct: realizedReturnPct,
         max_drawdown_pct: maxDrawdownPct,
-        external_cash_flows_present: baselineReset,
+        external_cash_flows_present: externalCashFlowsPresent,
         baseline_reason: performance.baseline_reason || null,
         baseline_reset: baselineReset,
         curve: publicCurve,
         limitations: [
           "This is a short live sample and is not evidence of future performance.",
           "Dollar account values, symbols, prices, quantities, orders, fills, and individual trade records are excluded from the public feed.",
-          baselineReset
-            ? "An external cash-flow boundary created a new performance epoch; current normalized return and drawdown start from the first post-flow account snapshot while prior history remains preserved."
-            : "Normalized return uses the active performance epoch baseline.",
+          "Tracked-account return removes external cash flows before normalization; deposits and withdrawals do not count as trading performance.",
+          "The plotted curve and drawdown are derived from cumulative realized live-trade P&L, so owner cash movements cannot create artificial spikes.",
         ],
       },
       disclosure: {
