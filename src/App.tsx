@@ -6,6 +6,7 @@ import { PublicShell } from "./components/Shell";
 import { currentRhenRelease, rhenReleaseBySlug } from "./data/releases";
 
 const Command = lazy(() => import("./pages/Command"));
+const Iren = lazy(() => import("./pages/Iren"));
 const Home = lazy(() => import("./pages/Home"));
 const Live = lazy(() => import("./pages/Live"));
 const System = lazy(() => import("./pages/System"));
@@ -27,6 +28,7 @@ const titles: Record<string, string> = {
   "/performance": "RHEN Performance — ANEVUM",
   "/releases": "RHEN Releases — ANEVUM",
   "/private": "Private — ANEVUM",
+  "/iren": "IREN — ANEVUM",
 };
 
 function RouteEffects() {
@@ -82,6 +84,7 @@ export default function App() {
         <Route path="/releases" element={<PublicExperience><Releases /></PublicExperience>} />
         <Route path="/releases/:slug" element={<PublicExperience><ReleaseDetail /></PublicExperience>} />
 
+        <Route path="/iren" element={<Suspense fallback={<Loader />}><Iren /></Suspense>} />
         <Route path="/private" element={<Suspense fallback={<Loader />}><PrivateAccess /></Suspense>} />
         <Route path="/command/*" element={<Suspense fallback={<Loader />}><Command /></Suspense>} />
         <Route path="/rhenlink" element={<Navigate to="/private" replace />} />
