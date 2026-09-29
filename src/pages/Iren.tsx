@@ -177,6 +177,7 @@ export default function Iren() {
   const positions = rows(snapshot?.positions);
   const recentOrders = rows(snapshot?.recent_orders);
   const research = rec(snapshot?.research);
+  const mobileDelivery = rec(snapshot?.mobile_live_activity);
   const performance = publicFeed?.performance;
   const activeTheory =
     theory?.problems.find((item) => item.problem_id === theory.program.current_problem_id) ||
@@ -437,6 +438,20 @@ export default function Iren() {
               <article className="iren-panel"><header><div><span>BOUNDARIES</span><strong>What IREN can see</strong></div></header><div className="iren-status-list"><p><span>PUBLIC TELEMETRY</span><b>LIVE</b></p><p><span>RHEN PRIVATE STATE</span><b>{commandAdmin ? "AUTHORIZED" : "LOCKED"}</b></p><p><span>NOSTRA API</span><b>NOT EXPOSED</b></p><p><span>GRAEN PUBLIC PROGRAM</span><b>{theory ? "AVAILABLE" : "UNAVAILABLE"}</b></p></div></article>
               <article className="iren-panel"><header><div><span>PROVENANCE</span><strong>Private runtime evidence</strong></div></header><div className="iren-card-list">{commandAdmin && evidence ? <><div><b>RUNTIME</b><strong>{text(rec(evidence.provenance?.runtime).deployment_id, "recorded")}</strong><p>{text(rec(evidence.provenance?.runtime).git_commit, "No commit exposed")}</p></div><div><b>LATEST SCAN</b><strong>{text(rec(evidence.provenance?.latest_scan_cycle).data_status, "—")}</strong><p>{text(rec(evidence.provenance?.latest_scan_cycle).cycle_outcome, "No cycle outcome")}</p></div></> : <p className="iren-empty">Authenticate to inspect private runtime provenance.</p>}</div></article>
             </div>
+            {commandAdmin && (
+              <article className="iren-panel">
+                <header><div><span>APPLE NATIVE DELIVERY</span><strong>Lock Screen / Live Activity transport</strong></div><small>{text(mobileDelivery.bundle_id, "com.anevum.iren")}</small></header>
+                <div className="iren-status-list">
+                  <p><span>MOBILE SERVICE</span><b>{mobileDelivery.running ? "RUNNING" : "STOPPED"}</b></p>
+                  <p><span>DURABLE REGISTRY</span><b>{mobileDelivery.registry_configured ? "CONNECTED" : "NOT CONFIGURED"}</b></p>
+                  <p><span>APNS SIGNING</span><b>{mobileDelivery.apns_configured ? "REMOTE READY" : "WAITING FOR APPLE CREDENTIALS"}</b></p>
+                  <p><span>SUCCESSFUL PUSHES</span><b>{text(mobileDelivery.push_count, "0")}</b></p>
+                  <p><span>FAILED PUSHES</span><b>{text(mobileDelivery.failed_push_count, "0")}</b></p>
+                  <p><span>LAST DELIVERY</span><b>{text(mobileDelivery.last_success_at, "No remote push yet")}</b></p>
+                  <p><span>LAST ERROR</span><b>{text(mobileDelivery.last_error, "NONE")}</b></p>
+                </div>
+              </article>
+            )}
           </section>
         )}
       </main>
