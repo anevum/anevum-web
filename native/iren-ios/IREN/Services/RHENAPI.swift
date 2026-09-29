@@ -28,6 +28,7 @@ enum RHENAPI {
     static let publicFeedURL = URL(string: "https://anevum.com/api/public/trading/live")!
     static let commandStatusURL = URL(string: "https://anevum.com/api/command/trader/status")!
     static let mobileRegistrationURL = URL(string: "https://anevum.com/api/command/trader/mobile/live-activity-token")!
+    static let mobileEndURL = URL(string: "https://anevum.com/api/command/trader/mobile/live-activity-end")!
 
     static func fetchPublicFeed() async throws -> RHENFeed {
         var request = URLRequest(url: publicFeedURL)
@@ -62,11 +63,29 @@ enum RHENAPI {
         return RHENWidgetSnapshot(feed: feed)
     }
 
+    struct MobileRegistrationResponse: Decodable {
+        let registered: Bool?
+        let remotePushConfigured: Bool?
+
+        enum CodingKeys: String, CodingKey {
+            case registered
+            case remotePushConfigured = "remote_push_configured"
+        }
+    }
+
+    static var apnsEnvironment: String {
+        #if DEBUG
+        return "sandbox"
+        #else
+        return "production"
+        #endif
+    }
+
     static func registerLiveActivityToken(
         pushToken: String,
         activityID: String,
         accessToken: String
-    ) async throws {
+    ) async throws -> MobileRegistrationResponse {
         var request = URLRequest(url: mobileRegistrationURL)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
@@ -76,8 +95,22 @@ enum RHENAPI {
             "push_token": pushToken,
             "activity_id": activityID,
             "platform": "ios",
-            "surface": "rhen_live_activity"
+            "surface": "rhen_live_activity",
+            "apns_environment": apnsEnvironment
         ])
+        request.timeoutInterval = 12
+        let (data, response) = try await URLSession.shared.data(for: request)
+        try validate(response)
+        return try JSONDecoder().decode(MobileRegistrationResponse.self, from: data)
+    }
+
+    static func deactivateLiveActivity(activityID: String, accessToken: String) async throws {
+        var request = URLRequest(url: mobileEndURL)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue("application/json", forHTTPHeaderField: "Accept")
+        request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
+        request.httpBody = try JSONSerialization.data(withJSONObject: ["activity_id": activityID])
         request.timeoutInterval = 12
         let (_, response) = try await URLSession.shared.data(for: request)
         try validate(response)
