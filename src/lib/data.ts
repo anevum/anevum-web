@@ -12,6 +12,21 @@ export type PublicActivityBucket = {
   count?: number | string;
 };
 
+export type PublicAds002State = {
+  methodology_version?: string | null;
+  readiness_state?: string | null;
+  data_valid?: boolean;
+  stable?: boolean;
+  confidence_score?: number | null;
+  executable_signals?: number | null;
+  direct_signals?: number | null;
+  unlinked_signals?: number | null;
+  direct_coverage?: number | null;
+  reason_codes?: string[];
+  promotion_authorized?: boolean;
+  live_configuration_changed?: boolean;
+};
+
 export type PublicResearchEntry = {
   at?: string | null;
   type?: string | null;
@@ -24,6 +39,7 @@ export type PublicResearchEntry = {
   week_start?: string | null;
   week_end?: string | null;
   warnings?: string[];
+  ads002?: PublicAds002State | null;
 };
 
 export type PublicResearchDecision = {

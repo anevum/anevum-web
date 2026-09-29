@@ -252,7 +252,7 @@ export default function Home() {
           <div>
             <span>03 // RECORD</span>
             <strong>The work should leave a trail.</strong>
-            <p>Research decisions, releases, evidence, and archived work remain inspectable rather than disappearing into a feed.</p>
+            <p>Daily system work, research decisions, releases, evidence, and operational milestones remain inspectable rather than disappearing into a feed.</p>
           </div>
           <Link to="/record">Open the record <b>→</b></Link>
         </section>

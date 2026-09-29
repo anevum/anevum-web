@@ -3,12 +3,13 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useLiveTrading } from "../hooks/useLiveTrading";
 import { latestRhenRelease } from "../data/releases";
+import { publicWorkLog } from "../data/public-work-log";
 import "../styles/releases.css";
 
 type RecordTab = "timeline" | "versions" | "evidence";
 
 const tabs: [RecordTab, string, string][] = [
-  ["timeline", "Timeline", "Research and report history"],
+  ["timeline", "Work log", "Build, research, and operations history"],
   ["versions", "Versions", "Sanitized live strategy history"],
   ["evidence", "Evidence", "What the public record contains"]
 ];
@@ -21,15 +22,24 @@ function dateLabel(value?: string | null) {
     : date.toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" });
 }
 
+function timeLabel(value?: string | null) {
+  if (!value) return "";
+  const date = new Date(value);
+  return Number.isNaN(date.getTime())
+    ? ""
+    : date.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZone: "America/New_York" });
+}
+
 export default function Record() {
   const [tab, setTab] = useState<RecordTab>("timeline");
   const { data, loading, error } = useLiveTrading(15000);
   const journal = data?.research?.journal || [];
   const versions = data?.strategy_history || [];
   const weekly = data?.research?.latest_weekly_summary;
-  const terminal = data?.research?.completed_decisions || [];
+  const decisions = data?.research?.completed_decisions || [];
   const next = data?.research?.next_direction;
   const latestRelease = latestRhenRelease();
+  const workLog = [...publicWorkLog].sort((a, b) => Date.parse(b.at) - Date.parse(a.at));
 
   return (
     <section className="compact-page workspace-screen story-workspace record-story">
@@ -38,12 +48,12 @@ export default function Record() {
           <p className="compact-eyebrow">RHEN / PUBLIC RECORD</p>
           <h1>Record</h1>
           <p className="story-heading-copy">
-            A sanitized history of system versions, canonical research decisions, report state, and evidence milestones. Normalized aggregate performance is public; raw capital, symbols, fills, and reconstructable trade detail remain private.
+            A sanitized build, operations, research, and system history. The work leaves a dated trail while raw capital, symbols, fills, thresholds, and reconstructable execution detail remain private.
           </p>
         </div>
         <div className="workspace-heading-status story-status">
           <div><small>ACTIVE</small><strong>{data?.active_strategy?.version_id || "UNRECORDED"}</strong></div>
-          <div><small>WEEKLY</small><strong>{weekly?.completeness_state || "UNAVAILABLE"}</strong></div>
+          <div><small>WORK LOG</small><strong>{workLog.length} UPDATES</strong></div>
           <div><small>PUBLIC MODE</small><strong>SANITIZED</strong></div>
         </div>
       </header>
@@ -63,8 +73,26 @@ export default function Record() {
             {tab === "timeline" && (
               <motion.div className="workspace-view story-view" key="timeline" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}>
                 <div className="story-title-row">
-                  <div><span className="story-kicker">CANONICAL PUBLIC TIMELINE</span><h2>What changed, without publishing the account.</h2></div>
-                  <p>{error || (loading ? "Loading durable public history…" : "Newest canonical research/report milestones first.")}</p>
+                  <div><span className="story-kicker">SEPTEMBER 28 / SYSTEM WORK LOG</span><h2>What actually changed today.</h2></div>
+                  <p>{error || (loading ? "Loading canonical public history…" : "Newest verified build, research, infrastructure, and operations updates first.")}</p>
+                </div>
+                <div className="field-notes record-notes">
+                  <div className="notes-line" aria-hidden="true" />
+                  {workLog.map((entry, index) => (
+                    <article key={entry.at + entry.title}>
+                      <div className="note-marker"><i /><span>{dateLabel(entry.at)} · {timeLabel(entry.at)}</span></div>
+                      <div className="note-body">
+                        <small>{entry.category} / {entry.status}</small>
+                        <strong>{entry.title}</strong>
+                        <p>{entry.summary}</p>
+                      </div>
+                    </article>
+                  ))}
+                </div>
+
+                <div className="story-title-row">
+                  <div><span className="story-kicker">CANONICAL RESEARCH / REPORT TRAIL</span><h2>Durable evidence records remain separate.</h2></div>
+                  <p>The system-generated research and reporting trail continues below the human-readable work log.</p>
                 </div>
                 <div className="field-notes record-notes">
                   <div className="notes-line" aria-hidden="true" />
@@ -103,14 +131,15 @@ export default function Record() {
             {tab === "evidence" && (
               <motion.div className="workspace-view story-view" key="evidence" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}>
                 <div className="story-title-row">
-                  <div><span className="story-kicker">PUBLIC EVIDENCE STANDARD</span><h2>The record shows state and decisions, not private capital.</h2></div>
+                  <div><span className="story-kicker">PUBLIC EVIDENCE STANDARD</span><h2>The record shows work, state, and decisions—not private capital.</h2></div>
                   <p>Normalized live performance is published separately; raw account values and execution-level records remain in Command and the canonical private ledger.</p>
                 </div>
                 <div className="rhen-state-grid">
-                  <article><span>RESEARCH DECISIONS</span><strong>{terminal.length}</strong><p>Terminal research decisions are preserved, including rejected lanes.</p></article>
+                  <article><span>WORK LOG</span><strong>{workLog.length} VERIFIED UPDATES</strong><p>Infrastructure, research, website, communications, and operating milestones from the current build day are publicly inspectable.</p></article>
+                  <article><span>RESEARCH DECISIONS</span><strong>{decisions.length}</strong><p>Research determinations are preserved, including rejected lanes and accepted research-only directions.</p></article>
                   <article><span>NEXT DIRECTION</span><strong>{next?.status ? String(next.status).replaceAll("_", " ").toUpperCase() : "UNRECORDED"}</strong><p>{next?.subject || "No next research direction recorded."}</p></article>
                   <article><span>WEEKLY REPORT</span><strong>{weekly?.completeness_state || "UNAVAILABLE"}</strong><p>{weekly?.report_version || "No version"} · {weekly?.included_session_count ?? 0}/{weekly?.expected_session_count ?? 0} canonical daily sessions represented.</p></article>
-                  <article><span>PRIVATE BY DESIGN</span><strong>RAW CAPITAL + EXECUTION</strong><p>Account values, positions, symbols, prices, quantities, fills, orders, and individual trade records are excluded even while normalized aggregate performance is public.</p></article>
+                  <article><span>PRIVATE BY DESIGN</span><strong>RAW CAPITAL + EXECUTION</strong><p>Account values, positions, symbols, prices, quantities, fills, orders, thresholds, and individual trade records are excluded.</p></article>
                   <article className="record-release-card"><span>RELEASE PROGRAM</span><strong>{latestRelease.codename} / {latestRelease.version}</strong><p>{latestRelease.releaseClass}. Named releases preserve architecture, verification, limitations, and a downloadable archival packet.</p><Link to="/releases">OPEN RELEASE ARCHIVE ↗</Link></article>
                 </div>
               </motion.div>
