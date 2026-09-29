@@ -22,6 +22,9 @@ targets:
       path: IREN/Info.plist
     entitlements:
       path: IREN/IREN.entitlements
+      properties:
+        com.apple.security.application-groups:
+          - group.com.anevum.iren
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.anevum.iren
@@ -43,6 +46,9 @@ targets:
       path: IRENWidgets/Info.plist
     entitlements:
       path: IRENWidgets/IRENWidgets.entitlements
+      properties:
+        com.apple.security.application-groups:
+          - group.com.anevum.iren
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.anevum.iren.widgets
