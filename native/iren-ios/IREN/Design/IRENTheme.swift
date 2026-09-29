@@ -14,18 +14,18 @@ struct IRENBackground: View {
     var body: some View {
         ZStack {
             LinearGradient(
-                colors: [.black, .irenDeepSpace, Color(red: 0.02, green: 0.035, blue: 0.065)],
+                colors: [.black, Color.irenDeepSpace, Color(red: 0.02, green: 0.035, blue: 0.065)],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
             )
             RadialGradient(
-                colors: [.irenElectric.opacity(0.20), .clear],
+                colors: [Color.irenElectric.opacity(0.20), .clear],
                 center: .topTrailing,
                 startRadius: 20,
                 endRadius: 430
             )
             RadialGradient(
-                colors: [.irenLuminance.opacity(0.07), .clear],
+                colors: [Color.irenLuminance.opacity(0.07), .clear],
                 center: .bottomLeading,
                 startRadius: 10,
                 endRadius: 360
@@ -39,10 +39,10 @@ struct IRENPanelModifier: ViewModifier {
     func body(content: Content) -> some View {
         content
             .padding(16)
-            .background(.irenPanel.opacity(0.82), in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+            .background(Color.irenPanel.opacity(0.82), in: RoundedRectangle(cornerRadius: 20, style: .continuous))
             .overlay {
                 RoundedRectangle(cornerRadius: 20, style: .continuous)
-                    .stroke(.irenLuminance.opacity(0.10), lineWidth: 1)
+                    .stroke(Color.irenLuminance.opacity(0.10), lineWidth: 1)
             }
     }
 }
@@ -56,5 +56,5 @@ func rhenStateColor(_ state: String, errors: Int = 0) -> Color {
     let normalized = state.lowercased()
     if normalized.contains("run") || normalized.contains("active") || normalized.contains("open") { return .green }
     if normalized.contains("error") || normalized.contains("fail") || normalized.contains("offline") { return .red }
-    return .irenLuminance
+    return Color.irenLuminance
 }
