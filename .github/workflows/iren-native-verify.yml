@@ -1,0 +1,60 @@
+name: IREN Native Verify
+
+on:
+  pull_request:
+    paths:
+      - "native/iren-ios/**"
+      - ".github/workflows/iren-native-verify.yml"
+  push:
+    branches: [main]
+    paths:
+      - "native/iren-ios/**"
+      - ".github/workflows/iren-native-verify.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: iren-native-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: macos-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate IREN Xcode project
+        working-directory: native/iren-ios
+        run: xcodegen generate
+
+      - name: Validate project targets
+        working-directory: native/iren-ios
+        run: xcodebuild -list -project IREN.xcodeproj
+
+      - name: Build IREN and widgets
+        working-directory: native/iren-ios
+        run: |
+          set -o pipefail
+          xcodebuild \
+            -project IREN.xcodeproj \
+            -scheme IREN \
+            -configuration Debug \
+            -sdk iphonesimulator \
+            -destination 'generic/platform=iOS Simulator' \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            build | tee "$RUNNER_TEMP/iren-xcodebuild.log"
+
+      - name: Verify native artifacts
+        working-directory: native/iren-ios
+        run: |
+          grep -R "RHENStatusWidget" IRENWidgets
+          grep -R "RHENLiveActivity" IRENWidgets
+          grep -R "group.com.anevum.iren" IREN IRENWidgets
+          grep -R "mobile/live-activity-token" IREN
