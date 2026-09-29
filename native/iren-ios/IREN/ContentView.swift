@@ -112,7 +112,7 @@ struct ContentView: View {
                 smallStat("ERRORS / 2H", "\(model.snapshot.errors2h)")
             }
         }
-        Color.irenPanel()
+        .irenPanel()
     }
 
     private var activityCard: some View {
@@ -172,7 +172,7 @@ struct ContentView: View {
                 }
             }
         }
-        Color.irenPanel()
+        .irenPanel()
     }
 
     private var liveActivityCard: some View {
@@ -232,7 +232,7 @@ struct ContentView: View {
                     .foregroundStyle(.orange)
             }
         }
-        Color.irenPanel()
+        .irenPanel()
     }
 
     private var accessCard: some View {
@@ -267,7 +267,7 @@ struct ContentView: View {
                     .tint(Color.irenLuminance)
             }
         }
-        Color.irenPanel()
+        .irenPanel()
     }
 
     private var installCard: some View {
@@ -281,7 +281,7 @@ struct ContentView: View {
                 .foregroundStyle(Color.irenMuted)
                 .fixedSize(horizontal: false, vertical: true)
         }
-        Color.irenPanel()
+        .irenPanel()
     }
 
     private var statusPill: some View {
