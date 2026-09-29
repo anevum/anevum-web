@@ -287,6 +287,7 @@ export type CommandSnapshot = {
   scanner?: Record<string, Record<string, unknown>>;
   history?: Record<string, unknown>[];
   research?: Record<string, unknown>;
+  mobile_live_activity?: Record<string, unknown> | null;
 };
 
 export type CommandEvidence = {

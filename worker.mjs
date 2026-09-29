@@ -157,6 +157,9 @@ async function commandApi(request, pathname) {
   if (pathname === "/api/command/trader/mobile/live-activity-token" && request.method === "POST") {
     return proxyTrader(request, "/v1/command/mobile/live-activity-token");
   }
+  if (pathname === "/api/command/trader/mobile/live-activity-end" && request.method === "POST") {
+    return proxyTrader(request, "/v1/command/mobile/live-activity-end");
+  }
   return null;
 }
 

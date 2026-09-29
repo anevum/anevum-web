@@ -29,6 +29,10 @@ struct ContentView: View {
             guard liveActivity.isActive else { return }
             Task { await liveActivity.update(using: next) }
         }
+        .onChange(of: model.accessToken) { _, token in
+            guard token != nil, liveActivity.isActive else { return }
+            Task { await liveActivity.registerCurrentPushToken(accessToken: token) }
+        }
         .sheet(isPresented: $showSignIn) {
             RHENLinkSignInSheet(model: model)
                 .presentationDetents([.medium])
@@ -207,7 +211,7 @@ struct ContentView: View {
 
                 if liveActivity.isActive {
                     Button(role: .destructive) {
-                        Task { await liveActivity.end(using: model.snapshot) }
+                        Task { await liveActivity.end(using: model.snapshot, accessToken: model.accessToken) }
                     } label: {
                         Image(systemName: "xmark")
                             .frame(width: 32, height: 32)

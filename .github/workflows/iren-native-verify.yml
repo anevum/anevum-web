@@ -51,10 +51,28 @@ jobs:
             CODE_SIGNING_REQUIRED=NO \
             build | tee "$RUNNER_TEMP/iren-xcodebuild.log"
 
+      - name: Build Release device configuration
+        working-directory: native/iren-ios
+        run: |
+          set -o pipefail
+          xcodebuild \
+            -project IREN.xcodeproj \
+            -scheme IREN \
+            -configuration Release \
+            -sdk iphoneos \
+            -destination 'generic/platform=iOS' \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            build | tee "$RUNNER_TEMP/iren-release-xcodebuild.log"
+
       - name: Verify native artifacts
         working-directory: native/iren-ios
         run: |
           grep -R "RHENStatusWidget" IRENWidgets
           grep -R "RHENLiveActivity" IRENWidgets
           grep -R "group.com.anevum.iren" IREN IRENWidgets
+          grep -R "aps-environment" IREN/IREN.entitlements
+          grep -F "APS_ENVIRONMENT = development" IREN.xcodeproj/project.pbxproj
+          grep -F "APS_ENVIRONMENT = production" IREN.xcodeproj/project.pbxproj
           grep -R "mobile/live-activity-token" IREN
+          grep -R "mobile/live-activity-end" IREN

@@ -57,26 +57,33 @@ final class LiveActivityManager: ObservableObject {
     }
 
     func registerCurrentPushToken(accessToken: String?) async {
+        guard let activity = Activity<RHENActivityAttributes>.activities.first else { return }
+        observePushToken(for: activity, accessToken: accessToken)
         guard let token = pushTokenHex,
-              let activity = Activity<RHENActivityAttributes>.activities.first,
               let accessToken else { return }
         do {
-            try await RHENAPI.registerLiveActivityToken(
+            let result = try await RHENAPI.registerLiveActivityToken(
                 pushToken: token,
                 activityID: activity.id,
                 accessToken: accessToken
             )
-            pushRegistered = true
-            lastError = nil
+            pushRegistered = result.remotePushConfigured == true
+            lastError = pushRegistered ? nil : "Token registered. Remote APNs delivery will activate when Apple signing credentials are installed on RHEN."
         } catch {
             pushRegistered = false
             lastError = "Live Activity is local-only until server push registration is available: \(error.localizedDescription)"
         }
     }
 
-    func end(using snapshot: RHENWidgetSnapshot) async {
+    func end(using snapshot: RHENWidgetSnapshot, accessToken: String?) async {
         let final = RHENActivityAttributes.ContentState(snapshot: snapshot)
         for activity in Activity<RHENActivityAttributes>.activities {
+            if let accessToken {
+                try? await RHENAPI.deactivateLiveActivity(
+                    activityID: activity.id,
+                    accessToken: accessToken
+                )
+            }
             await activity.end(
                 ActivityContent(state: final, staleDate: nil),
                 dismissalPolicy: .immediate
@@ -112,14 +119,16 @@ final class LiveActivityManager: ObservableObject {
                 }
                 if let accessToken {
                     do {
-                        try await RHENAPI.registerLiveActivityToken(
+                        let result = try await RHENAPI.registerLiveActivityToken(
                             pushToken: hex,
                             activityID: activity.id,
                             accessToken: accessToken
                         )
                         await MainActor.run {
-                            self?.pushRegistered = true
-                            self?.lastError = nil
+                            self?.pushRegistered = result.remotePushConfigured == true
+                            self?.lastError = self?.pushRegistered == true
+                                ? nil
+                                : "Push token registered; APNs delivery is waiting for Apple server credentials."
                         }
                     } catch {
                         await MainActor.run {

@@ -1,4 +1,4 @@
-# IREN Native 0.2
+# IREN Native 0.3
 
 IREN Native is the Apple-only companion layer for the continuously deployed ANEVUM operating console at https://anevum.com/iren.
 
@@ -50,3 +50,55 @@ Local Live Activity updates work once the app is signed and installed. Continuou
 - final IREN bundle ID
 
 Those values belong in protected server environment variables, never in this repository.
+
+
+## Current production architecture
+
+The RHEN server now owns a separate display-only ActivityKit delivery service. It:
+
+- stores ActivityKit tokens durably in the private Supabase schema
+- refreshes Live Activities on meaningful RHEN state changes with a periodic heartbeat
+- sends at most 24 normalized performance points and three compact activity rows
+- keeps ActivityKit payloads below Apple's 4 KB limit
+- records APNs delivery status privately for diagnosis
+- deactivates unregistered or invalid tokens
+- never participates in strategy, sizing, risk, order, or reconciliation decisions
+
+The IREN System view exposes mobile delivery health after founder authentication.
+
+## Automated verification
+
+`.github/workflows/iren-native-verify.yml` regenerates the Xcode project and builds:
+
+1. Debug for the iOS Simulator.
+2. Release for a generic iOS device with signing disabled.
+
+It also verifies the WidgetKit/ActivityKit source, App Group, push entitlement, and the mobile registration/deactivation routes.
+
+## TestFlight
+
+`.github/workflows/iren-testflight.yml` is a manual, credential-gated release workflow. Once the Apple account is ready, configure these repository secrets:
+
+- `APPLE_TEAM_ID`
+- `APP_STORE_CONNECT_KEY_ID`
+- `APP_STORE_CONNECT_ISSUER_ID`
+- `APP_STORE_CONNECT_PRIVATE_KEY_BASE64`
+
+The workflow then generates the project, archives a signed Release build with automatic provisioning, and uploads it to App Store Connect/TestFlight.
+
+The App Store Connect app record and identifiers must match:
+
+- app bundle: `com.anevum.iren`
+- widget bundle: `com.anevum.iren.widgets`
+- App Group: `group.com.anevum.iren`
+
+## RHEN APNs server secrets
+
+Continuous remote Live Activity updates activate when the RHEN Railway service has:
+
+- `IREN_APNS_TEAM_ID`
+- `IREN_APNS_KEY_ID`
+- `IREN_APNS_PRIVATE_KEY`
+- `IREN_BUNDLE_ID=com.anevum.iren`
+
+Until those values are present, token registration and local ActivityKit updates still function and RHEN reports `apns_configured=false` rather than pretending remote delivery is active.
