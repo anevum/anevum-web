@@ -2,6 +2,7 @@ import { AnimatePresence, motion } from "motion/react";
 import { useState } from "react";
 import RhenMark, { RhenSectionLabel } from "../components/RhenMark";
 import { useLiveTrading } from "../hooks/useLiveTrading";
+import { productionServiceLog } from "../data/public-work-log";
 
 type SystemTab = "chain" | "machine" | "evidence" | "guardrails";
 
@@ -102,6 +103,15 @@ export default function System() {
                     </article>
                   ))}
                   <div className="machine-core"><RhenMark decorative /><span className="rhen-core-word">RHEN</span><strong>CANONICAL SYSTEM</strong><i /></div>
+                </div>
+                <div className="story-title-row">
+                  <div><span className="story-kicker">PRODUCTION SERVICES / SEPTEMBER 28</span><h2>The actual services are visible too.</h2></div>
+                  <p>Service names and public-safe roles are shown here; credentials, private URLs, account data, and execution-sensitive configuration remain private.</p>
+                </div>
+                <div className="evidence-summary-grid">
+                  {productionServiceLog.map(([name, platform, status, body]) => (
+                    <article key={name}><span>{platform}</span><strong>{name} · {status}</strong><p>{body}</p></article>
+                  ))}
                 </div>
               </motion.div>
             )}
