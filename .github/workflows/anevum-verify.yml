@@ -119,7 +119,7 @@ jobs:
             (.telemetry | type == "object") and
             (.events | type == "array") and
             (.performance | type == "object") and
-            (.performance.methodology_version == "PUBLIC-PERFORMANCE-v1") and
+            (.performance.methodology_version == "PUBLIC-PERFORMANCE-v2") and
             (.performance.curve | type == "array") and
             (.performance.closed_trades | type == "number") and
             (.performance.external_cash_flows_present | type == "boolean") and
@@ -167,7 +167,7 @@ jobs:
           grep -Fq 'LIVE SYSTEMS' "$RUNNER_TEMP/anevum-visuals/home-rendered.html"
           grep -Fq 'RHEN' "$RUNNER_TEMP/anevum-visuals/home-rendered.html"
           grep -Fq 'performance-workspace' "$RUNNER_TEMP/anevum-visuals/performance-rendered.html"
-          grep -Fq 'PUBLIC-PERFORMANCE-v1' "$RUNNER_TEMP/anevum-visuals/performance-rendered.html"
+          grep -Fq 'PUBLIC-PERFORMANCE-v2' "$RUNNER_TEMP/anevum-visuals/performance-rendered.html"
           grep -Fq 'release-detail' "$RUNNER_TEMP/anevum-visuals/release-rendered.html"
           grep -Fq 'theory-page' "$RUNNER_TEMP/anevum-visuals/theory-rendered.html"
           grep -Fq "$current_theory_problem" "$RUNNER_TEMP/anevum-visuals/theory-rendered.html"
