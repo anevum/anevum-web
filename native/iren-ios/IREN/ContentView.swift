@@ -44,20 +44,20 @@ struct ContentView: View {
                 Text("IREN")
                     .font(.system(size: 20, weight: .semibold, design: .rounded))
                     .tracking(4)
-                    .foregroundStyle(.irenText)
+                    .foregroundStyle(Color.irenText)
                 Text("ANEVUM NATIVE SURFACE")
                     .font(.caption2.weight(.semibold))
                     .tracking(1.6)
-                    .foregroundStyle(.irenMuted)
+                    .foregroundStyle(Color.irenMuted)
             }
             Spacer()
             Link(destination: URL(string: "https://anevum.com/iren")!) {
                 Image(systemName: "arrow.up.right")
                     .font(.headline)
                     .frame(width: 42, height: 42)
-                    .background(.irenPanel.opacity(0.9), in: Circle())
+                    .background(Color.irenPanel.opacity(0.9), in: Circle())
             }
-            .foregroundStyle(.irenLuminance)
+            .foregroundStyle(Color.irenLuminance)
             .accessibilityLabel("Open full IREN console")
         }
     }
@@ -74,7 +74,7 @@ struct ContentView: View {
                             .tracking(2.2)
                         Text(model.snapshot.strategy.replacingOccurrences(of: "_", with: " ").uppercased())
                             .font(.caption2)
-                            .foregroundStyle(.irenMuted)
+                            .foregroundStyle(Color.irenMuted)
                             .lineLimit(1)
                     }
                 }
@@ -90,7 +90,7 @@ struct ContentView: View {
                     Text("NORMALIZED TRACKED RETURN")
                         .font(.caption2.weight(.semibold))
                         .tracking(1.25)
-                        .foregroundStyle(.irenMuted)
+                        .foregroundStyle(Color.irenMuted)
                 }
                 Spacer()
                 VStack(alignment: .trailing, spacing: 5) {
@@ -102,7 +102,7 @@ struct ContentView: View {
             RHENSparkline(points: model.snapshot.performancePoints, lineWidth: 2.2)
                 .frame(height: 82)
                 .overlay(alignment: .bottom) {
-                    Rectangle().fill(.irenLuminance.opacity(0.08)).frame(height: 1)
+                    Rectangle().fill(Color.irenLuminance.opacity(0.08)).frame(height: 1)
                 }
 
             HStack(spacing: 8) {
@@ -112,7 +112,7 @@ struct ContentView: View {
                 smallStat("ERRORS / 2H", "\(model.snapshot.errors2h)")
             }
         }
-        .irenPanel()
+        Color.irenPanel()
     }
 
     private var activityCard: some View {
@@ -122,16 +122,16 @@ struct ContentView: View {
                     Text("ACTIVITY TAPE")
                         .font(.caption2.weight(.semibold))
                         .tracking(1.4)
-                        .foregroundStyle(.irenLuminance)
+                        .foregroundStyle(Color.irenLuminance)
                     Text(model.snapshot.hasPrivateDetail ? "Orders, positions and RHEN events" : "Public RHEN events")
                         .font(.caption)
-                        .foregroundStyle(.irenMuted)
+                        .foregroundStyle(Color.irenMuted)
                 }
                 Spacer()
                 if model.snapshot.hasPrivateDetail {
                     Image(systemName: "lock.open.fill")
                         .font(.caption)
-                        .foregroundStyle(.irenLuminance)
+                        .foregroundStyle(Color.irenLuminance)
                 }
             }
 
@@ -146,17 +146,17 @@ struct ContentView: View {
                             Text(item.kind)
                                 .font(.caption2.weight(.bold))
                                 .tracking(1)
-                                .foregroundStyle(.irenLuminance)
+                                .foregroundStyle(Color.irenLuminance)
                             if item.isPrivate {
                                 Image(systemName: "lock.fill")
                                     .font(.system(size: 8))
-                                    .foregroundStyle(.irenMuted)
+                                    .foregroundStyle(Color.irenMuted)
                             }
                             Spacer()
                             if let date = parseISO(item.timestamp) {
                                 Text(date, style: .time)
                                     .font(.caption2.monospacedDigit())
-                                    .foregroundStyle(.irenMuted)
+                                    .foregroundStyle(Color.irenMuted)
                             }
                         }
                         Text(item.headline)
@@ -164,7 +164,7 @@ struct ContentView: View {
                             .lineLimit(2)
                         Text(item.detail)
                             .font(.caption2)
-                            .foregroundStyle(.irenMuted)
+                            .foregroundStyle(Color.irenMuted)
                     }
                 }
                 if item.id != model.snapshot.activity.prefix(4).last?.id {
@@ -172,7 +172,7 @@ struct ContentView: View {
                 }
             }
         }
-        .irenPanel()
+        Color.irenPanel()
     }
 
     private var liveActivityCard: some View {
@@ -182,10 +182,10 @@ struct ContentView: View {
                     Text("LOCK SCREEN LIVE ACTIVITY")
                         .font(.caption2.weight(.semibold))
                         .tracking(1.4)
-                        .foregroundStyle(.irenLuminance)
+                        .foregroundStyle(Color.irenLuminance)
                     Text(liveActivity.isActive ? "RHEN is attached to the Lock Screen" : "Start the richer live RHEN surface")
                         .font(.caption)
-                        .foregroundStyle(.irenMuted)
+                        .foregroundStyle(Color.irenMuted)
                 }
                 Spacer()
                 Circle()
@@ -203,7 +203,7 @@ struct ContentView: View {
                         .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.borderedProminent)
-                .tint(.irenElectric)
+                .tint(Color.irenElectric)
 
                 if liveActivity.isActive {
                     Button(role: .destructive) {
@@ -224,7 +224,7 @@ struct ContentView: View {
                     .tracking(1)
             }
             .font(.caption2)
-            .foregroundStyle(.irenMuted)
+            .foregroundStyle(Color.irenMuted)
 
             if let error = liveActivity.lastError {
                 Text(error)
@@ -232,7 +232,7 @@ struct ContentView: View {
                     .foregroundStyle(.orange)
             }
         }
-        .irenPanel()
+        Color.irenPanel()
     }
 
     private var accessCard: some View {
@@ -242,21 +242,21 @@ struct ContentView: View {
                     Text("RHENLINK")
                         .font(.caption2.weight(.semibold))
                         .tracking(1.4)
-                        .foregroundStyle(.irenLuminance)
+                        .foregroundStyle(Color.irenLuminance)
                     Text(model.isAuthenticated ? "Founder-private order and position detail is enabled" : "Unlock private order and position detail")
                         .font(.caption)
-                        .foregroundStyle(.irenMuted)
+                        .foregroundStyle(Color.irenMuted)
                 }
                 Spacer()
                 Image(systemName: model.isAuthenticated ? "checkmark.shield.fill" : "lock.shield")
-                    .foregroundStyle(model.isAuthenticated ? .green : .irenMuted)
+                    .foregroundStyle(model.isAuthenticated ? .green : Color.irenMuted)
             }
 
             if model.isAuthenticated {
                 HStack {
                     Text(model.authenticatedEmail)
                         .font(.caption.monospaced())
-                        .foregroundStyle(.irenText)
+                        .foregroundStyle(Color.irenText)
                     Spacer()
                     Button("Sign out") { Task { await model.signOut() } }
                         .font(.caption)
@@ -264,10 +264,10 @@ struct ContentView: View {
             } else {
                 Button("Sign in to RHENLINK") { showSignIn = true }
                     .buttonStyle(.bordered)
-                    .tint(.irenLuminance)
+                    .tint(Color.irenLuminance)
             }
         }
-        .irenPanel()
+        Color.irenPanel()
     }
 
     private var installCard: some View {
@@ -275,13 +275,13 @@ struct ContentView: View {
             Text("LOCK SCREEN WIDGET")
                 .font(.caption2.weight(.semibold))
                 .tracking(1.4)
-                .foregroundStyle(.irenLuminance)
+                .foregroundStyle(Color.irenLuminance)
             Text("After IREN is installed on the device: long-press the Lock Screen, choose Customize, tap the widget area, then select IREN. The rectangular RHEN widget carries the performance sparkline, return, position/order counts and latest activity.")
                 .font(.caption)
-                .foregroundStyle(.irenMuted)
+                .foregroundStyle(Color.irenMuted)
                 .fixedSize(horizontal: false, vertical: true)
         }
-        .irenPanel()
+        Color.irenPanel()
     }
 
     private var statusPill: some View {
@@ -300,7 +300,7 @@ struct ContentView: View {
 
     private func metric(_ label: String, _ value: String) -> some View {
         VStack(alignment: .trailing, spacing: 1) {
-            Text(label).font(.caption2).foregroundStyle(.irenMuted)
+            Text(label).font(.caption2).foregroundStyle(Color.irenMuted)
             Text(value).font(.caption.weight(.semibold).monospacedDigit())
         }
     }
@@ -308,7 +308,7 @@ struct ContentView: View {
     private func smallStat(_ label: String, _ value: String) -> some View {
         VStack(alignment: .leading, spacing: 2) {
             Text(value).font(.caption.weight(.bold).monospacedDigit())
-            Text(label).font(.system(size: 8, weight: .semibold)).foregroundStyle(.irenMuted).lineLimit(1)
+            Text(label).font(.system(size: 8, weight: .semibold)).foregroundStyle(Color.irenMuted).lineLimit(1)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
@@ -339,7 +339,7 @@ private struct RHENLinkSignInSheet: View {
                         Text("FOUNDER ACCESS")
                             .font(.caption2.weight(.semibold))
                             .tracking(1.4)
-                            .foregroundStyle(.irenMuted)
+                            .foregroundStyle(Color.irenMuted)
                     }
                 }
 
@@ -382,12 +382,12 @@ private struct RHENLinkSignInSheet: View {
                     }
                 }
                 .buttonStyle(.borderedProminent)
-                .tint(.irenElectric)
+                .tint(Color.irenElectric)
                 .disabled(email.isEmpty || password.isEmpty || isSubmitting)
 
                 Text("RHENLINK credentials are sent directly to Supabase Auth. Session tokens are stored in the device Keychain; no broker credentials are stored in IREN.")
                     .font(.caption2)
-                    .foregroundStyle(.irenMuted)
+                    .foregroundStyle(Color.irenMuted)
             }
             .padding(22)
         }
