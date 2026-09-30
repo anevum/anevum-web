@@ -37,9 +37,6 @@ export function PublicShell({ children }: { children: ReactNode }) {
           <Link className="company-live-link" to="/live" aria-label="Open live systems">
             <i /><span>Live systems</span>
           </Link>
-          <Link className="command-nav" to="/command" rel="nofollow" aria-label="Open Command login" title="Command login">
-            <span className="command-nav-dot" /><span>Command</span>
-          </Link>
           <button
             className="company-menu-button"
             type="button"
@@ -57,7 +54,6 @@ export function PublicShell({ children }: { children: ReactNode }) {
               <Link key={href} to={href} className={isActive(location.pathname, href) ? "active" : ""}>{label}</Link>
             ))}
             <Link to="/live">Live systems</Link>
-            <Link to="/command" rel="nofollow">Command</Link>
           </nav>
         ) : null}
       </header>
