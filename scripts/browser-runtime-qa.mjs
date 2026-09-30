@@ -6,7 +6,7 @@ import path from "node:path";
 const base = process.env.BASE_URL;
 if (!base) throw new Error("BASE_URL is required");
 
-const routes = ["/", "/products", "/products/rhen", "/performance", "/founder", "/resume"];
+const routes = ["/", "/products", "/products/rhen", "/performance", "/dispatches", "/dispatches/public-company-overhaul", "/founder", "/resume"];
 const viewports = [
   { name: "desktop", width: 1440, height: 1000, mobile: false, deviceScaleFactor: 1 },
   { name: "mobile", width: 390, height: 844, mobile: true, deviceScaleFactor: 1 }
