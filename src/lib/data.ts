@@ -227,6 +227,15 @@ export type PublicCryptoShadowValidation = {
   limitations?: string[];
 };
 
+export type PublicSystemState = {
+  runtime_state?: string;
+  health_state?: string;
+  tracking_state?: string;
+  observed_at?: string | null;
+  independent_runtime?: boolean;
+  activity?: string | null;
+};
+
 export type LiveTradingFeed = {
   ok: boolean;
   generated_at?: string;
@@ -234,6 +243,7 @@ export type LiveTradingFeed = {
   live?: boolean;
   state?: string;
   freshness_seconds?: number | null;
+  systems?: Partial<Record<"IREN" | "RHEN" | "NOSTRA" | "GRAEN" | "VELUM", PublicSystemState>>;
   active_strategy?: {
     version_id?: string;
     strategy_name?: string;
