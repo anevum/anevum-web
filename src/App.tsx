@@ -3,6 +3,7 @@ import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { OverflowPan } from "./components/OverflowPan";
 import SeasonalEasterEggs from "./components/SeasonalEasterEggs";
 import { PublicShell } from "./components/Shell";
+import { fieldNotes } from "./data/fieldNotes";
 import { currentRhenRelease, rhenReleaseBySlug } from "./data/releases";
 
 const Command = lazy(() => import("./pages/Command"));
@@ -25,7 +26,7 @@ const PrivateAccess = lazy(() => import("./pages/Rhenlink"));
 
 const titles: Record<string, string> = {
   "/": "ANEVUM — Software Systems & Research",
-  "/products": "Products — ANEVUM",
+  "/products": "Systems — ANEVUM",
   "/products/iren": "IREN — Operating Intelligence — ANEVUM",
   "/products/rhen": "RHEN — Market System — ANEVUM",
   "/products/nostra": "NOSTRA — Forecasting — ANEVUM",
@@ -38,41 +39,118 @@ const titles: Record<string, string> = {
   "/theory": "Theory Registry — ANEVUM",
   "/performance": "Performance — ANEVUM",
   "/founder": "Devon Akins — Founder, ANEVUM",
-  "/resume": "Devon Akins — Resume",
+  "/resume": "Devon Akins — Résumé",
   "/releases": "Releases — ANEVUM",
   "/private": "Private — ANEVUM",
   "/iren": "IREN Operations — ANEVUM"
 };
 
+const descriptions: Record<string, string> = {
+  "/": "ANEVUM builds interconnected software systems for orchestration, market operations, forecasting, mathematical validation, replay, telemetry, and measurable evidence.",
+  "/products": "Explore IREN, RHEN, NOSTRA, GRAEN, and VELUM: ANEVUM's orchestration, market, forecasting, mathematical research, and replay systems.",
+  "/products/iren": "IREN is ANEVUM's operating-intelligence layer for cross-system state, coordination, research visibility, and protected operator workflows.",
+  "/products/rhen": "RHEN is ANEVUM's deterministic market system for observation, evaluation, bounded execution, reconciliation, telemetry, and evidence.",
+  "/products/nostra": "NOSTRA is ANEVUM's forecasting and prediction research system for regimes, forward horizons, uncertainty, outcomes, and calibration.",
+  "/products/graen": "GRAEN is ANEVUM's mathematical and theoretical research program for falsification, bias control, dependence, validation, and bounded claims.",
+  "/products/velum": "VELUM is ANEVUM's broker-isolated replay and counterfactual system for historical reconstruction, simulation, comparison, and failure analysis.",
+  "/live": "Inspect ANEVUM's public-safe live system state, sanitized telemetry activity, runtime freshness, and current research status.",
+  "/research": "Read ANEVUM Field Notes: progress reports, architecture changes, research results, failures, releases, and operating lessons.",
+  "/case-studies": "Engineering and research case studies showing how ANEVUM systems interact across validation, forecasting, replay, and production evidence.",
+  "/architecture": "See ANEVUM's system architecture, production stack, authority boundaries, evidence path, and separation between research, simulation, and live execution.",
+  "/theory": "Browse ANEVUM's public theory registry and mathematical research artifacts.",
+  "/performance": "Public-safe live performance evidence for RHEN market lanes with normalized methodology, sample boundaries, and strict separation from simulation.",
+  "/founder": "Devon Akins is the founder of ANEVUM, building software systems, research infrastructure, forecasting, simulation, telemetry, and production controls.",
+  "/resume": "Résumé for Devon Akins, founder of ANEVUM, covering software systems, infrastructure, research tooling, mathematics, and production engineering.",
+  "/releases": "ANEVUM release records documenting RHEN versions, production changes, verification, and public system history."
+};
+
+function ensureMeta(selector: string, create: () => HTMLElement, content: string) {
+  let node = document.head.querySelector(selector) as HTMLElement | null;
+  if (!node) {
+    node = create();
+    document.head.appendChild(node);
+  }
+  node.setAttribute("content", content);
+}
+
+function setRouteMeta(pathname: string, title: string, description: string, protectedRoute: boolean) {
+  const canonicalUrl = "https://anevum.com" + (pathname === "/" ? "/" : pathname);
+  document.title = title;
+  document.documentElement.dataset.route = pathname.replace(/^\//, "") || "home";
+
+  ensureMeta('meta[name="description"]', () => {
+    const meta = document.createElement("meta");
+    meta.setAttribute("name", "description");
+    return meta;
+  }, description);
+
+  ensureMeta('meta[name="robots"]', () => {
+    const meta = document.createElement("meta");
+    meta.setAttribute("name", "robots");
+    return meta;
+  }, protectedRoute ? "noindex,nofollow" : "index,follow,max-image-preview:large");
+
+  for (const [property, value] of [
+    ["og:title", title],
+    ["og:description", description],
+    ["og:url", canonicalUrl],
+    ["twitter:title", title],
+    ["twitter:description", description]
+  ]) {
+    const isTwitter = property.startsWith("twitter:");
+    const attr = isTwitter ? "name" : "property";
+    let node = document.head.querySelector(`meta[${attr}="${property}"]`) as HTMLMetaElement | null;
+    if (!node) {
+      node = document.createElement("meta");
+      node.setAttribute(attr, property);
+      document.head.appendChild(node);
+    }
+    node.content = value;
+  }
+
+  let canonical = document.head.querySelector('link[rel="canonical"]') as HTMLLinkElement | null;
+  if (!canonical) {
+    canonical = document.createElement("link");
+    canonical.rel = "canonical";
+    document.head.appendChild(canonical);
+  }
+  canonical.href = canonicalUrl;
+}
+
 function RouteEffects() {
   const location = useLocation();
 
   useEffect(() => {
-    if (location.pathname.startsWith("/command")) {
-      document.title = "Command — ANEVUM";
-      return;
-    }
+    const path = location.pathname;
+    const protectedRoute = path.startsWith("/command") || path === "/private" || path === "/iren";
 
-    if (location.pathname === "/releases") {
+    let title = titles[path] || "ANEVUM — Software Systems & Research";
+    let description = descriptions[path] || descriptions["/"];
+
+    if (path.startsWith("/command")) {
+      title = "Command — ANEVUM";
+      description = "Protected ANEVUM operator surface.";
+    } else if (path === "/releases") {
       const current = currentRhenRelease();
-      document.title = "Releases — RHEN " + current.version + " " + current.codename + " — ANEVUM";
-      return;
-    }
-
-    if (location.pathname.startsWith("/releases/")) {
-      const slug = location.pathname.slice("/releases/".length);
+      title = "Releases — RHEN " + current.version + " " + current.codename + " — ANEVUM";
+      description = descriptions["/releases"];
+    } else if (path.startsWith("/releases/")) {
+      const slug = path.slice("/releases/".length);
       const release = rhenReleaseBySlug(slug);
-      document.title = release
+      title = release
         ? "RHEN " + release.version + " — " + release.codename + " — ANEVUM"
         : "Releases — ANEVUM";
-      return;
+      description = release
+        ? "Public release record for RHEN " + release.version + " " + release.codename + ", including production changes and verification."
+        : descriptions["/releases"];
+    } else if (path.startsWith("/research/")) {
+      const slug = path.slice("/research/".length);
+      const note = fieldNotes.find((item) => item.slug === slug);
+      title = note ? note.title + " — ANEVUM Field Notes" : "Field Note — ANEVUM";
+      description = note?.summary || descriptions["/research"];
     }
 
-    if (location.pathname.startsWith("/research/")) {
-      document.title = "Field Note — ANEVUM";
-      return;
-    }
-    document.title = titles[location.pathname] || "ANEVUM — Software Systems & Research";
+    setRouteMeta(path, title, description, protectedRoute);
   }, [location.pathname]);
 
   return null;
