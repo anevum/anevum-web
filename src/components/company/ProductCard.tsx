@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import type { Product } from "../../data/products";
+import SystemMark from "./SystemMark";
 
 export default function ProductCard({ product }: { product: Product }) {
   return (
@@ -8,11 +9,14 @@ export default function ProductCard({ product }: { product: Product }) {
         <span>{product.category}</span>
         <b>{product.status}</b>
       </header>
-      <div>
-        <small>{product.eyebrow}</small>
-        <h3>{product.name}</h3>
-        <p>{product.summary}</p>
+      <div className="company-product-identity">
+        <SystemMark system={product.name} decorative />
+        <div>
+          <small>{product.eyebrow}</small>
+          <h3>{product.name}</h3>
+        </div>
       </div>
+      <p>{product.summary}</p>
       <footer>
         <span>{product.capabilities.slice(0, 3).join(" · ")}</span>
         <strong>OPEN SYSTEM ↗</strong>
