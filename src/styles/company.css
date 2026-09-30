@@ -523,3 +523,13 @@
 @media(max-width:560px){
   .product-public-state,.product-module-strip{grid-template-columns:1fr}
 }
+
+.module-card{grid-template-rows:auto auto 1fr auto auto}
+.module-interfaces{padding:11px 0;border-top:1px solid var(--company-border);display:grid;gap:5px}
+.module-interfaces span{font-size:.38rem;letter-spacing:.11em;color:#536570}
+.module-interfaces small{font-size:.45rem;line-height:1.45;color:#7a8b96}
+.product-detail-iren{--company-accent:color-mix(in srgb,var(--season-accent) 52%,#a8d7f0)}
+.product-detail-rhen{--company-accent:var(--season-accent)}
+.product-detail-nostra{--company-accent:color-mix(in srgb,var(--season-accent) 55%,#b7a6e8)}
+.product-detail-graen{--company-accent:color-mix(in srgb,var(--season-accent) 52%,#9ac9ad)}
+.product-detail-velum{--company-accent:color-mix(in srgb,var(--season-accent) 55%,#d3bd86)}
