@@ -150,6 +150,28 @@
       ]
     },
     {
+      "slug": "seasonal-system",
+      "publishedAt": "2026-09-28T21:20:42Z",
+      "kind": "SYSTEM UPDATE",
+      "system": "ANEVUM",
+      "status": "SHIPPED",
+      "title": "Calendar-driven seasonal presentation became part of the public system",
+      "dek": "Seasonal identity now changes the atmosphere without becoming the information architecture.",
+      "body": [
+        "ANEVUM gained a calendar-driven theme layer, ambient effects, and reusable seasonal tokens.",
+        "The product hierarchy, evidence surfaces, and accessibility rules remain stable while the visual treatment can rotate month by month.",
+        "The October treatment uses restrained warm spectral accents rather than turning the product interface into a novelty skin."
+      ],
+      "tags": [
+        "design",
+        "website",
+        "seasonal"
+      ],
+      "links": [
+        "/"
+      ]
+    },
+    {
       "slug": "first-official-rhen-session",
       "publishedAt": "2026-09-28T20:10:00Z",
       "kind": "FIELD NOTE",
@@ -171,28 +193,6 @@
       "links": [
         "/performance",
         "/products/rhen"
-      ]
-    },
-    {
-      "slug": "seasonal-system",
-      "publishedAt": "2026-09-28T21:20:42Z",
-      "kind": "SYSTEM UPDATE",
-      "system": "ANEVUM",
-      "status": "SHIPPED",
-      "title": "Calendar-driven seasonal presentation became part of the public system",
-      "dek": "Seasonal identity now changes the atmosphere without becoming the information architecture.",
-      "body": [
-        "ANEVUM gained a calendar-driven theme layer, ambient effects, and reusable seasonal tokens.",
-        "The product hierarchy, evidence surfaces, and accessibility rules remain stable while the visual treatment can rotate month by month.",
-        "The October treatment uses restrained warm spectral accents rather than turning the product interface into a novelty skin."
-      ],
-      "tags": [
-        "design",
-        "website",
-        "seasonal"
-      ],
-      "links": [
-        "/"
       ]
     }
   ]
