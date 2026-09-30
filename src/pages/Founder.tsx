@@ -6,9 +6,13 @@ export default function Founder() {
     <div className="company-page founder-page">
       <section className="founder-hero">
         <div className="founder-id">
-          <span className="founder-monogram" aria-hidden="true">DA</span>
+          <div className="founder-portrait" aria-label="Devon Akins portrait">
+            <span className="founder-portrait-frame" />
+            <span className="founder-monogram" aria-hidden="true">DA</span>
+            <small>FOUNDER / ANEVUM</small>
+          </div>
           <div>
-            <span>FOUNDER / ANEVUM</span>
+            <span>FOUNDER / SYSTEMS BUILDER / INDEPENDENT RESEARCHER</span>
             <h1>{founder.name}</h1>
             <h2>{founder.profileHeadline}</h2>
             <p>{founder.summary}</p>
@@ -29,6 +33,12 @@ export default function Founder() {
             <div><dt>WEB</dt><dd>{founder.website}</dd></div>
           </dl>
         </aside>
+      </section>
+
+      <section className="founder-profile-strip">
+        <div><span>PRIMARY WORK</span><strong>ANEVUM</strong><p>Designing and operating the company&apos;s software, research, telemetry, deployment, forecasting, replay, and market-system architecture.</p></div>
+        <div><span>RESEARCH</span><strong>Mathematics + systems</strong><p>Validation, forecasting, evidence quality, simulation, and adaptive-system methodology.</p></div>
+        <div><span>BUILD STYLE</span><strong>End-to-end</strong><p>Product surface through backend services, data models, deployment, observability, and operating controls.</p></div>
       </section>
 
       <section className="company-section founder-about">

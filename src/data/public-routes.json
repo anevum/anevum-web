@@ -1,16 +1,98 @@
 [
-  {"path":"/","label":"Home","nav":true,"sitemap":true},
-  {"path":"/products","label":"Products","nav":true,"sitemap":true},
-  {"path":"/products/iren","label":"IREN","nav":false,"sitemap":true},
-  {"path":"/products/rhen","label":"RHEN","nav":false,"sitemap":true},
-  {"path":"/products/nostra","label":"NOSTRA","nav":false,"sitemap":true},
-  {"path":"/products/graen","label":"GRAEN","nav":false,"sitemap":true},
-  {"path":"/products/velum","label":"VELUM","nav":false,"sitemap":true},
-  {"path":"/performance","label":"Performance","nav":true,"sitemap":true},
-  {"path":"/research","label":"Research","nav":true,"sitemap":true},
-  {"path":"/founder","label":"Founder","nav":true,"sitemap":true},
-  {"path":"/resume","label":"Resume","nav":true,"sitemap":true},
-  {"path":"/releases","label":"Releases","nav":true,"sitemap":true},
-  {"path":"/live","label":"Live Systems","nav":false,"sitemap":true},
-  {"path":"/theory","label":"Theory Registry","nav":false,"sitemap":true}
+  {
+    "path": "/",
+    "label": "Home",
+    "nav": true,
+    "sitemap": true
+  },
+  {
+    "path": "/products",
+    "label": "Systems",
+    "nav": true,
+    "sitemap": true
+  },
+  {
+    "path": "/architecture",
+    "label": "Architecture",
+    "nav": true,
+    "sitemap": true
+  },
+  {
+    "path": "/products/iren",
+    "label": "IREN",
+    "nav": false,
+    "sitemap": true
+  },
+  {
+    "path": "/products/rhen",
+    "label": "RHEN",
+    "nav": false,
+    "sitemap": true
+  },
+  {
+    "path": "/products/nostra",
+    "label": "NOSTRA",
+    "nav": false,
+    "sitemap": true
+  },
+  {
+    "path": "/products/graen",
+    "label": "GRAEN",
+    "nav": false,
+    "sitemap": true
+  },
+  {
+    "path": "/products/velum",
+    "label": "VELUM",
+    "nav": false,
+    "sitemap": true
+  },
+  {
+    "path": "/performance",
+    "label": "Performance",
+    "nav": true,
+    "sitemap": true
+  },
+  {
+    "path": "/research",
+    "label": "Field Notes",
+    "nav": true,
+    "sitemap": true
+  },
+  {
+    "path": "/case-studies",
+    "label": "Case Studies",
+    "nav": true,
+    "sitemap": true
+  },
+  {
+    "path": "/founder",
+    "label": "Founder",
+    "nav": true,
+    "sitemap": true
+  },
+  {
+    "path": "/resume",
+    "label": "Resume",
+    "nav": false,
+    "sitemap": true
+  },
+  {
+    "path": "/releases",
+    "label": "Releases",
+    "nav": false,
+    "sitemap": true
+  },
+  {
+    "path": "/live",
+    "label": "Live Systems",
+    "nav": false,
+    "sitemap": true
+  },
+  {
+    "path": "/theory",
+    "label": "Theory Registry",
+    "nav": false,
+    "sitemap": true
+  }
 ]

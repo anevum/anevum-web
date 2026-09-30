@@ -12,6 +12,9 @@ const Products = lazy(() => import("./pages/Products"));
 const ProductDetail = lazy(() => import("./pages/ProductDetail"));
 const Live = lazy(() => import("./pages/Live"));
 const ResearchHub = lazy(() => import("./pages/ResearchHub"));
+const FieldNoteDetail = lazy(() => import("./pages/FieldNoteDetail"));
+const CaseStudies = lazy(() => import("./pages/CaseStudies"));
+const Architecture = lazy(() => import("./pages/Architecture"));
 const Theory = lazy(() => import("./pages/Theory"));
 const Performance = lazy(() => import("./pages/Performance"));
 const Founder = lazy(() => import("./pages/Founder"));
@@ -29,7 +32,9 @@ const titles: Record<string, string> = {
   "/products/graen": "GRAEN — Mathematical Research — ANEVUM",
   "/products/velum": "VELUM — Replay & Simulation — ANEVUM",
   "/live": "Live Systems — ANEVUM",
-  "/research": "Research — ANEVUM",
+  "/research": "Field Notes — ANEVUM",
+  "/case-studies": "Case Studies — ANEVUM",
+  "/architecture": "Architecture — ANEVUM",
   "/theory": "Theory Registry — ANEVUM",
   "/performance": "Performance — ANEVUM",
   "/founder": "Devon Akins — Founder, ANEVUM",
@@ -63,6 +68,10 @@ function RouteEffects() {
       return;
     }
 
+    if (location.pathname.startsWith("/research/")) {
+      document.title = "Field Note — ANEVUM";
+      return;
+    }
     document.title = titles[location.pathname] || "ANEVUM — Software Systems & Research";
   }, [location.pathname]);
 
@@ -89,6 +98,9 @@ export default function App() {
         <Route path="/products/:slug" element={<PublicExperience><ProductDetail /></PublicExperience>} />
         <Route path="/performance" element={<PublicExperience><Performance /></PublicExperience>} />
         <Route path="/research" element={<PublicExperience><ResearchHub /></PublicExperience>} />
+        <Route path="/research/:slug" element={<PublicExperience><FieldNoteDetail /></PublicExperience>} />
+        <Route path="/case-studies" element={<PublicExperience><CaseStudies /></PublicExperience>} />
+        <Route path="/architecture" element={<PublicExperience><Architecture /></PublicExperience>} />
         <Route path="/founder" element={<PublicExperience><Founder /></PublicExperience>} />
         <Route path="/resume" element={<PublicExperience><Resume /></PublicExperience>} />
         <Route path="/releases" element={<PublicExperience><Releases /></PublicExperience>} />
