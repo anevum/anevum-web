@@ -338,7 +338,10 @@ export default {
       }
     }
 
-    if (pathname === "/api/command/iren/status") {
+    if (pathname === "/api/command/iren/status" || pathname === "/api/command/iren/command") {
+      if (request.method === "POST" && url.hostname !== "anevum.com") {
+        return jsonResponse({ message: "IREN Command mutations are disabled outside production." }, 403);
+      }
       try {
         return await proxyIren(request, assertCommandAdmin);
       } catch (error) {
