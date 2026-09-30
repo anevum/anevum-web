@@ -151,7 +151,18 @@ try {
   }
 } finally {
   chrome.kill("SIGTERM");
-  fs.rmSync(profile, { recursive: true, force: true });
+  await Promise.race([
+    new Promise((resolve) => {
+      if (chrome.exitCode !== null) resolve();
+      else chrome.once("exit", resolve);
+    }),
+    sleep(2000)
+  ]);
+  try {
+    fs.rmSync(profile, { recursive: true, force: true, maxRetries: 3, retryDelay: 100 });
+  } catch {
+    // The GitHub runner is ephemeral; cleanup must never turn a passed browser QA into a failure.
+  }
 }
 
 if (failures.length) {
