@@ -86,6 +86,15 @@ export default function ProductDetail() {
           <SystemMark system={product.name} decorative />
           <strong>{product.name}</strong>
           <small>{product.category}</small>
+          <div className="product-hero-signal">
+            <div><span>01</span><b>{product.flow[0]}</b></div>
+            <div><span>{String(product.flow.length).padStart(2, "0")}</span><b>{product.flow[product.flow.length - 1]}</b></div>
+          </div>
+          <div className="product-hero-facts">
+            <span><small>CAPABILITIES</small><b>{product.capabilities.length}</b></span>
+            <span><small>MODULES</small><b>{relevantModules.length}</b></span>
+            <span><small>BOUNDARIES</small><b>{product.boundaries.length}</b></span>
+          </div>
           <i />
         </div>
       </section>
