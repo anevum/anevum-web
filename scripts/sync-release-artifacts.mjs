@@ -7,9 +7,11 @@ const registry = loadReleaseRegistry();
 const current = currentRelease(registry);
 
 const publicRoutes = JSON.parse(fs.readFileSync(path.join(ROOT, "src", "data", "public-routes.json"), "utf8"));
+const dispatchRegistry = JSON.parse(fs.readFileSync(path.join(ROOT, "src", "data", "dispatches.json"), "utf8"));
 const staticRoutes = publicRoutes.filter((route) => route.sitemap).map((route) => route.path);
 const releaseRoutes = registry.releases.map((release) => "/releases/" + release.slug);
-const routes = [...staticRoutes, ...releaseRoutes];
+const dispatchRoutes = (dispatchRegistry.entries || []).map((entry) => "/dispatches/" + entry.slug);
+const routes = [...staticRoutes, ...releaseRoutes, ...dispatchRoutes];
 
 const sitemap = [
   '<?xml version="1.0" encoding="UTF-8"?>',
@@ -30,7 +32,8 @@ const generated = {
   currentLifecycle: current.lifecycle,
   currentReleaseClass: current.releaseClass,
   currentPdfPath: current.pdfPath,
-  releaseRoutes
+  releaseRoutes,
+  dispatchRoutes
 };
 
 fs.writeFileSync(
