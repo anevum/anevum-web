@@ -1,22 +1,52 @@
 {
   "name": "Devon Akins",
-  "headline": "Founder / Software Systems Builder",
-  "profileHeadline": "Founder · Systems Builder · Independent Researcher",
+  "headline": "Software Systems Builder · Mathematics Tutor · Independent Researcher",
+  "profileHeadline": "Founder of ANEVUM · Software Builder · Mathematics Tutor",
   "email": "devon@anevum.com",
   "website": "anevum.com",
-  "summary": "Founder of ANEVUM, building and operating a multi-service software and research platform spanning orchestration, market systems, forecasting research, mathematical validation, replay, telemetry, evidence pipelines, and production infrastructure. Current work combines React and TypeScript applications with Python services, PostgreSQL/Supabase data systems, containerized deployment, CI/CD, observability, and research-to-production controls.",
+  "location": "Central Florida",
+  "summary": "Software builder, mathematics tutor, and independent researcher with experience spanning software development, undergraduate biophysics research, mathematics instruction, and organization leadership. Founded ANEVUM in 2026 to build and operate software and research products, combining React and TypeScript interfaces, Python services, data systems, cloud deployment, quantitative research, and technical documentation.",
   "experience": [
     {
       "organization": "ANEVUM",
       "role": "Founder",
       "period": "2026–Present",
       "bullets": [
-        "Architecting and deploying a multi-service software and research platform with public and protected operational surfaces.",
-        "Building React and TypeScript web applications and Python/FastAPI backend services.",
-        "Designing PostgreSQL/Supabase telemetry, canonical event, evidence, reconciliation, and research pipelines.",
-        "Operating containerized services on Railway and Cloudflare with GitHub Actions verification and deployment workflows.",
-        "Building live market-data, execution, risk-control, performance, forecasting, simulation, replay, and research tooling.",
-        "Maintaining explicit separation between live execution, shadow research, replay/simulation, and post-event evidence."
+        "Founded and operate an independent software and research venture spanning web products, automation, quantitative research, and technical publishing.",
+        "Design and ship React and TypeScript interfaces and Python/FastAPI services from product concept through production deployment.",
+        "Build PostgreSQL/Supabase data pipelines, telemetry, evidence capture, reconciliation, and operational tooling.",
+        "Manage cloud deployment and reliability workflows across Railway, Cloudflare, Docker, and GitHub Actions.",
+        "Conduct quantitative research, simulation, validation, and documentation to move defensible ideas from experiment to production."
+      ]
+    },
+    {
+      "organization": "Superprof",
+      "role": "Mathematics Tutor",
+      "period": "2022–Present",
+      "bullets": [
+        "Provide one-on-one mathematics instruction tailored to each student's coursework, pace, and learning needs.",
+        "Develop individualized explanations, worked examples, practice plans, and study strategies for subjects from algebra through calculus and statistics.",
+        "Translate abstract mathematical concepts into clear step-by-step reasoning and adapt instruction from student feedback and performance."
+      ]
+    },
+    {
+      "organization": "University of Arkansas",
+      "role": "Undergraduate Research Assistant · Biophysics",
+      "period": "2022–2023",
+      "bullets": [
+        "Contributed to biophysics and neural-systems research related to the Criticality Hypothesis.",
+        "Supported computational and theoretical analysis, data review, literature research, and research documentation.",
+        "Participated in lab discussions and communicated technical findings and open questions to support ongoing research."
+      ]
+    },
+    {
+      "organization": "The Bat Signal Student Organization",
+      "role": "Founder & President",
+      "period": "2022–2023",
+      "bullets": [
+        "Founded and led a student organization centered on mathematics, science, collaborative study, and academic community.",
+        "Coordinated study sessions, educational events, outreach, scheduling, and member communication.",
+        "Built the organization from concept through day-to-day operations while balancing university coursework and research."
       ]
     }
   ],
@@ -24,72 +54,77 @@
     {
       "group": "Software Engineering",
       "items": [
-        "React",
+        "Python",
         "TypeScript",
         "JavaScript",
-        "Python",
+        "React",
         "FastAPI",
         "REST APIs",
-        "System architecture"
+        "Git",
+        "GitHub"
       ]
     },
     {
-      "group": "Infrastructure",
+      "group": "Data & Infrastructure",
       "items": [
+        "PostgreSQL",
+        "Supabase",
         "Docker",
         "Railway",
-        "Cloudflare Workers",
-        "Supabase",
-        "PostgreSQL",
+        "Cloudflare",
         "GitHub Actions",
-        "CI/CD"
+        "CI/CD",
+        "Data pipelines",
+        "Telemetry"
       ]
     },
     {
-      "group": "Data & Research",
-      "items": [
-        "Telemetry systems",
-        "Experiment design",
-        "Market data",
-        "Mathematical modeling",
-        "Forecasting",
-        "Simulation",
-        "Validation",
-        "Performance analysis"
-      ]
-    },
-    {
-      "group": "Mathematics",
+      "group": "Mathematics & Research",
       "items": [
         "Calculus",
         "Linear algebra",
+        "Statistics and probability",
         "Mathematical modeling",
-        "Probability and statistical reasoning"
+        "Experiment design",
+        "Simulation",
+        "Validation",
+        "Technical research"
       ]
     },
     {
-      "group": "Systems",
+      "group": "Teaching & Operations",
       "items": [
-        "Distributed services",
-        "Automated operations",
-        "Observability",
-        "Versioning",
-        "Reliability controls",
-        "Risk controls",
-        "Research-to-production gates"
+        "Mathematics tutoring",
+        "Lesson planning",
+        "Technical writing",
+        "Documentation",
+        "Project coordination",
+        "Research communication"
       ]
     }
   ],
   "education": [
     {
-      "school": "University of Arkansas",
-      "study": "Mathematics studies",
-      "detail": "Relevant coursework: Calculus II, Calculus III, Linear Algebra."
-    },
-    {
       "school": "University of Central Florida",
       "study": "Physics studies",
-      "detail": "Undergraduate physics study."
+      "detail": "Undergraduate study in physics."
+    },
+    {
+      "school": "University of Arkansas",
+      "study": "Mathematics studies",
+      "detail": "Relevant coursework includes Calculus II, Calculus III, and Linear Algebra."
+    },
+    {
+      "school": "Valencia College",
+      "study": "Associate of Arts",
+      "detail": "General education and mathematics coursework."
+    }
+  ],
+  "certifications": [
+    {
+      "name": "Emergency Medical Technician · Florida",
+      "status": "Former certification",
+      "detail": "Certification expired in 2022."
     }
   ],
   "systems": [
