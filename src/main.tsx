@@ -13,6 +13,7 @@ import "./styles/command-v2.css";
 import "./styles/company.css";
 import "./styles/seasonal.css";
 import "./styles/iren.css";
+import "./styles/enhancements.css";
 
 applySeasonalTheme();
 
