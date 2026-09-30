@@ -728,3 +728,26 @@
   .home-evidence-metrics { grid-template-columns:1fr; }
   .home-evidence-chart footer { display:grid; grid-template-columns:1fr auto; }
 }
+
+
+/* Product identities: shared ANEVUM structure, distinct subsystem signatures */
+.product-detail-iren { --product-accent:#8bd9ff; }
+.product-detail-rhen { --product-accent:#5fc9ff; }
+.product-detail-nostra { --product-accent:#b58cff; }
+.product-detail-graen { --product-accent:#e8c26a; }
+.product-detail-velum { --product-accent:#56b8bc; }
+
+.product-detail .product-hero { position:relative; overflow:hidden; }
+.product-detail .product-hero::after { content:""; position:absolute; width:420px; height:420px; right:-80px; top:50%; transform:translateY(-50%); border:1px solid color-mix(in srgb, var(--product-accent) 30%, transparent); border-radius:50%; box-shadow:0 0 0 55px color-mix(in srgb, var(--product-accent) 5%, transparent),0 0 0 110px color-mix(in srgb, var(--product-accent) 3%, transparent); pointer-events:none; }
+.product-detail .product-hero-code { border-color:color-mix(in srgb, var(--product-accent) 24%, transparent); background:radial-gradient(circle at 50% 50%,color-mix(in srgb,var(--product-accent) 12%,transparent),transparent 45%),rgba(4,11,19,.55); }
+.product-detail .product-hero-code strong, .product-detail .product-status-line b { color:var(--product-accent); }
+.product-detail .product-public-state article { position:relative; overflow:hidden; }
+.product-detail .product-public-state article::before { content:""; position:absolute; left:0; top:0; bottom:0; width:2px; background:color-mix(in srgb,var(--product-accent) 65%,transparent); opacity:.6; }
+.product-detail .architecture-flow-step strong, .product-detail .research-ladder strong { color:color-mix(in srgb,var(--product-accent) 80%,white 20%); }
+
+.product-detail-graen .product-hero-code::before { content:""; position:absolute; inset:18%; background:linear-gradient(30deg,transparent 48%,rgba(232,194,106,.18) 49% 51%,transparent 52%),linear-gradient(90deg,transparent 48%,rgba(232,194,106,.18) 49% 51%,transparent 52%),linear-gradient(150deg,transparent 48%,rgba(232,194,106,.18) 49% 51%,transparent 52%); transform:rotate(15deg); }
+.product-detail-nostra .product-hero-code::before { content:""; position:absolute; inset:22% 12%; border-top:1px solid rgba(181,140,255,.32); border-bottom:1px solid rgba(181,140,255,.18); transform:skewY(-12deg); box-shadow:0 -30px 0 -29px rgba(181,140,255,.22),0 30px 0 -29px rgba(181,140,255,.22); }
+.product-detail-velum .product-hero-code::before,.product-detail-velum .product-hero-code::after { content:""; position:absolute; width:70%; height:35%; left:15%; top:32%; border:1px solid rgba(86,184,188,.25); border-radius:50%; transform:rotate(12deg); }
+.product-detail-velum .product-hero-code::after { transform:rotate(-12deg); opacity:.55; }
+.product-detail-rhen .product-hero-code::before { content:""; position:absolute; left:12%; right:12%; top:50%; height:1px; background:linear-gradient(90deg,transparent,#5fc9ff,transparent); box-shadow:0 -44px 0 rgba(95,201,255,.08),0 44px 0 rgba(95,201,255,.08); }
+.product-detail-iren .product-hero-code::before { content:""; position:absolute; width:38%; aspect-ratio:1; left:31%; top:31%; border:1px solid rgba(139,217,255,.28); transform:rotate(45deg); box-shadow:0 0 0 28px rgba(139,217,255,.025),0 0 0 56px rgba(139,217,255,.018); }
