@@ -154,12 +154,27 @@ jobs:
           base="${{ steps.preview.outputs.preview_url }}"
           mkdir -p "$RUNNER_TEMP/anevum-visuals"
 
+          chrome_retry() {
+            local attempt=1
+            while true; do
+              if google-chrome "$@"; then
+                return 0
+              fi
+              if [ "$attempt" -ge 2 ]; then
+                return 1
+              fi
+              attempt=$((attempt + 1))
+              sleep 1
+            done
+          }
+
           capture() {
             name="$1"
             path="$2"
-            google-chrome --headless --no-sandbox --disable-gpu --hide-scrollbars --virtual-time-budget=7000 --window-size=1440,1000 --screenshot="$RUNNER_TEMP/anevum-visuals/$name-desktop.png" "$base$path"
-            google-chrome --headless --no-sandbox --disable-gpu --hide-scrollbars --virtual-time-budget=7000 --window-size=390,844 --screenshot="$RUNNER_TEMP/anevum-visuals/$name-mobile.png" "$base$path"
-            google-chrome --headless --no-sandbox --disable-gpu --virtual-time-budget=7000 --dump-dom "$base$path" > "$RUNNER_TEMP/anevum-visuals/$name-rendered.html"
+            common=(--headless --no-sandbox --disable-gpu --disable-dev-shm-usage --disable-background-networking --disable-sync --no-first-run --virtual-time-budget=7000)
+            chrome_retry "${common[@]}" --hide-scrollbars --window-size=1440,1000 --screenshot="$RUNNER_TEMP/anevum-visuals/$name-desktop.png" "$base$path"
+            chrome_retry "${common[@]}" --hide-scrollbars --window-size=390,844 --screenshot="$RUNNER_TEMP/anevum-visuals/$name-mobile.png" "$base$path"
+            chrome_retry "${common[@]}" --dump-dom "$base$path" > "$RUNNER_TEMP/anevum-visuals/$name-rendered.html"
           }
 
           capture home /
