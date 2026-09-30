@@ -972,3 +972,13 @@
   .founder-portrait{max-width:260px}
   .topology-node .system-mark-svg{width:28px;height:28px}
 }
+
+
+/* Canonical subsystem mark placements ------------------------------------- */
+.system-state-grid article header{display:flex;align-items:center;gap:9px}
+.system-state-grid article header .system-mark-svg{width:24px;height:24px;flex:0 0 24px}
+.research-program-grid>a{position:relative}
+.research-program-grid>a>.system-mark-svg{width:46px;height:46px;margin-bottom:16px}
+.case-study-chain>span{display:flex;align-items:center;gap:8px}
+.case-study-chain .system-mark-svg{width:22px;height:22px;flex:0 0 22px}
+.case-study-feature-flow .system-mark-svg{width:32px;height:32px;margin:5px auto 3px}
