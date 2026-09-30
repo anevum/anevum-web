@@ -71,11 +71,13 @@ export default function ProductDetail() {
   );
   const systemKey = product.name as "IREN" | "RHEN" | "NOSTRA" | "GRAEN" | "VELUM";
   const publicSystem = data?.systems?.[systemKey];
-  const runtimeState = error
-    ? "UNAVAILABLE"
-    : loading
-      ? "CONNECTING"
-      : publicSystem?.runtime_state || (product.slug === "rhen" ? data?.state : "UNAVAILABLE");
+  const runtimeState = (
+    error
+      ? "UNAVAILABLE"
+      : loading
+        ? "CONNECTING"
+        : publicSystem?.runtime_state || (product.slug === "rhen" ? data?.state : "UNAVAILABLE")
+  ) || "UNAVAILABLE";
   const trackingState = publicSystem?.tracking_state || (loading ? "CONNECTING" : "UNAVAILABLE");
   const observedAt = publicSystem?.observed_at
     ? new Date(publicSystem.observed_at).toLocaleString([], { month:"short", day:"numeric", hour:"numeric", minute:"2-digit" })
