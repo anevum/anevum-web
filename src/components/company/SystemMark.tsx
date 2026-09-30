@@ -10,7 +10,7 @@ type Props = {
 
 export default function SystemMark({ system, className = "", decorative = false }: Props) {
   if (system === "RHEN") {
-    return <RhenMark className={"system-mark-svg " + className} decorative={decorative} label="RHEN" />;
+    return <RhenMark className={"system-mark-svg system-mark-rhen " + className} decorative={decorative} label="RHEN" />;
   }
 
   const common = {
