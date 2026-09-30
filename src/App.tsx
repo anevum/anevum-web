@@ -4,6 +4,7 @@ import { OverflowPan } from "./components/OverflowPan";
 import SeasonalEasterEggs from "./components/SeasonalEasterEggs";
 import { PublicShell } from "./components/Shell";
 import { currentRhenRelease, rhenReleaseBySlug } from "./data/releases";
+import { dispatchBySlug } from "./data/dispatches";
 
 const Command = lazy(() => import("./pages/Command"));
 const Iren = lazy(() => import("./pages/Iren"));
@@ -54,6 +55,15 @@ function RouteEffects() {
     if (location.pathname === "/releases") {
       const current = currentRhenRelease();
       document.title = "Releases — RHEN " + current.version + " " + current.codename + " — ANEVUM";
+      return;
+    }
+
+    if (location.pathname.startsWith("/dispatches/")) {
+      const slug = location.pathname.slice("/dispatches/".length);
+      const dispatch = dispatchBySlug(slug);
+      document.title = dispatch
+        ? dispatch.title + " — ANEVUM Dispatches"
+        : "Dispatches — ANEVUM";
       return;
     }
 
