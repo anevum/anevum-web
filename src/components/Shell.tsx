@@ -51,13 +51,15 @@ export function PublicShell({ children }: { children: ReactNode }) {
           </button>
         </div>
 
-        <nav className={"company-mobile-nav " + (mobileOpen ? "is-open" : "")} aria-label="Mobile navigation">
-          {nav.map(({ path: href, label }) => (
-            <Link key={href} to={href} className={isActive(location.pathname, href) ? "active" : ""}>{label}</Link>
-          ))}
-          <Link to="/live">Live systems</Link>
-          <Link to="/command" rel="nofollow">Command</Link>
-        </nav>
+        {mobileOpen ? (
+          <nav className="company-mobile-nav is-open" aria-label="Mobile navigation">
+            {nav.map(({ path: href, label }) => (
+              <Link key={href} to={href} className={isActive(location.pathname, href) ? "active" : ""}>{label}</Link>
+            ))}
+            <Link to="/live">Live systems</Link>
+            <Link to="/command" rel="nofollow">Command</Link>
+          </nav>
+        ) : null}
       </header>
       <main className="public-stage compact-public-stage company-public-stage">{children}</main>
     </div>
