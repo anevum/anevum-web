@@ -166,6 +166,10 @@ jobs:
           capture products /products
           capture rhen /products/rhen
           capture performance /performance
+          capture research /research
+          capture field-note /research/multi-market-architecture-equities-crypto
+          capture architecture /architecture
+          capture case-studies /case-studies
           capture founder /founder
           capture resume /resume
 
