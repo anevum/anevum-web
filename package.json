@@ -9,14 +9,15 @@
   "scripts": {
     "dev": "vite",
     "check": "tsc --noEmit",
-    "build": "npm run sync:seasonal && npm run sync:releases && npm run sync:share-image && npm run sync:resume && npm run check && vite build",
+    "build": "npm run sync:seasonal && npm run sync:releases && npm run validate:dispatches && npm run sync:share-image && npm run sync:resume && npm run check && vite build",
     "preview": "vite preview",
     "deploy": "npm run build && wrangler deploy",
     "sync:seasonal": "python scripts/generate-seasonal-avatar.py",
     "sync:releases": "node scripts/sync-release-artifacts.mjs",
     "sync:share-image": "node scripts/sync-share-image.mjs",
     "validate:releases": "node scripts/validate-release-registry.mjs",
-    "sync:resume": "python scripts/render-founder-resume.py"
+    "sync:resume": "python scripts/render-founder-resume.py",
+    "validate:dispatches": "node scripts/validate-dispatches.mjs"
   },
   "dependencies": {
     "motion": "13.4.3",
