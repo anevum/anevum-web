@@ -27,6 +27,8 @@
   align-items:center;
   z-index:90;
   background:linear-gradient(180deg,rgba(3,7,12,.92),rgba(3,7,12,.7) 70%,transparent);
+  padding-left:var(--safe-left);
+  padding-right:var(--safe-right);
   backdrop-filter:blur(16px);
 }
 .company-header:after{background:linear-gradient(90deg,transparent,var(--company-border),transparent)}
@@ -53,7 +55,7 @@
 .company-menu-button span{display:block;width:16px;height:1px;background:#c9d4dc}
 .company-mobile-nav{display:none}
 .company-public-stage{min-height:100dvh;padding-top:76px}
-.company-page{width:min(calc(100% - 48px),var(--company-max));margin:0 auto;padding-bottom:100px;overflow:visible}
+.company-page{width:min(calc(100% - 48px),var(--company-max));margin:0 auto;padding-left:var(--safe-left);padding-right:var(--safe-right);padding-bottom:calc(100px + var(--safe-bottom));overflow:visible}
 .company-page *{min-width:0}
 .company-page h1,.company-page h2,.company-page h3{text-wrap:balance}
 .company-page p{max-width:76ch}
