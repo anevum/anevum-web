@@ -138,6 +138,12 @@ jobs:
 
           curl --fail --show-error --silent --head "$base/command" | grep -qi 'x-robots-tag:.*noindex'
 
+      - name: Verify browser runtime and horizontal overflow
+        if: github.event_name == 'pull_request'
+        env:
+          BASE_URL: ${{ steps.preview.outputs.preview_url }}
+        run: node scripts/browser-runtime-qa.mjs
+
       - name: Capture browser QA
         if: github.event_name == 'pull_request'
         shell: bash
