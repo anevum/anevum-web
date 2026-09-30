@@ -44,6 +44,7 @@ jobs:
           current_pdf="$(jq -r '.currentPdfPath' public/release-registry.json)"
           test -s "dist/client$current_pdf"
           test -s dist/client/devon-akins-resume.pdf
+          test -s dist/client/devon-akins-headshot.jpg
           test -f dist/client/sitemap.xml
           test -f dist/client/release-registry.json
           test -n "$(find dist -name wrangler.json -print -quit)"
@@ -101,8 +102,19 @@ jobs:
           printf '%s' "$performance_html" | grep -Fq '<meta property="og:title" content="Performance — ANEVUM" />'
           printf '%s' "$performance_html" | grep -Fq '<link rel="canonical" href="https://anevum.com/performance" />'
 
+          dispatches_html="$(curl --fail --show-error --silent "$base/dispatches")"
+          printf '%s' "$dispatches_html" | grep -Fq '<meta property="og:title" content="Dispatches — ANEVUM" />'
+          printf '%s' "$dispatches_html" | grep -Fq '<link rel="canonical" href="https://anevum.com/dispatches" />'
+
+          dispatch_html="$(curl --fail --show-error --silent "$base/dispatches/public-company-overhaul")"
+          printf '%s' "$dispatch_html" | grep -Fq '<meta property="og:title" content="ANEVUM public platform rebuilt around the system portfolio — ANEVUM Dispatches" />'
+          printf '%s' "$dispatch_html" | grep -Fq '<link rel="canonical" href="https://anevum.com/dispatches/public-company-overhaul" />'
+
+          curl --fail --show-error --silent "$base/devon-akins-headshot.jpg" > "$RUNNER_TEMP/devon-akins-headshot.jpg"
+          test -s "$RUNNER_TEMP/devon-akins-headshot.jpg"
+
           sitemap="$(curl --fail --show-error --silent "$base/sitemap.xml")"
-          for path in /products /products/iren /products/rhen /products/nostra /products/graen /products/velum /performance /research /founder /resume /releases; do
+          for path in /products /products/iren /products/rhen /products/nostra /products/graen /products/velum /performance /research /dispatches /dispatches/public-company-overhaul /founder /resume /releases; do
             printf '%s' "$sitemap" | grep -Fq "https://anevum.com$path"
           done
 
@@ -164,18 +176,25 @@ jobs:
           capture products /products
           capture rhen /products/rhen
           capture performance /performance
+          capture dispatches /dispatches
+          capture dispatch /dispatches/public-company-overhaul
           capture founder /founder
           capture resume /resume
 
           grep -Fq 'company-home' "$RUNNER_TEMP/anevum-visuals/home-rendered.html"
+          grep -Fq 'LIVE EVIDENCE' "$RUNNER_TEMP/anevum-visuals/home-rendered.html"
           grep -Fq 'SYSTEM ARCHITECTURE' "$RUNNER_TEMP/anevum-visuals/home-rendered.html"
+          grep -Fq 'DISPATCHES' "$RUNNER_TEMP/anevum-visuals/home-rendered.html"
           grep -Fq 'IREN' "$RUNNER_TEMP/anevum-visuals/products-rendered.html"
           grep -Fq 'NOSTRA' "$RUNNER_TEMP/anevum-visuals/products-rendered.html"
           grep -Fq 'VELUM' "$RUNNER_TEMP/anevum-visuals/products-rendered.html"
           grep -Fq 'OBSERVE' "$RUNNER_TEMP/anevum-visuals/rhen-rendered.html"
           grep -Fq 'Separate markets. Separate records.' "$RUNNER_TEMP/anevum-visuals/performance-rendered.html"
-          grep -Fq 'AWAITING LIVE SAMPLE' "$RUNNER_TEMP/anevum-visuals/performance-rendered.html"
+          grep -Fq 'LIVE CRYPTO PERFORMANCE' "$RUNNER_TEMP/anevum-visuals/performance-rendered.html"
+          grep -Fq 'Work in public, with the evidence attached.' "$RUNNER_TEMP/anevum-visuals/dispatches-rendered.html"
+          grep -Fq 'ANEVUM public platform rebuilt around the system portfolio' "$RUNNER_TEMP/anevum-visuals/dispatch-rendered.html"
           grep -Fq 'Devon Akins' "$RUNNER_TEMP/anevum-visuals/founder-rendered.html"
+          grep -Fq 'devon-akins-headshot.jpg' "$RUNNER_TEMP/anevum-visuals/founder-rendered.html"
           grep -Fq 'Technical Skills' "$RUNNER_TEMP/anevum-visuals/resume-rendered.html"
 
       - name: Upload browser QA
