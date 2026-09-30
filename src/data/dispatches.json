@@ -1,0 +1,199 @@
+{
+  "schemaVersion": 1,
+  "entries": [
+    {
+      "slug": "public-company-overhaul",
+      "publishedAt": "2026-09-30T02:10:36Z",
+      "kind": "PROGRESS REPORT",
+      "system": "ANEVUM",
+      "status": "SHIPPED",
+      "title": "ANEVUM public platform rebuilt around the system portfolio",
+      "dek": "The public site moved from an experimental dashboard toward a product, research, evidence, and founder platform.",
+      "body": [
+        "The public information architecture now treats IREN, RHEN, NOSTRA, GRAEN, and VELUM as distinct systems with separate responsibilities, evidence boundaries, and product surfaces.",
+        "The release added a professional product portfolio, dedicated system pages, separate equities and crypto performance records, a research hub, founder profile, recruiter-facing resume, deterministic PDF resume, route metadata, responsive browser verification, and stricter public-data assertions.",
+        "The monthly seasonal layer remains independent of the product architecture. October's treatment can change the atmosphere without changing the underlying information system."
+      ],
+      "tags": [
+        "website",
+        "product",
+        "release",
+        "infrastructure"
+      ],
+      "links": [
+        "/products",
+        "/performance",
+        "/founder"
+      ]
+    },
+    {
+      "slug": "crypto-market-lane",
+      "publishedAt": "2026-09-29T23:40:00Z",
+      "kind": "RESEARCH NOTE",
+      "system": "RHEN",
+      "status": "ACTIVE",
+      "title": "Crypto became an explicit market lane rather than an equities clone",
+      "dek": "The architecture now keeps continuously traded crypto evidence separate from the equities population.",
+      "body": [
+        "Crypto research and execution state are attributed to an explicit market lane so features, evidence, calibration, replay, and performance are not silently pooled with equities.",
+        "NOSTRA, GRAEN, ADS, and VELUM each have crypto-facing research responsibilities, while RHEN retains execution and risk authority.",
+        "Public live performance remains empty until real closed live crypto trades exist. Replay, paper, shadow, and development evidence are not substituted for a live sample."
+      ],
+      "tags": [
+        "crypto",
+        "rhen",
+        "nostra",
+        "graen",
+        "velum"
+      ],
+      "links": [
+        "/products/rhen",
+        "/products/velum",
+        "/performance"
+      ]
+    },
+    {
+      "slug": "evidence-pipeline-attribution",
+      "publishedAt": "2026-09-29T22:20:00Z",
+      "kind": "PROGRESS REPORT",
+      "system": "RHEN",
+      "status": "SHIPPED",
+      "title": "Prediction-to-outcome attribution was hardened",
+      "dek": "Candidate prediction state is retained before execution and can later receive post-event forward outcomes.",
+      "body": [
+        "The evidence pipeline preserves pre-trade research state separately from the eventual realized outcome. That prevents later information from rewriting what the system actually knew at decision time.",
+        "Direct attribution links candidate evaluation, signal, intent, order, position, and forward outcomes through canonical telemetry.",
+        "This work changes evidence quality, not strategy thresholds, live risk, position sizing, or broker behavior."
+      ],
+      "tags": [
+        "telemetry",
+        "evidence",
+        "research",
+        "rhen"
+      ],
+      "links": [
+        "/products/rhen",
+        "/research"
+      ]
+    },
+    {
+      "slug": "graen-selection-bias",
+      "publishedAt": "2026-09-29T13:20:00Z",
+      "kind": "RESEARCH NOTE",
+      "system": "GRAEN",
+      "status": "ACTIVE",
+      "title": "Selection bias became a first-class research problem",
+      "dek": "GRAEN formalized how repeated strategy search can make weak effects look stronger than they are.",
+      "body": [
+        "The research program now treats selection, multiplicity, dependence, and adaptive reuse of evidence as explicit failure modes.",
+        "The working framework separates discovery evidence from validation evidence and requires claims to stay inside the strength of the available sample.",
+        "The objective is not to eliminate exploration. It is to make the cost of exploration visible before a research result can influence production."
+      ],
+      "tags": [
+        "graen",
+        "mathematics",
+        "validation",
+        "methodology"
+      ],
+      "links": [
+        "/products/graen",
+        "/research",
+        "/theory"
+      ]
+    },
+    {
+      "slug": "velum-replay-online",
+      "publishedAt": "2026-09-29T00:40:00Z",
+      "kind": "SYSTEM UPDATE",
+      "system": "VELUM",
+      "status": "ACTIVE",
+      "title": "VELUM established a broker-isolated replay path",
+      "dek": "Historical reconstruction and counterfactual work can reuse research mathematics without gaining live broker authority.",
+      "body": [
+        "VELUM reconstructs historical market state, applies declared friction assumptions, replays bounded strategy logic, and records comparable outcomes.",
+        "The replay path is intentionally isolated from live broker execution. Simulated results remain research evidence and never enter the live performance record.",
+        "The system supports off-hours research and is being extended across both equities and continuously traded crypto data."
+      ],
+      "tags": [
+        "velum",
+        "replay",
+        "simulation",
+        "counterfactual"
+      ],
+      "links": [
+        "/products/velum",
+        "/research"
+      ]
+    },
+    {
+      "slug": "production-hardening-after-scale-upgrade",
+      "publishedAt": "2026-09-28T23:46:22Z",
+      "kind": "PROGRESS REPORT",
+      "system": "RHEN",
+      "status": "SHIPPED",
+      "title": "RHEN production hardening completed after the Railway scaling upgrade",
+      "dek": "Runtime services, research scheduling, readiness checks, persistence, and operational notifications were verified together.",
+      "body": [
+        "The live trader, Research Agent, scheduler, and pre-open service were checked on the upgraded Railway environment with bounded restart behavior, health checks, persistence, and alerting intact.",
+        "The goal was operational resilience rather than a strategy rewrite. Live trading logic remained protected while support services became easier to observe and maintain.",
+        "Slack remains the operational alert surface for failures, blockers, state changes, and intervention-worthy events."
+      ],
+      "tags": [
+        "infrastructure",
+        "railway",
+        "operations",
+        "rhen"
+      ],
+      "links": [
+        "/products/rhen",
+        "/live"
+      ]
+    },
+    {
+      "slug": "first-official-rhen-session",
+      "publishedAt": "2026-09-28T20:10:00Z",
+      "kind": "FIELD NOTE",
+      "system": "RHEN",
+      "status": "RECORDED",
+      "title": "First official RHEN live session closed with a complete evidence trail",
+      "dek": "The important milestone was not a return number; it was a reproducible live record.",
+      "body": [
+        "RHEN completed an official live operating session and reconciled broker truth back into the canonical ledger.",
+        "The public record uses normalized percentages and counts rather than raw account values. External cash flow is separated from strategy performance through explicit performance epochs.",
+        "Post-close research remained evidence-driven: small samples were not treated as justification for on-the-fly threshold changes."
+      ],
+      "tags": [
+        "live",
+        "rhen",
+        "evidence",
+        "performance"
+      ],
+      "links": [
+        "/performance",
+        "/products/rhen"
+      ]
+    },
+    {
+      "slug": "seasonal-system",
+      "publishedAt": "2026-09-28T21:20:42Z",
+      "kind": "SYSTEM UPDATE",
+      "system": "ANEVUM",
+      "status": "SHIPPED",
+      "title": "Calendar-driven seasonal presentation became part of the public system",
+      "dek": "Seasonal identity now changes the atmosphere without becoming the information architecture.",
+      "body": [
+        "ANEVUM gained a calendar-driven theme layer, ambient effects, and reusable seasonal tokens.",
+        "The product hierarchy, evidence surfaces, and accessibility rules remain stable while the visual treatment can rotate month by month.",
+        "The October treatment uses restrained warm spectral accents rather than turning the product interface into a novelty skin."
+      ],
+      "tags": [
+        "design",
+        "website",
+        "seasonal"
+      ],
+      "links": [
+        "/"
+      ]
+    }
+  ]
+}
