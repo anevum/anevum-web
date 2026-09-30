@@ -183,5 +183,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: anevum-preview-visuals
-          path: ${{ runner.temp }}/anevum-visuals
+          path: |
+            ${{ runner.temp }}/anevum-visuals
+            dist/client/devon-akins-resume.pdf
           retention-days: 3
