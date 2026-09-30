@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import Mark from "../components/Mark";
 import ProductCard from "../components/company/ProductCard";
+import SystemMark, { type SystemName } from "../components/company/SystemMark";
 import SystemTopology from "../components/company/SystemTopology";
 import { fieldNotes } from "../data/fieldNotes";
 import { products } from "../data/products";
@@ -36,7 +37,7 @@ export default function HomeCompany() {
   const equities = feed?.market_performance?.equities;
   const crypto = feed?.market_performance?.crypto;
   const curve = (equities?.curve?.length ? equities.curve : crypto?.curve) || [];
-  const systemState = [
+  const systemState: Array<[SystemName, string, string]> = [
     ["RHEN", state, data?.active_strategy?.version_id || "Production market system"],
     ["NOSTRA", data?.research?.current_status || "RESEARCH", "Forecasting / market state"],
     ["GRAEN", data?.research?.active_questions?.length ? data.research.active_questions.length + " OPEN QUESTIONS" : "RESEARCH", "Validation / falsification"],
@@ -79,7 +80,7 @@ export default function HomeCompany() {
       <section className="company-section home-system-state">
         <header className="company-section-head"><span>02 / SYSTEM STATE</span><h2>The site reflects the operating system behind it.</h2><p>Public-safe state is separated from private Command. Unavailable data fails closed instead of being replaced with invented metrics.</p></header>
         <div className="system-state-grid">
-          {systemState.map(([name, status, detail]) => <article key={name}><header><span>{name}</span><i /></header><strong>{String(status).replaceAll("_", " ")}</strong><p>{detail}</p></article>)}
+          {systemState.map(([name, status, detail]) => <article key={name}><header><SystemMark system={name} decorative /><span>{name}</span><i /></header><strong>{String(status).replaceAll("_", " ")}</strong><p>{detail}</p></article>)}
         </div>
       </section>
 
@@ -115,7 +116,7 @@ export default function HomeCompany() {
 
       <section className="company-section home-case-study">
         <div className="case-study-feature-copy"><span>06 / CASE STUDY</span><h2>What happens when an equity strategy meets a 24/7 crypto market?</h2><p>GRAEN challenges the assumption. NOSTRA measures market state. VELUM replays alternatives. RHEN receives only what survives the evidence gate.</p><Link to="/case-studies">Explore case studies →</Link></div>
-        <div className="case-study-feature-flow" aria-label="Case study system flow">{["GRAEN", "NOSTRA", "VELUM", "RHEN"].map((item, index) => <div key={item}><span>{String(index + 1).padStart(2, "0")}</span><strong>{item}</strong>{index < 3 ? <i>↓</i> : null}</div>)}</div>
+        <div className="case-study-feature-flow" aria-label="Case study system flow">{(["GRAEN", "NOSTRA", "VELUM", "RHEN"] as SystemName[]).map((item, index) => <div key={item}><span>{String(index + 1).padStart(2, "0")}</span><SystemMark system={item} decorative /><strong>{item}</strong>{index < 3 ? <i>↓</i> : null}</div>)}</div>
       </section>
 
       <section className="company-founder-cta company-founder-cta-v3">
