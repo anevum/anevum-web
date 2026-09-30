@@ -6,6 +6,7 @@ import RhenMark from "../components/RhenMark";
 import UniverseBackground from "../components/UniverseBackground";
 import CommandPerformance from "../components/CommandPerformance";
 import CommandTopology from "../components/CommandTopology";
+import CommandIrenDock from "../components/CommandIrenDock";
 import { useLiveTrading } from "../hooks/useLiveTrading";
 import {
   fetchCommandDailyReport,
@@ -133,14 +134,14 @@ export default function Command() {
   }, [session, commandAdmin, refresh]);
 
   if (loading) {
-    return <div className="command-gate"><RhenMark /><span>ANEVUM / RHEN COMMAND</span><h1>Resolving identity.</h1></div>;
+    return <div className="command-gate"><RhenMark /><span>ANEVUM / COMMAND</span><h1>Resolving identity.</h1></div>;
   }
 
   if (!session?.user) {
     return (
       <div className="command-gate">
         <RhenMark />
-        <span>ANEVUM / RHEN COMMAND</span>
+        <span>ANEVUM / COMMAND</span>
         <h1>Private operations.</h1>
         <p>Sign in through the private ANEVUM entrance to open Command.</p>
         <Link className="primary-link" to="/private">Private access <b>↗</b></Link>
@@ -152,7 +153,7 @@ export default function Command() {
     return (
       <div className="command-gate">
         <RhenMark />
-        <span>ANEVUM / RHEN COMMAND</span>
+        <span>ANEVUM / COMMAND</span>
         <h1>Administrator access required.</h1>
         <p>This RHENLINK is authenticated but is not authorized for the private operations console.</p>
         <Link className="text-link" to="/">Return to ANEVUM <b>→</b></Link>
@@ -237,7 +238,7 @@ export default function Command() {
     <div className={`command-shell command-page-${commandPage}`}>
       <UniverseBackground />
       <header className="command-header">
-        <Link to="/" className="command-brand"><Mark /><span>ANEVUM</span><i /><span className="command-rhen-lockup"><RhenMark decorative /><strong>RHEN COMMAND</strong></span></Link>
+        <Link to="/" className="command-brand"><Mark /><span>ANEVUM</span><i /><span className="command-rhen-lockup"><RhenMark decorative /><strong>COMMAND</strong></span></Link>
         <nav aria-label="Command sections">
           <Link className={commandPage === "overview" ? "active" : ""} to="/command/overview">Overview</Link>
           <Link className={commandPage === "live" ? "active" : ""} to="/command/live">Live</Link>
@@ -247,7 +248,7 @@ export default function Command() {
           <Link className={commandPage === "system" ? "active" : ""} to="/command/system">System</Link>
         </nav>
         <div className="command-account">
-          <span><i /> READ / LIVE</span>
+          <span><i /> IREN / LIVE</span>
           <small>{session.user.email}</small>
           <div className="command-account-actions">
             <Link to="/" title="Return to public ANEVUM">Public</Link>
@@ -546,16 +547,17 @@ export default function Command() {
             </article>
 
             <article className="command-panel command-view-system command-panel-boundary">
-              <header><div><span>READ-ONLY BOUNDARY</span><strong>OBSERVATIONAL</strong></div><small>Command</small></header>
+              <header><div><span>OPERATOR BOUNDARY</span><strong>PROTECTED</strong></div><small>Command + IREN</small></header>
               <div className="command-summary-block">
                 <span>THIS SURFACE</span>
-                <strong>Reads live state and canonical evidence.</strong>
-                <p>No strategy parameter, risk, sizing, or research-experiment controls were added.</p>
+                <strong>Reads canonical state and submits durable work through IREN.</strong>
+                <p>Protected actions remain gated. Command does not bypass RHEN risk, strategy, broker, or execution authority.</p>
               </div>
             </article>
           </aside>
         </section>
       </main>
+      <CommandIrenDock accessToken={session.access_token} />
     </div>
   );
 }

@@ -6,18 +6,25 @@ export async function proxyIren(request, assertAdmin, upstreamFetch = fetch) {
   const json = (body, status) => new Response(JSON.stringify(body), { status, headers: {
     "content-type": "application/json", "cache-control": "private, no-store",
     "x-content-type-options": "nosniff" } });
-  if (request.method !== "GET") return json({ error: "method_not_allowed" }, 405);
+  if (!["GET", "POST"].includes(request.method)) return json({ error: "method_not_allowed" }, 405);
   if (!token) return json({ error: "unauthorized" }, 401);
   await assertAdmin(token);
   try {
     const response = await upstreamFetch(IREN_READ, {
-      headers: { authorization: "Bearer " + token, accept: "application/json" },
+      method: request.method,
+      headers: {
+        authorization: "Bearer " + token,
+        accept: "application/json",
+        "content-type": "application/json",
+      },
+      body: request.method === "POST" ? await request.text() : undefined,
       signal: AbortSignal.timeout(8000), cache: "no-store",
     });
     if (!response.ok) return json({ error: "operational_state_unavailable", stale: true, action_required: true }, response.status);
     const body = await response.json();
-    if (body.schema_version !== "iren_command.v1") throw new Error("invalid_contract");
-    return json(body, 200);
+    if (!["iren_command.v1", "iren_command.v2"].includes(body.schema_version)) throw new Error("invalid_contract");
+    if (request.method === "POST" && body.accepted !== true) throw new Error("command_not_accepted");
+    return json(body, response.status);
   } catch {
     return json({ error: "operational_state_unavailable", stale: true, action_required: true }, 503);
   }
