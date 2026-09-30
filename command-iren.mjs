@@ -22,7 +22,7 @@ export async function proxyIren(request, assertAdmin, upstreamFetch = fetch) {
     });
     if (!response.ok) return json({ error: "operational_state_unavailable", stale: true, action_required: true }, response.status);
     const body = await response.json();
-    if (body.schema_version !== "iren_command.v2") throw new Error("invalid_contract");
+    if (!["iren_command.v1", "iren_command.v2"].includes(body.schema_version)) throw new Error("invalid_contract");
     if (request.method === "POST" && body.accepted !== true) throw new Error("command_not_accepted");
     return json(body, response.status);
   } catch {
