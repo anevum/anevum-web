@@ -9,7 +9,7 @@ import type {
 } from "../lib/data";
 import { useLiveTrading } from "../hooks/useLiveTrading";
 
-type PerformanceTab = "overview" | "equities" | "crypto" | "methodology" | "boundaries";
+type PerformanceTab = "overview" | "equities" | "crypto" | "validation" | "methodology" | "boundaries";
 
 type LanePerformance = {
   market_lane?: string;
@@ -50,7 +50,8 @@ type ExtendedFeed = LiveTradingFeed & {
 const tabs: [PerformanceTab, string, string][] = [
   ["overview", "Overview", "Separate live market lanes"],
   ["equities", "Equities", "Closed live equity trades"],
-  ["crypto", "Crypto", "Live lane + CRR shadow study"],
+  ["crypto", "Crypto", "Closed live crypto trades"],
+  ["validation", "CRR Study", "Live shadow validation evidence"],
   ["methodology", "Methodology", "How normalized records are built"],
   ["boundaries", "Boundaries", "What remains private or excluded"]
 ];
@@ -576,7 +577,7 @@ export default function Performance() {
                 </button>
                 <button type="button" onClick={() => setTab("crypto")}>
                   <span>CRYPTO</span><strong>{cryptoClosed ? human(crypto?.sample_state) : "LIVE MONEY AWAITING SAMPLE"}</strong>
-                  <b>{cryptoClosed} live closes · CRR shadow {crrExits}/30 outcomes</b><MarketOverviewSparkline rows={crypto?.curve || []} label="Crypto live" /><p>{crrStudy ? "Live-money performance remains separate from the continuously updating CRR-001 shadow validation study." : "The live lane is ready; the CRR public study feed is connecting."}</p><i>OPEN CRYPTO + STUDY →</i>
+                  <b>{cryptoClosed} live closes · CRR shadow {crrExits}/30 outcomes</b><MarketOverviewSparkline rows={crypto?.curve || []} label="Crypto live" /><p>{crrStudy ? "Live-money performance remains separate from the continuously updating CRR-001 shadow validation study." : "The live lane is ready; the CRR public study feed is connecting."}</p><i>OPEN CRYPTO →</i>
                 </button>
               </div>
               <div className="performance-overview-boundary">
@@ -587,12 +588,8 @@ export default function Performance() {
           )}
 
           {tab === "equities" && <MarketLane title="Equities" eyebrow="LIVE EQUITIES PERFORMANCE" performance={equities} />}
-          {tab === "crypto" && (
-            <div className="crypto-evidence-stack">
-              <MarketLane title="Crypto" eyebrow="LIVE CRYPTO PERFORMANCE" performance={crypto} />
-              <CrrValidationStudy study={crrStudy} />
-            </div>
-          )}
+          {tab === "crypto" && <MarketLane title="Crypto" eyebrow="LIVE CRYPTO PERFORMANCE" performance={crypto} />}
+          {tab === "validation" && <CrrValidationStudy study={crrStudy} />}
 
           {tab === "methodology" && (
             <div className="performance-methodology">
