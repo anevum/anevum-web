@@ -69,8 +69,17 @@ export default function ProductDetail() {
     module.owner.includes(product.name) ||
     (product.slug === "iren" && module.owner.includes("IREN"))
   );
-  const runtimeState = error ? "UNAVAILABLE" : loading ? "CONNECTING" : data?.state || "UNAVAILABLE";
-  const researchState = String(data?.research?.current_status || "UNAVAILABLE").replaceAll("_", " ").toUpperCase();
+  const systemKey = product.name as "IREN" | "RHEN" | "NOSTRA" | "GRAEN" | "VELUM";
+  const publicSystem = data?.systems?.[systemKey];
+  const runtimeState = error
+    ? "UNAVAILABLE"
+    : loading
+      ? "CONNECTING"
+      : publicSystem?.runtime_state || (product.slug === "rhen" ? data?.state : "UNAVAILABLE");
+  const trackingState = publicSystem?.tracking_state || (loading ? "CONNECTING" : "UNAVAILABLE");
+  const observedAt = publicSystem?.observed_at
+    ? new Date(publicSystem.observed_at).toLocaleString([], { month:"short", day:"numeric", hour:"numeric", minute:"2-digit" })
+    : "NO PUBLIC OBSERVATION";
 
   return (
     <div className={"company-page product-detail product-detail-" + product.slug}>
@@ -102,9 +111,9 @@ export default function ProductDetail() {
 
       <section className="product-public-state" aria-label={product.name + " public-safe state"}>
         <article><span>PRODUCT STATUS</span><strong>{product.status}</strong><small>{product.category}</small></article>
-        <article><span>PUBLIC RUNTIME</span><strong>{product.slug === "rhen" || product.slug === "iren" ? runtimeState : "BOUNDED"}</strong><small>{product.slug === "rhen" ? (data?.active_strategy?.version_id || "No active strategy recorded") : "Public-safe state only"}</small></article>
-        <article><span>RESEARCH STATE</span><strong>{product.slug === "velum" ? "REPLAY / RESEARCH" : researchState}</strong><small>Sanitized canonical research state</small></article>
-        <article><span>TELEMETRY</span><strong>{data?.telemetry?.events_60m ?? "—"}</strong><small>Public aggregate events / 60m</small></article>
+        <article><span>RUNTIME</span><strong>{runtimeState.replaceAll("_", " ")}</strong><small>{publicSystem?.health_state?.replaceAll("_", " ") || "Public-safe runtime state"}</small></article>
+        <article><span>TRACKING</span><strong>{trackingState.replaceAll("_", " ")}</strong><small>{publicSystem?.activity || (product.slug === "rhen" ? ((data?.telemetry?.events_60m ?? 0) + " public events / 60m") : "Canonical public activity")}</small></article>
+        <article><span>LAST OBSERVATION</span><strong>{observedAt}</strong><small>{publicSystem?.independent_runtime ? "Independent runtime" : "Embedded / logical subsystem"}</small></article>
       </section>
 
       <section className="company-section">
