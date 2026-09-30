@@ -1523,3 +1523,71 @@
     line-height:1.68;
   }
 }
+
+
+/* ==========================================================================
+   Global icon centering + navigation visual cleanup — 2026-09-30
+   Keep locked mark geometry unchanged; normalize only presentation/alignment.
+   ========================================================================== */
+
+.system-icon {
+  place-items: center;
+  vertical-align: middle;
+}
+
+.system-icon .system-mark-svg {
+  display: block;
+  place-self: center;
+  margin: 0;
+  transform-box: view-box;
+  transform-origin: 50% 50%;
+}
+
+/* The evidence-chain guide runs through the card center, so its system mark
+   should share that same visual axis instead of being pinned to the left. */
+.home-evidence-chain-icons > div {
+  align-items: center;
+  text-align: center;
+}
+
+.home-evidence-chain-icons .system-icon {
+  position: relative;
+  left: auto;
+  top: auto;
+  margin: 0 auto;
+  z-index: 2;
+}
+
+.home-evidence-chain-icons span {
+  margin-top: auto;
+  text-align: center;
+}
+
+.home-evidence-chain-icons strong {
+  text-align: center;
+}
+
+/* Product hero marks should be optically centered in the panel. The previous
+   perspective tilt could make symmetric marks, especially RHEN, read left-heavy. */
+.product-detail .product-hero-code {
+  place-items: center;
+  text-align: center;
+  transform: none;
+}
+
+.product-detail .product-hero-code > .system-mark-svg {
+  display: block;
+  place-self: center;
+  margin: 20px auto 8px;
+  transform: none;
+}
+
+.product-detail-rhen .product-hero-code > .system-mark-rhen {
+  margin-inline: auto;
+}
+
+@media (max-width: 680px) {
+  .home-evidence-chain-icons > div {
+    min-height: 160px;
+  }
+}
