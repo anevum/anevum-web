@@ -1,15 +1,49 @@
-import { AnimatePresence, motion } from "motion/react";
 import { useMemo, useState } from "react";
-import { RhenSectionLabel } from "../components/RhenMark";
-import { useLiveTrading } from "../hooks/useLiveTrading";
+import type { LiveTradingFeed, PublicPerformancePoint } from "../lib/data";
 
-type PerformanceTab = "record" | "method" | "path" | "boundary";
+type PerformanceTab = "overview" | "equities" | "crypto" | "methodology" | "boundaries";
+
+type LanePerformance = {
+  market_lane?: string;
+  methodology_version?: string;
+  basis?: string;
+  status?: string;
+  sample_state?: string;
+  tracking_started_at?: string | null;
+  tracking_ended_at?: string | null;
+  first_trade_at?: string | null;
+  last_trade_at?: string | null;
+  active_periods?: number;
+  closed_trades?: number;
+  wins?: number;
+  losses?: number;
+  win_rate_pct?: number | null;
+  realized_return_pct?: number | null;
+  max_drawdown_pct?: number | null;
+  strategy_version_id?: string | null;
+  strategy_name?: string | null;
+  strategy_environment?: string | null;
+  strategy_status?: string | null;
+  denominator?: string;
+  curve?: PublicPerformancePoint[];
+  limitations?: string[];
+};
+
+type ExtendedFeed = LiveTradingFeed & {
+  market_performance?: {
+    methodology_version?: string;
+    equities?: LanePerformance;
+    crypto?: LanePerformance;
+    limitations?: string[];
+  };
+};
 
 const tabs: [PerformanceTab, string, string][] = [
-  ["record", "Record", "Live normalized results"],
-  ["method", "Method", "How the numbers are built"],
-  ["path", "Path", "What has to happen next"],
-  ["boundary", "Boundary", "Public versus private data"]
+  ["overview", "Overview", "Separate live market lanes"],
+  ["equities", "Equities", "Closed live equity trades"],
+  ["crypto", "Crypto", "Closed live crypto trades"],
+  ["methodology", "Methodology", "How normalized records are built"],
+  ["boundaries", "Boundaries", "What remains private or excluded"]
 ];
 
 function pct(value?: number | null, digits = 2, signed = true) {
@@ -18,13 +52,15 @@ function pct(value?: number | null, digits = 2, signed = true) {
   return sign + value.toFixed(digits) + "%";
 }
 
-function dateLabel(value?: string | null, includeTime = false) {
+function dateLabel(value?: string | null) {
   if (!value) return "—";
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "—";
-  return date.toLocaleString("en-US", includeTime
-    ? { month: "short", day: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" }
-    : { month: "short", day: "2-digit", year: "numeric" });
+  return date.toLocaleString("en-US", { month: "short", day: "2-digit", year: "numeric" });
+}
+
+function human(value?: string | null) {
+  return String(value || "UNAVAILABLE").replaceAll("_", " ");
 }
 
 function stateClass(value?: number | null) {
@@ -32,7 +68,15 @@ function stateClass(value?: number | null) {
   return value > 0 ? "is-positive" : value < 0 ? "is-negative" : "is-flat";
 }
 
-function PerformanceCurve({ rows }: { rows: { at?: string | null; return_pct?: number | null }[] }) {
+function PerformanceCurve({
+  rows,
+  label,
+  empty
+}: {
+  rows: PublicPerformancePoint[];
+  label: string;
+  empty: string;
+}) {
   const chart = useMemo(() => {
     const clean = rows
       .map((row) => ({ at: row.at || null, value: Number(row.return_pct) }))
@@ -43,18 +87,16 @@ function PerformanceCurve({ rows }: { rows: { at?: string | null; return_pct?: n
     const values = clean.map((row) => row.value);
     const minValue = Math.min(...values, 0);
     const maxValue = Math.max(...values, 0);
-    const rawRange = Math.max(0.2, maxValue - minValue);
-    const pad = Math.max(0.08, rawRange * 0.18);
+    const rawRange = Math.max(0.05, maxValue - minValue);
+    const pad = Math.max(0.03, rawRange * 0.18);
     const low = minValue - pad;
     const high = maxValue + pad;
     const span = Math.max(0.001, high - low);
-
     const points = clean.map((row, index) => {
-      const x = clean.length === 1 ? 0 : (index / (clean.length - 1)) * 1000;
+      const x = (index / Math.max(clean.length - 1, 1)) * 1000;
       const y = 290 - ((row.value - low) / span) * 270;
       return x.toFixed(2) + "," + y.toFixed(2);
     }).join(" ");
-
     const zeroY = 290 - ((0 - low) / span) * 270;
 
     return {
@@ -68,179 +110,163 @@ function PerformanceCurve({ rows }: { rows: { at?: string | null; return_pct?: n
   }, [rows]);
 
   if (!chart) {
-    return <div className="performance-chart-empty">A normalized curve will appear once enough live snapshots exist.</div>;
+    return (
+      <div className="market-performance-empty">
+        <span>{label}</span>
+        <strong>{empty}</strong>
+        <p>No measured curve is shown until closed live trades create a real sample.</p>
+      </div>
+    );
   }
 
   return (
-    <div className="performance-chart-wrap">
-      <div className="performance-chart-head">
-        <div>
-          <span>NORMALIZED TRACKED-ACCOUNT RETURN</span>
-          <strong className={stateClass(chart.latest)}>{pct(chart.latest)}</strong>
-        </div>
-        <div>
-          <small>{dateLabel(chart.clean[0]?.at)}</small>
-          <i>→</i>
-          <small>{dateLabel(chart.clean[chart.clean.length - 1]?.at)}</small>
-        </div>
-      </div>
-      <svg className="performance-chart" viewBox="0 0 1000 310" preserveAspectRatio="none" role="img" aria-label="Normalized live account return curve">
-        <line className="performance-zero" x1="0" x2="1000" y1={chart.zeroY} y2={chart.zeroY} />
-        <polyline className="performance-line" points={chart.points} />
+    <div className="market-performance-chart-wrap">
+      <header>
+        <div><span>{label}</span><strong className={stateClass(chart.latest)}>{pct(chart.latest)}</strong></div>
+        <div><small>{dateLabel(chart.clean[0]?.at)}</small><i>→</i><small>{dateLabel(chart.clean[chart.clean.length - 1]?.at)}</small></div>
+      </header>
+      <svg viewBox="0 0 1000 310" preserveAspectRatio="none" role="img" aria-label={label + " normalized live-trade performance curve"}>
+        <line className="market-performance-zero" x1="0" x2="1000" y1={chart.zeroY} y2={chart.zeroY} />
+        <polyline className="market-performance-line" points={chart.points} />
       </svg>
-      <div className="performance-chart-foot">
-        <span>LOW {pct(chart.minValue)}</span>
-        <span>0% BASELINE</span>
-        <span>HIGH {pct(chart.maxValue)}</span>
+      <footer><span>LOW {pct(chart.minValue)}</span><span>0% EPOCH BASELINE</span><span>HIGH {pct(chart.maxValue)}</span></footer>
+    </div>
+  );
+}
+
+function MarketLane({
+  title,
+  eyebrow,
+  performance
+}: {
+  title: string;
+  eyebrow: string;
+  performance?: LanePerformance;
+}) {
+  const closed = Number(performance?.closed_trades || 0);
+  const hasSample = closed > 0;
+
+  return (
+    <div className="market-lane-view">
+      <header className="market-lane-heading">
+        <div><span>{eyebrow}</span><h2>{title}</h2><p>Realized live-trade evidence for this market lane only. Replay, shadow, paper, and development results are excluded.</p></div>
+        <div className={"market-lane-status " + (hasSample ? "has-sample" : "awaiting")}>
+          <span>LIVE SAMPLE</span>
+          <strong>{hasSample ? human(performance?.sample_state) : "AWAITING LIVE SAMPLE"}</strong>
+          <small>{closed} closed live trade{closed === 1 ? "" : "s"}</small>
+        </div>
+      </header>
+
+      <PerformanceCurve
+        rows={performance?.curve || []}
+        label={title.toUpperCase() + " REALIZED LIVE-TRADE PERFORMANCE"}
+        empty="AWAITING LIVE SAMPLE"
+      />
+
+      <div className="market-lane-metrics">
+        <article><span>REALIZED RETURN</span><strong className={hasSample ? stateClass(performance?.realized_return_pct) : ""}>{hasSample ? pct(performance?.realized_return_pct) : "—"}</strong><small>{hasSample ? "Lane P&L / shared performance-epoch baseline" : "No measured live return yet"}</small></article>
+        <article><span>MAX DRAWDOWN</span><strong>{hasSample ? pct(performance?.max_drawdown_pct, 2, false) : "—"}</strong><small>{hasSample ? "Realized lane drawdown / epoch baseline" : "No measured live drawdown yet"}</small></article>
+        <article><span>CLOSED TRADES</span><strong>{closed}</strong><small>{performance?.wins ?? 0} wins · {performance?.losses ?? 0} losses</small></article>
+        <article><span>WIN RATE</span><strong>{hasSample ? pct(performance?.win_rate_pct, 1, false) : "—"}</strong><small>{hasSample ? "Descriptive sample statistic" : "Requires closed live trades"}</small></article>
+        <article><span>ACTIVE PERIODS</span><strong>{performance?.active_periods ?? 0}</strong><small>{hasSample ? "Distinct ET dates containing a close" : "No live close periods yet"}</small></article>
+        <article><span>STRATEGY</span><strong>{performance?.strategy_version_id || "UNRECORDED"}</strong><small>{human(performance?.strategy_environment)} · {human(performance?.strategy_status)}</small></article>
+      </div>
+
+      <div className="market-lane-evidence">
+        <div><span>FIRST LIVE TRADE</span><strong>{dateLabel(performance?.first_trade_at)}</strong></div>
+        <div><span>LATEST LIVE TRADE</span><strong>{dateLabel(performance?.last_trade_at)}</strong></div>
+        <div><span>METHODOLOGY</span><strong>{performance?.methodology_version || "PUBLIC-MARKET-PERFORMANCE-v1"}</strong></div>
+        <div><span>EVIDENCE STATUS</span><strong>{hasSample ? "MEASURED LIVE SAMPLE" : "NO LIVE CLOSED-TRADE SAMPLE"}</strong></div>
       </div>
     </div>
   );
 }
 
 export default function Performance() {
-  const [tab, setTab] = useState<PerformanceTab>("record");
-  const { data, loading, error } = useLiveTrading(3000);
-  const performance = data?.performance;
-  const activeVersion = data?.active_strategy?.version_id || "UNRECORDED";
-  const sample = String(performance?.sample_state || "UNAVAILABLE").replaceAll("_", " ");
+  const [tab, setTab] = useState<PerformanceTab>("overview");
+  const { data, loading, error } = useLiveTrading(5000);
+  const feed = data as ExtendedFeed | null;
+  const markets = feed?.market_performance;
+  const equities = markets?.equities;
+  const crypto = markets?.crypto;
+  const equityClosed = equities?.closed_trades ?? 0;
+  const cryptoClosed = crypto?.closed_trades ?? 0;
 
   return (
-    <section className="compact-page workspace-screen story-workspace performance-workspace">
-      <header className="workspace-heading story-heading">
-        <div>
-          <RhenSectionLabel context="LIVE PERFORMANCE EVIDENCE" />
-          <h1>Performance</h1>
-          <p className="story-heading-copy">
-            A sanitized record derived from the live broker ledger. Losses remain in the record.
-            Simulated research is never mixed into live results.
-          </p>
+    <div className="company-page market-performance-page">
+      <section className="company-page-hero performance-company-hero">
+        <span>LIVE PERFORMANCE EVIDENCE</span>
+        <h1>Separate markets. Separate records.</h1>
+        <p>Equities and crypto are presented as distinct live market lanes. Their realized curves are not combined, and simulated or replay results never enter the live record.</p>
+        <div className="performance-company-status">
+          <div><small>PUBLIC FEED</small><strong>{error ? "UNAVAILABLE" : loading ? "CONNECTING" : feed?.state || "UNAVAILABLE"}</strong></div>
+          <div><small>EQUITIES</small><strong>{equityClosed} CLOSED</strong></div>
+          <div><small>CRYPTO</small><strong>{cryptoClosed ? cryptoClosed + " CLOSED" : "AWAITING SAMPLE"}</strong></div>
+          <div><small>METHOD</small><strong>{markets?.methodology_version || "PUBLIC-MARKET-PERFORMANCE-v1"}</strong></div>
         </div>
-        <div className="workspace-heading-status story-status">
-          <div><small>SAMPLE</small><strong>{sample}</strong></div>
-          <div><small>VERSION</small><strong>{activeVersion}</strong></div>
-          <div><small>METHOD</small><strong>{performance?.methodology_version || "UNAVAILABLE"}</strong></div>
-        </div>
-      </header>
+      </section>
 
-      <div className="workspace-layout story-layout">
-        <aside className="workspace-tabs story-tabs" aria-label="Performance sections">
-          {tabs.map(([id, label, hint], index) => (
-            <button key={id} className={tab === id ? "active" : ""} onClick={() => setTab(id)}>
-              <span>{String(index + 1).padStart(2, "0")}</span>
-              <div><strong>{label}</strong><small>{hint}</small></div>
+      <section className="performance-market-shell">
+        <nav className="performance-market-tabs" aria-label="Performance sections">
+          {tabs.map(([id, label, hint]) => (
+            <button key={id} type="button" className={tab === id ? "active" : ""} onClick={() => setTab(id)} aria-pressed={tab === id}>
+              <strong>{label}</strong><small>{hint}</small>
             </button>
           ))}
-        </aside>
+        </nav>
 
-        <div className="workspace-content story-content">
-          <AnimatePresence mode="wait" initial={false}>
-            {tab === "record" && (
-              <motion.div className="workspace-view story-view performance-view" key="record" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}>
-                <div className="story-title-row performance-title-row">
-                  <div>
-                    <span className="story-kicker">LIVE / PERSONAL CAPITAL / BROKER-DERIVED</span>
-                    <h2>The public record starts with what actually happened.</h2>
-                  </div>
-                  <p>{error || (loading ? "Loading durable performance evidence…" : (performance?.baseline_reset ? "Current post-cash-flow baseline set " : "Tracking began ") + dateLabel(performance?.tracking_started_at, true) + ".")}</p>
-                </div>
+        <div className="performance-market-content">
+          {tab === "overview" && (
+            <div className="performance-overview">
+              <header><span>MARKET-LANE OVERVIEW</span><h2>The account may be shared. The evidence is not.</h2><p>Market-specific curves describe realized live-trade P&L for each lane normalized against the shared current performance-epoch denominator. They are not separate account-equity curves.</p></header>
+              <div className="market-overview-cards">
+                <button type="button" onClick={() => setTab("equities")}>
+                  <span>US EQUITIES</span><strong>{equityClosed ? human(equities?.sample_state) : "AWAITING LIVE SAMPLE"}</strong>
+                  <b>{equityClosed} closed live trades</b><p>{equityClosed ? "Measured broker-derived lane evidence is available." : "No measured live sample exists."}</p><i>OPEN EQUITIES →</i>
+                </button>
+                <button type="button" onClick={() => setTab("crypto")}>
+                  <span>CRYPTO</span><strong>{cryptoClosed ? human(crypto?.sample_state) : "AWAITING LIVE SAMPLE"}</strong>
+                  <b>{cryptoClosed} closed live trades</b><p>{cryptoClosed ? "Measured broker-derived lane evidence is available." : "The UI is live-data ready, but no closed live crypto sample exists yet."}</p><i>OPEN CRYPTO →</i>
+                </button>
+              </div>
+              <div className="performance-overview-boundary">
+                <strong>LIVE ONLY.</strong>
+                <p>Strategy research, paper trading, shadow evaluation, VELUM replay, historical simulation, and counterfactual results stay outside these curves.</p>
+              </div>
+            </div>
+          )}
 
-                <div className="performance-record-grid">
-                  <div className="performance-primary">
-                    <PerformanceCurve rows={performance?.curve || []} />
-                    <div className="performance-metric-strip">
-                      <article>
-                        <span>TRACKED ACCOUNT</span>
-                        <strong className={stateClass(performance?.account_return_pct)}>{pct(performance?.account_return_pct)}</strong>
-                        <small>From current performance baseline</small>
-                      </article>
-                      <article>
-                        <span>RHEN REALIZED</span>
-                        <strong className={stateClass(performance?.realized_return_pct)}>{pct(performance?.realized_return_pct)}</strong>
-                        <small>Current-epoch realized P&amp;L / baseline equity</small>
-                      </article>
-                      <article>
-                        <span>MAX DRAWDOWN</span>
-                        <strong>{pct(performance?.max_drawdown_pct, 2, false)}</strong>
-                        <small>Tracked account peak-to-trough measure</small>
-                      </article>
-                    </div>
-                  </div>
+          {tab === "equities" && <MarketLane title="Equities" eyebrow="LIVE EQUITIES PERFORMANCE" performance={equities} />}
+          {tab === "crypto" && <MarketLane title="Crypto" eyebrow="LIVE CRYPTO PERFORMANCE" performance={crypto} />}
 
-                  <aside className="performance-side-stack">
-                    <article><span>CLOSED LIVE TRADES</span><strong>{performance?.closed_trades ?? "—"}</strong><p>{performance?.wins ?? "—"} wins · {performance?.losses ?? "—"} losses</p></article>
-                    <article><span>WIN RATE</span><strong>{pct(performance?.win_rate_pct, 1, false)}</strong><p>Descriptive only. Current sample is intentionally labeled {sample.toLowerCase()}.</p></article>
-                    <article><span>TRADING SESSIONS</span><strong>{performance?.trading_sessions ?? "—"}</strong><p>Duration matters more than a single strong or weak session.</p></article>
-                    <article><span>STATUS</span><strong>{String(performance?.status || "UNAVAILABLE").replaceAll("_", " ")}</strong><p>No outside capital is accepted or managed through this public site.</p></article>
-                  </aside>
-                </div>
+          {tab === "methodology" && (
+            <div className="performance-methodology">
+              <header><span>METHODOLOGY</span><h2>What the percentages mean.</h2></header>
+              <div className="performance-method-grid-v3">
+                <article><span>01 / SOURCE</span><strong>Canonical closed live positions</strong><p>Lane attribution is resolved from the canonical decision and order chain, not guessed in the browser.</p></article>
+                <article><span>02 / DENOMINATOR</span><strong>Shared performance-epoch baseline</strong><p>Lane realized return is cumulative lane realized P&L inside the current performance epoch divided by the shared account epoch baseline.</p></article>
+                <article><span>03 / NOT ACCOUNT EQUITY</span><strong>Market-lane performance curve</strong><p>Because equities and crypto can share one brokerage account, neither lane curve is presented as a separately funded account-equity curve.</p></article>
+                <article><span>04 / CASH FLOWS</span><strong>Owner cash movement is not performance</strong><p>External deposits or withdrawals define explicit epoch boundaries so they are not represented as trading profit or loss.</p></article>
+                <article><span>05 / SAMPLE STATE</span><strong>No sample means no return</strong><p>A lane with zero closed live trades reports AWAITING LIVE SAMPLE. It does not display 0.00% as though zero return had been measured.</p></article>
+                <article><span>06 / EXCLUSIONS</span><strong>Research stays research</strong><p>Replay, simulation, paper, shadow, development, and counterfactual results are excluded from live performance.</p></article>
+              </div>
+              <div className="performance-formula"><span>LANE REALIZED RETURN</span><code>Σ realized P&amp;L for lane during epoch / shared epoch baseline equity × 100</code></div>
+            </div>
+          )}
 
-                <div className="performance-disclosure-line">
-                  <strong>EARLY SAMPLE.</strong>
-                  <span>This record is evidence of current live operation, not a claim of profitability or a forecast of future returns.</span>
-                </div>
-              </motion.div>
-            )}
-
-            {tab === "method" && (
-              <motion.div className="workspace-view story-view performance-view" key="method" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}>
-                <div className="story-title-row">
-                  <div><span className="story-kicker">PUBLIC-PERFORMANCE-v2</span><h2>Performance is generated from the durable live ledger.</h2></div>
-                  <p>Public percentages are computed server-side from locked telemetry; the browser never receives the underlying account values.</p>
-                </div>
-                <div className="performance-method-grid">
-                  <article><span>01 / SOURCE</span><strong>Broker-derived live telemetry</strong><p>RHEN reconciles execution and account state into durable records. The public feed reads those records rather than screenshots or manually entered results.</p></article>
-                  <article><span>02 / SCOPE</span><strong>Live is separate from research</strong><p>Only live strategy versions contribute to the RHEN realized metric. Shadow runs, backtests, replay laboratories, and development experiments remain research evidence.</p></article>
-                  <article><span>03 / BASELINE</span><strong>Normalized, not dollar-denominated</strong><p>The tracked-account curve indexes the active performance epoch to 0%. Raw equity, cash, buying power, trade prices, quantities, and symbols remain private.</p></article>
-                  <article><span>04 / CASH FLOWS</span><strong>Cash flows create explicit boundaries</strong><p>Deposits and withdrawals create a new performance epoch at the first post-flow broker snapshot. The new balance becomes 0% without deleting prior history or treating owner cash movement as trading profit or loss.</p></article>
-                  <article><span>05 / LOSSES</span><strong>No selective deletion</strong><p>Losing live trades remain in aggregate results. Strategy retirement creates a version boundary; it does not erase the prior live record.</p></article>
-                  <article><span>06 / FUTURE COMPLIANCE</span><strong>Performance marketing is a later legal gate</strong><p>If ANEVUM ever offers regulated advisory services, the public presentation will require a compliance review, fee-aware net performance treatment, recordkeeping, and any other then-applicable requirements.</p></article>
-                </div>
-              </motion.div>
-            )}
-
-            {tab === "path" && (
-              <motion.div className="workspace-view story-view performance-view" key="path" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}>
-                <div className="story-title-row">
-                  <div><span className="story-kicker">EVIDENCE-FIRST EXPANSION</span><h2>Scale comes after proof, not before it.</h2></div>
-                  <p>The company can broaden only when each preceding stage has enough evidence, operating maturity, and legal structure to support the next one.</p>
-                </div>
-                <div className="performance-path">
-                  <article className="is-active"><span>01</span><div><small>ACTIVE</small><strong>Personal live record</strong><p>Run RHEN with owned capital. Preserve broker-derived telemetry, failures, version changes, drawdowns, and research decisions.</p></div></article>
-                  <article className="is-active"><span>02</span><div><small>ACTIVE / BUILDING</small><strong>Public evidence + distribution</strong><p>Publish the canonical record on ANEVUM. Share the record through professional and social channels only as the underlying evidence becomes worth sharing.</p></div></article>
-                  <article><span>03</span><div><small>GATED</small><strong>Private technology demonstration</strong><p>A first business pilot should begin as a bounded shadow or decision-support deployment. No custody, no discretionary trading authority, and no promise of returns.</p></div></article>
-                  <article><span>04</span><div><small>FUTURE / LEGAL GATE</small><strong>Regulated outside-capital structure</strong><p>Only after counsel, compliance, operating controls, insurance, reporting, and the appropriate adviser/fund/account structure are in place should outside capital be considered.</p></div></article>
-                  <article><span>05</span><div><small>FUTURE / CAPACITY GATE</small><strong>Institutional or limited managed capacity</strong><p>Choose the client model only after RHEN demonstrates that its edge, liquidity, infrastructure, and economics survive larger scale. Retail access is not assumed.</p></div></article>
-                </div>
-              </motion.div>
-            )}
-
-            {tab === "boundary" && (
-              <motion.div className="workspace-view story-view performance-view" key="boundary" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}>
-                <div className="story-title-row">
-                  <div><span className="story-kicker">PUBLIC DATA CONTRACT</span><h2>Enough evidence to verify direction. Not enough data to reconstruct the account or strategy.</h2></div>
-                  <p>The public feed is intentionally narrower than Command and the private telemetry ledger.</p>
-                </div>
-                <div className="performance-boundary-grid">
-                  <article>
-                    <span>PUBLISHED</span>
-                    <strong>Normalized evidence</strong>
-                    <div>{(data?.disclosure?.public_fields || []).map((item) => <p key={item}>+ {item}</p>)}</div>
-                  </article>
-                  <article>
-                    <span>PRIVATE</span>
-                    <strong>Capital + execution detail</strong>
-                    <div>{(data?.disclosure?.excluded_fields || []).map((item) => <p key={item}>− {item}</p>)}</div>
-                  </article>
-                </div>
-                <div className="performance-boundary-note">
-                  <strong>NOT AN OFFER.</strong>
-                  <p>ANEVUM is not using this page to accept outside capital, open managed accounts, or offer investment-advisory services. It documents RHEN's own live system and development record.</p>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+          {tab === "boundaries" && (
+            <div className="performance-boundaries-v3">
+              <header><span>PUBLIC / PRIVATE CONTRACT</span><h2>Enough evidence to inspect. Not enough data to reconstruct private execution.</h2></header>
+              <div className="performance-boundary-columns">
+                <article><span>PUBLIC</span><ul><li>Normalized realized percentages</li><li>Aggregate counts</li><li>Sample classification</li><li>Strategy identities</li><li>First/latest live trade dates</li><li>Sanitized methodology</li><li>System status</li></ul></article>
+                <article><span>PRIVATE</span><ul><li>Account equity dollars</li><li>Cash and buying power</li><li>Deposit/withdrawal amounts</li><li>Symbols in private execution history</li><li>Order prices, fills, and quantities</li><li>Sensitive strategy thresholds</li><li>Private infrastructure URLs and credentials</li></ul></article>
+                <article><span>NEVER MIXED INTO LIVE</span><ul><li>VELUM replay</li><li>Historical simulations</li><li>Paper trades</li><li>Shadow scoring</li><li>Development experiments</li><li>Counterfactual alternatives</li></ul></article>
+              </div>
+              {(markets?.limitations || []).length ? <div className="performance-limitations">{markets?.limitations?.map((item) => <p key={item}>{item}</p>)}</div> : null}
+            </div>
+          )}
         </div>
-      </div>
-    </section>
+      </section>
+    </div>
   );
 }
