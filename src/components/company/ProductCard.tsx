@@ -4,7 +4,7 @@ import SystemMark from "./SystemMark";
 
 export default function ProductCard({ product }: { product: Product }) {
   return (
-    <Link className={"company-product-card product-" + product.slug + " status-" + product.status.toLowerCase().replaceAll(" ", "-").replaceAll("/", "")} to={"/products/" + product.slug}>
+    <Link className={"company-product-card product-" + product.slug + " status-" + product.status.toLowerCase().replaceAll(" / ", "-").replaceAll(" ", "-")} to={"/products/" + product.slug}>
       <header>
         <span>{product.category}</span>
         <b><i aria-hidden="true" />{product.status}</b>
