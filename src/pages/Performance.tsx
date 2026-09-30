@@ -1,5 +1,12 @@
 import { useMemo, useState } from "react";
-import type { LiveTradingFeed, PublicPerformancePoint } from "../lib/data";
+import type {
+  LiveTradingFeed,
+  PublicPerformancePoint,
+  PublicCryptoShadowValidation,
+  PublicCrrActivityPoint,
+  PublicCrrOutcomePoint,
+  PublicCrrGate
+} from "../lib/data";
 import { useLiveTrading } from "../hooks/useLiveTrading";
 
 type PerformanceTab = "overview" | "equities" | "crypto" | "methodology" | "boundaries";
@@ -37,12 +44,13 @@ type ExtendedFeed = LiveTradingFeed & {
     crypto?: LanePerformance;
     limitations?: string[];
   };
+  crypto_shadow_validation?: PublicCryptoShadowValidation;
 };
 
 const tabs: [PerformanceTab, string, string][] = [
   ["overview", "Overview", "Separate live market lanes"],
   ["equities", "Equities", "Closed live equity trades"],
-  ["crypto", "Crypto", "Closed live crypto trades"],
+  ["crypto", "Crypto", "Live lane + CRR shadow study"],
   ["methodology", "Methodology", "How normalized records are built"],
   ["boundaries", "Boundaries", "What remains private or excluded"]
 ];
@@ -157,6 +165,322 @@ function PerformanceCurve({
   );
 }
 
+
+function compactNumber(value?: number | null, digits = 2) {
+  if (value == null || !Number.isFinite(value)) return "—";
+  return value.toLocaleString("en-US", { maximumFractionDigits: digits });
+}
+
+function dateTimeLabel(value?: string | null) {
+  if (!value) return "—";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "—";
+  return date.toLocaleString("en-US", {
+    month: "short",
+    day: "2-digit",
+    hour: "numeric",
+    minute: "2-digit",
+    timeZoneName: "short"
+  });
+}
+
+function gateStateClass(status?: string | null) {
+  const value = String(status || "").toUpperCase();
+  if (value.includes("PASS")) return "is-pass";
+  if (value.includes("FAIL")) return "is-fail";
+  if (value.includes("PENDING") || value.includes("UNMEASURED")) return "is-pending";
+  return "is-collecting";
+}
+
+function ProgressMeter({
+  label,
+  value,
+  observed,
+  target
+}: {
+  label: string;
+  value?: number | null;
+  observed?: number | null;
+  target?: number | null;
+}) {
+  const width = Math.max(0, Math.min(100, Number(value || 0)));
+  return (
+    <div className="crr-meter">
+      <div><span>{label}</span><strong>{observed ?? 0} / {target ?? "—"}</strong></div>
+      <div className="crr-meter-track"><i style={{ width: width + "%" }} /></div>
+      <small>{width.toFixed(1)}% of frozen minimum sample gate</small>
+    </div>
+  );
+}
+
+function CrrSampleProgressChart({ rows = [] }: { rows?: PublicCrrActivityPoint[] }) {
+  const clean = rows
+    .map((row) => ({
+      at: row.at || null,
+      trades: Number(row.trade_progress_pct),
+      days: Number(row.day_progress_pct)
+    }))
+    .filter((row) => Number.isFinite(row.trades) && Number.isFinite(row.days));
+
+  if (!clean.length) {
+    return (
+      <div className="crr-chart-empty">
+        <span>SAMPLE ACCUMULATION</span>
+        <strong>AWAITING DURABLE SHADOW EVENTS</strong>
+        <p>The chart begins only after CRR-001 evidence is written durably.</p>
+      </div>
+    );
+  }
+
+  const x = (index: number) => clean.length === 1 ? 500 : (index / (clean.length - 1)) * 1000;
+  const y = (value: number) => 280 - Math.max(0, Math.min(100, value)) * 2.5;
+  const tradePoints = clean.map((row, index) => x(index).toFixed(1) + "," + y(row.trades).toFixed(1)).join(" ");
+  const dayPoints = clean.map((row, index) => x(index).toFixed(1) + "," + y(row.days).toFixed(1)).join(" ");
+
+  return (
+    <div className="crr-chart-card">
+      <header>
+        <div><span>SAMPLE ACCUMULATION</span><strong>Validation minimums</strong></div>
+        <div className="crr-chart-legend"><i className="trades" /> completed trades <i className="days" /> independent days</div>
+      </header>
+      <svg className="crr-progress-chart" viewBox="0 0 1000 310" preserveAspectRatio="none" role="img" aria-label="CRR-001 sample accumulation against validation minimums">
+        {[25, 50, 75, 100].map((level) => (
+          <g key={level}>
+            <line className={level === 100 ? "crr-threshold-line" : "crr-grid-line"} x1="0" x2="1000" y1={y(level)} y2={y(level)} />
+            <text className="crr-axis-text" x="8" y={y(level) - 5}>{level}%</text>
+          </g>
+        ))}
+        <polyline className="crr-progress-trades" points={tradePoints} />
+        <polyline className="crr-progress-days" points={dayPoints} />
+        {clean.map((row, index) => (
+          <g key={(row.at || "point") + index}>
+            <circle className="crr-dot-trades" cx={x(index)} cy={y(row.trades)} r="5"><title>{dateLabel(row.at)} · trades {row.trades.toFixed(1)}%</title></circle>
+            <circle className="crr-dot-days" cx={x(index)} cy={y(row.days)} r="5"><title>{dateLabel(row.at)} · days {row.days.toFixed(1)}%</title></circle>
+          </g>
+        ))}
+      </svg>
+      <footer><span>{dateLabel(clean[0]?.at)}</span><span>100% = frozen minimum sample gate</span><span>{dateLabel(clean[clean.length - 1]?.at)}</span></footer>
+    </div>
+  );
+}
+
+function CrrOutcomeChart({ rows = [] }: { rows?: PublicCrrOutcomePoint[] }) {
+  const clean = rows
+    .map((row) => ({
+      at: row.at || null,
+      outcome: Number(row.return_pct),
+      mean: Number(row.running_expectancy_pct),
+      compounded: Number(row.compounded_return_pct)
+    }))
+    .filter((row) => Number.isFinite(row.outcome) && Number.isFinite(row.mean) && Number.isFinite(row.compounded));
+
+  if (!clean.length) {
+    return (
+      <div className="crr-chart-empty">
+        <span>STRESSED-COST OUTCOMES</span>
+        <strong>NO DURABLE COMPLETED OUTCOME YET</strong>
+        <p>Running expectancy and cumulative shadow return remain unplotted until an exit is durably recorded.</p>
+      </div>
+    );
+  }
+
+  const values = clean.flatMap((row) => [row.mean, row.compounded, row.outcome, 0]);
+  const rawLow = Math.min(...values);
+  const rawHigh = Math.max(...values);
+  const span = Math.max(0.05, rawHigh - rawLow);
+  const low = rawLow - span * 0.16;
+  const high = rawHigh + span * 0.16;
+  const range = Math.max(0.001, high - low);
+  const x = (index: number) => clean.length === 1 ? 500 : (index / (clean.length - 1)) * 1000;
+  const y = (value: number) => 285 - ((value - low) / range) * 255;
+  const meanPoints = clean.map((row, index) => x(index).toFixed(1) + "," + y(row.mean).toFixed(1)).join(" ");
+  const compoundedPoints = clean.map((row, index) => x(index).toFixed(1) + "," + y(row.compounded).toFixed(1)).join(" ");
+  const zeroY = y(0);
+
+  return (
+    <div className="crr-chart-card">
+      <header>
+        <div><span>STRESSED-COST OUTCOMES</span><strong>Running evidence</strong></div>
+        <div className="crr-chart-legend"><i className="expectancy" /> running expectancy <i className="compound" /> cumulative return</div>
+      </header>
+      <svg className="crr-outcome-chart" viewBox="0 0 1000 310" preserveAspectRatio="none" role="img" aria-label="CRR-001 stressed-cost running expectancy and cumulative shadow return">
+        <line className="crr-zero-line" x1="0" x2="1000" y1={zeroY} y2={zeroY} />
+        <polyline className="crr-expectancy-line" points={meanPoints} />
+        <polyline className="crr-compound-line" points={compoundedPoints} />
+        {clean.map((row, index) => (
+          <g key={(row.at || "outcome") + index}>
+            <line className={row.outcome >= 0 ? "crr-outcome-stem is-up" : "crr-outcome-stem is-down"} x1={x(index)} x2={x(index)} y1={zeroY} y2={y(row.outcome)} />
+            <circle className="crr-outcome-dot" cx={x(index)} cy={y(row.outcome)} r="4">
+              <title>{dateTimeLabel(row.at)} · outcome {pct(row.outcome)} · running mean {pct(row.mean)}</title>
+            </circle>
+          </g>
+        ))}
+      </svg>
+      <footer><span>LOW {pct(rawLow)}</span><span>0% = no stressed-cost edge</span><span>HIGH {pct(rawHigh)}</span></footer>
+    </div>
+  );
+}
+
+function formatGateObserved(gate: PublicCrrGate) {
+  const id = gate.id || "";
+  if (gate.observed == null || !Number.isFinite(Number(gate.observed))) return "—";
+  const value = Number(gate.observed);
+  if (id === "expectancy" || id === "symbol_concentration") return pct(value, 3, id === "expectancy");
+  if (id === "profit_factor" || id === "dependence_adjusted_null") return compactNumber(value, 3);
+  return compactNumber(value, 0);
+}
+
+function CrrGateMatrix({ gates = [] }: { gates?: PublicCrrGate[] }) {
+  return (
+    <div className="crr-gate-panel">
+      <header><span>FROZEN VALIDATION GATES</span><h3>No single metric can promote the strategy.</h3><p>Every required gate must survive the formal GRAEN evaluation. Live descriptive values are labeled provisional until the minimum sample is reached.</p></header>
+      <div className="crr-gate-grid">
+        {gates.map((gate) => (
+          <article key={gate.id || gate.label} className={gateStateClass(gate.status)}>
+            <div><span>{gate.label}</span><b>{human(gate.status)}</b></div>
+            <strong>{formatGateObserved(gate)}</strong>
+            <p>Rule: {gate.rule || "—"}</p>
+            {gate.target != null ? <small>Target count: {gate.target}</small> : null}
+          </article>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function CrrValidationStudy({ study }: { study?: PublicCryptoShadowValidation }) {
+  if (!study) {
+    return (
+      <section className="crr-study crr-study-empty">
+        <span>CRR-001 LIVE VALIDATION STUDY</span>
+        <h2>Public study feed unavailable.</h2>
+        <p>The live-money crypto lane remains separate. No shadow statistic is substituted when the research feed is unavailable.</p>
+      </section>
+    );
+  }
+
+  const metrics = study.descriptive_metrics || {};
+  const counts = study.counts || {};
+  const targets = study.targets || {};
+  const progress = study.progress || {};
+  const design = study.design || {};
+  const historical = study.historical_reference;
+  const provisional = (counts.exits || 0) < (targets.validation_min_completed_trades || 30)
+    || (counts.independent_day_blocks || 0) < (targets.validation_min_independent_day_blocks || 20);
+
+  return (
+    <section className="crr-study">
+      <header className="crr-study-hero">
+        <div>
+          <span>CRR-001 · LIVE VALIDATION STUDY</span>
+          <h2>Controlled Residual Reversal</h2>
+          <p>{study.hypothesis}</p>
+        </div>
+        <div className="crr-study-state">
+          <small>RESEARCH STATE</small>
+          <strong>{human(study.status)}</strong>
+          <b>SHADOW ONLY · BROKER ORDERS DISABLED</b>
+        </div>
+      </header>
+
+      <div className="crr-science-note">
+        <strong>INTERPRETATION BOUNDARY</strong>
+        <p>This panel tracks forward shadow evidence arriving from the live market. It is not live-money performance. Until the frozen sample gates and formal tests pass, all outcome statistics are descriptive, not confirmatory.</p>
+      </div>
+
+      <div className="crr-study-summary">
+        <article><span>TRACKING SINCE</span><strong>{dateTimeLabel(study.tracking_started_at)}</strong><small>Durable CRR evidence window</small></article>
+        <article><span>LATEST EVIDENCE</span><strong>{dateTimeLabel(study.latest_received_at || study.latest_event_at)}</strong><small>Public feed refreshes every 5 seconds</small></article>
+        <article><span>OPPORTUNITIES</span><strong>{counts.opportunities ?? 0}</strong><small>{counts.entries ?? 0} confirmed entries · {counts.expired ?? 0} expired</small></article>
+        <article><span>COMPLETED OUTCOMES</span><strong>{counts.exits ?? 0}</strong><small>120-minute stressed-cost shadow exits</small></article>
+        <article><span>INDEPENDENT DAYS</span><strong>{counts.independent_day_blocks ?? 0}</strong><small>Entry-day blocks retained for dependence control</small></article>
+        <article><span>EXECUTION AUTHORITY</span><strong>NONE</strong><small>Research process cannot place broker orders</small></article>
+      </div>
+
+      <div className="crr-protocol-strip">
+        <article><span>BAR</span><strong>{design.bar_minutes ?? 5} min</strong><small>Observation interval</small></article>
+        <article><span>SHOCK</span><strong>{design.shock_lookback_minutes ?? 15} min</strong><small>Residual lookback</small></article>
+        <article><span>BASELINE</span><strong>{design.residual_volatility_lookback_minutes ?? 360} min</strong><small>Residual-volatility window</small></article>
+        <article><span>RECLAIM</span><strong>{design.reclaim_window_minutes ?? 15} min</strong><small>Confirmation window</small></article>
+        <article><span>HOLD</span><strong>{design.hold_minutes ?? 120} min</strong><small>Fixed outcome horizon</small></article>
+        <article><span>UNIVERSE</span><strong>{design.execution_asset_count ?? 3} / {design.context_asset_count ?? 6}</strong><small>Execution / context assets</small></article>
+      </div>
+
+      <div className="crr-progress-section">
+        <div className="crr-progress-copy">
+          <span>SAMPLE SUFFICIENCY</span>
+          <h3>Two minimums must be satisfied before formal validation is meaningful.</h3>
+          <p>Completed trades control outcome sample size. Independent day blocks reduce the chance that many correlated trades from one market episode masquerade as broad evidence.</p>
+          <ProgressMeter
+            label="Completed shadow trades"
+            value={progress.completed_trades_pct}
+            observed={counts.exits}
+            target={targets.validation_min_completed_trades}
+          />
+          <ProgressMeter
+            label="Independent day blocks"
+            value={progress.independent_days_pct}
+            observed={counts.independent_day_blocks}
+            target={targets.validation_min_independent_day_blocks}
+          />
+        </div>
+        <CrrSampleProgressChart rows={study.activity} />
+      </div>
+
+      <div className="crr-chart-grid">
+        <CrrOutcomeChart rows={study.outcomes} />
+        <div className="crr-descriptive-panel">
+          <header><span>DESCRIPTIVE STATISTICS</span><strong>{provisional ? "PROVISIONAL" : "SAMPLE MINIMUM REACHED"}</strong></header>
+          <div>
+            <article><span>EXPECTANCY / TRADE</span><strong className={stateClass(metrics.expectancy_per_trade_pct)}>{pct(metrics.expectancy_per_trade_pct, 3)}</strong><small>Mean stressed-cost shadow return</small></article>
+            <article><span>MEDIAN OUTCOME</span><strong className={stateClass(metrics.median_trade_return_pct)}>{pct(metrics.median_trade_return_pct, 3)}</strong><small>Median completed shadow return</small></article>
+            <article><span>WIN RATE</span><strong>{pct(metrics.win_rate_pct, 1, false)}</strong><small>Descriptive only; not a promotion gate alone</small></article>
+            <article><span>PROFIT FACTOR</span><strong>{compactNumber(metrics.profit_factor, 3)}</strong><small>Gross positive / gross negative shadow return</small></article>
+            <article><span>MAX DRAWDOWN</span><strong>{pct(metrics.max_drawdown_pct, 2, false)}</strong><small>Compounded shadow outcome sequence</small></article>
+            <article><span>MAX CONCENTRATION</span><strong>{pct(metrics.max_symbol_concentration_pct, 1, false)}</strong><small>Largest asset share of confirmed entries</small></article>
+          </div>
+        </div>
+      </div>
+
+      <CrrGateMatrix gates={study.gates} />
+
+      <div className="crr-reference-grid">
+        <article className="crr-historical-reference">
+          <span>FROZEN HISTORICAL REFERENCE</span>
+          <h3>Why more live evidence is necessary.</h3>
+          {historical ? (
+            <>
+              <p>The current v6 historical validation did not authorize promotion. It remains a reference point, not evidence to be blended into this forward shadow sample.</p>
+              <div>
+                <span><b>{historical.validation?.trade_count ?? 0}</b><small>validation trades</small></span>
+                <span><b>{historical.validation?.independent_day_blocks ?? 0}</b><small>day blocks</small></span>
+                <span><b className={stateClass(historical.validation?.expectancy_per_trade_pct)}>{pct(historical.validation?.expectancy_per_trade_pct, 3)}</b><small>validation expectancy</small></span>
+                <span><b>{historical.validation?.p_value == null ? "—" : compactNumber(historical.validation.p_value, 3)}</b><small>dependence-adjusted p</small></span>
+                <span><b className={stateClass(historical.validation?.delayed_expectancy_pct)}>{pct(historical.validation?.delayed_expectancy_pct, 3)}</b><small>one-bar-delay expectancy</small></span>
+                <span><b>{historical.holdout_opened ? "OPENED" : "CLOSED"}</b><small>holdout state</small></span>
+              </div>
+            </>
+          ) : (
+            <p>The latest persisted historical-reference result is not yet available through the public feed. The forward shadow study continues without filling the gap with estimated values.</p>
+          )}
+        </article>
+
+        <article className="crr-method-card">
+          <span>WHAT WOULD COUNT AS EVIDENCE?</span>
+          <h3>Positive results must survive multiple failure modes.</h3>
+          <p>The strategy is not promoted because a chart turns green. It must clear minimum sample size, independent-day coverage, positive stressed-cost expectancy, dependence-adjusted significance, concentration limits, profit-factor requirements, and delayed-entry robustness. Only then may an untouched holdout be opened.</p>
+          <div><b>{targets.holdout_min_completed_trades ?? 20}</b><small>minimum holdout trades</small><b>{targets.holdout_min_independent_day_blocks ?? 15}</b><small>minimum holdout day blocks</small></div>
+        </article>
+      </div>
+
+      <div className="crr-limitations">
+        <strong>LIMITATIONS / DATA QUALITY</strong>
+        {(study.limitations || []).map((item) => <p key={item}>{item}</p>)}
+      </div>
+    </section>
+  );
+}
+
 function MarketLane({
   title,
   eyebrow,
@@ -212,8 +536,11 @@ export default function Performance() {
   const markets = feed?.market_performance;
   const equities = markets?.equities;
   const crypto = markets?.crypto;
+  const crrStudy = feed?.crypto_shadow_validation;
   const equityClosed = equities?.closed_trades ?? 0;
   const cryptoClosed = crypto?.closed_trades ?? 0;
+  const crrExits = crrStudy?.counts?.exits ?? 0;
+  const crrDays = crrStudy?.counts?.independent_day_blocks ?? 0;
 
   return (
     <div className="company-page market-performance-page">
@@ -224,8 +551,8 @@ export default function Performance() {
         <div className="performance-company-status">
           <div><small>PUBLIC FEED</small><strong>{error ? "UNAVAILABLE" : loading ? "CONNECTING" : feed?.state || "UNAVAILABLE"}</strong></div>
           <div><small>EQUITIES</small><strong>{equityClosed} CLOSED</strong></div>
-          <div><small>CRYPTO</small><strong>{cryptoClosed ? cryptoClosed + " CLOSED" : "AWAITING SAMPLE"}</strong></div>
-          <div><small>METHOD</small><strong>{markets?.methodology_version || "PUBLIC-MARKET-PERFORMANCE-v1"}</strong></div>
+          <div><small>CRYPTO LIVE</small><strong>{cryptoClosed ? cryptoClosed + " CLOSED" : "AWAITING SAMPLE"}</strong></div>
+          <div><small>CRR SHADOW</small><strong>{crrExits} / 30 · {crrDays} / 20 DAYS</strong></div>
         </div>
       </section>
 
@@ -248,8 +575,8 @@ export default function Performance() {
                   <b>{equityClosed} closed live trades</b><MarketOverviewSparkline rows={equities?.curve || []} label="Equities" /><p>{equityClosed ? "Measured broker-derived lane evidence is available." : "No measured live sample exists."}</p><i>OPEN EQUITIES →</i>
                 </button>
                 <button type="button" onClick={() => setTab("crypto")}>
-                  <span>CRYPTO</span><strong>{cryptoClosed ? human(crypto?.sample_state) : "AWAITING LIVE SAMPLE"}</strong>
-                  <b>{cryptoClosed} closed live trades</b><MarketOverviewSparkline rows={crypto?.curve || []} label="Crypto" /><p>{cryptoClosed ? "Measured broker-derived lane evidence is available." : "The interface is live-data ready; no closed live crypto sample is shown until one exists."}</p><i>OPEN CRYPTO →</i>
+                  <span>CRYPTO</span><strong>{cryptoClosed ? human(crypto?.sample_state) : "LIVE MONEY AWAITING SAMPLE"}</strong>
+                  <b>{cryptoClosed} live closes · CRR shadow {crrExits}/30 outcomes</b><MarketOverviewSparkline rows={crypto?.curve || []} label="Crypto live" /><p>{crrStudy ? "Live-money performance remains separate from the continuously updating CRR-001 shadow validation study." : "The live lane is ready; the CRR public study feed is connecting."}</p><i>OPEN CRYPTO + STUDY →</i>
                 </button>
               </div>
               <div className="performance-overview-boundary">
@@ -260,7 +587,12 @@ export default function Performance() {
           )}
 
           {tab === "equities" && <MarketLane title="Equities" eyebrow="LIVE EQUITIES PERFORMANCE" performance={equities} />}
-          {tab === "crypto" && <MarketLane title="Crypto" eyebrow="LIVE CRYPTO PERFORMANCE" performance={crypto} />}
+          {tab === "crypto" && (
+            <div className="crypto-evidence-stack">
+              <MarketLane title="Crypto" eyebrow="LIVE CRYPTO PERFORMANCE" performance={crypto} />
+              <CrrValidationStudy study={crrStudy} />
+            </div>
+          )}
 
           {tab === "methodology" && (
             <div className="performance-methodology">
