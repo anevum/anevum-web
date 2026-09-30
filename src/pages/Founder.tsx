@@ -1,14 +1,19 @@
 import { Link } from "react-router-dom";
 import founder from "../data/founder.json";
+import SystemMark from "../components/company/SystemMark";
+
+const flagshipSystems = new Set(["IREN","RHEN","NOSTRA","GRAEN","VELUM"] as const);
+
+type FlagshipSystem = "IREN" | "RHEN" | "NOSTRA" | "GRAEN" | "VELUM";
 
 export default function Founder() {
   return (
     <div className="company-page founder-page">
       <section className="founder-hero">
         <div className="founder-id">
-          <div className="founder-portrait" aria-label="Devon Akins portrait">
-            <span className="founder-portrait-frame" />
-            <span className="founder-monogram" aria-hidden="true">DA</span>
+          <div className="founder-portrait">
+            <img src="/devon-akins-headshot.jpg" alt="Devon Akins" />
+            <span className="founder-portrait-frame" aria-hidden="true" />
             <small>FOUNDER / ANEVUM</small>
           </div>
           <div>
@@ -56,6 +61,11 @@ export default function Founder() {
             const route = ["IREN","RHEN","NOSTRA","GRAEN","VELUM"].includes(system.name) ? "/products/" + system.name.toLowerCase() : "/";
             return (
               <Link key={system.name} to={route}>
+                <div className="founder-system-mark">
+                  {flagshipSystems.has(system.name as FlagshipSystem)
+                    ? <SystemMark system={system.name as FlagshipSystem} decorative />
+                    : null}
+                </div>
                 <span>ANEVUM SYSTEM</span>
                 <strong>{system.name}</strong>
                 <p>{system.description}</p>

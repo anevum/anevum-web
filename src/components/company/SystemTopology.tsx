@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { products } from "../../data/products";
+import SystemMark from "./SystemMark";
 
 const positions: Record<string, { x: number; y: number }> = {
   iren: { x: 50, y: 13 },
@@ -28,6 +29,7 @@ export default function SystemTopology({ compact = false }: { compact?: boolean 
         const pos = positions[product.slug];
         return (
           <Link key={product.slug} to={"/products/" + product.slug} className={"topology-node node-" + product.slug} style={{ left: pos.x + "%", top: pos.y + "%" }} aria-label={product.name + ": " + product.category}>
+            <SystemMark system={product.name} decorative />
             <span>{product.eyebrow}</span>
             <strong>{product.name}</strong>
             <small>{product.category}</small>

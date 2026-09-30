@@ -2,7 +2,7 @@ export type ProductStatus = "OPERATIONAL" | "LIVE PRODUCTION" | "ACTIVE RESEARCH
 
 export type Product = {
   slug: "iren" | "rhen" | "nostra" | "graen" | "velum";
-  name: string;
+  name: "IREN" | "RHEN" | "NOSTRA" | "GRAEN" | "VELUM";
   eyebrow: string;
   category: string;
   status: ProductStatus;

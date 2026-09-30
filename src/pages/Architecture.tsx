@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import SystemTopology from "../components/company/SystemTopology";
+import SystemMark from "../components/company/SystemMark";
 import { products } from "../data/products";
 
 const stack = [
@@ -34,6 +35,7 @@ export default function Architecture() {
         <div className="architecture-role-grid">
           {products.map((product, index) => (
             <Link key={product.slug} to={"/products/" + product.slug}>
+              <SystemMark system={product.name} decorative />
               <span>{String(index + 1).padStart(2, "0")} / {product.category}</span>
               <strong>{product.name}</strong>
               <p>{product.role}</p>
