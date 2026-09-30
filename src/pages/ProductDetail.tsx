@@ -1,7 +1,8 @@
 import { Link, Navigate, useParams } from "react-router-dom";
 import ArchitectureFlow from "../components/company/ArchitectureFlow";
 import SystemTopology from "../components/company/SystemTopology";
-import { productBySlug, products } from "../data/products";
+import { modules, productBySlug, products } from "../data/products";
+import { useLiveTrading } from "../hooks/useLiveTrading";
 
 function ProductSpecific({ slug }: { slug: string }) {
   if (slug === "iren") {
@@ -58,8 +59,16 @@ function ProductSpecific({ slug }: { slug: string }) {
 
 export default function ProductDetail() {
   const { slug } = useParams();
+  const { data, loading, error } = useLiveTrading(10000);
   const product = productBySlug(slug);
   if (!product) return <Navigate to="/products" replace />;
+
+  const relevantModules = modules.filter((module) =>
+    module.owner.includes(product.name) ||
+    (product.slug === "iren" && module.owner.includes("IREN"))
+  );
+  const runtimeState = error ? "UNAVAILABLE" : loading ? "CONNECTING" : data?.state || "UNAVAILABLE";
+  const researchState = data?.research?.current_status || "UNAVAILABLE";
 
   return (
     <div className={"company-page product-detail product-detail-" + product.slug}>
@@ -74,6 +83,13 @@ export default function ProductDetail() {
         <div className="product-hero-code" aria-hidden="true"><span>ANEVUM / SYSTEM</span><strong>{product.name}</strong><i /></div>
       </section>
 
+      <section className="product-public-state" aria-label={product.name + " public-safe state"}>
+        <article><span>PRODUCT STATUS</span><strong>{product.status}</strong><small>{product.category}</small></article>
+        <article><span>PUBLIC RUNTIME</span><strong>{product.slug === "rhen" || product.slug === "iren" ? runtimeState : "BOUNDED"}</strong><small>{product.slug === "rhen" ? (data?.active_strategy?.version_id || "No active strategy recorded") : "Public-safe state only"}</small></article>
+        <article><span>RESEARCH STATE</span><strong>{product.slug === "velum" ? "REPLAY / RESEARCH" : researchState}</strong><small>Sanitized canonical research state</small></article>
+        <article><span>TELEMETRY</span><strong>{data?.telemetry?.events_60m ?? "—"}</strong><small>Public aggregate events / 60m</small></article>
+      </section>
+
       <section className="company-section">
         <header className="company-section-head"><span>OPERATING FLOW</span><h2>From state to evidence.</h2></header>
         <ArchitectureFlow steps={product.flow} label={product.name + " operating flow"} />
@@ -85,6 +101,19 @@ export default function ProductDetail() {
           {product.capabilities.map((capability, index) => <article key={capability}><span>{String(index + 1).padStart(2,"0")}</span><strong>{capability}</strong></article>)}
         </div>
       </section>
+
+      {relevantModules.length ? (
+        <section className="company-section">
+          <header className="company-section-head"><span>SUPPORTING MODULES</span><h2>Implemented components behind {product.name}.</h2></header>
+          <div className="product-module-strip">
+            {relevantModules.map((module) => (
+              <article key={module.name}>
+                <span>{module.category}</span><strong>{module.name}</strong><p>{module.purpose}</p><b>{module.status}</b>
+              </article>
+            ))}
+          </div>
+        </section>
+      ) : null}
 
       <section className="company-section">
         <header className="company-section-head"><span>ARCHITECTURE / BOUNDARIES</span><h2>The constraints are part of the system.</h2></header>
