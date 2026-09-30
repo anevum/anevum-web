@@ -1,8 +1,9 @@
 import { Link } from "react-router-dom";
+import SystemMark, { type SystemName } from "../components/company/SystemMark";
 import { fieldNotes } from "../data/fieldNotes";
 import { useLiveTrading } from "../hooks/useLiveTrading";
 
-const programs = [
+const programs: Array<[SystemName, string, string, string]> = [
   ["GRAEN","Mathematical validation","Selection bias, multiplicity, dependence, falsification, simulation design, and promotion methodology.","/products/graen"],
   ["NOSTRA","Forecasting","Regime inference, prediction state, forward horizons, uncertainty, post-event outcomes, and calibration.","/products/nostra"],
   ["VELUM","Replay & counterfactual","Historical reconstruction, broker-isolated replay, friction assumptions, counterfactual comparison, and failure analysis.","/products/velum"],
@@ -47,7 +48,7 @@ export default function ResearchHub() {
       <section className="company-section">
         <header className="company-section-head"><span>RESEARCH PROGRAMS</span><h2>Where formal evidence is produced.</h2><p>Field Notes explain the work. These programs own the underlying research roles and boundaries.</p></header>
         <div className="research-program-grid">
-          {programs.map(([name,category,description,href]) => <Link key={name} to={href}><span>{category}</span><strong>{name}</strong><p>{description}</p><i>OPEN ↗</i></Link>)}
+          {programs.map(([name,category,description,href]) => <Link key={name} to={href}><SystemMark system={name} decorative /><span>{category}</span><strong>{name}</strong><p>{description}</p><i>OPEN ↗</i></Link>)}
         </div>
       </section>
 
