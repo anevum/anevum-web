@@ -1,4 +1,6 @@
 import { Link } from "react-router-dom";
+import SystemIcon from "../components/company/SystemIcon";
+import type { SystemName } from "../components/company/SystemMark";
 
 const studies = [
   {
@@ -6,7 +8,7 @@ const studies = [
     status: "ACTIVE RESEARCH",
     title: "Can an equity strategy survive translation to crypto?",
     problem: "A strategy can share mathematical structure across markets while still fail because the data-generating process, session structure, liquidity, cost model, and volatility regime changed.",
-    chain: ["GRAEN", "NOSTRA", "VELUM", "RHEN"],
+    chain: ["GRAEN", "NOSTRA", "VELUM", "RHEN"] as SystemName[],
     result: "No equity result is treated as crypto validation. The infrastructure is shared; the evidence gate is not.",
     href: "/research/multi-market-architecture-equities-crypto"
   },
@@ -15,7 +17,7 @@ const studies = [
     status: "PRODUCTION ENGINEERING",
     title: "Building a time-ordered prediction evidence chain",
     problem: "Research becomes hindsight if the system cannot prove what it believed before an event and attach outcomes afterward without altering that original state.",
-    chain: ["RHEN", "NOSTRA", "GRAEN"],
+    chain: ["RHEN", "NOSTRA", "GRAEN"] as SystemName[],
     result: "The production evidence model is being hardened around immutable pre-event state plus later forward outcomes.",
     href: "/research/prediction-outcome-evidence-chain"
   },
@@ -24,7 +26,7 @@ const studies = [
     status: "SYSTEM DESIGN",
     title: "How live execution and replay coexist without contaminating each other",
     problem: "Historical simulation is useful only if it remains visibly different from live broker-derived evidence.",
-    chain: ["VELUM", "GRAEN", "RHEN"],
+    chain: ["VELUM", "GRAEN", "RHEN"] as SystemName[],
     result: "VELUM is broker-isolated and replay results remain research evidence only. Live records remain live records.",
     href: "/research/velum-replay-layer"
   }
@@ -53,6 +55,7 @@ export default function CaseStudies() {
             <div className="case-study-chain" aria-label="Systems involved">
               {study.chain.map((system, index) => (
                 <span key={system}>
+                  <SystemIcon system={system} size="xs" />
                   <strong>{system}</strong>
                   {index < study.chain.length - 1 ? <i>→</i> : null}
                 </span>
