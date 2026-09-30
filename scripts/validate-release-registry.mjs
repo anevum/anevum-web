@@ -11,7 +11,10 @@ const staticPublicRoutes = publicRoutes.filter((route) => route.sitemap).map((ro
 const appSource = fs.readFileSync(path.join(ROOT, "src", "App.tsx"), "utf8");
 for (const route of staticPublicRoutes) {
   const routeLiteral = 'path="' + route + '"';
-  if (!appSource.includes(routeLiteral)) {
+  const coveredByProductRouter =
+    route.startsWith("/products/") &&
+    appSource.includes('path="/products/:slug"');
+  if (!appSource.includes(routeLiteral) && !coveredByProductRouter) {
     errors.push("Canonical public route missing from React router: " + route);
   }
 }
