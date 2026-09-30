@@ -1,12 +1,24 @@
 import { Link } from "react-router-dom";
 import founder from "../data/founder.json";
+import { dispatches } from "../data/dispatches";
+import { useLiveTrading } from "../hooks/useLiveTrading";
 
 export default function Founder() {
+  const { data } = useLiveTrading(10000);
+  const latest = dispatches.slice(0, 3);
+
   return (
     <div className="company-page founder-page">
-      <section className="founder-hero">
-        <div className="founder-id">
-          <span className="founder-monogram" aria-hidden="true">DA</span>
+      <section className="founder-hero founder-hero-v2">
+        <div className="founder-photo-panel">
+          <img src="/devon-akins-headshot.jpg" alt="Devon Akins" />
+          <div className="founder-photo-overlay">
+            <span>FOUNDER / ANEVUM</span>
+            <strong>{data?.state || "PUBLIC SYSTEM"}</strong>
+          </div>
+        </div>
+
+        <div className="founder-id founder-id-v2">
           <div>
             <span>FOUNDER / ANEVUM</span>
             <h1>{founder.name}</h1>
@@ -15,10 +27,12 @@ export default function Founder() {
             <div className="founder-actions">
               <Link className="company-button primary" to="/resume">View résumé <span>→</span></Link>
               <a className="company-button" href="/devon-akins-resume.pdf" download>Download PDF</a>
+              <Link className="company-button" to="/dispatches">Read Dispatches</Link>
               <a className="company-text-link" href={"mailto:" + founder.email}>{founder.email}</a>
             </div>
           </div>
         </div>
+
         <aside className="founder-snapshot">
           <span>CURRENT FOCUS</span>
           <strong>ANEVUM</strong>
@@ -26,6 +40,8 @@ export default function Founder() {
           <dl>
             <div><dt>ROLE</dt><dd>Founder</dd></div>
             <div><dt>BUILD</dt><dd>2026–Present</dd></div>
+            <div><dt>PUBLIC STATE</dt><dd>{data?.state || "UNAVAILABLE"}</dd></div>
+            <div><dt>RESEARCH</dt><dd>{data?.research?.current_status || "UNAVAILABLE"}</dd></div>
             <div><dt>WEB</dt><dd>{founder.website}</dd></div>
           </dl>
         </aside>
@@ -36,6 +52,20 @@ export default function Founder() {
         <div className="founder-about-grid">
           <p>{founder.summary}</p>
           <p>Current work is deliberately cross-disciplinary: frontend product surfaces, Python services, deployment infrastructure, telemetry and evidence systems, market execution controls, mathematical research, forecasting, simulation, and reliability boundaries. The work is presented by what exists in the repositories and production system, not by inflated titles.</p>
+        </div>
+      </section>
+
+      <section className="company-section founder-dispatches">
+        <header className="company-section-head"><span>WORKING RECORD</span><h2>Recent Dispatches.</h2><p>Public progress notes make the build history inspectable instead of reducing it to a finished portfolio.</p></header>
+        <div className="founder-dispatch-grid">
+          {latest.map((entry) => (
+            <Link key={entry.slug} to={"/dispatches/" + entry.slug}>
+              <span>{entry.kind} · {entry.system}</span>
+              <strong>{entry.title}</strong>
+              <p>{entry.dek}</p>
+              <i>{entry.status} →</i>
+            </Link>
+          ))}
         </div>
       </section>
 
