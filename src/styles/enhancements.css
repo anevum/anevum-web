@@ -2464,3 +2464,79 @@
     font-size: clamp(2.7rem,15vw,4.2rem);
   }
 }
+
+
+/* Architecture role cards follow the same hierarchy instead of five narrow columns. */
+.architecture-role-grid {
+  grid-template-columns: repeat(2,minmax(0,1fr));
+  gap: 14px;
+}
+
+.architecture-role-grid > a {
+  min-height: 250px;
+  position: relative;
+  overflow: hidden;
+  padding: clamp(22px,3vw,32px);
+  border-color: color-mix(in srgb,var(--system-accent) 18%,rgba(255,255,255,.04));
+  border-radius: 24px 10px 24px 10px;
+  background:
+    radial-gradient(circle at 92% 0,color-mix(in srgb,var(--system-accent) 10%,transparent),transparent 34%),
+    linear-gradient(150deg,rgba(10,18,29,.8),rgba(5,10,17,.58));
+  transition: transform .2s ease,border-color .2s ease;
+}
+
+.architecture-role-grid > a:first-child {
+  grid-column: 1 / -1;
+  min-height: 220px;
+}
+
+.architecture-role-grid > a:hover {
+  transform: translateY(-3px);
+  border-color: color-mix(in srgb,var(--system-accent) 40%,transparent);
+}
+
+.architecture-role-grid > a::after {
+  content: "";
+  position: absolute;
+  right: -46px;
+  bottom: -46px;
+  width: 160px;
+  height: 160px;
+  border: 1px solid color-mix(in srgb,var(--system-accent) 12%,transparent);
+  border-radius: 50%;
+  box-shadow:
+    0 0 0 26px color-mix(in srgb,var(--system-accent) 3%,transparent),
+    0 0 0 52px color-mix(in srgb,var(--system-accent) 2%,transparent);
+  pointer-events: none;
+}
+
+.architecture-role-grid .system-mark-svg {
+  width: 50px;
+  height: 50px;
+  margin-bottom: 18px;
+}
+
+.architecture-role-grid strong {
+  margin: 22px 0 12px;
+  font-size: clamp(1.55rem,2.5vw,2.25rem);
+  letter-spacing: -.025em;
+}
+
+.architecture-role-grid p {
+  max-width: 620px;
+  font-size: .82rem;
+}
+
+@media (max-width: 720px) {
+  .architecture-role-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .architecture-role-grid > a:first-child {
+    grid-column: auto;
+  }
+
+  .architecture-role-grid > a {
+    min-height: 0;
+  }
+}
