@@ -168,7 +168,7 @@ jobs:
           capture resume /resume
 
           grep -Fq 'company-home' "$RUNNER_TEMP/anevum-visuals/home-rendered.html"
-          grep -Fq 'SYSTEM ARCHITECTURE' "$RUNNER_TEMP/anevum-visuals/home-rendered.html"
+          grep -Fq 'Five systems. One evidence chain.' "$RUNNER_TEMP/anevum-visuals/home-rendered.html"
           grep -Fq 'IREN' "$RUNNER_TEMP/anevum-visuals/products-rendered.html"
           grep -Fq 'NOSTRA' "$RUNNER_TEMP/anevum-visuals/products-rendered.html"
           grep -Fq 'VELUM' "$RUNNER_TEMP/anevum-visuals/products-rendered.html"
