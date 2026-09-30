@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import founder from "../data/founder.json";
-import SystemMark from "../components/company/SystemMark";
+import SystemIcon from "../components/company/SystemIcon";
 
 const flagshipSystems = new Set(["IREN","RHEN","NOSTRA","GRAEN","VELUM"] as const);
 
@@ -64,7 +64,7 @@ export default function Founder() {
               <Link key={system.name} to={route}>
                 <div className="founder-system-mark">
                   {flagshipSystems.has(system.name as FlagshipSystem)
-                    ? <SystemMark system={system.name as FlagshipSystem} decorative />
+                    ? <SystemIcon system={system.name as FlagshipSystem} size="md" />
                     : null}
                 </div>
                 <span>ANEVUM SYSTEM</span>
