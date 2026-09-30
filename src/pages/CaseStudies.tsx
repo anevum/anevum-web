@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
+import SystemMark, { type SystemName } from "../components/company/SystemMark";
 
-const studies = [
+const studies: Array<{ id: string; status: string; title: string; problem: string; chain: SystemName[]; result: string; href: string }> = [
   {
     id: "01",
     status: "ACTIVE RESEARCH",
@@ -53,6 +54,7 @@ export default function CaseStudies() {
             <div className="case-study-chain" aria-label="Systems involved">
               {study.chain.map((system, index) => (
                 <span key={system}>
+                  <SystemMark system={system} decorative />
                   <strong>{system}</strong>
                   {index < study.chain.length - 1 ? <i>→</i> : null}
                 </span>
