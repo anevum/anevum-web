@@ -101,6 +101,39 @@ export type PublicPerformancePoint = {
   return_pct?: number | null;
 };
 
+export type PublicMarketLanePerformance = {
+  market_lane?: string;
+  methodology_version?: string;
+  basis?: string;
+  status?: string;
+  sample_state?: string;
+  tracking_started_at?: string | null;
+  tracking_ended_at?: string | null;
+  first_trade_at?: string | null;
+  last_trade_at?: string | null;
+  active_periods?: number;
+  closed_trades?: number;
+  wins?: number;
+  losses?: number;
+  win_rate_pct?: number | null;
+  realized_return_pct?: number | null;
+  max_drawdown_pct?: number | null;
+  strategy_version_id?: string | null;
+  strategy_name?: string | null;
+  strategy_environment?: string | null;
+  strategy_status?: string | null;
+  denominator?: string;
+  curve?: PublicPerformancePoint[];
+  limitations?: string[];
+};
+
+export type PublicMarketPerformance = {
+  methodology_version?: string;
+  equities?: PublicMarketLanePerformance;
+  crypto?: PublicMarketLanePerformance;
+  limitations?: string[];
+};
+
 export type PublicPerformance = {
   methodology_version?: string;
   basis?: string;
@@ -179,6 +212,7 @@ export type LiveTradingFeed = {
     journal?: PublicResearchEntry[];
   };
   performance?: PublicPerformance;
+  market_performance?: PublicMarketPerformance;
   disclosure?: {
     level?: string;
     public_fields?: string[];
