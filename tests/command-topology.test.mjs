@@ -27,7 +27,7 @@ test("canonical read bypasses RHEN and preserves JWT", async () => {
     async token => assert.equal(token, "synthetic"), async (url, options) => {
       assert.match(url, /supabase.co\/functions\/v1\/iren-command$/);
       assert.equal(options.headers.authorization, "Bearer synthetic");
-      return Response.json({ schema_version: "iren_command.v1", stale: false });
+      return Response.json({ schema_version: "iren_command.v2", stale: false });
     });
   assert.equal(response.status, 200);
   assert.equal(response.headers.get("cache-control"), "private, no-store");
@@ -39,6 +39,6 @@ test("upstream outage and malformed contract fail closed", async () => {
     assert.equal((await response.json()).stale, true);
   }
 });
-test("read proxy rejects writes", async () => {
-  assert.equal((await proxyIren(new Request("http://test", { method: "POST" }), () => {})).status, 405);
+test("write proxy still requires private authentication", async () => {
+  assert.equal((await proxyIren(new Request("http://test", { method: "POST" }), () => {})).status, 401);
 });
