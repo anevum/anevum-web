@@ -14,6 +14,8 @@ const Live = lazy(() => import("./pages/Live"));
 const ResearchHub = lazy(() => import("./pages/ResearchHub"));
 const Theory = lazy(() => import("./pages/Theory"));
 const Performance = lazy(() => import("./pages/Performance"));
+const Dispatches = lazy(() => import("./pages/Dispatches"));
+const DispatchDetail = lazy(() => import("./pages/DispatchDetail"));
 const Founder = lazy(() => import("./pages/Founder"));
 const Resume = lazy(() => import("./pages/Resume"));
 const Releases = lazy(() => import("./pages/Releases"));
@@ -32,6 +34,7 @@ const titles: Record<string, string> = {
   "/research": "Research — ANEVUM",
   "/theory": "Theory Registry — ANEVUM",
   "/performance": "Performance — ANEVUM",
+  "/dispatches": "Dispatches — ANEVUM",
   "/founder": "Devon Akins — Founder, ANEVUM",
   "/resume": "Devon Akins — Resume",
   "/releases": "Releases — ANEVUM",
@@ -89,6 +92,8 @@ export default function App() {
         <Route path="/products/:slug" element={<PublicExperience><ProductDetail /></PublicExperience>} />
         <Route path="/performance" element={<PublicExperience><Performance /></PublicExperience>} />
         <Route path="/research" element={<PublicExperience><ResearchHub /></PublicExperience>} />
+        <Route path="/dispatches" element={<PublicExperience><Dispatches /></PublicExperience>} />
+        <Route path="/dispatches/:slug" element={<PublicExperience><DispatchDetail /></PublicExperience>} />
         <Route path="/founder" element={<PublicExperience><Founder /></PublicExperience>} />
         <Route path="/resume" element={<PublicExperience><Resume /></PublicExperience>} />
         <Route path="/releases" element={<PublicExperience><Releases /></PublicExperience>} />
