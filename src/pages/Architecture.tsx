@@ -27,6 +27,16 @@ export default function Architecture() {
         <SystemTopology />
       </section>
 
+      <section className="architecture-evidence-band" aria-label="ANEVUM evidence path">
+        <div className="architecture-evidence-flow">
+          <article><span>01 / OBSERVATION</span><strong>Canonical state</strong><p>Runtime events, market state, and research inputs are retained before conclusions are made.</p></article>
+          <article><span>02 / RESEARCH</span><strong>Challenge the claim</strong><p>GRAEN, NOSTRA, and VELUM test inference, prediction, replay, and counterfactual alternatives.</p></article>
+          <article><span>03 / PROMOTION</span><strong>Explicit authority gate</strong><p>Evidence can support a proposal, but it does not silently grant production authority.</p></article>
+          <article><span>04 / MEASUREMENT</span><strong>RHEN records reality</strong><p>Broker-derived live outcomes return to the evidence layer without being mixed with simulation.</p></article>
+        </div>
+        <div className="architecture-evidence-legend">STATE MAY FLOW ACROSS SYSTEMS · AUTHORITY REMAINS BOUNDED · LIVE AND SIMULATED EVIDENCE STAY DISTINCT</div>
+      </section>
+
       <section className="company-section">
         <header className="company-section-head">
           <span>SYSTEM ROLES</span>
