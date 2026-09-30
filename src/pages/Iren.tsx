@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import Mark from "../components/Mark";
-import RhenMark from "../components/RhenMark";
+import SystemMark from "../components/company/SystemMark";
 import UniverseBackground from "../components/UniverseBackground";
 import { useAuth } from "../auth/AuthProvider";
 import { useLiveTrading } from "../hooks/useLiveTrading";
@@ -209,7 +208,7 @@ export default function Iren() {
       <UniverseBackground />
       <aside className="iren-sidebar">
         <div className="iren-brand">
-          <Mark />
+          <SystemMark system="IREN" decorative />
           <div><strong>IREN</strong><span>ANEVUM OPERATING INTELLIGENCE</span></div>
         </div>
         <nav>
@@ -257,37 +256,38 @@ export default function Iren() {
                 <p>IREN combines live RHEN operation, research evidence, GRAEN theory work, system health, and protected controls. NOSTRA remains staged until its production API is exposed.</p>
               </div>
               <div className="iren-orbit">
-                <div className="iren-core">IREN</div>
-                <span className="node node-rhen">RHEN</span>
-                <span className="node node-nostra">NOSTRA</span>
-                <span className="node node-graen">GRAEN</span>
+                <div className="iren-core"><SystemMark system="IREN" decorative /><span>IREN</span></div>
+                <span className="node node-rhen"><SystemMark system="RHEN" decorative /><b>RHEN</b></span>
+                <span className="node node-velum"><SystemMark system="VELUM" decorative /><b>VELUM</b></span>
+                <span className="node node-nostra"><SystemMark system="NOSTRA" decorative /><b>NOSTRA</b></span>
+                <span className="node node-graen"><SystemMark system="GRAEN" decorative /><b>GRAEN</b></span>
               </div>
             </div>
 
             <div className="iren-module-grid">
               <article className="iren-module featured">
-                <header><RhenMark decorative /><span>RHEN</span><b className={stateTone(liveState)}>{liveState}</b></header>
+                <header><SystemMark system="RHEN" decorative /><span>RHEN</span><b className={stateTone(liveState)}>{liveState}</b></header>
                 <strong>{publicFeed?.active_strategy?.strategy_name || "Trading intelligence"}</strong>
                 <p>{publicFeed?.telemetry?.symbols_10m ?? 0} symbols observed · {publicFeed?.telemetry?.events_60m ?? 0} events / 60m</p>
                 <footer><span>RETURN</span><b>{performance?.account_return_pct == null ? "—" : percent(performance.account_return_pct / 100)}</b></footer>
               </article>
 
               <article className="iren-module">
-                <header><span>NOSTRA</span><b className="warn">STAGED</b></header>
+                <header><SystemMark system="NOSTRA" decorative /><span>NOSTRA</span><b className="warn">STAGED</b></header>
                 <strong>Forecasting / prediction</strong>
                 <p>The identity is locked under IREN. A dedicated production API has not yet been exposed, so IREN will not fabricate live state.</p>
                 <footer><span>FORMAL PROGRAM</span><b>FORWARD</b></footer>
               </article>
 
               <article className="iren-module">
-                <header><span>GRAEN</span><b className={stateTone(activeTheory?.status)}>{activeTheory?.status || "IDLE"}</b></header>
+                <header><SystemMark system="GRAEN" decorative /><span>GRAEN</span><b className={stateTone(activeTheory?.status)}>{activeTheory?.status || "IDLE"}</b></header>
                 <strong>{activeTheory?.title || "Mathematical research"}</strong>
                 <p>{activeTheory?.question || "No active theory problem is currently exposed."}</p>
                 <footer><span>CONJECTURES</span><b>{activeTheory?.conjectures?.length ?? 0}</b></footer>
               </article>
 
               <article className="iren-module">
-                <header><span>IREN</span><b className="good">ONLINE</b></header>
+                <header><SystemMark system="IREN" decorative /><span>IREN</span><b className="good">ONLINE</b></header>
                 <strong>Coordination layer</strong>
                 <p>Private operating state becomes available after RHENLINK founder authentication.</p>
                 <footer><span>ACCESS</span><b>{commandAdmin ? "PRIVATE + PUBLIC" : "PUBLIC"}</b></footer>
@@ -459,7 +459,7 @@ export default function Iren() {
       {loginOpen && (
         <div className="iren-modal-backdrop" onMouseDown={() => setLoginOpen(false)}>
           <form className="iren-modal" onSubmit={handleLogin} onMouseDown={(event) => event.stopPropagation()}>
-            <Mark />
+            <SystemMark system="IREN" decorative />
             <span>RHENLINK / IREN</span>
             <h2>Founder access</h2>
             <p>Use the same credentials as ANEVUM Command.</p>
