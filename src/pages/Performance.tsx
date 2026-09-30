@@ -69,6 +69,28 @@ function stateClass(value?: number | null) {
   return value > 0 ? "is-positive" : value < 0 ? "is-negative" : "is-flat";
 }
 
+function MarketOverviewSparkline({ rows = [], label }: { rows?: PublicPerformancePoint[]; label: string }) {
+  const clean = rows.map((row) => Number(row.return_pct)).filter(Number.isFinite);
+  if (clean.length < 2) return <div className="market-overview-spark-empty">{label}: AWAITING MEASURED CURVE</div>;
+
+  const low = Math.min(...clean, 0);
+  const high = Math.max(...clean, 0);
+  const span = Math.max(0.01, high - low);
+  const points = clean.map((value, index) => {
+    const x = (index / Math.max(1, clean.length - 1)) * 400;
+    const y = 64 - ((value - low) / span) * 52;
+    return x.toFixed(1) + "," + y.toFixed(1);
+  }).join(" ");
+  const zeroY = 64 - ((0 - low) / span) * 52;
+
+  return (
+    <svg className="market-overview-sparkline" viewBox="0 0 400 76" preserveAspectRatio="none" role="img" aria-label={label + " normalized live performance preview"}>
+      <line className="baseline" x1="0" x2="400" y1={zeroY} y2={zeroY} />
+      <polyline className="curve" points={points} />
+    </svg>
+  );
+}
+
 function PerformanceCurve({
   rows,
   label,
@@ -223,11 +245,11 @@ export default function Performance() {
               <div className="market-overview-cards">
                 <button type="button" onClick={() => setTab("equities")}>
                   <span>US EQUITIES</span><strong>{equityClosed ? human(equities?.sample_state) : "AWAITING LIVE SAMPLE"}</strong>
-                  <b>{equityClosed} closed live trades</b><p>{equityClosed ? "Measured broker-derived lane evidence is available." : "No measured live sample exists."}</p><i>OPEN EQUITIES →</i>
+                  <b>{equityClosed} closed live trades</b><MarketOverviewSparkline rows={equities?.curve || []} label="Equities" /><p>{equityClosed ? "Measured broker-derived lane evidence is available." : "No measured live sample exists."}</p><i>OPEN EQUITIES →</i>
                 </button>
                 <button type="button" onClick={() => setTab("crypto")}>
                   <span>CRYPTO</span><strong>{cryptoClosed ? human(crypto?.sample_state) : "AWAITING LIVE SAMPLE"}</strong>
-                  <b>{cryptoClosed} closed live trades</b><p>{cryptoClosed ? "Measured broker-derived lane evidence is available." : "The UI is live-data ready, but no closed live crypto sample exists yet."}</p><i>OPEN CRYPTO →</i>
+                  <b>{cryptoClosed} closed live trades</b><MarketOverviewSparkline rows={crypto?.curve || []} label="Crypto" /><p>{cryptoClosed ? "Measured broker-derived lane evidence is available." : "The interface is live-data ready; no closed live crypto sample is shown until one exists."}</p><i>OPEN CRYPTO →</i>
                 </button>
               </div>
               <div className="performance-overview-boundary">
