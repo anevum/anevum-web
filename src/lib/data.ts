@@ -126,6 +126,107 @@ export type PublicPerformance = {
   limitations?: string[];
 };
 
+export type PublicCrrGate = {
+  id?: string;
+  label?: string;
+  rule?: string;
+  observed?: number | null;
+  target?: number | null;
+  status?: string;
+};
+
+export type PublicCrrActivityPoint = {
+  at?: string | null;
+  opportunities?: number;
+  entries?: number;
+  exits?: number;
+  expired?: number;
+  cumulative_exits?: number;
+  cumulative_independent_days?: number;
+  trade_progress_pct?: number;
+  day_progress_pct?: number;
+};
+
+export type PublicCrrOutcomePoint = {
+  at?: string | null;
+  return_pct?: number | null;
+  running_expectancy_pct?: number | null;
+  compounded_return_pct?: number | null;
+};
+
+export type PublicCryptoShadowValidation = {
+  methodology_version?: string;
+  strategy_version_id?: string;
+  study_name?: string;
+  mode?: string;
+  status?: string;
+  execution_authority?: boolean;
+  broker_orders_possible?: boolean;
+  tracking_started_at?: string | null;
+  latest_event_at?: string | null;
+  latest_received_at?: string | null;
+  hypothesis?: string;
+  design?: {
+    bar_minutes?: number;
+    shock_lookback_minutes?: number;
+    residual_volatility_lookback_minutes?: number;
+    reclaim_window_minutes?: number;
+    hold_minutes?: number;
+    execution_asset_count?: number;
+    context_asset_count?: number;
+    cost_basis?: string;
+    live_money?: boolean;
+  };
+  counts?: {
+    opportunities?: number;
+    entries?: number;
+    exits?: number;
+    expired?: number;
+    independent_day_blocks?: number;
+  };
+  targets?: {
+    validation_min_completed_trades?: number;
+    validation_min_independent_day_blocks?: number;
+    holdout_min_completed_trades?: number;
+    holdout_min_independent_day_blocks?: number;
+  };
+  progress?: {
+    completed_trades_pct?: number;
+    independent_days_pct?: number;
+  };
+  descriptive_metrics?: {
+    expectancy_per_trade_pct?: number | null;
+    median_trade_return_pct?: number | null;
+    win_rate_pct?: number | null;
+    profit_factor?: number | null;
+    max_drawdown_pct?: number | null;
+    max_symbol_concentration_pct?: number | null;
+  };
+  gates?: PublicCrrGate[];
+  activity?: PublicCrrActivityPoint[];
+  outcomes?: PublicCrrOutcomePoint[];
+  historical_reference?: {
+    observed_at?: string | null;
+    status?: string | null;
+    development?: {
+      trade_count?: number;
+      expectancy_per_trade_pct?: number | null;
+    };
+    validation?: {
+      trade_count?: number;
+      independent_day_blocks?: number;
+      expectancy_per_trade_pct?: number | null;
+      p_value?: number | null;
+      profit_factor?: number | null;
+      max_symbol_share_pct?: number | null;
+      delayed_expectancy_pct?: number | null;
+    };
+    holdout_opened?: boolean;
+    holdout_passed?: boolean;
+  } | null;
+  limitations?: string[];
+};
+
 export type LiveTradingFeed = {
   ok: boolean;
   generated_at?: string;
@@ -179,6 +280,7 @@ export type LiveTradingFeed = {
     journal?: PublicResearchEntry[];
   };
   performance?: PublicPerformance;
+  crypto_shadow_validation?: PublicCryptoShadowValidation;
   disclosure?: {
     level?: string;
     public_fields?: string[];
