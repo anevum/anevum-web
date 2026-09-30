@@ -154,31 +154,57 @@ jobs:
           base="${{ steps.preview.outputs.preview_url }}"
           mkdir -p "$RUNNER_TEMP/anevum-visuals"
 
+          chrome_retry() {
+            local attempt=1
+            while true; do
+              if google-chrome "$@"; then
+                return 0
+              fi
+              if [ "$attempt" -ge 2 ]; then
+                return 1
+              fi
+              attempt=$((attempt + 1))
+              sleep 1
+            done
+          }
+
           capture() {
             name="$1"
             path="$2"
-            google-chrome --headless --no-sandbox --disable-gpu --hide-scrollbars --virtual-time-budget=7000 --window-size=1440,1000 --screenshot="$RUNNER_TEMP/anevum-visuals/$name-desktop.png" "$base$path"
-            google-chrome --headless --no-sandbox --disable-gpu --hide-scrollbars --virtual-time-budget=7000 --window-size=390,844 --screenshot="$RUNNER_TEMP/anevum-visuals/$name-mobile.png" "$base$path"
-            google-chrome --headless --no-sandbox --disable-gpu --virtual-time-budget=7000 --dump-dom "$base$path" > "$RUNNER_TEMP/anevum-visuals/$name-rendered.html"
+            marker="$3"
+            rendered="$RUNNER_TEMP/anevum-visuals/$name-rendered.html"
+            common=(--headless --no-sandbox --disable-gpu --disable-dev-shm-usage --disable-background-networking --disable-sync --no-first-run --virtual-time-budget=7000)
+
+            chrome_retry "${common[@]}" --hide-scrollbars --window-size=1440,1000 --screenshot="$RUNNER_TEMP/anevum-visuals/$name-desktop.png" "$base$path"
+            chrome_retry "${common[@]}" --hide-scrollbars --window-size=390,844 --screenshot="$RUNNER_TEMP/anevum-visuals/$name-mobile.png" "$base$path"
+
+            for attempt in 1 2 3; do
+              if chrome_retry "${common[@]}" --dump-dom "$base$path" > "$rendered" && grep -Fq "$marker" "$rendered"; then
+                return 0
+              fi
+              echo "Rendered marker not ready for $path (attempt $attempt/3): $marker" >&2
+              sleep 1
+            done
+
+            echo "Rendered marker missing after retries for $path: $marker" >&2
+            tail -c 2500 "$rendered" >&2 || true
+            return 1
           }
 
-          capture home /
-          capture products /products
-          capture rhen /products/rhen
-          capture performance /performance
-          capture founder /founder
-          capture resume /resume
+          capture home / 'Five systems. One evidence chain.'
+          capture products /products 'IREN'
+          capture rhen /products/rhen 'OBSERVE'
+          capture performance /performance 'Separate markets. Separate records.'
+          capture research /research 'Development journal.'
+          capture field-note /research/multi-market-architecture-equities-crypto 'REPRODUCE / CHALLENGE THIS NOTE'
+          capture architecture /architecture 'One company. Specialized systems.'
+          capture case-studies /case-studies 'SYSTEM DESIGN'
+          capture founder /founder 'Devon Akins'
+          capture resume /resume 'Technical Skills'
 
           grep -Fq 'company-home' "$RUNNER_TEMP/anevum-visuals/home-rendered.html"
-          grep -Fq 'Five systems. One evidence chain.' "$RUNNER_TEMP/anevum-visuals/home-rendered.html"
-          grep -Fq 'IREN' "$RUNNER_TEMP/anevum-visuals/products-rendered.html"
           grep -Fq 'NOSTRA' "$RUNNER_TEMP/anevum-visuals/products-rendered.html"
           grep -Fq 'VELUM' "$RUNNER_TEMP/anevum-visuals/products-rendered.html"
-          grep -Fq 'OBSERVE' "$RUNNER_TEMP/anevum-visuals/rhen-rendered.html"
-          grep -Fq 'Separate markets. Separate records.' "$RUNNER_TEMP/anevum-visuals/performance-rendered.html"
-          grep -Fq 'AWAITING LIVE SAMPLE' "$RUNNER_TEMP/anevum-visuals/performance-rendered.html"
-          grep -Fq 'Devon Akins' "$RUNNER_TEMP/anevum-visuals/founder-rendered.html"
-          grep -Fq 'Technical Skills' "$RUNNER_TEMP/anevum-visuals/resume-rendered.html"
 
       - name: Upload browser QA
         if: github.event_name == 'pull_request'

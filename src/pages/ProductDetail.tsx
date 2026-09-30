@@ -1,6 +1,7 @@
 import { Link, Navigate, useParams } from "react-router-dom";
 import ArchitectureFlow from "../components/company/ArchitectureFlow";
 import SystemTopology from "../components/company/SystemTopology";
+import SystemIcon from "../components/company/SystemIcon";
 import SystemMark from "../components/company/SystemMark";
 import { modules, productBySlug, products } from "../data/products";
 import { useLiveTrading } from "../hooks/useLiveTrading";
@@ -154,7 +155,7 @@ export default function ProductDetail() {
       <section className="company-section">
         <header className="company-section-head"><span>RELATED SYSTEMS</span><h2>Connected, not interchangeable.</h2></header>
         <div className="related-products">
-          {products.filter((item) => product.related.includes(item.slug)).map((item) => <Link key={item.slug} to={"/products/" + item.slug}><SystemMark system={item.name} decorative /><span>{item.category}</span><strong>{item.name}</strong><i>→</i></Link>)}
+          {products.filter((item) => product.related.includes(item.slug)).map((item) => <Link key={item.slug} to={"/products/" + item.slug}><SystemIcon system={item.name} size="sm" /><span>{item.category}</span><strong>{item.name}</strong><i>→</i></Link>)}
         </div>
       </section>
     </div>

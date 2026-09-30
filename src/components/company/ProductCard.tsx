@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import type { Product } from "../../data/products";
-import SystemMark from "./SystemMark";
+import SystemIcon from "./SystemIcon";
 
 export default function ProductCard({ product }: { product: Product }) {
   return (
@@ -10,7 +10,7 @@ export default function ProductCard({ product }: { product: Product }) {
         <b><i aria-hidden="true" />{product.status}</b>
       </header>
       <div className="company-product-identity">
-        <SystemMark system={product.name} decorative />
+        <SystemIcon system={product.name} size="lg" />
         <div>
           <small>{product.eyebrow}</small>
           <h3>{product.name}</h3>

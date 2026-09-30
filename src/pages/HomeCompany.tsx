@@ -1,7 +1,9 @@
 import { Link } from "react-router-dom";
 import Mark from "../components/Mark";
 import ProductCard from "../components/company/ProductCard";
+import SystemIcon from "../components/company/SystemIcon";
 import SystemTopology from "../components/company/SystemTopology";
+import type { SystemName } from "../components/company/SystemMark";
 import { fieldNotes } from "../data/fieldNotes";
 import { products } from "../data/products";
 import { useLiveTrading } from "../hooks/useLiveTrading";
@@ -9,6 +11,7 @@ import type { PublicPerformancePoint } from "../lib/data";
 
 type Lane = { closed_trades?: number; realized_return_pct?: number | null; curve?: PublicPerformancePoint[] };
 type MarketFeed = { market_performance?: { equities?: Lane; crypto?: Lane } };
+type SystemState = { system: SystemName; status: string | number; detail: string };
 
 function pct(value?: number | null) {
   if (value == null || !Number.isFinite(value)) return "—";
@@ -36,13 +39,21 @@ export default function HomeCompany() {
   const equities = feed?.market_performance?.equities;
   const crypto = feed?.market_performance?.crypto;
   const curve = (equities?.curve?.length ? equities.curve : crypto?.curve) || [];
-  const systemState = [
-    ["RHEN", state, data?.active_strategy?.version_id || "Production market system"],
-    ["NOSTRA", data?.research?.current_status || "RESEARCH", "Forecasting / market state"],
-    ["GRAEN", data?.research?.active_questions?.length ? data.research.active_questions.length + " OPEN QUESTIONS" : "RESEARCH", "Validation / falsification"],
-    ["VELUM", "REPLAY", "Simulation / counterfactual"],
-    ["IREN", error ? "DEGRADED" : "ONLINE", "Operating intelligence"]
+  const systemState: SystemState[] = [
+    { system:"RHEN", status:state, detail:data?.active_strategy?.version_id || "Production market system" },
+    { system:"NOSTRA", status:data?.research?.current_status || "RESEARCH", detail:"Forecasting / market state" },
+    { system:"GRAEN", status:data?.research?.active_questions?.length ? data.research.active_questions.length + " OPEN QUESTIONS" : "RESEARCH", detail:"Validation / falsification" },
+    { system:"VELUM", status:"REPLAY", detail:"Simulation / counterfactual" },
+    { system:"IREN", status:error ? "DEGRADED" : "ONLINE", detail:"Operating intelligence" }
   ];
+  const evidenceChain: { system: SystemName; step: string; action: string }[] = [
+    { system:"GRAEN", step:"01", action:"QUESTION" },
+    { system:"NOSTRA", step:"02", action:"FORECAST" },
+    { system:"VELUM", step:"03", action:"REPLAY" },
+    { system:"RHEN", step:"04", action:"OPERATE" },
+    { system:"IREN", step:"05", action:"COORDINATE" }
+  ];
+  const caseStudyFlow: SystemName[] = ["GRAEN","NOSTRA","VELUM","RHEN"];
 
   return (
     <div className="company-page company-home company-home-v3">
@@ -75,24 +86,35 @@ export default function HomeCompany() {
         </div>
       </section>
 
-      <section className="home-mission-strip">
-        <span>01 / OPERATING MODEL</span>
-        <h2>Five systems. One evidence chain.</h2>
-        <p>IREN coordinates. GRAEN tests what can be inferred. NOSTRA forecasts what may happen next. VELUM reconstructs what could have happened. RHEN operates bounded market workflows and records what actually happened.</p>
-        <div className="home-evidence-chain" aria-label="ANEVUM evidence chain">
-          <div><span>01 / QUESTION</span><strong>GRAEN</strong></div>
-          <div><span>02 / FORECAST</span><strong>NOSTRA</strong></div>
-          <div><span>03 / REPLAY</span><strong>VELUM</strong></div>
-          <div><span>04 / OPERATE</span><strong>RHEN</strong></div>
-          <div><span>05 / COORDINATE</span><strong>IREN</strong></div>
+      <section className="home-mission-strip home-mission-strip-icons">
+        <div className="home-mission-copy">
+          <span>01 / OPERATING MODEL</span>
+          <h2>Five systems. One evidence chain.</h2>
+          <p>IREN coordinates. GRAEN tests what can be inferred. NOSTRA forecasts what may happen next. VELUM reconstructs what could have happened. RHEN operates bounded market workflows and records what actually happened.</p>
+          <Link to="/architecture">How ANEVUM works →</Link>
         </div>
-        <Link to="/architecture">How ANEVUM works →</Link>
+        <div className="home-evidence-chain home-evidence-chain-icons" aria-label="ANEVUM evidence chain">
+          {evidenceChain.map(({ system, step, action }) => (
+            <div key={system}>
+              <SystemIcon system={system} size="sm" />
+              <span>{step} / {action}</span>
+              <strong>{system}</strong>
+            </div>
+          ))}
+        </div>
       </section>
 
       <section className="company-section home-system-state">
         <header className="company-section-head"><span>02 / SYSTEM STATE</span><h2>The site reflects the operating system behind it.</h2><p>Public-safe state is separated from private Command. Unavailable data fails closed instead of being replaced with invented metrics.</p></header>
-        <div className="system-state-grid">
-          {systemState.map(([name, status, detail]) => <article key={name}><header><span>{name}</span><i /></header><strong>{String(status).replaceAll("_", " ")}</strong><p>{detail}</p></article>)}
+        <div className="system-state-grid system-state-grid-icons">
+          {systemState.map(({ system, status, detail }) => (
+            <article key={system} className={"system-state-" + system.toLowerCase()}>
+              <header><SystemIcon system={system} size="sm" /><i /></header>
+              <span>{system}</span>
+              <strong>{String(status).replaceAll("_", " ")}</strong>
+              <p>{detail}</p>
+            </article>
+          ))}
         </div>
       </section>
 
@@ -118,17 +140,34 @@ export default function HomeCompany() {
         <div className="company-product-grid">{products.map((product) => <ProductCard key={product.slug} product={product} />)}</div>
       </section>
 
-      <section className="company-section home-field-notes">
-        <header className="company-section-head"><span>05 / FIELD NOTES</span><h2>The public engineering record.</h2><p>Progress reports, research decisions, failures, architecture changes, and system work are documented as they happen.</p></header>
-        <div className="field-note-preview-grid">
-          {fieldNotes.slice(0, 3).map((note) => <Link key={note.slug} to={"/research/" + note.slug}><header><span>{note.date}</span><b>{note.type}</b></header><strong>{note.title}</strong><p>{note.summary}</p><footer><span>{note.systems.join(" · ")}</span><i>READ →</i></footer></Link>)}
+      <section className="company-section home-field-notes home-field-notes-editorial">
+        <header className="company-section-head"><span>05 / FIELD NOTES</span><h2>A readable engineering journal.</h2><p>The public record is organized like a publication now: concise stories first, complete reproduction detail inside each note.</p></header>
+        <div className="field-note-preview-grid field-note-preview-grid-icons">
+          {fieldNotes.slice(0, 3).map((note) => (
+            <Link key={note.slug} to={"/research/" + note.slug}>
+              <header><span>{note.date}</span><b>{note.type}</b></header>
+              <SystemIcon system={note.systems[0]} size="md" />
+              <strong>{note.title}</strong>
+              <p>{note.summary}</p>
+              <footer><span>{note.readMinutes} MIN · {note.status}</span><i>READ →</i></footer>
+            </Link>
+          ))}
         </div>
-        <div className="section-end-link"><Link to="/research">Open all Field Notes →</Link></div>
+        <div className="section-end-link"><Link to="/research">Open Field Notes →</Link></div>
       </section>
 
       <section className="company-section home-case-study">
         <div className="case-study-feature-copy"><span>06 / CASE STUDY</span><h2>What happens when an equity strategy meets a 24/7 crypto market?</h2><p>GRAEN challenges the assumption. NOSTRA measures market state. VELUM replays alternatives. RHEN receives only what survives the evidence gate.</p><Link to="/case-studies">Explore case studies →</Link></div>
-        <div className="case-study-feature-flow" aria-label="Case study system flow">{["GRAEN", "NOSTRA", "VELUM", "RHEN"].map((item, index) => <div key={item}><span>{String(index + 1).padStart(2, "0")}</span><strong>{item}</strong>{index < 3 ? <i>↓</i> : null}</div>)}</div>
+        <div className="case-study-feature-flow case-study-feature-flow-icons" aria-label="Case study system flow">
+          {caseStudyFlow.map((system, index) => (
+            <div key={system}>
+              <SystemIcon system={system} size="sm" />
+              <span>{String(index + 1).padStart(2, "0")}</span>
+              <strong>{system}</strong>
+              {index < caseStudyFlow.length - 1 ? <i>↓</i> : null}
+            </div>
+          ))}
+        </div>
       </section>
 
       <section className="company-founder-cta company-founder-cta-v3">

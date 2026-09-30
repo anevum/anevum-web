@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import SystemTopology from "../components/company/SystemTopology";
-import SystemMark from "../components/company/SystemMark";
+import SystemIcon from "../components/company/SystemIcon";
 import { products } from "../data/products";
 
 const stack = [
@@ -45,7 +45,7 @@ export default function Architecture() {
         <div className="architecture-role-grid">
           {products.map((product, index) => (
             <Link key={product.slug} to={"/products/" + product.slug}>
-              <SystemMark system={product.name} decorative />
+              <SystemIcon system={product.name} size="lg" />
               <span>{String(index + 1).padStart(2, "0")} / {product.category}</span>
               <strong>{product.name}</strong>
               <p>{product.role}</p>
@@ -77,11 +77,11 @@ export default function Architecture() {
           <h2>State can flow farther than authority.</h2>
         </header>
         <div className="authority-grid">
-          <article><span>GRAEN</span><strong>Can falsify and validate.</strong><p>It does not place live orders.</p></article>
-          <article><span>NOSTRA</span><strong>Can forecast and calibrate.</strong><p>A forecast is not trade authorization.</p></article>
-          <article><span>VELUM</span><strong>Can replay and compare.</strong><p>Simulation does not enter the live record.</p></article>
-          <article><span>RHEN</span><strong>Can execute within bounded controls.</strong><p>Production behavior changes only through explicit promotion and deployment paths.</p></article>
-          <article><span>IREN</span><strong>Can coordinate and expose state.</strong><p>Public observability and protected operation remain separate surfaces.</p></article>
+          <article><SystemIcon system="GRAEN" size="sm" /><span>GRAEN</span><strong>Can falsify and validate.</strong><p>It does not place live orders.</p></article>
+          <article><SystemIcon system="NOSTRA" size="sm" /><span>NOSTRA</span><strong>Can forecast and calibrate.</strong><p>A forecast is not trade authorization.</p></article>
+          <article><SystemIcon system="VELUM" size="sm" /><span>VELUM</span><strong>Can replay and compare.</strong><p>Simulation does not enter the live record.</p></article>
+          <article><SystemIcon system="RHEN" size="sm" /><span>RHEN</span><strong>Can execute within bounded controls.</strong><p>Production behavior changes only through explicit promotion and deployment paths.</p></article>
+          <article><SystemIcon system="IREN" size="sm" /><span>IREN</span><strong>Can coordinate and expose state.</strong><p>Public observability and protected operation remain separate surfaces.</p></article>
         </div>
       </section>
 
