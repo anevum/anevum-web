@@ -141,6 +141,85 @@ async function runCase(route, viewport) {
   return failures;
 }
 
+
+async function runScrollResetCase(viewport) {
+  const page = await target();
+  const ws = new WebSocket(page.webSocketDebuggerUrl);
+  const pending = new Map();
+  let nextId = 1;
+
+  const send = (method, params = {}) => new Promise((resolve, reject) => {
+    const id = nextId++;
+    const timer = setTimeout(() => {
+      pending.delete(id);
+      reject(new Error("CDP timeout: " + method));
+    }, 10000);
+    pending.set(id, { resolve, reject, timer });
+    ws.send(JSON.stringify({ id, method, params }));
+  });
+
+  await new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error("WebSocket open timeout")), 10000);
+    ws.addEventListener("open", () => { clearTimeout(timer); resolve(); }, { once: true });
+    ws.addEventListener("error", () => { clearTimeout(timer); reject(new Error("WebSocket error")); }, { once: true });
+  });
+
+  ws.addEventListener("message", (event) => {
+    const message = JSON.parse(String(event.data));
+    if (!message.id || !pending.has(message.id)) return;
+    const item = pending.get(message.id);
+    clearTimeout(item.timer);
+    pending.delete(message.id);
+    if (message.error) item.reject(new Error(message.error.message));
+    else item.resolve(message.result);
+  });
+
+  await send("Page.enable");
+  await send("Runtime.enable");
+  await send("Emulation.setDeviceMetricsOverride", {
+    width: viewport.width,
+    height: viewport.height,
+    deviceScaleFactor: viewport.deviceScaleFactor,
+    mobile: viewport.mobile
+  });
+  await send("Page.navigate", { url: base + "/research" });
+  await sleep(5000);
+
+  const result = await send("Runtime.evaluate", {
+    expression: `(async () => {
+      window.scrollTo(0, Math.max(1200, document.documentElement.scrollHeight - innerHeight - 200));
+      await new Promise((resolve) => setTimeout(resolve, 150));
+      const before = window.scrollY;
+      const link = document.querySelector('a[href="/architecture"]');
+      if (!link) return { ok: false, reason: "architecture link missing", before, pathname: location.pathname, after: window.scrollY };
+      link.click();
+
+      const deadline = Date.now() + 5000;
+      while (location.pathname !== "/architecture" && Date.now() < deadline) {
+        await new Promise((resolve) => setTimeout(resolve, 50));
+      }
+      await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+      return {
+        ok: location.pathname === "/architecture" && before > 200 && window.scrollY <= 1,
+        before,
+        after: window.scrollY,
+        pathname: location.pathname
+      };
+    })()`,
+    awaitPromise: true,
+    returnByValue: true
+  });
+
+  const value = result.result?.value || {};
+  console.log(JSON.stringify({ case: "route-scroll-reset", viewport: viewport.name, ...value }));
+  ws.close();
+  await closeTarget(page.id);
+
+  return value.ok
+    ? []
+    : ["route navigation did not reset scroll to top " + JSON.stringify(value)];
+}
+
 let failures = [];
 try {
   await waitForDebugger();
@@ -148,6 +227,7 @@ try {
     for (const route of routes) {
       failures = failures.concat((await runCase(route, viewport)).map((item) => viewport.name + " " + route + ": " + item));
     }
+    failures = failures.concat((await runScrollResetCase(viewport)).map((item) => viewport.name + " scroll-reset: " + item));
   }
 } finally {
   chrome.kill("SIGTERM");
@@ -169,4 +249,4 @@ if (failures.length) {
   console.error(failures.join("\n"));
   process.exit(1);
 }
-console.log("Browser runtime QA passed: no horizontal overflow or JavaScript runtime errors.");
+console.log("Browser runtime QA passed: no horizontal overflow, JavaScript runtime errors, or route scroll-restoration regressions.");
