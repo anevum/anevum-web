@@ -5,10 +5,10 @@ import { fieldNotes } from "../data/fieldNotes";
 import { useLiveTrading } from "../hooks/useLiveTrading";
 
 const programs: { name: SystemName; category: string; description: string; href: string }[] = [
-  { name:"GRAEN", category:"Mathematical validation", description:"Selection bias, multiplicity, dependence, falsification, simulation design, and promotion methodology.", href:"/products/graen" },
-  { name:"NOSTRA", category:"Forecasting", description:"Regime inference, prediction state, forward horizons, uncertainty, post-event outcomes, and calibration.", href:"/products/nostra" },
-  { name:"VELUM", category:"Replay & counterfactual", description:"Historical reconstruction, broker-isolated replay, friction assumptions, counterfactual comparison, and failure analysis.", href:"/products/velum" },
-  { name:"RHEN", category:"Market evidence", description:"Candidate outcomes, execution evidence, strategy research, adaptive validation, and live/offline comparison.", href:"/products/rhen" }
+  { name: "GRAEN", category: "Mathematical validation", description: "Falsification, dependence, multiplicity, robustness, and promotion methodology.", href: "/products/graen" },
+  { name: "NOSTRA", category: "Forecasting", description: "Regime inference, forward horizons, uncertainty, outcomes, and calibration.", href: "/products/nostra" },
+  { name: "VELUM", category: "Replay & counterfactual", description: "Historical reconstruction, simulation, friction assumptions, and failure analysis.", href: "/products/velum" },
+  { name: "RHEN", category: "Market evidence", description: "Candidate outcomes, execution evidence, strategy research, and live/offline comparison.", href: "/products/rhen" }
 ];
 
 export default function ResearchHub() {
@@ -18,125 +18,91 @@ export default function ResearchHub() {
   const questions = research?.active_questions || [];
   const outcomes = research?.evidence?.candidate_forward_outcomes || [];
   const outcomeCount = outcomes.reduce((sum, row) => sum + Number(row.count || 0), 0);
-  const [lead, ...rest] = [...fieldNotes].sort((a, b) => b.date.localeCompare(a.date));
-  const leadSystems = lead?.systems || [];
+  const [lead, ...rest] = fieldNotes;
 
   return (
-    <div className="company-page research-hub field-notes-page">
-      <section className="company-page-hero field-notes-hero field-notes-hero-editorial">
+    <div className="company-page research-hub field-notes-page field-notes-editorial">
+      <section className="company-page-hero field-notes-hero editorial-hero">
         <div>
-          <span>FIELD NOTES / PUBLIC ENGINEERING RECORD</span>
-          <h1>What ANEVUM is learning while it is being built.</h1>
-          <p>Engineering changes, research results, failures, and operating lessons—written to be readable first and reproducible when the detail matters.</p>
+          <span>FIELD NOTES / ENGINEERING JOURNAL</span>
+          <h1>The work, written to be understood and reproduced.</h1>
+          <p>Architecture changes, research decisions, repairs, failures, and releases from ANEVUM. Each note keeps the narrative readable and the reproduction protocol explicit.</p>
         </div>
-        <div className="field-notes-hero-links">
-          <Link to="/case-studies">Case Studies →</Link>
-          <Link to="/architecture">Architecture →</Link>
-          <Link to="/performance">Live Evidence →</Link>
+        <div className="editorial-hero-links">
+          <Link to="/case-studies">Case Studies</Link>
+          <Link to="/architecture">Architecture</Link>
+          <Link to="/performance">Live Evidence</Link>
         </div>
       </section>
 
-      {lead ? (
-        <section className="company-section no-top-border field-notes-lead-section">
-          <Link to={"/research/" + lead.slug} className="field-notes-lead">
-            <div className="field-notes-lead-art" aria-hidden="true">
-              <div className="field-notes-lead-icons">
-                {leadSystems.slice(0,4).map((system, index) => (
-                  <SystemIcon key={system} system={system} size={index === 0 ? "lg" : "md"} />
-                ))}
-              </div>
-              <span>{lead.type}</span>
-            </div>
-            <div className="field-notes-lead-copy">
-              <header>
-                <span>LATEST FIELD NOTE</span>
-                <time>{lead.date}</time>
-              </header>
-              <h2>{lead.title}</h2>
-              <p>{lead.summary}</p>
-              <div className="field-notes-lead-meta">
-                <span>{lead.readMinutes} MIN READ</span>
-                <span>{lead.status}</span>
-              </div>
-              <div className="field-notes-lead-systems">
-                {leadSystems.map((system) => <SystemChip key={system} system={system} />)}
-              </div>
-              <strong>READ THE NOTE →</strong>
-            </div>
-          </Link>
-        </section>
-      ) : null}
-
-      <section className="company-section field-notes-stream-section">
-        <header className="company-section-head field-notes-section-head">
-          <span>RECENT</span>
-          <h2>Development journal.</h2>
-          <p>A chronological reading stream, not an archive cabinet. Open a note for the full narrative and its reproduction packet.</p>
+      <section className="company-section no-top-border editorial-lead-section">
+        <header className="company-section-head compact-head">
+          <span>LATEST</span>
+          <h2>Current field note.</h2>
         </header>
-        <div className="field-notes-stream">
+        <Link className="field-note-lead" to={"/research/" + lead.slug}>
+          <div className="field-note-lead-visual">
+            <div className="field-note-lead-icons">
+              {lead.systems.map((system) => <SystemIcon key={system} system={system} size="md" />)}
+            </div>
+            <span>{lead.type} / {lead.status}</span>
+          </div>
+          <div className="field-note-lead-copy">
+            <div className="field-note-deck-meta"><time>{lead.date}</time><span>{lead.readMinutes} MIN READ</span></div>
+            <h2>{lead.title}</h2>
+            <p>{lead.summary}</p>
+            <div className="field-note-chip-row">{lead.systems.map((system) => <SystemChip key={system} system={system} />)}</div>
+            <strong>READ FIELD NOTE →</strong>
+          </div>
+        </Link>
+      </section>
+
+      <section className="company-section editorial-stream-section">
+        <header className="company-section-head compact-head">
+          <span>RECENT</span>
+          <h2>Development record.</h2>
+          <p>Written like a journal, not an archive browser. Open any note for the full method and reproduction checklist.</p>
+        </header>
+        <div className="field-note-stream">
           {rest.map((note) => (
-            <Link key={note.slug} to={"/research/" + note.slug} className="field-notes-story">
-              <div className="field-notes-story-icon">
-                <SystemIcon system={note.systems[0]} size="md" />
-              </div>
-              <div className="field-notes-story-copy">
-                <header>
-                  <time>{note.date}</time>
-                  <span>{note.type}</span>
-                  <i>{note.status}</i>
-                </header>
+            <Link key={note.slug} to={"/research/" + note.slug} className="field-note-story">
+              <SystemIcon system={note.systems[0]} size="sm" />
+              <div className="field-note-story-copy">
+                <div className="field-note-deck-meta"><time>{note.date}</time><span>{note.type}</span><span>{note.readMinutes} MIN</span></div>
                 <h3>{note.title}</h3>
                 <p>{note.summary}</p>
-                <footer>
-                  <span>{note.readMinutes} MIN READ</span>
-                  <span>{note.systems.length} SYSTEM{note.systems.length === 1 ? "" : "S"}</span>
-                </footer>
+                <div className="field-note-chip-row">{note.systems.map((system) => <SystemChip key={system} system={system} />)}</div>
               </div>
-              <div className="field-notes-story-systems">
-                {note.systems.map((system) => <SystemIcon key={system} system={system} size="xs" />)}
-              </div>
-              <span className="field-notes-story-arrow">↗</span>
+              <div className="field-note-story-state"><span>{note.status}</span><i>↗</i></div>
             </Link>
           ))}
         </div>
       </section>
 
-      <section className="company-section field-notes-pulse">
-        <header className="company-section-head">
+      <section className="company-section research-pulse-section">
+        <header className="company-section-head compact-head">
           <span>RESEARCH PULSE</span>
-          <h2>What the evidence surface says now.</h2>
-          <p>{error || (loading ? "Loading sanitized research state…" : "A compact public-safe snapshot from the durable research surface.")}</p>
+          <h2>What the evidence says now.</h2>
+          <p>{error || (loading ? "Loading sanitized research state…" : "A compact view of the durable public research surface.")}</p>
         </header>
-        <div className="field-notes-pulse-grid">
-          <article>
-            <SystemIcon system="GRAEN" size="sm" />
-            <div><span>STATUS</span><strong>{research?.current_status || "UNAVAILABLE"}</strong><p>{research?.current_focus || "No current public focus is recorded."}</p></div>
-          </article>
-          <article>
-            <SystemIcon system="NOSTRA" size="sm" />
-            <div><span>FORWARD OUTCOMES</span><strong>{outcomeCount || "—"}</strong><p>Recorded candidate-outcome rows across published horizons.</p></div>
-          </article>
-          <article>
-            <SystemIcon system="GRAEN" size="sm" />
-            <div><span>ACTIVE QUESTIONS</span><strong>{questions.length}</strong><p>Questions remain questions until methodology and evidence support a conclusion.</p></div>
-          </article>
-          <article>
-            <SystemIcon system="IREN" size="sm" />
-            <div><span>DURABLE DECISIONS</span><strong>{decisions.length}</strong><p>Sanitized conclusions retained in canonical state.</p></div>
-          </article>
+        <div className="research-pulse-grid">
+          <article><span>STATUS</span><strong>{research?.current_status || "UNAVAILABLE"}</strong><p>{research?.current_focus || "No public focus is recorded."}</p></article>
+          <article><span>FORWARD OUTCOMES</span><strong>{outcomeCount || "—"}</strong><p>Published candidate-outcome rows.</p></article>
+          <article><span>OPEN QUESTIONS</span><strong>{questions.length}</strong><p>Questions still awaiting sufficient evidence.</p></article>
+          <article><span>DURABLE DECISIONS</span><strong>{decisions.length}</strong><p>Retained research conclusions and gate decisions.</p></article>
         </div>
       </section>
 
-      <section className="company-section field-notes-programs-section">
-        <header className="company-section-head">
-          <span>RESEARCH PROGRAMS</span>
-          <h2>Follow the system behind the note.</h2>
-          <p>Field Notes explain the work. These systems own the underlying research, forecasting, replay, and market evidence.</p>
+      <section className="company-section editorial-programs-section">
+        <header className="company-section-head compact-head">
+          <span>PROGRAMS</span>
+          <h2>Where the formal work lives.</h2>
+          <p>Field Notes explain the work. These systems own the underlying evidence roles and authority boundaries.</p>
         </header>
         <div className="research-program-grid research-program-grid-icons">
           {programs.map((program) => (
-            <Link key={program.name} to={program.href} className={"research-program-card program-" + program.name.toLowerCase()}>
-              <SystemIcon system={program.name} size="lg" />
+            <Link key={program.name} to={program.href}>
+              <SystemIcon system={program.name} size="md" />
               <span>{program.category}</span>
               <strong>{program.name}</strong>
               <p>{program.description}</p>
@@ -146,16 +112,17 @@ export default function ResearchHub() {
         </div>
       </section>
 
-      <section className="company-section field-notes-method-section">
-        <div className="field-notes-method-copy">
-          <span>HOW TO READ THESE</span>
-          <h2>Narrative first. Reproduction detail on demand.</h2>
-          <p>Each Field Note separates the readable account from the procedure needed to reproduce or challenge it. That keeps the journal approachable without hiding methodology, checks, assumptions, or limitations.</p>
-        </div>
-        <div className="field-notes-method-flow" aria-label="Field Note structure">
-          {["READ","INSPECT","REPRODUCE","CHALLENGE"].map((item, index) => (
-            <div key={item}><span>{String(index + 1).padStart(2,"0")}</span><strong>{item}</strong></div>
-          ))}
+      <section className="company-section editorial-method-section">
+        <div className="editorial-method-card">
+          <div>
+            <span>METHOD</span>
+            <h2>Evidence has to cross explicit gates.</h2>
+            <p>A note can describe an idea, implementation, failure, or result. It does not silently turn research into production authority.</p>
+          </div>
+          <div className="research-ladder">
+            {["QUESTION","HYPOTHESIS","DEVELOPMENT","VALIDATION","PROMOTION REVIEW","LIVE MEASUREMENT"].map((item,index) => <div key={item}><span>{String(index+1).padStart(2,"0")}</span><strong>{item}</strong></div>)}
+          </div>
+          <Link to="/products/graen">Read the GRAEN methodology →</Link>
         </div>
       </section>
     </div>
