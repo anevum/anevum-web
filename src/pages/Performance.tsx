@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import type { LiveTradingFeed, PublicPerformancePoint } from "../lib/data";
+import { useLiveTrading } from "../hooks/useLiveTrading";
 
 type PerformanceTab = "overview" | "equities" | "crypto" | "methodology" | "boundaries";
 
