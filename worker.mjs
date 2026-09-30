@@ -1,4 +1,5 @@
 import releaseRegistry from "./src/data/releases.json";
+import dispatchRegistry from "./src/data/dispatches.json";
 
 const TRADER_BASE = "https://alpaca-trader-production-bf3e.up.railway.app";
 const RESEARCH_BASE = "https://rhen-research-agent-production.up.railway.app";
@@ -208,6 +209,10 @@ function publicRouteMetadata(pathname) {
       title: "Research — ANEVUM",
       description: "ANEVUM research across GRAEN, NOSTRA, VELUM, and RHEN: hypotheses, validation gates, durable decisions, forward outcomes, and explicit limitations."
     },
+    "/dispatches": {
+      title: "Dispatches — ANEVUM",
+      description: "Progress reports, research notes, system updates, release context, and field notes from the ongoing build of ANEVUM."
+    },
     "/founder": {
       title: "Devon Akins — Founder, ANEVUM",
       description: "Founder profile for Devon Akins: systems builder and independent researcher building ANEVUM's software, infrastructure, telemetry, forecasting, mathematical research, and replay systems."
@@ -235,6 +240,18 @@ function publicRouteMetadata(pathname) {
       ...staticRoutes[pathname],
       url: "https://anevum.com" + (pathname === "/" ? "/" : pathname)
     };
+  }
+
+  if (pathname.startsWith("/dispatches/")) {
+    const slug = pathname.slice("/dispatches/".length);
+    const entry = (dispatchRegistry.entries || []).find((item) => item.slug === slug);
+    if (entry) {
+      return {
+        title: entry.title + " — ANEVUM Dispatches",
+        description: entry.dek,
+        url: "https://anevum.com/dispatches/" + entry.slug
+      };
+    }
   }
 
   if (pathname.startsWith("/releases/")) {
