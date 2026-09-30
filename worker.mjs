@@ -1,3 +1,4 @@
+import { proxyIren } from "./command-iren.mjs";
 import releaseRegistry from "./src/data/releases.json";
 
 const TRADER_BASE = "https://alpaca-trader-production-bf3e.up.railway.app";
@@ -334,6 +335,15 @@ export default {
         return await publicTheory();
       } catch (error) {
         return jsonResponse({ message: error instanceof Error ? error.message : "Theory program unavailable." }, 502);
+      }
+    }
+
+    if (pathname === "/api/command/iren/status") {
+      try {
+        return await proxyIren(request, assertCommandAdmin);
+      } catch (error) {
+        if (error instanceof ApiError) return jsonResponse({ message: error.message }, error.status);
+        return jsonResponse({ message: "Operational state unavailable.", stale: true }, 503);
       }
     }
 

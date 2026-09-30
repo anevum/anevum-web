@@ -5,6 +5,7 @@ import Mark from "../components/Mark";
 import RhenMark from "../components/RhenMark";
 import UniverseBackground from "../components/UniverseBackground";
 import CommandPerformance from "../components/CommandPerformance";
+import CommandTopology from "../components/CommandTopology";
 import { useLiveTrading } from "../hooks/useLiveTrading";
 import {
   fetchCommandDailyReport,
@@ -312,6 +313,7 @@ export default function Command() {
 
         <section className="command-grid">
           <div className="command-primary">
+            <CommandTopology token={session.access_token} />
             <CommandPerformance performance={publicFeed?.performance} feedError={publicFeedError} />
             <article className="command-panel command-view-overview command-view-live command-panel-scanner">
               <header><div><span>LIVE SCANNER</span><strong>{scanRows.length} symbols observed in runtime snapshot</strong></div><small>{clockTime(bot.last_strategy_at)}</small></header>
