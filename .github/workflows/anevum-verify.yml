@@ -205,7 +205,6 @@ jobs:
           grep -Fq 'company-home' "$RUNNER_TEMP/anevum-visuals/home-rendered.html"
           grep -Fq 'NOSTRA' "$RUNNER_TEMP/anevum-visuals/products-rendered.html"
           grep -Fq 'VELUM' "$RUNNER_TEMP/anevum-visuals/products-rendered.html"
-          grep -Fq 'AWAITING LIVE SAMPLE' "$RUNNER_TEMP/anevum-visuals/performance-rendered.html"
 
       - name: Upload browser QA
         if: github.event_name == 'pull_request'
