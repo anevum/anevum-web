@@ -68,6 +68,10 @@ function RouteEffects() {
       return;
     }
 
+    if (location.pathname.startsWith("/research/")) {
+      document.title = "Field Note — ANEVUM";
+      return;
+    }
     document.title = titles[location.pathname] || "ANEVUM — Software Systems & Research";
   }, [location.pathname]);
 
