@@ -200,6 +200,11 @@ Deno.serve(async (req) => {
       outcomeRows,
       comparisonRows,
       scanRows,
+      crrSummaryRows,
+      crrDailyRows,
+      crrOutcomeRows,
+      crrConcentrationRows,
+      crrResearchRows,
     ] = await Promise.all([
       sql.unsafe("select version_id, strategy_name, environment, status, activated_at from private.trading_strategy_versions where environment = 'live' and status = 'active' order by activated_at desc limit 1"),
       sql.unsafe("select version_id, strategy_name, environment, status, activated_at, retired_at from private.trading_strategy_versions where environment = 'live' order by coalesce(activated_at,created_at) desc limit 12"),
@@ -214,6 +219,69 @@ Deno.serve(async (req) => {
       sql.unsafe("select horizon_minutes,status,count(*)::int as count from private.trading_candidate_forward_outcomes group by horizon_minutes,status order by horizon_minutes,status"),
       sql.unsafe("select coalesce(nullif(payload->>'match_state',''),'UNKNOWN') as match_state,count(*)::int as count from private.trading_events where event_type='live_offline_comparison' group by 1 order by 1"),
       sql.unsafe("select observed_at,market_session,cycle_outcome,data_status,degraded from private.trading_scan_cycles order by observed_at desc limit 1"),
+      sql.unsafe(`select
+          min(occurred_at) as tracking_started_at,
+          max(occurred_at) as latest_event_at,
+          max(received_at) as latest_received_at,
+          count(*) filter (where event_type='crypto_shadow_v6_opportunity')::int as opportunity_count,
+          count(*) filter (where event_type='crypto_shadow_v6_entry')::int as entry_count,
+          count(*) filter (where event_type='crypto_shadow_v6_exit')::int as exit_count,
+          count(*) filter (where event_type='crypto_shadow_v6_expired')::int as expired_count,
+          count(distinct (occurred_at at time zone 'UTC')::date)
+            filter (where event_type='crypto_shadow_v6_entry')::int as independent_day_blocks
+        from private.trading_events
+        where strategy_version_id='CRYPTO-RESIDUAL-RECLAIM-001'
+          and event_type in (
+            'crypto_shadow_v6_opportunity',
+            'crypto_shadow_v6_entry',
+            'crypto_shadow_v6_exit',
+            'crypto_shadow_v6_expired'
+          )`),
+      sql.unsafe(`select
+          to_char((occurred_at at time zone 'UTC')::date, 'YYYY-MM-DD') as at,
+          count(*) filter (where event_type='crypto_shadow_v6_opportunity')::int as opportunities,
+          count(*) filter (where event_type='crypto_shadow_v6_entry')::int as entries,
+          count(*) filter (where event_type='crypto_shadow_v6_exit')::int as exits,
+          count(*) filter (where event_type='crypto_shadow_v6_expired')::int as expired
+        from private.trading_events
+        where strategy_version_id='CRYPTO-RESIDUAL-RECLAIM-001'
+          and event_type in (
+            'crypto_shadow_v6_opportunity',
+            'crypto_shadow_v6_entry',
+            'crypto_shadow_v6_exit',
+            'crypto_shadow_v6_expired'
+          )
+        group by 1
+        order by 1 asc`),
+      sql.unsafe(`select
+          occurred_at as at,
+          (payload->>'stressed_cost_net_return')::numeric * 100 as return_pct
+        from private.trading_events
+        where strategy_version_id='CRYPTO-RESIDUAL-RECLAIM-001'
+          and event_type='crypto_shadow_v6_exit'
+          and nullif(payload->>'stressed_cost_net_return','') is not null
+        order by occurred_at asc
+        limit 500`),
+      sql.unsafe(`select
+          case
+            when coalesce(sum(symbol_count),0) > 0
+              then max(symbol_count)::numeric / sum(symbol_count)::numeric * 100
+            else null
+          end as max_share_pct
+        from (
+          select symbol, count(*)::int as symbol_count
+          from private.trading_events
+          where strategy_version_id='CRYPTO-RESIDUAL-RECLAIM-001'
+            and event_type='crypto_shadow_v6_entry'
+            and symbol is not null
+          group by symbol
+        ) counts`),
+      sql.unsafe(`select occurred_at, payload
+        from private.trading_events
+        where strategy_version_id='CRYPTO-RESIDUAL-RECLAIM-001'
+          and event_type='crypto_native_research_v6_result'
+        order by received_at desc
+        limit 1`),
     ]);
 
 
@@ -657,6 +725,144 @@ Deno.serve(async (req) => {
     const equityMarketPerformance = publicMarketPerformance("us_equity");
     const cryptoMarketPerformance = publicMarketPerformance("crypto");
 
+    const crrSummary = crrSummaryRows[0] ?? {};
+    const crrOpportunityCount = numberOrZero(crrSummary.opportunity_count);
+    const crrEntryCount = numberOrZero(crrSummary.entry_count);
+    const crrExitCount = numberOrZero(crrSummary.exit_count);
+    const crrExpiredCount = numberOrZero(crrSummary.expired_count);
+    const crrIndependentDays = numberOrZero(crrSummary.independent_day_blocks);
+    const crrTradeTarget = 30;
+    const crrDayTarget = 20;
+
+    let crrRunningSum = 0;
+    let crrCompounded = 1;
+    let crrPeak = 1;
+    let crrMaxDrawdown = 0;
+    let crrGains = 0;
+    let crrLosses = 0;
+    let crrWins = 0;
+    const crrOutcomeCurve = crrOutcomeRows
+      .map((row) => ({
+        at: row.at,
+        return_pct: Number(row.return_pct),
+      }))
+      .filter((row) => Number.isFinite(row.return_pct))
+      .map((row, index) => {
+        crrRunningSum += row.return_pct;
+        crrCompounded *= Math.max(1 + row.return_pct / 100, 1e-9);
+        crrPeak = Math.max(crrPeak, crrCompounded);
+        crrMaxDrawdown = Math.max(crrMaxDrawdown, 1 - crrCompounded / crrPeak);
+        if (row.return_pct > 0) {
+          crrWins += 1;
+          crrGains += row.return_pct;
+        } else if (row.return_pct < 0) {
+          crrLosses += Math.abs(row.return_pct);
+        }
+        return {
+          at: row.at,
+          return_pct: row.return_pct,
+          running_expectancy_pct: crrRunningSum / (index + 1),
+          compounded_return_pct: (crrCompounded - 1) * 100,
+        };
+      });
+
+    const crrSortedReturns = crrOutcomeCurve
+      .map((row) => row.return_pct)
+      .slice()
+      .sort((a, b) => a - b);
+    const crrMedianReturnPct = crrSortedReturns.length
+      ? crrSortedReturns.length % 2
+        ? crrSortedReturns[(crrSortedReturns.length - 1) / 2]
+        : (crrSortedReturns[crrSortedReturns.length / 2 - 1] + crrSortedReturns[crrSortedReturns.length / 2]) / 2
+      : null;
+    const crrExpectancyPct = crrExitCount > 0 ? crrRunningSum / crrExitCount : null;
+    const crrWinRatePct = crrExitCount > 0 ? (crrWins / crrExitCount) * 100 : null;
+    const crrProfitFactor = crrExitCount > 0
+      ? crrLosses > 0
+        ? crrGains / crrLosses
+        : crrGains > 0
+          ? null
+          : 0
+      : null;
+    const crrConcentrationPct = crrConcentrationRows[0]?.max_share_pct == null
+      ? null
+      : Number(crrConcentrationRows[0].max_share_pct);
+
+    let cumulativeExits = 0;
+    let cumulativeDays = 0;
+    const crrActivity = crrDailyRows.map((row) => {
+      const entries = numberOrZero(row.entries);
+      const exits = numberOrZero(row.exits);
+      cumulativeExits += exits;
+      if (entries > 0) cumulativeDays += 1;
+      return {
+        at: row.at,
+        opportunities: numberOrZero(row.opportunities),
+        entries,
+        exits,
+        expired: numberOrZero(row.expired),
+        cumulative_exits: cumulativeExits,
+        cumulative_independent_days: cumulativeDays,
+        trade_progress_pct: Math.min(100, cumulativeExits / crrTradeTarget * 100),
+        day_progress_pct: Math.min(100, cumulativeDays / crrDayTarget * 100),
+      };
+    });
+
+    const crrResearchRow = crrResearchRows[0] ?? null;
+    const crrResearchPayload = objectValue(crrResearchRow?.payload);
+    const crrDevelopment = objectValue(objectValue(crrResearchPayload.development).primary_reclaim);
+    const crrValidation = objectValue(objectValue(crrResearchPayload.validation).primary_reclaim);
+    const crrDelayed = objectValue(objectValue(crrResearchPayload.validation).one_bar_delay_robustness);
+    const crrValidationNull = objectValue(crrValidation.dependence_adjusted_null);
+    const crrValidationConcentration = objectValue(crrValidation.symbol_concentration);
+    const crrHoldout = objectValue(crrResearchPayload.holdout);
+    const crrHistoricalReference = crrResearchRow
+      ? {
+          observed_at: crrResearchRow.occurred_at || null,
+          status: optionalString(crrResearchPayload.status),
+          development: {
+            trade_count: numberOrZero(crrDevelopment.trade_count),
+            expectancy_per_trade_pct:
+              Number.isFinite(Number(crrDevelopment.expectancy_per_trade))
+                ? Number(crrDevelopment.expectancy_per_trade) * 100
+                : null,
+          },
+          validation: {
+            trade_count: numberOrZero(crrValidation.trade_count),
+            independent_day_blocks: numberOrZero(crrValidation.independent_day_blocks),
+            expectancy_per_trade_pct:
+              Number.isFinite(Number(crrValidation.expectancy_per_trade))
+                ? Number(crrValidation.expectancy_per_trade) * 100
+                : null,
+            p_value:
+              Number.isFinite(Number(crrValidationNull.p_value))
+                ? Number(crrValidationNull.p_value)
+                : null,
+            profit_factor:
+              Number.isFinite(Number(crrValidation.profit_factor))
+                ? Number(crrValidation.profit_factor)
+                : null,
+            max_symbol_share_pct:
+              Number.isFinite(Number(crrValidationConcentration.max_share))
+                ? Number(crrValidationConcentration.max_share) * 100
+                : null,
+            delayed_expectancy_pct:
+              Number.isFinite(Number(crrDelayed.expectancy_per_trade))
+                ? Number(crrDelayed.expectancy_per_trade) * 100
+                : null,
+          },
+          holdout_opened: crrHoldout.opened === true,
+          holdout_passed: crrHoldout.passed === true,
+        }
+      : null;
+
+    const crrSampleState =
+      crrExitCount >= crrTradeTarget && crrIndependentDays >= crrDayTarget
+        ? "READY_FOR_FORMAL_VALIDATION"
+        : crrOpportunityCount > 0 || crrEntryCount > 0 || crrExitCount > 0
+          ? "COLLECTING"
+          : "AWAITING_EVIDENCE";
+
     const limitations = [
       ...(missingSessions.length
         ? [`Canonical weekly reporting is ${String(weekly?.completeness_state || "PARTIAL")}; ${missingSessions.length} expected session(s) are missing a canonical daily report.`]
@@ -759,6 +965,135 @@ Deno.serve(async (req) => {
         ]
       },
 
+      crypto_shadow_validation: {
+        methodology_version: "PUBLIC-CRR-LIVE-VALIDATION-v1",
+        strategy_version_id: "CRYPTO-RESIDUAL-RECLAIM-001",
+        study_name: "Controlled Residual Reversal",
+        mode: "shadow",
+        status: crrSampleState,
+        execution_authority: false,
+        broker_orders_possible: false,
+        tracking_started_at: crrSummary.tracking_started_at || null,
+        latest_event_at: crrSummary.latest_event_at || null,
+        latest_received_at: crrSummary.latest_received_at || null,
+        hypothesis: "A large negative market-relative crypto residual followed by a reclaim confirmation may produce positive stressed-cost expectancy over a fixed 120-minute horizon.",
+        design: {
+          bar_minutes: 5,
+          shock_lookback_minutes: 15,
+          residual_volatility_lookback_minutes: 360,
+          reclaim_window_minutes: 15,
+          hold_minutes: 120,
+          execution_asset_count: 3,
+          context_asset_count: 6,
+          cost_basis: "frozen stressed-cost model",
+          live_money: false,
+        },
+        counts: {
+          opportunities: crrOpportunityCount,
+          entries: crrEntryCount,
+          exits: crrExitCount,
+          expired: crrExpiredCount,
+          independent_day_blocks: crrIndependentDays,
+        },
+        targets: {
+          validation_min_completed_trades: crrTradeTarget,
+          validation_min_independent_day_blocks: crrDayTarget,
+          holdout_min_completed_trades: 20,
+          holdout_min_independent_day_blocks: 15,
+        },
+        progress: {
+          completed_trades_pct: Math.min(100, crrExitCount / crrTradeTarget * 100),
+          independent_days_pct: Math.min(100, crrIndependentDays / crrDayTarget * 100),
+        },
+        descriptive_metrics: {
+          expectancy_per_trade_pct: crrExpectancyPct,
+          median_trade_return_pct: crrMedianReturnPct,
+          win_rate_pct: crrWinRatePct,
+          profit_factor: crrProfitFactor,
+          max_drawdown_pct: crrExitCount > 0 ? crrMaxDrawdown * 100 : null,
+          max_symbol_concentration_pct: crrConcentrationPct,
+        },
+        gates: [
+          {
+            id: "completed_trades",
+            label: "Completed shadow trades",
+            rule: ">= 30",
+            observed: crrExitCount,
+            target: crrTradeTarget,
+            status: crrExitCount >= crrTradeTarget ? "PASS" : "COLLECTING",
+          },
+          {
+            id: "independent_days",
+            label: "Independent day blocks",
+            rule: ">= 20",
+            observed: crrIndependentDays,
+            target: crrDayTarget,
+            status: crrIndependentDays >= crrDayTarget ? "PASS" : "COLLECTING",
+          },
+          {
+            id: "expectancy",
+            label: "Stressed-cost expectancy",
+            rule: "> 0%",
+            observed: crrExpectancyPct,
+            status:
+              crrExpectancyPct == null
+                ? "UNMEASURED"
+                : crrExpectancyPct > 0
+                  ? "PROVISIONAL_PASS"
+                  : "PROVISIONAL_FAIL",
+          },
+          {
+            id: "profit_factor",
+            label: "Profit factor",
+            rule: "> 1.0",
+            observed: crrProfitFactor,
+            status:
+              crrExitCount === 0
+                ? "UNMEASURED"
+                : crrProfitFactor == null
+                  ? "PROVISIONAL_PASS"
+                  : crrProfitFactor > 1
+                    ? "PROVISIONAL_PASS"
+                    : "PROVISIONAL_FAIL",
+          },
+          {
+            id: "symbol_concentration",
+            label: "Maximum symbol concentration",
+            rule: "<= 70%",
+            observed: crrConcentrationPct,
+            status:
+              crrConcentrationPct == null
+                ? "UNMEASURED"
+                : crrConcentrationPct <= 70
+                  ? "PROVISIONAL_PASS"
+                  : "PROVISIONAL_FAIL",
+          },
+          {
+            id: "dependence_adjusted_null",
+            label: "Dependence-adjusted null test",
+            rule: "p <= 0.05",
+            observed: null,
+            status: "FORMAL_CHECK_PENDING",
+          },
+          {
+            id: "delay_robustness",
+            label: "One-bar delay robustness",
+            rule: "expectancy > 0%",
+            observed: null,
+            status: "FORMAL_CHECK_PENDING",
+          },
+        ],
+        activity: crrActivity,
+        outcomes: crrOutcomeCurve,
+        historical_reference: crrHistoricalReference,
+        limitations: [
+          "This is live shadow evidence, not broker-executed performance and not a claim of profitability.",
+          "The running expectancy, win rate, profit factor, drawdown, and concentration statistics are descriptive until the frozen minimum sample gates are met.",
+          "The formal dependence-adjusted null test and one-bar-delay robustness gate are evaluated by GRAEN, not approximated in the browser.",
+          "Symbols, prices, quantities, order details, account values, and execution-sensitive trigger thresholds remain private.",
+        ],
+      },
+
       performance: {
         methodology_version: "PUBLIC-PERFORMANCE-v2",
         basis: "broker_derived_live_ledger_with_cash_flow_epochs",
@@ -803,6 +1138,7 @@ Deno.serve(async (req) => {
           "normalized live performance percentages",
           "normalized public performance curve",
           "separate normalized equities and crypto live-trade performance",
+          "sanitized CRR-001 live-shadow validation evidence and frozen promotion-gate progress",
         ],
         excluded_fields: [
           "account value",
