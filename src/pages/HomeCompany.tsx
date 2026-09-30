@@ -39,12 +39,13 @@ export default function HomeCompany() {
   const equities = feed?.market_performance?.equities;
   const crypto = feed?.market_performance?.crypto;
   const curve = (equities?.curve?.length ? equities.curve : crypto?.curve) || [];
+  const systems = data?.systems || {};
   const systemState: SystemState[] = [
-    { system:"RHEN", status:state, detail:data?.active_strategy?.version_id || "Production market system" },
-    { system:"NOSTRA", status:data?.research?.current_status || "RESEARCH", detail:"Forecasting / market state" },
-    { system:"GRAEN", status:data?.research?.active_questions?.length ? data.research.active_questions.length + " OPEN QUESTIONS" : "RESEARCH", detail:"Validation / falsification" },
-    { system:"VELUM", status:"REPLAY", detail:"Simulation / counterfactual" },
-    { system:"IREN", status:error ? "DEGRADED" : "ONLINE", detail:"Operating intelligence" }
+    { system:"RHEN", status:systems.RHEN?.runtime_state || state, detail:systems.RHEN?.activity || data?.active_strategy?.version_id || "Production market system" },
+    { system:"NOSTRA", status:systems.NOSTRA?.runtime_state || "EMBEDDED", detail:systems.NOSTRA?.activity || "Forecast research embedded in RHEN" },
+    { system:"GRAEN", status:systems.GRAEN?.runtime_state || "CONNECTING", detail:systems.GRAEN?.activity || "Canonical mathematical research runtime" },
+    { system:"VELUM", status:systems.VELUM?.runtime_state || "CONNECTING", detail:systems.VELUM?.activity || "Replay / counterfactual runtime" },
+    { system:"IREN", status:systems.IREN?.runtime_state || (error ? "DEGRADED" : "CONNECTING"), detail:systems.IREN?.activity || "Operating intelligence" }
   ];
   const evidenceChain: { system: SystemName; step: string; action: string }[] = [
     { system:"GRAEN", step:"01", action:"QUESTION" },
@@ -129,7 +130,7 @@ export default function HomeCompany() {
           <div className="home-evidence-metrics">
             <article><span>EVENTS / 60M</span><strong>{data?.telemetry?.events_60m ?? "—"}</strong><p>Sanitized canonical telemetry.</p></article>
             <article><span>LIVE CLOSED TRADES</span><strong>{data?.performance?.closed_trades ?? "—"}</strong><p>Broker-derived live record.</p></article>
-            <article><span>RESEARCH STATE</span><strong>{data?.research?.current_status || "UNAVAILABLE"}</strong><p>Durable research state.</p></article>
+            <article><span>GRAEN RUNTIME</span><strong>{systems.GRAEN?.runtime_state || "—"}</strong><p>{systems.GRAEN?.activity || "Canonical research runtime."}</p></article>
             <article><span>STRATEGY</span><strong>{data?.active_strategy?.version_id || "UNAVAILABLE"}</strong><p>Active public-safe version identity.</p></article>
           </div>
         </div>
