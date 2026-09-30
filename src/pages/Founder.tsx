@@ -6,13 +6,13 @@ export default function Founder() {
     <div className="company-page founder-page">
       <section className="founder-hero">
         <div className="founder-id">
-          <div className="founder-portrait" aria-label="Devon Akins portrait">
-            <span className="founder-portrait-frame" />
-            <span className="founder-monogram" aria-hidden="true">DA</span>
+          <div className="founder-portrait">
+            <img src="/devon-akins-headshot.jpg" alt="Devon Akins" />
+            <span className="founder-portrait-frame" aria-hidden="true" />
             <small>FOUNDER / ANEVUM</small>
           </div>
           <div>
-            <span>FOUNDER / SYSTEMS BUILDER / INDEPENDENT RESEARCHER</span>
+            <span>FOUNDER / SOFTWARE BUILDER / INDEPENDENT RESEARCHER</span>
             <h1>{founder.name}</h1>
             <h2>{founder.profileHeadline}</h2>
             <p>{founder.summary}</p>
@@ -30,6 +30,7 @@ export default function Founder() {
           <dl>
             <div><dt>ROLE</dt><dd>Founder</dd></div>
             <div><dt>BUILD</dt><dd>2026–Present</dd></div>
+            <div><dt>BASE</dt><dd>{founder.location}</dd></div>
             <div><dt>WEB</dt><dd>{founder.website}</dd></div>
           </dl>
         </aside>
@@ -42,15 +43,15 @@ export default function Founder() {
       </section>
 
       <section className="company-section founder-about">
-        <header className="company-section-head"><span>ABOUT</span><h2>Building the system and the evidence around it.</h2></header>
+        <header className="company-section-head"><span>ABOUT</span><h2>Building software, research, and the evidence around both.</h2></header>
         <div className="founder-about-grid">
           <p>{founder.summary}</p>
-          <p>Current work is deliberately cross-disciplinary: frontend product surfaces, Python services, deployment infrastructure, telemetry and evidence systems, market execution controls, mathematical research, forecasting, simulation, and reliability boundaries. The work is presented by what exists in the repositories and production system, not by inflated titles.</p>
+          <p>My background also includes mathematics tutoring, undergraduate biophysics research, and student-organization leadership. ANEVUM is the current company and technical portfolio—not a substitute for the rest of my professional history.</p>
         </div>
       </section>
 
       <section className="company-section">
-        <header className="company-section-head"><span>CURRENT WORK</span><h2>Selected systems.</h2></header>
+        <header className="company-section-head"><span>CURRENT WORK</span><h2>Selected ANEVUM systems.</h2></header>
         <div className="selected-work-grid">
           {founder.systems.map((system) => {
             const route = ["IREN","RHEN","NOSTRA","GRAEN","VELUM"].includes(system.name) ? "/products/" + system.name.toLowerCase() : "/";
@@ -67,7 +68,7 @@ export default function Founder() {
       </section>
 
       <section className="company-section">
-        <header className="company-section-head"><span>SKILLS</span><h2>Technical competencies.</h2><p>Grouped by demonstrated work and study rather than self-rated proficiency scores.</p></header>
+        <header className="company-section-head"><span>SKILLS</span><h2>Professional competencies.</h2><p>Software engineering, mathematics, research, teaching, and technical operations.</p></header>
         <div className="founder-skill-grid">
           {founder.skills.map((group) => (
             <article key={group.group}><span>{group.group}</span><div>{group.items.map((item) => <b key={item}>{item}</b>)}</div></article>
@@ -99,7 +100,7 @@ export default function Founder() {
       </section>
 
       <section className="founder-contact">
-        <div><span>CONTACT</span><h2>Devon Akins</h2><p>Founder, ANEVUM</p></div>
+        <div><span>CONTACT</span><h2>Devon Akins</h2><p>Founder, ANEVUM · {founder.location}</p></div>
         <div><a href={"mailto:" + founder.email}>{founder.email}</a><a href="https://anevum.com">anevum.com</a><a href="/devon-akins-resume.pdf" download>Download résumé PDF ↗</a></div>
       </section>
     </div>
