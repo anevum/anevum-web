@@ -2,6 +2,10 @@ import { Link } from "react-router-dom";
 import founder from "../data/founder.json";
 import SystemMark from "../components/company/SystemMark";
 
+const flagshipSystems = new Set(["IREN","RHEN","NOSTRA","GRAEN","VELUM"] as const);
+
+type FlagshipSystem = "IREN" | "RHEN" | "NOSTRA" | "GRAEN" | "VELUM";
+
 export default function Founder() {
   return (
     <div className="company-page founder-page">
@@ -58,8 +62,8 @@ export default function Founder() {
             return (
               <Link key={system.name} to={route}>
                 <div className="founder-system-mark">
-                  {(["IREN","RHEN","NOSTRA","GRAEN","VELUM"] as const).includes(system.name as any)
-                    ? <SystemMark system={system.name as "IREN" | "RHEN" | "NOSTRA" | "GRAEN" | "VELUM"} decorative />
+                  {flagshipSystems.has(system.name as FlagshipSystem)
+                    ? <SystemMark system={system.name as FlagshipSystem} decorative />
                     : null}
                 </div>
                 <span>ANEVUM SYSTEM</span>
