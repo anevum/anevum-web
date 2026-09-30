@@ -49,6 +49,8 @@ jobs:
           test -s dist/client/iren-profile-current.json
           test -s public/devon-akins-resume.pdf
           test -s dist/client/devon-akins-resume.pdf
+          test -s public/devon-akins-headshot.jpg
+          test -s dist/client/devon-akins-headshot.jpg
           head -c 5 dist/client/devon-akins-resume.pdf | grep -Fq '%PDF-'
       - name: Deploy to Cloudflare Workers
         uses: cloudflare/wrangler-action@v3
