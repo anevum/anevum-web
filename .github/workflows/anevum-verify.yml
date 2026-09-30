@@ -166,6 +166,9 @@ jobs:
           capture products /products
           capture rhen /products/rhen
           capture performance /performance
+          capture architecture /architecture
+          capture research /research
+          capture field-note /research/multi-market-architecture-equities-crypto
           capture founder /founder
           capture resume /resume
 
@@ -177,6 +180,9 @@ jobs:
           grep -Fq 'OBSERVE' "$RUNNER_TEMP/anevum-visuals/rhen-rendered.html"
           grep -Fq 'Separate markets. Separate records.' "$RUNNER_TEMP/anevum-visuals/performance-rendered.html"
           grep -Fq 'AWAITING LIVE SAMPLE' "$RUNNER_TEMP/anevum-visuals/performance-rendered.html"
+          grep -Fq 'Three layers, five specialized systems.' "$RUNNER_TEMP/anevum-visuals/architecture-rendered.html"
+          grep -Fq 'Reports from the work itself.' "$RUNNER_TEMP/anevum-visuals/research-rendered.html"
+          grep -Fq 'How to audit this note.' "$RUNNER_TEMP/anevum-visuals/field-note-rendered.html"
           grep -Fq 'Devon Akins' "$RUNNER_TEMP/anevum-visuals/founder-rendered.html"
           grep -Fq 'Technical Skills' "$RUNNER_TEMP/anevum-visuals/resume-rendered.html"
 
