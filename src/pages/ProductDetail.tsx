@@ -68,7 +68,7 @@ export default function ProductDetail() {
     (product.slug === "iren" && module.owner.includes("IREN"))
   );
   const runtimeState = error ? "UNAVAILABLE" : loading ? "CONNECTING" : data?.state || "UNAVAILABLE";
-  const researchState = data?.research?.current_status || "UNAVAILABLE";
+  const researchState = String(data?.research?.current_status || "UNAVAILABLE").replaceAll("_", " ").toUpperCase();
 
   return (
     <div className={"company-page product-detail product-detail-" + product.slug}>
