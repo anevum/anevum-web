@@ -34,6 +34,8 @@ jobs:
         run: node scripts/validate-release-registry.mjs
       - name: Install
         run: npm install --no-audit --no-fund
+      - name: Test canonical operational boundary
+        run: node --experimental-strip-types --test tests/command-topology.test.mjs
       - name: Typecheck and build
         run: npm run build
       - name: Verify generated artifacts
