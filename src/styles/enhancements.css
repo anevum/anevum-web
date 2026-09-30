@@ -1006,3 +1006,43 @@
     transition: none;
   }
 }
+
+
+/* Founder portrait/grid integration.
+   The portrait is intentionally larger than the original monogram; reserve its real width so it never overlays identity copy. */
+@media (min-width: 901px) {
+  .founder-id {
+    grid-template-columns: minmax(220px, 330px) minmax(0, 1fr);
+    gap: clamp(32px, 3vw, 48px);
+  }
+
+  .founder-id > div:last-child {
+    min-width: 0;
+  }
+
+  .founder-id h1 {
+    font-size: clamp(4rem, 5.8vw, 6.5rem);
+  }
+}
+
+@media (min-width: 681px) and (max-width: 900px) {
+  .founder-id {
+    grid-template-columns: minmax(180px, 240px) minmax(0, 1fr);
+    gap: 24px;
+  }
+
+  .founder-portrait {
+    width: 100%;
+    max-width: 240px;
+  }
+
+  .founder-id h1 {
+    font-size: clamp(3.2rem, 9vw, 5rem);
+  }
+}
+
+@media (max-width: 680px) {
+  .founder-id {
+    grid-template-columns: 1fr;
+  }
+}
