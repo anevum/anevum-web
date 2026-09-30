@@ -66,6 +66,12 @@ export default function HomeCompany() {
         <div className="company-hero-visual">
           <div className="hero-visual-label"><span>ANEVUM / SYSTEM MAP</span><b>LIVE ARCHITECTURE</b></div>
           <SystemTopology compact />
+          <div className="hero-visual-metrics" aria-label="Current public system summary">
+            <span><small>RUNTIME</small><strong>{state}</strong></span>
+            <span><small>EVENTS / 60M</small><strong>{data?.telemetry?.events_60m ?? "—"}</strong></span>
+            <span><small>LIVE CLOSED</small><strong>{data?.performance?.closed_trades ?? "—"}</strong></span>
+          </div>
+          <p className="hero-visual-caption">Public-safe state only. Research, replay, and protected execution controls remain separated from this surface.</p>
         </div>
       </section>
 
@@ -73,6 +79,13 @@ export default function HomeCompany() {
         <span>01 / OPERATING MODEL</span>
         <h2>Five systems. One evidence chain.</h2>
         <p>IREN coordinates. GRAEN tests what can be inferred. NOSTRA forecasts what may happen next. VELUM reconstructs what could have happened. RHEN operates bounded market workflows and records what actually happened.</p>
+        <div className="home-evidence-chain" aria-label="ANEVUM evidence chain">
+          <div><span>01 / QUESTION</span><strong>GRAEN</strong></div>
+          <div><span>02 / FORECAST</span><strong>NOSTRA</strong></div>
+          <div><span>03 / REPLAY</span><strong>VELUM</strong></div>
+          <div><span>04 / OPERATE</span><strong>RHEN</strong></div>
+          <div><span>05 / COORDINATE</span><strong>IREN</strong></div>
+        </div>
         <Link to="/architecture">How ANEVUM works →</Link>
       </section>
 
