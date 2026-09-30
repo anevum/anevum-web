@@ -7,32 +7,41 @@ import { currentRhenRelease, rhenReleaseBySlug } from "./data/releases";
 
 const Command = lazy(() => import("./pages/Command"));
 const Iren = lazy(() => import("./pages/Iren"));
-const Home = lazy(() => import("./pages/Home"));
+const HomeCompany = lazy(() => import("./pages/HomeCompany"));
+const Products = lazy(() => import("./pages/Products"));
+const ProductDetail = lazy(() => import("./pages/ProductDetail"));
 const Live = lazy(() => import("./pages/Live"));
-const System = lazy(() => import("./pages/System"));
-const Research = lazy(() => import("./pages/Research"));
+const ResearchHub = lazy(() => import("./pages/ResearchHub"));
 const Theory = lazy(() => import("./pages/Theory"));
-const Record = lazy(() => import("./pages/Record"));
 const Performance = lazy(() => import("./pages/Performance"));
+const Founder = lazy(() => import("./pages/Founder"));
+const Resume = lazy(() => import("./pages/Resume"));
 const Releases = lazy(() => import("./pages/Releases"));
 const ReleaseDetail = lazy(() => import("./pages/ReleaseDetail"));
 const PrivateAccess = lazy(() => import("./pages/Rhenlink"));
 
 const titles: Record<string, string> = {
-  "/": "ANEVUM",
-  "/live": "Operations — ANEVUM",
-  "/system": "System — ANEVUM",
+  "/": "ANEVUM — Software Systems & Research",
+  "/products": "Products — ANEVUM",
+  "/products/iren": "IREN — Operating Intelligence — ANEVUM",
+  "/products/rhen": "RHEN — Market System — ANEVUM",
+  "/products/nostra": "NOSTRA — Forecasting — ANEVUM",
+  "/products/graen": "GRAEN — Mathematical Research — ANEVUM",
+  "/products/velum": "VELUM — Replay & Simulation — ANEVUM",
+  "/live": "Live Systems — ANEVUM",
   "/research": "Research — ANEVUM",
-  "/theory": "Mathematics & Theory — ANEVUM",
-  "/record": "Record — ANEVUM",
-  "/performance": "RHEN Performance — ANEVUM",
-  "/releases": "RHEN Releases — ANEVUM",
+  "/theory": "Theory Registry — ANEVUM",
+  "/performance": "Performance — ANEVUM",
+  "/founder": "Devon Akins — Founder, ANEVUM",
+  "/resume": "Devon Akins — Resume",
+  "/releases": "Releases — ANEVUM",
   "/private": "Private — ANEVUM",
-  "/iren": "IREN — ANEVUM",
+  "/iren": "IREN Operations — ANEVUM"
 };
 
 function RouteEffects() {
   const location = useLocation();
+
   useEffect(() => {
     if (location.pathname.startsWith("/command")) {
       document.title = "Command — ANEVUM";
@@ -41,7 +50,7 @@ function RouteEffects() {
 
     if (location.pathname === "/releases") {
       const current = currentRhenRelease();
-      document.title = `RHEN Releases — ${current.version} ${current.codename} — ANEVUM`;
+      document.title = "Releases — RHEN " + current.version + " " + current.codename + " — ANEVUM";
       return;
     }
 
@@ -49,13 +58,14 @@ function RouteEffects() {
       const slug = location.pathname.slice("/releases/".length);
       const release = rhenReleaseBySlug(slug);
       document.title = release
-        ? `RHEN ${release.version} — ${release.codename} — ANEVUM`
-        : "RHEN Releases — ANEVUM";
+        ? "RHEN " + release.version + " — " + release.codename + " — ANEVUM"
+        : "Releases — ANEVUM";
       return;
     }
 
-    document.title = titles[location.pathname] || "ANEVUM";
+    document.title = titles[location.pathname] || "ANEVUM — Software Systems & Research";
   }, [location.pathname]);
+
   return null;
 }
 
@@ -74,35 +84,39 @@ export default function App() {
       <OverflowPan />
       <SeasonalEasterEggs />
       <Routes>
-        <Route path="/" element={<PublicExperience><Home /></PublicExperience>} />
-        <Route path="/live" element={<PublicExperience><Live /></PublicExperience>} />
-        <Route path="/system" element={<PublicExperience><System /></PublicExperience>} />
-        <Route path="/research" element={<PublicExperience><Research /></PublicExperience>} />
-        <Route path="/theory" element={<PublicExperience><Theory /></PublicExperience>} />
-        <Route path="/record" element={<PublicExperience><Record /></PublicExperience>} />
+        <Route path="/" element={<PublicExperience><HomeCompany /></PublicExperience>} />
+        <Route path="/products" element={<PublicExperience><Products /></PublicExperience>} />
+        <Route path="/products/:slug" element={<PublicExperience><ProductDetail /></PublicExperience>} />
         <Route path="/performance" element={<PublicExperience><Performance /></PublicExperience>} />
+        <Route path="/research" element={<PublicExperience><ResearchHub /></PublicExperience>} />
+        <Route path="/founder" element={<PublicExperience><Founder /></PublicExperience>} />
+        <Route path="/resume" element={<PublicExperience><Resume /></PublicExperience>} />
         <Route path="/releases" element={<PublicExperience><Releases /></PublicExperience>} />
         <Route path="/releases/:slug" element={<PublicExperience><ReleaseDetail /></PublicExperience>} />
+        <Route path="/live" element={<PublicExperience><Live /></PublicExperience>} />
+        <Route path="/theory" element={<PublicExperience><Theory /></PublicExperience>} />
 
         <Route path="/iren" element={<Suspense fallback={<Loader />}><Iren /></Suspense>} />
         <Route path="/private" element={<Suspense fallback={<Loader />}><PrivateAccess /></Suspense>} />
         <Route path="/command/*" element={<Suspense fallback={<Loader />}><Command /></Suspense>} />
         <Route path="/rhenlink" element={<Navigate to="/private" replace />} />
 
+        <Route path="/system" element={<Navigate to="/products/iren" replace />} />
+        <Route path="/record" element={<Navigate to="/releases" replace />} />
         <Route path="/work" element={<Navigate to="/research" replace />} />
-        <Route path="/lab" element={<Navigate to="/research" replace />} />
-        <Route path="/notes" element={<Navigate to="/record" replace />} />
-        <Route path="/wiki" element={<Navigate to="/system" replace />} />
-        <Route path="/wiki/archive/transcosmic" element={<Navigate to="/record" replace />} />
-        <Route path="/about" element={<Navigate to="/system" replace />} />
+        <Route path="/lab" element={<Navigate to="/products/velum" replace />} />
+        <Route path="/notes" element={<Navigate to="/research" replace />} />
+        <Route path="/wiki" element={<Navigate to="/products" replace />} />
+        <Route path="/wiki/archive/transcosmic" element={<Navigate to="/releases" replace />} />
+        <Route path="/about" element={<Navigate to="/founder" replace />} />
         <Route path="/proof" element={<Navigate to="/performance" replace />} />
-        <Route path="/method" element={<Navigate to="/system" replace />} />
-        <Route path="/the-book" element={<Navigate to="/record" replace />} />
-        <Route path="/reply" element={<Navigate to="/record" replace />} />
-        <Route path="/stories/reply" element={<Navigate to="/record" replace />} />
-        <Route path="/universe" element={<Navigate to="/record" replace />} />
-        <Route path="/lattice" element={<Navigate to="/record" replace />} />
-        <Route path="/store" element={<Navigate to="/record" replace />} />
+        <Route path="/method" element={<Navigate to="/research" replace />} />
+        <Route path="/the-book" element={<Navigate to="/releases" replace />} />
+        <Route path="/reply" element={<Navigate to="/releases" replace />} />
+        <Route path="/stories/reply" element={<Navigate to="/releases" replace />} />
+        <Route path="/universe" element={<Navigate to="/releases" replace />} />
+        <Route path="/lattice" element={<Navigate to="/releases" replace />} />
+        <Route path="/store" element={<Navigate to="/releases" replace />} />
 
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

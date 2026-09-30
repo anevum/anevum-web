@@ -1,0 +1,163 @@
+{
+  "name": "Devon Akins",
+  "headline": "Founder / Software Systems Builder",
+  "profileHeadline": "Founder · Systems Builder · Independent Researcher",
+  "email": "devon@anevum.com",
+  "website": "anevum.com",
+  "summary": "Founder of ANEVUM, building and operating a multi-service software and research platform spanning orchestration, market systems, forecasting research, mathematical validation, replay, telemetry, evidence pipelines, and production infrastructure. Current work combines React and TypeScript applications with Python services, PostgreSQL/Supabase data systems, containerized deployment, CI/CD, observability, and research-to-production controls.",
+  "experience": [
+    {
+      "organization": "ANEVUM",
+      "role": "Founder",
+      "period": "2026–Present",
+      "bullets": [
+        "Architecting and deploying a multi-service software and research platform with public and protected operational surfaces.",
+        "Building React and TypeScript web applications and Python/FastAPI backend services.",
+        "Designing PostgreSQL/Supabase telemetry, canonical event, evidence, reconciliation, and research pipelines.",
+        "Operating containerized services on Railway and Cloudflare with GitHub Actions verification and deployment workflows.",
+        "Building live market-data, execution, risk-control, performance, forecasting, simulation, replay, and research tooling.",
+        "Maintaining explicit separation between live execution, shadow research, replay/simulation, and post-event evidence."
+      ]
+    }
+  ],
+  "skills": [
+    {
+      "group": "Software Engineering",
+      "items": [
+        "React",
+        "TypeScript",
+        "JavaScript",
+        "Python",
+        "FastAPI",
+        "REST APIs",
+        "System architecture"
+      ]
+    },
+    {
+      "group": "Infrastructure",
+      "items": [
+        "Docker",
+        "Railway",
+        "Cloudflare Workers",
+        "Supabase",
+        "PostgreSQL",
+        "GitHub Actions",
+        "CI/CD"
+      ]
+    },
+    {
+      "group": "Data & Research",
+      "items": [
+        "Telemetry systems",
+        "Experiment design",
+        "Market data",
+        "Mathematical modeling",
+        "Forecasting",
+        "Simulation",
+        "Validation",
+        "Performance analysis"
+      ]
+    },
+    {
+      "group": "Mathematics",
+      "items": [
+        "Calculus",
+        "Linear algebra",
+        "Mathematical modeling",
+        "Probability and statistical reasoning"
+      ]
+    },
+    {
+      "group": "Systems",
+      "items": [
+        "Distributed services",
+        "Automated operations",
+        "Observability",
+        "Versioning",
+        "Reliability controls",
+        "Risk controls",
+        "Research-to-production gates"
+      ]
+    }
+  ],
+  "education": [
+    {
+      "school": "University of Arkansas",
+      "study": "Mathematics studies",
+      "detail": "Relevant coursework: Calculus II, Calculus III, Linear Algebra."
+    },
+    {
+      "school": "University of Central Florida",
+      "study": "Physics studies",
+      "detail": "Undergraduate physics study."
+    }
+  ],
+  "systems": [
+    {
+      "name": "IREN",
+      "description": "Operating intelligence and orchestration surface connecting ANEVUM systems, runtime state, research state, and protected operations."
+    },
+    {
+      "name": "RHEN",
+      "description": "Market observation, evaluation, risk, execution, reconciliation, canonical telemetry, and evidence system with equities and crypto lanes."
+    },
+    {
+      "name": "NOSTRA",
+      "description": "Forecasting and prediction research system for regimes, forward horizons, uncertainty, calibration, and post-event outcomes."
+    },
+    {
+      "name": "GRAEN",
+      "description": "Mathematical and theoretical research program for methodology, falsification, selection bias, multiplicity, dependence, and validation."
+    },
+    {
+      "name": "VELUM",
+      "description": "Replay, simulation, market reconstruction, counterfactual analysis, and reproducible off-hours research system."
+    },
+    {
+      "name": "ANEVUM Web",
+      "description": "Public software/research product surface and protected Command console deployed through Cloudflare."
+    }
+  ],
+  "stack": [
+    "React",
+    "TypeScript",
+    "Vite",
+    "Python 3.12",
+    "FastAPI",
+    "PostgreSQL",
+    "Supabase",
+    "Docker",
+    "Railway",
+    "Cloudflare Workers",
+    "GitHub Actions",
+    "Alpaca",
+    "Slack"
+  ],
+  "timeline": [
+    {
+      "date": "Sep 24, 2026",
+      "title": "Canonical RHEN telemetry",
+      "detail": "Built durable decision, order, position, incident, provenance, and account-state telemetry as the evidence backbone for live and research workflows."
+    },
+    {
+      "date": "Sep 25, 2026",
+      "title": "RHEN live production",
+      "detail": "Established the current live RHEN strategy with guarded execution, reconciliation, strategy versioning, protected operations, and public-safe status surfaces."
+    },
+    {
+      "date": "Sep 27, 2026",
+      "title": "Research operations",
+      "detail": "Added Research Agent and Agent Support foundations, pre-open research state, durable research decisions, and scheduler/readiness controls."
+    },
+    {
+      "date": "Sep 28, 2026",
+      "title": "GRAEN validation program",
+      "detail": "Formalized the mathematical theory registry and MATH-001 work on discovery reliability, multiplicity, dependence, and bounded claims."
+    },
+    {
+      "date": "Sep 29, 2026",
+      "title": "Multi-market and replay architecture",
+      "detail": "Extended RHEN with explicit crypto market-lane attribution and connected crypto NOSTRA, GRAEN, ADS, and VELUM replay research without merging evidence populations."
+    }
+  ]
+}

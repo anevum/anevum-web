@@ -171,30 +171,69 @@ function currentReleaseSnapshot() {
 }
 
 function publicRouteMetadata(pathname) {
-  if (pathname === "/theory") {
-    return {
-      title: "Mathematics & Theory — ANEVUM",
-      description: "ANEVUM's public mathematics and theory program: formal problems, conjectures, assumptions, falsification criteria, workstreams, and the boundary between theory and RHEN production.",
-      url: "https://anevum.com/theory"
-    };
-  }
+  const staticRoutes = {
+    "/": {
+      title: "ANEVUM — Software Systems & Research",
+      description: "ANEVUM builds software systems for orchestration, market operations, forecasting research, mathematical validation, replay, simulation, telemetry, and evidence."
+    },
+    "/products": {
+      title: "Products — ANEVUM",
+      description: "Explore IREN, RHEN, NOSTRA, GRAEN, and VELUM: ANEVUM's orchestration, market, forecasting, mathematical research, and replay systems."
+    },
+    "/products/iren": {
+      title: "IREN — Operating Intelligence — ANEVUM",
+      description: "IREN is ANEVUM's operating intelligence and orchestration layer for system state, research coordination, protected operations, and cross-system visibility."
+    },
+    "/products/rhen": {
+      title: "RHEN — Market System — ANEVUM",
+      description: "RHEN is ANEVUM's market observation, evaluation, risk, execution, reconciliation, telemetry, evidence, and strategy-research system."
+    },
+    "/products/nostra": {
+      title: "NOSTRA — Forecasting — ANEVUM",
+      description: "NOSTRA is ANEVUM's forecasting and prediction research system for regimes, forward horizons, uncertainty, outcomes, and calibration."
+    },
+    "/products/graen": {
+      title: "GRAEN — Mathematical Research — ANEVUM",
+      description: "GRAEN is ANEVUM's mathematical and theoretical research program for falsification, selection bias, multiplicity, dependence, simulation design, and validation."
+    },
+    "/products/velum": {
+      title: "VELUM — Replay & Simulation — ANEVUM",
+      description: "VELUM is ANEVUM's broker-isolated replay, simulation, market reconstruction, counterfactual analysis, and failure-analysis system."
+    },
+    "/performance": {
+      title: "Performance — ANEVUM",
+      description: "Separate public-safe live performance records for RHEN equities and crypto market lanes, with normalized methodology, sample boundaries, and no simulated results."
+    },
+    "/research": {
+      title: "Research — ANEVUM",
+      description: "ANEVUM research across GRAEN, NOSTRA, VELUM, and RHEN: hypotheses, validation gates, durable decisions, forward outcomes, and explicit limitations."
+    },
+    "/founder": {
+      title: "Devon Akins — Founder, ANEVUM",
+      description: "Founder profile for Devon Akins: systems builder and independent researcher building ANEVUM's software, infrastructure, telemetry, forecasting, mathematical research, and replay systems."
+    },
+    "/resume": {
+      title: "Devon Akins — Resume",
+      description: "Recruiter-ready resume for Devon Akins, founder of ANEVUM, covering software engineering, infrastructure, data systems, research tooling, and selected systems."
+    },
+    "/live": {
+      title: "Live Systems — ANEVUM",
+      description: "Sanitized live operating state and telemetry for ANEVUM systems without exposing private account data, execution details, or sensitive infrastructure."
+    },
+    "/theory": {
+      title: "Theory Registry — ANEVUM",
+      description: "ANEVUM's public mathematical theory registry: formal problems, conjectures, assumptions, falsification criteria, workstreams, results, and authority boundaries."
+    },
+    "/releases": {
+      title: "Releases — ANEVUM",
+      description: "ANEVUM release history with named RHEN milestones, manifests, verification state, limitations, and downloadable release packets."
+    }
+  };
 
-  if (pathname === "/performance") {
+  if (staticRoutes[pathname]) {
     return {
-      title: "RHEN Performance — ANEVUM",
-      description: "RHEN's broker-derived live performance record: normalized returns, drawdown, sample size, methodology, and public/private evidence boundary.",
-      url: "https://anevum.com/performance"
-    };
-  }
-
-  if (pathname === "/releases") {
-    const current = currentReleaseSnapshot();
-    return {
-      title: current ? `RHEN Releases — ${current.version} ${current.codename} — ANEVUM` : "RHEN Releases — ANEVUM",
-      description: current
-        ? `RHEN release archive. Current named release: ${current.version} ${current.codename}, ${current.lifecycle}.`
-        : "RHEN named release archive, manifests, verification state, limitations, and release packets.",
-      url: "https://anevum.com/releases"
+      ...staticRoutes[pathname],
+      url: "https://anevum.com" + (pathname === "/" ? "/" : pathname)
     };
   }
 
@@ -203,9 +242,9 @@ function publicRouteMetadata(pathname) {
     const release = releaseRegistry.releases.find((item) => item.slug === slug);
     if (release) {
       return {
-        title: `RHEN ${release.version} — ${release.codename} — ANEVUM`,
-        description: `${release.releaseClass}. ${release.abstract}`,
-        url: `https://anevum.com/releases/${release.slug}`
+        title: "RHEN " + release.version + " — " + release.codename + " — ANEVUM",
+        description: release.releaseClass + ". " + release.abstract,
+        url: "https://anevum.com/releases/" + release.slug
       };
     }
   }
