@@ -22,6 +22,7 @@ export type Module = {
   owner: string;
   status: string;
   purpose: string;
+  interfaces: string[];
 };
 
 export const products: Product[] = [
@@ -103,25 +104,25 @@ export const products: Product[] = [
 ];
 
 export const modules: Module[] = [
-  { name: "Research Agent", category: "Research service", owner: "RHEN / GRAEN", status: "OPERATIONAL", purpose: "Runs bounded post-event research workflows and produces durable research artifacts." },
-  { name: "Agent Support Layer", category: "Operations", owner: "IREN / RHEN", status: "OPERATIONAL", purpose: "Integrity, registry, deployment-role, snapshot, and escalation support for research services." },
-  { name: "ADS", category: "Scoring research", owner: "RHEN / NOSTRA", status: "RESEARCH ONLY", purpose: "Retains shadow scores and attribution evidence without direct execution authority." },
-  { name: "Pre-Open State", category: "Market-state research", owner: "RHEN / NOSTRA", status: "SHADOW", purpose: "Builds research-only pre-open state and forward outcomes." },
-  { name: "Strategy Router", category: "Research controls", owner: "RHEN", status: "IMPLEMENTED", purpose: "Routes bounded strategy research while preserving production authorization boundaries." },
-  { name: "Promotion Gate", category: "Validation", owner: "GRAEN / RHEN", status: "IMPLEMENTED", purpose: "Requires explicit evidence gates before research can be considered for promotion." },
-  { name: "Adaptive Shadow", category: "Validation", owner: "GRAEN / RHEN", status: "RESEARCH", purpose: "Evaluates bounded adaptive proposals in shadow before any production consideration." },
-  { name: "Counterfactual Lab", category: "Simulation", owner: "VELUM / GRAEN", status: "RESEARCH", purpose: "Measures alternate bounded decisions against retained post-event evidence." },
-  { name: "Evidence Pipeline", category: "Telemetry", owner: "RHEN", status: "OPERATIONAL", purpose: "Links candidates, signals, intents, orders, positions, exits, and forward outcomes." },
-  { name: "Post-Event Evidence", category: "Analytics", owner: "RHEN / NOSTRA", status: "OPERATIONAL", purpose: "Computes forward outcomes after decisions without feeding them back into the original live decision." },
-  { name: "Research Scheduler", category: "Operations", owner: "Research Agent", status: "OPERATIONAL", purpose: "Runs research work on bounded schedules and evidence readiness." },
-  { name: "Strategy Lab", category: "Research tooling", owner: "RHEN / VELUM", status: "RESEARCH", purpose: "Compares strategy variants under common historical data and friction assumptions." },
-  { name: "Canonical Telemetry", category: "Data infrastructure", owner: "RHEN", status: "OPERATIONAL", purpose: "Durable event and decision evidence across live and research workflows." },
-  { name: "Cash Flow Accounting", category: "Performance integrity", owner: "RHEN", status: "OPERATIONAL", purpose: "Prevents external account flows from being misrepresented as system performance." },
-  { name: "Crypto Layer", category: "Market lane", owner: "RHEN", status: "LIVE SAMPLE PENDING", purpose: "Separates continuous-market features, execution attribution, evidence, and calibration from equities." },
-  { name: "Crypto NOSTRA", category: "Forecasting research", owner: "NOSTRA", status: "RESEARCH", purpose: "Infers descriptive crypto regimes from volatility, liquidity, activity, momentum, and time state." },
-  { name: "Crypto GRAEN", category: "Validation", owner: "GRAEN", status: "RESEARCH", purpose: "Defines crypto-specific promotion evidence floors and validation requirements." },
-  { name: "Crypto ADS", category: "Scoring research", owner: "RHEN / NOSTRA", status: "RESEARCH", purpose: "Provides crypto scoring research without live authority." },
-  { name: "VELUM Core", category: "Replay", owner: "VELUM", status: "ACTIVE", purpose: "Broker-isolated replay engine reusing production research mathematics." }
+  { name: "Research Agent", category: "Research service", owner: "RHEN / GRAEN", status: "OPERATIONAL", purpose: "Runs bounded post-event research workflows and produces durable research artifacts.", interfaces: ["Canonical telemetry", "Research scheduler", "PostgreSQL"] },
+  { name: "Agent Support Layer", category: "Operations", owner: "IREN / RHEN", status: "OPERATIONAL", purpose: "Integrity, registry, deployment-role, snapshot, and escalation support for research services.", interfaces: ["Research Agent", "Railway roles", "Alert state"] },
+  { name: "ADS", category: "Scoring research", owner: "RHEN / NOSTRA", status: "RESEARCH ONLY", purpose: "Retains shadow scores and attribution evidence without direct execution authority.", interfaces: ["Candidate evaluations", "Attribution", "Forward outcomes"] },
+  { name: "Pre-Open State", category: "Market-state research", owner: "RHEN / NOSTRA", status: "SHADOW", purpose: "Builds research-only pre-open state and forward outcomes.", interfaces: ["Market data", "Pre-open snapshots", "Forward outcomes"] },
+  { name: "Strategy Router", category: "Research controls", owner: "RHEN", status: "IMPLEMENTED", purpose: "Routes bounded strategy research while preserving production authorization boundaries.", interfaces: ["Strategy registry", "Research proposals", "Promotion controls"] },
+  { name: "Promotion Gate", category: "Validation", owner: "GRAEN / RHEN", status: "IMPLEMENTED", purpose: "Requires explicit evidence gates before research can be considered for promotion.", interfaces: ["Evidence quality", "Adaptive shadow", "Strategy registry"] },
+  { name: "Adaptive Shadow", category: "Validation", owner: "GRAEN / RHEN", status: "RESEARCH", purpose: "Evaluates bounded adaptive proposals in shadow before any production consideration.", interfaces: ["Candidate outcomes", "Strategy health", "Promotion gate"] },
+  { name: "Counterfactual Lab", category: "Simulation", owner: "VELUM / GRAEN", status: "RESEARCH", purpose: "Measures alternate bounded decisions against retained post-event evidence.", interfaces: ["Forward outcomes", "Adaptive policy", "Historical decisions"] },
+  { name: "Evidence Pipeline", category: "Telemetry", owner: "RHEN", status: "OPERATIONAL", purpose: "Links candidates, signals, intents, orders, positions, exits, and forward outcomes.", interfaces: ["Decision telemetry", "Broker lifecycle", "Post-event evidence"] },
+  { name: "Post-Event Evidence", category: "Analytics", owner: "RHEN / NOSTRA", status: "OPERATIONAL", purpose: "Computes forward outcomes after decisions without feeding them back into the original live decision.", interfaces: ["Candidate evaluations", "Market data", "Forward-outcome store"] },
+  { name: "Research Scheduler", category: "Operations", owner: "Research Agent", status: "OPERATIONAL", purpose: "Runs research work on bounded schedules and evidence readiness.", interfaces: ["Readiness state", "Agent runner", "Railway service"] },
+  { name: "Strategy Lab", category: "Research tooling", owner: "RHEN / VELUM", status: "RESEARCH", purpose: "Compares strategy variants under common historical data and friction assumptions.", interfaces: ["Replay engine", "Historical bars", "Strategy variants"] },
+  { name: "Canonical Telemetry", category: "Data infrastructure", owner: "RHEN", status: "OPERATIONAL", purpose: "Durable event and decision evidence across live and research workflows.", interfaces: ["Runtime emitters", "PostgreSQL", "Public projection"] },
+  { name: "Cash Flow Accounting", category: "Performance integrity", owner: "RHEN", status: "OPERATIONAL", purpose: "Prevents external account flows from being misrepresented as system performance.", interfaces: ["Account activities", "Performance epochs", "Public performance"] },
+  { name: "Crypto Layer", category: "Market lane", owner: "RHEN", status: "LIVE SAMPLE PENDING", purpose: "Separates continuous-market features, execution attribution, evidence, and calibration from equities.", interfaces: ["Crypto market data", "Execution adapter", "Market-lane telemetry"] },
+  { name: "Crypto NOSTRA", category: "Forecasting research", owner: "NOSTRA", status: "RESEARCH", purpose: "Infers descriptive crypto regimes from volatility, liquidity, activity, momentum, and time state.", interfaces: ["Crypto feature state", "BTC/ETH context", "Regime evidence"] },
+  { name: "Crypto GRAEN", category: "Validation", owner: "GRAEN", status: "RESEARCH", purpose: "Defines crypto-specific promotion evidence floors and validation requirements.", interfaces: ["Crypto evidence packet", "Promotion metrics", "Regime coverage"] },
+  { name: "Crypto ADS", category: "Scoring research", owner: "RHEN / NOSTRA", status: "RESEARCH", purpose: "Provides crypto scoring research without live authority.", interfaces: ["Crypto features", "Prediction state", "Attribution evidence"] },
+  { name: "VELUM Core", category: "Replay", owner: "VELUM", status: "ACTIVE", purpose: "Broker-isolated replay engine reusing production research mathematics.", interfaces: ["Historical bars", "Production scoring math", "Replay reports"] }
 ];
 
 export function productBySlug(slug?: string) {
