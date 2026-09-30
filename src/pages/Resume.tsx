@@ -33,7 +33,7 @@ export default function Resume() {
         </section>
 
         <section>
-          <h3>Core Skills</h3>
+          <h3>Technical Skills</h3>
           <div className="resume-skill-grid">
             {founder.skills.map((group) => <div key={group.group}><strong>{group.group}</strong><p>{group.items.join(" · ")}</p></div>)}
           </div>
