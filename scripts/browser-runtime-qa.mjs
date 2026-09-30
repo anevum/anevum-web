@@ -187,11 +187,13 @@ async function runScrollResetCase(viewport) {
 
   const result = await send("Runtime.evaluate", {
     expression: `(async () => {
-      window.scrollTo(0, Math.max(1200, document.documentElement.scrollHeight - innerHeight - 200));
-      await new Promise((resolve) => setTimeout(resolve, 150));
-      const before = window.scrollY;
+      const scroller = document.scrollingElement || document.documentElement;
+      const maxScroll = Math.max(0, scroller.scrollHeight - scroller.clientHeight);
+      scroller.scrollTop = Math.min(1200, maxScroll);
+      await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+      const before = scroller.scrollTop;
       const link = document.querySelector('a[href="/architecture"]');
-      if (!link) return { ok: false, reason: "architecture link missing", before, pathname: location.pathname, after: window.scrollY };
+      if (!link) return { ok: false, reason: "architecture link missing", before, maxScroll, pathname: location.pathname, after: scroller.scrollTop };
       link.click();
 
       const deadline = Date.now() + 5000;
@@ -200,9 +202,10 @@ async function runScrollResetCase(viewport) {
       }
       await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
       return {
-        ok: location.pathname === "/architecture" && before > 200 && window.scrollY <= 1,
+        ok: location.pathname === "/architecture" && before > 200 && scroller.scrollTop <= 1,
         before,
-        after: window.scrollY,
+        after: scroller.scrollTop,
+        maxScroll,
         pathname: location.pathname
       };
     })()`,
