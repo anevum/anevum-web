@@ -121,6 +121,20 @@ function RouteEffects() {
   const location = useLocation();
 
   useEffect(() => {
+    const previous = window.history.scrollRestoration;
+    window.history.scrollRestoration = "manual";
+    return () => {
+      window.history.scrollRestoration = previous;
+    };
+  }, []);
+
+  useEffect(() => {
+    window.requestAnimationFrame(() => {
+      window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+    });
+  }, [location.pathname]);
+
+  useEffect(() => {
     const path = location.pathname;
     const protectedRoute = path.startsWith("/command") || path === "/private" || path === "/iren";
 
