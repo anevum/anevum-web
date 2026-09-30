@@ -1507,3 +1507,19 @@
   .field-note-reproduce summary{padding:20px}
   .field-note-reproduce-body{padding:0 18px 22px}
 }
+
+
+/* Final mobile hierarchy refinement from visual QA */
+@media(max-width:720px){
+  .architecture-hero h1{
+    max-width:100%;
+    font-size:clamp(2.8rem,13.5vw,4.65rem);
+    line-height:.91;
+    letter-spacing:-.052em;
+  }
+  .architecture-hero p{
+    max-width:34rem;
+    font-size:.86rem;
+    line-height:1.68;
+  }
+}
