@@ -1,6 +1,6 @@
 import RhenMark from "../RhenMark";
 
-type SystemName = "IREN" | "RHEN" | "NOSTRA" | "GRAEN" | "VELUM";
+export type SystemName = "IREN" | "RHEN" | "NOSTRA" | "GRAEN" | "VELUM";
 
 type Props = {
   system: SystemName;
