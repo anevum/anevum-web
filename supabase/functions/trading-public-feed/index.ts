@@ -219,7 +219,7 @@ Deno.serve(async (req) => {
 
     const [performanceRows, performanceCurveRows] = await Promise.all([
       sql.unsafe(`with active_epoch as (
-          select epoch_id, baseline_snapshot_id, started_at, reason
+          select epoch_id, baseline_snapshot_id, started_at, ended_at, reason
           from private.trading_performance_epochs
           order by started_at desc
           limit 1
@@ -228,6 +228,7 @@ Deno.serve(async (req) => {
           select
             e.epoch_id,
             e.started_at as tracking_started_at,
+            e.ended_at as tracking_ended_at,
             e.reason as baseline_reason,
             p.equity::numeric as first_equity
           from active_epoch e
@@ -239,6 +240,7 @@ Deno.serve(async (req) => {
           from public.trading_public_equity p
           cross join baseline b
           where p.observed_at >= b.tracking_started_at
+            and p.observed_at <= coalesce(b.tracking_ended_at, now())
         ),
         drawdowns as (
           select
@@ -266,7 +268,7 @@ Deno.serve(async (req) => {
           from baseline b
           left join epoch_equity e on true
           left join drawdowns d on d.observed_at = e.observed_at
-          group by b.tracking_started_at, b.baseline_reason, b.first_equity
+          group by b.tracking_started_at, b.tracking_ended_at, b.baseline_reason, b.first_equity
         ),
         trades as (
           select
@@ -288,6 +290,7 @@ Deno.serve(async (req) => {
           cross join baseline b
           where s.environment = 'live'
             and t.closed_at >= b.tracking_started_at
+            and t.closed_at <= coalesce(b.tracking_ended_at, now())
         )
         select
           equity.tracking_started_at,
@@ -315,13 +318,13 @@ Deno.serve(async (req) => {
           end as realized_return_pct
         from equity cross join trades cross join epoch_trades`),
       sql.unsafe(`with active_epoch as (
-          select baseline_snapshot_id, started_at
+          select baseline_snapshot_id, started_at, ended_at
           from private.trading_performance_epochs
           order by started_at desc
           limit 1
         ),
         baseline as (
-          select e.started_at, p.equity::numeric as first_equity
+          select e.started_at, e.ended_at, p.equity::numeric as first_equity
           from active_epoch e
           join public.trading_public_equity p
             on p.snapshot_id = e.baseline_snapshot_id
@@ -335,6 +338,7 @@ Deno.serve(async (req) => {
           from public.trading_public_equity p
           cross join baseline b
           where p.observed_at >= b.started_at
+            and p.observed_at <= coalesce(b.ended_at, now())
         ),
         sampled as (
           select *
