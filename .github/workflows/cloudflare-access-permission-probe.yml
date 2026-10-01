@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 3
     steps:
-      - name: Inspect Access configuration read-only
+      - name: Probe Access app read/write permissions safely
         shell: bash
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -19,27 +19,20 @@ jobs:
           set -euo pipefail
           auth=(-H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" -H "Content-Type: application/json")
 
-          apps_status="$(curl --silent --show-error -o "$RUNNER_TEMP/apps.json" -w '%{http_code}'             "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/access/apps?per_page=100"             "${auth[@]}")"
-          echo "ACCESS_APPS_HTTP_STATUS=$apps_status"
-          test "$apps_status" = "200"
+          read_status="$(curl --silent --show-error -o "$RUNNER_TEMP/apps.json" -w '%{http_code}'             "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/access/apps?per_page=100"             "${auth[@]}")"
+          echo "ACCESS_APPS_READ_HTTP_STATUS=$read_status"
+          test "$read_status" = "200"
           jq -e '.success == true' "$RUNNER_TEMP/apps.json" > /dev/null
-          jq -c '[.result[] | {
-            name,
-            type,
-            domain,
-            aud,
-            session_duration,
-            policy_count: ((.policies // []) | length)
-          }]' "$RUNNER_TEMP/apps.json"
+          echo "ACCESS_APP_COUNT=$(jq '.result | length' "$RUNNER_TEMP/apps.json")"
 
-          org_status="$(curl --silent --show-error -o "$RUNNER_TEMP/org.json" -w '%{http_code}'             "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/access/organizations"             "${auth[@]}")"
-          echo "ACCESS_ORG_HTTP_STATUS=$org_status"
-          test "$org_status" = "200"
-          jq -e '.success == true' "$RUNNER_TEMP/org.json" > /dev/null
-          jq -c '{
-            auth_domain: .result.auth_domain,
-            name: .result.name,
-            session_duration: .result.session_duration,
-            auto_redirect_to_identity: .result.auto_redirect_to_identity,
-            deny_unmatched_requests: .result.deny_unmatched_requests
-          }' "$RUNNER_TEMP/org.json"
+          write_status="$(curl --silent --show-error -o "$RUNNER_TEMP/write.json" -w '%{http_code}'             -X POST             "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/access/apps"             "${auth[@]}"             --data '{}')"
+          echo "ACCESS_APPS_INVALID_CREATE_HTTP_STATUS=$write_status"
+          if [ "$write_status" = "403" ]; then
+            echo "ACCESS_APPS_WRITE=unauthorized"
+          elif [ "$write_status" = "400" ] || [ "$write_status" = "422" ]; then
+            echo "ACCESS_APPS_WRITE=authorized_validation_rejected"
+          else
+            echo "ACCESS_APPS_WRITE=unexpected_status"
+            jq -c '{success, errors}' "$RUNNER_TEMP/write.json" || true
+            exit 2
+          fi
