@@ -20,13 +20,6 @@ jobs:
           api="https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID"
           auth=(-H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" -H "Content-Type: application/json")
 
-          curl --fail --silent --show-error "$api/access/organizations" "${auth[@]}" > "$RUNNER_TEMP/org.json"
-          auth_domain="$(jq -r '.result | if type=="array" then .[0].auth_domain else .auth_domain end // empty' "$RUNNER_TEMP/org.json")"
-          if [ -z "$auth_domain" ]; then
-            echo "Zero Trust organization auth_domain is missing"
-            exit 1
-          fi
-
           curl --fail --silent --show-error "$api/access/apps?per_page=100" "${auth[@]}" > "$RUNNER_TEMP/apps.json"
           app_id="$(jq -r '.result[]? | select(.name=="ANEVUM Command") | .id' "$RUNNER_TEMP/apps.json" | head -n1)"
 
@@ -94,7 +87,6 @@ jobs:
 
           echo "ACCESS_APP_ID=$app_id"
           echo "ACCESS_AUD=$aud"
-          echo "ACCESS_TEAM_DOMAIN=https://$auth_domain"
           jq -c '{
             name:.result.name,
             type:.result.type,
