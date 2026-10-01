@@ -22,7 +22,6 @@ const Founder = lazy(() => import("./pages/Founder"));
 const Resume = lazy(() => import("./pages/Resume"));
 const Releases = lazy(() => import("./pages/Releases"));
 const ReleaseDetail = lazy(() => import("./pages/ReleaseDetail"));
-const PrivateAccess = lazy(() => import("./pages/Rhenlink"));
 
 const titles: Record<string, string> = {
   "/": "ANEVUM Core Rebuild Underway — Engineering Update",
@@ -201,7 +200,7 @@ export default function App() {
         <Route path="/theory" element={<PublicExperience><Theory /></PublicExperience>} />
 
         <Route path="/iren" element={<Suspense fallback={<Loader />}><Iren /></Suspense>} />
-        <Route path="/private" element={<Suspense fallback={<Loader />}><PrivateAccess /></Suspense>} />
+        <Route path="/private" element={<Navigate to="/command" replace />} />
         <Route path="/command/*" element={<Suspense fallback={<Loader />}><Command /></Suspense>} />
         <Route path="/rhenlink" element={<Navigate to="/private" replace />} />
 
