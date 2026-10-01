@@ -3,7 +3,7 @@ import releaseRegistry from "./src/data/releases.json";
 
 const TRADER_BASE = "https://alpaca-trader-production-bf3e.up.railway.app";
 const RESEARCH_BASE = "https://rhen-research-agent-production.up.railway.app";
-const PUBLIC_TRADING_FEED = "https://mfntzxheldzdvlokyntk.supabase.co/functions/v1/trading-public-feed";
+const PUBLIC_TRADING_FEED = "https://foundation-ingest-staging.up.railway.app/v1/trading-public-feed";
 const SUPABASE_AUTH_USER = "https://mfntzxheldzdvlokyntk.supabase.co/auth/v1/user";
 const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_XfkgeXau2-6XOPzoXF-Nnw_FSnx0Sae";
 
@@ -128,8 +128,7 @@ async function publicTradingFeed() {
   const response = await fetch(PUBLIC_TRADING_FEED, {
     method: "GET",
     headers: {
-      Accept: "application/json",
-      apikey: SUPABASE_PUBLISHABLE_KEY
+      Accept: "application/json"
     }
   });
   const raw = await response.text();
