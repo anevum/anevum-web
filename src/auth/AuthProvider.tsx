@@ -32,9 +32,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     async function resolveSession() {
       try {
-        const commandPath = typeof window !== "undefined"
-          && window.location.pathname.startsWith("/command");
-        const next = commandPath ? await resolveCommandAccessSession() : null;
+        const privatePath = typeof window !== "undefined"
+          && (
+            window.location.pathname.startsWith("/command")
+            || window.location.pathname === "/iren"
+          );
+        const next = privatePath ? await resolveCommandAccessSession() : null;
         if (!active) return;
         setSession(next);
       } finally {
