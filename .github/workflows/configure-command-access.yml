@@ -37,12 +37,17 @@ jobs:
 
           curl --fail --silent --show-error "$api/access/apps/$app_id/policies" "${auth[@]}" > "$RUNNER_TEMP/policies.json"
           policy_id="$(jq -r '.result[]? | select(.name=="ANEVUM Command Owner") | .id' "$RUNNER_TEMP/policies.json" | head -n1)"
+          if [ -n "$policy_id" ]; then
+            precedence="$(jq -r --arg id "$policy_id" '.result[] | select(.id==$id) | .precedence' "$RUNNER_TEMP/policies.json")"
+          else
+            precedence="$(jq -r '[.result[]?.precedence // 0] | max + 1' "$RUNNER_TEMP/policies.json")"
+          fi
 
-          cat > "$RUNNER_TEMP/policy.json" <<'JSON'
+          cat > "$RUNNER_TEMP/policy.json" <<JSON
           {
             "name": "ANEVUM Command Owner",
             "decision": "allow",
-            "precedence": 1,
+            "precedence": $precedence,
             "include": [
               {"email":{"email":"devon@anevum.com"}}
             ],
