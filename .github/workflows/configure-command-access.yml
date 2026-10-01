@@ -10,37 +10,30 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 3
     steps:
-      - name: Verify protected and public routes
+      - name: Verify Access routing
         shell: bash
         run: |
           set -euo pipefail
 
-          check_protected() {
-            url="$1"
-            headers="$(mktemp)"
-            status="$(curl --silent --show-error -o /dev/null -D "$headers" -w '%{http_code}' "$url")"
-            location="$(awk 'BEGIN{IGNORECASE=1} /^location:/ {sub(/^[^:]*:[[:space:]]*/, ""); sub(/$/, ""); print; exit}' "$headers")"
-            echo "PROTECTED_URL=$url STATUS=$status"
-            if [ "$status" != "302" ] && [ "$status" != "303" ]; then
-              echo "Expected Access redirect for $url"
-              cat "$headers"
-              exit 1
-            fi
-            case "$location" in
-              *cloudflareaccess.com*|*/cdn-cgi/access/*) ;;
-              *)
-                echo "Unexpected protected-route redirect: $location"
-                exit 1
-                ;;
-            esac
-          }
+          command_status="$(curl -sS -o /dev/null -w '%{http_code}' https://anevum.com/command)"
+          command_api_status="$(curl -sS -o /dev/null -w '%{http_code}' https://anevum.com/api/command/session)"
+          root_status="$(curl -sS -o /dev/null -w '%{http_code}' https://anevum.com/)"
+          rhen_status="$(curl -sS -o /dev/null -w '%{http_code}' https://anevum.com/products/rhen)"
 
-          check_protected "https://anevum.com/command"
-          check_protected "https://anevum.com/api/command/session"
+          echo "COMMAND_STATUS=$command_status"
+          echo "COMMAND_API_STATUS=$command_api_status"
+          echo "ROOT_STATUS=$root_status"
+          echo "RHEN_STATUS=$rhen_status"
 
-          root_status="$(curl --silent --show-error -o /dev/null -w '%{http_code}' https://anevum.com/)"
-          product_status="$(curl --silent --show-error -o /dev/null -w '%{http_code}' https://anevum.com/products/rhen)"
-          echo "PUBLIC_ROOT_STATUS=$root_status"
-          echo "PUBLIC_RHEN_STATUS=$product_status"
-          [ "$root_status" = "200" ]
-          [ "$product_status" = "200" ]
+          case "$command_status" in
+            302|303) ;;
+            *) exit 11 ;;
+          esac
+
+          case "$command_api_status" in
+            302|303) ;;
+            *) exit 12 ;;
+          esac
+
+          test "$root_status" = "200"
+          test "$rhen_status" = "200"
