@@ -20,6 +20,20 @@ jobs:
           api="https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID"
           auth=(-H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" -H "Content-Type: application/json")
 
+          verify_status="$(curl --silent --show-error -o "$RUNNER_TEMP/token-verify.json" -w '%{http_code}' "https://api.cloudflare.com/client/v4/user/tokens/verify" -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN")"
+          echo "TOKEN_VERIFY=$verify_status"
+          token_id="$(jq -r '.result.id // empty' "$RUNNER_TEMP/token-verify.json" 2>/dev/null || true)"
+          echo "TOKEN_ID=$token_id"
+          if [ -n "$token_id" ]; then
+            detail_status="$(curl --silent --show-error -o "$RUNNER_TEMP/token-detail.json" -w '%{http_code}' "https://api.cloudflare.com/client/v4/user/tokens/$token_id" -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN")"
+            echo "TOKEN_DETAIL=$detail_status"
+            if [ "$detail_status" = "200" ]; then
+              jq -c '{id:.result.id,name:.result.name,status:.result.status,permission_groups:[.result.policies[]?.permission_groups[]? | {id,name}],resources:[.result.policies[]?.resources]}' "$RUNNER_TEMP/token-detail.json"
+            else
+              jq -c '{success,errors,messages}' "$RUNNER_TEMP/token-detail.json" || true
+            fi
+          fi
+
           apps_status="$(curl --silent --show-error -o "$RUNNER_TEMP/apps.json" -w '%{http_code}'             "$api/access/apps?per_page=100" "${auth[@]}")"
           echo "ACCESS_APPS_GET=$apps_status"
           if [ "$apps_status" = "200" ]; then
