@@ -6,6 +6,7 @@ const RESEARCH_BASE = "https://rhen-research-agent-production.up.railway.app";
 const PUBLIC_TRADING_FEED = "https://foundation-ingest-staging.up.railway.app/v1/trading-public-feed";
 const SUPABASE_AUTH_USER = "https://mfntzxheldzdvlokyntk.supabase.co/auth/v1/user";
 const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_XfkgeXau2-6XOPzoXF-Nnw_FSnx0Sae";
+const FOUNDATION_IREN_COMMAND = "https://foundation-ingest-staging.up.railway.app/v1/command/iren";
 
 const PUBLIC_REBUILD_STATE = {
   ok: false,
@@ -40,11 +41,97 @@ function bearerToken(request) {
   return value.startsWith("Bearer ") ? value.slice(7).trim() : "";
 }
 
+function commandAuthMode(env) {
+  const mode = String(env?.COMMAND_AUTH_MODE || "supabase").trim().toLowerCase();
+  if (!["supabase", "dual", "cloudflare_access"].includes(mode)) {
+    throw new ApiError(503, "Command authentication mode is invalid.");
+  }
+  return mode;
+}
+
+function decodeBase64Url(value) {
+  const normalized = value.replace(/-/g, "+").replace(/_/g, "/");
+  const padded = normalized + "=".repeat((4 - normalized.length % 4) % 4);
+  const bytes = Uint8Array.from(atob(padded), (char) => char.charCodeAt(0));
+  return bytes;
+}
+
+function decodeJwtJson(value) {
+  return JSON.parse(new TextDecoder().decode(decodeBase64Url(value)));
+}
+
+async function verifyAccessAssertion(token, env) {
+  const teamDomain = String(env?.CF_ACCESS_TEAM_DOMAIN || "").trim().replace(/\/$/, "");
+  const audience = String(env?.CF_ACCESS_AUD || "").trim();
+  if (!teamDomain.startsWith("https://") || !audience) {
+    throw new ApiError(503, "Cloudflare Access is not configured.");
+  }
+
+  const parts = String(token || "").split(".");
+  if (parts.length !== 3) throw new ApiError(401, "Cloudflare Access authentication is invalid.");
+  const header = decodeJwtJson(parts[0]);
+  const payload = decodeJwtJson(parts[1]);
+  if (header.alg !== "RS256" || !header.kid) {
+    throw new ApiError(401, "Cloudflare Access authentication is invalid.");
+  }
+
+  const response = await fetch(teamDomain + "/cdn-cgi/access/certs", {
+    headers: { Accept: "application/json" }
+  });
+  if (!response.ok) throw new ApiError(503, "Cloudflare Access signing keys are unavailable.");
+  const jwks = await response.json();
+  const jwk = Array.isArray(jwks?.keys)
+    ? jwks.keys.find((item) => item && item.kid === header.kid)
+    : null;
+  if (!jwk) throw new ApiError(401, "Cloudflare Access signing key is unknown.");
+
+  const key = await crypto.subtle.importKey(
+    "jwk",
+    jwk,
+    { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" },
+    false,
+    ["verify"]
+  );
+  const signed = new TextEncoder().encode(parts[0] + "." + parts[1]);
+  const valid = await crypto.subtle.verify(
+    "RSASSA-PKCS1-v1_5",
+    key,
+    decodeBase64Url(parts[2]),
+    signed
+  );
+  if (!valid) throw new ApiError(401, "Cloudflare Access authentication is invalid.");
+
+  const now = Math.floor(Date.now() / 1000);
+  const tokenAudience = Array.isArray(payload.aud) ? payload.aud : [payload.aud];
+  if (
+    payload.iss !== teamDomain ||
+    !tokenAudience.includes(audience) ||
+    !Number.isFinite(Number(payload.exp)) ||
+    Number(payload.exp) <= now ||
+    (payload.iat !== undefined && Number(payload.iat) > now + 60)
+  ) {
+    throw new ApiError(401, "Cloudflare Access authentication is invalid or expired.");
+  }
+
+  const email = String(payload.email || "").trim().toLowerCase();
+  if (!email) throw new ApiError(401, "Cloudflare Access identity is missing email.");
+  const allowed = new Set(
+    String(env?.COMMAND_ACCESS_EMAILS || "")
+      .split(",")
+      .map((value) => value.trim().toLowerCase())
+      .filter(Boolean)
+  );
+  if (allowed.size && !allowed.has(email)) {
+    throw new ApiError(403, "Cloudflare Access identity is not authorized for Command.");
+  }
+  return { email, source: "cloudflare_access" };
+}
+
 async function assertCommandAdmin(token) {
   const response = await fetch(SUPABASE_AUTH_USER, {
     method: "GET",
     headers: {
-      Authorization: "Bearer " + token,
+      Authorization: "Bearer " + credential.token,
       apikey: SUPABASE_PUBLISHABLE_KEY,
       Accept: "application/json"
     }
@@ -66,12 +153,32 @@ async function assertCommandAdmin(token) {
   if (!allowed) {
     throw new ApiError(403, "Administrator authorization is required for Command.");
   }
+  return { email: String(user.email || "").trim().toLowerCase(), source: "supabase" };
 }
 
-async function proxyTrader(request, upstreamPath) {
+async function commandCredential(request, env) {
+  const mode = commandAuthMode(env);
+  const access = (request.headers.get("cf-access-jwt-assertion") || "").trim();
+
+  if (mode === "cloudflare_access") {
+    if (!access) throw new ApiError(401, "Cloudflare Access authentication is required.");
+    const identity = await verifyAccessAssertion(access, env);
+    return { token: access, source: "cloudflare_access", identity };
+  }
+
+  if (mode === "dual" && access) {
+    const identity = await verifyAccessAssertion(access, env);
+    return { token: access, source: "cloudflare_access", identity };
+  }
+
   const token = bearerToken(request);
   if (!token) throw new ApiError(401, "Private authentication is required before using Command.");
-  await assertCommandAdmin(token);
+  const identity = await assertCommandAdmin(token);
+  return { token, source: "supabase", identity };
+}
+
+async function proxyTrader(request, upstreamPath, env) {
+  const credential = await commandCredential(request, env);
 
   const requestUrl = new URL(request.url);
   const response = await fetch(TRADER_BASE + upstreamPath + requestUrl.search, {
@@ -142,36 +249,36 @@ async function publicTradingFeed() {
   });
 }
 
-async function commandApi(request, pathname) {
+async function commandApi(request, pathname, env) {
   if (pathname === "/api/command/trader/status" && request.method === "GET") {
-    return proxyTrader(request, "/v1/command/status");
+    return proxyTrader(request, "/v1/command/status", env);
   }
   if (pathname === "/api/command/trader/reports/daily" && request.method === "GET") {
-    return proxyTrader(request, "/v1/command/reports/daily");
+    return proxyTrader(request, "/v1/command/reports/daily", env);
   }
   if (pathname === "/api/command/trader/reports/weekly" && request.method === "GET") {
-    return proxyTrader(request, "/v1/command/reports/weekly");
+    return proxyTrader(request, "/v1/command/reports/weekly", env);
   }
   if (pathname === "/api/command/trader/evidence" && request.method === "GET") {
-    return proxyTrader(request, "/v1/command/evidence");
+    return proxyTrader(request, "/v1/command/evidence", env);
   }
   if (pathname === "/api/command/trader/entries/disable" && request.method === "POST") {
-    return proxyTrader(request, "/v1/command/entries/disable");
+    return proxyTrader(request, "/v1/command/entries/disable", env);
   }
   if (pathname === "/api/command/trader/entries/enable" && request.method === "POST") {
-    return proxyTrader(request, "/v1/command/entries/enable");
+    return proxyTrader(request, "/v1/command/entries/enable", env);
   }
   if (pathname === "/api/command/trader/orders/cancel" && request.method === "POST") {
-    return proxyTrader(request, "/v1/command/orders/cancel");
+    return proxyTrader(request, "/v1/command/orders/cancel", env);
   }
   if (pathname === "/api/command/trader/position/close" && request.method === "POST") {
-    return proxyTrader(request, "/v1/command/position/close");
+    return proxyTrader(request, "/v1/command/position/close", env);
   }
   if (pathname === "/api/command/trader/mobile/live-activity-token" && request.method === "POST") {
-    return proxyTrader(request, "/v1/command/mobile/live-activity-token");
+    return proxyTrader(request, "/v1/command/mobile/live-activity-token", env);
   }
   if (pathname === "/api/command/trader/mobile/live-activity-end" && request.method === "POST") {
-    return proxyTrader(request, "/v1/command/mobile/live-activity-end");
+    return proxyTrader(request, "/v1/command/mobile/live-activity-end", env);
   }
   return null;
 }
@@ -343,12 +450,32 @@ export default {
       }
     }
 
+    if (pathname === "/api/command/session") {
+      if (request.method !== "GET") return jsonResponse({ message: "Method not allowed." }, 405);
+      try {
+        const credential = await commandCredential(request, env);
+        return jsonResponse({
+          authenticated: true,
+          email: credential.identity?.email || null,
+          auth_source: credential.source,
+          command_admin: true
+        });
+      } catch (error) {
+        if (error instanceof ApiError) return jsonResponse({ message: error.message }, error.status);
+        return jsonResponse({ message: "Private authentication unavailable." }, 503);
+      }
+    }
+
     if (pathname === "/api/command/iren/status" || pathname === "/api/command/iren/command") {
       if (request.method === "POST" && url.hostname !== "anevum.com") {
         return jsonResponse({ message: "IREN Command mutations are disabled outside production." }, 403);
       }
       try {
-        return await proxyIren(request, assertCommandAdmin);
+        const credential = await commandCredential(request, env);
+        return await proxyIren(request, assertCommandAdmin, fetch, {
+          credential,
+          foundationUrl: String(env?.IREN_COMMAND_URL || FOUNDATION_IREN_COMMAND)
+        });
       } catch (error) {
         if (error instanceof ApiError) return jsonResponse({ message: error.message }, error.status);
         return jsonResponse({ message: "Operational state unavailable.", stale: true }, 503);
@@ -360,7 +487,7 @@ export default {
         return jsonResponse({ message: "Live Command controls are disabled outside production." }, 403);
       }
       try {
-        const response = await commandApi(request, pathname);
+        const response = await commandApi(request, pathname, env);
         if (response) return response;
         return jsonResponse({ message: "Command trader endpoint not found." }, 404);
       } catch (error) {
