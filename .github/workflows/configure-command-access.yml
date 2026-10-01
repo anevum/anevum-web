@@ -1,0 +1,116 @@
+name: Configure ANEVUM Command Access
+
+on:
+  push:
+    branches:
+      - ops/cloudflare-access-command-20261001
+
+jobs:
+  configure:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Create or verify ANEVUM Command Access
+        shell: bash
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          api="https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID"
+          auth=(-H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" -H "Content-Type: application/json")
+
+          curl --fail --silent --show-error "$api/access/organizations" "${auth[@]}" > "$RUNNER_TEMP/org.json"
+          auth_domain="$(jq -r '.result | if type=="array" then .[0].auth_domain else .auth_domain end // empty' "$RUNNER_TEMP/org.json")"
+          if [ -z "$auth_domain" ]; then
+            echo "Zero Trust organization auth_domain is missing"
+            exit 1
+          fi
+
+          curl --fail --silent --show-error "$api/access/apps?per_page=100" "${auth[@]}" > "$RUNNER_TEMP/apps.json"
+          app_id="$(jq -r '.result[]? | select(.name=="ANEVUM Command") | .id' "$RUNNER_TEMP/apps.json" | head -n1)"
+
+          cat > "$RUNNER_TEMP/app.json" <<'JSON'
+          {
+            "name": "ANEVUM Command",
+            "type": "self_hosted",
+            "session_duration": "24h",
+            "app_launcher_visible": false,
+            "auto_redirect_to_identity": false,
+            "destinations": [
+              {"type":"public","uri":"anevum.com/command"},
+              {"type":"public","uri":"anevum.com/command/*"},
+              {"type":"public","uri":"anevum.com/api/command"},
+              {"type":"public","uri":"anevum.com/api/command/*"}
+            ]
+          }
+          JSON
+
+          if [ -z "$app_id" ]; then
+            curl --fail --silent --show-error -X POST "$api/access/apps" "${auth[@]}"               --data-binary @"$RUNNER_TEMP/app.json" > "$RUNNER_TEMP/app-result.json"
+            app_id="$(jq -r '.result.id // empty' "$RUNNER_TEMP/app-result.json")"
+          else
+            curl --fail --silent --show-error -X PUT "$api/access/apps/$app_id" "${auth[@]}"               --data-binary @"$RUNNER_TEMP/app.json" > "$RUNNER_TEMP/app-result.json"
+          fi
+
+          if [ -z "$app_id" ]; then
+            echo "Access application was not created"
+            jq -c '{success,errors,messages}' "$RUNNER_TEMP/app-result.json" || true
+            exit 1
+          fi
+
+          curl --fail --silent --show-error "$api/access/apps/$app_id/policies" "${auth[@]}" > "$RUNNER_TEMP/policies.json"
+          policy_id="$(jq -r '.result[]? | select(.name=="ANEVUM Command Owner") | .id' "$RUNNER_TEMP/policies.json" | head -n1)"
+
+          cat > "$RUNNER_TEMP/policy.json" <<'JSON'
+          {
+            "name": "ANEVUM Command Owner",
+            "decision": "allow",
+            "precedence": 1,
+            "include": [
+              {"email":{"email":"devon@anevum.com"}}
+            ],
+            "exclude": [],
+            "require": []
+          }
+          JSON
+
+          if [ -z "$policy_id" ]; then
+            curl --fail --silent --show-error -X POST "$api/access/apps/$app_id/policies" "${auth[@]}"               --data-binary @"$RUNNER_TEMP/policy.json" > "$RUNNER_TEMP/policy-result.json"
+          else
+            curl --fail --silent --show-error -X PUT "$api/access/apps/$app_id/policies/$policy_id" "${auth[@]}"               --data-binary @"$RUNNER_TEMP/policy.json" > "$RUNNER_TEMP/policy-result.json"
+          fi
+
+          jq -e '.success == true' "$RUNNER_TEMP/policy-result.json" > /dev/null
+
+          curl --fail --silent --show-error "$api/access/apps/$app_id" "${auth[@]}" > "$RUNNER_TEMP/final-app.json"
+          curl --fail --silent --show-error "$api/access/apps/$app_id/policies" "${auth[@]}" > "$RUNNER_TEMP/final-policies.json"
+
+          aud="$(jq -r '.result.aud // empty' "$RUNNER_TEMP/final-app.json")"
+          if [ -z "$aud" ]; then
+            echo "Access application AUD is missing"
+            exit 1
+          fi
+
+          echo "ACCESS_APP_ID=$app_id"
+          echo "ACCESS_AUD=$aud"
+          echo "ACCESS_TEAM_DOMAIN=https://$auth_domain"
+          jq -c '{
+            name:.result.name,
+            type:.result.type,
+            session_duration:.result.session_duration,
+            app_launcher_visible:.result.app_launcher_visible,
+            destinations:.result.destinations
+          }' "$RUNNER_TEMP/final-app.json"
+          jq -c '{
+            policies:[
+              .result[] | {
+                name,
+                decision,
+                precedence,
+                include,
+                exclude,
+                require
+              }
+            ]
+          }' "$RUNNER_TEMP/final-policies.json"
