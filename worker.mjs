@@ -184,8 +184,8 @@ function currentReleaseSnapshot() {
 function publicRouteMetadata(pathname) {
   const staticRoutes = {
     "/": {
-      title: "ANEVUM — Software Systems & Research",
-      description: "ANEVUM builds software systems for orchestration, market operations, forecasting research, mathematical validation, replay, simulation, telemetry, and evidence."
+      title: "ANEVUM Core Rebuild Underway — Engineering Update",
+      description: "ANEVUM is rebuilding its core stack from the ground up. Public system data is temporarily offline while infrastructure, evidence paths, RHEN, and GRAEN are rebuilt and verified."
     },
     "/products": {
       title: "Products — ANEVUM",
