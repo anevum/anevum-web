@@ -13,7 +13,7 @@ type Dependencies = {
 };
 
 const fresh = (stamp: unknown, now: number) => {
-  if (typeof stamp !== "string" || !/(Z|[+-]\\d{2}:\\d{2})$/.test(stamp)) return false;
+  if (typeof stamp !== "string" || !/(Z|[+-]\d{2}:\d{2})$/.test(stamp)) return false;
   const age = now - Date.parse(stamp);
   return Number.isFinite(age) && age >= 0 && age <= 180000;
 };
