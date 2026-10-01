@@ -4,11 +4,16 @@ import { proxyIren } from "../command-iren.mjs";
 
 const admin = async () => {};
 
-test("IREN GET proxies authenticated v2 state", async () => {
+test("IREN GET preserves legacy Supabase session path during transition", async () => {
   const request = new Request("https://anevum.com/api/command/iren/status", {
     headers: { authorization: "Bearer abc" }
   });
-  const response = await proxyIren(request, admin, async (_url, init) => {
+  let checked = false;
+  const response = await proxyIren(request, async (token) => {
+    checked = true;
+    assert.equal(token, "abc");
+  }, async (url, init) => {
+    assert.match(String(url), /supabase\.co\/functions\/v1\/iren-command$/);
     assert.equal(init.method, "GET");
     assert.equal(init.headers.authorization, "Bearer abc");
     return new Response(JSON.stringify({ schema_version: "iren_command.v2", state: "HEALTHY" }), {
@@ -16,17 +21,49 @@ test("IREN GET proxies authenticated v2 state", async () => {
       headers: { "content-type": "application/json" }
     });
   });
+  assert.equal(checked, true);
   assert.equal(response.status, 200);
   assert.equal((await response.json()).state, "HEALTHY");
 });
 
-test("IREN POST forwards operator command", async () => {
+test("IREN Access GET routes to Railway without Supabase admin call", async () => {
+  const request = new Request("https://anevum.com/api/command/iren/status", {
+    headers: { "Cf-Access-Jwt-Assertion": "access.jwt.value" }
+  });
+  let adminCalls = 0;
+  const response = await proxyIren(request, async () => {
+    adminCalls += 1;
+  }, async (url, init) => {
+    assert.equal(
+      url,
+      "https://foundation-ingest-staging.up.railway.app/v1/command/iren"
+    );
+    assert.equal(init.method, "GET");
+    assert.equal(init.headers["Cf-Access-Jwt-Assertion"], "access.jwt.value");
+    assert.equal(init.headers.authorization, undefined);
+    return new Response(JSON.stringify({ schema_version: "iren_command.v2", state: "HEALTHY" }), {
+      status: 200,
+      headers: { "content-type": "application/json" }
+    });
+  });
+  assert.equal(adminCalls, 0);
+  assert.equal(response.status, 200);
+});
+
+test("IREN Access POST forwards operator command to Railway", async () => {
   const request = new Request("https://anevum.com/api/command/iren/command", {
     method: "POST",
-    headers: { authorization: "Bearer abc", "content-type": "application/json" },
+    headers: {
+      "Cf-Access-Jwt-Assertion": "access.jwt.value",
+      "content-type": "application/json"
+    },
     body: JSON.stringify({ command: "what's next?" })
   });
-  const response = await proxyIren(request, admin, async (_url, init) => {
+  const response = await proxyIren(request, admin, async (url, init) => {
+    assert.equal(
+      url,
+      "https://foundation-ingest-staging.up.railway.app/v1/command/iren"
+    );
     assert.equal(init.method, "POST");
     assert.match(String(init.body), /what's next/);
     return new Response(JSON.stringify({
@@ -42,8 +79,11 @@ test("IREN POST forwards operator command", async () => {
   assert.equal((await response.json()).accepted, true);
 });
 
-test("IREN rejects missing token", async () => {
-  const response = await proxyIren(new Request("https://anevum.com/api/command/iren/status"), admin);
+test("IREN rejects missing authentication", async () => {
+  const response = await proxyIren(
+    new Request("https://anevum.com/api/command/iren/status"),
+    admin
+  );
   assert.equal(response.status, 401);
 });
 
