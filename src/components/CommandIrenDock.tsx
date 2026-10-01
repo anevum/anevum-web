@@ -1,4 +1,4 @@
-import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
+import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import "../styles/iren-dock.css";
 
 type IrenObjective = {
@@ -84,6 +84,7 @@ export default function CommandIrenDock({ accessToken }: { accessToken: string }
   const [command, setCommand] = useState("");
   const [error, setError] = useState("");
   const [sending, setSending] = useState(false);
+  const refreshInFlight = useRef(false);
 
   const request = useCallback(async (path: string, init?: RequestInit) => {
     const response = await fetch(path, {
@@ -104,12 +105,16 @@ export default function CommandIrenDock({ accessToken }: { accessToken: string }
   }, [accessToken]);
 
   const refresh = useCallback(async () => {
+    if (refreshInFlight.current) return;
+    refreshInFlight.current = true;
     try {
       const value = await request("/api/command/iren/status");
       setFeed(value);
       setError("");
     } catch (nextError) {
       setError(nextError instanceof Error ? nextError.message : "IREN unavailable.");
+    } finally {
+      refreshInFlight.current = false;
     }
   }, [request]);
 
@@ -120,7 +125,7 @@ export default function CommandIrenDock({ accessToken }: { accessToken: string }
 
   useEffect(() => {
     void refresh();
-    const timer = window.setInterval(refresh, 2500);
+    const timer = window.setInterval(refresh, 5000);
     return () => window.clearInterval(timer);
   }, [refresh]);
 
