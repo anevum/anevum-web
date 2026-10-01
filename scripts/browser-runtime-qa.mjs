@@ -18,7 +18,11 @@ const chrome = spawn("google-chrome", [
   "--no-sandbox",
   "--disable-gpu",
   "--disable-dev-shm-usage",
+  "--remote-debugging-address=127.0.0.1",
   "--remote-debugging-port=9222",
+  "--no-first-run",
+  "--disable-background-networking",
+  "--disable-sync",
   "--user-data-dir=" + profile,
   "about:blank"
 ], { stdio: "ignore" });
@@ -26,14 +30,17 @@ const chrome = spawn("google-chrome", [
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 async function waitForDebugger() {
-  for (let i = 0; i < 80; i += 1) {
+  for (let i = 0; i < 200; i += 1) {
+    if (chrome.exitCode !== null) {
+      throw new Error("Chrome exited before DevTools became ready: " + chrome.exitCode);
+    }
     try {
       const response = await fetch("http://127.0.0.1:9222/json/version");
       if (response.ok) return;
     } catch {}
     await sleep(100);
   }
-  throw new Error("Chrome DevTools endpoint did not become ready");
+  throw new Error("Chrome DevTools endpoint did not become ready after 20 seconds");
 }
 
 async function target() {
