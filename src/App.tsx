@@ -7,7 +7,6 @@ import { fieldNotes } from "./data/fieldNotes";
 import { currentRhenRelease, rhenReleaseBySlug } from "./data/releases";
 
 const Command = lazy(() => import("./pages/Command"));
-const Iren = lazy(() => import("./pages/Iren"));
 const HomeCompany = lazy(() => import("./pages/HomeCompany"));
 const Products = lazy(() => import("./pages/Products"));
 const ProductDetail = lazy(() => import("./pages/ProductDetail"));
@@ -22,7 +21,6 @@ const Founder = lazy(() => import("./pages/Founder"));
 const Resume = lazy(() => import("./pages/Resume"));
 const Releases = lazy(() => import("./pages/Releases"));
 const ReleaseDetail = lazy(() => import("./pages/ReleaseDetail"));
-const PrivateAccess = lazy(() => import("./pages/Rhenlink"));
 
 const titles: Record<string, string> = {
   "/": "ANEVUM Core Rebuild Underway — Engineering Update",
@@ -200,10 +198,10 @@ export default function App() {
         <Route path="/live" element={<PublicExperience><Live /></PublicExperience>} />
         <Route path="/theory" element={<PublicExperience><Theory /></PublicExperience>} />
 
-        <Route path="/iren" element={<Suspense fallback={<Loader />}><Iren /></Suspense>} />
-        <Route path="/private" element={<Suspense fallback={<Loader />}><PrivateAccess /></Suspense>} />
+        <Route path="/iren" element={<Navigate to="/command" replace />} />
+        <Route path="/private" element={<Navigate to="/command" replace />} />
         <Route path="/command/*" element={<Suspense fallback={<Loader />}><Command /></Suspense>} />
-        <Route path="/rhenlink" element={<Navigate to="/private" replace />} />
+        <Route path="/rhenlink" element={<Navigate to="/command" replace />} />
 
         <Route path="/system" element={<Navigate to="/products/iren" replace />} />
         <Route path="/record" element={<Navigate to="/releases" replace />} />
