@@ -7,7 +7,6 @@ import { fieldNotes } from "./data/fieldNotes";
 import { currentRhenRelease, rhenReleaseBySlug } from "./data/releases";
 
 const Command = lazy(() => import("./pages/Command"));
-const Iren = lazy(() => import("./pages/Iren"));
 const HomeCompany = lazy(() => import("./pages/HomeCompany"));
 const Products = lazy(() => import("./pages/Products"));
 const ProductDetail = lazy(() => import("./pages/ProductDetail"));
@@ -199,7 +198,7 @@ export default function App() {
         <Route path="/live" element={<PublicExperience><Live /></PublicExperience>} />
         <Route path="/theory" element={<PublicExperience><Theory /></PublicExperience>} />
 
-        <Route path="/iren" element={<Suspense fallback={<Loader />}><Iren /></Suspense>} />
+        <Route path="/iren" element={<Navigate to="/command" replace />} />
         <Route path="/private" element={<Navigate to="/command" replace />} />
         <Route path="/command/*" element={<Suspense fallback={<Loader />}><Command /></Suspense>} />
         <Route path="/rhenlink" element={<Navigate to="/command" replace />} />
