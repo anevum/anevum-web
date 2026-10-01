@@ -12,6 +12,7 @@ import {
   isCommandAdmin,
   loadSession,
   refreshCurrentUser,
+  resolveCommandAccessSession,
   saveSession,
   sendMagicLinkRequest,
   sendPasswordResetRequest,
@@ -47,6 +48,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     async function resolveSession() {
       try {
+        if (typeof window !== "undefined" && window.location.pathname.startsWith("/command")) {
+          const accessSession = await resolveCommandAccessSession();
+          if (!active) return;
+          if (accessSession) {
+            setSession(accessSession);
+            setLoading(false);
+            return;
+          }
+        }
+
         const redirected = await consumeAuthRedirect();
         if (!active) return;
         if (redirected) {
