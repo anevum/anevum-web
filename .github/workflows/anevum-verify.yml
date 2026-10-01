@@ -108,35 +108,18 @@ jobs:
             printf '%s' "$sitemap" | grep -Fq "https://anevum.com$path"
           done
 
-          feed="$(curl --fail --show-error --silent "$base/api/public/trading/live")"
-          printf '%s' "$feed" | jq -e '
-            .ok == true and
-            .source == "anevum_public_telemetry" and
-            (.telemetry | type == "object") and
-            (.events | type == "array") and
-            (.performance | type == "object") and
-            (.market_performance | type == "object") and
-            .market_performance.methodology_version == "PUBLIC-MARKET-PERFORMANCE-v1" and
-            (.market_performance.equities.closed_trades | type == "number") and
-            (.market_performance.crypto.closed_trades | type == "number") and
-            (
-              .market_performance.crypto.closed_trades > 0
-              or (
-                .market_performance.crypto.status == "AWAITING_LIVE_SAMPLE" and
-                .market_performance.crypto.realized_return_pct == null and
-                .market_performance.crypto.win_rate_pct == null and
-                (.market_performance.crypto.curve | length) == 0
-              )
-            ) and
-            (has("account") | not) and
-            (has("positions") | not) and
-            (has("recent_closed_positions") | not) and
-            (has("recent_orders") | not) and
-            (has("equity") | not) and
-            ([.events[] | has("symbol")] | any | not) and
-            ([.events[] | has("price")] | any | not) and
-            ([.events[] | has("reason")] | any | not)
-          ' > /dev/null
+          feed_file="$RUNNER_TEMP/public-trading-feed.json"
+          feed_status="$(curl --show-error --silent -o "$feed_file" -w '%{http_code}' "$base/api/public/trading/live")"
+          test "$feed_status" = "503"
+          jq -e '
+            .ok == false and
+            .status == "REBUILDING" and
+            .source == "anevum_public_rebuild" and
+            .data_state == "OFFLINE_BY_DESIGN" and
+            .since == "2026-10-01" and
+            (.priority_systems == ["RHEN", "GRAEN"]) and
+            (.message | type == "string")
+          ' "$feed_file" > /dev/null
 
           curl --fail --show-error --silent --head "$base/command" | grep -qi 'x-robots-tag:.*noindex'
 
