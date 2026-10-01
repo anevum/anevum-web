@@ -23,6 +23,52 @@ export type RhenSession = {
   saved_at?: number;
 };
 
+export function commandAuthHeaders(session: RhenSession): Record<string, string> {
+  const headers: Record<string, string> = {
+    Accept: "application/json",
+    "Content-Type": "application/json"
+  };
+  if (session.auth_type !== "cloudflare_access" && session.access_token) {
+    headers.Authorization = "Bearer " + session.access_token;
+  }
+  return headers;
+}
+
+export async function resolveCommandAccessSession(): Promise<RhenSession | null> {
+  try {
+    const response = await fetch("/api/command/session", {
+      method: "GET",
+      headers: { Accept: "application/json" },
+      cache: "no-store"
+    });
+    if (!response.ok) return null;
+    const payload = await response.json() as {
+      authenticated?: boolean;
+      email?: string | null;
+      auth_source?: string | null;
+      command_admin?: boolean;
+    };
+    if (
+      payload.authenticated !== true ||
+      payload.auth_source !== "cloudflare_access" ||
+      payload.command_admin !== true
+    ) {
+      return null;
+    }
+    return {
+      access_token: "",
+      token_type: "access",
+      auth_type: "cloudflare_access",
+      user: {
+        email: String(payload.email || "").trim().toLowerCase(),
+        app_metadata: { command_admin: true, role: "command_admin" }
+      }
+    };
+  } catch {
+    return null;
+  }
+}
+
 function authHeaders(token?: string) {
   const value: Record<string, string> = {
     "Content-Type": "application/json",
@@ -113,6 +159,9 @@ export async function refreshSessionRequest(refreshToken: string) {
 }
 
 export async function refreshCurrentUser(session: RhenSession) {
+  if (session.auth_type === "cloudflare_access") {
+    return resolveCommandAccessSession();
+  }
   if (!session.access_token) return null;
 
   let current = session;
@@ -225,6 +274,12 @@ export async function updatePasswordRequest(session: RhenSession, password: stri
 }
 
 export async function signOutRequest(session: RhenSession | null) {
+  if (session?.auth_type === "cloudflare_access") {
+    if (typeof window !== "undefined") {
+      window.location.assign("/cdn-cgi/access/logout");
+    }
+    return;
+  }
   if (session?.access_token) {
     fetch(SUPABASE_URL + "/auth/v1/logout", {
       method: "POST",
@@ -239,6 +294,9 @@ export function isCommandAdmin(session: RhenSession | null) {
   if (!user) return false;
 
   const meta = user.app_metadata || {};
+  if (session?.auth_type === "cloudflare_access") {
+    return meta.command_admin === true;
+  }
   const role = String(meta.role || "").trim().toLowerCase();
   const email = String(user.email || "").trim().toLowerCase();
   const confirmed = Boolean(user.email_confirmed_at || user.confirmed_at);
