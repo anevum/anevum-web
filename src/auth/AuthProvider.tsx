@@ -8,19 +8,9 @@ import {
   type ReactNode
 } from "react";
 import {
-  consumeAuthRedirect,
   isCommandAdmin,
-  loadSession,
-  refreshCurrentUser,
   resolveCommandAccessSession,
-  saveSession,
-  sendMagicLinkRequest,
-  sendPasswordResetRequest,
-  signInRequest,
   signOutRequest,
-  signUpRequest,
-  updateMetadataRequest,
-  updatePasswordRequest,
   type RhenSession
 } from "../lib/auth";
 
@@ -28,19 +18,13 @@ type AuthValue = {
   session: RhenSession | null;
   loading: boolean;
   commandAdmin: boolean;
-  signIn(email: string, password: string): Promise<void>;
-  sendMagicLink(email: string): Promise<void>;
-  sendPasswordReset(email: string): Promise<void>;
-  signUp(input: { displayName: string; handle: string; email: string; password: string }): Promise<boolean>;
   signOut(): Promise<void>;
-  updateMetadata(patch: Record<string, unknown>): Promise<void>;
-  updatePassword(password: string): Promise<void>;
 };
 
 const AuthContext = createContext<AuthValue | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [session, setSession] = useState<RhenSession | null>(() => loadSession());
+  const [session, setSession] = useState<RhenSession | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -48,129 +32,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     async function resolveSession() {
       try {
-        if (typeof window !== "undefined" && window.location.pathname.startsWith("/command")) {
-          const accessSession = await resolveCommandAccessSession();
-          if (!active) return;
-          if (accessSession) {
-            setSession(accessSession);
-            setLoading(false);
-            return;
-          }
-        }
-
-        const redirected = await consumeAuthRedirect();
-        if (!active) return;
-        if (redirected) {
-          setSession(redirected);
-          setLoading(false);
-          return;
-        }
-
-        const current = loadSession();
-        if (!current) {
-          setLoading(false);
-          return;
-        }
-
-        const next = await refreshCurrentUser(current);
+        const commandPath = typeof window !== "undefined"
+          && window.location.pathname.startsWith("/command");
+        const next = commandPath ? await resolveCommandAccessSession() : null;
         if (!active) return;
         setSession(next);
-        setLoading(false);
-      } catch {
-        if (!active) return;
-        saveSession(null);
-        setSession(null);
-        setLoading(false);
+      } finally {
+        if (active) setLoading(false);
       }
     }
 
     void resolveSession();
-
     return () => {
       active = false;
     };
   }, []);
 
-  const signIn = useCallback(async (email: string, password: string) => {
-    const next = await signInRequest(email, password);
-    saveSession(next);
-    setSession(next);
-  }, []);
-
-  const sendMagicLink = useCallback(async (email: string) => {
-    await sendMagicLinkRequest(email);
-  }, []);
-
-  const sendPasswordReset = useCallback(async (email: string) => {
-    await sendPasswordResetRequest(email);
-  }, []);
-
-  const signUp = useCallback(async (input: {
-    displayName: string;
-    handle: string;
-    email: string;
-    password: string;
-  }) => {
-    const next = await signUpRequest(input);
-    if (!next.access_token || !next.user) return false;
-
-    saveSession(next);
-    const updated = await updateMetadataRequest(next, {
-      anevum_system_updates: true,
-      anevum_system_updates_at: new Date().toISOString(),
-      anevum_system_updates_source: "rhenlink-create"
-    });
-    setSession(updated);
-    return true;
-  }, []);
-
   const signOut = useCallback(async () => {
-    await signOutRequest(session);
+    await signOutRequest();
     setSession(null);
-  }, [session]);
-
-  const updateMetadata = useCallback(
-    async (patch: Record<string, unknown>) => {
-      if (!session) throw new Error("Sign in first.");
-      const next = await updateMetadataRequest(session, patch);
-      setSession(next);
-    },
-    [session]
-  );
-
-  const updatePassword = useCallback(
-    async (password: string) => {
-      if (!session) throw new Error("Open the password recovery link first.");
-      const next = await updatePasswordRequest(session, password);
-      setSession(next);
-    },
-    [session]
-  );
+  }, []);
 
   const value = useMemo<AuthValue>(
     () => ({
       session,
       loading,
       commandAdmin: isCommandAdmin(session),
-      signIn,
-      sendMagicLink,
-      sendPasswordReset,
-      signUp,
-      signOut,
-      updateMetadata,
-      updatePassword
+      signOut
     }),
-    [
-      session,
-      loading,
-      signIn,
-      sendMagicLink,
-      sendPasswordReset,
-      signUp,
-      signOut,
-      updateMetadata,
-      updatePassword
-    ]
+    [session, loading, signOut]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
