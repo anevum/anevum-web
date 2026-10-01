@@ -131,7 +131,7 @@ async function assertCommandAdmin(token) {
   const response = await fetch(SUPABASE_AUTH_USER, {
     method: "GET",
     headers: {
-      Authorization: "Bearer " + credential.token,
+      Authorization: "Bearer " + token,
       apikey: SUPABASE_PUBLISHABLE_KEY,
       Accept: "application/json"
     }
@@ -184,7 +184,7 @@ async function proxyTrader(request, upstreamPath, env) {
   const response = await fetch(TRADER_BASE + upstreamPath + requestUrl.search, {
     method: request.method,
     headers: {
-      Authorization: "Bearer " + token,
+      Authorization: "Bearer " + credential.token,
       "Content-Type": "application/json",
       "Cache-Control": "no-store"
     },
