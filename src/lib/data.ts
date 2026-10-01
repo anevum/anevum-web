@@ -385,6 +385,13 @@ export type TheoryProgramFeed = {
   };
 };
 
+export type CommandSession = {
+  authenticated?: boolean;
+  email?: string | null;
+  auth_source?: "supabase" | "cloudflare_access" | string;
+  command_admin?: boolean;
+};
+
 export type CommandSnapshot = {
   mode?: string;
   observed_at?: string;
@@ -452,14 +459,17 @@ export type ResearchReadiness = {
 
 async function authenticatedJson<T>(
   path: string,
-  session: RhenSession
+  session?: RhenSession | null
 ): Promise<T> {
+  const headers: Record<string, string> = {
+    Accept: "application/json",
+    "Content-Type": "application/json"
+  };
+  if (session?.access_token) {
+    headers.Authorization = "Bearer " + session.access_token;
+  }
   const response = await fetch(path, {
-    headers: {
-      Accept: "application/json",
-      "Content-Type": "application/json",
-      Authorization: "Bearer " + session.access_token
-    },
+    headers,
     cache: "no-store"
   });
 
@@ -474,16 +484,26 @@ async function authenticatedJson<T>(
   return payload;
 }
 
-export function fetchCommandStatus(session: RhenSession): Promise<CommandSnapshot> {
+export function fetchCommandSession(
+  session?: RhenSession | null
+): Promise<CommandSession> {
+  return authenticatedJson<CommandSession>("/api/command/session", session);
+}
+
+export function fetchCommandStatus(
+  session?: RhenSession | null
+): Promise<CommandSnapshot> {
   return authenticatedJson<CommandSnapshot>("/api/command/trader/status", session);
 }
 
-export function fetchCommandEvidence(session: RhenSession): Promise<CommandEvidence> {
+export function fetchCommandEvidence(
+  session?: RhenSession | null
+): Promise<CommandEvidence> {
   return authenticatedJson<CommandEvidence>("/api/command/trader/evidence", session);
 }
 
 export function fetchCommandDailyReport(
-  session: RhenSession,
+  session?: RhenSession | null,
   reportSession?: string
 ): Promise<Record<string, unknown>> {
   const query = reportSession ? "?session=" + encodeURIComponent(reportSession) : "";
@@ -491,7 +511,7 @@ export function fetchCommandDailyReport(
 }
 
 export function fetchCommandWeeklyReport(
-  session: RhenSession,
+  session?: RhenSession | null,
   weekEnd?: string
 ): Promise<Record<string, unknown>> {
   const query = weekEnd ? "?week_end=" + encodeURIComponent(weekEnd) : "";
