@@ -4,8 +4,6 @@ import releaseRegistry from "./src/data/releases.json";
 const TRADER_BASE = "https://alpaca-trader-production-bf3e.up.railway.app";
 const RESEARCH_BASE = "https://rhen-research-agent-production.up.railway.app";
 const PUBLIC_TRADING_FEED = "https://foundation-ingest-staging.up.railway.app/v1/trading-public-feed";
-const SUPABASE_AUTH_USER = "https://mfntzxheldzdvlokyntk.supabase.co/auth/v1/user";
-const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_XfkgeXau2-6XOPzoXF-Nnw_FSnx0Sae";
 const FOUNDATION_IREN_COMMAND = "https://foundation-ingest-staging.up.railway.app/v1/command/iren";
 
 const PUBLIC_REBUILD_STATE = {
@@ -36,15 +34,10 @@ function jsonResponse(payload, status = 200) {
   });
 }
 
-function bearerToken(request) {
-  const value = request.headers.get("authorization") || "";
-  return value.startsWith("Bearer ") ? value.slice(7).trim() : "";
-}
-
 function commandAuthMode(env) {
-  const mode = String(env?.COMMAND_AUTH_MODE || "supabase").trim().toLowerCase();
-  if (!["supabase", "dual", "cloudflare_access"].includes(mode)) {
-    throw new ApiError(503, "Command authentication mode is invalid.");
+  const mode = String(env?.COMMAND_AUTH_MODE || "cloudflare_access").trim().toLowerCase();
+  if (mode !== "cloudflare_access") {
+    throw new ApiError(503, "Command authentication mode must be cloudflare_access.");
   }
   return mode;
 }
@@ -127,54 +120,14 @@ async function verifyAccessAssertion(token, env) {
   return { email, source: "cloudflare_access" };
 }
 
-async function assertCommandAdmin(token) {
-  const response = await fetch(SUPABASE_AUTH_USER, {
-    method: "GET",
-    headers: {
-      Authorization: "Bearer " + token,
-      apikey: SUPABASE_PUBLISHABLE_KEY,
-      Accept: "application/json"
-    }
-  });
-
-  if (!response.ok) {
-    throw new ApiError(401, "Private authentication is invalid or expired.");
-  }
-
-  const user = await response.json();
-  const meta = user && user.app_metadata && typeof user.app_metadata === "object"
-    ? user.app_metadata
-    : {};
-  const role = String(meta.role || "").trim().toLowerCase();
-  const allowed =
-    meta.command_admin === true ||
-    ["owner", "founder", "admin", "command_admin"].includes(role);
-
-  if (!allowed) {
-    throw new ApiError(403, "Administrator authorization is required for Command.");
-  }
-  return { email: String(user.email || "").trim().toLowerCase(), source: "supabase" };
-}
-
 async function commandCredential(request, env) {
-  const mode = commandAuthMode(env);
+  commandAuthMode(env);
   const access = (request.headers.get("cf-access-jwt-assertion") || "").trim();
-
-  if (mode === "cloudflare_access") {
-    if (!access) throw new ApiError(401, "Cloudflare Access authentication is required.");
-    const identity = await verifyAccessAssertion(access, env);
-    return { token: access, source: "cloudflare_access", identity };
+  if (!access) {
+    throw new ApiError(401, "Cloudflare Access authentication is required.");
   }
-
-  if (mode === "dual" && access) {
-    const identity = await verifyAccessAssertion(access, env);
-    return { token: access, source: "cloudflare_access", identity };
-  }
-
-  const token = bearerToken(request);
-  if (!token) throw new ApiError(401, "Private authentication is required before using Command.");
-  const identity = await assertCommandAdmin(token);
-  return { token, source: "supabase", identity };
+  const identity = await verifyAccessAssertion(access, env);
+  return { token: access, source: "cloudflare_access", identity };
 }
 
 async function proxyTrader(request, upstreamPath, env) {
@@ -472,7 +425,7 @@ export default {
       }
       try {
         const credential = await commandCredential(request, env);
-        return await proxyIren(request, assertCommandAdmin, fetch, {
+        return await proxyIren(request, fetch, {
           credential,
           foundationUrl: String(env?.IREN_COMMAND_URL || FOUNDATION_IREN_COMMAND)
         });
