@@ -18,33 +18,52 @@ const chrome = spawn("google-chrome", [
   "--no-sandbox",
   "--disable-gpu",
   "--disable-dev-shm-usage",
-  "--remote-debugging-port=9222",
+  "--remote-debugging-address=127.0.0.1",
+  "--remote-debugging-port=0",
+  "--no-first-run",
+  "--disable-background-networking",
+  "--disable-sync",
   "--user-data-dir=" + profile,
   "about:blank"
 ], { stdio: "ignore" });
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
+let debugPort = null;
+
 async function waitForDebugger() {
-  for (let i = 0; i < 80; i += 1) {
+  const activePortFile = path.join(profile, "DevToolsActivePort");
+  for (let i = 0; i < 200; i += 1) {
+    if (chrome.exitCode !== null) {
+      throw new Error("Chrome exited before DevTools became ready: " + chrome.exitCode);
+    }
     try {
-      const response = await fetch("http://127.0.0.1:9222/json/version");
-      if (response.ok) return;
+      if (fs.existsSync(activePortFile)) {
+        const [port] = fs.readFileSync(activePortFile, "utf8").trim().split(/\r?\n/);
+        if (port && /^\d+$/.test(port)) {
+          const response = await fetch("http://127.0.0.1:" + port + "/json/version");
+          if (response.ok) {
+            debugPort = Number(port);
+            return;
+          }
+        }
+      }
     } catch {}
     await sleep(100);
   }
-  throw new Error("Chrome DevTools endpoint did not become ready");
+  throw new Error("Chrome DevTools endpoint did not become ready after 20 seconds");
 }
 
 async function target() {
-  const response = await fetch("http://127.0.0.1:9222/json/new?about:blank", { method: "PUT" });
+  if (!debugPort) throw new Error("Chrome DevTools port is unavailable");
+  const response = await fetch("http://127.0.0.1:" + debugPort + "/json/new?about:blank", { method: "PUT" });
   if (!response.ok) throw new Error("Could not create browser QA target");
   return response.json();
 }
 
 async function closeTarget(id) {
   try {
-    await fetch("http://127.0.0.1:9222/json/close/" + id);
+    if (debugPort) await fetch("http://127.0.0.1:" + debugPort + "/json/close/" + id);
   } catch {}
 }
 

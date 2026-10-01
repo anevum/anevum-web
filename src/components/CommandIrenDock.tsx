@@ -1,4 +1,5 @@
 import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { commandAuthHeaders, type RhenSession } from "../lib/auth";
 import "../styles/iren-dock.css";
 
 type IrenObjective = {
@@ -78,7 +79,7 @@ function responseText(command?: IrenCommand) {
   return command?.status === "PROCESSING" ? "IREN is processing this command." : "";
 }
 
-export default function CommandIrenDock({ accessToken }: { accessToken: string }) {
+export default function CommandIrenDock({ session }: { session: RhenSession }) {
   const [feed, setFeed] = useState<IrenFeed | null>(null);
   const [expanded, setExpanded] = useState(false);
   const [command, setCommand] = useState("");
@@ -90,9 +91,7 @@ export default function CommandIrenDock({ accessToken }: { accessToken: string }
     const response = await fetch(path, {
       ...init,
       headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json",
-        Authorization: "Bearer " + accessToken,
+        ...commandAuthHeaders(session),
         ...(init?.headers || {})
       },
       cache: "no-store"
@@ -102,7 +101,7 @@ export default function CommandIrenDock({ accessToken }: { accessToken: string }
       throw new Error(payload.message || payload.error || "IREN request failed.");
     }
     return payload;
-  }, [accessToken]);
+  }, [session]);
 
   const refresh = useCallback(async () => {
     if (refreshInFlight.current) return;

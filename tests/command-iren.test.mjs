@@ -64,3 +64,29 @@ test("IREN fails closed on invalid upstream contract", async () => {
   );
   assert.equal(response.status, 503);
 });
+
+
+test("Cloudflare Access IREN requests use Foundation and forward the assertion", async () => {
+  const request = new Request("https://anevum.com/api/command/iren/status");
+  const response = await proxyIren(
+    request,
+    async () => { throw new Error("legacy auth must not run"); },
+    async (url, init) => {
+      assert.equal(url, "https://foundation.example/v1/command/iren");
+      assert.equal(init.method, "GET");
+      assert.equal(init.headers["cf-access-jwt-assertion"], "access-jwt");
+      assert.equal(init.headers.authorization, undefined);
+      return Response.json({
+        schema_version: "iren_command.v2",
+        state: "HEALTHY",
+        stale: false
+      });
+    },
+    {
+      credential: { token: "access-jwt", source: "cloudflare_access" },
+      foundationUrl: "https://foundation.example/v1/command/iren"
+    }
+  );
+  assert.equal(response.status, 200);
+  assert.equal((await response.json()).state, "HEALTHY");
+});

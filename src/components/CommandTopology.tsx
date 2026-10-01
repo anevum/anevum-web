@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
+import { commandAuthHeaders, type RhenSession } from "../lib/auth";
 import { isStale, runtimeStatus, type IrenSnapshot } from "../lib/runtime-topology";
 
-export default function CommandTopology({ token }: { token: string }) {
+export default function CommandTopology({ session }: { session: RhenSession }) {
   const [snapshot, setSnapshot] = useState<IrenSnapshot | null>(null);
   const [error, setError] = useState("");
   const [now, setNow] = useState(Date.now());
@@ -14,12 +15,12 @@ export default function CommandTopology({ token }: { token: string }) {
     async function refresh() {
       try {
         const response = await fetch("/api/command/iren/status", {
-          headers: { Authorization: "Bearer " + token }, cache: "no-store",
+          headers: commandAuthHeaders(session), cache: "no-store",
           signal: AbortSignal.any([controller.signal, AbortSignal.timeout(10000)])
         });
         if (!response.ok) throw new Error("Canonical IREN state unavailable");
         const body = await response.json() as IrenSnapshot;
-        if (body.schema_version !== "iren_command.v1" || !Array.isArray(body.incidents)
+        if (!["iren_command.v1", "iren_command.v2"].includes(String(body.schema_version || "")) || !Array.isArray(body.incidents)
           || (body.topology && !Array.isArray(body.topology.services))) throw new Error("Invalid operational observation");
         if (!stopped) { setSnapshot(body); setError(""); }
       } catch {
@@ -31,7 +32,7 @@ export default function CommandTopology({ token }: { token: string }) {
     void refresh();
     const clock = setInterval(() => setNow(Date.now()), 5000);
     return () => { stopped = true; controller.abort(); clearTimeout(timer); clearInterval(clock); };
-  }, [token]);
+  }, [session]);
   const stale = isStale(snapshot, now, Boolean(error));
   const stamp = snapshot?.observed_at ? new Date(snapshot.observed_at).toLocaleString() : "No observation";
   return <article className="command-panel command-view-overview command-view-system">

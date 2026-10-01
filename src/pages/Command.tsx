@@ -314,7 +314,7 @@ export default function Command() {
 
         <section className="command-grid">
           <div className="command-primary">
-            <CommandTopology token={session.access_token} />
+            <CommandTopology session={session} />
             <CommandPerformance performance={publicFeed?.performance} feedError={publicFeedError} />
             <article className="command-panel command-view-overview command-view-live command-panel-scanner">
               <header><div><span>LIVE SCANNER</span><strong>{scanRows.length} symbols observed in runtime snapshot</strong></div><small>{clockTime(bot.last_strategy_at)}</small></header>
@@ -557,7 +557,7 @@ export default function Command() {
           </aside>
         </section>
       </main>
-      <CommandIrenDock accessToken={session.access_token} />
+      <CommandIrenDock session={session} />
     </div>
   );
 }
