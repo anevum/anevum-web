@@ -14,6 +14,7 @@ import "./styles/company.css";
 import "./styles/seasonal.css";
 import "./styles/iren.css";
 import "./styles/enhancements.css";
+import "./styles/rebuild-home.css";
 
 applySeasonalTheme();
 

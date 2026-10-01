@@ -7,6 +7,16 @@ const PUBLIC_TRADING_FEED = "https://mfntzxheldzdvlokyntk.supabase.co/functions/
 const SUPABASE_AUTH_USER = "https://mfntzxheldzdvlokyntk.supabase.co/auth/v1/user";
 const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_XfkgeXau2-6XOPzoXF-Nnw_FSnx0Sae";
 
+const PUBLIC_REBUILD_STATE = {
+  ok: false,
+  status: "REBUILDING",
+  source: "anevum_public_rebuild",
+  data_state: "OFFLINE_BY_DESIGN",
+  since: "2026-10-01",
+  priority_systems: ["RHEN", "GRAEN"],
+  message: "Public trading telemetry is intentionally offline while ANEVUM rebuilds its core data and runtime paths."
+};
+
 class ApiError extends Error {
   constructor(status, message) {
     super(message);
@@ -174,8 +184,8 @@ function currentReleaseSnapshot() {
 function publicRouteMetadata(pathname) {
   const staticRoutes = {
     "/": {
-      title: "ANEVUM — Software Systems & Research",
-      description: "ANEVUM builds software systems for orchestration, market operations, forecasting research, mathematical validation, replay, simulation, telemetry, and evidence."
+      title: "ANEVUM Core Rebuild Underway — Engineering Update",
+      description: "ANEVUM is rebuilding its core stack from the ground up. Public system data is temporarily offline while infrastructure, evidence paths, RHEN, and GRAEN are rebuilt and verified."
     },
     "/products": {
       title: "Products — ANEVUM",
@@ -313,11 +323,7 @@ export default {
 
     if (pathname === "/api/public/trading/live") {
       if (request.method !== "GET") return jsonResponse({ message: "Method not allowed." }, 405);
-      try {
-        return await publicTradingFeed();
-      } catch (error) {
-        return jsonResponse({ message: error instanceof Error ? error.message : "Public trading feed failed." }, 502);
-      }
+      return jsonResponse(PUBLIC_REBUILD_STATE, 503);
     }
 
     if (pathname === "/api/public/research/readiness") {

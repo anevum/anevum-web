@@ -2,147 +2,224 @@ import { Link } from "react-router-dom";
 import Mark from "../components/Mark";
 import ProductCard from "../components/company/ProductCard";
 import SystemIcon from "../components/company/SystemIcon";
-import SystemTopology from "../components/company/SystemTopology";
-import type { SystemName } from "../components/company/SystemMark";
 import { fieldNotes } from "../data/fieldNotes";
 import { products } from "../data/products";
-import { useLiveTrading } from "../hooks/useLiveTrading";
-import type { PublicPerformancePoint } from "../lib/data";
 
-type Lane = { closed_trades?: number; realized_return_pct?: number | null; curve?: PublicPerformancePoint[] };
-type MarketFeed = { market_performance?: { equities?: Lane; crypto?: Lane } };
-type SystemState = { system: SystemName; status: string | number; detail: string };
+const rebuildPhases = [
+  {
+    step: "01",
+    status: "UNDERWAY",
+    title: "Remove inherited data dependencies",
+    body: "Supabase dependencies are being removed from the core path. Data contracts, persistence requirements, and ownership are being redefined before a replacement is accepted."
+  },
+  {
+    step: "02",
+    status: "ACTIVE",
+    title: "Re-center the operating stack",
+    body: "GitHub remains the canonical code and change record. Railway remains the primary runtime and deployment layer while service boundaries are rebuilt intentionally."
+  },
+  {
+    step: "03",
+    status: "NEXT",
+    title: "Rebuild evidence and telemetry",
+    body: "Persistence, event delivery, health state, and public-safe telemetry will be reconstructed around durable contracts instead of patched around the previous stack."
+  },
+  {
+    step: "04",
+    status: "PRIORITY",
+    title: "Bring RHEN and GRAEN back online",
+    body: "Market operations and mathematical research are the first subsystem restoration targets. They return only after their new evidence paths pass verification."
+  },
+  {
+    step: "05",
+    status: "QUEUED",
+    title: "Restore public data surfaces",
+    body: "Live graphs, performance evidence, runtime state, and progress telemetry return after the rebuilt pipeline can support them without stale or synthetic fallbacks."
+  },
+  {
+    step: "06",
+    status: "QUEUED",
+    title: "Reintegrate the full machine",
+    body: "IREN, NOSTRA, VELUM, Command, and the public site will be reconnected to the rebuilt foundation and verified as one coherent operating system."
+  }
+];
 
-function pct(value?: number | null) {
-  if (value == null || !Number.isFinite(value)) return "—";
-  return (value > 0 ? "+" : "") + value.toFixed(2) + "%";
-}
-
-function MiniCurve({ rows = [] }: { rows?: PublicPerformancePoint[] }) {
-  const clean = rows.map((row) => Number(row.return_pct)).filter(Number.isFinite);
-  if (clean.length < 2) return <div className="home-curve-empty"><span>LIVE CURVE</span><strong>AWAITING MEASURED SAMPLE</strong></div>;
-  const low = Math.min(...clean, 0);
-  const high = Math.max(...clean, 0);
-  const span = Math.max(0.01, high - low);
-  const points = clean.map((value, index) => {
-    const x = (index / Math.max(1, clean.length - 1)) * 600;
-    const y = 150 - ((value - low) / span) * 125;
-    return x.toFixed(1) + "," + y.toFixed(1);
-  }).join(" ");
-  return <svg className="home-performance-curve" viewBox="0 0 600 170" preserveAspectRatio="none" role="img" aria-label="Normalized live performance preview"><polyline points={points} /></svg>;
-}
+const priorities = [
+  {
+    system: "RHEN" as const,
+    tag: "RESTORE FIRST",
+    title: "Market operations",
+    body: "Re-establish a clean runtime, durable evidence path, and trustworthy production telemetry before live activity is represented publicly."
+  },
+  {
+    system: "GRAEN" as const,
+    tag: "RESTORE FIRST",
+    title: "Mathematical research",
+    body: "Re-establish the independent research runtime, experiment records, validation boundaries, and durable outputs on the new foundation."
+  }
+];
 
 export default function HomeCompany() {
-  const { data, loading, error } = useLiveTrading(7000);
-  const feed = data as (typeof data & MarketFeed);
-  const state = loading ? "CONNECTING" : error ? "UNAVAILABLE" : data?.state || "UNAVAILABLE";
-  const equities = feed?.market_performance?.equities;
-  const crypto = feed?.market_performance?.crypto;
-  const curve = (equities?.curve?.length ? equities.curve : crypto?.curve) || [];
-  const systems = data?.systems || {};
-  const systemState: SystemState[] = [
-    { system:"RHEN", status:systems.RHEN?.runtime_state || state, detail:systems.RHEN?.activity || data?.active_strategy?.version_id || "Production market system" },
-    { system:"NOSTRA", status:systems.NOSTRA?.runtime_state || "EMBEDDED", detail:systems.NOSTRA?.activity || "Forecast research embedded in RHEN" },
-    { system:"GRAEN", status:systems.GRAEN?.runtime_state || "CONNECTING", detail:systems.GRAEN?.activity || "Canonical mathematical research runtime" },
-    { system:"VELUM", status:systems.VELUM?.runtime_state || "CONNECTING", detail:systems.VELUM?.activity || "Replay / counterfactual runtime" },
-    { system:"IREN", status:systems.IREN?.runtime_state || (error ? "DEGRADED" : "CONNECTING"), detail:systems.IREN?.activity || "Operating intelligence" }
-  ];
-  const evidenceChain: { system: SystemName; step: string; action: string }[] = [
-    { system:"GRAEN", step:"01", action:"QUESTION" },
-    { system:"NOSTRA", step:"02", action:"FORECAST" },
-    { system:"VELUM", step:"03", action:"REPLAY" },
-    { system:"RHEN", step:"04", action:"OPERATE" },
-    { system:"IREN", step:"05", action:"COORDINATE" }
-  ];
-  const caseStudyFlow: SystemName[] = ["GRAEN","NOSTRA","VELUM","RHEN"];
-
   return (
-    <div className="company-page company-home company-home-v3">
-      <section className="company-hero company-hero-v3">
-        <div className="company-hero-copy">
-          <div className="company-mark-lockup"><Mark /><span>SOFTWARE · RESEARCH · AUTONOMOUS SYSTEMS</span></div>
-          <h1>ANEVUM</h1>
-          <h2>Research. Forecast. Simulate. Execute. Measure.</h2>
-          <p>ANEVUM builds interconnected software systems that turn hypotheses into measurable evidence and bounded production behavior.</p>
-          <div className="company-actions">
-            <Link className="company-button primary" to="/architecture">Explore the architecture <span>→</span></Link>
-            <Link className="company-button" to="/products">Systems</Link>
-            <Link className="company-text-link" to="/research">Read Field Notes ↗</Link>
-          </div>
-          <div className="company-live-strip" aria-label="Public runtime status">
-            <span><i className={data?.live ? "is-live" : ""} /> PRODUCTION EVIDENCE</span>
-            <strong>{state}</strong>
-            <small>{data?.generated_at ? "UPDATED " + new Date(data.generated_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "PUBLIC FEED"}</small>
-          </div>
+    <div className="company-page company-home rebuild-home">
+      <section className="rebuild-breaking-hero" aria-labelledby="rebuild-headline">
+        <div className="rebuild-breaking-kicker">
+          <span className="rebuild-breaking-label"><i /> BREAKING // SYSTEM REBUILD</span>
+          <span>OCTOBER 1, 2026</span>
+          <span>ANEVUM ENGINEERING UPDATE</span>
         </div>
-        <div className="company-hero-visual">
-          <div className="hero-visual-label"><span>ANEVUM / SYSTEM MAP</span><b>LIVE ARCHITECTURE</b></div>
-          <SystemTopology compact />
-          <div className="hero-visual-metrics" aria-label="Current public system summary">
-            <span><small>RUNTIME</small><strong>{state}</strong></span>
-            <span><small>EVENTS / 60M</small><strong>{data?.telemetry?.events_60m ?? "—"}</strong></span>
-            <span><small>LIVE CLOSED</small><strong>{data?.performance?.closed_trades ?? "—"}</strong></span>
-          </div>
-          <p className="hero-visual-caption">Public-safe state only. Research, replay, and protected execution controls remain separated from this surface.</p>
-        </div>
-      </section>
 
-      <section className="home-mission-strip home-mission-strip-icons">
-        <div className="home-mission-copy">
-          <span>01 / OPERATING MODEL</span>
-          <h2>Five systems. One evidence chain.</h2>
-          <p>IREN coordinates. GRAEN tests what can be inferred. NOSTRA forecasts what may happen next. VELUM reconstructs what could have happened. RHEN operates bounded market workflows and records what actually happened.</p>
-          <Link to="/architecture">How ANEVUM works →</Link>
-        </div>
-        <div className="home-evidence-chain home-evidence-chain-icons" aria-label="ANEVUM evidence chain">
-          {evidenceChain.map(({ system, step, action }) => (
-            <div key={system}>
-              <SystemIcon system={system} size="sm" />
-              <span>{step} / {action}</span>
-              <strong>{system}</strong>
+        <div className="rebuild-breaking-grid">
+          <div className="rebuild-breaking-copy">
+            <div className="company-mark-lockup"><Mark /><span>SOFTWARE · RESEARCH · AUTONOMOUS SYSTEMS</span></div>
+            <p className="rebuild-eyebrow">LATEST DEVELOPMENT</p>
+            <h1 id="rebuild-headline">ANEVUM is rebuilding its core stack from the ground up.</h1>
+            <p className="rebuild-deck">
+              The first generation of the system produced enough useful feedback, data, and operating experience to justify a deeper architectural reset. Instead of continuing to layer fixes onto choices made while the project was still proving itself, we are rebuilding the machine deliberately from first principles.
+            </p>
+
+            <div className="rebuild-status-band" aria-label="Current rebuild status">
+              <span><small>PUBLIC DATA</small><strong>OFFLINE BY DESIGN</strong></span>
+              <span><small>REBUILD</small><strong>UNDERWAY</strong></span>
+              <span><small>WORK WINDOW</small><strong>UP TO ~1 WEEK</strong></span>
             </div>
-          ))}
+
+            <div className="company-actions">
+              <Link className="company-button primary" to="/research">Follow the rebuild <span>→</span></Link>
+              <Link className="company-button" to="/architecture">Architecture</Link>
+              <Link className="company-text-link" to="/products">System map ↗</Link>
+            </div>
+          </div>
+
+          <aside className="rebuild-latest-card" aria-label="Latest rebuild developments">
+            <header>
+              <span>LATEST // 13:30 ET</span>
+              <strong>REBUILD BRIEF</strong>
+            </header>
+            <div className="rebuild-latest-lead">
+              <span>01</span>
+              <div>
+                <small>FIRST MOVE</small>
+                <strong>Supabase is being removed from the core stack.</strong>
+                <p>The replacement persistence design will be selected from actual system requirements rather than inherited platform choices.</p>
+              </div>
+            </div>
+            <div className="rebuild-latest-list">
+              <article><span>02</span><div><strong>GitHub + Railway become the immediate center of gravity.</strong><p>Code, history, runtime, deployment, tests, and service boundaries are being rebuilt around the parts of the stack that already fit the operating model.</p></div></article>
+              <article><span>03</span><div><strong>RHEN and GRAEN are first back online.</strong><p>Trading and mathematical research are the priority restoration lanes before secondary surfaces are reconnected.</p></div></article>
+              <article><span>04</span><div><strong>The rebuild is being documented as it happens.</strong><p>Repository changes, tests, failures, architecture decisions, and measured results will be preserved through Field Notes and the public record.</p></div></article>
+            </div>
+          </aside>
+        </div>
+
+        <div className="rebuild-ticker" role="status">
+          <strong>PUBLIC STATUS</strong>
+          <span>LIVE GRAPHS, PERFORMANCE DATA, AND SYSTEM TELEMETRY ARE TEMPORARILY OFFLINE WHILE THE UNDERLYING DATA AND RUNTIME PATHS ARE REBUILT.</span>
         </div>
       </section>
 
-      <section className="company-section home-system-state">
-        <header className="company-section-head"><span>02 / SYSTEM STATE</span><h2>The site reflects the operating system behind it.</h2><p>Public-safe state is separated from private Command. Unavailable data fails closed instead of being replaced with invented metrics.</p></header>
-        <div className="system-state-grid system-state-grid-icons">
-          {systemState.map(({ system, status, detail }) => (
-            <article key={system} className={"system-state-" + system.toLowerCase()}>
-              <header><SystemIcon system={system} size="sm" /><i /></header>
-              <span>{system}</span>
-              <strong>{String(status).replaceAll("_", " ")}</strong>
-              <p>{detail}</p>
+      <section className="company-section rebuild-why">
+        <header className="company-section-head">
+          <span>01 / WHY THE DATA IS OFFLINE</span>
+          <h2>The downtime is part of the rebuild, not something being hidden.</h2>
+          <p>
+            The existing public surfaces depend on infrastructure that is being removed, separated, or migrated. During that work, ANEVUM will fail closed: no stale telemetry, invented continuity, or placeholder performance will be presented as live evidence.
+          </p>
+        </header>
+
+        <div className="rebuild-reason-grid">
+          <article className="rebuild-reason-feature">
+            <span>WHY NOW</span>
+            <h3>The prototype phase answered the important question: the system is worth rebuilding properly.</h3>
+            <p>
+              ANEVUM began as an experiment whose architecture evolved while the project itself was still being discovered. Recent operating feedback made the next step clear: preserve what worked, discard accidental complexity, and rebuild the foundation around explicit subsystem boundaries, durable evidence, reproducible research, and easier operation.
+            </p>
+          </article>
+          <article>
+            <span>PUBLIC DATA POLICY</span>
+            <strong>Offline is better than ambiguous.</strong>
+            <p>Graphs and metrics stay unavailable until the new pipeline can prove where the data came from, when it was generated, and whether it belongs to live, research, replay, shadow, or simulation state.</p>
+          </article>
+          <article>
+            <span>IMPLEMENTATION</span>
+            <strong>Codex-assisted, repository-first.</strong>
+            <p>Codex is being used for repository-level implementation, migration work, tests, verification, and documentation while architectural decisions remain traceable in GitHub.</p>
+          </article>
+        </div>
+      </section>
+
+      <section className="company-section rebuild-roadmap">
+        <header className="company-section-head">
+          <span>02 / REBUILD SEQUENCE</span>
+          <h2>Rebuild the foundation first. Restore visible systems second.</h2>
+          <p>
+            The working window may take the better part of a week. The sequence is intentionally biased toward correctness and clean ownership rather than keeping every public surface artificially online.
+          </p>
+        </header>
+
+        <div className="rebuild-phase-grid">
+          {rebuildPhases.map((phase) => (
+            <article key={phase.step} className={phase.status === "UNDERWAY" || phase.status === "ACTIVE" || phase.status === "PRIORITY" ? "is-active" : ""}>
+              <header><span>{phase.step}</span><b>{phase.status}</b></header>
+              <h3>{phase.title}</h3>
+              <p>{phase.body}</p>
             </article>
           ))}
         </div>
       </section>
 
-      <section className="company-section home-evidence-section">
-        <header className="company-section-head"><span>03 / LIVE EVIDENCE</span><h2>Measured performance stays separate from simulation.</h2><p>Only broker-derived closed live trades enter the public live record. Research, replay, shadow, and paper results remain outside it.</p></header>
-        <div className="home-evidence-grid">
-          <article className="home-evidence-chart">
-            <header><span>NORMALIZED LIVE PERFORMANCE</span><Link to="/performance">FULL RECORD ↗</Link></header>
-            <MiniCurve rows={curve} />
-            <footer><span>EQUITIES {equities?.closed_trades ?? 0} CLOSED</span><strong>{pct(equities?.realized_return_pct)}</strong><span>CRYPTO {crypto?.closed_trades ?? 0} CLOSED</span><strong>{pct(crypto?.realized_return_pct)}</strong></footer>
-          </article>
-          <div className="home-evidence-metrics">
-            <article><span>EVENTS / 60M</span><strong>{data?.telemetry?.events_60m ?? "—"}</strong><p>Sanitized canonical telemetry.</p></article>
-            <article><span>LIVE CLOSED TRADES</span><strong>{data?.performance?.closed_trades ?? "—"}</strong><p>Broker-derived live record.</p></article>
-            <article><span>GRAEN RUNTIME</span><strong>{systems.GRAEN?.runtime_state || "—"}</strong><p>{systems.GRAEN?.activity || "Canonical research runtime."}</p></article>
-            <article><span>STRATEGY</span><strong>{data?.active_strategy?.version_id || "UNAVAILABLE"}</strong><p>Active public-safe version identity.</p></article>
-          </div>
+      <section className="company-section rebuild-priority">
+        <header className="company-section-head">
+          <span>03 / FIRST RESTORATION TARGETS</span>
+          <h2>RHEN and GRAEN return first.</h2>
+          <p>
+            These two systems create the most important immediate feedback loop: RHEN produces real operating evidence, while GRAEN tests and formalizes the research that should influence future behavior.
+          </p>
+        </header>
+
+        <div className="rebuild-priority-grid">
+          {priorities.map((item) => (
+            <article key={item.system}>
+              <header><SystemIcon system={item.system} size="md" /><span>{item.tag}</span></header>
+              <small>{item.system}</small>
+              <h3>{item.title}</h3>
+              <p>{item.body}</p>
+              <Link to={"/products/" + item.system.toLowerCase()}>System profile <b>→</b></Link>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section className="company-section rebuild-documentation">
+        <header className="company-section-head">
+          <span>04 / OPEN DEVELOPMENT RECORD</span>
+          <h2>The rebuild will leave a reproducible trail.</h2>
+          <p>
+            Architecture decisions, migration milestones, tests, failures, research outcomes, and restoration checkpoints will be documented while the work is underway rather than reconstructed afterward.
+          </p>
+        </header>
+        <div className="rebuild-documentation-grid">
+          <article><span>FIELD NOTES</span><strong>Progress reports and engineering decisions</strong><p>Readable updates explaining what changed, why it changed, what failed, and what evidence supports the next step.</p><Link to="/research">Open Field Notes →</Link></article>
+          <article><span>GITHUB</span><strong>Canonical implementation history</strong><p>Code changes, tests, reviews, release history, and architecture work remain traceable to repository state instead of disappearing into chat.</p><Link to="/releases">Open release record →</Link></article>
+          <article><span>PUBLIC EVIDENCE</span><strong>Data returns only after verification</strong><p>When live graphs and metrics come back online, they will be connected to the rebuilt evidence path rather than the retired stack.</p><Link to="/performance">Performance surface →</Link></article>
         </div>
       </section>
 
       <section className="company-section">
-        <header className="company-section-head"><span>04 / SYSTEMS</span><h2>Specialized authority, shared evidence.</h2><p>Each system has a defined role and boundary. Product names do not imply that research, forecasting, simulation, and execution are interchangeable.</p></header>
+        <header className="company-section-head">
+          <span>05 / SYSTEMS</span>
+          <h2>The machine being rebuilt.</h2>
+          <p>The subsystem identities remain intact while their infrastructure, contracts, runtime boundaries, and shared evidence paths are rebuilt beneath them.</p>
+        </header>
         <div className="company-product-grid">{products.map((product) => <ProductCard key={product.slug} product={product} />)}</div>
       </section>
 
-      <section className="company-section home-field-notes home-field-notes-editorial">
-        <header className="company-section-head"><span>05 / FIELD NOTES</span><h2>A readable engineering journal.</h2><p>The public record is organized like a publication now: concise stories first, complete reproduction detail inside each note.</p></header>
+      <section className="company-section home-field-notes home-field-notes-editorial rebuild-notes">
+        <header className="company-section-head">
+          <span>06 / FIELD NOTES</span>
+          <h2>Follow the work as it happens.</h2>
+          <p>Current notes remain the public engineering journal. Rebuild entries will document the migration, validation, restoration sequence, and results.</p>
+        </header>
         <div className="field-note-preview-grid field-note-preview-grid-icons">
           {fieldNotes.slice(0, 3).map((note) => (
             <Link key={note.slug} to={"/research/" + note.slug}>
@@ -155,25 +232,6 @@ export default function HomeCompany() {
           ))}
         </div>
         <div className="section-end-link"><Link to="/research">Open Field Notes →</Link></div>
-      </section>
-
-      <section className="company-section home-case-study">
-        <div className="case-study-feature-copy"><span>06 / CASE STUDY</span><h2>What happens when an equity strategy meets a 24/7 crypto market?</h2><p>GRAEN challenges the assumption. NOSTRA measures market state. VELUM replays alternatives. RHEN receives only what survives the evidence gate.</p><Link to="/case-studies">Explore case studies →</Link></div>
-        <div className="case-study-feature-flow case-study-feature-flow-icons" aria-label="Case study system flow">
-          {caseStudyFlow.map((system, index) => (
-            <div key={system}>
-              <SystemIcon system={system} size="sm" />
-              <span>{String(index + 1).padStart(2, "0")}</span>
-              <strong>{system}</strong>
-              {index < caseStudyFlow.length - 1 ? <i>↓</i> : null}
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <section className="company-founder-cta company-founder-cta-v3">
-        <div className="founder-cta-identity"><span>FOUNDER / SYSTEMS BUILDER</span><h2>Devon Akins</h2><p>Software systems · mathematical research · forecasting · simulation · production infrastructure</p></div>
-        <div><p>ANEVUM is being built as an operating software and research company, with the public site exposing the architecture, evidence, development record, and limits of what the systems can currently support.</p><Link to="/founder">Founder profile →</Link><Link to="/resume">Résumé →</Link></div>
       </section>
     </div>
   );
