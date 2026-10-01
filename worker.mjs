@@ -40,6 +40,10 @@ function bearerToken(request) {
   return value.startsWith("Bearer ") ? value.slice(7).trim() : "";
 }
 
+function accessAssertion(request) {
+  return (request.headers.get("Cf-Access-Jwt-Assertion") || "").trim();
+}
+
 async function assertCommandAdmin(token) {
   const response = await fetch(SUPABASE_AUTH_USER, {
     method: "GET",
@@ -69,9 +73,11 @@ async function assertCommandAdmin(token) {
 }
 
 async function proxyTrader(request, upstreamPath) {
-  const token = bearerToken(request);
+  const access = accessAssertion(request);
+  const legacy = bearerToken(request);
+  const token = access || legacy;
   if (!token) throw new ApiError(401, "Private authentication is required before using Command.");
-  await assertCommandAdmin(token);
+  if (!access) await assertCommandAdmin(legacy);
 
   const requestUrl = new URL(request.url);
   const response = await fetch(TRADER_BASE + upstreamPath + requestUrl.search, {
@@ -79,7 +85,8 @@ async function proxyTrader(request, upstreamPath) {
     headers: {
       Authorization: "Bearer " + token,
       "Content-Type": "application/json",
-      "Cache-Control": "no-store"
+      "Cache-Control": "no-store",
+      ...(access ? { "X-ANEVUM-Command-Auth": "cloudflare-access" } : {})
     },
     body: request.method === "GET" || request.method === "HEAD" ? undefined : await request.text()
   });
@@ -143,6 +150,9 @@ async function publicTradingFeed() {
 }
 
 async function commandApi(request, pathname) {
+  if (pathname === "/api/command/session" && request.method === "GET") {
+    return proxyTrader(request, "/v1/command/session");
+  }
   if (pathname === "/api/command/trader/status" && request.method === "GET") {
     return proxyTrader(request, "/v1/command/status");
   }
@@ -352,6 +362,20 @@ export default {
       } catch (error) {
         if (error instanceof ApiError) return jsonResponse({ message: error.message }, error.status);
         return jsonResponse({ message: "Operational state unavailable.", stale: true }, 503);
+      }
+    }
+
+    if (pathname === "/api/command/session") {
+      if (request.method !== "GET") {
+        return jsonResponse({ message: "Method not allowed." }, 405);
+      }
+      try {
+        const response = await commandApi(request, pathname);
+        if (response) return response;
+        return jsonResponse({ message: "Command session endpoint not found." }, 404);
+      } catch (error) {
+        if (error instanceof ApiError) return jsonResponse({ message: error.message }, error.status);
+        return jsonResponse({ message: "Command identity unavailable." }, 503);
       }
     }
 
