@@ -11,11 +11,13 @@ import { useLiveTrading } from "../hooks/useLiveTrading";
 import {
   fetchCommandDailyReport,
   fetchCommandEvidence,
+  fetchCommandSession,
   fetchCommandStatus,
   fetchCommandWeeklyReport,
   fetchResearchReadiness,
   fetchTheoryProgram,
   type CommandEvidence,
+  type CommandSession,
   type CommandSnapshot,
   type ResearchReadiness,
   type TheoryProgramFeed
@@ -51,7 +53,7 @@ function arrayText(value: unknown) {
 }
 
 export default function Command() {
-  const { session, loading, commandAdmin, signOut } = useAuth();
+  const { session, loading: authLoading, signOut } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const commandPage = (() => {
@@ -69,15 +71,41 @@ export default function Command() {
   const [statusError, setStatusError] = useState("");
   const [evidenceError, setEvidenceError] = useState("");
   const [refreshing, setRefreshing] = useState(false);
+  const [commandIdentity, setCommandIdentity] = useState<CommandSession | null>(null);
+  const [commandIdentityLoading, setCommandIdentityLoading] = useState(true);
   const { data: publicFeed, error: publicFeedError } = useLiveTrading(3000);
+  const commandAdmin = commandIdentity?.command_admin === true;
+
+  useEffect(() => {
+    if (authLoading) return;
+    let active = true;
+    setCommandIdentityLoading(true);
+    void fetchCommandSession(session)
+      .then((identity) => {
+        if (active) setCommandIdentity(identity);
+      })
+      .catch(() => {
+        if (active) setCommandIdentity(null);
+      })
+      .finally(() => {
+        if (active) setCommandIdentityLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [authLoading, session]);
 
   const handleSignOut = useCallback(async () => {
+    if (commandIdentity?.auth_source === "cloudflare_access") {
+      window.location.assign("/cdn-cgi/access/logout");
+      return;
+    }
     await signOut();
     navigate("/", { replace: true });
-  }, [signOut, navigate]);
+  }, [commandIdentity?.auth_source, signOut, navigate]);
 
   const refresh = useCallback(async () => {
-    if (!session || !commandAdmin) return;
+    if (!commandAdmin) return;
     setRefreshing(true);
 
     const [statusResult, evidenceResult, readinessResult, theoryResult] = await Promise.allSettled([
@@ -127,23 +155,23 @@ export default function Command() {
   }, [session, commandAdmin]);
 
   useEffect(() => {
-    if (!session || !commandAdmin) return;
+    if (!commandAdmin) return;
     void refresh();
     const timer = window.setInterval(refresh, 5000);
     return () => window.clearInterval(timer);
   }, [session, commandAdmin, refresh]);
 
-  if (loading) {
+  if (authLoading || commandIdentityLoading) {
     return <div className="command-gate"><RhenMark /><span>ANEVUM / COMMAND</span><h1>Resolving identity.</h1></div>;
   }
 
-  if (!session?.user) {
+  if (!commandIdentity?.authenticated) {
     return (
       <div className="command-gate">
         <RhenMark />
         <span>ANEVUM / COMMAND</span>
         <h1>Private operations.</h1>
-        <p>Sign in through the private ANEVUM entrance to open Command.</p>
+        <p>Open Command through ANEVUM private access.</p>
         <Link className="primary-link" to="/private">Private access <b>↗</b></Link>
       </div>
     );
@@ -249,7 +277,7 @@ export default function Command() {
         </nav>
         <div className="command-account">
           <span><i /> IREN / LIVE</span>
-          <small>{session.user.email}</small>
+          <small>{commandIdentity.email || session?.user?.email || "Command administrator"}</small>
           <div className="command-account-actions">
             <Link to="/" title="Return to public ANEVUM">Public</Link>
             <button type="button" onClick={handleSignOut} title="Sign out of Command">Sign out</button>
@@ -314,7 +342,7 @@ export default function Command() {
 
         <section className="command-grid">
           <div className="command-primary">
-            <CommandTopology token={session.access_token} />
+            <CommandTopology token={session?.access_token} />
             <CommandPerformance performance={publicFeed?.performance} feedError={publicFeedError} />
             <article className="command-panel command-view-overview command-view-live command-panel-scanner">
               <header><div><span>LIVE SCANNER</span><strong>{scanRows.length} symbols observed in runtime snapshot</strong></div><small>{clockTime(bot.last_strategy_at)}</small></header>
@@ -557,7 +585,7 @@ export default function Command() {
           </aside>
         </section>
       </main>
-      <CommandIrenDock accessToken={session.access_token} />
+      <CommandIrenDock accessToken={session?.access_token} />
     </div>
   );
 }
