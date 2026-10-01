@@ -1,4 +1,4 @@
-name: Diagnose ANEVUM Command Access Payload
+name: Finalize ANEVUM Command Access
 
 on:
   push:
@@ -6,11 +6,11 @@ on:
       - ops/cloudflare-access-command-20261001
 
 jobs:
-  diagnose:
+  finalize:
     runs-on: ubuntu-latest
-    timeout-minutes: 3
+    timeout-minutes: 4
     steps:
-      - name: Validate Access application payload
+      - name: Create owner policy and print canonical Access identity
         shell: bash
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_ACCESS_API_TOKEN }}
@@ -20,27 +20,49 @@ jobs:
           api="https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID"
           auth=(-H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" -H "Content-Type: application/json")
 
+          curl --fail --silent --show-error "$api/access/organizations" "${auth[@]}" > "$RUNNER_TEMP/org.json"
+          auth_domain="$(jq -r '.result | if type=="array" then .[0].auth_domain else .auth_domain end // empty' "$RUNNER_TEMP/org.json")"
+          if [ -z "$auth_domain" ]; then
+            echo "Access organization auth_domain missing"
+            exit 1
+          fi
+
           curl --fail --silent --show-error "$api/access/apps?per_page=100" "${auth[@]}" > "$RUNNER_TEMP/apps.json"
           app_id="$(jq -r '.result[]? | select(.name=="ANEVUM Command") | .id' "$RUNNER_TEMP/apps.json" | head -n1)"
+          aud="$(jq -r '.result[]? | select(.name=="ANEVUM Command") | .aud' "$RUNNER_TEMP/apps.json" | head -n1)"
+          if [ -z "$app_id" ] || [ -z "$aud" ]; then
+            echo "ANEVUM Command Access app missing"
+            exit 1
+          fi
 
-          cat > "$RUNNER_TEMP/app.json" <<'JSON'
+          curl --fail --silent --show-error "$api/access/apps/$app_id/policies" "${auth[@]}" > "$RUNNER_TEMP/policies.json"
+          policy_id="$(jq -r '.result[]? | select(.name=="ANEVUM Command Owner") | .id' "$RUNNER_TEMP/policies.json" | head -n1)"
+
+          cat > "$RUNNER_TEMP/policy.json" <<'JSON'
           {
-            "name": "ANEVUM Command",
-            "type": "self_hosted",
-            "session_duration": "24h",
-            "app_launcher_visible": false,
-            "destinations": [
-              {"type":"public","uri":"anevum.com/command*"},
-              {"type":"public","uri":"anevum.com/api/command*"}
-            ]
+            "name": "ANEVUM Command Owner",
+            "decision": "allow",
+            "precedence": 1,
+            "include": [
+              {"email":{"email":"devon@anevum.com"}}
+            ],
+            "exclude": [],
+            "require": []
           }
           JSON
 
-          if [ -z "$app_id" ]; then
-            status="$(curl --silent --show-error -o "$RUNNER_TEMP/result.json" -w '%{http_code}'               -X POST "$api/access/apps" "${auth[@]}"               --data-binary @"$RUNNER_TEMP/app.json")"
+          if [ -z "$policy_id" ]; then
+            status="$(curl --silent --show-error -o "$RUNNER_TEMP/policy-result.json" -w '%{http_code}'               -X POST "$api/access/apps/$app_id/policies" "${auth[@]}"               --data-binary @"$RUNNER_TEMP/policy.json")"
           else
-            status="$(curl --silent --show-error -o "$RUNNER_TEMP/result.json" -w '%{http_code}'               -X PUT "$api/access/apps/$app_id" "${auth[@]}"               --data-binary @"$RUNNER_TEMP/app.json")"
+            status="$(curl --silent --show-error -o "$RUNNER_TEMP/policy-result.json" -w '%{http_code}'               -X PUT "$api/access/apps/$app_id/policies/$policy_id" "${auth[@]}"               --data-binary @"$RUNNER_TEMP/policy.json")"
           fi
 
-          echo "ACCESS_APP_STATUS=$status"
-          jq -c '{success,errors,messages,result:(.result|if type=="object" then {id,name,aud,type,destinations} else . end)}' "$RUNNER_TEMP/result.json" || true
+          echo "ACCESS_POLICY_STATUS=$status"
+          jq -c '{success,errors,messages,result:(.result|if type=="object" then {id,name,decision,precedence,include} else . end)}' "$RUNNER_TEMP/policy-result.json" || true
+          if [ "$status" -lt 200 ] || [ "$status" -ge 300 ]; then
+            exit 2
+          fi
+
+          echo "ACCESS_APP_ID=$app_id"
+          echo "ACCESS_AUD=$aud"
+          echo "ACCESS_TEAM_DOMAIN=https://$auth_domain"
