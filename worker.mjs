@@ -5,7 +5,7 @@ const TRADER_BASE = "https://alpaca-trader-production-bf3e.up.railway.app";
 const RESEARCH_BASE = "https://rhen-research-agent-production.up.railway.app";
 const PUBLIC_TRADING_FEED = "https://mfntzxheldzdvlokyntk.supabase.co/functions/v1/trading-public-feed";
 const SUPABASE_AUTH_USER = "https://mfntzxheldzdvlokyntk.supabase.co/auth/v1/user";
-const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_XfkgeXau2-6XOPzoXF-Nnw_FSnx0Sae";
+const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_XfkgeXau2-6XOPzoXF-Nnw_FSnx0Sae";\n\nconst PUBLIC_REBUILD_STATE = {\n  ok: false,\n  status: "REBUILDING",\n  source: "anevum_public_rebuild",\n  data_state: "OFFLINE_BY_DESIGN",\n  since: "2026-10-01",\n  priority_systems: ["RHEN", "GRAEN"],\n  message: "Public trading telemetry is intentionally offline while ANEVUM rebuilds its core data and runtime paths."\n};
 
 class ApiError extends Error {
   constructor(status, message) {
@@ -313,11 +313,7 @@ export default {
 
     if (pathname === "/api/public/trading/live") {
       if (request.method !== "GET") return jsonResponse({ message: "Method not allowed." }, 405);
-      try {
-        return await publicTradingFeed();
-      } catch (error) {
-        return jsonResponse({ message: error instanceof Error ? error.message : "Public trading feed failed." }, 502);
-      }
+      return jsonResponse(PUBLIC_REBUILD_STATE, 503);
     }
 
     if (pathname === "/api/public/research/readiness") {
