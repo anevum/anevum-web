@@ -1,4 +1,4 @@
-import type { RhenSession } from "./auth";
+import { commandAuthHeaders, type RhenSession } from "./auth";
 
 export type PublicTelemetryEvent = {
   at?: string | null;
@@ -455,11 +455,7 @@ async function authenticatedJson<T>(
   session: RhenSession
 ): Promise<T> {
   const response = await fetch(path, {
-    headers: {
-      Accept: "application/json",
-      "Content-Type": "application/json",
-      Authorization: "Bearer " + session.access_token
-    },
+    headers: commandAuthHeaders(session),
     cache: "no-store"
   });
 
