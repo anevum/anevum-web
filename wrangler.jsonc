@@ -6,6 +6,13 @@
   "workers_dev": true,
   "preview_urls": true,
   "previews": {},
+  "vars": {
+    "COMMAND_AUTH_MODE": "cloudflare_access",
+    "CF_ACCESS_TEAM_DOMAIN": "https://wispy-tooth-095a.cloudflareaccess.com",
+    "CF_ACCESS_AUD": "3fabe3c703b4cc972136d2292fda39783c11903c3c6cf5ac0e42c4738f2ee800",
+    "COMMAND_ACCESS_EMAILS": "devon@anevum.com",
+    "IREN_COMMAND_URL": "https://foundation-ingest-staging.up.railway.app/v1/command/iren"
+  },
   "routes": [
     {
       "pattern": "anevum.com/*",
