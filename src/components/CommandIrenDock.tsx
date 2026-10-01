@@ -78,7 +78,7 @@ function responseText(command?: IrenCommand) {
   return command?.status === "PROCESSING" ? "IREN is processing this command." : "";
 }
 
-export default function CommandIrenDock({ accessToken }: { accessToken: string }) {
+export default function CommandIrenDock({ accessToken }: { accessToken?: string }) {
   const [feed, setFeed] = useState<IrenFeed | null>(null);
   const [expanded, setExpanded] = useState(false);
   const [command, setCommand] = useState("");
@@ -92,7 +92,7 @@ export default function CommandIrenDock({ accessToken }: { accessToken: string }
       headers: {
         Accept: "application/json",
         "Content-Type": "application/json",
-        Authorization: "Bearer " + accessToken,
+        ...(accessToken ? { Authorization: "Bearer " + accessToken } : {}),
         ...(init?.headers || {})
       },
       cache: "no-store"
