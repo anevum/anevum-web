@@ -32,6 +32,10 @@ jobs:
           echo "ACCESS_ORG_GET=$org_status"
           jq -c '{success,errors,messages}' "$RUNNER_TEMP/org.json" || true
 
+          write_status="$(curl --silent --show-error -o "$RUNNER_TEMP/write-test.json" -w '%{http_code}'             -X POST "$api/access/apps" "${auth[@]}" --data-binary '{}')"
+          echo "ACCESS_APPS_WRITE_TEST=$write_status"
+          jq -c '{success,errors,messages}' "$RUNNER_TEMP/write-test.json" || true
+
           app_id="$(jq -r '.result[]? | select(.name=="ANEVUM Command") | .id' "$RUNNER_TEMP/apps.json" 2>/dev/null | head -n1 || true)"
           if [ -n "$app_id" ]; then
             policy_status="$(curl --silent --show-error -o "$RUNNER_TEMP/policies.json" -w '%{http_code}'               "$api/access/apps/$app_id/policies" "${auth[@]}")"
