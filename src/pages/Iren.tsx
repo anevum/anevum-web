@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
 import Mark from "../components/Mark";
 import RhenMark from "../components/RhenMark";
 import UniverseBackground from "../components/UniverseBackground";
@@ -51,12 +50,11 @@ function stateTone(value?: string | null) {
   return "warn";
 }
 
-async function commandPost(path: string, token: string) {
+async function commandPost(path: string) {
   const response = await fetch(path, {
     method: "POST",
     headers: {
-      Accept: "application/json",
-      Authorization: "Bearer " + token
+      Accept: "application/json"
     },
     cache: "no-store"
   });
@@ -66,7 +64,7 @@ async function commandPost(path: string, token: string) {
 }
 
 export default function Iren() {
-  const { session, loading: authLoading, commandAdmin, signIn, signOut } = useAuth();
+  const { session, commandAdmin, signOut } = useAuth();
   const { data: publicFeed, loading: publicLoading, error: publicError } = useLiveTrading(3000);
   const [view, setView] = useState<View>("overview");
   const [snapshot, setSnapshot] = useState<CommandSnapshot | null>(null);
@@ -77,10 +75,6 @@ export default function Iren() {
   const [theory, setTheory] = useState<TheoryProgramFeed | null>(null);
   const [privateError, setPrivateError] = useState("");
   const [busy, setBusy] = useState(false);
-  const [loginOpen, setLoginOpen] = useState(false);
-  const [email, setEmail] = useState(session?.user?.email || "");
-  const [password, setPassword] = useState("");
-  const [loginError, setLoginError] = useState("");
 
   useEffect(() => {
     const link = document.querySelector<HTMLLinkElement>('link[rel="manifest"]');
@@ -140,11 +134,11 @@ export default function Iren() {
   }, [refreshExtended]);
 
   const runControl = useCallback(async (label: string, path: string, warning: string) => {
-    if (!session?.access_token || !commandAdmin) return;
+    if (!session || !commandAdmin) return;
     if (!window.confirm(warning)) return;
     setBusy(true);
     try {
-      await commandPost(path, session.access_token);
+      await commandPost(path);
       await refreshExtended();
       window.alert(label + " completed.");
     } catch (error) {
@@ -154,21 +148,6 @@ export default function Iren() {
     }
   }, [session, commandAdmin, refreshExtended]);
 
-  const handleLogin = useCallback(async (event: React.FormEvent) => {
-    event.preventDefault();
-    setLoginError("");
-    setBusy(true);
-    try {
-      await signIn(email, password);
-      setPassword("");
-      setLoginOpen(false);
-    } catch (error) {
-      setLoginError(error instanceof Error ? error.message : "Sign in failed.");
-    } finally {
-      setBusy(false);
-    }
-  }, [email, password, signIn]);
-
   const account = rec(snapshot?.account);
   const bot = rec(snapshot?.bot);
   const market = rec(snapshot?.market);
@@ -177,7 +156,6 @@ export default function Iren() {
   const positions = rows(snapshot?.positions);
   const recentOrders = rows(snapshot?.recent_orders);
   const research = rec(snapshot?.research);
-  const mobileDelivery = rec(snapshot?.mobile_live_activity);
   const performance = publicFeed?.performance;
   const activeTheory =
     theory?.problems.find((item) => item.problem_id === theory.program.current_problem_id) ||
@@ -239,7 +217,7 @@ export default function Iren() {
                 <span>{session.user.email}</span><small>{commandAdmin ? "FOUNDER ACCESS" : "RHENLINK"}</small>
               </button>
             ) : (
-              <button className="iren-unlock" onClick={() => setLoginOpen(true)}>Unlock RHENLINK</button>
+              <button className="iren-unlock" onClick={() => window.location.assign("/command")}>Open Command</button>
             )}
           </div>
         </header>
@@ -364,7 +342,7 @@ export default function Iren() {
               <div className="iren-private-gate">
                 <strong>PRIVATE RHEN STATE LOCKED</strong>
                 <p>Sign in with your RHENLINK founder account to expose live broker state, scanner rows, positions, orders, reports, evidence, and controls.</p>
-                <button onClick={() => setLoginOpen(true)}>Unlock private telemetry</button>
+                <button onClick={() => window.location.assign("/command")}>Open Command</button>
               </div>
             )}
           </section>
@@ -420,7 +398,7 @@ export default function Iren() {
                 <button className="danger" disabled={busy} onClick={() => void runControl("Position close", "/api/command/trader/position/close", "Close the RHEN-managed position and disable new entries? This may submit a live market action.")}><span>POSITION CONTROL</span><strong>Close managed position</strong><small>Live action. Requires explicit confirmation and server authorization.</small></button>
               </div>
             ) : (
-              <div className="iren-private-gate"><strong>FOUNDER AUTHENTICATION REQUIRED</strong><p>Operational controls never appear as active actions without authenticated Command administrator authority.</p><button onClick={() => setLoginOpen(true)}>Authenticate</button></div>
+              <div className="iren-private-gate"><strong>FOUNDER AUTHENTICATION REQUIRED</strong><p>Operational controls never appear as active actions without authenticated Command administrator authority.</p><button onClick={() => window.location.assign("/command")}>Open Command</button></div>
             )}
           </section>
         )}
@@ -438,39 +416,10 @@ export default function Iren() {
               <article className="iren-panel"><header><div><span>BOUNDARIES</span><strong>What IREN can see</strong></div></header><div className="iren-status-list"><p><span>PUBLIC TELEMETRY</span><b>LIVE</b></p><p><span>RHEN PRIVATE STATE</span><b>{commandAdmin ? "AUTHORIZED" : "LOCKED"}</b></p><p><span>NOSTRA API</span><b>NOT EXPOSED</b></p><p><span>GRAEN PUBLIC PROGRAM</span><b>{theory ? "AVAILABLE" : "UNAVAILABLE"}</b></p></div></article>
               <article className="iren-panel"><header><div><span>PROVENANCE</span><strong>Private runtime evidence</strong></div></header><div className="iren-card-list">{commandAdmin && evidence ? <><div><b>RUNTIME</b><strong>{text(rec(evidence.provenance?.runtime).deployment_id, "recorded")}</strong><p>{text(rec(evidence.provenance?.runtime).git_commit, "No commit exposed")}</p></div><div><b>LATEST SCAN</b><strong>{text(rec(evidence.provenance?.latest_scan_cycle).data_status, "—")}</strong><p>{text(rec(evidence.provenance?.latest_scan_cycle).cycle_outcome, "No cycle outcome")}</p></div></> : <p className="iren-empty">Authenticate to inspect private runtime provenance.</p>}</div></article>
             </div>
-            {commandAdmin && (
-              <article className="iren-panel">
-                <header><div><span>APPLE NATIVE DELIVERY</span><strong>Lock Screen / Live Activity transport</strong></div><small>{text(mobileDelivery.bundle_id, "com.anevum.iren")}</small></header>
-                <div className="iren-status-list">
-                  <p><span>MOBILE SERVICE</span><b>{mobileDelivery.running ? "RUNNING" : "STOPPED"}</b></p>
-                  <p><span>DURABLE REGISTRY</span><b>{mobileDelivery.registry_configured ? "CONNECTED" : "NOT CONFIGURED"}</b></p>
-                  <p><span>APNS SIGNING</span><b>{mobileDelivery.apns_configured ? "REMOTE READY" : "WAITING FOR APPLE CREDENTIALS"}</b></p>
-                  <p><span>SUCCESSFUL PUSHES</span><b>{text(mobileDelivery.push_count, "0")}</b></p>
-                  <p><span>FAILED PUSHES</span><b>{text(mobileDelivery.failed_push_count, "0")}</b></p>
-                  <p><span>LAST DELIVERY</span><b>{text(mobileDelivery.last_success_at, "No remote push yet")}</b></p>
-                  <p><span>LAST ERROR</span><b>{text(mobileDelivery.last_error, "NONE")}</b></p>
-                </div>
-              </article>
-            )}
-          </section>
+                      </section>
         )}
       </main>
 
-      {loginOpen && (
-        <div className="iren-modal-backdrop" onMouseDown={() => setLoginOpen(false)}>
-          <form className="iren-modal" onSubmit={handleLogin} onMouseDown={(event) => event.stopPropagation()}>
-            <Mark />
-            <span>RHENLINK / IREN</span>
-            <h2>Founder access</h2>
-            <p>Use the same credentials as ANEVUM Command.</p>
-            <label>Email<input autoComplete="email" type="email" value={email} onChange={(event) => setEmail(event.target.value)} required /></label>
-            <label>Password<input autoComplete="current-password" type="password" value={password} onChange={(event) => setPassword(event.target.value)} required /></label>
-            {loginError && <div className="iren-login-error">{loginError}</div>}
-            <button type="submit" disabled={busy || authLoading}>{busy ? "Authenticating…" : "Unlock IREN"}</button>
-            <Link to="/private">Open full RHENLINK recovery</Link>
-          </form>
-        </div>
-      )}
     </div>
   );
 }
