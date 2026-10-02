@@ -103,19 +103,27 @@ export default function CommandTopology({
   }, [session]);
 
   const stale = isStale(snapshot, now, Boolean(error));
-  const guidance = useMemo(() => operatorGuidance(snapshot, Boolean(error)), [snapshot, error]);
+  const guidance = useMemo(
+    () => snapshot?.operator?.guidance || operatorGuidance(snapshot, Boolean(error)),
+    [snapshot, error]
+  );
   const services = snapshot?.topology?.services || [];
   const dependencies = Object.entries(snapshot?.topology?.dependencies || {});
   const work = snapshot?.work;
-  const readyCount = services.filter((row) => row.readiness === true && runtimeStatus(row, stale) === "RUNNING").length;
-  const problemCount = services.filter((row) => !["RUNNING", "IDLE"].includes(runtimeStatus(row, stale))).length;
-  const overall = stale ? "STALE" : snapshot?.state || "UNKNOWN";
+  const readyCount = snapshot?.operator?.inventory?.ready ??
+    services.filter((row) => row.readiness === true && runtimeStatus(row, stale) === "RUNNING").length;
+  const problemCount = snapshot?.operator?.inventory?.problems ??
+    services.filter((row) => !["RUNNING", "IDLE"].includes(runtimeStatus(row, stale))).length;
+  const runtimeCount = snapshot?.operator?.inventory?.independent_runtimes ?? services.length;
+  const overall = stale ? "STALE" : snapshot?.operator?.state || snapshot?.state || "UNKNOWN";
   const stamp = snapshot?.observed_at ? new Date(snapshot.observed_at).toLocaleString() : "No observation";
-  const operatorMessage = stale
-    ? "Fresh canonical observations are unavailable. Treat subsystem state as untrusted until IREN recovers."
-    : overall === "HEALTHY" && !guidance.length
-      ? `ANEVUM healthy. ${readyCount}/${services.length || 0} independent runtimes ready. No operator action required.`
-      : `${guidance.length} operator item${guidance.length === 1 ? "" : "s"} require review.`;
+  const operatorMessage = snapshot?.operator?.message || (
+    stale
+      ? "Fresh canonical observations are unavailable. Treat subsystem state as untrusted until IREN recovers."
+      : overall === "HEALTHY" && !guidance.length
+        ? `ANEVUM healthy. ${readyCount}/${runtimeCount || 0} independent runtimes ready. No operator action required.`
+        : `${guidance.length} operator item${guidance.length === 1 ? "" : "s"} require review.`
+  );
 
   return <article className="command-panel command-view-overview command-view-system ops-center">
     <header className="ops-header">
@@ -134,7 +142,7 @@ export default function CommandTopology({
           <p>One view of runtime health, data freshness, current work, incidents, and deployment identity.</p>
         </div>
         <div className="ops-summary-metrics">
-          <div><span>RUNTIMES</span><strong>{services.length}</strong></div>
+          <div><span>RUNTIMES</span><strong>{runtimeCount}</strong></div>
           <div><span>READY</span><strong>{readyCount}</strong></div>
           <div><span>PROBLEMS</span><strong>{problemCount}</strong></div>
           <div><span>INCIDENTS</span><strong>{snapshot?.incidents.length || 0}</strong></div>
@@ -217,6 +225,19 @@ export default function CommandTopology({
           <p>Keep Command open during maintenance; IREN will surface a concrete item here when canonical health changes.</p>
         </div>}
       </section>
+
+      {snapshot?.operator?.recent_transitions?.length ? <section>
+        <div className="ops-section-head">
+          <div><span>RECENT RECOVERY HISTORY</span><strong>Incident transitions recorded by IREN</strong></div>
+          <small>Canonical control events</small>
+        </div>
+        <div className="ops-guidance-list">
+          {snapshot.operator.recent_transitions.slice(0, 8).map((item, index) => <div className={"ops-guidance " + tone(item.severity)} key={(item.key || "event") + index}>
+            <div><span>{item.transition || "EVENT"} · {item.key || "ANEVUM"}</span><strong>{String(item.reason || "state transition").replaceAll("_", " ")}</strong></div>
+            <p>{item.created_at ? new Date(item.created_at).toLocaleString() : "Unknown time"}{item.delivery_status ? " · " + item.delivery_status : ""}</p>
+          </div>)}
+        </div>
+      </section> : null}
 
       <details className="ops-runbook">
         <summary>Operator runbook</summary>
