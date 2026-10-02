@@ -136,3 +136,15 @@ test("completed command result contract uses canonical result field", async () =
   const payload = await response.json();
   assert.equal(payload.work.commands[0].result.message, "Current IREN status.");
 });
+
+test("canonical handoff prompt and verification blockers survive the existing proxy", async () => {
+  const prompt = "Inspect CURRENT main.\nObjective: implement the scoped capability.\nNo expanded authority.";
+  const handoff = {handoff_id:"h-1",objective_key:"iren.example",handoff_status:"VERIFYING",
+    package:{prompt,base_sha:"a".repeat(40)},verification:{verified:false,blockers:["deployment_not_verified:IREN"]}};
+  const response = await proxyIren(new Request("https://anevum.com/api/command/iren/status"),
+    async () => Response.json({schema_version:"iren_command.v2",work:{handoffs:[handoff],execution_mode:"codex/manual software"}}),
+    {credential,foundationUrl:"https://foundation.example/v1/command/iren"});
+  const body = await response.json();
+  assert.deepEqual(body.work.handoffs[0], handoff);
+  assert.equal(body.work.handoffs[0].package.prompt, prompt);
+});

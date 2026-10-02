@@ -127,7 +127,9 @@ jobs:
         if: github.event_name == 'pull_request'
         env:
           BASE_URL: ${{ steps.preview.outputs.preview_url }}
-        run: node scripts/browser-runtime-qa.mjs
+        run: |
+          node scripts/browser-runtime-qa.mjs
+          node scripts/codex-handoff-browser-qa.mjs
 
       - name: Capture browser QA
         if: github.event_name == 'pull_request'
