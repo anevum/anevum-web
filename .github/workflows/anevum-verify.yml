@@ -110,15 +110,18 @@ jobs:
 
           feed_file="$RUNNER_TEMP/public-trading-feed.json"
           feed_status="$(curl --show-error --silent -o "$feed_file" -w '%{http_code}' "$base/api/public/trading/live")"
-          test "$feed_status" = "503"
+          test "$feed_status" = "200"
           jq -e '
-            .ok == false and
-            .status == "REBUILDING" and
-            .source == "anevum_public_rebuild" and
-            .data_state == "OFFLINE_BY_DESIGN" and
-            .since == "2026-10-01" and
-            (.priority_systems == ["RHEN", "GRAEN"]) and
-            (.message | type == "string")
+            .ok == true and
+            .source == "railway_postgresql_canonical" and
+            .disclosure.level == "sanitized" and
+            .systems.IREN.independent_runtime == true and
+            .systems.RHEN.independent_runtime == true and
+            .systems.NOSTRA.independent_runtime == true and
+            .systems.NOSTRA.tracking_state == "LIVE_BASELINE" and
+            (.disclosure.excluded_fields | index("account value") != null) and
+            (.disclosure.excluded_fields | index("symbols") != null) and
+            (.disclosure.excluded_fields | index("orders and fills") != null)
           ' "$feed_file" > /dev/null
 
           curl --fail --show-error --silent --head "$base/command" | grep -qi 'x-robots-tag:.*noindex'
