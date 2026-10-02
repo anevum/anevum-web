@@ -1,39 +1,85 @@
-name: Verify ANEVUM Command Access Edge
-
+name: Audit ANEVUM Command Access
 on:
   push:
-    branches:
-      - ops/cloudflare-access-command-20261001
-
+    branches: [ops/cloudflare-access-command-20261001]
+permissions:
+  contents: read
 jobs:
-  verify:
+  audit:
     runs-on: ubuntu-latest
-    timeout-minutes: 3
+    timeout-minutes: 5
     steps:
-      - name: Verify Access routing
-        shell: bash
+      - name: Read Access scope and probe production boundaries
+        env:
+          CLOUDFLARE_ACCESS_API_TOKEN: ${{ secrets.CLOUDFLARE_ACCESS_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        shell: python
         run: |
-          set -euo pipefail
-
-          command_status="$(curl -sS -o /dev/null -w '%{http_code}' https://anevum.com/command)"
-          command_api_status="$(curl -sS -o /dev/null -w '%{http_code}' https://anevum.com/api/command/session)"
-          root_status="$(curl -sS -o /dev/null -w '%{http_code}' https://anevum.com/)"
-          rhen_status="$(curl -sS -o /dev/null -w '%{http_code}' https://anevum.com/products/rhen)"
-
-          echo "COMMAND_STATUS=$command_status"
-          echo "COMMAND_API_STATUS=$command_api_status"
-          echo "ROOT_STATUS=$root_status"
-          echo "RHEN_STATUS=$rhen_status"
-
-          case "$command_status" in
-            302|303) ;;
-            *) exit 11 ;;
-          esac
-
-          case "$command_api_status" in
-            302|303) ;;
-            *) exit 12 ;;
-          esac
-
-          test "$root_status" = "200"
-          test "$rhen_status" = "200"
+          import json, os, urllib.request, urllib.error
+          base = "https://api.cloudflare.com/client/v4/accounts/" + os.environ["CLOUDFLARE_ACCOUNT_ID"]
+          def api(path):
+              req = urllib.request.Request(base + path, headers={"Authorization": "Bearer " + os.environ["CLOUDFLARE_ACCESS_API_TOKEN"]})
+              with urllib.request.urlopen(req, timeout=30) as response:
+                  data = json.load(response)
+              assert data.get("success"), data.get("errors")
+              return data["result"]
+          apps = api("/access/apps?per_page=100")
+          selected = [a for a in apps if a.get("name") == "ANEVUM Command"]
+          assert len(selected) == 1, "Expected exactly one ANEVUM Command app"
+          app = api("/access/apps/" + selected[0]["id"])
+          policies = api("/access/apps/" + app["id"] + "/policies")
+          org = api("/access/organizations")
+          print("ACCESS_APPLICATION=" + json.dumps({k: app.get(k) for k in ["id","name","aud","type","domain","destinations","self_hosted_domains","allowed_idps","auto_redirect_to_identity","session_duration"]}))
+          print("ACCESS_POLICIES=" + json.dumps(policies))
+          print("ACCESS_AUTH_DOMAIN=" + org["auth_domain"])
+          print("ACCESS_APP_INVENTORY=" + json.dumps([{k:a.get(k) for k in ["id","name","domain","destinations"]} for a in apps]))
+          assert app["id"] == "ea5ecc36-b828-4030-aaf7-c2a7799f6085"
+          assert app["aud"] == "3fabe3c703b4cc972136d2292fda39783c11903c3c6cf5ac0e42c4738f2ee800"
+          assert org["auth_domain"] == "wispy-tooth-095a.cloudflareaccess.com"
+          assert {d["uri"] for d in app["destinations"]} == {"anevum.com/command*", "anevum.com/api/command*"}
+          allows = [p for p in policies if p["decision"] == "allow"]
+          assert allows, "Owner allow policy missing"
+          for p in policies:
+              assert p["decision"] in ("allow","deny"), "Unexpected bypass or service authentication policy"
+          for p in allows:
+              assert p.get("include") == [{"email":{"email":"devon@anevum.com"}}], "Unexpected identity scope"
+          class NoRedirect(urllib.request.HTTPRedirectHandler):
+              def redirect_request(self, req, fp, code, msg, headers, newurl):
+                  return None
+          opener = urllib.request.build_opener(NoRedirect)
+          checks = [
+           ("https://anevum.com/", "GET", [200]),
+           ("https://anevum.com/products/rhen", "GET", [200]),
+           ("https://anevum.com/products/iren", "GET", [200]),
+           ("https://anevum.com/command", "GET", [302,303]),
+           ("https://anevum.com/command/topology", "GET", [302,303]),
+           ("https://anevum.com/api/command/session", "GET", [302,303,401,403]),
+           ("https://anevum.com/api/command/trader/status", "GET", [302,303,401,403]),
+           ("https://anevum.com/api/command/iren/status", "GET", [302,303,401,403]),
+           ("https://anevum.com/api/command/iren/command", "POST", [302,303,401,403]),
+           ("https://anevum.com/api/public/trading/live", "GET", [503]),
+           ("https://alpaca-trader-production-bf3e.up.railway.app/v1/command/session", "GET", [401]),
+           ("https://alpaca-trader-production-bf3e.up.railway.app/v1/command/status", "GET", [401]),
+           ("https://foundation-ingest-staging.up.railway.app/v1/command/iren", "GET", [401]),
+           ("https://foundation-ingest-staging.up.railway.app/v1/command/iren", "POST", [401]),
+          ]
+          for url, method, expected in checks:
+              req = urllib.request.Request(url, method=method, data=b"{}" if method=="POST" else None, headers={"Content-Type":"application/json"})
+              try:
+                  response = opener.open(req, timeout=30)
+              except urllib.error.HTTPError as error:
+                  response = error
+              status = response.code
+              body = response.read()
+              result = {"url":url,"method":method,"status":status}
+              if status in (302,303):
+                  location = response.headers.get("Location","")
+                  result["redirect_host"] = urllib.parse.urlparse(location).hostname
+                  assert result["redirect_host"] == org["auth_domain"], result
+              if "/api/public/trading/live" in url:
+                  assert json.loads(body)["data_state"] == "OFFLINE_BY_DESIGN"
+                  result["data_state"] = "OFFLINE_BY_DESIGN"
+              print("PROBE=" + json.dumps(result))
+              assert status in expected, result
+          print("READ_ONLY_ACCESS_AUDIT=PASS")
+          
