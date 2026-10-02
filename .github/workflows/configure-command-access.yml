@@ -28,6 +28,35 @@ jobs:
           assert len(selected) == 1, "Expected exactly one ANEVUM Command app"
           app = api("/access/apps/" + selected[0]["id"])
           policies = api("/access/apps/" + app["id"] + "/policies")
+          # Scope this repair to the already verified application and existing policies.
+          assert app["id"] == "ea5ecc36-b828-4030-aaf7-c2a7799f6085"
+          assert {d["uri"] for d in app["destinations"]} == {"anevum.com/command*", "anevum.com/api/command*"}
+          owner_id = "266c244d-1d51-4da8-8a46-4996d4517190"
+          staff_id = "c6de87a7-d0dc-48e8-aee1-dae7a5723696"
+          owner = next(p for p in policies if p["id"] == owner_id)
+          assert owner["decision"] == "allow" and owner["include"] == [{"email":{"email":"devon@anevum.com"}}]
+          assert set(p["id"] for p in policies).issubset({owner_id, staff_id}), "Unexpected policy change"
+          if any(p["id"] == staff_id for p in policies):
+              original_staff = api("/access/policies/" + staff_id)
+              fields = ["domain","type","allow_authenticate_via_warp","allow_iframe","allowed_idps","app_launcher_visible","auto_redirect_to_identity","cors_headers","custom_deny_message","custom_deny_url","custom_non_identity_deny_url","custom_pages","destinations","eager_redirect_cookie_setting","enable_binding_cookie","http_only_cookie_attribute","logo_url","mfa_config","name","oauth_configuration","options_preflight_bypass","path_cookie_attribute","policies","read_service_tokens_from_header","same_site_cookie_attribute","scim_config","session_duration","skip_interstitial","tags","use_clientless_isolation_app_launcher_url"]
+              payload = {k: app[k] for k in fields if k in app and app[k] is not None}
+              payload["policies"] = [{"id": owner_id, "precedence": 1}]
+              req = urllib.request.Request(base + "/access/apps/" + app["id"], method="PUT", data=json.dumps(payload).encode(), headers={"Authorization":"Bearer " + os.environ["CLOUDFLARE_ACCESS_API_TOKEN"],"Content-Type":"application/json"})
+              try:
+                  with urllib.request.urlopen(req, timeout=30) as response:
+                      result = json.load(response)
+              except urllib.error.HTTPError as error:
+                  print("ACCESS_UPDATE_ERROR=" + error.read().decode())
+                  raise
+              assert result.get("success"), result.get("errors")
+              app = api("/access/apps/" + app["id"])
+              policies = api("/access/apps/" + app["id"] + "/policies")
+              retained_staff = api("/access/policies/" + staff_id)
+              for field in ["id","name","decision","include","exclude","require"]:
+                  assert original_staff.get(field) == retained_staff.get(field), "Reusable policy unexpectedly changed"
+              print("ACCESS_POLICY_REPAIR=Detached existing staff policy from Command; reusable policy preserved")
+          assert [p["id"] for p in policies] == [owner_id]
+          
           org = api("/access/organizations")
           print("ACCESS_APPLICATION=" + json.dumps({k: app.get(k) for k in ["id","name","aud","type","domain","destinations","self_hosted_domains","allowed_idps","auto_redirect_to_identity","session_duration"]}))
           print("ACCESS_POLICIES=" + json.dumps(policies))
@@ -83,3 +112,14 @@ jobs:
               assert status in expected, result
           print("READ_ONLY_ACCESS_AUDIT=PASS")
           
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          persist-credentials: false
+      - name: Inventory canonical web source
+        shell: bash
+        run: |
+          git rev-parse HEAD
+          rg -n -i --glob '!public/releases/**' --glob '!src/data/releases.json' 'supabase|/functions/v1' . || test "$?" = 1
+      - name: Verify Command contracts on canonical main
+        run: node --test tests/command-iren.test.mjs tests/command-topology.test.mjs
