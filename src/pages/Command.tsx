@@ -314,7 +314,7 @@ export default function Command() {
 
         <section className="command-grid">
           <div className="command-primary">
-            <CommandTopology session={session} />
+            <CommandTopology session={session} feed={publicFeed} />
             <CommandPerformance performance={publicFeed?.performance} feedError={publicFeedError} />
             <article className="command-panel command-view-overview command-view-live command-panel-scanner">
               <header><div><span>LIVE SCANNER</span><strong>{scanRows.length} symbols observed in runtime snapshot</strong></div><small>{clockTime(bot.last_strategy_at)}</small></header>
