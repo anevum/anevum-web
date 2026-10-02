@@ -1,4 +1,4 @@
-import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { commandAuthHeaders, type RhenSession } from "../lib/auth";
 import "../styles/iren-dock.css";
 
@@ -31,6 +31,7 @@ type IrenCommand = {
   command_text?: string;
   source?: string;
   status?: string;
+  result?: Record<string, unknown>;
   response?: Record<string, unknown>;
   linked_job_id?: string | null;
   created_at?: string;
@@ -68,7 +69,7 @@ function stateClass(value?: string) {
 }
 
 function responseText(command?: IrenCommand) {
-  const response = command?.response || {};
+  const response = command?.result || command?.response || {};
   const message = response.message;
   if (typeof message === "string" && message.trim()) return message;
   const next = response.next_action;
@@ -82,7 +83,6 @@ function responseText(command?: IrenCommand) {
 export default function CommandIrenDock({ session }: { session: RhenSession }) {
   const [feed, setFeed] = useState<IrenFeed | null>(null);
   const [expanded, setExpanded] = useState(false);
-  const [command, setCommand] = useState("");
   const [error, setError] = useState("");
   const [sending, setSending] = useState(false);
   const refreshInFlight = useRef(false);
@@ -137,7 +137,6 @@ export default function CommandIrenDock({ session }: { session: RhenSession }) {
         method: "POST",
         body: JSON.stringify({ command: text })
       });
-      setCommand("");
       setExpanded(true);
       setError("");
       window.setTimeout(() => void refresh(), 350);
@@ -147,11 +146,6 @@ export default function CommandIrenDock({ session }: { session: RhenSession }) {
       setSending(false);
     }
   }, [refresh, request, sending]);
-
-  const submit = (event: FormEvent) => {
-    event.preventDefault();
-    void send(command);
-  };
 
   const work = feed?.work;
   const objectives = work?.objectives || [];
@@ -187,27 +181,13 @@ export default function CommandIrenDock({ session }: { session: RhenSession }) {
             <strong>Objective + job control</strong>
           </div>
           <div className="iren-dock-actions">
-            {["status", "what's next?", "do that", "what needs me?"].map((value) => (
+            {["status", "what's next?", "do that", "fix it", "what needs me?"].map((value) => (
               <button key={value} type="button" disabled={sending} onClick={() => void send(value)}>
                 {value}
               </button>
             ))}
           </div>
         </div>
-
-        <form className="iren-command-line" onSubmit={submit}>
-          <span>IREN &gt;</span>
-          <input
-            value={command}
-            onChange={(event) => setCommand(event.target.value)}
-            placeholder="status, what's next?, do that, fix it, or give IREN a directive…"
-            aria-label="Command IREN"
-            autoComplete="off"
-          />
-          <button type="submit" disabled={sending || !command.trim()}>
-            {sending ? "…" : "RUN"}
-          </button>
-        </form>
 
         {error ? <div className="iren-dock-error">{error}</div> : null}
         {lastResponse ? (
