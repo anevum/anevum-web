@@ -60,7 +60,7 @@ jobs:
            ("https://anevum.com/api/command/trader/status", "GET", [302,303,401,403]),
            ("https://anevum.com/api/command/iren/status", "GET", [302,303,401,403]),
            ("https://anevum.com/api/command/iren/command", "POST", [302,303,401,403]),
-           ("https://anevum.com/api/public/trading/live", "GET", [503]),
+           ("https://anevum.com/api/public/trading/live", "GET", [200]),
            ("https://alpaca-trader-production-bf3e.up.railway.app/v1/command/session", "GET", [401]),
            ("https://alpaca-trader-production-bf3e.up.railway.app/v1/command/status", "GET", [401]),
            ("https://foundation-ingest-staging.up.railway.app/v1/command/iren", "GET", [401]),
@@ -84,9 +84,19 @@ jobs:
                   result["redirect_host"] = urllib.parse.urlparse(location).hostname
                   if result["redirect_host"] != org["auth_domain"]:
                       failures.append(result)
-              if "/api/public/trading/live" in url and status == 503:
-                  result["data_state"] = json.loads(body).get("data_state")
-                  if result["data_state"] != "OFFLINE_BY_DESIGN":
+              if "/api/public/trading/live" in url and status == 200:
+                  payload = json.loads(body)
+                  result["source"] = payload.get("source")
+                  result["disclosure"] = (payload.get("disclosure") or {}).get("level")
+                  result["nostra_independent"] = ((payload.get("systems") or {}).get("NOSTRA") or {}).get("independent_runtime")
+                  excluded = set((payload.get("disclosure") or {}).get("excluded_fields") or [])
+                  if (
+                      payload.get("ok") is not True
+                      or payload.get("source") != "railway_postgresql_canonical"
+                      or result["disclosure"] != "sanitized"
+                      or result["nostra_independent"] is not True
+                      or not {"account value", "symbols", "orders and fills"}.issubset(excluded)
+                  ):
                       failures.append(result)
               print("PROBE=" + json.dumps(result))
               if status not in expected:
