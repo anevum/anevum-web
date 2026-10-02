@@ -5,11 +5,11 @@ import { products } from "../data/products";
 
 const stack = [
   ["PUBLIC SURFACE", "React · TypeScript · Vite", "Company site, product surfaces, evidence views, Field Notes, founder profile, and public-safe system state."],
-  ["EDGE", "Cloudflare Workers", "Routing, headers, API proxying, metadata, privacy boundaries, and production delivery."],
+  ["EDGE", "Cloudflare Workers · Access", "Private identity, routing, headers, API proxying, metadata, privacy boundaries, and production delivery."],
   ["CONTROL / STATE", "IREN", "Cross-system operating state, research state, protected Command, and orchestration visibility."],
   ["RESEARCH", "GRAEN · NOSTRA · VELUM", "Validation, forecasting, replay, simulation, counterfactual analysis, and promotion evidence."],
   ["EXECUTION", "RHEN", "Market observation, qualification, risk, execution, reconciliation, telemetry, and evidence capture."],
-  ["DATA", "PostgreSQL · Supabase", "Canonical events, evidence, research decisions, forward outcomes, authentication, and public projections."],
+  ["DATA", "Railway PostgreSQL", "Canonical events, evidence, research decisions, forward outcomes, and public projections."],
   ["SERVICES", "Python · FastAPI · Railway · Docker", "Long-running market, research, replay, and scheduled service roles."],
   ["INTEGRATIONS", "Alpaca · Slack · GitHub", "Broker interface, operational notifications, source control, CI, and deployment."]
 ];

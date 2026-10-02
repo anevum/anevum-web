@@ -27,7 +27,7 @@ const flowStages = [
 const machineNodes = [
   ["MARKET", "Alpaca", "https://www.google.com/s2/favicons?domain=alpaca.markets&sz=64", "Market and broker data. Broker state remains the external execution truth."],
   ["RHEN", "Railway", "https://www.google.com/s2/favicons?domain=railway.com&sz=64", "The production RHEN service scans, evaluates, executes, reconciles, and reports."],
-  ["LEDGER", "Supabase", "https://www.google.com/s2/favicons?domain=supabase.com&sz=64", "Canonical scan, candidate, signal, order, fill, position, outcome, report, and decision records."],
+  ["LEDGER", "Railway PostgreSQL", "https://www.google.com/s2/favicons?domain=postgresql.org&sz=64", "Canonical scan, candidate, signal, order, fill, position, outcome, report, and decision records."],
   ["WEB", "Cloudflare", "https://www.google.com/s2/favicons?domain=cloudflare.com&sz=64", "ANEVUM serves the public sanitized projection and the authenticated Command proxy."],
   ["SOURCE", "GitHub", "https://www.google.com/s2/favicons?domain=github.com&sz=64", "Source and deployment history tie runtime behavior to versioned code."],
   ["RESEARCH", "Offline research + reports", "https://www.google.com/s2/favicons?domain=python.org&sz=64", "Historical tests and canonical reports analyze evidence without changing live decisions."]

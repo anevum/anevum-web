@@ -1,3 +1,7 @@
+# Archived client — not part of Foundation v2
+
+This retained client uses retired Supabase Auth and mobile APIs. Its build/release workflows have been removed. Do not distribute or use it against current production; a future native client needs an explicit Access-compatible design. Historical implementation follows.
+
 # IREN Native 0.3
 
 IREN Native is the Apple-only companion layer for the continuously deployed ANEVUM operating console at https://anevum.com/iren.

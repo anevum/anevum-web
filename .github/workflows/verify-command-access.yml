@@ -1,0 +1,114 @@
+name: Verify Command Access
+on:
+  workflow_dispatch:
+  workflow_run:
+    workflows: [Deploy ANEVUM Production]
+    types: [completed]
+permissions:
+  contents: read
+jobs:
+  audit:
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Read Access scope and probe production boundaries
+        env:
+          CLOUDFLARE_ACCESS_API_TOKEN: ${{ secrets.CLOUDFLARE_ACCESS_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        shell: python
+        run: |
+          import json, os, urllib.request, urllib.error, urllib.parse, subprocess, tempfile, pathlib
+          base = "https://api.cloudflare.com/client/v4/accounts/" + os.environ["CLOUDFLARE_ACCOUNT_ID"]
+          def api(path):
+              req = urllib.request.Request(base + path, headers={"Authorization": "Bearer " + os.environ["CLOUDFLARE_ACCESS_API_TOKEN"]})
+              with urllib.request.urlopen(req, timeout=30) as response:
+                  data = json.load(response)
+              assert data.get("success"), data.get("errors")
+              return data["result"]
+          apps = api("/access/apps?per_page=100")
+          selected = [a for a in apps if a.get("name") == "ANEVUM Command"]
+          assert len(selected) == 1, "Expected exactly one ANEVUM Command app"
+          app = api("/access/apps/" + selected[0]["id"])
+          policies = api("/access/apps/" + app["id"] + "/policies")
+          org = api("/access/organizations")
+          print("ACCESS_APPLICATION=" + json.dumps({k: app.get(k) for k in ["id","name","aud","type","domain","destinations","self_hosted_domains","allowed_idps","auto_redirect_to_identity","session_duration"]}))
+          print("ACCESS_POLICIES=" + json.dumps(policies))
+          print("ACCESS_AUTH_DOMAIN=" + org["auth_domain"])
+          print("ACCESS_APP_INVENTORY=" + json.dumps([{k:a.get(k) for k in ["id","name","domain","destinations"]} for a in apps]))
+          assert app["id"] == "ea5ecc36-b828-4030-aaf7-c2a7799f6085"
+          assert app["aud"] == "3fabe3c703b4cc972136d2292fda39783c11903c3c6cf5ac0e42c4738f2ee800"
+          assert org["auth_domain"] == "wispy-tooth-095a.cloudflareaccess.com"
+          assert {d["uri"] for d in app["destinations"]} == {"anevum.com/command*", "anevum.com/api/command*"}
+          allows = [p for p in policies if p["decision"] == "allow"]
+          assert allows, "Owner allow policy missing"
+          for p in policies:
+              assert p["decision"] in ("allow","deny"), "Unexpected bypass or service authentication policy"
+          for p in allows:
+              assert p.get("include") == [{"email":{"email":"devon@anevum.com"}}], "Unexpected identity scope"
+          class NoRedirect(urllib.request.HTTPRedirectHandler):
+              def redirect_request(self, req, fp, code, msg, headers, newurl):
+                  return None
+          opener = urllib.request.build_opener(NoRedirect)
+          checks = [
+           ("https://anevum.com/", "GET", [200]),
+           ("https://anevum.com/products/rhen", "GET", [200]),
+           ("https://anevum.com/products/iren", "GET", [200]),
+           ("https://anevum.com/command", "GET", [302,303]),
+           ("https://anevum.com/command/topology", "GET", [302,303]),
+           ("https://anevum.com/api/command/session", "GET", [302,303,401,403]),
+           ("https://anevum.com/api/command/trader/status", "GET", [302,303,401,403]),
+           ("https://anevum.com/api/command/iren/status", "GET", [302,303,401,403]),
+           ("https://anevum.com/api/command/iren/command", "POST", [302,303,401,403]),
+           ("https://anevum.com/api/public/trading/live", "GET", [503]),
+           ("https://alpaca-trader-production-bf3e.up.railway.app/v1/command/session", "GET", [401]),
+           ("https://alpaca-trader-production-bf3e.up.railway.app/v1/command/status", "GET", [401]),
+           ("https://foundation-ingest-staging.up.railway.app/v1/command/iren", "GET", [401]),
+           ("https://foundation-ingest-staging.up.railway.app/v1/command/iren", "POST", [401]),
+          ]
+          failures = []
+          for url, method, expected in checks:
+              with tempfile.TemporaryDirectory() as tmp:
+                  headers_path = pathlib.Path(tmp) / "headers"
+                  body_path = pathlib.Path(tmp) / "body"
+                  args = ["curl","--silent","--show-error","--max-time","30","--request",method,"--dump-header",str(headers_path),"--output",str(body_path),"--write-out","%{http_code}",url]
+                  if method == "POST":
+                      args.extend(["--header","Content-Type: application/json","--data","{}"])
+                  process = subprocess.run(args, text=True, capture_output=True, check=True)
+                  status = int(process.stdout)
+                  headers = headers_path.read_text()
+                  body = body_path.read_bytes()
+              result = {"url":url,"method":method,"status":status}
+              if status in (302,303):
+                  location = next((line.split(":",1)[1].strip() for line in headers.splitlines() if line.lower().startswith("location:")), "")
+                  result["redirect_host"] = urllib.parse.urlparse(location).hostname
+                  if result["redirect_host"] != org["auth_domain"]:
+                      failures.append(result)
+              if "/api/public/trading/live" in url and status == 503:
+                  result["data_state"] = json.loads(body).get("data_state")
+                  if result["data_state"] != "OFFLINE_BY_DESIGN":
+                      failures.append(result)
+              print("PROBE=" + json.dumps(result))
+              if status not in expected:
+                  result["headers"] = [line for line in headers.splitlines() if line.lower().startswith(("server:","cf-mitigated:","content-type:"))]
+                  if url == "https://anevum.com/":
+                      result["public_body_preview"] = body[:1000].decode(errors="replace")
+                  failures.append(result)
+          assert not failures, json.dumps(failures)
+          
+          print("READ_ONLY_ACCESS_AUDIT=PASS")
+          
+      - uses: actions/checkout@v4
+        if: always()
+        with:
+          ref: main
+          persist-credentials: false
+      - name: Inventory canonical web source
+        if: always()
+        shell: bash
+        run: |
+          git rev-parse HEAD
+          git grep -n -i -I -E 'supabase|/functions/v1' -- ':!.github/workflows/verify-command-access.yml' || test "$?" = 1
+      - name: Verify Command contracts on canonical main
+        if: always()
+        run: node --test tests/command-iren.test.mjs tests/command-topology.test.mjs

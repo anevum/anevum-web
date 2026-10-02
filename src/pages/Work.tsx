@@ -28,7 +28,7 @@ export default function Work() {
             status="INFRASTRUCTURE"
             title="ANEVUM"
             description="The personal operating surface behind this site: identity, archive, public record, private Command, project structure, and the systems that connect them."
-            meta={["GITHUB", "CLOUDFLARE", "SUPABASE", "RHENLINK"]}
+            meta={["GITHUB", "CLOUDFLARE", "RAILWAY", "ACCESS"]}
             to="/wiki"
           />
         </div>
@@ -38,7 +38,7 @@ export default function Work() {
         <div className="section-label"><span>02</span><p>MAINTAINED</p></div>
         <div className="work-detail-grid">
           <article><span>COMMAND</span><h3>Private operations</h3><p>Authenticated visibility into the live capital system, scanner, account state, orders, positions, and runtime telemetry.</p></article>
-          <article><span>RHENLINK</span><h3>Identity layer</h3><p>A persistent ANEVUM identity for account preferences and access-controlled tools.</p></article>
+          <article><span>CLOUDFLARE ACCESS</span><h3>Identity layer</h3><p>Verified owner identity for private Command and its API.</p></article>
           <article><span>RECORD</span><h3>Evidence layer</h3><p>Public sanitized data and chronological project changes kept separate from private operational data.</p></article>
           <article><span>WIKI</span><h3>Knowledge layer</h3><p>The structured map for current systems, decisions, infrastructure, and archived work.</p></article>
         </div>
