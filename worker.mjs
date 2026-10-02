@@ -6,16 +6,6 @@ const RESEARCH_BASE = "https://rhen-research-agent-production.up.railway.app";
 const PUBLIC_TRADING_FEED = "https://foundation-ingest-staging.up.railway.app/v1/trading-public-feed";
 const FOUNDATION_IREN_COMMAND = "https://foundation-ingest-staging.up.railway.app/v1/command/iren";
 
-const PUBLIC_REBUILD_STATE = {
-  ok: false,
-  status: "REBUILDING",
-  source: "anevum_public_rebuild",
-  data_state: "OFFLINE_BY_DESIGN",
-  since: "2026-10-01",
-  priority_systems: ["RHEN", "GRAEN"],
-  message: "Public trading telemetry is intentionally offline while ANEVUM rebuilds its core data and runtime paths."
-};
-
 class ApiError extends Error {
   constructor(status, message) {
     super(message);
@@ -373,7 +363,18 @@ export default {
 
     if (pathname === "/api/public/trading/live") {
       if (request.method !== "GET") return jsonResponse({ message: "Method not allowed." }, 405);
-      return jsonResponse(PUBLIC_REBUILD_STATE, 503);
+      try {
+        return await publicTradingFeed();
+      } catch (error) {
+        return jsonResponse(
+          {
+            ok: false,
+            message: error instanceof Error ? error.message : "Public trading telemetry unavailable.",
+            stale: true
+          },
+          502
+        );
+      }
     }
 
     if (pathname === "/api/public/research/readiness") {

@@ -9,9 +9,9 @@ Access protects only `anevum.com/command*` and `anevum.com/api/command*`. The so
 - Issuer: `https://wispy-tooth-095a.cloudflareaccess.com`
 - Owner policy ID: `266c244d-1d51-4da8-8a46-4996d4517190`
 
-[Production boundary and 13 contract tests passed](https://github.com/anevum/anevum-web/actions/runs/36947417138). Public pages return 200; private edge paths redirect to Access; direct Railway Command origins deny unauthenticated reads/writes with 401. Public telemetry remains 503 / OFFLINE_BY_DESIGN. Worker/browser runtime uses Access assertions and no Supabase bearer.
+[Production boundary and 13 contract tests passed](https://github.com/anevum/anevum-web/actions/runs/36947417138). Public pages return 200; private edge paths redirect to Access; direct Railway Command origins deny unauthenticated reads/writes with 401. Public telemetry is restored through the sanitized Foundation `/v1/trading-public-feed` projection. Worker/browser runtime uses Access assertions and no Supabase bearer.
 
-Required owner-browser confirmation, safe IREN enqueue verification, Foundation report latency repair and actual Railway variable-value inventory remain open. See [backend current state](https://github.com/anevum/alpaca-trader/blob/main/docs/foundation-v2/CURRENT_STATE.md). Passing anonymous probes is not authenticated end-to-end proof.
+Required owner-browser confirmation, safe IREN enqueue verification, Foundation report latency repair and actual Railway variable-value inventory remain open. Public trading telemetry now reads from canonical Railway PostgreSQL through Foundation; the rebuild-era hard-coded 503 gate is obsolete. See [backend current state](https://github.com/anevum/alpaca-trader/blob/main/docs/foundation-v2/CURRENT_STATE.md). Passing anonymous probes is not authenticated end-to-end proof.
 
 ## Remaining reference classification
 
