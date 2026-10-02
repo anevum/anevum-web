@@ -45,6 +45,41 @@ export type IrenWorkSummary = {
   jobs?: Array<Record<string, unknown>>;
 };
 
+export type OperatorProjection = {
+  version?: string;
+  state?: string;
+  message?: string;
+  inventory?: {
+    independent_runtimes?: number;
+    ready?: number;
+    problems?: number;
+    complete?: boolean;
+    gaps?: Record<string, string[]>;
+    verified_at?: string;
+  };
+  work?: {
+    objective_count?: number;
+    objectives_complete?: number;
+    active_jobs?: number;
+    blocked_objectives?: number;
+    requires_human?: number;
+  };
+  guidance?: OperatorGuidance[];
+  recent_transitions?: Array<{
+    key?: string;
+    transition?: string;
+    severity?: string;
+    reason?: string;
+    created_at?: string;
+    delivery_status?: string;
+  }>;
+  authority?: {
+    read_only_projection?: boolean;
+    trading_mutations?: boolean;
+    protected_actions_bypassed?: boolean;
+  };
+};
+
 export type IrenSnapshot = {
   schema_version: string;
   revision: string | number | null;
@@ -66,6 +101,7 @@ export type IrenSnapshot = {
     running_job?: string | null;
   };
   work?: IrenWorkSummary;
+  operator?: OperatorProjection;
 };
 
 export type OperatorGuidance = {
