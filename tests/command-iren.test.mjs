@@ -108,3 +108,31 @@ test("IREN fails closed on invalid upstream contract", async () => {
   );
   assert.equal(response.status, 503);
 });
+
+
+test("completed command result contract uses canonical result field", async () => {
+  const body = {
+    schema_version: "iren_command.v2",
+    state: "DEGRADED",
+    stale: false,
+    work: {
+      commands: [{
+        command_id: "cmd-1",
+        command_text: "status",
+        status: "SUCCEEDED",
+        result: { message: "Current IREN status." }
+      }]
+    }
+  };
+  const response = await proxyIren(
+    new Request("https://anevum.com/api/command/iren/status"),
+    async () => Response.json(body),
+    {
+      credential,
+      foundationUrl: "https://foundation.example/v1/command/iren"
+    }
+  );
+  assert.equal(response.status, 200);
+  const payload = await response.json();
+  assert.equal(payload.work.commands[0].result.message, "Current IREN status.");
+});
