@@ -31,6 +31,7 @@ type IrenCommand = {
   command_text?: string;
   source?: string;
   status?: string;
+  result?: Record<string, unknown>;
   response?: Record<string, unknown>;
   linked_job_id?: string | null;
   created_at?: string;
@@ -68,7 +69,7 @@ function stateClass(value?: string) {
 }
 
 function responseText(command?: IrenCommand) {
-  const response = command?.response || {};
+  const response = command?.result || command?.response || {};
   const message = response.message;
   if (typeof message === "string" && message.trim()) return message;
   const next = response.next_action;
