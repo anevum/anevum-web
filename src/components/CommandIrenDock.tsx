@@ -38,6 +38,12 @@ type IrenCommand = {
   completed_at?: string | null;
 };
 
+type CodexHandoff = {
+  handoff_id: string; objective_key: string; handoff_status: string;
+  package?: { title: string; prompt: string; created_at: string; base_sha: string; branch: string };
+  association?: { pr_number: number; repository: string } | null;
+  verification?: { verified: boolean; blockers?: string[]; observed_at?: string };
+};
 type IrenFeed = {
   schema_version?: string;
   revision?: number | null;
@@ -46,6 +52,9 @@ type IrenFeed = {
   state?: string;
   incidents?: Array<Record<string, unknown>>;
   work?: {
+    next_action?: { title?: string; objective_key?: string; job_type?: string };
+    execution_mode?: string;
+    handoffs?: CodexHandoff[];
     objective_count?: number;
     objectives_complete?: number;
     active_jobs?: number;
@@ -84,6 +93,8 @@ export default function CommandIrenDock({ session }: { session: RhenSession }) {
   const [feed, setFeed] = useState<IrenFeed | null>(null);
   const [expanded, setExpanded] = useState(false);
   const [error, setError] = useState("");
+  const [copied, setCopied] = useState("");
+  const [directive, setDirective] = useState("");
   const [sending, setSending] = useState(false);
   const refreshInFlight = useRef(false);
 
@@ -159,6 +170,7 @@ export default function CommandIrenDock({ session }: { session: RhenSession }) {
     () => objectives.filter((objective) => ["ACTIVE", "READY", "BLOCKED"].includes(String(objective.status || ""))).slice(0, 8),
     [objectives]
   );
+  const handoff = work?.handoffs?.find((row) => !["SUPERSEDED", "FAILED"].includes(row.handoff_status));
   const lastCommand = commands[0];
   const lastResponse = responseText(lastCommand);
 
@@ -181,7 +193,7 @@ export default function CommandIrenDock({ session }: { session: RhenSession }) {
             <strong>Objective + job control</strong>
           </div>
           <div className="iren-dock-actions">
-            {["status", "what's next?", "do that", "fix it", "what needs me?"].map((value) => (
+            {["status", "what's next?", "prepare for Codex", "verify Codex handoff", "do that", "what needs me?"].map((value) => (
               <button key={value} type="button" disabled={sending} onClick={() => void send(value)}>
                 {value}
               </button>
@@ -197,6 +209,37 @@ export default function CommandIrenDock({ session }: { session: RhenSession }) {
             {lastCommand?.linked_job_id ? <small>Job {shortId(lastCommand.linked_job_id)}</small> : null}
           </div>
         ) : null}
+
+        <form className="iren-dock-directive" onSubmit={(event) => {
+          event.preventDefault(); void send(directive); setDirective("");
+        }}>
+          <label htmlFor="iren-directive">Ask IREN</label>
+          <input id="iren-directive" value={directive} maxLength={4000}
+            onChange={(event) => setDirective(event.target.value)} placeholder="What should Codex do next?" />
+          <button type="submit" disabled={sending || !directive.trim()}>Send</button>
+        </form>
+        {work?.next_action ? <div className="iren-dock-response">
+          <span>{work.execution_mode}</span><p>{work.next_action.title}</p>
+        </div> : null}
+        {handoff?.package ? <section className="iren-codex-handoff" aria-label="Codex handoff">
+          <strong>{handoff.package.title}</strong>
+          <p>{handoff.handoff_status} · {handoff.objective_key}</p>
+          <small>Prepared {new Date(handoff.package.created_at).toLocaleString()} · main {handoff.package.base_sha.slice(0, 12)}</small>
+          <p>Verification: {handoff.verification?.verified ? "VERIFIED" : "Evidence pending"}</p>
+          {handoff.association ? <a target="_blank" rel="noreferrer"
+            href={`https://github.com/${handoff.association.repository}/pull/${handoff.association.pr_number}`}>
+            PR #{handoff.association.pr_number}</a> : <small>Branch: {handoff.package.branch}</small>}
+          {handoff.verification?.blockers?.length ? <ul>{handoff.verification.blockers.map((blocker) =>
+            <li key={blocker}>{blocker.replaceAll("_", " ")}</li>)}</ul> : null}
+          <button type="button" onClick={async () => {
+            try { await navigator.clipboard.writeText(handoff.package!.prompt); setCopied(handoff.handoff_id); }
+            catch { setError("Copy unavailable. Select and copy the complete prompt below."); }
+          }}>{copied === handoff.handoff_id ? "Copied" : "Copy Codex Handoff"}</button>
+          <details><summary>Full Codex prompt</summary>
+            <textarea readOnly aria-label="Complete Codex prompt" value={handoff.package.prompt}
+              onFocus={(event) => event.target.select()} rows={12} />
+          </details>
+        </section> : null}
 
         <div className="iren-dock-grid">
           <section>
