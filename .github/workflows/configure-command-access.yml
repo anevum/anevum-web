@@ -105,7 +105,7 @@ jobs:
         shell: bash
         run: |
           git rev-parse HEAD
-          rg -n -i --glob '!public/releases/**' --glob '!src/data/releases.json' 'supabase|/functions/v1' . || test "$?" = 1
+          git grep -n -i -I -E 'supabase|/functions/v1' || test "$?" = 1
       - name: Verify Command contracts on canonical main
         if: always()
         run: node --test tests/command-iren.test.mjs tests/command-topology.test.mjs
