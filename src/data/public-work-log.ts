@@ -105,9 +105,9 @@ export const productionServiceLog = [
   ["rhen-research-agent", "Railway", "ONLINE", "Bounded research review service. Research cannot directly mutate live trading."],
   ["rhen-research-scheduler", "Railway", "READY", "DST-safe scheduled daily research cadence and catch-up orchestration."],
   ["rhen-preopen-state", "Railway", "ONLINE", "Pre-open state preparation and readiness support."],
-  ["trading-public-feed", "Supabase Edge", "ACTIVE", "Sanitized public telemetry, performance, research state, and record projection."],
-  ["trading-report-read", "Supabase Edge", "ACTIVE v9", "Private canonical report/evidence read path with compressed post-close evidence retrieval."],
-  ["research-agent-gateway", "Supabase Edge", "ACTIVE", "Bounded canonical evidence gateway for the Research Agent."],
+  ["trading-public-feed", "Railway / Cloudflare", "OFFLINE_BY_DESIGN", "Railway-native feed exists; public telemetry stays offline during the rebuild."],
+  ["trading-report-read", "Railway", "VERIFYING", "Private canonical PostgreSQL report/evidence reads; report latency verification remains open."],
+  ["research-agent-gateway", "Railway", "ACTIVE", "Bounded canonical evidence gateway for the Research Agent."],
   ["anevum.com", "Cloudflare", "ACTIVE", "Public system, research, record, performance, and authenticated Command surfaces."],
   ["IREN / Slack", "Slack", "ACTIVE", "Operational alerts, completion notices, research notes, and cross-system coordination."]
 ] as const;

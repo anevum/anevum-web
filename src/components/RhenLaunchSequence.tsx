@@ -13,7 +13,7 @@ const launchServices: LaunchService[] = [
   { id: "openai", label: "OpenAI", wheel: [50, 9], mark: [50, 16] },
   { id: "github", label: "GitHub", wheel: [79, 21], mark: [38, 29] },
   { id: "railway", label: "Railway", wheel: [91, 50], mark: [63, 30] },
-  { id: "supabase", label: "Supabase", wheel: [79, 79], mark: [51, 43] },
+  { id: "postgres", label: "PostgreSQL", wheel: [79, 79], mark: [51, 43] },
   { id: "alpaca", label: "Alpaca", wheel: [50, 91], mark: [39, 64] },
   { id: "slack", label: "Slack", wheel: [21, 79], mark: [61, 64] },
   { id: "cloudflare", label: "Cloudflare", wheel: [9, 50], mark: [29, 80] },
@@ -38,10 +38,10 @@ function BrandMark({ id }: { id: string }) {
           <path d="M.113 10.27A13.026 13.026 0 000 11.48h18.23c-.064-.125-.15-.237-.235-.347-3.117-4.027-4.793-3.677-7.19-3.78-.8-.034-1.34-.048-4.524-.048-1.704 0-3.555.005-5.358.01-.234.63-.459 1.24-.567 1.737h9.342v1.216H.113v.002zm18.26 2.426H.009c.02.326.05.645.094.961h16.955c.754 0 1.179-.429 1.315-.96zm-17.318 4.28s2.81 6.902 10.93 7.024c4.855 0 9.027-2.883 10.92-7.024H1.056zM11.988 0C7.5 0 3.593 2.466 1.531 6.108l4.75-.005v-.002c3.71 0 3.849.016 4.573.047l.448.016c1.563.052 3.485.22 4.996 1.364.82.621 2.007 1.99 2.712 2.965.654.902.842 1.94.396 2.934-.408.914-1.289 1.458-2.353 1.458H.391s.099.42.249.886h22.748A12.026 12.026 0 0024 12.005C24 5.377 18.621 0 11.988 0z" />
         </svg>
       );
-    case "supabase":
+    case "postgres":
       return (
         <svg className="service-brand-svg" viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M11.9 1.036c-.015-.986-1.26-1.41-1.874-.637L.764 12.05C-.33 13.427.65 15.455 2.409 15.455h9.579l.113 7.51c.014.985 1.259 1.408 1.873.636l9.262-11.653c1.093-1.375.113-3.403-1.645-3.403h-9.642z" />
+          <g fill="none" stroke="currentColor" strokeWidth="1.6"><ellipse cx="12" cy="5" rx="8" ry="3" /><path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3" /></g>
         </svg>
       );
     case "github":

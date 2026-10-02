@@ -6,8 +6,8 @@ const groups = [
     label: "SYSTEMS",
     items: [
       ["Automated Capital System", "Current market observation, risk, execution, telemetry, and review architecture.", "/work"],
-      ["ANEVUM Web", "GitHub, React, Cloudflare Workers, Supabase, routing, and deployment.", "/work"],
-      ["RHENLINK", "Identity and permission layer for ANEVUM accounts and private tools.", "/rhenlink"],
+      ["ANEVUM Web", "GitHub, React, Cloudflare Workers, Railway PostgreSQL, routing, and deployment.", "/work"],
+      ["Cloudflare Access", "Identity and permission boundary for private Command.", "/command"],
       ["Command", "Private operational visibility into the active capital system.", "/command"]
     ]
   },

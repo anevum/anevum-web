@@ -28,7 +28,7 @@ It must **not** expose:
 - quality scores, thresholds, risk limits, or reproducible strategy parameters
 - broker credentials, tokens, or private database records
 
-The browser reads `/api/public/trading/live`, which proxies the sanitized `trading-public-feed` Supabase Edge Function.
+The browser reads `/api/public/trading/live`. During the rebuild this returns HTTP 503 with `OFFLINE_BY_DESIGN`. The Railway-native public-feed replacement exists, but public telemetry must remain offline until separately authorized.
 
 CI treats this as a contract and fails if the public response regains blocked trading fields.
 
@@ -36,13 +36,13 @@ CI treats this as a contract and fails if the public response regains blocked tr
 
 Command shares the public site's single-viewport visual system: the animated universe background remains fixed, the outer document never scrolls, and dense private content scrolls inside the central workspace. The Performance route consumes the same `PUBLIC-PERFORMANCE-v1` feed as the public Performance page, so the public and private normalized record cannot drift into separate copies.
 
-The Command surface contains private operator telemetry. Production access is intended to sit behind Cloudflare Access and is also gated by ANEVUM/Supabase administrator authorization inside the application.
+The Command surface contains private operator telemetry. Cloudflare Access protects only `anevum.com/command*` and `anevum.com/api/command*`. The Worker verifies the signed Access assertion, issuer, audience, expiry and exact owner email before forwarding private requests to Railway. The current owner allowlist is `devon@anevum.com`. Browser Supabase sessions are not used.
 
 The public header contains a low-prominence Command entrance. Search engines are instructed not to index the operator/private routes.
 
 ### Private auth — `/private`
 
-Existing application authentication remains available as a secondary gate for Command. It is not part of the public navigation.
+Legacy `/private` and `/rhenlink` routes enter `/command`. Identity and logout use Cloudflare Access.
 
 ## Public data hardening
 
@@ -50,14 +50,15 @@ The historical public trading projection tables remain in the database for conti
 
 `database/lock_down_public_trading_projection.sql`
 
-The only trading data intentionally published to unauthenticated visitors is the sanitized Edge Function payload used by the public RHEN surfaces. Raw projection tables remain inaccessible to browser roles. The function returns normalized percentages/counts and a downsampled normalized curve, not dollar balances or trade-level execution detail.
+The SQL files above record historical lockdowns; they are not active runtime dependencies. Railway PostgreSQL now holds canonical evidence. Public telemetry remains offline during the rebuild; no raw account data is published.
 
 ## Stack
 
 - React 19 + TypeScript
 - Vite
 - Cloudflare Workers / static assets
-- Supabase for application data and telemetry
+- Cloudflare Access for private Command identity
+- Railway compute and canonical PostgreSQL
 - GitHub Actions verification and production deployment
 
 ## Commands
@@ -74,3 +75,7 @@ npm run dev
 Production is deployed from `main` by `.github/workflows/deploy-production.yml`.
 
 Pull requests run `.github/workflows/anevum-verify.yml`, which performs typechecking, a production build, a Cloudflare preview, privacy probes, and desktop/mobile browser captures.
+
+## Foundation v2 verification and archive
+
+See [current verification](docs/FOUNDATION_V2_STATE.md). `site/` and `native/iren-ios/` retain historical clients and are excluded from the production Vite entrypoint. Native release/build workflows are retired because that client still uses removed authentication and mobile APIs. Historical research, release packets and founder experience are preserved.
