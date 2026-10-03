@@ -68,11 +68,19 @@ function belongsToSystem(row: RuntimeRow, system: MonitoredSystem) {
     row.current_activity
   ].filter(Boolean).join(" ").toLowerCase();
 
-  if (system === "IREN") return /iren|foundation/.test(haystack);
-  if (system === "RHEN") return /rhen|alpaca|trader|preopen|crypto-edge|crypto_edge/.test(haystack);
-  if (system === "GRAEN") return /graen/.test(haystack);
-  if (system === "NOSTRA") return /nostra/.test(haystack);
-  return /velum/.test(haystack);
+  // Classify by current subsystem responsibility before legacy service prefixes.
+  const isVelum = /velum/.test(haystack);
+  const isGraen = /graen|crypto[-_ ]?edge[-_ ]?discovery|research[-_ ]?agent/.test(haystack);
+  const isNostra = /nostra/.test(haystack);
+  const isIren = /iren|foundation|research[-_ ]?scheduler/.test(haystack);
+  const isRhen = /alpaca[-_ ]?trader|preopen|rhen/.test(haystack)
+    && !isVelum && !isGraen && !isIren;
+
+  if (system === "IREN") return isIren;
+  if (system === "RHEN") return isRhen;
+  if (system === "GRAEN") return isGraen;
+  if (system === "NOSTRA") return isNostra;
+  return isVelum;
 }
 
 function incidentMatches(key: string, system: MonitoredSystem) {
