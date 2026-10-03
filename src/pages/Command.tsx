@@ -160,7 +160,7 @@ export default function Command() {
         <SystemIcon system="IREN" size="lg" />
         <span>ANEVUM / COMMAND</span>
         <h1>Administrator access required.</h1>
-        <p>This RHENLINK is authenticated but is not authorized for the private operations console.</p>
+        <p>This identity is authenticated but is not authorized for the private operations console.</p>
         <Link className="text-link" to="/">Return to ANEVUM <b>→</b></Link>
       </div>
     );
