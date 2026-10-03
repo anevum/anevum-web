@@ -189,3 +189,8 @@ body:has(.command-shell) .seasonal-easter-eggs,body:has(.vo-live) .seasonal-east
 body:has(.command-shell) .universe-background,body:has(.vo-live) .universe-background{display:none!important}
 .command-shell{background:#04070d!important}
 .command-header nav a.active{color:#b8d2ff!important;background:#326fff12!important;border-color:#326fff50!important}
+
+.vo-system-card.tone-warn{border-color:#e8bf7860}
+.vo-system-card.tone-bad{border-color:#f0a0a542}
+.vo-system-iren.tone-warn .instrument-core{stroke:#e8bf78;fill:#e8bf78;fill-opacity:.14}
+.vo-system-iren.tone-bad .instrument-core{stroke:#f0a0a5;fill:#f0a0a5;fill-opacity:.2}

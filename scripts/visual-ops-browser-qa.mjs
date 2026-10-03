@@ -127,6 +127,7 @@ async function runCase(route, viewport) {
     const cards=[...document.querySelectorAll(".vo-system-card, .vo-node")];
     const visible=el=>el.getBoundingClientRect().width>0;
     return {surface:Boolean(surface), cards:cards.filter(visible).length,
+      legacySummaryVisible:[...document.querySelectorAll(".command-stats")].some(visible),
       heading:document.querySelector(".vo-console h1")?.textContent,
       nostra:document.querySelector('[data-system="NOSTRA"]')?.getAttribute("data-state"),
       velum:document.querySelector('[data-system="VELUM"]')?.getAttribute("data-state"),
@@ -137,6 +138,7 @@ async function runCase(route, viewport) {
   })()`.replace("routePlaceholder", JSON.stringify(route)),returnByValue:true});
   const details=ops.result?.value||{};
   if(!details.surface || !details.cards || !details.links) throw new Error("Missing accessible visual surface: "+JSON.stringify(details));
+  if(route==="/command/overview" && details.legacySummaryVisible) throw new Error("Legacy trading strip obscures fleet overview");
   if(route==="/command/overview" && (details.nostra!=="OFFLINE" || details.velum!=="IDLE" || details.activeGraen!=="true")) throw new Error("State rendering failed: "+JSON.stringify(details));
   if(route.startsWith("/command/")) {
     await send("Runtime.evaluate",{expression:'document.querySelector(".vo-details summary")?.click()'});
