@@ -179,7 +179,7 @@ jobs:
             return 1
           }
 
-          capture home / 'ANEVUM is rebuilding its core stack from the ground up.'
+          capture home / 'ANEVUM is operating through a staged rebuild.'
           capture products /products 'IREN'
           capture rhen /products/rhen 'OBSERVE'
           capture performance /performance 'Separate markets. Separate records.'

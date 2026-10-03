@@ -15,6 +15,7 @@ import "./styles/seasonal.css";
 import "./styles/iren.css";
 import "./styles/enhancements.css";
 import "./styles/rebuild-home.css";
+import "./styles/public-system-status.css";
 
 applySeasonalTheme();
 

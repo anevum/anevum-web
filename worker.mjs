@@ -224,8 +224,8 @@ function currentReleaseSnapshot() {
 function publicRouteMetadata(pathname) {
   const staticRoutes = {
     "/": {
-      title: "ANEVUM Core Rebuild Underway — Engineering Update",
-      description: "ANEVUM is rebuilding its core stack from the ground up. Public system data is temporarily offline while infrastructure, evidence paths, RHEN, and GRAEN are rebuilt and verified."
+      title: "ANEVUM — Live Systems, Research & Engineering",
+      description: "ANEVUM is a live software and research system spanning IREN, RHEN, GRAEN, NOSTRA, and VELUM, with public-safe runtime state, research records, and explicit authority boundaries."
     },
     "/products": {
       title: "Products — ANEVUM",
