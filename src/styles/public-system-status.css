@@ -1,0 +1,20 @@
+.public-system-status{display:grid;gap:12px}
+.public-system-status>header{display:flex;align-items:end;justify-content:space-between;gap:18px}
+.public-system-status>header>div{display:grid;gap:5px}
+.public-system-status>header span{color:#647a88;font-size:.43rem;font-weight:760;letter-spacing:.14em}
+.public-system-status>header strong{color:#cbd7dd;font-size:.76rem;font-weight:570}
+.public-system-status>header small{color:#566a77;font-size:.43rem;letter-spacing:.08em}
+.public-system-status-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
+.public-system-status-card{min-width:0;min-height:190px;padding:14px;display:flex;flex-direction:column;border:1px solid rgba(207,228,241,.09);border-radius:12px;background:linear-gradient(145deg,rgba(9,18,27,.76),rgba(4,9,14,.74));box-shadow:inset 2px 0 rgba(157,137,101,.25)}
+.public-system-status-card.good{box-shadow:inset 2px 0 rgba(130,189,151,.42)}
+.public-system-status-card.bad{box-shadow:inset 2px 0 rgba(176,111,114,.5)}
+.public-system-status-card-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.public-system-status-card-head span{display:flex;align-items:center;gap:6px;color:#6e8290;font-size:.39rem;letter-spacing:.08em}
+.public-system-status-card-head i{width:5px;height:5px;border-radius:50%;background:#9f8864}
+.public-system-status-card.good .public-system-status-card-head i{background:#82bd97;box-shadow:0 0 10px rgba(130,189,151,.24)}
+.public-system-status-card.bad .public-system-status-card-head i{background:#b06f72}
+.public-system-status-card>strong{margin-top:18px;color:#d4dee4;font-size:1.18rem;letter-spacing:-.025em;font-weight:560}
+.public-system-status-card p{margin:8px 0 18px;color:#738590;font-size:.56rem;line-height:1.5}
+.public-system-status-card>small{margin-top:auto;color:#536875;font-size:.4rem;letter-spacing:.06em}
+@media(max-width:980px){.public-system-status-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.public-system-status-card:last-child{grid-column:1/-1}}
+@media(max-width:620px){.public-system-status>header{align-items:flex-start;flex-direction:column}.public-system-status-grid{grid-template-columns:1fr}.public-system-status-card:last-child{grid-column:auto}.public-system-status-card{min-height:150px}}
