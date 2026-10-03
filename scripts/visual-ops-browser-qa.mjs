@@ -103,7 +103,11 @@ async function runCase(route, viewport) {
       return;
     }
     if (message.method === "Runtime.exceptionThrown") {
-      runtimeErrors.push(message.params?.exceptionDetails?.text || "Runtime exception");
+      const detail = message.params?.exceptionDetails || {};
+      runtimeErrors.push(JSON.stringify({
+        message: detail.exception?.description || detail.text || "Runtime exception",
+        url: detail.url, line: detail.lineNumber, stack: detail.stackTrace?.callFrames
+      }));
     }
     if (message.method === "Runtime.consoleAPICalled" && message.params?.type === "error") {
       const values = (message.params.args || []).map((arg) => arg.value || arg.description || "").join(" ");
