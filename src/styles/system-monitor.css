@@ -52,3 +52,14 @@
 .command-page-monitor .command-side{display:none!important}
 .command-page-monitor .command-grid .system-monitor,
 .command-page-monitor .command-grid .ops-center{display:flex!important}
+
+
+.system-monitor-work-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.system-monitor-work-grid>div{min-width:0;display:grid;align-content:start;gap:7px}
+.system-monitor-work-label{padding:0 2px;color:#526c7d;font-size:.39rem;font-weight:720;letter-spacing:.11em}
+.system-monitor-work-grid article{padding:10px 11px;border:1px solid rgba(207,228,241,.075);border-radius:10px;background:rgba(3,9,15,.62)}
+.system-monitor-work-grid article>div{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.system-monitor-work-grid article strong{min-width:0;overflow:hidden;text-overflow:ellipsis;color:#aebec7;font-size:.56rem;font-weight:570;white-space:nowrap}
+.system-monitor-work-grid article span{color:#657b88;font-size:.4rem;letter-spacing:.06em}
+.system-monitor-work-grid article p{margin:5px 0 0;color:#60737f;font-size:.49rem;line-height:1.4}
+@media(max-width:760px){.system-monitor-work-grid{grid-template-columns:1fr}}
