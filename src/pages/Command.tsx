@@ -6,6 +6,7 @@ import RhenMark from "../components/RhenMark";
 import UniverseBackground from "../components/UniverseBackground";
 import CommandPerformance from "../components/CommandPerformance";
 import CommandTopology from "../components/CommandTopology";
+import CommandSystemMonitor, { type MonitoredSystem } from "../components/CommandSystemMonitor";
 import CommandIrenDock from "../components/CommandIrenDock";
 import { useLiveTrading } from "../hooks/useLiveTrading";
 import {
@@ -56,10 +57,14 @@ export default function Command() {
   const location = useLocation();
   const commandPage = (() => {
     const segment = location.pathname.split("/")[2];
-    return ["overview", "live", "performance", "evidence", "research", "system"].includes(segment)
+    return ["overview", "iren", "rhen", "graen", "nostra", "velum", "infrastructure", "live", "performance", "evidence", "research", "system"].includes(segment)
       ? segment
       : "overview";
   })();
+  const monitoredSystem = (["iren", "rhen", "graen", "nostra", "velum"].includes(commandPage)
+    ? commandPage.toUpperCase()
+    : null) as MonitoredSystem | null;
+  const viewPage = monitoredSystem || commandPage === "infrastructure" ? "system" : commandPage;
   const [snapshot, setSnapshot] = useState<CommandSnapshot | null>(null);
   const [evidence, setEvidence] = useState<CommandEvidence | null>(null);
   const [dailyReport, setDailyReport] = useState<Record<string, unknown> | null>(null);
@@ -234,18 +239,39 @@ export default function Command() {
       .map((symbol) => ({ symbol, row: record(scanner[symbol]) }));
   }, [scanner, strategy.scan_symbols]);
 
+  const monitorRow = monitoredSystem ? publicFeed?.systems?.[monitoredSystem] : undefined;
+  const monitorState = text(monitorRow?.health_state || monitorRow?.runtime_state, "UNKNOWN").toUpperCase();
+  const monitorOnline = ["HEALTHY", "RUNNING", "READY", "COMPLETE"].includes(monitorState);
+  const pageTitle = monitoredSystem || (commandPage === "infrastructure" ? "Infrastructure" : commandPage === "overview" ? "Command" : commandPage.charAt(0).toUpperCase() + commandPage.slice(1));
+  const pageDescription = monitoredSystem
+    ? `${monitoredSystem} runtime health, current activity, incidents, deployments, and evidence freshness.`
+    : commandPage === "overview"
+      ? "One operating view across IREN, RHEN, GRAEN, NOSTRA, VELUM, dependencies, incidents, and current work."
+      : commandPage === "infrastructure"
+        ? "Canonical runtime inventory, dependencies, freshness, and control-plane health."
+        : commandPage === "live"
+          ? "Live scanner, orders, broker position, and runtime decisions."
+          : commandPage === "performance"
+            ? "Live normalized performance synchronized with the public record, plus private daily and weekly operating evidence."
+            : commandPage === "evidence"
+              ? "Post-event evidence and live-versus-offline comparisons."
+              : commandPage === "research"
+                ? "Canonical research direction, rejected families, open questions, and decisions."
+                : "Telemetry, provenance, runtime health, and Command boundaries.";
+
   return (
-    <div className={`command-shell command-page-${commandPage}`}>
+    <div className={`command-shell command-page-${viewPage}`}>
       <UniverseBackground />
       <header className="command-header">
         <Link to="/" className="command-brand"><Mark /><span>ANEVUM</span><i /><span className="command-rhen-lockup"><RhenMark decorative /><strong>COMMAND</strong></span></Link>
-        <nav aria-label="Command sections">
+        <nav aria-label="Command systems">
           <Link className={commandPage === "overview" ? "active" : ""} to="/command/overview">Overview</Link>
-          <Link className={commandPage === "live" ? "active" : ""} to="/command/live">Live</Link>
-          <Link className={commandPage === "performance" ? "active" : ""} to="/command/performance">Performance</Link>
-          <Link className={commandPage === "evidence" ? "active" : ""} to="/command/evidence">Evidence</Link>
-          <Link className={commandPage === "research" ? "active" : ""} to="/command/research">Research</Link>
-          <Link className={commandPage === "system" ? "active" : ""} to="/command/system">System</Link>
+          <Link className={commandPage === "iren" ? "active" : ""} to="/command/iren">IREN</Link>
+          <Link className={commandPage === "rhen" ? "active" : ""} to="/command/rhen">RHEN</Link>
+          <Link className={commandPage === "graen" ? "active" : ""} to="/command/graen">GRAEN</Link>
+          <Link className={commandPage === "nostra" ? "active" : ""} to="/command/nostra">NOSTRA</Link>
+          <Link className={commandPage === "velum" ? "active" : ""} to="/command/velum">VELUM</Link>
+          <Link className={commandPage === "infrastructure" ? "active" : ""} to="/command/infrastructure">Infra</Link>
         </nav>
         <div className="command-account">
           <span><i /> IREN / LIVE</span>
@@ -260,44 +286,30 @@ export default function Command() {
       <main className="command-main">
         <section id="live" className="command-hero">
           <div>
-            <p>PRIVATE OPERATIONS / {commandPage.toUpperCase()}</p>
-            <h1>{commandPage === "overview" ? "Command" : commandPage.charAt(0).toUpperCase() + commandPage.slice(1)}</h1>
-            <span>{commandPage === "overview"
-              ? "RHEN at a glance: capital, market state, active strategy, position, and current operating evidence."
-              : commandPage === "live"
-                ? "Live scanner, orders, broker position, and runtime decisions."
-                : commandPage === "performance"
-                  ? "Live normalized performance synchronized with the public record, plus private daily and weekly operating evidence."
-                  : commandPage === "evidence"
-                    ? "Post-event evidence and live-versus-offline comparisons."
-                    : commandPage === "research"
-                      ? "Canonical research direction, rejected families, open questions, and decisions."
-                      : "Telemetry, provenance, runtime health, and Command boundaries."}</span>
+            <p>PRIVATE OPERATIONS / {pageTitle.toUpperCase()}</p>
+            <h1>{pageTitle}</h1>
+            <span>{pageDescription}</span>
           </div>
           <div className="command-connection">
-            <i className={!statusError && snapshot && bot.bot_armed && bot.execution_authorized && !bot.runtime_paused ? "online" : ""} />
+            <i className={monitoredSystem ? (monitorOnline ? "online" : "") : (!statusError && snapshot && bot.bot_armed && bot.execution_authorized && !bot.runtime_paused ? "online" : "")} />
             <div>
               <strong>
-                {snapshot ? text(snapshot.mode).toUpperCase() : "LIVE"} / {
-                  !snapshot
-                    ? "STATUS UNAVAILABLE"
-                    : statusError
-                      ? bot.bot_armed
-                        ? "LAST KNOWN ARMED"
-                        : "LAST KNOWN DISARMED"
-                      : bot.runtime_paused
-                        ? "PAUSED"
-                        : bot.bot_armed
-                          ? "ARMED"
-                          : "DISARMED"
-                }
+                {monitoredSystem
+                  ? monitoredSystem + " / " + monitorState
+                  : snapshot ? text(snapshot.mode).toUpperCase() + " / " + (
+                    statusError
+                      ? bot.bot_armed ? "LAST KNOWN ARMED" : "LAST KNOWN DISARMED"
+                      : bot.runtime_paused ? "PAUSED" : bot.bot_armed ? "ARMED" : "DISARMED"
+                  ) : "LIVE / STATUS UNAVAILABLE"}
               </strong>
               <small>
-                {statusError
-                  ? "Live status degraded · " + statusError
-                  : evidenceError
-                    ? "Live status OK · evidence degraded"
-                    : "Updated " + clockTime(snapshot?.observed_at)}
+                {monitoredSystem
+                  ? text(monitorRow?.activity, "Canonical subsystem activity unavailable.")
+                  : statusError
+                    ? "Live status degraded · " + statusError
+                    : evidenceError
+                      ? "Live status OK · evidence degraded"
+                      : "Updated " + clockTime(snapshot?.observed_at)}
               </small>
             </div>
             <button type="button" onClick={refresh} disabled={refreshing} aria-label="Refresh Command">↻</button>
@@ -314,7 +326,7 @@ export default function Command() {
 
         <section className="command-grid">
           <div className="command-primary">
-            <CommandTopology session={session} feed={publicFeed} />
+            {monitoredSystem ? <CommandSystemMonitor session={session} feed={publicFeed} system={monitoredSystem} /> : <CommandTopology session={session} feed={publicFeed} />}
             <CommandPerformance performance={publicFeed?.performance} feedError={publicFeedError} />
             <article className="command-panel command-view-overview command-view-live command-panel-scanner">
               <header><div><span>LIVE SCANNER</span><strong>{scanRows.length} symbols observed in runtime snapshot</strong></div><small>{clockTime(bot.last_strategy_at)}</small></header>
