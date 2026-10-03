@@ -64,7 +64,7 @@ export default function Command() {
   const monitoredSystem = (["iren", "rhen", "graen", "nostra", "velum"].includes(commandPage)
     ? commandPage.toUpperCase()
     : null) as MonitoredSystem | null;
-  const viewPage = monitoredSystem || commandPage === "infrastructure" ? "system" : commandPage;
+  const viewPage = monitoredSystem || commandPage === "infrastructure" ? "monitor" : commandPage;
   const [snapshot, setSnapshot] = useState<CommandSnapshot | null>(null);
   const [evidence, setEvidence] = useState<CommandEvidence | null>(null);
   const [dailyReport, setDailyReport] = useState<Record<string, unknown> | null>(null);
