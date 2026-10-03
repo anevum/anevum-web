@@ -44,3 +44,11 @@
 .system-monitor-footer small{color:#4f6270;font-size:.42rem}
 @media(max-width:980px){.system-monitor-runtime-grid{grid-template-columns:1fr 1fr}.system-monitor-summary{grid-template-columns:1fr}.system-monitor-data-grid{grid-template-columns:1fr 1fr}}
 @media(max-width:620px){.system-monitor-runtime-grid{grid-template-columns:1fr}.system-monitor-data-grid{grid-template-columns:1fr 1fr}.system-monitor-footer{align-items:flex-start;flex-direction:column}}
+
+
+/* Command monitor routes intentionally bypass the legacy RHEN page composition. */
+.command-page-monitor .command-grid{grid-template-columns:1fr!important}
+.command-page-monitor .command-primary{display:grid!important;grid-template-columns:1fr!important}
+.command-page-monitor .command-side{display:none!important}
+.command-page-monitor .command-grid .system-monitor,
+.command-page-monitor .command-grid .ops-center{display:flex!important}
