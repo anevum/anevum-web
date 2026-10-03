@@ -100,7 +100,9 @@ export function publicSystem(name: SystemName, feed?: LiveTradingFeed | null, no
 }
 export function commandSystem(name: SystemName, snapshot: IrenSnapshot | null, feed?: LiveTradingFeed | null, now = Date.now(), unavailable = false): SystemView {
   const rows = (snapshot?.topology?.services || []).filter(row => runtimeOwner(row) === name);
-  const fresh = !unavailable && snapshot?.stale === false && freshStamp(snapshot.observed_at, now);
+  const stamps = rows.map(row => row.last_heartbeat_at || row.observed_at || snapshot?.observed_at);
+  const observedAt = stamps.find(stamp => !freshStamp(stamp, now)) || stamps.slice().sort((a,b) => Date.parse(a || "") - Date.parse(b || ""))[0] || snapshot?.observed_at;
+  const fresh = !unavailable && snapshot?.stale === false && freshStamp(snapshot.observed_at, now) && freshStamp(observedAt, now);
   const work = systemWork(snapshot, name);
   const incidents = snapshot?.incidents.filter(row => incidentOwner(row) === name);
   const states = rows.map(row => row.liveness === false ? "OFFLINE" : row.readiness === false ? "DEGRADED" :
@@ -114,7 +116,7 @@ export function commandSystem(name: SystemName, snapshot: IrenSnapshot | null, f
   return { name, raw, runtime: mostSevere(rows.map(row => row.status)) || "UNKNOWN", fresh,
     active: fresh && healthy && (work.jobs.some(row => row.status === "RUNNING") || publicRow.active),
     activity: work.jobs.find(row => row.status === "RUNNING")?.title as string || ownActivity || (publicRow.fresh ? publicRow.activity : "Awaiting a canonical activity observation."),
-    observedAt: snapshot?.observed_at,
+    observedAt,
     jobs: snapshot?.work?.jobs ? work.jobs.length : undefined,
     objectives: snapshot?.work?.objectives ? work.objectives.length : undefined,
     incidents: incidents?.length, signal: fresh && healthy ? String(snapshot?.revision ?? snapshot?.observed_at) : undefined,

@@ -78,3 +78,15 @@ test("fleet health fails closed for incomplete, unknown or stale evidence", () =
   views[2]={...views[2],raw:"UNRECOGNIZED_PROVIDER_STATE"};
   assert.notEqual(fleetState(views),"HEALTHY");
 });
+
+test("a fresh IREN envelope cannot refresh an expired subsystem observation", () => {
+  const value=snapshot();
+  const old=new Date(now-180001).toISOString();
+  value.topology.services[2].last_heartbeat_at=old;
+  value.work.jobs=[{owner_system:"GRAEN",status:"RUNNING",title:"Retained work"}];
+  const view=commandSystem("GRAEN",value,feed(),now);
+  assert.equal(view.fresh,false);
+  assert.equal(view.raw,"STALE");
+  assert.equal(view.active,false);
+  assert.equal(view.observedAt,old);
+});
