@@ -81,7 +81,7 @@ export default function ProductDetail() {
   ) || "UNAVAILABLE";
   const trackingState = systemState?.tracking_state || (loading ? "CONNECTING" : "UNAVAILABLE");
   const observedAt = systemState?.observed_at
-    ? new Date(publicSystem.observed_at).toLocaleString([], { month:"short", day:"numeric", hour:"numeric", minute:"2-digit" })
+    ? new Date(systemState.observed_at).toLocaleString([], { month:"short", day:"numeric", hour:"numeric", minute:"2-digit" })
     : "NO PUBLIC OBSERVATION";
 
   return (

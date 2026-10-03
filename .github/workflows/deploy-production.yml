@@ -56,3 +56,15 @@ jobs:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           command: deploy
+      - name: Verify production visual operations
+        env:
+          BASE_URL: https://anevum.com
+          PUBLIC_ONLY: "1"
+        run: node scripts/visual-ops-browser-qa.mjs
+      - name: Retain production screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: anevum-production-visuals
+          path: ${{ runner.temp }}/anevum-visuals
+          retention-days: 7

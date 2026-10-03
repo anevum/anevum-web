@@ -6,7 +6,7 @@ import path from "node:path";
 const base = process.env.BASE_URL;
 if (!base) throw new Error("BASE_URL is required");
 
-const routes = ["/", "/live", "/products", "/command/overview", "/command/iren", "/command/rhen", "/command/graen", "/command/nostra", "/command/velum"];
+const routes = (process.env.PUBLIC_ONLY === "1" ? ["/", "/live", "/products"] : ["/", "/live", "/products", "/command/overview", "/command/iren", "/command/rhen", "/command/graen", "/command/nostra", "/command/velum"]);
 const output = path.join(process.env.RUNNER_TEMP || os.tmpdir(), "anevum-visuals");
 fs.mkdirSync(output, {recursive:true});
 const viewports = [
@@ -145,7 +145,7 @@ async function runCase(route, viewport) {
   const screenshot=await send("Page.captureScreenshot",{format:"png",captureBeyondViewport:false});
   fs.writeFileSync(path.join(output,"visual-"+(route.slice(1).replaceAll("/","-")||"home")+"-"+viewport.name+".png"),Buffer.from(screenshot.data,"base64"));
   await send("Emulation.setEmulatedMedia",{features:[{name:"prefers-reduced-motion",value:"reduce"}]});
-  const motion=await send("Runtime.evaluate",{expression:`[...document.querySelectorAll(".vo-console *, .vo-public-board *")].filter(el=>getComputedStyle(el).animationName!=="none" && getComputedStyle(el).animationDuration!=="0s").length`,returnByValue:true});
+  const motion=await send("Runtime.evaluate",{expression:`[...document.querySelectorAll(".vo-console *, .vo-public-status *")].filter(el=>getComputedStyle(el).animationName!=="none" && getComputedStyle(el).animationDuration!=="0s").length`,returnByValue:true});
   if(motion.result?.value) throw new Error("Reduced motion left animations running: "+motion.result.value);
   const result = await send("Runtime.evaluate", {
     expression: `(() => {
