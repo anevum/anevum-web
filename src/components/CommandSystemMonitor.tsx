@@ -147,6 +147,22 @@ export default function CommandSystemMonitor({
     () => (snapshot?.incidents || []).filter((row) => incidentMatches(String(row.key || ""), system)),
     [snapshot, system]
   );
+  const activeJobs = useMemo(
+    () => (snapshot?.work?.jobs || []).filter((row) => {
+      const owner = String(row.owner_system || "").toUpperCase();
+      const status = String(row.status || "").toUpperCase();
+      return owner === system && ["QUEUED", "RUNNING", "WAITING", "BLOCKED", "NEEDS_APPROVAL"].includes(status);
+    }),
+    [snapshot, system]
+  );
+  const activeObjectives = useMemo(
+    () => (snapshot?.work?.objectives || []).filter((row) => {
+      const owner = String(row.owner_system || "").toUpperCase();
+      const status = String(row.status || "").toUpperCase();
+      return owner === system && ["ACTIVE", "READY", "WAITING", "BLOCKED"].includes(status);
+    }),
+    [snapshot, system]
+  );
   const ready = services.filter((row) => row.readiness === true && ["RUNNING", "IDLE"].includes(runtimeStatus(row, stale))).length;
   const problems = services.filter((row) => !["RUNNING", "IDLE"].includes(runtimeStatus(row, stale))).length;
   const currentState = stale
@@ -255,6 +271,33 @@ export default function CommandSystemMonitor({
             </div>
           </section>
         ) : null}
+
+        <section>
+          <div className="system-monitor-section-head">
+            <div><span>CURRENT WORK</span><strong>IREN-tracked objectives and jobs owned by {system}</strong></div>
+            <small>{activeJobs.length} active job{activeJobs.length === 1 ? "" : "s"} · {activeObjectives.length} open objective{activeObjectives.length === 1 ? "" : "s"}</small>
+          </div>
+          <div className="system-monitor-work-grid">
+            <div>
+              <span className="system-monitor-work-label">ACTIVE JOBS</span>
+              {activeJobs.length ? activeJobs.slice(0, 6).map((row, index) => (
+                <article key={String(row.job_id || index)}>
+                  <div><strong>{String(row.title || row.job_type || "System job")}</strong><span>{String(row.status || "UNKNOWN")}</span></div>
+                  <p>{String(row.job_type || row.objective_key || "IREN work item")}</p>
+                </article>
+              )) : <p className="system-monitor-clear">No active {system} jobs are recorded by IREN.</p>}
+            </div>
+            <div>
+              <span className="system-monitor-work-label">OPEN OBJECTIVES</span>
+              {activeObjectives.length ? activeObjectives.slice(0, 6).map((row, index) => (
+                <article key={String(row.objective_key || index)}>
+                  <div><strong>{String(row.title || row.objective_key || "System objective")}</strong><span>{String(row.status || "UNKNOWN")}</span></div>
+                  <p>{String(row.description || row.objective_key || "IREN objective")}</p>
+                </article>
+              )) : <p className="system-monitor-clear">No open {system} objectives are recorded by IREN.</p>}
+            </div>
+          </div>
+        </section>
 
         <section>
           <div className="system-monitor-section-head">
