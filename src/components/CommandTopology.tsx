@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import { commandAuthHeaders, type RhenSession } from "../lib/auth";
 import type { LiveTradingFeed, PublicSystemState } from "../lib/data";
 import {
@@ -26,11 +27,11 @@ function compact(value?: string | null, length = 10) {
 
 function SystemCard({ name, row, now }: { name: string; row?: PublicSystemState; now: number }) {
   const state = row?.health_state || row?.runtime_state || "UNKNOWN";
-  return <div className={"ops-system-card " + tone(state)}>
+  return <Link to={"/command/" + name.toLowerCase()} className={"ops-system-card ops-system-link " + tone(state)}>
     <div className="ops-system-title"><strong>{name}</strong><span>{state}</span></div>
     <p>{row?.activity || "No activity summary available."}</p>
-    <small>{row?.observed_at ? "Observed " + ageLabel(row.observed_at, now) : "No canonical activity timestamp"}</small>
-  </div>;
+    <small>{row?.observed_at ? "Observed " + ageLabel(row.observed_at, now) : "No canonical activity timestamp"} · Open {name} →</small>
+  </Link>;
 }
 
 function RuntimeCard({ row, stale, now }: { row: RuntimeRow; stale: boolean; now: number }) {
