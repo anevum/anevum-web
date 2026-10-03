@@ -6,9 +6,9 @@ import io
 import os
 
 root = Path(os.environ["RUNNER_TEMP"]) / "anevum-visuals"
-routes = ["home", "live", "products", "command-overview", "command-iren", "command-rhen", "command-graen", "command-nostra", "command-velum"]
+routes = ["home", "live", "products", "command-overview", "command-iren", "command-rhen", "command-graen", "command-nostra", "command-velum", "home-systems"]
 for viewport, size in [("desktop", (480, 334)), ("mobile", (195, 422))]:
-    sheet = Image.new("RGB", (size[0] * 3, (size[1] + 26) * 3), "#04070D")
+    sheet = Image.new("RGB", (size[0] * 3, (size[1] + 26) * 4), "#04070D")
     draw = ImageDraw.Draw(sheet)
     for index, route in enumerate(routes):
         shot = Image.open(root / f"visual-{route}-{viewport}.png").convert("RGB")
@@ -20,3 +20,9 @@ for viewport, size in [("desktop", (480, 334)), ("mobile", (195, 422))]:
     output = io.BytesIO()
     sheet.save(output, format="WEBP", quality=72)
     print(f"VISUAL_CONTACT_{viewport.upper()}=" + base64.b64encode(output.getvalue()).decode())
+
+for viewport in ["desktop", "mobile"]:
+    shot = Image.open(root / f"visual-command-overview-{viewport}.png").convert("RGB")
+    output = io.BytesIO()
+    shot.save(output, format="WEBP", quality=80)
+    print(f"VISUAL_OVERVIEW_{viewport.upper()}=" + base64.b64encode(output.getvalue()).decode())

@@ -36,7 +36,7 @@
 .vo-connections{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
 .vo-link-base,.vo-link-signal{fill:none;vector-effect:non-scaling-stroke;stroke:var(--vo-accent);stroke-width:1;opacity:.22}
 .vo-link-signal{stroke-width:2;stroke-dasharray:8 450;opacity:0}
-.is-fresh .vo-link-signal{animation:vo-transmit 1.7s ease-out 1}
+.is-fresh.tone-good .vo-link-signal,.is-fresh.tone-active .vo-link-signal{animation:vo-transmit 1.7s ease-out 1}
 .is-working .vo-link-signal{opacity:.6;animation:vo-transmit 4s linear infinite}
 .is-stale .vo-link-base{stroke-dasharray:4 7;opacity:.13}
 .vo-core-ring{position:absolute;left:50%;top:50%;width:240px;height:240px;transform:translate(-50%,-50%);border:1px solid #326fff20;border-radius:50%;box-shadow:0 0 0 28px #326fff05,0 0 0 60px #326fff03;pointer-events:none}
@@ -182,3 +182,10 @@ a.vo-system-card:hover{border-color:color-mix(in srgb,var(--vo-accent) 60%,trans
 }
 @media(max-width:460px){.vo-system-grid{grid-template-columns:1fr}.vo-card-top{flex-wrap:nowrap}.vo-system-card .vo-instrument-frame{max-height:136px;overflow:hidden}.vo-system-card .system-instrument{max-height:136px}.vo-system-card .vo-activity{min-height:0}.vo-card-identity h3{font-size:24px}.vo-system-card>footer{font-size:10px}.vo-section-head{flex-wrap:wrap}.vo-section-head>small{text-align:left;max-width:100%}.vo-health-panel .vo-metrics{gap:18px}.vo-constellation{min-height:350px}.vo-node{width:100px}.vo-node-iren{width:102px}.vo-constellation.is-compact{min-height:330px}}
 @media(prefers-reduced-motion:reduce){.vo-console *,.vo-public-status *,.vo-live *,.vo-system-card *{animation:none!important;transition:none!important}.vo-arrival{opacity:0}.is-working .instrument-signal{opacity:.45;stroke-dasharray:4 14}.vo-link-signal{opacity:0!important}}
+
+/* Keep legacy trading summaries in their detailed routes, away from fleet health. */
+.command-shell.command-page-overview .command-stats.command-view-overview{display:none!important}
+body:has(.command-shell) .seasonal-easter-eggs,body:has(.vo-live) .seasonal-easter-eggs,
+body:has(.command-shell) .universe-background,body:has(.vo-live) .universe-background{display:none!important}
+.command-shell{background:#04070d!important}
+.command-header nav a.active{color:#b8d2ff!important;background:#326fff12!important;border-color:#326fff50!important}

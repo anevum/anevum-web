@@ -1,4 +1,4 @@
-import { publicSystem, displayState } from "../lib/system-display";
+import { publicSystem } from "../lib/system-display";
 import { SystemVisualShell } from "../components/operations/VisualOps";
 import { Link, Navigate, useParams } from "react-router-dom";
 import ArchitectureFlow from "../components/company/ArchitectureFlow";
@@ -62,7 +62,7 @@ function ProductSpecific({ slug }: { slug: string }) {
 
 export default function ProductDetail() {
   const { slug } = useParams();
-  const { data, loading, error } = useLiveTrading(10000);
+  const { data, error } = useLiveTrading(10000);
   const product = productBySlug(slug);
   if (!product) return <Navigate to="/products" replace />;
 
@@ -71,18 +71,7 @@ export default function ProductDetail() {
     (product.slug === "iren" && module.owner.includes("IREN"))
   );
   const systemKey = product.name as "IREN" | "RHEN" | "NOSTRA" | "GRAEN" | "VELUM";
-  const systemState = data?.systems?.[systemKey];
-  const runtimeState = (
-    error
-      ? "UNAVAILABLE"
-      : loading
-        ? "CONNECTING"
-        : systemState?.runtime_state || (product.slug === "rhen" ? data?.state : "UNAVAILABLE")
-  ) || "UNAVAILABLE";
-  const trackingState = systemState?.tracking_state || (loading ? "CONNECTING" : "UNAVAILABLE");
-  const observedAt = systemState?.observed_at
-    ? new Date(systemState.observed_at).toLocaleString([], { month:"short", day:"numeric", hour:"numeric", minute:"2-digit" })
-    : "NO PUBLIC OBSERVATION";
+  const view = publicSystem(systemKey, data, Date.now(), Boolean(error));
 
   return (
     <div className={"company-page product-detail product-detail-" + product.slug}>
@@ -94,15 +83,8 @@ export default function ProductDetail() {
           <p>{product.role}</p>
           <div className="product-status-line"><b>{product.status}</b><span>{product.category}</span></div>
         </div>
-        <SystemVisualShell view={publicSystem(systemKey, data, Date.now(), Boolean(error))} hero />
+        <SystemVisualShell view={view} hero />
 
-      </section>
-
-      <section className="product-public-state" aria-label={product.name + " public-safe state"}>
-        <article><span>PRODUCT STATUS</span><strong>{product.status}</strong><small>{product.category}</small></article>
-        <article><span>RUNTIME</span><strong>{displayState(runtimeState)}</strong><small>{systemState?.health_state?.replaceAll("_", " ") || "Public-safe runtime state"}</small></article>
-        <article><span>TRACKING</span><strong>{displayState(trackingState)}</strong><small>{systemState?.activity || (product.slug === "rhen" ? ((data?.telemetry?.events_60m ?? 0) + " public events / 60m") : "Canonical public activity")}</small></article>
-        <article><span>LAST OBSERVATION</span><strong>{observedAt}</strong><small>{systemState?.independent_runtime ? "Independent runtime" : "Embedded / logical subsystem"}</small></article>
       </section>
 
       <section className="company-section">

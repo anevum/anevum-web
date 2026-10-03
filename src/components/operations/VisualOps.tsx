@@ -26,7 +26,7 @@ export function SystemVisualShell({ view, to, hero = false, now = Date.now() }: 
   const body = <><div className="vo-card-top"><SystemIcon system={view.name} size={hero ? "lg" : "sm"} /><SystemStatusChip state={view.raw} /></div>
     <div className="vo-card-identity"><div><span>{identity.role}</span><h3>{view.name}</h3></div><span className="vo-accent" aria-hidden="true">{identity.accent}</span></div>
     <div className="vo-instrument-frame"><SystemInstrument name={view.name} /><i key={view.signal} className={view.signal ? "vo-arrival" : "vo-no-arrival"} aria-hidden="true" /></div>
-    <div className="vo-work-label"><i aria-hidden="true" />{view.active ? "Activity observed" : view.fresh ? displayState(view.runtime) : "Awaiting fresh evidence"}</div>
+    <div className="vo-work-label"><i aria-hidden="true" />{view.active ? "Activity observed" : view.fresh ? displayState(view.runtime) : view.runtime !== "UNKNOWN" ? "Last reported: " + displayState(view.runtime) : "Awaiting fresh evidence"}</div>
     <p className="vo-activity" title={view.activity}>{view.activity}</p>
     {(view.jobs !== undefined || view.objectives !== undefined || view.incidents !== undefined) && <div className="vo-card-counts"><span>◇ <b>{view.jobs ?? "—"}</b> jobs</span><span>◎ <b>{view.objectives ?? "—"}</b> objectives</span><span className={view.incidents ? "vo-attention" : ""}>! <b>{view.incidents ?? "—"}</b> incidents</span></div>}
     <footer><span title={view.observedAt || undefined}>{SEMANTIC.freshness} {ageText(view.observedAt, now)}</span><span>{to ? "Open monitor ↗" : "Activity schematic"}</span></footer></>;
@@ -44,7 +44,7 @@ export function SystemConstellation({ views, command = false, compact = false }:
     </svg>
     <div className="vo-core-ring" aria-hidden="true" />
     {views.map(view => <Link key={view.name} to={(command ? "/command/" : "/products/") + view.name.toLowerCase()} className={"vo-node vo-node-" + view.name.toLowerCase() + visualClass(view)} aria-label={view.name + ": " + displayState(view.raw) + ". Open monitor"} data-state={view.raw}>
-      <SystemIcon system={view.name} size="lg" /><strong>{view.name}</strong><SystemStatusChip state={view.raw} /><span className="vo-node-work">{view.active ? "Work in progress" : view.fresh ? displayState(view.runtime) : "Observation unavailable"}</span>
+      <SystemIcon system={view.name} size="lg" /><strong>{view.name}</strong><SystemStatusChip state={view.raw} /><span className="vo-node-work">{view.active ? "Work in progress" : view.fresh ? displayState(view.runtime) : view.runtime !== "UNKNOWN" ? "Reported: " + displayState(view.runtime) : "Observation unavailable"}</span>
     </Link>)}
   </div>;
 }
