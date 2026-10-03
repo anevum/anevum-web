@@ -472,6 +472,13 @@
 .command-page-system .command-side{display:grid!important;grid-template-columns:minmax(0,1.4fr) minmax(260px,.6fr)!important}
 .command-page-system .command-panel-telemetry{grid-column:1}.command-page-system .command-panel-boundary{grid-column:2}
 
+/* System-first monitor routes: one canonical full-width operations surface. */
+.command-page-monitor .command-grid{grid-template-columns:1fr!important}
+.command-page-monitor .command-primary{display:grid!important;grid-template-columns:1fr!important}
+.command-page-monitor .command-side{display:none!important}
+.command-page-monitor .command-view-system{display:flex!important}
+
+
 /* Auth gates inherit the same universe-era visual language. */
 .command-gate{
   min-height:100dvh!important;
