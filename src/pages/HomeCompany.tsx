@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import Mark from "../components/Mark";
 import ProductCard from "../components/company/ProductCard";
 import SystemIcon from "../components/company/SystemIcon";
+import { publicSystem, SYSTEMS } from "../lib/system-display";
 import PublicSystemStatus from "../components/PublicSystemStatus";
 import { fieldNotes } from "../data/fieldNotes";
 import { products } from "../data/products";
@@ -10,28 +11,28 @@ import { useLiveTrading } from "../hooks/useLiveTrading";
 const currentWork = [
   {
     step: "01",
-    status: "ACTIVE",
+    status: "RESEARCH PATH",
     system: "GRAEN" as const,
     title: "BTC strategy discovery",
-    body: "BTC-only mechanism research is running behind explicit development gates. No candidate is presented as promoted until the evidence path actually clears."
+    body: "Mechanism research must clear explicit development, validation and forward-evidence gates before any candidate can be promoted."
   },
   {
     step: "02",
-    status: "ACTIVE",
+    status: "RESEARCH PATH",
     system: "IREN" as const,
     title: "Canonical operations state",
     body: "IREN observes runtime health, dependency freshness, incidents, objectives, and service identity so operator decisions come from one control surface."
   },
   {
     step: "03",
-    status: "ACTIVE",
+    status: "RESEARCH PATH",
     system: "RHEN" as const,
     title: "Execution integration",
     body: "RHEN remains the bounded market runtime. Research output must pass replay, forward evidence, promotion, risk, and durable execution gates before live use."
   },
   {
     step: "04",
-    status: "VERIFY",
+    status: "REPLAY BOUNDARY",
     system: "VELUM" as const,
     title: "Replay before promotion",
     body: "VELUM remains broker-isolated and is the engineering replay boundary for a research survivor before fresh forward evidence and any production consideration."
@@ -40,13 +41,9 @@ const currentWork = [
 
 export default function HomeCompany() {
   const { data, loading, error } = useLiveTrading(5000);
-  const systemRows = data?.systems || {};
-  const systemStates = Object.values(systemRows);
-  const observedSystems = systemStates.length;
-  const healthySystems = systemStates.filter((row) => {
-    const state = String(row?.health_state || row?.runtime_state || "").toUpperCase();
-    return ["HEALTHY", "RUNNING", "READY", "COMPLETE", "IDLE"].includes(state);
-  }).length;
+  const views = SYSTEMS.map(name => publicSystem(name, data, Date.now(), Boolean(error)));
+  const observedSystems = views.filter(view => view.fresh).length;
+  const healthySystems = views.filter(view => view.fresh && ["HEALTHY", "RUNNING", "READY", "IDLE"].includes(view.raw)).length;
   const researchState = String(data?.research?.current_status || "UNRECORDED").replaceAll("_", " ").toUpperCase();
 
   return (
@@ -92,7 +89,7 @@ export default function HomeCompany() {
               <span>01</span>
               <div>
                 <small>PRIMARY RESEARCH</small>
-                <strong>GRAEN is evaluating BTC-native strategy mechanisms.</strong>
+                <strong>{data?.research?.current_focus || "Research must earn its place in production."}</strong>
                 <p>Development evidence is being treated as development evidence only. A research survivor still requires replay and fresh forward confirmation before promotion.</p>
               </div>
             </div>
@@ -119,7 +116,7 @@ export default function HomeCompany() {
             account state, strategy thresholds, orders, sizing, or protected operator controls.
           </p>
         </header>
-        <PublicSystemStatus data={data} />
+        <PublicSystemStatus data={data} error={error} compact />
       </section>
 
       <section className="company-section rebuild-roadmap">

@@ -1,53 +1,14 @@
-import { Link } from "react-router-dom";
-import SystemIcon from "./company/SystemIcon";
-import type { LiveTradingFeed, PublicSystemState } from "../lib/data";
-import "../styles/public-system-status.css";
+import type { LiveTradingFeed } from "../lib/data";
+import { ageText, fleetState, publicSystem, SYSTEMS } from "../lib/system-display";
+import { SectionHead, SystemConstellation, SystemStatusChip, SystemVisualShell } from "./operations/VisualOps";
 
-const SYSTEMS = ["IREN", "RHEN", "GRAEN", "NOSTRA", "VELUM"] as const;
-type SystemName = typeof SYSTEMS[number];
-
-function tone(row?: PublicSystemState) {
-  const state = String(row?.health_state || row?.runtime_state || "UNKNOWN").toUpperCase();
-  if (["HEALTHY", "RUNNING", "READY", "COMPLETE", "IDLE"].includes(state)) return "good";
-  if (["FAILED", "OFFLINE", "CRITICAL", "STALE", "ATTENTION_REQUIRED"].includes(state)) return "bad";
-  return "warn";
-}
-
-function age(value?: string | null) {
-  if (!value) return "NO TIMESTAMP";
-  const t = Date.parse(value);
-  if (!Number.isFinite(t)) return "INVALID TIME";
-  const seconds = Math.max(0, Math.floor((Date.now() - t) / 1000));
-  if (seconds < 60) return seconds + "S AGO";
-  const minutes = Math.floor(seconds / 60);
-  if (minutes < 60) return minutes + "M AGO";
-  return Math.floor(minutes / 60) + "H AGO";
-}
-
-export default function PublicSystemStatus({ data }: { data?: LiveTradingFeed | null }) {
-  return (
-    <section className="public-system-status" aria-label="ANEVUM system status">
-      <header>
-        <div><span>LIVE SYSTEM MAP</span><strong>One machine. Five independently observed systems.</strong></div>
-        <small>{data?.generated_at ? "FEED " + age(data.generated_at) : "CONNECTING"}</small>
-      </header>
-      <div className="public-system-status-grid">
-        {SYSTEMS.map((name: SystemName) => {
-          const row = data?.systems?.[name];
-          const state = String(row?.health_state || row?.runtime_state || "UNKNOWN").toUpperCase();
-          return (
-            <Link className={"public-system-status-card " + tone(row)} to={"/products/" + name.toLowerCase()} key={name}>
-              <div className="public-system-status-card-head">
-                <SystemIcon system={name} size="sm" />
-                <span><i />{state}</span>
-              </div>
-              <strong>{name}</strong>
-              <p>{row?.activity || "Awaiting canonical subsystem activity."}</p>
-              <small>{age(row?.observed_at)}</small>
-            </Link>
-          );
-        })}
-      </div>
-    </section>
-  );
+export default function PublicSystemStatus({ data, error = "", compact = false }: { data?: LiveTradingFeed | null; error?: string; compact?: boolean }) {
+  const now = Date.now();
+  const views = SYSTEMS.map(name => publicSystem(name, data, now, Boolean(error)));
+  return <section className={"vo-public-status" + (compact ? " is-compact" : "")} aria-label="ANEVUM system status" data-visual-ops="public">
+    <SectionHead eyebrow="LIVE SYSTEMS / CANONICAL OBSERVATIONS" title={compact ? "Five systems. One operating picture." : "The ANEVUM observatory"} detail={"Feed refreshed " + ageText(data?.generated_at, now)} />
+    <div className="vo-public-health" role="status"><SystemStatusChip state={fleetState(views)} /><span>{error ? "Public feed unavailable · last observations shown" : views.filter(view => view.fresh).length + " / 5 systems with fresh observations"}</span></div>
+    <SystemConstellation views={views} compact={compact} />
+    {!compact && <div className="vo-system-grid">{views.map(view => <SystemVisualShell key={view.name} view={view} now={now} to={"/products/" + view.name.toLowerCase()} />)}</div>}
+  </section>;
 }

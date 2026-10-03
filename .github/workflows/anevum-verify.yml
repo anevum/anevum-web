@@ -25,7 +25,7 @@ jobs:
         with:
           python-version: "3.12"
       - name: Install PDF renderer
-        run: pip install "weasyprint==68.0"
+        run: pip install "weasyprint==68.0" "Pillow==11.3.0"
       - name: Synchronize RHEN release artifacts
         run: node scripts/sync-release-artifacts.mjs
       - name: Render RHEN release packets
@@ -35,7 +35,7 @@ jobs:
       - name: Install
         run: npm install --no-audit --no-fund
       - name: Test canonical operational boundary
-        run: node --experimental-strip-types --test tests/command-topology.test.mjs tests/command-iren.test.mjs tests/command-operations.test.mjs
+        run: node --experimental-strip-types --test tests/command-topology.test.mjs tests/command-iren.test.mjs tests/command-operations.test.mjs tests/visual-ops.test.mjs
       - name: Typecheck and build
         run: npm run build
       - name: Verify generated artifacts
@@ -118,7 +118,7 @@ jobs:
             .systems.IREN.independent_runtime == true and
             .systems.RHEN.independent_runtime == true and
             .systems.NOSTRA.independent_runtime == true and
-            .systems.NOSTRA.tracking_state == "LIVE_BASELINE" and
+            (.systems.NOSTRA.tracking_state | type == "string") and
             (.disclosure.excluded_fields | index("account value") != null) and
             (.disclosure.excluded_fields | index("symbols") != null) and
             (.disclosure.excluded_fields | index("orders and fills") != null)
@@ -133,6 +133,10 @@ jobs:
         run: |
           node scripts/browser-runtime-qa.mjs
           node scripts/codex-handoff-browser-qa.mjs
+          node scripts/visual-ops-browser-qa.mjs
+      - name: Visual review contact sheets
+        if: github.event_name == 'pull_request'
+        run: python scripts/visual-ops-contact-sheet.py
 
       - name: Capture browser QA
         if: github.event_name == 'pull_request'

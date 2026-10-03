@@ -6,7 +6,7 @@ import { useLiveTrading } from "../hooks/useLiveTrading";
 import { products } from "../data/products";
 
 export default function Products() {
-  const { data } = useLiveTrading(10000);
+  const { data, error } = useLiveTrading(10000);
   return (
     <div className="company-page">
       <section className="company-page-hero">
@@ -14,7 +14,7 @@ export default function Products() {
         <h1>Systems with explicit jobs and explicit boundaries.</h1>
         <p>ANEVUM is organized around five flagship systems and a supporting package ecosystem. Product status describes implementation maturity, not commercial availability or performance.</p>
       </section>
-      <section className="company-section no-top-border"><PublicSystemStatus data={data} /></section>
+      <section className="company-section no-top-border"><PublicSystemStatus data={data} error={error} /></section>
       <section className="company-section"><SystemTopology /></section>
       <section className="company-section">
         <header className="company-section-head"><span>FLAGSHIP SYSTEMS</span><h2>Portfolio</h2></header>
