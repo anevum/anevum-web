@@ -5,6 +5,7 @@ export function useLiveTrading(intervalMs = 5000) {
   const [data, setData] = useState<LiveTradingFeed | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [now, setNow] = useState(Date.now());
 
   useEffect(() => {
     let active = true;
@@ -26,12 +27,15 @@ export function useLiveTrading(intervalMs = 5000) {
 
     load();
     timer = window.setInterval(load, intervalMs);
+    // Expire visual observations even while a network request is stalled.
+    const clock = window.setInterval(() => setNow(Date.now()), 5000);
 
     return () => {
       active = false;
+      window.clearInterval(clock);
       if (timer) window.clearInterval(timer);
     };
   }, [intervalMs]);
 
-  return { data, loading, error };
+  return { data, loading, error, now };
 }
