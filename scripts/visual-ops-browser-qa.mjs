@@ -6,7 +6,9 @@ import path from "node:path";
 const base = process.env.BASE_URL;
 if (!base) throw new Error("BASE_URL is required");
 
-const routes = ["/command/system"];
+const routes = (process.env.PUBLIC_ONLY === "1" ? ["/", "/live", "/products"] : ["/", "/live", "/products", "/command/overview", "/command/iren", "/command/rhen", "/command/graen", "/command/nostra", "/command/velum"]);
+const output = path.join(process.env.RUNNER_TEMP || os.tmpdir(), "anevum-visuals");
+fs.mkdirSync(output, {recursive:true});
 const viewports = [
   { name: "desktop", width: 1440, height: 1000, mobile: false, deviceScaleFactor: 1 },
   { name: "mobile", width: 390, height: 844, mobile: true, deviceScaleFactor: 1 }
@@ -121,49 +123,51 @@ async function runCase(route, viewport) {
     deviceScaleFactor: viewport.deviceScaleFactor,
     mobile: viewport.mobile
   });
-  await send("Page.addScriptToEvaluateOnNewDocument", {source: `
-    window.__sentCommands = [];
-    const originalFetch = window.fetch.bind(window);
-    window.fetch = async (url, init = {}) => {
-      const path = String(url);
-      if (path.includes("/api/command/session")) return Response.json({authenticated:true,auth_source:"cloudflare_access",command_admin:true,email:"qa@example.test"});
-      if (path.includes("/api/command/iren/command")) {
-        window.__sentCommands.push(JSON.parse(init.body).command);
-        return Response.json({schema_version:"iren_command.v2",accepted:true,command:{status:"QUEUED"}},{status:202});
-      }
-      if (path.includes("/api/command/iren/status")) return Response.json({
-        schema_version:"iren_command.v2",state:"HEALTHY",stale:false,observed_at:new Date().toISOString(),incidents:[],
-        work:{objectives:[],jobs:[],commands:[],next_action:{title:"Add runtime evidence"},execution_mode:"codex/manual software",
-          handoffs:[{handoff_id:"qa-1",objective_key:"iren.evidence",handoff_status:"PREPARED",
-            package:{title:"Add runtime evidence",created_at:new Date().toISOString(),base_sha:"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-              branch:"codex/handoff/qa-1",prompt:"Inspect CURRENT main.\\nComplete the scoped objective.\\nDo not expand authority."},
-            verification:{verified:false,blockers:["implementation_not_submitted"]}}]}
-      });
-      if (path.startsWith("/api/command/")) return Response.json({});
-      return originalFetch(url, init);
-    };
-    Object.defineProperty(navigator, "clipboard", {value:{writeText:async text => {window.__copiedPrompt=text;}}});
-  `});
+  if (route.startsWith("/command/")) await send("Page.addScriptToEvaluateOnNewDocument", {source: "(" + "() => {\n    const originalFetch=window.fetch.bind(window);\n    window.fetch=async (input,init={}) => {\n      const url=String(input);\n      if(url.includes(\"/api/command/session\")) return Response.json({authenticated:true,auth_source:\"cloudflare_access\",command_admin:true,email:\"qa@example.test\"});\n      if(url.includes(\"/api/command/iren/status\")) {\n        const at=new Date().toISOString();\n        return Response.json({\n          schema_version:\"iren_command.v2\",revision:42,observed_at:at,stale:false,state:\"DEGRADED\",action_required:true,\n          topology:{services:[\"IREN\",\"RHEN\",\"GRAEN\",\"NOSTRA\",\"VELUM\"].map(name=>({service_id:name.toLowerCase(),service_name:name+\" runtime\",runtime_kind:name.toLowerCase(),independent_runtime:true,status:name===\"NOSTRA\"?\"OFFLINE\":name===\"VELUM\"?\"IDLE\":\"HEALTHY\",liveness:name!==\"NOSTRA\",readiness:name!==\"NOSTRA\",observed_at:at,last_heartbeat_at:at,scope:\"qa\",revision:\"qa-fixture-not-production\",current_activity:{IREN:\"Coordinating observation and evidence.\",RHEN:\"Observing the latest market cycle.\",GRAEN:\"Evaluating retained research evidence.\",NOSTRA:\"Forecast runtime unavailable.\",VELUM:\"Ready for the next replay.\"}[name]})),dependencies:{foundation:{status:\"HEALTHY\",last_success:at}}},\n          incidents:[{key:\"service.nostra\",severity:\"warning\",reason:\"Forecast runtime is offline\",opened_at:at}],\n          work:{active_jobs:1,requires_human:1,blocked_objectives:1,objectives:[{owner_system:\"GRAEN\",objective_key:\"qa-research\",title:\"Evaluate retained evidence\",status:\"ACTIVE\",description:\"Review the current evidence window.\",updated_at:at}],jobs:[{owner_system:\"GRAEN\",job_id:\"qa-job\",title:\"Research evaluation\",status:\"RUNNING\",description:\"Checking retained observations.\",updated_at:at}],commands:[],handoffs:[],next_action:{title:\"Restore forecast observations\"}},\n          operator:{state:\"DEGRADED\",message:\"NOSTRA needs attention. Other systems remain observable.\",recent_transitions:[{key:\"service.nostra\",transition:\"INCIDENT_OPENED\",severity:\"warning\",reason:\"Forecast runtime is offline\",created_at:at}]}\n        });\n      }\n      if(url.includes(\"/api/command/\")) return Response.json({});\n      return originalFetch(input,init);\n    };\n  }" + ")()"});
   await send("Page.navigate", { url: base + route });
   await sleep(5000);
-
-  await send("Runtime.evaluate", {expression: `
-    document.querySelector(".iren-dock-handle")?.click();
-    [...document.querySelectorAll("button")].find(b => b.textContent === "prepare for Codex")?.click();
-  `});
-  await sleep(500);
-  await send("Runtime.evaluate", {expression: `
-    [...document.querySelectorAll("button")].find(b => b.textContent === "Copy Codex Handoff")?.click();
-  `});
-  await sleep(200);
-  const interactions = await send("Runtime.evaluate", {expression: `({
-    prepared: window.__sentCommands?.includes("prepare for Codex"),
-    copied: window.__copiedPrompt === document.querySelector('textarea[aria-label="Complete Codex prompt"]')?.value,
-    prompt: document.querySelector('textarea[aria-label="Complete Codex prompt"]')?.value,
-    blockers: document.querySelector(".iren-codex-handoff")?.textContent.includes("implementation not submitted")
-  })`,returnByValue:true});
-  const check = interactions.result?.value || {};
-  if (!check.prepared || !check.copied || !check.prompt || !check.blockers) throw new Error("Handoff interaction failed: " + JSON.stringify(check));
+  const ops = await send("Runtime.evaluate", {expression: `(() => {
+    const surface=document.querySelector("[data-visual-ops]");
+    const cards=[...document.querySelectorAll(".vo-system-card, .vo-node")];
+    const visible=el=>el.getBoundingClientRect().width>0;
+    return {surface:Boolean(surface), cards:cards.filter(visible).length,
+      legacySummaryVisible:[...document.querySelectorAll(".command-stats")].some(visible),
+      heading:document.querySelector(".vo-console h1")?.textContent,
+      nostra:document.querySelector('[data-system="NOSTRA"]')?.getAttribute("data-state"),
+      velum:document.querySelector('[data-system="VELUM"]')?.getAttribute("data-state"),
+      activeGraen:document.querySelector('[data-system="GRAEN"]')?.getAttribute("data-active"),
+      links:cards.filter(el=>el.tagName==="A").every(el=>el.tabIndex===0&&el.hasAttribute("aria-label")),
+      nav:routePlaceholder
+    };
+  })()`.replace("routePlaceholder", JSON.stringify(route)),returnByValue:true});
+  const details=ops.result?.value||{};
+  if(!details.surface || !details.cards || !details.links) throw new Error("Missing accessible visual surface: "+JSON.stringify(details));
+  if(route==="/command/overview" && details.legacySummaryVisible) throw new Error("Legacy trading strip obscures fleet overview");
+  if(route==="/command/overview" && (details.nostra!=="OFFLINE" || details.velum!=="IDLE" || details.activeGraen!=="true")) throw new Error("State rendering failed: "+JSON.stringify(details));
+  if(route.startsWith("/command/")) {
+    await send("Runtime.evaluate",{expression:'document.querySelector(".vo-details summary")?.click()'});
+    await send("Runtime.evaluate",{expression:'document.querySelector(".vo-details summary")?.click()'});
+  }
+  const focus = await send("Runtime.evaluate",{expression:`(() => {
+    const link=[...document.querySelectorAll(".vo-node, a.vo-system-card")].find(el=>el.getBoundingClientRect().width>0);
+    if(!link) return true;
+    link.focus();
+    const good=document.activeElement===link && parseFloat(getComputedStyle(link).outlineWidth)>=2;
+    link.blur(); return good;
+  })()`,returnByValue:true});
+  if(!focus.result?.value) throw new Error("System card keyboard focus is not visible");
+  const screenshot=await send("Page.captureScreenshot",{format:"png",captureBeyondViewport:false});
+  fs.writeFileSync(path.join(output,"visual-"+(route.slice(1).replaceAll("/","-")||"home")+"-"+viewport.name+".png"),Buffer.from(screenshot.data,"base64"));
+  if(route==="/") {
+    await send("Runtime.evaluate",{expression:'document.querySelector(".vo-public-status")?.scrollIntoView({block:"start"})'});
+    await sleep(300);
+    const systems=await send("Page.captureScreenshot",{format:"png",captureBeyondViewport:false});
+    fs.writeFileSync(path.join(output,"visual-home-systems-"+viewport.name+".png"),Buffer.from(systems.data,"base64"));
+    await send("Runtime.evaluate",{expression:"window.scrollTo(0,0)"});
+  }
+  await send("Emulation.setEmulatedMedia",{features:[{name:"prefers-reduced-motion",value:"reduce"}]});
+  const motion=await send("Runtime.evaluate",{expression:`[...document.querySelectorAll(".vo-console *, .vo-public-status *")].filter(el=>getComputedStyle(el).animationName!=="none" && getComputedStyle(el).animationDuration!=="0s").length`,returnByValue:true});
+  if(motion.result?.value) throw new Error("Reduced motion left animations running: "+motion.result.value);
   const result = await send("Runtime.evaluate", {
     expression: `(() => {
       const root = document.documentElement;

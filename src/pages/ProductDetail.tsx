@@ -1,8 +1,9 @@
+import { publicSystem } from "../lib/system-display";
+import { SystemVisualShell } from "../components/operations/VisualOps";
 import { Link, Navigate, useParams } from "react-router-dom";
 import ArchitectureFlow from "../components/company/ArchitectureFlow";
 import SystemTopology from "../components/company/SystemTopology";
 import SystemIcon from "../components/company/SystemIcon";
-import SystemMark from "../components/company/SystemMark";
 import { modules, productBySlug, products } from "../data/products";
 import { useLiveTrading } from "../hooks/useLiveTrading";
 
@@ -61,7 +62,7 @@ function ProductSpecific({ slug }: { slug: string }) {
 
 export default function ProductDetail() {
   const { slug } = useParams();
-  const { data, loading, error } = useLiveTrading(10000);
+  const { data, error } = useLiveTrading(10000);
   const product = productBySlug(slug);
   if (!product) return <Navigate to="/products" replace />;
 
@@ -70,18 +71,7 @@ export default function ProductDetail() {
     (product.slug === "iren" && module.owner.includes("IREN"))
   );
   const systemKey = product.name as "IREN" | "RHEN" | "NOSTRA" | "GRAEN" | "VELUM";
-  const publicSystem = data?.systems?.[systemKey];
-  const runtimeState = (
-    error
-      ? "UNAVAILABLE"
-      : loading
-        ? "CONNECTING"
-        : publicSystem?.runtime_state || (product.slug === "rhen" ? data?.state : "UNAVAILABLE")
-  ) || "UNAVAILABLE";
-  const trackingState = publicSystem?.tracking_state || (loading ? "CONNECTING" : "UNAVAILABLE");
-  const observedAt = publicSystem?.observed_at
-    ? new Date(publicSystem.observed_at).toLocaleString([], { month:"short", day:"numeric", hour:"numeric", minute:"2-digit" })
-    : "NO PUBLIC OBSERVATION";
+  const view = publicSystem(systemKey, data, Date.now(), Boolean(error));
 
   return (
     <div className={"company-page product-detail product-detail-" + product.slug}>
@@ -93,29 +83,8 @@ export default function ProductDetail() {
           <p>{product.role}</p>
           <div className="product-status-line"><b>{product.status}</b><span>{product.category}</span></div>
         </div>
-        <div className="product-hero-code" aria-hidden="true">
-          <span>ANEVUM / SYSTEM</span>
-          <SystemMark system={product.name} decorative />
-          <strong>{product.name}</strong>
-          <small>{product.category}</small>
-          <div className="product-hero-signal">
-            <div><span>01</span><b>{product.flow[0]}</b></div>
-            <div><span>{String(product.flow.length).padStart(2, "0")}</span><b>{product.flow[product.flow.length - 1]}</b></div>
-          </div>
-          <div className="product-hero-facts">
-            <span><small>CAPABILITIES</small><b>{product.capabilities.length}</b></span>
-            <span><small>MODULES</small><b>{relevantModules.length}</b></span>
-            <span><small>BOUNDARIES</small><b>{product.boundaries.length}</b></span>
-          </div>
-          <i />
-        </div>
-      </section>
+        <SystemVisualShell view={view} hero />
 
-      <section className="product-public-state" aria-label={product.name + " public-safe state"}>
-        <article><span>PRODUCT STATUS</span><strong>{product.status}</strong><small>{product.category}</small></article>
-        <article><span>RUNTIME</span><strong>{runtimeState.replaceAll("_", " ")}</strong><small>{publicSystem?.health_state?.replaceAll("_", " ") || "Public-safe runtime state"}</small></article>
-        <article><span>TRACKING</span><strong>{trackingState.replaceAll("_", " ")}</strong><small>{publicSystem?.activity || (product.slug === "rhen" ? ((data?.telemetry?.events_60m ?? 0) + " public events / 60m") : "Canonical public activity")}</small></article>
-        <article><span>LAST OBSERVATION</span><strong>{observedAt}</strong><small>{publicSystem?.independent_runtime ? "Independent runtime" : "Embedded / logical subsystem"}</small></article>
       </section>
 
       <section className="company-section">

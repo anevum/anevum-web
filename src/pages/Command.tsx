@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthProvider";
 import Mark from "../components/Mark";
@@ -230,14 +230,14 @@ export default function Command() {
   const theoryConjectures = theoryProblem?.conjectures || [];
   const openTheoryConjectures = theoryConjectures.filter((row) => row.status === "OPEN");
 
-  const scanRows = useMemo(() => {
+  const scanRows = (() => {
     const preferred = Array.isArray(strategy.scan_symbols)
       ? strategy.scan_symbols.map(String)
       : Object.keys(scanner);
     return preferred
       .filter((symbol) => scanner[symbol])
       .map((symbol) => ({ symbol, row: record(scanner[symbol]) }));
-  }, [scanner, strategy.scan_symbols]);
+  })();
 
   const monitorRow = monitoredSystem ? publicFeed?.systems?.[monitoredSystem] : undefined;
   const monitorState = text(monitorRow?.health_state || monitorRow?.runtime_state, "UNKNOWN").toUpperCase();
@@ -266,15 +266,15 @@ export default function Command() {
         <Link to="/" className="command-brand"><Mark /><span>ANEVUM</span><i /><span className="command-rhen-lockup"><SystemIcon system="IREN" size="xs" /><strong>COMMAND</strong></span></Link>
         <nav aria-label="Command systems">
           <Link className={commandPage === "overview" ? "active" : ""} to="/command/overview">Overview</Link>
-          <Link className={commandPage === "iren" ? "active" : ""} to="/command/iren">IREN</Link>
-          <Link className={commandPage === "rhen" ? "active" : ""} to="/command/rhen">RHEN</Link>
-          <Link className={commandPage === "graen" ? "active" : ""} to="/command/graen">GRAEN</Link>
-          <Link className={commandPage === "nostra" ? "active" : ""} to="/command/nostra">NOSTRA</Link>
-          <Link className={commandPage === "velum" ? "active" : ""} to="/command/velum">VELUM</Link>
+          <Link className={commandPage === "iren" ? "active" : ""} to="/command/iren" aria-current={commandPage === "iren" ? "page" : undefined}><SystemIcon system="IREN" size="xs" />IREN</Link>
+          <Link className={commandPage === "rhen" ? "active" : ""} to="/command/rhen" aria-current={commandPage === "rhen" ? "page" : undefined}><SystemIcon system="RHEN" size="xs" />RHEN</Link>
+          <Link className={commandPage === "graen" ? "active" : ""} to="/command/graen" aria-current={commandPage === "graen" ? "page" : undefined}><SystemIcon system="GRAEN" size="xs" />GRAEN</Link>
+          <Link className={commandPage === "nostra" ? "active" : ""} to="/command/nostra" aria-current={commandPage === "nostra" ? "page" : undefined}><SystemIcon system="NOSTRA" size="xs" />NOSTRA</Link>
+          <Link className={commandPage === "velum" ? "active" : ""} to="/command/velum" aria-current={commandPage === "velum" ? "page" : undefined}><SystemIcon system="VELUM" size="xs" />VELUM</Link>
           <Link className={commandPage === "infrastructure" ? "active" : ""} to="/command/infrastructure">Infra</Link>
         </nav>
         <div className="command-account">
-          <span><i /> IREN / LIVE</span>
+          <span><i /> COMMAND / AUTHENTICATED</span>
           <small>{session.user.email}</small>
           <div className="command-account-actions">
             <Link to="/" title="Return to public ANEVUM">Public</Link>
@@ -326,7 +326,7 @@ export default function Command() {
 
         <section className="command-grid">
           <div className="command-primary">
-            {monitoredSystem ? <CommandSystemMonitor session={session} feed={publicFeed} system={monitoredSystem} /> : <CommandTopology session={session} feed={publicFeed} />}
+            {monitoredSystem ? <CommandSystemMonitor session={session} feed={publicFeedError ? null : publicFeed} system={monitoredSystem} /> : <CommandTopology session={session} feed={publicFeedError ? null : publicFeed} />}
             <CommandPerformance performance={publicFeed?.performance} feedError={publicFeedError} />
             <article className="command-panel command-view-overview command-view-live command-panel-scanner">
               <header><div><span>LIVE SCANNER</span><strong>{scanRows.length} symbols observed in runtime snapshot</strong></div><small>{clockTime(bot.last_strategy_at)}</small></header>
