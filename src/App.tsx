@@ -23,7 +23,7 @@ const Releases = lazy(() => import("./pages/Releases"));
 const ReleaseDetail = lazy(() => import("./pages/ReleaseDetail"));
 
 const titles: Record<string, string> = {
-  "/": "ANEVUM Core Rebuild Underway — Engineering Update",
+  "/": "ANEVUM — Live Systems, Research & Engineering",
   "/products": "Systems — ANEVUM",
   "/products/iren": "IREN — Operating Intelligence — ANEVUM",
   "/products/rhen": "RHEN — Market System — ANEVUM",
@@ -44,7 +44,7 @@ const titles: Record<string, string> = {
 };
 
 const descriptions: Record<string, string> = {
-  "/": "ANEVUM is rebuilding its core stack from the ground up. Public system data is temporarily offline while infrastructure, evidence paths, RHEN, and GRAEN are rebuilt and verified.",
+  "/": "ANEVUM is a live software and research system spanning IREN, RHEN, GRAEN, NOSTRA, and VELUM, with public-safe runtime state, research records, and explicit authority boundaries.",
   "/products": "Explore IREN, RHEN, NOSTRA, GRAEN, and VELUM: ANEVUM's orchestration, market, forecasting, mathematical research, and replay systems.",
   "/products/iren": "IREN is ANEVUM's operating-intelligence layer for cross-system state, coordination, research visibility, and protected operator workflows.",
   "/products/rhen": "RHEN is ANEVUM's deterministic market system for observation, evaluation, bounded execution, reconciliation, telemetry, and evidence.",
