@@ -1,6 +1,7 @@
 import { motion } from "motion/react";
 import { useMemo } from "react";
 import { RhenSectionLabel } from "../components/RhenMark";
+import PublicSystemStatus from "../components/PublicSystemStatus";
 import { useLiveTrading } from "../hooks/useLiveTrading";
 
 function timeLabel(value?: string | null) {
@@ -42,7 +43,7 @@ export default function Live() {
       <header className="workspace-heading">
         <div>
           <RhenSectionLabel context="LIVE OPERATIONS" />
-          <h1>Operations</h1>
+          <h1>Live systems</h1>
         </div>
         <div className="workspace-heading-status">
           <span className={"runtime-state " + stateClass}><i />{state}</span>
@@ -50,6 +51,8 @@ export default function Live() {
           <div><small>FRESHNESS</small><strong>{ageLabel(data?.freshness_seconds)}</strong></div>
         </div>
       </header>
+
+      <PublicSystemStatus data={data} />
 
       <div className="live-layout">
         <article className="compact-panel live-console-panel">
@@ -62,8 +65,7 @@ export default function Live() {
               <time>{timeLabel(data?.generated_at)}</time>
               <strong>RHEN</strong>
               <p>
-                Public telemetry connected. Events are real system records; account value, symbols,
-                fills, orders, P&amp;L, thresholds, sizing, and risk parameters are excluded.
+                Public telemetry connected. This feed carries sanitized cross-system operating state plus RHEN telemetry; account value, symbols, fills, orders, P&amp;L, thresholds, sizing, and risk parameters are excluded.
               </p>
             </div>
             {events.length ? events.slice(0, 11).map((event, index) => (
