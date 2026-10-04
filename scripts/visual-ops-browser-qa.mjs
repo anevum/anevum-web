@@ -6,7 +6,9 @@ import path from "node:path";
 const base = process.env.BASE_URL;
 if (!base) throw new Error("BASE_URL is required");
 
-const routes = (process.env.PUBLIC_ONLY === "1" ? ["/", "/live", "/products"] : ["/", "/live", "/products", "/command/overview", "/command/iren", "/command/rhen", "/command/graen", "/command/nostra", "/command/velum"]);
+const publicRoutes = ["/", "/live", "/products", "/products/iren", "/products/rhen", "/products/graen", "/products/nostra", "/products/velum"];
+const commandRoutes = ["/command/overview", "/command/iren", "/command/rhen", "/command/graen", "/command/nostra", "/command/velum", "/command/infrastructure"];
+const routes = process.env.PUBLIC_ONLY === "1" ? publicRoutes : [...publicRoutes, ...commandRoutes];
 const output = path.join(process.env.RUNNER_TEMP || os.tmpdir(), "anevum-visuals");
 fs.mkdirSync(output, {recursive:true});
 const viewports = [
@@ -142,6 +144,52 @@ async function runCase(route, viewport) {
   })()`.replace("routePlaceholder", JSON.stringify(route)),returnByValue:true});
   const details=ops.result?.value||{};
   if(!details.surface || !details.cards || !details.links) throw new Error("Missing accessible visual surface: "+JSON.stringify(details));
+
+  if(route.startsWith("/products/") && route.split("/").filter(Boolean).length === 2) {
+    const iconGeometry = await send("Runtime.evaluate", {expression: `(() => {
+      const icon=document.querySelector(".product-hero .vo-card-top .system-icon");
+      const mark=icon?.querySelector(".system-mark-svg");
+      if(!icon || !mark) return {present:false};
+      const a=icon.getBoundingClientRect();
+      const b=mark.getBoundingClientRect();
+      const style=getComputedStyle(icon);
+      return {
+        present:true,
+        width:Math.round(a.width),
+        height:Math.round(a.height),
+        overflow:style.overflow,
+        markInside:b.left>=a.left-1 && b.top>=a.top-1 && b.right<=a.right+1 && b.bottom<=a.bottom+1
+      };
+    })()`, returnByValue:true});
+    const geometry=iconGeometry.result?.value||{};
+    if(!geometry.present || geometry.width!==geometry.height || !geometry.markInside) {
+      throw new Error("Subsystem hero icon geometry failed: "+JSON.stringify(geometry));
+    }
+  }
+
+  if(route==="/") {
+    const topologyGeometry = await send("Runtime.evaluate", {expression: `(() => {
+      const root=document.querySelector(".company-topology");
+      if(!root) return {present:false,collisions:[]};
+      const labels=[...root.querySelectorAll(".topology-flow-label")];
+      const nodes=[...root.querySelectorAll(".topology-node")];
+      const overlaps=(a,b)=>a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top;
+      const collisions=[];
+      for(const label of labels) {
+        const lr=label.getBoundingClientRect();
+        for(const node of nodes) {
+          const nr=node.getBoundingClientRect();
+          if(overlaps(lr,nr)) collisions.push((label.textContent||"label").trim()+" × "+(node.textContent||"node").trim());
+        }
+      }
+      return {present:true,collisions};
+    })()`, returnByValue:true});
+    const topology=topologyGeometry.result?.value||{};
+    if(topology.present && topology.collisions?.length) {
+      throw new Error("Topology label/node overlap: "+JSON.stringify(topology.collisions));
+    }
+  }
+
   if(route==="/command/overview" && details.legacySummaryVisible) throw new Error("Legacy trading strip obscures fleet overview");
   if(route==="/command/overview" && (details.nostra!=="OFFLINE" || details.velum!=="IDLE" || details.activeGraen!=="true")) throw new Error("State rendering failed: "+JSON.stringify(details));
   if(route.startsWith("/command/")) {
