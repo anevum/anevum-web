@@ -4,9 +4,6 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
-  schedule:
-    # Monthly rebuild refreshes the calendar theme and generated IREN avatar asset.
-    - cron: "17 6 1 * *"
 
 permissions:
   contents: read
