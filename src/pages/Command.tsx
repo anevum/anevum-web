@@ -51,6 +51,30 @@ function arrayText(value: unknown) {
   return Array.isArray(value) && value.length ? value.map(String).join(", ") : "—";
 }
 
+function CommandNavGlyph({ kind }: { kind: "overview" | "infrastructure" }) {
+  if (kind === "overview") {
+    return (
+      <svg className="command-nav-glyph" viewBox="0 0 24 24" aria-hidden="true">
+        <rect x="4" y="4" width="6" height="6" rx="1.4" />
+        <rect x="14" y="4" width="6" height="6" rx="1.4" />
+        <rect x="4" y="14" width="6" height="6" rx="1.4" />
+        <rect x="14" y="14" width="6" height="6" rx="1.4" />
+      </svg>
+    );
+  }
+
+  return (
+    <svg className="command-nav-glyph" viewBox="0 0 24 24" aria-hidden="true">
+      <rect x="4" y="5" width="16" height="4" rx="1.4" />
+      <rect x="4" y="10" width="16" height="4" rx="1.4" />
+      <rect x="4" y="15" width="16" height="4" rx="1.4" />
+      <circle cx="7" cy="7" r=".8" className="command-nav-glyph-dot" />
+      <circle cx="7" cy="12" r=".8" className="command-nav-glyph-dot" />
+      <circle cx="7" cy="17" r=".8" className="command-nav-glyph-dot" />
+    </svg>
+  );
+}
+
 export default function Command() {
   const { session, loading, commandAdmin, signOut } = useAuth();
   const navigate = useNavigate();
@@ -265,13 +289,27 @@ export default function Command() {
       <header className="command-header">
         <Link to="/" className="command-brand"><Mark /><span>ANEVUM</span><i /><span className="command-rhen-lockup"><SystemIcon system="IREN" size="xs" /><strong>COMMAND</strong></span></Link>
         <nav aria-label="Command systems">
-          <Link className={commandPage === "overview" ? "active" : ""} to="/command/overview">Overview</Link>
-          <Link className={commandPage === "iren" ? "active" : ""} to="/command/iren" aria-current={commandPage === "iren" ? "page" : undefined}><SystemIcon system="IREN" size="xs" />IREN</Link>
-          <Link className={commandPage === "rhen" ? "active" : ""} to="/command/rhen" aria-current={commandPage === "rhen" ? "page" : undefined}><SystemIcon system="RHEN" size="xs" />RHEN</Link>
-          <Link className={commandPage === "graen" ? "active" : ""} to="/command/graen" aria-current={commandPage === "graen" ? "page" : undefined}><SystemIcon system="GRAEN" size="xs" />GRAEN</Link>
-          <Link className={commandPage === "nostra" ? "active" : ""} to="/command/nostra" aria-current={commandPage === "nostra" ? "page" : undefined}><SystemIcon system="NOSTRA" size="xs" />NOSTRA</Link>
-          <Link className={commandPage === "velum" ? "active" : ""} to="/command/velum" aria-current={commandPage === "velum" ? "page" : undefined}><SystemIcon system="VELUM" size="xs" />VELUM</Link>
-          <Link className={commandPage === "infrastructure" ? "active" : ""} to="/command/infrastructure">Infra</Link>
+          <Link className={commandPage === "overview" ? "active" : ""} to="/command/overview" aria-label="Overview" title="Overview" aria-current={commandPage === "overview" ? "page" : undefined}>
+            <CommandNavGlyph kind="overview" /><span className="command-nav-label">Overview</span>
+          </Link>
+          <Link className={commandPage === "iren" ? "active" : ""} to="/command/iren" aria-label="IREN" title="IREN" aria-current={commandPage === "iren" ? "page" : undefined}>
+            <SystemIcon system="IREN" size="xs" /><span className="command-nav-label">IREN</span>
+          </Link>
+          <Link className={commandPage === "rhen" ? "active" : ""} to="/command/rhen" aria-label="RHEN" title="RHEN" aria-current={commandPage === "rhen" ? "page" : undefined}>
+            <SystemIcon system="RHEN" size="xs" /><span className="command-nav-label">RHEN</span>
+          </Link>
+          <Link className={commandPage === "graen" ? "active" : ""} to="/command/graen" aria-label="GRAEN" title="GRAEN" aria-current={commandPage === "graen" ? "page" : undefined}>
+            <SystemIcon system="GRAEN" size="xs" /><span className="command-nav-label">GRAEN</span>
+          </Link>
+          <Link className={commandPage === "nostra" ? "active" : ""} to="/command/nostra" aria-label="NOSTRA" title="NOSTRA" aria-current={commandPage === "nostra" ? "page" : undefined}>
+            <SystemIcon system="NOSTRA" size="xs" /><span className="command-nav-label">NOSTRA</span>
+          </Link>
+          <Link className={commandPage === "velum" ? "active" : ""} to="/command/velum" aria-label="VELUM" title="VELUM" aria-current={commandPage === "velum" ? "page" : undefined}>
+            <SystemIcon system="VELUM" size="xs" /><span className="command-nav-label">VELUM</span>
+          </Link>
+          <Link className={commandPage === "infrastructure" ? "active" : ""} to="/command/infrastructure" aria-label="Infrastructure" title="Infrastructure" aria-current={commandPage === "infrastructure" ? "page" : undefined}>
+            <CommandNavGlyph kind="infrastructure" /><span className="command-nav-label">Infrastructure</span>
+          </Link>
         </nav>
         <div className="command-account">
           <span><i /> COMMAND / AUTHENTICATED</span>
