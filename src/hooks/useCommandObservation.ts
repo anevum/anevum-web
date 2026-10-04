@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { commandAuthHeaders, type RhenSession } from "../lib/auth";
 import type { IrenSnapshot } from "../lib/runtime-topology";
 
-export function useCommandObservation(session: RhenSession) {
+export function useCommandObservation(session: RhenSession, intervalMs = 15000) {
   const [snapshot, setSnapshot] = useState<IrenSnapshot | null>(null);
   const [error, setError] = useState("");
   const [now, setNow] = useState(Date.now());
@@ -25,11 +25,11 @@ export function useCommandObservation(session: RhenSession) {
             (body.topology && !Array.isArray(body.topology.services))) throw new Error("Invalid operational observation");
         if (!stopped) { setSnapshot(body); setError(""); setReceivedAt(new Date().toISOString()); setNow(Date.now()); }
       } catch { if (!stopped) setError("Canonical IREN state unavailable"); }
-      finally { if (!stopped) timer = setTimeout(refresh, 15000); }
+      finally { if (!stopped) timer = setTimeout(refresh, intervalMs); }
     }
     void refresh();
     const clock = setInterval(() => setNow(Date.now()), 5000);
     return () => { stopped = true; controller.abort(); clearTimeout(timer); clearInterval(clock); };
-  }, [session]);
+  }, [session, intervalMs]);
   return { snapshot, error, now, receivedAt };
 }

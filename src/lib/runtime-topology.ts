@@ -33,6 +33,18 @@ export type IrenIncident = {
   opened_at?: string;
 };
 
+export type IrenJobEvent = {
+  event_id: string | number;
+  job_id: string;
+  event_type: string;
+  event?: Record<string, unknown>;
+  created_at?: string;
+  owner_system?: string;
+  objective_key?: string | null;
+  title?: string | null;
+  job_type?: string | null;
+};
+
 export type IrenWorkSummary = {
   next_action?: { title?: string; objective_key?: string; job_type?: string };
   execution_mode?: string;
@@ -43,6 +55,7 @@ export type IrenWorkSummary = {
   requires_human?: number;
   objectives?: Array<Record<string, unknown>>;
   jobs?: Array<Record<string, unknown>>;
+  job_events?: IrenJobEvent[];
 };
 
 export type OperatorProjection = {
@@ -101,6 +114,48 @@ export type IrenSnapshot = {
     running_job?: string | null;
   };
   work?: IrenWorkSummary;
+  research?: {
+    graen_problems?: Array<{
+      problem_id?: string;
+      title?: string;
+      status?: string;
+      research_stage?: string | null;
+      candidate_id?: string | null;
+      hypothesis?: string | null;
+      family?: string | null;
+      mechanism?: string | null;
+      campaign_id?: string | null;
+      updated_at?: string;
+      started_at?: string | null;
+      completed_at?: string | null;
+    }>;
+    graen_runs?: Array<{
+      run_id?: string;
+      problem_id?: string;
+      status?: string;
+      methodology_version?: string | null;
+      result_state?: string | null;
+      error?: string | null;
+      started_at?: string;
+      completed_at?: string | null;
+      created_at?: string;
+    }>;
+    velum_replays?: Array<{
+      status?: string;
+      started_at?: string | null;
+      completed_at?: string | null;
+    }>;
+    graen_runtime?: {
+      worker_id?: string | null;
+      runtime_version?: string | null;
+      deployment_id?: string | null;
+      heartbeat_at?: string | null;
+      active_problem_id?: string | null;
+      queue_depth?: number | null;
+      last_error?: string | null;
+      updated_at?: string | null;
+    } | null;
+  };
   operator?: OperatorProjection;
 };
 

@@ -7,7 +7,7 @@ const base = process.env.BASE_URL;
 if (!base) throw new Error("BASE_URL is required");
 
 const publicRoutes = ["/", "/live", "/products", "/products/iren", "/products/rhen", "/products/graen", "/products/nostra", "/products/velum", "/architecture", "/research", "/research/multi-market-architecture-equities-crypto", "/case-studies", "/performance", "/founder", "/resume", "/releases", "/theory"];
-const commandRoutes = ["/command/overview", "/command/iren", "/command/rhen", "/command/graen", "/command/nostra", "/command/velum", "/command/infrastructure"];
+const commandRoutes = ["/command/overview", "/command/terminal", "/command/iren", "/command/rhen", "/command/graen", "/command/nostra", "/command/velum", "/command/infrastructure"];
 const routes = process.env.PUBLIC_ONLY === "1" ? publicRoutes : [...publicRoutes, ...commandRoutes];
 const output = path.join(process.env.RUNNER_TEMP || os.tmpdir(), "anevum-visuals");
 fs.mkdirSync(output, {recursive:true});
@@ -125,12 +125,12 @@ async function runCase(route, viewport) {
     deviceScaleFactor: viewport.deviceScaleFactor,
     mobile: viewport.mobile
   });
-  if (route.startsWith("/command/")) await send("Page.addScriptToEvaluateOnNewDocument", {source: "(" + "() => {\n    const originalFetch=window.fetch.bind(window);\n    window.fetch=async (input,init={}) => {\n      const url=String(input);\n      if(url.includes(\"/api/command/session\")) return Response.json({authenticated:true,auth_source:\"cloudflare_access\",command_admin:true,email:\"qa@example.test\"});\n      if(url.includes(\"/api/command/iren/status\")) {\n        const at=new Date().toISOString();\n        return Response.json({\n          schema_version:\"iren_command.v2\",revision:42,observed_at:at,stale:false,state:\"DEGRADED\",action_required:true,\n          topology:{services:[\"IREN\",\"RHEN\",\"GRAEN\",\"NOSTRA\",\"VELUM\"].map(name=>({service_id:name.toLowerCase(),service_name:name+\" runtime\",runtime_kind:name.toLowerCase(),independent_runtime:true,status:name===\"NOSTRA\"?\"OFFLINE\":name===\"VELUM\"?\"IDLE\":\"HEALTHY\",liveness:name!==\"NOSTRA\",readiness:name!==\"NOSTRA\",observed_at:at,last_heartbeat_at:at,scope:\"qa\",revision:\"qa-fixture-not-production\",current_activity:{IREN:\"Coordinating observation and evidence.\",RHEN:\"Observing the latest market cycle.\",GRAEN:\"Evaluating retained research evidence.\",NOSTRA:\"Forecast runtime unavailable.\",VELUM:\"Ready for the next replay.\"}[name]})),dependencies:{foundation:{status:\"HEALTHY\",last_success:at}}},\n          incidents:[{key:\"service.nostra\",severity:\"warning\",reason:\"Forecast runtime is offline\",opened_at:at}],\n          work:{active_jobs:1,requires_human:1,blocked_objectives:1,objectives:[{owner_system:\"GRAEN\",objective_key:\"qa-research\",title:\"Evaluate retained evidence\",status:\"ACTIVE\",description:\"Review the current evidence window.\",updated_at:at}],jobs:[{owner_system:\"GRAEN\",job_id:\"qa-job\",title:\"Research evaluation\",status:\"RUNNING\",description:\"Checking retained observations.\",updated_at:at}],commands:[],handoffs:[],next_action:{title:\"Restore forecast observations\"}},\n          operator:{state:\"DEGRADED\",message:\"NOSTRA needs attention. Other systems remain observable.\",recent_transitions:[{key:\"service.nostra\",transition:\"INCIDENT_OPENED\",severity:\"warning\",reason:\"Forecast runtime is offline\",created_at:at}]}\n        });\n      }\n      if(url.includes(\"/api/command/\")) return Response.json({});\n      return originalFetch(input,init);\n    };\n  }" + ")()"});
+  if (route.startsWith("/command/")) await send("Page.addScriptToEvaluateOnNewDocument", {source: "(" + "() => {\n    const originalFetch=window.fetch.bind(window);\n    window.fetch=async (input,init={}) => {\n      const url=String(input);\n      if(url.includes(\"/api/command/session\")) return Response.json({authenticated:true,auth_source:\"cloudflare_access\",command_admin:true,email:\"qa@example.test\"});\n      if(url.includes(\"/api/command/iren/status\")) {\n        const at=new Date().toISOString();\n        return Response.json({\n          schema_version:\"iren_command.v2\",revision:42,observed_at:at,stale:false,state:\"DEGRADED\",action_required:true,\n          topology:{services:[\"IREN\",\"RHEN\",\"GRAEN\",\"NOSTRA\",\"VELUM\"].map(name=>({service_id:name.toLowerCase(),service_name:name+\" runtime\",runtime_kind:name.toLowerCase(),independent_runtime:true,status:name===\"NOSTRA\"?\"OFFLINE\":name===\"VELUM\"?\"IDLE\":\"HEALTHY\",liveness:name!==\"NOSTRA\",readiness:name!==\"NOSTRA\",observed_at:at,last_heartbeat_at:at,scope:\"qa\",revision:\"qa-fixture-not-production\",current_activity:{IREN:\"Coordinating observation and evidence.\",RHEN:\"Observing the latest market cycle.\",GRAEN:\"Evaluating retained research evidence.\",NOSTRA:\"Forecast runtime unavailable.\",VELUM:\"Ready for the next replay.\"}[name]})),dependencies:{foundation:{status:\"HEALTHY\",last_success:at}}},\n          incidents:[{key:\"service.nostra\",severity:\"warning\",reason:\"Forecast runtime is offline\",opened_at:at}],\n          work:{active_jobs:1,requires_human:1,blocked_objectives:1,objectives:[{owner_system:\"GRAEN\",objective_key:\"qa-research\",title:\"Evaluate retained evidence\",status:\"ACTIVE\",description:\"Review the current evidence window.\",updated_at:at}],jobs:[{owner_system:\"GRAEN\",job_id:\"qa-job\",title:\"BTC V14 R2H evaluation\",status:\"RUNNING\",job_type:\"RESEARCH\",metadata:{stage:\"CRYPTO_BTC_4H_CONSENSUS_V14_R2H_VELUM_REPLAY\",run_id:\"qa-r2h-run\",candidate_id:\"qa-r2h\"},updated_at:at}],job_events:[{event_id:1,job_id:\"qa-job\",event_type:\"RUNNING\",event:{stage:\"CRYPTO_BTC_4H_CONSENSUS_V14_R2H_VELUM_REPLAY\",run_id:\"qa-r2h-run\"},created_at:at,owner_system:\"GRAEN\",objective_key:\"qa-research\",title:\"BTC V14 R2H evaluation\",job_type:\"RESEARCH\"}],commands:[],handoffs:[],next_action:{title:\"Restore forecast observations\"}},\n          research:{graen_problems:[{problem_id:\"qa-problem\",title:\"BTC V14 R2H\",status:\"RUNNING\",research_stage:\"CRYPTO_BTC_4H_CONSENSUS_V14_R2H_VELUM_REPLAY\",candidate_id:\"qa-r2h\",hypothesis:\"4H consensus transfer\",updated_at:at,started_at:at}],graen_runs:[{run_id:\"qa-r2h-run\",problem_id:\"qa-problem\",status:\"RUNNING\",methodology_version:\"btc-4h-consensus-v14-r2h\",started_at:at,created_at:at}],velum_replays:[{status:\"RUNNING\",started_at:at}],graen_runtime:{worker_id:\"qa-graen-worker\",runtime_version:\"qa\",heartbeat_at:at,active_problem_id:\"qa-problem\",queue_depth:0}},\n          operator:{state:\"DEGRADED\",message:\"NOSTRA needs attention. Other systems remain observable.\",recent_transitions:[{key:\"service.nostra\",transition:\"INCIDENT_OPENED\",severity:\"warning\",reason:\"Forecast runtime is offline\",created_at:at}]}\n        });\n      }\n      if(url.includes(\"/api/command/\")) return Response.json({});\n      return originalFetch(input,init);\n    };\n  }" + ")()"});
   await send("Page.navigate", { url: base + route });
   await sleep(5000);
   const ops = await send("Runtime.evaluate", {expression: `(() => {
     const surface=document.querySelector("[data-visual-ops]");
-    const cards=[...document.querySelectorAll(".vo-system-card, .vo-node")];
+    const cards=[...document.querySelectorAll(".vo-system-card, .vo-node, .terminal-lane, .terminal-focus-card")];
     const visible=el=>el.getBoundingClientRect().width>0;
     return {surface:Boolean(surface), cards:cards.filter(visible).length,
       legacySummaryVisible:[...document.querySelectorAll(".command-stats")].some(visible),
@@ -219,7 +219,7 @@ async function runCase(route, viewport) {
       return {count:rects.length,rows,overlaps,minWidth:Math.min(...rects.map(r=>r.width)),maxRight:Math.max(...rects.map(r=>r.right)),viewport:document.documentElement.clientWidth};
     })()`,returnByValue:true});
     const nav=navAudit.result?.value||{};
-    if(nav.count!==7||nav.overlaps?.length||nav.minWidth<32||nav.maxRight>nav.viewport+1||(viewport.mobile&&nav.rows?.length!==1)){
+    if(nav.count!==8||nav.overlaps?.length||nav.minWidth<32||nav.maxRight>nav.viewport+1||(viewport.mobile&&nav.rows?.length!==1)){
       throw new Error("Command icon navigation geometry failed: "+JSON.stringify(nav));
     }
   }
@@ -253,6 +253,20 @@ async function runCase(route, viewport) {
     const topology=topologyGeometry.result?.value||{};
     if(!topology.present || topology.nodeCount!==5 || topology.missingIcons?.length || topology.collisions?.length) {
       throw new Error("Topology geometry/icon failure: "+JSON.stringify(topology));
+    }
+  }
+
+  if(route==="/command/terminal") {
+    const terminalAudit=await send("Runtime.evaluate",{expression:`(() => ({
+      terminal:Boolean(document.querySelector(".operations-terminal")),
+      focusCards:document.querySelectorAll(".terminal-focus-card").length,
+      lanes:document.querySelectorAll(".terminal-lane").length,
+      workingFocus:document.querySelectorAll(".terminal-focus-card.is-working").length,
+      streamRows:document.querySelectorAll(".terminal-stream li").length
+    }))()`,returnByValue:true});
+    const terminal=terminalAudit.result?.value||{};
+    if(!terminal.terminal||terminal.focusCards!==2||terminal.lanes!==5||terminal.workingFocus<2||terminal.streamRows<3){
+      throw new Error("Live operations terminal fixture failed: "+JSON.stringify(terminal));
     }
   }
 

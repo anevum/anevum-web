@@ -414,7 +414,7 @@
     grid-column: 1 / -1 !important;
     grid-row: 2 !important;
     width: 100%;
-    grid-template-columns: repeat(7,minmax(0,1fr)) !important;
+    grid-template-columns: repeat(8,minmax(0,1fr)) !important;
     grid-auto-flow: row;
     grid-auto-columns: auto;
     gap: 4px !important;
