@@ -1,7 +1,6 @@
 import { lazy, Suspense, useEffect, useLayoutEffect, type ReactNode } from "react";
 import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { OverflowPan } from "./components/OverflowPan";
-import SeasonalEasterEggs from "./components/SeasonalEasterEggs";
 import { PublicShell } from "./components/Shell";
 import { fieldNotes } from "./data/fieldNotes";
 import { currentRhenRelease, rhenReleaseBySlug } from "./data/releases";
@@ -162,7 +161,6 @@ function RouteEffects() {
   return null;
 }
 
-
 function RouteScrollReset({ children }: { children: ReactNode }) {
   const location = useLocation();
 
@@ -190,7 +188,6 @@ export default function App() {
     <>
       <RouteEffects />
       <OverflowPan />
-      <SeasonalEasterEggs />
       <Routes>
         <Route path="/" element={<PublicExperience><HomeCompany /></PublicExperience>} />
         <Route path="/products" element={<PublicExperience><Products /></PublicExperience>} />
