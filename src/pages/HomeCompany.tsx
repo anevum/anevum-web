@@ -8,171 +8,236 @@ import { fieldNotes } from "../data/fieldNotes";
 import { products } from "../data/products";
 import { useLiveTrading } from "../hooks/useLiveTrading";
 
-const currentWork = [
-  {
-    step: "01",
-    status: "RESEARCH PATH",
-    system: "GRAEN" as const,
-    title: "BTC strategy discovery",
-    body: "Mechanism research must clear explicit development, validation and forward-evidence gates before any candidate can be promoted."
-  },
-  {
-    step: "02",
-    status: "RESEARCH PATH",
-    system: "IREN" as const,
-    title: "Canonical operations state",
-    body: "IREN observes runtime health, dependency freshness, incidents, objectives, and service identity so operator decisions come from one control surface."
-  },
-  {
-    step: "03",
-    status: "RESEARCH PATH",
-    system: "RHEN" as const,
-    title: "Execution integration",
-    body: "RHEN remains the bounded market runtime. Research output must pass replay, forward evidence, promotion, risk, and durable execution gates before live use."
-  },
-  {
-    step: "04",
-    status: "REPLAY BOUNDARY",
-    system: "VELUM" as const,
-    title: "Replay before promotion",
-    body: "VELUM remains broker-isolated and is the engineering replay boundary for a research survivor before fresh forward evidence and any production consideration."
-  }
-];
+const introVideoUrl = import.meta.env.VITE_ANEVUM_INTRO_VIDEO_URL?.trim();
+
+const systemRoles = {
+  IREN: "Operating intelligence",
+  RHEN: "Market system",
+  NOSTRA: "Forecasting",
+  GRAEN: "Research",
+  VELUM: "Replay"
+} as const;
 
 export default function HomeCompany() {
   const { data, loading, error } = useLiveTrading(5000);
-  const views = SYSTEMS.map(name => publicSystem(name, data, Date.now(), Boolean(error)));
-  const observedSystems = views.filter(view => view.fresh).length;
-  const healthySystems = views.filter(view => view.fresh && ["HEALTHY", "RUNNING", "READY", "IDLE"].includes(view.raw)).length;
-  const researchState = String(data?.research?.current_status || "UNRECORDED").replaceAll("_", " ").toUpperCase();
+  const views = SYSTEMS.map((name) => publicSystem(name, data, Date.now(), Boolean(error)));
+  const observedSystems = views.filter((view) => view.fresh).length;
+  const healthySystems = views.filter(
+    (view) => view.fresh && ["HEALTHY", "RUNNING", "READY", "IDLE"].includes(view.raw)
+  ).length;
+  const researchState = String(data?.research?.current_status || "UNRECORDED")
+    .replaceAll("_", " ")
+    .toUpperCase();
 
   return (
-    <div className="company-page company-home rebuild-home">
-      <section className="rebuild-breaking-hero" aria-labelledby="rebuild-headline">
-        <div className="rebuild-breaking-kicker">
-          <span className="rebuild-breaking-label"><i /> LIVE // SYSTEM REBUILD + VERIFICATION</span>
-          <span>OCTOBER 4, 2026</span>
-          <span>ANEVUM OPERATING UPDATE</span>
-        </div>
-
-        <div className="rebuild-breaking-grid">
-          <div className="rebuild-breaking-copy">
-            <div className="company-mark-lockup"><Mark /><span>SOFTWARE · RESEARCH · AUTONOMOUS SYSTEMS</span></div>
-            <p className="rebuild-eyebrow">CURRENT STATE</p>
-            <h1 id="rebuild-headline">ANEVUM is operating through a staged rebuild.</h1>
-            <p className="rebuild-deck">
-              The foundation has moved beyond the original prototype architecture. GitHub is the canonical change record,
-              Railway runs the service layer, PostgreSQL carries durable state, and the named systems are being observed as
-              distinct runtimes with explicit authority boundaries. Public data now returns only where the rebuilt evidence
-              path can support it.
-            </p>
-
-            <div className="rebuild-status-band" aria-label="Current ANEVUM status">
-              <span><small>PUBLIC FEED</small><strong>{loading ? "CONNECTING" : error ? "DEGRADED" : data?.live ? "LIVE" : "LIMITED"}</strong></span>
-              <span><small>SYSTEMS OBSERVED</small><strong>{observedSystems ? healthySystems + " / " + observedSystems + " READY" : "AWAITING FEED"}</strong></span>
-              <span><small>RESEARCH</small><strong>{researchState}</strong></span>
-            </div>
-
-            <div className="company-actions">
-              <Link className="company-button primary" to="/live">Open live systems <span>→</span></Link>
-              <Link className="company-button" to="/architecture">Architecture</Link>
-              <Link className="company-text-link" to="/research">Research record ↗</Link>
-            </div>
+    <div className="company-page company-home launch-home">
+      <section className="launch-hero" aria-labelledby="launch-title">
+        <div className="launch-hero-copy">
+          <div className="launch-kicker">
+            <span><i /> ANEVUM // SYSTEMS + RESEARCH</span>
+            <small>REBUILD LAUNCH / 2026</small>
           </div>
 
-          <aside className="rebuild-latest-card" aria-label="Current ANEVUM work">
-            <header>
-              <span>NOW // SYSTEM STATE</span>
-              <strong>OPERATING BRIEF</strong>
-            </header>
-            <div className="rebuild-latest-lead">
-              <span>01</span>
-              <div>
-                <small>PRIMARY RESEARCH</small>
-                <strong>{data?.research?.current_focus || "Research must earn its place in production."}</strong>
-                <p>Development evidence is being treated as development evidence only. A research survivor still requires replay and fresh forward confirmation before promotion.</p>
-              </div>
+          <div className="launch-brand-lockup" aria-hidden="true">
+            <Mark />
+            <span>ANEVUM</span>
+          </div>
+
+          <h1 id="launch-title">A system built to show its work.</h1>
+          <p className="launch-lead">
+            ANEVUM connects operating intelligence, market execution, mathematical research,
+            forecasting, and replay into one inspectable engineering environment.
+          </p>
+
+          <div className="launch-actions">
+            <a className="company-button primary" href="#intro-film">
+              Watch the introduction <span>↓</span>
+            </a>
+            <Link className="company-button" to="/products">Explore the systems</Link>
+          </div>
+
+          <div className="launch-runtime" aria-label="Current public runtime">
+            <div>
+              <span>PUBLIC FEED</span>
+              <strong>{loading ? "CONNECTING" : error ? "DEGRADED" : data?.live ? "LIVE" : "LIMITED"}</strong>
             </div>
-            <div className="rebuild-latest-list">
-              <article><span>02</span><div><strong>Command is moving to one canonical operations model.</strong><p>IREN, RHEN, GRAEN, NOSTRA, and VELUM are monitored as separate systems instead of being hidden inside RHEN-centric pages.</p></div></article>
-              <article><span>03</span><div><strong>The public site is being reconnected to live subsystem state.</strong><p>System status is rendered from the rebuilt feed instead of stale rebuild copy or placeholder continuity.</p></div></article>
-              <article><span>04</span><div><strong>Execution remains intentionally gated.</strong><p>Research, replay, forecasting, and control-plane state can inform RHEN, but none of them silently grants broker authority.</p></div></article>
+            <div>
+              <span>OBSERVED</span>
+              <strong>{observedSystems ? observedSystems + " / " + SYSTEMS.length : "—"}</strong>
             </div>
-          </aside>
+            <div>
+              <span>READY</span>
+              <strong>{observedSystems ? healthySystems + " / " + observedSystems : "—"}</strong>
+            </div>
+            <div>
+              <span>RESEARCH</span>
+              <strong>{researchState}</strong>
+            </div>
+          </div>
         </div>
 
-        <div className="rebuild-ticker" role="status">
-          <strong>PUBLIC STATUS</strong>
-          <span>{error ? "THE PUBLIC SYSTEM FEED IS CURRENTLY DEGRADED. STATIC FALLBACKS ARE NOT BEING PRESENTED AS LIVE STATE." : "LIVE SYSTEM STATE IS RETURNING THROUGH THE REBUILT FOUNDATION. SOME DATA REMAINS LIMITED UNTIL ITS EVIDENCE CONTRACT IS VERIFIED."}</span>
+        <div className="launch-hero-visual" aria-label="ANEVUM system topology">
+          <div className="launch-system-map">
+            <svg className="launch-system-lines" viewBox="0 0 100 100" aria-hidden="true">
+              <path d="M50 50 L18 18" />
+              <path d="M50 50 L82 18" />
+              <path d="M50 50 L18 82" />
+              <path d="M50 50 L82 82" />
+              <circle cx="50" cy="50" r="27" />
+              <circle cx="50" cy="50" r="39" />
+            </svg>
+
+            {(["RHEN", "GRAEN", "IREN", "NOSTRA", "VELUM"] as const).map((system) => {
+              const view = views.find((item) => item.name === system);
+              return (
+                <Link
+                  key={system}
+                  to={"/products/" + system.toLowerCase()}
+                  className={"launch-orbit-node launch-orbit-" + system.toLowerCase()}
+                >
+                  <SystemIcon system={system} size={system === "IREN" ? "lg" : "md"} />
+                  <strong>{system}</strong>
+                  <span>{systemRoles[system]}</span>
+                  <small className={view?.fresh ? "is-fresh" : ""}>
+                    {view?.fresh ? view.raw : "PUBLIC STATE PENDING"}
+                  </small>
+                </Link>
+              );
+            })}
+
+            <div className="launch-system-caption">
+              <span>ONE ENVIRONMENT</span>
+              <strong>FIVE BOUNDED SYSTEMS</strong>
+            </div>
+          </div>
+        </div>
+
+        <div className="launch-scroll-cue" aria-hidden="true">
+          <span>INTRODUCTION</span><i />
         </div>
       </section>
 
-      <section className="company-section">
-        <header className="company-section-head">
+      <section className="launch-film-section" id="intro-film" aria-labelledby="intro-film-title">
+        <header className="launch-section-heading">
+          <span>00 / INTRODUCTION</span>
+          <div>
+            <h2 id="intro-film-title">Meet ANEVUM.</h2>
+            <p>
+              This presentation stage is reserved for the launch film: a concise visual explanation
+              of ANEVUM, the five systems, their authority boundaries, and the evidence path that ties
+              research to production.
+            </p>
+          </div>
+        </header>
+
+        <div className={"launch-film-frame" + (introVideoUrl ? " has-video" : " is-prepared")}>
+          <div className="launch-film-bar">
+            <span>ANEVUM // INTRO FILM</span>
+            <small>{introVideoUrl ? "MEDIA READY" : "MEDIA SLOT READY"}</small>
+          </div>
+
+          {introVideoUrl ? (
+            <video
+              className="launch-film-video"
+              src={introVideoUrl}
+              controls
+              playsInline
+              preload="metadata"
+              aria-label="ANEVUM introduction film"
+            />
+          ) : (
+            <div className="launch-film-placeholder">
+              <div className="launch-film-mark"><Mark /></div>
+              <span>ANEVUM PRESENTS</span>
+              <strong>SYSTEMS THAT CAN BE INSPECTED.</strong>
+              <p>
+                Final video attaches here through <code>VITE_ANEVUM_INTRO_VIDEO_URL</code> without
+                changing the page layout.
+              </p>
+              <div className="launch-film-timeline" aria-label="Planned film structure">
+                <span><b>00:00</b> Identity</span>
+                <span><b>00:12</b> Five systems</span>
+                <span><b>00:30</b> Evidence path</span>
+                <span><b>00:48</b> Rebuild</span>
+              </div>
+            </div>
+          )}
+        </div>
+      </section>
+
+      <section className="company-section launch-live-section">
+        <header className="launch-section-heading">
           <span>01 / LIVE MACHINE</span>
-          <h2>Monitor the systems, not a marketing snapshot.</h2>
-          <p>
-            The public view is intentionally compact. It reports canonical system activity and freshness without exposing private
-            account state, strategy thresholds, orders, sizing, or protected operator controls.
-          </p>
+          <div>
+            <h2>See the current system, not a frozen marketing snapshot.</h2>
+            <p>
+              The public surface reports sanitized runtime state and freshness without exposing
+              private account data, strategy thresholds, order details, or protected controls.
+            </p>
+          </div>
         </header>
         <PublicSystemStatus data={data} error={error} compact />
       </section>
 
-      <section className="company-section rebuild-roadmap">
-        <header className="company-section-head">
-          <span>02 / CURRENT WORK</span>
-          <h2>The rebuild is now a running program, not a blank-slate outage.</h2>
-          <p>
-            Current work is concentrated on subsystem observability, BTC research, replay/forward evidence, and keeping production authority separate from research.
-          </p>
-        </header>
-
-        <div className="rebuild-phase-grid">
-          {currentWork.map((item) => (
-            <article key={item.step} className="is-active">
-              <header><span>{item.step}</span><b>{item.status}</b></header>
-              <SystemIcon system={item.system} size="sm" />
-              <h3>{item.title}</h3>
-              <p>{item.body}</p>
-            </article>
-          ))}
-        </div>
-      </section>
-
       <section className="company-section">
-        <header className="company-section-head">
-          <span>03 / SYSTEMS</span>
-          <h2>Specialized runtimes with bounded authority.</h2>
-          <p>
-            IREN coordinates state, RHEN owns bounded market execution, GRAEN owns formal research, NOSTRA owns forecasting,
-            and VELUM owns broker-isolated replay. Their identities are functional boundaries, not presentation labels.
-          </p>
+        <header className="launch-section-heading">
+          <span>02 / SYSTEMS</span>
+          <div>
+            <h2>Specialized systems. Explicit boundaries.</h2>
+            <p>
+              IREN coordinates state. RHEN owns bounded market execution. GRAEN owns formal research.
+              NOSTRA owns forecasting. VELUM owns broker-isolated replay.
+            </p>
+          </div>
         </header>
-        <div className="company-product-grid">{products.map((product) => <ProductCard key={product.slug} product={product} />)}</div>
-      </section>
-
-      <section className="company-section rebuild-documentation">
-        <header className="company-section-head">
-          <span>04 / OPERATING RECORD</span>
-          <h2>The work should remain inspectable.</h2>
-          <p>
-            Architecture changes, research decisions, failures, releases, and public evidence remain separate records so current status does not erase how the system got there.
-          </p>
-        </header>
-        <div className="rebuild-documentation-grid">
-          <article><span>LIVE SYSTEMS</span><strong>Current public-safe runtime state</strong><p>Cross-system state, telemetry freshness, and current research context from the rebuilt public feed.</p><Link to="/live">Open live systems →</Link></article>
-          <article><span>FIELD NOTES</span><strong>Research and engineering decisions</strong><p>Readable records of hypotheses, architecture changes, failures, limitations, and next actions.</p><Link to="/research">Open Field Notes →</Link></article>
-          <article><span>RELEASES</span><strong>Versioned implementation history</strong><p>Release records preserve what changed and what was verified without conflating repository activity with research evidence.</p><Link to="/releases">Open releases →</Link></article>
+        <div className="company-product-grid launch-product-grid">
+          {products.map((product) => <ProductCard key={product.slug} product={product} />)}
         </div>
       </section>
 
-      <section className="company-section home-field-notes home-field-notes-editorial rebuild-notes">
-        <header className="company-section-head">
-          <span>05 / FIELD NOTES</span>
-          <h2>Follow the research and engineering record.</h2>
-          <p>Current notes document implementation, evidence, rejected ideas, system changes, and measured results.</p>
+      <section className="company-section launch-record-section">
+        <header className="launch-section-heading">
+          <span>03 / EVIDENCE</span>
+          <div>
+            <h2>The record stays visible.</h2>
+            <p>
+              Architecture changes, research decisions, failures, releases, and measured evidence
+              remain separate records so current state never erases how the system got there.
+            </p>
+          </div>
         </header>
+
+        <div className="launch-record-grid">
+          <Link to="/architecture">
+            <span>ARCHITECTURE</span>
+            <strong>How the machine is divided</strong>
+            <p>Service boundaries, authority, data flow, infrastructure, and public/private separation.</p>
+            <i>OPEN →</i>
+          </Link>
+          <Link to="/research">
+            <span>FIELD NOTES</span>
+            <strong>Research and engineering decisions</strong>
+            <p>Hypotheses, failures, methodology changes, implementation work, and next actions.</p>
+            <i>OPEN →</i>
+          </Link>
+          <Link to="/releases">
+            <span>RELEASES</span>
+            <strong>Versioned implementation history</strong>
+            <p>What changed, when it changed, and what was actually verified.</p>
+            <i>OPEN →</i>
+          </Link>
+        </div>
+      </section>
+
+      <section className="company-section home-field-notes launch-notes">
+        <header className="launch-section-heading">
+          <span>04 / LATEST</span>
+          <div>
+            <h2>Follow the work as it changes.</h2>
+            <p>Recent Field Notes document implementation, evidence, rejected ideas, and measured results.</p>
+          </div>
+        </header>
+
         <div className="field-note-preview-grid field-note-preview-grid-icons">
           {fieldNotes.slice(0, 3).map((note) => (
             <Link key={note.slug} to={"/research/" + note.slug}>
@@ -184,6 +249,7 @@ export default function HomeCompany() {
             </Link>
           ))}
         </div>
+
         <div className="section-end-link"><Link to="/research">Open Field Notes →</Link></div>
       </section>
     </div>
