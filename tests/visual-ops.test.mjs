@@ -90,3 +90,26 @@ test("a fresh IREN envelope cannot refresh an expired subsystem observation", ()
   assert.equal(view.active,false);
   assert.equal(view.observedAt,old);
 });
+
+test("healthy idle Command runtimes stay healthy without pretending to work", () => {
+  const value=snapshot();
+  for (const row of value.topology.services) row.status="IDLE";
+  const graen=commandSystem("GRAEN",value,null,now);
+  assert.equal(graen.raw,"HEALTHY");
+  assert.equal(graen.runtime,"IDLE");
+  assert.equal(graen.active,false);
+  assert.equal(graen.signal,undefined);
+  assert.match(graen.activity,/No active research run/);
+});
+
+test("only substantive work produces a Command activity signal", () => {
+  const value=snapshot();
+  for (const row of value.topology.services) row.status="IDLE";
+  value.work.jobs=[{owner_system:"IREN",status:"RUNNING",title:"Verify runtime evidence"}];
+  const iren=commandSystem("IREN",value,null,now);
+  assert.equal(iren.raw,"HEALTHY");
+  assert.equal(iren.runtime,"RUNNING");
+  assert.equal(iren.active,true);
+  assert.ok(iren.signal);
+  assert.equal(iren.activity,"Verify runtime evidence");
+});
