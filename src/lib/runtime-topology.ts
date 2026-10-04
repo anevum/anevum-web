@@ -153,6 +153,8 @@ export type IrenSnapshot = {
   observed_at: string | null;
   stale: boolean;
   state: string;
+  operating_state?: string;
+  productivity_state?: string;
   action_required: boolean;
   topology: {
     services: RuntimeRow[];
@@ -169,6 +171,75 @@ export type IrenSnapshot = {
   };
   work?: IrenWorkSummary;
   research?: {
+    operating_summary?: {
+      objective?: string;
+      condition?: string;
+      productivity?: string;
+      productivity_is_health?: boolean;
+      active_hypotheses?: number;
+      experiments_running?: number;
+      hypotheses_falsified?: number;
+      validation_candidates?: number;
+      holdout_candidates?: number;
+      engineering_required?: number;
+      blocked_hypotheses?: number;
+      latest_progress_at?: string | null;
+      latest_progress_age_seconds?: number | null;
+      next_autonomous_action?: string;
+      service_health_alone_is_insufficient?: boolean;
+    };
+    autonomy_charter?: {
+      charter_id?: string;
+      version?: string;
+      code_mutation_authority?: boolean;
+      spending_authority?: boolean;
+      production_risk_increase_authority?: boolean;
+      unrestricted_live_promotion_authority?: boolean;
+    };
+    engineering_requirements?: Array<{
+      requirement_id?: string;
+      condition?: string;
+      requested_by?: string;
+      title?: string;
+      reason?: string;
+      capability_required?: string;
+      blocked_research?: string[];
+      affected_components?: string[];
+      acceptance_tests?: string[];
+      risk?: string;
+      continuation_policy?: string;
+      handoff_prompt?: string;
+      manual_chatgpt_workspace_required?: boolean;
+      runtime_code_mutation_authorized?: boolean;
+      runtime_git_write_authorized?: boolean;
+      runtime_merge_authorized?: boolean;
+      runtime_deploy_authorized?: boolean;
+    }>;
+    hypothesis_graph?: {
+      schema_version?: string;
+      node_count?: number;
+      state_counts?: Record<string, number>;
+      family_counts?: Record<string, number>;
+      failure_reason_counts?: Record<string, number>;
+      graph_hash?: string;
+      recent_nodes?: Array<{
+        hypothesis_id?: string;
+        problem_id?: string;
+        title?: string;
+        family?: string | null;
+        mechanism?: string | null;
+        state?: string;
+        research_stage?: string | null;
+        run_count?: number;
+        parents?: string[];
+        latest_result_state?: string | null;
+        latest_decision?: string | null;
+        failure_reasons?: string[];
+        updated_at?: string | null;
+        last_run_at?: string | null;
+        artifact_count?: number;
+      }>;
+    };
     graen_problems?: Array<{
       problem_id?: string;
       title?: string;
