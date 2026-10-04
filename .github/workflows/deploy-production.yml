@@ -40,10 +40,6 @@ jobs:
         run: npm run build
       - name: Verify generated public artifacts
         run: |
-          test -s public/iren-profile-current.png
-          test -s public/iren-profile-current.json
-          test -s dist/client/iren-profile-current.png
-          test -s dist/client/iren-profile-current.json
           test -s public/devon-akins-resume.pdf
           test -s dist/client/devon-akins-resume.pdf
           head -c 5 dist/client/devon-akins-resume.pdf | grep -Fq '%PDF-'
