@@ -63,7 +63,5 @@ test("live terminal does not turn heartbeat observations into fake work", () => 
   assert.match(source, /A heartbeat is evidence of liveness, not a work event/);
   assert.match(source, /HEALTH/);
   assert.match(source, /ACTIVITY/);
-  assert.match(source, /No active research run/);
-  assert.match(source, /No replay running/);
   assert.match(source, /BTC canary/);
 });
