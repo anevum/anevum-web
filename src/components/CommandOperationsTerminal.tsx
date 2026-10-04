@@ -557,7 +557,6 @@ export default function CommandOperationsTerminal({
           const lane = laneActivity(snapshot, feed, system, now);
           const tone = stateTone(lane.view.raw);
           const latest = events.find(row => row.system === system);
-          const rows = (snapshot?.topology?.services || []).filter(row => runtimeOwner(row) === system);
           return (
             <article
               key={system}
