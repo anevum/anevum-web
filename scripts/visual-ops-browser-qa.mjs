@@ -384,9 +384,13 @@ async function runScrollResetCase(viewport) {
     expression: `(async () => {
       const scroller = document.scrollingElement || document.documentElement;
       const maxScroll = Math.max(0, scroller.scrollHeight - scroller.clientHeight);
-      scroller.scrollTop = Math.min(1200, maxScroll);
+      const root = document.documentElement;
+      const previousScrollBehavior = root.style.scrollBehavior;
+      root.style.scrollBehavior = "auto";
+      window.scrollTo({ top: Math.min(1200, maxScroll), left: 0, behavior: "auto" });
       await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
       const before = scroller.scrollTop;
+      root.style.scrollBehavior = previousScrollBehavior;
       const link = document.querySelector('a[href="/architecture"]');
       if (!link) return { ok: false, reason: "architecture link missing", before, maxScroll, pathname: location.pathname, after: scroller.scrollTop };
       link.click();
