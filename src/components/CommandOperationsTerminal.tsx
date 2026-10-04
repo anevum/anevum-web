@@ -209,6 +209,15 @@ function sortEvents(rows: TerminalEvent[]) {
     .sort((a, b) => (Date.parse(b.at || "") || 0) - (Date.parse(a.at || "") || 0));
 }
 
+function activeResearchProblem(snapshot: IrenSnapshot | null, system: SystemName) {
+  const activeStates = ["RUNNING", "QUEUED", "WAITING", "BLOCKED"];
+  return (snapshot?.research?.graen_problems || []).find(row => {
+    if (!activeStates.includes(String(row.status || "").toUpperCase())) return false;
+    const stage = String(row.research_stage || "");
+    return system === "VELUM" ? stage.includes("VELUM_REPLAY") : true;
+  });
+}
+
 function laneActivity(snapshot: IrenSnapshot | null, feed: LiveTradingFeed | null | undefined, system: SystemName, now: number) {
   const view = commandSystem(system, snapshot, feed, now);
   const work = systemWork(snapshot, system);
@@ -216,9 +225,7 @@ function laneActivity(snapshot: IrenSnapshot | null, feed: LiveTradingFeed | nul
   const queued = work.jobs.find(row => String(row.status) === "QUEUED");
   const job = running || queued || work.jobs[0];
 
-  const activeProblem = (snapshot?.research?.graen_problems || []).find(row =>
-    ["RUNNING", "QUEUED", "WAITING", "BLOCKED"].includes(String(row.status || "").toUpperCase())
-  );
+  const activeProblem = activeResearchProblem(snapshot, system);
   const activeReplay = (snapshot?.research?.velum_replays || []).find(row =>
     String(row.status || "").toUpperCase() === "RUNNING"
   );
@@ -235,18 +242,18 @@ function laneActivity(snapshot: IrenSnapshot | null, feed: LiveTradingFeed | nul
     traceType = stage ? displayState(stage) : "Research problem";
     traceStarted = activeProblem.started_at || activeProblem.updated_at || null;
   }
-  if (system === "VELUM" && activeReplay) {
-    traceActivity = stage && stage.includes("VELUM") ? displayState(stage) : "Replay running";
-    traceStatus = activeReplay.status || null;
-    traceType = stage && stage.includes("VELUM") ? displayState(stage) : "VELUM replay";
-    traceStarted = activeReplay.started_at || null;
+  if (system === "VELUM" && (activeProblem || activeReplay)) {
+    traceActivity = stage ? displayState(stage) : "Replay running";
+    traceStatus = activeReplay?.status || activeProblem?.status || null;
+    traceType = stage ? displayState(stage) : "VELUM replay";
+    traceStarted = activeReplay?.started_at || activeProblem?.started_at || activeProblem?.updated_at || null;
   }
 
   const researchFocus = system === "GRAEN" ? feed?.research?.current_focus : null;
   const activity = String(traceActivity || job?.title || researchFocus || view.activity || "Awaiting observation.");
   const started = String(traceStarted || job?.started_at || activeProblem?.started_at || job?.created_at || "");
   const traceActive = String(traceStatus || "").toUpperCase() === "RUNNING";
-  return { view, work, job, activity, started, traceStatus, traceType, traceActive };
+  return { view, work, job, activity, started, traceStatus, traceType, traceActive, activeProblem };
 }
 
 function elapsed(value: unknown, now: number) {
@@ -276,6 +283,21 @@ function jobContext(job?: Record<string, unknown>) {
   return rows.slice(0, 4);
 }
 
+function researchContext(snapshot: IrenSnapshot | null, system: "GRAEN" | "VELUM") {
+  const problem = activeResearchProblem(snapshot, system);
+  if (!problem) return [] as Array<[string, string]>;
+  const run = (snapshot?.research?.graen_runs || []).find(row =>
+    row.problem_id && row.problem_id === problem.problem_id
+  );
+  const rows: Array<[string, string | null | undefined]> = [
+    ["STAGE", problem.research_stage ? displayState(problem.research_stage) : null],
+    ["RUN", run?.run_id || problem.campaign_id],
+    ["CANDIDATE", problem.candidate_id],
+    ["HYPOTHESIS", problem.hypothesis || problem.family || problem.mechanism]
+  ];
+  return rows.filter((row): row is [string, string] => Boolean(row[1])).slice(0, 4);
+}
+
 function FocusWorkbench({
   system,
   snapshot,
@@ -293,9 +315,11 @@ function FocusWorkbench({
   const rows = (snapshot?.topology?.services || []).filter(row => runtimeOwner(row) === system);
   const runtime = rows.find(row => row.current_activity) || rows[0];
   const latest = events.find(row => row.system === system);
-  const context = jobContext(lane.job);
+  const jobMeta = jobContext(lane.job);
+  const context = jobMeta.length ? jobMeta : researchContext(snapshot, system);
   const startedAt = lane.started || runtime?.started_at;
-  const heartbeat = runtime?.last_heartbeat_at || runtime?.observed_at || lane.view.observedAt;
+  const heartbeat = runtime?.last_heartbeat_at || runtime?.observed_at || lane.view.observedAt ||
+    (system === "GRAEN" ? snapshot?.research?.graen_runtime?.heartbeat_at : null);
   const live = lane.view.active || lane.traceActive || String(lane.job?.status || "") === "RUNNING";
 
   return (
