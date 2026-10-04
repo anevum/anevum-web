@@ -33,6 +33,18 @@ export type IrenIncident = {
   opened_at?: string;
 };
 
+export type IrenJobEvent = {
+  event_id: string | number;
+  job_id: string;
+  event_type: string;
+  event?: Record<string, unknown>;
+  created_at?: string;
+  owner_system?: string;
+  objective_key?: string | null;
+  title?: string | null;
+  job_type?: string | null;
+};
+
 export type IrenWorkSummary = {
   next_action?: { title?: string; objective_key?: string; job_type?: string };
   execution_mode?: string;
@@ -43,6 +55,7 @@ export type IrenWorkSummary = {
   requires_human?: number;
   objectives?: Array<Record<string, unknown>>;
   jobs?: Array<Record<string, unknown>>;
+  job_events?: IrenJobEvent[];
 };
 
 export type OperatorProjection = {
