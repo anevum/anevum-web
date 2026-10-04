@@ -6,7 +6,7 @@ import path from "node:path";
 const base = process.env.BASE_URL;
 if (!base) throw new Error("BASE_URL is required");
 
-const publicRoutes = ["/", "/live", "/products", "/products/iren", "/products/rhen", "/products/graen", "/products/nostra", "/products/velum"];
+const publicRoutes = ["/", "/live", "/products", "/products/iren", "/products/rhen", "/products/graen", "/products/nostra", "/products/velum", "/architecture", "/research", "/case-studies", "/performance", "/founder", "/releases", "/theory"];
 const commandRoutes = ["/command/overview", "/command/iren", "/command/rhen", "/command/graen", "/command/nostra", "/command/velum", "/command/infrastructure"];
 const routes = process.env.PUBLIC_ONLY === "1" ? publicRoutes : [...publicRoutes, ...commandRoutes];
 const output = path.join(process.env.RUNNER_TEMP || os.tmpdir(), "anevum-visuals");
@@ -209,9 +209,9 @@ async function runCase(route, viewport) {
     }
   }
 
-  if(route==="/") {
+  if(["/products","/architecture"].includes(route)) {
     const topologyGeometry = await send("Runtime.evaluate", {expression: `(() => {
-      const root=document.querySelector(".company-topology");
+      const root=document.querySelector(".company-topology:not(.is-compact)");
       if(!root) return {present:false,collisions:[]};
       const labels=[...root.querySelectorAll(".topology-flow-label")];
       const nodes=[...root.querySelectorAll(".topology-node")];
@@ -227,8 +227,8 @@ async function runCase(route, viewport) {
       return {present:true,collisions};
     })()`, returnByValue:true});
     const topology=topologyGeometry.result?.value||{};
-    if(topology.present && topology.collisions?.length) {
-      throw new Error("Topology label/node overlap: "+JSON.stringify(topology.collisions));
+    if(!topology.present || topology.collisions?.length) {
+      throw new Error("Topology label/node overlap: "+JSON.stringify(topology));
     }
   }
 
