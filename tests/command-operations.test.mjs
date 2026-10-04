@@ -1,5 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import { ageLabel, operatorGuidance } from "../src/lib/runtime-topology.ts";
 
 test("ageLabel gives operator-friendly freshness", () => {
@@ -37,3 +38,19 @@ test("evidence incident points the operator at Foundation and spool health", () 
   assert.equal(guidance[0].target, "Foundation evidence");
   assert.match(guidance[0].action, /spool/);
 });
+
+test("live terminal renders canonical BTC canary paper safeguards", () => {
+  const source = readFileSync(
+    new URL("../src/components/CommandOperationsTerminal.tsx", import.meta.url),
+    "utf8"
+  );
+  assert.match(source, /snapshot\?\.btc_canary/);
+  assert.match(source, /BTC-CANARY-001/);
+  assert.match(source, /PAPER ONLY/);
+  assert.match(source, /LIVE DISABLED/);
+  assert.match(source, /NOT PROMOTED/);
+  assert.match(source, /current_return_pct/);
+  assert.match(source, /protection_status/);
+  assert.match(source, /risk_stop_pct/);
+});
+
