@@ -137,6 +137,7 @@ async function runCase(route, viewport) {
       heading:document.querySelector(".vo-console h1")?.textContent,
       nostra:document.querySelector('[data-system="NOSTRA"]')?.getAttribute("data-state"),
       velum:document.querySelector('[data-system="VELUM"]')?.getAttribute("data-state"),
+      velumActivity:document.querySelector('[data-system="VELUM"]')?.getAttribute("data-activity"),
       activeGraen:document.querySelector('[data-system="GRAEN"]')?.getAttribute("data-active"),
       links:cards.filter(el=>el.tagName==="A").every(el=>el.tabIndex===0&&el.hasAttribute("aria-label")),
       nav:routePlaceholder
@@ -279,7 +280,7 @@ async function runCase(route, viewport) {
   }
 
   if(route==="/command/overview" && details.legacySummaryVisible) throw new Error("Legacy trading strip obscures fleet overview");
-  if(route==="/command/overview" && (details.nostra!=="OFFLINE" || details.velum!=="IDLE" || details.activeGraen!=="true")) throw new Error("State rendering failed: "+JSON.stringify(details));
+  if(route==="/command/overview" && (details.nostra!=="OFFLINE" || details.velum!=="HEALTHY" || details.velumActivity!=="IDLE" || details.activeGraen!=="true")) throw new Error("Health/activity rendering failed: "+JSON.stringify(details));
   if(route.startsWith("/command/")) {
     await send("Runtime.evaluate",{expression:'document.querySelector(".vo-details summary")?.click()'});
     await send("Runtime.evaluate",{expression:'document.querySelector(".vo-details summary")?.click()'});

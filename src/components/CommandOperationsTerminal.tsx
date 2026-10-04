@@ -100,14 +100,18 @@ function runtimeEvents(snapshot: IrenSnapshot | null): TerminalEvent[] {
   return (snapshot?.topology?.services || []).flatMap(row => {
     const system = runtimeOwner(row);
     if (!system) return [];
+    const state = String(row.status || "UNKNOWN").toUpperCase();
+    const abnormal = ["OFFLINE", "DEGRADED", "INCIDENT", "STALE", "UNKNOWN"].includes(state);
+    // Routine health probes are freshness evidence, not substantive activity.
+    if (!row.current_activity && !abnormal) return [];
     return [{
       id: "runtime-" + row.service_id + "-" + String(stamp(row, snapshot?.observed_at)),
       at: stamp(row, snapshot?.observed_at),
       system,
-      source: "RUNTIME OBSERVATION",
+      source: row.current_activity ? "RUNTIME ACTIVITY" : "RUNTIME HEALTH",
       state: row.status,
       title: row.service_name || row.service_id,
-      detail: row.current_activity || "Heartbeat / readiness observation"
+      detail: row.current_activity || displayState(row.status)
     }];
   });
 }
@@ -257,11 +261,27 @@ function laneActivity(snapshot: IrenSnapshot | null, feed: LiveTradingFeed | nul
     traceStarted = activeReplay?.started_at || activeProblem?.started_at || activeProblem?.updated_at || null;
   }
 
-  const researchFocus = system === "GRAEN" ? feed?.research?.current_focus : null;
-  const activity = String(traceActivity || job?.title || researchFocus || view.activity || "Awaiting observation.");
-  const started = String(traceStarted || job?.started_at || activeProblem?.started_at || job?.created_at || "");
+  const runningJob = String(job?.status || "").toUpperCase() === "RUNNING";
+  const queuedJob = String(job?.status || "").toUpperCase() === "QUEUED";
   const traceActive = String(traceStatus || "").toUpperCase() === "RUNNING";
-  return { view, work, job, activity, started, traceStatus, traceType, traceActive, activeProblem };
+  let activityState = view.activityState;
+  if (traceActive) activityState = system === "VELUM" ? "REPLAYING" : "RESEARCHING";
+  else if (runningJob) activityState = "RUNNING";
+  else if (queuedJob && activityState === "IDLE") activityState = "QUEUED";
+
+  const active = view.active || traceActive || runningJob;
+  const fallback = system === "IREN"
+    ? "Supervising; no active jobs."
+    : system === "RHEN"
+      ? "No current executable cycle."
+      : system === "GRAEN"
+        ? "No active research run."
+        : system === "VELUM"
+          ? "No replay currently running."
+          : "No forecast cycle currently running.";
+  const activity = String(traceActivity || (job?.title ? String(job.title) : "") || (active ? view.activity : "") || fallback);
+  const started = String(traceStarted || job?.started_at || activeProblem?.started_at || job?.created_at || "");
+  return { view, work, job, activity, activityState, active, started, traceStatus, traceType, traceActive, activeProblem };
 }
 
 function elapsed(value: unknown, now: number) {
@@ -328,7 +348,7 @@ function FocusWorkbench({
   const startedAt = lane.started || runtime?.started_at;
   const heartbeat = runtime?.last_heartbeat_at || runtime?.observed_at || lane.view.observedAt ||
     (system === "GRAEN" ? snapshot?.research?.graen_runtime?.heartbeat_at : null);
-  const live = lane.view.active || lane.traceActive || String(lane.job?.status || "") === "RUNNING";
+  const live = lane.active;
 
   return (
     <article
@@ -340,7 +360,7 @@ function FocusWorkbench({
           <SystemIcon system={system} size="sm" />
           <div><span>{system === "GRAEN" ? "RESEARCH WORKBENCH" : "REPLAY WORKBENCH"}</span><h2>{system}</h2></div>
         </div>
-        <div className="terminal-focus-state"><i aria-hidden="true" /><strong>{displayState(lane.view.raw)}</strong></div>
+        <div className="terminal-focus-state"><i aria-hidden="true" /><strong>{displayState(lane.view.health)} · {displayState(lane.activityState)}</strong></div>
       </header>
 
       <div className="terminal-focus-instrument" aria-label={system + " live activity instrument"}>
@@ -359,7 +379,7 @@ function FocusWorkbench({
       </div>}
 
       <dl className="terminal-focus-metrics">
-        <div><dt>STATE</dt><dd>{displayState(lane.traceStatus || String(lane.job?.status || lane.view.raw || "UNKNOWN"))}</dd></div>
+        <div><dt>ACTIVITY</dt><dd>{displayState(lane.activityState)}</dd></div>
         <div><dt>STAGE</dt><dd>{lane.traceType || String(lane.job?.job_type || "—").replaceAll("_", " ")}</dd></div>
         <div><dt>ELAPSED</dt><dd>{elapsed(startedAt, now)}</dd></div>
         <div><dt>HEARTBEAT</dt><dd>{ageText(heartbeat, now)}</dd></div>
@@ -607,7 +627,7 @@ export default function CommandOperationsTerminal({
   const fleetFresh = Boolean(snapshot && !snapshot.stale && !error);
   const activeCount = TERMINAL_SYSTEMS.filter(system => {
     const lane = laneActivity(snapshot, feed, system, now);
-    return lane.view.active || lane.traceActive;
+    return lane.active;
   }).length;
 
   return (
@@ -649,22 +669,22 @@ export default function CommandOperationsTerminal({
           return (
             <article
               key={system}
-              className={"terminal-lane tone-" + tone + (lane.view.active || lane.traceActive ? " is-working" : "")}
+              className={"terminal-lane tone-" + tone + (lane.active ? " is-working" : "")}
               style={{ "--terminal-accent": IDENTITY[system].color } as CSSProperties}
             >
               <header>
                 <SystemIcon system={system} size="sm" />
                 <div><strong>{system}</strong><span>{IDENTITY[system].role}</span></div>
-                <b>{displayState(lane.view.raw)}</b>
+                <b>{displayState(lane.view.health)}</b>
               </header>
               <div className="terminal-lane-activity">
-                <i className={lane.view.active || lane.traceActive ? "is-live" : ""} aria-hidden="true" />
+                <i className={lane.active ? "is-live" : ""} aria-hidden="true" />
                 <p>{lane.activity}</p>
               </div>
               <dl>
-                <div><dt>STATE</dt><dd>{displayState(lane.traceStatus || String(lane.job?.status || lane.view.raw || "UNKNOWN"))}</dd></div>
+                <div><dt>ACTIVITY</dt><dd>{displayState(lane.activityState)}</dd></div>
                 <div><dt>RUNTIMES</dt><dd>{rows.length || "—"}</dd></div>
-                <div><dt>LAST SIGNAL</dt><dd>{ageText(latest?.at || lane.view.observedAt, now)}</dd></div>
+                <div><dt>LAST EVENT</dt><dd>{latest ? ageText(latest.at, now) : "No substantive event"}</dd></div>
               </dl>
               {lane.job && <small className="terminal-job-age">{lane.started ? "Started " + ageText(lane.started, now) : "Queued work"} · {String(lane.job.job_type || "work").replaceAll("_", " ")}</small>}
             </article>

@@ -27,7 +27,7 @@ export default function CommandSystemMonitor({ session, feed, system }: { sessio
     <header className="vo-console-heading"><div><span>COMMAND / SYSTEM MONITOR</span><h1>{system}</h1></div><Link to="/command/overview">← Overview</Link></header>
     <div className="vo-monitor-hero"><SystemVisualShell view={view} hero now={now} /><section className="vo-panel vo-health-panel"><SectionHead eyebrow="HEALTH & FRESHNESS" title="Operating state" />
       <div className="vo-health-line"><SystemStatusChip state={view.raw} /><span>{ageText(view.observedAt, now)}</span></div>
-      <div className="vo-metrics"><SystemMetric label="Open objectives" value={view.objectives} /><SystemMetric label="Active jobs" value={view.jobs} /><SystemMetric label="Incidents" value={view.incidents} />
+      <div className="vo-metrics"><SystemMetric label="Health" value={displayState(view.health)} /><SystemMetric label="Activity" value={displayState(view.activityState)} /><SystemMetric label="Open objectives" value={view.objectives} /><SystemMetric label="Active jobs" value={view.jobs} /><SystemMetric label="Incidents" value={view.incidents} />
         <SystemMetric label="Ready runtimes" value={view.fresh && rows.length ? rows.filter(row => row.readiness === true).length + " / " + rows.length : "—"} /></div>
       {system === "IREN" && <div className="vo-metrics"><SystemMetric label="Blocked objectives" value={snapshot?.work?.blocked_objectives} /><SystemMetric label="Human action" value={snapshot?.work?.requires_human} /></div>}
       <p className="vo-caption">{!view.fresh ? "Last known details · fresh evidence unavailable" : "Observed by IREN / Foundation"} · refreshed {ageText(receivedAt,now)}</p>

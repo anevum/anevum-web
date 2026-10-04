@@ -23,7 +23,8 @@ const LABELS: Record<string, string> = {
   QUEUED: "Queued", SUCCEEDED: "Complete", COMPLETE: "Complete", COMPLETED: "Complete",
   REJECTED: "Rejected", CANCELLED: "Cancelled", CONNECTING: "Connecting", OPEN: "Open",
   CLOSED: "Closed", REPLAYING: "Replaying", FORECASTING: "Forecasting", RESEARCHING: "Researching",
-  OBSERVING: "Observing", WAITING_FOR_INPUTS: "Waiting for inputs", COLLECTING: "Collecting evidence"
+  OBSERVING: "Observing", SCANNING: "Scanning", SUPERVISING: "Supervising",
+  WAITING_FOR_INPUTS: "Waiting for inputs", COLLECTING: "Collecting evidence"
 };
 export function displayState(raw?: string | null) {
   const key = String(raw || "UNKNOWN").toUpperCase();
@@ -34,7 +35,7 @@ export function stateTone(raw?: string | null): Tone {
   if (["OFFLINE", "FAILED", "CRASHED", "CRITICAL", "OFFLINE_BY_DESIGN"].includes(key)) return "bad";
   if (["DEGRADED", "BLOCKED", "NEEDS_APPROVAL", "ATTENTION_REQUIRED", "WARNING"].includes(key)) return "warn";
   if (["HEALTHY", "READY", "IDLE", "COMPLETE", "COMPLETED", "SUCCEEDED"].includes(key)) return "good";
-  if (["RUNNING", "ACTIVE", "OBSERVING", "FORECASTING", "RESEARCHING", "REPLAYING", "LIVE_TELEMETRY", "CANONICAL_CONTROL_STATE", "LIVE_BASELINE"].includes(key)) return "active";
+  if (["RUNNING", "ACTIVE", "OBSERVING", "SCANNING", "FORECASTING", "RESEARCHING", "REPLAYING", "LIVE_TELEMETRY", "CANONICAL_CONTROL_STATE", "LIVE_BASELINE"].includes(key)) return "active";
   return "quiet";
 }
 export function freshStamp(stamp?: string | null, now = Date.now(), maxAge = 180000) {
@@ -71,9 +72,20 @@ export function systemWork(snapshot: IrenSnapshot | null | undefined, name: Syst
   };
 }
 export type SystemView = {
-  name: SystemName; raw: string; runtime: string; activity: string; observedAt?: string | null;
-  fresh: boolean; active: boolean; jobs?: number; objectives?: number; incidents?: number;
-  signal?: string; source: string;
+  name: SystemName;
+  raw: string;
+  health: string;
+  runtime: string;
+  activityState: string;
+  activity: string;
+  observedAt?: string | null;
+  fresh: boolean;
+  active: boolean;
+  jobs?: number;
+  objectives?: number;
+  incidents?: number;
+  signal?: string;
+  source: string;
 };
 function mostSevere(values: string[]): string | undefined {
   for (const group of [
@@ -87,40 +99,132 @@ function mostSevere(values: string[]): string | undefined {
 export function publicSystem(name: SystemName, feed?: LiveTradingFeed | null, now = Date.now(), unavailable = false): SystemView {
   const row: PublicSystemState | undefined = feed?.systems?.[name];
   const fresh = !unavailable && feed?.ok === true && freshStamp(feed.generated_at, now) && freshStamp(row?.observed_at, now);
-  const known = mostSevere([row?.health_state, row?.runtime_state].filter(Boolean) as string[]) || "UNAVAILABLE";
-  const raw = unavailable ? "UNAVAILABLE" : !row ? "UNAVAILABLE" : !fresh && stateTone(known) !== "bad" ? "STALE" : known;
-  const runtime = row?.runtime_state || "UNKNOWN";
-  // Runtime availability is not proof of research/forecast/replay work.
+  const runtime = String(row?.runtime_state || "UNKNOWN").toUpperCase();
+  const runtimeHealth = ["OFFLINE", "FAILED", "CRASHED", "CRITICAL", "DEGRADED", "BLOCKED", "STALE", "UNAVAILABLE"].includes(runtime)
+    ? runtime
+    : undefined;
+  const knownHealth = mostSevere([row?.health_state, runtimeHealth].filter(Boolean) as string[])
+    || (runtime !== "UNKNOWN" ? runtime : "UNAVAILABLE");
+  const health = unavailable ? "UNAVAILABLE" : !row ? "UNAVAILABLE" : !fresh && stateTone(knownHealth) !== "bad" ? "STALE" : knownHealth;
+
+  // A service being reachable is not evidence of current work.
   const explicitWork = ["OBSERVING", "RESEARCHING", "FORECASTING", "REPLAYING"].includes(runtime);
-  const scan = name === "RHEN" && (feed?.telemetry?.scan_events_10m ?? 0) > 0 && freshStamp(feed?.operational?.latest_scan?.observed_at, now);
-  const canAnimate = fresh && ["good", "active"].includes(stateTone(raw));
-  return { name, raw, runtime, fresh, active: canAnimate && (explicitWork || scan),
-    observedAt: row?.observed_at, activity: row?.activity || "Awaiting a canonical activity observation.",
-    signal: canAnimate ? row?.observed_at || undefined : undefined, source: "Foundation public projection" };
+  const scan = name === "RHEN"
+    && (feed?.telemetry?.scan_events_10m ?? 0) > 0
+    && freshStamp(feed?.operational?.latest_scan?.observed_at, now);
+  const usable = fresh && ["good", "active"].includes(stateTone(health));
+  const activityState = !usable
+    ? "UNAVAILABLE"
+    : scan
+      ? "SCANNING"
+      : explicitWork
+        ? runtime
+        : name === "IREN"
+          ? "SUPERVISING"
+          : "IDLE";
+  const active = usable && ["RUNNING", "ACTIVE", "OBSERVING", "SCANNING", "RESEARCHING", "FORECASTING", "REPLAYING"].includes(activityState);
+  const fallbackActivity = name === "IREN"
+    ? "Supervising; no active jobs are exposed."
+    : name === "RHEN"
+      ? "No current market cycle is exposed."
+      : name === "GRAEN"
+        ? "No active research run."
+        : name === "VELUM"
+          ? "No replay currently running."
+          : "No forecast cycle currently running.";
+
+  return {
+    name,
+    raw: health,
+    health,
+    runtime,
+    activityState,
+    fresh,
+    active,
+    observedAt: row?.observed_at,
+    activity: row?.activity || fallbackActivity,
+    signal: active ? row?.observed_at || undefined : undefined,
+    source: "Foundation public projection"
+  };
 }
 export function commandSystem(name: SystemName, snapshot: IrenSnapshot | null, feed?: LiveTradingFeed | null, now = Date.now(), unavailable = false): SystemView {
   const rows = (snapshot?.topology?.services || []).filter(row => runtimeOwner(row) === name);
   const stamps = rows.map(row => row.last_heartbeat_at || row.observed_at || snapshot?.observed_at);
-  const observedAt = stamps.find(stamp => !freshStamp(stamp, now)) || stamps.slice().sort((a,b) => Date.parse(a || "") - Date.parse(b || ""))[0] || snapshot?.observed_at;
-  const fresh = !unavailable && snapshot?.stale === false && freshStamp(snapshot.observed_at, now) && freshStamp(observedAt, now);
+  const observedAt = stamps.find(stamp => !freshStamp(stamp, now))
+    || stamps.slice().sort((a,b) => Date.parse(a || "") - Date.parse(b || ""))[0]
+    || snapshot?.observed_at;
+  const fresh = !unavailable
+    && snapshot?.stale === false
+    && freshStamp(snapshot.observed_at, now)
+    && freshStamp(observedAt, now);
   const work = systemWork(snapshot, name);
   const incidents = snapshot?.incidents.filter(row => incidentOwner(row) === name);
-  const states = rows.map(row => row.liveness === false ? "OFFLINE" : row.readiness === false ? "DEGRADED" :
-    !freshStamp(row.last_heartbeat_at || row.observed_at || snapshot?.observed_at, now) ? "STALE" : row.status);
-  if (name === "IREN" && snapshot) states.push(snapshot.operator?.state || snapshot.state);
-  if (incidents?.length) states.push(incidents.some(row => row.severity.toLowerCase() === "critical") ? "CRITICAL" : "DEGRADED");
-  const raw = !snapshot ? "UNAVAILABLE" : !fresh ? "STALE" : mostSevere(states) || "UNAVAILABLE";
-  const healthy = ["good", "active"].includes(stateTone(raw));
+
+  // Health is based on liveness/readiness/freshness, never on whether work is active.
+  const healthStates: string[] = rows.map(row =>
+    row.liveness === false
+      ? "OFFLINE"
+      : row.readiness === false
+        ? "DEGRADED"
+        : !freshStamp(row.last_heartbeat_at || row.observed_at || snapshot?.observed_at, now)
+          ? "STALE"
+          : "HEALTHY"
+  );
+  if (name === "IREN" && snapshot && snapshot.state !== "HEALTHY") {
+    healthStates.push(snapshot.operator?.state || snapshot.state);
+  }
+  if (incidents?.length) {
+    healthStates.push(incidents.some(row => row.severity.toLowerCase() === "critical") ? "CRITICAL" : "DEGRADED");
+  }
+
+  const health = !snapshot || !rows.length ? "UNAVAILABLE" : !fresh ? "STALE" : mostSevere(healthStates) || "UNAVAILABLE";
+  const healthy = ["good", "active"].includes(stateTone(health));
   const publicRow = publicSystem(name, feed, now);
+  const runningJob = work.jobs.find(row => String(row.status) === "RUNNING");
+  const queuedJob = work.jobs.find(row => String(row.status) === "QUEUED");
   const ownActivity = rows.find(row => row.current_activity)?.current_activity;
-  return { name, raw, runtime: mostSevere(rows.map(row => row.status)) || "UNKNOWN", fresh,
-    active: fresh && healthy && (work.jobs.some(row => row.status === "RUNNING") || publicRow.active),
-    activity: work.jobs.find(row => row.status === "RUNNING")?.title as string || ownActivity || (publicRow.fresh ? publicRow.activity : "Awaiting a canonical activity observation."),
+
+  let activityState = "IDLE";
+  if (!fresh || !healthy) activityState = "UNAVAILABLE";
+  else if (runningJob) activityState = "RUNNING";
+  else if (publicRow.active) activityState = publicRow.activityState;
+  else if (queuedJob) activityState = "QUEUED";
+  else if (name === "IREN") activityState = "SUPERVISING";
+
+  const active = fresh && healthy && ["RUNNING", "ACTIVE", "OBSERVING", "SCANNING", "RESEARCHING", "FORECASTING", "REPLAYING"].includes(activityState);
+  const fallbackActivity = name === "IREN"
+    ? "Supervising; no active jobs."
+    : name === "RHEN"
+      ? "No current executable cycle."
+      : name === "GRAEN"
+        ? "No active research run."
+        : name === "VELUM"
+          ? "No replay currently running."
+          : "No forecast cycle currently running.";
+  const activity = String(
+    runningJob?.title
+    || (queuedJob ? "Queued: " + String(queuedJob.title || queuedJob.job_type || "work") : "")
+    || ownActivity
+    || (publicRow.active ? publicRow.activity : "")
+    || fallbackActivity
+  );
+
+  return {
+    name,
+    raw: health,
+    health,
+    runtime: mostSevere(rows.map(row => row.status)) || "UNKNOWN",
+    activityState,
+    fresh,
+    active,
+    activity,
     observedAt,
     jobs: snapshot?.work?.jobs ? work.jobs.length : undefined,
     objectives: snapshot?.work?.objectives ? work.objectives.length : undefined,
-    incidents: incidents?.length, signal: fresh && healthy ? String(snapshot?.revision ?? snapshot?.observed_at) : undefined,
-    source: "IREN / Foundation" };
+    incidents: incidents?.length,
+    signal: active ? String(snapshot?.revision ?? snapshot?.observed_at) : undefined,
+    source: "IREN / Foundation"
+  };
 }
 export function fleetState(views: SystemView[]) {
   if (views.some(view => stateTone(view.raw) === "bad")) return "DEGRADED";

@@ -31,13 +31,20 @@ test("offline NOSTRA overrides a generic healthy field and idle VELUM stays calm
   value.systems.VELUM.runtime_state="IDLE";
   const nostra=publicSystem("NOSTRA",value,now), velum=publicSystem("VELUM",value,now);
   assert.equal(nostra.raw,"OFFLINE"); assert.equal(nostra.active,false);
-  assert.equal(velum.raw,"IDLE"); assert.equal(velum.active,false);
+  assert.equal(velum.raw,"HEALTHY"); assert.equal(velum.activityState,"IDLE"); assert.equal(velum.active,false);
   assert.equal(fleetState(SYSTEMS.map(name=>publicSystem(name,value,now))),"DEGRADED");
 });
-test("service health alone never animates research or forecasting work", () => {
+test("service health alone never becomes activity", () => {
   const value=feed();
-  for(const name of ["GRAEN","NOSTRA","VELUM"]) assert.equal(publicSystem(name,value,now).active,false);
+  for(const name of ["GRAEN","NOSTRA","VELUM"]) {
+    const view=publicSystem(name,value,now);
+    assert.equal(view.raw,"HEALTHY");
+    assert.equal(view.activityState,"IDLE");
+    assert.equal(view.active,false);
+  }
+  assert.equal(publicSystem("IREN",value,now).activityState,"SUPERVISING");
   value.systems.GRAEN.runtime_state="RESEARCHING";
+  assert.equal(publicSystem("GRAEN",value,now).activityState,"RESEARCHING");
   assert.equal(publicSystem("GRAEN",value,now).active,true);
   value.systems.GRAEN.observed_at=new Date(now-180001).toISOString();
   assert.equal(publicSystem("GRAEN",value,now).active,false);
@@ -46,6 +53,7 @@ test("RHEN scan motion requires positive counts and a fresh recorded scan", () =
   const value=feed(); value.telemetry={scan_events_10m:3};
   assert.equal(publicSystem("RHEN",value,now).active,false);
   value.operational={latest_scan:{observed_at:stamp}};
+  assert.equal(publicSystem("RHEN",value,now).activityState,"SCANNING");
   assert.equal(publicSystem("RHEN",value,now).active,true);
   value.telemetry.scan_events_10m=0;
   assert.equal(publicSystem("RHEN",value,now).active,false);
@@ -65,11 +73,16 @@ test("missing private evidence is not supplied from public service health", () =
 });
 test("only current owned work drives activity; failed jobs do not", () => {
   const value=snapshot(); value.work.jobs=[{owner_system:"GRAEN",status:"RUNNING",title:"Evaluate retained evidence"},{owner_system:"VELUM",status:"FAILED",title:"Replay failed"}];
+  assert.equal(commandSystem("GRAEN",value,null,now).activityState,"RUNNING");
   assert.equal(commandSystem("GRAEN",value,null,now).active,true);
+  assert.equal(commandSystem("VELUM",value,null,now).activityState,"IDLE");
   assert.equal(commandSystem("VELUM",value,null,now).active,false);
   assert.equal(systemWork(value,"GRAEN").jobs.length,1);
   value.incidents=[{key:"graen.evidence",severity:"critical",reason:"Evidence unavailable"}];
-  assert.equal(commandSystem("GRAEN",value,null,now).active,false);
+  const degraded=commandSystem("GRAEN",value,null,now);
+  assert.equal(degraded.raw,"CRITICAL");
+  assert.equal(degraded.activityState,"UNAVAILABLE");
+  assert.equal(degraded.active,false);
 });
 test("fleet health fails closed for incomplete, unknown or stale evidence", () => {
   const value=feed(); let views=SYSTEMS.map(name=>publicSystem(name,value,now));
@@ -89,4 +102,17 @@ test("a fresh IREN envelope cannot refresh an expired subsystem observation", ()
   assert.equal(view.raw,"STALE");
   assert.equal(view.active,false);
   assert.equal(view.observedAt,old);
+});
+
+
+test("private healthy runtime without owned work is explicitly idle or supervising", () => {
+  const value=snapshot();
+  const graen=commandSystem("GRAEN",value,feed(),now);
+  const iren=commandSystem("IREN",value,feed(),now);
+  assert.equal(graen.health,"HEALTHY");
+  assert.equal(graen.activityState,"IDLE");
+  assert.equal(graen.active,false);
+  assert.equal(iren.health,"HEALTHY");
+  assert.equal(iren.activityState,"SUPERVISING");
+  assert.equal(iren.active,false);
 });

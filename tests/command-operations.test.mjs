@@ -60,3 +60,17 @@ test("live terminal renders canonical BTC canary paper safeguards", () => {
   assert.match(source, /return_history/);
 });
 
+
+
+test("live terminal does not present routine heartbeats as substantive work", () => {
+  const source = readFileSync(
+    new URL("../src/components/CommandOperationsTerminal.tsx", import.meta.url),
+    "utf8"
+  );
+  assert.match(source, /Routine health probes are freshness evidence, not substantive activity/);
+  assert.match(source, /RUNTIME ACTIVITY/);
+  assert.match(source, /RUNTIME HEALTH/);
+  assert.match(source, /displayState\(lane\.view\.health\)/);
+  assert.match(source, /displayState\(lane\.activityState\)/);
+  assert.match(source, /No substantive event/);
+});
