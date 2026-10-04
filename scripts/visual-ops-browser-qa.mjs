@@ -7,7 +7,7 @@ const base = process.env.BASE_URL;
 if (!base) throw new Error("BASE_URL is required");
 
 const publicRoutes = ["/", "/live", "/products", "/products/iren", "/products/rhen", "/products/graen", "/products/nostra", "/products/velum", "/architecture", "/research", "/research/multi-market-architecture-equities-crypto", "/case-studies", "/performance", "/founder", "/resume", "/releases", "/theory"];
-const commandRoutes = ["/command/overview", "/command/iren", "/command/rhen", "/command/graen", "/command/nostra", "/command/velum", "/command/infrastructure"];
+const commandRoutes = ["/command/overview", "/command/terminal", "/command/iren", "/command/rhen", "/command/graen", "/command/nostra", "/command/velum", "/command/infrastructure"];
 const routes = process.env.PUBLIC_ONLY === "1" ? publicRoutes : [...publicRoutes, ...commandRoutes];
 const output = path.join(process.env.RUNNER_TEMP || os.tmpdir(), "anevum-visuals");
 fs.mkdirSync(output, {recursive:true});
@@ -130,7 +130,7 @@ async function runCase(route, viewport) {
   await sleep(5000);
   const ops = await send("Runtime.evaluate", {expression: `(() => {
     const surface=document.querySelector("[data-visual-ops]");
-    const cards=[...document.querySelectorAll(".vo-system-card, .vo-node")];
+    const cards=[...document.querySelectorAll(".vo-system-card, .vo-node, .terminal-lane, .terminal-focus-card")];
     const visible=el=>el.getBoundingClientRect().width>0;
     return {surface:Boolean(surface), cards:cards.filter(visible).length,
       legacySummaryVisible:[...document.querySelectorAll(".command-stats")].some(visible),
@@ -219,7 +219,7 @@ async function runCase(route, viewport) {
       return {count:rects.length,rows,overlaps,minWidth:Math.min(...rects.map(r=>r.width)),maxRight:Math.max(...rects.map(r=>r.right)),viewport:document.documentElement.clientWidth};
     })()`,returnByValue:true});
     const nav=navAudit.result?.value||{};
-    if(nav.count!==7||nav.overlaps?.length||nav.minWidth<32||nav.maxRight>nav.viewport+1||(viewport.mobile&&nav.rows?.length!==1)){
+    if(nav.count!==8||nav.overlaps?.length||nav.minWidth<32||nav.maxRight>nav.viewport+1||(viewport.mobile&&nav.rows?.length!==1)){
       throw new Error("Command icon navigation geometry failed: "+JSON.stringify(nav));
     }
   }
@@ -253,6 +253,20 @@ async function runCase(route, viewport) {
     const topology=topologyGeometry.result?.value||{};
     if(!topology.present || topology.nodeCount!==5 || topology.missingIcons?.length || topology.collisions?.length) {
       throw new Error("Topology geometry/icon failure: "+JSON.stringify(topology));
+    }
+  }
+
+  if(route==="/command/terminal") {
+    const terminalAudit=await send("Runtime.evaluate",{expression:`(() => ({
+      terminal:Boolean(document.querySelector(".operations-terminal")),
+      focusCards:document.querySelectorAll(".terminal-focus-card").length,
+      lanes:document.querySelectorAll(".terminal-lane").length,
+      workingFocus:document.querySelectorAll(".terminal-focus-card.is-working").length,
+      streamRows:document.querySelectorAll(".terminal-stream li").length
+    }))()`,returnByValue:true});
+    const terminal=terminalAudit.result?.value||{};
+    if(!terminal.terminal||terminal.focusCards!==2||terminal.lanes!==5||terminal.workingFocus<2||terminal.streamRows<3){
+      throw new Error("Live operations terminal fixture failed: "+JSON.stringify(terminal));
     }
   }
 
