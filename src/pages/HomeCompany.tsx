@@ -151,8 +151,8 @@ export default function HomeCompany() {
               <span>ANEVUM PRESENTS</span>
               <strong>SYSTEMS THAT CAN BE INSPECTED.</strong>
               <p>
-                Final video attaches here through <code>VITE_ANEVUM_INTRO_VIDEO_URL</code> without
-                changing the page layout.
+                The launch film is being prepared for this stage. The final 16:9 master can replace
+                this frame without changing the page layout.
               </p>
               <div className="launch-film-timeline" aria-label="Planned film structure">
                 <span><b>00:00</b> Identity</span>
