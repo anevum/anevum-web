@@ -1,48 +1,18 @@
 import type { CSSProperties } from "react";
 import Mark from "./Mark";
 
-const spokes = Array.from({ length: 16 });
-const nodes = Array.from({ length: 12 });
+const spokes = Array.from({ length: 12 });
+const nodes = Array.from({ length: 10 });
 const ticks = Array.from({ length: 24 });
-const embers = Array.from({ length: 28 });
 
 export default function UniverseBackground() {
   return (
-    <div className="universe-background" aria-hidden="true">
-      <div className="universe-nebula universe-nebula-a" />
-      <div className="universe-nebula universe-nebula-b" />
-      <div className="universe-nebula universe-nebula-c" />
+    <div className="universe-background launch-universe-background" aria-hidden="true">
+      <div className="launch-universe-glow launch-universe-glow-a" />
+      <div className="launch-universe-glow launch-universe-glow-b" />
+      <div className="launch-universe-grid" />
 
-      <div className="universe-stars universe-stars-far" />
-      <div className="universe-stars universe-stars-mid" />
-      <div className="universe-stars universe-stars-near" />
-      <div className="universe-stars universe-stars-cross" />
-
-      <div className="october-atmosphere">
-        <div className="october-scanlines" />
-        <div className="october-web october-web-a" />
-        <div className="october-web october-web-b" />
-        <div className="october-fog october-fog-a" />
-        <div className="october-fog october-fog-b" />
-        <div className="october-fog october-fog-c" />
-        <div className="october-iren-art" />
-        <div className="october-embers">
-          {embers.map((_, index) => (
-            <span
-              key={"ember-" + index}
-              style={{
-                "--ember-x": ((index * 37) % 97) + "%",
-                "--ember-size": 1 + (index % 4) * 0.8 + "px",
-                "--ember-delay": -(index * 0.63) + "s",
-                "--ember-duration": 10 + (index % 7) * 1.9 + "s",
-                "--ember-drift": -28 + (index % 9) * 7 + "px"
-              } as CSSProperties}
-            />
-          ))}
-        </div>
-      </div>
-
-      <div className="universe-engine">
+      <div className="universe-engine launch-universe-engine">
         <div className="engine-halo" />
         <div className="engine-field engine-field-a" />
         <div className="engine-field engine-field-b" />
@@ -52,20 +22,16 @@ export default function UniverseBackground() {
         <span className="engine-ring engine-ring-mid" />
         <span className="engine-ring engine-ring-inner" />
 
-        <span className="engine-polygon engine-polygon-outer" />
-        <span className="engine-polygon engine-polygon-inner" />
-
         <span className="engine-orbit engine-orbit-a" />
         <span className="engine-orbit engine-orbit-b" />
         <span className="engine-orbit engine-orbit-c" />
-        <span className="engine-orbit engine-orbit-d" />
 
         <div className="engine-spokes">
           {spokes.map((_, index) => (
             <span
               className="engine-spoke"
               key={"spoke-" + index}
-              style={{ "--angle": index * 22.5 + "deg" } as CSSProperties}
+              style={{ "--angle": index * 30 + "deg" } as CSSProperties}
             />
           ))}
         </div>
@@ -86,8 +52,8 @@ export default function UniverseBackground() {
               className="engine-node"
               key={"node-" + index}
               style={{
-                "--angle": index * 30 + "deg",
-                "--delay": -(index * 0.37) + "s"
+                "--angle": index * 36 + "deg",
+                "--delay": -(index * 0.42) + "s"
               } as CSSProperties}
             />
           ))}
@@ -98,10 +64,6 @@ export default function UniverseBackground() {
           <span className="engine-core-light" />
           <span className="engine-core-mark"><Mark /></span>
         </div>
-
-        <span className="engine-beacon engine-beacon-a" />
-        <span className="engine-beacon engine-beacon-b" />
-        <span className="engine-beacon engine-beacon-c" />
       </div>
 
       <div className="universe-vignette" />
