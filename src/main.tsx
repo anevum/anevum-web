@@ -18,6 +18,7 @@ import "./styles/rebuild-home.css";
 import "./styles/public-system-status.css";
 import "./styles/visual-ops.css";
 import "./styles/visual-pass.css";
+import "./styles/operations-terminal.css";
 
 applySeasonalTheme();
 
