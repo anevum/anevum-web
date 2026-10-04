@@ -144,7 +144,7 @@ function publicEvents(feed?: LiveTradingFeed | null): TerminalEvent[] {
     source: "RESEARCH RECORD",
     state: row.status,
     title: row.subject || row.decision_type || "Research decision",
-    detail: row.conclusion || row.next_action
+    detail: row.conclusion || row.methodology_version
   }));
   return [...telemetry, ...research];
 }
