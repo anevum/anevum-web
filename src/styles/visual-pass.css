@@ -70,6 +70,20 @@
 .company-product-card footer strong{color:var(--surface-accent,#b7c6cf) !important}
 
 /* --- Shared icon geometry ------------------------------------------------ */
+/* SystemIcon is a span-based component. Enforce its square box at the final
+ * layer so generic text-span rules cannot stretch, pad, or re-layout marks. */
+.system-icon{
+  width:var(--icon-size) !important;
+  height:var(--icon-size) !important;
+  min-width:var(--icon-size) !important;
+  min-height:var(--icon-size) !important;
+  padding:0 !important;
+  display:inline-grid !important;
+  place-items:center !important;
+  flex:0 0 var(--icon-size) !important;
+  box-sizing:border-box;
+}
+
 .vo-card-top .system-icon {
   --icon-size: 34px !important;
   width: var(--icon-size) !important;
