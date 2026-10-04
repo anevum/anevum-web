@@ -6,7 +6,7 @@ import path from "node:path";
 const base = process.env.BASE_URL;
 if (!base) throw new Error("BASE_URL is required");
 
-const publicRoutes = ["/", "/live", "/products", "/products/iren", "/products/rhen", "/products/graen", "/products/nostra", "/products/velum", "/architecture", "/research", "/research/multi-market-architecture-equities-crypto", "/case-studies", "/performance", "/founder", "/releases", "/theory"];
+const publicRoutes = ["/", "/live", "/products", "/products/iren", "/products/rhen", "/products/graen", "/products/nostra", "/products/velum", "/architecture", "/research", "/research/multi-market-architecture-equities-crypto", "/case-studies", "/performance", "/founder", "/resume", "/releases", "/theory"];
 const commandRoutes = ["/command/overview", "/command/iren", "/command/rhen", "/command/graen", "/command/nostra", "/command/velum", "/command/infrastructure"];
 const routes = process.env.PUBLIC_ONLY === "1" ? publicRoutes : [...publicRoutes, ...commandRoutes];
 const output = path.join(process.env.RUNNER_TEMP || os.tmpdir(), "anevum-visuals");
