@@ -52,5 +52,11 @@ test("live terminal renders canonical BTC canary paper safeguards", () => {
   assert.match(source, /current_return_pct/);
   assert.match(source, /protection_status/);
   assert.match(source, /risk_stop_pct/);
+  assert.match(source, /LIVE DECISION PIPELINE/);
+  assert.match(source, /momentum_return/);
+  assert.match(source, /above_sma/);
+  assert.match(source, /desired_long/);
+  assert.match(source, /RECENT DECISION CYCLES/);
+  assert.match(source, /return_history/);
 });
 
