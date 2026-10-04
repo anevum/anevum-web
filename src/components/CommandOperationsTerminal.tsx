@@ -7,6 +7,7 @@ import {
   SYSTEMS,
   ageText,
   commandSystem,
+  freshStamp,
   displayState,
   incidentOwner,
   runtimeOwner,
@@ -100,14 +101,19 @@ function runtimeEvents(snapshot: IrenSnapshot | null): TerminalEvent[] {
   return (snapshot?.topology?.services || []).flatMap(row => {
     const system = runtimeOwner(row);
     if (!system) return [];
+    const state = String(row.status || "UNKNOWN").toUpperCase();
+    const meaningfulState = ["DEGRADED", "INCIDENT", "OFFLINE"].includes(state);
+    // A heartbeat is evidence of liveness, not a work event. Only publish a
+    // runtime event when the service exposes real current work or a problem.
+    if (!row.current_activity && !meaningfulState) return [];
     return [{
       id: "runtime-" + row.service_id + "-" + String(stamp(row, snapshot?.observed_at)),
       at: stamp(row, snapshot?.observed_at),
       system,
-      source: "RUNTIME OBSERVATION",
+      source: row.current_activity ? "RUNTIME ACTIVITY" : "RUNTIME STATE",
       state: row.status,
       title: row.service_name || row.service_id,
-      detail: row.current_activity || "Heartbeat / readiness observation"
+      detail: row.current_activity || displayState(row.status)
     }];
   });
 }
@@ -237,6 +243,7 @@ function laneActivity(snapshot: IrenSnapshot | null, feed: LiveTradingFeed | nul
   const activeReplay = (snapshot?.research?.velum_replays || []).find(row =>
     String(row.status || "").toUpperCase() === "RUNNING"
   );
+  const latestReplay = (snapshot?.research?.velum_replays || [])[0];
   const stage = activeProblem?.research_stage || null;
 
   let traceActivity: string | null = null;
@@ -257,11 +264,38 @@ function laneActivity(snapshot: IrenSnapshot | null, feed: LiveTradingFeed | nul
     traceStarted = activeReplay?.started_at || activeProblem?.started_at || activeProblem?.updated_at || null;
   }
 
-  const researchFocus = system === "GRAEN" ? feed?.research?.current_focus : null;
-  const activity = String(traceActivity || job?.title || researchFocus || view.activity || "Awaiting observation.");
-  const started = String(traceStarted || job?.started_at || activeProblem?.started_at || job?.created_at || "");
   const traceActive = String(traceStatus || "").toUpperCase() === "RUNNING";
-  return { view, work, job, activity, started, traceStatus, traceType, traceActive, activeProblem };
+  const canaryStamp = snapshot?.btc_canary?.observed_at || snapshot?.btc_canary?.decision_at;
+  const canaryActive = system === "RHEN"
+    && snapshot?.btc_canary?.available === true
+    && freshStamp(canaryStamp, now, 90000);
+  const active = Boolean(running || traceActive || view.active || canaryActive);
+
+  let activityState = "IDLE";
+  if (running) activityState = "RUNNING";
+  else if (queued) activityState = "QUEUED";
+  else if (traceActive && system === "GRAEN") activityState = "RESEARCHING";
+  else if (traceActive && system === "VELUM") activityState = "REPLAYING";
+  else if (canaryActive) activityState = "MONITORING";
+  else if (view.active && system === "RHEN") activityState = "SCANNING";
+  else if (view.active && system === "NOSTRA") activityState = "FORECASTING";
+  else if (view.active) activityState = view.runtime || "ACTIVE";
+  else if (system === "IREN") activityState = "SUPERVISING";
+
+  let idleDetail = view.activity || "No active work.";
+  if (system === "VELUM" && latestReplay?.completed_at) {
+    idleDetail = "No replay running · last replay " + displayState(latestReplay.status) + " " + ageText(latestReplay.completed_at, now);
+  } else if (system === "RHEN" && feed?.operational?.latest_scan?.observed_at) {
+    idleDetail = "No current execution signal · last scan " + ageText(feed.operational.latest_scan.observed_at, now);
+  }
+
+  const canaryActivity = canaryActive
+    ? "BTC canary · " + (snapshot?.btc_canary?.position_open ? "protected position open" : "paper monitoring") +
+      " · " + displayState(snapshot?.btc_canary?.action || "AWAITING")
+    : null;
+  const activity = String(traceActivity || job?.title || canaryActivity || (active ? view.activity : idleDetail) || "No active work.");
+  const started = String(traceStarted || job?.started_at || activeProblem?.started_at || job?.created_at || "");
+  return { view, work, job, activity, activityState, active, started, traceStatus, traceType, traceActive, activeProblem };
 }
 
 function elapsed(value: unknown, now: number) {
@@ -328,7 +362,7 @@ function FocusWorkbench({
   const startedAt = lane.started || runtime?.started_at;
   const heartbeat = runtime?.last_heartbeat_at || runtime?.observed_at || lane.view.observedAt ||
     (system === "GRAEN" ? snapshot?.research?.graen_runtime?.heartbeat_at : null);
-  const live = lane.view.active || lane.traceActive || String(lane.job?.status || "") === "RUNNING";
+  const live = lane.active;
 
   return (
     <article
@@ -340,7 +374,7 @@ function FocusWorkbench({
           <SystemIcon system={system} size="sm" />
           <div><span>{system === "GRAEN" ? "RESEARCH WORKBENCH" : "REPLAY WORKBENCH"}</span><h2>{system}</h2></div>
         </div>
-        <div className="terminal-focus-state"><i aria-hidden="true" /><strong>{displayState(lane.view.raw)}</strong></div>
+        <div className="terminal-focus-state"><i aria-hidden="true" /><strong>{displayState(lane.view.raw)} · {displayState(lane.activityState)}</strong></div>
       </header>
 
       <div className="terminal-focus-instrument" aria-label={system + " live activity instrument"}>
@@ -359,9 +393,9 @@ function FocusWorkbench({
       </div>}
 
       <dl className="terminal-focus-metrics">
-        <div><dt>STATE</dt><dd>{displayState(lane.traceStatus || String(lane.job?.status || lane.view.raw || "UNKNOWN"))}</dd></div>
-        <div><dt>STAGE</dt><dd>{lane.traceType || String(lane.job?.job_type || "—").replaceAll("_", " ")}</dd></div>
-        <div><dt>ELAPSED</dt><dd>{elapsed(startedAt, now)}</dd></div>
+        <div><dt>HEALTH</dt><dd>{displayState(lane.view.raw)}</dd></div>
+        <div><dt>ACTIVITY</dt><dd>{displayState(lane.activityState)}</dd></div>
+        <div><dt>ELAPSED</dt><dd>{lane.active ? elapsed(startedAt, now) : "—"}</dd></div>
         <div><dt>HEARTBEAT</dt><dd>{ageText(heartbeat, now)}</dd></div>
       </dl>
 
@@ -485,7 +519,7 @@ export default function CommandOperationsTerminal({
   const fleetFresh = Boolean(snapshot && !snapshot.stale && !error);
   const activeCount = TERMINAL_SYSTEMS.filter(system => {
     const lane = laneActivity(snapshot, feed, system, now);
-    return lane.view.active || lane.traceActive;
+    return lane.active;
   }).length;
 
   return (
@@ -494,7 +528,7 @@ export default function CommandOperationsTerminal({
         <div>
           <span>COMMAND / LIVE OPERATIONS</span>
           <h1>System terminal</h1>
-          <p>Evidence-backed activity across GRAEN, VELUM, IREN, RHEN, and NOSTRA.</p>
+          <p>Health and actual work are separate. Animation requires current evidence, not a heartbeat.</p>
         </div>
         <div className="terminal-session">
           <span className={fleetFresh ? "terminal-live-dot is-live" : "terminal-live-dot"} aria-hidden="true" />
@@ -527,7 +561,7 @@ export default function CommandOperationsTerminal({
           return (
             <article
               key={system}
-              className={"terminal-lane tone-" + tone + (lane.view.active || lane.traceActive ? " is-working" : "")}
+              className={"terminal-lane tone-" + tone + (lane.active ? " is-working" : "")}
               style={{ "--terminal-accent": IDENTITY[system].color } as CSSProperties}
             >
               <header>
@@ -536,13 +570,13 @@ export default function CommandOperationsTerminal({
                 <b>{displayState(lane.view.raw)}</b>
               </header>
               <div className="terminal-lane-activity">
-                <i className={lane.view.active || lane.traceActive ? "is-live" : ""} aria-hidden="true" />
-                <p>{lane.activity}</p>
+                <i className={lane.active ? "is-live" : ""} aria-hidden="true" />
+                <div><span className="terminal-activity-state">{displayState(lane.activityState)}</span><p>{lane.activity}</p></div>
               </div>
               <dl>
-                <div><dt>STATE</dt><dd>{displayState(lane.traceStatus || String(lane.job?.status || lane.view.raw || "UNKNOWN"))}</dd></div>
-                <div><dt>RUNTIMES</dt><dd>{rows.length || "—"}</dd></div>
-                <div><dt>LAST SIGNAL</dt><dd>{ageText(latest?.at || lane.view.observedAt, now)}</dd></div>
+                <div><dt>HEALTH</dt><dd>{displayState(lane.view.raw)}</dd></div>
+                <div><dt>ACTIVITY</dt><dd>{displayState(lane.activityState)}</dd></div>
+                <div><dt>LAST EVIDENCE</dt><dd>{latest?.at ? ageText(latest.at, now) : "None exposed"}</dd></div>
               </dl>
               {lane.job && <small className="terminal-job-age">{lane.started ? "Started " + ageText(lane.started, now) : "Queued work"} · {String(lane.job.job_type || "work").replaceAll("_", " ")}</small>}
             </article>
