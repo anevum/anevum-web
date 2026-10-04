@@ -79,11 +79,17 @@ export function OverflowPan() {
       const wasActive = element.classList.contains("overflow-pan-active");
       if (wasActive) element.classList.remove("overflow-pan-active");
 
-      const style = window.getComputedStyle(element);
-      const isEllipsis = style.textOverflow === "ellipsis";
-      const maxScroll = Math.max(0, element.scrollWidth - element.clientWidth);
+      const clientWidth = element.clientWidth;
+      const maxScroll = Math.max(0, element.scrollWidth - clientWidth);
 
-      if (!isEllipsis || element.clientWidth === 0 || maxScroll < MIN_OVERFLOW_PX) {
+      if (clientWidth === 0 || maxScroll < MIN_OVERFLOW_PX) {
+        states.delete(element);
+        resetElement(element, true);
+        return;
+      }
+
+      const style = window.getComputedStyle(element);
+      if (style.textOverflow !== "ellipsis") {
         states.delete(element);
         resetElement(element, true);
         return;
@@ -112,26 +118,53 @@ export function OverflowPan() {
       });
     }
 
-    function scan() {
-      const current = new Set<HTMLElement>();
-      document.body.querySelectorAll<HTMLElement>("*").forEach((element) => {
-        current.add(element);
-        inspect(element);
-      });
+    const pendingElements = new Set<HTMLElement>();
+    let fullScanRequested = false;
 
+    function pruneDisconnected() {
       states.forEach((state, element) => {
-        if (!current.has(element) || !element.isConnected) {
+        if (!element.isConnected) {
           states.delete(element);
-          resetElement(element, true);
         }
       });
     }
 
-    function scheduleScan() {
+    function scanAll() {
+      document.body.querySelectorAll<HTMLElement>("*").forEach(inspect);
+      pruneDisconnected();
+    }
+
+    function queueElement(element: HTMLElement | null) {
+      let current = element;
+      while (current && current !== document.body) {
+        pendingElements.add(current);
+        current = current.parentElement;
+      }
+    }
+
+    function queueSubtree(element: HTMLElement) {
+      queueElement(element);
+      element.querySelectorAll<HTMLElement>("*").forEach((child) => pendingElements.add(child));
+    }
+
+    function scheduleScan(full = false) {
+      if (full) fullScanRequested = true;
       if (scanFrame) return;
       scanFrame = window.requestAnimationFrame(() => {
         scanFrame = 0;
-        scan();
+        if (fullScanRequested) {
+          fullScanRequested = false;
+          pendingElements.clear();
+          scanAll();
+          return;
+        }
+
+        const elements = Array.from(pendingElements);
+        pendingElements.clear();
+        elements.forEach((element) => {
+          if (element.isConnected) inspect(element);
+        });
+        pruneDisconnected();
       });
     }
 
@@ -213,23 +246,38 @@ export function OverflowPan() {
       animationFrame = window.requestAnimationFrame(tick);
     }
 
-    const observer = new MutationObserver(scheduleScan);
+    const observer = new MutationObserver((mutations) => {
+      for (const mutation of mutations) {
+        if (mutation.type === "characterData") {
+          queueElement(mutation.target.parentElement);
+          continue;
+        }
+
+        queueElement(mutation.target instanceof HTMLElement ? mutation.target : mutation.target.parentElement);
+        mutation.addedNodes.forEach((node) => {
+          if (node instanceof HTMLElement) queueSubtree(node);
+          else queueElement(node.parentElement);
+        });
+      }
+      scheduleScan();
+    });
     observer.observe(document.body, {
       childList: true,
       subtree: true,
       characterData: true
     });
 
-    window.addEventListener("resize", scheduleScan, { passive: true });
-    reducedMotion.addEventListener("change", scheduleScan);
+    const scheduleFullScan = () => scheduleScan(true);
+    window.addEventListener("resize", scheduleFullScan, { passive: true });
+    reducedMotion.addEventListener("change", scheduleFullScan);
 
-    scheduleScan();
+    scheduleScan(true);
     animationFrame = window.requestAnimationFrame(tick);
 
     return () => {
       observer.disconnect();
-      window.removeEventListener("resize", scheduleScan);
-      reducedMotion.removeEventListener("change", scheduleScan);
+      window.removeEventListener("resize", scheduleFullScan);
+      reducedMotion.removeEventListener("change", scheduleFullScan);
       window.cancelAnimationFrame(animationFrame);
       if (scanFrame) window.cancelAnimationFrame(scanFrame);
       states.forEach((state) => resetElement(state.element, true));
