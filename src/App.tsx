@@ -1,5 +1,5 @@
-import { lazy, Suspense, useEffect, type ReactNode } from "react";
-import { Navigate, Route, Routes, useLocation } from "react-router-dom";
+import { lazy, Suspense, useEffect, useLayoutEffect, type ReactNode } from "react";
+import { Navigate, Route, Routes, useLocation, useNavigationType } from "react-router-dom";
 import { OverflowPan } from "./components/OverflowPan";
 import SeasonalEasterEggs from "./components/SeasonalEasterEggs";
 import { PublicShell } from "./components/Shell";
@@ -117,6 +117,7 @@ function setRouteMeta(pathname: string, title: string, description: string, prot
 
 function RouteEffects() {
   const location = useLocation();
+  const navigationType = useNavigationType();
 
   useEffect(() => {
     const previous = window.history.scrollRestoration;
@@ -126,11 +127,15 @@ function RouteEffects() {
     };
   }, []);
 
-  useEffect(() => {
-    window.requestAnimationFrame(() => {
-      window.scrollTo({ top: 0, left: 0, behavior: "auto" });
-    });
-  }, [location.pathname]);
+  useLayoutEffect(() => {
+    if (navigationType === "POP") return;
+
+    const root = document.documentElement;
+    const previousScrollBehavior = root.style.scrollBehavior;
+    root.style.scrollBehavior = "auto";
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+    root.style.scrollBehavior = previousScrollBehavior;
+  }, [location.pathname, navigationType]);
 
   useEffect(() => {
     const path = location.pathname;
