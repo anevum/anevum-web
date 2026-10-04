@@ -51,7 +51,7 @@ export default function HomeCompany() {
       <section className="rebuild-breaking-hero" aria-labelledby="rebuild-headline">
         <div className="rebuild-breaking-kicker">
           <span className="rebuild-breaking-label"><i /> LIVE // SYSTEM REBUILD + VERIFICATION</span>
-          <span>OCTOBER 3, 2026</span>
+          <span>OCTOBER 4, 2026</span>
           <span>ANEVUM OPERATING UPDATE</span>
         </div>
 
