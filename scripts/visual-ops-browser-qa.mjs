@@ -426,10 +426,10 @@ let failures = [];
 try {
   await waitForDebugger();
   for (const viewport of viewports) {
+    failures = failures.concat((await runScrollResetCase(viewport)).map((item) => viewport.name + " scroll-reset: " + item));
     for (const route of routes) {
       failures = failures.concat((await runCase(route, viewport)).map((item) => viewport.name + " " + route + ": " + item));
     }
-    failures = failures.concat((await runScrollResetCase(viewport)).map((item) => viewport.name + " scroll-reset: " + item));
   }
 } finally {
   chrome.kill("SIGTERM");
