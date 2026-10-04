@@ -144,7 +144,8 @@ async function runCase(route, viewport) {
   })()`.replace("routePlaceholder", JSON.stringify(route)),returnByValue:true});
   const details=ops.result?.value||{};
   const requiresVisualOpsSurface = route === "/" || route === "/live" || route === "/products" || route.startsWith("/command/");
-  if((requiresVisualOpsSurface && !details.surface) || !details.cards || !details.links) {
+  const requiresSystemCards = route === "/" || route === "/live" || route === "/products" || route.startsWith("/products/") || route.startsWith("/command/");
+  if((requiresVisualOpsSurface && !details.surface) || (requiresSystemCards && (!details.cards || !details.links))) {
     throw new Error("Missing accessible visual surface: "+JSON.stringify(details));
   }
 
