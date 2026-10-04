@@ -384,7 +384,19 @@ function BtcCanaryPanel({
   const state = available
     ? displayState(canary?.evidence_state || "OBSERVING")
     : "NO CANONICAL RUN";
-  const positionState = canary?.position_open ? "OPEN / PROTECTED" : "FLAT";
+  const protectionStatus = String(canary?.protection_status || "").toLowerCase();
+  const protectionActive = [
+    "new",
+    "accepted",
+    "held",
+    "pending_new",
+    "partially_filled"
+  ].includes(protectionStatus);
+  const positionState = canary?.position_open
+    ? protectionActive
+      ? "OPEN / PROTECTED"
+      : "OPEN / CHECK PROTECTION"
+    : "FLAT";
   const protection = canary?.protection_status
     ? displayState(canary.protection_status)
     : canary?.position_open
