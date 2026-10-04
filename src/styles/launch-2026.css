@@ -1154,12 +1154,10 @@ body {
     min-height: 310px;
   }
 
-  .company-footer-inner {
-    padding-inline: 0;
-  }
-
+  .company-footer-inner,
   .company-footer-bottom {
-    padding-inline: 0;
+    padding-left: max(18px, var(--safe-left));
+    padding-right: max(18px, var(--safe-right));
   }
 
   .company-footer-links {
