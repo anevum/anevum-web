@@ -114,6 +114,33 @@ export type IrenSnapshot = {
     running_job?: string | null;
   };
   work?: IrenWorkSummary;
+  research?: {
+    graen_problems?: Array<{
+      problem_id?: string;
+      title?: string;
+      status?: string;
+      research_stage?: string | null;
+      updated_at?: string;
+      started_at?: string | null;
+      completed_at?: string | null;
+    }>;
+    graen_runs?: Array<{
+      run_id?: string;
+      problem_id?: string;
+      status?: string;
+      methodology_version?: string | null;
+      result_state?: string | null;
+      error?: string | null;
+      started_at?: string;
+      completed_at?: string | null;
+      created_at?: string;
+    }>;
+    velum_replays?: Array<{
+      status?: string;
+      started_at?: string | null;
+      completed_at?: string | null;
+    }>;
+  };
   operator?: OperatorProjection;
 };
 
