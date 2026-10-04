@@ -109,7 +109,7 @@ export function commandSystem(name: SystemName, snapshot: IrenSnapshot | null, f
 
   // Health answers "can this runtime be trusted?" Activity answers "is it doing
   // useful work right now?" Never let a heartbeat or process loop answer both.
-  const healthStates = rows.map(row => row.liveness === false ? "OFFLINE" : row.readiness === false ? "DEGRADED" :
+  const healthStates: string[] = rows.map(row => row.liveness === false ? "OFFLINE" : row.readiness === false ? "DEGRADED" :
     !freshStamp(row.last_heartbeat_at || row.observed_at || snapshot?.observed_at, now) ? "STALE" : "HEALTHY");
   if (name === "IREN" && snapshot && !["HEALTHY", "RUNNING", "IDLE"].includes(String(snapshot.operator?.state || snapshot.state))) {
     healthStates.push(snapshot.operator?.state || snapshot.state);
