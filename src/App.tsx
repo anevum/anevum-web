@@ -1,5 +1,5 @@
-import { lazy, Suspense, useEffect, useLayoutEffect, useRef, type ReactNode } from "react";
-import { Navigate, Route, Routes, useLocation, useNavigationType } from "react-router-dom";
+import { lazy, Suspense, useEffect, useLayoutEffect, type ReactNode } from "react";
+import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { OverflowPan } from "./components/OverflowPan";
 import SeasonalEasterEggs from "./components/SeasonalEasterEggs";
 import { PublicShell } from "./components/Shell";
@@ -117,8 +117,6 @@ function setRouteMeta(pathname: string, title: string, description: string, prot
 
 function RouteEffects() {
   const location = useLocation();
-  const navigationType = useNavigationType();
-  const mounted = useRef(false);
 
   useEffect(() => {
     const previous = window.history.scrollRestoration;
@@ -129,16 +127,23 @@ function RouteEffects() {
   }, []);
 
   useLayoutEffect(() => {
-    const isInitialMount = !mounted.current;
-    mounted.current = true;
-    if (!isInitialMount && navigationType === "POP") return;
+    const scroller = document.scrollingElement || document.documentElement;
+    scroller.scrollTop = 0;
+    scroller.scrollLeft = 0;
+    document.body.scrollTop = 0;
+    document.body.scrollLeft = 0;
+  }, [location.pathname]);
 
-    const root = document.documentElement;
-    const previousScrollBehavior = root.style.scrollBehavior;
-    root.style.scrollBehavior = "auto";
-    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
-    root.style.scrollBehavior = previousScrollBehavior;
-  }, [location.pathname, navigationType]);
+  useEffect(() => {
+    const frame = window.requestAnimationFrame(() => {
+      const scroller = document.scrollingElement || document.documentElement;
+      scroller.scrollTop = 0;
+      scroller.scrollLeft = 0;
+      document.body.scrollTop = 0;
+      document.body.scrollLeft = 0;
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [location.pathname]);
 
   useEffect(() => {
     const path = location.pathname;
