@@ -433,17 +433,47 @@ function BtcCanaryPanel({
         ? " is-negative"
         : "";
   const observed = canary?.observed_at || canary?.decision_at;
+  const signal = canary?.signal;
+  const momentumLabel = fractionPercent(signal?.momentum_return);
+  const signalClose = Number(signal?.close || 0);
+  const signalSma = Number(signal?.sma || 0);
+  const smaGap = signalClose > 0 && signalSma > 0
+    ? fractionPercent(String(signalClose / signalSma - 1))
+    : "—";
+  const desiredState = signal?.desired_long === true
+    ? "LONG"
+    : signal?.desired_long === false
+      ? "FLAT"
+      : "WAITING";
+  const consensusPass = signal?.desired_long === true;
+  const cycles = (canary?.recent_cycles || []).slice(-6).reverse();
+
+  const returns = (canary?.return_history || [])
+    .map(point => ({
+      at: point.at,
+      value: Number(point.return_pct)
+    }))
+    .filter(point => Number.isFinite(point.value));
+  const minReturn = returns.length ? Math.min(...returns.map(point => point.value), 0) : 0;
+  const maxReturn = returns.length ? Math.max(...returns.map(point => point.value), 0) : 0;
+  const returnRange = Math.max(maxReturn - minReturn, 0.0001);
+  const sparkPoints = returns.map((point, index) => {
+    const x = returns.length <= 1 ? 120 : index * 240 / (returns.length - 1);
+    const y = 50 - ((point.value - minReturn) / returnRange) * 44;
+    return x.toFixed(2) + "," + y.toFixed(2);
+  }).join(" ");
+  const zeroY = 50 - ((0 - minReturn) / returnRange) * 44;
 
   return (
     <section
-      className={"terminal-canary" + (available ? " is-available" : "")}
-      aria-label="BTC canary paper experiment"
+      className={"terminal-canary terminal-canary-live" + (available ? " is-available" : "")}
+      aria-label="BTC canary live paper experiment"
     >
       <header>
         <div className="terminal-canary-title">
           <SystemIcon system="RHEN" size="sm" />
           <div>
-            <span>RHEN / FORWARD PAPER EXPERIMENT</span>
+            <span>RHEN / LIVE FORWARD PAPER EXPERIMENT</span>
             <h2>BTC-CANARY-001</h2>
           </div>
         </div>
@@ -454,21 +484,113 @@ function BtcCanaryPanel({
         </div>
       </header>
 
-      <div className="terminal-canary-grid">
-        <div className="terminal-canary-status">
-          <span>FORWARD STATE</span>
+      <div className="terminal-canary-livebar">
+        <div>
+          <i className={available ? "is-live" : ""} aria-hidden="true" />
+          <span>OPERATING STATE</span>
           <strong>{state}</strong>
-          <p>{canary?.reason || "Waiting for canonical BTC canary evidence."}</p>
         </div>
-        <dl>
-          <div><dt>POSITION</dt><dd>{positionState}</dd></div>
-          <div><dt>CURRENT RETURN</dt><dd className={returnClass}>{returnLabel}</dd></div>
-          <div><dt>RISK STOP</dt><dd>{fractionPercent(canary?.risk_stop_pct)}</dd></div>
-          <div><dt>PROTECTION</dt><dd>{protection}</dd></div>
-          <div><dt>SIGNAL</dt><dd>{action}</dd></div>
-          <div><dt>TIMEFRAME</dt><dd>{canary?.bar_interval || "4Hour"}</dd></div>
-        </dl>
+        <p>{canary?.reason || "Waiting for canonical BTC canary evidence."}</p>
+        <small>canonical observation {ageText(observed, now)} · 3s Command refresh</small>
       </div>
+
+      <div className="terminal-canary-operating-grid">
+        <section className="terminal-canary-engine" aria-label="BTC canary decision pipeline">
+          <header>
+            <div><span>LIVE DECISION PIPELINE</span><strong>Frozen R2H consensus</strong></div>
+            <small>{canary?.bar_interval || "4Hour"} bars · 24/7 crypto lane</small>
+          </header>
+
+          <div className="terminal-canary-flow">
+            <article className={"terminal-canary-node" + (signal?.bar_at ? " is-active" : "")}>
+              <span>01 · BAR</span>
+              <strong>{signal?.bar_at ? "COMPLETE" : "WAITING"}</strong>
+              <small>{signal?.bar_at ? ageText(signal.bar_at, now) : "No completed bar"}</small>
+              <em>{signal?.completed_bar_count ? signal.completed_bar_count + " bars loaded" : "4H BTC/USD"}</em>
+            </article>
+
+            <div className="terminal-canary-arrow" aria-hidden="true">→</div>
+
+            <article className={"terminal-canary-node" + (signal?.momentum_positive ? " is-pass" : "")}>
+              <span>02 · MOMENTUM</span>
+              <strong>{momentumLabel}</strong>
+              <small>180-day / 1080-bar lookback</small>
+              <em>{signal?.momentum_positive === true ? "POSITIVE" : signal?.momentum_positive === false ? "NEGATIVE" : "WAITING"}</em>
+            </article>
+
+            <div className="terminal-canary-arrow terminal-canary-arrow-or" aria-hidden="true">OR</div>
+
+            <article className={"terminal-canary-node" + (signal?.above_sma ? " is-pass" : "")}>
+              <span>03 · SMA REGIME</span>
+              <strong>{smaGap}</strong>
+              <small>price vs 250-day / 1500-bar SMA</small>
+              <em>{signal?.above_sma === true ? "ABOVE SMA" : signal?.above_sma === false ? "BELOW SMA" : "WAITING"}</em>
+            </article>
+
+            <div className="terminal-canary-arrow" aria-hidden="true">→</div>
+
+            <article className={"terminal-canary-node terminal-canary-decision" + (consensusPass ? " is-pass" : "")}>
+              <span>04 · CONSENSUS</span>
+              <strong>{desiredState}</strong>
+              <small>momentum positive OR above SMA</small>
+              <em>{action}</em>
+            </article>
+
+            <div className="terminal-canary-arrow" aria-hidden="true">→</div>
+
+            <article className={"terminal-canary-node terminal-canary-position" + (canary?.position_open ? " is-active" : "")}>
+              <span>05 · POSITION</span>
+              <strong>{positionState}</strong>
+              <small>{protectionActive ? "broker protection confirmed" : protection}</small>
+              <em>{returnLabel}</em>
+            </article>
+          </div>
+        </section>
+
+        <section className="terminal-canary-forward" aria-label="BTC canary forward performance">
+          <header>
+            <div><span>FORWARD PAPER RETURN</span><strong className={returnClass}>{returnLabel}</strong></div>
+            <small>{canary?.position_open ? "position open" : "no open BTC position"}</small>
+          </header>
+
+          <div className="terminal-canary-spark">
+            {sparkPoints ? (
+              <svg viewBox="0 0 240 56" role="img" aria-label="Recent forward paper return trace">
+                <line x1="0" x2="240" y1={zeroY} y2={zeroY} className="terminal-canary-zero" />
+                <polyline points={sparkPoints} className="terminal-canary-return-line" />
+              </svg>
+            ) : (
+              <div className="terminal-canary-nochart">Waiting for durable return observations.</div>
+            )}
+          </div>
+
+          <dl>
+            <div><dt>POSITION</dt><dd>{positionState}</dd></div>
+            <div><dt>RISK STOP</dt><dd>{fractionPercent(canary?.risk_stop_pct)}</dd></div>
+            <div><dt>PROTECTION</dt><dd>{protection}</dd></div>
+            <div><dt>LAST SIGNAL</dt><dd>{action}</dd></div>
+          </dl>
+        </section>
+      </div>
+
+      <section className="terminal-canary-cycles" aria-label="Recent BTC canary decision cycles">
+        <header>
+          <span>RECENT DECISION CYCLES</span>
+          <strong>{cycles.length ? cycles.length + " canonical observations" : "Awaiting observations"}</strong>
+        </header>
+        <ol>
+          {cycles.length ? cycles.map((cycle, index) => (
+            <li key={String(cycle.at || index) + "-" + index}>
+              <time dateTime={cycle.at || undefined}>
+                {cycle.at ? new Date(cycle.at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" }) : "—"}
+              </time>
+              <b>{displayState(cycle.action || "OBSERVE")}</b>
+              <span>{cycle.reason || "Canary observation"}</span>
+              <small>{ageText(cycle.at, now)}</small>
+            </li>
+          )) : <li className="terminal-canary-empty">No durable canary cycles exposed yet.</li>}
+        </ol>
+      </section>
 
       <footer>
         <span><b>RUN</b>{canary?.run_id || "—"}</span>
