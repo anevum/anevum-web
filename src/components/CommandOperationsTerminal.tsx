@@ -243,8 +243,8 @@ function laneActivity(snapshot: IrenSnapshot | null, feed: LiveTradingFeed | nul
   }
 
   const researchFocus = system === "GRAEN" ? feed?.research?.current_focus : null;
-  const activity = String(job?.title || traceActivity || researchFocus || view.activity || "Awaiting observation.");
-  const started = String(job?.started_at || traceStarted || activeProblem?.started_at || job?.created_at || "");
+  const activity = String(traceActivity || job?.title || researchFocus || view.activity || "Awaiting observation.");
+  const started = String(traceStarted || job?.started_at || activeProblem?.started_at || job?.created_at || "");
   const traceActive = String(traceStatus || "").toUpperCase() === "RUNNING";
   return { view, work, job, activity, started, traceStatus, traceType, traceActive };
 }
@@ -294,7 +294,7 @@ function FocusWorkbench({
   const runtime = rows.find(row => row.current_activity) || rows[0];
   const latest = events.find(row => row.system === system);
   const context = jobContext(lane.job);
-  const startedAt = lane.job?.started_at || lane.job?.created_at || runtime?.started_at;
+  const startedAt = lane.started || runtime?.started_at;
   const heartbeat = runtime?.last_heartbeat_at || runtime?.observed_at || lane.view.observedAt;
   const live = lane.view.active || lane.traceActive || String(lane.job?.status || "") === "RUNNING";
 
@@ -318,8 +318,8 @@ function FocusWorkbench({
 
       <div className="terminal-focus-work">
         <span>CURRENT WORK</span>
-        <strong>{lane.job?.title ? String(lane.job.title) : lane.activity}</strong>
-        <p>{runtime?.current_activity || lane.activity}</p>
+        <strong>{lane.activity}</strong>
+        <p>{runtime?.current_activity || (lane.job?.title ? String(lane.job.title) : lane.activity)}</p>
       </div>
 
       {context.length > 0 && <div className="terminal-focus-context">
