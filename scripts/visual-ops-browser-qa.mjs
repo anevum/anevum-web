@@ -232,6 +232,15 @@ async function runCase(route, viewport) {
       const nodes=[...root.querySelectorAll(".topology-node")];
       const overlaps=(a,b)=>a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top;
       const collisions=[];
+      const missingIcons=[];
+      for(const node of nodes) {
+        const icon=node.querySelector(":scope > .system-icon");
+        const ir=icon?.getBoundingClientRect();
+        const style=icon ? getComputedStyle(icon) : null;
+        if(!icon || !ir || ir.width<20 || ir.height<20 || style?.display==="none" || style?.visibility==="hidden") {
+          missingIcons.push((node.textContent||"node").trim());
+        }
+      }
       for(const label of labels) {
         const lr=label.getBoundingClientRect();
         for(const node of nodes) {
@@ -239,11 +248,11 @@ async function runCase(route, viewport) {
           if(overlaps(lr,nr)) collisions.push((label.textContent||"label").trim()+" × "+(node.textContent||"node").trim());
         }
       }
-      return {present:true,collisions};
+      return {present:true,nodeCount:nodes.length,missingIcons,collisions};
     })()`, returnByValue:true});
     const topology=topologyGeometry.result?.value||{};
-    if(!topology.present || topology.collisions?.length) {
-      throw new Error("Topology label/node overlap: "+JSON.stringify(topology));
+    if(!topology.present || topology.nodeCount!==5 || topology.missingIcons?.length || topology.collisions?.length) {
+      throw new Error("Topology geometry/icon failure: "+JSON.stringify(topology));
     }
   }
 
