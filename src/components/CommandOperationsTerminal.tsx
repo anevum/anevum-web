@@ -225,19 +225,28 @@ function laneActivity(snapshot: IrenSnapshot | null, feed: LiveTradingFeed | nul
   const stage = activeProblem?.research_stage || null;
 
   let traceActivity: string | null = null;
+  let traceStatus: string | null = null;
+  let traceType: string | null = null;
+  let traceStarted: string | null = null;
+
   if (system === "GRAEN" && activeProblem) {
     traceActivity = [activeProblem.title, stage ? displayState(stage) : null].filter(Boolean).join(" · ");
+    traceStatus = activeProblem.status || null;
+    traceType = stage ? displayState(stage) : "Research problem";
+    traceStarted = activeProblem.started_at || activeProblem.updated_at || null;
   }
   if (system === "VELUM" && activeReplay) {
-    traceActivity = stage && stage.includes("VELUM")
-      ? displayState(stage)
-      : "Replay running";
+    traceActivity = stage && stage.includes("VELUM") ? displayState(stage) : "Replay running";
+    traceStatus = activeReplay.status || null;
+    traceType = stage && stage.includes("VELUM") ? displayState(stage) : "VELUM replay";
+    traceStarted = activeReplay.started_at || null;
   }
 
   const researchFocus = system === "GRAEN" ? feed?.research?.current_focus : null;
   const activity = String(job?.title || traceActivity || researchFocus || view.activity || "Awaiting observation.");
-  const started = String(job?.started_at || activeReplay?.started_at || activeProblem?.started_at || job?.created_at || "");
-  return { view, work, job, activity, started };
+  const started = String(job?.started_at || traceStarted || activeProblem?.started_at || job?.created_at || "");
+  const traceActive = String(traceStatus || "").toUpperCase() === "RUNNING";
+  return { view, work, job, activity, started, traceStatus, traceType, traceActive };
 }
 
 function elapsed(value: unknown, now: number) {
@@ -287,7 +296,7 @@ function FocusWorkbench({
   const context = jobContext(lane.job);
   const startedAt = lane.job?.started_at || lane.job?.created_at || runtime?.started_at;
   const heartbeat = runtime?.last_heartbeat_at || runtime?.observed_at || lane.view.observedAt;
-  const live = lane.view.active || String(lane.job?.status || "") === "RUNNING";
+  const live = lane.view.active || lane.traceActive || String(lane.job?.status || "") === "RUNNING";
 
   return (
     <article
@@ -318,8 +327,8 @@ function FocusWorkbench({
       </div>}
 
       <dl className="terminal-focus-metrics">
-        <div><dt>JOB</dt><dd>{lane.job ? displayState(String(lane.job.status || "UNKNOWN")) : "None active"}</dd></div>
-        <div><dt>TYPE</dt><dd>{String(lane.job?.job_type || "—").replaceAll("_", " ")}</dd></div>
+        <div><dt>STATE</dt><dd>{displayState(lane.traceStatus || String(lane.job?.status || lane.view.raw || "UNKNOWN"))}</dd></div>
+        <div><dt>STAGE</dt><dd>{lane.traceType || String(lane.job?.job_type || "—").replaceAll("_", " ")}</dd></div>
         <div><dt>ELAPSED</dt><dd>{elapsed(startedAt, now)}</dd></div>
         <div><dt>HEARTBEAT</dt><dd>{ageText(heartbeat, now)}</dd></div>
       </dl>
@@ -356,7 +365,10 @@ export default function CommandOperationsTerminal({
   );
   const visible = filter === "ALL" ? events : events.filter(row => row.system === filter);
   const fleetFresh = Boolean(snapshot && !snapshot.stale && !error);
-  const activeCount = TERMINAL_SYSTEMS.filter(system => laneActivity(snapshot, feed, system, now).view.active).length;
+  const activeCount = TERMINAL_SYSTEMS.filter(system => {
+    const lane = laneActivity(snapshot, feed, system, now);
+    return lane.view.active || lane.traceActive;
+  }).length;
 
   return (
     <article className="command-panel command-view-terminal operations-terminal" aria-label="ANEVUM live operations terminal">
@@ -395,7 +407,7 @@ export default function CommandOperationsTerminal({
           return (
             <article
               key={system}
-              className={"terminal-lane tone-" + tone + (lane.view.active ? " is-working" : "")}
+              className={"terminal-lane tone-" + tone + (lane.view.active || lane.traceActive ? " is-working" : "")}
               style={{ "--terminal-accent": IDENTITY[system].color } as CSSProperties}
             >
               <header>
@@ -404,11 +416,11 @@ export default function CommandOperationsTerminal({
                 <b>{displayState(lane.view.raw)}</b>
               </header>
               <div className="terminal-lane-activity">
-                <i className={lane.view.active ? "is-live" : ""} aria-hidden="true" />
+                <i className={lane.view.active || lane.traceActive ? "is-live" : ""} aria-hidden="true" />
                 <p>{lane.activity}</p>
               </div>
               <dl>
-                <div><dt>JOB</dt><dd>{lane.job ? displayState(String(lane.job.status || "UNKNOWN")) : "None active"}</dd></div>
+                <div><dt>STATE</dt><dd>{displayState(lane.traceStatus || String(lane.job?.status || lane.view.raw || "UNKNOWN"))}</dd></div>
                 <div><dt>RUNTIMES</dt><dd>{rows.length || "—"}</dd></div>
                 <div><dt>LAST SIGNAL</dt><dd>{ageText(latest?.at || lane.view.observedAt, now)}</dd></div>
               </dl>
