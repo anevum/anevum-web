@@ -188,6 +188,45 @@
   --icon-size: 56px !important;
 }
 
+/* Components built from spans must not inherit legacy text-span layout.
+ * SystemIcon and SystemChip both render span roots, so descendant text rules
+ * need explicit component boundaries. */
+.related-products a>.system-icon{
+  grid-column:1 !important;
+  grid-row:1 / span 2 !important;
+  align-self:center;
+  justify-self:start;
+  margin:0;
+}
+.related-products a>.system-icon .system-mark-svg{
+  width:64% !important;
+  height:64% !important;
+  margin:0 !important;
+}
+.related-products a>span:not(.system-icon),
+.related-products a>strong{grid-column:2}
+
+.field-note-systems>.system-chip,
+.field-note-index-systems>.system-chip{
+  min-height:34px;
+  padding:3px 9px 3px 4px !important;
+  border:1px solid color-mix(in srgb,var(--chip-accent) 20%,transparent) !important;
+  color:color-mix(in srgb,var(--chip-accent) 76%,white 24%) !important;
+  letter-spacing:normal !important;
+}
+.field-note-systems .system-chip .system-icon,
+.field-note-index-systems .system-chip .system-icon{
+  padding:0 !important;
+  border:1px solid color-mix(in srgb,var(--icon-accent) 26%,rgba(255,255,255,.06)) !important;
+  color:var(--icon-accent) !important;
+  letter-spacing:normal !important;
+}
+.field-note-systems .system-chip .system-icon-orbit,
+.field-note-index-systems .system-chip .system-icon-orbit{
+  padding:0 !important;
+  border:1px solid color-mix(in srgb,var(--icon-accent) 8%,transparent) !important;
+}
+
 /* Architecture authority cards once treated every direct <span> as a text
  * label. SystemIcon is also a span, so that rule changed its display model
  * and padding. Restore the shared square icon contract explicitly. */
