@@ -396,7 +396,10 @@ async function runScrollResetCase(viewport) {
       link.click();
 
       const deadline = Date.now() + 5000;
-      while (location.pathname !== "/architecture" && Date.now() < deadline) {
+      while (
+        (location.pathname !== "/architecture" || scroller.scrollTop > 1) &&
+        Date.now() < deadline
+      ) {
         await new Promise((resolve) => setTimeout(resolve, 50));
       }
       await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
