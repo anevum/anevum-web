@@ -191,6 +191,11 @@
 /* Components built from spans must not inherit legacy text-span layout.
  * SystemIcon and SystemChip both render span roots, so descendant text rules
  * need explicit component boundaries. */
+.case-study-chain .system-icon{
+  display:inline-grid !important;
+  place-items:center !important;
+  gap:0 !important;
+}
 .related-products a>.system-icon{
   grid-column:1 !important;
   grid-row:1 / span 2 !important;
