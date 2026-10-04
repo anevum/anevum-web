@@ -30,8 +30,8 @@ export function SystemVisualShell({ view, to, hero = false, now = Date.now() }: 
     <p className="vo-activity" title={view.activity}>{view.activity}</p>
     {(view.jobs !== undefined || view.objectives !== undefined || view.incidents !== undefined) && <div className="vo-card-counts"><span>◇ <b>{view.jobs ?? "—"}</b> jobs</span><span>◎ <b>{view.objectives ?? "—"}</b> objectives</span><span className={view.incidents ? "vo-attention" : ""}>! <b>{view.incidents ?? "—"}</b> incidents</span></div>}
     <footer><span title={view.observedAt || undefined}>{SEMANTIC.freshness} {ageText(view.observedAt, now)}</span><span>{to ? "Open monitor ↗" : "Activity schematic"}</span></footer></>;
-  return to ? <Link to={to} className={"vo-system-card" + visualClass(view)} aria-label={view.name + ": " + displayState(view.raw) + ". Open monitor"} data-system={view.name} data-state={view.raw} data-active={view.active}>{body}</Link> :
-    <section className={"vo-system-card vo-hero-card" + visualClass(view)} aria-label={view.name + " activity instrument"} data-system={view.name} data-state={view.raw} data-active={view.active}>{body}</section>;
+  return to ? <Link to={to} className={"vo-system-card" + visualClass(view)} aria-label={view.name + ": " + displayState(view.raw) + ", activity " + displayState(view.runtime) + ". Open monitor"} data-system={view.name} data-state={view.raw} data-activity={view.runtime} data-active={view.active}>{body}</Link> :
+    <section className={"vo-system-card vo-hero-card" + visualClass(view)} aria-label={view.name + " activity instrument"} data-system={view.name} data-state={view.raw} data-activity={view.runtime} data-active={view.active}>{body}</section>;
 }
 export function SystemConstellation({ views, command = false, compact = false }: { views: SystemView[]; command?: boolean; compact?: boolean }) {
   return <div className={"vo-constellation" + (compact ? " is-compact" : "")} aria-label="Five-system constellation">
