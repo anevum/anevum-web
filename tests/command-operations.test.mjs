@@ -54,3 +54,16 @@ test("live terminal renders canonical BTC canary paper safeguards", () => {
   assert.match(source, /risk_stop_pct/);
 });
 
+
+test("live terminal does not turn heartbeat observations into fake work", () => {
+  const source = readFileSync(
+    new URL("../src/components/CommandOperationsTerminal.tsx", import.meta.url),
+    "utf8"
+  );
+  assert.match(source, /A heartbeat is evidence of liveness, not a work event/);
+  assert.match(source, /HEALTH/);
+  assert.match(source, /ACTIVITY/);
+  assert.match(source, /No active research run/);
+  assert.match(source, /No replay running/);
+  assert.match(source, /BTC canary/);
+});
