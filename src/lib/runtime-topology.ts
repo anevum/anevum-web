@@ -93,6 +93,30 @@ export type OperatorProjection = {
   };
 };
 
+export type BtcCanarySignalProjection = {
+  bar_at?: string | null;
+  close?: string | null;
+  momentum_return?: string | null;
+  momentum_positive?: boolean | null;
+  momentum_lookback_bars?: number | null;
+  sma?: string | null;
+  above_sma?: boolean | null;
+  sma_window_bars?: number | null;
+  desired_long?: boolean | null;
+  completed_bar_count?: number | null;
+};
+
+export type BtcCanaryCycleProjection = {
+  at?: string | null;
+  action?: string | null;
+  reason?: string | null;
+};
+
+export type BtcCanaryReturnPoint = {
+  at?: string | null;
+  return_pct?: string | null;
+};
+
 export type BtcCanaryProjection = {
   available?: boolean;
   run_id?: string;
@@ -111,11 +135,16 @@ export type BtcCanaryProjection = {
   model_version?: string | null;
   position_open?: boolean;
   position_observed_at?: string | null;
+  entry_price?: string | null;
+  current_price?: string | null;
   current_return_pct?: string | null;
   risk_stop_pct?: string | null;
   account_observed_at?: string | null;
   protection_status?: string | null;
   protection_observed_at?: string | null;
+  signal?: BtcCanarySignalProjection;
+  recent_cycles?: BtcCanaryCycleProjection[];
+  return_history?: BtcCanaryReturnPoint[];
 };
 
 export type IrenSnapshot = {
