@@ -512,7 +512,7 @@
     min-height: 90px !important;
   }
 
-  .company-topology:not(.is-compact) .topology-node > span,
+  .company-topology:not(.is-compact) .topology-node > span:not(.system-icon),
   .company-topology:not(.is-compact) .topology-node > small {
     display: none !important;
   }
