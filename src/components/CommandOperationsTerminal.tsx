@@ -16,6 +16,7 @@ import {
 } from "../lib/system-display";
 import { useCommandObservation } from "../hooks/useCommandObservation";
 import SystemIcon from "./company/SystemIcon";
+import SystemInstrument from "./operations/SystemInstruments";
 import "../styles/operations-terminal.css";
 
 type TerminalFilter = "ALL" | SystemName;
@@ -172,6 +173,98 @@ function laneActivity(snapshot: IrenSnapshot | null, feed: LiveTradingFeed | nul
   return { view, work, job, activity, started };
 }
 
+function elapsed(value: unknown, now: number) {
+  const stamp = Date.parse(String(value || ""));
+  if (!Number.isFinite(stamp) || stamp > now) return "—";
+  const seconds = Math.max(0, Math.floor((now - stamp) / 1000));
+  if (seconds < 60) return seconds + "s";
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return minutes + "m " + (seconds % 60) + "s";
+  return Math.floor(minutes / 60) + "h " + (minutes % 60) + "m";
+}
+
+function jobContext(job?: Record<string, unknown>) {
+  if (!job) return [] as Array<[string, string]>;
+  const metadata = object(job.metadata);
+  const rows: Array<[string, string]> = [];
+  const fields: Array<[string, string[]]> = [
+    ["STAGE", ["stage", "phase"]],
+    ["RUN", ["run_id", "campaign_id", "experiment_id"]],
+    ["CANDIDATE", ["candidate_id", "candidate", "strategy_id"]],
+    ["HYPOTHESIS", ["hypothesis", "family", "mechanism"]]
+  ];
+  for (const [label, keys] of fields) {
+    const key = keys.find(candidate => compactValue(metadata[candidate]));
+    if (key) rows.push([label, compactValue(metadata[key])]);
+  }
+  return rows.slice(0, 4);
+}
+
+function FocusWorkbench({
+  system,
+  snapshot,
+  feed,
+  events,
+  now
+}: {
+  system: "GRAEN" | "VELUM";
+  snapshot: IrenSnapshot | null;
+  feed?: LiveTradingFeed | null;
+  events: TerminalEvent[];
+  now: number;
+}) {
+  const lane = laneActivity(snapshot, feed, system, now);
+  const rows = (snapshot?.topology?.services || []).filter(row => runtimeOwner(row) === system);
+  const runtime = rows.find(row => row.current_activity) || rows[0];
+  const latest = events.find(row => row.system === system);
+  const context = jobContext(lane.job);
+  const startedAt = lane.job?.started_at || lane.job?.created_at || runtime?.started_at;
+  const heartbeat = runtime?.last_heartbeat_at || runtime?.observed_at || lane.view.observedAt;
+  const live = lane.view.active || String(lane.job?.status || "") === "RUNNING";
+
+  return (
+    <article
+      className={"terminal-focus-card tone-" + stateTone(lane.view.raw) + (live ? " is-working" : "")}
+      style={{ "--terminal-accent": IDENTITY[system].color } as CSSProperties}
+    >
+      <header>
+        <div className="terminal-focus-title">
+          <SystemIcon system={system} size="sm" />
+          <div><span>{system === "GRAEN" ? "RESEARCH WORKBENCH" : "REPLAY WORKBENCH"}</span><h2>{system}</h2></div>
+        </div>
+        <div className="terminal-focus-state"><i aria-hidden="true" /><strong>{displayState(lane.view.raw)}</strong></div>
+      </header>
+
+      <div className="terminal-focus-instrument" aria-label={system + " live activity instrument"}>
+        <SystemInstrument name={system} />
+        <i className="terminal-focus-sweep" aria-hidden="true" />
+      </div>
+
+      <div className="terminal-focus-work">
+        <span>CURRENT WORK</span>
+        <strong>{lane.job?.title ? String(lane.job.title) : lane.activity}</strong>
+        <p>{runtime?.current_activity || lane.activity}</p>
+      </div>
+
+      {context.length > 0 && <div className="terminal-focus-context">
+        {context.map(([label, value]) => <span key={label}><b>{label}</b>{value}</span>)}
+      </div>}
+
+      <dl className="terminal-focus-metrics">
+        <div><dt>JOB</dt><dd>{lane.job ? displayState(String(lane.job.status || "UNKNOWN")) : "None active"}</dd></div>
+        <div><dt>TYPE</dt><dd>{String(lane.job?.job_type || "—").replaceAll("_", " ")}</dd></div>
+        <div><dt>ELAPSED</dt><dd>{elapsed(startedAt, now)}</dd></div>
+        <div><dt>HEARTBEAT</dt><dd>{ageText(heartbeat, now)}</dd></div>
+      </dl>
+
+      <footer>
+        <div><span>RUNTIME</span><strong>{runtime?.service_name || runtime?.service_id || "No owned runtime observed"}</strong></div>
+        <div><span>LATEST EVENT</span><strong>{latest ? latest.title + " · " + ageText(latest.at, now) : "No event exposed yet"}</strong></div>
+      </footer>
+    </article>
+  );
+}
+
 export default function CommandOperationsTerminal({
   session,
   feed,
@@ -219,6 +312,11 @@ export default function CommandOperationsTerminal({
       </section>
 
       {(error || feedError) && <div className="terminal-warning"><strong>OBSERVATION DEGRADED</strong><span>{error || feedError}</span></div>}
+
+      <section className="terminal-focus-grid" aria-label="GRAEN and VELUM live workbenches">
+        <FocusWorkbench system="GRAEN" snapshot={snapshot} feed={feed} events={events} now={now} />
+        <FocusWorkbench system="VELUM" snapshot={snapshot} feed={feed} events={events} now={now} />
+      </section>
 
       <section className="terminal-lanes" aria-label="ANEVUM systems">
         {TERMINAL_SYSTEMS.map(system => {
