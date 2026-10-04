@@ -120,6 +120,11 @@ export type IrenSnapshot = {
       title?: string;
       status?: string;
       research_stage?: string | null;
+      candidate_id?: string | null;
+      hypothesis?: string | null;
+      family?: string | null;
+      mechanism?: string | null;
+      campaign_id?: string | null;
       updated_at?: string;
       started_at?: string | null;
       completed_at?: string | null;
@@ -140,6 +145,16 @@ export type IrenSnapshot = {
       started_at?: string | null;
       completed_at?: string | null;
     }>;
+    graen_runtime?: {
+      worker_id?: string | null;
+      runtime_version?: string | null;
+      deployment_id?: string | null;
+      heartbeat_at?: string | null;
+      active_problem_id?: string | null;
+      queue_depth?: number | null;
+      last_error?: string | null;
+      updated_at?: string | null;
+    } | null;
   };
   operator?: OperatorProjection;
 };
