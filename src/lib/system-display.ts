@@ -121,11 +121,36 @@ export function commandSystem(name: SystemName, snapshot: IrenSnapshot | null, f
   const publicRow = publicSystem(name, feed, now);
   const runningJob = work.jobs.find(row => String(row.status) === "RUNNING");
   const explicitRuntime = rows.find(row => String(row.status).toUpperCase() === "RUNNING" && Boolean(row.current_activity));
-  const active = fresh && healthy && Boolean(runningJob || explicitRuntime || publicRow.active);
-  const runtime = active
-    ? String(runningJob ? "RUNNING" : explicitRuntime?.status || publicRow.runtime || "ACTIVE")
-    : "IDLE";
+  const activeProblem = (snapshot?.research?.graen_problems || []).find(row => {
+    if (String(row.status || "").toUpperCase() !== "RUNNING") return false;
+    return name === "VELUM"
+      ? String(row.research_stage || "").includes("VELUM")
+      : name === "GRAEN";
+  });
+  const activeReplay = name === "VELUM"
+    ? (snapshot?.research?.velum_replays || []).find(row => String(row.status || "").toUpperCase() === "RUNNING")
+    : undefined;
+  const canaryStamp = snapshot?.btc_canary?.observed_at || snapshot?.btc_canary?.decision_at;
+  const canaryActive = name === "RHEN"
+    && snapshot?.btc_canary?.available === true
+    && freshStamp(canaryStamp, now, 90000);
+  const durableActivity = Boolean(activeProblem || activeReplay || canaryActive);
+  const active = fresh && healthy && Boolean(runningJob || explicitRuntime || publicRow.active || durableActivity);
+  const runtime = !active ? "IDLE"
+    : runningJob ? "RUNNING"
+    : explicitRuntime ? String(explicitRuntime.status)
+    : activeReplay || (activeProblem && name === "VELUM") ? "REPLAYING"
+    : activeProblem ? "RESEARCHING"
+    : canaryActive ? "MONITORING"
+    : publicRow.runtime || "ACTIVE";
   const ownActivity = explicitRuntime?.current_activity;
+  const durableActivityText = activeProblem
+    ? [activeProblem.title, activeProblem.research_stage ? displayState(activeProblem.research_stage) : null].filter(Boolean).join(" · ")
+    : activeReplay
+      ? "Replay running"
+      : canaryActive
+        ? "BTC canary · " + displayState(snapshot?.btc_canary?.action || "AWAITING") + " · " + (snapshot?.btc_canary?.reason || "paper monitoring")
+        : null;
 
   const idleActivity: Record<SystemName, string> = {
     IREN: "Supervising system health; no active IREN job.",
@@ -136,7 +161,7 @@ export function commandSystem(name: SystemName, snapshot: IrenSnapshot | null, f
   };
 
   return { name, raw, runtime, fresh, active,
-    activity: runningJob?.title as string || ownActivity || (publicRow.active ? publicRow.activity : idleActivity[name]),
+    activity: runningJob?.title as string || ownActivity || durableActivityText || (publicRow.active ? publicRow.activity : idleActivity[name]),
     observedAt,
     jobs: snapshot?.work?.jobs ? work.jobs.length : undefined,
     objectives: snapshot?.work?.objectives ? work.objectives.length : undefined,
