@@ -150,6 +150,54 @@ function publicEvents(feed?: LiveTradingFeed | null): TerminalEvent[] {
   return [...telemetry, ...research];
 }
 
+function researchTraceEvents(snapshot: IrenSnapshot | null): TerminalEvent[] {
+  const problems = snapshot?.research?.graen_problems || [];
+  const runs = snapshot?.research?.graen_runs || [];
+  const activeVelumStage = problems.find(row =>
+    String(row.research_stage || "").includes("VELUM")
+    && ["RUNNING", "QUEUED", "WAITING", "BLOCKED"].includes(String(row.status || "").toUpperCase())
+  )?.research_stage;
+
+  const problemEvents = problems.map((row, index): TerminalEvent => ({
+    id: "graen-problem-" + String(row.problem_id || index) + "-" + String(row.updated_at || index),
+    at: row.updated_at || row.started_at,
+    system: "GRAEN",
+    source: "GRAEN STAGE",
+    state: row.status,
+    title: row.title || "Research problem",
+    detail: row.research_stage ? displayState(row.research_stage) : "No active research stage"
+  }));
+
+  const runEvents = runs.map((row, index): TerminalEvent => {
+    const detail = [
+      row.methodology_version ? "method: " + row.methodology_version : "",
+      row.result_state ? "state: " + displayState(row.result_state) : "",
+      row.error ? "error: " + row.error.slice(0, 140) : ""
+    ].filter(Boolean).join(" · ");
+    return {
+      id: "graen-run-" + String(row.run_id || index),
+      at: row.completed_at || row.started_at || row.created_at,
+      system: "GRAEN",
+      source: "GRAEN RUN",
+      state: row.status,
+      title: row.result_state ? displayState(row.result_state) : "Research execution",
+      detail
+    };
+  });
+
+  const replayEvents = (snapshot?.research?.velum_replays || []).map((row, index): TerminalEvent => ({
+    id: "velum-replay-" + String(row.started_at || index) + "-" + index,
+    at: row.completed_at || row.started_at,
+    system: "VELUM",
+    source: "VELUM REPLAY",
+    state: row.status,
+    title: activeVelumStage ? displayState(activeVelumStage) : "Replay lifecycle",
+    detail: "Replay " + displayState(row.status || "UNKNOWN")
+  }));
+
+  return [...problemEvents, ...runEvents, ...replayEvents];
+}
+
 function sortEvents(rows: TerminalEvent[]) {
   const seen = new Set<string>();
   return rows
@@ -167,9 +215,28 @@ function laneActivity(snapshot: IrenSnapshot | null, feed: LiveTradingFeed | nul
   const running = work.jobs.find(row => String(row.status) === "RUNNING");
   const queued = work.jobs.find(row => String(row.status) === "QUEUED");
   const job = running || queued || work.jobs[0];
+
+  const activeProblem = (snapshot?.research?.graen_problems || []).find(row =>
+    ["RUNNING", "QUEUED", "WAITING", "BLOCKED"].includes(String(row.status || "").toUpperCase())
+  );
+  const activeReplay = (snapshot?.research?.velum_replays || []).find(row =>
+    String(row.status || "").toUpperCase() === "RUNNING"
+  );
+  const stage = activeProblem?.research_stage || null;
+
+  let traceActivity: string | null = null;
+  if (system === "GRAEN" && activeProblem) {
+    traceActivity = [activeProblem.title, stage ? displayState(stage) : null].filter(Boolean).join(" · ");
+  }
+  if (system === "VELUM" && activeReplay) {
+    traceActivity = stage && stage.includes("VELUM")
+      ? displayState(stage)
+      : "Replay running";
+  }
+
   const researchFocus = system === "GRAEN" ? feed?.research?.current_focus : null;
-  const activity = String(job?.title || researchFocus || view.activity || "Awaiting observation.");
-  const started = String(job?.started_at || job?.created_at || "");
+  const activity = String(job?.title || traceActivity || researchFocus || view.activity || "Awaiting observation.");
+  const started = String(job?.started_at || activeReplay?.started_at || activeProblem?.started_at || job?.created_at || "");
   return { view, work, job, activity, started };
 }
 
@@ -282,6 +349,7 @@ export default function CommandOperationsTerminal({
       ...jobEvents(snapshot),
       ...runtimeEvents(snapshot),
       ...controlEvents(snapshot),
+      ...researchTraceEvents(snapshot),
       ...publicEvents(feed)
     ]),
     [snapshot, feed]
