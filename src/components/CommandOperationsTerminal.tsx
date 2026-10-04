@@ -395,7 +395,7 @@ export default function CommandOperationsTerminal({
   }).length;
 
   return (
-    <article className="command-panel command-view-terminal operations-terminal" aria-label="ANEVUM live operations terminal">
+    <article className="command-panel command-view-terminal operations-terminal" data-visual-ops="terminal" aria-label="ANEVUM live operations terminal">
       <header className="terminal-heading">
         <div>
           <span>COMMAND / LIVE OPERATIONS</span>
