@@ -1,0 +1,448 @@
+/* ANEVUM visual normalization pass — 2026-10-04
+ * Shared presentation corrections for subsystem icons, public topology,
+ * and the private Command navigation. This file intentionally loads last.
+ */
+
+/* --- Shared icon geometry ------------------------------------------------ */
+.vo-card-top .system-icon {
+  --icon-size: 34px !important;
+  width: var(--icon-size) !important;
+  height: var(--icon-size) !important;
+  min-width: var(--icon-size) !important;
+  min-height: var(--icon-size) !important;
+  flex: 0 0 var(--icon-size) !important;
+}
+
+.vo-node .system-icon {
+  --icon-size: 50px !important;
+  width: var(--icon-size) !important;
+  height: var(--icon-size) !important;
+  min-width: var(--icon-size) !important;
+  min-height: var(--icon-size) !important;
+  flex: 0 0 var(--icon-size) !important;
+}
+
+.vo-node-iren .system-icon {
+  --icon-size: 62px !important;
+}
+
+.vo-timeline-dot .system-icon {
+  --icon-size: 20px !important;
+  width: var(--icon-size) !important;
+  height: var(--icon-size) !important;
+  min-width: var(--icon-size) !important;
+  min-height: var(--icon-size) !important;
+  flex: 0 0 var(--icon-size) !important;
+}
+
+/* Product pages use the complete locked app-icon presentation. Previous
+ * width-only overrides compressed an 88px icon into a 48px box and made
+ * the marks look clipped. */
+.product-hero .vo-hero-card {
+  min-width: 0;
+  border-radius: 20px;
+}
+
+.product-hero .vo-hero-card .vo-card-top {
+  min-height: 70px;
+  align-items: center;
+  overflow: visible;
+}
+
+.product-hero .vo-hero-card .vo-card-top .system-icon {
+  --icon-size: 62px !important;
+  width: var(--icon-size) !important;
+  height: var(--icon-size) !important;
+  min-width: var(--icon-size) !important;
+  min-height: var(--icon-size) !important;
+  flex: 0 0 var(--icon-size) !important;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb,var(--icon-accent) 26%,rgba(255,255,255,.06));
+  border-radius: 18px;
+  background:
+    linear-gradient(145deg,rgba(255,255,255,.07),transparent 36%),
+    radial-gradient(circle at 50% 32%,color-mix(in srgb,var(--icon-accent) 17%,transparent),transparent 62%),
+    rgba(5,13,22,.82);
+  box-shadow:
+    inset 0 1px rgba(255,255,255,.08),
+    inset 0 -18px 30px rgba(0,0,0,.14),
+    0 8px 28px rgba(0,0,0,.2),
+    0 0 24px color-mix(in srgb,var(--icon-accent) 10%,transparent);
+}
+
+.product-hero .vo-hero-card .vo-card-top .system-icon::before {
+  display: block;
+}
+
+.product-hero .vo-hero-card .vo-card-top .system-icon-orbit {
+  display: block;
+}
+
+.product-hero .vo-hero-card .vo-card-top .system-mark-svg {
+  width: 64% !important;
+  height: 64% !important;
+  max-width: none !important;
+}
+
+/* --- Public system topology --------------------------------------------- */
+.company-topology-lines {
+  z-index: 0;
+}
+
+.topology-flow-label {
+  z-index: 1 !important;
+  pointer-events: none;
+  white-space: nowrap;
+  text-shadow: 0 0 16px rgba(4,7,13,.9);
+}
+
+.topology-node {
+  z-index: 3;
+  width: 174px;
+  min-height: 104px;
+  padding: 14px 15px;
+}
+
+.node-iren {
+  width: 202px;
+  min-height: 120px;
+}
+
+.topology-node .system-icon {
+  --icon-size: 50px !important;
+  width: var(--icon-size) !important;
+  height: var(--icon-size) !important;
+  min-width: var(--icon-size) !important;
+  min-height: var(--icon-size) !important;
+  flex: 0 0 var(--icon-size) !important;
+  margin: 0 auto 6px;
+}
+
+.node-iren .system-icon {
+  --icon-size: 56px !important;
+}
+
+/* --- Command icon-first navigation -------------------------------------- */
+.command-rhen-lockup {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+}
+
+.command-rhen-lockup .system-icon {
+  --icon-size: 28px !important;
+  width: var(--icon-size) !important;
+  height: var(--icon-size) !important;
+  min-width: var(--icon-size) !important;
+  min-height: var(--icon-size) !important;
+  flex: 0 0 var(--icon-size) !important;
+}
+
+.command-rhen-lockup strong {
+  color: #718596;
+  font-size: .46rem;
+  font-weight: 700;
+  letter-spacing: .12em;
+}
+
+.command-header nav {
+  display: grid !important;
+  grid-auto-flow: column;
+  grid-auto-columns: 44px;
+  justify-content: center !important;
+  align-items: center;
+  gap: 7px !important;
+  overflow: visible !important;
+}
+
+.command-header nav a {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  min-height: 44px !important;
+  padding: 0 !important;
+  display: grid !important;
+  place-items: center;
+  border-radius: 12px !important;
+  color: #718596 !important;
+}
+
+.command-header nav a:hover {
+  color: #d2e0ea !important;
+  border-color: rgba(110,161,255,.24) !important;
+}
+
+.command-header nav a.active {
+  color: #d9e6ff !important;
+  border-color: rgba(110,161,255,.42) !important;
+  background: radial-gradient(circle at 50% 35%,rgba(50,111,255,.16),rgba(6,13,23,.68)) !important;
+  box-shadow: inset 0 0 0 1px rgba(184,210,255,.04),0 0 24px rgba(50,111,255,.08) !important;
+}
+
+.command-header nav .system-icon {
+  --icon-size: 27px !important;
+  width: var(--icon-size) !important;
+  height: var(--icon-size) !important;
+  min-width: var(--icon-size) !important;
+  min-height: var(--icon-size) !important;
+  flex: 0 0 var(--icon-size) !important;
+  border: 1px solid color-mix(in srgb,var(--icon-accent) 24%,rgba(255,255,255,.05)) !important;
+  border-radius: 8px !important;
+  background:
+    linear-gradient(145deg,rgba(255,255,255,.06),transparent 38%),
+    radial-gradient(circle at 50% 35%,color-mix(in srgb,var(--icon-accent) 16%,transparent),transparent 62%),
+    rgba(5,13,22,.8) !important;
+  box-shadow: inset 0 1px rgba(255,255,255,.06),0 0 14px color-mix(in srgb,var(--icon-accent) 8%,transparent) !important;
+}
+
+.command-header nav .system-icon::before {
+  display: block;
+  inset: 3px;
+  border-radius: 5px;
+}
+
+.command-header nav .system-icon .system-mark-svg {
+  width: 70% !important;
+  height: 70% !important;
+}
+
+.command-header nav .system-icon-orbit {
+  display: none !important;
+}
+
+.command-nav-glyph {
+  width: 24px;
+  height: 24px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.35;
+  vector-effect: non-scaling-stroke;
+}
+
+.command-nav-glyph-dot {
+  fill: currentColor;
+  stroke: none;
+}
+
+.command-nav-label {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0,0,0,0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+@media (max-width: 900px) {
+  .topology-node {
+    width: 132px;
+    min-height: 88px;
+    padding: 10px 11px;
+  }
+
+  .node-iren {
+    width: 150px;
+    min-height: 98px;
+  }
+
+  .topology-node .system-icon {
+    --icon-size: 42px !important;
+  }
+
+  .node-iren .system-icon {
+    --icon-size: 48px !important;
+  }
+}
+
+@media (max-width: 760px) {
+  .command-header {
+    height: calc(108px + var(--command-safe-top)) !important;
+    grid-template-columns: minmax(0,1fr) auto !important;
+    grid-template-rows: 54px 54px !important;
+    gap: 0 8px !important;
+  }
+
+  .command-header nav {
+    grid-column: 1 / -1 !important;
+    grid-row: 2 !important;
+    width: 100%;
+    grid-template-columns: repeat(7,minmax(0,1fr)) !important;
+    grid-auto-flow: row;
+    grid-auto-columns: auto;
+    gap: 4px !important;
+  }
+
+  .command-header nav a {
+    width: 100%;
+    min-width: 0;
+    height: 44px;
+    min-height: 44px !important;
+    border-radius: 10px !important;
+  }
+
+  .command-header nav .system-icon {
+    --icon-size: 26px !important;
+  }
+
+  .command-nav-glyph {
+    width: 22px;
+    height: 22px;
+  }
+
+  .command-main {
+    min-height: calc(100dvh - 108px - var(--command-safe-top)) !important;
+  }
+
+  .command-account-actions a,
+  .command-account-actions button {
+    width: 34px;
+    min-width: 34px;
+    height: 34px;
+    padding: 0 !important;
+    display: grid;
+    place-items: center;
+    font-size: 0 !important;
+  }
+
+  .command-account-actions a::before {
+    content: "↗";
+    font-size: 16px;
+    line-height: 1;
+  }
+
+  .command-account-actions button::before {
+    content: "⏻";
+    font-size: 15px;
+    line-height: 1;
+  }
+}
+
+@media (max-width: 680px) {
+  .company-topology,
+  .company-topology.is-compact {
+    min-height: 420px !important;
+    border-radius: 18px;
+  }
+
+  .topology-node,
+  .node-iren {
+    display: grid;
+    justify-items: center;
+    align-content: center;
+    text-align: center;
+    gap: 4px;
+  }
+
+  .topology-node {
+    width: 90px !important;
+    min-height: 82px !important;
+    padding: 8px 7px !important;
+    border-radius: 13px;
+  }
+
+  .node-iren {
+    width: 102px !important;
+    min-height: 90px !important;
+  }
+
+  .topology-node > span,
+  .topology-node > small {
+    display: none !important;
+  }
+
+  .topology-node strong {
+    font-size: .98rem !important;
+    line-height: 1;
+    letter-spacing: -.03em;
+  }
+
+  .topology-node .system-icon {
+    --icon-size: 38px !important;
+    margin: 0 auto 2px;
+  }
+
+  .node-iren .system-icon {
+    --icon-size: 44px !important;
+  }
+
+  .topology-flow-label {
+    font-size: .36rem !important;
+    letter-spacing: .13em !important;
+    color: rgba(184,210,255,.32) !important;
+  }
+
+  .topology-flow-label.flow-research {
+    top: 29% !important;
+  }
+
+  .topology-flow-label.flow-operate {
+    top: 61.5% !important;
+  }
+
+  .product-hero .vo-hero-card .vo-card-top {
+    min-height: 62px;
+  }
+
+  .product-hero .vo-hero-card .vo-card-top .system-icon {
+    --icon-size: 54px !important;
+    border-radius: 16px;
+  }
+
+  .product-hero .vo-hero-card {
+    padding: 18px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .command-brand > i {
+    display: none;
+  }
+
+  .command-rhen-lockup strong {
+    display: none;
+  }
+
+  .command-rhen-lockup .system-icon {
+    --icon-size: 26px !important;
+  }
+
+  .command-header nav {
+    gap: 3px !important;
+  }
+
+  .command-header nav a {
+    height: 42px;
+    min-height: 42px !important;
+  }
+
+  .company-topology,
+  .company-topology.is-compact {
+    min-height: 398px !important;
+  }
+
+  .topology-node {
+    width: 84px !important;
+    min-height: 76px !important;
+  }
+
+  .node-iren {
+    width: 96px !important;
+    min-height: 84px !important;
+  }
+
+  .topology-node strong {
+    font-size: .9rem !important;
+  }
+
+  .topology-node .system-icon {
+    --icon-size: 36px !important;
+  }
+
+  .node-iren .system-icon {
+    --icon-size: 42px !important;
+  }
+}
