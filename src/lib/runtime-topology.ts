@@ -93,6 +93,31 @@ export type OperatorProjection = {
   };
 };
 
+export type BtcCanaryProjection = {
+  available?: boolean;
+  run_id?: string;
+  strategy_version_id?: string;
+  paper_only?: boolean;
+  live_execution_authorized?: boolean;
+  promotion_ready?: boolean;
+  research_status?: string;
+  evidence_state?: string;
+  observed_at?: string | null;
+  decision_at?: string | null;
+  action?: string | null;
+  reason?: string | null;
+  bar_interval?: string | null;
+  strategy_family?: string | null;
+  model_version?: string | null;
+  position_open?: boolean;
+  position_observed_at?: string | null;
+  current_return_pct?: string | null;
+  risk_stop_pct?: string | null;
+  account_observed_at?: string | null;
+  protection_status?: string | null;
+  protection_observed_at?: string | null;
+};
+
 export type IrenSnapshot = {
   schema_version: string;
   revision: string | number | null;
@@ -156,6 +181,7 @@ export type IrenSnapshot = {
       updated_at?: string | null;
     } | null;
   };
+  btc_canary?: BtcCanaryProjection;
   operator?: OperatorProjection;
 };
 
