@@ -365,6 +365,80 @@ function FocusWorkbench({
   );
 }
 
+function canaryPercent(value: unknown, signed = false) {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) return "—";
+  const percent = numeric * 100;
+  const prefix = signed && percent > 0 ? "+" : "";
+  return prefix + percent.toFixed(Math.abs(percent) >= 1 ? 2 : 3) + "%";
+}
+
+function CanaryWorkbench({
+  snapshot,
+  now
+}: {
+  snapshot: IrenSnapshot | null;
+  now: number;
+}) {
+  const canary = snapshot?.btc_canary;
+  const available = canary?.available === true;
+  const positionOpen = canary?.position_open === true;
+  const state = !available
+    ? "NO CANONICAL RUN"
+    : positionOpen
+      ? "PAPER POSITION OPEN"
+      : displayState(canary?.evidence_state || "OBSERVING");
+  const tone = stateTone(positionOpen ? "RUNNING" : available ? "WAITING" : "UNKNOWN");
+  const active = available && (positionOpen || String(canary?.action || "").toLowerCase() === "hold");
+  const context = [
+    ["RUN", canary?.run_id],
+    ["SIGNAL", canary?.strategy_version_id],
+    ["MODEL", canary?.model_version]
+  ].filter((row): row is [string, string] => Boolean(row[1]));
+
+  return (
+    <article
+      className={"terminal-focus-card terminal-canary-card tone-" + tone + (active ? " is-working" : "")}
+      style={{ "--terminal-accent": IDENTITY.RHEN.color } as CSSProperties}
+    >
+      <header>
+        <div className="terminal-focus-title">
+          <SystemIcon system="RHEN" size="sm" />
+          <div><span>FORWARD PAPER CANARY</span><h2>RHEN / BTC</h2></div>
+        </div>
+        <div className="terminal-focus-state"><i aria-hidden="true" /><strong>{state}</strong></div>
+      </header>
+
+      <div className="terminal-focus-instrument" aria-label="RHEN BTC paper canary activity instrument">
+        <SystemInstrument name="RHEN" />
+        <i className="terminal-focus-sweep" aria-hidden="true" />
+      </div>
+
+      <div className="terminal-focus-work">
+        <span>LATEST DECISION</span>
+        <strong>{displayState(canary?.action || canary?.evidence_state || "awaiting evidence")}</strong>
+        <p>{canary?.reason || "No canonical BTC canary decision has landed yet."}</p>
+      </div>
+
+      {context.length > 0 && <div className="terminal-focus-context">
+        {context.map(([label, value]) => <span key={label}><b>{label}</b>{value}</span>)}
+      </div>}
+
+      <dl className="terminal-focus-metrics">
+        <div><dt>RETURN</dt><dd>{canaryPercent(canary?.current_return_pct, true)}</dd></div>
+        <div><dt>FAIL-SAFE STOP</dt><dd>{canary?.risk_stop_pct == null ? "—" : "−" + canaryPercent(Math.abs(Number(canary.risk_stop_pct)))}</dd></div>
+        <div><dt>PROTECTION</dt><dd>{displayState(canary?.protection_status || "unobserved")}</dd></div>
+        <div><dt>EVIDENCE</dt><dd>{ageText(canary?.observed_at, now)}</dd></div>
+      </dl>
+
+      <footer>
+        <div><span>LINEAGE</span><strong>{canary?.bar_interval || "—"} · {displayState(canary?.research_status || "NOT_PROMOTED")}</strong></div>
+        <div><span>AUTHORITY</span><strong>{canary?.live_execution_authorized === true ? "LIVE AUTHORIZED" : "PAPER ONLY · LIVE NONE"}</strong></div>
+      </footer>
+    </article>
+  );
+}
+
 export default function CommandOperationsTerminal({
   session,
   feed,
@@ -417,9 +491,10 @@ export default function CommandOperationsTerminal({
 
       {(error || feedError) && <div className="terminal-warning"><strong>OBSERVATION DEGRADED</strong><span>{error || feedError}</span></div>}
 
-      <section className="terminal-focus-grid" aria-label="GRAEN and VELUM live workbenches">
+      <section className="terminal-focus-grid" aria-label="GRAEN, VELUM, and RHEN live workbenches">
         <FocusWorkbench system="GRAEN" snapshot={snapshot} feed={feed} events={events} now={now} />
         <FocusWorkbench system="VELUM" snapshot={snapshot} feed={feed} events={events} now={now} />
+        <CanaryWorkbench snapshot={snapshot} now={now} />
       </section>
 
       <section className="terminal-lanes" aria-label="ANEVUM systems">
