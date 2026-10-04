@@ -113,3 +113,37 @@ test("only substantive work produces a Command activity signal", () => {
   assert.ok(iren.signal);
   assert.equal(iren.activity,"Verify runtime evidence");
 });
+
+test("durable research replay and canary evidence drive shared Command activity", () => {
+  const value=snapshot();
+  for (const row of value.topology.services) row.status="IDLE";
+
+  value.research={
+    graen_problems:[{status:"RUNNING",title:"Evaluate BTC hypothesis",research_stage:"GRAEN_SEARCH"}],
+    velum_replays:[]
+  };
+  let view=commandSystem("GRAEN",value,null,now);
+  assert.equal(view.active,true);
+  assert.equal(view.runtime,"RESEARCHING");
+  assert.match(view.activity,/Evaluate BTC hypothesis/);
+
+  value.research={
+    graen_problems:[],
+    velum_replays:[{status:"RUNNING",started_at:stamp}]
+  };
+  view=commandSystem("VELUM",value,null,now);
+  assert.equal(view.active,true);
+  assert.equal(view.runtime,"REPLAYING");
+
+  value.research={graen_problems:[],velum_replays:[]};
+  value.btc_canary={
+    available:true,
+    observed_at:stamp,
+    action:"hold",
+    reason:"paper position protected"
+  };
+  view=commandSystem("RHEN",value,null,now);
+  assert.equal(view.active,true);
+  assert.equal(view.runtime,"MONITORING");
+  assert.match(view.activity,/paper position protected/);
+});
