@@ -6,7 +6,9 @@ import path from "node:path";
 const base = process.env.BASE_URL;
 if (!base) throw new Error("BASE_URL is required");
 
-const routes = (process.env.PUBLIC_ONLY === "1" ? ["/", "/live", "/products"] : ["/", "/live", "/products", "/command/overview", "/command/iren", "/command/rhen", "/command/graen", "/command/nostra", "/command/velum"]);
+const publicRoutes = ["/", "/live", "/products", "/products/iren", "/products/rhen", "/products/graen", "/products/nostra", "/products/velum", "/architecture", "/research", "/research/multi-market-architecture-equities-crypto", "/case-studies", "/performance", "/founder", "/resume", "/releases", "/theory"];
+const commandRoutes = ["/command/overview", "/command/iren", "/command/rhen", "/command/graen", "/command/nostra", "/command/velum", "/command/infrastructure"];
+const routes = process.env.PUBLIC_ONLY === "1" ? publicRoutes : [...publicRoutes, ...commandRoutes];
 const output = path.join(process.env.RUNNER_TEMP || os.tmpdir(), "anevum-visuals");
 fs.mkdirSync(output, {recursive:true});
 const viewports = [
@@ -141,7 +143,119 @@ async function runCase(route, viewport) {
     };
   })()`.replace("routePlaceholder", JSON.stringify(route)),returnByValue:true});
   const details=ops.result?.value||{};
-  if(!details.surface || !details.cards || !details.links) throw new Error("Missing accessible visual surface: "+JSON.stringify(details));
+  const requiresVisualOpsSurface = route === "/" || route === "/live" || route === "/products" || route.startsWith("/command/");
+  const requiresSystemCards = route === "/" || route === "/live" || route === "/products" || route.startsWith("/products/") || route.startsWith("/command/");
+  if((requiresVisualOpsSurface && !details.surface) || (requiresSystemCards && (!details.cards || !details.links))) {
+    throw new Error("Missing accessible visual surface: "+JSON.stringify(details));
+  }
+
+  if(route.startsWith("/products/") && route.split("/").filter(Boolean).length === 2) {
+    const iconGeometry = await send("Runtime.evaluate", {expression: `(() => {
+      const icon=document.querySelector(".product-hero .vo-card-top .system-icon");
+      const mark=icon?.querySelector(".system-mark-svg");
+      if(!icon || !mark) return {present:false};
+      const a=icon.getBoundingClientRect();
+      const b=mark.getBoundingClientRect();
+      const style=getComputedStyle(icon);
+      return {
+        present:true,
+        width:Math.round(a.width),
+        height:Math.round(a.height),
+        overflow:style.overflow,
+        markInside:b.left>=a.left-1 && b.top>=a.top-1 && b.right<=a.right+1 && b.bottom<=a.bottom+1
+      };
+    })()`, returnByValue:true});
+    const geometry=iconGeometry.result?.value||{};
+    if(!geometry.present || geometry.width!==geometry.height || !geometry.markInside) {
+      throw new Error("Subsystem hero icon geometry failed: "+JSON.stringify(geometry));
+    }
+
+    const relatedAudit = await send("Runtime.evaluate", {expression: `(() => {
+      const failures=[];
+      for(const link of document.querySelectorAll(".related-products a")){
+        const icon=link.querySelector(":scope > .system-icon");
+        const name=link.querySelector(":scope > strong");
+        if(!icon||!name) continue;
+        const a=icon.getBoundingClientRect();
+        const b=name.getBoundingClientRect();
+        if(a.left>=b.left || a.right>b.left+2) failures.push({name:name.textContent,iconLeft:Math.round(a.left),iconRight:Math.round(a.right),nameLeft:Math.round(b.left)});
+      }
+      return failures;
+    })()`,returnByValue:true});
+    if(relatedAudit.result?.value?.length) throw new Error("Related-system icon placement failed: "+JSON.stringify(relatedAudit.result.value));
+  }
+
+  const iconAudit = await send("Runtime.evaluate", {expression: `(() => {
+    const visible=el=>{const r=el.getBoundingClientRect();const s=getComputedStyle(el);return r.width>0&&r.height>0&&s.display!=="none"&&s.visibility!=="hidden"};
+    const failures=[];
+    for(const icon of [...document.querySelectorAll(".system-icon")].filter(visible)){
+      const mark=icon.querySelector(".system-mark-svg");
+      if(!mark) continue;
+      const a=icon.getBoundingClientRect();
+      const b=mark.getBoundingClientRect();
+      const square=Math.abs(a.width-a.height)<=1;
+      const inside=b.left>=a.left-1&&b.top>=a.top-1&&b.right<=a.right+1&&b.bottom<=a.bottom+1;
+      if(!square||!inside) failures.push({
+        system:[...icon.classList].find(value=>value.startsWith("system-icon-")&&!["system-icon-xs","system-icon-sm","system-icon-md","system-icon-lg"].includes(value)),
+        width:Math.round(a.width),height:Math.round(a.height),
+        mark:{left:Math.round(b.left-a.left),top:Math.round(b.top-a.top),right:Math.round(a.right-b.right),bottom:Math.round(a.bottom-b.bottom)}
+      });
+    }
+    return failures.slice(0,12);
+  })()`,returnByValue:true});
+  if(iconAudit.result?.value?.length) throw new Error("Visible subsystem icon clipping/sizing failure: "+JSON.stringify(iconAudit.result.value));
+
+  if(route.startsWith("/command/")) {
+    const navAudit=await send("Runtime.evaluate",{expression:`(() => {
+      const nav=document.querySelector(".command-header nav");
+      const links=[...nav?.querySelectorAll("a")||[]].filter(el=>el.getBoundingClientRect().width>0);
+      const rects=links.map(el=>{const r=el.getBoundingClientRect();return {label:el.getAttribute("aria-label"),left:r.left,right:r.right,top:r.top,bottom:r.bottom,width:r.width,height:r.height}});
+      const overlaps=[];
+      for(let i=0;i<rects.length;i++) for(let j=i+1;j<rects.length;j++){
+        const a=rects[i],b=rects[j];
+        if(a.left<b.right&&a.right>b.left&&a.top<b.bottom&&a.bottom>b.top) overlaps.push(a.label+" × "+b.label);
+      }
+      const rows=[...new Set(rects.map(r=>Math.round(r.top)))];
+      return {count:rects.length,rows,overlaps,minWidth:Math.min(...rects.map(r=>r.width)),maxRight:Math.max(...rects.map(r=>r.right)),viewport:document.documentElement.clientWidth};
+    })()`,returnByValue:true});
+    const nav=navAudit.result?.value||{};
+    if(nav.count!==7||nav.overlaps?.length||nav.minWidth<32||nav.maxRight>nav.viewport+1||(viewport.mobile&&nav.rows?.length!==1)){
+      throw new Error("Command icon navigation geometry failed: "+JSON.stringify(nav));
+    }
+  }
+
+  if(["/products","/architecture"].includes(route)) {
+    const topologyGeometry = await send("Runtime.evaluate", {expression: `(() => {
+      const root=document.querySelector(".company-topology:not(.is-compact)");
+      if(!root) return {present:false,collisions:[]};
+      const labels=[...root.querySelectorAll(".topology-flow-label")];
+      const nodes=[...root.querySelectorAll(".topology-node")];
+      const overlaps=(a,b)=>a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top;
+      const collisions=[];
+      const missingIcons=[];
+      for(const node of nodes) {
+        const icon=node.querySelector(":scope > .system-icon");
+        const ir=icon?.getBoundingClientRect();
+        const style=icon ? getComputedStyle(icon) : null;
+        if(!icon || !ir || ir.width<20 || ir.height<20 || style?.display==="none" || style?.visibility==="hidden") {
+          missingIcons.push((node.textContent||"node").trim());
+        }
+      }
+      for(const label of labels) {
+        const lr=label.getBoundingClientRect();
+        for(const node of nodes) {
+          const nr=node.getBoundingClientRect();
+          if(overlaps(lr,nr)) collisions.push((label.textContent||"label").trim()+" × "+(node.textContent||"node").trim());
+        }
+      }
+      return {present:true,nodeCount:nodes.length,missingIcons,collisions};
+    })()`, returnByValue:true});
+    const topology=topologyGeometry.result?.value||{};
+    if(!topology.present || topology.nodeCount!==5 || topology.missingIcons?.length || topology.collisions?.length) {
+      throw new Error("Topology geometry/icon failure: "+JSON.stringify(topology));
+    }
+  }
+
   if(route==="/command/overview" && details.legacySummaryVisible) throw new Error("Legacy trading strip obscures fleet overview");
   if(route==="/command/overview" && (details.nostra!=="OFFLINE" || details.velum!=="IDLE" || details.activeGraen!=="true")) throw new Error("State rendering failed: "+JSON.stringify(details));
   if(route.startsWith("/command/")) {
