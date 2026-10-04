@@ -1,7 +1,7 @@
 import { useMemo, useState, type CSSProperties } from "react";
 import type { RhenSession } from "../lib/auth";
 import type { LiveTradingFeed } from "../lib/data";
-import type { IrenJobEvent, IrenSnapshot, RuntimeRow } from "../lib/runtime-topology";
+import type { BtcCanaryProjection, IrenJobEvent, IrenSnapshot, RuntimeRow } from "../lib/runtime-topology";
 import {
   IDENTITY,
   SYSTEMS,
@@ -47,6 +47,14 @@ function compactValue(value: unknown) {
   if (typeof value === "number" && Number.isFinite(value)) return String(value);
   if (typeof value === "string" && value.length <= 120) return value;
   return "";
+}
+
+function fractionPercent(value?: string | null) {
+  if (value === undefined || value === null || value === "") return "—";
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) return "—";
+  const percent = parsed * 100;
+  return (percent > 0 ? "+" : "") + percent.toFixed(2) + "%";
 }
 
 function eventDetail(event?: Record<string, unknown>) {
@@ -365,6 +373,80 @@ function FocusWorkbench({
   );
 }
 
+function BtcCanaryPanel({
+  canary,
+  now
+}: {
+  canary?: BtcCanaryProjection;
+  now: number;
+}) {
+  const available = canary?.available === true;
+  const state = available
+    ? displayState(canary?.evidence_state || "OBSERVING")
+    : "NO CANONICAL RUN";
+  const positionState = canary?.position_open ? "OPEN / PROTECTED" : "FLAT";
+  const protection = canary?.protection_status
+    ? displayState(canary.protection_status)
+    : canary?.position_open
+      ? "UNCONFIRMED"
+      : "NOT REQUIRED";
+  const action = displayState(canary?.action || "AWAITING");
+  const returnLabel = fractionPercent(canary?.current_return_pct);
+  const returnTone = Number(canary?.current_return_pct || 0);
+  const returnClass = !available
+    ? ""
+    : returnTone > 0
+      ? " is-positive"
+      : returnTone < 0
+        ? " is-negative"
+        : "";
+  const observed = canary?.observed_at || canary?.decision_at;
+
+  return (
+    <section
+      className={"terminal-canary" + (available ? " is-available" : "")}
+      aria-label="BTC canary paper experiment"
+    >
+      <header>
+        <div className="terminal-canary-title">
+          <SystemIcon system="RHEN" size="sm" />
+          <div>
+            <span>RHEN / FORWARD PAPER EXPERIMENT</span>
+            <h2>BTC-CANARY-001</h2>
+          </div>
+        </div>
+        <div className="terminal-canary-authority">
+          <b>PAPER ONLY</b>
+          <b>LIVE DISABLED</b>
+          <b>NOT PROMOTED</b>
+        </div>
+      </header>
+
+      <div className="terminal-canary-grid">
+        <div className="terminal-canary-status">
+          <span>FORWARD STATE</span>
+          <strong>{state}</strong>
+          <p>{canary?.reason || "Waiting for canonical BTC canary evidence."}</p>
+        </div>
+        <dl>
+          <div><dt>POSITION</dt><dd>{positionState}</dd></div>
+          <div><dt>CURRENT RETURN</dt><dd className={returnClass}>{returnLabel}</dd></div>
+          <div><dt>RISK STOP</dt><dd>{fractionPercent(canary?.risk_stop_pct)}</dd></div>
+          <div><dt>PROTECTION</dt><dd>{protection}</dd></div>
+          <div><dt>SIGNAL</dt><dd>{action}</dd></div>
+          <div><dt>TIMEFRAME</dt><dd>{canary?.bar_interval || "4Hour"}</dd></div>
+        </dl>
+      </div>
+
+      <footer>
+        <span><b>RUN</b>{canary?.run_id || "—"}</span>
+        <span><b>MODEL</b>{canary?.model_version || canary?.strategy_version_id || "BTC-CANARY-001"}</span>
+        <span><b>OBSERVED</b>{ageText(observed, now)}</span>
+      </footer>
+    </section>
+  );
+}
+
 export default function CommandOperationsTerminal({
   session,
   feed,
@@ -421,6 +503,8 @@ export default function CommandOperationsTerminal({
         <FocusWorkbench system="GRAEN" snapshot={snapshot} feed={feed} events={events} now={now} />
         <FocusWorkbench system="VELUM" snapshot={snapshot} feed={feed} events={events} now={now} />
       </section>
+
+      <BtcCanaryPanel canary={snapshot?.btc_canary} now={now} />
 
       <section className="terminal-lanes" aria-label="ANEVUM systems">
         {TERMINAL_SYSTEMS.map(system => {
