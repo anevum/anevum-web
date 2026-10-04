@@ -161,7 +161,7 @@ export function commandSystem(name: SystemName, snapshot: IrenSnapshot | null, f
   const incidents = snapshot?.incidents.filter(row => incidentOwner(row) === name);
 
   // Health is based on liveness/readiness/freshness, never on whether work is active.
-  const healthStates = rows.map(row =>
+  const healthStates: string[] = rows.map(row =>
     row.liveness === false
       ? "OFFLINE"
       : row.readiness === false
