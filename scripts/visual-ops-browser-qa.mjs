@@ -6,7 +6,7 @@ import path from "node:path";
 const base = process.env.BASE_URL;
 if (!base) throw new Error("BASE_URL is required");
 
-const publicRoutes = ["/", "/live", "/products", "/products/iren", "/products/rhen", "/products/graen", "/products/nostra", "/products/velum", "/architecture", "/research", "/case-studies", "/performance", "/founder", "/releases", "/theory"];
+const publicRoutes = ["/", "/live", "/products", "/products/iren", "/products/rhen", "/products/graen", "/products/nostra", "/products/velum", "/architecture", "/research", "/research/multi-market-architecture-equities-crypto", "/case-studies", "/performance", "/founder", "/releases", "/theory"];
 const commandRoutes = ["/command/overview", "/command/iren", "/command/rhen", "/command/graen", "/command/nostra", "/command/velum", "/command/infrastructure"];
 const routes = process.env.PUBLIC_ONLY === "1" ? publicRoutes : [...publicRoutes, ...commandRoutes];
 const output = path.join(process.env.RUNNER_TEMP || os.tmpdir(), "anevum-visuals");
@@ -169,6 +169,20 @@ async function runCase(route, viewport) {
     if(!geometry.present || geometry.width!==geometry.height || !geometry.markInside) {
       throw new Error("Subsystem hero icon geometry failed: "+JSON.stringify(geometry));
     }
+
+    const relatedAudit = await send("Runtime.evaluate", {expression: `(() => {
+      const failures=[];
+      for(const link of document.querySelectorAll(".related-products a")){
+        const icon=link.querySelector(":scope > .system-icon");
+        const name=link.querySelector(":scope > strong");
+        if(!icon||!name) continue;
+        const a=icon.getBoundingClientRect();
+        const b=name.getBoundingClientRect();
+        if(a.left>=b.left || a.right>b.left+2) failures.push({name:name.textContent,iconLeft:Math.round(a.left),iconRight:Math.round(a.right),nameLeft:Math.round(b.left)});
+      }
+      return failures;
+    })()`,returnByValue:true});
+    if(relatedAudit.result?.value?.length) throw new Error("Related-system icon placement failed: "+JSON.stringify(relatedAudit.result.value));
   }
 
   const iconAudit = await send("Runtime.evaluate", {expression: `(() => {
