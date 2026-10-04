@@ -365,9 +365,9 @@
 
   .command-account-actions a,
   .command-account-actions button {
-    width: 34px;
-    min-width: 34px;
-    height: 34px;
+    width: 44px;
+    min-width: 44px;
+    height: 44px;
     padding: 0 !important;
     display: grid;
     place-items: center;
