@@ -14,7 +14,7 @@ export const IDENTITY = {
 // Matches app/slack_brand.py's concepts; Slack assets are not shipped to the browser.
 export const SEMANTIC = { health: "✓", warning: "!", critical: "×", live: "◉", research: "⌘", forecast: "⑂", replay: "↺", execution: "↗", freshness: "◷", job: "◇", objective: "◎", incident: "!", data: "≋", waiting: "○" } as const;
 const LABELS: Record<string, string> = {
-  HEALTHY: "Healthy", RUNNING: "Active", ACTIVE: "Active", CANONICAL_CONTROL_STATE: "Control active",
+  HEALTHY: "Healthy", RUNNING: "Working", ACTIVE: "Working", CANONICAL_CONTROL_STATE: "Control active",
   LIVE_TELEMETRY: "Live telemetry", LIVE_BASELINE: "Baseline tracking", READY: "Ready",
   IDLE: "Ready / idle", OFFLINE: "Offline", OFFLINE_BY_DESIGN: "Offline by design",
   STALE: "Data stale", DEGRADED: "Needs attention", WAITING: "Waiting", BLOCKED: "Blocked",
@@ -23,7 +23,8 @@ const LABELS: Record<string, string> = {
   QUEUED: "Queued", SUCCEEDED: "Complete", COMPLETE: "Complete", COMPLETED: "Complete",
   REJECTED: "Rejected", CANCELLED: "Cancelled", CONNECTING: "Connecting", OPEN: "Open",
   CLOSED: "Closed", REPLAYING: "Replaying", FORECASTING: "Forecasting", RESEARCHING: "Researching",
-  OBSERVING: "Observing", WAITING_FOR_INPUTS: "Waiting for inputs", COLLECTING: "Collecting evidence"
+  OBSERVING: "Observing", SCANNING: "Scanning", SUPERVISING: "Supervising", MONITORING: "Monitoring",
+  WAITING_FOR_INPUTS: "Waiting for inputs", COLLECTING: "Collecting evidence", NO_ACTIVE_WORK: "No active work"
 };
 export function displayState(raw?: string | null) {
   const key = String(raw || "UNKNOWN").toUpperCase();
@@ -105,21 +106,41 @@ export function commandSystem(name: SystemName, snapshot: IrenSnapshot | null, f
   const fresh = !unavailable && snapshot?.stale === false && freshStamp(snapshot.observed_at, now) && freshStamp(observedAt, now);
   const work = systemWork(snapshot, name);
   const incidents = snapshot?.incidents.filter(row => incidentOwner(row) === name);
-  const states = rows.map(row => row.liveness === false ? "OFFLINE" : row.readiness === false ? "DEGRADED" :
-    !freshStamp(row.last_heartbeat_at || row.observed_at || snapshot?.observed_at, now) ? "STALE" : row.status);
-  if (name === "IREN" && snapshot) states.push(snapshot.operator?.state || snapshot.state);
-  if (incidents?.length) states.push(incidents.some(row => row.severity.toLowerCase() === "critical") ? "CRITICAL" : "DEGRADED");
-  const raw = !snapshot ? "UNAVAILABLE" : !fresh ? "STALE" : mostSevere(states) || "UNAVAILABLE";
-  const healthy = ["good", "active"].includes(stateTone(raw));
+
+  // Health answers "can this runtime be trusted?" Activity answers "is it doing
+  // useful work right now?" Never let a heartbeat or process loop answer both.
+  const healthStates = rows.map(row => row.liveness === false ? "OFFLINE" : row.readiness === false ? "DEGRADED" :
+    !freshStamp(row.last_heartbeat_at || row.observed_at || snapshot?.observed_at, now) ? "STALE" : "HEALTHY");
+  if (name === "IREN" && snapshot && !["HEALTHY", "RUNNING", "IDLE"].includes(String(snapshot.operator?.state || snapshot.state))) {
+    healthStates.push(snapshot.operator?.state || snapshot.state);
+  }
+  if (incidents?.length) healthStates.push(incidents.some(row => row.severity.toLowerCase() === "critical") ? "CRITICAL" : "DEGRADED");
+
+  const raw = !snapshot ? "UNAVAILABLE" : !fresh ? "STALE" : mostSevere(healthStates) || (rows.length ? "HEALTHY" : "UNAVAILABLE");
+  const healthy = stateTone(raw) === "good";
   const publicRow = publicSystem(name, feed, now);
-  const ownActivity = rows.find(row => row.current_activity)?.current_activity;
-  return { name, raw, runtime: mostSevere(rows.map(row => row.status)) || "UNKNOWN", fresh,
-    active: fresh && healthy && (work.jobs.some(row => row.status === "RUNNING") || publicRow.active),
-    activity: work.jobs.find(row => row.status === "RUNNING")?.title as string || ownActivity || (publicRow.fresh ? publicRow.activity : "Awaiting a canonical activity observation."),
+  const runningJob = work.jobs.find(row => String(row.status) === "RUNNING");
+  const explicitRuntime = rows.find(row => String(row.status).toUpperCase() === "RUNNING" && Boolean(row.current_activity));
+  const active = fresh && healthy && Boolean(runningJob || explicitRuntime || publicRow.active);
+  const runtime = active
+    ? String(runningJob ? "RUNNING" : explicitRuntime?.status || publicRow.runtime || "ACTIVE")
+    : "IDLE";
+  const ownActivity = explicitRuntime?.current_activity;
+
+  const idleActivity: Record<SystemName, string> = {
+    IREN: "Supervising system health; no active IREN job.",
+    RHEN: "No current execution work signal.",
+    GRAEN: "No active research run.",
+    NOSTRA: "No active forecast cycle.",
+    VELUM: "No replay running."
+  };
+
+  return { name, raw, runtime, fresh, active,
+    activity: runningJob?.title as string || ownActivity || (publicRow.active ? publicRow.activity : idleActivity[name]),
     observedAt,
     jobs: snapshot?.work?.jobs ? work.jobs.length : undefined,
     objectives: snapshot?.work?.objectives ? work.objectives.length : undefined,
-    incidents: incidents?.length, signal: fresh && healthy ? String(snapshot?.revision ?? snapshot?.observed_at) : undefined,
+    incidents: incidents?.length, signal: active ? String(snapshot?.revision ?? snapshot?.observed_at) : undefined,
     source: "IREN / Foundation" };
 }
 export function fleetState(views: SystemView[]) {
