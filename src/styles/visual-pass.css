@@ -3,6 +3,39 @@
  * and the private Command navigation. This file intentionally loads last.
  */
 
+/* --- Canonical subsystem identity ---------------------------------------- */
+/* Older presentation layers still contain pre-lock colors. Normalize every
+ * shared system surface here so a system reads the same on Home, Systems,
+ * Architecture, Field Notes, product pages, and Command. */
+.system-chip-iren{--chip-accent:var(--iren-signal) !important}
+.system-chip-rhen{--chip-accent:#6fd1ff !important}
+.system-chip-graen{--chip-accent:var(--graen-gold) !important}
+.system-chip-nostra{--chip-accent:var(--nostra-lavender) !important}
+.system-chip-velum{--chip-accent:var(--velum-cyan) !important}
+
+.node-iren{--system-accent:var(--iren-signal) !important}
+.node-rhen{--system-accent:#6fd1ff !important}
+.node-graen{--system-accent:var(--graen-gold) !important}
+.node-nostra{--system-accent:var(--nostra-lavender) !important}
+.node-velum{--system-accent:var(--velum-cyan) !important}
+
+.system-state-iren{--state-accent:var(--iren-signal) !important}
+.system-state-rhen{--state-accent:#6fd1ff !important}
+.system-state-graen{--state-accent:var(--graen-gold) !important}
+.system-state-nostra{--state-accent:var(--nostra-lavender) !important}
+.system-state-velum{--state-accent:var(--velum-cyan) !important}
+
+.program-rhen{--program-accent:#6fd1ff !important}
+.program-graen{--program-accent:var(--graen-gold) !important}
+.program-nostra{--program-accent:var(--nostra-lavender) !important}
+.program-velum{--program-accent:var(--velum-cyan) !important}
+
+.architecture-role-grid a:nth-child(1){--system-accent:var(--iren-signal) !important}
+.architecture-role-grid a:nth-child(2){--system-accent:#6fd1ff !important}
+.architecture-role-grid a:nth-child(3){--system-accent:var(--nostra-lavender) !important}
+.architecture-role-grid a:nth-child(4){--system-accent:var(--graen-gold) !important}
+.architecture-role-grid a:nth-child(5){--system-accent:var(--velum-cyan) !important}
+
 /* --- Shared icon geometry ------------------------------------------------ */
 .vo-card-top .system-icon {
   --icon-size: 34px !important;
