@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, type ReactNode } from "react";
+import { lazy, Suspense, useEffect, useLayoutEffect, type ReactNode } from "react";
 import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { OverflowPan } from "./components/OverflowPan";
 import SeasonalEasterEggs from "./components/SeasonalEasterEggs";
@@ -127,12 +127,6 @@ function RouteEffects() {
   }, []);
 
   useEffect(() => {
-    window.requestAnimationFrame(() => {
-      window.scrollTo({ top: 0, left: 0, behavior: "auto" });
-    });
-  }, [location.pathname]);
-
-  useEffect(() => {
     const path = location.pathname;
     const protectedRoute = path.startsWith("/command") || path === "/private" || path === "/iren";
 
@@ -168,12 +162,27 @@ function RouteEffects() {
   return null;
 }
 
+
+function RouteScrollReset({ children }: { children: ReactNode }) {
+  const location = useLocation();
+
+  useLayoutEffect(() => {
+    const root = document.documentElement;
+    const previousScrollBehavior = root.style.scrollBehavior;
+    root.style.scrollBehavior = "auto";
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+    root.style.scrollBehavior = previousScrollBehavior;
+  }, [location.pathname]);
+
+  return children;
+}
+
 function Loader() {
   return <div className="route-loader"><span>ANEVUM</span><i /></div>;
 }
 
 function PublicExperience({ children }: { children: ReactNode }) {
-  return <PublicShell><Suspense fallback={<Loader />}>{children}</Suspense></PublicShell>;
+  return <PublicShell><Suspense fallback={<Loader />}><RouteScrollReset>{children}</RouteScrollReset></Suspense></PublicShell>;
 }
 
 export default function App() {
