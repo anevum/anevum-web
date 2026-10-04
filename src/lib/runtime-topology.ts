@@ -13,6 +13,14 @@ export type RuntimeRow = {
   liveness?: boolean | null;
   readiness?: boolean;
   current_activity?: string;
+  activity_active?: boolean;
+  waiting_dependency_until?: string | null;
+  engineering_required_count?: number;
+  manual_engineering_handoff_enabled?: boolean;
+  runtime_source_mutation_authorized?: boolean;
+  active_problem_id?: string | null;
+  last_claim_at?: string | null;
+  last_completion_at?: string | null;
   last_success?: string;
   last_failure?: string;
   scope: string;
@@ -365,6 +373,13 @@ export function operatorGuidance(snapshot: IrenSnapshot | null, unavailable = fa
         target: "Safety boundary",
         title: "Protected runtime invariant failed",
         action: "Keep execution authority unchanged. Inspect the reported invariant and restore the expected safe state before any further promotion or execution work."
+      });
+    } else if (key.startsWith("productivity.")) {
+      rows.push({
+        severity,
+        target: key.slice("productivity.".length) || "GRAEN",
+        title: "Runtime is healthy but productive research has stalled",
+        action: "IREN should derive and queue the next safe research objective automatically. Escalate only if GRAEN reports ENGINEERING_REQUIRED or HUMAN_DECISION_REQUIRED."
       });
     } else {
       rows.push({
