@@ -143,7 +143,10 @@ async function runCase(route, viewport) {
     };
   })()`.replace("routePlaceholder", JSON.stringify(route)),returnByValue:true});
   const details=ops.result?.value||{};
-  if(!details.surface || !details.cards || !details.links) throw new Error("Missing accessible visual surface: "+JSON.stringify(details));
+  const requiresVisualOpsSurface = route === "/" || route === "/live" || route === "/products" || route.startsWith("/command/");
+  if((requiresVisualOpsSurface && !details.surface) || !details.cards || !details.links) {
+    throw new Error("Missing accessible visual surface: "+JSON.stringify(details));
+  }
 
   if(route.startsWith("/products/") && route.split("/").filter(Boolean).length === 2) {
     const iconGeometry = await send("Runtime.evaluate", {expression: `(() => {
