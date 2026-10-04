@@ -170,6 +170,45 @@ async function runCase(route, viewport) {
     }
   }
 
+  const iconAudit = await send("Runtime.evaluate", {expression: `(() => {
+    const visible=el=>{const r=el.getBoundingClientRect();const s=getComputedStyle(el);return r.width>0&&r.height>0&&s.display!=="none"&&s.visibility!=="hidden"};
+    const failures=[];
+    for(const icon of [...document.querySelectorAll(".system-icon")].filter(visible)){
+      const mark=icon.querySelector(".system-mark-svg");
+      if(!mark) continue;
+      const a=icon.getBoundingClientRect();
+      const b=mark.getBoundingClientRect();
+      const square=Math.abs(a.width-a.height)<=1;
+      const inside=b.left>=a.left-1&&b.top>=a.top-1&&b.right<=a.right+1&&b.bottom<=a.bottom+1;
+      if(!square||!inside) failures.push({
+        system:[...icon.classList].find(value=>value.startsWith("system-icon-")&&!["system-icon-xs","system-icon-sm","system-icon-md","system-icon-lg"].includes(value)),
+        width:Math.round(a.width),height:Math.round(a.height),
+        mark:{left:Math.round(b.left-a.left),top:Math.round(b.top-a.top),right:Math.round(a.right-b.right),bottom:Math.round(a.bottom-b.bottom)}
+      });
+    }
+    return failures.slice(0,12);
+  })()`,returnByValue:true});
+  if(iconAudit.result?.value?.length) throw new Error("Visible subsystem icon clipping/sizing failure: "+JSON.stringify(iconAudit.result.value));
+
+  if(route.startsWith("/command/")) {
+    const navAudit=await send("Runtime.evaluate",{expression:`(() => {
+      const nav=document.querySelector(".command-header nav");
+      const links=[...nav?.querySelectorAll("a")||[]].filter(el=>el.getBoundingClientRect().width>0);
+      const rects=links.map(el=>{const r=el.getBoundingClientRect();return {label:el.getAttribute("aria-label"),left:r.left,right:r.right,top:r.top,bottom:r.bottom,width:r.width,height:r.height}});
+      const overlaps=[];
+      for(let i=0;i<rects.length;i++) for(let j=i+1;j<rects.length;j++){
+        const a=rects[i],b=rects[j];
+        if(a.left<b.right&&a.right>b.left&&a.top<b.bottom&&a.bottom>b.top) overlaps.push(a.label+" × "+b.label);
+      }
+      const rows=[...new Set(rects.map(r=>Math.round(r.top)))];
+      return {count:rects.length,rows,overlaps,minWidth:Math.min(...rects.map(r=>r.width)),maxRight:Math.max(...rects.map(r=>r.right)),viewport:document.documentElement.clientWidth};
+    })()`,returnByValue:true});
+    const nav=navAudit.result?.value||{};
+    if(nav.count!==7||nav.overlaps?.length||nav.minWidth<32||nav.maxRight>nav.viewport+1||(viewport.mobile&&nav.rows?.length!==1)){
+      throw new Error("Command icon navigation geometry failed: "+JSON.stringify(nav));
+    }
+  }
+
   if(route==="/") {
     const topologyGeometry = await send("Runtime.evaluate", {expression: `(() => {
       const root=document.querySelector(".company-topology");
