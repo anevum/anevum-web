@@ -1,0 +1,268 @@
+.command-trading-lanes {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+
+.command-trading-lanes-heading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 2px 2px 0;
+}
+
+.command-trading-lanes-heading > div {
+  display: grid;
+  gap: 4px;
+}
+
+.command-trading-lanes-heading span,
+.trading-lane-card header span,
+.trading-lane-metrics span,
+.trading-lane-focus span,
+.trading-lane-card footer span,
+.trading-lane-alert span {
+  font-size: 10px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  opacity: .62;
+}
+
+.command-trading-lanes-heading strong {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.command-trading-lanes-heading small {
+  font-size: 11px;
+  opacity: .52;
+}
+
+.command-trading-lanes-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  min-width: 0;
+}
+
+.trading-lane-card {
+  position: relative;
+  display: grid;
+  align-content: start;
+  gap: 12px;
+  min-width: 0;
+  padding: 14px;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,.09);
+  border-radius: 16px;
+  background: rgba(7, 11, 18, .72);
+  box-shadow: inset 0 1px rgba(255,255,255,.025);
+}
+
+.trading-lane-card::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 2px;
+  background: rgba(255,255,255,.25);
+}
+
+.trading-lane-live::before { background: #6ea1ff; }
+.trading-lane-degraded::before { background: #d0b37a; }
+.trading-lane-offline::before { background: rgba(255,255,255,.18); }
+
+.trading-lane-card > header {
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+  gap: 12px;
+}
+
+.trading-lane-card > header > div:first-child {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.trading-lane-card > header strong {
+  font-size: 14px;
+  line-height: 1.2;
+}
+
+.trading-lane-card > header small {
+  font-size: 10px;
+  opacity: .52;
+}
+
+.trading-lane-heartbeat {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 0 0 auto;
+  font-size: 10px;
+  opacity: .7;
+}
+
+.trading-lane-heartbeat i {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: #6ea1ff;
+  box-shadow: 0 0 12px rgba(110,161,255,.72);
+}
+
+.trading-lane-degraded .trading-lane-heartbeat i { background: #d0b37a; }
+.trading-lane-offline .trading-lane-heartbeat i { background: rgba(255,255,255,.25); box-shadow: none; }
+
+.trading-lane-metrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1px;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,.065);
+  border-radius: 10px;
+  background: rgba(255,255,255,.045);
+}
+
+.trading-lane-metrics > div {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+  padding: 9px 10px;
+  background: rgba(4,7,13,.86);
+}
+
+.trading-lane-metrics strong {
+  overflow: hidden;
+  font-size: 11px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.trading-lane-focus {
+  display: grid;
+  gap: 8px;
+}
+
+.trading-lane-focus > div {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  padding: 10px 11px;
+  border: 1px solid rgba(255,255,255,.06);
+  border-radius: 10px;
+  background: rgba(255,255,255,.025);
+}
+
+.trading-lane-focus strong {
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.trading-lane-focus p,
+.trading-lane-alert p {
+  margin: 0;
+  font-size: 10px;
+  line-height: 1.4;
+  opacity: .62;
+}
+
+.trading-lane-alert {
+  display: grid;
+  gap: 4px;
+  padding: 10px 11px;
+  border: 1px solid rgba(208,179,122,.28);
+  border-radius: 10px;
+  background: rgba(208,179,122,.07);
+}
+
+.trading-lane-alert.is-error {
+  border-color: rgba(255,125,125,.25);
+  background: rgba(255,125,125,.055);
+}
+
+.trading-lane-alert strong {
+  font-size: 11px;
+}
+
+.trading-lane-card > footer {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.trading-lane-card > footer > div {
+  display: grid;
+  gap: 3px;
+}
+
+.trading-lane-card > footer strong {
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.trading-lane-orders {
+  display: grid;
+  gap: 2px;
+  max-height: 126px;
+  overflow: auto;
+}
+
+.trading-lane-order {
+  display: grid;
+  grid-template-columns: 52px 1fr 38px 54px 64px;
+  gap: 6px;
+  align-items: center;
+  min-width: 0;
+  padding: 6px 7px;
+  border-radius: 7px;
+  background: rgba(255,255,255,.025);
+  font-size: 9px;
+}
+
+.trading-lane-order time,
+.trading-lane-order span {
+  opacity: .58;
+}
+
+.trading-lane-order strong,
+.trading-lane-order b {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.trading-lane-order b {
+  text-align: right;
+}
+
+.trading-lane-empty {
+  padding: 8px;
+  border-radius: 8px;
+  background: rgba(255,255,255,.02);
+  font-size: 10px;
+  opacity: .5;
+}
+
+@media (max-width: 1180px) {
+  .command-trading-lanes-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 720px) {
+  .command-trading-lanes-heading {
+    align-items: start;
+    flex-direction: column;
+  }
+
+  .trading-lane-order {
+    grid-template-columns: 48px 1fr 34px 50px;
+  }
+
+  .trading-lane-order b {
+    display: none;
+  }
+}
