@@ -9,6 +9,7 @@ import CommandTopology from "../components/CommandTopology";
 import CommandSystemMonitor, { type MonitoredSystem } from "../components/CommandSystemMonitor";
 import CommandIrenDock from "../components/CommandIrenDock";
 import CommandOperationsTerminal from "../components/CommandOperationsTerminal";
+import CommandCustomer from "../components/CommandCustomer";
 import { useLiveTrading } from "../hooks/useLiveTrading";
 import {
   fetchCommandDailyReport,
@@ -189,15 +190,7 @@ export default function Command() {
   }
 
   if (!commandAdmin) {
-    return (
-      <div className="command-gate">
-        <SystemIcon system="IREN" size="lg" />
-        <span>ANEVUM / COMMAND</span>
-        <h1>Administrator access required.</h1>
-        <p>This identity is authenticated but is not authorized for the private operations console.</p>
-        <Link className="text-link" to="/">Return to ANEVUM <b>→</b></Link>
-      </div>
-    );
+    return <CommandCustomer session={session} onSignOut={handleSignOut} />;
   }
 
   const account = record(snapshot?.account);
