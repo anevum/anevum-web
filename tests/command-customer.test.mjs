@@ -113,8 +113,9 @@ test("customer read client uses stable product surfaces only", () => {
 
 test("customer product uses the simplified routed navigation", () => {
   for (const route of ["overview", "trading", "money", "activity", "settings", "system"]) {
-    assert.match(customer, new RegExp('/command/' + route));
+    assert.match(customer, new RegExp('page: "' + route + '"'));
   }
+  assert.match(customer, /to=\{"\/command\/" \+ item\.page\}/);
   assert.match(customer, /Overview/);
   assert.match(customer, /Trading/);
   assert.match(customer, /Money/);
