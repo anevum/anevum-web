@@ -19,33 +19,22 @@ function PublicFooter() {
           <Mark />
           <div>
             <strong>ANEVUM</strong>
-            <span>SOFTWARE SYSTEMS &amp; RESEARCH</span>
-            <small>Public system state, research records, architecture, and measured evidence. Protected operational controls remain outside this surface.</small>
+            <span>LIVE SYSTEMS &amp; RESEARCH</span>
+            <small>Observe the system. Read the record. Inspect the evidence.</small>
           </div>
         </div>
 
         <div className="company-footer-links">
           <section>
-            <span>SYSTEMS</span>
-            <Link to="/products/iren">IREN</Link>
-            <Link to="/products/rhen">RHEN</Link>
-            <Link to="/products/nostra">NOSTRA</Link>
-            <Link to="/products/graen">GRAEN</Link>
-            <Link to="/products/velum">VELUM</Link>
-          </section>
-          <section>
-            <span>EVIDENCE</span>
-            <Link to="/performance">Performance</Link>
+            <span>PUBLIC</span>
+            <Link to="/live">Live Terminal</Link>
             <Link to="/research">Field Notes</Link>
-            <Link to="/case-studies">Case Studies</Link>
-            <Link to="/live">Live Systems</Link>
-            <Link to="/releases">Releases</Link>
+            <Link to="/founder">About</Link>
           </section>
           <section>
-            <span>COMPANY</span>
-            <Link to="/architecture">Architecture</Link>
-            <Link to="/founder">Founder</Link>
+            <span>MORE</span>
             <Link to="/resume">Résumé</Link>
+            <Link to="/command">Command</Link>
             <a href="mailto:devon@anevum.com">devon@anevum.com</a>
           </section>
         </div>
@@ -53,7 +42,7 @@ function PublicFooter() {
 
       <div className="company-footer-bottom">
         <span>© {new Date().getFullYear()} ANEVUM</span>
-        <span>PUBLIC SURFACE / SANITIZED STATE / EVIDENCE BEFORE CLAIMS</span>
+        <span>PUBLIC-SAFE OBSERVABILITY / EVIDENCE BEFORE CLAIMS</span>
       </div>
     </footer>
   );
@@ -82,8 +71,8 @@ export function PublicShell({ children }: { children: ReactNode }) {
         </nav>
 
         <div className="company-header-actions">
-          <Link className="company-live-link" to="/live" aria-label="Open live systems">
-            <i /><span>Live systems</span>
+          <Link className="company-live-link" to="/command" aria-label="Open private Command">
+            <span>Command</span>
           </Link>
           <button
             className="company-menu-button"
@@ -101,7 +90,7 @@ export function PublicShell({ children }: { children: ReactNode }) {
             {nav.map(({ path: href, label }) => (
               <Link key={href} to={href} className={isActive(location.pathname, href) ? "active" : ""}>{label}</Link>
             ))}
-            <Link to="/live">Live systems</Link>
+            <Link to="/command">Command</Link>
           </nav>
         ) : null}
       </header>
