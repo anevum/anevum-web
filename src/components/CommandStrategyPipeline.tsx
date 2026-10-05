@@ -8,8 +8,16 @@ function authorityLabel(row: StrategyAuthorityProjection) {
 
 function executionLabel(row: StrategyAuthorityProjection) {
   if (row.status === "DISABLED") return "Disabled";
-  if (row.entries_enabled) return "Entries enabled";
-  if (row.execution_authorized) return "Execution authorized";
+  if (row.manual_approval_required && row.signals_enabled) {
+    return "Signals live · manual approval";
+  }
+  if (row.entries_enabled && row.broker_writes_allowed !== false) {
+    return "Entries enabled";
+  }
+  if (row.signals_enabled) return "Signals enabled";
+  if (row.execution_authorized && row.broker_writes_allowed !== false) {
+    return "Broker execution authorized";
+  }
   if (row.execution_enabled) return "Execution configured";
   return "Observing";
 }
@@ -54,7 +62,10 @@ export default function CommandStrategyPipeline({
               <div key={(row.lane || "lane") + "-" + index}>
                 <strong>{String(row.lane || "lane").toUpperCase()} · {authorityLabel(row)}</strong>
                 <p>{displayState(row.status)} · {executionLabel(row)}</p>
-                <small>{row.strategy_version_id || "No version ID"} · {row.trading_mode || "mode unknown"}</small>
+                <small>
+                  {row.strategy_version_id || "No version ID"} · {row.trading_mode || "mode unknown"}
+                  {row.broker_writes_allowed === false ? " · broker writes off" : ""}
+                </small>
               </div>
             )) : <p>No canonical strategy authority exposed.</p>}
           </div>
