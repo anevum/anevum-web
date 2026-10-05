@@ -73,7 +73,7 @@ function shortId(value?: string | null) {
 function stateClass(value?: string) {
   const v = String(value || "").toUpperCase();
   if (["HEALTHY", "COMPLETE", "SUCCEEDED", "READY"].includes(v)) return "good";
-  if (["FAILED", "ATTENTION_REQUIRED", "BLOCKED", "CANCELLED"].includes(v)) return "bad";
+  if (["FAILED", "ATTENTION_REQUIRED", "BLOCKED", "CANCELLED", "OFFLINE"].includes(v)) return "bad";
   return "warn";
 }
 
@@ -173,24 +173,30 @@ export default function CommandIrenDock({ session }: { session: RhenSession }) {
   const handoff = work?.handoffs?.find((row) => !["SUPERSEDED", "FAILED"].includes(row.handoff_status));
   const lastCommand = commands[0];
   const lastResponse = responseText(lastCommand);
+  const connectionLabel = error
+    ? (feed ? "DEGRADED" : "OFFLINE")
+    : feed?.stale
+      ? "STALE"
+      : String(feed?.state || "CONNECTING").toUpperCase();
 
   return (
     <aside className={"iren-dock " + (expanded ? "expanded" : "")} aria-label="IREN operating terminal">
       <button className="iren-dock-handle" type="button" onClick={() => setExpanded((value) => !value)}>
-        <span className={"iren-dock-state " + stateClass(feed?.state)} />
+        <span className={"iren-dock-state " + stateClass(connectionLabel)} />
         <strong>IREN</strong>
-        <span>{feed?.stale ? "STALE" : String(feed?.state || "CONNECTING")}</span>
+        <span className="iren-dock-connection">{connectionLabel}</span>
         <i />
-        <span>{activeJobs.length} JOB{activeJobs.length === 1 ? "" : "S"}</span>
-        <span>{work?.requires_human || 0} NEEDS YOU</span>
+        <span className="iren-dock-prompt">Ask IREN…</span>
+        <span className="iren-dock-count">{activeJobs.length} JOB{activeJobs.length === 1 ? "" : "S"}</span>
+        <span className="iren-dock-count">{work?.requires_human || 0} NEEDS YOU</span>
         <b>{expanded ? "⌄" : "⌃"}</b>
       </button>
 
       <div className="iren-dock-body">
         <div className="iren-dock-toolbar">
           <div>
-            <small>OPERATING INTELLIGENCE</small>
-            <strong>Objective + job control</strong>
+            <small>OPERATING INTELLIGENCE / RHEN NATIVE</small>
+            <strong>Operator command + current work</strong>
           </div>
           <div className="iren-dock-actions">
             {["status", "what's next?", "prepare for Codex", "verify Codex handoff", "do that", "what needs me?"].map((value) => (
@@ -215,7 +221,7 @@ export default function CommandIrenDock({ session }: { session: RhenSession }) {
         }}>
           <label htmlFor="iren-directive">Ask IREN</label>
           <input id="iren-directive" value={directive} maxLength={4000}
-            onChange={(event) => setDirective(event.target.value)} placeholder="What should Codex do next?" />
+            onChange={(event) => setDirective(event.target.value)} placeholder="Ask IREN about the current system, work, or next action…" />
           <button type="submit" disabled={sending || !directive.trim()}>Send</button>
         </form>
         {work?.next_action ? <div className="iren-dock-response">
