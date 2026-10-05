@@ -1,7 +1,6 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import SystemIcon from "../components/company/SystemIcon";
-import SystemInstrument from "../components/operations/SystemInstruments";
 import { SystemStatusChip } from "../components/operations/VisualOps";
 import { useLiveTrading } from "../hooks/useLiveTrading";
 import {
@@ -207,10 +206,7 @@ export default function Live() {
             </header>
 
             {selectedView ? (
-              <div className="pt-focus">
-                <div className="pt-instrument-stage" data-system={selectedView.name} data-active={selectedView.active}>
-                  <SystemInstrument name={selectedView.name} />
-                </div>
+              <div className="pt-focus pt-focus-observation">
                 <div className="pt-focus-copy">
                   <span className="pt-label">CURRENT PUBLIC OBSERVATION</span>
                   <h2>{displayState(selectedView.activityState)}</h2>

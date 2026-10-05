@@ -1164,3 +1164,9 @@
 @media (max-width: 520px) {
   .pt-architecture-flow { grid-template-columns: 1fr; }
 }
+
+
+/* Selected module view is a factual observation panel, not an activity animation. */
+.pt-focus.pt-focus-observation{display:block;min-height:0;padding:20px}
+.pt-focus-observation .pt-focus-copy{max-width:900px;margin:0 auto}
+.pt-instrument-stage{display:none!important}

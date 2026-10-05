@@ -1,5 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import { SYSTEMS, publicSystem, commandSystem, fleetState, freshStamp, displayState, systemWork } from "../src/lib/system-display.ts";
 const now = Date.parse("2026-10-03T12:00:00Z");
 const stamp = new Date(now).toISOString();
@@ -116,4 +117,21 @@ test("private healthy runtime without owned work is explicitly idle or supervisi
   assert.equal(iren.health,"HEALTHY");
   assert.equal(iren.activityState,"SUPERVISING");
   assert.equal(iren.active,false);
+});
+
+
+test("operator and public status surfaces do not use decorative system instruments", () => {
+  const terminal = readFileSync(new URL("../src/components/CommandOperationsTerminal.tsx", import.meta.url), "utf8");
+  const visualOps = readFileSync(new URL("../src/components/operations/VisualOps.tsx", import.meta.url), "utf8");
+  const live = readFileSync(new URL("../src/pages/Live.tsx", import.meta.url), "utf8");
+
+  assert.doesNotMatch(terminal, /SystemInstrument/);
+  assert.doesNotMatch(terminal, /terminal-focus-instrument/);
+  assert.doesNotMatch(visualOps, /SystemInstrument/);
+  assert.doesNotMatch(visualOps, /vo-link-signal/);
+  assert.match(visualOps, /vo-status-matrix/);
+  assert.match(visualOps, /FRESHNESS/);
+  assert.match(visualOps, /SOURCE/);
+  assert.doesNotMatch(live, /SystemInstrument/);
+  assert.match(live, /CURRENT PUBLIC OBSERVATION/);
 });

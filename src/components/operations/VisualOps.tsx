@@ -1,7 +1,6 @@
 import type { CSSProperties, ReactNode } from "react";
 import { Link } from "react-router-dom";
 import SystemIcon from "../company/SystemIcon";
-import SystemInstrument from "./SystemInstruments";
 import { ageText, displayState, IDENTITY, SEMANTIC, stateTone, type SystemName, type SystemView, freshStamp } from "../../lib/system-display";
 import type { IrenIncident, RuntimeRow } from "../../lib/runtime-topology";
 import type { LiveTradingFeed } from "../../lib/data";
@@ -24,27 +23,29 @@ function visualClass(view: SystemView) {
 export function SystemVisualShell({ view, to, hero = false, now = Date.now() }: { view: SystemView; to?: string; hero?: boolean; now?: number }) {
   const identity = IDENTITY[view.name];
   const body = <><div className="vo-card-top"><SystemIcon system={view.name} size={hero ? "lg" : "sm"} /><SystemStatusChip state={view.raw} /></div>
-    <div className="vo-card-identity"><div><span>{identity.role}</span><h3>{view.name}</h3></div><span className="vo-accent" aria-hidden="true">{identity.accent}</span></div>
-    <div className="vo-instrument-frame"><SystemInstrument name={view.name} /><i key={view.signal} className={view.signal ? "vo-arrival" : "vo-no-arrival"} aria-hidden="true" /></div>
-    <div className="vo-work-label"><i aria-hidden="true" /><b>{view.fresh ? displayState(view.activityState) : "Activity unavailable"}</b><span>{view.active ? "Activity observed" : view.fresh ? "No active work observed" : "Awaiting fresh evidence"}</span></div>
+    <div className="vo-card-identity"><div><span>{identity.role}</span><h3>{view.name}</h3></div></div>
+    <dl className="vo-card-facts" aria-label={view.name + " operational facts"}>
+      <div><dt>HEALTH</dt><dd>{displayState(view.health)}</dd></div>
+      <div><dt>ACTIVITY</dt><dd>{view.fresh ? displayState(view.activityState) : "Unavailable"}</dd></div>
+      <div><dt>FRESHNESS</dt><dd>{ageText(view.observedAt, now)}</dd></div>
+      <div><dt>SOURCE</dt><dd>{view.source || "Unavailable"}</dd></div>
+    </dl>
     <p className="vo-activity" title={view.activity}>{view.activity}</p>
     {(view.jobs !== undefined || view.objectives !== undefined || view.incidents !== undefined) && <div className="vo-card-counts"><span>◇ <b>{view.jobs ?? "—"}</b> jobs</span><span>◎ <b>{view.objectives ?? "—"}</b> objectives</span><span className={view.incidents ? "vo-attention" : ""}>! <b>{view.incidents ?? "—"}</b> incidents</span></div>}
-    <footer><span title={view.observedAt || undefined}>{SEMANTIC.freshness} {ageText(view.observedAt, now)}</span><span>{to ? "Open monitor ↗" : "Activity schematic"}</span></footer></>;
+    <footer><span title={view.observedAt || undefined}>{SEMANTIC.freshness} {ageText(view.observedAt, now)}</span><span>{to ? "Open monitor ↗" : "Observed state"}</span></footer></>;
   return to ? <Link to={to} className={"vo-system-card" + visualClass(view)} aria-label={view.name + ": health " + displayState(view.health) + ", activity " + displayState(view.activityState) + ". Open monitor"} data-system={view.name} data-state={view.health} data-activity={view.activityState} data-active={view.active}>{body}</Link> :
     <section className={"vo-system-card vo-hero-card" + visualClass(view)} aria-label={view.name + ": health " + displayState(view.health) + ", activity " + displayState(view.activityState)} data-system={view.name} data-state={view.health} data-activity={view.activityState} data-active={view.active}>{body}</section>;
 }
 export function SystemConstellation({ views, command = false, compact = false }: { views: SystemView[]; command?: boolean; compact?: boolean }) {
-  return <div className={"vo-constellation" + (compact ? " is-compact" : "")} aria-label="Five-system constellation">
-    <div className="vo-constellation-caption"><span>ANEVUM / SYSTEM ARRAY</span><small>Signals follow fresh observations</small></div>
-    <svg className="vo-connections" viewBox="0 0 1000 360" preserveAspectRatio="none" aria-hidden="true">
-      {views.filter(view => view.name !== "IREN").map((view, i) => {
-        const ends = [[210,95],[790,95],[210,265],[790,265]][i];
-        return <g key={view.name} className={visualClass(view)}><path d={"M500 180L" + ends.join(" ")} className="vo-link-base" /><path d={"M500 180L" + ends.join(" ")} className="vo-link-signal" key={view.signal} /></g>;
-      })}
-    </svg>
-    <div className="vo-core-ring" aria-hidden="true" />
-    {views.map(view => <Link key={view.name} to={(command ? "/command/" : "/products/") + view.name.toLowerCase()} className={"vo-node vo-node-" + view.name.toLowerCase() + visualClass(view)} aria-label={view.name + ": health " + displayState(view.health) + ", activity " + displayState(view.activityState) + ". Open monitor"} data-system={view.name} data-state={view.health} data-activity={view.activityState} data-active={view.active}>
-      <SystemIcon system={view.name} size="lg" /><strong>{view.name}</strong><SystemStatusChip state={view.health} /><span className="vo-node-work">{displayState(view.activityState)}</span>
+  const now = Date.now();
+  return <div className={"vo-status-matrix" + (compact ? " is-compact" : "")} aria-label="ANEVUM system status matrix">
+    <div className="vo-status-matrix-head"><span>SYSTEM</span><span>HEALTH</span><span>ACTIVITY</span><span>FRESHNESS</span><span>SOURCE</span></div>
+    {views.map(view => <Link key={view.name} to={(command ? "/command/" : "/products/") + view.name.toLowerCase()} className={"vo-status-row" + visualClass(view)} aria-label={view.name + ": health " + displayState(view.health) + ", activity " + displayState(view.activityState)} data-system={view.name} data-state={view.health} data-activity={view.activityState}>
+      <span className="vo-status-system"><SystemIcon system={view.name} size="sm" /><strong>{view.name}</strong></span>
+      <span><SystemStatusChip state={view.health} /></span>
+      <span>{displayState(view.activityState)}</span>
+      <span>{ageText(view.observedAt, now)}</span>
+      <span>{view.source || "Unavailable"}</span>
     </Link>)}
   </div>;
 }

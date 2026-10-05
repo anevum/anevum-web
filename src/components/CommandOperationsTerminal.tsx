@@ -13,7 +13,6 @@ import {
 } from "../lib/system-display";
 import type { CommandObservation } from "../hooks/useCommandObservation";
 import SystemIcon from "./company/SystemIcon";
-import SystemInstrument from "./operations/SystemInstruments";
 import { buildCommandEvents, TERMINAL_SYSTEMS, type CommandTerminalEvent } from "../lib/command-events";
 import "../styles/operations-terminal.css";
 
@@ -173,11 +172,6 @@ function FocusWorkbench({
         </div>
         <div className="terminal-focus-state"><i aria-hidden="true" /><strong>{displayState(lane.view.health)} · {displayState(lane.activityState)}</strong></div>
       </header>
-
-      <div className="terminal-focus-instrument" aria-label={system + " live activity instrument"}>
-        <SystemInstrument name={system} />
-        <i className="terminal-focus-sweep" aria-hidden="true" />
-      </div>
 
       <div className="terminal-focus-work">
         <span>CURRENT WORK</span>
