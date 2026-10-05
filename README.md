@@ -2,6 +2,16 @@
 
 ANEVUM's operating website and private Command interface. RHEN is the current flagship autonomous market research, execution, evidence, and learning system; the site architecture is intentionally broader than RHEN so ANEVUM can add future systems, agents, infrastructure, releases, and business lines without another structural redesign.
 
+## Open source
+
+The code and documentation in this repository are licensed under the [Apache License 2.0](LICENSE). You may use, modify, and redistribute them under that license.
+
+ANEVUM's names, subsystem names, logos, marks, icons, and product branding are not licensed as trademarks. Forks and derivative projects should use their own branding and must not imply endorsement or official ANEVUM status. See [TRADEMARKS.md](TRADEMARKS.md).
+
+Security-sensitive findings should be reported privately rather than opened as public issues. See [SECURITY.md](SECURITY.md).
+
+This repository is intentionally the public web surface. Private credentials, broker secrets, authenticated operator data, and non-public execution state do not belong here. Other ANEVUM repositories may remain private or use different licensing until separately reviewed.
+
 ## Product boundary
 
 ### Public — `/`
