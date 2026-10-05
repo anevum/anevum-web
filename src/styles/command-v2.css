@@ -819,3 +819,118 @@
   .position-row{grid-template-columns:1fr 1fr}
   .position-row>div{padding:10px 11px}
 }
+
+
+/* Command operator workspace v3 ----------------------------------------- */
+/* Four canonical destinations: Overview, Trading, Research, System. */
+.command-page-overview .command-view-overview,
+.command-page-trading .command-view-trading,
+.command-page-research .command-view-research,
+.command-page-system .command-view-system,
+.command-page-system .command-view-terminal{
+  display:flex!important;
+}
+.command-page-overview .command-stats.command-view-overview,
+.command-page-trading .command-stats.command-view-trading{
+  display:grid!important;
+}
+
+.command-page-overview .command-grid{
+  grid-template-columns:minmax(0,1.5fr) minmax(290px,.5fr)!important;
+}
+.command-page-overview .command-primary,
+.command-page-overview .command-side{
+  display:grid!important;
+  grid-template-columns:1fr!important;
+  grid-template-rows:auto!important;
+}
+
+.command-page-trading .command-grid{
+  grid-template-columns:minmax(0,1.45fr) minmax(300px,.55fr)!important;
+}
+.command-page-trading .command-primary,
+.command-page-trading .command-side{
+  display:grid!important;
+  grid-template-columns:1fr!important;
+  grid-template-rows:auto!important;
+}
+.command-page-trading .command-panel-account-tracker,
+.command-page-trading .command-panel-public-performance{
+  grid-column:1/-1;
+}
+
+.command-page-research .command-grid{
+  grid-template-columns:1fr!important;
+}
+.command-page-research .command-primary{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr)!important;
+  grid-template-rows:auto!important;
+}
+.command-page-research .command-side{
+  display:none!important;
+}
+
+.command-page-system .command-grid{
+  grid-template-columns:minmax(0,1.45fr) minmax(300px,.55fr)!important;
+}
+.command-page-system .command-primary{
+  display:grid!important;
+  grid-template-columns:1fr!important;
+  grid-template-rows:auto!important;
+}
+.command-page-system .command-side{
+  display:grid!important;
+  grid-template-columns:1fr!important;
+  grid-template-rows:auto!important;
+}
+.command-page-system .command-panel-telemetry,
+.command-page-system .command-panel-boundary{
+  grid-column:1!important;
+}
+.command-page-system .command-view-terminal{
+  min-height:420px;
+}
+
+/* Old aliases resolve into the canonical workspace in React. They no longer
+ * need their own visual composition. */
+.command-page-trading .scanner-body,
+.command-page-trading .order-body{
+  max-height:360px!important;
+}
+
+@media(max-width:1050px){
+  .command-page-overview .command-grid,
+  .command-page-trading .command-grid,
+  .command-page-system .command-grid{
+    grid-template-columns:1fr!important;
+  }
+  .command-page-overview .command-side,
+  .command-page-trading .command-side,
+  .command-page-system .command-side{
+    margin-top:9px!important;
+  }
+}
+
+@media(max-width:760px){
+  .command-page-overview .command-grid,
+  .command-page-trading .command-grid,
+  .command-page-research .command-grid,
+  .command-page-system .command-grid{
+    display:block!important;
+  }
+  .command-page-overview .command-primary,
+  .command-page-overview .command-side,
+  .command-page-trading .command-primary,
+  .command-page-trading .command-side,
+  .command-page-research .command-primary,
+  .command-page-system .command-primary,
+  .command-page-system .command-side{
+    display:grid!important;
+    grid-template-columns:1fr!important;
+    grid-template-rows:none!important;
+    grid-auto-rows:auto!important;
+    gap:9px!important;
+  }
+  .command-page-research .command-side{display:none!important}
+}
