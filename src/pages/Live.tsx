@@ -6,6 +6,7 @@ import { SystemStatusChip } from "../components/operations/VisualOps";
 import { useLiveTrading } from "../hooks/useLiveTrading";
 import {
   IDENTITY,
+  MODULE_LABEL,
   SYSTEMS,
   ageText,
   displayState,
@@ -128,12 +129,12 @@ export default function Live() {
       detail: data?.research?.current_focus || "No public focus"
     },
     {
-      label: "GRAEN",
+      label: "Research",
       state: graen?.activityState || "UNAVAILABLE",
       detail: graen?.activity || "Research unavailable"
     },
     {
-      label: "VELUM",
+      label: "Replay",
       state: velum?.activityState || "UNAVAILABLE",
       detail: velum?.activity || "Replay unavailable"
     },
@@ -143,7 +144,7 @@ export default function Live() {
       detail: data?.crypto_shadow_validation?.study_name || "Public research gate"
     },
     {
-      label: "RHEN",
+      label: "Execution",
       state: rhen?.activityState || "UNAVAILABLE",
       detail: rhen?.activity || "Market system unavailable"
     },
@@ -155,13 +156,13 @@ export default function Live() {
   ];
 
   return (
-    <section className="public-terminal-page" aria-label="ANEVUM live terminal" data-visual-ops="public-terminal">
+    <section className="public-terminal-page" aria-label="RHEN live terminal" data-visual-ops="public-terminal">
       <header className="pt-topbar">
         <div className="pt-title-lockup">
           <i className={"pt-live-dot" + (error ? " is-stale" : "")} aria-hidden="true" />
           <div>
-            <span>ANEVUM / PUBLIC TERMINAL</span>
-            <strong>{error ? "OBSERVATION DEGRADED" : "LIVE OPERATING VIEW"}</strong>
+            <span>ANEVUM / RHEN PUBLIC TERMINAL</span>
+            <strong>{error ? "OBSERVATION DEGRADED" : "RHEN OPERATING VIEW"}</strong>
           </div>
         </div>
         <div className="pt-meta">
@@ -173,10 +174,10 @@ export default function Live() {
 
       <div className="pt-shell">
         <aside className="pt-system-rail" aria-label="System selector">
-          <span>SYSTEM ARRAY</span>
+          <span>RHEN MODULES</span>
           <button className={"pt-system-button" + (selected === "ALL" ? " is-selected" : "")} type="button" onClick={() => setSelected("ALL")}>
-            <i className="pt-all-icon">5</i>
-            <div><strong>ALL</strong><small>Unified operating picture</small></div>
+            <i className="pt-all-icon">R</i>
+            <div><strong>RHEN</strong><small>Unified runtime picture</small></div>
           </button>
           {views.map((view) => (
             <button
@@ -186,7 +187,7 @@ export default function Live() {
               onClick={() => setSelected(view.name)}
             >
               <SystemIcon system={view.name} size="sm" />
-              <div><strong>{view.name}</strong><small>{displayState(view.activityState)}</small></div>
+              <div><strong>{MODULE_LABEL[view.name]}</strong><small>{displayState(view.activityState)}</small></div>
             </button>
           ))}
         </aside>
@@ -197,9 +198,9 @@ export default function Live() {
               <div className="pt-selected-title">
                 {selectedView ? <SystemIcon system={selectedView.name} size="sm" /> : <span>◉</span>}
                 <div>
-                  <span>{selectedView ? IDENTITY[selectedView.name].role : "ANEVUM / SYSTEM ARRAY"}</span>
-                  <strong>{selectedView ? selectedView.name : "Five bounded systems"}</strong>
-                  <small>{selectedView ? selectedView.activity : "Select a system to inspect its current public observation."}</small>
+                  <span>{selectedView ? IDENTITY[selectedView.name].role : "RHEN / UNIFIED RUNTIME"}</span>
+                  <strong>{selectedView ? MODULE_LABEL[selectedView.name] : "One service · isolated modules"}</strong>
+                  <small>{selectedView ? selectedView.activity : "Select an internal RHEN module to inspect its current public observation."}</small>
                 </div>
               </div>
               <SystemStatusChip state={selectedView?.raw || fleet} />
@@ -223,7 +224,7 @@ export default function Live() {
                 </div>
               </div>
             ) : (
-              <div className="pt-map" aria-label="Current five-system operating picture">
+              <div className="pt-map" aria-label="Current RHEN module operating picture">
                 {views.map((view) => (
                   <button
                     key={view.name}
@@ -234,7 +235,7 @@ export default function Live() {
                   >
                     <SystemIcon system={view.name} size={view.name === "IREN" ? "lg" : "md"} />
                     <div className="pt-map-card-copy">
-                      <strong>{view.name}</strong>
+                      <strong>{MODULE_LABEL[view.name]}</strong>
                       <span>{IDENTITY[view.name].role} · {displayState(view.activityState)}</span>
                       <small>{view.activity}</small>
                     </div>
@@ -247,8 +248,8 @@ export default function Live() {
 
           <section className="pt-pipeline" aria-label="Public research and evidence pipeline">
             <header className="pt-pipeline-head">
-              <strong>Research → production evidence path</strong>
-              <span>States below are direct public projections, not inferred progress.</span>
+              <strong>RHEN research → protected execution evidence path</strong>
+              <span>Legacy subsystem keys are compatibility aliases for internal RHEN modules.</span>
             </header>
             <div className="pt-pipeline-track">
               {pipeline.map((stage) => (
@@ -290,7 +291,7 @@ export default function Live() {
 
       <div className="pt-bottom-grid">
         <section className="pt-data-panel">
-          <header><strong>RHEN telemetry</strong><span>AGGREGATE ONLY</span></header>
+          <header><strong>Execution telemetry</strong><span>RHEN · AGGREGATE ONLY</span></header>
           <div className="pt-kpis">
             <div className="pt-kpi"><span>Events · 60m</span><strong>{count(data?.telemetry?.events_60m)}</strong></div>
             <div className="pt-kpi"><span>Scans · 10m</span><strong>{count(data?.telemetry?.scan_events_10m)}</strong></div>
@@ -300,7 +301,7 @@ export default function Live() {
         </section>
 
         <section className="pt-data-panel">
-          <header><strong>GRAEN research</strong><span>{displayState(data?.research?.current_status)}</span></header>
+          <header><strong>Research module</strong><span>{displayState(data?.research?.current_status)}</span></header>
           <p className="pt-panel-copy">{data?.research?.current_focus || "No current public research focus is recorded."}</p>
           <p className="pt-panel-copy"><b>Next:</b> {data?.research?.next_direction?.subject || "No next direction recorded."}</p>
         </section>
