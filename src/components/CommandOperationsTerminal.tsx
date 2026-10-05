@@ -722,7 +722,7 @@ export default function CommandOperationsTerminal({
 
       <footer className="terminal-footer">
         <span>READ ONLY · no execution authority</span>
-        <span>IREN / Foundation + durable telemetry</span>
+        <span>IREN / RHEN Core + durable telemetry</span>
       </footer>
     </article>
   );
