@@ -225,35 +225,33 @@ async function runCase(route, viewport) {
     }
   }
 
-  if(["/products","/architecture"].includes(route)) {
-    const topologyGeometry = await send("Runtime.evaluate", {expression: `(() => {
-      const root=document.querySelector(".company-topology:not(.is-compact)");
-      if(!root) return {present:false,collisions:[]};
-      const labels=[...root.querySelectorAll(".topology-flow-label")];
-      const nodes=[...root.querySelectorAll(".topology-node")];
-      const overlaps=(a,b)=>a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top;
-      const collisions=[];
+  if(route==="/architecture") {
+    const architectureGeometry = await send("Runtime.evaluate", {expression: `(() => {
+      const grid=document.querySelector(".architecture-role-grid");
+      if(!grid) return {present:false,cards:0,missingIcons:[],collapsedCards:[],labels:[]};
+      const cards=[...grid.querySelectorAll(":scope > a")];
       const missingIcons=[];
-      for(const node of nodes) {
-        const icon=node.querySelector(":scope > .system-icon");
+      const collapsedCards=[];
+      const labels=[];
+      for(const card of cards) {
+        const rect=card.getBoundingClientRect();
+        const icon=card.querySelector(".system-icon");
         const ir=icon?.getBoundingClientRect();
         const style=icon ? getComputedStyle(icon) : null;
+        const label=card.querySelector("strong")?.textContent?.trim() || "";
+        labels.push(label);
+        if(rect.width<140 || rect.height<120) collapsedCards.push(label || "module");
         if(!icon || !ir || ir.width<20 || ir.height<20 || style?.display==="none" || style?.visibility==="hidden") {
-          missingIcons.push((node.textContent||"node").trim());
+          missingIcons.push(label || "module");
         }
       }
-      for(const label of labels) {
-        const lr=label.getBoundingClientRect();
-        for(const node of nodes) {
-          const nr=node.getBoundingClientRect();
-          if(overlaps(lr,nr)) collisions.push((label.textContent||"label").trim()+" × "+(node.textContent||"node").trim());
-        }
-      }
-      return {present:true,nodeCount:nodes.length,missingIcons,collisions};
+      return {present:true,cards:cards.length,missingIcons,collapsedCards,labels};
     })()`, returnByValue:true});
-    const topology=topologyGeometry.result?.value||{};
-    if(!topology.present || topology.nodeCount!==5 || topology.missingIcons?.length || topology.collisions?.length) {
-      throw new Error("Topology geometry/icon failure: "+JSON.stringify(topology));
+    const architecture=architectureGeometry.result?.value||{};
+    const required=["EXECUTION","CONTROL","RESEARCH","REPLAY","FORECAST","CORE / STORE","RESEARCH WORKER","COMMAND / API"];
+    const missingLabels=required.filter((label)=>!(architecture.labels||[]).includes(label));
+    if(!architecture.present || architecture.cards!==8 || architecture.missingIcons?.length || architecture.collapsedCards?.length || missingLabels.length) {
+      throw new Error("RHEN v3 architecture geometry/icon failure: "+JSON.stringify({...architecture,missingLabels}));
     }
   }
 
