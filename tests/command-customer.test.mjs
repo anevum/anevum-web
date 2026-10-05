@@ -6,6 +6,7 @@ const command = readFileSync(new URL("../src/pages/Command.tsx", import.meta.url
 const customer = readFileSync(new URL("../src/components/CommandCustomer.tsx", import.meta.url), "utf8");
 const auth = readFileSync(new URL("../src/lib/auth.ts", import.meta.url), "utf8");
 const platform = readFileSync(new URL("../src/lib/command-platform.ts", import.meta.url), "utf8");
+const customerApi = readFileSync(new URL("../src/lib/command-customer.ts", import.meta.url), "utf8");
 const worker = readFileSync(new URL("../worker.mjs", import.meta.url), "utf8");
 
 test("tenant identities render a dedicated customer Command", () => {
@@ -97,4 +98,15 @@ test("worker proxies stable customer read surfaces", () => {
   }
   assert.match(worker, /proxyCustomerProjection/);
   assert.match(worker, /allowTenant: true/);
+});
+
+
+test("customer read client uses stable product surfaces only", () => {
+  for (const surface of ["account", "overview", "trading", "money", "activity"]) {
+    assert.match(customerApi, new RegExp('"' + surface + '"'));
+  }
+  assert.match(customerApi, /\/api\/command\/"/);
+  assert.doesNotMatch(customerApi, /\/platform\/allocation/);
+  assert.doesNotMatch(customerApi, /control\/resume/);
+  assert.doesNotMatch(customerApi, /control\/pause/);
 });
