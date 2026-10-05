@@ -1,55 +1,63 @@
 import { Link } from "react-router-dom";
-import SystemTopology from "../components/company/SystemTopology";
 import SystemIcon from "../components/company/SystemIcon";
-import { products } from "../data/products";
 
 const stack = [
-  ["PUBLIC SURFACE", "React · TypeScript · Vite", "Company site, product surfaces, evidence views, Field Notes, founder profile, and public-safe system state."],
-  ["EDGE", "Cloudflare Workers · Access", "Private identity, routing, headers, API proxying, metadata, privacy boundaries, and production delivery."],
-  ["CONTROL / STATE", "IREN", "Cross-system operating state, research state, protected Command, and orchestration visibility."],
-  ["RESEARCH", "GRAEN · NOSTRA · VELUM", "Validation, forecasting, replay, simulation, counterfactual analysis, and promotion evidence."],
-  ["EXECUTION", "RHEN", "Market observation, qualification, risk, execution, reconciliation, telemetry, and evidence capture."],
-  ["DATA", "Railway PostgreSQL", "Canonical events, evidence, research decisions, forward outcomes, and public projections."],
-  ["SERVICES", "Python · FastAPI · Railway · Docker", "Long-running market, research, replay, and scheduled service roles."],
-  ["INTEGRATIONS", "Alpaca · Slack · GitHub", "Broker interface, operational notifications, source control, CI, and deployment."]
+  ["PUBLIC SURFACE", "React · TypeScript · Vite", "ANEVUM.com, Command entry points, the public Live Terminal, Field Notes, founder profile, and public-safe evidence."],
+  ["EDGE", "Cloudflare Workers · Access", "Production delivery, protected Command identity, API proxying, privacy boundaries, and response hardening."],
+  ["RUNTIME", "RHEN · one Railway service", "The existing production service runs the RHEN supervisor and all internal modules in one container and on one persistent volume."],
+  ["MODULES", "Execution · Control · Research · Replay · Forecast", "Functional boundaries remain explicit even though the deployment topology is consolidated."],
+  ["CORE / STORE", "SQLite WAL · /data/rhen-core.db", "Bounded state and evidence storage with retention, compaction, WAL checkpointing, and one canonical Core writer."],
+  ["BROKER", "Alpaca", "Only the execution boundary receives broker execution configuration. Research, replay, forecast, and control paths remain execution-disabled."],
+  ["INTEGRATIONS", "Slack · GitHub · Railway", "Operational alerts, source control, CI, deployment, and service-level infrastructure."]
 ];
+
+const modules = [
+  ["EXECUTION", "Market observation, equities and crypto lanes, orders, fills, risk, reconciliation, session handling, and broker-derived evidence."],
+  ["CONTROL", "Health, incidents, scheduling, orchestration, protected-action gates, and system supervision."],
+  ["RESEARCH", "Strategy evaluation, crypto edge discovery, V15 research execution, and forward-shadow evidence."],
+  ["REPLAY", "Deterministic historical replay and counterfactual simulation without broker-order authority."],
+  ["FORECAST", "Regime, baseline, calibration, and forward-measurement workflows."],
+  ["CORE / STORE", "Canonical APIs, scheduler state, research state, bounded evidence storage, retention, and compaction."],
+  ["RESEARCH WORKER", "Evidence review and model-assisted research under the same protected promotion boundaries."],
+  ["COMMAND / API", "Protected operator and customer routing into the same canonical RHEN state rather than a parallel platform."]
+] as const;
 
 export default function Architecture() {
   return (
     <div className="company-page architecture-page">
       <section className="company-page-hero architecture-hero">
-        <span>ANEVUM ARCHITECTURE</span>
-        <h1>One company. Specialized systems. Explicit authority boundaries.</h1>
-        <p>ANEVUM is organized so research can challenge production without silently controlling it, simulation can reuse production mathematics without becoming live evidence, and public observability can exist without exposing private execution state.</p>
+        <span>RHEN V3 ARCHITECTURE</span>
+        <h1>One runtime. Internal modules. Explicit authority isolation.</h1>
+        <p>
+          ANEVUM has consolidated its production topology around RHEN. The former subsystem brands now
+          survive only as migration aliases for internal responsibilities. Deployment is simpler, but
+          research, replay, control, storage, and broker execution still have separate authority boundaries.
+        </p>
       </section>
 
-      <section className="company-section no-top-border architecture-topology">
-        <SystemTopology />
-      </section>
-
-      <section className="architecture-evidence-band" aria-label="ANEVUM evidence path">
+      <section className="architecture-evidence-band" aria-label="RHEN runtime topology">
         <div className="architecture-evidence-flow">
-          <article><span>01 / OBSERVATION</span><strong>Canonical state</strong><p>Runtime events, market state, and research inputs are retained before conclusions are made.</p></article>
-          <article><span>02 / RESEARCH</span><strong>Challenge the claim</strong><p>GRAEN, NOSTRA, and VELUM test inference, prediction, replay, and counterfactual alternatives.</p></article>
-          <article><span>03 / PROMOTION</span><strong>Explicit authority gate</strong><p>Evidence can support a proposal, but it does not silently grant production authority.</p></article>
-          <article><span>04 / MEASUREMENT</span><strong>RHEN records reality</strong><p>Broker-derived live outcomes return to the evidence layer without being mixed with simulation.</p></article>
+          <article><span>01 / OBSERVE</span><strong>Market + runtime state</strong><p>RHEN ingests market state, runtime state, and broker-derived evidence into one canonical runtime.</p></article>
+          <article><span>02 / RESEARCH</span><strong>Challenge the hypothesis</strong><p>Research, forecast, and replay modules test claims without receiving live order authority.</p></article>
+          <article><span>03 / GATE</span><strong>Protect promotion</strong><p>Evidence can advance a candidate to review, but research code cannot silently grant live authority.</p></article>
+          <article><span>04 / EXECUTE</span><strong>Broker authority stays narrow</strong><p>Only the execution boundary can submit broker actions within configured risk and reconciliation controls.</p></article>
         </div>
-        <div className="architecture-evidence-legend">STATE MAY FLOW ACROSS SYSTEMS · AUTHORITY REMAINS BOUNDED · LIVE AND SIMULATED EVIDENCE STAY DISTINCT</div>
+        <div className="architecture-evidence-legend">ONE RHEN SERVICE · LOOPBACK INTERNAL MODULES · EXECUTION AUTHORITY ISOLATED · SHADOW / PAPER / LIVE EVIDENCE REMAIN DISTINCT</div>
       </section>
 
       <section className="company-section">
         <header className="company-section-head">
-          <span>SYSTEM ROLES</span>
-          <h2>The hierarchy is functional, not decorative.</h2>
+          <span>INTERNAL MODULES</span>
+          <h2>Consolidation removes duplicate services, not functional boundaries.</h2>
         </header>
         <div className="architecture-role-grid">
-          {products.map((product, index) => (
-            <Link key={product.slug} to={"/products/" + product.slug}>
-              <SystemIcon system={product.name} size="lg" />
-              <span>{String(index + 1).padStart(2, "0")} / {product.category}</span>
-              <strong>{product.name}</strong>
-              <p>{product.role}</p>
-              <i>OPEN SYSTEM →</i>
+          {modules.map(([name, role], index) => (
+            <Link key={name} to="/live">
+              <SystemIcon system="RHEN" size="sm" />
+              <span>{String(index + 1).padStart(2, "0")} / RHEN MODULE</span>
+              <strong>{name}</strong>
+              <p>{role}</p>
+              <i>INSPECT RHEN →</i>
             </Link>
           ))}
         </div>
@@ -58,7 +66,7 @@ export default function Architecture() {
       <section className="company-section">
         <header className="company-section-head">
           <span>PRODUCTION STACK</span>
-          <h2>Software underneath the product names.</h2>
+          <h2>The operational stack after the rebuild.</h2>
         </header>
         <div className="architecture-stack">
           {stack.map(([layer, tech, description], index) => (
@@ -73,21 +81,21 @@ export default function Architecture() {
 
       <section className="company-section">
         <header className="company-section-head">
-          <span>AUTHORITY MODEL</span>
-          <h2>State can flow farther than authority.</h2>
+          <span>STORAGE + SAFETY</span>
+          <h2>The rebuild is also a data-discipline change.</h2>
         </header>
         <div className="authority-grid">
-          <article><SystemIcon system="GRAEN" size="sm" /><span>GRAEN</span><strong>Can falsify and validate.</strong><p>It does not place live orders.</p></article>
-          <article><SystemIcon system="NOSTRA" size="sm" /><span>NOSTRA</span><strong>Can forecast and calibrate.</strong><p>A forecast is not trade authorization.</p></article>
-          <article><SystemIcon system="VELUM" size="sm" /><span>VELUM</span><strong>Can replay and compare.</strong><p>Simulation does not enter the live record.</p></article>
-          <article><SystemIcon system="RHEN" size="sm" /><span>RHEN</span><strong>Can execute within bounded controls.</strong><p>Production behavior changes only through explicit promotion and deployment paths.</p></article>
-          <article><SystemIcon system="IREN" size="sm" /><span>IREN</span><strong>Can coordinate and expose state.</strong><p>Public observability and protected operation remain separate surfaces.</p></article>
+          <article><SystemIcon system="RHEN" size="sm" /><span>CORE</span><strong>Bounded SQLite instead of an operational PostgreSQL dependency.</strong><p>RHEN v3 targets normal storage below 500 MB and sheds routine analytics above the defined pressure threshold while preserving critical execution evidence.</p></article>
+          <article><SystemIcon system="RHEN" size="sm" /><span>RETENTION</span><strong>Routine telemetry is compacted instead of warehoused forever.</strong><p>Decision summaries, normalized candidate observations, position metrics, and routine evidence use explicit retention windows.</p></article>
+          <article><SystemIcon system="RHEN" size="sm" /><span>AUTHORITY</span><strong>One service does not mean one permission set.</strong><p>Research, replay, forecast, control, and pure Core subprocesses have execution disabled; broker order authority remains confined to execution.</p></article>
+          <article><SystemIcon system="RHEN" size="sm" /><span>V15</span><strong>The BTC candidate remains frozen and unpromoted.</strong><p>V15-R1-BTC-R2H-BREAKOUT-42-15 remains shadow/paper only until fresh forward evidence and protected promotion requirements are satisfied.</p></article>
+          <article><SystemIcon system="RHEN" size="sm" /><span>CUTOVER</span><strong>Legacy services are retired only after RHEN is verified healthy.</strong><p>The rebuild preserves rollback evidence and does not treat architectural simplification as permission to skip verification.</p></article>
         </div>
       </section>
 
       <section className="architecture-cta">
-        <div><span>SEE THE SYSTEM OPERATE</span><h2>Architecture is only useful if the evidence matches it.</h2></div>
-        <div><Link to="/performance">Performance evidence →</Link><Link to="/research">Field Notes →</Link><Link to="/case-studies">Case Studies →</Link></div>
+        <div><span>SEE RHEN OPERATE</span><h2>The public surface should match the runtime that actually exists.</h2></div>
+        <div><Link to="/live">Live Terminal →</Link><Link to="/research">Field Notes →</Link><Link to="/command/overview">Command →</Link></div>
       </section>
     </div>
   );
