@@ -54,3 +54,12 @@ test("customer console reports real onboarding, reconciliation and activity", ()
   assert.match(customer, /Save risk profile/);
   assert.match(customer, /Pause RHEN/);
 });
+
+
+test("customer Command never equates consent with an active executor", () => {
+  assert.match(customer, /tenant_execution_runtime_unavailable/);
+  assert.match(customer, /EXECUTOR PENDING/);
+  assert.match(customer, /executionReady/);
+  assert.match(customer, /orders remain blocked until the tenant executor/);
+  assert.doesNotMatch(customer, /botEnabled \? "RHEN PAPER ACTIVE"/);
+});
