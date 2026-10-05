@@ -224,8 +224,8 @@ function currentReleaseSnapshot() {
 function publicRouteMetadata(pathname) {
   const staticRoutes = {
     "/": {
-      title: "ANEVUM Command — Automated Trading with Inspectable Evidence",
-      description: "ANEVUM Command is the customer control surface for connecting an Alpaca account, configuring RHEN automated trading, reviewing broker-derived money state and activity, and inspecting public-safe operating evidence. Paper beta first; live-money authority remains gated until verified."
+      title: "ANEVUM — RHEN Unified Runtime + Command",
+      description: "ANEVUM is consolidating its production architecture around RHEN v3: one Railway runtime with isolated execution, control, research, replay, forecast, Core/Store, and research-worker modules. Command is the customer surface; Paper Beta first and live-money authority remains gated."
     },
     "/products": {
       title: "Products — ANEVUM",
