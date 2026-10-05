@@ -260,8 +260,8 @@ function publicRouteMetadata(pathname) {
       description: "ANEVUM research across GRAEN, NOSTRA, VELUM, and RHEN: hypotheses, validation gates, durable decisions, forward outcomes, and explicit limitations."
     },
     "/founder": {
-      title: "Devon Akins — Founder, ANEVUM",
-      description: "Founder profile for Devon Akins: systems builder and independent researcher building ANEVUM's software, infrastructure, telemetry, forecasting, mathematical research, and replay systems."
+      title: "About ANEVUM — Devon Akins",
+      description: "About ANEVUM and founder Devon Akins, building inspectable software systems, research infrastructure, forecasting, replay, telemetry, and production controls."
     },
     "/resume": {
       title: "Devon Akins — Resume",
