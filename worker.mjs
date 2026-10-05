@@ -224,8 +224,8 @@ function currentReleaseSnapshot() {
 function publicRouteMetadata(pathname) {
   const staticRoutes = {
     "/": {
-      title: "ANEVUM — Live Systems & Research",
-      description: "ANEVUM is an inspectable software and research environment centered on a public-safe live terminal for IREN, RHEN, GRAEN, NOSTRA, and VELUM."
+      title: "ANEVUM Command — Automated Trading with Inspectable Evidence",
+      description: "ANEVUM Command is the customer control surface for connecting an Alpaca account, configuring RHEN automated trading, reviewing broker-derived money state and activity, and inspecting public-safe operating evidence. Paper beta first; live-money authority remains gated until verified."
     },
     "/products": {
       title: "Products — ANEVUM",
