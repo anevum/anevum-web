@@ -129,6 +129,16 @@ jobs:
             (.disclosure.excluded_fields | index("credentials") != null)
           ' "$feed_file" > /dev/null
 
+          rhen_health_file="$RUNNER_TEMP/rhen-health.json"
+          curl --fail --show-error --silent "https://alpaca-trader-production-bf3e.up.railway.app/health" > "$rhen_health_file"
+          jq -e '
+            .ok == true and
+            .modules.iren.ok == true and
+            .modules.iren.body.durable_state_current == true and
+            .modules.iren.body.work_engine.running == true and
+            .modules.graen_research.ok == true
+          ' "$rhen_health_file" > /dev/null
+
           curl --fail --show-error --silent --head "$base/command" | grep -qi 'x-robots-tag:.*noindex'
 
       - name: Verify browser runtime and horizontal overflow
