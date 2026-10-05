@@ -211,7 +211,6 @@ export default function Command() {
   const recentOrders = list(snapshot?.recent_orders);
   const scanner = record(snapshot?.scanner);
   const history = list(snapshot?.history);
-  const position = positions[0];
   const dayPnl = number(account.day_pnl);
 
   const runtime = record(evidence?.provenance?.runtime);
