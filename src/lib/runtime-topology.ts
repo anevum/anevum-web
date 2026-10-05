@@ -102,8 +102,13 @@ export type StrategyAuthorityProjection = {
   trading_mode?: string;
   execution_mode?: string;
   execution_enabled?: boolean;
+  signal_authorized?: boolean;
+  signals_enabled?: boolean;
   execution_authorized?: boolean;
+  broker_writes_allowed?: boolean;
   entries_enabled?: boolean;
+  manual_approval_required?: boolean;
+  pending_approval?: Record<string, unknown> | null;
 };
 
 export type StrategyCandidateProjection = {
