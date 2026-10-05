@@ -11,6 +11,7 @@ import CommandIrenDock from "../components/CommandIrenDock";
 import CommandOperationsTerminal from "../components/CommandOperationsTerminal";
 import CommandStrategyPipeline from "../components/CommandStrategyPipeline";
 import CommandRawLog from "../components/CommandRawLog";
+import CommandTradingLanes from "../components/CommandTradingLanes";
 import { useCommandObservation } from "../hooks/useCommandObservation";
 import { useLiveTrading } from "../hooks/useLiveTrading";
 import {
@@ -400,40 +401,9 @@ export default function Command() {
               : null}
             <CommandAccountTracker account={account} history={accountHistory} orders={recentOrders} />
             <CommandPerformance performance={publicFeed?.performance} feedError={publicFeedError} />
-            <article className="command-panel command-view-overview command-view-trading command-panel-crypto-live-signal">
-              <header>
-                <div>
-                  <span>BTC LIVE SIGNAL / REAL ACCOUNT</span>
-                  <strong>{cryptoApprovalPending ? "PENDING MANUAL ACTION" : "MONITORING"}</strong>
-                </div>
-                <small>BROKER WRITES DISABLED</small>
-              </header>
-              <div className="command-metric-grid">
-                <div><span>STRATEGY</span><strong>{text(cryptoStats.strategy_version_id, "RHEN-BTC-DIRECT-002")}</strong></div>
-                <div><span>CLOSED TRADES</span><strong>{text(cryptoStats.closed_trades, "0")}</strong></div>
-                <div><span>W / L</span><strong>{text(cryptoStats.wins, "0")} / {text(cryptoStats.losses, "0")}</strong></div>
-                <div><span>WIN RATE</span><strong>{cryptoStats.win_rate !== undefined ? percent(Number(cryptoStats.win_rate)) : "—"}</strong></div>
-              </div>
-              {cryptoApprovalPending ? (
-                <div className="order-body">
-                  <div className="order-row">
-                    <time>{clockTime(cryptoApproval.generated_at)}</time>
-                    <strong>{text(cryptoApproval.symbol, "BTC/USD")}</strong>
-                    <span>{text(cryptoApproval.ticket_type, "ACTION").toUpperCase()}</span>
-                    <span>{text(cryptoApproval.side).toUpperCase()}</span>
-                    <b>{cryptoApproval.reference_price ? money(cryptoApproval.reference_price) : "—"}</b>
-                  </div>
-                  <div className="command-empty">
-                    {text(cryptoApproval.reason, "RHEN generated a live-account BTC signal.")}
-                    {" "}Manual action is required; RHEN did not submit a crypto broker order.
-                  </div>
-                </div>
-              ) : (
-                <div className="command-empty">
-                  RHEN is reading the live Alpaca account and BTC market data. A valid setup will appear here as a pending manual-action ticket; autonomous crypto broker writes remain disabled.
-                </div>
-              )}
-            </article>
+            {(commandPage === "overview" || commandPage === "trading") && snapshot
+              ? <CommandTradingLanes snapshot={snapshot} />
+              : null}
             <article className="command-panel command-view-trading command-panel-scanner">
               <header><div><span>LIVE SCANNER</span><strong>{scanRows.length} symbols observed in runtime snapshot</strong></div><small>{clockTime(bot.last_strategy_at)}</small></header>
               <div className="scanner-head"><span>SYMBOL</span><span>PRICE</span><span>ACTION</span><span>REASON</span></div>
@@ -680,7 +650,7 @@ export default function Command() {
           </aside>
         </section>
       </main>
-      <CommandRawLog snapshot={commandObservation.snapshot} feed={publicFeedError ? null : publicFeed} now={commandObservation.now} />
+      <CommandRawLog snapshot={commandObservation.snapshot} feed={publicFeedError ? null : publicFeed} tradingSnapshot={snapshot} now={commandObservation.now} />
       <CommandIrenDock session={session} />
     </div>
   );
