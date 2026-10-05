@@ -1,6 +1,6 @@
 # ANEVUM Web
 
-ANEVUM's operating website and private Command interface. RHEN is the current flagship autonomous market research, execution, evidence, and learning system; the site architecture is intentionally broader than RHEN so ANEVUM can add future systems, agents, infrastructure, releases, and business lines without another structural redesign.
+ANEVUM's operating website and private Command interface. RHEN v3 is the single top-level ANEVUM system and production runtime. Execution, control, research, replay, forecasting, Core/Store, research-worker, and Command/API responsibilities remain isolated as internal modules rather than independent products or Railway application services.
 
 ## Open source
 
@@ -16,7 +16,7 @@ This repository is intentionally the public web surface. Private credentials, br
 
 ### Public — `/`
 
-The public site presents ANEVUM as the operating company and RHEN as its current flagship. RHEN-specific pages remain an intentionally limited observability and evidence surface. It may show:
+The public site presents ANEVUM as the operating company and RHEN v3 as its unified runtime. Public pages expose an intentionally limited observability and evidence surface; legacy subsystem names may remain in compatibility data during cutover but are not independent top-level products. It may show:
 
 - runtime state and telemetry freshness
 - active public version identifier and version history
@@ -60,7 +60,7 @@ The historical public trading projection tables remain in the database for conti
 
 `database/lock_down_public_trading_projection.sql`
 
-The SQL files above record historical lockdowns; they are not active runtime dependencies. Railway PostgreSQL now holds canonical evidence. Public telemetry remains offline during the rebuild; no raw account data is published.
+The SQL files above record historical lockdowns; they are not active runtime dependencies. RHEN v3 Core uses bounded SQLite storage on the RHEN persistent volume for operational state and evidence. Historical PostgreSQL artifacts may remain during cutover, but PostgreSQL is no longer the target operational dependency for RHEN v3. Public telemetry remains sanitized; no raw account data is published.
 
 ## Stack
 
@@ -68,7 +68,7 @@ The SQL files above record historical lockdowns; they are not active runtime dep
 - Vite
 - Cloudflare Workers / static assets
 - Cloudflare Access for private Command identity
-- Railway compute and canonical PostgreSQL
+- Railway compute with RHEN Core on bounded SQLite storage
 - GitHub Actions verification and production deployment
 
 ## Commands
