@@ -217,10 +217,6 @@ export default function Command() {
 
   const account = record(snapshot?.account);
   const accountHistory = snapshot?.account_history || null;
-  const cryptoStats = record(snapshot?.crypto_stats);
-  const cryptoApproval = record(snapshot?.crypto_approval);
-  const cryptoApprovalPending =
-    text(cryptoApproval.status, "").toUpperCase() === "PENDING_APPROVAL";
   const bot = record(snapshot?.bot);
   const strategy = record(snapshot?.strategy);
   const market = record(snapshot?.market);
