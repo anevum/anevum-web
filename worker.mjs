@@ -5,6 +5,7 @@ const TRADER_BASE = "https://alpaca-trader-production-bf3e.up.railway.app";
 const RESEARCH_BASE = "https://rhen-research-agent-production.up.railway.app";
 const PUBLIC_TRADING_FEED = "https://foundation-ingest-staging.up.railway.app/v1/trading-public-feed";
 const FOUNDATION_IREN_COMMAND = "https://foundation-ingest-staging.up.railway.app/v1/command/iren";
+const FOUNDATION_PLATFORM_BASE = "https://foundation-ingest-staging.up.railway.app/v1/command/platform";
 
 class ApiError extends Error {
   constructor(status, message) {
@@ -35,7 +36,7 @@ function decodeJwtJson(value) {
   return JSON.parse(new TextDecoder().decode(decodeBase64Url(value)));
 }
 
-async function verifyAccessAssertion(token, env) {
+async function verifyAccessAssertion(token, env, { enforceAdmin = true } = {}) {
   const teamDomain = String(env?.CF_ACCESS_TEAM_DOMAIN || "").trim().replace(/\/$/, "");
   const audience = String(env?.CF_ACCESS_AUD || "").trim();
   if (!teamDomain.startsWith("https://") || !audience) {
@@ -96,19 +97,81 @@ async function verifyAccessAssertion(token, env) {
       .map((value) => value.trim().toLowerCase())
       .filter(Boolean)
   );
-  if (allowed.size && !allowed.has(email)) {
-    throw new ApiError(403, "Cloudflare Access identity is not authorized for Command.");
+  const commandAdmin = allowed.size === 0 || allowed.has(email);
+  if (enforceAdmin && !commandAdmin) {
+    throw new ApiError(403, "Cloudflare Access identity is not authorized for operator Command.");
   }
-  return { email, source: "cloudflare_access" };
+  return { email, source: "cloudflare_access", command_admin: commandAdmin };
 }
 
-async function commandCredential(request, env) {
+async function commandCredential(request, env, { allowTenant = false } = {}) {
   const access = (request.headers.get("cf-access-jwt-assertion") || "").trim();
   if (!access) {
     throw new ApiError(401, "Cloudflare Access authentication is required.");
   }
-  const identity = await verifyAccessAssertion(access, env);
+  const identity = await verifyAccessAssertion(access, env, {
+    enforceAdmin: !allowTenant
+  });
   return { token: access, source: "cloudflare_access", identity };
+}
+
+async function proxyPlatform(request, upstreamPath, env, { allowTenant = true } = {}) {
+  const credential = await commandCredential(request, env, { allowTenant });
+  const requestUrl = new URL(request.url);
+  const response = await fetch(FOUNDATION_PLATFORM_BASE + upstreamPath + requestUrl.search, {
+    method: request.method,
+    headers: {
+      "Cf-Access-Jwt-Assertion": credential.token,
+      "Content-Type": "application/json",
+      "Accept": "application/json",
+      "Cache-Control": "no-store"
+    },
+    body: request.method === "GET" || request.method === "HEAD" ? undefined : await request.text()
+  });
+  const raw = await response.text();
+  let payload = {};
+  if (raw) {
+    try { payload = JSON.parse(raw); }
+    catch { payload = { message: raw }; }
+  }
+  return jsonResponse(payload, response.status);
+}
+
+async function platformSession(request, env) {
+  const credential = await commandCredential(request, env, { allowTenant: true });
+  try {
+    const response = await fetch(FOUNDATION_PLATFORM_BASE + "/session", {
+      method: "GET",
+      headers: {
+        "Cf-Access-Jwt-Assertion": credential.token,
+        "Accept": "application/json",
+        "Cache-Control": "no-store"
+      }
+    });
+    const raw = await response.text();
+    let payload = {};
+    if (raw) {
+      try { payload = JSON.parse(raw); }
+      catch { payload = { message: raw }; }
+    }
+    if (response.ok) return jsonResponse(payload, response.status);
+    if (!credential.identity?.command_admin) return jsonResponse(payload, response.status);
+  } catch {
+    if (!credential.identity?.command_admin) {
+      throw new ApiError(503, "Customer Command session is unavailable.");
+    }
+  }
+
+  return jsonResponse({
+    authenticated: true,
+    email: credential.identity?.email || null,
+    auth_source: credential.source,
+    command_admin: true,
+    principal_id: null,
+    tenants: [],
+    active_tenant_id: null,
+    surface: "operator"
+  });
 }
 
 async function proxyTrader(request, upstreamPath, env) {
@@ -398,16 +461,53 @@ export default {
     if (pathname === "/api/command/session") {
       if (request.method !== "GET") return jsonResponse({ message: "Method not allowed." }, 405);
       try {
-        const credential = await commandCredential(request, env);
-        return jsonResponse({
-          authenticated: true,
-          email: credential.identity?.email || null,
-          auth_source: credential.source,
-          command_admin: true
-        });
+        return await platformSession(request, env);
       } catch (error) {
         if (error instanceof ApiError) return jsonResponse({ message: error.message }, error.status);
         return jsonResponse({ message: "Private authentication unavailable." }, 503);
+      }
+    }
+
+    if (pathname === "/api/command/platform/alpaca/callback") {
+      if (request.method !== "GET") return jsonResponse({ message: "Method not allowed." }, 405);
+      try {
+        await commandCredential(request, env, { allowTenant: true });
+        const code = String(url.searchParams.get("code") || "").trim();
+        const state = String(url.searchParams.get("state") || "").trim();
+        if (!code || !state) throw new ApiError(400, "Alpaca OAuth callback is incomplete.");
+        const callbackRequest = new Request(request.url, {
+          method: "POST",
+          headers: request.headers,
+          body: JSON.stringify({ code, state })
+        });
+        const response = await proxyPlatform(callbackRequest, "/alpaca/oauth/callback", env);
+        const payload = await response.clone().json().catch(() => ({}));
+        if (!response.ok) {
+          const target = new URL("/command", request.url);
+          target.searchParams.set("alpaca", "error");
+          target.searchParams.set("message", String(payload.detail || payload.message || "connection_failed").slice(0, 160));
+          return Response.redirect(target.toString(), 303);
+        }
+        const target = new URL("/command", request.url);
+        target.searchParams.set("alpaca", "connected");
+        return Response.redirect(target.toString(), 303);
+      } catch (error) {
+        if (error instanceof ApiError) return jsonResponse({ message: error.message }, error.status);
+        return jsonResponse({ message: "Alpaca OAuth callback failed." }, 503);
+      }
+    }
+
+    if (pathname.startsWith("/api/command/platform/")) {
+      if (request.method !== "GET" && url.hostname !== "anevum.com") {
+        return jsonResponse({ message: "Customer Command mutations are disabled outside production." }, 403);
+      }
+      try {
+        const suffix = pathname.slice("/api/command/platform".length);
+        const adminOnly = suffix.startsWith("/admin/");
+        return await proxyPlatform(request, suffix, env, { allowTenant: !adminOnly });
+      } catch (error) {
+        if (error instanceof ApiError) return jsonResponse({ message: error.message }, error.status);
+        return jsonResponse({ message: error instanceof Error ? error.message : "Customer Command request failed." }, 500);
       }
     }
 
