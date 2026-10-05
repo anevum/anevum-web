@@ -155,7 +155,7 @@ export default function Live() {
   ];
 
   return (
-    <section className="public-terminal-page" aria-label="ANEVUM live terminal">
+    <section className="public-terminal-page" aria-label="ANEVUM live terminal" data-visual-ops="public-terminal">
       <header className="pt-topbar">
         <div className="pt-title-lockup">
           <i className={"pt-live-dot" + (error ? " is-stale" : "")} aria-hidden="true" />
