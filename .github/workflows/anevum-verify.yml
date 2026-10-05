@@ -184,7 +184,7 @@ jobs:
             return 1
           }
 
-          capture home / 'Watch the machine work.'
+          capture home / 'Connect. Configure. Observe.'
           capture terminal /live 'EVIDENCE DRAWER'
           capture research /research 'Development journal.'
           capture field-note /research/multi-market-architecture-equities-crypto 'REPRODUCE / CHALLENGE THIS NOTE'
