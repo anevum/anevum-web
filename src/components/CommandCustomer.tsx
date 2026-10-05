@@ -406,7 +406,7 @@ export default function CommandCustomer({
             </header>
             <div className="customer-command-timeline">
               {(overview?.activity || []).length ? (overview?.activity || []).slice(0, 16).map((event, index) => (
-                <div key={event.object_id + "-" + index}>
+                <div key={text(event.object_id, "event") + "-" + index}>
                   <i />
                   <div>
                     <strong>{reasonLabel(text(event.action, "event"))}</strong>
