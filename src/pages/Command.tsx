@@ -5,6 +5,7 @@ import Mark from "../components/Mark";
 import SystemIcon from "../components/company/SystemIcon";
 import UniverseBackground from "../components/UniverseBackground";
 import CommandPerformance from "../components/CommandPerformance";
+import CommandAccountTracker from "../components/CommandAccountTracker";
 import CommandTopology from "../components/CommandTopology";
 import CommandSystemMonitor, { type MonitoredSystem } from "../components/CommandSystemMonitor";
 import CommandIrenDock from "../components/CommandIrenDock";
@@ -201,6 +202,7 @@ export default function Command() {
   }
 
   const account = record(snapshot?.account);
+  const accountHistory = snapshot?.account_history || null;
   const bot = record(snapshot?.bot);
   const strategy = record(snapshot?.strategy);
   const market = record(snapshot?.market);
@@ -374,7 +376,7 @@ export default function Command() {
           <article><span>CASH</span><strong>{money(account.cash)}</strong><small>Buying power {money(account.buying_power)}</small></article>
           <article><span>MARKET</span><strong>{market.is_open ? "OPEN" : "CLOSED"}</strong><small>{text(latestScan.market_session, "runtime")}</small></article>
           <article><span>RHEN</span><strong>{bot.entries_enabled ? "WATCHING" : "ENTRY LOCK"}</strong><small>{text(strategy.name, "strategy")}</small></article>
-          <article><span>POSITION</span><strong>{position ? text(position.symbol) : "FLAT"}</strong><small>{position ? money(position.unrealized_pl) + " / " + percent(position.unrealized_plpc) : "No open position"}</small></article>
+          <article><span>POSITIONS</span><strong>{positions.length ? positions.length + " OPEN" : "FLAT"}</strong><small>{positions.length ? positions.slice(0, 3).map((row) => text(row.symbol)).join(" · ") : "No open position"}</small></article>
         </section>
 
         <section className="command-grid">
@@ -384,6 +386,7 @@ export default function Command() {
               : monitoredSystem
                 ? <CommandSystemMonitor session={session} feed={publicFeedError ? null : publicFeed} system={monitoredSystem} />
                 : <CommandTopology session={session} feed={publicFeedError ? null : publicFeed} />}
+            <CommandAccountTracker account={account} history={accountHistory} orders={recentOrders} />
             <CommandPerformance performance={publicFeed?.performance} feedError={publicFeedError} />
             <article className="command-panel command-view-overview command-view-live command-panel-scanner">
               <header><div><span>LIVE SCANNER</span><strong>{scanRows.length} symbols observed in runtime snapshot</strong></div><small>{clockTime(bot.last_strategy_at)}</small></header>
@@ -401,7 +404,7 @@ export default function Command() {
               </div>
             </article>
 
-            <article className="command-panel command-view-live command-panel-orders">
+            <article className="command-panel command-view-overview command-view-live command-panel-orders">
               <header><div><span>ORDER TAPE</span><strong>{openOrders.length} open / {recentOrders.length} recent</strong></div><small>Private broker telemetry</small></header>
               <div className="order-body">
                 {recentOrders.length ? recentOrders.slice(0, 12).map((order, index) => (
@@ -574,16 +577,21 @@ export default function Command() {
 
           <aside className="command-side">
             <article className="command-panel command-view-overview command-view-live command-panel-position">
-              <header><div><span>ACTIVE POSITION</span><strong>{position ? text(position.symbol) : "FLAT"}</strong></div><small>Live from broker</small></header>
-              {position ? (
-                <div className="position-grid">
-                  <div><span>MARKET VALUE</span><strong>{money(position.market_value)}</strong></div>
-                  <div><span>ENTRY</span><strong>{money(position.avg_entry_price)}</strong></div>
-                  <div><span>CURRENT</span><strong>{money(position.current_price)}</strong></div>
-                  <div><span>QTY</span><strong>{text(position.qty)}</strong></div>
-                  <div className="wide"><span>UNREALIZED P&amp;L</span><strong>{money(position.unrealized_pl)} / {percent(position.unrealized_plpc)}</strong></div>
+              <header><div><span>ACTIVE POSITIONS</span><strong>{positions.length ? positions.length + " OPEN" : "FLAT"}</strong></div><small>Live from broker</small></header>
+              {positions.length ? (
+                <div className="position-list">
+                  {positions.map((row, index) => (
+                    <div className="position-row" key={text(row.symbol, String(index))}>
+                      <div><span>SYMBOL</span><strong>{text(row.symbol)}</strong></div>
+                      <div><span>QTY</span><strong>{text(row.qty)}</strong></div>
+                      <div><span>ENTRY</span><strong>{money(row.avg_entry_price)}</strong></div>
+                      <div><span>CURRENT</span><strong>{money(row.current_price)}</strong></div>
+                      <div><span>VALUE</span><strong>{money(row.market_value)}</strong></div>
+                      <div><span>UNREALIZED P&amp;L</span><strong className={(number(row.unrealized_pl) || 0) > 0 ? "positive" : (number(row.unrealized_pl) || 0) < 0 ? "negative" : ""}>{money(row.unrealized_pl)} / {percent(row.unrealized_plpc)}</strong></div>
+                    </div>
+                  ))}
                 </div>
-              ) : <div className="command-empty">No open position.</div>}
+              ) : <div className="command-empty">No open positions.</div>}
             </article>
 
             <article id="telemetry" className="command-panel command-view-overview command-view-system command-panel-telemetry">
