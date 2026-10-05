@@ -39,38 +39,30 @@ test("evidence incident points the operator at RHEN Core and spool health", () =
   assert.match(guidance[0].action, /spool/);
 });
 
-test("live terminal renders canonical BTC canary paper safeguards", () => {
+test("live terminal uses the canonical event pipeline and excludes retired BTC canary UI", () => {
   const source = readFileSync(
     new URL("../src/components/CommandOperationsTerminal.tsx", import.meta.url),
     "utf8"
   );
-  assert.match(source, /snapshot\?\.btc_canary/);
-  assert.match(source, /BTC-CANARY-001/);
-  assert.match(source, /PAPER ONLY/);
-  assert.match(source, /LIVE DISABLED/);
-  assert.match(source, /NOT PROMOTED/);
-  assert.match(source, /current_return_pct/);
-  assert.match(source, /protection_status/);
-  assert.match(source, /risk_stop_pct/);
-  assert.match(source, /LIVE DECISION PIPELINE/);
-  assert.match(source, /momentum_return/);
-  assert.match(source, /above_sma/);
-  assert.match(source, /desired_long/);
-  assert.match(source, /RECENT DECISION CYCLES/);
-  assert.match(source, /return_history/);
+  assert.doesNotMatch(source, /snapshot\?\.btc_canary/);
+  assert.doesNotMatch(source, /BTC-CANARY-001/);
+  assert.match(source, /buildCommandEvents/);
+  assert.match(source, /TERMINAL_SYSTEMS/);
+  assert.match(source, /current merged window/);
+  assert.match(source, /READ ONLY · no execution authority/);
 });
 
 
 
-test("live terminal does not present routine heartbeats as substantive work", () => {
+test("live terminal keeps runtime health separate from substantive activity", () => {
   const source = readFileSync(
     new URL("../src/components/CommandOperationsTerminal.tsx", import.meta.url),
     "utf8"
   );
-  assert.match(source, /Routine health probes are freshness evidence, not substantive activity/);
-  assert.match(source, /RUNTIME ACTIVITY/);
-  assert.match(source, /RUNTIME HEALTH/);
+  assert.match(source, /explicit work signals/);
   assert.match(source, /displayState\(lane\.view\.health\)/);
   assert.match(source, /displayState\(lane\.activityState\)/);
   assert.match(source, /No substantive event/);
+  assert.match(source, /No current executable cycle/);
+  assert.match(source, /No active research run/);
 });
