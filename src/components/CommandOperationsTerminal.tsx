@@ -393,6 +393,155 @@ function FocusWorkbench({
   );
 }
 
+function AutonomousOperatingPanel({
+  snapshot,
+  now
+}: {
+  snapshot: IrenSnapshot | null;
+  now: number;
+}) {
+  const summary = snapshot?.research?.operating_summary;
+  const requirements = snapshot?.research?.engineering_requirements || [];
+  const recentHypotheses = snapshot?.research?.hypothesis_graph?.recent_nodes || [];
+  const state = snapshot?.operating_state || summary?.condition || snapshot?.state || "UNKNOWN";
+  const productivity = snapshot?.productivity_state || summary?.productivity || "UNKNOWN";
+  const nextAction = summary?.next_autonomous_action || "Awaiting canonical autonomous operating state.";
+  const objective = summary?.objective || "Discover a reproducible, cost-aware crypto trading edge.";
+  const charter = snapshot?.research?.autonomy_charter;
+  const topRequirement = requirements[0];
+
+  const humanObjectives = (snapshot?.work?.objectives || []).filter(row => {
+    const metadata = object(row.metadata);
+    return row.protected_action === true
+      || metadata.classification === "HUMAN_DECISION_REQUIRED"
+      || metadata.job_type === "HUMAN_DECISION";
+  });
+  const topHuman = humanObjectives[0];
+
+  const copyHandoff = async () => {
+    const prompt = topRequirement?.handoff_prompt;
+    if (!prompt) return;
+    try {
+      await navigator.clipboard.writeText(prompt);
+    } catch {
+      // Clipboard permission can be unavailable in standalone/iOS contexts.
+    }
+  };
+
+  return (
+    <section
+      className={"terminal-autonomy tone-" + stateTone(state)}
+      aria-label="ANEVUM autonomous operating loop"
+    >
+      <header>
+        <div className="terminal-autonomy-title">
+          <SystemIcon system="IREN" size="sm" />
+          <div>
+            <span>ANEVUM / AUTONOMOUS OPERATING LOOP</span>
+            <h2>{displayState(state)}</h2>
+          </div>
+        </div>
+        <div className="terminal-autonomy-productivity">
+          <i className={productivity.includes("PRODUCTIVE") || state === "RESEARCHING" ? "is-live" : ""} aria-hidden="true" />
+          <span>PRODUCTIVITY</span>
+          <strong>{displayState(productivity)}</strong>
+        </div>
+      </header>
+
+      <div className="terminal-autonomy-objective">
+        <span>CURRENT OBJECTIVE</span>
+        <strong>{objective}</strong>
+        <p>{nextAction}</p>
+      </div>
+
+      <dl className="terminal-autonomy-metrics">
+        <div><dt>ACTIVE HYPOTHESES</dt><dd>{summary?.active_hypotheses ?? "—"}</dd></div>
+        <div><dt>RUNNING</dt><dd>{summary?.experiments_running ?? "—"}</dd></div>
+        <div><dt>VALIDATION</dt><dd>{summary?.validation_candidates ?? "—"}</dd></div>
+        <div><dt>HOLDOUT</dt><dd>{summary?.holdout_candidates ?? "—"}</dd></div>
+        <div><dt>SHADOW</dt><dd>{summary?.shadow_candidates_active ?? "—"}</dd></div>
+        <div><dt>PAPER</dt><dd>{summary?.paper_candidates_active ?? "—"}</dd></div>
+        <div><dt>FALSIFIED</dt><dd>{summary?.hypotheses_falsified ?? "—"}</dd></div>
+        <div><dt>NEEDS DEVON</dt><dd>{humanObjectives.length + (summary?.engineering_required ?? requirements.length)}</dd></div>
+      </dl>
+
+      <div className="terminal-autonomy-body">
+        <section className="terminal-autonomy-memory">
+          <header>
+            <div><span>RESEARCH MEMORY</span><strong>{snapshot?.research?.hypothesis_graph?.node_count ?? 0} hypotheses recorded</strong></div>
+            <small>latest progress {ageText(summary?.latest_progress_at, now)}</small>
+          </header>
+          <ol>
+            {recentHypotheses.length ? recentHypotheses.slice(0, 6).map((row, index) => (
+              <li key={String(row.hypothesis_id || row.problem_id || index)}>
+                <div>
+                  <b>{row.hypothesis_id || "UNNAMED"}</b>
+                  <span>{row.family || row.title || "Research hypothesis"}</span>
+                </div>
+                <strong>{displayState(row.state || "UNKNOWN")}</strong>
+                <small>{row.failure_reasons?.[0] || row.latest_result_state || row.research_stage || "No terminal result yet"}</small>
+              </li>
+            )) : <li className="terminal-autonomy-empty">No hypothesis memory exposed yet.</li>}
+          </ol>
+        </section>
+
+        <section className={"terminal-autonomy-engineering" + (topHuman || topRequirement ? " is-required" : "")}>
+          <header>
+            <span>MANUAL AUTHORITY BOUNDARY</span>
+            <strong>
+              {topHuman
+                ? "HUMAN DECISION REQUIRED"
+                : topRequirement
+                  ? "CHATGPT / CODEX REQUIRED"
+                  : "NO HUMAN ACTION REQUIRED"}
+            </strong>
+          </header>
+
+          {topHuman ? (
+            <>
+              <h3>{String(topHuman.title || "Protected decision required")}</h3>
+              <p>{String(topHuman.description || "Review the protected decision in IREN before authority can expand.")}</p>
+              <div className="terminal-autonomy-requirement-meta">
+                <span><b>TYPE</b>{displayState(String(object(topHuman.metadata).classification || "HUMAN_DECISION_REQUIRED"))}</span>
+                <span><b>RISK</b>PROTECTED</span>
+                <span><b>AUTO ACTION</b>DISABLED</span>
+              </div>
+              <small>ANEVUM continues independent safe work. It cannot expand live risk, spend, credentials, or production authority by itself.</small>
+            </>
+          ) : topRequirement ? (
+            <>
+              <h3>{topRequirement.title || topRequirement.requirement_id || "Software capability required"}</h3>
+              <p>{topRequirement.reason || topRequirement.capability_required}</p>
+              <div className="terminal-autonomy-requirement-meta">
+                <span><b>ID</b>{topRequirement.requirement_id || "—"}</span>
+                <span><b>RISK</b>{topRequirement.risk || "—"}</span>
+                <span><b>BLOCKS</b>{topRequirement.blocked_research?.join(", ") || "research branch"}</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => void copyHandoff()}
+                disabled={!topRequirement.handoff_prompt}
+              >
+                COPY CODEX HANDOFF
+              </button>
+              <small>{topRequirement.continuation_policy || "Independent research continues while software is updated manually."}</small>
+            </>
+          ) : (
+            <p>GRAEN can continue through research, validation, VELUM, shadow, and authorized paper evidence without intervention. Source changes, spending, credentials, and live-risk expansion remain manual.</p>
+          )}
+        </section>
+      </div>
+
+      <footer>
+        <span><b>CHARTER</b>{charter?.charter_id || "ANEVUM-AUTONOMY-CHARTER-V1"} {charter?.version ? "v" + charter.version : ""}</span>
+        <span><b>CODE</b>{charter?.code_mutation_authority === false ? "MANUAL ONLY" : "LOCKED"}</span>
+        <span><b>SPEND</b>{charter?.spending_authority === false ? "MANUAL ONLY" : "LOCKED"}</span>
+        <span><b>RISK INCREASE</b>{charter?.production_risk_increase_authority === false ? "MANUAL ONLY" : "LOCKED"}</span>
+      </footer>
+    </section>
+  );
+}
+
 function BtcCanaryPanel({
   canary,
   now
@@ -652,6 +801,8 @@ export default function CommandOperationsTerminal({
       </section>
 
       {(error || feedError) && <div className="terminal-warning"><strong>OBSERVATION DEGRADED</strong><span>{error || feedError}</span></div>}
+
+      <AutonomousOperatingPanel snapshot={snapshot} now={now} />
 
       <section className="terminal-focus-grid" aria-label="GRAEN and VELUM live workbenches">
         <FocusWorkbench system="GRAEN" snapshot={snapshot} feed={feed} events={events} now={now} />
