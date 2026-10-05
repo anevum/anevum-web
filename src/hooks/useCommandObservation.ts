@@ -2,12 +2,26 @@ import { useEffect, useState } from "react";
 import { commandAuthHeaders, type RhenSession } from "../lib/auth";
 import type { IrenSnapshot } from "../lib/runtime-topology";
 
-export function useCommandObservation(session: RhenSession, intervalMs = 15000) {
+export type CommandObservation = {
+  snapshot: IrenSnapshot | null;
+  error: string;
+  now: number;
+  receivedAt?: string;
+};
+
+export function useCommandObservation(session: RhenSession | null, intervalMs = 15000): CommandObservation {
   const [snapshot, setSnapshot] = useState<IrenSnapshot | null>(null);
   const [error, setError] = useState("");
   const [now, setNow] = useState(Date.now());
   const [receivedAt, setReceivedAt] = useState<string>();
   useEffect(() => {
+    if (!session) {
+      setSnapshot(null);
+      setError("");
+      setReceivedAt(undefined);
+      return;
+    }
+
     let stopped = false;
     let timer: ReturnType<typeof setTimeout>;
     const controller = new AbortController();
