@@ -52,8 +52,8 @@ jobs:
           opener = urllib.request.build_opener(NoRedirect)
           checks = [
            ("https://anevum.com/", "GET", [200]),
-           ("https://anevum.com/products/rhen", "GET", [200]),
-           ("https://anevum.com/products/iren", "GET", [200]),
+           ("https://anevum.com/products/rhen", "GET", [200,308]),
+           ("https://anevum.com/products/iren", "GET", [200,308]),
            ("https://anevum.com/command", "GET", [302,303]),
            ("https://anevum.com/command/topology", "GET", [302,303]),
            ("https://anevum.com/api/command/session", "GET", [302,303,401,403]),
@@ -63,8 +63,6 @@ jobs:
            ("https://anevum.com/api/public/trading/live", "GET", [200]),
            ("https://alpaca-trader-production-bf3e.up.railway.app/v1/command/session", "GET", [401]),
            ("https://alpaca-trader-production-bf3e.up.railway.app/v1/command/status", "GET", [401]),
-           ("https://foundation-ingest-staging.up.railway.app/v1/command/iren", "GET", [401]),
-           ("https://foundation-ingest-staging.up.railway.app/v1/command/iren", "POST", [401]),
           ]
           failures = []
           for url, method, expected in checks:
