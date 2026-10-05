@@ -9,6 +9,7 @@ import CommandTopology from "../components/CommandTopology";
 import CommandSystemMonitor, { type MonitoredSystem } from "../components/CommandSystemMonitor";
 import CommandIrenDock from "../components/CommandIrenDock";
 import CommandOperationsTerminal from "../components/CommandOperationsTerminal";
+import CommandFinance from "../components/CommandFinance";
 import { useLiveTrading } from "../hooks/useLiveTrading";
 import {
   fetchCommandDailyReport,
@@ -52,7 +53,7 @@ function arrayText(value: unknown) {
   return Array.isArray(value) && value.length ? value.map(String).join(", ") : "—";
 }
 
-function CommandNavGlyph({ kind }: { kind: "overview" | "terminal" | "infrastructure" }) {
+function CommandNavGlyph({ kind }: { kind: "overview" | "terminal" | "finance" | "infrastructure" }) {
   if (kind === "overview") {
     return (
       <svg className="command-nav-glyph" viewBox="0 0 24 24" aria-hidden="true">
@@ -69,6 +70,15 @@ function CommandNavGlyph({ kind }: { kind: "overview" | "terminal" | "infrastruc
       <svg className="command-nav-glyph" viewBox="0 0 24 24" aria-hidden="true">
         <rect x="3.5" y="4.5" width="17" height="15" rx="2" />
         <path d="M7 9l3 3-3 3M12.5 15H17" />
+      </svg>
+    );
+  }
+
+  if (kind === "finance") {
+    return (
+      <svg className="command-nav-glyph" viewBox="0 0 24 24" aria-hidden="true">
+        <rect x="3.5" y="6" width="17" height="12" rx="2" />
+        <path d="M3.5 9.5h17M8 14h3.5M15.5 14h1.5" />
       </svg>
     );
   }
@@ -91,7 +101,7 @@ export default function Command() {
   const location = useLocation();
   const commandPage = (() => {
     const segment = location.pathname.split("/")[2];
-    return ["overview", "terminal", "iren", "rhen", "graen", "nostra", "velum", "infrastructure", "live", "performance", "evidence", "research", "system"].includes(segment)
+    return ["overview", "terminal", "finance", "iren", "rhen", "graen", "nostra", "velum", "infrastructure", "live", "performance", "evidence", "research", "system"].includes(segment)
       ? segment
       : "overview";
   })();
@@ -283,6 +293,8 @@ export default function Command() {
       ? "One operating view across IREN, RHEN, GRAEN, NOSTRA, VELUM, dependencies, incidents, and current work."
       : commandPage === "terminal"
         ? "Near-real-time work, runtime, research, replay, telemetry, and control events across the full ANEVUM stack."
+      : commandPage === "finance"
+        ? "Internal financial ledger, RHEN capital allocation, and Alpaca Broker Sandbox provider controls. Virtual funds only."
       : commandPage === "infrastructure"
         ? "Canonical runtime inventory, dependencies, freshness, and control-plane health."
         : commandPage === "live"
@@ -306,6 +318,9 @@ export default function Command() {
           </Link>
           <Link className={commandPage === "terminal" ? "active" : ""} to="/command/terminal" aria-label="Live terminal" title="Live terminal" aria-current={commandPage === "terminal" ? "page" : undefined}>
             <CommandNavGlyph kind="terminal" /><span className="command-nav-label">Terminal</span>
+          </Link>
+          <Link className={commandPage === "finance" ? "active" : ""} to="/command/finance" aria-label="Finance" title="Finance" aria-current={commandPage === "finance" ? "page" : undefined}>
+            <CommandNavGlyph kind="finance" /><span className="command-nav-label">Finance</span>
           </Link>
           <Link className={commandPage === "iren" ? "active" : ""} to="/command/iren" aria-label="IREN" title="IREN" aria-current={commandPage === "iren" ? "page" : undefined}>
             <SystemIcon system="IREN" size="xs" /><span className="command-nav-label">IREN</span>
@@ -379,12 +394,14 @@ export default function Command() {
 
         <section className="command-grid">
           <div className="command-primary">
-            {commandPage === "terminal"
-              ? <CommandOperationsTerminal session={session} feed={publicFeedError ? null : publicFeed} feedError={publicFeedError} />
-              : monitoredSystem
-                ? <CommandSystemMonitor session={session} feed={publicFeedError ? null : publicFeed} system={monitoredSystem} />
-                : <CommandTopology session={session} feed={publicFeedError ? null : publicFeed} />}
-            <CommandPerformance performance={publicFeed?.performance} feedError={publicFeedError} />
+            {commandPage === "finance"
+              ? <CommandFinance session={session} />
+              : commandPage === "terminal"
+                ? <CommandOperationsTerminal session={session} feed={publicFeedError ? null : publicFeed} feedError={publicFeedError} />
+                : monitoredSystem
+                  ? <CommandSystemMonitor session={session} feed={publicFeedError ? null : publicFeed} system={monitoredSystem} />
+                  : <CommandTopology session={session} feed={publicFeedError ? null : publicFeed} />}
+            {commandPage === "finance" ? null : <CommandPerformance performance={publicFeed?.performance} feedError={publicFeedError} />}
             <article className="command-panel command-view-overview command-view-live command-panel-scanner">
               <header><div><span>LIVE SCANNER</span><strong>{scanRows.length} symbols observed in runtime snapshot</strong></div><small>{clockTime(bot.last_strategy_at)}</small></header>
               <div className="scanner-head"><span>SYMBOL</span><span>PRICE</span><span>ACTION</span><span>REASON</span></div>
