@@ -106,7 +106,7 @@ export default function CommandAccountTracker({
   const recentFills = orders.filter((order) => order.filled_at && ["buy", "sell"].includes(String(order.side || "").toLowerCase()));
 
   return (
-    <article className="command-panel command-view-overview command-view-live command-view-performance command-panel-account-tracker">
+    <article className="command-panel command-view-overview command-view-trading command-panel-account-tracker">
       <header>
         <div>
           <span>BROKER ACCOUNT / PRIVATE</span>
