@@ -83,3 +83,42 @@ test("canonical runtime health is not overridden by stale auxiliary runtimes", a
   assert.equal(mod.commandSystem("RHEN", snapshot, null, now).health, "HEALTHY");
   assert.equal(mod.commandSystem("IREN", snapshot, null, now).health, "HEALTHY");
 });
+
+
+test("IREN health comes from the fresh control envelope, not optional IREN_EXECUTOR inventory", async () => {
+  const mod = await import("../src/lib/system-display.ts");
+  const now = Date.parse("2026-10-05T22:45:00Z");
+  const snapshot = {
+    schema_version: "iren_command.v2",
+    revision: 11,
+    observed_at: "2026-10-05T22:44:50Z",
+    stale: false,
+    state: "HEALTHY",
+    action_required: false,
+    incidents: [],
+    topology: {
+      services: [
+        {
+          service_id: "IREN_EXECUTOR",
+          runtime_kind: "SERVICE",
+          independent_runtime: true,
+          status: "OFFLINE",
+          observed_at: "2026-10-05T22:00:00Z",
+          last_heartbeat_at: null,
+          liveness: false,
+          readiness: false,
+          scope: "auxiliary"
+        }
+      ],
+      dependencies: {}
+    },
+    work: { jobs: [], objectives: [] }
+  };
+
+  const iren = mod.commandSystem("IREN", snapshot, null, now);
+  assert.equal(iren.health, "HEALTHY");
+  assert.equal(iren.runtime, "HEALTHY");
+  assert.equal(iren.fresh, true);
+  assert.equal(iren.activityState, "SUPERVISING");
+  assert.equal(iren.active, false);
+});

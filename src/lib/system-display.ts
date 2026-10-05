@@ -159,42 +159,47 @@ export function publicSystem(name: SystemName, feed?: LiveTradingFeed | null, no
 }
 export function commandSystem(name: SystemName, snapshot: IrenSnapshot | null, feed?: LiveTradingFeed | null, now = Date.now(), unavailable = false): SystemView {
   const rows = (snapshot?.topology?.services || []).filter(row => runtimeOwner(row) === name);
-  // Parent-system health comes from the canonical runtime row when it exists.
-  // Optional/helper runtimes (for example PREOPEN or IREN_EXECUTOR) remain visible
-  // in topology details but must not make RHEN or IREN look offline.
-  const canonicalRows = rows.filter(row => String(row.service_id || "").toUpperCase() === name);
-  const healthRows = canonicalRows.length ? canonicalRows : rows;
-  const stamps = healthRows
+  const isIrenEnvelope = name === "IREN";
+
+  // RHEN and the other modules use their canonical runtime row when present.
+  // IREN itself is the control envelope/API and is not a service row in policy;
+  // IREN_EXECUTOR is optional inventory and must never define IREN health.
+  const canonicalRows = isIrenEnvelope
+    ? []
+    : rows.filter(row => String(row.service_id || "").toUpperCase() === name);
+  const healthRows = canonicalRows.length ? canonicalRows : (isIrenEnvelope ? [] : rows);
+
+  const rowStamps = healthRows
     .map(row => row.last_heartbeat_at || row.observed_at || snapshot?.observed_at)
     .filter(Boolean)
     .sort((a,b) => Date.parse(String(b)) - Date.parse(String(a)));
-  const observedAt = stamps[0] || snapshot?.observed_at;
+  const observedAt = isIrenEnvelope ? snapshot?.observed_at : (rowStamps[0] || snapshot?.observed_at);
   const fresh = !unavailable
     && snapshot?.stale === false
-    && freshStamp(snapshot.observed_at, now)
-    && freshStamp(observedAt, now);
+    && freshStamp(snapshot?.observed_at, now)
+    && (isIrenEnvelope || freshStamp(observedAt, now));
+
   const work = systemWork(snapshot, name);
   const incidents = snapshot?.incidents.filter(row => incidentOwner(row) === name);
 
-  // Health is based on the canonical runtime's liveness/readiness/freshness,
-  // never on auxiliary inventory or whether useful work is active.
-  const healthStates: string[] = healthRows.map(row =>
-    row.liveness === false
-      ? "OFFLINE"
-      : row.readiness === false
-        ? "DEGRADED"
-        : !freshStamp(row.last_heartbeat_at || row.observed_at || snapshot?.observed_at, now)
-          ? "STALE"
-          : "HEALTHY"
-  );
-  if (name === "IREN" && snapshot && snapshot.state !== "HEALTHY") {
-    healthStates.push(snapshot.operator?.state || snapshot.state);
-  }
+  const healthStates: string[] = isIrenEnvelope
+    ? [String(snapshot?.operator?.state || snapshot?.state || "UNKNOWN")]
+    : healthRows.map(row =>
+        row.liveness === false
+          ? "OFFLINE"
+          : row.readiness === false
+            ? "DEGRADED"
+            : !freshStamp(row.last_heartbeat_at || row.observed_at || snapshot?.observed_at, now)
+              ? "STALE"
+              : "HEALTHY"
+      );
+
   if (incidents?.length) {
     healthStates.push(incidents.some(row => row.severity.toLowerCase() === "critical") ? "CRITICAL" : "DEGRADED");
   }
 
-  const health = !snapshot || !rows.length ? "UNAVAILABLE" : !fresh ? "STALE" : mostSevere(healthStates) || "UNAVAILABLE";
+  const hasCanonicalEvidence = isIrenEnvelope ? Boolean(snapshot) : healthRows.length > 0;
+  const health = !hasCanonicalEvidence ? "UNAVAILABLE" : !fresh ? "STALE" : mostSevere(healthStates) || "UNAVAILABLE";
   const healthy = ["good", "active"].includes(stateTone(health));
   const publicRow = publicSystem(name, feed, now);
   const runningJob = work.jobs.find(row => String(row.status) === "RUNNING");
@@ -230,7 +235,9 @@ export function commandSystem(name: SystemName, snapshot: IrenSnapshot | null, f
     name,
     raw: health,
     health,
-    runtime: mostSevere(healthRows.map(row => row.status)) || "UNKNOWN",
+    runtime: isIrenEnvelope
+      ? String(snapshot?.state || "UNKNOWN")
+      : mostSevere(healthRows.map(row => row.status)) || "UNKNOWN",
     activityState,
     fresh,
     active,
