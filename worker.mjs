@@ -256,8 +256,8 @@ function publicRouteMetadata(pathname) {
       description: "Separate public-safe live performance records for RHEN equities and crypto market lanes, with normalized methodology, sample boundaries, and no simulated results."
     },
     "/research": {
-      title: "Research — ANEVUM",
-      description: "ANEVUM research across GRAEN, NOSTRA, VELUM, and RHEN: hypotheses, validation gates, durable decisions, forward outcomes, and explicit limitations."
+      title: "Field Notes — ANEVUM",
+      description: "ANEVUM Field Notes document RHEN research, validation gates, failed hypotheses, architecture changes, forward evidence, releases, and explicit limitations."
     },
     "/founder": {
       title: "About ANEVUM — Devon Akins",
@@ -268,8 +268,8 @@ function publicRouteMetadata(pathname) {
       description: "Recruiter-ready resume for Devon Akins, founder of ANEVUM, covering software engineering, infrastructure, data systems, research tooling, and selected systems."
     },
     "/live": {
-      title: "Live Terminal — ANEVUM",
-      description: "Observe ANEVUM operating through public-safe system state, telemetry, research, replay, evidence, validation, and normalized performance."
+      title: "RHEN Live Terminal — ANEVUM",
+      description: "Observe RHEN v3 through public-safe execution, control, research, replay, forecast, evidence, validation, and normalized performance projections."
     },
     "/theory": {
       title: "Theory Registry — ANEVUM",
