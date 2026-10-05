@@ -407,7 +407,7 @@ export default function Command() {
                 <div><span>STRATEGY</span><strong>{text(cryptoStats.strategy_version_id, "RHEN-BTC-DIRECT-002")}</strong></div>
                 <div><span>CLOSED TRADES</span><strong>{text(cryptoStats.closed_trades, "0")}</strong></div>
                 <div><span>W / L</span><strong>{text(cryptoStats.wins, "0")} / {text(cryptoStats.losses, "0")}</strong></div>
-                <div><span>WIN RATE</span><strong>{cryptoStats.win_rate !== undefined ? percent(Number(cryptoStats.win_rate) * 100) : "—"}</strong></div>
+                <div><span>WIN RATE</span><strong>{cryptoStats.win_rate !== undefined ? percent(Number(cryptoStats.win_rate)) : "—"}</strong></div>
               </div>
               {cryptoApprovalPending ? (
                 <div className="order-body">
