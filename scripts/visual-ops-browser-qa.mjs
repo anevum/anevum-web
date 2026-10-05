@@ -232,10 +232,20 @@ async function runCase(route, viewport) {
         if(a.left<b.right&&a.right>b.left&&a.top<b.bottom&&a.bottom>b.top) overlaps.push(a.label+" × "+b.label);
       }
       const rows=[...new Set(rects.map(r=>Math.round(r.top)))];
-      return {count:rects.length,rows,overlaps,minWidth:Math.min(...rects.map(r=>r.width)),maxRight:Math.max(...rects.map(r=>r.right)),viewport:document.documentElement.clientWidth};
+      return {
+        count:rects.length,
+        labels:rects.map(r=>r.label),
+        rows,
+        overlaps,
+        minWidth:Math.min(...rects.map(r=>r.width)),
+        maxRight:Math.max(...rects.map(r=>r.right)),
+        viewport:document.documentElement.clientWidth
+      };
     })()`,returnByValue:true});
     const nav=navAudit.result?.value||{};
-    if(nav.count!==8||nav.overlaps?.length||nav.minWidth<32||nav.maxRight>nav.viewport+1||(viewport.mobile&&nav.rows?.length!==1)){
+    const canonicalLabels=["Overview","Trading","Research","System"];
+    const labelsMatch=Array.isArray(nav.labels)&&canonicalLabels.every((label,index)=>nav.labels[index]===label);
+    if(nav.count!==4||!labelsMatch||nav.overlaps?.length||nav.minWidth<44||nav.maxRight>nav.viewport+1||nav.rows?.length!==1){
       throw new Error("Command icon navigation geometry failed: "+JSON.stringify(nav));
     }
   }
