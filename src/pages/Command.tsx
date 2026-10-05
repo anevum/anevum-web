@@ -392,7 +392,7 @@ export default function Command() {
               ? <CommandOperationsTerminal observation={commandObservation} feed={publicFeedError ? null : publicFeed} feedError={publicFeedError} />
               : null}
             {commandPage === "overview" || commandPage === "research"
-              ? <CommandStrategyPipeline snapshot={commandObservation.snapshot} feed={publicFeedError ? null : publicFeed} now={commandObservation.now} />
+              ? <CommandStrategyPipeline snapshot={commandObservation.snapshot} now={commandObservation.now} />
               : null}
             <CommandAccountTracker account={account} history={accountHistory} orders={recentOrders} />
             <CommandPerformance performance={publicFeed?.performance} feedError={publicFeedError} />
