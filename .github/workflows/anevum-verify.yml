@@ -78,7 +78,7 @@ jobs:
         if: github.event_name == 'pull_request'
         shell: bash
         run: |
-          set -euo pipefail
+          set -euxo pipefail
           base="${{ steps.preview.outputs.preview_url }}"
           current_slug="$(jq -r '.currentSlug' public/release-registry.json)"
           public_routes="$(node --input-type=module -e 'import fs from "node:fs"; const routes=JSON.parse(fs.readFileSync("src/data/public-routes.json","utf8")); process.stdout.write(routes.filter((route)=>route.sitemap).map((route)=>route.path).join(" "))')"
