@@ -254,7 +254,7 @@ export default function CommandCustomer({
             <dl>
               <div><dt>Funding state</dt><dd>{overview?.funding?.known ? (brokerFunded ? "FUNDED" : "EMPTY") : "UNKNOWN"}</dd></div>
               <div><dt>Cash</dt><dd>{money(overview?.funding?.cash ?? account.cash)}</dd></div>
-              <div><dt>Buying power</dt><dd>{money(overview?.funding?.buying_power ?? account.buying_power)}</dd></div>
+              <div><dt>Crypto capacity</dt><dd>{money(overview?.funding?.available_for_crypto ?? overview?.funding?.cash ?? account.cash)}</dd></div>
               <div><dt>RHEN allocation</dt><dd>{percent(overview?.allocation?.allocation_fraction)}</dd></div>
               <div><dt>Allocation cap</dt><dd>{money(overview?.allocation?.absolute_cap)}</dd></div>
             </dl>
