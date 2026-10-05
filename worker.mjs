@@ -5,7 +5,8 @@ const TRADER_BASE = "https://alpaca-trader-production-bf3e.up.railway.app";
 const RESEARCH_BASE = "https://rhen-research-agent-production.up.railway.app";
 const PUBLIC_TRADING_FEED = "https://foundation-ingest-staging.up.railway.app/v1/trading-public-feed";
 const FOUNDATION_IREN_COMMAND = "https://foundation-ingest-staging.up.railway.app/v1/command/iren";
-const FOUNDATION_PLATFORM_BASE = "https://foundation-ingest-staging.up.railway.app/v1/command/platform";
+const FOUNDATION_COMMAND_BASE = "https://foundation-ingest-staging.up.railway.app/v1/command";
+const FOUNDATION_PLATFORM_BASE = FOUNDATION_COMMAND_BASE + "/platform";
 
 class ApiError extends Error {
   constructor(status, message) {
@@ -130,6 +131,26 @@ async function proxyPlatform(request, upstreamPath, env, { allowTenant = true } 
       "Cache-Control": "no-store"
     },
     body: request.method === "GET" || request.method === "HEAD" ? undefined : await request.text()
+  });
+  const raw = await response.text();
+  let payload = {};
+  if (raw) {
+    try { payload = JSON.parse(raw); }
+    catch { payload = { message: raw }; }
+  }
+  return jsonResponse(payload, response.status);
+}
+
+async function proxyCustomerProjection(request, upstreamPath, env) {
+  const credential = await commandCredential(request, env, { allowTenant: true });
+  const requestUrl = new URL(request.url);
+  const response = await fetch(FOUNDATION_COMMAND_BASE + upstreamPath + requestUrl.search, {
+    method: "GET",
+    headers: {
+      "Cf-Access-Jwt-Assertion": credential.token,
+      "Accept": "application/json",
+      "Cache-Control": "no-store"
+    }
   });
   const raw = await response.text();
   let payload = {};
@@ -468,6 +489,25 @@ export default {
       } catch (error) {
         if (error instanceof ApiError) return jsonResponse({ message: error.message }, error.status);
         return jsonResponse({ message: "Private authentication unavailable." }, 503);
+      }
+    }
+
+    if (
+      pathname === "/api/command/account" ||
+      pathname === "/api/command/overview" ||
+      pathname === "/api/command/trading" ||
+      pathname === "/api/command/money" ||
+      pathname === "/api/command/activity"
+    ) {
+      if (request.method !== "GET") {
+        return jsonResponse({ message: "Method not allowed." }, 405);
+      }
+      try {
+        const suffix = pathname.slice("/api/command".length);
+        return await proxyCustomerProjection(request, suffix, env);
+      } catch (error) {
+        if (error instanceof ApiError) return jsonResponse({ message: error.message }, error.status);
+        return jsonResponse({ message: error instanceof Error ? error.message : "Customer Command projection unavailable." }, 500);
       }
     }
 
