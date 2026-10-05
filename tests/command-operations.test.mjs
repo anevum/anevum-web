@@ -24,7 +24,7 @@ test("operator guidance fails closed when canonical state is stale", () => {
   assert.match(guidance[0].action, /IREN observations/);
 });
 
-test("evidence incident points the operator at Foundation and spool health", () => {
+test("evidence incident points the operator at RHEN Core and spool health", () => {
   const guidance = operatorGuidance({
     schema_version: "iren_command.v2",
     revision: 2,
@@ -35,7 +35,7 @@ test("evidence incident points the operator at Foundation and spool health", () 
     topology: null,
     incidents: [{ key: "evidence.delivery", severity: "warning", reason: "evidence_delivery_error" }]
   });
-  assert.equal(guidance[0].target, "Foundation evidence");
+  assert.equal(guidance[0].target, "RHEN Core evidence");
   assert.match(guidance[0].action, /spool/);
 });
 
