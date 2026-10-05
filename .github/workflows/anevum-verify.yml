@@ -114,15 +114,19 @@ jobs:
           test "$feed_status" = "200"
           jq -e '
             .ok == true and
-            .source == "railway_postgresql_canonical" and
-            .disclosure.level == "sanitized" and
-            .systems.IREN.independent_runtime == true and
-            .systems.RHEN.independent_runtime == true and
-            .systems.NOSTRA.independent_runtime == true and
+            .source == "rhen-core-sqlite" and
+            .disclosure.level == "aggregate_only" and
+            .systems.IREN.independent_runtime == false and
+            .systems.RHEN.independent_runtime == false and
+            .systems.GRAEN.independent_runtime == false and
+            .systems.VELUM.independent_runtime == false and
+            .systems.NOSTRA.independent_runtime == false and
             (.systems.NOSTRA.tracking_state | type == "string") and
-            (.disclosure.excluded_fields | index("account value") != null) and
+            (.disclosure.excluded_fields | index("dollar_values") != null) and
             (.disclosure.excluded_fields | index("symbols") != null) and
-            (.disclosure.excluded_fields | index("orders and fills") != null)
+            (.disclosure.excluded_fields | index("orders") != null) and
+            (.disclosure.excluded_fields | index("fills") != null) and
+            (.disclosure.excluded_fields | index("credentials") != null)
           ' "$feed_file" > /dev/null
 
           curl --fail --show-error --silent --head "$base/command" | grep -qi 'x-robots-tag:.*noindex'
