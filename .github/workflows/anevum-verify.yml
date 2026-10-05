@@ -131,6 +131,7 @@ jobs:
 
           rhen_health_file="$RUNNER_TEMP/rhen-health.json"
           curl --fail --show-error --silent "https://alpaca-trader-production-bf3e.up.railway.app/health" > "$rhen_health_file"
+          jq '{ok, module_failures, iren: .modules.iren, graen_research: .modules.graen_research}' "$rhen_health_file"
           jq -e '
             .ok == true and
             .modules.iren.ok == true and
