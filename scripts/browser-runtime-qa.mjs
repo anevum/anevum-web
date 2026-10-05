@@ -115,14 +115,26 @@ async function runCase(route, viewport) {
 
   await send("Page.enable");
   await send("Runtime.enable");
+  await send("Network.enable");
   await send("Emulation.setDeviceMetricsOverride", {
     width: viewport.width,
     height: viewport.height,
     deviceScaleFactor: viewport.deviceScaleFactor,
     mobile: viewport.mobile
   });
-  await send("Page.navigate", { url: base + route });
-  await sleep(5000);
+  let navigationAttempt = 0;
+  while (true) {
+    runtimeErrors.length = 0;
+    await send("Page.navigate", { url: base + route });
+    await sleep(5000);
+    const stalePreviewChunk = runtimeErrors.some((item) =>
+      item.includes("Failed to fetch dynamically imported module")
+    );
+    if (!stalePreviewChunk || navigationAttempt >= 1) break;
+    navigationAttempt += 1;
+    await send("Network.clearBrowserCache").catch(() => {});
+    await sleep(1500);
+  }
 
   const result = await send("Runtime.evaluate", {
     expression: `(() => {
