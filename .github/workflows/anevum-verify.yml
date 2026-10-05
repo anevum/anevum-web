@@ -78,7 +78,7 @@ jobs:
         if: github.event_name == 'pull_request'
         shell: bash
         run: |
-          set -euo pipefail
+          set -euxo pipefail
           base="${{ steps.preview.outputs.preview_url }}"
           current_slug="$(jq -r '.currentSlug' public/release-registry.json)"
           public_routes="$(node --input-type=module -e 'import fs from "node:fs"; const routes=JSON.parse(fs.readFileSync("src/data/public-routes.json","utf8")); process.stdout.write(routes.filter((route)=>route.sitemap).map((route)=>route.path).join(" "))')"
@@ -91,21 +91,22 @@ jobs:
           test -s "$RUNNER_TEMP/devon-akins-resume.pdf"
           head -c 5 "$RUNNER_TEMP/devon-akins-resume.pdf" | grep -Fq '%PDF-'
 
-          products_html="$(curl --fail --show-error --silent "$base/products")"
-          printf '%s' "$products_html" | grep -Fq '<meta property="og:title" content="Products — ANEVUM" />'
-          printf '%s' "$products_html" | grep -Fq '<link rel="canonical" href="https://anevum.com/products" />'
+          live_html="$(curl --fail --show-error --silent "$base/live")"
+          printf '%s' "$live_html" | grep -Fq '<meta property="og:title" content="Live Terminal — ANEVUM" />'
+          printf '%s' "$live_html" | grep -Fq '<link rel="canonical" href="https://anevum.com/live" />'
 
           founder_html="$(curl --fail --show-error --silent "$base/founder")"
-          printf '%s' "$founder_html" | grep -Fq '<meta property="og:title" content="Devon Akins — Founder, ANEVUM" />'
+          printf '%s' "$founder_html" | grep -Fq '<meta property="og:title" content="About ANEVUM — Devon Akins" />'
           printf '%s' "$founder_html" | grep -Fq '<link rel="canonical" href="https://anevum.com/founder" />'
 
-          performance_html="$(curl --fail --show-error --silent "$base/performance")"
-          printf '%s' "$performance_html" | grep -Fq '<meta property="og:title" content="Performance — ANEVUM" />'
-          printf '%s' "$performance_html" | grep -Fq '<link rel="canonical" href="https://anevum.com/performance" />'
-
           sitemap="$(curl --fail --show-error --silent "$base/sitemap.xml")"
-          for path in /products /products/iren /products/rhen /products/nostra /products/graen /products/velum /performance /research /founder /resume /releases; do
+          for path in /live /research /founder /resume; do
             printf '%s' "$sitemap" | grep -Fq "https://anevum.com$path"
+          done
+
+          for legacy in /products /products/rhen /performance /case-studies /theory; do
+            status="$(curl --show-error --silent -o /dev/null -w '%{http_code}' "$base$legacy")"
+            test "$status" = "308"
           done
 
           feed_file="$RUNNER_TEMP/public-trading-feed.json"
@@ -183,20 +184,18 @@ jobs:
             return 1
           }
 
-          capture home / 'A system built to show its work.'
-          capture products /products 'IREN'
-          capture rhen /products/rhen 'OBSERVE'
-          capture performance /performance 'Separate markets. Separate records.'
+          capture home / 'Watch the machine work.'
+          capture terminal /live 'EVIDENCE DRAWER'
           capture research /research 'Development journal.'
           capture field-note /research/multi-market-architecture-equities-crypto 'REPRODUCE / CHALLENGE THIS NOTE'
           capture architecture /architecture 'One company. Specialized systems.'
-          capture case-studies /case-studies 'SYSTEM DESIGN'
           capture founder /founder 'Devon Akins'
           capture resume /resume 'Technical Skills'
 
-          grep -Fq 'company-home' "$RUNNER_TEMP/anevum-visuals/home-rendered.html"
-          grep -Fq 'NOSTRA' "$RUNNER_TEMP/anevum-visuals/products-rendered.html"
-          grep -Fq 'VELUM' "$RUNNER_TEMP/anevum-visuals/products-rendered.html"
+          grep -Fq 'public-terminal-home' "$RUNNER_TEMP/anevum-visuals/home-rendered.html"
+          grep -Fq 'public-terminal-page' "$RUNNER_TEMP/anevum-visuals/terminal-rendered.html"
+          grep -Fq 'GRAEN' "$RUNNER_TEMP/anevum-visuals/terminal-rendered.html"
+          grep -Fq 'VELUM' "$RUNNER_TEMP/anevum-visuals/terminal-rendered.html"
 
       - name: Upload browser QA
         if: github.event_name == 'pull_request'

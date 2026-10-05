@@ -224,8 +224,8 @@ function currentReleaseSnapshot() {
 function publicRouteMetadata(pathname) {
   const staticRoutes = {
     "/": {
-      title: "ANEVUM — Live Systems, Research & Engineering",
-      description: "ANEVUM is a live software and research system spanning IREN, RHEN, GRAEN, NOSTRA, and VELUM, with public-safe runtime state, research records, and explicit authority boundaries."
+      title: "ANEVUM — Live Systems & Research",
+      description: "ANEVUM is an inspectable software and research environment centered on a public-safe live terminal for IREN, RHEN, GRAEN, NOSTRA, and VELUM."
     },
     "/products": {
       title: "Products — ANEVUM",
@@ -260,16 +260,16 @@ function publicRouteMetadata(pathname) {
       description: "ANEVUM research across GRAEN, NOSTRA, VELUM, and RHEN: hypotheses, validation gates, durable decisions, forward outcomes, and explicit limitations."
     },
     "/founder": {
-      title: "Devon Akins — Founder, ANEVUM",
-      description: "Founder profile for Devon Akins: systems builder and independent researcher building ANEVUM's software, infrastructure, telemetry, forecasting, mathematical research, and replay systems."
+      title: "About ANEVUM — Devon Akins",
+      description: "About ANEVUM and founder Devon Akins, building inspectable software systems, research infrastructure, forecasting, replay, telemetry, and production controls."
     },
     "/resume": {
       title: "Devon Akins — Resume",
       description: "Recruiter-ready resume for Devon Akins, founder of ANEVUM, covering software engineering, infrastructure, data systems, research tooling, and selected systems."
     },
     "/live": {
-      title: "Live Systems — ANEVUM",
-      description: "Sanitized live operating state and telemetry for ANEVUM systems without exposing private account data, execution details, or sensitive infrastructure."
+      title: "Live Terminal — ANEVUM",
+      description: "Observe ANEVUM operating through public-safe system state, telemetry, research, replay, evidence, validation, and normalized performance."
     },
     "/theory": {
       title: "Theory Registry — ANEVUM",
@@ -439,6 +439,20 @@ export default {
         if (error instanceof ApiError) return jsonResponse({ message: error.message }, error.status);
         return jsonResponse({ message: error instanceof Error ? error.message : "Command trader request failed." }, 500);
       }
+    }
+
+    if (
+      (request.method === "GET" || request.method === "HEAD") &&
+      (
+        pathname === "/products" ||
+        pathname.startsWith("/products/") ||
+        pathname === "/performance" ||
+        pathname === "/case-studies" ||
+        pathname === "/theory"
+      )
+    ) {
+      const target = new URL("/live", request.url);
+      return Response.redirect(target.toString(), 308);
     }
 
     let response = await env.ASSETS.fetch(request);
