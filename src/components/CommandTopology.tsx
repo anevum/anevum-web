@@ -1,8 +1,7 @@
 import { Link } from "react-router-dom";
-import type { RhenSession } from "../lib/auth";
 import type { LiveTradingFeed } from "../lib/data";
 import { isStale, operatorGuidance } from "../lib/runtime-topology";
-import { useCommandObservation } from "../hooks/useCommandObservation";
+import type { CommandObservation } from "../hooks/useCommandObservation";
 import { SYSTEMS, ageText, commandSystem, fleetState } from "../lib/system-display";
 import { RuntimeDetails, SectionHead, SystemConstellation, SystemIncidentPanel, SystemMetric, SystemStatusChip, SystemTimeline, SystemVisualShell, SystemWorkQueue } from "./operations/VisualOps";
 
@@ -12,8 +11,8 @@ function commandRoute(name: string) {
   return "/command/system";
 }
 
-export default function CommandTopology({ session, feed }: { session: RhenSession; feed?: LiveTradingFeed | null }) {
-  const { snapshot, error, now, receivedAt } = useCommandObservation(session);
+export default function CommandTopology({ observation, feed }: { observation: CommandObservation; feed?: LiveTradingFeed | null }) {
+  const { snapshot, error, now, receivedAt } = observation;
   const stale = isStale(snapshot, now, Boolean(error));
   const views = SYSTEMS.map(name => commandSystem(name, snapshot, feed, now, Boolean(error)));
   const fleet = fleetState(views);
@@ -33,7 +32,7 @@ export default function CommandTopology({ session, feed }: { session: RhenSessio
       <SystemMetric label="Active jobs" value={work?.active_jobs} />
       <SystemMetric label="Needs you" value={work?.requires_human} />
       <SystemMetric label="Market" value={feed?.operational?.latest_scan?.market_session?.replaceAll("_", " ") || "Unavailable"} />
-      <SystemMetric label="Refreshed" value={ageText(receivedAt, now)} detail="Observations every 15s" />
+      <SystemMetric label="Refreshed" value={ageText(receivedAt, now)} detail="Observations every 3s" />
     </div>
     <SystemConstellation views={views} command />
     <section className={"vo-operator-brief" + (snapshot?.action_required || guidance.length ? " needs-attention" : "")} aria-label="IREN operator brief">
