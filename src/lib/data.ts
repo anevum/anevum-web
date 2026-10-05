@@ -385,10 +385,28 @@ export type TheoryProgramFeed = {
   };
 };
 
+export type CommandAccountHistoryPoint = {
+  at?: string | null;
+  equity?: string | number | null;
+  profit_loss?: string | number | null;
+  profit_loss_pct?: string | number | null;
+};
+
+export type CommandAccountHistory = {
+  source?: string;
+  period?: string;
+  timeframe?: string;
+  base_value?: string | number | null;
+  status?: string;
+  error?: string;
+  points?: CommandAccountHistoryPoint[];
+};
+
 export type CommandSnapshot = {
   mode?: string;
   observed_at?: string;
   account?: Record<string, unknown>;
+  account_history?: CommandAccountHistory | null;
   bot?: Record<string, unknown>;
   strategy?: Record<string, unknown>;
   risk?: Record<string, unknown>;
