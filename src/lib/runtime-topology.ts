@@ -147,6 +147,66 @@ export type BtcCanaryProjection = {
   return_history?: BtcCanaryReturnPoint[];
 };
 
+export type StrategyAuthorityProjection = {
+  owner?: string;
+  lane?: string;
+  strategy_version_id?: string | null;
+  strategy_name?: string | null;
+  status?: string;
+  trading_mode?: string;
+  execution_mode?: string;
+  execution_enabled?: boolean;
+  execution_authorized?: boolean;
+  entries_enabled?: boolean;
+};
+
+export type StrategyCandidateProjection = {
+  owner?: string;
+  problem_id?: string | null;
+  candidate_id?: string | null;
+  title?: string | null;
+  lane?: string | null;
+  status?: string | null;
+  stage?: string | null;
+  methodology_version?: string | null;
+  run_id?: string | null;
+  updated_at?: string | null;
+  started_at?: string | null;
+  completed_at?: string | null;
+  supersedes_strategy_version_id?: string | null;
+};
+
+export type StrategyValidationProjection = {
+  owner?: string;
+  event_type?: string | null;
+  candidate_id?: string | null;
+  problem_id?: string | null;
+  strategy_version_id?: string | null;
+  status?: string | null;
+  observed_at?: string | null;
+  engineering_gate?: Record<string, unknown> | null;
+};
+
+export type StrategyReleaseGateProjection = {
+  owner?: string;
+  status?: string | null;
+  reason?: string | null;
+  target_lane?: string | null;
+  target_strategy_version_id?: string | null;
+  automatic_promotion?: boolean;
+  production_authority_changed?: boolean;
+};
+
+export type StrategyPipelineProjection = {
+  schema_version?: string;
+  observed_at?: string | null;
+  available?: boolean;
+  active?: StrategyAuthorityProjection[];
+  candidate?: StrategyCandidateProjection | null;
+  validation?: StrategyValidationProjection | null;
+  release_gate?: StrategyReleaseGateProjection | null;
+};
+
 export type IrenSnapshot = {
   schema_version: string;
   revision: string | number | null;
@@ -168,6 +228,7 @@ export type IrenSnapshot = {
     running_job?: string | null;
   };
   work?: IrenWorkSummary;
+  strategy_pipeline?: StrategyPipelineProjection;
   research?: {
     graen_problems?: Array<{
       problem_id?: string;
