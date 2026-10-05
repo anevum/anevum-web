@@ -90,9 +90,9 @@ export type SystemView = {
 function mostSevere(values: string[]): string | undefined {
   for (const group of [
     ["CRITICAL", "FAILED", "CRASHED", "OFFLINE", "OFFLINE_BY_DESIGN"],
-    ["DEGRADED", "BLOCKED", "NEEDS_APPROVAL", "ATTENTION_REQUIRED"],
+    ["DEGRADED", "BLOCKED", "NEEDS_APPROVAL", "ATTENTION_REQUIRED", "ENGINEERING_REQUIRED", "HUMAN_DECISION_REQUIRED", "DEGRADED_PRODUCTIVITY"],
     ["STALE", "UNAVAILABLE", "UNKNOWN"], ["IDLE", "WAITING", "WAITING_FOR_INPUTS"],
-    ["READY", "HEALTHY", "RUNNING", "ACTIVE", "REPLAYING", "FORECASTING", "RESEARCHING", "OBSERVING"]
+    ["READY", "HEALTHY", "OPERATING", "RUNNING", "ACTIVE", "REPLAYING", "FORECASTING", "RESEARCHING", "OBSERVING", "PRODUCTIVE"]
   ]) { const match = values.find(value => group.includes(value)); if (match) return match; }
   return values[0];
 }
