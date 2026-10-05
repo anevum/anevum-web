@@ -7,7 +7,7 @@ const base = process.env.BASE_URL;
 if (!base) throw new Error("BASE_URL is required");
 
 const publicRoutes = ["/", "/live", "/architecture", "/research", "/research/multi-market-architecture-equities-crypto", "/founder", "/resume", "/releases"];
-const commandRoutes = ["/command/overview", "/command/terminal", "/command/iren", "/command/rhen", "/command/graen", "/command/nostra", "/command/velum", "/command/infrastructure"];
+const commandRoutes = ["/command/overview", "/command/trading", "/command/research", "/command/system"];
 const routes = process.env.PUBLIC_ONLY === "1" ? publicRoutes : [...publicRoutes, ...commandRoutes];
 const output = path.join(process.env.RUNNER_TEMP || os.tmpdir(), "anevum-visuals");
 fs.mkdirSync(output, {recursive:true});
@@ -144,10 +144,25 @@ async function runCase(route, viewport) {
     };
   })()`.replace("routePlaceholder", JSON.stringify(route)),returnByValue:true});
   const details=ops.result?.value||{};
-  const requiresVisualOpsSurface = route === "/live" || route.startsWith("/command/");
-  const requiresSystemCards = route === "/live" || route.startsWith("/command/");
+  const requiresVisualOpsSurface = route === "/live" || route === "/command/overview" || route === "/command/system";
+  const requiresSystemCards = route === "/live" || route === "/command/overview" || route === "/command/system";
   if((requiresVisualOpsSurface && !details.surface) || (requiresSystemCards && (!details.cards || !details.links))) {
     throw new Error("Missing accessible visual surface: "+JSON.stringify(details));
+  }
+  if(route === "/command/trading" || route === "/command/research") {
+    const workspace = await send("Runtime.evaluate", {expression: `({
+      pageClass: document.querySelector(".command-shell")?.className || "",
+      panels: [...document.querySelectorAll(".command-panel")].filter(el => {
+        const rect = el.getBoundingClientRect();
+        const style = getComputedStyle(el);
+        return rect.width > 0 && rect.height > 0 && style.display !== "none" && style.visibility !== "hidden";
+      }).length,
+      navCurrent: document.querySelector(".command-header nav a[aria-current=\"page\"]")?.getAttribute("href")
+    })`, returnByValue:true});
+    const value=workspace.result?.value||{};
+    if(!value.panels || value.navCurrent !== route) {
+      throw new Error("Canonical Command workspace failed: "+JSON.stringify({route,...value}));
+    }
   }
 
   if(route.startsWith("/products/") && route.split("/").filter(Boolean).length === 2) {
