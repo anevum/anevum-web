@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthProvider";
 import Mark from "../components/Mark";
@@ -9,6 +9,7 @@ import CommandAccountTracker from "../components/CommandAccountTracker";
 import CommandTopology from "../components/CommandTopology";
 import CommandIrenDock from "../components/CommandIrenDock";
 import CommandOperationsTerminal from "../components/CommandOperationsTerminal";
+import { useCommandObservation } from "../hooks/useCommandObservation";
 import { useLiveTrading } from "../hooks/useLiveTrading";
 import {
   fetchCommandDailyReport,
@@ -112,6 +113,8 @@ export default function Command() {
   const [statusError, setStatusError] = useState("");
   const [evidenceError, setEvidenceError] = useState("");
   const [refreshing, setRefreshing] = useState(false);
+  const refreshInFlight = useRef(false);
+  const commandObservation = useCommandObservation(commandAdmin ? session : null, 3000);
   const { data: publicFeed, error: publicFeedError } = useLiveTrading(3000);
 
   const handleSignOut = useCallback(async () => {
@@ -120,53 +123,58 @@ export default function Command() {
   }, [signOut, navigate]);
 
   const refresh = useCallback(async () => {
-    if (!session || !commandAdmin) return;
+    if (!session || !commandAdmin || refreshInFlight.current) return;
+    refreshInFlight.current = true;
     setRefreshing(true);
 
-    const [statusResult, evidenceResult, readinessResult, theoryResult] = await Promise.allSettled([
-      fetchCommandStatus(session),
-      fetchCommandEvidence(session),
-      fetchResearchReadiness(),
-      fetchTheoryProgram()
-    ]);
-
-    if (statusResult.status === "fulfilled") {
-      setSnapshot(statusResult.value);
-      setStatusError("");
-    } else {
-      setStatusError(
-        statusResult.reason instanceof Error
-          ? statusResult.reason.message
-          : "Live status unavailable."
-      );
-    }
-
-    if (evidenceResult.status === "fulfilled") {
-      const nextEvidence = evidenceResult.value;
-      setEvidence(nextEvidence);
-      setEvidenceError("");
-
-      const [daily, weekly] = await Promise.all([
-        fetchCommandDailyReport(session).catch(() => null),
-        fetchCommandWeeklyReport(session).catch(() => null)
+    try {
+      const [statusResult, evidenceResult, readinessResult, theoryResult] = await Promise.allSettled([
+        fetchCommandStatus(session),
+        fetchCommandEvidence(session),
+        fetchResearchReadiness(),
+        fetchTheoryProgram()
       ]);
-      setDailyReport(daily || record(nextEvidence.latest_daily));
-      setWeeklyReport(weekly || record(nextEvidence.latest_weekly));
-    } else {
-      setEvidenceError(
-        evidenceResult.reason instanceof Error
-          ? evidenceResult.reason.message
-          : "Command evidence unavailable."
-      );
-    }
 
-    setResearchReadiness(
-      readinessResult.status === "fulfilled" ? readinessResult.value : null
-    );
-    setTheoryProgram(
-      theoryResult.status === "fulfilled" ? theoryResult.value : null
-    );
-    setRefreshing(false);
+      if (statusResult.status === "fulfilled") {
+        setSnapshot(statusResult.value);
+        setStatusError("");
+      } else {
+        setStatusError(
+          statusResult.reason instanceof Error
+            ? statusResult.reason.message
+            : "Live status unavailable."
+        );
+      }
+
+      if (evidenceResult.status === "fulfilled") {
+        const nextEvidence = evidenceResult.value;
+        setEvidence(nextEvidence);
+        setEvidenceError("");
+
+        const [daily, weekly] = await Promise.all([
+          fetchCommandDailyReport(session).catch(() => null),
+          fetchCommandWeeklyReport(session).catch(() => null)
+        ]);
+        setDailyReport(daily || record(nextEvidence.latest_daily));
+        setWeeklyReport(weekly || record(nextEvidence.latest_weekly));
+      } else {
+        setEvidenceError(
+          evidenceResult.reason instanceof Error
+            ? evidenceResult.reason.message
+            : "Command evidence unavailable."
+        );
+      }
+
+      setResearchReadiness(
+        readinessResult.status === "fulfilled" ? readinessResult.value : null
+      );
+      setTheoryProgram(
+        theoryResult.status === "fulfilled" ? theoryResult.value : null
+      );
+    } finally {
+      refreshInFlight.current = false;
+      setRefreshing(false);
+    }
   }, [session, commandAdmin]);
 
   useEffect(() => {
@@ -277,6 +285,37 @@ export default function Command() {
       .map((symbol) => ({ symbol, row: record(scanner[symbol]) }));
   })();
 
+  const irenConnection = commandObservation.error
+    ? commandObservation.snapshot ? "DEGRADED" : "OFFLINE"
+    : commandObservation.snapshot?.stale
+      ? "DEGRADED"
+      : commandObservation.snapshot
+        ? "LIVE"
+        : "CONNECTING";
+  const executionState = bot.runtime_paused
+    ? "PAUSED"
+    : bot.bot_armed
+      ? "ARMED"
+      : snapshot
+        ? "DISARMED"
+        : "WAITING";
+  const connectionTitle = irenConnection === "LIVE" && snapshot
+    ? text(snapshot.mode, "RHEN").toUpperCase() + " / " + executionState
+    : "IREN / " + irenConnection;
+  const connectionDetail = irenConnection === "OFFLINE"
+    ? commandObservation.error || "Canonical IREN state is unavailable."
+    : irenConnection === "DEGRADED"
+      ? commandObservation.error || "Canonical IREN state is stale."
+      : statusError
+        ? "Trading status degraded · " + statusError
+        : evidenceError
+          ? "Trading live · evidence degraded"
+          : snapshot
+            ? "RHEN updated " + clockTime(snapshot.observed_at)
+            : irenConnection === "LIVE"
+              ? "IREN live · RHEN account state pending"
+              : "Resolving canonical runtime state…";
+
   const pageTitle = commandPage === "overview"
     ? "Command"
     : commandPage.charAt(0).toUpperCase() + commandPage.slice(1);
@@ -325,22 +364,10 @@ export default function Command() {
             <span>{pageDescription}</span>
           </div>
           <div className="command-connection">
-            <i className={!statusError && snapshot ? "online" : ""} />
+            <i className={irenConnection === "LIVE" ? "online" : ""} />
             <div>
-              <strong>
-                {snapshot ? text(snapshot.mode).toUpperCase() + " / " + (
-                  statusError
-                    ? "STATUS DEGRADED"
-                    : bot.runtime_paused ? "PAUSED" : bot.bot_armed ? "ARMED" : "DISARMED"
-                ) : "RHEN / CONNECTING"}
-              </strong>
-              <small>
-                {statusError
-                  ? "RHEN status degraded · " + statusError
-                  : evidenceError
-                    ? "Trading live · evidence degraded"
-                    : "RHEN updated " + clockTime(snapshot?.observed_at)}
-              </small>
+              <strong>{connectionTitle}</strong>
+              <small>{connectionDetail}</small>
             </div>
             <button type="button" onClick={refresh} disabled={refreshing} aria-label="Refresh Command">↻</button>
           </div>
@@ -357,10 +384,10 @@ export default function Command() {
         <section className="command-grid">
           <div className="command-primary">
             {commandPage === "overview" || commandPage === "system"
-              ? <CommandTopology session={session} feed={publicFeedError ? null : publicFeed} />
+              ? <CommandTopology observation={commandObservation} feed={publicFeedError ? null : publicFeed} />
               : null}
             {commandPage === "system"
-              ? <CommandOperationsTerminal session={session} feed={publicFeedError ? null : publicFeed} feedError={publicFeedError} />
+              ? <CommandOperationsTerminal observation={commandObservation} feed={publicFeedError ? null : publicFeed} feedError={publicFeedError} />
               : null}
             <CommandAccountTracker account={account} history={accountHistory} orders={recentOrders} />
             <CommandPerformance performance={publicFeed?.performance} feedError={publicFeedError} />
