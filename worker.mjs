@@ -1,10 +1,8 @@
-import { proxyIren } from "./command-iren.mjs";
 import releaseRegistry from "./src/data/releases.json";
 
 const TRADER_BASE = "https://alpaca-trader-production-bf3e.up.railway.app";
 const RESEARCH_BASE = "https://rhen-research-agent-production.up.railway.app";
 const PUBLIC_TRADING_FEED = TRADER_BASE + "/v1/trading-public-feed";
-const FOUNDATION_IREN_COMMAND = "https://foundation-ingest-staging.up.railway.app/v1/command/iren";
 
 class ApiError extends Error {
   constructor(status, message) {
@@ -411,19 +409,26 @@ export default {
       }
     }
 
-    if (pathname === "/api/command/iren/status" || pathname === "/api/command/iren/command") {
-      if (request.method === "POST" && url.hostname !== "anevum.com") {
+    if (pathname === "/api/command/iren/status") {
+      if (request.method !== "GET") return jsonResponse({ message: "Method not allowed." }, 405);
+      try {
+        return await proxyTrader(request, "/v1/command/iren/status", env);
+      } catch (error) {
+        if (error instanceof ApiError) return jsonResponse({ message: error.message }, error.status);
+        return jsonResponse({ message: "IREN state unavailable from RHEN.", stale: true }, 503);
+      }
+    }
+
+    if (pathname === "/api/command/iren/command") {
+      if (request.method !== "POST") return jsonResponse({ message: "Method not allowed." }, 405);
+      if (url.hostname !== "anevum.com") {
         return jsonResponse({ message: "IREN Command mutations are disabled outside production." }, 403);
       }
       try {
-        const credential = await commandCredential(request, env);
-        return await proxyIren(request, fetch, {
-          credential,
-          foundationUrl: String(env?.IREN_COMMAND_URL || FOUNDATION_IREN_COMMAND)
-        });
+        return await proxyTrader(request, "/v1/command/iren/command", env);
       } catch (error) {
         if (error instanceof ApiError) return jsonResponse({ message: error.message }, error.status);
-        return jsonResponse({ message: "Operational state unavailable.", stale: true }, 503);
+        return jsonResponse({ message: "IREN command unavailable from RHEN." }, 503);
       }
     }
 
