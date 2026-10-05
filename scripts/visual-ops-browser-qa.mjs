@@ -157,7 +157,7 @@ async function runCase(route, viewport) {
         const style = getComputedStyle(el);
         return rect.width > 0 && rect.height > 0 && style.display !== "none" && style.visibility !== "hidden";
       }).length,
-      navCurrent: document.querySelector(".command-header nav a[aria-current=\"page\"]")?.getAttribute("href")
+      navCurrent: document.querySelector('.command-header nav a[aria-current="page"]')?.getAttribute("href")
     })`, returnByValue:true});
     const value=workspace.result?.value||{};
     if(!value.panels || value.navCurrent !== route) {
