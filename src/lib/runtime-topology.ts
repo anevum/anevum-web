@@ -250,9 +250,9 @@ export function operatorGuidance(snapshot: IrenSnapshot | null, unavailable = fa
   if (!snapshot || unavailable || snapshot.stale) {
     return [{
       severity: "critical",
-      target: "IREN / Foundation",
+      target: "IREN / RHEN Core",
       title: "Canonical operations state is stale",
-      action: "Check rhen-research-scheduler and Foundation availability first. Restore fresh IREN observations before trusting any downstream status."
+      action: "Check the RHEN unified runtime, IREN process, and RHEN Core durability first. Restore fresh IREN observations before trusting downstream status."
     }];
   }
 
@@ -270,9 +270,9 @@ export function operatorGuidance(snapshot: IrenSnapshot | null, unavailable = fa
     } else if (key.startsWith("evidence.")) {
       rows.push({
         severity,
-        target: "Foundation evidence",
+        target: "RHEN Core evidence",
         title: "Durable evidence delivery is degraded",
-        action: "Check Foundation ingest plus the RHEN evidence spool/backlog. Confirm new events are landing before retrying or evaluating research."
+        action: "Check RHEN Core plus the evidence spool/backlog. Confirm new events are landing before retrying or evaluating research."
       });
     } else if (key.startsWith("scheduler.") || key.startsWith("workflow.")) {
       rows.push({

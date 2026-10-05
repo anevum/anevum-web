@@ -21,3 +21,51 @@
 .iren-codex-handoff details{margin-top:12px}.iren-codex-handoff summary{cursor:pointer;padding:8px 0}
 .iren-codex-handoff textarea{display:block;width:100%;box-sizing:border-box;resize:vertical;padding:10px;background:#070e19;color:#bdcee6;border:1px solid #29405d;font:12px/1.5 monospace}
 .iren-codex-handoff a{color:#88b9ff}.iren-dock-actions{flex-wrap:wrap}
+
+
+/* IREN operator layer v3 ------------------------------------------------ */
+.iren-dock{
+  display:flex;
+  flex-direction:column-reverse;
+  align-items:stretch;
+}
+.iren-dock-handle{
+  min-height:50px;
+  border-radius:14px;
+}
+.iren-dock.expanded .iren-dock-handle{
+  border-radius:0 0 16px 16px;
+  border-top-color:rgba(111,157,229,.09);
+  border-bottom-color:rgba(111,157,229,.22);
+}
+.iren-dock.expanded .iren-dock-body{
+  border-width:1px 1px 0;
+  border-radius:16px 16px 0 0;
+}
+.iren-dock-prompt{
+  min-width:0;
+  flex:1;
+  padding:9px 12px;
+  border:1px solid rgba(111,157,229,.1);
+  border-radius:9px;
+  background:rgba(255,255,255,.018);
+  color:#8196b5!important;
+  font-size:9px!important;
+  letter-spacing:.04em!important;
+}
+.iren-dock-connection{font-weight:700}
+.iren-dock-count{white-space:nowrap}
+.iren-dock-state.warn{background:#e5ad55;box-shadow:0 0 12px rgba(229,173,85,.42)}
+.iren-dock-state.bad{background:#ff6876;box-shadow:0 0 12px rgba(255,104,118,.42)}
+
+@media(max-width:720px){
+  .iren-dock-handle{
+    min-height:54px;
+  }
+  .iren-dock-prompt{
+    display:block!important;
+    font-size:8px!important;
+  }
+  .iren-dock-count{display:none!important}
+  .iren-dock.expanded .iren-dock-body{max-height:70vh}
+}

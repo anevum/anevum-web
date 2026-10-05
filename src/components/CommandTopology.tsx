@@ -6,6 +6,12 @@ import { useCommandObservation } from "../hooks/useCommandObservation";
 import { SYSTEMS, ageText, commandSystem, fleetState } from "../lib/system-display";
 import { RuntimeDetails, SectionHead, SystemConstellation, SystemIncidentPanel, SystemMetric, SystemStatusChip, SystemTimeline, SystemVisualShell, SystemWorkQueue } from "./operations/VisualOps";
 
+function commandRoute(name: string) {
+  if (name === "RHEN") return "/command/trading";
+  if (["GRAEN", "NOSTRA", "VELUM"].includes(name)) return "/command/research";
+  return "/command/system";
+}
+
 export default function CommandTopology({ session, feed }: { session: RhenSession; feed?: LiveTradingFeed | null }) {
   const { snapshot, error, now, receivedAt } = useCommandObservation(session);
   const stale = isStale(snapshot, now, Boolean(error));
@@ -34,14 +40,14 @@ export default function CommandTopology({ session, feed }: { session: RhenSessio
       <span className="vo-brief-icon" aria-hidden="true">{stale ? "!" : snapshot?.action_required ? "!" : "◎"}</span>
       <div><span>IREN WANTS YOU TO KNOW</span><strong>{stale ? "Fresh control evidence is unavailable." : snapshot?.operator?.message || (guidance.length ? guidance[0].title : "No operator action required.")}</strong>
         {guidance.length > 0 && <details><summary>Review {guidance.length} operator item{guidance.length === 1 ? "" : "s"}</summary>{guidance.map((item,index) => <div key={index}><b>{item.target} · {item.title}</b><p>{item.action}</p></div>)}</details>}
-      </div><Link to="/command/iren">Open IREN ↗</Link>
+      </div><Link to="/command/system">Open IREN ↗</Link>
     </section>
-    <section><SectionHead eyebrow="FIVE SYSTEMS / ONE OPERATING PICTURE" title="Inside the system" detail="Motion reflects observed activity" /><div className="vo-system-grid">{views.map(view => <SystemVisualShell key={view.name} view={view} now={now} to={"/command/" + view.name.toLowerCase()} />)}</div></section>
+    <section><SectionHead eyebrow="FIVE SYSTEMS / ONE OPERATING PICTURE" title="Inside the system" detail="Motion reflects observed activity" /><div className="vo-system-grid">{views.map(view => <SystemVisualShell key={view.name} view={view} now={now} to={commandRoute(view.name)} />)}</div></section>
     <div className="vo-two-column"><section className="vo-panel"><SectionHead eyebrow="IREN / CURRENT WORK" title="Work in motion" detail={stale ? "Last known observation" : work?.next_action?.title} /><SystemWorkQueue rows={jobs} known={Boolean(work?.jobs) && !stale} kind="jobs" now={now} /></section>
       <section className="vo-panel"><SectionHead eyebrow="CONTROL EVENTS" title="Recent activity" /><SystemTimeline items={transitions} now={now} empty={stale ? "Activity evidence unavailable." : "No recent control transitions recorded."} /></section></div>
     <section className="vo-panel"><SectionHead eyebrow="ATTENTION" title="Incidents" /><SystemIncidentPanel incidents={snapshot?.incidents || []} known={Boolean(snapshot)} stale={stale} /></section>
     <details className="vo-details"><summary>Dependencies & freshness <span>Evidence delivery and scheduler state</span></summary><div className="vo-dependencies">{Object.entries(snapshot?.topology?.dependencies || {}).map(([name,row]) => <article key={name}><strong>{name.replaceAll("_"," ")}</strong><SystemStatusChip state={stale ? "STALE" : row.status} /><p>{row.basis}</p><small>Last success: {ageText(row.last_success, now)}</small></article>)}</div></details>
     <RuntimeDetails rows={snapshot?.topology?.services || []} revision={snapshot?.revision} />
-    <footer className="vo-console-footer"><span>{error || "IREN / Foundation · read-only observation"}</span><Link to="/command/infrastructure">Infrastructure ↗</Link></footer>
+    <footer className="vo-console-footer"><span>{error || "IREN / RHEN Core · canonical observation"}</span><Link to="/command/system">System ↗</Link></footer>
   </article>;
 }
