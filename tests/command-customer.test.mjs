@@ -29,8 +29,8 @@ test("session model separates operator and customer authority", () => {
 test("customer API is paper-only and does not expose withdrawals", () => {
   assert.match(platform, /startCustomerAlpacaPaperOauth/);
   assert.match(platform, /https:\/\/anevum\.com\/api\/command\/platform\/alpaca\/callback/);
-  assert.match(customer, /Live customer trading remains disabled/);
-  assert.match(customer, /cannot authorize live trading, withdrawals, or funding movement/);
+  assert.match(customer, /Live authority/);
+  assert.match(customer, /cannot bypass IREN, broker, release, risk, or tenant-executor gates/);
   assert.doesNotMatch(platform, /\/withdraw/);
   assert.doesNotMatch(platform, /\/deposit/);
   assert.doesNotMatch(platform, /withdrawCustomer/);
@@ -48,20 +48,19 @@ test("worker preserves admin routes while allowing tenant platform sessions", ()
 
 test("customer console reports real onboarding, reconciliation and activity", () => {
   assert.match(customer, /Paper onboarding/);
-  assert.match(customer, /LAST RECONCILIATION/);
+  assert.match(customer, /Reconciliation/);
   assert.match(customer, /What actually happened/);
-  assert.match(customer, /No decorative activity/);
   assert.match(customer, /Save allocation/);
-  assert.match(customer, /Save risk profile/);
+  assert.match(customer, /Save guardrails/);
   assert.match(customer, /Pause RHEN/);
 });
 
 
 test("customer Command never equates consent with an active executor", () => {
-  assert.match(customer, /tenant_execution_runtime_unavailable/);
-  assert.match(customer, /EXECUTOR PENDING/);
   assert.match(customer, /executionReady/);
-  assert.match(customer, /orders remain blocked until the tenant executor/);
+  assert.match(customer, /No active execution is implied by setup state/);
+  assert.match(customer, /ENABLED \/ WAITING/);
+  assert.match(customer, /EXECUTION GATES/);
   assert.doesNotMatch(customer, /botEnabled \? "RHEN PAPER ACTIVE"/);
 });
 
@@ -77,8 +76,8 @@ test("customer Command consumes derived lifecycle and broker funding", () => {
   assert.match(platform, /command_customer\.v2/);
   assert.match(platform, /lifecycle\?:/);
   assert.match(platform, /funding\?:/);
-  assert.match(customer, /ACCOUNT STATE/);
-  assert.match(customer, /Funding state/);
+  assert.match(customer, /lifecycleState/);
+  assert.match(customer, /Crypto capacity/);
   assert.match(customer, /Alpaca source of truth/);
   assert.match(customer, /does not fabricate a separate customer cash balance/);
   assert.match(customer, /nextAction/);
@@ -109,4 +108,17 @@ test("customer read client uses stable product surfaces only", () => {
   assert.doesNotMatch(customerApi, /\/platform\/allocation/);
   assert.doesNotMatch(customerApi, /control\/resume/);
   assert.doesNotMatch(customerApi, /control\/pause/);
+});
+
+
+test("customer product uses the simplified routed navigation", () => {
+  for (const route of ["overview", "trading", "money", "activity", "settings", "system"]) {
+    assert.match(customer, new RegExp('/command/' + route));
+  }
+  assert.match(customer, /Overview/);
+  assert.match(customer, /Trading/);
+  assert.match(customer, /Money/);
+  assert.match(customer, /Activity/);
+  assert.match(customer, /Settings/);
+  assert.match(customer, /Advanced transparency/);
 });
