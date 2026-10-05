@@ -93,58 +93,64 @@ export type OperatorProjection = {
   };
 };
 
-export type BtcCanarySignalProjection = {
-  bar_at?: string | null;
-  close?: string | null;
-  momentum_return?: string | null;
-  momentum_positive?: boolean | null;
-  momentum_lookback_bars?: number | null;
-  sma?: string | null;
-  above_sma?: boolean | null;
-  sma_window_bars?: number | null;
-  desired_long?: boolean | null;
-  completed_bar_count?: number | null;
+export type StrategyAuthorityProjection = {
+  owner?: string;
+  lane?: string;
+  strategy_version_id?: string | null;
+  strategy_name?: string | null;
+  status?: string;
+  trading_mode?: string;
+  execution_mode?: string;
+  execution_enabled?: boolean;
+  execution_authorized?: boolean;
+  entries_enabled?: boolean;
 };
 
-export type BtcCanaryCycleProjection = {
-  at?: string | null;
-  action?: string | null;
-  reason?: string | null;
+export type StrategyCandidateProjection = {
+  owner?: string;
+  problem_id?: string | null;
+  candidate_id?: string | null;
+  title?: string | null;
+  lane?: string | null;
+  status?: string | null;
+  stage?: string | null;
+  methodology_version?: string | null;
+  run_id?: string | null;
+  updated_at?: string | null;
+  started_at?: string | null;
+  completed_at?: string | null;
+  supersedes_strategy_version_id?: string | null;
 };
 
-export type BtcCanaryReturnPoint = {
-  at?: string | null;
-  return_pct?: string | null;
-};
-
-export type BtcCanaryProjection = {
-  available?: boolean;
-  run_id?: string;
-  strategy_version_id?: string;
-  paper_only?: boolean;
-  live_execution_authorized?: boolean;
-  promotion_ready?: boolean;
-  research_status?: string;
-  evidence_state?: string;
+export type StrategyValidationProjection = {
+  owner?: string;
+  event_type?: string | null;
+  candidate_id?: string | null;
+  problem_id?: string | null;
+  strategy_version_id?: string | null;
+  status?: string | null;
   observed_at?: string | null;
-  decision_at?: string | null;
-  action?: string | null;
+  engineering_gate?: Record<string, unknown> | null;
+};
+
+export type StrategyReleaseGateProjection = {
+  owner?: string;
+  status?: string | null;
   reason?: string | null;
-  bar_interval?: string | null;
-  strategy_family?: string | null;
-  model_version?: string | null;
-  position_open?: boolean;
-  position_observed_at?: string | null;
-  entry_price?: string | null;
-  current_price?: string | null;
-  current_return_pct?: string | null;
-  risk_stop_pct?: string | null;
-  account_observed_at?: string | null;
-  protection_status?: string | null;
-  protection_observed_at?: string | null;
-  signal?: BtcCanarySignalProjection;
-  recent_cycles?: BtcCanaryCycleProjection[];
-  return_history?: BtcCanaryReturnPoint[];
+  target_lane?: string | null;
+  target_strategy_version_id?: string | null;
+  automatic_promotion?: boolean;
+  production_authority_changed?: boolean;
+};
+
+export type StrategyPipelineProjection = {
+  schema_version?: string;
+  observed_at?: string | null;
+  available?: boolean;
+  active?: StrategyAuthorityProjection[];
+  candidate?: StrategyCandidateProjection | null;
+  validation?: StrategyValidationProjection | null;
+  release_gate?: StrategyReleaseGateProjection | null;
 };
 
 export type IrenSnapshot = {
@@ -168,6 +174,7 @@ export type IrenSnapshot = {
     running_job?: string | null;
   };
   work?: IrenWorkSummary;
+  strategy_pipeline?: StrategyPipelineProjection;
   research?: {
     graen_problems?: Array<{
       problem_id?: string;
@@ -210,7 +217,6 @@ export type IrenSnapshot = {
       updated_at?: string | null;
     } | null;
   };
-  btc_canary?: BtcCanaryProjection;
   operator?: OperatorProjection;
 };
 
