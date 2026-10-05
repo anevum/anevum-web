@@ -173,7 +173,7 @@ export default function Live() {
       </header>
 
       <div className="pt-shell">
-        <aside className="pt-system-rail" aria-label="System selector">
+        <aside className="pt-system-rail" aria-label="RHEN module selector">
           <span>RHEN MODULES</span>
           <button className={"pt-system-button" + (selected === "ALL" ? " is-selected" : "")} type="button" onClick={() => setSelected("ALL")}>
             <i className="pt-all-icon">R</i>
@@ -269,7 +269,7 @@ export default function Live() {
             <div className="pt-filter-row" aria-label="Event filters">
               {(["ALL", ...SYSTEMS] as TerminalFilter[]).map((name) => (
                 <button key={name} type="button" className={feedFilter === name ? "is-selected" : ""} onClick={() => setFeedFilter(name)}>
-                  {name}
+                  {name === "ALL" ? "ALL" : MODULE_LABEL[name]}
                 </button>
               ))}
             </div>
@@ -279,7 +279,7 @@ export default function Live() {
               <article className="pt-feed-event" key={row.id}>
                 <time dateTime={row.at || undefined}>{shortTime(row.at)}</time>
                 <div>
-                  <span className="pt-event-system"><SystemIcon system={row.system} size="xs" /> {row.system}</span>
+                  <span className="pt-event-system"><SystemIcon system={row.system} size="xs" /> {MODULE_LABEL[row.system]}</span>
                   <strong>{row.title}</strong>
                   {row.detail ? <p>{row.detail}</p> : null}
                 </div>
@@ -357,9 +357,9 @@ export default function Live() {
                 <p>The browser receives only the bounded public feed. Protected operator state remains behind Command.</p>
               </article>
               <article>
-                <span>FLEET</span>
+                <span>RHEN RUNTIME</span>
                 <strong>{displayState(fleet)}</strong>
-                <p>{views.filter((view) => view.fresh).length} of 5 system observations are currently fresh.</p>
+                <p>{views.filter((view) => view.fresh).length} of 5 compatibility module observations are currently fresh.</p>
               </article>
               <article>
                 <span>CURRENT RESEARCH</span>
@@ -406,15 +406,15 @@ export default function Live() {
           {evidenceTab === "ARCHITECTURE" ? (
             <div className="pt-architecture-flow">
               {[
-                ["IREN", "Operating intelligence", "Coordinates state, work, incidents, and operator-facing evidence."],
-                ["GRAEN", "Research", "Owns hypothesis formation, falsification, methodology, and bounded claims."],
-                ["VELUM", "Replay", "Reconstructs historical conditions and tests hypotheses away from broker execution."],
-                ["NOSTRA", "Forecasting", "Owns forward-horizon prediction, uncertainty, regimes, and calibration."],
-                ["RHEN", "Market system", "Observes markets and owns bounded live execution, reconciliation, and evidence."]
+                ["IREN", "Control", "Health, incidents, scheduling, protected actions, and operator-facing evidence."],
+                ["GRAEN", "Research", "Hypothesis formation, falsification, methodology, V15 research, and bounded claims."],
+                ["VELUM", "Replay", "Historical reconstruction and counterfactual testing without broker authority."],
+                ["NOSTRA", "Forecast", "Forward horizons, regimes, uncertainty, outcomes, and calibration."],
+                ["RHEN", "Execution", "Market observation, risk, bounded broker execution, reconciliation, and evidence."]
               ].map(([name, role, detail]) => (
                 <article key={name}>
                   <SystemIcon system={name as SystemName} size="sm" />
-                  <div><span>{role}</span><strong>{name}</strong><p>{detail}</p></div>
+                  <div><span>{role} module</span><strong>{MODULE_LABEL[name as SystemName]}</strong><p>{detail}</p></div>
                 </article>
               ))}
               <footer>
@@ -436,7 +436,7 @@ export default function Live() {
               ))}
               {(data?.research?.completed_decisions || []).slice(0, 4).map((row, index) => (
                 <article key={"history-research-" + String(row.decision_key || index)}>
-                  <span>{row.at ? new Date(row.at).toLocaleDateString() : "DATE UNAVAILABLE"} · GRAEN</span>
+                  <span>{row.at ? new Date(row.at).toLocaleDateString() : "DATE UNAVAILABLE"} · RESEARCH</span>
                   <strong>{row.subject || row.decision_type || "Research decision"}</strong>
                   <p>{row.conclusion || displayState(row.status)}</p>
                 </article>
@@ -449,9 +449,10 @@ export default function Live() {
 
       <footer className="pt-terminal-foot">
         <span>
-          Public-safe observations only. No account balances, positions, orders, symbols, fills, dollar P&amp;L,
-          exact strategy rules, thresholds, credentials, or protected controls are exposed. Missing or stale evidence
-          remains visibly missing or stale.
+          Public-safe RHEN observations only. Compatibility subsystem IDs may still exist underneath the projection,
+          but the production architecture is one RHEN runtime with isolated internal modules. No account balances,
+          positions, orders, symbols, fills, dollar P&amp;L, exact strategy rules, thresholds, credentials, or protected
+          controls are exposed. Missing or stale evidence remains visibly missing or stale.
         </span>
         <nav className="pt-terminal-links" aria-label="Terminal evidence links">
           <Link to="/research">Field Notes</Link>
