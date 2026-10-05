@@ -2,12 +2,27 @@ import { useEffect, useState } from "react";
 import { commandAuthHeaders, type RhenSession } from "../lib/auth";
 import type { IrenSnapshot } from "../lib/runtime-topology";
 
-export function useCommandObservation(session: RhenSession, intervalMs = 15000) {
+export type CommandObservation = {
+  snapshot: IrenSnapshot | null;
+  error: string;
+  now: number;
+  receivedAt?: string;
+};
+
+export function useCommandObservation(session: RhenSession | null, intervalMs = 15000): CommandObservation {
   const [snapshot, setSnapshot] = useState<IrenSnapshot | null>(null);
   const [error, setError] = useState("");
   const [now, setNow] = useState(Date.now());
   const [receivedAt, setReceivedAt] = useState<string>();
   useEffect(() => {
+    if (!session) {
+      setSnapshot(null);
+      setError("");
+      setReceivedAt(undefined);
+      return;
+    }
+
+    const activeSession = session;
     let stopped = false;
     let timer: ReturnType<typeof setTimeout>;
     const controller = new AbortController();
@@ -16,7 +31,7 @@ export function useCommandObservation(session: RhenSession, intervalMs = 15000) 
     async function refresh() {
       try {
         const response = await fetch("/api/command/iren/status", {
-          headers: commandAuthHeaders(session), cache: "no-store",
+          headers: commandAuthHeaders(activeSession), cache: "no-store",
           signal: AbortSignal.any([controller.signal, AbortSignal.timeout(10000)])
         });
         if (!response.ok) throw new Error("Canonical IREN state unavailable");

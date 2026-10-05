@@ -474,7 +474,8 @@ async function authenticatedJson<T>(
 ): Promise<T> {
   const response = await fetch(path, {
     headers: commandAuthHeaders(session),
-    cache: "no-store"
+    cache: "no-store",
+    signal: AbortSignal.timeout(10000)
   });
 
   const payload = (await response.json().catch(() => ({}))) as T & {
@@ -515,7 +516,8 @@ export function fetchCommandWeeklyReport(
 export async function fetchResearchReadiness(): Promise<ResearchReadiness> {
   const response = await fetch("/api/public/research/readiness", {
     headers: { Accept: "application/json" },
-    cache: "no-store"
+    cache: "no-store",
+    signal: AbortSignal.timeout(10000)
   });
   const payload = (await response.json().catch(() => ({}))) as ResearchReadiness & {
     message?: string;
@@ -530,7 +532,8 @@ export async function fetchResearchReadiness(): Promise<ResearchReadiness> {
 export async function fetchTheoryProgram(): Promise<TheoryProgramFeed> {
   const response = await fetch("/api/public/theory", {
     headers: { Accept: "application/json" },
-    cache: "no-store"
+    cache: "no-store",
+    signal: AbortSignal.timeout(10000)
   });
   const payload = (await response.json().catch(() => ({}))) as TheoryProgramFeed & {
     message?: string;
@@ -545,7 +548,8 @@ export async function fetchTheoryProgram(): Promise<TheoryProgramFeed> {
 export async function fetchLiveTradingFeed(): Promise<LiveTradingFeed> {
   const response = await fetch("/api/public/trading/live", {
     headers: { Accept: "application/json" },
-    cache: "no-store"
+    cache: "no-store",
+    signal: AbortSignal.timeout(10000)
   });
   const payload = (await response.json().catch(() => ({}))) as LiveTradingFeed & {
     message?: string;

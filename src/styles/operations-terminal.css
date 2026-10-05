@@ -99,7 +99,7 @@
 .command-page-terminal .command-primary{display:block!important}
 .command-page-terminal .command-primary>.command-panel:not(.command-view-terminal){display:none!important}
 .command-page-terminal .command-view-terminal{display:flex!important}
-.command-page-terminal .command-main{width:min(calc(100% - 48px),1480px)!important;margin:26px auto 110px!important;padding:0!important;overflow:visible!important}
+.command-page-system .command-main{width:min(calc(100% - 48px),1480px)!important;margin:26px auto 110px!important;padding:0!important;overflow:visible!important}
 @keyframes terminal-pulse{0%,100%{opacity:.55}50%{opacity:1}}
 @keyframes terminal-sweep{0%{left:-2%}100%{left:102%}}
 @media(max-width:1100px){.terminal-focus-grid{grid-template-columns:1fr}.terminal-canary-operating-grid{grid-template-columns:1fr}.terminal-canary-engine{border-right:0;border-bottom:1px solid rgba(110,161,255,.09)}.terminal-canary-flow{grid-template-columns:minmax(105px,1fr) 18px minmax(105px,1fr) 24px minmax(105px,1fr) 18px minmax(105px,1fr) 18px minmax(120px,1.05fr)}.terminal-canary-cycles ol{grid-template-columns:1fr 1fr}.terminal-canary-grid{grid-template-columns:1fr}.terminal-canary-status{border-right:0;border-bottom:1px solid rgba(110,161,255,.09)}.terminal-canary dl{grid-template-columns:repeat(3,minmax(0,1fr))}.terminal-canary dl>div:nth-child(3){border-right:0}.terminal-canary dl>div:nth-child(-n+3){border-bottom:1px solid rgba(110,161,255,.065)}.terminal-lanes{grid-template-columns:repeat(2,minmax(0,1fr))}.terminal-lane:last-child{grid-column:span 2}.terminal-stream-head,.terminal-stream li{grid-template-columns:74px 80px 125px minmax(0,1fr)}}
@@ -111,6 +111,6 @@
   .terminal-lanes{grid-template-columns:1fr}.terminal-lane:last-child{grid-column:auto}
   .terminal-stream>header{align-items:flex-start;flex-direction:column}.terminal-stream nav{width:100%}.terminal-stream button{flex:1}
   .terminal-stream-head{display:none}.terminal-stream li{grid-template-columns:62px 72px minmax(0,1fr);gap:7px}.terminal-event-source{display:none}.terminal-stream li>div small{display:block}
-  .terminal-footer{flex-direction:column}.command-page-terminal .command-main{width:calc(100% - 20px)!important;margin-top:12px!important}
+  .terminal-footer{flex-direction:column}.command-page-system .command-main{width:calc(100% - 20px)!important;margin-top:12px!important}
 }
 @media(prefers-reduced-motion:reduce){.terminal-live-dot.is-live,.terminal-lane-activity i.is-live,.terminal-focus-card.is-working .terminal-focus-state i,.terminal-focus-card.is-working .terminal-focus-sweep,.terminal-canary-livebar i.is-live{animation:none}}

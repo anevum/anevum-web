@@ -1,5 +1,4 @@
 import { useMemo, useState, type CSSProperties } from "react";
-import type { RhenSession } from "../lib/auth";
 import type { LiveTradingFeed } from "../lib/data";
 import type { BtcCanaryProjection, IrenJobEvent, IrenSnapshot, RuntimeRow } from "../lib/runtime-topology";
 import {
@@ -14,7 +13,7 @@ import {
   systemWork,
   type SystemName
 } from "../lib/system-display";
-import { useCommandObservation } from "../hooks/useCommandObservation";
+import type { CommandObservation } from "../hooks/useCommandObservation";
 import SystemIcon from "./company/SystemIcon";
 import SystemInstrument from "./operations/SystemInstruments";
 import "../styles/operations-terminal.css";
@@ -602,15 +601,15 @@ function BtcCanaryPanel({
 }
 
 export default function CommandOperationsTerminal({
-  session,
+  observation,
   feed,
   feedError
 }: {
-  session: RhenSession;
+  observation: CommandObservation;
   feed?: LiveTradingFeed | null;
   feedError?: string;
 }) {
-  const { snapshot, error, now, receivedAt } = useCommandObservation(session, 3000);
+  const { snapshot, error, now, receivedAt } = observation;
   const [filter, setFilter] = useState<TerminalFilter>("ALL");
 
   const events = useMemo(
@@ -722,7 +721,7 @@ export default function CommandOperationsTerminal({
 
       <footer className="terminal-footer">
         <span>READ ONLY · no execution authority</span>
-        <span>IREN / Foundation + durable telemetry</span>
+        <span>IREN / RHEN Core + durable telemetry</span>
       </footer>
     </article>
   );

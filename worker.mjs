@@ -120,7 +120,8 @@ async function proxyTrader(request, upstreamPath, env) {
       "Content-Type": "application/json",
       "Cache-Control": "no-store"
     },
-    body: request.method === "GET" || request.method === "HEAD" ? undefined : await request.text()
+    body: request.method === "GET" || request.method === "HEAD" ? undefined : await request.text(),
+    signal: AbortSignal.timeout(10000)
   });
   const raw = await response.text();
   let payload = {};
@@ -134,7 +135,8 @@ async function proxyTrader(request, upstreamPath, env) {
 async function publicResearchReadiness() {
   const response = await fetch(RESEARCH_BASE + "/v1/readiness/public", {
     method: "GET",
-    headers: { Accept: "application/json" }
+    headers: { Accept: "application/json" },
+    signal: AbortSignal.timeout(10000)
   });
   const raw = await response.text();
   return new Response(raw, {
@@ -150,7 +152,8 @@ async function publicResearchReadiness() {
 async function publicTheory() {
   const response = await fetch(RESEARCH_BASE + "/v1/theory/public", {
     method: "GET",
-    headers: { Accept: "application/json" }
+    headers: { Accept: "application/json" },
+    signal: AbortSignal.timeout(10000)
   });
   const raw = await response.text();
   return new Response(raw, {
@@ -168,7 +171,8 @@ async function publicTradingFeed() {
     method: "GET",
     headers: {
       Accept: "application/json"
-    }
+    },
+    signal: AbortSignal.timeout(10000)
   });
   const raw = await response.text();
   return new Response(raw, {
