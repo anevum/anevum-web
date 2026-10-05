@@ -23,6 +23,76 @@ export type FieldNote = {
 
 export const fieldNotes: FieldNote[] = [
   {
+    slug: "rhen-v3-unified-runtime-rebuild",
+    date: "2026-10-05",
+    type: "SYSTEMS",
+    status: "IMPLEMENTATION / CUTOVER",
+    title: "RHEN v3 consolidates ANEVUM into one production runtime",
+    summary: "ANEVUM is replacing an over-fragmented service topology with one RHEN Railway application service containing isolated execution, control, research, replay, forecast, Core/Store, research-worker, and Command/API modules.",
+    systems: ["RHEN"],
+    readMinutes: 6,
+    featured: true,
+    sections: [
+      {
+        heading: "What changed",
+        body: [
+          "RHEN is now the only top-level ANEVUM system and production runtime. IREN, GRAEN, VELUM, NOSTRA, Foundation, and Research Agent remain only as migration aliases for internal responsibilities during cutover.",
+          "The existing production service is converted in place so it can retain its persistent volume while internal service-to-service traffic moves to loopback boundaries inside one container."
+        ]
+      },
+      {
+        heading: "Why the rebuild was necessary",
+        body: [
+          "The previous architecture duplicated long-lived services that shared one repository, called each other over HTTP, and retained too much high-frequency evidence.",
+          "The PostgreSQL storage path reached its volume ceiling during the rebuild. RHEN v3 treats that as an architecture problem: the new Core uses bounded SQLite storage, explicit retention windows, compaction, and analytics shedding instead of assuming storage can grow indefinitely."
+        ]
+      },
+      {
+        heading: "Authority is still separated",
+        body: [
+          "One Railway service does not mean one permission set. Execution retains broker authority, while Research, Replay, Forecast, Control, and pure Core processes run with execution disabled.",
+          "The frozen V15 BTC candidate remains shadow/paper only. The rebuild does not promote it, alter its strategy definition, or grant research code live-order authority."
+        ]
+      },
+      {
+        heading: "Verification and cutover",
+        body: [
+          "The RHEN v3 branch passed the full staging suite with 1,208 tests passing and 8 skipped, plus 54 focused RHEN v3, research, forecast, and V15 tests. GitHub CI and the Foundation runtime audit were green before merge.",
+          "Cutover remains an operational sequence: verify RHEN critical health, verify internal module health, verify bounded storage growth, resume V15 forward shadow, then disable legacy services one by one. Old services and the previous database volume are not treated as disposable until retirement is explicitly verified."
+        ]
+      }
+    ],
+    reproduce: {
+      question: "Can ANEVUM reduce deployment complexity and storage growth without collapsing the authority boundaries that protect execution?",
+      inputs: [
+        "The existing RHEN production service and persistent volume",
+        "The previous multi-service runtime inventory",
+        "Canonical execution, research, replay, forecast, scheduler, and control responsibilities",
+        "Observed database-volume growth and evidence-retention patterns",
+        "The frozen V15 forward-validation contract"
+      ],
+      method: [
+        "Move top-level subsystem responsibilities behind one RHEN supervisor as isolated internal modules.",
+        "Route internal APIs over loopback and keep broker configuration confined to the execution boundary.",
+        "Replace the operational PostgreSQL dependency with a bounded SQLite Core on the retained RHEN volume.",
+        "Compact high-frequency decision evidence and apply explicit retention windows.",
+        "Validate the combined runtime before retiring legacy services."
+      ],
+      checks: [
+        "Execution remains the only broker-writing boundary.",
+        "Research, replay, forecast, control, and Core processes run with execution disabled.",
+        "Critical order, fill, reconciliation, incident, approval, replay-result, and deployment evidence remains durable.",
+        "Routine analytics cannot consume the remaining volume indefinitely.",
+        "V15 stays frozen and shadow/paper only throughout migration."
+      ],
+      expected: "One production RHEN application service can replace the duplicated service topology while preserving functional isolation, bounded storage, reproducible evidence, and protected live-risk authority.",
+      limits: [
+        "A merged architecture is not the same thing as a completed production cutover; legacy services are retired only after runtime verification.",
+        "Consolidation reduces operational duplication but does not remove the need for observability, fail-closed gates, or explicit human authority for protected live-risk changes."
+      ]
+    }
+  },
+  {
     slug: "multi-market-architecture-equities-crypto",
     date: "2026-09-29",
     type: "SYSTEMS",
