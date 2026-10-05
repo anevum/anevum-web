@@ -966,3 +966,127 @@
     overflow-wrap:anywhere;
   }
 }
+
+
+/* Command v4: one strategy lifecycle, one optional raw event instrument. */
+.command-strategy-pipeline { overflow: hidden; }
+.command-strategy-flow {
+  display: grid;
+  grid-template-columns: minmax(0,1fr) auto minmax(0,1fr) auto minmax(0,1fr) auto minmax(0,1fr);
+  gap: .65rem;
+  align-items: stretch;
+  padding: 1rem;
+}
+.command-strategy-flow > section {
+  min-width: 0;
+  padding: .9rem;
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 14px;
+  background: rgba(5,9,16,.58);
+  display: grid;
+  gap: .4rem;
+  align-content: start;
+}
+.command-strategy-flow > section > span,
+.command-strategy-flow > section > small {
+  color: var(--muted, #8d99aa);
+  font-size: .68rem;
+  letter-spacing: .08em;
+}
+.command-strategy-flow > section > strong { font-size: .9rem; line-height: 1.25; overflow-wrap: anywhere; }
+.command-strategy-flow > section > p { margin: 0; color: #c7d0dc; font-size: .76rem; line-height: 1.4; }
+.command-strategy-flow > i { align-self: center; color: rgba(255,255,255,.28); font-style: normal; }
+
+.command-raw-log {
+  position: fixed;
+  left: 14px;
+  right: min(360px, 30vw);
+  bottom: 14px;
+  z-index: 70;
+  pointer-events: none;
+}
+.command-raw-log-toggle,
+.command-raw-log-drawer { pointer-events: auto; }
+.command-raw-log-toggle {
+  margin-left: auto;
+  width: min(330px, 100%);
+  min-height: 42px;
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 12px;
+  background: rgba(4,7,13,.94);
+  color: #dce6f2;
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: .8rem;
+  align-items: center;
+  padding: 0 .8rem;
+  font: inherit;
+}
+.command-raw-log-toggle span { display: flex; align-items: center; gap: .45rem; font-size: .7rem; letter-spacing: .1em; }
+.command-raw-log-toggle i { width: 7px; height: 7px; border-radius: 50%; background: #59616c; }
+.command-raw-log-toggle i.is-live { background: #9bd5ff; box-shadow: 0 0 10px rgba(155,213,255,.55); }
+.command-raw-log-toggle strong { font-size: .7rem; color: #8794a6; }
+.command-raw-log-toggle b { font-size: 1rem; }
+.command-raw-log-drawer {
+  margin-top: .45rem;
+  max-height: min(58vh, 560px);
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 14px;
+  background: rgba(4,7,13,.98);
+  box-shadow: 0 20px 70px rgba(0,0,0,.45);
+  overflow: hidden;
+}
+.command-raw-log-drawer > header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: .8rem 1rem;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+}
+.command-raw-log-drawer > header > div { display: grid; gap: .2rem; }
+.command-raw-log-drawer > header span { font-size: .65rem; letter-spacing: .09em; color: #8491a1; }
+.command-raw-log-drawer > header strong { font-size: .78rem; }
+.command-raw-log-drawer nav { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: .3rem; }
+.command-raw-log-drawer nav button {
+  border: 1px solid rgba(255,255,255,.09);
+  border-radius: 8px;
+  background: transparent;
+  color: #8390a0;
+  padding: .28rem .42rem;
+  font-size: .62rem;
+}
+.command-raw-log-drawer nav button.active { color: #fff; border-color: rgba(155,213,255,.45); background: rgba(110,161,255,.12); }
+.command-raw-log-head,
+.command-raw-log-drawer li {
+  display: grid;
+  grid-template-columns: 82px 92px 150px minmax(0,1fr);
+  gap: .8rem;
+  align-items: start;
+}
+.command-raw-log-head {
+  padding: .5rem 1rem;
+  color: #657182;
+  font-size: .6rem;
+  letter-spacing: .08em;
+  border-bottom: 1px solid rgba(255,255,255,.06);
+}
+.command-raw-log-drawer ol { margin: 0; padding: 0; max-height: 430px; overflow: auto; list-style: none; }
+.command-raw-log-drawer li { padding: .6rem 1rem; border-bottom: 1px solid rgba(255,255,255,.05); font-size: .7rem; }
+.command-raw-log-drawer li > span { display: flex; gap: .4rem; align-items: center; }
+.command-raw-log-drawer li time,
+.command-raw-log-drawer li small,
+.command-raw-log-drawer li em { color: #748195; font-style: normal; }
+.command-raw-log-drawer li div { min-width: 0; }
+.command-raw-log-drawer li div strong { display: block; overflow-wrap: anywhere; }
+.command-raw-log-drawer li div p { margin: .15rem 0; color: #a9b5c4; overflow-wrap: anywhere; }
+
+@media (max-width: 920px) {
+  .command-strategy-flow { grid-template-columns: 1fr; }
+  .command-strategy-flow > i { transform: rotate(90deg); justify-self: center; }
+  .command-raw-log { left: 8px; right: 8px; bottom: 8px; }
+  .command-raw-log-drawer > header { display: grid; }
+  .command-raw-log-drawer nav { justify-content: flex-start; }
+  .command-raw-log-head { display: none; }
+  .command-raw-log-drawer li { grid-template-columns: 70px 82px minmax(0,1fr); }
+  .command-raw-log-drawer li > small { display: none; }
+}
