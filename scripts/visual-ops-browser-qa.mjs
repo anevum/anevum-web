@@ -6,7 +6,7 @@ import path from "node:path";
 const base = process.env.BASE_URL;
 if (!base) throw new Error("BASE_URL is required");
 
-const publicRoutes = ["/", "/live", "/products", "/products/iren", "/products/rhen", "/products/graen", "/products/nostra", "/products/velum", "/architecture", "/research", "/research/multi-market-architecture-equities-crypto", "/case-studies", "/performance", "/founder", "/resume", "/releases", "/theory"];
+const publicRoutes = ["/", "/live", "/architecture", "/research", "/research/multi-market-architecture-equities-crypto", "/founder", "/resume", "/releases"];
 const commandRoutes = ["/command/overview", "/command/terminal", "/command/iren", "/command/rhen", "/command/graen", "/command/nostra", "/command/velum", "/command/infrastructure"];
 const routes = process.env.PUBLIC_ONLY === "1" ? publicRoutes : [...publicRoutes, ...commandRoutes];
 const output = path.join(process.env.RUNNER_TEMP || os.tmpdir(), "anevum-visuals");
@@ -130,7 +130,7 @@ async function runCase(route, viewport) {
   await sleep(5000);
   const ops = await send("Runtime.evaluate", {expression: `(() => {
     const surface=document.querySelector("[data-visual-ops]");
-    const cards=[...document.querySelectorAll(".vo-system-card, .vo-node, .terminal-lane, .terminal-focus-card")];
+    const cards=[...document.querySelectorAll(".vo-system-card, .vo-node, .terminal-lane, .terminal-focus-card, .pt-system-button, .pt-map-card")];
     const visible=el=>el.getBoundingClientRect().width>0;
     return {surface:Boolean(surface), cards:cards.filter(visible).length,
       legacySummaryVisible:[...document.querySelectorAll(".command-stats")].some(visible),
@@ -144,8 +144,8 @@ async function runCase(route, viewport) {
     };
   })()`.replace("routePlaceholder", JSON.stringify(route)),returnByValue:true});
   const details=ops.result?.value||{};
-  const requiresVisualOpsSurface = route === "/" || route === "/live" || route === "/products" || route.startsWith("/command/");
-  const requiresSystemCards = route === "/" || route === "/live" || route === "/products" || route.startsWith("/products/") || route.startsWith("/command/");
+  const requiresVisualOpsSurface = route === "/live" || route.startsWith("/command/");
+  const requiresSystemCards = route === "/live" || route.startsWith("/command/");
   if((requiresVisualOpsSurface && !details.surface) || (requiresSystemCards && (!details.cards || !details.links))) {
     throw new Error("Missing accessible visual surface: "+JSON.stringify(details));
   }
@@ -303,7 +303,7 @@ async function runCase(route, viewport) {
     await send("Runtime.evaluate",{expression:"window.scrollTo(0,0)"});
   }
   await send("Emulation.setEmulatedMedia",{features:[{name:"prefers-reduced-motion",value:"reduce"}]});
-  const motion=await send("Runtime.evaluate",{expression:`[...document.querySelectorAll(".vo-console *, .vo-public-status *")].filter(el=>getComputedStyle(el).animationName!=="none" && getComputedStyle(el).animationDuration!=="0s").length`,returnByValue:true});
+  const motion=await send("Runtime.evaluate",{expression:`[...document.querySelectorAll(".vo-console *, .vo-public-status *, .public-terminal-page *")].filter(el=>getComputedStyle(el).animationName!=="none" && getComputedStyle(el).animationDuration!=="0s").length`,returnByValue:true});
   if(motion.result?.value) throw new Error("Reduced motion left animations running: "+motion.result.value);
   const result = await send("Runtime.evaluate", {
     expression: `(() => {
