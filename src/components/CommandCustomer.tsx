@@ -115,6 +115,9 @@ export default function CommandCustomer({
   const botEnabled = overview?.control?.bot_enabled === true;
   const executionReady = overview?.eligibility?.eligible === true;
   const executorPending = eligibilityReasons.includes("tenant_execution_runtime_unavailable");
+  const lifecycleState = overview?.lifecycle?.state || (paperConnected ? "CONFIGURING" : "BROKER_SETUP_REQUIRED");
+  const nextAction = overview?.lifecycle?.next_action || "Complete paper onboarding";
+  const brokerFunded = overview?.funding?.funded === true;
   const automationLabel = executionReady
     ? "RHEN PAPER ACTIVE"
     : botEnabled && executorPending
@@ -165,9 +168,11 @@ export default function CommandCustomer({
             <i />
             <span>{automationLabel}</span>
             <small>
-              {executorPending
-                ? "Customer paper authorization may be enabled, but the tenant execution runtime is not deployed yet."
-                : "Live customer trading remains disabled."}
+              {overview?.lifecycle?.state !== "ACTIVE"
+                ? nextAction
+                : executorPending
+                  ? "Customer paper authorization may be enabled, but the tenant execution runtime is not deployed yet."
+                  : "Live customer trading remains disabled."}
             </small>
           </div>
         </section>
@@ -182,6 +187,11 @@ export default function CommandCustomer({
         {error && <div className="customer-command-notice error">{error}</div>}
 
         <section className="customer-command-status-grid">
+          <article>
+            <span>ACCOUNT STATE</span>
+            <strong>{lifecycleState.replaceAll("_", " ")}</strong>
+            <small>{nextAction}</small>
+          </article>
           <article>
             <span>BROKER</span>
             <strong>{paperConnected ? "ALPACA PAPER" : "NOT CONNECTED"}</strong>
@@ -242,11 +252,17 @@ export default function CommandCustomer({
             </header>
             <div className="customer-command-balance-value">{money(account.equity)}</div>
             <dl>
-              <div><dt>Cash</dt><dd>{money(account.cash)}</dd></div>
-              <div><dt>Buying power</dt><dd>{money(account.buying_power)}</dd></div>
+              <div><dt>Funding state</dt><dd>{overview?.funding?.known ? (brokerFunded ? "FUNDED" : "EMPTY") : "UNKNOWN"}</dd></div>
+              <div><dt>Cash</dt><dd>{money(overview?.funding?.cash ?? account.cash)}</dd></div>
+              <div><dt>Buying power</dt><dd>{money(overview?.funding?.buying_power ?? account.buying_power)}</dd></div>
               <div><dt>RHEN allocation</dt><dd>{percent(overview?.allocation?.allocation_fraction)}</dd></div>
               <div><dt>Allocation cap</dt><dd>{money(overview?.allocation?.absolute_cap)}</dd></div>
             </dl>
+            {!brokerFunded && paperConnected && (
+              <small className="customer-command-disclosure">
+                Add or reset Alpaca Paper funds in Alpaca, then verify broker state again. ANEVUM does not fabricate a separate customer cash balance.
+              </small>
+            )}
           </article>
 
           <article className="customer-command-panel customer-command-control">
