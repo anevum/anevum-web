@@ -63,3 +63,10 @@ test("customer Command never equates consent with an active executor", () => {
   assert.match(customer, /orders remain blocked until the tenant executor/);
   assert.doesNotMatch(customer, /botEnabled \? "RHEN PAPER ACTIVE"/);
 });
+
+
+test("operator Command fails closed if its email allowlist is missing", () => {
+  assert.match(worker, /Command operator allowlist is not configured/);
+  assert.match(worker, /const commandAdmin = allowed\.has\(email\)/);
+  assert.doesNotMatch(worker, /allowed\.size === 0 \|\| allowed\.has\(email\)/);
+});
