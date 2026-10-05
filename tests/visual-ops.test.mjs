@@ -11,8 +11,9 @@ test("friendly labels retain raw values and rejected research is not a runtime f
   assert.equal(displayState("IDLE"), "Ready / idle");
   assert.equal(displayState("REJECTED"), "Rejected");
 });
-test("freshness rejects missing, invalid, unzoned, future and expired timestamps", () => {
-  for (const value of [null, "invalid", "2026-10-03T12:00:00", new Date(now+1).toISOString(),new Date(now-180001).toISOString()]) assert.equal(freshStamp(value,now),false);
+test("freshness tolerates small clock skew but rejects invalid, far-future and expired timestamps", () => {
+  for (const value of [null, "invalid", "2026-10-03T12:00:00", new Date(now+30001).toISOString(),new Date(now-180001).toISOString()]) assert.equal(freshStamp(value,now),false);
+  assert.equal(freshStamp(new Date(now+5000).toISOString(),now),true);
   assert.equal(freshStamp(stamp,now),true);
 });
 test("public unavailable or stale observations cannot become healthy or active", () => {

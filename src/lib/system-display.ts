@@ -46,15 +46,17 @@ export function stateTone(raw?: string | null): Tone {
   if (["RUNNING", "ACTIVE", "OBSERVING", "SCANNING", "FORECASTING", "RESEARCHING", "REPLAYING", "LIVE_TELEMETRY", "CANONICAL_CONTROL_STATE", "LIVE_BASELINE"].includes(key)) return "active";
   return "quiet";
 }
+const MAX_CLOCK_SKEW_MS = 30000;
 export function freshStamp(stamp?: string | null, now = Date.now(), maxAge = 180000) {
   if (!stamp || !/(Z|[+-]\d{2}:\d{2})$/.test(stamp)) return false;
   const age = now - Date.parse(stamp);
-  return Number.isFinite(age) && age >= 0 && age <= maxAge;
+  return Number.isFinite(age) && age >= -MAX_CLOCK_SKEW_MS && age <= maxAge;
 }
 export function ageText(stamp?: string | null, now = Date.now()) {
   if (!stamp || !Number.isFinite(Date.parse(stamp))) return "No observation";
-  if (Date.parse(stamp) > now) return "Clock mismatch";
-  const seconds = Math.max(0, Math.floor((now - Date.parse(stamp)) / 1000));
+  const age = now - Date.parse(stamp);
+  if (age < -MAX_CLOCK_SKEW_MS) return "Clock mismatch";
+  const seconds = Math.max(0, Math.floor(age / 1000));
   return seconds < 60 ? seconds + "s ago" : seconds < 3600 ? Math.floor(seconds / 60) + "m ago" : Math.floor(seconds / 3600) + "h ago";
 }
 export function runtimeOwner(row: RuntimeRow): SystemName | null {
