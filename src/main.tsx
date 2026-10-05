@@ -9,6 +9,7 @@ import "./styles/performance.css";
 import "./styles/rhen-brand.css";
 import "./styles/command.css";
 import "./styles/command-v2.css";
+import "./styles/finance-command.css";
 import "./styles/company.css";
 import "./styles/iren.css";
 import "./styles/enhancements.css";
