@@ -1708,3 +1708,83 @@
   .company-home-v3 .hero-visual-metrics small{font-size:.32rem}
   .company-home-v3 .hero-visual-metrics strong{font-size:.6rem}
 }
+
+
+/* RHEN v3 unified module icon language ------------------------------------- */
+/* The old subsystem keys remain compatibility selectors only. Identity is RHEN;
+ * semantic status colors are intentionally kept separate from these marks. */
+.rhen-module-mark .rm-shell,
+.rhen-module-mark .rm-line,
+.rhen-module-mark .rm-ticks{
+  fill:none;
+  stroke:currentColor;
+  stroke-width:1.45;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+  vector-effect:non-scaling-stroke;
+}
+.rhen-module-mark .rm-shell{opacity:.38;stroke-width:1}
+.rhen-module-mark .rm-shell-inner{opacity:.16;stroke-dasharray:2.5 4}
+.rhen-module-mark .rm-ticks{opacity:.46;stroke-width:1}
+.rhen-module-mark .rm-faint{opacity:.32;stroke-width:1}
+.rhen-module-mark .rm-node,
+.rhen-module-mark .rm-core{fill:currentColor;stroke:none}
+.rhen-module-mark .rm-core{filter:drop-shadow(0 0 8px currentColor)}
+
+.system-icon-iren,
+.system-icon-rhen,
+.system-icon-graen,
+.system-icon-nostra,
+.system-icon-velum{
+  --icon-accent:#6EA1FF;
+}
+.system-mark-iren,
+.system-mark-rhen,
+.system-mark-graen,
+.system-mark-nostra,
+.system-mark-velum{
+  --system-accent:#6EA1FF;
+  color:#6EA1FF;
+}
+.system-chip-iren,
+.system-chip-rhen,
+.system-chip-graen,
+.system-chip-nostra,
+.system-chip-velum{
+  --chip-accent:#6EA1FF;
+}
+
+/* Module variants stay inside one RHEN blue/cyan family rather than acting like
+ * separate product brands. */
+.system-icon[data-rhen-module="EXECUTION"],
+.rhen-module-icon-execution{--icon-accent:#6FD1FF}
+.system-icon[data-rhen-module="CONTROL"],
+.rhen-module-icon-control{--icon-accent:#6EA1FF}
+.system-icon[data-rhen-module="RESEARCH"],
+.rhen-module-icon-research{--icon-accent:#8FB8FF}
+.system-icon[data-rhen-module="REPLAY"],
+.rhen-module-icon-replay{--icon-accent:#78C8D8}
+.system-icon[data-rhen-module="FORECAST"],
+.rhen-module-icon-forecast{--icon-accent:#A7C6FF}
+.rhen-module-icon-core{--icon-accent:#7DA7FF}
+.rhen-module-icon-worker{--icon-accent:#8EC4F0}
+.rhen-module-icon-command{--icon-accent:#B8D2FF}
+
+.rhen-module-icon .rhen-module-mark,
+.system-icon .rhen-module-mark{
+  color:var(--icon-accent);
+}
+
+.node-iren,
+.node-rhen,
+.node-graen,
+.node-nostra,
+.node-velum,
+.architecture-role-grid a:nth-child(n),
+.selected-work-grid>a:nth-child(n){
+  --system-accent:#6EA1FF;
+}
+
+@media(max-width:720px){
+  .system-icon-lg{--icon-size:72px;border-radius:19px}
+}
