@@ -79,7 +79,7 @@ test("customer Command consumes derived lifecycle and broker funding", () => {
   assert.match(customer, /lifecycleState/);
   assert.match(customer, /Crypto capacity/);
   assert.match(customer, /Alpaca source of truth/);
-  assert.match(customer, /does not fabricate a separate customer cash balance/);
+  assert.match(customer, /does not create a competing customer cash balance/);
   assert.match(customer, /nextAction/);
 });
 
