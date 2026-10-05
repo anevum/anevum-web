@@ -489,5 +489,5 @@ function OrderRows({ rows }: { rows: Record<string, unknown>[] }) {
 }
 
 function SimpleRows({ rows, fields }: { rows: Record<string, unknown>[]; fields: string[] }) {
-  return <div className="cc2-table simple">{rows.map((row, index) => <div key={text(row.transfer_intent_id, String(index))}>{fields.map(field => <span key={field}>{field.includes("at") ? dateTime(row[field]) : text(row[field])}</span>)}</div>)}</div>;
+  return <div className="cc2-table simple">{rows.map((row, index) => <div key={text(row.transfer_intent_id, String(index))}>{fields.map(field => <span key={field}>{field.endsWith("_at") ? dateTime(row[field]) : text(row[field])}</span>)}</div>)}</div>;
 }
