@@ -17,10 +17,10 @@ const Releases = lazy(() => import("./pages/Releases"));
 const ReleaseDetail = lazy(() => import("./pages/ReleaseDetail"));
 
 const titles: Record<string, string> = {
-  "/": "ANEVUM Command — Automated Trading with Inspectable Evidence",
-  "/live": "Live Terminal — ANEVUM",
+  "/": "ANEVUM — RHEN Unified Runtime + Command",
+  "/live": "RHEN Live Terminal — ANEVUM",
   "/research": "Field Notes — ANEVUM",
-  "/architecture": "Architecture — ANEVUM",
+  "/architecture": "RHEN v3 Architecture — ANEVUM",
   "/founder": "About ANEVUM — Devon Akins",
   "/resume": "Devon Akins — Résumé",
   "/releases": "Releases — ANEVUM",
@@ -29,10 +29,10 @@ const titles: Record<string, string> = {
 };
 
 const descriptions: Record<string, string> = {
-  "/": "ANEVUM Command is the customer control surface for connecting an Alpaca account, configuring RHEN automated trading, reviewing broker-derived money state and activity, and inspecting public-safe operating evidence. Paper beta first; live-money authority remains gated until verified.",
-  "/live": "Observe ANEVUM operating through public-safe system state, telemetry, research, replay, evidence, validation, and normalized performance.",
+  "/": "ANEVUM is consolidating its production architecture around RHEN v3: one Railway runtime with isolated execution, control, research, replay, forecast, Core/Store, and research-worker modules. Command is the customer surface; Paper Beta first and live-money authority remains gated.",
+  "/live": "Observe RHEN v3 through public-safe execution, control, research, replay, forecast, evidence, validation, and normalized performance projections.",
   "/research": "Read ANEVUM Field Notes: research decisions, failed hypotheses, engineering changes, releases, and measured evidence.",
-  "/architecture": "ANEVUM architecture, authority boundaries, evidence flow, infrastructure, and separation between research, simulation, customer control, and live execution.",
+  "/architecture": "RHEN v3 architecture: one Railway service, bounded SQLite Core, internal module isolation, evidence retention, protected promotion, and narrow broker authority.",
   "/founder": "About ANEVUM and founder Devon Akins, building inspectable software systems, automated trading infrastructure, research tooling, forecasting, replay, telemetry, and production controls.",
   "/resume": "Résumé for Devon Akins, founder of ANEVUM, covering software systems, infrastructure, research tooling, mathematics, and production engineering.",
   "/releases": "ANEVUM release records documenting RHEN versions, production changes, verification, and public system history."
@@ -106,7 +106,7 @@ function RouteEffects() {
     const path = location.pathname;
     const protectedRoute = path.startsWith("/command") || path === "/private" || path === "/iren";
 
-    let title = titles[path] || "ANEVUM Command — Automated Trading with Inspectable Evidence";
+    let title = titles[path] || "ANEVUM — RHEN Unified Runtime + Command";
     let description = descriptions[path] || descriptions["/"];
 
     if (path.startsWith("/command")) {
