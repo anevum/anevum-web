@@ -4,10 +4,23 @@ export type RhenUser = {
   app_metadata?: Record<string, unknown>;
 };
 
+export type CommandTenant = {
+  tenant_id: string;
+  tenant_key?: string | null;
+  display_name?: string | null;
+  tenant_status?: string | null;
+  role?: string | null;
+};
+
 export type RhenSession = {
   access_token: "";
   token_type: "access";
   auth_type: "cloudflare_access";
+  command_admin: boolean;
+  surface: "operator" | "customer";
+  principal_id?: string | null;
+  active_tenant_id?: string | null;
+  tenants: CommandTenant[];
   user?: RhenUser;
 };
 
@@ -32,22 +45,37 @@ export async function resolveCommandAccessSession(): Promise<RhenSession | null>
       email?: string | null;
       auth_source?: string | null;
       command_admin?: boolean;
+      surface?: "operator" | "customer";
+      principal_id?: string | null;
+      active_tenant_id?: string | null;
+      tenants?: CommandTenant[];
     };
     if (
       payload.authenticated !== true ||
-      payload.auth_source !== "cloudflare_access" ||
-      payload.command_admin !== true
+      payload.auth_source !== "cloudflare_access"
     ) {
       return null;
     }
+
+    const admin = payload.command_admin === true;
+    const tenants = Array.isArray(payload.tenants) ? payload.tenants : [];
+    if (!admin && tenants.length === 0) return null;
 
     return {
       access_token: "",
       token_type: "access",
       auth_type: "cloudflare_access",
+      command_admin: admin,
+      surface: admin ? "operator" : "customer",
+      principal_id: payload.principal_id || null,
+      active_tenant_id: payload.active_tenant_id || tenants[0]?.tenant_id || null,
+      tenants,
       user: {
         email: String(payload.email || "").trim().toLowerCase(),
-        app_metadata: { command_admin: true, role: "command_admin" }
+        app_metadata: {
+          command_admin: admin,
+          role: admin ? "command_admin" : "command_customer"
+        }
       }
     };
   } catch {
@@ -64,6 +92,7 @@ export async function signOutRequest() {
 export function isCommandAdmin(session: RhenSession | null) {
   return (
     session?.auth_type === "cloudflare_access" &&
+    session.command_admin === true &&
     session.user?.app_metadata?.command_admin === true
   );
 }
