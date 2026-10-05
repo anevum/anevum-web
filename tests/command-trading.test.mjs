@@ -69,3 +69,36 @@ test("Command network reads are timeout bounded and connection state is terminal
   assert.match(data, /AbortSignal\.timeout\(10000\)/);
   assert.match(worker, /AbortSignal\.timeout\(10000\)/);
 });
+
+
+test("Command strategy lifecycle uses the canonical private projection and one raw log", () => {
+  const command = readFileSync(new URL("../src/pages/Command.tsx", import.meta.url), "utf8");
+  const pipeline = readFileSync(new URL("../src/components/CommandStrategyPipeline.tsx", import.meta.url), "utf8");
+  const rawLog = readFileSync(new URL("../src/components/CommandRawLog.tsx", import.meta.url), "utf8");
+  const terminal = readFileSync(new URL("../src/components/CommandOperationsTerminal.tsx", import.meta.url), "utf8");
+  const topology = readFileSync(new URL("../src/lib/runtime-topology.ts", import.meta.url), "utf8");
+
+  assert.match(command, /CommandStrategyPipeline snapshot=\{commandObservation\.snapshot\}/);
+  assert.match(command, /CommandRawLog snapshot=\{commandObservation\.snapshot\}/);
+  assert.match(pipeline, /snapshot\?\.strategy_pipeline/);
+  assert.doesNotMatch(pipeline, /active_strategy/);
+  assert.match(topology, /strategy_pipeline\?: StrategyPipelineProjection/);
+  assert.match(rawLog, /buildCommandEvents\(snapshot, feed\)/);
+  assert.doesNotMatch(terminal, /className="terminal-stream"/);
+  assert.doesNotMatch(terminal, /BTC-CANARY-001/);
+});
+
+
+test("Command deployment config has no retired Foundation or Vercel runtime path", () => {
+  const worker = readFileSync(new URL("../worker.mjs", import.meta.url), "utf8");
+  const wrangler = readFileSync(new URL("../wrangler.jsonc", import.meta.url), "utf8");
+  const verify = readFileSync(new URL("../.github/workflows/anevum-verify.yml", import.meta.url), "utf8");
+  const deploy = readFileSync(new URL("../.github/workflows/deploy-production.yml", import.meta.url), "utf8");
+
+  for (const source of [worker, wrangler, verify, deploy]) {
+    assert.doesNotMatch(source, /foundation-ingest-staging/i);
+    assert.doesNotMatch(source, /IREN_COMMAND_URL/);
+    assert.doesNotMatch(source, /vercel/i);
+  }
+  assert.match(deploy, /Deploy to Cloudflare Workers/);
+});
