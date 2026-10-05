@@ -82,3 +82,19 @@ test("customer Command consumes derived lifecycle and broker funding", () => {
   assert.match(customer, /does not fabricate a separate customer cash balance/);
   assert.match(customer, /nextAction/);
 });
+
+
+test("worker proxies stable customer read surfaces", () => {
+  assert.match(worker, /FOUNDATION_COMMAND_BASE/);
+  for (const route of [
+    "/api/command/account",
+    "/api/command/overview",
+    "/api/command/trading",
+    "/api/command/money",
+    "/api/command/activity"
+  ]) {
+    assert.match(worker, new RegExp(route.replaceAll("/", "\\/")));
+  }
+  assert.match(worker, /proxyCustomerProjection/);
+  assert.match(worker, /allowTenant: true/);
+});
