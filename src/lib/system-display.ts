@@ -1,7 +1,7 @@
 import type { LiveTradingFeed, PublicSystemState } from "./data";
 import type { IrenSnapshot, RuntimeRow, IrenIncident } from "./runtime-topology";
 
-export const SYSTEMS = ["RHEN", "IREN", "GRAEN", "VELUM", "NOSTRA"] as const;
+export const SYSTEMS = ["IREN", "RHEN", "GRAEN", "NOSTRA", "VELUM"] as const;
 export type SystemName = typeof SYSTEMS[number];
 export type Tone = "good" | "active" | "warn" | "bad" | "quiet";
 // Compatibility keys remain in the public contract, but every identity is now a RHEN v3 module.
