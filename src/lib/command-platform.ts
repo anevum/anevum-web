@@ -46,6 +46,8 @@ export type CustomerCommandOverview = {
     equity?: string | null;
     cash?: string | null;
     buying_power?: string | null;
+    non_marginable_buying_power?: string | null;
+    available_for_crypto?: string | null;
     observed_at?: string | null;
     external_money_movement_enabled?: boolean;
   } | null;
