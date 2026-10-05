@@ -70,3 +70,15 @@ test("operator Command fails closed if its email allowlist is missing", () => {
   assert.match(worker, /const commandAdmin = allowed\.has\(email\)/);
   assert.doesNotMatch(worker, /allowed\.size === 0 \|\| allowed\.has\(email\)/);
 });
+
+
+test("customer Command consumes derived lifecycle and broker funding", () => {
+  assert.match(platform, /command_customer\.v2/);
+  assert.match(platform, /lifecycle\?:/);
+  assert.match(platform, /funding\?:/);
+  assert.match(customer, /ACCOUNT STATE/);
+  assert.match(customer, /Funding state/);
+  assert.match(customer, /Alpaca source of truth/);
+  assert.match(customer, /does not fabricate a separate customer cash balance/);
+  assert.match(customer, /nextAction/);
+});
