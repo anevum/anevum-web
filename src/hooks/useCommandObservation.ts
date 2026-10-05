@@ -22,6 +22,7 @@ export function useCommandObservation(session: RhenSession | null, intervalMs = 
       return;
     }
 
+    const activeSession = session;
     let stopped = false;
     let timer: ReturnType<typeof setTimeout>;
     const controller = new AbortController();
@@ -30,7 +31,7 @@ export function useCommandObservation(session: RhenSession | null, intervalMs = 
     async function refresh() {
       try {
         const response = await fetch("/api/command/iren/status", {
-          headers: commandAuthHeaders(session), cache: "no-store",
+          headers: commandAuthHeaders(activeSession), cache: "no-store",
           signal: AbortSignal.any([controller.signal, AbortSignal.timeout(10000)])
         });
         if (!response.ok) throw new Error("Canonical IREN state unavailable");
