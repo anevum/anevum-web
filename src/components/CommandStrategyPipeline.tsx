@@ -1,82 +1,111 @@
-import type { LiveTradingFeed } from "../lib/data";
-import type { IrenSnapshot } from "../lib/runtime-topology";
+import type { IrenSnapshot, StrategyAuthorityProjection } from "../lib/runtime-topology";
 import { ageText, displayState } from "../lib/system-display";
 import SystemIcon from "./company/SystemIcon";
 
-function activeCandidate(snapshot: IrenSnapshot | null) {
-  const open = ["RUNNING", "QUEUED", "WAITING", "BLOCKED"];
-  return (snapshot?.research?.graen_problems || []).find(row =>
-    open.includes(String(row.status || "").toUpperCase())
-  ) || null;
+function authorityLabel(row: StrategyAuthorityProjection) {
+  return row.strategy_name || row.strategy_version_id || "Unidentified strategy";
 }
 
-function latestReplay(snapshot: IrenSnapshot | null) {
-  return (snapshot?.research?.velum_replays || [])
-    .slice()
-    .sort((a, b) => Date.parse(b.started_at || "") - Date.parse(a.started_at || ""))[0] || null;
+function executionLabel(row: StrategyAuthorityProjection) {
+  if (row.status === "DISABLED") return "Disabled";
+  if (row.entries_enabled) return "Entries enabled";
+  if (row.execution_authorized) return "Execution authorized";
+  if (row.execution_enabled) return "Execution configured";
+  return "Observing";
 }
 
 export default function CommandStrategyPipeline({
   snapshot,
-  feed,
   now
 }: {
   snapshot: IrenSnapshot | null;
-  feed?: LiveTradingFeed | null;
   now: number;
 }) {
-  const active = feed?.active_strategy;
-  const candidate = activeCandidate(snapshot);
-  const replay = latestReplay(snapshot);
-  const next = feed?.research?.next_direction;
-  const strategyLabel = active?.strategy_name || active?.version_id || "No canonical active strategy";
-  const candidateLabel = candidate?.title || candidate?.candidate_id || next?.subject || "No replacement candidate";
-  const validationState = replay?.status || candidate?.research_stage || "WAITING";
-  const releaseState = candidate
-    ? ["COMPLETE", "SUCCEEDED"].includes(String(candidate.status || "").toUpperCase()) ? "REVIEW" : "HOLD"
-    : "NO CHANGE";
+  const pipeline = snapshot?.strategy_pipeline;
+  const active = pipeline?.active || [];
+  const candidate = pipeline?.candidate;
+  const validation = pipeline?.validation;
+  const release = pipeline?.release_gate;
+  const available = pipeline?.available !== false && Boolean(pipeline);
+
+  const candidateLabel = candidate?.title || candidate?.candidate_id || "No replacement candidate";
+  const candidateState = candidate
+    ? [candidate.lane, candidate.stage || candidate.status].filter(Boolean).map(value => displayState(value)).join(" · ")
+    : "No superseding research";
+  const validationState = validation?.status || (candidate ? "WAITING" : "NO_CANDIDATE");
+  const releaseState = release?.status || (available ? "NO_CANDIDATE" : "UNAVAILABLE");
 
   return (
-    <article className="command-panel command-strategy-pipeline">
+    <article className={"command-panel command-strategy-pipeline" + (available ? "" : " is-unavailable")}>
       <header>
         <div>
           <span>STRATEGY LIFECYCLE</span>
-          <strong>Current authority → next possible replacement</strong>
+          <strong>Authority → research → validation → release gate</strong>
         </div>
-        <small>Evidence-backed only</small>
+        <small>{pipeline?.schema_version || "strategy_pipeline unavailable"}</small>
       </header>
 
       <div className="command-strategy-flow" aria-label="Strategy research and promotion pipeline">
         <section>
           <SystemIcon system="RHEN" size="sm" />
-          <span>01 · ACTIVE</span>
-          <strong>{strategyLabel}</strong>
-          <p>{active?.environment || "runtime"} · {displayState(active?.status || "UNKNOWN")}</p>
-          <small>{active?.activated_at ? "activated " + ageText(active.activated_at, now) : "No activation timestamp"}</small>
+          <span>01 · ACTIVE AUTHORITY</span>
+          <div className="command-strategy-authorities">
+            {active.length ? active.map((row, index) => (
+              <div key={(row.lane || "lane") + "-" + index}>
+                <strong>{String(row.lane || "lane").toUpperCase()} · {authorityLabel(row)}</strong>
+                <p>{displayState(row.status)} · {executionLabel(row)}</p>
+                <small>{row.strategy_version_id || "No version ID"} · {row.trading_mode || "mode unknown"}</small>
+              </div>
+            )) : <p>No canonical strategy authority exposed.</p>}
+          </div>
         </section>
         <i aria-hidden="true">→</i>
+
         <section>
           <SystemIcon system="GRAEN" size="sm" />
           <span>02 · RESEARCH</span>
           <strong>{candidateLabel}</strong>
-          <p>{candidate?.research_stage ? displayState(candidate.research_stage) : next?.conclusion || "No active superseding research"}</p>
-          <small>{candidate?.updated_at ? ageText(candidate.updated_at, now) : "No active candidate"}</small>
+          <p>{candidateState}</p>
+          <small>
+            {candidate
+              ? [
+                  candidate.supersedes_strategy_version_id
+                    ? "supersedes " + candidate.supersedes_strategy_version_id
+                    : "no supersession target",
+                  candidate.updated_at ? ageText(candidate.updated_at, now) : null
+                ].filter(Boolean).join(" · ")
+              : "No active candidate"}
+          </small>
         </section>
         <i aria-hidden="true">→</i>
+
         <section>
           <SystemIcon system="VELUM" size="sm" />
           <span>03 · VALIDATE</span>
           <strong>{displayState(validationState)}</strong>
-          <p>{replay?.status ? "Latest replay evidence" : "Validation evidence required before promotion"}</p>
-          <small>{replay?.completed_at || replay?.started_at ? ageText(replay.completed_at || replay.started_at, now) : "No replay timestamp"}</small>
+          <p>
+            {validation
+              ? [
+                  validation.candidate_id || validation.strategy_version_id,
+                  validation.event_type ? displayState(validation.event_type) : null
+                ].filter(Boolean).join(" · ")
+              : "Validation evidence required before promotion"}
+          </p>
+          <small>{validation?.observed_at ? ageText(validation.observed_at, now) : "No matching VELUM evidence"}</small>
         </section>
         <i aria-hidden="true">→</i>
+
         <section>
           <SystemIcon system="IREN" size="sm" />
           <span>04 · RELEASE GATE</span>
-          <strong>{releaseState}</strong>
-          <p>Research cannot silently replace production strategy.</p>
-          <small>{snapshot?.action_required ? "Operator attention required" : "Protected authority boundary"}</small>
+          <strong>{displayState(releaseState)}</strong>
+          <p>{release?.reason || (available ? "No strategy change is awaiting release." : "Canonical pipeline projection is unavailable.")}</p>
+          <small>
+            {release?.target_lane
+              ? String(release.target_lane).toUpperCase() + " · " + (release.target_strategy_version_id || "no active target")
+              : "Protected authority boundary"}
+            {" · auto promotion off"}
+          </small>
         </section>
       </div>
     </article>
