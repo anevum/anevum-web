@@ -19,22 +19,22 @@ function PublicFooter() {
           <Mark />
           <div>
             <strong>ANEVUM</strong>
-            <span>LIVE SYSTEMS &amp; RESEARCH</span>
-            <small>Observe the system. Read the record. Inspect the evidence.</small>
+            <span>COMMAND + LIVE EVIDENCE</span>
+            <small>Use the product. Inspect the system. Follow the evidence.</small>
           </div>
         </div>
 
         <div className="company-footer-links">
           <section>
-            <span>PUBLIC</span>
+            <span>PRODUCT</span>
+            <Link to="/command/overview">Command</Link>
             <Link to="/live">Live Terminal</Link>
             <Link to="/research">Field Notes</Link>
-            <Link to="/founder">About</Link>
           </section>
           <section>
-            <span>MORE</span>
+            <span>ANEVUM</span>
+            <Link to="/founder">About</Link>
             <Link to="/resume">Résumé</Link>
-            <Link to="/command">Command</Link>
             <a href="mailto:devon@anevum.com">devon@anevum.com</a>
           </section>
         </div>
@@ -42,7 +42,7 @@ function PublicFooter() {
 
       <div className="company-footer-bottom">
         <span>© {new Date().getFullYear()} ANEVUM</span>
-        <span>PUBLIC-SAFE OBSERVABILITY / EVIDENCE BEFORE CLAIMS</span>
+        <span>PAPER BETA / PUBLIC-SAFE EVIDENCE / LIVE-MONEY AUTHORITY GATED</span>
       </div>
     </footer>
   );
@@ -71,7 +71,7 @@ export function PublicShell({ children }: { children: ReactNode }) {
         </nav>
 
         <div className="company-header-actions">
-          <Link className="company-live-link" to="/command" aria-label="Open private Command">
+          <Link className="company-live-link" to="/command/overview" aria-label="Open ANEVUM Command">
             <span>Command</span>
           </Link>
           <button
@@ -90,7 +90,7 @@ export function PublicShell({ children }: { children: ReactNode }) {
             {nav.map(({ path: href, label }) => (
               <Link key={href} to={href} className={isActive(location.pathname, href) ? "active" : ""}>{label}</Link>
             ))}
-            <Link to="/command">Command</Link>
+            <Link to="/command/overview">Command</Link>
           </nav>
         ) : null}
       </header>
