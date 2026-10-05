@@ -935,3 +935,34 @@
   }
   .command-page-research .command-side{display:none!important}
 }
+
+
+/* Command v4 mobile: keep summary data on-canvas instead of horizontal
+ * card overflow. Dense data belongs below the fold, not outside the viewport. */
+@media(max-width:760px){
+  .command-shell .command-stats{
+    grid-auto-flow:row!important;
+    grid-auto-columns:auto!important;
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    overflow:visible!important;
+  }
+  .command-shell .command-stats article{
+    width:auto!important;
+    min-width:0!important;
+  }
+  .command-shell .command-stats article:last-child{
+    grid-column:1/-1;
+  }
+  .command-page-system .operations-terminal,
+  .command-page-system .terminal-meta,
+  .command-page-system .terminal-lanes,
+  .command-page-system .terminal-stream,
+  .command-page-system .terminal-stream li{
+    min-width:0!important;
+    max-width:100%!important;
+  }
+  .command-page-system .terminal-stream li *,
+  .command-page-system .terminal-canary *{
+    overflow-wrap:anywhere;
+  }
+}
