@@ -70,7 +70,8 @@
 .command-header nav::-webkit-scrollbar{display:none}
 .command-header nav a{
   flex:0 0 auto;
-  min-height:31px;
+  min-width:44px;
+  min-height:44px;
   display:grid;
   place-items:center;
   padding:0 clamp(7px,.8vw,11px)!important;
@@ -520,7 +521,7 @@
   .command-account>span{display:none}
   .command-account-actions{border-left:0;padding-left:0}
   .command-header nav{grid-column:1/-1;grid-row:2;justify-content:flex-start!important}
-  .command-header nav a{font-size:.43rem!important;padding:0 7px!important}
+  .command-header nav a{min-width:44px!important;min-height:44px!important;font-size:.43rem!important;padding:0 7px!important}
   .command-main{
     width:calc(100% - 24px)!important;
     height:calc(100dvh - 100px - var(--command-safe-top))!important;
