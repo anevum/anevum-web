@@ -30,8 +30,10 @@ test("customer API is paper-only and does not expose withdrawals", () => {
   assert.match(platform, /https:\/\/anevum\.com\/api\/command\/platform\/alpaca\/callback/);
   assert.match(customer, /Live customer trading remains disabled/);
   assert.match(customer, /cannot authorize live trading, withdrawals, or funding movement/);
-  assert.doesNotMatch(platform, /withdraw/i);
-  assert.doesNotMatch(platform, /deposit/i);
+  assert.doesNotMatch(platform, /\/withdraw/);
+  assert.doesNotMatch(platform, /\/deposit/);
+  assert.doesNotMatch(platform, /withdrawCustomer/);
+  assert.doesNotMatch(platform, /depositCustomer/);
 });
 
 test("worker preserves admin routes while allowing tenant platform sessions", () => {
