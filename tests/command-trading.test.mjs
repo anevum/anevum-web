@@ -41,3 +41,26 @@ test("IREN Command routes through RHEN instead of Foundation", () => {
   assert.match(dock, /Ask IREN…/);
   assert.match(dock, /error[\s\S]*OFFLINE/);
 });
+
+
+test("Command shares one canonical IREN observation across operator workspaces", () => {
+  const command = readFileSync(new URL("../src/pages/Command.tsx", import.meta.url), "utf8");
+  const topology = readFileSync(new URL("../src/components/CommandTopology.tsx", import.meta.url), "utf8");
+  const terminal = readFileSync(new URL("../src/components/CommandOperationsTerminal.tsx", import.meta.url), "utf8");
+
+  assert.match(command, /useCommandObservation\(commandAdmin \? session : null, 3000\)/);
+  assert.match(command, /observation=\{commandObservation\}/);
+  assert.doesNotMatch(topology, /useCommandObservation\(/);
+  assert.doesNotMatch(terminal, /useCommandObservation\(/);
+});
+
+test("Command network reads are timeout bounded and connection state is terminal", () => {
+  const command = readFileSync(new URL("../src/pages/Command.tsx", import.meta.url), "utf8");
+  const data = readFileSync(new URL("../src/lib/data.ts", import.meta.url), "utf8");
+  const worker = readFileSync(new URL("../worker.mjs", import.meta.url), "utf8");
+
+  assert.match(command, /"DEGRADED" : "OFFLINE"/);
+  assert.match(command, /"LIVE"/);
+  assert.match(data, /AbortSignal\.timeout\(10000\)/);
+  assert.match(worker, /AbortSignal\.timeout\(10000\)/);
+});
