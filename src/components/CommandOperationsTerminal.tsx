@@ -1,4 +1,4 @@
-import { useMemo, useState, type CSSProperties } from "react";
+import { useMemo, type CSSProperties } from "react";
 import type { LiveTradingFeed } from "../lib/data";
 import type { IrenSnapshot } from "../lib/runtime-topology";
 import {
@@ -17,8 +17,20 @@ import SystemInstrument from "./operations/SystemInstruments";
 import { buildCommandEvents, TERMINAL_SYSTEMS, type CommandTerminalEvent } from "../lib/command-events";
 import "../styles/operations-terminal.css";
 
-type TerminalFilter = "ALL" | SystemName;
 type TerminalEvent = CommandTerminalEvent;
+
+function object(value: unknown): Record<string, unknown> {
+  return value && typeof value === "object" && !Array.isArray(value)
+    ? value as Record<string, unknown>
+    : {};
+}
+
+function compactValue(value: unknown) {
+  if (typeof value === "boolean") return value ? "yes" : "no";
+  if (typeof value === "number" && Number.isFinite(value)) return String(value);
+  if (typeof value === "string" && value.length <= 120) return value;
+  return "";
+}
 
 function activeResearchProblem(snapshot: IrenSnapshot | null, system: SystemName) {
   const activeStates = ["RUNNING", "QUEUED", "WAITING", "BLOCKED"];
@@ -202,10 +214,7 @@ export default function CommandOperationsTerminal({
   feedError?: string;
 }) {
   const { snapshot, error, now, receivedAt } = observation;
-  const [filter, setFilter] = useState<TerminalFilter>("ALL");
-
   const events = useMemo(() => buildCommandEvents(snapshot, feed), [snapshot, feed]);
-  const visible = filter === "ALL" ? events : events.filter(row => row.system === filter);
   const fleetFresh = Boolean(snapshot && !snapshot.stale && !error);
   const activeCount = TERMINAL_SYSTEMS.filter(system => {
     const lane = laneActivity(snapshot, feed, system, now);
@@ -270,34 +279,6 @@ export default function CommandOperationsTerminal({
             </article>
           );
         })}
-      </section>
-
-      <section className="terminal-stream">
-        <header>
-          <div><span>UNIFIED EVENT STREAM</span><strong>{filter === "ALL" ? "All systems" : filter}</strong></div>
-          <nav aria-label="Filter terminal events">
-            {(["ALL", ...TERMINAL_SYSTEMS] as TerminalFilter[]).map(item => (
-              <button
-                type="button"
-                key={item}
-                className={filter === item ? "active" : ""}
-                onClick={() => setFilter(item)}
-                aria-pressed={filter === item}
-              >{item}</button>
-            ))}
-          </nav>
-        </header>
-        <div className="terminal-stream-head" aria-hidden="true"><span>TIME</span><span>SYSTEM</span><span>SOURCE</span><span>EVENT</span></div>
-        <ol>
-          {visible.length ? visible.slice(0, 80).map(row => (
-            <li key={row.id} className={"tone-" + stateTone(row.state)}>
-              <time dateTime={row.at || undefined}>{row.at ? new Date(row.at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" }) : "—"}</time>
-              <span className="terminal-event-system"><SystemIcon system={row.system} size="xs" /><b>{row.system}</b></span>
-              <span className="terminal-event-source">{row.source}</span>
-              <div><strong>{row.title}</strong>{row.detail && <p>{row.detail}</p>}<small>{ageText(row.at, now)}</small></div>
-            </li>
-          )) : <li className="terminal-empty">No recorded events for this filter.</li>}
-        </ol>
       </section>
 
       <footer className="terminal-footer">
