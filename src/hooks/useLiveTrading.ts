@@ -21,19 +21,21 @@ export function useLiveTrading(intervalMs = 5000) {
         if (!active) return;
         setError(reason instanceof Error ? reason.message : "Live feed unavailable.");
       } finally {
-        if (active) setLoading(false);
+        if (active) {
+          setLoading(false);
+          timer = window.setTimeout(load, intervalMs);
+        }
       }
     }
 
-    load();
-    timer = window.setInterval(load, intervalMs);
+    void load();
     // Expire visual observations even while a network request is stalled.
     const clock = window.setInterval(() => setNow(Date.now()), 5000);
 
     return () => {
       active = false;
       window.clearInterval(clock);
-      if (timer) window.clearInterval(timer);
+      if (timer) window.clearTimeout(timer);
     };
   }, [intervalMs]);
 
