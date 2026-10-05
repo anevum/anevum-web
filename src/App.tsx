@@ -17,7 +17,7 @@ const Releases = lazy(() => import("./pages/Releases"));
 const ReleaseDetail = lazy(() => import("./pages/ReleaseDetail"));
 
 const titles: Record<string, string> = {
-  "/": "ANEVUM — Live Systems & Research",
+  "/": "ANEVUM Command — Automated Trading with Inspectable Evidence",
   "/live": "Live Terminal — ANEVUM",
   "/research": "Field Notes — ANEVUM",
   "/architecture": "Architecture — ANEVUM",
@@ -29,11 +29,11 @@ const titles: Record<string, string> = {
 };
 
 const descriptions: Record<string, string> = {
-  "/": "ANEVUM is an inspectable software and research environment centered on a public-safe live terminal for IREN, RHEN, GRAEN, NOSTRA, and VELUM.",
+  "/": "ANEVUM Command is the customer control surface for connecting an Alpaca account, configuring RHEN automated trading, reviewing broker-derived money state and activity, and inspecting public-safe operating evidence. Paper beta first; live-money authority remains gated until verified.",
   "/live": "Observe ANEVUM operating through public-safe system state, telemetry, research, replay, evidence, validation, and normalized performance.",
   "/research": "Read ANEVUM Field Notes: research decisions, failed hypotheses, engineering changes, releases, and measured evidence.",
-  "/architecture": "ANEVUM architecture, authority boundaries, evidence flow, infrastructure, and separation between research, simulation, and live execution.",
-  "/founder": "About ANEVUM and founder Devon Akins, building inspectable software systems, research infrastructure, forecasting, replay, telemetry, and production controls.",
+  "/architecture": "ANEVUM architecture, authority boundaries, evidence flow, infrastructure, and separation between research, simulation, customer control, and live execution.",
+  "/founder": "About ANEVUM and founder Devon Akins, building inspectable software systems, automated trading infrastructure, research tooling, forecasting, replay, telemetry, and production controls.",
   "/resume": "Résumé for Devon Akins, founder of ANEVUM, covering software systems, infrastructure, research tooling, mathematics, and production engineering.",
   "/releases": "ANEVUM release records documenting RHEN versions, production changes, verification, and public system history."
 };
@@ -106,12 +106,12 @@ function RouteEffects() {
     const path = location.pathname;
     const protectedRoute = path.startsWith("/command") || path === "/private" || path === "/iren";
 
-    let title = titles[path] || "ANEVUM — Live Systems & Research";
+    let title = titles[path] || "ANEVUM Command — Automated Trading with Inspectable Evidence";
     let description = descriptions[path] || descriptions["/"];
 
     if (path.startsWith("/command")) {
       title = "Command — ANEVUM";
-      description = "Protected ANEVUM operator surface.";
+      description = "Protected ANEVUM Command customer and operator surface.";
     } else if (path === "/releases") {
       const current = currentRhenRelease();
       title = "Releases — RHEN " + current.version + " " + current.codename + " — ANEVUM";
