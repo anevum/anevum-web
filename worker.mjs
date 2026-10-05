@@ -97,7 +97,10 @@ async function verifyAccessAssertion(token, env, { enforceAdmin = true } = {}) {
       .map((value) => value.trim().toLowerCase())
       .filter(Boolean)
   );
-  const commandAdmin = allowed.size === 0 || allowed.has(email);
+  const commandAdmin = allowed.has(email);
+  if (enforceAdmin && allowed.size === 0) {
+    throw new ApiError(503, "Command operator allowlist is not configured.");
+  }
   if (enforceAdmin && !commandAdmin) {
     throw new ApiError(403, "Cloudflare Access identity is not authorized for operator Command.");
   }
