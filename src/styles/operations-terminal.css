@@ -114,3 +114,9 @@
   .terminal-footer{flex-direction:column}.command-page-system .command-main{width:calc(100% - 20px)!important;margin-top:12px!important}
 }
 @media(prefers-reduced-motion:reduce){.terminal-live-dot.is-live,.terminal-lane-activity i.is-live,.terminal-focus-card.is-working .terminal-focus-state i,.terminal-focus-card.is-working .terminal-focus-sweep{animation:none}}
+
+
+/* Operational workbenches: show evidence, not simulated activity graphics. */
+.terminal-focus-instrument,.terminal-focus-sweep{display:none!important}
+.terminal-focus-card.is-working .terminal-focus-state i,.terminal-live-dot.is-live,.terminal-lane-activity i.is-live{animation:none!important;box-shadow:none}
+.terminal-focus-work{padding-top:14px}
