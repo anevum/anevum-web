@@ -407,6 +407,8 @@ export type CommandSnapshot = {
   observed_at?: string;
   account?: Record<string, unknown>;
   account_history?: CommandAccountHistory | null;
+  crypto_stats?: Record<string, unknown>;
+  crypto_approval?: Record<string, unknown> | null;
   bot?: Record<string, unknown>;
   strategy?: Record<string, unknown>;
   risk?: Record<string, unknown>;

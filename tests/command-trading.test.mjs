@@ -29,6 +29,11 @@ test("Trading workspace exposes private broker account tracking and executions",
   assert.match(tracker, /B = buy · S = sell/);
   assert.match(tracker, /RECENT FILLS/);
   assert.match(data, /account_history\?: CommandAccountHistory/);
+  assert.match(data, /crypto_approval\?: Record<string, unknown> \| null/);
+  assert.match(command, /BTC LIVE SIGNAL \/ REAL ACCOUNT/);
+  assert.match(command, /PENDING MANUAL ACTION/);
+  assert.match(command, /BROKER WRITES DISABLED/);
+  assert.match(command, /RHEN did not submit a crypto broker order/);
 });
 
 test("IREN Command routes through RHEN instead of Foundation", () => {
