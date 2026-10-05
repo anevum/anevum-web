@@ -44,7 +44,7 @@ export default function CommandPerformance({
   const sample = String(performance?.sample_state || "UNAVAILABLE").replaceAll("_", " ");
 
   return (
-    <article className="command-panel command-view-performance command-panel-public-performance">
+    <article className="command-panel command-view-trading command-panel-public-performance">
       <header>
         <div>
           <span>PUBLIC PERFORMANCE / AUTO-SYNC</span>
