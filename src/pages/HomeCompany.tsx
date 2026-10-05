@@ -1,19 +1,21 @@
 import { Link } from "react-router-dom";
 import Mark from "../components/Mark";
+import RhenMark from "../components/RhenMark";
+import RhenModuleIcon, { type RhenModuleName } from "../components/company/RhenModuleIcon";
 import { useLiveTrading } from "../hooks/useLiveTrading";
 import { ageText, displayState, publicSystem } from "../lib/system-display";
 import "../styles/public-terminal.css";
 
 const introVideoUrl = import.meta.env.VITE_ANEVUM_INTRO_VIDEO_URL?.trim();
 
-const modules = [
-  ["EXECUTION", "Broker-facing market execution, risk, reconciliation, and evidence."],
-  ["CONTROL", "Health, incidents, scheduling, orchestration, and protected-action gates."],
-  ["RESEARCH", "Strategy evaluation, V15 research, edge discovery, and forward shadow."],
-  ["REPLAY", "Deterministic historical replay, simulation, and counterfactual checks."],
-  ["FORECAST", "Baseline, regime, calibration, and forward-measurement workflows."],
-  ["CORE / STORE", "Bounded SQLite state, evidence, scheduler state, and gateway APIs."]
-] as const;
+const modules: ReadonlyArray<readonly [string, RhenModuleName, string]> = [
+  ["EXECUTION", "EXECUTION", "Broker-facing market execution, risk, reconciliation, and evidence."],
+  ["CONTROL", "CONTROL", "Health, incidents, scheduling, orchestration, and protected-action gates."],
+  ["RESEARCH", "RESEARCH", "Strategy evaluation, V15 research, edge discovery, and forward shadow."],
+  ["REPLAY", "REPLAY", "Deterministic historical replay, simulation, and counterfactual checks."],
+  ["FORECAST", "FORECAST", "Baseline, regime, calibration, and forward-measurement workflows."],
+  ["CORE / STORE", "CORE", "Bounded SQLite state, evidence, scheduler state, and gateway APIs."]
+];
 
 export default function HomeCompany() {
   const { data, loading, error, now } = useLiveTrading(5000);
@@ -52,7 +54,7 @@ export default function HomeCompany() {
           <i className="pt-home-orbit one" />
           <i className="pt-home-orbit two" />
           <Link className="pt-home-core" to="/live" aria-label="Open RHEN in the Live Terminal">
-            <Mark />
+            <RhenMark decorative />
             <strong>RHEN</strong>
             <small>UNIFIED RUNTIME</small>
           </Link>
@@ -91,8 +93,9 @@ export default function HomeCompany() {
         </header>
 
         <div className="pt-home-links">
-          {modules.map(([name, description]) => (
+          {modules.map(([name, module, description]) => (
             <Link key={name} to="/architecture">
+              <RhenModuleIcon module={module} size="sm" />
               <span>RHEN MODULE</span>
               <strong>{name}</strong>
               <p>{description}</p>
