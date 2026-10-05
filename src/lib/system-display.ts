@@ -1,15 +1,16 @@
 import type { LiveTradingFeed, PublicSystemState } from "./data";
 import type { IrenSnapshot, RuntimeRow, IrenIncident } from "./runtime-topology";
 
-export const SYSTEMS = ["IREN", "RHEN", "GRAEN", "NOSTRA", "VELUM"] as const;
+export const SYSTEMS = ["RHEN", "IREN", "GRAEN", "VELUM", "NOSTRA"] as const;
 export type SystemName = typeof SYSTEMS[number];
 export type Tone = "good" | "active" | "warn" | "bad" | "quiet";
+// Compatibility keys remain in the public contract, but every identity is now a RHEN v3 module.
 export const IDENTITY = {
-  IREN: { role: "Control module", accent: "🧭", slack: ":iren:", color: "#6EA1FF" },
-  RHEN: { role: "Execution module", accent: "📈", slack: ":rhen:", color: "#6FD1FF" },
-  GRAEN: { role: "Research module", accent: "📐", slack: ":graen:", color: "#D0B37A" },
-  NOSTRA: { role: "Forecast module", accent: "🔮", slack: ":nostra:", color: "#A99BE8" },
-  VELUM: { role: "Replay module", accent: "⏱", slack: ":velum:", color: "#56B8BC" }
+  RHEN: { role: "RHEN execution module", accent: "↗", slack: ":rhen:", color: "#6FD1FF" },
+  IREN: { role: "RHEN control module", accent: "◎", slack: ":rhen:", color: "#6EA1FF" },
+  GRAEN: { role: "RHEN research module", accent: "⌘", slack: ":rhen:", color: "#8FB8FF" },
+  VELUM: { role: "RHEN replay module", accent: "↺", slack: ":rhen:", color: "#78C8D8" },
+  NOSTRA: { role: "RHEN forecast module", accent: "⑂", slack: ":rhen:", color: "#A7C6FF" }
 } as const;
 
 export const MODULE_LABEL: Record<SystemName, string> = {
