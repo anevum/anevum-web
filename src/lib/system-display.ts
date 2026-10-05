@@ -159,10 +159,16 @@ export function publicSystem(name: SystemName, feed?: LiveTradingFeed | null, no
 }
 export function commandSystem(name: SystemName, snapshot: IrenSnapshot | null, feed?: LiveTradingFeed | null, now = Date.now(), unavailable = false): SystemView {
   const rows = (snapshot?.topology?.services || []).filter(row => runtimeOwner(row) === name);
-  const stamps = rows.map(row => row.last_heartbeat_at || row.observed_at || snapshot?.observed_at);
-  const observedAt = stamps.find(stamp => !freshStamp(stamp, now))
-    || stamps.slice().sort((a,b) => Date.parse(a || "") - Date.parse(b || ""))[0]
-    || snapshot?.observed_at;
+  // Parent-system health comes from the canonical runtime row when it exists.
+  // Optional/helper runtimes (for example PREOPEN or IREN_EXECUTOR) remain visible
+  // in topology details but must not make RHEN or IREN look offline.
+  const canonicalRows = rows.filter(row => String(row.service_id || "").toUpperCase() === name);
+  const healthRows = canonicalRows.length ? canonicalRows : rows;
+  const stamps = healthRows
+    .map(row => row.last_heartbeat_at || row.observed_at || snapshot?.observed_at)
+    .filter(Boolean)
+    .sort((a,b) => Date.parse(String(b)) - Date.parse(String(a)));
+  const observedAt = stamps[0] || snapshot?.observed_at;
   const fresh = !unavailable
     && snapshot?.stale === false
     && freshStamp(snapshot.observed_at, now)
@@ -170,8 +176,9 @@ export function commandSystem(name: SystemName, snapshot: IrenSnapshot | null, f
   const work = systemWork(snapshot, name);
   const incidents = snapshot?.incidents.filter(row => incidentOwner(row) === name);
 
-  // Health is based on liveness/readiness/freshness, never on whether work is active.
-  const healthStates: string[] = rows.map(row =>
+  // Health is based on the canonical runtime's liveness/readiness/freshness,
+  // never on auxiliary inventory or whether useful work is active.
+  const healthStates: string[] = healthRows.map(row =>
     row.liveness === false
       ? "OFFLINE"
       : row.readiness === false
@@ -223,7 +230,7 @@ export function commandSystem(name: SystemName, snapshot: IrenSnapshot | null, f
     name,
     raw: health,
     health,
-    runtime: mostSevere(rows.map(row => row.status)) || "UNKNOWN",
+    runtime: mostSevere(healthRows.map(row => row.status)) || "UNKNOWN",
     activityState,
     fresh,
     active,
