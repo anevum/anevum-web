@@ -7,7 +7,6 @@ import UniverseBackground from "../components/UniverseBackground";
 import CommandPerformance from "../components/CommandPerformance";
 import CommandAccountTracker from "../components/CommandAccountTracker";
 import CommandTopology from "../components/CommandTopology";
-import CommandSystemMonitor, { type MonitoredSystem } from "../components/CommandSystemMonitor";
 import CommandIrenDock from "../components/CommandIrenDock";
 import CommandOperationsTerminal from "../components/CommandOperationsTerminal";
 import { useLiveTrading } from "../hooks/useLiveTrading";
@@ -53,7 +52,7 @@ function arrayText(value: unknown) {
   return Array.isArray(value) && value.length ? value.map(String).join(", ") : "—";
 }
 
-function CommandNavGlyph({ kind }: { kind: "overview" | "terminal" | "infrastructure" }) {
+function CommandNavGlyph({ kind }: { kind: "overview" | "trading" | "research" | "system" }) {
   if (kind === "overview") {
     return (
       <svg className="command-nav-glyph" viewBox="0 0 24 24" aria-hidden="true">
@@ -64,16 +63,22 @@ function CommandNavGlyph({ kind }: { kind: "overview" | "terminal" | "infrastruc
       </svg>
     );
   }
-
-  if (kind === "terminal") {
+  if (kind === "trading") {
     return (
       <svg className="command-nav-glyph" viewBox="0 0 24 24" aria-hidden="true">
-        <rect x="3.5" y="4.5" width="17" height="15" rx="2" />
-        <path d="M7 9l3 3-3 3M12.5 15H17" />
+        <path d="M4 17l4-5 4 3 7-9" />
+        <path d="M15 6h4v4" />
       </svg>
     );
   }
-
+  if (kind === "research") {
+    return (
+      <svg className="command-nav-glyph" viewBox="0 0 24 24" aria-hidden="true">
+        <circle cx="9" cy="9" r="4" />
+        <path d="M12 12l7 7M15 5h4M17 3v4" />
+      </svg>
+    );
+  }
   return (
     <svg className="command-nav-glyph" viewBox="0 0 24 24" aria-hidden="true">
       <rect x="4" y="5" width="16" height="4" rx="1.4" />
@@ -91,15 +96,13 @@ export default function Command() {
   const navigate = useNavigate();
   const location = useLocation();
   const commandPage = (() => {
-    const segment = location.pathname.split("/")[2];
-    return ["overview", "terminal", "iren", "rhen", "graen", "nostra", "velum", "infrastructure", "live", "performance", "evidence", "research", "system"].includes(segment)
-      ? segment
-      : "overview";
+    const segment = location.pathname.split("/")[2] || "overview";
+    if (["trading", "live", "performance", "evidence", "rhen"].includes(segment)) return "trading";
+    if (["research", "graen", "nostra", "velum"].includes(segment)) return "research";
+    if (["system", "terminal", "infrastructure", "iren"].includes(segment)) return "system";
+    return "overview";
   })();
-  const monitoredSystem = (["iren", "rhen", "graen", "nostra", "velum"].includes(commandPage)
-    ? commandPage.toUpperCase()
-    : null) as MonitoredSystem | null;
-  const viewPage = monitoredSystem || commandPage === "infrastructure" ? "monitor" : commandPage;
+  const viewPage = commandPage;
   const [snapshot, setSnapshot] = useState<CommandSnapshot | null>(null);
   const [evidence, setEvidence] = useState<CommandEvidence | null>(null);
   const [dailyReport, setDailyReport] = useState<Record<string, unknown> | null>(null);
@@ -274,57 +277,34 @@ export default function Command() {
       .map((symbol) => ({ symbol, row: record(scanner[symbol]) }));
   })();
 
-  const monitorRow = monitoredSystem ? publicFeed?.systems?.[monitoredSystem] : undefined;
-  const monitorState = text(monitorRow?.health_state || monitorRow?.runtime_state, "UNKNOWN").toUpperCase();
-  const monitorOnline = ["HEALTHY", "RUNNING", "READY", "COMPLETE"].includes(monitorState);
-  const pageTitle = monitoredSystem || (commandPage === "infrastructure" ? "Infrastructure" : commandPage === "overview" ? "Command" : commandPage.charAt(0).toUpperCase() + commandPage.slice(1));
-  const pageDescription = monitoredSystem
-    ? `${monitoredSystem} runtime health, current activity, incidents, deployments, and evidence freshness.`
-    : commandPage === "overview"
-      ? "One operating view across IREN, RHEN, GRAEN, NOSTRA, VELUM, dependencies, incidents, and current work."
-      : commandPage === "terminal"
-        ? "Near-real-time work, runtime, research, replay, telemetry, and control events across the full ANEVUM stack."
-      : commandPage === "infrastructure"
-        ? "Canonical runtime inventory, dependencies, freshness, and control-plane health."
-        : commandPage === "live"
-          ? "Live scanner, orders, broker position, and runtime decisions."
-          : commandPage === "performance"
-            ? "Live normalized performance synchronized with the public record, plus private daily and weekly operating evidence."
-            : commandPage === "evidence"
-              ? "Post-event evidence and live-versus-offline comparisons."
-              : commandPage === "research"
-                ? "Canonical research direction, rejected families, open questions, and decisions."
-                : "Telemetry, provenance, runtime health, and Command boundaries.";
+  const pageTitle = commandPage === "overview"
+    ? "Command"
+    : commandPage.charAt(0).toUpperCase() + commandPage.slice(1);
+  const pageDescription = commandPage === "overview"
+    ? "Mission control: account state, live work, incidents, and the system's current operating picture."
+    : commandPage === "trading"
+      ? "Broker account, performance, positions, scanner decisions, orders, fills, exposure, and execution state."
+      : commandPage === "research"
+        ? "GRAEN, NOSTRA, and VELUM in one workspace: hypotheses, evidence, replay, forecasts, validation, and research decisions."
+        : "IREN, RHEN runtime health, infrastructure, dependencies, telemetry, versions, and diagnostics.";
 
   return (
     <div className={`command-shell command-page-${viewPage}`}>
       <UniverseBackground />
       <header className="command-header">
         <Link to="/" className="command-brand"><Mark /><span>ANEVUM</span><i /><span className="command-rhen-lockup"><SystemIcon system="IREN" size="xs" /><strong>COMMAND</strong></span></Link>
-        <nav aria-label="Command systems">
+        <nav aria-label="Command workspaces">
           <Link className={commandPage === "overview" ? "active" : ""} to="/command/overview" aria-label="Overview" title="Overview" aria-current={commandPage === "overview" ? "page" : undefined}>
             <CommandNavGlyph kind="overview" /><span className="command-nav-label">Overview</span>
           </Link>
-          <Link className={commandPage === "terminal" ? "active" : ""} to="/command/terminal" aria-label="Live terminal" title="Live terminal" aria-current={commandPage === "terminal" ? "page" : undefined}>
-            <CommandNavGlyph kind="terminal" /><span className="command-nav-label">Terminal</span>
+          <Link className={commandPage === "trading" ? "active" : ""} to="/command/trading" aria-label="Trading" title="Trading" aria-current={commandPage === "trading" ? "page" : undefined}>
+            <CommandNavGlyph kind="trading" /><span className="command-nav-label">Trading</span>
           </Link>
-          <Link className={commandPage === "iren" ? "active" : ""} to="/command/iren" aria-label="IREN" title="IREN" aria-current={commandPage === "iren" ? "page" : undefined}>
-            <SystemIcon system="IREN" size="xs" /><span className="command-nav-label">IREN</span>
+          <Link className={commandPage === "research" ? "active" : ""} to="/command/research" aria-label="Research" title="Research" aria-current={commandPage === "research" ? "page" : undefined}>
+            <CommandNavGlyph kind="research" /><span className="command-nav-label">Research</span>
           </Link>
-          <Link className={commandPage === "rhen" ? "active" : ""} to="/command/rhen" aria-label="RHEN" title="RHEN" aria-current={commandPage === "rhen" ? "page" : undefined}>
-            <SystemIcon system="RHEN" size="xs" /><span className="command-nav-label">RHEN</span>
-          </Link>
-          <Link className={commandPage === "graen" ? "active" : ""} to="/command/graen" aria-label="GRAEN" title="GRAEN" aria-current={commandPage === "graen" ? "page" : undefined}>
-            <SystemIcon system="GRAEN" size="xs" /><span className="command-nav-label">GRAEN</span>
-          </Link>
-          <Link className={commandPage === "nostra" ? "active" : ""} to="/command/nostra" aria-label="NOSTRA" title="NOSTRA" aria-current={commandPage === "nostra" ? "page" : undefined}>
-            <SystemIcon system="NOSTRA" size="xs" /><span className="command-nav-label">NOSTRA</span>
-          </Link>
-          <Link className={commandPage === "velum" ? "active" : ""} to="/command/velum" aria-label="VELUM" title="VELUM" aria-current={commandPage === "velum" ? "page" : undefined}>
-            <SystemIcon system="VELUM" size="xs" /><span className="command-nav-label">VELUM</span>
-          </Link>
-          <Link className={commandPage === "infrastructure" ? "active" : ""} to="/command/infrastructure" aria-label="Infrastructure" title="Infrastructure" aria-current={commandPage === "infrastructure" ? "page" : undefined}>
-            <CommandNavGlyph kind="infrastructure" /><span className="command-nav-label">Infrastructure</span>
+          <Link className={commandPage === "system" ? "active" : ""} to="/command/system" aria-label="System" title="System" aria-current={commandPage === "system" ? "page" : undefined}>
+            <CommandNavGlyph kind="system" /><span className="command-nav-label">System</span>
           </Link>
         </nav>
         <div className="command-account">
@@ -345,32 +325,28 @@ export default function Command() {
             <span>{pageDescription}</span>
           </div>
           <div className="command-connection">
-            <i className={monitoredSystem ? (monitorOnline ? "online" : "") : (!statusError && snapshot && bot.bot_armed && bot.execution_authorized && !bot.runtime_paused ? "online" : "")} />
+            <i className={!statusError && snapshot ? "online" : ""} />
             <div>
               <strong>
-                {monitoredSystem
-                  ? monitoredSystem + " / " + monitorState
-                  : snapshot ? text(snapshot.mode).toUpperCase() + " / " + (
-                    statusError
-                      ? bot.bot_armed ? "LAST KNOWN ARMED" : "LAST KNOWN DISARMED"
-                      : bot.runtime_paused ? "PAUSED" : bot.bot_armed ? "ARMED" : "DISARMED"
-                  ) : "LIVE / STATUS UNAVAILABLE"}
+                {snapshot ? text(snapshot.mode).toUpperCase() + " / " + (
+                  statusError
+                    ? "STATUS DEGRADED"
+                    : bot.runtime_paused ? "PAUSED" : bot.bot_armed ? "ARMED" : "DISARMED"
+                ) : "RHEN / CONNECTING"}
               </strong>
               <small>
-                {monitoredSystem
-                  ? text(monitorRow?.activity, "Canonical subsystem activity unavailable.")
-                  : statusError
-                    ? "Live status degraded · " + statusError
-                    : evidenceError
-                      ? "Live status OK · evidence degraded"
-                      : "Updated " + clockTime(snapshot?.observed_at)}
+                {statusError
+                  ? "RHEN status degraded · " + statusError
+                  : evidenceError
+                    ? "Trading live · evidence degraded"
+                    : "RHEN updated " + clockTime(snapshot?.observed_at)}
               </small>
             </div>
             <button type="button" onClick={refresh} disabled={refreshing} aria-label="Refresh Command">↻</button>
           </div>
         </section>
 
-        <section className="command-stats command-view-overview command-view-performance">
+        <section className="command-stats command-view-overview command-view-trading">
           <article><span>TOTAL EQUITY</span><strong>{money(account.equity)}</strong><small className={dayPnl && dayPnl > 0 ? "positive" : dayPnl && dayPnl < 0 ? "negative" : ""}>Today {money(account.day_pnl)}</small></article>
           <article><span>CASH</span><strong>{money(account.cash)}</strong><small>Buying power {money(account.buying_power)}</small></article>
           <article><span>MARKET</span><strong>{market.is_open ? "OPEN" : "CLOSED"}</strong><small>{text(latestScan.market_session, "runtime")}</small></article>
@@ -380,14 +356,15 @@ export default function Command() {
 
         <section className="command-grid">
           <div className="command-primary">
-            {commandPage === "terminal"
+            {commandPage === "overview" || commandPage === "system"
+              ? <CommandTopology session={session} feed={publicFeedError ? null : publicFeed} />
+              : null}
+            {commandPage === "system"
               ? <CommandOperationsTerminal session={session} feed={publicFeedError ? null : publicFeed} feedError={publicFeedError} />
-              : monitoredSystem
-                ? <CommandSystemMonitor session={session} feed={publicFeedError ? null : publicFeed} system={monitoredSystem} />
-                : <CommandTopology session={session} feed={publicFeedError ? null : publicFeed} />}
+              : null}
             <CommandAccountTracker account={account} history={accountHistory} orders={recentOrders} />
             <CommandPerformance performance={publicFeed?.performance} feedError={publicFeedError} />
-            <article className="command-panel command-view-overview command-view-live command-panel-scanner">
+            <article className="command-panel command-view-trading command-panel-scanner">
               <header><div><span>LIVE SCANNER</span><strong>{scanRows.length} symbols observed in runtime snapshot</strong></div><small>{clockTime(bot.last_strategy_at)}</small></header>
               <div className="scanner-head"><span>SYMBOL</span><span>PRICE</span><span>ACTION</span><span>REASON</span></div>
               <div className="scanner-body">
@@ -403,7 +380,7 @@ export default function Command() {
               </div>
             </article>
 
-            <article className="command-panel command-view-overview command-view-live command-panel-orders">
+            <article className="command-panel command-view-trading command-panel-orders">
               <header><div><span>ORDER TAPE</span><strong>{openOrders.length} open / {recentOrders.length} recent</strong></div><small>Private broker telemetry</small></header>
               <div className="order-body">
                 {recentOrders.length ? recentOrders.slice(0, 12).map((order, index) => (
@@ -416,7 +393,7 @@ export default function Command() {
               </div>
             </article>
 
-            <article id="daily" className="command-panel command-evidence-panel command-view-overview command-view-performance command-panel-daily">
+            <article id="daily" className="command-panel command-evidence-panel command-view-research command-panel-daily">
               <header><div><span>CANONICAL DAILY REPORT</span><strong>{text(daily.session, "No daily report")}</strong></div><small>{text(daily.report_version)}</small></header>
               {Object.keys(daily).length ? (
                 <>
@@ -453,7 +430,7 @@ export default function Command() {
               ) : <div className="command-empty">No canonical daily report is available.</div>}
             </article>
 
-            <article id="weekly" className="command-panel command-evidence-panel command-view-performance command-panel-weekly">
+            <article id="weekly" className="command-panel command-evidence-panel command-view-research command-panel-weekly">
               <header><div><span>CANONICAL WEEKLY REPORT</span><strong>{text(weekly.completeness_state, "No weekly report")}</strong></div><small>{text(weekly.report_version)}</small></header>
               {Object.keys(weekly).length ? (
                 <>
@@ -474,7 +451,7 @@ export default function Command() {
               ) : <div className="command-empty">No canonical weekly report is available.</div>}
             </article>
 
-            <article id="post-event" className="command-panel command-evidence-panel command-view-evidence command-panel-post-event">
+            <article id="post-event" className="command-panel command-evidence-panel command-view-research command-panel-post-event">
               <header><div><span>POST-EVENT EVIDENCE</span><strong>{evidence?.post_event_evidence?.analytics_only ? "ANALYTICS ONLY" : "UNAVAILABLE"}</strong></div><small>{text(evidence?.evidence_version)}</small></header>
               <div className="command-two-column">
                 <div>
@@ -575,7 +552,7 @@ export default function Command() {
           </div>
 
           <aside className="command-side">
-            <article className="command-panel command-view-overview command-view-live command-panel-position">
+            <article className="command-panel command-view-trading command-panel-position">
               <header><div><span>ACTIVE POSITIONS</span><strong>{positions.length ? positions.length + " OPEN" : "FLAT"}</strong></div><small>Live from broker</small></header>
               {positions.length ? (
                 <div className="position-list">
@@ -593,7 +570,7 @@ export default function Command() {
               ) : <div className="command-empty">No open positions.</div>}
             </article>
 
-            <article id="telemetry" className="command-panel command-view-overview command-view-system command-panel-telemetry">
+            <article id="telemetry" className="command-panel command-view-system command-panel-telemetry">
               <header><div><span>TELEMETRY + PROVENANCE</span><strong>{text(runtime.system_version, "RHEN")}</strong></div><small>{text(evidence?.generated_at)}</small></header>
               <div className="system-grid">
                 <div><span>RUN</span><strong>{text(runtime.run_id)}</strong></div>
@@ -609,7 +586,7 @@ export default function Command() {
               </div>
             </article>
 
-            <article className="command-panel command-view-live command-panel-feed">
+            <article className="command-panel command-view-overview command-panel-feed">
               <header><div><span>LIVE FEED</span><strong>Recent runtime decisions</strong></div><small>Process state</small></header>
               <div className="feed-body">
                 {history.length ? history.slice(0, 16).map((item, index) => (
