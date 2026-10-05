@@ -1090,3 +1090,35 @@
   .command-raw-log-drawer li { grid-template-columns: 70px 82px minmax(0,1fr); }
   .command-raw-log-drawer li > small { display: none; }
 }
+
+
+.command-strategy-authorities {
+  display: grid;
+  gap: .55rem;
+}
+.command-strategy-authorities > div {
+  display: grid;
+  gap: .18rem;
+  padding: .55rem .6rem;
+  border: 1px solid rgba(255,255,255,.06);
+  border-radius: 10px;
+  background: rgba(255,255,255,.025);
+}
+.command-strategy-authorities > div > strong {
+  font-size: .76rem;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+.command-strategy-authorities > div > p {
+  margin: 0;
+  color: #aeb9c7;
+  font-size: .68rem;
+}
+.command-strategy-authorities > div > small {
+  color: #727f90;
+  font-size: .62rem;
+  overflow-wrap: anywhere;
+}
+.command-strategy-pipeline.is-unavailable {
+  border-color: rgba(255,180,110,.2);
+}
