@@ -423,6 +423,85 @@ export type CommandEvidence = {
   telemetry_health?: Record<string, unknown> | null;
 };
 
+export type CommandFinanceProvider = {
+  provider?: string;
+  environment?: string;
+  base_url?: string;
+  configured?: boolean;
+  external_money_movement?: boolean;
+  virtual_funds_only?: boolean;
+  tokenized_ach_only?: boolean;
+};
+
+export type CommandFinanceProviderAccount = {
+  provider?: string;
+  provider_account_ref?: string;
+  provider_environment?: string;
+  status?: string;
+  metadata?: Record<string, unknown>;
+  updated_at?: string;
+};
+
+export type CommandFinanceBankLink = {
+  bank_link_id?: string;
+  provider?: string;
+  provider_relationship_ref?: string;
+  bank_account_type?: string;
+  display_name?: string;
+  status?: string;
+  metadata?: Record<string, unknown>;
+  updated_at?: string;
+};
+
+export type CommandFinanceTransfer = {
+  transfer_id?: string;
+  direction?: string;
+  provider?: string;
+  provider_environment?: string;
+  currency?: string;
+  amount?: string;
+  status?: string;
+  provider_reference?: string | null;
+  created_at?: string;
+  settled_at?: string | null;
+};
+
+export type CommandFinanceSnapshot = {
+  schema_version: "anevum-finance.v1";
+  initialized?: boolean;
+  customer?: Record<string, unknown> | null;
+  currency?: string;
+  balances?: {
+    available_cash?: string;
+    rhen_allocation?: string;
+    reserve?: string;
+    total?: string;
+  };
+  allocation?: {
+    execution_mode?: string;
+    status?: string;
+    max_allocation?: string;
+    max_position_fraction?: string;
+    max_daily_loss_fraction?: string;
+    strategy_version_id?: string | null;
+    external_execution_enabled?: boolean;
+    updated_at?: string;
+  } | null;
+  provider?: CommandFinanceProvider;
+  provider_accounts?: CommandFinanceProviderAccount[];
+  bank_links?: CommandFinanceBankLink[];
+  recent_transfers?: CommandFinanceTransfer[];
+  external_money_movement_enabled?: boolean;
+  live_execution_authorized?: boolean;
+  idempotent?: boolean;
+  transaction_key?: string;
+  sync?: {
+    observed?: number;
+    settled?: number;
+    failed?: number;
+  };
+};
+
 export type ResearchReadinessBlocker = {
   scope?: string | null;
   code?: string | null;
@@ -466,6 +545,38 @@ async function authenticatedJson<T>(
 
   if (!response.ok) {
     throw new Error(payload.detail || payload.message || "Command request failed.");
+  }
+  return payload;
+}
+
+export function fetchCommandFinance(session: RhenSession): Promise<CommandFinanceSnapshot> {
+  return authenticatedJson<CommandFinanceSnapshot>("/api/command/finance", session);
+}
+
+export async function mutateCommandFinance(
+  session: RhenSession,
+  body: Record<string, unknown>
+): Promise<CommandFinanceSnapshot> {
+  const response = await fetch("/api/command/finance", {
+    method: "POST",
+    headers: commandAuthHeaders(session),
+    cache: "no-store",
+    body: JSON.stringify(body)
+  });
+  const payload = (await response.json().catch(() => ({}))) as CommandFinanceSnapshot & {
+    detail?: string;
+    message?: string;
+    error?: string;
+  };
+  if (!response.ok) {
+    throw new Error(payload.detail || payload.message || payload.error || "Finance request failed.");
+  }
+  if (
+    payload.schema_version !== "anevum-finance.v1" ||
+    payload.external_money_movement_enabled === true ||
+    payload.live_execution_authorized === true
+  ) {
+    throw new Error("Unsafe finance contract rejected.");
   }
   return payload;
 }
