@@ -1,10 +1,12 @@
 import { proxyIren } from "./command-iren.mjs";
+import { proxyFinance } from "./command-finance.mjs";
 import releaseRegistry from "./src/data/releases.json";
 
 const TRADER_BASE = "https://alpaca-trader-production-bf3e.up.railway.app";
 const RESEARCH_BASE = "https://rhen-research-agent-production.up.railway.app";
 const PUBLIC_TRADING_FEED = "https://foundation-ingest-staging.up.railway.app/v1/trading-public-feed";
 const FOUNDATION_IREN_COMMAND = "https://foundation-ingest-staging.up.railway.app/v1/command/iren";
+const FOUNDATION_FINANCE_COMMAND = "https://foundation-ingest-staging.up.railway.app/v1/command/finance";
 
 class ApiError extends Error {
   constructor(status, message) {
@@ -424,6 +426,25 @@ export default {
       } catch (error) {
         if (error instanceof ApiError) return jsonResponse({ message: error.message }, error.status);
         return jsonResponse({ message: "Operational state unavailable.", stale: true }, 503);
+      }
+    }
+
+    if (pathname === "/api/command/finance") {
+      if (!["GET", "POST"].includes(request.method)) {
+        return jsonResponse({ message: "Method not allowed." }, 405);
+      }
+      if (request.method === "POST" && url.hostname !== "anevum.com") {
+        return jsonResponse({ message: "Finance mutations are disabled outside production." }, 403);
+      }
+      try {
+        const credential = await commandCredential(request, env);
+        return await proxyFinance(request, fetch, {
+          credential,
+          foundationUrl: String(env?.FINANCE_COMMAND_URL || FOUNDATION_FINANCE_COMMAND)
+        });
+      } catch (error) {
+        if (error instanceof ApiError) return jsonResponse({ message: error.message }, error.status);
+        return jsonResponse({ message: "Financial state unavailable.", stale: true }, 503);
       }
     }
 
