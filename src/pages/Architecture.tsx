@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import SystemIcon from "../components/company/SystemIcon";
+import RhenModuleIcon, { type RhenModuleName } from "../components/company/RhenModuleIcon";
 
 const stack = [
   ["PUBLIC SURFACE", "React · TypeScript · Vite", "ANEVUM.com, Command entry points, the public Live Terminal, Field Notes, founder profile, and public-safe evidence."],
@@ -11,16 +11,16 @@ const stack = [
   ["INTEGRATIONS", "Slack · GitHub · Railway", "Operational alerts, source control, CI, deployment, and service-level infrastructure."]
 ];
 
-const modules = [
-  ["EXECUTION", "Market observation, equities and crypto lanes, orders, fills, risk, reconciliation, session handling, and broker-derived evidence."],
-  ["CONTROL", "Health, incidents, scheduling, orchestration, protected-action gates, and system supervision."],
-  ["RESEARCH", "Strategy evaluation, crypto edge discovery, V15 research execution, and forward-shadow evidence."],
-  ["REPLAY", "Deterministic historical replay and counterfactual simulation without broker-order authority."],
-  ["FORECAST", "Regime, baseline, calibration, and forward-measurement workflows."],
-  ["CORE / STORE", "Canonical APIs, scheduler state, research state, bounded evidence storage, retention, and compaction."],
-  ["RESEARCH WORKER", "Evidence review and model-assisted research under the same protected promotion boundaries."],
-  ["COMMAND / API", "Protected operator and customer routing into the same canonical RHEN state rather than a parallel platform."]
-] as const;
+const modules: ReadonlyArray<readonly [string, RhenModuleName, string]> = [
+  ["EXECUTION", "EXECUTION", "Market observation, equities and crypto lanes, orders, fills, risk, reconciliation, session handling, and broker-derived evidence."],
+  ["CONTROL", "CONTROL", "Health, incidents, scheduling, orchestration, protected-action gates, and system supervision."],
+  ["RESEARCH", "RESEARCH", "Strategy evaluation, crypto edge discovery, V15 research execution, and forward-shadow evidence."],
+  ["REPLAY", "REPLAY", "Deterministic historical replay and counterfactual simulation without broker-order authority."],
+  ["FORECAST", "FORECAST", "Regime, baseline, calibration, and forward-measurement workflows."],
+  ["CORE / STORE", "CORE", "Canonical APIs, scheduler state, research state, bounded evidence storage, retention, and compaction."],
+  ["RESEARCH WORKER", "WORKER", "Evidence review and model-assisted research under the same protected promotion boundaries."],
+  ["COMMAND / API", "COMMAND", "Protected operator and customer routing into the same canonical RHEN state rather than a parallel platform."]
+];
 
 export default function Architecture() {
   return (
@@ -51,9 +51,9 @@ export default function Architecture() {
           <h2>Consolidation removes duplicate services, not functional boundaries.</h2>
         </header>
         <div className="architecture-role-grid">
-          {modules.map(([name, role], index) => (
+          {modules.map(([name, module, role], index) => (
             <Link key={name} to="/live">
-              <SystemIcon system="RHEN" size="sm" />
+              <RhenModuleIcon module={module} size="sm" />
               <span>{String(index + 1).padStart(2, "0")} / RHEN MODULE</span>
               <strong>{name}</strong>
               <p>{role}</p>
@@ -85,11 +85,11 @@ export default function Architecture() {
           <h2>The rebuild is also a data-discipline change.</h2>
         </header>
         <div className="authority-grid">
-          <article><SystemIcon system="RHEN" size="sm" /><span>CORE</span><strong>Bounded SQLite instead of an operational PostgreSQL dependency.</strong><p>RHEN v3 targets normal storage below 500 MB and sheds routine analytics above the defined pressure threshold while preserving critical execution evidence.</p></article>
-          <article><SystemIcon system="RHEN" size="sm" /><span>RETENTION</span><strong>Routine telemetry is compacted instead of warehoused forever.</strong><p>Decision summaries, normalized candidate observations, position metrics, and routine evidence use explicit retention windows.</p></article>
-          <article><SystemIcon system="RHEN" size="sm" /><span>AUTHORITY</span><strong>One service does not mean one permission set.</strong><p>Research, replay, forecast, control, and pure Core subprocesses have execution disabled; broker order authority remains confined to execution.</p></article>
-          <article><SystemIcon system="RHEN" size="sm" /><span>V15</span><strong>The BTC candidate remains frozen and unpromoted.</strong><p>V15-R1-BTC-R2H-BREAKOUT-42-15 remains shadow/paper only until fresh forward evidence and protected promotion requirements are satisfied.</p></article>
-          <article><SystemIcon system="RHEN" size="sm" /><span>CUTOVER</span><strong>Legacy services are retired only after RHEN is verified healthy.</strong><p>The rebuild preserves rollback evidence and does not treat architectural simplification as permission to skip verification.</p></article>
+          <article><RhenModuleIcon module="CORE" size="sm" /><span>CORE</span><strong>Bounded SQLite instead of an operational PostgreSQL dependency.</strong><p>RHEN v3 targets normal storage below 500 MB and sheds routine analytics above the defined pressure threshold while preserving critical execution evidence.</p></article>
+          <article><RhenModuleIcon module="CORE" size="sm" /><span>RETENTION</span><strong>Routine telemetry is compacted instead of warehoused forever.</strong><p>Decision summaries, normalized candidate observations, position metrics, and routine evidence use explicit retention windows.</p></article>
+          <article><RhenModuleIcon module="CONTROL" size="sm" /><span>AUTHORITY</span><strong>One service does not mean one permission set.</strong><p>Research, replay, forecast, control, and pure Core subprocesses have execution disabled; broker order authority remains confined to execution.</p></article>
+          <article><RhenModuleIcon module="RESEARCH" size="sm" /><span>V15</span><strong>The BTC candidate remains frozen and unpromoted.</strong><p>V15-R1-BTC-R2H-BREAKOUT-42-15 remains shadow/paper only until fresh forward evidence and protected promotion requirements are satisfied.</p></article>
+          <article><RhenModuleIcon module="CONTROL" size="sm" /><span>CUTOVER</span><strong>Legacy services are retired only after RHEN is verified healthy.</strong><p>The rebuild preserves rollback evidence and does not treat architectural simplification as permission to skip verification.</p></article>
         </div>
       </section>
 
