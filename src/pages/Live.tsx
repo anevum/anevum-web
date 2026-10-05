@@ -17,6 +17,7 @@ import {
 import "../styles/public-terminal.css";
 
 type TerminalFilter = "ALL" | SystemName;
+type EvidenceTab = "OVERVIEW" | "RESEARCH" | "PERFORMANCE" | "ARCHITECTURE" | "HISTORY";
 
 type PublicTerminalEvent = {
   id: string;
@@ -45,6 +46,7 @@ export default function Live() {
   const { data, error, now } = useLiveTrading(5000);
   const [selected, setSelected] = useState<TerminalFilter>("ALL");
   const [feedFilter, setFeedFilter] = useState<TerminalFilter>("ALL");
+  const [evidenceTab, setEvidenceTab] = useState<EvidenceTab>("OVERVIEW");
 
   const views = useMemo(
     () => SYSTEMS.map((name) => publicSystem(name, data, now, Boolean(error))),
@@ -323,6 +325,126 @@ export default function Live() {
           </div>
         </section>
       </div>
+
+
+      <section className="pt-evidence-drawer" aria-label="Terminal evidence drawer">
+        <header className="pt-evidence-tabs">
+          <div>
+            <span>EVIDENCE DRAWER</span>
+            <strong>Inspect without leaving the terminal</strong>
+          </div>
+          <nav aria-label="Evidence views">
+            {(["OVERVIEW", "RESEARCH", "PERFORMANCE", "ARCHITECTURE", "HISTORY"] as EvidenceTab[]).map((tab) => (
+              <button
+                key={tab}
+                type="button"
+                className={evidenceTab === tab ? "is-selected" : ""}
+                onClick={() => setEvidenceTab(tab)}
+              >
+                {tab}
+              </button>
+            ))}
+          </nav>
+        </header>
+
+        <div className="pt-evidence-body">
+          {evidenceTab === "OVERVIEW" ? (
+            <div className="pt-evidence-grid">
+              <article>
+                <span>PUBLIC CONTRACT</span>
+                <strong>{data?.disclosure?.level || "Sanitized projection"}</strong>
+                <p>The browser receives only the bounded public feed. Protected operator state remains behind Command.</p>
+              </article>
+              <article>
+                <span>FLEET</span>
+                <strong>{displayState(fleet)}</strong>
+                <p>{views.filter((view) => view.fresh).length} of 5 system observations are currently fresh.</p>
+              </article>
+              <article>
+                <span>CURRENT RESEARCH</span>
+                <strong>{displayState(data?.research?.current_status)}</strong>
+                <p>{data?.research?.current_focus || "No current public research focus recorded."}</p>
+              </article>
+              <article>
+                <span>PERFORMANCE RECORD</span>
+                <strong>{displayState(data?.performance?.status)}</strong>
+                <p>{data?.performance?.basis || "Normalized public performance evidence."}</p>
+              </article>
+            </div>
+          ) : null}
+
+          {evidenceTab === "RESEARCH" ? (
+            <div className="pt-evidence-list">
+              <article>
+                <span>CURRENT FOCUS</span>
+                <strong>{data?.research?.current_focus || "No current public focus"}</strong>
+                <p>{data?.research?.next_direction?.conclusion || data?.research?.next_direction?.subject || "No next recorded direction."}</p>
+              </article>
+              {(data?.research?.completed_decisions || []).slice(0, 6).map((row, index) => (
+                <article key={String(row.decision_key || row.at || index)}>
+                  <span>{displayState(row.status)} · {row.methodology_version || "methodology unlisted"}</span>
+                  <strong>{row.subject || row.decision_type || "Research decision"}</strong>
+                  <p>{row.conclusion || "No public conclusion recorded."}</p>
+                </article>
+              ))}
+              {!data?.research?.completed_decisions?.length ? <p className="pt-no-events">No completed public research decisions are available.</p> : null}
+            </div>
+          ) : null}
+
+          {evidenceTab === "PERFORMANCE" ? (
+            <div className="pt-evidence-grid">
+              <article><span>ACCOUNT RETURN</span><strong>{pct(data?.performance?.account_return_pct)}</strong><p>{data?.performance?.methodology_version || "Methodology unavailable"}</p></article>
+              <article><span>REALIZED RETURN</span><strong>{pct(data?.performance?.realized_return_pct)}</strong><p>Normalized public evidence only.</p></article>
+              <article><span>MAX DRAWDOWN</span><strong>{pct(data?.performance?.max_drawdown_pct)}</strong><p>{displayState(data?.performance?.sample_state)}</p></article>
+              <article><span>CLOSED TRADES</span><strong>{count(data?.performance?.closed_trades)}</strong><p>{count(data?.performance?.wins)} wins · {count(data?.performance?.losses)} losses</p></article>
+              <article><span>WIN RATE</span><strong>{pct(data?.performance?.win_rate_pct)}</strong><p>{count(data?.performance?.trading_sessions)} recorded trading sessions</p></article>
+              <article><span>TRACKING</span><strong>{ageText(data?.performance?.last_observed_at, now)}</strong><p>{data?.performance?.baseline_reason || "Current normalized baseline"}</p></article>
+            </div>
+          ) : null}
+
+          {evidenceTab === "ARCHITECTURE" ? (
+            <div className="pt-architecture-flow">
+              {[
+                ["IREN", "Operating intelligence", "Coordinates state, work, incidents, and operator-facing evidence."],
+                ["GRAEN", "Research", "Owns hypothesis formation, falsification, methodology, and bounded claims."],
+                ["VELUM", "Replay", "Reconstructs historical conditions and tests hypotheses away from broker execution."],
+                ["NOSTRA", "Forecasting", "Owns forward-horizon prediction, uncertainty, regimes, and calibration."],
+                ["RHEN", "Market system", "Observes markets and owns bounded live execution, reconciliation, and evidence."]
+              ].map(([name, role, detail]) => (
+                <article key={name}>
+                  <SystemIcon system={name as SystemName} size="sm" />
+                  <div><span>{role}</span><strong>{name}</strong><p>{detail}</p></div>
+                </article>
+              ))}
+              <footer>
+                <span>AUTHORITY BOUNDARY</span>
+                <strong>Research and replay do not silently become live trading authority.</strong>
+                <Link to="/architecture">Open detailed architecture →</Link>
+              </footer>
+            </div>
+          ) : null}
+
+          {evidenceTab === "HISTORY" ? (
+            <div className="pt-evidence-list">
+              {(data?.strategy_history || []).slice(0, 8).map((row, index) => (
+                <article key={String(row.version_id || row.activated_at || index)}>
+                  <span>{row.activated_at ? new Date(row.activated_at).toLocaleDateString() : "DATE UNAVAILABLE"} · {displayState(row.status)}</span>
+                  <strong>{row.version_id || row.strategy_name || "Strategy record"}</strong>
+                  <p>{row.strategy_name || "Unnamed strategy"} · {row.environment || "environment unlisted"}</p>
+                </article>
+              ))}
+              {(data?.research?.completed_decisions || []).slice(0, 4).map((row, index) => (
+                <article key={"history-research-" + String(row.decision_key || index)}>
+                  <span>{row.at ? new Date(row.at).toLocaleDateString() : "DATE UNAVAILABLE"} · GRAEN</span>
+                  <strong>{row.subject || row.decision_type || "Research decision"}</strong>
+                  <p>{row.conclusion || displayState(row.status)}</p>
+                </article>
+              ))}
+              {!data?.strategy_history?.length && !data?.research?.completed_decisions?.length ? <p className="pt-no-events">No public history is currently available.</p> : null}
+            </div>
+          ) : null}
+        </div>
+      </section>
 
       <footer className="pt-terminal-foot">
         <span>
