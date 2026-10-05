@@ -3,7 +3,7 @@ import releaseRegistry from "./src/data/releases.json";
 
 const TRADER_BASE = "https://alpaca-trader-production-bf3e.up.railway.app";
 const RESEARCH_BASE = "https://rhen-research-agent-production.up.railway.app";
-const PUBLIC_TRADING_FEED = "https://foundation-ingest-staging.up.railway.app/v1/trading-public-feed";
+const PUBLIC_TRADING_FEED = TRADER_BASE + "/v1/trading-public-feed";
 const FOUNDATION_IREN_COMMAND = "https://foundation-ingest-staging.up.railway.app/v1/command/iren";
 
 class ApiError extends Error {
