@@ -82,3 +82,18 @@ test("Command strategy lifecycle uses the canonical private projection and one r
   assert.doesNotMatch(terminal, /className="terminal-stream"/);
   assert.doesNotMatch(terminal, /BTC-CANARY-001/);
 });
+
+
+test("Command deployment config has no retired Foundation or Vercel runtime path", () => {
+  const worker = readFileSync(new URL("../worker.mjs", import.meta.url), "utf8");
+  const wrangler = readFileSync(new URL("../wrangler.jsonc", import.meta.url), "utf8");
+  const verify = readFileSync(new URL("../.github/workflows/anevum-verify.yml", import.meta.url), "utf8");
+  const deploy = readFileSync(new URL("../.github/workflows/deploy-production.yml", import.meta.url), "utf8");
+
+  for (const source of [worker, wrangler, verify, deploy]) {
+    assert.doesNotMatch(source, /foundation-ingest-staging/i);
+    assert.doesNotMatch(source, /IREN_COMMAND_URL/);
+    assert.doesNotMatch(source, /vercel/i);
+  }
+  assert.match(deploy, /Deploy to Cloudflare Workers/);
+});
