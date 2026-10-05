@@ -90,10 +90,10 @@ jobs:
                   excluded = set((payload.get("disclosure") or {}).get("excluded_fields") or [])
                   if (
                       payload.get("ok") is not True
-                      or payload.get("source") != "railway_postgresql_canonical"
-                      or result["disclosure"] != "sanitized"
-                      or result["nostra_independent"] is not True
-                      or not {"account value", "symbols", "orders and fills"}.issubset(excluded)
+                      or payload.get("source") != "rhen-core-sqlite"
+                      or result["disclosure"] != "aggregate_only"
+                      or result["nostra_independent"] is not False
+                      or not {"symbols", "dollar_values", "orders", "fills"}.issubset(excluded)
                   ):
                       failures.append(result)
               print("PROBE=" + json.dumps(result))
