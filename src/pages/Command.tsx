@@ -9,6 +9,8 @@ import CommandAccountTracker from "../components/CommandAccountTracker";
 import CommandTopology from "../components/CommandTopology";
 import CommandIrenDock from "../components/CommandIrenDock";
 import CommandOperationsTerminal from "../components/CommandOperationsTerminal";
+import CommandStrategyPipeline from "../components/CommandStrategyPipeline";
+import CommandRawLog from "../components/CommandRawLog";
 import { useCommandObservation } from "../hooks/useCommandObservation";
 import { useLiveTrading } from "../hooks/useLiveTrading";
 import {
@@ -393,6 +395,9 @@ export default function Command() {
             {commandPage === "system"
               ? <CommandOperationsTerminal observation={commandObservation} feed={publicFeedError ? null : publicFeed} feedError={publicFeedError} />
               : null}
+            {commandPage === "overview" || commandPage === "research"
+              ? <CommandStrategyPipeline snapshot={commandObservation.snapshot} now={commandObservation.now} />
+              : null}
             <CommandAccountTracker account={account} history={accountHistory} orders={recentOrders} />
             <CommandPerformance performance={publicFeed?.performance} feedError={publicFeedError} />
             <article className="command-panel command-view-overview command-view-trading command-panel-crypto-live-signal">
@@ -675,6 +680,7 @@ export default function Command() {
           </aside>
         </section>
       </main>
+      <CommandRawLog snapshot={commandObservation.snapshot} feed={publicFeedError ? null : publicFeed} now={commandObservation.now} />
       <CommandIrenDock session={session} />
     </div>
   );
