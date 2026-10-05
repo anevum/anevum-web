@@ -5,12 +5,20 @@ export const SYSTEMS = ["IREN", "RHEN", "GRAEN", "NOSTRA", "VELUM"] as const;
 export type SystemName = typeof SYSTEMS[number];
 export type Tone = "good" | "active" | "warn" | "bad" | "quiet";
 export const IDENTITY = {
-  IREN: { role: "Operating intelligence", accent: "🧭", slack: ":iren:", color: "#6EA1FF" },
-  RHEN: { role: "Market observation", accent: "📈", slack: ":rhen:", color: "#6FD1FF" },
-  GRAEN: { role: "Mathematical research", accent: "📐", slack: ":graen:", color: "#D0B37A" },
-  NOSTRA: { role: "Forecast research", accent: "🔮", slack: ":nostra:", color: "#A99BE8" },
-  VELUM: { role: "Temporal replay", accent: "⏱", slack: ":velum:", color: "#56B8BC" }
+  IREN: { role: "Control module", accent: "🧭", slack: ":iren:", color: "#6EA1FF" },
+  RHEN: { role: "Execution module", accent: "📈", slack: ":rhen:", color: "#6FD1FF" },
+  GRAEN: { role: "Research module", accent: "📐", slack: ":graen:", color: "#D0B37A" },
+  NOSTRA: { role: "Forecast module", accent: "🔮", slack: ":nostra:", color: "#A99BE8" },
+  VELUM: { role: "Replay module", accent: "⏱", slack: ":velum:", color: "#56B8BC" }
 } as const;
+
+export const MODULE_LABEL: Record<SystemName, string> = {
+  IREN: "CONTROL",
+  RHEN: "EXECUTION",
+  GRAEN: "RESEARCH",
+  NOSTRA: "FORECAST",
+  VELUM: "REPLAY"
+};
 // Matches app/slack_brand.py's concepts; Slack assets are not shipped to the browser.
 export const SEMANTIC = { health: "✓", warning: "!", critical: "×", live: "◉", research: "⌘", forecast: "⑂", replay: "↺", execution: "↗", freshness: "◷", job: "◇", objective: "◎", incident: "!", data: "≋", waiting: "○" } as const;
 const LABELS: Record<string, string> = {
@@ -144,7 +152,7 @@ export function publicSystem(name: SystemName, feed?: LiveTradingFeed | null, no
     observedAt: row?.observed_at,
     activity: row?.activity || fallbackActivity,
     signal: active ? row?.observed_at || undefined : undefined,
-    source: "Foundation public projection"
+    source: "RHEN public projection"
   };
 }
 export function commandSystem(name: SystemName, snapshot: IrenSnapshot | null, feed?: LiveTradingFeed | null, now = Date.now(), unavailable = false): SystemView {
@@ -223,7 +231,7 @@ export function commandSystem(name: SystemName, snapshot: IrenSnapshot | null, f
     objectives: snapshot?.work?.objectives ? work.objectives.length : undefined,
     incidents: incidents?.length,
     signal: active ? String(snapshot?.revision ?? snapshot?.observed_at) : undefined,
-    source: "IREN / Foundation"
+    source: "RHEN Core"
   };
 }
 export function fleetState(views: SystemView[]) {

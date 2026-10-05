@@ -19,8 +19,8 @@ function PublicFooter() {
           <Mark />
           <div>
             <strong>ANEVUM</strong>
-            <span>COMMAND + LIVE EVIDENCE</span>
-            <small>Use the product. Inspect the system. Follow the evidence.</small>
+            <span>COMMAND + RHEN LIVE EVIDENCE</span>
+            <small>Use the product. Inspect the runtime. Follow the evidence.</small>
           </div>
         </div>
 
@@ -28,11 +28,12 @@ function PublicFooter() {
           <section>
             <span>PRODUCT</span>
             <Link to="/command/overview">Command</Link>
-            <Link to="/live">Live Terminal</Link>
+            <Link to="/live">RHEN Live</Link>
             <Link to="/research">Field Notes</Link>
           </section>
           <section>
             <span>ANEVUM</span>
+            <Link to="/architecture">Architecture</Link>
             <Link to="/founder">About</Link>
             <Link to="/resume">Résumé</Link>
             <a href="mailto:devon@anevum.com">devon@anevum.com</a>
@@ -42,7 +43,7 @@ function PublicFooter() {
 
       <div className="company-footer-bottom">
         <span>© {new Date().getFullYear()} ANEVUM</span>
-        <span>PAPER BETA / PUBLIC-SAFE EVIDENCE / LIVE-MONEY AUTHORITY GATED</span>
+        <span>RHEN V3 / COMMAND PAPER BETA / LIVE-MONEY AUTHORITY GATED</span>
       </div>
     </footer>
   );

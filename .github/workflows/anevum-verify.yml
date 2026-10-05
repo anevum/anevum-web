@@ -92,7 +92,7 @@ jobs:
           head -c 5 "$RUNNER_TEMP/devon-akins-resume.pdf" | grep -Fq '%PDF-'
 
           live_html="$(curl --fail --show-error --silent "$base/live")"
-          printf '%s' "$live_html" | grep -Fq '<meta property="og:title" content="Live Terminal — ANEVUM" />'
+          printf '%s' "$live_html" | grep -Fq '<meta property="og:title" content="RHEN Live Terminal — ANEVUM" />'
           printf '%s' "$live_html" | grep -Fq '<link rel="canonical" href="https://anevum.com/live" />'
 
           founder_html="$(curl --fail --show-error --silent "$base/founder")"
@@ -184,18 +184,19 @@ jobs:
             return 1
           }
 
-          capture home / 'Connect. Configure. Observe.'
+          capture home / 'One runtime. Clear boundaries.'
           capture terminal /live 'EVIDENCE DRAWER'
           capture research /research 'Development journal.'
           capture field-note /research/multi-market-architecture-equities-crypto 'REPRODUCE / CHALLENGE THIS NOTE'
-          capture architecture /architecture 'One company. Specialized systems.'
+          capture architecture /architecture 'One runtime. Internal modules.'
           capture founder /founder 'Devon Akins'
           capture resume /resume 'Technical Skills'
 
           grep -Fq 'public-terminal-home' "$RUNNER_TEMP/anevum-visuals/home-rendered.html"
           grep -Fq 'public-terminal-page' "$RUNNER_TEMP/anevum-visuals/terminal-rendered.html"
-          grep -Fq 'GRAEN' "$RUNNER_TEMP/anevum-visuals/terminal-rendered.html"
-          grep -Fq 'VELUM' "$RUNNER_TEMP/anevum-visuals/terminal-rendered.html"
+          grep -Fq 'RESEARCH' "$RUNNER_TEMP/anevum-visuals/terminal-rendered.html"
+          grep -Fq 'REPLAY' "$RUNNER_TEMP/anevum-visuals/terminal-rendered.html"
+          grep -Fq 'RHEN' "$RUNNER_TEMP/anevum-visuals/terminal-rendered.html"
 
       - name: Upload browser QA
         if: github.event_name == 'pull_request'
