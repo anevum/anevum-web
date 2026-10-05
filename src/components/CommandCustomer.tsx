@@ -113,6 +113,15 @@ export default function CommandCustomer({
   const eligibilityReasons = overview?.eligibility?.reasons || [];
   const paperConnected = overview?.broker?.environment === "PAPER";
   const botEnabled = overview?.control?.bot_enabled === true;
+  const executionReady = overview?.eligibility?.eligible === true;
+  const executorPending = eligibilityReasons.includes("tenant_execution_runtime_unavailable");
+  const automationLabel = executionReady
+    ? "RHEN PAPER ACTIVE"
+    : botEnabled && executorPending
+      ? "RHEN PAPER ENABLED / EXECUTOR PENDING"
+      : botEnabled
+        ? "RHEN PAPER ENABLED / GATES CLOSED"
+        : "RHEN PAPER PAUSED";
 
   return (
     <div className="customer-command">
@@ -152,10 +161,14 @@ export default function CommandCustomer({
               and observe every broker reconciliation and automation state from one place.
             </p>
           </div>
-          <div className={"customer-command-state " + (botEnabled ? "is-active" : "")}>
+          <div className={"customer-command-state " + (executionReady ? "is-active" : "")}>
             <i />
-            <span>{botEnabled ? "RHEN PAPER ACTIVE" : "RHEN PAPER PAUSED"}</span>
-            <small>Live customer trading remains disabled.</small>
+            <span>{automationLabel}</span>
+            <small>
+              {executorPending
+                ? "Customer paper authorization may be enabled, but the tenant execution runtime is not deployed yet."
+                : "Live customer trading remains disabled."}
+            </small>
           </div>
         </section>
 
@@ -245,7 +258,11 @@ export default function CommandCustomer({
               <SystemIcon system="RHEN" size="sm" />
               <div>
                 <strong>{botEnabled ? "Enabled" : "Paused"}</strong>
-                <span>{botEnabled ? "New paper entries may pass when all gates are ready." : "No new tenant paper entries are authorized."}</span>
+                <span>
+                  {botEnabled
+                    ? "Customer paper authority is enabled; orders remain blocked until the tenant executor and every safety gate are ready."
+                    : "No new tenant paper entries are authorized."}
+                </span>
               </div>
             </div>
             <div className="customer-command-actions">
