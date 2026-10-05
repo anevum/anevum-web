@@ -7,7 +7,7 @@ export type CustomerCommandStep = {
 };
 
 export type CustomerCommandOverview = {
-  schema_version: "command_customer.v1";
+  schema_version: "command_customer.v1" | "command_customer.v2";
   surface: "customer";
   tenant: {
     tenant_id: string;
@@ -15,6 +15,13 @@ export type CustomerCommandOverview = {
     display_name?: string | null;
     status?: string | null;
     role?: string | null;
+  };
+  lifecycle?: {
+    state?: string;
+    setup_ready?: boolean;
+    execution_ready?: boolean;
+    next_action?: string;
+    missing?: string[];
   };
   onboarding: {
     complete: boolean;
@@ -30,6 +37,17 @@ export type CustomerCommandOverview = {
     trading_blocked?: boolean;
     withdrawals_blocked?: boolean;
     last_reconciled_at?: string | null;
+  } | null;
+  funding?: {
+    source?: string;
+    environment?: string;
+    known?: boolean;
+    funded?: boolean;
+    equity?: string | null;
+    cash?: string | null;
+    buying_power?: string | null;
+    observed_at?: string | null;
+    external_money_movement_enabled?: boolean;
   } | null;
   allocation?: {
     allocation_id?: string;
