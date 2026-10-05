@@ -82,6 +82,10 @@ test("Command strategy lifecycle uses the canonical private projection and one r
   assert.match(command, /CommandRawLog snapshot=\{commandObservation\.snapshot\}/);
   assert.match(pipeline, /snapshot\?\.strategy_pipeline/);
   assert.doesNotMatch(pipeline, /active_strategy/);
+  assert.match(pipeline, /manual_approval_required/);
+  assert.match(pipeline, /signals_enabled/);
+  assert.match(pipeline, /broker_writes_allowed/);
+  assert.match(pipeline, /Signals live · manual approval/);
   assert.match(topology, /strategy_pipeline\?: StrategyPipelineProjection/);
   assert.match(rawLog, /buildCommandEvents\(snapshot, feed\)/);
   assert.doesNotMatch(terminal, /className="terminal-stream"/);
