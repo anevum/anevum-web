@@ -4,6 +4,7 @@ import type { IrenSnapshot } from "../lib/runtime-topology";
 import { ageText, displayState, stateTone, type SystemName } from "../lib/system-display";
 import { buildCommandEvents, TERMINAL_SYSTEMS } from "../lib/command-events";
 import SystemIcon from "./company/SystemIcon";
+import UiIcon from "./UiIcon";
 
 type Filter = "ALL" | SystemName;
 
@@ -59,7 +60,7 @@ export default function CommandRawLog({
       <button type="button" className="command-raw-log-toggle" onClick={() => setOpen(value => !value)} aria-expanded={open}>
         <span><i className={events.length ? "is-live" : ""} /> RAW LOG</span>
         <strong>{events.length} events</strong>
-        <b>{open ? "×" : "⌁"}</b>
+        <b><UiIcon name="logs" /></b>
       </button>
       {open && (
         <div className="command-raw-log-drawer">
