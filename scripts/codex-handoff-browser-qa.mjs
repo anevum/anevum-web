@@ -159,12 +159,12 @@ async function runCase(route, viewport) {
   await sleep(5000);
 
   await send("Runtime.evaluate", {expression: `
-    [...document.querySelectorAll("button")].find(b => b.textContent === "Generate Codex prompt")?.click();
+    [...document.querySelectorAll("button")].find(b => b.textContent?.trim() === "Generate Codex prompt")?.click();
   `});
   await sleep(900);
   await send("Runtime.evaluate", {expression: `
-    [...document.querySelectorAll("button")].find(b => b.textContent === "Copy generated prompt")?.click();
-    [...document.querySelectorAll("button")].find(b => b.textContent === "Verify tracked handoff")?.click();
+    [...document.querySelectorAll("button")].find(b => b.textContent?.trim() === "Copy generated prompt")?.click();
+    [...document.querySelectorAll("button")].find(b => b.textContent?.trim() === "Verify tracked handoff")?.click();
   `});
   await sleep(500);
   const interactions = await send("Runtime.evaluate", {expression: `({

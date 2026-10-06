@@ -1,6 +1,7 @@
 import type { CSSProperties, ReactNode } from "react";
 import { Link } from "react-router-dom";
 import SystemIcon from "../company/SystemIcon";
+import UiIcon from "../UiIcon";
 import { ageText, displayState, IDENTITY, SEMANTIC, stateTone, type SystemName, type SystemView, freshStamp } from "../../lib/system-display";
 import type { IrenIncident, RuntimeRow } from "../../lib/runtime-topology";
 import type { LiveTradingFeed } from "../../lib/data";
@@ -31,8 +32,8 @@ export function SystemVisualShell({ view, to, hero = false, now = Date.now() }: 
       <div><dt>SOURCE</dt><dd>{view.source || "Unavailable"}</dd></div>
     </dl>
     <p className="vo-activity" title={view.activity}>{view.activity}</p>
-    {(view.jobs !== undefined || view.objectives !== undefined || view.incidents !== undefined) && <div className="vo-card-counts"><span>◇ <b>{view.jobs ?? "—"}</b> jobs</span><span>◎ <b>{view.objectives ?? "—"}</b> objectives</span><span className={view.incidents ? "vo-attention" : ""}>! <b>{view.incidents ?? "—"}</b> incidents</span></div>}
-    <footer><span title={view.observedAt || undefined}>{SEMANTIC.freshness} {ageText(view.observedAt, now)}</span><span>{to ? "Open monitor ↗" : "Observed state"}</span></footer></>;
+    {(view.jobs !== undefined || view.objectives !== undefined || view.incidents !== undefined) && <div className="vo-card-counts"><span><UiIcon name="job" /> <b>{view.jobs ?? "—"}</b> jobs</span><span><UiIcon name="objective" /> <b>{view.objectives ?? "—"}</b> objectives</span><span className={view.incidents ? "vo-attention" : ""}><UiIcon name="incident" /> <b>{view.incidents ?? "—"}</b> incidents</span></div>}
+    <footer><span title={view.observedAt || undefined}><UiIcon name="freshness" /> {ageText(view.observedAt, now)}</span><span>{to ? "Open monitor ↗" : "Observed state"}</span></footer></>;
   return to ? <Link to={to} className={"vo-system-card" + visualClass(view)} aria-label={view.name + ": health " + displayState(view.health) + ", activity " + displayState(view.activityState) + ". Open monitor"} data-system={view.name} data-state={view.health} data-activity={view.activityState} data-active={view.active}>{body}</Link> :
     <section className={"vo-system-card vo-hero-card" + visualClass(view)} aria-label={view.name + ": health " + displayState(view.health) + ", activity " + displayState(view.activityState)} data-system={view.name} data-state={view.health} data-activity={view.activityState} data-active={view.active}>{body}</section>;
 }
@@ -52,13 +53,13 @@ export function SystemConstellation({ views, command = false, compact = false }:
 export type TimelineItem = { id: string; title: string; detail?: string | null; at?: string | null; state?: string | null; system?: SystemName };
 export function SystemTimeline({ items, empty = "No recent activity recorded.", now = Date.now() }: { items: TimelineItem[]; empty?: string; now?: number }) {
   return items.length ? <ol className="vo-timeline">{items.slice(0,8).map(item => <li key={item.id}>
-    <span className={"vo-timeline-dot tone-" + stateTone(item.state)} aria-hidden="true">{item.system ? <SystemIcon system={item.system} size="xs" /> : "◇"}</span>
+    <span className={"vo-timeline-dot tone-" + stateTone(item.state)} aria-hidden="true">{item.system ? <SystemIcon system={item.system} size="xs" /> : <UiIcon name="evidence" />}</span>
     <div><strong>{item.title}</strong>{item.detail && <p>{item.detail}</p>}</div><time dateTime={item.at || undefined} title={item.at || undefined}>{ageText(item.at, now)}</time>
   </li>)}</ol> : <p className="vo-empty">{SEMANTIC.data} {empty}</p>;
 }
 export function SystemWorkQueue({ rows, known, kind, now }: { rows: Array<Record<string, unknown>>; known: boolean; kind: "jobs" | "objectives"; now: number }) {
   return <div className="vo-work-queue">{rows.length ? rows.slice(0,6).map((row,index) => <article key={String(row.job_id || row.objective_key || index)} className={row.status === "RUNNING" ? "is-running" : ""}>
-    <span className="vo-queue-icon" aria-hidden="true">{kind === "jobs" ? SEMANTIC.job : SEMANTIC.objective}</span>
+    <span className="vo-queue-icon" aria-hidden="true"><UiIcon name={kind === "jobs" ? "job" : "objective"} /></span>
     <div><strong>{String(row.title || (kind === "jobs" ? "System job" : "System objective"))}</strong><p>{String(row.description || row.job_type || "IREN work item").replaceAll("_", " ")}</p><time>{ageText(String(row.updated_at || row.created_at || row.started_at || ""), now)}</time></div>
     <SystemStatusChip state={String(row.status || "UNKNOWN")} />
   </article>) : <p className="vo-empty">{known ? "○ No active " + kind + " recorded." : "○ Work evidence unavailable."}</p>}</div>;
@@ -66,7 +67,7 @@ export function SystemWorkQueue({ rows, known, kind, now }: { rows: Array<Record
 export function SystemIncidentPanel({ incidents, known, stale = false }: { incidents: IrenIncident[]; known: boolean; stale?: boolean }) {
   if (!known || stale && !incidents.length) return <p className="vo-empty">○ Incident evidence unavailable. Awaiting a fresh observation.</p>;
   return incidents.length ? <div className="vo-incidents">{stale && <small>Last known incidents · observation stale</small>}{incidents.map(row => <article key={row.key} className={"tone-" + stateTone(row.severity)}>
-    <span className="vo-incident-icon" aria-hidden="true">!</span><div><strong>{displayState(row.reason || "Operational incident")}</strong><details><summary>Incident identity</summary><code>{row.key}</code></details></div><SystemStatusChip state={row.severity} />
+    <span className="vo-incident-icon" aria-hidden="true"><UiIcon name="incident" /></span><div><strong>{displayState(row.reason || "Operational incident")}</strong><details><summary>Incident identity</summary><code>{row.key}</code></details></div><SystemStatusChip state={row.severity} />
   </article>)}</div> : <p className="vo-empty is-clear">✓ No active incidents</p>;
 }
 export function RuntimeDetails({ rows, revision }: { rows: RuntimeRow[]; revision?: string | number | null }) {

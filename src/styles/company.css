@@ -1953,3 +1953,32 @@
 .program-nostra,
 .program-velum,
 .program-rhen{--program-accent:#8fb6d2}
+
+
+/* ==========================================================================
+   Canonical RHEN v3 visual-language cutover — 2026-10-06
+   Compatibility names retain their routes/data keys, but active presentation
+   uses one RHEN module color family. State/severity colors remain independent.
+   ========================================================================== */
+.system-mark-iren,.system-mark-rhen,.system-mark-graen,.system-mark-nostra,.system-mark-velum,
+.system-icon-iren,.system-icon-rhen,.system-icon-graen,.system-icon-nostra,.system-icon-velum{
+  --system-accent:#8fb6d2!important;
+  --icon-accent:#8fb6d2!important;
+  color:#8fb6d2!important;
+}
+.company-product-card.product-iren,.company-product-card.product-rhen,.company-product-card.product-graen,
+.company-product-card.product-nostra,.company-product-card.product-velum{--card-accent:#8fb6d2!important}
+.company-product-card[class*="product-"] header b,
+.company-product-card[class*="product-"] footer strong{color:#8fb6d2!important}
+.product-detail-iren,.product-detail-rhen,.product-detail-graen,.product-detail-nostra,.product-detail-velum{
+  --product-accent:#8fb6d2!important;
+  --product-glow:rgba(143,182,210,.16)!important;
+  --company-accent:#8fb6d2!important;
+}
+.program-graen,.program-nostra,.program-velum,.program-rhen{--program-accent:#8fb6d2!important}
+.node-iren,.node-rhen,.node-graen,.node-nostra,.node-velum{--system-accent:#8fb6d2!important}
+.system-chip-iren,.system-chip-rhen,.system-chip-graen,.system-chip-nostra,.system-chip-velum{--chip-accent:#8fb6d2!important}
+.system-state-iren,.system-state-rhen,.system-state-graen,.system-state-nostra,.system-state-velum{--state-accent:#8fb6d2!important}
+.ui-icon{display:inline-block;vertical-align:-.14em}
+.iren-maintenance-actions .ui-icon,.command-account-actions .ui-icon{width:14px;height:14px;flex:0 0 auto}
+.iren-maintenance-actions button{display:inline-flex;align-items:center;justify-content:center;gap:7px}

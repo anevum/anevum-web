@@ -1,34 +1,58 @@
 # ANEVUM visual operations
 
-Built on PR #114, without changing canonical stores, telemetry APIs, authentication, trading, or research authority.
+Status: CANONICAL  
+Updated: 2026-10-06
+
+This document defines the active visual language for the public ANEVUM site and protected Command surface. Presentation changes do not change canonical stores, telemetry APIs, authentication, trading authority, research authority, or compatibility keys.
+
+## Identity hierarchy
+
+ANEVUM is the company identity. RHEN is the product and production runtime identity.
+
+IREN, GRAEN, NOSTRA, and VELUM remain named RHEN modules and compatibility keys:
+
+| Compatibility name | Canonical RHEN module | Responsibility |
+| --- | --- | --- |
+| RHEN | Execution | scanning, qualification, risk-gated broker execution |
+| IREN | Control | health, incidents, scheduling, orchestration, protected release boundaries |
+| GRAEN | Research | discovery, experiments, falsification, promotion evidence |
+| NOSTRA | Forecast | regimes, calibration, baselines, forward measurement |
+| VELUM | Replay | replay, simulation, friction/delay stress, counterfactual verification |
+
+All active module glyphs use the RHEN blue/cyan identity family. Green, amber, red, and muted gray are reserved for state and severity.
 
 ## Surfaces
 
-Command overview uses a compact global strip and IREN-centered system array. Each subsystem opens a dedicated instrument, owned work queue, recorded activity, incidents, and expandable runtime provenance. RHEN's Live, Performance, Evidence and Research routes remain available.
+Command is the protected operating product. Its primary workspaces are Overview, Trading, Research, and System.
 
-Public Live uses the sanitized projection. The homepage retains its editorial structure with a compact array. Products share the locked marks, palette, and current public observations.
+Public Live uses the sanitized RHEN projection. The homepage and architecture surfaces may show the named modules, but must present them as modules inside RHEN rather than independent production products.
 
-## Observation and motion contract
+Compatibility routes and backend keys may continue using IREN/GRAEN/NOSTRA/VELUM until data migrations are complete. Presentation translates those keys into the canonical module treatment.
 
-| Visualization | Canonical inputs | Meaning |
-| --- | --- | --- |
-| IREN control core | IREN state/operator, incidents, active jobs, objectives, blocked objectives, requires_human | Coordination, health, and operator attention |
-| RHEN market engine | systems.RHEN; telemetry event/scan/reconciliation/error counts; operational.latest_scan.observed_at | Observed scanning and durable event volume, never inferred trades |
-| GRAEN research lattice | systems.GRAEN; owned RUNNING jobs; public research focus/status, questions and decisions | Research activity only when explicitly supported |
-| NOSTRA branches | systems.NOSTRA and owned jobs/runtime observations | Availability and forecast activity; paths contain no predicted values |
-| VELUM temporal tracks | systems.VELUM and owned replay work | Replay availability/activity, separate from execution |
-| Signal arrival | New observation timestamps / IREN revision | Arrival of an observation, not a broker event |
+## Icon roles
 
-A generic RUNNING runtime alone does not imply research, prediction or replay work. Missing evidence produces Unavailable; observations expire after the existing 180-second freshness window. Stale/failed refreshes cannot produce Healthy. An explicit offline state remains visible. Empty known queues differ from unavailable evidence. Raw status and runtime identity remain accessible.
+Three icon roles are separate:
 
-## Identity, accessibility and performance
+1. **Identity glyphs** — RHEN module glyphs for Execution, Control, Research, Replay, Forecast, Core, Worker, and Command.
+2. **State markers** — active, success, warning, critical, waiting, risk, and evidence semantics.
+3. **UI concept icons** — navigation/actions such as account, scanner, orders, positions, telemetry, freshness, incident, job, objective, logs, prompt, copy, handoff, and refresh.
 
-Locked SVG marks remain unchanged. IREN blue, RHEN space/navy/ice, GRAEN bronze/ivory, NOSTRA violet and VELUM teal distinguish the systems. Native emoji supplement rather than replace those marks; the repository does not ship Slack custom emoji assets.
+Do not use a health color to distinguish a module. Do not use a module glyph as a generic button icon. Do not create one-off Unicode glyphs when a canonical UI concept icon exists.
 
-Links provide accessible names and visible keyboard focus. Text and symbols accompany color. Reduced motion disables instrument, signal, queue and glow animations. The visuals use a small fixed SVG tree and CSS opacity/transforms; they add no animation package, WebGL, or telemetry backend.
+## Observation contract
 
-## Verification
+A generic RUNNING runtime alone does not imply research, prediction, replay, or execution. Missing evidence produces Unavailable. Stale/failed refreshes cannot produce Healthy. Empty known queues differ from unavailable evidence. Raw status and runtime provenance remain accessible.
 
-ANEVUM Verify runs canonical boundary tests, visual-state regressions, typecheck/build, Cloudflare preview, route/metadata/privacy probes, existing browser checks and all nine visual routes at 1440×1000 and 390×844.
+## Slack
 
-Protected browser fixtures intercept only the test browser's fetch. They do not change server authentication or submit production commands. Public screenshots use the real sanitized feed. Full-resolution captures and contact sheets are retained in the ANEVUM preview artifact; production deployment also checks the three public visual surfaces and retains screenshots.
+Slack uses only two custom ANEVUM-family brand emoji: `:anevum:` and `:rhen:`.
+
+New runtime notifications use:
+
+`:rhen: <semantic marker> RHEN // <MODULE> // <EVENT>`
+
+Legacy IREN/GRAEN/NOSTRA/VELUM custom emoji families are retired from new use. Compatibility parsing remains valid for historical messages.
+
+## Accessibility and performance
+
+Links provide accessible names and visible keyboard focus. Text accompanies color. Reduced motion disables nonessential glow, signal, queue, and arrival animations. The visual system uses lightweight SVG and CSS and requires no separate visual telemetry backend.
