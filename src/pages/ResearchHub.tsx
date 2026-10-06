@@ -9,7 +9,7 @@ const programs: { name: SystemName; category: string; description: string; href:
   { name:"GRAEN", category:"Strategy discovery", description:"Bounded candidate generation, chronological development/validation/holdout evidence, multiplicity control, falsification, and paper-only promotion.", href:"/architecture" },
   { name:"NOSTRA", category:"Forecasting", description:"Regime inference, prediction state, forward horizons, uncertainty, post-event outcomes, and calibration without execution authority.", href:"/architecture" },
   { name:"VELUM", category:"Independent verification", description:"Broker-isolated replay, LOW/BASE/HIGH friction stress, execution-delay stress, counterfactual comparison, and failure analysis.", href:"/architecture" },
-  { name:"RHEN", category:"Execution evidence", description:"Market observations, live and paper lane evidence, reconciliation, candidate outcomes, and normalized production records.", href:"/live" }
+  { name:"RHEN", category:"Execution evidence", description:"Market observations, regular and extended equity evidence, reconciliation, exact candidate outcomes, and normalized production records.", href:"/live" }
 ];
 
 export default function ResearchHub() {
@@ -24,7 +24,6 @@ export default function ResearchHub() {
   const graen = publicSystem("GRAEN", data, now, Boolean(error));
   const velum = publicSystem("VELUM", data, now, Boolean(error));
   const rhen = publicSystem("RHEN", data, now, Boolean(error));
-  const validation = data?.crypto_shadow_validation;
   const activeStrategy = data?.active_strategy?.version_id || data?.active_strategy?.strategy_name || "UNAVAILABLE";
 
   return (
@@ -84,20 +83,10 @@ export default function ResearchHub() {
             </article>
 
             <article>
-              <header><RhenSystemGlyph system="GRAEN" size="sm" /><span>PUBLISHED VALIDATION SAMPLE</span></header>
-              <strong>{displayState(validation?.status)}</strong>
-              <div className="research-validation-progress">
-                <div>
-                  <span>Completed exits</span>
-                  <b>{validation?.counts?.exits ?? "—"}</b>
-                  <small>{validation?.progress?.completed_trades_pct == null ? "No progress reported" : validation.progress.completed_trades_pct.toFixed(1) + "% of public target"}</small>
-                </div>
-                <div>
-                  <span>Independent days</span>
-                  <b>{validation?.counts?.independent_day_blocks ?? "—"}</b>
-                  <small>{validation?.progress?.independent_days_pct == null ? "No progress reported" : validation.progress.independent_days_pct.toFixed(1) + "% of public target"}</small>
-                </div>
-              </div>
+              <header><RhenSystemGlyph system="RHEN" size="sm" /><span>FORWARD EVIDENCE</span></header>
+              <strong>{outcomeCount ? outcomeCount + " RECORDED OUTCOMES" : "AWAITING MEASURABLE COHORT"}</strong>
+              <p>Post-event outcomes stay separate from the original decision. V4.3 admits new candidates to exact evaluation only when the original decision price and completed-bar timestamp were preserved.</p>
+              <small>Legacy rows with missing decision-time inputs are not reconstructed or guessed.</small>
             </article>
 
             <article className="research-authority-card">
@@ -198,7 +187,7 @@ export default function ResearchHub() {
         <div className="field-notes-method-copy">
           <span>HOW TO READ THESE</span>
           <h2>Narrative first. Evidence before promotion.</h2>
-          <p>Each Field Note separates the readable account from the procedure needed to reproduce or challenge it. The canonical BTC path is bounded research → chronological validation → independent VELUM replay → forward paper → ELIGIBLE_FOR_REVIEW. No automated research state grants live authority.</p>
+          <p>Each Field Note separates the readable account from the procedure needed to reproduce or challenge it. The canonical V4.3 path is bounded research → chronological validation → independent VELUM replay → exact forward evidence → protected release review. No automated research state grants live authority.</p>
         </div>
         <div className="field-notes-method-flow" aria-label="Field Note structure">
           {["READ","INSPECT","REPRODUCE","CHALLENGE"].map((item, index) => (
