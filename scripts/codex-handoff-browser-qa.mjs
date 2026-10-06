@@ -6,7 +6,7 @@ import path from "node:path";
 const base = process.env.BASE_URL;
 if (!base) throw new Error("BASE_URL is required");
 
-const routes = ["/command/system"];
+const routes = ["/command/review"];
 const viewports = [
   { name: "desktop", width: 1440, height: 1000, mobile: false, deviceScaleFactor: 1 },
   { name: "mobile", width: 390, height: 844, mobile: true, deviceScaleFactor: 1 }
@@ -159,31 +159,31 @@ async function runCase(route, viewport) {
   await sleep(5000);
 
   await send("Runtime.evaluate", {expression: `
-    [...document.querySelectorAll("button")].find(b => b.textContent?.trim() === "Generate Codex prompt")?.click();
+    [...document.querySelectorAll("button")].find(b => b.textContent?.trim() === "Generate Work prompt")?.click();
   `});
   await sleep(900);
   await send("Runtime.evaluate", {expression: `
-    [...document.querySelectorAll("button")].find(b => b.textContent?.trim() === "Copy generated prompt")?.click();
+    [...document.querySelectorAll("button")].find(b => b.textContent?.trim() === "Copy Work prompt")?.click();
     [...document.querySelectorAll("button")].find(b => b.textContent?.trim() === "Verify tracked handoff")?.click();
   `});
   await sleep(500);
   const interactions = await send("Runtime.evaluate", {expression: `({
     generated: window.__sentCommands?.some(command => command.startsWith("maintenance prompt")),
     verified: window.__sentCommands?.includes("verify Codex handoff"),
-    maintenancePrompt: document.querySelector('textarea[aria-label="IREN maintenance Codex prompt"]')?.value,
-    copied: window.__copiedPrompt === document.querySelector('textarea[aria-label="IREN maintenance Codex prompt"]')?.value,
+    maintenancePrompt: document.querySelector('textarea[aria-label="IREN Work handoff prompt"]')?.value,
+    copied: window.__copiedPrompt === document.querySelector('textarea[aria-label="IREN Work handoff prompt"]')?.value,
     tracked: document.querySelector(".iren-maintenance-handoff")?.textContent.includes("Add runtime evidence"),
-    adaptivePass: document.body.textContent.includes("ADAPTIVE PASS · TARGETED"),
+    workPass: document.body.textContent.includes("WORK PASS · TARGETED"),
     adaptiveDelta: document.body.textContent.includes("3 material changes"),
     noDock: !document.querySelector(".iren-dock")
   })`,returnByValue:true});
   const check = interactions.result?.value || {};
   if (!check.generated || !check.verified || !check.copied || !check.tracked || !check.noDock ||
-      !check.adaptivePass || !check.adaptiveDelta ||
+      !check.workPass || !check.adaptiveDelta ||
       !check.maintenancePrompt?.includes("IREN ADAPTIVE MAINTENANCE PASS v2") ||
       !check.maintenancePrompt?.includes("anevum/alpaca-trader") ||
       !check.maintenancePrompt?.includes("anevum/anevum-web")) {
-    throw new Error("Maintenance interaction failed: " + JSON.stringify(check));
+    throw new Error("Work handoff interaction failed: " + JSON.stringify(check));
   }
   const result = await send("Runtime.evaluate", {
     expression: `(() => {

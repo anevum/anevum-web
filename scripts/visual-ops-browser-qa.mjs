@@ -7,7 +7,7 @@ const base = process.env.BASE_URL;
 if (!base) throw new Error("BASE_URL is required");
 
 const publicRoutes = ["/", "/live", "/architecture", "/research", "/research/multi-market-architecture-equities-crypto", "/founder", "/resume", "/releases"];
-const commandRoutes = ["/command/overview", "/command/trading", "/command/research", "/command/system"];
+const commandRoutes = ["/command/operate", "/command/discover", "/command/review", "/command/system"];
 const routes = process.env.PUBLIC_ONLY === "1" ? publicRoutes : [...publicRoutes, ...commandRoutes];
 const output = path.join(process.env.RUNNER_TEMP || os.tmpdir(), "anevum-visuals");
 fs.mkdirSync(output, {recursive:true});
@@ -147,24 +147,41 @@ async function runCase(route, viewport) {
     };
   })()`.replace("routePlaceholder", JSON.stringify(route)),returnByValue:true});
   const details=ops.result?.value||{};
-  const requiresVisualOpsSurface = route === "/live" || route === "/command/overview" || route === "/command/system";
-  const requiresSystemCards = route === "/live" || route === "/command/overview" || route === "/command/system";
-  if((requiresVisualOpsSurface && !details.surface) || (requiresSystemCards && (!details.cards || !details.links))) {
-    throw new Error("Missing accessible visual surface: "+JSON.stringify(details));
+  if(route === "/live" && (!details.surface || !details.cards || !details.links)) {
+    throw new Error("Missing accessible public visual surface: "+JSON.stringify(details));
   }
-  if(route === "/command/trading" || route === "/command/research") {
-    const workspace = await send("Runtime.evaluate", {expression: `({
-      pageClass: document.querySelector(".command-shell")?.className || "",
-      panels: [...document.querySelectorAll(".command-panel")].filter(el => {
+
+  if(route.startsWith("/command/")) {
+    const workspace = await send("Runtime.evaluate", {expression: `(() => {
+      const visible = (selector) => {
+        const el = document.querySelector(selector);
+        if (!el) return false;
         const rect = el.getBoundingClientRect();
         const style = getComputedStyle(el);
         return rect.width > 0 && rect.height > 0 && style.display !== "none" && style.visibility !== "hidden";
-      }).length,
-      navCurrent: document.querySelector('.command-header nav a[aria-current="page"]')?.getAttribute("href")
-    })`, returnByValue:true});
+      };
+      const active = document.querySelector(".command-v4-header nav a.active");
+      return {
+        root: visible(".command-v4"),
+        heading: document.querySelector(".command-v4-heading h1")?.textContent?.trim() || "",
+        navCurrent: active?.getAttribute("href") || "",
+        operate: visible(".command-v4-operate .command-v4-strip") && visible(".command-trading-lanes"),
+        discover: visible(".command-v4-discover") && visible(".command-v4-funnel"),
+        review: visible(".command-v4-review-stack") && visible(".command-v4-review"),
+        system: visible(".command-v4-system-stack") && (
+          visible(".operations-terminal") || visible(".ops-center") || visible(".command-topology")
+        )
+      };
+    })()`, returnByValue:true});
     const value=workspace.result?.value||{};
-    if(!value.panels || value.navCurrent !== route) {
-      throw new Error("Canonical Command workspace failed: "+JSON.stringify({route,...value}));
+    const expected = {
+      "/command/operate": ["Operate", "operate"],
+      "/command/discover": ["Discover", "discover"],
+      "/command/review": ["Review", "review"],
+      "/command/system": ["System", "system"]
+    }[route];
+    if(!expected || !value.root || value.navCurrent !== route || value.heading !== expected[0] || value[expected[1]] !== true) {
+      throw new Error("Canonical Command V4 workspace failed: "+JSON.stringify({route,...value}));
     }
   }
 
@@ -226,9 +243,9 @@ async function runCase(route, viewport) {
 
   if(route.startsWith("/command/")) {
     const navAudit=await send("Runtime.evaluate",{expression:`(() => {
-      const nav=document.querySelector(".command-header nav");
+      const nav=document.querySelector(".command-v4-header nav");
       const links=[...nav?.querySelectorAll("a")||[]].filter(el=>el.getBoundingClientRect().width>0);
-      const rects=links.map(el=>{const r=el.getBoundingClientRect();return {label:el.getAttribute("aria-label"),left:r.left,right:r.right,top:r.top,bottom:r.bottom,width:r.width,height:r.height}});
+      const rects=links.map(el=>{const r=el.getBoundingClientRect();return {label:el.textContent?.trim()||"",current:el.getAttribute("aria-current"),left:r.left,right:r.right,top:r.top,bottom:r.bottom,width:r.width,height:r.height}});
       const overlaps=[];
       for(let i=0;i<rects.length;i++) for(let j=i+1;j<rects.length;j++){
         const a=rects[i],b=rects[j];
@@ -237,7 +254,7 @@ async function runCase(route, viewport) {
       const rows=[...new Set(rects.map(r=>Math.round(r.top)))];
       return {
         count:rects.length,
-        labels:rects.map(r=>r.label),
+        labels:rects.map(r=>r.label),\n        current:rects.filter(r=>r.current==="page").map(r=>r.label),
         rows,
         overlaps,
         minWidth:Math.min(...rects.map(r=>r.width)),
@@ -246,9 +263,9 @@ async function runCase(route, viewport) {
       };
     })()`,returnByValue:true});
     const nav=navAudit.result?.value||{};
-    const canonicalLabels=["Overview","Trading","Research","System"];
+    const canonicalLabels=["Operate","Discover","Review","System"];
     const labelsMatch=Array.isArray(nav.labels)&&canonicalLabels.every((label,index)=>nav.labels[index]===label);
-    if(nav.count!==4||!labelsMatch||nav.overlaps?.length||nav.minWidth<44||nav.maxRight>nav.viewport+1||nav.rows?.length!==1){
+    if(nav.count!==4||!labelsMatch||nav.current?.length!==1||nav.overlaps?.length||nav.minWidth<44||nav.maxRight>nav.viewport+1||nav.rows?.length!==1){
       throw new Error("Command icon navigation geometry failed: "+JSON.stringify(nav));
     }
   }

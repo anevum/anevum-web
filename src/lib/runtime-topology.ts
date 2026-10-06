@@ -150,6 +150,11 @@ export type StrategyReleaseGateProjection = {
 
 export type StrategyPipelineProjection = {
   btc_discovery?: BtcDiscoveryProjection | null;
+  research?: {
+    control?: ResearchControlProjection;
+    observability?: ResearchObservabilityProjection;
+    graen_problems?: IrenSnapshot["research"] extends infer R ? never : never;
+  } | Record<string, unknown>;
   schema_version?: string;
   observed_at?: string | null;
   available?: boolean;
@@ -247,6 +252,30 @@ export type ResearchObservabilityEvent = {
   detail?: string | null;
 };
 
+export type ResearchControlProjection = {
+  schema_version?: string;
+  mode?: "IDLE" | "OBSERVING" | "AUTOMATED_TEST" | "RESEARCH_REVIEW_REQUIRED" | "RELEASE_REVIEW_REQUIRED" | string;
+  reason?: string | null;
+  review_required?: boolean;
+  review_kind?: string | null;
+  work_credit_recommended?: boolean;
+  problem_id?: string | null;
+  stage?: string | null;
+  decision?: string | null;
+  next_action?: string | null;
+  rejected_generations?: number;
+  latest_run_id?: string | null;
+  autonomy?: {
+    collect_market_evidence?: boolean;
+    execute_frozen_hypotheses?: boolean;
+    run_replay_validation?: boolean;
+    generate_new_hypothesis_family?: boolean;
+    patch_strategy_code?: boolean;
+    promote_live_strategy?: boolean;
+    change_risk_or_capital?: boolean;
+  };
+};
+
 export type ResearchObservabilityProjection = {
   schema_version?: string;
   updated_at?: string | null;
@@ -283,6 +312,7 @@ export type IrenSnapshot = {
   work?: IrenWorkSummary;
   strategy_pipeline?: StrategyPipelineProjection;
   research?: {
+    control?: ResearchControlProjection;
     graen_problems?: Array<{
       problem_id?: string;
       title?: string;
@@ -303,6 +333,9 @@ export type IrenSnapshot = {
       status?: string;
       methodology_version?: string | null;
       result_state?: string | null;
+      decision?: string | null;
+      next_action?: string | null;
+      candidate_id?: string | null;
       error?: string | null;
       started_at?: string;
       completed_at?: string | null;

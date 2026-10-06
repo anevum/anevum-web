@@ -484,6 +484,17 @@ export type CommandExtendedEquityLane = {
   } | null;
 };
 
+export type CommandUniverse = {
+  enabled?: boolean;
+  source?: string | null;
+  active_count?: number;
+  candidate_count?: number;
+  eligible_count?: number;
+  updated_at?: string | null;
+  error?: string | null;
+  active_symbols?: string[];
+};
+
 export type CommandSnapshot = {
   mode?: string;
   observed_at?: string;
@@ -500,6 +511,7 @@ export type CommandSnapshot = {
   crypto_stats?: Record<string, unknown>;
   crypto_approval?: Record<string, unknown> | null;
   extended_equity?: CommandExtendedEquityLane | null;
+  universe?: CommandUniverse | null;
   crypto_live?: CommandCryptoLane | null;
   crypto_paper?: CommandCryptoLane | null;
   bot?: Record<string, unknown>;
