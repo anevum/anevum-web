@@ -427,14 +427,21 @@ async function runScrollResetCase(viewport) {
     const beforeState = await evaluate(`(async () => {
       const readyDeadline = Date.now() + 12000;
       let link = null;
-      let scroller = document.scrollingElement || document.documentElement;
+      let scroller = null;
       let maxScroll = 0;
       while (Date.now() < readyDeadline) {
-        scroller = document.scrollingElement || document.documentElement;
+        scroller = document.scrollingElement || document.documentElement || null;
+        if (!scroller) {
+          await new Promise((resolve) => setTimeout(resolve, 100));
+          continue;
+        }
         link = document.querySelector('a[href="/architecture"]');
         maxScroll = Math.max(0, scroller.scrollHeight - scroller.clientHeight);
         if (location.pathname === "/research" && link && maxScroll > 200) break;
         await new Promise((resolve) => setTimeout(resolve, 100));
+      }
+      if (!scroller) {
+        return { ready: false, reason: "document scroller unavailable after hydration wait", before: 0, maxScroll: 0, pathname: location.pathname };
       }
       if (!link) {
         return { ready: false, reason: "architecture link missing after hydration wait", before: scroller.scrollTop, maxScroll, pathname: location.pathname };
@@ -492,8 +499,8 @@ async function runScrollResetCase(viewport) {
       await sleep(100);
       try {
         const observed = await evaluate(`(() => {
-          const scroller = document.scrollingElement || document.documentElement;
-          return { pathname: location.pathname, after: scroller.scrollTop };
+          const scroller = document.scrollingElement || document.documentElement || null;
+          return { pathname: location.pathname, after: scroller ? scroller.scrollTop : null };
         })()`);
         if (observed) afterState = observed;
         if (afterState.pathname === "/architecture" && afterState.after <= 1) break;
