@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import {
   isRegularEquityMarketTime,
   projectEquityMarketTimeline,
+  suppressTransientEquitySpikes,
   EQUITY_MARKET_DISPLAY
 } from "../src/lib/equity-market-time.ts";
 
@@ -47,4 +48,24 @@ test("equity timeline preserves intraday spacing inside an active session", () =
   const projected = projectEquityMarketTimeline(rows);
   assert.equal(projected[1].displayTime - projected[0].displayTime, 5 * 60_000);
   assert.equal(projected[2].displayTime - projected[1].displayTime, 25 * 60_000);
+});
+
+test("transient broker-equity spikes are suppressed without smoothing sustained moves", () => {
+  const rows = [
+    { equity: 73.80, sessionDate: "2026-10-06" },
+    { equity: 73.79, sessionDate: "2026-10-06" },
+    { equity: 55.35, sessionDate: "2026-10-06" },
+    { equity: 73.78, sessionDate: "2026-10-06" },
+    { equity: 73.63, sessionDate: "2026-10-06" }
+  ];
+  const cleaned = suppressTransientEquitySpikes(rows);
+  assert.equal(cleaned.suppressedCount, 1);
+  assert.deepEqual(cleaned.rows.map((row) => row.equity), [73.80, 73.79, 73.78, 73.63]);
+
+  const sustained = suppressTransientEquitySpikes([
+    { equity: 73.80, sessionDate: "2026-10-06" },
+    { equity: 70.00, sessionDate: "2026-10-06" },
+    { equity: 66.00, sessionDate: "2026-10-06" }
+  ]);
+  assert.equal(sustained.suppressedCount, 0);
 });
