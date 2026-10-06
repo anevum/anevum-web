@@ -83,12 +83,12 @@ function laneActivity(snapshot: IrenSnapshot | null, feed: LiveTradingFeed | nul
   const fallback = system === "IREN"
     ? "Supervising; no active jobs."
     : system === "RHEN"
-      ? "No current executable cycle."
+      ? "Runtime healthy · waiting for the next executable market cycle."
       : system === "GRAEN"
-        ? "No active research run."
+        ? "Research worker healthy · waiting for research work."
         : system === "VELUM"
-          ? "No replay currently running."
-          : "No forecast cycle currently running.";
+          ? "Replay worker healthy · waiting for an eligible replay."
+          : "Forecast worker healthy · waiting for forecast or scoring inputs.";
   const activity = String(traceActivity || (job?.title ? String(job.title) : "") || (active ? view.activity : "") || fallback);
   const started = String(traceStarted || job?.started_at || activeProblem?.started_at || job?.created_at || "");
   return { view, work, job, activity, activityState, active, started, traceStatus, traceType, traceActive, activeProblem };
