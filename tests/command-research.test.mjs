@@ -68,3 +68,16 @@ test("IREN review surface is framed as a deliberate Work handoff", () => {
   assert.match(dock, /maintenance prompt/); // backend command remains compatible
   assert.doesNotMatch(dock, /IREN \/ MAINTENANCE/);
 });
+
+
+test("Strategy lifecycle exposes read-only forward evidence readiness", () => {
+  const pipeline = readFileSync(new URL("../src/components/CommandStrategyPipeline.tsx", import.meta.url), "utf8");
+  const topology = readFileSync(new URL("../src/lib/runtime-topology.ts", import.meta.url), "utf8");
+
+  assert.match(topology, /StrategyEvidenceReadinessProjection/);
+  assert.match(topology, /measurement_ready_rate_pct/);
+  assert.match(pipeline, /FORWARD EVIDENCE READINESS/);
+  assert.match(pipeline, /missing_reference_price_count/);
+  assert.match(pipeline, /missing_bar_time_count/);
+  assert.match(pipeline, /read only/);
+});
