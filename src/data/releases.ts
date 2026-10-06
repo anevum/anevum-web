@@ -52,8 +52,8 @@ export function rhenReleaseBySlug(slug?: string) {
 }
 
 function semverParts(version: string) {
-  const match = /^(\d+)\.(\d+)(?:\.(\d+))?$/.exec(version);
-  return match ? [Number(match[1]), Number(match[2]), Number(match[3] || 0)] : null;
+  const match = /^(\d+)\.(\d+)\.(\d+)$/.exec(version);
+  return match ? [Number(match[1]), Number(match[2]), Number(match[3])] : null;
 }
 
 export function nextPatchVersion(version: string) {
