@@ -94,7 +94,6 @@ export default function CommandIrenDock({ session }: { session: RhenSession }) {
   const [expanded, setExpanded] = useState(false);
   const [error, setError] = useState("");
   const [copied, setCopied] = useState("");
-  const [directive, setDirective] = useState("");
   const [sending, setSending] = useState(false);
   const refreshInFlight = useRef(false);
 
@@ -186,7 +185,7 @@ export default function CommandIrenDock({ session }: { session: RhenSession }) {
         <strong>IREN</strong>
         <span className="iren-dock-connection">{connectionLabel}</span>
         <i />
-        <span className="iren-dock-prompt">Ask IREN…</span>
+        <span className="iren-dock-prompt">DETERMINISTIC CONTROL</span>
         <span className="iren-dock-count">{activeJobs.length} JOB{activeJobs.length === 1 ? "" : "S"}</span>
         <span className="iren-dock-count">{work?.requires_human || 0} NEEDS YOU</span>
         <b>{expanded ? "⌄" : "⌃"}</b>
@@ -195,35 +194,33 @@ export default function CommandIrenDock({ session }: { session: RhenSession }) {
       <div className="iren-dock-body">
         <div className="iren-dock-toolbar">
           <div>
-            <small>OPERATING INTELLIGENCE / RHEN NATIVE</small>
-            <strong>Operator command + current work</strong>
+            <small>IREN / ZERO-COST CONTROL PLANE</small>
+            <strong>Deterministic operator controls</strong>
+            <p>No conversational model is running here. IREN reads canonical state, runs fixed safe controls, and prepares manual Codex handoffs without paid model execution.</p>
           </div>
           <div className="iren-dock-actions">
-            {["status", "what's next?", "prepare for Codex", "verify Codex handoff", "do that", "what needs me?"].map((value) => (
-              <button key={value} type="button" disabled={sending} onClick={() => void send(value)}>
-                {value}
-              </button>
-            ))}
+            <button type="button" disabled={sending} onClick={() => void refresh()}>refresh state</button>
+            <button type="button" disabled={sending} onClick={() => void send("what's next?")}>next safe action</button>
+            <button type="button" disabled={sending} onClick={() => void send("do that")}>run safe action</button>
+            <button type="button" disabled={sending} onClick={() => void send("what needs me?")}>needs owner</button>
+            <button type="button" disabled={sending} onClick={() => void send("prepare for Codex")}>prepare manual Codex</button>
+            <button type="button" disabled={sending} onClick={() => void send("verify Codex handoff")}>verify handoff</button>
           </div>
         </div>
 
         {error ? <div className="iren-dock-error">{error}</div> : null}
         {lastResponse ? (
           <div className="iren-dock-response">
-            <span>{String(lastCommand?.status || "IREN")}</span>
+            <span>LAST CONTROL · {String(lastCommand?.status || "RECORDED")}</span>
             <p>{lastResponse}</p>
-            {lastCommand?.linked_job_id ? <small>Job {shortId(lastCommand.linked_job_id)}</small> : null}
+            {lastCommand?.linked_job_id ? <small>Durable job {shortId(lastCommand.linked_job_id)}</small> : <small>No model-generated reply.</small>}
           </div>
-        ) : null}
-
-        <form className="iren-dock-directive" onSubmit={(event) => {
-          event.preventDefault(); void send(directive); setDirective("");
-        }}>
-          <label htmlFor="iren-directive">Ask IREN</label>
-          <input id="iren-directive" value={directive} maxLength={4000}
-            onChange={(event) => setDirective(event.target.value)} placeholder="Ask IREN about the current system, work, or next action…" />
-          <button type="submit" disabled={sending || !directive.trim()}>Send</button>
-        </form>
+        ) : (
+          <div className="iren-dock-response">
+            <span>CONTROL MODE</span>
+            <p>Choose an explicit action above. Free-form prompts are intentionally disabled because Command has no paid conversational worker.</p>
+          </div>
+        )}
         {work?.next_action ? <div className="iren-dock-response">
           <span>{work.execution_mode}</span><p>{work.next_action.title}</p>
         </div> : null}
