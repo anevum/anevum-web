@@ -142,7 +142,7 @@ async function runCase(route, viewport) {
           result:{message:"Adaptive maintenance prompt prepared: TARGETED; 3 material change(s) since the previous v2 prompt.",
             maintenance_prompt:"IREN ADAPTIVE MAINTENANCE PASS v2\\nBackend/runtime: anevum/alpaca-trader\\nFrontend/Command: anevum/anevum-web\\nRESEARCH -> STRATEGY CONTROL LOOP",
             maintenance_manifest:{version:"iren-maintenance-manifest.v2",mode:"TARGETED",driver:"pending canonical objective or work item",
-              change_count:3,changed_since_previous:true,changes:["New objective: COMMAND","GRAEN run changed: run-1","New strategy: BTC-CANARY-001"],
+              change_count:3,changed_since_previous:true,changes:["New objective: COMMAND","GRAEN run changed: run-1","New strategy: EQUITY-CANDIDATE-001"],
               budget:{primary_objectives:1,supporting_changes:2,parallel_research_threads:1,scope:"one coherent change set"}}}}]:[],
           next_action:{title:"Add runtime evidence"},execution_mode:"codex/manual software",
           handoffs:[{handoff_id:"qa-1",objective_key:"iren.evidence",handoff_status:"PREPARED",
