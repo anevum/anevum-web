@@ -84,6 +84,7 @@ export default function CommandIrenDock({ session }: { session: RhenSession }) {
   const [copied, setCopied] = useState("");
   const [sending, setSending] = useState(false);
   const [pendingControl, setPendingControl] = useState("");
+  const [lastOutcome, setLastOutcome] = useState<{ command: IrenCommand; job?: IrenJob } | null>(null);
   const refreshInFlight = useRef(false);
 
   const request = useCallback(async (path: string, init?: RequestInit) => {
@@ -130,7 +131,7 @@ export default function CommandIrenDock({ session }: { session: RhenSession }) {
           : undefined;
         const deterministicJob = linkedJob && String(linkedJob.job_type || "").startsWith("CONTROL_");
         if (!deterministicJob || ["SUCCEEDED", "FAILED", "CANCELLED", "NEEDS_APPROVAL"].includes(String(linkedJob?.status || "").toUpperCase())) {
-          return command;
+          return { command, job: linkedJob };
         }
       }
     }
@@ -153,6 +154,7 @@ export default function CommandIrenDock({ session }: { session: RhenSession }) {
     if (!text || sending) return;
     setSending(true);
     setPendingControl(text);
+    setLastOutcome(null);
     try {
       const accepted = await request("/api/command/iren/command", {
         method: "POST",
@@ -161,8 +163,12 @@ export default function CommandIrenDock({ session }: { session: RhenSession }) {
       setExpanded(true);
       setError("");
       const commandId = accepted.command?.command_id;
-      if (commandId) await waitForCommand(commandId);
-      else await refresh();
+      if (commandId) {
+        const outcome = await waitForCommand(commandId);
+        setLastOutcome(outcome);
+      } else {
+        await refresh();
+      }
     } catch (nextError) {
       setError(nextError instanceof Error ? nextError.message : "IREN control failed.");
     } finally {
@@ -182,13 +188,23 @@ export default function CommandIrenDock({ session }: { session: RhenSession }) {
     () => objectives.filter((objective) => ["ACTIVE", "READY", "BLOCKED"].includes(String(objective.status || ""))).slice(0, 8),
     [objectives]
   );
-  const handoff = work?.handoffs?.find((row) => !["SUPERSEDED", "FAILED"].includes(row.handoff_status));
+  const handoff = work?.handoffs?.find((row) =>
+    ["PREPARED", "IN_PROGRESS", "PR_OPEN", "MERGED", "VERIFYING"].includes(String(row.handoff_status || "").toUpperCase())
+  );
   const nextAction = work?.next_action;
   const executionMode = String(work?.execution_mode || "idle");
   const hasNextAction = Boolean(nextAction?.title);
   const canRunAction = hasNextAction && executionMode === "deterministic";
   const canPrepareCodex = hasNextAction && executionMode === "codex/manual software" && !handoff;
   const canVerifyHandoff = Boolean(handoff);
+  const outcomeResponse = (lastOutcome?.command.result || lastOutcome?.command.response || {}) as Record<string, unknown>;
+  const outcomeJobResult = (lastOutcome?.job?.result || {}) as Record<string, unknown>;
+  const outcomeMessage = typeof outcomeJobResult.message === "string"
+    ? outcomeJobResult.message
+    : typeof outcomeResponse.message === "string"
+      ? outcomeResponse.message
+      : "";
+  const outcomeStatus = String(lastOutcome?.job?.status || lastOutcome?.command.status || "").toUpperCase();
   const openIncidents = (feed?.incidents || [])
     .filter((row) => String(row.status || "OPEN").toUpperCase() !== "RESOLVED")
     .slice(0, 4);
@@ -254,6 +270,17 @@ export default function CommandIrenDock({ session }: { session: RhenSession }) {
           <div className="iren-dock-response">
             <span>CONTROL RUNNING</span>
             <p>{pendingControl}</p>
+          </div>
+        ) : null}
+        {lastOutcome && !sending ? (
+          <div className="iren-dock-response">
+            <span>LAST CONTROL · {outcomeStatus || "COMPLETE"}</span>
+            {outcomeMessage ? <p>{outcomeMessage}</p> : null}
+            {lastOutcome.job ? (
+              <small>{lastOutcome.job.job_type || "CONTROL"} · {shortId(lastOutcome.job.job_id)}</small>
+            ) : (
+              <small>Command {shortId(lastOutcome.command.command_id)}</small>
+            )}
           </div>
         ) : null}
         {!hasNextAction && !handoff && !sending ? (
