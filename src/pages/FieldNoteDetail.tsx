@@ -1,5 +1,5 @@
 import { Link, Navigate, useParams } from "react-router-dom";
-import { RhenRhenSystemChip, RhenSystemGlyph } from "../components/company/RhenModuleGlyph";
+import { RhenSystemChip, RhenSystemGlyph } from "../components/company/RhenModuleGlyph";
 import { fieldNoteBySlug } from "../data/fieldNotes";
 
 export default function FieldNoteDetail() {
