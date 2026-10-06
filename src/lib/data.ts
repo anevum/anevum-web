@@ -414,6 +414,18 @@ export type CommandCryptoLane = {
   strategy_version_id?: string;
   strategy_family?: string;
   stats?: Record<string, unknown>;
+  intraday_preview?: {
+    status?: string;
+    strategy_version_id?: string;
+    observed_at?: string;
+    action?: string;
+    reason?: string;
+    max_hold_minutes?: number;
+    cost_assumptions?: { minimum_round_trip_fee_pct?: string; minimum_slippage_pct?: string };
+    broker_writes_allowed?: boolean;
+    live_execution_authorized?: boolean;
+    activation_blockers?: string[];
+  };
   last_decision?: string | null;
   last_signal?: Record<string, unknown> | null;
   last_scan?: Record<string, Record<string, unknown>>;

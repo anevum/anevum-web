@@ -74,6 +74,7 @@ function CryptoLane({
   const currentPosition = positions[0];
   const currentReturn = numeric(currentPosition?.unrealized_plpc);
   const state = laneState(lane);
+  const preview = lane?.intraday_preview;
 
   return (
     <article className={"trading-lane-card trading-lane-" + laneTone(lane)}>
@@ -135,6 +136,25 @@ function CryptoLane({
         <section className="trading-lane-alert is-error">
           <span>LANE ERROR</span>
           <strong>{lane.last_error}</strong>
+        </section>
+      ) : null}
+
+      {preview && preview.status !== "DISABLED" ? (
+        <section className="trading-lane-alert">
+          <span>INTRADAY DESIGN · UNVALIDATED</span>
+          <strong>{text(preview.strategy_version_id)} · {text(preview.action, preview.status).toUpperCase()}</strong>
+          <p>{text(preview.reason, "Market data observation unavailable.")}</p>
+          <p>
+            Observed {clockTime(preview.observed_at)} · flat account hypothesis · broker writes blocked.
+            {preview.max_hold_minutes ? ` Holding limit ${preview.max_hold_minutes} minutes.` : ""}
+          </p>
+          {preview.cost_assumptions ? <p>
+            Round-trip fee floor {percent(preview.cost_assumptions.minimum_round_trip_fee_pct)}
+            {" · "}slippage floor {percent(preview.cost_assumptions.minimum_slippage_pct)} plus spread.
+          </p> : null}
+          {preview.activation_blockers?.length ? <p>
+            Release blocked: {preview.activation_blockers.map(value => value.replaceAll("_", " ")).join("; ")}.
+          </p> : null}
         </section>
       ) : null}
 
