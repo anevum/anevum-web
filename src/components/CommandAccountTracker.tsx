@@ -77,29 +77,16 @@ export default function CommandAccountTracker({
         if (!["buy", "sell"].includes(side) || !Number.isFinite(time) || !isRegularEquityMarketTime(time)) {
           return null;
         }
-        const markerProjection = projectEquityMarketTimeline([{ at, time }]);
-        if (!markerProjection.length) return null;
         let nearest = points[0];
         for (const point of points) {
           if (Math.abs(point.time - time) < Math.abs(nearest.time - time)) nearest = point;
         }
-        const session = projected.find((row) => row.sessionDate === markerProjection[0].sessionDate);
-        if (!session) return null;
-        const sessionStart = projected.find((row) => row.sessionDate === markerProjection[0].sessionDate);
-        if (!sessionStart) return null;
-        const projectedMarker = projectEquityMarketTimeline([
-          ...projected
-            .filter((row) => row.sessionDate === markerProjection[0].sessionDate)
-            .map((row) => ({ at: row.at, time: row.time })),
-          { at, time }
-        ]).find((row) => row.at === at && row.time === time);
-        if (!projectedMarker) return null;
         return {
           id: String(order.id || order.client_order_id || at + side),
           side,
           symbol: text(order.symbol, "—"),
           at,
-          x: ((projectedMarker.displayTime - firstTime) / timeSpan) * width,
+          x: nearest.x,
           y: nearest.y
         };
       })
