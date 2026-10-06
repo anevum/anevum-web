@@ -16,6 +16,7 @@ type ChartPoint = {
   at: string;
   time: number;
   equity: number;
+  sessionDate: string;
   x: number;
   y: number;
 };
@@ -65,9 +66,19 @@ export default function CommandAccountTracker({
       at: row.at,
       time: row.time,
       equity: row.equity,
+      sessionDate: row.sessionDate,
       x: ((row.displayTime - firstTime) / timeSpan) * width,
       y: bottom - ((row.equity - low) / valueSpan) * (bottom - top)
     }));
+
+    const segments = Array.from(new Set(points.map((row) => row.sessionDate)))
+      .map((sessionDate) =>
+        points
+          .filter((row) => row.sessionDate === sessionDate)
+          .map((row) => row.x.toFixed(2) + "," + row.y.toFixed(2))
+          .join(" ")
+      )
+      .filter((segment) => segment.includes(" "));
 
     const markers = orders
       .map((order) => {
@@ -93,7 +104,7 @@ export default function CommandAccountTracker({
       .filter((row): row is { id: string; side: string; symbol: string; at: string; x: number; y: number } => Boolean(row));
 
     return {
-      points: points.map((row) => row.x.toFixed(2) + "," + row.y.toFixed(2)).join(" "),
+      segments,
       markers,
       first: points[0],
       last: points[points.length - 1],
@@ -138,7 +149,9 @@ export default function CommandAccountTracker({
           {chart ? (
             <>
               <svg viewBox="0 0 1000 220" preserveAspectRatio="none" role="img" aria-label="Private broker account equity curve with RHEN buy and sell execution markers">
-                <polyline points={chart.points} className="account-tracker-line" />
+                {chart.segments.map((segment, index) => (
+                  <polyline key={index} points={segment} className="account-tracker-line" />
+                ))}
                 {chart.markers.map((marker) => (
                   <g key={marker.id} className={"account-tracker-marker " + (marker.side === "buy" ? "is-buy" : "is-sell")}>
                     <circle cx={marker.x} cy={marker.y} r="7" />
