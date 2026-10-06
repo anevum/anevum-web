@@ -33,7 +33,11 @@ test("Trading workspace exposes private broker account tracking and executions",
   assert.match(data, /account_history\?: CommandAccountHistory/);
   assert.match(data, /crypto_live\?: CommandCryptoLane \| null/);
   assert.match(data, /crypto_paper\?: CommandCryptoLane \| null/);
+  assert.match(data, /extended_equity\?: CommandExtendedEquityLane \| null/);
   assert.match(lanes, /EQUITIES \/ LIVE/);
+  assert.match(lanes, /EQUITIES \/ EXTENDED 24\/5/);
+  assert.match(lanes, /managed_symbols/);
+  assert.match(lanes, /clientOrderId\.includes\("-ext-"\)/);
   assert.match(lanes, /CRYPTO \/ REAL ACCOUNT/);
   assert.match(lanes, /CRYPTO \/ PAPER CANARY/);
   assert.match(lanes, /PAPER AUTONOMOUS/);
