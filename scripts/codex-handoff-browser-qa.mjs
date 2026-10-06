@@ -139,8 +139,11 @@ async function runCase(route, viewport) {
       if (path.includes("/api/command/iren/status")) return Response.json({
         schema_version:"iren_command.v2",state:"HEALTHY",stale:false,observed_at:new Date().toISOString(),incidents:[],
         work:{objectives:[],jobs:[],commands:window.__maintenanceRequested?[{command_id:"qa-maintenance",status:"SUCCEEDED",
-          result:{message:"Maintenance Codex prompt prepared from current IREN state.",
-            maintenance_prompt:"Continue ANEVUM/RHEN maintenance from the CURRENT actual state.\\nBackend/runtime: anevum/alpaca-trader\\nFrontend/Command: anevum/anevum-web"}}]:[],
+          result:{message:"Adaptive maintenance prompt prepared: TARGETED; 3 material change(s) since the previous v2 prompt.",
+            maintenance_prompt:"IREN ADAPTIVE MAINTENANCE PASS v2\\nBackend/runtime: anevum/alpaca-trader\\nFrontend/Command: anevum/anevum-web\\nRESEARCH -> STRATEGY CONTROL LOOP",
+            maintenance_manifest:{version:"iren-maintenance-manifest.v2",mode:"TARGETED",driver:"pending canonical objective or work item",
+              change_count:3,changed_since_previous:true,changes:["New objective: COMMAND","GRAEN run changed: run-1","New strategy: BTC-CANARY-001"],
+              budget:{primary_objectives:1,supporting_changes:2,parallel_research_threads:1,scope:"one coherent change set"}}}}]:[],
           next_action:{title:"Add runtime evidence"},execution_mode:"codex/manual software",
           handoffs:[{handoff_id:"qa-1",objective_key:"iren.evidence",handoff_status:"PREPARED",
             package:{title:"Add runtime evidence",created_at:new Date().toISOString(),base_sha:"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
@@ -174,9 +177,11 @@ async function runCase(route, viewport) {
   })`,returnByValue:true});
   const check = interactions.result?.value || {};
   if (!check.generated || !check.verified || !check.copied || !check.tracked || !check.noDock ||
-      !check.maintenancePrompt?.includes("Continue ANEVUM/RHEN maintenance from the CURRENT actual state") ||
+      !check.maintenancePrompt?.includes("IREN ADAPTIVE MAINTENANCE PASS v2") ||
       !check.maintenancePrompt?.includes("anevum/alpaca-trader") ||
-      !check.maintenancePrompt?.includes("anevum/anevum-web")) {
+      !check.maintenancePrompt?.includes("anevum/anevum-web") ||
+      !document.body.textContent.includes("ADAPTIVE PASS · TARGETED") ||
+      !document.body.textContent.includes("3 material changes")) {
     throw new Error("Maintenance interaction failed: " + JSON.stringify(check));
   }
   const result = await send("Runtime.evaluate", {
