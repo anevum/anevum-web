@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { commandAuthHeaders, type RhenSession } from "../lib/auth";
 
 type IrenObjective = {
@@ -98,133 +98,6 @@ function activeHandoff(feed: IrenFeed | null) {
   );
 }
 
-function buildMaintenancePrompt(feed: IrenFeed | null, focus: string) {
-  const services = (feed?.topology?.services || []).slice(0, 12);
-  const incidents = (feed?.incidents || []).slice(0, 12);
-  const objectives = (feed?.work?.objectives || [])
-    .filter((row) => ["ACTIVE", "READY", "BLOCKED"].includes(String(row.status || "").toUpperCase()))
-    .slice(0, 10);
-  const jobs = (feed?.work?.jobs || [])
-    .filter((row) => ["QUEUED", "RUNNING", "WAITING", "BLOCKED", "NEEDS_APPROVAL"].includes(String(row.status || "").toUpperCase()))
-    .slice(0, 10);
-  const handoff = activeHandoff(feed);
-  const operatorFocus = focus.trim();
-
-  const lines = [
-    "Continue ANEVUM/RHEN maintenance from the CURRENT actual state. Do not restart architecture analysis or redesign completed work.",
-    "",
-    "Canonical repositories:",
-    "- Backend/runtime: anevum/alpaca-trader",
-    "- Frontend/Command: anevum/anevum-web",
-    "",
-    "IREN snapshot:",
-    "- State: " + clean(feed?.state, "UNKNOWN"),
-    "- Observed at: " + clean(feed?.observed_at),
-    "- Snapshot stale: " + (feed?.stale ? "YES" : "NO"),
-    "- Revision: " + clean(feed?.revision),
-    "",
-    "Runtime services:"
-  ];
-
-  if (services.length) {
-    for (const row of services) {
-      lines.push(
-        "- " + clean(row.service_name || row.service_id, "service") +
-        " | status=" + clean(row.status, "UNKNOWN") +
-        " | ready=" + (row.readiness === true ? "YES" : row.readiness === false ? "NO" : "UNKNOWN") +
-        " | revision=" + clean(row.revision) +
-        " | deployment=" + clean(row.deployment) +
-        (row.current_activity ? " | activity=" + clean(row.current_activity) : "")
-      );
-    }
-  } else {
-    lines.push("- No service inventory was present in this snapshot. Inspect live Railway state before editing.");
-  }
-
-  lines.push("", "Open incidents:");
-  if (incidents.length) {
-    for (const row of incidents) {
-      lines.push(
-        "- " + clean(row.key || row.incident_type, "incident") +
-        " | severity=" + clean(row.severity, "UNKNOWN") +
-        " | reason=" + clean(row.reason, "unspecified")
-      );
-    }
-  } else {
-    lines.push("- None reported.");
-  }
-
-  lines.push("", "Active objectives:");
-  if (objectives.length) {
-    for (const row of objectives) {
-      lines.push(
-        "- " + clean(row.objective_key, "objective") +
-        " | " + clean(row.status, "UNKNOWN") +
-        " | " + clean(row.title, "Untitled") +
-        " | owner=" + clean(row.owner_system, "IREN")
-      );
-    }
-  } else {
-    lines.push("- None.");
-  }
-
-  lines.push("", "Active work:");
-  if (jobs.length) {
-    for (const row of jobs) {
-      lines.push(
-        "- " + clean(row.job_id, "job") +
-        " | " + clean(row.status, "UNKNOWN") +
-        " | " + clean(row.job_type, "WORK") +
-        " | " + clean(row.title, "Untitled") +
-        " | owner=" + clean(row.owner_system, "IREN")
-      );
-    }
-  } else {
-    lines.push("- None.");
-  }
-
-  lines.push(
-    "",
-    "IREN next action:",
-    "- " + (feed?.work?.next_action?.title
-      ? clean(feed.work.next_action.title) + " | mode=" + clean(feed.work.execution_mode, "unknown")
-      : "No pending canonical action.")
-  );
-
-  lines.push("", "Tracked Codex handoff:");
-  if (handoff?.package) {
-    lines.push(
-      "- ACTIVE: " + clean(handoff.package.title) +
-      " | status=" + clean(handoff.handoff_status) +
-      " | objective=" + clean(handoff.objective_key) +
-      " | base=" + shortId(handoff.package.base_sha)
-    );
-    lines.push("- Inspect and continue/verify this handoff before creating overlapping work.");
-  } else {
-    lines.push("- None active.");
-  }
-
-  lines.push(
-    "",
-    "Operator focus:",
-    operatorFocus ? "- " + operatorFocus : "- No additional focus supplied. Perform the highest-value maintenance pass supported by current evidence.",
-    "",
-    "Execution instructions:",
-    "1. Inspect CURRENT main in both repositories, applicable AGENTS.md files, current GitHub CI, current Railway deployments, and current Command/IREN state before editing. Treat the snapshot above as context, not authority.",
-    "2. Reconcile the snapshot against live evidence. Do not act on stale assumptions, old PRs, obsolete services, or legacy architecture.",
-    "3. Preserve the current ANEVUM/RHEN architecture and naming. Consolidate rather than duplicate. Do not reintroduce retired infrastructure.",
-    "4. Identify the highest-value concrete maintenance/update work consistent with the operator focus and current evidence. If a safe code fix is clear, implement it; do not stop at analysis.",
-    "5. Add or update focused tests, run the relevant full CI, and verify the deployed result with GitHub plus Railway/Cloudflare evidence.",
-    "6. Preserve RHEN live strategy, risk controls, broker behavior, position sizing, execution permissions, credentials, and capital behavior unless the operator explicitly authorizes a change to those protected areas.",
-    "7. Keep paid model/API worker spending disabled. Do not add autonomous spending, credential changes, destructive infrastructure actions, or silent live-trading behavior changes.",
-    "8. Do not fabricate health, telemetry, research progress, trades, deployment state, or completion. If evidence is missing, surface the missing evidence.",
-    "9. If there is no real maintenance need, say so and do not invent work.",
-    "10. Finish with: exact changes made, tests/CI results, deployed state, unresolved blockers, and the next concrete action if one exists."
-  );
-
-  return lines.join("\n");
-}
-
 export default function CommandIrenMaintenance({ session }: { session: RhenSession }) {
   const [feed, setFeed] = useState<IrenFeed | null>(null);
   const [focus, setFocus] = useState("");
@@ -232,6 +105,7 @@ export default function CommandIrenMaintenance({ session }: { session: RhenSessi
   const [copied, setCopied] = useState("");
   const [sending, setSending] = useState(false);
   const [lastOutcome, setLastOutcome] = useState<{ command: IrenCommand; job?: IrenJob } | null>(null);
+  const [generatedPrompt, setGeneratedPrompt] = useState("");
   const refreshInFlight = useRef(false);
 
   const request = useCallback(async (path: string, init?: RequestInit) => {
@@ -283,7 +157,7 @@ export default function CommandIrenMaintenance({ session }: { session: RhenSessi
   }, [request]);
 
   const send = useCallback(async (command: string) => {
-    if (sending) return;
+    if (sending) return null;
     setSending(true);
     setLastOutcome(null);
     try {
@@ -293,17 +167,38 @@ export default function CommandIrenMaintenance({ session }: { session: RhenSessi
       }) as { command?: IrenCommand };
       const commandId = accepted.command?.command_id;
       if (commandId) {
-        setLastOutcome(await waitForCommand(commandId));
-      } else {
-        await refresh();
+        const outcome = await waitForCommand(commandId);
+        setLastOutcome(outcome);
+        setError("");
+        return outcome;
       }
+      await refresh();
       setError("");
+      return null;
     } catch (nextError) {
       setError(nextError instanceof Error ? nextError.message : "IREN control failed.");
+      return null;
     } finally {
       setSending(false);
     }
   }, [refresh, request, sending, waitForCommand]);
+
+  const generateMaintenancePrompt = useCallback(async () => {
+    const command = focus.trim()
+      ? "maintenance prompt: " + focus.trim()
+      : "maintenance prompt";
+    const outcome = await send(command);
+    const response = (outcome?.command.result || outcome?.command.response || {}) as Record<string, unknown>;
+    const prompt = typeof response.maintenance_prompt === "string"
+      ? response.maintenance_prompt
+      : "";
+    if (!prompt) {
+      setGeneratedPrompt("");
+      setError("IREN completed without returning a maintenance prompt.");
+      return;
+    }
+    setGeneratedPrompt(prompt);
+  }, [focus, send]);
 
   useEffect(() => {
     void refresh();
@@ -316,7 +211,6 @@ export default function CommandIrenMaintenance({ session }: { session: RhenSessi
   const canPrepareTracked = Boolean(feed?.work?.next_action?.title) &&
     executionMode === "codex/manual software" &&
     !handoff;
-  const maintenancePrompt = useMemo(() => buildMaintenancePrompt(feed, focus), [feed, focus]);
   const state = String(error ? "OFFLINE" : feed?.stale ? "STALE" : feed?.state || "CONNECTING").toUpperCase();
   const activeIncidents = (feed?.incidents || []).length;
   const activeJobs = (feed?.work?.jobs || []).filter((row) =>
@@ -351,7 +245,7 @@ export default function CommandIrenMaintenance({ session }: { session: RhenSessi
         <div className="iren-maintenance-state">
           <div><span>OBSERVED</span><strong>{feed?.observed_at ? new Date(feed.observed_at).toLocaleString() : "—"}</strong></div>
           <div><span>NEXT</span><strong>{feed?.work?.next_action?.title || "No pending canonical action"}</strong></div>
-          <div><span>MODE</span><strong>{executionMode}</strong></div>
+          <div><span>CODEX PROMPT</span><strong>{generatedPrompt ? "READY" : "NOT GENERATED"}</strong></div>
         </div>
 
         <label className="iren-maintenance-focus">
@@ -367,17 +261,22 @@ export default function CommandIrenMaintenance({ session }: { session: RhenSessi
 
         <div className="iren-maintenance-actions">
           <button type="button" onClick={() => void refresh()} disabled={sending}>Refresh state</button>
-          <button type="button" className="primary" onClick={() => void copy(maintenancePrompt, "maintenance")}>
-            {copied === "maintenance" ? "Copied" : "Copy maintenance prompt"}
+          <button type="button" className="primary" onClick={() => void generateMaintenancePrompt()} disabled={sending}>
+            {sending ? "Working…" : "Generate Codex prompt"}
           </button>
+          {generatedPrompt ? (
+            <button type="button" onClick={() => void copy(generatedPrompt, "maintenance")}>
+              {copied === "maintenance" ? "Copied" : "Copy generated prompt"}
+            </button>
+          ) : null}
           {canPrepareTracked ? (
             <button type="button" onClick={() => void send("prepare for Codex")} disabled={sending}>
-              {sending ? "Preparing…" : "Prepare tracked handoff"}
+              Prepare tracked handoff
             </button>
           ) : null}
           {handoff ? (
             <button type="button" onClick={() => void send("verify Codex handoff")} disabled={sending}>
-              {sending ? "Verifying…" : "Verify tracked handoff"}
+              Verify tracked handoff
             </button>
           ) : null}
         </div>
@@ -389,10 +288,17 @@ export default function CommandIrenMaintenance({ session }: { session: RhenSessi
           </div>
         ) : null}
 
-        <details className="iren-maintenance-prompt">
-          <summary>Preview maintenance prompt</summary>
-          <textarea readOnly aria-label="IREN maintenance Codex prompt" value={maintenancePrompt} rows={12} onFocus={(event) => event.target.select()} />
-        </details>
+        {generatedPrompt ? (
+          <details className="iren-maintenance-prompt">
+            <summary>Preview generated Codex prompt</summary>
+            <textarea readOnly aria-label="IREN maintenance Codex prompt" value={generatedPrompt} rows={12} onFocus={(event) => event.target.select()} />
+          </details>
+        ) : (
+          <div className="iren-maintenance-alert">
+            <span>CODEX HANDOFF</span>
+            <strong>Generate a fresh maintenance prompt from current IREN state when you want a new Codex pass.</strong>
+          </div>
+        )}
 
         {handoff?.package ? (
           <div className="iren-maintenance-handoff">
