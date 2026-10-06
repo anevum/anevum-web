@@ -6,8 +6,8 @@ import { SYSTEMS, ageText, commandSystem, fleetState } from "../lib/system-displ
 import { RuntimeDetails, SectionHead, SystemConstellation, SystemIncidentPanel, SystemMetric, SystemStatusChip, SystemTimeline, SystemVisualShell, SystemWorkQueue } from "./operations/VisualOps";
 
 function commandRoute(name: string) {
-  if (name === "RHEN") return "/command/trading";
-  if (["GRAEN", "NOSTRA", "VELUM"].includes(name)) return "/command/research";
+  if (name === "RHEN") return "/command/operate";
+  if (["GRAEN", "NOSTRA", "VELUM"].includes(name)) return "/command/discover";
   return "/command/system";
 }
 
