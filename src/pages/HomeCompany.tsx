@@ -26,10 +26,10 @@ export default function HomeCompany() {
           <span className="pt-home-kicker">ANEVUM // RHEN V3 UNIFIED RUNTIME</span>
           <h1>One runtime. Clear boundaries.</h1>
           <p>
-            RHEN is now the single ANEVUM system and production runtime. Execution, control, research,
-            replay, forecasting, Core/Store, and the research worker run as isolated modules inside one
-            Railway service instead of a fleet of overlapping services. Command remains the customer
-            surface; the public terminal remains the evidence surface.
+            RHEN is the unified ANEVUM production runtime. IREN, GRAEN, VELUM, and NOSTRA remain named
+            internal modules for control, research, replay, and forecasting, while execution and Core/Store
+            share the same Railway service with isolated authority boundaries. Command is the protected
+            operating surface; the public terminal is the public evidence surface.
           </p>
 
           <div className="pt-home-actions">
@@ -82,10 +82,10 @@ export default function HomeCompany() {
           <div>
             <h2>The architecture has been consolidated around RHEN.</h2>
             <p>
-              The former IREN, GRAEN, VELUM, NOSTRA, Foundation, and Research Agent identities are now
-              migration aliases for internal RHEN modules rather than independent top-level products or
-              Railway services. This removes duplicated infrastructure while preserving the authority
-              boundaries that keep research and control code from silently gaining broker execution power.
+              IREN, GRAEN, VELUM, and NOSTRA now operate as named modules inside the unified RHEN runtime
+              rather than separate Railway services. Legacy Foundation-era infrastructure is no longer part
+              of the production path. The consolidation removes duplicated infrastructure while preserving
+              the authority boundaries that keep research and control code from gaining broker execution power.
             </p>
           </div>
         </header>
@@ -107,10 +107,10 @@ export default function HomeCompany() {
           <div>
             <h2>The product is Command. RHEN is the machine underneath it.</h2>
             <p>
-              Command is being built around the decisions a customer actually needs: account state,
-              trading state, allocation, risk, activity, and required action. Paper Beta is the current
-              launch path. Live-money customer authority and real money movement remain gated until their
-              execution, custody, reconciliation, and security requirements are verified.
+              Command is the protected operating surface for account state, trading lanes, strategy authority,
+              risk, research, replay, forecasting, incidents, and required action. It reads the canonical RHEN
+              runtime instead of maintaining a parallel control model, and it keeps broker-write authority
+              explicit rather than inferring it from a healthy process or active strategy.
             </p>
           </div>
         </header>
@@ -135,10 +135,10 @@ export default function HomeCompany() {
           <div>
             <h2>Production rebuild, BTC validation, and customer product work now share one architecture.</h2>
             <p>
-              RHEN v3 has merged with one Railway application service and a bounded SQLite Core at
-              /data/rhen-core.db. The frozen V15 BTC breakout candidate remains shadow/paper only while
-              forward evidence accumulates. Command Paper Beta is being implemented separately and does
-              not imply live customer trading authority.
+              RHEN v3 runs as one Railway application service with a bounded SQLite Core at
+              /data/rhen-core.db. Command reads current equities and crypto authority, GRAEN research,
+              VELUM validation, NOSTRA forecasting, and IREN control state from that canonical runtime.
+              Strategy versions and release gates are rendered from live evidence instead of hard-coded site copy.
             </p>
           </div>
         </header>
@@ -150,14 +150,14 @@ export default function HomeCompany() {
             <p>One Railway service, one persistent volume, loopback internal modules, bounded retention, and isolated broker authority.</p>
           </Link>
           <Link to="/live">
-            <span>BTC / V15</span>
-            <strong>Forward evidence before promotion</strong>
-            <p>V15-R1-BTC-R2H-BREAKOUT-42-15 is frozen and remains shadow/paper only. No automatic live promotion.</p>
+            <span>STRATEGY PIPELINE</span>
+            <strong>Authority and research stay separate</strong>
+            <p>Current strategies, research candidates, replay evidence, and release gates are projected from canonical RHEN state.</p>
           </Link>
           <Link to="/command/overview">
             <span>COMMAND</span>
-            <strong>Paper Beta in implementation</strong>
-            <p>Customer account connection, allocation, risk, activity, and paper authorization are being built behind protected access.</p>
+            <strong>Protected operating console</strong>
+            <p>Live account state, equities and crypto lanes, risk, research, replay, forecasting, incidents, and raw events in one surface.</p>
           </Link>
         </div>
       </section>

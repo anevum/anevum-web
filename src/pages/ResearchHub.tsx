@@ -5,10 +5,10 @@ import { fieldNotes } from "../data/fieldNotes";
 import { useLiveTrading } from "../hooks/useLiveTrading";
 
 const programs: { name: SystemName; category: string; description: string; href: string }[] = [
-  { name:"GRAEN", category:"Mathematical validation", description:"Selection bias, multiplicity, dependence, falsification, simulation design, and promotion methodology.", href:"/products/graen" },
-  { name:"NOSTRA", category:"Forecasting", description:"Regime inference, prediction state, forward horizons, uncertainty, post-event outcomes, and calibration.", href:"/products/nostra" },
-  { name:"VELUM", category:"Replay & counterfactual", description:"Historical reconstruction, broker-isolated replay, friction assumptions, counterfactual comparison, and failure analysis.", href:"/products/velum" },
-  { name:"RHEN", category:"Market evidence", description:"Candidate outcomes, execution evidence, strategy research, adaptive validation, and live/offline comparison.", href:"/products/rhen" }
+  { name:"GRAEN", category:"Mathematical validation", description:"Selection bias, multiplicity, dependence, falsification, simulation design, and promotion methodology.", href:"/architecture" },
+  { name:"NOSTRA", category:"Forecasting", description:"Regime inference, prediction state, forward horizons, uncertainty, post-event outcomes, and calibration.", href:"/architecture" },
+  { name:"VELUM", category:"Replay & counterfactual", description:"Historical reconstruction, broker-isolated replay, friction assumptions, counterfactual comparison, and failure analysis.", href:"/architecture" },
+  { name:"RHEN", category:"Market evidence", description:"Candidate outcomes, execution evidence, strategy research, adaptive validation, and live/offline comparison.", href:"/live" }
 ];
 
 export default function ResearchHub() {
@@ -131,7 +131,7 @@ export default function ResearchHub() {
         <header className="company-section-head">
           <span>RESEARCH PROGRAMS</span>
           <h2>Follow the system behind the note.</h2>
-          <p>Field Notes explain the work. These systems own the underlying research, forecasting, replay, and market evidence.</p>
+          <p>Field Notes explain the work. These named RHEN modules own the underlying research, forecasting, replay, and market evidence.</p>
         </header>
         <div className="research-program-grid research-program-grid-icons">
           {programs.map((program) => (
@@ -140,7 +140,7 @@ export default function ResearchHub() {
               <span>{program.category}</span>
               <strong>{program.name}</strong>
               <p>{program.description}</p>
-              <i>OPEN SYSTEM ↗</i>
+              <i>OPEN MODULE ↗</i>
             </Link>
           ))}
         </div>

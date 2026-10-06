@@ -63,6 +63,17 @@ test("live terminal keeps runtime health separate from substantive activity", ()
   assert.match(source, /displayState\(lane\.view\.health\)/);
   assert.match(source, /displayState\(lane\.activityState\)/);
   assert.match(source, /No substantive event/);
-  assert.match(source, /No current executable cycle/);
-  assert.match(source, /No active research run/);
+  assert.match(source, /waiting for the next executable market cycle/);
+  assert.match(source, /waiting for research work/);
+});
+
+
+test("public research uses the unified RHEN runtime", () => {
+  const worker = readFileSync(
+    new URL("../worker.mjs", import.meta.url),
+    "utf8"
+  );
+  assert.doesNotMatch(worker, /rhen-research-agent-production/);
+  assert.match(worker, /\/v1\/research\/readiness\/public/);
+  assert.match(worker, /\/v1\/research\/theory\/public/);
 });

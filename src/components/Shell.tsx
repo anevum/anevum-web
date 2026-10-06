@@ -43,7 +43,7 @@ function PublicFooter() {
 
       <div className="company-footer-bottom">
         <span>© {new Date().getFullYear()} ANEVUM</span>
-        <span>RHEN V3 / COMMAND PAPER BETA / LIVE-MONEY AUTHORITY GATED</span>
+        <span>RHEN V3 / COMMAND / PROTECTED EXECUTION AUTHORITY</span>
       </div>
     </footer>
   );

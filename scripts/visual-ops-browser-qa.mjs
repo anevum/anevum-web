@@ -303,7 +303,7 @@ async function runCase(route, viewport) {
   }
 
   if(route==="/command/overview" && details.legacySummaryVisible) throw new Error("Legacy trading strip obscures fleet overview");
-  if(route==="/command/overview" && (details.nostra!=="OFFLINE" || details.velum!=="HEALTHY" || details.velumActivity!=="IDLE" || details.activeGraen!=="true")) throw new Error("Health/activity rendering failed: "+JSON.stringify(details));
+  if(route==="/command/overview" && (details.nostra!=="OFFLINE" || details.velum!=="HEALTHY" || details.velumActivity!=="WAITING_FOR_WORK" || details.activeGraen!=="true")) throw new Error("Health/activity rendering failed: "+JSON.stringify(details));
   if(route.startsWith("/command/")) {
     await send("Runtime.evaluate",{expression:'document.querySelector(".vo-details summary")?.click()'});
     await send("Runtime.evaluate",{expression:'document.querySelector(".vo-details summary")?.click()'});

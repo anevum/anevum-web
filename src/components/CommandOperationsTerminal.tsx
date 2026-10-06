@@ -77,18 +77,18 @@ function laneActivity(snapshot: IrenSnapshot | null, feed: LiveTradingFeed | nul
   let activityState = view.activityState;
   if (traceActive) activityState = system === "VELUM" ? "REPLAYING" : "RESEARCHING";
   else if (runningJob) activityState = "RUNNING";
-  else if (queuedJob && activityState === "IDLE") activityState = "QUEUED";
+  else if (queuedJob && activityState === "WAITING_FOR_WORK") activityState = "QUEUED";
 
   const active = view.active || traceActive || runningJob;
   const fallback = system === "IREN"
     ? "Supervising; no active jobs."
     : system === "RHEN"
-      ? "No current executable cycle."
+      ? "Runtime healthy · waiting for the next executable market cycle."
       : system === "GRAEN"
-        ? "No active research run."
+        ? "Research worker healthy · waiting for research work."
         : system === "VELUM"
-          ? "No replay currently running."
-          : "No forecast cycle currently running.";
+          ? "Replay worker healthy · waiting for an eligible replay."
+          : "Forecast worker healthy · waiting for forecast or scoring inputs.";
   const activity = String(traceActivity || (job?.title ? String(job.title) : "") || (active ? view.activity : "") || fallback);
   const started = String(traceStarted || job?.started_at || activeProblem?.started_at || job?.created_at || "");
   return { view, work, job, activity, activityState, active, started, traceStatus, traceType, traceActive, activeProblem };
@@ -221,7 +221,7 @@ export default function CommandOperationsTerminal({
         <div>
           <span>COMMAND / LIVE OPERATIONS</span>
           <h1>System terminal</h1>
-          <p>Evidence-backed activity across GRAEN, VELUM, IREN, RHEN, and NOSTRA.</p>
+          <p>Evidence-backed activity across the named modules inside the unified RHEN runtime.</p>
         </div>
         <div className="terminal-session">
           <span className={fleetFresh ? "terminal-live-dot is-live" : "terminal-live-dot"} aria-hidden="true" />

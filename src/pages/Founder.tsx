@@ -56,10 +56,14 @@ export default function Founder() {
       </section>
 
       <section className="company-section">
-        <header className="company-section-head"><span>CURRENT WORK</span><h2>Selected ANEVUM systems.</h2></header>
+        <header className="company-section-head"><span>CURRENT WORK</span><h2>Selected ANEVUM modules and surfaces.</h2></header>
         <div className="selected-work-grid">
           {founder.systems.map((system) => {
-            const route = ["IREN","RHEN","NOSTRA","GRAEN","VELUM"].includes(system.name) ? "/products/" + system.name.toLowerCase() : "/";
+            const route = system.name === "RHEN"
+              ? "/live"
+              : ["IREN","NOSTRA","GRAEN","VELUM"].includes(system.name)
+                ? "/architecture"
+                : "/";
             return (
               <Link key={system.name} to={route}>
                 <div className="founder-system-mark">
@@ -67,7 +71,7 @@ export default function Founder() {
                     ? <SystemIcon system={system.name as FlagshipSystem} size="md" />
                     : null}
                 </div>
-                <span>ANEVUM SYSTEM</span>
+                <span>ANEVUM MODULE / SURFACE</span>
                 <strong>{system.name}</strong>
                 <p>{system.description}</p>
                 <i>OPEN ↗</i>

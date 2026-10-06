@@ -29,7 +29,7 @@ export default function Architecture() {
         <span>RHEN V3 ARCHITECTURE</span>
         <h1>One runtime. Internal modules. Explicit authority isolation.</h1>
         <p>
-          ANEVUM has consolidated its production topology around RHEN. The former subsystem brands now
+          ANEVUM has consolidated its production topology around RHEN. IREN, GRAEN, VELUM, and NOSTRA now
           survive only as migration aliases for internal responsibilities. Deployment is simpler, but
           research, replay, control, storage, and broker execution still have separate authority boundaries.
         </p>
@@ -88,7 +88,7 @@ export default function Architecture() {
           <article><SystemIcon system="RHEN" size="sm" /><span>CORE</span><strong>Bounded SQLite instead of an operational PostgreSQL dependency.</strong><p>RHEN v3 targets normal storage below 500 MB and sheds routine analytics above the defined pressure threshold while preserving critical execution evidence.</p></article>
           <article><SystemIcon system="RHEN" size="sm" /><span>RETENTION</span><strong>Routine telemetry is compacted instead of warehoused forever.</strong><p>Decision summaries, normalized candidate observations, position metrics, and routine evidence use explicit retention windows.</p></article>
           <article><SystemIcon system="RHEN" size="sm" /><span>AUTHORITY</span><strong>One service does not mean one permission set.</strong><p>Research, replay, forecast, control, and pure Core subprocesses have execution disabled; broker order authority remains confined to execution.</p></article>
-          <article><SystemIcon system="RHEN" size="sm" /><span>V15</span><strong>The BTC candidate remains frozen and unpromoted.</strong><p>V15-R1-BTC-R2H-BREAKOUT-42-15 remains shadow/paper only until fresh forward evidence and protected promotion requirements are satisfied.</p></article>
+          <article><SystemIcon system="RHEN" size="sm" /><span>STRATEGY</span><strong>Runtime authority and research candidates stay separate.</strong><p>Command reads current equities and crypto authority from RHEN while GRAEN candidates, VELUM validation evidence, and IREN release gates remain explicit before any production change.</p></article>
           <article><SystemIcon system="RHEN" size="sm" /><span>CUTOVER</span><strong>Legacy services are retired only after RHEN is verified healthy.</strong><p>The rebuild preserves rollback evidence and does not treat architectural simplification as permission to skip verification.</p></article>
         </div>
       </section>

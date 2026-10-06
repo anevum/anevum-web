@@ -29,7 +29,7 @@ const titles: Record<string, string> = {
 };
 
 const descriptions: Record<string, string> = {
-  "/": "ANEVUM is consolidating its production architecture around RHEN v3: one Railway runtime with isolated execution, control, research, replay, forecast, Core/Store, and research-worker modules. Command is the customer surface; Paper Beta first and live-money authority remains gated.",
+  "/": "ANEVUM runs RHEN v3 as one unified Railway runtime with isolated execution, control, research, replay, forecast, Core/Store, and research-worker modules. Command is the protected operating surface with execution authority projected from canonical runtime state.",
   "/live": "Observe RHEN v3 through public-safe execution, control, research, replay, forecast, evidence, validation, and normalized performance projections.",
   "/research": "Read ANEVUM Field Notes: research decisions, failed hypotheses, engineering changes, releases, and measured evidence.",
   "/architecture": "RHEN v3 architecture: one Railway service, bounded SQLite Core, internal module isolation, evidence retention, protected promotion, and narrow broker authority.",

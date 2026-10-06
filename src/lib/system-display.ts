@@ -24,7 +24,7 @@ export const SEMANTIC = { health: "✓", warning: "!", critical: "×", live: "�
 const LABELS: Record<string, string> = {
   HEALTHY: "Healthy", RUNNING: "Active", ACTIVE: "Active", CANONICAL_CONTROL_STATE: "Control active",
   LIVE_TELEMETRY: "Live telemetry", LIVE_BASELINE: "Baseline tracking", READY: "Ready",
-  IDLE: "Ready / idle", OFFLINE: "Offline", OFFLINE_BY_DESIGN: "Offline by design",
+  IDLE: "Waiting for work", WAITING_FOR_WORK: "Waiting for work", OFFLINE: "Offline", OFFLINE_BY_DESIGN: "Offline by design",
   STALE: "Data stale", DEGRADED: "Needs attention", WAITING: "Waiting", BLOCKED: "Blocked",
   NEEDS_APPROVAL: "Needs approval", ATTENTION_REQUIRED: "Needs attention", CRITICAL: "Critical",
   FAILED: "Failed", CRASHED: "Offline", UNAVAILABLE: "Unavailable", UNKNOWN: "Unverified",
@@ -42,7 +42,7 @@ export function stateTone(raw?: string | null): Tone {
   const key = String(raw || "").toUpperCase();
   if (["OFFLINE", "FAILED", "CRASHED", "CRITICAL", "OFFLINE_BY_DESIGN"].includes(key)) return "bad";
   if (["DEGRADED", "BLOCKED", "NEEDS_APPROVAL", "ATTENTION_REQUIRED", "WARNING"].includes(key)) return "warn";
-  if (["HEALTHY", "READY", "IDLE", "COMPLETE", "COMPLETED", "SUCCEEDED"].includes(key)) return "good";
+  if (["HEALTHY", "READY", "COMPLETE", "COMPLETED", "SUCCEEDED"].includes(key)) return "good";
   if (["RUNNING", "ACTIVE", "OBSERVING", "SCANNING", "FORECASTING", "RESEARCHING", "REPLAYING", "LIVE_TELEMETRY", "CANONICAL_CONTROL_STATE", "LIVE_BASELINE"].includes(key)) return "active";
   return "quiet";
 }
@@ -101,7 +101,7 @@ function mostSevere(values: string[]): string | undefined {
   for (const group of [
     ["CRITICAL", "FAILED", "CRASHED", "OFFLINE", "OFFLINE_BY_DESIGN"],
     ["DEGRADED", "BLOCKED", "NEEDS_APPROVAL", "ATTENTION_REQUIRED"],
-    ["STALE", "UNAVAILABLE", "UNKNOWN"], ["IDLE", "WAITING", "WAITING_FOR_INPUTS"],
+    ["STALE", "UNAVAILABLE", "UNKNOWN"], ["IDLE", "WAITING", "WAITING_FOR_WORK", "WAITING_FOR_INPUTS"],
     ["READY", "HEALTHY", "RUNNING", "ACTIVE", "REPLAYING", "FORECASTING", "RESEARCHING", "OBSERVING"]
   ]) { const match = values.find(value => group.includes(value)); if (match) return match; }
   return values[0];
@@ -131,17 +131,17 @@ export function publicSystem(name: SystemName, feed?: LiveTradingFeed | null, no
         ? runtime
         : name === "IREN"
           ? "SUPERVISING"
-          : "IDLE";
+          : "WAITING_FOR_WORK";
   const active = usable && ["RUNNING", "ACTIVE", "OBSERVING", "SCANNING", "RESEARCHING", "FORECASTING", "REPLAYING"].includes(activityState);
   const fallbackActivity = name === "IREN"
     ? "Supervising; no active jobs are exposed."
     : name === "RHEN"
-      ? "No current market cycle is exposed."
+      ? "Runtime healthy · waiting for the next executable market cycle."
       : name === "GRAEN"
-        ? "No active research run."
+        ? "Research worker healthy · waiting for research work."
         : name === "VELUM"
-          ? "No replay currently running."
-          : "No forecast cycle currently running.";
+          ? "Replay worker healthy · waiting for an eligible replay."
+          : "Forecast worker healthy · waiting for forecast or scoring inputs.";
 
   return {
     name,
@@ -206,7 +206,7 @@ export function commandSystem(name: SystemName, snapshot: IrenSnapshot | null, f
   const queuedJob = work.jobs.find(row => String(row.status) === "QUEUED");
   const ownActivity = rows.find(row => row.current_activity)?.current_activity;
 
-  let activityState = "IDLE";
+  let activityState = "WAITING_FOR_WORK";
   if (!fresh || !healthy) activityState = "UNAVAILABLE";
   else if (runningJob) activityState = "RUNNING";
   else if (publicRow.active) activityState = publicRow.activityState;
@@ -217,12 +217,12 @@ export function commandSystem(name: SystemName, snapshot: IrenSnapshot | null, f
   const fallbackActivity = name === "IREN"
     ? "Supervising; no active jobs."
     : name === "RHEN"
-      ? "No current executable cycle."
+      ? "Runtime healthy · waiting for the next executable market cycle."
       : name === "GRAEN"
-        ? "No active research run."
+        ? "Research worker healthy · waiting for research work."
         : name === "VELUM"
-          ? "No replay currently running."
-          : "No forecast cycle currently running.";
+          ? "Replay worker healthy · waiting for an eligible replay."
+          : "Forecast worker healthy · waiting for forecast or scoring inputs.";
   const activity = String(
     runningJob?.title
     || (queuedJob ? "Queued: " + String(queuedJob.title || queuedJob.job_type || "work") : "")

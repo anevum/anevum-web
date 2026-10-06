@@ -9,7 +9,7 @@ const snapshot = () => ({schema_version:"iren_command.v2",revision:1,observed_at
 test("friendly labels retain raw values and rejected research is not a runtime failure", () => {
   assert.equal(displayState("CANONICAL_CONTROL_STATE"), "Control active");
   assert.equal(displayState("OFFLINE"), "Offline");
-  assert.equal(displayState("IDLE"), "Ready / idle");
+  assert.equal(displayState("IDLE"), "Waiting for work");
   assert.equal(displayState("REJECTED"), "Rejected");
 });
 test("freshness tolerates small clock skew but rejects invalid, far-future and expired timestamps", () => {
@@ -27,13 +27,13 @@ test("public unavailable or stale observations cannot become healthy or active",
   value.ok=false;
   assert.equal(publicSystem("RHEN",value,now).fresh,false);
 });
-test("offline NOSTRA overrides a generic healthy field and idle VELUM stays calm", () => {
+test("offline NOSTRA overrides healthy state and waiting VELUM stays calm", () => {
   const value=feed();
   value.systems.NOSTRA.runtime_state="OFFLINE";
   value.systems.VELUM.runtime_state="IDLE";
   const nostra=publicSystem("NOSTRA",value,now), velum=publicSystem("VELUM",value,now);
   assert.equal(nostra.raw,"OFFLINE"); assert.equal(nostra.active,false);
-  assert.equal(velum.raw,"HEALTHY"); assert.equal(velum.activityState,"IDLE"); assert.equal(velum.active,false);
+  assert.equal(velum.raw,"HEALTHY"); assert.equal(velum.activityState,"WAITING_FOR_WORK"); assert.equal(velum.active,false);
   assert.equal(fleetState(SYSTEMS.map(name=>publicSystem(name,value,now))),"DEGRADED");
 });
 test("service health alone never becomes activity", () => {
@@ -41,7 +41,7 @@ test("service health alone never becomes activity", () => {
   for(const name of ["GRAEN","NOSTRA","VELUM"]) {
     const view=publicSystem(name,value,now);
     assert.equal(view.raw,"HEALTHY");
-    assert.equal(view.activityState,"IDLE");
+    assert.equal(view.activityState,"WAITING_FOR_WORK");
     assert.equal(view.active,false);
   }
   assert.equal(publicSystem("IREN",value,now).activityState,"SUPERVISING");
@@ -77,7 +77,7 @@ test("only current owned work drives activity; failed jobs do not", () => {
   const value=snapshot(); value.work.jobs=[{owner_system:"GRAEN",status:"RUNNING",title:"Evaluate retained evidence"},{owner_system:"VELUM",status:"FAILED",title:"Replay failed"}];
   assert.equal(commandSystem("GRAEN",value,null,now).activityState,"RUNNING");
   assert.equal(commandSystem("GRAEN",value,null,now).active,true);
-  assert.equal(commandSystem("VELUM",value,null,now).activityState,"IDLE");
+  assert.equal(commandSystem("VELUM",value,null,now).activityState,"WAITING_FOR_WORK");
   assert.equal(commandSystem("VELUM",value,null,now).active,false);
   assert.equal(systemWork(value,"GRAEN").jobs.length,1);
   value.incidents=[{key:"graen.evidence",severity:"critical",reason:"Evidence unavailable"}];
@@ -107,12 +107,12 @@ test("a fresh IREN envelope cannot refresh an expired subsystem observation", ()
 });
 
 
-test("private healthy runtime without owned work is explicitly idle or supervising", () => {
+test("private healthy runtime without owned work is explicitly waiting or supervising", () => {
   const value=snapshot();
   const graen=commandSystem("GRAEN",value,feed(),now);
   const iren=commandSystem("IREN",value,feed(),now);
   assert.equal(graen.health,"HEALTHY");
-  assert.equal(graen.activityState,"IDLE");
+  assert.equal(graen.activityState,"WAITING_FOR_WORK");
   assert.equal(graen.active,false);
   assert.equal(iren.health,"HEALTHY");
   assert.equal(iren.activityState,"SUPERVISING");
