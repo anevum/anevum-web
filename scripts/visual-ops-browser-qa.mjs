@@ -411,28 +411,36 @@ async function runScrollResetCase(viewport) {
   });
   await send("Page.navigate", { url: base + "/research" });
 
-  const readyResult = await send("Runtime.evaluate", {
-    expression: `(async () => {
-      const scroller = document.scrollingElement || document.documentElement;
-      const deadline = Date.now() + 12000;
-      while (Date.now() < deadline) {
-        const link = document.querySelector('a[href="/architecture"]');
-        const maxScroll = Math.max(0, scroller.scrollHeight - scroller.clientHeight);
-        if (location.pathname === "/research" && link && maxScroll > 200) {
-          return { ready: true, maxScroll, pathname: location.pathname };
-        }
-        await new Promise((resolve) => setTimeout(resolve, 100));
-      }
-      return {
-        ready: false,
-        maxScroll: Math.max(0, scroller.scrollHeight - scroller.clientHeight),
-        pathname: location.pathname
-      };
-    })()`,
-    awaitPromise: true,
-    returnByValue: true
-  });
-  const ready = readyResult.result?.value || {};
+  // Do not hold one Runtime.evaluate promise across navigation. Chromium may
+  // replace the execution context after Page.navigate, leaving a long-running
+  // evaluation attached to the initial blank document. Poll with short
+  // evaluations so each attempt binds to the current document instead.
+  const readyDeadline = Date.now() + 12000;
+  let ready = {};
+  while (Date.now() < readyDeadline) {
+    try {
+      const readyResult = await send("Runtime.evaluate", {
+        expression: `(() => {
+          const scroller = document.scrollingElement || document.documentElement || null;
+          const link = document.querySelector('a[href="/architecture"]');
+          const maxScroll = scroller
+            ? Math.max(0, scroller.scrollHeight - scroller.clientHeight)
+            : 0;
+          return {
+            ready: location.pathname === "/research" && Boolean(link) && maxScroll > 200,
+            maxScroll,
+            pathname: location.pathname
+          };
+        })()`,
+        returnByValue: true
+      });
+      ready = readyResult.result?.value || {};
+      if (ready.ready) break;
+    } catch {
+      // Navigation can briefly destroy the current execution context.
+    }
+    await sleep(100);
+  }
 
   if (!ready.ready) {
     const value = {
