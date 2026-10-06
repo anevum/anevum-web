@@ -17,7 +17,7 @@ const Releases = lazy(() => import("./pages/Releases"));
 const ReleaseDetail = lazy(() => import("./pages/ReleaseDetail"));
 
 const titles: Record<string, string> = {
-  "/": "ANEVUM — RHEN Unified Runtime + Command",
+  "/": "ANEVUM — RHEN + Command",
   "/live": "RHEN Live Terminal — ANEVUM",
   "/research": "Field Notes — ANEVUM",
   "/architecture": "RHEN v3 Architecture — ANEVUM",
@@ -29,10 +29,10 @@ const titles: Record<string, string> = {
 };
 
 const descriptions: Record<string, string> = {
-  "/": "ANEVUM runs RHEN v3 as one unified Railway runtime with isolated execution, control, research, replay, forecast, Core/Store, and research-worker modules. Command is the protected operating surface with execution authority projected from canonical runtime state.",
-  "/live": "Observe RHEN v3 through public-safe execution, control, research, replay, forecast, evidence, validation, and normalized performance projections.",
+  "/": "ANEVUM builds RHEN, an inspectable automated trading and research system. The canonical RHEN runtime isolates execution, control, research, replay, forecast, and Core/Store responsibilities; a separate BTC paper canary is retained only for paper execution and forward evidence. Command is the protected operating surface.",
+  "/live": "Observe RHEN through public-safe execution, control, research, replay, forecast, evidence, validation, and normalized performance projections without exposing private account or strategy details.",
   "/research": "Read ANEVUM Field Notes: research decisions, failed hypotheses, engineering changes, releases, and measured evidence.",
-  "/architecture": "RHEN v3 architecture: one Railway service, bounded SQLite Core, internal module isolation, evidence retention, protected promotion, and narrow broker authority.",
+  "/architecture": "RHEN v3 architecture: one canonical Railway runtime, named internal modules, an isolated BTC paper canary, bounded SQLite Core, protected promotion, and narrow live broker authority.",
   "/founder": "About ANEVUM and founder Devon Akins, building inspectable software systems, automated trading infrastructure, research tooling, forecasting, replay, telemetry, and production controls.",
   "/resume": "Résumé for Devon Akins, founder of ANEVUM, covering software systems, infrastructure, research tooling, mathematics, and production engineering.",
   "/releases": "ANEVUM release records documenting RHEN versions, production changes, verification, and public system history."
@@ -106,7 +106,7 @@ function RouteEffects() {
     const path = location.pathname;
     const protectedRoute = path.startsWith("/command") || path === "/private" || path === "/iren";
 
-    let title = titles[path] || "ANEVUM — RHEN Unified Runtime + Command";
+    let title = titles[path] || "ANEVUM — RHEN + Command";
     let description = descriptions[path] || descriptions["/"];
 
     if (path.startsWith("/command")) {
