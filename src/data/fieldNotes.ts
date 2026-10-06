@@ -93,66 +93,6 @@ export const fieldNotes: FieldNote[] = [
     }
   },
   {
-    slug: "multi-market-architecture-equities-crypto",
-    date: "2026-09-29",
-    type: "SYSTEMS",
-    status: "ACTIVE",
-    title: "RHEN becomes a multi-market system",
-    summary: "Equities remain intact while crypto is introduced as a separate continuous-market lane with its own attribution, research evidence, forecasting context, validation path, and replay support.",
-    systems: ["RHEN", "NOSTRA", "GRAEN", "VELUM"],
-    readMinutes: 5,
-    featured: true,
-    sections: [
-      {
-        heading: "What changed",
-        body: [
-          "The system no longer treats market type as an incidental symbol property. Equities and crypto are explicit market lanes with separate evidence attribution.",
-          "This preserves the existing equities record while allowing crypto research, forecasting, replay, and eventual live execution to evolve under different assumptions."
-        ]
-      },
-      {
-        heading: "Why the separation matters",
-        body: [
-          "A 24/7 market is not simply an equity session with longer hours. Session structure, liquidity behavior, feature scaling, volatility, and evaluation windows can differ materially.",
-          "The architecture therefore shares infrastructure where appropriate while keeping validation populations and performance records distinct."
-        ]
-      },
-      {
-        heading: "Current boundary",
-        body: [
-          "Crypto research can reuse infrastructure and mathematical tooling, but no equity result automatically validates a crypto strategy.",
-          "GRAEN owns the promotion evidence, NOSTRA measures market state and forecasts, VELUM replays and challenges the strategy, and RHEN executes only after the required gate is satisfied."
-        ]
-      }
-    ],
-    reproduce: {
-      question: "Can a second market lane be added without contaminating the evidence or performance record of the first?",
-      inputs: [
-        "An existing equities lane with retained live evidence",
-        "A continuous-market data source for crypto",
-        "A canonical event model capable of carrying market-lane attribution",
-        "Separate research, replay, and performance populations"
-      ],
-      method: [
-        "Make market lane an explicit field at ingestion and preserve it through candidate, decision, execution, and outcome records.",
-        "Reuse shared infrastructure only where the assumptions are genuinely common.",
-        "Keep research datasets, validation gates, and public performance summaries separated by lane.",
-        "Require explicit promotion before a research result can affect execution."
-      ],
-      checks: [
-        "Existing equities records remain unchanged.",
-        "Every new crypto event can be attributed to the crypto lane without inference from symbol naming.",
-        "Replay, shadow, and live results remain distinguishable.",
-        "No equity validation result is treated as crypto validation."
-      ],
-      expected: "Two market lanes can share infrastructure while retaining independent evidence, validation, and performance histories.",
-      limits: [
-        "This architecture establishes separation; it does not prove a crypto trading edge.",
-        "Market-lane isolation still depends on complete telemetry and correct attribution at every write boundary."
-      ]
-    }
-  },
-  {
     slug: "prediction-outcome-evidence-chain",
     date: "2026-09-29",
     type: "ENGINEERING",
