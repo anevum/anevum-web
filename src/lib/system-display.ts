@@ -136,12 +136,12 @@ export function publicSystem(name: SystemName, feed?: LiveTradingFeed | null, no
   const fallbackActivity = name === "IREN"
     ? "Supervising; no active jobs are exposed."
     : name === "RHEN"
-      ? "No current market cycle is exposed."
+      ? "Runtime healthy · waiting for the next executable market cycle."
       : name === "GRAEN"
-        ? "No active research run."
+        ? "Research worker healthy · waiting for research work."
         : name === "VELUM"
-          ? "No replay currently running."
-          : "No forecast cycle currently running.";
+          ? "Replay worker healthy · waiting for an eligible replay."
+          : "Forecast worker healthy · waiting for forecast or scoring inputs.";
 
   return {
     name,
@@ -217,12 +217,12 @@ export function commandSystem(name: SystemName, snapshot: IrenSnapshot | null, f
   const fallbackActivity = name === "IREN"
     ? "Supervising; no active jobs."
     : name === "RHEN"
-      ? "No current executable cycle."
+      ? "Runtime healthy · waiting for the next executable market cycle."
       : name === "GRAEN"
-        ? "No active research run."
+        ? "Research worker healthy · waiting for research work."
         : name === "VELUM"
-          ? "No replay currently running."
-          : "No forecast cycle currently running.";
+          ? "Replay worker healthy · waiting for an eligible replay."
+          : "Forecast worker healthy · waiting for forecast or scoring inputs.";
   const activity = String(
     runningJob?.title
     || (queuedJob ? "Queued: " + String(queuedJob.title || queuedJob.job_type || "work") : "")
