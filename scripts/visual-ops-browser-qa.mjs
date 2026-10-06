@@ -401,30 +401,47 @@ async function runScrollResetCase(viewport) {
     else item.resolve(message.result);
   });
 
-  await send("Page.enable");
-  await send("Runtime.enable");
-  await send("Emulation.setDeviceMetricsOverride", {
-    width: viewport.width,
-    height: viewport.height,
-    deviceScaleFactor: viewport.deviceScaleFactor,
-    mobile: viewport.mobile
-  });
-  await send("Page.navigate", { url: base + "/research" });
+  const evaluate = async (expression, awaitPromise = false) => {
+    const response = await send("Runtime.evaluate", {
+      expression,
+      awaitPromise,
+      returnByValue: true
+    });
+    if (response.exceptionDetails) {
+      throw new Error("Runtime.evaluate exception: " + JSON.stringify(response.exceptionDetails));
+    }
+    return response.result?.value;
+  };
 
-  const result = await send("Runtime.evaluate", {
-    expression: `(async () => {
-      const scroller = document.scrollingElement || document.documentElement;
+  try {
+    await send("Page.enable");
+    await send("Runtime.enable");
+    await send("Emulation.setDeviceMetricsOverride", {
+      width: viewport.width,
+      height: viewport.height,
+      deviceScaleFactor: viewport.deviceScaleFactor,
+      mobile: viewport.mobile
+    });
+    await send("Page.navigate", { url: base + "/research" });
+
+    const beforeState = await evaluate(`(async () => {
       const readyDeadline = Date.now() + 12000;
       let link = null;
+      let scroller = document.scrollingElement || document.documentElement;
       let maxScroll = 0;
       while (Date.now() < readyDeadline) {
+        scroller = document.scrollingElement || document.documentElement;
         link = document.querySelector('a[href="/architecture"]');
         maxScroll = Math.max(0, scroller.scrollHeight - scroller.clientHeight);
         if (location.pathname === "/research" && link && maxScroll > 200) break;
         await new Promise((resolve) => setTimeout(resolve, 100));
       }
-      if (!link) return { ok: false, reason: "architecture link missing after hydration wait", before: scroller.scrollTop, maxScroll, pathname: location.pathname, after: scroller.scrollTop };
-      if (maxScroll <= 200) return { ok: false, reason: "research route not scrollable after hydration wait", before: scroller.scrollTop, maxScroll, pathname: location.pathname, after: scroller.scrollTop };
+      if (!link) {
+        return { ready: false, reason: "architecture link missing after hydration wait", before: scroller.scrollTop, maxScroll, pathname: location.pathname };
+      }
+      if (maxScroll <= 200) {
+        return { ready: false, reason: "research route not scrollable after hydration wait", before: scroller.scrollTop, maxScroll, pathname: location.pathname };
+      }
 
       const root = document.documentElement;
       const previousScrollBehavior = root.style.scrollBehavior;
@@ -433,33 +450,71 @@ async function runScrollResetCase(viewport) {
       await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
       const before = scroller.scrollTop;
       root.style.scrollBehavior = previousScrollBehavior;
-      link.click();
+      return { ready: before > 200, before, maxScroll, pathname: location.pathname };
+    })()`, true);
 
-      const deadline = Date.now() + 5000;
-      while (
-        (location.pathname !== "/architecture" || scroller.scrollTop > 1) &&
-        Date.now() < deadline
-      ) {
-        await new Promise((resolve) => setTimeout(resolve, 50));
-      }
-      await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
-      return {
-        ok: location.pathname === "/architecture" && before > 200 && scroller.scrollTop <= 1,
-        before,
-        after: scroller.scrollTop,
-        maxScroll,
-        pathname: location.pathname
+    if (!beforeState?.ready) {
+      const value = {
+        ok: false,
+        reason: beforeState?.reason || "research route did not reach scroll-reset precondition",
+        before: beforeState?.before ?? 0,
+        maxScroll: beforeState?.maxScroll ?? 0,
+        pathname: beforeState?.pathname || "unknown",
+        after: beforeState?.before ?? 0
       };
-    })()`,
-    awaitPromise: true,
-    returnByValue: true
-  });
+      console.log(JSON.stringify({ case: "route-scroll-reset", viewport: viewport.name, ...value }));
+      return ["route navigation did not reset scroll to top " + JSON.stringify(value)];
+    }
 
-  const value = result.result?.value || {};
-  console.log(JSON.stringify({ case: "route-scroll-reset", viewport: viewport.name, ...value }));
-  ws.close();
-  await closeTarget(page.id);
-  return value.ok ? [] : ["route navigation did not reset scroll to top " + JSON.stringify(value)];
+    const clickState = await evaluate(`(() => {
+      const link = document.querySelector('a[href="/architecture"]');
+      if (!link) return { clicked: false, pathname: location.pathname };
+      link.click();
+      return { clicked: true, pathname: location.pathname };
+    })()`);
+
+    if (!clickState?.clicked) {
+      const value = {
+        ok: false,
+        reason: "architecture link missing at navigation time",
+        before: beforeState.before,
+        maxScroll: beforeState.maxScroll,
+        pathname: clickState?.pathname || "unknown",
+        after: beforeState.before
+      };
+      console.log(JSON.stringify({ case: "route-scroll-reset", viewport: viewport.name, ...value }));
+      return ["route navigation did not reset scroll to top " + JSON.stringify(value)];
+    }
+
+    const deadline = Date.now() + 7000;
+    let afterState = { pathname: clickState.pathname || "unknown", after: beforeState.before };
+    while (Date.now() < deadline) {
+      await sleep(100);
+      try {
+        const observed = await evaluate(`(() => {
+          const scroller = document.scrollingElement || document.documentElement;
+          return { pathname: location.pathname, after: scroller.scrollTop };
+        })()`);
+        if (observed) afterState = observed;
+        if (afterState.pathname === "/architecture" && afterState.after <= 1) break;
+      } catch {
+        // Client-side navigation can briefly replace the execution context; retry on the new context.
+      }
+    }
+
+    const value = {
+      ok: afterState.pathname === "/architecture" && beforeState.before > 200 && afterState.after <= 1,
+      before: beforeState.before,
+      after: afterState.after,
+      maxScroll: beforeState.maxScroll,
+      pathname: afterState.pathname
+    };
+    console.log(JSON.stringify({ case: "route-scroll-reset", viewport: viewport.name, ...value }));
+    return value.ok ? [] : ["route navigation did not reset scroll to top " + JSON.stringify(value)];
+  } finally {
+    ws.close();
+    await closeTarget(page.id);
+  }
 }
 
 let failures = [];
