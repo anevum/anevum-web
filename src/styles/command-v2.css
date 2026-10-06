@@ -1119,6 +1119,38 @@
   font-size: .62rem;
   overflow-wrap: anywhere;
 }
+.command-evidence-readiness {
+  margin: 0 1rem 1rem;
+  padding: .72rem .82rem;
+  border: 1px solid rgba(155,213,255,.12);
+  border-radius: 12px;
+  background: rgba(110,161,255,.045);
+  display: grid;
+  gap: .28rem;
+}
+.command-evidence-readiness > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: baseline;
+}
+.command-evidence-readiness span,
+.command-evidence-readiness small {
+  color: #748195;
+  font-size: .64rem;
+  letter-spacing: .06em;
+}
+.command-evidence-readiness strong { font-size: .82rem; }
+.command-evidence-readiness p {
+  margin: 0;
+  color: #bac5d3;
+  font-size: .7rem;
+}
+.command-evidence-readiness small {
+  letter-spacing: 0;
+  overflow-wrap: anywhere;
+}
+
 .command-strategy-pipeline.is-unavailable {
   border-color: rgba(255,180,110,.2);
 }
