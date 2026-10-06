@@ -438,6 +438,14 @@ export type CommandCryptoLane = {
 export type CommandSnapshot = {
   mode?: string;
   observed_at?: string;
+  runtime?: Record<string, unknown> | null;
+  telemetry?: {
+    latest_scan?: Record<string, unknown> | null;
+    events_observed?: number;
+    last_poll_at?: string | null;
+    last_strategy_at?: string | null;
+    last_error?: string | null;
+  } | null;
   account?: Record<string, unknown>;
   account_history?: CommandAccountHistory | null;
   crypto_stats?: Record<string, unknown>;

@@ -228,10 +228,11 @@ export default function Command() {
   const history = list(snapshot?.history);
   const dayPnl = number(account.day_pnl);
 
+  const liveRuntime = record(snapshot?.runtime);
   const runtimeEnvelope = record(evidence?.provenance?.runtime);
   const runtimePayload = record(runtimeEnvelope.payload);
   const runtimeDetails = record(runtimePayload.runtime);
-  const runtime = Object.keys(runtimeDetails).length
+  const evidenceRuntime = Object.keys(runtimeDetails).length
     ? {
         ...runtimeDetails,
         run_id: runtimePayload.run_id ?? runtimeEnvelope.run_id,
@@ -239,10 +240,14 @@ export default function Command() {
         observed_at: runtimeEnvelope.occurred_at ?? runtimeDetails.runtime_started_at
       }
     : runtimeEnvelope;
+  const runtime = Object.keys(liveRuntime).length ? liveRuntime : evidenceRuntime;
+
+  const liveTelemetry = record(snapshot?.telemetry);
+  const liveScan = record(liveTelemetry.latest_scan);
   const scanEnvelope = record(evidence?.provenance?.latest_scan_cycle);
   const scanPayload = record(scanEnvelope.payload);
   const scanRuntime = record(scanPayload.runtime);
-  const latestScan = Object.keys(scanPayload).length
+  const evidenceScan = Object.keys(scanPayload).length
     ? {
         ...scanPayload,
         scan_cycle_id: scanPayload.scan_cycle_id ?? scanPayload.cycle_key ?? scanEnvelope.event_key,
@@ -254,20 +259,35 @@ export default function Command() {
         git_commit: scanPayload.git_commit ?? scanRuntime.git_commit
       }
     : scanEnvelope;
+  const latestScan = Object.keys(liveScan).length ? liveScan : evidenceScan;
+
   const health = record(evidence?.telemetry_health);
-  const telemetryTracking = text(
-    health.tracking_state,
-    health.latest_event_at ? "OBSERVED" : "NO DATA"
-  ).toUpperCase();
-  const runtimeTracking = text(
-    health.runtime_provenance_state,
-    Object.keys(runtime).length ? "RECORDED" : "MISSING"
-  ).toUpperCase();
-  const decisionTracking = text(
-    health.decision_cycle_state,
-    Object.keys(latestScan).length ? "OBSERVED" : "NO DATA"
-  ).toUpperCase();
-  const events24h = health.events_24h ?? health.events_observed;
+  const liveTrackingObserved =
+    Object.keys(liveRuntime).length > 0 ||
+    Object.keys(liveScan).length > 0 ||
+    liveTelemetry.last_poll_at != null;
+  const telemetryTracking = liveTrackingObserved
+    ? "OBSERVED"
+    : text(
+        health.tracking_state,
+        health.latest_event_at ? "OBSERVED" : "NO DATA"
+      ).toUpperCase();
+  const runtimeTracking = Object.keys(liveRuntime).length
+    ? "LIVE"
+    : text(
+        health.runtime_provenance_state,
+        Object.keys(runtime).length ? "RECORDED" : "MISSING"
+      ).toUpperCase();
+  const decisionTracking = Object.keys(liveScan).length
+    ? "LIVE"
+    : text(
+        health.decision_cycle_state,
+        Object.keys(latestScan).length ? "OBSERVED" : "NO DATA"
+      ).toUpperCase();
+  const events24h =
+    liveTelemetry.events_observed ??
+    health.events_24h ??
+    health.events_observed;
   const daily = dailyReport || record(evidence?.latest_daily);
   const weekly = weeklyReport || record(evidence?.latest_weekly);
   const dailyMetrics = record(daily.metrics);
@@ -310,6 +330,16 @@ export default function Command() {
   const readinessLimitations = researchReadiness?.limitations || [];
   const readinessMonitors = researchReadiness?.monitors || [];
   const gptReady = researchReadiness?.gpt_would_run_now === true;
+  const canonicalResearchRuns = commandObservation.snapshot?.research?.observability?.runs || [];
+  const rawGraenProblems = commandObservation.snapshot?.research?.graen_problems || [];
+  const liveResearchCount = canonicalResearchRuns.length
+    ? canonicalResearchRuns.filter((row) =>
+        ["RUNNING", "OPEN", "QUEUED", "WAITING"].includes(String(row.status || "").toUpperCase())
+      ).length
+    : rawGraenProblems.filter((row) =>
+        ["RUNNING", "QUEUED", "WAITING"].includes(String(row.status || "").toUpperCase())
+      ).length;
+  const liveResearchState = liveResearchCount > 0 ? "ACTIVE" : "IDLE";
   const theoryProblem =
     theoryProgram?.problems.find((row) => row.problem_id === theoryProgram.program.current_problem_id) ||
     [...(theoryProgram?.problems || [])].reverse().find((row) => row.status === "ACTIVE") ||
@@ -553,10 +583,12 @@ export default function Command() {
             </article>
 
             <article id="research" className="command-panel command-evidence-panel command-view-research command-panel-research">
-              <header><div><span>RESEARCH STATE</span><strong>{readinessState}</strong></div><small>{gptReady ? "GPT READY" : "GPT HELD"}</small></header>
+              <header><div><span>SEMANTIC REVIEW GATE</span><strong>{readinessState}</strong></div><small>NOT RUNTIME STATUS</small></header>
               <div className="command-metric-grid compact">
-                <div><span>READINESS</span><strong>{readinessState}</strong></div>
-                <div><span>GPT NOW</span><strong>{gptReady ? "RUN" : "HOLD"}</strong></div>
+                <div><span>LIVE RESEARCH</span><strong>{liveResearchState}</strong></div>
+                <div><span>ACTIVE RUNS</span><strong>{liveResearchCount}</strong></div>
+                <div><span>REVIEW READINESS</span><strong>{readinessState}</strong></div>
+                <div><span>GPT ELIGIBILITY</span><strong>{gptReady ? "READY" : "HELD"}</strong></div>
                 <div><span>ACTIVE BLOCKERS</span><strong>{researchReadiness?.blocker_count ?? "—"}</strong></div>
                 <div><span>KNOWN LIMITATIONS</span><strong>{researchReadiness?.limitation_count ?? "—"}</strong></div>
                 <div><span>MONITORS</span><strong>{researchReadiness?.monitor_count ?? "—"}</strong></div>
@@ -577,7 +609,7 @@ export default function Command() {
                   <p key={"monitor-" + index}><b>MONITOR / {text(row.code).toUpperCase()}</b> · {arrayText(row.reason_codes)}</p>
                 ))}
                 {!readinessBlockers.length && !readinessLimitations.length && !readinessMonitors.length ? (
-                  <p>{gptReady ? "No deterministic blocker is preventing semantic review." : "No readiness details are currently available."}</p>
+                  <p>{gptReady ? "No deterministic blocker is preventing semantic review." : "No semantic-readiness details are currently available. Live GRAEN activity is tracked separately above."}</p>
                 ) : null}
               </div>
               <div className="command-summary-block">
@@ -650,7 +682,7 @@ export default function Command() {
             <article id="telemetry" className="command-panel command-view-system command-panel-telemetry">
               <header>
                 <div><span>TELEMETRY + PROVENANCE</span><strong>{text(runtime.system_version, "RHEN")} · {telemetryTracking}</strong></div>
-                <small>Evidence {text(evidence?.generated_at)}</small>
+                <small>{Object.keys(liveRuntime).length ? "Live runtime" : "Evidence " + text(evidence?.generated_at)}</small>
               </header>
               <div className="system-grid">
                 <div><span>TRACKING</span><strong>{telemetryTracking}</strong></div>

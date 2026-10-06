@@ -74,13 +74,15 @@ test("Command shares one canonical IREN observation across operator workspaces",
   assert.doesNotMatch(terminal, /useCommandObservation\(/);
 });
 
-test("Command telemetry normalizes legacy event envelopes and exposes tracking state", () => {
+test("Command telemetry prefers live RHEN tracking and preserves legacy evidence fallback", () => {
   const command = readFileSync(new URL("../src/pages/Command.tsx", import.meta.url), "utf8");
 
+  assert.match(command, /snapshot\?\.runtime/);
+  assert.match(command, /snapshot\?\.telemetry/);
   assert.match(command, /runtimeEnvelope/);
   assert.match(command, /runtimePayload/);
   assert.match(command, /scanEnvelope/);
-  assert.match(command, /health\.events_24h \?\? health\.events_observed/);
+  assert.match(command, /liveTelemetry\.events_observed \?\?\s*health\.events_24h \?\?\s*health\.events_observed/);
   assert.match(command, /RUNTIME PROVENANCE/);
   assert.match(command, /DECISION STREAM/);
   assert.match(command, /LATEST EVENT/);
