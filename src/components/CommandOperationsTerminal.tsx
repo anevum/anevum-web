@@ -35,7 +35,10 @@ function activeResearchProblem(snapshot: IrenSnapshot | null, system: SystemName
   const activeStates = ["RUNNING", "QUEUED", "WAITING", "BLOCKED"];
   return (snapshot?.research?.graen_problems || []).find(row => {
     if (!activeStates.includes(String(row.status || "").toUpperCase())) return false;
-    const stage = String(row.research_stage || "");
+    const stage = String(row.research_stage || "").toUpperCase();
+    if (["ADAPTIVE_PROGRAM_EXHAUSTED", "CANDIDATE_READY_FOR_STRATEGY_REVIEW"].includes(stage)) {
+      return false;
+    }
     return system === "VELUM" ? stage.includes("VELUM_REPLAY") : true;
   });
 }
@@ -71,15 +74,23 @@ function laneActivity(snapshot: IrenSnapshot | null, feed: LiveTradingFeed | nul
     traceStarted = activeReplay?.started_at || activeProblem?.started_at || activeProblem?.updated_at || null;
   }
 
+  const researchControl = snapshot?.research?.control;
+  const reviewRequired = system === "GRAEN" && researchControl?.review_required === true;
+  if (reviewRequired) {
+    traceActivity = researchControl?.reason || "Research review requires a deliberate Work / Codex pass.";
+    traceStatus = "REVIEW_REQUIRED";
+    traceType = displayState(researchControl?.review_kind || "RESEARCH_REVIEW");
+  }
+
   const runningJob = String(job?.status || "").toUpperCase() === "RUNNING";
   const queuedJob = String(job?.status || "").toUpperCase() === "QUEUED";
   const traceActive = String(traceStatus || "").toUpperCase() === "RUNNING";
-  let activityState = view.activityState;
+  let activityState = reviewRequired ? "REVIEW_REQUIRED" : view.activityState;
   if (traceActive) activityState = system === "VELUM" ? "REPLAYING" : "RESEARCHING";
   else if (runningJob) activityState = "RUNNING";
   else if (queuedJob && activityState === "WAITING_FOR_WORK") activityState = "QUEUED";
 
-  const active = view.active || traceActive || runningJob;
+  const active = reviewRequired ? false : (view.active || traceActive || runningJob);
   const fallback = system === "IREN"
     ? "Supervising; no active jobs."
     : system === "RHEN"
