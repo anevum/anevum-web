@@ -1861,3 +1861,57 @@
   .company-home-v3 .hero-visual-metrics small{font-size:.32rem}
   .company-home-v3 .hero-visual-metrics strong{font-size:.6rem}
 }
+
+
+/* RHEN functional module glyphs — one restrained visual language, no sub-brand shells. */
+.rhen-module-glyph{
+  width:42px;
+  height:42px;
+  display:block;
+  flex:0 0 auto;
+  color:#8fb6d2;
+  overflow:visible;
+}
+.rhen-module-glyph path,
+.rhen-module-glyph rect,
+.rhen-module-glyph ellipse,
+.rhen-module-glyph circle{
+  fill:none;
+  stroke:currentColor;
+  stroke-width:1.6;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+  vector-effect:non-scaling-stroke;
+}
+.rhen-module-glyph circle{
+  fill:currentColor;
+  stroke:none;
+}
+
+.architecture-role-grid .rhen-module-glyph{
+  width:38px;
+  height:38px;
+  margin-bottom:28px;
+  color:rgba(157,210,225,.78);
+}
+.architecture-role-grid a:hover .rhen-module-glyph{
+  color:#b5dce8;
+}
+.authority-grid .rhen-module-glyph{
+  width:32px;
+  height:32px;
+  margin-bottom:16px;
+  color:rgba(157,210,225,.68);
+}
+
+@media(max-width:720px){
+  .architecture-role-grid .rhen-module-glyph{
+    width:34px;
+    height:34px;
+    margin-bottom:18px;
+  }
+  .authority-grid .rhen-module-glyph{
+    width:30px;
+    height:30px;
+  }
+}
