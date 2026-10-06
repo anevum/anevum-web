@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { commandAuthHeaders, type RhenSession } from "../lib/auth";
+import UiIcon from "./UiIcon";
 
 type IrenObjective = {
   objective_key?: string;
@@ -274,23 +275,23 @@ export default function CommandIrenMaintenance({ session }: { session: RhenSessi
         </label>
 
         <div className="iren-maintenance-actions">
-          <button type="button" onClick={() => void refresh()} disabled={sending}>Refresh state</button>
+          <button type="button" onClick={() => void refresh()} disabled={sending}><UiIcon name="refresh" /> Refresh state</button>
           <button type="button" className="primary" onClick={() => void generateMaintenancePrompt()} disabled={sending}>
-            {sending ? "Working…" : "Generate Codex prompt"}
+            {sending ? "Working…" : <><UiIcon name="prompt" /> Generate Codex prompt</>}
           </button>
           {generatedPrompt ? (
             <button type="button" onClick={() => void copy(generatedPrompt, "maintenance")}>
-              {copied === "maintenance" ? "Copied" : "Copy generated prompt"}
+              {copied === "maintenance" ? "Copied" : <><UiIcon name="copy" /> Copy generated prompt</>}
             </button>
           ) : null}
           {canPrepareTracked ? (
             <button type="button" onClick={() => void send("prepare for Codex")} disabled={sending}>
-              Prepare tracked handoff
+              <UiIcon name="handoff" /> Prepare tracked handoff
             </button>
           ) : null}
           {handoff ? (
             <button type="button" onClick={() => void send("verify Codex handoff")} disabled={sending}>
-              Verify tracked handoff
+              <UiIcon name="validation" /> Verify tracked handoff
             </button>
           ) : null}
         </div>
@@ -343,7 +344,7 @@ export default function CommandIrenMaintenance({ session }: { session: RhenSessi
               </a>
             ) : <small>{handoff.package.branch}</small>}
             <button type="button" onClick={() => void copy(handoff.package!.prompt, handoff.handoff_id)}>
-              {copied === handoff.handoff_id ? "Copied" : "Copy tracked handoff"}
+              {copied === handoff.handoff_id ? "Copied" : <><UiIcon name="copy" /> Copy tracked handoff</>}
             </button>
             {handoff.verification?.blockers?.length ? (
               <small>{handoff.verification.blockers.map((item) => item.replaceAll("_", " ")).join(" · ")}</small>
