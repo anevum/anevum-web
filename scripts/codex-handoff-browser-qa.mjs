@@ -149,7 +149,7 @@ async function runCase(route, viewport) {
 
   await send("Runtime.evaluate", {expression: `
     document.querySelector(".iren-dock-handle")?.click();
-    [...document.querySelectorAll("button")].find(b => b.textContent === "prepare for Codex")?.click();
+    [...document.querySelectorAll("button")].find(b => b.textContent === "verify handoff")?.click();
   `});
   await sleep(500);
   await send("Runtime.evaluate", {expression: `
@@ -157,13 +157,13 @@ async function runCase(route, viewport) {
   `});
   await sleep(200);
   const interactions = await send("Runtime.evaluate", {expression: `({
-    prepared: window.__sentCommands?.includes("prepare for Codex"),
+    verified: window.__sentCommands?.includes("verify Codex handoff"),\n    prepareHidden: ![...document.querySelectorAll("button")].some(b => b.textContent === "prepare for Codex"),
     copied: window.__copiedPrompt === document.querySelector('textarea[aria-label="Complete Codex prompt"]')?.value,
     prompt: document.querySelector('textarea[aria-label="Complete Codex prompt"]')?.value,
     blockers: document.querySelector(".iren-codex-handoff")?.textContent.includes("implementation not submitted")
   })`,returnByValue:true});
   const check = interactions.result?.value || {};
-  if (!check.prepared || !check.copied || !check.prompt || !check.blockers) throw new Error("Handoff interaction failed: " + JSON.stringify(check));
+  if (!check.verified || !check.prepareHidden || !check.copied || !check.prompt || !check.blockers) throw new Error("Handoff interaction failed: " + JSON.stringify(check));
   const result = await send("Runtime.evaluate", {
     expression: `(() => {
       const root = document.documentElement;
