@@ -7,12 +7,12 @@ import "../styles/public-terminal.css";
 const introVideoUrl = import.meta.env.VITE_ANEVUM_INTRO_VIDEO_URL?.trim();
 
 const modules = [
-  ["EXECUTION", "Broker-facing market execution, risk, reconciliation, and evidence."],
-  ["CONTROL", "Health, incidents, scheduling, orchestration, and protected-action gates."],
-  ["RESEARCH", "Strategy evaluation, V15 research, edge discovery, and forward shadow."],
-  ["REPLAY", "Deterministic historical replay, simulation, and counterfactual checks."],
-  ["FORECAST", "Baseline, regime, calibration, and forward-measurement workflows."],
-  ["CORE / STORE", "Bounded SQLite state, evidence, scheduler state, and gateway APIs."]
+  ["EXECUTION", "RHEN broker-facing equities execution, live BTC signal generation, risk, reconciliation, and durable evidence."],
+  ["IREN / CONTROL", "Health, incidents, scheduling, orchestration, required-action state, and protected release boundaries."],
+  ["GRAEN / RESEARCH", "Bounded strategy discovery, chronological evaluation, falsification, and candidate promotion evidence."],
+  ["VELUM / REPLAY", "Independent replay, friction stress, delay stress, simulation, and counterfactual verification."],
+  ["NOSTRA / FORECAST", "Regime, baseline, calibration, forward measurement, and prediction-state workflows."],
+  ["CORE / STORE", "Bounded SQLite state, scheduler state, research state, evidence retention, and canonical gateway APIs."]
 ] as const;
 
 export default function HomeCompany() {
@@ -23,18 +23,18 @@ export default function HomeCompany() {
     <div className="public-terminal-home">
       <section className="pt-home-hero">
         <div className="pt-home-copy">
-          <span className="pt-home-kicker">ANEVUM // RHEN V3 UNIFIED RUNTIME</span>
-          <h1>One runtime. Clear boundaries.</h1>
+          <span className="pt-home-kicker">ANEVUM // RHEN</span>
+          <h1>One system. Clear evidence.</h1>
           <p>
-            RHEN is the unified ANEVUM production runtime. IREN, GRAEN, VELUM, and NOSTRA remain named
-            internal modules for control, research, replay, and forecasting, while execution and Core/Store
-            share the same Railway service with isolated authority boundaries. Command is the protected
-            operating surface; the public terminal is the public evidence surface.
+            ANEVUM builds RHEN, an inspectable automated trading and research system. RHEN operates
+            equities execution, a live BTC signal lane, durable evidence, strategy research, replay,
+            forecasting, and control. Command is the protected operator surface; the Live Terminal is
+            the sanitized public view into what the system is actually doing.
           </p>
 
           <div className="pt-home-actions">
-            <Link to="/command/overview">Open Command →</Link>
-            <Link to="/live">Inspect RHEN Live</Link>
+            <Link to="/live">Inspect RHEN Live →</Link>
+            <Link to="/research">Read Research</Link>
             <Link to="/architecture">See Architecture</Link>
           </div>
 
@@ -42,50 +42,48 @@ export default function HomeCompany() {
             <span>RHEN PUBLIC EVIDENCE</span>
             <strong>{loading ? "CONNECTING" : error ? "DEGRADED" : displayState(rhen.raw).toUpperCase()}</strong>
             <span>·</span>
-            <span>1 PRODUCTION SERVICE</span>
+            <span>1 CANONICAL RUNTIME + ISOLATED PAPER CANARY</span>
             <span>·</span>
             <span>UPDATED {ageText(data?.generated_at, now).toUpperCase()}</span>
           </div>
         </div>
 
-        <div className="pt-home-machine" aria-label="RHEN unified runtime">
-          <i className="pt-home-orbit one" />
-          <i className="pt-home-orbit two" />
+        <div className="pt-home-machine" aria-label="RHEN unified runtime and named modules">
           <Link className="pt-home-core" to="/live" aria-label="Open RHEN in the Live Terminal">
             <Mark />
             <strong>RHEN</strong>
-            <small>UNIFIED RUNTIME</small>
+            <small>CANONICAL RUNTIME</small>
           </Link>
 
           <Link className="pt-home-node rhen" to="/architecture">
-            <span>EXECUTION</span>
-            <small>Broker authority isolated</small>
+            <span>IREN</span>
+            <small>Control · health · scheduler</small>
           </Link>
-          <Link className="pt-home-node graen" to="/architecture">
-            <span>CONTROL</span>
-            <small>Health · gates · scheduler</small>
+          <Link className="pt-home-node graen" to="/research">
+            <span>GRAEN</span>
+            <small>Discovery · validation</small>
           </Link>
           <Link className="pt-home-node nostra" to="/architecture">
-            <span>RESEARCH</span>
-            <small>V15 · discovery · shadow</small>
+            <span>NOSTRA</span>
+            <small>Forecast · calibration</small>
           </Link>
           <Link className="pt-home-node velum" to="/architecture">
-            <span>REPLAY + FORECAST</span>
-            <small>Simulation · calibration</small>
+            <span>VELUM</span>
+            <small>Replay · stress verification</small>
           </Link>
         </div>
       </section>
 
       <section className="pt-home-section">
         <header className="pt-home-section-head">
-          <span>00 / REBUILD</span>
+          <span>00 / SYSTEM</span>
           <div>
-            <h2>The architecture has been consolidated around RHEN.</h2>
+            <h2>RHEN is the production system. The modules keep distinct responsibilities.</h2>
             <p>
-              IREN, GRAEN, VELUM, and NOSTRA now operate as named modules inside the unified RHEN runtime
-              rather than separate Railway services. Legacy Foundation-era infrastructure is no longer part
-              of the production path. The consolidation removes duplicated infrastructure while preserving
-              the authority boundaries that keep research and control code from gaining broker execution power.
+              IREN, GRAEN, VELUM, and NOSTRA operate as named modules inside the canonical RHEN runtime,
+              not as separate product stacks. An isolated BTC paper canary remains a second Railway service
+              specifically for paper execution and forward evidence; it cannot grant live broker-write authority.
+              This keeps deployment simple without collapsing research, replay, control, and execution into one permission set.
             </p>
           </div>
         </header>
@@ -105,12 +103,12 @@ export default function HomeCompany() {
         <header className="pt-home-section-head">
           <span>01 / COMMAND</span>
           <div>
-            <h2>The product is Command. RHEN is the machine underneath it.</h2>
+            <h2>Command is the operating product. RHEN is the system underneath it.</h2>
             <p>
-              Command is the protected operating surface for account state, trading lanes, strategy authority,
-              risk, research, replay, forecasting, incidents, and required action. It reads the canonical RHEN
-              runtime instead of maintaining a parallel control model, and it keeps broker-write authority
-              explicit rather than inferring it from a healthy process or active strategy.
+              Command is the protected surface for account state, trading lanes, strategy authority,
+              risk, research, replay, forecasting, incidents, and required action. It reads canonical
+              RHEN state instead of maintaining a parallel control model, and it keeps broker-write
+              authority explicit rather than inferring it from a healthy process or active strategy.
             </p>
           </div>
         </header>
@@ -121,9 +119,9 @@ export default function HomeCompany() {
           ) : (
             <div className="pt-home-film-placeholder">
               <Mark />
-              <span>ANEVUM PRESENTS</span>
-              <strong>COMMAND RHEN. INSPECT THE EVIDENCE.</strong>
-              <small>16:9 INTRO FILM SLOT READY</small>
+              <span>INTRODUCTION FILM</span>
+              <strong>RHEN / COMMAND</strong>
+              <small>VIDEO ASSET NOT YET PUBLISHED</small>
             </div>
           )}
         </div>
@@ -133,12 +131,12 @@ export default function HomeCompany() {
         <header className="pt-home-section-head">
           <span>02 / CURRENT STATE</span>
           <div>
-            <h2>Production rebuild, BTC validation, and customer product work now share one architecture.</h2>
+            <h2>One canonical runtime, one isolated paper canary, one evidence model.</h2>
             <p>
-              RHEN v3 runs as one Railway application service with a bounded SQLite Core at
-              /data/rhen-core.db. Command reads current equities and crypto authority, GRAEN research,
-              VELUM validation, NOSTRA forecasting, and IREN control state from that canonical runtime.
-              Strategy versions and release gates are rendered from live evidence instead of hard-coded site copy.
+              RHEN v3 runs the canonical production supervisor, execution boundary, Core/Store, IREN control,
+              GRAEN research, VELUM replay, and NOSTRA forecasting in one Railway application service backed by
+              bounded SQLite state at /data/rhen-core.db. The separate BTC paper canary consumes only validated
+              paper assignments and remains isolated from live execution authority.
             </p>
           </div>
         </header>
@@ -146,13 +144,13 @@ export default function HomeCompany() {
         <div className="pt-home-links">
           <Link to="/architecture">
             <span>RHEN V3</span>
-            <strong>Unified production runtime</strong>
-            <p>One Railway service, one persistent volume, loopback internal modules, bounded retention, and isolated broker authority.</p>
+            <strong>Canonical production runtime</strong>
+            <p>One supervised runtime with isolated internal responsibilities, bounded state, evidence retention, and narrow broker authority.</p>
           </Link>
-          <Link to="/live">
-            <span>STRATEGY PIPELINE</span>
-            <strong>Authority and research stay separate</strong>
-            <p>Current strategies, research candidates, replay evidence, and release gates are projected from canonical RHEN state.</p>
+          <Link to="/research">
+            <span>GRAEN → VELUM</span>
+            <strong>Research must earn forward paper</strong>
+            <p>Bounded candidates move through chronological evidence, independent replay, friction stress, and paper-only forward evaluation.</p>
           </Link>
           <Link to="/command/overview">
             <span>COMMAND</span>
