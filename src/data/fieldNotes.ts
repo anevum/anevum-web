@@ -65,8 +65,8 @@ export const fieldNotes: FieldNote[] = [
     reproduce: {
       question: "Can RHEN expand equity coverage and research depth while preserving exact no-lookahead evidence and narrow live authority?",
       inputs: [
-        "RHEN V4.3 source commit c4058241",
-        "Railway deployment a46b8f66",
+        "The deployed RHEN V4.3 source",
+        "The successful RHEN V4.3 Railway deployment",
         "Canonical scheduler v1.0.10",
         "Daily research rhen-daily-v1.7",
         "Candidate decision reference price and completed-bar timestamp",
