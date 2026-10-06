@@ -285,46 +285,48 @@ export default function CommandIrenDock({ session }: { session: RhenSession }) {
           </details>
         </section> : null}
 
-        <div className="iren-dock-grid">
-          <section>
-            <header>
-              <span>OBJECTIVES</span>
-              <b>{work?.objectives_complete || 0}/{work?.objective_count || 0} COMPLETE</b>
-            </header>
-            <div className="iren-dock-list">
-              {nextObjectives.length ? nextObjectives.map((objective) => (
-                <article key={objective.objective_key}>
-                  <i className={stateClass(objective.status)} />
-                  <div>
-                    <strong>{objective.title || objective.objective_key}</strong>
-                    <small>{objective.owner_system || "IREN"} · {objective.objective_key}</small>
-                  </div>
-                  <b className={stateClass(objective.status)}>{objective.status}</b>
-                </article>
-              )) : <p className="iren-dock-empty">No active or ready objectives.</p>}
-            </div>
-          </section>
+        {(nextObjectives.length || activeJobs.length) ? (
+          <div className="iren-dock-grid">
+            {nextObjectives.length ? (
+              <section>
+                <header>
+                  <span>OBJECTIVES</span>
+                  <b>{work?.objectives_complete || 0}/{work?.objective_count || 0} COMPLETE</b>
+                </header>
+                <div className="iren-dock-list">
+                  {nextObjectives.map((objective) => (
+                    <article key={objective.objective_key}>
+                      <i className={stateClass(objective.status)} />
+                      <div>
+                        <strong>{objective.title || objective.objective_key}</strong>
+                        <small>{objective.owner_system || "IREN"} · {objective.objective_key}</small>
+                      </div>
+                      <b className={stateClass(objective.status)}>{objective.status}</b>
+                    </article>
+                  ))}
+                </div>
+              </section>
+            ) : null}
 
-          <section>
-            <header>
-              <span>ACTIVE WORK</span>
-              <b>{activeJobs.length} CURRENT</b>
-            </header>
-            <div className="iren-dock-list">
-              {activeJobs.length ? activeJobs.slice(0, 8).map((job) => (
-                <article key={job.job_id}>
-                  <i className={stateClass(job.status)} />
-                  <div>
-                    <strong>{job.title || job.job_type || "IREN job"}</strong>
-                    <small>{job.owner_system || "IREN"} · {shortId(job.job_id)}</small>
-                  </div>
-                  <b className={stateClass(job.status)}>{job.status}</b>
-                </article>
-              )) : <p className="iren-dock-empty">No active jobs.</p>}
-            </div>
-          </section>
-        </div>
-      </div>
-    </aside>
-  );
-}
+            {activeJobs.length ? (
+              <section>
+                <header>
+                  <span>ACTIVE WORK</span>
+                  <b>{activeJobs.length} CURRENT</b>
+                </header>
+                <div className="iren-dock-list">
+                  {activeJobs.slice(0, 8).map((job) => (
+                    <article key={job.job_id}>
+                      <i className={stateClass(job.status)} />
+                      <div>
+                        <strong>{job.title || job.job_type || "IREN job"}</strong>
+                        <small>{job.owner_system || "IREN"} · {shortId(job.job_id)}</small>
+                      </div>
+                      <b className={stateClass(job.status)}>{job.status}</b>
+                    </article>
+                  ))}
+                </div>
+              </section>
+            ) : null}
+          </div>
+        ) : null}
