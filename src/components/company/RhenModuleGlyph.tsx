@@ -1,3 +1,5 @@
+import type { SystemName } from "./SystemMark";
+
 export type RhenModuleGlyphName =
   | "EXECUTION"
   | "CONTROL"
@@ -8,11 +10,26 @@ export type RhenModuleGlyphName =
   | "WORKER"
   | "COMMAND";
 
+type Size = "xs" | "sm" | "md" | "lg";
+
 type Props = {
   module: RhenModuleGlyphName;
+  size?: Size;
   className?: string;
   decorative?: boolean;
 };
+
+export const SYSTEM_TO_RHEN_MODULE: Record<SystemName, RhenModuleGlyphName> = {
+  RHEN: "EXECUTION",
+  IREN: "CONTROL",
+  GRAEN: "RESEARCH",
+  VELUM: "REPLAY",
+  NOSTRA: "FORECAST"
+};
+
+export function rhenModuleForSystem(system: SystemName): RhenModuleGlyphName {
+  return SYSTEM_TO_RHEN_MODULE[system];
+}
 
 function Glyph({ module }: { module: RhenModuleGlyphName }) {
   if (module === "EXECUTION") {
@@ -83,10 +100,17 @@ function Glyph({ module }: { module: RhenModuleGlyphName }) {
   );
 }
 
-export default function RhenModuleGlyph({ module, className = "", decorative = false }: Props) {
+export default function RhenModuleGlyph({ module, size = "md", className = "", decorative = false }: Props) {
   return (
     <span
-      className={"system-icon rhen-functional-icon rhen-functional-icon-" + module.toLowerCase() + " " + className}
+      className={
+        "system-icon rhen-functional-icon rhen-functional-icon-" +
+        module.toLowerCase() +
+        " system-icon-" +
+        size +
+        " " +
+        className
+      }
       aria-hidden={decorative || undefined}
       aria-label={decorative ? undefined : "RHEN " + module.toLowerCase() + " module"}
     >
@@ -98,6 +122,37 @@ export default function RhenModuleGlyph({ module, className = "", decorative = f
       >
         <Glyph module={module} />
       </svg>
+    </span>
+  );
+}
+
+
+export function RhenSystemGlyph({
+  system,
+  size = "md",
+  className = "",
+  decorative = true
+}: {
+  system: SystemName;
+  size?: Size;
+  className?: string;
+  decorative?: boolean;
+}) {
+  return (
+    <RhenModuleGlyph
+      module={rhenModuleForSystem(system)}
+      size={size}
+      className={"rhen-named-module rhen-named-module-" + system.toLowerCase() + " " + className}
+      decorative={decorative}
+    />
+  );
+}
+
+export function RhenSystemChip({ system, className = "" }: { system: SystemName; className?: string }) {
+  return (
+    <span className={"system-chip rhen-system-chip " + className}>
+      <RhenSystemGlyph system={system} size="xs" decorative />
+      <strong>{system}</strong>
     </span>
   );
 }
