@@ -447,6 +447,43 @@ export type CommandCryptoLane = {
   runtime?: Record<string, unknown> | null;
 };
 
+export type CommandExtendedEquityLane = {
+  lane?: string;
+  enabled?: boolean;
+  execution_enabled?: boolean;
+  execution_authorized?: boolean;
+  strategy_version_id?: string | null;
+  observed_at?: string | null;
+  session?: {
+    session?: string | null;
+    target_session_date?: string | null;
+    starts_at?: string | null;
+    ends_at?: string | null;
+    regular_open?: string | null;
+    regular_close?: string | null;
+    extended?: boolean;
+    tradable?: boolean;
+    reason?: string | null;
+  } | null;
+  universe?: {
+    active_symbols?: string[];
+    active_count?: number;
+    eligible_count?: number;
+    updated_at?: string | null;
+  } | null;
+  scanner?: Record<string, Record<string, unknown>>;
+  last_decision?: string | null;
+  last_error?: string | null;
+  last_order?: Record<string, unknown> | null;
+  last_exits?: Record<string, unknown>[];
+  managed_symbols?: string[];
+  active_positions?: number;
+  data_cache?: {
+    symbols?: number;
+    bars?: number;
+  } | null;
+};
+
 export type CommandSnapshot = {
   mode?: string;
   observed_at?: string;
@@ -462,6 +499,7 @@ export type CommandSnapshot = {
   account_history?: CommandAccountHistory | null;
   crypto_stats?: Record<string, unknown>;
   crypto_approval?: Record<string, unknown> | null;
+  extended_equity?: CommandExtendedEquityLane | null;
   crypto_live?: CommandCryptoLane | null;
   crypto_paper?: CommandCryptoLane | null;
   bot?: Record<string, unknown>;
