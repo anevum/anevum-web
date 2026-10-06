@@ -54,6 +54,8 @@ export default function Live() {
   );
   const fleet = fleetState(views);
   const selectedView = selected === "ALL" ? null : views.find((view) => view.name === selected) || null;
+  const forwardOutcomes = data?.research?.evidence?.candidate_forward_outcomes || [];
+  const forwardOutcomeCount = forwardOutcomes.reduce((sum, row) => sum + Number(row.count || 0), 0);
 
   const events = useMemo(() => {
     const rows: PublicTerminalEvent[] = [];
@@ -91,17 +93,6 @@ export default function Live() {
       });
     }
 
-    if (data?.crypto_shadow_validation?.latest_event_at) {
-      rows.push({
-        id: "crypto-validation-" + data.crypto_shadow_validation.latest_event_at,
-        at: data.crypto_shadow_validation.latest_event_at,
-        system: "GRAEN",
-        state: data.crypto_shadow_validation.status,
-        title: data.crypto_shadow_validation.study_name || "Crypto validation",
-        detail: "Public validation evidence updated"
-      });
-    }
-
     if (data?.active_strategy?.activated_at) {
       rows.push({
         id: "strategy-" + data.active_strategy.activated_at,
@@ -135,9 +126,11 @@ export default function Live() {
       detail: velum?.activity || "Replay unavailable"
     },
     {
-      label: "Validation",
-      state: data?.crypto_shadow_validation?.status || data?.research?.current_status || "UNAVAILABLE",
-      detail: data?.crypto_shadow_validation?.study_name || "Public research gate"
+      label: "Forward evidence",
+      state: forwardOutcomeCount > 0 ? "OBSERVING" : "WAITING_FOR_INPUTS",
+      detail: forwardOutcomeCount > 0
+        ? forwardOutcomeCount + " time-ordered outcomes recorded"
+        : "Awaiting exact measurable post-fix cohort"
     },
     {
       label: "Production",
@@ -254,7 +247,7 @@ export default function Live() {
                   </div>
                   <div className="pt-operating-facts">
                     <div><span>Research state</span><strong>{displayState(data?.research?.current_status)}</strong></div>
-                    <div><span>Validation</span><strong>{displayState(data?.crypto_shadow_validation?.status)}</strong></div>
+                    <div><span>Forward outcomes</span><strong>{forwardOutcomeCount || "—"}</strong></div>
                   </div>
                   <p>{data?.research?.current_focus || "No current public research focus is recorded."}</p>
                 </section>
@@ -355,12 +348,12 @@ export default function Live() {
         </section>
 
         <section className="pt-data-panel">
-          <header><strong>Crypto validation</strong><span>{displayState(data?.crypto_shadow_validation?.status)}</span></header>
+          <header><strong>Forward evidence</strong><span>{forwardOutcomeCount ? "OBSERVED" : "AWAITING COHORT"}</span></header>
           <div className="pt-kpis">
-            <div className="pt-kpi"><span>Completed exits</span><strong>{count(data?.crypto_shadow_validation?.counts?.exits)}</strong></div>
-            <div className="pt-kpi"><span>Independent days</span><strong>{count(data?.crypto_shadow_validation?.counts?.independent_day_blocks)}</strong></div>
-            <div className="pt-kpi"><span>Trade progress</span><strong>{pct(data?.crypto_shadow_validation?.progress?.completed_trades_pct)}</strong></div>
-            <div className="pt-kpi"><span>Day progress</span><strong>{pct(data?.crypto_shadow_validation?.progress?.independent_days_pct)}</strong></div>
+            <div className="pt-kpi"><span>Recorded outcomes</span><strong>{forwardOutcomeCount || "—"}</strong></div>
+            <div className="pt-kpi"><span>Horizons</span><strong>{forwardOutcomes.length || "—"}</strong></div>
+            <div className="pt-kpi"><span>Decision contract</span><strong>EXACT</strong></div>
+            <div className="pt-kpi"><span>Lookahead</span><strong>FORBIDDEN</strong></div>
           </div>
         </section>
       </div>
@@ -488,7 +481,7 @@ export default function Live() {
       <footer className="pt-terminal-foot">
         <span>
           Public-safe RHEN observations only. IREN, GRAEN, VELUM, and NOSTRA are named internal modules of the canonical RHEN runtime.
-          A separate BTC paper canary is retained only for isolated paper execution and forward evidence. No account balances,
+          Live broker authority is limited to the current long U.S. equity / ETF scope. No account balances,
           positions, orders, symbols, fills, dollar P&amp;L, exact strategy rules, thresholds, credentials, or protected
           controls are exposed. Missing or stale evidence remains visibly missing or stale.
         </span>
