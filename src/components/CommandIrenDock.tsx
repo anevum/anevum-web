@@ -1,89 +1,236 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { commandAuthHeaders, type RhenSession } from "../lib/auth";
-import "../styles/iren-dock.css";
 
 type IrenObjective = {
   objective_key?: string;
-  parent_key?: string | null;
   title?: string;
-  description?: string;
   status?: string;
   owner_system?: string;
-  priority?: number;
-  dependencies?: string[];
 };
 
 type IrenJob = {
   job_id?: string;
-  objective_key?: string | null;
   title?: string;
   owner_system?: string;
   job_type?: string;
   status?: string;
-  requires_human?: boolean;
-  created_at?: string;
-  updated_at?: string;
   result?: Record<string, unknown>;
 };
 
 type IrenCommand = {
   command_id?: string;
-  command_text?: string;
-  source?: string;
   status?: string;
   result?: Record<string, unknown>;
   response?: Record<string, unknown>;
   linked_job_id?: string | null;
-  created_at?: string;
-  completed_at?: string | null;
+};
+
+type IrenService = {
+  service_id?: string;
+  service_name?: string;
+  status?: string;
+  readiness?: boolean;
+  revision?: string;
+  deployment?: string;
+  current_activity?: string;
 };
 
 type CodexHandoff = {
-  handoff_id: string; objective_key: string; handoff_status: string;
-  package?: { title: string; prompt: string; created_at: string; base_sha: string; branch: string };
-  association?: { pr_number: number; repository: string } | null;
-  verification?: { verified: boolean; blockers?: string[]; observed_at?: string };
+  handoff_id: string;
+  objective_key: string;
+  handoff_status: string;
+  package?: {
+    title: string;
+    prompt: string;
+    created_at: string;
+    base_sha: string;
+    branch: string;
+  };
+  association?: {
+    pr_number: number;
+    repository: string;
+  } | null;
+  verification?: {
+    verified: boolean;
+    blockers?: string[];
+    observed_at?: string;
+  };
 };
+
 type IrenFeed = {
   schema_version?: string;
-  revision?: number | null;
+  revision?: number | string | null;
   observed_at?: string | null;
   stale?: boolean;
   state?: string;
+  topology?: {
+    services?: IrenService[];
+  };
   incidents?: Array<Record<string, unknown>>;
   work?: {
-    next_action?: { title?: string; objective_key?: string; job_type?: string };
+    next_action?: {
+      title?: string;
+      objective_key?: string;
+      job_type?: string;
+    };
     execution_mode?: string;
     handoffs?: CodexHandoff[];
-    objective_count?: number;
-    objectives_complete?: number;
-    active_jobs?: number;
-    blocked_objectives?: number;
-    requires_human?: number;
     objectives?: IrenObjective[];
     jobs?: IrenJob[];
     commands?: IrenCommand[];
   };
 };
 
+function clean(value: unknown, fallback = "—") {
+  const text = String(value ?? "").replace(/\s+/g, " ").trim();
+  return text || fallback;
+}
+
 function shortId(value?: string | null) {
-  return value ? value.slice(0, 8) : "—";
+  return value ? value.slice(0, 10) : "—";
 }
 
-function stateClass(value?: string) {
-  const v = String(value || "").toUpperCase();
-  if (["HEALTHY", "COMPLETE", "SUCCEEDED", "READY"].includes(v)) return "good";
-  if (["FAILED", "ATTENTION_REQUIRED", "BLOCKED", "CANCELLED", "OFFLINE"].includes(v)) return "bad";
-  return "warn";
+function activeHandoff(feed: IrenFeed | null) {
+  return feed?.work?.handoffs?.find((row) =>
+    ["PREPARED", "IN_PROGRESS", "PR_OPEN", "MERGED", "VERIFYING"].includes(
+      String(row.handoff_status || "").toUpperCase()
+    )
+  );
 }
 
-export default function CommandIrenDock({ session }: { session: RhenSession }) {
+function buildMaintenancePrompt(feed: IrenFeed | null, focus: string) {
+  const services = (feed?.topology?.services || []).slice(0, 12);
+  const incidents = (feed?.incidents || []).slice(0, 12);
+  const objectives = (feed?.work?.objectives || [])
+    .filter((row) => ["ACTIVE", "READY", "BLOCKED"].includes(String(row.status || "").toUpperCase()))
+    .slice(0, 10);
+  const jobs = (feed?.work?.jobs || [])
+    .filter((row) => ["QUEUED", "RUNNING", "WAITING", "BLOCKED", "NEEDS_APPROVAL"].includes(String(row.status || "").toUpperCase()))
+    .slice(0, 10);
+  const handoff = activeHandoff(feed);
+  const operatorFocus = focus.trim();
+
+  const lines = [
+    "Continue ANEVUM/RHEN maintenance from the CURRENT actual state. Do not restart architecture analysis or redesign completed work.",
+    "",
+    "Canonical repositories:",
+    "- Backend/runtime: anevum/alpaca-trader",
+    "- Frontend/Command: anevum/anevum-web",
+    "",
+    "IREN snapshot:",
+    "- State: " + clean(feed?.state, "UNKNOWN"),
+    "- Observed at: " + clean(feed?.observed_at),
+    "- Snapshot stale: " + (feed?.stale ? "YES" : "NO"),
+    "- Revision: " + clean(feed?.revision),
+    "",
+    "Runtime services:"
+  ];
+
+  if (services.length) {
+    for (const row of services) {
+      lines.push(
+        "- " + clean(row.service_name || row.service_id, "service") +
+        " | status=" + clean(row.status, "UNKNOWN") +
+        " | ready=" + (row.readiness === true ? "YES" : row.readiness === false ? "NO" : "UNKNOWN") +
+        " | revision=" + clean(row.revision) +
+        " | deployment=" + clean(row.deployment) +
+        (row.current_activity ? " | activity=" + clean(row.current_activity) : "")
+      );
+    }
+  } else {
+    lines.push("- No service inventory was present in this snapshot. Inspect live Railway state before editing.");
+  }
+
+  lines.push("", "Open incidents:");
+  if (incidents.length) {
+    for (const row of incidents) {
+      lines.push(
+        "- " + clean(row.key || row.incident_type, "incident") +
+        " | severity=" + clean(row.severity, "UNKNOWN") +
+        " | reason=" + clean(row.reason, "unspecified")
+      );
+    }
+  } else {
+    lines.push("- None reported.");
+  }
+
+  lines.push("", "Active objectives:");
+  if (objectives.length) {
+    for (const row of objectives) {
+      lines.push(
+        "- " + clean(row.objective_key, "objective") +
+        " | " + clean(row.status, "UNKNOWN") +
+        " | " + clean(row.title, "Untitled") +
+        " | owner=" + clean(row.owner_system, "IREN")
+      );
+    }
+  } else {
+    lines.push("- None.");
+  }
+
+  lines.push("", "Active work:");
+  if (jobs.length) {
+    for (const row of jobs) {
+      lines.push(
+        "- " + clean(row.job_id, "job") +
+        " | " + clean(row.status, "UNKNOWN") +
+        " | " + clean(row.job_type, "WORK") +
+        " | " + clean(row.title, "Untitled") +
+        " | owner=" + clean(row.owner_system, "IREN")
+      );
+    }
+  } else {
+    lines.push("- None.");
+  }
+
+  lines.push(
+    "",
+    "IREN next action:",
+    "- " + (feed?.work?.next_action?.title
+      ? clean(feed.work.next_action.title) + " | mode=" + clean(feed.work.execution_mode, "unknown")
+      : "No pending canonical action.")
+  );
+
+  lines.push("", "Tracked Codex handoff:");
+  if (handoff?.package) {
+    lines.push(
+      "- ACTIVE: " + clean(handoff.package.title) +
+      " | status=" + clean(handoff.handoff_status) +
+      " | objective=" + clean(handoff.objective_key) +
+      " | base=" + shortId(handoff.package.base_sha)
+    );
+    lines.push("- Inspect and continue/verify this handoff before creating overlapping work.");
+  } else {
+    lines.push("- None active.");
+  }
+
+  lines.push(
+    "",
+    "Operator focus:",
+    operatorFocus ? "- " + operatorFocus : "- No additional focus supplied. Perform the highest-value maintenance pass supported by current evidence.",
+    "",
+    "Execution instructions:",
+    "1. Inspect CURRENT main in both repositories, applicable AGENTS.md files, current GitHub CI, current Railway deployments, and current Command/IREN state before editing. Treat the snapshot above as context, not authority.",
+    "2. Reconcile the snapshot against live evidence. Do not act on stale assumptions, old PRs, obsolete services, or legacy architecture.",
+    "3. Preserve the current ANEVUM/RHEN architecture and naming. Consolidate rather than duplicate. Do not reintroduce retired infrastructure.",
+    "4. Identify the highest-value concrete maintenance/update work consistent with the operator focus and current evidence. If a safe code fix is clear, implement it; do not stop at analysis.",
+    "5. Add or update focused tests, run the relevant full CI, and verify the deployed result with GitHub plus Railway/Cloudflare evidence.",
+    "6. Preserve RHEN live strategy, risk controls, broker behavior, position sizing, execution permissions, credentials, and capital behavior unless the operator explicitly authorizes a change to those protected areas.",
+    "7. Keep paid model/API worker spending disabled. Do not add autonomous spending, credential changes, destructive infrastructure actions, or silent live-trading behavior changes.",
+    "8. Do not fabricate health, telemetry, research progress, trades, deployment state, or completion. If evidence is missing, surface the missing evidence.",
+    "9. If there is no real maintenance need, say so and do not invent work.",
+    "10. Finish with: exact changes made, tests/CI results, deployed state, unresolved blockers, and the next concrete action if one exists."
+  );
+
+  return lines.join("\n");
+}
+
+export default function CommandIrenMaintenance({ session }: { session: RhenSession }) {
   const [feed, setFeed] = useState<IrenFeed | null>(null);
-  const [expanded, setExpanded] = useState(false);
+  const [focus, setFocus] = useState("");
   const [error, setError] = useState("");
   const [copied, setCopied] = useState("");
   const [sending, setSending] = useState(false);
-  const [pendingControl, setPendingControl] = useState("");
   const [lastOutcome, setLastOutcome] = useState<{ command: IrenCommand; job?: IrenJob } | null>(null);
   const refreshInFlight = useRef(false);
 
@@ -129,235 +276,145 @@ export default function CommandIrenDock({ session }: { session: RhenSession }) {
         const linkedJob = command.linked_job_id
           ? value.work?.jobs?.find((row) => row.job_id === command.linked_job_id)
           : undefined;
-        const deterministicJob = linkedJob && String(linkedJob.job_type || "").startsWith("CONTROL_");
-        if (!deterministicJob || ["SUCCEEDED", "FAILED", "CANCELLED", "NEEDS_APPROVAL"].includes(String(linkedJob?.status || "").toUpperCase())) {
-          return { command, job: linkedJob };
-        }
+        return { command, job: linkedJob };
       }
     }
-    throw new Error("Control was accepted but completion was not observed.");
+    throw new Error("IREN accepted the control but completion was not observed.");
   }, [request]);
 
-  useEffect(() => {
-    document.documentElement.classList.add("iren-dock-active");
-    return () => document.documentElement.classList.remove("iren-dock-active");
-  }, []);
-
-  useEffect(() => {
-    void refresh();
-    const timer = window.setInterval(refresh, 5000);
-    return () => window.clearInterval(timer);
-  }, [refresh]);
-
-  const send = useCallback(async (value: string) => {
-    const text = value.trim();
-    if (!text || sending) return;
+  const send = useCallback(async (command: string) => {
+    if (sending) return;
     setSending(true);
-    setPendingControl(text);
     setLastOutcome(null);
     try {
       const accepted = await request("/api/command/iren/command", {
         method: "POST",
-        body: JSON.stringify({ command: text })
+        body: JSON.stringify({ command })
       }) as { command?: IrenCommand };
-      setExpanded(true);
-      setError("");
       const commandId = accepted.command?.command_id;
       if (commandId) {
-        const outcome = await waitForCommand(commandId);
-        setLastOutcome(outcome);
+        setLastOutcome(await waitForCommand(commandId));
       } else {
         await refresh();
       }
+      setError("");
     } catch (nextError) {
       setError(nextError instanceof Error ? nextError.message : "IREN control failed.");
     } finally {
-      setPendingControl("");
       setSending(false);
     }
   }, [refresh, request, sending, waitForCommand]);
 
-  const work = feed?.work;
-  const objectives = work?.objectives || [];
-  const jobs = work?.jobs || [];
-  const activeJobs = useMemo(
-    () => jobs.filter((job) => ["QUEUED", "RUNNING", "WAITING", "BLOCKED", "NEEDS_APPROVAL"].includes(String(job.status || ""))),
-    [jobs]
-  );
-  const nextObjectives = useMemo(
-    () => objectives.filter((objective) => ["ACTIVE", "READY", "BLOCKED"].includes(String(objective.status || ""))).slice(0, 8),
-    [objectives]
-  );
-  const handoff = work?.handoffs?.find((row) =>
-    ["PREPARED", "IN_PROGRESS", "PR_OPEN", "MERGED", "VERIFYING"].includes(String(row.handoff_status || "").toUpperCase())
-  );
-  const nextAction = work?.next_action;
-  const executionMode = String(work?.execution_mode || "idle");
-  const hasNextAction = Boolean(nextAction?.title);
-  const canRunAction = hasNextAction && executionMode === "deterministic";
-  const canPrepareCodex = hasNextAction && executionMode === "codex/manual software" && !handoff;
-  const canVerifyHandoff = Boolean(handoff);
+  useEffect(() => {
+    void refresh();
+    const timer = window.setInterval(refresh, 10000);
+    return () => window.clearInterval(timer);
+  }, [refresh]);
+
+  const handoff = activeHandoff(feed);
+  const executionMode = String(feed?.work?.execution_mode || "idle");
+  const canPrepareTracked = Boolean(feed?.work?.next_action?.title) &&
+    executionMode === "codex/manual software" &&
+    !handoff;
+  const maintenancePrompt = useMemo(() => buildMaintenancePrompt(feed, focus), [feed, focus]);
+  const state = String(error ? "OFFLINE" : feed?.stale ? "STALE" : feed?.state || "CONNECTING").toUpperCase();
+  const activeIncidents = (feed?.incidents || []).length;
+  const activeJobs = (feed?.work?.jobs || []).filter((row) =>
+    ["QUEUED", "RUNNING", "WAITING", "BLOCKED", "NEEDS_APPROVAL"].includes(String(row.status || "").toUpperCase())
+  ).length;
   const outcomeResponse = (lastOutcome?.command.result || lastOutcome?.command.response || {}) as Record<string, unknown>;
-  const outcomeJobResult = (lastOutcome?.job?.result || {}) as Record<string, unknown>;
-  const outcomeMessage = typeof outcomeJobResult.message === "string"
-    ? outcomeJobResult.message
-    : typeof outcomeResponse.message === "string"
-      ? outcomeResponse.message
-      : "";
-  const outcomeStatus = String(lastOutcome?.job?.status || lastOutcome?.command.status || "").toUpperCase();
-  const openIncidents = (feed?.incidents || [])
-    .filter((row) => String(row.status || "OPEN").toUpperCase() !== "RESOLVED")
-    .slice(0, 4);
-  const incidentSummary = openIncidents
-    .map((row) => String(row.key || row.reason || row.incident_type || "incident"))
-    .join(" · ");
-  const connectionLabel = error
-    ? (feed ? "DEGRADED" : "OFFLINE")
-    : feed?.stale
-      ? "STALE"
-      : String(feed?.state || "CONNECTING").toUpperCase();
+  const outcomeMessage = typeof outcomeResponse.message === "string" ? outcomeResponse.message : "";
+
+  const copy = useCallback(async (text: string, key: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(key);
+      window.setTimeout(() => setCopied((current) => current === key ? "" : current), 1800);
+    } catch {
+      setError("Clipboard unavailable. Open the prompt preview and copy it manually.");
+    }
+  }, []);
 
   return (
-    <aside className={"iren-dock " + (expanded ? "expanded" : "")} aria-label="IREN operating terminal">
-      <button className="iren-dock-handle" type="button" onClick={() => setExpanded((value) => !value)}>
-        <span className={"iren-dock-state " + stateClass(connectionLabel)} />
-        <strong>IREN</strong>
-        <span className="iren-dock-connection">{connectionLabel}</span>
-        <i />
-        <span className="iren-dock-prompt">DETERMINISTIC CONTROL</span>
-        <span className="iren-dock-count">{activeJobs.length} JOB{activeJobs.length === 1 ? "" : "S"}</span>
-        <span className="iren-dock-count">{work?.requires_human || 0} NEEDS YOU</span>
-        <b>{expanded ? "⌄" : "⌃"}</b>
-      </button>
+    <article className="command-panel command-view-system command-panel-boundary command-panel-iren-maintenance" aria-label="IREN maintenance">
+      <header>
+        <div>
+          <span>IREN / MAINTENANCE</span>
+          <strong>{state}</strong>
+        </div>
+        <small>{activeIncidents} incident{activeIncidents === 1 ? "" : "s"} · {activeJobs} active job{activeJobs === 1 ? "" : "s"}</small>
+      </header>
 
-      <div className="iren-dock-body">
-        <div className="iren-dock-toolbar">
-          <div>
-            <small>IREN / CONTROL PLANE</small>
-            <strong>Operator controls</strong>
-          </div>
-          <div className="iren-dock-actions">
-            <button type="button" disabled={sending} onClick={() => void refresh()}>refresh</button>
-            {canRunAction ? (
-              <button type="button" disabled={sending} onClick={() => void send("do that")}>
-                {pendingControl === "do that" ? "running…" : "run action"}
-              </button>
-            ) : null}
-            {canPrepareCodex ? (
-              <button type="button" disabled={sending} onClick={() => void send("prepare for Codex")}>
-                {pendingControl === "prepare for Codex" ? "preparing…" : "prepare for Codex"}
-              </button>
-            ) : null}
-            {canVerifyHandoff ? (
-              <button type="button" disabled={sending} onClick={() => void send("verify Codex handoff")}>
-                {pendingControl === "verify Codex handoff" ? "verifying…" : "verify handoff"}
-              </button>
-            ) : null}
-          </div>
+      <div className="iren-maintenance-body">
+        {error ? <div className="iren-maintenance-alert bad">{error}</div> : null}
+
+        <div className="iren-maintenance-state">
+          <div><span>OBSERVED</span><strong>{feed?.observed_at ? new Date(feed.observed_at).toLocaleString() : "—"}</strong></div>
+          <div><span>NEXT</span><strong>{feed?.work?.next_action?.title || "No pending canonical action"}</strong></div>
+          <div><span>MODE</span><strong>{executionMode}</strong></div>
         </div>
 
-        {error ? <div className="iren-dock-error">{error}</div> : null}
-        {(feed?.stale || openIncidents.length || connectionLabel === "DEGRADED") ? (
-          <div className="iren-dock-response">
-            <span>CURRENT CONTROL STATE · {connectionLabel}</span>
-            <p>{feed?.stale
-              ? "Canonical IREN observation is stale."
-              : incidentSummary || "IREN is degraded; no open incident detail was supplied by the canonical state."}</p>
-            <small>Observed {feed?.observed_at ? new Date(feed.observed_at).toLocaleString() : "—"}</small>
-          </div>
-        ) : null}
-        {sending ? (
-          <div className="iren-dock-response">
-            <span>CONTROL RUNNING</span>
-            <p>{pendingControl}</p>
-          </div>
-        ) : null}
-        {lastOutcome && !sending ? (
-          <div className="iren-dock-response">
-            <span>LAST CONTROL · {outcomeStatus || "COMPLETE"}</span>
-            {outcomeMessage ? <p>{outcomeMessage}</p> : null}
-            {lastOutcome.job ? (
-              <small>{lastOutcome.job.job_type || "CONTROL"} · {shortId(lastOutcome.job.job_id)}</small>
-            ) : (
-              <small>Command {shortId(lastOutcome.command.command_id)}</small>
-            )}
-          </div>
-        ) : null}
-        {!hasNextAction && !handoff && !sending ? (
-          <div className="iren-dock-response">
-            <span>READY</span>
-            <p>No pending control action.</p>
-          </div>
-        ) : null}
-        {work?.next_action ? <div className="iren-dock-response">
-          <span>{work.execution_mode}</span><p>{work.next_action.title}</p>
-        </div> : null}
-        {handoff?.package ? <section className="iren-codex-handoff" aria-label="Codex handoff">
-          <strong>{handoff.package.title}</strong>
-          <p>{handoff.handoff_status} · {handoff.objective_key}</p>
-          <small>Prepared {new Date(handoff.package.created_at).toLocaleString()} · main {handoff.package.base_sha.slice(0, 12)}</small>
-          <p>Verification: {handoff.verification?.verified ? "VERIFIED" : "Evidence pending"}</p>
-          {handoff.association ? <a target="_blank" rel="noreferrer"
-            href={`https://github.com/${handoff.association.repository}/pull/${handoff.association.pr_number}`}>
-            PR #{handoff.association.pr_number}</a> : <small>Branch: {handoff.package.branch}</small>}
-          {handoff.verification?.blockers?.length ? <ul>{handoff.verification.blockers.map((blocker) =>
-            <li key={blocker}>{blocker.replaceAll("_", " ")}</li>)}</ul> : null}
-          <button type="button" onClick={async () => {
-            try { await navigator.clipboard.writeText(handoff.package!.prompt); setCopied(handoff.handoff_id); }
-            catch { setError("Copy unavailable. Select and copy the complete prompt below."); }
-          }}>{copied === handoff.handoff_id ? "Copied" : "Copy Codex Handoff"}</button>
-          <details><summary>Full Codex prompt</summary>
-            <textarea readOnly aria-label="Complete Codex prompt" value={handoff.package.prompt}
-              onFocus={(event) => event.target.select()} rows={12} />
-          </details>
-        </section> : null}
+        <label className="iren-maintenance-focus">
+          <span>FOCUS FOR NEXT CODEX PASS</span>
+          <textarea
+            value={focus}
+            rows={3}
+            maxLength={1000}
+            onChange={(event) => setFocus(event.target.value)}
+            placeholder="Optional: tell IREN what you want the next maintenance pass to focus on."
+          />
+        </label>
 
-        {(nextObjectives.length || activeJobs.length) ? (
-          <div className="iren-dock-grid">
-            {nextObjectives.length ? (
-              <section>
-                <header>
-                  <span>OBJECTIVES</span>
-                  <b>{work?.objectives_complete || 0}/{work?.objective_count || 0} COMPLETE</b>
-                </header>
-                <div className="iren-dock-list">
-                  {nextObjectives.map((objective) => (
-                    <article key={objective.objective_key}>
-                      <i className={stateClass(objective.status)} />
-                      <div>
-                        <strong>{objective.title || objective.objective_key}</strong>
-                        <small>{objective.owner_system || "IREN"} · {objective.objective_key}</small>
-                      </div>
-                      <b className={stateClass(objective.status)}>{objective.status}</b>
-                    </article>
-                  ))}
-                </div>
-              </section>
-            ) : null}
+        <div className="iren-maintenance-actions">
+          <button type="button" onClick={() => void refresh()} disabled={sending}>Refresh state</button>
+          <button type="button" className="primary" onClick={() => void copy(maintenancePrompt, "maintenance")}>
+            {copied === "maintenance" ? "Copied" : "Copy maintenance prompt"}
+          </button>
+          {canPrepareTracked ? (
+            <button type="button" onClick={() => void send("prepare for Codex")} disabled={sending}>
+              {sending ? "Preparing…" : "Prepare tracked handoff"}
+            </button>
+          ) : null}
+          {handoff ? (
+            <button type="button" onClick={() => void send("verify Codex handoff")} disabled={sending}>
+              {sending ? "Verifying…" : "Verify tracked handoff"}
+            </button>
+          ) : null}
+        </div>
 
-            {activeJobs.length ? (
-              <section>
-                <header>
-                  <span>ACTIVE WORK</span>
-                  <b>{activeJobs.length} CURRENT</b>
-                </header>
-                <div className="iren-dock-list">
-                  {activeJobs.slice(0, 8).map((job) => (
-                    <article key={job.job_id}>
-                      <i className={stateClass(job.status)} />
-                      <div>
-                        <strong>{job.title || job.job_type || "IREN job"}</strong>
-                        <small>{job.owner_system || "IREN"} · {shortId(job.job_id)}</small>
-                      </div>
-                      <b className={stateClass(job.status)}>{job.status}</b>
-                    </article>
-                  ))}
-                </div>
-              </section>
+        {lastOutcome ? (
+          <div className="iren-maintenance-alert">
+            <span>LAST IREN CONTROL · {clean(lastOutcome.job?.status || lastOutcome.command.status, "COMPLETE")}</span>
+            <strong>{outcomeMessage || "Control completed."}</strong>
+          </div>
+        ) : null}
+
+        <details className="iren-maintenance-prompt">
+          <summary>Preview maintenance prompt</summary>
+          <textarea readOnly aria-label="IREN maintenance Codex prompt" value={maintenancePrompt} rows={12} onFocus={(event) => event.target.select()} />
+        </details>
+
+        {handoff?.package ? (
+          <div className="iren-maintenance-handoff">
+            <div>
+              <span>TRACKED HANDOFF</span>
+              <strong>{handoff.package.title}</strong>
+              <small>{handoff.handoff_status} · {handoff.objective_key} · main {shortId(handoff.package.base_sha)}</small>
+            </div>
+            {handoff.association ? (
+              <a href={"https://github.com/" + handoff.association.repository + "/pull/" + handoff.association.pr_number} target="_blank" rel="noreferrer">
+                PR #{handoff.association.pr_number}
+              </a>
+            ) : <small>{handoff.package.branch}</small>}
+            <button type="button" onClick={() => void copy(handoff.package!.prompt, handoff.handoff_id)}>
+              {copied === handoff.handoff_id ? "Copied" : "Copy tracked handoff"}
+            </button>
+            {handoff.verification?.blockers?.length ? (
+              <small>{handoff.verification.blockers.map((item) => item.replaceAll("_", " ")).join(" · ")}</small>
             ) : null}
           </div>
         ) : null}
       </div>
-    </aside>
+    </article>
   );
 }
