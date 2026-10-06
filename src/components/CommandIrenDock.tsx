@@ -25,6 +25,22 @@ type IrenCommand = {
   linked_job_id?: string | null;
 };
 
+type MaintenanceManifest = {
+  version?: string;
+  generated_at?: string;
+  mode?: string;
+  driver?: string;
+  change_count?: number;
+  changed_since_previous?: boolean;
+  changes?: string[];
+  budget?: {
+    primary_objectives?: number;
+    supporting_changes?: number;
+    parallel_research_threads?: number;
+    scope?: string;
+  };
+};
+
 type CodexHandoff = {
   handoff_id: string;
   objective_key: string;
@@ -93,6 +109,7 @@ export default function CommandIrenMaintenance({ session }: { session: RhenSessi
   const [sending, setSending] = useState(false);
   const [lastOutcome, setLastOutcome] = useState<{ command: IrenCommand; job?: IrenJob } | null>(null);
   const [generatedPrompt, setGeneratedPrompt] = useState("");
+  const [generatedManifest, setGeneratedManifest] = useState<MaintenanceManifest | null>(null);
   const refreshInFlight = useRef(false);
 
   const request = useCallback(async (path: string, init?: RequestInit) => {
@@ -179,12 +196,19 @@ export default function CommandIrenMaintenance({ session }: { session: RhenSessi
     const prompt = typeof response.maintenance_prompt === "string"
       ? response.maintenance_prompt
       : "";
+    const manifest = response.maintenance_manifest;
     if (!prompt) {
       setGeneratedPrompt("");
+      setGeneratedManifest(null);
       setError("IREN completed without returning a maintenance prompt.");
       return;
     }
     setGeneratedPrompt(prompt);
+    setGeneratedManifest(
+      manifest && typeof manifest === "object"
+        ? manifest as MaintenanceManifest
+        : null
+    );
   }, [focus, send]);
 
   useEffect(() => {
@@ -205,6 +229,8 @@ export default function CommandIrenMaintenance({ session }: { session: RhenSessi
   ).length;
   const outcomeResponse = (lastOutcome?.command.result || lastOutcome?.command.response || {}) as Record<string, unknown>;
   const outcomeMessage = typeof outcomeResponse.message === "string" ? outcomeResponse.message : "";
+  const promptMode = clean(generatedManifest?.mode, "—");
+  const promptDelta = Number(generatedManifest?.change_count || 0);
 
   const copy = useCallback(async (text: string, key: string) => {
     try {
@@ -232,7 +258,8 @@ export default function CommandIrenMaintenance({ session }: { session: RhenSessi
         <div className="iren-maintenance-state">
           <div><span>OBSERVED</span><strong>{feed?.observed_at ? new Date(feed.observed_at).toLocaleString() : "—"}</strong></div>
           <div><span>NEXT</span><strong>{feed?.work?.next_action?.title || "No pending canonical action"}</strong></div>
-          <div><span>CODEX PROMPT</span><strong>{generatedPrompt ? "READY" : "NOT GENERATED"}</strong></div>
+          <div><span>CODEX PASS</span><strong>{generatedPrompt ? promptMode : "NOT GENERATED"}</strong></div>
+          <div><span>DELTA</span><strong>{generatedPrompt ? promptDelta + " material change" + (promptDelta === 1 ? "" : "s") : "—"}</strong></div>
         </div>
 
         <label className="iren-maintenance-focus">
@@ -276,10 +303,26 @@ export default function CommandIrenMaintenance({ session }: { session: RhenSessi
         ) : null}
 
         {generatedPrompt ? (
-          <details className="iren-maintenance-prompt">
-            <summary>Preview generated Codex prompt</summary>
-            <textarea readOnly aria-label="IREN maintenance Codex prompt" value={generatedPrompt} rows={12} onFocus={(event) => event.target.select()} />
-          </details>
+          <>
+            {generatedManifest ? (
+              <div className="iren-maintenance-alert">
+                <span>ADAPTIVE PASS · {promptMode}</span>
+                <strong>{clean(generatedManifest.driver, "Current evidence selected this pass.")}</strong>
+                <small>
+                  {promptDelta} material change{promptDelta === 1 ? "" : "s"} ·
+                  {" "}{generatedManifest.budget?.primary_objectives ?? 0} primary objective ·
+                  {" "}up to {generatedManifest.budget?.supporting_changes ?? 0} supporting changes
+                </small>
+                {generatedManifest.changes?.length ? (
+                  <small>{generatedManifest.changes.slice(0, 4).join(" · ")}</small>
+                ) : null}
+              </div>
+            ) : null}
+            <details className="iren-maintenance-prompt">
+              <summary>Preview generated Codex prompt</summary>
+              <textarea readOnly aria-label="IREN maintenance Codex prompt" value={generatedPrompt} rows={12} onFocus={(event) => event.target.select()} />
+            </details>
+          </>
         ) : (
           <div className="iren-maintenance-alert">
             <span>CODEX HANDOFF</span>
