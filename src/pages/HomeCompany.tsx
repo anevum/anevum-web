@@ -1,19 +1,20 @@
 import { Link } from "react-router-dom";
 import Mark from "../components/Mark";
+import RhenModuleGlyph, { type RhenModuleGlyphName } from "../components/company/RhenModuleGlyph";
 import { useLiveTrading } from "../hooks/useLiveTrading";
 import { ageText, displayState, publicSystem } from "../lib/system-display";
 import "../styles/public-terminal.css";
 
 const introVideoUrl = import.meta.env.VITE_ANEVUM_INTRO_VIDEO_URL?.trim();
 
-const modules = [
-  ["EXECUTION", "RHEN broker-facing equities execution, live BTC signal generation, risk, reconciliation, and durable evidence."],
-  ["IREN / CONTROL", "Health, incidents, scheduling, orchestration, required-action state, and protected release boundaries."],
-  ["GRAEN / RESEARCH", "Bounded strategy discovery, chronological evaluation, falsification, and candidate promotion evidence."],
-  ["VELUM / REPLAY", "Independent replay, friction stress, delay stress, simulation, and counterfactual verification."],
-  ["NOSTRA / FORECAST", "Regime, baseline, calibration, forward measurement, and prediction-state workflows."],
-  ["CORE / STORE", "Bounded SQLite state, scheduler state, research state, evidence retention, and canonical gateway APIs."]
-] as const;
+const modules: ReadonlyArray<readonly [string, RhenModuleGlyphName, string]> = [
+  ["EXECUTION", "EXECUTION", "RHEN broker-facing equities execution, live BTC signal generation, risk, reconciliation, and durable evidence."],
+  ["IREN / CONTROL", "CONTROL", "Health, incidents, scheduling, orchestration, required-action state, and protected release boundaries."],
+  ["GRAEN / RESEARCH", "RESEARCH", "Bounded strategy discovery, chronological evaluation, falsification, and candidate promotion evidence."],
+  ["VELUM / REPLAY", "REPLAY", "Independent replay, friction stress, delay stress, simulation, and counterfactual verification."],
+  ["NOSTRA / FORECAST", "FORECAST", "Regime, baseline, calibration, forward measurement, and prediction-state workflows."],
+  ["CORE / STORE", "CORE", "Bounded SQLite state, scheduler state, research state, evidence retention, and canonical gateway APIs."]
+];
 
 export default function HomeCompany() {
   const { data, loading, error, now } = useLiveTrading(5000);
@@ -64,21 +65,25 @@ export default function HomeCompany() {
 
           <div className="pt-home-runtime-modules">
             <Link to="/architecture">
+              <RhenModuleGlyph module="CONTROL" decorative />
               <span>IREN</span>
               <strong>Control</strong>
               <small>Health · incidents · scheduler · release gates</small>
             </Link>
             <Link to="/research">
+              <RhenModuleGlyph module="RESEARCH" decorative />
               <span>GRAEN</span>
               <strong>Research</strong>
               <small>Bounded discovery · chronological validation</small>
             </Link>
             <Link to="/architecture">
+              <RhenModuleGlyph module="REPLAY" decorative />
               <span>VELUM</span>
               <strong>Verification</strong>
               <small>Replay · friction stress · delay stress</small>
             </Link>
             <Link to="/architecture">
+              <RhenModuleGlyph module="FORECAST" decorative />
               <span>NOSTRA</span>
               <strong>Forecast</strong>
               <small>Regime · calibration · forward measurement</small>
@@ -108,8 +113,9 @@ export default function HomeCompany() {
         </header>
 
         <div className="pt-home-links">
-          {modules.map(([name, description]) => (
+          {modules.map(([name, glyph, description]) => (
             <Link key={name} to="/architecture">
+              <RhenModuleGlyph module={glyph} decorative />
               <span>RHEN MODULE</span>
               <strong>{name}</strong>
               <p>{description}</p>

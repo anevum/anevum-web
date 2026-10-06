@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import SystemIcon from "../components/company/SystemIcon";
+import RhenModuleGlyph, { type RhenModuleGlyphName } from "../components/company/RhenModuleGlyph";
 
 const stack = [
   ["PUBLIC SURFACE", "React · TypeScript · Vite", "ANEVUM.com, Command entry points, the public Live Terminal, Field Notes, founder profile, and public-safe evidence."],
@@ -12,16 +12,16 @@ const stack = [
   ["INTEGRATIONS", "Slack · GitHub · Railway", "Operational alerts, source control, CI, deployment, and service-level infrastructure."]
 ];
 
-const modules = [
-  ["EXECUTION", "Market observation, equities and crypto lanes, orders, fills, risk, reconciliation, session handling, and broker-derived evidence."],
-  ["CONTROL", "Health, incidents, scheduling, orchestration, protected-action gates, and system supervision."],
-  ["RESEARCH", "GRAEN bounded strategy discovery, chronological development/validation/holdout evidence, falsification, and paper-only promotion state."],
-  ["REPLAY", "VELUM independent historical replay, friction stress, execution-delay stress, and counterfactual verification without live broker authority."],
-  ["FORECAST", "NOSTRA regime, baseline, calibration, forward-measurement, and prediction-state workflows."],
-  ["CORE / STORE", "Canonical APIs, scheduler state, research state, bounded evidence storage, retention, and compaction."],
-  ["RESEARCH WORKER", "Evidence review and model-assisted research under the same protected promotion boundaries."],
-  ["COMMAND / API", "Protected operator and customer routing into the same canonical RHEN state rather than a parallel platform."]
-] as const;
+const modules: ReadonlyArray<readonly [string, RhenModuleGlyphName, string]> = [
+  ["EXECUTION", "EXECUTION", "Market observation, equities and crypto lanes, orders, fills, risk, reconciliation, session handling, and broker-derived evidence."],
+  ["CONTROL", "CONTROL", "Health, incidents, scheduling, orchestration, protected-action gates, and system supervision."],
+  ["RESEARCH", "RESEARCH", "GRAEN bounded strategy discovery, chronological development/validation/holdout evidence, falsification, and paper-only promotion state."],
+  ["REPLAY", "REPLAY", "VELUM independent historical replay, friction stress, execution-delay stress, and counterfactual verification without live broker authority."],
+  ["FORECAST", "FORECAST", "NOSTRA regime, baseline, calibration, forward-measurement, and prediction-state workflows."],
+  ["CORE / STORE", "CORE", "Canonical APIs, scheduler state, research state, bounded evidence storage, retention, and compaction."],
+  ["RESEARCH WORKER", "WORKER", "Evidence review and model-assisted research under the same protected promotion boundaries."],
+  ["COMMAND / API", "COMMAND", "Protected operator and customer routing into the same canonical RHEN state rather than a parallel platform."]
+];
 
 export default function Architecture() {
   return (
@@ -53,9 +53,9 @@ export default function Architecture() {
           <h2>Consolidation removes duplicate services, not functional boundaries.</h2>
         </header>
         <div className="architecture-role-grid">
-          {modules.map(([name, role], index) => (
+          {modules.map(([name, glyph, role], index) => (
             <Link key={name} to="/live">
-              <SystemIcon system="RHEN" size="sm" />
+              <RhenModuleGlyph module={glyph} decorative />
               <span>{String(index + 1).padStart(2, "0")} / RHEN MODULE</span>
               <strong>{name}</strong>
               <p>{role}</p>
@@ -87,11 +87,11 @@ export default function Architecture() {
           <h2>The rebuild is also a data-discipline change.</h2>
         </header>
         <div className="authority-grid">
-          <article><SystemIcon system="RHEN" size="sm" /><span>CORE</span><strong>Bounded SQLite instead of an operational PostgreSQL dependency.</strong><p>RHEN v3 targets normal storage below 500 MB and sheds routine analytics above the defined pressure threshold while preserving critical execution evidence.</p></article>
-          <article><SystemIcon system="RHEN" size="sm" /><span>RETENTION</span><strong>Routine telemetry is compacted instead of warehoused forever.</strong><p>Decision summaries, normalized candidate observations, position metrics, and routine evidence use explicit retention windows.</p></article>
-          <article><SystemIcon system="RHEN" size="sm" /><span>AUTHORITY</span><strong>One runtime does not mean one permission set.</strong><p>Research, replay, forecast, control, and pure Core subprocesses have execution disabled; broker order authority remains confined to execution.</p></article>
-          <article><SystemIcon system="RHEN" size="sm" /><span>STRATEGY</span><strong>Runtime authority and research candidates stay separate.</strong><p>Command reads current equities and crypto authority from RHEN while GRAEN candidates, VELUM verification, forward-paper evidence, and IREN release state remain explicit. Automated research can reach ELIGIBLE_FOR_REVIEW, never live authority.</p></article>
-          <article><SystemIcon system="RHEN" size="sm" /><span>CUTOVER</span><strong>Legacy services are retired only after RHEN is verified healthy.</strong><p>The rebuild preserves rollback evidence and does not treat architectural simplification as permission to skip verification.</p></article>
+          <article><RhenModuleGlyph module="CORE" decorative /><span>CORE</span><strong>Bounded SQLite instead of an operational PostgreSQL dependency.</strong><p>RHEN v3 targets normal storage below 500 MB and sheds routine analytics above the defined pressure threshold while preserving critical execution evidence.</p></article>
+          <article><RhenModuleGlyph module="CORE" decorative /><span>RETENTION</span><strong>Routine telemetry is compacted instead of warehoused forever.</strong><p>Decision summaries, normalized candidate observations, position metrics, and routine evidence use explicit retention windows.</p></article>
+          <article><RhenModuleGlyph module="CONTROL" decorative /><span>AUTHORITY</span><strong>One runtime does not mean one permission set.</strong><p>Research, replay, forecast, control, and pure Core subprocesses have execution disabled; broker order authority remains confined to execution.</p></article>
+          <article><RhenModuleGlyph module="RESEARCH" decorative /><span>STRATEGY</span><strong>Runtime authority and research candidates stay separate.</strong><p>Command reads current equities and crypto authority from RHEN while GRAEN candidates, VELUM verification, forward-paper evidence, and IREN release state remain explicit. Automated research can reach ELIGIBLE_FOR_REVIEW, never live authority.</p></article>
+          <article><RhenModuleGlyph module="CONTROL" decorative /><span>CUTOVER</span><strong>Legacy services are retired only after RHEN is verified healthy.</strong><p>The rebuild preserves rollback evidence and does not treat architectural simplification as permission to skip verification.</p></article>
         </div>
       </section>
 

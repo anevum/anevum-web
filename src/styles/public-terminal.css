@@ -1392,3 +1392,29 @@
 .pt-focus.pt-focus-observation{display:block;min-height:0;padding:20px}
 .pt-focus-observation .pt-focus-copy{max-width:900px;margin:0 auto}
 .pt-instrument-stage{display:none!important}
+
+
+.pt-home-runtime-modules .rhen-module-glyph{
+  width:28px;
+  height:28px;
+  margin-bottom:12px;
+  color:#8fb6d2;
+}
+.pt-home-links .rhen-module-glyph{
+  width:30px;
+  height:30px;
+  margin-bottom:16px;
+  color:#8fb6d2;
+}
+.pt-home-runtime-modules a:hover .rhen-module-glyph,
+.pt-home-links a:hover .rhen-module-glyph{
+  color:#b5dce8;
+}
+
+@media(max-width:480px){
+  .pt-home-runtime-modules .rhen-module-glyph,
+  .pt-home-links .rhen-module-glyph{
+    width:26px;
+    height:26px;
+  }
+}
