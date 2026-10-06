@@ -35,7 +35,7 @@ jobs:
       - name: Install
         run: npm install --no-audit --no-fund
       - name: Test canonical operational boundary
-        run: node --experimental-strip-types --test tests/command-topology.test.mjs tests/command-operations.test.mjs tests/command-trading.test.mjs tests/equity-market-time.test.mjs tests/visual-ops.test.mjs tests/btc-discovery.test.mjs
+        run: node --experimental-strip-types --test tests/command-topology.test.mjs tests/command-operations.test.mjs tests/command-trading.test.mjs tests/command-research.test.mjs tests/equity-market-time.test.mjs tests/visual-ops.test.mjs tests/btc-discovery.test.mjs
       - name: Typecheck and build
         run: npm run build
       - name: Verify generated artifacts
