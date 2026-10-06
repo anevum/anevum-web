@@ -1,7 +1,6 @@
 import releaseRegistry from "./src/data/releases.json";
 
 const TRADER_BASE = "https://alpaca-trader-production-bf3e.up.railway.app";
-const RESEARCH_BASE = "https://rhen-research-agent-production.up.railway.app";
 const PUBLIC_TRADING_FEED = TRADER_BASE + "/v1/trading-public-feed";
 
 class ApiError extends Error {
@@ -133,7 +132,7 @@ async function proxyTrader(request, upstreamPath, env) {
 }
 
 async function publicResearchReadiness() {
-  const response = await fetch(RESEARCH_BASE + "/v1/readiness/public", {
+  const response = await fetch(TRADER_BASE + "/v1/research/readiness/public", {
     method: "GET",
     headers: { Accept: "application/json" },
     signal: AbortSignal.timeout(10000)
@@ -150,7 +149,7 @@ async function publicResearchReadiness() {
 }
 
 async function publicTheory() {
-  const response = await fetch(RESEARCH_BASE + "/v1/theory/public", {
+  const response = await fetch(TRADER_BASE + "/v1/research/theory/public", {
     method: "GET",
     headers: { Accept: "application/json" },
     signal: AbortSignal.timeout(10000)
@@ -227,7 +226,7 @@ function publicRouteMetadata(pathname) {
   const staticRoutes = {
     "/": {
       title: "ANEVUM — RHEN Unified Runtime + Command",
-      description: "ANEVUM is consolidating its production architecture around RHEN v3: one Railway runtime with isolated execution, control, research, replay, forecast, Core/Store, and research-worker modules. Command is the customer surface; Paper Beta first and live-money authority remains gated."
+      description: "ANEVUM runs RHEN v3 as one unified Railway runtime with isolated execution, control, research, replay, forecast, Core/Store, and research-worker modules. Command is the protected operating surface, with execution authority shown explicitly from canonical runtime state."
     },
     "/products": {
       title: "Products — ANEVUM",
