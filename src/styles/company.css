@@ -1864,6 +1864,31 @@
 
 
 /* RHEN functional module glyphs — one restrained visual language, no sub-brand shells. */
+.rhen-functional-icon{
+  --icon-size:42px;
+  width:var(--icon-size);
+  height:var(--icon-size);
+  flex:0 0 var(--icon-size);
+  display:inline-grid;
+  place-items:center;
+  overflow:visible;
+  border:0;
+  border-radius:0;
+  background:none;
+  box-shadow:none;
+  color:#8fb6d2;
+  isolation:auto;
+}
+.rhen-functional-icon::before,
+.rhen-functional-icon::after{display:none}
+.rhen-functional-icon .system-mark-svg{
+  width:100%;
+  height:100%;
+  margin:0;
+  color:currentColor;
+  filter:none;
+}
+
 .rhen-module-glyph{
   width:42px;
   height:42px;
