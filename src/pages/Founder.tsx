@@ -1,10 +1,15 @@
 import { Link } from "react-router-dom";
 import founder from "../data/founder.json";
-import SystemIcon from "../components/company/SystemIcon";
+import RhenModuleGlyph, { type RhenModuleGlyphName } from "../components/company/RhenModuleGlyph";
 
-const flagshipSystems = new Set(["IREN","RHEN","NOSTRA","GRAEN","VELUM"] as const);
-
-type FlagshipSystem = "IREN" | "RHEN" | "NOSTRA" | "GRAEN" | "VELUM";
+const systemPresentation: Record<string, { glyph: RhenModuleGlyphName; route: string; category: string }> = {
+  RHEN: { glyph: "EXECUTION", route: "/live", category: "RHEN MODULE" },
+  IREN: { glyph: "CONTROL", route: "/architecture", category: "RHEN MODULE" },
+  GRAEN: { glyph: "RESEARCH", route: "/research", category: "RHEN MODULE" },
+  VELUM: { glyph: "REPLAY", route: "/architecture", category: "RHEN MODULE" },
+  NOSTRA: { glyph: "FORECAST", route: "/architecture", category: "RHEN MODULE" },
+  "ANEVUM Web": { glyph: "COMMAND", route: "/", category: "PUBLIC SURFACE" }
+};
 
 export default function Founder() {
   return (
@@ -59,19 +64,13 @@ export default function Founder() {
         <header className="company-section-head"><span>CURRENT WORK</span><h2>Selected ANEVUM modules and surfaces.</h2></header>
         <div className="selected-work-grid">
           {founder.systems.map((system) => {
-            const route = system.name === "RHEN"
-              ? "/live"
-              : ["IREN","NOSTRA","GRAEN","VELUM"].includes(system.name)
-                ? "/architecture"
-                : "/";
+            const presentation = systemPresentation[system.name] || { glyph: "COMMAND" as RhenModuleGlyphName, route: "/", category: "ANEVUM SURFACE" };
             return (
-              <Link key={system.name} to={route}>
+              <Link key={system.name} to={presentation.route}>
                 <div className="founder-system-mark">
-                  {flagshipSystems.has(system.name as FlagshipSystem)
-                    ? <SystemIcon system={system.name as FlagshipSystem} size="md" />
-                    : null}
+                  <RhenModuleGlyph module={presentation.glyph} decorative />
                 </div>
-                <span>ANEVUM MODULE / SURFACE</span>
+                <span>{presentation.category}</span>
                 <strong>{system.name}</strong>
                 <p>{system.description}</p>
                 <i>OPEN ↗</i>
