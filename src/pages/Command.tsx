@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthProvider";
 import Mark from "../components/Mark";
+import UiIcon from "../components/UiIcon";
 import SystemIcon from "../components/company/SystemIcon";
 import UniverseBackground from "../components/UniverseBackground";
 import CommandPerformance from "../components/CommandPerformance";
@@ -55,45 +56,6 @@ function shortSha(value: unknown) {
 
 function arrayText(value: unknown) {
   return Array.isArray(value) && value.length ? value.map(String).join(", ") : "—";
-}
-
-function CommandNavGlyph({ kind }: { kind: "overview" | "trading" | "research" | "system" }) {
-  if (kind === "overview") {
-    return (
-      <svg className="command-nav-glyph" viewBox="0 0 24 24" aria-hidden="true">
-        <rect x="4" y="4" width="6" height="6" rx="1.4" />
-        <rect x="14" y="4" width="6" height="6" rx="1.4" />
-        <rect x="4" y="14" width="6" height="6" rx="1.4" />
-        <rect x="14" y="14" width="6" height="6" rx="1.4" />
-      </svg>
-    );
-  }
-  if (kind === "trading") {
-    return (
-      <svg className="command-nav-glyph" viewBox="0 0 24 24" aria-hidden="true">
-        <path d="M4 17l4-5 4 3 7-9" />
-        <path d="M15 6h4v4" />
-      </svg>
-    );
-  }
-  if (kind === "research") {
-    return (
-      <svg className="command-nav-glyph" viewBox="0 0 24 24" aria-hidden="true">
-        <circle cx="9" cy="9" r="4" />
-        <path d="M12 12l7 7M15 5h4M17 3v4" />
-      </svg>
-    );
-  }
-  return (
-    <svg className="command-nav-glyph" viewBox="0 0 24 24" aria-hidden="true">
-      <rect x="4" y="5" width="16" height="4" rx="1.4" />
-      <rect x="4" y="10" width="16" height="4" rx="1.4" />
-      <rect x="4" y="15" width="16" height="4" rx="1.4" />
-      <circle cx="7" cy="7" r=".8" className="command-nav-glyph-dot" />
-      <circle cx="7" cy="12" r=".8" className="command-nav-glyph-dot" />
-      <circle cx="7" cy="17" r=".8" className="command-nav-glyph-dot" />
-    </svg>
-  );
 }
 
 export default function Command() {
@@ -405,16 +367,16 @@ export default function Command() {
         <Link to="/" className="command-brand"><Mark /><span>ANEVUM</span><i /><span className="command-rhen-lockup"><SystemIcon system="IREN" size="xs" /><strong>COMMAND</strong></span></Link>
         <nav aria-label="Command workspaces">
           <Link className={commandPage === "overview" ? "active" : ""} to="/command/overview" aria-label="Overview" title="Overview" aria-current={commandPage === "overview" ? "page" : undefined}>
-            <CommandNavGlyph kind="overview" /><span className="command-nav-label">Overview</span>
+            <UiIcon name="overview" className="command-nav-glyph" /><span className="command-nav-label">Overview</span>
           </Link>
           <Link className={commandPage === "trading" ? "active" : ""} to="/command/trading" aria-label="Trading" title="Trading" aria-current={commandPage === "trading" ? "page" : undefined}>
-            <CommandNavGlyph kind="trading" /><span className="command-nav-label">Trading</span>
+            <UiIcon name="trading" className="command-nav-glyph" /><span className="command-nav-label">Trading</span>
           </Link>
           <Link className={commandPage === "research" ? "active" : ""} to="/command/research" aria-label="Research" title="Research" aria-current={commandPage === "research" ? "page" : undefined}>
-            <CommandNavGlyph kind="research" /><span className="command-nav-label">Research</span>
+            <UiIcon name="research" className="command-nav-glyph" /><span className="command-nav-label">Research</span>
           </Link>
           <Link className={commandPage === "system" ? "active" : ""} to="/command/system" aria-label="System" title="System" aria-current={commandPage === "system" ? "page" : undefined}>
-            <CommandNavGlyph kind="system" /><span className="command-nav-label">System</span>
+            <UiIcon name="system" className="command-nav-glyph" /><span className="command-nav-label">System</span>
           </Link>
         </nav>
         <div className="command-account">
@@ -440,7 +402,7 @@ export default function Command() {
               <strong>{connectionTitle}</strong>
               <small>{connectionDetail}</small>
             </div>
-            <button type="button" onClick={refresh} disabled={refreshing} aria-label="Refresh Command">↻</button>
+            <button type="button" onClick={refresh} disabled={refreshing} aria-label="Refresh Command"><UiIcon name="refresh" /></button>
           </div>
         </section>
 
