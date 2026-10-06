@@ -34,6 +34,7 @@ export default function CommandStrategyPipeline({
   const candidate = pipeline?.candidate;
   const validation = pipeline?.validation;
   const release = pipeline?.release_gate;
+  const readiness = pipeline?.evidence_readiness;
   const available = pipeline?.available !== false && Boolean(pipeline);
 
   const candidateLabel = candidate?.title || candidate?.candidate_id || "No replacement candidate";
@@ -119,6 +120,30 @@ export default function CommandStrategyPipeline({
           </small>
         </section>
       </div>
+
+      {readiness && (
+        <section className="command-evidence-readiness" aria-label="Forward evidence readiness">
+          <div>
+            <span>FORWARD EVIDENCE READINESS</span>
+            <strong>
+              {readiness.measurement_ready_rate_pct == null
+                ? "No current sample"
+                : readiness.measurement_ready_rate_pct.toFixed(1) + "%"}
+            </strong>
+          </div>
+          <p>
+            {readiness.measurement_ready_count || 0} / {readiness.candidate_count || 0} candidates measurable
+            {" · "}{readiness.sampled_cycles || 0} recent cycles
+          </p>
+          <small>
+            Missing reference price {readiness.missing_reference_price_count || 0}
+            {" · "}missing bar time {readiness.missing_bar_time_count || 0}
+            {" · "}reference-only holds {readiness.evidence_reference_only_count || 0}
+            {readiness.latest_observed_at ? " · " + ageText(readiness.latest_observed_at, now) : ""}
+            {" · read only"}
+          </small>
+        </section>
+      )}
     </article>
   );
 }
