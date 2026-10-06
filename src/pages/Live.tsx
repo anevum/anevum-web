@@ -245,7 +245,7 @@ export default function Live() {
           <section className="pt-pipeline" aria-label="Public research and evidence pipeline">
             <header className="pt-pipeline-head">
               <strong>RHEN research → protected execution evidence path</strong>
-              <span>Legacy subsystem keys are compatibility aliases for internal RHEN modules.</span>
+              <span>Named subsystem identities are projected as internal modules of the unified RHEN runtime.</span>
             </header>
             <div className="pt-pipeline-track">
               {pipeline.map((stage) => (
@@ -445,8 +445,8 @@ export default function Live() {
 
       <footer className="pt-terminal-foot">
         <span>
-          Public-safe RHEN observations only. Compatibility subsystem IDs may still exist underneath the projection,
-          but the production architecture is one RHEN runtime with isolated internal modules. No account balances,
+          Public-safe RHEN observations only. IREN, GRAEN, VELUM, and NOSTRA are presented as named internal modules,
+          while the production architecture remains one RHEN runtime with isolated authority boundaries. No account balances,
           positions, orders, symbols, fills, dollar P&amp;L, exact strategy rules, thresholds, credentials, or protected
           controls are exposed. Missing or stale evidence remains visibly missing or stale.
         </span>
