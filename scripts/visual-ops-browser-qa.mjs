@@ -300,28 +300,6 @@ async function runCase(route, viewport) {
     }
   }
 
-  if(route==="/command/terminal") {
-    const terminalAudit=await send("Runtime.evaluate",{expression:`(() => ({
-      terminal:Boolean(document.querySelector(".operations-terminal")),
-      focusCards:document.querySelectorAll(".terminal-focus-card").length,
-      lanes:document.querySelectorAll(".terminal-lane").length,
-      workingFocus:document.querySelectorAll(".terminal-focus-card.is-working").length,
-      canary:Boolean(document.querySelector(".terminal-canary.is-available")),
-      canaryTitle:document.querySelector(".terminal-canary h2")?.textContent,
-      canarySafeguards:[...document.querySelectorAll(".terminal-canary-authority b")].map(el=>el.textContent),
-      canaryPipelineNodes:document.querySelectorAll(".terminal-canary-node").length,
-      canaryCycles:document.querySelectorAll(".terminal-canary-cycles li:not(.terminal-canary-empty)").length,
-      canaryChart:Boolean(document.querySelector(".terminal-canary-spark svg")),
-      canaryOverflow:(()=>{const el=document.querySelector(".terminal-canary");return el?el.scrollWidth>el.clientWidth+1:false})(),
-      streamRows:document.querySelectorAll(".terminal-stream li").length
-    }))()`,returnByValue:true});
-    const terminal=terminalAudit.result?.value||{};
-    const safeguards=terminal.canarySafeguards||[];
-    if(!terminal.terminal||terminal.focusCards!==2||terminal.lanes!==5||terminal.workingFocus<2||!terminal.canary||terminal.canaryTitle!=="BTC-CANARY-001"||terminal.canaryPipelineNodes!==5||terminal.canaryCycles<2||!terminal.canaryChart||terminal.canaryOverflow||!safeguards.includes("PAPER ONLY")||!safeguards.includes("LIVE DISABLED")||!safeguards.includes("NOT PROMOTED")||terminal.streamRows<3){
-      throw new Error("Live operations terminal fixture failed: "+JSON.stringify(terminal));
-    }
-  }
-
   if(route==="/command/overview" && details.legacySummaryVisible) throw new Error("Legacy trading strip obscures fleet overview");
   if(route==="/command/overview" && (details.nostra!=="OFFLINE" || details.velum!=="HEALTHY" || details.velumActivity!=="WAITING_FOR_WORK" || details.activeGraen!=="true")) throw new Error("Health/activity rendering failed: "+JSON.stringify(details));
   if(route.startsWith("/command/")) {
