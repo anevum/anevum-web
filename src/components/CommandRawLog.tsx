@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import type { LiveTradingFeed } from "../lib/data";
+import type { CommandSnapshot, LiveTradingFeed } from "../lib/data";
 import type { IrenSnapshot } from "../lib/runtime-topology";
 import { ageText, displayState, stateTone, type SystemName } from "../lib/system-display";
 import { buildCommandEvents, TERMINAL_SYSTEMS } from "../lib/command-events";
@@ -10,15 +10,48 @@ type Filter = "ALL" | SystemName;
 export default function CommandRawLog({
   snapshot,
   feed,
+  tradingSnapshot,
   now
 }: {
   snapshot: IrenSnapshot | null;
   feed?: LiveTradingFeed | null;
+  tradingSnapshot?: CommandSnapshot | null;
   now: number;
 }) {
   const [open, setOpen] = useState(false);
   const [filter, setFilter] = useState<Filter>("ALL");
-  const events = useMemo(() => buildCommandEvents(snapshot, feed), [snapshot, feed]);
+  const events = useMemo(() => {
+    const base = buildCommandEvents(snapshot, feed);
+    const rows = [...base];
+    const append = (
+      source: string,
+      history: Record<string, unknown>[] | undefined,
+      prefix: string
+    ) => {
+      for (const [index, event] of (history || []).entries()) {
+        rows.push({
+          id: prefix + "-" + String(event.at || index) + "-" + index,
+          at: typeof event.at === "string" ? event.at : null,
+          system: "RHEN" as const,
+          source,
+          state: typeof event.action === "string" ? event.action : typeof event.kind === "string" ? event.kind : "EVENT",
+          title: [
+            typeof event.symbol === "string" ? event.symbol : "",
+            typeof event.action === "string" ? event.action.toUpperCase() : typeof event.kind === "string" ? event.kind.replaceAll("_", " ").toUpperCase() : "EVENT"
+          ].filter(Boolean).join(" · "),
+          detail: typeof event.reason === "string"
+            ? event.reason
+            : typeof event.message === "string"
+              ? event.message
+              : null
+        });
+      }
+    };
+    append("EQUITY RUNTIME", tradingSnapshot?.history, "equity");
+    append("CRYPTO LIVE", tradingSnapshot?.crypto_live?.history, "crypto-live");
+    append("CRYPTO PAPER", tradingSnapshot?.crypto_paper?.history, "crypto-paper");
+    return rows.sort((a, b) => (Date.parse(b.at || "") || 0) - (Date.parse(a.at || "") || 0));
+  }, [snapshot, feed, tradingSnapshot]);
   const visible = filter === "ALL" ? events : events.filter(row => row.system === filter);
 
   return (

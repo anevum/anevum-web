@@ -18,9 +18,11 @@ test("Command exposes four canonical operator workspaces", () => {
 test("Trading workspace exposes private broker account tracking and executions", () => {
   const command = readFileSync(new URL("../src/pages/Command.tsx", import.meta.url), "utf8");
   const tracker = readFileSync(new URL("../src/components/CommandAccountTracker.tsx", import.meta.url), "utf8");
+  const lanes = readFileSync(new URL("../src/components/CommandTradingLanes.tsx", import.meta.url), "utf8");
   const data = readFileSync(new URL("../src/lib/data.ts", import.meta.url), "utf8");
 
   assert.match(command, /CommandAccountTracker/);
+  assert.match(command, /CommandTradingLanes snapshot=\{snapshot\}/);
   assert.match(command, /command-view-trading command-panel-orders/);
   assert.match(command, /ACTIVE POSITIONS/);
   assert.match(command, /positions\.map/);
@@ -29,11 +31,14 @@ test("Trading workspace exposes private broker account tracking and executions",
   assert.match(tracker, /B = buy · S = sell/);
   assert.match(tracker, /RECENT FILLS/);
   assert.match(data, /account_history\?: CommandAccountHistory/);
-  assert.match(data, /crypto_approval\?: Record<string, unknown> \| null/);
-  assert.match(command, /BTC LIVE SIGNAL \/ REAL ACCOUNT/);
-  assert.match(command, /PENDING MANUAL ACTION/);
-  assert.match(command, /BROKER WRITES DISABLED/);
-  assert.match(command, /RHEN did not submit a crypto broker order/);
+  assert.match(data, /crypto_live\?: CommandCryptoLane \| null/);
+  assert.match(data, /crypto_paper\?: CommandCryptoLane \| null/);
+  assert.match(lanes, /EQUITIES \/ LIVE/);
+  assert.match(lanes, /CRYPTO \/ REAL ACCOUNT/);
+  assert.match(lanes, /CRYPTO \/ PAPER CANARY/);
+  assert.match(lanes, /PAPER AUTONOMOUS/);
+  assert.match(lanes, /broker_writes_allowed/);
+  assert.match(lanes, /BROKER WRITES/);
 });
 
 test("IREN Command routes through RHEN instead of Foundation", () => {

@@ -402,6 +402,39 @@ export type CommandAccountHistory = {
   points?: CommandAccountHistoryPoint[];
 };
 
+export type CommandCryptoLane = {
+  available?: boolean;
+  lane?: string;
+  observed_at?: string | null;
+  trading_mode?: string;
+  execution_mode?: string;
+  execution_enabled?: boolean;
+  execution_authorized?: boolean;
+  broker_writes_allowed?: boolean;
+  strategy_version_id?: string;
+  strategy_family?: string;
+  stats?: Record<string, unknown>;
+  last_decision?: string | null;
+  last_signal?: Record<string, unknown> | null;
+  last_scan?: Record<string, Record<string, unknown>>;
+  last_order?: Record<string, unknown> | null;
+  last_error?: string | null;
+  last_execution_at?: string | null;
+  last_scan_at?: string | null;
+  last_market_data_at?: string | null;
+  scanner_healthy?: boolean;
+  execution_healthy?: boolean;
+  active_positions?: number;
+  aggregate_exposure?: string | number;
+  pending_approval?: Record<string, unknown> | null;
+  positions?: Record<string, unknown>[];
+  open_orders?: Record<string, unknown>[];
+  recent_orders?: Record<string, unknown>[];
+  history?: Record<string, unknown>[];
+  account?: Record<string, unknown>;
+  runtime?: Record<string, unknown> | null;
+};
+
 export type CommandSnapshot = {
   mode?: string;
   observed_at?: string;
@@ -409,6 +442,8 @@ export type CommandSnapshot = {
   account_history?: CommandAccountHistory | null;
   crypto_stats?: Record<string, unknown>;
   crypto_approval?: Record<string, unknown> | null;
+  crypto_live?: CommandCryptoLane | null;
+  crypto_paper?: CommandCryptoLane | null;
   bot?: Record<string, unknown>;
   strategy?: Record<string, unknown>;
   risk?: Record<string, unknown>;
