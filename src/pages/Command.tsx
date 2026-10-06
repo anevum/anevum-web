@@ -10,6 +10,7 @@ import CommandTopology from "../components/CommandTopology";
 import CommandIrenMaintenance from "../components/CommandIrenDock";
 import CommandOperationsTerminal from "../components/CommandOperationsTerminal";
 import CommandStrategyPipeline from "../components/CommandStrategyPipeline";
+import CommandResearchLab from "../components/CommandResearchLab";
 import CommandRawLog from "../components/CommandRawLog";
 import CommandTradingLanes from "../components/CommandTradingLanes";
 import { useCommandObservation } from "../hooks/useCommandObservation";
@@ -428,6 +429,9 @@ export default function Command() {
               : null}
             {commandPage === "system"
               ? <CommandOperationsTerminal observation={commandObservation} feed={publicFeedError ? null : publicFeed} feedError={publicFeedError} />
+              : null}
+            {commandPage === "research"
+              ? <CommandResearchLab snapshot={commandObservation.snapshot} now={commandObservation.now} />
               : null}
             {commandPage === "overview" || commandPage === "research"
               ? <CommandStrategyPipeline snapshot={commandObservation.snapshot} now={commandObservation.now} />
