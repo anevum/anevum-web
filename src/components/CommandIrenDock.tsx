@@ -25,16 +25,6 @@ type IrenCommand = {
   linked_job_id?: string | null;
 };
 
-type IrenService = {
-  service_id?: string;
-  service_name?: string;
-  status?: string;
-  readiness?: boolean;
-  revision?: string;
-  deployment?: string;
-  current_activity?: string;
-};
-
 type CodexHandoff = {
   handoff_id: string;
   objective_key: string;
@@ -63,9 +53,6 @@ type IrenFeed = {
   observed_at?: string | null;
   stale?: boolean;
   state?: string;
-  topology?: {
-    services?: IrenService[];
-  };
   incidents?: Array<Record<string, unknown>>;
   work?: {
     next_action?: {
