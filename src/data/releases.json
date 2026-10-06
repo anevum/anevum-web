@@ -1,7 +1,188 @@
 {
   "schemaVersion": 2,
-  "currentSlug": "rhen-0-8-2-aurora",
+  "currentSlug": "rhen-4-3-canonical",
   "releases": [
+    {
+      "slug": "rhen-4-3-canonical",
+      "version": "4.3",
+      "codename": "CANONICAL",
+      "lifecycle": "Operational V4.3",
+      "releaseClass": "Canonical Major Update",
+      "date": "2026-10-06",
+      "headline": "One equity system. Exact evidence.",
+      "abstract": "CANONICAL establishes RHEN V4.3 as the consolidated equity-first production system: one Railway runtime, long U.S. equity and ETF authority, hierarchical market discovery, regular and extended-session operation, bounded Core storage, protected research control, and exact forward-evidence measurement.",
+      "thesis": "V4.3 should expand what RHEN can observe and test without expanding what it is allowed to claim. Production authority stays narrow, retired crypto research stays historical, and post-event strategy evidence is admitted only when the original decision-time inputs were actually preserved.",
+      "sourceCommit": "c4058241bcd9d7de616dcef3e534bc82b7c999ef",
+      "productionDeployment": "a46b8f66-c4e3-48d5-8556-7a7d68df7413",
+      "activeStrategy": "LIVE-2026-09-25-003 / rolling_momentum_vwap",
+      "pdfPath": "",
+      "badges": [
+        "LIVE EQUITIES",
+        "24/5 EQUITY COVERAGE",
+        "EXACT FORWARD EVIDENCE",
+        "PROTECTED RESEARCH"
+      ],
+      "capabilities": [
+        {
+          "label": "DISCOVERY",
+          "title": "Broader equity opportunity discovery",
+          "body": "RHEN uses hierarchical Alpaca market-wide screening before bounded detailed evaluation, expanding the candidate pool without pulling full history for the entire catalog each cycle."
+        },
+        {
+          "label": "EXECUTION",
+          "title": "Regular + extended equity operation",
+          "body": "Live authority is limited to long U.S. equities and ETFs. Regular-session execution and the 24/5 extended-equity lane retain explicit session attribution, authorization, risk, and reconciliation."
+        },
+        {
+          "label": "EVIDENCE",
+          "title": "Exact decision-to-outcome measurement",
+          "body": "New forward-evidence candidates require the original decision reference price plus completed decision-bar timestamp. Ten- and fifteen-minute outcomes mature later without rewriting the original decision."
+        },
+        {
+          "label": "RESEARCH",
+          "title": "Shadow economics and allocation validation",
+          "body": "Cost-aware shadow economics and normalized allocation alternatives are evaluated post-event against matured outcomes while remaining unable to change the live record."
+        },
+        {
+          "label": "CONTROL",
+          "title": "IREN research and configuration boundaries",
+          "body": "IREN separates runtime health from protected operator state, preserves configuration drift for review, and stops exhausted or retired research workflows instead of manufacturing autonomous activity."
+        },
+        {
+          "label": "STORAGE",
+          "title": "Pressure-aware bounded RHEN Core",
+          "body": "SQLite retention, reclaimable-page accounting, compaction, and analytics shedding keep storage bounded while preserving critical execution and evidence records."
+        }
+      ],
+      "architecture": [
+        {
+          "label": "01",
+          "title": "Cloudflare public + Command edge",
+          "body": "React/TypeScript public surfaces, protected Command identity, API proxying, privacy boundaries, and production delivery."
+        },
+        {
+          "label": "02",
+          "title": "Canonical RHEN Railway runtime",
+          "body": "One supervised application service contains execution, Core/Store, IREN control, GRAEN research, VELUM replay, NOSTRA forecast, Research Agent, and supporting internal APIs."
+        },
+        {
+          "label": "03",
+          "title": "Equity execution boundary",
+          "body": "Only RHEN execution can receive live broker authority, and the current authority scope is long U.S. equities and ETFs."
+        },
+        {
+          "label": "04",
+          "title": "RHEN Core / SQLite",
+          "body": "One bounded durable state store owns scheduler, research, incident, telemetry, and evidence state with retention and compaction."
+        },
+        {
+          "label": "05",
+          "title": "Research + replay boundary",
+          "body": "GRAEN, VELUM, NOSTRA, Research Agent, and shadow validators can generate evidence but cannot self-promote into live strategy or risk changes."
+        },
+        {
+          "label": "06",
+          "title": "Alpaca broker + market data",
+          "body": "Broker account truth, equity market state, orders, fills, positions, clock, calendar, and bounded screeners feed the production boundary."
+        }
+      ],
+      "verification": [
+        {
+          "label": "SOURCE",
+          "value": "c4058241",
+          "body": "Canonical RHEN V4.3 source commit after retiring the stale adaptive scheduler workflow."
+        },
+        {
+          "label": "DEPLOYMENT",
+          "value": "a46b8f66",
+          "body": "Railway production deployment completed successfully on October 6, 2026."
+        },
+        {
+          "label": "SCHEDULER",
+          "value": "v1.0.10",
+          "body": "Canonical scheduler no longer registers the retired adaptive executor workflow."
+        },
+        {
+          "label": "DAILY RESEARCH",
+          "value": "rhen-daily-v1.7",
+          "body": "Daily research carries the explicit measurable-cohort readiness contract."
+        },
+        {
+          "label": "FORWARD COHORT",
+          "value": "AWAITING",
+          "body": "The exact post-fix measurable cohort intentionally waits for the first live equity session after the evidence repair."
+        }
+      ],
+      "limitations": [
+        {
+          "title": "First exact post-fix cohort not yet observed",
+          "body": "The forward-evidence repair landed after the October 6 regular equity session. V4.3 therefore remains AWAITING_MEASURABLE_COHORT until the next live decision cycle produces candidates with the exact decision price and completed-bar time."
+        },
+        {
+          "title": "October 6 legacy candidates are not reconstructed",
+          "body": "2,445 legacy candidates cannot be measured exactly: 1,746 lack the original decision-bar timestamp and 699 lack the original decision reference price. RHEN deliberately does not guess those values."
+        },
+        {
+          "title": "Profitability is not established",
+          "body": "A functioning execution and evidence system does not prove an edge. Shadow economics, shadow allocation, and strategy changes remain gated on valid matured evidence across additional sessions."
+        },
+        {
+          "title": "Feed and market-structure limits remain explicit",
+          "body": "Market-data identity, session rules, broker constraints, spreads, fills, and small-sample effects remain part of interpretation rather than being hidden by aggregate metrics."
+        }
+      ],
+      "changelog": [
+        {
+          "pr": 389,
+          "title": "Redesign research control and whole-market discovery"
+        },
+        {
+          "pr": 398,
+          "title": "Quarantine retired asset-class research and clear recovered reporting errors"
+        },
+        {
+          "pr": 405,
+          "title": "Use effective live bytes for RHEN Core storage pressure"
+        },
+        {
+          "pr": 406,
+          "title": "Validate shadow economics against forward outcomes"
+        },
+        {
+          "pr": 408,
+          "title": "Validate shadow allocation against forward outcomes"
+        },
+        {
+          "pr": 409,
+          "title": "Add shadow allocation validation to daily research"
+        },
+        {
+          "pr": 410,
+          "title": "Repair exact forward-outcome evidence boundary"
+        },
+        {
+          "pr": 411,
+          "title": "Preserve warm-up candidate price/time evidence"
+        },
+        {
+          "pr": 412,
+          "title": "Expose intraday forward-evidence readiness"
+        },
+        {
+          "pr": 413,
+          "title": "Pass evidence readiness through IREN projection"
+        },
+        {
+          "pr": 414,
+          "title": "Formalize measurable forward-evidence cohort state"
+        },
+        {
+          "pr": 415,
+          "title": "Retire stale adaptive scheduler workflow"
+        }
+      ],
+      "next": "Collect the first post-fix live equity cohort, verify effectively complete measurable coverage, allow 10/15-minute outcomes to mature, and evaluate shadow economics and shadow allocation before authorizing another strategy change."
+    },
     {
       "slug": "rhen-0-8-2-aurora",
       "version": "0.8.2",
