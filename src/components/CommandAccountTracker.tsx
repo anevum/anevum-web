@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import type { CommandAccountHistory } from "../lib/data";
 import { clockTime, money, signedMoney } from "../lib/format";
+import { isRegularEquityMarketTime, projectEquityMarketTimeline } from "../lib/equity-market-time";
 
 function numeric(value: unknown) {
   const parsed = Number(value);
@@ -39,16 +40,17 @@ export default function CommandAccountTracker({
       })
       .filter((row): row is { at: string; time: number; equity: number } => Boolean(row));
 
-    if (raw.length < 2) return null;
+    const projected = projectEquityMarketTimeline(raw);
+    if (projected.length < 2) return null;
 
     const width = 1000;
     const top = 18;
     const bottom = 202;
-    const firstTime = raw[0].time;
-    const lastTime = raw[raw.length - 1].time;
+    const firstTime = projected[0].displayTime;
+    const lastTime = projected[projected.length - 1].displayTime;
     const timeSpan = Math.max(1, lastTime - firstTime);
-    const lowValue = Math.min(...raw.map((row) => row.equity));
-    const highValue = Math.max(...raw.map((row) => row.equity));
+    const lowValue = Math.min(...projected.map((row) => row.equity));
+    const highValue = Math.max(...projected.map((row) => row.equity));
     const observedRange = highValue - lowValue;
     const padding = Math.max(
       0.25,
@@ -59,9 +61,11 @@ export default function CommandAccountTracker({
     const high = highValue + padding;
     const valueSpan = Math.max(0.01, high - low);
 
-    const points: ChartPoint[] = raw.map((row) => ({
-      ...row,
-      x: ((row.time - firstTime) / timeSpan) * width,
+    const points: ChartPoint[] = projected.map((row) => ({
+      at: row.at,
+      time: row.time,
+      equity: row.equity,
+      x: ((row.displayTime - firstTime) / timeSpan) * width,
       y: bottom - ((row.equity - low) / valueSpan) * (bottom - top)
     }));
 
@@ -70,19 +74,32 @@ export default function CommandAccountTracker({
         const side = String(order.side || "").toLowerCase();
         const at = String(order.filled_at || "");
         const time = Date.parse(at);
-        if (!["buy", "sell"].includes(side) || !Number.isFinite(time) || time < firstTime || time > lastTime) {
+        if (!["buy", "sell"].includes(side) || !Number.isFinite(time) || !isRegularEquityMarketTime(time)) {
           return null;
         }
+        const markerProjection = projectEquityMarketTimeline([{ at, time }]);
+        if (!markerProjection.length) return null;
         let nearest = points[0];
         for (const point of points) {
           if (Math.abs(point.time - time) < Math.abs(nearest.time - time)) nearest = point;
         }
+        const session = projected.find((row) => row.sessionDate === markerProjection[0].sessionDate);
+        if (!session) return null;
+        const sessionStart = projected.find((row) => row.sessionDate === markerProjection[0].sessionDate);
+        if (!sessionStart) return null;
+        const projectedMarker = projectEquityMarketTimeline([
+          ...projected
+            .filter((row) => row.sessionDate === markerProjection[0].sessionDate)
+            .map((row) => ({ at: row.at, time: row.time })),
+          { at, time }
+        ]).find((row) => row.at === at && row.time === time);
+        if (!projectedMarker) return null;
         return {
           id: String(order.id || order.client_order_id || at + side),
           side,
           symbol: text(order.symbol, "—"),
           at,
-          x: ((time - firstTime) / timeSpan) * width,
+          x: ((projectedMarker.displayTime - firstTime) / timeSpan) * width,
           y: nearest.y
         };
       })
@@ -112,7 +129,7 @@ export default function CommandAccountTracker({
           <span>BROKER ACCOUNT / PRIVATE</span>
           <strong>Equity + executions</strong>
         </div>
-        <small>{history?.timeframe || "5Min"} · {history?.status === "unavailable" ? "HISTORY UNAVAILABLE" : "LIVE"}</small>
+        <small>{history?.timeframe || "5Min"} · {history?.status === "unavailable" ? "HISTORY UNAVAILABLE" : "LIVE · MARKET GAPS COMPRESSED"}</small>
       </header>
 
       <div className="account-tracker-body">
