@@ -1,18 +1,15 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthProvider";
-import Mark from "../components/Mark";
-import UiIcon from "../components/UiIcon";
 import SystemIcon from "../components/company/SystemIcon";
-import UniverseBackground from "../components/UniverseBackground";
-import CommandPerformance from "../components/CommandPerformance";
 import CommandAccountTracker from "../components/CommandAccountTracker";
-import CommandTopology from "../components/CommandTopology";
+import CommandDiscoveryDeck from "../components/CommandDiscoveryDeck";
 import CommandIrenMaintenance from "../components/CommandIrenDock";
 import CommandOperationsTerminal from "../components/CommandOperationsTerminal";
-import CommandStrategyPipeline from "../components/CommandStrategyPipeline";
-import CommandResearchLab from "../components/CommandResearchLab";
+import CommandPerformance from "../components/CommandPerformance";
 import CommandRawLog from "../components/CommandRawLog";
+import CommandReviewDeck from "../components/CommandReviewDeck";
+import CommandTopology from "../components/CommandTopology";
 import CommandTradingLanes from "../components/CommandTradingLanes";
 import { useCommandObservation } from "../hooks/useCommandObservation";
 import { useLiveTrading } from "../hooks/useLiveTrading";
@@ -21,66 +18,83 @@ import {
   fetchCommandEvidence,
   fetchCommandStatus,
   fetchCommandWeeklyReport,
-  fetchResearchReadiness,
-  fetchTheoryProgram,
   type CommandEvidence,
-  type CommandSnapshot,
-  type ResearchReadiness,
-  type TheoryProgramFeed
+  type CommandSnapshot
 } from "../lib/data";
-import { clockTime, money, percent } from "../lib/format";
+import { clockTime, money } from "../lib/format";
+import { ageText, displayState } from "../lib/system-display";
+import "../styles/command-v4.css";
+
+type CommandPage = "operate" | "discover" | "review" | "system";
 
 function record(value: unknown): Record<string, unknown> {
   return value && typeof value === "object" && !Array.isArray(value)
-    ? (value as Record<string, unknown>)
+    ? value as Record<string, unknown>
     : {};
 }
 
 function list(value: unknown): Record<string, unknown>[] {
-  return Array.isArray(value) ? (value as Record<string, unknown>[]) : [];
+  return Array.isArray(value) ? value as Record<string, unknown>[] : [];
 }
 
 function text(value: unknown, fallback = "—") {
   return value === undefined || value === null || value === "" ? fallback : String(value);
 }
 
-function number(value: unknown) {
-  const n = Number(value);
-  return Number.isFinite(n) ? n : null;
+function numeric(value: unknown) {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
 }
 
-function shortSha(value: unknown) {
-  const raw = text(value, "");
-  return raw ? raw.slice(0, 10) : "—";
+function routePage(pathname: string): CommandPage {
+  const segment = pathname.split("/")[2] || "operate";
+  if (["discover", "research", "graen", "nostra", "velum"].includes(segment)) return "discover";
+  if (["review", "evidence"].includes(segment)) return "review";
+  if (["system", "terminal", "infrastructure", "iren"].includes(segment)) return "system";
+  return "operate";
 }
 
-function arrayText(value: unknown) {
-  return Array.isArray(value) && value.length ? value.map(String).join(", ") : "—";
+const PAGE_COPY: Record<CommandPage, { eyebrow: string; title: string; detail: string }> = {
+  operate: {
+    eyebrow: "RHEN / EXECUTION",
+    title: "Operate",
+    detail: "What is trading now, what capital is exposed, and what the broker is actually doing."
+  },
+  discover: {
+    eyebrow: "GRAEN + VELUM / DISCOVERY",
+    title: "Discover",
+    detail: "Market coverage, opportunity funnel, frozen experiments, replay evidence, and real research progress."
+  },
+  review: {
+    eyebrow: "IREN / DECISION BOUNDARY",
+    title: "Review",
+    detail: "Only work that needs judgment: new hypotheses, strategy patches, release decisions, and evidence-backed handoffs."
+  },
+  system: {
+    eyebrow: "IREN / SYSTEM",
+    title: "System",
+    detail: "Runtime health, dependencies, work state, incidents, and the raw canonical event stream."
+  }
+};
+
+function StateDot({ ok }: { ok: boolean }) {
+  return <i className={ok ? "is-live" : ""} aria-hidden="true" />;
 }
 
 export default function Command() {
   const { session, loading, commandAdmin, signOut } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const commandPage = (() => {
-    const segment = location.pathname.split("/")[2] || "overview";
-    if (["trading", "live", "performance", "evidence", "rhen"].includes(segment)) return "trading";
-    if (["research", "graen", "nostra", "velum"].includes(segment)) return "research";
-    if (["system", "terminal", "infrastructure", "iren"].includes(segment)) return "system";
-    return "overview";
-  })();
-  const viewPage = commandPage;
+  const page = routePage(location.pathname);
   const [snapshot, setSnapshot] = useState<CommandSnapshot | null>(null);
   const [evidence, setEvidence] = useState<CommandEvidence | null>(null);
   const [dailyReport, setDailyReport] = useState<Record<string, unknown> | null>(null);
   const [weeklyReport, setWeeklyReport] = useState<Record<string, unknown> | null>(null);
-  const [researchReadiness, setResearchReadiness] = useState<ResearchReadiness | null>(null);
-  const [theoryProgram, setTheoryProgram] = useState<TheoryProgramFeed | null>(null);
   const [statusError, setStatusError] = useState("");
   const [evidenceError, setEvidenceError] = useState("");
   const [refreshing, setRefreshing] = useState(false);
   const refreshInFlight = useRef(false);
-  const commandObservation = useCommandObservation(commandAdmin ? session : null, 3000);
+  const controlObservation = useCommandObservation(commandAdmin ? session : null, 3000);
   const { data: publicFeed, error: publicFeedError } = useLiveTrading(3000);
 
   const handleSignOut = useCallback(async () => {
@@ -92,51 +106,32 @@ export default function Command() {
     if (!session || !commandAdmin || refreshInFlight.current) return;
     refreshInFlight.current = true;
     setRefreshing(true);
-
     try {
-      const [statusResult, evidenceResult, readinessResult, theoryResult] = await Promise.allSettled([
+      const [statusResult, evidenceResult] = await Promise.allSettled([
         fetchCommandStatus(session),
-        fetchCommandEvidence(session),
-        fetchResearchReadiness(),
-        fetchTheoryProgram()
+        fetchCommandEvidence(session)
       ]);
 
       if (statusResult.status === "fulfilled") {
         setSnapshot(statusResult.value);
         setStatusError("");
       } else {
-        setStatusError(
-          statusResult.reason instanceof Error
-            ? statusResult.reason.message
-            : "Live status unavailable."
-        );
+        setStatusError(statusResult.reason instanceof Error ? statusResult.reason.message : "Trading status unavailable.");
       }
 
       if (evidenceResult.status === "fulfilled") {
-        const nextEvidence = evidenceResult.value;
-        setEvidence(nextEvidence);
+        const next = evidenceResult.value;
+        setEvidence(next);
         setEvidenceError("");
-
         const [daily, weekly] = await Promise.all([
           fetchCommandDailyReport(session).catch(() => null),
           fetchCommandWeeklyReport(session).catch(() => null)
         ]);
-        setDailyReport(daily || record(nextEvidence.latest_daily));
-        setWeeklyReport(weekly || record(nextEvidence.latest_weekly));
+        setDailyReport(daily || record(next.latest_daily));
+        setWeeklyReport(weekly || record(next.latest_weekly));
       } else {
-        setEvidenceError(
-          evidenceResult.reason instanceof Error
-            ? evidenceResult.reason.message
-            : "Command evidence unavailable."
-        );
+        setEvidenceError(evidenceResult.reason instanceof Error ? evidenceResult.reason.message : "Evidence unavailable.");
       }
-
-      setResearchReadiness(
-        readinessResult.status === "fulfilled" ? readinessResult.value : null
-      );
-      setTheoryProgram(
-        theoryResult.status === "fulfilled" ? theoryResult.value : null
-      );
     } finally {
       refreshInFlight.current = false;
       setRefreshing(false);
@@ -155,533 +150,119 @@ export default function Command() {
   }
 
   if (!session?.user) {
-    return (
-      <div className="command-gate">
-        <SystemIcon system="IREN" size="lg" />
-        <span>ANEVUM / COMMAND</span>
-        <h1>Private operations.</h1>
-        <p>Sign in through the private ANEVUM entrance to open Command.</p>
-        <Link className="primary-link" to="/private">Private access <b>↗</b></Link>
-      </div>
-    );
+    return <div className="command-gate"><SystemIcon system="IREN" size="lg" /><span>ANEVUM / COMMAND</span><h1>Private operations.</h1><p>Sign in through the private ANEVUM entrance to open Command.</p><Link className="primary-link" to="/private">Private access <b>↗</b></Link></div>;
   }
 
   if (!commandAdmin) {
-    return (
-      <div className="command-gate">
-        <SystemIcon system="IREN" size="lg" />
-        <span>ANEVUM / COMMAND</span>
-        <h1>Administrator access required.</h1>
-        <p>This identity is authenticated but is not authorized for the private operations console.</p>
-        <Link className="text-link" to="/">Return to ANEVUM <b>→</b></Link>
-      </div>
-    );
+    return <div className="command-gate"><SystemIcon system="IREN" size="lg" /><span>ANEVUM / COMMAND</span><h1>Administrator access required.</h1><p>This identity is authenticated but is not authorized for the operations console.</p><Link className="text-link" to="/">Return to ANEVUM <b>→</b></Link></div>;
   }
 
   const account = record(snapshot?.account);
-  const accountHistory = snapshot?.account_history || null;
   const bot = record(snapshot?.bot);
-  const strategy = record(snapshot?.strategy);
-  const market = record(snapshot?.market);
   const positions = list(snapshot?.positions);
-  const openOrders = list(snapshot?.open_orders);
   const recentOrders = list(snapshot?.recent_orders);
-  const scanner = record(snapshot?.scanner);
-  const history = list(snapshot?.history);
-  const dayPnl = number(account.day_pnl);
-
-  const liveRuntime = record(snapshot?.runtime);
-  const runtimeEnvelope = record(evidence?.provenance?.runtime);
-  const runtimePayload = record(runtimeEnvelope.payload);
-  const runtimeDetails = record(runtimePayload.runtime);
-  const evidenceRuntime = Object.keys(runtimeDetails).length
-    ? {
-        ...runtimeDetails,
-        run_id: runtimePayload.run_id ?? runtimeEnvelope.run_id,
-        strategy_version_id: runtimePayload.strategy_version_id ?? runtimeEnvelope.strategy_version_id,
-        observed_at: runtimeEnvelope.occurred_at ?? runtimeDetails.runtime_started_at
-      }
-    : runtimeEnvelope;
-  const runtime = Object.keys(liveRuntime).length ? liveRuntime : evidenceRuntime;
-
-  const liveTelemetry = record(snapshot?.telemetry);
-  const liveScan = record(liveTelemetry.latest_scan);
-  const scanEnvelope = record(evidence?.provenance?.latest_scan_cycle);
-  const scanPayload = record(scanEnvelope.payload);
-  const scanRuntime = record(scanPayload.runtime);
-  const evidenceScan = Object.keys(scanPayload).length
-    ? {
-        ...scanPayload,
-        scan_cycle_id: scanPayload.scan_cycle_id ?? scanPayload.cycle_key ?? scanEnvelope.event_key,
-        observed_at: scanEnvelope.occurred_at ?? scanPayload.observed_at,
-        run_id: scanEnvelope.run_id ?? scanPayload.run_id,
-        strategy_version_id: scanEnvelope.strategy_version_id ?? scanPayload.strategy_version_id,
-        runtime_instance_id: scanPayload.runtime_instance_id ?? scanRuntime.runtime_instance_id,
-        deployment_id: scanPayload.deployment_id ?? scanRuntime.deployment_id,
-        git_commit: scanPayload.git_commit ?? scanRuntime.git_commit
-      }
-    : scanEnvelope;
-  const latestScan = Object.keys(liveScan).length ? liveScan : evidenceScan;
-
-  const health = record(evidence?.telemetry_health);
-  const liveTrackingObserved =
-    Object.keys(liveRuntime).length > 0 ||
-    Object.keys(liveScan).length > 0 ||
-    liveTelemetry.last_poll_at != null;
-  const telemetryTracking = liveTrackingObserved
-    ? "OBSERVED"
-    : text(
-        health.tracking_state,
-        health.latest_event_at ? "OBSERVED" : "NO DATA"
-      ).toUpperCase();
-  const runtimeTracking = Object.keys(liveRuntime).length
-    ? "LIVE"
-    : text(
-        health.runtime_provenance_state,
-        Object.keys(runtime).length ? "RECORDED" : "MISSING"
-      ).toUpperCase();
-  const decisionTracking = Object.keys(liveScan).length
-    ? "LIVE"
-    : text(
-        health.decision_cycle_state,
-        Object.keys(latestScan).length ? "OBSERVED" : "NO DATA"
-      ).toUpperCase();
-  const events24h =
-    liveTelemetry.events_observed ??
-    health.events_24h ??
-    health.events_observed;
-  const daily = dailyReport || record(evidence?.latest_daily);
-  const weekly = weeklyReport || record(evidence?.latest_weekly);
-  const dailyMetrics = record(daily.metrics);
-  const dailyClass = record(daily.classification);
-  const dailyForward = record(daily.candidate_forward_evidence);
-  const dailyForwardStatus = record(dailyForward.status);
-  const dailyConsistency = record(daily.live_vs_offline_consistency);
-  const weeklyEvidenceStability = record(weekly.evidence_stability);
-  const confirmedFacts = list(weeklyEvidenceStability.confirmed_facts);
-  const includedWeeklySessions = Array.isArray(weekly.included_trading_sessions)
-    ? weekly.included_trading_sessions
-    : Array.isArray(weekly.included_sessions)
-      ? weekly.included_sessions
-      : [];
-  const missingWeeklySessions = Array.isArray(weekly.missing_trading_sessions)
-    ? weekly.missing_trading_sessions
-    : Array.isArray(weekly.missing_sessions)
-      ? weekly.missing_sessions
-      : [];
-  const expectedWeeklySessions = Array.isArray(weekly.expected_trading_sessions)
-    ? weekly.expected_trading_sessions
-    : Array.isArray(weekly.expected_sessions)
-      ? weekly.expected_sessions
-      : [];
-  const weeklyWarnings = Array.isArray(weekly.warnings) ? weekly.warnings.map(String) : [];
-  const weeklyQuestions = evidence?.research_questions || list(weekly.research_questions);
-  const weeklyDecisions = evidence?.weekly_decisions || list(weekly.decisions);
-  const researchDecisions = evidence?.research_decisions || [];
-  const nextResearch = researchDecisions.find((row) => row.decision_type === "next_research_direction");
-  const rejectedResearch = researchDecisions.filter((row) => row.decision_type === "terminal_rejection");
-  const forwardRows = evidence?.post_event_evidence?.forward_outcomes || [];
-  const comparisonRows = evidence?.post_event_evidence?.live_offline || [];
-  const maxForwardCount = Math.max(1, ...forwardRows.map((row) => number(row.count) || 0));
-  const maxComparisonCount = Math.max(1, ...comparisonRows.map((row) => number(row.count) || 0));
-  const dailyWins = Math.max(0, number(dailyMetrics.wins) || 0);
-  const dailyLosses = Math.max(0, number(dailyMetrics.losses) || 0);
-  const dailyClosed = Math.max(1, dailyWins + dailyLosses);
-  const readinessState = text(researchReadiness?.state, "UNAVAILABLE").toUpperCase();
-  const readinessBlockers = researchReadiness?.blockers || [];
-  const readinessLimitations = researchReadiness?.limitations || [];
-  const readinessMonitors = researchReadiness?.monitors || [];
-  const gptReady = researchReadiness?.gpt_would_run_now === true;
-  const canonicalResearchRuns = commandObservation.snapshot?.research?.observability?.runs || [];
-  const rawGraenProblems = commandObservation.snapshot?.research?.graen_problems || [];
-  const liveResearchCount = canonicalResearchRuns.length
-    ? canonicalResearchRuns.filter((row) =>
-        ["RUNNING", "OPEN", "QUEUED", "WAITING"].includes(String(row.status || "").toUpperCase())
-      ).length
-    : rawGraenProblems.filter((row) =>
-        ["RUNNING", "QUEUED", "WAITING"].includes(String(row.status || "").toUpperCase())
-      ).length;
-  const liveResearchState = liveResearchCount > 0 ? "ACTIVE" : "IDLE";
-  const theoryProblem =
-    theoryProgram?.problems.find((row) => row.problem_id === theoryProgram.program.current_problem_id) ||
-    [...(theoryProgram?.problems || [])].reverse().find((row) => row.status === "ACTIVE") ||
-    theoryProgram?.problems[0];
-  const theoryConjectures = theoryProblem?.conjectures || [];
-  const openTheoryConjectures = theoryConjectures.filter((row) => row.status === "OPEN");
-
-  const scanRows = (() => {
-    const preferred = Array.isArray(strategy.scan_symbols)
-      ? strategy.scan_symbols.map(String)
-      : Object.keys(scanner);
-    return preferred
-      .filter((symbol) => scanner[symbol])
-      .map((symbol) => ({ symbol, row: record(scanner[symbol]) }));
-  })();
-
-  const irenConnection = commandObservation.error
-    ? commandObservation.snapshot ? "DEGRADED" : "OFFLINE"
-    : commandObservation.snapshot?.stale
-      ? "DEGRADED"
-      : commandObservation.snapshot
-        ? "LIVE"
-        : "CONNECTING";
-  const executionState = bot.runtime_paused
-    ? "PAUSED"
-    : bot.bot_armed
-      ? "ARMED"
-      : snapshot
-        ? "DISARMED"
-        : "WAITING";
-  const connectionTitle = irenConnection === "LIVE" && snapshot
-    ? text(snapshot.mode, "RHEN").toUpperCase() + " / " + executionState
-    : "IREN / " + irenConnection;
-  const connectionDetail = irenConnection === "OFFLINE"
-    ? commandObservation.error || "Canonical IREN state is unavailable."
-    : irenConnection === "DEGRADED"
-      ? commandObservation.error || "Canonical IREN state is stale."
-      : statusError
-        ? "Trading status degraded · " + statusError
-        : evidenceError
-          ? "Trading live · evidence degraded"
-          : snapshot
-            ? "RHEN updated " + clockTime(snapshot.observed_at)
-            : irenConnection === "LIVE"
-              ? "IREN live · RHEN account state pending"
-              : "Resolving canonical runtime state…";
-
-  const pageTitle = commandPage === "overview"
-    ? "Command"
-    : commandPage.charAt(0).toUpperCase() + commandPage.slice(1);
-  const pageDescription = commandPage === "overview"
-    ? "Mission control: account state, live work, incidents, and the system's current operating picture."
-    : commandPage === "trading"
-      ? "Broker account, performance, positions, scanner decisions, orders, fills, exposure, and execution state."
-      : commandPage === "research"
-        ? "GRAEN, NOSTRA, and VELUM in one workspace: hypotheses, evidence, replay, forecasts, validation, and research decisions."
-        : "IREN, RHEN runtime health, infrastructure, dependencies, telemetry, versions, and diagnostics.";
+  const dayPnl = numeric(account.day_pnl);
+  const control = controlObservation.snapshot?.research?.control;
+  const controlFresh = Boolean(controlObservation.snapshot && !controlObservation.snapshot.stale && !controlObservation.error);
+  const pageCopy = PAGE_COPY[page];
+  const activeUniverse = snapshot?.universe?.active_count ?? Object.keys(record(snapshot?.scanner)).length;
+  const openPositions = positions.length;
 
   return (
-    <div className={`command-shell command-page-${viewPage}`}>
-      <UniverseBackground />
-      <header className="command-header">
-        <Link to="/" className="command-brand"><Mark /><span>ANEVUM</span><i /><span className="command-rhen-lockup"><SystemIcon system="IREN" size="xs" /><strong>COMMAND</strong></span></Link>
+    <div className={"command-shell command-v4 command-v4-" + page}>
+      <header className="command-v4-header">
+        <Link className="command-v4-brand" to="/command/operate">
+          <SystemIcon system="IREN" size="sm" />
+          <span>ANEVUM</span>
+          <i />
+          <strong>COMMAND</strong>
+        </Link>
+
         <nav aria-label="Command workspaces">
-          <Link className={commandPage === "overview" ? "active" : ""} to="/command/overview" aria-label="Overview" title="Overview" aria-current={commandPage === "overview" ? "page" : undefined}>
-            <UiIcon name="overview" className="command-nav-glyph" /><span className="command-nav-label">Overview</span>
-          </Link>
-          <Link className={commandPage === "trading" ? "active" : ""} to="/command/trading" aria-label="Trading" title="Trading" aria-current={commandPage === "trading" ? "page" : undefined}>
-            <UiIcon name="trading" className="command-nav-glyph" /><span className="command-nav-label">Trading</span>
-          </Link>
-          <Link className={commandPage === "research" ? "active" : ""} to="/command/research" aria-label="Research" title="Research" aria-current={commandPage === "research" ? "page" : undefined}>
-            <UiIcon name="research" className="command-nav-glyph" /><span className="command-nav-label">Research</span>
-          </Link>
-          <Link className={commandPage === "system" ? "active" : ""} to="/command/system" aria-label="System" title="System" aria-current={commandPage === "system" ? "page" : undefined}>
-            <UiIcon name="system" className="command-nav-glyph" /><span className="command-nav-label">System</span>
-          </Link>
+          <Link className={page === "operate" ? "active" : ""} to="/command/operate">Operate</Link>
+          <Link className={page === "discover" ? "active" : ""} to="/command/discover">Discover</Link>
+          <Link className={page === "review" ? "active" : ""} to="/command/review">Review{control?.review_required ? <b /> : null}</Link>
+          <Link className={page === "system" ? "active" : ""} to="/command/system">System</Link>
         </nav>
-        <div className="command-account">
-          <span><i /> COMMAND / AUTHENTICATED</span>
-          <small>{session.user.email}</small>
-          <div className="command-account-actions">
-            <Link to="/" title="Return to public ANEVUM">Public</Link>
-            <button type="button" onClick={handleSignOut} title="Sign out of Command">Sign out</button>
-          </div>
+
+        <div className="command-v4-account">
+          <span><StateDot ok={controlFresh && !statusError} />{controlFresh && !statusError ? "LIVE" : "DEGRADED"}</span>
+          <button type="button" onClick={handleSignOut}>Sign out</button>
         </div>
       </header>
 
-      <main className="command-main">
-        <section id="live" className="command-hero">
-          <div>
-            <p>PRIVATE OPERATIONS / {pageTitle.toUpperCase()}</p>
-            <h1>{pageTitle}</h1>
-            <span>{pageDescription}</span>
-          </div>
-          <div className="command-connection">
-            <i className={irenConnection === "LIVE" ? "online" : ""} />
+      <main className="command-v4-main">
+        <section className="command-v4-heading">
+          <div><span>{pageCopy.eyebrow}</span><h1>{pageCopy.title}</h1><p>{pageCopy.detail}</p></div>
+          <div className="command-v4-observation">
+            <StateDot ok={controlFresh && !statusError} />
             <div>
-              <strong>{connectionTitle}</strong>
-              <small>{connectionDetail}</small>
+              <strong>{displayState(controlObservation.snapshot?.state || (statusError ? "DEGRADED" : "CONNECTING"))}</strong>
+              <small>{controlObservation.snapshot?.observed_at ? ageText(controlObservation.snapshot.observed_at, controlObservation.now) : "awaiting canonical observation"}</small>
             </div>
-            <button type="button" onClick={refresh} disabled={refreshing} aria-label="Refresh Command"><UiIcon name="refresh" /></button>
+            <button type="button" onClick={() => void refresh()} disabled={refreshing}>{refreshing ? "…" : "↻"}</button>
           </div>
         </section>
 
-        <section className="command-stats command-view-overview command-view-trading">
-          <article><span>TOTAL EQUITY</span><strong>{money(account.equity)}</strong><small className={dayPnl && dayPnl > 0 ? "positive" : dayPnl && dayPnl < 0 ? "negative" : ""}>Today {money(account.day_pnl)}</small></article>
-          <article><span>CASH</span><strong>{money(account.cash)}</strong><small>Buying power {money(account.buying_power)}</small></article>
-          <article><span>MARKET</span><strong>{market.is_open ? "OPEN" : "CLOSED"}</strong><small>{text(latestScan.market_session, "runtime")}</small></article>
-          <article><span>RHEN</span><strong>{bot.entries_enabled ? "WATCHING" : "ENTRY LOCK"}</strong><small>{text(strategy.name, "strategy")}</small></article>
-          <article><span>POSITIONS</span><strong>{positions.length ? positions.length + " OPEN" : "FLAT"}</strong><small>{positions.length ? positions.slice(0, 3).map((row) => text(row.symbol)).join(" · ") : "No open position"}</small></article>
-        </section>
+        {(statusError || evidenceError || controlObservation.error) && (
+          <section className="command-v4-alert">
+            <strong>Observation degraded</strong>
+            <span>{[statusError, evidenceError, controlObservation.error].filter(Boolean).join(" · ")}</span>
+          </section>
+        )}
 
-        <section className="command-grid">
-          <div className="command-primary">
-            {commandPage === "overview" || commandPage === "system"
-              ? <CommandTopology observation={commandObservation} feed={publicFeedError ? null : publicFeed} />
-              : null}
-            {commandPage === "system"
-              ? <CommandOperationsTerminal observation={commandObservation} feed={publicFeedError ? null : publicFeed} feedError={publicFeedError} />
-              : null}
-            {commandPage === "research"
-              ? <CommandResearchLab snapshot={commandObservation.snapshot} now={commandObservation.now} />
-              : null}
-            {commandPage === "overview" || commandPage === "research"
-              ? <CommandStrategyPipeline snapshot={commandObservation.snapshot} now={commandObservation.now} />
-              : null}
-            <CommandAccountTracker account={account} history={accountHistory} orders={recentOrders} />
-            <CommandPerformance performance={publicFeed?.performance} feedError={publicFeedError} />
-            {(commandPage === "overview" || commandPage === "trading") && snapshot
-              ? <CommandTradingLanes snapshot={snapshot} />
-              : null}
-            <article className="command-panel command-view-trading command-panel-scanner">
-              <header><div><span>LIVE SCANNER</span><strong>{scanRows.length} symbols observed in runtime snapshot</strong></div><small>{clockTime(bot.last_strategy_at)}</small></header>
-              <div className="scanner-head"><span>SYMBOL</span><span>PRICE</span><span>ACTION</span><span>REASON</span></div>
-              <div className="scanner-body">
-                {scanRows.length ? scanRows.map(({ symbol, row }) => {
-                  const meta = record(row.metadata);
-                  return (
-                    <div className={"scanner-row " + (row.action === "buy" ? "qualified" : "")} key={symbol}>
-                      <strong>{symbol}</strong><span>{money(meta.current_close)}</span>
-                      <b>{text(row.action, "hold").toUpperCase()}</b><p>{text(row.reason, "waiting")}</p>
-                    </div>
-                  );
-                }) : <div className="command-empty">No current runtime scanner rows. Durable scan-cycle status is shown under Telemetry.</div>}
-              </div>
-            </article>
+        {page === "operate" && (
+          <>
+            <section className="command-v4-strip">
+              <div><span>ACCOUNT</span><strong>{money(account.equity)}</strong><small>{text(snapshot?.mode, "—").toUpperCase()}</small></div>
+              <div><span>DAY P/L</span><strong className={dayPnl !== null && dayPnl < 0 ? "negative" : dayPnl !== null && dayPnl > 0 ? "positive" : ""}>{dayPnl !== null ? (dayPnl >= 0 ? "+" : "") + money(dayPnl) : "—"}</strong><small>broker account</small></div>
+              <div><span>POSITIONS</span><strong>{openPositions}</strong><small>{bot.entries_enabled ? "entries enabled" : "entry gate active"}</small></div>
+              <div><span>ACTIVE UNIVERSE</span><strong>{Number(activeUniverse).toLocaleString()}</strong><small>{text(snapshot?.universe?.source, "scanner")}</small></div>
+              <div><span>RESEARCH</span><strong>{displayState(control?.mode)}</strong><small>{control?.review_required ? "review required" : "bounded automation"}</small></div>
+            </section>
 
-            <article className="command-panel command-view-trading command-panel-orders">
-              <header><div><span>ORDER TAPE</span><strong>{openOrders.length} open / {recentOrders.length} recent</strong></div><small>Private broker telemetry</small></header>
-              <div className="order-body">
-                {recentOrders.length ? recentOrders.slice(0, 12).map((order, index) => (
-                  <div className="order-row" key={text(order.id, String(index))}>
-                    <time>{clockTime(order.filled_at || order.submitted_at)}</time>
-                    <strong>{text(order.symbol)}</strong><span>{text(order.side).toUpperCase()}</span>
-                    <span>{text(order.status).toUpperCase()}</span><b>{order.filled_avg_price ? money(order.filled_avg_price) : "—"}</b>
-                  </div>
-                )) : <div className="command-empty">No recent RHEN orders.</div>}
-              </div>
-            </article>
+            {snapshot ? <CommandTradingLanes snapshot={snapshot} /> : <div className="command-v4-empty">Waiting for RHEN trading state.</div>}
 
-            <article id="daily" className="command-panel command-evidence-panel command-view-research command-panel-daily">
-              <header><div><span>CANONICAL DAILY REPORT</span><strong>{text(daily.session, "No daily report")}</strong></div><small>{text(daily.report_version)}</small></header>
-              {Object.keys(daily).length ? (
-                <>
-                  <div className="command-metric-grid">
-                    <div><span>CLASSIFICATION</span><strong>{text(dailyClass.classification)}</strong></div>
-                    <div><span>TRADES</span><strong>{text(dailyMetrics.trade_count)}</strong></div>
-                    <div><span>W / L</span><strong>{text(dailyMetrics.wins)} / {text(dailyMetrics.losses)}</strong></div>
-                    <div><span>EXPECTANCY</span><strong>{money(dailyMetrics.expectancy)}</strong></div>
-                    <div><span>PROFIT FACTOR</span><strong>{text(dailyMetrics.profit_factor)}</strong></div>
-                    <div><span>AVG MFE / MAE</span><strong>{text(dailyMetrics.average_mfe_pct)}% / {text(dailyMetrics.average_mae_pct)}%</strong></div>
-                  </div>
-                  <div className="command-outcome-viz" aria-label={dailyWins + " wins and " + dailyLosses + " losses"}>
-                    <div><span>WINS</span><strong>{dailyWins}</strong></div>
-                    <div className="command-outcome-track">
-                      <i className="wins" style={{ width: ((dailyWins / dailyClosed) * 100) + "%" }} />
-                      <i className="losses" style={{ width: ((dailyLosses / dailyClosed) * 100) + "%" }} />
-                    </div>
-                    <div><strong>{dailyLosses}</strong><span>LOSSES</span></div>
-                  </div>
-                  <div className="command-summary-block">
-                    <span>FINDING</span><strong>{text(dailyClass.reason || daily.summary)}</strong>
-                    <p>{text(daily.next_offline_research_action, "No next daily research action recorded.")}</p>
-                  </div>
-                  <div className="command-metric-grid compact">
-                    <div><span>FORWARD COMPLETE</span><strong>{text(dailyForwardStatus.complete_rows)}</strong></div>
-                    <div><span>FORWARD INCOMPLETE</span><strong>{text(dailyForwardStatus.incomplete_rows)}</strong></div>
-                    <div><span>COMPARISON METHOD</span><strong>{text(dailyConsistency.methodology)}</strong></div>
-                    <div><span>POST-EVENT ONLY</span><strong>{dailyConsistency.post_event_only === true ? "YES" : "—"}</strong></div>
-                  </div>
-                  <div className="command-warning-list">
-                    {(Array.isArray(daily.data_quality_warnings) ? daily.data_quality_warnings : []).map((warning, index) => <p key={index}>{String(warning)}</p>)}
-                  </div>
-                </>
-              ) : <div className="command-empty">No canonical daily report is available.</div>}
-            </article>
+            <div className="command-v4-two command-v4-operating-charts">
+              <CommandAccountTracker account={account} history={snapshot?.account_history} orders={recentOrders} />
+              <CommandPerformance performance={publicFeed?.performance} feedError={publicFeedError} />
+            </div>
 
-            <article id="weekly" className="command-panel command-evidence-panel command-view-research command-panel-weekly">
-              <header><div><span>CANONICAL WEEKLY REPORT</span><strong>{text(weekly.completeness_state, "No weekly report")}</strong></div><small>{text(weekly.report_version)}</small></header>
-              {Object.keys(weekly).length ? (
-                <>
-                  <div className="command-metric-grid">
-                    <div><span>PERIOD</span><strong>{text(weekly.period_start)} → {text(weekly.period_end)}</strong></div>
-                    <div><span>INCLUDED</span><strong>{includedWeeklySessions.length}</strong></div>
-                    <div><span>MISSING</span><strong>{missingWeeklySessions.length}</strong></div>
-                    <div><span>EXPECTED</span><strong>{expectedWeeklySessions.length}</strong></div>
-                    <div><span>INCLUDED SESSIONS</span><strong>{arrayText(includedWeeklySessions)}</strong></div>
-                    <div><span>MISSING SESSIONS</span><strong>{arrayText(missingWeeklySessions)}</strong></div>
-                    <div><span>REPORT KEY</span><strong>{text(weekly.report_key)}</strong></div>
-                  </div>
-                  <div className="command-fact-list">
-                    {confirmedFacts.map((fact, index) => <p key={index}><b>{text(fact.fact)}</b><span>{text(fact.value)}</span></p>)}
-                  </div>
-                  <div className="command-warning-list">{weeklyWarnings.map((warning, index) => <p key={index}>{warning}</p>)}</div>
-                </>
-              ) : <div className="command-empty">No canonical weekly report is available.</div>}
-            </article>
-
-            <article id="post-event" className="command-panel command-evidence-panel command-view-research command-panel-post-event">
-              <header><div><span>POST-EVENT EVIDENCE</span><strong>{evidence?.post_event_evidence?.analytics_only ? "ANALYTICS ONLY" : "UNAVAILABLE"}</strong></div><small>{text(evidence?.evidence_version)}</small></header>
-              <div className="command-two-column">
-                <div>
-                  <span className="command-subhead">CANDIDATE FORWARD OUTCOMES</span>
-                  {forwardRows.length ? forwardRows.map((row, index) => (
-                    <div className="command-evidence-bar-row" key={index}>
-                      <p className="command-evidence-row"><b>{text(row.horizon_minutes)}M</b><span>{text(row.status)}</span><strong>{text(row.count)}</strong></p>
-                      <div className="command-evidence-track"><i style={{ width: (((number(row.count) || 0) / maxForwardCount) * 100) + "%" }} /></div>
-                    </div>
-                  )) : <p className="command-empty">No forward-outcome summary.</p>}
+            <div className="command-v4-two">
+              <article className="command-v4-card">
+                <header><div><span>OPEN POSITIONS</span><strong>Broker truth</strong></div><small>{openPositions} open</small></header>
+                <div className="command-v4-table">
+                  {positions.length ? positions.map((row, index) => <div key={text(row.asset_id, text(row.symbol, String(index)))}><strong>{text(row.symbol)}</strong><span>{text(row.qty)} units</span><span>{row.current_price != null ? money(row.current_price) : "—"}</span><b>{text(row.side, "long").toUpperCase()}</b></div>) : <p>Flat.</p>}
                 </div>
-                <div>
-                  <span className="command-subhead">LIVE VS. OFFLINE</span>
-                  {comparisonRows.length ? comparisonRows.map((row, index) => (
-                    <div className="command-evidence-bar-row" key={index}>
-                      <p className="command-evidence-row"><b>{text(row.session)}</b><span>{text(row.match_state)}</span><strong>{text(row.count)}</strong></p>
-                      <div className="command-evidence-track"><i style={{ width: (((number(row.count) || 0) / maxComparisonCount) * 100) + "%" }} /></div>
-                    </div>
-                  )) : <p className="command-empty">No comparison summary.</p>}
+              </article>
+              <article className="command-v4-card">
+                <header><div><span>RECENT ORDERS</span><strong>Execution tape</strong></div><small>{recentOrders.length} loaded</small></header>
+                <div className="command-v4-table">
+                  {recentOrders.length ? recentOrders.slice(0, 12).map((row, index) => <div key={text(row.id, String(index))}><strong>{text(row.symbol)}</strong><span>{text(row.side).toUpperCase()}</span><span>{text(row.status).toUpperCase()}</span><b>{clockTime(row.filled_at || row.submitted_at)}</b></div>) : <p>No recent orders.</p>}
                 </div>
-              </div>
-            </article>
+              </article>
+            </div>
+          </>
+        )}
 
-            <article id="research" className="command-panel command-evidence-panel command-view-research command-panel-research">
-              <header><div><span>SEMANTIC REVIEW GATE</span><strong>{readinessState}</strong></div><small>NOT RUNTIME STATUS</small></header>
-              <div className="command-metric-grid compact">
-                <div><span>LIVE RESEARCH</span><strong>{liveResearchState}</strong></div>
-                <div><span>ACTIVE RUNS</span><strong>{liveResearchCount}</strong></div>
-                <div><span>REVIEW READINESS</span><strong>{readinessState}</strong></div>
-                <div><span>GPT ELIGIBILITY</span><strong>{gptReady ? "READY" : "HELD"}</strong></div>
-                <div><span>ACTIVE BLOCKERS</span><strong>{researchReadiness?.blocker_count ?? "—"}</strong></div>
-                <div><span>KNOWN LIMITATIONS</span><strong>{researchReadiness?.limitation_count ?? "—"}</strong></div>
-                <div><span>MONITORS</span><strong>{researchReadiness?.monitor_count ?? "—"}</strong></div>
-                <div><span>READY QUESTIONS</span><strong>{researchReadiness?.ready_strategy_question_count ?? "—"}</strong></div>
-                <div><span>WAITING QUESTIONS</span><strong>{researchReadiness?.waiting_strategy_question_count ?? "—"}</strong></div>
-                <div><span>WAITING ON</span><strong>{arrayText(researchReadiness?.waiting_requirements)}</strong></div>
-                <div><span>EVIDENCE SESSION</span><strong>{text(researchReadiness?.trigger_reference)}</strong></div>
-                <div><span>EVIDENCE CUTOFF</span><strong>{clockTime(researchReadiness?.evidence_cutoff)}</strong></div>
-              </div>
-              <div className="command-warning-list">
-                {readinessBlockers.map((row, index) => (
-                  <p key={"blocker-" + index}><b>BLOCKER / {text(row.code).toUpperCase()}</b> · {arrayText(row.reason_codes)}</p>
-                ))}
-                {readinessLimitations.map((row, index) => (
-                  <p key={"limitation-" + index}><b>LIMITATION / {text(row.code).toUpperCase()}</b> · {arrayText(row.reason_codes)}</p>
-                ))}
-                {readinessMonitors.map((row, index) => (
-                  <p key={"monitor-" + index}><b>MONITOR / {text(row.code).toUpperCase()}</b> · {arrayText(row.reason_codes)}</p>
-                ))}
-                {!readinessBlockers.length && !readinessLimitations.length && !readinessMonitors.length ? (
-                  <p>{gptReady ? "No deterministic blocker is preventing semantic review." : "No semantic-readiness details are currently available. Live GRAEN activity is tracked separately above."}</p>
-                ) : null}
-              </div>
-              <div className="command-summary-block">
-                <span>NEXT EXPERIMENT</span>
-                <strong>{text(nextResearch?.conclusion, "No canonical next-direction decision.")}</strong>
-                <p>Experiment execution is not available from Command in this task.</p>
-              </div>
-              <div className="command-two-column">
-                <div>
-                  <span className="command-subhead">MATHEMATICS &amp; THEORY</span>
-                  <div className="command-list-item">
-                    <strong>{text(theoryProblem?.problem_id)} · {text(theoryProblem?.title)}</strong>
-                    <p>{text(theoryProblem?.question, "Canonical theory registry unavailable.")}</p>
-                    <small>Registry {theoryProgram?.registry_hash ? theoryProgram.registry_hash.slice(0, 12) : "—"} · Production authority: NONE</small>
-                  </div>
-                </div>
-                <div>
-                  <span className="command-subhead">OPEN CONJECTURES</span>
-                  {openTheoryConjectures.length ? openTheoryConjectures.map((row) => (
-                    <div className="command-list-item" key={row.conjecture_id}>
-                      <strong>{row.conjecture_id} · {row.title}</strong>
-                      <p>{row.statement}</p>
-                      <small>Novelty: {row.novelty_state} · Status: {row.status}</small>
-                    </div>
-                  )) : <div className="command-empty">No open theory conjectures are recorded.</div>}
-                </div>
-              </div>
-              <div className="command-two-column">
-                <div>
-                  <span className="command-subhead">PERMANENTLY REJECTED RESEARCH</span>
-                  {rejectedResearch.length ? rejectedResearch.map((row, index) => (
-                    <div className="command-list-item" key={index}><strong>{text(row.subject)}</strong><p>{text(row.conclusion)}</p></div>
-                  )) : <div className="command-empty">No terminal research decision recorded.</div>}
-                </div>
-                <div>
-                  <span className="command-subhead">OPEN / MONITOR QUESTIONS</span>
-                  {weeklyQuestions.length ? weeklyQuestions.map((row, index) => (
-                    <div className="command-list-item" key={index}><strong>{text(row.research_question_id || row.status)}</strong><p>{text(row.question)}</p></div>
-                  )) : <div className="command-empty">No active research questions.</div>}
-                </div>
-              </div>
-              <div className="command-list-stack">
-                <span className="command-subhead">WEEKLY DECISIONS</span>
-                {weeklyDecisions.map((row, index) => (
-                  <div className="command-list-item" key={index}><strong>{text(row.decision_key)}</strong><p>{text(row.decision)}</p><small>Production behavior changed: {row.production_behavior_changed === true ? "YES" : "NO"}</small></div>
-                ))}
-              </div>
-            </article>
-          </div>
+        {page === "discover" && <CommandDiscoveryDeck snapshot={snapshot} control={controlObservation.snapshot} now={controlObservation.now} />}
 
-          <aside className="command-side">
-            <article className="command-panel command-view-trading command-panel-position">
-              <header><div><span>ACTIVE POSITIONS</span><strong>{positions.length ? positions.length + " OPEN" : "FLAT"}</strong></div><small>Live from broker</small></header>
-              {positions.length ? (
-                <div className="position-list">
-                  {positions.map((row, index) => (
-                    <div className="position-row" key={text(row.symbol, String(index))}>
-                      <div><span>SYMBOL</span><strong>{text(row.symbol)}</strong></div>
-                      <div><span>QTY</span><strong>{text(row.qty)}</strong></div>
-                      <div><span>ENTRY</span><strong>{money(row.avg_entry_price)}</strong></div>
-                      <div><span>CURRENT</span><strong>{money(row.current_price)}</strong></div>
-                      <div><span>VALUE</span><strong>{money(row.market_value)}</strong></div>
-                      <div><span>UNREALIZED P&amp;L</span><strong className={(number(row.unrealized_pl) || 0) > 0 ? "positive" : (number(row.unrealized_pl) || 0) < 0 ? "negative" : ""}>{money(row.unrealized_pl)} / {percent(row.unrealized_plpc)}</strong></div>
-                    </div>
-                  ))}
-                </div>
-              ) : <div className="command-empty">No open positions.</div>}
-            </article>
-
-            <article id="telemetry" className="command-panel command-view-system command-panel-telemetry">
-              <header>
-                <div><span>TELEMETRY + PROVENANCE</span><strong>{text(runtime.system_version, "RHEN")} · {telemetryTracking}</strong></div>
-                <small>{Object.keys(liveRuntime).length ? "Live runtime" : "Evidence " + text(evidence?.generated_at)}</small>
-              </header>
-              <div className="system-grid">
-                <div><span>TRACKING</span><strong>{telemetryTracking}</strong></div>
-                <div><span>RUNTIME PROVENANCE</span><strong>{runtimeTracking}</strong></div>
-                <div><span>DECISION STREAM</span><strong>{decisionTracking}</strong></div>
-                <div><span>LATEST EVENT</span><strong>{text(health.latest_event_at)}</strong></div>
-                <div><span>RUN</span><strong>{text(runtime.run_id)}</strong></div>
-                <div><span>STRATEGY</span><strong>{text(runtime.strategy_version_id)}</strong></div>
-                <div><span>DEPLOYMENT</span><strong>{text(runtime.deployment_id)}</strong></div>
-                <div><span>GIT</span><strong>{shortSha(runtime.git_commit)}</strong></div>
-                <div><span>RUNTIME</span><strong>{text(runtime.runtime_instance_id)}</strong></div>
-                <div><span>LATEST SCAN</span><strong>{text(latestScan.scan_cycle_id)}</strong></div>
-                <div><span>SCAN OUTCOME</span><strong>{text(latestScan.cycle_outcome)}</strong></div>
-                <div><span>DATA STATUS</span><strong>{text(latestScan.data_status)}</strong></div>
-                <div><span>EVENTS / 24H</span><strong>{text(events24h)}</strong></div>
-                <div><span>RUNTIME ERRORS / 24H</span><strong>{text(health.runtime_errors_24h)}</strong></div>
-              </div>
-            </article>
-
-            <article className="command-panel command-view-overview command-panel-feed">
-              <header><div><span>LIVE FEED</span><strong>Recent runtime decisions</strong></div><small>Process state</small></header>
-              <div className="feed-body">
-                {history.length ? history.slice(0, 16).map((item, index) => (
-                  <div className="feed-row" key={text(item.at, String(index))}>
-                    <time>{clockTime(item.at)}</time>
-                    <div><strong>{text(item.symbol || item.kind, "RHEN")}</strong><span>{text(item.action, "decision").toUpperCase()}</span></div>
-                    <p>{text(item.reason || item.message, "Recorded")}</p>
-                  </div>
-                )) : <div className="command-empty">No runtime decisions recorded in this process.</div>}
-              </div>
-            </article>
-
+        {page === "review" && (
+          <div className="command-v4-review-stack">
+            <CommandReviewDeck snapshot={controlObservation.snapshot} evidence={evidence} daily={dailyReport} weekly={weeklyReport} now={controlObservation.now} />
             <CommandIrenMaintenance session={session} />
-          </aside>
-        </section>
+          </div>
+        )}
+
+        {page === "system" && (
+          <div className="command-v4-system-stack">
+            <CommandTopology observation={controlObservation} feed={publicFeed} />
+            <CommandOperationsTerminal observation={controlObservation} feed={publicFeed} feedError={publicFeedError} />
+          </div>
+        )}
       </main>
-      <CommandRawLog snapshot={commandObservation.snapshot} feed={publicFeedError ? null : publicFeed} tradingSnapshot={snapshot} now={commandObservation.now} />
+
+      <CommandRawLog snapshot={controlObservation.snapshot} feed={publicFeed} tradingSnapshot={snapshot} now={controlObservation.now} />
     </div>
   );
 }
