@@ -77,7 +77,7 @@ function laneActivity(snapshot: IrenSnapshot | null, feed: LiveTradingFeed | nul
   let activityState = view.activityState;
   if (traceActive) activityState = system === "VELUM" ? "REPLAYING" : "RESEARCHING";
   else if (runningJob) activityState = "RUNNING";
-  else if (queuedJob && activityState === "IDLE") activityState = "QUEUED";
+  else if (queuedJob && activityState === "WAITING_FOR_WORK") activityState = "QUEUED";
 
   const active = view.active || traceActive || runningJob;
   const fallback = system === "IREN"
@@ -221,7 +221,7 @@ export default function CommandOperationsTerminal({
         <div>
           <span>COMMAND / LIVE OPERATIONS</span>
           <h1>System terminal</h1>
-          <p>Evidence-backed activity across GRAEN, VELUM, IREN, RHEN, and NOSTRA.</p>
+          <p>Evidence-backed activity across the named modules inside the unified RHEN runtime.</p>
         </div>
         <div className="terminal-session">
           <span className={fleetFresh ? "terminal-live-dot is-live" : "terminal-live-dot"} aria-hidden="true" />
