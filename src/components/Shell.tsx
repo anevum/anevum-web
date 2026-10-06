@@ -1,7 +1,6 @@
 import { type ReactNode, useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import Mark from "./Mark";
-import UniverseBackground from "./UniverseBackground";
 import publicRoutes from "../data/public-routes.json";
 
 const nav = publicRoutes.filter((route) => route.nav);
@@ -59,7 +58,6 @@ export function PublicShell({ children }: { children: ReactNode }) {
 
   return (
     <div className="public-frame compact-public-frame company-shell">
-      <UniverseBackground />
       <header className="public-header compact-public-header company-header">
         <Link className="public-brand company-brand" to="/" aria-label="ANEVUM home">
           <Mark /><span>ANEVUM</span>
