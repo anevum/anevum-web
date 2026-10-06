@@ -149,6 +149,7 @@ export type StrategyReleaseGateProjection = {
 };
 
 export type StrategyPipelineProjection = {
+  btc_discovery?: BtcDiscoveryProjection | null;
   schema_version?: string;
   observed_at?: string | null;
   available?: boolean;
@@ -156,6 +157,48 @@ export type StrategyPipelineProjection = {
   candidate?: StrategyCandidateProjection | null;
   validation?: StrategyValidationProjection | null;
   release_gate?: StrategyReleaseGateProjection | null;
+};
+
+export type BtcDiscoveryMetrics = {
+  trade_count: number;
+  independent_days: number;
+  net_expectancy: number;
+  profit_factor: number;
+  max_drawdown: number;
+  net_return: number;
+};
+export type BtcDiscoveryCandidate = StrategyCandidateProjection & {
+  fingerprint?: string;
+  parameters?: Record<string, unknown>;
+  rejection_reasons?: string[];
+  results?: Record<string, {
+    verified?: boolean;
+    rejection_reasons?: string[];
+    scenarios?: Record<string, { costs: { fee_bps: number; spread_bps: number; slippage_bps: number }; delay_bars: number; metrics: BtcDiscoveryMetrics }>;
+  }>;
+};
+export type BtcDiscoveryProjection = {
+  schema_version: string;
+  methodology_version: string;
+  state: string;
+  current_stage: string;
+  running: boolean;
+  updated_at?: string | null;
+  candidate?: BtcDiscoveryCandidate | null;
+  candidates?: BtcDiscoveryCandidate[];
+  rejection_reasons?: string[];
+  search_completed?: number;
+  search_bound?: number;
+  paper_candidate_id?: string | null;
+  last_error?: string | null;
+  paper_progress?: {
+    status: string;
+    metrics?: BtcDiscoveryMetrics;
+    elapsed_days?: number;
+    filled_orders?: number;
+    fresh?: boolean;
+    fee_source?: string;
+  } | null;
 };
 
 export type IrenSnapshot = {

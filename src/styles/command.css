@@ -815,3 +815,14 @@
 @media (display-mode:standalone) and (orientation:landscape) and (max-height:500px){
   .command-shell{--command-safe-top:max(var(--safe-top),46px)}
 }
+.command-btc-discovery{padding:16px;border-top:1px solid rgba(232,238,243,.1);font-size:.72rem;color:#a7b4be}
+.command-btc-discovery>header{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.command-btc-discovery>header>div{display:grid;gap:8px;min-width:0}
+.command-btc-discovery small{display:block;color:#758693;font-size:.62rem;overflow-wrap:anywhere}
+.command-btc-discovery p{line-height:1.6}
+.command-btc-stress{max-width:100%;overflow-x:auto;border:1px solid rgba(232,238,243,.1);border-radius:6px}
+.command-btc-stress table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums;white-space:nowrap}
+.command-btc-stress th,.command-btc-stress td{text-align:left;padding:9px 12px;border-bottom:1px solid rgba(232,238,243,.08);font-size:.62rem}
+.command-btc-stress th{color:#c8d3db;font-weight:500}
+.command-btc-discovery details{margin:14px 0;overflow-wrap:anywhere}
+.command-btc-discovery details ul{padding-left:20px;max-height:220px;overflow:auto;line-height:1.7}
