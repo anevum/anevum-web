@@ -19,7 +19,7 @@ test("Command exposes four canonical operator workspaces", () => {
   assert.doesNotMatch(command, />Trading</);
 });
 
-test("Operate workspace exposes broker truth and all active trading lanes", () => {
+test("Operate workspace exposes broker truth and current equity trading lanes", () => {
   const command = readFileSync(new URL("../src/pages/Command.tsx", import.meta.url), "utf8");
   const tracker = readFileSync(new URL("../src/components/CommandAccountTracker.tsx", import.meta.url), "utf8");
   const lanes = readFileSync(new URL("../src/components/CommandTradingLanes.tsx", import.meta.url), "utf8");
@@ -34,13 +34,14 @@ test("Operate workspace exposes broker truth and all active trading lanes", () =
   assert.match(tracker, /B = buy · S = sell/);
   assert.match(data, /account_history\?: CommandAccountHistory/);
   assert.match(data, /universe\?: CommandUniverse \| null/);
-  assert.match(data, /crypto_live\?: CommandCryptoLane \| null/);
   assert.match(data, /extended_equity\?: CommandExtendedEquityLane \| null/);
   assert.match(lanes, /EQUITIES \/ LIVE/);
   assert.match(lanes, /EQUITIES \/ EXTENDED 24\/5/);
-  assert.match(lanes, /CRYPTO \/ REAL ACCOUNT/);
-  assert.match(lanes, /CRYPTO \/ PAPER CANARY/);
+  assert.doesNotMatch(lanes, /CRYPTO \/ REAL ACCOUNT/);
+  assert.doesNotMatch(lanes, /CRYPTO \/ PAPER CANARY/);
+  assert.doesNotMatch(lanes, /crypto_live|crypto_paper|CommandCryptoLane|BTC\/USD/);
   assert.match(lanes, /BROKER WRITES/);
+  assert.match(lanes, /long U\.S\. equities \/ ETFs/);
 });
 
 test("Review workspace owns the deliberate Work handoff", () => {
