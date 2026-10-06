@@ -148,6 +148,21 @@ export type StrategyReleaseGateProjection = {
   production_authority_changed?: boolean;
 };
 
+export type StrategyEvidenceReadinessProjection = {
+  schema_version?: string;
+  research_only?: boolean;
+  execution_authority?: boolean;
+  changes_live_decision?: boolean;
+  sampled_cycles?: number;
+  candidate_count?: number;
+  measurement_ready_count?: number;
+  measurement_ready_rate_pct?: number | null;
+  missing_reference_price_count?: number;
+  missing_bar_time_count?: number;
+  evidence_reference_only_count?: number;
+  latest_observed_at?: string | null;
+};
+
 export type StrategyPipelineProjection = {
   research?: {
     control?: ResearchControlProjection;
@@ -158,6 +173,7 @@ export type StrategyPipelineProjection = {
   observed_at?: string | null;
   available?: boolean;
   active?: StrategyAuthorityProjection[];
+  evidence_readiness?: StrategyEvidenceReadinessProjection | null;
   candidate?: StrategyCandidateProjection | null;
   validation?: StrategyValidationProjection | null;
   release_gate?: StrategyReleaseGateProjection | null;
