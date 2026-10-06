@@ -13,6 +13,7 @@
   --company-border:var(--season-line,rgba(226,236,243,.11));
   --company-border-strong:rgba(226,236,243,.2);
   min-height:100dvh;
+  background:#03070c;
 }
 .company-header{
   position:fixed;
