@@ -179,10 +179,10 @@ export default function Command() {
         </Link>
 
         <nav aria-label="Command workspaces">
-          <Link className={page === "operate" ? "active" : ""} to="/command/operate">Operate</Link>
-          <Link className={page === "discover" ? "active" : ""} to="/command/discover">Discover</Link>
-          <Link className={page === "review" ? "active" : ""} to="/command/review">Review{control?.review_required ? <b /> : null}</Link>
-          <Link className={page === "system" ? "active" : ""} to="/command/system">System</Link>
+          <Link className={page === "operate" ? "active" : ""} aria-current={page === "operate" ? "page" : undefined} to="/command/operate">Operate</Link>
+          <Link className={page === "discover" ? "active" : ""} aria-current={page === "discover" ? "page" : undefined} to="/command/discover">Discover</Link>
+          <Link className={page === "review" ? "active" : ""} aria-current={page === "review" ? "page" : undefined} to="/command/review">Review{control?.review_required ? <b /> : null}</Link>
+          <Link className={page === "system" ? "active" : ""} aria-current={page === "system" ? "page" : undefined} to="/command/system">System</Link>
         </nav>
 
         <div className="command-v4-account">
