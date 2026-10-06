@@ -41,7 +41,7 @@ test("Trading workspace exposes private broker account tracking and executions",
   assert.match(lanes, /BROKER WRITES/);
 });
 
-test("IREN maintenance is embedded in System and produces Codex-ready prompts", () => {
+test("IREN maintenance is embedded in System and requests Codex prompts from IREN", () => {
   const worker = readFileSync(new URL("../worker.mjs", import.meta.url), "utf8");
   const command = readFileSync(new URL("../src/pages/Command.tsx", import.meta.url), "utf8");
   const maintenance = readFileSync(new URL("../src/components/CommandIrenDock.tsx", import.meta.url), "utf8");
@@ -52,13 +52,13 @@ test("IREN maintenance is embedded in System and produces Codex-ready prompts", 
   assert.doesNotMatch(command, /<CommandIrenDock session=\{session\} \/>/);
   assert.match(maintenance, /IREN \/ MAINTENANCE/);
   assert.match(maintenance, /FOCUS FOR NEXT CODEX PASS/);
-  assert.match(maintenance, /Copy maintenance prompt/);
-  assert.match(maintenance, /Continue ANEVUM\/RHEN maintenance from the CURRENT actual state/);
-  assert.match(maintenance, /Backend\/runtime: anevum\/alpaca-trader/);
-  assert.match(maintenance, /Frontend\/Command: anevum\/anevum-web/);
-  assert.match(maintenance, /Inspect CURRENT main in both repositories/);
+  assert.match(maintenance, /Generate Codex prompt/);
+  assert.match(maintenance, /maintenance prompt: /);
+  assert.match(maintenance, /maintenance_prompt/);
+  assert.match(maintenance, /Copy generated prompt/);
   assert.match(maintenance, /Prepare tracked handoff/);
   assert.match(maintenance, /Verify tracked handoff/);
+  assert.doesNotMatch(maintenance, /buildMaintenancePrompt/);
   assert.doesNotMatch(maintenance, /iren-dock-handle/);
   assert.doesNotMatch(maintenance, /DETERMINISTIC CONTROL/);
 });
