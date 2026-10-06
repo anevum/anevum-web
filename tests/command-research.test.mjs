@@ -76,7 +76,13 @@ test("Strategy lifecycle exposes read-only forward evidence readiness", () => {
 
   assert.match(topology, /StrategyEvidenceReadinessProjection/);
   assert.match(topology, /measurement_ready_rate_pct/);
+  assert.match(topology, /AWAITING_MEASURABLE_COHORT/);
+  assert.match(topology, /measurement_contract/);
+  assert.match(topology, /next_action/);
   assert.match(pipeline, /FORWARD EVIDENCE READINESS/);
+  assert.match(pipeline, /readiness\.state/);
+  assert.match(pipeline, /readiness\.next_action/);
+  assert.match(pipeline, /readiness\.measurement_contract/);
   assert.match(pipeline, /missing_reference_price_count/);
   assert.match(pipeline, /missing_bar_time_count/);
   assert.match(pipeline, /read only/);
