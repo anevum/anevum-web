@@ -1,4 +1,4 @@
-import type { CommandCryptoLane, CommandSnapshot } from "../lib/data";
+import type { CommandCryptoLane, CommandExtendedEquityLane, CommandSnapshot } from "../lib/data";
 import { clockTime, money, percent } from "../lib/format";
 
 function record(value: unknown): Record<string, unknown> {
@@ -36,6 +36,25 @@ function laneState(lane?: CommandCryptoLane | null) {
   if (text(lane.execution_mode, "").includes("paper")) return "PAPER AUTONOMOUS";
   if (text(lane.execution_mode, "").includes("live_signal")) return "LIVE SIGNAL";
   return lane.execution_enabled ? "MONITORING" : "DISABLED";
+}
+
+function extendedTone(lane?: CommandExtendedEquityLane | null) {
+  if (!lane || lane.enabled === false) return "offline";
+  if (lane.last_error) return "degraded";
+  return "live";
+}
+
+function extendedState(lane?: CommandExtendedEquityLane | null) {
+  if (!lane) return "UNAVAILABLE";
+  if (lane.enabled === false) return "DISABLED";
+  if (lane.last_error) return "DEGRADED";
+  if ((lane.active_positions || 0) > 0) return "POSITION OPEN";
+  const session = text(lane.session?.session, "closed").toLowerCase();
+  if (session === "regular") return "HANDOFF";
+  if (session === "closed") return "CLOSED";
+  if (lane.execution_authorized) return "ACTIVE";
+  if (lane.execution_enabled) return "GATED";
+  return "OBSERVING";
 }
 
 function LaneOrders({ rows }: { rows: Record<string, unknown>[] }) {
@@ -176,8 +195,16 @@ function CryptoLane({
 function EquitiesLane({ snapshot }: { snapshot: CommandSnapshot }) {
   const bot = record(snapshot.bot);
   const strategy = record(snapshot.strategy);
-  const positions = list(snapshot.positions).filter(row => !text(row.symbol, "").includes("/"));
-  const orders = list(snapshot.recent_orders).filter(row => !text(row.symbol, "").includes("/"));
+  const extendedOwned = new Set(snapshot.extended_equity?.managed_symbols || []);
+  const positions = list(snapshot.positions).filter(row => {
+    const symbol = text(row.symbol, "");
+    return !symbol.includes("/") && !extendedOwned.has(symbol);
+  });
+  const orders = list(snapshot.recent_orders).filter(row => {
+    const symbol = text(row.symbol, "");
+    const clientOrderId = text(row.client_order_id, "");
+    return !symbol.includes("/") && !clientOrderId.includes("-ext-");
+  });
   const scanner = record(snapshot.scanner);
   const lastSignal = Object.entries(scanner)
     .map(([symbol, raw]) => ({ symbol, row: record(raw) }))
@@ -235,18 +262,109 @@ function EquitiesLane({ snapshot }: { snapshot: CommandSnapshot }) {
   );
 }
 
+function ExtendedEquitiesLane({ snapshot }: { snapshot: CommandSnapshot }) {
+  const lane = snapshot.extended_equity;
+  const session = lane?.session;
+  const universe = lane?.universe;
+  const scanner = lane?.scanner || {};
+  const cache = lane?.data_cache;
+  const managedSymbols = lane?.managed_symbols || [];
+  const orders = list(snapshot.recent_orders).filter(row => {
+    const symbol = text(row.symbol, "");
+    const clientOrderId = text(row.client_order_id, "");
+    return !symbol.includes("/") && clientOrderId.includes("-ext-");
+  });
+  const candidates = Object.entries(scanner)
+    .map(([symbol, raw]) => ({ symbol, row: record(raw) }))
+    .filter(item => text(item.row.action, "").toLowerCase() === "buy");
+  const focus = candidates[0]
+    || Object.entries(scanner).map(([symbol, raw]) => ({ symbol, row: record(raw) }))[0];
+  const sessionLabel = text(session?.session, "closed").replaceAll("_", " ").toUpperCase();
+
+  return (
+    <article className={"trading-lane-card trading-lane-" + extendedTone(lane)}>
+      <header>
+        <div>
+          <span>EQUITIES / EXTENDED 24/5</span>
+          <strong>{extendedState(lane)}</strong>
+          <small>Overnight · premarket · after-hours</small>
+        </div>
+        <div className="trading-lane-heartbeat">
+          <i />
+          <span>{clockTime(lane?.observed_at)}</span>
+        </div>
+      </header>
+
+      <div className="trading-lane-metrics">
+        <div><span>STRATEGY</span><strong>{text(lane?.strategy_version_id, "—")}</strong></div>
+        <div><span>SESSION</span><strong>{sessionLabel}</strong></div>
+        <div><span>POSITIONS</span><strong>{lane?.active_positions || 0}</strong></div>
+        <div><span>SCANNED</span><strong>{Object.keys(scanner).length}</strong></div>
+        <div><span>QUALIFIED</span><strong>{candidates.length}</strong></div>
+        <div><span>BROKER WRITES</span><strong>{lane?.execution_authorized ? "ENABLED" : "BLOCKED"}</strong></div>
+      </div>
+
+      <section className="trading-lane-focus">
+        <div>
+          <span>CURRENT DECISION</span>
+          <strong>{text(lane?.last_decision, "Waiting for extended-session observation.")}</strong>
+          {focus ? (
+            <p>
+              {focus.symbol} · {text(focus.row.action, "hold").toUpperCase()} · {text(focus.row.reason, "waiting")}
+            </p>
+          ) : null}
+        </div>
+        <div>
+          <span>SESSION / TAPE</span>
+          <strong>
+            {sessionLabel}
+            {session?.tradable === true ? " · TRADABLE" : " · NO NEW EXTENDED ENTRIES"}
+          </strong>
+          <p>
+            {managedSymbols.length ? managedSymbols.join(" · ") + " owned" : "No extended positions"}
+            {" · "}{text(universe?.active_count, "0")} symbols
+            {" · "}{text(cache?.bars, "0")} rolling bars
+          </p>
+        </div>
+      </section>
+
+      {lane?.execution_enabled && !lane?.execution_authorized ? (
+        <section className="trading-lane-alert">
+          <span>EXECUTION GATED</span>
+          <strong>Observation is live; broker writes remain blocked.</strong>
+          <p>The extended lane cannot place orders until its execution authorization is satisfied.</p>
+        </section>
+      ) : null}
+
+      {lane?.last_error ? (
+        <section className="trading-lane-alert is-error">
+          <span>LANE ERROR</span>
+          <strong>{lane.last_error}</strong>
+        </section>
+      ) : null}
+
+      <footer>
+        <div><span>RECENT EXT ORDERS</span><strong>{orders.length}</strong></div>
+        <div><span>UNIVERSE UPDATED</span><strong>{clockTime(universe?.updated_at)}</strong></div>
+      </footer>
+      <LaneOrders rows={orders} />
+    </article>
+  );
+}
+
 export default function CommandTradingLanes({ snapshot }: { snapshot: CommandSnapshot }) {
   return (
     <section className="command-trading-lanes" aria-label="Live RHEN trading lanes">
       <header className="command-trading-lanes-heading">
         <div>
           <span>RHEN / LIVE TRADING</span>
-          <strong>Equities and crypto in one operating view</strong>
+          <strong>Regular, extended, and crypto execution in one operating view</strong>
         </div>
-        <small>5s broker snapshot · 24/7 crypto observation</small>
+        <small>5s broker snapshot · 24/5 equities · 24/7 crypto</small>
       </header>
       <div className="command-trading-lanes-grid">
         <EquitiesLane snapshot={snapshot} />
+        <ExtendedEquitiesLane snapshot={snapshot} />
         <CryptoLane
           title="CRYPTO / REAL ACCOUNT"
           subtitle="Live Alpaca account · signal authority"
