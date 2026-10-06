@@ -5,10 +5,10 @@ import { fieldNotes } from "../data/fieldNotes";
 import { useLiveTrading } from "../hooks/useLiveTrading";
 
 const programs: { name: SystemName; category: string; description: string; href: string }[] = [
-  { name:"GRAEN", category:"Mathematical validation", description:"Selection bias, multiplicity, dependence, falsification, simulation design, and promotion methodology.", href:"/architecture" },
-  { name:"NOSTRA", category:"Forecasting", description:"Regime inference, prediction state, forward horizons, uncertainty, post-event outcomes, and calibration.", href:"/architecture" },
-  { name:"VELUM", category:"Replay & counterfactual", description:"Historical reconstruction, broker-isolated replay, friction assumptions, counterfactual comparison, and failure analysis.", href:"/architecture" },
-  { name:"RHEN", category:"Market evidence", description:"Candidate outcomes, execution evidence, strategy research, adaptive validation, and live/offline comparison.", href:"/live" }
+  { name:"GRAEN", category:"Strategy discovery", description:"Bounded candidate generation, chronological development/validation/holdout evidence, multiplicity control, falsification, and paper-only promotion.", href:"/architecture" },
+  { name:"NOSTRA", category:"Forecasting", description:"Regime inference, prediction state, forward horizons, uncertainty, post-event outcomes, and calibration without execution authority.", href:"/architecture" },
+  { name:"VELUM", category:"Independent verification", description:"Broker-isolated replay, LOW/BASE/HIGH friction stress, execution-delay stress, counterfactual comparison, and failure analysis.", href:"/architecture" },
+  { name:"RHEN", category:"Execution evidence", description:"Market observations, live and paper lane evidence, reconciliation, candidate outcomes, and normalized production records.", href:"/live" }
 ];
 
 export default function ResearchHub() {
@@ -27,12 +27,12 @@ export default function ResearchHub() {
         <div>
           <span>FIELD NOTES / PUBLIC ENGINEERING RECORD</span>
           <h1>What ANEVUM is learning while it is being built.</h1>
-          <p>Engineering changes, research results, failures, and operating lessons—written to be readable first and reproducible when the detail matters.</p>
+          <p>Engineering changes, research results, rejected hypotheses, and operating lessons—written to be readable first and reproducible when the detail matters. Research can earn forward-paper status, but it cannot silently become live execution authority.</p>
         </div>
         <div className="field-notes-hero-links">
-          <Link to="/case-studies">Case Studies →</Link>
+          <Link to="/live">Live Evidence →</Link>
           <Link to="/architecture">Architecture →</Link>
-          <Link to="/performance">Live Evidence →</Link>
+          <Link to="/releases">Releases →</Link>
         </div>
       </section>
 
@@ -131,7 +131,7 @@ export default function ResearchHub() {
         <header className="company-section-head">
           <span>RESEARCH PROGRAMS</span>
           <h2>Follow the system behind the note.</h2>
-          <p>Field Notes explain the work. These named RHEN modules own the underlying research, forecasting, replay, and market evidence.</p>
+          <p>Field Notes explain the work. GRAEN discovers and challenges candidates, VELUM verifies them independently, NOSTRA measures forecast state, and RHEN owns execution evidence. Candidate-stage details remain private until they have a deliberately sanitized public projection.</p>
         </header>
         <div className="research-program-grid research-program-grid-icons">
           {programs.map((program) => (
@@ -149,8 +149,8 @@ export default function ResearchHub() {
       <section className="company-section field-notes-method-section">
         <div className="field-notes-method-copy">
           <span>HOW TO READ THESE</span>
-          <h2>Narrative first. Reproduction detail on demand.</h2>
-          <p>Each Field Note separates the readable account from the procedure needed to reproduce or challenge it. That keeps the journal approachable without hiding methodology, checks, assumptions, or limitations.</p>
+          <h2>Narrative first. Evidence before promotion.</h2>
+          <p>Each Field Note separates the readable account from the procedure needed to reproduce or challenge it. The canonical BTC path is bounded research → chronological validation → independent VELUM replay → forward paper → ELIGIBLE_FOR_REVIEW. No automated research state grants live authority.</p>
         </div>
         <div className="field-notes-method-flow" aria-label="Field Note structure">
           {["READ","INSPECT","REPRODUCE","CHALLENGE"].map((item, index) => (
