@@ -8,6 +8,34 @@ export type PublicWorkLogEntry = {
 
 export const publicWorkLog: PublicWorkLogEntry[] = [
   {
+    at: "2026-10-06T23:32:14Z",
+    category: "INFRASTRUCTURE",
+    title: "RHEN V4.3 canonical runtime deployed",
+    summary: "RHEN production is on the deployed V4.3 source with scheduler v1.0.10. The stale adaptive executor workflow was retired, the unified runtime is healthy, and crypto-specific current research remains quarantined as historical evidence.",
+    status: "COMPLETE"
+  },
+  {
+    at: "2026-10-06T22:58:35Z",
+    category: "RESEARCH",
+    title: "Exact measurable forward-evidence cohort formalized",
+    summary: "New candidates require the original decision reference price plus completed decision-bar timestamp before 10/15-minute outcomes can be evaluated. Legacy rows with missing decision-time inputs are not reconstructed.",
+    status: "COMPLETE"
+  },
+  {
+    at: "2026-10-06T21:55:30Z",
+    category: "RESEARCH",
+    title: "Shadow economics and allocation validation added",
+    summary: "Post-event validators now measure cost-aware shadow economics and normalized allocation alternatives against matured forward outcomes without modifying the live decision record.",
+    status: "COMPLETE"
+  },
+  {
+    at: "2026-10-06T17:30:19Z",
+    category: "RESEARCH",
+    title: "Research control and whole-market equity discovery redesigned",
+    summary: "RHEN now distinguishes automated frozen testing from deliberate research/release review and uses hierarchical Alpaca screening to broaden the equity opportunity pool efficiently.",
+    status: "COMPLETE"
+  },
+  {
     at: "2026-09-28T23:55:37Z",
     category: "INFRASTRUCTURE",
     title: "Post-close evidence path optimized and reconciled",
@@ -101,13 +129,10 @@ export const publicWorkLog: PublicWorkLogEntry[] = [
 ];
 
 export const productionServiceLog = [
-  ["alpaca-trader", "Railway", "ONLINE", "Live RHEN execution, telemetry, reconciliation, and canonical session recording."],
-  ["rhen-research-agent", "Railway", "ONLINE", "Bounded research review service. Research cannot directly mutate live trading."],
-  ["rhen-research-scheduler", "Railway", "READY", "DST-safe scheduled daily research cadence and catch-up orchestration."],
-  ["rhen-preopen-state", "Railway", "ONLINE", "Pre-open state preparation and readiness support."],
-  ["trading-public-feed", "Railway / Cloudflare", "OFFLINE_BY_DESIGN", "Railway-native feed exists; public telemetry stays offline during the rebuild."],
-  ["trading-report-read", "Railway", "VERIFYING", "Private canonical PostgreSQL report/evidence reads; report latency verification remains open."],
-  ["research-agent-gateway", "Railway", "ACTIVE", "Bounded canonical evidence gateway for the Research Agent."],
-  ["anevum.com", "Cloudflare", "ACTIVE", "Public system, research, record, performance, and authenticated Command surfaces."],
-  ["IREN / Slack", "Slack", "ACTIVE", "Operational alerts, completion notices, research notes, and cross-system coordination."]
+  ["rhen", "Railway", "ONLINE", "Canonical RHEN V4.3 runtime: equity execution, Core/Store, IREN, GRAEN, VELUM, NOSTRA, Research Agent, scheduler, and internal APIs."],
+  ["RHEN Core / SQLite", "Railway volume", "ACTIVE", "Bounded canonical scheduler, research, incident, telemetry, and evidence state with retention, reclaimable-space accounting, and compaction."],
+  ["anevum.com", "Cloudflare", "ACTIVE", "Public system, Field Notes, Releases, Live Terminal, and authenticated Command surfaces."],
+  ["Command", "Cloudflare Access", "PROTECTED", "Private operator surface reading canonical RHEN and IREN state; no parallel control model."],
+  ["Alpaca", "Broker / market data", "ACTIVE", "Long U.S. equity and ETF execution plus bounded market discovery and exchange-calendar truth."],
+  ["IREN / Slack", "Slack", "ACTIVE", "Operational alerts, failures, blockers, research/release review notices, and actions requiring attention."]
 ] as const;

@@ -61,10 +61,11 @@ export function ageText(stamp?: string | null, now = Date.now()) {
 }
 export function runtimeOwner(row: RuntimeRow): SystemName | null {
   const key = [row.service_id, row.service_name, row.runtime_kind].join(" ").toLowerCase();
+  if (/crypto[-_ ]?edge|crypto[-_ ]?research|graen[-_ ]?research[-_ ]?executor/.test(key)) return null;
   if (/velum/.test(key)) return "VELUM";
   if (/nostra/.test(key)) return "NOSTRA";
   if (/iren|foundation|research[-_ ]?scheduler/.test(key)) return "IREN";
-  if (/graen|crypto[-_ ]?edge|research[-_ ]?agent/.test(key)) return "GRAEN";
+  if (/graen|research[-_ ]?agent/.test(key)) return "GRAEN";
   if (/rhen|alpaca[-_ ]?trader|preopen/.test(key)) return "RHEN";
   return null;
 }

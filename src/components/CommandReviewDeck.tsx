@@ -34,6 +34,7 @@ export default function CommandReviewDeck({
   const candidate = pipeline?.candidate;
   const validation = pipeline?.validation;
   const release = pipeline?.release_gate;
+  const readiness = pipeline?.evidence_readiness;
   const autonomy = control?.autonomy || {};
   const dailyMetrics = record(daily?.metrics);
   const dailyClass = record(daily?.classification);
@@ -65,6 +66,25 @@ export default function CommandReviewDeck({
           <small>{control?.work_credit_recommended ? "Use a deliberate Work / Codex pass below." : "Automation may continue within frozen boundaries."}</small>
         </div>
       </section>
+
+      <article className="command-v4-card command-v4-evidence-readiness">
+        <header>
+          <div><span>FORWARD EVIDENCE READINESS</span><strong>{displayState(readiness?.state || "AWAITING_MEASURABLE_COHORT")}</strong></div>
+          <small>{readiness?.latest_observed_at ? ageText(readiness.latest_observed_at, now) : "Awaiting first measurable post-fix cycle"}</small>
+        </header>
+        <div className="command-v4-metrics">
+          <div><span>CANDIDATES</span><strong>{readiness?.candidate_count ?? 0}</strong></div>
+          <div><span>MEASURABLE</span><strong>{readiness?.measurement_ready_count ?? 0}</strong></div>
+          <div><span>COVERAGE</span><strong>{readiness?.measurement_ready_rate_pct == null ? "—" : readiness.measurement_ready_rate_pct.toFixed(1) + "%"}</strong></div>
+          <div><span>RECENT CYCLES</span><strong>{readiness?.sampled_cycles ?? 0}</strong></div>
+        </div>
+        <p className="command-v4-note">
+          Contract: <strong>{text(readiness?.measurement_contract, "exact_decision_price_plus_completed_bar_time").replaceAll("_", " ")}</strong>.
+          {" "}Missing decision price {readiness?.missing_reference_price_count ?? 0}; missing completed-bar time {readiness?.missing_bar_time_count ?? 0}.
+          {" "}Legacy gaps remain unmeasurable rather than reconstructed.
+        </p>
+        <p className="command-v4-note"><strong>Next:</strong> {readiness?.next_action || "Collect the first post-fix live decision cycle before evaluating forward-outcome coverage."}</p>
+      </article>
 
       <div className="command-v4-two">
         <article className="command-v4-card">

@@ -226,7 +226,7 @@ function publicRouteMetadata(pathname) {
   const staticRoutes = {
     "/": {
       title: "ANEVUM — RHEN Unified Runtime + Command",
-      description: "ANEVUM runs RHEN v3 as one unified Railway runtime with isolated execution, control, research, replay, forecast, Core/Store, and research-worker modules. Command is the protected operating surface, with execution authority shown explicitly from canonical runtime state."
+      description: "ANEVUM runs RHEN V4.3 as one canonical Railway runtime with explicit execution, control, research, replay, forecast, and Core/Store boundaries. Command is the protected operating surface, and broker authority is limited to the current equity scope."
     },
     "/products": {
       title: "Products — ANEVUM",
@@ -254,7 +254,7 @@ function publicRouteMetadata(pathname) {
     },
     "/performance": {
       title: "Performance — ANEVUM",
-      description: "Separate public-safe live performance records for RHEN equities and crypto market lanes, with normalized methodology, sample boundaries, and no simulated results."
+      description: "Public-safe normalized RHEN equity performance and evidence records, with explicit sample boundaries and no simulated or replay results mixed into live performance."
     },
     "/research": {
       title: "Field Notes — ANEVUM",
@@ -270,7 +270,7 @@ function publicRouteMetadata(pathname) {
     },
     "/live": {
       title: "RHEN Live Terminal — ANEVUM",
-      description: "Observe RHEN v3 through public-safe execution, control, research, replay, forecast, evidence, validation, and normalized performance projections."
+      description: "Observe RHEN V4.3 through public-safe equity execution, control, research, replay, forecast, evidence, validation, and normalized performance projections."
     },
     "/theory": {
       title: "Theory Registry — ANEVUM",

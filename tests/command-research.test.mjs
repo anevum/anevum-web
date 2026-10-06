@@ -87,3 +87,17 @@ test("Strategy lifecycle exposes read-only forward evidence readiness", () => {
   assert.match(pipeline, /missing_bar_time_count/);
   assert.match(pipeline, /read only/);
 });
+
+
+test("Command Review renders the V4.3 measurable forward-evidence gate", () => {
+  const review = readFileSync(new URL("../src/components/CommandReviewDeck.tsx", import.meta.url), "utf8");
+  const topology = readFileSync(new URL("../src/lib/runtime-topology.ts", import.meta.url), "utf8");
+
+  assert.match(review, /FORWARD EVIDENCE READINESS/);
+  assert.match(review, /AWAITING_MEASURABLE_COHORT/);
+  assert.match(review, /exact_decision_price_plus_completed_bar_time/);
+  assert.match(review, /Legacy gaps remain unmeasurable rather than reconstructed/);
+  assert.match(review, /missing_reference_price_count/);
+  assert.match(review, /missing_bar_time_count/);
+  assert.match(topology, /evidence_readiness\?: StrategyEvidenceReadinessProjection/);
+});

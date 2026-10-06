@@ -20,7 +20,7 @@ const titles: Record<string, string> = {
   "/": "ANEVUM — RHEN + Command",
   "/live": "RHEN Live Terminal — ANEVUM",
   "/research": "Field Notes — ANEVUM",
-  "/architecture": "RHEN v3 Architecture — ANEVUM",
+  "/architecture": "RHEN V4.3 Architecture — ANEVUM",
   "/founder": "About ANEVUM — Devon Akins",
   "/resume": "Devon Akins — Résumé",
   "/releases": "Releases — ANEVUM",
@@ -29,10 +29,10 @@ const titles: Record<string, string> = {
 };
 
 const descriptions: Record<string, string> = {
-  "/": "ANEVUM builds RHEN, an inspectable automated trading and research system. The canonical RHEN runtime isolates execution, control, research, replay, forecast, and Core/Store responsibilities; a separate BTC paper canary is retained only for paper execution and forward evidence. Command is the protected operating surface.",
+  "/": "ANEVUM builds RHEN, an inspectable equity trading and research system. RHEN V4.3 consolidates execution, control, research, replay, forecast, and Core/Store responsibilities in one canonical runtime while keeping broker authority narrow and evidence boundaries explicit. Command is the protected operating surface.",
   "/live": "Observe RHEN through public-safe execution, control, research, replay, forecast, evidence, validation, and normalized performance projections without exposing private account or strategy details.",
   "/research": "Read ANEVUM Field Notes: research decisions, failed hypotheses, engineering changes, releases, and measured evidence.",
-  "/architecture": "RHEN v3 architecture: one canonical Railway runtime, named internal modules, an isolated BTC paper canary, bounded SQLite Core, protected promotion, and narrow live broker authority.",
+  "/architecture": "RHEN V4.3 architecture: one canonical Railway runtime, named internal modules, bounded SQLite Core, equity-only broker authority, protected research review, and exact forward-evidence measurement.",
   "/founder": "About ANEVUM and founder Devon Akins, building inspectable software systems, automated trading infrastructure, research tooling, forecasting, replay, telemetry, and production controls.",
   "/resume": "Résumé for Devon Akins, founder of ANEVUM, covering software systems, infrastructure, research tooling, mathematics, and production engineering.",
   "/releases": "ANEVUM release records documenting RHEN versions, production changes, verification, and public system history."

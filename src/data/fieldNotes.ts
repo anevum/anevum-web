@@ -23,6 +23,77 @@ export type FieldNote = {
 
 export const fieldNotes: FieldNote[] = [
   {
+    slug: "rhen-v4-3-canonical-equity-evidence",
+    date: "2026-10-06",
+    type: "RELEASE",
+    status: "DEPLOYED / EVIDENCE GATE OPEN",
+    title: "RHEN V4.3 narrows authority and raises the evidence standard",
+    summary: "RHEN V4.3 retires active crypto research, expands equity discovery and 24/5 market coverage, validates shadow economics and allocation post-event, and refuses to reconstruct missing decision-time inputs for forward outcomes.",
+    systems: ["RHEN", "IREN", "GRAEN", "VELUM", "NOSTRA"],
+    readMinutes: 6,
+    featured: true,
+    sections: [
+      {
+        heading: "What V4.3 changes",
+        body: [
+          "RHEN is now explicitly equity-first. Current broker authority is limited to long U.S. equities and ETFs, with regular-session execution and a separate 24/5 extended-equity lane whose authorization is visible rather than implied.",
+          "Whole-market discovery uses bounded Alpaca screeners and dynamic-universe logic to expand the opportunity pool without turning every listed asset into an expensive full-history request."
+        ]
+      },
+      {
+        heading: "What was retired",
+        body: [
+          "Crypto execution, crypto research lanes, the BTC paper canary, and the retired adaptive research executor are historical evidence only. They are filtered from current control, research, and website projections rather than being shown as dormant current capabilities.",
+          "The canonical scheduler no longer calls the removed adaptive executor. That stale workflow was the source of repeated IREN ConnectError incidents after the V4 cleanup."
+        ]
+      },
+      {
+        heading: "The new evidence boundary",
+        body: [
+          "A candidate enters the post-fix measurable cohort only when RHEN preserved the exact decision reference price and the timestamp of the completed decision bar. Forward outcomes mature later at declared horizons; they do not rewrite the original decision.",
+          "October 6 contains 2,445 legacy candidates that cannot meet that standard: 1,746 lack the original decision-bar timestamp and 699 lack the original decision reference price. V4.3 does not infer or backfill those values."
+        ]
+      },
+      {
+        heading: "What happens next",
+        body: [
+          "The system is deliberately in AWAITING_MEASURABLE_COHORT until the first live post-fix equity decision cycle. The next valid question is whether new candidates enter the cohort at effectively complete coverage and produce mature 10- and 15-minute outcomes.",
+          "Only after that evidence exists should shadow economics, shadow allocation, or the production strategy be judged again."
+        ]
+      }
+    ],
+    reproduce: {
+      question: "Can RHEN expand equity coverage and research depth while preserving exact no-lookahead evidence and narrow live authority?",
+      inputs: [
+        "The deployed RHEN V4.3 source",
+        "The successful RHEN V4.3 Railway deployment",
+        "Canonical scheduler v1.0.10",
+        "Daily research rhen-daily-v1.7",
+        "Candidate decision reference price and completed-bar timestamp",
+        "Post-event 10- and 15-minute outcomes"
+      ],
+      method: [
+        "Retire crypto-specific current-state projections and stale adaptive scheduler work.",
+        "Keep live authority scoped to long U.S. equities and ETFs.",
+        "Expand candidate discovery through bounded hierarchical Alpaca screening.",
+        "Persist exact decision-time price and completed-bar evidence for new candidates.",
+        "Evaluate shadow economics and shadow allocation only after forward outcomes mature."
+      ],
+      checks: [
+        "No retired crypto or BTC runtime is represented as a current active lane.",
+        "Research, replay, forecasting, and control retain no broker-order authority.",
+        "New measurable candidates contain both exact decision price and completed-bar timestamp.",
+        "Legacy candidates missing those fields remain explicitly unmeasurable.",
+        "Forward outcomes are attached after the decision and cannot alter the original record."
+      ],
+      expected: "V4.3 should produce a clean post-fix equity cohort whose evidence can be evaluated without reconstruction, hindsight, or hidden authority expansion.",
+      limits: [
+        "The first post-fix cohort had not yet occurred at release freeze because the evidence repair landed after the October 6 regular session.",
+        "A clean evidence pipeline does not establish profitability; additional independent sessions are required before strategy conclusions."
+      ]
+    }
+  },
+  {
     slug: "rhen-v3-unified-runtime-rebuild",
     date: "2026-10-05",
     type: "SYSTEMS",
@@ -31,7 +102,7 @@ export const fieldNotes: FieldNote[] = [
     summary: "ANEVUM is replacing an over-fragmented service topology with one RHEN Railway application service containing isolated execution, control, research, replay, forecast, Core/Store, research-worker, and Command/API modules.",
     systems: ["RHEN"],
     readMinutes: 6,
-    featured: true,
+    featured: false,
     sections: [
       {
         heading: "What changed",

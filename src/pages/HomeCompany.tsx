@@ -8,7 +8,7 @@ import "../styles/public-terminal.css";
 const introVideoUrl = import.meta.env.VITE_ANEVUM_INTRO_VIDEO_URL?.trim();
 
 const modules: ReadonlyArray<readonly [string, RhenModuleGlyphName, string]> = [
-  ["EXECUTION", "EXECUTION", "RHEN broker-facing equities execution, live BTC signal generation, risk, reconciliation, and durable evidence."],
+  ["EXECUTION", "EXECUTION", "RHEN broker-facing long U.S. equities and ETFs across regular and extended sessions, with risk, reconciliation, and durable evidence."],
   ["IREN / CONTROL", "CONTROL", "Health, incidents, scheduling, orchestration, required-action state, and protected release boundaries."],
   ["GRAEN / RESEARCH", "RESEARCH", "Bounded strategy discovery, chronological evaluation, falsification, and candidate promotion evidence."],
   ["VELUM / REPLAY", "REPLAY", "Independent replay, friction stress, delay stress, simulation, and counterfactual verification."],
@@ -29,8 +29,8 @@ export default function HomeCompany() {
           <h1>One system. Clear evidence.</h1>
           <p>
             ANEVUM builds RHEN, an inspectable automated trading and research system. RHEN operates
-            equities execution, a live BTC signal lane, durable evidence, strategy research, replay,
-            forecasting, and control. Command is the protected operator surface; the Live Terminal is
+            equity execution across regular and extended sessions, whole-market discovery, durable evidence,
+            strategy research, replay, forecasting, and control. Command is the protected operator surface; the Live Terminal is
             the sanitized public view into what the system is actually doing.
           </p>
 
@@ -44,7 +44,7 @@ export default function HomeCompany() {
             <span>RHEN PUBLIC EVIDENCE</span>
             <strong>{loading ? "CONNECTING" : error ? "DEGRADED" : displayState(rhen.raw).toUpperCase()}</strong>
             <span>·</span>
-            <span>1 CANONICAL RUNTIME + ISOLATED PAPER CANARY</span>
+            <span>1 CANONICAL RHEN RUNTIME · EQUITY-ONLY AUTHORITY</span>
             <span>·</span>
             <span>UPDATED {ageText(data?.generated_at, now).toUpperCase()}</span>
           </div>
@@ -57,7 +57,7 @@ export default function HomeCompany() {
               <div>
                 <span>CANONICAL PRODUCTION SYSTEM</span>
                 <strong>RHEN</strong>
-                <small>Unified runtime with isolated paper execution</small>
+                <small>Unified runtime · narrow equity broker authority</small>
               </div>
             </div>
             <span className="pt-home-runtime-status"><i />{runtimeStatus}</span>
@@ -91,8 +91,8 @@ export default function HomeCompany() {
           </div>
 
           <footer className="pt-home-runtime-guardrails">
-            <div><span>LIVE BTC</span><strong>SIGNAL-ONLY</strong></div>
-            <div><span>PAPER BTC</span><strong>ISOLATED CANARY</strong></div>
+            <div><span>LIVE EQUITIES</span><strong>AUTHORIZED</strong></div>
+            <div><span>EXTENDED 24/5</span><strong>AUTHORITY EXPLICIT</strong></div>
             <div><span>RESEARCH</span><strong>NO AUTO-LIVE PROMOTION</strong></div>
           </footer>
         </div>
@@ -105,9 +105,9 @@ export default function HomeCompany() {
             <h2>RHEN is the production system. The modules keep distinct responsibilities.</h2>
             <p>
               IREN, GRAEN, VELUM, and NOSTRA operate as named modules inside the canonical RHEN runtime,
-              not as separate product stacks. An isolated BTC paper canary remains a second Railway service
-              specifically for paper execution and forward evidence; it cannot grant live broker-write authority.
-              This keeps deployment simple without collapsing research, replay, control, and execution into one permission set.
+              not as separate product stacks. Live broker authority is confined to RHEN execution and the current
+              long U.S. equities / ETF scope. This keeps deployment simple without collapsing research, replay,
+              forecasting, control, and execution into one permission set.
             </p>
           </div>
         </header>
@@ -130,7 +130,7 @@ export default function HomeCompany() {
           <div>
             <h2>Command is the operating product. RHEN is the system underneath it.</h2>
             <p>
-              Command is the protected surface for account state, trading lanes, strategy authority,
+              Command is the protected surface for account state, regular and extended equity lanes, strategy authority,
               risk, research, replay, forecasting, incidents, and required action. It reads canonical
               RHEN state instead of maintaining a parallel control model, and it keeps broker-write
               authority explicit rather than inferring it from a healthy process or active strategy.
@@ -156,31 +156,31 @@ export default function HomeCompany() {
         <header className="pt-home-section-head">
           <span>02 / CURRENT STATE</span>
           <div>
-            <h2>One canonical runtime, one isolated paper canary, one evidence model.</h2>
+            <h2>One canonical runtime. One evidence model. Explicit authority.</h2>
             <p>
-              RHEN v3 runs the canonical production supervisor, execution boundary, Core/Store, IREN control,
+              RHEN V4.3 runs the production supervisor, execution boundary, Core/Store, IREN control,
               GRAEN research, VELUM replay, and NOSTRA forecasting in one Railway application service backed by
-              bounded SQLite state at /data/rhen-core.db. The separate BTC paper canary consumes only validated
-              paper assignments and remains isolated from live execution authority.
+              bounded SQLite state at /data/rhen-core.db. The current execution authority is equity-only, while
+              research and replay remain unable to promote themselves into live broker behavior.
             </p>
           </div>
         </header>
 
         <div className="pt-home-links">
           <Link to="/architecture">
-            <span>RHEN V3</span>
+            <span>RHEN V4.3</span>
             <strong>Canonical production runtime</strong>
             <p>One supervised runtime with isolated internal responsibilities, bounded state, evidence retention, and narrow broker authority.</p>
           </Link>
           <Link to="/research">
             <span>GRAEN → VELUM</span>
-            <strong>Research must earn forward paper</strong>
-            <p>Bounded candidates move through chronological evidence, independent replay, friction stress, and paper-only forward evaluation.</p>
+            <strong>Research must earn release review</strong>
+            <p>Bounded candidates move through chronological evidence, independent replay, friction stress, exact forward outcomes, and a protected release boundary.</p>
           </Link>
           <Link to="/command/overview">
             <span>COMMAND</span>
             <strong>Protected operating console</strong>
-            <p>Live account state, equities and crypto lanes, risk, research, replay, forecasting, incidents, and raw events in one surface.</p>
+            <p>Live account state, regular and extended equities, risk, research, replay, forecasting, incidents, evidence readiness, and raw events in one surface.</p>
           </Link>
         </div>
       </section>

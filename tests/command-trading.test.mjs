@@ -19,7 +19,7 @@ test("Command exposes four canonical operator workspaces", () => {
   assert.doesNotMatch(command, />Trading</);
 });
 
-test("Operate workspace exposes broker truth and all active trading lanes", () => {
+test("Operate workspace exposes broker truth and current equity trading lanes", () => {
   const command = readFileSync(new URL("../src/pages/Command.tsx", import.meta.url), "utf8");
   const tracker = readFileSync(new URL("../src/components/CommandAccountTracker.tsx", import.meta.url), "utf8");
   const lanes = readFileSync(new URL("../src/components/CommandTradingLanes.tsx", import.meta.url), "utf8");
@@ -34,13 +34,14 @@ test("Operate workspace exposes broker truth and all active trading lanes", () =
   assert.match(tracker, /B = buy · S = sell/);
   assert.match(data, /account_history\?: CommandAccountHistory/);
   assert.match(data, /universe\?: CommandUniverse \| null/);
-  assert.match(data, /crypto_live\?: CommandCryptoLane \| null/);
   assert.match(data, /extended_equity\?: CommandExtendedEquityLane \| null/);
   assert.match(lanes, /EQUITIES \/ LIVE/);
   assert.match(lanes, /EQUITIES \/ EXTENDED 24\/5/);
-  assert.match(lanes, /CRYPTO \/ REAL ACCOUNT/);
-  assert.match(lanes, /CRYPTO \/ PAPER CANARY/);
+  assert.doesNotMatch(lanes, /CRYPTO \/ REAL ACCOUNT/);
+  assert.doesNotMatch(lanes, /CRYPTO \/ PAPER CANARY/);
+  assert.doesNotMatch(lanes, /crypto_live|crypto_paper|CommandCryptoLane|BTC\/USD/);
   assert.match(lanes, /BROKER WRITES/);
+  assert.match(lanes, /long U\.S\. equities \/ ETFs/);
 });
 
 test("Review workspace owns the deliberate Work handoff", () => {
@@ -117,4 +118,31 @@ test("Command deployment config has no retired Foundation or Vercel runtime path
     assert.doesNotMatch(source, /vercel/i);
   }
   assert.match(deploy, /Deploy to Cloudflare Workers/);
+});
+
+
+test("V4.3 active website and Command surfaces cannot resurrect retired crypto or V3 state", () => {
+  const activeSources = [
+    "../src/App.tsx",
+    "../src/pages/HomeCompany.tsx",
+    "../src/pages/Architecture.tsx",
+    "../src/pages/ResearchHub.tsx",
+    "../src/pages/Live.tsx",
+    "../src/components/CommandTradingLanes.tsx",
+    "../src/components/CommandResearchLab.tsx",
+    "../src/data/products.ts",
+    "../src/components/Shell.tsx"
+  ].map(path => readFileSync(new URL(path, import.meta.url), "utf8")).join("\n");
+
+  assert.doesNotMatch(activeSources, /BTC|CRYPTO \/|paper canary|RHEN v3/i);
+  assert.match(activeSources, /RHEN V4\.3/);
+  assert.match(activeSources, /EXTENDED 24\/5|extended equity/i);
+
+  const registry = JSON.parse(readFileSync(new URL("../src/data/releases.json", import.meta.url), "utf8"));
+  const current = registry.releases.find((release) => release.slug === registry.currentSlug);
+  assert.equal(current.version, "4.3.0");
+  assert.equal(current.codename, "MERIDIAN");
+  assert.equal(current.sourceCommit, "c4058241bcd9d7de616dcef3e534bc82b7c999ef");
+  assert.equal(current.productionDeployment, "a46b8f66-c4e3-48d5-8556-7a7d68df7413");
+  assert.match(current.next, /first post-fix live equity cohort/i);
 });

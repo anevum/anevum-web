@@ -352,7 +352,7 @@ export default function CommandResearchLab({
       </header>
 
       <section className="research-observability-summary">
-        <div><span>ACTIVE RUNS</span><strong>{activeRuns}</strong><small>GRAEN / VELUM / NOSTRA / RHEN paper</small></div>
+        <div><span>ACTIVE RUNS</span><strong>{activeRuns}</strong><small>GRAEN / VELUM / NOSTRA / RHEN evidence</small></div>
         <div><span>TRACKED RUNS</span><strong>{runs.length}</strong><small>Most recent persisted research evidence</small></div>
         <div><span>CHARTABLE</span><strong>{chartableRuns}</strong><small>Scan / replay / return evidence series</small></div>
         <div><span>POLL</span><strong>{projection?.poll_seconds ?? 3}s</strong><small>Shared canonical IREN observation</small></div>

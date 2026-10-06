@@ -296,7 +296,7 @@ async function runCase(route, viewport) {
     const required=["EXECUTION","CONTROL","RESEARCH","REPLAY","FORECAST","CORE / STORE","RESEARCH WORKER","COMMAND / API"];
     const missingLabels=required.filter((label)=>!(architecture.labels||[]).includes(label));
     if(!architecture.present || architecture.cards!==8 || architecture.missingIcons?.length || architecture.collapsedCards?.length || missingLabels.length) {
-      throw new Error("RHEN v3 architecture geometry/icon failure: "+JSON.stringify({...architecture,missingLabels}));
+      throw new Error("RHEN V4.3 architecture geometry/icon failure: "+JSON.stringify({...architecture,missingLabels}));
     }
   }
 

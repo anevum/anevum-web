@@ -23,7 +23,7 @@ function ProductSpecific({ slug }: { slug: string }) {
     return (
       <div className="product-deep-grid three">
         <article><span>EQUITIES LANE</span><h3>Session-bound live market workflow.</h3><p>Market observation, candidate scoring, risk, execution, reconciliation, and evidence are retained in canonical telemetry.</p></article>
-        <article><span>CRYPTO LANE</span><h3>Continuous market architecture.</h3><p>Crypto has explicit market-lane attribution, feature normalization, execution-adapter versioning, NOSTRA regime research, GRAEN promotion gates, ADS research, and VELUM replay.</p></article>
+        <article><span>EXTENDED EQUITIES</span><h3>Continuous-week equity architecture.</h3><p>RHEN separates regular-session execution from the 24/5 extended-equity lane while preserving one broker account, explicit session attribution, independent authorization, and durable evidence.</p></article>
         <article><span>SEPARATION</span><h3>Live ≠ shadow ≠ replay.</h3><p>Research layers can measure and challenge production behavior, but they do not silently rewrite the original live decision or mix simulated outcomes into the live record.</p></article>
       </div>
     );
