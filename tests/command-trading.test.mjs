@@ -41,14 +41,18 @@ test("Trading workspace exposes private broker account tracking and executions",
   assert.match(lanes, /BROKER WRITES/);
 });
 
-test("IREN Command routes through RHEN instead of Foundation", () => {
+test("IREN Command routes through RHEN as a deterministic zero-cost control plane", () => {
   const worker = readFileSync(new URL("../worker.mjs", import.meta.url), "utf8");
   const dock = readFileSync(new URL("../src/components/CommandIrenDock.tsx", import.meta.url), "utf8");
 
   assert.match(worker, /proxyTrader\(request, "\/v1\/command\/iren\/status", env\)/);
   assert.match(worker, /proxyTrader\(request, "\/v1\/command\/iren\/command", env\)/);
   assert.doesNotMatch(worker, /FOUNDATION_IREN_COMMAND/);
-  assert.match(dock, /Ask IREN…/);
+  assert.match(dock, /ZERO-COST CONTROL PLANE/);
+  assert.match(dock, /No conversational model is running here/);
+  assert.match(dock, /prepare manual Codex/);
+  assert.doesNotMatch(dock, /Ask IREN…/);
+  assert.doesNotMatch(dock, /iren-dock-directive/);
   assert.match(dock, /error[\s\S]*OFFLINE/);
 });
 
@@ -63,6 +67,19 @@ test("Command shares one canonical IREN observation across operator workspaces",
   assert.doesNotMatch(topology, /useCommandObservation\(/);
   assert.doesNotMatch(terminal, /useCommandObservation\(/);
 });
+
+test("Command telemetry normalizes legacy event envelopes and exposes tracking state", () => {
+  const command = readFileSync(new URL("../src/pages/Command.tsx", import.meta.url), "utf8");
+
+  assert.match(command, /runtimeEnvelope/);
+  assert.match(command, /runtimePayload/);
+  assert.match(command, /scanEnvelope/);
+  assert.match(command, /health\.events_24h \?\? health\.events_observed/);
+  assert.match(command, /RUNTIME PROVENANCE/);
+  assert.match(command, /DECISION STREAM/);
+  assert.match(command, /LATEST EVENT/);
+});
+
 
 test("Command network reads are timeout bounded and connection state is terminal", () => {
   const command = readFileSync(new URL("../src/pages/Command.tsx", import.meta.url), "utf8");
