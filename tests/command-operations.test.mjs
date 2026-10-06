@@ -77,3 +77,15 @@ test("public research uses the unified RHEN runtime", () => {
   assert.match(worker, /\/v1\/research\/readiness\/public/);
   assert.match(worker, /\/v1\/research\/theory\/public/);
 });
+
+
+test("operations terminal does not present exhausted research as active work", () => {
+  const source = readFileSync(
+    new URL("../src/components/CommandOperationsTerminal.tsx", import.meta.url),
+    "utf8"
+  );
+  assert.match(source, /ADAPTIVE_PROGRAM_EXHAUSTED/);
+  assert.match(source, /reviewRequired/);
+  assert.match(source, /REVIEW_REQUIRED/);
+  assert.match(source, /Work \/ Codex pass/);
+});
