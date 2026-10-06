@@ -1,7 +1,11 @@
 import { useMemo } from "react";
 import type { CommandAccountHistory } from "../lib/data";
 import { clockTime, money, signedMoney } from "../lib/format";
-import { isRegularEquityMarketTime, projectEquityMarketTimeline } from "../lib/equity-market-time";
+import {
+  isRegularEquityMarketTime,
+  projectEquityMarketTimeline,
+  suppressTransientEquitySpikes
+} from "../lib/equity-market-time";
 
 function numeric(value: unknown) {
   const parsed = Number(value);
@@ -42,16 +46,17 @@ export default function CommandAccountTracker({
       .filter((row): row is { at: string; time: number; equity: number } => Boolean(row));
 
     const projected = projectEquityMarketTimeline(raw);
-    if (projected.length < 2) return null;
+    const cleaned = suppressTransientEquitySpikes(projected);
+    if (cleaned.rows.length < 2) return null;
 
     const width = 1000;
     const top = 18;
     const bottom = 202;
-    const firstTime = projected[0].displayTime;
-    const lastTime = projected[projected.length - 1].displayTime;
+    const firstTime = cleaned.rows[0].displayTime;
+    const lastTime = cleaned.rows[cleaned.rows.length - 1].displayTime;
     const timeSpan = Math.max(1, lastTime - firstTime);
-    const lowValue = Math.min(...projected.map((row) => row.equity));
-    const highValue = Math.max(...projected.map((row) => row.equity));
+    const lowValue = Math.min(...cleaned.rows.map((row) => row.equity));
+    const highValue = Math.max(...cleaned.rows.map((row) => row.equity));
     const observedRange = highValue - lowValue;
     const padding = Math.max(
       0.25,
@@ -62,7 +67,7 @@ export default function CommandAccountTracker({
     const high = highValue + padding;
     const valueSpan = Math.max(0.01, high - low);
 
-    const points: ChartPoint[] = projected.map((row) => ({
+    const points: ChartPoint[] = cleaned.rows.map((row) => ({
       at: row.at,
       time: row.time,
       equity: row.equity,
@@ -109,7 +114,8 @@ export default function CommandAccountTracker({
       first: points[0],
       last: points[points.length - 1],
       low: lowValue,
-      high: highValue
+      high: highValue,
+      suppressedCount: cleaned.suppressedCount
     };
   }, [history?.points, orders]);
 
@@ -127,7 +133,13 @@ export default function CommandAccountTracker({
           <span>BROKER ACCOUNT / PRIVATE</span>
           <strong>Equity + executions</strong>
         </div>
-        <small>{history?.timeframe || "5Min"} · {history?.status === "unavailable" ? "HISTORY UNAVAILABLE" : "LIVE · MARKET GAPS COMPRESSED"}</small>
+        <small>
+          {history?.timeframe || "5Min"} · {history?.status === "unavailable"
+            ? "HISTORY UNAVAILABLE"
+            : chart?.suppressedCount
+              ? `LIVE · ${chart.suppressedCount} TRANSIENT SAMPLE${chart.suppressedCount === 1 ? "" : "S"} SUPPRESSED`
+              : "LIVE · MARKET GAPS COMPRESSED"}
+        </small>
       </header>
 
       <div className="account-tracker-body">
