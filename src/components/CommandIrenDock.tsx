@@ -209,7 +209,7 @@ export default function CommandIrenDock({ session }: { session: RhenSession }) {
             <button type="button" disabled={sending} onClick={() => void send("what's next?")}>next safe action</button>
             <button type="button" disabled={sending} onClick={() => void send("do that")}>run safe action</button>
             <button type="button" disabled={sending} onClick={() => void send("what needs me?")}>needs owner</button>
-            <button type="button" disabled={sending} onClick={() => void send("prepare for Codex")}>prepare manual Codex</button>
+            <button type="button" disabled={sending} onClick={() => void send("prepare for Codex")}>prepare for Codex</button>
             <button type="button" disabled={sending} onClick={() => void send("verify Codex handoff")}>verify handoff</button>
           </div>
         </div>
