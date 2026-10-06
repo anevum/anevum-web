@@ -11,7 +11,7 @@ export const publicWorkLog: PublicWorkLogEntry[] = [
     at: "2026-10-06T23:32:14Z",
     category: "INFRASTRUCTURE",
     title: "RHEN V4.3 canonical runtime deployed",
-    summary: "RHEN production is on commit c4058241 with scheduler v1.0.10. The stale adaptive executor workflow was retired, the unified runtime is healthy, and crypto-specific current research remains quarantined as historical evidence.",
+    summary: "RHEN production is on the deployed V4.3 source with scheduler v1.0.10. The stale adaptive executor workflow was retired, the unified runtime is healthy, and crypto-specific current research remains quarantined as historical evidence.",
     status: "COMPLETE"
   },
   {
