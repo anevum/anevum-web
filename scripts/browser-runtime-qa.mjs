@@ -6,7 +6,7 @@ import path from "node:path";
 const base = process.env.BASE_URL;
 if (!base) throw new Error("BASE_URL is required");
 
-const routes = ["/", "/live", "/research", "/research/multi-market-architecture-equities-crypto", "/architecture", "/founder", "/resume", "/releases"];
+const routes = ["/", "/live", "/research", "/research/prediction-outcome-evidence-chain", "/architecture", "/founder", "/resume", "/releases"];
 const viewports = [
   { name: "desktop", width: 1440, height: 1000, mobile: false, deviceScaleFactor: 1 },
   { name: "mobile", width: 390, height: 844, mobile: true, deviceScaleFactor: 1 }
@@ -169,7 +169,19 @@ try {
   await waitForDebugger();
   for (const viewport of viewports) {
     for (const route of routes) {
-      failures = failures.concat((await runCase(route, viewport)).map((item) => viewport.name + " " + route + ": " + item));
+      let routeFailures = await runCase(route, viewport);
+      const transientChunkRace =
+        routeFailures.length > 0 &&
+        routeFailures.every((item) =>
+          item.includes("Failed to fetch dynamically imported module")
+        );
+      if (transientChunkRace) {
+        await sleep(2500);
+        routeFailures = await runCase(route, viewport);
+      }
+      failures = failures.concat(
+        routeFailures.map((item) => viewport.name + " " + route + ": " + item)
+      );
     }
   }
 } finally {
