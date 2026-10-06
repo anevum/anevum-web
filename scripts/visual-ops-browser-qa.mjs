@@ -260,7 +260,7 @@ async function runCase(route, viewport) {
       const labels=[];
       for(const card of cards) {
         const rect=card.getBoundingClientRect();
-        const icon=card.querySelector(".system-icon");
+        const icon=card.querySelector(".rhen-module-glyph, .system-icon");
         const ir=icon?.getBoundingClientRect();
         const style=icon ? getComputedStyle(icon) : null;
         const label=card.querySelector("strong")?.textContent?.trim() || "";
