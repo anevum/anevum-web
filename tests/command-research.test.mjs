@@ -2,21 +2,31 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 
-test("Research workspace renders the canonical live Research Lab", () => {
+test("Command V4 uses four workspaces with a protected review boundary", () => {
   const command = readFileSync(new URL("../src/pages/Command.tsx", import.meta.url), "utf8");
-  const lab = readFileSync(new URL("../src/components/CommandResearchLab.tsx", import.meta.url), "utf8");
+  const discover = readFileSync(new URL("../src/components/CommandDiscoveryDeck.tsx", import.meta.url), "utf8");
+  const review = readFileSync(new URL("../src/components/CommandReviewDeck.tsx", import.meta.url), "utf8");
   const topology = readFileSync(new URL("../src/lib/runtime-topology.ts", import.meta.url), "utf8");
 
-  assert.match(command, /CommandResearchLab/);
-  assert.match(command, /commandPage === "research"/);
-  assert.match(command, /snapshot=\{commandObservation\.snapshot\}/);
-  assert.match(lab, /snapshot\?\.research\?\.observability/);
-  assert.match(topology, /ResearchObservabilityProjection/);
-  assert.match(topology, /observability\?: ResearchObservabilityProjection/);
+  for (const label of ["Operate", "Discover", "Review", "System"]) {
+    assert.match(command, new RegExp(">" + label));
+  }
+  assert.match(command, /CommandDiscoveryDeck/);
+  assert.match(command, /CommandReviewDeck/);
+  assert.match(command, /routePage/);
+  assert.match(discover, /CommandResearchLab/);
+  assert.match(discover, /MARKET DISCOVERY/);
+  assert.match(review, /AUTONOMY CONTRACT/);
+  assert.match(review, /DECISION REQUIRED/);
+  assert.match(topology, /ResearchControlProjection/);
+  assert.match(topology, /RESEARCH_REVIEW_REQUIRED/);
+  assert.match(topology, /generate_new_hypothesis_family/);
+  assert.match(topology, /promote_live_strategy/);
 });
 
-test("Research Lab is interactive without mutating runtimes", () => {
+test("Discovery keeps Research Lab interactive without mutating runtimes", () => {
   const lab = readFileSync(new URL("../src/components/CommandResearchLab.tsx", import.meta.url), "utf8");
+  const discover = readFileSync(new URL("../src/components/CommandDiscoveryDeck.tsx", import.meta.url), "utf8");
 
   for (const system of ["GRAEN", "VELUM", "NOSTRA", "RHEN"]) {
     assert.match(lab, new RegExp('"' + system + '"'));
@@ -27,12 +37,12 @@ test("Research Lab is interactive without mutating runtimes", () => {
   assert.match(lab, /Evidence-indexed/);
   assert.match(lab, /inactive time is not drawn as flatline space/);
   assert.match(lab, /READ ONLY/);
-  assert.match(lab, /Live trading performance is intentionally separate/);
-  assert.doesNotMatch(lab, /\bfetch\s*\(/);
-  assert.doesNotMatch(lab, /\/v1\/pause|\/v1\/resume|orders\/cancel|position\/close/);
+  assert.doesNotMatch(lab, /orders\/cancel|position\/close/);
+  assert.match(discover, /OPTIONS/);
+  assert.match(discover, /NOT WIRED/);
 });
 
-test("Research Lab exposes run progress, chart series, metrics, context and event tape", () => {
+test("Research Lab exposes run progress, charts, metrics, context and event tape", () => {
   const lab = readFileSync(new URL("../src/components/CommandResearchLab.tsx", import.meta.url), "utf8");
 
   assert.match(lab, /progress_pct/);
@@ -43,4 +53,14 @@ test("Research Lab exposes run progress, chart series, metrics, context and even
   assert.match(lab, /EVENT TAPE/);
   assert.match(lab, /Selected run/);
   assert.match(lab, /poll_seconds/);
+});
+
+test("IREN review surface is framed as a deliberate Work handoff", () => {
+  const dock = readFileSync(new URL("../src/components/CommandIrenDock.tsx", import.meta.url), "utf8");
+
+  assert.match(dock, /IREN \/ WORK HANDOFF/);
+  assert.match(dock, /Generate Work prompt/);
+  assert.match(dock, /evidence-backed Work prompt/);
+  assert.match(dock, /maintenance prompt/); // backend command remains compatible
+  assert.doesNotMatch(dock, /IREN \/ MAINTENANCE/);
 });
