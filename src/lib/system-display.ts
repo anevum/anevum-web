@@ -5,11 +5,11 @@ export const SYSTEMS = ["IREN", "RHEN", "GRAEN", "NOSTRA", "VELUM"] as const;
 export type SystemName = typeof SYSTEMS[number];
 export type Tone = "good" | "active" | "warn" | "bad" | "quiet";
 export const IDENTITY = {
-  IREN: { role: "Control module", accent: "🧭", slack: ":iren:", color: "#6EA1FF" },
-  RHEN: { role: "Execution module", accent: "📈", slack: ":rhen:", color: "#6FD1FF" },
-  GRAEN: { role: "Research module", accent: "📐", slack: ":graen:", color: "#D0B37A" },
-  NOSTRA: { role: "Forecast module", accent: "🔮", slack: ":nostra:", color: "#A99BE8" },
-  VELUM: { role: "Replay module", accent: "⏱", slack: ":velum:", color: "#56B8BC" }
+  IREN: { role: "Control module", accent: "CONTROL", slack: ":rhen:", color: "#8FB6D2" },
+  RHEN: { role: "Execution module", accent: "EXECUTION", slack: ":rhen:", color: "#8FB6D2" },
+  GRAEN: { role: "Research module", accent: "RESEARCH", slack: ":rhen:", color: "#8FB6D2" },
+  NOSTRA: { role: "Forecast module", accent: "FORECAST", slack: ":rhen:", color: "#8FB6D2" },
+  VELUM: { role: "Replay module", accent: "REPLAY", slack: ":rhen:", color: "#8FB6D2" }
 } as const;
 
 export const MODULE_LABEL: Record<SystemName, string> = {
