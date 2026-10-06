@@ -24,7 +24,7 @@ export const SEMANTIC = { health: "✓", warning: "!", critical: "×", live: "�
 const LABELS: Record<string, string> = {
   HEALTHY: "Healthy", RUNNING: "Active", ACTIVE: "Active", CANONICAL_CONTROL_STATE: "Control active",
   LIVE_TELEMETRY: "Live telemetry", LIVE_BASELINE: "Baseline tracking", READY: "Ready",
-  IDLE: "Legacy idle", WAITING_FOR_WORK: "Waiting for work", OFFLINE: "Offline", OFFLINE_BY_DESIGN: "Offline by design",
+  IDLE: "Waiting for work", WAITING_FOR_WORK: "Waiting for work", OFFLINE: "Offline", OFFLINE_BY_DESIGN: "Offline by design",
   STALE: "Data stale", DEGRADED: "Needs attention", WAITING: "Waiting", BLOCKED: "Blocked",
   NEEDS_APPROVAL: "Needs approval", ATTENTION_REQUIRED: "Needs attention", CRITICAL: "Critical",
   FAILED: "Failed", CRASHED: "Offline", UNAVAILABLE: "Unavailable", UNKNOWN: "Unverified",
