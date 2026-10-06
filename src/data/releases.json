@@ -1,11 +1,11 @@
 {
   "schemaVersion": 2,
-  "currentSlug": "rhen-4-3-canonical",
+  "currentSlug": "rhen-4-3-0-meridian",
   "releases": [
     {
-      "slug": "rhen-4-3-canonical",
-      "version": "4.3",
-      "codename": "CANONICAL",
+      "slug": "rhen-4-3-0-meridian",
+      "version": "4.3.0",
+      "codename": "MERIDIAN",
       "lifecycle": "Operational V4.3",
       "releaseClass": "Canonical Major Update",
       "date": "2026-10-06",
@@ -15,7 +15,7 @@
       "sourceCommit": "c4058241bcd9d7de616dcef3e534bc82b7c999ef",
       "productionDeployment": "a46b8f66-c4e3-48d5-8556-7a7d68df7413",
       "activeStrategy": "LIVE-2026-09-25-003 / rolling_momentum_vwap",
-      "pdfPath": "",
+      "pdfPath": "/releases/RHEN-4.3.0-MERIDIAN.pdf",
       "badges": [
         "LIVE EQUITIES",
         "24/5 EQUITY COVERAGE",
