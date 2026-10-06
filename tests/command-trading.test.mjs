@@ -50,7 +50,7 @@ test("IREN Command routes through RHEN as a deterministic zero-cost control plan
   assert.doesNotMatch(worker, /FOUNDATION_IREN_COMMAND/);
   assert.match(dock, /ZERO-COST CONTROL PLANE/);
   assert.match(dock, /No conversational model is running here/);
-  assert.match(dock, /prepare manual Codex/);
+  assert.match(dock, /prepare for Codex/);
   assert.doesNotMatch(dock, /Ask IREN…/);
   assert.doesNotMatch(dock, /iren-dock-directive/);
   assert.match(dock, /error[\s\S]*OFFLINE/);
