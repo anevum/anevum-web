@@ -120,13 +120,10 @@ export default function Live() {
   const graen = views.find((view) => view.name === "GRAEN");
   const velum = views.find((view) => view.name === "VELUM");
   const rhen = views.find((view) => view.name === "RHEN");
+  const iren = views.find((view) => view.name === "IREN");
+  const nostra = views.find((view) => view.name === "NOSTRA");
 
   const pipeline = [
-    {
-      label: "Hypothesis",
-      state: data?.research?.current_focus ? "RECORDED" : "WAITING",
-      detail: data?.research?.current_focus || "No public focus"
-    },
     {
       label: "Research",
       state: graen?.activityState || "UNAVAILABLE",
@@ -143,12 +140,12 @@ export default function Live() {
       detail: data?.crypto_shadow_validation?.study_name || "Public research gate"
     },
     {
-      label: "Execution",
+      label: "Production",
       state: rhen?.activityState || "UNAVAILABLE",
       detail: rhen?.activity || "Market system unavailable"
     },
     {
-      label: "Evidence",
+      label: "Record",
       state: data?.performance?.status || "UNAVAILABLE",
       detail: data?.performance?.sample_state || "Normalized record"
     }
@@ -220,32 +217,77 @@ export default function Live() {
                 </div>
               </div>
             ) : (
-              <div className="pt-map" aria-label="Current RHEN module operating picture">
-                {views.map((view) => (
-                  <button
-                    key={view.name}
-                    type="button"
-                    className={"pt-map-card pt-map-" + view.name.toLowerCase()}
-                    data-active={view.active}
-                    onClick={() => setSelected(view.name)}
-                  >
-                    <SystemIcon system={view.name} size={view.name === "IREN" ? "lg" : "md"} />
-                    <div className="pt-map-card-copy">
-                      <strong>{MODULE_LABEL[view.name]}</strong>
-                      <span>{IDENTITY[view.name].role} · {displayState(view.activityState)}</span>
-                      <small>{view.activity}</small>
+              <div className="pt-operating-grid" aria-label="Current RHEN operating hierarchy">
+                <section className="pt-operating-panel is-execution">
+                  <header>
+                    <div>
+                      <span>01 / EXECUTION</span>
+                      <strong>RHEN</strong>
                     </div>
-                    <i className={"pt-state-pip tone-" + stateTone(view.raw)} aria-hidden="true" />
-                  </button>
-                ))}
+                    <i className={"pt-state-pip tone-" + stateTone(rhen?.raw)} aria-hidden="true" />
+                  </header>
+                  <p>{rhen?.activity || "Execution observation unavailable."}</p>
+                  <div className="pt-operating-facts">
+                    <div><span>Strategy</span><strong>{data?.active_strategy?.version_id || data?.active_strategy?.strategy_name || "UNAVAILABLE"}</strong></div>
+                    <div><span>Environment</span><strong>{displayState(data?.active_strategy?.environment || "production")}</strong></div>
+                    <div><span>Events · 60m</span><strong>{count(data?.telemetry?.events_60m)}</strong></div>
+                    <div><span>Errors · 2h</span><strong>{count(data?.telemetry?.errors_2h)}</strong></div>
+                  </div>
+                  <button type="button" onClick={() => setSelected("RHEN")}>Inspect execution →</button>
+                </section>
+
+                <section className="pt-operating-panel is-research">
+                  <header>
+                    <div>
+                      <span>02 / RESEARCH + VERIFICATION</span>
+                      <strong>GRAEN → VELUM</strong>
+                    </div>
+                    <i className={"pt-state-pip tone-" + stateTone(graen?.raw)} aria-hidden="true" />
+                  </header>
+                  <div className="pt-operating-module-list">
+                    <button type="button" onClick={() => setSelected("GRAEN")}>
+                      <span>GRAEN</span><strong>{displayState(graen?.activityState)}</strong><small>{graen?.activity || "No public research observation."}</small>
+                    </button>
+                    <button type="button" onClick={() => setSelected("VELUM")}>
+                      <span>VELUM</span><strong>{displayState(velum?.activityState)}</strong><small>{velum?.activity || "No public replay observation."}</small>
+                    </button>
+                  </div>
+                  <div className="pt-operating-facts">
+                    <div><span>Research state</span><strong>{displayState(data?.research?.current_status)}</strong></div>
+                    <div><span>Validation</span><strong>{displayState(data?.crypto_shadow_validation?.status)}</strong></div>
+                  </div>
+                  <p>{data?.research?.current_focus || "No current public research focus is recorded."}</p>
+                </section>
+
+                <section className="pt-operating-panel is-control">
+                  <header>
+                    <div>
+                      <span>03 / CONTROL + EVIDENCE</span>
+                      <strong>IREN / NOSTRA</strong>
+                    </div>
+                    <i className={"pt-state-pip tone-" + stateTone(iren?.raw)} aria-hidden="true" />
+                  </header>
+                  <div className="pt-operating-module-list">
+                    <button type="button" onClick={() => setSelected("IREN")}>
+                      <span>IREN</span><strong>{displayState(iren?.activityState)}</strong><small>{iren?.activity || "No public control observation."}</small>
+                    </button>
+                    <button type="button" onClick={() => setSelected("NOSTRA")}>
+                      <span>NOSTRA</span><strong>{displayState(nostra?.activityState)}</strong><small>{nostra?.activity || "No public forecast observation."}</small>
+                    </button>
+                  </div>
+                  <div className="pt-operating-facts">
+                    <div><span>Feed freshness</span><strong>{ageText(data?.generated_at, now)}</strong></div>
+                    <div><span>Record</span><strong>{displayState(data?.performance?.sample_state)}</strong></div>
+                  </div>
+                </section>
               </div>
             )}
           </section>
 
           <section className="pt-pipeline" aria-label="Public research and evidence pipeline">
             <header className="pt-pipeline-head">
-              <strong>RHEN research → protected execution evidence path</strong>
-              <span>Named subsystem identities are projected as internal modules of the unified RHEN runtime.</span>
+              <strong>Research evidence lifecycle</strong>
+              <span>Research and replay remain separate from production authority; the public feed shows only sanitized evidence.</span>
             </header>
             <div className="pt-pipeline-track">
               {pipeline.map((stage) => (
