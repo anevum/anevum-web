@@ -125,7 +125,13 @@ export default function CommandIrenDock({ session }: { session: RhenSession }) {
       setFeed(value);
       const command = value.work?.commands?.find((row) => row.command_id === commandId);
       if (command && ["SUCCEEDED", "FAILED", "CANCELLED"].includes(String(command.status || "").toUpperCase())) {
-        return command;
+        const linkedJob = command.linked_job_id
+          ? value.work?.jobs?.find((row) => row.job_id === command.linked_job_id)
+          : undefined;
+        const deterministicJob = linkedJob && String(linkedJob.job_type || "").startsWith("CONTROL_");
+        if (!deterministicJob || ["SUCCEEDED", "FAILED", "CANCELLED", "NEEDS_APPROVAL"].includes(String(linkedJob?.status || "").toUpperCase())) {
+          return command;
+        }
       }
     }
     throw new Error("Control was accepted but completion was not observed.");
