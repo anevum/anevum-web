@@ -57,6 +57,14 @@ jobs:
           print("resume pdf bytes:", len(pdf))
           PY
 
+      - name: Deploy production to Cloudflare
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        shell: bash
+        run: npx wrangler deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
       - id: preview
         if: github.event_name == 'pull_request'
         name: Create or update Cloudflare Preview
