@@ -85,14 +85,19 @@ function Glyph({ module }: { module: RhenModuleGlyphName }) {
 
 export default function RhenModuleGlyph({ module, className = "", decorative = false }: Props) {
   return (
-    <svg
-      className={"rhen-module-glyph rhen-module-glyph-" + module.toLowerCase() + " " + className}
-      viewBox="0 0 72 72"
-      role={decorative ? undefined : "img"}
+    <span
+      className={"system-icon rhen-functional-icon rhen-functional-icon-" + module.toLowerCase() + " " + className}
       aria-hidden={decorative || undefined}
       aria-label={decorative ? undefined : "RHEN " + module.toLowerCase() + " module"}
     >
-      <Glyph module={module} />
-    </svg>
+      <svg
+        className={"system-mark-svg rhen-module-glyph rhen-module-glyph-" + module.toLowerCase()}
+        viewBox="0 0 72 72"
+        role={decorative ? undefined : "img"}
+        aria-hidden={decorative || undefined}
+      >
+        <Glyph module={module} />
+      </svg>
+    </span>
   );
 }
