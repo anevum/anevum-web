@@ -55,6 +55,102 @@ function statusTone(status?: string | null) {
   return "neutral";
 }
 
+function fallbackProjection(snapshot: IrenSnapshot | null): ResearchObservabilityProjection | null {
+  const research = snapshot?.research;
+  if (!research) return null;
+
+  const problems = new Map(
+    (research.graen_problems || [])
+      .filter(row => row.problem_id)
+      .map(row => [String(row.problem_id), row] as const)
+  );
+
+  const runs: ResearchObservabilityRun[] = (research.graen_runs || [])
+    .filter(row => row.run_id)
+    .map(row => {
+      const problem = problems.get(String(row.problem_id || ""));
+      const status = String(row.status || "UNKNOWN").toUpperCase();
+      const stage = problem?.research_stage || row.result_state || null;
+      const progress =
+        ["SUCCEEDED", "COMPLETED", "COMPLETE", "FAILED", "CANCELLED"].includes(status) ? 100 :
+        status === "WAITING" ? 85 :
+        status === "QUEUED" ? 10 :
+        status === "BLOCKED" ? 70 :
+        30;
+      return {
+        run_id: String(row.run_id),
+        system: "GRAEN",
+        kind: "RESEARCH",
+        title: problem?.title || problem?.candidate_id || "GRAEN research run",
+        status,
+        stage,
+        progress_pct: progress,
+        problem_id: row.problem_id || null,
+        candidate_id: problem?.candidate_id || null,
+        methodology_version: row.methodology_version || null,
+        started_at: row.started_at || row.created_at || null,
+        completed_at: row.completed_at || null,
+        updated_at: row.completed_at || row.started_at || row.created_at || null,
+        metrics: {},
+        series: [],
+        detail: {
+          fallback: true,
+          source: "rhen_core_graen_runs"
+        }
+      };
+    });
+
+  const represented = new Set(runs.map(row => row.problem_id).filter(Boolean));
+  for (const problem of research.graen_problems || []) {
+    const problemId = String(problem.problem_id || "");
+    const status = String(problem.status || "UNKNOWN").toUpperCase();
+    if (!problemId || represented.has(problemId)) continue;
+    if (!["RUNNING", "QUEUED", "WAITING", "BLOCKED"].includes(status)) continue;
+    runs.push({
+      run_id: "problem:" + problemId,
+      system: "GRAEN",
+      kind: "RESEARCH_QUEUE",
+      title: problem.title || problem.candidate_id || "GRAEN research problem",
+      status,
+      stage: problem.research_stage || null,
+      progress_pct: status === "WAITING" ? 85 : status === "BLOCKED" ? 70 : status === "QUEUED" ? 10 : 30,
+      problem_id: problemId,
+      candidate_id: problem.candidate_id || null,
+      started_at: problem.started_at || null,
+      completed_at: problem.completed_at || null,
+      updated_at: problem.updated_at || problem.started_at || null,
+      metrics: {},
+      series: [],
+      detail: {
+        fallback: true,
+        source: "rhen_core_graen_problems"
+      }
+    });
+  }
+
+  runs.sort((a, b) =>
+    String(b.updated_at || b.started_at || "").localeCompare(String(a.updated_at || a.started_at || ""))
+  );
+
+  if (!runs.length) return null;
+  return {
+    schema_version: "research_observability.fallback.v1",
+    updated_at:
+      research.graen_runtime?.heartbeat_at ||
+      runs[0]?.updated_at ||
+      snapshot?.observed_at ||
+      null,
+    poll_seconds: 3,
+    runs,
+    events: [],
+    authority: {
+      read_only: true,
+      research_only: true,
+      live_trading_performance_mixed: false
+    }
+  };
+}
+
 function Chart({
   series,
   selectedPoint,
@@ -165,7 +261,7 @@ function RunList({
             </div>
           </button>
         );
-      }) : <div className="research-observability-empty">No persisted research or simulation runs match this filter.</div>}
+      }) : <div className="research-observability-empty">No canonical research or simulation runs match this filter.</div>}
     </div>
   );
 }
@@ -177,7 +273,7 @@ export default function CommandResearchLab({
   snapshot: IrenSnapshot | null;
   now: number;
 }) {
-  const liveProjection = snapshot?.research?.observability || null;
+  const liveProjection = snapshot?.research?.observability || fallbackProjection(snapshot);
   const [system, setSystem] = useState<SystemFilter>("ALL");
   const [eventScope, setEventScope] = useState<EventScope>("SELECTED");
   const [selectedRunId, setSelectedRunId] = useState<string | null>(null);
