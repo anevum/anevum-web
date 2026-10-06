@@ -201,7 +201,7 @@ export default function CommandIrenMaintenance({ session }: { session: RhenSessi
     if (!prompt) {
       setGeneratedPrompt("");
       setGeneratedManifest(null);
-      setError("IREN completed without returning a maintenance prompt.");
+      setError("IREN completed without returning a Work handoff prompt.");
       return;
     }
     setGeneratedPrompt(prompt);
@@ -244,10 +244,10 @@ export default function CommandIrenMaintenance({ session }: { session: RhenSessi
   }, []);
 
   return (
-    <article className="command-panel command-view-system command-panel-boundary command-panel-iren-maintenance" aria-label="IREN maintenance">
+    <article className="command-panel command-view-system command-panel-boundary command-panel-iren-maintenance" aria-label="IREN work handoff">
       <header>
         <div>
-          <span>IREN / MAINTENANCE</span>
+          <span>IREN / WORK HANDOFF</span>
           <strong>{state}</strong>
         </div>
         <small>{activeIncidents} incident{activeIncidents === 1 ? "" : "s"} · {activeJobs} active job{activeJobs === 1 ? "" : "s"}</small>
@@ -264,24 +264,24 @@ export default function CommandIrenMaintenance({ session }: { session: RhenSessi
         </div>
 
         <label className="iren-maintenance-focus">
-          <span>FOCUS FOR NEXT CODEX PASS</span>
+          <span>OPTIONAL FOCUS FOR THIS WORK PASS</span>
           <textarea
             value={focus}
             rows={3}
             maxLength={1000}
             onChange={(event) => setFocus(event.target.value)}
-            placeholder="Optional: tell IREN what you want the next maintenance pass to focus on."
+            placeholder="Optional: narrow the next evidence-backed Work / Codex pass. Leave blank to let current state choose the priority."
           />
         </label>
 
         <div className="iren-maintenance-actions">
           <button type="button" onClick={() => void refresh()} disabled={sending}><UiIcon name="refresh" /> Refresh state</button>
           <button type="button" className="primary" onClick={() => void generateMaintenancePrompt()} disabled={sending}>
-            {sending ? "Working…" : <><UiIcon name="prompt" /> Generate Codex prompt</>}
+            {sending ? "Working…" : <><UiIcon name="prompt" /> Generate Work prompt</>}
           </button>
           {generatedPrompt ? (
             <button type="button" onClick={() => void copy(generatedPrompt, "maintenance")}>
-              {copied === "maintenance" ? "Copied" : <><UiIcon name="copy" /> Copy generated prompt</>}
+              {copied === "maintenance" ? "Copied" : <><UiIcon name="copy" /> Copy Work prompt</>}
             </button>
           ) : null}
           {canPrepareTracked ? (
@@ -307,7 +307,7 @@ export default function CommandIrenMaintenance({ session }: { session: RhenSessi
           <>
             {generatedManifest ? (
               <div className="iren-maintenance-alert">
-                <span>ADAPTIVE PASS · {promptMode}</span>
+                <span>WORK PASS · {promptMode}</span>
                 <strong>{clean(generatedManifest.driver, "Current evidence selected this pass.")}</strong>
                 <small>
                   {promptDelta} material change{promptDelta === 1 ? "" : "s"} ·
@@ -320,14 +320,14 @@ export default function CommandIrenMaintenance({ session }: { session: RhenSessi
               </div>
             ) : null}
             <details className="iren-maintenance-prompt">
-              <summary>Preview generated Codex prompt</summary>
-              <textarea readOnly aria-label="IREN maintenance Codex prompt" value={generatedPrompt} rows={12} onFocus={(event) => event.target.select()} />
+              <summary>Preview evidence-backed Work prompt</summary>
+              <textarea readOnly aria-label="IREN Work handoff prompt" value={generatedPrompt} rows={12} onFocus={(event) => event.target.select()} />
             </details>
           </>
         ) : (
           <div className="iren-maintenance-alert">
             <span>CODEX HANDOFF</span>
-            <strong>Generate a fresh maintenance prompt from current IREN state when you want a new Codex pass.</strong>
+            <strong>Generate a Work prompt only when current evidence justifies a new reasoning or implementation pass.</strong>
           </div>
         )}
 
