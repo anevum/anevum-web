@@ -150,6 +150,7 @@ export type StrategyReleaseGateProjection = {
 
 export type StrategyEvidenceReadinessProjection = {
   schema_version?: string;
+  state?: "AWAITING_MEASURABLE_COHORT" | "READY" | "PARTIAL" | "DEGRADED" | string;
   research_only?: boolean;
   execution_authority?: boolean;
   changes_live_decision?: boolean;
@@ -161,6 +162,8 @@ export type StrategyEvidenceReadinessProjection = {
   missing_bar_time_count?: number;
   evidence_reference_only_count?: number;
   latest_observed_at?: string | null;
+  measurement_contract?: string;
+  next_action?: string;
 };
 
 export type StrategyPipelineProjection = {
