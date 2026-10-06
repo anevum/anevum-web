@@ -243,9 +243,9 @@ async function runCase(route, viewport) {
 
   if(route.startsWith("/command/")) {
     const navAudit=await send("Runtime.evaluate",{expression:`(() => {
-      const nav=document.querySelector(".command-header nav");
+      const nav=document.querySelector(".command-v4-header nav");
       const links=[...nav?.querySelectorAll("a")||[]].filter(el=>el.getBoundingClientRect().width>0);
-      const rects=links.map(el=>{const r=el.getBoundingClientRect();return {label:el.getAttribute("aria-label"),left:r.left,right:r.right,top:r.top,bottom:r.bottom,width:r.width,height:r.height}});
+      const rects=links.map(el=>{const r=el.getBoundingClientRect();return {label:el.textContent?.trim()||"",current:el.getAttribute("aria-current"),left:r.left,right:r.right,top:r.top,bottom:r.bottom,width:r.width,height:r.height}});
       const overlaps=[];
       for(let i=0;i<rects.length;i++) for(let j=i+1;j<rects.length;j++){
         const a=rects[i],b=rects[j];
@@ -254,7 +254,7 @@ async function runCase(route, viewport) {
       const rows=[...new Set(rects.map(r=>Math.round(r.top)))];
       return {
         count:rects.length,
-        labels:rects.map(r=>r.label),
+        labels:rects.map(r=>r.label),\n        current:rects.filter(r=>r.current==="page").map(r=>r.label),
         rows,
         overlaps,
         minWidth:Math.min(...rects.map(r=>r.width)),
@@ -263,9 +263,9 @@ async function runCase(route, viewport) {
       };
     })()`,returnByValue:true});
     const nav=navAudit.result?.value||{};
-    const canonicalLabels=["Overview","Trading","Research","System"];
+    const canonicalLabels=["Operate","Discover","Review","System"];
     const labelsMatch=Array.isArray(nav.labels)&&canonicalLabels.every((label,index)=>nav.labels[index]===label);
-    if(nav.count!==4||!labelsMatch||nav.overlaps?.length||nav.minWidth<44||nav.maxRight>nav.viewport+1||nav.rows?.length!==1){
+    if(nav.count!==4||!labelsMatch||nav.current?.length!==1||nav.overlaps?.length||nav.minWidth<44||nav.maxRight>nav.viewport+1||nav.rows?.length!==1){
       throw new Error("Command icon navigation geometry failed: "+JSON.stringify(nav));
     }
   }
