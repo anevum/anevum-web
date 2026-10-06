@@ -172,6 +172,12 @@ export default function CommandIrenDock({ session }: { session: RhenSession }) {
   const handoff = work?.handoffs?.find((row) => !["SUPERSEDED", "FAILED"].includes(row.handoff_status));
   const lastCommand = commands[0];
   const lastResponse = responseText(lastCommand);
+  const openIncidents = (feed?.incidents || [])
+    .filter((row) => String(row.status || "OPEN").toUpperCase() !== "RESOLVED")
+    .slice(0, 4);
+  const incidentSummary = openIncidents
+    .map((row) => String(row.key || row.reason || row.incident_type || "incident"))
+    .join(" · ");
   const connectionLabel = error
     ? (feed ? "DEGRADED" : "OFFLINE")
     : feed?.stale
@@ -209,6 +215,15 @@ export default function CommandIrenDock({ session }: { session: RhenSession }) {
         </div>
 
         {error ? <div className="iren-dock-error">{error}</div> : null}
+        {(feed?.stale || openIncidents.length || connectionLabel === "DEGRADED") ? (
+          <div className="iren-dock-response">
+            <span>CURRENT CONTROL STATE · {connectionLabel}</span>
+            <p>{feed?.stale
+              ? "Canonical IREN observation is stale."
+              : incidentSummary || "IREN is degraded; no open incident detail was supplied by the canonical state."}</p>
+            <small>Observed {feed?.observed_at ? new Date(feed.observed_at).toLocaleString() : "—"}</small>
+          </div>
+        ) : null}
         {lastResponse ? (
           <div className="iren-dock-response">
             <span>LAST CONTROL · {String(lastCommand?.status || "RECORDED")}</span>
