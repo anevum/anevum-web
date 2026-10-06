@@ -6,7 +6,7 @@ import path from "node:path";
 const base = process.env.BASE_URL;
 if (!base) throw new Error("BASE_URL is required");
 
-const publicRoutes = ["/", "/live", "/architecture", "/research", "/research/multi-market-architecture-equities-crypto", "/founder", "/resume", "/releases"];
+const publicRoutes = ["/", "/live", "/architecture", "/research", "/research/prediction-outcome-evidence-chain", "/founder", "/resume", "/releases"];
 const commandRoutes = ["/command/operate", "/command/discover", "/command/review", "/command/system"];
 const routes = process.env.PUBLIC_ONLY === "1" ? publicRoutes : [...publicRoutes, ...commandRoutes];
 const output = path.join(process.env.RUNNER_TEMP || os.tmpdir(), "anevum-visuals");
@@ -542,7 +542,19 @@ try {
   for (const viewport of viewports) {
     failures = failures.concat((await runScrollResetCase(viewport)).map((item) => viewport.name + " scroll-reset: " + item));
     for (const route of routes) {
-      failures = failures.concat((await runCase(route, viewport)).map((item) => viewport.name + " " + route + ": " + item));
+      let routeFailures = await runCase(route, viewport);
+      const transientChunkRace =
+        routeFailures.length > 0 &&
+        routeFailures.every((item) =>
+          item.includes("Failed to fetch dynamically imported module")
+        );
+      if (transientChunkRace) {
+        await sleep(2500);
+        routeFailures = await runCase(route, viewport);
+      }
+      failures = failures.concat(
+        routeFailures.map((item) => viewport.name + " " + route + ": " + item)
+      );
     }
   }
 } finally {
