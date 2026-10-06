@@ -1940,3 +1940,16 @@
     height:30px;
   }
 }
+
+
+/* Active public RHEN module cutover: preserve named modules, unify their visual identity. */
+.rhen-functional-icon.system-icon-xs{--icon-size:26px}
+.rhen-functional-icon.system-icon-sm{--icon-size:36px}
+.rhen-functional-icon.system-icon-md{--icon-size:42px}
+.rhen-functional-icon.system-icon-lg{--icon-size:58px}
+.rhen-functional-icon .rhen-module-glyph{width:100%;height:100%;margin:0}
+.rhen-system-chip{--chip-accent:#8fb6d2}
+.program-graen,
+.program-nostra,
+.program-velum,
+.program-rhen{--program-accent:#8fb6d2}

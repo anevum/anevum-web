@@ -1,5 +1,5 @@
 import { Link, Navigate, useParams } from "react-router-dom";
-import SystemIcon, { SystemChip } from "../components/company/SystemIcon";
+import { RhenSystemChip, RhenSystemGlyph } from "../components/company/RhenModuleGlyph";
 import { fieldNoteBySlug } from "../data/fieldNotes";
 
 export default function FieldNoteDetail() {
@@ -22,11 +22,11 @@ export default function FieldNoteDetail() {
             <h1>{note.title}</h1>
             <p>{note.summary}</p>
             <div className="field-note-systems">
-              {note.systems.map((system) => <SystemChip key={system} system={system} />)}
+              {note.systems.map((system) => <RhenSystemChip key={system} system={system} />)}
             </div>
           </div>
           <aside className="field-note-hero-icon" aria-label={"Primary system: " + note.systems[0]}>
-            <SystemIcon system={note.systems[0]} size="lg" />
+            <RhenSystemGlyph system={note.systems[0]} size="lg" />
             <span>PRIMARY SYSTEM</span>
             <strong>{note.systems[0]}</strong>
           </aside>
@@ -51,7 +51,7 @@ export default function FieldNoteDetail() {
             <span>AT A GLANCE</span>
             <strong>{note.type}</strong>
             <p>{note.status}</p>
-            <div>{note.systems.map((system) => <SystemIcon key={system} system={system} size="xs" />)}</div>
+            <div>{note.systems.map((system) => <RhenSystemGlyph key={system} system={system} size="xs" />)}</div>
           </div>
           <div className="field-note-rail-card">
             <span>REPRODUCIBILITY</span>

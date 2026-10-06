@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import SystemIcon, { SystemChip } from "../components/company/SystemIcon";
+import { RhenSystemChip, RhenSystemGlyph } from "../components/company/RhenModuleGlyph";
 import type { SystemName } from "../components/company/SystemMark";
 import { fieldNotes } from "../data/fieldNotes";
 import { useLiveTrading } from "../hooks/useLiveTrading";
@@ -56,7 +56,7 @@ export default function ResearchHub() {
           <article className="research-live-primary">
             <header>
               <div className="research-live-identity">
-                <SystemIcon system="GRAEN" size="md" />
+                <RhenSystemGlyph system="GRAEN" size="md" />
                 <div>
                   <span>GRAEN / CURRENT FOCUS</span>
                   <strong>{displayState(research?.current_status || graen.activityState)}</strong>
@@ -78,13 +78,13 @@ export default function ResearchHub() {
 
           <div className="research-live-secondary">
             <article>
-              <header><SystemIcon system="VELUM" size="sm" /><span>VELUM / VERIFICATION</span></header>
+              <header><RhenSystemGlyph system="VELUM" size="sm" /><span>VELUM / VERIFICATION</span></header>
               <strong>{displayState(velum.activityState)}</strong>
               <p>{velum.activity}</p>
             </article>
 
             <article>
-              <header><SystemIcon system="GRAEN" size="sm" /><span>PUBLISHED VALIDATION SAMPLE</span></header>
+              <header><RhenSystemGlyph system="GRAEN" size="sm" /><span>PUBLISHED VALIDATION SAMPLE</span></header>
               <strong>{displayState(validation?.status)}</strong>
               <div className="research-validation-progress">
                 <div>
@@ -101,7 +101,7 @@ export default function ResearchHub() {
             </article>
 
             <article className="research-authority-card">
-              <header><SystemIcon system="RHEN" size="sm" /><span>PRODUCTION AUTHORITY</span></header>
+              <header><RhenSystemGlyph system="RHEN" size="sm" /><span>PRODUCTION AUTHORITY</span></header>
               <strong>{activeStrategy}</strong>
               <p>{rhen.activity}</p>
               <small>Research and replay cannot automatically replace the production strategy or grant live broker authority.</small>
@@ -116,7 +116,7 @@ export default function ResearchHub() {
             <div className="field-notes-lead-art" aria-hidden="true">
               <div className="field-notes-lead-icons">
                 {leadSystems.slice(0,4).map((system, index) => (
-                  <SystemIcon key={system} system={system} size={index === 0 ? "lg" : "md"} />
+                  <RhenSystemGlyph key={system} system={system} size={index === 0 ? "lg" : "md"} />
                 ))}
               </div>
               <span>{lead.type}</span>
@@ -133,7 +133,7 @@ export default function ResearchHub() {
                 <span>{lead.status}</span>
               </div>
               <div className="field-notes-lead-systems">
-                {leadSystems.map((system) => <SystemChip key={system} system={system} />)}
+                {leadSystems.map((system) => <RhenSystemChip key={system} system={system} />)}
               </div>
               <strong>READ THE NOTE →</strong>
             </div>
@@ -151,7 +151,7 @@ export default function ResearchHub() {
           {rest.map((note) => (
             <Link key={note.slug} to={"/research/" + note.slug} className="field-notes-story">
               <div className="field-notes-story-icon">
-                <SystemIcon system={note.systems[0]} size="md" />
+                <RhenSystemGlyph system={note.systems[0]} size="md" />
               </div>
               <div className="field-notes-story-copy">
                 <header>
@@ -167,7 +167,7 @@ export default function ResearchHub() {
                 </footer>
               </div>
               <div className="field-notes-story-systems">
-                {note.systems.map((system) => <SystemIcon key={system} system={system} size="xs" />)}
+                {note.systems.map((system) => <RhenSystemGlyph key={system} system={system} size="xs" />)}
               </div>
               <span className="field-notes-story-arrow">↗</span>
             </Link>
@@ -184,7 +184,7 @@ export default function ResearchHub() {
         <div className="research-program-grid research-program-grid-icons">
           {programs.map((program) => (
             <Link key={program.name} to={program.href} className={"research-program-card program-" + program.name.toLowerCase()}>
-              <SystemIcon system={program.name} size="lg" />
+              <RhenSystemGlyph system={program.name} size="lg" />
               <span>{program.category}</span>
               <strong>{program.name}</strong>
               <p>{program.description}</p>

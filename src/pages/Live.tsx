@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import SystemIcon from "../components/company/SystemIcon";
+import { RhenSystemGlyph } from "../components/company/RhenModuleGlyph";
 import { SystemStatusChip } from "../components/operations/VisualOps";
 import { useLiveTrading } from "../hooks/useLiveTrading";
 import {
@@ -182,7 +182,7 @@ export default function Live() {
               type="button"
               onClick={() => setSelected(view.name)}
             >
-              <SystemIcon system={view.name} size="sm" />
+              <RhenSystemGlyph system={view.name} size="sm" />
               <div><strong>{MODULE_LABEL[view.name]}</strong><small>{displayState(view.activityState)}</small></div>
             </button>
           ))}
@@ -192,7 +192,7 @@ export default function Live() {
           <section className="pt-visual">
             <header className="pt-visual-head">
               <div className="pt-selected-title">
-                {selectedView ? <SystemIcon system={selectedView.name} size="sm" /> : <span>◉</span>}
+                {selectedView ? <RhenSystemGlyph system={selectedView.name} size="sm" /> : <span>◉</span>}
                 <div>
                   <span>{selectedView ? IDENTITY[selectedView.name].role : "RHEN / UNIFIED RUNTIME"}</span>
                   <strong>{selectedView ? MODULE_LABEL[selectedView.name] : "Canonical runtime · isolated modules"}</strong>
@@ -317,7 +317,7 @@ export default function Live() {
               <article className="pt-feed-event" key={row.id}>
                 <time dateTime={row.at || undefined}>{shortTime(row.at)}</time>
                 <div>
-                  <span className="pt-event-system"><SystemIcon system={row.system} size="xs" /> {MODULE_LABEL[row.system]}</span>
+                  <span className="pt-event-system"><RhenSystemGlyph system={row.system} size="xs" /> {MODULE_LABEL[row.system]}</span>
                   <strong>{row.title}</strong>
                   {row.detail ? <p>{row.detail}</p> : null}
                 </div>
@@ -451,7 +451,7 @@ export default function Live() {
                 ["RHEN", "Execution", "Market observation, risk, bounded broker execution, reconciliation, and evidence."]
               ].map(([name, role, detail]) => (
                 <article key={name}>
-                  <SystemIcon system={name as SystemName} size="sm" />
+                  <RhenSystemGlyph system={name as SystemName} size="sm" />
                   <div><span>{role} module</span><strong>{MODULE_LABEL[name as SystemName]}</strong><p>{detail}</p></div>
                 </article>
               ))}
