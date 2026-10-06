@@ -138,7 +138,7 @@ async function runCase(route, viewport) {
       nostra:document.querySelector('[data-system="NOSTRA"]')?.getAttribute("data-state"),
       velum:document.querySelector('[data-system="VELUM"]')?.getAttribute("data-state"),
       velumActivity:document.querySelector('[data-system="VELUM"]')?.getAttribute("data-activity"),
-      activeGraen:document.querySelector('[data-system="GRAEN"]')?.getAttribute("data-active"),
+      activeGraen:document.querySelector('[data-system="GRAEN"][data-active]')?.getAttribute("data-active"),
       links:cards.filter(el=>el.tagName==="A").every(el=>el.tabIndex===0&&el.hasAttribute("aria-label")),
       nav:routePlaceholder
     };
