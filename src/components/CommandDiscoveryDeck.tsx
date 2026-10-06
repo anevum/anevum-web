@@ -45,7 +45,6 @@ export default function CommandDiscoveryDeck({
   const observed = Object.keys(scanner).length;
   const maxFunnel = Math.max(eligible, candidates, active, observed, 1);
   const extended = snapshot?.extended_equity;
-  const crypto = snapshot?.crypto_live;
 
   const funnel = [
     ["ELIGIBLE", eligible, "Tradable + fractionable equities RHEN can consider"],
@@ -87,11 +86,11 @@ export default function CommandDiscoveryDeck({
         <article className="command-v4-card">
           <header><div><span>MARKET SURFACES</span><strong>What RHEN actually covers</strong></div><small>No cosmetic lanes</small></header>
           <div className="command-v4-surface-list">
-            <div><b>EQUITIES</b><strong>LIVE</strong><p>{active || observed} active symbols · rotating universe</p></div>
+            <div><b>EQUITIES</b><strong>LIVE</strong><p>{active || observed} active symbols · rotating long-only universe</p></div>
             <div><b>EXTENDED 24/5</b><strong>{extended?.execution_authorized ? "LIVE" : extended?.enabled ? "OBSERVING" : "OFF"}</strong><p>{text(extended?.session?.session, "closed").replaceAll("_", " ")} · {count(extended?.universe?.active_count)} symbols</p></div>
-            <div><b>CRYPTO</b><strong>{crypto?.execution_authorized ? "LIVE" : crypto?.execution_enabled ? "GATED" : "OBSERVING"}</strong><p>{text(crypto?.strategy_version_id, "No active strategy identity")}</p></div>
-            <div><b>OPTIONS</b><strong>NOT WIRED</strong><p>No RHEN options execution path is represented as active.</p></div>
-            <div><b>SHORT EQUITIES</b><strong>NOT WIRED</strong><p>No short-selling authority is represented as active.</p></div>
+            <div><b>OPTIONS</b><strong>RESEARCH ONLY</strong><p>Research is permitted; no options broker-write authority exists.</p></div>
+            <div><b>SHORT EQUITIES</b><strong>DISABLED</strong><p>Current RHEN authority is long U.S. equities and ETFs only.</p></div>
+            <div><b>LEVERAGE EXPANSION</b><strong>DISABLED</strong><p>No expanded leverage authority is represented as active.</p></div>
           </div>
         </article>
       </div>
