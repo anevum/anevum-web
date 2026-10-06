@@ -41,29 +41,26 @@ test("Trading workspace exposes private broker account tracking and executions",
   assert.match(lanes, /BROKER WRITES/);
 });
 
-test("IREN Command exposes only real contextual controls and waits for completion", () => {
+test("IREN maintenance is embedded in System and requests Codex prompts from IREN", () => {
   const worker = readFileSync(new URL("../worker.mjs", import.meta.url), "utf8");
-  const dock = readFileSync(new URL("../src/components/CommandIrenDock.tsx", import.meta.url), "utf8");
+  const command = readFileSync(new URL("../src/pages/Command.tsx", import.meta.url), "utf8");
+  const maintenance = readFileSync(new URL("../src/components/CommandIrenDock.tsx", import.meta.url), "utf8");
 
   assert.match(worker, /proxyTrader\(request, "\/v1\/command\/iren\/status", env\)/);
   assert.match(worker, /proxyTrader\(request, "\/v1\/command\/iren\/command", env\)/);
-  assert.doesNotMatch(worker, /FOUNDATION_IREN_COMMAND/);
-  assert.match(dock, /IREN \/ CONTROL PLANE/);
-  assert.match(dock, /waitForCommand/);
-  assert.match(dock, /lastOutcome/);
-  assert.match(dock, /LAST CONTROL/);
-  assert.match(dock, /linked_job_id/);
-  assert.match(dock, /canRunAction/);
-  assert.match(dock, /canPrepareCodex/);
-  assert.match(dock, /canVerifyHandoff/);
-  assert.match(dock, /No pending control action/);
-  assert.doesNotMatch(dock, /No conversational model is running here/);
-  assert.doesNotMatch(dock, /CONTROL MODE/);
-  assert.doesNotMatch(dock, /next safe action/);
-  assert.doesNotMatch(dock, /needs owner/);
-  assert.doesNotMatch(dock, /Ask IREN…/);
-  assert.doesNotMatch(dock, /iren-dock-directive/);
-  assert.match(dock, /error[\s\S]*OFFLINE/);
+  assert.match(command, /<CommandIrenMaintenance session=\{session\} \/>/);
+  assert.doesNotMatch(command, /<CommandIrenDock session=\{session\} \/>/);
+  assert.match(maintenance, /IREN \/ MAINTENANCE/);
+  assert.match(maintenance, /FOCUS FOR NEXT CODEX PASS/);
+  assert.match(maintenance, /Generate Codex prompt/);
+  assert.match(maintenance, /maintenance prompt: /);
+  assert.match(maintenance, /maintenance_prompt/);
+  assert.match(maintenance, /Copy generated prompt/);
+  assert.match(maintenance, /Prepare tracked handoff/);
+  assert.match(maintenance, /Verify tracked handoff/);
+  assert.doesNotMatch(maintenance, /buildMaintenancePrompt/);
+  assert.doesNotMatch(maintenance, /iren-dock-handle/);
+  assert.doesNotMatch(maintenance, /DETERMINISTIC CONTROL/);
 });
 
 test("Command shares one canonical IREN observation across operator workspaces", () => {

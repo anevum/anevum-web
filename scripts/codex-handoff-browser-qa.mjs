@@ -128,12 +128,20 @@ async function runCase(route, viewport) {
       const path = String(url);
       if (path.includes("/api/command/session")) return Response.json({authenticated:true,auth_source:"cloudflare_access",command_admin:true,email:"qa@example.test"});
       if (path.includes("/api/command/iren/command")) {
-        window.__sentCommands.push(JSON.parse(init.body).command);
+        const command = JSON.parse(init.body).command;
+        window.__sentCommands.push(command);
+        if (command.startsWith("maintenance prompt")) {
+          window.__maintenanceRequested = true;
+          return Response.json({schema_version:"iren_command.v2",accepted:true,command:{command_id:"qa-maintenance",status:"QUEUED"}},{status:202});
+        }
         return Response.json({schema_version:"iren_command.v2",accepted:true,command:{status:"QUEUED"}},{status:202});
       }
       if (path.includes("/api/command/iren/status")) return Response.json({
         schema_version:"iren_command.v2",state:"HEALTHY",stale:false,observed_at:new Date().toISOString(),incidents:[],
-        work:{objectives:[],jobs:[],commands:[],next_action:{title:"Add runtime evidence"},execution_mode:"codex/manual software",
+        work:{objectives:[],jobs:[],commands:window.__maintenanceRequested?[{command_id:"qa-maintenance",status:"SUCCEEDED",
+          result:{message:"Maintenance Codex prompt prepared from current IREN state.",
+            maintenance_prompt:"Continue ANEVUM/RHEN maintenance from the CURRENT actual state.\\nBackend/runtime: anevum/alpaca-trader\\nFrontend/Command: anevum/anevum-web"}}]:[],
+          next_action:{title:"Add runtime evidence"},execution_mode:"codex/manual software",
           handoffs:[{handoff_id:"qa-1",objective_key:"iren.evidence",handoff_status:"PREPARED",
             package:{title:"Add runtime evidence",created_at:new Date().toISOString(),base_sha:"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
               branch:"codex/handoff/qa-1",prompt:"Inspect CURRENT main.\\nComplete the scoped objective.\\nDo not expand authority."},
@@ -148,22 +156,29 @@ async function runCase(route, viewport) {
   await sleep(5000);
 
   await send("Runtime.evaluate", {expression: `
-    document.querySelector(".iren-dock-handle")?.click();
-    [...document.querySelectorAll("button")].find(b => b.textContent === "verify handoff")?.click();
+    [...document.querySelectorAll("button")].find(b => b.textContent === "Generate Codex prompt")?.click();
+  `});
+  await sleep(900);
+  await send("Runtime.evaluate", {expression: `
+    [...document.querySelectorAll("button")].find(b => b.textContent === "Copy generated prompt")?.click();
+    [...document.querySelectorAll("button")].find(b => b.textContent === "Verify tracked handoff")?.click();
   `});
   await sleep(500);
-  await send("Runtime.evaluate", {expression: `
-    [...document.querySelectorAll("button")].find(b => b.textContent === "Copy Codex Handoff")?.click();
-  `});
-  await sleep(200);
   const interactions = await send("Runtime.evaluate", {expression: `({
-    verified: window.__sentCommands?.includes("verify Codex handoff"),\n    prepareHidden: ![...document.querySelectorAll("button")].some(b => b.textContent === "prepare for Codex"),
-    copied: window.__copiedPrompt === document.querySelector('textarea[aria-label="Complete Codex prompt"]')?.value,
-    prompt: document.querySelector('textarea[aria-label="Complete Codex prompt"]')?.value,
-    blockers: document.querySelector(".iren-codex-handoff")?.textContent.includes("implementation not submitted")
+    generated: window.__sentCommands?.some(command => command.startsWith("maintenance prompt")),
+    verified: window.__sentCommands?.includes("verify Codex handoff"),
+    maintenancePrompt: document.querySelector('textarea[aria-label="IREN maintenance Codex prompt"]')?.value,
+    copied: window.__copiedPrompt === document.querySelector('textarea[aria-label="IREN maintenance Codex prompt"]')?.value,
+    tracked: document.querySelector(".iren-maintenance-handoff")?.textContent.includes("Add runtime evidence"),
+    noDock: !document.querySelector(".iren-dock")
   })`,returnByValue:true});
   const check = interactions.result?.value || {};
-  if (!check.verified || !check.prepareHidden || !check.copied || !check.prompt || !check.blockers) throw new Error("Handoff interaction failed: " + JSON.stringify(check));
+  if (!check.generated || !check.verified || !check.copied || !check.tracked || !check.noDock ||
+      !check.maintenancePrompt?.includes("Continue ANEVUM/RHEN maintenance from the CURRENT actual state") ||
+      !check.maintenancePrompt?.includes("anevum/alpaca-trader") ||
+      !check.maintenancePrompt?.includes("anevum/anevum-web")) {
+    throw new Error("Maintenance interaction failed: " + JSON.stringify(check));
+  }
   const result = await send("Runtime.evaluate", {
     expression: `(() => {
       const root = document.documentElement;

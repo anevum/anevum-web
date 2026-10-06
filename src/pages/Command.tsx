@@ -7,7 +7,7 @@ import UniverseBackground from "../components/UniverseBackground";
 import CommandPerformance from "../components/CommandPerformance";
 import CommandAccountTracker from "../components/CommandAccountTracker";
 import CommandTopology from "../components/CommandTopology";
-import CommandIrenDock from "../components/CommandIrenDock";
+import CommandIrenMaintenance from "../components/CommandIrenDock";
 import CommandOperationsTerminal from "../components/CommandOperationsTerminal";
 import CommandStrategyPipeline from "../components/CommandStrategyPipeline";
 import CommandRawLog from "../components/CommandRawLog";
@@ -679,19 +679,11 @@ export default function Command() {
               </div>
             </article>
 
-            <article className="command-panel command-view-system command-panel-boundary">
-              <header><div><span>OPERATOR BOUNDARY</span><strong>PROTECTED</strong></div><small>Command + IREN</small></header>
-              <div className="command-summary-block">
-                <span>THIS SURFACE</span>
-                <strong>Reads canonical state and submits durable work through IREN.</strong>
-                <p>Protected actions remain gated. Command does not bypass RHEN risk, strategy, broker, or execution authority.</p>
-              </div>
-            </article>
+            <CommandIrenMaintenance session={session} />
           </aside>
         </section>
       </main>
       <CommandRawLog snapshot={commandObservation.snapshot} feed={publicFeedError ? null : publicFeed} tradingSnapshot={snapshot} now={commandObservation.now} />
-      <CommandIrenDock session={session} />
     </div>
   );
 }
