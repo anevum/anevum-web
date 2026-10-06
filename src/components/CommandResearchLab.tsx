@@ -162,7 +162,7 @@ function Chart({
 }) {
   const points = (series?.points || []).filter(row => numeric(row.value) !== null);
   if (points.length < 2) {
-    return <div className="research-observability-empty">No chartable series persisted for this run yet.</div>;
+    return <div className="research-observability-empty">This run is visible. The chart appears after two persisted evidence points; scan activity remains available in metrics and the event tape.</div>;
   }
 
   const values = points.map(row => Number(row.value));
@@ -322,7 +322,7 @@ export default function CommandResearchLab({
   }).slice(0, 80);
 
   const activeRuns = runs.filter(run =>
-    ["RUNNING", "OPEN", "QUEUED", "WAITING"].includes(String(run.status || "").toUpperCase())
+    ["RUNNING", "OPEN", "QUEUED", "WAITING", "AWAITING_STAGE_MATURITY"].includes(String(run.status || "").toUpperCase())
   ).length;
   const chartableRuns = runs.filter(run => (run.series || []).some(item => (item.points || []).length > 1)).length;
 
@@ -354,7 +354,7 @@ export default function CommandResearchLab({
       <section className="research-observability-summary">
         <div><span>ACTIVE RUNS</span><strong>{activeRuns}</strong><small>GRAEN / VELUM / NOSTRA / RHEN paper</small></div>
         <div><span>TRACKED RUNS</span><strong>{runs.length}</strong><small>Most recent persisted research evidence</small></div>
-        <div><span>CHARTABLE</span><strong>{chartableRuns}</strong><small>Real equity/trade/forward series</small></div>
+        <div><span>CHARTABLE</span><strong>{chartableRuns}</strong><small>Scan / replay / return evidence series</small></div>
         <div><span>POLL</span><strong>{projection?.poll_seconds ?? 3}s</strong><small>Shared canonical IREN observation</small></div>
       </section>
 
