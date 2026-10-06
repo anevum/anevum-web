@@ -18,21 +18,22 @@ function PublicFooter() {
           <Mark />
           <div>
             <strong>ANEVUM</strong>
-            <span>COMMAND + RHEN LIVE EVIDENCE</span>
-            <small>Use the product. Inspect the runtime. Follow the evidence.</small>
+            <span>RHEN + COMMAND</span>
+            <small>Operate the system. Inspect the evidence.</small>
           </div>
         </div>
 
         <div className="company-footer-links">
           <section>
-            <span>PRODUCT</span>
+            <span>SYSTEM</span>
             <Link to="/command/overview">Command</Link>
             <Link to="/live">RHEN Live</Link>
-            <Link to="/research">Field Notes</Link>
+            <Link to="/architecture">Architecture</Link>
+            <Link to="/releases">Releases</Link>
           </section>
           <section>
             <span>ANEVUM</span>
-            <Link to="/architecture">Architecture</Link>
+            <Link to="/research">Field Notes</Link>
             <Link to="/founder">About</Link>
             <Link to="/resume">Résumé</Link>
             <a href="mailto:devon@anevum.com">devon@anevum.com</a>
@@ -42,7 +43,7 @@ function PublicFooter() {
 
       <div className="company-footer-bottom">
         <span>© {new Date().getFullYear()} ANEVUM</span>
-        <span>RHEN V3 / COMMAND / PROTECTED EXECUTION AUTHORITY</span>
+        <span>RHEN V3 / COMMAND / PUBLIC EVIDENCE</span>
       </div>
     </footer>
   );
