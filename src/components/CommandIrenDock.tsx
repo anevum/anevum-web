@@ -330,3 +330,7 @@ export default function CommandIrenDock({ session }: { session: RhenSession }) {
             ) : null}
           </div>
         ) : null}
+      </div>
+    </aside>
+  );
+}
