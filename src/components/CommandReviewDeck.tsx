@@ -98,7 +98,7 @@ export default function CommandReviewDeck({
             <div><span>CLOSED TRADES</span><strong>{text(dailyMetrics.closed_trades)}</strong></div>
             <div><span>W / L</span><strong>{text(dailyMetrics.wins, "0")} / {text(dailyMetrics.losses, "0")}</strong></div>
             <div><span>WIN RATE</span><strong>{text(dailyMetrics.win_rate_pct, "—")}{dailyMetrics.win_rate_pct != null ? "%" : ""}</strong></div>
-            <div><span>CLASSIFICATION</span><strong>{displayState(dailyClass.state || dailyClass.classification)}</strong></div>
+            <div><span>CLASSIFICATION</span><strong>{displayState(text(dailyClass.state || dailyClass.classification, "UNKNOWN"))}</strong></div>
           </div>
         </article>
 
