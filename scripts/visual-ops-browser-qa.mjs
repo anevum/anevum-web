@@ -37,7 +37,7 @@ let debugPort = null;
 
 async function waitForDebugger() {
   const activePortFile = path.join(profile, "DevToolsActivePort");
-  for (let i = 0; i < 200; i += 1) {
+  for (let i = 0; i < 600; i += 1) {
     if (chrome.exitCode !== null) {
       throw new Error("Chrome exited before DevTools became ready: " + chrome.exitCode);
     }
@@ -55,7 +55,10 @@ async function waitForDebugger() {
     } catch {}
     await sleep(100);
   }
-  throw new Error("Chrome DevTools endpoint did not become ready after 20 seconds");
+  throw new Error(
+    "Chrome DevTools endpoint did not become ready after 60 seconds; " +
+    "profile entries=" + fs.readdirSync(profile).join(",")
+  );
 }
 
 async function target() {
