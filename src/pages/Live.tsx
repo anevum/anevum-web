@@ -198,7 +198,7 @@ export default function Live() {
                 {selectedView ? <SystemIcon system={selectedView.name} size="sm" /> : <span>◉</span>}
                 <div>
                   <span>{selectedView ? IDENTITY[selectedView.name].role : "RHEN / UNIFIED RUNTIME"}</span>
-                  <strong>{selectedView ? MODULE_LABEL[selectedView.name] : "One service · isolated modules"}</strong>
+                  <strong>{selectedView ? MODULE_LABEL[selectedView.name] : "Canonical runtime · isolated modules"}</strong>
                   <small>{selectedView ? selectedView.activity : "Select an internal RHEN module to inspect its current public observation."}</small>
                 </div>
               </div>
@@ -403,8 +403,8 @@ export default function Live() {
             <div className="pt-architecture-flow">
               {[
                 ["IREN", "Control", "Health, incidents, scheduling, protected actions, and operator-facing evidence."],
-                ["GRAEN", "Research", "Hypothesis formation, falsification, methodology, V15 research, and bounded claims."],
-                ["VELUM", "Replay", "Historical reconstruction and counterfactual testing without broker authority."],
+                ["GRAEN", "Research", "Bounded strategy discovery, chronological evidence, falsification, and paper-only promotion state."],
+                ["VELUM", "Replay", "Independent replay, friction stress, execution-delay stress, and counterfactual verification without live broker authority."],
                 ["NOSTRA", "Forecast", "Forward horizons, regimes, uncertainty, outcomes, and calibration."],
                 ["RHEN", "Execution", "Market observation, risk, bounded broker execution, reconciliation, and evidence."]
               ].map(([name, role, detail]) => (
@@ -445,8 +445,8 @@ export default function Live() {
 
       <footer className="pt-terminal-foot">
         <span>
-          Public-safe RHEN observations only. IREN, GRAEN, VELUM, and NOSTRA are presented as named internal modules,
-          while the production architecture remains one RHEN runtime with isolated authority boundaries. No account balances,
+          Public-safe RHEN observations only. IREN, GRAEN, VELUM, and NOSTRA are named internal modules of the canonical RHEN runtime.
+          A separate BTC paper canary is retained only for isolated paper execution and forward evidence. No account balances,
           positions, orders, symbols, fills, dollar P&amp;L, exact strategy rules, thresholds, credentials, or protected
           controls are exposed. Missing or stale evidence remains visibly missing or stale.
         </span>

@@ -199,7 +199,7 @@ jobs:
             return 1
           }
 
-          capture home / 'One runtime. Clear boundaries.'
+          capture home / 'One system. Clear evidence.'
           capture terminal /live 'EVIDENCE DRAWER'
           capture research /research 'Development journal.'
           capture field-note /research/multi-market-architecture-equities-crypto 'REPRODUCE / CHALLENGE THIS NOTE'

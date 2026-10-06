@@ -4,19 +4,20 @@ import SystemIcon from "../components/company/SystemIcon";
 const stack = [
   ["PUBLIC SURFACE", "React · TypeScript · Vite", "ANEVUM.com, Command entry points, the public Live Terminal, Field Notes, founder profile, and public-safe evidence."],
   ["EDGE", "Cloudflare Workers · Access", "Production delivery, protected Command identity, API proxying, privacy boundaries, and response hardening."],
-  ["RUNTIME", "RHEN · one Railway service", "The existing production service runs the RHEN supervisor and all internal modules in one container and on one persistent volume."],
+  ["RUNTIME", "RHEN · canonical Railway service", "The canonical production service runs the RHEN supervisor, execution boundary, Core/Store, and named internal modules on one persistent volume."],
   ["MODULES", "Execution · Control · Research · Replay · Forecast", "Functional boundaries remain explicit even though the deployment topology is consolidated."],
   ["CORE / STORE", "SQLite WAL · /data/rhen-core.db", "Bounded state and evidence storage with retention, compaction, WAL checkpointing, and one canonical Core writer."],
-  ["BROKER", "Alpaca", "Only the execution boundary receives broker execution configuration. Research, replay, forecast, and control paths remain execution-disabled."],
+  ["PAPER CANARY", "Railway · Alpaca paper", "A second isolated Railway service executes approved forward-paper BTC candidates only. It cannot grant live broker-write authority."],
+  ["BROKER", "Alpaca", "Only RHEN execution receives live broker execution configuration. Research, replay, forecast, control, Core/Store, and the paper-only candidate path cannot self-promote into live authority."],
   ["INTEGRATIONS", "Slack · GitHub · Railway", "Operational alerts, source control, CI, deployment, and service-level infrastructure."]
 ];
 
 const modules = [
   ["EXECUTION", "Market observation, equities and crypto lanes, orders, fills, risk, reconciliation, session handling, and broker-derived evidence."],
   ["CONTROL", "Health, incidents, scheduling, orchestration, protected-action gates, and system supervision."],
-  ["RESEARCH", "Strategy evaluation, crypto edge discovery, V15 research execution, and forward-shadow evidence."],
-  ["REPLAY", "Deterministic historical replay and counterfactual simulation without broker-order authority."],
-  ["FORECAST", "Regime, baseline, calibration, and forward-measurement workflows."],
+  ["RESEARCH", "GRAEN bounded strategy discovery, chronological development/validation/holdout evidence, falsification, and paper-only promotion state."],
+  ["REPLAY", "VELUM independent historical replay, friction stress, execution-delay stress, and counterfactual verification without live broker authority."],
+  ["FORECAST", "NOSTRA regime, baseline, calibration, forward-measurement, and prediction-state workflows."],
   ["CORE / STORE", "Canonical APIs, scheduler state, research state, bounded evidence storage, retention, and compaction."],
   ["RESEARCH WORKER", "Evidence review and model-assisted research under the same protected promotion boundaries."],
   ["COMMAND / API", "Protected operator and customer routing into the same canonical RHEN state rather than a parallel platform."]
@@ -29,9 +30,10 @@ export default function Architecture() {
         <span>RHEN V3 ARCHITECTURE</span>
         <h1>One runtime. Internal modules. Explicit authority isolation.</h1>
         <p>
-          ANEVUM has consolidated its production topology around RHEN. IREN, GRAEN, VELUM, and NOSTRA now
-          survive only as migration aliases for internal responsibilities. Deployment is simpler, but
-          research, replay, control, storage, and broker execution still have separate authority boundaries.
+          ANEVUM has consolidated its production topology around RHEN. IREN, GRAEN, VELUM, and NOSTRA remain
+          named internal modules with distinct control, research, replay, and forecasting responsibilities.
+          A separate BTC paper canary is retained only for isolated forward-paper execution; live broker authority
+          remains confined to RHEN execution.
         </p>
       </section>
 
@@ -42,7 +44,7 @@ export default function Architecture() {
           <article><span>03 / GATE</span><strong>Protect promotion</strong><p>Evidence can advance a candidate to review, but research code cannot silently grant live authority.</p></article>
           <article><span>04 / EXECUTE</span><strong>Broker authority stays narrow</strong><p>Only the execution boundary can submit broker actions within configured risk and reconciliation controls.</p></article>
         </div>
-        <div className="architecture-evidence-legend">ONE RHEN SERVICE · LOOPBACK INTERNAL MODULES · EXECUTION AUTHORITY ISOLATED · SHADOW / PAPER / LIVE EVIDENCE REMAIN DISTINCT</div>
+        <div className="architecture-evidence-legend">ONE CANONICAL RHEN RUNTIME · NAMED INTERNAL MODULES · ISOLATED BTC PAPER CANARY · PAPER / LIVE AUTHORITY REMAIN DISTINCT</div>
       </section>
 
       <section className="company-section">
@@ -87,8 +89,8 @@ export default function Architecture() {
         <div className="authority-grid">
           <article><SystemIcon system="RHEN" size="sm" /><span>CORE</span><strong>Bounded SQLite instead of an operational PostgreSQL dependency.</strong><p>RHEN v3 targets normal storage below 500 MB and sheds routine analytics above the defined pressure threshold while preserving critical execution evidence.</p></article>
           <article><SystemIcon system="RHEN" size="sm" /><span>RETENTION</span><strong>Routine telemetry is compacted instead of warehoused forever.</strong><p>Decision summaries, normalized candidate observations, position metrics, and routine evidence use explicit retention windows.</p></article>
-          <article><SystemIcon system="RHEN" size="sm" /><span>AUTHORITY</span><strong>One service does not mean one permission set.</strong><p>Research, replay, forecast, control, and pure Core subprocesses have execution disabled; broker order authority remains confined to execution.</p></article>
-          <article><SystemIcon system="RHEN" size="sm" /><span>STRATEGY</span><strong>Runtime authority and research candidates stay separate.</strong><p>Command reads current equities and crypto authority from RHEN while GRAEN candidates, VELUM validation evidence, and IREN release gates remain explicit before any production change.</p></article>
+          <article><SystemIcon system="RHEN" size="sm" /><span>AUTHORITY</span><strong>One runtime does not mean one permission set.</strong><p>Research, replay, forecast, control, and pure Core subprocesses have execution disabled; broker order authority remains confined to execution.</p></article>
+          <article><SystemIcon system="RHEN" size="sm" /><span>STRATEGY</span><strong>Runtime authority and research candidates stay separate.</strong><p>Command reads current equities and crypto authority from RHEN while GRAEN candidates, VELUM verification, forward-paper evidence, and IREN release state remain explicit. Automated research can reach ELIGIBLE_FOR_REVIEW, never live authority.</p></article>
           <article><SystemIcon system="RHEN" size="sm" /><span>CUTOVER</span><strong>Legacy services are retired only after RHEN is verified healthy.</strong><p>The rebuild preserves rollback evidence and does not treat architectural simplification as permission to skip verification.</p></article>
         </div>
       </section>
