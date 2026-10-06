@@ -36,7 +36,7 @@ export const fieldNotes: FieldNote[] = [
       {
         heading: "What changed",
         body: [
-          "RHEN is now the only top-level ANEVUM system and production runtime. IREN, GRAEN, VELUM, NOSTRA, Foundation, and Research Agent remain only as migration aliases for internal responsibilities during cutover.",
+          "RHEN is now the unified ANEVUM production runtime. IREN, GRAEN, VELUM, and NOSTRA remain named internal modules with distinct control, research, replay, and forecasting responsibilities inside that runtime.",
           "The existing production service is converted in place so it can retain its persistent volume while internal service-to-service traffic moves to loopback boundaries inside one container."
         ]
       },
@@ -51,14 +51,14 @@ export const fieldNotes: FieldNote[] = [
         heading: "Authority is still separated",
         body: [
           "One Railway service does not mean one permission set. Execution retains broker authority, while Research, Replay, Forecast, Control, and pure Core processes run with execution disabled.",
-          "The frozen V15 BTC candidate remains shadow/paper only. The rebuild does not promote it, alter its strategy definition, or grant research code live-order authority."
+          "Strategy authority remains separate from research candidates. The rebuild does not let GRAEN, VELUM, NOSTRA, or other research processes silently gain broker-write authority; Command reads the current production and candidate states from the canonical RHEN pipeline."
         ]
       },
       {
         heading: "Verification and cutover",
         body: [
           "The RHEN v3 branch passed the full staging suite with 1,208 tests passing and 8 skipped, plus 54 focused RHEN v3, research, forecast, and V15 tests. GitHub CI and the Foundation runtime audit were green before merge.",
-          "Cutover remains an operational sequence: verify RHEN critical health, verify internal module health, verify bounded storage growth, resume V15 forward shadow, then disable legacy services one by one. Old services and the previous database volume are not treated as disposable until retirement is explicitly verified."
+          "The production cutover now centers on one RHEN service and bounded Core storage. Verification covers critical runtime health, internal module health, canonical evidence, Command projections, and explicit release gates; legacy staging services are not authoritative production sources."
         ]
       }
     ],
@@ -69,7 +69,7 @@ export const fieldNotes: FieldNote[] = [
         "The previous multi-service runtime inventory",
         "Canonical execution, research, replay, forecast, scheduler, and control responsibilities",
         "Observed database-volume growth and evidence-retention patterns",
-        "The frozen V15 forward-validation contract"
+        "The canonical strategy and research-promotion contracts"
       ],
       method: [
         "Move top-level subsystem responsibilities behind one RHEN supervisor as isolated internal modules.",
@@ -83,7 +83,7 @@ export const fieldNotes: FieldNote[] = [
         "Research, replay, forecast, control, and Core processes run with execution disabled.",
         "Critical order, fill, reconciliation, incident, approval, replay-result, and deployment evidence remains durable.",
         "Routine analytics cannot consume the remaining volume indefinitely.",
-        "V15 stays frozen and shadow/paper only throughout migration."
+        "Research candidates remain separate from production authority until an explicit release gate changes that authority."
       ],
       expected: "One production RHEN application service can replace the duplicated service topology while preserving functional isolation, bounded storage, reproducible evidence, and protected live-risk authority.",
       limits: [
