@@ -50,6 +50,9 @@ test("IREN Command exposes only real contextual controls and waits for completio
   assert.doesNotMatch(worker, /FOUNDATION_IREN_COMMAND/);
   assert.match(dock, /IREN \/ CONTROL PLANE/);
   assert.match(dock, /waitForCommand/);
+  assert.match(dock, /lastOutcome/);
+  assert.match(dock, /LAST CONTROL/);
+  assert.match(dock, /linked_job_id/);
   assert.match(dock, /canRunAction/);
   assert.match(dock, /canPrepareCodex/);
   assert.match(dock, /canVerifyHandoff/);
