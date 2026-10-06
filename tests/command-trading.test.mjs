@@ -55,6 +55,9 @@ test("IREN maintenance is embedded in System and requests Codex prompts from IRE
   assert.match(maintenance, /Generate Codex prompt/);
   assert.match(maintenance, /maintenance prompt: /);
   assert.match(maintenance, /maintenance_prompt/);
+  assert.match(maintenance, /maintenance_manifest/);
+  assert.match(maintenance, /ADAPTIVE PASS/);
+  assert.match(maintenance, /material change/);
   assert.match(maintenance, /Copy generated prompt/);
   assert.match(maintenance, /Prepare tracked handoff/);
   assert.match(maintenance, /Verify tracked handoff/);
