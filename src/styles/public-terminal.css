@@ -700,70 +700,145 @@
   font: 700 10px/1 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 }
 
-.pt-home-machine {
-  position: relative;
-  min-height: 480px;
-  display: grid;
-  place-items: center;
+.pt-home-runtime-card {
+  align-self: center;
+  overflow: hidden;
+  border: 1px solid var(--pt-line-strong);
+  border-radius: 16px;
+  background: rgba(7,12,22,.78);
 }
 
-.pt-home-orbit {
-  position: absolute;
-  border: 1px solid rgba(110,161,255,.16);
-  border-radius: 50%;
-}
-.pt-home-orbit.one { width: 70%; aspect-ratio: 1; }
-.pt-home-orbit.two { width: 100%; aspect-ratio: 1; opacity: .55; }
-
-.pt-home-core {
-  position: relative;
-  z-index: 3;
-  width: 180px;
-  aspect-ratio: 1;
-  display: grid;
-  place-items: center;
-  border: 1px solid rgba(110,161,255,.34);
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(50,111,255,.17), rgba(7,12,22,.92) 62%);
-  box-shadow: 0 0 80px rgba(50,111,255,.12);
+.pt-home-runtime-card-head {
+  min-height: 112px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 20px;
+  border-bottom: 1px solid var(--pt-line);
 }
 
-.pt-home-core strong {
-  position: absolute;
-  bottom: 39px;
-  color: var(--pt-text);
+.pt-home-runtime-id {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.pt-home-runtime-id .anevum-mark {
+  width: 42px;
+  height: 42px;
+}
+
+.pt-home-runtime-id span,
+.pt-home-runtime-id strong,
+.pt-home-runtime-id small {
+  display: block;
+}
+
+.pt-home-runtime-id span,
+.pt-home-runtime-guardrails span {
+  color: var(--pt-muted);
+  font: 600 8px/1.2 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   letter-spacing: .12em;
 }
 
-.pt-home-core small {
-  position: absolute;
-  bottom: 24px;
-  color: var(--pt-muted);
-  font: 600 7px/1 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  letter-spacing: .14em;
+.pt-home-runtime-id strong {
+  margin-top: 5px;
+  color: var(--pt-text);
+  font-size: 24px;
+  letter-spacing: -.025em;
 }
 
-.pt-home-node {
-  position: absolute;
-  z-index: 4;
+.pt-home-runtime-id small {
+  margin-top: 4px;
+  color: #8796aa;
+  font-size: 9px;
+}
+
+.pt-home-runtime-status {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--pt-text);
+  font: 700 9px/1 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  letter-spacing: .08em;
+}
+
+.pt-home-runtime-status i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #8dceaa;
+}
+
+.pt-home-runtime-modules {
   display: grid;
-  place-items: center;
-  gap: 4px;
-  width: 94px;
-  min-height: 84px;
-  padding: 8px;
-  border: 1px solid var(--pt-line);
-  border-radius: 12px;
-  background: rgba(7,12,22,.86);
+  grid-template-columns: repeat(2, minmax(0,1fr));
+}
+
+.pt-home-runtime-modules a {
+  min-height: 116px;
+  padding: 18px 20px;
+  border-right: 1px solid var(--pt-line);
+  border-bottom: 1px solid var(--pt-line);
   color: var(--pt-text);
   text-decoration: none;
 }
-.pt-home-node span { font-size: 9px; font-weight: 700; letter-spacing: .08em; }
-.pt-home-node small { color: var(--pt-muted); font-size: 7px; line-height: 1.35; text-align: center; }
-.pt-home-node.rhen { left: 2%; top: 14%; }
-.pt-home-node.graen { right: 2%; top: 14%; }
-.pt-home-node.nostra { left: 2%; bottom: 12%; }
-.pt-home-node.velum { right: 2%; bottom: 12%; }
+
+.pt-home-runtime-modules a:nth-child(2n) { border-right: 0; }
+.pt-home-runtime-modules a:nth-last-child(-n+2) { border-bottom: 0; }
+
+.pt-home-runtime-modules span,
+.pt-home-runtime-modules strong,
+.pt-home-runtime-modules small {
+  display: block;
+}
+
+.pt-home-runtime-modules span {
+  color: var(--pt-soft);
+  font: 700 8px/1.2 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  letter-spacing: .1em;
+}
+
+.pt-home-runtime-modules strong {
+  margin-top: 12px;
+  font-size: 17px;
+}
+
+.pt-home-runtime-modules small {
+  margin-top: 7px;
+  color: #8190a4;
+  font-size: 9px;
+  line-height: 1.45;
+}
+
+.pt-home-runtime-modules a:hover {
+  background: rgba(255,255,255,.025);
+}
+
+.pt-home-runtime-guardrails {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0,1fr));
+  border-top: 1px solid var(--pt-line);
+}
+
+.pt-home-runtime-guardrails div {
+  min-width: 0;
+  padding: 14px;
+  border-right: 1px solid var(--pt-line);
+}
+
+.pt-home-runtime-guardrails div:last-child { border-right: 0; }
+
+.pt-home-runtime-guardrails strong {
+  display: block;
+  margin-top: 6px;
+  color: #cbd8e8;
+  font-size: 8px;
+  line-height: 1.35;
+  letter-spacing: .04em;
+}
 
 .pt-home-section {
   padding: 64px 0;
@@ -943,20 +1018,21 @@
   .pt-bottom-grid { grid-template-columns: 1fr; }
   .pt-terminal-foot { flex-direction: column; }
   .pt-home-hero { display: block; min-height: auto; }
-  .pt-home-machine { min-height: 420px; margin-top: 28px; }
+  .pt-home-runtime-card { margin-top: 28px; }
   .pt-home-section-head { grid-template-columns: 1fr; gap: 8px; }
   .pt-home-links { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 520px) {
   .pt-home-copy h1 { font-size: 48px; }
-  .pt-home-machine { min-height: 350px; }
-  .pt-home-core { width: 135px; }
-  .pt-home-node { width: 76px; min-height: 70px; }
-  .pt-home-node.rhen,
-  .pt-home-node.nostra { left: 0; }
-  .pt-home-node.graen,
-  .pt-home-node.velum { right: 0; }
+  .pt-home-runtime-card-head { align-items: flex-start; flex-direction: column; }
+  .pt-home-runtime-modules { grid-template-columns: 1fr; }
+  .pt-home-runtime-modules a { border-right: 0; border-bottom: 1px solid var(--pt-line); }
+  .pt-home-runtime-modules a:nth-last-child(-n+2) { border-bottom: 1px solid var(--pt-line); }
+  .pt-home-runtime-modules a:last-child { border-bottom: 0; }
+  .pt-home-runtime-guardrails { grid-template-columns: 1fr; }
+  .pt-home-runtime-guardrails div { border-right: 0; border-bottom: 1px solid var(--pt-line); }
+  .pt-home-runtime-guardrails div:last-child { border-bottom: 0; }
   .pt-map { grid-template-columns: 1fr; }
   .pt-map-card.pt-map-rhen { grid-column: auto; order: 0; }
   .pt-visual-head { align-items: flex-start; flex-direction: column; }

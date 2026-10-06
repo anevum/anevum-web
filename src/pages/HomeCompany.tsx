@@ -18,6 +18,7 @@ const modules = [
 export default function HomeCompany() {
   const { data, loading, error, now } = useLiveTrading(5000);
   const rhen = publicSystem("RHEN", data, now, Boolean(error));
+  const runtimeStatus = loading ? "CONNECTING" : error ? "DEGRADED" : displayState(rhen.raw).toUpperCase();
 
   return (
     <div className="public-terminal-home">
@@ -48,29 +49,47 @@ export default function HomeCompany() {
           </div>
         </div>
 
-        <div className="pt-home-machine" aria-label="RHEN unified runtime and named modules">
-          <Link className="pt-home-core" to="/live" aria-label="Open RHEN in the Live Terminal">
-            <Mark />
-            <strong>RHEN</strong>
-            <small>CANONICAL RUNTIME</small>
-          </Link>
+        <div className="pt-home-runtime-card" aria-label="RHEN current architecture">
+          <header className="pt-home-runtime-card-head">
+            <div className="pt-home-runtime-id">
+              <Mark />
+              <div>
+                <span>CANONICAL PRODUCTION SYSTEM</span>
+                <strong>RHEN</strong>
+                <small>Unified runtime with isolated paper execution</small>
+              </div>
+            </div>
+            <span className="pt-home-runtime-status"><i />{runtimeStatus}</span>
+          </header>
 
-          <Link className="pt-home-node rhen" to="/architecture">
-            <span>IREN</span>
-            <small>Control · health · scheduler</small>
-          </Link>
-          <Link className="pt-home-node graen" to="/research">
-            <span>GRAEN</span>
-            <small>Discovery · validation</small>
-          </Link>
-          <Link className="pt-home-node nostra" to="/architecture">
-            <span>NOSTRA</span>
-            <small>Forecast · calibration</small>
-          </Link>
-          <Link className="pt-home-node velum" to="/architecture">
-            <span>VELUM</span>
-            <small>Replay · stress verification</small>
-          </Link>
+          <div className="pt-home-runtime-modules">
+            <Link to="/architecture">
+              <span>IREN</span>
+              <strong>Control</strong>
+              <small>Health · incidents · scheduler · release gates</small>
+            </Link>
+            <Link to="/research">
+              <span>GRAEN</span>
+              <strong>Research</strong>
+              <small>Bounded discovery · chronological validation</small>
+            </Link>
+            <Link to="/architecture">
+              <span>VELUM</span>
+              <strong>Verification</strong>
+              <small>Replay · friction stress · delay stress</small>
+            </Link>
+            <Link to="/architecture">
+              <span>NOSTRA</span>
+              <strong>Forecast</strong>
+              <small>Regime · calibration · forward measurement</small>
+            </Link>
+          </div>
+
+          <footer className="pt-home-runtime-guardrails">
+            <div><span>LIVE BTC</span><strong>SIGNAL-ONLY</strong></div>
+            <div><span>PAPER BTC</span><strong>ISOLATED CANARY</strong></div>
+            <div><span>RESEARCH</span><strong>NO AUTO-LIVE PROMOTION</strong></div>
+          </footer>
         </div>
       </section>
 
