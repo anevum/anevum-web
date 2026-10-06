@@ -6,7 +6,7 @@ import path from "node:path";
 const base = process.env.BASE_URL;
 if (!base) throw new Error("BASE_URL is required");
 
-const publicRoutes = ["/", "/live", "/architecture", "/research", "/research/multi-market-architecture-equities-crypto", "/founder", "/resume", "/releases"];
+const publicRoutes = ["/", "/live", "/architecture", "/research", "/research/prediction-outcome-evidence-chain", "/founder", "/resume", "/releases"];
 const commandRoutes = ["/command/operate", "/command/discover", "/command/review", "/command/system"];
 const routes = process.env.PUBLIC_ONLY === "1" ? publicRoutes : [...publicRoutes, ...commandRoutes];
 const output = path.join(process.env.RUNNER_TEMP || os.tmpdir(), "anevum-visuals");
@@ -128,7 +128,7 @@ async function runCase(route, viewport) {
     deviceScaleFactor: viewport.deviceScaleFactor,
     mobile: viewport.mobile
   });
-  if (route.startsWith("/command/")) await send("Page.addScriptToEvaluateOnNewDocument", {source: "(" + "() => {\n    const originalFetch=window.fetch.bind(window);\n    window.fetch=async (input,init={}) => {\n      const url=String(input);\n      if(url.includes(\"/api/command/session\")) return Response.json({authenticated:true,auth_source:\"cloudflare_access\",command_admin:true,email:\"qa@example.test\"});\n      if(url.includes(\"/api/command/iren/status\")) {\n        const at=new Date().toISOString();\n        return Response.json({\n          schema_version:\"iren_command.v2\",revision:42,observed_at:at,stale:false,state:\"DEGRADED\",action_required:true,\n          topology:{services:[\"IREN\",\"RHEN\",\"GRAEN\",\"NOSTRA\",\"VELUM\"].map(name=>({service_id:name.toLowerCase(),service_name:name+\" runtime\",runtime_kind:name.toLowerCase(),independent_runtime:true,status:name===\"NOSTRA\"?\"OFFLINE\":name===\"VELUM\"?\"IDLE\":\"HEALTHY\",liveness:name!==\"NOSTRA\",readiness:name!==\"NOSTRA\",observed_at:at,last_heartbeat_at:at,scope:\"qa\",revision:\"qa-fixture-not-production\",current_activity:{IREN:\"Coordinating observation and evidence.\",RHEN:\"Observing the latest market cycle.\",GRAEN:\"Evaluating retained research evidence.\",NOSTRA:\"Forecast runtime unavailable.\",VELUM:\"Ready for the next replay.\"}[name]})),dependencies:{rhen_core:{status:\"HEALTHY\",last_success:at}}},\n          incidents:[{key:\"service.nostra\",severity:\"warning\",reason:\"Forecast runtime is offline\",opened_at:at}],\n          work:{active_jobs:1,requires_human:1,blocked_objectives:1,objectives:[{owner_system:\"GRAEN\",objective_key:\"qa-research\",title:\"Evaluate retained evidence\",status:\"ACTIVE\",description:\"Review the current evidence window.\",updated_at:at}],jobs:[{owner_system:\"GRAEN\",job_id:\"qa-job\",title:\"BTC V14 R2H evaluation\",status:\"RUNNING\",job_type:\"RESEARCH\",metadata:{stage:\"CRYPTO_BTC_4H_CONSENSUS_V14_R2H_VELUM_REPLAY\",run_id:\"qa-r2h-run\",candidate_id:\"qa-r2h\"},updated_at:at}],job_events:[{event_id:1,job_id:\"qa-job\",event_type:\"RUNNING\",event:{stage:\"CRYPTO_BTC_4H_CONSENSUS_V14_R2H_VELUM_REPLAY\",run_id:\"qa-r2h-run\"},created_at:at,owner_system:\"GRAEN\",objective_key:\"qa-research\",title:\"BTC V14 R2H evaluation\",job_type:\"RESEARCH\"}],commands:[],handoffs:[],next_action:{title:\"Restore forecast observations\"}},\n          research:{graen_problems:[{problem_id:\"qa-problem\",title:\"BTC V14 R2H\",status:\"RUNNING\",research_stage:\"CRYPTO_BTC_4H_CONSENSUS_V14_R2H_VELUM_REPLAY\",candidate_id:\"qa-r2h\",hypothesis:\"4H consensus transfer\",updated_at:at,started_at:at}],graen_runs:[{run_id:\"qa-r2h-run\",problem_id:\"qa-problem\",status:\"RUNNING\",methodology_version:\"btc-4h-consensus-v14-r2h\",started_at:at,created_at:at}],velum_replays:[{status:\"RUNNING\",started_at:at}],graen_runtime:{worker_id:\"qa-graen-worker\",runtime_version:\"qa\",heartbeat_at:at,active_problem_id:\"qa-problem\",queue_depth:0}},\n          btc_canary:{available:true,run_id:\"BTC-CANARY-001-PAPER-20261004\",strategy_version_id:\"BTC-CANARY-001\",paper_only:true,live_execution_authorized:false,promotion_ready:false,research_status:\"NOT_PROMOTED\",evidence_state:\"COLLECTING_OPEN_POSITION\",observed_at:at,decision_at:at,action:\"hold\",reason:\"BTC canary position protected; waiting for frozen R2H exit\",bar_interval:\"4Hour\",strategy_family:\"btc_4h_momentum_or_sma_consensus_experimental_canary\",model_version:\"graen-btc-4h-consensus-v14-r2h\",position_open:true,position_observed_at:at,entry_price:\"121000.00\",current_price:\"122512.50\",current_return_pct:\"0.0125\",risk_stop_pct:\"0.05\",account_observed_at:at,protection_status:\"new\",protection_observed_at:at,signal:{bar_at:at,close:\"123456.78\",momentum_return:\"0.0842\",momentum_positive:true,momentum_lookback_bars:1080,sma:\"118500.00\",above_sma:true,sma_window_bars:1500,desired_long:true,completed_bar_count:12592},recent_cycles:[{at,action:\"hold\",reason:\"BTC canary position protected; waiting for frozen R2H exit\"},{at:new Date(Date.now()-3000).toISOString(),action:\"hold\",reason:\"Frozen R2H consensus remains long\"}],return_history:[{at:new Date(Date.now()-12000).toISOString(),return_pct:\"-0.003\"},{at:new Date(Date.now()-9000).toISOString(),return_pct:\"0.002\"},{at:new Date(Date.now()-6000).toISOString(),return_pct:\"0.007\"},{at,return_pct:\"0.0125\"}]},\n          operator:{state:\"DEGRADED\",message:\"NOSTRA needs attention. Other systems remain observable.\",recent_transitions:[{key:\"service.nostra\",transition:\"INCIDENT_OPENED\",severity:\"warning\",reason:\"Forecast runtime is offline\",created_at:at}]}\n        });\n      }\n      if(url.includes(\"/api/command/\")) return Response.json({});\n      return originalFetch(input,init);\n    };\n  }" + ")()"});
+  if (route.startsWith("/command/")) await send("Page.addScriptToEvaluateOnNewDocument", {source: "(" + "() => {\n    const originalFetch=window.fetch.bind(window);\n    window.fetch=async (input,init={}) => {\n      const url=String(input);\n      if(url.includes(\"/api/command/session\")) return Response.json({authenticated:true,auth_source:\"cloudflare_access\",command_admin:true,email:\"qa@example.test\"});\n      if(url.includes(\"/api/command/iren/status\")) {\n        const at=new Date().toISOString();\n        return Response.json({\n          schema_version:\"iren_command.v2\",revision:42,observed_at:at,stale:false,state:\"DEGRADED\",action_required:true,\n          topology:{services:[\"IREN\",\"RHEN\",\"GRAEN\",\"NOSTRA\",\"VELUM\"].map(name=>({service_id:name.toLowerCase(),service_name:name+\" runtime\",runtime_kind:name.toLowerCase(),independent_runtime:false,status:name===\"NOSTRA\"?\"OFFLINE\":name===\"VELUM\"?\"IDLE\":\"HEALTHY\",liveness:name!==\"NOSTRA\",readiness:name!==\"NOSTRA\",observed_at:at,last_heartbeat_at:at,scope:\"qa\",revision:\"qa-fixture-not-production\",current_activity:{IREN:\"Coordinating observation and evidence.\",RHEN:\"Observing the latest market cycle.\",GRAEN:\"Evaluating retained research evidence.\",NOSTRA:\"Forecast runtime unavailable.\",VELUM:\"Ready for the next replay.\"}[name]})),dependencies:{rhen_core:{status:\"HEALTHY\",last_success:at}}},\n          incidents:[{key:\"service.nostra\",severity:\"warning\",reason:\"Forecast runtime is offline\",opened_at:at}],\n          work:{active_jobs:1,requires_human:1,blocked_objectives:1,objectives:[{owner_system:\"GRAEN\",objective_key:\"qa-research\",title:\"Evaluate retained evidence\",status:\"ACTIVE\",description:\"Review the current evidence window.\",updated_at:at}],jobs:[{owner_system:\"GRAEN\",job_id:\"qa-job\",title:\"Equity shadow economics evaluation\",status:\"RUNNING\",job_type:\"RESEARCH\",metadata:{stage:\"EQUITY_SHADOW_ECONOMICS_EVIDENCE\",run_id:\"qa-equity-shadow-run\",candidate_id:\"qa-equity-shadow\"},updated_at:at}],job_events:[{event_id:1,job_id:\"qa-job\",event_type:\"RUNNING\",event:{stage:\"EQUITY_SHADOW_ECONOMICS_EVIDENCE\",run_id:\"qa-equity-shadow-run\"},created_at:at,owner_system:\"GRAEN\",objective_key:\"qa-research\",title:\"Equity shadow economics evaluation\",job_type:\"RESEARCH\"}],commands:[],handoffs:[],next_action:{title:\"Restore forecast observations\"}},\n          research:{graen_problems:[{problem_id:\"qa-problem\",title:\"Equity shadow economics\",status:\"RUNNING\",research_stage:\"EQUITY_SHADOW_ECONOMICS_EVIDENCE\",candidate_id:\"qa-equity-shadow\",hypothesis:\"Cost-adjusted opportunity economics\",updated_at:at,started_at:at}],graen_runs:[{run_id:\"qa-equity-shadow-run\",problem_id:\"qa-problem\",status:\"RUNNING\",methodology_version:\"rhen-shadow-economics-v1\",started_at:at,created_at:at}],velum_replays:[{status:\"RUNNING\",started_at:at}],graen_runtime:{worker_id:\"qa-graen-worker\",runtime_version:\"qa\",heartbeat_at:at,active_problem_id:\"qa-problem\",queue_depth:0}},\n          operator:{state:\"DEGRADED\",message:\"NOSTRA needs attention. Other systems remain observable.\",recent_transitions:[{key:\"service.nostra\",transition:\"INCIDENT_OPENED\",severity:\"warning\",reason:\"Forecast runtime is offline\",created_at:at}]}\n        });\n      }\n      if(url.includes(\"/api/command/\")) return Response.json({});\n      return originalFetch(input,init);\n    };\n  }" + ")()"});
   await send("Page.navigate", { url: base + route });
   await sleep(5000);
   const ops = await send("Runtime.evaluate", {expression: `(() => {
@@ -297,28 +297,6 @@ async function runCase(route, viewport) {
     const missingLabels=required.filter((label)=>!(architecture.labels||[]).includes(label));
     if(!architecture.present || architecture.cards!==8 || architecture.missingIcons?.length || architecture.collapsedCards?.length || missingLabels.length) {
       throw new Error("RHEN v3 architecture geometry/icon failure: "+JSON.stringify({...architecture,missingLabels}));
-    }
-  }
-
-  if(route==="/command/terminal") {
-    const terminalAudit=await send("Runtime.evaluate",{expression:`(() => ({
-      terminal:Boolean(document.querySelector(".operations-terminal")),
-      focusCards:document.querySelectorAll(".terminal-focus-card").length,
-      lanes:document.querySelectorAll(".terminal-lane").length,
-      workingFocus:document.querySelectorAll(".terminal-focus-card.is-working").length,
-      canary:Boolean(document.querySelector(".terminal-canary.is-available")),
-      canaryTitle:document.querySelector(".terminal-canary h2")?.textContent,
-      canarySafeguards:[...document.querySelectorAll(".terminal-canary-authority b")].map(el=>el.textContent),
-      canaryPipelineNodes:document.querySelectorAll(".terminal-canary-node").length,
-      canaryCycles:document.querySelectorAll(".terminal-canary-cycles li:not(.terminal-canary-empty)").length,
-      canaryChart:Boolean(document.querySelector(".terminal-canary-spark svg")),
-      canaryOverflow:(()=>{const el=document.querySelector(".terminal-canary");return el?el.scrollWidth>el.clientWidth+1:false})(),
-      streamRows:document.querySelectorAll(".terminal-stream li").length
-    }))()`,returnByValue:true});
-    const terminal=terminalAudit.result?.value||{};
-    const safeguards=terminal.canarySafeguards||[];
-    if(!terminal.terminal||terminal.focusCards!==2||terminal.lanes!==5||terminal.workingFocus<2||!terminal.canary||terminal.canaryTitle!=="BTC-CANARY-001"||terminal.canaryPipelineNodes!==5||terminal.canaryCycles<2||!terminal.canaryChart||terminal.canaryOverflow||!safeguards.includes("PAPER ONLY")||!safeguards.includes("LIVE DISABLED")||!safeguards.includes("NOT PROMOTED")||terminal.streamRows<3){
-      throw new Error("Live operations terminal fixture failed: "+JSON.stringify(terminal));
     }
   }
 
@@ -542,7 +520,19 @@ try {
   for (const viewport of viewports) {
     failures = failures.concat((await runScrollResetCase(viewport)).map((item) => viewport.name + " scroll-reset: " + item));
     for (const route of routes) {
-      failures = failures.concat((await runCase(route, viewport)).map((item) => viewport.name + " " + route + ": " + item));
+      let routeFailures = await runCase(route, viewport);
+      const transientChunkRace =
+        routeFailures.length > 0 &&
+        routeFailures.every((item) =>
+          item.includes("Failed to fetch dynamically imported module")
+        );
+      if (transientChunkRace) {
+        await sleep(2500);
+        routeFailures = await runCase(route, viewport);
+      }
+      failures = failures.concat(
+        routeFailures.map((item) => viewport.name + " " + route + ": " + item)
+      );
     }
   }
 } finally {

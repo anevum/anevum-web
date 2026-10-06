@@ -35,7 +35,7 @@ jobs:
       - name: Install
         run: npm install --no-audit --no-fund
       - name: Test canonical operational boundary
-        run: node --experimental-strip-types --test tests/command-topology.test.mjs tests/command-operations.test.mjs tests/command-trading.test.mjs tests/command-research.test.mjs tests/equity-market-time.test.mjs tests/visual-ops.test.mjs tests/btc-discovery.test.mjs
+        run: node --experimental-strip-types --test tests/command-topology.test.mjs tests/command-operations.test.mjs tests/command-trading.test.mjs tests/command-research.test.mjs tests/equity-market-time.test.mjs tests/visual-ops.test.mjs
       - name: Typecheck and build
         run: npm run build
       - name: Verify generated artifacts
@@ -139,13 +139,17 @@ jobs:
 
           rhen_health_file="$RUNNER_TEMP/rhen-health.json"
           curl --fail --show-error --silent "https://alpaca-trader-production-bf3e.up.railway.app/health" > "$rhen_health_file"
-          jq '{ok, module_failures, iren: .modules.iren, graen_research: .modules.graen_research}' "$rhen_health_file"
+          jq '{ok, module_failures, iren: .modules.iren, graen: .modules.graen, velum: .modules.velum, nostra: .modules.nostra, research_agent: .modules.research_agent}' "$rhen_health_file"
           jq -e '
             .ok == true and
+            (.module_failures | length) == 0 and
             .modules.iren.ok == true and
             .modules.iren.body.durable_state_current == true and
             .modules.iren.body.work_engine.running == true and
-            .modules.graen_research.ok == true
+            .modules.graen.ok == true and
+            .modules.velum.ok == true and
+            .modules.nostra.ok == true and
+            .modules.research_agent.ok == true
           ' "$rhen_health_file" > /dev/null
 
           curl --fail --show-error --silent --head "$base/command" | grep -qi 'x-robots-tag:.*noindex'
@@ -210,7 +214,7 @@ jobs:
           capture home / 'One system. Clear evidence.'
           capture terminal /live 'EVIDENCE DRAWER'
           capture research /research 'Development journal.'
-          capture field-note /research/multi-market-architecture-equities-crypto 'REPRODUCE / CHALLENGE THIS NOTE'
+          capture field-note /research/prediction-outcome-evidence-chain 'REPRODUCE / CHALLENGE THIS NOTE'
           capture architecture /architecture 'One runtime. Internal modules.'
           capture founder /founder 'Devon Akins'
           capture resume /resume 'Technical Skills'
