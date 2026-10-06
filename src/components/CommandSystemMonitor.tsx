@@ -8,7 +8,7 @@ export type MonitoredSystem = SystemName;
 const RELATED: Record<SystemName, Array<[string,string]>> = {
   IREN: [["/command/infrastructure","Infrastructure"]],
   RHEN: [["/command/live","Live"],["/command/performance","Performance"],["/command/evidence","Evidence"],["/command/research","Research"]],
-  GRAEN: [["/command/research","Research record"]], NOSTRA: [["/products/nostra","About NOSTRA"]], VELUM: [["/products/velum","About VELUM"]]
+  GRAEN: [["/command/research","Research record"]], NOSTRA: [["/architecture","Architecture"]], VELUM: [["/architecture","Architecture"]]
 };
 export default function CommandSystemMonitor({ session, feed, system }: { session: RhenSession; feed?: LiveTradingFeed | null; system: SystemName }) {
   const { snapshot, error, now, receivedAt } = useCommandObservation(session);
@@ -30,7 +30,7 @@ export default function CommandSystemMonitor({ session, feed, system }: { sessio
       <div className="vo-metrics"><SystemMetric label="Health" value={displayState(view.health)} /><SystemMetric label="Activity" value={displayState(view.activityState)} /><SystemMetric label="Open objectives" value={view.objectives} /><SystemMetric label="Active jobs" value={view.jobs} /><SystemMetric label="Incidents" value={view.incidents} />
         <SystemMetric label="Ready runtimes" value={view.fresh && rows.length ? rows.filter(row => row.readiness === true).length + " / " + rows.length : "—"} /></div>
       {system === "IREN" && <div className="vo-metrics"><SystemMetric label="Blocked objectives" value={snapshot?.work?.blocked_objectives} /><SystemMetric label="Human action" value={snapshot?.work?.requires_human} /></div>}
-      <p className="vo-caption">{!view.fresh ? "Last known details · fresh evidence unavailable" : "Observed by IREN / Foundation"} · refreshed {ageText(receivedAt,now)}</p>
+      <p className="vo-caption">{!view.fresh ? "Last known details · fresh evidence unavailable" : "Observed by IREN / RHEN Core"} · refreshed {ageText(receivedAt,now)}</p>
       {system === "IREN" && snapshot?.operator?.message && <p className="vo-brief-message">{snapshot.operator.message}</p>}
       {system === "NOSTRA" && <p className="vo-caption">Branches describe the system's role. No forecast values or confidence levels are inferred.</p>}
       {system === "VELUM" && <p className="vo-caption">Replay activity is separate from broker execution.</p>}
