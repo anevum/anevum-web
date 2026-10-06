@@ -126,16 +126,22 @@ export default function CommandStrategyPipeline({
           <div>
             <span>FORWARD EVIDENCE READINESS</span>
             <strong>
-              {readiness.measurement_ready_rate_pct == null
-                ? "No current sample"
-                : readiness.measurement_ready_rate_pct.toFixed(1) + "%"}
+              {readiness.state
+                ? displayState(readiness.state)
+                : readiness.measurement_ready_rate_pct == null
+                  ? "No current sample"
+                  : readiness.measurement_ready_rate_pct.toFixed(1) + "%"}
             </strong>
           </div>
           <p>
             {readiness.measurement_ready_count || 0} / {readiness.candidate_count || 0} candidates measurable
             {" · "}{readiness.sampled_cycles || 0} recent cycles
           </p>
+          {readiness.next_action && <p>{readiness.next_action}</p>}
           <small>
+            {readiness.measurement_contract
+              ? "Contract " + readiness.measurement_contract.replaceAll("_", " ") + " · "
+              : ""}
             Missing reference price {readiness.missing_reference_price_count || 0}
             {" · "}missing bar time {readiness.missing_bar_time_count || 0}
             {" · "}reference-only holds {readiness.evidence_reference_only_count || 0}
