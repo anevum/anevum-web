@@ -227,9 +227,46 @@ export default function Command() {
   const history = list(snapshot?.history);
   const dayPnl = number(account.day_pnl);
 
-  const runtime = record(evidence?.provenance?.runtime);
-  const latestScan = record(evidence?.provenance?.latest_scan_cycle);
+  const runtimeEnvelope = record(evidence?.provenance?.runtime);
+  const runtimePayload = record(runtimeEnvelope.payload);
+  const runtimeDetails = record(runtimePayload.runtime);
+  const runtime = Object.keys(runtimeDetails).length
+    ? {
+        ...runtimeDetails,
+        run_id: runtimePayload.run_id ?? runtimeEnvelope.run_id,
+        strategy_version_id: runtimePayload.strategy_version_id ?? runtimeEnvelope.strategy_version_id,
+        observed_at: runtimeEnvelope.occurred_at ?? runtimeDetails.runtime_started_at
+      }
+    : runtimeEnvelope;
+  const scanEnvelope = record(evidence?.provenance?.latest_scan_cycle);
+  const scanPayload = record(scanEnvelope.payload);
+  const scanRuntime = record(scanPayload.runtime);
+  const latestScan = Object.keys(scanPayload).length
+    ? {
+        ...scanPayload,
+        scan_cycle_id: scanPayload.scan_cycle_id ?? scanPayload.cycle_key ?? scanEnvelope.event_key,
+        observed_at: scanEnvelope.occurred_at ?? scanPayload.observed_at,
+        run_id: scanEnvelope.run_id ?? scanPayload.run_id,
+        strategy_version_id: scanEnvelope.strategy_version_id ?? scanPayload.strategy_version_id,
+        runtime_instance_id: scanPayload.runtime_instance_id ?? scanRuntime.runtime_instance_id,
+        deployment_id: scanPayload.deployment_id ?? scanRuntime.deployment_id,
+        git_commit: scanPayload.git_commit ?? scanRuntime.git_commit
+      }
+    : scanEnvelope;
   const health = record(evidence?.telemetry_health);
+  const telemetryTracking = text(
+    health.tracking_state,
+    health.latest_event_at ? "OBSERVED" : "NO DATA"
+  ).toUpperCase();
+  const runtimeTracking = text(
+    health.runtime_provenance_state,
+    Object.keys(runtime).length ? "RECORDED" : "MISSING"
+  ).toUpperCase();
+  const decisionTracking = text(
+    health.decision_cycle_state,
+    Object.keys(latestScan).length ? "OBSERVED" : "NO DATA"
+  ).toUpperCase();
+  const events24h = health.events_24h ?? health.events_observed;
   const daily = dailyReport || record(evidence?.latest_daily);
   const weekly = weeklyReport || record(evidence?.latest_weekly);
   const dailyMetrics = record(daily.metrics);
@@ -607,8 +644,15 @@ export default function Command() {
             </article>
 
             <article id="telemetry" className="command-panel command-view-system command-panel-telemetry">
-              <header><div><span>TELEMETRY + PROVENANCE</span><strong>{text(runtime.system_version, "RHEN")}</strong></div><small>{text(evidence?.generated_at)}</small></header>
+              <header>
+                <div><span>TELEMETRY + PROVENANCE</span><strong>{text(runtime.system_version, "RHEN")} · {telemetryTracking}</strong></div>
+                <small>Evidence {text(evidence?.generated_at)}</small>
+              </header>
               <div className="system-grid">
+                <div><span>TRACKING</span><strong>{telemetryTracking}</strong></div>
+                <div><span>RUNTIME PROVENANCE</span><strong>{runtimeTracking}</strong></div>
+                <div><span>DECISION STREAM</span><strong>{decisionTracking}</strong></div>
+                <div><span>LATEST EVENT</span><strong>{text(health.latest_event_at)}</strong></div>
                 <div><span>RUN</span><strong>{text(runtime.run_id)}</strong></div>
                 <div><span>STRATEGY</span><strong>{text(runtime.strategy_version_id)}</strong></div>
                 <div><span>DEPLOYMENT</span><strong>{text(runtime.deployment_id)}</strong></div>
@@ -617,7 +661,7 @@ export default function Command() {
                 <div><span>LATEST SCAN</span><strong>{text(latestScan.scan_cycle_id)}</strong></div>
                 <div><span>SCAN OUTCOME</span><strong>{text(latestScan.cycle_outcome)}</strong></div>
                 <div><span>DATA STATUS</span><strong>{text(latestScan.data_status)}</strong></div>
-                <div><span>EVENTS / 24H</span><strong>{text(health.events_24h)}</strong></div>
+                <div><span>EVENTS / 24H</span><strong>{text(events24h)}</strong></div>
                 <div><span>RUNTIME ERRORS / 24H</span><strong>{text(health.runtime_errors_24h)}</strong></div>
               </div>
             </article>
