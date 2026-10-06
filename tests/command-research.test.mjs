@@ -39,7 +39,11 @@ test("Discovery keeps Research Lab interactive without mutating runtimes", () =>
   assert.match(lab, /READ ONLY/);
   assert.doesNotMatch(lab, /orders\/cancel|position\/close/);
   assert.match(discover, /OPTIONS/);
-  assert.match(discover, /NOT WIRED/);
+  assert.match(discover, /RESEARCH ONLY/);
+  assert.match(discover, /SHORT EQUITIES/);
+  assert.match(discover, /LEVERAGE EXPANSION/);
+  assert.match(discover, /DISABLED/);
+  assert.doesNotMatch(discover, />CRYPTO</);
 });
 
 test("Research Lab exposes run progress, charts, metrics, context and event tape", () => {
