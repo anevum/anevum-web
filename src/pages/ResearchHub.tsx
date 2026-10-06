@@ -3,6 +3,7 @@ import SystemIcon, { SystemChip } from "../components/company/SystemIcon";
 import type { SystemName } from "../components/company/SystemMark";
 import { fieldNotes } from "../data/fieldNotes";
 import { useLiveTrading } from "../hooks/useLiveTrading";
+import { ageText, displayState, publicSystem } from "../lib/system-display";
 
 const programs: { name: SystemName; category: string; description: string; href: string }[] = [
   { name:"GRAEN", category:"Strategy discovery", description:"Bounded candidate generation, chronological development/validation/holdout evidence, multiplicity control, falsification, and paper-only promotion.", href:"/architecture" },
@@ -12,7 +13,7 @@ const programs: { name: SystemName; category: string; description: string; href:
 ];
 
 export default function ResearchHub() {
-  const { data, loading, error } = useLiveTrading(10000);
+  const { data, loading, error, now } = useLiveTrading(10000);
   const research = data?.research;
   const decisions = research?.completed_decisions || [];
   const questions = research?.active_questions || [];
@@ -20,6 +21,11 @@ export default function ResearchHub() {
   const outcomeCount = outcomes.reduce((sum, row) => sum + Number(row.count || 0), 0);
   const [lead, ...rest] = [...fieldNotes].sort((a, b) => b.date.localeCompare(a.date));
   const leadSystems = lead?.systems || [];
+  const graen = publicSystem("GRAEN", data, now, Boolean(error));
+  const velum = publicSystem("VELUM", data, now, Boolean(error));
+  const rhen = publicSystem("RHEN", data, now, Boolean(error));
+  const validation = data?.crypto_shadow_validation;
+  const activeStrategy = data?.active_strategy?.version_id || data?.active_strategy?.strategy_name || "UNAVAILABLE";
 
   return (
     <div className="company-page research-hub field-notes-page">
@@ -33,6 +39,74 @@ export default function ResearchHub() {
           <Link to="/live">Live Evidence →</Link>
           <Link to="/architecture">Architecture →</Link>
           <Link to="/releases">Releases →</Link>
+        </div>
+      </section>
+
+      <section className="company-section no-top-border field-notes-live-state" aria-label="Current public research evidence">
+        <header className="company-section-head field-notes-live-head">
+          <span>CURRENT RESEARCH</span>
+          <h2>What the research system is doing now.</h2>
+          <p>
+            Live, sanitized evidence from RHEN. GRAEN research and VELUM replay are observable here,
+            while candidate parameters and protected operator controls remain private.
+          </p>
+        </header>
+
+        <div className="research-live-shell">
+          <article className="research-live-primary">
+            <header>
+              <div className="research-live-identity">
+                <SystemIcon system="GRAEN" size="md" />
+                <div>
+                  <span>GRAEN / CURRENT FOCUS</span>
+                  <strong>{displayState(research?.current_status || graen.activityState)}</strong>
+                </div>
+              </div>
+              <small>{ageText(research?.last_updated_at || graen.observedAt, now)}</small>
+            </header>
+
+            <h3>{research?.current_focus || "No current public research focus is recorded."}</h3>
+            <p>{graen.activity}</p>
+
+            <div className="research-live-metrics">
+              <div><span>ACTIVE QUESTIONS</span><strong>{questions.length}</strong></div>
+              <div><span>DURABLE DECISIONS</span><strong>{decisions.length}</strong></div>
+              <div><span>FORWARD OUTCOMES</span><strong>{outcomeCount || "—"}</strong></div>
+              <div><span>NEXT DIRECTION</span><strong>{research?.next_direction?.subject || "NOT RECORDED"}</strong></div>
+            </div>
+          </article>
+
+          <div className="research-live-secondary">
+            <article>
+              <header><SystemIcon system="VELUM" size="sm" /><span>VELUM / VERIFICATION</span></header>
+              <strong>{displayState(velum.activityState)}</strong>
+              <p>{velum.activity}</p>
+            </article>
+
+            <article>
+              <header><SystemIcon system="GRAEN" size="sm" /><span>PUBLISHED VALIDATION SAMPLE</span></header>
+              <strong>{displayState(validation?.status)}</strong>
+              <div className="research-validation-progress">
+                <div>
+                  <span>Completed exits</span>
+                  <b>{validation?.counts?.exits ?? "—"}</b>
+                  <small>{validation?.progress?.completed_trades_pct == null ? "No progress reported" : validation.progress.completed_trades_pct.toFixed(1) + "% of public target"}</small>
+                </div>
+                <div>
+                  <span>Independent days</span>
+                  <b>{validation?.counts?.independent_day_blocks ?? "—"}</b>
+                  <small>{validation?.progress?.independent_days_pct == null ? "No progress reported" : validation.progress.independent_days_pct.toFixed(1) + "% of public target"}</small>
+                </div>
+              </div>
+            </article>
+
+            <article className="research-authority-card">
+              <header><SystemIcon system="RHEN" size="sm" /><span>PRODUCTION AUTHORITY</span></header>
+              <strong>{activeStrategy}</strong>
+              <p>{rhen.activity}</p>
+              <small>Research and replay cannot automatically replace the production strategy or grant live broker authority.</small>
+            </article>
+          </div>
         </div>
       </section>
 
@@ -98,32 +172,6 @@ export default function ResearchHub() {
               <span className="field-notes-story-arrow">↗</span>
             </Link>
           ))}
-        </div>
-      </section>
-
-      <section className="company-section field-notes-pulse">
-        <header className="company-section-head">
-          <span>RESEARCH PULSE</span>
-          <h2>What the evidence surface says now.</h2>
-          <p>{error || (loading ? "Loading sanitized research state…" : "A compact public-safe snapshot from the durable research surface.")}</p>
-        </header>
-        <div className="field-notes-pulse-grid">
-          <article>
-            <SystemIcon system="GRAEN" size="sm" />
-            <div><span>STATUS</span><strong>{research?.current_status || "UNAVAILABLE"}</strong><p>{research?.current_focus || "No current public focus is recorded."}</p></div>
-          </article>
-          <article>
-            <SystemIcon system="NOSTRA" size="sm" />
-            <div><span>FORWARD OUTCOMES</span><strong>{outcomeCount || "—"}</strong><p>Recorded candidate-outcome rows across published horizons.</p></div>
-          </article>
-          <article>
-            <SystemIcon system="GRAEN" size="sm" />
-            <div><span>ACTIVE QUESTIONS</span><strong>{questions.length}</strong><p>Questions remain questions until methodology and evidence support a conclusion.</p></div>
-          </article>
-          <article>
-            <SystemIcon system="IREN" size="sm" />
-            <div><span>DURABLE DECISIONS</span><strong>{decisions.length}</strong><p>Sanitized conclusions retained in canonical state.</p></div>
-          </article>
         </div>
       </section>
 
