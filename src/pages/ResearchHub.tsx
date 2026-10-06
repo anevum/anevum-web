@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { RhenRhenSystemChip, RhenSystemGlyph } from "../components/company/RhenModuleGlyph";
+import { RhenSystemChip, RhenSystemGlyph } from "../components/company/RhenModuleGlyph";
 import type { SystemName } from "../components/company/SystemMark";
 import { fieldNotes } from "../data/fieldNotes";
 import { useLiveTrading } from "../hooks/useLiveTrading";
