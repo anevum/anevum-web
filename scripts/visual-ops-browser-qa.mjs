@@ -410,12 +410,22 @@ async function runScrollResetCase(viewport) {
     mobile: viewport.mobile
   });
   await send("Page.navigate", { url: base + "/research" });
-  await sleep(5000);
 
   const result = await send("Runtime.evaluate", {
     expression: `(async () => {
       const scroller = document.scrollingElement || document.documentElement;
-      const maxScroll = Math.max(0, scroller.scrollHeight - scroller.clientHeight);
+      const readyDeadline = Date.now() + 12000;
+      let link = null;
+      let maxScroll = 0;
+      while (Date.now() < readyDeadline) {
+        link = document.querySelector('a[href="/architecture"]');
+        maxScroll = Math.max(0, scroller.scrollHeight - scroller.clientHeight);
+        if (location.pathname === "/research" && link && maxScroll > 200) break;
+        await new Promise((resolve) => setTimeout(resolve, 100));
+      }
+      if (!link) return { ok: false, reason: "architecture link missing after hydration wait", before: scroller.scrollTop, maxScroll, pathname: location.pathname, after: scroller.scrollTop };
+      if (maxScroll <= 200) return { ok: false, reason: "research route not scrollable after hydration wait", before: scroller.scrollTop, maxScroll, pathname: location.pathname, after: scroller.scrollTop };
+
       const root = document.documentElement;
       const previousScrollBehavior = root.style.scrollBehavior;
       root.style.scrollBehavior = "auto";
@@ -423,8 +433,6 @@ async function runScrollResetCase(viewport) {
       await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
       const before = scroller.scrollTop;
       root.style.scrollBehavior = previousScrollBehavior;
-      const link = document.querySelector('a[href="/architecture"]');
-      if (!link) return { ok: false, reason: "architecture link missing", before, maxScroll, pathname: location.pathname, after: scroller.scrollTop };
       link.click();
 
       const deadline = Date.now() + 5000;
