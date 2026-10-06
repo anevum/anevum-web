@@ -13,6 +13,9 @@ const MARKET_OPEN_MINUTE = 9 * 60 + 30;
 const MARKET_CLOSE_MINUTE = 16 * 60;
 const SESSION_MINUTES = MARKET_CLOSE_MINUTE - MARKET_OPEN_MINUTE;
 const COMPRESSED_SESSION_GAP_MINUTES = 10;
+const TRANSIENT_SPIKE_MIN_DOLLARS = 1;
+const TRANSIENT_SPIKE_MIN_RATIO = 0.08;
+const TRANSIENT_SPIKE_MAX_NEIGHBOR_RATIO = 0.02;
 
 type TimedPoint = {
   at: string;
@@ -23,6 +26,11 @@ type SessionParts = {
   dateKey: string;
   weekday: string;
   minuteOfDay: number;
+};
+
+type ProjectedEquityPoint = {
+  equity: number;
+  sessionDate: string;
 };
 
 function easternParts(time: number): SessionParts | null {
@@ -87,6 +95,54 @@ export function projectEquityMarketTimeline<T extends TimedPoint>(rows: T[]) {
       displayTime: displayMinute * 60_000
     };
   });
+}
+
+export function suppressTransientEquitySpikes<T extends ProjectedEquityPoint>(rows: T[]) {
+  if (rows.length < 3) {
+    return { rows: [...rows], suppressedCount: 0 };
+  }
+
+  const keep = rows.map(() => true);
+  let suppressedCount = 0;
+
+  for (let index = 1; index < rows.length - 1; index += 1) {
+    const previous = rows[index - 1];
+    const current = rows[index];
+    const next = rows[index + 1];
+
+    if (
+      previous.sessionDate !== current.sessionDate
+      || current.sessionDate !== next.sessionDate
+    ) {
+      continue;
+    }
+
+    const scale = Math.max(
+      Math.abs(previous.equity),
+      Math.abs(current.equity),
+      Math.abs(next.equity),
+      1
+    );
+    const deviation = Math.min(
+      Math.abs(current.equity - previous.equity),
+      Math.abs(current.equity - next.equity)
+    );
+    const neighborGap = Math.abs(next.equity - previous.equity);
+
+    if (
+      deviation >= TRANSIENT_SPIKE_MIN_DOLLARS
+      && deviation / scale >= TRANSIENT_SPIKE_MIN_RATIO
+      && neighborGap / scale <= TRANSIENT_SPIKE_MAX_NEIGHBOR_RATIO
+    ) {
+      keep[index] = false;
+      suppressedCount += 1;
+    }
+  }
+
+  return {
+    rows: rows.filter((_, index) => keep[index]),
+    suppressedCount
+  };
 }
 
 export const EQUITY_MARKET_DISPLAY = {
