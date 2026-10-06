@@ -173,15 +173,16 @@ async function runCase(route, viewport) {
     maintenancePrompt: document.querySelector('textarea[aria-label="IREN maintenance Codex prompt"]')?.value,
     copied: window.__copiedPrompt === document.querySelector('textarea[aria-label="IREN maintenance Codex prompt"]')?.value,
     tracked: document.querySelector(".iren-maintenance-handoff")?.textContent.includes("Add runtime evidence"),
+    adaptivePass: document.body.textContent.includes("ADAPTIVE PASS · TARGETED"),
+    adaptiveDelta: document.body.textContent.includes("3 material changes"),
     noDock: !document.querySelector(".iren-dock")
   })`,returnByValue:true});
   const check = interactions.result?.value || {};
   if (!check.generated || !check.verified || !check.copied || !check.tracked || !check.noDock ||
+      !check.adaptivePass || !check.adaptiveDelta ||
       !check.maintenancePrompt?.includes("IREN ADAPTIVE MAINTENANCE PASS v2") ||
       !check.maintenancePrompt?.includes("anevum/alpaca-trader") ||
-      !check.maintenancePrompt?.includes("anevum/anevum-web") ||
-      !document.body.textContent.includes("ADAPTIVE PASS · TARGETED") ||
-      !document.body.textContent.includes("3 material changes")) {
+      !check.maintenancePrompt?.includes("anevum/anevum-web")) {
     throw new Error("Maintenance interaction failed: " + JSON.stringify(check));
   }
   const result = await send("Runtime.evaluate", {
