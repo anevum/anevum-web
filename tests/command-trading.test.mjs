@@ -41,21 +41,30 @@ test("Trading workspace exposes private broker account tracking and executions",
   assert.match(lanes, /BROKER WRITES/);
 });
 
-test("IREN Command routes through RHEN as a deterministic zero-cost control plane", () => {
+test("IREN Command exposes only real contextual controls and waits for completion", () => {
   const worker = readFileSync(new URL("../worker.mjs", import.meta.url), "utf8");
   const dock = readFileSync(new URL("../src/components/CommandIrenDock.tsx", import.meta.url), "utf8");
 
   assert.match(worker, /proxyTrader\(request, "\/v1\/command\/iren\/status", env\)/);
   assert.match(worker, /proxyTrader\(request, "\/v1\/command\/iren\/command", env\)/);
   assert.doesNotMatch(worker, /FOUNDATION_IREN_COMMAND/);
-  assert.match(dock, /ZERO-COST CONTROL PLANE/);
-  assert.match(dock, /No conversational model is running here/);
-  assert.match(dock, /prepare for Codex/);
+  assert.match(dock, /IREN \/ CONTROL PLANE/);
+  assert.match(dock, /waitForCommand/);
+  assert.match(dock, /lastOutcome/);
+  assert.match(dock, /LAST CONTROL/);
+  assert.match(dock, /linked_job_id/);
+  assert.match(dock, /canRunAction/);
+  assert.match(dock, /canPrepareCodex/);
+  assert.match(dock, /canVerifyHandoff/);
+  assert.match(dock, /No pending control action/);
+  assert.doesNotMatch(dock, /No conversational model is running here/);
+  assert.doesNotMatch(dock, /CONTROL MODE/);
+  assert.doesNotMatch(dock, /next safe action/);
+  assert.doesNotMatch(dock, /needs owner/);
   assert.doesNotMatch(dock, /Ask IREN…/);
   assert.doesNotMatch(dock, /iren-dock-directive/);
   assert.match(dock, /error[\s\S]*OFFLINE/);
 });
-
 
 test("Command shares one canonical IREN observation across operator workspaces", () => {
   const command = readFileSync(new URL("../src/pages/Command.tsx", import.meta.url), "utf8");

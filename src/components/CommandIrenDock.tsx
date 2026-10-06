@@ -77,24 +77,14 @@ function stateClass(value?: string) {
   return "warn";
 }
 
-function responseText(command?: IrenCommand) {
-  const response = command?.result || command?.response || {};
-  const message = response.message;
-  if (typeof message === "string" && message.trim()) return message;
-  const next = response.next_action;
-  if (next && typeof next === "object") {
-    const title = (next as Record<string, unknown>).title;
-    if (typeof title === "string") return title;
-  }
-  return command?.status === "PROCESSING" ? "IREN is processing this command." : "";
-}
-
 export default function CommandIrenDock({ session }: { session: RhenSession }) {
   const [feed, setFeed] = useState<IrenFeed | null>(null);
   const [expanded, setExpanded] = useState(false);
   const [error, setError] = useState("");
   const [copied, setCopied] = useState("");
   const [sending, setSending] = useState(false);
+  const [pendingControl, setPendingControl] = useState("");
+  const [lastOutcome, setLastOutcome] = useState<{ command: IrenCommand; job?: IrenJob } | null>(null);
   const refreshInFlight = useRef(false);
 
   const request = useCallback(async (path: string, init?: RequestInit) => {
@@ -114,17 +104,38 @@ export default function CommandIrenDock({ session }: { session: RhenSession }) {
   }, [session]);
 
   const refresh = useCallback(async () => {
-    if (refreshInFlight.current) return;
+    if (refreshInFlight.current) return null;
     refreshInFlight.current = true;
     try {
-      const value = await request("/api/command/iren/status");
+      const value = await request("/api/command/iren/status") as IrenFeed;
       setFeed(value);
       setError("");
+      return value;
     } catch (nextError) {
       setError(nextError instanceof Error ? nextError.message : "IREN unavailable.");
+      return null;
     } finally {
       refreshInFlight.current = false;
     }
+  }, [request]);
+
+  const waitForCommand = useCallback(async (commandId: string) => {
+    for (let attempt = 0; attempt < 30; attempt += 1) {
+      await new Promise((resolve) => window.setTimeout(resolve, 350));
+      const value = await request("/api/command/iren/status") as IrenFeed;
+      setFeed(value);
+      const command = value.work?.commands?.find((row) => row.command_id === commandId);
+      if (command && ["SUCCEEDED", "FAILED", "CANCELLED"].includes(String(command.status || "").toUpperCase())) {
+        const linkedJob = command.linked_job_id
+          ? value.work?.jobs?.find((row) => row.job_id === command.linked_job_id)
+          : undefined;
+        const deterministicJob = linkedJob && String(linkedJob.job_type || "").startsWith("CONTROL_");
+        if (!deterministicJob || ["SUCCEEDED", "FAILED", "CANCELLED", "NEEDS_APPROVAL"].includes(String(linkedJob?.status || "").toUpperCase())) {
+          return { command, job: linkedJob };
+        }
+      }
+    }
+    throw new Error("Control was accepted but completion was not observed.");
   }, [request]);
 
   useEffect(() => {
@@ -142,25 +153,33 @@ export default function CommandIrenDock({ session }: { session: RhenSession }) {
     const text = value.trim();
     if (!text || sending) return;
     setSending(true);
+    setPendingControl(text);
+    setLastOutcome(null);
     try {
-      await request("/api/command/iren/command", {
+      const accepted = await request("/api/command/iren/command", {
         method: "POST",
         body: JSON.stringify({ command: text })
-      });
+      }) as { command?: IrenCommand };
       setExpanded(true);
       setError("");
-      window.setTimeout(() => void refresh(), 350);
+      const commandId = accepted.command?.command_id;
+      if (commandId) {
+        const outcome = await waitForCommand(commandId);
+        setLastOutcome(outcome);
+      } else {
+        await refresh();
+      }
     } catch (nextError) {
-      setError(nextError instanceof Error ? nextError.message : "IREN command failed.");
+      setError(nextError instanceof Error ? nextError.message : "IREN control failed.");
     } finally {
+      setPendingControl("");
       setSending(false);
     }
-  }, [refresh, request, sending]);
+  }, [refresh, request, sending, waitForCommand]);
 
   const work = feed?.work;
   const objectives = work?.objectives || [];
   const jobs = work?.jobs || [];
-  const commands = work?.commands || [];
   const activeJobs = useMemo(
     () => jobs.filter((job) => ["QUEUED", "RUNNING", "WAITING", "BLOCKED", "NEEDS_APPROVAL"].includes(String(job.status || ""))),
     [jobs]
@@ -169,9 +188,23 @@ export default function CommandIrenDock({ session }: { session: RhenSession }) {
     () => objectives.filter((objective) => ["ACTIVE", "READY", "BLOCKED"].includes(String(objective.status || ""))).slice(0, 8),
     [objectives]
   );
-  const handoff = work?.handoffs?.find((row) => !["SUPERSEDED", "FAILED"].includes(row.handoff_status));
-  const lastCommand = commands[0];
-  const lastResponse = responseText(lastCommand);
+  const handoff = work?.handoffs?.find((row) =>
+    ["PREPARED", "IN_PROGRESS", "PR_OPEN", "MERGED", "VERIFYING"].includes(String(row.handoff_status || "").toUpperCase())
+  );
+  const nextAction = work?.next_action;
+  const executionMode = String(work?.execution_mode || "idle");
+  const hasNextAction = Boolean(nextAction?.title);
+  const canRunAction = hasNextAction && executionMode === "deterministic";
+  const canPrepareCodex = hasNextAction && executionMode === "codex/manual software" && !handoff;
+  const canVerifyHandoff = Boolean(handoff);
+  const outcomeResponse = (lastOutcome?.command.result || lastOutcome?.command.response || {}) as Record<string, unknown>;
+  const outcomeJobResult = (lastOutcome?.job?.result || {}) as Record<string, unknown>;
+  const outcomeMessage = typeof outcomeJobResult.message === "string"
+    ? outcomeJobResult.message
+    : typeof outcomeResponse.message === "string"
+      ? outcomeResponse.message
+      : "";
+  const outcomeStatus = String(lastOutcome?.job?.status || lastOutcome?.command.status || "").toUpperCase();
   const openIncidents = (feed?.incidents || [])
     .filter((row) => String(row.status || "OPEN").toUpperCase() !== "RESOLVED")
     .slice(0, 4);
@@ -200,17 +233,26 @@ export default function CommandIrenDock({ session }: { session: RhenSession }) {
       <div className="iren-dock-body">
         <div className="iren-dock-toolbar">
           <div>
-            <small>IREN / ZERO-COST CONTROL PLANE</small>
-            <strong>Deterministic operator controls</strong>
-            <p>No conversational model is running here. IREN reads canonical state, runs fixed safe controls, and prepares manual Codex handoffs without paid model execution.</p>
+            <small>IREN / CONTROL PLANE</small>
+            <strong>Operator controls</strong>
           </div>
           <div className="iren-dock-actions">
-            <button type="button" disabled={sending} onClick={() => void refresh()}>refresh state</button>
-            <button type="button" disabled={sending} onClick={() => void send("what's next?")}>next safe action</button>
-            <button type="button" disabled={sending} onClick={() => void send("do that")}>run safe action</button>
-            <button type="button" disabled={sending} onClick={() => void send("what needs me?")}>needs owner</button>
-            <button type="button" disabled={sending} onClick={() => void send("prepare for Codex")}>prepare for Codex</button>
-            <button type="button" disabled={sending} onClick={() => void send("verify Codex handoff")}>verify handoff</button>
+            <button type="button" disabled={sending} onClick={() => void refresh()}>refresh</button>
+            {canRunAction ? (
+              <button type="button" disabled={sending} onClick={() => void send("do that")}>
+                {pendingControl === "do that" ? "running…" : "run action"}
+              </button>
+            ) : null}
+            {canPrepareCodex ? (
+              <button type="button" disabled={sending} onClick={() => void send("prepare for Codex")}>
+                {pendingControl === "prepare for Codex" ? "preparing…" : "prepare for Codex"}
+              </button>
+            ) : null}
+            {canVerifyHandoff ? (
+              <button type="button" disabled={sending} onClick={() => void send("verify Codex handoff")}>
+                {pendingControl === "verify Codex handoff" ? "verifying…" : "verify handoff"}
+              </button>
+            ) : null}
           </div>
         </div>
 
@@ -224,18 +266,29 @@ export default function CommandIrenDock({ session }: { session: RhenSession }) {
             <small>Observed {feed?.observed_at ? new Date(feed.observed_at).toLocaleString() : "—"}</small>
           </div>
         ) : null}
-        {lastResponse ? (
+        {sending ? (
           <div className="iren-dock-response">
-            <span>LAST CONTROL · {String(lastCommand?.status || "RECORDED")}</span>
-            <p>{lastResponse}</p>
-            {lastCommand?.linked_job_id ? <small>Durable job {shortId(lastCommand.linked_job_id)}</small> : <small>No model-generated reply.</small>}
+            <span>CONTROL RUNNING</span>
+            <p>{pendingControl}</p>
           </div>
-        ) : (
+        ) : null}
+        {lastOutcome && !sending ? (
           <div className="iren-dock-response">
-            <span>CONTROL MODE</span>
-            <p>Choose an explicit action above. Free-form prompts are intentionally disabled because Command has no paid conversational worker.</p>
+            <span>LAST CONTROL · {outcomeStatus || "COMPLETE"}</span>
+            {outcomeMessage ? <p>{outcomeMessage}</p> : null}
+            {lastOutcome.job ? (
+              <small>{lastOutcome.job.job_type || "CONTROL"} · {shortId(lastOutcome.job.job_id)}</small>
+            ) : (
+              <small>Command {shortId(lastOutcome.command.command_id)}</small>
+            )}
           </div>
-        )}
+        ) : null}
+        {!hasNextAction && !handoff && !sending ? (
+          <div className="iren-dock-response">
+            <span>READY</span>
+            <p>No pending control action.</p>
+          </div>
+        ) : null}
         {work?.next_action ? <div className="iren-dock-response">
           <span>{work.execution_mode}</span><p>{work.next_action.title}</p>
         </div> : null}
@@ -259,45 +312,51 @@ export default function CommandIrenDock({ session }: { session: RhenSession }) {
           </details>
         </section> : null}
 
-        <div className="iren-dock-grid">
-          <section>
-            <header>
-              <span>OBJECTIVES</span>
-              <b>{work?.objectives_complete || 0}/{work?.objective_count || 0} COMPLETE</b>
-            </header>
-            <div className="iren-dock-list">
-              {nextObjectives.length ? nextObjectives.map((objective) => (
-                <article key={objective.objective_key}>
-                  <i className={stateClass(objective.status)} />
-                  <div>
-                    <strong>{objective.title || objective.objective_key}</strong>
-                    <small>{objective.owner_system || "IREN"} · {objective.objective_key}</small>
-                  </div>
-                  <b className={stateClass(objective.status)}>{objective.status}</b>
-                </article>
-              )) : <p className="iren-dock-empty">No active or ready objectives.</p>}
-            </div>
-          </section>
+        {(nextObjectives.length || activeJobs.length) ? (
+          <div className="iren-dock-grid">
+            {nextObjectives.length ? (
+              <section>
+                <header>
+                  <span>OBJECTIVES</span>
+                  <b>{work?.objectives_complete || 0}/{work?.objective_count || 0} COMPLETE</b>
+                </header>
+                <div className="iren-dock-list">
+                  {nextObjectives.map((objective) => (
+                    <article key={objective.objective_key}>
+                      <i className={stateClass(objective.status)} />
+                      <div>
+                        <strong>{objective.title || objective.objective_key}</strong>
+                        <small>{objective.owner_system || "IREN"} · {objective.objective_key}</small>
+                      </div>
+                      <b className={stateClass(objective.status)}>{objective.status}</b>
+                    </article>
+                  ))}
+                </div>
+              </section>
+            ) : null}
 
-          <section>
-            <header>
-              <span>ACTIVE WORK</span>
-              <b>{activeJobs.length} CURRENT</b>
-            </header>
-            <div className="iren-dock-list">
-              {activeJobs.length ? activeJobs.slice(0, 8).map((job) => (
-                <article key={job.job_id}>
-                  <i className={stateClass(job.status)} />
-                  <div>
-                    <strong>{job.title || job.job_type || "IREN job"}</strong>
-                    <small>{job.owner_system || "IREN"} · {shortId(job.job_id)}</small>
-                  </div>
-                  <b className={stateClass(job.status)}>{job.status}</b>
-                </article>
-              )) : <p className="iren-dock-empty">No active jobs.</p>}
-            </div>
-          </section>
-        </div>
+            {activeJobs.length ? (
+              <section>
+                <header>
+                  <span>ACTIVE WORK</span>
+                  <b>{activeJobs.length} CURRENT</b>
+                </header>
+                <div className="iren-dock-list">
+                  {activeJobs.slice(0, 8).map((job) => (
+                    <article key={job.job_id}>
+                      <i className={stateClass(job.status)} />
+                      <div>
+                        <strong>{job.title || job.job_type || "IREN job"}</strong>
+                        <small>{job.owner_system || "IREN"} · {shortId(job.job_id)}</small>
+                      </div>
+                      <b className={stateClass(job.status)}>{job.status}</b>
+                    </article>
+                  ))}
+                </div>
+              </section>
+            ) : null}
+          </div>
+        ) : null}
       </div>
     </aside>
   );
