@@ -201,6 +201,65 @@ export type BtcDiscoveryProjection = {
   } | null;
 };
 
+export type ResearchObservabilityPoint = {
+  at?: string | null;
+  value: number;
+};
+
+export type ResearchObservabilitySeries = {
+  key?: string;
+  label?: string;
+  unit?: string;
+  points?: ResearchObservabilityPoint[];
+};
+
+export type ResearchObservabilityRun = {
+  run_id: string;
+  system: "GRAEN" | "VELUM" | "NOSTRA" | "RHEN";
+  kind?: string;
+  title?: string;
+  status?: string;
+  stage?: string | null;
+  progress_pct?: number | null;
+  problem_id?: string | null;
+  candidate_id?: string | null;
+  methodology_version?: string | null;
+  strategy_version_id?: string | null;
+  started_at?: string | null;
+  completed_at?: string | null;
+  updated_at?: string | null;
+  metrics?: Record<string, number>;
+  series?: ResearchObservabilitySeries[];
+  artifact_count?: number;
+  detail?: Record<string, unknown>;
+};
+
+export type ResearchObservabilityEvent = {
+  event_id?: string;
+  at?: string | null;
+  system?: "GRAEN" | "VELUM" | "NOSTRA" | "RHEN";
+  run_id?: string | null;
+  event_type?: string | null;
+  stage?: string | null;
+  status?: string | null;
+  progress_pct?: number | null;
+  title?: string | null;
+  detail?: string | null;
+};
+
+export type ResearchObservabilityProjection = {
+  schema_version?: string;
+  updated_at?: string | null;
+  poll_seconds?: number;
+  runs?: ResearchObservabilityRun[];
+  events?: ResearchObservabilityEvent[];
+  authority?: {
+    read_only?: boolean;
+    research_only?: boolean;
+    live_trading_performance_mixed?: boolean;
+  };
+};
+
 export type IrenSnapshot = {
   schema_version: string;
   revision: string | number | null;
@@ -254,6 +313,7 @@ export type IrenSnapshot = {
       started_at?: string | null;
       completed_at?: string | null;
     }>;
+    observability?: ResearchObservabilityProjection;
     graen_runtime?: {
       worker_id?: string | null;
       runtime_version?: string | null;
