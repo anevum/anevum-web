@@ -27,7 +27,7 @@ export default function ReleaseDetail() {
           <div><small>LIFECYCLE</small><strong>{release.lifecycle}</strong></div>
           <div><small>RELEASED</small><strong>{displayDate(release.date)}</strong></div>
           <div><small>SOURCE</small><strong>{release.sourceCommit.slice(0, 12)}</strong></div>
-          <a href={release.pdfPath} target="_blank" rel="noreferrer">DOWNLOAD PDF <span>↗</span></a>
+          {release.pdfPath ? <a href={release.pdfPath} target="_blank" rel="noreferrer">DOWNLOAD PDF <span>↗</span></a> : <span className="release-pdf-pending">RELEASE RECORD · WEB</span>}
         </aside>
       </header>
 
