@@ -1,5 +1,5 @@
-import { Component, useEffect, useState, type ReactNode } from "react";
-import { forecastCurrent, type LiveState, type Point, type Forecast, type ExecutionMarker } from "../lib/command-live-events";
+import { Component, useEffect, useRef, useState, type ReactNode } from "react";
+import { forecastCurrent, sourceHistoryValid, type LiveState, type Point, type Forecast, type ExecutionMarker } from "../lib/command-live-events";
 import "../styles/command-live.css";
 
 function value(v: unknown, digits = 2) { return typeof v === "number" && Number.isFinite(v) ? v.toFixed(digits) : "—"; }
@@ -59,6 +59,43 @@ function Sparkline({points}: {points: Point[]}) {
   return <svg viewBox="0 0 120 25" role="img" aria-label={`Source series · ${data.at(-1)!.provenance}`}><polyline points={data.map(p=>`${(Date.parse(p.timestamp)-start)/Math.max(1,end-start)*120},${24-(p.value!-low)/Math.max(.0001,high-low)*23}`).join(" ")} /><title>{data.at(-1)!.provenance} · {data.at(-1)!.methodology_version || "source observation"} · {data.at(-1)!.source}</title></svg>;
 }
 
+function SourceReplay({symbol}: {symbol: string}) {
+  const [clock,setClock] = useState(new Date().toISOString().slice(0,16));
+  const [points,setPoints] = useState<Point[]>([]);
+  const [status,setStatus] = useState("No source artifact loaded.");
+  const [busy,setBusy] = useState(false);
+  const [fingerprint,setFingerprint] = useState("");
+  const generation = useRef(0);
+  const replayTime = Date.parse(clock+"Z");
+  useEffect(()=>()=>{generation.current += 1;},[]);
+  useEffect(()=>{setPoints([]);setFingerprint("");setStatus("No source artifact loaded.");},[symbol]);
+  async function load() {
+    if (!symbol || !Number.isFinite(replayTime)) return;
+    const requestGeneration = ++generation.current;
+    setBusy(true); setPoints([]); setFingerprint("");
+    try {
+      const end = new Date(replayTime).toISOString();
+      const start = new Date(replayTime-2*60*60*1000).toISOString();
+      const query = new URLSearchParams({series:"candles:"+symbol,start,end,clock:end,limit:"2400"});
+      const response = await fetch("/api/command/shadow/history?"+query,{credentials:"same-origin",cache:"no-store"});
+      if (!response.ok) throw new Error(`Source history unavailable (${response.status}).`);
+      const body = await response.json() as {points:Point[];entry_authority:boolean;truncated:boolean;pruned_records:number;artifact_fingerprint:string;replay_clock:string};
+      if (body.entry_authority !== false || !sourceHistoryValid(body.points,replayTime)) throw new Error("Source artifact failed provenance checks.");
+      if (requestGeneration !== generation.current) return;
+      setPoints(body.points);setFingerprint(body.artifact_fingerprint);
+      setStatus(`${body.points.length} observed bars · ${body.truncated ? "truncated" : "bounded response"} · ${body.pruned_records} records pruned from archive`);
+    } catch(error) {if (requestGeneration === generation.current) setStatus(error instanceof Error ? error.message : "Source history unavailable.");}
+    finally {if (requestGeneration === generation.current) setBusy(false);}
+  }
+  return <><h3>Source availability replay</h3><p>Archived observations available at the selected clock. This view does not establish a VELUM validation pass.</p>
+    <label>Replay clock (UTC) <input type="datetime-local" value={clock} onChange={e=>{generation.current += 1;setBusy(false);setClock(e.target.value);setPoints([]);setFingerprint("");setStatus("No source artifact loaded.");}} /></label>
+    <button type="button" disabled={busy || !symbol} onClick={load}>{busy ? "Loading observations…" : `Load ${symbol || "symbol"} source history`}</button>
+    <p role="status">{status}</p>
+    <ChartBoundary><Candles points={points} now={replayTime} windowSize={120} vwap={[]} executions={[]} overlays={[]} /></ChartBoundary>
+    {fingerprint && <small>Source artifact {fingerprint} · no execution authority</small>}
+  </>;
+}
+
 export default function CommandLiveMarket({state}: {state: LiveState}) {
   const [selected, setSelected] = useState("");
   const [view, setView] = useState("LIVE");
@@ -77,7 +114,7 @@ export default function CommandLiveMarket({state}: {state: LiveState}) {
   return <section className="command-live" aria-label="RHEN 4.4 shadow visual intelligence">
     <header><div><small>RHEN 4.4 / SHADOW OBSERVATION</small><h2>Market fabric</h2></div><strong>{state.stale ? "STALE / VALUES FROZEN" : String(state.system.connection_state || "WARMING")}</strong></header>
     <p>4.3 remains the trading champion. This surface has no broker-write authority.</p>
-    <nav aria-label="Live visual views">{["LIVE","SYMBOL","FORECAST","PERFORMANCE","SYSTEM","REPLAY"].map(v => <button type="button" key={v} aria-pressed={view===v} onClick={()=>setView(v)}>{v}</button>)}</nav>
+    <nav aria-label="Live visual views">{["LIVE","SYMBOL","FORECAST","PERFORMANCE","ADAPTIVE","SYSTEM","REPLAY"].map(v => <button type="button" key={v} aria-pressed={view===v} onClick={()=>setView(v)}>{v}</button>)}</nav>
     {(state.stale || state.error) && <p role="status">{state.error || "Live data stale"}</p>}
     <div className="command-live-strip"><span>OPERATIONAL · {String(state.system.session || "unavailable")}</span><span>Feed {String(state.system.feed || "unavailable")}</span><span>Coverage {String(state.system.subscribed_symbols ?? 0)}/{String(state.system.intended_symbols ?? 0)}</span><span>{String(state.system.capability || "unknown")}</span><span>Entry authority: disabled</span></div>
     {["LIVE","SYMBOL","FORECAST"].includes(view) && <>
@@ -97,6 +134,19 @@ export default function CommandLiveMarket({state}: {state: LiveState}) {
     </>}
     {view === "SYSTEM" && <dl>{Object.entries(state.system).map(([key,v])=><div key={key}><dt>{key}</dt><dd>{typeof v === "object" ? JSON.stringify(v) : String(v)}</dd></div>)}</dl>}
     {view === "PERFORMANCE" && <ChartBoundary><h3>Observed broker equity</h3><Sparkline points={shown.series["account:equity"] || []} /><p>OBSERVED · ALPACA/REST_RECONCILIATION · updates after broker events and periodic reconciliation. Latest equity {value(shown.series["account:equity"]?.at(-1)?.value)}. Account state {account?.quality_state || "UNAVAILABLE"}. These samples do not establish daily return or trading performance validation.</p></ChartBoundary>}
-    {view === "REPLAY" && <p>VELUM visual contract is implemented behind validation gates. No replay artifact is loaded; no synthetic replay is shown.</p>}
+    {view === "PERFORMANCE" && <ChartBoundary><div className="command-live-grid">{[
+      ["normalized_equity","Account equity / first observed sample = 100"],
+      ["sampled_drawdown_pct","Drawdown from observed sample peak (%)"],
+      ["gross_exposure_pct","Observed gross position exposure / equity (%)"]
+    ].map(([key,label])=><article key={key}><h3>{label}</h3><Sparkline points={shown.series["performance:"+key] || []} /><p>{value(shown.series["performance:"+key]?.at(-1)?.value)} · DERIVED · account-observation-diagnostics-v1</p></article>)}</div><p>Account sample diagnostics. Deposits and withdrawals are not adjusted; strategy returns and full-session drawdown remain unavailable.</p></ChartBoundary>}
+    {view === "ADAPTIVE" && <>
+      <h3>Policy, regime and capital / shadow</h3>
+      <p>Effective execution remains BASELINE_LOCKED. Proposed values are counterfactual and confer no trading authority.</p>
+      {["nostra","adaptive_control","capital_governor"].map(key=>{
+        const data = shown.system[key];
+        return <article key={key}><h3>{key}</h3>{data && typeof data === "object" ? <dl>{Object.entries(data).map(([field,v])=><div key={field}><dt>{field}</dt><dd>{typeof v === "object" ? JSON.stringify(v) : String(v)}</dd></div>)}</dl> : <p>Canonical source unavailable.</p>}</article>;
+      })}
+    </>}
+    {view === "REPLAY" && <><label>Symbol <select value={symbol} onChange={e=>setSelected(e.target.value)}>{rows.map(row=><option key={row.symbol}>{row.symbol}</option>)}</select></label><SourceReplay key={symbol} symbol={symbol} /></>}
   </section>;
 }

@@ -148,6 +148,22 @@ async function proxyCommandStream(request, env) {
   });
 }
 
+async function proxyCommandHistory(request, env) {
+  if (String(env?.COMMAND_LIVE_STREAM_ENABLED || "false") !== "true") return jsonResponse({ message: "4.4 source history disabled." }, 503);
+  if (request.method !== "GET") return jsonResponse({message:"Read-only history."},405);
+  const url = new URL(request.url);
+  const allowed = new Set(["series","start","end","clock","limit"]);
+  if ([...url.searchParams.keys()].some(key=>!allowed.has(key))) return jsonResponse({message:"Invalid history query."},400);
+  const credential = await commandCredential(request,env);
+  const base = String(env?.RHEN_COMMAND_STREAM_BASE || TRADER_BASE).replace(/\/$/,"");
+  if (!base.startsWith("https://")) return jsonResponse({message:"Secure upstream required."},503);
+  const response = await fetch(base+"/v1/command/shadow/history"+url.search, {
+    headers:{Authorization:"Bearer "+credential.token,Accept:"application/json"},
+    signal:AbortSignal.timeout(10000),redirect:"error"
+  });
+  return jsonResponse(await response.json(),response.status);
+}
+
 async function publicResearchReadiness() {
   const response = await fetch(TRADER_BASE + "/v1/research/readiness/public", {
     method: "GET",
@@ -416,6 +432,11 @@ export default {
     if (pathname === "/api/command/stream") {
       try { return await proxyCommandStream(request, env); }
       catch (error) { return jsonResponse({ message: "Authenticated Command stream unavailable." }, error instanceof ApiError ? error.status : 502); }
+    }
+
+    if (pathname === "/api/command/shadow/history") {
+      try { return await proxyCommandHistory(request,env); }
+      catch (error) { return jsonResponse({message:"Authenticated source history unavailable."},error instanceof ApiError ? error.status : 502); }
     }
 
     if (pathname === "/api/command/session") {

@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import {applyLiveMessage, emptyLiveState, forecastCurrent} from "../src/lib/command-live-events.ts";
+import {applyLiveMessage, emptyLiveState, forecastCurrent, sourceHistoryValid} from "../src/lib/command-live-events.ts";
 
 const timestamp = "2026-10-06T15:30:00Z";
 function message(kind, payload, sequence=1, generation="g1") {
@@ -10,6 +10,16 @@ function snapshot(generation="g1") {
   return applyLiveMessage(emptyLiveState(),message("snapshot",{visual_schema:"command-visual.v1",scanner:{},series:{},execution_events:[],system:{entry_authority:false}},1,generation));
 }
 function point(at=timestamp, value=100) { return {timestamp:at,value,provenance:"OBSERVED",source:"ALPACA/iex",quality_state:"LIVE"}; }
+
+test("source history enforces actual availability and observed provenance",()=>{
+  const p={...point(),available_at:timestamp};
+  const clock=Date.parse(timestamp);
+  assert.equal(sourceHistoryValid([p],clock),true);
+  assert.equal(sourceHistoryValid([{...p,available_at:"2026-10-06T15:31:00Z"}],clock),false);
+  assert.equal(sourceHistoryValid([point()],clock),false);
+  assert.equal(sourceHistoryValid([{...p,provenance:"FORECAST"}],clock),false);
+  assert.equal(sourceHistoryValid([p,p],clock),false);
+});
 
 test("snapshot fence rejects another generation until replacement",()=>{
   const old = snapshot();

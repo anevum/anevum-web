@@ -4,6 +4,7 @@ export type Point = {
   value?: number | null; symbol?: string; methodology_version?: string;
   open?: number; high?: number; low?: number; close?: number; volume?: number | null;
   complete?: boolean; feed?: string; session?: string;
+  available_at?: string;
 };
 export type ScannerRow = {
   symbol: string; mid: number | null; bid?: number; ask?: number; spread_bps: number | null;
@@ -39,6 +40,13 @@ function pointValid(point: Point) {
     && Boolean(point.source && point.quality_state) && Number.isFinite(Date.parse(point.timestamp))
     && (["DERIVED", "FORECAST"].includes(point.provenance) ? Boolean(point.methodology_version) : true)
     && [point.value, point.open, point.high, point.low, point.close, point.volume].every(v => v == null || typeof v === "number" && Number.isFinite(v));
+}
+
+export function sourceHistoryValid(points: Point[], clock: number): boolean {
+  return Array.isArray(points) && points.length <= 2400 && Number.isFinite(clock) && points.every((p,i)=>
+    pointValid(p) && p.provenance === "OBSERVED" && Number.isFinite(Date.parse(p.available_at || "")) &&
+    Date.parse(p.timestamp) <= Date.parse(p.available_at!) && Date.parse(p.available_at!) <= clock &&
+    (i === 0 || Date.parse(points[i-1].timestamp) < Date.parse(p.timestamp)));
 }
 
 export function forecastCurrent(f: Forecast, now: number): boolean {
@@ -110,6 +118,12 @@ export function applyLiveMessage(state: LiveState, message: LiveMessage): LiveSt
     for (const row of Object.values(scanner)) next = delta(next, "scanner_patch", row);
     for (const [series_id, points] of Object.entries(payload.series as Record<string, Point[]> || {})) next = delta(next, "series_reset", {series_id, points});
     for (const marker of (payload.execution_events as ExecutionMarker[] || [])) next = delta(next, "execution_event", marker);
+    const forecasts = payload.forecasts as Record<string, Forecast> || {};
+    if (Object.keys(forecasts).length > 30) throw new Error("Forecast capacity exceeded");
+    for (const forecast of Object.values(forecasts)) {
+      // Expired forecasts do not poison an otherwise valid live snapshot.
+      if (forecastCurrent(forecast, Date.now())) next = delta(next, "forecast_replace", forecast);
+    }
     next.system = payload.system as Record<string, unknown> || {};
     return next;
   }
