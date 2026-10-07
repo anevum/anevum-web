@@ -1,5 +1,5 @@
 import { Component, useEffect, useRef, useState, type ReactNode } from "react";
-import { forecastCurrent, sourceHistoryValid, type LiveState, type Point, type Forecast, type ExecutionMarker } from "../lib/command-live-events";
+import { forecastCurrent, sourceHistoryValid, scannerFreshness, type LiveState, type Point, type Forecast, type ExecutionMarker } from "../lib/command-live-events";
 import "../styles/command-live.css";
 
 function value(v: unknown, digits = 2) { return typeof v === "number" && Number.isFinite(v) ? v.toFixed(digits) : "—"; }
@@ -110,6 +110,8 @@ export default function CommandLiveMarket({state}: {state: LiveState}) {
   const forecast = shown.forecasts[symbol];
   const currentForecast = forecast && forecastCurrent(forecast,now) ? forecast : undefined;
   const account = shown.system.account_observation as {positions?: {symbol: string; average_entry_price: number; observed_at: string; source: string; provenance: string}[]; overlays?: BrokerOverlay[]; quality_state?: string} | undefined;
+  const coverage = shown.system.scanner_coverage as {session_id?: string; evaluable_symbol_hours?: number;
+    eligible_symbol_hours?: number; signal_candidates?: number; signal_candidates_per_evaluable_symbol_hour?: number | null} | undefined;
   const overlays: BrokerOverlay[] = account?.quality_state === "LIVE" ? [...(account.overlays || []), ...(account.positions || []).map(p=>({symbol:p.symbol,kind:"BROKER_AVERAGE_ENTRY",value:p.average_entry_price,observed_at:p.observed_at,source:p.source,provenance:p.provenance}))].filter(p=>p.symbol === symbol) : [];
   return <section className="command-live" aria-label="RHEN 4.4 shadow visual intelligence">
     <header><div><small>RHEN 4.4 / SHADOW OBSERVATION</small><h2>Market fabric</h2></div><strong>{state.stale ? "STALE / VALUES FROZEN" : String(state.system.connection_state || "WARMING")}</strong></header>
@@ -117,17 +119,20 @@ export default function CommandLiveMarket({state}: {state: LiveState}) {
     <nav aria-label="Live visual views">{["LIVE","SYMBOL","FORECAST","PERFORMANCE","ADAPTIVE","SYSTEM","REPLAY"].map(v => <button type="button" key={v} aria-pressed={view===v} onClick={()=>setView(v)}>{v}</button>)}</nav>
     {(state.stale || state.error) && <p role="status">{state.error || "Live data stale"}</p>}
     <div className="command-live-strip"><span>OPERATIONAL · {String(state.system.session || "unavailable")}</span><span>Feed {String(state.system.feed || "unavailable")}</span><span>Coverage {String(state.system.subscribed_symbols ?? 0)}/{String(state.system.intended_symbols ?? 0)}</span><span>{String(state.system.capability || "unknown")}</span><span>Entry authority: disabled</span></div>
+    <p>DERIVED / {coverage?.session_id || "coverage unavailable"}: {value(coverage?.evaluable_symbol_hours,4)} evaluable symbol-hours
+      {" / "}{value(coverage?.eligible_symbol_hours,4)} subscribed symbol-hours · {value(coverage?.signal_candidates,0)} distinct signal candidates
+      {" · "}{value(coverage?.signal_candidates_per_evaluable_symbol_hour)} candidates per evaluable symbol-hour.
+      Restart downtime excluded. Signal candidates have not passed portfolio/risk validation; these counters do not establish independent research sessions.</p>
     {["LIVE","SYMBOL","FORECAST"].includes(view) && <>
       <div className="command-live-controls"><label>Symbol <select value={symbol} onChange={e=>setSelected(e.target.value)}>{rows.map(row=><option key={row.symbol}>{row.symbol}</option>)}</select></label><button type="button" onClick={()=>setPaused(paused ? null : state)}>{paused ? "Follow live" : "Pause visual following"}</button><label><input type="checkbox" checked={showForecast} onChange={e=>setShowForecast(e.target.checked)} /> Show forecast</label></div>
       <label>Completed-bar window <select value={windowSize} onChange={e=>setWindowSize(Number(e.target.value))}>{[30,60,120].map(v=><option key={v} value={v}>{v} bars</option>)}</select></label>
       <ChartBoundary key={symbol}><Candles points={shown.series["candles:"+symbol] || []} forecast={showForecast ? currentForecast : undefined} now={now} windowSize={windowSize} vwap={shown.series["rolling_vwap:"+symbol] || []} executions={shown.executions.filter(e=>e.symbol === symbol)} overlays={overlays} /></ChartBoundary>
       {view === "FORECAST" && <p>{currentForecast ? `Issued ${currentForecast.issued_at}; expires ${currentForecast.expires_at}; ${currentForecast.methodology_version}` : "No current versioned NOSTRA forecast. Projection unavailable."}</p>}
       <div className="command-live-grid">{Object.values(shown.scanner).map(row=>{
-        const age = row.quote_source_at ? now-Date.parse(row.quote_source_at) : null;
-        const stale = state.stale || age === null || age > 45000;
+        const {quoteAge:age, stale} = scannerFreshness(row,now,state.stale);
         return <button type="button" key={row.symbol} onClick={()=>setSelected(row.symbol)} aria-pressed={symbol===row.symbol}>
           <strong>{row.symbol}<b>{value(row.mid)}</b></strong><Sparkline points={shown.series["mid:"+row.symbol] || []} />
-          <span>{stale ? "STALE" : row.evaluable ? "EVALUABLE" : "BLOCKED"} · {row.candidate_state}</span><span>Spread {value(row.spread_bps)} bp · quote {age===null ? "unavailable" : `${Math.max(0,age).toFixed(0)} ms`}</span><span>{row.rejection_code || "No rejection"}</span><small>{row.signal_reason}</small>
+          <span>{stale ? "STALE" : row.evaluable ? "EVALUABLE" : "BLOCKED"} · {stale ? "BLOCKED" : row.candidate_state}</span><span>Spread {value(row.spread_bps)} bp · quote {age===null ? "unavailable" : `${age.toFixed(0)} ms`}</span><span>Observed bars {value(row.observed_bar_count,0)} / {value(row.required_bar_count,0)} required</span><span>{row.rejection_code || "No rejection"}</span><small>{row.signal_reason}</small>
         </button>;
       })}</div>
       <h3>Broker evidence tape / OBSERVED</h3>{shown.executions.length ? shown.executions.slice(-20).reverse().map(e=><p key={e.event_id}>{e.timestamp} · {e.symbol} · {e.event_type} · {e.quantity ?? "—"} @ {e.price ?? "—"} · {e.order_ref}</p>) : <p>No broker events observed by this shadow runtime.</p>}
