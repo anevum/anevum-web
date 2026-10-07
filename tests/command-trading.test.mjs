@@ -140,9 +140,9 @@ test("V4.3 active website and Command surfaces cannot resurrect retired crypto o
 
   const registry = JSON.parse(readFileSync(new URL("../src/data/releases.json", import.meta.url), "utf8"));
   const current = registry.releases.find((release) => release.slug === registry.currentSlug);
-  assert.equal(current.version, "4.3.0");
+  assert.equal(current.version, "4.3.1");
   assert.equal(current.codename, "MERIDIAN");
-  assert.equal(current.sourceCommit, "c4058241bcd9d7de616dcef3e534bc82b7c999ef");
-  assert.equal(current.productionDeployment, "a46b8f66-c4e3-48d5-8556-7a7d68df7413");
+  assert.equal(current.sourceCommit, "01ad6a06ce68aba5cd9e6699b6ed617fa542875b");
+  assert.equal(current.productionDeployment, "c07a1d2b-d1a5-4192-a86a-7ec7fc4fb862");
   assert.match(current.next, /first post-fix live equity cohort/i);
 });
