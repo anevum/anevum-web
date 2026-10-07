@@ -35,3 +35,12 @@ Backend status and per-slice blockers are in `anevum/rhen/docs/rhen44/STATUS.md`
 No production visual acceptance or real-data screenshots are claimed without an
 authorized session and active staging feed. The surface contains no invented
 market points and no broker controls.
+
+The second integration adds source-volume histograms, completed rolling-bar VWAP
+(DERIVED, explicitly a rolling window), observed broker position average-entry and
+actual open-order stop/limit levels, and actual fill markers with broker identity.
+Broker levels expire visually after 150 seconds without a fresh reconciliation.
+The performance view shows actual observed broker equity samples; it makes no
+claim of normalized returns, daily drawdown, profitability, or validation success.
+30/60/120 completed-bar window controls use the available bounded source history.
+The source remains gated and requires isolated live-data and authorized visual QA.
