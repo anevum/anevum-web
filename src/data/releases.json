@@ -1,7 +1,153 @@
 {
   "schemaVersion": 2,
-  "currentSlug": "rhen-4-3-1-meridian",
+  "currentSlug": "rhen-4-3-2-meridian",
   "releases": [
+    {
+      "slug": "rhen-4-3-2-meridian",
+      "version": "4.3.2",
+      "codename": "MERIDIAN",
+      "lifecycle": "Operational V4.3",
+      "releaseClass": "Runtime Identity Consistency Patch",
+      "date": "2026-10-07",
+      "headline": "One generation, everywhere.",
+      "abstract": "MERIDIAN 4.3.2 completes the V4.3 synchronization by correcting stale runtime self-identification. RHEN health, FastAPI metadata, runtime provenance, Command-facing diagnostics, and the public release program now agree on the V4.3 generation while preserving all prior release snapshots unchanged.",
+      "thesis": "Operational identity is evidence. A production system should not run V4.3 code while reporting V3 or 0.8.2 metadata. This patch changes identity metadata only and leaves trading behavior, authority, strategy, risk, sizing, scheduler behavior, and evidence methodology unchanged.",
+      "sourceCommit": "4d48f6b40d0ed6a001a3ad40170daf142e928756",
+      "productionDeployment": "3c83ae55-5fd9-4c9c-b717-8f817b949b0d",
+      "activeStrategy": "LIVE-2026-09-25-003 / rolling_momentum_vwap",
+      "pdfPath": "/releases/RHEN-4.3.2-MERIDIAN.pdf",
+      "badges": [
+        "LIVE EQUITIES",
+        "24/5 EQUITY COVERAGE",
+        "EXACT FORWARD EVIDENCE",
+        "V4.3 RUNTIME IDENTITY"
+      ],
+      "capabilities": [
+        {
+          "label": "DISCOVERY",
+          "title": "Broader equity opportunity discovery",
+          "body": "RHEN uses hierarchical Alpaca market-wide screening before bounded detailed evaluation, expanding the candidate pool without pulling full history for the entire catalog each cycle."
+        },
+        {
+          "label": "EXECUTION",
+          "title": "Regular + extended equity operation",
+          "body": "Live authority is limited to long U.S. equities and ETFs. Regular-session execution and the 24/5 extended-equity lane retain explicit session attribution, authorization, risk, and reconciliation."
+        },
+        {
+          "label": "EVIDENCE",
+          "title": "Exact decision-to-outcome measurement",
+          "body": "New forward-evidence candidates require the original decision reference price plus completed decision-bar timestamp. Ten- and fifteen-minute outcomes mature later without rewriting the original decision."
+        },
+        {
+          "label": "RESEARCH",
+          "title": "Shadow economics and allocation validation",
+          "body": "Cost-aware shadow economics and normalized allocation alternatives are evaluated post-event against matured outcomes while remaining unable to change the live record."
+        },
+        {
+          "label": "CONTROL",
+          "title": "IREN registry-aware control state",
+          "body": "IREN separates runtime health from protected operator state and now reduces scheduler incidents only from workflows that remain in the canonical registry. Retired failures stay durable history instead of current degradation."
+        },
+        {
+          "label": "STORAGE",
+          "title": "Pressure-aware bounded RHEN Core",
+          "body": "SQLite retention, reclaimable-page accounting, compaction, and analytics shedding keep storage bounded while preserving critical execution and evidence records."
+        }
+      ],
+      "architecture": [
+        {
+          "label": "01",
+          "title": "Cloudflare public + Command edge",
+          "body": "React/TypeScript public surfaces, protected Command identity, API proxying, privacy boundaries, and production delivery."
+        },
+        {
+          "label": "02",
+          "title": "Canonical RHEN Railway runtime",
+          "body": "One supervised application service contains execution, Core/Store, IREN control, GRAEN research, VELUM replay, NOSTRA forecast, Research Agent, and supporting internal APIs."
+        },
+        {
+          "label": "03",
+          "title": "Equity execution boundary",
+          "body": "Only RHEN execution can receive live broker authority, and the current authority scope is long U.S. equities and ETFs."
+        },
+        {
+          "label": "04",
+          "title": "RHEN Core / SQLite",
+          "body": "One bounded durable state store owns scheduler, research, incident, telemetry, and evidence state with retention and compaction."
+        },
+        {
+          "label": "05",
+          "title": "Research + replay boundary",
+          "body": "GRAEN, VELUM, NOSTRA, Research Agent, and shadow validators can generate evidence but cannot self-promote into live strategy or risk changes."
+        },
+        {
+          "label": "06",
+          "title": "Alpaca broker + market data",
+          "body": "Broker account truth, equity market state, orders, fills, positions, clock, calendar, and bounded screeners feed the production boundary."
+        }
+      ],
+      "verification": [
+        {
+          "label": "SOURCE",
+          "value": "4d48f6b4",
+          "body": "Canonical RHEN source after correcting stale runtime generation and system-version metadata."
+        },
+        {
+          "label": "DEPLOYMENT",
+          "value": "3c83ae55",
+          "body": "Railway production deployment completed successfully on October 7, 2026."
+        },
+        {
+          "label": "RUNTIME",
+          "value": "rhen-unified-v4.3",
+          "body": "Live unified health now reports the canonical V4.3 runtime generation."
+        },
+        {
+          "label": "VERSION",
+          "value": "4.3.2",
+          "body": "Execution provenance, API metadata, and release identity now share the same system version."
+        },
+        {
+          "label": "MODULES",
+          "value": "0 failures",
+          "body": "RHEN, GRAEN, VELUM, NOSTRA, Research Agent, Core, and IREN processes are reachable through the unified health boundary."
+        },
+        {
+          "label": "FORWARD COHORT",
+          "value": "AWAITING",
+          "body": "The exact post-fix measurable cohort still waits for the first eligible live equity decision cycle after the evidence repair."
+        }
+      ],
+      "limitations": [
+        {
+          "title": "October 6 legacy candidates are not reconstructed",
+          "body": "2,445 legacy candidates cannot be measured exactly: 1,746 lack the original decision-bar timestamp and 699 lack the original decision reference price. RHEN deliberately does not guess those values."
+        },
+        {
+          "title": "Profitability is not established",
+          "body": "A functioning execution and evidence system does not prove an edge. Shadow economics, shadow allocation, and strategy changes remain gated on valid matured evidence across additional sessions."
+        },
+        {
+          "title": "Feed and market-structure limits remain explicit",
+          "body": "Market-data identity, session rules, broker constraints, spreads, fills, and small-sample effects remain part of interpretation rather than being hidden by aggregate metrics."
+        },
+        {
+          "title": "First exact post-fix cohort not yet observed",
+          "body": "The forward-evidence repair landed after the October 6 regular equity session. The system must still collect the first live post-fix cohort before shadow economics, allocation, or another strategy patch can be judged from exact outcomes."
+        },
+        {
+          "title": "Protected configuration review remains operator-authorized",
+          "body": "IREN may correctly remain ATTENTION_REQUIRED while protected configuration identity awaits deliberate review. Runtime health does not authorize automatic acceptance or replacement of the trusted baseline."
+        }
+      ],
+      "changelog": [
+        {
+          "pr": 417,
+          "title": "Align RHEN V4.3 runtime identity"
+        }
+      ],
+      "next": "Collect the first post-fix live equity cohort, verify effectively complete measurable coverage, allow 10/15-minute outcomes to mature, and evaluate shadow economics and shadow allocation before authorizing another strategy change."
+    },
     {
       "slug": "rhen-4-3-1-meridian",
       "version": "4.3.1",
