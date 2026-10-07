@@ -64,7 +64,7 @@ export default function CommandDiscoveryDeck({
       <section className={"command-v4-decision tone-" + stateClass(mode)}>
         <div>
           <span>RESEARCH CONTROL</span>
-          <strong>{displayState(mode)}</strong>
+          <strong>{mode === "IDLE" ? "No frozen experiment" : displayState(mode)}</strong>
           <p>{controlReason}</p>
         </div>
         <dl>
