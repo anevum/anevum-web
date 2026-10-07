@@ -145,9 +145,13 @@ async function runCase(route, viewport) {
           const homeReady = ${JSON.stringify(route)} !== "/" || document.title === "ANEVUM — RHEN + Command";
           const liveReady = ${JSON.stringify(route)} !== "/live" || Boolean(document.querySelector('[data-visual-ops="public-terminal"]'));
           const architectureReady = ${JSON.stringify(route)} !== "/architecture" || Boolean(document.querySelector(".architecture-role-grid"));
+          const researchReady = ${JSON.stringify(route)} !== "/research" || Boolean(document.querySelector(".research-hub.field-notes-page .field-notes-stream-section"));
+          const fieldNoteReady = !${JSON.stringify(route)}.startsWith("/research/") || Boolean(document.querySelector(".field-note-detail .field-note-reproduce"));
+          const founderReady = ${JSON.stringify(route)} !== "/founder" || Boolean(document.querySelector(".founder-page .founder-hero"));
+          const resumeReady = ${JSON.stringify(route)} !== "/resume" || Boolean(document.querySelector(".resume-page .resume-sheet"));
           const commandReady = !${JSON.stringify(route)}.startsWith("/command/") || Boolean(document.querySelector(".command-v4"));
-          return {ready:pathReady && suspenseReady && homeReady && liveReady && architectureReady && commandReady,
-            pathname:location.pathname,title:document.title,suspenseReady,liveReady,architectureReady,commandReady};
+          return {ready:pathReady && suspenseReady && homeReady && liveReady && architectureReady && researchReady && fieldNoteReady && founderReady && resumeReady && commandReady,
+            pathname:location.pathname,title:document.title,suspenseReady,liveReady,architectureReady,researchReady,fieldNoteReady,founderReady,resumeReady,commandReady};
         })()`,
         returnByValue:true
       });
@@ -168,9 +172,13 @@ async function runCase(route, viewport) {
         const homeReady = ${JSON.stringify(route)} !== "/" || document.title === "ANEVUM — RHEN + Command";
         const liveReady = ${JSON.stringify(route)} !== "/live" || Boolean(document.querySelector('[data-visual-ops="public-terminal"]'));
         const architectureReady = ${JSON.stringify(route)} !== "/architecture" || Boolean(document.querySelector(".architecture-role-grid"));
+        const researchReady = ${JSON.stringify(route)} !== "/research" || Boolean(document.querySelector(".research-hub.field-notes-page .field-notes-stream-section"));
+        const fieldNoteReady = !${JSON.stringify(route)}.startsWith("/research/") || Boolean(document.querySelector(".field-note-detail .field-note-reproduce"));
+        const founderReady = ${JSON.stringify(route)} !== "/founder" || Boolean(document.querySelector(".founder-page .founder-hero"));
+        const resumeReady = ${JSON.stringify(route)} !== "/resume" || Boolean(document.querySelector(".resume-page .resume-sheet"));
         const commandReady = !${JSON.stringify(route)}.startsWith("/command/") || Boolean(document.querySelector(".command-v4"));
-        return {ready:pathReady && suspenseReady && homeReady && liveReady && architectureReady && commandReady,
-          pathname:location.pathname,title:document.title,suspenseReady,liveReady,architectureReady,commandReady};
+        return {ready:pathReady && suspenseReady && homeReady && liveReady && architectureReady && researchReady && fieldNoteReady && founderReady && resumeReady && commandReady,
+          pathname:location.pathname,title:document.title,suspenseReady,liveReady,architectureReady,researchReady,fieldNoteReady,founderReady,resumeReady,commandReady};
       })()`,
       returnByValue:true
     });
@@ -363,6 +371,29 @@ async function runCase(route, viewport) {
   if(!focus.result?.value) throw new Error("System card keyboard focus is not visible");
   const screenshot=await send("Page.captureScreenshot",{format:"png",captureBeyondViewport:false});
   fs.writeFileSync(path.join(output,"visual-"+(route.slice(1).replaceAll("/","-")||"home")+"-"+viewport.name+".png"),Buffer.from(screenshot.data,"base64"));
+  // Reuse this bounded, hydrated browser target for the release evidence.
+  // The duplicate CLI screenshot process could hang until the entire job died.
+  const evidenceRoutes = {
+    "/":["home",["One system. Clear evidence.","public-terminal-home"]],
+    "/live":["terminal",["EVIDENCE DRAWER","public-terminal-page","RESEARCH","REPLAY","RHEN"]],
+    "/research":["research",["Development journal."]],
+    "/research/prediction-outcome-evidence-chain":["field-note",["REPRODUCE / CHALLENGE THIS NOTE"]],
+    "/architecture":["architecture",["One runtime. Internal modules."]],
+    "/founder":["founder",["Devon Akins"]],
+    "/resume":["resume",["Technical Skills"]]
+  };
+  if (evidenceRoutes[route]) {
+    const [name, markers] = evidenceRoutes[route];
+    const rendered = await send("Runtime.evaluate", {
+      expression:"document.documentElement.outerHTML",returnByValue:true
+    });
+    const html = rendered.result?.value;
+    if (typeof html !== "string" || markers.some(marker => !html.includes(marker))) {
+      throw new Error("Release evidence marker missing: "+JSON.stringify({route,viewport:viewport.name,markers}));
+    }
+    fs.writeFileSync(path.join(output,name+"-"+viewport.name+".png"),Buffer.from(screenshot.data,"base64"));
+    if (viewport.name === "desktop") fs.writeFileSync(path.join(output,name+"-rendered.html"),html);
+  }
   if(route==="/") {
     await send("Runtime.evaluate",{expression:'document.querySelector(".vo-public-status")?.scrollIntoView({block:"start"})'});
     await sleep(300);

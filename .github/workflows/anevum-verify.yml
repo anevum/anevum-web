@@ -166,64 +166,22 @@ jobs:
         if: github.event_name == 'pull_request'
         run: python scripts/visual-ops-contact-sheet.py
 
-      - name: Capture browser QA
+      - name: Verify captured browser QA
         if: github.event_name == 'pull_request'
         shell: bash
         run: |
           set -euo pipefail
-          base="${{ steps.preview.outputs.preview_url }}"
-          mkdir -p "$RUNNER_TEMP/anevum-visuals"
-
-          chrome_retry() {
-            local attempt=1
-            while true; do
-              if google-chrome "$@"; then
-                return 0
-              fi
-              if [ "$attempt" -ge 2 ]; then
-                return 1
-              fi
-              attempt=$((attempt + 1))
-              sleep 1
-            done
-          }
-
-          capture() {
-            name="$1"
-            path="$2"
-            marker="$3"
-            rendered="$RUNNER_TEMP/anevum-visuals/$name-rendered.html"
-            common=(--headless --no-sandbox --disable-gpu --disable-dev-shm-usage --disable-background-networking --disable-sync --no-first-run --virtual-time-budget=7000)
-
-            chrome_retry "${common[@]}" --hide-scrollbars --window-size=1440,1000 --screenshot="$RUNNER_TEMP/anevum-visuals/$name-desktop.png" "$base$path"
-            chrome_retry "${common[@]}" --hide-scrollbars --window-size=390,844 --screenshot="$RUNNER_TEMP/anevum-visuals/$name-mobile.png" "$base$path"
-
-            for attempt in 1 2 3; do
-              if chrome_retry "${common[@]}" --dump-dom "$base$path" > "$rendered" && grep -Fq "$marker" "$rendered"; then
-                return 0
-              fi
-              echo "Rendered marker not ready for $path (attempt $attempt/3): $marker" >&2
-              sleep 1
-            done
-
-            echo "Rendered marker missing after retries for $path: $marker" >&2
-            tail -c 2500 "$rendered" >&2 || true
-            return 1
-          }
-
-          capture home / 'One system. Clear evidence.'
-          capture terminal /live 'EVIDENCE DRAWER'
-          capture research /research 'Development journal.'
-          capture field-note /research/prediction-outcome-evidence-chain 'REPRODUCE / CHALLENGE THIS NOTE'
-          capture architecture /architecture 'One runtime. Internal modules.'
-          capture founder /founder 'Devon Akins'
-          capture resume /resume 'Technical Skills'
-
-          grep -Fq 'public-terminal-home' "$RUNNER_TEMP/anevum-visuals/home-rendered.html"
-          grep -Fq 'public-terminal-page' "$RUNNER_TEMP/anevum-visuals/terminal-rendered.html"
-          grep -Fq 'RESEARCH' "$RUNNER_TEMP/anevum-visuals/terminal-rendered.html"
-          grep -Fq 'REPLAY' "$RUNNER_TEMP/anevum-visuals/terminal-rendered.html"
-          grep -Fq 'RHEN' "$RUNNER_TEMP/anevum-visuals/terminal-rendered.html"
+          evidence="$RUNNER_TEMP/anevum-visuals"
+          for name in home terminal research field-note architecture founder resume; do
+            test -s "$evidence/$name-desktop.png"
+            test -s "$evidence/$name-mobile.png"
+            test -s "$evidence/$name-rendered.html"
+          done
+          grep -Fq 'public-terminal-home' "$evidence/home-rendered.html"
+          grep -Fq 'public-terminal-page' "$evidence/terminal-rendered.html"
+          grep -Fq 'RESEARCH' "$evidence/terminal-rendered.html"
+          grep -Fq 'REPLAY' "$evidence/terminal-rendered.html"
+          grep -Fq 'RHEN' "$evidence/terminal-rendered.html"
 
       - name: Upload browser QA
         if: github.event_name == 'pull_request'

@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import {applyLiveMessage, emptyLiveState, forecastCurrent, sourceHistoryValid, scannerFreshness} from "../src/lib/command-live-events.ts";
+import {applyLiveMessage, bootstrapLiveState, emptyLiveState, forecastCurrent, sourceHistoryValid, scannerFreshness} from "../src/lib/command-live-events.ts";
 
 const timestamp = "2026-10-06T15:30:00Z";
 test("quiet bars and future quotes cannot render an evaluable live candidate",()=>{
@@ -20,6 +20,16 @@ function snapshot(generation="g1") {
   return applyLiveMessage(emptyLiveState(),message("snapshot",{visual_schema:"command-visual.v1",scanner:{},series:{},execution_events:[],system:{entry_authority:false}},1,generation));
 }
 function point(at=timestamp, value=100) { return {timestamp:at,value,provenance:"OBSERVED",source:"ALPACA/iex",quality_state:"LIVE"}; }
+
+test("REST bootstrap remains frozen and cannot overwrite live socket state",()=>{
+  const read=message("snapshot",{visual_schema:"command-visual.v1",scanner:{SPY:{symbol:"SPY",mid:100}},system:{entry_authority:false}},0);
+  const boot=bootstrapLiveState(emptyLiveState(),read);
+  assert.equal(boot.stale,true); assert.equal(boot.scanner.SPY.mid,100);
+  assert.equal(applyLiveMessage(boot,message("scanner_patch",{symbol:"SPY",mid:101},1)).scanner.SPY.mid,100);
+  const live=applyLiveMessage(boot,message("snapshot",{visual_schema:"command-visual.v1",scanner:{SPY:{symbol:"SPY",mid:102}}},2));
+  assert.equal(live.stale,false); assert.equal(bootstrapLiveState(live,read),live);
+  assert.throws(()=>bootstrapLiveState(emptyLiveState(),message("heartbeat",{})));
+});
 
 test("source history enforces actual availability and observed provenance",()=>{
   const p={...point(),available_at:timestamp};
