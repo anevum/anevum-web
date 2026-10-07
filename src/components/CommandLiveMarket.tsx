@@ -1,6 +1,7 @@
 import { Component, useEffect, useRef, useState, type ReactNode } from "react";
 import { forecastCurrent, sourceHistoryValid, scannerFreshness, type LiveState, type Point, type Forecast, type ExecutionMarker } from "../lib/command-live-events";
 import "../styles/command-live.css";
+import { currentRhenRelease } from "../data/releases";
 
 function value(v: unknown, digits = 2) { return typeof v === "number" && Number.isFinite(v) ? v.toFixed(digits) : "—"; }
 
@@ -119,7 +120,7 @@ export default function CommandLiveMarket({state}: {state: LiveState}) {
   const overlays: BrokerOverlay[] = account?.quality_state === "LIVE" ? [...(account.overlays || []), ...(account.positions || []).map(p=>({symbol:p.symbol,kind:"BROKER_AVERAGE_ENTRY",value:p.average_entry_price,observed_at:p.observed_at,source:p.source,provenance:p.provenance}))].filter(p=>p.symbol === symbol) : [];
   return <section className="command-live" aria-label="RHEN 4.4 shadow visual intelligence">
     <header><div><small>RHEN 4.4 / SHADOW OBSERVATION</small><h2>Market fabric</h2></div><strong>{state.stale ? "STALE / VALUES FROZEN" : String(state.system.connection_state || "WARMING")}</strong></header>
-    <p>4.3.2 remains the trading champion. The 4.4 observer is deployed separately; live crossover remains pending.</p>
+    <p>{currentRhenRelease().version} remains the trading champion. The 4.4 observer is deployed separately; live crossover remains pending.</p>
     <div className="command-live-readiness" aria-label="4.4 integration and validation status">
       <article><small>DISCOVERY → STREAM</small><strong>{hotset?.quality_state || "Awaiting observation"}</strong><p>{value(hotset?.discovery_count,0)} discovery symbols · {value(hotset?.rotation_count,0)} rotations</p></article>
       <article><small>BROKER RECONCILIATION</small><strong>{!parity ? "Awaiting observation" : parity.reconciliation_complete ? "Canonical recovery complete" : "Incomplete"}</strong><p>{parity?.stream_parity_complete ? "Raw stream parity complete" : parity ? `Raw gaps: ${value(parity.missing_observed_orders,0)} orders / ${value(parity.missing_observed_fills,0)} fills` : "No verified ledger snapshot"}</p></article>

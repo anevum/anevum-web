@@ -28,7 +28,7 @@ export const fieldNotes: FieldNote[] = [
     type: "ENGINEERING",
     status: "DEPLOYED IN SHADOW / VALIDATION OPEN",
     title: "RHEN 4.4: observe first, earn the crossover",
-    summary: "The 4.4 observer now connects broad discovery to a bounded market stream, reconciles broker evidence, and reads canonical NOSTRA forecasts. The live trading champion remains 4.3.2 while the remaining implementation and validation work is completed.",
+    summary: "The 4.4 observer now connects broad discovery to a bounded market stream, reconciles broker evidence, and reads canonical NOSTRA forecasts. The current production champion continues trading while the remaining implementation and validation work is completed.",
     systems: ["RHEN", "NOSTRA", "VELUM", "GRAEN", "IREN"],
     readMinutes: 3,
     featured: true,
@@ -44,7 +44,7 @@ export const fieldNotes: FieldNote[] = [
       ]},
       {heading: "What still has to be earned", body: [
         "The remaining work includes complete risk and cost attribution, canonical research exports, VELUM validation artifacts, and authenticated visual acceptance. Forward and untouched holdout evidence must be collected from real observations.",
-        "The current production strategy remains 4.3.2. Adaptive ACTIVE policies and a 4.4 broker-write crossover have not been promoted. Engineering tests establish mechanics; they do not establish a profitable edge."
+        "The current production strategy continues trading. Adaptive ACTIVE policies and a 4.4 broker-write crossover have not been promoted. Engineering tests establish mechanics; they do not establish a profitable edge."
       ]}
     ],
     reproduce: {
