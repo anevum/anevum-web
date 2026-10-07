@@ -10,7 +10,7 @@ export type ScannerRow = {
   quote_source_at?: string | null; quote_age_ms: number | null; candidate_state: string;
   evaluable: boolean; rejection_code: string | null; quality_state: string; signal_reason?: string;
 };
-export type ExecutionMarker = Point & { event_id: string; event_type: string; price?: number | null; order_ref: string; quantity?: number | null };
+export type ExecutionMarker = Point & { event_id: string; event_type: string; price?: number | null; order_ref: string; quantity?: number | null; side?: string };
 export type Forecast = {
   forecast_id: string; symbol: string; issued_at: string; feature_as_of: string;
   expires_at: string; horizon_seconds: number; model_version: string; methodology_version: string;
