@@ -118,6 +118,7 @@ export default function CommandLiveMarket({state}: {state: LiveState}) {
     <p>4.3 remains the trading champion. This surface has no broker-write authority.</p>
     <nav aria-label="Live visual views">{["LIVE","SYMBOL","FORECAST","PERFORMANCE","ADAPTIVE","SYSTEM","REPLAY"].map(v => <button type="button" key={v} aria-pressed={view===v} onClick={()=>setView(v)}>{v}</button>)}</nav>
     {(state.stale || state.error) && <p role="status">{state.error || "Live data stale"}</p>}
+    {state.stale && state.bootstrap_status && <p>{state.bootstrap_status}</p>}
     <div className="command-live-strip"><span>OPERATIONAL · {String(state.system.session || "unavailable")}</span><span>Feed {String(state.system.feed || "unavailable")}</span><span>Coverage {String(state.system.subscribed_symbols ?? 0)}/{String(state.system.intended_symbols ?? 0)}</span><span>{String(state.system.capability || "unknown")}</span><span>Entry authority: disabled</span></div>
     <p>DERIVED / {coverage?.session_id || "coverage unavailable"}: {value(coverage?.evaluable_symbol_hours,4)} evaluable symbol-hours
       {" / "}{value(coverage?.eligible_symbol_hours,4)} subscribed symbol-hours · {value(coverage?.signal_candidates,0)} distinct signal candidates

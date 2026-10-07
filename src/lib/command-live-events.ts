@@ -36,6 +36,7 @@ export type LiveState = {
   generation: string | null; sequence: number; stale: boolean; error: string;
   scanner: Record<string, ScannerRow>; series: Record<string, Point[]>;
   executions: ExecutionMarker[]; forecasts: Record<string, Forecast>; system: Record<string, unknown>;
+  bootstrap_status?: string;
 };
 export type LiveMessage = {
   schema_version: "command-live.v1"; message_type: string; server_time: string;
@@ -45,6 +46,14 @@ export type LiveMessage = {
 export function emptyLiveState(): LiveState {
   return {generation: null, sequence: -1, stale: true, error: "Awaiting authenticated shadow snapshot",
     scanner: {}, series: {}, executions: [], forecasts: {}, system: {}};
+}
+
+export function bootstrapLiveState(state: LiveState, message: LiveMessage): LiveState {
+  // Never overwrite a socket snapshot/delta or call a REST snapshot live.
+  if (state.generation !== null) return state;
+  if (message.message_type !== "snapshot") throw new Error("Bootstrap snapshot required");
+  return {...applyLiveMessage(state,message), stale:true,
+    error:"Bootstrap observations frozen; awaiting verified live stream"};
 }
 
 function pointValid(point: Point) {
