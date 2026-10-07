@@ -101,3 +101,33 @@ test("Command Review renders the V4.3 measurable forward-evidence gate", () => {
   assert.match(review, /missing_bar_time_count/);
   assert.match(topology, /evidence_readiness\?: StrategyEvidenceReadinessProjection/);
 });
+
+
+test("V4.3 evidence waits are explicit rather than generic idle work", () => {
+  const discover = readFileSync(new URL("../src/components/CommandDiscoveryDeck.tsx", import.meta.url), "utf8");
+  const review = readFileSync(new URL("../src/components/CommandReviewDeck.tsx", import.meta.url), "utf8");
+  const terminal = readFileSync(new URL("../src/components/CommandOperationsTerminal.tsx", import.meta.url), "utf8");
+  const lab = readFileSync(new URL("../src/components/CommandResearchLab.tsx", import.meta.url), "utf8");
+
+  assert.match(discover, /AWAITING_MEASURABLE_COHORT/);
+  assert.match(discover, /Collecting the first exact post-fix live equity cohort/);
+  assert.match(review, /WAITING_FOR_INPUTS/);
+  assert.match(review, /No Work \/ Codex pass is justified until measurable evidence exists/);
+  assert.match(terminal, /waiting for the first measurable post-fix cohort before replay is eligible/);
+  assert.match(lab, /Replay is waiting for the first exact post-fix measurable cohort/);
+});
+
+test("IREN configuration review is fingerprint-bound and operator-controlled", () => {
+  const dock = readFileSync(new URL("../src/components/CommandIrenDock.tsx", import.meta.url), "utf8");
+  const worker = readFileSync(new URL("../worker.mjs", import.meta.url), "utf8");
+  const topology = readFileSync(new URL("../src/lib/runtime-topology.ts", import.meta.url), "utf8");
+
+  assert.match(dock, /PROTECTED CONFIGURATION/);
+  assert.match(dock, /Accept exact current fingerprint/);
+  assert.match(dock, /configuration_review/);
+  assert.match(dock, /configuration_drift/);
+  assert.match(worker, /\/api\/command\/iren\/configuration\/accept/);
+  assert.match(worker, /disabled outside production/);
+  assert.match(topology, /ConfigurationReviewProjection/);
+  assert.match(topology, /ConfigurationDriftProjection/);
+});
