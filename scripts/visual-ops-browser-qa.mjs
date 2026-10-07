@@ -145,9 +145,11 @@ async function runCase(route, viewport) {
           const homeReady = ${JSON.stringify(route)} !== "/" || document.title === "ANEVUM — RHEN + Command";
           const liveReady = ${JSON.stringify(route)} !== "/live" || Boolean(document.querySelector('[data-visual-ops="public-terminal"]'));
           const architectureReady = ${JSON.stringify(route)} !== "/architecture" || Boolean(document.querySelector(".architecture-role-grid"));
+          const researchReady = ${JSON.stringify(route)} !== "/research" || Boolean(document.querySelector(".research-hub.field-notes-page .field-notes-stream-section"));
+          const fieldNoteReady = !${JSON.stringify(route)}.startsWith("/research/") || Boolean(document.querySelector(".field-note-detail .field-note-reproduce"));
           const commandReady = !${JSON.stringify(route)}.startsWith("/command/") || Boolean(document.querySelector(".command-v4"));
-          return {ready:pathReady && suspenseReady && homeReady && liveReady && architectureReady && commandReady,
-            pathname:location.pathname,title:document.title,suspenseReady,liveReady,architectureReady,commandReady};
+          return {ready:pathReady && suspenseReady && homeReady && liveReady && architectureReady && researchReady && fieldNoteReady && commandReady,
+            pathname:location.pathname,title:document.title,suspenseReady,liveReady,architectureReady,researchReady,fieldNoteReady,commandReady};
         })()`,
         returnByValue:true
       });
@@ -168,9 +170,11 @@ async function runCase(route, viewport) {
         const homeReady = ${JSON.stringify(route)} !== "/" || document.title === "ANEVUM — RHEN + Command";
         const liveReady = ${JSON.stringify(route)} !== "/live" || Boolean(document.querySelector('[data-visual-ops="public-terminal"]'));
         const architectureReady = ${JSON.stringify(route)} !== "/architecture" || Boolean(document.querySelector(".architecture-role-grid"));
+        const researchReady = ${JSON.stringify(route)} !== "/research" || Boolean(document.querySelector(".research-hub.field-notes-page .field-notes-stream-section"));
+        const fieldNoteReady = !${JSON.stringify(route)}.startsWith("/research/") || Boolean(document.querySelector(".field-note-detail .field-note-reproduce"));
         const commandReady = !${JSON.stringify(route)}.startsWith("/command/") || Boolean(document.querySelector(".command-v4"));
-        return {ready:pathReady && suspenseReady && homeReady && liveReady && architectureReady && commandReady,
-          pathname:location.pathname,title:document.title,suspenseReady,liveReady,architectureReady,commandReady};
+        return {ready:pathReady && suspenseReady && homeReady && liveReady && architectureReady && researchReady && fieldNoteReady && commandReady,
+          pathname:location.pathname,title:document.title,suspenseReady,liveReady,architectureReady,researchReady,fieldNoteReady,commandReady};
       })()`,
       returnByValue:true
     });
@@ -368,7 +372,7 @@ async function runCase(route, viewport) {
   const evidenceRoutes = {
     "/":["home",["One system. Clear evidence.","public-terminal-home"]],
     "/live":["terminal",["EVIDENCE DRAWER","public-terminal-page","RESEARCH","REPLAY","RHEN"]],
-    "/research":["research",["RHEN publishes what the evidence supports"]],
+    "/research":["research",["Development journal."]],
     "/research/prediction-outcome-evidence-chain":["field-note",["REPRODUCE / CHALLENGE THIS NOTE"]],
     "/architecture":["architecture",["One runtime. Internal modules."]],
     "/founder":["founder",["Devon Akins"]],
