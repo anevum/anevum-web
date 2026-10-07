@@ -141,9 +141,13 @@ async function runCase(route, viewport) {
       const result = await send("Runtime.evaluate", {
         expression: `(() => {
           const pathReady = location.pathname === ${JSON.stringify(route)};
+          const suspenseReady = !document.querySelector(".route-loader");
           const homeReady = ${JSON.stringify(route)} !== "/" || document.title === "ANEVUM — RHEN + Command";
           const liveReady = ${JSON.stringify(route)} !== "/live" || Boolean(document.querySelector('[data-visual-ops="public-terminal"]'));
-          return {ready:pathReady && homeReady && liveReady, pathname:location.pathname, title:document.title, liveReady};
+          const architectureReady = ${JSON.stringify(route)} !== "/architecture" || Boolean(document.querySelector(".architecture-role-grid"));
+          const commandReady = !${JSON.stringify(route)}.startsWith("/command/") || Boolean(document.querySelector(".command-v4"));
+          return {ready:pathReady && suspenseReady && homeReady && liveReady && architectureReady && commandReady,
+            pathname:location.pathname,title:document.title,suspenseReady,liveReady,architectureReady,commandReady};
         })()`,
         returnByValue:true
       });
@@ -160,9 +164,13 @@ async function runCase(route, viewport) {
     const result = await send("Runtime.evaluate", {
       expression: `(() => {
         const pathReady = location.pathname === ${JSON.stringify(route)};
+        const suspenseReady = !document.querySelector(".route-loader");
         const homeReady = ${JSON.stringify(route)} !== "/" || document.title === "ANEVUM — RHEN + Command";
         const liveReady = ${JSON.stringify(route)} !== "/live" || Boolean(document.querySelector('[data-visual-ops="public-terminal"]'));
-        return {ready:pathReady && homeReady && liveReady, pathname:location.pathname, title:document.title, liveReady};
+        const architectureReady = ${JSON.stringify(route)} !== "/architecture" || Boolean(document.querySelector(".architecture-role-grid"));
+        const commandReady = !${JSON.stringify(route)}.startsWith("/command/") || Boolean(document.querySelector(".command-v4"));
+        return {ready:pathReady && suspenseReady && homeReady && liveReady && architectureReady && commandReady,
+          pathname:location.pathname,title:document.title,suspenseReady,liveReady,architectureReady,commandReady};
       })()`,
       returnByValue:true
     });
