@@ -11,6 +11,8 @@ import CommandRawLog from "../components/CommandRawLog";
 import CommandReviewDeck from "../components/CommandReviewDeck";
 import CommandTopology from "../components/CommandTopology";
 import CommandTradingLanes from "../components/CommandTradingLanes";
+import CommandLiveMarket from "../components/CommandLiveMarket";
+import { useCommandLiveStream } from "../hooks/useCommandLiveStream";
 import { useCommandObservation } from "../hooks/useCommandObservation";
 import { useLiveTrading } from "../hooks/useLiveTrading";
 import {
@@ -86,6 +88,8 @@ export default function Command() {
   const navigate = useNavigate();
   const location = useLocation();
   const page = routePage(location.pathname);
+  const liveEnabled = import.meta.env.VITE_COMMAND_LIVE_STREAM_ENABLED === "true" && Boolean(commandAdmin && session);
+  const liveState = useCommandLiveStream(liveEnabled);
   const [snapshot, setSnapshot] = useState<CommandSnapshot | null>(null);
   const [evidence, setEvidence] = useState<CommandEvidence | null>(null);
   const [dailyReport, setDailyReport] = useState<Record<string, unknown> | null>(null);
@@ -141,9 +145,10 @@ export default function Command() {
   useEffect(() => {
     if (!session || !commandAdmin) return;
     void refresh();
-    const timer = window.setInterval(refresh, 5000);
+    // 4.4 REST is a degraded diagnostic audit. Prices/candles use one live socket.
+    const timer = window.setInterval(refresh, liveEnabled ? 60000 : 5000);
     return () => window.clearInterval(timer);
-  }, [session, commandAdmin, refresh]);
+  }, [session, commandAdmin, refresh, liveEnabled]);
 
   if (loading) {
     return <div className="command-gate"><SystemIcon system="IREN" size="lg" /><span>ANEVUM / COMMAND</span><h1>Resolving identity.</h1></div>;
@@ -222,6 +227,8 @@ export default function Command() {
             </section>
 
             {snapshot ? <CommandTradingLanes snapshot={snapshot} /> : <div className="command-v4-empty">Waiting for RHEN trading state.</div>}
+
+            {liveEnabled && <CommandLiveMarket state={liveState} />}
 
             <div className="command-v4-two command-v4-operating-charts">
               <CommandAccountTracker account={account} history={snapshot?.account_history} orders={recentOrders} />

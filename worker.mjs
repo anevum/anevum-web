@@ -131,6 +131,23 @@ async function proxyTrader(request, upstreamPath, env) {
   return jsonResponse(payload, response.status);
 }
 
+async function proxyCommandStream(request, env) {
+  if (String(env?.COMMAND_LIVE_STREAM_ENABLED || "false") !== "true") return jsonResponse({ message: "4.4 shadow stream disabled." }, 503);
+  const url = new URL(request.url);
+  if (request.method !== "GET" || request.headers.get("Upgrade")?.toLowerCase() !== "websocket") return jsonResponse({ message: "WebSocket upgrade required." }, 426);
+  if (request.headers.get("Origin") !== url.origin) return jsonResponse({ message: "Same-origin Command stream required." }, 403);
+  if (url.search) return jsonResponse({ message: "Stream query credentials are not accepted." }, 400);
+  const credential = await commandCredential(request, env);
+  const base = String(env?.RHEN_COMMAND_STREAM_BASE || TRADER_BASE).replace(/\/$/, "");
+  if (!base.startsWith("https://")) return jsonResponse({ message: "Secure stream upstream required." }, 503);
+  // Returning the upgrade response preserves Cloudflare's WebSocket proxy. It must
+  // not be converted to JSON, read as text, or subject to a REST timeout.
+  return fetch(base + "/v1/command/stream", {
+    headers: { Upgrade: "websocket", Authorization: "Bearer " + credential.token },
+    redirect: "error"
+  });
+}
+
 async function publicResearchReadiness() {
   const response = await fetch(TRADER_BASE + "/v1/research/readiness/public", {
     method: "GET",
@@ -394,6 +411,11 @@ export default {
       } catch (error) {
         return jsonResponse({ message: error instanceof Error ? error.message : "Theory program unavailable." }, 502);
       }
+    }
+
+    if (pathname === "/api/command/stream") {
+      try { return await proxyCommandStream(request, env); }
+      catch (error) { return jsonResponse({ message: "Authenticated Command stream unavailable." }, error instanceof ApiError ? error.status : 502); }
     }
 
     if (pathname === "/api/command/session") {
