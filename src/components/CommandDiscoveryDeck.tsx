@@ -38,7 +38,13 @@ export default function CommandDiscoveryDeck({
   const universe = snapshot?.universe;
   const scanner = record(snapshot?.scanner);
   const researchControl = control?.research?.control;
-  const mode = text(researchControl?.mode, "IDLE");
+  const readiness = control?.strategy_pipeline?.evidence_readiness;
+  const awaitingCohort = readiness?.state === "AWAITING_MEASURABLE_COHORT";
+  const rawMode = text(researchControl?.mode, "IDLE");
+  const mode = rawMode === "IDLE" && awaitingCohort ? "COLLECTING" : rawMode;
+  const controlReason = awaitingCohort && rawMode === "IDLE"
+    ? "Collecting the first exact post-fix live equity cohort. New strategy research is intentionally gated until measurable outcomes exist."
+    : researchControl?.reason || "No bounded research program is currently requesting work.";
   const eligible = count(universe?.eligible_count);
   const candidates = count(universe?.candidate_count);
   const active = count(universe?.active_count);
@@ -59,12 +65,12 @@ export default function CommandDiscoveryDeck({
         <div>
           <span>RESEARCH CONTROL</span>
           <strong>{displayState(mode)}</strong>
-          <p>{researchControl?.reason || "No bounded research program is currently requesting work."}</p>
+          <p>{controlReason}</p>
         </div>
         <dl>
           <div><dt>STAGE</dt><dd>{displayState(researchControl?.stage)}</dd></div>
           <div><dt>REJECTED</dt><dd>{researchControl?.rejected_generations ?? 0}</dd></div>
-          <div><dt>NEXT</dt><dd>{displayState(researchControl?.next_action)}</dd></div>
+          <div><dt>NEXT</dt><dd>{awaitingCohort ? readiness?.next_action || "Collect measurable cohort" : displayState(researchControl?.next_action)}</dd></div>
           <div><dt>WORK PASS</dt><dd>{researchControl?.work_credit_recommended ? "RECOMMENDED" : "NOT REQUIRED"}</dd></div>
         </dl>
       </section>
