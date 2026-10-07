@@ -131,20 +131,45 @@ async function runCase(route, viewport) {
   await send("Emulation.setEmulatedMedia", {features:[{name:"prefers-reduced-motion",value:"reduce"}]});
   if (route.startsWith("/command/")) await send("Page.addScriptToEvaluateOnNewDocument", {source: "(" + "() => {\n    const originalFetch=window.fetch.bind(window);\n    window.fetch=async (input,init={}) => {\n      const url=String(input);\n      if(url.includes(\"/api/command/session\")) return Response.json({authenticated:true,auth_source:\"cloudflare_access\",command_admin:true,email:\"qa@example.test\"});\n      if(url.includes(\"/api/command/iren/status\")) {\n        const at=new Date().toISOString();\n        return Response.json({\n          schema_version:\"iren_command.v2\",revision:42,observed_at:at,stale:false,state:\"DEGRADED\",action_required:true,\n          topology:{services:[\"IREN\",\"RHEN\",\"GRAEN\",\"NOSTRA\",\"VELUM\"].map(name=>({service_id:name.toLowerCase(),service_name:name+\" runtime\",runtime_kind:name.toLowerCase(),independent_runtime:false,status:name===\"NOSTRA\"?\"OFFLINE\":name===\"VELUM\"?\"IDLE\":\"HEALTHY\",liveness:name!==\"NOSTRA\",readiness:name!==\"NOSTRA\",observed_at:at,last_heartbeat_at:at,scope:\"qa\",revision:\"qa-fixture-not-production\",current_activity:{IREN:\"Coordinating observation and evidence.\",RHEN:\"Observing the latest market cycle.\",GRAEN:\"Evaluating retained research evidence.\",NOSTRA:\"Forecast runtime unavailable.\",VELUM:\"Ready for the next replay.\"}[name]})),dependencies:{rhen_core:{status:\"HEALTHY\",last_success:at}}},\n          incidents:[{key:\"service.nostra\",severity:\"warning\",reason:\"Forecast runtime is offline\",opened_at:at}],\n          work:{active_jobs:1,requires_human:1,blocked_objectives:1,objectives:[{owner_system:\"GRAEN\",objective_key:\"qa-research\",title:\"Evaluate retained evidence\",status:\"ACTIVE\",description:\"Review the current evidence window.\",updated_at:at}],jobs:[{owner_system:\"GRAEN\",job_id:\"qa-job\",title:\"Equity shadow economics evaluation\",status:\"RUNNING\",job_type:\"RESEARCH\",metadata:{stage:\"EQUITY_SHADOW_ECONOMICS_EVIDENCE\",run_id:\"qa-equity-shadow-run\",candidate_id:\"qa-equity-shadow\"},updated_at:at}],job_events:[{event_id:1,job_id:\"qa-job\",event_type:\"RUNNING\",event:{stage:\"EQUITY_SHADOW_ECONOMICS_EVIDENCE\",run_id:\"qa-equity-shadow-run\"},created_at:at,owner_system:\"GRAEN\",objective_key:\"qa-research\",title:\"Equity shadow economics evaluation\",job_type:\"RESEARCH\"}],commands:[],handoffs:[],next_action:{title:\"Restore forecast observations\"}},\n          research:{graen_problems:[{problem_id:\"qa-problem\",title:\"Equity shadow economics\",status:\"RUNNING\",research_stage:\"EQUITY_SHADOW_ECONOMICS_EVIDENCE\",candidate_id:\"qa-equity-shadow\",hypothesis:\"Cost-adjusted opportunity economics\",updated_at:at,started_at:at}],graen_runs:[{run_id:\"qa-equity-shadow-run\",problem_id:\"qa-problem\",status:\"RUNNING\",methodology_version:\"rhen-shadow-economics-v1\",started_at:at,created_at:at}],velum_replays:[{status:\"RUNNING\",started_at:at}],graen_runtime:{worker_id:\"qa-graen-worker\",runtime_version:\"qa\",heartbeat_at:at,active_problem_id:\"qa-problem\",queue_depth:0}},\n          operator:{state:\"DEGRADED\",message:\"NOSTRA needs attention. Other systems remain observable.\",recent_transitions:[{key:\"service.nostra\",transition:\"INCIDENT_OPENED\",severity:\"warning\",reason:\"Forecast runtime is offline\",created_at:at}]}\n        });\n      }\n      if(url.includes(\"/api/command/\")) return Response.json({});\n      return originalFetch(input,init);\n    };\n  }" + ")()"});
   await send("Page.navigate", { url: base + route });
-  await sleep(5000);
-  if (route === "/") {
-    const expectedTitle = "ANEVUM — RHEN + Command";
-    let title = "";
-    for (let attempt = 0; attempt < 4; attempt++) {
-      const titleResult = await send("Runtime.evaluate", {expression:"document.title",returnByValue:true});
-      title = String(titleResult.result?.value || "");
-      if (title === expectedTitle) break;
-      await sleep(1500);
-      await send("Page.reload", {ignoreCache:true});
-      await sleep(2500);
+
+  // Lazy public routes and Cloudflare asset propagation are asynchronous.
+  // Assert only after the requested route is actually hydrated.
+  const routeReadyDeadline = Date.now() + 12000;
+  let routeReady = {};
+  while (Date.now() < routeReadyDeadline) {
+    try {
+      const result = await send("Runtime.evaluate", {
+        expression: `(() => {
+          const pathReady = location.pathname === ${JSON.stringify(route)};
+          const homeReady = ${JSON.stringify(route)} !== "/" || document.title === "ANEVUM — RHEN + Command";
+          const liveReady = ${JSON.stringify(route)} !== "/live" || Boolean(document.querySelector('[data-visual-ops="public-terminal"]'));
+          return {ready:pathReady && homeReady && liveReady, pathname:location.pathname, title:document.title, liveReady};
+        })()`,
+        returnByValue:true
+      });
+      routeReady = result.result?.value || {};
+      if (routeReady.ready) break;
+    } catch {
+      // A navigation can replace the execution context between polls.
     }
-    if (title !== expectedTitle) throw new Error("Production propagation mismatch: expected "+expectedTitle+" but saw "+title);
+    await sleep(125);
   }
+  if (!routeReady.ready) {
+    await send("Page.reload", {ignoreCache:true});
+    await sleep(2500);
+    const result = await send("Runtime.evaluate", {
+      expression: `(() => {
+        const pathReady = location.pathname === ${JSON.stringify(route)};
+        const homeReady = ${JSON.stringify(route)} !== "/" || document.title === "ANEVUM — RHEN + Command";
+        const liveReady = ${JSON.stringify(route)} !== "/live" || Boolean(document.querySelector('[data-visual-ops="public-terminal"]'));
+        return {ready:pathReady && homeReady && liveReady, pathname:location.pathname, title:document.title, liveReady};
+      })()`,
+      returnByValue:true
+    });
+    routeReady = result.result?.value || {};
+  }
+  if (!routeReady.ready) throw new Error("Route did not hydrate before visual assertion: "+JSON.stringify({route,...routeReady}));
+
   const ops = await send("Runtime.evaluate", {expression: `(() => {
     const surface=document.querySelector("[data-visual-ops]");
     const cards=[...document.querySelectorAll(".vo-system-card, .vo-node, .terminal-lane, .terminal-focus-card, .pt-system-button, .pt-map-card")];
@@ -439,7 +464,7 @@ async function runScrollResetCase(viewport) {
             ? Math.max(0, scroller.scrollHeight - scroller.clientHeight)
             : 0;
           return {
-            ready: location.pathname === "/research" && Boolean(link) && maxScroll > 200,
+            ready: location.pathname === "/research" && Boolean(link),
             maxScroll,
             pathname: location.pathname
           };
@@ -469,9 +494,27 @@ async function runScrollResetCase(viewport) {
     return ["route navigation did not reset scroll to top " + JSON.stringify(value)];
   }
 
-  // SSR content may satisfy route readiness before hydration's initial layout
-  // effect resets scroll. Establish an actual scrolled precondition across
-  // multiple observations before clicking; never retry the navigation assertion.
+  // Force a deterministic scrollable document. The route-reset assertion should
+  // test navigation behavior, not depend on the natural height of /research.
+  const spacerResult = await send("Runtime.evaluate", {
+    expression: `(() => {
+      let spacer=document.getElementById("qa-route-scroll-spacer");
+      if(!spacer){
+        spacer=document.createElement("div");
+        spacer.id="qa-route-scroll-spacer";
+        spacer.setAttribute("aria-hidden","true");
+        spacer.style.height="2200px";
+        spacer.style.width="1px";
+        spacer.style.pointerEvents="none";
+        document.body.appendChild(spacer);
+      }
+      const scroller=document.scrollingElement || document.documentElement;
+      return {maxScroll:Math.max(0,scroller.scrollHeight-scroller.clientHeight)};
+    })()`,
+    returnByValue:true
+  });
+  ready.maxScroll = Number(spacerResult.result?.value?.maxScroll || ready.maxScroll || 0);
+
   const scrollDeadline = Date.now() + 5000;
   let before = 0;
   while (Date.now() < scrollDeadline && before <= 200) {
