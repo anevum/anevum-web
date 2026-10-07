@@ -58,6 +58,21 @@
   letter-spacing: 0.08em;
 }
 
+/* Metadata and titles are separate rows inside the terminal flex lockups. */
+.pt-title-lockup > div > span,
+.pt-title-lockup > div > strong,
+.pt-feed-title > div > span,
+.pt-feed-title > div > strong,
+.pt-selected-title > div > span,
+.pt-selected-title > div > strong {
+  display: block;
+}
+.pt-title-lockup > div > strong,
+.pt-feed-title > div > strong,
+.pt-selected-title > div > strong {
+  margin-top: 4px;
+}
+
 .pt-live-dot {
   width: 7px;
   height: 7px;
