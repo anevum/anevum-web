@@ -38,6 +38,11 @@ export default function CommandReviewDeck({
   const autonomy = control?.autonomy || {};
   const dailyMetrics = record(daily?.metrics);
   const dailyClass = record(daily?.classification);
+  const winRate = dailyMetrics.win_rate_pct ?? (
+    dailyMetrics.win_rate != null && Number.isFinite(Number(dailyMetrics.win_rate))
+      ? (Number(dailyMetrics.win_rate) * 100).toFixed(1) : null);
+  const warnings = Array.isArray(daily?.data_quality_warnings) ? daily.data_quality_warnings : [];
+
   const weeklyStability = record(weekly?.evidence_stability);
   const reviewRequired = control?.review_required === true;
   const awaitingCohort = readiness?.state === "AWAITING_MEASURABLE_COHORT";
@@ -123,11 +128,22 @@ export default function CommandReviewDeck({
         <article className="command-v4-card">
           <header><div><span>LIVE EVIDENCE</span><strong>Current session</strong></div><small>{text(daily?.session, text(evidence?.generated_at, "No report"))}</small></header>
           <div className="command-v4-metrics">
-            <div><span>CLOSED TRADES</span><strong>{text(dailyMetrics.closed_trades)}</strong></div>
+            <div><span>CLOSED TRADES</span><strong>{text(dailyMetrics.trade_count ?? dailyMetrics.closed_trades)}</strong></div>
             <div><span>W / L</span><strong>{text(dailyMetrics.wins, "0")} / {text(dailyMetrics.losses, "0")}</strong></div>
-            <div><span>WIN RATE</span><strong>{text(dailyMetrics.win_rate_pct, "—")}{dailyMetrics.win_rate_pct != null ? "%" : ""}</strong></div>
+            <div><span>WIN RATE</span><strong>{text(winRate, "—")}{winRate != null ? "%" : ""}</strong></div>
             <div><span>CLASSIFICATION</span><strong>{displayState(text(dailyClass.state || dailyClass.classification, "UNKNOWN"))}</strong></div>
           </div>
+          <p className="command-v4-note">{text(daily?.summary || dailyClass.reason, "No confirmed daily report is available.")}</p>
+          {daily && <details><summary>Review session evidence</summary>
+            <p className="command-v4-note">{text(daily?.focus, "No research action recorded.")}</p>
+            <div className="command-v4-metrics">
+              <div><span>REALIZED P&amp;L</span><strong>{text(dailyMetrics.realized_pnl)}</strong></div>
+              <div><span>PROFIT FACTOR</span><strong>{text(dailyMetrics.profit_factor)}</strong></div>
+              <div><span>EXPECTANCY</span><strong>{text(dailyMetrics.expectancy)}</strong></div>
+              <div><span>AVG HOLD / MIN</span><strong>{text(dailyMetrics.average_hold_minutes)}</strong></div>
+            </div>
+            {warnings.map((warning, index) => <p className="command-v4-note" key={index}>{text(warning)}</p>)}
+          </details>}
         </article>
 
         <article className="command-v4-card">
