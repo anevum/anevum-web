@@ -147,9 +147,11 @@ async function runCase(route, viewport) {
           const architectureReady = ${JSON.stringify(route)} !== "/architecture" || Boolean(document.querySelector(".architecture-role-grid"));
           const researchReady = ${JSON.stringify(route)} !== "/research" || Boolean(document.querySelector(".research-hub.field-notes-page .field-notes-stream-section"));
           const fieldNoteReady = !${JSON.stringify(route)}.startsWith("/research/") || Boolean(document.querySelector(".field-note-detail .field-note-reproduce"));
+          const founderReady = ${JSON.stringify(route)} !== "/founder" || Boolean(document.querySelector(".founder-page .founder-hero"));
+          const resumeReady = ${JSON.stringify(route)} !== "/resume" || Boolean(document.querySelector(".resume-page .resume-sheet"));
           const commandReady = !${JSON.stringify(route)}.startsWith("/command/") || Boolean(document.querySelector(".command-v4"));
-          return {ready:pathReady && suspenseReady && homeReady && liveReady && architectureReady && researchReady && fieldNoteReady && commandReady,
-            pathname:location.pathname,title:document.title,suspenseReady,liveReady,architectureReady,researchReady,fieldNoteReady,commandReady};
+          return {ready:pathReady && suspenseReady && homeReady && liveReady && architectureReady && researchReady && fieldNoteReady && founderReady && resumeReady && commandReady,
+            pathname:location.pathname,title:document.title,suspenseReady,liveReady,architectureReady,researchReady,fieldNoteReady,founderReady,resumeReady,commandReady};
         })()`,
         returnByValue:true
       });
@@ -172,9 +174,11 @@ async function runCase(route, viewport) {
         const architectureReady = ${JSON.stringify(route)} !== "/architecture" || Boolean(document.querySelector(".architecture-role-grid"));
         const researchReady = ${JSON.stringify(route)} !== "/research" || Boolean(document.querySelector(".research-hub.field-notes-page .field-notes-stream-section"));
         const fieldNoteReady = !${JSON.stringify(route)}.startsWith("/research/") || Boolean(document.querySelector(".field-note-detail .field-note-reproduce"));
+        const founderReady = ${JSON.stringify(route)} !== "/founder" || Boolean(document.querySelector(".founder-page .founder-hero"));
+        const resumeReady = ${JSON.stringify(route)} !== "/resume" || Boolean(document.querySelector(".resume-page .resume-sheet"));
         const commandReady = !${JSON.stringify(route)}.startsWith("/command/") || Boolean(document.querySelector(".command-v4"));
-        return {ready:pathReady && suspenseReady && homeReady && liveReady && architectureReady && researchReady && fieldNoteReady && commandReady,
-          pathname:location.pathname,title:document.title,suspenseReady,liveReady,architectureReady,researchReady,fieldNoteReady,commandReady};
+        return {ready:pathReady && suspenseReady && homeReady && liveReady && architectureReady && researchReady && fieldNoteReady && founderReady && resumeReady && commandReady,
+          pathname:location.pathname,title:document.title,suspenseReady,liveReady,architectureReady,researchReady,fieldNoteReady,founderReady,resumeReady,commandReady};
       })()`,
       returnByValue:true
     });
