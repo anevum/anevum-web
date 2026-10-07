@@ -75,6 +75,8 @@ function laneActivity(snapshot: IrenSnapshot | null, feed: LiveTradingFeed | nul
   }
 
   const researchControl = snapshot?.research?.control;
+  const readiness = snapshot?.strategy_pipeline?.evidence_readiness;
+  const awaitingCohort = readiness?.state === "AWAITING_MEASURABLE_COHORT";
   const reviewRequired = system === "GRAEN" && researchControl?.review_required === true;
   if (reviewRequired) {
     traceActivity = researchControl?.reason || "Research review requires a deliberate Work / Codex pass.";
@@ -89,6 +91,7 @@ function laneActivity(snapshot: IrenSnapshot | null, feed: LiveTradingFeed | nul
   if (traceActive) activityState = system === "VELUM" ? "REPLAYING" : "RESEARCHING";
   else if (runningJob) activityState = "RUNNING";
   else if (queuedJob && activityState === "WAITING_FOR_WORK") activityState = "QUEUED";
+  else if (system === "VELUM" && awaitingCohort) activityState = "WAITING_FOR_INPUTS";
 
   const active = reviewRequired ? false : (view.active || traceActive || runningJob);
   const fallback = system === "IREN"
@@ -98,7 +101,9 @@ function laneActivity(snapshot: IrenSnapshot | null, feed: LiveTradingFeed | nul
       : system === "GRAEN"
         ? "Research worker healthy · waiting for research work."
         : system === "VELUM"
-          ? "Replay worker healthy · waiting for an eligible replay."
+          ? awaitingCohort
+            ? "Replay worker healthy · waiting for the first measurable post-fix cohort before replay is eligible."
+            : "Replay worker healthy · waiting for an eligible replay."
           : "Forecast worker healthy · waiting for forecast or scoring inputs.";
   const activity = String(traceActivity || (job?.title ? String(job.title) : "") || (active ? view.activity : "") || fallback);
   const started = String(traceStarted || job?.started_at || activeProblem?.started_at || job?.created_at || "");

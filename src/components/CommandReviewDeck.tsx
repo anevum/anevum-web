@@ -40,7 +40,15 @@ export default function CommandReviewDeck({
   const dailyClass = record(daily?.classification);
   const weeklyStability = record(weekly?.evidence_stability);
   const reviewRequired = control?.review_required === true;
-  const mode = text(control?.mode, "IDLE");
+  const awaitingCohort = readiness?.state === "AWAITING_MEASURABLE_COHORT";
+  const rawMode = text(control?.mode, "IDLE");
+  const mode = rawMode === "IDLE" && awaitingCohort ? "WAITING_FOR_INPUTS" : rawMode;
+  const reviewReason = awaitingCohort && rawMode === "IDLE"
+    ? "Strategy review is waiting for the first exact post-fix cohort, not for a worker. No evidence-backed strategy decision exists yet."
+    : control?.reason || "No research decision currently requires an operator or model pass.";
+  const reviewNext = awaitingCohort
+    ? readiness?.next_action || "Collect the first measurable cohort."
+    : control?.next_action;
 
   const permissions = [
     ["Collect evidence", autonomy.collect_market_evidence],
@@ -58,12 +66,12 @@ export default function CommandReviewDeck({
         <div>
           <span>{reviewRequired ? "DECISION REQUIRED" : "REVIEW QUEUE"}</span>
           <h2>{displayState(mode)}</h2>
-          <p>{control?.reason || "No research decision currently requires an operator or model pass."}</p>
+          <p>{reviewReason}</p>
         </div>
         <div className="command-v4-review-action">
           <span>NEXT ACTION</span>
-          <strong>{displayState(control?.next_action)}</strong>
-          <small>{control?.work_credit_recommended ? "Use a deliberate Work / Codex pass below." : "Automation may continue within frozen boundaries."}</small>
+          <strong>{awaitingCohort ? reviewNext : displayState(reviewNext)}</strong>
+          <small>{awaitingCohort ? "No Work / Codex pass is justified until measurable evidence exists." : control?.work_credit_recommended ? "Use a deliberate Work / Codex pass below." : "Automation may continue within frozen boundaries."}</small>
         </div>
       </section>
 

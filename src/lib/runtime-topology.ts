@@ -265,6 +265,37 @@ export type ResearchObservabilityProjection = {
   };
 };
 
+export type ConfigurationDriftChange = {
+  path?: string;
+  operation?: string;
+  classification?: string;
+  severity?: string;
+  before?: unknown;
+  after?: unknown;
+};
+
+export type ConfigurationDriftProjection = {
+  schema_version?: string;
+  baseline_fingerprint?: string | null;
+  current_fingerprint?: string | null;
+  comparison_completeness?: "full" | "legacy_partial" | string;
+  changed_count?: number;
+  added_count?: number;
+  removed_count?: number;
+  detail_unavailable?: boolean;
+  legacy_note?: string;
+  changes?: ConfigurationDriftChange[];
+};
+
+export type ConfigurationReviewProjection = {
+  status?: "CONFIGURATION_REVIEW_REQUIRED" | "ACCEPTED_PENDING_REOBSERVATION" | string;
+  baseline_fingerprint?: string | null;
+  current_fingerprint?: string | null;
+  comparison_completeness?: string | null;
+  accepted_at?: string | null;
+  accepted_by?: string | null;
+};
+
 export type IrenSnapshot = {
   schema_version: string;
   revision: string | number | null;
@@ -286,6 +317,11 @@ export type IrenSnapshot = {
     running_job?: string | null;
   };
   work?: IrenWorkSummary;
+  configuration_review?: ConfigurationReviewProjection | null;
+  configuration_drift?: ConfigurationDriftProjection | null;
+  configuration_current?: Record<string, unknown> | null;
+  configuration_baseline?: Record<string, unknown> | null;
+  configuration_acceptance?: Record<string, unknown> | null;
   strategy_pipeline?: StrategyPipelineProjection;
   research?: {
     control?: ResearchControlProjection;
@@ -409,7 +445,7 @@ export function operatorGuidance(snapshot: IrenSnapshot | null, unavailable = fa
         severity,
         target: "Protected configuration",
         title: "Configuration identity changed",
-        action: "Compare the current runtime configuration with the recorded baseline. Explain the drift before accepting or overwriting it."
+        action: "Open the IREN configuration review, inspect the exact current V4.3 snapshot and any available field-level drift, then accept only the displayed current fingerprint if it matches the intended production authority."
       });
     } else if (key.startsWith("safety.")) {
       rows.push({

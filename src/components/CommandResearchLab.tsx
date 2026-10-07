@@ -229,12 +229,14 @@ function RunList({
   runs,
   selectedRunId,
   onSelect,
-  now
+  now,
+  emptyMessage
 }: {
   runs: ResearchObservabilityRun[];
   selectedRunId: string | null;
   onSelect: (runId: string) => void;
   now: number;
+  emptyMessage?: string;
 }) {
   return (
     <div className="research-observability-run-list" role="list" aria-label="Research and simulation runs">
@@ -261,7 +263,7 @@ function RunList({
             </div>
           </button>
         );
-      }) : <div className="research-observability-empty">No canonical research or simulation runs match this filter.</div>}
+      }) : <div className="research-observability-empty">{emptyMessage || "No canonical research or simulation runs match this filter."}</div>}
     </div>
   );
 }
@@ -309,6 +311,12 @@ export default function CommandResearchLab({
   }, [filteredRuns, selectedRunId]);
 
   const selectedRun = runs.find(run => run.run_id === selectedRunId) || filteredRuns[0] || null;
+  const awaitingCohort = snapshot?.strategy_pipeline?.evidence_readiness?.state === "AWAITING_MEASURABLE_COHORT";
+  const emptyRunMessage = system === "VELUM" && awaitingCohort
+    ? "VELUM is healthy. Replay is waiting for the first exact post-fix measurable cohort; no replay curve should exist yet."
+    : system === "GRAEN" && awaitingCohort
+      ? "GRAEN is collecting evidence. New hypothesis work is intentionally gated until the first measurable cohort exists."
+      : undefined;
   const series = selectedRun?.series || [];
   const activeSeries = series[selectedSeries] || series[0];
   const metrics = Object.entries(selectedRun?.metrics || {})
@@ -372,7 +380,7 @@ export default function CommandResearchLab({
             <span>RUNS</span>
             <strong>{filteredRuns.length}</strong>
           </div>
-          <RunList runs={filteredRuns} selectedRunId={selectedRun?.run_id || null} onSelect={runId => {
+          <RunList runs={filteredRuns} selectedRunId={selectedRun?.run_id || null} emptyMessage={emptyRunMessage} onSelect={runId => {
             setSelectedRunId(runId);
             setSelectedSeries(0);
             setSelectedPoint(null);
@@ -434,7 +442,7 @@ export default function CommandResearchLab({
                 </dl>
               </details>
             </>
-          ) : <div className="research-observability-empty">Select a research run to inspect it.</div>}
+          ) : <div className="research-observability-empty">{emptyRunMessage || "Select a research run to inspect it."}</div>}
         </section>
       </div>
 
