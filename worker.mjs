@@ -1,4 +1,5 @@
 import releaseRegistry from "./src/data/releases.json";
+import { shadowRead } from "./shadow-transport.mjs";
 
 const TRADER_BASE = "https://alpaca-trader-production-bf3e.up.railway.app";
 const PUBLIC_TRADING_FEED = TRADER_BASE + "/v1/trading-public-feed";
@@ -157,11 +158,8 @@ async function proxyCommandHistory(request, env) {
   const credential = await commandCredential(request,env);
   const base = String(env?.RHEN_COMMAND_STREAM_BASE || TRADER_BASE).replace(/\/$/,"");
   if (!base.startsWith("https://")) return jsonResponse({message:"Secure upstream required."},503);
-  const response = await fetch(base+"/v1/command/shadow/history"+url.search, {
-    headers:{Authorization:"Bearer "+credential.token,Accept:"application/json"},
-    signal:AbortSignal.timeout(10000),redirect:"error"
-  });
-  return jsonResponse(await response.json(),response.status);
+  const result = await shadowRead(base,"/v1/command/shadow/history"+url.search,credential.token);
+  return jsonResponse(result.payload,result.status);
 }
 
 async function proxyCommandBootstrap(request, env) {
@@ -171,11 +169,8 @@ async function proxyCommandBootstrap(request, env) {
   const credential = await commandCredential(request,env);
   const base = String(env?.RHEN_COMMAND_STREAM_BASE || TRADER_BASE).replace(/\/$/,"");
   if (!base.startsWith("https://")) return jsonResponse({message:"Secure upstream required."},503);
-  const response = await fetch(base+"/v1/command/shadow/bootstrap", {
-    headers:{Authorization:"Bearer "+credential.token,Accept:"application/json"},
-    signal:AbortSignal.timeout(10000),redirect:"error"
-  });
-  return jsonResponse(await response.json(),response.status);
+  const result = await shadowRead(base,"/v1/command/shadow/bootstrap",credential.token);
+  return jsonResponse(result.payload,result.status);
 }
 
 async function publicResearchReadiness() {

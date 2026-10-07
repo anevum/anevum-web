@@ -47,7 +47,11 @@ export function useCommandLiveStream(enabled: boolean): LiveState {
     void fetch("/api/command/shadow/bootstrap",{credentials:"same-origin",cache:"no-store",
       signal:AbortSignal.any([bootstrapAbort.signal,AbortSignal.timeout(10000)])})
       .then(async response => {
-        if (!response.ok) throw new Error(`Shadow bootstrap unavailable (${response.status})`);
+        if (!response.ok) {
+          const detail = await response.json().catch(()=>({})) as {error_code?: string};
+          const code = /^SHADOW_[A-Z0-9_]+$/.test(detail.error_code || "") ? ` · ${detail.error_code}` : "";
+          throw new Error(`Shadow bootstrap unavailable (${response.status})${code}`);
+        }
         return await response.json() as LiveMessage;
       }).then(message => {
         if (stopped) return;
