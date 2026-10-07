@@ -64,6 +64,15 @@ type CodexHandoff = {
   };
 };
 
+type ConfigurationChange = {
+  path?: string;
+  operation?: string;
+  classification?: string;
+  severity?: string;
+  before?: unknown;
+  after?: unknown;
+};
+
 type IrenFeed = {
   schema_version?: string;
   revision?: number | string | null;
@@ -71,6 +80,24 @@ type IrenFeed = {
   stale?: boolean;
   state?: string;
   incidents?: Array<Record<string, unknown>>;
+  configuration_review?: {
+    status?: string;
+    baseline_fingerprint?: string | null;
+    current_fingerprint?: string | null;
+    comparison_completeness?: string | null;
+    accepted_at?: string | null;
+    accepted_by?: string | null;
+  } | null;
+  configuration_drift?: {
+    comparison_completeness?: string | null;
+    changed_count?: number;
+    added_count?: number;
+    removed_count?: number;
+    detail_unavailable?: boolean;
+    legacy_note?: string;
+    changes?: ConfigurationChange[];
+  } | null;
+  configuration_current?: Record<string, unknown> | null;
   work?: {
     next_action?: {
       title?: string;
@@ -84,6 +111,12 @@ type IrenFeed = {
     commands?: IrenCommand[];
   };
 };
+
+function record(value: unknown): Record<string, unknown> {
+  return value && typeof value === "object" && !Array.isArray(value)
+    ? value as Record<string, unknown>
+    : {};
+}
 
 function clean(value: unknown, fallback = "—") {
   const text = String(value ?? "").replace(/\s+/g, " ").trim();
@@ -108,6 +141,7 @@ export default function CommandIrenMaintenance({ session }: { session: RhenSessi
   const [error, setError] = useState("");
   const [copied, setCopied] = useState("");
   const [sending, setSending] = useState(false);
+  const [acceptingConfiguration, setAcceptingConfiguration] = useState(false);
   const [lastOutcome, setLastOutcome] = useState<{ command: IrenCommand; job?: IrenJob } | null>(null);
   const [generatedPrompt, setGeneratedPrompt] = useState("");
   const [generatedManifest, setGeneratedManifest] = useState<MaintenanceManifest | null>(null);
@@ -188,6 +222,24 @@ export default function CommandIrenMaintenance({ session }: { session: RhenSessi
     }
   }, [refresh, request, sending, waitForCommand]);
 
+  const acceptConfiguration = useCallback(async () => {
+    const fingerprint = String(feed?.configuration_review?.current_fingerprint || "").trim();
+    if (!fingerprint || acceptingConfiguration) return;
+    setAcceptingConfiguration(true);
+    try {
+      await request("/api/command/iren/configuration/accept", {
+        method: "POST",
+        body: JSON.stringify({ fingerprint })
+      });
+      setError("");
+      await refresh();
+    } catch (nextError) {
+      setError(nextError instanceof Error ? nextError.message : "Configuration acceptance failed.");
+    } finally {
+      setAcceptingConfiguration(false);
+    }
+  }, [acceptingConfiguration, feed?.configuration_review?.current_fingerprint, refresh, request]);
+
   const generateMaintenancePrompt = useCallback(async () => {
     const command = focus.trim()
       ? "maintenance prompt: " + focus.trim()
@@ -232,6 +284,16 @@ export default function CommandIrenMaintenance({ session }: { session: RhenSessi
   const outcomeMessage = typeof outcomeResponse.message === "string" ? outcomeResponse.message : "";
   const promptMode = clean(generatedManifest?.mode, "—");
   const promptDelta = Number(generatedManifest?.change_count || 0);
+  const configurationReview = feed?.configuration_review;
+  const configurationDrift = feed?.configuration_drift;
+  const currentConfiguration = record(feed?.configuration_current);
+  const currentProtected = record(currentConfiguration.protected);
+  const currentExecution = record(currentProtected.execution);
+  const currentStrategy = record(currentProtected.strategy);
+  const currentAuthority = record(currentProtected.asset_authority);
+  const currentPortfolio = record(currentProtected.portfolio);
+  const configurationNeedsReview = configurationReview?.status === "CONFIGURATION_REVIEW_REQUIRED";
+  const driftChanges = configurationDrift?.changes || [];
 
   const copy = useCallback(async (text: string, key: string) => {
     try {
@@ -262,6 +324,58 @@ export default function CommandIrenMaintenance({ session }: { session: RhenSessi
           <div><span>CODEX PASS</span><strong>{generatedPrompt ? promptMode : "NOT GENERATED"}</strong></div>
           <div><span>DELTA</span><strong>{generatedPrompt ? promptDelta + " material change" + (promptDelta === 1 ? "" : "s") : "—"}</strong></div>
         </div>
+
+        {configurationReview ? (
+          <section className={"iren-maintenance-alert " + (configurationNeedsReview ? "bad" : "")}>
+            <span>PROTECTED CONFIGURATION · {clean(configurationReview.status)}</span>
+            <strong>
+              {configurationNeedsReview
+                ? "Review the exact current V4.3 configuration before accepting it as the new trusted baseline."
+                : "Configuration acceptance is waiting for IREN re-observation."}
+            </strong>
+            <small>
+              Comparison: {clean(configurationDrift?.comparison_completeness || configurationReview.comparison_completeness)}
+              {" · "}current {shortId(configurationReview.current_fingerprint)}
+              {" · "}baseline {shortId(configurationReview.baseline_fingerprint)}
+            </small>
+
+            <div className="iren-maintenance-state">
+              <div><span>STRATEGY</span><strong>{clean(currentStrategy.version_id || currentStrategy.name)}</strong></div>
+              <div><span>MODE</span><strong>{clean(currentExecution.trading_mode)}</strong></div>
+              <div><span>LIVE AUTHORITY</span><strong>{currentExecution.live_execution_authorized === true && currentExecution.bot_armed === true ? "ARMED" : "REVIEW"}</strong></div>
+              <div><span>ASSET SCOPE</span><strong>{clean(currentAuthority.live_asset_scope || (currentAuthority.long_us_equities_etfs === true ? "long_us_equities_etfs_only" : ""))}</strong></div>
+              <div><span>OPTIONS</span><strong>{currentAuthority.options_research_only === true || currentAuthority.options === false ? "RESEARCH ONLY" : "REVIEW"}</strong></div>
+              <div><span>SHORT / LEVERAGE</span><strong>{currentAuthority.short_equities === false && currentAuthority.leverage_expansion === false ? "DISABLED" : "REVIEW"}</strong></div>
+              <div><span>MAX DAILY LOSS</span><strong>{clean(currentPortfolio.max_daily_loss)}</strong></div>
+              <div><span>MAX GROSS</span><strong>{clean(currentPortfolio.max_gross_exposure_pct)}</strong></div>
+            </div>
+
+            {configurationDrift?.detail_unavailable ? (
+              <small>{configurationDrift.legacy_note || "The legacy baseline did not preserve enough non-secret inputs for an honest field-level historical diff. Review the full current V2 snapshot instead."}</small>
+            ) : driftChanges.length ? (
+              <details className="iren-maintenance-prompt">
+                <summary>Review {driftChanges.length} protected configuration change{driftChanges.length === 1 ? "" : "s"}</summary>
+                <div>
+                  {driftChanges.slice(0, 24).map((change, index) => (
+                    <p key={(change.path || "change") + index}>
+                      <strong>{clean(change.path)}</strong>
+                      {" · "}{clean(change.classification)}
+                      {" · "}{clean(change.operation)}
+                      {change.operation !== "add" ? " · " + clean(change.before) : ""}
+                      {change.operation !== "remove" ? " → " + clean(change.after) : ""}
+                    </p>
+                  ))}
+                </div>
+              </details>
+            ) : null}
+
+            {configurationNeedsReview ? (
+              <button type="button" className="primary" onClick={() => void acceptConfiguration()} disabled={sending || acceptingConfiguration}>
+                {acceptingConfiguration ? "Accepting exact fingerprint…" : "Accept exact current fingerprint"}
+              </button>
+            ) : null}
+          </section>
+        ) : null}
 
         <label className="iren-maintenance-focus">
           <span>OPTIONAL FOCUS FOR THIS WORK PASS</span>
