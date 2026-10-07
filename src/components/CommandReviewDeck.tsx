@@ -70,7 +70,7 @@ export default function CommandReviewDeck({
       <section className={"command-v4-review-hero" + (reviewRequired ? " needs-review" : "")}>
         <div>
           <span>{reviewRequired ? "DECISION REQUIRED" : "REVIEW QUEUE"}</span>
-          <h2>{displayState(mode)}</h2>
+          <h2>{mode === "IDLE" && daily ? "Session evidence to review" : displayState(mode)}</h2>
           <p>{reviewReason}</p>
         </div>
         <div className="command-v4-review-action">
@@ -135,7 +135,7 @@ export default function CommandReviewDeck({
           </div>
           <p className="command-v4-note">{text(daily?.summary || dailyClass.reason, "No confirmed daily report is available.")}</p>
           {daily && <details><summary>Review session evidence</summary>
-            <p className="command-v4-note">{text(daily?.focus, "No research action recorded.")}</p>
+            <p className="command-v4-note">{text(daily?.next_offline_research_action || daily?.focus, "No research action recorded.")}</p>
             <div className="command-v4-metrics">
               <div><span>REALIZED P&amp;L</span><strong>{text(dailyMetrics.realized_pnl)}</strong></div>
               <div><span>PROFIT FACTOR</span><strong>{text(dailyMetrics.profit_factor)}</strong></div>
