@@ -422,6 +422,19 @@ export default {
       }
     }
 
+    if (pathname === "/api/command/iren/configuration/accept") {
+      if (request.method !== "POST") return jsonResponse({ message: "Method not allowed." }, 405);
+      if (url.hostname !== "anevum.com") {
+        return jsonResponse({ message: "Protected configuration acceptance is disabled outside production." }, 403);
+      }
+      try {
+        return await proxyTrader(request, "/v1/command/iren/configuration/accept", env);
+      } catch (error) {
+        if (error instanceof ApiError) return jsonResponse({ message: error.message }, error.status);
+        return jsonResponse({ message: "IREN configuration review unavailable from RHEN." }, 503);
+      }
+    }
+
     if (pathname === "/api/command/iren/command") {
       if (request.method !== "POST") return jsonResponse({ message: "Method not allowed." }, 405);
       if (url.hostname !== "anevum.com") {
