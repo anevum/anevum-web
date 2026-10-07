@@ -455,22 +455,41 @@ async function runScrollResetCase(viewport) {
     return ["route navigation did not reset scroll to top " + JSON.stringify(value)];
   }
 
-  const scrollResult = await send("Runtime.evaluate", {
-    expression: `(async () => {
-      const scroller = document.scrollingElement || document.documentElement;
-      const root = document.documentElement;
-      const previousScrollBehavior = root.style.scrollBehavior;
-      root.style.scrollBehavior = "auto";
-      window.scrollTo({ top: Math.min(1200, ${Number(ready.maxScroll) || 0}), left: 0, behavior: "auto" });
-      await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
-      const before = scroller.scrollTop;
-      root.style.scrollBehavior = previousScrollBehavior;
-      return { before };
-    })()`,
-    awaitPromise: true,
-    returnByValue: true
-  });
-  const before = Number(scrollResult.result?.value?.before || 0);
+  // SSR content may satisfy route readiness before hydration's initial layout
+  // effect resets scroll. Establish an actual scrolled precondition across
+  // multiple observations before clicking; never retry the navigation assertion.
+  const scrollDeadline = Date.now() + 5000;
+  let before = 0;
+  let stableScrollSamples = 0;
+  while (Date.now() < scrollDeadline && stableScrollSamples < 3) {
+    const scrollResult = await send("Runtime.evaluate", {
+      expression: `(async () => {
+        const scroller = document.scrollingElement || document.documentElement;
+        const root = document.documentElement;
+        const previousScrollBehavior = root.style.scrollBehavior;
+        root.style.scrollBehavior = "auto";
+        if (scroller.scrollTop <= 200) {
+          window.scrollTo({ top: Math.min(1200, scroller.scrollHeight-scroller.clientHeight), left: 0, behavior: "auto" });
+        }
+        await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+        const before = scroller.scrollTop;
+        root.style.scrollBehavior = previousScrollBehavior;
+        return { before };
+      })()`,
+      awaitPromise: true,
+      returnByValue: true
+    });
+    before = Number(scrollResult.result?.value?.before || 0);
+    stableScrollSamples = before > 200 ? stableScrollSamples + 1 : 0;
+    if (stableScrollSamples < 3) await sleep(100);
+  }
+  if (stableScrollSamples < 3) {
+    const value = {ok:false,reason:"scrolled precondition not established",before,maxScroll:Number(ready.maxScroll)||0};
+    console.log(JSON.stringify({case:"route-scroll-reset",viewport:viewport.name,...value}));
+    ws.close();
+    await closeTarget(page.id);
+    return ["route scroll setup failed " + JSON.stringify(value)];
+  }
 
   await send("Runtime.evaluate", {
     expression: `(() => {
