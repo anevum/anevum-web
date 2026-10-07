@@ -10,7 +10,19 @@ export type ScannerRow = {
   symbol: string; mid: number | null; bid?: number; ask?: number; spread_bps: number | null;
   quote_source_at?: string | null; quote_age_ms: number | null; candidate_state: string;
   evaluable: boolean; rejection_code: string | null; quality_state: string; signal_reason?: string;
+  bar_source_at?: string | null; observed_bar_count?: number; required_bar_count?: number;
 };
+
+export function scannerFreshness(row: ScannerRow, now: number, streamStale: boolean) {
+  const quoteAge = row.quote_source_at ? now-Date.parse(row.quote_source_at) : null;
+  const barAge = row.bar_source_at ? now-Date.parse(row.bar_source_at) : null;
+  const quoteStale = quoteAge === null || !Number.isFinite(quoteAge) || quoteAge < 0 || quoteAge > 45000;
+  // Older gated schemas lacked bar_source_at. Respect their server quality until
+  // a version with explicit bar timestamps arrives; never invent a timestamp.
+  const barStale = row.bar_source_at !== undefined &&
+    (barAge === null || !Number.isFinite(barAge) || barAge < 0 || barAge > 120000);
+  return {quoteAge, barAge, stale: streamStale || quoteStale || barStale || row.quality_state === "STALE"};
+}
 export type ExecutionMarker = Point & { event_id: string; event_type: string; price?: number | null; order_ref: string; quantity?: number | null; side?: string };
 export type Forecast = {
   forecast_id: string; symbol: string; issued_at: string; feature_as_of: string;

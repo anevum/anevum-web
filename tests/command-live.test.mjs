@@ -1,8 +1,18 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import {applyLiveMessage, emptyLiveState, forecastCurrent, sourceHistoryValid} from "../src/lib/command-live-events.ts";
+import {applyLiveMessage, emptyLiveState, forecastCurrent, sourceHistoryValid, scannerFreshness} from "../src/lib/command-live-events.ts";
 
 const timestamp = "2026-10-06T15:30:00Z";
+test("quiet bars and future quotes cannot render an evaluable live candidate",()=>{
+  const now=Date.parse(timestamp);
+  const row={symbol:"SPY",quote_source_at:timestamp,bar_source_at:new Date(now-60000).toISOString(),quality_state:"LIVE",evaluable:true,candidate_state:"CANDIDATE"};
+  assert.equal(scannerFreshness(row,now,false).stale,false);
+  assert.equal(scannerFreshness({...row,bar_source_at:new Date(now-120001).toISOString()},now,false).stale,true);
+  assert.equal(scannerFreshness({...row,quote_source_at:new Date(now+1).toISOString()},now,false).stale,true);
+  assert.equal(scannerFreshness({...row,bar_source_at:null},now,false).stale,true);
+  assert.equal(scannerFreshness(row,now,true).stale,true);
+  assert.equal(scannerFreshness({...row,quality_state:"STALE"},now,false).stale,true);
+});
 function message(kind, payload, sequence=1, generation="g1") {
   return {schema_version:"command-live.v1",message_type:kind,payload,sequence,stream_generation:generation,server_time:timestamp};
 }
