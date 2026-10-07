@@ -445,7 +445,7 @@ export function operatorGuidance(snapshot: IrenSnapshot | null, unavailable = fa
         severity,
         target: "Protected configuration",
         title: "Configuration identity changed",
-        action: "Compare the current runtime configuration with the recorded baseline. Explain the drift before accepting or overwriting it."
+        action: "Open the IREN configuration review, inspect the exact current V4.3 snapshot and any available field-level drift, then accept only the displayed current fingerprint if it matches the intended production authority."
       });
     } else if (key.startsWith("safety.")) {
       rows.push({
