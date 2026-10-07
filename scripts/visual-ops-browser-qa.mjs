@@ -368,7 +368,7 @@ async function runCase(route, viewport) {
   const evidenceRoutes = {
     "/":["home",["One system. Clear evidence.","public-terminal-home"]],
     "/live":["terminal",["EVIDENCE DRAWER","public-terminal-page","RESEARCH","REPLAY","RHEN"]],
-    "/research":["research",["Development journal."]],
+    "/research":["research",["RHEN publishes what the evidence supports"]],
     "/research/prediction-outcome-evidence-chain":["field-note",["REPRODUCE / CHALLENGE THIS NOTE"]],
     "/architecture":["architecture",["One runtime. Internal modules."]],
     "/founder":["founder",["Devon Akins"]],
