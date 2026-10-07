@@ -4,10 +4,14 @@ export async function shadowRead(base, path, token, fetcher = fetch) {
   try {
     response = await fetcher(base + path, {
       headers: {Authorization: "Bearer " + token, Accept: "application/json"},
-      signal: AbortSignal.timeout(10000), redirect: "error"
+      signal: AbortSignal.timeout(10000), redirect: "manual"
     });
-  } catch {
-    return {status: 502, payload: {message: "Shadow upstream connection failed.", error_code: "SHADOW_FETCH_FAILED"}};
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "";
+    const reason = /redirect/i.test(message) ? "REDIRECT" : /timeout|timed out|abort/i.test(message) ? "TIMEOUT"
+      : /dns|resolve/i.test(message) ? "DNS" : /certificate|tls|ssl/i.test(message) ? "TLS"
+      : /connection|socket|network/i.test(message) ? "NETWORK" : "FAILED";
+    return {status: 502, payload: {message: "Shadow upstream connection failed.", error_code: "SHADOW_FETCH_" + reason}};
   }
   if (!response.ok) {
     return {status: response.status, payload: {

@@ -1,6 +1,7 @@
 import { Component, useEffect, useRef, useState, type ReactNode } from "react";
 import { forecastCurrent, sourceHistoryValid, scannerFreshness, type LiveState, type Point, type Forecast, type ExecutionMarker } from "../lib/command-live-events";
 import "../styles/command-live.css";
+import { currentRhenRelease } from "../data/releases";
 
 function value(v: unknown, digits = 2) { return typeof v === "number" && Number.isFinite(v) ? v.toFixed(digits) : "—"; }
 
@@ -107,6 +108,10 @@ export default function CommandLiveMarket({state}: {state: LiveState}) {
   const rows = Object.values(state.scanner);
   const symbol = selected || rows[0]?.symbol || "";
   const shown = paused || state;
+  const hotset = shown.system.hotset as {quality_state?: string; discovery_count?: number; rotation_count?: number} | undefined;
+  const parity = shown.system.canonical_ledger_parity as {reconciliation_complete?: boolean; stream_parity_complete?: boolean; missing_observed_orders?: number; missing_observed_fills?: number} | undefined;
+  const approvals = shown.system.asc_profile_release as {approved_profiles?: string[]; reason?: string} | undefined;
+  const forecasts = shown.system.nostra_forecasts as {canonical_count?: number; projected_count?: number; reason?: string} | undefined;
   const forecast = shown.forecasts[symbol];
   const currentForecast = forecast && forecastCurrent(forecast,now) ? forecast : undefined;
   const account = shown.system.account_observation as {positions?: {symbol: string; average_entry_price: number; observed_at: string; source: string; provenance: string}[]; overlays?: BrokerOverlay[]; quality_state?: string} | undefined;
@@ -115,7 +120,13 @@ export default function CommandLiveMarket({state}: {state: LiveState}) {
   const overlays: BrokerOverlay[] = account?.quality_state === "LIVE" ? [...(account.overlays || []), ...(account.positions || []).map(p=>({symbol:p.symbol,kind:"BROKER_AVERAGE_ENTRY",value:p.average_entry_price,observed_at:p.observed_at,source:p.source,provenance:p.provenance}))].filter(p=>p.symbol === symbol) : [];
   return <section className="command-live" aria-label="RHEN 4.4 shadow visual intelligence">
     <header><div><small>RHEN 4.4 / SHADOW OBSERVATION</small><h2>Market fabric</h2></div><strong>{state.stale ? "STALE / VALUES FROZEN" : String(state.system.connection_state || "WARMING")}</strong></header>
-    <p>4.3 remains the trading champion. This surface has no broker-write authority.</p>
+    <p>{currentRhenRelease().version} remains the trading champion. The 4.4 observer is deployed separately; live crossover remains pending.</p>
+    <div className="command-live-readiness" aria-label="4.4 integration and validation status">
+      <article><small>DISCOVERY → STREAM</small><strong>{hotset?.quality_state || "Awaiting observation"}</strong><p>{value(hotset?.discovery_count,0)} discovery symbols · {value(hotset?.rotation_count,0)} rotations</p></article>
+      <article><small>BROKER RECONCILIATION</small><strong>{!parity ? "Awaiting observation" : parity.reconciliation_complete ? "Canonical recovery complete" : "Incomplete"}</strong><p>{parity?.stream_parity_complete ? "Raw stream parity complete" : parity ? `Raw gaps: ${value(parity.missing_observed_orders,0)} orders / ${value(parity.missing_observed_fills,0)} fills` : "No verified ledger snapshot"}</p></article>
+      <article><small>ADAPTIVE APPROVALS</small><strong>{approvals?.approved_profiles?.length ? `${approvals.approved_profiles.length} shadow profiles` : "No approved profile"}</strong><p>ACTIVE unavailable · evidence gates remain required</p></article>
+      <article><small>NOSTRA PROJECTION</small><strong>{value(forecasts?.projected_count,0)} projected forecasts</strong><p>{value(forecasts?.canonical_count,0)} canonical forecasts · only observed references qualify</p></article>
+    </div>
     <nav aria-label="Live visual views">{["LIVE","SYMBOL","FORECAST","PERFORMANCE","ADAPTIVE","SYSTEM","REPLAY"].map(v => <button type="button" key={v} aria-pressed={view===v} onClick={()=>setView(v)}>{v}</button>)}</nav>
     {(state.stale || state.error) && <p role="status">{state.error || "Live data stale"}</p>}
     {state.stale && state.bootstrap_status && <p>{state.bootstrap_status}</p>}

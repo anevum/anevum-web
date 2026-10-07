@@ -145,7 +145,7 @@ async function proxyCommandStream(request, env) {
   // not be converted to JSON, read as text, or subject to a REST timeout.
   return fetch(base + "/v1/command/stream", {
     headers: { Upgrade: "websocket", Authorization: "Bearer " + credential.token },
-    redirect: "error"
+    redirect: "manual"
   });
 }
 
