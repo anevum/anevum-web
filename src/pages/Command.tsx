@@ -64,14 +64,14 @@ const PAGE_COPY: Record<CommandPage, { eyebrow: string; title: string; detail: s
     detail: "What is trading now, what capital is exposed, and what the broker is actually doing."
   },
   discover: {
-    eyebrow: "GRAEN + VELUM / DISCOVERY",
+    eyebrow: "EVIDENCE + RESEARCH / DISCOVERY",
     title: "Discover",
-    detail: "Live research observations, market coverage, opportunity funnel, replay evidence, and bounded discovery progress."
+    detail: "Canonical market evidence, NOSTRA forecast outcomes, open research questions, and on-demand GRAEN / VELUM experiment evidence."
   },
   review: {
-    eyebrow: "IREN / DECISION BOUNDARY",
+    eyebrow: "EVIDENCE / DECISION BOUNDARY",
     title: "Review",
-    detail: "Only work that needs judgment: new hypotheses, strategy patches, release decisions, and evidence-backed handoffs."
+    detail: "Only work that needs judgment: unresolved evidence, new hypotheses, bounded strategy experiments, release decisions, and operator / Work handoffs."
   },
   public: {
     eyebrow: "ANEVUM / PUBLIC PROJECTION",
@@ -81,7 +81,7 @@ const PAGE_COPY: Record<CommandPage, { eyebrow: string; title: string; detail: s
   system: {
     eyebrow: "IREN / SYSTEM",
     title: "System",
-    detail: "Runtime health, dependencies, work state, incidents, and the raw canonical event stream."
+    detail: "One Railway runtime, embedded modules, on-demand research/replay state, deterministic schedules, incidents, and the raw canonical event stream."
   }
 };
 
