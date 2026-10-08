@@ -105,6 +105,8 @@ jobs:
               label='preview'
             fi
             echo "| $label | $database | $uuid |" >> "$GITHUB_STEP_SUMMARY"
+            # UUIDs are deployment identifiers (not credentials); log only validated IDs.
+            echo "Verified member D1: $database | UUID: $uuid"
           done
           {
             echo ''
