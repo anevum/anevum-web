@@ -44,7 +44,7 @@ export type LiveMessage = {
 };
 
 export function emptyLiveState(): LiveState {
-  return {generation: null, sequence: -1, stale: true, error: "Awaiting authenticated shadow snapshot",
+  return {generation: null, sequence: -1, stale: true, error: "Awaiting authenticated research observation",
     scanner: {}, series: {}, executions: [], forecasts: {}, system: {}};
 }
 
