@@ -64,7 +64,7 @@ export default function HomeCompany() {
             <Link to={product.routes.home} className="truth-product-card" key={product.slug}>
               <header><SystemIcon system={product.system || "RHEN"} size="md" /><span>{product.lifecycle.toUpperCase()}</span></header>
               <h3>{product.name}</h3><p>{product.oneLine}</p>
-              <dl><div><dt>RELEASE</dt><dd>{product.currentRelease || "—"}</dd></div><div><dt>CATEGORY</dt><dd>{product.category}</dd></div></dl>
+              <dl><div><dt>RELEASE</dt><dd>{product.slug === "rhen" ? release.version : "—"}</dd></div><div><dt>CATEGORY</dt><dd>{product.category}</dd></div></dl>
               <footer><span>REAL PRODUCT</span><b>OPEN ↗</b></footer>
             </Link>
           ))}
