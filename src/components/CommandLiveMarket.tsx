@@ -78,7 +78,7 @@ function SourceReplay({symbol}: {symbol: string}) {
       const end = new Date(replayTime).toISOString();
       const start = new Date(replayTime-2*60*60*1000).toISOString();
       const query = new URLSearchParams({series:"candles:"+symbol,start,end,clock:end,limit:"2400"});
-      const response = await fetch("/api/command/shadow/history?"+query,{credentials:"same-origin",cache:"no-store"});
+      const response = await fetch("/api/command/research/history?"+query,{credentials:"same-origin",cache:"no-store"});
       if (!response.ok) throw new Error(`Source history unavailable (${response.status}).`);
       const body = await response.json() as {points:Point[];entry_authority:boolean;truncated:boolean;pruned_records:number;artifact_fingerprint:string;replay_clock:string};
       if (body.entry_authority !== false || !sourceHistoryValid(body.points,replayTime)) throw new Error("Source artifact failed provenance checks.");
@@ -118,13 +118,13 @@ export default function CommandLiveMarket({state}: {state: LiveState}) {
   const coverage = shown.system.scanner_coverage as {session_id?: string; evaluable_symbol_hours?: number;
     eligible_symbol_hours?: number; signal_candidates?: number; signal_candidates_per_evaluable_symbol_hour?: number | null} | undefined;
   const overlays: BrokerOverlay[] = account?.quality_state === "LIVE" ? [...(account.overlays || []), ...(account.positions || []).map(p=>({symbol:p.symbol,kind:"BROKER_AVERAGE_ENTRY",value:p.average_entry_price,observed_at:p.observed_at,source:p.source,provenance:p.provenance}))].filter(p=>p.symbol === symbol) : [];
-  return <section className="command-live" aria-label="RHEN 4.4 shadow visual intelligence">
-    <header><div><small>RHEN 4.4 / SHADOW OBSERVATION</small><h2>Market fabric</h2></div><strong>{state.stale ? "STALE / VALUES FROZEN" : String(state.system.connection_state || "WARMING")}</strong></header>
-    <p>{currentRhenRelease().version} remains the trading champion. The 4.4 observer is deployed separately; live crossover remains pending.</p>
-    <div className="command-live-readiness" aria-label="4.4 integration and validation status">
+  return <section className="command-live" aria-label="RHEN 4.4 research observation">
+    <header><div><small>RHEN 4.4 / DISCOVER OBSERVATION</small><h2>Market evidence</h2></div><strong>{state.stale ? "STALE / VALUES FROZEN" : String(state.system.connection_state || "WARMING")}</strong></header>
+    <p>{currentRhenRelease().version} remains the trading champion. The 4.4 research observation stream is isolated from broker writes; Review owns validation and crossover decisions.</p>
+    <div className="command-live-readiness" aria-label="4.4 research observation and review status">
       <article><small>DISCOVERY → STREAM</small><strong>{hotset?.quality_state || "Awaiting observation"}</strong><p>{value(hotset?.discovery_count,0)} discovery symbols · {value(hotset?.rotation_count,0)} rotations</p></article>
       <article><small>BROKER RECONCILIATION</small><strong>{!parity ? "Awaiting observation" : parity.reconciliation_complete ? "Canonical recovery complete" : "Incomplete"}</strong><p>{parity?.stream_parity_complete ? "Raw stream parity complete" : parity ? `Raw gaps: ${value(parity.missing_observed_orders,0)} orders / ${value(parity.missing_observed_fills,0)} fills` : "No verified ledger snapshot"}</p></article>
-      <article><small>ADAPTIVE APPROVALS</small><strong>{approvals?.approved_profiles?.length ? `${approvals.approved_profiles.length} shadow profiles` : "No approved profile"}</strong><p>ACTIVE unavailable · evidence gates remain required</p></article>
+      <article><small>ADAPTIVE APPROVALS</small><strong>{approvals?.approved_profiles?.length ? `${approvals.approved_profiles.length} research profiles` : "No approved profile"}</strong><p>ACTIVE unavailable · evidence gates remain required</p></article>
       <article><small>NOSTRA PROJECTION</small><strong>{value(forecasts?.projected_count,0)} projected forecasts</strong><p>{value(forecasts?.canonical_count,0)} canonical forecasts · only observed references qualify</p></article>
     </div>
     <nav aria-label="Live visual views">{["LIVE","SYMBOL","FORECAST","PERFORMANCE","ADAPTIVE","SYSTEM","REPLAY"].map(v => <button type="button" key={v} aria-pressed={view===v} onClick={()=>setView(v)}>{v}</button>)}</nav>
@@ -147,7 +147,7 @@ export default function CommandLiveMarket({state}: {state: LiveState}) {
           <span>{stale ? "STALE" : row.evaluable ? "EVALUABLE" : "BLOCKED"} · {stale ? "BLOCKED" : row.candidate_state}</span><span>Spread {value(row.spread_bps)} bp · quote {age===null ? "unavailable" : `${age.toFixed(0)} ms`}</span><span>Observed bars {value(row.observed_bar_count,0)} / {value(row.required_bar_count,0)} required</span><span>{row.rejection_code || "No rejection"}</span><small>{row.signal_reason}</small>
         </button>;
       })}</div>
-      <h3>Broker evidence tape / OBSERVED</h3>{shown.executions.length ? shown.executions.slice(-20).reverse().map(e=><p key={e.event_id}>{e.timestamp} · {e.symbol} · {e.event_type} · {e.quantity ?? "—"} @ {e.price ?? "—"} · {e.order_ref}</p>) : <p>No broker events observed by this shadow runtime.</p>}
+      <h3>Broker evidence tape / OBSERVED</h3>{shown.executions.length ? shown.executions.slice(-20).reverse().map(e=><p key={e.event_id}>{e.timestamp} · {e.symbol} · {e.event_type} · {e.quantity ?? "—"} @ {e.price ?? "—"} · {e.order_ref}</p>) : <p>No broker events observed by this research runtime.</p>}
     </>}
     {view === "SYSTEM" && <dl>{Object.entries(state.system).map(([key,v])=><div key={key}><dt>{key}</dt><dd>{typeof v === "object" ? JSON.stringify(v) : String(v)}</dd></div>)}</dl>}
     {view === "PERFORMANCE" && <ChartBoundary><h3>Observed broker equity</h3><Sparkline points={shown.series["account:equity"] || []} /><p>OBSERVED · ALPACA/REST_RECONCILIATION · updates after broker events and periodic reconciliation. Latest equity {value(shown.series["account:equity"]?.at(-1)?.value)}. Account state {account?.quality_state || "UNAVAILABLE"}. These samples do not establish daily return or trading performance validation.</p></ChartBoundary>}
@@ -157,7 +157,7 @@ export default function CommandLiveMarket({state}: {state: LiveState}) {
       ["gross_exposure_pct","Observed gross position exposure / equity (%)"]
     ].map(([key,label])=><article key={key}><h3>{label}</h3><Sparkline points={shown.series["performance:"+key] || []} /><p>{value(shown.series["performance:"+key]?.at(-1)?.value)} · DERIVED · account-observation-diagnostics-v1</p></article>)}</div><p>Account sample diagnostics. Deposits and withdrawals are not adjusted; strategy returns and full-session drawdown remain unavailable.</p></ChartBoundary>}
     {view === "ADAPTIVE" && <>
-      <h3>Policy, regime and capital / shadow</h3>
+      <h3>Policy, regime and capital / research</h3>
       <p>Effective execution remains BASELINE_LOCKED. Proposed values are counterfactual and confer no trading authority.</p>
       {["nostra","adaptive_control","capital_governor"].map(key=>{
         const data = shown.system[key];
