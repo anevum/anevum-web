@@ -1,4 +1,10 @@
 /* Signed-in ANEVUM member surfaces. No RHEN operator styles or broker account values. */
+.member-legal { max-width: 760px; padding: clamp(44px,7vw,96px) 0 24px; font-size: 1rem; line-height: 1.75; }
+.member-legal h1 { font-size: clamp(2.1rem,5vw,3.1rem); letter-spacing: -.035em; margin: 10px 0 24px; }
+.member-legal h2 { font-size: 1.2rem; margin: 35px 0 9px; }
+.member-legal p { margin: 0 0 17px; color: var(--workshop-copy); }
+.member-legal a { color: var(--workshop-accent); }
+.member-legal .member-legal-date { border-top: 1px solid var(--workshop-line); padding-top: 18px; margin-top: 38px; font-size: .81rem; }
 .workshop-header .workshop-account-link {
   color: var(--workshop-accent);
   white-space: nowrap;
