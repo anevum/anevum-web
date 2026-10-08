@@ -55,28 +55,47 @@ def safe_policy_check(app, policies, organization):
     return destination_mode(x.get("uri") for x in app.get("destinations", []))
 
 
-def access_update_payload(original, mode):
-    """Return the full GET configuration with only domain/destinations changed.
+# Writable self-hosted Access application properties accepted by the PUT API.
+# GET also returns IDs, AUD, timestamps and deprecated self_hosted_domains:
+# these are NOT sent back to Cloudflare. Policies are maintained separately.
+APP_WRITE_FIELDS = frozenset((
+    "type", "name", "allow_iframe", "allow_authenticate_via_warp",
+    "allowed_idps", "app_launcher_visible", "auto_redirect_to_identity",
+    "cors_headers", "custom_deny_message", "custom_deny_url",
+    "custom_non_identity_deny_url", "custom_pages", "session_duration",
+    "http_only_cookie_attribute", "same_site_cookie_attribute",
+    "read_service_tokens_from_header", "service_auth_401_redirect",
+    "skip_interstitial", "options_preflight_bypass", "path_cookie_attribute",
+    "access_token_lifetime", "logo_url", "app_launcher_logo_url", "bg_color",
+    "footer_links", "tags", "enable_binding_cookie", "enable_clientless_access",
+    "http_only_cookie_attribute", "same_site_cookie_attribute",
+))
 
-    Cloudflare Access application updates use PUT, NOT PATCH. A reduced PUT
-    would reset unrelated authentication settings, so preserve every GET field.
+
+def access_update_payload(original, mode):
+    """Send only documented writable fields, retaining the old auth settings.
+
+    All authorization, identity, session and cookie fields supplied by GET are
+    copied through when present. The HTTP response must keep the other fields.
     """
     if mode not in ("legacy", "member"):
         raise ValueError("Refusing an unknown Access cutover mode.")
-    result = dict(original)
-    result["domain"] = "anevum.com/command/rhen" if mode == "member" else original.get("domain", "anevum.com/command")
-    result["destinations"] = [{"type": "public", "uri": uri} for uri in sorted(SCOPED if mode == "member" else LEGACY)]
+    if original.get("type") != "self_hosted" or original.get("name") != APP_NAME:
+        raise ValueError("Refusing change to unexpected Access application.")
+    result = {key: value for key, value in original.items()
+              if key in APP_WRITE_FIELDS and value is not None}
+    result["domain"] = "anevum.com/command/rhen*" if mode == "member" else original.get("domain", "anevum.com/command*")
+    result["destinations"] = [
+        {"type": "public", "uri": uri}
+        for uri in sorted(SCOPED if mode == "member" else LEGACY)
+    ]
     return result
 
 
 def ensure_unchanged_auth_settings(before, after):
-    fields = (
-        "id", "aud", "name", "type", "allowed_idps",
-        "auto_redirect_to_identity", "session_duration", "app_launcher_visible",
-        "http_only_cookie_attribute", "same_site_cookie_attribute",
-        "read_service_tokens_from_header", "policies", "custom_deny_url",
-        "custom_deny_message", "custom_non_identity_deny_url", "service_auth_401_redirect"
-    )
+    # Any preexisting security setting that changes (including policies and AUD)
+    # blocks the cutover and causes an attempt to restore the original scope.
+    fields = APP_WRITE_FIELDS | frozenset(("id", "aud", "policies"))
     for field in fields:
         if before.get(field) != after.get(field):
             raise RuntimeError("Access application attribute unexpectedly changed: " + field)
@@ -207,7 +226,7 @@ def main():
     except Exception:
         if changed:
             # Fail closed: recover the original route coverage before exiting.
-            rollback = dict(app)
+            rollback = access_update_payload(app, "legacy")
             try:
                 request_json(account, token, "/access/apps/" + APP_ID, method="PUT", body=rollback)
                 restored, restored_policies, restored_org = read_app(account, token)
