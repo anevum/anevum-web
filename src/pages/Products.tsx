@@ -2,9 +2,11 @@ import { Link } from "react-router-dom";
 import PublicEvidenceSnapshot from "../components/PublicEvidenceSnapshot";
 import SystemIcon from "../components/company/SystemIcon";
 import { publicProducts } from "../data/products";
+import { currentRhenRelease } from "../data/releases";
 
 export default function Products() {
   const products = publicProducts();
+  const rhenRelease = currentRhenRelease();
   return (
     <div className="studio-page truth-products-page">
       <section className="truth-page-intro">
@@ -18,7 +20,7 @@ export default function Products() {
           <article key={product.slug} className="truth-product-row">
             <div className="truth-product-identity"><span>{String(index+1).padStart(2,"0")}</span><SystemIcon system={product.system || "RHEN"} size="lg" /><div><strong>{product.name}</strong><small>{product.category}</small></div></div>
             <div className="truth-product-copy"><span>{product.lifecycle.toUpperCase()}</span><p>{product.oneLine}</p></div>
-            <div className="truth-product-route"><span>{product.currentRelease ? "CURRENT "+product.currentRelease : "NO RELEASE"}</span><Link to={product.routes.home}>Open product →</Link></div>
+            <div className="truth-product-route"><span>{product.slug === "rhen" ? "CURRENT "+rhenRelease.version : "NO RELEASE"}</span><Link to={product.routes.home}>Open product →</Link></div>
           </article>
         ))}
       </section>
