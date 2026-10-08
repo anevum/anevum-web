@@ -71,7 +71,7 @@ jobs:
         shell: bash
         run: |
           set -o pipefail
-          output="$(npx wrangler preview --name "pr-${{ github.event.pull_request.number }}" --json)"
+          output="$(npx wrangler preview --name "pr-${{ github.event.pull_request.number }}-${{ github.run_id }}" --json)"
           printf '%s\n' "$output"
           json="$(printf '%s\n' "$output" | sed -n '/^{/,$p')"
           preview_url="$(printf '%s' "$json" | jq -er '.preview.urls[0]')"
