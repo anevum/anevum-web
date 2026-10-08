@@ -112,6 +112,15 @@ def request_json(account, token, path, method="GET", body=None):
         with urllib.request.urlopen(req, timeout=20) as response:
             result = json.load(response)
     except urllib.error.HTTPError as exc:
+        # Cloudflare sends structured validation error codes. Never log the
+        # request, bearer token, unfiltered response, or Access policy contents.
+        try:
+            errors = json.loads(exc.read(8192)).get("errors", [])
+            safe_codes = [str(e.get("code"))[:18] for e in errors
+                          if isinstance(e, dict) and isinstance(e.get("code"), (str, int))]
+            print("ACCESS_API_ERROR_CODES=" + json.dumps(safe_codes))
+        except (ValueError, OSError, AttributeError):
+            pass
         raise RuntimeError("Cloudflare Access API HTTP " + str(exc.code)) from None
     if result.get("success") is not True:
         raise RuntimeError("Cloudflare Access API rejected the requested operation.")
