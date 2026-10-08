@@ -111,6 +111,31 @@ export async function memberEndpoint(request, env, pathname) {
   }
 
   const db = env.MEMBER_DB;
+  if (pathname === "/api/member/export" && request.method === "GET") {
+    const [profile, saved, follows, entitlements] = await Promise.all([
+      db.prepare("SELECT display_name, theme, created_at, updated_at FROM member_profiles WHERE user_id = ?").bind(user.id).first(),
+      db.prepare("SELECT app_slug, saved_at FROM member_saved_apps WHERE user_id = ? ORDER BY saved_at DESC").bind(user.id).all(),
+      db.prepare("SELECT project_slug, followed_at FROM member_project_follows WHERE user_id = ? ORDER BY followed_at DESC").bind(user.id).all(),
+      db.prepare("SELECT app_slug, capability, granted_at, expires_at FROM member_entitlements WHERE user_id = ?").bind(user.id).all()
+    ]);
+    return new Response(JSON.stringify({
+      exportedAt: new Date().toISOString(),
+      identity: { id: user.id, name: user.name, email: user.email, image: user.image },
+      profile: profile || {},
+      savedApps: saved.results || [],
+      projectFollows: follows.results || [],
+      entitlements: entitlements.results || []
+    }, null, 2), {
+      status: 200,
+      headers: {
+        "Content-Type": "application/json; charset=utf-8",
+        "Content-Disposition": 'attachment; filename="anevum-account-data.json"',
+        "Cache-Control": "private, no-store",
+        "X-Content-Type-Options": "nosniff",
+        "X-Robots-Tag": "noindex, nofollow, noarchive"
+      }
+    });
+  }
   if (pathname === "/api/member/session" && request.method === "GET") {
     return reply({ authenticated: true, user: { id: user.id, email: user.email, name: user.name, image: user.image } });
   }
