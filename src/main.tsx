@@ -22,6 +22,7 @@ import "./styles/studio.css";
 import "./styles/workshop.css";
 import "./styles/members.css";
 import "./styles/workshop-editorial.css";
+import "./styles/workshop-rhen.css";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

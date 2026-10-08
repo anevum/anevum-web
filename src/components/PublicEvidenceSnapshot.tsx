@@ -19,7 +19,7 @@ function ageText(value?: string | null, now = Date.now()) {
 }
 
 export default function PublicEvidenceSnapshot({ compact = false }: { compact?: boolean }) {
-  const { data, loading, error, now } = useLiveTrading(5000);
+  const { data, loading, error, now } = useLiveTrading(30000);
   const performance = data?.performance;
 
   const chart = useMemo(() => {
