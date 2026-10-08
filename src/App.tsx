@@ -18,6 +18,12 @@ const Founder = lazy(() => import("./pages/Founder"));
 const Resume = lazy(() => import("./pages/Resume"));
 const Releases = lazy(() => import("./pages/Releases"));
 const ReleaseDetail = lazy(() => import("./pages/ReleaseDetail"));
+const SignIn = lazy(() => import("./pages/SignIn"));
+const MemberHome = lazy(() => import("./pages/MemberHome"));
+const MemberSettings = lazy(() => import("./pages/MemberSettings"));
+const RhenApp = lazy(() => import("./pages/RhenApp"));
+const Privacy = lazy(() => import("./pages/Privacy"));
+const Terms = lazy(() => import("./pages/Terms"));
 
 const titles: Record<string, string> = {
   "/": "ANEVUM — Independent Software",
@@ -29,7 +35,12 @@ const titles: Record<string, string> = {
   "/products/rhen/architecture": "RHEN Architecture — ANEVUM",
   "/products/rhen/releases": "RHEN Releases — ANEVUM",
   "/about": "About — ANEVUM",
-  "/resume": "Résumé — ANEVUM"
+  "/resume": "Résumé — ANEVUM",
+  "/sign-in": "Sign in — ANEVUM",
+  "/me": "My Space — ANEVUM",
+  "/me/settings": "Account settings — ANEVUM",
+  "/privacy": "Privacy — ANEVUM",
+  "/terms": "Terms — ANEVUM"
 };
 
 const descriptions: Record<string, string> = {
@@ -42,7 +53,12 @@ const descriptions: Record<string, string> = {
   "/products/rhen/architecture": "Inspect RHEN execution, research, replay, forecasting, control, storage, and evidence boundaries.",
   "/products/rhen/releases": "RHEN release records document production changes, verification, limitations, and public system history.",
   "/about": "About ANEVUM, the independently built and operated software studio.",
-  "/resume": "Professional résumé and background for the person responsible for ANEVUM."
+  "/resume": "Professional résumé and background for the person responsible for ANEVUM.",
+  "/sign-in": "ANEVUM account access.",
+  "/me": "Your private ANEVUM project library and follows.",
+  "/me/settings": "Private ANEVUM profile and account settings.",
+  "/privacy": "ANEVUM privacy information.",
+  "/terms": "ANEVUM website terms."
 };
 
 function ensureMeta(selector: string, create: () => HTMLElement, content: string) {
@@ -109,11 +125,14 @@ function RouteEffects() {
 
   useEffect(() => {
     const path = location.pathname;
-    const protectedRoute = path.startsWith("/command");
+    const protectedRoute = path.startsWith("/command") || path === "/sign-in" || path.startsWith("/me") || path.startsWith("/apps/");
     let title = titles[path] || "ANEVUM — Independent Software";
     let description = descriptions[path] || descriptions["/"];
 
-    if (path.startsWith("/command")) {
+    if (path.startsWith("/apps/rhen/") || path === "/apps/rhen") {
+      title = "RHEN Workspace — ANEVUM";
+      description = "Authenticated RHEN application workspace.";
+    } else if (path.startsWith("/command")) {
       title = "Command — ANEVUM";
       description = "Protected ANEVUM operating surface.";
     } else if (path.startsWith("/products/rhen/releases/")) {
@@ -185,6 +204,13 @@ export default function App() {
         <Route path="/field-notes/:slug" element={<PublicExperience><FieldNoteDetail /></PublicExperience>} />
         <Route path="/about" element={<PublicExperience><Founder /></PublicExperience>} />
         <Route path="/resume" element={<PublicExperience><Resume /></PublicExperience>} />
+        <Route path="/privacy" element={<PublicExperience><Privacy /></PublicExperience>} />
+        <Route path="/terms" element={<PublicExperience><Terms /></PublicExperience>} />
+        <Route path="/sign-in" element={<PublicExperience><SignIn /></PublicExperience>} />
+        <Route path="/me" element={<PublicExperience><MemberHome /></PublicExperience>} />
+        <Route path="/me/settings" element={<PublicExperience><MemberSettings /></PublicExperience>} />
+        <Route path="/apps/rhen/command/*" element={<LegacyRhenOperatorRoute />} />
+        <Route path="/apps/rhen/*" element={<Suspense fallback={<Loader />}><RhenApp /></Suspense>} />
 
         <Route path="/products/rhen" element={<PublicExperience><RhenProduct /></PublicExperience>} />
         <Route path="/products/rhen/evidence" element={<PublicExperience><Live /></PublicExperience>} />
@@ -241,4 +267,11 @@ function LegacyNoteRedirect() {
   const location = useLocation();
   const slug = location.pathname.slice("/research/".length);
   return <Navigate to={"/field-notes/" + slug} replace />;
+}
+
+function LegacyRhenOperatorRoute() {
+  // Keep Cloudflare Access at /command until the nested path has an Access policy.
+  const location = useLocation();
+  const suffix = location.pathname.slice("/apps/rhen/command".length) || "/operate";
+  return <Navigate to={"/command" + suffix} replace />;
 }

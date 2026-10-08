@@ -15,13 +15,15 @@
     "sync:releases": "node scripts/sync-release-artifacts.mjs",
     "sync:share-image": "node scripts/sync-share-image.mjs",
     "validate:releases": "node scripts/validate-release-registry.mjs",
-    "sync:resume": "python scripts/render-founder-resume.py"
+    "sync:resume": "python scripts/render-founder-resume.py",
+    "test:members": "node --test tests/member-boundaries.test.mjs"
   },
   "dependencies": {
     "motion": "13.4.3",
     "react": "19.3.0",
     "react-dom": "19.3.0",
-    "react-router-dom": "7.18.4"
+    "react-router-dom": "7.18.4",
+    "better-auth": "1.7.5"
   },
   "devDependencies": {
     "@cloudflare/vite-plugin": "1.59.0",

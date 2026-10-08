@@ -20,6 +20,7 @@ import "./styles/command-trading-lanes.css";
 import "./styles/launch-2026.css";
 import "./styles/studio.css";
 import "./styles/workshop.css";
+import "./styles/members.css";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

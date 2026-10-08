@@ -3,9 +3,11 @@ import PublicEvidenceSnapshot from "../components/PublicEvidenceSnapshot";
 import SystemIcon from "../components/company/SystemIcon";
 import { currentRhenRelease } from "../data/releases";
 import { useLiveTrading } from "../hooks/useLiveTrading";
+import { useMemberAvailability } from "../member/useMemberAvailability";
 
 export default function RhenProduct() {
   const release = currentRhenRelease();
+  const memberAvailability = useMemberAvailability();
   const { data, error, now } = useLiveTrading(5000);
   const research = data?.research;
   const telemetry = data?.telemetry;
@@ -22,6 +24,10 @@ export default function RhenProduct() {
           <dl><div><dt>LIVE</dt><dd>LONG EQUITIES + ETFs</dd></div><div><dt>OPTIONS</dt><dd>RESEARCH ONLY</dd></div><div><dt>SHORTS</dt><dd>DISABLED</dd></div><div><dt>PROMOTION</dt><dd>MANUAL</dd></div></dl>
         </aside>
       </section>
+
+      {memberAvailability === "available" ? (
+        <p className="member-rhen-open"><Link to="/apps/rhen">Open RHEN workspace →</Link><span> A personal research viewer, not a live trading account.</span></p>
+      ) : null}
 
       <PublicEvidenceSnapshot />
 

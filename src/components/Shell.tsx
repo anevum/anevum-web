@@ -2,11 +2,23 @@ import { type ReactNode, useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import Mark from "./Mark";
 import publicRoutes from "../data/public-routes.json";
+import { memberAuthClient } from "../member/auth-client";
+import { useMemberAvailability } from "../member/useMemberAvailability";
 
 const nav = publicRoutes.filter((route) => route.nav);
 
 function isActive(pathname: string, href: string) {
   return href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(href + "/");
+}
+
+function MemberLink() {
+  const { data: session } = memberAuthClient.useSession();
+  return <Link className="workshop-account-link" to={session?.user ? "/me" : "/sign-in"}>{session?.user ? "My Space" : "Sign in"}</Link>;
+}
+
+function AvailableMemberLink() {
+  const status = useMemberAvailability();
+  return status === "available" ? <MemberLink /> : null;
 }
 
 function PublicFooter() {
@@ -25,6 +37,8 @@ function PublicFooter() {
             <Link to="/feed">Updates</Link>
             <Link to="/field-notes">Field Notes</Link>
             <Link to="/about">About</Link>
+            <Link to="/privacy">Privacy</Link>
+            <Link to="/terms">Terms</Link>
           </nav>
         </div>
       </div>
@@ -37,7 +51,7 @@ export function PublicShell({ children }: { children: ReactNode }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   useEffect(() => setMobileOpen(false), [location.pathname]);
 
-  const lightPage = location.pathname === "/" || location.pathname === "/products";
+  const lightPage = location.pathname === "/" || location.pathname === "/products" || location.pathname === "/sign-in" || location.pathname === "/privacy" || location.pathname === "/terms" || location.pathname.startsWith("/me");
 
   return (
     <div className={"public-frame studio-shell workshop-shell " + (lightPage ? "workshop-public-light" : "workshop-public-legacy")}>
@@ -54,6 +68,7 @@ export function PublicShell({ children }: { children: ReactNode }) {
               </Link>
             ))}
           </nav>
+          <AvailableMemberLink />
           <button
             className="studio-menu-button"
             type="button"
@@ -71,6 +86,7 @@ export function PublicShell({ children }: { children: ReactNode }) {
               {label}
             </Link>
           ))}
+          <AvailableMemberLink />
         </nav>
       </header>
       <main className="studio-stage">
