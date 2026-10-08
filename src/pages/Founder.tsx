@@ -3,56 +3,57 @@ import founder from "../data/founder.json";
 
 export default function Founder() {
   return (
-    <div className="studio-page studio-about-page">
-      <section className="studio-about-hero">
-        <div className="studio-about-portrait"><img src="/devon-akins-headshot.jpg" alt="Devon Akins" /></div>
+    <div className="studio-page studio-about-page workshop-about">
+      <header className="workshop-page-intro">
+        <p className="workshop-kicker">About ANEVUM</p>
+        <h1>ANEVUM is one person right now.</h1>
+        <p>I'm Devon. I build software because I'm curious, I want useful things to exist, and I enjoy figuring out how systems work. ANEVUM is where I keep that work.</p>
+      </header>
+
+      <section className="workshop-about-intro" aria-label="Who is behind ANEVUM">
         <div>
-          <span>ABOUT / DEVON AKINS</span>
-          <h1>ANEVUM is one person right now.</h1>
-          <p className="studio-about-lead">
-            I&apos;m Devon Akins. I founded ANEVUM in 2026 and currently design, build, test, deploy, document,
-            and operate the software myself.
-          </p>
-          <p>
-            I am not trying to make a one-person studio look like a large software firm. The point is to make useful things,
-            show the work clearly, and let the company become larger only when the work actually calls for it.
-          </p>
-          <div className="studio-actions">
-            <Link className="studio-button primary" to="/resume">View résumé <span>→</span></Link>
-            <a className="studio-button" href="/devon-akins-resume.pdf" download>Download PDF</a>
+          <h2>A workshop, not a product pitch.</h2>
+          <p>RHEN started as my own experiment in markets and money. Other projects may have nothing to do with trading. I use mathematics, programming, research, and AI-assisted development to take ideas from something I'm wondering about to something I can actually use.</p>
+          <p>Not everything works, and I don't pretend otherwise. I'd rather publish the results, make the useful parts available, and keep learning.</p>
+          <p>I'd like the work to support my family and eventually help other people, too. That matters more to me than making the website look like a much larger company.</p>
+          <div className="workshop-about-links">
+            <Link to="/resume">View résumé →</Link>
+            <a href="/devon-akins-resume.pdf" download>Download PDF</a>
+            <a href={`mailto:${founder.email}`}>Get in touch</a>
           </div>
         </div>
+        <figure className="workshop-about-photo">
+          <img src="/devon-akins-headshot.jpg" alt="Portrait of Devon Akins, who builds ANEVUM" loading="lazy" />
+          <figcaption>Devon Akins · Independent developer</figcaption>
+        </figure>
       </section>
 
-      <section className="studio-statement compact">
-        <span>WHY I STARTED IT</span>
-        <div>
-          <h2>Build software that gives people some attention back.</h2>
-          <p>
-            Money, investing, administration, and repetitive decisions can sit in the background of everyday life and keep taking mental space.
-            I want ANEVUM to build tools that handle more of that work for people while still making the underlying system understandable.
-          </p>
-          <p>That starts with finance because it is where I am doing the deepest work now. It does not end there.</p>
+      <section className="workshop-section" aria-labelledby="about-background">
+        <div className="workshop-section-heading">
+          <div><p className="workshop-section-eyebrow">Experience</p><h2 id="about-background">The path so far</h2></div>
         </div>
-      </section>
-
-      <section className="studio-section">
-        <header className="studio-section-heading"><span>BACKGROUND</span><div><h2>Software, mathematics, research, and teaching.</h2><p>Those threads show up in how I approach products: model the problem, make the assumptions visible, test what can be tested, and explain the result.</p></div></header>
-        <div className="studio-background-grid">
-          {founder.experience.slice(0,4).map((item) => (
-            <article key={`${item.organization}-${item.role}`}><span>{item.period}</span><h3>{item.organization}</h3><strong>{item.role}</strong><p>{item.bullets[0]}</p></article>
+        <div className="workshop-about-experience">
+          {founder.experience.slice(0, 4).map((item) => (
+            <article key={item.organization + "-" + item.role}>
+              <time>{item.period}</time>
+              <div><h3>{item.organization}</h3><strong>{item.role}</strong><p>{item.bullets[0]}</p></div>
+            </article>
           ))}
         </div>
       </section>
 
-      <section className="studio-section">
-        <header className="studio-section-heading"><span>WORKING STACK</span><div><h2>I build across the whole path from idea to running software.</h2></div></header>
-        <div className="studio-stack">{founder.stack.map((item) => <span key={item}>{item}</span>)}</div>
+      <section className="workshop-section" aria-labelledby="about-tools">
+        <div className="workshop-section-heading">
+          <div><p className="workshop-section-eyebrow">Tools</p><h2 id="about-tools">What I work with</h2></div>
+        </div>
+        <div className="workshop-about-stack">
+          {founder.stack.map((item) => <span key={item}>{item}</span>)}
+        </div>
       </section>
 
-      <section className="studio-contact-band">
-        <div><span>CONTACT</span><h2>Devon Akins</h2><p>Founder, ANEVUM · {founder.location}</p></div>
-        <div><a href={`mailto:${founder.email}`}>{founder.email}</a><Link to="/products">Products</Link><Link to="/research">Field Notes</Link></div>
+      <section className="workshop-endnote">
+        <p>ANEVUM is maintained independently. If there's something interesting you'd like to talk about, you can reach me directly.</p>
+        <a href={`mailto:${founder.email}`}>{founder.email} →</a>
       </section>
     </div>
   );

@@ -51,7 +51,7 @@ export function PublicShell({ children }: { children: ReactNode }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   useEffect(() => setMobileOpen(false), [location.pathname]);
 
-  const lightPage = location.pathname === "/" || location.pathname === "/products" || location.pathname === "/sign-in" || location.pathname === "/privacy" || location.pathname === "/terms" || location.pathname.startsWith("/me");
+  const lightPage = location.pathname === "/" || location.pathname === "/products" || location.pathname === "/feed" || location.pathname === "/about" || location.pathname === "/sign-in" || location.pathname === "/privacy" || location.pathname === "/terms" || location.pathname.startsWith("/field-notes") || location.pathname.startsWith("/me");
 
   return (
     <div className={"public-frame studio-shell workshop-shell " + (lightPage ? "workshop-public-light" : "workshop-public-legacy")}>

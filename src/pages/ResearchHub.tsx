@@ -3,54 +3,51 @@ import { fieldNotes } from "../data/fieldNotes";
 
 export default function ResearchHub() {
   const notes = [...fieldNotes].sort((a, b) => b.date.localeCompare(a.date));
-  const [lead, ...rest] = notes;
+  const [latest, ...older] = notes;
 
   return (
-    <div className="studio-page studio-notes-page">
-      <section className="studio-page-hero">
-        <span>FIELD NOTES</span>
-        <h1>The useful part of building in public is showing what did not work.</h1>
-        <p>
-          Field Notes are the working record behind ANEVUM: research, engineering changes, releases, mistakes,
-          dead ends, and the evidence used to decide what happens next.
-        </p>
-      </section>
+    <div className="studio-page studio-notes-page workshop-notes">
+      <header className="workshop-page-intro">
+        <p className="workshop-kicker">FIELD NOTES</p>
+        <h1>Notes from building things.</h1>
+        <p>Working through ideas usually means getting something wrong first. These notes document actual experiments, decisions, releases, and things I learned along the way.</p>
+      </header>
 
-      {lead ? (
-        <section className="studio-note-feature">
-          <div className="studio-note-feature-meta"><span>LATEST NOTE</span><time>{lead.date}</time></div>
-          <div className="studio-note-feature-copy">
-            <span>{lead.type} / {lead.status}</span>
-            <h2>{lead.title}</h2>
-            <p>{lead.summary}</p>
-            <Link to={`/research/${lead.slug}`}>Read the note →</Link>
+      {latest && (
+        <section className="workshop-section workshop-latest-note">
+          <div className="workshop-section-heading">
+            <div><p className="workshop-section-eyebrow">Most recent</p><h2>Latest Field Note</h2></div>
           </div>
-          <div className="studio-note-feature-aside">
-            <span>READ TIME</span><strong>{lead.readMinutes} MIN</strong>
-            <span>SYSTEMS</span><strong>{lead.systems.join(" / ")}</strong>
-          </div>
+          <article>
+            <p className="workshop-note-type">{latest.date} · {latest.type}</p>
+            <h3><Link to={"/field-notes/" + latest.slug}>{latest.title}</Link></h3>
+            <p>{latest.summary}</p>
+            <Link to={"/field-notes/" + latest.slug}>Read the note →</Link>
+          </article>
         </section>
-      ) : null}
+      )}
 
-      <section className="studio-section">
-        <header className="studio-section-heading"><span>RECENT</span><div><h2>Build log, not marketing archive.</h2><p>Most of the current record is RHEN because RHEN is the current flagship project. Future products will live in the same journal.</p></div></header>
-        <div className="studio-note-list">
-          {rest.map((note, index) => (
-            <Link key={note.slug} to={`/research/${note.slug}`}>
-              <span className="studio-note-index">{String(index + 2).padStart(2,"0")}</span>
-              <div><header><time>{note.date}</time><span>{note.type}</span></header><h3>{note.title}</h3><p>{note.summary}</p></div>
-              <aside><span>{note.readMinutes} MIN</span><b>↗</b></aside>
+      <section className="workshop-section" aria-labelledby="workshop-all-notes">
+        <div className="workshop-section-heading">
+          <div><p className="workshop-section-eyebrow">Archive</p><h2 id="workshop-all-notes">Earlier work</h2></div>
+          <span className="workshop-notes-count">{notes.length} published notes</span>
+        </div>
+        <div className="workshop-note-list">
+          {older.map((note) => (
+            <Link key={note.slug} className="workshop-note-row" to={"/field-notes/" + note.slug}>
+              <time dateTime={note.date}>{note.date}</time>
+              <div>
+                <span className="workshop-note-type">{note.type}</span>
+                <h3>{note.title}</h3>
+                <p>{note.summary}</p>
+              </div>
+              <span className="workshop-row-arrow" aria-hidden="true">→</span>
             </Link>
           ))}
+          {!older.length && <p className="workshop-empty">More notes will appear here when published.</p>}
         </div>
       </section>
-
-      <section className="studio-page-cta">
-        <span>METHOD</span>
-        <h2>Write down what the system believed before the outcome is known.</h2>
-        <p>That principle matters for markets, experiments, and product decisions. Evidence is more useful when it cannot be rewritten after the fact.</p>
-        <Link to="/products/rhen">See how RHEN applies it →</Link>
-      </section>
+      <p className="workshop-notes-ending">RHEN is the current focus. Future projects will have their own records here too.</p>
     </div>
   );
 }

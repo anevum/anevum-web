@@ -21,6 +21,7 @@ import "./styles/launch-2026.css";
 import "./styles/studio.css";
 import "./styles/workshop.css";
 import "./styles/members.css";
+import "./styles/workshop-editorial.css";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
