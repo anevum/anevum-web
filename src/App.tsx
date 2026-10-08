@@ -22,6 +22,8 @@ const SignIn = lazy(() => import("./pages/SignIn"));
 const MemberHome = lazy(() => import("./pages/MemberHome"));
 const MemberSettings = lazy(() => import("./pages/MemberSettings"));
 const RhenApp = lazy(() => import("./pages/RhenApp"));
+const Privacy = lazy(() => import("./pages/Privacy"));
+const Terms = lazy(() => import("./pages/Terms"));
 
 const titles: Record<string, string> = {
   "/": "ANEVUM — Independent Software",
@@ -36,7 +38,9 @@ const titles: Record<string, string> = {
   "/resume": "Résumé — ANEVUM",
   "/sign-in": "Sign in — ANEVUM",
   "/me": "My Space — ANEVUM",
-  "/me/settings": "Account settings — ANEVUM"
+  "/me/settings": "Account settings — ANEVUM",
+  "/privacy": "Privacy — ANEVUM",
+  "/terms": "Terms — ANEVUM"
 };
 
 const descriptions: Record<string, string> = {
@@ -52,7 +56,9 @@ const descriptions: Record<string, string> = {
   "/resume": "Professional résumé and background for the person responsible for ANEVUM.",
   "/sign-in": "ANEVUM account access.",
   "/me": "Your private ANEVUM project library and follows.",
-  "/me/settings": "Private ANEVUM profile and account settings."
+  "/me/settings": "Private ANEVUM profile and account settings.",
+  "/privacy": "ANEVUM privacy information.",
+  "/terms": "ANEVUM website terms."
 };
 
 function ensureMeta(selector: string, create: () => HTMLElement, content: string) {
@@ -198,6 +204,8 @@ export default function App() {
         <Route path="/field-notes/:slug" element={<PublicExperience><FieldNoteDetail /></PublicExperience>} />
         <Route path="/about" element={<PublicExperience><Founder /></PublicExperience>} />
         <Route path="/resume" element={<PublicExperience><Resume /></PublicExperience>} />
+        <Route path="/privacy" element={<PublicExperience><Privacy /></PublicExperience>} />
+        <Route path="/terms" element={<PublicExperience><Terms /></PublicExperience>} />
         <Route path="/sign-in" element={<PublicExperience><SignIn /></PublicExperience>} />
         <Route path="/me" element={<PublicExperience><MemberHome /></PublicExperience>} />
         <Route path="/me/settings" element={<PublicExperience><MemberSettings /></PublicExperience>} />
