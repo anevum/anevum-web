@@ -54,6 +54,9 @@ test("new accounts never redefine protected RHEN operator APIs", () => {
   assert.match(worker, /pathname\.startsWith\("\/api\/command\/trader\/"\)/);
   assert.match(worker, /commandCredential\(request, env\)/);
   assert.match(members, /disableImplicitLinking: true/);
+  assert.match(members, /encryptOAuthTokens: true/);
+  assert.match(members, /requireEmailVerification: true/);
+  assert.match(members, /storage: "database"/);
   assert.match(members, /user\.id/);
   assert.match(sql, /CREATE TABLE IF NOT EXISTS member_entitlements/);
   assert.match(sql, /REFERENCES "user"\("id"\) ON DELETE CASCADE/);
