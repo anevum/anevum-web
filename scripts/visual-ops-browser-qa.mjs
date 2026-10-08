@@ -343,7 +343,7 @@ async function runCase(route, viewport) {
   // The duplicate CLI screenshot process could hang until the entire job died.
   const evidenceRoutes = {
     "/":["home",["truth-home","A place for things I build."]],
-    "/products":["products",["truth-products-page","PRODUCT REGISTRY"]],
+    "/products":["products",["truth-products-page","Things I’m working on."]],
     "/products/rhen":["rhen",["truth-rhen-page","PRODUCT / RHEN"]],
     "/products/rhen/evidence":["terminal",["EVIDENCE DRAWER","public-terminal-page","RESEARCH","REPLAY","RHEN"]],
     "/field-notes":["research",["studio-notes-page","FIELD NOTES"]],
