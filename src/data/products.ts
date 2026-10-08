@@ -101,15 +101,16 @@ const legacy = (
 
 export const products: Product[] = [
   legacy("rhen","RHEN","MARKET SYSTEM","Equity intelligence & execution","Canonical execution and market-observation runtime."),
-  legacy("iren","IREN","CONTROL","Control & orchestration","Control, health, incidents, scheduling, and protected review."),
-  legacy("graen","GRAEN","RESEARCH","Research","Bounded research, methodology, and evidence."),
-  legacy("nostra","NOSTRA","FORECAST","Forecasting","Forward horizons, regimes, uncertainty, and outcome measurement."),
-  legacy("velum","VELUM","REPLAY","Replay","Broker-isolated replay and counterfactual research.")
+  legacy("iren","IREN","CONTROL","Control & orchestration","Deterministic health, incidents, scheduling, configuration drift, recovery, and protected operator review."),
+  legacy("graen","GRAEN","RESEARCH","Research","On-demand research methodology for turning canonical evidence into bounded experiments and deliberate AI-assisted investigation."),
+  legacy("nostra","NOSTRA","FORECAST","Forecasting","Embedded numerical forecasting, point-in-time baselines, calibration, and matured-outcome scoring."),
+  legacy("velum","VELUM","REPLAY","Replay","On-demand broker-isolated replay, friction stress, and counterfactual validation.")
 ];
 
 export const modules: Module[] = [
-  { name:"Research Agent", category:"Research runtime", owner:"RHEN / GRAEN", status:"OPERATIONAL", purpose:"Runs bounded post-event evidence review without broker authority.", interfaces:["Canonical telemetry","RHEN Core"] },
-  { name:"Canonical Scheduler", category:"Operations", owner:"IREN", status:"OPERATIONAL", purpose:"Owns durable market-relative and interval workflows.", interfaces:["Scheduler ledger","Exchange calendar"] }
+  { name:"Deterministic Evidence Review", category:"Embedded research", owner:"RHEN Core", status:"EMBEDDED", purpose:"Compiles and classifies post-session evidence without model calls, broker authority, or automatic promotion.", interfaces:["Canonical telemetry","RHEN Core"] },
+  { name:"AI Research / Work", category:"On-demand research", owner:"GRAEN / operator", status:"ON DEMAND", purpose:"Uses deliberate model-assisted research only when canonical evidence warrants a bounded investigation.", interfaces:["Evidence packages","Experiment specifications"] },
+  { name:"Canonical Scheduler", category:"Operations", owner:"IREN", status:"OPERATIONAL", purpose:"Owns durable market-relative and interval workflows without requiring model execution.", interfaces:["Scheduler ledger","Exchange calendar"] }
 ];
 
 export function productBySlug(slug?: string) {
