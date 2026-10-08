@@ -158,7 +158,8 @@ async function proxyCommandHistory(request, env) {
   const credential = await commandCredential(request,env);
   const base = String(env?.RHEN_COMMAND_STREAM_BASE || TRADER_BASE).replace(/\/$/,"");
   if (!base.startsWith("https://")) return jsonResponse({message:"Secure upstream required."},503);
-  const result = await shadowRead(base,"/v1/command/research/history"+url.search,credential.token);
+  let result = await shadowRead(base,"/v1/command/research/history"+url.search,credential.token);
+  if (result.status === 404) result = await shadowRead(base,"/v1/command/shadow/history"+url.search,credential.token);
   return jsonResponse(result.payload,result.status);
 }
 
@@ -169,7 +170,8 @@ async function proxyCommandBootstrap(request, env) {
   const credential = await commandCredential(request,env);
   const base = String(env?.RHEN_COMMAND_STREAM_BASE || TRADER_BASE).replace(/\/$/,"");
   if (!base.startsWith("https://")) return jsonResponse({message:"Secure upstream required."},503);
-  const result = await shadowRead(base,"/v1/command/research/bootstrap",credential.token);
+  let result = await shadowRead(base,"/v1/command/research/bootstrap",credential.token);
+  if (result.status === 404) result = await shadowRead(base,"/v1/command/shadow/bootstrap",credential.token);
   return jsonResponse(result.payload,result.status);
 }
 
