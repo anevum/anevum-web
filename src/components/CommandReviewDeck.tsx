@@ -1,4 +1,5 @@
 import type { CommandEvidence } from "../lib/data";
+import type { LiveState } from "../lib/command-live-events";
 import type { IrenSnapshot } from "../lib/runtime-topology";
 import { ageText, displayState } from "../lib/system-display";
 
@@ -21,12 +22,14 @@ export default function CommandReviewDeck({
   evidence,
   daily,
   weekly,
+  researchObservation,
   now
 }: {
   snapshot: IrenSnapshot | null;
   evidence: CommandEvidence | null;
   daily: Record<string, unknown> | null;
   weekly: Record<string, unknown> | null;
+  researchObservation: LiveState | null;
   now: number;
 }) {
   const control = snapshot?.research?.control;
@@ -42,6 +45,11 @@ export default function CommandReviewDeck({
     dailyMetrics.win_rate != null && Number.isFinite(Number(dailyMetrics.win_rate))
       ? (Number(dailyMetrics.win_rate) * 100).toFixed(1) : null);
   const warnings = Array.isArray(daily?.data_quality_warnings) ? daily.data_quality_warnings : [];
+  const observationSystem = record(researchObservation?.system);
+  const observationHotset = record(observationSystem.hotset);
+  const observationParity = record(observationSystem.canonical_ledger_parity);
+  const observationForecasts = record(observationSystem.nostra_forecasts);
+  const observationCoverage = record(observationSystem.scanner_coverage);
 
   const weeklyStability = record(weekly?.evidence_stability);
   const reviewRequired = control?.review_required === true;
@@ -97,6 +105,17 @@ export default function CommandReviewDeck({
           {" "}Legacy gaps remain unmeasurable rather than reconstructed.
         </p>
         <p className="command-v4-note"><strong>Next:</strong> {readiness?.next_action || "Collect the first post-fix live decision cycle before evaluating forward-outcome coverage."}</p>
+      </article>
+
+      <article className="command-v4-card">
+        <header><div><span>RHEN 4.4 RESEARCH OBSERVATION</span><strong>{researchObservation ? (researchObservation.stale ? "STALE / FROZEN" : "LIVE EVIDENCE") : "UNAVAILABLE"}</strong></div><small>Discover → Review</small></header>
+        <div className="command-v4-metrics">
+          <div><span>DISCOVERY STREAM</span><strong>{displayState(text(observationHotset.quality_state, "UNAVAILABLE"))}</strong></div>
+          <div><span>LEDGER PARITY</span><strong>{observationParity.parity_complete === true ? "COMPLETE" : displayState(text(observationParity.quality_state, "UNAVAILABLE"))}</strong></div>
+          <div><span>NOSTRA</span><strong>{text(observationForecasts.projected_count, "0")} projected</strong></div>
+          <div><span>CANDIDATES</span><strong>{text(observationCoverage.signal_candidates, "0")}</strong></div>
+        </div>
+        <p className="command-v4-note">Discover owns live read-only observation and candidate evidence. Review owns parity, holdout, replay, approval, and release decisions. This is one research pipeline; there is no separate shadow workflow and this evidence carries no broker-write authority.</p>
       </article>
 
       <div className="command-v4-two">
