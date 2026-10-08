@@ -1,114 +1,64 @@
 import { Link, Navigate, useParams } from "react-router-dom";
-import { RhenSystemChip, RhenSystemGlyph } from "../components/company/RhenModuleGlyph";
+import { RhenSystemChip } from "../components/company/RhenModuleGlyph";
 import { fieldNoteBySlug } from "../data/fieldNotes";
 
 export default function FieldNoteDetail() {
   const { slug } = useParams();
   const note = fieldNoteBySlug(slug);
-  if (!note) return <Navigate to="/research" replace />;
+  if (!note) return <Navigate to="/field-notes" replace />;
 
   return (
-    <div className="company-page field-note-detail field-note-detail-editorial">
-      <section className="field-note-hero field-note-hero-editorial">
-        <Link to="/research" className="field-note-back">← FIELD NOTES</Link>
-        <div className="field-note-hero-grid">
-          <div className="field-note-hero-copy">
-            <div className="field-note-meta">
-              <span>{note.date}</span>
-              <span>{note.type}</span>
-              <span>{note.readMinutes} MIN READ</span>
-              <b>{note.status}</b>
-            </div>
-            <h1>{note.title}</h1>
-            <p>{note.summary}</p>
-            <div className="field-note-systems">
-              {note.systems.map((system) => <RhenSystemChip key={system} system={system} />)}
-            </div>
-          </div>
-          <aside className="field-note-hero-icon" aria-label={"Primary system: " + note.systems[0]}>
-            <RhenSystemGlyph system={note.systems[0]} size="lg" />
-            <span>PRIMARY SYSTEM</span>
-            <strong>{note.systems[0]}</strong>
-          </aside>
+    <article className="studio-page field-note-detail workshop-note-detail">
+      <header className="workshop-note-heading">
+        <Link to="/field-notes" className="workshop-note-back">← All Field Notes</Link>
+        <div className="workshop-note-metadata">
+          <time dateTime={note.date}>{note.date}</time>
+          <span>{note.type}</span>
+          <span>{note.readMinutes} min read</span>
         </div>
-      </section>
+        <h1>{note.title}</h1>
+        <p>{note.summary}</p>
+        <div className="workshop-note-chips" aria-label="Related projects and systems">
+          {note.systems.map((system) => <RhenSystemChip key={system} system={system} />)}
+        </div>
+        <p className="workshop-note-status">Recorded status: {note.status}</p>
+      </header>
 
-      <main className="field-note-reading">
-        <section className="field-note-body field-note-body-editorial">
-          {note.sections.map((section, index) => (
-            <article key={section.heading}>
-              <span>{String(index + 1).padStart(2, "0")}</span>
-              <div>
-                <h2>{section.heading}</h2>
-                {section.body.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}
-              </div>
-            </article>
-          ))}
-        </section>
+      <div className="workshop-note-article">
+        {note.sections.map((section) => (
+          <section key={section.heading}>
+            <h2>{section.heading}</h2>
+            {section.body.map((paragraph, index) => <p key={section.heading + "-" + index}>{paragraph}</p>)}
+          </section>
+        ))}
+      </div>
 
-        <aside className="field-note-reading-rail">
-          <div className="field-note-rail-card">
-            <span>AT A GLANCE</span>
-            <strong>{note.type}</strong>
-            <p>{note.status}</p>
-            <div>{note.systems.map((system) => <RhenSystemGlyph key={system} system={system} size="xs" />)}</div>
-          </div>
-          <div className="field-note-rail-card">
-            <span>REPRODUCIBILITY</span>
-            <strong>Procedure included</strong>
-            <p>Inputs, method, checks, expected result, and limitations are retained below.</p>
-          </div>
-        </aside>
-      </main>
-
-      <section className="field-note-reproduce-wrap">
-        <details className="field-note-reproduce">
+      <section className="workshop-note-method" aria-label="Reproduction notes">
+        <details>
           <summary>
-            <div>
-              <span>REPRODUCE / CHALLENGE THIS NOTE</span>
-              <strong>Open the complete method</strong>
-            </div>
-            <i aria-hidden="true">+</i>
+            <span>REPRODUCE / CHALLENGE THIS NOTE</span>
+            <strong>Read the method and limitations</strong>
           </summary>
-          <div className="field-note-reproduce-body">
-            <div className="reproduce-question">
-              <span>QUESTION</span>
-              <h2>{note.reproduce.question}</h2>
-            </div>
-
-            <div className="reproduce-grid">
-              <section>
-                <span>INPUTS</span>
-                <ul>{note.reproduce.inputs.map((item) => <li key={item}>{item}</li>)}</ul>
-              </section>
-              <section>
-                <span>METHOD</span>
-                <ol>{note.reproduce.method.map((item) => <li key={item}>{item}</li>)}</ol>
-              </section>
-              <section>
-                <span>CHECKS</span>
-                <ul>{note.reproduce.checks.map((item) => <li key={item}>{item}</li>)}</ul>
-              </section>
-              <section>
-                <span>EXPECTED RESULT</span>
-                <p>{note.reproduce.expected}</p>
-              </section>
-              <section className="reproduce-limits">
-                <span>LIMITS</span>
-                <ul>{note.reproduce.limits.map((item) => <li key={item}>{item}</li>)}</ul>
-              </section>
-            </div>
+          <div className="workshop-note-method-content">
+            <h2>{note.reproduce.question}</h2>
+            <h3>Inputs</h3>
+            <ul>{note.reproduce.inputs.map((value) => <li key={value}>{value}</li>)}</ul>
+            <h3>Method</h3>
+            <ol>{note.reproduce.method.map((value) => <li key={value}>{value}</li>)}</ol>
+            <h3>Checks</h3>
+            <ul>{note.reproduce.checks.map((value) => <li key={value}>{value}</li>)}</ul>
+            <h3>Expected result</h3>
+            <p>{note.reproduce.expected}</p>
+            <h3>Limitations</h3>
+            <ul>{note.reproduce.limits.map((value) => <li key={value}>{value}</li>)}</ul>
           </div>
         </details>
       </section>
 
-      <section className="field-note-footer field-note-footer-editorial">
-        <div>
-          <span>PUBLIC ENGINEERING RECORD</span>
-          <p>Field Notes document current work and its reproducibility context. Formal validation evidence and broker-derived live performance remain separate records.</p>
-        </div>
-        <Link to="/research">Return to Field Notes →</Link>
-      </section>
-    </div>
+      <footer className="workshop-note-end">
+        <p>These are development records, not claims that a trading strategy is profitable or a test result will repeat.</p>
+        <Link to="/field-notes">← Back to Field Notes</Link>
+      </footer>
+    </article>
   );
 }
