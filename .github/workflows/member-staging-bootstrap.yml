@@ -1,0 +1,109 @@
+name: ANEVUM Member Staging Bootstrap
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'wrangler.member-staging.jsonc'
+      - '.github/workflows/member-staging-bootstrap.yml'
+      - 'scripts/verify-member-staging-deploy.mjs'
+      - 'src/server/member.mjs'
+      - 'src/server/member-preflight.mjs'
+      - 'worker.mjs'
+      - 'vite.config.ts'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'wrangler.member-staging.jsonc'
+      - '.github/workflows/member-staging-bootstrap.yml'
+      - 'scripts/verify-member-staging-deploy.mjs'
+      - 'src/server/member.mjs'
+      - 'src/server/member-preflight.mjs'
+      - 'worker.mjs'
+      - 'vite.config.ts'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: anevum-member-staging-bootstrap-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  bootstrap:
+    runs-on: ubuntu-latest
+    timeout-minutes: 14
+    env:
+      # Cloudflare Vite's documented entry-config override. This is intentionally
+      # not an ordinary 'wrangler deploy --config' after a production build:
+      # Vite generates a separate staging Worker bundle and Wrangler config.
+      CLOUDFLARE_VITE_WRANGLER_CONFIG_PATH: wrangler.member-staging.jsonc
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install Python resume renderer
+        run: pip install "weasyprint==68.0" "Pillow==11.3.0"
+      - name: Install pinned Node dependencies
+        run: npm install --no-audit --no-fund
+      - name: Verify staging source configuration is isolated and accounts disabled
+        run: |
+          node scripts/verify-member-bindings.mjs --require-config
+          node scripts/verify-member-staging-deploy.mjs
+      - name: Build the separate staging Worker and static assets
+        run: npm run build
+      - name: Verify generated Worker will not overwrite production
+        run: node scripts/verify-member-staging-deploy.mjs --generated
+      - name: Deploy isolated disabled staging Worker
+        if: github.event_name != 'pull_request'
+        id: deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -z "${CLOUDFLARE_API_TOKEN:-}" ] || [ -z "${CLOUDFLARE_ACCOUNT_ID:-}" ]; then
+            echo '::error::Cloudflare Worker deploy token or account ID is unavailable.'
+            exit 1
+          fi
+          # This uses the generated config, verified to name ONLY anevum-member-staging.
+          npx wrangler deploy 2>&1 | tee "$RUNNER_TEMP/anevum-member-staging-deploy.log"
+          staging_url="$(grep -Eo 'https://anevum-member-staging\.[[:alnum:]._-]+\.workers\.dev' "$RUNNER_TEMP/anevum-member-staging-deploy.log" | head -n 1 || true)"
+          if [ -z "$staging_url" ]; then
+            echo '::error::Could not discover the new stable staging URL from the Wrangler deployment output. Inspect the deploy log.'
+            exit 1
+          fi
+          echo "staging_url=$staging_url" >> "$GITHUB_OUTPUT"
+          {
+            echo '## ANEVUM member staging bootstrap'
+            echo ''
+            echo "Dedicated staging origin: $staging_url"
+            echo ''
+            echo 'Preview D1 only. Sign-in and preview OAuth remain explicitly disabled.'
+            echo 'Production member database and all RHEN broker-write paths remain unchanged.'
+            echo ''
+            echo "Google staging callback (not yet registered): $staging_url/api/auth/callback/google"
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Confirm deployed staging is fail closed
+        if: github.event_name != 'pull_request'
+        env:
+          STAGING_URL: ${{ steps.deploy.outputs.staging_url }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$STAGING_URL"
+          availability="$(curl --fail --silent --show-error --retry 5 --retry-delay 2 "$STAGING_URL/api/member/availability")"
+          printf '%s' "$availability" | jq -e '.available == false and .provider == null' > /dev/null
+          member_status="$(curl --silent --show-error -o /dev/null -w '%{http_code}' "$STAGING_URL/api/member/me")"
+          test "$member_status" = '503'
+          operator_status="$(curl --silent --show-error -o /dev/null -w '%{http_code}' "$STAGING_URL/api/command/trader/status")"
+          test "$operator_status" = '401'
+          headers="$(curl --fail --silent --show-error -D - -o /dev/null "$STAGING_URL/")"
+          printf '%s' "$headers" | grep -iq '^x-robots-tag: noindex, nofollow, noarchive'
+          echo 'Bootstrap probes passed: unauthenticated member unavailable, operator denied, search indexing disabled.'
