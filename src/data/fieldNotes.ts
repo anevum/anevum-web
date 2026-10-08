@@ -23,24 +23,24 @@ export type FieldNote = {
 
 export const fieldNotes: FieldNote[] = [
   {
-    slug: "rhen-v4-4-shadow-and-release-gates",
+    slug: "rhen-v4-4-research-observation-and-release-gates",
     date: "2026-10-07",
     type: "ENGINEERING",
-    status: "DEPLOYED IN SHADOW / VALIDATION OPEN",
+    status: "RESEARCH OBSERVATION / VALIDATION OPEN",
     title: "RHEN 4.4: observe first, earn the crossover",
-    summary: "The 4.4 observer now connects broad discovery to a bounded market stream, reconciles broker evidence, and reads canonical NOSTRA forecasts. The current production champion continues trading while the remaining implementation and validation work is completed.",
+    summary: "RHEN 4.4 now treats live read-only observation as research infrastructure: Discover collects market and candidate evidence, while Review owns reconciliation, replay, holdout, approval, and crossover decisions. The current production champion continues trading while validation remains open.",
     systems: ["RHEN", "NOSTRA", "VELUM", "GRAEN", "IREN"],
     readMinutes: 3,
     featured: true,
     sections: [
       {heading: "What is deployed", body: [
-        "A separate observer follows a rotating 24-symbol hotset drawn from the canonical 100-symbol discovery universe. Rotation has bounded churn, pinned confirmation symbols, and durable state across restart.",
+        "Discover follows a rotating 24-symbol hotset drawn from the canonical 100-symbol discovery universe. The read-only research stream preserves bounded churn, pinned confirmation symbols, and durable state across restart without becoming a separate strategy lane.",
         "Broker events are compared with the canonical order and fill ledger. Reconciliation can recover a missing stream observation while preserving the original gap in the record. Recovery is not presented as perfect raw-stream coverage.",
         "NOSTRA forecasts are read from the canonical store and projected only when an observed reference price, source timestamp, model version, and valid horizon are available. The approval registry accepts exact evidence-linked profile decisions; it does not approve profiles by itself."
       ]},
       {heading: "What the free feed can actually cover", body: [
-        "Basic IEX observation covers 8 AM to 5 PM Eastern. The 4.4 observer explicitly blocks the remaining premarket and after-hours gaps rather than extending stale quotes into a continuous chart.",
-        "Overnight observation uses its own feed and eligibility rules. Each execution session requires separate evidence. A running observer does not establish continuous trading authority."
+        "Basic IEX research observation covers 8 AM to 5 PM Eastern. Discover explicitly blocks remaining premarket and after-hours gaps rather than extending stale quotes into a continuous chart.",
+        "Overnight research observation uses its own feed and eligibility rules. Each session requires separate evidence. Continuous observation does not establish continuous trading authority."
       ]},
       {heading: "What still has to be earned", body: [
         "The remaining work includes complete risk and cost attribution, canonical research exports, VELUM validation artifacts, and authenticated visual acceptance. Forward and untouched holdout evidence must be collected from real observations.",
@@ -50,9 +50,9 @@ export const fieldNotes: FieldNote[] = [
     reproduce: {
       question: "Can 4.4 improve market observation and policy evidence while preserving a traceable, reversible trading path?",
       inputs: ["Canonical discovery universe", "Timestamped market observations", "Broker trade updates and canonical ledger", "Versioned forecasts and profile approvals"],
-      method: ["Run the observer separately from live execution.", "Retain source times and distinguish recovery from raw stream parity.", "Project forecasts only against observed point-in-time references.", "Test recovery and compare fixed and adaptive policies before crossover."],
-      checks: ["Observer has no broker-write authority.", "Feed gaps and stale values remain explicit.", "Missing evidence cannot become an approval.", "The live release number changes only after promotion."],
-      expected: "A verifiable shadow record and a clear list of unresolved gates.",
+      method: ["Collect live read-only evidence through Discover while live execution remains isolated.", "Retain source times and distinguish recovery from raw stream parity.", "Project forecasts only against observed point-in-time references.", "Send parity, replay, holdout, approval, and crossover evidence to Review."],
+      checks: ["Discover research observation has no broker-write authority.", "Feed gaps and stale values remain explicit.", "Missing evidence cannot become an approval.", "Review cannot promote a release without the declared evidence gates."],
+      expected: "One verifiable Discover → Review research record and a clear list of unresolved release gates.",
       limits: ["Forward coverage and independent holdout evidence remain incomplete.", "Command transport and full visual acceptance remain under verification.", "No claim of profitability or full 24/5 execution is established by this update."]
     }
   },
