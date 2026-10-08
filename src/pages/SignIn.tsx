@@ -29,6 +29,7 @@ export default function SignIn() {
           Continue with Google
         </button>
       )}
+      <p className="member-muted">Before creating an account, read the <Link to="/privacy">privacy notice</Link> and <Link to="/terms">terms</Link>.</p>
       <p className="member-muted"><Link to="/products">Explore projects without signing in</Link></p>
     </section>
   );
