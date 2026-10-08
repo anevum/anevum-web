@@ -342,7 +342,7 @@ async function runCase(route, viewport) {
   // Reuse this bounded, hydrated browser target for the release evidence.
   // The duplicate CLI screenshot process could hang until the entire job died.
   const evidenceRoutes = {
-    "/":["home",["truth-home","Useful software, built against real problems."]],
+    "/":["home",["truth-home","A place for things I build."]],
     "/products":["products",["truth-products-page","PRODUCT REGISTRY"]],
     "/products/rhen":["rhen",["truth-rhen-page","PRODUCT / RHEN"]],
     "/products/rhen/evidence":["terminal",["EVIDENCE DRAWER","public-terminal-page","RESEARCH","REPLAY","RHEN"]],
