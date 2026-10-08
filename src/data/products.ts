@@ -11,7 +11,6 @@ export type ProductDefinition = {
   lifecycle: ProductLifecycle;
   category: string;
   oneLine: string;
-  currentRelease?: string;
   publicDataAdapter?: "rhen-live";
   hasApp: boolean;
   appAccess?: ProductAccess;
@@ -35,7 +34,6 @@ export const productRegistry: ProductDefinition[] = [
     lifecycle: "active",
     category: "Markets / research",
     oneLine: "Live trading and research system for testing market ideas against real evidence and real operating constraints.",
-    currentRelease: "4.3.2",
     publicDataAdapter: "rhen-live",
     hasApp: false,
     supportModel: "free",
