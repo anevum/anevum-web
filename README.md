@@ -12,16 +12,20 @@ This repository is intentionally the public web surface. Private credentials, br
 
 ## Public information architecture
 
-- `/` — ANEVUM studio home
-- `/products` — product and experiment portfolio
-- `/products/rhen` — RHEN flagship product overview
-- `/research` — Field Notes / public build record
-- `/about` — Devon Akins + ANEVUM
+- `/` — live ANEVUM home
+- `/products` — canonical public product registry
+- `/feed` — releases, Field Notes, public-safe runtime events, and research decisions
+- `/field-notes` — public build / research journal
+- `/about` — ANEVUM and founder context
 - `/resume` — professional résumé
-- `/live` — RHEN public-safe evidence
-- `/architecture` — RHEN technical architecture
-- `/releases` — RHEN release history
+- `/products/rhen` — RHEN product hub
+- `/products/rhen/evidence` — RHEN public-safe evidence
+- `/products/rhen/architecture` — RHEN architecture and authority boundaries
+- `/products/rhen/releases` — RHEN release history
 - `/command` — protected operator surface
+- `/command/public` — operator view of the public projection / truth boundary
+
+Legacy public URLs such as `/live`, `/research`, `/architecture`, and `/releases` redirect to their canonical product-scoped routes.
 
 RHEN is the current flagship R&D system. IREN, GRAEN, VELUM, and NOSTRA remain named internal RHEN responsibilities rather than top-level ANEVUM products. Future software can be added beside RHEN without restructuring the company around the trading system.
 
@@ -45,7 +49,7 @@ Live results remain separate from replay, backtest, development, and research ev
 
 Command remains the protected operational interface. It contains private operator telemetry and controls. Cloudflare Access protects private routes and the Worker verifies the signed Access assertion before forwarding private requests.
 
-The public header contains a deliberately low-prominence Command entrance. Search engines are instructed not to index protected routes.
+The public header contains a deliberately low-prominence Command entrance. Search engines are instructed not to index protected routes. Command includes a Public workspace that exposes the health and provenance of the same sanitized projection used by the public site.
 
 ## Stack
 
