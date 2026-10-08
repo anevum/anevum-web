@@ -344,7 +344,7 @@ async function runCase(route, viewport) {
   const evidenceRoutes = {
     "/":["home",["truth-home","A place for things I build."]],
     "/products":["products",["truth-products-page","Things I’m working on."]],
-    "/products/rhen":["rhen",["truth-rhen-page","PRODUCT / RHEN"]],
+    "/products/rhen":["rhen",["truth-rhen-page","PRODUCT / RHEN","workshop-rhen-evidence","A working program is only the beginning."]],
     "/products/rhen/evidence":["terminal",["EVIDENCE DRAWER","public-terminal-page","RESEARCH","REPLAY","RHEN"]],
     "/field-notes":["research",["studio-notes-page","FIELD NOTES"]],
     "/field-notes/prediction-outcome-evidence-chain":["field-note",["REPRODUCE / CHALLENGE THIS NOTE"]],
