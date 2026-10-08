@@ -24,7 +24,7 @@ test("schema automation can only migrate preview D1 after main-branch merge", ()
   assert.match(workflow, /branches: \[main\]/);
   assert.match(workflow, /github\.event_name == 'push'/);
   assert.match(workflow, /--require-config/);
-  assert.match(workflow, /ANEVUM_MEMBERS_ENABLED == \\"false\\"/);
+  assert.match(workflow, /ANEVUM_MEMBERS_ENABLED == "false"/);
   assert.match(workflow, /d1 migrations apply MEMBER_DB --remote --config wrangler\.preview-migrations\.jsonc/);
   assert.doesNotMatch(workflow, /d1 migrations apply[^\n]*(?<!preview-)migrations\.jsonc/);
   assert.doesNotMatch(workflow, /d1 migrations apply[^\n]*--config wrangler\.jsonc/);
