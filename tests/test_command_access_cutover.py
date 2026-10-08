@@ -41,14 +41,22 @@ class CommandAccessCutoverTests(unittest.TestCase):
         update = cutover.access_update_payload(app, "member")
         self.assertEqual(app, original)
         self.assertEqual(cutover.destination_mode(d["uri"] for d in update["destinations"]), "member")
-        self.assertEqual(update["domain"], "anevum.com/command/rhen")
-        for key in ["id", "aud", "type", "name", "allowed_idps", "session_duration", "http_only_cookie_attribute", "same_site_cookie_attribute"]:
+        self.assertEqual(update["domain"], "anevum.com/command/rhen*")
+        self.assertIn(update["domain"], [x["uri"] for x in update["destinations"]])
+        for key in ["type", "name", "allowed_idps", "session_duration", "http_only_cookie_attribute", "same_site_cookie_attribute"]:
             self.assertEqual(update[key], original[key])
-        cutover.ensure_unchanged_auth_settings(original, update)
-        drifted = dict(update)
+        for key in ["id", "aud", "created_at", "updated_at", "self_hosted_domains", "policies"]:
+            self.assertNotIn(key, update, key + " is not a writable PUT field")
+        # Cloudflare returns read-only identifiers and computed fields separately.
+        response = {**original, **update}
+        cutover.ensure_unchanged_auth_settings(original, response)
+        drifted = dict(response)
         drifted["session_duration"] = "10m"
         with self.assertRaises(RuntimeError):
             cutover.ensure_unchanged_auth_settings(original, drifted)
+        back = cutover.access_update_payload(original, "legacy")
+        self.assertEqual(back["domain"], "anevum.com/command*")
+        self.assertEqual(cutover.destination_mode(x["uri"] for x in back["destinations"]), "legacy")
 
     def test_disallows_drifted_scope_and_lost_operator_api(self):
         for paths in (
