@@ -470,7 +470,7 @@ async function runScrollResetCase(viewport) {
       const readyResult = await send("Runtime.evaluate", {
         expression: `(() => {
           const scroller = document.scrollingElement || document.documentElement || null;
-          const link = document.querySelector('a[href="/products/rhen/architecture"]');
+          const link = document.querySelector('a[href="/products"]');
           const maxScroll = scroller
             ? Math.max(0, scroller.scrollHeight - scroller.clientHeight)
             : 0;
@@ -561,7 +561,7 @@ async function runScrollResetCase(viewport) {
 
   await send("Runtime.evaluate", {
     expression: `(() => {
-      const link = document.querySelector('a[href="/products/rhen/architecture"]');
+      const link = document.querySelector('a[href="/products"]');
       if (!link) return false;
       link.click();
       return true;
@@ -581,7 +581,7 @@ async function runScrollResetCase(viewport) {
         returnByValue: true
       });
       state = stateResult.result?.value || state;
-      if (state.pathname === "/products/rhen/architecture" && Number(state.after) <= 1) break;
+      if (state.pathname === "/products" && Number(state.after) <= 1) break;
     } catch {
       // A real document navigation can briefly replace the execution context.
     }
@@ -589,7 +589,7 @@ async function runScrollResetCase(viewport) {
   }
 
   const value = {
-    ok: state.pathname === "/products/rhen/architecture" && before > 200 && Number(state.after) <= 1,
+    ok: state.pathname === "/products" && before > 200 && Number(state.after) <= 1,
     before,
     after: Number.isFinite(Number(state.after)) ? Number(state.after) : null,
     maxScroll: Number(ready.maxScroll) || 0,
