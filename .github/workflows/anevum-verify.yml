@@ -39,7 +39,7 @@ jobs:
       - name: Verify member boundaries
         run: npm run test:members
       - name: Verify member D1 binding isolation
-        run: node --test tests/member-bindings.test.mjs && node scripts/verify-member-bindings.mjs
+        run: node --test tests/member-bindings.test.mjs tests/member-staging.test.mjs && node scripts/verify-member-bindings.mjs
       - name: Verify member schema and tenant separation
         run: python scripts/verify-member-schema.py
       - name: Typecheck and build
