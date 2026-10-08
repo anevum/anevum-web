@@ -16,7 +16,7 @@ const errors = [];
 function assert(ok, message) {
   if (!ok) errors.push(message);
 }
-function onePreviewDb(config, label) {
+function onePreviewDb(config, label, requireMigrationDir = true) {
   const bindings = config?.d1_databases;
   assert(Array.isArray(bindings) && bindings.length === 1, label + " must have exactly one D1 binding.");
   const db = Array.isArray(bindings) ? bindings[0] : null;
@@ -24,7 +24,8 @@ function onePreviewDb(config, label) {
   assert(db?.database_name === "anevum-members-preview", label + " must bind preview D1 name.");
   assert(db?.database_id === expected, label + " must bind the verified preview UUID.");
   assert(db?.database_id !== production, label + " must not bind the production UUID.");
-  assert(db?.migrations_dir === schema, label + " must reference committed migrations.");
+  if (requireMigrationDir) assert(db?.migrations_dir === schema, label + " must reference committed migrations.");
+  else if (db?.migrations_dir !== undefined) assert(db.migrations_dir === schema, label + " has an unexpected migrations directory.");
 }
 
 const prod = load("wrangler.jsonc");
@@ -75,7 +76,8 @@ if (process.argv.includes("--generated")) {
              "Generated Worker unexpectedly contains a production route.");
       assert(generated?.vars?.ANEVUM_MEMBERS_ENABLED === "false", "Generated Worker activated member signup.");
       assert(generated?.vars?.ANEVUM_MEMBER_PREVIEW_ENABLED === "false", "Generated Worker activated preview OAuth.");
-      onePreviewDb(generated, "Staging generated");
+      // Cloudflare Vite omits migrations_dir from deployment output by design.
+      onePreviewDb(generated, "Staging generated", false);
       for (const name of privateNames) {
         assert(!Object.hasOwn(generated?.vars || {}, name), "Generated Worker includes secret " + name + " in source vars.");
       }
