@@ -23,6 +23,7 @@ export type ProductDefinition = {
     architecture?: string;
     notes?: string;
   };
+  memberFeatures?: { id: string; name: string; description: string; route: string }[];
 };
 
 export const productRegistry: ProductDefinition[] = [
@@ -36,14 +37,21 @@ export const productRegistry: ProductDefinition[] = [
     oneLine: "Live trading and research system for testing market ideas against real evidence and real operating constraints.",
     publicDataAdapter: "rhen-live",
     hasApp: false,
+    appAccess: "account",
     supportModel: "free",
     routes: {
       home: "/products/rhen",
+      app: "/apps/rhen",
       evidence: "/products/rhen/evidence",
       releases: "/products/rhen/releases",
       architecture: "/products/rhen/architecture",
       notes: "/field-notes"
-    }
+    },
+    memberFeatures: [
+      { id: "evidence", name: "Evidence", description: "Measured, public-safe performance and source freshness.", route: "/apps/rhen/evidence" },
+      { id: "research", name: "Research", description: "Published experiments, decisions, and build notes.", route: "/apps/rhen/research" },
+      { id: "updates", name: "Updates", description: "Release history and changes to the project.", route: "/apps/rhen/updates" }
+    ]
   }
 ];
 
@@ -116,3 +124,4 @@ export const modules: Module[] = [
 export function productBySlug(slug?: string) {
   return products.find((product) => product.slug === slug);
 }
+

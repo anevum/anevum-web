@@ -1,0 +1,67 @@
+/* RHEN Terminal uses the shared workshop system while retaining operational layout. */
+.command-workshop.command-v4 { --v4-bg: var(--workshop-paper); --v4-panel: var(--workshop-surface); --v4-panel-2: var(--workshop-soft); --v4-text: var(--workshop-ink); --v4-muted: var(--workshop-copy); --v4-dim: var(--workshop-muted); --v4-line: var(--workshop-line); --v4-line-soft: var(--workshop-line); --v4-live: var(--workshop-good); --v4-review: var(--workshop-warn); --v4-danger: var(--workshop-danger); color-scheme: light; font-size: 1rem; line-height: 1.55; }
+.command-workshop .command-v4-header { background: var(--workshop-paper); border-bottom: 1px solid var(--workshop-line); gap: 20px; }
+.command-workshop .command-v4-brand > span { font-size: .9rem; letter-spacing: .1em; }
+.command-workshop .command-v4-brand > strong { font-size: .8rem; letter-spacing: .04em; }
+.command-workshop .command-v4-header nav a { font-size: .9rem; color: var(--workshop-copy); min-height: 44px; }
+.command-workshop .command-v4-header nav a.active { color: var(--workshop-accent); border-bottom-color: var(--workshop-accent); }
+.command-workshop .command-v4-account { gap: 13px; }
+.command-workshop .command-v4-account > span { font-size: .75rem; }
+.command-workshop .terminal-command-link { color: var(--workshop-accent); font-size: .9rem; min-height: 44px; display: inline-flex; align-items: center; }
+.command-workshop :is(button, select, input) { min-height: 40px; font-size: .875rem; }
+.command-workshop .command-v4-main { width: min(calc(100% - 44px), 1380px); padding-top: 32px; }
+.command-workshop .command-v4-heading h1 { font-size: clamp(2.1rem, 4vw, 3.2rem); line-height: 1.15; font-weight: 650; letter-spacing: -.035em; }
+.command-workshop .command-v4-heading p { font-size: 1rem; line-height: 1.6; }
+.command-workshop .command-v4-heading span { font-size: .75rem; }
+.command-workshop .command-v4-observation { min-width: 270px; background: var(--workshop-surface); }
+.command-workshop .command-v4-observation strong { font-size: .875rem; }
+.command-workshop .command-v4-observation small { font-size: .75rem; }
+.command-workshop .command-v4-strip strong { font-size: 1.15rem; }
+.command-workshop .command-v4-strip span { font-size: .75rem; letter-spacing: .045em; }
+.command-workshop .command-v4-strip small { font-size: .8125rem; }
+.command-workshop :is(.command-panel, .command-v4-card, .operations-terminal, .ops-center, .command-topology, .command-live) { background: var(--workshop-surface); border-color: var(--workshop-line); border-radius: 8px; box-shadow: none; }
+.command-workshop :is(.command-panel, .command-v4-card) > header { padding: 16px 18px; flex-wrap: wrap; }
+.command-workshop .command-v4-card > header strong { font-size: 1rem; }
+.command-workshop .command-v4-card > header small { font-size: .8125rem; text-align: left; }
+.command-workshop .command-v4-card header span { font-size: .75rem; letter-spacing: .045em; }
+.command-workshop .command-v4-table > div { font-size: .875rem; padding: 13px 18px; overflow-wrap: anywhere; }
+.command-workshop .command-v4-table strong { font-size: .9rem; }
+.command-workshop .command-v4-table b { font-size: .8125rem; }
+.command-workshop .command-v4-table > p { font-size: .9rem; }
+.command-workshop .command-v4-review-hero h2 { font-size: 1.5rem; line-height: 1.25; }
+.command-workshop :is(.command-v4-review-hero, .command-v4-decision) p { font-size: .95rem; line-height: 1.65; }
+.command-workshop .command-v4-review-action small { font-size: .875rem; }
+.command-workshop .command-v4-decision dd { font-size: .9rem; }
+.command-workshop .command-v4-funnel > div > div { grid-template-columns: 85px 70px minmax(0,1fr); }
+.command-workshop .command-v4-surface-list > div { grid-template-columns: 125px 115px minmax(0,1fr); }
+.command-workshop :is(.command-v4-surface-list, .command-v4-lifecycle) p { font-size: .9rem; }
+.command-workshop .command-v4-metrics strong { font-size: 1rem; }
+.command-workshop :is(.terminal-focus-card, .vo-system-card, .vo-console, .vo-node, .trading-lane, .research-observability-chart, .command-raw-log-toggle, .command-raw-log-drawer) { box-shadow: none; }
+.command-workshop :is(.terminal-focus-card, .vo-system-card) { background: var(--workshop-surface); border-color: var(--workshop-line); }
+.command-workshop :is(.terminal-focus-card::before, .terminal-focus-sweep, .vo-system-card::before) { display: none; }
+.command-workshop .operations-terminal { background: var(--workshop-surface) !important; background-image: none !important; }
+.command-workshop :is(.system-icon, .system-mark-svg, .rhen-mark) { filter: none; }
+.command-workshop .command-live svg { overflow: visible; }
+.command-workshop .command-raw-log-drawer { background: var(--workshop-surface); }
+.command-workshop .command-v4-strip strong { white-space: normal; overflow-wrap: anywhere; }
+.command-workshop .command-v4-header nav a b { top: 12px; }
+.command-gate { background: var(--workshop-paper); color: var(--workshop-ink); }
+@media(max-width: 1050px) { .command-workshop .command-v4-heading { flex-wrap: wrap; } }
+@media(max-width: 760px) {
+  .command-workshop .command-v4-header { gap: 6px 10px; }
+  .command-workshop .command-v4-header nav { overflow: visible; }
+  .command-workshop .command-v4-header nav a { font-size: .8125rem; padding-inline: 4px; flex: 1 1 0; }
+  .command-workshop .command-v4-account { gap: 9px; }
+  .command-workshop .terminal-command-link { font-size: .8125rem; }
+  .command-workshop .command-v4-account button { padding-inline: 7px; font-size: .8125rem; }
+  .command-workshop .command-v4-main { width: calc(100% - 28px); padding-top: 24px; }
+  .command-workshop .command-v4-observation { min-width: 0; }
+  .command-workshop .command-v4-brand > strong { display: none; }
+  .command-workshop .command-v4-heading { gap: 20px; }
+  .command-workshop .command-v4-surface-list > div { grid-template-columns: 1fr auto; }
+  .command-workshop .command-v4-surface-list p { grid-column: 1/-1; }
+  .command-workshop .command-v4-strip strong { font-size: 1rem; }
+  .command-workshop .command-v4-table > div { grid-template-columns: 1fr 1fr; }
+  .command-workshop .command-v4-table b { text-align: left; }
+}
+@media(prefers-reduced-motion: reduce) { .command-workshop *, .command-workshop *::before, .command-workshop *::after { animation: none !important; transition: none !important; } }

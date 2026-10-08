@@ -1,0 +1,133 @@
+/* Shared design tokens for ANEVUM, member Command, and each program terminal. */
+:root {
+  --workshop-paper: #f8f8f5;
+  --workshop-surface: #fff;
+  --workshop-soft: #eef1f0;
+  --workshop-ink: #242b30;
+  --workshop-copy: #505c65;
+  --workshop-muted: #606c74;
+  --workshop-line: #dce0e0;
+  --workshop-line-strong: #bcc6cb;
+  --workshop-accent: #315e7d;
+  --workshop-good: #286343;
+  --workshop-warn: #8a601e;
+  --workshop-danger: #a13f42;
+  --workshop-forecast: #76548f;
+  --ink: var(--workshop-paper);
+  --ink-soft: var(--workshop-soft);
+  --panel: var(--workshop-surface);
+  --panel-2: var(--workshop-soft);
+  --paper: var(--workshop-ink);
+  --paper-soft: var(--workshop-copy);
+  --muted: var(--workshop-muted);
+  --muted-2: var(--workshop-muted);
+  --blue: var(--workshop-accent);
+  --blue-bright: var(--workshop-accent);
+  --green: var(--workshop-good);
+  --amber: var(--workshop-warn);
+  --red: var(--workshop-danger);
+  --line: var(--workshop-line);
+  --line-strong: var(--workshop-line-strong);
+  --studio-bg: var(--workshop-paper);
+  --studio-panel: var(--workshop-surface);
+  --studio-panel-soft: var(--workshop-soft);
+  --studio-text: var(--workshop-ink);
+  --studio-copy: var(--workshop-copy);
+  --studio-muted: var(--workshop-muted);
+  --studio-line: var(--workshop-line);
+  --studio-line-strong: var(--workshop-line-strong);
+  --studio-blue: var(--workshop-accent);
+  --studio-blue-soft: #e6edf1;
+  --studio-green: var(--workshop-good);
+  color-scheme: light;
+}
+html, body, #root { background: var(--workshop-paper); color: var(--workshop-ink); }
+.route-loader { background: var(--workshop-paper); color: var(--workshop-ink); }
+.workshop-public-light .studio-stage > :is(.company-page, .public-terminal-page, .resume-page) {
+  width: min(calc(100% - 44px), 1120px);
+  margin-inline: auto;
+}
+.workshop-public-light :is(.studio-page-hero, .company-page-hero) {
+  padding-block: clamp(48px, 7vw, 88px) 40px;
+  min-height: auto;
+}
+.workshop-public-light :is(.studio-page-hero, .company-page-hero) h1 {
+  max-width: 850px;
+  font-size: clamp(2.15rem, 4.4vw, 3.5rem);
+  line-height: 1.15;
+  margin-block: 14px 20px;
+  font-weight: 650;
+  letter-spacing: -.035em;
+}
+.workshop-public-light :is(.studio-page-hero, .company-page-hero) p {
+  font-size: 1rem; line-height: 1.7; max-width: 74ch;
+}
+.workshop-public-light :is(.studio-section-heading, .company-section-head) h2 {
+  font-size: clamp(1.35rem, 2.5vw, 1.9rem); line-height: 1.3;
+}
+.workshop-public-light :is(.studio-section, .company-section) { padding-block: 30px; }
+.workshop-public-light :is(.studio-page-cta, .architecture-cta) {
+  padding-block: 28px; background: transparent; border-top: 1px solid var(--workshop-line);
+}
+.workshop-public-light :is(.studio-page-cta, .architecture-cta) h2 {
+  font-size: 1.5rem; line-height: 1.4; max-width: 70ch;
+}
+.workshop-public-light .studio-release-feature { background: var(--workshop-surface); border-radius: 10px; }
+.workshop-public-light .studio-release-feature h2 { font-size: clamp(1.6rem, 3vw, 2.5rem); line-height: 1.25; margin-block: 15px; }
+.workshop-public-light .studio-release-feature-copy { padding: 28px; }
+.workshop-public-light .studio-release-detail-hero { padding-block: 54px 35px; }
+.workshop-public-light .studio-release-detail-hero h1 { font-size: clamp(2rem, 4vw, 3.5rem); line-height: 1.15; }
+.workshop-public-light .studio-release-detail-hero p { font-size: 1rem; line-height: 1.7; }
+.workshop-public-light :is(.studio-release-standard-grid, .studio-release-capability-grid, .studio-release-verification-grid) { gap: 18px; }
+.workshop-public-light :is(.studio-release-standard-grid, .studio-release-capability-grid, .studio-release-verification-grid) article { background: var(--workshop-surface); min-height: 0; padding: 22px; border: 1px solid var(--workshop-line); border-radius: 8px; }
+.workshop-public-light :is(.studio-release-capability-grid, .studio-release-verification-grid) h3 { margin-top: 18px; font-size: 1.1rem; }
+.workshop-public-light .studio-statement.compact h2 { font-size: 1.6rem; line-height: 1.4; }
+.workshop-public-light .resume-page { padding-top: 38px; }
+.workshop-public-light .resume-toolbar { flex-wrap: wrap; gap: 20px; margin-bottom: 26px; }
+.workshop-public-light .resume-sheet { box-shadow: none; border: 1px solid var(--workshop-line); border-radius: 10px; }
+.workshop-public-light .public-terminal-page { padding-top: 32px; font-family: inherit; }
+.workshop-public-light .pt-visual { box-shadow: none; min-height: 0; }
+.workshop-public-light .pt-map::before, .workshop-public-light .pt-map::after { display: none; }
+.workshop-public-light :is(.pt-system-button, .pt-map-card) { transform: none; }
+.workshop-public-light :is(.pt-map-card, .pt-topology-node, .vo-system-card, .vo-scope, .vo-console) { box-shadow: none; }
+.workshop-public-light .pt-map-card[data-active="true"] { box-shadow: none; }
+.workshop-public-light :is(.architecture-role-grid, .authority-grid) { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.workshop-public-light .architecture-role-grid > a { min-height: 180px; padding: 24px; background: var(--workshop-surface); border-radius: 8px; box-shadow: none; }
+.workshop-public-light .architecture-role-grid strong { margin-top: 16px; }
+.workshop-public-light .architecture-role-grid p { font-size: .95rem; line-height: 1.65; }
+.workshop-public-light .architecture-role-grid > a::before { display: none; }
+.workshop-public-light .architecture-stack article { background: transparent; }
+.workshop-public-light .architecture-evidence-flow article { background: var(--workshop-surface); }
+.workshop-public-light .architecture-evidence-legend { font-size: .8rem; line-height: 1.6; letter-spacing: normal; }
+:where(.workshop-shell, .member-app, .command-workshop) :is(a, button, input, select, summary):focus-visible { outline: 3px solid #4f8eb2; outline-offset: 3px; }
+@media (max-width: 760px) {
+  .workshop-public-light .studio-stage > :is(.company-page, .public-terminal-page, .resume-page) { width: calc(100% - 32px); }
+  .workshop-public-light :is(.architecture-role-grid, .authority-grid) { grid-template-columns: 1fr; }
+  .workshop-public-light .studio-release-feature-copy { padding: 22px; }
+}
+/* Keep older evidence and release layouts as ordinary reading surfaces. */
+.workshop-public-light .studio-release-feature { min-height: 0; padding: 0; gap: 0; grid-template-columns: minmax(0,1fr) 280px; border: 1px solid var(--workshop-line); }
+.workshop-public-light .studio-release-feature-copy { grid-template-columns: 1fr; gap: 18px; align-items: start; }
+.workshop-public-light .studio-release-meta { flex-direction: row; flex-wrap: wrap; justify-content: start; align-items: center; gap: 10px 20px; }
+.workshop-public-light .studio-release-feature aside { border: 0; border-left: 1px solid var(--workshop-line); border-radius: 0; background: var(--workshop-soft); align-content: start; padding: 28px; }
+.workshop-public-light .studio-release-feature aside strong { margin-bottom: 9px; }
+.workshop-public-light .architecture-hero { background: transparent; }
+.workshop-public-light .architecture-evidence-flow p { color: var(--workshop-copy); font-size: .875rem; line-height: 1.6; }
+.workshop-public-light .architecture-evidence-flow span { color: var(--workshop-muted); }
+.workshop-public-light .architecture-evidence-legend { color: var(--workshop-copy); background: var(--workshop-soft); }
+.workshop-public-light .pt-shell { grid-template-columns: 178px minmax(0,1fr); min-height: 0; }
+.workshop-public-light .pt-feed { grid-column: 1/-1; border-left: 0; border-top: 1px solid var(--workshop-line); padding: 22px; }
+.workshop-public-light .pt-feed-list { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 0 28px; max-height: 520px; }
+.workshop-public-light .pt-map { min-height: 0; }
+.workshop-public-light .pt-main { padding: 20px; }
+.workshop-public-light .pt-unified-execution { min-height: 0; }
+.workshop-public-light .pt-feed-event time { min-width: 0; }
+.workshop-public-light .pt-unified-metrics { grid-template-columns: repeat(2,minmax(0,1fr)); }
+@media(max-width:760px) {
+  .workshop-public-light .studio-release-feature { grid-template-columns: 1fr; }
+  .workshop-public-light .studio-release-feature aside { border-left: 0; border-top: 1px solid var(--workshop-line); padding: 22px; }
+  .workshop-public-light .pt-shell { grid-template-columns: 1fr; }
+  .workshop-public-light .pt-feed-list { grid-template-columns: 1fr; }
+  .workshop-public-light .pt-main { padding: 18px 0; }
+  .workshop-public-light .pt-topbar { flex-wrap: wrap; }
+}

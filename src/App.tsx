@@ -5,6 +5,7 @@ import { PublicShell } from "./components/Shell";
 import { fieldNotes } from "./data/fieldNotes";
 import { currentRhenRelease, rhenReleaseBySlug } from "./data/releases";
 
+const RhenTerminal = lazy(() => import("./pages/RhenTerminal"));
 const Command = lazy(() => import("./pages/Command"));
 const HomeCompany = lazy(() => import("./pages/HomeCompany"));
 const Products = lazy(() => import("./pages/Products"));
@@ -37,7 +38,7 @@ const titles: Record<string, string> = {
   "/about": "About — ANEVUM",
   "/resume": "Résumé — ANEVUM",
   "/sign-in": "Sign in — ANEVUM",
-  "/me": "My Space — ANEVUM",
+  "/me": "Command — ANEVUM",
   "/me/settings": "Account settings — ANEVUM",
   "/privacy": "Privacy — ANEVUM",
   "/terms": "Terms — ANEVUM"
@@ -133,8 +134,8 @@ function RouteEffects() {
       title = "RHEN Workspace — ANEVUM";
       description = "Authenticated RHEN application workspace.";
     } else if (path.startsWith("/command")) {
-      title = "Command — ANEVUM";
-      description = "Protected ANEVUM operating surface.";
+      title = path === "/command" ? "Command — ANEVUM" : "RHEN Terminal — ANEVUM";
+      description = path === "/command" ? "Your private member profile and programs." : "Protected RHEN operator workspace.";
     } else if (path.startsWith("/products/rhen/releases/")) {
       const slug = path.slice("/products/rhen/releases/".length);
       const release = rhenReleaseBySlug(slug);
@@ -209,6 +210,7 @@ export default function App() {
         <Route path="/sign-in" element={<PublicExperience><SignIn /></PublicExperience>} />
         <Route path="/me" element={<PublicExperience><MemberHome /></PublicExperience>} />
         <Route path="/me/settings" element={<PublicExperience><MemberSettings /></PublicExperience>} />
+        <Route path="/apps/rhen/terminal/*" element={<LegacyRhenOperatorRoute />} />
         <Route path="/apps/rhen/command/*" element={<LegacyRhenOperatorRoute />} />
         <Route path="/apps/rhen/*" element={<Suspense fallback={<Loader />}><RhenApp /></Suspense>} />
 
@@ -230,10 +232,12 @@ export default function App() {
         <Route path="/case-studies" element={<Navigate to="/products" replace />} />
         <Route path="/theory" element={<Navigate to="/field-notes" replace />} />
 
-        <Route path="/iren" element={<Navigate to="/command" replace />} />
-        <Route path="/private" element={<Navigate to="/command" replace />} />
-        <Route path="/command/*" element={<Suspense fallback={<Loader />}><Command /></Suspense>} />
-        <Route path="/rhenlink" element={<Navigate to="/command" replace />} />
+        <Route path="/iren" element={<Navigate to="/command/rhen/operate" replace />} />
+        <Route path="/private" element={<Navigate to="/command/rhen/operate" replace />} />
+        <Route path="/command" element={<PublicExperience><Command /></PublicExperience>} />
+        <Route path="/command/rhen/*" element={<Suspense fallback={<Loader />}><RhenTerminal /></Suspense>} />
+        <Route path="/command/*" element={<LegacyTerminalRedirect />} />
+        <Route path="/rhenlink" element={<Navigate to="/command/rhen/operate" replace />} />
 
         <Route path="/system" element={<Navigate to="/products/rhen" replace />} />
         <Route path="/record" element={<Navigate to="/products/rhen/releases" replace />} />
@@ -272,6 +276,14 @@ function LegacyNoteRedirect() {
 function LegacyRhenOperatorRoute() {
   // Keep Cloudflare Access at /command until the nested path has an Access policy.
   const location = useLocation();
-  const suffix = location.pathname.slice("/apps/rhen/command".length) || "/operate";
-  return <Navigate to={"/command" + suffix} replace />;
+  const parts = location.pathname.split("/").filter(Boolean);
+  const suffix = parts.slice(3).join("/") || "operate";
+  return <Navigate to={"/command/rhen/" + suffix} replace />;
+}
+
+
+function LegacyTerminalRedirect() {
+  const location = useLocation();
+  const suffix = location.pathname.slice("/command/".length) || "operate";
+  return <Navigate to={"/command/rhen/" + suffix} replace />;
 }

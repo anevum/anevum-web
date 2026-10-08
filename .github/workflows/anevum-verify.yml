@@ -169,6 +169,7 @@ jobs:
           node scripts/browser-runtime-qa.mjs
           node scripts/codex-handoff-browser-qa.mjs
           node scripts/visual-ops-browser-qa.mjs
+          node scripts/member-command-browser-qa.mjs
       - name: Visual review contact sheets
         if: github.event_name == 'pull_request'
         run: python scripts/visual-ops-contact-sheet.py
@@ -205,3 +206,4 @@ jobs:
             ${{ runner.temp }}/anevum-visuals
             dist/client/devon-akins-resume.pdf
           retention-days: 3
+

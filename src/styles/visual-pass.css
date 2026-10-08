@@ -8,30 +8,30 @@
  * shared system surface here so a system reads the same on Home, Systems,
  * Architecture, Field Notes, product pages, and Command. */
 .system-chip-iren{--chip-accent:var(--iren-signal) !important}
-.system-chip-rhen{--chip-accent:#6fd1ff !important}
+.system-chip-rhen{--chip-accent:var(--workshop-accent) !important}
 .system-chip-graen{--chip-accent:var(--graen-gold) !important}
 .system-chip-nostra{--chip-accent:var(--nostra-lavender) !important}
 .system-chip-velum{--chip-accent:var(--velum-cyan) !important}
 
 .node-iren{--system-accent:var(--iren-signal) !important}
-.node-rhen{--system-accent:#6fd1ff !important}
+.node-rhen{--system-accent:var(--workshop-accent) !important}
 .node-graen{--system-accent:var(--graen-gold) !important}
 .node-nostra{--system-accent:var(--nostra-lavender) !important}
 .node-velum{--system-accent:var(--velum-cyan) !important}
 
 .system-state-iren{--state-accent:var(--iren-signal) !important}
-.system-state-rhen{--state-accent:#6fd1ff !important}
+.system-state-rhen{--state-accent:var(--workshop-accent) !important}
 .system-state-graen{--state-accent:var(--graen-gold) !important}
 .system-state-nostra{--state-accent:var(--nostra-lavender) !important}
 .system-state-velum{--state-accent:var(--velum-cyan) !important}
 
-.program-rhen{--program-accent:#6fd1ff !important}
+.program-rhen{--program-accent:var(--workshop-accent) !important}
 .program-graen{--program-accent:var(--graen-gold) !important}
 .program-nostra{--program-accent:var(--nostra-lavender) !important}
 .program-velum{--program-accent:var(--velum-cyan) !important}
 
 .architecture-role-grid a:nth-child(1){--system-accent:var(--iren-signal) !important}
-.architecture-role-grid a:nth-child(2){--system-accent:#6fd1ff !important}
+.architecture-role-grid a:nth-child(2){--system-accent:var(--workshop-accent) !important}
 .architecture-role-grid a:nth-child(3){--system-accent:var(--nostra-lavender) !important}
 .architecture-role-grid a:nth-child(4){--system-accent:var(--graen-gold) !important}
 .architecture-role-grid a:nth-child(5){--system-accent:var(--velum-cyan) !important}
@@ -40,34 +40,34 @@
  * tuple and a CSS color. Give the final layer explicit canonical values so
  * gradients, borders, traces, and icons cannot silently lose their accent. */
 .product-detail-iren{--system-accent:var(--iren-signal) !important;--system-rgb:110,161,255 !important}
-.product-detail-rhen{--system-accent:#6fd1ff !important;--system-rgb:111,209,255 !important}
+.product-detail-rhen{--system-accent:var(--workshop-accent) !important;--system-rgb:111,209,255 !important}
 .product-detail-graen{--system-accent:var(--graen-gold) !important;--system-rgb:208,179,122 !important}
 .product-detail-nostra{--system-accent:var(--nostra-lavender) !important;--system-rgb:169,155,232 !important}
 .product-detail-velum{--system-accent:var(--velum-cyan) !important;--system-rgb:86,184,188 !important}
 
 .company-product-card.product-iren{--surface-accent:var(--iren-signal)}
-.company-product-card.product-rhen{--surface-accent:#6fd1ff}
+.company-product-card.product-rhen{--surface-accent:var(--workshop-accent)}
 .company-product-card.product-graen{--surface-accent:var(--graen-gold)}
 .company-product-card.product-nostra{--surface-accent:var(--nostra-lavender)}
 .company-product-card.product-velum{--surface-accent:var(--velum-cyan)}
 
 .company-product-card{
   background:
-    radial-gradient(circle at 80% 18%,color-mix(in srgb,var(--surface-accent,#7fdff3) 11%,transparent),transparent 34%),
-    linear-gradient(155deg,rgba(8,19,31,.82),rgba(3,9,16,.72));
+    radial-gradient(circle at 80% 18%,color-mix(in srgb,var(--surface-accent,var(--workshop-accent)) 11%,transparent),transparent 34%),
+    linear-gradient(155deg,var(--workshop-surface),var(--workshop-surface));
 }
 .company-product-card::before{
-  background:linear-gradient(90deg,transparent,color-mix(in srgb,var(--surface-accent,#7fdff3) 62%,transparent),transparent);
+  background:linear-gradient(90deg,transparent,color-mix(in srgb,var(--surface-accent,var(--workshop-accent)) 62%,transparent),transparent);
 }
 .company-product-card::after{
-  border-color:color-mix(in srgb,var(--surface-accent,#7fdff3) 12%,transparent);
+  border-color:color-mix(in srgb,var(--surface-accent,var(--workshop-line)) 12%,transparent);
 }
 .company-product-card:hover{
-  border-color:color-mix(in srgb,var(--surface-accent,#7fdff3) 34%,transparent);
+  border-color:color-mix(in srgb,var(--surface-accent,var(--workshop-line)) 34%,transparent);
   box-shadow:0 18px 60px rgba(0,0,0,.24),inset 0 0 60px color-mix(in srgb,var(--surface-accent,#7fdff3) 4%,transparent);
 }
 .company-product-card header b,
-.company-product-card footer strong{color:var(--surface-accent,#b7c6cf) !important}
+.company-product-card footer strong{color:var(--surface-accent,var(--workshop-ink)) !important}
 
 /* --- Shared icon geometry ------------------------------------------------ */
 /* SystemIcon is a span-based component. Enforce its square box at the final
@@ -137,12 +137,12 @@
   min-height: var(--icon-size) !important;
   flex: 0 0 var(--icon-size) !important;
   overflow: hidden;
-  border: 1px solid color-mix(in srgb,var(--icon-accent) 26%,rgba(255,255,255,.06));
+  border: 1px solid color-mix(in srgb,var(--icon-accent) 26%,var(--workshop-line));
   border-radius: 18px;
   background:
-    linear-gradient(145deg,rgba(255,255,255,.07),transparent 36%),
+    linear-gradient(145deg,rgba(36,43,48,0.070),transparent 36%),
     radial-gradient(circle at 50% 32%,color-mix(in srgb,var(--icon-accent) 17%,transparent),transparent 62%),
-    rgba(5,13,22,.82);
+    var(--workshop-surface);
   box-shadow:
     inset 0 1px rgba(255,255,255,.08),
     inset 0 -18px 30px rgba(0,0,0,.14),
@@ -236,7 +236,7 @@
 .field-note-systems .system-chip .system-icon,
 .field-note-index-systems .system-chip .system-icon{
   padding:0 !important;
-  border:1px solid color-mix(in srgb,var(--icon-accent) 26%,rgba(255,255,255,.06)) !important;
+  border:1px solid color-mix(in srgb,var(--icon-accent) 26%,var(--workshop-line)) !important;
   color:var(--icon-accent) !important;
   letter-spacing:normal !important;
 }
@@ -284,8 +284,8 @@
 }
 
 .command-rhen-lockup strong {
-  color: #718596;
-  font-size: .46rem;
+  color: var(--workshop-copy);
+  font-size: .8125rem;
   font-weight: 700;
   letter-spacing: .12em;
 }
@@ -309,18 +309,18 @@
   display: grid !important;
   place-items: center;
   border-radius: 12px !important;
-  color: #718596 !important;
+  color: var(--workshop-copy) !important;
 }
 
 .command-header nav a:hover {
-  color: #d2e0ea !important;
-  border-color: rgba(110,161,255,.24) !important;
+  color: var(--workshop-ink) !important;
+  border-color: var(--workshop-line) !important;
 }
 
 .command-header nav a.active {
-  color: #d9e6ff !important;
-  border-color: rgba(110,161,255,.42) !important;
-  background: radial-gradient(circle at 50% 35%,rgba(50,111,255,.16),rgba(6,13,23,.68)) !important;
+  color: var(--workshop-ink) !important;
+  border-color: var(--workshop-line) !important;
+  background: radial-gradient(circle at 50% 35%,rgba(49,94,125,0.120),var(--workshop-surface)) !important;
   box-shadow: inset 0 0 0 1px rgba(184,210,255,.04),0 0 24px rgba(50,111,255,.08) !important;
 }
 
@@ -331,12 +331,12 @@
   min-width: var(--icon-size) !important;
   min-height: var(--icon-size) !important;
   flex: 0 0 var(--icon-size) !important;
-  border: 1px solid color-mix(in srgb,var(--icon-accent) 24%,rgba(255,255,255,.05)) !important;
+  border: 1px solid color-mix(in srgb,var(--icon-accent) 24%,var(--workshop-line)) !important;
   border-radius: 8px !important;
   background:
-    linear-gradient(145deg,rgba(255,255,255,.06),transparent 38%),
+    linear-gradient(145deg,rgba(36,43,48,0.060),transparent 38%),
     radial-gradient(circle at 50% 35%,color-mix(in srgb,var(--icon-accent) 16%,transparent),transparent 62%),
-    rgba(5,13,22,.8) !important;
+    var(--workshop-surface) !important;
   box-shadow: inset 0 1px rgba(255,255,255,.06),0 0 14px color-mix(in srgb,var(--icon-accent) 8%,transparent) !important;
 }
 
@@ -533,9 +533,9 @@
   }
 
   .topology-flow-label {
-    font-size: .36rem !important;
+    font-size: .8125rem !important;
     letter-spacing: .13em !important;
-    color: rgba(184,210,255,.32) !important;
+    color: var(--workshop-line) !important;
   }
 
   .topology-flow-label.flow-research {
@@ -608,3 +608,4 @@
     --icon-size: 42px !important;
   }
 }
+

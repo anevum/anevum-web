@@ -55,7 +55,7 @@ export default function MemberSettings() {
 
   return (
     <div className="member-page member-settings">
-      <p className="workshop-kicker">My Space / Settings</p>
+      <p className="workshop-kicker">Command / Profile</p>
       <h1>Account settings</h1>
       <p>{session.user.email}</p>
       {error && <p role="alert" className="member-alert">{error}</p>}
@@ -73,7 +73,8 @@ export default function MemberSettings() {
         <button type="button" disabled={busy} onClick={() => void memberAuthClient.signOut({ fetchOptions: { onSuccess: () => navigate("/", { replace: true }) } })}>Sign out</button>
         <button type="button" className="member-danger-action" disabled={busy} onClick={() => void remove()}>Delete account permanently</button>
       </section>
-      <Link to="/me">← Back to My Space</Link>
+      <Link to="/me">Back to Command</Link>
     </div>
   );
 }
+
