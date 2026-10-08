@@ -1,32 +1,34 @@
-import ProductCard from "../components/company/ProductCard";
-import ModuleGrid from "../components/company/ModuleGrid";
-import SystemTopology from "../components/company/SystemTopology";
-import PublicSystemStatus from "../components/PublicSystemStatus";
-import { useLiveTrading } from "../hooks/useLiveTrading";
-import { products } from "../data/products";
+import { Link } from "react-router-dom";
+import PublicEvidenceSnapshot from "../components/PublicEvidenceSnapshot";
+import SystemIcon from "../components/company/SystemIcon";
+import { publicProducts } from "../data/products";
+import { currentRhenRelease } from "../data/releases";
 
 export default function Products() {
-  const { data, error } = useLiveTrading(10000);
+  const products = publicProducts();
+  const rhenRelease = currentRhenRelease();
   return (
-    <div className="company-page">
-      <section className="company-page-hero">
-        <span>PRODUCT PORTFOLIO</span>
-        <h1>Systems with explicit jobs and explicit boundaries.</h1>
-        <p>ANEVUM is organized around five flagship systems and a supporting package ecosystem. Product status describes implementation maturity, not commercial availability or performance.</p>
+    <div className="studio-page truth-products-page">
+      <section className="truth-page-intro">
+        <span>PRODUCT REGISTRY</span>
+        <h1>Software earns its place here by existing.</h1>
+        <p>Public products are registered only when there is a real implementation, an explicit status, and something useful to inspect or use.</p>
       </section>
-      <section className="company-section no-top-border"><PublicSystemStatus data={data} error={error} /></section>
-      <section className="company-section"><SystemTopology /></section>
-      <section className="company-section">
-        <header className="company-section-head"><span>FLAGSHIP SYSTEMS</span><h2>Portfolio</h2></header>
-        <div className="company-product-grid">{products.map((product) => <ProductCard key={product.slug} product={product} />)}</div>
+
+      <section className="truth-product-list">
+        {products.map((product,index) => (
+          <article key={product.slug} className="truth-product-row">
+            <div className="truth-product-identity"><span>{String(index+1).padStart(2,"0")}</span><SystemIcon system={product.system || "RHEN"} size="lg" /><div><strong>{product.name}</strong><small>{product.category}</small></div></div>
+            <div className="truth-product-copy"><span>{product.lifecycle.toUpperCase()}</span><p>{product.oneLine}</p></div>
+            <div className="truth-product-route"><span>{product.slug === "rhen" ? "CURRENT "+rhenRelease.version : "NO RELEASE"}</span><Link to={product.routes.home}>Open product →</Link></div>
+          </article>
+        ))}
       </section>
-      <section className="company-section">
-        <header className="company-section-head">
-          <span>PACKAGE ECOSYSTEM</span>
-          <h2>Supporting components.</h2>
-          <p>These are implemented modules, research layers, and production infrastructure. They are not promoted into separate products simply because they have names in the codebase.</p>
-        </header>
-        <ModuleGrid />
+
+      {products.some((product)=>product.slug==="rhen") ? <PublicEvidenceSnapshot /> : null}
+
+      <section className="truth-registry-note">
+        <span>REGISTRY RULE</span><h2>No empty product cards.</h2><p>Future applications will appear here when they are actually built. Internal RHEN modules remain architecture, not separate consumer products.</p>
       </section>
     </div>
   );

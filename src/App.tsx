@@ -7,6 +7,9 @@ import { currentRhenRelease, rhenReleaseBySlug } from "./data/releases";
 
 const Command = lazy(() => import("./pages/Command"));
 const HomeCompany = lazy(() => import("./pages/HomeCompany"));
+const Products = lazy(() => import("./pages/Products"));
+const RhenProduct = lazy(() => import("./pages/RhenProduct"));
+const Feed = lazy(() => import("./pages/Feed"));
 const Live = lazy(() => import("./pages/Live"));
 const ResearchHub = lazy(() => import("./pages/ResearchHub"));
 const FieldNoteDetail = lazy(() => import("./pages/FieldNoteDetail"));
@@ -17,25 +20,29 @@ const Releases = lazy(() => import("./pages/Releases"));
 const ReleaseDetail = lazy(() => import("./pages/ReleaseDetail"));
 
 const titles: Record<string, string> = {
-  "/": "ANEVUM — RHEN + Command",
-  "/live": "RHEN Live Terminal — ANEVUM",
-  "/research": "Field Notes — ANEVUM",
-  "/architecture": "RHEN V4.3 Architecture — ANEVUM",
-  "/founder": "About ANEVUM — Devon Akins",
-  "/resume": "Devon Akins — Résumé",
-  "/releases": "Releases — ANEVUM",
-  "/private": "Private — ANEVUM",
-  "/iren": "IREN Operations — ANEVUM"
+  "/": "ANEVUM — Independent Software",
+  "/products": "Products — ANEVUM",
+  "/feed": "Feed — ANEVUM",
+  "/field-notes": "Field Notes — ANEVUM",
+  "/products/rhen": "RHEN — ANEVUM",
+  "/products/rhen/evidence": "RHEN Public Evidence — ANEVUM",
+  "/products/rhen/architecture": "RHEN Architecture — ANEVUM",
+  "/products/rhen/releases": "RHEN Releases — ANEVUM",
+  "/about": "About — ANEVUM",
+  "/resume": "Résumé — ANEVUM"
 };
 
 const descriptions: Record<string, string> = {
-  "/": "ANEVUM builds RHEN, an inspectable equity trading and research system. RHEN V4.3 consolidates execution, control, research, replay, forecast, and Core/Store responsibilities in one canonical runtime while keeping broker authority narrow and evidence boundaries explicit. Command is the protected operating surface.",
-  "/live": "Observe RHEN through public-safe execution, control, research, replay, forecast, evidence, validation, and normalized performance projections without exposing private account or strategy details.",
-  "/research": "Read ANEVUM Field Notes: research decisions, failed hypotheses, engineering changes, releases, and measured evidence.",
-  "/architecture": "RHEN V4.3 architecture: one canonical Railway runtime, named internal modules, bounded SQLite Core, equity-only broker authority, protected research review, and exact forward-evidence measurement.",
-  "/founder": "About ANEVUM and founder Devon Akins, building inspectable software systems, automated trading infrastructure, research tooling, forecasting, replay, telemetry, and production controls.",
-  "/resume": "Résumé for Devon Akins, founder of ANEVUM, covering software systems, infrastructure, research tooling, mathematics, and production engineering.",
-  "/releases": "ANEVUM release records documenting RHEN versions, production changes, verification, and public system history."
+  "/": "Independent software built against real problems, with real data, public evidence, and versioned work.",
+  "/products": "The canonical registry of public ANEVUM products. Products appear when they actually exist.",
+  "/feed": "A chronological ANEVUM record assembled from real releases, Field Notes, public-safe runtime observations, and research decisions.",
+  "/field-notes": "ANEVUM Field Notes document research decisions, failures, engineering changes, releases, and measured evidence.",
+  "/products/rhen": "RHEN is ANEVUM's live trading and research system operating on real market data with public evidence and narrow live authority.",
+  "/products/rhen/evidence": "Inspect sanitized RHEN runtime and performance evidence without exposing protected broker, position, order, or strategy details.",
+  "/products/rhen/architecture": "Inspect RHEN execution, research, replay, forecasting, control, storage, and evidence boundaries.",
+  "/products/rhen/releases": "RHEN release records document production changes, verification, limitations, and public system history.",
+  "/about": "About ANEVUM, the independently built and operated software studio.",
+  "/resume": "Professional résumé and background for the person responsible for ANEVUM."
 };
 
 function ensureMeta(selector: string, create: () => HTMLElement, content: string) {
@@ -97,39 +104,31 @@ function RouteEffects() {
   useEffect(() => {
     const previous = window.history.scrollRestoration;
     window.history.scrollRestoration = "manual";
-    return () => {
-      window.history.scrollRestoration = previous;
-    };
+    return () => { window.history.scrollRestoration = previous; };
   }, []);
 
   useEffect(() => {
     const path = location.pathname;
-    const protectedRoute = path.startsWith("/command") || path === "/private" || path === "/iren";
-
-    let title = titles[path] || "ANEVUM — RHEN + Command";
+    const protectedRoute = path.startsWith("/command");
+    let title = titles[path] || "ANEVUM — Independent Software";
     let description = descriptions[path] || descriptions["/"];
 
     if (path.startsWith("/command")) {
       title = "Command — ANEVUM";
-      description = "Protected ANEVUM Command customer and operator surface.";
-    } else if (path === "/releases") {
-      const current = currentRhenRelease();
-      title = "Releases — RHEN " + current.version + " " + current.codename + " — ANEVUM";
-      description = descriptions["/releases"];
-    } else if (path.startsWith("/releases/")) {
-      const slug = path.slice("/releases/".length);
+      description = "Protected ANEVUM operating surface.";
+    } else if (path.startsWith("/products/rhen/releases/")) {
+      const slug = path.slice("/products/rhen/releases/".length);
       const release = rhenReleaseBySlug(slug);
-      title = release
-        ? "RHEN " + release.version + " — " + release.codename + " — ANEVUM"
-        : "Releases — ANEVUM";
-      description = release
-        ? "Public release record for RHEN " + release.version + " " + release.codename + ", including production changes and verification."
-        : descriptions["/releases"];
-    } else if (path.startsWith("/research/")) {
-      const slug = path.slice("/research/".length);
+      title = release ? "RHEN " + release.version + " — " + release.codename + " — ANEVUM" : "RHEN Releases — ANEVUM";
+      description = release ? "Public release record for RHEN " + release.version + " " + release.codename + ", including production changes, verification, and limits." : descriptions["/products/rhen/releases"];
+    } else if (path.startsWith("/field-notes/")) {
+      const slug = path.slice("/field-notes/".length);
       const note = fieldNotes.find((item) => item.slug === slug);
       title = note ? note.title + " — ANEVUM Field Notes" : "Field Note — ANEVUM";
-      description = note?.summary || descriptions["/research"];
+      description = note?.summary || descriptions["/field-notes"];
+    } else if (path === "/products/rhen/releases") {
+      const current = currentRhenRelease();
+      title = "RHEN Releases — " + current.version + " " + current.codename + " — ANEVUM";
     }
 
     setRouteMeta(path, title, description, protectedRoute);
@@ -140,7 +139,6 @@ function RouteEffects() {
 
 function RouteScrollReset({ children }: { children: ReactNode }) {
   const location = useLocation();
-
   useLayoutEffect(() => {
     const root = document.documentElement;
     const previousScrollBehavior = root.style.scrollBehavior;
@@ -148,7 +146,6 @@ function RouteScrollReset({ children }: { children: ReactNode }) {
     window.scrollTo({ top: 0, left: 0, behavior: "auto" });
     root.style.scrollBehavior = previousScrollBehavior;
   }, [location.pathname]);
-
   return children;
 }
 
@@ -167,45 +164,66 @@ export default function App() {
       <OverflowPan />
       <Routes>
         <Route path="/" element={<PublicExperience><HomeCompany /></PublicExperience>} />
-        <Route path="/live" element={<PublicExperience><Live /></PublicExperience>} />
-        <Route path="/research" element={<PublicExperience><ResearchHub /></PublicExperience>} />
-        <Route path="/research/:slug" element={<PublicExperience><FieldNoteDetail /></PublicExperience>} />
-        <Route path="/founder" element={<PublicExperience><Founder /></PublicExperience>} />
-        <Route path="/architecture" element={<PublicExperience><Architecture /></PublicExperience>} />
+        <Route path="/products" element={<PublicExperience><Products /></PublicExperience>} />
+        <Route path="/feed" element={<PublicExperience><Feed /></PublicExperience>} />
+        <Route path="/field-notes" element={<PublicExperience><ResearchHub /></PublicExperience>} />
+        <Route path="/field-notes/:slug" element={<PublicExperience><FieldNoteDetail /></PublicExperience>} />
+        <Route path="/about" element={<PublicExperience><Founder /></PublicExperience>} />
         <Route path="/resume" element={<PublicExperience><Resume /></PublicExperience>} />
-        <Route path="/releases" element={<PublicExperience><Releases /></PublicExperience>} />
-        <Route path="/releases/:slug" element={<PublicExperience><ReleaseDetail /></PublicExperience>} />
 
-        <Route path="/products" element={<Navigate to="/live" replace />} />
-        <Route path="/products/:slug" element={<Navigate to="/live" replace />} />
-        <Route path="/performance" element={<Navigate to="/live" replace />} />
-        <Route path="/case-studies" element={<Navigate to="/live" replace />} />
-        <Route path="/theory" element={<Navigate to="/live" replace />} />
+        <Route path="/products/rhen" element={<PublicExperience><RhenProduct /></PublicExperience>} />
+        <Route path="/products/rhen/evidence" element={<PublicExperience><Live /></PublicExperience>} />
+        <Route path="/products/rhen/architecture" element={<PublicExperience><Architecture /></PublicExperience>} />
+        <Route path="/products/rhen/releases" element={<PublicExperience><Releases /></PublicExperience>} />
+        <Route path="/products/rhen/releases/:slug" element={<PublicExperience><ReleaseDetail /></PublicExperience>} />
+
+        <Route path="/live" element={<Navigate to="/products/rhen/evidence" replace />} />
+        <Route path="/performance" element={<Navigate to="/products/rhen/evidence" replace />} />
+        <Route path="/architecture" element={<Navigate to="/products/rhen/architecture" replace />} />
+        <Route path="/releases" element={<Navigate to="/products/rhen/releases" replace />} />
+        <Route path="/releases/:slug" element={<LegacyReleaseRedirect />} />
+        <Route path="/research" element={<Navigate to="/field-notes" replace />} />
+        <Route path="/research/:slug" element={<LegacyNoteRedirect />} />
+        <Route path="/field-notes-old" element={<Navigate to="/field-notes" replace />} />
+        <Route path="/founder" element={<Navigate to="/about" replace />} />
+        <Route path="/case-studies" element={<Navigate to="/products" replace />} />
+        <Route path="/theory" element={<Navigate to="/field-notes" replace />} />
 
         <Route path="/iren" element={<Navigate to="/command" replace />} />
         <Route path="/private" element={<Navigate to="/command" replace />} />
         <Route path="/command/*" element={<Suspense fallback={<Loader />}><Command /></Suspense>} />
         <Route path="/rhenlink" element={<Navigate to="/command" replace />} />
 
-        <Route path="/system" element={<Navigate to="/live" replace />} />
-        <Route path="/record" element={<Navigate to="/releases" replace />} />
-        <Route path="/work" element={<Navigate to="/research" replace />} />
-        <Route path="/lab" element={<Navigate to="/live" replace />} />
-        <Route path="/notes" element={<Navigate to="/research" replace />} />
-        <Route path="/wiki" element={<Navigate to="/live" replace />} />
-        <Route path="/wiki/archive/transcosmic" element={<Navigate to="/releases" replace />} />
-        <Route path="/about" element={<Navigate to="/founder" replace />} />
-        <Route path="/proof" element={<Navigate to="/live" replace />} />
-        <Route path="/method" element={<Navigate to="/research" replace />} />
-        <Route path="/the-book" element={<Navigate to="/releases" replace />} />
-        <Route path="/reply" element={<Navigate to="/releases" replace />} />
-        <Route path="/stories/reply" element={<Navigate to="/releases" replace />} />
-        <Route path="/universe" element={<Navigate to="/releases" replace />} />
-        <Route path="/lattice" element={<Navigate to="/releases" replace />} />
-        <Route path="/store" element={<Navigate to="/releases" replace />} />
+        <Route path="/system" element={<Navigate to="/products/rhen" replace />} />
+        <Route path="/record" element={<Navigate to="/products/rhen/releases" replace />} />
+        <Route path="/work" element={<Navigate to="/field-notes" replace />} />
+        <Route path="/lab" element={<Navigate to="/products" replace />} />
+        <Route path="/notes" element={<Navigate to="/field-notes" replace />} />
+        <Route path="/wiki" element={<Navigate to="/products/rhen" replace />} />
+        <Route path="/wiki/archive/transcosmic" element={<Navigate to="/products/rhen/releases" replace />} />
+        <Route path="/proof" element={<Navigate to="/products/rhen/evidence" replace />} />
+        <Route path="/method" element={<Navigate to="/field-notes" replace />} />
+        <Route path="/the-book" element={<Navigate to="/field-notes" replace />} />
+        <Route path="/reply" element={<Navigate to="/field-notes" replace />} />
+        <Route path="/stories/reply" element={<Navigate to="/field-notes" replace />} />
+        <Route path="/universe" element={<Navigate to="/products" replace />} />
+        <Route path="/lattice" element={<Navigate to="/products" replace />} />
+        <Route path="/store" element={<Navigate to="/products" replace />} />
 
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </>
   );
+}
+
+function LegacyReleaseRedirect() {
+  const location = useLocation();
+  const slug = location.pathname.slice("/releases/".length);
+  return <Navigate to={"/products/rhen/releases/" + slug} replace />;
+}
+
+function LegacyNoteRedirect() {
+  const location = useLocation();
+  const slug = location.pathname.slice("/research/".length);
+  return <Navigate to={"/field-notes/" + slug} replace />;
 }

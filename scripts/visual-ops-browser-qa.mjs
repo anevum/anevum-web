@@ -6,8 +6,8 @@ import path from "node:path";
 const base = process.env.BASE_URL;
 if (!base) throw new Error("BASE_URL is required");
 
-const publicRoutes = ["/", "/live", "/architecture", "/research", "/research/prediction-outcome-evidence-chain", "/founder", "/resume", "/releases"];
-const commandRoutes = ["/command/operate", "/command/discover", "/command/review", "/command/system"];
+const publicRoutes = ["/", "/products", "/feed", "/products/rhen", "/products/rhen/evidence", "/products/rhen/architecture", "/field-notes", "/field-notes/prediction-outcome-evidence-chain", "/about", "/resume", "/products/rhen/releases"];
+const commandRoutes = ["/command/operate", "/command/discover", "/command/review", "/command/public", "/command/system"];
 const routes = process.env.PUBLIC_ONLY === "1" ? publicRoutes : [...publicRoutes, ...commandRoutes];
 const output = path.join(process.env.RUNNER_TEMP || os.tmpdir(), "anevum-visuals");
 fs.mkdirSync(output, {recursive:true});
@@ -142,16 +142,17 @@ async function runCase(route, viewport) {
         expression: `(() => {
           const pathReady = location.pathname === ${JSON.stringify(route)};
           const suspenseReady = !document.querySelector(".route-loader");
-          const homeReady = ${JSON.stringify(route)} !== "/" || document.title === "ANEVUM — RHEN + Command";
-          const liveReady = ${JSON.stringify(route)} !== "/live" || Boolean(document.querySelector('[data-visual-ops="public-terminal"]'));
-          const architectureReady = ${JSON.stringify(route)} !== "/architecture" || Boolean(document.querySelector(".architecture-role-grid"));
-          const researchReady = ${JSON.stringify(route)} !== "/research" || Boolean(document.querySelector(".research-hub.field-notes-page .field-notes-stream-section"));
-          const fieldNoteReady = !${JSON.stringify(route)}.startsWith("/research/") || Boolean(document.querySelector(".field-note-detail .field-note-reproduce"));
-          const founderReady = ${JSON.stringify(route)} !== "/founder" || Boolean(document.querySelector(".founder-page .founder-hero"));
+          const homeReady = ${JSON.stringify(route)} !== "/" || Boolean(document.querySelector(".studio-home"));\n          const productsReady = ${JSON.stringify(route)} !== "/products" || Boolean(document.querySelector(".truth-products-page"));\n          const feedReady = ${JSON.stringify(route)} !== "/feed" || Boolean(document.querySelector(".feed-page"));\n          const rhenReady = ${JSON.stringify(route)} !== "/products/rhen" || Boolean(document.querySelector(".truth-rhen-page"));
+          const liveReady = ${JSON.stringify(route)} !== "/products/rhen/evidence" || Boolean(document.querySelector('[data-visual-ops="public-terminal"]'));
+          const architectureReady = ${JSON.stringify(route)} !== "/products/rhen/architecture" || Boolean(document.querySelector(".architecture-role-grid"));
+          const researchReady = ${JSON.stringify(route)} !== "/field-notes" || Boolean(document.querySelector(".studio-notes-page"));
+          const fieldNoteReady = !${JSON.stringify(route)}.startsWith("/field-notes/") || Boolean(document.querySelector(".field-note-detail .field-note-reproduce"));
+          const aboutReady = ${JSON.stringify(route)} !== "/about" || Boolean(document.querySelector(".studio-about-page"));
           const resumeReady = ${JSON.stringify(route)} !== "/resume" || Boolean(document.querySelector(".resume-page .resume-sheet"));
+          const releasesReady = ${JSON.stringify(route)} !== "/products/rhen/releases" || Boolean(document.querySelector(".studio-releases-page .studio-release-feature"));
           const commandReady = !${JSON.stringify(route)}.startsWith("/command/") || Boolean(document.querySelector(".command-v4"));
-          return {ready:pathReady && suspenseReady && homeReady && liveReady && architectureReady && researchReady && fieldNoteReady && founderReady && resumeReady && commandReady,
-            pathname:location.pathname,title:document.title,suspenseReady,liveReady,architectureReady,researchReady,fieldNoteReady,founderReady,resumeReady,commandReady};
+          return {ready:pathReady && suspenseReady && homeReady && productsReady && feedReady && rhenReady && liveReady && architectureReady && researchReady && fieldNoteReady && aboutReady && resumeReady && releasesReady && commandReady,
+            pathname:location.pathname,title:document.title,suspenseReady,homeReady,productsReady,feedReady,rhenReady,liveReady,architectureReady,researchReady,fieldNoteReady,aboutReady,resumeReady,releasesReady,commandReady};
         })()`,
         returnByValue:true
       });
@@ -169,16 +170,17 @@ async function runCase(route, viewport) {
       expression: `(() => {
         const pathReady = location.pathname === ${JSON.stringify(route)};
         const suspenseReady = !document.querySelector(".route-loader");
-        const homeReady = ${JSON.stringify(route)} !== "/" || document.title === "ANEVUM — RHEN + Command";
-        const liveReady = ${JSON.stringify(route)} !== "/live" || Boolean(document.querySelector('[data-visual-ops="public-terminal"]'));
-        const architectureReady = ${JSON.stringify(route)} !== "/architecture" || Boolean(document.querySelector(".architecture-role-grid"));
-        const researchReady = ${JSON.stringify(route)} !== "/research" || Boolean(document.querySelector(".research-hub.field-notes-page .field-notes-stream-section"));
-        const fieldNoteReady = !${JSON.stringify(route)}.startsWith("/research/") || Boolean(document.querySelector(".field-note-detail .field-note-reproduce"));
-        const founderReady = ${JSON.stringify(route)} !== "/founder" || Boolean(document.querySelector(".founder-page .founder-hero"));
+        const homeReady = ${JSON.stringify(route)} !== "/" || Boolean(document.querySelector(".studio-home"));\n          const productsReady = ${JSON.stringify(route)} !== "/products" || Boolean(document.querySelector(".truth-products-page"));\n          const feedReady = ${JSON.stringify(route)} !== "/feed" || Boolean(document.querySelector(".feed-page"));\n          const rhenReady = ${JSON.stringify(route)} !== "/products/rhen" || Boolean(document.querySelector(".truth-rhen-page"));
+        const liveReady = ${JSON.stringify(route)} !== "/products/rhen/evidence" || Boolean(document.querySelector('[data-visual-ops="public-terminal"]'));
+        const architectureReady = ${JSON.stringify(route)} !== "/products/rhen/architecture" || Boolean(document.querySelector(".architecture-role-grid"));
+        const researchReady = ${JSON.stringify(route)} !== "/field-notes" || Boolean(document.querySelector(".studio-notes-page"));
+        const fieldNoteReady = !${JSON.stringify(route)}.startsWith("/field-notes/") || Boolean(document.querySelector(".field-note-detail .field-note-reproduce"));
+        const aboutReady = ${JSON.stringify(route)} !== "/about" || Boolean(document.querySelector(".studio-about-page"));
         const resumeReady = ${JSON.stringify(route)} !== "/resume" || Boolean(document.querySelector(".resume-page .resume-sheet"));
+          const releasesReady = ${JSON.stringify(route)} !== "/products/rhen/releases" || Boolean(document.querySelector(".studio-releases-page .studio-release-feature"));
         const commandReady = !${JSON.stringify(route)}.startsWith("/command/") || Boolean(document.querySelector(".command-v4"));
-        return {ready:pathReady && suspenseReady && homeReady && liveReady && architectureReady && researchReady && fieldNoteReady && founderReady && resumeReady && commandReady,
-          pathname:location.pathname,title:document.title,suspenseReady,liveReady,architectureReady,researchReady,fieldNoteReady,founderReady,resumeReady,commandReady};
+        return {ready:pathReady && suspenseReady && homeReady && productsReady && feedReady && rhenReady && liveReady && architectureReady && researchReady && fieldNoteReady && aboutReady && resumeReady && releasesReady && commandReady,
+          pathname:location.pathname,title:document.title,suspenseReady,homeReady,productsReady,feedReady,rhenReady,liveReady,architectureReady,researchReady,fieldNoteReady,aboutReady,resumeReady,releasesReady,commandReady};
       })()`,
       returnByValue:true
     });
@@ -202,7 +204,7 @@ async function runCase(route, viewport) {
     };
   })()`.replace("routePlaceholder", JSON.stringify(route)),returnByValue:true});
   const details=ops.result?.value||{};
-  if(route === "/live" && (!details.surface || !details.cards || !details.links)) {
+  if(route === "/products/rhen/evidence" && (!details.surface || !details.cards || !details.links)) {
     throw new Error("Missing accessible public visual surface: "+JSON.stringify(details));
   }
 
@@ -223,6 +225,7 @@ async function runCase(route, viewport) {
         operate: visible(".command-v4-operate .command-v4-strip") && visible(".command-trading-lanes"),
         discover: visible(".command-v4-discover") && visible(".command-v4-funnel"),
         review: visible(".command-v4-review-stack") && visible(".command-v4-review"),
+        public: visible(".command-v4-public .command-v4-strip"),
         system: visible(".command-v4-system-stack") && (
           visible(".operations-terminal") || visible(".ops-center") || visible(".command-topology")
         )
@@ -233,47 +236,12 @@ async function runCase(route, viewport) {
       "/command/operate": ["Operate", "operate"],
       "/command/discover": ["Discover", "discover"],
       "/command/review": ["Review", "review"],
+      "/command/public": ["Public", "public"],
       "/command/system": ["System", "system"]
     }[route];
     if(!expected || !value.root || value.navCurrent !== route || value.heading !== expected[0] || value[expected[1]] !== true) {
       throw new Error("Canonical Command V4 workspace failed: "+JSON.stringify({route,...value}));
     }
-  }
-
-  if(route.startsWith("/products/") && route.split("/").filter(Boolean).length === 2) {
-    const iconGeometry = await send("Runtime.evaluate", {expression: `(() => {
-      const icon=document.querySelector(".product-hero .vo-card-top .system-icon");
-      const mark=icon?.querySelector(".system-mark-svg");
-      if(!icon || !mark) return {present:false};
-      const a=icon.getBoundingClientRect();
-      const b=mark.getBoundingClientRect();
-      const style=getComputedStyle(icon);
-      return {
-        present:true,
-        width:Math.round(a.width),
-        height:Math.round(a.height),
-        overflow:style.overflow,
-        markInside:b.left>=a.left-1 && b.top>=a.top-1 && b.right<=a.right+1 && b.bottom<=a.bottom+1
-      };
-    })()`, returnByValue:true});
-    const geometry=iconGeometry.result?.value||{};
-    if(!geometry.present || geometry.width!==geometry.height || !geometry.markInside) {
-      throw new Error("Subsystem hero icon geometry failed: "+JSON.stringify(geometry));
-    }
-
-    const relatedAudit = await send("Runtime.evaluate", {expression: `(() => {
-      const failures=[];
-      for(const link of document.querySelectorAll(".related-products a")){
-        const icon=link.querySelector(":scope > .system-icon");
-        const name=link.querySelector(":scope > strong");
-        if(!icon||!name) continue;
-        const a=icon.getBoundingClientRect();
-        const b=name.getBoundingClientRect();
-        if(a.left>=b.left || a.right>b.left+2) failures.push({name:name.textContent,iconLeft:Math.round(a.left),iconRight:Math.round(a.right),nameLeft:Math.round(b.left)});
-      }
-      return failures;
-    })()`,returnByValue:true});
-    if(relatedAudit.result?.value?.length) throw new Error("Related-system icon placement failed: "+JSON.stringify(relatedAudit.result.value));
   }
 
   const iconAudit = await send("Runtime.evaluate", {expression: `(() => {
@@ -318,14 +286,14 @@ async function runCase(route, viewport) {
       };
     })()`,returnByValue:true});
     const nav=navAudit.result?.value||{};
-    const canonicalLabels=["Operate","Discover","Review","System"];
+    const canonicalLabels=["Operate","Discover","Review","Public","System"];
     const labelsMatch=Array.isArray(nav.labels)&&canonicalLabels.every((label,index)=>nav.labels[index]===label);
-    if(nav.count!==4||!labelsMatch||nav.current?.length!==1||nav.overlaps?.length||nav.minWidth<44||nav.maxRight>nav.viewport+1||nav.rows?.length!==1){
+    if(nav.count!==5||!labelsMatch||nav.current?.length!==1||nav.overlaps?.length||nav.minWidth<44||nav.maxRight>nav.viewport+1||nav.rows?.length!==1){
       throw new Error("Command icon navigation geometry failed: "+JSON.stringify(nav));
     }
   }
 
-  if(route==="/architecture") {
+  if(route==="/products/rhen/architecture") {
     const architectureGeometry = await send("Runtime.evaluate", {expression: `(() => {
       const grid=document.querySelector(".architecture-role-grid");
       if(!grid) return {present:false,cards:0,missingIcons:[],collapsedCards:[],labels:[]};
@@ -374,13 +342,17 @@ async function runCase(route, viewport) {
   // Reuse this bounded, hydrated browser target for the release evidence.
   // The duplicate CLI screenshot process could hang until the entire job died.
   const evidenceRoutes = {
-    "/":["home",["One system. Clear evidence.","public-terminal-home"]],
-    "/live":["terminal",["EVIDENCE DRAWER","public-terminal-page","RESEARCH","REPLAY","RHEN"]],
-    "/research":["research",["Development journal."]],
-    "/research/prediction-outcome-evidence-chain":["field-note",["REPRODUCE / CHALLENGE THIS NOTE"]],
-    "/architecture":["architecture",["One runtime. Internal modules."]],
-    "/founder":["founder",["Devon Akins"]],
-    "/resume":["resume",["Technical Skills"]]
+    "/":["home",["truth-home","Useful software, built against real problems."]],
+    "/products":["products",["truth-products-page","PRODUCT REGISTRY"]],
+    "/products/rhen":["rhen",["truth-rhen-page","PRODUCT / RHEN"]],
+    "/products/rhen/evidence":["terminal",["EVIDENCE DRAWER","public-terminal-page","RESEARCH","REPLAY","RHEN"]],
+    "/field-notes":["research",["studio-notes-page","FIELD NOTES"]],
+    "/field-notes/prediction-outcome-evidence-chain":["field-note",["REPRODUCE / CHALLENGE THIS NOTE"]],
+    "/products/rhen/architecture":["architecture",["One runtime. Internal modules."]],
+    "/about":["about",["studio-about-page","ANEVUM is one person right now."]],
+    "/resume":["resume",["Technical Skills"]],
+    "/products/rhen/releases":["releases",["studio-releases-page","Every version leaves a record."]],
+    "/feed":["feed",["feed-page","PUBLIC FEED"]]
   };
   if (evidenceRoutes[route]) {
     const [name, markers] = evidenceRoutes[route];
@@ -485,7 +457,7 @@ async function runScrollResetCase(viewport) {
     deviceScaleFactor: viewport.deviceScaleFactor,
     mobile: viewport.mobile
   });
-  await send("Page.navigate", { url: base + "/research" });
+  await send("Page.navigate", { url: base + "/field-notes" });
 
   // Do not hold one Runtime.evaluate promise across navigation. Chromium may
   // replace the execution context after Page.navigate, leaving a long-running
@@ -498,12 +470,12 @@ async function runScrollResetCase(viewport) {
       const readyResult = await send("Runtime.evaluate", {
         expression: `(() => {
           const scroller = document.scrollingElement || document.documentElement || null;
-          const link = document.querySelector('a[href="/architecture"]');
+          const link = document.querySelector('a[href="/products/rhen/architecture"]');
           const maxScroll = scroller
             ? Math.max(0, scroller.scrollHeight - scroller.clientHeight)
             : 0;
           return {
-            ready: location.pathname === "/research" && Boolean(link),
+            ready: location.pathname === "/field-notes" && Boolean(link),
             maxScroll,
             pathname: location.pathname
           };
@@ -589,7 +561,7 @@ async function runScrollResetCase(viewport) {
 
   await send("Runtime.evaluate", {
     expression: `(() => {
-      const link = document.querySelector('a[href="/architecture"]');
+      const link = document.querySelector('a[href="/products/rhen/architecture"]');
       if (!link) return false;
       link.click();
       return true;
@@ -609,7 +581,7 @@ async function runScrollResetCase(viewport) {
         returnByValue: true
       });
       state = stateResult.result?.value || state;
-      if (state.pathname === "/architecture" && Number(state.after) <= 1) break;
+      if (state.pathname === "/products/rhen/architecture" && Number(state.after) <= 1) break;
     } catch {
       // A real document navigation can briefly replace the execution context.
     }
@@ -617,7 +589,7 @@ async function runScrollResetCase(viewport) {
   }
 
   const value = {
-    ok: state.pathname === "/architecture" && before > 200 && Number(state.after) <= 1,
+    ok: state.pathname === "/products/rhen/architecture" && before > 200 && Number(state.after) <= 1,
     before,
     after: Number.isFinite(Number(state.after)) ? Number(state.after) : null,
     maxScroll: Number(ready.maxScroll) || 0,

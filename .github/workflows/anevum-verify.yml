@@ -71,7 +71,7 @@ jobs:
         shell: bash
         run: |
           set -o pipefail
-          output="$(npx wrangler preview --name "pr-${{ github.event.pull_request.number }}" --json)"
+          output="$(npx wrangler preview --name "pr-${{ github.event.pull_request.number }}-${{ github.run_id }}" --json)"
           printf '%s\n' "$output"
           json="$(printf '%s\n' "$output" | sed -n '/^{/,$p')"
           preview_url="$(printf '%s' "$json" | jq -er '.preview.urls[0]')"
@@ -91,7 +91,7 @@ jobs:
           current_slug="$(jq -r '.currentSlug' public/release-registry.json)"
           public_routes="$(node --input-type=module -e 'import fs from "node:fs"; const routes=JSON.parse(fs.readFileSync("src/data/public-routes.json","utf8")); process.stdout.write(routes.filter((route)=>route.sitemap).map((route)=>route.path).join(" "))')"
 
-          for path in $public_routes "/releases/$current_slug" /private /command /command/performance /iren /iren.webmanifest; do
+          for path in $public_routes "/products/rhen/releases/$current_slug" /private /command /command/public /command/performance /iren /iren.webmanifest; do
             curl --fail --show-error --silent "$base$path" > /dev/null
           done
 
@@ -99,23 +99,26 @@ jobs:
           test -s "$RUNNER_TEMP/devon-akins-resume.pdf"
           head -c 5 "$RUNNER_TEMP/devon-akins-resume.pdf" | grep -Fq '%PDF-'
 
-          live_html="$(curl --fail --show-error --silent "$base/live")"
-          printf '%s' "$live_html" | grep -Fq '<meta property="og:title" content="RHEN Live Terminal — ANEVUM" />'
-          printf '%s' "$live_html" | grep -Fq '<link rel="canonical" href="https://anevum.com/live" />'
+          live_html="$(curl --fail --show-error --silent "$base/products/rhen/evidence")"
+          printf '%s' "$live_html" | grep -Fq '<meta property="og:title" content="RHEN Public Evidence — ANEVUM" />'
+          printf '%s' "$live_html" | grep -Fq '<link rel="canonical" href="https://anevum.com/products/rhen/evidence" />'
 
-          founder_html="$(curl --fail --show-error --silent "$base/founder")"
-          printf '%s' "$founder_html" | grep -Fq '<meta property="og:title" content="About ANEVUM — Devon Akins" />'
-          printf '%s' "$founder_html" | grep -Fq '<link rel="canonical" href="https://anevum.com/founder" />'
+          about_html="$(curl --fail --show-error --silent "$base/about")"
+          printf '%s' "$about_html" | grep -Fq '<meta property="og:title" content="About — ANEVUM" />'
+          printf '%s' "$about_html" | grep -Fq '<link rel="canonical" href="https://anevum.com/about" />'
 
           sitemap="$(curl --fail --show-error --silent "$base/sitemap.xml")"
-          for path in /live /research /founder /resume; do
+          for path in /products /feed /field-notes /about /resume /products/rhen /products/rhen/evidence /products/rhen/architecture /products/rhen/releases; do
             printf '%s' "$sitemap" | grep -Fq "https://anevum.com$path"
           done
 
-          for legacy in /products /products/rhen /performance /case-studies /theory; do
+          for legacy in /founder /live /performance /research /architecture /releases /case-studies /theory /products/iren /products/nostra /products/graen /products/velum; do
             status="$(curl --show-error --silent -o /dev/null -w '%{http_code}' "$base$legacy")"
             test "$status" = "308"
           done
+
+          test "$(curl --show-error --silent -o /dev/null -w '%{http_code}' "$base/products")" = "200"
+          test "$(curl --show-error --silent -o /dev/null -w '%{http_code}' "$base/products/rhen")" = "200"
 
           feed_file="$RUNNER_TEMP/public-trading-feed.json"
           feed_status="$(curl --show-error --silent -o "$feed_file" -w '%{http_code}' "$base/api/public/trading/live")"
@@ -172,12 +175,18 @@ jobs:
         run: |
           set -euo pipefail
           evidence="$RUNNER_TEMP/anevum-visuals"
-          for name in home terminal research field-note architecture founder resume; do
+          for name in home products feed rhen terminal research field-note architecture about resume releases; do
             test -s "$evidence/$name-desktop.png"
             test -s "$evidence/$name-mobile.png"
             test -s "$evidence/$name-rendered.html"
           done
-          grep -Fq 'public-terminal-home' "$evidence/home-rendered.html"
+          grep -Fq 'truth-home' "$evidence/home-rendered.html"
+          grep -Fq 'Useful software, built against real problems.' "$evidence/home-rendered.html"
+          grep -Fq 'truth-products-page' "$evidence/products-rendered.html"
+          grep -Fq 'truth-rhen-page' "$evidence/rhen-rendered.html"
+          grep -Fq 'studio-about-page' "$evidence/about-rendered.html"
+          grep -Fq 'feed-page' "$evidence/feed-rendered.html"
+          grep -Fq 'studio-releases-page' "$evidence/releases-rendered.html"
           grep -Fq 'public-terminal-page' "$evidence/terminal-rendered.html"
           grep -Fq 'RESEARCH' "$evidence/terminal-rendered.html"
           grep -Fq 'REPLAY' "$evidence/terminal-rendered.html"

@@ -269,60 +269,44 @@ function currentReleaseSnapshot() {
 function publicRouteMetadata(pathname) {
   const staticRoutes = {
     "/": {
-      title: "ANEVUM — RHEN Unified Runtime + Command",
-      description: "ANEVUM runs RHEN V4.3 as one canonical Railway runtime with explicit execution, control, research, replay, forecast, and Core/Store boundaries. Command is the protected operating surface, and broker authority is limited to the current equity scope."
+      title: "ANEVUM — Independent Software",
+      description: "Independent software built against real problems, with real data, public evidence, and versioned work."
     },
     "/products": {
       title: "Products — ANEVUM",
-      description: "Explore IREN, RHEN, NOSTRA, GRAEN, and VELUM: ANEVUM's orchestration, market, forecasting, mathematical research, and replay systems."
+      description: "The canonical registry of public ANEVUM products. Products appear when they actually exist."
     },
-    "/products/iren": {
-      title: "IREN — Operating Intelligence — ANEVUM",
-      description: "IREN is ANEVUM's operating intelligence and orchestration layer for system state, research coordination, protected operations, and cross-system visibility."
+    "/feed": {
+      title: "Feed — ANEVUM",
+      description: "A chronological record assembled from real releases, Field Notes, public-safe runtime observations, and research decisions."
+    },
+    "/field-notes": {
+      title: "Field Notes — ANEVUM",
+      description: "ANEVUM Field Notes document research decisions, failures, engineering changes, releases, and measured evidence."
     },
     "/products/rhen": {
-      title: "RHEN — Market System — ANEVUM",
-      description: "RHEN is ANEVUM's market observation, evaluation, risk, execution, reconciliation, telemetry, evidence, and strategy-research system."
+      title: "RHEN — ANEVUM",
+      description: "RHEN is ANEVUM's live trading and research system operating on real market data with public evidence and narrow live authority."
     },
-    "/products/nostra": {
-      title: "NOSTRA — Forecasting — ANEVUM",
-      description: "NOSTRA is ANEVUM's forecasting and prediction research system for regimes, forward horizons, uncertainty, outcomes, and calibration."
+    "/products/rhen/evidence": {
+      title: "RHEN Public Evidence — ANEVUM",
+      description: "Inspect sanitized RHEN runtime and performance evidence without exposing protected broker, position, order, or strategy details."
     },
-    "/products/graen": {
-      title: "GRAEN — Mathematical Research — ANEVUM",
-      description: "GRAEN is ANEVUM's mathematical and theoretical research program for falsification, selection bias, multiplicity, dependence, simulation design, and validation."
+    "/products/rhen/architecture": {
+      title: "RHEN Architecture — ANEVUM",
+      description: "Inspect RHEN execution, research, replay, forecasting, control, storage, and evidence boundaries."
     },
-    "/products/velum": {
-      title: "VELUM — Replay & Simulation — ANEVUM",
-      description: "VELUM is ANEVUM's broker-isolated replay, simulation, market reconstruction, counterfactual analysis, and failure-analysis system."
+    "/products/rhen/releases": {
+      title: "RHEN Releases — ANEVUM",
+      description: "RHEN release records document production changes, verification, limitations, and public system history."
     },
-    "/performance": {
-      title: "Performance — ANEVUM",
-      description: "Public-safe normalized RHEN equity performance and evidence records, with explicit sample boundaries and no simulated or replay results mixed into live performance."
-    },
-    "/research": {
-      title: "Field Notes — ANEVUM",
-      description: "ANEVUM Field Notes document RHEN research, validation gates, failed hypotheses, architecture changes, forward evidence, releases, and explicit limitations."
-    },
-    "/founder": {
-      title: "About ANEVUM — Devon Akins",
-      description: "About ANEVUM and founder Devon Akins, building inspectable software systems, research infrastructure, forecasting, replay, telemetry, and production controls."
+    "/about": {
+      title: "About — ANEVUM",
+      description: "About ANEVUM, the independently built and operated software studio."
     },
     "/resume": {
-      title: "Devon Akins — Resume",
-      description: "Recruiter-ready resume for Devon Akins, founder of ANEVUM, covering software engineering, infrastructure, data systems, research tooling, and selected systems."
-    },
-    "/live": {
-      title: "RHEN Live Terminal — ANEVUM",
-      description: "Observe RHEN V4.3 through public-safe equity execution, control, research, replay, forecast, evidence, validation, and normalized performance projections."
-    },
-    "/theory": {
-      title: "Theory Registry — ANEVUM",
-      description: "ANEVUM's public mathematical theory registry: formal problems, conjectures, assumptions, falsification criteria, workstreams, results, and authority boundaries."
-    },
-    "/releases": {
-      title: "Releases — ANEVUM",
-      description: "ANEVUM release history with named RHEN milestones, manifests, verification state, limitations, and downloadable release packets."
+      title: "Résumé — ANEVUM",
+      description: "Professional résumé and background for the person responsible for ANEVUM."
     }
   };
 
@@ -333,14 +317,14 @@ function publicRouteMetadata(pathname) {
     };
   }
 
-  if (pathname.startsWith("/releases/")) {
-    const slug = pathname.slice("/releases/".length);
+  if (pathname.startsWith("/products/rhen/releases/")) {
+    const slug = pathname.slice("/products/rhen/releases/".length);
     const release = releaseRegistry.releases.find((item) => item.slug === slug);
     if (release) {
       return {
         title: "RHEN " + release.version + " — " + release.codename + " — ANEVUM",
         description: release.releaseClass + ". " + release.abstract,
-        url: "https://anevum.com/releases/" + release.slug
+        url: "https://anevum.com/products/rhen/releases/" + release.slug
       };
     }
   }
@@ -521,18 +505,26 @@ export default {
       }
     }
 
-    if (
-      (request.method === "GET" || request.method === "HEAD") &&
-      (
-        pathname === "/products" ||
-        pathname.startsWith("/products/") ||
-        pathname === "/performance" ||
-        pathname === "/case-studies" ||
-        pathname === "/theory"
-      )
-    ) {
-      const target = new URL("/live", request.url);
-      return Response.redirect(target.toString(), 308);
+    if (request.method === "GET" || request.method === "HEAD") {
+      const legacyRedirects = {
+        "/founder": "/about",
+        "/live": "/products/rhen/evidence",
+        "/performance": "/products/rhen/evidence",
+        "/architecture": "/products/rhen/architecture",
+        "/releases": "/products/rhen/releases",
+        "/research": "/field-notes",
+        "/case-studies": "/products",
+        "/theory": "/field-notes",
+        "/products/iren": "/products/rhen",
+        "/products/nostra": "/products/rhen",
+        "/products/graen": "/products/rhen",
+        "/products/velum": "/products/rhen"
+      };
+      const targetPath = legacyRedirects[pathname];
+      if (targetPath) {
+        const target = new URL(targetPath, request.url);
+        return Response.redirect(target.toString(), 308);
+      }
     }
 
     let response = await env.ASSETS.fetch(request);

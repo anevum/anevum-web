@@ -1,188 +1,104 @@
 import { Link } from "react-router-dom";
-import Mark from "../components/Mark";
-import RhenModuleGlyph, { type RhenModuleGlyphName } from "../components/company/RhenModuleGlyph";
+import PublicEvidenceSnapshot from "../components/PublicEvidenceSnapshot";
+import SystemIcon from "../components/company/SystemIcon";
 import { useLiveTrading } from "../hooks/useLiveTrading";
-import { ageText, displayState, publicSystem } from "../lib/system-display";
-import "../styles/public-terminal.css";
+import { fieldNotes } from "../data/fieldNotes";
+import { currentRhenRelease } from "../data/releases";
+import { publicProducts } from "../data/products";
 
-const introVideoUrl = import.meta.env.VITE_ANEVUM_INTRO_VIDEO_URL?.trim();
-
-const modules: ReadonlyArray<readonly [string, RhenModuleGlyphName, string]> = [
-  ["EXECUTION", "EXECUTION", "RHEN broker-facing long U.S. equities and ETFs across regular and extended sessions, with risk, reconciliation, and durable evidence."],
-  ["IREN / CONTROL", "CONTROL", "Health, incidents, scheduling, orchestration, required-action state, and protected release boundaries."],
-  ["GRAEN / RESEARCH", "RESEARCH", "Bounded strategy discovery, chronological evaluation, falsification, and candidate promotion evidence."],
-  ["VELUM / REPLAY", "REPLAY", "Independent replay, friction stress, delay stress, simulation, and counterfactual verification."],
-  ["NOSTRA / FORECAST", "FORECAST", "Regime, baseline, calibration, forward measurement, and prediction-state workflows."],
-  ["CORE / STORE", "CORE", "Bounded SQLite state, scheduler state, research state, evidence retention, and canonical gateway APIs."]
-];
+function ago(value?: string | null, now = Date.now()) {
+  if (!value) return "—";
+  const ms = now - new Date(value).getTime();
+  if (!Number.isFinite(ms)) return "—";
+  const m = Math.max(0, Math.floor(ms / 60000));
+  if (m < 1) return "now";
+  if (m < 60) return m + "m";
+  if (m < 1440) return Math.floor(m / 60) + "h";
+  return Math.floor(m / 1440) + "d";
+}
 
 export default function HomeCompany() {
-  const { data, loading, error, now } = useLiveTrading(5000);
-  const rhen = publicSystem("RHEN", data, now, Boolean(error));
-  const runtimeStatus = loading ? "CONNECTING" : error ? "DEGRADED" : displayState(rhen.raw).toUpperCase();
+  const release = currentRhenRelease();
+  const products = publicProducts();
+  const notes = [...fieldNotes].sort((a,b) => b.date.localeCompare(a.date)).slice(0,3);
+  const { data, error, now } = useLiveTrading(5000);
+  const events = (data?.events || []).slice(0,6);
 
   return (
-    <div className="public-terminal-home">
-      <section className="pt-home-hero">
-        <div className="pt-home-copy">
-          <span className="pt-home-kicker">ANEVUM // RHEN</span>
-          <h1>One system. Clear evidence.</h1>
-          <p>
-            ANEVUM builds RHEN, an inspectable automated trading and research system. RHEN operates
-            equity execution across regular and extended sessions, whole-market discovery, durable evidence,
-            strategy research, replay, forecasting, and control. Command is the protected operator surface; the Live Terminal is
-            the sanitized public view into what the system is actually doing.
-          </p>
-
-          <div className="pt-home-actions">
-            <Link to="/live">Inspect RHEN Live →</Link>
-            <Link to="/research">Read Research</Link>
-            <Link to="/architecture">See Architecture</Link>
+    <div className="studio-home truth-home">
+      <section className="truth-hero">
+        <div className="truth-hero-copy">
+          <span className="truth-kicker">INDEPENDENT SOFTWARE / BUILT IN PUBLIC</span>
+          <h1>Useful software, built against real problems.</h1>
+          <p>ANEVUM builds practical tools around money, automation, research, and real-world data. The work stays small enough to inspect and public enough to challenge.</p>
+          <div className="studio-actions">
+            <Link className="studio-button primary" to="/products">Browse products <span>→</span></Link>
+            <Link className="studio-button" to="/feed">See what changed</Link>
           </div>
-
-          <div className="pt-home-runtime" aria-label="Current RHEN public runtime">
-            <span>RHEN PUBLIC EVIDENCE</span>
-            <strong>{loading ? "CONNECTING" : error ? "DEGRADED" : displayState(rhen.raw).toUpperCase()}</strong>
-            <span>·</span>
-            <span>1 CANONICAL RHEN RUNTIME · EQUITY-ONLY AUTHORITY</span>
-            <span>·</span>
-            <span>UPDATED {ageText(data?.generated_at, now).toUpperCase()}</span>
+          <div className="truth-hero-flags">
+            <span><i /> REAL DATA</span>
+            <span><i /> PUBLIC EVIDENCE</span>
+            <span><i /> VERSIONED RELEASES</span>
           </div>
         </div>
+        <PublicEvidenceSnapshot compact />
+      </section>
 
-        <div className="pt-home-runtime-card" aria-label="RHEN current architecture">
-          <header className="pt-home-runtime-card-head">
-            <div className="pt-home-runtime-id">
-              <Mark />
-              <div>
-                <span>CANONICAL PRODUCTION SYSTEM</span>
-                <strong>RHEN</strong>
-                <small>Unified runtime · narrow equity broker authority</small>
-              </div>
-            </div>
-            <span className="pt-home-runtime-status"><i />{runtimeStatus}</span>
-          </header>
-
-          <div className="pt-home-runtime-modules">
-            <Link to="/architecture">
-              <RhenModuleGlyph module="CONTROL" decorative />
-              <span>IREN</span>
-              <strong>Control</strong>
-              <small>Health · incidents · scheduler · release gates</small>
-            </Link>
-            <Link to="/research">
-              <RhenModuleGlyph module="RESEARCH" decorative />
-              <span>GRAEN</span>
-              <strong>Research</strong>
-              <small>Bounded discovery · chronological validation</small>
-            </Link>
-            <Link to="/architecture">
-              <RhenModuleGlyph module="REPLAY" decorative />
-              <span>VELUM</span>
-              <strong>Verification</strong>
-              <small>Replay · friction stress · delay stress</small>
-            </Link>
-            <Link to="/architecture">
-              <RhenModuleGlyph module="FORECAST" decorative />
-              <span>NOSTRA</span>
-              <strong>Forecast</strong>
-              <small>Regime · calibration · forward measurement</small>
-            </Link>
-          </div>
-
-          <footer className="pt-home-runtime-guardrails">
-            <div><span>LIVE EQUITIES</span><strong>AUTHORIZED</strong></div>
-            <div><span>EXTENDED 24/5</span><strong>AUTHORITY EXPLICIT</strong></div>
-            <div><span>RESEARCH</span><strong>NO AUTO-LIVE PROMOTION</strong></div>
-          </footer>
+      <section className="truth-live-row">
+        <header><div><i className={error ? "degraded" : "live"} /><span>{error ? "PUBLIC FEED DEGRADED" : "WHAT'S HAPPENING NOW"}</span></div><Link to="/feed">Open feed →</Link></header>
+        <div className="truth-live-items">
+          {events.length ? events.map((event,index) => (
+            <article key={String(event.at || index)+String(event.type || event.kind || "")}>
+              <time>{ago(event.at,now)}</time><span>RHEN</span><strong>{event.label || event.type || event.kind || "Runtime observation"}</strong>
+            </article>
+          )) : (
+            <article className="empty"><time>—</time><span>RHEN</span><strong>{error || "No current public runtime events. Static records remain available."}</strong></article>
+          )}
         </div>
       </section>
 
-      <section className="pt-home-section">
-        <header className="pt-home-section-head">
-          <span>00 / SYSTEM</span>
-          <div>
-            <h2>RHEN is the production system. The modules keep distinct responsibilities.</h2>
-            <p>
-              IREN, GRAEN, VELUM, and NOSTRA operate as named modules inside the canonical RHEN runtime,
-              not as separate product stacks. Live broker authority is confined to RHEN execution and the current
-              long U.S. equities / ETF scope. This keeps deployment simple without collapsing research, replay,
-              forecasting, control, and execution into one permission set.
-            </p>
-          </div>
-        </header>
+      <section className="studio-section truth-products-section">
+        <header className="truth-section-head"><div><span>PRODUCTS</span><h2>Things that actually exist.</h2></div><Link to="/products">All products →</Link></header>
+        <div className="truth-product-grid">
+          {products.map((product) => (
+            <Link to={product.routes.home} className="truth-product-card" key={product.slug}>
+              <header><SystemIcon system={product.system || "RHEN"} size="md" /><span>{product.lifecycle.toUpperCase()}</span></header>
+              <h3>{product.name}</h3><p>{product.oneLine}</p>
+              <dl><div><dt>RELEASE</dt><dd>{product.slug === "rhen" ? release.version : "—"}</dd></div><div><dt>CATEGORY</dt><dd>{product.category}</dd></div></dl>
+              <footer><span>REAL PRODUCT</span><b>OPEN ↗</b></footer>
+            </Link>
+          ))}
+          <article className="truth-product-card registry-empty">
+            <header><span>REGISTRY</span></header>
+            <h3>Next product goes here when it exists.</h3>
+            <p>ANEVUM does not publish placeholder products just to fill a grid.</p>
+            <footer><span>{products.length} PUBLIC PRODUCT{products.length === 1 ? "" : "S"}</span></footer>
+          </article>
+        </div>
+      </section>
 
-        <div className="pt-home-links">
-          {modules.map(([name, glyph, description]) => (
-            <Link key={name} to="/architecture">
-              <RhenModuleGlyph module={glyph} decorative />
-              <span>RHEN MODULE</span>
-              <strong>{name}</strong>
-              <p>{description}</p>
+      <section className="studio-section truth-notes-section">
+        <header className="truth-section-head"><div><span>FIELD NOTES</span><h2>The build record.</h2></div><Link to="/field-notes">All notes →</Link></header>
+        <div className="truth-note-grid">
+          {notes.map((note) => (
+            <Link key={note.slug} to={"/field-notes/"+note.slug}>
+              <time>{note.date}</time><span>{note.type}</span><h3>{note.title}</h3><p>{note.summary}</p><footer>{note.readMinutes} MIN READ <b>↗</b></footer>
             </Link>
           ))}
         </div>
       </section>
 
-      <section className="pt-home-section" id="introduction">
-        <header className="pt-home-section-head">
-          <span>01 / COMMAND</span>
-          <div>
-            <h2>Command is the operating product. RHEN is the system underneath it.</h2>
-            <p>
-              Command is the protected surface for account state, regular and extended equity lanes, strategy authority,
-              risk, research, replay, forecasting, incidents, and required action. It reads canonical
-              RHEN state instead of maintaining a parallel control model, and it keeps broker-write
-              authority explicit rather than inferring it from a healthy process or active strategy.
-            </p>
-          </div>
-        </header>
-
-        <div className="pt-home-film">
-          {introVideoUrl ? (
-            <video src={introVideoUrl} controls playsInline preload="metadata" aria-label="ANEVUM introduction film" />
-          ) : (
-            <div className="pt-home-film-placeholder">
-              <Mark />
-              <span>INTRODUCTION FILM</span>
-              <strong>RHEN / COMMAND</strong>
-              <small>VIDEO ASSET NOT YET PUBLISHED</small>
-            </div>
-          )}
-        </div>
+      <section className="truth-release-strip">
+        <div><span>CURRENT RELEASE</span><strong>RHEN {release.version} · {release.codename}</strong><p>{release.headline}</p></div>
+        <div className="truth-release-facts"><span>LIVE AUTHORITY · LONG U.S. EQUITIES + ETFs</span><span>OPTIONS · RESEARCH ONLY</span><span>PROMOTION · MANUAL</span></div>
+        <Link to="/products/rhen/releases">Release record →</Link>
       </section>
 
-      <section className="pt-home-section">
-        <header className="pt-home-section-head">
-          <span>02 / CURRENT STATE</span>
-          <div>
-            <h2>One canonical runtime. One evidence model. Explicit authority.</h2>
-            <p>
-              RHEN V4.3 runs the production supervisor, execution boundary, Core/Store, IREN control,
-              GRAEN research, VELUM replay, and NOSTRA forecasting in one Railway application service backed by
-              bounded SQLite state at /data/rhen-core.db. The current execution authority is equity-only, while
-              research and replay remain unable to promote themselves into live broker behavior.
-            </p>
-          </div>
-        </header>
-
-        <div className="pt-home-links">
-          <Link to="/architecture">
-            <span>RHEN V4.3</span>
-            <strong>Canonical production runtime</strong>
-            <p>One supervised runtime with isolated internal responsibilities, bounded state, evidence retention, and narrow broker authority.</p>
-          </Link>
-          <Link to="/research">
-            <span>GRAEN → VELUM</span>
-            <strong>Research must earn release review</strong>
-            <p>Bounded candidates move through chronological evidence, independent replay, friction stress, exact forward outcomes, and a protected release boundary.</p>
-          </Link>
-          <Link to="/command/overview">
-            <span>COMMAND</span>
-            <strong>Protected operating console</strong>
-            <p>Live account state, regular and extended equities, risk, research, replay, forecasting, incidents, evidence readiness, and raw events in one surface.</p>
-          </Link>
-        </div>
+      <section className="truth-independent-band">
+        <span>INDEPENDENT SOFTWARE</span>
+        <h2>No fake scale. No fake data.</h2>
+        <p>ANEVUM is independently built and operated. Support and paid access will appear only when there is a real mechanism and a real product value behind them.</p>
+        <Link to="/about">About ANEVUM →</Link>
       </section>
     </div>
   );

@@ -27,7 +27,7 @@ import { clockTime, money } from "../lib/format";
 import { ageText, displayState } from "../lib/system-display";
 import "../styles/command-v4.css";
 
-type CommandPage = "operate" | "discover" | "review" | "system";
+type CommandPage = "operate" | "discover" | "review" | "public" | "system";
 
 function record(value: unknown): Record<string, unknown> {
   return value && typeof value === "object" && !Array.isArray(value)
@@ -52,6 +52,7 @@ function routePage(pathname: string): CommandPage {
   const segment = pathname.split("/")[2] || "operate";
   if (["discover", "research", "graen", "nostra", "velum"].includes(segment)) return "discover";
   if (["review", "evidence"].includes(segment)) return "review";
+  if (["public"].includes(segment)) return "public";
   if (["system", "terminal", "infrastructure", "iren"].includes(segment)) return "system";
   return "operate";
 }
@@ -71,6 +72,11 @@ const PAGE_COPY: Record<CommandPage, { eyebrow: string; title: string; detail: s
     eyebrow: "IREN / DECISION BOUNDARY",
     title: "Review",
     detail: "Only work that needs judgment: new hypotheses, strategy patches, release decisions, and evidence-backed handoffs."
+  },
+  public: {
+    eyebrow: "ANEVUM / PUBLIC PROJECTION",
+    title: "Public",
+    detail: "Exactly what the public website can see: source freshness, public performance, releases, research state, and privacy-safe telemetry."
   },
   system: {
     eyebrow: "IREN / SYSTEM",
@@ -187,6 +193,7 @@ export default function Command() {
           <Link className={page === "operate" ? "active" : ""} aria-current={page === "operate" ? "page" : undefined} to="/command/operate">Operate</Link>
           <Link className={page === "discover" ? "active" : ""} aria-current={page === "discover" ? "page" : undefined} to="/command/discover">Discover</Link>
           <Link className={page === "review" ? "active" : ""} aria-current={page === "review" ? "page" : undefined} to="/command/review">Review{control?.review_required ? <b /> : null}</Link>
+          <Link className={page === "public" ? "active" : ""} aria-current={page === "public" ? "page" : undefined} to="/command/public">Public</Link>
           <Link className={page === "system" ? "active" : ""} aria-current={page === "system" ? "page" : undefined} to="/command/system">System</Link>
         </nav>
 
@@ -263,6 +270,39 @@ export default function Command() {
             <CommandReviewDeck snapshot={controlObservation.snapshot} evidence={evidence} daily={dailyReport} weekly={weeklyReport} researchObservation={liveEnabled ? liveState : null} now={controlObservation.now} />
             <CommandIrenMaintenance session={session} />
           </div>
+        )}
+
+        {page === "public" && (
+          <>
+            <section className="command-v4-strip">
+              <div><span>PUBLIC FEED</span><strong>{publicFeedError ? "DEGRADED" : displayState(publicFeed?.state || "OBSERVING")}</strong><small>{publicFeed?.generated_at ? ageText(publicFeed.generated_at, Date.now()) : "awaiting source"}</small></div>
+              <div><span>PUBLIC RETURN</span><strong>{publicFeed?.performance?.account_return_pct != null ? String(publicFeed.performance.account_return_pct.toFixed(2)) + "%" : "—"}</strong><small>normalized</small></div>
+              <div><span>CLOSED TRADES</span><strong>{publicFeed?.performance?.closed_trades ?? "—"}</strong><small>{publicFeed?.performance?.wins ?? "—"} W / {publicFeed?.performance?.losses ?? "—"} L</small></div>
+              <div><span>RESEARCH</span><strong>{displayState(publicFeed?.research?.current_status)}</strong><small>{publicFeed?.research?.current_focus || "no public focus"}</small></div>
+              <div><span>DISCLOSURE</span><strong>{text(publicFeed?.disclosure?.level, "SANITIZED")}</strong><small>public-safe projection</small></div>
+            </section>
+
+            <div className="command-v4-two">
+              <CommandPerformance performance={publicFeed?.performance} feedError={publicFeedError} />
+              <article className="command-v4-card">
+                <header><div><span>PUBLIC SOURCE HEALTH</span><strong>Website truth boundary</strong></div><small>{publicFeed?.generated_at ? clockTime(publicFeed.generated_at) : "—"}</small></header>
+                <div className="command-v4-table">
+                  <div><strong>RHEN runtime</strong><span>{displayState(publicFeed?.systems?.RHEN?.runtime_state)}</span><span>{displayState(publicFeed?.systems?.RHEN?.health_state)}</span><b>{publicFeed?.systems?.RHEN?.observed_at ? ageText(publicFeed.systems.RHEN.observed_at, Date.now()) : "—"}</b></div>
+                  <div><strong>Research</strong><span>{displayState(publicFeed?.research?.current_status)}</span><span>{publicFeed?.research?.active_questions?.length ?? 0} questions</span><b>{publicFeed?.research?.last_updated_at ? ageText(publicFeed.research.last_updated_at, Date.now()) : "—"}</b></div>
+                  <div><strong>Performance</strong><span>{displayState(publicFeed?.performance?.status)}</span><span>{displayState(publicFeed?.performance?.sample_state)}</span><b>{publicFeed?.performance?.last_observed_at ? ageText(publicFeed.performance.last_observed_at, Date.now()) : "—"}</b></div>
+                  <div><strong>Privacy contract</strong><span>PUBLIC SAFE</span><span>{publicFeed?.disclosure?.public_fields?.length ?? 0} projected fields</span><b>{publicFeed?.disclosure?.excluded_fields?.length ?? 0} excluded</b></div>
+                </div>
+              </article>
+            </div>
+
+            <article className="command-v4-card">
+              <header><div><span>RECENT PUBLIC EVENTS</span><strong>Same feed used by anevum.com</strong></div><small>{publicFeed?.events?.length ?? 0} loaded</small></header>
+              <div className="command-v4-table">
+                {(publicFeed?.events || []).slice(0, 12).map((row, index) => <div key={String(row.at || index)}><strong>{text(row.label, text(row.type, text(row.kind, "Observation")))}</strong><span>RHEN</span><span>{text(row.type, row.kind ? String(row.kind) : "EVENT").toUpperCase()}</span><b>{clockTime(row.at)}</b></div>)}
+                {!publicFeed?.events?.length ? <p>No current public runtime events.</p> : null}
+              </div>
+            </article>
+          </>
         )}
 
         {page === "system" && (

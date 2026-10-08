@@ -5,14 +5,14 @@
   "email": "devon@anevum.com",
   "website": "anevum.com",
   "location": "Central Florida",
-  "summary": "Software builder, mathematics tutor, and independent researcher with experience spanning software development, undergraduate biophysics research, mathematics instruction, and organization leadership. Founded ANEVUM in 2026 to build and operate software and research products, combining React and TypeScript interfaces, Python services, data systems, cloud deployment, quantitative research, and technical documentation.",
+  "summary": "Software builder, mathematics tutor, and independent researcher with experience spanning software development, undergraduate biophysics research, mathematics instruction, and organization leadership. Founded ANEVUM in 2026 as an independent software studio, combining React and TypeScript interfaces, Python services, data systems, cloud deployment, quantitative research, and technical documentation to build practical products and experiments.",
   "experience": [
     {
       "organization": "ANEVUM",
       "role": "Founder",
       "period": "2026–Present",
       "bullets": [
-        "Founded and operate an independent software and research venture spanning web products, automation, quantitative research, and technical publishing.",
+        "Founded and operate an independent software studio building web products, automation, quantitative research systems, and technical publishing.",
         "Design and ship React and TypeScript interfaces and Python/FastAPI services from product concept through production deployment.",
         "Build SQLite/PostgreSQL data pipelines, telemetry, evidence capture, reconciliation, and operational tooling.",
         "Manage cloud deployment and reliability workflows across Railway, Cloudflare, Docker, and GitHub Actions.",
@@ -134,7 +134,7 @@
     },
     {
       "name": "RHEN",
-      "description": "Unified production runtime for market observation, risk, execution, reconciliation, canonical telemetry, evidence, and equities/crypto lanes."
+      "description": "Flagship trading and research system for market observation, risk, execution, reconciliation, canonical telemetry, evidence, replay, forecasting, and long-only U.S. equities and ETF operation."
     },
     {
       "name": "NOSTRA",
