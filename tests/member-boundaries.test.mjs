@@ -31,6 +31,7 @@ test("unprovisioned private member APIs never expose state", async () => {
     "/api/member/me",
     "/api/member/session",
     "/api/member/entitlements",
+    "/api/member/export",
     "/api/member/saved-apps/rhen"
   ]) {
     const response = await memberEndpoint(
