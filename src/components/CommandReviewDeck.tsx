@@ -115,7 +115,7 @@ export default function CommandReviewDeck({
           <div><span>NOSTRA</span><strong>{text(observationForecasts.projected_count, "0")} projected</strong></div>
           <div><span>CANDIDATES</span><strong>{text(observationCoverage.signal_candidates, "0")}</strong></div>
         </div>
-        <p className="command-v4-note">Discover owns live read-only observation and candidate evidence. Review owns parity, holdout, replay, approval, and release decisions. This is one research pipeline; there is no separate shadow workflow and this evidence carries no broker-write authority.</p>
+        <p className="command-v4-note">Discover owns live read-only observation and candidate evidence. Review owns parity, holdout, replay, approval, and release decisions. This is one research pipeline, and this evidence carries no broker-write authority.</p>
       </article>
 
       <div className="command-v4-two">
