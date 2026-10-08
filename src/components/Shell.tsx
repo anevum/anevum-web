@@ -37,6 +37,8 @@ function PublicFooter() {
             <Link to="/feed">Updates</Link>
             <Link to="/field-notes">Field Notes</Link>
             <Link to="/about">About</Link>
+            <Link to="/privacy">Privacy</Link>
+            <Link to="/terms">Terms</Link>
           </nav>
         </div>
       </div>
@@ -49,7 +51,7 @@ export function PublicShell({ children }: { children: ReactNode }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   useEffect(() => setMobileOpen(false), [location.pathname]);
 
-  const lightPage = location.pathname === "/" || location.pathname === "/products" || location.pathname === "/sign-in" || location.pathname.startsWith("/me");
+  const lightPage = location.pathname === "/" || location.pathname === "/products" || location.pathname === "/sign-in" || location.pathname === "/privacy" || location.pathname === "/terms" || location.pathname.startsWith("/me");
 
   return (
     <div className={"public-frame studio-shell workshop-shell " + (lightPage ? "workshop-public-light" : "workshop-public-legacy")}>
