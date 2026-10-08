@@ -91,7 +91,7 @@ jobs:
           current_slug="$(jq -r '.currentSlug' public/release-registry.json)"
           public_routes="$(node --input-type=module -e 'import fs from "node:fs"; const routes=JSON.parse(fs.readFileSync("src/data/public-routes.json","utf8")); process.stdout.write(routes.filter((route)=>route.sitemap).map((route)=>route.path).join(" "))')"
 
-          for path in $public_routes "/releases/$current_slug" /private /command /command/performance /iren /iren.webmanifest; do
+          for path in $public_routes "/products/rhen/releases/$current_slug" /private /command /command/public /command/performance /iren /iren.webmanifest; do
             curl --fail --show-error --silent "$base$path" > /dev/null
           done
 
@@ -99,20 +99,20 @@ jobs:
           test -s "$RUNNER_TEMP/devon-akins-resume.pdf"
           head -c 5 "$RUNNER_TEMP/devon-akins-resume.pdf" | grep -Fq '%PDF-'
 
-          live_html="$(curl --fail --show-error --silent "$base/live")"
+          live_html="$(curl --fail --show-error --silent "$base/products/rhen/evidence")"
           printf '%s' "$live_html" | grep -Fq '<meta property="og:title" content="RHEN Public Evidence — ANEVUM" />'
-          printf '%s' "$live_html" | grep -Fq '<link rel="canonical" href="https://anevum.com/live" />'
+          printf '%s' "$live_html" | grep -Fq '<link rel="canonical" href="https://anevum.com/products/rhen/evidence" />'
 
           about_html="$(curl --fail --show-error --silent "$base/about")"
-          printf '%s' "$about_html" | grep -Fq '<meta property="og:title" content="About — Devon Akins / ANEVUM" />'
+          printf '%s' "$about_html" | grep -Fq '<meta property="og:title" content="About — ANEVUM" />'
           printf '%s' "$about_html" | grep -Fq '<link rel="canonical" href="https://anevum.com/about" />'
 
           sitemap="$(curl --fail --show-error --silent "$base/sitemap.xml")"
-          for path in /products /products/rhen /live /research /about /architecture /resume /releases; do
+          for path in /products /feed /field-notes /about /resume /products/rhen /products/rhen/evidence /products/rhen/architecture /products/rhen/releases; do
             printf '%s' "$sitemap" | grep -Fq "https://anevum.com$path"
           done
 
-          for legacy in /founder /performance /case-studies /theory /products/iren /products/nostra /products/graen /products/velum; do
+          for legacy in /founder /live /performance /research /architecture /releases /case-studies /theory /products/iren /products/nostra /products/graen /products/velum; do
             status="$(curl --show-error --silent -o /dev/null -w '%{http_code}' "$base$legacy")"
             test "$status" = "308"
           done
@@ -175,16 +175,17 @@ jobs:
         run: |
           set -euo pipefail
           evidence="$RUNNER_TEMP/anevum-visuals"
-          for name in home products rhen terminal research field-note architecture about resume releases; do
+          for name in home products feed rhen terminal research field-note architecture about resume releases; do
             test -s "$evidence/$name-desktop.png"
             test -s "$evidence/$name-mobile.png"
             test -s "$evidence/$name-rendered.html"
           done
-          grep -Fq 'studio-home' "$evidence/home-rendered.html"
-          grep -Fq 'Independent software studio' "$evidence/home-rendered.html"
-          grep -Fq 'studio-products-page' "$evidence/products-rendered.html"
-          grep -Fq 'rhen-product-page' "$evidence/rhen-rendered.html"
+          grep -Fq 'truth-home' "$evidence/home-rendered.html"
+          grep -Fq 'Useful software, built against real problems.' "$evidence/home-rendered.html"
+          grep -Fq 'truth-products-page' "$evidence/products-rendered.html"
+          grep -Fq 'truth-rhen-page' "$evidence/rhen-rendered.html"
           grep -Fq 'studio-about-page' "$evidence/about-rendered.html"
+          grep -Fq 'feed-page' "$evidence/feed-rendered.html"
           grep -Fq 'studio-releases-page' "$evidence/releases-rendered.html"
           grep -Fq 'public-terminal-page' "$evidence/terminal-rendered.html"
           grep -Fq 'RESEARCH' "$evidence/terminal-rendered.html"
