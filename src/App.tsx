@@ -137,16 +137,30 @@ function RouteEffects() {
   return null;
 }
 
-function RouteScrollReset({ children }: { children: ReactNode }) {
+function RouteScrollReset() {
   const location = useLocation();
   useLayoutEffect(() => {
+    // This must run above lazy route Suspense: when embedded in a lazy page,
+    // the scroll-reset effect can be deferred until after the route resolves.
     const root = document.documentElement;
+    const scroller = document.scrollingElement || root;
     const previousScrollBehavior = root.style.scrollBehavior;
     root.style.scrollBehavior = "auto";
     window.scrollTo({ top: 0, left: 0, behavior: "auto" });
-    root.style.scrollBehavior = previousScrollBehavior;
-  }, [location.pathname]);
-  return children;
+    scroller.scrollTop = 0;
+    // Repeat on the next frame, before restoring smooth scrolling. This also
+    // avoids browser scroll anchoring retaining the old document position.
+    const frame = window.requestAnimationFrame(() => {
+      window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+      scroller.scrollTop = 0;
+      root.style.scrollBehavior = previousScrollBehavior;
+    });
+    return () => {
+      window.cancelAnimationFrame(frame);
+      root.style.scrollBehavior = previousScrollBehavior;
+    };
+  }, [location.pathname, location.key]);
+  return null;
 }
 
 function Loader() {
@@ -154,13 +168,14 @@ function Loader() {
 }
 
 function PublicExperience({ children }: { children: ReactNode }) {
-  return <PublicShell><Suspense fallback={<Loader />}><RouteScrollReset>{children}</RouteScrollReset></Suspense></PublicShell>;
+  return <PublicShell><Suspense fallback={<Loader />}>{children}</Suspense></PublicShell>;
 }
 
 export default function App() {
   return (
     <>
       <RouteEffects />
+      <RouteScrollReset />
       <OverflowPan />
       <Routes>
         <Route path="/" element={<PublicExperience><HomeCompany /></PublicExperience>} />
