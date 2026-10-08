@@ -31,6 +31,25 @@ class CommandAccessCutoverTests(unittest.TestCase):
         for paths in (cutover.LEGACY, cutover.SCOPED):
             self.assertIn(cutover.safe_policy_check(*self.fixture(paths)), ("legacy", "member"))
 
+    def test_put_preserves_all_existing_app_settings_except_destinations(self):
+        app, policies, org = self.fixture(cutover.LEGACY)
+        app["allowed_idps"] = ["identity-provider"]
+        app["session_duration"] = "24h"
+        app["http_only_cookie_attribute"] = True
+        app["same_site_cookie_attribute"] = "strict"
+        original = dict(app)
+        update = cutover.access_update_payload(app, "member")
+        self.assertEqual(app, original)
+        self.assertEqual(cutover.destination_mode(d["uri"] for d in update["destinations"]), "member")
+        self.assertEqual(update["domain"], "anevum.com/command/rhen")
+        for key in ["id", "aud", "type", "name", "allowed_idps", "session_duration", "http_only_cookie_attribute", "same_site_cookie_attribute"]:
+            self.assertEqual(update[key], original[key])
+        cutover.ensure_unchanged_auth_settings(original, update)
+        drifted = dict(update)
+        drifted["session_duration"] = "10m"
+        with self.assertRaises(RuntimeError):
+            cutover.ensure_unchanged_auth_settings(original, drifted)
+
     def test_disallows_drifted_scope_and_lost_operator_api(self):
         for paths in (
             {"anevum.com/command"},
