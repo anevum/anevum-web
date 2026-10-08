@@ -1,65 +1,54 @@
 import { Link } from "react-router-dom";
+import PublicEvidenceSnapshot from "../components/PublicEvidenceSnapshot";
+import SystemIcon from "../components/company/SystemIcon";
 import { currentRhenRelease } from "../data/releases";
-
-const capabilities = [
-  ["MARKET OBSERVATION", "Discover candidates and preserve the state that existed when a decision was made."],
-  ["EXECUTION", "Operate a deliberately narrow live broker-write path for long U.S. equities and ETFs."],
-  ["RESEARCH", "Turn weak outcomes and new hypotheses into bounded experiments rather than silent live changes."],
-  ["REPLAY", "Reconstruct and stress ideas without allowing simulated evidence to become live performance."],
-  ["FORECASTING", "Measure regimes and forward outcomes without putting a model directly in the broker order path."],
-  ["CONTROL", "Keep health, incidents, configuration drift, authority, and release gates explicit."],
-] as const;
+import { useLiveTrading } from "../hooks/useLiveTrading";
 
 export default function RhenProduct() {
   const release = currentRhenRelease();
+  const { data, error, now } = useLiveTrading(5000);
+  const research = data?.research;
+  const telemetry = data?.telemetry;
 
   return (
-    <div className="studio-page rhen-product-page">
-      <section className="rhen-product-hero">
-        <div>
-          <span>PRODUCT 01 / RHEN</span>
-          <h1>Can a trading system actually earn the right to trust itself?</h1>
-          <p>
-            RHEN is ANEVUM&apos;s flagship R&amp;D project: a live automated trading and research system built to test market ideas,
-            measure what really happened, and make improvement decisions from evidence instead of confidence.
-          </p>
-          <div className="studio-actions">
-            <Link className="studio-button primary" to="/live">View public evidence <span>→</span></Link>
-            <Link className="studio-button" to="/releases">Release history</Link>
-          </div>
+    <div className="studio-page truth-rhen-page">
+      <section className="truth-rhen-hero">
+        <div className="truth-rhen-title">
+          <SystemIcon system="RHEN" size="lg" />
+          <div><span>PRODUCT / RHEN</span><h1>RHEN</h1><p>Trading and research system operating on real market data with public evidence and deliberately narrow live authority.</p></div>
         </div>
-        <aside className="rhen-release-card">
-          <span>CURRENT</span><strong>RHEN {release.version}</strong><b>{release.codename}</b>
-          <p>{release.headline}</p>
-          <dl>
-            <div><dt>LIVE</dt><dd>LONG EQUITIES + ETFs</dd></div>
-            <div><dt>OPTIONS</dt><dd>RESEARCH ONLY</dd></div>
-            <div><dt>SHORTS</dt><dd>DISABLED</dd></div>
-            <div><dt>PROMOTION</dt><dd>MANUAL</dd></div>
-          </dl>
+        <aside className="truth-rhen-release">
+          <span>CURRENT RELEASE</span><strong>{release.version}</strong><b>{release.codename}</b><small>{release.date}</small>
+          <dl><div><dt>LIVE</dt><dd>LONG EQUITIES + ETFs</dd></div><div><dt>OPTIONS</dt><dd>RESEARCH ONLY</dd></div><div><dt>SHORTS</dt><dd>DISABLED</dd></div><div><dt>PROMOTION</dt><dd>MANUAL</dd></div></dl>
         </aside>
       </section>
 
-      <section className="studio-statement compact">
-        <span>WHAT IT IS</span>
-        <div><h2>A working research machine, not a claim of solved markets.</h2><p>RHEN trades real money while the system measures execution, candidate quality, forward outcomes, replay results, and operating failures. The live path stays narrow while research is allowed to be much more exploratory.</p></div>
+      <PublicEvidenceSnapshot />
+
+      <section className="truth-rhen-data-grid">
+        <article>
+          <header><span>OPERATIONS</span><strong>{error ? "DEGRADED" : String(data?.state || "OBSERVING").replaceAll("_"," ")}</strong></header>
+          <div className="truth-kpi-grid"><div><span>EVENTS · 60M</span><strong>{telemetry?.events_60m ?? "—"}</strong></div><div><span>SCANS · 10M</span><strong>{telemetry?.scan_events_10m ?? "—"}</strong></div><div><span>RECONCILIATIONS · 2H</span><strong>{telemetry?.reconciliations_2h ?? "—"}</strong></div><div><span>ERRORS · 2H</span><strong>{telemetry?.errors_2h ?? "—"}</strong></div></div>
+          <footer>{data?.generated_at ? "Feed observed "+new Date(data.generated_at).toLocaleString() : "No current public feed timestamp"}</footer>
+        </article>
+
+        <article>
+          <header><span>RESEARCH</span><strong>{String(research?.current_status || "AWAITING").replaceAll("_"," ")}</strong></header>
+          <h3>{research?.current_focus || "No current public research focus recorded."}</h3>
+          <p>{research?.next_direction?.conclusion || research?.next_direction?.subject || "No next public research direction recorded."}</p>
+          <footer>{research?.last_updated_at ? new Date(research.last_updated_at).toLocaleString() : "No research timestamp"}</footer>
+        </article>
       </section>
 
-      <section className="studio-section">
-        <header className="studio-section-heading"><span>CAPABILITIES</span><div><h2>One product, several internal responsibilities.</h2><p>IREN, GRAEN, VELUM, and NOSTRA remain useful names inside RHEN. They are architecture, not separate companies.</p></div></header>
-        <div className="rhen-capability-grid">
-          {capabilities.map(([title, body], index) => <article key={title}><span>{String(index + 1).padStart(2,"0")}</span><h3>{title}</h3><p>{body}</p></article>)}
-        </div>
+      <section className="truth-rhen-links">
+        <Link to="/products/rhen/evidence"><span>01</span><strong>Public evidence</strong><p>Live public-safe telemetry, performance, research state, and evidence boundaries.</p><b>OPEN ↗</b></Link>
+        <Link to="/products/rhen/releases"><span>02</span><strong>Releases</strong><p>Versioned record of what changed, what was verified, and what remains unresolved.</p><b>OPEN ↗</b></Link>
+        <Link to="/products/rhen/architecture"><span>03</span><strong>Architecture</strong><p>Execution, control, research, replay, forecasting, storage, and authority boundaries.</p><b>OPEN ↗</b></Link>
+        <Link to="/field-notes"><span>04</span><strong>Field Notes</strong><p>Research decisions, failures, repairs, experiments, and build notes.</p><b>OPEN ↗</b></Link>
       </section>
 
-      <section className="studio-section rhen-links-section">
-        <header className="studio-section-heading"><span>INSPECT IT</span><div><h2>The technical record still exists. It just lives under the product now.</h2></div></header>
-        <div className="rhen-link-grid">
-          <Link to="/live"><span>LIVE</span><strong>Public evidence</strong><p>Sanitized runtime and performance evidence.</p><b>OPEN ↗</b></Link>
-          <Link to="/architecture"><span>SYSTEM</span><strong>Architecture</strong><p>Execution, research, replay, forecast, control, and data boundaries.</p><b>OPEN ↗</b></Link>
-          <Link to="/releases"><span>VERSIONS</span><strong>Releases</strong><p>What changed, what was verified, and what remains unresolved.</p><b>OPEN ↗</b></Link>
-          <Link to="/research"><span>JOURNAL</span><strong>Field Notes</strong><p>Research decisions, failures, repairs, and build notes.</p><b>OPEN ↗</b></Link>
-        </div>
+      <section className="truth-rhen-limits">
+        <span>WHAT RHEN DOES NOT CLAIM</span><h2>Operating is not the same as proving an edge.</h2><p>{release.limitations.find((item)=>item.title.toLowerCase().includes("profitability"))?.body || "Profitability remains an evidence question, not a marketing statement."}</p>
       </section>
     </div>
   );
