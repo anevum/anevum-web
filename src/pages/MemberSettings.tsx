@@ -69,6 +69,7 @@ export default function MemberSettings() {
       <section className="member-section">
         <h2>Account</h2>
         <p>ANEVUM accounts save project preferences. Signing up does not connect you to any brokerage account.</p>
+        <p><a href="/api/member/export" download="anevum-account-data.json">Download my account data (JSON)</a></p>
         <button type="button" disabled={busy} onClick={() => void memberAuthClient.signOut({ fetchOptions: { onSuccess: () => navigate("/", { replace: true }) } })}>Sign out</button>
         <button type="button" className="member-danger-action" disabled={busy} onClick={() => void remove()}>Delete account permanently</button>
       </section>
