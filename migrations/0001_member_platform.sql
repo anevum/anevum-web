@@ -53,6 +53,13 @@ CREATE TABLE IF NOT EXISTS "verification" (
 );
 CREATE INDEX IF NOT EXISTS "verification_identifier_idx" ON "verification" ("identifier");
 
+CREATE TABLE IF NOT EXISTS "rateLimit" (
+  "id" TEXT PRIMARY KEY NOT NULL,
+  "key" TEXT NOT NULL UNIQUE,
+  "count" INTEGER NOT NULL,
+  "lastRequest" INTEGER NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS member_profiles (
   user_id TEXT PRIMARY KEY NOT NULL REFERENCES "user"("id") ON DELETE CASCADE,
   display_name TEXT,
