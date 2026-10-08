@@ -51,6 +51,44 @@ jobs:
         run: pip install "weasyprint==68.0" "Pillow==11.3.0"
       - name: Install pinned Node dependencies
         run: npm install --no-audit --no-fund
+      - name: Verify names of encrypted staging Worker secrets (read-only)
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -z "${CLOUDFLARE_API_TOKEN:-}" ] || [ -z "${CLOUDFLARE_ACCOUNT_ID:-}" ]; then
+            echo '::error::Cloudflare Worker token/account configuration is missing.'
+            exit 1
+          fi
+          # Cloudflare's Secrets List API returns secret NAMES only, never values.
+          # The HTTP response is written to an ephemeral file and never printed.
+          secret_inventory="$RUNNER_TEMP/anevum-member-staging-secret-names.json"
+          if ! curl --fail --silent --show-error --retry 2 --max-time 15 \
+            -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+            "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/anevum-member-staging/secrets" \
+            -o "$secret_inventory"; then
+            echo '::error::Unable to read staging Worker secret names; check Workers Scripts Read/Write token permissions.'
+            exit 1
+          fi
+          if ! jq -e '.success == true and (.result | type == "array")' "$secret_inventory" > /dev/null; then
+            echo '::error::Cloudflare staging secret-name lookup returned an invalid response.'
+            exit 1
+          fi
+          missing=0
+          for name in GOOGLE_CLIENT_ID GOOGLE_CLIENT_SECRET BETTER_AUTH_SECRET; do
+            if jq -e --arg name "$name" 'any(.result[]; .name == $name and .type == "secret_text")' "$secret_inventory" > /dev/null; then
+              echo "Verified encrypted staging secret binding: $name"
+            else
+              echo "::error::Missing encrypted secret on anevum-member-staging: $name"
+              missing=1
+            fi
+          done
+          if [ "$missing" != '0' ]; then
+            echo '::error::Add the missing names under Cloudflare Workers & Pages > anevum-member-staging > Settings > Variables and Secrets. Do not paste values into GitHub or chat.'
+            exit 1
+          fi
       - name: Verify staging source config is isolated and Google OAuth is scoped
         run: |
           node scripts/verify-member-bindings.mjs --require-config
