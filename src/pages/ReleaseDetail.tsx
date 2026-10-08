@@ -25,7 +25,7 @@ export default function ReleaseDetail() {
           <div><span>LIFECYCLE</span><strong>{release.lifecycle}</strong></div>
           <div><span>RELEASED</span><strong>{displayDate(release.date)}</strong></div>
           <div><span>SOURCE</span><strong>{release.sourceCommit.slice(0, 12)}</strong></div>
-          <div><span>DEPLOYMENT</span><strong>{release.productionDeployment.slice(0, 12)}</strong></div>
+          {release.productionDeployment ? <div><span>DEPLOYMENT</span><strong>{release.productionDeployment.slice(0, 12)}</strong></div> : null}
           {release.pdfPath ? <a href={release.pdfPath} target="_blank" rel="noreferrer">DOWNLOAD RELEASE PDF ↗</a> : null}
         </aside>
       </section>
