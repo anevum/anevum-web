@@ -175,7 +175,7 @@ jobs:
         run: |
           set -euo pipefail
           evidence="$RUNNER_TEMP/anevum-visuals"
-          for name in home products rhen terminal research field-note architecture about resume; do
+          for name in home products rhen terminal research field-note architecture about resume releases; do
             test -s "$evidence/$name-desktop.png"
             test -s "$evidence/$name-mobile.png"
             test -s "$evidence/$name-rendered.html"
@@ -184,7 +184,7 @@ jobs:
           grep -Fq 'Independent software studio' "$evidence/home-rendered.html"
           grep -Fq 'studio-products-page' "$evidence/products-rendered.html"
           grep -Fq 'rhen-product-page' "$evidence/rhen-rendered.html"
-          grep -Fq 'studio-about-page' "$evidence/about-rendered.html"
+          grep -Fq 'studio-about-page' "$evidence/about-rendered.html"\n          grep -Fq 'studio-releases-page' "$evidence/releases-rendered.html"
           grep -Fq 'public-terminal-page' "$evidence/terminal-rendered.html"
           grep -Fq 'RESEARCH' "$evidence/terminal-rendered.html"
           grep -Fq 'REPLAY' "$evidence/terminal-rendered.html"
