@@ -1,5 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import { inspectMemberBindings } from "../scripts/verify-member-bindings.mjs";
 
 const prodID = "00000000-0000-4000-8000-000000000001";
@@ -68,4 +69,13 @@ test("production activation needs both distinct D1 bindings", () => {
   assert.equal(inspectMemberBindings(c, preview(), { requireLive: true }).valid, true);
   c.previews.d1_databases = [];
   assert.equal(inspectMemberBindings(c, preview(), { requireLive: true }).valid, false);
+});
+
+test("manual D1 provisioning uses supported Wrangler create options", () => {
+  const workflow = readFileSync(new URL("../.github/workflows/member-d1-provision.yml", import.meta.url), "utf8");
+  assert.match(workflow, /workflow_dispatch:/);
+  assert.match(workflow, /CREATE_MEMBER_DATABASES/);
+  assert.match(workflow, /npx wrangler d1 create "\$database"/);
+  assert.doesNotMatch(workflow, /npx wrangler d1 create[^\n]*--json/);
+  assert.match(workflow, /npx wrangler d1 list --json/);
 });
