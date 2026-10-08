@@ -1,6 +1,7 @@
 import releaseRegistry from "./src/data/releases.json";
 import { shadowRead } from "./shadow-transport.mjs";
 import { memberEndpoint } from "./src/server/member.mjs";
+import { legacyOperatorTarget } from "./src/server/operator-routes.mjs";
 
 const TRADER_BASE = "https://alpaca-trader-production-bf3e.up.railway.app";
 const PUBLIC_TRADING_FEED = TRADER_BASE + "/v1/trading-public-feed";
@@ -514,7 +515,15 @@ export default {
       }
     }
 
+    // Guard all unrecognized operator API paths. Never let a protected API
+    // accidentally fall through to the public SPA/HTML response.
+    if (pathname === "/api/command" || pathname.startsWith("/api/command/")) {
+      return jsonResponse({ message: "Cloudflare Access authentication is required." }, 401);
+    }
+
     if (request.method === "GET" || request.method === "HEAD") {
+      const operatorDestination = legacyOperatorTarget(pathname);
+      if (operatorDestination) return Response.redirect(new URL(operatorDestination, request.url).toString(), 308);
       const legacyRedirects = {
         "/founder": "/about",
         "/live": "/products/rhen/evidence",
