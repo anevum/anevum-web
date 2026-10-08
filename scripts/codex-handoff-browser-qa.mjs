@@ -6,7 +6,7 @@ import path from "node:path";
 const base = process.env.BASE_URL;
 if (!base) throw new Error("BASE_URL is required");
 
-const routes = ["/command/review"];
+const routes = ["/command/rhen/review"];
 const viewports = [
   { name: "desktop", width: 1440, height: 1000, mobile: false, deviceScaleFactor: 1 },
   { name: "mobile", width: 390, height: 844, mobile: true, deviceScaleFactor: 1 }
@@ -254,3 +254,4 @@ if (failures.length) {
   process.exit(1);
 }
 console.log("Browser runtime QA passed: no horizontal overflow or JavaScript runtime errors.");
+

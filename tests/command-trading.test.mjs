@@ -3,9 +3,9 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 
 test("Command exposes four canonical operator workspaces", () => {
-  const command = readFileSync(new URL("../src/pages/Command.tsx", import.meta.url), "utf8");
+  const command = readFileSync(new URL("../src/pages/RhenTerminal.tsx", import.meta.url), "utf8");
 
-  for (const route of ["/command/operate", "/command/discover", "/command/review", "/command/system"]) {
+  for (const route of ["/command/rhen/operate", "/command/rhen/discover", "/command/rhen/review", "/command/rhen/system"]) {
     assert.match(command, new RegExp(route.replaceAll("/", "\\/")));
   }
   for (const label of ["Operate", "Discover", "Review", "System"]) {
@@ -20,7 +20,7 @@ test("Command exposes four canonical operator workspaces", () => {
 });
 
 test("Operate workspace exposes broker truth and current equity trading lanes", () => {
-  const command = readFileSync(new URL("../src/pages/Command.tsx", import.meta.url), "utf8");
+  const command = readFileSync(new URL("../src/pages/RhenTerminal.tsx", import.meta.url), "utf8");
   const tracker = readFileSync(new URL("../src/components/CommandAccountTracker.tsx", import.meta.url), "utf8");
   const lanes = readFileSync(new URL("../src/components/CommandTradingLanes.tsx", import.meta.url), "utf8");
   const data = readFileSync(new URL("../src/lib/data.ts", import.meta.url), "utf8");
@@ -46,7 +46,7 @@ test("Operate workspace exposes broker truth and current equity trading lanes", 
 
 test("Review workspace owns the deliberate Work handoff", () => {
   const worker = readFileSync(new URL("../worker.mjs", import.meta.url), "utf8");
-  const command = readFileSync(new URL("../src/pages/Command.tsx", import.meta.url), "utf8");
+  const command = readFileSync(new URL("../src/pages/RhenTerminal.tsx", import.meta.url), "utf8");
   const handoff = readFileSync(new URL("../src/components/CommandIrenDock.tsx", import.meta.url), "utf8");
   const review = readFileSync(new URL("../src/components/CommandReviewDeck.tsx", import.meta.url), "utf8");
 
@@ -67,7 +67,7 @@ test("Review workspace owns the deliberate Work handoff", () => {
 });
 
 test("Command shares one canonical IREN observation across workspaces", () => {
-  const command = readFileSync(new URL("../src/pages/Command.tsx", import.meta.url), "utf8");
+  const command = readFileSync(new URL("../src/pages/RhenTerminal.tsx", import.meta.url), "utf8");
   const topology = readFileSync(new URL("../src/components/CommandTopology.tsx", import.meta.url), "utf8");
   const terminal = readFileSync(new URL("../src/components/CommandOperationsTerminal.tsx", import.meta.url), "utf8");
 
@@ -79,7 +79,7 @@ test("Command shares one canonical IREN observation across workspaces", () => {
 });
 
 test("Command network reads are timeout bounded and connection state is terminal", () => {
-  const command = readFileSync(new URL("../src/pages/Command.tsx", import.meta.url), "utf8");
+  const command = readFileSync(new URL("../src/pages/RhenTerminal.tsx", import.meta.url), "utf8");
   const data = readFileSync(new URL("../src/lib/data.ts", import.meta.url), "utf8");
   const worker = readFileSync(new URL("../worker.mjs", import.meta.url), "utf8");
 
@@ -90,7 +90,7 @@ test("Command network reads are timeout bounded and connection state is terminal
 });
 
 test("Command has one raw event drawer and no decorative per-subsystem navigation", () => {
-  const command = readFileSync(new URL("../src/pages/Command.tsx", import.meta.url), "utf8");
+  const command = readFileSync(new URL("../src/pages/RhenTerminal.tsx", import.meta.url), "utf8");
   const rawLog = readFileSync(new URL("../src/components/CommandRawLog.tsx", import.meta.url), "utf8");
   const terminal = readFileSync(new URL("../src/components/CommandOperationsTerminal.tsx", import.meta.url), "utf8");
   const topology = readFileSync(new URL("../src/lib/runtime-topology.ts", import.meta.url), "utf8");
@@ -146,3 +146,4 @@ test("V4.3 active website and Command surfaces cannot resurrect retired crypto o
   assert.equal(current.productionDeployment, "3c83ae55-5fd9-4c9c-b717-8f817b949b0d");
   assert.match(current.next, /first post-fix live equity cohort/i);
 });
+

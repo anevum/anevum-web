@@ -13,12 +13,12 @@ function isActive(pathname: string, href: string) {
 
 function MemberLink() {
   const { data: session } = memberAuthClient.useSession();
-  return <Link className="workshop-account-link" to={session?.user ? "/me" : "/sign-in"}>{session?.user ? "My Space" : "Sign in"}</Link>;
+  return <Link className="workshop-account-link" to={session?.user ? "/me" : "/sign-in"}>{session?.user ? "Command" : "Sign in"}</Link>;
 }
 
 function AvailableMemberLink() {
   const status = useMemberAvailability();
-  return status === "available" ? <MemberLink /> : null;
+  return status === "available" ? <MemberLink /> : <Link className="workshop-account-link" to="/me">Command</Link>;
 }
 
 function PublicFooter() {
@@ -51,10 +51,8 @@ export function PublicShell({ children }: { children: ReactNode }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   useEffect(() => setMobileOpen(false), [location.pathname]);
 
-  const lightPage = location.pathname === "/" || location.pathname === "/products" || location.pathname === "/products/rhen" || location.pathname === "/feed" || location.pathname === "/about" || location.pathname === "/sign-in" || location.pathname === "/privacy" || location.pathname === "/terms" || location.pathname.startsWith("/field-notes") || location.pathname.startsWith("/me");
-
   return (
-    <div className={"public-frame studio-shell workshop-shell " + (lightPage ? "workshop-public-light" : "workshop-public-legacy")}>
+    <div className="public-frame studio-shell workshop-shell workshop-public-light">
       <header className="studio-header workshop-header">
         <div className="workshop-header-inner">
           <Link className="studio-brand" to="/" aria-label="ANEVUM home">
@@ -96,3 +94,4 @@ export function PublicShell({ children }: { children: ReactNode }) {
     </div>
   );
 }
+

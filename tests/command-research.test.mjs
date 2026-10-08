@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 
 test("Command V4 uses four workspaces with a protected review boundary", () => {
-  const command = readFileSync(new URL("../src/pages/Command.tsx", import.meta.url), "utf8");
+  const command = readFileSync(new URL("../src/pages/RhenTerminal.tsx", import.meta.url), "utf8");
   const discover = readFileSync(new URL("../src/components/CommandDiscoveryDeck.tsx", import.meta.url), "utf8");
   const review = readFileSync(new URL("../src/components/CommandReviewDeck.tsx", import.meta.url), "utf8");
   const topology = readFileSync(new URL("../src/lib/runtime-topology.ts", import.meta.url), "utf8");
@@ -131,3 +131,4 @@ test("IREN configuration review is fingerprint-bound and operator-controlled", (
   assert.match(topology, /ConfigurationReviewProjection/);
   assert.match(topology, /ConfigurationDriftProjection/);
 });
+

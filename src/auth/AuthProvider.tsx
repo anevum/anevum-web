@@ -31,7 +31,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let active = true;
-    const privateRoute = location.pathname.startsWith("/command");
+    const privateRoute = location.pathname.startsWith("/command/");
 
     if (!privateRoute) {
       setSession(null);
@@ -82,3 +82,4 @@ export function useAuth() {
   if (!value) throw new Error("useAuth must be used inside AuthProvider.");
   return value;
 }
+

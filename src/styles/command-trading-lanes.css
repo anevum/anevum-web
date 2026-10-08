@@ -23,7 +23,7 @@
 .trading-lane-focus span,
 .trading-lane-card footer span,
 .trading-lane-alert span {
-  font-size: 10px;
+  font-size: 13px;
   letter-spacing: .12em;
   text-transform: uppercase;
   opacity: .62;
@@ -35,7 +35,7 @@
 }
 
 .command-trading-lanes-heading small {
-  font-size: 11px;
+  font-size: 13px;
   opacity: .52;
 }
 
@@ -54,9 +54,9 @@
   min-width: 0;
   padding: 14px;
   overflow: hidden;
-  border: 1px solid rgba(255,255,255,.09);
+  border: 1px solid var(--workshop-line);
   border-radius: 16px;
-  background: rgba(7, 11, 18, .72);
+  background: var(--workshop-surface);
   box-shadow: inset 0 1px rgba(255,255,255,.025);
 }
 
@@ -65,12 +65,12 @@
   position: absolute;
   inset: 0 auto 0 0;
   width: 2px;
-  background: rgba(255,255,255,.25);
+  background: rgba(36,43,48,0.120);
 }
 
-.trading-lane-live::before { background: #6ea1ff; }
-.trading-lane-degraded::before { background: #d0b37a; }
-.trading-lane-offline::before { background: rgba(255,255,255,.18); }
+.trading-lane-live::before { background: var(--workshop-accent); }
+.trading-lane-degraded::before { background: var(--workshop-warn); }
+.trading-lane-offline::before { background: rgba(36,43,48,0.120); }
 
 .trading-lane-card > header {
   display: flex;
@@ -91,7 +91,7 @@
 }
 
 .trading-lane-card > header small {
-  font-size: 10px;
+  font-size: 13px;
   opacity: .52;
 }
 
@@ -100,7 +100,7 @@
   align-items: center;
   gap: 6px;
   flex: 0 0 auto;
-  font-size: 10px;
+  font-size: 13px;
   opacity: .7;
 }
 
@@ -108,21 +108,21 @@
   width: 6px;
   height: 6px;
   border-radius: 999px;
-  background: #6ea1ff;
+  background: var(--workshop-accent);
   box-shadow: 0 0 12px rgba(110,161,255,.72);
 }
 
-.trading-lane-degraded .trading-lane-heartbeat i { background: #d0b37a; }
-.trading-lane-offline .trading-lane-heartbeat i { background: rgba(255,255,255,.25); box-shadow: none; }
+.trading-lane-degraded .trading-lane-heartbeat i { background: var(--workshop-warn); }
+.trading-lane-offline .trading-lane-heartbeat i { background: rgba(36,43,48,0.120); box-shadow: none; }
 
 .trading-lane-metrics {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 1px;
   overflow: hidden;
-  border: 1px solid rgba(255,255,255,.065);
+  border: 1px solid var(--workshop-line);
   border-radius: 10px;
-  background: rgba(255,255,255,.045);
+  background: rgba(36,43,48,0.045);
 }
 
 .trading-lane-metrics > div {
@@ -130,12 +130,12 @@
   gap: 3px;
   min-width: 0;
   padding: 9px 10px;
-  background: rgba(4,7,13,.86);
+  background: var(--workshop-surface);
 }
 
 .trading-lane-metrics strong {
   overflow: hidden;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 600;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -151,20 +151,20 @@
   gap: 4px;
   min-width: 0;
   padding: 10px 11px;
-  border: 1px solid rgba(255,255,255,.06);
+  border: 1px solid var(--workshop-line);
   border-radius: 10px;
-  background: rgba(255,255,255,.025);
+  background: rgba(36,43,48,0.025);
 }
 
 .trading-lane-focus strong {
-  font-size: 12px;
+  font-size: 13px;
   line-height: 1.35;
 }
 
 .trading-lane-focus p,
 .trading-lane-alert p {
   margin: 0;
-  font-size: 10px;
+  font-size: 13px;
   line-height: 1.4;
   opacity: .62;
 }
@@ -173,18 +173,18 @@
   display: grid;
   gap: 4px;
   padding: 10px 11px;
-  border: 1px solid rgba(208,179,122,.28);
+  border: 1px solid var(--workshop-warn);
   border-radius: 10px;
-  background: rgba(208,179,122,.07);
+  background: rgba(138,96,30,0.070);
 }
 
 .trading-lane-alert.is-error {
-  border-color: rgba(255,125,125,.25);
-  background: rgba(255,125,125,.055);
+  border-color: var(--workshop-danger);
+  background: rgba(161,63,66,0.055);
 }
 
 .trading-lane-alert strong {
-  font-size: 11px;
+  font-size: 13px;
 }
 
 .trading-lane-card > footer {
@@ -199,7 +199,7 @@
 }
 
 .trading-lane-card > footer strong {
-  font-size: 10px;
+  font-size: 13px;
   font-weight: 600;
 }
 
@@ -218,8 +218,8 @@
   min-width: 0;
   padding: 6px 7px;
   border-radius: 7px;
-  background: rgba(255,255,255,.025);
-  font-size: 9px;
+  background: rgba(36,43,48,0.025);
+  font-size: 13px;
 }
 
 .trading-lane-order time,
@@ -241,8 +241,8 @@
 .trading-lane-empty {
   padding: 8px;
   border-radius: 8px;
-  background: rgba(255,255,255,.02);
-  font-size: 10px;
+  background: rgba(36,43,48,0.020);
+  font-size: 13px;
   opacity: .5;
 }
 
@@ -266,3 +266,4 @@
     display: none;
   }
 }
+

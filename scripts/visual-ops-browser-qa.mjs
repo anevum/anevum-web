@@ -6,8 +6,8 @@ import path from "node:path";
 const base = process.env.BASE_URL;
 if (!base) throw new Error("BASE_URL is required");
 
-const publicRoutes = ["/", "/products", "/feed", "/products/rhen", "/products/rhen/evidence", "/products/rhen/architecture", "/field-notes", "/field-notes/prediction-outcome-evidence-chain", "/about", "/resume", "/products/rhen/releases"];
-const commandRoutes = ["/command/operate", "/command/discover", "/command/review", "/command/public", "/command/system"];
+const publicRoutes = ["/", "/products", "/feed", "/products/rhen", "/products/rhen/evidence", "/products/rhen/architecture", "/field-notes", "/field-notes/prediction-outcome-evidence-chain", "/about", "/resume", "/products/rhen/releases", "/me", "/privacy", "/terms"];
+const commandRoutes = ["/command/rhen/operate", "/command/rhen/discover", "/command/rhen/review", "/command/rhen/public", "/command/rhen/system"];
 const routes = process.env.PUBLIC_ONLY === "1" ? publicRoutes : [...publicRoutes, ...commandRoutes];
 const output = path.join(process.env.RUNNER_TEMP || os.tmpdir(), "anevum-visuals");
 fs.mkdirSync(output, {recursive:true});
@@ -150,8 +150,10 @@ async function runCase(route, viewport) {
           const aboutReady = ${JSON.stringify(route)} !== "/about" || Boolean(document.querySelector(".studio-about-page"));
           const resumeReady = ${JSON.stringify(route)} !== "/resume" || Boolean(document.querySelector(".resume-page .resume-sheet"));
           const releasesReady = ${JSON.stringify(route)} !== "/products/rhen/releases" || Boolean(document.querySelector(".studio-releases-page .studio-release-feature"));
+          const memberReady = ${JSON.stringify(route)} !== "/me" || Boolean(document.querySelector(".member-command"));
+          const legalReady = !["/privacy", "/terms"].includes(${JSON.stringify(route)}) || Boolean(document.querySelector(".member-legal"));
           const commandReady = !${JSON.stringify(route)}.startsWith("/command/") || Boolean(document.querySelector(".command-v4"));
-          return {ready:pathReady && suspenseReady && homeReady && productsReady && feedReady && rhenReady && liveReady && architectureReady && researchReady && fieldNoteReady && aboutReady && resumeReady && releasesReady && commandReady,
+          return {ready:pathReady && suspenseReady && homeReady && productsReady && feedReady && rhenReady && liveReady && architectureReady && researchReady && fieldNoteReady && aboutReady && resumeReady && releasesReady && memberReady && legalReady && commandReady,
             pathname:location.pathname,title:document.title,suspenseReady,homeReady,productsReady,feedReady,rhenReady,liveReady,architectureReady,researchReady,fieldNoteReady,aboutReady,resumeReady,releasesReady,commandReady};
         })()`,
         returnByValue:true
@@ -178,8 +180,10 @@ async function runCase(route, viewport) {
         const aboutReady = ${JSON.stringify(route)} !== "/about" || Boolean(document.querySelector(".studio-about-page"));
         const resumeReady = ${JSON.stringify(route)} !== "/resume" || Boolean(document.querySelector(".resume-page .resume-sheet"));
           const releasesReady = ${JSON.stringify(route)} !== "/products/rhen/releases" || Boolean(document.querySelector(".studio-releases-page .studio-release-feature"));
+        const memberReady = ${JSON.stringify(route)} !== "/me" || Boolean(document.querySelector(".member-command"));
+        const legalReady = !["/privacy", "/terms"].includes(${JSON.stringify(route)}) || Boolean(document.querySelector(".member-legal"));
         const commandReady = !${JSON.stringify(route)}.startsWith("/command/") || Boolean(document.querySelector(".command-v4"));
-        return {ready:pathReady && suspenseReady && homeReady && productsReady && feedReady && rhenReady && liveReady && architectureReady && researchReady && fieldNoteReady && aboutReady && resumeReady && releasesReady && commandReady,
+        return {ready:pathReady && suspenseReady && homeReady && productsReady && feedReady && rhenReady && liveReady && architectureReady && researchReady && fieldNoteReady && aboutReady && resumeReady && releasesReady && memberReady && legalReady && commandReady,
           pathname:location.pathname,title:document.title,suspenseReady,homeReady,productsReady,feedReady,rhenReady,liveReady,architectureReady,researchReady,fieldNoteReady,aboutReady,resumeReady,releasesReady,commandReady};
       })()`,
       returnByValue:true
@@ -220,6 +224,7 @@ async function runCase(route, viewport) {
       const active = document.querySelector(".command-v4-header nav a.active");
       return {
         root: visible(".command-v4"),
+        readablePage: getComputedStyle(document.querySelector(".command-v4")).position === "relative" && getComputedStyle(document.querySelector(".command-v4"), "::after").display === "none",
         heading: document.querySelector(".command-v4-heading h1")?.textContent?.trim() || "",
         navCurrent: active?.getAttribute("href") || "",
         operate: visible(".command-v4-operate .command-v4-strip") && visible(".command-trading-lanes"),
@@ -233,13 +238,13 @@ async function runCase(route, viewport) {
     })()`, returnByValue:true});
     const value=workspace.result?.value||{};
     const expected = {
-      "/command/operate": ["Operate", "operate"],
-      "/command/discover": ["Discover", "discover"],
-      "/command/review": ["Review", "review"],
-      "/command/public": ["Public", "public"],
-      "/command/system": ["System", "system"]
+      "/command/rhen/operate": ["Operate", "operate"],
+      "/command/rhen/discover": ["Discover", "discover"],
+      "/command/rhen/review": ["Review", "review"],
+      "/command/rhen/public": ["Public", "public"],
+      "/command/rhen/system": ["System", "system"]
     }[route];
-    if(!expected || !value.root || value.navCurrent !== route || value.heading !== expected[0] || value[expected[1]] !== true) {
+    if(!expected || !value.root || !value.readablePage || value.navCurrent !== route || value.heading !== expected[0] || value[expected[1]] !== true) {
       throw new Error("Canonical Command V4 workspace failed: "+JSON.stringify({route,...value}));
     }
   }
@@ -323,8 +328,8 @@ async function runCase(route, viewport) {
     }
   }
 
-  if(route==="/command/overview" && details.legacySummaryVisible) throw new Error("Legacy trading strip obscures fleet overview");
-  if(route==="/command/overview" && (details.nostra!=="HEALTHY" || details.velum!=="HEALTHY" || details.velumActivity!=="WAITING_FOR_WORK" || details.activeGraen!=="false")) throw new Error("Lean health/activity rendering failed: "+JSON.stringify(details));
+  if(route==="/command/rhen/overview" && details.legacySummaryVisible) throw new Error("Legacy trading strip obscures fleet overview");
+  if(route==="/command/rhen/overview" && (details.nostra!=="HEALTHY" || details.velum!=="HEALTHY" || details.velumActivity!=="WAITING_FOR_WORK" || details.activeGraen!=="false")) throw new Error("Lean health/activity rendering failed: "+JSON.stringify(details));
   if(route.startsWith("/command/")) {
     await send("Runtime.evaluate",{expression:'document.querySelector(".vo-details summary")?.click()'});
     await send("Runtime.evaluate",{expression:'document.querySelector(".vo-details summary")?.click()'});
@@ -348,11 +353,14 @@ async function runCase(route, viewport) {
     "/products/rhen/evidence":["terminal",["EVIDENCE DRAWER","public-terminal-page","RESEARCH","REPLAY","RHEN"]],
     "/field-notes":["research",["studio-notes-page","FIELD NOTES"]],
     "/field-notes/prediction-outcome-evidence-chain":["field-note",["REPRODUCE / CHALLENGE THIS NOTE"]],
-    "/products/rhen/architecture":["architecture",["One runtime. Internal modules."]],
+    "/products/rhen/architecture":["architecture",["How RHEN works."]],
     "/about":["about",["studio-about-page","ANEVUM is one person right now."]],
     "/resume":["resume",["Technical Skills"]],
     "/products/rhen/releases":["releases",["studio-releases-page","Every version leaves a record."]],
-    "/feed":["feed",["feed-page","PUBLIC FEED"]]
+    "/feed":["feed",["feed-page","PUBLIC FEED"]],
+    "/me":["member-command",["member-command","My programs","Programs"]],
+    "/privacy":["privacy",["member-legal"]],
+    "/terms":["terms",["member-legal"]]
   };
   if (evidenceRoutes[route]) {
     const [name, markers] = evidenceRoutes[route];
@@ -643,3 +651,4 @@ if (failures.length) {
   process.exit(1);
 }
 console.log("Browser runtime QA passed: no horizontal overflow, JavaScript runtime errors, or route scroll-restoration regressions.");
+

@@ -23,6 +23,8 @@ import "./styles/workshop.css";
 import "./styles/members.css";
 import "./styles/workshop-editorial.css";
 import "./styles/workshop-rhen.css";
+import "./styles/workshop-system.css";
+import "./styles/member-command.css";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
@@ -33,3 +35,4 @@ createRoot(document.getElementById("root")!).render(
     </BrowserRouter>
   </StrictMode>
 );
+

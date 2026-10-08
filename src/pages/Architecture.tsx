@@ -26,8 +26,8 @@ export default function Architecture() {
   return (
     <div className="company-page architecture-page">
       <section className="company-page-hero architecture-hero">
-        <span>RHEN V4.3 ARCHITECTURE</span>
-        <h1>One runtime. Internal modules. Explicit authority isolation.</h1>
+        <span>RHEN / ARCHITECTURE</span>
+        <h1>How RHEN works.</h1>
         <p>
           ANEVUM has consolidated its production topology around RHEN. IREN remains deterministic control,
           NOSTRA runs as embedded numerical forecasting, and GRAEN / VELUM remain named on-demand research
@@ -97,8 +97,9 @@ export default function Architecture() {
 
       <section className="architecture-cta">
         <div><span>SEE RHEN OPERATE</span><h2>The public surface should match the runtime that actually exists.</h2></div>
-        <div><Link to="/live">Live Terminal →</Link><Link to="/research">Field Notes →</Link><Link to="/command/overview">Command →</Link></div>
+        <div><Link to="/live">Public evidence</Link><Link to="/research">Field Notes</Link></div>
       </section>
     </div>
   );
 }
+
