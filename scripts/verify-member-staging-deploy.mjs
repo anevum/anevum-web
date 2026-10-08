@@ -1,6 +1,6 @@
 // Fail-closed audit for the independently deployed ANEVUM member staging Worker.
 // Never let a staging deployment inherit production D1, routes, privileged RHEN
-// operations, real secrets in source, or enabled accounts at bootstrap.
+// operations or real secrets in source. Only the verified staging origin may enable OAuth.
 import { existsSync, readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 
@@ -10,6 +10,7 @@ function load(path) {
 const expected = "a537432e-d216-4b31-8b22-19662cc3a44a";
 const production = "7f0d4c0c-2e85-4900-8504-1347954e1df1";
 const schema = "migrations";
+const verifiedStagingOrigin = "https://anevum-member-staging.devonakins.workers.dev";
 const privateNames = ["BETTER_AUTH_SECRET", "GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET"];
 const errors = [];
 
@@ -25,7 +26,8 @@ function onePreviewDb(config, label, requireMigrationDir = true) {
   assert(db?.database_id === expected, label + " must bind the verified preview UUID.");
   assert(db?.database_id !== production, label + " must not bind the production UUID.");
   if (requireMigrationDir) assert(db?.migrations_dir === schema, label + " must reference committed migrations.");
-  // Generated configs rebase migration paths relative to dist; only validate\n  // the source migration directory. Deployed bindings are checked by exact UUID.
+  // Generated configs rebase migration paths relative to dist; only validate
+  // the source migration directory. Deployed bindings are checked by exact UUID.
 }
 
 const prod = load("wrangler.jsonc");
@@ -44,10 +46,15 @@ assert(stage.preview_urls !== true, "Staging must not expose extra randomized pr
 assert(!Object.hasOwn(stage, "routes") && !Object.hasOwn(stage, "route"), "Staging must not bind production routes.");
 assert(!Object.hasOwn(stage, "custom_domains"), "Staging must not bind custom domains.");
 assert(!Object.hasOwn(stage, "env"), "Staging deployment must use one explicit configuration.");
-assert(stage?.vars?.ANEVUM_MEMBERS_ENABLED === "false", "Staging bootstrap must leave member signup disabled.");
-assert(stage?.vars?.ANEVUM_MEMBER_PREVIEW_ENABLED === "false", "Staging bootstrap must not start OAuth before manual approval.");
+assert(stage?.vars?.ANEVUM_MEMBERS_ENABLED === "true", "Only staging OAuth test accounts may be enabled.");
+assert(stage?.vars?.ANEVUM_MEMBER_PREVIEW_ENABLED === "true", "Staging test OAuth must use explicitly enabled preview identity.");
 assert(stage?.vars?.COMMAND_LIVE_STREAM_ENABLED === "false", "Staging must disable RHEN live command stream.");
-assert(!Object.hasOwn(stage?.vars || {}, "MEMBER_PREVIEW_ORIGIN"), "Do not invent an unverified staging origin.");
+assert(stage?.vars?.MEMBER_PREVIEW_ORIGIN === verifiedStagingOrigin, "Staging identity must use its exact verified HTTPS origin.");
+const stageVarsAllowed = new Set(["COMMAND_AUTH_MODE", "COMMAND_LIVE_STREAM_ENABLED", "ANEVUM_MEMBERS_ENABLED", "ANEVUM_MEMBER_PREVIEW_ENABLED", "MEMBER_PREVIEW_ORIGIN"]);
+for (const name of Object.keys(stage.vars || {})) {
+  assert(stageVarsAllowed.has(name), "Unexpected variable in staging config: " + name);
+}
+assert(stage?.vars?.COMMAND_AUTH_MODE === "cloudflare_access", "Staging must keep operator access guarded.");
 assert(!Object.hasOwn(stage?.vars || {}, "CF_ACCESS_AUD") &&
        !Object.hasOwn(stage?.vars || {}, "CF_ACCESS_TEAM_DOMAIN") &&
        !Object.hasOwn(stage?.vars || {}, "COMMAND_ACCESS_EMAILS"),
@@ -74,8 +81,17 @@ if (process.argv.includes("--generated")) {
       assert(generated?.workers_dev === true, "Generated Worker must preserve workers.dev route.");
       assert(!Object.hasOwn(generated, "routes") && !Object.hasOwn(generated, "route"),
              "Generated Worker unexpectedly contains a production route.");
-      assert(generated?.vars?.ANEVUM_MEMBERS_ENABLED === "false", "Generated Worker activated member signup.");
-      assert(generated?.vars?.ANEVUM_MEMBER_PREVIEW_ENABLED === "false", "Generated Worker activated preview OAuth.");
+      assert(generated?.vars?.ANEVUM_MEMBERS_ENABLED === "true", "Generated Worker lost the explicit staging-only OAuth gate.");
+      assert(generated?.vars?.ANEVUM_MEMBER_PREVIEW_ENABLED === "true", "Generated Worker lost its staging preview gate.");
+      assert(generated?.vars?.MEMBER_PREVIEW_ORIGIN === verifiedStagingOrigin, "Generated Worker uses an unverified OAuth origin.");
+      assert(generated?.vars?.COMMAND_LIVE_STREAM_ENABLED === "false", "Generated staging Worker enabled live RHEN command stream.");
+      assert(!Object.hasOwn(generated?.vars || {}, "CF_ACCESS_AUD") &&
+             !Object.hasOwn(generated?.vars || {}, "CF_ACCESS_TEAM_DOMAIN") &&
+             !Object.hasOwn(generated?.vars || {}, "COMMAND_ACCESS_EMAILS"),
+             "Generated staging Worker inherited protected RHEN operator authorization.");
+      for (const name of Object.keys(generated.vars || {})) {
+        assert(stageVarsAllowed.has(name), "Unexpected generated staging variable: " + name);
+      }
       // Cloudflare Vite omits migrations_dir from deployment output by design.
       onePreviewDb(generated, "Staging generated", false);
       for (const name of privateNames) {
@@ -90,5 +106,5 @@ if (errors.length) {
   process.exitCode = 1;
 } else {
   console.log("STAGING GUARD PASS: " + (process.argv.includes("--generated") ? "generated" : "source") +
-    " Worker targets isolated preview D1; production member signup remains disabled.");
+    " Worker targets isolated preview D1 with exact OAuth origin; production member signup remains disabled.");
 }
