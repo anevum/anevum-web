@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { memberConfigured, memberEndpoint } from "../src/server/member.mjs";
+import { resolveMemberOrigin, memberSchemaReady, REQUIRED_MEMBER_TABLES } from "../src/server/member-preflight.mjs";
 
 test("member accounts fail closed without all dependencies", () => {
   assert.equal(memberConfigured({}), false);
@@ -61,4 +62,53 @@ test("new accounts never redefine protected RHEN operator APIs", () => {
   assert.match(sql, /CREATE TABLE IF NOT EXISTS member_entitlements/);
   assert.match(sql, /REFERENCES "user"\("id"\) ON DELETE CASCADE/);
   assert.doesNotMatch(members, /proxyTrader|TRADER_BASE|EXECUTION_ENABLED|BOT_ARMED/);
+});
+
+test("only the canonical origin or one explicitly enabled preview origin is accepted", () => {
+  const prod = new Request("https://anevum.com/api/member/availability");
+  const preview = new Request("https://member-test.devonakins.workers.dev/api/member/availability");
+  const previewEnv = {
+    ANEVUM_MEMBER_PREVIEW_ENABLED: "true",
+    MEMBER_PREVIEW_ORIGIN: "https://member-test.devonakins.workers.dev"
+  };
+  assert.equal(resolveMemberOrigin(prod, {}), "https://anevum.com");
+  assert.equal(resolveMemberOrigin(preview, {}), null);
+  assert.equal(resolveMemberOrigin(preview, { ...previewEnv, ANEVUM_MEMBER_PREVIEW_ENABLED: "false" }), null);
+  assert.equal(resolveMemberOrigin(preview, previewEnv), "https://member-test.devonakins.workers.dev");
+  assert.equal(resolveMemberOrigin(new Request("https://evil.example/api/member/availability"), previewEnv), null);
+  assert.equal(resolveMemberOrigin(preview, { ...previewEnv, MEMBER_PREVIEW_ORIGIN: "https://evil.example" }), null);
+  assert.equal(resolveMemberOrigin(preview, { ...previewEnv, MEMBER_PREVIEW_ORIGIN: "http://member-test.devonakins.workers.dev" }), null);
+  assert.equal(resolveMemberOrigin(preview, { ...previewEnv, MEMBER_PREVIEW_ORIGIN: "https://member-test.devonakins.workers.dev/path" }), null);
+});
+
+test("partially migrated or unavailable member database never advertises working signup", async () => {
+  const fakeDB = (tables) => ({
+    prepare: () => ({
+      all: async () => ({ results: tables.map((name) => ({ name })) })
+    })
+  });
+  assert.equal(await memberSchemaReady({}), false);
+  assert.equal(await memberSchemaReady({ MEMBER_DB: fakeDB(REQUIRED_MEMBER_TABLES) }), true);
+  assert.equal(await memberSchemaReady({
+    MEMBER_DB: fakeDB(REQUIRED_MEMBER_TABLES.filter((table) => table !== "session"))
+  }), false);
+  assert.equal(await memberSchemaReady({
+    MEMBER_DB: { prepare: () => ({ all: async () => { throw new Error("D1 unavailable"); } }) }
+  }), false);
+
+  const env = {
+    ANEVUM_MEMBERS_ENABLED: "true",
+    MEMBER_DB: fakeDB(REQUIRED_MEMBER_TABLES),
+    BETTER_AUTH_SECRET: "x".repeat(40),
+    GOOGLE_CLIENT_ID: "test-client-id",
+    GOOGLE_CLIENT_SECRET: "test-client-secret"
+  };
+  const request = new Request("https://anevum.com/api/member/availability");
+  let response = await memberEndpoint(request, env, "/api/member/availability");
+  assert.equal(response.status, 200);
+  assert.deepEqual(await response.json(), { available: true, provider: "google" });
+  response = await memberEndpoint(request, {
+    ...env, MEMBER_DB: fakeDB(REQUIRED_MEMBER_TABLES.filter((table) => table !== "account"))
+  }, "/api/member/availability");
+  assert.deepEqual(await response.json(), { available: false, provider: null });
 });

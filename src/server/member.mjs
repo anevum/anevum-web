@@ -1,6 +1,5 @@
 import { betterAuth } from "better-auth";
-
-const CANONICAL_ORIGIN = "https://anevum.com";
+import { resolveMemberOrigin, memberSchemaReady } from "./member-preflight.mjs";
 const PUBLIC_PROJECTS = new Set(["rhen"]);
 
 export function memberConfigured(env) {
@@ -14,10 +13,10 @@ export function memberConfigured(env) {
   );
 }
 
-export function makeMemberAuth(env) {
-  if (!memberConfigured(env)) throw new Error("Member identity is not configured.");
+export function makeMemberAuth(env, verifiedOrigin) {
+  if (!memberConfigured(env) || !verifiedOrigin) throw new Error("Member identity is not configured.");
   return betterAuth({
-    baseURL: CANONICAL_ORIGIN,
+    baseURL: verifiedOrigin,
     secret: env.BETTER_AUTH_SECRET,
     database: env.MEMBER_DB,
     emailAndPassword: { enabled: false },
@@ -48,7 +47,7 @@ export function makeMemberAuth(env) {
       }
     },
     session: { freshAge: 10 * 60 },
-    trustedOrigins: [CANONICAL_ORIGIN],
+    trustedOrigins: [verifiedOrigin],
     advanced: { useSecureCookies: true, ipAddress: { ipAddressHeaders: ["cf-connecting-ip"] } },
     rateLimit: {
       enabled: true,
@@ -73,11 +72,11 @@ function reply(data, status = 200) {
   });
 }
 
-function safeMutation(request) {
+function safeMutation(request, verifiedOrigin) {
   const url = new URL(request.url);
-  return url.protocol === "https:" &&
-    url.origin === CANONICAL_ORIGIN &&
-    request.headers.get("Origin") === CANONICAL_ORIGIN;
+  return Boolean(verifiedOrigin) && url.protocol === "https:" &&
+    url.origin === verifiedOrigin &&
+    request.headers.get("Origin") === verifiedOrigin;
 }
 
 async function safeJSON(request) {
@@ -92,8 +91,9 @@ async function safeJSON(request) {
 }
 
 export async function memberEndpoint(request, env, pathname) {
+  const verifiedOrigin = resolveMemberOrigin(request, env);
   if (pathname === "/api/member/availability") {
-    const available = memberConfigured(env) && new URL(request.url).origin === CANONICAL_ORIGIN;
+    const available = memberConfigured(env) && Boolean(verifiedOrigin) && await memberSchemaReady(env);
     return request.method === "GET"
       ? reply({ available, provider: available ? "google" : null })
       : reply({ message: "Method not allowed." }, 405);
@@ -101,9 +101,9 @@ export async function memberEndpoint(request, env, pathname) {
 
   // The API cannot open accidentally on a new preview or after missing secrets.
   if (!memberConfigured(env)) return reply({ message: "Member accounts are not available yet." }, 503);
-  if (new URL(request.url).origin !== CANONICAL_ORIGIN) return reply({ message: "Member API is disabled outside production." }, 403);
+  if (!verifiedOrigin) return reply({ message: "Member API origin is not authorized." }, 403);
 
-  const auth = makeMemberAuth(env);
+  const auth = makeMemberAuth(env, verifiedOrigin);
   if (pathname === "/api/auth" || pathname.startsWith("/api/auth/")) {
     return auth.handler(request);
   }
@@ -111,7 +111,7 @@ export async function memberEndpoint(request, env, pathname) {
   const session = await auth.api.getSession({ headers: request.headers }).catch(() => null);
   const user = session?.user;
   if (!user?.id) return reply({ message: "Sign in required." }, 401);
-  if (!["GET", "HEAD"].includes(request.method) && !safeMutation(request)) {
+  if (!["GET", "HEAD"].includes(request.method) && !safeMutation(request, verifiedOrigin)) {
     return reply({ message: "Same-origin request required." }, 403);
   }
 
