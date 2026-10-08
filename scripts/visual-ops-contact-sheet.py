@@ -6,9 +6,9 @@ import io
 import os
 
 root = Path(os.environ["RUNNER_TEMP"]) / "anevum-visuals"
-routes = ["home", "live", "research", "architecture", "founder", "resume", "releases", "command-operate", "command-discover", "command-review", "command-system", "home-systems"]
+routes = ["home", "products", "products-rhen", "live", "research", "architecture", "about", "resume", "releases", "command-operate", "command-discover", "command-review", "command-system"]
 for viewport, size in [("desktop", (480, 334)), ("mobile", (195, 422))]:
-    sheet = Image.new("RGB", (size[0] * 3, (size[1] + 26) * 4), "#04070D")
+    rows = (len(routes) + 2) // 3\n    sheet = Image.new("RGB", (size[0] * 3, (size[1] + 26) * rows), "#04070D")
     draw = ImageDraw.Draw(sheet)
     for index, route in enumerate(routes):
         shot = Image.open(root / f"visual-{route}-{viewport}.png").convert("RGB")
