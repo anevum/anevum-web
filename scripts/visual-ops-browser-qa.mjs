@@ -148,10 +148,10 @@ async function runCase(route, viewport) {
           const researchReady = ${JSON.stringify(route)} !== "/research" || Boolean(document.querySelector(".studio-notes-page"));
           const fieldNoteReady = !${JSON.stringify(route)}.startsWith("/research/") || Boolean(document.querySelector(".field-note-detail .field-note-reproduce"));
           const aboutReady = ${JSON.stringify(route)} !== "/about" || Boolean(document.querySelector(".studio-about-page"));
-          const resumeReady = ${JSON.stringify(route)} !== "/resume" || Boolean(document.querySelector(".resume-page .resume-sheet"));
+          const resumeReady = ${JSON.stringify(route)} !== "/resume" || Boolean(document.querySelector(".resume-page .resume-sheet"));\n          const releasesReady = ${JSON.stringify(route)} !== "/releases" || Boolean(document.querySelector(".studio-releases-page .studio-release-feature"));
           const commandReady = !${JSON.stringify(route)}.startsWith("/command/") || Boolean(document.querySelector(".command-v4"));
-          return {ready:pathReady && suspenseReady && homeReady && productsReady && rhenReady && liveReady && architectureReady && researchReady && fieldNoteReady && aboutReady && resumeReady && commandReady,
-            pathname:location.pathname,title:document.title,suspenseReady,homeReady,productsReady,rhenReady,liveReady,architectureReady,researchReady,fieldNoteReady,aboutReady,resumeReady,commandReady};
+          return {ready:pathReady && suspenseReady && homeReady && productsReady && rhenReady && liveReady && architectureReady && researchReady && fieldNoteReady && aboutReady && resumeReady && releasesReady && commandReady,
+            pathname:location.pathname,title:document.title,suspenseReady,homeReady,productsReady,rhenReady,liveReady,architectureReady,researchReady,fieldNoteReady,aboutReady,resumeReady,releasesReady,commandReady};
         })()`,
         returnByValue:true
       });
@@ -175,10 +175,10 @@ async function runCase(route, viewport) {
         const researchReady = ${JSON.stringify(route)} !== "/research" || Boolean(document.querySelector(".studio-notes-page"));
         const fieldNoteReady = !${JSON.stringify(route)}.startsWith("/research/") || Boolean(document.querySelector(".field-note-detail .field-note-reproduce"));
         const aboutReady = ${JSON.stringify(route)} !== "/about" || Boolean(document.querySelector(".studio-about-page"));
-        const resumeReady = ${JSON.stringify(route)} !== "/resume" || Boolean(document.querySelector(".resume-page .resume-sheet"));
+        const resumeReady = ${JSON.stringify(route)} !== "/resume" || Boolean(document.querySelector(".resume-page .resume-sheet"));\n          const releasesReady = ${JSON.stringify(route)} !== "/releases" || Boolean(document.querySelector(".studio-releases-page .studio-release-feature"));
         const commandReady = !${JSON.stringify(route)}.startsWith("/command/") || Boolean(document.querySelector(".command-v4"));
-        return {ready:pathReady && suspenseReady && homeReady && productsReady && rhenReady && liveReady && architectureReady && researchReady && fieldNoteReady && aboutReady && resumeReady && commandReady,
-          pathname:location.pathname,title:document.title,suspenseReady,homeReady,productsReady,rhenReady,liveReady,architectureReady,researchReady,fieldNoteReady,aboutReady,resumeReady,commandReady};
+        return {ready:pathReady && suspenseReady && homeReady && productsReady && rhenReady && liveReady && architectureReady && researchReady && fieldNoteReady && aboutReady && resumeReady && releasesReady && commandReady,
+          pathname:location.pathname,title:document.title,suspenseReady,homeReady,productsReady,rhenReady,liveReady,architectureReady,researchReady,fieldNoteReady,aboutReady,resumeReady,releasesReady,commandReady};
       })()`,
       returnByValue:true
     });
@@ -346,7 +346,7 @@ async function runCase(route, viewport) {
     "/research/prediction-outcome-evidence-chain":["field-note",["REPRODUCE / CHALLENGE THIS NOTE"]],
     "/architecture":["architecture",["One runtime. Internal modules."]],
     "/about":["about",["studio-about-page","ANEVUM is one person right now."]],
-    "/resume":["resume",["Technical Skills"]]
+    "/resume":["resume",["Technical Skills"]],\n    "/releases":["releases",["studio-releases-page","Every version leaves a record."]]
   };
   if (evidenceRoutes[route]) {
     const [name, markers] = evidenceRoutes[route];
