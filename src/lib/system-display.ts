@@ -65,7 +65,8 @@ export function runtimeOwner(row: RuntimeRow): SystemName | null {
   if (/velum/.test(key)) return "VELUM";
   if (/nostra/.test(key)) return "NOSTRA";
   if (/iren|foundation|research[-_ ]?scheduler/.test(key)) return "IREN";
-  if (/graen|research[-_ ]?agent/.test(key)) return "GRAEN";
+  if (/research[-_ ]?(agent|evidence)/.test(key)) return null;
+  if (/graen/.test(key)) return "GRAEN";
   if (/rhen|alpaca[-_ ]?trader|preopen/.test(key)) return "RHEN";
   return null;
 }
@@ -139,10 +140,10 @@ export function publicSystem(name: SystemName, feed?: LiveTradingFeed | null, no
     : name === "RHEN"
       ? "Runtime healthy · waiting for the next executable market cycle."
       : name === "GRAEN"
-        ? "Research worker healthy · waiting for research work."
+        ? "On-demand research is idle · no bounded experiment is queued."
         : name === "VELUM"
-          ? "Replay worker healthy · waiting for an eligible replay."
-          : "Forecast worker healthy · waiting for forecast or scoring inputs.";
+          ? "On-demand replay is idle · no validation run is queued."
+          : "Embedded forecast loop healthy · waiting for forecast or scoring inputs.";
 
   return {
     name,
@@ -220,10 +221,10 @@ export function commandSystem(name: SystemName, snapshot: IrenSnapshot | null, f
     : name === "RHEN"
       ? "Runtime healthy · waiting for the next executable market cycle."
       : name === "GRAEN"
-        ? "Research worker healthy · waiting for research work."
+        ? "On-demand research is idle · no bounded experiment is queued."
         : name === "VELUM"
-          ? "Replay worker healthy · waiting for an eligible replay."
-          : "Forecast worker healthy · waiting for forecast or scoring inputs.";
+          ? "On-demand replay is idle · no validation run is queued."
+          : "Embedded forecast loop healthy · waiting for forecast or scoring inputs.";
   const activity = String(
     runningJob?.title
     || (queuedJob ? "Queued: " + String(queuedJob.title || queuedJob.job_type || "work") : "")

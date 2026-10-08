@@ -4,8 +4,8 @@ import RhenModuleGlyph, { type RhenModuleGlyphName } from "../components/company
 const stack = [
   ["PUBLIC SURFACE", "React · TypeScript · Vite", "ANEVUM.com, Command entry points, the public Live Terminal, Field Notes, founder profile, and public-safe evidence."],
   ["EDGE", "Cloudflare Workers · Access", "Production delivery, protected Command identity, API proxying, privacy boundaries, and response hardening."],
-  ["RUNTIME", "RHEN · canonical Railway service", "The canonical production service runs the RHEN supervisor, execution boundary, Core/Store, and named internal modules on one persistent volume."],
-  ["MODULES", "Execution · Control · Research · Replay · Forecast", "Functional boundaries remain explicit even though the deployment topology is consolidated."],
+  ["RUNTIME", "RHEN · one permanent Railway service", "The production service runs the execution boundary, Core/Store, deterministic IREN control, and public/API routing on one persistent volume."],
+  ["MODULES", "Embedded · deterministic · on-demand", "NOSTRA and deterministic evidence review are embedded in Core; GRAEN research and VELUM replay run only when bounded work requires them."],
   ["CORE / STORE", "SQLite WAL · /data/rhen-core.db", "Bounded state and evidence storage with retention, compaction, WAL checkpointing, and one canonical Core writer."],
   ["BROKER", "Alpaca", "Only RHEN execution receives live broker execution configuration. Research, replay, forecast, control, Core/Store, and the paper-only candidate path cannot self-promote into live authority."],
   ["INTEGRATIONS", "Slack · GitHub · Railway", "Operational alerts, source control, CI, deployment, and service-level infrastructure."]
@@ -13,12 +13,12 @@ const stack = [
 
 const modules: ReadonlyArray<readonly [string, RhenModuleGlyphName, string]> = [
   ["EXECUTION", "EXECUTION", "Market observation, regular and extended equity sessions, orders, fills, risk, reconciliation, session handling, and broker-derived evidence."],
-  ["CONTROL", "CONTROL", "Health, incidents, scheduling, orchestration, protected-action gates, and system supervision."],
-  ["RESEARCH", "RESEARCH", "GRAEN bounded strategy discovery, chronological development/validation/holdout evidence, falsification, and protected promotion state."],
-  ["REPLAY", "REPLAY", "VELUM independent historical replay, friction stress, execution-delay stress, and counterfactual verification without live broker authority."],
-  ["FORECAST", "FORECAST", "NOSTRA regime, baseline, calibration, forward-measurement, and prediction-state workflows."],
-  ["CORE / STORE", "CORE", "Canonical APIs, scheduler state, research state, bounded evidence storage, retention, and compaction."],
-  ["RESEARCH WORKER", "WORKER", "Deterministic evidence review plus deliberate model-assisted Work handoffs under protected promotion boundaries."],
+  ["CONTROL", "CONTROL", "IREN deterministic health, incidents, market-relative scheduling, configuration identity, recovery, and protected-action gates."],
+  ["RESEARCH", "RESEARCH", "GRAEN is an on-demand research method: canonical evidence becomes bounded hypotheses, experiments, and deliberate model-assisted investigation outside the live order path."],
+  ["REPLAY", "REPLAY", "VELUM runs on demand for historical replay, friction stress, execution-delay stress, and counterfactual verification without live broker authority."],
+  ["FORECAST", "FORECAST", "NOSTRA is embedded numerical forecasting: point-in-time baselines, shrunken-drift forecasts, calibration, and matured-outcome scoring."],
+  ["CORE / STORE", "CORE", "Canonical APIs, embedded forecast/evidence review, scheduler state, bounded evidence storage, retention, and compaction."],
+  ["EVIDENCE REVIEW", "WORKER", "Deterministic post-session review runs inside Core; semantic AI research is invoked deliberately through operator / ChatGPT Work workflows."],
   ["COMMAND / API", "COMMAND", "Protected operator and customer routing into the same canonical RHEN state rather than a parallel platform."]
 ];
 
@@ -29,8 +29,9 @@ export default function Architecture() {
         <span>RHEN V4.3 ARCHITECTURE</span>
         <h1>One runtime. Internal modules. Explicit authority isolation.</h1>
         <p>
-          ANEVUM has consolidated its production topology around RHEN. IREN, GRAEN, VELUM, and NOSTRA remain
-          named internal modules with distinct control, research, replay, and forecasting responsibilities.
+          ANEVUM has consolidated its production topology around RHEN. IREN remains deterministic control,
+          NOSTRA runs as embedded numerical forecasting, and GRAEN / VELUM remain named on-demand research
+          and replay functions rather than permanent services.
           Live broker authority remains confined to RHEN execution and the current long U.S. equities / ETF scope;
           research, replay, forecasting, and control cannot grant themselves broker-write authority.
         </p>
@@ -49,7 +50,7 @@ export default function Architecture() {
       <section className="company-section">
         <header className="company-section-head">
           <span>INTERNAL MODULES</span>
-          <h2>Consolidation removes duplicate services, not functional boundaries.</h2>
+          <h2>Functional boundaries remain even when most modules do not need permanent compute.</h2>
         </header>
         <div className="architecture-role-grid">
           {modules.map(([name, glyph, role], index) => (
@@ -89,7 +90,7 @@ export default function Architecture() {
           <article><RhenModuleGlyph module="CORE" decorative /><span>CORE</span><strong>Bounded SQLite instead of an operational PostgreSQL dependency.</strong><p>RHEN V4.3 measures effective live SQLite usage, reuses reclaimable pages, compacts bounded history, and sheds routine analytics only under defined storage pressure while preserving critical execution evidence.</p></article>
           <article><RhenModuleGlyph module="CORE" decorative /><span>RETENTION</span><strong>Routine telemetry is compacted instead of warehoused forever.</strong><p>Decision summaries, normalized candidate observations, position metrics, and routine evidence use explicit retention windows.</p></article>
           <article><RhenModuleGlyph module="CONTROL" decorative /><span>AUTHORITY</span><strong>One runtime does not mean one permission set.</strong><p>Research, replay, forecast, control, and pure Core subprocesses have execution disabled; broker order authority remains confined to execution.</p></article>
-          <article><RhenModuleGlyph module="RESEARCH" decorative /><span>STRATEGY</span><strong>Runtime authority and research candidates stay separate.</strong><p>Command reads current equity authority from RHEN while GRAEN candidates, VELUM verification, exact forward-outcome readiness, shadow economics/allocation evidence, and IREN release state remain explicit. Automated research can reach review, never live authority.</p></article>
+          <article><RhenModuleGlyph module="RESEARCH" decorative /><span>STRATEGY</span><strong>Runtime authority and research candidates stay separate.</strong><p>Command reads current equity authority from RHEN while GRAEN proposals, on-demand VELUM verification, NOSTRA forward outcomes, and IREN control state remain explicit. Deterministic evidence can reach review; AI-assisted research remains deliberate and cannot grant live authority.</p></article>
           <article><RhenModuleGlyph module="CONTROL" decorative /><span>CUTOVER</span><strong>Retired services remain historical after RHEN is verified healthy.</strong><p>The canonical runtime preserves rollback evidence, filters retired asset-class research from active projections, and does not treat architectural simplification as permission to skip verification.</p></article>
         </div>
       </section>
