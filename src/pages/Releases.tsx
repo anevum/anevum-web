@@ -1,5 +1,4 @@
 import { Link } from "react-router-dom";
-import RhenMark, { RhenSectionLabel } from "../components/RhenMark";
 import {
   archivedRhenReleases,
   currentRhenRelease,
@@ -7,7 +6,6 @@ import {
   nextMinorVersion,
   nextPatchVersion
 } from "../data/releases";
-import "../styles/releases.css";
 
 function displayDate(value: string) {
   const date = new Date(value + "T12:00:00Z");
@@ -17,50 +15,82 @@ function displayDate(value: string) {
 export default function Releases() {
   const current = currentRhenRelease();
   const archive = archivedRhenReleases();
-  return (
-    <section className="release-index docs-page">
-      <header className="release-index-hero">
-        <div>
-          <RhenSectionLabel context="RELEASE PROGRAM" />
-          <h1>Releases</h1>
-          <p>
-            Named system milestones that preserve what RHEN was, what changed, what was verified, what remained unknown, and why the next version exists.
-          </p>
-        </div>
-        <div className="release-index-mark" aria-hidden="true"><RhenMark decorative /></div>
-      </header>
 
-      <Link className="release-feature" to={`/releases/${current.slug}`}>
-        <div className="release-feature-meta">
-          <span>CURRENT RELEASE</span>
-          <strong>RHEN {current.version}</strong>
-          <small>{displayDate(current.date)}</small>
+  return (
+    <div className="studio-page studio-releases-page">
+      <section className="studio-page-hero">
+        <span>RHEN / RELEASES</span>
+        <h1>Every version leaves a record.</h1>
+        <p>
+          RHEN releases preserve what changed, what was verified, what remained unknown, and what the system was actually
+          authorized to do at that point in time.
+        </p>
+      </section>
+
+      <Link className="studio-release-feature" to={`/releases/${current.slug}`}>
+        <div className="studio-release-feature-copy">
+          <div className="studio-release-meta">
+            <span>CURRENT RELEASE</span>
+            <strong>RHEN {current.version}</strong>
+            <time>{displayDate(current.date)}</time>
+          </div>
+          <div>
+            <span>{current.lifecycle}</span>
+            <h2>{current.codename}</h2>
+            <p>{current.headline}</p>
+          </div>
         </div>
-        <div className="release-feature-title">
-          <span>{current.lifecycle}</span>
-          <h2>{current.codename}</h2>
-          <p>{current.headline}</p>
-        </div>
-        <div className="release-feature-arrow">OPEN <i>↗</i></div>
+        <aside>
+          <span>RELEASE CLASS</span>
+          <strong>{current.releaseClass}</strong>
+          <span>SOURCE</span>
+          <strong>{current.sourceCommit.slice(0, 12)}</strong>
+          <span>OPEN RECORD</span>
+          <b>↗</b>
+        </aside>
       </Link>
 
-      <section className="release-standard">
-        <div className="release-section-label"><span>01</span><strong>THE RELEASE STANDARD</strong></div>
-        <div className="release-standard-grid">
-          <article><small>PATCH</small><strong>{nextPatchVersion(current.version)}</strong><p>Bug fixes, telemetry corrections, documentation, and operational hardening. Normally retains the active codename.</p></article>
-          <article><small>MINOR</small><strong>{nextMinorVersion(current.version)}</strong><p>A meaningful capability or operating-model change. Receives release notes and normally a new codename.</p></article>
-          <article><small>MAJOR</small><strong>{nextMajorVersion(current.version)}</strong><p>A generational milestone with a full release packet, immutable manifest, evidence summary, limitations, and new codename.</p></article>
+      <section className="studio-section">
+        <header className="studio-section-heading">
+          <span>VERSIONING</span>
+          <div>
+            <h2>Changes should say how large they really are.</h2>
+            <p>A release name is useful only if it makes the system easier to reconstruct later.</p>
+          </div>
+        </header>
+        <div className="studio-release-standard-grid">
+          <article><span>PATCH</span><strong>{nextPatchVersion(current.version)}</strong><p>Bug fixes, telemetry corrections, documentation, and operational hardening without a generational change.</p></article>
+          <article><span>MINOR</span><strong>{nextMinorVersion(current.version)}</strong><p>A meaningful capability or operating-model change that deserves its own release record.</p></article>
+          <article><span>MAJOR</span><strong>{nextMajorVersion(current.version)}</strong><p>A generational milestone with a full evidence boundary, limitations, verification, and new operating thesis.</p></article>
         </div>
       </section>
 
-      <section className="release-archive">
-        <div className="release-section-label"><span>02</span><strong>ARCHIVE</strong></div>
-        {archive.length ? archive.map((release) => (
-          <Link key={release.slug} to={`/releases/${release.slug}`} className="release-archive-row">
-            <span>RHEN {release.version}</span><strong>{release.codename}</strong><small>{release.lifecycle}</small><time>{displayDate(release.date)}</time>
-          </Link>
-        )) : <div className="release-empty">{current.codename} is the first registered release. Future named releases will appear here automatically.</div>}
+      <section className="studio-section">
+        <header className="studio-section-heading">
+          <span>ARCHIVE</span>
+          <div><h2>Older releases stay inspectable.</h2><p>The archive is part of the evidence. New claims should not rewrite what an earlier build actually was.</p></div>
+        </header>
+        <div className="studio-release-archive">
+          {archive.length ? archive.map((release) => (
+            <Link key={release.slug} to={`/releases/${release.slug}`}>
+              <span>RHEN {release.version}</span>
+              <strong>{release.codename}</strong>
+              <small>{release.lifecycle}</small>
+              <time>{displayDate(release.date)}</time>
+              <b>↗</b>
+            </Link>
+          )) : (
+            <div className="studio-release-empty">{current.codename} is the first registered release. Future named releases will appear here automatically.</div>
+          )}
+        </div>
       </section>
-    </section>
+
+      <section className="studio-page-cta">
+        <span>PRODUCT CONTEXT</span>
+        <h2>A release is evidence about RHEN, not a company announcement.</h2>
+        <p>The public record stays under the product so ANEVUM can grow beyond one system without turning every engineering change into the identity of the studio.</p>
+        <Link to="/products/rhen">Back to RHEN →</Link>
+      </section>
+    </div>
   );
 }
