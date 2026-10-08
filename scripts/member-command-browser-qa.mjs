@@ -18,7 +18,7 @@ async function runCase(viewport, state) {
   const ws=new WebSocket(target.webSocketDebuggerUrl); const pending=new Map(); let next=0;
   await new Promise((resolve,reject)=>{ws.addEventListener("open",resolve,{once:true});ws.addEventListener("error",reject,{once:true});});
   ws.addEventListener("message", event=>{const value=JSON.parse(String(event.data));if(!value.id)return;const task=pending.get(value.id);if(!task)return;pending.delete(value.id);clearTimeout(task.timer);if(value.error)task.reject(new Error(value.error.message));else task.resolve(value.result);});
-  const send=(method,params={})=>new Promise((resolve,reject)=>{const id=++next;const timer=setTimeout(()=>reject(new Error("CDP timeout: "+method)),10000);pending.set(id,{resolve,reject,timer});ws.send(JSON.stringify({id,method,params}));});
+  const send=(method,params={},timeoutMs=20000)=>new Promise((resolve,reject)=>{const id=++next;const timer=setTimeout(()=>{pending.delete(id);reject(new Error("CDP timeout: "+method));},timeoutMs);pending.set(id,{resolve,reject,timer});try{ws.send(JSON.stringify({id,method,params}));}catch(error){clearTimeout(timer);pending.delete(id);reject(error);}});
   const evaluate=async expression => {const result=await send("Runtime.evaluate", {expression,returnByValue:true,awaitPromise:true});if(result.exceptionDetails)throw new Error(result.exceptionDetails.text);return result.result?.value;};
   await send("Page.enable"); await send("Runtime.enable"); await send("Emulation.setDeviceMetricsOverride", {width:viewport.width,height:viewport.height,deviceScaleFactor:1,mobile:viewport.width<760});
   await send("Page.addScriptToEvaluateOnNewDocument", {source:`(() => {
@@ -36,8 +36,18 @@ async function runCase(viewport, state) {
       return original(input,init);
     };
   })()`});
-  await send("Page.navigate", {url:base+"/me"});
-  for(let i=0;i<50;i++){if(await evaluate('document.querySelector(".member-program") && !document.body.textContent.includes("Checking your account")'))break;await pause(100);}
+  // Cloudflare preview cold-start/navigation can outlive the default CDP command
+  // timeout. Retry only a navigation timeout, never a UI/assertion failure.
+  const destination=base+"/me";
+  for(let attempt=0;attempt<2;attempt++){
+    try{await send("Page.navigate",{url:destination},30000);break;}
+    catch(error){
+      if(error?.message!=="CDP timeout: Page.navigate"||attempt===1)throw error;
+      await send("Page.stopLoading",{},10000).catch(()=>{});
+      await pause(500);
+    }
+  }
+  for(let i=0;i<100;i++){if(await evaluate('document.querySelector(".member-program") && !document.body.textContent.includes("Checking your account")'))break;await pause(100);}
   const info=await evaluate(`(() => ({text:document.body.textContent,overflow:document.documentElement.scrollWidth>innerWidth+1,operator:!!document.querySelector('a[href^="/command/rhen"]'),background:getComputedStyle(document.body).backgroundColor,buttons:[...document.querySelectorAll('.member-card-actions button')].map(el=>el.textContent)}))()`);
   if(info.overflow||info.operator||info.background!=="rgb(248, 248, 245)")throw new Error("Member portal layout/access failure "+JSON.stringify(info));
   if(state==="disabled"&&(!info.text.includes("Member accounts are not open yet")||info.buttons.length))throw new Error("Disabled accounts advertised persistence");
