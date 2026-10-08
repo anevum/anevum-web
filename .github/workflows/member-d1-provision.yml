@@ -71,7 +71,8 @@ jobs:
             fi
             if [ "$count" -eq 0 ] && [ "$MODE" = 'create-missing' ]; then
               echo "Creating absent D1 database: $database"
-              npx wrangler d1 create "$database" --json > "$RUNNER_TEMP/create-$database.json"
+              # Wrangler d1 create does not support --json; the next d1 list is authoritative.
+              npx wrangler d1 create "$database" > "$RUNNER_TEMP/create-$database.log"
               npx wrangler d1 list --json > "$inventory"
               jq -e 'type == "array"' "$inventory" > /dev/null
             fi
