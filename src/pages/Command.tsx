@@ -65,7 +65,7 @@ const PAGE_COPY: Record<CommandPage, { eyebrow: string; title: string; detail: s
   discover: {
     eyebrow: "GRAEN + VELUM / DISCOVERY",
     title: "Discover",
-    detail: "Market coverage, opportunity funnel, frozen experiments, replay evidence, and real research progress."
+    detail: "Live research observations, market coverage, opportunity funnel, replay evidence, and bounded discovery progress."
   },
   review: {
     eyebrow: "IREN / DECISION BOUNDARY",
@@ -145,7 +145,7 @@ export default function Command() {
   useEffect(() => {
     if (!session || !commandAdmin) return;
     void refresh();
-    // 4.4 REST is a degraded diagnostic audit. Prices/candles use one live socket.
+    // 4.4 REST is a degraded research diagnostic. Prices/candles use one live observation socket.
     const timer = window.setInterval(refresh, liveEnabled ? 60000 : 5000);
     return () => window.clearInterval(timer);
   }, [session, commandAdmin, refresh, liveEnabled]);
@@ -228,7 +228,6 @@ export default function Command() {
 
             {snapshot ? <CommandTradingLanes snapshot={snapshot} /> : <div className="command-v4-empty">Waiting for RHEN trading state.</div>}
 
-            {liveEnabled && <CommandLiveMarket state={liveState} />}
 
             <div className="command-v4-two command-v4-operating-charts">
               <CommandAccountTracker account={account} history={snapshot?.account_history} orders={recentOrders} />
@@ -252,11 +251,11 @@ export default function Command() {
           </>
         )}
 
-        {page === "discover" && <CommandDiscoveryDeck snapshot={snapshot} control={controlObservation.snapshot} now={controlObservation.now} />}
+        {page === "discover" && (\n          <>\n            <CommandDiscoveryDeck snapshot={snapshot} control={controlObservation.snapshot} now={controlObservation.now} />\n            {liveEnabled && <CommandLiveMarket state={liveState} />}\n          </>\n        )}
 
         {page === "review" && (
           <div className="command-v4-review-stack">
-            <CommandReviewDeck snapshot={controlObservation.snapshot} evidence={evidence} daily={dailyReport} weekly={weeklyReport} now={controlObservation.now} />
+            <CommandReviewDeck snapshot={controlObservation.snapshot} evidence={evidence} daily={dailyReport} weekly={weeklyReport} researchObservation={liveEnabled ? liveState : null} now={controlObservation.now} />
             <CommandIrenMaintenance session={session} />
           </div>
         )}
