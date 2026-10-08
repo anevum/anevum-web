@@ -51,6 +51,67 @@ export function publicProducts() {
   return productRegistry.filter((product) => product.visibility === "public");
 }
 
-export function productBySlug(slug?: string) {
+export function publicProductBySlug(slug?: string) {
   return productRegistry.find((product) => product.slug === slug);
+}
+
+/* Legacy internal topology compatibility.
+   These records are not the public product registry and are not routed as products. */
+export type Product = {
+  slug: "iren" | "rhen" | "nostra" | "graen" | "velum";
+  name: "IREN" | "RHEN" | "NOSTRA" | "GRAEN" | "VELUM";
+  eyebrow: string;
+  category: string;
+  status: string;
+  summary: string;
+  role: string;
+  capabilities: string[];
+  technologies: string[];
+  evidence: string[];
+  boundaries: string[];
+  flow: string[];
+  related: string[];
+};
+
+export type Module = {
+  name: string;
+  category: string;
+  owner: string;
+  status: string;
+  purpose: string;
+  interfaces: string[];
+};
+
+const legacy = (
+  slug: Product["slug"],
+  name: Product["name"],
+  eyebrow: string,
+  category: string,
+  role: string
+): Product => ({
+  slug, name, eyebrow, category, status: "INTERNAL MODULE",
+  summary: role, role,
+  capabilities: ["Observe canonical state", "Produce bounded evidence", "Preserve explicit authority boundaries"],
+  technologies: ["Python", "RHEN Core", "Railway"],
+  evidence: ["Canonical telemetry", "Durable research state"],
+  boundaries: ["No silent authority expansion", "Public projection remains sanitized"],
+  flow: ["OBSERVE", "MEASURE", "PERSIST", "REVIEW"],
+  related: ["rhen","iren","graen","nostra","velum"].filter((item) => item !== slug)
+});
+
+export const products: Product[] = [
+  legacy("rhen","RHEN","MARKET SYSTEM","Equity intelligence & execution","Canonical execution and market-observation runtime."),
+  legacy("iren","IREN","CONTROL","Control & orchestration","Control, health, incidents, scheduling, and protected review."),
+  legacy("graen","GRAEN","RESEARCH","Research","Bounded research, methodology, and evidence."),
+  legacy("nostra","NOSTRA","FORECAST","Forecasting","Forward horizons, regimes, uncertainty, and outcome measurement."),
+  legacy("velum","VELUM","REPLAY","Replay","Broker-isolated replay and counterfactual research.")
+];
+
+export const modules: Module[] = [
+  { name:"Research Agent", category:"Research runtime", owner:"RHEN / GRAEN", status:"OPERATIONAL", purpose:"Runs bounded post-event evidence review without broker authority.", interfaces:["Canonical telemetry","RHEN Core"] },
+  { name:"Canonical Scheduler", category:"Operations", owner:"IREN", status:"OPERATIONAL", purpose:"Owns durable market-relative and interval workflows.", interfaces:["Scheduler ledger","Exchange calendar"] }
+];
+
+export function productBySlug(slug?: string) {
+  return products.find((product) => product.slug === slug);
 }
