@@ -44,9 +44,10 @@ export function makeMemberAuth(env) {
     },
     session: { freshAge: 10 * 60 },
     trustedOrigins: [CANONICAL_ORIGIN],
-    advanced: { useSecureCookies: true },
+    advanced: { useSecureCookies: true, ipAddress: { ipAddressHeaders: ["cf-connecting-ip"] } },
     rateLimit: {
       enabled: true,
+      storage: "database",
       window: 60,
       max: 40,
       customRules: {
@@ -87,8 +88,9 @@ async function safeJSON(request) {
 
 export async function memberEndpoint(request, env, pathname) {
   if (pathname === "/api/member/availability") {
+    const available = memberConfigured(env) && new URL(request.url).origin === CANONICAL_ORIGIN;
     return request.method === "GET"
-      ? reply({ available: memberConfigured(env), provider: memberConfigured(env) ? "google" : null })
+      ? reply({ available, provider: available ? "google" : null })
       : reply({ message: "Method not allowed." }, 405);
   }
 
