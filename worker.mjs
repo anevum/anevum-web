@@ -269,40 +269,44 @@ function currentReleaseSnapshot() {
 function publicRouteMetadata(pathname) {
   const staticRoutes = {
     "/": {
-      title: "ANEVUM — Independent Software Studio",
-      description: "ANEVUM is an independent software studio run by Devon Akins, building practical software around money, investing, automation, and reducing repetitive cognitive work."
+      title: "ANEVUM — Independent Software",
+      description: "Independent software built against real problems, with real data, public evidence, and versioned work."
     },
     "/products": {
       title: "Products — ANEVUM",
-      description: "Explore ANEVUM products and experiments. RHEN is the current flagship project, with room for focused financial tools, utilities, and future software."
+      description: "The canonical registry of public ANEVUM products. Products appear when they actually exist."
+    },
+    "/feed": {
+      title: "Feed — ANEVUM",
+      description: "A chronological record assembled from real releases, Field Notes, public-safe runtime observations, and research decisions."
+    },
+    "/field-notes": {
+      title: "Field Notes — ANEVUM",
+      description: "ANEVUM Field Notes document research decisions, failures, engineering changes, releases, and measured evidence."
     },
     "/products/rhen": {
       title: "RHEN — ANEVUM",
-      description: "RHEN is ANEVUM's live automated trading and research system for measuring market ideas, execution, replay, forecasting, and evidence under real operating constraints."
+      description: "RHEN is ANEVUM's live trading and research system operating on real market data with public evidence and narrow live authority."
     },
-    "/live": {
+    "/products/rhen/evidence": {
       title: "RHEN Public Evidence — ANEVUM",
-      description: "Inspect sanitized public RHEN runtime and performance evidence without exposing private account, order, position, or strategy details."
+      description: "Inspect sanitized RHEN runtime and performance evidence without exposing protected broker, position, order, or strategy details."
     },
-    "/research": {
-      title: "Field Notes — ANEVUM",
-      description: "ANEVUM Field Notes document research decisions, failures, engineering changes, releases, and the evidence used to decide what happens next."
-    },
-    "/architecture": {
+    "/products/rhen/architecture": {
       title: "RHEN Architecture — ANEVUM",
-      description: "Inspect RHEN's execution, research, replay, forecasting, control, storage, and evidence boundaries."
+      description: "Inspect RHEN execution, research, replay, forecasting, control, storage, and evidence boundaries."
+    },
+    "/products/rhen/releases": {
+      title: "RHEN Releases — ANEVUM",
+      description: "RHEN release records document production changes, verification, limitations, and public system history."
     },
     "/about": {
-      title: "About — Devon Akins / ANEVUM",
-      description: "About Devon Akins and ANEVUM, an independent software studio building practical tools around finance, automation, research, and everyday cognitive burden."
+      title: "About — ANEVUM",
+      description: "About ANEVUM, the independently built and operated software studio."
     },
     "/resume": {
-      title: "Devon Akins — Résumé",
-      description: "Résumé for Devon Akins, founder of ANEVUM, covering software systems, infrastructure, research, mathematics, teaching, and production engineering."
-    },
-    "/releases": {
-      title: "RHEN Releases — ANEVUM",
-      description: "RHEN release records documenting production changes, verification, limitations, and public system history."
+      title: "Résumé — ANEVUM",
+      description: "Professional résumé and background for the person responsible for ANEVUM."
     }
   };
 
@@ -313,14 +317,14 @@ function publicRouteMetadata(pathname) {
     };
   }
 
-  if (pathname.startsWith("/releases/")) {
-    const slug = pathname.slice("/releases/".length);
+  if (pathname.startsWith("/products/rhen/releases/")) {
+    const slug = pathname.slice("/products/rhen/releases/".length);
     const release = releaseRegistry.releases.find((item) => item.slug === slug);
     if (release) {
       return {
         title: "RHEN " + release.version + " — " + release.codename + " — ANEVUM",
         description: release.releaseClass + ". " + release.abstract,
-        url: "https://anevum.com/releases/" + release.slug
+        url: "https://anevum.com/products/rhen/releases/" + release.slug
       };
     }
   }
@@ -504,9 +508,13 @@ export default {
     if (request.method === "GET" || request.method === "HEAD") {
       const legacyRedirects = {
         "/founder": "/about",
-        "/performance": "/live",
+        "/live": "/products/rhen/evidence",
+        "/performance": "/products/rhen/evidence",
+        "/architecture": "/products/rhen/architecture",
+        "/releases": "/products/rhen/releases",
+        "/research": "/field-notes",
         "/case-studies": "/products",
-        "/theory": "/research",
+        "/theory": "/field-notes",
         "/products/iren": "/products/rhen",
         "/products/nostra": "/products/rhen",
         "/products/graen": "/products/rhen",
