@@ -98,12 +98,49 @@ jobs:
         run: |
           set -euo pipefail
           test -n "$STAGING_URL"
-          availability="$(curl --fail --silent --show-error --retry 5 --retry-delay 2 "$STAGING_URL/api/member/availability")"
-          printf '%s' "$availability" | jq -e '.available == false and .provider == null' > /dev/null
-          member_status="$(curl --silent --show-error -o /dev/null -w '%{http_code}' "$STAGING_URL/api/member/me")"
-          test "$member_status" = '503'
-          operator_status="$(curl --silent --show-error -o /dev/null -w '%{http_code}' "$STAGING_URL/api/command/trader/status")"
-          test "$operator_status" = '401'
-          headers="$(curl --fail --silent --show-error -D - -o /dev/null "$STAGING_URL/")"
-          printf '%s' "$headers" | grep -iq '^x-robots-tag: noindex, nofollow, noarchive'
-          echo 'Bootstrap probes passed: unauthenticated member unavailable, operator denied, search indexing disabled.'
+          # A newly created workers.dev route can become reachable after the
+          # deploy API reports success. Curl's default --retry does not retry 404.
+          # Wait a bounded time, but never silently accept a live signup response.
+          status='not-checked'
+          available=0
+          for attempt in $(seq 1 30); do
+            status="$(curl --silent --show-error --max-time 12 -o "$RUNNER_TEMP/member-availability.json" -w '%{http_code}' "$STAGING_URL/api/member/availability" 2>/dev/null || true)"
+            if [ "$status" = '200' ]; then
+              if ! jq -e '.available == false and .provider == null' "$RUNNER_TEMP/member-availability.json" > /dev/null; then
+                echo '::error::Staging returned HTTP 200 but its signup gate is not disabled.'
+                exit 1
+              fi
+              available=1
+              break
+            fi
+            case "$status" in
+              000|404|429|500|502|503|504)
+                echo "Staging route not ready (attempt $attempt of 30, HTTP $status)."
+                ;;
+              *)
+                echo "::error::Unexpected staging availability response: HTTP $status"
+                exit 1
+                ;;
+            esac
+            sleep 5
+          done
+          if [ "$available" != 1 ]; then
+            echo "::error::Staging URL was not reachable after 30 attempts; last HTTP $status. Check Workers & Pages > anevum-member-staging > Settings > Domains & Routes."
+            exit 1
+          fi
+          member_status="$(curl --silent --show-error --max-time 12 -o /dev/null -w '%{http_code}' "$STAGING_URL/api/member/me")"
+          if [ "$member_status" != '503' ]; then
+            echo "::error::Staging member authorization is not fail-closed: HTTP $member_status"
+            exit 1
+          fi
+          operator_status="$(curl --silent --show-error --max-time 12 -o /dev/null -w '%{http_code}' "$STAGING_URL/api/command/trader/status")"
+          if [ "$operator_status" != '401' ]; then
+            echo "::error::Staging operator endpoint is not blocked as expected: HTTP $operator_status"
+            exit 1
+          fi
+          headers="$(curl --fail --silent --show-error --max-time 12 -D - -o /dev/null "$STAGING_URL/")"
+          if ! printf '%s' "$headers" | grep -iq '^x-robots-tag: noindex, nofollow, noarchive'; then
+            echo '::error::Staging public response must be excluded from search indexing.'
+            exit 1
+          fi
+          echo 'Bootstrap probes passed: member signup disabled, operator denied, search indexing disabled.'
