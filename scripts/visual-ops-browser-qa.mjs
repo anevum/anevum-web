@@ -224,6 +224,7 @@ async function runCase(route, viewport) {
       const active = document.querySelector(".command-v4-header nav a.active");
       return {
         root: visible(".command-v4"),
+        readablePage: getComputedStyle(document.querySelector(".command-v4")).position === "relative" && getComputedStyle(document.querySelector(".command-v4"), "::after").display === "none",
         heading: document.querySelector(".command-v4-heading h1")?.textContent?.trim() || "",
         navCurrent: active?.getAttribute("href") || "",
         operate: visible(".command-v4-operate .command-v4-strip") && visible(".command-trading-lanes"),
@@ -243,7 +244,7 @@ async function runCase(route, viewport) {
       "/command/rhen/public": ["Public", "public"],
       "/command/rhen/system": ["System", "system"]
     }[route];
-    if(!expected || !value.root || value.navCurrent !== route || value.heading !== expected[0] || value[expected[1]] !== true) {
+    if(!expected || !value.root || !value.readablePage || value.navCurrent !== route || value.heading !== expected[0] || value[expected[1]] !== true) {
       throw new Error("Canonical Command V4 workspace failed: "+JSON.stringify({route,...value}));
     }
   }

@@ -65,3 +65,10 @@
   .command-workshop .command-v4-table b { text-align: left; }
 }
 @media(prefers-reduced-motion: reduce) { .command-workshop *, .command-workshop *::before, .command-workshop *::after { animation: none !important; transition: none !important; } }
+/* Retire the old full-screen terminal backdrop; it masks text on light paper. */
+.command-workshop.command-shell::after { display: none; }
+.command-workshop .research-observability-header { flex-wrap: wrap; }
+.command-workshop :is(.research-observability-filters, .research-observability-series-tabs) { flex-wrap: wrap; min-width: 0; }
+.command-workshop .research-observability-header-state { flex-wrap: wrap; min-width: 0; }
+/* The program is a normal responsive page, rather than a clipped fixed viewport. */
+.command-workshop.command-shell { position: relative !important; inset: auto !important; height: auto !important; min-height: 100dvh !important; overflow: visible !important; background: var(--workshop-paper) !important; }
