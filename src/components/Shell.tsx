@@ -37,8 +37,10 @@ export function PublicShell({ children }: { children: ReactNode }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   useEffect(() => setMobileOpen(false), [location.pathname]);
 
+  const lightPage = location.pathname === "/" || location.pathname === "/products";
+
   return (
-    <div className="public-frame studio-shell workshop-shell">
+    <div className={"public-frame studio-shell workshop-shell " + (lightPage ? "workshop-public-light" : "workshop-public-legacy")}>
       <header className="studio-header workshop-header">
         <div className="workshop-header-inner">
           <Link className="studio-brand" to="/" aria-label="ANEVUM home">
