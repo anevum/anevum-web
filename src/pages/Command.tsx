@@ -273,7 +273,7 @@ export default function Command() {
         )}
 
         {page === "public" && (
-          <>
+          <div className="command-v4-public">
             <section className="command-v4-strip">
               <div><span>PUBLIC FEED</span><strong>{publicFeedError ? "DEGRADED" : displayState(publicFeed?.state || "OBSERVING")}</strong><small>{publicFeed?.generated_at ? ageText(publicFeed.generated_at, Date.now()) : "awaiting source"}</small></div>
               <div><span>PUBLIC RETURN</span><strong>{publicFeed?.performance?.account_return_pct != null ? String(publicFeed.performance.account_return_pct.toFixed(2)) + "%" : "—"}</strong><small>normalized</small></div>
@@ -302,7 +302,7 @@ export default function Command() {
                 {!publicFeed?.events?.length ? <p>No current public runtime events.</p> : null}
               </div>
             </article>
-          </>
+          </div>
         )}
 
         {page === "system" && (
