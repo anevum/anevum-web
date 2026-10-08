@@ -36,6 +36,24 @@ jobs:
         run: npm install --no-audit --no-fund
       - name: Test canonical operational boundary
         run: node --experimental-strip-types --test tests/command-topology.test.mjs tests/command-operations.test.mjs tests/command-trading.test.mjs tests/command-research.test.mjs tests/equity-market-time.test.mjs tests/visual-ops.test.mjs tests/command-live.test.mjs
+      - name: Inspect and provision isolated D1 member databases
+        if: github.event_name == 'pull_request' && github.event.pull_request.number == 208
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -euo pipefail
+          list="$(npx wrangler d1 list --json)"
+          for name in anevum-members anevum-members-preview; do
+            if ! echo "$list" | jq -e --arg name "$name" '.[] | select(.name == $name)' >/dev/null; then
+              npx wrangler d1 create "$name" --location enam
+            fi
+          done
+          npx wrangler d1 list --json | jq -c '[.[] | select(.name == "anevum-members" or .name == "anevum-members-preview") | {name, uuid}]'
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      - name: Verify member boundaries
+        run: npm run test:members
       - name: Typecheck and build
         run: npm run build
       - name: Verify generated artifacts

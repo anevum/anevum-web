@@ -1,0 +1,35 @@
+import { Link } from "react-router-dom";
+import { memberAuthClient } from "../member/auth-client";
+import { useMemberAvailability } from "../member/useMemberAvailability";
+
+export default function SignIn() {
+  const availability = useMemberAvailability();
+  const { data: session, isPending } = memberAuthClient.useSession();
+
+  const signIn = async () => {
+    await memberAuthClient.signIn.social({
+      provider: "google",
+      callbackURL: "/me"
+    });
+  };
+
+  return (
+    <section className="member-auth-page">
+      <p className="workshop-kicker">ANEVUM account</p>
+      <h1>Your space for projects.</h1>
+      <p>Save software you use, follow development, and open applications that are actually available. Public projects and Field Notes never require an account.</p>
+      {availability === "checking" || isPending ? (
+        <p role="status">Checking account availability…</p>
+      ) : availability === "unavailable" ? (
+        <p role="status">Member registration is not open yet. The rest of ANEVUM remains available without signing in.</p>
+      ) : session?.user ? (
+        <Link className="member-primary-action" to="/me">Go to My Space</Link>
+      ) : (
+        <button className="member-primary-action" type="button" onClick={() => void signIn()}>
+          Continue with Google
+        </button>
+      )}
+      <p className="member-muted"><Link to="/products">Explore projects without signing in</Link></p>
+    </section>
+  );
+}

@@ -1,5 +1,6 @@
 import releaseRegistry from "./src/data/releases.json";
 import { shadowRead } from "./shadow-transport.mjs";
+import { memberEndpoint } from "./src/server/member.mjs";
 
 const TRADER_BASE = "https://alpaca-trader-production-bf3e.up.railway.app";
 const PUBLIC_TRADING_FEED = TRADER_BASE + "/v1/trading-public-feed";
@@ -369,9 +370,9 @@ function withSecurityHeaders(response, pathname, hostname) {
   headers.set("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
   headers.set("Cross-Origin-Opener-Policy", "same-origin");
   headers.set("X-Frame-Options", "DENY");
-  const privateOrArchived = pathname.startsWith("/command") || pathname.startsWith("/private") || pathname.startsWith("/rhenlink") || pathname.startsWith("/wiki/archive") || pathname.startsWith("/lattice") || pathname.startsWith("/store") || pathname.startsWith("/reply") || pathname.startsWith("/the-book") || pathname.startsWith("/stories/");
+  const privateOrArchived = pathname.startsWith("/me") || pathname.startsWith("/sign-in") || pathname.startsWith("/apps/") || pathname.startsWith("/command") || pathname.startsWith("/private") || pathname.startsWith("/rhenlink") || pathname.startsWith("/wiki/archive") || pathname.startsWith("/lattice") || pathname.startsWith("/store") || pathname.startsWith("/reply") || pathname.startsWith("/the-book") || pathname.startsWith("/stories/");
   if (privateOrArchived || hostname !== "anevum.com") headers.set("X-Robots-Tag", "noindex, nofollow, noarchive");
-  if (pathname.startsWith("/command") || pathname.startsWith("/private")) headers.set("Cache-Control", "private, no-store");
+  if (pathname.startsWith("/command") || pathname.startsWith("/private") || pathname.startsWith("/me") || pathname.startsWith("/sign-in") || pathname.startsWith("/apps/")) headers.set("Cache-Control", "private, no-store");
 
   return new Response(response.body, {
     status: response.status,
@@ -388,6 +389,14 @@ export default {
     if (url.hostname === "anevum.com" && url.protocol !== "https:") {
       url.protocol = "https:";
       return Response.redirect(url.toString(), 308);
+    }
+
+    if (pathname.startsWith("/api/member/") || pathname === "/api/auth" || pathname.startsWith("/api/auth/")) {
+      try {
+        return await memberEndpoint(request, env, pathname);
+      } catch {
+        return jsonResponse({ message: "Member service unavailable." }, 503);
+      }
     }
 
     if (pathname === "/api/public/trading/live") {
