@@ -6,25 +6,34 @@ import { rhenReleases } from "../data/releases";
 type FeedItem = {
   id: string;
   at: string;
+  precision: "date" | "time";
   type: "RELEASE" | "NOTE" | "RESEARCH" | "RUNTIME";
   title: string;
   summary?: string;
   href?: string;
 };
 
+function displayWhen(item: FeedItem) {
+  if (item.precision === "date") return item.at;
+  const parsed = new Date(item.at);
+  return Number.isFinite(parsed.getTime()) ? parsed.toLocaleString() : item.at;
+}
+
 export function buildStaticFeed(): FeedItem[] {
-  const releases = rhenReleases.map((release) => ({
+  const releases: FeedItem[] = rhenReleases.map((release) => ({
     id: "release-" + release.slug,
-    at: release.date + "T12:00:00Z",
-    type: "RELEASE" as const,
+    at: release.date,
+    precision: "date",
+    type: "RELEASE",
     title: "RHEN " + release.version + " · " + release.codename,
     summary: release.headline,
     href: "/products/rhen/releases/" + release.slug
   }));
-  const notes = fieldNotes.map((note) => ({
+  const notes: FeedItem[] = fieldNotes.map((note) => ({
     id: "note-" + note.slug,
-    at: note.date + "T13:00:00Z",
-    type: "NOTE" as const,
+    at: note.date,
+    precision: "date",
+    type: "NOTE",
     title: note.title,
     summary: note.summary,
     href: "/field-notes/" + note.slug
@@ -33,28 +42,40 @@ export function buildStaticFeed(): FeedItem[] {
 }
 
 export default function Feed() {
-  const { data, error, now } = useLiveTrading(5000);
-  const liveItems: FeedItem[] = [
-    ...(data?.events || []).map((event, index) => ({
-      id: "runtime-" + String(event.at || index) + "-" + String(event.type || event.kind || ""),
-      at: event.at || data?.generated_at || new Date(now).toISOString(),
-      type: "RUNTIME" as const,
+  const { data, error, loading } = useLiveTrading(5000);
+
+  const runtimeItems: FeedItem[] = (data?.events || [])
+    .filter((event) => Boolean(event.at))
+    .map((event, index) => ({
+      id: "runtime-" + String(event.at) + "-" + String(event.type || event.kind || index),
+      at: String(event.at),
+      precision: "time",
+      type: "RUNTIME",
       title: event.label || event.type || event.kind || "RHEN runtime observation",
-      summary: "Public-safe runtime event"
-    })),
-    ...((data?.research?.completed_decisions || []).map((decision, index) => ({
+      summary: "Public-safe runtime observation"
+    }));
+
+  const researchItems: FeedItem[] = (data?.research?.completed_decisions || [])
+    .filter((decision) => Boolean(decision.at))
+    .map((decision, index) => ({
       id: "research-" + String(decision.decision_key || decision.at || index),
-      at: decision.at || data?.generated_at || new Date(now).toISOString(),
-      type: "RESEARCH" as const,
+      at: String(decision.at),
+      precision: "time",
+      type: "RESEARCH",
       title: decision.subject || decision.decision_type || "Research decision",
       summary: decision.conclusion || decision.status || undefined
-    })))
-  ];
+    }));
 
-  const items = [...liveItems, ...buildStaticFeed()]
+  const items = [...runtimeItems, ...researchItems, ...buildStaticFeed()]
     .filter((item) => item.at)
     .sort((a,b) => b.at.localeCompare(a.at))
     .slice(0, 80);
+
+  const connected = Boolean(data?.generated_at) && !error;
+  const feedState = error ? "LIVE FEED DEGRADED" : connected ? "LIVE FEED CONNECTED" : loading ? "CONNECTING TO LIVE FEED" : "STATIC RECORDS";
+  const feedDetail = data?.generated_at
+    ? "source observed " + new Date(data.generated_at).toLocaleString()
+    : "release and Field Note records remain available";
 
   return (
     <div className="studio-page feed-page">
@@ -63,11 +84,24 @@ export default function Feed() {
         <h1>What changed, what ran, what was learned.</h1>
         <p>One chronological record assembled from real releases, Field Notes, public-safe runtime observations, and research decisions.</p>
       </section>
-      <section className="feed-status"><i className={error ? "degraded" : "live"} /><strong>{error ? "LIVE FEED DEGRADED" : "LIVE FEED CONNECTED"}</strong><span>{data?.generated_at ? new Date(data.generated_at).toLocaleString() : "static records still available"}</span></section>
+      <section className="feed-status">
+        <i className={error ? "degraded" : connected ? "live" : ""} />
+        <strong>{feedState}</strong>
+        <span>{feedDetail}</span>
+      </section>
       <section className="feed-list">
         {items.map((item) => {
-          const body = <><time>{new Date(item.at).toLocaleString()}</time><span>{item.type}</span><strong>{item.title}</strong>{item.summary ? <p>{item.summary}</p> : null}</>;
-          return item.href ? <Link key={item.id} to={item.href}>{body}<b>↗</b></Link> : <article key={item.id}>{body}</article>;
+          const body = (
+            <>
+              <time dateTime={item.at}>{displayWhen(item)}</time>
+              <span>{item.type}</span>
+              <strong>{item.title}</strong>
+              {item.summary ? <p>{item.summary}</p> : null}
+            </>
+          );
+          return item.href
+            ? <Link key={item.id} to={item.href}>{body}<b>↗</b></Link>
+            : <article key={item.id}>{body}</article>;
         })}
       </section>
     </div>
