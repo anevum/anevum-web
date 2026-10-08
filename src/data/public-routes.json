@@ -1,11 +1,12 @@
 [
   { "path": "/", "label": "Home", "nav": false, "sitemap": true },
   { "path": "/products", "label": "Products", "nav": true, "sitemap": true },
-  { "path": "/products/rhen", "label": "RHEN", "nav": false, "sitemap": true },
-  { "path": "/research", "label": "Field Notes", "nav": true, "sitemap": true },
+  { "path": "/feed", "label": "Feed", "nav": true, "sitemap": true },
+  { "path": "/field-notes", "label": "Field Notes", "nav": true, "sitemap": true },
   { "path": "/about", "label": "About", "nav": true, "sitemap": true },
-  { "path": "/live", "label": "RHEN Public Evidence", "nav": false, "sitemap": true },
-  { "path": "/architecture", "label": "RHEN Architecture", "nav": false, "sitemap": true },
-  { "path": "/releases", "label": "RHEN Releases", "nav": false, "sitemap": true },
+  { "path": "/products/rhen", "label": "RHEN", "nav": false, "sitemap": true },
+  { "path": "/products/rhen/evidence", "label": "RHEN Evidence", "nav": false, "sitemap": true },
+  { "path": "/products/rhen/releases", "label": "RHEN Releases", "nav": false, "sitemap": true },
+  { "path": "/products/rhen/architecture", "label": "RHEN Architecture", "nav": false, "sitemap": true },
   { "path": "/resume", "label": "Resume", "nav": false, "sitemap": true }
 ]
