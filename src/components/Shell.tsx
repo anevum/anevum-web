@@ -12,39 +12,16 @@ function isActive(pathname: string, href: string) {
 
 function PublicFooter() {
   return (
-    <footer className="company-footer">
-      <div className="company-footer-inner">
-        <div className="company-footer-brand">
-          <Mark />
-          <div>
-            <strong>ANEVUM</strong>
-            <span>RHEN + COMMAND</span>
-            <small>Operate the system. Inspect the evidence.</small>
-          </div>
-        </div>
-
-        <div className="company-footer-links">
-          <section>
-            <span>SYSTEM</span>
-            <Link to="/command/overview">Command</Link>
-            <Link to="/live">RHEN Live</Link>
-            <Link to="/architecture">Architecture</Link>
-            <Link to="/releases">Releases</Link>
-          </section>
-          <section>
-            <span>ANEVUM</span>
-            <Link to="/research">Field Notes</Link>
-            <Link to="/founder">About</Link>
-            <Link to="/resume">Résumé</Link>
-            <a href="mailto:devon@anevum.com">devon@anevum.com</a>
-          </section>
+    <footer className="studio-footer">
+      <div className="studio-footer-main">
+        <div className="studio-footer-brand"><Mark /><div><strong>ANEVUM</strong><span>Independent software studio</span><small>Built and operated by Devon Akins.</small></div></div>
+        <div className="studio-footer-links">
+          <section><span>EXPLORE</span><Link to="/products">Products</Link><Link to="/research">Field Notes</Link><Link to="/about">About</Link><Link to="/resume">Résumé</Link></section>
+          <section><span>RHEN</span><Link to="/products/rhen">Overview</Link><Link to="/live">Public evidence</Link><Link to="/releases">Releases</Link><Link to="/architecture">Architecture</Link></section>
+          <section><span>CONTACT</span><a href="mailto:devon@anevum.com">devon@anevum.com</a><Link to="/command/overview">Command</Link></section>
         </div>
       </div>
-
-      <div className="company-footer-bottom">
-        <span>© {new Date().getFullYear()} ANEVUM</span>
-        <span>RHEN V4.3 / COMMAND / PUBLIC EVIDENCE</span>
-      </div>
+      <div className="studio-footer-bottom"><span>© {new Date().getFullYear()} ANEVUM</span><span>ONE FOUNDER · SOFTWARE / FINANCE / AUTOMATION</span></div>
     </footer>
   );
 }
@@ -53,51 +30,22 @@ export function PublicShell({ children }: { children: ReactNode }) {
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  useEffect(() => {
-    setMobileOpen(false);
-  }, [location.pathname]);
+  useEffect(() => setMobileOpen(false), [location.pathname]);
 
   return (
-    <div className="public-frame compact-public-frame company-shell">
-      <header className="public-header compact-public-header company-header">
-        <Link className="public-brand company-brand" to="/" aria-label="ANEVUM home">
-          <Mark /><span>ANEVUM</span>
-        </Link>
-
-        <nav className="public-nav public-nav-main company-nav" aria-label="Primary navigation">
-          {nav.map(({ path: href, label }) => (
-            <Link key={href} to={href} className={isActive(location.pathname, href) ? "active" : ""}>{label}</Link>
-          ))}
+    <div className="public-frame compact-public-frame company-shell studio-shell">
+      <header className="studio-header">
+        <Link className="studio-brand" to="/" aria-label="ANEVUM home"><Mark /><span>ANEVUM</span></Link>
+        <nav className="studio-nav" aria-label="Primary navigation">
+          {nav.map(({ path: href, label }) => <Link key={href} to={href} className={isActive(location.pathname, href) ? "active" : ""}>{label}</Link>)}
         </nav>
-
-        <div className="company-header-actions">
-          <Link className="company-live-link" to="/command/overview" aria-label="Open ANEVUM Command">
-            <span>Command</span>
-          </Link>
-          <button
-            className="company-menu-button"
-            type="button"
-            aria-label="Toggle navigation"
-            aria-expanded={mobileOpen}
-            onClick={() => setMobileOpen((open) => !open)}
-          >
-            <span /><span />
-          </button>
+        <div className="studio-header-actions">
+          <Link className="studio-command-link" to="/command/overview"><i /> Command</Link>
+          <button className="studio-menu-button" type="button" aria-label="Toggle navigation" aria-expanded={mobileOpen} onClick={() => setMobileOpen((open) => !open)}><span /><span /></button>
         </div>
-
-        {mobileOpen ? (
-          <nav className="company-mobile-nav is-open" aria-label="Mobile navigation">
-            {nav.map(({ path: href, label }) => (
-              <Link key={href} to={href} className={isActive(location.pathname, href) ? "active" : ""}>{label}</Link>
-            ))}
-            <Link to="/command/overview">Command</Link>
-          </nav>
-        ) : null}
+        {mobileOpen ? <nav className="studio-mobile-nav" aria-label="Mobile navigation">{nav.map(({ path: href, label }) => <Link key={href} to={href} className={isActive(location.pathname, href) ? "active" : ""}>{label}</Link>)}<Link to="/command/overview">Command</Link></nav> : null}
       </header>
-      <main className="public-stage compact-public-stage company-public-stage">
-        {children}
-        <PublicFooter />
-      </main>
+      <main className="studio-stage">{children}<PublicFooter /></main>
     </div>
   );
 }
