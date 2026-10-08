@@ -23,6 +23,91 @@ export type FieldNote = {
 
 export const fieldNotes: FieldNote[] = [
   {
+    slug: "anevum-lean-runtime-reset",
+    date: "2026-10-08",
+    type: "SYSTEMS",
+    status: "DEPLOYED / MANUAL INFRA CLEANUP OPEN",
+    title: "ANEVUM gets smaller on purpose",
+    summary: "RHEN now keeps permanent compute focused on trading, control, evidence, and API routing. Numerical forecasting and deterministic evidence review are embedded; model-assisted research and replay move on demand; live promotion remains manual.",
+    systems: ["RHEN", "IREN", "GRAEN", "VELUM", "NOSTRA"],
+    readMinutes: 5,
+    featured: true,
+    sections: [
+      {
+        heading: "The problem was not a missing agent",
+        body: [
+          "ANEVUM had accumulated too many always-running internal roles for the amount of real work that required continuous compute. Several services mostly waited for scheduled research, replay, or model-assisted work while the trading runtime carried the only true real-time obligation.",
+          "The reset keeps the original loop and removes the theater around it: trade, preserve evidence, review what happened, define a bounded experiment, replay or validate it, and promote only after an explicit operator decision."
+        ]
+      },
+      {
+        heading: "What stays resident",
+        body: [
+          "RHEN remains the single permanent Railway product service. Inside it, the production supervisor now keeps four resident process boundaries: canonical Core/Store, live execution, deterministic IREN control, and the API router.",
+          "NOSTRA no longer needs a standalone server. Its point-in-time numerical forecast and scoring loop runs inside Core with the same research-only authority. Deterministic post-session evidence review is embedded there as well."
+        ]
+      },
+      {
+        heading: "What moved on demand",
+        body: [
+          "GRAEN is now a research method rather than a permanent process. Canonical evidence can be exported as one private, fingerprinted research package for operator or ChatGPT Work analysis. That package can identify a question worth investigating, but it has no broker-write, live-strategy-mutation, or promotion authority.",
+          "VELUM no longer waits online for work. A bounded one-shot runner validates a completed market session, executes the existing replay and friction assumptions, writes research evidence, and exits. Semantic model research is similarly deliberate rather than an always-on production dependency."
+        ]
+      },
+      {
+        heading: "What did not change",
+        body: [
+          "The architecture cut did not change RHEN's live strategy merely to make the migration look successful. Live broker authority remains confined to RHEN execution, current scope remains long U.S. equities and ETFs, and research cannot silently enable options, shorting, leverage, or another asset lane.",
+          "No language model is required for scanning, entries, sizing, exits, reconciliation, health, scheduling, or configuration identity. Promotion still requires explicit operator authority."
+        ]
+      },
+      {
+        heading: "Cleanup that is intentionally not hidden",
+        body: [
+          "The old RHEN 4.4 shadow did not satisfy its release gates. Its exact deployed source and latest branch state were archived instead of being promoted. Its Railway compute deletion is staged while the small evidence volume is retained for reproducibility; until that staged infrastructure change is confirmed, the old shadow still exists.",
+          "Legacy crypto and model-related Railway variable names also remain visible until they are manually removed. Expensive or obsolete activation switches have been explicitly pinned off so those names cannot silently restore the retired runtime paths.",
+          "Early resource readings are lower after the process reduction, but the post-cutover window is not long enough to publish a mature cost-savings claim. A clean architecture and a profitable trading edge are separate questions."
+        ]
+      }
+    ],
+    reproduce: {
+      question: "Can ANEVUM preserve the trading and evidence loop while removing permanent compute that has no continuous-time obligation?",
+      inputs: [
+        "The current RHEN supervisor process manifest",
+        "Canonical daily and weekly research evidence",
+        "Point-in-time NOSTRA forecast and outcome records",
+        "IREN scheduler, configuration, and incident state",
+        "VELUM replay manifests",
+        "Railway process and resource observations",
+        "The archived RHEN 4.4 shadow source and evidence identity"
+      ],
+      method: [
+        "Keep execution, canonical storage, deterministic control, and routing resident.",
+        "Embed deterministic NOSTRA forecasting and evidence review in Core.",
+        "Move model-assisted GRAEN research to explicit operator / Work sessions.",
+        "Run VELUM as a bounded replay job only when an experiment or incident requires it.",
+        "Keep strategy behavior fixed during the architecture migration so operational and trading changes remain attributable.",
+        "Archive incomplete shadow work before staging its compute teardown."
+      ],
+      checks: [
+        "A model-provider outage cannot stop the authorized live trading path.",
+        "Research and replay retain no broker-write or automatic-promotion authority.",
+        "Daily and weekly deterministic evidence review still runs without a model call.",
+        "A private canonical research package can be produced without changing live state.",
+        "VELUM can complete a replay and exit without a permanent server.",
+        "Command and the public architecture distinguish resident, embedded, and on-demand functions.",
+        "Missing or still-manual cleanup is described explicitly rather than shown as complete."
+      ],
+      expected: "One permanent RHEN product service supports the live trading loop while research intelligence and replay consume compute only when bounded work exists.",
+      limits: [
+        "The staged RHEN 4.4 shadow-service deletion still requires infrastructure confirmation before that compute is actually gone.",
+        "Legacy Railway variable names still require manual dashboard deletion even though retired activation paths are pinned off.",
+        "A short post-cutover resource sample is not enough to establish the final monthly Railway cost.",
+        "This architecture change does not establish trading profitability or a repeatable market edge."
+      ]
+    }
+  },
+  {
     slug: "rhen-v4-4-research-observation-and-release-gates",
     date: "2026-10-07",
     type: "ENGINEERING",
@@ -31,7 +116,7 @@ export const fieldNotes: FieldNote[] = [
     summary: "RHEN 4.4 now treats live read-only observation as research infrastructure: Discover collects market and candidate evidence, while Review owns reconciliation, replay, holdout, approval, and crossover decisions. The current production champion continues trading while validation remains open.",
     systems: ["RHEN", "NOSTRA", "VELUM", "GRAEN", "IREN"],
     readMinutes: 3,
-    featured: true,
+    featured: false,
     sections: [
       {heading: "What is deployed", body: [
         "Discover follows a rotating 24-symbol hotset drawn from the canonical 100-symbol discovery universe. The read-only research stream preserves bounded churn, pinned confirmation symbols, and durable state across restart without becoming a separate strategy lane.",
