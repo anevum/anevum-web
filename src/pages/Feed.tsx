@@ -56,7 +56,7 @@ const filters: { value: Filter; label: string }[] = [
 
 export default function Feed() {
   const [filter, setFilter] = useState<Filter>("ALL");
-  const { data, error, loading } = useLiveTrading(5000);
+  const { data, error, loading } = useLiveTrading(30000);
 
   const runtimeItems: FeedItem[] = (data?.events || [])
     .filter((event) => Boolean(event.at))
