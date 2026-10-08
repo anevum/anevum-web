@@ -1,67 +1,50 @@
 # ANEVUM.WEB.BUILD.2026-10-08.005.MEMBERS-APP-PLATFORM — rollout
-**Status:** Code implemented behind disabled gate; external resource setup and sign-in validation outstanding.  
-**Owner-approved identity:** Independent software workshop with RHEN as its first app; public project content does not require login.
 
-## What exists in the repository
+**Status (2026-10-08):** Both D1 databases provisioned and verified. This change binds distinct production/preview databases and introduces preview-only schema migration automation. Real Google OAuth and public signup are **not** enabled.
+**Identity:** ANEVUM is an independent software workshop. Command is the member account/program hub; RHEN is its first project, with the private operator RHEN Terminal remaining a distinct authorization domain.
 
-- React sign-in and personal My Space/settings; follow/save RHEN, display name, sign out, deletion.
-- RHEN app with overview, sanitized public evidence, research, and updates. It is *not* a user brokerage account.
-- Server-side D1 member tables and sessions using pinned Better Auth + Google OAuth. Account writes always derive the user ID from the verified server session.
-- `/api/member/availability` returns `available:false` until every condition is satisfied.
-- Existing Cloudflare Access `/command` and `/api/command/*` remain the only authority for RHEN operator controls. `/apps/rhen/command/*` redirects to that existing protected URL; it never serves private information itself.
-- `ANEVUM_MEMBERS_ENABLED=false` by default in `wrangler.jsonc`. No production accounts or OAuth login are claimed.
+## Verified D1 provisioning
 
-## External blocker recorded October 8, 2026
+GitHub Actions [run #37836895576](https://github.com/anevum/anevum-web/actions/runs/37836895576) completed successfully in `create-missing` mode using `CLOUDFLARE_D1_TOKEN`, creating both resources. Its Cloudflare inventory returned these UUIDs:
 
-GitHub Actions' current Cloudflare deployment token can deploy the Worker but received Cloudflare API **Authentication error 10000** for `/accounts/<id>/d1/database` when running `wrangler d1 list --json`. Consequently, the D1 resources were **not created**, their UUIDs are unknown, no migrations have been applied remotely, and no database binding has been added to `wrangler.jsonc`.
+| Environment | D1 name | Verified UUID |
+| --- | --- | --- |
+| Production | `anevum-members` | `7f0d4c0c-2e85-4900-8504-1347954e1df1` |
+| Preview | `anevum-members-preview` | `a537432e-d216-4b31-8b22-19662cc3a44a` |
 
-Do not treat the GitHub job's `success` as database provisioning success: that optional exploratory step used `continue-on-error:true`; it has now been removed.
+The earlier Cloudflare token error (10000) was solved by a separate scoped D1 Edit token stored in GitHub Actions. The earlier `--json` unsupported argument to `wrangler d1 create` was fixed and verified. Keep that D1 token separate from the Worker deployment token.
 
-## Setup steps needed before enabling public member accounts
+## Deployment and isolation
 
-These are one-time operator/provider tasks and require explicit Cloudflare/Google credentials. Do not put tokens in GitHub source or chat.
+- `wrangler.jsonc` binds `MEMBER_DB` to **production** D1 under `d1_databases` and to the **preview** D1 under `previews.d1_databases`. These are different real database UUIDs.
+- `wrangler.preview-migrations.jsonc` targets only `anevum-members-preview` for remote Wrangler migrations. Do not use the ordinary production Wrangler config to migrate preview.
+- `scripts/verify-member-bindings.mjs --require-config` and the binding/isolation tests run on every GitHub PR and main build.
+- `.github/workflows/member-preview-d1-migrate.yml` applies only to preview D1 after related files merge to `main`. It requires validated UUIDs from Cloudflare inventory, verifies the production member gate remains false, applies the committed schema, reads back all nine member tables, and checks foreign keys. Its result must be independently inspected; a successful web deployment alone does not prove D1 migration success.
+- **No** automated production D1 migration, real account signup, brokerage account binding, payment integration, or Cloudflare Access policy change is part of this release.
 
-1. In Cloudflare, use a token restricted to the ANEVUM account with **D1:Edit** (and the existing Worker deploy permissions). The API token is set as `CLOUDFLARE_API_TOKEN` in the repository's GitHub Actions secret store; the current token does not have D1 privileges. Alternatively create the databases in the Cloudflare dashboard with an authorized account, leaving the existing deployment token unchanged.
-2. Create **two D1 databases**, `anevum-members` (production) and `anevum-members-preview` (test), and record their real UUIDs. Never assign the production database to a preview Worker. Both can live in the same Cloudflare account.
-3. Add the production database to `wrangler.jsonc` after its real UUID exists:
-   ```json
-   "d1_databases": [{
-     "binding": "MEMBER_DB",
-     "database_name": "anevum-members",
-     "database_id": "<ACTUAL_PRODUCTION_D1_UUID>",
-     "migrations_dir": "migrations"
-   }]
-   ```
-   Add the preview database under `previews.d1_databases` when using Cloudflare preview resources, with `binding:"MEMBER_DB"`, its own name, and its own UUID. Use a **separate** preview migration config that targets only preview DB. Never test member data with a production D1 binding.
-4. With an authorized Cloudflare token, apply `migrations/0001_member_platform.sql` to **preview first**, then test profile persistence, login, deletion and cross-user isolation. Apply the same migration to production only after the preview result is verified. Wrangler: `npx wrangler d1 migrations apply anevum-members --remote` after binding config is checked. Verify applied migrations and table schema, do not blindly replay SQL.
-5. Create a Google OAuth **Web application** credential in Google Cloud. Set the exact authorized redirect URI `https://anevum.com/api/auth/callback/google` and authorized JavaScript origin `https://anevum.com`. Verify the app's consent screen and publish/tester status.
-6. Use a **dedicated, stable staging HTTPS origin** such as a named Cloudflare Workers preview or staging subdomain, with its own Google callback registered. Set `MEMBER_PREVIEW_ORIGIN` to that exact origin and opt in with `ANEVUM_MEMBER_PREVIEW_ENABLED=true` **only for staging**. The origin must be an ANEVUM subdomain or `.workers.dev`; neither flag is enabled by default. Staging must bind the preview D1, never production. The public availability endpoint also checks for all required migration tables before advertising signup.\n7. Set Cloudflare Worker secrets, not repository variables: `BETTER_AUTH_SECRET` (independent cryptographically generated random value >=32 characters), `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`. Do not publish OAuth secrets in a React bundle or wrangler source. `ANEVUM_MEMBERS_ENABLED` remains false while testing.
-8. Review and approve the actual `/privacy` and `/terms` pages for public signup. They are drafts. Verify account deletion, complaint contact address, the account JSON export and any retention statements against real provider policies.
-9. Validate the deployed preview and production Worker bindings with a secure integration test. Confirm unauthenticated and expired sessions return 401 on member API; cross-member data access fails; direct requests to `/api/command/*` remain 401/403 without Cloudflare Access regardless of Better Auth cookies; all protected routes are noindexed/no-store; OAuth callback state/nonce behavior works; authorized operator controls remain unchanged.
-10. Only after a real Google callback round-trip and user-isolation checks pass, enable `ANEVUM_MEMBERS_ENABLED=true` in Cloudflare production deployment configuration, deploy, and verify a new account and account deletion. Do not announce signup earlier.
+## What the member platform contains
 
-## Route contract
+- `/me`: new member Command home; saved applications, followed projects, and real project updates (login gated). `/me/settings` handles profile edits, JSON export, sign out, and deletion.
+- `/apps/rhen/*`: member research/evidence workspace with sanitized public evidence; it is not a personal broker account or trading controller.
+- `/command/rhen/*` and `/api/command/*`: protected RHEN Terminal and operator APIs. Cloudflare Access authorization is **not** conferred by Google/member sign-in.
+- `src/server/member.mjs`: disabled-by-default Better Auth Google OAuth identity backend, D1 session tables, ownership-isolated state, and account export/deletion.
+- `/api/member/availability` intentionally responds `available:false` until secrets, schema, origin, and explicit activation conditions all pass.
 
-| Route | Audience |
-| --- | --- |
-| `/`, `/products`, `/feed`, `/field-notes` | Public |
-| `/sign-in`, `/me`, `/me/settings` | Signup/account (gated until fully configured) |
-| `/apps/rhen/*` | Member research/evidence app; no user broker connection |
-| `/apps/rhen/command/*` | Redirect to the legacy protected Command route |
-| `/command/*`, `/api/command/*` | Cloudflare Access-verified RHEN operator only |
-| `/api/member/*`, `/api/auth/*` | New member-only backend; gated until enabled |
+## Remaining activation gates (ordered)
 
-## Tests and release gates
+1. Verify merged `wrangler.jsonc` production and preview bindings, normal website deployment, and the **separate** preview migration workflow success. Confirm Cloudflare lists the nine member tables in the preview D1, not the production D1.
+2. Configure a stable, dedicated HTTPS staging Worker origin with **preview D1 only**. Set `ANEVUM_MEMBER_PREVIEW_ENABLED=true`, `MEMBER_PREVIEW_ORIGIN`, and the member enablement flag in that **isolated staging Worker only**, never in production. Validate staging's Worker/Google callback paths.
+3. Create Google OAuth Web client credentials and configure the correct approved callback(s), including `https://anevum.com/api/auth/callback/google`. Set `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, and a >=32-character random `BETTER_AUTH_SECRET` using Cloudflare Worker secrets rather than GitHub source or chat.
+4. Complete Google login/logout, OAuth callback state, cookie security, expiry, CSRF/origin, member data isolation with two real staging users, JSON export, deletion, and rate limits. Run `scripts/verify-member-staging.mjs` against real distinct staging sessions; fixture-only browser tests do not satisfy this gate.
+5. Confirm Cloudflare Access routing allows ordinary members to visit their account Command while continuing to protect `/command/rhen/*` and all `/api/command/*`. Verify ordinary members are explicitly denied operator access.
+6. Review `/privacy` and `/terms` against the actual data collection/deletion/retention practices. Obtain owner approval **before real public signup**.
+7. After preview security validation and approvals, migrate **production** D1 using the separately verified production binding, set production Worker secrets, explicitly enable `ANEVUM_MEMBERS_ENABLED=true`, and test actual signup/deletion and account isolation.
+8. Only advertise the RHEN app as available in the product registry when authenticated member access actually works. Personal Alpaca OAuth, member-specific bots, funding, and rewards are distinct, later regulated workflows.
 
-- `npm run test:members` exercises fail-closed auth responses and explicit Command separation.
-- `scripts/verify-member-schema.py` validates migration syntax, ownership, and cascade behavior with SQLite.
-- Existing GitHub Actions verifies RHEN operational boundary tests, TypeScript/build, route/SEO/privacy probes, desktop and mobile browser captures, and visual assertions.
-- Never introduce multi-user broker write authority while enabling member profiles.
-- No new Railway service, Supabase deployment, or payment platform is needed for this release.
+## Checks
 
-## Remaining choices
+- `npm run test:members` and `node --test tests/member-bindings.test.mjs tests/member-staging.test.mjs tests/member-preview-migration.test.mjs`.
+- `node scripts/verify-member-bindings.mjs --require-config` and `python scripts/verify-member-schema.py`.
+- GitHub Actions production/preview builds, operational boundary tests, public privacy/noindex checks, and responsive UI/browser QA.
 
-- Google OAuth production credentials, D1 provisioning permission, migrations and production secret values remain external.
-- Legal/privacy drafts require founder approval before public account registration.
-- The initial UI offers a JSON export of profile data, saved/followed projects, and entitlements. Google OAuth provider data beyond what ANEVUM stores is not included. Notifications remain out of scope.
-- The broader site design pass beyond Home/Projects can continue independently of signup; it must preserve honest RHEN data.
+Live RHEN order flow, strategy promotion gates, and current Railway deployment must remain unchanged.
