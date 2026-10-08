@@ -1,5 +1,5 @@
 /* Command V4 -------------------------------------------------------------
- * Operational console: four workspaces only.
+ * Operational console: five focused workspaces.
  * Operate = live execution, Discover = market/research search,
  * Review = protected intelligence boundary, System = machinery.
  */
@@ -459,3 +459,7 @@
   .command-v4-table>div{grid-template-columns:1fr 1fr}
   .command-v4-table b{text-align:left}
 }
+
+
+.command-v4-public{display:grid;gap:12px}
+.command-v4-public .command-v4-two{margin-top:0}
