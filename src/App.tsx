@@ -7,6 +7,8 @@ import { currentRhenRelease, rhenReleaseBySlug } from "./data/releases";
 
 const Command = lazy(() => import("./pages/Command"));
 const HomeCompany = lazy(() => import("./pages/HomeCompany"));
+const Products = lazy(() => import("./pages/Products"));
+const RhenProduct = lazy(() => import("./pages/RhenProduct"));
 const Live = lazy(() => import("./pages/Live"));
 const ResearchHub = lazy(() => import("./pages/ResearchHub"));
 const FieldNoteDetail = lazy(() => import("./pages/FieldNoteDetail"));
@@ -17,25 +19,29 @@ const Releases = lazy(() => import("./pages/Releases"));
 const ReleaseDetail = lazy(() => import("./pages/ReleaseDetail"));
 
 const titles: Record<string, string> = {
-  "/": "ANEVUM — RHEN + Command",
-  "/live": "RHEN Live Terminal — ANEVUM",
+  "/": "ANEVUM — Independent Software Studio",
+  "/products": "Products — ANEVUM",
+  "/products/rhen": "RHEN — ANEVUM",
+  "/live": "RHEN Public Evidence — ANEVUM",
   "/research": "Field Notes — ANEVUM",
-  "/architecture": "RHEN V4.3 Architecture — ANEVUM",
-  "/founder": "About ANEVUM — Devon Akins",
+  "/architecture": "RHEN Architecture — ANEVUM",
+  "/about": "About — Devon Akins / ANEVUM",
   "/resume": "Devon Akins — Résumé",
-  "/releases": "Releases — ANEVUM",
+  "/releases": "RHEN Releases — ANEVUM",
   "/private": "Private — ANEVUM",
   "/iren": "IREN Operations — ANEVUM"
 };
 
 const descriptions: Record<string, string> = {
-  "/": "ANEVUM builds RHEN, an inspectable equity trading and research system. RHEN V4.3 consolidates execution, control, research, replay, forecast, and Core/Store responsibilities in one canonical runtime while keeping broker authority narrow and evidence boundaries explicit. Command is the protected operating surface.",
-  "/live": "Observe RHEN through public-safe execution, control, research, replay, forecast, evidence, validation, and normalized performance projections without exposing private account or strategy details.",
-  "/research": "Read ANEVUM Field Notes: research decisions, failed hypotheses, engineering changes, releases, and measured evidence.",
-  "/architecture": "RHEN V4.3 architecture: one canonical Railway runtime, named internal modules, bounded SQLite Core, equity-only broker authority, protected research review, and exact forward-evidence measurement.",
-  "/founder": "About ANEVUM and founder Devon Akins, building inspectable software systems, automated trading infrastructure, research tooling, forecasting, replay, telemetry, and production controls.",
-  "/resume": "Résumé for Devon Akins, founder of ANEVUM, covering software systems, infrastructure, research tooling, mathematics, and production engineering.",
-  "/releases": "ANEVUM release records documenting RHEN versions, production changes, verification, and public system history."
+  "/": "ANEVUM is an independent software studio run by Devon Akins, building practical software around money, investing, automation, and reducing repetitive cognitive work.",
+  "/products": "Explore ANEVUM products and experiments. RHEN is the current flagship project, with room for focused financial tools, utilities, and future software.",
+  "/products/rhen": "RHEN is ANEVUM's live automated trading and research system for measuring market ideas, execution, replay, forecasting, and evidence under real operating constraints.",
+  "/live": "Inspect sanitized public RHEN runtime and performance evidence without exposing private account, order, position, or strategy details.",
+  "/research": "Read ANEVUM Field Notes: the public build record covering research decisions, failures, engineering changes, releases, and measured evidence.",
+  "/architecture": "Inspect RHEN's execution, research, replay, forecasting, control, storage, and evidence boundaries.",
+  "/about": "About Devon Akins and ANEVUM, an independent software studio building practical tools around finance, automation, research, and everyday cognitive burden.",
+  "/resume": "Résumé for Devon Akins, founder of ANEVUM, covering software systems, infrastructure, research, mathematics, teaching, and production engineering.",
+  "/releases": "RHEN release records documenting production changes, verification, limitations, and public system history."
 };
 
 function ensureMeta(selector: string, create: () => HTMLElement, content: string) {
@@ -97,34 +103,28 @@ function RouteEffects() {
   useEffect(() => {
     const previous = window.history.scrollRestoration;
     window.history.scrollRestoration = "manual";
-    return () => {
-      window.history.scrollRestoration = previous;
-    };
+    return () => { window.history.scrollRestoration = previous; };
   }, []);
 
   useEffect(() => {
     const path = location.pathname;
     const protectedRoute = path.startsWith("/command") || path === "/private" || path === "/iren";
 
-    let title = titles[path] || "ANEVUM — RHEN + Command";
+    let title = titles[path] || "ANEVUM — Independent Software Studio";
     let description = descriptions[path] || descriptions["/"];
 
     if (path.startsWith("/command")) {
       title = "Command — ANEVUM";
-      description = "Protected ANEVUM Command customer and operator surface.";
+      description = "Protected ANEVUM operating surface.";
     } else if (path === "/releases") {
       const current = currentRhenRelease();
-      title = "Releases — RHEN " + current.version + " " + current.codename + " — ANEVUM";
+      title = "RHEN Releases — " + current.version + " " + current.codename + " — ANEVUM";
       description = descriptions["/releases"];
     } else if (path.startsWith("/releases/")) {
       const slug = path.slice("/releases/".length);
       const release = rhenReleaseBySlug(slug);
-      title = release
-        ? "RHEN " + release.version + " — " + release.codename + " — ANEVUM"
-        : "Releases — ANEVUM";
-      description = release
-        ? "Public release record for RHEN " + release.version + " " + release.codename + ", including production changes and verification."
-        : descriptions["/releases"];
+      title = release ? "RHEN " + release.version + " — " + release.codename + " — ANEVUM" : "RHEN Releases — ANEVUM";
+      description = release ? "Public release record for RHEN " + release.version + " " + release.codename + ", including production changes, verification, and limits." : descriptions["/releases"];
     } else if (path.startsWith("/research/")) {
       const slug = path.slice("/research/".length);
       const note = fieldNotes.find((item) => item.slug === slug);
@@ -167,42 +167,44 @@ export default function App() {
       <OverflowPan />
       <Routes>
         <Route path="/" element={<PublicExperience><HomeCompany /></PublicExperience>} />
+        <Route path="/products" element={<PublicExperience><Products /></PublicExperience>} />
+        <Route path="/products/rhen" element={<PublicExperience><RhenProduct /></PublicExperience>} />
         <Route path="/live" element={<PublicExperience><Live /></PublicExperience>} />
         <Route path="/research" element={<PublicExperience><ResearchHub /></PublicExperience>} />
         <Route path="/research/:slug" element={<PublicExperience><FieldNoteDetail /></PublicExperience>} />
-        <Route path="/founder" element={<PublicExperience><Founder /></PublicExperience>} />
+        <Route path="/about" element={<PublicExperience><Founder /></PublicExperience>} />
         <Route path="/architecture" element={<PublicExperience><Architecture /></PublicExperience>} />
         <Route path="/resume" element={<PublicExperience><Resume /></PublicExperience>} />
         <Route path="/releases" element={<PublicExperience><Releases /></PublicExperience>} />
         <Route path="/releases/:slug" element={<PublicExperience><ReleaseDetail /></PublicExperience>} />
 
-        <Route path="/products" element={<Navigate to="/live" replace />} />
-        <Route path="/products/:slug" element={<Navigate to="/live" replace />} />
+        <Route path="/founder" element={<Navigate to="/about" replace />} />
+        <Route path="/field-notes" element={<Navigate to="/research" replace />} />
+        <Route path="/products/rhen/live" element={<Navigate to="/live" replace />} />
         <Route path="/performance" element={<Navigate to="/live" replace />} />
-        <Route path="/case-studies" element={<Navigate to="/live" replace />} />
-        <Route path="/theory" element={<Navigate to="/live" replace />} />
+        <Route path="/case-studies" element={<Navigate to="/products" replace />} />
+        <Route path="/theory" element={<Navigate to="/research" replace />} />
 
         <Route path="/iren" element={<Navigate to="/command" replace />} />
         <Route path="/private" element={<Navigate to="/command" replace />} />
         <Route path="/command/*" element={<Suspense fallback={<Loader />}><Command /></Suspense>} />
         <Route path="/rhenlink" element={<Navigate to="/command" replace />} />
 
-        <Route path="/system" element={<Navigate to="/live" replace />} />
+        <Route path="/system" element={<Navigate to="/products/rhen" replace />} />
         <Route path="/record" element={<Navigate to="/releases" replace />} />
         <Route path="/work" element={<Navigate to="/research" replace />} />
-        <Route path="/lab" element={<Navigate to="/live" replace />} />
+        <Route path="/lab" element={<Navigate to="/products" replace />} />
         <Route path="/notes" element={<Navigate to="/research" replace />} />
-        <Route path="/wiki" element={<Navigate to="/live" replace />} />
+        <Route path="/wiki" element={<Navigate to="/products/rhen" replace />} />
         <Route path="/wiki/archive/transcosmic" element={<Navigate to="/releases" replace />} />
-        <Route path="/about" element={<Navigate to="/founder" replace />} />
         <Route path="/proof" element={<Navigate to="/live" replace />} />
         <Route path="/method" element={<Navigate to="/research" replace />} />
-        <Route path="/the-book" element={<Navigate to="/releases" replace />} />
-        <Route path="/reply" element={<Navigate to="/releases" replace />} />
-        <Route path="/stories/reply" element={<Navigate to="/releases" replace />} />
-        <Route path="/universe" element={<Navigate to="/releases" replace />} />
-        <Route path="/lattice" element={<Navigate to="/releases" replace />} />
-        <Route path="/store" element={<Navigate to="/releases" replace />} />
+        <Route path="/the-book" element={<Navigate to="/research" replace />} />
+        <Route path="/reply" element={<Navigate to="/research" replace />} />
+        <Route path="/stories/reply" element={<Navigate to="/research" replace />} />
+        <Route path="/universe" element={<Navigate to="/products" replace />} />
+        <Route path="/lattice" element={<Navigate to="/products" replace />} />
+        <Route path="/store" element={<Navigate to="/products" replace />} />
 
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
