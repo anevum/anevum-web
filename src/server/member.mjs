@@ -24,10 +24,15 @@ export function makeMemberAuth(env) {
     socialProviders: {
       google: {
         clientId: env.GOOGLE_CLIENT_ID,
-        clientSecret: env.GOOGLE_CLIENT_SECRET
+        clientSecret: env.GOOGLE_CLIENT_SECRET,
+        requireEmailVerification: true
       }
     },
-    account: { accountLinking: { disableImplicitLinking: true } },
+    account: {
+      encryptOAuthTokens: true,
+      storeStateStrategy: "database",
+      accountLinking: { disableImplicitLinking: true }
+    },
     user: {
       deleteUser: {
         enabled: true,
