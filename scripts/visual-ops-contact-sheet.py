@@ -6,7 +6,7 @@ import io
 import os
 
 root = Path(os.environ["RUNNER_TEMP"]) / "anevum-visuals"
-routes = ["home", "products", "products-rhen", "live", "research", "architecture", "about", "resume", "releases", "command-operate", "command-discover", "command-review", "command-system"]
+routes = ["home", "products", "feed", "products-rhen", "products-rhen-evidence", "products-rhen-architecture", "field-notes", "about", "resume", "products-rhen-releases", "command-operate", "command-discover", "command-review", "command-public", "command-system"]
 for viewport, size in [("desktop", (480, 334)), ("mobile", (195, 422))]:
     rows = (len(routes) + 2) // 3
     sheet = Image.new("RGB", (size[0] * 3, (size[1] + 26) * rows), "#04070D")
