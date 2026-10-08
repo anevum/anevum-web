@@ -133,7 +133,7 @@ async function proxyTrader(request, upstreamPath, env) {
 }
 
 async function proxyCommandStream(request, env) {
-  if (String(env?.COMMAND_LIVE_STREAM_ENABLED || "false") !== "true") return jsonResponse({ message: "4.4 research observation stream disabled." }, 503);
+  if (String(env?.COMMAND_LIVE_STREAM_ENABLED || "false") !== "true") return jsonResponse({ message: "Archived 4.4 observation is not resident in the lean RHEN runtime." }, 503);
   const url = new URL(request.url);
   if (request.method !== "GET" || request.headers.get("Upgrade")?.toLowerCase() !== "websocket") return jsonResponse({ message: "WebSocket upgrade required." }, 426);
   if (request.headers.get("Origin") !== url.origin) return jsonResponse({ message: "Same-origin Command stream required." }, 403);
@@ -150,7 +150,7 @@ async function proxyCommandStream(request, env) {
 }
 
 async function proxyCommandHistory(request, env) {
-  if (String(env?.COMMAND_LIVE_STREAM_ENABLED || "false") !== "true") return jsonResponse({ message: "4.4 source history disabled." }, 503);
+  if (String(env?.COMMAND_LIVE_STREAM_ENABLED || "false") !== "true") return jsonResponse({ message: "Archived 4.4 observation is not resident in the lean RHEN runtime." }, 503);
   if (request.method !== "GET") return jsonResponse({message:"Read-only history."},405);
   const url = new URL(request.url);
   const allowed = new Set(["series","start","end","clock","limit"]);
@@ -164,7 +164,7 @@ async function proxyCommandHistory(request, env) {
 }
 
 async function proxyCommandBootstrap(request, env) {
-  if (String(env?.COMMAND_LIVE_STREAM_ENABLED || "false") !== "true") return jsonResponse({message:"4.4 bootstrap disabled."},503);
+  if (String(env?.COMMAND_LIVE_STREAM_ENABLED || "false") !== "true") return jsonResponse({message:"Archived 4.4 observation is not resident in the lean RHEN runtime."},503);
   if (request.method !== "GET") return jsonResponse({message:"Read-only bootstrap."},405);
   if (new URL(request.url).search) return jsonResponse({message:"Bootstrap query credentials are not accepted."},400);
   const credential = await commandCredential(request,env);
