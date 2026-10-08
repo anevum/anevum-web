@@ -581,7 +581,7 @@ async function runScrollResetCase(viewport) {
         returnByValue: true
       });
       state = stateResult.result?.value || state;
-      if (state.pathname === "/architecture" && Number(state.after) <= 1) break;
+      if (state.pathname === "/products/rhen/architecture" && Number(state.after) <= 1) break;
     } catch {
       // A real document navigation can briefly replace the execution context.
     }
@@ -589,7 +589,7 @@ async function runScrollResetCase(viewport) {
   }
 
   const value = {
-    ok: state.pathname === "/architecture" && before > 200 && Number(state.after) <= 1,
+    ok: state.pathname === "/products/rhen/architecture" && before > 200 && Number(state.after) <= 1,
     before,
     after: Number.isFinite(Number(state.after)) ? Number(state.after) : null,
     maxScroll: Number(ready.maxScroll) || 0,
