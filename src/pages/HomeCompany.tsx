@@ -1,154 +1,104 @@
 import { Link } from "react-router-dom";
-import Mark from "../components/Mark";
+import PublicEvidenceSnapshot from "../components/PublicEvidenceSnapshot";
+import SystemIcon from "../components/company/SystemIcon";
+import { useLiveTrading } from "../hooks/useLiveTrading";
 import { fieldNotes } from "../data/fieldNotes";
 import { currentRhenRelease } from "../data/releases";
+import { publicProducts } from "../data/products";
 
-const principles = [
-  ["01", "Give time back", "The point of automation is not more software to manage. It is fewer repetitive decisions competing for a person's attention."],
-  ["02", "Make complexity legible", "Money, markets, data, and automation are complicated enough. The interface should make the underlying system easier to understand, not harder."],
-  ["03", "Evidence over theatre", "Experiments, failures, limits, and measured results belong in the record. A polished interface is useful; pretending is not."],
-  ["04", "Build small, then earn scale", "ANEVUM can make focused tools quickly, learn from real use, and let the useful ones grow instead of turning every idea into a platform."],
-] as const;
+function ago(value?: string | null, now = Date.now()) {
+  if (!value) return "—";
+  const ms = now - new Date(value).getTime();
+  if (!Number.isFinite(ms)) return "—";
+  const m = Math.max(0, Math.floor(ms / 60000));
+  if (m < 1) return "now";
+  if (m < 60) return m + "m";
+  if (m < 1440) return Math.floor(m / 60) + "h";
+  return Math.floor(m / 1440) + "d";
+}
 
 export default function HomeCompany() {
   const release = currentRhenRelease();
-  const latestNote = [...fieldNotes].sort((a, b) => b.date.localeCompare(a.date))[0];
+  const products = publicProducts();
+  const notes = [...fieldNotes].sort((a,b) => b.date.localeCompare(a.date)).slice(0,3);
+  const { data, error, now } = useLiveTrading(5000);
+  const events = (data?.events || []).slice(0,6);
 
   return (
-    <div className="studio-home">
-      <section className="studio-hero">
-        <div className="studio-hero-copy">
-          <div className="studio-eyebrow"><i /> INDEPENDENT SOFTWARE STUDIO</div>
-          <h1>Software for the parts of life that shouldn&apos;t take over your life.</h1>
-          <p className="studio-hero-lead">
-            ANEVUM is an independent software studio run by Devon Akins. I build practical tools around
-            money, investing, automation, and the repetitive work that gets in the way of living.
-          </p>
+    <div className="studio-home truth-home">
+      <section className="truth-hero">
+        <div className="truth-hero-copy">
+          <span className="truth-kicker">INDEPENDENT SOFTWARE / BUILT IN PUBLIC</span>
+          <h1>Useful software, built against real problems.</h1>
+          <p>ANEVUM builds practical tools around money, automation, research, and real-world data. The work stays small enough to inspect and public enough to challenge.</p>
           <div className="studio-actions">
-            <Link className="studio-button primary" to="/products">Explore the work <span>→</span></Link>
-            <Link className="studio-button" to="/research">Read Field Notes</Link>
+            <Link className="studio-button primary" to="/products">Browse products <span>→</span></Link>
+            <Link className="studio-button" to="/feed">See what changed</Link>
           </div>
-          <div className="studio-hero-footnote">
-            <span>ONE FOUNDER</span><i />
-            <span>BUILDING IN PUBLIC</span><i />
-            <span>CENTRAL FLORIDA</span>
+          <div className="truth-hero-flags">
+            <span><i /> REAL DATA</span>
+            <span><i /> PUBLIC EVIDENCE</span>
+            <span><i /> VERSIONED RELEASES</span>
           </div>
         </div>
-
-        <aside className="studio-now-card" aria-label="What ANEVUM is building now">
-          <header>
-            <span>NOW / 001</span>
-            <Mark />
-          </header>
-          <div className="studio-now-main">
-            <span>FLAGSHIP PROJECT</span>
-            <h2>RHEN</h2>
-            <p>
-              A live trading and research system for testing whether market ideas can survive real evidence,
-              real friction, and real operation.
-            </p>
-          </div>
-          <dl>
-            <div><dt>CURRENT RELEASE</dt><dd>{release.version}</dd></div>
-            <div><dt>STATE</dt><dd>ACTIVE R&amp;D</dd></div>
-            <div><dt>FOCUS</dt><dd>EQUITIES + ETFs</dd></div>
-          </dl>
-          <Link to="/products/rhen">Open RHEN <span>↗</span></Link>
-        </aside>
+        <PublicEvidenceSnapshot compact />
       </section>
 
-      <section className="studio-statement">
-        <span>WHY ANEVUM</span>
-        <div>
-          <h2>Technology should carry some of the weight.</h2>
-          <p>
-            People have families, work, interests, and lives they actually want to be present for. Financial
-            administration, research, repetitive decisions, and software busywork can consume far more attention
-            than they deserve. ANEVUM starts there: find a burden, understand it, and build something that makes it lighter.
-          </p>
-          <p>
-            Finance is the first major domain, not the permanent boundary. If a useful tool fits the same philosophy,
-            it belongs here.
-          </p>
+      <section className="truth-live-row">
+        <header><div><i className={error ? "degraded" : "live"} /><span>{error ? "PUBLIC FEED DEGRADED" : "WHAT'S HAPPENING NOW"}</span></div><Link to="/feed">Open feed →</Link></header>
+        <div className="truth-live-items">
+          {events.length ? events.map((event,index) => (
+            <article key={String(event.at || index)+String(event.type || event.kind || "")}>
+              <time>{ago(event.at,now)}</time><span>RHEN</span><strong>{event.label || event.type || event.kind || "Runtime observation"}</strong>
+            </article>
+          )) : (
+            <article className="empty"><time>—</time><span>RHEN</span><strong>{error || "No current public runtime events. Static records remain available."}</strong></article>
+          )}
         </div>
       </section>
 
-      <section className="studio-section studio-work-section">
-        <header className="studio-section-heading">
-          <span>THE WORK</span>
-          <div><h2>One serious system now. Room for many useful tools later.</h2></div>
-        </header>
-
-        <div className="studio-work-grid">
-          <Link to="/products/rhen" className="studio-work-card flagship">
-            <div className="studio-card-index">01</div>
-            <div className="studio-card-status"><i /> ACTIVE</div>
-            <h3>RHEN</h3>
-            <p>Automated market observation, trading, research, replay, forecasting, and evidence.</p>
-            <footer><span>FINANCE / INVESTING</span><b>EXPLORE ↗</b></footer>
-          </Link>
-
-          <article className="studio-work-card future">
-            <div className="studio-card-index">02</div>
-            <div className="studio-card-status">NEXT</div>
-            <h3>Focused financial tools</h3>
-            <p>Smaller products for individuals: planning, cash flow, decision support, investing, and automation.</p>
-            <footer><span>PRODUCT LANE</span><b>IN DEVELOPMENT</b></footer>
-          </article>
-
-          <article className="studio-work-card future">
-            <div className="studio-card-index">03+</div>
-            <div className="studio-card-status">OPEN</div>
-            <h3>Experiments</h3>
-            <p>Small software can stay small. Useful experiments can graduate into products when they earn it.</p>
-            <footer><span>LAB / UTILITIES</span><b>ROOM TO GROW</b></footer>
+      <section className="studio-section truth-products-section">
+        <header className="truth-section-head"><div><span>PRODUCTS</span><h2>Things that actually exist.</h2></div><Link to="/products">All products →</Link></header>
+        <div className="truth-product-grid">
+          {products.map((product) => (
+            <Link to={product.routes.home} className="truth-product-card" key={product.slug}>
+              <header><SystemIcon system={product.system || "RHEN"} size="md" /><span>{product.lifecycle.toUpperCase()}</span></header>
+              <h3>{product.name}</h3><p>{product.oneLine}</p>
+              <dl><div><dt>RELEASE</dt><dd>{product.currentRelease || "—"}</dd></div><div><dt>CATEGORY</dt><dd>{product.category}</dd></div></dl>
+              <footer><span>REAL PRODUCT</span><b>OPEN ↗</b></footer>
+            </Link>
+          ))}
+          <article className="truth-product-card registry-empty">
+            <header><span>REGISTRY</span></header>
+            <h3>Next product goes here when it exists.</h3>
+            <p>ANEVUM does not publish placeholder products just to fill a grid.</p>
+            <footer><span>{products.length} PUBLIC PRODUCT{products.length === 1 ? "" : "S"}</span></footer>
           </article>
         </div>
-        <Link className="studio-inline-link" to="/products">See the product portfolio →</Link>
       </section>
 
-      <section className="studio-section studio-principles-section">
-        <header className="studio-section-heading">
-          <span>HOW I BUILD</span>
-          <div>
-            <h2>Useful before impressive.</h2>
-            <p>ANEVUM does not need to behave like a giant software company. The advantage of being small is that the work can stay close to the problem.</p>
-          </div>
-        </header>
-        <div className="studio-principles-grid">
-          {principles.map(([index, title, body]) => (
-            <article key={index}><span>{index}</span><h3>{title}</h3><p>{body}</p></article>
+      <section className="studio-section truth-notes-section">
+        <header className="truth-section-head"><div><span>FIELD NOTES</span><h2>The build record.</h2></div><Link to="/field-notes">All notes →</Link></header>
+        <div className="truth-note-grid">
+          {notes.map((note) => (
+            <Link key={note.slug} to={"/field-notes/"+note.slug}>
+              <time>{note.date}</time><span>{note.type}</span><h3>{note.title}</h3><p>{note.summary}</p><footer>{note.readMinutes} MIN READ <b>↗</b></footer>
+            </Link>
           ))}
         </div>
       </section>
 
-      {latestNote ? (
-        <section className="studio-section studio-notes-section">
-          <header className="studio-section-heading">
-            <span>FIELD NOTES</span>
-            <div><h2>The build record stays public.</h2><p>What changed, what failed, what the evidence says, and what I am trying next.</p></div>
-          </header>
-          <Link className="studio-latest-note" to={`/research/${latestNote.slug}`}>
-            <div><span>LATEST / {latestNote.date}</span><strong>{latestNote.type}</strong></div>
-            <h3>{latestNote.title}</h3>
-            <p>{latestNote.summary}</p>
-            <footer><span>{latestNote.readMinutes} MIN READ</span><b>READ NOTE ↗</b></footer>
-          </Link>
-          <Link className="studio-inline-link" to="/research">Browse all Field Notes →</Link>
-        </section>
-      ) : null}
+      <section className="truth-release-strip">
+        <div><span>CURRENT RELEASE</span><strong>RHEN {release.version} · {release.codename}</strong><p>{release.headline}</p></div>
+        <div className="truth-release-facts"><span>LIVE AUTHORITY · LONG U.S. EQUITIES + ETFs</span><span>OPTIONS · RESEARCH ONLY</span><span>PROMOTION · MANUAL</span></div>
+        <Link to="/products/rhen/releases">Release record →</Link>
+      </section>
 
-      <section className="studio-founder-band">
-        <div className="studio-founder-image"><img src="/devon-akins-headshot.jpg" alt="Devon Akins" /></div>
-        <div>
-          <span>THE PERSON BEHIND IT</span>
-          <h2>ANEVUM is one person right now.</h2>
-          <p>
-            I&apos;m Devon Akins. I design, build, test, deploy, document, and operate the software here. The site is meant
-            to show that work clearly—not to make a one-person studio look like a hundred-person company.
-          </p>
-          <Link to="/about">About me and ANEVUM →</Link>
-        </div>
+      <section className="truth-independent-band">
+        <span>INDEPENDENT SOFTWARE</span>
+        <h2>No fake scale. No fake data.</h2>
+        <p>ANEVUM is independently built and operated. Support and paid access will appear only when there is a real mechanism and a real product value behind them.</p>
+        <Link to="/about">About ANEVUM →</Link>
       </section>
     </div>
   );
