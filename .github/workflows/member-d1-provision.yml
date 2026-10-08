@@ -1,0 +1,112 @@
+name: Provision ANEVUM Member D1 (Manual)
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: 'Inspect existing databases or create only missing member databases'
+        required: true
+        default: inspect
+        type: choice
+        options:
+          - inspect
+          - create-missing
+      confirmation:
+        description: 'For create-missing only, type CREATE_MEMBER_DATABASES'
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: anevum-member-d1-provision
+  cancel-in-progress: false
+
+jobs:
+  inventory:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Require deliberate approval before creating resources
+        env:
+          MODE: ${{ inputs.mode }}
+          CONFIRMATION: ${{ inputs.confirmation }}
+        run: |
+          set -euo pipefail
+          if [ "$MODE" = 'create-missing' ]; then
+            if [ "$CONFIRMATION" != 'CREATE_MEMBER_DATABASES' ]; then
+              echo '::error::Explicit confirmation string is required before D1 creation.'
+              exit 1
+            fi
+          fi
+      - name: Install pinned Wrangler
+        run: npm install --no-audit --no-fund
+      - name: Inspect D1 and optionally create only missing databases
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_D1_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          MODE: ${{ inputs.mode }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -z "${CLOUDFLARE_API_TOKEN:-}" ] || [ -z "${CLOUDFLARE_ACCOUNT_ID:-}" ]; then
+            echo '::error::CLOUDFLARE_D1_TOKEN or CLOUDFLARE_ACCOUNT_ID is missing. Set them as GitHub Actions secrets, not repository files.'
+            exit 1
+          fi
+
+          inventory="$RUNNER_TEMP/anevum-d1-inventory.json"
+          npx wrangler d1 list --json > "$inventory"
+          jq -e 'type == "array"' "$inventory" > /dev/null
+
+          for database in anevum-members anevum-members-preview; do
+            count="$(jq --arg name "$database" '[.[] | select(.name == $name)] | length' "$inventory")"
+            if [ "$count" -gt 1 ]; then
+              echo "::error::Ambiguous duplicate database name: $database"
+              exit 1
+            fi
+            if [ "$count" -eq 0 ] && [ "$MODE" = 'create-missing' ]; then
+              echo "Creating absent D1 database: $database"
+              npx wrangler d1 create "$database" --json > "$RUNNER_TEMP/create-$database.json"
+              npx wrangler d1 list --json > "$inventory"
+              jq -e 'type == "array"' "$inventory" > /dev/null
+            fi
+          done
+
+          {
+            echo '## ANEVUM member D1 inventory'
+            echo ''
+            echo '| Environment | Database | UUID |'
+            echo '| --- | --- | --- |'
+          } >> "$GITHUB_STEP_SUMMARY"
+          for database in anevum-members anevum-members-preview; do
+            entries="$(jq --arg name "$database" '[.[] | select(.name == $name)] | length' "$inventory")"
+            if [ "$entries" -ne 1 ]; then
+              if [ "$MODE" = 'create-missing' ]; then
+                echo "::error::Database $database is still missing or ambiguous after provisioning."
+                exit 1
+              fi
+              echo "| pending | $database | not created |" >> "$GITHUB_STEP_SUMMARY"
+              continue
+            fi
+            uuid="$(jq -r --arg name "$database" '[.[] | select(.name == $name) | .uuid] | first // empty' "$inventory")"
+            if ! [[ "$uuid" =~ ^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$ ]]; then
+              echo "::error::Cloudflare did not return a valid D1 UUID for $database."
+              exit 1
+            fi
+            if [ "$database" = 'anevum-members' ]; then
+              label='production'
+            else
+              label='preview'
+            fi
+            echo "| $label | $database | $uuid |" >> "$GITHUB_STEP_SUMMARY"
+          done
+          {
+            echo ''
+            echo 'Member registration is still OFF. No migration, secret mutation, preview binding, Cloudflare Access change, or public rollout was performed.'
+            echo 'Record the verified UUIDs and continue with the gated rollout checklist in issue #210.'
+          } >> "$GITHUB_STEP_SUMMARY"
