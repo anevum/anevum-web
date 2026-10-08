@@ -55,6 +55,33 @@ def safe_policy_check(app, policies, organization):
     return destination_mode(x.get("uri") for x in app.get("destinations", []))
 
 
+def access_update_payload(original, mode):
+    """Return the full GET configuration with only domain/destinations changed.
+
+    Cloudflare Access application updates use PUT, NOT PATCH. A reduced PUT
+    would reset unrelated authentication settings, so preserve every GET field.
+    """
+    if mode not in ("legacy", "member"):
+        raise ValueError("Refusing an unknown Access cutover mode.")
+    result = dict(original)
+    result["domain"] = "anevum.com/command/rhen" if mode == "member" else original.get("domain", "anevum.com/command")
+    result["destinations"] = [{"type": "public", "uri": uri} for uri in sorted(SCOPED if mode == "member" else LEGACY)]
+    return result
+
+
+def ensure_unchanged_auth_settings(before, after):
+    fields = (
+        "id", "aud", "name", "type", "allowed_idps",
+        "auto_redirect_to_identity", "session_duration", "app_launcher_visible",
+        "http_only_cookie_attribute", "same_site_cookie_attribute",
+        "read_service_tokens_from_header", "policies", "custom_deny_url",
+        "custom_deny_message", "custom_non_identity_deny_url", "service_auth_401_redirect"
+    )
+    for field in fields:
+        if before.get(field) != after.get(field):
+            raise RuntimeError("Access application attribute unexpectedly changed: " + field)
+
+
 def request_json(account, token, path, method="GET", body=None):
     url = "https://api.cloudflare.com/client/v4/accounts/" + account + path
     raw = None if body is None else json.dumps(body).encode("utf-8")
@@ -160,32 +187,29 @@ def main():
     if not verify_live("legacy", 30):
         raise RuntimeError("Production Access baseline is not healthy; refusing cutover.")
 
-    original_domain = app.get("domain")
-    patch = {
-        "domain": "anevum.com/command/rhen",
-        "destinations": [{"type": "public", "uri": uri} for uri in sorted(SCOPED)]
-    }
+    # PUT is the documented Access application update method. Preserve all GET
+    # attributes to avoid resetting session/cookie/IdP/security settings.
+    update = access_update_payload(app, "member")
     changed = False
     try:
-        updated = request_json(account, token, "/access/apps/" + APP_ID, method="PATCH", body=patch)
+        updated = request_json(account, token, "/access/apps/" + APP_ID, method="PUT", body=update)
         changed = True
+        ensure_unchanged_auth_settings(app, updated)
         if destination_mode(x.get("uri") for x in updated.get("destinations", [])) != "member":
             raise RuntimeError("Cloudflare did not return the expected scoped destinations.")
         current, policies_now, org_now = read_app(account, token)
         if safe_policy_check(current, policies_now, org_now) != "member":
             raise RuntimeError("Owner-only Access invariants changed during cutover.")
+        ensure_unchanged_auth_settings(app, current)
         if not verify_live("member"):
             raise RuntimeError("Scoped Access behavior is not live-verified.")
         print("COMMAND_ACCESS_CUTOVER=PASS owner-only RHEN protected, member Command reachable")
     except Exception:
         if changed:
             # Fail closed: recover the original route coverage before exiting.
-            rollback = {
-                "domain": original_domain or "anevum.com/command",
-                "destinations": [{"type": "public", "uri": uri} for uri in sorted(LEGACY)]
-            }
+            rollback = dict(app)
             try:
-                request_json(account, token, "/access/apps/" + APP_ID, method="PATCH", body=rollback)
+                request_json(account, token, "/access/apps/" + APP_ID, method="PUT", body=rollback)
                 restored, restored_policies, restored_org = read_app(account, token)
                 if safe_policy_check(restored, restored_policies, restored_org) == "legacy":
                     verify_live("legacy", 30)
