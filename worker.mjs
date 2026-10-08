@@ -133,7 +133,7 @@ async function proxyTrader(request, upstreamPath, env) {
 }
 
 async function proxyCommandStream(request, env) {
-  if (String(env?.COMMAND_LIVE_STREAM_ENABLED || "false") !== "true") return jsonResponse({ message: "4.4 shadow stream disabled." }, 503);
+  if (String(env?.COMMAND_LIVE_STREAM_ENABLED || "false") !== "true") return jsonResponse({ message: "4.4 research observation stream disabled." }, 503);
   const url = new URL(request.url);
   if (request.method !== "GET" || request.headers.get("Upgrade")?.toLowerCase() !== "websocket") return jsonResponse({ message: "WebSocket upgrade required." }, 426);
   if (request.headers.get("Origin") !== url.origin) return jsonResponse({ message: "Same-origin Command stream required." }, 403);
@@ -158,7 +158,7 @@ async function proxyCommandHistory(request, env) {
   const credential = await commandCredential(request,env);
   const base = String(env?.RHEN_COMMAND_STREAM_BASE || TRADER_BASE).replace(/\/$/,"");
   if (!base.startsWith("https://")) return jsonResponse({message:"Secure upstream required."},503);
-  const result = await shadowRead(base,"/v1/command/shadow/history"+url.search,credential.token);
+  const result = await shadowRead(base,"/v1/command/research/history"+url.search,credential.token);
   return jsonResponse(result.payload,result.status);
 }
 
@@ -169,7 +169,7 @@ async function proxyCommandBootstrap(request, env) {
   const credential = await commandCredential(request,env);
   const base = String(env?.RHEN_COMMAND_STREAM_BASE || TRADER_BASE).replace(/\/$/,"");
   if (!base.startsWith("https://")) return jsonResponse({message:"Secure upstream required."},503);
-  const result = await shadowRead(base,"/v1/command/shadow/bootstrap",credential.token);
+  const result = await shadowRead(base,"/v1/command/research/bootstrap",credential.token);
   return jsonResponse(result.payload,result.status);
 }
 
@@ -443,14 +443,14 @@ export default {
       catch (error) { return jsonResponse({ message: "Authenticated Command stream unavailable." }, error instanceof ApiError ? error.status : 502); }
     }
 
-    if (pathname === "/api/command/shadow/history") {
+    if (pathname === "/api/command/research/history" || pathname === "/api/command/shadow/history") {
       try { return await proxyCommandHistory(request,env); }
       catch (error) { return jsonResponse({message:"Authenticated source history unavailable."},error instanceof ApiError ? error.status : 502); }
     }
 
-    if (pathname === "/api/command/shadow/bootstrap") {
+    if (pathname === "/api/command/research/bootstrap" || pathname === "/api/command/shadow/bootstrap") {
       try { return await proxyCommandBootstrap(request,env); }
-      catch (error) { return jsonResponse({message:"Authenticated shadow bootstrap unavailable."},error instanceof ApiError ? error.status : 502); }
+      catch (error) { return jsonResponse({message:"Authenticated research bootstrap unavailable."},error instanceof ApiError ? error.status : 502); }
     }
 
     if (pathname === "/api/command/session") {
