@@ -1,7 +1,7 @@
 [
   { "path": "/", "label": "Home", "nav": false, "sitemap": true },
-  { "path": "/products", "label": "Products", "nav": true, "sitemap": true },
-  { "path": "/feed", "label": "Feed", "nav": true, "sitemap": true },
+  { "path": "/products", "label": "Projects", "nav": true, "sitemap": true },
+  { "path": "/feed", "label": "Updates", "nav": true, "sitemap": true },
   { "path": "/field-notes", "label": "Field Notes", "nav": true, "sitemap": true },
   { "path": "/about", "label": "About", "nav": true, "sitemap": true },
   { "path": "/products/rhen", "label": "RHEN", "nav": false, "sitemap": true },

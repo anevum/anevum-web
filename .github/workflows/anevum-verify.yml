@@ -181,7 +181,7 @@ jobs:
             test -s "$evidence/$name-rendered.html"
           done
           grep -Fq 'truth-home' "$evidence/home-rendered.html"
-          grep -Fq 'Useful software, built against real problems.' "$evidence/home-rendered.html"
+          grep -Fq 'A place for things I build.' "$evidence/home-rendered.html"
           grep -Fq 'truth-products-page' "$evidence/products-rendered.html"
           grep -Fq 'truth-rhen-page' "$evidence/rhen-rendered.html"
           grep -Fq 'studio-about-page' "$evidence/about-rendered.html"

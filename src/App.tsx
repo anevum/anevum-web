@@ -21,8 +21,8 @@ const ReleaseDetail = lazy(() => import("./pages/ReleaseDetail"));
 
 const titles: Record<string, string> = {
   "/": "ANEVUM — Independent Software",
-  "/products": "Products — ANEVUM",
-  "/feed": "Feed — ANEVUM",
+  "/products": "Projects — ANEVUM",
+  "/feed": "Updates — ANEVUM",
   "/field-notes": "Field Notes — ANEVUM",
   "/products/rhen": "RHEN — ANEVUM",
   "/products/rhen/evidence": "RHEN Public Evidence — ANEVUM",
