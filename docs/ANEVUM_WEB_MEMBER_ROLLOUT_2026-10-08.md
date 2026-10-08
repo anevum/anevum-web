@@ -36,7 +36,7 @@ These are one-time operator/provider tasks and require explicit Cloudflare/Googl
 4. With an authorized Cloudflare token, apply `migrations/0001_member_platform.sql` to **preview first**, then test profile persistence, login, deletion and cross-user isolation. Apply the same migration to production only after the preview result is verified. Wrangler: `npx wrangler d1 migrations apply anevum-members --remote` after binding config is checked. Verify applied migrations and table schema, do not blindly replay SQL.
 5. Create a Google OAuth **Web application** credential in Google Cloud. Set the exact authorized redirect URI `https://anevum.com/api/auth/callback/google` and authorized JavaScript origin `https://anevum.com`. Verify the app's consent screen and publish/tester status.
 6. Set Cloudflare Worker secrets, not repository variables: `BETTER_AUTH_SECRET` (independent cryptographically generated random value >=32 characters), `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`. Do not publish OAuth secrets in a React bundle or wrangler source. `ANEVUM_MEMBERS_ENABLED` remains false while testing.
-7. Review and approve the actual `/privacy` and `/terms` pages for public signup. They are drafts. Verify account deletion, complaint contact address, user data export/access requests, and any retention statements against real provider policies.
+7. Review and approve the actual `/privacy` and `/terms` pages for public signup. They are drafts. Verify account deletion, complaint contact address, the account JSON export and any retention statements against real provider policies.
 8. Validate the deployed preview and production Worker bindings with a secure integration test. Confirm unauthenticated and expired sessions return 401 on member API; cross-member data access fails; direct requests to `/api/command/*` remain 401/403 without Cloudflare Access regardless of Better Auth cookies; all protected routes are noindexed/no-store; OAuth callback state/nonce behavior works; authorized operator controls remain unchanged.
 9. Only after a real Google callback round-trip and user-isolation checks pass, enable `ANEVUM_MEMBERS_ENABLED=true` in Cloudflare production deployment configuration, deploy, and verify a new account and account deletion. Do not announce signup earlier.
 
@@ -63,5 +63,5 @@ These are one-time operator/provider tasks and require explicit Cloudflare/Googl
 
 - Google OAuth production credentials, D1 provisioning permission, migrations and production secret values remain external.
 - Legal/privacy drafts require founder approval before public account registration.
-- Full account data export and notifications are not offered in the initial UI. Before making a public signup claim, finalize the user's account data access process.
+- The initial UI offers a JSON export of profile data, saved/followed projects, and entitlements. Google OAuth provider data beyond what ANEVUM stores is not included. Notifications remain out of scope.
 - The broader site design pass beyond Home/Projects can continue independently of signup; it must preserve honest RHEN data.
