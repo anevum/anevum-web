@@ -251,7 +251,12 @@ export default function Command() {
           </>
         )}
 
-        {page === "discover" && (\n          <>\n            <CommandDiscoveryDeck snapshot={snapshot} control={controlObservation.snapshot} now={controlObservation.now} />\n            {liveEnabled && <CommandLiveMarket state={liveState} />}\n          </>\n        )}
+        {page === "discover" && (
+          <>
+            <CommandDiscoveryDeck snapshot={snapshot} control={controlObservation.snapshot} now={controlObservation.now} />
+            {liveEnabled && <CommandLiveMarket state={liveState} />}
+          </>
+        )}
 
         {page === "review" && (
           <div className="command-v4-review-stack">
