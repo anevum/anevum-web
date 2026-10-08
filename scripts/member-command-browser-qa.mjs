@@ -54,4 +54,16 @@ async function runCase(viewport, state) {
   const png=await send("Page.captureScreenshot",{format:"png",captureBeyondViewport:false});fs.writeFileSync(path.join(output,`member-command-${state}-${viewport.width}.png`),Buffer.from(png.data,"base64"));
   console.log(JSON.stringify({state,width:viewport.width,ok:true}));ws.close();await fetch(`http://127.0.0.1:${port}/json/close/${target.id}`);
 }
-try {for(const viewport of [{width:1440,height:1000},{width:390,height:844}])for(const state of ["disabled","signed-out","member"])await runCase(viewport,state);} finally {chrome.kill();fs.rmSync(profile,{recursive:true,force:true});}
+try {
+  for(const viewport of [{width:1440,height:1000},{width:390,height:844}])
+    for(const state of ["disabled","signed-out","member"])await runCase(viewport,state);
+} finally {
+  if(chrome.exitCode === null && chrome.signalCode === null) {
+    await new Promise(resolve => {
+      const timeout=setTimeout(() => {chrome.kill("SIGKILL");resolve();},5000);
+      chrome.once("close",() => {clearTimeout(timeout);resolve();});
+      chrome.kill();
+    });
+  }
+  await fs.promises.rm(profile,{recursive:true,force:true,maxRetries:5,retryDelay:200});
+}
