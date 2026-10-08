@@ -55,6 +55,7 @@ jobs:
         run: |
           node scripts/verify-member-bindings.mjs --require-config
           node scripts/verify-member-staging-deploy.mjs
+          node --test tests/member-staging.test.mjs
       - name: Build the separate staging Worker and static assets
         run: npm run build
       - name: Verify generated Worker will not overwrite production
