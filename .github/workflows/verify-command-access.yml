@@ -39,7 +39,13 @@ jobs:
           assert app["id"] == "ea5ecc36-b828-4030-aaf7-c2a7799f6085"
           assert app["aud"] == "3fabe3c703b4cc972136d2292fda39783c11903c3c6cf5ac0e42c4738f2ee800"
           assert org["auth_domain"] == "wispy-tooth-095a.cloudflareaccess.com"
-          assert {d["uri"] for d in app["destinations"]} == {"anevum.com/command*", "anevum.com/api/command*"}
+          app_uris = {d["uri"] for d in app["destinations"]}
+          legacy_uris = {"anevum.com/command*", "anevum.com/api/command*"}
+          member_uris = {"anevum.com/command/rhen*", "anevum.com/api/command*"}
+          assert app_uris in (legacy_uris, member_uris), "Access destinations changed outside approved Command scopes."
+          mode = "member" if app_uris == member_uris else "legacy"
+          print("COMMAND_ACCESS_SCOPE=" + mode)
+          assert not any(d.get("overrides") for d in app["destinations"]), "Access path override must not bypass owner authentication"
           allows = [p for p in policies if p["decision"] == "allow"]
           assert allows, "Owner allow policy missing"
           for p in policies:
@@ -54,8 +60,11 @@ jobs:
            ("https://anevum.com/", "GET", [200]),
            ("https://anevum.com/products/rhen", "GET", [200,308]),
            ("https://anevum.com/products/iren", "GET", [200,308]),
-           ("https://anevum.com/command", "GET", [302,303]),
-           ("https://anevum.com/command/topology", "GET", [302,303]),
+           ("https://anevum.com/command", "GET", [200] if mode == "member" else [302,303]),
+           ("https://anevum.com/command/topology", "GET", [308] if mode == "member" else [302,303]),
+           ("https://anevum.com/command/rhen", "GET", [302,303]),
+           ("https://anevum.com/command/rhen/operate", "GET", [302,303]),
+           ("https://anevum.com/api/command/unknown", "GET", [302,303,401,403]),
            ("https://anevum.com/api/command/session", "GET", [302,303,401,403]),
            ("https://anevum.com/api/command/trader/status", "GET", [302,303,401,403]),
            ("https://anevum.com/api/command/iren/status", "GET", [302,303,401,403]),
@@ -82,6 +91,13 @@ jobs:
                   result["redirect_host"] = urllib.parse.urlparse(location).hostname
                   if result["redirect_host"] != org["auth_domain"]:
                       failures.append(result)
+              if url == "https://anevum.com/command" and status == 200:
+                  assert mode == "member"
+                  assert any("noindex" in line.lower() for line in headers.splitlines() if line.lower().startswith("x-robots-tag:"))
+                  assert any("no-store" in line.lower() for line in headers.splitlines() if line.lower().startswith("cache-control:"))
+              if url == "https://anevum.com/command/topology" and status == 308:
+                  dest = urllib.parse.urlparse(next((line.split(":",1)[1].strip() for line in headers.splitlines() if line.lower().startswith("location:")), ""))
+                  assert dest.hostname == "anevum.com" and dest.path == "/command/rhen/topology"
               if "/api/public/trading/live" in url and status == 200:
                   payload = json.loads(body)
                   result["source"] = payload.get("source")
@@ -104,7 +120,7 @@ jobs:
                   failures.append(result)
           assert not failures, json.dumps(failures)
           
-          print("READ_ONLY_ACCESS_AUDIT=PASS")
+          print("READ_ONLY_ACCESS_AUDIT=PASS scope=" + mode)
           
       - uses: actions/checkout@v4
         if: always()
