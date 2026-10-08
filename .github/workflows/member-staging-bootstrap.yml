@@ -1,4 +1,4 @@
-name: ANEVUM Member Staging Bootstrap
+name: ANEVUM Member Staging OAuth
 
 on:
   push:
@@ -51,15 +51,16 @@ jobs:
         run: pip install "weasyprint==68.0" "Pillow==11.3.0"
       - name: Install pinned Node dependencies
         run: npm install --no-audit --no-fund
-      - name: Verify staging source configuration is isolated and accounts disabled
+      - name: Verify staging source config is isolated and Google OAuth is scoped
         run: |
           node scripts/verify-member-bindings.mjs --require-config
           node scripts/verify-member-staging-deploy.mjs
+          node --test tests/member-staging.test.mjs
       - name: Build the separate staging Worker and static assets
         run: npm run build
       - name: Verify generated Worker will not overwrite production
         run: node scripts/verify-member-staging-deploy.mjs --generated
-      - name: Deploy isolated disabled staging Worker
+      - name: Deploy isolated staging OAuth Worker
         if: github.event_name != 'pull_request'
         id: deploy
         env:
@@ -85,12 +86,12 @@ jobs:
             echo ''
             echo "Dedicated staging origin: $staging_url"
             echo ''
-            echo 'Preview D1 only. Sign-in and preview OAuth remain explicitly disabled.'
+            echo 'Preview D1 only. Staging-only Google test authentication configured, pending real two-account acceptance.'
             echo 'Production member database and all RHEN broker-write paths remain unchanged.'
             echo ''
-            echo "Google staging callback (not yet registered): $staging_url/api/auth/callback/google"
+            echo "Google staging callback: $staging_url/api/auth/callback/google"
           } >> "$GITHUB_STEP_SUMMARY"
-      - name: Confirm deployed staging is fail closed
+      - name: Verify staging Google identity readiness and deny operator access
         if: github.event_name != 'pull_request'
         env:
           STAGING_URL: ${{ steps.deploy.outputs.staging_url }}
@@ -98,7 +99,7 @@ jobs:
         run: |
           set -euo pipefail
           test -n "$STAGING_URL"
-          # A newly created workers.dev route can become reachable after the
+          # A workers.dev route can become reachable after the
           # deploy API reports success. Curl's default --retry does not retry 404.
           # Wait a bounded time, but never silently accept a live signup response.
           status='not-checked'
@@ -106,8 +107,8 @@ jobs:
           for attempt in $(seq 1 30); do
             status="$(curl --silent --show-error --max-time 12 -o "$RUNNER_TEMP/member-availability.json" -w '%{http_code}' "$STAGING_URL/api/member/availability" 2>/dev/null || true)"
             if [ "$status" = '200' ]; then
-              if ! jq -e '.available == false and .provider == null' "$RUNNER_TEMP/member-availability.json" > /dev/null; then
-                echo '::error::Staging returned HTTP 200 but its signup gate is not disabled.'
+              if ! jq -e '.available == true and .provider == "google"' "$RUNNER_TEMP/member-availability.json" > /dev/null; then
+                echo '::error::Staging OAuth is not ready. Check staging-only Worker secret names, flags, and preview D1 migration without logging secret values.'
                 exit 1
               fi
               available=1
@@ -129,8 +130,13 @@ jobs:
             exit 1
           fi
           member_status="$(curl --silent --show-error --max-time 12 -o /dev/null -w '%{http_code}' "$STAGING_URL/api/member/me")"
-          if [ "$member_status" != '503' ]; then
-            echo "::error::Staging member authorization is not fail-closed: HTTP $member_status"
+          if [ "$member_status" != '401' ]; then
+            echo "::error::Unauthenticated staging member endpoint must return 401: HTTP $member_status"
+            exit 1
+          fi
+          auth_status="$(curl --silent --show-error --max-time 12 -o /dev/null -w '%{http_code}' "$STAGING_URL/api/auth/get-session")"
+          if [ "$auth_status" != '200' ]; then
+            echo "::error::Staging auth handler is not responding: HTTP $auth_status"
             exit 1
           fi
           operator_status="$(curl --silent --show-error --max-time 12 -o /dev/null -w '%{http_code}' "$STAGING_URL/api/command/trader/status")"
@@ -143,4 +149,4 @@ jobs:
             echo '::error::Staging public response must be excluded from search indexing.'
             exit 1
           fi
-          echo 'Bootstrap probes passed: member signup disabled, operator denied, search indexing disabled.'
+          echo 'Staging OAuth checks passed: availability ready, anonymous member denied, auth handler responsive, operator denied, noindex. Real Google sign-in remains untested.'
