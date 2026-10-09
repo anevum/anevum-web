@@ -1,8 +1,8 @@
 # ANEVUM Web
 
-ANEVUM's public studio website and protected Command interface.
+ANEVUM's Commons-first service entrance, shared research application, personal member Command and protected company RHEN operator terminal.
 
-ANEVUM is currently an independent software studio run by Devon Akins. The public website presents the studio, its products, Field Notes, and founder background without treating internal RHEN modules as separate companies or top-level commercial products.
+ANEVUM is evolving into an independent software and research service. The public homepage introduces the service; authenticated members enter Commons, manage private programs in Command, and access RHEN as the first standalone application. The founder's workshop history remains available through About and Field Notes rather than defining the homepage.
 
 ## Open source
 
@@ -10,9 +10,15 @@ The code and documentation in this repository are licensed under the [Apache Lic
 
 This repository is intentionally the public web surface. Private credentials, broker secrets, authenticated operator data, and non-public execution state do not belong here.
 
-## Public information architecture
+## Product and navigation architecture
 
-- `/` — live ANEVUM home
+- `/` — ANEVUM Commons service entrance; signed-in members proceed to Commons
+- `/commons` — signed-in Commons research area; contribution access requires explicit invitation
+- `/commons/topic/:id` — invite-only member discussion
+- `/sign-in` — Google account entry, returning to Commons
+- `/me`, `/command` — private member account and program hub
+- `/apps/rhen/*` — personal member RHEN application, without inherited company broker access
+- `/command/rhen/*` — restricted company RHEN operator terminal
 - `/products` — canonical public product registry
 - `/feed` — releases, Field Notes, public-safe runtime events, and research decisions
 - `/field-notes` — public build / research journal
@@ -28,6 +34,11 @@ This repository is intentionally the public web surface. Private credentials, br
 Legacy public URLs such as `/live`, `/research`, `/architecture`, and `/releases` redirect to their canonical product-scoped routes.
 
 RHEN is the current flagship R&D system. IREN, GRAEN, VELUM, and NOSTRA remain named internal RHEN responsibilities rather than top-level ANEVUM products. Future software can be added beside RHEN without restructuring the company around the trading system.
+
+
+Commons research submission, comment and moderation APIs are explicitly gated by `ANEVUM_COMMONS_ENABLED`. Production stays `false` while invite-only staging security, migration and policy checks run. The owner-only terminal remains separately protected, and this branch has no live trading or Stripe authority.
+
+Implementation contract and release gates: [`docs/ANEVUM_WEB_COMMONS_SERVICE_ENTRY_2026-10-09.md`](docs/ANEVUM_WEB_COMMONS_SERVICE_ENTRY_2026-10-09.md).
 
 ## RHEN public evidence boundary
 
