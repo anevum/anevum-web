@@ -83,7 +83,7 @@ test("Command network reads are timeout bounded and connection state is terminal
   const data = readFileSync(new URL("../src/lib/data.ts", import.meta.url), "utf8");
   const worker = readFileSync(new URL("../worker.mjs", import.meta.url), "utf8");
 
-  assert.match(command, /"LIVE" : "DEGRADED"/);
+  assert.match(command, /liveEnabled && !liveState\\.stale \\? "STREAMING" : "POLLING"/);
   assert.match(command, /Observation degraded/);
   assert.match(data, /AbortSignal\.timeout\(10000\)/);
   assert.match(worker, /AbortSignal\.timeout\(10000\)/);
