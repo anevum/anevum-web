@@ -1,6 +1,6 @@
 # ANEVUM.WEB.BUILD.2026-10-09.001.RHEN-CLOUD-BILLING-FOUNDATION
 
-**State:** Development branch / production-preparation only. No Stripe product, checkout, paid-member execution, or live-member brokerage rollout is authorized or represented as active.
+**State:** Development branch / production-preparation only. ANEVUM live-mode Stripe product and two prices exist but are **inactive**. No Checkout, paid-member execution, or live-member brokerage rollout is authorized or active.
 
 ## Product decisions
 
@@ -20,10 +20,12 @@
 - `member_billing_subscriptions` records normalized Stripe subscription state and current paid period; foreign keys to both user and customer. Unknown prices never confer entitlement.
 - `member_billing_events` stores webhook event identifiers for repeat-delivery recognition.
 - `member_billing_checkout_locks` provides an expiring, token-checked D1 lock; provider-side open Checkout and subscription checks reduce duplicate purchases.
+- `member_rhen_beta_waitlist` records free opt-in interest keyed only by the member identity; it does not authorize a paid, paper or live trading service.
 - All subscription/user/customer queries are explicitly scoped. Cascade on user deletion removes local billing records only **after** the provider cancellation callback succeeds.
 
 ### API
 
+- `GET /api/member/rhen/beta`, `POST /api/member/rhen/beta` and `DELETE /api/member/rhen/beta`: gated free waitlist status/join/withdrawal, verified email and same-origin mutation enforcement, no monetary or brokerage capability.
 - `GET /api/member/billing`: authenticated subscriber status, pricing proposal, billing feature gates and paid-only entitlement. Always reports `paperExecutionEnabled:false` and `liveExecutionEnabled:false`.
 - `POST /api/member/billing/checkout`: authenticated and same-origin, verified-email member; accepts only `{ "plan": "founding" | "standard" }` and no price/customer/id override. Enabled only with test-mode configuration and explicit staging flags or separately approved live production. Price is fetched from Stripe and must match USD 2.99/4.99 per month before Checkout creation.
 - `POST /api/member/billing/portal`: authenticated billing customer opens Stripe's hosted management portal, using the server-owned customer mapping. The portal remains usable when new checkout is closed, provided safe Stripe settings remain configured.
@@ -40,6 +42,7 @@
 ## Environment variables and secrets
 
 Both checked-in Wrangler deployment configurations set:
+- `ANEVUM_RHEN_BETA_WAITLIST_ENABLED=false`
 - `ANEVUM_RHEN_BILLING_ENABLED=false`
 - `ANEVUM_RHEN_BILLING_CHECKOUT_ENABLED=false`
 - `ANEVUM_RHEN_BILLING_WEBHOOKS_ENABLED=false`
@@ -58,7 +61,7 @@ Never paste secret keys, webhook signing secrets, session cookies, member creden
 ## Separate staging acceptance
 
 1. Merge after CI review. The main-branch preview-only migration workflow targets `anevum-members-preview` and must verify five billing tables, ten pre-existing tables and FK integrity.
-2. In Stripe **test mode**, create one RHEN Cloud product with separate $9.99 and $19.99 USD recurring monthly prices, and configure Stripe Customer Portal. Do not use live prices in staging.
+2. In a separately connected Stripe **test-mode** account/sandbox, create one RHEN Cloud product with $2.99 and $4.99 USD monthly prices, and configure a test customer portal. Do not use live-price IDs, live keys, or live charges in staging.
 3. Configure a Stripe test webhook destination `https://anevum-member-staging.devonakins.workers.dev/api/billing/stripe/webhook` for `customer.subscription.created`, `customer.subscription.updated`, `customer.subscription.deleted`. Save that destination's signing secret as a staging Worker **Secret**.
 4. Configure all staging Stripe bindings, activate billing + webhook + (optionally standard checkout) staging flags only.
 5. With two independent authenticated test members, exercise valid/invalid same-origin checkout, wrong plan/extra input, price mismatch, duplicate/out-of-order webhooks, missed webhook replay/reconciliation, payment failure, cancelled renewal, expired period, customer mapping mismatch, portal access, deletion with open checkout/subscription, user cross-access, nonmember 401, and owner operator access unchanged.
@@ -67,7 +70,7 @@ Never paste secret keys, webhook signing secrets, session cookies, member creden
 
 ## Production release gates (distinct from schema readiness)
 
-1. Actual Stripe connection must be accessible; payment settings/product/price IDs and mode verified against an authenticated Stripe account. API tool connection returning an invalid link ID is **not** acceptance.
+1. ANEVUM's connected Stripe merchant account has been verified with charge and payout capabilities enabled. A separate test-mode Stripe account/sandbox and successful test Checkout/portal/webhook reconciliation are still required; an active merchant account by itself is not launch approval.
 2. Payment terms, refund/cancellation policy, privacy/retention, sales tax and consumer disclosures must be reviewed against real flows; do not claim existing October 8 privacy/terms approval covers payment data.
 3. Obtain brokerage and securities regulatory review before proposing automated investing subscriptions or live execution. Alpaca third-party commercial OAuth/live trading approval is separate.
 4. Verify real workload economics, billing rate limits, failure mode/incident procedures, operational support, subscriber cancellation and reconciliation before collecting funds.
@@ -84,3 +87,26 @@ The existing Railway `rhen` supervisor is a single tenant, with one volume and o
 ## Billing recovery
 
 Authenticated members can refresh Stripe subscription state via a once-per-minute provider reconciliation endpoint. It checks the server-owned customer ID and membership metadata, detects incomplete inventories and revokes obsolete local subscriptions. The per-member sync table supports bounded retries; webhook and refresh updates use a monotonic source observation timestamp. Paid status remains separate from any paper/live broker authority.
+
+
+## Verified ANEVUM live-mode Stripe catalog (prelaunch, October 9, 2026)
+
+These Stripe IDs are not credentials. The entries are **inactive** and no checkout endpoint is enabled in the production Worker.
+
+- Product: `prod_VPRTx3TlVzIaRj` — RHEN Cloud, `active=false`
+- Founding price: `price_1UOcaHDru8RvRNYomaMADO0F` — USD **$2.99/month**, `active=false`
+- Standard introductory price: `price_1UOcaNDru8RvRNYoUEK7pHsR` — USD **$4.99/month**, `active=false`
+- ANEVUM billing portal: not configured. The attempted connector operation was blocked by safety controls; this is a pending Stripe Dashboard/configuration step.
+- Stripe test-mode account/sandbox has **not** been exposed by the connected Stripe session (which returns a live-mode merchant). Do not substitute live records for test records.
+- No live Stripe keys or webhook signing secrets have been committed or copied into this repository.
+
+Creating an inactive catalog product and inactive prices does not enable payments. Before any real member charge, review service descriptions, launch terms/refund/cancel disclosures, tax settings, broker/signal service authority, and true marginal economics.
+
+## Free beta interest waitlist
+
+The beta interest domain is deliberately separate from payment entitlements. Signed-in, verified-email members will be able to join/withdraw when `ANEVUM_RHEN_BETA_WAITLIST_ENABLED=true` in a separately approved release. The member UI says explicitly that registration is voluntary, free and not a trading account or invitation guarantee.
+
+- `member_rhen_beta_waitlist` includes only `user_id` and `joined_at`; the latter is exported in the member's account data and cascades on account deletion.
+- The `POST` route ignores any purported client user ID and rejects unexpected JSON fields. Member identity is always resolved from the Better Auth session, and all non-GET mutations pass the existing exact same-origin guard.
+- The production and staging deployment sources currently set the flag to `false`; the staging deployment verifier and production binding verifier reject enabling the flag without deliberate release approval.
+- No email invitation automation, brokerage link, paper executor, runtime host or payment collection is introduced with the waitlist.
