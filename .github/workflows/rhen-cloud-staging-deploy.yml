@@ -1,0 +1,181 @@
+name: RHEN Cloud Staging Deployment (Billing Off)
+
+on:
+  push:
+    branches:
+      - work/rhen-cloud-billing-foundation-2026-10-09
+    paths:
+      - '.github/workflows/rhen-cloud-staging-deploy.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: anevum-rhen-cloud-preview-staging-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy-staging-only:
+    if: github.ref == 'refs/heads/work/rhen-cloud-billing-foundation-2026-10-09'
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    env:
+      CLOUDFLARE_VITE_WRANGLER_CONFIG_PATH: wrangler.member-staging.jsonc
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install staging build requirements
+        run: |
+          python -m pip install "weasyprint==68.0" "Pillow==11.3.0"
+          npm install --no-audit --no-fund
+      - name: Fail closed on any production route, database or billing activation
+        shell: bash
+        run: |
+          set -euo pipefail
+          node scripts/verify-member-bindings.mjs --require-config
+          node scripts/verify-member-staging-deploy.mjs
+          node --test tests/member-staging.test.mjs
+          npm run test:members
+          jq -e '
+            .name == "anevum-member-staging" and
+            .workers_dev == true and
+            .vars.ANEVUM_STRIPE_MODE == "test" and
+            .vars.ANEVUM_RHEN_BILLING_ENABLED == "false" and
+            .vars.ANEVUM_RHEN_BILLING_CHECKOUT_ENABLED == "false" and
+            .vars.ANEVUM_RHEN_BILLING_WEBHOOKS_ENABLED == "false" and
+            .vars.ANEVUM_RHEN_BILLING_LIVE_APPROVED == "false" and
+            .vars.ANEVUM_RHEN_BETA_WAITLIST_ENABLED == "false" and
+            .vars.STRIPE_FOUNDING_PRICE_ID == "price_1UOcwSDSvwYS3kwTHxrYRQev" and
+            .vars.STRIPE_STANDARD_PRICE_ID == "price_1UOcwYDSvwYS3kwTqnadIMBD" and
+            (.d1_databases | length) == 1 and
+            .d1_databases[0].binding == "MEMBER_DB" and
+            .d1_databases[0].database_name == "anevum-members-preview" and
+            .d1_databases[0].database_id == "a537432e-d216-4b31-8b22-19662cc3a44a" and
+            (has("routes") | not) and (has("route") | not)
+          ' wrangler.member-staging.jsonc > /dev/null
+      - name: Verify production remains outside this deployment target
+        shell: bash
+        run: |
+          set -euo pipefail
+          jq -e '
+            .name == "anevum-web-nextgen" and
+            .vars.ANEVUM_STRIPE_MODE == "disabled" and
+            .vars.ANEVUM_RHEN_BILLING_ENABLED == "false" and
+            .vars.ANEVUM_RHEN_BILLING_CHECKOUT_ENABLED == "false" and
+            .vars.ANEVUM_RHEN_BILLING_WEBHOOKS_ENABLED == "false" and
+            .d1_databases[0].database_name == "anevum-members" and
+            .d1_databases[0].database_id == "7f0d4c0c-2e85-4900-8504-1347954e1df1"
+          ' wrangler.jsonc > /dev/null
+      - name: Confirm Cloudflare staging-only encrypted binding names
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "${CLOUDFLARE_ACCOUNT_ID:-}"
+          test -n "${CLOUDFLARE_API_TOKEN:-}"
+          curl --fail --silent --show-error --retry 2 --max-time 20 \
+            -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+            "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/anevum-member-staging/secrets" \
+            -o "$RUNNER_TEMP/rhen-staging-secret-names.json"
+          jq -e '.success == true and (.result | type == "array")' \
+            "$RUNNER_TEMP/rhen-staging-secret-names.json" > /dev/null
+          for name in GOOGLE_CLIENT_ID GOOGLE_CLIENT_SECRET BETTER_AUTH_SECRET STRIPE_SECRET_KEY STRIPE_WEBHOOK_SECRET; do
+            jq -e --arg key "$name" \
+              'any(.result[]; .name == $key and .type == "secret_text")' \
+              "$RUNNER_TEMP/rhen-staging-secret-names.json" > /dev/null
+            echo "PASS encrypted staging binding exists: $name"
+          done
+      - name: Verify migrated preview D1 is complete and consistent
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_D1_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "${CLOUDFLARE_API_TOKEN:-}"
+          npx wrangler d1 list --json > "$RUNNER_TEMP/rhen-preview-db-inventory.json"
+          jq -e '
+            ([.[] | select(.name == "anevum-members-preview" and .uuid == "a537432e-d216-4b31-8b22-19662cc3a44a")] | length) == 1 and
+            ([.[] | select(.name == "anevum-members" and .uuid == "7f0d4c0c-2e85-4900-8504-1347954e1df1")] | length) == 1
+          ' "$RUNNER_TEMP/rhen-preview-db-inventory.json" > /dev/null
+          npx wrangler d1 execute MEMBER_DB --remote --config wrangler.preview-migrations.jsonc --json \
+            --command "SELECT COUNT(*) AS required_tables FROM sqlite_master WHERE type = 'table' AND name IN ('user','session','account','verification','rateLimit','member_profiles','member_saved_apps','member_project_follows','member_entitlements','member_rhen_drafts','member_billing_customers','member_billing_subscriptions','member_billing_events','member_billing_checkout_locks','member_billing_sync_state','member_rhen_beta_waitlist')" \
+            > "$RUNNER_TEMP/rhen-preview-required-tables.json"
+          jq -e '.[0].success == true and .[0].results[0].required_tables == 16' \
+            "$RUNNER_TEMP/rhen-preview-required-tables.json" > /dev/null
+          npx wrangler d1 execute MEMBER_DB --remote --config wrangler.preview-migrations.jsonc --json \
+            --command 'PRAGMA foreign_key_check' > "$RUNNER_TEMP/rhen-preview-fk.json"
+          jq -e '.[0].success == true and (.[0].results | length) == 0' \
+            "$RUNNER_TEMP/rhen-preview-fk.json" > /dev/null
+          echo 'PASS 16 member/draft/billing/beta preview tables and 0 FK violations'
+      - name: Build staging-only Cloudflare Worker
+        run: npm run build
+      - name: Verify generated Worker retains exact isolated target
+        run: node scripts/verify-member-staging-deploy.mjs --generated
+      - name: Deploy ONLY anevum-member-staging
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          npx wrangler deploy > "$RUNNER_TEMP/rhen-staging-deploy.log" 2>&1 || {
+            tail -n 70 "$RUNNER_TEMP/rhen-staging-deploy.log"
+            exit 1
+          }
+          grep -Eq 'anevum-member-staging' "$RUNNER_TEMP/rhen-staging-deploy.log"
+          echo 'PASS stage deployment applied to anevum-member-staging'
+      - name: Verify staging auth boundaries and billing admission OFF
+        shell: bash
+        run: |
+          set -euo pipefail
+          STAGING_ORIGIN="https://anevum-member-staging.devonakins.workers.dev"
+          code() {
+            curl --silent --show-error --max-time 15 -o "$RUNNER_TEMP/rhen-route-check.json" \
+              -w '%{http_code}' "$@"
+          }
+          available=0
+          for attempt in $(seq 1 25); do
+            status="$(code "$STAGING_ORIGIN/api/member/availability" 2>/dev/null || true)"
+            if [ "$status" = "200" ] && jq -e '.available == true and .provider == "google"' \
+              "$RUNNER_TEMP/rhen-route-check.json" > /dev/null; then
+              available=1
+              break
+            fi
+            echo "Staging readiness pending ($attempt/25; status=$status)"
+            sleep 5
+          done
+          test "$available" = 1
+          for path in /api/member/me /api/member/billing /api/member/rhen/beta /api/member/rhen/draft; do
+            status="$(code "$STAGING_ORIGIN$path")"
+            if [ "$status" != "401" ]; then
+              echo "::error::Anonymous member endpoint not denied: $path HTTP $status"
+              exit 1
+            fi
+          done
+          operator="$(code "$STAGING_ORIGIN/api/command/trader/status")"
+          test "$operator" = "401"
+          webhook="$(code -X POST -H 'content-type: application/json' --data '{}' \
+            "$STAGING_ORIGIN/api/billing/stripe/webhook")"
+          test "$webhook" = "503"
+          checkout="$(code -X POST -H "Origin: $STAGING_ORIGIN" \
+            -H 'content-type: application/json' --data '{"plan":"standard"}' \
+            "$STAGING_ORIGIN/api/member/billing/checkout")"
+          test "$checkout" = "401"
+          echo 'PASS staging OAuth routes, private member 401, owner operator 401, webhook disabled 503 and no anonymous checkout'
+          {
+            echo '## RHEN Cloud staging-only deployment'
+            echo
+            echo "Isolated Worker: $STAGING_ORIGIN"
+            echo "Database: anevum-members-preview (16 tables; FK clean)"
+            echo "Stripe sandbox price IDs pinned; checkout and webhook admission OFF."
+            echo "No real customer purchase attempted, and no production or RHEN live deployment."
+            echo
+            echo "Further verified owner-only activation required before Stripe sandbox Checkout and signed webhook acceptance."
+          } >> "$GITHUB_STEP_SUMMARY"
