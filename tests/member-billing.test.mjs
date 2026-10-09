@@ -120,6 +120,28 @@ test("price, subscription status, and period gate paid entitlement without order
   assert.equal(normalized.plan,"founding");
   assert.equal(normalized.periodEnd,now+7200);
   assert.equal(normalized.customerId,"cus_valid01");
+  assert.equal(normalized.cancelAtPeriodEnd,0);
+});
+
+test("Stripe portal scheduled cancel_at equal to current_period_end prevents renewal despite false legacy flag",()=>{
+  const env=stagingEnv();
+  const end=Math.floor(Date.now()/1000)+30*24*3600;
+  const make=(fields={})=>normalizeStripeSubscription({
+    id:"sub_valid01",customer:"cus_valid01",status:"active",
+    cancel_at_period_end:false,
+    items:{data:[{price:{id:env.STRIPE_STANDARD_PRICE_ID},current_period_end:end}]},
+    ...fields
+  },env);
+  const scheduled=make({cancel_at:end,canceled_at:Math.floor(Date.now()/1000)});
+  assert.equal(scheduled.cancelAtPeriodEnd,1);
+  assert.equal(scheduled.status,"active");
+  assert.equal(scheduled.periodEnd,end);
+  assert.equal(paidAccess({plan_code:"standard",status:scheduled.status,current_period_end:end}),true);
+  assert.equal(make({cancel_at_period_end:true}).cancelAtPeriodEnd,1);
+  assert.equal(make({cancel_at:null}).cancelAtPeriodEnd,0);
+  assert.equal(make({cancel_at:end-86400}).cancelAtPeriodEnd,0);
+  assert.equal(make({cancel_at:end+86400}).cancelAtPeriodEnd,0);
+  assert.equal(make({cancel_at:end,status:"canceled"}).cancelAtPeriodEnd,0);
 });
 
 test("billing status fails closed without migrated schema and never enables member trading",async()=>{
@@ -262,6 +284,13 @@ test("provider reconciliation restores missing webhook, revokes absent subscript
     assert.equal(result.subscription.plan,"standard");
     assert.ok(result.lastReconciledAt);
     await assert.rejects(reconcileMemberBilling(db,"user-a",env,stagingOrigin),e=>e.status===429);
+    state.attempt=0;
+    // Recover a portal cancellation whose Stripe payload uses cancel_at
+    // without setting cancel_at_period_end.
+    items=[{...items[0],cancel_at:now+3600,cancel_at_period_end:false}];
+    result=await reconcileMemberBilling(db,"user-a",env,stagingOrigin);
+    assert.equal(result.subscription.cancelAtPeriodEnd,true);
+    assert.equal(result.paidAccess,true);
     state.attempt=0;items=[];
     result=await reconcileMemberBilling(db,"user-a",env,stagingOrigin);
     assert.equal(result.paidAccess,false);
