@@ -91,8 +91,10 @@ export default function RhenRealtimePanel({state}: {state: LiveState}) {
   const rows = Object.values(state.scanner);
   const symbol = rows.find(row => row.symbol === selected)?.symbol || rows[0]?.symbol || "";
   const instrument = rows.find(row => row.symbol === symbol);
+  const liveSource = String(state.system.connection_state || "CONNECTING");
+  const sourceConnected = liveSource === "HEALTHY" || liveSource === "WARMING";
   const quoteFresh = Boolean(
-    instrument && !state.stale &&
+    instrument && !state.stale && sourceConnected &&
     observedRecently(instrument.quote_source_at, now, 45000)
   );
   const account = state.system.account_observation as BrokerAccountObservation | undefined;
@@ -101,7 +103,7 @@ export default function RhenRealtimePanel({state}: {state: LiveState}) {
     observedRecently(account.observed_at, now, 40000) &&
     state.system.account_state === "HEALTHY"
   );
-  const liveSource = String(state.system.connection_state || "CONNECTING");
+
   const sourceFeed = String(state.system.market_feed || "UNKNOWN").toUpperCase();
   const session = String(state.system.session || "UNKNOWN");
   const brokerStatus = String(state.system.broker_stream_state || "UNAVAILABLE");
@@ -143,7 +145,7 @@ export default function RhenRealtimePanel({state}: {state: LiveState}) {
         </div>
         <div className="rhen-realtime-symbols" role="group" aria-label="Observed market symbols">
           {rows.map(row => {
-            const fresh = !state.stale && observedRecently(row.quote_source_at, now, 45000);
+            const fresh = !state.stale && sourceConnected && observedRecently(row.quote_source_at, now, 45000);
             return <button key={row.symbol} type="button" className={row.symbol === symbol ? "active" : ""} onClick={() => setSelected(row.symbol)}>
               <b>{row.symbol}</b><strong>{numeric(row.mid)}</strong><span>{fresh ? "QUOTE FRESH" : "STALE / NO QUOTE"}</span>
             </button>;
