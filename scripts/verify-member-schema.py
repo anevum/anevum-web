@@ -56,6 +56,11 @@ for user_id, email in (("member-a", "a@example.test"), ("member-b", "b@example.t
         ("sub_test" + user_id.replace("-", ""), user_id, customer,
          "price_test", "founding", "active", 1999999999),
     )
+    db.execute(
+        "INSERT INTO member_billing_checkout_locks "
+        "(user_id,lock_token,expires_at) VALUES(?,?,?)",
+        (user_id, "lock-" + user_id, 1999999999),
+    )
 
 assert db.execute(
     "SELECT count(*) FROM member_saved_apps WHERE user_id = ?", ("member-a",)
