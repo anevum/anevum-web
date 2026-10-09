@@ -94,8 +94,8 @@ test("production is default-disabled and staging requires valid test keys and ex
 
 test("price, subscription status, and period gate paid entitlement without order authority",()=>{
   const env=stagingEnv();
-  assert.equal(RHEN_CLOUD_PLANS.founding.amountCents,999);
-  assert.equal(RHEN_CLOUD_PLANS.standard.amountCents,1999);
+  assert.equal(RHEN_CLOUD_PLANS.founding.amountCents,299);
+  assert.equal(RHEN_CLOUD_PLANS.standard.amountCents,499);
   assert.equal(planFromPrice(env,env.STRIPE_FOUNDING_PRICE_ID),"founding");
   assert.equal(planFromPrice(env,"price_Unrecognized"),"unknown");
   const now=Math.floor(Date.now()/1000);
@@ -164,7 +164,7 @@ test("checkout refuses wrong prices and duplicate provider sessions, with per-us
     calls.push(init.method+" "+u.pathname);
     if(u.pathname==="/v1/prices/price_Founding123")
       return Response.json({id:"price_Founding123",active:true,currency:"usd",type:"recurring",
-        recurring:{interval:"month",interval_count:1},unit_amount:wrongPrice?1999:999});
+        recurring:{interval:"month",interval_count:1},unit_amount:wrongPrice?499:299});
     if(u.pathname==="/v1/checkout/sessions" && init.method==="GET")
       return Response.json({has_more:false,data:pending?[{status:"open",mode:"subscription"}]:[]});
     if(u.pathname==="/v1/subscriptions" && init.method==="GET")
