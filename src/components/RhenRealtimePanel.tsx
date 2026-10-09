@@ -169,7 +169,7 @@ export default function RhenRealtimePanel({state}: {state: LiveState}) {
           <span>Cash {accountFresh && account?.cash != null ? "$" + numeric(account.cash) : "—"}</span>
           <span>Buying power {accountFresh && account?.buying_power != null ? "$" + numeric(account.buying_power) : "—"}</span>
         </div>
-        <p className="rhen-realtime-method">Alpaca account values, sampled about every {account?.sampling_seconds ?? state.system.account_sample_interval_seconds ?? 10} seconds and after observed broker updates. This is not a tick-by-tick equity calculation or cash-flow-adjusted performance curve.</p>
+        <p className="rhen-realtime-method">Alpaca account values, sampled about every {account?.sampling_seconds ?? Number(state.system.account_sample_interval_seconds ?? 10)} seconds and after observed broker updates. This is not a tick-by-tick equity calculation or cash-flow-adjusted performance curve.</p>
         <h3>Broker event tape</h3>
         {state.executions.length ? (
           <div className="rhen-realtime-tape">
