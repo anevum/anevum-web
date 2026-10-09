@@ -11,7 +11,9 @@ const expected = "a537432e-d216-4b31-8b22-19662cc3a44a";
 const production = "7f0d4c0c-2e85-4900-8504-1347954e1df1";
 const schema = "migrations";
 const verifiedStagingOrigin = "https://anevum-member-staging.devonakins.workers.dev";
-const privateNames = ["BETTER_AUTH_SECRET", "GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET"];
+const privateNames = ["BETTER_AUTH_SECRET", "GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET",
+  "ALPACA_CONNECT_CLIENT_ID", "ALPACA_CONNECT_CLIENT_SECRET",
+  "ALPACA_CONNECT_TOKEN_KEY_BASE64", "ANEVUM_OWNER_BROKER_ACCOUNT_ID"];
 const errors = [];
 
 function assert(ok, message) {
@@ -54,7 +56,17 @@ assert(stage?.vars?.ANEVUM_COMMONS_ENABLED === "true", "Staging Commons is gated
 assert(stage?.vars?.ANEVUM_MEMBER_PREVIEW_ENABLED === "true", "Staging test OAuth must use explicitly enabled preview identity.");
 assert(stage?.vars?.COMMAND_LIVE_STREAM_ENABLED === "false", "Staging must disable RHEN live command stream.");
 assert(stage?.vars?.MEMBER_PREVIEW_ORIGIN === verifiedStagingOrigin, "Staging identity must use its exact verified HTTPS origin.");
-const stageVarsAllowed = new Set(["COMMAND_AUTH_MODE", "COMMAND_LIVE_STREAM_ENABLED", "ANEVUM_MEMBERS_ENABLED", "ANEVUM_MEMBER_RHEN_DRAFTS_ENABLED", "ANEVUM_COMMONS_ENABLED", "ANEVUM_MEMBER_PREVIEW_ENABLED", "MEMBER_PREVIEW_ORIGIN"]);
+const alpacaLockedFlags = [
+  "ANEVUM_ALPACA_LIVE_CONNECT_ENABLED",
+  "ANEVUM_ALPACA_PROVIDER_LIVE_APPROVED",
+  "ANEVUM_ALPACA_COMMERCIAL_USE_APPROVED",
+  "ANEVUM_ALPACA_LIVE_SNAPSHOT_ENABLED"
+];
+for (const flag of alpacaLockedFlags) {
+  assert(prod?.vars?.[flag] === "false", "Production must keep " + flag + " disabled until independent approval.");
+  assert(stage?.vars?.[flag] === "false", "Staging must keep " + flag + " disabled until independent approval.");
+}
+const stageVarsAllowed = new Set(["COMMAND_AUTH_MODE", "COMMAND_LIVE_STREAM_ENABLED", "ANEVUM_MEMBERS_ENABLED", "ANEVUM_MEMBER_RHEN_DRAFTS_ENABLED", "ANEVUM_COMMONS_ENABLED", "ANEVUM_MEMBER_PREVIEW_ENABLED", "MEMBER_PREVIEW_ORIGIN", ...alpacaLockedFlags]);
 for (const name of Object.keys(stage.vars || {})) {
   assert(stageVarsAllowed.has(name), "Unexpected variable in staging config: " + name);
 }
@@ -91,6 +103,9 @@ if (process.argv.includes("--generated")) {
       assert(generated?.vars?.ANEVUM_MEMBER_PREVIEW_ENABLED === "true", "Generated Worker lost its staging preview gate.");
       assert(generated?.vars?.MEMBER_PREVIEW_ORIGIN === verifiedStagingOrigin, "Generated Worker uses an unverified OAuth origin.");
       assert(generated?.vars?.COMMAND_LIVE_STREAM_ENABLED === "false", "Generated staging Worker enabled live RHEN command stream.");
+      for (const flag of alpacaLockedFlags) {
+        assert(generated?.vars?.[flag] === "false", "Generated staging Worker enabled unapproved Alpaca feature: " + flag);
+      }
       assert(!Object.hasOwn(generated?.vars || {}, "CF_ACCESS_AUD") &&
              !Object.hasOwn(generated?.vars || {}, "CF_ACCESS_TEAM_DOMAIN") &&
              !Object.hasOwn(generated?.vars || {}, "COMMAND_ACCESS_EMAILS"),
