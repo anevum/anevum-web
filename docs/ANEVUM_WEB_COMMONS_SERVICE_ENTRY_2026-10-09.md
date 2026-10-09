@@ -91,3 +91,11 @@ Commons is assigned migration 0004 because staging preview D1 has already receiv
 ## Acceptance definition
 
 A first-time visitor should immediately recognize ANEVUM as a service with a community and working applications. A signed-in member should land in the Commons application, understand what is actually available, and reach Command/RHEN without crossing account boundaries. Admitted testers should be able to post bounded questions and research notes, reply, and see accurate provenance. Uninvited users must never see private research. Failures must never be papered over with fixtures or fictional activity.
+
+## Follow-on beta moderation slice — staged, not launched
+
+Additive migration `0005_commons_reports.sql` provides a private abuse-report path for invited, active Commons members. Each report identifies an existing visible topic or reply and selects one of five bounded reasons; it stores no free-text allegations and no financial or brokerage data. Server-derived membership, validated item IDs, 10-report/day limit and one-report-per-member-per-item prevent account impersonation and unbounded report flooding.
+
+Moderators can see an open-report queue without reporter identities, inspect the original research record, use existing content hide/restore controls, and mark the report reviewed with a timestamp and reviewer ID. Reviews do not automatically remove content or grant trading authority. Reports are included in a member's account export and cascade on reporter or content deletion.
+
+**Release boundary:** This is draft-only. Preview migration `0005` and authenticated, two-user report tests must pass before enabling it. No production database migration, open signup, public discussion, broker permission, subscription enforcement, or owner terminal change is authorized. Recheck Commons Terms and Privacy for the report retention/handling behavior before pilot.
