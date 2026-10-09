@@ -52,33 +52,22 @@ export default function RhenApp() {
     return () => controller.abort();
   }, [session?.user?.id, availability, section]);
 
-  async function updateLiveBroker(action: "start" | "disconnect") {
-    if (!session?.user || availability !== "available" || connectBusy) return;
-    if (!brokerage || brokerage.liveTradingEnabled || (action === "start" && !brokerage.connectionAvailable)) return;
-    if (action === "start" && brokerage.accountConnected) return;
-    if (action === "disconnect" && !brokerage.accountConnected) return;
+  async function disconnectLiveBroker() {
+    if (!session?.user || availability !== "available" || connectBusy || !brokerage?.accountConnected) return;
     setConnectBusy(true); setConnectMessage("");
     try {
-      const response = await fetch("/api/member/alpaca/live/" + action, {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: "{}"
+      const response = await fetch("/api/member/alpaca/live/disconnect", {
+        method: "POST", headers: { "Content-Type": "application/json" }, body: "{}"
       });
-      const payload = await response.json() as { authorizeUrl?: string; message?: string };
-      if (!response.ok) throw new Error(payload.message || "Live account request failed.");
-      if (action === "start") {
-        const destination = new URL(payload.authorizeUrl || "");
-        if (destination.origin !== "https://app.alpaca.markets" ||
-            destination.pathname !== "/oauth/authorize") throw new Error("Unrecognized Alpaca authorization destination.");
-        window.location.assign(destination.toString());
-        return;
-      }
+      const payload = await response.json() as { message?: string };
+      if (!response.ok) throw new Error(payload.message || "Live brokerage disconnect failed.");
       setBrokerage(null);
       const current = await fetch("/api/member/brokerage", { cache: "no-store" });
       if (!current.ok) throw new Error("Could not verify disconnected account.");
       setBrokerage(await current.json());
       setConnectMessage(payload.message || "Account disconnected.");
     } catch (error) {
-      setConnectMessage(error instanceof Error ? error.message : "Live account request failed.");
+      setConnectMessage(error instanceof Error ? error.message : "Live brokerage disconnect failed.");
     } finally { setConnectBusy(false); }
   }
 
@@ -128,8 +117,8 @@ export default function RhenApp() {
               <h3>{brokerage?.accountConnected ? "Your Alpaca account is linked" : brokerage?.connectionAvailable ? "Connect your live Alpaca account" : "Account linking awaits Alpaca approval"}</h3>
               <p>Only the official Alpaca OAuth permission screen can authorize a brokerage connection. ANEVUM never asks for your broker API keys here.</p>
               {brokerage?.accountConnected && <p>Verified account ending in {brokerage.account?.ending || "••••"}. This connection does not automatically authorize algorithmic trades.</p>}
-              {brokerage?.connectionAvailable && !brokerage.accountConnected && <button type="button" className="commons-action" disabled={connectBusy} onClick={() => void updateLiveBroker("start")}>{connectBusy ? "Opening…" : "Connect Alpaca live account"}</button>}
-              {brokerage?.accountConnected && <button type="button" className="commons-moderate" disabled={connectBusy} onClick={() => void updateLiveBroker("disconnect")}>{connectBusy ? "Disconnecting…" : "Disconnect brokerage"}</button>}
+              {!brokerage?.accountConnected && <Link to="/apps/rhen/connect" className="commons-action">Review Alpaca access disclosure</Link>}
+              {brokerage?.accountConnected && <button type="button" className="commons-moderate" disabled={connectBusy} onClick={() => void disconnectLiveBroker()}>{connectBusy ? "Disconnecting…" : "Disconnect brokerage"}</button>}
               {connectMessage && <p role="status">{connectMessage}</p>}
             </section>
             {brokerError ? <p role="alert">Brokerage capability status could not be verified.</p> : !brokerage ? <p role="status">Checking capabilities…</p> : brokerage.liveTradingEnabled || brokerage.paperTradingEnabled || brokerage.depositsEnabled || brokerage.withdrawalsEnabled ? <p role="alert">Unexpected trading or money movement capability. Do not use this workspace.</p> : <dl className="member-app-readiness"><div><dt>Alpaca live linking</dt><dd>{brokerage.accountConnected ? "Linked" : brokerage.connectionAvailable ? "Available" : "Awaiting approval"}</dd></div><div><dt>Personal live bot</dt><dd>Not armed</dd></div><div><dt>Paper trial</dt><dd>Not required for planned live enrollment</dd></div><div><dt>Funding and withdrawals</dt><dd>Not supported</dd></div></dl>}
