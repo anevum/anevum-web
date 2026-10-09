@@ -12,7 +12,7 @@ type RhenSection = "overview" | "account" | "setup" | "evidence" | "research" | 
 const nav: { id: RhenSection; label: string; path: string }[] = [
   { id: "overview", label: "Overview", path: "/apps/rhen" },
   { id: "account", label: "My brokerage", path: "/apps/rhen/account" },
-  { id: "setup", label: "Bot draft", path: "/apps/rhen/setup" },
+  { id: "setup", label: "My bot settings", path: "/apps/rhen/setup" },
   { id: "evidence", label: "Evidence", path: "/apps/rhen/evidence" },
   { id: "research", label: "Research", path: "/apps/rhen/research" },
   { id: "updates", label: "Updates", path: "/apps/rhen/updates" }
@@ -99,8 +99,8 @@ export default function RhenApp() {
         <main className="member-app-content">
           <p className="workshop-kicker">RHEN / {section}</p>
           {section === "overview" && <>
-            <h2>Trading ideas, tested against evidence.</h2>
-            <p>RHEN is ANEVUM's market research application. This member workspace currently shows public-safe evidence and research; it is not yet a personal brokerage connection or live trading control panel.</p>
+            <h2>Your RHEN workspace</h2>
+            <p>RHEN Cloud is being built for individually owned brokerage accounts and personal algorithm settings. For now you can review research and prepare your own limits; no member live order placement is active.</p>
             <dl className="member-app-facts">
               <div><dt>Registered release</dt><dd>{release.version}</dd></div>
               <div><dt>Live trading scope</dt><dd>Long U.S. equities and ETFs</dd></div>
