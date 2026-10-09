@@ -62,8 +62,16 @@ const billingFlags = [
   "ANEVUM_RHEN_FOUNDING_ENABLED",
   "ANEVUM_RHEN_BILLING_LIVE_APPROVED"
 ];
+const stagingBillingValues = {
+  ANEVUM_RHEN_BILLING_ENABLED: "true",
+  ANEVUM_RHEN_BILLING_WEBHOOKS_ENABLED: "true",
+  ANEVUM_RHEN_BILLING_CHECKOUT_ENABLED: "false",
+  ANEVUM_RHEN_FOUNDING_ENABLED: "false",
+  ANEVUM_RHEN_BILLING_LIVE_APPROVED: "false"
+};
 for (const key of billingFlags) {
-  assert(stage?.vars?.[key] === "false", "Staging billing flag must remain disabled: " + key);
+  assert(stage?.vars?.[key] === stagingBillingValues[key],
+    "Staging sandbox billing stage mismatch: " + key);
   assert(prod?.vars?.[key] === "false", "Production billing flag must remain disabled: " + key);
 }
 assert(stage?.vars?.ANEVUM_STRIPE_MODE === "test", "Staging must use Stripe test-mode only.");
@@ -123,7 +131,8 @@ if (process.argv.includes("--generated")) {
              "Generated staging Worker inherited protected RHEN operator authorization.");
       assert(generated?.vars?.[betaFlag] === "false", "Generated staging unexpectedly enables beta registration.");
       for (const key of billingFlags) {
-        assert(generated?.vars?.[key] === "false", "Generated staging unexpectedly enables billing: " + key);
+        assert(generated?.vars?.[key] === stagingBillingValues[key],
+          "Generated staging unexpectedly changed sandbox billing gate: " + key);
       }
       assert(generated?.vars?.ANEVUM_STRIPE_MODE === "test", "Generated staging Stripe mode changed.");
       for (const [key, expectedValue] of Object.entries(sandboxPrices)) {
