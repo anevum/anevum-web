@@ -13,6 +13,8 @@ import CommandTopology from "../components/CommandTopology";
 import CommandTradingLanes from "../components/CommandTradingLanes";
 import CommandLiveMarket from "../components/CommandLiveMarket";
 import { useCommandLiveStream } from "../hooks/useCommandLiveStream";
+import { useRhenLiveObserver } from "../hooks/useRhenLiveObserver";
+import RhenRealtimePanel from "../components/RhenRealtimePanel";
 import { useCommandObservation } from "../hooks/useCommandObservation";
 import { useLiveTrading } from "../hooks/useLiveTrading";
 import {
@@ -97,6 +99,7 @@ export default function RhenTerminal() {
   const page = routePage(location.pathname);
   const liveEnabled = import.meta.env.VITE_COMMAND_LIVE_STREAM_ENABLED === "true" && Boolean(commandAdmin && session);
   const liveState = useCommandLiveStream(liveEnabled);
+  const observerState = useRhenLiveObserver(Boolean(commandAdmin && session));
   const [snapshot, setSnapshot] = useState<CommandSnapshot | null>(null);
   const [evidence, setEvidence] = useState<CommandEvidence | null>(null);
   const [dailyReport, setDailyReport] = useState<Record<string, unknown> | null>(null);
@@ -216,7 +219,7 @@ export default function RhenTerminal() {
 
         <div className="command-v4-account">
           <Link className="terminal-command-link" to="/me">Command</Link>
-          <span><StateDot ok={controlFresh && !statusError} />{controlFresh && !statusError ? (liveEnabled && !liveState.stale ? "STREAMING" : "POLLING") : "DEGRADED"}</span>
+          <span><StateDot ok={controlFresh && !statusError} />{controlFresh && !statusError ? (observerState.stale ? "STATUS POLLING" : "READ-ONLY STREAM") : "DEGRADED"}</span>
           <button type="button" onClick={handleSignOut}>Sign out</button>
         </div>
       </header>
@@ -252,6 +255,7 @@ export default function RhenTerminal() {
               <div><span>RESEARCH</span><strong>{displayState(control?.mode)}</strong><small>{control?.review_required ? "review required" : "bounded automation"}</small></div>
             </section>
 
+            <RhenRealtimePanel state={observerState} />
             {snapshot ? <CommandTradingLanes snapshot={snapshot} /> : <div className="command-v4-empty">Waiting for RHEN trading state.</div>}
 
 
@@ -280,6 +284,7 @@ export default function RhenTerminal() {
         {page === "discover" && (
           <>
             <CommandDiscoveryDeck snapshot={snapshot} control={controlObservation.snapshot} now={controlObservation.now} />
+            <RhenRealtimePanel state={observerState} />
             {liveEnabled && <CommandLiveMarket state={liveState} />}
           </>
         )}

@@ -151,6 +151,31 @@ async function proxyCommandStream(request, env) {
   });
 }
 
+async function proxyOwnerReadOnlyStream(request, env) {
+  if (String(env?.RHEN_OBSERVER_ENABLED || "false") !== "true") {
+    return jsonResponse({message:"RHEN read-only stream not enabled."}, 503);
+  }
+  const url = new URL(request.url);
+  if (request.method !== "GET" || request.headers.get("Upgrade")?.toLowerCase() !== "websocket") {
+    return jsonResponse({message:"WebSocket upgrade required."}, 426);
+  }
+  if (request.headers.get("Origin") !== url.origin || url.search) {
+    return jsonResponse({message:"Same-origin private stream only."}, 403);
+  }
+  const credential = await commandCredential(request, env);
+  const ownerEmail = String(env?.RHEN_OWNER_EMAIL || "").trim().toLowerCase();
+  if (!ownerEmail || credential.identity.email !== ownerEmail) {
+    return jsonResponse({message:"Owner identity required for company RHEN."}, 403);
+  }
+  const base = String(env?.RHEN_COMMAND_STREAM_BASE || TRADER_BASE).replace(/\/$/,"");
+  if (!base.startsWith("https://")) return jsonResponse({message:"Secure upstream required."}, 503);
+  // Forward only the verified Access assertion, never a broker token or URL credential.
+  return fetch(base + "/v1/command/live", {
+    headers: { Upgrade: "websocket", Authorization: "Bearer " + credential.token },
+    redirect: "manual"
+  });
+}
+
 async function proxyCommandHistory(request, env) {
   if (String(env?.COMMAND_LIVE_STREAM_ENABLED || "false") !== "true") return jsonResponse({ message: "Archived 4.4 observation is not resident in the lean RHEN runtime." }, 503);
   if (request.method !== "GET") return jsonResponse({message:"Read-only history."},405);
@@ -432,6 +457,11 @@ export default {
       } catch (error) {
         return jsonResponse({ message: error instanceof Error ? error.message : "Theory program unavailable." }, 502);
       }
+    }
+
+    if (pathname === "/api/command/live") {
+      try { return await proxyOwnerReadOnlyStream(request, env); }
+      catch (error) { return jsonResponse({ message: "Private RHEN observer unavailable." }, error instanceof ApiError ? error.status : 502); }
     }
 
     if (pathname === "/api/command/stream") {

@@ -21,6 +21,8 @@
     "CF_ACCESS_AUD": "3fabe3c703b4cc972136d2292fda39783c11903c3c6cf5ac0e42c4738f2ee800",
     "COMMAND_ACCESS_EMAILS": "devon@anevum.com",
     "COMMAND_LIVE_STREAM_ENABLED": "false",
+    "RHEN_OBSERVER_ENABLED": "true",
+    "RHEN_OWNER_EMAIL": "devon@anevum.com",
     "ANEVUM_MEMBERS_ENABLED": "true",
     "ANEVUM_MEMBER_RHEN_DRAFTS_ENABLED": "false",
     "ANEVUM_MEMBER_PREVIEW_ENABLED": "false"
