@@ -5,6 +5,7 @@ import Mark from "../components/Mark";
 import { fieldNotes, type FieldNote } from "../data/fieldNotes";
 import { memberAuthClient } from "../member/auth-client";
 import css from "../styles/commons-v5.css?inline";
+import polishCss from "../styles/commons-v5-polish.css?inline";
 
 /**
  * Project Commons Stage 1. V5 visual parity baseline in an isolated Shadow DOM.
@@ -105,7 +106,7 @@ function Sidebar({ collapsed, onClose, onNotice }: {
   const { data: session } = memberAuthClient.useSession();
   const userName = session?.user?.name || "Browsing as guest";
   const userInitial = userName.charAt(0).toUpperCase();
-  return <aside className="left-sidebar" aria-label="Main navigation"><div className="sidebar-scroll">
+  return <aside id="commons-primary-navigation" className="left-sidebar" aria-label="Main navigation"><div className="sidebar-scroll">
     <div className="sidebar-nav-group">
       <span className="side-heading">EXPLORE</span>
       <Link className="side-link active" to="/" aria-current="page" title="Home feed" onClick={onClose}><Icon name="home"/><span>Home feed</span></Link>
@@ -225,9 +226,9 @@ function Feed({ search, filter, setFilter, density, setDensity, onNotice }: {
       </div>
     </section>
     <div className="demo-strip"><span className="dot"/><span><strong>Public ANEVUM work</strong> — {notes.length} authentic publications; member discussions are in development.</span></div>
-    <div className="feed-tabs" role="tablist" aria-label="Publication filters">
-      {tabs.map(tab=><button type="button" role="tab" key={tab.id} className={"tab "+(filter===tab.id?"active":"")}
-        aria-selected={filter===tab.id} onClick={()=>setFilter(tab.id)}>{tab.label}</button>)}
+    <div className="feed-tabs" role="group" aria-label="Publication filters">
+      {tabs.map(tab=><button type="button" key={tab.id} className={"tab "+(filter===tab.id?"active":"")}
+        aria-pressed={filter===tab.id} onClick={()=>setFilter(tab.id)}>{tab.label}</button>)}
       <span className="feed-spacer"/>
       <span className="feed-sort"><Icon name="filter"/>Latest</span>
     </div>
@@ -238,7 +239,7 @@ function Feed({ search, filter, setFilter, density, setDensity, onNotice }: {
     </button>
     <section className="post-list" aria-label="Published ANEVUM work">
       {matching.length ? matching.map((note,index)=><NotePost note={note} feature={index===0 && filter==="all" && !search.trim()} onNotice={onNotice} key={note.slug}/>) :
-        <div className="c-v5-empty"><strong>No matching publications</strong>Try another search term or category.</div>}
+        <div className="c-v5-empty" role="status"><strong>No matching publications</strong>Try another search term or category.</div>}
     </section>
   </>;
 }
@@ -316,8 +317,7 @@ function AppearancePanel({ prefs, onChange, onClose, onReset }: {
   </div>;
 }
 
-function CommonsApp() {
-  const [prefs,setPrefs] = useState<Preferences>(loadPreferences);
+function CommonsApp({prefs,setPrefs}: {prefs:Preferences;setPrefs:(next:Preferences)=>void}) {
   const [filter,setFilter] = useState<Filter>("all");
   const [search,setSearch] = useState("");
   const [designOpen,setDesignOpen] = useState(false);
@@ -325,15 +325,14 @@ function CommonsApp() {
   const [collapsed,setCollapsed] = useState(false);
   const [noticeOpen,setNoticeOpen] = useState(false);
   const searchRef=useRef<HTMLInputElement>(null);
+  const { data: session } = memberAuthClient.useSession();
 
   useEffect(()=>{
-    try{window.localStorage.setItem("anevum-commons-v5-design",JSON.stringify(prefs));}catch {/* storage unavailable */}
-    window.dispatchEvent(new CustomEvent("anevum-commons-v5-settings",{detail:prefs}));
-  },[prefs]);
-  useEffect(()=>{
     const onKey=(event:KeyboardEvent)=>{
-      const tag=(event.target as HTMLElement | null)?.tagName;
-      if(event.key==="/" && tag!=="INPUT" && tag!=="TEXTAREA"){
+      const originalTarget=event.composedPath()[0] as HTMLElement | undefined;
+      const tag=originalTarget?.tagName;
+      const editing=tag==="INPUT" || tag==="TEXTAREA" || originalTarget?.isContentEditable;
+      if(event.key==="/" && !editing && !event.ctrlKey && !event.metaKey && !event.altKey){
         event.preventDefault();searchRef.current?.focus();
       }
       if(event.key==="Escape"){setDesignOpen(false);setDrawerOpen(false);setNoticeOpen(false);}
@@ -359,7 +358,7 @@ function CommonsApp() {
       <Link to="/products"><Icon name="compass"/><span>Explore</span></Link>
       <button type="button" className="mobile-create" aria-label="Create a post" onClick={()=>setNoticeOpen(true)}><Icon name="plus"/></button>
       <Link to="/field-notes"><Icon name="book"/><span>Research</span></Link>
-      <Link to="/sign-in"><Icon name="user"/><span>Account</span></Link>
+      <Link to={session?.user ? "/command" : "/sign-in"}><Icon name="user"/><span>Account</span></Link>
     </nav>
     {drawerOpen ? <button type="button" className="drawer-scrim" aria-label="Close navigation" onClick={()=>setDrawerOpen(false)}/> : null}
     {designOpen ? <AppearancePanel prefs={prefs} onChange={setPrefs} onClose={()=>setDesignOpen(false)} onReset={()=>setPrefs(defaults)}/> : null}
@@ -381,23 +380,15 @@ export default function CommonsV5() {
     if(mount.current){setShadow(mount.current.shadowRoot || mount.current.attachShadow({mode:"open"}));}
   },[]);
   const [prefs,setPrefs]=useState<Preferences>(loadPreferences);
-  // Scope the reference CSS to its own shadow host; all legacy UI is unaffected.
+  useEffect(()=>{
+    try {window.localStorage.setItem("anevum-commons-v5-design",JSON.stringify(prefs));}
+    catch { /* local preferences are optional */ }
+  },[prefs]);
+  // Scope both the baseline and refinements in the Shadow DOM; legacy pages are unaffected.
   return <div ref={mount} className="anevum-commons-v5-mount"
     data-theme={prefs.theme} data-layout={prefs.layout} data-density={prefs.density}
     data-radius={prefs.radius} data-surface={prefs.surface} style={{display:"block",minHeight:"100dvh"}}>
-    {shadow ? createPortal(<><style>{css}</style><ShadowSettingsBridge onChange={setPrefs}/><CommonsApp/></>,shadow) : null}
+    {shadow ? createPortal(<><style>{css+"\n"+polishCss}</style><CommonsApp prefs={prefs} setPrefs={setPrefs}/></>,shadow) : null}
   </div>;
 }
 
-/** Bridges preview appearance tokens from React state to the containing Shadow host. */
-function ShadowSettingsBridge({onChange}:{onChange:(next:Preferences)=>void}) {
-  useEffect(()=>{
-    function update(event:Event){
-      const detail=(event as CustomEvent<Preferences>).detail;
-      onChange(detail);
-    }
-    window.addEventListener("anevum-commons-v5-settings",update);
-    return ()=>window.removeEventListener("anevum-commons-v5-settings",update);
-  },[onChange]);
-  return null;
-}
