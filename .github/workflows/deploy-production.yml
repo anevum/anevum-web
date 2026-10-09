@@ -51,6 +51,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          npm run test:members
           node scripts/verify-member-bindings.mjs --require-live
           jq -e '
             .name == "anevum-web-nextgen" and
