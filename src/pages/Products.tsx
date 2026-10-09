@@ -9,9 +9,9 @@ export default function Products() {
   return (
     <div className="studio-page truth-products-page workshop-projects">
       <header className="workshop-page-intro">
-        <p className="workshop-kicker">Projects</p>
-        <h1>Things I’m working on.</h1>
-        <p>Software I started because I wanted to use it, test an idea, or understand a problem. Every project here exists; its page explains what is available and what is still being built.</p>
+        <p className="workshop-kicker">ANEVUM / Applications</p>
+        <h1>Software you can explore.</h1>
+        <p>Browse the applications being developed at ANEVUM. Each page distinguishes what works now, what is under evaluation, and what is still planned.</p>
       </header>
       <section className="workshop-section" aria-label="Registered projects">
         {products.length > 0 ? (
@@ -32,7 +32,7 @@ export default function Products() {
                   </span>
                 </div>
                 <Link to={product.routes.home} className="workshop-directory-open" aria-label={"View " + product.name + " project"}>
-                  View project <span aria-hidden="true">→</span>
+                  Explore application <span aria-hidden="true">→</span>
                 </Link>
               </article>
             ))}
@@ -40,7 +40,7 @@ export default function Products() {
         ) : <p className="workshop-empty">No public projects are registered yet.</p>}
       </section>
       <section className="workshop-endnote">
-        <p>Project pages show actual functionality, research, updates, and limitations. I don’t add placeholder products to fill a catalog.</p>
+        <p>ANEVUM shows actual applications, measurements, research, and limitations. Planned capabilities are identified rather than presented as finished features.</p>
         <Link to="/field-notes">Read the build notes <span aria-hidden="true">→</span></Link>
       </section>
     </div>
