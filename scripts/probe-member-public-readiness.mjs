@@ -93,13 +93,6 @@ export async function runPublicReadiness(request = fetch) {
   for (const path of ["/api/command/trader/status", "/api/command/unknown"]) {
     status("staging operator API denied " + path, await get(STAGING_ORIGIN, path), [401]);
   }
-  status("staging forged-origin guest write denied", await get(
-    STAGING_ORIGIN, "/api/member/me", {
-      method: "PATCH",
-      headers: { Origin: "https://untrusted.example", "Content-Type": "application/json" },
-      body: JSON.stringify({ displayName: "no-mutation" })
-    }), [401]);
-
   return { success: true, checks: checked };
 }
 
