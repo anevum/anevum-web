@@ -1,0 +1,93 @@
+name: RHEN Cloud Sandbox Cancellation Audit (Read Only)
+
+on:
+  push:
+    branches:
+      - work/rhen-cloud-billing-foundation-2026-10-09
+    paths:
+      - '.github/workflows/rhen-cloud-sandbox-cancellation-audit.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: rhen-cloud-sandbox-cancellation-audit
+  cancel-in-progress: false
+
+jobs:
+  audit-preview-cancellation:
+    if: github.ref == 'refs/heads/work/rhen-cloud-billing-foundation-2026-10-09'
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    env:
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_D1_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install preview-only D1 tooling
+        run: npm install --no-audit --no-fund
+      - name: Assert production billing remains disabled and audit is preview-only
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "${CLOUDFLARE_ACCOUNT_ID:-}"
+          test -n "${CLOUDFLARE_API_TOKEN:-}"
+          jq -e '
+            .name == "anevum-member-staging" and
+            .vars.ANEVUM_STRIPE_MODE == "test" and
+            .d1_databases[0].database_name == "anevum-members-preview" and
+            .d1_databases[0].database_id == "a537432e-d216-4b31-8b22-19662cc3a44a"
+          ' wrangler.member-staging.jsonc > /dev/null
+          jq -e '
+            .name == "anevum-web-nextgen" and
+            .vars.ANEVUM_STRIPE_MODE == "disabled" and
+            .vars.ANEVUM_RHEN_BILLING_ENABLED == "false" and
+            .vars.ANEVUM_RHEN_BILLING_CHECKOUT_ENABLED == "false" and
+            .vars.ANEVUM_RHEN_BILLING_WEBHOOKS_ENABLED == "false" and
+            .d1_databases[0].database_id == "7f0d4c0c-2e85-4900-8504-1347954e1df1"
+          ' wrangler.jsonc > /dev/null
+          npx wrangler d1 list --json > "$RUNNER_TEMP/d1-list.json"
+          jq -e '([.[] | select(.name == "anevum-members-preview" and .uuid == "a537432e-d216-4b31-8b22-19662cc3a44a")] | length) == 1' \
+            "$RUNNER_TEMP/d1-list.json" > /dev/null
+      - name: Inspect exact staging subscription state without member PII
+        shell: bash
+        run: |
+          set -euo pipefail
+          npx wrangler d1 execute MEMBER_DB --remote --config wrangler.preview-migrations.jsonc --json \
+            --command "SELECT COUNT(*) AS matching, COALESCE(MAX(s.cancel_at_period_end),0) AS local_cancel_at_period_end, COALESCE(MAX(s.current_period_end),0) AS current_period_end, COALESCE(MAX(CASE WHEN s.status='active' AND s.current_period_end > unixepoch() THEN 1 ELSE 0 END),0) AS active_until_period_end FROM member_billing_subscriptions s JOIN member_billing_customers c ON s.user_id=c.user_id AND s.stripe_customer_id=c.stripe_customer_id WHERE s.stripe_subscription_id='sub_1UOedYDSvwYS3kwTgDj5vPYI' AND s.stripe_customer_id='cus_VPTZXJPJKj3vNM' AND s.stripe_price_id='price_1UOcwYDSvwYS3kwTqnadIMBD' AND s.plan_code='standard'" \
+            > "$RUNNER_TEMP/cancel-state.json"
+          jq -e '.[0].success==true and .[0].results[0].matching==1 and .[0].results[0].active_until_period_end==1' \
+            "$RUNNER_TEMP/cancel-state.json" > /dev/null
+      - name: Confirm signed Stripe cancellation update was durably handled
+        shell: bash
+        run: |
+          set -euo pipefail
+          npx wrangler d1 execute MEMBER_DB --remote --config wrangler.preview-migrations.jsonc --json \
+            --command "SELECT COUNT(*) AS matching FROM member_billing_events WHERE stripe_event_id='evt_1UOetEDSvwYS3kwTZ3hBz5w6' AND event_type='customer.subscription.updated'" \
+            > "$RUNNER_TEMP/cancel-event.json"
+          jq -e '.[0].success==true and .[0].results[0].matching==1' "$RUNNER_TEMP/cancel-event.json" > /dev/null
+          npx wrangler d1 execute MEMBER_DB --remote --config wrangler.preview-migrations.jsonc --json \
+            --command 'PRAGMA foreign_key_check' > "$RUNNER_TEMP/cancel-fk.json"
+          jq -e '.[0].success==true and (.[0].results | length)==0' "$RUNNER_TEMP/cancel-fk.json" > /dev/null
+          flag="$(jq -r '.[0].results[0].local_cancel_at_period_end' "$RUNNER_TEMP/cancel-state.json")"
+          {
+            echo '## RHEN Cloud: Stripe sandbox end-of-period cancellation audit'
+            echo
+            echo 'PASS: Exactly one isolated member subscription matched the canceled-at-period-end Stripe account.'
+            echo 'PASS: Staging D1 recorded the signed Stripe subscription.updated event.'
+            echo 'PASS: The subscription remains active during its current paid period.'
+            echo 'PASS: Preview D1 has no foreign-key violations.'
+            if [ "$flag" = '1' ]; then
+              echo 'PASS: ANEVUM local cancellation-scheduled flag is recorded.'
+            else
+              echo 'FOLLOW-UP REQUIRED: Stripe has scheduled the cancellation, but the D1 flag remains false. The updated normalizer must be deployed and the member must use Refresh subscription status to reconcile.'
+              echo 'No backend invoice, subscription, or D1 row was mutated by this audit.'
+              echo '::warning::ANEVUM D1 requires provider reconciliation to display Stripe scheduled cancellation'
+            fi
+            echo
+            echo 'No member identifiers, email, card data, or Stripe secrets were retrieved.'
+          } >> "$GITHUB_STEP_SUMMARY"
