@@ -75,6 +75,10 @@ jobs:
           jq -e '.[0].success==true and (.[0].results | length)==0' "$RUNNER_TEMP/cancel-fk.json" > /dev/null
           flag="$(jq -r '.[0].results[0].local_cancel_at_period_end' "$RUNNER_TEMP/cancel-state.json")"
           echo "AUDIT_D1_CANCEL_AT_PERIOD_END=$flag"
+          if [ "$flag" != "1" ]; then
+            echo '::error::ANEVUM local cancellation flag is not reconciled yet. Stripe cancellation remains scheduled; do not retry checkout or change subscription.'
+            exit 1
+          fi
           {
             echo '## RHEN Cloud: Stripe sandbox end-of-period cancellation audit'
             echo
