@@ -34,7 +34,7 @@ const prod = load("wrangler.jsonc");
 const stage = load("wrangler.member-staging.jsonc");
 const previewMigration = load("wrangler.preview-migrations.jsonc");
 
-assert(prod?.vars?.ANEVUM_MEMBERS_ENABLED === "false", "Production signup must remain disabled.");
+assert(prod?.vars?.ANEVUM_MEMBERS_ENABLED === "true", "The release candidate must explicitly opt into production members.");
 assert(prod?.vars?.ANEVUM_MEMBER_RHEN_DRAFTS_ENABLED === "false", "Production personal draft settings must remain disabled.");
 assert(prod?.vars?.ANEVUM_MEMBER_PREVIEW_ENABLED === "false", "Production preview identity must remain disabled.");
 assert(prod?.d1_databases?.[0]?.database_id === production, "Production binding UUID changed.");
@@ -109,5 +109,5 @@ if (errors.length) {
   process.exitCode = 1;
 } else {
   console.log("STAGING GUARD PASS: " + (process.argv.includes("--generated") ? "generated" : "source") +
-    " Worker targets isolated preview D1 with exact OAuth origin; production member signup remains disabled.");
+    " Worker targets isolated preview D1 with exact OAuth origin; production member signup is a separate top-level Worker authorization domain.");
 }
