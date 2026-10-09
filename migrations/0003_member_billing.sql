@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS member_billing_subscriptions (
   user_id TEXT NOT NULL REFERENCES "user"("id") ON DELETE CASCADE,
   stripe_customer_id TEXT NOT NULL,
   stripe_price_id TEXT NOT NULL,
-  plan_code TEXT NOT NULL CHECK(plan_code IN ('founding','standard')),
+  plan_code TEXT NOT NULL CHECK(plan_code IN ('founding','standard','unknown')),
   status TEXT NOT NULL,
   current_period_end INTEGER NOT NULL DEFAULT 0,
   cancel_at_period_end INTEGER NOT NULL DEFAULT 0 CHECK(cancel_at_period_end IN (0,1)),
