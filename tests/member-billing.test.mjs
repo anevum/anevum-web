@@ -4,7 +4,7 @@ import { readFileSync } from "node:fs";
 import {
   RHEN_CLOUD_PLANS, billingConfigured, billingSchemaReady, paidAccess,
   planFromPrice, normalizeStripeSubscription, verifyStripeSignature,
-  readBillingStatus, stripeWebhookEndpoint, cancelBillingBeforeAccountDeletion
+  readBillingStatus, memberBillingEndpoint, stripeWebhookEndpoint, cancelBillingBeforeAccountDeletion
 } from "../src/server/member-billing.mjs";
 
 const stagingOrigin = "https://anevum-member-staging.devonakins.workers.dev";
@@ -126,6 +126,80 @@ test("billing status fails closed without migrated schema and never enables memb
   assert.equal(state.checkoutEnabled,false);
   assert.equal(state.paidAccess,true);
   assert.equal(state.liveExecutionEnabled,false);
+});
+
+test("checkout refuses wrong prices and duplicate provider sessions, with per-user lock",async()=>{
+  const env={...stagingEnv(),
+    ANEVUM_RHEN_BILLING_CHECKOUT_ENABLED:"true",
+    ANEVUM_RHEN_FOUNDING_ENABLED:"true"
+  };
+  const user={id:"user-a",email:"member@example.test",emailVerified:true};
+  const calls=[];
+  let pending=false;
+  let wrongPrice=false;
+  let lockActive=false;
+  const db={prepare(sql){
+    return {
+      args:[],bind(...args){this.args=args;return this;},
+      async all(){return {results:tables.map(name=>({name}))};},
+      async first(){
+        if(sql.includes("SELECT status FROM member_billing_subscriptions"))return null;
+        if(sql.includes("member_billing_customers"))return {stripe_customer_id:"cus_abc123"};
+        return null;
+      },
+      async run(){
+        if(sql.includes("INSERT INTO member_billing_checkout_locks")){
+          if(lockActive)return {success:true,meta:{changes:0}};
+          lockActive=true;
+          return {success:true,meta:{changes:1}};
+        }
+        if(sql.includes("DELETE FROM member_billing_checkout_locks"))lockActive=false;
+        return {success:true,meta:{changes:1}};
+      }
+    };
+  }};
+  const oldFetch=globalThis.fetch;
+  globalThis.fetch=async(url,init)=>{
+    const u=new URL(url);
+    calls.push(init.method+" "+u.pathname);
+    if(u.pathname==="/v1/prices/price_Founding123")
+      return Response.json({id:"price_Founding123",active:true,currency:"usd",type:"recurring",
+        recurring:{interval:"month",interval_count:1},unit_amount:wrongPrice?1999:999});
+    if(u.pathname==="/v1/checkout/sessions" && init.method==="GET")
+      return Response.json({has_more:false,data:pending?[{status:"open",mode:"subscription"}]:[]});
+    if(u.pathname==="/v1/subscriptions" && init.method==="GET")
+      return Response.json({has_more:false,data:[]});
+    if(u.pathname==="/v1/checkout/sessions" && init.method==="POST")
+      return Response.json({url:"https://checkout.stripe.com/c/pay/cs_test_abc"});
+    throw Error("Unexpected mocked Stripe API "+init.method+" "+u.pathname);
+  };
+  const checkout=()=>new Request(stagingOrigin+"/api/member/billing/checkout",{
+    method:"POST",headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({plan:"founding"})
+  });
+  try{
+    let res=await memberBillingEndpoint(checkout(),{...env,MEMBER_DB:db},user,stagingOrigin,
+      "/api/member/billing/checkout");
+    assert.equal(res.status,200);
+    assert.equal((await res.json()).url,"https://checkout.stripe.com/c/pay/cs_test_abc");
+    assert.equal(lockActive,false);
+    assert.ok(calls.includes("POST /v1/checkout/sessions"));
+    pending=true;
+    calls.length=0;
+    res=await memberBillingEndpoint(checkout(),{...env,MEMBER_DB:db},user,stagingOrigin,
+      "/api/member/billing/checkout");
+    assert.equal(res.status,409);
+    assert.equal(calls.includes("POST /v1/checkout/sessions"),false);
+    assert.equal(lockActive,false);
+    pending=false;
+    wrongPrice=true;
+    calls.length=0;
+    res=await memberBillingEndpoint(checkout(),{...env,MEMBER_DB:db},user,stagingOrigin,
+      "/api/member/billing/checkout");
+    assert.equal(res.status,503);
+    assert.equal(calls.includes("POST /v1/checkout/sessions"),false);
+    assert.equal(lockActive,false);
+  }finally{globalThis.fetch=oldFetch;}
 });
 
 test("Stripe webhook signature validates raw body, timestamp, and all v1 candidates",async()=>{
