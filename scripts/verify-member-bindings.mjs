@@ -46,7 +46,8 @@ export function inspectMemberBindings(config, previewMigrationConfig = null, opt
   if (Object.hasOwn(vars, "ANEVUM_MEMBER_RHEN_DRAFTS_ENABLED") && vars.ANEVUM_MEMBER_RHEN_DRAFTS_ENABLED !== "false") {
     errors.push("Production RHEN member draft editing must remain disabled.");
   }
-  if (vars.ANEVUM_RHEN_BETA_WAITLIST_ENABLED !== "false") {
+  if (Object.hasOwn(vars, "ANEVUM_RHEN_BETA_WAITLIST_ENABLED") &&
+      vars.ANEVUM_RHEN_BETA_WAITLIST_ENABLED !== "false") {
     errors.push("Production free beta registration must remain disabled until separate approval.");
   }
   if (vars.ANEVUM_MEMBER_PREVIEW_ENABLED !== "false") {
