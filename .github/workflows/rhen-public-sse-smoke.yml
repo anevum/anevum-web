@@ -12,14 +12,14 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 3
     steps:
-      - name: Verify live Railway SSE response is truly streamed and aggregate-only
+      - name: Verify Cloudflare public SSE is unbuffered and aggregate-only
         shell: bash
         run: |
           node --input-type=module <<'EOF'
           import assert from "node:assert/strict";
           const controller = new AbortController();
           const timeout = setTimeout(() => controller.abort(), 15000);
-          const url = "https://alpaca-trader-production-bf3e.up.railway.app/v1/trading-public-events";
+          const url = "https://anevum.com/api/public/trading/events";
           try {
             const response = await fetch(url, {
               headers: { Accept: "text/event-stream" },
@@ -46,7 +46,7 @@ jobs:
             assert.equal(Object.hasOwn(seen, "account"), false);
             assert.equal(Object.hasOwn(seen, "open_orders"), false);
             assert.equal(Object.hasOwn(seen, "positions"), false);
-            console.log("LIVE RAILWAY SSE: 200; event: snapshot; canonical aggregate-only");
+            console.log("LIVE CLOUDFLARE SSE: 200; event: snapshot; canonical aggregate-only");
             console.log("Snapshot generated_at:", seen.generated_at);
           } finally {
             clearTimeout(timeout);
