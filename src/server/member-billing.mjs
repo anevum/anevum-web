@@ -105,7 +105,11 @@ export async function readBillingStatus(db, userId, env, origin) {
 }
 
 async function stripeRequest(env, method, path, fields, idempotencyKey) {
-  if (!/^\/(?:customers|checkout\/sessions|billing_portal\/sessions|subscriptions|prices)(?:\/|$)/.test(path)) {
+  const target = new URL(STRIPE_API + path);
+  if (target.origin !== "https://api.stripe.com" ||
+      !/^\\/(?:v1\\/)?(?:customers|checkout\\/sessions|billing_portal\\/sessions|subscriptions|prices)(?:\\/|$)/.test(
+        target.pathname.replace(/^\\/v1/, "")
+      )) {
     throw new BillingError(500, "Stripe operation not allowed.");
   }
   const headers = {
@@ -383,7 +387,8 @@ export async function stripeWebhookEndpoint(request, env) {
 }
 
 export async function cancelBillingBeforeAccountDeletion(env, userId) {
-  // Billing migrations are optional; existing no-billing members stay deletable.
+  // Cancel first, delete identity second. A pending Checkout session cannot be
+  // allowed to complete after its owner has deleted the ANEVUM account.
   const ready = await billingSchemaReady(env.MEMBER_DB);
   if (!ready) {
     if (env?.ANEVUM_RHEN_BILLING_ENABLED === "true" || env?.STRIPE_SECRET_KEY) {
@@ -391,16 +396,54 @@ export async function cancelBillingBeforeAccountDeletion(env, userId) {
     }
     return;
   }
-  const rows = await env.MEMBER_DB.prepare(
-    "SELECT stripe_subscription_id,status FROM member_billing_subscriptions WHERE user_id=?"
-  ).bind(userId).all();
-  for (const row of rows.results || []) {
-    if (!OPEN_STATUSES.has(row.status)) continue;
-    if (!env?.STRIPE_SECRET_KEY) throw new BillingError(503, "Billing cancellation unavailable.");
-    const canceled = await stripeRequest(env, "DELETE", "/subscriptions/" + row.stripe_subscription_id);
+  const customer = await env.MEMBER_DB.prepare(
+    "SELECT stripe_customer_id FROM member_billing_customers WHERE user_id=?"
+  ).bind(userId).first();
+  if (!customer) return;
+  if (!env?.STRIPE_SECRET_KEY) throw new BillingError(503, "Billing cancellation unavailable.");
+  const id = customer.stripe_customer_id;
+  if (!/^cus_[A-Za-z0-9]+$/.test(id)) throw new BillingError(503, "Invalid billing mapping.");
+  const sessions = await stripeRequest(
+    env, "GET", "/checkout/sessions?customer=" + encodeURIComponent(id) + "&status=open&limit=100"
+  );
+  if (sessions.has_more || !Array.isArray(sessions.data)) {
+    throw new BillingError(503, "Pending checkouts could not be enumerated safely.");
+  }
+  for (const session of sessions.data) {
+    if (session.status !== "open") continue;
+    if (!/^cs_(?:test_|live_)?[A-Za-z0-9]+$/.test(String(session.id || ""))) {
+      throw new BillingError(503, "Unexpected checkout session.");
+    }
+    try {
+      const expired = await stripeRequest(env, "POST", "/checkout/sessions/" + session.id + "/expire");
+      if (expired.status !== "expired") {
+        throw new BillingError(503, "Could not expire pending checkout.");
+      }
+    } catch {
+      // Checkout may have completed during cancellation. The following
+      // subscription enumeration must include and cancel its subscription.
+      const current = await stripeRequest(env, "GET", "/checkout/sessions/" + session.id);
+      if (current.status !== "complete" && current.status !== "expired") {
+        throw new BillingError(503, "Pending checkout could not be closed.");
+      }
+    }
+  }
+  const list = await stripeRequest(
+    env, "GET", "/subscriptions?customer=" + encodeURIComponent(id) + "&status=all&limit=100"
+  );
+  if (list.has_more || !Array.isArray(list.data)) {
+    throw new BillingError(503, "Subscriptions could not be enumerated safely.");
+  }
+  for (const subscription of list.data) {
+    if (!OPEN_STATUSES.has(subscription.status)) continue;
+    if (!/^sub_[A-Za-z0-9]+$/.test(String(subscription.id || ""))) {
+      throw new BillingError(503, "Unexpected subscription.");
+    }
+    const canceled = await stripeRequest(env, "DELETE", "/subscriptions/" + subscription.id);
     if (canceled?.status !== "canceled") {
       throw new BillingError(503, "Billing cancellation not confirmed.");
     }
   }
-  // The caller's authenticated account deletion then cascades the local rows.
+  // A provider/network error prevents identity deletion and loss of the
+  // customer->member reconciliation mapping. No new charges are left running.
 }
