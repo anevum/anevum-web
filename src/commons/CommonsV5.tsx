@@ -218,7 +218,7 @@ function Feed({ search, filter, setFilter, density, setDensity, onNotice }: {
   ];
   return <>
     <section className="feed-header">
-      <div><h1>The Commons<span style={{color:"var(--accent)"}}>.</h1><p>Build something. Learn something. Share what you find.</p></div>
+      <div><h1>The Commons<span style={{color:"var(--accent)"}}>.</span></h1><p>Build something. Learn something. Share what you find.</p></div>
       <div className="feed-header-controls">
         <button type="button" className={"layout-btn "+(density==="comfortable"?"active":"")} onClick={()=>setDensity("comfortable")} aria-label="Comfortable feed" aria-pressed={density==="comfortable"}><Icon name="layout"/></button>
         <button type="button" className={"layout-btn "+(density==="compact"?"active":"")} onClick={()=>setDensity("compact")} aria-label="Compact feed" aria-pressed={density==="compact"}><Icon name="list"/></button>
