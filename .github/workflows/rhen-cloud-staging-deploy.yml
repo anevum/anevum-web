@@ -1,4 +1,4 @@
-name: RHEN Cloud Staging Deployment (Checkout Off)
+name: RHEN Cloud Staging Deployment (Stripe Sandbox Only)
 
 on:
   push:
@@ -8,6 +8,7 @@ on:
       - '.github/workflows/rhen-cloud-staging-deploy.yml'
       - 'wrangler.member-staging.jsonc'
       - 'src/server/member-billing.mjs'
+      - 'src/pages/MemberBilling.tsx'
       - 'scripts/verify-member-staging-deploy.mjs'
   workflow_dispatch:
 
