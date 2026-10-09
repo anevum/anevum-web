@@ -39,5 +39,7 @@ jobs:
         run: node --test tests/member-alpaca-live.test.mjs tests/commons.test.mjs tests/commons-beta.test.mjs
       - name: Validate isolated D1 migration and member accounts
         run: python scripts/verify-member-schema.py
+      - name: Install PDF renderer for site build
+        run: pip install "weasyprint==68.0" "Pillow==11.3.0"
       - name: Typecheck and build member app
         run: npm run build
