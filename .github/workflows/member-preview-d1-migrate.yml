@@ -79,16 +79,16 @@ jobs:
             > "$RUNNER_TEMP/anevum-preview-drafts.json"
           jq -e '.[0].success == true and .[0].results[0].draft_tables == 1' "$RUNNER_TEMP/anevum-preview-drafts.json" > /dev/null
           npx wrangler d1 execute MEMBER_DB --remote --config wrangler.preview-migrations.jsonc --json \
-            --command "SELECT COUNT(*) AS billing_tables FROM sqlite_master WHERE type = 'table' AND name IN ('member_billing_customers','member_billing_subscriptions','member_billing_events')" \
+            --command "SELECT COUNT(*) AS billing_tables FROM sqlite_master WHERE type = 'table' AND name IN ('member_billing_customers','member_billing_subscriptions','member_billing_events','member_billing_checkout_locks')" \
             > "$RUNNER_TEMP/anevum-preview-billing.json"
-          jq -e '.[0].success == true and .[0].results[0].billing_tables == 3' "$RUNNER_TEMP/anevum-preview-billing.json" > /dev/null
+          jq -e '.[0].success == true and .[0].results[0].billing_tables == 4' "$RUNNER_TEMP/anevum-preview-billing.json" > /dev/null
           npx wrangler d1 execute MEMBER_DB --remote --config wrangler.preview-migrations.jsonc --json \
             --command 'PRAGMA foreign_key_check' > "$RUNNER_TEMP/anevum-preview-fk.json"
           jq -e '.[0].success == true and (.[0].results | length) == 0' "$RUNNER_TEMP/anevum-preview-fk.json" > /dev/null
           {
             echo '## ANEVUM member preview schema'
             echo ''
-            echo 'Verified: 9 core tables + 1 RHEN draft table + 3 user-scoped billing tables, zero FK violations, isolated preview D1 UUID.'
+            echo 'Verified: 9 core tables + 1 RHEN draft table + 4 user-scoped billing tables, zero FK violations, isolated preview D1 UUID.'
             echo ''
             echo 'Production D1 and member signup settings are untouched by this preview-only workflow.'
           } >> "$GITHUB_STEP_SUMMARY"
