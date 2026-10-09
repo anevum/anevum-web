@@ -46,7 +46,11 @@ function fakeStaging({ brokenExport = false, sharedDrafts = false } = {}) {
         if (options.headers.Origin !== STAGING_ORIGIN) return reply({ message: "Denied" }, 403);
         const change = options.method === "PUT"
           ? JSON.parse(options.body) : null;
-        const next = change ? draft(change.label, change.maxOpenPositions) : null;
+        const next = change ? {
+          ...draft(change.label, change.maxOpenPositions),
+          maxTotalExposurePercent: change.maxTotalExposurePercent,
+          maxPositionPercent: change.maxPositionPercent
+        } : null;
         if (sharedDrafts) sharedDraft = next;
         else member.draft = next;
       }
