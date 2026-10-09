@@ -99,10 +99,12 @@ test("member terminal never redirects to protected owner RHEN Terminal", () => {
   assert.match(terminal, /No brokerage linked/);
 });
 
-test("both production and preview keep dual-auth cutover off until verified", () => {
-  for (const path of ["wrangler.jsonc", "wrangler.member-staging.jsonc"]) {
-    const config = JSON.parse(source(path));
-    assert.equal(config.vars.ANEVUM_OWNER_TERMINAL_DUAL_AUTH, "false");
+test("production keeps owner dual-auth off and staging rejects unexpected bindings", () => {
+  const prod = JSON.parse(source("wrangler.jsonc"));
+  const stage = JSON.parse(source("wrangler.member-staging.jsonc"));
+  assert.equal(prod.vars.ANEVUM_OWNER_TERMINAL_DUAL_AUTH, "false");
+  assert.ok(!("ANEVUM_OWNER_TERMINAL_DUAL_AUTH" in stage.vars));
+  for (const config of [prod, stage]) {
     assert.ok(!("ANEVUM_OWNER_MEMBER_ID" in config.vars));
     assert.ok(!("ANEVUM_OWNER_ACCESS_EMAIL" in config.vars));
   }
