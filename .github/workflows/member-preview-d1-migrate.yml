@@ -39,7 +39,7 @@ jobs:
         run: |
           set -euo pipefail
           node scripts/verify-member-bindings.mjs --require-config
-          jq -e '.vars.ANEVUM_MEMBERS_ENABLED == "false" and .vars.ANEVUM_MEMBER_PREVIEW_ENABLED == "false"' wrangler.jsonc > /dev/null
+          jq -e '(.vars.ANEVUM_MEMBERS_ENABLED == "false" or .vars.ANEVUM_MEMBERS_ENABLED == "true") and .vars.ANEVUM_MEMBER_PREVIEW_ENABLED == "false" and .vars.ANEVUM_MEMBER_RHEN_DRAFTS_ENABLED == "false"' wrangler.jsonc > /dev/null
           jq -e '.d1_databases | length == 1' wrangler.preview-migrations.jsonc > /dev/null
       - name: Verify Cloudflare DB inventory matches committed UUIDs
         env:
@@ -86,5 +86,5 @@ jobs:
             echo ''
             echo 'Verified: 9 core tables + 1 tenant-scoped RHEN draft table, zero foreign-key violations, isolated preview D1 UUID.'
             echo ''
-            echo 'Production D1 is untouched by this workflow. Public sign-up remains disabled.'
+            echo 'Production D1 and member signup settings are untouched by this preview-only workflow.'
           } >> "$GITHUB_STEP_SUMMARY"

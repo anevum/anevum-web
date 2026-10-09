@@ -30,7 +30,7 @@ test("activated staging is pinned to one verified HTTPS origin and preview D1", 
   const stage = JSON.parse(readFileSync(new URL("../wrangler.member-staging.jsonc", import.meta.url), "utf8"));
   const origin = "https://anevum-member-staging.devonakins.workers.dev";
 
-  assert.equal(prod.vars.ANEVUM_MEMBERS_ENABLED, "false");
+  assert.equal(prod.vars.ANEVUM_MEMBERS_ENABLED, "true");
   assert.equal(prod.vars.ANEVUM_MEMBER_RHEN_DRAFTS_ENABLED, "false");
   assert.equal(prod.vars.ANEVUM_MEMBER_PREVIEW_ENABLED, "false");
   assert.equal(stage.name, "anevum-member-staging");

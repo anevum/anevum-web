@@ -1,17 +1,10 @@
 name: ANEVUM Member Production Readiness (Read Only)
 
 on:
-  push:
+  workflow_run:
+    workflows: ["Deploy ANEVUM Production"]
+    types: [completed]
     branches: [main]
-    paths:
-      - '.github/workflows/member-public-readiness.yml'
-      - 'scripts/probe-member-public-readiness.mjs'
-      - 'tests/member-adversarial.test.mjs'
-      - 'src/server/member.mjs'
-      - 'src/pages/Privacy.tsx'
-      - 'src/pages/Terms.tsx'
-      - 'wrangler.jsonc'
-      - 'wrangler.member-staging.jsonc'
   workflow_dispatch:
 
 permissions:
@@ -23,12 +16,19 @@ concurrency:
 
 jobs:
   read-only-member-preflight:
+    if: github.event_name == 'workflow_dispatch' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main')
     runs-on: ubuntu-latest
     timeout-minutes: 10
     env:
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Verify audited commit matches successful website deployment
+        if: github.event_name == 'workflow_run'
+        run: |
+          test "$(git rev-parse HEAD)" = "${{ github.event.workflow_run.head_sha }}"
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
@@ -38,11 +38,11 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          node scripts/verify-member-bindings.mjs --require-config
+          node scripts/verify-member-bindings.mjs --require-live
           node scripts/verify-member-staging-deploy.mjs
           node --test tests/member-adversarial.test.mjs tests/member-boundaries.test.mjs tests/member-command-cutover.test.mjs
           test "$(jq -r '.name' wrangler.jsonc)" = 'anevum-web-nextgen'
-          test "$(jq -r '.vars.ANEVUM_MEMBERS_ENABLED' wrangler.jsonc)" = 'false'
+          test "$(jq -r '.vars.ANEVUM_MEMBERS_ENABLED' wrangler.jsonc)" = 'true'
           test "$(jq -r '.vars.ANEVUM_MEMBER_PREVIEW_ENABLED' wrangler.jsonc)" = 'false'
           test "$(jq -r '.d1_databases[0].database_id' wrangler.jsonc)" = '7f0d4c0c-2e85-4900-8504-1347954e1df1'
           test "$(jq -r '.previews.d1_databases[0].database_id' wrangler.jsonc)" = 'a537432e-d216-4b31-8b22-19662cc3a44a'
@@ -96,20 +96,23 @@ jobs:
           npx wrangler d1 execute MEMBER_DB --remote --config wrangler.jsonc --json \
             --command "SELECT COUNT(*) AS member_tables FROM sqlite_master WHERE type='table' AND name IN ('user','session','account','verification','rateLimit','member_profiles','member_saved_apps','member_project_follows','member_entitlements')" \
             > "$RUNNER_TEMP/member-prod-table-count.json"
-          jq -e '.[0].success == true and (.[0].results[0].member_tables == 0 or .[0].results[0].member_tables == 9)' \
+          jq -e '.[0].success == true and .[0].results[0].member_tables == 9' \
             "$RUNNER_TEMP/member-prod-table-count.json" >/dev/null
           count="$(jq -r '.[0].results[0].member_tables' "$RUNNER_TEMP/member-prod-table-count.json")"
           echo "PROD_D1_MEMBER_TABLES=$count"
           echo "PREVIEW_D1_SEPARATE=PASS"
-          if [ "$count" = '0' ]; then
-            echo 'Production D1 member schema is not migrated; explicit owner-authorized migration remains required.'
-          else
-            echo 'Production D1 member schema exists; verify prior approval/migration evidence separately.'
-          fi
+          npx wrangler d1 execute MEMBER_DB --remote --config wrangler.jsonc --json \
+            --command "SELECT COUNT(*) AS draft_tables FROM sqlite_master WHERE type='table' AND name='member_rhen_drafts'" \
+            > "$RUNNER_TEMP/member-prod-draft-table-count.json"
+          jq -e '.[0].success == true and .[0].results[0].draft_tables == 1' "$RUNNER_TEMP/member-prod-draft-table-count.json" >/dev/null
+          npx wrangler d1 execute MEMBER_DB --remote --config wrangler.jsonc --json \
+            --command 'PRAGMA foreign_key_check' > "$RUNNER_TEMP/member-prod-foreign-keys.json"
+          jq -e '.[0].success == true and (.[0].results|length) == 0' "$RUNNER_TEMP/member-prod-foreign-keys.json" >/dev/null
+          echo 'Production D1 nine core tables and one draft table present; zero foreign-key violations.'
       - name: Read-only live anonymous Access, member and OAuth readiness probes
         id: anonymous_routes
         continue-on-error: true
-        run: node scripts/probe-member-public-readiness.mjs
+        run: node scripts/probe-member-production-launch.mjs
       - name: Release readiness checkpoint
         if: always()
         shell: bash
@@ -117,17 +120,17 @@ jobs:
           {
             echo '## ANEVUM member production readiness (read-only)'
             echo ''
-            echo 'Production registrations: **DISABLED**; no schema migrations, trades or account writes were performed.'
+            echo 'Production registrations: **ENABLED** after a separately approved production merge; no schema migrations, trades or account writes were performed by this probe.'
             echo 'Cloudflare production encrypted auth binding NAMES, D1 identities/schema count, staging Google readiness, anonymous denials and RHEN Access: verified above.'
             echo 'No secret value, Google console client configuration, private auth-secret rotation or real two-member browser cookies were inspected.'
             echo ''
-            echo 'Next: confirm private production OAuth rotation + correct Google production callback; execute separately approved manual production D1 migration; separately approve production signup activation.'
+            echo 'Next: complete disposable real-account production Google sign-in, export, deletion, second-account isolation, and session revocation checks before announcing public availability.'
           } >> "$GITHUB_STEP_SUMMARY"
           echo "Production encrypted Secret bindings: ${{ steps.production_secrets.outcome }}"
           echo "Production D1 identity/schema: ${{ steps.production_d1.outcome }}"
           echo "Anonymous live access and OAuth readiness: ${{ steps.anonymous_routes.outcome }}"
           if [ "${{ steps.production_secrets.outcome }}" != 'success' ] || [ "${{ steps.production_d1.outcome }}" != 'success' ] || [ "${{ steps.anonymous_routes.outcome }}" != 'success' ]; then
-            echo '::error::Production member readiness NOT approved. Inspect the separate diagnostics above. Public signup must remain disabled.'
+            echo '::error::Production member readiness NOT approved. Inspect diagnostics and immediately revert the signup flag if live availability or isolation failed.'
             exit 1
           fi
-          echo 'PRODUCTION_MEMBER_READINESS=PASS (read-only; real OAuth and private secret rotation remain separate approvals)'
+          echo 'PRODUCTION_MEMBER_READINESS=PASS (read-only; real authenticated production OAuth and private secret rotation remain separate approvals)'

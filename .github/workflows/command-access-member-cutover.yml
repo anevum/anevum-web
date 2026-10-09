@@ -40,7 +40,7 @@ jobs:
             echo ''
             echo 'Owner-only Access restricts /command/rhen* and /api/command*.'
             echo 'The /command member entry is now open to the normal website,'
-            echo 'but Google login still requires an explicitly enabled member account.'
+            echo 'and Google login is authorized only by the independent member identity backend.'
             echo ''
-            echo 'Production membership remains disabled; RHEN broker-write authority is unchanged.'
+            echo 'Cloudflare Access remains owner-only for private RHEN operator routes; broker-write authority is unchanged.'
           } >> "$GITHUB_STEP_SUMMARY"
