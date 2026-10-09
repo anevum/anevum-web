@@ -127,18 +127,19 @@ export default function Commons() {
     } finally { setReviewing(null); }
   }
 
+  const template = query.get("template");
   const filter = query.get("kind");
   const selectedKind = filter === "question" || filter === "research_note" ? filter : "all";
   const topics = state?.topics?.filter(item => selectedKind === "all" || item.kind === selectedKind) || [];
   const notes = [...fieldNotes].sort((a,b) => b.date.localeCompare(a.date)).slice(0,3);
 
   useEffect(() => {
-    if (query.get("template") !== "ruleset" || !state?.available) return;
+    if (template !== "ruleset" || !state?.available) return;
     setKind("research_note");
     setSubject("algorithms");
     setBody(previous => previous || RULE_SET_TEMPLATE);
     setComposer(true);
-  }, [query.get("template"), state?.available]);
+  }, [template, state?.available]);
 
   function startRuleSetReview() {
     if (!state?.available) return;
