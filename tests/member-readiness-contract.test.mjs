@@ -32,6 +32,20 @@ test("readiness workflow only gathers information and cannot auto-migrate or ena
   assert.notEqual(config.d1_databases[0].database_id, staging.d1_databases[0].database_id);
 });
 
+test("independent release diagnostics gather all blocker types but fail closed overall", () => {
+  const workflow = read(".github/workflows/member-public-readiness.yml");
+  for (const id of ["production_secrets", "production_d1", "anonymous_routes"]) {
+    assert.match(workflow, new RegExp("id: " + id + "\\n\\s*continue-on-error: true"));
+    assert.match(workflow, new RegExp("steps\\." + id + "\\.outcome"));
+  }
+  assert.match(workflow, /if: always\(\)/);
+  assert.match(workflow, /steps\.production_secrets\.outcome/);
+  assert.match(workflow, /PRODUCTION_MEMBER_READINESS=PASS/);
+  assert.match(workflow, /missing=0/);
+  assert.match(workflow, /if \[ "\$missing" != '0' \]/);
+  assert.match(workflow, /Production member readiness NOT approved/);
+});
+
 test("production migration still requires independent, affirmative operator confirmations", () => {
   const migration = read(".github/workflows/member-production-d1-migrate.yml");
   assert.match(migration, /workflow_dispatch:/);
