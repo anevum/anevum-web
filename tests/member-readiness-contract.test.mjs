@@ -15,14 +15,20 @@ test("owner-reviewed legal notices are no longer marked as drafts", () => {
 
 test("readiness workflow only gathers information and cannot auto-migrate or enable users", () => {
   const workflow = read(".github/workflows/member-public-readiness.yml");
-  const liveProbe = read("scripts/probe-member-public-readiness.mjs");
+  const liveProbe = read("scripts/probe-member-production-launch.mjs");
   const config = JSON.parse(read("wrangler.jsonc"));
   const staging = JSON.parse(read("wrangler.member-staging.jsonc"));
   assert.match(workflow, /workflow_dispatch:/);
+  assert.match(workflow, /workflow_run:/);
+  assert.match(workflow, /workflows: \["Deploy ANEVUM Production"\]/);
+  assert.match(workflow, /if: github\.event_name == /);
   assert.match(workflow, /branches: \[main\]/);
   assert.doesNotMatch(workflow, /pull_request:/);
   assert.match(workflow, /npx wrangler d1 execute MEMBER_DB --remote --config wrangler\.jsonc --json/);
   assert.match(workflow, /--command "SELECT COUNT\(\*\) AS member_tables/);
+  assert.match(workflow, /member_rhen_drafts/);
+  assert.match(workflow, /probe-member-production-launch\.mjs/);
+  assert.match(workflow, /PRODUCTION_MEMBER_READINESS=PASS/);
   assert.doesNotMatch(workflow, /d1 migrations apply|wrangler deploy|wrangler secret put|wrangler d1 create/i);
   assert.doesNotMatch(liveProbe, /method:\s*["'](?:POST|PUT|PATCH|DELETE)["']/);
   assert.doesNotMatch(liveProbe, /Cookie\s*:|Authorization\s*:/);
