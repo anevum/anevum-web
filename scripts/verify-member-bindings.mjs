@@ -43,6 +43,9 @@ export function inspectMemberBindings(config, previewMigrationConfig = null, opt
   if (!["true", "false"].includes(vars.ANEVUM_MEMBERS_ENABLED)) {
     errors.push("ANEVUM_MEMBERS_ENABLED must be an explicit string true or false.");
   }
+  if (vars.ANEVUM_MEMBER_RHEN_DRAFTS_ENABLED !== "false") {
+    errors.push("Production RHEN member draft editing must remain disabled.");
+  }
   if (vars.ANEVUM_MEMBER_PREVIEW_ENABLED !== "false") {
     errors.push("The top-level Worker must not enable preview identity.");
   }
