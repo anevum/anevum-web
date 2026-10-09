@@ -26,7 +26,7 @@ test("readiness workflow only gathers information and cannot auto-migrate or ena
   assert.doesNotMatch(workflow, /d1 migrations apply|wrangler deploy|wrangler secret put|wrangler d1 create/i);
   assert.doesNotMatch(liveProbe, /method:\s*["'](?:POST|PUT|PATCH|DELETE)["']/);
   assert.doesNotMatch(liveProbe, /Cookie\s*:|Authorization\s*:/);
-  assert.equal(config.vars.ANEVUM_MEMBERS_ENABLED, "false");
+  assert.equal(config.vars.ANEVUM_MEMBERS_ENABLED, "true");
   assert.equal(config.vars.ANEVUM_MEMBER_PREVIEW_ENABLED, "false");
   assert.equal(staging.vars.ANEVUM_MEMBERS_ENABLED, "true");
   assert.notEqual(config.d1_databases[0].database_id, staging.d1_databases[0].database_id);
