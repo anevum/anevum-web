@@ -29,3 +29,11 @@ CREATE TABLE IF NOT EXISTS member_billing_events (
   created_at INTEGER NOT NULL,
   received_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
+
+-- Dedicated short-lived D1 mutex prevents concurrent Checkout creation for one user.
+-- Never store Stripe tokens, card data or broker credentials in this table.
+CREATE TABLE IF NOT EXISTS member_billing_checkout_locks (
+  user_id TEXT PRIMARY KEY NOT NULL REFERENCES "user"("id") ON DELETE CASCADE,
+  lock_token TEXT NOT NULL,
+  expires_at INTEGER NOT NULL
+);
