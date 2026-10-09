@@ -134,11 +134,11 @@ export default function CommandAccountTracker({
           <strong>Equity + executions</strong>
         </div>
         <small>
-          {history?.timeframe || "5Min"} · {history?.status === "unavailable"
-            ? "HISTORY UNAVAILABLE"
-            : chart?.suppressedCount
-              ? `LIVE · ${chart.suppressedCount} TRANSIENT SAMPLE${chart.suppressedCount === 1 ? "" : "S"} SUPPRESSED`
-              : "LIVE · MARKET GAPS COMPRESSED"}
+          {history?.timeframe || "5Min"} BROKER HISTORY · {history?.status === "unavailable"
+            ? "SOURCE UNAVAILABLE"
+            : chart?.last
+              ? `LAST SAMPLE ${clockTime(chart.last.at)}${chart.suppressedCount ? ` · ${chart.suppressedCount} TRANSIENT SAMPLE(S) EXCLUDED` : ""}`
+              : "AWAITING MEASURED SAMPLES"}
         </small>
       </header>
 
@@ -181,7 +181,7 @@ export default function CommandAccountTracker({
           ) : (
             <div className="command-empty">
               {history?.status === "unavailable"
-                ? "Broker equity history is temporarily unavailable. Current balances and executions remain live."
+                ? "Broker equity history is temporarily unavailable. The last fetched balances and executions are shown separately."
                 : "Account equity history will appear after at least two broker history points are available."}
             </div>
           )}
