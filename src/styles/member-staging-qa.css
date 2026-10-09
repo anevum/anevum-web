@@ -1,0 +1,26 @@
+/* Isolated staging-only read-only acceptance; no visual success authority. */
+.member-staging-qa { max-width: 850px; }
+.member-staging-qa h1 { margin-bottom: 20px; }
+.member-staging-qa .member-primary-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 11px 18px;
+  border: 1px solid #315e7d;
+  border-radius: 7px;
+  color: #fff;
+  background: #315e7d;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 600;
+}
+.member-staging-qa .member-primary-action:disabled { opacity: .5; cursor: not-allowed; }
+.member-staging-qa a { color: var(--workshop-accent); }
+.member-staging-qa ol { padding-left: 22px; color: var(--workshop-copy); }
+.member-staging-qa ol li { margin-bottom: 14px; }
+.member-qa-results { border: 1px solid var(--workshop-line); border-radius: 8px; padding: 20px; margin-top: 24px; }
+.member-qa-results h3 { margin: 0 0 14px; font-size: 1rem; }
+.member-qa-results ul { margin: 0; padding: 0; list-style: none; }
+.member-qa-results li { display: flex; gap: 12px; align-items: start; padding: 12px 0; border-top: 1px solid var(--workshop-line); font-size: .9rem; }
+.member-qa-results li span { min-width: 45px; font-size: .72rem; font-weight: 800; letter-spacing: .03em; color: var(--workshop-copy); }
