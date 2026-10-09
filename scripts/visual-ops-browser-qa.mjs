@@ -206,12 +206,17 @@ async function runCase(route, viewport) {
       const posts = root?.querySelectorAll(".post") || [];
       const isVisible = el => { if (!el || getComputedStyle(el).display === "none") return false; const rect=el.getBoundingClientRect(); return rect.width > 0 && rect.right > 0 && rect.left < innerWidth && rect.bottom > 0 && rect.top < innerHeight; };
       const width = el => Math.round(el?.getBoundingClientRect().width || 0);
+      const createGlyph=root?.querySelector(".mobile-create .ico");
+      const createStyle=createGlyph ? getComputedStyle(createGlyph) : null;
+      const createGlyphPaintWidth=createGlyph && createStyle ?
+        Math.round(createGlyph.getBoundingClientRect().width -
+          parseFloat(createStyle.paddingLeft||"0") - parseFloat(createStyle.paddingRight||"0")) : 0;
       return {
         isolated: Boolean(host && root && !document.querySelector(".global-header")),
         headerHeight: Math.round(header?.getBoundingClientRect().height || 0),
         leftWidth: width(left), centerWidth: width(center), rightWidth: width(right),
         leftVisible: isVisible(left), rightVisible: isVisible(right),
-        mobileVisible: isVisible(mobile), postCount: posts.length,
+        mobileVisible: isVisible(mobile), createGlyphPaintWidth, postCount: posts.length,
         hasAuthenticNotes: Boolean(root?.querySelector('[href*="field-notes/anevum-lean-runtime-reset"]')),
         containsFiction: /Mara Cole|Eli Rowan|184 votes|sample community/i.test(root?.textContent || "")
       };
@@ -221,7 +226,8 @@ async function runCase(route, viewport) {
     if(!ui.isolated || ui.postCount<6 || !ui.hasAuthenticNotes || ui.containsFiction ||
       !ui.headerHeight || (desktop && (Math.abs(ui.headerHeight-64)>2 || !ui.leftVisible || !ui.rightVisible ||
         Math.abs(ui.leftWidth-252)>4 || Math.abs(ui.rightWidth-312)>4 || ui.centerWidth<500)) ||
-      (!desktop && viewport.width<721 && (!ui.mobileVisible || ui.rightVisible || ui.leftVisible))) {
+      (!desktop && viewport.width<721 && (!ui.mobileVisible || ui.rightVisible || ui.leftVisible ||
+        ui.createGlyphPaintWidth<14))) {
       throw new Error("Commons V5 rendered-app parity failed: "+JSON.stringify({viewport:viewport.name,...ui}));
     }
 
