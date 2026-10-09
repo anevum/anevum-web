@@ -95,9 +95,9 @@ export default function Feed() {
   return (
     <div className="studio-page feed-page workshop-feed">
       <header className="workshop-page-intro">
-        <p className="workshop-kicker">PUBLIC FEED</p>
-        <h1>Updates from the workbench.</h1>
-        <p>What's changed, what I've tested, and what I've learned. These are actual published records and public-safe RHEN observations, not a social feed.</p>
+        <p className="workshop-kicker">ANEVUM / UPDATES</p>
+        <h1>What has changed.</h1>
+        <p>Follow releases, experiments, and public-safe RHEN observations. This chronological record is separate from discussions inside Commons, and it contains no invented activity.</p>
       </header>
       <section className="workshop-feed-list-section" aria-label="Updates">
         <div className="workshop-feed-source" role="status">
