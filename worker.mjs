@@ -261,8 +261,7 @@ async function publicTradingEvents() {
   const response = await fetch(TRADER_BASE + "/v1/trading-public-events", {
     method: "GET",
     headers: { Accept: "text/event-stream" },
-    redirect: "manual",
-    signal: AbortSignal.timeout(20000)
+    redirect: "manual"
   });
   if (!response.ok || !response.body) {
     return jsonResponse({ message: "Public event stream unavailable." }, 503);
