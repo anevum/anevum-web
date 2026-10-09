@@ -21,7 +21,7 @@ const stagingEnv = () => ({
   STRIPE_FOUNDING_PRICE_ID: "price_Founding123",
   STRIPE_STANDARD_PRICE_ID: "price_Standard456"
 });
-const tables = ["member_billing_customers", "member_billing_subscriptions", "member_billing_events", "member_billing_checkout_locks"];
+const tables = ["member_billing_customers", "member_billing_subscriptions", "member_billing_events", "member_billing_checkout_locks", "member_billing_sync_state"];
 function mockDb({customer=true, row=null}={}) {
   const eventIds = new Set();
   const batched = [];
