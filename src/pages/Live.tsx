@@ -43,7 +43,7 @@ function shortTime(value?: string | null) {
 }
 
 export default function Live() {
-  const { data, error, now } = useLiveTrading(5000);
+  const { data, error, now, transport } = useLiveTrading(5000);
   const [selected, setSelected] = useState<TerminalFilter>("ALL");
   const [feedFilter, setFeedFilter] = useState<TerminalFilter>("ALL");
   const [evidenceTab, setEvidenceTab] = useState<EvidenceTab>("OVERVIEW");
@@ -156,7 +156,7 @@ export default function Live() {
         </div>
         <div className="pt-meta">
           <span>{new Date(now).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}</span>
-          <span>HTTP SNAPSHOT {ageText(data?.generated_at, now)} · LAST SCAN {ageText(data?.operational?.latest_scan?.observed_at, now)}</span>
+          <span>{transport === "STREAM" ? "CANONICAL EVENT STREAM" : "PERIODIC HTTP SNAPSHOT"} {ageText(data?.generated_at, now)} · LAST SCAN {ageText(data?.operational?.latest_scan?.observed_at, now)}</span>
           <SystemStatusChip state={fleet} />
         </div>
       </header>
