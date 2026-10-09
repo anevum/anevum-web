@@ -43,3 +43,9 @@ CREATE TABLE IF NOT EXISTS member_billing_sync_state (
  last_attempt_ms INTEGER NOT NULL DEFAULT 0,
  last_success_ms INTEGER NOT NULL DEFAULT 0
 );
+
+-- Free, opt-in prerelease interest only. No paid or execution entitlements.
+CREATE TABLE IF NOT EXISTS member_rhen_beta_waitlist (
+  user_id TEXT PRIMARY KEY NOT NULL REFERENCES "user"("id") ON DELETE CASCADE,
+  joined_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
