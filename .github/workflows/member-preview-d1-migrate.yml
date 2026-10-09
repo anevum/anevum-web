@@ -79,12 +79,16 @@ jobs:
             > "$RUNNER_TEMP/anevum-preview-drafts.json"
           jq -e '.[0].success == true and .[0].results[0].draft_tables == 1' "$RUNNER_TEMP/anevum-preview-drafts.json" > /dev/null
           npx wrangler d1 execute MEMBER_DB --remote --config wrangler.preview-migrations.jsonc --json \
+            --command "SELECT COUNT(*) AS commons_tables FROM sqlite_master WHERE type = 'table' AND name IN ('commons_members','commons_topics','commons_comments','commons_moderation_events')" \
+            > "$RUNNER_TEMP/anevum-preview-commons.json"
+          jq -e '.[0].success == true and .[0].results[0].commons_tables == 4' "$RUNNER_TEMP/anevum-preview-commons.json" > /dev/null
+          npx wrangler d1 execute MEMBER_DB --remote --config wrangler.preview-migrations.jsonc --json \
             --command 'PRAGMA foreign_key_check' > "$RUNNER_TEMP/anevum-preview-fk.json"
           jq -e '.[0].success == true and (.[0].results | length) == 0' "$RUNNER_TEMP/anevum-preview-fk.json" > /dev/null
           {
             echo '## ANEVUM member preview schema'
             echo ''
-            echo 'Verified: 9 core tables + 1 tenant-scoped RHEN draft table, zero foreign-key violations, isolated preview D1 UUID.'
+            echo 'Verified: 9 core tables + 1 tenant-scoped RHEN draft table + 4 Commons research tables, zero foreign-key violations, isolated preview D1 UUID.'
             echo ''
             echo 'Production D1 and member signup settings are untouched by this preview-only workflow.'
           } >> "$GITHUB_STEP_SUMMARY"
