@@ -8,6 +8,7 @@ import { currentRhenRelease, rhenReleaseBySlug } from "./data/releases";
 const RhenTerminal = lazy(() => import("./pages/RhenTerminal"));
 const Command = lazy(() => import("./pages/Command"));
 const HomeCompany = lazy(() => import("./pages/HomeCompany"));
+const CommonsV5 = lazy(() => import("./commons/CommonsV5"));
 const Products = lazy(() => import("./pages/Products"));
 const RhenProduct = lazy(() => import("./pages/RhenProduct"));
 const Feed = lazy(() => import("./pages/Feed"));
@@ -29,7 +30,7 @@ const Privacy = lazy(() => import("./pages/Privacy"));
 const Terms = lazy(() => import("./pages/Terms"));
 
 const titles: Record<string, string> = {
-  "/": "ANEVUM — Independent Software",
+  "/": "The Commons — ANEVUM",
   "/products": "Projects — ANEVUM",
   "/feed": "Updates — ANEVUM",
   "/field-notes": "Field Notes — ANEVUM",
@@ -49,7 +50,7 @@ const titles: Record<string, string> = {
 };
 
 const descriptions: Record<string, string> = {
-  "/": "Independent software built against real problems, with real data, public evidence, and versioned work.",
+  "/": "The Commons is ANEVUM's evolving community for builders and researchers. Explore real first-party publications and RHEN development.",
   "/products": "The canonical registry of public ANEVUM products. Products appear when they actually exist.",
   "/feed": "A chronological ANEVUM record assembled from real releases, Field Notes, public-safe runtime observations, and research decisions.",
   "/field-notes": "ANEVUM Field Notes document research decisions, failures, engineering changes, releases, and measured evidence.",
@@ -204,7 +205,7 @@ export default function App() {
       <RouteScrollReset />
       <OverflowPan />
       <Routes>
-        <Route path="/" element={<PublicExperience><HomeCompany /></PublicExperience>} />
+        <Route path="/" element={<Suspense fallback={<Loader />}><CommonsV5 /></Suspense>} />
         <Route path="/products" element={<PublicExperience><Products /></PublicExperience>} />
         <Route path="/feed" element={<PublicExperience><Feed /></PublicExperience>} />
         <Route path="/field-notes" element={<PublicExperience><ResearchHub /></PublicExperience>} />
