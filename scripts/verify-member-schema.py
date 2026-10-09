@@ -7,7 +7,7 @@ root = Path(__file__).resolve().parents[1]
 schemas = sorted((root / "migrations").glob("*.sql"))
 names = [p.name for p in schemas]
 base = ["0001_member_platform.sql", "0002_member_rhen_drafts.sql"]
-assert names in (base + ["0004_commons_beta.sql", "0005_commons_reports.sql", "0006_member_alpaca_live_connect.sql"], base + ["0003_member_billing.sql", "0004_commons_beta.sql", "0005_commons_reports.sql", "0006_member_alpaca_live_connect.sql"]), (
+assert names in (base + ["0004_commons_beta.sql", "0005_commons_reports.sql", "0006_member_alpaca_live_connect.sql", "0007_commons_private_research.sql"], base + ["0003_member_billing.sql", "0004_commons_beta.sql", "0005_commons_reports.sql", "0006_member_alpaca_live_connect.sql"]), (
     "Expected canonical member migration order (billing 0003 precedes Commons 0004 when present): " + str(names)
 )
 
@@ -25,7 +25,7 @@ required = {
     "member_rhen_drafts", "commons_members", "commons_topics",
     "commons_comments", "commons_moderation_events", "commons_reports",
     "member_alpaca_live_oauth_states", "member_alpaca_live_connections",
-    "member_alpaca_live_consents",
+    "member_alpaca_live_consents", "commons_private_drafts", "commons_private_revisions",
 }
 assert required <= tables, f"Missing tables: {required - tables}"
 

@@ -41,7 +41,7 @@ jobs:
       - name: Verify member boundaries
         run: npm run test:members
       - name: Verify Commons invitation, privacy and moderation boundaries
-        run: node --test tests/commons.test.mjs tests/commons-beta.test.mjs
+        run: node --test tests/commons.test.mjs tests/commons-beta.test.mjs tests/commons-private-research.test.mjs
       - name: Verify live member data isolation and Commons learning
         run: node --test tests/member-alpaca-live.test.mjs tests/member-alpaca-snapshot.test.mjs tests/member-rhen-draft.test.mjs tests/commons-learning.test.mjs
       - name: Verify member D1 binding isolation
