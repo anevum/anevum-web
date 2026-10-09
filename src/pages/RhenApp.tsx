@@ -7,9 +7,10 @@ import { fieldNotes } from "../data/fieldNotes";
 import { memberAuthClient } from "../member/auth-client";
 import { useMemberAvailability } from "../member/useMemberAvailability";
 
-type RhenSection = "overview" | "evidence" | "research" | "updates";
+type RhenSection = "overview" | "account" | "evidence" | "research" | "updates";
 const nav: { id: RhenSection; label: string; path: string }[] = [
   { id: "overview", label: "Overview", path: "/apps/rhen" },
+  { id: "account", label: "My brokerage", path: "/apps/rhen/account" },
   { id: "evidence", label: "Evidence", path: "/apps/rhen/evidence" },
   { id: "research", label: "Research", path: "/apps/rhen/research" },
   { id: "updates", label: "Updates", path: "/apps/rhen/updates" }
@@ -20,9 +21,11 @@ export default function RhenApp() {
   const availability = useMemberAvailability();
   const { data: session, isPending } = memberAuthClient.useSession();
   const [operator, setOperator] = useState(false);
+  const [brokerage, setBrokerage] = useState<{ integration: string; connectionAvailable: boolean; accountConnected: boolean; paperTradingEnabled: boolean; liveTradingEnabled: boolean; depositsEnabled: boolean; withdrawalsEnabled: boolean } | null>(null);
+  const [brokerError, setBrokerError] = useState(false);
   const release = currentRhenRelease();
   const segment = location.pathname.split("/")[3] || "overview";
-  const section: RhenSection = ["overview", "evidence", "research", "updates"].includes(segment) ? segment as RhenSection : "overview";
+  const section: RhenSection = ["overview", "account", "evidence", "research", "updates"].includes(segment) ? segment as RhenSection : "overview";
 
   useEffect(() => {
     if (!session?.user || availability !== "available") return;
@@ -33,6 +36,17 @@ export default function RhenApp() {
       .catch(() => { if (alive) setOperator(false); });
     return () => { alive = false; };
   }, [session?.user, availability]);
+
+  useEffect(() => {
+    if (!session?.user || availability !== "available" || section !== "account") return;
+    const controller = new AbortController();
+    setBrokerage(null); setBrokerError(false);
+    void fetch("/api/member/brokerage", { cache: "no-store", signal: controller.signal })
+      .then(async response => { if (!response.ok) throw new Error("Unavailable"); return response.json(); })
+      .then(value => { if (!controller.signal.aborted) setBrokerage(value); })
+      .catch(() => { if (!controller.signal.aborted) setBrokerError(true); });
+    return () => controller.abort();
+  }, [session?.user?.id, availability, section]);
 
   if (availability === "checking" || isPending) return <div className="member-page"><p role="status">Opening RHEN…</p></div>;
   if (availability !== "available") return <div className="member-page"><h1>RHEN workspace is not open yet.</h1><p>Public RHEN research and evidence remain available.</p><Link to="/products/rhen">Explore RHEN</Link></div>;
@@ -71,6 +85,14 @@ export default function RhenApp() {
               <div><dt>Profitability</dt><dd>Not established</dd></div>
             </dl>
             <Link to="/apps/rhen/evidence">View real evidence →</Link>
+          </>}
+          {section === "account" && <>
+            <h2>Your brokerage workspace</h2>
+            <p>Member brokerage connections and personally configured trading bots are planned, not operational. This does not control the company operator terminal.</p>
+            <section className="member-app-ready"><p className="workshop-kicker">Personal brokerage</p><h3>Not available yet</h3><p>No member brokerage account can be connected from this workspace today.</p></section>
+            {brokerError ? <p role="alert">Brokerage capability status could not be verified.</p> : !brokerage ? <p role="status">Checking capabilities…</p> : brokerage.connectionAvailable || brokerage.accountConnected || brokerage.paperTradingEnabled || brokerage.liveTradingEnabled || brokerage.depositsEnabled || brokerage.withdrawalsEnabled ? <p role="alert">Unexpected capabilities. Financial controls remain unavailable.</p> : <dl className="member-app-readiness"><div><dt>Brokerage linking</dt><dd>Not enabled</dd></div><div><dt>Personal paper bot</dt><dd>Not enabled</dd></div><div><dt>Personal live bot</dt><dd>Not enabled</dd></div><div><dt>Funding and withdrawals</dt><dd>Not supported</dd></div></dl>}
+            <p>Live member execution will require separate brokerage, regulatory, and security approval.</p>
+            <Link to="/apps/rhen/evidence">Explore verified RHEN evidence</Link>
           </>}
           {section === "evidence" && <>
             <h2>Public evidence</h2>

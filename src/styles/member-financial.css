@@ -1,0 +1,33 @@
+/* Future financial features: honest availability, no invented account values. */
+.member-financial { max-width: 960px; }
+.member-financial .member-page-heading { align-items: start; }
+.member-financial .member-page-heading h1 { margin-top: 8px; }
+.member-financial-status { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: start; gap: 24px; border: 1px solid var(--workshop-line); background: var(--workshop-surface); border-radius: 9px; padding: clamp(18px,3vw,30px); margin-top: 30px; }
+.member-financial-status h2 { font-size: clamp(1.35rem,2.4vw,1.8rem); margin: 7px 0 11px; }
+.member-financial-status p { margin: 0; max-width: 56ch; }
+.member-financial-eyebrow { display: block; color: var(--workshop-muted); font-size: .72rem; font-weight: 700; letter-spacing: .08em; }
+.member-financial-state { display: inline-block; border: 1px solid var(--workshop-line); border-radius: 5px; padding: 6px 10px; font-size: .77rem; font-weight: 650; color: var(--workshop-copy); white-space: nowrap; }
+.member-financial-note { margin: 22px 0; font-size: .92rem; }
+.member-financial a { color: var(--workshop-accent); }
+.member-financial-steps { border-top: 1px solid var(--workshop-line); }
+.member-financial-steps article { display: grid; grid-template-columns: 34px minmax(0,1fr); gap: 14px; padding: 21px 0; border-bottom: 1px solid var(--workshop-line); }
+.member-financial-steps article > span { font-size: .77rem; color: var(--workshop-muted); font-variant-numeric: tabular-nums; padding-top: 3px; }
+.member-financial-steps h3 { font-size: 1rem; margin: 0 0 6px; }
+.member-financial-steps p { font-size: .91rem; margin: 0; }
+.member-financial-footnote { border-top: 1px solid var(--workshop-line); padding-top: 20px; font-size: .84rem; }
+.member-command-rewards { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 14px 24px; }
+.member-command-rewards > div { max-width: 62ch; }
+.member-command-rewards p { margin: 0 0 10px; }
+.member-command-rewards a { color: var(--workshop-accent); font-size: .9rem; font-weight: 600; }
+.member-app-ready { border: 1px solid #dde0df; border-radius: 8px; padding: 22px; margin: 24px 0; background: #fff; }
+.member-app-ready h3 { font-size: 1.1rem; margin: 5px 0 12px; }
+.member-app-ready p { margin: 0; color: #59656e; }
+.member-app-readiness { display: grid; border-top: 1px solid #dde0df; margin: 24px 0; }
+.member-app-readiness div { display: flex; justify-content: space-between; gap: 15px; padding: 13px 0; border-bottom: 1px solid #dde0df; }
+.member-app-readiness dt { color: #59656e; }
+.member-app-readiness dd { margin: 0; font-weight: 650; text-align: right; }
+@media(max-width:640px) {
+  .member-financial-status { gap: 18px; }
+  .member-financial-steps article { grid-template-columns: 26px minmax(0,1fr); gap: 10px; }
+  .member-app-readiness div { flex-wrap: wrap; }
+}

@@ -78,6 +78,7 @@ function CommandHome({ enabled = false, checking = false, identity }: {
           <Link to="/command" aria-current="page" className="active">My programs</Link>
           {signedIn ? <a href="#command-following">Following</a> : <Link to="/feed">Updates</Link>}
           <Link to={signedIn ? "/me/settings" : "/sign-in"}>Profile &amp; account</Link>
+          <Link to="/me/rewards">Member rewards</Link>
           <Link to="/products">All projects</Link>
         </nav>
         <div className="member-command-account">
@@ -105,6 +106,7 @@ function CommandHome({ enabled = false, checking = false, identity }: {
             </article>;
           })}
         </section>
+        <section className="member-command-section member-command-rewards" aria-labelledby="command-rewards-title"><div><h2 id="command-rewards-title">Member rewards</h2><p>We are exploring ways to return genuine business surplus to people who support ANEVUM. Rewards are not active; no credits accrue.</p></div><Link to="/me/rewards">How rewards may work</Link></section>
         {signedIn && <section id="command-following" className="member-command-section" aria-labelledby="command-following-title"><h2 id="command-following-title">Following</h2>{notes.length ? <div className="member-notes">{notes.map(note => <Link key={note.slug} to={"/field-notes/" + note.slug}><time>{note.date}</time><strong>{note.title}</strong></Link>)}</div> : <p>Follow a program to see its published notes and updates here.</p>}</section>}
       </main>
     </div>
