@@ -52,7 +52,7 @@ test("Commons never opens for members when the feature flag is unset or false", 
 });
 
 test("schema readiness requires all four Commons tables and rejects database outages", async () => {
-  const tables = ["commons_members", "commons_topics", "commons_comments", "commons_moderation_events"];
+  const tables = ["commons_members", "commons_topics", "commons_comments", "commons_moderation_events", "commons_reports"];
   const fake = names => ({ prepare: () => ({ all: async () => ({ results: names.map(name => ({ name })) }) }) });
   assert.equal(await commonsSchemaReady(fake(tables)), true);
   assert.equal(await commonsSchemaReady(fake(tables.slice(0, 3))), false);
@@ -70,7 +70,7 @@ function fakeDB({ member = null, topics = [] } = {}) {
           calls.push({ sql, params });
           return {
             all: async () => ({ results: sql.includes("sqlite_master")
-              ? ["commons_members", "commons_topics", "commons_comments", "commons_moderation_events"].map(name => ({ name }))
+              ? ["commons_members", "commons_topics", "commons_comments", "commons_moderation_events", "commons_reports"].map(name => ({ name }))
               : sql.includes("FROM commons_topics t") ? topics : [] }),
             first: async () => sql.includes("FROM commons_members WHERE user_id") ? member : null,
             run: async () => ({ meta: { changes: 1 } })
@@ -78,7 +78,7 @@ function fakeDB({ member = null, topics = [] } = {}) {
         },
         all: async () => {
           calls.push({ sql, params: [] });
-          return { results: ["commons_members", "commons_topics", "commons_comments", "commons_moderation_events"].map(name => ({ name })) };
+          return { results: ["commons_members", "commons_topics", "commons_comments", "commons_moderation_events", "commons_reports"].map(name => ({ name })) };
         }
       };
     }
@@ -116,7 +116,7 @@ test("admitted member feed exposes only member-visible topics, with no query-sel
 
 test("account export has a separate Commons record and fails safely before migration", async () => {
   assert.deepEqual(await exportCommonsData({}, "user-a"), {
-    membership: null, topics: [], comments: []
+    membership: null, topics: [], comments: [], reports: []
   });
   const member = source("src/server/member.mjs");
   assert.ok(member.indexOf("if (!user?.id)") < member.indexOf('pathname === "/api/member/commons"'));
