@@ -62,23 +62,37 @@ export function validateCommonsComment(value) {
   return { body: cleanString(value.body, 3, 1500, "Comment") };
 }
 
+export function validateCommonsReport(value) {
+  if (!value || typeof value !== "object" || Array.isArray(value) ||
+      Object.keys(value).sort().join(",") !== "itemId,itemType,reason") {
+    throw new Error("Only item type, item ID, and report reason are accepted.");
+  }
+  if (!["topic", "comment"].includes(value.itemType) ||
+      typeof value.itemId !== "string" || !topicIdPattern.test(value.itemId) ||
+      !["spam", "harassment", "privacy", "misleading_claims", "other"].includes(value.reason)) {
+    throw new Error("Invalid report target or reason.");
+  }
+  return { itemType: value.itemType, itemId: value.itemId, reason: value.reason };
+}
+
 export async function commonsSchemaReady(db) {
   if (typeof db?.prepare !== "function") return false;
   try {
     const result = await db.prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name LIKE 'commons_%'").all();
     const present = new Set((result?.results || []).map(row => row.name));
-    return ["commons_members","commons_topics","commons_comments","commons_moderation_events"].every(table => present.has(table));
+    return ["commons_members","commons_topics","commons_comments","commons_moderation_events","commons_reports"].every(table => present.has(table));
   } catch { return false; }
 }
 
 export async function exportCommonsData(db, userId) {
-  if (!await commonsSchemaReady(db)) return { membership: null, topics: [], comments: [] };
-  const [membership, topics, comments] = await Promise.all([
+  if (!await commonsSchemaReady(db)) return { membership: null, topics: [], comments: [], reports: [] };
+  const [membership, topics, comments, reports] = await Promise.all([
     db.prepare("SELECT role, status, joined_at FROM commons_members WHERE user_id = ?").bind(userId).first(),
     db.prepare("SELECT id, kind, subject, title, body, visibility, created_at FROM commons_topics WHERE author_id = ? ORDER BY created_at DESC").bind(userId).all(),
-    db.prepare("SELECT id, topic_id, body, visibility, created_at FROM commons_comments WHERE author_id = ? ORDER BY created_at DESC").bind(userId).all()
+    db.prepare("SELECT id, topic_id, body, visibility, created_at FROM commons_comments WHERE author_id = ? ORDER BY created_at DESC").bind(userId).all(),
+    db.prepare("SELECT id, topic_id, comment_id, reason, status, created_at, reviewed_at FROM commons_reports WHERE reporter_id = ? ORDER BY created_at DESC").bind(userId).all()
   ]);
-  return { membership: membership || null, topics: topics.results || [], comments: comments.results || [] };
+  return { membership: membership || null, topics: topics.results || [], comments: comments.results || [], reports: reports.results || [] };
 }
 
 const authorName = "COALESCE(NULLIF(TRIM(p.display_name), ''), u.name)";
@@ -149,6 +163,64 @@ export async function commonsEndpoint(request, env, user, pathname) {
       .bind(id, user.id, input.kind, input.subject, input.title, input.body, user.id).run();
     if (result.meta?.changes !== 1) return respond({ message: "Daily research contribution limit reached." }, 429);
     return respond({ id, created: true }, 201);
+  }
+
+
+  // Reports are bound to server-authenticated contributors; reporter identity is
+  // never exposed in moderator responses. Content stays in the original thread.
+  if (pathname === "/api/member/commons/reports") {
+    if (request.method === "GET") {
+      if (!moderator) return respond({ message: "Moderator access required." }, 403);
+      const results = await db.prepare(`SELECT r.id, r.reason, r.created_at AS createdAt,
+        CASE WHEN r.topic_id IS NULL THEN 'comment' ELSE 'topic' END AS itemType,
+        COALESCE(r.topic_id, c.topic_id) AS topicId, t.title AS topicTitle
+        FROM commons_reports r
+        LEFT JOIN commons_comments c ON c.id = r.comment_id
+        JOIN commons_topics t ON t.id = COALESCE(r.topic_id, c.topic_id)
+        WHERE r.status = 'open'
+        ORDER BY r.created_at ASC, r.id ASC LIMIT 50`).all();
+      return respond({ reports: results.results || [] });
+    }
+    if (request.method !== "POST") return respond({ message: "Method not allowed." }, 405);
+    let input;
+    try { input = validateCommonsReport(await bodyObject(request, ["itemType","itemId","reason"], 256)); }
+    catch (error) { return respond({ message: error instanceof Error ? error.message : "Invalid report." }, 400); }
+    const target = input.itemType === "topic" ? "t.id" : "c.id";
+    const from = input.itemType === "topic"
+      ? "commons_topics t"
+      : "commons_comments c JOIN commons_topics t ON t.id = c.topic_id";
+    const visible = input.itemType === "topic"
+      ? "t.visibility = 'members'"
+      : "t.visibility = 'members' AND c.visibility = 'members'";
+    const column = input.itemType === "topic" ? "topic_id" : "comment_id";
+    const statement = `INSERT OR IGNORE INTO commons_reports(id, reporter_id, ${column}, reason)
+      SELECT ?, ?, ${target}, ? FROM ${from}
+      WHERE ${target} = ? AND ${visible}
+        AND (SELECT COUNT(*) FROM commons_reports
+             WHERE reporter_id = ? AND created_at >= datetime('now','-1 day')) < 10`;
+    try {
+      const result = await db.prepare(statement).bind(crypto.randomUUID(), user.id, input.reason, input.itemId, user.id).run();
+      if (result.meta?.changes !== 1) return respond({ message: "Report already received, limited, or item unavailable." }, 409);
+      return respond({ created: true }, 201);
+    } catch {
+      return respond({ message: "Report could not be saved." }, 503);
+    }
+  }
+  const reportReview = /^\\/api\\/member\\/commons\\/reports\\/([^/]+)$/.exec(pathname);
+  if (reportReview) {
+    if (!moderator) return respond({ message: "Moderator access required." }, 403);
+    if (request.method !== "PATCH") return respond({ message: "Method not allowed." }, 405);
+    const id = reportReview[1];
+    if (!topicIdPattern.test(id)) return respond({ message: "Report not found." }, 404);
+    let input;
+    try { input = await bodyObject(request, ["reviewed"], 128); }
+    catch { return respond({ message: "Invalid review action." }, 400); }
+    if (Object.keys(input).length !== 1 || input.reviewed !== true) return respond({ message: "Invalid review action." }, 400);
+    const result = await db.prepare(`UPDATE commons_reports
+      SET status = 'reviewed', reviewed_by = ?, reviewed_at = datetime('now')
+      WHERE id = ? AND status = 'open'`).bind(user.id, id).run();
+    if (result.meta?.changes !== 1) return respond({ message: "Report not found or already reviewed." }, 404);
+    return respond({ reviewed: true });
   }
 
   const topicMatch = /^\/api\/member\/commons\/topics\/([^/]+)$/.exec(pathname);
