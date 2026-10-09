@@ -82,8 +82,8 @@ test("member drafts cannot reach RHEN operator endpoint or browser secrets", () 
   const staging = JSON.parse(readFileSync(new URL("../wrangler.member-staging.jsonc", import.meta.url), "utf8"));
   assert.ok(members.indexOf("if (!user?.id)") < members.indexOf('pathname === "/api/member/rhen/draft"'));
   assert.match(members, /memberRhenDraftSchemaReady\(db\)/);
-  assert.match(ui, /Configuration only/);
-  assert.match(ui, /does not control the operator/);
+  assert.match(ui, /Saved settings · Trading inactive/);
+  assert.match(ui, /cannot control another member/);
   assert.doesNotMatch(ui, /api\/command|api\/trader|accessToken|alpacaKey/);
   assert.equal(prod.vars.ANEVUM_MEMBER_RHEN_DRAFTS_ENABLED, "false");
   assert.equal(staging.vars.ANEVUM_MEMBER_RHEN_DRAFTS_ENABLED, "true");
