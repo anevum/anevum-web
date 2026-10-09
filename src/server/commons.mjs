@@ -90,7 +90,7 @@ const topicSelect = `SELECT t.id, t.kind, t.subject, t.title, t.body, t.created_
   LEFT JOIN member_profiles p ON p.user_id = t.author_id`;
 
 async function listTopics(db) {
-  const rows = await db.prepare(topicSelect + " WHERE t.visibility = 'members' ORDER BY t.created_at DESC, t.id DESC LIMIT 30").all();
+  const rows = await db.prepare(topicSelect + " WHERE t.visibility = 'members' ORDER BY t.created_at DESC, t.id DESC LIMIT ?").bind(30).all();
   return (rows.results || []).map(({ visibility, ...row }) => row);
 }
 
