@@ -84,7 +84,7 @@ test("production is default-disabled and staging requires valid test keys and ex
   ]) assert.equal(prod.vars[flag],"false");
   assert.equal(stage.vars.ANEVUM_RHEN_BILLING_ENABLED,"true");
   assert.equal(stage.vars.ANEVUM_RHEN_BILLING_WEBHOOKS_ENABLED,"true");
-  assert.equal(stage.vars.ANEVUM_RHEN_BILLING_CHECKOUT_ENABLED,"false");
+  assert.equal(stage.vars.ANEVUM_RHEN_BILLING_CHECKOUT_ENABLED,"true");
   assert.equal(stage.vars.ANEVUM_RHEN_FOUNDING_ENABLED,"false");
   assert.equal(stage.vars.ANEVUM_RHEN_BILLING_LIVE_APPROVED,"false");
   for(const vars of [prod.vars,stage.vars]) {

@@ -24,6 +24,8 @@ const displayPrice = (plan: Plan) => new Intl.NumberFormat("en-US", {
 }).format(plan.amountCents / 100);
 
 export default function MemberBilling() {
+  const sandboxOnly = typeof window !== "undefined" &&
+    window.location.hostname === "anevum-member-staging.devonakins.workers.dev";
   const availability = useMemberAvailability();
   const { data: session, isPending } = memberAuthClient.useSession();
   const [search] = useSearchParams();
@@ -131,6 +133,7 @@ export default function MemberBilling() {
     <section className="member-page member-settings">
       <p className="workshop-kicker">Command / Subscription</p>
       <h1>RHEN Cloud</h1>
+      {sandboxOnly && <p role="status"><strong>Stripe sandbox test only.</strong> Use Stripe test payment methods, never a real card. No real charges, brokerage connections or RHEN trading can occur here.</p>}
       <p>ANEVUM accounts and public research remain free. RHEN Cloud is a proposed subscription for the separately approved, hosted RHEN service. It does not enable trading today.</p>
       {search.get("checkout") === "success" && <p role="status">Checkout returned. Billing access is confirmed only after Stripe webhook reconciliation; refresh this page to see verified status.</p>}
       {search.get("checkout") === "cancelled" && <p role="status">Checkout was cancelled. No subscription is inferred from this page.</p>}

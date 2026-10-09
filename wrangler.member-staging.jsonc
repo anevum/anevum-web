@@ -13,7 +13,7 @@
     "ANEVUM_MEMBER_PREVIEW_ENABLED": "true",
     "MEMBER_PREVIEW_ORIGIN": "https://anevum-member-staging.devonakins.workers.dev",
     "ANEVUM_RHEN_BILLING_ENABLED": "true",
-    "ANEVUM_RHEN_BILLING_CHECKOUT_ENABLED": "false",
+    "ANEVUM_RHEN_BILLING_CHECKOUT_ENABLED": "true",
     "ANEVUM_RHEN_BILLING_WEBHOOKS_ENABLED": "true",
     "ANEVUM_RHEN_FOUNDING_ENABLED": "false",
     "ANEVUM_RHEN_BILLING_LIVE_APPROVED": "false",

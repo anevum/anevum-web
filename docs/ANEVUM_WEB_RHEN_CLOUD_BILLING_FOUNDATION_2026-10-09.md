@@ -140,3 +140,17 @@ The beta interest domain is deliberately separate from payment entitlements. Sig
 - The `POST` route ignores any purported client user ID and rejects unexpected JSON fields. Member identity is always resolved from the Better Auth session, and all non-GET mutations pass the existing exact same-origin guard.
 - The production and staging deployment sources currently set the flag to `false`; the staging deployment verifier and production binding verifier reject enabling the flag without deliberate release approval.
 - No email invitation automation, brokerage link, paper executor, runtime host or payment collection is introduced with the waitlist.
+
+## Sandbox-only checkout testing enabled (October 9, 2026)
+
+After verified provider delivery of `customer.subscription.created` and `customer.subscription.updated` test events (Stripe delivery_success=true), staging checkout is enabled for authenticated, verified staging members only; **production checkout, founding admission, beta waitlist, and all brokerage execution stay OFF**. The synthetic incomplete provider subscription used for delivery was closed without completing payment.
+
+- Exact staging origin: `https://anevum-member-staging.devonakins.workers.dev/me/billing`.
+- The stage Worker uses `ANEVUM_STRIPE_MODE=test`, an independent preview D1 database and sandbox-only price IDs.
+- Only the **$4.99 standard** test checkout is open; the **$2.99 founding** tier remains visible as planned pricing but cannot be selected.
+- Session-scope, verified member email, same-origin mutation, provider price verification and D1 Checkout mutex are mandatory before redirecting to Stripe.
+- Stripe sandbox card `4242 4242 4242 4242` with any future expiry and any CVC is a testing fixture, not a real credit-card charge.
+- The first complete payment, successful return, signed webhook reconciliation, cross-member denial, portal cancellation, account deletion and no-orphan-subscription checks are **not** certified until two authenticated staging accounts finish E2E acceptance.
+- Never send real payment-card details or Stripe sandbox secret keys to ChatGPT, GitHub, Slack, or logs.
+
+The existing `RHEN Cloud Staging Deployment` GitHub Actions workflow performs a staging-only deployment, confirms signed webhook forgery rejection, probes anonymous session denial, inspects isolated preview D1 and rejects any unsafe production flags. Do not merge or enable billing on the production Worker for sandbox testing.

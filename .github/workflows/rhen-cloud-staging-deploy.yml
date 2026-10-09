@@ -51,7 +51,7 @@ jobs:
             .workers_dev == true and
             .vars.ANEVUM_STRIPE_MODE == "test" and
              .vars.ANEVUM_RHEN_BILLING_ENABLED == "true" and
-            .vars.ANEVUM_RHEN_BILLING_CHECKOUT_ENABLED == "false" and
+            .vars.ANEVUM_RHEN_BILLING_CHECKOUT_ENABLED == "true" and
             .vars.ANEVUM_RHEN_BILLING_WEBHOOKS_ENABLED == "true" and
             .vars.ANEVUM_RHEN_BILLING_LIVE_APPROVED == "false" and
             .vars.ANEVUM_RHEN_BETA_WAITLIST_ENABLED == "false" and
@@ -171,14 +171,14 @@ jobs:
             -H 'content-type: application/json' --data '{"plan":"standard"}' \
             "$STAGING_ORIGIN/api/member/billing/checkout")"
           test "$checkout" = "401"
-          echo 'PASS staging private member 401, owner operator 401, forged webhook rejected 400, Checkout OFF'
+          echo 'PASS staging private member 401, operator 401, forged webhook rejected 400, no anonymous sandbox Checkout'
           {
             echo '## RHEN Cloud staging-only deployment'
             echo
             echo "Isolated Worker: $STAGING_ORIGIN"
             echo "Database: anevum-members-preview (16 tables; FK clean)"
-            echo "Stripe sandbox price IDs pinned; signed webhook receiver ON; Checkout OFF."
+            echo "Stripe sandbox prices pinned; signed webhooks ON; verified staging members can test Checkout; founding plan and production remain OFF."
             echo "No real customer purchase attempted, and no production or RHEN live deployment."
             echo
-            echo "Provider-signed webhook delivery and browser-authenticated Checkout remain unverified."
+            echo "Provider-signed webhook delivery was verified separately; full authenticated Checkout completion remains pending."
           } >> "$GITHUB_STEP_SUMMARY"
