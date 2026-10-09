@@ -1,0 +1,114 @@
+name: ANEVUM Member Production Readiness (Read Only)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/member-public-readiness.yml'
+      - 'scripts/probe-member-public-readiness.mjs'
+      - 'tests/member-adversarial.test.mjs'
+      - 'src/server/member.mjs'
+      - 'src/pages/Privacy.tsx'
+      - 'src/pages/Terms.tsx'
+      - 'wrangler.jsonc'
+      - 'wrangler.member-staging.jsonc'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: anevum-member-production-readiness
+  cancel-in-progress: false
+
+jobs:
+  read-only-member-preflight:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install pinned Node dependencies
+        run: npm install --no-audit --no-fund
+      - name: Verify member configuration and local security contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          node scripts/verify-member-bindings.mjs --require-config
+          node scripts/verify-member-staging-deploy.mjs
+          node --test tests/member-adversarial.test.mjs tests/member-boundaries.test.mjs tests/member-command-cutover.test.mjs
+          test "$(jq -r '.name' wrangler.jsonc)" = 'anevum-web-nextgen'
+          test "$(jq -r '.vars.ANEVUM_MEMBERS_ENABLED' wrangler.jsonc)" = 'false'
+          test "$(jq -r '.vars.ANEVUM_MEMBER_PREVIEW_ENABLED' wrangler.jsonc)" = 'false'
+          test "$(jq -r '.d1_databases[0].database_id' wrangler.jsonc)" = '7f0d4c0c-2e85-4900-8504-1347954e1df1'
+          test "$(jq -r '.previews.d1_databases[0].database_id' wrangler.jsonc)" = 'a537432e-d216-4b31-8b22-19662cc3a44a'
+      - name: Confirm encrypted names on PRODUCTION Worker only — never read values
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$CLOUDFLARE_ACCOUNT_ID"
+          test -n "$CLOUDFLARE_API_TOKEN"
+          curl --fail --silent --show-error --retry 2 --max-time 20 \
+            -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+            "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/anevum-web-nextgen/secrets" \
+            -o "$RUNNER_TEMP/member-prod-secret-inventory.json"
+          jq -e '.success == true and (.result | type == "array")' \
+            "$RUNNER_TEMP/member-prod-secret-inventory.json" >/dev/null
+          for name in GOOGLE_CLIENT_ID GOOGLE_CLIENT_SECRET BETTER_AUTH_SECRET; do
+            if jq -e --arg n "$name" \
+              'any(.result[]; .name == $n and .type == "secret_text")' \
+              "$RUNNER_TEMP/member-prod-secret-inventory.json" >/dev/null; then
+              echo "PASS encrypted production binding name: $name"
+            else
+              echo "::error::Missing production encrypted Secret: $name on Worker anevum-web-nextgen."
+              echo "::error::A Text variable is NOT an encrypted Worker Secret. Rotate any values that were previously stored as Text."
+              exit 1
+            fi
+          done
+          echo 'Encryption/binding NAMES verified. Values, validity, Google callback and private Better Auth rotation are NOT verified.'
+      - name: Inspect production D1 identity and schema — SELECT only
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_D1_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$CLOUDFLARE_API_TOKEN"
+          npx wrangler d1 list --json > "$RUNNER_TEMP/member-d1-inventory.json"
+          jq -e '
+            ([.[] | select(.name == "anevum-members" and .uuid == "7f0d4c0c-2e85-4900-8504-1347954e1df1")] | length) == 1 and
+            ([.[] | select(.name == "anevum-members-preview" and .uuid == "a537432e-d216-4b31-8b22-19662cc3a44a")] | length) == 1
+          ' "$RUNNER_TEMP/member-d1-inventory.json" >/dev/null
+
+          npx wrangler d1 execute MEMBER_DB --remote --config wrangler.jsonc --json \
+            --command "SELECT COUNT(*) AS member_tables FROM sqlite_master WHERE type='table' AND name IN ('user','session','account','verification','rateLimit','member_profiles','member_saved_apps','member_project_follows','member_entitlements')" \
+            > "$RUNNER_TEMP/member-prod-table-count.json"
+          jq -e '.[0].success == true and (.[0].results[0].member_tables == 0 or .[0].results[0].member_tables == 9)' \
+            "$RUNNER_TEMP/member-prod-table-count.json" >/dev/null
+          count="$(jq -r '.[0].results[0].member_tables' "$RUNNER_TEMP/member-prod-table-count.json")"
+          echo "PROD_D1_MEMBER_TABLES=$count"
+          echo "PREVIEW_D1_SEPARATE=PASS"
+          if [ "$count" = '0' ]; then
+            echo 'Production D1 member schema is not migrated; explicit owner-authorized migration remains required.'
+          else
+            echo 'Production D1 member schema exists; verify prior approval/migration evidence separately.'
+          fi
+      - name: Read-only live anonymous Access, member and OAuth readiness probes
+        run: node scripts/probe-member-public-readiness.mjs
+      - name: Release readiness checkpoint
+        shell: bash
+        run: |
+          {
+            echo '## ANEVUM member production readiness (read-only)'
+            echo ''
+            echo 'Production registrations: **DISABLED**; no schema migrations, trades or account writes were performed.'
+            echo 'Cloudflare production encrypted auth binding NAMES, D1 identities/schema count, staging Google readiness, anonymous denials and RHEN Access: verified above.'
+            echo 'No secret value, Google console client configuration, private auth-secret rotation or real two-member browser cookies were inspected.'
+            echo ''
+            echo 'Next: confirm private production OAuth rotation + correct Google production callback; execute separately approved manual production D1 migration; separately approve production signup activation.'
+          } >> "$GITHUB_STEP_SUMMARY"
