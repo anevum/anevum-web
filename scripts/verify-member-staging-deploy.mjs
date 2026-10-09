@@ -52,7 +52,24 @@ assert(stage?.vars?.ANEVUM_MEMBER_RHEN_DRAFTS_ENABLED === "true", "Only staging 
 assert(stage?.vars?.ANEVUM_MEMBER_PREVIEW_ENABLED === "true", "Staging test OAuth must use explicitly enabled preview identity.");
 assert(stage?.vars?.COMMAND_LIVE_STREAM_ENABLED === "false", "Staging must disable RHEN live command stream.");
 assert(stage?.vars?.MEMBER_PREVIEW_ORIGIN === verifiedStagingOrigin, "Staging identity must use its exact verified HTTPS origin.");
-const stageVarsAllowed = new Set(["COMMAND_AUTH_MODE", "COMMAND_LIVE_STREAM_ENABLED", "ANEVUM_MEMBERS_ENABLED", "ANEVUM_MEMBER_RHEN_DRAFTS_ENABLED", "ANEVUM_MEMBER_PREVIEW_ENABLED", "MEMBER_PREVIEW_ORIGIN"]);
+const billingFlags = [
+  "ANEVUM_RHEN_BILLING_ENABLED",
+  "ANEVUM_RHEN_BILLING_CHECKOUT_ENABLED",
+  "ANEVUM_RHEN_BILLING_WEBHOOKS_ENABLED",
+  "ANEVUM_RHEN_FOUNDING_ENABLED",
+  "ANEVUM_RHEN_BILLING_LIVE_APPROVED"
+];
+for (const key of billingFlags) {
+  assert(stage?.vars?.[key] === "false", "Staging billing flag must remain disabled: " + key);
+  assert(prod?.vars?.[key] === "false", "Production billing flag must remain disabled: " + key);
+}
+assert(stage?.vars?.ANEVUM_STRIPE_MODE === "test", "Staging must use Stripe test-mode only.");
+assert(prod?.vars?.ANEVUM_STRIPE_MODE === "disabled", "Production must not enable Stripe live-mode.");
+const stageVarsAllowed = new Set([
+  "COMMAND_AUTH_MODE", "COMMAND_LIVE_STREAM_ENABLED", "ANEVUM_MEMBERS_ENABLED",
+  "ANEVUM_MEMBER_RHEN_DRAFTS_ENABLED", "ANEVUM_MEMBER_PREVIEW_ENABLED",
+  "MEMBER_PREVIEW_ORIGIN", "ANEVUM_STRIPE_MODE", ...billingFlags
+]);
 for (const name of Object.keys(stage.vars || {})) {
   assert(stageVarsAllowed.has(name), "Unexpected variable in staging config: " + name);
 }
@@ -92,6 +109,10 @@ if (process.argv.includes("--generated")) {
              !Object.hasOwn(generated?.vars || {}, "CF_ACCESS_TEAM_DOMAIN") &&
              !Object.hasOwn(generated?.vars || {}, "COMMAND_ACCESS_EMAILS"),
              "Generated staging Worker inherited protected RHEN operator authorization.");
+      for (const key of billingFlags) {
+        assert(generated?.vars?.[key] === "false", "Generated staging unexpectedly enables billing: " + key);
+      }
+      assert(generated?.vars?.ANEVUM_STRIPE_MODE === "test", "Generated staging Stripe mode changed.");
       for (const name of Object.keys(generated.vars || {})) {
         assert(stageVarsAllowed.has(name), "Unexpected generated staging variable: " + name);
       }
