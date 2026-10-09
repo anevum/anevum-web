@@ -14,7 +14,7 @@ const sample = {
   body: "This hypothesis needs an out-of-sample comparison including trading costs."
 };
 const user = { id: "verified-member-123" };
-const tables = ["commons_members", "commons_topics", "commons_comments", "commons_moderation_events"];
+const tables = ["commons_members", "commons_topics", "commons_comments", "commons_moderation_events", "commons_reports"];
 
 function mockDB({ role = "contributor", active = true, rows = [], topic = null, comments = [] } = {}) {
   const calls = [];
@@ -148,7 +148,7 @@ test("Contributor cannot hide another member's research", async () => {
 
 test("Account export is user-scoped and empty when Commons schema is unavailable", async () => {
   const absent = await exportCommonsData({}, user.id);
-  assert.deepEqual(absent, { membership: null, topics: [], comments: [] });
+  assert.deepEqual(absent, { membership: null, topics: [], comments: [], reports: [] });
   const { db, calls } = mockDB();
   const exported = await exportCommonsData(db, user.id);
   assert.deepEqual(exported.topics, []);
