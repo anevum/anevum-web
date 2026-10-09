@@ -6,12 +6,15 @@ on:
       - "src/server/member-alpaca-live.mjs"
       - "src/server/member.mjs"
       - "src/pages/RhenApp.tsx"
+      - "src/pages/RhenDraft.tsx"
+      - "src/server/member-rhen-draft.mjs"
       - "src/pages/RhenConnect.tsx"
       - "src/App.tsx"
       - "src/styles/rhen-connect.css"
       - "migrations/**"
       - "scripts/verify-member-schema.py"
       - "tests/member-alpaca-live.test.mjs"
+      - "tests/member-rhen-draft.test.mjs"
       - "tests/commons*.test.mjs"
       - ".github/workflows/member-live-connect-verify.yml"
 
@@ -39,7 +42,7 @@ jobs:
       - name: Install application dependencies
         run: npm install --no-audit --no-fund
       - name: Verify member-owned OAuth, Commons and default-off authority
-        run: node --test tests/member-alpaca-live.test.mjs tests/commons.test.mjs tests/commons-beta.test.mjs
+        run: node --test tests/member-alpaca-live.test.mjs tests/member-rhen-draft.test.mjs tests/commons.test.mjs tests/commons-beta.test.mjs
       - name: Validate isolated D1 migration and member accounts
         run: python scripts/verify-member-schema.py
       - name: Install PDF renderer for site build
