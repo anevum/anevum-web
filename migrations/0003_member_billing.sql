@@ -17,7 +17,7 @@ CREATE TABLE IF NOT EXISTS member_billing_subscriptions (
   status TEXT NOT NULL,
   current_period_end INTEGER NOT NULL DEFAULT 0,
   cancel_at_period_end INTEGER NOT NULL DEFAULT 0 CHECK(cancel_at_period_end IN (0,1)),
-  last_event_created INTEGER NOT NULL DEFAULT 0,
+  source_checked_at_ms INTEGER NOT NULL DEFAULT 0,
   updated_at TEXT NOT NULL DEFAULT (datetime('now')),
   FOREIGN KEY (stripe_customer_id) REFERENCES member_billing_customers(stripe_customer_id) ON DELETE CASCADE
 );
@@ -36,4 +36,10 @@ CREATE TABLE IF NOT EXISTS member_billing_checkout_locks (
   user_id TEXT PRIMARY KEY NOT NULL REFERENCES "user"("id") ON DELETE CASCADE,
   lock_token TEXT NOT NULL,
   expires_at INTEGER NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS member_billing_sync_state (
+ user_id TEXT PRIMARY KEY NOT NULL REFERENCES "user"("id") ON DELETE CASCADE,
+ last_attempt_ms INTEGER NOT NULL DEFAULT 0,
+ last_success_ms INTEGER NOT NULL DEFAULT 0
 );
