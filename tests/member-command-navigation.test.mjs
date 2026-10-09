@@ -21,6 +21,9 @@ test("Google callback, header and account links return members to Command", () =
   assert.match(signIn, /to="\/command">Open Command/);
   assert.match(shell, /session\?\.user \? "\/command" : "\/sign-in"/);
   assert.match(home, /to="\/command" aria-current="page"/);
+  assert.match(home, /value\?\.command_admin === true/);
+  assert.match(home, /signedIn && operator &&/);
+  assert.match(home, /to="\/command\/rhen\/operate">Open RHEN Terminal/);
   assert.match(settings, /to="\/command">Back to Command/);
   assert.match(rhen, /<Link to="\/command">Command<\/Link>/);
   assert.match(rhen, /<Link to="\/command\/rhen\/operate">RHEN Terminal<\/Link>/);
