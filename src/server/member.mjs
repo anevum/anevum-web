@@ -72,14 +72,14 @@ function reply(data, status = 200) {
   });
 }
 
-function safeMutation(request, verifiedOrigin) {
+export function safeMutation(request, verifiedOrigin) {
   const url = new URL(request.url);
   return Boolean(verifiedOrigin) && url.protocol === "https:" &&
     url.origin === verifiedOrigin &&
     request.headers.get("Origin") === verifiedOrigin;
 }
 
-async function safeJSON(request) {
+export async function safeJSON(request) {
   if (request.headers.get("content-type")?.split(";")[0]?.trim().toLowerCase() !== "application/json") {
     throw new Error("JSON body required.");
   }
