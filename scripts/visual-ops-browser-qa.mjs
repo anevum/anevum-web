@@ -142,7 +142,7 @@ async function runCase(route, viewport) {
         expression: `(() => {
           const pathReady = location.pathname === ${JSON.stringify(route)};
           const suspenseReady = !document.querySelector(".route-loader");
-          const homeReady = ${JSON.stringify(route)} !== "/" || Boolean(document.querySelector(".studio-home"));\n          const productsReady = ${JSON.stringify(route)} !== "/products" || Boolean(document.querySelector(".truth-products-page"));\n          const feedReady = ${JSON.stringify(route)} !== "/feed" || Boolean(document.querySelector(".feed-page"));\n          const rhenReady = ${JSON.stringify(route)} !== "/products/rhen" || Boolean(document.querySelector(".truth-rhen-page"));
+          const homeReady = ${JSON.stringify(route)} !== "/" || Boolean(document.querySelector(".commons-welcome"));\n          const productsReady = ${JSON.stringify(route)} !== "/products" || Boolean(document.querySelector(".truth-products-page"));\n          const feedReady = ${JSON.stringify(route)} !== "/feed" || Boolean(document.querySelector(".feed-page"));\n          const rhenReady = ${JSON.stringify(route)} !== "/products/rhen" || Boolean(document.querySelector(".truth-rhen-page"));
           const liveReady = ${JSON.stringify(route)} !== "/products/rhen/evidence" || Boolean(document.querySelector('[data-visual-ops="public-terminal"]'));
           const architectureReady = ${JSON.stringify(route)} !== "/products/rhen/architecture" || Boolean(document.querySelector(".architecture-role-grid"));
           const researchReady = ${JSON.stringify(route)} !== "/field-notes" || Boolean(document.querySelector(".studio-notes-page"));
@@ -172,7 +172,7 @@ async function runCase(route, viewport) {
       expression: `(() => {
         const pathReady = location.pathname === ${JSON.stringify(route)};
         const suspenseReady = !document.querySelector(".route-loader");
-        const homeReady = ${JSON.stringify(route)} !== "/" || Boolean(document.querySelector(".studio-home"));\n          const productsReady = ${JSON.stringify(route)} !== "/products" || Boolean(document.querySelector(".truth-products-page"));\n          const feedReady = ${JSON.stringify(route)} !== "/feed" || Boolean(document.querySelector(".feed-page"));\n          const rhenReady = ${JSON.stringify(route)} !== "/products/rhen" || Boolean(document.querySelector(".truth-rhen-page"));
+        const homeReady = ${JSON.stringify(route)} !== "/" || Boolean(document.querySelector(".commons-welcome"));\n          const productsReady = ${JSON.stringify(route)} !== "/products" || Boolean(document.querySelector(".truth-products-page"));\n          const feedReady = ${JSON.stringify(route)} !== "/feed" || Boolean(document.querySelector(".feed-page"));\n          const rhenReady = ${JSON.stringify(route)} !== "/products/rhen" || Boolean(document.querySelector(".truth-rhen-page"));
         const liveReady = ${JSON.stringify(route)} !== "/products/rhen/evidence" || Boolean(document.querySelector('[data-visual-ops="public-terminal"]'));
         const architectureReady = ${JSON.stringify(route)} !== "/products/rhen/architecture" || Boolean(document.querySelector(".architecture-role-grid"));
         const researchReady = ${JSON.stringify(route)} !== "/field-notes" || Boolean(document.querySelector(".studio-notes-page"));
