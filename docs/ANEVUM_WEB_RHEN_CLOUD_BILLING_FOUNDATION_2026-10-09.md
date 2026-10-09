@@ -5,10 +5,11 @@
 ## Product decisions
 
 - ANEVUM public site, account creation, research, updates, and baseline member experience remain free.
-- Proposed RHEN Cloud founding monthly price is **$9.99 USD**; standard monthly price is **$19.99 USD**. No annual plan, performance fee, withdrawal fee, commission or guarantees are introduced.
+- Proposed RHEN Cloud founding monthly price is **$2.99 USD**; standard monthly price is **$4.99 USD**. Free ANEVUM membership and free RHEN paper testing remain available during beta. No annual plan, performance fee, withdrawal fee, commission or guarantees are introduced.
 - Never sell membership as a share in the owner/company's brokerage account.
 - Subscriber eligibility must never bypass the owner's private Cloudflare Access session, RHEN account isolation, broker approvals, or per-account execution gates.
 - Billing is separate from member RHEN drafts, from GRAEN/VELUM research, and from production order-write authority.
+- These prices are low-cost, provisional early-adoption rates. $2.99 is NOT a verified marginal-cost floor for individual live-account execution; reevaluate measured cloud compute, licensed market data, API usage, support, payment failure/refund exposure, and regulated-service obligations before payment activation. Do not advertise returns or promises of profitability.
 - The founding price is a release-controlled offer, NOT a claim that its capacity limit is implemented. Keep `ANEVUM_RHEN_FOUNDING_ENABLED=false` until invitations/capacity enforcement are separately approved.
 
 ## Implemented billing foundation
@@ -24,7 +25,7 @@
 ### API
 
 - `GET /api/member/billing`: authenticated subscriber status, pricing proposal, billing feature gates and paid-only entitlement. Always reports `paperExecutionEnabled:false` and `liveExecutionEnabled:false`.
-- `POST /api/member/billing/checkout`: authenticated and same-origin, verified-email member; accepts only `{ "plan": "founding" | "standard" }` and no price/customer/id override. Enabled only with test-mode configuration and explicit staging flags or separately approved live production. Price is fetched from Stripe and must match USD 9.99/19.99 per month before Checkout creation.
+- `POST /api/member/billing/checkout`: authenticated and same-origin, verified-email member; accepts only `{ "plan": "founding" | "standard" }` and no price/customer/id override. Enabled only with test-mode configuration and explicit staging flags or separately approved live production. Price is fetched from Stripe and must match USD 2.99/4.99 per month before Checkout creation.
 - `POST /api/member/billing/portal`: authenticated billing customer opens Stripe's hosted management portal, using the server-owned customer mapping. The portal remains usable when new checkout is closed, provided safe Stripe settings remain configured.
 - `POST /api/billing/stripe/webhook`: raw-body HMAC-SHA256 Stripe signature, freshness tolerance, account mode and event shape verification. Accepts subscription-created/updated/deleted events, retrieves Stripe's latest canonical subscription, verifies mapped customer and member metadata, then updates D1. Duplicate and delayed events cannot by themselves revive canceled access. Unknown customer and prices never grant paid access.
 - Existing `/api/member/export` now includes billing records for that user. Existing Better Auth `beforeDelete` callback attempts to expire open Stripe Checkout sessions and cancel open provider subscriptions before allowing identity deletion; a failed provider operation prevents silent orphan charging.
