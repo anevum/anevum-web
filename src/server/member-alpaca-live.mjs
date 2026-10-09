@@ -33,7 +33,9 @@ export function liveConnectConfigured(env) {
     typeof env?.ALPACA_CONNECT_CLIENT_ID === "string" && env.ALPACA_CONNECT_CLIENT_ID.length >= 8 &&
     typeof env?.ALPACA_CONNECT_CLIENT_SECRET === "string" && env.ALPACA_CONNECT_CLIENT_SECRET.length >= 16 &&
     typeof env?.ALPACA_CONNECT_TOKEN_KEY_BASE64 === "string" &&
-    env.ALPACA_CONNECT_TOKEN_KEY_BASE64.length >= 40
+    env.ALPACA_CONNECT_TOKEN_KEY_BASE64.length >= 40 &&
+    typeof env?.ANEVUM_OWNER_BROKER_ACCOUNT_ID === "string" &&
+    env.ANEVUM_OWNER_BROKER_ACCOUNT_ID.length >= 8
   );
 }
 
@@ -132,26 +134,37 @@ export async function memberAlpacaLiveEndpoint(
 ) {
   const statusRequest = pathname === "/api/member/brokerage";
   const db = env?.MEMBER_DB;
-  if (!liveConnectConfigured(env) || !await liveConnectSchemaReady(db)) {
-    return statusRequest && request.method === "GET"
-      ? respond(statusPayload(null))
-      : respond({ message: "Live account linking has not been approved or activated." }, 503);
-  }
   if (!verifiedUser?.id || typeof verifiedOrigin !== "string" ||
       new URL(request.url).origin !== verifiedOrigin || !verifiedOrigin.startsWith("https://")) {
     return respond({ message: "Member identity or callback origin not authorized." }, 403);
   }
+  const schemaReady = await liveConnectSchemaReady(db);
+  const enabled = liveConnectConfigured(env) && schemaReady;
   const callback = verifiedOrigin + "/api/member/alpaca/live/callback";
   const now = Math.floor(Date.now() / 1000);
 
+  // Status and removal remain available to the owner even when new grants are
+  // suspended. Disabling onboarding must never trap a member's stored grant.
   if (statusRequest) {
     if (request.method !== "GET") return respond({ message: "Read-only capability." }, 405);
+    if (!schemaReady) return respond(statusPayload(null));
     const row = await db.prepare(
       "SELECT broker_account_id,connected_at FROM member_alpaca_live_connections " +
       "WHERE user_id=? AND revoked_at IS NULL"
     ).bind(verifiedUser.id).first();
-    return respond(statusPayload(row, true));
+    return respond(statusPayload(row, enabled));
   }
+  if (pathname === "/api/member/alpaca/live/disconnect") {
+    if (request.method !== "POST") return respond({ message: "Method not allowed." }, 405);
+    if (!schemaReady) return respond({ message: "Brokerage storage is unavailable." }, 503);
+    await db.prepare("DELETE FROM member_alpaca_live_connections WHERE user_id=?")
+      .bind(verifiedUser.id).run();
+    return respond({
+      disconnected: true, executionEnabled: false,
+      message: "Access in ANEVUM is removed. Also revoke ANEVUM in your Alpaca authorized applications."
+    });
+  }
+  if (!enabled) return respond({ message: "Live account linking has not been approved or activated." }, 503);
 
   if (pathname === "/api/member/alpaca/live/start") {
     if (request.method !== "POST") return respond({ message: "Method not allowed." }, 405);
@@ -162,8 +175,13 @@ export async function memberAlpacaLiveEndpoint(
     if (existing) return respond({ message: "Disconnect your existing live account before reconnecting." }, 409);
     const state = newState();
     const digest = await sha256Hex(state);
-    await db.prepare("INSERT INTO member_alpaca_live_oauth_states (state_hash,user_id,expires_at,created_at) VALUES(?,?,?,?)")
-      .bind(digest, verifiedUser.id, now + STATE_LIFETIME_SECONDS, now).run();
+    const saved = await db.prepare(
+      "INSERT INTO member_alpaca_live_oauth_states(state_hash,user_id,expires_at,created_at) " +
+      "SELECT ?,?,?,? WHERE (SELECT COUNT(*) FROM member_alpaca_live_oauth_states " +
+      "WHERE user_id=? AND created_at>=?) < 8"
+    ).bind(digest, verifiedUser.id, now + STATE_LIFETIME_SECONDS, now,
+      verifiedUser.id, now - 3600).run();
+    if (saved.meta?.changes !== 1) return respond({ message: "Please wait before starting another connection." }, 429);
     return respond({
       authorizeUrl: buildLiveAuthorizationURL(env.ALPACA_CONNECT_CLIENT_ID, callback, state),
       accountConnected: false,
@@ -177,7 +195,8 @@ export async function memberAlpacaLiveEndpoint(
     const state = url.searchParams.get("state");
     const code = url.searchParams.get("code");
     // The state is one-time and bound to the current verified member session.
-    if (!state || !/^[A-Za-z0-9_-]{40,128}$/.test(state)) {
+    if (url.searchParams.getAll("state").length !== 1 || url.searchParams.getAll("code").length !== 1 ||
+        !state || !/^[A-Za-z0-9_-]{40,128}$/.test(state)) {
       return respond({ message: "Invalid OAuth state." }, 400);
     }
     const digest = await sha256Hex(state);
@@ -248,16 +267,6 @@ export async function memberAlpacaLiveEndpoint(
       "Cache-Control": "private, no-store", "Referrer-Policy": "no-referrer",
       "X-Robots-Tag": "noindex, nofollow, noarchive"
     } });
-  }
-
-  if (pathname === "/api/member/alpaca/live/disconnect") {
-    if (request.method !== "POST") return respond({ message: "Method not allowed." }, 405);
-    await db.prepare("DELETE FROM member_alpaca_live_connections WHERE user_id=?")
-      .bind(verifiedUser.id).run();
-    return respond({
-      disconnected: true, executionEnabled: false,
-      message: "Access in ANEVUM is removed. Also revoke ANEVUM in your Alpaca authorized applications."
-    });
   }
 
   return respond({ message: "Live brokerage endpoint not found." }, 404);
