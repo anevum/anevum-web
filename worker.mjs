@@ -1,6 +1,7 @@
 import releaseRegistry from "./src/data/releases.json";
 import { shadowRead } from "./shadow-transport.mjs";
-import { memberEndpoint } from "./src/server/member.mjs";
+import { memberEndpoint, resolveAuthenticatedMemberSession } from "./src/server/member.mjs";
+import { hasBoundOwnerTerminalAccess, ownerDualAuthEnabled } from "./src/server/member-terminal.mjs";
 import { legacyOperatorTarget } from "./src/server/operator-routes.mjs";
 
 const TRADER_BASE = "https://alpaca-trader-production-bf3e.up.railway.app";
@@ -108,6 +109,20 @@ async function commandCredential(request, env) {
     throw new ApiError(401, "Cloudflare Access authentication is required.");
   }
   const identity = await verifyAccessAssertion(access, env);
+  // During migration, no member can inherit the company's private Access
+  // session when a DIFFERENT member account is signed in. After explicit
+  // cutover, BOTH the immutable owner-member ID and owner Access identity
+  // are mandatory for every private API, including streams and writes.
+  if (ownerDualAuthEnabled(env) || env?.ANEVUM_OWNER_MEMBER_ID) {
+    const memberSession = await resolveAuthenticatedMemberSession(request, env);
+    const bound = hasBoundOwnerTerminalAccess(memberSession?.user, identity, env);
+    if (ownerDualAuthEnabled(env) && !bound) {
+      throw new ApiError(403, "A verified owner member session and private Access identity are required.");
+    }
+    if (!ownerDualAuthEnabled(env) && memberSession?.user && !bound) {
+      throw new ApiError(403, "This member account is not authorized for the company terminal.");
+    }
+  }
   return { token: access, source: "cloudflare_access", identity };
 }
 
@@ -431,6 +446,18 @@ export default {
         return await publicTheory();
       } catch (error) {
         return jsonResponse({ message: error instanceof Error ? error.message : "Theory program unavailable." }, 502);
+      }
+    }
+
+    // The read-only HTML shell must not be presented as the company account
+    // to a non-owner member after the dual-auth cutover. API authorization
+    // below remains independent and mandatory.
+    if (ownerDualAuthEnabled(env) &&
+      (pathname === "/command/rhen" || pathname.startsWith("/command/rhen/"))) {
+      try { await commandCredential(request, env); }
+      catch (error) {
+        return jsonResponse({ message: "Verified owner authorization required." },
+          error instanceof ApiError ? error.status : 503);
       }
     }
 
