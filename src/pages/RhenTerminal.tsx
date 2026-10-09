@@ -104,7 +104,9 @@ export default function RhenTerminal() {
   const [statusError, setStatusError] = useState("");
   const [evidenceError, setEvidenceError] = useState("");
   const [refreshing, setRefreshing] = useState(false);
-  const refreshInFlight = useRef(false);
+  const [statusReceivedAt, setStatusReceivedAt] = useState<string | null>(null);
+  const statusInFlight = useRef(false);
+  const evidenceInFlight = useRef(false);
   const controlObservation = useCommandObservation(commandAdmin ? session : null, 3000);
   const { data: publicFeed, error: publicFeedError } = useLiveTrading(3000);
 
@@ -113,49 +115,63 @@ export default function RhenTerminal() {
     navigate("/", { replace: true });
   }, [signOut, navigate]);
 
-  const refresh = useCallback(async () => {
-    if (!session || !commandAdmin || refreshInFlight.current) return;
-    refreshInFlight.current = true;
-    setRefreshing(true);
+  const refreshStatus = useCallback(async () => {
+    if (!session || !commandAdmin || statusInFlight.current) return;
+    statusInFlight.current = true;
     try {
-      const [statusResult, evidenceResult] = await Promise.allSettled([
-        fetchCommandStatus(session),
-        fetchCommandEvidence(session)
-      ]);
-
-      if (statusResult.status === "fulfilled") {
-        setSnapshot(statusResult.value);
-        setStatusError("");
-      } else {
-        setStatusError(statusResult.reason instanceof Error ? statusResult.reason.message : "Trading status unavailable.");
-      }
-
-      if (evidenceResult.status === "fulfilled") {
-        const next = evidenceResult.value;
-        setEvidence(next);
-        setEvidenceError("");
-        const [daily, weekly] = await Promise.all([
-          fetchCommandDailyReport(session).catch(() => null),
-          fetchCommandWeeklyReport(session).catch(() => null)
-        ]);
-        setDailyReport(daily || record(next.latest_daily));
-        setWeeklyReport(weekly || record(next.latest_weekly));
-      } else {
-        setEvidenceError(evidenceResult.reason instanceof Error ? evidenceResult.reason.message : "Evidence unavailable.");
-      }
+      const next = await fetchCommandStatus(session);
+      setSnapshot(next);
+      setStatusReceivedAt(new Date().toISOString());
+      setStatusError("");
+    } catch (reason) {
+      setStatusError(reason instanceof Error ? reason.message : "Trading status unavailable.");
     } finally {
-      refreshInFlight.current = false;
-      setRefreshing(false);
+      statusInFlight.current = false;
     }
   }, [session, commandAdmin]);
 
+  const refreshEvidence = useCallback(async () => {
+    if (!session || !commandAdmin || evidenceInFlight.current) return;
+    evidenceInFlight.current = true;
+    try {
+      const next = await fetchCommandEvidence(session);
+      setEvidence(next);
+      setEvidenceError("");
+      const [daily, weekly] = await Promise.all([
+        fetchCommandDailyReport(session).catch(() => null),
+        fetchCommandWeeklyReport(session).catch(() => null)
+      ]);
+      setDailyReport(daily || record(next.latest_daily));
+      setWeeklyReport(weekly || record(next.latest_weekly));
+    } catch (reason) {
+      setEvidenceError(reason instanceof Error ? reason.message : "Research evidence unavailable.");
+    } finally {
+      evidenceInFlight.current = false;
+    }
+  }, [session, commandAdmin]);
+
+  const refresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await Promise.all([refreshStatus(), refreshEvidence()]);
+    } finally {
+      setRefreshing(false);
+    }
+  }, [refreshStatus, refreshEvidence]);
+
   useEffect(() => {
     if (!session || !commandAdmin) return;
-    void refresh();
-    // 4.4 REST is a degraded research diagnostic. Prices/candles use one live observation socket.
-    const timer = window.setInterval(refresh, liveEnabled ? 60000 : 5000);
-    return () => window.clearInterval(timer);
-  }, [session, commandAdmin, refresh, liveEnabled]);
+    void refreshStatus();
+    void refreshEvidence();
+    // Trading state is fast read-only polling; durable research reports are slow.
+    // A slow report must never hold up the next account/position observation.
+    const statusTimer = window.setInterval(() => void refreshStatus(), 5000);
+    const evidenceTimer = window.setInterval(() => void refreshEvidence(), 60000);
+    return () => {
+      window.clearInterval(statusTimer);
+      window.clearInterval(evidenceTimer);
+    };
+  }, [session, commandAdmin, refreshStatus, refreshEvidence]);
 
   if (loading) {
     return <div className="command-gate"><SystemIcon system="RHEN" size="lg" /><span>RHEN / TERMINAL</span><h1>Resolving identity.</h1></div>;
@@ -200,7 +216,7 @@ export default function RhenTerminal() {
 
         <div className="command-v4-account">
           <Link className="terminal-command-link" to="/me">Command</Link>
-          <span><StateDot ok={controlFresh && !statusError} />{controlFresh && !statusError ? "LIVE" : "DEGRADED"}</span>
+          <span><StateDot ok={controlFresh && !statusError} />{controlFresh && !statusError ? (liveEnabled && !liveState.stale ? "STREAMING" : "POLLING") : "DEGRADED"}</span>
           <button type="button" onClick={handleSignOut}>Sign out</button>
         </div>
       </header>
@@ -213,6 +229,7 @@ export default function RhenTerminal() {
             <div>
               <strong>{displayState(controlObservation.snapshot?.state || (statusError ? "DEGRADED" : "CONNECTING"))}</strong>
               <small>{controlObservation.snapshot?.observed_at ? ageText(controlObservation.snapshot.observed_at, controlObservation.now) : "awaiting canonical observation"}</small>
+              <small>Broker snapshot {ageText(statusReceivedAt, controlObservation.now)} · ~5s refresh · equity history 5min</small>
             </div>
             <button type="button" aria-label="Refresh RHEN observations" onClick={() => void refresh()} disabled={refreshing}>{refreshing ? "…" : "↻"}</button>
           </div>
@@ -292,7 +309,8 @@ export default function RhenTerminal() {
                   <div><strong>RHEN runtime</strong><span>{displayState(publicFeed?.systems?.RHEN?.runtime_state)}</span><span>{displayState(publicFeed?.systems?.RHEN?.health_state)}</span><b>{publicFeed?.systems?.RHEN?.observed_at ? ageText(publicFeed.systems.RHEN.observed_at, Date.now()) : "—"}</b></div>
                   <div><strong>Research</strong><span>{displayState(publicFeed?.research?.current_status)}</span><span>{publicFeed?.research?.active_questions?.length ?? 0} questions</span><b>{publicFeed?.research?.last_updated_at ? ageText(publicFeed.research.last_updated_at, Date.now()) : "—"}</b></div>
                   <div><strong>Performance</strong><span>{displayState(publicFeed?.performance?.status)}</span><span>{displayState(publicFeed?.performance?.sample_state)}</span><b>{publicFeed?.performance?.last_observed_at ? ageText(publicFeed.performance.last_observed_at, Date.now()) : "—"}</b></div>
-                  <div><strong>Privacy contract</strong><span>PUBLIC SAFE</span><span>{publicFeed?.disclosure?.public_fields?.length ?? 0} projected fields</span><b>{publicFeed?.disclosure?.excluded_fields?.length ?? 0} excluded</b></div>
+                  <div><strong>Broker checks</strong><span>{displayState(publicFeed?.broker_reconciliation?.state)}</span><span>{publicFeed?.broker_reconciliation?.checks_2h ?? "—"} / 2h</span><b>{publicFeed?.broker_reconciliation?.last_checked_at ? ageText(publicFeed.broker_reconciliation.last_checked_at, controlObservation.now) : "Awaiting broker check"}</b></div>
+                <div><strong>Privacy contract</strong><span>PUBLIC SAFE</span><span>{publicFeed?.disclosure?.public_fields?.length ?? 0} projected fields</span><b>{publicFeed?.disclosure?.excluded_fields?.length ?? 0} excluded</b></div>
                 </div>
               </article>
             </div>
