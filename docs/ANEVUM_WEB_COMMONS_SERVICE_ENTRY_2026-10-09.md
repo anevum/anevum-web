@@ -30,7 +30,7 @@ The public header links to Commons, Updates, Research and RHEN; project history 
 
 ## Data model and authority
 
-`0003_commons_beta.sql` extends the existing member D1 only:
+`0004_commons_beta.sql` extends the existing member D1 only:
 
 - `commons_members`: immutable authenticated user ID, manually admitted role, active/suspended state and invitation attribution.
 - `commons_topics`: id, author ID, question/research-note kind, subject, title, body, private/hidden visibility and creation timestamp.
@@ -60,7 +60,7 @@ On production with Commons disabled, a signed-in user can reach the new account-
 1. Keep changes on an isolated PR; run `npm run test:members`, the full typecheck/build, existing public/owner tests, and new Commons isolated tests.
 2. Review privacy and participation-term updates. The new Commons paragraphs are proposals, **not** independent legal approval. No actual private member content should be admitted before review.
 3. Complete or separately isolate the outstanding production-deploy race and owner RHEN cross-account protection findings (#234 / #235). Do not bypass the guarded production deploy path.
-4. Apply migration `0003_commons_beta.sql` to **preview D1 only**, using the explicit preview-only workflow. Check exactly 4 new Commons tables, foreign-key integrity and existing core/draft tables.
+4. Apply migration `0004_commons_beta.sql` to **preview D1 only**, using the explicit preview-only workflow. Check exactly 4 new Commons tables, foreign-key integrity and existing core/draft tables.
 5. Deploy branch to **anevum-member-staging** only with preview database and `ANEVUM_COMMONS_ENABLED=true`. Do not use production credentials for test users.
 6. Verify anonymous rejection, uninvited rejection, suspension, author isolation, cross-member read permissions, invalid payload/ID rejection, moderation, per-account throttles, export/delete cascades and private no-cache/noindex headers. Test on desktop and mobile.
 7. Admit two dedicated staging user IDs using a reviewed D1 command; grant one moderator role. Do not copy session cookies or user credentials into issues or CI logs.
@@ -76,6 +76,8 @@ On production with Commons disabled, a signed-in user can reach the new account-
 - Paid RHEN Cloud entitlements and resource-based quotas after existing Stripe sandbox acceptance (#241).
 - Financial bounties, taxes, member rewards and brokerage credit arrangements only after explicit legal and payment-rail review.
 - Dedicated hardware, GPU inference, native mobile clients and desktop packages after demand and measured cost warrant them.
+
+Commons is assigned migration 0004 because staging preview D1 has already received RHEN billing migration 0003 on the separate billing workstream. Integrate billing migration into the main migration ledger before Commons rollout; never overwrite the recorded migration 0003 or relabel it as Commons. The isolated Commons branch can be tested without production D1 changes.
 
 ## Current engineering dependencies
 
