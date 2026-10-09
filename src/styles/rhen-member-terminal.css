@@ -1,0 +1,51 @@
+/* Private RHEN terminal: real member/broker data only, no demo/placeholder charts. */
+.rhen-member-terminal { width: min(100%, 1120px); }
+.rhen-member-terminal-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 24px; }
+.rhen-member-terminal-header h2 { margin: 0 0 8px; font-size: clamp(1.5rem, 3vw, 2rem); letter-spacing: -.04em; }
+.rhen-member-terminal-header p { margin: 0; max-width: 69ch; color: #54616b; line-height: 1.55; }
+.rhen-member-terminal-header button { border: 1px solid #b9c8d1; background: #fff; border-radius: 7px; padding: 9px 13px; min-height: 40px; cursor: pointer; font: inherit; font-size: .85rem; }
+.rhen-member-terminal-header button:disabled { opacity: .6; cursor: not-allowed; }
+.rhen-member-terminal-state { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); border: 1px solid #cad3d7; border-radius: 9px; overflow: hidden; margin: 0 0 18px; background: #16282f; color: #f4f8f9; }
+.rhen-member-terminal-state div { min-width: 0; display: grid; gap: 8px; padding: 17px 16px; border-right: 1px solid #344951; }
+.rhen-member-terminal-state div:last-child { border-right: 0; }
+.rhen-member-terminal-state span { font-size: .69rem; color: #b6c7cc; letter-spacing: .02em; }
+.rhen-member-terminal-state strong { font-size: .87rem; font-weight: 650; overflow-wrap: anywhere; }
+.rhen-member-terminal-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 17px; margin-bottom: 17px; }
+.rhen-member-terminal-card { background: #fff; border: 1px solid #d7dfe1; border-radius: 9px; padding: clamp(16px,2vw,23px); margin-bottom: 17px; min-width: 0; }
+.rhen-member-terminal-grid .rhen-member-terminal-card { margin-bottom: 0; }
+.rhen-member-terminal-cardhead { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 19px; }
+.rhen-member-terminal-cardhead h3 { font-size: 1.12rem; letter-spacing: -.025em; margin: 4px 0 0; }
+.rhen-member-terminal-cardhead p { margin: 0; font-size: .64rem; color: #607582; font-weight: 800; letter-spacing: .085em; }
+.rhen-member-terminal-badge { flex-shrink: 0; display: inline-block; font-size: .7rem; color: #38566a; background: #edf2f5; border-radius: 5px; padding: 5px 9px; }
+.rhen-member-terminal-metrics { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 20px 14px; margin: 0; }
+.rhen-member-terminal-metrics div { display: grid; gap: 5px; border-top: 1px solid #e2e8e9; padding-top: 10px; min-width: 0; }
+.rhen-member-terminal-metrics dt { font-size: .77rem; color: #61717a; }
+.rhen-member-terminal-metrics dd { margin: 0; font-size: clamp(.95rem, 1.8vw, 1.15rem); font-weight: 700; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.rhen-member-terminal-strategy { display: block; font-size: 1rem; margin-bottom: 15px; }
+.rhen-member-terminal-caption { color: #677781; font-size: .78rem; line-height: 1.55; margin: 14px 0 0; }
+.rhen-member-terminal-empty { padding: 14px; background: #f5f7f7; border: 1px dashed #c8d2d7; color: #586b76; border-radius: 7px; line-height: 1.6; font-size: .87rem; margin: 0; }
+.rhen-member-terminal-empty p { margin: 0 0 8px; }
+.rhen-member-terminal-empty a, .rhen-member-terminal-link { color: #225c7e; font-weight: 650; font-size: .85rem; text-decoration: underline; text-underline-offset: 3px; }
+.rhen-member-terminal-link { display: inline-block; margin-top: 16px; }
+.rhen-member-terminal-table-wrap { overflow-x: auto; }
+.rhen-member-terminal-table-wrap table { width: 100%; border-collapse: collapse; font-size: .83rem; }
+.rhen-member-terminal-table-wrap th, .rhen-member-terminal-table-wrap td { padding: 12px 8px; text-align: left; border-bottom: 1px solid #e4e9eb; vertical-align: top; font-variant-numeric: tabular-nums; }
+.rhen-member-terminal-table-wrap thead th { color: #667680; font-size: .7rem; font-weight: 700; }
+.rhen-member-terminal-table-wrap tbody th { font-weight: 700; }
+.rhen-member-terminal-table-wrap tbody small { display: block; font-size: .7rem; color: #6e7d85; font-weight: 450; margin-top: 4px; }
+.rhen-member-terminal-warning { background: #fff6f0; color: #693923; border: 1px solid #eacbb8; border-radius: 7px; padding: 13px 16px; font-size: .84rem; margin-bottom: 17px; line-height: 1.6; }
+.rhen-member-terminal-footnote { max-width: 88ch; color: #64717a; font-size: .81rem; line-height: 1.65; margin: 23px 0 0; }
+@media (max-width: 850px) {
+ .rhen-member-terminal-state { grid-template-columns: repeat(2,minmax(0,1fr)); }
+ .rhen-member-terminal-state div:nth-child(2) { border-right: 0; }
+ .rhen-member-terminal-state div:nth-child(-n+2) { border-bottom: 1px solid #344951; }
+ .rhen-member-terminal-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 500px) {
+ .rhen-member-terminal-state { grid-template-columns: 1fr; }
+ .rhen-member-terminal-state div, .rhen-member-terminal-state div:nth-child(2) { border-right: 0; border-bottom: 1px solid #344951; }
+ .rhen-member-terminal-state div:last-child { border-bottom: 0; }
+ .rhen-member-terminal-card { padding: 15px; }
+ .rhen-member-terminal-metrics { gap: 15px 11px; }
+ .rhen-member-terminal-cardhead { flex-wrap: wrap; }
+}
