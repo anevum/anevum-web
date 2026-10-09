@@ -1,6 +1,7 @@
 import { betterAuth } from "better-auth";
 import { commonsEndpoint, exportCommonsData } from "./commons.mjs";
 import { memberAlpacaLiveEndpoint, exportMemberLiveConnection } from "./member-alpaca-live.mjs";
+import { memberAlpacaReadSnapshot } from "./member-alpaca-snapshot.mjs";
 import { memberRewardsStatus, memberBrokerageStatus } from "./member-capabilities.mjs";
 import { memberRhenDraftSchemaReady, readMemberRhenDraft, saveMemberRhenDraft, deleteMemberRhenDraft, validateRhenDraft } from "./member-rhen-draft.mjs";
 import { resolveMemberOrigin, memberSchemaReady } from "./member-preflight.mjs";
@@ -123,6 +124,9 @@ export async function memberEndpoint(request, env, pathname) {
     return commonsEndpoint(request, env, user, pathname);
   }
 
+  if (pathname === "/api/member/alpaca/live/snapshot") {
+    return memberAlpacaReadSnapshot(request, env, user, verifiedOrigin);
+  }
   if (pathname === "/api/member/brokerage" || pathname.startsWith("/api/member/alpaca/live/")) {
     return memberAlpacaLiveEndpoint(request, env, user, verifiedOrigin, pathname);
   }
