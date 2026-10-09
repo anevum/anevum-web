@@ -21,6 +21,8 @@ const Releases = lazy(() => import("./pages/Releases"));
 const ReleaseDetail = lazy(() => import("./pages/ReleaseDetail"));
 const SignIn = lazy(() => import("./pages/SignIn"));
 const MemberHome = lazy(() => import("./pages/MemberHome"));
+const Commons = lazy(() => import("./pages/Commons"));
+const CommonsTopic = lazy(() => import("./pages/CommonsTopic"));
 const MemberSettings = lazy(() => import("./pages/MemberSettings"));
 const MemberRewards = lazy(() => import("./pages/MemberRewards"));
 const MemberStagingVerify = lazy(() => import("./pages/MemberStagingVerify"));
@@ -29,7 +31,8 @@ const Privacy = lazy(() => import("./pages/Privacy"));
 const Terms = lazy(() => import("./pages/Terms"));
 
 const titles: Record<string, string> = {
-  "/": "ANEVUM — Independent Software",
+  "/": "ANEVUM Commons — Research, Software & Community",
+  "/commons": "Commons — ANEVUM",
   "/products": "Projects — ANEVUM",
   "/feed": "Updates — ANEVUM",
   "/field-notes": "Field Notes — ANEVUM",
@@ -49,7 +52,8 @@ const titles: Record<string, string> = {
 };
 
 const descriptions: Record<string, string> = {
-  "/": "Independent software built against real problems, with real data, public evidence, and versioned work.",
+  "/": "ANEVUM Commons brings collaborative research, practical software and a private member workspace together.",
+  "/commons": "Your research space on ANEVUM. Invitations and contribution permissions are independently enforced.",
   "/products": "The canonical registry of public ANEVUM products. Products appear when they actually exist.",
   "/feed": "A chronological ANEVUM record assembled from real releases, Field Notes, public-safe runtime observations, and research decisions.",
   "/field-notes": "ANEVUM Field Notes document research decisions, failures, engineering changes, releases, and measured evidence.",
@@ -132,11 +136,14 @@ function RouteEffects() {
 
   useEffect(() => {
     const path = location.pathname;
-    const protectedRoute = path.startsWith("/command") || path === "/sign-in" || path.startsWith("/me") || path.startsWith("/apps/");
+    const protectedRoute = path.startsWith("/commons") || path.startsWith("/command") || path === "/sign-in" || path.startsWith("/me") || path.startsWith("/apps/");
     let title = titles[path] || "ANEVUM — Independent Software";
     let description = descriptions[path] || descriptions["/"];
 
-    if (path.startsWith("/apps/rhen/") || path === "/apps/rhen") {
+    if (path.startsWith("/commons/topic/")) {
+      title = "Research discussion — ANEVUM Commons";
+      description = "Invite-only research discussion inside ANEVUM Commons.";
+    } else if (path.startsWith("/apps/rhen/") || path === "/apps/rhen") {
       title = "RHEN Workspace — ANEVUM";
       description = "Authenticated RHEN application workspace.";
     } else if (path.startsWith("/command")) {
@@ -215,6 +222,8 @@ export default function App() {
         <Route path="/terms" element={<PublicExperience><Terms /></PublicExperience>} />
         <Route path="/sign-in" element={<PublicExperience><SignIn /></PublicExperience>} />
         <Route path="/me" element={<PublicExperience><MemberHome /></PublicExperience>} />
+        <Route path="/commons" element={<Suspense fallback={<Loader />}><Commons /></Suspense>} />
+        <Route path="/commons/topic/:id" element={<Suspense fallback={<Loader />}><CommonsTopic /></Suspense>} />
         <Route path="/me/settings" element={<PublicExperience><MemberSettings /></PublicExperience>} />
         <Route path="/me/rewards" element={<PublicExperience><MemberRewards /></PublicExperience>} />
         <Route path="/me/verify" element={<PublicExperience><MemberStagingVerify /></PublicExperience>} />
