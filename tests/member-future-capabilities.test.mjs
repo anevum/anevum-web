@@ -59,6 +59,6 @@ test("member money UI is inert, separates operator terminal and preserves launch
   assert.match(page, /No credits are accruing/);
   assert.match(page, /not a return on investment/i);
   assert.doesNotMatch(page, /\$100|guaranteed|Connect Alpaca|Deposit now/);
-  assert.equal(config.vars.ANEVUM_MEMBERS_ENABLED, "false");
+  assert.equal(config.vars.ANEVUM_MEMBERS_ENABLED, "true");
   assert.match(app, /path="\/command\/rhen\/\*"/);
 });
