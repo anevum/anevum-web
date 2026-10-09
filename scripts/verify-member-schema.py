@@ -18,7 +18,7 @@ required = {
     "user", "session", "account", "verification", "rateLimit", "member_profiles",
     "member_saved_apps", "member_project_follows", "member_entitlements",
     "member_rhen_drafts", "member_billing_customers",
-    "member_billing_subscriptions", "member_billing_events",
+    "member_billing_subscriptions", "member_billing_events", "member_billing_checkout_locks",
 }
 assert required <= tables, f"Missing tables: {required - tables}"
 
@@ -85,7 +85,7 @@ for invalid in [(0, 30, 10), (2, 101, 10), (2, 30, 31)]:
 
 db.execute('DELETE FROM "user" WHERE id = ?', ("member-a",))
 for table in ("member_saved_apps", "member_project_follows", "member_profiles",
-              "member_rhen_drafts", "member_billing_customers", "member_billing_subscriptions"):
+              "member_rhen_drafts", "member_billing_customers", "member_billing_subscriptions", "member_billing_checkout_locks"):
     assert db.execute(
         f"SELECT count(*) FROM {table} WHERE user_id = ?", ("member-a",)
     ).fetchone()[0] == 0, f"{table} did not cascade"
