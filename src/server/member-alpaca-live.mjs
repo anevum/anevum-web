@@ -99,10 +99,11 @@ async function encryptBearer(token, userId, connectionId, accountId, key64) {
   return { encrypted: encode64(new Uint8Array(ciphertext)), iv: encode64(nonce) };
 }
 
-const statusPayload = (connected, enabled = false) => ({
+const statusPayload = (connected, enabled = false, readEnabled = false) => ({
   integration: "alpaca_connect",
   connectionAvailable: enabled,
   accountConnected: Boolean(connected),
+  accountReadAvailable: Boolean(connected && readEnabled),
   paperTradingEnabled: false,
   liveTradingEnabled: false,
   brokerWriteEnabled: false,
@@ -154,7 +155,7 @@ export async function memberAlpacaLiveEndpoint(
       "SELECT broker_account_id,connected_at FROM member_alpaca_live_connections " +
       "WHERE user_id=? AND revoked_at IS NULL"
     ).bind(verifiedUser.id).first();
-    return respond(statusPayload(row, enabled));
+    return respond(statusPayload(row, enabled, enabled && env?.ANEVUM_ALPACA_LIVE_SNAPSHOT_ENABLED === "true"));
   }
   if (pathname === "/api/member/alpaca/live/disconnect") {
     if (request.method !== "POST") return respond({ message: "Method not allowed." }, 405);
