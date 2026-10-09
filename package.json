@@ -16,7 +16,7 @@
     "sync:share-image": "node scripts/sync-share-image.mjs",
     "validate:releases": "node scripts/validate-release-registry.mjs",
     "sync:resume": "python scripts/render-founder-resume.py",
-    "test:members": "node --test tests/member-boundaries.test.mjs"
+    "test:members": "node --test tests/member-boundaries.test.mjs tests/member-adversarial.test.mjs"
   },
   "dependencies": {
     "motion": "13.4.3",
