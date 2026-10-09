@@ -27,6 +27,8 @@
 .rhen-connect-eyebrow { margin: 0; font-size: .66rem; letter-spacing: .11em; font-weight: 800; color: #547184; }
 .rhen-connect-readiness { margin: 20px 0 0; font-size: .76rem; font-weight: 650; color: #72531a; }
 .rhen-connect-links { margin: 18px 0 0; font-size: .79rem; color: #839197; }
+.rhen-connect-signin { margin: 12px 0 0; font-size: .8rem; line-height: 1.55; color: #435864; }
+.rhen-connect-signin a { color: #155b83; text-underline-offset: 3px; font-weight: 650; }
 .rhen-connect-consent { min-width: 0; }
 .rhen-connect-disclosure { padding: clamp(15px, 2.3vw, 22px); border: 1px solid #cbdbe5;
   border-left: 4px solid #2b779c; background: #fff; border-radius: 8px; box-shadow: 0 2px 14px rgba(20,36,44,.045); }
