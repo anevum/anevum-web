@@ -13,12 +13,12 @@ function isActive(pathname: string, href: string) {
 
 function MemberLink() {
   const { data: session } = memberAuthClient.useSession();
-  return <Link className="workshop-account-link" to={session?.user ? "/me" : "/sign-in"}>{session?.user ? "Command" : "Sign in"}</Link>;
+  return <Link className="workshop-account-link" to={session?.user ? "/command" : "/sign-in"}>{session?.user ? "Command" : "Sign in"}</Link>;
 }
 
 function AvailableMemberLink() {
   const status = useMemberAvailability();
-  return status === "available" ? <MemberLink /> : <Link className="workshop-account-link" to="/me">Command</Link>;
+  return status === "available" ? <MemberLink /> : <Link className="workshop-account-link" to="/command">Command</Link>;
 }
 
 function PublicFooter() {
