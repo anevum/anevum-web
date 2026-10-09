@@ -7,10 +7,12 @@ import { fieldNotes } from "../data/fieldNotes";
 import { memberAuthClient } from "../member/auth-client";
 import { useMemberAvailability } from "../member/useMemberAvailability";
 import RhenDraft from "./RhenDraft";
+import RhenMemberTerminal from "./RhenMemberTerminal";
 
-type RhenSection = "overview" | "account" | "setup" | "evidence" | "research" | "updates";
+type RhenSection = "overview" | "my-terminal" | "account" | "setup" | "evidence" | "research" | "updates";
 const nav: { id: RhenSection; label: string; path: string }[] = [
   { id: "overview", label: "Overview", path: "/apps/rhen" },
+  { id: "my-terminal", label: "My terminal", path: "/apps/rhen/my-terminal" },
   { id: "account", label: "My brokerage", path: "/apps/rhen/account" },
   { id: "setup", label: "My bot settings", path: "/apps/rhen/setup" },
   { id: "evidence", label: "Evidence", path: "/apps/rhen/evidence" },
@@ -29,7 +31,7 @@ export default function RhenApp() {
   const [connectMessage, setConnectMessage] = useState("");
   const release = currentRhenRelease();
   const segment = location.pathname.split("/")[3] || "overview";
-  const section: RhenSection = ["overview", "account", "setup", "evidence", "research", "updates"].includes(segment) ? segment as RhenSection : "overview";
+  const section: RhenSection = ["overview", "my-terminal", "account", "setup", "evidence", "research", "updates"].includes(segment) ? segment as RhenSection : "overview";
 
   useEffect(() => {
     if (!session?.user || availability !== "available") return;
@@ -107,8 +109,9 @@ export default function RhenApp() {
               <div><dt>Options</dt><dd>Research only</dd></div>
               <div><dt>Profitability</dt><dd>Not established</dd></div>
             </dl>
-            <Link to="/apps/rhen/evidence">View real evidence →</Link>
+            <Link to="/apps/rhen/my-terminal">Open my private RHEN terminal →</Link><span> · </span><Link to="/apps/rhen/evidence">View real evidence →</Link>
           </>}
+          {section === "my-terminal" && <RhenMemberTerminal key={session.user.id} />}
           {section === "account" && <>
             <h2>Your brokerage workspace</h2>
             <p>This account will connect to your own Alpaca account, not ANEVUM's company trading bot. Live trading is the development target; order placement remains separately gated.</p>
