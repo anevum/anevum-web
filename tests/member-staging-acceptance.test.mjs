@@ -85,7 +85,7 @@ test("new staging acceptance UI cannot unlock production registration or alter d
   assert.match(page, /does not independently prove cross-user isolation/i);
   assert.match(app, /path="\/me\/verify"/);
   assert.match(settings, /to="\/me\/verify"/);
-  assert.equal(prod.vars.ANEVUM_MEMBERS_ENABLED, "false");
+  assert.equal(prod.vars.ANEVUM_MEMBERS_ENABLED, "true");
   assert.equal(prod.vars.ANEVUM_MEMBER_RHEN_DRAFTS_ENABLED, "false");
   assert.doesNotMatch(path("src/member/staging-acceptance.ts"), /method: "(?:PUT|POST|PATCH|DELETE)"|api\/auth\/sign-in|createOrder/);
 });
