@@ -4,7 +4,7 @@ import { readFileSync } from "node:fs";
 import { legacyOperatorTarget } from "../src/server/operator-routes.mjs";
 
 test("member Command has no forced operator redirect", () => {
-  for (const path of ["/", "/me", "/command", "/command/rhen", "/command/rhen/operate", "/command/rhen/review", "/apps/rhen/evidence", "/commanded"]) {
+  for (const path of ["/", "/me", "/command", "/command/rhen", "/command/rhen/operate", "/command/rhen/review", "/apps/rhen/evidence", "/apps/rhen/terminal", "/apps/rhen/terminal/operate", "/commanded"]) {
     assert.equal(legacyOperatorTarget(path), null, "Unexpected redirect: " + path);
   }
 });
@@ -17,8 +17,6 @@ test("old terminal routes only redirect to the protected RHEN subtree", () => {
     "/command/system": "/command/rhen/system",
     "/command/topology": "/command/rhen/topology",
     "/command/iren": "/command/rhen/iren",
-    "/apps/rhen/terminal": "/command/rhen/operate",
-    "/apps/rhen/terminal/operate": "/command/rhen/operate",
     "/apps/rhen/command": "/command/rhen/operate",
     "/apps/rhen/command/review": "/command/rhen/review",
     "/private": "/command/rhen/operate",
