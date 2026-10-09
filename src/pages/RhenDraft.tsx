@@ -117,12 +117,12 @@ export default function RhenDraft() {
 
   return (
     <section className="member-draft-workspace">
-      <h2>Draft your RHEN setup.</h2>
-      <p>This saves preferences for a possible personal RHEN bot. It is not a paper-trading engine, a strategy, a brokerage connection, or permission to place orders.</p>
+      <h2>Set up your personal RHEN bot</h2>
+      <p>Choose your starting limits for a future live RHEN bot linked to your own brokerage account. Saving a configuration does not submit orders, activate a strategy, or connect your broker.</p>
       <div className="member-app-ready">
         <p className="workshop-kicker">Authority</p>
-        <h3>Configuration only</h3>
-        <p>Execution, broker access, deposits, withdrawals, and automatic strategy activation are not available to member drafts.</p>
+        <h3>Saved settings · Trading inactive</h3>
+        <p>Your settings are private to your ANEVUM member account. When live member trading becomes available, these preferences can only restrict the separate operator-approved risk limits. They cannot override them.</p>
       </div>
       {loading ? <p role="status">Checking your draft workspace…</p> : !available ? (
         <p role="status" className="member-financial-note">Personal RHEN draft settings are not enabled in this environment. You can still review <Link to="/apps/rhen/evidence">public RHEN evidence</Link>.</p>
@@ -138,7 +138,7 @@ export default function RhenDraft() {
               <div><span>Market scope</span><strong>U.S. equities and ETFs</strong></div>
               <div><span>Direction</span><strong>Long only</strong></div>
             </div>
-            <p className="member-draft-caption">These are optional planning limits, not recommended allocation levels or live safeguards.</p>
+            <p className="member-draft-caption">Your personal limits are upper bounds, not recommendations. They remain planning values until Alpaca approval, broker verification, and a separately authorized live deployment. Actual limits may be stricter.</p>
             <div className="member-draft-fields">
               <div className="member-draft-field">
                 <label htmlFor="draft-positions">Maximum simultaneous positions</label>
@@ -162,7 +162,7 @@ export default function RhenDraft() {
       )}
       {notice && <p role="status">{notice}</p>}
       {error && <p role="alert" className="member-alert">{error}</p>}
-      <p className="member-financial-footnote">A saved draft does not control the operator's RHEN deployment. Member brokerage onboarding and live orders require independent release approvals.</p>
+      <p className="member-financial-footnote">These settings cannot control another member's bot or ANEVUM's private RHEN account. Member live orders require separate permissions and deployment approvals.</p>
     </section>
   );
 }
