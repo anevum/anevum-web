@@ -54,7 +54,7 @@ export default function RhenApp() {
 
   async function updateLiveBroker(action: "start" | "disconnect") {
     if (!session?.user || availability !== "available" || connectBusy) return;
-    if (!brokerage?.connectionAvailable || brokerage.liveTradingEnabled) return;
+    if (!brokerage || brokerage.liveTradingEnabled || (action === "start" && !brokerage.connectionAvailable)) return;
     if (action === "start" && brokerage.accountConnected) return;
     if (action === "disconnect" && !brokerage.accountConnected) return;
     setConnectBusy(true); setConnectMessage("");
@@ -129,7 +129,7 @@ export default function RhenApp() {
               <p>Only the official Alpaca OAuth permission screen can authorize a brokerage connection. ANEVUM never asks for your broker API keys here.</p>
               {brokerage?.accountConnected && <p>Verified account ending in {brokerage.account?.ending || "••••"}. This connection does not automatically authorize algorithmic trades.</p>}
               {brokerage?.connectionAvailable && !brokerage.accountConnected && <button type="button" className="commons-action" disabled={connectBusy} onClick={() => void updateLiveBroker("start")}>{connectBusy ? "Opening…" : "Connect Alpaca live account"}</button>}
-              {brokerage?.connectionAvailable && brokerage.accountConnected && <button type="button" className="commons-moderate" disabled={connectBusy} onClick={() => void updateLiveBroker("disconnect")}>{connectBusy ? "Disconnecting…" : "Disconnect brokerage"}</button>}
+              {brokerage?.accountConnected && <button type="button" className="commons-moderate" disabled={connectBusy} onClick={() => void updateLiveBroker("disconnect")}>{connectBusy ? "Disconnecting…" : "Disconnect brokerage"}</button>}
               {connectMessage && <p role="status">{connectMessage}</p>}
             </section>
             {brokerError ? <p role="alert">Brokerage capability status could not be verified.</p> : !brokerage ? <p role="status">Checking capabilities…</p> : brokerage.liveTradingEnabled || brokerage.paperTradingEnabled || brokerage.depositsEnabled || brokerage.withdrawalsEnabled ? <p role="alert">Unexpected trading or money movement capability. Do not use this workspace.</p> : <dl className="member-app-readiness"><div><dt>Alpaca live linking</dt><dd>{brokerage.accountConnected ? "Linked" : brokerage.connectionAvailable ? "Available" : "Awaiting approval"}</dd></div><div><dt>Personal live bot</dt><dd>Not armed</dd></div><div><dt>Paper trial</dt><dd>Not required for planned live enrollment</dd></div><div><dt>Funding and withdrawals</dt><dd>Not supported</dd></div></dl>}
