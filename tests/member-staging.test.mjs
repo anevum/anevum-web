@@ -4,22 +4,25 @@ import { stagingOrigin } from "../scripts/verify-member-staging.mjs";
 import { resolveMemberOrigin } from "../src/server/member-preflight.mjs";
 import { readFileSync } from "node:fs";
 
-test("staging acceptance never targets production", () => {
+test("cookie-bearing staging acceptance is pinned to one audited Worker host", () => {
+  const verified = "https://anevum-member-staging.devonakins.workers.dev";
+  assert.equal(stagingOrigin(verified), verified);
   for (const origin of [
     "https://anevum.com",
-    "http://test.anevum.com",
+    "https://stage.anevum.com",
     "https://evil.example",
     "https://anevum.com.evil.example",
-    "https://staging.anevum.com/path",
-    "https://test.anevum.com?token=private",
-    "https://me:secret@staging.anevum.com"
+    "https://attacker.workers.dev",
+    "https://anevum-preview.example.workers.dev",
+    "https://anevum-member-staging.attacker.workers.dev",
+    "http://anevum-member-staging.devonakins.workers.dev",
+    verified + "/path", verified + "/", verified + "?token=private",
+    "https://me:secret@anevum-member-staging.devonakins.workers.dev",
+    verified + "#anchor",
+    verified + ":443"
   ]) {
-    assert.throws(() => stagingOrigin(origin));
+    assert.throws(() => stagingOrigin(origin), origin);
   }
-});
-test("staging accepts only exact clean ANEVUM or workers.dev origins", () => {
-  assert.equal(stagingOrigin("https://stage.anevum.com"), "https://stage.anevum.com");
-  assert.equal(stagingOrigin("https://anevum-preview.example.workers.dev"), "https://anevum-preview.example.workers.dev");
 });
 
 test("activated staging is pinned to one verified HTTPS origin and preview D1", () => {
