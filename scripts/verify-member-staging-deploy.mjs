@@ -52,6 +52,9 @@ assert(stage?.vars?.ANEVUM_MEMBER_RHEN_DRAFTS_ENABLED === "true", "Only staging 
 assert(stage?.vars?.ANEVUM_MEMBER_PREVIEW_ENABLED === "true", "Staging test OAuth must use explicitly enabled preview identity.");
 assert(stage?.vars?.COMMAND_LIVE_STREAM_ENABLED === "false", "Staging must disable RHEN live command stream.");
 assert(stage?.vars?.MEMBER_PREVIEW_ORIGIN === verifiedStagingOrigin, "Staging identity must use its exact verified HTTPS origin.");
+const betaFlag = "ANEVUM_RHEN_BETA_WAITLIST_ENABLED";
+assert(stage?.vars?.[betaFlag] === "false", "Staging beta registrations must be disabled before separate approval.");
+assert(prod?.vars?.[betaFlag] === "false", "Production beta registrations must be disabled before separate approval.");
 const billingFlags = [
   "ANEVUM_RHEN_BILLING_ENABLED",
   "ANEVUM_RHEN_BILLING_CHECKOUT_ENABLED",
@@ -68,7 +71,7 @@ assert(prod?.vars?.ANEVUM_STRIPE_MODE === "disabled", "Production must not enabl
 const stageVarsAllowed = new Set([
   "COMMAND_AUTH_MODE", "COMMAND_LIVE_STREAM_ENABLED", "ANEVUM_MEMBERS_ENABLED",
   "ANEVUM_MEMBER_RHEN_DRAFTS_ENABLED", "ANEVUM_MEMBER_PREVIEW_ENABLED",
-  "MEMBER_PREVIEW_ORIGIN", "ANEVUM_STRIPE_MODE", ...billingFlags
+  "MEMBER_PREVIEW_ORIGIN", "ANEVUM_STRIPE_MODE", betaFlag, ...billingFlags
 ]);
 for (const name of Object.keys(stage.vars || {})) {
   assert(stageVarsAllowed.has(name), "Unexpected variable in staging config: " + name);
@@ -109,6 +112,7 @@ if (process.argv.includes("--generated")) {
              !Object.hasOwn(generated?.vars || {}, "CF_ACCESS_TEAM_DOMAIN") &&
              !Object.hasOwn(generated?.vars || {}, "COMMAND_ACCESS_EMAILS"),
              "Generated staging Worker inherited protected RHEN operator authorization.");
+      assert(generated?.vars?.[betaFlag] === "false", "Generated staging unexpectedly enables beta registration.");
       for (const key of billingFlags) {
         assert(generated?.vars?.[key] === "false", "Generated staging unexpectedly enables billing: " + key);
       }
