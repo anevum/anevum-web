@@ -48,6 +48,7 @@ export const productRegistry: ProductDefinition[] = [
       notes: "/field-notes"
     },
     memberFeatures: [
+      { id: "terminal", name: "My terminal", description: "Private RHEN workspace. Personal Alpaca linking and trading are not yet enabled.", route: "/apps/rhen/terminal" },
       { id: "evidence", name: "Evidence", description: "Measured, public-safe performance and source freshness.", route: "/apps/rhen/evidence" },
       { id: "research", name: "Research", description: "Published experiments, decisions, and build notes.", route: "/apps/rhen/research" },
       { id: "updates", name: "Updates", description: "Release history and changes to the project.", route: "/apps/rhen/updates" }
