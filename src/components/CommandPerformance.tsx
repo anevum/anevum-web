@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import type { PublicPerformance } from "../lib/data";
+import { ageText } from "../lib/system-display";
 
 function pct(value?: number | null, digits = 2, signed = true) {
   if (value == null || !Number.isFinite(value)) return "—";
@@ -47,10 +48,10 @@ export default function CommandPerformance({
     <article className="command-panel command-view-trading command-panel-public-performance">
       <header>
         <div>
-          <span>PUBLIC PERFORMANCE / AUTO-SYNC</span>
+          <span>PUBLIC PERFORMANCE / RECORDED</span>
           <strong>{performance?.methodology_version || "PUBLIC-PERFORMANCE-v2"}</strong>
         </div>
-        <small>{feedError || sample}</small>
+        <small>{feedError || (performance?.last_observed_at ? `LAST RECORD ${ageText(performance.last_observed_at)} · ${sample}` : sample)}</small>
       </header>
 
       <div className="command-performance-body">
@@ -71,7 +72,7 @@ export default function CommandPerformance({
               <polyline points={chart.points} className="command-performance-line" />
             </svg>
           ) : (
-            <div className="command-empty">Normalized live performance will appear when enough public snapshots exist.</div>
+            <div className="command-empty">Measured performance will appear when enough recorded snapshots exist.</div>
           )}
         </div>
 
