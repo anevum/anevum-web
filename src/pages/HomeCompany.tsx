@@ -49,7 +49,7 @@ export default function HomeCompany() {
       <div className="commons-feature-grid">
         <article><span>01 / COMMUNITY</span><h3>Commons</h3><p>Ask specific questions, exchange research notes and preserve valuable findings. Participation begins with a small invite-only group.</p><Link to="/commons">Open Commons →</Link></article>
         <article><span>02 / APPLICATION</span><h3>RHEN</h3><p>Explore a working market research system, its public evidence and development record. Personal brokerage connections are not active yet.</p><Link to="/products/rhen">Meet RHEN →</Link></article>
-        <article><span>03 / RESEARCH</span><h3>Knowledge</h3><p>Research deserves context, limitations and a revision history. Browse published experiments, engineering decisions and field notes.</p><Link to="/field-notes">Read the record →</Link></article>
+        <article><span>03 / LEARNING</span><h3>Learn the method</h3><p>Understand strategy rules, backtests, trading costs, and the limits of historical results before risking money. The learning material is free.</p><Link to="/learn">Start learning →</Link></article>
         <article><span>04 / YOUR ACCOUNT</span><h3>Command</h3><p>One private home for your programs, preferences and account. The company's protected trading terminal is not shared with members.</p><Link to="/sign-in">Manage your account →</Link></article>
       </div>
     </section>

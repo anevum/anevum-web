@@ -22,17 +22,20 @@ const ReleaseDetail = lazy(() => import("./pages/ReleaseDetail"));
 const SignIn = lazy(() => import("./pages/SignIn"));
 const MemberHome = lazy(() => import("./pages/MemberHome"));
 const Commons = lazy(() => import("./pages/Commons"));
+const Learning = lazy(() => import("./pages/Learning"));
 const CommonsTopic = lazy(() => import("./pages/CommonsTopic"));
 const MemberSettings = lazy(() => import("./pages/MemberSettings"));
 const MemberRewards = lazy(() => import("./pages/MemberRewards"));
 const MemberStagingVerify = lazy(() => import("./pages/MemberStagingVerify"));
 const RhenApp = lazy(() => import("./pages/RhenApp"));
+const RhenConnect = lazy(() => import("./pages/RhenConnect"));
 const Privacy = lazy(() => import("./pages/Privacy"));
 const Terms = lazy(() => import("./pages/Terms"));
 
 const titles: Record<string, string> = {
   "/": "ANEVUM Commons — Research, Software & Community",
   "/commons": "Commons — ANEVUM",
+  "/learn": "Trading Research Basics — ANEVUM Commons",
   "/products": "Projects — ANEVUM",
   "/feed": "Updates — ANEVUM",
   "/field-notes": "Field Notes — ANEVUM",
@@ -54,6 +57,7 @@ const titles: Record<string, string> = {
 const descriptions: Record<string, string> = {
   "/": "ANEVUM Commons brings collaborative research, practical software and a private member workspace together.",
   "/commons": "Your research space on ANEVUM. Invitations and contribution permissions are independently enforced.",
+  "/learn": "A free guide to research rules, testing methodology, risk and sharing reproducible results in Commons.",
   "/products": "The canonical registry of public ANEVUM products. Products appear when they actually exist.",
   "/feed": "A chronological ANEVUM record assembled from real releases, Field Notes, public-safe runtime observations, and research decisions.",
   "/field-notes": "ANEVUM Field Notes document research decisions, failures, engineering changes, releases, and measured evidence.",
@@ -223,12 +227,14 @@ export default function App() {
         <Route path="/sign-in" element={<PublicExperience><SignIn /></PublicExperience>} />
         <Route path="/me" element={<PublicExperience><MemberHome /></PublicExperience>} />
         <Route path="/commons" element={<Suspense fallback={<Loader />}><Commons /></Suspense>} />
+        <Route path="/learn" element={<PublicExperience><Learning /></PublicExperience>} />
         <Route path="/commons/topic/:id" element={<Suspense fallback={<Loader />}><CommonsTopic /></Suspense>} />
         <Route path="/me/settings" element={<PublicExperience><MemberSettings /></PublicExperience>} />
         <Route path="/me/rewards" element={<PublicExperience><MemberRewards /></PublicExperience>} />
         <Route path="/me/verify" element={<PublicExperience><MemberStagingVerify /></PublicExperience>} />
         <Route path="/apps/rhen/terminal/*" element={<LegacyRhenOperatorRoute />} />
         <Route path="/apps/rhen/command/*" element={<LegacyRhenOperatorRoute />} />
+        <Route path="/apps/rhen/connect" element={<Suspense fallback={<Loader />}><RhenConnect /></Suspense>} />
         <Route path="/apps/rhen/*" element={<Suspense fallback={<Loader />}><RhenApp /></Suspense>} />
 
         <Route path="/products/rhen" element={<PublicExperience><RhenProduct /></PublicExperience>} />

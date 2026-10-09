@@ -179,3 +179,14 @@
 @media(prefers-reduced-motion: reduce) {
   .commons-app *, .commons-welcome * { scroll-behavior: auto !important; transition: none !important; animation: none !important; }
 }
+
+/* Commons collaborative rule-set worksheet — research only, never order routing. */
+.commons-ruleset-intro { display:flex; justify-content:space-between; align-items:center;
+  gap:24px; flex-wrap:wrap; padding:clamp(17px,2.6vw,25px); margin:0 0 26px;
+  background:#ecf3f5; border:1px solid #c9dce4; border-radius:10px; }
+.commons-ruleset-intro > div:first-child { flex:2 1 350px; }
+.commons-ruleset-intro h2 { font-size:1.25rem; line-height:1.25; margin:7px 0; letter-spacing:-.025em; }
+.commons-ruleset-intro p:not(.commons-eyebrow) { margin:7px 0 0; max-width:65ch; color:#4e626f; line-height:1.6; font-size:.86rem; }
+.commons-ruleset-intro-actions { display:flex; flex-direction:column; align-items:flex-start; gap:12px; flex:1 1 200px; }
+.commons-ruleset-intro-actions a { color:#315e7d; font-size:.84rem; font-weight:600; }
+.commons-ruleset-intro-actions button { white-space:normal; }

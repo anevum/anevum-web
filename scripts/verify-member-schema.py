@@ -7,7 +7,7 @@ root = Path(__file__).resolve().parents[1]
 schemas = sorted((root / "migrations").glob("*.sql"))
 names = [p.name for p in schemas]
 base = ["0001_member_platform.sql", "0002_member_rhen_drafts.sql"]
-assert names in (base + ["0004_commons_beta.sql", "0005_commons_reports.sql"], base + ["0003_member_billing.sql", "0004_commons_beta.sql", "0005_commons_reports.sql"]), (
+assert names in (base + ["0004_commons_beta.sql", "0005_commons_reports.sql", "0006_member_alpaca_live_connect.sql"], base + ["0003_member_billing.sql", "0004_commons_beta.sql", "0005_commons_reports.sql", "0006_member_alpaca_live_connect.sql"]), (
     "Expected canonical member migration order (billing 0003 precedes Commons 0004 when present): " + str(names)
 )
 
@@ -24,6 +24,8 @@ required = {
     "member_saved_apps", "member_project_follows", "member_entitlements",
     "member_rhen_drafts", "commons_members", "commons_topics",
     "commons_comments", "commons_moderation_events", "commons_reports",
+    "member_alpaca_live_oauth_states", "member_alpaca_live_connections",
+    "member_alpaca_live_consents",
 }
 assert required <= tables, f"Missing tables: {required - tables}"
 
@@ -134,6 +136,44 @@ for bad in (
         pass
 assert db.execute("SELECT COUNT(*) FROM commons_reports").fetchone()[0] == 2
 
+
+# Account credentials are encrypted per member, unique across members, and
+# cleaned up by member identity deletion; no company RHEN state is referenced.
+for member, account in (("member-a", "broker-a"), ("member-b", "broker-b")):
+    db.execute(
+        "INSERT INTO member_alpaca_live_connections "
+        "(user_id, connection_id, broker_account_id, encrypted_token, token_iv, granted_scopes, connected_at) "
+        "VALUES(?,?,?,?,?,?,?)",
+        (member, "connection-" + member, account, "encrypted-test-only", "iv-test-only", "trading", 1800000000),
+    )
+db.execute(
+    "INSERT INTO member_alpaca_live_oauth_states "
+    "(state_hash, user_id, expires_at, created_at) VALUES(?,?,?,?)",
+    ("a" * 64, "member-a", 1800000100, 1800000000)
+)
+for bad in (
+    ("other-user", "new-connection", "broker-a"),
+    ("member-b", "connection-different", "broker-c"),
+):
+    try:
+        db.execute(
+            "INSERT INTO member_alpaca_live_connections "
+            "(user_id,connection_id,broker_account_id,encrypted_token,token_iv,granted_scopes,connected_at) "
+            "VALUES(?,?,?,?,?,?,?)",
+            (*bad, "encrypted", "iv", "trading", 1800000000),
+        )
+        raise AssertionError("Alpaca live identity/account uniqueness bypassed")
+    except sqlite3.IntegrityError:
+        pass
+
+db.execute(
+    "INSERT INTO member_alpaca_live_consents (user_id, disclosure_version, accepted_at) VALUES (?, ?, ?)",
+    ("member-a", "alpaca-live-v1", 1800000000),
+)
+db.execute(
+    "INSERT INTO member_alpaca_live_consents (user_id, disclosure_version, accepted_at) VALUES (?, ?, ?)",
+    ("member-b", "alpaca-live-v1", 1800000000),
+)
 db.execute('DELETE FROM "user" WHERE id = ?', ("member-a",))
 for table in ("member_saved_apps", "member_project_follows", "member_profiles", "member_rhen_drafts", "commons_members"):
     assert db.execute(
@@ -146,5 +186,10 @@ for table in ("member_saved_apps", "member_project_follows", "member_profiles", 
 assert db.execute("SELECT COUNT(*) FROM commons_topics WHERE id = 'topic-a'").fetchone()[0] == 0, "Deleted user left authored topic"
 assert db.execute("SELECT COUNT(*) FROM commons_comments WHERE id = 'comment-b'").fetchone()[0] == 0, "Deleted topic left comments"
 assert db.execute("SELECT COUNT(*) FROM commons_reports").fetchone()[0] == 0, "Deleted user/topic left reports"
+assert db.execute("SELECT COUNT(*) FROM member_alpaca_live_connections WHERE user_id='member-a'").fetchone()[0] == 0
+assert db.execute("SELECT COUNT(*) FROM member_alpaca_live_connections WHERE user_id='member-b'").fetchone()[0] == 1
+assert db.execute("SELECT COUNT(*) FROM member_alpaca_live_oauth_states WHERE user_id='member-a'").fetchone()[0] == 0
+assert db.execute("SELECT COUNT(*) FROM member_alpaca_live_consents WHERE user_id='member-a'").fetchone()[0] == 0
+assert db.execute("SELECT COUNT(*) FROM member_alpaca_live_consents WHERE user_id='member-b'").fetchone()[0] == 1
 assert db.execute("PRAGMA foreign_key_check").fetchall() == [], "Foreign-key violations"
 print("Member D1 schema: core, drafts, Commons tables, tenant keys, constraints, and cascades passed.")

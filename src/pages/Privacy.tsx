@@ -12,6 +12,11 @@ export default function Privacy() {
       <p>Commons is an invitation-only research area. If admitted, ANEVUM stores your invitation status, participation role, questions, research notes, replies, timestamps and any moderation actions. Your chosen account display name appears beside contributions to other admitted Commons members. Contributions are not public website posts by default, but other admitted members can read them. Do not submit passwords, brokerage credentials, bank details, non-public trading positions, or other confidential information.</p>
       <p>Research content associated with your account is included in account export when Commons storage is available. Deleting your member identity is designed to remove your Commons membership and authored contributions from the active member database; replies from other members to your deleted topics are also removed. Moderation events and service-provider backups may be subject to separate security and retention practices. Publication outside Commons requires a separate choice and appropriate review.</p>
 
+      <h2>Proposed Alpaca brokerage linking and account data</h2>
+      <p>RHEN Cloud's brokerage linking is not yet enabled for general members. If it becomes available, the Alpaca Connect authorization screen will explain the requested account and trading permissions before you choose whether to proceed. With your authorization, ANEVUM would store the broker account identifier, a member-specific connection identifier, the permitted scope, connection date, and an encrypted Alpaca access token. The application records the version and time of its required pre-authorization disclosure. The stored token is encrypted for the linked member and brokerage account, is not displayed to other members, and is not included in downloaded account exports.</p>
+      <p>If separately approved, the personal RHEN terminal may request your account equity, cash, buying power, holdings and recent orders directly from Alpaca to show you a read-only account view. The proposed snapshot endpoint does not persist those balances and positions as a new account-history table; network infrastructure and provider logs can have separate retention. Your private Alpaca records are not published to Commons, a public RHEN evidence feed, or other members. No member order placement, cash transfer or withdrawal capability is enabled through this planned read-only feature.</p>
+      <p>Disconnecting deletes ANEVUM's active encrypted brokerage connection from the member database. To revoke Alpaca's authorization itself, remove the application through Alpaca's account controls. OAuth state records, consent records, backups, security events, and other provider logs may follow separate deletion and retention processes. The proposed connection and data processing require final security, provider and legal review before public activation.</p>
+
       <h2>Why this information is processed</h2>
       <p>We use it to authenticate you, keep your member profile and preferences separate from other accounts, protect against misuse, operate account recovery and deletion, and show available project features. A member login is not a brokerage connection and does not authorize access to private RHEN trading tools, another member's data, or financial accounts.</p>
 
@@ -24,7 +29,7 @@ export default function Privacy() {
       <h2>Your choices</h2>
       <p>You can continue reading the public website without Google sign-in. Authentication uses session cookies; blocking them may prevent member features from working. For questions about data access, provider retention, or deletion, contact <a href="mailto:devon@anevum.com">devon@anevum.com</a>.</p>
 
-      <p className="member-legal-date">Last reviewed October 8, 2026. Proposed Commons additions dated October 9, 2026; owner review required before publication.</p>
+      <p className="member-legal-date">Last reviewed October 8, 2026. Draft Commons and RHEN Cloud disclosures updated October 9, 2026; owner and legal review required before publication.</p>
     </article>
   );
 }

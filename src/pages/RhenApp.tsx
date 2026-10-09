@@ -7,12 +7,14 @@ import { fieldNotes } from "../data/fieldNotes";
 import { memberAuthClient } from "../member/auth-client";
 import { useMemberAvailability } from "../member/useMemberAvailability";
 import RhenDraft from "./RhenDraft";
+import RhenMemberTerminal from "./RhenMemberTerminal";
 
-type RhenSection = "overview" | "account" | "setup" | "evidence" | "research" | "updates";
+type RhenSection = "overview" | "my-terminal" | "account" | "setup" | "evidence" | "research" | "updates";
 const nav: { id: RhenSection; label: string; path: string }[] = [
   { id: "overview", label: "Overview", path: "/apps/rhen" },
+  { id: "my-terminal", label: "My terminal", path: "/apps/rhen/my-terminal" },
   { id: "account", label: "My brokerage", path: "/apps/rhen/account" },
-  { id: "setup", label: "Bot draft", path: "/apps/rhen/setup" },
+  { id: "setup", label: "My bot settings", path: "/apps/rhen/setup" },
   { id: "evidence", label: "Evidence", path: "/apps/rhen/evidence" },
   { id: "research", label: "Research", path: "/apps/rhen/research" },
   { id: "updates", label: "Updates", path: "/apps/rhen/updates" }
@@ -23,11 +25,13 @@ export default function RhenApp() {
   const availability = useMemberAvailability();
   const { data: session, isPending } = memberAuthClient.useSession();
   const [operator, setOperator] = useState(false);
-  const [brokerage, setBrokerage] = useState<{ integration: string; connectionAvailable: boolean; accountConnected: boolean; paperTradingEnabled: boolean; liveTradingEnabled: boolean; depositsEnabled: boolean; withdrawalsEnabled: boolean } | null>(null);
+  const [brokerage, setBrokerage] = useState<{ integration: string; connectionAvailable: boolean; accountConnected: boolean; paperTradingEnabled: boolean; liveTradingEnabled: boolean; depositsEnabled: boolean; withdrawalsEnabled: boolean; account?: { ending: string } | null } | null>(null);
   const [brokerError, setBrokerError] = useState(false);
+  const [connectBusy, setConnectBusy] = useState(false);
+  const [connectMessage, setConnectMessage] = useState("");
   const release = currentRhenRelease();
   const segment = location.pathname.split("/")[3] || "overview";
-  const section: RhenSection = ["overview", "account", "setup", "evidence", "research", "updates"].includes(segment) ? segment as RhenSection : "overview";
+  const section: RhenSection = ["overview", "my-terminal", "account", "setup", "evidence", "research", "updates"].includes(segment) ? segment as RhenSection : "overview";
 
   useEffect(() => {
     if (!session?.user || availability !== "available") return;
@@ -49,6 +53,25 @@ export default function RhenApp() {
       .catch(() => { if (!controller.signal.aborted) setBrokerError(true); });
     return () => controller.abort();
   }, [session?.user?.id, availability, section]);
+
+  async function disconnectLiveBroker() {
+    if (!session?.user || availability !== "available" || connectBusy || !brokerage?.accountConnected) return;
+    setConnectBusy(true); setConnectMessage("");
+    try {
+      const response = await fetch("/api/member/alpaca/live/disconnect", {
+        method: "POST", headers: { "Content-Type": "application/json" }, body: "{}"
+      });
+      const payload = await response.json() as { message?: string };
+      if (!response.ok) throw new Error(payload.message || "Live brokerage disconnect failed.");
+      setBrokerage(null);
+      const current = await fetch("/api/member/brokerage", { cache: "no-store" });
+      if (!current.ok) throw new Error("Could not verify disconnected account.");
+      setBrokerage(await current.json());
+      setConnectMessage(payload.message || "Account disconnected.");
+    } catch (error) {
+      setConnectMessage(error instanceof Error ? error.message : "Live brokerage disconnect failed.");
+    } finally { setConnectBusy(false); }
+  }
 
   if (availability === "checking" || isPending) return <div className="member-page"><p role="status">Opening RHEN…</p></div>;
   if (availability !== "available") return <div className="member-page"><h1>RHEN workspace is not open yet.</h1><p>Public RHEN research and evidence remain available.</p><Link to="/products/rhen">Explore RHEN</Link></div>;
@@ -78,22 +101,31 @@ export default function RhenApp() {
         <main className="member-app-content">
           <p className="workshop-kicker">RHEN / {section}</p>
           {section === "overview" && <>
-            <h2>Trading ideas, tested against evidence.</h2>
-            <p>RHEN is ANEVUM's market research application. This member workspace currently shows public-safe evidence and research; it is not yet a personal brokerage connection or live trading control panel.</p>
+            <h2>Your RHEN workspace</h2>
+            <p>RHEN Cloud is being built for individually owned brokerage accounts and personal algorithm settings. For now you can review research and prepare your own limits; no member live order placement is active.</p>
             <dl className="member-app-facts">
               <div><dt>Registered release</dt><dd>{release.version}</dd></div>
               <div><dt>Live trading scope</dt><dd>Long U.S. equities and ETFs</dd></div>
               <div><dt>Options</dt><dd>Research only</dd></div>
               <div><dt>Profitability</dt><dd>Not established</dd></div>
             </dl>
-            <Link to="/apps/rhen/evidence">View real evidence →</Link>
+            <Link to="/apps/rhen/my-terminal">Open my private RHEN terminal →</Link><span> · </span><Link to="/apps/rhen/evidence">View real evidence →</Link>
           </>}
+          {section === "my-terminal" && <RhenMemberTerminal key={session.user.id} />}
           {section === "account" && <>
             <h2>Your brokerage workspace</h2>
-            <p>Member brokerage connections and personally configured trading bots are planned, not operational. This does not control the company operator terminal.</p>
-            <section className="member-app-ready"><p className="workshop-kicker">Personal brokerage</p><h3>Not available yet</h3><p>No member brokerage account can be connected from this workspace today.</p></section>
-            {brokerError ? <p role="alert">Brokerage capability status could not be verified.</p> : !brokerage ? <p role="status">Checking capabilities…</p> : brokerage.connectionAvailable || brokerage.accountConnected || brokerage.paperTradingEnabled || brokerage.liveTradingEnabled || brokerage.depositsEnabled || brokerage.withdrawalsEnabled ? <p role="alert">Unexpected capabilities. Financial controls remain unavailable.</p> : <dl className="member-app-readiness"><div><dt>Brokerage linking</dt><dd>Not enabled</dd></div><div><dt>Personal paper bot</dt><dd>Not enabled</dd></div><div><dt>Personal live bot</dt><dd>Not enabled</dd></div><div><dt>Funding and withdrawals</dt><dd>Not supported</dd></div></dl>}
-            <p>Live member execution will require separate brokerage, regulatory, and security approval.</p>
+            <p>This account will connect to your own Alpaca account, not ANEVUM's company trading bot. Live trading is the development target; order placement remains separately gated.</p>
+            <section className="member-app-ready">
+              <p className="workshop-kicker">Alpaca Connect / live account</p>
+              <h3>{brokerage?.accountConnected ? "Your Alpaca account is linked" : brokerage?.connectionAvailable ? "Connect your live Alpaca account" : "Account linking awaits Alpaca approval"}</h3>
+              <p>Only the official Alpaca OAuth permission screen can authorize a brokerage connection. ANEVUM never asks for your broker API keys here.</p>
+              {brokerage?.accountConnected && <p>Verified account ending in {brokerage.account?.ending || "••••"}. This connection does not automatically authorize algorithmic trades.</p>}
+              {!brokerage?.accountConnected && <Link to="/apps/rhen/connect" className="commons-action">Review Alpaca access disclosure</Link>}
+              {brokerage?.accountConnected && <button type="button" className="commons-moderate" disabled={connectBusy} onClick={() => void disconnectLiveBroker()}>{connectBusy ? "Disconnecting…" : "Disconnect brokerage"}</button>}
+              {connectMessage && <p role="status">{connectMessage}</p>}
+            </section>
+            {brokerError ? <p role="alert">Brokerage capability status could not be verified.</p> : !brokerage ? <p role="status">Checking capabilities…</p> : brokerage.liveTradingEnabled || brokerage.paperTradingEnabled || brokerage.depositsEnabled || brokerage.withdrawalsEnabled ? <p role="alert">Unexpected trading or money movement capability. Do not use this workspace.</p> : <dl className="member-app-readiness"><div><dt>Alpaca live linking</dt><dd>{brokerage.accountConnected ? "Linked" : brokerage.connectionAvailable ? "Available" : "Awaiting approval"}</dd></div><div><dt>Personal live bot</dt><dd>Not armed</dd></div><div><dt>Paper trial</dt><dd>Not required for planned live enrollment</dd></div><div><dt>Funding and withdrawals</dt><dd>Not supported</dd></div></dl>}
+            <p>Automated live orders require Alpaca approval, approved security and regulatory gates, verified account-level limits, and your explicit activation. No live order path is available through this member page today.</p>
             <Link to="/apps/rhen/setup">Create a non-executing bot draft</Link><span> · </span><Link to="/apps/rhen/evidence">Explore verified RHEN evidence</Link>
           </>}
           {section === "setup" && <RhenDraft key={session.user.id} />}

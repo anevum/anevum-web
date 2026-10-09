@@ -1,0 +1,35 @@
+/* Commons learning: public educational material with honest research context. */
+.commons-learning { width: min(calc(100% - 44px), 1050px); margin: 0 auto; padding: clamp(34px, 6vw, 70px) 0 85px; color: #202e36; }
+.commons-learning-hero { max-width: 850px; padding-bottom: 58px; }
+.commons-learning-hero h1 { font-size: clamp(2rem, 4.5vw, 3.75rem); line-height: 1.1; letter-spacing: -.055em; max-width: 16ch; margin: 16px 0 23px; }
+.commons-learning-hero > p:not(.commons-learning-caption) { font-size: clamp(.95rem, 1.6vw, 1.13rem); color: #4e616a; line-height: 1.75; max-width: 69ch; }
+.commons-learning-actions { margin: 27px 0 14px; display: flex; align-items: center; flex-wrap: wrap; gap: 15px 20px; }
+.commons-learning-actions a:not(.commons-action) { color: #315e7d; font-size: .91rem; font-weight: 650; text-underline-offset: 3px; }
+.commons-learning-caption { font-size: .79rem; color: #75838a; line-height: 1.65; }
+.commons-learning-sequence { border-top: 1px solid #dce3e5; padding-top: 49px; }
+.commons-learning-section-heading h2, .commons-learning-checklist h2, .commons-learning-rhen h2 { font-size: clamp(1.5rem, 3vw, 2.25rem); letter-spacing: -.035em; line-height: 1.2; margin: 10px 0 13px; }
+.commons-learning-section-heading p { font-size: .95rem; color: #536571; margin-bottom: 33px; max-width: 68ch; }
+.commons-learning-stages { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 17px; }
+.commons-learning-stage { display: grid; grid-template-columns: 45px 1fr; gap: 14px; padding: 27px 24px 24px; border: 1px solid #d8e0e3; border-radius: 9px; background: #fff; min-width: 0; }
+.commons-learning-index { font-variant-numeric: tabular-nums; font-size: 1.05rem; font-weight: 800; color: #336686; }
+.commons-learning-stage h3 { font-size: 1.27rem; margin: 8px 0 13px; line-height: 1.2; }
+.commons-learning-stage p { color: #52636d; font-size: .9rem; line-height: 1.65; }
+.commons-learning-stage .commons-learning-example { border-top: 1px solid #e5e9ec; margin: 16px 0 0; padding-top: 13px; color: #344d60; font-weight: 550; }
+.commons-learning-checklist { display: grid; grid-template-columns: minmax(200px, .85fr) minmax(0,1.15fr); gap: 32px; margin-top: 62px; padding: 35px 0; border-top: 1px solid #dce3e5; border-bottom: 1px solid #dce3e5; }
+.commons-learning-checklist ol { padding: 0 0 0 22px; margin: 0; }
+.commons-learning-checklist li { font-size: .94rem; color: #52636d; line-height: 1.6; padding: 8px 0; }
+.commons-learning-rhen { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 26px; margin: 42px 0; }
+.commons-learning-rhen > div:first-child { max-width: 61ch; flex: 2 1 340px; }
+.commons-learning-rhen p { color: #52636d; line-height: 1.7; }
+.commons-learning-links { display: grid; align-content: center; gap: 16px; flex: 1 1 205px; }
+.commons-learning-links a { font-weight: 650; font-size: .87rem; color: #315e7d; text-decoration: underline; text-underline-offset: 3px; }
+.commons-learning-endnote { border-top: 1px solid #dce3e5; padding-top: 20px; }
+.commons-learning-endnote p { font-size: .8rem; line-height: 1.65; max-width: 93ch; color: #6b7980; }
+.commons-learning a:focus-visible { outline: 3px solid #86b5d5; outline-offset: 3px; }
+@media(max-width: 730px) {
+ .commons-learning-stages, .commons-learning-checklist { grid-template-columns: 1fr; }
+ .commons-learning-stage { grid-template-columns: 32px 1fr; padding: 20px 17px; }
+ .commons-learning { width: min(calc(100% - 34px), 1050px); padding-top: 33px; }
+ .commons-learning-hero { padding-bottom: 35px; }
+ .commons-learning-checklist { gap: 10px; }
+}

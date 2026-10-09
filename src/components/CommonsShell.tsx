@@ -37,6 +37,7 @@ export default function CommonsShell({ children, identity, role }: {
               <Link className={pathname === "/commons" ? "active" : ""} to="/commons">Research feed</Link>
               <Link to="/commons?kind=question">Questions</Link>
               <Link to="/commons?kind=research_note">Research notes</Link>
+              <Link to="/learn">Learning / rule sets</Link>
               <Link to="/field-notes">Published guides</Link>
             </nav>
           </div>
@@ -44,6 +45,7 @@ export default function CommonsShell({ children, identity, role }: {
             <span className="commons-eyebrow">My workspace</span>
             <nav>
               <Link to="/command">Command home</Link>
+              <Link to="/apps/rhen/my-terminal">My RHEN terminal</Link>
               <Link to="/apps/rhen">RHEN research</Link>
               <Link to="/me/settings">Account settings</Link>
             </nav>

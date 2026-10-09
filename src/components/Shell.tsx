@@ -35,6 +35,7 @@ function PublicFooter() {
           <nav aria-label="Footer navigation">
             <Link to="/products">Projects</Link>
             <Link to="/feed">Updates</Link>
+            <Link to="/learn">Learn</Link>
             <Link to="/field-notes">Field Notes</Link>
             <Link to="/about">About</Link>
             <Link to="/privacy">Privacy</Link>

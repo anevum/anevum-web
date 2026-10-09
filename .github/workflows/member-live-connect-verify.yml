@@ -1,0 +1,75 @@
+name: Member LIVE Connect isolation checks
+
+on:
+  pull_request:
+    paths:
+      - "src/server/member-alpaca-live.mjs"
+      - "src/server/member-alpaca-snapshot.mjs"
+      - "src/server/member.mjs"
+      - "src/pages/RhenApp.tsx"
+      - "src/pages/RhenMemberTerminal.tsx"
+      - "src/pages/Learning.tsx"
+      - "src/pages/Commons.tsx"
+      - "src/pages/HomeCompany.tsx"
+      - "src/pages/Terms.tsx"
+      - "src/pages/Privacy.tsx"
+      - "src/components/CommonsShell.tsx"
+      - "src/data/public-routes.json"
+      - "src/data/products.ts"
+      - "src/pages/RhenDraft.tsx"
+      - "src/server/member-rhen-draft.mjs"
+      - "src/pages/RhenConnect.tsx"
+      - "src/App.tsx"
+      - "src/styles/rhen-connect.css"
+      - "src/styles/rhen-member-terminal.css"
+      - "src/styles/commons-learning.css"
+      - "src/styles/commons.css"
+      - "scripts/verify-alpaca-disclosure-browser.mjs"
+      - "migrations/**"
+      - "scripts/verify-member-schema.py"
+      - "tests/member-alpaca-live.test.mjs"
+      - "tests/member-alpaca-snapshot.test.mjs"
+      - "tests/commons-learning.test.mjs"
+      - "tests/member-rhen-draft.test.mjs"
+      - "tests/commons*.test.mjs"
+      - ".github/workflows/member-live-connect-verify.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: member-live-connect-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  member-live-boundary:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install application dependencies
+        run: npm install --no-audit --no-fund
+      - name: Verify member-owned OAuth, Commons and default-off authority
+        run: node --test tests/member-alpaca-live.test.mjs tests/member-alpaca-snapshot.test.mjs tests/member-rhen-draft.test.mjs tests/commons.test.mjs tests/commons-beta.test.mjs tests/commons-learning.test.mjs
+      - name: Validate isolated D1 migration and member accounts
+        run: python scripts/verify-member-schema.py
+      - name: Install PDF renderer for site build
+        run: pip install "weasyprint==68.0" "Pillow==11.3.0"
+      - name: Typecheck and build member app
+        run: npm run build
+      - name: Capture authentic public RHEN authorization disclosure
+        run: node scripts/verify-alpaca-disclosure-browser.mjs
+      - name: Store Alpaca disclosure evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: rhen-alpaca-disclosure-review
+          retention-days: 14
+          path: ${{ runner.temp }}/alpaca-review/

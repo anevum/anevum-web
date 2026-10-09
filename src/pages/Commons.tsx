@@ -23,6 +23,24 @@ const subjects = [
   { id: "software", label: "Software" },
   { id: "mathematics", label: "Mathematics" }
 ];
+const RULE_SET_TEMPLATE = `Research hypothesis:
+
+Market, timeframe, and data source:
+
+Exact entry rule:
+
+Exact exit rule and position/risk limits:
+
+Sample dates, transaction costs, and trade count:
+
+Development / validation / untouched holdout:
+
+Results and adverse conditions (include losses):
+
+What would falsify this idea?
+
+Specific question for other researchers:`;
+
 function dateLabel(value: string) {
   const valueMs = Date.parse(value.includes("T") ? value : value.replace(" ", "T") + "Z");
   return Number.isNaN(valueMs) ? "" : new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric" }).format(valueMs);
@@ -109,10 +127,27 @@ export default function Commons() {
     } finally { setReviewing(null); }
   }
 
+  const template = query.get("template");
   const filter = query.get("kind");
   const selectedKind = filter === "question" || filter === "research_note" ? filter : "all";
   const topics = state?.topics?.filter(item => selectedKind === "all" || item.kind === selectedKind) || [];
   const notes = [...fieldNotes].sort((a,b) => b.date.localeCompare(a.date)).slice(0,3);
+
+  useEffect(() => {
+    if (template !== "ruleset" || !state?.available) return;
+    setKind("research_note");
+    setSubject("algorithms");
+    setBody(previous => previous || RULE_SET_TEMPLATE);
+    setComposer(true);
+  }, [template, state?.available]);
+
+  function startRuleSetReview() {
+    if (!state?.available) return;
+    setComposer(true);
+    setKind("research_note");
+    setSubject("algorithms");
+    setBody(previous => previous || RULE_SET_TEMPLATE);
+  }
 
   return <CommonsShell identity={authenticated ? identity : undefined} role={state?.role}>
     <div className="commons-heading">
@@ -144,6 +179,15 @@ export default function Commons() {
         <a href="mailto:devon@anevum.com?subject=ANEVUM%20Commons%20beta%20interest">Request a beta invitation →</a>
       </section>
     ) : state?.available ? (<>
+      <section className="commons-ruleset-intro" aria-label="Strategy research worksheet">
+        <div><p className="commons-eyebrow">RESEARCH WORKSHOP</p>
+          <h2>Have a rule set worth testing?</h2>
+          <p>Describe the entry, exit, costs, sample, and evidence so others can challenge your reasoning. This starts a research note, not a trade or a signal subscription.</p></div>
+        <div className="commons-ruleset-intro-actions">
+          <button type="button" className="commons-action" onClick={startRuleSetReview}>Use rule-set worksheet</button>
+          <Link to="/learn">Learn the research method →</Link>
+        </div>
+      </section>
       <div className="commons-list-header">
         <div>
           <p className="commons-eyebrow">Member contributions</p>

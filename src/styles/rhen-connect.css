@@ -1,0 +1,53 @@
+/* Alpaca Connect customer-facing disclosure. Real member route, never a screenshot-only mock. */
+.rhen-connect-page {
+  min-height: 100vh;
+  background: #f8f9fa;
+  color: #182329;
+  font-family: inherit;
+}
+.rhen-connect-topbar {
+  display: flex; justify-content: space-between; align-items: center;
+  min-height: 66px; padding: 10px clamp(18px, 4vw, 42px);
+  border-bottom: 1px solid #e1e5e7; background: #fff;
+}
+.rhen-connect-topbar > a:last-child,
+.rhen-connect-links a,
+.rhen-connect-disclosure a { color: #155b83; text-decoration: underline; text-underline-offset: 3px; }
+.rhen-connect-topbar > a:last-child { font-size: .82rem; }
+.rhen-connect-brand { display: inline-flex; align-items: center; gap: 11px; color: #172936; text-decoration: none; }
+.rhen-connect-brand .rhen-mark { width: 48px; height: 42px; color: #12659e; }
+.rhen-connect-brand > span { display: flex; flex-direction: column; font-weight: 750; font-size: 1.1rem; letter-spacing: .14em; line-height: 1.1; }
+.rhen-connect-brand small { margin-top: 4px; font-size: .56rem; letter-spacing: .19em; font-weight: 700; color: #607583; }
+.rhen-connect-layout { display: grid; grid-template-columns: minmax(240px,.82fr) minmax(0,1.18fr); gap: clamp(24px,4vw,54px);
+  align-items: start; max-width: 1140px; margin: 0 auto; padding: clamp(18px, 3vw, 38px); }
+.rhen-connect-intro h1 { margin: 11px 0 15px; font-size: clamp(1.55rem, 3vw, 2.2rem); letter-spacing: -.045em; line-height: 1.14; }
+.rhen-connect-intro > p:not(.rhen-connect-eyebrow):not(.rhen-connect-readiness):not(.rhen-connect-links) {
+  font-size: .92rem; line-height: 1.65; max-width: 42ch; color: #4d616b;
+}
+.rhen-connect-eyebrow { margin: 0; font-size: .66rem; letter-spacing: .11em; font-weight: 800; color: #547184; }
+.rhen-connect-readiness { margin: 20px 0 0; font-size: .76rem; font-weight: 650; color: #72531a; }
+.rhen-connect-links { margin: 18px 0 0; font-size: .79rem; color: #839197; }
+.rhen-connect-signin { margin: 12px 0 0; font-size: .8rem; line-height: 1.55; color: #435864; }
+.rhen-connect-signin a { color: #155b83; text-underline-offset: 3px; font-weight: 650; }
+.rhen-connect-consent { min-width: 0; }
+.rhen-connect-disclosure { padding: clamp(15px, 2.3vw, 22px); border: 1px solid #cbdbe5;
+  border-left: 4px solid #2b779c; background: #fff; border-radius: 8px; box-shadow: 0 2px 14px rgba(20,36,44,.045); }
+.rhen-connect-disclosure h2 { margin: 8px 0 10px; font-size: clamp(1.14rem, 2vw, 1.45rem); letter-spacing: -.03em; }
+.rhen-connect-disclosure p:last-child { margin: 0; color: #34464f; font-size: .87rem; line-height: 1.57; }
+.rhen-connect-ack { display: flex; gap: 10px; align-items: flex-start; margin: 14px 0 11px;
+  color: #344a55; font-size: .82rem; line-height: 1.47; cursor: pointer; }
+.rhen-connect-ack input { margin: 3px 0 0; flex: 0 0 auto; accent-color: #176d9d; width: 17px; height: 17px; }
+.rhen-connect-submit { display: inline-flex; align-items: center; justify-content: center;
+  border: none; border-radius: 6px; background: #176d9d; color: #fff; padding: 11px 19px;
+  min-height: 40px; font: inherit; font-size: .85rem; font-weight: 700; cursor: pointer; }
+.rhen-connect-submit:disabled { cursor: not-allowed; background: #d6dfe4; color: #546773; }
+.rhen-connect-submit:focus-visible, .rhen-connect-ack input:focus-visible { outline: 3px solid #5eb3e1; outline-offset: 2px; }
+.rhen-connect-error { color: #982e34; font-size: .85rem; }
+.rhen-connect-footnote { margin: 12px 0 0; font-size: .73rem; line-height: 1.48; color: #637984; }
+@media (max-width: 700px) {
+  .rhen-connect-topbar { min-height: 58px; }
+  .rhen-connect-layout { grid-template-columns: 1fr; padding: 18px; gap: 24px; }
+  .rhen-connect-intro > p:not(.rhen-connect-eyebrow):not(.rhen-connect-readiness):not(.rhen-connect-links) { max-width: 100%; }
+  .rhen-connect-disclosure p:last-child { font-size: .9rem; }
+  .rhen-connect-submit { width: 100%; }
+}
