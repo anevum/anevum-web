@@ -8,6 +8,7 @@
   "vars": {
     "COMMAND_AUTH_MODE": "cloudflare_access",
     "COMMAND_LIVE_STREAM_ENABLED": "false",
+    "ANEVUM_OWNER_TERMINAL_DUAL_AUTH": "false",
     "ANEVUM_MEMBERS_ENABLED": "true",
     "ANEVUM_MEMBER_RHEN_DRAFTS_ENABLED": "true",
     "ANEVUM_MEMBER_PREVIEW_ENABLED": "true",
