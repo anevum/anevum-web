@@ -192,6 +192,40 @@ async function runCase(route, viewport) {
   }
   if (!routeReady.ready) throw new Error("Route did not hydrate before visual assertion: "+JSON.stringify({route,...routeReady}));
 
+  // Stage 1 Commons parity checks: test geometry of the *rendered React app*
+  // (inside its isolated ShadowRoot), not a descriptive concept image.
+  if (route === "/") {
+    const reply = await send("Runtime.evaluate", {expression:`(() => {
+      const host = document.querySelector(".anevum-commons-v5-mount");
+      const root = host?.shadowRoot;
+      const header = root?.querySelector(".global-header");
+      const left = root?.querySelector(".left-sidebar");
+      const center = root?.querySelector(".main");
+      const right = root?.querySelector(".right-sidebar");
+      const mobile = root?.querySelector(".mobile-nav");
+      const posts = root?.querySelectorAll(".post") || [];
+      const isVisible = el => Boolean(el) && getComputedStyle(el).display !== "none" && el.getBoundingClientRect().width > 0;
+      const width = el => Math.round(el?.getBoundingClientRect().width || 0);
+      return {
+        isolated: Boolean(host && root && !document.querySelector(".global-header")),
+        headerHeight: Math.round(header?.getBoundingClientRect().height || 0),
+        leftWidth: width(left), centerWidth: width(center), rightWidth: width(right),
+        leftVisible: isVisible(left), rightVisible: isVisible(right),
+        mobileVisible: isVisible(mobile), postCount: posts.length,
+        hasAuthenticNotes: Boolean(root?.querySelector('[href*="field-notes/anevum-lean-runtime-reset"]')),
+        containsFiction: /Mara Cole|Eli Rowan|184 votes|sample community/i.test(root?.textContent || "")
+      };
+    })()`,returnByValue:true});
+    const ui=reply.result?.value||{};
+    const desktop=viewport.width>=1200;
+    if(!ui.isolated || ui.postCount<6 || !ui.hasAuthenticNotes || ui.containsFiction ||
+      !ui.headerHeight || (desktop && (Math.abs(ui.headerHeight-64)>2 || !ui.leftVisible || !ui.rightVisible ||
+        Math.abs(ui.leftWidth-252)>4 || Math.abs(ui.rightWidth-312)>4 || ui.centerWidth<500)) ||
+      (!desktop && viewport.width<721 && (!ui.mobileVisible || ui.rightVisible || ui.leftVisible))) {
+      throw new Error("Commons V5 rendered-app parity failed: "+JSON.stringify({viewport:viewport.name,...ui}));
+    }
+  }
+
   const ops = await send("Runtime.evaluate", {expression: `(() => {
     const surface=document.querySelector("[data-visual-ops]");
     const cards=[...document.querySelectorAll(".vo-system-card, .vo-node, .terminal-lane, .terminal-focus-card, .pt-system-button, .pt-map-card")];
