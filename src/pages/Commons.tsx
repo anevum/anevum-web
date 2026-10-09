@@ -15,6 +15,8 @@ type CommonsState = {
   role: "contributor" | "moderator" | null;
   topics: Topic[];
 };
+type CommonsReport = { id: string; topicId: string; topicTitle: string;
+  itemType: "topic" | "comment"; reason: string; createdAt: string };
 const subjects = [
   { id: "markets", label: "Market research" },
   { id: "algorithms", label: "Algorithms" },
@@ -32,6 +34,8 @@ export default function Commons() {
   const [query] = useSearchParams();
   const [state, setState] = useState<CommonsState | null>(null);
   const [loading, setLoading] = useState(false);
+  const [reports, setReports] = useState<CommonsReport[]>([]);
+  const [reviewing, setReviewing] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [composer, setComposer] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -46,11 +50,21 @@ export default function Commons() {
     const response = await fetch("/api/member/commons", { cache: "no-store", signal });
     if (!response.ok) throw new Error("Commons could not be loaded.");
     const next = await response.json() as CommonsState;
-    if (!signal?.aborted) setState(next);
+    if (signal?.aborted) return;
+    setState(next);
+    if (next.available && next.role === "moderator") {
+      const queue = await fetch("/api/member/commons/reports", { cache: "no-store", signal });
+      if (!queue.ok) throw new Error("Moderator reports could not be loaded.");
+      const payload = await queue.json() as { reports: CommonsReport[] };
+      if (!signal?.aborted) setReports(payload.reports);
+    } else {
+      setReports([]);
+    }
   }, []);
 
   useEffect(() => {
     setState(null);
+    setReports([]);
     setError("");
     if (!authenticated) return;
     const abort = new AbortController();
@@ -77,6 +91,22 @@ export default function Commons() {
     } catch (err) {
       setError(err instanceof Error ? err.message : "Submission failed.");
     } finally { setSubmitting(false); }
+  }
+
+  async function reviewReport(reportId: string) {
+    if (state?.role !== "moderator" || reviewing) return;
+    setReviewing(reportId); setError("");
+    try {
+      const response = await fetch("/api/member/commons/reports/" + reportId, {
+        method: "PATCH", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reviewed: true })
+      });
+      const payload = await response.json() as { message?: string };
+      if (!response.ok) throw new Error(payload.message || "Review could not be recorded.");
+      setReports(previous => previous.filter(report => report.id !== reportId));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Review could not be recorded.");
+    } finally { setReviewing(null); }
   }
 
   const filter = query.get("kind");
@@ -147,6 +177,15 @@ export default function Commons() {
       </article>)}</div> : <section className="commons-empty">
         <h3>{state.topics.length && selectedKind !== "all" ? "No research in this category yet." : "The research record starts here."}</h3>
         <p>{state.topics.length && selectedKind !== "all" ? "Try another filter or contribute a question." : "No Commons contributions have been published yet. Start with a question worth investigating."}</p>
+      </section>}
+      {state.role === "moderator" && <section className="commons-composer" aria-label="Private moderator report queue">
+        <div className="commons-list-header"><h2>Reports awaiting review</h2></div>
+        {reports.length ? reports.map(report => <article className="commons-topic" key={report.id}>
+          <div className="commons-topic-meta"><span>{report.itemType.toUpperCase()}</span><span>{report.reason.replaceAll("_", " ")}</span><time dateTime={report.createdAt}>{dateLabel(report.createdAt)}</time></div>
+          <h3><Link to={"/commons/topic/" + report.topicId}>{report.topicTitle}</Link></h3>
+          <p>Review the reported content and use the thread's moderation controls if action is necessary.</p>
+          <button type="button" className="commons-moderate" disabled={reviewing !== null} onClick={() => void reviewReport(report.id)}>{reviewing === report.id ? "Saving…" : "Mark reviewed"}</button>
+        </article>) : <p className="commons-empty">No open reports.</p>}
       </section>}
       <p className="commons-research-note">Community posts are exploratory contributions, not verified trading signals or investment advice. Nothing here changes RHEN's live trading rules.</p>
     </>) : null}
