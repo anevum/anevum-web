@@ -1,4 +1,5 @@
 import { betterAuth } from "better-auth";
+import { commonsEndpoint, exportCommonsData } from "./commons.mjs";
 import { memberRewardsStatus, memberBrokerageStatus } from "./member-capabilities.mjs";
 import { memberRhenDraftSchemaReady, readMemberRhenDraft, saveMemberRhenDraft, deleteMemberRhenDraft, validateRhenDraft } from "./member-rhen-draft.mjs";
 import { resolveMemberOrigin, memberSchemaReady } from "./member-preflight.mjs";
@@ -117,6 +118,10 @@ export async function memberEndpoint(request, env, pathname) {
     return reply({ message: "Same-origin request required." }, 403);
   }
 
+  if (pathname === "/api/member/commons" || pathname.startsWith("/api/member/commons/")) {
+    return commonsEndpoint(request, env, user, pathname);
+  }
+
   if (pathname === "/api/member/rewards" || pathname === "/api/member/brokerage") {
     if (request.method !== "GET") return reply({ message: "Read-only capability." }, 405);
     return reply(pathname === "/api/member/rewards" ? memberRewardsStatus() : memberBrokerageStatus());
@@ -154,12 +159,13 @@ export async function memberEndpoint(request, env, pathname) {
   }
   if (pathname === "/api/member/export" && request.method === "GET") {
     const hasDraftTable = await memberRhenDraftSchemaReady(db);
-    const [profile, saved, follows, entitlements, rhenDraft] = await Promise.all([
+    const [profile, saved, follows, entitlements, rhenDraft, commons] = await Promise.all([
       db.prepare("SELECT display_name, theme, created_at, updated_at FROM member_profiles WHERE user_id = ?").bind(user.id).first(),
       db.prepare("SELECT app_slug, saved_at FROM member_saved_apps WHERE user_id = ? ORDER BY saved_at DESC").bind(user.id).all(),
       db.prepare("SELECT project_slug, followed_at FROM member_project_follows WHERE user_id = ? ORDER BY followed_at DESC").bind(user.id).all(),
       db.prepare("SELECT app_slug, capability, granted_at, expires_at FROM member_entitlements WHERE user_id = ?").bind(user.id).all(),
-      hasDraftTable ? readMemberRhenDraft(db, user.id) : Promise.resolve(null)
+      hasDraftTable ? readMemberRhenDraft(db, user.id) : Promise.resolve(null),
+      exportCommonsData(db, user.id)
     ]);
     return new Response(JSON.stringify({
       exportedAt: new Date().toISOString(),
@@ -168,7 +174,8 @@ export async function memberEndpoint(request, env, pathname) {
       savedApps: saved.results || [],
       projectFollows: follows.results || [],
       entitlements: entitlements.results || [],
-      rhenDraft
+      rhenDraft,
+      commons
     }, null, 2), {
       status: 200,
       headers: {
