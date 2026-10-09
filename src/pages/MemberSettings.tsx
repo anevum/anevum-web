@@ -73,7 +73,7 @@ export default function MemberSettings() {
         <button type="button" disabled={busy} onClick={() => void memberAuthClient.signOut({ fetchOptions: { onSuccess: () => navigate("/", { replace: true }) } })}>Sign out</button>
         <button type="button" className="member-danger-action" disabled={busy} onClick={() => void remove()}>Delete account permanently</button>
       </section>
-      <Link to="/me">Back to Command</Link>
+      <Link to="/command">Back to Command</Link>
     </div>
   );
 }

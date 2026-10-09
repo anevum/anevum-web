@@ -75,7 +75,7 @@ function CommandHome({ enabled = false, checking = false, identity }: {
         <p className="workshop-kicker">ANEVUM</p><strong className="member-command-title">Command</strong>
         <p>Your home for the things you use.</p>
         <nav aria-label="Member navigation">
-          <Link to="/me" aria-current="page" className="active">My programs</Link>
+          <Link to="/command" aria-current="page" className="active">My programs</Link>
           {signedIn ? <a href="#command-following">Following</a> : <Link to="/feed">Updates</Link>}
           <Link to={signedIn ? "/me/settings" : "/sign-in"}>Profile &amp; account</Link>
           <Link to="/products">All projects</Link>

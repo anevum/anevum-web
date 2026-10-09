@@ -15,7 +15,7 @@ export default function SignIn() {
     try {
       const result = await memberAuthClient.signIn.social({
         provider: "google",
-        callbackURL: "/me"
+        callbackURL: "/command"
       });
       if (result.error) {
         setError(result.error.message || "Sign-in could not be started.");
@@ -37,7 +37,7 @@ export default function SignIn() {
       ) : availability === "unavailable" ? (
         <p role="status">Member registration is not open yet. The rest of ANEVUM remains available without signing in.</p>
       ) : session?.user ? (
-        <Link className="member-primary-action" to="/me">Open Command</Link>
+        <Link className="member-primary-action" to="/command">Open Command</Link>
       ) : (
         <button className="member-primary-action" type="button" disabled={redirecting} onClick={() => void signIn()}>
           {redirecting ? "Opening Google…" : "Continue with Google"}
