@@ -28,7 +28,7 @@
 }
 :host([data-theme="paper"]) {
   --sub: #526176;
-  --muted: #6d7b8e;
+  --muted: #657387;
   --line: #d5dce9;
 }
 :host([data-theme="plum"]) {
@@ -331,9 +331,17 @@
     min-width: 0;
     touch-action: manipulation;
   }
-  .mobile-nav .ico {
+  .mobile-nav > a .ico {
     width: 20px;
     height: 20px;
+  }
+  /* Keep the Create glyph's original 22px paint area inside the 42px button.
+     A generic 20px svg rule + 10px padding on each side made it disappear. */
+  .mobile-nav > .mobile-create .ico {
+    width: 42px;
+    height: 42px;
+    padding: 10px;
+    stroke-width: 2.5;
   }
   .mobile-nav > a:focus-visible,
   .mobile-nav > button:focus-visible {
