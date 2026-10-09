@@ -13,6 +13,7 @@ type BillingStatus = {
   paidAccess: boolean;
   plans: Record<"founding" | "standard", Plan>;
   subscription: Subscription | null;
+  lastReconciledAt: number | null;
   paperExecutionEnabled: false;
   liveExecutionEnabled: false;
 };
@@ -52,6 +53,18 @@ export default function MemberBilling() {
       .finally(() => { if (!controller.signal.aborted) setLoading(false); });
     return () => controller.abort();
   }, [availability, session?.user?.id]);
+
+  const refreshBilling = async () => {
+    setBusy(true); setError("");
+    try {
+      const response = await fetch("/api/member/billing/refresh", {method:"POST",headers:{"Content-Type":"application/json"},body:"{}"});
+      const payload = await response.json() as BillingStatus & {message?:string};
+      if (!response.ok) throw new Error(payload.message || "Refresh unavailable.");
+      if (payload.paperExecutionEnabled || payload.liveExecutionEnabled) throw new Error("Unexpected trading capability.");
+      setBilling(payload);
+    } catch (err) { setError(err instanceof Error ? err.message : "Refresh failed."); }
+    finally { setBusy(false); }
+  };
 
   const redirectToStripe = async (operation: "checkout" | "portal", plan?: "founding" | "standard") => {
     setBusy(true);
@@ -100,6 +113,8 @@ export default function MemberBilling() {
           {billing.subscription?.currentPeriodEnd && <p>Current billing period ends: {new Date(billing.subscription.currentPeriodEnd * 1000).toLocaleDateString()}</p>}
           {billing.subscription?.cancelAtPeriodEnd && <p>Cancellation is scheduled at the end of the billing period.</p>}
           <p>{billing.paidAccess ? "Subscription entitlement recorded." : "No current paid entitlement."} Personal paper and live trading remain unavailable until a separate RHEN release.</p>
+          {billing.available && <button type="button" disabled={busy} onClick={() => void refreshBilling()}>Refresh subscription status</button>}
+          {billing.lastReconciledAt && <p>Last checked with Stripe: {new Date(billing.lastReconciledAt).toLocaleString()}</p>}
           {billing.manageEnabled && <button type="button" disabled={busy} onClick={() => void redirectToStripe("portal")}>Manage billing in Stripe</button>}
         </section>
         <section className="member-section">
