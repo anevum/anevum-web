@@ -39,7 +39,7 @@ test("independent release diagnostics gather all blocker types but fail closed o
     assert.match(workflow, new RegExp("steps\\." + id + "\\.outcome"));
   }
   assert.match(workflow, /if: always\(\)/);
-  assert.match(workflow, /steps\\.production_secrets\\.outcome/);
+  assert.match(workflow, /steps\.production_secrets\.outcome/);
   assert.match(workflow, /PRODUCTION_MEMBER_READINESS=PASS/);
   assert.match(workflow, /missing=0/);
   assert.match(workflow, /if \[ "\$missing" != '0' \]/);
