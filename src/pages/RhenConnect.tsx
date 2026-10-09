@@ -62,11 +62,23 @@ export default function RhenConnect() {
     }
   }
 
-  if (availability === "checking" || isPending) return <main className="member-page"><p role="status">Checking RHEN access…</p></main>;
-  if (availability !== "available") return <main className="member-page"><h1>RHEN member access is not available yet.</h1><Link to="/products/rhen">About RHEN</Link></main>;
-  if (!session?.user) return <main className="member-page"><h1>Sign in to connect your brokerage.</h1><Link to="/sign-in">Sign in</Link></main>;
-
-  const canContinue = broker?.connectionAvailable === true && broker.accountConnected === false;
+  // Everyone can read Alpaca's exact disclosure before registration. Only a
+  // verified, authorized member can begin OAuth after explicitly acknowledging it.
+  // This public, read-only state also provides an honest app-review screenshot.
+  const signedIn = Boolean(session?.user);
+  const canContinue = signedIn && !isPending && availability === "available" &&
+    broker?.connectionAvailable === true && broker.accountConnected === false;
+  const readiness = !signedIn
+    ? "Disclosure preview — sign in required for future account linking"
+    : availability !== "available"
+      ? "Member access not enabled"
+      : broker?.accountConnected
+        ? "Account already connected"
+        : canContinue
+          ? "Authorization available"
+          : loading
+            ? "Checking authorization availability"
+            : "Application approval pending — connections disabled";
   return (
     <main className="rhen-connect-page">
       <header className="rhen-connect-topbar">
@@ -78,7 +90,8 @@ export default function RhenConnect() {
           <p className="rhen-connect-eyebrow">ALPACA CONNECT / YOUR OWN ACCOUNT</p>
           <h1 id="rhen-connect-title">Connect your Alpaca account</h1>
           <p>Review the access RHEN by ANEVUM requests before continuing to Alpaca. Your brokerage account remains in your name. Connecting does not start automated trading.</p>
-          <p className="rhen-connect-readiness">{broker?.accountConnected ? "Account already connected" : canContinue ? "Authorization available" : loading ? "Checking authorization availability" : "Application approval pending — connections disabled"}</p>
+          <p className="rhen-connect-readiness">{readiness}</p>
+          {!signedIn && <p className="rhen-connect-signin"><Link to="/sign-in">Sign in to your ANEVUM account</Link> to continue when linking is approved.</p>}
           <p className="rhen-connect-links"><Link to="/products/rhen">Learn about RHEN</Link><span aria-hidden="true"> · </span><Link to="/terms">Terms</Link><span aria-hidden="true"> · </span><Link to="/privacy">Privacy</Link></p>
         </div>
         <div className="rhen-connect-consent">
