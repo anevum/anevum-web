@@ -47,6 +47,8 @@ jobs:
           test "$(jq -r '.d1_databases[0].database_id' wrangler.jsonc)" = '7f0d4c0c-2e85-4900-8504-1347954e1df1'
           test "$(jq -r '.previews.d1_databases[0].database_id' wrangler.jsonc)" = 'a537432e-d216-4b31-8b22-19662cc3a44a'
       - name: Confirm encrypted names on PRODUCTION Worker only — never read values
+        id: production_secrets
+        continue-on-error: true
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         shell: bash
@@ -60,6 +62,7 @@ jobs:
             -o "$RUNNER_TEMP/member-prod-secret-inventory.json"
           jq -e '.success == true and (.result | type == "array")' \
             "$RUNNER_TEMP/member-prod-secret-inventory.json" >/dev/null
+          missing=0
           for name in GOOGLE_CLIENT_ID GOOGLE_CLIENT_SECRET BETTER_AUTH_SECRET; do
             if jq -e --arg n "$name" \
               'any(.result[]; .name == $n and .type == "secret_text")' \
@@ -67,12 +70,17 @@ jobs:
               echo "PASS encrypted production binding name: $name"
             else
               echo "::error::Missing production encrypted Secret: $name on Worker anevum-web-nextgen."
-              echo "::error::A Text variable is NOT an encrypted Worker Secret. Rotate any values that were previously stored as Text."
-              exit 1
+              missing=1
             fi
           done
+          if [ "$missing" != '0' ]; then
+            echo '::error::One or more production credentials are not encrypted Secret bindings. Convert/rotate these in anevum-web-nextgen, not staging.'
+            exit 1
+          fi
           echo 'Encryption/binding NAMES verified. Values, validity, Google callback and private Better Auth rotation are NOT verified.'
       - name: Inspect production D1 identity and schema — SELECT only
+        id: production_d1
+        continue-on-error: true
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_D1_TOKEN }}
         shell: bash
@@ -99,8 +107,11 @@ jobs:
             echo 'Production D1 member schema exists; verify prior approval/migration evidence separately.'
           fi
       - name: Read-only live anonymous Access, member and OAuth readiness probes
+        id: anonymous_routes
+        continue-on-error: true
         run: node scripts/probe-member-public-readiness.mjs
       - name: Release readiness checkpoint
+        if: always()
         shell: bash
         run: |
           {
@@ -112,3 +123,11 @@ jobs:
             echo ''
             echo 'Next: confirm private production OAuth rotation + correct Google production callback; execute separately approved manual production D1 migration; separately approve production signup activation.'
           } >> "$GITHUB_STEP_SUMMARY"
+          echo "Production encrypted Secret bindings: ${{ steps.production_secrets.outcome }}"
+          echo "Production D1 identity/schema: ${{ steps.production_d1.outcome }}"
+          echo "Anonymous live access and OAuth readiness: ${{ steps.anonymous_routes.outcome }}"
+          if [ "${{ steps.production_secrets.outcome }}" != 'success' ] || [ "${{ steps.production_d1.outcome }}" != 'success' ] || [ "${{ steps.anonymous_routes.outcome }}" != 'success' ]; then
+            echo '::error::Production member readiness NOT approved. Inspect the separate diagnostics above. Public signup must remain disabled.'
+            exit 1
+          fi
+          echo 'PRODUCTION_MEMBER_READINESS=PASS (read-only; real OAuth and private secret rotation remain separate approvals)'
