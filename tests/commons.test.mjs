@@ -122,7 +122,7 @@ test("account export has a separate Commons record and fails safely before migra
   assert.ok(member.indexOf("if (!user?.id)") < member.indexOf('pathname === "/api/member/commons"'));
   assert.ok(member.indexOf("safeMutation(request, verifiedOrigin)") < member.indexOf('pathname === "/api/member/commons"'));
   assert.match(member, /exportCommonsData\(db, user\.id\)/);
-  const sql = source("migrations/0003_commons_beta.sql");
+  const sql = source("migrations/0004_commons_beta.sql");
   assert.match(sql, /REFERENCES "user"\("id"\) ON DELETE CASCADE/);
   assert.match(sql, /commons_moderation_events/);
   assert.doesNotMatch(sql, /broker_token|payout|financial_balance|execution_enabled/);
