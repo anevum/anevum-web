@@ -253,7 +253,7 @@ export type LiveTradingFeed = {
   } | null;
   strategy_history?: PublicStrategyHistory[];
   broker_reconciliation?: {
-    state?: "SAFE" | "BLOCKED" | "STALE" | "UNKNOWN";
+    state?: "SAFE" | "BLOCKED" | "ERROR" | "STALE" | "UNKNOWN";
     last_checked_at?: string | null;
     checks_2h?: number;
   };
