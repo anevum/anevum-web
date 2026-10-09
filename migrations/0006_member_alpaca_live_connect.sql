@@ -27,3 +27,12 @@ CREATE TABLE IF NOT EXISTS member_alpaca_live_connections (
 );
 CREATE INDEX IF NOT EXISTS member_alpaca_live_connection_owner_idx
     ON member_alpaca_live_connections(user_id, connected_at DESC);
+
+-- The broker-disclosure acknowledgement is versioned, user-scoped and separate
+-- from both Better Auth login and Alpaca's own permission grant.
+CREATE TABLE IF NOT EXISTS member_alpaca_live_consents (
+    user_id TEXT NOT NULL REFERENCES "user"("id") ON DELETE CASCADE,
+    disclosure_version TEXT NOT NULL CHECK(length(disclosure_version) BETWEEN 5 AND 64),
+    accepted_at INTEGER NOT NULL,
+    PRIMARY KEY(user_id, disclosure_version)
+);
