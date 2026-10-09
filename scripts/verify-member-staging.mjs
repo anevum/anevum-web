@@ -23,6 +23,13 @@ export function stagingOrigin(raw) {
   return STAGING_ORIGIN;
 }
 
+function sameEditableDraft(a, b) {
+  if (a === null || b === null) return a === b;
+  if (!a || !b) return false;
+  return ["label", "maxOpenPositions", "maxPositionPercent",
+    "maxTotalExposurePercent"].every(key => a[key] === b[key]);
+}
+
 function sameDraft(a, b) {
   if (a === null || b === null) return a === b;
   if (!a || !b) return false;
@@ -205,7 +212,7 @@ export async function runAcceptance({
       changed[0] = true;
       const afterA = await readDraft("read updated draft A", cookieA);
       const unchangedB = await readDraft("read untouched draft B", cookieB);
-      if (afterA?.label !== sampleA.label || !sameDraft(unchangedB, originalB)) {
+      if (!sameEditableDraft(afterA, sampleA) || !sameDraft(unchangedB, originalB)) {
         throw new Error("RHEN draft A write leaked into account B.");
       }
 
@@ -213,8 +220,8 @@ export async function runAcceptance({
       changed[1] = true;
       const afterBothA = await readDraft("isolation read A", cookieA);
       const afterBothB = await readDraft("isolation read B", cookieB);
-      if (afterBothA?.label !== sampleA.label ||
-          afterBothB?.label !== sampleB.label) {
+      if (!sameEditableDraft(afterBothA, sampleA) ||
+          !sameEditableDraft(afterBothB, sampleB)) {
         throw new Error("RHEN draft cross-account isolation failed.");
       }
       const afterExportA = await readExport("isolation export A", cookieA, a.user.id, b.user.id);
@@ -240,8 +247,7 @@ export async function runAcceptance({
           await expectStatus("restore draft " + label, response, [200]);
           const restored = await readDraft("verify restored draft " + label, cookie);
           // Update timestamps legitimately change on restoration.
-          if (restored?.label !== (initial?.label ?? undefined) &&
-              !(restored === null && initial === null)) {
+          if (!sameEditableDraft(restored, initial)) {
             throw new Error("Restored draft label mismatch " + label);
           }
         } catch {
