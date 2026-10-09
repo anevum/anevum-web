@@ -156,7 +156,7 @@ export default function Live() {
         </div>
         <div className="pt-meta">
           <span>{new Date(now).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}</span>
-          <span>FEED {ageText(data?.generated_at, now)}</span>
+          <span>HTTP SNAPSHOT {ageText(data?.generated_at, now)} · LAST SCAN {ageText(data?.operational?.latest_scan?.observed_at, now)}</span>
           <SystemStatusChip state={fleet} />
         </div>
       </header>
