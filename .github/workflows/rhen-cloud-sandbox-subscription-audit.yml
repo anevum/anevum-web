@@ -1,0 +1,111 @@
+name: RHEN Cloud Sandbox Subscription Audit (Read Only)
+
+on:
+  push:
+    branches:
+      - work/rhen-cloud-billing-foundation-2026-10-09
+    paths:
+      - '.github/workflows/rhen-cloud-sandbox-subscription-audit.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: anevum-rhen-cloud-sandbox-read-only-audit
+  cancel-in-progress: false
+
+jobs:
+  verify-preview-subscription:
+    if: github.ref == 'refs/heads/work/rhen-cloud-billing-foundation-2026-10-09'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_D1_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install locked Wrangler tooling
+        run: npm install --no-audit --no-fund
+      - name: Assert exact staging-only database and disabled production billing
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "${CLOUDFLARE_ACCOUNT_ID:-}"
+          test -n "${CLOUDFLARE_API_TOKEN:-}"
+          jq -e '
+            .name == "anevum-member-staging" and
+            .vars.ANEVUM_STRIPE_MODE == "test" and
+            .vars.ANEVUM_RHEN_BILLING_ENABLED == "true" and
+            .vars.ANEVUM_RHEN_BILLING_WEBHOOKS_ENABLED == "true" and
+            .vars.ANEVUM_RHEN_BILLING_CHECKOUT_ENABLED == "true" and
+            .vars.ANEVUM_RHEN_BILLING_LIVE_APPROVED == "false" and
+            (.d1_databases | length) == 1 and
+            .d1_databases[0].database_name == "anevum-members-preview" and
+            .d1_databases[0].database_id == "a537432e-d216-4b31-8b22-19662cc3a44a"
+          ' wrangler.member-staging.jsonc >/dev/null
+          jq -e '
+            .name == "anevum-web-nextgen" and
+            .vars.ANEVUM_STRIPE_MODE == "disabled" and
+            .vars.ANEVUM_RHEN_BILLING_ENABLED == "false" and
+            .vars.ANEVUM_RHEN_BILLING_CHECKOUT_ENABLED == "false" and
+            .vars.ANEVUM_RHEN_BILLING_WEBHOOKS_ENABLED == "false" and
+            .d1_databases[0].database_id == "7f0d4c0c-2e85-4900-8504-1347954e1df1"
+          ' wrangler.jsonc >/dev/null
+      - name: Confirm exact D1 inventory UUID (read only)
+        shell: bash
+        run: |
+          set -euo pipefail
+          npx wrangler d1 list --json > "$RUNNER_TEMP/rhen-cloud-d1-inventory.json"
+          jq -e '
+            ([.[] | select(.name=="anevum-members-preview" and .uuid=="a537432e-d216-4b31-8b22-19662cc3a44a")] | length)==1 and
+            ([.[] | select(.name=="anevum-members" and .uuid=="7f0d4c0c-2e85-4900-8504-1347954e1df1")] | length)==1
+          ' "$RUNNER_TEMP/rhen-cloud-d1-inventory.json" >/dev/null
+      - name: Verify paid sandbox subscription maps to one member
+        shell: bash
+        run: |
+          set -euo pipefail
+          npx wrangler d1 execute MEMBER_DB --remote --config wrangler.preview-migrations.jsonc --json \
+            --command "SELECT COUNT(*) AS matching FROM member_billing_subscriptions s JOIN member_billing_customers c ON c.user_id = s.user_id AND c.stripe_customer_id = s.stripe_customer_id WHERE s.stripe_subscription_id = 'sub_1UOedYDSvwYS3kwTgDj5vPYI' AND s.stripe_customer_id = 'cus_VPTZXJPJKj3vNM' AND s.stripe_price_id = 'price_1UOcwYDSvwYS3kwTqnadIMBD' AND s.plan_code = 'standard' AND s.status = 'active' AND s.current_period_end > unixepoch() AND s.cancel_at_period_end = 0" \
+            > "$RUNNER_TEMP/rhen-cloud-paid-match.json"
+          if ! jq -e '.[0].success == true and .[0].results[0].matching == 1' \
+            "$RUNNER_TEMP/rhen-cloud-paid-match.json" >/dev/null; then
+            echo '::error::No uniquely mapped active RHEN Cloud sandbox subscription in preview D1. Stripe status alone does not establish ANEVUM paid entitlement.'
+            exit 1
+          fi
+          echo 'PASS: one authenticated member owns the active sandbox standard subscription in preview D1'
+      - name: Verify Stripe created-event reconciliation was recorded
+        shell: bash
+        run: |
+          set -euo pipefail
+          npx wrangler d1 execute MEMBER_DB --remote --config wrangler.preview-migrations.jsonc --json \
+            --command "SELECT COUNT(*) AS matched FROM member_billing_events WHERE stripe_event_id='evt_1UOedaDSvwYS3kwTwHdejImU' AND event_type='customer.subscription.created'" \
+            > "$RUNNER_TEMP/rhen-cloud-created-event.json"
+          if ! jq -e '.[0].success == true and .[0].results[0].matched == 1' \
+             "$RUNNER_TEMP/rhen-cloud-created-event.json" >/dev/null; then
+            echo '::error::Stripe created event has not been recorded as handled in preview D1.'
+            exit 1
+          fi
+          echo 'PASS: signed Stripe created-event recorded exactly once'
+      - name: Verify referential consistency without reading member identities
+        shell: bash
+        run: |
+          set -euo pipefail
+          npx wrangler d1 execute MEMBER_DB --remote --config wrangler.preview-migrations.jsonc --json \
+            --command 'PRAGMA foreign_key_check' > "$RUNNER_TEMP/rhen-cloud-fk-check.json"
+          jq -e '.[0].success == true and (.[0].results | length) == 0' \
+            "$RUNNER_TEMP/rhen-cloud-fk-check.json" >/dev/null
+          {
+            echo "## RHEN Cloud sandbox: initial paid subscription audit"
+            echo
+            echo "PASS: Active monthly standard Stripe test subscription is linked to exactly one member in preview D1."
+            echo "PASS: Webhook event is durably recorded in preview D1."
+            echo "PASS: D1 foreign-key integrity."
+            echo "No personal identifiers, card details or Stripe API secrets were printed."
+            echo "No D1 writes, production billing changes, broker changes or user cancellations were performed."
+            echo
+            echo "Next: member-driven portal cancellation and two-user tenant isolation."
+          } >> "$GITHUB_STEP_SUMMARY"
