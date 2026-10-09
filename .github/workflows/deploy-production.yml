@@ -43,12 +43,53 @@ jobs:
           test -s public/devon-akins-resume.pdf
           test -s dist/client/devon-akins-resume.pdf
           head -c 5 dist/client/devon-akins-resume.pdf | grep -Fq '%PDF-'
+      - name: Verify production member release prerequisites before deployment
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_D1_TOKEN }}
+          WORKER_SECRETS_READ_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          node scripts/verify-member-bindings.mjs --require-live
+          jq -e '
+            .name == "anevum-web-nextgen" and
+            .vars.ANEVUM_MEMBERS_ENABLED == "true" and
+            .vars.ANEVUM_MEMBER_RHEN_DRAFTS_ENABLED == "false" and
+            .vars.ANEVUM_MEMBER_PREVIEW_ENABLED == "false" and
+            .vars.COMMAND_LIVE_STREAM_ENABLED == "false" and
+            .d1_databases[0].database_id == "7f0d4c0c-2e85-4900-8504-1347954e1df1" and
+            .previews.d1_databases[0].database_id == "a537432e-d216-4b31-8b22-19662cc3a44a"
+          ' wrangler.jsonc >/dev/null
+          test -n "${CLOUDFLARE_API_TOKEN:-}"
+          test -n "${WORKER_SECRETS_READ_TOKEN:-}"
+          npx wrangler d1 execute MEMBER_DB --remote --config wrangler.jsonc --json \
+            --command "SELECT COUNT(*) AS member_tables FROM sqlite_master WHERE type='table' AND name IN ('user','session','account','verification','rateLimit','member_profiles','member_saved_apps','member_project_follows','member_entitlements')" > "$RUNNER_TEMP/prod-launch-schema.json"
+          jq -e '.[0].success == true and .[0].results[0].member_tables == 9' "$RUNNER_TEMP/prod-launch-schema.json" >/dev/null
+          npx wrangler d1 execute MEMBER_DB --remote --config wrangler.jsonc --json \
+            --command "SELECT COUNT(*) AS draft_tables FROM sqlite_master WHERE type='table' AND name='member_rhen_drafts'" > "$RUNNER_TEMP/prod-launch-draft-schema.json"
+          jq -e '.[0].success == true and .[0].results[0].draft_tables == 1' "$RUNNER_TEMP/prod-launch-draft-schema.json" >/dev/null
+          npx wrangler d1 execute MEMBER_DB --remote --config wrangler.jsonc --json \
+            --command 'PRAGMA foreign_key_check' > "$RUNNER_TEMP/prod-launch-foreign-keys.json"
+          jq -e '.[0].success == true and (.[0].results|length) == 0' "$RUNNER_TEMP/prod-launch-foreign-keys.json" >/dev/null
+          curl --fail --silent --show-error --retry 2 --max-time 20 \
+            -H "Authorization: Bearer $WORKER_SECRETS_READ_TOKEN" \
+            "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/anevum-web-nextgen/secrets" \
+            -o "$RUNNER_TEMP/prod-launch-secret-bindings.json"
+          jq -e '.success == true and (.result|type == "array")' "$RUNNER_TEMP/prod-launch-secret-bindings.json" >/dev/null
+          for name in GOOGLE_CLIENT_ID GOOGLE_CLIENT_SECRET BETTER_AUTH_SECRET; do
+            jq -e --arg key "$name" 'any(.result[]; .name == $key and .type == "secret_text")' \
+              "$RUNNER_TEMP/prod-launch-secret-bindings.json" >/dev/null
+          done
+          echo 'PASS release preflight: approved migrated D1, ten required tables, FK integrity and encrypted auth binding names.'
       - name: Deploy to Cloudflare Workers
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           command: deploy
+      - name: Verify production member launch boundaries
+        run: node scripts/probe-member-production-launch.mjs
       - name: Verify production visual operations
         env:
           BASE_URL: https://anevum.com
