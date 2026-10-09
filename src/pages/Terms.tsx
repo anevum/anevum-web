@@ -24,7 +24,7 @@ export default function Terms() {
       <h2>Account removal and questions</h2>
       <p>You can export and delete your member account through <a href="/me/settings">Command account settings</a>, subject to a recent sign-in for sensitive actions. Review the <a href="/privacy">Privacy notice</a> for the information stored and deletion limitations. Questions can be sent to <a href="mailto:devon@anevum.com">devon@anevum.com</a>.</p>
 
-      <p className="member-legal-date">Commons revisions proposed October 9, 2026; publication subject to owner review.</p>
+      <p className="member-legal-date">Last reviewed October 8, 2026. Proposed Commons additions dated October 9, 2026; owner review required before publication.</p>
     </article>
   );
 }
