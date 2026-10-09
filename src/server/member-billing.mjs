@@ -4,7 +4,7 @@ export const RHEN_CLOUD_PLANS = Object.freeze({
   founding: Object.freeze({ code: "founding", amountCents: 999, currency: "usd", interval: "month" }),
   standard: Object.freeze({ code: "standard", amountCents: 1999, currency: "usd", interval: "month" })
 });
-const BILLING_TABLES = ["member_billing_customers", "member_billing_subscriptions", "member_billing_events"];
+const BILLING_TABLES = ["member_billing_customers", "member_billing_subscriptions", "member_billing_events", "member_billing_checkout_locks"];
 const STRIPE_API = "https://api.stripe.com/v1";
 const ACTIVE_STATUSES = new Set(["active"]); // No trial periods are offered.
 const OPEN_STATUSES = new Set(["incomplete", "trialing", "active", "past_due", "unpaid", "paused"]);
@@ -29,7 +29,7 @@ export async function billingSchemaReady(db) {
   if (!db || typeof db.prepare !== "function") return false;
   try {
     const response = await db.prepare(
-      "SELECT name FROM sqlite_master WHERE type='table' AND name IN ('member_billing_customers','member_billing_subscriptions','member_billing_events')"
+      "SELECT name FROM sqlite_master WHERE type='table' AND name IN ('member_billing_customers','member_billing_subscriptions','member_billing_events','member_billing_checkout_locks')"
     ).all();
     const found = new Set((response.results || []).map(row => row.name));
     return BILLING_TABLES.every(name => found.has(name));
@@ -165,6 +165,54 @@ async function ensureCustomer(db, env, user) {
   return customer.id;
 }
 
+async function acquireCheckoutLock(db, userId) {
+  const token = crypto.randomUUID();
+  const now = Math.floor(Date.now() / 1000);
+  try {
+    const result = await db.prepare(
+      "INSERT INTO member_billing_checkout_locks (user_id,lock_token,expires_at) VALUES (?,?,?) " +
+      "ON CONFLICT(user_id) DO UPDATE SET lock_token=excluded.lock_token, expires_at=excluded.expires_at " +
+      "WHERE member_billing_checkout_locks.expires_at < ?"
+    ).bind(userId, token, now + 180, now).run();
+    if (result?.success !== true) throw new BillingError(503, "Checkout lock is unavailable.");
+    if (Number(result?.meta?.changes) !== 1) {
+      throw new BillingError(409, "Checkout is already being prepared.");
+    }
+  } catch (error) {
+    if (error instanceof BillingError) throw error;
+    throw new BillingError(503, "Checkout lock is unavailable.");
+  }
+  return token;
+}
+
+async function releaseCheckoutLock(db, userId, token) {
+  // Compare token, not user alone: a crashed/expired request must not unlock a
+  // newer request that already acquired the same member's execution slot.
+  try {
+    await db.prepare(
+      "DELETE FROM member_billing_checkout_locks WHERE user_id=? AND lock_token=?"
+    ).bind(userId, token).run();
+  } catch { /* The lease expires; provider checks still prevent repeat checkout. */ }
+}
+
+async function checkNoOpenStripeBilling(env, customerId) {
+  // Local state can lag Stripe because webhooks are asynchronous; always consult
+  // the provider before creating another subscription for this user.
+  const query = encodeURIComponent(customerId);
+  const [sessions, subscriptions] = await Promise.all([
+    stripeRequest(env, "GET", "/checkout/sessions?customer=" + query + "&status=open&limit=100"),
+    stripeRequest(env, "GET", "/subscriptions?customer=" + query + "&status=all&limit=100")
+  ]);
+  if (sessions?.has_more || subscriptions?.has_more ||
+      !Array.isArray(sessions?.data) || !Array.isArray(subscriptions?.data)) {
+    throw new BillingError(503, "Existing billing state cannot be verified.");
+  }
+  if (sessions.data.some(s => s.status === "open" && s.mode === "subscription") ||
+      subscriptions.data.some(s => OPEN_STATUSES.has(s.status))) {
+    throw new BillingError(409, "There is already a subscription or unfinished checkout to manage.");
+  }
+}
+
 export async function memberBillingEndpoint(request, env, user, origin, pathname) {
   if (!["GET", "POST"].includes(request.method)) return billingReply({ message: "Method not allowed." }, 405);
   const db = env.MEMBER_DB;
@@ -204,7 +252,9 @@ export async function memberBillingEndpoint(request, env, user, origin, pathname
       "AND status IN ('active','trialing','past_due','unpaid','incomplete','paused') LIMIT 1"
     ).bind(user.id).first();
     if (active) return billingReply({ message: "Manage the existing subscription instead." }, 409);
+    let checkoutLock = null;
     try {
+      checkoutLock = await acquireCheckoutLock(db, user.id);
       const priceId = body.plan === "founding" ? env.STRIPE_FOUNDING_PRICE_ID : env.STRIPE_STANDARD_PRICE_ID;
       // Validate the actual Stripe price; never charge a different amount than advertised.
       const price = await stripeRequest(env, "GET", "/prices/" + priceId);
@@ -215,6 +265,7 @@ export async function memberBillingEndpoint(request, env, user, origin, pathname
         throw new BillingError(503, "Configured price does not match the advertised subscription.");
       }
       const customerId = await ensureCustomer(db, env, user);
+      await checkNoOpenStripeBilling(env, customerId);
       const checkout = await stripeRequest(env, "POST", "/checkout/sessions", {
         mode: "subscription",
         customer: customerId,
@@ -233,6 +284,8 @@ export async function memberBillingEndpoint(request, env, user, origin, pathname
     } catch (error) {
       return billingReply({ message: error instanceof BillingError ? error.message : "Billing unavailable." },
         error instanceof BillingError ? error.status : 502);
+    } finally {
+      if (checkoutLock) await releaseCheckoutLock(db, user.id, checkoutLock);
     }
   }
   try {
