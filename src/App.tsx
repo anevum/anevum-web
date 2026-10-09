@@ -23,6 +23,7 @@ const SignIn = lazy(() => import("./pages/SignIn"));
 const MemberHome = lazy(() => import("./pages/MemberHome"));
 const MemberSettings = lazy(() => import("./pages/MemberSettings"));
 const MemberRewards = lazy(() => import("./pages/MemberRewards"));
+const MemberStagingVerify = lazy(() => import("./pages/MemberStagingVerify"));
 const RhenApp = lazy(() => import("./pages/RhenApp"));
 const Privacy = lazy(() => import("./pages/Privacy"));
 const Terms = lazy(() => import("./pages/Terms"));
@@ -42,6 +43,7 @@ const titles: Record<string, string> = {
   "/me": "Command — ANEVUM",
   "/me/settings": "Account settings — ANEVUM",
   "/me/rewards": "Member rewards — ANEVUM",
+  "/me/verify": "Staging verification — ANEVUM",
   "/privacy": "Privacy — ANEVUM",
   "/terms": "Terms — ANEVUM"
 };
@@ -61,6 +63,7 @@ const descriptions: Record<string, string> = {
   "/me": "Your private ANEVUM project library and follows.",
   "/me/settings": "Private ANEVUM profile and account settings.",
   "/me/rewards": "Status and future plans for ANEVUM member rewards.",
+  "/me/verify": "Private read-only staging member account security checks.",
   "/privacy": "ANEVUM privacy information.",
   "/terms": "ANEVUM website terms."
 };
@@ -214,6 +217,7 @@ export default function App() {
         <Route path="/me" element={<PublicExperience><MemberHome /></PublicExperience>} />
         <Route path="/me/settings" element={<PublicExperience><MemberSettings /></PublicExperience>} />
         <Route path="/me/rewards" element={<PublicExperience><MemberRewards /></PublicExperience>} />
+        <Route path="/me/verify" element={<PublicExperience><MemberStagingVerify /></PublicExperience>} />
         <Route path="/apps/rhen/terminal/*" element={<LegacyRhenOperatorRoute />} />
         <Route path="/apps/rhen/command/*" element={<LegacyRhenOperatorRoute />} />
         <Route path="/apps/rhen/*" element={<Suspense fallback={<Loader />}><RhenApp /></Suspense>} />

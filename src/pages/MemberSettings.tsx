@@ -68,8 +68,9 @@ export default function MemberSettings() {
       </section>
       <section className="member-section">
         <h2>Account</h2>
-        <p>ANEVUM accounts save project preferences. Signing up does not connect you to any brokerage account.</p>
+        <p>ANEVUM accounts save project preferences and optional, non-executing RHEN configuration drafts. Signing up does not connect you to any brokerage account.</p>
         <p><a href="/api/member/export" download="anevum-account-data.json">Download my account data (JSON)</a></p>
+        {window.location.origin === "https://anevum-member-staging.devonakins.workers.dev" && <p><Link to="/me/verify">Run staging account verification</Link></p>}
         <button type="button" disabled={busy} onClick={() => void memberAuthClient.signOut({ fetchOptions: { onSuccess: () => navigate("/", { replace: true }) } })}>Sign out</button>
         <button type="button" className="member-danger-action" disabled={busy} onClick={() => void remove()}>Delete account permanently</button>
       </section>
