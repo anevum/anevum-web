@@ -1,12 +1,68 @@
 [
-  { "path": "/", "label": "Home", "nav": false, "sitemap": true },
-  { "path": "/products", "label": "Projects", "nav": true, "sitemap": true },
-  { "path": "/feed", "label": "Updates", "nav": true, "sitemap": true },
-  { "path": "/field-notes", "label": "Field Notes", "nav": true, "sitemap": true },
-  { "path": "/about", "label": "About", "nav": true, "sitemap": true },
-  { "path": "/products/rhen", "label": "RHEN", "nav": false, "sitemap": true },
-  { "path": "/products/rhen/evidence", "label": "RHEN Evidence", "nav": false, "sitemap": true },
-  { "path": "/products/rhen/releases", "label": "RHEN Releases", "nav": false, "sitemap": true },
-  { "path": "/products/rhen/architecture", "label": "RHEN Architecture", "nav": false, "sitemap": true },
-  { "path": "/resume", "label": "Resume", "nav": false, "sitemap": true }
+  {
+    "path": "/",
+    "label": "Home",
+    "nav": false,
+    "sitemap": true
+  },
+  {
+    "path": "/commons",
+    "label": "Commons",
+    "nav": true,
+    "sitemap": false
+  },
+  {
+    "path": "/products",
+    "label": "Projects",
+    "nav": false,
+    "sitemap": true
+  },
+  {
+    "path": "/feed",
+    "label": "Updates",
+    "nav": true,
+    "sitemap": true
+  },
+  {
+    "path": "/field-notes",
+    "label": "Research",
+    "nav": true,
+    "sitemap": true
+  },
+  {
+    "path": "/about",
+    "label": "About",
+    "nav": false,
+    "sitemap": true
+  },
+  {
+    "path": "/products/rhen",
+    "label": "RHEN",
+    "nav": true,
+    "sitemap": true
+  },
+  {
+    "path": "/products/rhen/evidence",
+    "label": "RHEN Evidence",
+    "nav": false,
+    "sitemap": true
+  },
+  {
+    "path": "/products/rhen/releases",
+    "label": "RHEN Releases",
+    "nav": false,
+    "sitemap": true
+  },
+  {
+    "path": "/products/rhen/architecture",
+    "label": "RHEN Architecture",
+    "nav": false,
+    "sitemap": true
+  },
+  {
+    "path": "/resume",
+    "label": "Resume",
+    "nav": false,
+    "sitemap": true
+  }
 ]

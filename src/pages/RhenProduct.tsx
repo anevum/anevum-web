@@ -44,8 +44,8 @@ export default function RhenProduct() {
             <p className="workshop-kicker">PRODUCT / RHEN</p>
             <h1>RHEN</h1>
             <p className="workshop-rhen-lead">
-              RHEN is my first major software project. I started building it to investigate markets,
-              test trading ideas, and learn whether a system can make useful decisions from real evidence.
+              RHEN is ANEVUM's first major application, developed to investigate market behavior,
+              evaluate trading ideas, and test whether decisions hold up against measurable evidence.
             </p>
             <p className="workshop-rhen-lead-secondary">
               The software is operating with narrow trading authority, but a working system is not the same thing

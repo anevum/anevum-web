@@ -36,6 +36,7 @@ const previewMigration = load("wrangler.preview-migrations.jsonc");
 
 assert(prod?.vars?.ANEVUM_MEMBERS_ENABLED === "true", "The release candidate must explicitly opt into production members.");
 assert(prod?.vars?.ANEVUM_MEMBER_RHEN_DRAFTS_ENABLED === "false", "Production personal draft settings must remain disabled.");
+assert(prod?.vars?.ANEVUM_COMMONS_ENABLED === "false", "Production Commons must remain disabled.");
 assert(prod?.vars?.ANEVUM_MEMBER_PREVIEW_ENABLED === "false", "Production preview identity must remain disabled.");
 assert(prod?.d1_databases?.[0]?.database_id === production, "Production binding UUID changed.");
 assert(prod?.previews?.d1_databases?.[0]?.database_id === expected, "Production preview binding UUID changed.");
@@ -49,10 +50,11 @@ assert(!Object.hasOwn(stage, "custom_domains"), "Staging must not bind custom do
 assert(!Object.hasOwn(stage, "env"), "Staging deployment must use one explicit configuration.");
 assert(stage?.vars?.ANEVUM_MEMBERS_ENABLED === "true", "Only staging OAuth test accounts may be enabled.");
 assert(stage?.vars?.ANEVUM_MEMBER_RHEN_DRAFTS_ENABLED === "true", "Only staging may expose authenticated RHEN draft settings.");
+assert(stage?.vars?.ANEVUM_COMMONS_ENABLED === "true", "Staging Commons is gated by invitations and preview D1.");
 assert(stage?.vars?.ANEVUM_MEMBER_PREVIEW_ENABLED === "true", "Staging test OAuth must use explicitly enabled preview identity.");
 assert(stage?.vars?.COMMAND_LIVE_STREAM_ENABLED === "false", "Staging must disable RHEN live command stream.");
 assert(stage?.vars?.MEMBER_PREVIEW_ORIGIN === verifiedStagingOrigin, "Staging identity must use its exact verified HTTPS origin.");
-const stageVarsAllowed = new Set(["COMMAND_AUTH_MODE", "COMMAND_LIVE_STREAM_ENABLED", "ANEVUM_MEMBERS_ENABLED", "ANEVUM_MEMBER_RHEN_DRAFTS_ENABLED", "ANEVUM_MEMBER_PREVIEW_ENABLED", "MEMBER_PREVIEW_ORIGIN"]);
+const stageVarsAllowed = new Set(["COMMAND_AUTH_MODE", "COMMAND_LIVE_STREAM_ENABLED", "ANEVUM_MEMBERS_ENABLED", "ANEVUM_MEMBER_RHEN_DRAFTS_ENABLED", "ANEVUM_COMMONS_ENABLED", "ANEVUM_MEMBER_PREVIEW_ENABLED", "MEMBER_PREVIEW_ORIGIN"]);
 for (const name of Object.keys(stage.vars || {})) {
   assert(stageVarsAllowed.has(name), "Unexpected variable in staging config: " + name);
 }
@@ -85,6 +87,7 @@ if (process.argv.includes("--generated")) {
              "Generated Worker unexpectedly contains a production route.");
       assert(generated?.vars?.ANEVUM_MEMBERS_ENABLED === "true", "Generated Worker lost the explicit staging-only OAuth gate.");
       assert(generated?.vars?.ANEVUM_MEMBER_RHEN_DRAFTS_ENABLED === "true", "Generated Worker lost staging-only draft gate.");
+      assert(generated?.vars?.ANEVUM_COMMONS_ENABLED === "true", "Generated staging must retain the invitation-gated Commons flag.");
       assert(generated?.vars?.ANEVUM_MEMBER_PREVIEW_ENABLED === "true", "Generated Worker lost its staging preview gate.");
       assert(generated?.vars?.MEMBER_PREVIEW_ORIGIN === verifiedStagingOrigin, "Generated Worker uses an unverified OAuth origin.");
       assert(generated?.vars?.COMMAND_LIVE_STREAM_ENABLED === "false", "Generated staging Worker enabled live RHEN command stream.");

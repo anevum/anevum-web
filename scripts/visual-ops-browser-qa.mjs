@@ -142,7 +142,7 @@ async function runCase(route, viewport) {
         expression: `(() => {
           const pathReady = location.pathname === ${JSON.stringify(route)};
           const suspenseReady = !document.querySelector(".route-loader");
-          const homeReady = ${JSON.stringify(route)} !== "/" || Boolean(document.querySelector(".studio-home"));\n          const productsReady = ${JSON.stringify(route)} !== "/products" || Boolean(document.querySelector(".truth-products-page"));\n          const feedReady = ${JSON.stringify(route)} !== "/feed" || Boolean(document.querySelector(".feed-page"));\n          const rhenReady = ${JSON.stringify(route)} !== "/products/rhen" || Boolean(document.querySelector(".truth-rhen-page"));
+          const homeReady = ${JSON.stringify(route)} !== "/" || Boolean(document.querySelector(".commons-welcome"));\n          const productsReady = ${JSON.stringify(route)} !== "/products" || Boolean(document.querySelector(".truth-products-page"));\n          const feedReady = ${JSON.stringify(route)} !== "/feed" || Boolean(document.querySelector(".feed-page"));\n          const rhenReady = ${JSON.stringify(route)} !== "/products/rhen" || Boolean(document.querySelector(".truth-rhen-page"));
           const liveReady = ${JSON.stringify(route)} !== "/products/rhen/evidence" || Boolean(document.querySelector('[data-visual-ops="public-terminal"]'));
           const architectureReady = ${JSON.stringify(route)} !== "/products/rhen/architecture" || Boolean(document.querySelector(".architecture-role-grid"));
           const researchReady = ${JSON.stringify(route)} !== "/field-notes" || Boolean(document.querySelector(".studio-notes-page"));
@@ -172,7 +172,7 @@ async function runCase(route, viewport) {
       expression: `(() => {
         const pathReady = location.pathname === ${JSON.stringify(route)};
         const suspenseReady = !document.querySelector(".route-loader");
-        const homeReady = ${JSON.stringify(route)} !== "/" || Boolean(document.querySelector(".studio-home"));\n          const productsReady = ${JSON.stringify(route)} !== "/products" || Boolean(document.querySelector(".truth-products-page"));\n          const feedReady = ${JSON.stringify(route)} !== "/feed" || Boolean(document.querySelector(".feed-page"));\n          const rhenReady = ${JSON.stringify(route)} !== "/products/rhen" || Boolean(document.querySelector(".truth-rhen-page"));
+        const homeReady = ${JSON.stringify(route)} !== "/" || Boolean(document.querySelector(".commons-welcome"));\n          const productsReady = ${JSON.stringify(route)} !== "/products" || Boolean(document.querySelector(".truth-products-page"));\n          const feedReady = ${JSON.stringify(route)} !== "/feed" || Boolean(document.querySelector(".feed-page"));\n          const rhenReady = ${JSON.stringify(route)} !== "/products/rhen" || Boolean(document.querySelector(".truth-rhen-page"));
         const liveReady = ${JSON.stringify(route)} !== "/products/rhen/evidence" || Boolean(document.querySelector('[data-visual-ops="public-terminal"]'));
         const architectureReady = ${JSON.stringify(route)} !== "/products/rhen/architecture" || Boolean(document.querySelector(".architecture-role-grid"));
         const researchReady = ${JSON.stringify(route)} !== "/field-notes" || Boolean(document.querySelector(".studio-notes-page"));
@@ -347,18 +347,18 @@ async function runCase(route, viewport) {
   // Reuse this bounded, hydrated browser target for the release evidence.
   // The duplicate CLI screenshot process could hang until the entire job died.
   const evidenceRoutes = {
-    "/":["home",["truth-home","A place for things I build."]],
-    "/products":["products",["truth-products-page","Things I’m working on."]],
+    "/":["home",["commons-welcome","Good questions."]],
+    "/products":["products",["truth-products-page","Software you can explore."]],
     "/products/rhen":["rhen",["truth-rhen-page","PRODUCT / RHEN","workshop-rhen-evidence","A working program is only the beginning."]],
     "/products/rhen/evidence":["terminal",["EVIDENCE DRAWER","public-terminal-page","RESEARCH","REPLAY","RHEN"]],
-    "/field-notes":["research",["studio-notes-page","FIELD NOTES"]],
+    "/field-notes":["research",["studio-notes-page","Research worth keeping."]],
     "/field-notes/prediction-outcome-evidence-chain":["field-note",["REPRODUCE / CHALLENGE THIS NOTE"]],
     "/products/rhen/architecture":["architecture",["How RHEN works."]],
     "/about":["about",["studio-about-page","ANEVUM is one person right now."]],
     "/resume":["resume",["Technical Skills"]],
     "/products/rhen/releases":["releases",["studio-releases-page","Every version leaves a record."]],
-    "/feed":["feed",["feed-page","PUBLIC FEED"]],
-    "/me":["member-command",["member-command","My programs","Programs"]],
+    "/feed":["feed",["feed-page","What has changed."]],
+    "/me":["member-command",["member-command","My Command","Programs"]],
     "/privacy":["privacy",["member-legal"]],
     "/terms":["terms",["member-legal"]]
   };

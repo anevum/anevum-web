@@ -79,7 +79,7 @@ export default function RhenApp() {
           <p className="workshop-kicker">RHEN / {section}</p>
           {section === "overview" && <>
             <h2>Trading ideas, tested against evidence.</h2>
-            <p>RHEN is my market research and execution project. This member workspace shows the same sanitized public evidence and research available on ANEVUM; it is not a personal brokerage account or a live trading control panel.</p>
+            <p>RHEN is ANEVUM's market research application. This member workspace currently shows public-safe evidence and research; it is not yet a personal brokerage connection or live trading control panel.</p>
             <dl className="member-app-facts">
               <div><dt>Registered release</dt><dd>{release.version}</dd></div>
               <div><dt>Live trading scope</dt><dd>Long U.S. equities and ETFs</dd></div>

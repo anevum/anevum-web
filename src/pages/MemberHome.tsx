@@ -91,7 +91,8 @@ function CommandHome({ enabled = false, checking = false, identity }: {
         <p className="workshop-kicker">ANEVUM</p><strong className="member-command-title">Command</strong>
         <p>Your home for the things you use.</p>
         <nav aria-label="Member navigation">
-          <Link to="/command" aria-current="page" className="active">My programs</Link>
+          <Link to="/command" aria-current="page" className="active">My Command</Link>
+          <Link to="/commons">Commons research</Link>
           {signedIn ? <a href="#command-following">Following</a> : <Link to="/feed">Updates</Link>}
           <Link to={signedIn ? "/me/settings" : "/sign-in"}>Profile &amp; account</Link>
           <Link to="/me/rewards">Member rewards</Link>
@@ -103,11 +104,12 @@ function CommandHome({ enabled = false, checking = false, identity }: {
       </aside>
       <main className="member-command-content">
         <header className="member-command-heading">
-          <div><p className="workshop-kicker">Command</p><h1>{signedIn ? name : "Your programs, in one place."}</h1><p>Open a program, keep track of its progress, and manage your ANEVUM account.</p></div>
+          <div><p className="workshop-kicker">Your private workspace</p><h1>{signedIn ? name : "Your Command, in one place."}</h1><p>Manage your personal programs and account here. Shared research and discussions happen separately in Commons.</p></div>
           {signedIn && <Link to="/me/settings">Edit profile</Link>}
         </header>
         {checking ? <p className="member-command-notice" role="status">Checking your account…</p> : !signedIn ? <div className="member-command-notice" role="status"><strong>{enabled ? "Sign in to make this your Command." : "Member accounts are not open yet."}</strong><p>{enabled ? "Your saved programs, follows, and profile belong to your account." : "You can explore the projects and their public records now. Saving programs and profile changes will open with registration."}</p>{enabled && <Link to="/sign-in">Continue with Google</Link>}</div> : null}
         {error && <div className="member-command-notice member-alert" role="alert"><p>{error}</p><button type="button" onClick={() => void load().then(() => setError("")).catch(reason => setError(String(reason.message)))}>Retry</button></div>}
+        <section className="member-command-section member-command-rewards" aria-labelledby="command-commons-title"><div><h2 id="command-commons-title">Commons</h2><p>Research, questions and contributions across the ANEVUM community. A small invitation-only beta is in development.</p></div><Link to="/commons">Enter Commons</Link></section>
         {signedIn && operator && <section className="member-command-section" aria-labelledby="command-operator">
           <div className="member-command-rewards">
             <div>

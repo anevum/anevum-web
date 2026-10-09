@@ -1,124 +1,67 @@
-import { Link } from "react-router-dom";
-import SystemIcon from "../components/company/SystemIcon";
+import { Link, Navigate } from "react-router-dom";
+import Mark from "../components/Mark";
+import { memberAuthClient } from "../member/auth-client";
 import { fieldNotes } from "../data/fieldNotes";
 import { currentRhenRelease } from "../data/releases";
-import { publicProducts } from "../data/products";
 
-function readableDate(value: string) {
-  const date = new Date(value + "T12:00:00");
-  return Number.isNaN(date.getTime())
-    ? value
-    : new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric" }).format(date);
-}
+const path = [
+  ["01", "Ask", "Turn a question or hypothesis into a clear problem."],
+  ["02", "Investigate", "Discuss assumptions, measurements, and limitations."],
+  ["03", "Test", "Connect the research to evidence as tools become available."],
+  ["04", "Document", "Keep a useful record of what was learned."]
+];
 
 export default function HomeCompany() {
-  const products = publicProducts();
-  const rhen = products.find((product) => product.slug === "rhen");
-  const otherProjects = products.filter((product) => product.slug !== "rhen");
-  const notes = [...fieldNotes].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 4);
+  const { data: session } = memberAuthClient.useSession();
+  const latestNotes = [...fieldNotes].sort((a,b) => b.date.localeCompare(a.date)).slice(0,3);
   const release = currentRhenRelease();
 
-  return (
-    <div className="studio-home truth-home workshop-home">
-      <section className="workshop-hero" aria-labelledby="workshop-heading">
-        <p className="workshop-kicker">Independent software &amp; experiments</p>
-        <h1 id="workshop-heading">A place for things I build.</h1>
-        <p className="workshop-intro-copy">
-          I make software to solve problems, explore ideas, and learn how things work.
-          ANEVUM is where I share the projects and what I learn while building them.
-        </p>
-        <div className="workshop-actions">
-          <Link className="workshop-primary-link" to="/products">Explore projects <span aria-hidden="true">→</span></Link>
-          <Link className="workshop-secondary-link" to="/field-notes">Read Field Notes</Link>
+  // The signed-in destination is Commons. Never redirect into an owner terminal.
+  if (session?.user) return <Navigate to="/commons" replace />;
+
+  return <div className="studio-home truth-home commons-welcome">
+    <section className="commons-landing-hero">
+      <div className="commons-landing-copy">
+        <span className="commons-eyebrow">ANEVUM / COMMONS</span>
+        <h1>Good questions.<br /><span>Real research.</span><br />Better software.</h1>
+        <p>A place to investigate ideas, share what you've learned, and use practical tools. We're starting with algorithmic trading research, and building from there.</p>
+        <div className="commons-landing-actions">
+          <Link className="commons-action" to="/sign-in">Enter Commons →</Link>
+          <Link className="commons-link" to="/products/rhen">Explore RHEN</Link>
         </div>
-      </section>
-
-      {rhen ? (
-        <section className="workshop-section workshop-current" aria-labelledby="workshop-current-heading">
-          <div className="workshop-section-heading">
-            <div>
-              <p className="workshop-section-eyebrow">Current project</p>
-              <h2 id="workshop-current-heading">What I’m working on</h2>
-            </div>
-            <Link to="/products">All projects <span aria-hidden="true">→</span></Link>
+        <div className="commons-landing-footnote">Account sign-in is available. Commons research contributions are entering an invitation-only beta.</div>
+      </div>
+      <div className="commons-landing-preview" aria-label="How research in Commons is organized">
+        <div className="commons-landing-window">
+          <div className="commons-preview-bar"><div className="commons-preview-mark"><Mark /><strong>Commons</strong></div><span>Research workflow</span></div>
+          <div className="commons-preview-intro"><span>HOW IT WORKS</span><h2>From a question to useful evidence.</h2><p>Thoughtful discussion becomes a record you can return to.</p></div>
+          <div className="commons-preview-steps">
+            {path.map(([num,title,detail]) => <div className="commons-preview-step" key={num}>
+              <span className="commons-preview-num">{num}</span><div><strong>{title}</strong><p>{detail}</p></div>
+            </div>)}
           </div>
-          <article className="workshop-featured-project">
-            <div className="workshop-featured-main">
-              <div className="workshop-project-identity">
-                <SystemIcon system="RHEN" size="md" />
-                <div>
-                  <h3>RHEN</h3>
-                  <span>Markets &amp; research · {rhen.lifecycle}</span>
-                </div>
-              </div>
-              <p>I'm building a system to research market behavior, test trading ideas, and measure what actually works. It uses real market data, and its results are still being evaluated.</p>
-              <div className="workshop-project-links">
-                <Link to={rhen.routes.home}>View RHEN <span aria-hidden="true">→</span></Link>
-                {rhen.routes.evidence ? <Link to={rhen.routes.evidence}>Public evidence</Link> : null}
-              </div>
-            </div>
-            <div className="workshop-project-facts" aria-label="Current RHEN details">
-              <dl>
-                <div><dt>Latest registered release</dt><dd>{release.version}</dd></div>
-                <div><dt>Current scope</dt><dd>U.S. equities and ETFs</dd></div>
-                <div><dt>Results</dt><dd>Under evaluation</dd></div>
-              </dl>
-              <Link to={rhen.routes.releases || rhen.routes.home}>Release history <span aria-hidden="true">→</span></Link>
-            </div>
-          </article>
-        </section>
-      ) : null}
-
-      {otherProjects.length > 0 ? (
-        <section className="workshop-section" aria-labelledby="workshop-more-heading">
-          <div className="workshop-section-heading">
-            <div><p className="workshop-section-eyebrow">More projects</p><h2 id="workshop-more-heading">Other things I’ve made</h2></div>
-          </div>
-          <div className="workshop-project-list">
-            {otherProjects.map((product) => (
-              <Link key={product.slug} to={product.routes.home} className="workshop-project-row">
-                <strong>{product.name}</strong>
-                <span>{product.oneLine}</span>
-                <span aria-hidden="true">→</span>
-              </Link>
-            ))}
-          </div>
-        </section>
-      ) : null}
-
-      <section className="workshop-section" aria-labelledby="workshop-notes-heading">
-        <div className="workshop-section-heading">
-          <div>
-            <p className="workshop-section-eyebrow">From the workbench</p>
-            <h2 id="workshop-notes-heading">Recent notes</h2>
-          </div>
-          <Link to="/field-notes">All Field Notes <span aria-hidden="true">→</span></Link>
+          <div className="commons-preview-status"><span>INITIAL APPLICATION</span><strong>RHEN</strong><span>Research · Markets · v{release.version}</span></div>
         </div>
-        {notes.length ? (
-          <div className="workshop-note-list">
-            {notes.map((note) => (
-              <Link key={note.slug} className="workshop-note-row" to={"/field-notes/" + note.slug}>
-                <time dateTime={note.date}>{readableDate(note.date)}</time>
-                <div>
-                  <span className="workshop-note-type">{note.type}</span>
-                  <h3>{note.title}</h3>
-                  <p>{note.summary}</p>
-                </div>
-                <span className="workshop-row-arrow" aria-hidden="true">→</span>
-              </Link>
-            ))}
-          </div>
-        ) : <p className="workshop-empty">No published notes yet.</p>}
-        <div className="workshop-update-link">
-          <span>Want the shorter version?</span>
-          <Link to="/feed">See the latest updates <span aria-hidden="true">→</span></Link>
-        </div>
-      </section>
-
-      <section className="workshop-endnote" aria-label="About ANEVUM">
-        <p>Some projects are useful now. Others are experiments. I’d rather show what’s actually being built than pretend everything is finished.</p>
-        <Link to="/about">A little more about ANEVUM <span aria-hidden="true">→</span></Link>
-      </section>
-    </div>
-  );
+      </div>
+    </section>
+    <section className="commons-landing-features" aria-labelledby="commons-capabilities">
+      <div className="commons-section-title"><span className="commons-eyebrow">ONE ACCOUNT</span><h2 id="commons-capabilities">Your place to learn, contribute, and build.</h2><p>ANEVUM connects a research community with the software being developed. Each area has a clear purpose.</p></div>
+      <div className="commons-feature-grid">
+        <article><span>01 / COMMUNITY</span><h3>Commons</h3><p>Ask specific questions, exchange research notes and preserve valuable findings. Participation begins with a small invite-only group.</p><Link to="/commons">Open Commons →</Link></article>
+        <article><span>02 / APPLICATION</span><h3>RHEN</h3><p>Explore a working market research system, its public evidence and development record. Personal brokerage connections are not active yet.</p><Link to="/products/rhen">Meet RHEN →</Link></article>
+        <article><span>03 / RESEARCH</span><h3>Knowledge</h3><p>Research deserves context, limitations and a revision history. Browse published experiments, engineering decisions and field notes.</p><Link to="/field-notes">Read the record →</Link></article>
+        <article><span>04 / YOUR ACCOUNT</span><h3>Command</h3><p>One private home for your programs, preferences and account. The company's protected trading terminal is not shared with members.</p><Link to="/sign-in">Manage your account →</Link></article>
+      </div>
+    </section>
+    <section className="commons-landing-record" aria-labelledby="commons-public">
+      <div className="commons-record-heading"><div><span className="commons-eyebrow">PUBLISHED MATERIAL</span><h2 id="commons-public">Start with actual work.</h2></div><Link to="/field-notes">Browse the library →</Link></div>
+      <div className="commons-public-list">
+        {latestNotes.map(note => <Link key={note.slug} to={"/field-notes/" + note.slug}><time dateTime={note.date}>{note.date}</time><div><strong>{note.title}</strong><p>{note.summary}</p></div><span aria-hidden="true">→</span></Link>)}
+      </div>
+    </section>
+    <section className="commons-landing-close">
+      <div><span className="commons-eyebrow">JOIN ANEVUM</span><h2>Build on evidence, not promises.</h2><p>Start with a free account. Commons participation will open in controlled groups while we verify the experience.</p></div>
+      <Link className="commons-action" to="/sign-in">Sign in or create account →</Link>
+    </section>
+  </div>;
 }

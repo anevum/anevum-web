@@ -43,6 +43,8 @@ jobs:
           test -s public/devon-akins-resume.pdf
           test -s dist/client/devon-akins-resume.pdf
           head -c 5 dist/client/devon-akins-resume.pdf | grep -Fq '%PDF-'
+      - name: Verify one guarded production deployment writer
+        run: node scripts/verify-production-deploy-boundary.mjs
       - name: Verify production member release prerequisites before deployment
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_D1_TOKEN }}

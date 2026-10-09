@@ -15,7 +15,7 @@ export default function SignIn() {
     try {
       const result = await memberAuthClient.signIn.social({
         provider: "google",
-        callbackURL: "/command"
+        callbackURL: "/commons"
       });
       if (result.error) {
         setError(result.error.message || "Sign-in could not be started.");
@@ -29,15 +29,15 @@ export default function SignIn() {
 
   return (
     <section className="member-auth-page">
-      <p className="workshop-kicker">ANEVUM account</p>
-      <h1>Your projects. Your Command.</h1>
-      <p>Save software you use, follow development, and open applications that are actually available. Public projects and Field Notes never require an account.</p>
+      <p className="workshop-kicker">ANEVUM / Commons</p>
+      <h1>One account. Your research space.</h1>
+      <p>Enter Commons, manage your private Command, and follow the development of RHEN and future applications. Commons research contributions are currently invitation-only; joining ANEVUM is free.</p>
       {availability === "checking" || isPending ? (
         <p role="status">Checking account availability…</p>
       ) : availability === "unavailable" ? (
-        <p role="status">Member registration is not open yet. The rest of ANEVUM remains available without signing in.</p>
+        <p role="status">Member registration is not open yet. Published research and projects remain available without signing in.</p>
       ) : session?.user ? (
-        <Link className="member-primary-action" to="/command">Open Command</Link>
+        <Link className="member-primary-action" to="/commons">Enter Commons</Link>
       ) : (
         <button className="member-primary-action" type="button" disabled={redirecting} onClick={() => void signIn()}>
           {redirecting ? "Opening Google…" : "Continue with Google"}
@@ -45,7 +45,7 @@ export default function SignIn() {
       )}
       {error ? <p role="alert" className="member-alert">{error}</p> : null}
       <p className="member-muted">Before creating an account, read the <Link to="/privacy">privacy notice</Link> and <Link to="/terms">terms</Link>.</p>
-      <p className="member-muted"><Link to="/products">Explore projects without signing in</Link></p>
+      <p className="member-muted"><Link to="/field-notes">Browse published research without signing in</Link></p>
     </section>
   );
 }
