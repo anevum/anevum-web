@@ -1,8 +1,8 @@
 // RHEN Cloud billing. Stripe grants a subscription record ONLY, never trading
 // authority. All broker/order operations remain outside the member Worker.
 export const RHEN_CLOUD_PLANS = Object.freeze({
-  founding: Object.freeze({ code: "founding", amountCents: 999, currency: "usd", interval: "month" }),
-  standard: Object.freeze({ code: "standard", amountCents: 1999, currency: "usd", interval: "month" })
+  founding: Object.freeze({ code: "founding", amountCents: 299, currency: "usd", interval: "month" }),
+  standard: Object.freeze({ code: "standard", amountCents: 499, currency: "usd", interval: "month" })
 });
 const BILLING_TABLES = ["member_billing_customers", "member_billing_subscriptions", "member_billing_events", "member_billing_checkout_locks", "member_billing_sync_state"];
 const STRIPE_API = "https://api.stripe.com/v1";
