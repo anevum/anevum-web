@@ -1,106 +1,55 @@
-# Project Commons — Stage 01: Public entrance and app shell
+# Project Commons — Stage 1: Dense social application shell (V4)
 
-**Session:** `ANEVUM.WEB.DESIGN.2026-10-09.002.COMMONS-STAGE-ONE-ENTRY`  
-**Milestone:** ANEVUM 2.0 / Project Commons (internal); The Commons (public experience)  
-**Status:** DESIGN REVIEW — NOT APPROVED FOR IMPLEMENTATION OR DEPLOYMENT  
-**Repo:** `anevum/anevum-web`  
-**Applies to:** public website, public route/nav, static first-party feed, responsive UI. **Does not apply to:** RHEN trading runtime, founder terminal, broker access, member writes or production DB.
+**Session:** `ANEVUM.WEB.DESIGN.2026-10-09.003.COMMONS-REDDIT-LIKE-APP-SHELL`  
+**Milestone:** ANEVUM 2.0 / Project Commons. Public identity: **The Commons**.  
+**Review status:** **DESIGN REVIEW ONLY. NOT APPROVED FOR MERGE OR DEPLOYMENT.**  
+**Supersession:** This V4 app-shell contract **supersedes** the original Stage 1 marketing/large-card entrance concept in this PR. The owner explicitly rejected the previous design on October 9, 2026.
 
-## Outcome
+## Product correction
 
-A first-time visitor to `anevum.com` immediately encounters a recognizable, compact, socially oriented community interface rather than a large marketing landing page or the founder's trading dashboard. The experience is useful before signup: guests can open authentic ANEVUM publications and public project pages. ANEVUM is the umbrella, The Commons the community, RHEN the first distinct application. Do not repeat "2.0" on public navigation.
+This must look and operate like a **social application**, not a project-portfolio homepage or WordPress-like block layout. The implementation must match a fully rendered, browser-tested app-shell design; use layout screenshots as acceptance evidence, not aspirational image concepts disconnected from the code.
 
-**Primary five-second test:** new visitor can identify what ANEVUM is for, find the feed, Discover, Research, RHEN and Join, and open real work without signing in.
+* Top global bar ~60px desktop/~55px mobile, including ANEVUM identity, search, quick navigation and compact account actions.
+* Persistent unboxed **left sidebar** ~249px desktop: Home feed, Explore, Research, RHEN, spaces, profile, saved work, Command. Collapsible; mobile drawer.
+* The **main central feed** must occupy the most horizontal area (~883px at 1440px viewport). Inline tabs, search, post rows separated by thin lines, compact metadata, contributor identity/flair, small vote/comment/save/share controls, and optional modest thumbnails. **Card and compact density modes.**
+* Smaller **right rail** ~308px: introductory context, RHEN, topics, current published work. Hide at tablet width; do not let it displace feed.
+* At <770px, single-column feed with bottom navigation and a restrained 55px header. No horizontal overflow at 320px.
+* Restrained neutral-charcoal surfaces with sage/green as an **accent only** and a light theme. No boxed sidebars, massive welcome banners, CTA tiles, glowing diagrams, fake metrics or gratuitous motion.
 
-## Design acceptance checklist
+## Honest production content
 
-- [ ] Compact social home with direct access to real public content; **no tall promotional hero**
-- [ ] Dark forest default; restrained sage and green accents; user-selectable light appearance
-- [ ] Navigation labels and grouping as below
-- [ ] Honest official/first-party starter feed until genuine public member posts exist
-- [ ] Anonymous public browsing, but user-generated writes gated by real authentication and releases
-- [ ] Mobile layout with compact bottom tabs, readable 320px viewport and no sideways scrolling
-- [ ] Stage 1 stays limited to entrance/shared shell; identity, profiles, XP, creators, research publishing and RHEN member terminals remain in their respective later approval stages
+The default Stage 1 production feed must derive from genuinely published `src/data/fieldNotes.ts` records (currently 7 first-party notes) with exact original titles, dates, statuses and links. It must not depict fictional users, likes, trading returns, discussion counts or active communities.
 
-No stage implementation begins until these have been reviewed.
+The offline V4 design prototype has a clearly labeled **Preview community design** toggle that demonstrates fictional member usernames, badges and levels solely for future visual acceptance. **Do not ship that fictional preview mode to production.** No user generated functionality is authorized by this stage.
 
-## Layout and navigation
+## Stage boundaries and routing
 
-### Desktop
+| URL / surface | Stage 1 behavior |
+| --- | --- |
+| `/` | Publicly browsable dense Commons-style feed, without forced sign-in |
+| `/products` | Existing real project list; later becomes Discover |
+| `/field-notes` | Existing real published notes; later expanded research library |
+| `/products/rhen` | Public RHEN project and real evidence; no brokerage permissions |
+| `/sign-in` | Existing authentication, no new account claims |
+| `/commons` | Respect staged invite-only/private data access and existing gates |
+| `/command/rhen/*` | **Founder-only terminal unchanged** |
 
-Global header, 61px: existing ANEVUM mark + wordmark, search, **Commons**, **Discover**, **Research**, **RHEN**, light/dark switch, Sign in and **Join free**. Width constrained around 1480px.
+Stage 1 includes public shell only: **no** member writes, D1 migrations, XP, badges ledger, subscriptions, downloads marketplace, broker OAuth, owner-terminal authority changes or trading engine changes. Unreleased navigation must lead to truthful states or real existing content, not dummy features.
 
-Below: three-column social shell. Left sidebar ~215px; fluid content column; discovery rail ~287px; gaps ~16–18px. Left navigation: Home feed, Discover projects, Research library, Communities *(later)*, Levels & awards *(later)*, Create a profile, My Command *(sign in)*. Compact current-section styling, no glowing telemetry.
+## Existing engineering conflict
 
-Main: intro strip ~120–132px; title **"Make. Learn. Share what works."**; one-sentence explanation; account-gated composer invitation; real-content filters **All / Systems / Engineering / Releases**; chronological or curated ANEVUM first-party editorial cards. Right rail: Join/Start here, published projects, Field Notes, public RHEN app, clearly disclosed future community/profile capabilities. Inert or unreleased destinations must never impersonate working functions.
+Open draft #249 expects `/` to be a marketing-service entrance and `/commons` to be an invite-only application. Reconcile the public entrance layout before code review. Draft #251 adds moderation and #252 adds separate broker-related work; neither may be bundled into this design or Stage 1 cosmetic release. Respect #234 deploy-race mitigation and #235 company terminal privacy.
 
-### Mobile
+## Required implementation method (AFTER owner approves design)
 
-At <~1060px, omit the discovery rail; at <~760px, hide the sidebar and switch to a single reading column. Sticky mobile header ~57px with wordmark, compact search and theme. Bottom navigation: **Home / Discover / Research / Account**, reachable with thumb and safe-area padding. Critical links removed from the right rail must remain available in mobile navigation. No overflow at 320px.
+1. Implement this design as **genuine React components with strongly scoped CSS/design tokens**, e.g., GlobalBar, Sidebar, FeedHeader, PostRow, ContextRail, BottomNav. Do not paste the preview's vanilla JavaScript and simulated content into production.
+2. Isolate from existing `PublicShell` and legacy site CSS, leaving protected routes unchanged. No changes to live RHEN.
+3. Verify typecheck, build, existing privacy/member/security tests, public search and navigation, plus responsive captures at 320, 390, 768, 1024, 1440, and 1680px. Target WCAG 2.2 AA.
+4. Run explicit visual parity against the approved real-browser screenshot and interaction tests for navigation, density, filtering, theme and focus behavior.
+5. Isolated preview/staging first; validate routing and privacy. **Production merge/deploy requires separate explicit owner approval.** Commons member write feature flag stays OFF.
 
-### Design tokens
+## V4 preview and visual review
 
-| Role | Dark | Light |
-| --- | --- | --- |
-| canvas | `#101813` | `#f4f6f3` |
-| surfaces | `#19261e` | `#ffffff` |
-| border | `#32463a` | `#d5dfd7` |
-| primary text | `#eef6ef` | `#1c3024` |
-| secondary text | `#abc0b1` | `#566a5b` |
-| accent | `#89d7aa` | `#276449` |
+The current ChatGPT handoff includes a self-contained 3-file browser implementation (`index.html`, `styles.css`, `app.js`), desktop/mobile dark/light screenshots, documented design assumptions, and passing Playwright responsive/interaction checks. This establishes browser feasibility; it does not mean that the React production implementation has been completed.
 
-Quiet 1px borders, 10–11px corners, strong typography, clear focus, system fonts. No large 3D scenes, dashboard counters, animated orbital backgrounds, auto-playing video, fake trading performance or paywall-first messaging.
-
-## First-party launch content (no fiction)
-
-Reuse existing published **`src/data/fieldNotes.ts`** and the public product registry as the source of truth; never hardcode prototype examples as durable data. Proposed starter cards:
-
-1. **ANEVUM gets smaller on purpose** — published 2026-10-08. `/field-notes/anevum-lean-runtime-reset`
-2. **RHEN 4.4: observe first, earn the crossover** — published 2026-10-07. `/field-notes/rhen-v4-4-research-observation-and-release-gates`
-3. **RHEN V4.3 narrows authority and raises the evidence standard** — published 2026-10-06. `/field-notes/rhen-v4-3-canonical-equity-evidence`
-
-Card content contract: real title, date, type, author **ANEVUM (Official)**, summary, source action and accurate public status. No simulated member identities, replies, XP, awards, performance, likes, subscribers, ratings or download counts. A genuine empty state is acceptable and should explain what has not launched.
-
-Search and topic filters at Stage 1 may operate on existing public ANEVUM content; broader social search belongs to later stages.
-
-## Route contract and future compatibility
-
-| URL | Stage 1 | Notes |
-| --- | --- | --- |
-| `/` | PUBLIC Commons-style landing + public ANEVUM activity | Guest browsing, no mandatory login |
-| `/commons` | Respect existing staged compatibility and feature gates | Authenticated Commons application later, same visual shell |
-| `/products` | Existing public product catalog | Later becomes or redirects to Discover |
-| `/field-notes` | Existing published notes | Later research library is separately designed |
-| `/products/rhen` | Existing public RHEN app information | No member live trading implied |
-| `/sign-in` | Existing Better Auth entry | Member profiles/onboarding in Stage 2 |
-| `/command` | Existing protected member/owner interface | No authority change |
-| `/command/rhen/*` | **Founder-only operator terminal — unchanged** | Never exposed by public shell |
-
-Draft PR **#249** currently assumes a consumer marketing `/` and an invited `/commons`; this **conflicts** with the accepted social-first first-visit requirement. Reconcile it before any implementation merge. Draft PRs **#251** (moderation) and **#252** (member RHEN/broker integration) are stacked and must not be pulled into a cosmetic Stage 1 release.
-
-Guest requests must never accidentally query gated Commons member D1 content. Do not auto-redirect users to disabled or invite-only surfaces. Share shell/branding across public and authenticated experiences without sharing private payloads.
-
-## Interaction contract
-
-**Public:** click navigation, open Field Notes, view RHEN/product pages, search/filter published material, toggle theme. Join and gated composer must invoke genuine sign-in or state that contributions are not open yet; they cannot falsely claim posting succeeded.
-
-**Account-only:** member identity, follow/save, post/reply, private Command are not considered implemented by this stage. Navigation can reserve space for them but must clearly indicate sign-in or future availability.
-
-**Unknown or empty data:** honest blank/empty/loading/error states. No placeholders presented as live people or results.
-
-## Implementation release process (after owner approves design)
-
-1. Create focused code PR, preferably rebased/reconciled with #249 only for public navigation and entrance. Do not merge the full stacked Commons chain in Stage 1.
-2. Implement tokenized React components **GlobalHeader, LeftSidebar, IntroStrip, EditorialFeedCard, FeedFilters, DiscoveryRail, MobileTabNav**, using existing authoritatively published notes.
-3. Preserve public-route meta/canonical/SEO, existing Cloudflare Worker and auth contract, and current protected `/command/rhen/*` boundaries.
-4. Verify `npm run check`, `npm run build`, existing privacy/member/owner tests, and CI. No production D1 migration; `ANEVUM_COMMONS_ENABLED` stays **OFF** until its separate launch acceptance.
-5. Run Chromium visual QA at 320/390/768/1024/1440px, dark/light, keyboard focus, screen-reader labels, reduced motion, >=44px touch targets, no overflow. Target WCAG 2.2 AA and good CWV metrics where measurable.
-6. Deploy only to an isolated preview for actual visual review; validate anonymous public read, signed-out write rejection, private noindex/no-store, owner terminal unchanged and rollback. Production release only after separate owner authorization.
-
-## Review artifact
-
-A stand-alone offline **Stage 1 preview** and matching screenshot set was created in the current design session, with a passing local Chromium smoke test covering responsive widths, filter/search, theme, and guest join dialog. **That HTML is a visual prototype, not deployable application code or an authentication implementation.** The zip and screenshots are supplied in the ChatGPT handoff.
-
-## Explicit non-scope
-
-No production deployment; no RHEN changes; no Alpaca connection; no subscriptions or charging; no D1 migrations; no member writes; no badge ledger; no upload/download marketplace; no fictitious communities or returns. Those features each have separate design and release gates.
+Owner is reviewing V4 before any integration.
