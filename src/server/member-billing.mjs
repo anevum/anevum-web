@@ -106,10 +106,12 @@ export async function readBillingStatus(db, userId, env, origin) {
 
 async function stripeRequest(env, method, path, fields, idempotencyKey) {
   const target = new URL(STRIPE_API + path);
+  const resources = [
+    "/v1/customers", "/v1/checkout/sessions",
+    "/v1/billing_portal/sessions", "/v1/subscriptions", "/v1/prices"
+  ];
   if (target.origin !== "https://api.stripe.com" ||
-      !/^\\/(?:v1\\/)?(?:customers|checkout\\/sessions|billing_portal\\/sessions|subscriptions|prices)(?:\\/|$)/.test(
-        target.pathname.replace(/^\\/v1/, "")
-      )) {
+      !resources.some(prefix => target.pathname === prefix || target.pathname.startsWith(prefix + "/"))) {
     throw new BillingError(500, "Stripe operation not allowed.");
   }
   const headers = {
