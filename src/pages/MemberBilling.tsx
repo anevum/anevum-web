@@ -160,9 +160,13 @@ export default function MemberBilling() {
             ? <>Recorded status: <strong>{billing.subscription.status}</strong> · Plan: <strong>{billing.subscription.plan}</strong></>
             : "No RHEN Cloud subscription is recorded for this account."}</p>
           {billing.subscription?.currentPeriodEnd && <p>Current billing period ends: {new Date(billing.subscription.currentPeriodEnd * 1000).toLocaleDateString()}</p>}
-          {billing.subscription?.cancelAtPeriodEnd && <p>Cancellation is scheduled at the end of the billing period.</p>}
+          {billing.subscription?.cancelAtPeriodEnd &&
+            <p role="status">Cancellation scheduled: this subscription will not renew after {billing.subscription.currentPeriodEnd
+              ? new Date(billing.subscription.currentPeriodEnd * 1000).toLocaleDateString()
+              : "the current billing period"}.</p>}
           <p>{billing.paidAccess ? "Subscription entitlement recorded." : "No current paid entitlement."} Personal paper and live trading remain unavailable until a separate RHEN release.</p>
           {billing.available && <button type="button" disabled={busy} onClick={() => void refreshBilling()}>Refresh subscription status</button>}
+          {billing.manageEnabled && <p>Made a change in Stripe? Refresh subscription status to confirm your account has updated.</p>}
           {billing.lastReconciledAt && <p>Last checked with Stripe: {new Date(billing.lastReconciledAt).toLocaleString()}</p>}
           {billing.manageEnabled && <button type="button" disabled={busy} onClick={() => void redirectToStripe("portal")}>Manage billing in Stripe</button>}
         </section>
