@@ -1,0 +1,55 @@
+name: RHEN aggregate SSE production transport smoke
+on:
+  push:
+    branches: [ops/verify-rhen-realtime-live-20261008]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Verify live Railway SSE response is truly streamed and aggregate-only
+        shell: bash
+        run: |
+          node --input-type=module <<'EOF'
+          import assert from "node:assert/strict";
+          const controller = new AbortController();
+          const timeout = setTimeout(() => controller.abort(), 15000);
+          const url = "https://alpaca-trader-production-bf3e.up.railway.app/v1/trading-public-events";
+          try {
+            const response = await fetch(url, {
+              headers: { Accept: "text/event-stream" },
+              signal: controller.signal,
+            });
+            assert.equal(response.status, 200);
+            assert.match(response.headers.get("content-type") || "", /text\/event-stream/);
+            let transcript = "";
+            let seen = null;
+            for await (const chunk of response.body) {
+              transcript += new TextDecoder().decode(chunk);
+              const start = transcript.indexOf("event: snapshot\ndata:");
+              const end = start >= 0 ? transcript.indexOf("\n\n", start) : -1;
+              if (end >= 0) {
+                seen = JSON.parse(transcript.slice(start + "event: snapshot\ndata:".length, end));
+                break;
+              }
+              if (transcript.length > 1000000) throw new Error("Unbounded SSE frame");
+            }
+            assert.ok(seen, "No initial canonical SSE snapshot");
+            assert.equal(seen.ok, true);
+            assert.equal(seen.source, "rhen-core-sqlite");
+            assert.equal(seen.disclosure?.level, "aggregate_only");
+            assert.equal(Object.hasOwn(seen, "account"), false);
+            assert.equal(Object.hasOwn(seen, "open_orders"), false);
+            assert.equal(Object.hasOwn(seen, "positions"), false);
+            console.log("LIVE RAILWAY SSE: 200; event: snapshot; canonical aggregate-only");
+            console.log("Snapshot generated_at:", seen.generated_at);
+          } finally {
+            clearTimeout(timeout);
+            controller.abort();
+          }
+          EOF
