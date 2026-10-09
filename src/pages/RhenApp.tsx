@@ -43,7 +43,7 @@ export default function RhenApp() {
   return (
     <div className="member-app">
       <header className="member-app-topbar">
-        <Link to="/me">Command</Link>
+        <Link to="/command">Command</Link>
         <div className="member-app-name"><SystemIcon system="RHEN" size="sm" /><strong>RHEN</strong></div>
         <Link to="/me/settings" aria-label="Account settings">Account</Link>
       </header>
@@ -57,7 +57,7 @@ export default function RhenApp() {
               <Link key={id} to={path} aria-current={section === id ? "page" : undefined} className={section === id ? "active" : ""}>{label}</Link>
             )}
           </nav>
-          {operator && <div className="member-app-operator"><span>PRIVATE OPERATOR</span><Link to="/apps/rhen/terminal/operate">RHEN Terminal</Link></div>}
+          {operator && <div className="member-app-operator"><span>PRIVATE OPERATOR</span><Link to="/command/rhen/operate">RHEN Terminal</Link></div>}
         </aside>
         <main className="member-app-content">
           <p className="workshop-kicker">RHEN / {section}</p>
