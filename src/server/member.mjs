@@ -1,3 +1,4 @@
+import { privateResearchEndpoint, exportPrivateResearch } from "./member-research.mjs";
 import { betterAuth } from "better-auth";
 import { commonsEndpoint, exportCommonsData } from "./commons.mjs";
 import { memberAlpacaLiveEndpoint, exportMemberLiveConnection } from "./member-alpaca-live.mjs";
@@ -124,6 +125,10 @@ export async function memberEndpoint(request, env, pathname) {
     return commonsEndpoint(request, env, user, pathname);
   }
 
+  if (pathname === "/api/member/research/drafts" || pathname.startsWith("/api/member/research/drafts/")) {
+    return privateResearchEndpoint(request, env, user, pathname);
+  }
+
   if (pathname === "/api/member/alpaca/live/snapshot") {
     return memberAlpacaReadSnapshot(request, env, user, verifiedOrigin);
   }
@@ -167,14 +172,15 @@ export async function memberEndpoint(request, env, pathname) {
   }
   if (pathname === "/api/member/export" && request.method === "GET") {
     const hasDraftTable = await memberRhenDraftSchemaReady(db);
-    const [profile, saved, follows, entitlements, rhenDraft, commons, alpacaLiveConnection] = await Promise.all([
+    const [profile, saved, follows, entitlements, rhenDraft, commons, alpacaLiveConnection, privateResearch] = await Promise.all([
       db.prepare("SELECT display_name, theme, created_at, updated_at FROM member_profiles WHERE user_id = ?").bind(user.id).first(),
       db.prepare("SELECT app_slug, saved_at FROM member_saved_apps WHERE user_id = ? ORDER BY saved_at DESC").bind(user.id).all(),
       db.prepare("SELECT project_slug, followed_at FROM member_project_follows WHERE user_id = ? ORDER BY followed_at DESC").bind(user.id).all(),
       db.prepare("SELECT app_slug, capability, granted_at, expires_at FROM member_entitlements WHERE user_id = ?").bind(user.id).all(),
       hasDraftTable ? readMemberRhenDraft(db, user.id) : Promise.resolve(null),
       exportCommonsData(db, user.id),
-      exportMemberLiveConnection(db, user.id)
+      exportMemberLiveConnection(db, user.id),
+      exportPrivateResearch(db, user.id)
     ]);
     return new Response(JSON.stringify({
       exportedAt: new Date().toISOString(),
@@ -185,7 +191,8 @@ export async function memberEndpoint(request, env, pathname) {
       entitlements: entitlements.results || [],
       rhenDraft,
       commons,
-      alpacaLiveConnection
+      alpacaLiveConnection,
+      privateResearch
     }, null, 2), {
       status: 200,
       headers: {
