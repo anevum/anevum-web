@@ -252,6 +252,11 @@ export type LiveTradingFeed = {
     activated_at?: string;
   } | null;
   strategy_history?: PublicStrategyHistory[];
+  broker_reconciliation?: {
+    state?: "SAFE" | "BLOCKED" | "STALE" | "UNKNOWN";
+    last_checked_at?: string | null;
+    checks_2h?: number;
+  };
   telemetry?: {
     events_60m?: number;
     scan_events_10m?: number;
