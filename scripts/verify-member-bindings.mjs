@@ -46,6 +46,9 @@ export function inspectMemberBindings(config, previewMigrationConfig = null, opt
   if (Object.hasOwn(vars, "ANEVUM_MEMBER_RHEN_DRAFTS_ENABLED") && vars.ANEVUM_MEMBER_RHEN_DRAFTS_ENABLED !== "false") {
     errors.push("Production RHEN member draft editing must remain disabled.");
   }
+  if (Object.hasOwn(vars, "ANEVUM_COMMONS_ENABLED") && vars.ANEVUM_COMMONS_ENABLED !== "false") {
+    errors.push("Production Commons contributions must remain disabled until reviewed release.");
+  }
   if (vars.ANEVUM_MEMBER_PREVIEW_ENABLED !== "false") {
     errors.push("The top-level Worker must not enable preview identity.");
   }
