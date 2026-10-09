@@ -13,7 +13,7 @@ type MemberData = {
   follows: string[];
   entitlements: { app: string; capability: string }[];
 };
-type MemberIdentity = { name?: string | null; email?: string | null };
+type MemberIdentity = { id?: string | null; name?: string | null; email?: string | null };
 
 export default function MemberHome() {
   const availability = useMemberAvailability();
@@ -50,7 +50,7 @@ function CommandHome({ enabled = false, checking = false, identity }: {
       if (!controller.signal.aborted) setError(reason instanceof Error ? reason.message : "Could not load your account.");
     });
     return () => controller.abort();
-  }, [signedIn, identity?.email, load]);
+  }, [signedIn, identity?.id, load]);
 
   useEffect(() => {
     // Neither a Google session nor a cached Cloudflare Access session alone
@@ -71,7 +71,7 @@ function CommandHome({ enabled = false, checking = false, identity }: {
       })
       .catch(() => { if (!controller.signal.aborted) setOperator(false); });
     return () => controller.abort();
-  }, [signedIn, identity?.email]);
+  }, [signedIn, identity?.id]);
 
   const toggle = async (kind: "saved-apps" | "follows", slug: string, selected: boolean) => {
     setUpdating(kind + slug);
