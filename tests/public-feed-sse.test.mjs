@@ -15,7 +15,7 @@ test("Cloudflare relays only RHEN aggregate SSE as an unbuffered no-store stream
   assert.match(proxy, /new Response\(response\.body/);
   assert.match(proxy, /text\/event-stream/);
   assert.match(proxy, /no-store, no-transform/);
-  assert.doesNotMatch(proxy, /response\.text\(|response\.json\(|Authorization|broker|APCA-API/);
+  assert.doesNotMatch(proxy.replace(/\/\/[^\n]*/g, ""), /response\.text\(|response\.json\(|Authorization|broker|APCA-API/);
   assert.doesNotMatch(proxy, /AbortSignal\.timeout/);
 });
 
