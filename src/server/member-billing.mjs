@@ -4,7 +4,7 @@ export const RHEN_CLOUD_PLANS = Object.freeze({
   founding: Object.freeze({ code: "founding", amountCents: 999, currency: "usd", interval: "month" }),
   standard: Object.freeze({ code: "standard", amountCents: 1999, currency: "usd", interval: "month" })
 });
-const BILLING_TABLES = ["member_billing_customers", "member_billing_subscriptions", "member_billing_events", "member_billing_checkout_locks"];
+const BILLING_TABLES = ["member_billing_customers", "member_billing_subscriptions", "member_billing_events", "member_billing_checkout_locks", "member_billing_sync_state"];
 const STRIPE_API = "https://api.stripe.com/v1";
 const ACTIVE_STATUSES = new Set(["active"]); // No trial periods are offered.
 const OPEN_STATUSES = new Set(["incomplete", "trialing", "active", "past_due", "unpaid", "paused"]);
@@ -29,7 +29,7 @@ export async function billingSchemaReady(db) {
   if (!db || typeof db.prepare !== "function") return false;
   try {
     const response = await db.prepare(
-      "SELECT name FROM sqlite_master WHERE type='table' AND name IN ('member_billing_customers','member_billing_subscriptions','member_billing_events','member_billing_checkout_locks')"
+      "SELECT name FROM sqlite_master WHERE type='table' AND name IN ('member_billing_customers','member_billing_subscriptions','member_billing_events','member_billing_checkout_locks','member_billing_sync_state')"
     ).all();
     const found = new Set((response.results || []).map(row => row.name));
     return BILLING_TABLES.every(name => found.has(name));
@@ -75,7 +75,7 @@ export async function readBillingStatus(db, userId, env, origin) {
   const enabled = schemaReady && billingConfigured(env, origin);
   if (!schemaReady) return {
     available: false, checkoutEnabled: false, foundingEnabled: false, manageEnabled: false,
-    plans: RHEN_CLOUD_PLANS, subscription: null, paidAccess: false,
+    plans: RHEN_CLOUD_PLANS, subscription: null, lastReconciledAt: null, paidAccess: false,
     paperExecutionEnabled: false, liveExecutionEnabled: false
   };
   const row = await db.prepare(
@@ -86,6 +86,7 @@ export async function readBillingStatus(db, userId, env, origin) {
   const customer = await db.prepare(
     "SELECT stripe_customer_id FROM member_billing_customers WHERE user_id=?"
   ).bind(userId).first();
+  const sync = await db.prepare("SELECT last_success_ms FROM member_billing_sync_state WHERE user_id=?").bind(userId).first();
   const subscription = row ? {
     plan: row.plan_code, status: row.status,
     currentPeriodEnd: Number(row.current_period_end) || null,
@@ -93,11 +94,13 @@ export async function readBillingStatus(db, userId, env, origin) {
   } : null;
   return {
     available: enabled,
-    checkoutEnabled: enabled && env?.ANEVUM_RHEN_BILLING_CHECKOUT_ENABLED === "true",
+    checkoutEnabled: enabled && env?.ANEVUM_RHEN_BILLING_CHECKOUT_ENABLED === "true" &&
+      env?.ANEVUM_RHEN_BILLING_WEBHOOKS_ENABLED === "true",
     foundingEnabled: enabled && env?.ANEVUM_RHEN_FOUNDING_ENABLED === "true",
-    manageEnabled: Boolean(customer && env?.STRIPE_SECRET_KEY),
+    manageEnabled: Boolean(enabled && customer && env?.STRIPE_SECRET_KEY),
     plans: RHEN_CLOUD_PLANS,
     subscription,
+    lastReconciledAt: Number(sync?.last_success_ms) || null,
     paidAccess: paidAccess(row),
     paperExecutionEnabled: false,
     liveExecutionEnabled: false
@@ -219,15 +222,21 @@ export async function memberBillingEndpoint(request, env, user, origin, pathname
   if (pathname === "/api/member/billing" && request.method === "GET") {
     return billingReply(await readBillingStatus(db, user.id, env, origin));
   }
-  if (pathname !== "/api/member/billing/checkout" && pathname !== "/api/member/billing/portal") {
+  if (!["/api/member/billing/checkout","/api/member/billing/portal","/api/member/billing/refresh"].includes(pathname)) {
     return billingReply({ message: "Billing endpoint not found." }, 404);
   }
   if (request.method !== "POST") return billingReply({ message: "Method not allowed." }, 405);
   if (!await billingSchemaReady(db) || !validStripeSettings(env, origin)) {
     return billingReply({ message: "Billing configuration is unavailable." }, 503);
   }
+  if (pathname === "/api/member/billing/refresh") {
+    try { return billingReply(await reconcileMemberBilling(db, user.id, env, origin)); }
+    catch (error) { return billingReply({message: error instanceof BillingError ? error.message : "Billing refresh failed."},
+      error instanceof BillingError ? error.status : 503); }
+  }
   if (pathname === "/api/member/billing/checkout") {
-    if (!billingConfigured(env, origin) || env?.ANEVUM_RHEN_BILLING_CHECKOUT_ENABLED !== "true") {
+    if (!billingConfigured(env, origin) || (env?.ANEVUM_RHEN_BILLING_CHECKOUT_ENABLED !== "true" ||
+         env?.ANEVUM_RHEN_BILLING_WEBHOOKS_ENABLED !== "true")) {
       return billingReply({ message: "RHEN Cloud checkout is not open." }, 503);
     }
     if (user.emailVerified !== true) return billingReply({ message: "Verified account required." }, 403);
@@ -272,6 +281,8 @@ export async function memberBillingEndpoint(request, env, user, origin, pathname
         "line_items[0][price]": priceId,
         "line_items[0][quantity]": "1",
         client_reference_id: user.id,
+        "metadata[anevum_product]": "rhen_cloud",
+        "metadata[anevum_member_id]": user.id,
         "subscription_data[metadata][anevum_product]": "rhen_cloud",
         "subscription_data[metadata][anevum_member_id]": user.id,
         success_url: origin + "/me/billing?checkout=success",
@@ -359,6 +370,84 @@ export function normalizeStripeSubscription(subscription, env) {
   };
 }
 
+
+export function normalizedSubscriptionUpsert(db, memberId, subscription, checkedAtMs) {
+  return db.prepare(
+    "INSERT INTO member_billing_subscriptions " +
+    "(stripe_subscription_id,user_id,stripe_customer_id,stripe_price_id,plan_code,status," +
+    "current_period_end,cancel_at_period_end,source_checked_at_ms) " +
+    "VALUES (?,?,?,?,?,?,?,?,?) ON CONFLICT(stripe_subscription_id) DO UPDATE SET " +
+    "stripe_price_id=excluded.stripe_price_id,plan_code=excluded.plan_code," +
+    "status=excluded.status,current_period_end=excluded.current_period_end," +
+    "cancel_at_period_end=excluded.cancel_at_period_end," +
+    "source_checked_at_ms=excluded.source_checked_at_ms,updated_at=datetime('now') " +
+    "WHERE member_billing_subscriptions.user_id=excluded.user_id " +
+    "AND member_billing_subscriptions.stripe_customer_id=excluded.stripe_customer_id " +
+    "AND member_billing_subscriptions.source_checked_at_ms<=excluded.source_checked_at_ms"
+  ).bind(subscription.id,memberId,subscription.customerId,subscription.priceId,
+    subscription.plan,subscription.status,subscription.periodEnd,subscription.cancelAtPeriodEnd,checkedAtMs);
+}
+
+export async function reconcileMemberBilling(db, memberId, env, origin) {
+  if (!billingConfigured(env,origin) || !await billingSchemaReady(db)) {
+    throw new BillingError(503,"Billing refresh is unavailable.");
+  }
+  const customer = await db.prepare(
+    "SELECT stripe_customer_id FROM member_billing_customers WHERE user_id=?"
+  ).bind(memberId).first();
+  if (!customer) return readBillingStatus(db,memberId,env,origin);
+  const customerId = String(customer.stripe_customer_id || "");
+  if (!/^cus_[A-Za-z0-9]+$/.test(customerId)) throw new BillingError(503,"Invalid billing mapping.");
+
+  const now = Date.now();
+  const limited = await db.prepare(
+    "INSERT INTO member_billing_sync_state(user_id,last_attempt_ms) VALUES (?,?) " +
+    "ON CONFLICT(user_id) DO UPDATE SET last_attempt_ms=excluded.last_attempt_ms " +
+    "WHERE member_billing_sync_state.last_attempt_ms<=?"
+  ).bind(memberId,now,now-60_000).run();
+  if (limited?.success !== true) throw new BillingError(503,"Billing refresh storage unavailable.");
+  if (Number(limited.meta?.changes) !== 1) throw new BillingError(429,"Try again in one minute.");
+
+  const provider = await stripeRequest(env,"GET",
+    "/subscriptions?customer="+encodeURIComponent(customerId)+"&status=all&limit=100");
+  if (provider?.has_more || !Array.isArray(provider?.data) || provider.data.length > 100) {
+    throw new BillingError(503,"Stripe subscription history is incomplete.");
+  }
+  const current = await db.prepare(
+    "SELECT stripe_subscription_id FROM member_billing_subscriptions WHERE user_id=?"
+  ).bind(memberId).all();
+  const snapshotAt = Date.now();
+  const seen = new Set();
+  const statements = [];
+  for (const source of provider.data) {
+    if (source?.customer !== customerId) throw new BillingError(409,"Stripe customer mismatch.");
+    if (source?.metadata?.anevum_product !== "rhen_cloud") continue;
+    if (source?.metadata?.anevum_member_id !== memberId) {
+      throw new BillingError(409,"Stripe subscription member mismatch.");
+    }
+    if (Boolean(source.livemode) !== (env.ANEVUM_STRIPE_MODE === "live")) {
+      throw new BillingError(409,"Stripe account mode mismatch.");
+    }
+    const normalized = normalizeStripeSubscription(source,env);
+    if (seen.has(normalized.id)) throw new BillingError(503,"Duplicate Stripe subscription.");
+    seen.add(normalized.id);
+    statements.push(normalizedSubscriptionUpsert(db,memberId,normalized,snapshotAt));
+  }
+  for (const old of current.results || []) {
+    if (seen.has(old.stripe_subscription_id)) continue;
+    statements.push(db.prepare(
+      "UPDATE member_billing_subscriptions SET status='unknown',source_checked_at_ms=?," +
+      "updated_at=datetime('now') WHERE user_id=? AND stripe_subscription_id=? " +
+      "AND source_checked_at_ms<=?"
+    ).bind(snapshotAt,memberId,old.stripe_subscription_id,snapshotAt));
+  }
+  statements.push(db.prepare(
+    "UPDATE member_billing_sync_state SET last_success_ms=? WHERE user_id=?"
+  ).bind(snapshotAt,memberId));
+  await db.batch(statements);
+  return readBillingStatus(db,memberId,env,origin);
+}
+
 export async function stripeWebhookEndpoint(request, env) {
   if (request.method !== "POST") return billingReply({ message: "Method not allowed." }, 405);
   const origin = new URL(request.url).origin;
@@ -417,22 +506,7 @@ export async function stripeWebhookEndpoint(request, env) {
       db.prepare(
         "INSERT OR IGNORE INTO member_billing_events (stripe_event_id,event_type,created_at) VALUES (?,?,?)"
       ).bind(event.id,event.type,event.created),
-      db.prepare(
-        "INSERT INTO member_billing_subscriptions " +
-        "(stripe_subscription_id,user_id,stripe_customer_id,stripe_price_id,plan_code,status," +
-        "current_period_end,cancel_at_period_end,last_event_created) " +
-        "VALUES (?,?,?,?,?,?,?,?,?) ON CONFLICT(stripe_subscription_id) DO UPDATE SET " +
-        "stripe_price_id=excluded.stripe_price_id, plan_code=excluded.plan_code, " +
-        "status=excluded.status,current_period_end=excluded.current_period_end, " +
-        "cancel_at_period_end=excluded.cancel_at_period_end, " +
-        "last_event_created=excluded.last_event_created,updated_at=datetime('now') " +
-        "WHERE member_billing_subscriptions.user_id=excluded.user_id " +
-        "AND member_billing_subscriptions.stripe_customer_id=excluded.stripe_customer_id"
-      ).bind(
-        subscription.id,customer.user_id,subscription.customerId,subscription.priceId,
-        subscription.plan,subscription.status,subscription.periodEnd,
-        subscription.cancelAtPeriodEnd,event.created
-      )
+      normalizedSubscriptionUpsert(db,customer.user_id,subscription,Date.now())
     ]);
     return billingReply({ received: true, handled: true });
   } catch (error) {
@@ -446,7 +520,7 @@ export async function cancelBillingBeforeAccountDeletion(env, userId) {
   // allowed to complete after its owner has deleted the ANEVUM account.
   const ready = await billingSchemaReady(env.MEMBER_DB);
   if (!ready) {
-    if (env?.ANEVUM_RHEN_BILLING_ENABLED === "true" || env?.STRIPE_SECRET_KEY) {
+    if (env?.ANEVUM_RHEN_BILLING_ENABLED === "true") {
       throw new BillingError(503, "Billing state unavailable; cannot safely delete account.");
     }
     return;
