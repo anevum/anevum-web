@@ -274,7 +274,7 @@ function LegacyNoteRedirect() {
 }
 
 function LegacyRhenOperatorRoute() {
-  // Keep Cloudflare Access at /command until the nested path has an Access policy.
+  // Cloudflare Access now protects /command/rhen* and /api/command* only.
   const location = useLocation();
   const parts = location.pathname.split("/").filter(Boolean);
   const suffix = parts.slice(3).join("/") || "operate";
