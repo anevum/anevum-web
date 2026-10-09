@@ -293,3 +293,41 @@ test("OAuth start is bounded per member and disconnection works after all approv
   assert.equal(linked.size, 0);
   assert.equal(connections.size, 0);
 });
+
+
+test("A brokerage authorization requires the Alpaca disclosure", async () => {
+  const { db, states, consents } = mockDB();
+  const path = "/api/member/alpaca/live/start";
+  for (const payload of [
+    {},
+    { acknowledged: false, disclosureVersion: "alpaca-live-v1" },
+    { acknowledged: true, disclosureVersion: "obsolete" },
+    { acknowledged: true, disclosureVersion: "alpaca-live-v1", accountId: "someone-else" }
+  ]) {
+    const response = await memberAlpacaLiveEndpoint(
+      req(path, "POST", payload), configured(db), userA, origin, path
+    );
+    assert.equal(response.status, 400);
+  }
+  assert.equal(states.size, 0);
+  assert.equal(consents.size, 0);
+  const accepted = await start(db);
+  assert.equal(accepted.response.status, 200);
+  assert.equal(consents.get(userA.id).disclosureVersion, "alpaca-live-v1");
+  assert.equal(states.size, 1);
+
+  const page = readFileSync(new URL("../src/pages/RhenConnect.tsx", import.meta.url), "utf8");
+  const router = readFileSync(new URL("../src/App.tsx", import.meta.url), "utf8");
+  const brokerage = readFileSync(new URL("../src/pages/RhenApp.tsx", import.meta.url), "utf8");
+  for (const sentence of [
+    "Authorize RHEN by ANEVUM",
+    "By allowing RHEN by ANEVUM to access your Alpaca account",
+    "authorization to place transactions in your account at your direction.",
+    "Alpaca does not warrant or guarantee that RHEN by ANEVUM will work as advertised or expected.",
+    "Before authorizing, learn more about"
+  ]) assert.ok(page.includes(sentence), "Missing Alpaca disclosure copy");
+  assert.ok(page.includes('type="checkbox" checked={acknowledged}'));
+  assert.ok(page.includes('disabled={!canContinue || !acknowledged || busy}'));
+  assert.ok(router.includes('path="/apps/rhen/connect"'));
+  assert.ok(brokerage.includes('to="/apps/rhen/connect"'));
+});
