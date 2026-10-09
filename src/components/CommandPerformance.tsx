@@ -83,7 +83,7 @@ export default function CommandPerformance({
         </div>
       </div>
       <footer className="command-performance-footer">
-        <span>Same durable feed used by /performance · refreshes every 5 seconds · live and research results remain separated</span>
+        <span>Durable measured curve · public feed refreshes about every 3–5 seconds; chart points change only when new source evidence exists</span>
       </footer>
     </article>
   );
