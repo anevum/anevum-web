@@ -18,7 +18,9 @@
     "ANEVUM_RHEN_FOUNDING_ENABLED": "false",
     "ANEVUM_RHEN_BILLING_LIVE_APPROVED": "false",
     "ANEVUM_STRIPE_MODE": "test",
-    "ANEVUM_RHEN_BETA_WAITLIST_ENABLED": "false"
+    "ANEVUM_RHEN_BETA_WAITLIST_ENABLED": "false",
+    "STRIPE_FOUNDING_PRICE_ID": "price_1UOcwSDSvwYS3kwTHxrYRQev",
+    "STRIPE_STANDARD_PRICE_ID": "price_1UOcwYDSvwYS3kwTqnadIMBD"
   },
   "assets": {
     "binding": "ASSETS",
