@@ -22,6 +22,7 @@
     "COMMAND_ACCESS_EMAILS": "devon@anevum.com",
     "COMMAND_LIVE_STREAM_ENABLED": "false",
     "ANEVUM_MEMBERS_ENABLED": "false",
+    "ANEVUM_MEMBER_RHEN_DRAFTS_ENABLED": "false",
     "ANEVUM_MEMBER_PREVIEW_ENABLED": "false"
   },
   "routes": [
