@@ -1,4 +1,5 @@
 import { betterAuth } from "better-auth";
+import { memberRewardsStatus, memberBrokerageStatus } from "./member-capabilities.mjs";
 import { resolveMemberOrigin, memberSchemaReady } from "./member-preflight.mjs";
 const PUBLIC_PROJECTS = new Set(["rhen"]);
 
@@ -115,6 +116,10 @@ export async function memberEndpoint(request, env, pathname) {
     return reply({ message: "Same-origin request required." }, 403);
   }
 
+  if (pathname === "/api/member/rewards" || pathname === "/api/member/brokerage") {
+    if (request.method !== "GET") return reply({ message: "Read-only capability." }, 405);
+    return reply(pathname === "/api/member/rewards" ? memberRewardsStatus() : memberBrokerageStatus());
+  }
   const db = env.MEMBER_DB;
   if (pathname === "/api/member/export" && request.method === "GET") {
     const [profile, saved, follows, entitlements] = await Promise.all([
