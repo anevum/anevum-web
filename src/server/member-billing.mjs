@@ -74,14 +74,14 @@ export async function readBillingStatus(db, userId, env, origin) {
   const schemaReady = await billingSchemaReady(db);
   const enabled = schemaReady && billingConfigured(env, origin);
   if (!schemaReady) return {
-    available: false, checkoutEnabled: false, manageEnabled: false,
+    available: false, checkoutEnabled: false, foundingEnabled: false, manageEnabled: false,
     plans: RHEN_CLOUD_PLANS, subscription: null, paidAccess: false,
     paperExecutionEnabled: false, liveExecutionEnabled: false
   };
   const row = await db.prepare(
     "SELECT plan_code, status, current_period_end, cancel_at_period_end " +
     "FROM member_billing_subscriptions WHERE user_id=? " +
-    "ORDER BY current_period_end DESC LIMIT 1"
+    "ORDER BY CASE WHEN status='active' THEN 0 ELSE 1 END, current_period_end DESC LIMIT 1"
   ).bind(userId).first();
   const customer = await db.prepare(
     "SELECT stripe_customer_id FROM member_billing_customers WHERE user_id=?"
@@ -94,6 +94,7 @@ export async function readBillingStatus(db, userId, env, origin) {
   return {
     available: enabled,
     checkoutEnabled: enabled && env?.ANEVUM_RHEN_BILLING_CHECKOUT_ENABLED === "true",
+    foundingEnabled: enabled && env?.ANEVUM_RHEN_FOUNDING_ENABLED === "true",
     manageEnabled: Boolean(customer && env?.STRIPE_SECRET_KEY),
     plans: RHEN_CLOUD_PLANS,
     subscription,
@@ -104,7 +105,7 @@ export async function readBillingStatus(db, userId, env, origin) {
 }
 
 async function stripeRequest(env, method, path, fields, idempotencyKey) {
-  if (!/^\/(?:customers|checkout\/sessions|billing_portal\/sessions|subscriptions)(?:\/|$)/.test(path)) {
+  if (!/^\/(?:customers|checkout\/sessions|billing_portal\/sessions|subscriptions|prices)(?:\/|$)/.test(path)) {
     throw new BillingError(500, "Stripe operation not allowed.");
   }
   const headers = {
@@ -175,7 +176,7 @@ export async function memberBillingEndpoint(request, env, user, origin, pathname
     if (!billingConfigured(env, origin) || env?.ANEVUM_RHEN_BILLING_CHECKOUT_ENABLED !== "true") {
       return billingReply({ message: "RHEN Cloud checkout is not open." }, 503);
     }
-    if (!user.emailVerified && !user.email) return billingReply({ message: "Verified account required." }, 403);
+    if (user.emailVerified !== true) return billingReply({ message: "Verified account required." }, 403);
     let body;
     try {
       if (request.headers.get("content-type")?.split(";")[0]?.trim().toLowerCase() !== "application/json") {
@@ -198,8 +199,16 @@ export async function memberBillingEndpoint(request, env, user, origin, pathname
     ).bind(user.id).first();
     if (active) return billingReply({ message: "Manage the existing subscription instead." }, 409);
     try {
-      const customerId = await ensureCustomer(db, env, user);
       const priceId = body.plan === "founding" ? env.STRIPE_FOUNDING_PRICE_ID : env.STRIPE_STANDARD_PRICE_ID;
+      // Validate the actual Stripe price; never charge a different amount than advertised.
+      const price = await stripeRequest(env, "GET", "/prices/" + priceId);
+      if (price?.id !== priceId || price?.active !== true ||
+          price?.currency !== "usd" || price?.type !== "recurring" ||
+          price?.recurring?.interval !== "month" || price?.recurring?.interval_count !== 1 ||
+          price?.unit_amount !== RHEN_CLOUD_PLANS[body.plan].amountCents) {
+        throw new BillingError(503, "Configured price does not match the advertised subscription.");
+      }
+      const customerId = await ensureCustomer(db, env, user);
       const checkout = await stripeRequest(env, "POST", "/checkout/sessions", {
         mode: "subscription",
         customer: customerId,
@@ -377,7 +386,7 @@ export async function cancelBillingBeforeAccountDeletion(env, userId) {
   // Billing migrations are optional; existing no-billing members stay deletable.
   const ready = await billingSchemaReady(env.MEMBER_DB);
   if (!ready) {
-    if (env?.ANEVUM_RHEN_BILLING_ENABLED === "true") {
+    if (env?.ANEVUM_RHEN_BILLING_ENABLED === "true" || env?.STRIPE_SECRET_KEY) {
       throw new BillingError(503, "Billing state unavailable; cannot safely delete account.");
     }
     return;
