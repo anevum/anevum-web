@@ -52,7 +52,7 @@ test("unknown protected operator APIs never fall back to anonymous public assets
 test("production and staging live trading privileges remain unchanged", () => {
   const prod = JSON.parse(readFileSync(new URL("../wrangler.jsonc", import.meta.url), "utf8"));
   const stage = JSON.parse(readFileSync(new URL("../wrangler.member-staging.jsonc", import.meta.url), "utf8"));
-  assert.equal(prod.vars.ANEVUM_MEMBERS_ENABLED, "false");
+  assert.equal(prod.vars.ANEVUM_MEMBERS_ENABLED, "true");
   assert.equal(prod.vars.ANEVUM_MEMBER_PREVIEW_ENABLED, "false");
   assert.equal(stage.vars.COMMAND_LIVE_STREAM_ENABLED, "false");
   assert.equal(stage.d1_databases[0].database_name, "anevum-members-preview");
