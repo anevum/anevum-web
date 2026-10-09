@@ -30,6 +30,7 @@ const req = (route, method = "GET", data = {}) => new Request(origin + route, {
 function mockDB() {
   const states = new Map();
   const connections = new Map();
+  const consents = new Map();
   const calls = [];
   const db = {
     prepare(sql) {
@@ -45,6 +46,11 @@ function mockDB() {
               return null;
             },
             run: async () => {
+              if (sql.includes("INSERT INTO member_alpaca_live_consents")) {
+                const [memberId, disclosureVersion, acceptedAt] = args;
+                consents.set(memberId, { disclosureVersion, acceptedAt });
+                return { meta: { changes: 1 } };
+              }
               if (sql.includes("INSERT INTO member_alpaca_live_oauth_states")) {
                 const [hash, user, expiry, created, boundedUser, windowStart] = args;
                 if (states.has(hash)) throw Error("State exists");
@@ -83,12 +89,13 @@ function mockDB() {
         all: async () => sql.includes("sqlite_master") ?
           { results: [
             { name: "member_alpaca_live_oauth_states" },
-            { name: "member_alpaca_live_connections" }
+            { name: "member_alpaca_live_connections" },
+            { name: "member_alpaca_live_consents" }
           ] } : { results: [] }
       };
     }
   };
-  return { db, states, connections, calls };
+  return { db, states, connections, consents, calls };
 }
 const configured = (db) => ({ ...baseFlags, MEMBER_DB: db });
 function brokerFetch(accountId = "member-a-live-account", opts = {}) {
