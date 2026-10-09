@@ -38,6 +38,7 @@ export default function CommonsShell({ children, identity, role }: {
               <Link to="/commons?kind=question">Questions</Link>
               <Link to="/commons?kind=research_note">Research notes</Link>
               <Link to="/learn">Learning / rule sets</Link>
+              <Link to="/me/research">Private research notebook</Link>
               <Link to="/field-notes">Published guides</Link>
             </nav>
           </div>
