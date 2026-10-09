@@ -43,7 +43,7 @@ export default function MemberSettings() {
   };
 
   const remove = async () => {
-    if (!window.confirm("Permanently delete your ANEVUM account, saved projects, and follows? This cannot be undone.")) return;
+    if (!window.confirm("Permanently delete your ANEVUM account and saved data? Any RHEN Cloud subscriptions will be cancelled immediately before deletion. This cannot be undone.")) return;
     setBusy(true); setError("");
     try {
       const { error: deletionError } = await memberAuthClient.deleteUser();
