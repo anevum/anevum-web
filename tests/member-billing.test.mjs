@@ -77,12 +77,17 @@ async function signedRequest(event, secret="whsec_local_mock_only", timestamp=Ma
 test("production is default-disabled and staging requires valid test keys and exact origin",async()=>{
   const prod=JSON.parse(readFileSync(new URL("../wrangler.jsonc",import.meta.url),"utf8"));
   const stage=JSON.parse(readFileSync(new URL("../wrangler.member-staging.jsonc",import.meta.url),"utf8"));
-  for(const vars of [prod.vars,stage.vars]){
-    for(const flag of [
-      "ANEVUM_RHEN_BILLING_ENABLED","ANEVUM_RHEN_BILLING_CHECKOUT_ENABLED",
-      "ANEVUM_RHEN_BILLING_WEBHOOKS_ENABLED","ANEVUM_RHEN_FOUNDING_ENABLED",
-      "ANEVUM_RHEN_BILLING_LIVE_APPROVED"
-    ]) assert.equal(vars[flag],"false");
+  for(const flag of [
+    "ANEVUM_RHEN_BILLING_ENABLED","ANEVUM_RHEN_BILLING_CHECKOUT_ENABLED",
+    "ANEVUM_RHEN_BILLING_WEBHOOKS_ENABLED","ANEVUM_RHEN_FOUNDING_ENABLED",
+    "ANEVUM_RHEN_BILLING_LIVE_APPROVED"
+  ]) assert.equal(prod.vars[flag],"false");
+  assert.equal(stage.vars.ANEVUM_RHEN_BILLING_ENABLED,"true");
+  assert.equal(stage.vars.ANEVUM_RHEN_BILLING_WEBHOOKS_ENABLED,"true");
+  assert.equal(stage.vars.ANEVUM_RHEN_BILLING_CHECKOUT_ENABLED,"false");
+  assert.equal(stage.vars.ANEVUM_RHEN_FOUNDING_ENABLED,"false");
+  assert.equal(stage.vars.ANEVUM_RHEN_BILLING_LIVE_APPROVED,"false");
+  for(const vars of [prod.vars,stage.vars]) {
     for(const secret of ["STRIPE_SECRET_KEY","STRIPE_WEBHOOK_SECRET"])
       assert.equal(Object.hasOwn(vars,secret),false);
   }
