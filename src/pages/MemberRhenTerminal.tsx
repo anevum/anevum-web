@@ -84,15 +84,14 @@ export default function MemberRhenTerminal() {
         </div>
       ) : !status ? (
         <p role="status">Verifying your account's terminal…</p>
+      ) : status.ownerMember ? (
+        <div className="member-rhen-terminal-owner">
+          <strong>Company RHEN Terminal</strong>
+          <p>Your existing ANEVUM trading and research system belongs to this owner account. Private Cloudflare Access authorization is also required to open it.</p>
+          <Link to="/command/rhen/operate">{operator ? "Open your existing terminal →" : "Verify private operator access →"}</Link>
+        </div>
       ) : (
         <>
-          {status.ownerMember && operator && (
-            <div className="member-rhen-terminal-owner">
-              <strong>Company RHEN Terminal</strong>
-              <p>Your existing ANEVUM trading and research system remains separately protected.</p>
-              <Link to="/command/rhen/operate">Open your existing terminal →</Link>
-            </div>
-          )}
           <div className="member-rhen-terminal-grid">
             <section><span>BROKERAGE</span><strong>{EMPTY}</strong><small>Personal Alpaca connection not available</small></section>
             <section><span>PORTFOLIO</span><strong>—</strong><small>No personal account data</small></section>
