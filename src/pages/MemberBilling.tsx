@@ -5,6 +5,7 @@ import { useMemberAvailability } from "../member/useMemberAvailability";
 
 type Plan = { code: string; amountCents: number; currency: string; interval: string };
 type Subscription = { plan: string; status: string; currentPeriodEnd: number | null; cancelAtPeriodEnd: boolean };
+type BetaStatus = {available:boolean; joined:boolean; joinedAt:string|null; priceCents?:number; executionEnabled?:boolean};
 type BillingStatus = {
   available: boolean;
   checkoutEnabled: boolean;
@@ -27,6 +28,7 @@ export default function MemberBilling() {
   const { data: session, isPending } = memberAuthClient.useSession();
   const [search] = useSearchParams();
   const [billing, setBilling] = useState<BillingStatus | null>(null);
+  const [beta, setBeta] = useState<BetaStatus | null>(null);
   const [loading, setLoading] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -53,6 +55,37 @@ export default function MemberBilling() {
       .finally(() => { if (!controller.signal.aborted) setLoading(false); });
     return () => controller.abort();
   }, [availability, session?.user?.id]);
+
+  useEffect(() => {
+    if (!session?.user || availability !== "available") return;
+    const controller=new AbortController();
+    void fetch("/api/member/rhen/beta",{cache:"no-store",signal:controller.signal})
+      .then(async response => {
+        const body=await response.json() as BetaStatus;
+        if (body.executionEnabled) throw new Error("Unexpected trading access.");
+        return body;
+      })
+      .then(body => {if(!controller.signal.aborted)setBeta(body);})
+      .catch(() => {if(!controller.signal.aborted)setBeta({available:false,joined:false,joinedAt:null});});
+    return () => controller.abort();
+  },[availability,session?.user?.id]);
+
+  const toggleBeta = async (join:boolean) => {
+    setBusy(true);setError("");
+    try {
+      const response=await fetch("/api/member/rhen/beta",{
+        method:join?"POST":"DELETE",
+        headers:{"Content-Type":"application/json"},
+        body:join?"{}":undefined
+      });
+      const body=await response.json() as BetaStatus & {message?:string};
+      if(!response.ok)throw new Error(body.message||"Beta registration unavailable.");
+      if(body.executionEnabled)throw new Error("Unexpected trading capability.");
+      setBeta(body);
+    } catch(reason) {
+      setError(reason instanceof Error?reason.message:"Unable to update beta registration.");
+    } finally {setBusy(false);}
+  };
 
   const refreshBilling = async () => {
     setBusy(true); setError("");
@@ -104,6 +137,19 @@ export default function MemberBilling() {
       {error && <p role="alert" className="member-alert">{error}</p>}
       {loading && <p role="status">Loading your subscription status…</p>}
       {!billing && !loading && <p>Billing configuration is not available in this environment.</p>}
+      <section className="member-section" aria-labelledby="rhen-beta-title">
+        <h2 id="rhen-beta-title">Free RHEN beta</h2>
+        <p>Join the opt-in interest list for a future RHEN Cloud paper-testing invitation. This is free, does not connect a broker, does not execute trades, and does not enroll you in a subscription. Invitations are not guaranteed.</p>
+        {beta?.joined && <>
+          <p role="status">You're on the interest list.</p>
+          {beta.joinedAt && <p>Joined: {new Date(beta.joinedAt.replace(" ","T")+"Z").toLocaleDateString()}</p>}
+        </>}
+        {beta?.available
+          ? <button type="button" disabled={busy} onClick={() => void toggleBeta(!beta.joined)}>
+              {beta.joined ? "Leave free beta list" : "Join free beta list"}
+            </button>
+          : <p role="status">Beta registration is not yet open.</p>}
+      </section>
       {billing && <>
         <section className="member-section">
           <h2>Subscription status</h2>
