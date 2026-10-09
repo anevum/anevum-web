@@ -8,9 +8,9 @@ export default function ResearchHub() {
   return (
     <div className="studio-page studio-notes-page workshop-notes">
       <header className="workshop-page-intro">
-        <p className="workshop-kicker">FIELD NOTES</p>
-        <h1>Notes from building things.</h1>
-        <p>Working through ideas usually means getting something wrong first. These notes document actual experiments, decisions, releases, and things I learned along the way.</p>
+        <p className="workshop-kicker">ANEVUM / RESEARCH LIBRARY</p>
+        <h1>Research worth keeping.</h1>
+        <p>Explore published investigations, technical decisions, failed hypotheses, and release notes. Commons is where invited members can discuss new questions; these Field Notes are the enduring public record.</p>
       </header>
 
       {latest && (
