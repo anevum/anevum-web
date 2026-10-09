@@ -82,3 +82,15 @@
 .c-v5-dialog h2{font-size:20px;margin:0 0 9px}
 .c-v5-dialog p{font-size:13px;color:var(--sub)}
 .c-v5-dialog-close{margin-top:12px;border:1px solid var(--line);border-radius:8px;color:var(--text);background:var(--panel-light);padding:8px 12px}
+
+/* Protected public-shell render: no styles leak into or out of this Shadow DOM. */
+.brand-mark .anevum-mark .mark-ring{stroke-width:1.6;opacity:.85}
+.brand-mark .anevum-mark .mark-outer{stroke-width:4.5}
+.brand-mark .anevum-mark .mark-inner{stroke-width:2.3}
+.brand-mark .anevum-mark .mark-stem{stroke-width:1.2}
+.brand-mark .anevum-mark circle{fill:currentColor}
+.c-v5-dialog-backdrop{position:fixed;z-index:120;inset:0;background:rgba(2,6,12,.72);display:grid;place-items:center;padding:16px}
+.c-v5-dialog .dialog-buttons{display:flex;flex-wrap:wrap;gap:10px;margin-top:19px}
+.c-v5-dialog .dialog-buttons .btn-primary,.c-v5-dialog .dialog-buttons .btn-secondary{display:flex;gap:7px;justify-content:center;align-items:center;min-height:38px;padding:0 12px}
+.c-v5-dialog .dialog-buttons .btn-primary .ico{width:14px;height:14px}
+.c-v5-join{font-weight:700}
