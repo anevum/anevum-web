@@ -48,6 +48,9 @@ export const productRegistry: ProductDefinition[] = [
       notes: "/field-notes"
     },
     memberFeatures: [
+      { id: "my-terminal", name: "My RHEN terminal", description: "Private brokerage and order overview. Broker data only when approved and connected.", route: "/apps/rhen/my-terminal" },
+      { id: "setup", name: "My bot settings", description: "Personal risk and allocation preferences; trading stays inactive.", route: "/apps/rhen/setup" },
+      { id: "account", name: "Alpaca connection", description: "Review permissions and personal account-linking readiness.", route: "/apps/rhen/account" },
       { id: "evidence", name: "Evidence", description: "Measured, public-safe performance and source freshness.", route: "/apps/rhen/evidence" },
       { id: "research", name: "Research", description: "Published experiments, decisions, and build notes.", route: "/apps/rhen/research" },
       { id: "updates", name: "Updates", description: "Release history and changes to the project.", route: "/apps/rhen/updates" }
