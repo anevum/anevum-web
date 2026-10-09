@@ -204,7 +204,7 @@ async function runCase(route, viewport) {
       const right = root?.querySelector(".right-sidebar");
       const mobile = root?.querySelector(".mobile-nav");
       const posts = root?.querySelectorAll(".post") || [];
-      const isVisible = el => Boolean(el) && getComputedStyle(el).display !== "none" && el.getBoundingClientRect().width > 0;
+      const isVisible = el => { if (!el || getComputedStyle(el).display === "none") return false; const rect=el.getBoundingClientRect(); return rect.width > 0 && rect.right > 0 && rect.left < innerWidth && rect.bottom > 0 && rect.top < innerHeight; };
       const width = el => Math.round(el?.getBoundingClientRect().width || 0);
       return {
         isolated: Boolean(host && root && !document.querySelector(".global-header")),
