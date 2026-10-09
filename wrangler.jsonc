@@ -31,7 +31,8 @@
     "ANEVUM_RHEN_BILLING_WEBHOOKS_ENABLED": "false",
     "ANEVUM_RHEN_FOUNDING_ENABLED": "false",
     "ANEVUM_RHEN_BILLING_LIVE_APPROVED": "false",
-    "ANEVUM_STRIPE_MODE": "disabled"
+    "ANEVUM_STRIPE_MODE": "disabled",
+    "ANEVUM_RHEN_BETA_WAITLIST_ENABLED": "false"
   },
   "routes": [
     {
