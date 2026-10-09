@@ -19,7 +19,7 @@ export default function HomeCompany() {
   // The signed-in destination is Commons. Never redirect into an owner terminal.
   if (session?.user) return <Navigate to="/commons" replace />;
 
-  return <div className="commons-welcome">
+  return <div className="studio-home truth-home commons-welcome">
     <section className="commons-landing-hero">
       <div className="commons-landing-copy">
         <span className="commons-eyebrow">ANEVUM / COMMONS</span>
