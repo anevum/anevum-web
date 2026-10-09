@@ -218,7 +218,7 @@ export default function App() {
         <Route path="/me/settings" element={<PublicExperience><MemberSettings /></PublicExperience>} />
         <Route path="/me/rewards" element={<PublicExperience><MemberRewards /></PublicExperience>} />
         <Route path="/me/verify" element={<PublicExperience><MemberStagingVerify /></PublicExperience>} />
-        <Route path="/apps/rhen/terminal/*" element={<LegacyRhenOperatorRoute />} />
+        <Route path="/apps/rhen/terminal/*" element={<Suspense fallback={<Loader />}><RhenApp /></Suspense>} />
         <Route path="/apps/rhen/command/*" element={<LegacyRhenOperatorRoute />} />
         <Route path="/apps/rhen/*" element={<Suspense fallback={<Loader />}><RhenApp /></Suspense>} />
 

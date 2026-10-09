@@ -7,10 +7,12 @@ import { fieldNotes } from "../data/fieldNotes";
 import { memberAuthClient } from "../member/auth-client";
 import { useMemberAvailability } from "../member/useMemberAvailability";
 import RhenDraft from "./RhenDraft";
+import MemberRhenTerminal from "./MemberRhenTerminal";
 
-type RhenSection = "overview" | "account" | "setup" | "evidence" | "research" | "updates";
+type RhenSection = "overview" | "terminal" | "account" | "setup" | "evidence" | "research" | "updates";
 const nav: { id: RhenSection; label: string; path: string }[] = [
   { id: "overview", label: "Overview", path: "/apps/rhen" },
+  { id: "terminal", label: "My terminal", path: "/apps/rhen/terminal" },
   { id: "account", label: "My brokerage", path: "/apps/rhen/account" },
   { id: "setup", label: "Bot draft", path: "/apps/rhen/setup" },
   { id: "evidence", label: "Evidence", path: "/apps/rhen/evidence" },
@@ -27,17 +29,26 @@ export default function RhenApp() {
   const [brokerError, setBrokerError] = useState(false);
   const release = currentRhenRelease();
   const segment = location.pathname.split("/")[3] || "overview";
-  const section: RhenSection = ["overview", "account", "setup", "evidence", "research", "updates"].includes(segment) ? segment as RhenSection : "overview";
+  const section: RhenSection = ["overview", "terminal", "account", "setup", "evidence", "research", "updates"].includes(segment) ? segment as RhenSection : "overview";
 
   useEffect(() => {
-    if (!session?.user || availability !== "available") return;
-    let alive = true;
-    void fetch("/api/command/session", { cache: "no-store" })
-      .then((response) => response.ok ? response.json() : null)
-      .then((value: { command_admin?: boolean } | null) => { if (alive) setOperator(value?.command_admin === true); })
-      .catch(() => { if (alive) setOperator(false); });
-    return () => { alive = false; };
-  }, [session?.user, availability]);
+    setOperator(false);
+    if (!session?.user?.id || availability !== "available") return;
+    const controller = new AbortController();
+    // Cloudflare Access alone is never a member's proof of company ownership.
+    // Only a server-bound owner-member may attempt the separate operator check.
+    void fetch("/api/member/rhen/terminal", { cache: "no-store", signal: controller.signal })
+      .then(response => response.ok ? response.json() : null)
+      .then(async (member: { ownerMember?: boolean } | null) => {
+        if (member?.ownerMember !== true) return false;
+        const response = await fetch("/api/command/session", { cache: "no-store", signal: controller.signal });
+        const value = response.ok ? await response.json() as { command_admin?: boolean; auth_source?: string } : null;
+        return value?.command_admin === true && value?.auth_source === "cloudflare_access";
+      })
+      .then(authorized => { if (!controller.signal.aborted) setOperator(authorized); })
+      .catch(() => { if (!controller.signal.aborted) setOperator(false); });
+    return () => controller.abort();
+  }, [session?.user?.id, availability]);
 
   useEffect(() => {
     if (!session?.user || availability !== "available" || section !== "account") return;
@@ -97,6 +108,7 @@ export default function RhenApp() {
             <Link to="/apps/rhen/setup">Create a non-executing bot draft</Link><span> · </span><Link to="/apps/rhen/evidence">Explore verified RHEN evidence</Link>
           </>}
           {section === "setup" && <RhenDraft key={session.user.id} />}
+          {section === "terminal" && <MemberRhenTerminal key={session.user.id} />}
           {section === "evidence" && <>
             <h2>Public evidence</h2>
             <p>Measured output from the privacy-safe RHEN feed. Missing or stale sources are shown as unavailable, never replaced with invented values.</p>
