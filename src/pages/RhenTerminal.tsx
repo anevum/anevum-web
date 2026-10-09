@@ -111,7 +111,7 @@ export default function RhenTerminal() {
   const statusInFlight = useRef(false);
   const evidenceInFlight = useRef(false);
   const controlObservation = useCommandObservation(commandAdmin ? session : null, 3000);
-  const { data: publicFeed, error: publicFeedError } = useLiveTrading(3000);
+  const { data: publicFeed, error: publicFeedError, transport: publicTransport } = useLiveTrading(3000);
 
   const handleSignOut = useCallback(async () => {
     await signOut();
@@ -299,7 +299,7 @@ export default function RhenTerminal() {
         {page === "public" && (
           <div className="command-v4-public">
             <section className="command-v4-strip">
-              <div><span>PUBLIC FEED</span><strong>{publicFeedError ? "DEGRADED" : displayState(publicFeed?.state || "OBSERVING")}</strong><small>{publicFeed?.generated_at ? ageText(publicFeed.generated_at, Date.now()) : "awaiting source"}</small></div>
+              <div><span>PUBLIC FEED · {publicTransport === "STREAM" ? "PUSH" : "POLL"}</span><strong>{publicFeedError ? "DEGRADED" : displayState(publicFeed?.state || "OBSERVING")}</strong><small>{publicFeed?.generated_at ? ageText(publicFeed.generated_at, Date.now()) : "awaiting source"}</small></div>
               <div><span>PUBLIC RETURN</span><strong>{publicFeed?.performance?.account_return_pct != null ? String(publicFeed.performance.account_return_pct.toFixed(2)) + "%" : "—"}</strong><small>normalized</small></div>
               <div><span>CLOSED TRADES</span><strong>{publicFeed?.performance?.closed_trades ?? "—"}</strong><small>{publicFeed?.performance?.wins ?? "—"} W / {publicFeed?.performance?.losses ?? "—"} L</small></div>
               <div><span>RESEARCH</span><strong>{displayState(publicFeed?.research?.current_status)}</strong><small>{publicFeed?.research?.current_focus || "no public focus"}</small></div>
