@@ -163,7 +163,7 @@ async function proxyOwnerReadOnlyStream(request, env) {
     return jsonResponse({message:"Same-origin private stream only."}, 403);
   }
   const credential = await commandCredential(request, env);
-  const base = String(env?.RHEN_COMMAND_STREAM_BASE || TRADER_BASE).replace(/\\/$/,"");
+  const base = String(env?.RHEN_COMMAND_STREAM_BASE || TRADER_BASE).replace(/\/$/,"");
   if (!base.startsWith("https://")) return jsonResponse({message:"Secure upstream required."}, 503);
   // Forward only the verified Access assertion, never a broker token or URL credential.
   return fetch(base + "/v1/command/live", {
