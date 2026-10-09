@@ -22,6 +22,7 @@ const ReleaseDetail = lazy(() => import("./pages/ReleaseDetail"));
 const SignIn = lazy(() => import("./pages/SignIn"));
 const MemberHome = lazy(() => import("./pages/MemberHome"));
 const MemberSettings = lazy(() => import("./pages/MemberSettings"));
+const MemberBilling = lazy(() => import("./pages/MemberBilling"));
 const MemberRewards = lazy(() => import("./pages/MemberRewards"));
 const MemberStagingVerify = lazy(() => import("./pages/MemberStagingVerify"));
 const RhenApp = lazy(() => import("./pages/RhenApp"));
@@ -216,6 +217,7 @@ export default function App() {
         <Route path="/sign-in" element={<PublicExperience><SignIn /></PublicExperience>} />
         <Route path="/me" element={<PublicExperience><MemberHome /></PublicExperience>} />
         <Route path="/me/settings" element={<PublicExperience><MemberSettings /></PublicExperience>} />
+        <Route path="/me/billing" element={<PublicExperience><Suspense fallback={<Loader />}><MemberBilling /></Suspense></PublicExperience>} />
         <Route path="/me/rewards" element={<PublicExperience><MemberRewards /></PublicExperience>} />
         <Route path="/me/verify" element={<PublicExperience><MemberStagingVerify /></PublicExperience>} />
         <Route path="/apps/rhen/terminal/*" element={<LegacyRhenOperatorRoute />} />
