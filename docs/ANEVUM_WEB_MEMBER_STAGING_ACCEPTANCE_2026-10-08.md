@@ -29,3 +29,16 @@ This is a follow-on to #228/#229 and production member readiness #230. It does *
 5. Separately verify the production Google OAuth client's authorized origin and callback; privately rotate the production Better Auth secret if it ever appeared in chat/text; confirm actual two-account acceptance and policy text.
 
 The explicitly gated `.github/workflows/member-production-d1-migrate.yml` remains manual-only and requires its own exact confirmation phrase and independent owner-approved security checkboxes. Its success only creates tables and **does not enable public signup**. Do not mark any gate complete from staged fixtures or a simple account-login confirmation alone.
+
+
+## Security hardening — staging cookie target and cross-account draft verification
+
+The local two-cookie acceptance script `scripts/verify-member-staging.mjs` now accepts **only** the exact configured staging origin `https://anevum-member-staging.devonakins.workers.dev`. Do not broaden the allowlist to arbitrary `*.workers.dev` or `*.anevum.com`: the real test-session Cookie headers would otherwise be sent to whoever controls that host. Production and other staging subdomains are rejected before any HTTP request is made.
+
+Running the script without flags checks **two distinct real authenticated sessions**, account/session and export ownership, per-account RHEN draft/export correspondence, disabled rewards and brokerage writes, denied member-to-owner RHEN access, denied anonymous routes, and rejected missing/forged Origin mutation attempts. Results contain only PASS labels, not any identifiers or cookies.
+
+`--exercise-writes` is **explicit opt-in for disposable staging test accounts only**. It writes different RHEN draft names/limits to each test user's record and cross-checks each user's read/export result, then attempts to restore both original draft records even if a test fails. Saved RHEN project bookmarks are similarly restored. No live trading, financial transfer, production account or production database path is used. If restoration fails, the script reports which staging account requires manual cleanup. Both browser profile sessions and their cookies must remain within the operator's protected local test runtime; never send session cookies through ChatGPT, GitHub, public CI or a third-party service.
+
+Run the script only after authenticating both test accounts privately. A passing local script is evidence about the tested cookies and data at that time, but is not proof of Google Console client settings, private Better Auth secret rotation, historical data retention, expired-session response, rate-limit behavior, or completed account deletion. Those have separate acceptance requirements.
+
+Production D1 migration remains gated behind the existing manual-only workflow and explicit owner confirmations. No PR in this workstream authorizes automatic production D1 migrations or signup activation.
