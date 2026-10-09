@@ -15,6 +15,11 @@ export default function Terms() {
       <h2>RHEN and financial information</h2>
       <p>RHEN is a software and research project. Its publicly visible research, market evidence, simulations, and early live results are not personalized financial advice, investment recommendations, or a promise of profit. Backtests and observed results may not predict future outcomes. The current general member workspace does not connect a brokerage account, take custody of funds, or place trades on your behalf. Saved RHEN configuration drafts are planning notes, not active trading strategies, brokerage connections, actual risk controls, or automatic authorizations.</p>
 
+      <h2>Proposed Alpaca Connect member authorization</h2>
+      <p>RHEN Cloud is being developed so eligible members can choose to authorize access to their own Alpaca brokerage account through Alpaca Connect. When the integration is approved and enabled, an account connection may grant RHEN by ANEVUM access to brokerage information and permission to place transactions at your direction. Alpaca remains the custodian of your brokerage account. ANEVUM does not pool member funds or operate deposits and withdrawals within RHEN Cloud.</p>
+      <p>Connecting an Alpaca account does not automatically activate a trading algorithm. Member execution requires separately approved strategy releases, a member-specific configuration, explicit activation, broker permissions, and operating risk controls. Brokerage trading can cause losses, orders may not fill, and software outages or market changes can affect outcomes. No performance, loss prevention, uninterrupted execution or order-fill guarantee is made. The proposed live-member execution service is not presently available.</p>
+      <p>You may disconnect your account within RHEN and independently revoke ANEVUM access in Alpaca's authorized-app controls. Disconnecting does not reverse previously submitted or filled brokerage transactions. Separate risk, broker and financial service terms must be reviewed and approved before member live trading launches.</p>
+
       <h2>Responsible use and availability</h2>
       <p>Use the services lawfully. Do not attempt to bypass authentication, access another account, interfere with other users, or overload systems. ANEVUM may limit or discontinue access when necessary to protect the service. Work-in-progress software is provided without a guarantee of uninterrupted availability or fitness for a particular purpose, to the extent permitted by applicable law.</p>
 
@@ -24,7 +29,7 @@ export default function Terms() {
       <h2>Account removal and questions</h2>
       <p>You can export and delete your member account through <a href="/me/settings">Command account settings</a>, subject to a recent sign-in for sensitive actions. Review the <a href="/privacy">Privacy notice</a> for the information stored and deletion limitations. Questions can be sent to <a href="mailto:devon@anevum.com">devon@anevum.com</a>.</p>
 
-      <p className="member-legal-date">Last reviewed October 8, 2026. Proposed Commons additions dated October 9, 2026; owner review required before publication.</p>
+      <p className="member-legal-date">Last reviewed October 8, 2026. Draft Commons and RHEN Cloud disclosures updated October 9, 2026; owner and legal review required before publication.</p>
     </article>
   );
 }
