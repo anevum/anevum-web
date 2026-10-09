@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import {
-  validateCommonsTopic, validateCommonsComment, commonsSchemaReady,
+  validateCommonsTopic, validateCommonsComment, validateCommonsReport, commonsSchemaReady,
   commonsEndpoint, exportCommonsData
 } from "../src/server/commons.mjs";
 import { memberEndpoint, safeMutation } from "../src/server/member.mjs";
@@ -177,4 +177,50 @@ test("New routes preserve production-off staging-on gating and cannot enter oper
   assert.equal(safeMutation(request("/api/member/commons/topics", "POST", sample), "https://anevum.com"), true);
   const forged = new Request("https://anevum.com/api/member/commons/topics", { method: "POST", headers: { Origin: "https://external.example" } });
   assert.equal(safeMutation(forged, "https://anevum.com"), false);
+});
+
+
+test("Reports are reason-only, bounded, authenticated and never accept forged identities", async () => {
+  const target = "22222222-2222-4222-8222-222222222222";
+  const report = { itemType: "topic", itemId: target, reason: "misleading_claims" };
+  assert.deepEqual(validateCommonsReport(report), report);
+  for (const bad of [
+    { ...report, reporterId: "owner" }, { ...report, role: "moderator" },
+    { ...report, reason: "transfer_money" }, { ...report, itemId: "other-account" },
+    { ...report, itemType: "broker" }, { itemType: "topic", itemId: target }
+  ]) assert.throws(() => validateCommonsReport(bad));
+
+  const { db, calls } = mockDB();
+  const env = { MEMBER_DB: db, ANEVUM_COMMONS_ENABLED: "true" };
+  const path = "/api/member/commons/reports";
+  const created = await commonsEndpoint(request(path, "POST", report), env, user, path);
+  assert.equal(created.status, 201);
+  const insert = calls.find(call => call.sql.includes("INSERT OR IGNORE INTO commons_reports"));
+  assert.ok(insert);
+  assert.equal(insert.args[1], user.id);
+  assert.equal(insert.args[3], target);
+  assert.equal(insert.args[4], user.id);
+  assert.match(insert.sql, /visibility = 'members'/);
+  assert.match(insert.sql, /COUNT\(\*\) FROM commons_reports/);
+  assert.equal((await commonsEndpoint(request(path, "POST", { ...report, reporterId: "owner" }), env, user, path)).status, 400);
+  assert.equal((await commonsEndpoint(request(path), env, user, path)).status, 403);
+  assert.equal((await commonsEndpoint(request(path + "/" + target, "PATCH", { reviewed: true }), env, user, path + "/" + target)).status, 403);
+});
+
+test("Only an admitted moderator can see and acknowledge a private report queue", async () => {
+  const reportId = "33333333-3333-4333-8333-333333333333";
+  const { db, calls } = mockDB({ role: "moderator" });
+  const env = { MEMBER_DB: db, ANEVUM_COMMONS_ENABLED: "true" };
+  const path = "/api/member/commons/reports";
+  const list = await commonsEndpoint(request(path), env, user, path);
+  assert.equal(list.status, 200);
+  assert.deepEqual(await list.json(), { reports: [] });
+  const endpoint = path + "/" + reportId;
+  const patched = await commonsEndpoint(request(endpoint, "PATCH", { reviewed: true }), env, user, endpoint);
+  assert.equal(patched.status, 200);
+  assert.deepEqual(await patched.json(), { reviewed: true });
+  assert.ok(calls.some(({ sql, args }) => sql.includes("UPDATE commons_reports") &&
+    args[0] === user.id && args[1] === reportId));
+  assert.equal((await commonsEndpoint(request(endpoint, "PATCH", { reviewed: false }), env, user, endpoint)).status, 400);
+  assert.equal((await commonsEndpoint(request(endpoint, "PATCH", { reviewed: true, userId: "owner" }), env, user, endpoint)).status, 400);
 });
