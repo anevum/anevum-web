@@ -11,7 +11,7 @@ const expected = "a537432e-d216-4b31-8b22-19662cc3a44a";
 const production = "7f0d4c0c-2e85-4900-8504-1347954e1df1";
 const schema = "migrations";
 const verifiedStagingOrigin = "https://anevum-member-staging.devonakins.workers.dev";
-const privateNames = ["BETTER_AUTH_SECRET", "GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET"];
+const privateNames = ["BETTER_AUTH_SECRET", "GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET", "STRIPE_SECRET_KEY", "STRIPE_WEBHOOK_SECRET"];
 const errors = [];
 
 function assert(ok, message) {
@@ -67,11 +67,20 @@ for (const key of billingFlags) {
   assert(prod?.vars?.[key] === "false", "Production billing flag must remain disabled: " + key);
 }
 assert(stage?.vars?.ANEVUM_STRIPE_MODE === "test", "Staging must use Stripe test-mode only.");
+const sandboxPrices = {
+  STRIPE_FOUNDING_PRICE_ID: "price_1UOcwSDSvwYS3kwTHxrYRQev",
+  STRIPE_STANDARD_PRICE_ID: "price_1UOcwYDSvwYS3kwTqnadIMBD"
+};
+for (const [key, expectedValue] of Object.entries(sandboxPrices)) {
+  assert(stage?.vars?.[key] === expectedValue, "Staging must use the verified sandbox price: " + key);
+  assert(!Object.hasOwn(prod?.vars || {}, key), "Production must not use sandbox price: " + key);
+}
 assert(prod?.vars?.ANEVUM_STRIPE_MODE === "disabled", "Production must not enable Stripe live-mode.");
 const stageVarsAllowed = new Set([
   "COMMAND_AUTH_MODE", "COMMAND_LIVE_STREAM_ENABLED", "ANEVUM_MEMBERS_ENABLED",
   "ANEVUM_MEMBER_RHEN_DRAFTS_ENABLED", "ANEVUM_MEMBER_PREVIEW_ENABLED",
-  "MEMBER_PREVIEW_ORIGIN", "ANEVUM_STRIPE_MODE", betaFlag, ...billingFlags
+  "MEMBER_PREVIEW_ORIGIN", "ANEVUM_STRIPE_MODE", betaFlag, ...billingFlags,
+  ...Object.keys(sandboxPrices)
 ]);
 for (const name of Object.keys(stage.vars || {})) {
   assert(stageVarsAllowed.has(name), "Unexpected variable in staging config: " + name);
@@ -117,6 +126,9 @@ if (process.argv.includes("--generated")) {
         assert(generated?.vars?.[key] === "false", "Generated staging unexpectedly enables billing: " + key);
       }
       assert(generated?.vars?.ANEVUM_STRIPE_MODE === "test", "Generated staging Stripe mode changed.");
+      for (const [key, expectedValue] of Object.entries(sandboxPrices)) {
+        assert(generated?.vars?.[key] === expectedValue, "Generated staging uses wrong Stripe sandbox price: " + key);
+      }
       for (const name of Object.keys(generated.vars || {})) {
         assert(stageVarsAllowed.has(name), "Unexpected generated staging variable: " + name);
       }
