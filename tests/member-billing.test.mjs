@@ -4,7 +4,7 @@ import { readFileSync } from "node:fs";
 import {
   RHEN_CLOUD_PLANS, billingConfigured, billingSchemaReady, paidAccess,
   planFromPrice, normalizeStripeSubscription, verifyStripeSignature,
-  readBillingStatus, memberBillingEndpoint, stripeWebhookEndpoint, cancelBillingBeforeAccountDeletion
+  readBillingStatus, memberBillingEndpoint, stripeWebhookEndpoint, cancelBillingBeforeAccountDeletion, reconcileMemberBilling
 } from "../src/server/member-billing.mjs";
 
 const stagingOrigin = "https://anevum-member-staging.devonakins.workers.dev";
@@ -200,6 +200,66 @@ test("checkout refuses wrong prices and duplicate provider sessions, with per-us
     assert.equal(calls.includes("POST /v1/checkout/sessions"),false);
     assert.equal(lockActive,false);
   }finally{globalThis.fetch=oldFetch;}
+});
+
+
+test("provider reconciliation restores missing webhook, revokes absent subscription, and rate limits refresh", async () => {
+  const state = {attempt:0,success:0,rows:new Map(),customer:"cus_abc123"};
+  const now=Math.floor(Date.now()/1000);
+  const db={
+    prepare(sql){return {sql,args:[],bind(...args){this.args=args;return this;},
+      async first(){
+        if(sql.includes("sqlite_master"))return null;
+        if(sql.includes("member_billing_customers"))return {stripe_customer_id:state.customer};
+        if(sql.includes("SELECT last_success_ms"))return {last_success_ms:state.success};
+        if(sql.includes("FROM member_billing_subscriptions"))return state.rows.get("sub_test123")||null;
+        return null;
+      },
+      async all(){
+        if(sql.includes("sqlite_master"))return {results:tables.map(name=>({name}))};
+        if(sql.includes("SELECT stripe_subscription_id"))return {results:[...state.rows.keys()].map(stripe_subscription_id=>({stripe_subscription_id}))};
+        return {results:[]};
+      },
+      async run(){
+        if(sql.includes("INSERT INTO member_billing_sync_state")){
+          if(Date.now()-state.attempt<60000)return {success:true,meta:{changes:0}};
+          state.attempt=Date.now();return {success:true,meta:{changes:1}};
+        }
+        return {success:true,meta:{changes:1}};
+      }};
+    },
+    async batch(stmts){
+      for(const op of stmts){
+        if(op.sql.includes("INSERT INTO member_billing_subscriptions")){
+          const a=op.args;state.rows.set(a[0],{
+            plan_code:a[4],status:a[5],current_period_end:a[6],cancel_at_period_end:a[7]
+          });
+        } else if(op.sql.includes("UPDATE member_billing_subscriptions")){
+          const row=state.rows.get(op.args[2]);if(row)row.status="unknown";
+        } else if(op.sql.includes("UPDATE member_billing_sync_state"))state.success=op.args[0];
+      }
+      return stmts.map(()=>({success:true}));
+    }
+  };
+  const env={...stagingEnv(),MEMBER_DB:db};
+  const prev=globalThis.fetch;
+  let items=[{id:"sub_test123",customer:"cus_abc123",status:"active",livemode:false,
+    items:{data:[{price:{id:"price_Standard456"},current_period_end:now+3600}]},
+    metadata:{anevum_member_id:"user-a",anevum_product:"rhen_cloud"}}];
+  globalThis.fetch=async ()=>Response.json({has_more:false,data:items});
+  try{
+    let result=await reconcileMemberBilling(db,"user-a",env,stagingOrigin);
+    assert.equal(result.paidAccess,true);
+    assert.equal(result.subscription.plan,"standard");
+    assert.ok(result.lastReconciledAt);
+    await assert.rejects(reconcileMemberBilling(db,"user-a",env,stagingOrigin),e=>e.status===429);
+    state.attempt=0;items=[];
+    result=await reconcileMemberBilling(db,"user-a",env,stagingOrigin);
+    assert.equal(result.paidAccess,false);
+    assert.equal(result.subscription.status,"unknown");
+    assert.equal(result.paperExecutionEnabled,false);
+    assert.equal(result.liveExecutionEnabled,false);
+  }finally{globalThis.fetch=prev;}
 });
 
 test("Stripe webhook signature validates raw body, timestamp, and all v1 candidates",async()=>{
