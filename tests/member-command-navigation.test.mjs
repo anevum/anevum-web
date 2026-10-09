@@ -34,7 +34,7 @@ test("new canonical member links never change Access operator API or trading aut
   const prod = JSON.parse(source("wrangler.jsonc"));
   const stage = JSON.parse(source("wrangler.member-staging.jsonc"));
   const worker = source("worker.mjs");
-  assert.equal(prod.vars.ANEVUM_MEMBERS_ENABLED, "false");
+  assert.equal(prod.vars.ANEVUM_MEMBERS_ENABLED, "true");
   assert.equal(prod.vars.ANEVUM_MEMBER_PREVIEW_ENABLED, "false");
   assert.equal(stage.vars.ANEVUM_MEMBERS_ENABLED, "true");
   assert.equal(stage.vars.COMMAND_LIVE_STREAM_ENABLED, "false");
