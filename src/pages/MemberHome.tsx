@@ -32,6 +32,7 @@ function CommandHome({ enabled = false, checking = false, identity }: {
   const [data, setData] = useState<MemberData | null>(null);
   const [error, setError] = useState("");
   const [updating, setUpdating] = useState("");
+  const [operator, setOperator] = useState(false);
   const products = publicProducts();
   const signedIn = enabled && Boolean(identity);
   const load = useCallback(async (signal?: AbortSignal) => {
@@ -50,6 +51,21 @@ function CommandHome({ enabled = false, checking = false, identity }: {
     });
     return () => controller.abort();
   }, [signedIn, identity?.email, load]);
+
+  useEffect(() => {
+    // Google member identity is never enough for an owner terminal link.
+    // The owner-only Cloudflare Access JWT must also be accepted by the Worker.
+    setOperator(false);
+    if (!signedIn) return;
+    const controller = new AbortController();
+    void fetch("/api/command/session", { cache: "no-store", signal: controller.signal })
+      .then(async response => response.ok ? response.json() : null)
+      .then((value: { command_admin?: boolean } | null) => {
+        if (!controller.signal.aborted) setOperator(value?.command_admin === true);
+      })
+      .catch(() => { if (!controller.signal.aborted) setOperator(false); });
+    return () => controller.abort();
+  }, [signedIn, identity?.email]);
 
   const toggle = async (kind: "saved-apps" | "follows", slug: string, selected: boolean) => {
     setUpdating(kind + slug);
@@ -92,6 +108,15 @@ function CommandHome({ enabled = false, checking = false, identity }: {
         </header>
         {checking ? <p className="member-command-notice" role="status">Checking your account…</p> : !signedIn ? <div className="member-command-notice" role="status"><strong>{enabled ? "Sign in to make this your Command." : "Member accounts are not open yet."}</strong><p>{enabled ? "Your saved programs, follows, and profile belong to your account." : "You can explore the projects and their public records now. Saving programs and profile changes will open with registration."}</p>{enabled && <Link to="/sign-in">Continue with Google</Link>}</div> : null}
         {error && <div className="member-command-notice member-alert" role="alert"><p>{error}</p><button type="button" onClick={() => void load().then(() => setError("")).catch(reason => setError(String(reason.message)))}>Retry</button></div>}
+        {signedIn && operator && <section className="member-command-section" aria-labelledby="command-operator">
+          <div className="member-command-rewards">
+            <div>
+              <h2 id="command-operator">Private RHEN operator workspace</h2>
+              <p>Access to the existing restricted terminal is independently verified by Cloudflare Access. This is separate from ordinary member accounts and bot drafts.</p>
+            </div>
+            <Link to="/command/rhen/operate">Open RHEN Terminal</Link>
+          </div>
+        </section>}
         {signedIn && <section className="member-command-section" aria-labelledby="command-saved"><h2 id="command-saved">Saved programs</h2>{!data ? <p role="status">Loading your programs…</p> : saved.length ? <div className="member-command-saved">{saved.map(product => <Link key={product.slug} to={product.routes.app || product.routes.home}><strong>{product.name}</strong><span>{product.category}</span><b>Open program</b></Link>)}</div> : <p>Nothing saved yet. Save a program below to keep it here.</p>}</section>}
         <section className="member-command-section" aria-labelledby="command-programs">
           <div className="member-command-section-heading"><h2 id="command-programs">Programs</h2><Link to="/products">Project directory</Link></div>

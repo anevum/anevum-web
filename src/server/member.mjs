@@ -1,5 +1,6 @@
 import { betterAuth } from "better-auth";
 import { memberRewardsStatus, memberBrokerageStatus } from "./member-capabilities.mjs";
+import { memberRhenDraftSchemaReady, readMemberRhenDraft, saveMemberRhenDraft, deleteMemberRhenDraft, validateRhenDraft } from "./member-rhen-draft.mjs";
 import { resolveMemberOrigin, memberSchemaReady } from "./member-preflight.mjs";
 const PUBLIC_PROJECTS = new Set(["rhen"]);
 
@@ -121,12 +122,44 @@ export async function memberEndpoint(request, env, pathname) {
     return reply(pathname === "/api/member/rewards" ? memberRewardsStatus() : memberBrokerageStatus());
   }
   const db = env.MEMBER_DB;
+  if (pathname === "/api/member/rhen/draft") {
+    if (env?.ANEVUM_MEMBER_RHEN_DRAFTS_ENABLED !== "true") {
+      return reply({ message: "Personal RHEN drafts are not enabled." }, 503);
+    }
+    if (!await memberRhenDraftSchemaReady(db)) {
+      return reply({ message: "Personal RHEN draft storage is unavailable." }, 503);
+    }
+    if (!["GET", "PUT", "DELETE"].includes(request.method)) {
+      return reply({ message: "Method not allowed." }, 405);
+    }
+    let draft;
+    if (request.method === "PUT") {
+      try { draft = validateRhenDraft(await safeJSON(request)); }
+      catch (error) { return reply({ message: error instanceof Error ? error.message : "Invalid draft." }, 400); }
+    }
+    try {
+      if (request.method === "PUT") {
+        const saved = await saveMemberRhenDraft(db, user.id, draft);
+        return reply({ available: true, draft: saved, executionEnabled: false, brokerageConnected: false });
+      }
+      if (request.method === "DELETE") {
+        await deleteMemberRhenDraft(db, user.id);
+        return reply({ available: true, draft: null, executionEnabled: false, brokerageConnected: false });
+      }
+      const saved = await readMemberRhenDraft(db, user.id);
+      return reply({ available: true, draft: saved, executionEnabled: false, brokerageConnected: false });
+    } catch {
+      return reply({ message: "Personal RHEN draft storage is unavailable." }, 503);
+    }
+  }
   if (pathname === "/api/member/export" && request.method === "GET") {
-    const [profile, saved, follows, entitlements] = await Promise.all([
+    const hasDraftTable = await memberRhenDraftSchemaReady(db);
+    const [profile, saved, follows, entitlements, rhenDraft] = await Promise.all([
       db.prepare("SELECT display_name, theme, created_at, updated_at FROM member_profiles WHERE user_id = ?").bind(user.id).first(),
       db.prepare("SELECT app_slug, saved_at FROM member_saved_apps WHERE user_id = ? ORDER BY saved_at DESC").bind(user.id).all(),
       db.prepare("SELECT project_slug, followed_at FROM member_project_follows WHERE user_id = ? ORDER BY followed_at DESC").bind(user.id).all(),
-      db.prepare("SELECT app_slug, capability, granted_at, expires_at FROM member_entitlements WHERE user_id = ?").bind(user.id).all()
+      db.prepare("SELECT app_slug, capability, granted_at, expires_at FROM member_entitlements WHERE user_id = ?").bind(user.id).all(),
+      hasDraftTable ? readMemberRhenDraft(db, user.id) : Promise.resolve(null)
     ]);
     return new Response(JSON.stringify({
       exportedAt: new Date().toISOString(),
@@ -134,7 +167,8 @@ export async function memberEndpoint(request, env, pathname) {
       profile: profile || {},
       savedApps: saved.results || [],
       projectFollows: follows.results || [],
-      entitlements: entitlements.results || []
+      entitlements: entitlements.results || [],
+      rhenDraft
     }, null, 2), {
       status: 200,
       headers: {

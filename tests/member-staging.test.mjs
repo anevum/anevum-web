@@ -28,9 +28,11 @@ test("activated staging is pinned to one verified HTTPS origin and preview D1", 
   const origin = "https://anevum-member-staging.devonakins.workers.dev";
 
   assert.equal(prod.vars.ANEVUM_MEMBERS_ENABLED, "false");
+  assert.equal(prod.vars.ANEVUM_MEMBER_RHEN_DRAFTS_ENABLED, "false");
   assert.equal(prod.vars.ANEVUM_MEMBER_PREVIEW_ENABLED, "false");
   assert.equal(stage.name, "anevum-member-staging");
   assert.equal(stage.vars.ANEVUM_MEMBERS_ENABLED, "true");
+  assert.equal(stage.vars.ANEVUM_MEMBER_RHEN_DRAFTS_ENABLED, "true");
   assert.equal(stage.vars.ANEVUM_MEMBER_PREVIEW_ENABLED, "true");
   assert.equal(stage.vars.MEMBER_PREVIEW_ORIGIN, origin);
   assert.equal(stage.d1_databases[0].database_id, "a537432e-d216-4b31-8b22-19662cc3a44a");

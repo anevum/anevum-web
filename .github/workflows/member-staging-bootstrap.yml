@@ -172,6 +172,11 @@ jobs:
             echo "::error::Unauthenticated staging member endpoint must return 401: HTTP $member_status"
             exit 1
           fi
+          draft_status="$(curl --silent --show-error --max-time 12 -o /dev/null -w '%{http_code}' "$STAGING_URL/api/member/rhen/draft")"
+          if [ "$draft_status" != '401' ]; then
+            echo "::error::Anonymous RHEN draft API must deny access: HTTP $draft_status"
+            exit 1
+          fi
           auth_status="$(curl --silent --show-error --max-time 12 -o /dev/null -w '%{http_code}' "$STAGING_URL/api/auth/get-session")"
           if [ "$auth_status" != '200' ]; then
             echo "::error::Staging auth handler is not responding: HTTP $auth_status"
