@@ -140,3 +140,22 @@ test("research moderation is role-gated and creates an audit event", () => {
   assert.match(service, /COUNT\(\*\) FROM commons_comments WHERE author_id/);
   assert.doesNotMatch(service, /TRADER_BASE|proxyTrader|COMMAND_ACCESS|alpacaKey|stripeSecret/);
 });
+
+
+test("reporting is an admitted-member feature with a private moderator UI and no broker controls", () => {
+  const server = source("src/server/commons.mjs");
+  const thread = source("src/pages/CommonsTopic.tsx");
+  const commons = source("src/pages/Commons.tsx");
+  const staging = JSON.parse(source("wrangler.member-staging.jsonc"));
+  const production = JSON.parse(source("wrangler.jsonc"));
+  assert.match(server, /if \(pathname === "\/api\/member\/commons\/reports"\)/);
+  assert.match(server, /if \(!moderator\) return respond/);
+  assert.match(server, /INSERT OR IGNORE INTO commons_reports/);
+  assert.match(server, /reviewed_by = \?/);
+  assert.match(thread, /Report topic/);
+  assert.match(thread, /Report reply/);
+  assert.match(commons, /Reports awaiting review/);
+  assert.equal(production.vars.ANEVUM_COMMONS_ENABLED, "false");
+  assert.equal(staging.vars.ANEVUM_COMMONS_ENABLED, "true");
+  assert.doesNotMatch(server, /TRADER_BASE|executeOrder|ALPACA_API_SECRET|stripeSecret/);
+});
