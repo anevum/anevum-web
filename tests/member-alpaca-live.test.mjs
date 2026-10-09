@@ -45,8 +45,11 @@ function mockDB() {
             },
             run: async () => {
               if (sql.includes("INSERT INTO member_alpaca_live_oauth_states")) {
-                const [hash, user, expiry, created] = args;
+                const [hash, user, expiry, created, boundedUser, windowStart] = args;
                 if (states.has(hash)) throw Error("State exists");
+                if (boundedUser !== user) throw Error("OAuth state scope mismatch");
+                if ([...states.values()].filter(s => s.user_id === user && s.created_at >= windowStart).length >= 8)
+                  return { meta: { changes: 0 } };
                 states.set(hash, { user_id: user, expires_at: expiry, created_at: created, consumed_at: null });
                 return { meta: { changes: 1 } };
               }
@@ -250,4 +253,35 @@ test("The only member browser paths are authenticated account linking and read-o
   assert.match(api, /encrypted_token/);
   assert.doesNotMatch(api, /\/v2\/orders|TRADER_BASE|proxyTrader|ALPACA_API_SECRET|executeOrder/);
   assert.equal(read("migrations/0006_member_alpaca_live_connect.sql").includes("ON DELETE CASCADE"), true);
+});
+
+
+test("OAuth start is bounded per member and disconnection works after all approval flags are disabled", async () => {
+  const { db, connections } = mockDB();
+  for (let i = 0; i < 8; i++) {
+    const result = await start(db, userA);
+    assert.equal(result.response.status, 200);
+  }
+  const blocked = await start(db, userA);
+  assert.equal(blocked.response.status, 429);
+
+  const { db: linkedDb, connections: linked } = mockDB();
+  const initial = await start(linkedDb, userA);
+  assert.equal((await callbackRequest(initial.env, userA, initial.state,
+    brokerFetch("live-account-a").fetcher)).status, 303);
+  assert.equal(linked.size, 1);
+  const disabled = { ...initial.env, ANEVUM_ALPACA_LIVE_CONNECT_ENABLED: "false" };
+  const status = await memberAlpacaLiveEndpoint(
+    req("/api/member/brokerage"), disabled, userA, origin, "/api/member/brokerage"
+  );
+  const current = await status.json();
+  assert.equal(current.accountConnected, true);
+  assert.equal(current.connectionAvailable, false);
+  const disconnect = await memberAlpacaLiveEndpoint(
+    req("/api/member/alpaca/live/disconnect", "POST"), disabled, userA,
+    origin, "/api/member/alpaca/live/disconnect"
+  );
+  assert.equal(disconnect.status, 200);
+  assert.equal(linked.size, 0);
+  assert.equal(connections.size, 0);
 });
