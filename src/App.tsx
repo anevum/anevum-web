@@ -23,6 +23,7 @@ const SignIn = lazy(() => import("./pages/SignIn"));
 const MemberHome = lazy(() => import("./pages/MemberHome"));
 const Commons = lazy(() => import("./pages/Commons"));
 const Learning = lazy(() => import("./pages/Learning"));
+const PrivateResearch = lazy(() => import("./pages/PrivateResearch"));
 const CommonsTopic = lazy(() => import("./pages/CommonsTopic"));
 const MemberSettings = lazy(() => import("./pages/MemberSettings"));
 const MemberRewards = lazy(() => import("./pages/MemberRewards"));
@@ -228,6 +229,7 @@ export default function App() {
         <Route path="/me" element={<PublicExperience><MemberHome /></PublicExperience>} />
         <Route path="/commons" element={<Suspense fallback={<Loader />}><Commons /></Suspense>} />
         <Route path="/learn" element={<PublicExperience><Learning /></PublicExperience>} />
+        <Route path="/me/research" element={<Suspense fallback={<Loader />}><PrivateResearch /></Suspense>} />
         <Route path="/commons/topic/:id" element={<Suspense fallback={<Loader />}><CommonsTopic /></Suspense>} />
         <Route path="/me/settings" element={<PublicExperience><MemberSettings /></PublicExperience>} />
         <Route path="/me/rewards" element={<PublicExperience><MemberRewards /></PublicExperience>} />
