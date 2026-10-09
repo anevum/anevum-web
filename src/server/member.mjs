@@ -129,7 +129,7 @@ export async function memberEndpoint(request, env, pathname) {
   }
   const db = env.MEMBER_DB;
   if (pathname === "/api/member/billing" || pathname === "/api/member/billing/checkout" ||
-      pathname === "/api/member/billing/portal") {
+      pathname === "/api/member/billing/portal" || pathname === "/api/member/billing/refresh") {
     return memberBillingEndpoint(request, env, user, verifiedOrigin, pathname);
   }
   if (pathname === "/api/member/rhen/draft") {
