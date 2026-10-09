@@ -1,5 +1,6 @@
 import { betterAuth } from "better-auth";
 import { memberRewardsStatus, memberBrokerageStatus } from "./member-capabilities.mjs";
+import { memberTerminalStatus } from "./member-terminal.mjs";
 import { memberRhenDraftSchemaReady, readMemberRhenDraft, saveMemberRhenDraft, deleteMemberRhenDraft, validateRhenDraft } from "./member-rhen-draft.mjs";
 import { resolveMemberOrigin, memberSchemaReady } from "./member-preflight.mjs";
 const PUBLIC_PROJECTS = new Set(["rhen"]);
@@ -92,6 +93,18 @@ export async function safeJSON(request) {
   return value;
 }
 
+// Also used at the separate, feature-gated owner-operator API boundary.
+// Never accept a caller-supplied member ID for private Command authority.
+export async function resolveAuthenticatedMemberSession(request, env) {
+  const origin = resolveMemberOrigin(request, env);
+  if (!origin || !memberConfigured(env)) return null;
+  try {
+    return await makeMemberAuth(env, origin).api.getSession({ headers: request.headers });
+  } catch {
+    return null;
+  }
+}
+
 export async function memberEndpoint(request, env, pathname) {
   const verifiedOrigin = resolveMemberOrigin(request, env);
   if (pathname === "/api/member/availability") {
@@ -115,6 +128,13 @@ export async function memberEndpoint(request, env, pathname) {
   if (!user?.id) return reply({ message: "Sign in required." }, 401);
   if (!["GET", "HEAD"].includes(request.method) && !safeMutation(request, verifiedOrigin)) {
     return reply({ message: "Same-origin request required." }, 403);
+  }
+
+  // Each signed-in member receives only their own future terminal readiness.
+  // No owner broker data or private RHEN API is reachable from this endpoint.
+  if (pathname === "/api/member/rhen/terminal") {
+    if (request.method !== "GET") return reply({ message: "Read-only terminal status." }, 405);
+    return reply(memberTerminalStatus(user, env));
   }
 
   if (pathname === "/api/member/rewards" || pathname === "/api/member/brokerage") {
