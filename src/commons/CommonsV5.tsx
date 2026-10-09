@@ -328,6 +328,7 @@ function CommonsApp() {
 
   useEffect(()=>{
     try{window.localStorage.setItem("anevum-commons-v5-design",JSON.stringify(prefs));}catch {/* storage unavailable */}
+    window.dispatchEvent(new CustomEvent("anevum-commons-v5-settings",{detail:prefs}));
   },[prefs]);
   useEffect(()=>{
     const onKey=(event:KeyboardEvent)=>{
