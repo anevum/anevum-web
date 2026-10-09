@@ -32,6 +32,8 @@ test("schema automation can only migrate preview D1 after main-branch merge", ()
   assert.doesNotMatch(workflow, /secrets\.CLOUDFLARE_API_TOKEN/);
   assert.match(workflow, /PRAGMA foreign_key_check/);
   assert.match(workflow, /member_rhen_drafts/);
+  assert.match(workflow, /member_billing_subscriptions/);
+  assert.match(read("migrations/0003_member_billing.sql"), /REFERENCES "user"\("id"\) ON DELETE CASCADE/);
   const schema = read("migrations/0002_member_rhen_drafts.sql");
   assert.match(schema, /REFERENCES "user"\("id"\) ON DELETE CASCADE/);
   assert.doesNotMatch(schema, /account_tokens|access_token|trading_order/);
