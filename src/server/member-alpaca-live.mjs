@@ -4,6 +4,7 @@ const ALPACA_AUTHORIZE = "https://app.alpaca.markets/oauth/authorize";
 const ALPACA_TOKEN = "https://api.alpaca.markets/oauth/token";
 const ALPACA_ACCOUNT = "https://api.alpaca.markets/v2/account";
 const STATE_LIFETIME_SECONDS = 600;
+const LIVE_DISCLOSURE_VERSION = "alpaca-live-v1";
 const ACCOUNT_ID = /^[A-Za-z0-9_.:-]{8,128}$/;
 
 function respond(value, status = 200) {
@@ -47,7 +48,8 @@ export async function liveConnectSchemaReady(db) {
     ).all();
     const names = new Set((rows?.results || []).map(x => x.name));
     return names.has("member_alpaca_live_oauth_states") &&
-      names.has("member_alpaca_live_connections");
+      names.has("member_alpaca_live_connections") &&
+      names.has("member_alpaca_live_consents");
   } catch {
     return false;
   }
@@ -169,10 +171,36 @@ export async function memberAlpacaLiveEndpoint(
   if (pathname === "/api/member/alpaca/live/start") {
     if (request.method !== "POST") return respond({ message: "Method not allowed." }, 405);
     if (verifiedUser.emailVerified !== true) return respond({ message: "Verified account required." }, 403);
+    // Broker access and potential trading authority must be explained and
+    // explicitly acknowledged before an OAuth redirect can be issued.
+    // No client-selected member, broker or permission fields are accepted.
+    let acknowledgement;
+    try {
+      if (request.headers.get("Content-Type")?.split(";")[0].trim().toLowerCase() !== "application/json") {
+        throw new Error("JSON required");
+      }
+      const raw = await request.text();
+      if (raw.length > 256) throw new Error("Invalid body size");
+      acknowledgement = JSON.parse(raw);
+    } catch {
+      return respond({ message: "Review and acknowledge the brokerage trading disclosure first." }, 400);
+    }
+    if (!acknowledgement || Array.isArray(acknowledgement) ||
+        Object.keys(acknowledgement).sort().join(",") !== "acknowledged,disclosureVersion" ||
+        acknowledgement.acknowledged !== true ||
+        acknowledgement.disclosureVersion !== LIVE_DISCLOSURE_VERSION) {
+      return respond({ message: "Review and acknowledge the brokerage trading disclosure first." }, 400);
+    }
     const existing = await db.prepare(
       "SELECT connection_id FROM member_alpaca_live_connections WHERE user_id=? AND revoked_at IS NULL"
     ).bind(verifiedUser.id).first();
     if (existing) return respond({ message: "Disconnect your existing live account before reconnecting." }, 409);
+    // Server keeps a versioned, authenticated-member record of the acknowledgement.
+    // This is not an Alpaca grant and never enables a trading strategy.
+    await db.prepare(
+      "INSERT INTO member_alpaca_live_consents(user_id,disclosure_version,accepted_at) VALUES(?,?,?) " +
+      "ON CONFLICT(user_id,disclosure_version) DO UPDATE SET accepted_at=excluded.accepted_at"
+    ).bind(verifiedUser.id, LIVE_DISCLOSURE_VERSION, now).run();
     const state = newState();
     const digest = await sha256Hex(state);
     const saved = await db.prepare(
