@@ -21,9 +21,10 @@ const baseFlags = {
   ALPACA_CONNECT_TOKEN_KEY_BASE64: key,
   ANEVUM_OWNER_BROKER_ACCOUNT_ID: "owner-private-alpaca-account",
 };
-const req = (route, method = "GET") => new Request(origin + route, {
+const req = (route, method = "GET", data = {}) => new Request(origin + route, {
   method,
-  headers: method === "POST" ? { Origin: origin } : {},
+  headers: method === "POST" ? { Origin: origin, "Content-Type": "application/json" } : {},
+  body: method === "POST" ? JSON.stringify(data) : undefined,
 });
 
 function mockDB() {
@@ -108,7 +109,7 @@ function brokerFetch(accountId = "member-a-live-account", opts = {}) {
 async function start(db, user = userA, flags = {}) {
   const env = { ...configured(db), ...flags };
   const response = await memberAlpacaLiveEndpoint(
-    req("/api/member/alpaca/live/start", "POST"), env, user, origin,
+    req("/api/member/alpaca/live/start", "POST", { acknowledged: true, disclosureVersion: "alpaca-live-v1" }), env, user, origin,
     "/api/member/alpaca/live/start"
   );
   const value = await response.json();
