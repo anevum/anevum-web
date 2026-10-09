@@ -11,6 +11,7 @@ on:
       - "src/pages/RhenConnect.tsx"
       - "src/App.tsx"
       - "src/styles/rhen-connect.css"
+      - "scripts/verify-alpaca-disclosure-browser.mjs"
       - "migrations/**"
       - "scripts/verify-member-schema.py"
       - "tests/member-alpaca-live.test.mjs"
@@ -49,3 +50,11 @@ jobs:
         run: pip install "weasyprint==68.0" "Pillow==11.3.0"
       - name: Typecheck and build member app
         run: npm run build
+      - name: Capture authentic public RHEN authorization disclosure
+        run: node scripts/verify-alpaca-disclosure-browser.mjs
+      - name: Store Alpaca disclosure evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: rhen-alpaca-disclosure-review
+          retention-days: 14
+          path: ${{ runner.temp }}/alpaca-review/
