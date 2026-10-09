@@ -56,7 +56,7 @@ Never paste secret keys, webhook signing secrets, session cookies, member creden
 
 ## Separate staging acceptance
 
-1. Merge after CI review. The main-branch preview-only migration workflow targets `anevum-members-preview` and must verify four billing tables, ten pre-existing tables and FK integrity.
+1. Merge after CI review. The main-branch preview-only migration workflow targets `anevum-members-preview` and must verify five billing tables, ten pre-existing tables and FK integrity.
 2. In Stripe **test mode**, create one RHEN Cloud product with separate $9.99 and $19.99 USD recurring monthly prices, and configure Stripe Customer Portal. Do not use live prices in staging.
 3. Configure a Stripe test webhook destination `https://anevum-member-staging.devonakins.workers.dev/api/billing/stripe/webhook` for `customer.subscription.created`, `customer.subscription.updated`, `customer.subscription.deleted`. Save that destination's signing secret as a staging Worker **Secret**.
 4. Configure all staging Stripe bindings, activate billing + webhook + (optionally standard checkout) staging flags only.
@@ -79,3 +79,7 @@ Never paste secret keys, webhook signing secrets, session cookies, member creden
 The existing Railway `rhen` supervisor is a single tenant, with one volume and one primary live broker credential pair. No website billing change may fan out orders through that process. Next implementation must design and test stateless tenant execution workers and durable per-account state, broker token isolation, independent budgets, idempotency, order reconciliation, queue fairness, audit trails, secure credential storage, per-member lifecycle, and failure isolation. Validate all behavior on paper accounts before proposing a live-member pilot.
 
 **Rollback:** turn off checkout first; preserve billing portal and webhook reconciliation for existing subscriptions; never assume switching off billing flags cancels Stripe subscriptions. Failures involving existing subscribers require explicit provider-side cancellation and notices rather than orphan charging.
+
+## Billing recovery
+
+Authenticated members can refresh Stripe subscription state via a once-per-minute provider reconciliation endpoint. It checks the server-owned customer ID and membership metadata, detects incomplete inventories and revokes obsolete local subscriptions. The per-member sync table supports bounded retries; webhook and refresh updates use a monotonic source observation timestamp. Paid status remains separate from any paper/live broker authority.
