@@ -1,5 +1,6 @@
 import { betterAuth } from "better-auth";
 import { memberBillingEndpoint, billingSchemaReady, cancelBillingBeforeAccountDeletion } from "./member-billing.mjs";
+import { memberBetaEndpoint, memberBetaSchemaReady } from "./member-beta.mjs";
 import { memberRewardsStatus, memberBrokerageStatus } from "./member-capabilities.mjs";
 import { memberRhenDraftSchemaReady, readMemberRhenDraft, saveMemberRhenDraft, deleteMemberRhenDraft, validateRhenDraft } from "./member-rhen-draft.mjs";
 import { resolveMemberOrigin, memberSchemaReady } from "./member-preflight.mjs";
@@ -128,6 +129,9 @@ export async function memberEndpoint(request, env, pathname) {
     return reply(pathname === "/api/member/rewards" ? memberRewardsStatus() : memberBrokerageStatus());
   }
   const db = env.MEMBER_DB;
+  if (pathname === "/api/member/rhen/beta") {
+    return memberBetaEndpoint(request,env,user);
+  }
   if (pathname === "/api/member/billing" || pathname === "/api/member/billing/checkout" ||
       pathname === "/api/member/billing/portal" || pathname === "/api/member/billing/refresh") {
     return memberBillingEndpoint(request, env, user, verifiedOrigin, pathname);
@@ -165,7 +169,8 @@ export async function memberEndpoint(request, env, pathname) {
   if (pathname === "/api/member/export" && request.method === "GET") {
     const hasDraftTable = await memberRhenDraftSchemaReady(db);
     const hasBillingTables = await billingSchemaReady(db);
-    const [profile, saved, follows, entitlements, rhenDraft, billingCustomer, billingSubscriptions] = await Promise.all([
+    const hasBetaTable = await memberBetaSchemaReady(db);
+    const [profile, saved, follows, entitlements, rhenDraft, billingCustomer, billingSubscriptions, betaWaitlist] = await Promise.all([
       db.prepare("SELECT display_name, theme, created_at, updated_at FROM member_profiles WHERE user_id = ?").bind(user.id).first(),
       db.prepare("SELECT app_slug, saved_at FROM member_saved_apps WHERE user_id = ? ORDER BY saved_at DESC").bind(user.id).all(),
       db.prepare("SELECT project_slug, followed_at FROM member_project_follows WHERE user_id = ? ORDER BY followed_at DESC").bind(user.id).all(),
@@ -177,7 +182,10 @@ export async function memberEndpoint(request, env, pathname) {
       hasBillingTables ? db.prepare(
         "SELECT plan_code,status,current_period_end,cancel_at_period_end,updated_at " +
         "FROM member_billing_subscriptions WHERE user_id=?"
-      ).bind(user.id).all() : Promise.resolve({results:[]})
+      ).bind(user.id).all() : Promise.resolve({results:[]}),
+      hasBetaTable ? db.prepare(
+        "SELECT joined_at FROM member_rhen_beta_waitlist WHERE user_id=?"
+      ).bind(user.id).first() : Promise.resolve(null)
     ]);
     return new Response(JSON.stringify({
       exportedAt: new Date().toISOString(),
@@ -187,7 +195,8 @@ export async function memberEndpoint(request, env, pathname) {
       projectFollows: follows.results || [],
       entitlements: entitlements.results || [],
       rhenDraft,
-      billing: { customer: billingCustomer || null, subscriptions: billingSubscriptions.results || [] }
+      billing: { customer: billingCustomer || null, subscriptions: billingSubscriptions.results || [] },
+      rhenBetaWaitlist: {joined: Boolean(betaWaitlist), joinedAt: betaWaitlist?.joined_at || null}
     }, null, 2), {
       status: 200,
       headers: {
