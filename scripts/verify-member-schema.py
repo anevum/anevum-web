@@ -19,6 +19,7 @@ required = {
     "member_saved_apps", "member_project_follows", "member_entitlements",
     "member_rhen_drafts", "member_billing_customers",
     "member_billing_subscriptions", "member_billing_events", "member_billing_checkout_locks", "member_billing_sync_state",
+    "member_rhen_beta_waitlist",
 }
 assert required <= tables, f"Missing tables: {required - tables}"
 
@@ -56,6 +57,7 @@ for user_id, email in (("member-a", "a@example.test"), ("member-b", "b@example.t
         ("sub_test" + user_id.replace("-", ""), user_id, customer,
          "price_test", "founding", "active", 1999999999),
     )
+    db.execute("INSERT INTO member_rhen_beta_waitlist(user_id) VALUES (?)", (user_id,))
     db.execute("INSERT INTO member_billing_sync_state(user_id) VALUES (?)", (user_id,))
     db.execute(
         "INSERT INTO member_billing_checkout_locks "
@@ -91,7 +93,7 @@ for invalid in [(0, 30, 10), (2, 101, 10), (2, 30, 31)]:
 
 db.execute('DELETE FROM "user" WHERE id = ?', ("member-a",))
 for table in ("member_saved_apps", "member_project_follows", "member_profiles",
-              "member_rhen_drafts", "member_billing_customers", "member_billing_subscriptions", "member_billing_checkout_locks", "member_billing_sync_state"):
+              "member_rhen_drafts", "member_billing_customers", "member_billing_subscriptions", "member_billing_checkout_locks", "member_billing_sync_state", "member_rhen_beta_waitlist"):
     assert db.execute(
         f"SELECT count(*) FROM {table} WHERE user_id = ?", ("member-a",)
     ).fetchone()[0] == 0, f"{table} did not cascade"
