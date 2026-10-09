@@ -6,11 +6,13 @@ import { currentRhenRelease } from "../data/releases";
 import { fieldNotes } from "../data/fieldNotes";
 import { memberAuthClient } from "../member/auth-client";
 import { useMemberAvailability } from "../member/useMemberAvailability";
+import RhenDraft from "./RhenDraft";
 
-type RhenSection = "overview" | "account" | "evidence" | "research" | "updates";
+type RhenSection = "overview" | "account" | "setup" | "evidence" | "research" | "updates";
 const nav: { id: RhenSection; label: string; path: string }[] = [
   { id: "overview", label: "Overview", path: "/apps/rhen" },
   { id: "account", label: "My brokerage", path: "/apps/rhen/account" },
+  { id: "setup", label: "Bot draft", path: "/apps/rhen/setup" },
   { id: "evidence", label: "Evidence", path: "/apps/rhen/evidence" },
   { id: "research", label: "Research", path: "/apps/rhen/research" },
   { id: "updates", label: "Updates", path: "/apps/rhen/updates" }
@@ -25,7 +27,7 @@ export default function RhenApp() {
   const [brokerError, setBrokerError] = useState(false);
   const release = currentRhenRelease();
   const segment = location.pathname.split("/")[3] || "overview";
-  const section: RhenSection = ["overview", "account", "evidence", "research", "updates"].includes(segment) ? segment as RhenSection : "overview";
+  const section: RhenSection = ["overview", "account", "setup", "evidence", "research", "updates"].includes(segment) ? segment as RhenSection : "overview";
 
   useEffect(() => {
     if (!session?.user || availability !== "available") return;
@@ -92,8 +94,9 @@ export default function RhenApp() {
             <section className="member-app-ready"><p className="workshop-kicker">Personal brokerage</p><h3>Not available yet</h3><p>No member brokerage account can be connected from this workspace today.</p></section>
             {brokerError ? <p role="alert">Brokerage capability status could not be verified.</p> : !brokerage ? <p role="status">Checking capabilities…</p> : brokerage.connectionAvailable || brokerage.accountConnected || brokerage.paperTradingEnabled || brokerage.liveTradingEnabled || brokerage.depositsEnabled || brokerage.withdrawalsEnabled ? <p role="alert">Unexpected capabilities. Financial controls remain unavailable.</p> : <dl className="member-app-readiness"><div><dt>Brokerage linking</dt><dd>Not enabled</dd></div><div><dt>Personal paper bot</dt><dd>Not enabled</dd></div><div><dt>Personal live bot</dt><dd>Not enabled</dd></div><div><dt>Funding and withdrawals</dt><dd>Not supported</dd></div></dl>}
             <p>Live member execution will require separate brokerage, regulatory, and security approval.</p>
-            <Link to="/apps/rhen/evidence">Explore verified RHEN evidence</Link>
+            <Link to="/apps/rhen/setup">Create a non-executing bot draft</Link><span> · </span><Link to="/apps/rhen/evidence">Explore verified RHEN evidence</Link>
           </>}
+          {section === "setup" && <RhenDraft key={session.user.id} />}
           {section === "evidence" && <>
             <h2>Public evidence</h2>
             <p>Measured output from the privacy-safe RHEN feed. Missing or stale sources are shown as unavailable, never replaced with invented values.</p>
