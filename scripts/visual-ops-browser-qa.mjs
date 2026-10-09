@@ -142,7 +142,7 @@ async function runCase(route, viewport) {
         expression: `(() => {
           const pathReady = location.pathname === ${JSON.stringify(route)};
           const suspenseReady = !document.querySelector(".route-loader");
-          const homeReady = ${JSON.stringify(route)} !== "/" || Boolean(document.querySelector(".studio-home"));\n          const productsReady = ${JSON.stringify(route)} !== "/products" || Boolean(document.querySelector(".truth-products-page"));\n          const feedReady = ${JSON.stringify(route)} !== "/feed" || Boolean(document.querySelector(".feed-page"));\n          const rhenReady = ${JSON.stringify(route)} !== "/products/rhen" || Boolean(document.querySelector(".truth-rhen-page"));
+          const homeReady = ${JSON.stringify(route)} !== "/" || Boolean(document.querySelector(".anevum-commons-v5-mount")?.shadowRoot?.querySelector(".global-header"));\n          const productsReady = ${JSON.stringify(route)} !== "/products" || Boolean(document.querySelector(".truth-products-page"));\n          const feedReady = ${JSON.stringify(route)} !== "/feed" || Boolean(document.querySelector(".feed-page"));\n          const rhenReady = ${JSON.stringify(route)} !== "/products/rhen" || Boolean(document.querySelector(".truth-rhen-page"));
           const liveReady = ${JSON.stringify(route)} !== "/products/rhen/evidence" || Boolean(document.querySelector('[data-visual-ops="public-terminal"]'));
           const architectureReady = ${JSON.stringify(route)} !== "/products/rhen/architecture" || Boolean(document.querySelector(".architecture-role-grid"));
           const researchReady = ${JSON.stringify(route)} !== "/field-notes" || Boolean(document.querySelector(".studio-notes-page"));
@@ -172,7 +172,7 @@ async function runCase(route, viewport) {
       expression: `(() => {
         const pathReady = location.pathname === ${JSON.stringify(route)};
         const suspenseReady = !document.querySelector(".route-loader");
-        const homeReady = ${JSON.stringify(route)} !== "/" || Boolean(document.querySelector(".studio-home"));\n          const productsReady = ${JSON.stringify(route)} !== "/products" || Boolean(document.querySelector(".truth-products-page"));\n          const feedReady = ${JSON.stringify(route)} !== "/feed" || Boolean(document.querySelector(".feed-page"));\n          const rhenReady = ${JSON.stringify(route)} !== "/products/rhen" || Boolean(document.querySelector(".truth-rhen-page"));
+        const homeReady = ${JSON.stringify(route)} !== "/" || Boolean(document.querySelector(".anevum-commons-v5-mount")?.shadowRoot?.querySelector(".global-header"));\n          const productsReady = ${JSON.stringify(route)} !== "/products" || Boolean(document.querySelector(".truth-products-page"));\n          const feedReady = ${JSON.stringify(route)} !== "/feed" || Boolean(document.querySelector(".feed-page"));\n          const rhenReady = ${JSON.stringify(route)} !== "/products/rhen" || Boolean(document.querySelector(".truth-rhen-page"));
         const liveReady = ${JSON.stringify(route)} !== "/products/rhen/evidence" || Boolean(document.querySelector('[data-visual-ops="public-terminal"]'));
         const architectureReady = ${JSON.stringify(route)} !== "/products/rhen/architecture" || Boolean(document.querySelector(".architecture-role-grid"));
         const researchReady = ${JSON.stringify(route)} !== "/field-notes" || Boolean(document.querySelector(".studio-notes-page"));
@@ -347,7 +347,7 @@ async function runCase(route, viewport) {
   // Reuse this bounded, hydrated browser target for the release evidence.
   // The duplicate CLI screenshot process could hang until the entire job died.
   const evidenceRoutes = {
-    "/":["home",["truth-home","A place for things I build."]],
+    "/":["home",["anevum-commons-v5-mount","The Commons","Public ANEVUM work"]],
     "/products":["products",["truth-products-page","Things I’m working on."]],
     "/products/rhen":["rhen",["truth-rhen-page","PRODUCT / RHEN","workshop-rhen-evidence","A working program is only the beginning."]],
     "/products/rhen/evidence":["terminal",["EVIDENCE DRAWER","public-terminal-page","RESEARCH","REPLAY","RHEN"]],
@@ -365,7 +365,11 @@ async function runCase(route, viewport) {
   if (evidenceRoutes[route]) {
     const [name, markers] = evidenceRoutes[route];
     const rendered = await send("Runtime.evaluate", {
-      expression:"document.documentElement.outerHTML",returnByValue:true
+      expression:`(() => {
+        const outer = document.documentElement.outerHTML;
+        const host = document.querySelector(".anevum-commons-v5-mount");
+        return host && host.shadowRoot ? outer + "\\n<!-- V5 SHADOW DOM -->\\n" + host.shadowRoot.innerHTML : outer;
+      })()`,returnByValue:true
     });
     const html = rendered.result?.value;
     if (typeof html !== "string" || markers.some(marker => !html.includes(marker))) {
