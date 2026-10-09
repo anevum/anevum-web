@@ -1,4 +1,4 @@
-name: RHEN Cloud Staging Deployment (Billing Off)
+name: RHEN Cloud Staging Deployment (Checkout Off)
 
 on:
   push:
@@ -6,6 +6,9 @@ on:
       - work/rhen-cloud-billing-foundation-2026-10-09
     paths:
       - '.github/workflows/rhen-cloud-staging-deploy.yml'
+      - 'wrangler.member-staging.jsonc'
+      - 'src/server/member-billing.mjs'
+      - 'scripts/verify-member-staging-deploy.mjs'
   workflow_dispatch:
 
 permissions:
@@ -47,9 +50,9 @@ jobs:
             .name == "anevum-member-staging" and
             .workers_dev == true and
             .vars.ANEVUM_STRIPE_MODE == "test" and
-            .vars.ANEVUM_RHEN_BILLING_ENABLED == "false" and
+             .vars.ANEVUM_RHEN_BILLING_ENABLED == "true" and
             .vars.ANEVUM_RHEN_BILLING_CHECKOUT_ENABLED == "false" and
-            .vars.ANEVUM_RHEN_BILLING_WEBHOOKS_ENABLED == "false" and
+            .vars.ANEVUM_RHEN_BILLING_WEBHOOKS_ENABLED == "true" and
             .vars.ANEVUM_RHEN_BILLING_LIVE_APPROVED == "false" and
             .vars.ANEVUM_RHEN_BETA_WAITLIST_ENABLED == "false" and
             .vars.STRIPE_FOUNDING_PRICE_ID == "price_1UOcwSDSvwYS3kwTHxrYRQev" and
@@ -163,19 +166,19 @@ jobs:
           test "$operator" = "401"
           webhook="$(code -X POST -H 'content-type: application/json' --data '{}' \
             "$STAGING_ORIGIN/api/billing/stripe/webhook")"
-          test "$webhook" = "503"
+          test "$webhook" = "400"
           checkout="$(code -X POST -H "Origin: $STAGING_ORIGIN" \
             -H 'content-type: application/json' --data '{"plan":"standard"}' \
             "$STAGING_ORIGIN/api/member/billing/checkout")"
           test "$checkout" = "401"
-          echo 'PASS staging OAuth routes, private member 401, owner operator 401, webhook disabled 503 and no anonymous checkout'
+          echo 'PASS staging private member 401, owner operator 401, forged webhook rejected 400, Checkout OFF'
           {
             echo '## RHEN Cloud staging-only deployment'
             echo
             echo "Isolated Worker: $STAGING_ORIGIN"
             echo "Database: anevum-members-preview (16 tables; FK clean)"
-            echo "Stripe sandbox price IDs pinned; checkout and webhook admission OFF."
+            echo "Stripe sandbox price IDs pinned; signed webhook receiver ON; Checkout OFF."
             echo "No real customer purchase attempted, and no production or RHEN live deployment."
             echo
-            echo "Further verified owner-only activation required before Stripe sandbox Checkout and signed webhook acceptance."
+            echo "Provider-signed webhook delivery and browser-authenticated Checkout remain unverified."
           } >> "$GITHUB_STEP_SUMMARY"
