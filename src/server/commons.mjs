@@ -206,7 +206,7 @@ export async function commonsEndpoint(request, env, user, pathname) {
       return respond({ message: "Report could not be saved." }, 503);
     }
   }
-  const reportReview = /^\\/api\\/member\\/commons\\/reports\\/([^/]+)$/.exec(pathname);
+  const reportReview = new RegExp("^/api/member/commons/reports/([^/]+)$").exec(pathname);
   if (reportReview) {
     if (!moderator) return respond({ message: "Moderator access required." }, 403);
     if (request.method !== "PATCH") return respond({ message: "Method not allowed." }, 405);
