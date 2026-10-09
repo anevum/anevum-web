@@ -361,12 +361,23 @@ export function normalizeStripeSubscription(subscription, env) {
   const items = subscription?.items?.data;
   const priceId = Array.isArray(items) && items.length === 1 ? String(items[0]?.price?.id || "") : "";
   const plan = planFromPrice(env, priceId);
+  const currentPeriodEnd = periodEnd(subscription);
+  const providerCancelAt = Number(subscription?.cancel_at) || 0;
+  // Stripe Billing Portal can schedule an end-of-period cancellation using
+  // cancel_at (equal to the current period end) while leaving the legacy
+  // cancel_at_period_end boolean false. Both forms mean "will not renew".
+  // canceled_at is the time of the request, NOT the effective cancellation date.
+  const isOpen = OPEN_STATUSES.has(subscription?.status);
+  const periodEndScheduled = providerCancelAt > Math.floor(Date.now() / 1000) &&
+    providerCancelAt === currentPeriodEnd;
+  const isPeriodEndCancellation = isOpen &&
+    (subscription.cancel_at_period_end === true || periodEndScheduled);
   return {
     id: subscription.id, customerId: subscription.customer,
     priceId: priceId || "unrecognized", plan,
     status: typeof subscription.status === "string" ? subscription.status : "unknown",
-    periodEnd: periodEnd(subscription),
-    cancelAtPeriodEnd: subscription.cancel_at_period_end ? 1 : 0
+    periodEnd: currentPeriodEnd,
+    cancelAtPeriodEnd: isPeriodEndCancellation ? 1 : 0
   };
 }
 
