@@ -61,8 +61,8 @@ Never paste secret keys, webhook signing secrets, session cookies, member creden
 ## Separate staging acceptance
 
 1. Merge after CI review. The main-branch preview-only migration workflow targets `anevum-members-preview` and must verify five billing tables, ten pre-existing tables and FK integrity.
-2. In a separately connected Stripe **test-mode** account/sandbox, create one RHEN Cloud product with $2.99 and $4.99 USD monthly prices, and configure a test customer portal. Do not use live-price IDs, live keys, or live charges in staging.
-3. Configure a Stripe test webhook destination `https://anevum-member-staging.devonakins.workers.dev/api/billing/stripe/webhook` for `customer.subscription.created`, `customer.subscription.updated`, `customer.subscription.deleted`. Save that destination's signing secret as a staging Worker **Secret**.
+2. **Completed on the Stripe sandbox:** RHEN Cloud product, both $2.99 and $4.99 USD monthly prices, and a test customer portal. Do not use live-price IDs, live keys, or live charges in staging.
+3. **Endpoint configured on the sandbox:** `https://anevum-member-staging.devonakins.workers.dev/api/billing/stripe/webhook` listens to `customer.subscription.created`, `customer.subscription.updated`, and `customer.subscription.deleted`. **Still outstanding:** copy that sandbox endpoint's signing secret directly into staging Worker **Secrets**, without exposing it in repository files or chat.
 4. Configure all staging Stripe bindings, activate billing + webhook + (optionally standard checkout) staging flags only.
 5. With two independent authenticated test members, exercise valid/invalid same-origin checkout, wrong plan/extra input, price mismatch, duplicate/out-of-order webhooks, missed webhook replay/reconciliation, payment failure, cancelled renewal, expired period, customer mapping mismatch, portal access, deletion with open checkout/subscription, user cross-access, nonmember 401, and owner operator access unchanged.
 6. Inspect Stripe test mode for zero orphan subscriptions after deletion. Record results without payment-card data or secrets.
@@ -96,11 +96,41 @@ These Stripe IDs are not credentials. The entries are **inactive** and no checko
 - Product: `prod_VPRTx3TlVzIaRj` — RHEN Cloud, `active=false`
 - Founding price: `price_1UOcaHDru8RvRNYomaMADO0F` — USD **$2.99/month**, `active=false`
 - Standard introductory price: `price_1UOcaNDru8RvRNYoUEK7pHsR` — USD **$4.99/month**, `active=false`
-- ANEVUM billing portal: not configured. The attempted connector operation was blocked by safety controls; this is a pending Stripe Dashboard/configuration step.
-- Stripe test-mode account/sandbox has **not** been exposed by the connected Stripe session (which returns a live-mode merchant). Do not substitute live records for test records.
+- Production ANEVUM billing portal: not yet configured. The **sandbox customer portal** is configured separately; production portal setup is intentionally deferred until payment readiness.
+- The separate **ANEVUM sandbox** is now connected in test mode. Do not substitute live credentials, live catalog IDs, or live transactions for sandbox settings.
 - No live Stripe keys or webhook signing secrets have been committed or copied into this repository.
 
 Creating an inactive catalog product and inactive prices does not enable payments. Before any real member charge, review service descriptions, launch terms/refund/cancel disclosures, tax settings, broker/signal service authority, and true marginal economics.
+
+## Verified Stripe sandbox catalog and smoke tests (October 9, 2026)
+
+The authenticated Stripe connector returns **ANEVUM sandbox** as `livemode=false`, distinct from ANEVUM's live merchant account. This section contains **test-only** Stripe IDs, not credentials:
+
+| Stripe sandbox resource | Verified identifier / state |
+| --- | --- |
+| Product | `prod_VPRpidZ3pDqmwR`, active only inside sandbox |
+| Founding price | `price_1UOcwSDSvwYS3kwTHxrYRQev`, USD $2.99 per month |
+| Standard introductory price | `price_1UOcwYDSvwYS3kwTqnadIMBD`, USD $4.99 per month |
+| Portal configuration | `bpc_1UOcwgDSvwYS3kwT4YdklqqW`, sandbox; default; invoices, payment methods, cancellation at period end |
+| Webhook endpoint | `we_1UOczCDSvwYS3kwTcQhU22Iu`, sandbox; targets `/api/billing/stripe/webhook` on the **member staging** Worker |
+| Sandbox synthetic customers | `cus_VPRrwvxUp7AGyH` and `cus_VPRtuZKesVKAmp`, not real ANEVUM member identities |
+
+Provider-only smoke tests returned valid hosted Checkout Sessions for two independent synthetic customers at USD $2.99 and $4.99, and returned a valid customer portal session. The sandbox subscription inventory contained **zero subscriptions** immediately after these API checks. Checkout sessions were **not completed** and will expire without collecting payment. This confirms provider resource wiring only; it does **not** prove the ANEVUM staging Worker, its cookie boundary, or real payment webhook reconciliation.
+
+The webhook destination has been created and is **enabled at Stripe**, but ANEVUM staging currently deliberately denies billing webhooks because its feature flag is off and its sandbox signing secret has not been configured. Do not deliver subscription events expecting HTTP 2xx until staging Worker secrets and the D1 migration are installed and the sandbox billing webhook gate is independently enabled.
+
+### Next staging configuration (do not copy secrets to GitHub)
+
+The Stripe Dashboard's selected sandbox provides its **test secret API key** and the **specific webhook endpoint signing secret**. Move those secret strings directly to Cloudflare member-staging Worker Secrets (never place them in source, chat, GitHub issues, or URLs):
+
+- `STRIPE_SECRET_KEY` = the sandbox API secret key (test/sandbox only)
+- `STRIPE_WEBHOOK_SECRET` = the signing secret for sandbox webhook `we_1UOczCDSvwYS3kwTcQhU22Iu`
+- `STRIPE_FOUNDING_PRICE_ID` = `price_1UOcwSDSvwYS3kwTHxrYRQev`
+- `STRIPE_STANDARD_PRICE_ID` = `price_1UOcwYDSvwYS3kwTqnadIMBD`
+
+Keep production's `ANEVUM_STRIPE_MODE=disabled` and all checkout flags disabled. In staging, run the preview D1 migration and independently verify its tables and foreign keys **before** any flag activation. Only then, under a separate staging-only operator authorization, set `ANEVUM_RHEN_BILLING_ENABLED=true`, `ANEVUM_RHEN_BILLING_WEBHOOKS_ENABLED=true` and `ANEVUM_RHEN_BILLING_CHECKOUT_ENABLED=true`; keep `ANEVUM_RHEN_FOUNDING_ENABLED=false` until quota/eligibility rules are implemented.
+
+Do not activate the member's personal brokerage or trading permissions. A subscription only records billing entitlement, not broker authorization.
 
 ## Free beta interest waitlist
 
