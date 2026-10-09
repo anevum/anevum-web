@@ -45,8 +45,17 @@ test("backend protects member financial status with authenticated session and re
   assert.ok(members.indexOf("if (!user?.id)") < members.indexOf('pathname === "/api/member/rewards"'));
   assert.ok(members.indexOf("if (!user?.id)") < members.indexOf('pathname === "/api/member/brokerage"'));
   assert.match(members, /memberRewardsStatus\(\)/);
-  assert.match(members, /memberBrokerageStatus\(\)/);
+  // Original future contract stays disabled. The authenticated broker handler
+  // can link an individually owned Alpaca account only behind approval flags.
+  const alpaca = source("src/server/member-alpaca-live.mjs");
+  const snapshot = source("src/server/member-alpaca-snapshot.mjs");
+  assert.match(members, /memberAlpacaLiveEndpoint\(request, env, user, verifiedOrigin, pathname\)/);
+  assert.match(members, /memberAlpacaReadSnapshot\(request, env, user, verifiedOrigin\)/);
+  assert.match(alpaca, /liveConnectConfigured\(env\)/);
+  assert.match(snapshot, /snapshotReadEnabled\(env\)/);
+  assert.match(snapshot, /WHERE user_id=\? AND revoked_at IS NULL/);
   assert.doesNotMatch(members, /member_reward_ledger|brokerage_order|createTransfer/);
+  assert.doesNotMatch(snapshot, /method: "POST"|submitOrder|placeOrder|createTransfer/);
 });
 
 test("member money UI is inert, separates operator terminal and preserves launch gates", () => {
