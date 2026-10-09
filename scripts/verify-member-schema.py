@@ -25,6 +25,7 @@ required = {
     "member_rhen_drafts", "commons_members", "commons_topics",
     "commons_comments", "commons_moderation_events", "commons_reports",
     "member_alpaca_live_oauth_states", "member_alpaca_live_connections",
+    "member_alpaca_live_consents",
 }
 assert required <= tables, f"Missing tables: {required - tables}"
 
@@ -165,6 +166,14 @@ for bad in (
     except sqlite3.IntegrityError:
         pass
 
+db.execute(
+    "INSERT INTO member_alpaca_live_consents (user_id, disclosure_version, accepted_at) VALUES (?, ?, ?)",
+    ("member-a", "alpaca-live-v1", 1800000000),
+)
+db.execute(
+    "INSERT INTO member_alpaca_live_consents (user_id, disclosure_version, accepted_at) VALUES (?, ?, ?)",
+    ("member-b", "alpaca-live-v1", 1800000000),
+)
 db.execute('DELETE FROM "user" WHERE id = ?', ("member-a",))
 for table in ("member_saved_apps", "member_project_follows", "member_profiles", "member_rhen_drafts", "commons_members"):
     assert db.execute(
@@ -180,5 +189,7 @@ assert db.execute("SELECT COUNT(*) FROM commons_reports").fetchone()[0] == 0, "D
 assert db.execute("SELECT COUNT(*) FROM member_alpaca_live_connections WHERE user_id='member-a'").fetchone()[0] == 0
 assert db.execute("SELECT COUNT(*) FROM member_alpaca_live_connections WHERE user_id='member-b'").fetchone()[0] == 1
 assert db.execute("SELECT COUNT(*) FROM member_alpaca_live_oauth_states WHERE user_id='member-a'").fetchone()[0] == 0
+assert db.execute("SELECT COUNT(*) FROM member_alpaca_live_consents WHERE user_id='member-a'").fetchone()[0] == 0
+assert db.execute("SELECT COUNT(*) FROM member_alpaca_live_consents WHERE user_id='member-b'").fetchone()[0] == 1
 assert db.execute("PRAGMA foreign_key_check").fetchall() == [], "Foreign-key violations"
 print("Member D1 schema: core, drafts, Commons tables, tenant keys, constraints, and cascades passed.")
