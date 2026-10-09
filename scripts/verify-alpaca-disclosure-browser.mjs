@@ -153,5 +153,11 @@ try {
 } finally {
   chrome.kill("SIGTERM");
   server.kill("SIGTERM");
-  fs.rmSync(profile, { recursive: true, force: true });
+  // Chrome can still be writing its profile after SIGTERM; the runner's
+  // temporary directory cleanup is a fallback, never a test failure.
+  try {
+    fs.rmSync(profile, { recursive: true, force: true, maxRetries: 12, retryDelay: 250 });
+  } catch (error) {
+    console.warn("Temporary browser profile will be removed by CI runner:", error.code);
+  }
 }
