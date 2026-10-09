@@ -26,7 +26,7 @@ The existing brand marks, typography direction and light interface remain. Commo
 - Server module: authenticated-user-only endpoint dispatch, invite checks, same-origin writes through existing member boundary, input schemas, creation quotas (3 topics / 20 comments per user per 24 hours), member-only feed, role-gated moderation and account export.
 - No publication to anonymous visitors, no direct HTML injection, no uploads or user-code execution, no rewards, no monetary balance, no broker connection, no live-trading authority.
 - Empty states are honest and readable: no synthetic posts, membership counts, achievement credits or performance metrics.
-- Runtime flag `ANEVUM_COMMONS_ENABLED` is **absent and therefore disabled** in committed production configuration. Schema presence is also required. Adding this migration does not activate participation.
+- Runtime flag `ANEVUM_COMMONS_ENABLED` is explicitly **false in production** and **true only in staging**, where migration readiness and invitation membership also gate participation. Schema presence is also required. Adding this migration does not activate participation.
 
 ## Invitation operating model (first ~8–12 testers)
 Admission is deliberately manual at pilot size. A successfully signed-in Google account does **not** automatically become a Commons contributor. Only the server-populated `commons_members` row allows reads or writes. Grant initial invitations to verified actual Better Auth user IDs in *preview D1 only*, by a restricted D1 administrator; never copy user IDs, cookie values or secrets into code, issues, or logs. A moderator role also requires an explicit authorized DB change. No public invitation endpoint exists yet.
@@ -37,7 +37,7 @@ Avoid enabling all signed-in users, auto-enrolling via display name, or issuing 
 1. Land and test the redesign through a pull request. Existing owner and member identities remain separated.
 2. Run `node --test tests/commons.test.mjs`, existing member tests, TypeScript/build, and desktop/mobile browser QA. Explicitly inspect empty states, sign-in redirect, noindex, and errors.
 3. Apply migration 0003 to **preview D1 only**, with the existing `wrangler.preview-migrations.jsonc` and reviewed migration workflow. Confirm tables and foreign keys. Never run an unreviewed production D1 migration.
-4. Deploy branch into the dedicated staging worker with preview D1. Set `ANEVUM_COMMONS_ENABLED=true` only on staging after schema acceptance, leaving production disabled.
+4. Deploy branch into the dedicated staging worker with preview D1. The staging Worker source has `ANEVUM_COMMONS_ENABLED=true`, but any user action remains blocked until the preview schema and admission rows exist. Production keeps the flag false.
 5. Test two admitted users, one uninvited user, one suspended user, one moderator, and one anonymous visitor; test crossed cookies, forged roles and IDs, limits, origin checks, hidden topics, account export/deletion, and accessibility/mobile widths.
 6. Review privacy notice, contribution licensing, moderation policy, records/deletion retention, illegal content/reporting workflow and posting risks. The current Terms and Privacy did not authorize this new class of stored member-generated content.
 7. Only after the review, owner authorization and cost/abuse budget, separately authorize the production migration, flags, and invite roll-out. Do not merge a PR that triggers a risky production deployment until the deployment single-writer issue is resolved.
