@@ -38,6 +38,8 @@ jobs:
         run: node --experimental-strip-types --test tests/command-topology.test.mjs tests/command-operations.test.mjs tests/command-trading.test.mjs tests/command-research.test.mjs tests/equity-market-time.test.mjs tests/visual-ops.test.mjs tests/command-live.test.mjs tests/reconciliation-visibility.test.mjs tests/rhen-realtime.test.mjs tests/public-feed-sse.test.mjs
       - name: Verify member boundaries
         run: npm run test:members
+      - name: Verify Commons invitation, privacy and moderation boundaries
+        run: node --test tests/commons.test.mjs
       - name: Verify member D1 binding isolation
         run: node --test tests/member-bindings.test.mjs tests/member-staging.test.mjs tests/member-preview-migration.test.mjs tests/member-command-cutover.test.mjs tests/member-command-navigation.test.mjs && node scripts/verify-member-bindings.mjs --require-config
       - name: Verify Cloudflare Command Access cutover safety (offline)
