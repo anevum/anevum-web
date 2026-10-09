@@ -28,6 +28,7 @@ import "./styles/member-command.css";
 import "./styles/member-financial.css";
 import "./styles/member-rhen-draft.css";
 import "./styles/member-staging-qa.css";
+import "./styles/commons.css";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
