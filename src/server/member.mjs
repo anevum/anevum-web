@@ -1,5 +1,6 @@
 import { betterAuth } from "better-auth";
 import { commonsEndpoint, exportCommonsData } from "./commons.mjs";
+import { memberAlpacaLiveEndpoint, exportMemberLiveConnection } from "./member-alpaca-live.mjs";
 import { memberRewardsStatus, memberBrokerageStatus } from "./member-capabilities.mjs";
 import { memberRhenDraftSchemaReady, readMemberRhenDraft, saveMemberRhenDraft, deleteMemberRhenDraft, validateRhenDraft } from "./member-rhen-draft.mjs";
 import { resolveMemberOrigin, memberSchemaReady } from "./member-preflight.mjs";
@@ -122,9 +123,12 @@ export async function memberEndpoint(request, env, pathname) {
     return commonsEndpoint(request, env, user, pathname);
   }
 
-  if (pathname === "/api/member/rewards" || pathname === "/api/member/brokerage") {
-    if (request.method !== "GET") return reply({ message: "Read-only capability." }, 405);
-    return reply(pathname === "/api/member/rewards" ? memberRewardsStatus() : memberBrokerageStatus());
+  if (pathname === "/api/member/brokerage" || pathname.startsWith("/api/member/alpaca/live/")) {
+    return memberAlpacaLiveEndpoint(request, env, user, verifiedOrigin, pathname);
+  }
+  if (pathname === "/api/member/rewards") {
+    return request.method === "GET" ? reply(memberRewardsStatus()) :
+      reply({ message: "Read-only capability." }, 405);
   }
   const db = env.MEMBER_DB;
   if (pathname === "/api/member/rhen/draft") {
@@ -159,13 +163,14 @@ export async function memberEndpoint(request, env, pathname) {
   }
   if (pathname === "/api/member/export" && request.method === "GET") {
     const hasDraftTable = await memberRhenDraftSchemaReady(db);
-    const [profile, saved, follows, entitlements, rhenDraft, commons] = await Promise.all([
+    const [profile, saved, follows, entitlements, rhenDraft, commons, alpacaLiveConnection] = await Promise.all([
       db.prepare("SELECT display_name, theme, created_at, updated_at FROM member_profiles WHERE user_id = ?").bind(user.id).first(),
       db.prepare("SELECT app_slug, saved_at FROM member_saved_apps WHERE user_id = ? ORDER BY saved_at DESC").bind(user.id).all(),
       db.prepare("SELECT project_slug, followed_at FROM member_project_follows WHERE user_id = ? ORDER BY followed_at DESC").bind(user.id).all(),
       db.prepare("SELECT app_slug, capability, granted_at, expires_at FROM member_entitlements WHERE user_id = ?").bind(user.id).all(),
       hasDraftTable ? readMemberRhenDraft(db, user.id) : Promise.resolve(null),
-      exportCommonsData(db, user.id)
+      exportCommonsData(db, user.id),
+      exportMemberLiveConnection(db, user.id)
     ]);
     return new Response(JSON.stringify({
       exportedAt: new Date().toISOString(),
@@ -175,7 +180,8 @@ export async function memberEndpoint(request, env, pathname) {
       projectFollows: follows.results || [],
       entitlements: entitlements.results || [],
       rhenDraft,
-      commons
+      commons,
+      alpacaLiveConnection
     }, null, 2), {
       status: 200,
       headers: {
