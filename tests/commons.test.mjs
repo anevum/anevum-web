@@ -52,7 +52,7 @@ test("Commons never opens for members when the feature flag is unset or false", 
 });
 
 test("schema readiness requires all four Commons tables and rejects database outages", async () => {
-  const tables = ["commons_members", "commons_topics", "commons_comments", "commons_moderation_events"];
+  const tables = ["commons_members", "commons_topics", "commons_comments", "commons_moderation_events", "commons_reports"];
   const fake = names => ({ prepare: () => ({ all: async () => ({ results: names.map(name => ({ name })) }) }) });
   assert.equal(await commonsSchemaReady(fake(tables)), true);
   assert.equal(await commonsSchemaReady(fake(tables.slice(0, 3))), false);
@@ -70,7 +70,7 @@ function fakeDB({ member = null, topics = [] } = {}) {
           calls.push({ sql, params });
           return {
             all: async () => ({ results: sql.includes("sqlite_master")
-              ? ["commons_members", "commons_topics", "commons_comments", "commons_moderation_events"].map(name => ({ name }))
+              ? ["commons_members", "commons_topics", "commons_comments", "commons_moderation_events", "commons_reports"].map(name => ({ name }))
               : sql.includes("FROM commons_topics t") ? topics : [] }),
             first: async () => sql.includes("FROM commons_members WHERE user_id") ? member : null,
             run: async () => ({ meta: { changes: 1 } })
@@ -78,7 +78,7 @@ function fakeDB({ member = null, topics = [] } = {}) {
         },
         all: async () => {
           calls.push({ sql, params: [] });
-          return { results: ["commons_members", "commons_topics", "commons_comments", "commons_moderation_events"].map(name => ({ name })) };
+          return { results: ["commons_members", "commons_topics", "commons_comments", "commons_moderation_events", "commons_reports"].map(name => ({ name })) };
         }
       };
     }
@@ -116,7 +116,7 @@ test("admitted member feed exposes only member-visible topics, with no query-sel
 
 test("account export has a separate Commons record and fails safely before migration", async () => {
   assert.deepEqual(await exportCommonsData({}, "user-a"), {
-    membership: null, topics: [], comments: []
+    membership: null, topics: [], comments: [], reports: []
   });
   const member = source("src/server/member.mjs");
   assert.ok(member.indexOf("if (!user?.id)") < member.indexOf('pathname === "/api/member/commons"'));
@@ -139,4 +139,23 @@ test("research moderation is role-gated and creates an audit event", () => {
   assert.match(service, /COUNT\(\*\) FROM commons_topics WHERE author_id/);
   assert.match(service, /COUNT\(\*\) FROM commons_comments WHERE author_id/);
   assert.doesNotMatch(service, /TRADER_BASE|proxyTrader|COMMAND_ACCESS|alpacaKey|stripeSecret/);
+});
+
+
+test("reporting is an admitted-member feature with a private moderator UI and no broker controls", () => {
+  const server = source("src/server/commons.mjs");
+  const thread = source("src/pages/CommonsTopic.tsx");
+  const commons = source("src/pages/Commons.tsx");
+  const staging = JSON.parse(source("wrangler.member-staging.jsonc"));
+  const production = JSON.parse(source("wrangler.jsonc"));
+  assert.match(server, /if \(pathname === "\/api\/member\/commons\/reports"\)/);
+  assert.match(server, /if \(!moderator\) return respond/);
+  assert.match(server, /INSERT OR IGNORE INTO commons_reports/);
+  assert.match(server, /reviewed_by = \?/);
+  assert.match(thread, /Report topic/);
+  assert.match(thread, /Report reply/);
+  assert.match(commons, /Reports awaiting review/);
+  assert.equal(production.vars.ANEVUM_COMMONS_ENABLED, "false");
+  assert.equal(staging.vars.ANEVUM_COMMONS_ENABLED, "true");
+  assert.doesNotMatch(server, /TRADER_BASE|executeOrder|ALPACA_API_SECRET|stripeSecret/);
 });

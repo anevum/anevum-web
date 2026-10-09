@@ -25,6 +25,9 @@ export default function CommonsTopic() {
   const [error, setError] = useState("");
   const [pending, setPending] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [reportTarget, setReportTarget] = useState<{ itemType: "topic" | "comment"; itemId: string } | null>(null);
+  const [reportReason, setReportReason] = useState("spam");
+  const [reportAcknowledgment, setReportAcknowledgment] = useState("");
   const authenticated = availability === "available" && Boolean(session?.user);
 
   const reload = useCallback(async (signal?: AbortSignal) => {
@@ -78,6 +81,23 @@ export default function CommonsTopic() {
     finally { setPending(false); }
   }
 
+  async function submitReport(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!reportTarget || pending) return;
+    setPending(true); setError(""); setReportAcknowledgment("");
+    try {
+      const response = await fetch("/api/member/commons/reports", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...reportTarget, reason: reportReason })
+      });
+      const payload = await response.json() as { message?: string };
+      if (!response.ok) throw new Error(payload.message || "Report could not be submitted.");
+      setReportTarget(null);
+      setReportAcknowledgment("Report received for private moderator review.");
+    } catch (err) { setError(err instanceof Error ? err.message : "Report could not be submitted."); }
+    finally { setPending(false); }
+  }
+
   return <CommonsShell identity={authenticated ? session?.user?.name || session?.user?.email : undefined} role={thread?.canModerate ? "moderator" : null}>
     <div className="commons-thread">
       <Link className="commons-back" to="/commons">← Back to Commons</Link>
@@ -91,6 +111,7 @@ export default function CommonsTopic() {
           {thread.topic.hidden && <p className="commons-mod-notice">Hidden from contributors — visible to moderators.</p>}
           <div className="commons-body">{thread.topic.body}</div>
           {thread.canModerate && <button className="commons-moderate" type="button" disabled={pending} onClick={() => void moderate("topic", thread.topic.id, !thread.topic.hidden)}>{thread.topic.hidden ? "Restore topic" : "Hide topic"}</button>}
+          {!thread.topic.hidden && <button className="commons-moderate" type="button" disabled={pending} onClick={() => { setReportTarget({ itemType: "topic", itemId: thread.topic.id }); setReportReason("spam"); }}>Report topic</button>}
         </article>
         <section aria-labelledby="commons-discussion">
           <div className="commons-list-header"><h2 id="commons-discussion">Discussion ({thread.comments.length})</h2></div>
@@ -99,8 +120,25 @@ export default function CommonsTopic() {
             {comment.hidden && <p className="commons-mod-notice">Hidden from contributors</p>}
             <p>{comment.body}</p>
             {thread.canModerate && <button className="commons-moderate" type="button" disabled={pending} onClick={() => void moderate("comment", comment.id, !comment.hidden)}>{comment.hidden ? "Restore reply" : "Hide reply"}</button>}
+            {!comment.hidden && <button className="commons-moderate" type="button" disabled={pending} onClick={() => { setReportTarget({ itemType: "comment", itemId: comment.id }); setReportReason("spam"); }}>Report reply</button>}
           </article>)}</div> : <p className="commons-empty">There are no replies yet.</p>}
         </section>
+        {reportTarget && <form className="commons-composer" onSubmit={event => void submitReport(event)}>
+          <h3>Report this {reportTarget.itemType === "topic" ? "topic" : "reply"}</h3>
+          <p>Choose the reason. Reports are private to Commons moderators and do not automatically remove content.</p>
+          <label>Reason<select value={reportReason} onChange={event => setReportReason(event.target.value)}>
+            <option value="spam">Spam or solicitation</option>
+            <option value="harassment">Harassment</option>
+            <option value="privacy">Private or sensitive information</option>
+            <option value="misleading_claims">Misleading performance claims</option>
+            <option value="other">Other community safety concern</option>
+          </select></label>
+          <div className="commons-form-actions">
+            <button className="commons-action" type="submit" disabled={pending}>{pending ? "Sending…" : "Send report"}</button>
+            <button className="commons-moderate" type="button" disabled={pending} onClick={() => setReportTarget(null)}>Cancel</button>
+          </div>
+        </form>}
+        {reportAcknowledgment && <p className="commons-mod-notice" role="status">{reportAcknowledgment}</p>}
         {!thread.topic.hidden && <form className="commons-composer" onSubmit={event => void sendComment(event)}>
           <h3>Contribute to this research</h3>
           <label>Your reply<textarea value={text} onChange={event => setText(event.target.value)} required minLength={3} maxLength={1500} rows={5} placeholder="Ask a useful question, challenge an assumption, or add evidence…" /></label>

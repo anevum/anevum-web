@@ -41,7 +41,7 @@ jobs:
       - name: Verify member boundaries
         run: npm run test:members
       - name: Verify Commons invitation, privacy and moderation boundaries
-        run: node --test tests/commons.test.mjs
+        run: node --test tests/commons.test.mjs tests/commons-beta.test.mjs
       - name: Verify member D1 binding isolation
         run: node --test tests/member-bindings.test.mjs tests/member-staging.test.mjs tests/member-preview-migration.test.mjs tests/member-command-cutover.test.mjs tests/member-command-navigation.test.mjs && node scripts/verify-member-bindings.mjs --require-config
       - name: Verify Cloudflare Command Access cutover safety (offline)

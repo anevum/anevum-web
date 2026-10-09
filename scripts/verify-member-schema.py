@@ -7,7 +7,7 @@ root = Path(__file__).resolve().parents[1]
 schemas = sorted((root / "migrations").glob("*.sql"))
 names = [p.name for p in schemas]
 base = ["0001_member_platform.sql", "0002_member_rhen_drafts.sql"]
-assert names in (base + ["0004_commons_beta.sql"], base + ["0003_member_billing.sql", "0004_commons_beta.sql"]), (
+assert names in (base + ["0004_commons_beta.sql", "0005_commons_reports.sql"], base + ["0003_member_billing.sql", "0004_commons_beta.sql", "0005_commons_reports.sql"]), (
     "Expected canonical member migration order (billing 0003 precedes Commons 0004 when present): " + str(names)
 )
 
@@ -23,7 +23,7 @@ required = {
     "user", "session", "account", "verification", "rateLimit", "member_profiles",
     "member_saved_apps", "member_project_follows", "member_entitlements",
     "member_rhen_drafts", "commons_members", "commons_topics",
-    "commons_comments", "commons_moderation_events",
+    "commons_comments", "commons_moderation_events", "commons_reports",
 }
 assert required <= tables, f"Missing tables: {required - tables}"
 
@@ -110,6 +110,30 @@ for bad in (
     except sqlite3.IntegrityError:
         pass
 
+
+# Reports cannot impersonate reporters or bypass duplicate constraints.
+db.execute(
+    "INSERT INTO commons_reports(id, reporter_id, topic_id, reason) VALUES(?,?,?,?)",
+    ("report-b", "member-b", "topic-a", "misleading_claims")
+)
+db.execute(
+    "INSERT INTO commons_reports(id, reporter_id, comment_id, reason) VALUES(?,?,?,?)",
+    ("report-a", "member-a", "comment-b", "spam")
+)
+for bad in (
+    ("duplicate", "member-b", "topic-a", "privacy"),
+    ("unknown", "unknown", "topic-a", "other"),
+):
+    try:
+        db.execute(
+            "INSERT INTO commons_reports(id, reporter_id, topic_id, reason) VALUES(?,?,?,?)",
+            bad
+        )
+        raise AssertionError("Commons report constraints were bypassed")
+    except sqlite3.IntegrityError:
+        pass
+assert db.execute("SELECT COUNT(*) FROM commons_reports").fetchone()[0] == 2
+
 db.execute('DELETE FROM "user" WHERE id = ?', ("member-a",))
 for table in ("member_saved_apps", "member_project_follows", "member_profiles", "member_rhen_drafts", "commons_members"):
     assert db.execute(
@@ -121,5 +145,6 @@ for table in ("member_saved_apps", "member_project_follows", "member_profiles", 
 
 assert db.execute("SELECT COUNT(*) FROM commons_topics WHERE id = 'topic-a'").fetchone()[0] == 0, "Deleted user left authored topic"
 assert db.execute("SELECT COUNT(*) FROM commons_comments WHERE id = 'comment-b'").fetchone()[0] == 0, "Deleted topic left comments"
+assert db.execute("SELECT COUNT(*) FROM commons_reports").fetchone()[0] == 0, "Deleted user/topic left reports"
 assert db.execute("PRAGMA foreign_key_check").fetchall() == [], "Foreign-key violations"
 print("Member D1 schema: core, drafts, Commons tables, tenant keys, constraints, and cascades passed.")
