@@ -15,7 +15,7 @@ test("production and preview member D1 resources use verified distinct identitie
   assert.equal(preview.database_name, "anevum-members-preview");
   assert.notEqual(production.database_id, preview.database_id);
   assert.deepEqual(preview, target);
-  assert.equal(config.vars.ANEVUM_MEMBERS_ENABLED, "false");
+  assert.equal(config.vars.ANEVUM_MEMBERS_ENABLED, "true");
   assert.equal(config.vars.ANEVUM_MEMBER_PREVIEW_ENABLED, "false");
 });
 
