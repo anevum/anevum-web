@@ -5,7 +5,7 @@ import sqlite3
 
 root = Path(__file__).resolve().parents[1]
 schemas = sorted((root / "migrations").glob("*.sql"))
-assert [p.name for p in schemas] == ["0001_member_platform.sql", "0002_member_rhen_drafts.sql"]
+assert [p.name for p in schemas] == ["0001_member_platform.sql", "0002_member_rhen_drafts.sql", "0003_commons_beta.sql"]
 db = sqlite3.connect(":memory:")
 db.execute("PRAGMA foreign_keys = ON")
 for migration in schemas:
@@ -17,7 +17,8 @@ tables = {
 required = {
     "user", "session", "account", "verification", "rateLimit", "member_profiles",
     "member_saved_apps", "member_project_follows", "member_entitlements",
-    "member_rhen_drafts",
+    "member_rhen_drafts", "commons_members", "commons_topics",
+    "commons_comments", "commons_moderation_events",
 }
 assert required <= tables, f"Missing tables: {required - tables}"
 
@@ -70,8 +71,42 @@ for invalid in [(0, 30, 10), (2, 101, 10), (2, 30, 31)]:
     except sqlite3.IntegrityError:
         pass
 
+
+# Commons membership and discussions must remain independently user-owned.
+db.execute(
+    "INSERT INTO commons_members (user_id, role, invited_by) VALUES (?, ?, ?)",
+    ("member-a", "moderator", "preview-owner-approval")
+)
+db.execute(
+    "INSERT INTO commons_members (user_id, role, invited_by) VALUES (?, ?, ?)",
+    ("member-b", "contributor", "preview-owner-approval")
+)
+db.execute(
+    "INSERT INTO commons_topics (id, author_id, kind, subject, title, body) VALUES (?, ?, ?, ?, ?, ?)",
+    ("topic-a", "member-a", "question", "algorithms", "Can this rule be validated?", "A bounded research question with enough detail to investigate.")
+)
+db.execute(
+    "INSERT INTO commons_comments (id, topic_id, author_id, body) VALUES (?, ?, ?, ?)",
+    ("comment-b", "topic-a", "member-b", "We should test across different regimes.")
+)
+assert db.execute("SELECT COUNT(*) FROM commons_topics WHERE author_id = 'member-a'").fetchone()[0] == 1
+assert db.execute("SELECT COUNT(*) FROM commons_comments WHERE author_id = 'member-b'").fetchone()[0] == 1
+for bad in (
+    ("bad-owner", "unknown", "question", "algorithms", "Can this rule be validated?", "A bounded research question with enough detail to investigate."),
+    ("bad-title", "member-b", "question", "algorithms", "tiny", "A bounded research question with enough detail to investigate."),
+    ("bad-kind", "member-b", "prediction", "algorithms", "Can this rule be validated?", "A bounded research question with enough detail to investigate."),
+):
+    try:
+        db.execute(
+            "INSERT INTO commons_topics (id, author_id, kind, subject, title, body) VALUES (?, ?, ?, ?, ?, ?)",
+            bad
+        )
+        raise AssertionError("Commons unexpectedly allowed invalid research input")
+    except sqlite3.IntegrityError:
+        pass
+
 db.execute('DELETE FROM "user" WHERE id = ?', ("member-a",))
-for table in ("member_saved_apps", "member_project_follows", "member_profiles", "member_rhen_drafts"):
+for table in ("member_saved_apps", "member_project_follows", "member_profiles", "member_rhen_drafts", "commons_members"):
     assert db.execute(
         f"SELECT count(*) FROM {table} WHERE user_id = ?", ("member-a",)
     ).fetchone()[0] == 0, f"{table} did not cascade"
@@ -79,5 +114,7 @@ for table in ("member_saved_apps", "member_project_follows", "member_profiles", 
         f"SELECT count(*) FROM {table} WHERE user_id = ?", ("member-b",)
     ).fetchone()[0] == 1, f"{table} deleted another account's data"
 
+assert db.execute("SELECT COUNT(*) FROM commons_topics WHERE id = 'topic-a'").fetchone()[0] == 0, "Deleted user left authored topic"
+assert db.execute("SELECT COUNT(*) FROM commons_comments WHERE id = 'comment-b'").fetchone()[0] == 0, "Deleted topic left comments"
 assert db.execute("PRAGMA foreign_key_check").fetchall() == [], "Foreign-key violations"
-print("Member D1 schema: core and draft tables, tenant keys, constraints, and cascades passed.")
+print("Member D1 schema: core, drafts, Commons tables, tenant keys, constraints, and cascades passed.")
