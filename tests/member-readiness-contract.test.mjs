@@ -42,4 +42,6 @@ test("production migration still requires independent, affirmative operator conf
   assert.match(migration, /MIGRATE_PRODUCTION_MEMBER_DB/);
   assert.match(migration, /ANEVUM_MEMBERS_ENABLED == "false"/);
   assert.match(migration, /d1 migrations apply MEMBER_DB --remote --config wrangler\.jsonc/);
+  assert.match(migration, /member_rhen_drafts/);
+  assert.match(migration, /migrations\/\*\.sql/);
 });
