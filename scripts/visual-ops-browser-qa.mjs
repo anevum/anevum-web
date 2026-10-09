@@ -224,6 +224,36 @@ async function runCase(route, viewport) {
       (!desktop && viewport.width<721 && (!ui.mobileVisible || ui.rightVisible || ui.leftVisible))) {
       throw new Error("Commons V5 rendered-app parity failed: "+JSON.stringify({viewport:viewport.name,...ui}));
     }
+
+    // Verify that the real React state drives the ShadowRoot design tokens.
+    // Reset preferences before screenshot capture to retain a stable baseline.
+    const behavior=await send("Runtime.evaluate", {expression:`(async()=>{
+      const host=document.querySelector(".anevum-commons-v5-mount");
+      const root=host?.shadowRoot;
+      const wait=()=>new Promise(resolve=>setTimeout(resolve,140));
+      const launch=root?.querySelector(".design-launch");
+      if(!launch) return {ok:false,reason:"Missing appearance button"};
+      launch.click();
+      await wait();
+      const carbon=[...root.querySelectorAll(".theme-option")].find(button=>button.textContent.includes("Carbon"));
+      if(!carbon) return {ok:false,reason:"Missing Carbon palette control"};
+      carbon.click();
+      await wait();
+      const changedTheme=host.getAttribute("data-theme")==="carbon";
+      root.querySelector('[aria-label="Compact feed"]')?.click();
+      await wait();
+      const changedDensity=host.getAttribute("data-density")==="compact";
+      root.querySelector(".reset-design")?.click();
+      await wait();
+      const resetDefaults=host.getAttribute("data-theme")==="midnight"&&host.getAttribute("data-density")==="comfortable";
+      root.querySelector('[aria-label="Close appearance settings"]')?.click();
+      await wait();
+      const fontSize=parseFloat(getComputedStyle(root.querySelector(".post-title")).fontSize);
+      return {ok:changedTheme&&changedDensity&&resetDefaults&&fontSize>=15,changedTheme,changedDensity,resetDefaults,fontSize,closed:!root.querySelector(".design-panel")};
+    })()`,awaitPromise:true,returnByValue:true});
+    if(!behavior.result?.value?.ok || !behavior.result?.value?.closed) {
+      throw new Error("Commons V5 appearance controls failed: "+JSON.stringify(behavior.result?.value));
+    }
   }
 
   const ops = await send("Runtime.evaluate", {expression: `(() => {
@@ -668,6 +698,9 @@ try {
       );
     }
   }
+  // Explicit narrow-phone acceptance without repeating all legacy routes.
+  const narrow = { name:"narrow",width:320,height:720,mobile:true,deviceScaleFactor:1 };
+  failures = failures.concat((await runCase("/", narrow)).map(item=>"narrow /: "+item));
 } finally {
   chrome.kill("SIGTERM");
   await Promise.race([
