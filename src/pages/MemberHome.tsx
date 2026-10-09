@@ -53,15 +53,21 @@ function CommandHome({ enabled = false, checking = false, identity }: {
   }, [signedIn, identity?.email, load]);
 
   useEffect(() => {
-    // Google member identity is never enough for an owner terminal link.
-    // The owner-only Cloudflare Access JWT must also be accepted by the Worker.
+    // Neither a Google session nor a cached Cloudflare Access session alone
+    // is evidence that this ANEVUM member owns the company RHEN Terminal.
     setOperator(false);
     if (!signedIn) return;
     const controller = new AbortController();
-    void fetch("/api/command/session", { cache: "no-store", signal: controller.signal })
-      .then(async response => response.ok ? response.json() : null)
-      .then((value: { command_admin?: boolean } | null) => {
-        if (!controller.signal.aborted) setOperator(value?.command_admin === true);
+    void fetch("/api/member/rhen/terminal", { cache: "no-store", signal: controller.signal })
+      .then(response => response.ok ? response.json() : null)
+      .then(async (member: { ownerMember?: boolean } | null) => {
+        if (member?.ownerMember !== true) return false;
+        const response = await fetch("/api/command/session", { cache: "no-store", signal: controller.signal });
+        const value = response.ok ? await response.json() as { command_admin?: boolean; auth_source?: string } : null;
+        return value?.command_admin === true && value?.auth_source === "cloudflare_access";
+      })
+      .then(authorized => {
+        if (!controller.signal.aborted) setOperator(authorized);
       })
       .catch(() => { if (!controller.signal.aborted) setOperator(false); });
     return () => controller.abort();
