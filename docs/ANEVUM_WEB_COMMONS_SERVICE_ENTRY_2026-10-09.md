@@ -1,6 +1,6 @@
 # ANEVUM Commons: Service Entry and Invite-Only Research Foundation
 
-**Session:** `ANEVUM.WEB.BUILD.2026-10-09.001.COMMONS-SERVICE-ENTRY`  
+**Session:** `ANEVUM.WEB.BUILD.2026-10-09.001.COMMONS-FIRST-PLATFORM`  
 **Status:** Build on isolated branch. Production community posting is OFF; owner approval and staging acceptance pending.  
 **Scope:** ANEVUM Web and member D1 only. No live RHEN trading, broker OAuth, Stripe billing, rewards payouts, or production data migrations are authorized by this change.
 
