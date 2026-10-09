@@ -83,9 +83,13 @@ test("production is default-disabled and staging requires valid test keys and ex
       "ANEVUM_RHEN_BILLING_WEBHOOKS_ENABLED","ANEVUM_RHEN_FOUNDING_ENABLED",
       "ANEVUM_RHEN_BILLING_LIVE_APPROVED"
     ]) assert.equal(vars[flag],"false");
-    for(const secret of ["STRIPE_SECRET_KEY","STRIPE_WEBHOOK_SECRET","STRIPE_FOUNDING_PRICE_ID","STRIPE_STANDARD_PRICE_ID"])
+    for(const secret of ["STRIPE_SECRET_KEY","STRIPE_WEBHOOK_SECRET"])
       assert.equal(Object.hasOwn(vars,secret),false);
   }
+  assert.equal(stage.vars.STRIPE_FOUNDING_PRICE_ID,"price_1UOcwSDSvwYS3kwTHxrYRQev");
+  assert.equal(stage.vars.STRIPE_STANDARD_PRICE_ID,"price_1UOcwYDSvwYS3kwTqnadIMBD");
+  assert.equal(Object.hasOwn(prod.vars,"STRIPE_FOUNDING_PRICE_ID"),false);
+  assert.equal(Object.hasOwn(prod.vars,"STRIPE_STANDARD_PRICE_ID"),false);
   assert.equal(billingConfigured(stagingEnv(),stagingOrigin),true);
   assert.equal(billingConfigured(stagingEnv(),"https://anevum.com"),false);
   assert.equal(billingConfigured({...stagingEnv(),ANEVUM_STRIPE_MODE:"live"},stagingOrigin),false);
