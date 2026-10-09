@@ -12,6 +12,12 @@
     "sitemap": false
   },
   {
+    "path": "/learn",
+    "label": "Learn",
+    "nav": true,
+    "sitemap": true
+  },
+  {
     "path": "/products",
     "label": "Projects",
     "nav": false,
