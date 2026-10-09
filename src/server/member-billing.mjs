@@ -407,10 +407,10 @@ export async function stripeWebhookEndpoint(request, env) {
       "SELECT user_id FROM member_billing_customers WHERE stripe_customer_id=?"
     ).bind(subscription.customerId).first();
     if (!customer) return billingReply({ received: true, handled: false });
-    if (latest?.metadata?.anevum_product && latest.metadata.anevum_product !== "rhen_cloud") {
-      throw new BillingError(409, "Unexpected subscription product.");
+    if (latest?.metadata?.anevum_product !== "rhen_cloud") {
+      throw new BillingError(409, "Subscription is not a RHEN Cloud purchase.");
     }
-    if (latest?.metadata?.anevum_member_id && latest.metadata.anevum_member_id !== customer.user_id) {
+    if (latest?.metadata?.anevum_member_id !== customer.user_id) {
       throw new BillingError(409, "Subscription ownership mismatch.");
     }
     await db.batch([
