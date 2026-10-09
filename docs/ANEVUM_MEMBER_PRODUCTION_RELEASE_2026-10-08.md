@@ -19,7 +19,7 @@ The root /command is the normal member page and is not behind Cloudflare Access.
 
 The Worker now sends legacy operator URL aliases to the protected /command/rhen subtree before delivering the public SPA. Unknown /api/command/* endpoints fail closed rather than rendering an HTML page.
 
-The new command-access-member-cutover workflow runs ONLY after a successful main-branch production website deployment. It audits the current Access app ID, AUD, policy and identity; refuses unexpected path/policy drift; checks that /me and private routes work; then PATCHes only the same app's destinations. It uses Cloudflare's documented PUT application-update method, carrying forward the documented writable existing authentication/session settings but excluding GET-only identity/timestamps, changing the primary domain to the exact protected terminal destination, and changing the Access destinations. It rechecks the original owner policy, Access AUD and settings after the operation. It checks that the member root returns HTTP 200, legacy operator URLs redirect server-side, private RHEN operator paths still require Access, and private APIs still deny anonymous access. On a failed live check it attempts to restore the previous broader Access scope. If the Access API token is read-only or this cannot be verified, treat the cutover as incomplete and inspect the run; do not bypass Access to solve it. Verify Command Access accepts only the exact old or new path set during the change.
+The new command-access-member-cutover workflow runs ONLY after a successful main-branch production website deployment. It audits the current Access app ID, AUD, policy and identity; refuses unexpected path/policy drift; checks that /me and private routes work; then updates only the same app's destinations. It uses Cloudflare's documented PUT application-update method, carrying forward the documented writable existing authentication/session settings but excluding GET-only identity/timestamps, changing the primary domain to the exact protected terminal destination, and changing the Access destinations. It rechecks the original owner policy, Access AUD and settings after the operation. It checks that the member root returns HTTP 200, legacy operator URLs redirect server-side, private RHEN operator paths still require Access, and private APIs still deny anonymous access. On a failed live check it attempts to restore the previous broader Access scope. If the Access API token is read-only or this cannot be verified, treat the cutover as incomplete and inspect the run; do not bypass Access to solve it. Verify Command Access accepts only the exact old or new path set during the change.
 
 ## Production D1 — explicit manual approval
 
@@ -33,13 +33,13 @@ If the owner has not reviewed Privacy and Terms or has not privately rotated any
 
 The code handles Google name, email and linked account identifiers, optional profile image, encrypted provider tokens, sessions and session security metadata, profile preferences, saved apps, follows and entitlements. JSON export and active-record deletion are implemented; the provider log/backup deletion period is not established from source.
 
-The Privacy and Terms draft pages now describe current behavior and remain visibly DRAFT for the owner to approve. Do not promise fixed provider retention periods, investment returns, brokerage access, or a paid service that does not exist. Remove the draft warnings only after owner review of actual processes, retention and applicable jurisdiction.
+The owner reviewed and approved the current Privacy and Terms wording in the October 8 conversation. The pages now display their last-reviewed date instead of the draft warning. This is an owner operational/content approval, not independent legal advice, a regulatory certification, or evidence about third-party provider retention. The notices do not promise fixed provider backup/log retention, guaranteed investment returns, brokerage custody, or a paid service not yet offered.
 
 ## Final release gates before public registration
 
 1. Confirm separately that two real staging accounts pass isolation, deletion/export, expired-session, invalid Origin, CSRF and rate-limit checks. The two-cookie staging script may run only with session cookies supplied through a protected local runtime, not ChatGPT, public CI, or repository files.
 2. Confirm the live Command Access audit reports scoped member mode while the RHEN Terminal and APIs still demand owner-only Access. Revisit legacy links and verify redirects.
-3. Obtain explicit owner approval for current Privacy and Terms, including actual deletion/backups/log retention.
+3. **Owner wording approval recorded (October 8)** for Privacy and Terms; retain the notices' explicit uncertainty about Cloudflare/Google backup and log retention. Confirm future operational changes against the posted policies before opening public signup.
 4. Confirm production Google OAuth client origin https://anevum.com and callback https://anevum.com/api/auth/callback/google; three encrypted production Worker secret names; private rotation of the previously chat-exposed production auth secret.
 5. Run the manual production D1 migration workflow and obtain its nine-table and FK success evidence.
 6. In a separate, reviewed production activation change, enable ONLY production member registration flag, preserve distinct preview, and verify live OAuth, member data isolation, logout/deletion/export, and private RHEN authorization. Never silently enable public registration from a website CSS/copy/access change.
@@ -55,6 +55,16 @@ Rollback on any failure: disable the production membership flag, and for Access 
 - .github/workflows/command-access-member-cutover.yml: production post-deploy scoped cutover.
 - .github/workflows/verify-command-access.yml: accepts only exact old or new paths and tests protected traffic.
 - .github/workflows/member-production-d1-migrate.yml: approval-gated isolated production DB migration.
+- scripts/probe-member-public-readiness.mjs and .github/workflows/member-public-readiness.yml: read-only production/staging availability, Access denial, encrypted binding name inventory and production D1 schema-state preflight; no migration or enabled signup.
+- tests/member-adversarial.test.mjs and tests/member-readiness-contract.test.mjs: offline Origin/CSRF, payload and release safety regressions.
 - Issue #210: canonical rollout, approvals and evidence.
 
 No new Railway runtime, Supabase, crypto, payment/reward authority, or live trading permissions are part of this release.
+
+## Owner-reviewed legal copy and remaining production gates (October 8)
+
+The owner confirmed that the current Privacy and Terms wording looks good and instructed continuing development. The website notices may therefore show a **last reviewed** date instead of "Draft for owner review". This is **not** evidence that third-party provider deletion/retention periods are fixed or that a lawyer reviewed the pages. The live feature remains OFF until its separate deployment gate passes.
+
+The read-only `ANEVUM Member Production Readiness` workflow runs on a verified main-branch change and can be rerun manually. It checks production encrypted **secret names only**, exact production and preview D1 identities and current production member-table count (0 or 9), staging Google availability, guest member denial, production signup closed, public-safe Command page and live owner-only RHEN Access challenges. It never reads the values of Worker secrets, captures member cookies, migrates D1, performs write requests, or enables signup. Its success cannot validate that the external Google Console web client has the right callback or that the chat-visible production Better Auth secret was rotated privately.
+
+If the preflight finds missing production encrypted bindings, correct them *only* on Worker `anevum-web-nextgen`. If its D1 table count is zero, the separate approval-gated `member-production-d1-migrate.yml` migration is still required. Before using that workflow, independently record Google production consent-screen and redirect configuration plus protected, private secret rotation; staging two-account security evidence remains distinct from this anonymous preflight. Preserve the authenticated RHEN operator path and broker-write authority throughout.

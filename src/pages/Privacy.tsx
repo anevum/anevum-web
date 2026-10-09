@@ -20,7 +20,7 @@ export default function Privacy() {
       <h2>Your choices</h2>
       <p>You can continue reading the public website without Google sign-in. Authentication uses session cookies; blocking them may prevent member features from working. For questions about data access, provider retention, or deletion, contact <a href="mailto:devon@anevum.com">devon@anevum.com</a>.</p>
 
-      <p className="member-legal-date">Draft for owner review · October 8, 2026 · Public registration remains disabled pending approval.</p>
+      <p className="member-legal-date">Last reviewed October 8, 2026.</p>
     </article>
   );
 }
