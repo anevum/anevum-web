@@ -255,6 +255,28 @@ async function publicTradingFeed() {
   });
 }
 
+async function publicTradingEvents() {
+  // Public SSE is a stream of the exact same aggregate-only Core projection.
+  // Do not buffer a response body, cache a connection, or expose raw broker data.
+  const response = await fetch(TRADER_BASE + "/v1/trading-public-events", {
+    method: "GET",
+    headers: { Accept: "text/event-stream" },
+    redirect: "manual"
+  });
+  if (!response.ok || !response.body) {
+    return jsonResponse({ message: "Public event stream unavailable." }, 503);
+  }
+  return new Response(response.body, {
+    status: 200,
+    headers: {
+      "Content-Type": "text/event-stream; charset=utf-8",
+      "Cache-Control": "no-store, no-transform",
+      "X-Content-Type-Options": "nosniff",
+      "X-Accel-Buffering": "no"
+    }
+  });
+}
+
 async function commandApi(request, pathname, env) {
   if (pathname === "/api/command/trader/status" && request.method === "GET") {
     return proxyTrader(request, "/v1/command/status", env);
@@ -422,6 +444,15 @@ export default {
         return await memberEndpoint(request, env, pathname);
       } catch {
         return jsonResponse({ message: "Member service unavailable." }, 503);
+      }
+    }
+
+    if (pathname === "/api/public/trading/events") {
+      if (request.method !== "GET") return jsonResponse({ message: "Read-only public stream." }, 405);
+      try {
+        return await publicTradingEvents();
+      } catch {
+        return jsonResponse({ message: "Public event stream unavailable." }, 503);
       }
     }
 
