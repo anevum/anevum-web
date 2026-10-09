@@ -1,0 +1,66 @@
+name: Verify RHEN production live observation
+on:
+  push:
+    branches: [ops/verify-rhen-realtime-live-20261008]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Verify live RHEN service and isolated observer
+        shell: bash
+        run: |
+          set -euo pipefail
+          target="https://alpaca-trader-production-bf3e.up.railway.app"
+          for attempt in 1 2 3 4 5; do
+            status=$(curl --silent --show-error --max-time 20 --output "$RUNNER_TEMP/rhen-health.json" --write-out '%{http_code}' "$target/health") || status="000"
+            if [[ "$status" == "200" ]] && jq -e '
+              .ok == true
+              and .execution.ok == true
+              and .core.ok == true
+              and .modules.observer.ok == true
+              and .modules.observer.body.mode == "READ_ONLY"
+              and .modules.observer.body.entry_authority == false
+              and .modules.observer.body.broker_orders_possible == false
+            ' "$RUNNER_TEMP/rhen-health.json" >/dev/null; then
+              break
+            fi
+            if [[ "$attempt" == "5" ]]; then
+              echo "::error::RHEN observer liveness or read-only contract failed (HTTP $status)."
+              jq '{ok,execution_ok:.execution.ok,core_ok:.core.ok,observer:.modules.observer}' "$RUNNER_TEMP/rhen-health.json" || true
+              exit 1
+            fi
+            sleep 5
+          done
+          jq -r '"RHEN core: " + (.core.ok|tostring), "RHEN execution: " + (.execution.ok|tostring), "Observer mode: " + (.modules.observer.body.mode // "UNKNOWN"), "Market stream: " + (.modules.observer.body.market_state // "UNKNOWN"), "Broker update stream: " + (.modules.observer.body.broker_stream_state // "UNKNOWN"), "Market feed: " + (.modules.observer.body.market_feed // "UNKNOWN"), "Watched symbols: " + (.modules.observer.body.watched_symbols|tostring)' "$RUNNER_TEMP/rhen-health.json" | tee -a "$GITHUB_STEP_SUMMARY"
+      - name: Verify public-safe projection and website availability
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --fail --silent --show-error --max-time 20 "https://anevum.com/api/public/trading/live" -o "$RUNNER_TEMP/anevum-feed.json"
+          jq -e '.ok == true and .source == "rhen-core-sqlite" and .disclosure.level == "aggregate_only" and .broker_reconciliation.state != null' "$RUNNER_TEMP/anevum-feed.json" >/dev/null
+          printf 'Public feed: valid, aggregate-only; broker reconciliation summary present.\n' >> "$GITHUB_STEP_SUMMARY"
+      - name: Reject anonymous private websocket connection
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --input-type=module <<'EOF'
+          const url="wss://anevum.com/api/command/live";
+          let resolved=false;
+          const result=await Promise.race([
+            new Promise(resolve => {
+              const ws=new WebSocket(url);
+              ws.addEventListener('open',()=>{ resolved=true; ws.close(); resolve('SECURITY_FAILURE'); });
+              ws.addEventListener('error',()=>{ resolved=true; resolve('DENIED'); });
+              ws.addEventListener('close',()=>{ if(!resolved) resolve('DENIED'); });
+            }),
+            new Promise(resolve=>setTimeout(()=>resolve('NO_RESULT'),12000))
+          ]);
+          if(result!=='DENIED'){ console.error('Unauthenticated WebSocket not confirmed rejected: '+result); process.exit(1); }
+          console.log('Unauthenticated private WebSocket rejected.');
+          EOF
