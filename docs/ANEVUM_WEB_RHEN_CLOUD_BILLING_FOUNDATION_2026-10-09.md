@@ -18,6 +18,7 @@
 - `member_billing_customers` maps one Better Auth user to a Stripe customer. Unique customer id and user id.
 - `member_billing_subscriptions` records normalized Stripe subscription state and current paid period; foreign keys to both user and customer. Unknown prices never confer entitlement.
 - `member_billing_events` stores webhook event identifiers for repeat-delivery recognition.
+- `member_billing_checkout_locks` provides an expiring, token-checked D1 lock; provider-side open Checkout and subscription checks reduce duplicate purchases.
 - All subscription/user/customer queries are explicitly scoped. Cascade on user deletion removes local billing records only **after** the provider cancellation callback succeeds.
 
 ### API
@@ -55,7 +56,7 @@ Never paste secret keys, webhook signing secrets, session cookies, member creden
 
 ## Separate staging acceptance
 
-1. Merge after CI review. The main-branch preview-only migration workflow targets `anevum-members-preview` and must verify three billing tables, ten pre-existing tables and FK integrity.
+1. Merge after CI review. The main-branch preview-only migration workflow targets `anevum-members-preview` and must verify four billing tables, ten pre-existing tables and FK integrity.
 2. In Stripe **test mode**, create one RHEN Cloud product with separate $9.99 and $19.99 USD recurring monthly prices, and configure Stripe Customer Portal. Do not use live prices in staging.
 3. Configure a Stripe test webhook destination `https://anevum-member-staging.devonakins.workers.dev/api/billing/stripe/webhook` for `customer.subscription.created`, `customer.subscription.updated`, `customer.subscription.deleted`. Save that destination's signing secret as a staging Worker **Secret**.
 4. Configure all staging Stripe bindings, activate billing + webhook + (optionally standard checkout) staging flags only.
