@@ -3,6 +3,7 @@ import type { CommandSnapshot, LiveTradingFeed } from "../lib/data";
 import type { IrenSnapshot } from "../lib/runtime-topology";
 import { ageText, displayState, stateTone, type SystemName } from "../lib/system-display";
 import { buildCommandEvents, TERMINAL_SYSTEMS } from "../lib/command-events";
+import { significantRuntimeHistory } from "../lib/reconciliation-visibility";
 import SystemIcon from "./company/SystemIcon";
 import UiIcon from "./UiIcon";
 
@@ -29,7 +30,7 @@ export default function CommandRawLog({
       history: Record<string, unknown>[] | undefined,
       prefix: string
     ) => {
-      for (const [index, event] of (history || []).entries()) {
+      for (const [index, event] of (prefix === "equity" ? significantRuntimeHistory(history || []) : (history || [])).entries()) {
         rows.push({
           id: prefix + "-" + String(event.at || index) + "-" + index,
           at: typeof event.at === "string" ? event.at : null,
