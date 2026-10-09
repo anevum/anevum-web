@@ -45,7 +45,9 @@ function mockDB({ role = "contributor", active = true, rows = [], topic = null, 
           return prepared;
         },
         all: async () => sql.includes("sqlite_master") ?
-          { results: tables.map(name => ({ name })) } : { results: [] },
+          { results: tables.map(name => ({ name })) } :
+          sql.includes("FROM commons_topics t") ? { results: rows } :
+          sql.includes("FROM commons_comments c") ? { results: comments } : { results: [] },
         first: async () => null
       };
     },
