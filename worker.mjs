@@ -163,6 +163,10 @@ async function proxyOwnerReadOnlyStream(request, env) {
     return jsonResponse({message:"Same-origin private stream only."}, 403);
   }
   const credential = await commandCredential(request, env);
+  const ownerEmail = String(env?.RHEN_OWNER_EMAIL || "").trim().toLowerCase();
+  if (!ownerEmail || credential.identity.email !== ownerEmail) {
+    return jsonResponse({message:"Owner identity required for company RHEN."}, 403);
+  }
   const base = String(env?.RHEN_COMMAND_STREAM_BASE || TRADER_BASE).replace(/\/$/,"");
   if (!base.startsWith("https://")) return jsonResponse({message:"Secure upstream required."}, 503);
   // Forward only the verified Access assertion, never a broker token or URL credential.
