@@ -54,6 +54,8 @@ jobs:
         run: python -m unittest discover -s tests -p 'test_command_access_cutover.py' -v
       - name: Verify member schema and tenant separation
         run: python scripts/verify-member-schema.py
+      - name: Rehearse all V5 preview D1 migration contracts offline
+        run: python scripts/verify-v5-preview-schema-rehearsal.py
       - name: Typecheck and build
         run: npm run build
       - name: Verify generated artifacts
