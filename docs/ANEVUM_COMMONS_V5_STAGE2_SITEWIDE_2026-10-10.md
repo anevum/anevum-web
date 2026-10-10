@@ -53,3 +53,22 @@ This branch is **draft only** and stacked on F0 #258, which itself is stacked on
 6. Review production D1 migration 0004 separately; record owner visual and final production approval in #259. No automatic deployment.
 
 Acceptance is one coherent Commons public experience now, then an independently verified account experience, fully reviewed social functionality, safe cleanup, and rollbackable release. This stage is progress toward that definition—not a claim the full V5 product is complete.
+
+## Reviewed legacy static-client retirement — October 10, 2026
+
+**Draft-only source deletion** in this branch:
+- site/index.html, site/app.js, site/styles.css, site/_headers, site/robots.txt, site/sitemap.xml.
+- scripts/build.mjs and scripts/serve.mjs, the two old static paths targeting site/ instead of the root Vite/React app.
+
+**Evidence:** source grep through all 11 GitHub workflow files, the active package scripts,
+24 application scripts (other than those two retired scripts), 34 test files, root README,
+Vite config and Worker revealed no runtime references to those old entrypoints. The
+retired scripts did reference the old static directory, and site/README previously
+identified the client as non-runtime. root package.json uses Vite for dev/build/preview.
+Only archival wiki material stays under site/wiki/archive/transcosmic.
+
+**Protection:** no schema, Cloudflare Worker, deployment, auth, brokerage, production
+or GitHub branch was deleted; removal exists only as a reviewable draft Git diff.
+Validate the combined CI/browser route probe before merge. Additional retired pages,
+styles, assets, duplicate branches, unused integrations and GitHub statuses need a
+separate evidence-backed inventory; do not mass-delete them.

@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { readFileSync, existsSync } from "node:fs";
 
 const source = path => readFileSync(new URL("../" + path, import.meta.url), "utf8");
 const app = source("src/App.tsx");
@@ -36,4 +36,13 @@ test("public RHEN product registry reflects suspended runtime and V5 redevelopme
   const registry = source("src/data/products.ts");
   assert.match(registry, /lifecycle: "development"/);
   assert.match(registry, /separately gated execution/);
+});
+
+test("pre-Vite client and duplicate static build helpers are retired, archive retained", () => {
+  for (const oldPath of ["site/index.html", "site/app.js", "site/styles.css",
+    "site/_headers", "site/robots.txt", "site/sitemap.xml",
+    "scripts/build.mjs", "scripts/serve.mjs"]) {
+    assert.equal(existsSync(new URL("../" + oldPath, import.meta.url)), false, "obsolete static path remains: " + oldPath);
+  }
+  assert.equal(existsSync(new URL("../site/wiki/archive/transcosmic/README.md", import.meta.url)), true);
 });
