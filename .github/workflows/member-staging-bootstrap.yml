@@ -44,6 +44,15 @@ on:
       - 'worker.mjs'
       - 'vite.config.ts'
   workflow_dispatch:
+    inputs:
+      confirmation:
+        description: 'Type DEPLOY_MEMBER_STAGING_ONLY after reviewing exact source and rollback'
+        required: true
+        type: string
+      reviewed_head_sha:
+        description: 'Exact reviewed 40-character main SHA for staging release'
+        required: true
+        type: string
 
 permissions:
   contents: read
@@ -54,6 +63,13 @@ concurrency:
 
 jobs:
   bootstrap:
+    # PR/main pushes may run preflight and build, but ONLY a separately approved
+    # manual dispatch at the exact current main SHA can deploy staging.
+    if: >-
+      github.event_name != 'workflow_dispatch' ||
+      (github.ref == 'refs/heads/main' &&
+       inputs.confirmation == 'DEPLOY_MEMBER_STAGING_ONLY' &&
+       inputs.reviewed_head_sha == github.sha)
     runs-on: ubuntu-latest
     timeout-minutes: 14
     env:
@@ -121,7 +137,7 @@ jobs:
       - name: Verify generated Worker will not overwrite production
         run: node scripts/verify-member-staging-deploy.mjs --generated
       - name: Deploy isolated staging OAuth Worker
-        if: github.event_name != 'pull_request'
+        if: github.event_name == 'workflow_dispatch'
         id: deploy
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -152,7 +168,7 @@ jobs:
             echo "Google staging callback: $staging_url/api/auth/callback/google"
           } >> "$GITHUB_STEP_SUMMARY"
       - name: Verify staging Google identity readiness and deny operator access
-        if: github.event_name != 'pull_request'
+        if: github.event_name == 'workflow_dispatch'
         env:
           STAGING_URL: ${{ steps.deploy.outputs.staging_url }}
         shell: bash
