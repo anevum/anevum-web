@@ -44,6 +44,8 @@ jobs:
         run: npm run test:members
       - name: Verify ANEVUM V5 Foundation workspace contract
         run: npm run test:foundation
+      - name: Enforce pinned WEB/RHEN cross-repository workspace schema parity
+        run: node scripts/verify-v5-cross-repo-schema.mjs
       - name: Enforce one guarded production Worker deployment
         run: node --test tests/v5-verify-deploy-safety.test.mjs
       - name: Verify member D1 binding isolation
