@@ -21,9 +21,14 @@ on:
         description: "Type PREVIEW_BACKUP_VERIFIED after independently verifying a usable preview D1 backup"
         required: true
         type: string
+      backup_run_id:
+        description: "Successful encrypted preview backup/restore run ID (same source SHA)"
+        required: true
+        type: string
 
 permissions:
   contents: read
+  actions: read
 
 concurrency:
   group: anevum-member-preview-d1-schema
@@ -43,6 +48,28 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
+      - name: Verify successful archived preview D1 backup before 0005 review migration
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BACKUP_RUN_ID: ${{ inputs.backup_run_id }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$BACKUP_RUN_ID" =~ ^[0-9]{9,12}$ ]]
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$BACKUP_RUN_ID" > "$RUNNER_TEMP/preview-backup-run.json"
+          jq -e --arg sha "$GITHUB_SHA" '
+            .name == "ANEVUM V5 Preview D1 Encrypted Backup and Restore Test" and
+            .event == "workflow_dispatch" and
+            .head_branch == "main" and
+            .head_sha == $sha and
+            .status == "completed" and
+            .conclusion == "success"
+          ' "$RUNNER_TEMP/preview-backup-run.json" > /dev/null
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$BACKUP_RUN_ID/artifacts" > "$RUNNER_TEMP/preview-backup-artifacts.json"
+          jq -e --arg name "anevum-preview-d1-encrypted-$BACKUP_RUN_ID" '
+            any(.artifacts[]; .name == $name and .expired == false and .size_in_bytes > 1024)
+          ' "$RUNNER_TEMP/preview-backup-artifacts.json" > /dev/null
+          echo 'PASS: current-SHA preview backup and unexpired encrypted archive reviewed.'
       - name: Install reviewed Wrangler
         run: npm install --no-audit --no-fund
 
