@@ -91,3 +91,17 @@ test("invalid JSON is rejected even when byte equality and digest are contrived"
     /INCOMPATIBLE_SCHEMA/,
   );
 });
+
+test("cross-repository RHEN verification uses least-privilege authenticated GitHub API reads", () => {
+  const workflow = readFileSync(
+    new URL("../.github/workflows/anevum-verify.yml", import.meta.url), "utf8",
+  );
+  assert.match(workflow, /permissions:\s*\n\s+contents: read/);
+  assert.match(workflow,
+    /Enforce pinned WEB\/RHEN cross-repository workspace schema parity[^]*?env:\s*\n\s+GITHUB_TOKEN: \$\{\{ github\.token \}\}\s*\n\s+run: node scripts\/verify-v5-cross-repo-schema\.mjs/);
+  const verifier = readFileSync(
+    new URL("../scripts/verify-v5-cross-repo-schema.mjs", import.meta.url), "utf8",
+  );
+  assert.match(verifier, /token: process\.env\.GITHUB_TOKEN/);
+  assert.match(verifier, /rhenBranchHead !== expectedCommit/);
+});

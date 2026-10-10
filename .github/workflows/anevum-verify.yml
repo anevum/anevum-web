@@ -10,6 +10,9 @@ concurrency:
   group: anevum-verify-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+
 jobs:
   verify:
     runs-on: ubuntu-latest
@@ -45,6 +48,11 @@ jobs:
       - name: Verify ANEVUM V5 Foundation workspace contract
         run: npm run test:foundation
       - name: Enforce pinned WEB/RHEN cross-repository workspace schema parity
+        # Public GitHub REST unauthenticated IP rate limits can return 403 in
+        # Actions runners; authenticate this read-only pinned branch check.
+        # The validator itself still fails closed on unexpected SHA or bytes.
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
         run: node scripts/verify-v5-cross-repo-schema.mjs
       - name: Enforce one guarded production Worker deployment
         run: node --test tests/v5-verify-deploy-safety.test.mjs
