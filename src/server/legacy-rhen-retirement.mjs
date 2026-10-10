@@ -25,7 +25,7 @@ export function retiredRhenStatus() {
     status: "SUSPENDED_FOR_REBUILD",
     project: "RHEN",
     execution_enabled: false,
-    broker_connected: false,
+    broker_workspace_available: false,
     stale: true,
     reason: "The legacy RHEN trading service is retired while RHEN V5 is rebuilt.",
     next: "Member-owned RHEN workspaces and broker linking will follow validation.",
