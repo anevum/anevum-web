@@ -12,7 +12,6 @@ const CommonsV5 = lazy(() => import("./commons/CommonsV5"));
 const Products = lazy(() => import("./pages/Products"));
 const RhenProduct = lazy(() => import("./pages/RhenProduct"));
 const Feed = lazy(() => import("./pages/Feed"));
-const Live = lazy(() => import("./pages/Live"));
 const ResearchHub = lazy(() => import("./pages/ResearchHub"));
 const FieldNoteDetail = lazy(() => import("./pages/FieldNoteDetail"));
 const Architecture = lazy(() => import("./pages/Architecture"));
@@ -230,7 +229,7 @@ export default function App() {
         <Route path="/apps/rhen/*" element={<Suspense fallback={<Loader />}><RhenApp /></Suspense>} />
 
         <Route path="/products/rhen" element={<Suspense fallback={<Loader />}><CommonsV5 /></Suspense>} />
-        <Route path="/products/rhen/evidence" element={<PublicExperience><Live /></PublicExperience>} />
+        <Route path="/products/rhen/evidence" element={<Suspense fallback={<Loader />}><CommonsV5 /></Suspense>} />
         <Route path="/products/rhen/architecture" element={<Suspense fallback={<Loader />}><CommonsV5 /></Suspense>} />
         <Route path="/products/rhen/releases" element={<Suspense fallback={<Loader />}><CommonsV5 /></Suspense>} />
         <Route path="/products/rhen/releases/:slug" element={<Suspense fallback={<Loader />}><CommonsV5 /></Suspense>} />
