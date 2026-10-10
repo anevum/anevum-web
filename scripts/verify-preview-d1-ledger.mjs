@@ -9,7 +9,8 @@
  * No database access or writes occur in this module.
  */
 import { readFile, readdir } from "node:fs/promises";
-import { resolve } from "node:path";
+import { createHash } from "node:crypto";
+import { resolve, join } from "node:path";
 import { pathToFileURL } from "node:url";
 
 const VALID_FILE = /^[0-9]{4}_[a-z0-9_]+\.sql$/;
@@ -44,7 +45,20 @@ export function validatePreviewD1Ledger(parsed, available) {
 export async function checkPreviewD1Ledger(ledgerFile, migrationDirectory) {
   const ledger = JSON.parse(await readFile(ledgerFile, "utf8"));
   const names = await readdir(migrationDirectory);
-  return validatePreviewD1Ledger(ledger, new Set(names));
+  const validated = validatePreviewD1Ledger(ledger, new Set(names));
+  // Pin the exact reviewed billing source from immutable PR #240 commit
+  // f0fd0bcd458b89eaac86717d306773764dc4314d. This certifies the file
+  // selected for future migration, NOT historical byte-equivalence with the
+  // already-applied preview schema (which must be reviewed separately).
+  const sql = await readFile(join(migrationDirectory, "0003_member_billing.sql"));
+  const actual = createHash("sha1")
+    .update(Buffer.from("blob " + sql.length + "\0"))
+    .update(sql)
+    .digest("hex");
+  if (actual !== "54333fa22dfce87a58e16e3e85b2d27a59b33544") {
+    throw new Error("PREVIEW_LINEAGE_BLOCKED: reviewed billing 0003 SQL source blob has drifted.");
+  }
+  return validated;
 }
 
 if (process.argv[1] &&
