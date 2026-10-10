@@ -26,7 +26,7 @@ STEPS = (
     ("migrations-review", "0005_member_alpaca_review.sql", "40d4d282eeae1630fd89d7b08c975102cff8e341"),
     ("migrations-social", "0006_commons_v5_discussions.sql", "69df811aca79e812c3d976edb5e17b2c4c6d4fbd"),
 )
-DENIED_SQL = re.compile(r"\b(?:DROP|DELETE|UPDATE|ALTER|INSERT|REPLACE|ATTACH|DETACH|VACUUM)\b", re.I)
+ALLOWED_STATEMENT = re.compile(r"(?is)^(?:PRAGMA\\s+foreign_keys\\s*=\\s*ON|CREATE\\s+(?:UNIQUE\\s+)?(?:TABLE|INDEX)\\s+IF\\s+NOT\\s+EXISTS\\b)")
 
 
 def require(condition: bool, message: str) -> None:
@@ -49,7 +49,11 @@ def verify_catalog() -> list[tuple[str, str]]:
         require(git_blob_sha(data) == sha, f"unreviewed SQL blob: {name}")
         text = data.decode("utf-8")
         statements = "\n".join(line.split("--")[0] for line in text.splitlines())
-        require(not DENIED_SQL.search(statements), f"data-changing SQL found in {name}")
+        for statement in statements.split(";"):
+            stripped = statement.strip()
+            if stripped:
+                require(bool(ALLOWED_STATEMENT.match(stripped)),
+                        f"non-schema operation found in {name}")
         require("PRAGMA foreign_keys = ON" in text, f"FK requirement missing in {name}")
         contents.append((name, text))
     require([int(name[:4]) for name, _ in contents] == [1, 2, 3, 4, 5, 6],
