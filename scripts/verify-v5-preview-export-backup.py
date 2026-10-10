@@ -24,11 +24,23 @@ import sqlite3
 import sys
 from typing import Any
 
-EXPECTED_LEDGER = [
+BASE_LEDGER = [
     "0001_member_platform.sql",
     "0002_member_rhen_drafts.sql",
     "0003_member_billing.sql",
 ]
+WORKSPACE_MIGRATION = "0004_member_rhen_workspaces.sql"
+REVIEW_MIGRATION = "0005_member_alpaca_review.sql"
+APPROVED_LEDGER_STATES = [
+    BASE_LEDGER,
+    BASE_LEDGER + [WORKSPACE_MIGRATION],
+    BASE_LEDGER + [WORKSPACE_MIGRATION, REVIEW_MIGRATION],
+]
+REVIEW_TABLES = {
+    "member_alpaca_review_states",
+    "member_alpaca_review_consent",
+    "member_alpaca_review_connections",
+}
 MAX_EXPORT_BYTES = 64 * 1024 * 1024
 
 
@@ -75,13 +87,21 @@ def verify_restore(raw: bytes) -> dict[str, Any]:
         )}
         expected = {"d1_migrations", "user", "member_rhen_workspaces", "member_rhen_drafts"}
         _require(expected <= tables, "required preview tables missing")
-        _require(not any(name.startswith("member_alpaca_review_") or
-                         name.startswith("commons_v5_") for name in tables),
-                 "unexpected reviewer or social schema in preview backup")
+        _require(not any(name.startswith("commons_v5_") for name in tables),
+                 "unreviewed social schema in preview backup")
         ledger = [row[0] for row in db.execute(
             "SELECT name FROM d1_migrations ORDER BY id"
         )]
-        _require(ledger == EXPECTED_LEDGER, "preview migration lineage not exactly 0001-0003")
+        # Only consecutive, explicitly reviewed source stages can be recovered.
+        # Existing 0004 tables without a migration ledger row are intentionally
+        # allowed in the 0001-0003 snapshot; 0005 has no such exception.
+        _require(ledger in APPROVED_LEDGER_STATES,
+                 "preview migration lineage outside reviewed recovery stages")
+        reviewer_tables = {name for name in tables
+                           if name.startswith("member_alpaca_review_")}
+        _require(reviewer_tables == (
+            REVIEW_TABLES if REVIEW_MIGRATION in ledger else set()
+        ), "reviewer tables do not match registered 0005 migration")
         members = db.execute('SELECT COUNT(*) FROM "user"').fetchone()[0]
         drafts = db.execute("SELECT COUNT(*) FROM member_rhen_drafts").fetchone()[0]
         workspaces = db.execute("SELECT COUNT(*) FROM member_rhen_workspaces").fetchone()[0]
@@ -131,9 +151,10 @@ def _write_private(path: str, encrypted: bytes) -> None:
         out.write(encrypted)
 
 
-def _fixture() -> bytes:
+def _fixture(stage: int = 3) -> bytes:
     # Synthetic IDs and email values only. No export from Cloudflare here.
-    return ('''
+    _require(stage in (3, 4, 5), "unsupported synthetic recovery stage")
+    source = '''
 PRAGMA foreign_keys=OFF;
 BEGIN TRANSACTION;
 CREATE TABLE "user" (id TEXT PRIMARY KEY, email TEXT);
@@ -153,16 +174,43 @@ INSERT INTO d1_migrations VALUES(1,'0001_member_platform.sql');
 INSERT INTO d1_migrations VALUES(2,'0002_member_rhen_drafts.sql');
 INSERT INTO d1_migrations VALUES(3,'0003_member_billing.sql');
 COMMIT;
-''').encode("utf-8")
+'''
+    if stage >= 4:
+        source += ("\nINSERT INTO d1_migrations "
+                   "VALUES(4,'0004_member_rhen_workspaces.sql');\n")
+    if stage >= 5:
+        source += '''
+CREATE TABLE member_alpaca_review_states (
+ state_hash TEXT PRIMARY KEY, user_id TEXT REFERENCES "user"(id) ON DELETE CASCADE);
+CREATE TABLE member_alpaca_review_consent (
+ user_id TEXT REFERENCES "user"(id) ON DELETE CASCADE, disclosure_version TEXT);
+CREATE TABLE member_alpaca_review_connections (
+ user_id TEXT PRIMARY KEY REFERENCES "user"(id) ON DELETE CASCADE,
+ broker_account_id TEXT UNIQUE, encrypted_token TEXT);
+INSERT INTO d1_migrations VALUES(5,'0005_member_alpaca_review.sql');
+'''
+    return source.encode("utf-8")
 
 
 def _selftest() -> None:
+    for stage in (3, 4, 5):
+        result = verify_restore(_fixture(stage))
+        _require((result["members"], result["workspaces"], result["drafts"],
+                  result["migration_ledger_count"]) == (2, 2, 2, stage),
+                 "approved synthetic recovery stage rejected")
     good = _fixture()
-    result = verify_restore(good)
-    _require(result["members"] == 2, "valid fixture rejected")
+    four = _fixture(4)
+    five = _fixture(5)
     for tampered in [
         good.replace(b"0003_member_billing.sql", b"0004_member_rhen_workspaces.sql"),
-        good.replace(b"VALUES('fixture-b','wrk_fixture_b')", b"VALUES('fixture-a','wrk_fixture_b')"),
+        four.replace(b"0004_member_rhen_workspaces.sql",
+                     b"0005_member_alpaca_review.sql"),
+        four + b"CREATE TABLE member_alpaca_review_states (id TEXT);",
+        five.replace(b"INSERT INTO d1_migrations VALUES(5,'0005_member_alpaca_review.sql');", b""),
+        five.replace(b"CREATE TABLE member_alpaca_review_consent (\n user_id TEXT REFERENCES \"user\"(id) ON DELETE CASCADE, disclosure_version TEXT);", b""),
+        five.replace(b"0005_member_alpaca_review.sql", b"0006_commons_v5_discussions.sql"),
+        good.replace(b"VALUES('fixture-b','wrk_fixture_b')",
+                     b"VALUES('fixture-a','wrk_fixture_b')"),
         good.replace(b"INSERT INTO member_rhen_drafts(user_id) VALUES('fixture-b');", b""),
         good + b"ATTACH DATABASE '/tmp/never-create-file.sqlite' AS secondary;",
     ]:
@@ -171,7 +219,7 @@ def _selftest() -> None:
         except BackupBlocked:
             continue
         raise BackupBlocked("negative selftest accepted invalid backup")
-    print("PASS: synthetic preview SQL restore and negative safety cases")
+    print("PASS: reviewed 0003/0004/0005 synthetic restore stages and negative safety cases")
 
 
 def main(argv: list[str]) -> None:
