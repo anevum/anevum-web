@@ -106,6 +106,7 @@ export async function exportMemberSocial(db,userId){
 
 export async function commonsSocialEndpoint(request,env,user,origin,pathname){
   if(!user?.id)return reply({message:"Authentication required."},401);
+  if(user.emailVerified!==true)return reply({message:"Verified member account required."},403);
   if(!socialConfigured(env,origin))return reply({
     available:false,message:"Commons discussion posting has not been enabled."
   },503);
