@@ -6,6 +6,7 @@ on:
     paths:
       - '.github/workflows/deploy-production.yml'
       - '.github/workflows/member-staging-bootstrap.yml'
+      - '.github/workflows/member-preview-d1-migrate.yml'
       - '.github/workflows/v5-preview-d1-backup-restore.yml'
       - '.github/workflows/v5-release-safety-bootstrap-verify.yml'
       - 'scripts/verify-v5-preview-export-backup.py'
@@ -15,6 +16,7 @@ on:
     paths:
       - '.github/workflows/deploy-production.yml'
       - '.github/workflows/member-staging-bootstrap.yml'
+      - '.github/workflows/member-preview-d1-migrate.yml'
       - '.github/workflows/v5-preview-d1-backup-restore.yml'
       - '.github/workflows/v5-release-safety-bootstrap-verify.yml'
       - 'scripts/verify-v5-preview-export-backup.py'
