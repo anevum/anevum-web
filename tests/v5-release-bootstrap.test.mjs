@@ -77,3 +77,22 @@ test("legacy preview D1 migration cannot auto-run on main pushes", () => {
   const write=y.indexOf("d1 migrations apply MEMBER_DB --remote");
   assert.ok(write>sourceCheck && sourceCheck>0, "preview backup check must precede SQL mutation");
 });
+
+test("pinned reviewer staging is manual, checks an immutable CI-passed draft and never deploys public production",()=>{
+  const y=read(".github/workflows/v5-pinned-alpaca-review-staging.yml");
+  assert.match(y,/workflow_dispatch:\s*\n\s+inputs:/);
+  assert.doesNotMatch(y,/^\s+(?:push|pull_request|schedule):\s*$/m);
+  for(const v of ["DEPLOY_ALPACA_PAPER_REVIEW_STAGING_ONLY","PAPER_CALLBACK_WHITELISTED",
+    "OWNER_APPROVES_PAPER_ONLY","511de938061e4d532fb3bb1ff21ece24a5580d06","inputs.approved_candidate_sha == '511de938061e4d532fb3bb1ff21ece24a5580d06'",
+    "persist-credentials: false","commits/$candidate/check-runs","pulls/275",
+    "ref: ${{ inputs.approved_candidate_sha }}","verify-v5-alpaca-review-staging.mjs --generated",
+    "0005_member_alpaca_review.sql","ALPACA_CONNECT_CLIENT_SECRET","ALPACA_CONNECT_TOKEN_KEY_BASE64",
+    "anevum-web-nextgen/deployments?per_page=1","PREVIEW"])
+    assert.ok(y.includes(v),v);
+  assert.match(y,/github\.ref == 'refs\/heads\/main'/);
+  assert.match(y,/inputs\.reviewed_main_sha == github\.sha/);
+  assert.equal((y.match(/npx wrangler deploy\b/g)||[]).length,1);
+  assert.doesNotMatch(y,/d1 migrations apply|paper-api\.alpaca\.markets\/v2\/orders|cloudflare\/wrangler-action@/);
+  assert.ok(y.indexOf("Verify exact owner-approved main, pinned PR provenance") <
+    y.indexOf("Deploy reviewed staging Worker only"));
+});
