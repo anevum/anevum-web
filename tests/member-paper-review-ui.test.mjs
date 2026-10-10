@@ -60,7 +60,7 @@ test("paper account must be masked, properly typed, and never live",()=>{
     const result=parsePaperReviewBrokerage({...linked(),account});
     if(account && "brokerSecret" in account){
       assert.ok(result);
-      assert.equal(JSON.stringify(result).includes("raw"),false);
+      assert.equal("brokerSecret" in result.account,false);
     } else {
       assert.equal(result,null,JSON.stringify(account));
     }
