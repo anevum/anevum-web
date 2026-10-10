@@ -20,6 +20,14 @@
 - Community data and trading data have different tenancy, permission, storage and privacy contracts. Commons never consumes founder fills, API credentials or private broker positions.
 - Do not activate old stacked Commons/Broker PRs #249/#251/#252 wholesale as part of a visual or F0 contract merge. Review APIs/migrations/roles individually after design and privacy acceptance.
 
+## Owner account is a normal RHEN brokerage workspace (new decision)
+
+The previous founder-only Command/broker coupling is **legacy data**, not V5 product architecture. In RHEN V5 the ANEVUM owner signs into Commons like everyone else, receives an independent `RHEN_NEXT` workspace under their verified member identity, and initiates **the same** regulated broker OAuth link, authorization, revocation, paper-trading and terminal onboarding as any other member. ANEVUM founder/admin role is a **separate authorization capability** for company management; it grants no automatic trading access to other people's workspaces. The owner can use their own RHEN terminal and manage ANEVUM's infrastructure from a distinct admin area.
+
+Only the quarantined `LEGACY_FOUNDER` workspace uses the old owner-only route `/command/rhen/operate`, and then only until the original production service and records are safely retired. A new founder `RHEN_NEXT` workspace must route to the ordinary private `/apps/rhen` just like a member workspace; its broker-link state initially is `NOT_LINKED` with `NONE` live authority. Owner and other members must pass the same broker licensing/provider approval, KYC/authorization, session-bound tenant protection, and independent paper/live safety gates. No Railway Alpaca keys may be copied to the website member database. Old trading results remain historical read-only evidence rather than being credited to the new account's performance.
+
+Production retirement and evidence-preserving cleanup: [RHEN #474](https://github.com/anevum/rhen/issues/474). The owner authorized stopping further live trading but **not** liquidation or deletion of positions, orders or backups. Because the broker's authoritative open positions/orders are not accessible through the currently connected market-data tools, no live shutdown or volume deletion is permitted before verification.
+
 ## Simplified product scope (owner decision)
 
 The current GRAEN, VELUM, and NOSTRA identities were **prototypes**, not approved permanent products. The ANEVUM V5 interface should present **one RHEN application** with internal areas:
