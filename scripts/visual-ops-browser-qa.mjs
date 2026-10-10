@@ -6,7 +6,7 @@ import path from "node:path";
 const base = process.env.BASE_URL;
 if (!base) throw new Error("BASE_URL is required");
 
-const publicRoutes = ["/", "/communities", "/learn", "/sign-in", "/products", "/feed", "/products/rhen", "/products/rhen/evidence", "/products/rhen/architecture", "/field-notes", "/field-notes/prediction-outcome-evidence-chain", "/about", "/resume", "/products/rhen/releases", "/me", "/privacy", "/terms"];
+const publicRoutes = ["/", "/communities", "/learn", "/sign-in", "/command", "/me/settings", "/me/rewards", "/products", "/feed", "/products/rhen", "/products/rhen/evidence", "/products/rhen/architecture", "/field-notes", "/field-notes/prediction-outcome-evidence-chain", "/about", "/resume", "/products/rhen/releases", "/me", "/privacy", "/terms"];
 const commandRoutes = ["/command/rhen/operate", "/command/rhen/discover", "/command/rhen/review", "/command/rhen/public", "/command/rhen/system"];
 const routes = process.env.PUBLIC_ONLY === "1" ? publicRoutes : [...publicRoutes, ...commandRoutes];
 const output = path.join(process.env.RUNNER_TEMP || os.tmpdir(), "anevum-visuals");
@@ -150,7 +150,7 @@ async function runCase(route, viewport) {
           const aboutReady = ${JSON.stringify(route)} !== "/about" || Boolean(document.querySelector(".anevum-commons-v5-mount")?.shadowRoot?.querySelector(".c2-about"));
           const resumeReady = ${JSON.stringify(route)} !== "/resume" || Boolean(document.querySelector(".anevum-commons-v5-mount")?.shadowRoot?.querySelector(".c2-resume .c2-card"));
           const releasesReady = ${JSON.stringify(route)} !== "/products/rhen/releases" || Boolean(document.querySelector(".anevum-commons-v5-mount")?.shadowRoot?.querySelector(".c2-stack .c2-card"));
-          const memberReady = ${JSON.stringify(route)} !== "/me" || Boolean(document.querySelector(".member-command"));
+          const memberReady = !["/me", "/command", "/me/settings", "/me/rewards"].includes(${JSON.stringify(route)}) || Boolean(document.querySelector(".anevum-commons-v5-mount")?.shadowRoot?.querySelector(".c2-member"));
           const legalReady = !["/privacy", "/terms"].includes(${JSON.stringify(route)}) || Boolean(document.querySelector(".anevum-commons-v5-mount")?.shadowRoot?.querySelector(".c2-legal .member-legal"));
           const commandReady = !${JSON.stringify(route)}.startsWith("/command/") || Boolean(document.querySelector(".command-v4"));
           const extraReady = !["/communities", "/learn", "/sign-in"].includes(${JSON.stringify(route)}) || Boolean(document.querySelector(".anevum-commons-v5-mount")?.shadowRoot?.querySelector(".c2-page"));
@@ -181,7 +181,7 @@ async function runCase(route, viewport) {
         const aboutReady = ${JSON.stringify(route)} !== "/about" || Boolean(document.querySelector(".anevum-commons-v5-mount")?.shadowRoot?.querySelector(".c2-about"));
         const resumeReady = ${JSON.stringify(route)} !== "/resume" || Boolean(document.querySelector(".anevum-commons-v5-mount")?.shadowRoot?.querySelector(".c2-resume .c2-card"));
           const releasesReady = ${JSON.stringify(route)} !== "/products/rhen/releases" || Boolean(document.querySelector(".anevum-commons-v5-mount")?.shadowRoot?.querySelector(".c2-stack .c2-card"));
-        const memberReady = ${JSON.stringify(route)} !== "/me" || Boolean(document.querySelector(".member-command"));
+        const memberReady = !["/me", "/command", "/me/settings", "/me/rewards"].includes(${JSON.stringify(route)}) || Boolean(document.querySelector(".anevum-commons-v5-mount")?.shadowRoot?.querySelector(".c2-member"));
         const legalReady = !["/privacy", "/terms"].includes(${JSON.stringify(route)}) || Boolean(document.querySelector(".anevum-commons-v5-mount")?.shadowRoot?.querySelector(".c2-legal .member-legal"));
         const commandReady = !${JSON.stringify(route)}.startsWith("/command/") || Boolean(document.querySelector(".command-v4"));
           const extraReady = !["/communities", "/learn", "/sign-in"].includes(${JSON.stringify(route)}) || Boolean(document.querySelector(".anevum-commons-v5-mount")?.shadowRoot?.querySelector(".c2-page"));
@@ -426,7 +426,10 @@ async function runCase(route, viewport) {
     "/communities":["communities",["Explore the subjects","No fictional communities"]],
     "/learn":["learn",["Learn by examining real work","A practical research loop"]],
     "/sign-in":["sign-in",["member-auth-page","Your projects. Your Command."]],
-    "/me":["member-command",["member-command","My programs","Programs"]],
+    "/me":["member-command",["c2-member","member-command","Programs"]],
+    "/command":["command",["c2-member","member-command","Programs"]],
+    "/me/settings":["settings",["c2-member","Account settings"]],
+    "/me/rewards":["rewards",["c2-member","Not launched"]],
     "/privacy":["privacy",["member-legal"]],
     "/terms":["terms",["member-legal"]]
   };
