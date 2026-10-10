@@ -57,3 +57,23 @@ test("helper handles private data in memory, without logging SQL or identities",
   assert.match(py, /PREVIEW_BACKUP_BLOCKED/);
   assert.doesNotMatch(py, /print\(sql\)|print\(raw\)|print\(.*email/);
 });
+
+test("legacy preview D1 migration cannot auto-run on main pushes", () => {
+  const y=read(".github/workflows/member-preview-d1-migrate.yml");
+  assert.match(y, /workflow_dispatch:\s*\n\s+inputs:/);
+  assert.doesNotMatch(y, /^\s+push:\s*$/m);
+  assert.match(y, /github\.ref == 'refs\/heads\/main'/);
+  assert.match(y, /inputs\.confirmation == 'MIGRATE_PREVIEW_ONLY'/);
+  assert.match(y, /inputs\.reviewed_head_sha == github\.sha/);
+  assert.match(y, /inputs\.backup_reviewed == 'PREVIEW_BACKUP_VERIFIED'/);
+  assert.match(y, /inputs\.backup_run_id/);
+  assert.match(y, /git ls-remote origin refs\/heads\/main/);
+  assert.match(y, /\.head_sha==\$sha/);
+  assert.match(y, /\.conclusion=="success"/);
+  assert.match(y, /\.expired==false and \.size_in_bytes>1024/);
+  assert.match(y, /test -f migrations\/0003_member_billing\.sql/);
+  assert.match(y, /test -f migrations\/0004_member_rhen_workspaces\.sql/);
+  const sourceCheck=y.indexOf("Verify current main SHA, archived preview backup");
+  const write=y.indexOf("d1 migrations apply MEMBER_DB --remote");
+  assert.ok(write>sourceCheck && sourceCheck>0, "preview backup check must precede SQL mutation");
+});
