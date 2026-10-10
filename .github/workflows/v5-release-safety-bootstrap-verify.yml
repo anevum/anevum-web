@@ -1,0 +1,43 @@
+name: ANEVUM V5 Release Safety Bootstrap
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/deploy-production.yml'
+      - '.github/workflows/member-staging-bootstrap.yml'
+      - '.github/workflows/member-preview-d1-migrate.yml'
+      - '.github/workflows/v5-preview-d1-backup-restore.yml'
+      - '.github/workflows/v5-release-safety-bootstrap-verify.yml'
+      - 'scripts/verify-v5-preview-export-backup.py'
+      - 'tests/v5-release-bootstrap.test.mjs'
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/deploy-production.yml'
+      - '.github/workflows/member-staging-bootstrap.yml'
+      - '.github/workflows/member-preview-d1-migrate.yml'
+      - '.github/workflows/v5-preview-d1-backup-restore.yml'
+      - '.github/workflows/v5-release-safety-bootstrap-verify.yml'
+      - 'scripts/verify-v5-preview-export-backup.py'
+      - 'tests/v5-release-bootstrap.test.mjs'
+
+permissions:
+  contents: read
+
+jobs:
+  safety:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Prove production and staging cannot deploy on merge
+        run: node --test tests/v5-release-bootstrap.test.mjs
+      - name: Offline private D1 backup restore smoke checks
+        run: python scripts/verify-v5-preview-export-backup.py selftest

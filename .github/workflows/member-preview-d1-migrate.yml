@@ -1,22 +1,31 @@
 name: Migrate ANEVUM Member Preview D1
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - 'wrangler.jsonc'
-      - 'wrangler.preview-migrations.jsonc'
-      - 'migrations/**'
-      - '.github/workflows/member-preview-d1-migrate.yml'
+  # IMPORTANT: automatic main-push D1 migration was retired for V5 safety.
+  # This bootstrap exists before complete V5 0003/0004 provenance is merged.
+  # It must fail closed until the reviewed V5 lineage reaches main.
   workflow_dispatch:
     inputs:
       confirmation:
-        description: 'For manual preview migration, type MIGRATE_PREVIEW_ONLY'
+        description: 'Type MIGRATE_PREVIEW_ONLY after approved reviewed backup and source'
+        required: true
+        type: string
+      reviewed_head_sha:
+        description: 'Exact reviewed 40-character current main SHA'
+        required: true
+        type: string
+      backup_run_id:
+        description: 'Successful encrypted preview D1 backup and restore run ID'
+        required: true
+        type: string
+      backup_reviewed:
+        description: 'Type PREVIEW_BACKUP_VERIFIED after recovery artifact check'
         required: true
         type: string
 
 permissions:
   contents: read
+  actions: read
 
 concurrency:
   group: anevum-member-preview-d1-schema
@@ -24,7 +33,11 @@ concurrency:
 
 jobs:
   migrate-preview:
-    if: github.event_name == 'push' || inputs.confirmation == 'MIGRATE_PREVIEW_ONLY'
+    if: >-
+      github.ref == 'refs/heads/main' &&
+      inputs.confirmation == 'MIGRATE_PREVIEW_ONLY' &&
+      inputs.reviewed_head_sha == github.sha &&
+      inputs.backup_reviewed == 'PREVIEW_BACKUP_VERIFIED'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -32,6 +45,37 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Verify current main SHA, archived preview backup, and unchanged migration catalog
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BACKUP_RUN_ID: ${{ inputs.backup_run_id }}
+        run: |
+          set -euo pipefail
+          current_main="$(git ls-remote origin refs/heads/main | cut -f1)"
+          test -n "$current_main"
+          test "$current_main" = "$GITHUB_SHA"
+          test "$current_main" = "${{ inputs.reviewed_head_sha }}"
+          [[ "$BACKUP_RUN_ID" =~ ^[0-9]{9,12}$ ]]
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$BACKUP_RUN_ID" > "$RUNNER_TEMP/preview-backup-run.json"
+          jq -e --arg sha "$GITHUB_SHA" '
+            .name=="ANEVUM V5 Preview D1 Encrypted Backup and Restore Test" and
+            .event=="workflow_dispatch" and
+            .head_branch=="main" and
+            .head_sha==$sha and
+            .status=="completed" and
+            .conclusion=="success"
+          ' "$RUNNER_TEMP/preview-backup-run.json" >/dev/null
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$BACKUP_RUN_ID/artifacts" > "$RUNNER_TEMP/preview-backup-artifacts.json"
+          jq -e --arg name "anevum-preview-d1-encrypted-$BACKUP_RUN_ID" '
+            any(.artifacts[]; .name==$name and .expired==false and .size_in_bytes>1024)
+          ' "$RUNNER_TEMP/preview-backup-artifacts.json" >/dev/null
+          # Current main has only 0001,0002; the preview ledger already has 0003.
+          # Fail closed here. A later reviewed V5 release supplies 0003/0004 and
+          # an explicit provenance verifier before allowing another D1 write.
+          test -f migrations/0003_member_billing.sql
+          test -f migrations/0004_member_rhen_workspaces.sql
+          test -f scripts/verify-preview-d1-ledger.mjs
       - name: Install pinned Wrangler
         run: npm install --no-audit --no-fund
       - name: Verify isolated bindings and registration gate

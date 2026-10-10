@@ -44,6 +44,15 @@ on:
       - 'worker.mjs'
       - 'vite.config.ts'
   workflow_dispatch:
+    inputs:
+      confirmation:
+        description: 'Type DEPLOY_MEMBER_STAGING_ONLY after reviewing exact source and rollback'
+        required: true
+        type: string
+      reviewed_head_sha:
+        description: 'Exact reviewed 40-character main SHA for staging release'
+        required: true
+        type: string
 
 permissions:
   contents: read
@@ -54,6 +63,13 @@ concurrency:
 
 jobs:
   bootstrap:
+    # PR/main pushes may run preflight and build, but ONLY a separately approved
+    # manual dispatch at the exact current main SHA can deploy staging.
+    if: >-
+      github.event_name != 'workflow_dispatch' ||
+      (github.ref == 'refs/heads/main' &&
+       inputs.confirmation == 'DEPLOY_MEMBER_STAGING_ONLY' &&
+       inputs.reviewed_head_sha == github.sha)
     runs-on: ubuntu-latest
     timeout-minutes: 14
     env:
@@ -120,8 +136,17 @@ jobs:
         run: npm run build
       - name: Verify generated Worker will not overwrite production
         run: node scripts/verify-member-staging-deploy.mjs --generated
+      - name: Reject stale approved main SHA before staging deployment
+        if: github.event_name == 'workflow_dispatch'
+        shell: bash
+        run: |
+          set -euo pipefail
+          current_main="$(git ls-remote origin refs/heads/main | cut -f1)"
+          test -n "$current_main"
+          test "$current_main" = "$GITHUB_SHA"
+          test "$current_main" = "${{ inputs.reviewed_head_sha }}"
       - name: Deploy isolated staging OAuth Worker
-        if: github.event_name != 'pull_request'
+        if: github.event_name == 'workflow_dispatch'
         id: deploy
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -152,7 +177,7 @@ jobs:
             echo "Google staging callback: $staging_url/api/auth/callback/google"
           } >> "$GITHUB_STEP_SUMMARY"
       - name: Verify staging Google identity readiness and deny operator access
-        if: github.event_name != 'pull_request'
+        if: github.event_name == 'workflow_dispatch'
         env:
           STAGING_URL: ${{ steps.deploy.outputs.staging_url }}
         shell: bash
@@ -197,6 +222,11 @@ jobs:
           draft_status="$(curl --silent --show-error --max-time 12 -o /dev/null -w '%{http_code}' "$STAGING_URL/api/member/rhen/draft")"
           if [ "$draft_status" != '401' ]; then
             echo "::error::Anonymous RHEN draft API must deny access: HTTP $draft_status"
+            exit 1
+          fi
+          workspace_status="$(curl --silent --show-error --max-time 12 -o /dev/null -w '%{http_code}' "$STAGING_URL/api/member/rhen/workspace")"
+          if [ "$workspace_status" != '401' ]; then
+            echo "::error::Anonymous V5 RHEN workspace API must return 401: HTTP $workspace_status"
             exit 1
           fi
           auth_status="$(curl --silent --show-error --max-time 12 -o /dev/null -w '%{http_code}' "$STAGING_URL/api/auth/get-session")"

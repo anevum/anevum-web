@@ -1,9 +1,22 @@
 name: Deploy ANEVUM Production
 
 on:
-  push:
-    branches: [main]
+  # V5 release is a separately owner-approved MANUAL operation only. Pushing or
+  # merging to main must NEVER start an uncontrolled production deployment.
   workflow_dispatch:
+    inputs:
+      confirmation:
+        description: 'Type DEPLOY_ANEVUM_PRODUCTION_V5 after staging acceptance'
+        required: true
+        type: string
+      reviewed_head_sha:
+        description: 'Exact reviewed 40-character main commit SHA'
+        required: true
+        type: string
+      rollback_confirmed:
+        description: 'Type PRODUCTION_ROLLBACK_VERIFIED after restore/rollback rehearsal'
+        required: true
+        type: string
 
 permissions:
   contents: read
@@ -14,6 +27,11 @@ concurrency:
 
 jobs:
   deploy:
+    if: >-
+      github.ref == 'refs/heads/main' &&
+      inputs.confirmation == 'DEPLOY_ANEVUM_PRODUCTION_V5' &&
+      inputs.reviewed_head_sha == github.sha &&
+      inputs.rollback_confirmed == 'PRODUCTION_ROLLBACK_VERIFIED'
     runs-on: ubuntu-latest
     timeout-minutes: 12
     steps:
@@ -85,6 +103,14 @@ jobs:
               "$RUNNER_TEMP/prod-launch-secret-bindings.json" >/dev/null
           done
           echo 'PASS release preflight: approved migrated D1, ten required tables, FK integrity and encrypted auth binding names.'
+      - name: Reject stale main ref before production deployment
+        shell: bash
+        run: |
+          set -euo pipefail
+          current_main="$(git ls-remote origin refs/heads/main | cut -f1)"
+          test -n "$current_main"
+          test "$current_main" = "$GITHUB_SHA"
+          test "$current_main" = "${{ inputs.reviewed_head_sha }}"
       - name: Deploy to Cloudflare Workers
         uses: cloudflare/wrangler-action@v3
         with:
