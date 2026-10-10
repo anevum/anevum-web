@@ -8,6 +8,7 @@ import Privacy from "../pages/Privacy";
 import Terms from "../pages/Terms";
 import SignIn from "../pages/SignIn";
 import CommonsPostsBeta from "./CommonsPostsBeta";
+import CommonsModeration from "./CommonsModeration";
 
 /**
  * V5 Stage 2 public routes. Only published first-party records are rendered.
@@ -259,6 +260,7 @@ export default function CommonsPublicPage({ pathname, search }: Props) {
   if (pathname === "/products/rhen/architecture") return <RhenArchitecture/>;
   if (pathname === "/products/rhen/releases") return <Releases/>;
   if (pathname.startsWith("/products/rhen/releases/")) return <ReleaseDetail slug={pathname.slice("/products/rhen/releases/".length)}/>;
+  if (pathname === "/communities/moderation") return <CommonsModeration/>;
   if (pathname === "/communities") return <Communities/>;
   if (pathname === "/learn") return <Learn/>;
   if (pathname === "/about") return <About/>;
