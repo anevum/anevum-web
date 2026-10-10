@@ -1,7 +1,7 @@
 import { betterAuth } from "better-auth";
 import { memberRewardsStatus, memberBrokerageStatus } from "./member-capabilities.mjs";
 import { reviewerSchemaReady, reviewerEndpoint, exportReviewerConnection } from "./member-alpaca-review.mjs";
-import { commonsSocialEndpoint } from "./commons-social.mjs";
+import { commonsSocialEndpoint, socialSchemaReady, exportMemberSocial } from "./commons-social.mjs";
 import { memberRhenDraftSchemaReady, readMemberRhenDraft, saveMemberRhenDraft, deleteMemberRhenDraft, validateRhenDraft } from "./member-rhen-draft.mjs";
 import { resolveMemberOrigin, memberSchemaReady } from "./member-preflight.mjs";
 import { memberRhenWorkspaceSchemaReady, readMemberRhenWorkspace, createMemberRhenWorkspace } from "./member-rhen-workspace.mjs";
@@ -226,7 +226,8 @@ export async function memberEndpoint(request, env, pathname) {
   if (pathname === "/api/member/export" && request.method === "GET") {
     const hasDraftTable = await memberRhenDraftSchemaReady(db);
     const hasWorkspaceTable = await memberRhenWorkspaceSchemaReady(db);
-    const [profile, saved, follows, entitlements, rhenDraft, rhenWorkspace, reviewerConnection] = await Promise.all([
+    const hasSocialTables = await socialSchemaReady(db);
+    const [profile, saved, follows, entitlements, rhenDraft, rhenWorkspace, reviewerConnection, socialContributions] = await Promise.all([
       db.prepare("SELECT display_name, theme, created_at, updated_at FROM member_profiles WHERE user_id = ?").bind(user.id).first(),
       db.prepare("SELECT app_slug, saved_at FROM member_saved_apps WHERE user_id = ? ORDER BY saved_at DESC").bind(user.id).all(),
       db.prepare("SELECT project_slug, followed_at FROM member_project_follows WHERE user_id = ? ORDER BY followed_at DESC").bind(user.id).all(),
@@ -234,7 +235,8 @@ export async function memberEndpoint(request, env, pathname) {
       hasDraftTable ? readMemberRhenDraft(db, user.id) : Promise.resolve(null),
       hasWorkspaceTable ? readMemberRhenWorkspace(db, user.id) : Promise.resolve(null),
       env?.ANEVUM_MEMBER_PREVIEW_ENABLED === "true"
-        ? exportReviewerConnection(db, user.id) : Promise.resolve(null)
+        ? exportReviewerConnection(db, user.id) : Promise.resolve(null),
+      hasSocialTables ? exportMemberSocial(db, user.id) : Promise.resolve(null)
     ]);
     return new Response(JSON.stringify({
       exportedAt: new Date().toISOString(),
@@ -245,7 +247,8 @@ export async function memberEndpoint(request, env, pathname) {
       entitlements: entitlements.results || [],
       rhenDraft,
       rhenWorkspace,
-      brokerReview: reviewerConnection
+      brokerReview: reviewerConnection,
+      commonsContributions: socialContributions
     }, null, 2), {
       status: 200,
       headers: {
