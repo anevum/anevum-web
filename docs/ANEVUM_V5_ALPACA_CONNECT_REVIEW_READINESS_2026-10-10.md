@@ -17,6 +17,7 @@ Do **not** upload the confidential questionnaire, private business identifiers, 
 - Remount the entire stateful review screen by authenticated member ID; abort the previous member's request and clear status, pending acknowledgement and errors when the identity changes.
 - Keep explicit disclosure and versioned acknowledgement before OAuth redirect. Fixed partner authorization origin and `env=paper`; the UI rejects an authorization URL requesting scopes.
 - Public RHEN editorial copy uses generic brokerage market-data wording, preserving the dated research method. Provider references stay in the brokerage integration UI rather than marketing or Field Notes. The Commons topic screen states that following/reading another member never copies orders or activates strategies.
+- Gate all reviewer endpoints on both the distinct `0004` workspace and `0005` reviewer migration registrations in the actual preview D1 ledger, in addition to the three required review tables. Manually precreated or incompletely migrated tables do not enable OAuth. Negative tests fail closed on missing ledger rows, missing tables, and D1 query failure. This does not apply migrations.
 - Add negative tests to `npm run test:members`; failures block draft CI.
 
 These changes are only defense in depth on the frontend. The separate server-side Better Auth/session, one-time state, scope denial, encrypted token vault and preview-only production locks remain authoritative.

@@ -24,12 +24,21 @@ const req=(route,method="GET",body)=>new Request(origin+route,{
   body:body===undefined?undefined:JSON.stringify(body)
 });
 
-function fakeDatabase() {
+function fakeDatabase(options={}) {
   const states=new Map(),consents=new Map(),connections=new Map(),calls=[];
-  const names=["member_alpaca_review_states","member_alpaca_review_consent","member_alpaca_review_connections"];
+  const names=options.tables??["member_alpaca_review_states","member_alpaca_review_consent","member_alpaca_review_connections"];
+  const migrations=options.migrations??["0004_member_rhen_workspaces.sql","0005_member_alpaca_review.sql"];
   const db={prepare(sql) {
     return {
-      all:async()=>({results:names.map(name=>({name}))}),
+      all:async()=>{
+        if(sql.includes("FROM d1_migrations")){
+          if(options.ledgerUnavailable)throw Error("Ledger unavailable");
+          return {results:migrations.map(name=>({name}))};
+        }
+        if(sql.includes("FROM sqlite_master"))
+          return {results:names.map(name=>({name}))};
+        throw Error("Unexpected all: "+sql);
+      },
       bind(...args){
         calls.push({sql,args});
         return {
@@ -112,6 +121,39 @@ test("production and unapproved configurations always block reviewer OAuth",asyn
   assert.equal(prod.vars.ANEVUM_ALPACA_REVIEW_CONNECT_ENABLED,"false");
   assert.equal(stage.vars.ANEVUM_ALPACA_REVIEW_CONNECT_ENABLED,"false");
   assert.notEqual(stage.d1_databases[0].database_id,prod.d1_databases[0].database_id);
+});
+
+test("review-only OAuth refuses tables without the reviewed 0004 and 0005 ledger registrations",async()=>{
+  const validMigrations=["0004_member_rhen_workspaces.sql","0005_member_alpaca_review.sql"];
+  const completeTables=["member_alpaca_review_states","member_alpaca_review_consent",
+    "member_alpaca_review_connections"];
+  for(const incomplete of [
+    {migrations:[]},
+    {migrations:[validMigrations[0]]},
+    {migrations:[validMigrations[1]]},
+    {migrations:validMigrations,tables:completeTables.slice(0,2)},
+    {ledgerUnavailable:true}
+  ]){
+    const {db,states,consents,connections}=fakeDatabase(incomplete);
+    assert.equal(await reviewerSchemaReady(db),false);
+    const attempt=await start(db);
+    assert.equal(attempt.r.status,503);
+    assert.equal(states.size,0);
+    assert.equal(consents.size,0);
+    const provider=providerFetch();
+    const callbackAttempt=await callback("x".repeat(44),db,userA,provider.fetcher);
+    assert.equal(callbackAttempt.status,503);
+    assert.equal(provider.calls.length,0);
+    const view=await reviewerEndpoint(req("/api/member/brokerage"),configured(db),
+      userA,origin,"/api/member/brokerage");
+    const viewStatus=await view.json();
+    assert.equal(viewStatus.connectionAvailable,false);
+    assert.equal(viewStatus.accountConnected,false);
+    assert.equal(connections.size,0);
+  }
+  // Later unrelated migrations must not remove the reviewed paper OAuth gate.
+  const {db}=fakeDatabase({migrations:[...validMigrations,"0006_commons_v5_discussions.sql"]});
+  assert.equal(await reviewerSchemaReady(db),true);
 });
 
 test("authorization URL fixes paper environment, HTTPS callback and read-only default",()=>{

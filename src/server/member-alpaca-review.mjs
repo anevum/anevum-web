@@ -58,10 +58,20 @@ export function reviewerConnectConfigured(env, verifiedOrigin) {
 export async function reviewerSchemaReady(db) {
   if(typeof db?.prepare!=="function")return false;
   try{
+    // A manually precreated table is NOT migration approval. Keep paper OAuth
+    // disabled until both reviewed, separately authorized preview migrations
+    // are recorded in the D1 ledger, even if the table names already exist.
+    const registered=await db.prepare(
+      "SELECT name FROM d1_migrations WHERE name IN " +
+      "('0004_member_rhen_workspaces.sql','0005_member_alpaca_review.sql')"
+    ).all();
+    const migrations=new Set((registered?.results||[]).map(row=>row.name));
+    if(!["0004_member_rhen_workspaces.sql","0005_member_alpaca_review.sql"]
+      .every(name=>migrations.has(name)))return false;
     const found=await db.prepare(
       "SELECT name FROM sqlite_master WHERE type='table' AND name LIKE 'member_alpaca_review_%'"
     ).all();
-    const names=new Set((found?.results||[]).map(x=>x.name));
+    const names=new Set((found?.results||[]).map(row=>row.name));
     return ["member_alpaca_review_states","member_alpaca_review_consent","member_alpaca_review_connections"]
       .every(name=>names.has(name));
   }catch{return false;}
