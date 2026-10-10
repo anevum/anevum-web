@@ -84,3 +84,28 @@ test("post-deploy owner Access audit recognizes retired RHEN without weakening p
   assert.match(verify, /p\["decision"\] in \("allow","deny"\)/);
   assert.match(scope, /Apply reversible owner-only Access scope to the RHEN terminal/);
 });
+
+
+test("RHEN browser and Worker SEO metadata must not claim retired execution is live", () => {
+  const app = read("../src/App.tsx");
+  const worker = read("../worker.mjs");
+  const product = read("../src/pages/RhenProduct.tsx");
+  const rhenDescription =
+    "RHEN is being rebuilt as an integrated research and trading application. " +
+    "Legacy live execution is suspended; historical evidence remains available.";
+  const evidenceDescription =
+    "Review historical, sanitized RHEN research and trading evidence. " +
+    "Live feeds and execution are suspended during the V5 rebuild.";
+
+  // The Worker sets initial SEO/OG/Twitter meta; the browser updates them
+  // again on client-side navigation. They must present the same truthful state.
+  for (const [surface, source] of [["Worker metadata", worker], ["React route metadata", app]]) {
+    assert.ok(source.includes(rhenDescription), surface + " missing retired RHEN description");
+    assert.ok(source.includes(evidenceDescription), surface + " missing paused evidence description");
+    assert.doesNotMatch(source,
+      /RHEN is ANEVUM's live trading and research system operating on real market data/,
+      surface + " misleadingly describes the retired bot as operating");
+  }
+  assert.match(product, /Legacy trading is suspended/);
+  assert.match(product, /Live execution suspended/);
+});
