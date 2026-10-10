@@ -60,6 +60,8 @@ jobs:
         run: node --test tests/member-bindings.test.mjs tests/member-staging.test.mjs tests/member-preview-migration.test.mjs tests/preview-d1-ledger-lineage.test.mjs tests/member-command-cutover.test.mjs tests/member-command-navigation.test.mjs && node scripts/verify-member-bindings.mjs --require-config
       - name: Verify Cloudflare Command Access cutover safety (offline)
         run: python -m unittest discover -s tests -p 'test_command_access_cutover.py' -v
+      - name: Verify isolated reviewer staging cannot change production
+        run: node --test tests/v5-alpaca-review-staging.test.mjs && node scripts/verify-v5-alpaca-review-staging.mjs
       - name: Verify member schema and tenant separation
         run: python scripts/verify-member-schema.py
       - name: Rehearse all V5 preview D1 migration contracts offline
