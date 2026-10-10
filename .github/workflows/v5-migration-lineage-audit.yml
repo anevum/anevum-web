@@ -1,0 +1,45 @@
+name: ANEVUM V5 Migration Lineage Audit
+
+on:
+  pull_request:
+    branches: [build/anevum-v5-foundation-web-contracts-20261009]
+    paths:
+      - 'migrations/**'
+      - 'tests/member-preview-migration.test.mjs'
+      - 'tests/member-v5-workspace.test.mjs'
+      - 'scripts/verify-member-schema.py'
+      - 'docs/ANEVUM_V5_FOUNDATION_2026-10-09.md'
+      - '.github/workflows/member-preview-d1-migrate.yml'
+      - '.github/workflows/v5-migration-lineage-audit.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: anevum-v5-preview-d1-lineage-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Audit migration source naming and preview-only guard
+        run: node --test tests/member-preview-migration.test.mjs
+      - name: Verify SQLite member schema, cascade and tenant isolation
+        run: python scripts/verify-member-schema.py
+      - name: Verify no production D1 migration or deploy is performed here
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f migrations/0004_member_rhen_workspaces.sql
+          test ! -f migrations/0003_member_rhen_workspaces.sql
+          # The production Worker / D1 is never touched by this workflow.
+          test "$(find migrations -maxdepth 1 -name '0003_member_rhen_workspaces.sql' | wc -l | tr -d ' ')" = 0
