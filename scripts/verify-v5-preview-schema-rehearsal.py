@@ -138,26 +138,26 @@ def execute() -> dict:
             "member_alpaca_review_connections"}, "OAuth table set is wrong")
         db.execute(
             "INSERT INTO member_alpaca_review_connections"
-            "(user_id,connection_id,broker_account_id,encrypted_token,token_iv,granted_scopes)"
-            " VALUES(?,?,?,?,?,?)",
+            "(user_id,connection_id,broker_account_id,encrypted_token,token_iv,granted_scopes,connected_at)"
+            " VALUES(?,?,?,?,?,?,?)",
             ("member-alpha", "synthetic-connection-1", "paper-alpha",
-             "NONREAL-ENCRYPTED-FIXTURE", "NONREAL-IV", ""),
+             "NONREAL-ENCRYPTED-FIXTURE", "NONREAL-IV", "", 1),
         )
         reject_integrity(
             db, "INSERT INTO member_alpaca_review_connections"
-                "(user_id,connection_id,broker_account_id,encrypted_token,token_iv,granted_scopes)"
-                " VALUES(?,?,?,?,?,?)",
+                "(user_id,connection_id,broker_account_id,encrypted_token,token_iv,granted_scopes,connected_at)"
+                " VALUES(?,?,?,?,?,?,?)",
             ("member-bravo", "synthetic-connection-2", "paper-alpha",
-             "NONREAL-ENCRYPTED-FIXTURE", "NONREAL-IV", ""),
+             "NONREAL-ENCRYPTED-FIXTURE", "NONREAL-IV", "", 1),
             "same broker assigned to two members",
         )
         for scope in ("trading", "account:write"):
             reject_integrity(
                 db, "INSERT INTO member_alpaca_review_connections"
-                    "(user_id,connection_id,broker_account_id,encrypted_token,token_iv,granted_scopes)"
-                    " VALUES(?,?,?,?,?,?)",
+                    "(user_id,connection_id,broker_account_id,encrypted_token,token_iv,granted_scopes,connected_at)"
+                    " VALUES(?,?,?,?,?,?,?)",
                 ("member-bravo", "new-id-" + scope, "paper-bravo",
-                 "NONREAL-ENCRYPTED-FIXTURE", "NONREAL-IV", scope),
+                 "NONREAL-ENCRYPTED-FIXTURE", "NONREAL-IV", scope, 1),
                 "unsafe OAuth scope " + scope,
             )
         db.executescript(catalog[5][1])
