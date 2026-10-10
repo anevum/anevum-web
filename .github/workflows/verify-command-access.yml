@@ -69,9 +69,9 @@ jobs:
            ("https://anevum.com/api/command/trader/status", "GET", [302,303,401,403]),
            ("https://anevum.com/api/command/iren/status", "GET", [302,303,401,403]),
            ("https://anevum.com/api/command/iren/command", "POST", [302,303,401,403]),
-           ("https://anevum.com/api/public/trading/live", "GET", [200]),
-           ("https://alpaca-trader-production-bf3e.up.railway.app/v1/command/session", "GET", [401]),
-           ("https://alpaca-trader-production-bf3e.up.railway.app/v1/command/status", "GET", [401]),
+           # Founder singleton backend is intentionally retired; no direct Railway origin.
+           ("https://anevum.com/api/public/trading/live", "GET", [503]),
+           ("https://anevum.com/api/public/research/readiness", "GET", [503]),
           ]
           failures = []
           for url, method, expected in checks:
@@ -98,18 +98,17 @@ jobs:
               if url == "https://anevum.com/command/topology" and status == 308:
                   dest = urllib.parse.urlparse(next((line.split(":",1)[1].strip() for line in headers.splitlines() if line.lower().startswith("location:")), ""))
                   assert dest.hostname == "anevum.com" and dest.path == "/command/rhen/topology"
-              if "/api/public/trading/live" in url and status == 200:
+              if ("/api/public/trading/live" in url or "/api/public/research/readiness" in url) and status == 503:
+                  # Intentional V5 retirement, never old broker balances or fake data.
                   payload = json.loads(body)
-                  result["source"] = payload.get("source")
-                  result["disclosure"] = (payload.get("disclosure") or {}).get("level")
-                  result["nostra_independent"] = ((payload.get("systems") or {}).get("NOSTRA") or {}).get("independent_runtime")
-                  excluded = set((payload.get("disclosure") or {}).get("excluded_fields") or [])
+                  result["retirement"] = payload.get("status")
                   if (
-                      payload.get("ok") is not True
-                      or payload.get("source") != "rhen-core-sqlite"
-                      or result["disclosure"] != "aggregate_only"
-                      or result["nostra_independent"] is not False
-                      or not {"symbols", "dollar_values", "orders", "fills"}.issubset(excluded)
+                      payload.get("ok") is not False
+                      or payload.get("status") != "SUSPENDED_FOR_REBUILD"
+                      or payload.get("execution_enabled") is not False
+                      or payload.get("broker_workspace_available") is not False
+                      or payload.get("stale") is not True
+                      or any(key in payload for key in ("positions", "fills", "account_equity", "account_balance"))
                   ):
                       failures.append(result)
               print("PROBE=" + json.dumps(result))

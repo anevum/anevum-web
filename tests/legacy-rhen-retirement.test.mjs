@@ -71,3 +71,16 @@ test("browser surfaces disclose retirement and stop live transport retries", () 
   assert.match(hook, /const LEGACY_RHEN_REBUILD = true/);
   assert.match(hook, /if \(LEGACY_RHEN_REBUILD\) return/);
 });
+
+test("post-deploy owner Access audit recognizes retired RHEN without weakening policies", () => {
+  const verify = read("../.github/workflows/verify-command-access.yml");
+  const scope = read("../.github/workflows/command-access-member-cutover.yml");
+  assert.match(verify, /"https:\/\/anevum.com\/api\/public\/trading\/live", "GET", \[503\]/);
+  assert.match(verify, /"https:\/\/anevum.com\/api\/public\/research\/readiness", "GET", \[503\]/);
+  assert.match(verify, /payload\.get\("status"\) != "SUSPENDED_FOR_REBUILD"/);
+  assert.doesNotMatch(verify, /alpaca-trader-production-bf3e\.up\.railway\.app/);
+  assert.match(verify, /Owner allow policy missing/);
+  assert.match(verify, /app_uris in \(legacy_uris, member_uris\)/);
+  assert.match(verify, /p\["decision"\] in \("allow","deny"\)/);
+  assert.match(scope, /Apply reversible owner-only Access scope to the RHEN terminal/);
+});
