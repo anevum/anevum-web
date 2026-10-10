@@ -61,6 +61,37 @@ jobs:
             ([.[] | select(.name == "anevum-members-preview" and .uuid == $preview)] | length == 1)
           ' "$RUNNER_TEMP/anevum-d1.json" > /dev/null
           echo 'Both Cloudflare D1 identifiers match the committed configuration.'
+      - name: Block migrations if preview history has no reviewed local SQL source
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_D1_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Read-only: this job must not start an apply if a prior preview
+          # migration is absent from the checked-in SQL migration catalog.
+          # At 2026-10-10 preview has an applied billing 0003 from unmerged
+          # PR #240, while this F0 branch deliberately contains no billing SQL.
+          # In that state this check blocks the apply rather than inventing,
+          # deleting, silently skipping or replaying migration history.
+          npx wrangler d1 execute MEMBER_DB --remote --config wrangler.preview-migrations.jsonc --json \
+            --command 'SELECT name FROM d1_migrations ORDER BY id' \
+            > "$RUNNER_TEMP/anevum-preview-applied-ledger.json"
+          jq -e 'type == "array" and .[0].success == true and (.[0].results | type == "array")' \
+            "$RUNNER_TEMP/anevum-preview-applied-ledger.json" > /dev/null
+          jq -r '.[0].results[].name' "$RUNNER_TEMP/anevum-preview-applied-ledger.json" \
+            > "$RUNNER_TEMP/anevum-preview-applied-filenames.txt"
+          while IFS= read -r applied; do
+            if [[ ! "$applied" =~ ^[0-9]{4}_[a-z0-9_]+\.sql$ ]]; then
+              echo "::error::Preview D1 ledger has an invalid migration filename. Abort before apply."
+              exit 1
+            fi
+            if [[ ! -f "migrations/$applied" ]]; then
+              echo "::error::Preview D1 already applied $applied, but its reviewed SQL source is absent from this branch. Reconcile migration lineage and obtain approval before applying any further migration."
+              exit 1
+            fi
+          done < "$RUNNER_TEMP/anevum-preview-applied-filenames.txt"
+          echo 'Previously applied preview D1 migration filenames all have reviewed local SQL sources.'
       - name: Apply migration only to ANEVUM preview D1
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_D1_TOKEN }}
