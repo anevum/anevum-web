@@ -51,6 +51,15 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          # Re-check the live source ref: a reviewed dispatch must not publish a stale main.
+          current_main="$(git ls-remote origin refs/heads/main | cut -f1)"
+          test -n "$current_main"
+          test "$current_main" = "$GITHUB_SHA"
+          test "$current_main" = "${{ inputs.reviewed_head_sha }}"
+          # Require all historically applied SQL source files and validator before writes.
+          test -f migrations/0003_member_billing.sql
+          test -f migrations/0004_member_rhen_workspaces.sql
+          test -f scripts/verify-preview-d1-ledger.mjs
           [[ "$BACKUP_RUN_ID" =~ ^[0-9]{9,12}$ ]]
           gh api "repos/$GITHUB_REPOSITORY/actions/runs/$BACKUP_RUN_ID" > "$RUNNER_TEMP/preview-backup-run.json"
           jq -e --arg sha "$GITHUB_SHA" '
