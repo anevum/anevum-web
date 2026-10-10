@@ -86,8 +86,9 @@ existing preview table definitions and constraints with the reviewed SQL.
 
 **Rollout boundary:** Draft PR #263 has no migration/deployment approval.
 Production D1, Stripe/checkout/webhooks, broker integration, execution, and
-other paid services remain outside this change. The preview migration workflow
-can run on a future `main` push, so never merge without reviewing that gate.
+other paid services remain outside this change. The preview migration workflow is **manual-only** on `main` and demands
+`MIGRATE_PREVIEW_ONLY` plus the exact reviewed main HEAD SHA; no merge can
+silently dispatch it. A separate reviewer must approve any D1 write.
 Two-account workspace tests passed; real draft write/read/export and deletion
 tests remain pending. Neither staging acceptance nor green CI authorizes
 production deployment or trading.
