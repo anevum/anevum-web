@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { memberAuthClient } from "../member/auth-client";
 import { useMemberAvailability } from "../member/useMemberAvailability";
 import { runStagingAcceptance, type AcceptanceReport } from "../member/staging-acceptance";
-import { runWorkspaceStagingProof, type WorkspaceStagingProof } from "../member/workspace-staging-acceptance";
+import { runWorkspaceStagingProof, WorkspaceStagingFailure, type WorkspaceStagingProof } from "../member/workspace-staging-acceptance";
 
 const STAGING_ORIGIN = "https://anevum-member-staging.devonakins.workers.dev";
 
@@ -57,8 +57,14 @@ export default function MemberStagingVerify() {
       setWorkspaceProof(await runWorkspaceStagingProof(
         fetch, session.user.id, window.location.origin
       ));
-    } catch {
-      setWorkspaceError("Private workspace acceptance failed. No release approval was granted.");
+    } catch (failure) {
+      // Only bounded verifier step/reason codes; no raw server exceptions,
+      // member IDs, cookies, or account export contents may be displayed.
+      const diagnostic = failure instanceof WorkspaceStagingFailure
+        ? failure.step + " / " + failure.reason
+        : "PREFLIGHT / CHECK_FAILED";
+      setWorkspaceError("Private workspace acceptance blocked. Diagnostic: " +
+        diagnostic + ". No release approval was granted. Do not share account exports or cookies.");
     } finally {
       setWorkspaceRunning(false);
     }
