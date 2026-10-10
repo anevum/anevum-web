@@ -207,7 +207,7 @@ test("provider escalation, denied account and duplicate broker identity always f
 test("known read-only provider scopes remain non-executing",async()=>{
   const {db}=fakeDatabase();
   const {state}=await start(db);
-  const r=await callback(state,db,userA,providerFetch("paper-member-a-1234","account:read").fetcher);
+  const r=await callback(state,db,userA,providerFetch("paper-member-a-1234","data").fetcher);
   assert.equal(r.status,303);
   const view=await reviewerEndpoint(req("/api/member/brokerage"),configured(db),userA,origin,"/api/member/brokerage");
   const status=await view.json();
