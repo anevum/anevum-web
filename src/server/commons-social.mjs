@@ -129,7 +129,8 @@ export async function commonsSocialEndpoint(request,env,user,origin,pathname){
           "SELECT id,author_user_id,topic,title,body,created_at,updated_at FROM commons_v5_posts WHERE status='PUBLISHED' ORDER BY created_at DESC,id DESC LIMIT 30";
         const values=topic ? await db.prepare(sql).bind(topic).all() : await db.prepare(sql).all();
         return reply({available:true,pilot:true,posts:(values.results||[]).map(x=>presentPost(x,user.id)),
-          moderationStatus:"PILOT_REVIEW_REQUIRED",hasMore:false});
+          moderationStatus:"PILOT_REVIEW_REQUIRED",pageCap:30,
+          olderPostsMayExist:(values.results||[]).length===30});
       }catch{return reply({message:"Commons feed temporarily unavailable."},503);}
     }
     if(request.method!=="POST")return reply({message:"Method not allowed."},405);
