@@ -48,7 +48,7 @@ CREATE INDEX IF NOT EXISTS commons_v5_reports_review
 
 CREATE TABLE IF NOT EXISTS commons_v5_moderation_events (
   id TEXT PRIMARY KEY NOT NULL,
-  actor_user_id TEXT NOT NULL REFERENCES "user"("id") ON DELETE CASCADE,
+  actor_user_id TEXT REFERENCES "user"("id") ON DELETE SET NULL,
   target_post_id TEXT REFERENCES commons_v5_posts(id) ON DELETE SET NULL,
   report_id TEXT UNIQUE REFERENCES commons_v5_reports(id) ON DELETE SET NULL,
   action TEXT NOT NULL CHECK(action IN ('hide_post','restore_post','resolve_report','dismiss_report')),
