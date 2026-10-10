@@ -68,12 +68,12 @@ test("legacy preview D1 migration cannot auto-run on main pushes", () => {
   assert.match(y, /inputs\.backup_reviewed == 'PREVIEW_BACKUP_VERIFIED'/);
   assert.match(y, /inputs\.backup_run_id/);
   assert.match(y, /git ls-remote origin refs\/heads\/main/);
-  assert.match(y, /\.head_sha==\$sha/);
-  assert.match(y, /\.conclusion=="success"/);
-  assert.match(y, /\.expired==false and \.size_in_bytes>1024/);
+  assert.match(y, /\.head_sha\s*==\s*\$sha/);
+  assert.match(y, /\.conclusion\s*==\s*"success"/);
+  assert.match(y, /\.expired\s*==\s*false\s+and\s+\.size_in_bytes\s*>\s*1024/);
   assert.match(y, /test -f migrations\/0003_member_billing\.sql/);
   assert.match(y, /test -f migrations\/0004_member_rhen_workspaces\.sql/);
-  const sourceCheck=y.indexOf("Verify current main SHA, archived preview backup");
+  const sourceCheck=Math.max(y.indexOf("Verify current main SHA, archived preview backup"),y.indexOf("Verify independently restorable encrypted preview backup exists"));
   const write=y.indexOf("d1 migrations apply MEMBER_DB --remote");
   assert.ok(write>sourceCheck && sourceCheck>0, "preview backup check must precede SQL mutation");
 });

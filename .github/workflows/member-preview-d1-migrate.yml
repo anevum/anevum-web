@@ -1,25 +1,24 @@
 name: Migrate ANEVUM Member Preview D1
 
 on:
-  # IMPORTANT: automatic main-push D1 migration was retired for V5 safety.
-  # This bootstrap exists before complete V5 0003/0004 provenance is merged.
-  # It must fail closed until the reviewed V5 lineage reaches main.
+  # Preview D1 has an applied billing 0003 from another unmerged workstream.
+  # Never migrate merely because migrations/** or workflow files reach main.
   workflow_dispatch:
     inputs:
       confirmation:
-        description: 'Type MIGRATE_PREVIEW_ONLY after approved reviewed backup and source'
+        description: 'Type MIGRATE_PREVIEW_ONLY after reviewing preview D1 backup and source lineage'
         required: true
         type: string
       reviewed_head_sha:
-        description: 'Exact reviewed 40-character current main SHA'
+        description: 'Paste the exact reviewed 40-character main HEAD SHA for this preview schema change'
         required: true
         type: string
       backup_run_id:
-        description: 'Successful encrypted preview D1 backup and restore run ID'
+        description: 'Successful, unexpired encrypted preview backup/restore GitHub Actions run ID'
         required: true
         type: string
       backup_reviewed:
-        description: 'Type PREVIEW_BACKUP_VERIFIED after recovery artifact check'
+        description: 'Type PREVIEW_BACKUP_VERIFIED after inspecting the restored encrypted backup run'
         required: true
         type: string
 
@@ -45,37 +44,37 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Verify current main SHA, archived preview backup, and unchanged migration catalog
-        shell: bash
+      - name: Verify independently restorable encrypted preview backup exists
         env:
           GH_TOKEN: ${{ github.token }}
           BACKUP_RUN_ID: ${{ inputs.backup_run_id }}
+        shell: bash
         run: |
           set -euo pipefail
+          # Re-check the live source ref: a reviewed dispatch must not publish a stale main.
           current_main="$(git ls-remote origin refs/heads/main | cut -f1)"
           test -n "$current_main"
           test "$current_main" = "$GITHUB_SHA"
           test "$current_main" = "${{ inputs.reviewed_head_sha }}"
-          [[ "$BACKUP_RUN_ID" =~ ^[0-9]{9,12}$ ]]
-          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$BACKUP_RUN_ID" > "$RUNNER_TEMP/preview-backup-run.json"
-          jq -e --arg sha "$GITHUB_SHA" '
-            .name=="ANEVUM V5 Preview D1 Encrypted Backup and Restore Test" and
-            .event=="workflow_dispatch" and
-            .head_branch=="main" and
-            .head_sha==$sha and
-            .status=="completed" and
-            .conclusion=="success"
-          ' "$RUNNER_TEMP/preview-backup-run.json" >/dev/null
-          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$BACKUP_RUN_ID/artifacts" > "$RUNNER_TEMP/preview-backup-artifacts.json"
-          jq -e --arg name "anevum-preview-d1-encrypted-$BACKUP_RUN_ID" '
-            any(.artifacts[]; .name==$name and .expired==false and .size_in_bytes>1024)
-          ' "$RUNNER_TEMP/preview-backup-artifacts.json" >/dev/null
-          # Current main has only 0001,0002; the preview ledger already has 0003.
-          # Fail closed here. A later reviewed V5 release supplies 0003/0004 and
-          # an explicit provenance verifier before allowing another D1 write.
+          # Require all historically applied SQL source files and validator before writes.
           test -f migrations/0003_member_billing.sql
           test -f migrations/0004_member_rhen_workspaces.sql
           test -f scripts/verify-preview-d1-ledger.mjs
+          [[ "$BACKUP_RUN_ID" =~ ^[0-9]{9,12}$ ]]
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$BACKUP_RUN_ID" > "$RUNNER_TEMP/preview-backup-run.json"
+          jq -e --arg sha "$GITHUB_SHA" '
+            .name == "ANEVUM V5 Preview D1 Encrypted Backup and Restore Test" and
+            .event == "workflow_dispatch" and
+            .head_branch == "main" and
+            .head_sha == $sha and
+            .status == "completed" and
+            .conclusion == "success"
+          ' "$RUNNER_TEMP/preview-backup-run.json" > /dev/null
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$BACKUP_RUN_ID/artifacts" > "$RUNNER_TEMP/preview-backup-artifacts.json"
+          jq -e --arg name "anevum-preview-d1-encrypted-$BACKUP_RUN_ID" '
+            any(.artifacts[]; .name == $name and .expired == false and .size_in_bytes > 1024)
+          ' "$RUNNER_TEMP/preview-backup-artifacts.json" > /dev/null
+          echo 'PASS: reviewed private preview backup/restore run and unexpired encrypted archive both exist.'
       - name: Install pinned Wrangler
         run: npm install --no-audit --no-fund
       - name: Verify isolated bindings and registration gate
@@ -105,6 +104,25 @@ jobs:
             ([.[] | select(.name == "anevum-members-preview" and .uuid == $preview)] | length == 1)
           ' "$RUNNER_TEMP/anevum-d1.json" > /dev/null
           echo 'Both Cloudflare D1 identifiers match the committed configuration.'
+      - name: Block migrations if preview history has no reviewed local SQL source
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_D1_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Read-only: this job must not start an apply if a prior preview
+          # migration is absent from the checked-in SQL migration catalog.
+          # At 2026-10-10 preview has an applied billing 0003 from unmerged
+          # PR #240, while this F0 branch deliberately contains no billing SQL.
+          # In that state this check blocks the apply rather than inventing,
+          # deleting, silently skipping or replaying migration history.
+          npx wrangler d1 execute MEMBER_DB --remote --config wrangler.preview-migrations.jsonc --json \
+            --command 'SELECT name FROM d1_migrations ORDER BY id' \
+            > "$RUNNER_TEMP/anevum-preview-applied-ledger.json"
+          node scripts/verify-preview-d1-ledger.mjs \
+            "$RUNNER_TEMP/anevum-preview-applied-ledger.json" migrations
+
       - name: Apply migration only to ANEVUM preview D1
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_D1_TOKEN }}
@@ -114,6 +132,16 @@ jobs:
           set -euo pipefail
           # Explicit config + remote database binding: no production D1 migrations.
           npx wrangler d1 migrations apply MEMBER_DB --remote --config wrangler.preview-migrations.jsonc
+          # The workspace table was initially created directly in PREVIEW for
+          # staged acceptance, while the preview ledger already has a separate
+          # 0003_member_billing.sql from unmerged billing PR #240. Do NOT
+          # rewrite or delete an applied migration. 0004 must be independently
+          # recorded after this reviewed preview-only invocation.
+          npx wrangler d1 execute MEMBER_DB --remote --config wrangler.preview-migrations.jsonc --json \
+            --command "SELECT COUNT(*) AS workspace_migration_registered FROM d1_migrations WHERE name = '0004_member_rhen_workspaces.sql'" \
+            > "$RUNNER_TEMP/anevum-preview-workspace-migration-ledger.json"
+          jq -e '.[0].success == true and .[0].results[0].workspace_migration_registered == 1' \
+            "$RUNNER_TEMP/anevum-preview-workspace-migration-ledger.json" > /dev/null
           npx wrangler d1 execute MEMBER_DB --remote --config wrangler.preview-migrations.jsonc --json \
             --command "SELECT COUNT(*) AS required_tables FROM sqlite_master WHERE type = 'table' AND name IN ('user','session','account','verification','rateLimit','member_profiles','member_saved_apps','member_project_follows','member_entitlements')" \
             > "$RUNNER_TEMP/anevum-preview-tables.json"
@@ -122,6 +150,10 @@ jobs:
             --command "SELECT COUNT(*) AS draft_tables FROM sqlite_master WHERE type = 'table' AND name = 'member_rhen_drafts'" \
             > "$RUNNER_TEMP/anevum-preview-drafts.json"
           jq -e '.[0].success == true and .[0].results[0].draft_tables == 1' "$RUNNER_TEMP/anevum-preview-drafts.json" > /dev/null
+          npx wrangler d1 execute MEMBER_DB --remote --config wrangler.preview-migrations.jsonc --json \
+            --command "SELECT COUNT(*) AS workspace_tables FROM sqlite_master WHERE type = 'table' AND name = 'member_rhen_workspaces'" \
+            > "$RUNNER_TEMP/anevum-preview-workspaces.json"
+          jq -e '.[0].success == true and .[0].results[0].workspace_tables == 1' "$RUNNER_TEMP/anevum-preview-workspaces.json" > /dev/null
           npx wrangler d1 execute MEMBER_DB --remote --config wrangler.preview-migrations.jsonc --json \
             --command 'PRAGMA foreign_key_check' > "$RUNNER_TEMP/anevum-preview-fk.json"
           jq -e '.[0].success == true and (.[0].results | length) == 0' "$RUNNER_TEMP/anevum-preview-fk.json" > /dev/null
