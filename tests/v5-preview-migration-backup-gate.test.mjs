@@ -14,6 +14,9 @@ for(const file of [
     assert.match(source,/backup_reviewed:/);
     assert.match(source,/PREVIEW_BACKUP_VERIFIED/);
     assert.match(source,/inputs\.reviewed_head_sha == github\.sha/);
+    assert.match(source,/git ls-remote origin refs\/heads\/main/);
+    assert.match(source,/test "\$current_main" = "\$GITHUB_SHA"/);
+    assert.match(source,/test "\$current_main" = "\$\{\{ inputs\.reviewed_head_sha \}\}"/);
     assert.match(source,/actions: read/);
     assert.match(source,/GH_TOKEN: \$\{\{ github\.token \}\}/);
     assert.match(source,/\.head_sha == \$sha/);
