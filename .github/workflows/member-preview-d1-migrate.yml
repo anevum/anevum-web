@@ -70,6 +70,16 @@ jobs:
           set -euo pipefail
           # Explicit config + remote database binding: no production D1 migrations.
           npx wrangler d1 migrations apply MEMBER_DB --remote --config wrangler.preview-migrations.jsonc
+          # The workspace table was initially created directly in PREVIEW for
+          # staged acceptance, while the preview ledger already has a separate
+          # 0003_member_billing.sql from unmerged billing PR #240. Do NOT
+          # rewrite or delete an applied migration. 0004 must be independently
+          # recorded after this reviewed preview-only invocation.
+          npx wrangler d1 execute MEMBER_DB --remote --config wrangler.preview-migrations.jsonc --json \
+            --command "SELECT COUNT(*) AS workspace_migration_registered FROM d1_migrations WHERE name = '0004_member_rhen_workspaces.sql'" \
+            > "$RUNNER_TEMP/anevum-preview-workspace-migration-ledger.json"
+          jq -e '.[0].success == true and .[0].results[0].workspace_migration_registered == 1' \
+            "$RUNNER_TEMP/anevum-preview-workspace-migration-ledger.json" > /dev/null
           npx wrangler d1 execute MEMBER_DB --remote --config wrangler.preview-migrations.jsonc --json \
             --command "SELECT COUNT(*) AS required_tables FROM sqlite_master WHERE type = 'table' AND name IN ('user','session','account','verification','rateLimit','member_profiles','member_saved_apps','member_project_follows','member_entitlements')" \
             > "$RUNNER_TEMP/anevum-preview-tables.json"
