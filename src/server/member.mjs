@@ -1,6 +1,7 @@
 import { betterAuth } from "better-auth";
 import { memberRewardsStatus, memberBrokerageStatus } from "./member-capabilities.mjs";
 import { reviewerSchemaReady, reviewerEndpoint, exportReviewerConnection } from "./member-alpaca-review.mjs";
+import { commonsSocialEndpoint } from "./commons-social.mjs";
 import { memberRhenDraftSchemaReady, readMemberRhenDraft, saveMemberRhenDraft, deleteMemberRhenDraft, validateRhenDraft } from "./member-rhen-draft.mjs";
 import { resolveMemberOrigin, memberSchemaReady } from "./member-preflight.mjs";
 import { memberRhenWorkspaceSchemaReady, readMemberRhenWorkspace, createMemberRhenWorkspace } from "./member-rhen-workspace.mjs";
@@ -151,6 +152,11 @@ export async function memberEndpoint(request, env, pathname) {
   }
 
   const db = env.MEMBER_DB;
+  if (pathname.startsWith("/api/member/commons/")) {
+    // Identity and same-origin writes were already checked above.
+    // The social module separately requires the isolated preview-only flag and schema.
+    return commonsSocialEndpoint(request, env, user, verifiedOrigin, pathname);
+  }
   if (pathname === "/api/member/rewards" || pathname === "/api/member/brokerage") {
     if (request.method !== "GET") return reply({ message: "Read-only capability." }, 405);
     if (pathname === "/api/member/brokerage" &&
