@@ -11,7 +11,8 @@
     "ANEVUM_MEMBERS_ENABLED": "true",
     "ANEVUM_MEMBER_RHEN_DRAFTS_ENABLED": "true",
     "ANEVUM_MEMBER_PREVIEW_ENABLED": "true",
-    "MEMBER_PREVIEW_ORIGIN": "https://anevum-member-staging.devonakins.workers.dev"
+    "MEMBER_PREVIEW_ORIGIN": "https://anevum-member-staging.devonakins.workers.dev",
+    "ANEVUM_V5_WORKSPACES_ENABLED": "true"
   },
   "assets": {
     "binding": "ASSETS",

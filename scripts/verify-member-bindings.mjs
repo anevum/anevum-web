@@ -46,6 +46,9 @@ export function inspectMemberBindings(config, previewMigrationConfig = null, opt
   if (Object.hasOwn(vars, "ANEVUM_MEMBER_RHEN_DRAFTS_ENABLED") && vars.ANEVUM_MEMBER_RHEN_DRAFTS_ENABLED !== "false") {
     errors.push("Production RHEN member draft editing must remain disabled.");
   }
+  if (vars.ANEVUM_V5_WORKSPACES_ENABLED !== "false") {
+    errors.push("Production V5 RHEN workspace provisioning must remain disabled.");
+  }
   if (vars.ANEVUM_MEMBER_PREVIEW_ENABLED !== "false") {
     errors.push("The top-level Worker must not enable preview identity.");
   }

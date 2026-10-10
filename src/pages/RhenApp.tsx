@@ -7,6 +7,7 @@ import { fieldNotes } from "../data/fieldNotes";
 import { memberAuthClient } from "../member/auth-client";
 import { useMemberAvailability } from "../member/useMemberAvailability";
 import RhenDraft from "./RhenDraft";
+import { parsePrivateFoundationWorkspace, type FoundationWorkspaceState } from "../contracts/anevum-foundation";
 
 type RhenSection = "overview" | "account" | "setup" | "evidence" | "research" | "updates";
 const nav: { id: RhenSection; label: string; path: string }[] = [
@@ -25,6 +26,9 @@ export default function RhenApp() {
   const [operator, setOperator] = useState(false);
   const [brokerage, setBrokerage] = useState<{ integration: string; connectionAvailable: boolean; accountConnected: boolean; paperTradingEnabled: boolean; liveTradingEnabled: boolean; depositsEnabled: boolean; withdrawalsEnabled: boolean } | null>(null);
   const [brokerError, setBrokerError] = useState(false);
+  const [workspace, setWorkspace] = useState<FoundationWorkspaceState | null>(null);
+  const [workspaceGate, setWorkspaceGate] = useState<"loading" | "off" | "ready" | "error">("loading");
+  const [creatingWorkspace, setCreatingWorkspace] = useState(false);
   const release = currentRhenRelease();
   const segment = location.pathname.split("/")[3] || "overview";
   const section: RhenSection = ["overview", "account", "setup", "evidence", "research", "updates"].includes(segment) ? segment as RhenSection : "overview";
@@ -40,6 +44,33 @@ export default function RhenApp() {
   }, [session?.user, availability]);
 
   useEffect(() => {
+    setWorkspace(null);
+    setWorkspaceGate("loading");
+    if (!session?.user?.id || availability !== "available") return;
+    const memberId = session.user.id;
+    const controller = new AbortController();
+    void fetch("/api/member/rhen/workspace", { cache: "no-store", signal: controller.signal })
+      .then(async response => {
+        if (response.status === 503) return null;
+        if (!response.ok) throw new Error("Could not verify the private workspace.");
+        return await response.json() as { available?: boolean; workspace?: unknown };
+      })
+      .then(value => {
+        if (controller.signal.aborted) return;
+        if (value === null) { setWorkspaceGate("off"); return; }
+        if (value.available !== true || !Object.hasOwn(value, "workspace")) throw new Error("Invalid workspace response.");
+        const parsed = value.workspace === null ? null : parsePrivateFoundationWorkspace(value.workspace, memberId);
+        if (value.workspace !== null && (!parsed || parsed.engine_source !== "RHEN_NEXT" ||
+          parsed.workspace_kind !== "MEMBER_PRIVATE" || parsed.execution_permission !== "NONE" ||
+          parsed.broker_link_state !== "NOT_LINKED")) throw new Error("Unapproved workspace authority.");
+        setWorkspace(parsed);
+        setWorkspaceGate("ready");
+      })
+      .catch(() => { if (!controller.signal.aborted) setWorkspaceGate("error"); });
+    return () => controller.abort();
+  }, [session?.user?.id, availability]);
+
+  useEffect(() => {
     if (!session?.user || availability !== "available" || section !== "account") return;
     const controller = new AbortController();
     setBrokerage(null); setBrokerError(false);
@@ -49,6 +80,27 @@ export default function RhenApp() {
       .catch(() => { if (!controller.signal.aborted) setBrokerError(true); });
     return () => controller.abort();
   }, [session?.user?.id, availability, section]);
+
+  const initializeWorkspace = async () => {
+    if (workspaceGate !== "ready" || workspace || creatingWorkspace || !session?.user?.id) return;
+    setCreatingWorkspace(true);
+    try {
+      const response = await fetch("/api/member/rhen/workspace", {
+        method: "POST", credentials: "same-origin", cache: "no-store"
+      });
+      if (!response.ok) throw new Error("Workspace creation unavailable.");
+      const payload = await response.json() as { available?: boolean; workspace?: unknown };
+      const parsed = parsePrivateFoundationWorkspace(payload.workspace, session.user.id);
+      if (payload.available !== true || !parsed || parsed.workspace_kind !== "MEMBER_PRIVATE" ||
+          parsed.engine_source !== "RHEN_NEXT" || parsed.execution_permission !== "NONE" ||
+          parsed.broker_link_state !== "NOT_LINKED") throw new Error("Workspace proof failed.");
+      setWorkspace(parsed);
+    } catch {
+      setWorkspaceGate("error");
+    } finally {
+      setCreatingWorkspace(false);
+    }
+  };
 
   if (availability === "checking" || isPending) return <div className="member-page"><p role="status">Opening RHEN…</p></div>;
   if (availability !== "available") return <div className="member-page"><h1>RHEN workspace is not open yet.</h1><p>Public RHEN research and evidence remain available.</p><Link to="/products/rhen">Explore RHEN</Link></div>;
@@ -86,6 +138,27 @@ export default function RhenApp() {
               <div><dt>Options</dt><dd>Research only</dd></div>
               <div><dt>Profitability</dt><dd>Not established</dd></div>
             </dl>
+            <section className="member-app-ready" aria-labelledby="rhen-v5-private-workspace">
+              <p className="workshop-kicker">Private RHEN V5</p>
+              <h3 id="rhen-v5-private-workspace">Your personal workspace</h3>
+              {workspaceGate === "loading" ? <p role="status">Checking your private RHEN workspace…</p>
+                : workspaceGate === "off" ? <p>V5 private workspace provisioning is not enabled in this environment.</p>
+                : workspaceGate === "error" ? <p role="alert">Your private workspace could not be verified. No RHEN controls are available.</p>
+                : workspace ? <>
+                  <p>Your workspace is reserved under your authenticated ANEVUM account. Research, paper execution, and brokerage linking are not activated.</p>
+                  <dl className="member-app-facts">
+                    <div><dt>Workspace</dt><dd><code>{workspace.workspace_id}</code></dd></div>
+                    <div><dt>Research evidence</dt><dd>{workspace.evidence_state.replaceAll("_", " ")}</dd></div>
+                    <div><dt>Broker connection</dt><dd>Not linked</dd></div>
+                    <div><dt>Execution authority</dt><dd>None</dd></div>
+                  </dl>
+                </> : <>
+                  <p>You can reserve a private RHEN workspace in this staging environment. This does not connect an Alpaca account or start a bot.</p>
+                  <button type="button" disabled={creatingWorkspace} onClick={() => void initializeWorkspace()}>
+                    {creatingWorkspace ? "Creating private workspace…" : "Create private workspace"}
+                  </button>
+                </>}
+            </section>
             <Link to="/apps/rhen/evidence">View real evidence →</Link>
           </>}
           {section === "account" && <>
