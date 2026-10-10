@@ -91,8 +91,8 @@ jobs:
           test "$(jq -er '.d1_databases[0].database_name' wrangler.alpaca-review-migrations.jsonc)" = "anevum-members-preview"
           test "$(jq -er '.d1_databases[0].migrations_dir' wrangler.alpaca-review-migrations.jsonc)" = "migrations-review"
           test "$(jq -er '.vars.ANEVUM_MEMBER_PREVIEW_ENABLED' wrangler.jsonc)" = "false"
-          test "$(jq -er '.vars.ANEVUM_ALPACA_REVIEW_CONNECT_ENABLED' wrangler.jsonc)" = "false"
-          test "$(jq -er '.vars.ANEVUM_ALPACA_REVIEW_CONNECT_ENABLED' wrangler.member-staging.jsonc)" = "false"
+          test "$(jq -r '.vars.ANEVUM_ALPACA_REVIEW_CONNECT_ENABLED // "false"' wrangler.jsonc)" = "false"
+          test "$(jq -r '.vars.ANEVUM_ALPACA_REVIEW_CONNECT_ENABLED // "false"' wrangler.member-staging.jsonc)" = "false"
           test ! -e migrations/0005_member_alpaca_review.sql
           test "$(find migrations-review -maxdepth 1 -type f -name '*.sql' | wc -l | tr -d ' ')" = "1"
           [[ "$REVIEWED_SCHEMA_BLOB_SHA" =~ ^[0-9a-f]{40}$ ]]
