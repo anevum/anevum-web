@@ -189,7 +189,7 @@ test("one-time member-bound state connects a real paper account only with encryp
 
 test("provider escalation, denied account and duplicate broker identity always fail closed",async()=>{
   for(const [scope,account] of [["trading","paper-member-a-1234"],
-    ["account:write","paper-member-a-1234"],["","short"]]){
+    ["account:write","paper-member-a-1234"],["portfolio:write","paper-member-a-1234"],["","short"]]){
     const {db}=fakeDatabase();
     const {state}=await start(db);
     const r=await callback(state,db,userA,providerFetch(account,scope).fetcher);
@@ -202,6 +202,18 @@ test("provider escalation, denied account and duplicate broker identity always f
   const b=await start(db,userB);
   assert.equal((await callback(b.state,db,userB,providerFetch().fetcher)).status,409);
   assert.equal(connections.size,1);
+});
+
+test("known read-only provider scopes remain non-executing",async()=>{
+  const {db}=fakeDatabase();
+  const {state}=await start(db);
+  const r=await callback(state,db,userA,providerFetch("paper-member-a-1234","account:read").fetcher);
+  assert.equal(r.status,303);
+  const view=await reviewerEndpoint(req("/api/member/brokerage"),configured(db),userA,origin,"/api/member/brokerage");
+  const status=await view.json();
+  assert.equal(status.accountConnected,true);
+  assert.equal(status.liveTradingEnabled,false);
+  assert.equal(status.paperTradingEnabled,false);
 });
 
 test("disabled onboarding still permits per-member disconnect without order access",async()=>{
@@ -246,7 +258,7 @@ test("API routes preserve Better Auth, privacy and migration lineage",()=>{
 
 test("review OAuth migration cannot ride along with member 0004 or a production deployment",()=>{
   const source=p=>readFileSync(new URL("../"+p,import.meta.url),"utf8");
-    const mainMigrations=readdirSync(new URL("../migrations/",import.meta.url))
+  const mainMigrations=readdirSync(new URL("../migrations/",import.meta.url))
     .filter(path=>path.endsWith(".sql")).sort();
   assert.deepEqual(mainMigrations,[
     "0001_member_platform.sql","0002_member_rhen_drafts.sql",
