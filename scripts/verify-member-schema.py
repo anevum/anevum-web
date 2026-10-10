@@ -5,7 +5,7 @@ import sqlite3
 
 root = Path(__file__).resolve().parents[1]
 schemas = sorted((root / "migrations").glob("*.sql"))
-assert [p.name for p in schemas] == ["0001_member_platform.sql", "0002_member_rhen_drafts.sql", "0004_member_rhen_workspaces.sql"]
+assert [p.name for p in schemas] == ["0001_member_platform.sql", "0002_member_rhen_drafts.sql", "0003_member_billing.sql", "0004_member_rhen_workspaces.sql"]
 db = sqlite3.connect(":memory:")
 db.execute("PRAGMA foreign_keys = ON")
 for migration in schemas:
@@ -18,6 +18,9 @@ required = {
     "user", "session", "account", "verification", "rateLimit", "member_profiles",
     "member_saved_apps", "member_project_follows", "member_entitlements",
     "member_rhen_drafts", "member_rhen_workspaces",
+    "member_billing_customers", "member_billing_subscriptions",
+    "member_billing_events", "member_billing_checkout_locks",
+    "member_billing_sync_state", "member_rhen_beta_waitlist",
 }
 assert required <= tables, f"Missing tables: {required - tables}"
 
