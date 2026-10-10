@@ -110,7 +110,7 @@ export default function RhenReviewConnect() {
     <div className="rhen-review-disclosure" aria-label="Brokerage authorization disclosure">
       <p className="rhen-review-kicker">REQUIRED AUTHORIZATION DISCLOSURE</p>
       <h2>Authorize RHEN by ANEVUM</h2>
-      <p>By allowing RHEN by ANEVUM to access your Alpaca account, you are granting RHEN by ANEVUM access to your account information and authorization to place transactions at your direction.</p>
+      <p>By allowing RHEN by ANEVUM to access your Alpaca account, you are granting RHEN by ANEVUM access to your account information and authorization to place transactions in your account at your direction.</p>
       <p>Alpaca does not warrant or guarantee that RHEN by ANEVUM will work as advertised or expected. Before authorizing, learn more about <Link to="/products/rhen">RHEN by ANEVUM</Link>.</p>
       <p className="rhen-review-scope"><strong>This review implementation requests read-only access to a paper account.</strong> It does not request order placement permission. Any future trading functionality requires a separate review and authorization.</p>
     </div>
