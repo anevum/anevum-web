@@ -4,7 +4,7 @@ on:
   push:
     branches: [main]
   pull_request:
-    branches: [main]
+    branches: [main, build/commons-v5-shell-20261009, build/anevum-v5-foundation-web-contracts-20261009]
 
 concurrency:
   group: anevum-verify-${{ github.ref }}
@@ -42,8 +42,14 @@ jobs:
         run: node --experimental-strip-types --test tests/command-topology.test.mjs tests/command-operations.test.mjs tests/command-trading.test.mjs tests/command-research.test.mjs tests/equity-market-time.test.mjs tests/visual-ops.test.mjs tests/command-live.test.mjs tests/reconciliation-visibility.test.mjs tests/rhen-realtime.test.mjs tests/public-feed-sse.test.mjs
       - name: Verify member boundaries
         run: npm run test:members
+      - name: Verify ANEVUM V5 Foundation workspace contract
+        run: npm run test:foundation
+      - name: Enforce pinned WEB/RHEN cross-repository workspace schema parity
+        run: node scripts/verify-v5-cross-repo-schema.mjs
+      - name: Enforce one guarded production Worker deployment
+        run: node --test tests/v5-verify-deploy-safety.test.mjs
       - name: Verify member D1 binding isolation
-        run: node --test tests/member-bindings.test.mjs tests/member-staging.test.mjs tests/member-preview-migration.test.mjs tests/member-command-cutover.test.mjs tests/member-command-navigation.test.mjs && node scripts/verify-member-bindings.mjs --require-config
+        run: node --test tests/member-bindings.test.mjs tests/member-staging.test.mjs tests/member-preview-migration.test.mjs tests/preview-d1-ledger-lineage.test.mjs tests/member-command-cutover.test.mjs tests/member-command-navigation.test.mjs && node scripts/verify-member-bindings.mjs --require-config
       - name: Verify Cloudflare Command Access cutover safety (offline)
         run: python -m unittest discover -s tests -p 'test_command_access_cutover.py' -v
       - name: Verify member schema and tenant separation
