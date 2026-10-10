@@ -18,7 +18,7 @@ test("Stage 2 public routes reuse the V5 shell rather than reentering the legacy
 test("Private owner and member routes retain existing separate routing and permissions", () => {
   assert.match(app, /<Route path="\/apps\/rhen\/\*" element=\{<Suspense fallback=\{<Loader \/>\}><RhenApp \/><\/Suspense>\} \/>/);
   assert.match(app, /<Route path="\/command\/rhen\/\*" element=\{<Suspense fallback=\{<Loader \/>\}><RhenTerminal \/><\/Suspense>\} \/>/);
-  assert.match(app, /<Route path="\/me\/settings" element=\{<PublicExperience><MemberSettings \/><\/PublicExperience>\} \/>/);
+  assert.match(app, /<Route path="\/me\/settings" element=\{<Suspense fallback=\{<Loader \/>\}><CommonsV5 content=\{<MemberSettings \/>\} \/><\/Suspense>\} \/>/);
   assert.doesNotMatch(pages, /\/api\/command\/|\/api\/member\/rhen\/workspace|broker_secret|alpaca_secret/);
 });
 
@@ -58,4 +58,18 @@ test("browser QA validates the actual V5 ShadowRoot public routes without legacy
   assert.match(qa, /shadowRoot/);
   assert.doesNotMatch(qa, /document\.querySelector\("\.truth-products-page"\)/);
   assert.doesNotMatch(qa, /document\.querySelector\("\.studio-notes-page"\)/);
+});
+
+test("member/account screens reuse V5 presentation without moving owner/private RHEN APIs", () => {
+  const app = source("src/App.tsx");
+  const wrapper = source("src/commons/CommonsV5.tsx");
+  for (const path of ["/command", "/me", "/me/settings", "/me/rewards"]) {
+    assert.match(app, new RegExp('<Route path="' + path.replaceAll("/", "\\/") + '" element=\\{<Suspense fallback='));
+  }
+  assert.match(wrapper, /content\?:ReactNode/);
+  assert.match(wrapper, /accountCss/);
+  assert.match(wrapper, /Private member account presentation/);
+  assert.doesNotMatch(wrapper, /fetch\("\/api\/member|fetch\("\/api\/command\/session"/);
+  assert.match(app, /<Route path="\/command\/rhen\/\*" element=\{<Suspense fallback=\{<Loader \/>/);
+  assert.match(app, /<Route path="\/apps\/rhen\/\*" element=\{<Suspense fallback=\{<Loader \/>/);
 });
