@@ -2,6 +2,7 @@ import releaseRegistry from "./src/data/releases.json";
 import { shadowRead } from "./shadow-transport.mjs";
 import { memberEndpoint } from "./src/server/member.mjs";
 import { legacyOperatorTarget } from "./src/server/operator-routes.mjs";
+import { retiredRhenBoundary, retiredRhenStatus } from "./src/server/legacy-rhen-retirement.mjs";
 
 const TRADER_BASE = "https://alpaca-trader-production-bf3e.up.railway.app";
 const PUBLIC_TRADING_FEED = TRADER_BASE + "/v1/trading-public-feed";
@@ -445,6 +446,26 @@ export default {
       } catch {
         return jsonResponse({ message: "Member service unavailable." }, 503);
       }
+    }
+
+    // Retirement gate: keeps Commons membership/authentication functional while
+    // preventing every legacy RHEN public and protected API request from reaching
+    // the old Railway host. Never substitute made-up broker or research data.
+    const retiredRhenAccess = retiredRhenBoundary(pathname);
+    if (retiredRhenAccess) {
+      if (retiredRhenAccess === "public") {
+        if (request.method !== "GET") return jsonResponse({ message: "Read-only suspended evidence." }, 405);
+      } else {
+        try {
+          // Preserve the former owner-only Cloudflare Access boundary even
+          // after the upstream has been retired.
+          await commandCredential(request, env);
+        } catch (error) {
+          if (error instanceof ApiError) return jsonResponse({ message: error.message }, error.status);
+          return jsonResponse({ message: "Private authentication unavailable." }, 503);
+        }
+      }
+      return jsonResponse(retiredRhenStatus(), 503);
     }
 
     if (pathname === "/api/public/trading/events") {
