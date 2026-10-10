@@ -2,6 +2,7 @@ import { betterAuth } from "better-auth";
 import { memberRewardsStatus, memberBrokerageStatus } from "./member-capabilities.mjs";
 import { memberRhenDraftSchemaReady, readMemberRhenDraft, saveMemberRhenDraft, deleteMemberRhenDraft, validateRhenDraft } from "./member-rhen-draft.mjs";
 import { resolveMemberOrigin, memberSchemaReady } from "./member-preflight.mjs";
+import { memberRhenWorkspaceSchemaReady, readMemberRhenWorkspace, createMemberRhenWorkspace } from "./member-rhen-workspace.mjs";
 const PUBLIC_PROJECTS = new Set(["rhen"]);
 
 export function memberConfigured(env) {
@@ -81,6 +82,37 @@ export function safeMutation(request, verifiedOrigin) {
     request.headers.get("Origin") === verifiedOrigin;
 }
 
+/**
+ * A zero-length POST can reach the Cloudflare Worker with a non-null body
+ * ReadableStream (for example when the browser sends Content-Length: 0).
+ * The member workspace creation contract requires zero BYTES, not no stream.
+ *
+ * Probe the stream in bounded chunks: any actual payload, including whitespace
+ * and client-selected member/workspace IDs, fails closed. No request contents
+ * are stored, parsed or logged. This is called only after verified session and
+ * same-origin mutation checks, and the body is not used by the allocator.
+ */
+export async function workspaceCreateHasClientPayload(request) {
+  if (request.body === null) return false;
+  let reader;
+  try {
+    reader = request.body.getReader();
+    for (let i = 0; i < 8; i++) {
+      const { done, value } = await reader.read();
+      if (done) return false;
+      if (!(value instanceof Uint8Array)) return true;
+      if (value.byteLength > 0) return true;
+    }
+    // An unbounded sequence of empty chunks is not a permitted request shape.
+    return true;
+  } catch {
+    // Unreadable, locked, or errored streams must never authorize creation.
+    return true;
+  } finally {
+    try { await reader?.cancel(); } catch {}
+  }
+}
+
 export async function safeJSON(request) {
   if (request.headers.get("content-type")?.split(";")[0]?.trim().toLowerCase() !== "application/json") {
     throw new Error("JSON body required.");
@@ -122,6 +154,28 @@ export async function memberEndpoint(request, env, pathname) {
     return reply(pathname === "/api/member/rewards" ? memberRewardsStatus() : memberBrokerageStatus());
   }
   const db = env.MEMBER_DB;
+  if (pathname === "/api/member/rhen/workspace") {
+    if (!["GET", "POST"].includes(request.method)) return reply({ message: "Method not allowed." }, 405);
+    if (env?.ANEVUM_V5_WORKSPACES_ENABLED !== "true") {
+      return reply({ message: "Private RHEN V5 workspaces are not enabled." }, 503);
+    }
+    // Never allow a query-selected owner, workspace or brokerage account.
+    if (new URL(request.url).search) return reply({ message: "Workspace selection is not supported." }, 400);
+    if (request.method === "POST" && await workspaceCreateHasClientPayload(request)) {
+      return reply({ message: "Workspace creation accepts no client fields." }, 400);
+    }
+    if (!await memberRhenWorkspaceSchemaReady(db)) {
+      return reply({ message: "Private workspace storage is not ready." }, 503);
+    }
+    try {
+      const workspace = request.method === "POST"
+        ? await createMemberRhenWorkspace(db, user.id)
+        : await readMemberRhenWorkspace(db, user.id);
+      return reply({ available: true, workspace });
+    } catch {
+      return reply({ message: "Private workspace is unavailable." }, 503);
+    }
+  }
   if (pathname === "/api/member/rhen/draft") {
     if (env?.ANEVUM_MEMBER_RHEN_DRAFTS_ENABLED !== "true") {
       return reply({ message: "Personal RHEN drafts are not enabled." }, 503);
@@ -154,12 +208,14 @@ export async function memberEndpoint(request, env, pathname) {
   }
   if (pathname === "/api/member/export" && request.method === "GET") {
     const hasDraftTable = await memberRhenDraftSchemaReady(db);
-    const [profile, saved, follows, entitlements, rhenDraft] = await Promise.all([
+    const hasWorkspaceTable = await memberRhenWorkspaceSchemaReady(db);
+    const [profile, saved, follows, entitlements, rhenDraft, rhenWorkspace] = await Promise.all([
       db.prepare("SELECT display_name, theme, created_at, updated_at FROM member_profiles WHERE user_id = ?").bind(user.id).first(),
       db.prepare("SELECT app_slug, saved_at FROM member_saved_apps WHERE user_id = ? ORDER BY saved_at DESC").bind(user.id).all(),
       db.prepare("SELECT project_slug, followed_at FROM member_project_follows WHERE user_id = ? ORDER BY followed_at DESC").bind(user.id).all(),
       db.prepare("SELECT app_slug, capability, granted_at, expires_at FROM member_entitlements WHERE user_id = ?").bind(user.id).all(),
-      hasDraftTable ? readMemberRhenDraft(db, user.id) : Promise.resolve(null)
+      hasDraftTable ? readMemberRhenDraft(db, user.id) : Promise.resolve(null),
+      hasWorkspaceTable ? readMemberRhenWorkspace(db, user.id) : Promise.resolve(null)
     ]);
     return new Response(JSON.stringify({
       exportedAt: new Date().toISOString(),
@@ -168,7 +224,8 @@ export async function memberEndpoint(request, env, pathname) {
       savedApps: saved.results || [],
       projectFollows: follows.results || [],
       entitlements: entitlements.results || [],
-      rhenDraft
+      rhenDraft,
+      rhenWorkspace
     }, null, 2), {
       status: 200,
       headers: {

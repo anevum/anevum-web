@@ -336,11 +336,11 @@ function publicRouteMetadata(pathname) {
     },
     "/products/rhen": {
       title: "RHEN — ANEVUM",
-      description: "RHEN is ANEVUM's live trading and research system operating on real market data with public evidence and narrow live authority."
+      description: "RHEN is being rebuilt as an integrated research and trading application. Legacy live execution is suspended; historical evidence remains available."
     },
     "/products/rhen/evidence": {
       title: "RHEN Public Evidence — ANEVUM",
-      description: "Inspect sanitized RHEN runtime and performance evidence without exposing protected broker, position, order, or strategy details."
+      description: "Review historical, sanitized RHEN research and trading evidence. Live feeds and execution are suspended during the V5 rebuild."
     },
     "/products/rhen/architecture": {
       title: "RHEN Architecture — ANEVUM",

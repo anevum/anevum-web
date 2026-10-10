@@ -142,7 +142,7 @@ async function runCase(route, viewport) {
         expression: `(() => {
           const pathReady = location.pathname === ${JSON.stringify(route)};
           const suspenseReady = !document.querySelector(".route-loader");
-          const homeReady = ${JSON.stringify(route)} !== "/" || Boolean(document.querySelector(".studio-home"));\n          const productsReady = ${JSON.stringify(route)} !== "/products" || Boolean(document.querySelector(".truth-products-page"));\n          const feedReady = ${JSON.stringify(route)} !== "/feed" || Boolean(document.querySelector(".feed-page"));\n          const rhenReady = ${JSON.stringify(route)} !== "/products/rhen" || Boolean(document.querySelector(".truth-rhen-page"));
+          const homeReady = ${JSON.stringify(route)} !== "/" || Boolean(document.querySelector(".anevum-commons-v5-mount")?.shadowRoot?.querySelector(".global-header"));\n          const productsReady = ${JSON.stringify(route)} !== "/products" || Boolean(document.querySelector(".truth-products-page"));\n          const feedReady = ${JSON.stringify(route)} !== "/feed" || Boolean(document.querySelector(".feed-page"));\n          const rhenReady = ${JSON.stringify(route)} !== "/products/rhen" || Boolean(document.querySelector(".truth-rhen-page"));
           const liveReady = ${JSON.stringify(route)} !== "/products/rhen/evidence" || Boolean(document.querySelector('[data-visual-ops="public-terminal"]'));
           const architectureReady = ${JSON.stringify(route)} !== "/products/rhen/architecture" || Boolean(document.querySelector(".architecture-role-grid"));
           const researchReady = ${JSON.stringify(route)} !== "/field-notes" || Boolean(document.querySelector(".studio-notes-page"));
@@ -172,7 +172,7 @@ async function runCase(route, viewport) {
       expression: `(() => {
         const pathReady = location.pathname === ${JSON.stringify(route)};
         const suspenseReady = !document.querySelector(".route-loader");
-        const homeReady = ${JSON.stringify(route)} !== "/" || Boolean(document.querySelector(".studio-home"));\n          const productsReady = ${JSON.stringify(route)} !== "/products" || Boolean(document.querySelector(".truth-products-page"));\n          const feedReady = ${JSON.stringify(route)} !== "/feed" || Boolean(document.querySelector(".feed-page"));\n          const rhenReady = ${JSON.stringify(route)} !== "/products/rhen" || Boolean(document.querySelector(".truth-rhen-page"));
+        const homeReady = ${JSON.stringify(route)} !== "/" || Boolean(document.querySelector(".anevum-commons-v5-mount")?.shadowRoot?.querySelector(".global-header"));\n          const productsReady = ${JSON.stringify(route)} !== "/products" || Boolean(document.querySelector(".truth-products-page"));\n          const feedReady = ${JSON.stringify(route)} !== "/feed" || Boolean(document.querySelector(".feed-page"));\n          const rhenReady = ${JSON.stringify(route)} !== "/products/rhen" || Boolean(document.querySelector(".truth-rhen-page"));
         const liveReady = ${JSON.stringify(route)} !== "/products/rhen/evidence" || Boolean(document.querySelector('[data-visual-ops="public-terminal"]'));
         const architectureReady = ${JSON.stringify(route)} !== "/products/rhen/architecture" || Boolean(document.querySelector(".architecture-role-grid"));
         const researchReady = ${JSON.stringify(route)} !== "/field-notes" || Boolean(document.querySelector(".studio-notes-page"));
@@ -191,6 +191,76 @@ async function runCase(route, viewport) {
     routeReady = result.result?.value || {};
   }
   if (!routeReady.ready) throw new Error("Route did not hydrate before visual assertion: "+JSON.stringify({route,...routeReady}));
+
+  // Stage 1 Commons parity checks: test geometry of the *rendered React app*
+  // (inside its isolated ShadowRoot), not a descriptive concept image.
+  if (route === "/") {
+    const reply = await send("Runtime.evaluate", {expression:`(() => {
+      const host = document.querySelector(".anevum-commons-v5-mount");
+      const root = host?.shadowRoot;
+      const header = root?.querySelector(".global-header");
+      const left = root?.querySelector(".left-sidebar");
+      const center = root?.querySelector(".main");
+      const right = root?.querySelector(".right-sidebar");
+      const mobile = root?.querySelector(".mobile-nav");
+      const posts = root?.querySelectorAll(".post") || [];
+      const isVisible = el => { if (!el || getComputedStyle(el).display === "none") return false; const rect=el.getBoundingClientRect(); return rect.width > 0 && rect.right > 0 && rect.left < innerWidth && rect.bottom > 0 && rect.top < innerHeight; };
+      const width = el => Math.round(el?.getBoundingClientRect().width || 0);
+      const createGlyph=root?.querySelector(".mobile-create .ico");
+      const createStyle=createGlyph ? getComputedStyle(createGlyph) : null;
+      const createGlyphPaintWidth=createGlyph && createStyle ?
+        Math.round(createGlyph.getBoundingClientRect().width -
+          parseFloat(createStyle.paddingLeft||"0") - parseFloat(createStyle.paddingRight||"0")) : 0;
+      return {
+        isolated: Boolean(host && root && !document.querySelector(".global-header")),
+        headerHeight: Math.round(header?.getBoundingClientRect().height || 0),
+        leftWidth: width(left), centerWidth: width(center), rightWidth: width(right),
+        leftVisible: isVisible(left), rightVisible: isVisible(right),
+        mobileVisible: isVisible(mobile), createGlyphPaintWidth, postCount: posts.length,
+        hasAuthenticNotes: Boolean(root?.querySelector('[href*="field-notes/anevum-lean-runtime-reset"]')),
+        containsFiction: /Mara Cole|Eli Rowan|184 votes|sample community/i.test(root?.textContent || "")
+      };
+    })()`,returnByValue:true});
+    const ui=reply.result?.value||{};
+    const desktop=viewport.width>=1200;
+    if(!ui.isolated || ui.postCount<6 || !ui.hasAuthenticNotes || ui.containsFiction ||
+      !ui.headerHeight || (desktop && (Math.abs(ui.headerHeight-64)>2 || !ui.leftVisible || !ui.rightVisible ||
+        Math.abs(ui.leftWidth-252)>4 || Math.abs(ui.rightWidth-312)>4 || ui.centerWidth<500)) ||
+      (!desktop && viewport.width<721 && (!ui.mobileVisible || ui.rightVisible || ui.leftVisible ||
+        ui.createGlyphPaintWidth<14))) {
+      throw new Error("Commons V5 rendered-app parity failed: "+JSON.stringify({viewport:viewport.name,...ui}));
+    }
+
+    // Verify that the real React state drives the ShadowRoot design tokens.
+    // Reset preferences before screenshot capture to retain a stable baseline.
+    const behavior=await send("Runtime.evaluate", {expression:`(async()=>{
+      const host=document.querySelector(".anevum-commons-v5-mount");
+      const root=host?.shadowRoot;
+      const wait=()=>new Promise(resolve=>setTimeout(resolve,140));
+      const launch=root?.querySelector(".design-launch");
+      if(!launch) return {ok:false,reason:"Missing appearance button"};
+      launch.click();
+      await wait();
+      const carbon=[...root.querySelectorAll(".theme-option")].find(button=>button.textContent.includes("Carbon"));
+      if(!carbon) return {ok:false,reason:"Missing Carbon palette control"};
+      carbon.click();
+      await wait();
+      const changedTheme=host.getAttribute("data-theme")==="carbon";
+      root.querySelector('[aria-label="Compact feed"]')?.click();
+      await wait();
+      const changedDensity=host.getAttribute("data-density")==="compact";
+      root.querySelector(".reset-design")?.click();
+      await wait();
+      const resetDefaults=host.getAttribute("data-theme")==="midnight"&&host.getAttribute("data-density")==="comfortable";
+      root.querySelector('[aria-label="Close appearance settings"]')?.click();
+      await wait();
+      const fontSize=parseFloat(getComputedStyle(root.querySelector(".post-title")).fontSize);
+      return {ok:changedTheme&&changedDensity&&resetDefaults&&fontSize>=15,changedTheme,changedDensity,resetDefaults,fontSize,closed:!root.querySelector(".design-panel")};
+    })()`,awaitPromise:true,returnByValue:true});
+    if(!behavior.result?.value?.ok || !behavior.result?.value?.closed) {
+      throw new Error("Commons V5 appearance controls failed: "+JSON.stringify(behavior.result?.value));
+    }
+  }
 
   const ops = await send("Runtime.evaluate", {expression: `(() => {
     const surface=document.querySelector("[data-visual-ops]");
@@ -347,7 +417,7 @@ async function runCase(route, viewport) {
   // Reuse this bounded, hydrated browser target for the release evidence.
   // The duplicate CLI screenshot process could hang until the entire job died.
   const evidenceRoutes = {
-    "/":["home",["truth-home","A place for things I build."]],
+    "/":["home",["anevum-commons-v5-mount","The Commons","Public ANEVUM work"]],
     "/products":["products",["truth-products-page","Things I’m working on."]],
     "/products/rhen":["rhen",["truth-rhen-page","PRODUCT / RHEN","workshop-rhen-evidence","A working program is only the beginning."]],
     "/products/rhen/evidence":["terminal",["EVIDENCE DRAWER","public-terminal-page","RESEARCH","REPLAY","RHEN"]],
@@ -365,7 +435,11 @@ async function runCase(route, viewport) {
   if (evidenceRoutes[route]) {
     const [name, markers] = evidenceRoutes[route];
     const rendered = await send("Runtime.evaluate", {
-      expression:"document.documentElement.outerHTML",returnByValue:true
+      expression:`(() => {
+        const outer = document.documentElement.outerHTML;
+        const host = document.querySelector(".anevum-commons-v5-mount");
+        return host && host.shadowRoot ? outer + "\\n<!-- V5 SHADOW DOM -->\\n" + host.shadowRoot.innerHTML : outer;
+      })()`,returnByValue:true
     });
     const html = rendered.result?.value;
     if (typeof html !== "string" || markers.some(marker => !html.includes(marker))) {
@@ -630,6 +704,9 @@ try {
       );
     }
   }
+  // Explicit narrow-phone acceptance without repeating all legacy routes.
+  const narrow = { name:"narrow",width:320,height:720,mobile:true,deviceScaleFactor:1 };
+  failures = failures.concat((await runCase("/", narrow)).map(item=>"narrow /: "+item));
 } finally {
   chrome.kill("SIGTERM");
   await Promise.race([
