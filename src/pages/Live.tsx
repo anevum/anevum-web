@@ -151,7 +151,7 @@ export default function Live() {
           <i className={"pt-live-dot" + (error ? " is-stale" : "")} aria-hidden="true" />
           <div>
             <span>ANEVUM / RHEN PUBLIC TERMINAL</span>
-            <strong>{error ? "OBSERVATION DEGRADED" : "RHEN OPERATING VIEW"}</strong>
+            <strong>TRADING SUSPENDED / V5 REBUILD</strong>
           </div>
         </div>
         <div className="pt-meta">
@@ -160,6 +160,12 @@ export default function Live() {
           <SystemStatusChip state={fleet} />
         </div>
       </header>
+
+      <section className="pt-v5-retirement" role="status" aria-label="RHEN V5 rebuild status">
+        <strong>RHEN V5 · REBUILD IN PROGRESS</strong>
+        <p>Legacy real-money trading was intentionally suspended. Live observations and historic brokerage evidence from the retired runtime are no longer available here. The next RHEN will start with separate member-owned paper workspaces, then independently approved broker connections.</p>
+        <Link to="/products/rhen">View RHEN development</Link>
+      </section>
 
       <div className="pt-shell">
         <aside className="pt-system-rail" aria-label="RHEN module selector">

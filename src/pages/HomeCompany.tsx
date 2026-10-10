@@ -51,7 +51,7 @@ export default function HomeCompany() {
                   <span>Markets &amp; research · {rhen.lifecycle}</span>
                 </div>
               </div>
-              <p>I'm building a system to research market behavior, test trading ideas, and measure what actually works. It uses real market data, and its results are still being evaluated.</p>
+              <p>I'm rebuilding RHEN around reproducible research and private member trading workspaces. Legacy real-money execution has been suspended while the new foundation is developed.</p>
               <div className="workshop-project-links">
                 <Link to={rhen.routes.home}>View RHEN <span aria-hidden="true">→</span></Link>
                 {rhen.routes.evidence ? <Link to={rhen.routes.evidence}>Public evidence</Link> : null}

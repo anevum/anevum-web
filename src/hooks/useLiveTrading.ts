@@ -3,17 +3,22 @@ import { fetchLiveTradingFeed, type LiveTradingFeed } from "../lib/data";
 
 type FeedTransport = "STREAM" | "POLL";
 
+// The legacy RHEN source is intentionally offline during the V5 rebuild.
+// Never poll a retired service or imply a fabricated live price series.
+const LEGACY_RHEN_REBUILD = true;
+
 /** Event-driven, aggregate-only Core activity with a bounded REST fallback.
  * Neither transport fabricates new price, performance, or event observations.
  */
 export function useLiveTrading(intervalMs = 5000) {
   const [data, setData] = useState<LiveTradingFeed | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(!LEGACY_RHEN_REBUILD);
+  const [error, setError] = useState(LEGACY_RHEN_REBUILD ? "Trading suspended for RHEN V5 rebuild." : "");
   const [now, setNow] = useState(Date.now());
   const [transport, setTransport] = useState<FeedTransport>("POLL");
 
   useEffect(() => {
+    if (LEGACY_RHEN_REBUILD) return; // No SSE or polling against retired RHEN.
     let active = true;
     let streamReady = false;
     let requestInFlight = false;
