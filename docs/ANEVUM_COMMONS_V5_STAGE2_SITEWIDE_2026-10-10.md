@@ -92,3 +92,11 @@ text.
 The previous `/products/rhen/evidence` view still mounted the pre-Vite/legacy public trading terminal outside the V5 Commons layout. This slice replaces that *public presentation only* with a source-backed V5 evidence/limits page. It clearly states `SUSPENDED_FOR_REBUILD`, names the Research and Replay capabilities as development/not released, and links to real dated RHEN Field Notes, historical releases and architecture. No fabricated account curves, live activity, trades, member data, live market API or performance figures are introduced. Existing `/command/rhen/*` owner routes and `/apps/rhen/*` private routes are unchanged. The retired legacy component remains in repository history pending audited reachability/rollback cleanup. Browser QA now checks the actual accessible ShadowRoot evidence surface.
 
 **Release:** stacked on Stage 2A public site draft; do not merge to main, migrate D1 or deploy production without the master #259 gates.
+
+## Stage 2B — Member Command integration (stacked draft)
+
+The four member-owned account routes /command, /me, /me/settings and /me/rewards now render **their unmodified, separately authenticated React components** within the Commons V5 Shadow DOM application shell. This reuses the real member profile, saved-program, follow, private settings, data export, deletion and not-launched rewards logic; no second auth state, fake data, broker API, OAuth grant or ownership calculation was introduced.
+
+A scoped V5 account style layer maps the existing workshop member classes onto the same app palette while hiding duplicate global navigation and retaining all genuine member tools. The right discovery rail is removed from account views to give the member center additional working room. Header/sidebar/mobile account links keep working. Owner-only terminal remains routed at /command/rhen/* with existing Worker/Access authority checks, outside the shared public shell. Private member RHEN app stays at /apps/rhen/* and staging verifier remains unchanged.
+
+The member shell and evidence route are now composed in an independent integrated V5 staging candidate based on Stage 2C, without merging the sibling drafts into main. This is a UI integration; it does not replace staging privacy acceptance or authorize production migration.
