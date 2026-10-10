@@ -1,0 +1,134 @@
+name: Register ANEVUM Alpaca Paper Review Preview Schema
+
+on:
+  # Deliberately independent from the existing F0 0004 migration workflow.
+  # GitHub only exposes manual dispatch on main after a separately approved merge.
+  workflow_dispatch:
+    inputs:
+      confirmation:
+        description: "Type MIGRATE_ALPACA_REVIEW_PREVIEW_ONLY"
+        required: true
+        type: string
+      reviewed_head_sha:
+        description: "Exact reviewed main commit SHA (40 hex chars)"
+        required: true
+        type: string
+      reviewed_schema_blob_sha:
+        description: "Exact reviewed Git blob SHA for migrations-review/0005_member_alpaca_review.sql"
+        required: true
+        type: string
+      backup_reviewed:
+        description: "Type PREVIEW_BACKUP_VERIFIED after independently verifying a usable preview D1 backup"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: anevum-member-preview-d1-schema
+  cancel-in-progress: false
+
+jobs:
+  apply-review-only:
+    if: >-
+      github.ref == 'refs/heads/main' &&
+      inputs.confirmation == 'MIGRATE_ALPACA_REVIEW_PREVIEW_ONLY' &&
+      inputs.reviewed_head_sha == github.sha &&
+      inputs.backup_reviewed == 'PREVIEW_BACKUP_VERIFIED'
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install reviewed Wrangler
+        run: npm install --no-audit --no-fund
+
+      - name: Fail closed on wrong schema, source, or database
+        shell: bash
+        run: |
+          set -euo pipefail
+          node scripts/verify-member-bindings.mjs --require-config
+          production_uuid="$(jq -er '.d1_databases[] | select(.binding == "MEMBER_DB") | .database_id' wrangler.jsonc)"
+          preview_uuid="$(jq -er '.previews.d1_databases[] | select(.binding == "MEMBER_DB") | .database_id' wrangler.jsonc)"
+          reviewer_uuid="$(jq -er '.d1_databases[] | select(.binding == "MEMBER_DB") | .database_id' wrangler.alpaca-review-migrations.jsonc)"
+          test "$production_uuid" != "$preview_uuid"
+          test "$reviewer_uuid" = "$preview_uuid"
+          test "$(jq -er '.d1_databases | length' wrangler.alpaca-review-migrations.jsonc)" = "1"
+          test "$(jq -er '.d1_databases[0].database_name' wrangler.alpaca-review-migrations.jsonc)" = "anevum-members-preview"
+          test "$(jq -er '.d1_databases[0].migrations_dir' wrangler.alpaca-review-migrations.jsonc)" = "migrations-review"
+          test "$(jq -er '.vars.ANEVUM_MEMBER_PREVIEW_ENABLED' wrangler.jsonc)" = "false"
+          test "$(jq -er '.vars.ANEVUM_ALPACA_REVIEW_CONNECT_ENABLED' wrangler.jsonc)" = "false"
+          test "$(jq -er '.vars.ANEVUM_ALPACA_REVIEW_CONNECT_ENABLED' wrangler.member-staging.jsonc)" = "false"
+          test ! -e migrations/0005_member_alpaca_review.sql
+          test "$(find migrations-review -maxdepth 1 -type f -name '*.sql' | wc -l | tr -d ' ')" = "1"
+          test "$(git hash-object migrations-review/0005_member_alpaca_review.sql)" = "${{ inputs.reviewed_schema_blob_sha }}"
+          test "${#REVIEWED_HEAD_SHA}" = "40"
+        env:
+          REVIEWED_HEAD_SHA: ${{ inputs.reviewed_head_sha }}
+
+      - name: Verify remote preview D1 and reviewed migration lineage without writing
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_D1_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "${CLOUDFLARE_API_TOKEN:-}"
+          test -n "${CLOUDFLARE_ACCOUNT_ID:-}"
+          npx wrangler d1 list --json > "$RUNNER_TEMP/d1-list.json"
+          reviewer_uuid="$(jq -er '.d1_databases[0].database_id' wrangler.alpaca-review-migrations.jsonc)"
+          jq -e --arg uuid "$reviewer_uuid" 'type=="array" and ([.[]|select(.name=="anevum-members-preview" and .uuid==$uuid)]|length==1)' "$RUNNER_TEMP/d1-list.json" > /dev/null
+          npx wrangler d1 execute MEMBER_DB --remote --config wrangler.alpaca-review-migrations.jsonc --json \
+            --command 'SELECT name FROM d1_migrations ORDER BY id' > "$RUNNER_TEMP/preview-ledger.json"
+          node scripts/verify-preview-d1-ledger.mjs "$RUNNER_TEMP/preview-ledger.json" migrations
+          jq -e '.[0].success == true and ([.[0].results[].name] == ["0001_member_platform.sql","0002_member_rhen_drafts.sql","0003_member_billing.sql","0004_member_rhen_workspaces.sql"])' "$RUNNER_TEMP/preview-ledger.json" > /dev/null
+          npx wrangler d1 execute MEMBER_DB --remote --config wrangler.alpaca-review-migrations.jsonc --json \
+            --command "SELECT (SELECT COUNT(*) FROM \"user\") AS users, (SELECT COUNT(*) FROM member_rhen_workspaces) AS workspaces, (SELECT COUNT(*) FROM member_rhen_drafts) AS drafts" > "$RUNNER_TEMP/preview-before.json"
+          jq -e '.[0].success == true and .[0].results[0].users >= 2 and .[0].results[0].workspaces >= 2 and .[0].results[0].drafts >= 2' "$RUNNER_TEMP/preview-before.json" > /dev/null
+          npx wrangler d1 execute MEMBER_DB --remote --config wrangler.alpaca-review-migrations.jsonc --json \
+            --command "SELECT COUNT(*) AS review_tables FROM sqlite_master WHERE type='table' AND name LIKE 'member_alpaca_review_%'" > "$RUNNER_TEMP/review-tables-before.json"
+          jq -e '.[0].success == true and .[0].results[0].review_tables == 0' "$RUNNER_TEMP/review-tables-before.json" > /dev/null
+          npx wrangler d1 execute MEMBER_DB --remote --config wrangler.alpaca-review-migrations.jsonc --json \
+            --command 'PRAGMA foreign_key_check' > "$RUNNER_TEMP/fks-before.json"
+          jq -e '.[0].success == true and (.[0].results|length)==0' "$RUNNER_TEMP/fks-before.json" > /dev/null
+          echo 'Reviewed preview-only migration lineage and member count checks passed.'
+
+      - name: Apply exactly one reviewer-only SQL migration to preview D1
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_D1_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          npx wrangler d1 migrations apply MEMBER_DB --remote --config wrangler.alpaca-review-migrations.jsonc
+
+      - name: Verify one registration, unchanged member state, and foreign keys
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_D1_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          npx wrangler d1 execute MEMBER_DB --remote --config wrangler.alpaca-review-migrations.jsonc --json \
+            --command "SELECT COUNT(*) AS review_registered FROM d1_migrations WHERE name='0005_member_alpaca_review.sql'" > "$RUNNER_TEMP/review-ledger-after.json"
+          jq -e '.[0].success == true and .[0].results[0].review_registered == 1' "$RUNNER_TEMP/review-ledger-after.json" > /dev/null
+          npx wrangler d1 execute MEMBER_DB --remote --config wrangler.alpaca-review-migrations.jsonc --json \
+            --command "SELECT COUNT(*) AS review_tables FROM sqlite_master WHERE type='table' AND name IN ('member_alpaca_review_states','member_alpaca_review_consent','member_alpaca_review_connections')" > "$RUNNER_TEMP/review-tables-after.json"
+          jq -e '.[0].success == true and .[0].results[0].review_tables == 3' "$RUNNER_TEMP/review-tables-after.json" > /dev/null
+          npx wrangler d1 execute MEMBER_DB --remote --config wrangler.alpaca-review-migrations.jsonc --json \
+            --command "SELECT (SELECT COUNT(*) FROM \"user\") AS users, (SELECT COUNT(*) FROM member_rhen_workspaces) AS workspaces, (SELECT COUNT(*) FROM member_rhen_drafts) AS drafts" > "$RUNNER_TEMP/preview-after.json"
+          before="$(jq -c '.[0].results[0]' "$RUNNER_TEMP/preview-before.json")"
+          after="$(jq -c '.[0].results[0]' "$RUNNER_TEMP/preview-after.json")"
+          test "$before" = "$after"
+          npx wrangler d1 execute MEMBER_DB --remote --config wrangler.alpaca-review-migrations.jsonc --json \
+            --command 'PRAGMA foreign_key_check' > "$RUNNER_TEMP/fks-after.json"
+          jq -e '.[0].success == true and (.[0].results|length)==0' "$RUNNER_TEMP/fks-after.json" > /dev/null
+          {
+            echo "### ANEVUM Alpaca OAuth reviewer PREVIEW schema"
+            echo '0004 workspace ledger already registered, 0005 added in separate manually authorized run.'
+            echo 'Existing member/workspace/draft counts unchanged; foreign key checks clear.'
+            echo 'Production D1 and Worker unchanged; broker linking flag remains OFF.'
+          } >> "$GITHUB_STEP_SUMMARY"
