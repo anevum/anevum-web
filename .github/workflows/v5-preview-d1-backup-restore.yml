@@ -1,0 +1,137 @@
+name: ANEVUM V5 Preview D1 Encrypted Backup and Restore Test
+
+on:
+  # Manual only. Neither PR nor merge runs this with private member data.
+  workflow_dispatch:
+    inputs:
+      confirmation:
+        description: 'Type BACKUP_PREVIEW_ONLY to authorize staging preview export'
+        required: true
+        type: string
+      reviewed_head_sha:
+        description: 'Exact reviewed current main SHA (40 characters)'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: anevum-preview-d1-schema-backup
+  cancel-in-progress: false
+
+jobs:
+  backup-preview:
+    if: >-
+      github.ref == 'refs/heads/main' &&
+      inputs.confirmation == 'BACKUP_PREVIEW_ONLY' &&
+      inputs.reviewed_head_sha == github.sha
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Pin crypto tooling
+        run: python -m pip install --no-cache-dir cryptography==45.0.7
+      - name: Verify exact approved main and isolated preview target
+        shell: bash
+        run: |
+          set -euo pipefail
+          actual_main="$(git ls-remote origin refs/heads/main | cut -f1)"
+          test "$actual_main" = "$GITHUB_SHA"
+          test "$actual_main" = "${{ inputs.reviewed_head_sha }}"
+          test "$(jq -r '.name' wrangler.member-staging.jsonc)" = 'anevum-member-staging'
+          test "$(jq -r '.d1_databases[0].database_name' wrangler.member-staging.jsonc)" = 'anevum-members-preview'
+          test "$(jq -r '.d1_databases[0].database_id' wrangler.member-staging.jsonc)" = 'a537432e-d216-4b31-8b22-19662cc3a44a'
+          test "$(jq -r '.d1_databases[0].database_id' wrangler.jsonc)" != 'a537432e-d216-4b31-8b22-19662cc3a44a'
+          test "$(jq -r '.vars.ANEVUM_ALPACA_REVIEW_CONNECT_ENABLED' wrangler.member-staging.jsonc)" = 'false'
+          test "$(jq -r '.vars.ANEVUM_COMMONS_SOCIAL_PILOT_ENABLED' wrangler.member-staging.jsonc)" = 'false'
+          python scripts/verify-v5-preview-export-backup.py selftest
+      - name: Export only the staging preview database, never log its rows or URL
+        id: export
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_D1_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          ANEVUM_PREVIEW_BACKUP_FERNET_KEY: ${{ secrets.ANEVUM_PREVIEW_BACKUP_FERNET_KEY }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          umask 077
+          test -n "${CLOUDFLARE_API_TOKEN:-}"
+          test -n "${CLOUDFLARE_ACCOUNT_ID:-}"
+          test -n "${ANEVUM_PREVIEW_BACKUP_FERNET_KEY:-}"
+          root="https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/d1/database"
+          preview="a537432e-d216-4b31-8b22-19662cc3a44a"
+          headers=(-H "Authorization: Bearer $CLOUDFLARE_API_TOKEN")
+          curl --fail --silent --show-error "${headers[@]}" "$root/$preview" -o "$RUNNER_TEMP/preview-ident.json"
+          jq -e '.success==true and .result.name=="anevum-members-preview" and .result.uuid=="a537432e-d216-4b31-8b22-19662cc3a44a"' "$RUNNER_TEMP/preview-ident.json" >/dev/null
+          curl --fail --silent --show-error "${headers[@]}" -H "Content-Type: application/json" \
+            -d '{"output_format":"polling"}' "$root/$preview/export" -o "$RUNNER_TEMP/export-progress.json"
+          complete=0
+          for attempt in $(seq 1 25); do
+            status="$(jq -r '.result.status // "missing"' "$RUNNER_TEMP/export-progress.json")"
+            if [ "$status" = "complete" ]; then complete=1; break; fi
+            test "$status" = "active"
+            bookmark="$(jq -r '.result.at_bookmark // empty' "$RUNNER_TEMP/export-progress.json")"
+            test -n "$bookmark"
+            sleep 2
+            jq -n --arg b "$bookmark" '{output_format:"polling",current_bookmark:$b}' > "$RUNNER_TEMP/export-poll-body.json"
+            curl --fail --silent --show-error "${headers[@]}" -H "Content-Type: application/json" \
+              --data-binary "@$RUNNER_TEMP/export-poll-body.json" "$root/$preview/export" \
+              -o "$RUNNER_TEMP/export-progress.json"
+          done
+          test "$complete" = "1"
+          signed_url="$(jq -er '.result.result.signed_url' "$RUNNER_TEMP/export-progress.json")"
+          case "$signed_url" in https://*.r2.cloudflarestorage.com/*) ;; *) exit 1;; esac
+          private_sql="$RUNNER_TEMP/v5-preview-private.sql"
+          curl --fail --silent --show-error --location --max-time 50 "$signed_url" -o "$private_sql"
+          unset signed_url
+          python scripts/verify-v5-preview-export-backup.py verify-sql "$private_sql" > "$RUNNER_TEMP/backup-restore-report.json"
+          test "$(jq -er '.status' "$RUNNER_TEMP/backup-restore-report.json")" = 'RESTORED_AND_VERIFIED_SQLITE_PREVIEW_ONLY'
+          test "$(jq -er '.members' "$RUNNER_TEMP/backup-restore-report.json")" = '2'
+          sha="$(jq -er '.sql_sha256' "$RUNNER_TEMP/backup-restore-report.json")"
+          python scripts/verify-v5-preview-export-backup.py encrypt-sql "$private_sql" "$RUNNER_TEMP/anevum-preview-d1.sql.fernet" >/dev/null
+          rm -f "$private_sql" "$RUNNER_TEMP/export-progress.json" "$RUNNER_TEMP/export-poll-body.json"
+          echo "sql_sha256=$sha" >> "$GITHUB_OUTPUT"
+          echo 'Preview export downloaded, independently restored in scratch SQLite and encrypted. No plaintext artifact retained.'
+      - name: Upload encrypted preview SQL only (not accessible plaintext)
+        uses: actions/upload-artifact@v4
+        with:
+          name: anevum-preview-d1-encrypted-${{ github.run_id }}
+          path: ${{ runner.temp }}/anevum-preview-d1.sql.fernet
+          retention-days: 30
+          if-no-files-found: error
+          compression-level: 0
+      - name: Re-download encrypted archive from GitHub artifact storage
+        uses: actions/download-artifact@v4
+        with:
+          name: anevum-preview-d1-encrypted-${{ github.run_id }}
+          path: ${{ runner.temp }}/anevum-recovery-verify
+      - name: Verify archived encrypted file decrypts and independently restores
+        env:
+          ANEVUM_PREVIEW_BACKUP_FERNET_KEY: ${{ secrets.ANEVUM_PREVIEW_BACKUP_FERNET_KEY }}
+          EXPECTED_BACKUP_SHA: ${{ steps.export.outputs.sql_sha256 }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          umask 077
+          test -n "$EXPECTED_BACKUP_SHA"
+          python scripts/verify-v5-preview-export-backup.py verify-encrypted \
+            "$RUNNER_TEMP/anevum-recovery-verify/anevum-preview-d1.sql.fernet" \
+            > "$RUNNER_TEMP/verified-archive-report.json"
+          jq -e --arg expected "$EXPECTED_BACKUP_SHA" \
+            '.status=="ENCRYPTED_ARCHIVE_RESTORED_AND_VERIFIED_SQLITE_PREVIEW_ONLY" and .sql_sha256==$expected and .members==2 and .workspaces==2 and .drafts==2 and .fk_violations==0' \
+            "$RUNNER_TEMP/verified-archive-report.json" >/dev/null
+          {
+            echo '## Private ANEVUM staging preview backup'
+            echo ''
+            echo 'PASS: downloaded private D1 SQL export, restored in isolated in-memory SQLite.'
+            echo 'PASS: encrypted backup uploaded, downloaded again from Actions artifact storage, decrypted and restored.'
+            echo 'Two synthetic-independent identity counts preserved: 2 members, 2 workspaces, 2 drafts.'
+            echo "SHA256 of SQL export: \`$EXPECTED_BACKUP_SHA\`."
+            echo 'This is NOT a Cloudflare remote database restore and DOES NOT apply migrations.'
+            echo 'Encrypted artifact retention: 30 days. Verify key custody and restore procedure before migration.'
+          } >> "$GITHUB_STEP_SUMMARY"
