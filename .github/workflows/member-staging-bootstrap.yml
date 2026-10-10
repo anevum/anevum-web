@@ -136,6 +136,15 @@ jobs:
         run: npm run build
       - name: Verify generated Worker will not overwrite production
         run: node scripts/verify-member-staging-deploy.mjs --generated
+      - name: Reject stale approved main SHA before staging deployment
+        if: github.event_name == 'workflow_dispatch'
+        shell: bash
+        run: |
+          set -euo pipefail
+          current_main="$(git ls-remote origin refs/heads/main | cut -f1)"
+          test -n "$current_main"
+          test "$current_main" = "$GITHUB_SHA"
+          test "$current_main" = "${{ inputs.reviewed_head_sha }}"
       - name: Deploy isolated staging OAuth Worker
         if: github.event_name == 'workflow_dispatch'
         id: deploy
