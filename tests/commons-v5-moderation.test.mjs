@@ -171,6 +171,7 @@ test("moderator routing is pre-authenticated by Access and also subject to Bette
   assert.match(member,/moderationEndpoint\(request, env, user, verifiedOrigin/);
   assert.match(social,/list\.length>0 && list\.includes\(memberEmail\)/);
   assert.match(schema,/report_id TEXT UNIQUE REFERENCES commons_v5_reports/);
+  assert.match(schema,/actor_user_id TEXT REFERENCES "user"\("id"\) ON DELETE SET NULL/);
   const ui=read("src/commons/CommonsModeration.tsx");
   const pages=read("src/commons/CommonsPages.tsx");
   const app=read("src/App.tsx");
