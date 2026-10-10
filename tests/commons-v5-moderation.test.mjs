@@ -94,7 +94,7 @@ test("moderation requires matching independently verified Access identity and ex
 
 test("staff queue requires dual authorization and excludes account and brokerage information",async()=>{
   const {db}=fakeDb();
-  assert.equal((await invoke(db,moderator,undefined)).status,403);
+  assert.equal((await invoke(db,moderator,null)).status,403);
   assert.equal((await invoke(db,another,another.email)).status,403);
   const {status,payload}=await invoke(db);
   assert.equal(status,200);
