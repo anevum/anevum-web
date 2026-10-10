@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { runWorkspaceStagingProof, WORKSPACE_STAGING_ORIGIN } from "../src/member/workspace-staging-acceptance.ts";
+import { runWorkspaceStagingProof, WorkspaceStagingFailure, WORKSPACE_STAGING_ORIGIN } from "../src/member/workspace-staging-acceptance.ts";
 
 const headers = {
   "cache-control": "private, no-store",
@@ -123,4 +123,89 @@ test("verification UI exposes an explicitly consented write and keeps read-only 
   assert.match(page,/Comparison code \(not a login credential\)/);
   assert.match(page,/different Google test account/);
   assert.match(page,/This comparison alone does not prove complete cross-user access isolation/);
+});
+
+
+test("real API status failures report the exact stage without leaking response or identity", async () => {
+  const cases = [
+    { path: "/api/member/session", method: "GET", status: 401, step: "SESSION" },
+    { path: "/api/member/rhen/workspace", method: "GET", status: 503, step: "INITIAL_READ" },
+    { path: "/api/member/rhen/workspace", method: "POST", status: 403, step: "CREATE" },
+    { path: "/api/member/rhen/workspace?member_id=other", method: "GET", status: 429, step: "DENY_QUERY" },
+    { path: "/api/member/export", method: "GET", status: 500, step: "EXPORT" }
+  ];
+  for (const expected of cases) {
+    const env = stage("member-A");
+    const proxy = async (path, init) => {
+      if (path === expected.path && init.method === expected.method) {
+        return reply({ secretResponseBody: "DO_NOT_PRINT", member_id: "member-A" }, expected.status);
+      }
+      return env.fetcher(path, init);
+    };
+    await assert.rejects(
+      runWorkspaceStagingProof(proxy, "member-A", WORKSPACE_STAGING_ORIGIN),
+      error => {
+        assert.ok(error instanceof WorkspaceStagingFailure);
+        assert.equal(error.step, expected.step);
+        assert.equal(error.reason, "HTTP_" + expected.status);
+        assert.doesNotMatch(JSON.stringify({
+          step: error.step, reason: error.reason, message: error.message
+        }), /DO_NOT_PRINT|member-A|wrk_|cookie|secretResponseBody/i);
+        return true;
+      }
+    );
+  }
+});
+
+test("unknown network failures, invalid content and stale sessions produce bounded codes", async () => {
+  const base = stage("member-A");
+  await assert.rejects(
+    runWorkspaceStagingProof(async (path, init) => {
+      if (path === "/api/member/session") throw new Error("SESSION_COOKIE_PRIVATE_VALUE");
+      return base.fetcher(path, init);
+    }, "member-A", WORKSPACE_STAGING_ORIGIN),
+    error => error instanceof WorkspaceStagingFailure &&
+      error.step === "SESSION" &&
+      error.reason === "NETWORK_ERROR" &&
+      !JSON.stringify(error).includes("SESSION_COOKIE_PRIVATE_VALUE")
+  );
+
+  const other = stage("member-A", { sessionId: "member-B" });
+  await assert.rejects(
+    runWorkspaceStagingProof(other.fetcher, "member-A", WORKSPACE_STAGING_ORIGIN),
+    error => error instanceof WorkspaceStagingFailure &&
+      error.step === "SESSION" && error.reason === "SESSION_MISMATCH"
+  );
+
+  await assert.rejects(
+    runWorkspaceStagingProof(async (path, init) => {
+      if (path === "/api/member/session")
+        return new Response("{private-malformed-json", {
+          status: 200, headers: headers
+        });
+      return base.fetcher(path, init);
+    }, "member-A", WORKSPACE_STAGING_ORIGIN),
+    error => error instanceof WorkspaceStagingFailure &&
+      error.step === "SESSION" && error.reason === "INVALID_JSON"
+  );
+
+  await assert.rejects(
+    runWorkspaceStagingProof(async (path, init) => {
+      if (path === "/api/member/session")
+        return reply({ authenticated: true, user: { id: "member-A" } }, 200, {
+          "cache-control": "public, max-age=60"
+        });
+      return base.fetcher(path, init);
+    }, "member-A", WORKSPACE_STAGING_ORIGIN),
+    error => error instanceof WorkspaceStagingFailure &&
+      error.step === "SESSION" && error.reason === "PRIVATE_HEADERS"
+  );
+});
+
+test("staging diagnostic UI displays only finite codes and never raw error payloads", () => {
+  const src = readFileSync(new URL("../src/pages/MemberStagingVerify.tsx", import.meta.url), "utf8");
+  assert.match(src, /failure instanceof WorkspaceStagingFailure/);
+  assert.match(src, /failure.step \+ " \/ " \+ failure.reason/);
+  assert.match(src, /No release approval was granted/);
+  assert.doesNotMatch(src, /setWorkspaceError\([^)]*failure\.message/);
 });
