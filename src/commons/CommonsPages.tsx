@@ -122,6 +122,34 @@ function RhenOverview() {
     </section>
   </div>;
 }
+function RhenEvidence() {
+  const records = orderedNotes.filter(note => note.systems.includes("RHEN")).slice(0, 4);
+  return <div className="c2-page c2-evidence" data-evidence-state="SUSPENDED_FOR_REBUILD">
+    <Link to="/products/rhen" className="c2-text-link">← RHEN overview</Link>
+    <Intro kicker="RHEN / PUBLIC EVIDENCE" title="Evidence, with its limits visible">
+      RHEN's V5 successor is still being developed. Current execution and public performance telemetry are not available. Historical publications remain accessible with their original dates and limitations.
+    </Intro>
+    <div className="c2-truth" role="status">
+      <strong>SUSPENDED_FOR_REBUILD</strong> — The retired trading runtime does not supply current broker orders, positions, account curves or returns. An empty chart must not be represented as zero performance or live activity.
+    </div>
+    <section className="c2-grid" aria-label="Evidence availability">
+      <article className="c2-card"><span className="c2-kicker">EXECUTION</span><h2>No active trading runtime</h2><p>The former RHEN live system was retired. No current trading outcomes or live orders are reported on this public page.</p></article>
+      <article className="c2-card"><span className="c2-kicker">RESEARCH</span><h2>Research: development</h2><p>Evidence collection, source provenance, candidate rejection and repeatable tests are being rebuilt within RHEN. No strategy promotion is implied.</p></article>
+      <article className="c2-card"><span className="c2-kicker">REPLAY</span><h2>Replay: not released</h2><p>Historical replay and paper experiments require independent test evidence before any results can be described as validated.</p></article>
+      <article className="c2-card"><span className="c2-kicker">ACCOUNT PRIVACY</span><h2>Member and broker data are private</h2><p>Account balances, brokerage authorizations, private strategies, and member workspace details are never published here.</p></article>
+    </section>
+    <section className="c2-section">
+      <h2>Historical RHEN records</h2>
+      <p>These are dated source documents, not a current market feed or a claim of profitability. Read each record's test method and limits before interpreting its results.</p>
+      <div className="c2-stack">{records.length ? records.map(note => <NoteCard key={note.slug} note={note}/>) :
+        <div className="c2-empty"><h3>No historical evidence available</h3><p>Source-backed publications will appear only when verified.</p></div>}</div>
+    </section>
+    <section className="c2-section"><h2>Audit trail and design</h2>
+      <p>See historical releases for prior verified changes, and the V5 architecture for the separation between research, replay, execution and ownership.</p>
+      <div className="c2-action-row"><Link to="/products/rhen/releases">Historical releases</Link><Link to="/products/rhen/architecture">V5 architecture</Link><Link to="/field-notes">Field Notes</Link></div>
+    </section>
+  </div>;
+}
 function RhenArchitecture() {
   const sections = [
     ["Identity and privacy", "Accounts and RHEN workspaces are member-specific. The server derives ownership from the authenticated session; one member cannot select another member's workspace."],
@@ -225,6 +253,7 @@ export default function CommonsPublicPage({ pathname, search }: Props) {
   if (pathname === "/field-notes") return <NoteIndex search={search}/>;
   if (pathname.startsWith("/field-notes/")) return <NoteDetail slug={pathname.slice("/field-notes/".length)}/>;
   if (pathname === "/products/rhen") return <RhenOverview/>;
+  if (pathname === "/products/rhen/evidence") return <RhenEvidence/>;
   if (pathname === "/products/rhen/architecture") return <RhenArchitecture/>;
   if (pathname === "/products/rhen/releases") return <Releases/>;
   if (pathname.startsWith("/products/rhen/releases/")) return <ReleaseDetail slug={pathname.slice("/products/rhen/releases/".length)}/>;

@@ -12,7 +12,6 @@ const CommonsV5 = lazy(() => import("./commons/CommonsV5"));
 const Products = lazy(() => import("./pages/Products"));
 const RhenProduct = lazy(() => import("./pages/RhenProduct"));
 const Feed = lazy(() => import("./pages/Feed"));
-const Live = lazy(() => import("./pages/Live"));
 const ResearchHub = lazy(() => import("./pages/ResearchHub"));
 const FieldNoteDetail = lazy(() => import("./pages/FieldNoteDetail"));
 const Architecture = lazy(() => import("./pages/Architecture"));
@@ -221,16 +220,16 @@ export default function App() {
         <Route path="/privacy" element={<Suspense fallback={<Loader />}><CommonsV5 /></Suspense>} />
         <Route path="/terms" element={<Suspense fallback={<Loader />}><CommonsV5 /></Suspense>} />
         <Route path="/sign-in" element={<Suspense fallback={<Loader />}><CommonsV5 /></Suspense>} />
-        <Route path="/me" element={<PublicExperience><MemberHome /></PublicExperience>} />
-        <Route path="/me/settings" element={<PublicExperience><MemberSettings /></PublicExperience>} />
-        <Route path="/me/rewards" element={<PublicExperience><MemberRewards /></PublicExperience>} />
+        <Route path="/me" element={<Suspense fallback={<Loader />}><CommonsV5 content={<MemberHome />} /></Suspense>} />
+        <Route path="/me/settings" element={<Suspense fallback={<Loader />}><CommonsV5 content={<MemberSettings />} /></Suspense>} />
+        <Route path="/me/rewards" element={<Suspense fallback={<Loader />}><CommonsV5 content={<MemberRewards />} /></Suspense>} />
         <Route path="/me/verify" element={<PublicExperience><MemberStagingVerify /></PublicExperience>} />
         <Route path="/apps/rhen/terminal/*" element={<LegacyRhenOperatorRoute />} />
         <Route path="/apps/rhen/command/*" element={<LegacyRhenOperatorRoute />} />
         <Route path="/apps/rhen/*" element={<Suspense fallback={<Loader />}><RhenApp /></Suspense>} />
 
         <Route path="/products/rhen" element={<Suspense fallback={<Loader />}><CommonsV5 /></Suspense>} />
-        <Route path="/products/rhen/evidence" element={<PublicExperience><Live /></PublicExperience>} />
+        <Route path="/products/rhen/evidence" element={<Suspense fallback={<Loader />}><CommonsV5 /></Suspense>} />
         <Route path="/products/rhen/architecture" element={<Suspense fallback={<Loader />}><CommonsV5 /></Suspense>} />
         <Route path="/products/rhen/releases" element={<Suspense fallback={<Loader />}><CommonsV5 /></Suspense>} />
         <Route path="/products/rhen/releases/:slug" element={<Suspense fallback={<Loader />}><CommonsV5 /></Suspense>} />
@@ -249,7 +248,7 @@ export default function App() {
 
         <Route path="/iren" element={<Navigate to="/command/rhen/operate" replace />} />
         <Route path="/private" element={<Navigate to="/command/rhen/operate" replace />} />
-        <Route path="/command" element={<PublicExperience><Command /></PublicExperience>} />
+        <Route path="/command" element={<Suspense fallback={<Loader />}><CommonsV5 content={<Command />} /></Suspense>} />
         <Route path="/command/rhen/*" element={<Suspense fallback={<Loader />}><RhenTerminal /></Suspense>} />
         <Route path="/command/*" element={<LegacyTerminalRedirect />} />
         <Route path="/rhenlink" element={<Navigate to="/command/rhen/operate" replace />} />

@@ -6,8 +6,8 @@ const source = (p) => readFileSync(new URL("../" + p, import.meta.url), "utf8");
 
 test("canonical member entry is /command and /me stays as compatibility route", () => {
   const app = source("src/App.tsx");
-  assert.match(app, /<Route path="\/command" element=\{<PublicExperience><Command \/><\/PublicExperience>\} \/>/);
-  assert.match(app, /<Route path="\/me" element=\{<PublicExperience><MemberHome \/><\/PublicExperience>\} \/>/);
+  assert.match(app, /<Route path="\/command" element=\{<Suspense fallback=\{<Loader \/>\}><CommonsV5 content=\{<Command \/>\} \/><\/Suspense>\} \/>/);
+  assert.match(app, /<Route path="\/me" element=\{<Suspense fallback=\{<Loader \/>\}><CommonsV5 content=\{<MemberHome \/>\} \/><\/Suspense>\} \/>/);
   assert.match(app, /<Route path="\/command\/rhen\/\*" element=\{<Suspense fallback=\{<Loader \/>\}><RhenTerminal \/><\/Suspense>\} \/>/);
 });
 
