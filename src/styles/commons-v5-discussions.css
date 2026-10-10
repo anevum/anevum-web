@@ -1,0 +1,34 @@
+/* Preview-only discussion primitives. All selectors remain in Commons ShadowRoot. */
+.c2-social{max-width:920px;margin:36px auto 0;padding:25px 0 72px;border-top:1px solid var(--line);line-height:1.6}
+.c2-social-header{margin-bottom:18px}
+.c2-social-header h2,.c2-social>h2{font-size:clamp(22px,2.4vw,29px);margin:0 0 5px;letter-spacing:-.025em;color:var(--text-strong)}
+.c2-social-header p,.c2-social>p{color:var(--sub);max-width:68ch;font-size:13px}
+.c2-social-composer{display:grid;gap:8px;margin:18px 0 25px;padding:22px!important}
+.c2-social-composer h3{margin:0 0 7px;font-size:19px}
+.c2-social label{display:block;font-weight:700;color:var(--text);font-size:12px}
+.c2-social input,.c2-social textarea,.c2-social select{font:inherit;line-height:1.5;color:var(--text);background:var(--panel-light);border:1px solid var(--line);border-radius:8px;width:100%;max-width:100%;padding:10px 12px}
+.c2-social textarea{resize:vertical;min-height:64px}
+.c2-social input:focus-visible,.c2-social textarea:focus-visible,.c2-social select:focus-visible,.c2-social button:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+.c2-social button{color:var(--text);background:var(--panel-light);border:1px solid var(--line);padding:9px 14px;min-height:41px;border-radius:8px;font:inherit;font-size:12px;font-weight:700;cursor:pointer}
+.c2-social button:hover:not(:disabled){border-color:var(--accent)}
+.c2-social button:disabled{opacity:.5;cursor:not-allowed}
+.c2-social-composer button[type=submit],.c2-social-replies button[type=submit]{justify-self:start;background:var(--accent);color:var(--accent-contrast);border-color:var(--accent)}
+.c2-social .c2-social-limit{font-size:11px;color:var(--muted);margin:6px 0;line-height:1.5}
+.c2-social .c2-tabs{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:20px}
+.c2-social .c2-tabs button{background:transparent;border-color:transparent}
+.c2-social .c2-tabs button.selected{background:var(--panel-light);border-color:var(--line);color:var(--accent)}
+.c2-social-stream{display:grid;gap:12px}
+.c2-social-post{padding:20px!important;overflow-wrap:anywhere}
+.c2-social-post h3{font-size:18px;margin:11px 0 7px;letter-spacing:-.018em;color:var(--text-strong)}
+.c2-social-post>p{font-size:13px;line-height:1.8;white-space:pre-wrap;color:var(--sub)}
+.c2-social-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;border-top:1px solid var(--line);padding-top:13px;margin-top:18px}
+.c2-social-actions select{max-width:170px}
+.c2-social-replies{margin-top:16px;padding:14px 0 0;border-top:1px solid var(--line)}
+.c2-social-reply{border-bottom:1px solid var(--line);padding:10px 0}
+.c2-social-reply small{color:var(--muted)}
+.c2-social-reply p{color:var(--sub);font-size:13px;white-space:pre-wrap;margin:6px 0}
+.c2-social-replies form{display:grid;gap:8px;margin-top:16px}
+.c2-social-replies form button{justify-self:start}
+.c2-social-message{color:var(--accent);font-size:12px;padding:9px 0}
+@media(max-width:600px){.c2-social{margin-top:25px;padding-top:20px}.c2-social-composer{padding:15px!important}.c2-social-post{padding:15px!important}.c2-social-actions{align-items:stretch;display:grid;grid-template-columns:1fr 1fr}.c2-social-actions label{grid-column:1 / -1}.c2-social-actions select{max-width:none}.c2-social-actions button{min-width:0}}
+@media(prefers-reduced-motion:reduce){.c2-social *{animation:none!important;transition:none!important}}

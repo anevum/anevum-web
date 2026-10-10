@@ -7,6 +7,7 @@ import founder from "../data/founder.json";
 import Privacy from "../pages/Privacy";
 import Terms from "../pages/Terms";
 import SignIn from "../pages/SignIn";
+import CommonsPostsBeta from "./CommonsPostsBeta";
 
 /**
  * V5 Stage 2 public routes. Only published first-party records are rendered.
@@ -201,9 +202,10 @@ function Communities() {
     ["Releases", "What was changed and verified", "release"]
   ];
   return <div className="c2-page">
-    <Intro kicker="COMMONS / TOPICS" title="Explore the subjects">Commons discussion groups, posting, voting and member profiles are still being built. These topic links currently browse authentic published work.</Intro>
+    <Intro kicker="COMMONS / TOPICS" title="Explore the subjects">Browse authentic published research. Member discussion is separate and only opens after the invite-only pilot passes its moderation and privacy checks.</Intro>
     <div className="c2-grid">{types.map(([title, detail, slug]) => <article className="c2-card" key={slug}><h2>{title}</h2><p>{detail}</p><Link className="c2-text-link" to={"/field-notes?category=" + slug}>Read publications →</Link></article>)}</div>
     <div className="c2-truth">No fictional communities, membership counts, rankings, votes or endorsements are displayed.</div>
+    <CommonsPostsBeta/>
   </div>;
 }
 function Learn() {
