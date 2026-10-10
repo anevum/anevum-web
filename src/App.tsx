@@ -228,7 +228,7 @@ export default function App() {
         <Route path="/apps/rhen/terminal/*" element={<LegacyRhenOperatorRoute />} />
         <Route path="/apps/rhen/command/*" element={<LegacyRhenOperatorRoute />} />
         <Route path="/apps/rhen/connect" element={<Suspense fallback={<Loader />}><CommonsV5 content={<RhenReviewConnect />} /></Suspense>} />
-        <Route path="/apps/rhen/*" element={<Suspense fallback={<Loader />}><RhenApp /></Suspense>} />
+        <Route path="/apps/rhen/*" element={<Suspense fallback={<Loader />}><CommonsV5 content={<RhenApp />} /></Suspense>} />
 
         <Route path="/products/rhen" element={<Suspense fallback={<Loader />}><CommonsV5 /></Suspense>} />
         <Route path="/products/rhen/evidence" element={<Suspense fallback={<Loader />}><CommonsV5 /></Suspense>} />

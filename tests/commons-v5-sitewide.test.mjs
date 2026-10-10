@@ -16,7 +16,7 @@ test("Stage 2 public routes reuse the V5 shell rather than reentering the legacy
 });
 
 test("Private owner and member routes retain existing separate routing and permissions", () => {
-  assert.match(app, /<Route path="\/apps\/rhen\/\*" element=\{<Suspense fallback=\{<Loader \/>\}><RhenApp \/><\/Suspense>\} \/>/);
+  assert.match(app, /<Route path="\/apps\/rhen\/\*" element=\{<Suspense fallback=\{<Loader \/>\}><CommonsV5 content=\{<RhenApp \/>\} \/><\/Suspense>\} \/>/);
   assert.match(app, /<Route path="\/command\/rhen\/\*" element=\{<Suspense fallback=\{<Loader \/>\}><RhenTerminal \/><\/Suspense>\} \/>/);
   assert.match(app, /<Route path="\/me\/settings" element=\{<Suspense fallback=\{<Loader \/>\}><CommonsV5 content=\{<MemberSettings \/>\} \/><\/Suspense>\} \/>/);
   assert.doesNotMatch(pages, /\/api\/command\/|\/api\/member\/rhen\/workspace|broker_secret|alpaca_secret/);
@@ -72,4 +72,17 @@ test("member/account screens reuse V5 presentation without moving owner/private 
   assert.doesNotMatch(wrapper, /fetch\("\/api\/member|fetch\("\/api\/command\/session"/);
   assert.match(app, /<Route path="\/command\/rhen\/\*" element=\{<Suspense fallback=\{<Loader \/>/);
   assert.match(app, /<Route path="\/apps\/rhen\/\*" element=\{<Suspense fallback=\{<Loader \/>/);
+});
+
+
+test("private RHEN uses scoped draft styles, historical evidence and member-keyed state", () => {
+  const ui = source("src/pages/RhenApp.tsx");
+  assert.match(commons, /member-rhen-draft\.css\?inline/);
+  assert.match(commons, /commons-v5-private-rhen\.css\?inline/);
+  assert.match(ui, /RhenMemberWorkspace key=\{session\.user\.id\}/);
+  assert.match(ui, /data-evidence-state="SUSPENDED_FOR_REBUILD"/);
+  assert.doesNotMatch(ui, /PublicEvidenceSnapshot|useLiveTrading|<main/);
+  assert.match(ui, /value\.paperTradingEnabled !== false/);
+  assert.match(ui, /value\.liveTradingEnabled !== false/);
+  assert.match(ui, /value\.account\?\.environment !== "paper"/);
 });
