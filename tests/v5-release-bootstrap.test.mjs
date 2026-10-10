@@ -87,7 +87,8 @@ test("pinned reviewer staging is manual, checks an immutable CI-passed draft and
     "persist-credentials: false","commits/$candidate/check-runs","pulls/275",
     "ref: ${{ inputs.approved_candidate_sha }}","verify-v5-alpaca-review-staging.mjs --generated",
     "0005_member_alpaca_review.sql","ALPACA_CONNECT_CLIENT_SECRET","ALPACA_CONNECT_TOKEN_KEY_BASE64",
-    "anevum-web-nextgen/deployments?per_page=1","PREVIEW"])
+    "anevum-web-nextgen/deployments?per_page=1",
+    "wrangler.alpaca-review-migrations.jsonc","member_rhen_workspaces"])
     assert.ok(y.includes(v),v);
   assert.match(y,/github\.ref == 'refs\/heads\/main'/);
   assert.match(y,/inputs\.reviewed_main_sha == github\.sha/);
