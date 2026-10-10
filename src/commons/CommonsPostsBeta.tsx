@@ -16,6 +16,10 @@ const topics:Topic[]=["systems","engineering","research","releases"];
 const reasons=["spam","harassment","privacy","misinformation","other"] as const;
 type ReportReason=typeof reasons[number];
 
+function isoDate(epoch:number){
+  const date=new Date(epoch*1000);
+  return Number.isFinite(date.getTime())?date.toISOString():undefined;
+}
 function stamp(epoch:number){
   const date=new Date(epoch*1000);
   return Number.isFinite(date.getTime())?
@@ -170,7 +174,7 @@ function SignedInDiscussions({memberId}:{memberId:string}){
       <div className="c2-social-stream" aria-label="Member discussions">
         {posts.length===0?<div className="c2-empty"><h3>No published discussions yet</h3><p>No activity has been fabricated for the pilot. Members can start the first conversation when posting is enabled.</p></div>:
           posts.map(post=><article className="c2-card c2-social-post" key={post.id}>
-            <div className="c2-card-meta"><span>{post.topic}</span><time dateTime={new Date(post.createdAt*1000).toISOString()}>{stamp(post.createdAt)}</time><span>{post.authorLabel}</span></div>
+            <div className="c2-card-meta"><span>{post.topic}</span><time dateTime={isoDate(post.createdAt)}>{stamp(post.createdAt)}</time><span>{post.authorLabel}</span></div>
             <h3>{post.title}</h3><p>{post.body}</p>
             <div className="c2-social-actions">
               <button type="button" onClick={()=>void showReplies(post.id)}>View replies</button>
