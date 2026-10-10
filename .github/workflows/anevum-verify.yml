@@ -40,6 +40,8 @@ jobs:
         run: npm run test:members
       - name: Verify ANEVUM V5 Foundation workspace contract
         run: npm run test:foundation
+      - name: Enforce one guarded production Worker deployment
+        run: node --test tests/v5-verify-deploy-safety.test.mjs
       - name: Verify member D1 binding isolation
         run: node --test tests/member-bindings.test.mjs tests/member-staging.test.mjs tests/member-preview-migration.test.mjs tests/member-command-cutover.test.mjs tests/member-command-navigation.test.mjs && node scripts/verify-member-bindings.mjs --require-config
       - name: Verify Cloudflare Command Access cutover safety (offline)
@@ -66,14 +68,6 @@ jobs:
           assert len(pdf) > 10_000
           print("resume pdf bytes:", len(pdf))
           PY
-
-      - name: Deploy production to Cloudflare
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        shell: bash
-        run: npx wrangler deploy
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
 
       - id: preview
         if: github.event_name == 'pull_request'
