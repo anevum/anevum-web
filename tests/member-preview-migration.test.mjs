@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 
 const root = new URL("../", import.meta.url);
 const read = (path) => readFileSync(new URL(path, root), "utf8");
@@ -40,4 +40,34 @@ test("schema automation can only migrate preview D1 after main-branch merge", ()
   assert.match(workspaces, /REFERENCES "user"\("id"\) ON DELETE CASCADE/);
   assert.match(workspaces, /UNIQUE/);
   assert.doesNotMatch(workspaces, /alpaca|token|orders|broker_id/i);
+});
+
+
+test("workspace migration avoids the applied billing 0003 filename without rewriting preview history", () => {
+  const files = readdirSync(new URL("migrations/", root))
+    .filter(name => name.endsWith(".sql")).sort();
+  assert.deepEqual(files, [
+    "0001_member_platform.sql",
+    "0002_member_rhen_drafts.sql",
+    "0004_member_rhen_workspaces.sql"
+  ]);
+  // The preview D1 ledger already has 0003_member_billing.sql from unmerged
+  // billing PR #240. That migration is NOT authorized for production by F0.
+  // A separate billing integration decision must reconcile its source before
+  // any production D1 migration, without renaming its existing ledger entry.
+  assert.equal(files.some(name => /^0003_/.test(name)), false);
+  const workspace = read("migrations/0004_member_rhen_workspaces.sql");
+  assert.match(workspace, /CREATE TABLE IF NOT EXISTS member_rhen_workspaces/);
+  assert.match(workspace, /REFERENCES "user"\("id"\) ON DELETE CASCADE/);
+  assert.doesNotMatch(workspace, /\bDROP\s+TABLE\b|\bDELETE\s+FROM\b|\bUPDATE\s+member_rhen_workspaces\b/i);
+  assert.doesNotMatch(workspace, /broker_account|access_token|order_id|payment_intent/i);
+});
+
+test("preview migration workflow fails closed unless workspace 0004 is recorded in the ledger", () => {
+  const workflow = read(".github/workflows/member-preview-d1-migrate.yml");
+  assert.match(workflow, /0004_member_rhen_workspaces\.sql/);
+  assert.match(workflow, /workspace_migration_registered/);
+  assert.match(workflow, /d1_migrations/);
+  assert.match(workflow, /--config wrangler\.preview-migrations\.jsonc/);
+  assert.doesNotMatch(workflow, /d1 migrations apply MEMBER_DB --remote --config wrangler\.jsonc/);
 });
