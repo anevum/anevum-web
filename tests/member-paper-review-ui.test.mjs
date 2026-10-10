@@ -14,7 +14,10 @@ const linked = () => ({
 });
 
 test("paper-only state and masked account status are accepted",()=>{
-  assert.deepEqual(parsePaperReviewBrokerage(paper()),paper());
+  const normalized=parsePaperReviewBrokerage(paper());
+  assert.ok(normalized);
+  assert.equal(normalized.connectionAvailable,true);
+  assert.equal(normalized.brokerWriteEnabled,undefined); // never render unneeded broker fields
   const connected=parsePaperReviewBrokerage(linked());
   assert.deepEqual(connected?.account,{ending:"1234",environment:"paper"});
   assert.equal(connected?.accountConnected,true);
