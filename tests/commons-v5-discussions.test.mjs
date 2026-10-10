@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import {readFileSync,readdirSync,existsSync} from "node:fs";
 import {
   socialConfigured,socialSchemaReady,validatePost,validateReply,validateReport,
-  commonsSocialEndpoint
+  commonsSocialEndpoint,exportMemberSocial
 } from "../src/server/commons-social.mjs";
 
 const origin="https://anevum-member-staging.devonakins.workers.dev";
@@ -51,6 +51,15 @@ function fakeDb(){
       const parent=posts.get(args[0]);
       return result(parent?.status==="PUBLISHED"?
         [...replies.values()].filter(x=>x.post_id===args[0]&&x.status==="PUBLISHED").slice(0,50):[]);
+    }
+    if(sql.startsWith("SELECT id,topic,title,body,status,created_at,updated_at FROM commons_v5_posts")){
+      return result([...posts.values()].filter(p=>p.author_user_id===args[0]));
+    }
+    if(sql.startsWith("SELECT id,post_id,body,status,created_at FROM commons_v5_replies")){
+      return result([...replies.values()].filter(r=>r.author_user_id===args[0]));
+    }
+    if(sql.startsWith("SELECT id,post_id,reason,status,created_at FROM commons_v5_reports")){
+      return result([...reports.values()].filter(r=>r.reporter_user_id===args[0]));
     }
     if(sql.startsWith("INSERT INTO commons_v5_posts")){
       const [id,author_user_id,topic,title,body,created_at,updated_at,limitOwner,since]=args;
@@ -214,6 +223,25 @@ test("reports cannot target own, removed or duplicate posts",async()=>{
   assert.equal((await call(store.db,userB,route,"POST",{reason:"harassment"})).status,409);
 });
 
+test("social account export contains owned contributions and reports only",async()=>{
+  const store=fakeDb();
+  const first=await call(store.db,userA,"/api/member/commons/posts","POST",post());
+  const postId=first.body.post.id;
+  await call(store.db,userB,"/api/member/commons/posts/"+postId+"/replies","POST",
+    {body:"A separate member's reply"});
+  await call(store.db,userB,"/api/member/commons/posts/"+postId+"/report","POST",
+    {reason:"privacy"});
+  const a=await exportMemberSocial(store.db,userA.id);
+  const b=await exportMemberSocial(store.db,userB.id);
+  assert.equal(a.posts.length,1);
+  assert.equal(a.replies.length,0);
+  assert.equal(a.reports.length,0);
+  assert.equal(b.posts.length,0);
+  assert.equal(b.replies.length,1);
+  assert.equal(b.reports.length,1);
+  assert.equal("author_user_id" in a.posts[0],false); // exports omit unnecessary identity fields
+});
+
 test("Commons social migration is isolated and never auto-applied with F0 or OAuth",()=>{
   const src=p=>readFileSync(new URL("../"+p,import.meta.url),"utf8");
   const main=readdirSync(new URL("../migrations/",import.meta.url)).filter(f=>f.endsWith(".sql"));
@@ -239,6 +267,7 @@ test("social endpoints are behind Better Auth and same-origin checks",()=>{
   const originCheck=member.indexOf('!safeMutation(request, verifiedOrigin)');
   const social=member.indexOf('if (pathname.startsWith("/api/member/commons/"))');
   assert.ok(auth>0&&originCheck>auth&&social>originCheck);
+  assert.match(member,/commonsContributions: socialContributions/);
   assert.match(src("src/commons/CommonsPostsBeta.tsx"),/key=\{session.user.id\}/);
   assert.doesNotMatch(src("src/commons/CommonsPostsBeta.tsx"),/dangerouslySetInnerHTML/);
   assert.doesNotMatch(src("src/server/commons-social.mjs"),/\/v2\/orders|brokerOrder|brokerToken|Stripe|subscription/);
