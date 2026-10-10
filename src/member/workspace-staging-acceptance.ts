@@ -1,7 +1,7 @@
 // Browser-only acceptance of the current authenticated member's persistent
 // RHEN_NEXT workspace. Runs only on the isolated staging origin and never sends
 // credentials, raw member IDs or workspace IDs to third-party services.
-import { parsePrivateFoundationWorkspace, type FoundationWorkspaceState } from "../contracts/anevum-foundation";
+import { parsePrivateFoundationWorkspace, type FoundationWorkspaceState } from "../contracts/anevum-foundation.ts";
 
 export const WORKSPACE_STAGING_ORIGIN = "https://anevum-member-staging.devonakins.workers.dev";
 export type WorkspaceStagingProof = {
