@@ -24,6 +24,7 @@ Cloudflare Access must separately protect the moderator API path; do not rely on
 - `GET /api/member/commons/moderation/reports`: bounded 30 most recent pending reports (oldest first) with reason and relevant post content; no reporter email, credentials, broker data, positions or account token. A full pagination/review-history UI remains future work.
 - `POST /api/member/commons/moderation/reports/:report-id/resolve`: exact `{ "decision": "HIDE" | "DISMISS", "reason": "<8–500 chars>" }` body, bound report UUID; conditional pending-report resolution through one D1 batch. `HIDE` hides the published post; `DISMISS` leaves it published. A unique report-specific `commons_v5_moderation_events` entry records verified staff actor ID, affected post, report ID, action, reason and time.
 - A second attempted resolution must return a conflict and cannot create a second audit event. The report audit and status are server-owned.
+- Deleting a moderator account clears the staff user foreign key from retained moderation events (`ON DELETE SET NULL`) instead of erasing the action/reason/time audit. Any further retention or pseudonymization policy needs explicit legal review.
 - No API can change broker or RHEN order permissions, suspend financial accounts, delete source evidence or apply a production migration.
 
 ## Release blockers
