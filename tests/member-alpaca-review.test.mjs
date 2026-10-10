@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync, existsSync } from "node:fs";
 import {
   reviewerConnectConfigured, reviewerSchemaReady, buildReviewerAuthorizeUrl,
   reviewerEndpoint, exportReviewerConnection
@@ -227,7 +227,7 @@ test("API routes preserve Better Auth, privacy and migration lineage",()=>{
   const read=p=>readFileSync(new URL("../"+p,import.meta.url),"utf8");
   const member=read("src/server/member.mjs");
   const worker=read("worker.mjs");
-  const sql=read("migrations/0005_member_alpaca_review.sql");
+  const sql=read("migrations-review/0005_member_alpaca_review.sql");
   const ui=read("src/pages/RhenReviewConnect.tsx");
   assert.match(member,/if \(!user\?\.id\)/);
   assert.match(member,/safeMutation\(request, verifiedOrigin\)/);
@@ -241,4 +241,41 @@ test("API routes preserve Better Auth, privacy and migration lineage",()=>{
   assert.match(ui,/canAuthorize \|\| !acknowledged/);
   assert.doesNotMatch(ui,/brokerToken|client_secret|<input type="password"/);
   assert.doesNotMatch(read("src/server/member-alpaca-review.mjs"),/\/v2\/orders|\/v2\/positions|placeOrder|submitOrder/);
+});
+
+
+test("review OAuth migration cannot ride along with member 0004 or a production deployment",()=>{
+  const source=p=>readFileSync(new URL("../"+p,import.meta.url),"utf8");
+    const mainMigrations=readdirSync(new URL("../migrations/",import.meta.url))
+    .filter(path=>path.endsWith(".sql")).sort();
+  assert.deepEqual(mainMigrations,[
+    "0001_member_platform.sql","0002_member_rhen_drafts.sql",
+    "0003_member_billing.sql","0004_member_rhen_workspaces.sql"
+  ]);
+  assert.equal(existsSync(new URL("../migrations/0005_member_alpaca_review.sql",import.meta.url)),false);
+  const reviewer=JSON.parse(source("wrangler.alpaca-review-migrations.jsonc"));
+  const prod=JSON.parse(source("wrangler.jsonc"));
+  const target=prod.previews.d1_databases.find(item=>item.binding==="MEMBER_DB");
+  assert.equal(reviewer.d1_databases.length,1);
+  assert.equal(reviewer.d1_databases[0].database_id,target.database_id);
+  assert.notEqual(reviewer.d1_databases[0].database_id,prod.d1_databases[0].database_id);
+  assert.equal(reviewer.d1_databases[0].migrations_dir,"migrations-review");
+  const migration=source("migrations-review/0005_member_alpaca_review.sql");
+  assert.match(migration,/ON DELETE CASCADE/);
+  assert.match(migration,/CHECK\(environment='paper'\)/);
+  const workflow=source(".github/workflows/member-alpaca-review-d1-migrate.yml");
+  assert.match(workflow,/workflow_dispatch:/);
+  assert.match(workflow,/MIGRATE_ALPACA_REVIEW_PREVIEW_ONLY/);
+  assert.match(workflow,/PREVIEW_BACKUP_VERIFIED/);
+  assert.match(workflow,/reviewed_schema_blob_sha/);
+  assert.match(workflow,/inputs\.reviewed_head_sha == github\.sha/);
+  assert.match(workflow,/github\.ref == 'refs\/heads\/main'/);
+  assert.match(workflow,/0004_member_rhen_workspaces\.sql/);
+  assert.match(workflow,/npx wrangler d1 migrations apply MEMBER_DB --remote --config wrangler\.alpaca-review-migrations\.jsonc/);
+  assert.doesNotMatch(workflow,/--config wrangler\.jsonc/);
+  assert.doesNotMatch(workflow,/--config wrangler\.preview-migrations\.jsonc/);
+  assert.doesNotMatch(workflow,/\n  push:/);
+  const oldWorkflow=source(".github/workflows/member-preview-d1-migrate.yml");
+  assert.match(oldWorkflow,/--config wrangler\.preview-migrations\.jsonc/);
+  assert.doesNotMatch(oldWorkflow,/alpaca-review-migrations|migrations-review/);
 });
