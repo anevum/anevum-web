@@ -2,22 +2,30 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { memberAuthClient } from "../member/auth-client";
 import { useMemberAvailability } from "../member/useMemberAvailability";
+import { parsePaperReviewBrokerage, type PaperReviewBrokerage } from "../contracts/paper-review-brokerage";
 
 const DISCLOSURE_VERSION = "alpaca-review-paper-v1";
-type Status = {
-  connectionAvailable: boolean;
-  accountConnected: boolean;
-  liveTradingEnabled: boolean;
-  paperTradingEnabled: boolean;
-  account?: { ending: string; environment: "paper" } | null;
-};
-
 export default function RhenReviewConnect() {
   const { data: session, isPending } = memberAuthClient.useSession();
   const availability = useMemberAvailability();
+  const signedIn = !isPending && availability === "available" &&
+    typeof session?.user?.id === "string" && session.user.id.length > 0;
+  // Key the entire stateful view to identity, so a prior member's paper
+  // account cannot flash during the next member's session transition.
+  const identityKey = signedIn ? (session?.user?.id || "missing-id") :
+    "signed-out:" + availability + ":" + isPending;
+  return <RhenReviewMember key={identityKey} memberId={identityKey}
+    signedIn={signedIn} isPending={isPending} availability={availability} />;
+}
+
+function RhenReviewMember({ memberId, signedIn, isPending, availability }: {
+  memberId: string;
+  signedIn: boolean;
+  isPending: boolean;
+  availability: ReturnType<typeof useMemberAvailability>;
+}) {
   const navigate = useNavigate();
-  const signedIn = availability === "available" && !!session?.user;
-  const [status, setStatus] = useState<Status | null>(null);
+  const [status, setStatus] = useState<PaperReviewBrokerage | null>(null);
   const [loading, setLoading] = useState(false);
   const [acknowledged, setAcknowledged] = useState(false);
   const [working, setWorking] = useState(false);
@@ -25,6 +33,7 @@ export default function RhenReviewConnect() {
 
   useEffect(() => {
     setStatus(null);
+    setError("");
     setAcknowledged(false);
     if (!signedIn) return;
     const controller = new AbortController();
@@ -32,15 +41,22 @@ export default function RhenReviewConnect() {
     void fetch("/api/member/brokerage", { cache: "no-store", credentials: "same-origin", signal: controller.signal })
       .then(async result => {
         if (!result.ok) throw Error("Connection readiness unavailable.");
-        return await result.json() as Status;
+        const verified = parsePaperReviewBrokerage(await result.json());
+        if (!verified) throw Error("Unexpected brokerage capability or account state.");
+        return verified;
       })
       .then(value => {
         if (!controller.signal.aborted) setStatus(value);
       })
-      .catch(() => { if (!controller.signal.aborted) setError("Could not verify your brokerage connection."); })
+      .catch(() => {
+        if (!controller.signal.aborted) {
+          setStatus(null);
+          setError("Brokerage status could not be safely verified. Connecting is disabled.");
+        }
+      })
       .finally(() => { if (!controller.signal.aborted) setLoading(false); });
     return () => controller.abort();
-  }, [signedIn, session?.user?.id]);
+  }, [signedIn, memberId]);
 
   const canAuthorize = signedIn && !isPending && !loading &&
     status?.connectionAvailable === true && status.accountConnected === false && !working;
