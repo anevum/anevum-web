@@ -44,6 +44,22 @@ It simulates exactly the observed starting anomaly: two synthetic, distinct memb
 5. Requires six reviewed blob SHAs, separate migration catalogs, safe schema-only SQL, exact `0001..0006` sequencing and no foreign-key violations.
 6. Emits `PASS_OFFLINE_REHEARSAL_ONLY`. This is not proof of a remote D1 migration or automatic approval to dispatch a workflow.
 
+## Backup export and independent restore proof — October 10
+
+The connected Cloudflare API successfully produced a **preview-only** D1 SQL export, with a signed one-hour download URL and a D1 time-travel bookmark. No production database was queried for row contents. The interactive execution environment could not resolve Cloudflare's signed R2 export hostname, so **the generated export was NOT retrieved, decrypted, restored, retained or accepted as a verified backup here**. A time-travel bookmark alone is not an independently restorable SQL backup.
+
+To close this gate, this draft includes:
+
+- `scripts/verify-v5-preview-export-backup.py`: fail-closed private SQL in-memory SQLite restore, exact 0001–0003 ledger verification, integrity and FK checks, two distinct member workspace owners, SHA-256 digest and optional authenticated Fernet encryption/decryption. No names, emails, row contents or SQL are ever printed.
+- `.github/workflows/v5-preview-d1-backup-restore.yml`: manual exact-`main`-SHA, preview-only D1 export; download into restricted runner scratch; restore and encrypt; upload **only Fernet ciphertext** for 30 days; download the stored encrypted artifact and independently decrypt/retest it before asserting backup readiness. It requires an owner-maintained GitHub Actions encrypted secret named `ANEVUM_PREVIEW_BACKUP_FERNET_KEY`; never paste that key into an issue, chat, screenshot or release log. The workflow is **DRAFT on an unmerged branch** and cannot currently be manually dispatched from the main workflow list.
+- The V5 full CI runs `python scripts/verify-v5-preview-export-backup.py selftest` with **synthetic** users and negative safety cases. This is source validation only, not a live backup.
+
+The encrypted artifact is retained for 30 days, not indefinitely. Do not start the remote 0004/0005 migrations until a real export-backup workflow has completed successfully, the encrypted stored artifact is confirmed restorable, the recovery key custody and rollback window are reviewed, the current preview row/count/ledger state still matches, and the operator separately approves each change.
+
+### Automatic deployment guard
+
+The current production workflow on `main` still auto-deploys on pushes. The V5 integrated candidate now removes that trigger, replacing it with an exact reviewed main SHA, manual confirmation and independently confirmed rollback input, plus a live `git ls-remote` main HEAD guard. Its staging Worker bootstrap is independently manual-only and rejects a stale main head. **These safety gates are only on the V5 draft until reviewed/merged.** Do not merge the full release candidate while the live production workflow can still auto-release an unaccepted site; the main-branch workflow and obsolete Vercel integration must first be reconciled.
+
 ## Actual migration authorization remains a separate gate
 
 - [ ] Re-check preview and production D1 identity and counts immediately before migration.
