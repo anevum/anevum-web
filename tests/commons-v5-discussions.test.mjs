@@ -7,8 +7,8 @@ import {
 } from "../src/server/commons-social.mjs";
 
 const origin="https://anevum-member-staging.devonakins.workers.dev";
-const userA={id:"member-alpha"};
-const userB={id:"member-bravo"};
+const userA={id:"member-alpha",emailVerified:true};
+const userB={id:"member-bravo",emailVerified:true};
 const flag={
   MEMBER_PREVIEW_ORIGIN:origin,ANEVUM_MEMBER_PREVIEW_ENABLED:"true",
   ANEVUM_COMMONS_SOCIAL_PILOT_ENABLED:"true"
@@ -144,6 +144,20 @@ test("untrusted author/owner/role fields and oversized content fail closed",()=>
   assert.deepEqual(validateReport({reason:"privacy"}),{reason:"privacy"});
   for(const reason of ["trading","administrator",null])
     assert.throws(()=>validateReport({reason}));
+});
+
+test("an unverified signed-in member cannot read, post or report",async()=>{
+  const store=fakeDb();
+  const unverified={id:"unverified-account",emailVerified:false};
+  const list=await call(store.db,unverified,"/api/member/commons/posts");
+  const write=await call(store.db,unverified,"/api/member/commons/posts","POST",post());
+  const report=await call(store.db,unverified,
+    "/api/member/commons/posts/123e4567-e89b-12d3-a456-426614174000/report",
+    "POST",{reason:"privacy"});
+  assert.equal(list.status,403);
+  assert.equal(write.status,403);
+  assert.equal(report.status,403);
+  assert.equal(store.posts.size,0);
 });
 
 test("unconfigured endpoint and missing moderator schema cannot publish",async()=>{
