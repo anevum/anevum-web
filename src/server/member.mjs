@@ -1,5 +1,6 @@
 import { betterAuth } from "better-auth";
 import { memberRewardsStatus, memberBrokerageStatus } from "./member-capabilities.mjs";
+import { reviewerSchemaReady, reviewerEndpoint, exportReviewerConnection } from "./member-alpaca-review.mjs";
 import { memberRhenDraftSchemaReady, readMemberRhenDraft, saveMemberRhenDraft, deleteMemberRhenDraft, validateRhenDraft } from "./member-rhen-draft.mjs";
 import { resolveMemberOrigin, memberSchemaReady } from "./member-preflight.mjs";
 import { memberRhenWorkspaceSchemaReady, readMemberRhenWorkspace, createMemberRhenWorkspace } from "./member-rhen-workspace.mjs";
@@ -149,11 +150,21 @@ export async function memberEndpoint(request, env, pathname) {
     return reply({ message: "Same-origin request required." }, 403);
   }
 
+  const db = env.MEMBER_DB;
   if (pathname === "/api/member/rewards" || pathname === "/api/member/brokerage") {
     if (request.method !== "GET") return reply({ message: "Read-only capability." }, 405);
+    if (pathname === "/api/member/brokerage" &&
+        env?.ANEVUM_MEMBER_PREVIEW_ENABLED === "true" &&
+        await reviewerSchemaReady(db)) {
+      return reviewerEndpoint(request, env, user, verifiedOrigin, pathname);
+    }
     return reply(pathname === "/api/member/rewards" ? memberRewardsStatus() : memberBrokerageStatus());
   }
-  const db = env.MEMBER_DB;
+  if (pathname.startsWith("/api/member/alpaca/review/")) {
+    // The provider callback still requires the same verified Better Auth
+    // browser identity. Mutation paths have passed the same-origin guard.
+    return reviewerEndpoint(request, env, user, verifiedOrigin, pathname);
+  }
   if (pathname === "/api/member/rhen/workspace") {
     if (!["GET", "POST"].includes(request.method)) return reply({ message: "Method not allowed." }, 405);
     if (env?.ANEVUM_V5_WORKSPACES_ENABLED !== "true") {
@@ -209,13 +220,15 @@ export async function memberEndpoint(request, env, pathname) {
   if (pathname === "/api/member/export" && request.method === "GET") {
     const hasDraftTable = await memberRhenDraftSchemaReady(db);
     const hasWorkspaceTable = await memberRhenWorkspaceSchemaReady(db);
-    const [profile, saved, follows, entitlements, rhenDraft, rhenWorkspace] = await Promise.all([
+    const [profile, saved, follows, entitlements, rhenDraft, rhenWorkspace, reviewerConnection] = await Promise.all([
       db.prepare("SELECT display_name, theme, created_at, updated_at FROM member_profiles WHERE user_id = ?").bind(user.id).first(),
       db.prepare("SELECT app_slug, saved_at FROM member_saved_apps WHERE user_id = ? ORDER BY saved_at DESC").bind(user.id).all(),
       db.prepare("SELECT project_slug, followed_at FROM member_project_follows WHERE user_id = ? ORDER BY followed_at DESC").bind(user.id).all(),
       db.prepare("SELECT app_slug, capability, granted_at, expires_at FROM member_entitlements WHERE user_id = ?").bind(user.id).all(),
       hasDraftTable ? readMemberRhenDraft(db, user.id) : Promise.resolve(null),
-      hasWorkspaceTable ? readMemberRhenWorkspace(db, user.id) : Promise.resolve(null)
+      hasWorkspaceTable ? readMemberRhenWorkspace(db, user.id) : Promise.resolve(null),
+      env?.ANEVUM_MEMBER_PREVIEW_ENABLED === "true"
+        ? exportReviewerConnection(db, user.id) : Promise.resolve(null)
     ]);
     return new Response(JSON.stringify({
       exportedAt: new Date().toISOString(),
@@ -225,7 +238,8 @@ export async function memberEndpoint(request, env, pathname) {
       projectFollows: follows.results || [],
       entitlements: entitlements.results || [],
       rhenDraft,
-      rhenWorkspace
+      rhenWorkspace,
+      brokerReview: reviewerConnection
     }, null, 2), {
       status: 200,
       headers: {

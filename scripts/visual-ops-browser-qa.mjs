@@ -6,7 +6,7 @@ import path from "node:path";
 const base = process.env.BASE_URL;
 if (!base) throw new Error("BASE_URL is required");
 
-const publicRoutes = ["/", "/communities", "/learn", "/sign-in", "/command", "/me/settings", "/me/rewards", "/products", "/feed", "/products/rhen", "/products/rhen/evidence", "/products/rhen/architecture", "/field-notes", "/field-notes/prediction-outcome-evidence-chain", "/about", "/resume", "/products/rhen/releases", "/me", "/privacy", "/terms"];
+const publicRoutes = ["/", "/communities", "/learn", "/sign-in", "/command", "/me/settings", "/me/rewards", "/apps/rhen/connect", "/products", "/feed", "/products/rhen", "/products/rhen/evidence", "/products/rhen/architecture", "/field-notes", "/field-notes/prediction-outcome-evidence-chain", "/about", "/resume", "/products/rhen/releases", "/me", "/privacy", "/terms"];
 const commandRoutes = ["/command/rhen/operate", "/command/rhen/discover", "/command/rhen/review", "/command/rhen/public", "/command/rhen/system"];
 const routes = process.env.PUBLIC_ONLY === "1" ? publicRoutes : [...publicRoutes, ...commandRoutes];
 const output = path.join(process.env.RUNNER_TEMP || os.tmpdir(), "anevum-visuals");
@@ -151,10 +151,11 @@ async function runCase(route, viewport) {
           const resumeReady = ${JSON.stringify(route)} !== "/resume" || Boolean(document.querySelector(".anevum-commons-v5-mount")?.shadowRoot?.querySelector(".c2-resume .c2-card"));
           const releasesReady = ${JSON.stringify(route)} !== "/products/rhen/releases" || Boolean(document.querySelector(".anevum-commons-v5-mount")?.shadowRoot?.querySelector(".c2-stack .c2-card"));
           const memberReady = !["/me", "/command", "/me/settings", "/me/rewards"].includes(${JSON.stringify(route)}) || Boolean(document.querySelector(".anevum-commons-v5-mount")?.shadowRoot?.querySelector(".c2-member"));
+          const brokerReviewReady = ${JSON.stringify(route)} !== "/apps/rhen/connect" || (()=>{ const root=document.querySelector(".anevum-commons-v5-mount")?.shadowRoot; const disclosure=root?.querySelector(".rhen-review-disclosure"); const allow=root?.querySelector(".rhen-review-allow"); const checkbox=root?.querySelector(".rhen-review-check input"); return !!disclosure && disclosure.textContent.includes("Authorize RHEN by ANEVUM") && disclosure.textContent.includes("Alpaca does not warrant or guarantee") && allow?.disabled===true && checkbox?.disabled===true; })();
           const legalReady = !["/privacy", "/terms"].includes(${JSON.stringify(route)}) || Boolean(document.querySelector(".anevum-commons-v5-mount")?.shadowRoot?.querySelector(".c2-legal .member-legal"));
           const commandReady = !${JSON.stringify(route)}.startsWith("/command/") || Boolean(document.querySelector(".command-v4"));
           const extraReady = !["/communities", "/learn", "/sign-in"].includes(${JSON.stringify(route)}) || Boolean(document.querySelector(".anevum-commons-v5-mount")?.shadowRoot?.querySelector(".c2-page"));
-          return {ready:pathReady && suspenseReady && homeReady && productsReady && feedReady && rhenReady && liveReady && architectureReady && researchReady && fieldNoteReady && aboutReady && resumeReady && releasesReady && memberReady && legalReady && commandReady && extraReady,
+          return {ready:pathReady && suspenseReady && homeReady && productsReady && feedReady && rhenReady && liveReady && architectureReady && researchReady && fieldNoteReady && aboutReady && resumeReady && releasesReady && memberReady && brokerReviewReady && legalReady && commandReady && extraReady,
             pathname:location.pathname,title:document.title,suspenseReady,homeReady,productsReady,feedReady,rhenReady,liveReady,architectureReady,researchReady,fieldNoteReady,aboutReady,resumeReady,releasesReady,commandReady};
         })()`,
         returnByValue:true
@@ -182,10 +183,11 @@ async function runCase(route, viewport) {
         const resumeReady = ${JSON.stringify(route)} !== "/resume" || Boolean(document.querySelector(".anevum-commons-v5-mount")?.shadowRoot?.querySelector(".c2-resume .c2-card"));
           const releasesReady = ${JSON.stringify(route)} !== "/products/rhen/releases" || Boolean(document.querySelector(".anevum-commons-v5-mount")?.shadowRoot?.querySelector(".c2-stack .c2-card"));
         const memberReady = !["/me", "/command", "/me/settings", "/me/rewards"].includes(${JSON.stringify(route)}) || Boolean(document.querySelector(".anevum-commons-v5-mount")?.shadowRoot?.querySelector(".c2-member"));
+          const brokerReviewReady = ${JSON.stringify(route)} !== "/apps/rhen/connect" || (()=>{ const root=document.querySelector(".anevum-commons-v5-mount")?.shadowRoot; const disclosure=root?.querySelector(".rhen-review-disclosure"); const allow=root?.querySelector(".rhen-review-allow"); const checkbox=root?.querySelector(".rhen-review-check input"); return !!disclosure && disclosure.textContent.includes("Authorize RHEN by ANEVUM") && disclosure.textContent.includes("Alpaca does not warrant or guarantee") && allow?.disabled===true && checkbox?.disabled===true; })();
         const legalReady = !["/privacy", "/terms"].includes(${JSON.stringify(route)}) || Boolean(document.querySelector(".anevum-commons-v5-mount")?.shadowRoot?.querySelector(".c2-legal .member-legal"));
         const commandReady = !${JSON.stringify(route)}.startsWith("/command/") || Boolean(document.querySelector(".command-v4"));
           const extraReady = !["/communities", "/learn", "/sign-in"].includes(${JSON.stringify(route)}) || Boolean(document.querySelector(".anevum-commons-v5-mount")?.shadowRoot?.querySelector(".c2-page"));
-        return {ready:pathReady && suspenseReady && homeReady && productsReady && feedReady && rhenReady && liveReady && architectureReady && researchReady && fieldNoteReady && aboutReady && resumeReady && releasesReady && memberReady && legalReady && commandReady && extraReady,
+        return {ready:pathReady && suspenseReady && homeReady && productsReady && feedReady && rhenReady && liveReady && architectureReady && researchReady && fieldNoteReady && aboutReady && resumeReady && releasesReady && memberReady && brokerReviewReady && legalReady && commandReady && extraReady,
           pathname:location.pathname,title:document.title,suspenseReady,homeReady,productsReady,feedReady,rhenReady,liveReady,architectureReady,researchReady,fieldNoteReady,aboutReady,resumeReady,releasesReady,commandReady};
       })()`,
       returnByValue:true
@@ -430,6 +432,7 @@ async function runCase(route, viewport) {
     "/command":["command",["c2-member","member-command","Programs"]],
     "/me/settings":["settings",["c2-member","Account settings"]],
     "/me/rewards":["rewards",["c2-member","Not launched"]],
+    "/apps/rhen/connect":["rhen-review-disclosure",["rhen-review-disclosure","Authorize RHEN by ANEVUM","REQUIRED AUTHORIZATION DISCLOSURE"]],
     "/privacy":["privacy",["member-legal"]],
     "/terms":["terms",["member-legal"]]
   };

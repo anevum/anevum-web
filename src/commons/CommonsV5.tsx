@@ -9,6 +9,7 @@ import css from "../styles/commons-v5.css?inline";
 import polishCss from "../styles/commons-v5-polish.css?inline";
 import pagesCss from "../styles/commons-v5-pages.css?inline";
 import accountCss from "../styles/commons-v5-accounts.css?inline";
+import brokerReviewCss from "../styles/commons-v5-broker-review.css?inline";
 import memberCommandCss from "../styles/member-command.css?inline";
 import memberBaseCss from "../styles/members.css?inline";
 import memberFinancialCss from "../styles/member-financial.css?inline";
@@ -401,7 +402,7 @@ export default function CommonsV5({content}: {content?:ReactNode}) {
   return <div ref={mount} className="anevum-commons-v5-mount"
     data-theme={prefs.theme} data-layout={prefs.layout} data-density={prefs.density}
     data-radius={prefs.radius} data-surface={prefs.surface} style={{display:"block",minHeight:"100dvh"}}>
-    {shadow ? createPortal(<><style>{css+"\n"+polishCss+"\n"+pagesCss+"\n"+memberCommandCss+"\n"+memberBaseCss+"\n"+memberFinancialCss+"\n"+accountCss}</style><CommonsApp prefs={prefs} setPrefs={setPrefs} content={content}/></>,shadow) : null}
+    {shadow ? createPortal(<><style>{css+"\n"+polishCss+"\n"+pagesCss+"\n"+memberCommandCss+"\n"+memberBaseCss+"\n"+memberFinancialCss+"\n"+accountCss+"\n"+brokerReviewCss}</style><CommonsApp prefs={prefs} setPrefs={setPrefs} content={content}/></>,shadow) : null}
   </div>;
 }
 

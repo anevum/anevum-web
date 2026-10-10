@@ -1,0 +1,10 @@
+{
+  "d1_databases": [
+    {
+      "binding": "MEMBER_DB",
+      "database_name": "anevum-members-preview",
+      "database_id": "a537432e-d216-4b31-8b22-19662cc3a44a",
+      "migrations_dir": "migrations-review"
+    }
+  ]
+}
