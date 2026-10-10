@@ -214,6 +214,7 @@ export default function App() {
         <Route path="/feed" element={<Suspense fallback={<Loader />}><CommonsV5 /></Suspense>} />
         <Route path="/field-notes" element={<Suspense fallback={<Loader />}><CommonsV5 /></Suspense>} />
         <Route path="/communities" element={<Suspense fallback={<Loader />}><CommonsV5 /></Suspense>} />
+        <Route path="/communities/moderation" element={<Suspense fallback={<Loader />}><CommonsV5 /></Suspense>} />
         <Route path="/learn" element={<Suspense fallback={<Loader />}><CommonsV5 /></Suspense>} />
         <Route path="/field-notes/:slug" element={<Suspense fallback={<Loader />}><CommonsV5 /></Suspense>} />
         <Route path="/about" element={<Suspense fallback={<Loader />}><CommonsV5 /></Suspense>} />
