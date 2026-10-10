@@ -77,21 +77,9 @@ jobs:
           npx wrangler d1 execute MEMBER_DB --remote --config wrangler.preview-migrations.jsonc --json \
             --command 'SELECT name FROM d1_migrations ORDER BY id' \
             > "$RUNNER_TEMP/anevum-preview-applied-ledger.json"
-          jq -e 'type == "array" and .[0].success == true and (.[0].results | type == "array")' \
-            "$RUNNER_TEMP/anevum-preview-applied-ledger.json" > /dev/null
-          jq -r '.[0].results[].name' "$RUNNER_TEMP/anevum-preview-applied-ledger.json" \
-            > "$RUNNER_TEMP/anevum-preview-applied-filenames.txt"
-          while IFS= read -r applied; do
-            if [[ ! "$applied" =~ ^[0-9]{4}_[a-z0-9_]+\.sql$ ]]; then
-              echo "::error::Preview D1 ledger has an invalid migration filename. Abort before apply."
-              exit 1
-            fi
-            if [[ ! -f "migrations/$applied" ]]; then
-              echo "::error::Preview D1 already applied $applied, but its reviewed SQL source is absent from this branch. Reconcile migration lineage and obtain approval before applying any further migration."
-              exit 1
-            fi
-          done < "$RUNNER_TEMP/anevum-preview-applied-filenames.txt"
-          echo 'Previously applied preview D1 migration filenames all have reviewed local SQL sources.'
+          node scripts/verify-preview-d1-ledger.mjs \
+            "$RUNNER_TEMP/anevum-preview-applied-ledger.json" migrations
+
       - name: Apply migration only to ANEVUM preview D1
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_D1_TOKEN }}
