@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import CommonsPublicPage from "./CommonsPages";
@@ -8,6 +8,10 @@ import { memberAuthClient } from "../member/auth-client";
 import css from "../styles/commons-v5.css?inline";
 import polishCss from "../styles/commons-v5-polish.css?inline";
 import pagesCss from "../styles/commons-v5-pages.css?inline";
+import accountCss from "../styles/commons-v5-accounts.css?inline";
+import memberCommandCss from "../styles/member-command.css?inline";
+import memberBaseCss from "../styles/members.css?inline";
+import memberFinancialCss from "../styles/member-financial.css?inline";
 
 /**
  * Project Commons Stage 1. V5 visual parity baseline in an isolated Shadow DOM.
@@ -320,7 +324,7 @@ function AppearancePanel({ prefs, onChange, onClose, onReset }: {
   </div>;
 }
 
-function CommonsApp({prefs,setPrefs}: {prefs:Preferences;setPrefs:(next:Preferences)=>void}) {
+function CommonsApp({prefs,setPrefs,content}: {prefs:Preferences;setPrefs:(next:Preferences)=>void;content?:ReactNode}) {
   const [filter,setFilter] = useState<Filter>("all");
   const [search,setSearch] = useState("");
   const [designOpen,setDesignOpen] = useState(false);
@@ -348,7 +352,7 @@ function CommonsApp({prefs,setPrefs}: {prefs:Preferences;setPrefs:(next:Preferen
     return ()=>document.removeEventListener("keydown",onKey);
   },[]);
 
-  return <div className={"app "+(collapsed?"nav-collapsed ":"")+(drawerOpen?"drawer-open":"")}>
+  return <div className={"app "+(content?"account-view ":"")+(collapsed?"nav-collapsed ":"")+(drawerOpen?"drawer-open":"")}>
     <Header search={search} setSearch={setSearch} inputRef={searchRef} pathname={pathname}
       onSearchSubmit={()=>navigate("/field-notes?q="+encodeURIComponent(search.trim()))}
       onMenu={()=>{if(window.matchMedia("(max-width: 900px)").matches) setDrawerOpen(x=>!x); else setCollapsed(x=>!x);}}
@@ -356,11 +360,11 @@ function CommonsApp({prefs,setPrefs}: {prefs:Preferences;setPrefs:(next:Preferen
     <div className="shell">
       <Sidebar collapsed={collapsed} pathname={pathname} onClose={()=>setDrawerOpen(false)} onNotice={()=>setNoticeOpen(true)}/>
       <main className="main" id="commons-main">
-        {isFeed ? <Feed search={search} filter={filter} setFilter={setFilter} density={prefs.density}
+        {content ? <section className="c2-member" aria-label="Private member account presentation">{content}</section> : isFeed ? <Feed search={search} filter={filter} setFilter={setFilter} density={prefs.density}
           setDensity={next=>setPrefs({...prefs,density:next})} onNotice={()=>setNoticeOpen(true)}/> :
           <CommonsPublicPage pathname={pathname} search={search} />}
       </main>
-      <RightRail onNotice={()=>setNoticeOpen(true)}/>
+      {content ? null : <RightRail onNotice={()=>setNoticeOpen(true)}/>}
     </div>
     <nav className="mobile-nav" aria-label="Mobile navigation">
       <Link to="/" className={isFeed?"active":""} aria-current={isFeed?"page":undefined}><Icon name="home"/><span>Home</span></Link>
@@ -382,7 +386,7 @@ function CommonsApp({prefs,setPrefs}: {prefs:Preferences;setPrefs:(next:Preferen
   </div>;
 }
 
-export default function CommonsV5() {
+export default function CommonsV5({content}: {content?:ReactNode}) {
   const mount = useRef<HTMLDivElement>(null);
   const [shadow,setShadow]=useState<ShadowRoot|null>(null);
   useEffect(()=>{
@@ -397,7 +401,7 @@ export default function CommonsV5() {
   return <div ref={mount} className="anevum-commons-v5-mount"
     data-theme={prefs.theme} data-layout={prefs.layout} data-density={prefs.density}
     data-radius={prefs.radius} data-surface={prefs.surface} style={{display:"block",minHeight:"100dvh"}}>
-    {shadow ? createPortal(<><style>{css+"\n"+polishCss+"\n"+pagesCss}</style><CommonsApp prefs={prefs} setPrefs={setPrefs}/></>,shadow) : null}
+    {shadow ? createPortal(<><style>{css+"\n"+polishCss+"\n"+pagesCss+"\n"+memberCommandCss+"\n"+memberBaseCss+"\n"+memberFinancialCss+"\n"+accountCss}</style><CommonsApp prefs={prefs} setPrefs={setPrefs} content={content}/></>,shadow) : null}
   </div>;
 }
 
