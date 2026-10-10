@@ -46,3 +46,13 @@ test("pre-Vite client and duplicate static build helpers are retired, archive re
   }
   assert.equal(existsSync(new URL("../site/wiki/archive/transcosmic/README.md", import.meta.url)), true);
 });
+
+test("browser QA validates the actual V5 ShadowRoot public routes without legacy studio selectors", () => {
+  const qa = source("scripts/visual-ops-browser-qa.mjs");
+  assert.match(qa, /c2-project/);
+  assert.match(qa, /Architecture and authority/);
+  assert.match(qa, /No fictional communities/);
+  assert.match(qa, /shadowRoot/);
+  assert.doesNotMatch(qa, /document\.querySelector\("\.truth-products-page"\)/);
+  assert.doesNotMatch(qa, /document\.querySelector\("\.studio-notes-page"\)/);
+});

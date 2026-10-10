@@ -72,3 +72,17 @@ or GitHub branch was deleted; removal exists only as a reviewable draft Git diff
 Validate the combined CI/browser route probe before merge. Additional retired pages,
 styles, assets, duplicate branches, unused integrations and GitHub statuses need a
 separate evidence-backed inventory; do not mass-delete them.
+
+## Browser QA migration with the new rendered component tree
+
+Legacy visual QA selectors initially targeted .studio-notes-page,
+.truth-products-page, .architecture-role-grid and other retired public
+component classes. Stage 2 updates only the **migrated public-route
+assertions** to inspect the open Commons V5 ShadowRoot; keeps the original
+protected Command, evidence terminal, native route, keyboard and visual checks.
+The RHEN V5 architecture page now requires six labeled authority-boundary
+cards with noncollapsed geometry, rather than eight retired legacy module icons.
+Scroll-reset QA now navigates the real ShadowRoot link, not a defunct outer
+document anchor. QA explicitly includes the new topics, learning and
+authenticated-entry screens. Fail closed on missing actual DOM and source-backed
+text.
