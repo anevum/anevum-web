@@ -1,0 +1,111 @@
+name: Prepare RHEN Cloud Production Billing D1 (Manual Only)
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirmation:
+        description: 'Type MIGRATE_PRODUCTION_RHEN_BILLING'
+        required: true
+        type: string
+      owner_approved:
+        description: 'Owner approved production billing schema migration (not payment activation)'
+        required: true
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: anevum-production-rhen-billing-migration
+  cancel-in-progress: false
+
+jobs:
+  migrate-billing:
+    if: inputs.confirmation == 'MIGRATE_PRODUCTION_RHEN_BILLING' && inputs.owner_approved
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    env:
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: Verify unchanged existing member account and brokerage boundaries
+        run: |
+          set -euo pipefail
+          node scripts/verify-member-bindings.mjs --require-config
+          python scripts/verify-member-schema.py
+          npm run test:members
+          jq -e '
+            .name == "anevum-web-nextgen" and
+            .vars.ANEVUM_MEMBERS_ENABLED == "true" and
+            .vars.ANEVUM_MEMBER_PREVIEW_ENABLED == "false" and
+            .vars.ANEVUM_RHEN_BILLING_ENABLED == "false" and
+            .vars.ANEVUM_RHEN_BILLING_CHECKOUT_ENABLED == "false" and
+            .vars.ANEVUM_RHEN_BILLING_WEBHOOKS_ENABLED == "false" and
+            .vars.ANEVUM_RHEN_BILLING_LIVE_APPROVED == "false" and
+            (.d1_databases | length) == 1 and
+            .d1_databases[0].binding == "MEMBER_DB" and
+            .d1_databases[0].database_name == "anevum-members" and
+            .d1_databases[0].database_id == "7f0d4c0c-2e85-4900-8504-1347954e1df1"
+          ' wrangler.jsonc > /dev/null
+          test -f migrations/0003_member_billing.sql
+      - name: Confirm exact Cloudflare D1 production target
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_D1_TOKEN }}
+        run: |
+          set -euo pipefail
+          test -n "$CLOUDFLARE_API_TOKEN"
+          test -n "$CLOUDFLARE_ACCOUNT_ID"
+          npx wrangler d1 list --json > "$RUNNER_TEMP/d1-inventory.json"
+          jq -e '
+            ([.[]|select(.name=="anevum-members" and .uuid=="7f0d4c0c-2e85-4900-8504-1347954e1df1")]|length)==1 and
+            ([.[]|select(.name=="anevum-members-preview" and .uuid=="a537432e-d216-4b31-8b22-19662cc3a44a")]|length)==1
+          ' "$RUNNER_TEMP/d1-inventory.json" >/dev/null
+      - name: Inspect existing member schema before billing migration
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_D1_TOKEN }}
+        run: |
+          set -euo pipefail
+          npx wrangler d1 execute MEMBER_DB --remote --config wrangler.jsonc --json \
+            --command "SELECT COUNT(*) AS member_tables FROM sqlite_master WHERE type='table' AND name IN ('user','session','account','verification','rateLimit','member_profiles','member_saved_apps','member_project_follows','member_entitlements','member_rhen_drafts')" \
+            > "$RUNNER_TEMP/current-member-tables.json"
+          jq -e '.[0].success==true and .[0].results[0].member_tables==10' "$RUNNER_TEMP/current-member-tables.json" >/dev/null
+          npx wrangler d1 execute MEMBER_DB --remote --config wrangler.jsonc --json \
+            --command "SELECT COUNT(*) AS billing_tables FROM sqlite_master WHERE type='table' AND name IN ('member_billing_customers','member_billing_subscriptions','member_billing_events','member_billing_checkout_locks','member_billing_sync_state')" \
+            > "$RUNNER_TEMP/current-billing-tables.json"
+          jq -e '.[0].success==true and (.[0].results[0].billing_tables==0 or .[0].results[0].billing_tables==5)' "$RUNNER_TEMP/current-billing-tables.json" >/dev/null
+      - name: Apply approved billing migration to production D1 only
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_D1_TOKEN }}
+        run: |
+          set -euo pipefail
+          npx wrangler d1 migrations apply MEMBER_DB --remote --config wrangler.jsonc
+          npx wrangler d1 execute MEMBER_DB --remote --config wrangler.jsonc --json \
+            --command "SELECT COUNT(*) AS billing_tables FROM sqlite_master WHERE type='table' AND name IN ('member_billing_customers','member_billing_subscriptions','member_billing_events','member_billing_checkout_locks','member_billing_sync_state')" \
+            > "$RUNNER_TEMP/billing-tables-after.json"
+          jq -e '.[0].success==true and .[0].results[0].billing_tables==5' "$RUNNER_TEMP/billing-tables-after.json" >/dev/null
+          npx wrangler d1 execute MEMBER_DB --remote --config wrangler.jsonc --json \
+            --command 'PRAGMA foreign_key_check' > "$RUNNER_TEMP/billing-fk-check.json"
+          jq -e '.[0].success==true and (.[0].results|length)==0' "$RUNNER_TEMP/billing-fk-check.json" >/dev/null
+      - name: Confirm schema-only change and no billing activation
+        run: |
+          set -euo pipefail
+          jq -e '
+            .vars.ANEVUM_RHEN_BILLING_ENABLED=="false" and
+            .vars.ANEVUM_RHEN_BILLING_CHECKOUT_ENABLED=="false" and
+            .vars.ANEVUM_RHEN_BILLING_WEBHOOKS_ENABLED=="false"
+          ' wrangler.jsonc >/dev/null
+          {
+            echo "## RHEN Cloud production billing schema"
+            echo
+            echo "Five user-scoped billing tables, zero D1 foreign-key violations."
+            echo "Checkout, paid plans, webhooks, member brokerage, and live trading all remain disabled."
+            echo "No Railway, Alpaca, production secret, or payment-provider mutation occurred."
+          } >> "$GITHUB_STEP_SUMMARY"

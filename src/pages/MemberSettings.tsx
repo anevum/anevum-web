@@ -43,7 +43,7 @@ export default function MemberSettings() {
   };
 
   const remove = async () => {
-    if (!window.confirm("Permanently delete your ANEVUM account, saved projects, and follows? This cannot be undone.")) return;
+    if (!window.confirm("Permanently delete your ANEVUM account and saved data? Any RHEN Cloud subscriptions will be cancelled immediately before deletion. This cannot be undone.")) return;
     setBusy(true); setError("");
     try {
       const { error: deletionError } = await memberAuthClient.deleteUser();
@@ -68,6 +68,7 @@ export default function MemberSettings() {
       </section>
       <section className="member-section">
         <h2>Account</h2>
+        <p><Link to="/me/billing">RHEN Cloud subscription and billing</Link></p>
         <p>ANEVUM accounts save project preferences and optional, non-executing RHEN configuration drafts. Signing up does not connect you to any brokerage account.</p>
         <p><a href="/api/member/export" download="anevum-account-data.json">Download my account data (JSON)</a></p>
         {window.location.origin === "https://anevum-member-staging.devonakins.workers.dev" && <p><Link to="/me/verify">Run staging account verification</Link></p>}

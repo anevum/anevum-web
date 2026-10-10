@@ -5,7 +5,7 @@ import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-const SECRET_NAMES = ["BETTER_AUTH_SECRET", "GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET"];
+const SECRET_NAMES = ["BETTER_AUTH_SECRET", "GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET", "STRIPE_SECRET_KEY", "STRIPE_WEBHOOK_SECRET"];
 
 function binding(config, scope, errors) {
   const databases = config?.d1_databases || [];
@@ -45,6 +45,10 @@ export function inspectMemberBindings(config, previewMigrationConfig = null, opt
   }
   if (Object.hasOwn(vars, "ANEVUM_MEMBER_RHEN_DRAFTS_ENABLED") && vars.ANEVUM_MEMBER_RHEN_DRAFTS_ENABLED !== "false") {
     errors.push("Production RHEN member draft editing must remain disabled.");
+  }
+  if (Object.hasOwn(vars, "ANEVUM_RHEN_BETA_WAITLIST_ENABLED") &&
+      vars.ANEVUM_RHEN_BETA_WAITLIST_ENABLED !== "false") {
+    errors.push("Production free beta registration must remain disabled until separate approval.");
   }
   if (vars.ANEVUM_MEMBER_PREVIEW_ENABLED !== "false") {
     errors.push("The top-level Worker must not enable preview identity.");

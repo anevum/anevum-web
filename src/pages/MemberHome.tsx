@@ -94,6 +94,7 @@ function CommandHome({ enabled = false, checking = false, identity }: {
           <Link to="/command" aria-current="page" className="active">My programs</Link>
           {signedIn ? <a href="#command-following">Following</a> : <Link to="/feed">Updates</Link>}
           <Link to={signedIn ? "/me/settings" : "/sign-in"}>Profile &amp; account</Link>
+          {signedIn && <Link to="/me/billing">RHEN Cloud billing</Link>}
           <Link to="/me/rewards">Member rewards</Link>
           <Link to="/products">All projects</Link>
         </nav>

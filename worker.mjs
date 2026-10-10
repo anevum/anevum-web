@@ -1,6 +1,7 @@
 import releaseRegistry from "./src/data/releases.json";
 import { shadowRead } from "./shadow-transport.mjs";
 import { memberEndpoint } from "./src/server/member.mjs";
+import { stripeWebhookEndpoint } from "./src/server/member-billing.mjs";
 import { legacyOperatorTarget } from "./src/server/operator-routes.mjs";
 import { retiredRhenBoundary, retiredRhenStatus } from "./src/server/legacy-rhen-retirement.mjs";
 
@@ -438,6 +439,11 @@ export default {
     if (url.hostname === "anevum.com" && url.protocol !== "https:") {
       url.protocol = "https:";
       return Response.redirect(url.toString(), 308);
+    }
+
+    if (pathname === "/api/billing/stripe/webhook") {
+      try { return await stripeWebhookEndpoint(request, env); }
+      catch { return jsonResponse({ message: "Billing webhook unavailable." }, 503); }
     }
 
     if (pathname.startsWith("/api/member/") || pathname === "/api/auth" || pathname.startsWith("/api/auth/")) {
