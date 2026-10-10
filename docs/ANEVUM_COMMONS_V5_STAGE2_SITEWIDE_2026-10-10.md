@@ -86,3 +86,9 @@ Scroll-reset QA now navigates the real ShadowRoot link, not a defunct outer
 document anchor. QA explicitly includes the new topics, learning and
 authenticated-entry screens. Fail closed on missing actual DOM and source-backed
 text.
+
+## Stage 2C — public RHEN evidence route (stacked, draft only)
+
+The previous `/products/rhen/evidence` view still mounted the pre-Vite/legacy public trading terminal outside the V5 Commons layout. This slice replaces that *public presentation only* with a source-backed V5 evidence/limits page. It clearly states `SUSPENDED_FOR_REBUILD`, names the Research and Replay capabilities as development/not released, and links to real dated RHEN Field Notes, historical releases and architecture. No fabricated account curves, live activity, trades, member data, live market API or performance figures are introduced. Existing `/command/rhen/*` owner routes and `/apps/rhen/*` private routes are unchanged. The retired legacy component remains in repository history pending audited reachability/rollback cleanup. Browser QA now checks the actual accessible ShadowRoot evidence surface.
+
+**Release:** stacked on Stage 2A public site draft; do not merge to main, migrate D1 or deploy production without the master #259 gates.
