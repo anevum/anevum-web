@@ -197,7 +197,7 @@ function RhenMemberWorkspace({ memberId }: { memberId: string }) {
             <p>This is the shared research record, separate from your private workspace. The former live runtime has been retired for the V5 rebuild.</p>
             <section className="member-app-ready" data-evidence-state="SUSPENDED_FOR_REBUILD" aria-label="Public RHEN evidence status">
               <p className="workshop-kicker">SUSPENDED_FOR_REBUILD</p>
-              <h3>Legacy live trading is suspended.</h3>
+              <h3>Legacy trading is suspended.</h3>
               <p>No current account curve, live positions or new trading results are available. Historical publications are retained; profitability has not been established.</p>
             </section>
             <Link to="/products/rhen/evidence">Detailed evidence and limitations →</Link>
