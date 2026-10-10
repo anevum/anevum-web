@@ -4,7 +4,7 @@ on:
   push:
     branches: [main]
   pull_request:
-    branches: [main, build/commons-v5-shell-20261009, build/anevum-v5-foundation-web-contracts-20261009, build/commons-v5-stage2-sitewide-20261010]
+    branches: [main, build/commons-v5-shell-20261009, build/anevum-v5-foundation-web-contracts-20261009, build/commons-v5-stage2-sitewide-20261010, build/commons-v5-stage2-integrated-20261010]
 
 concurrency:
   group: anevum-verify-${{ github.ref }}
