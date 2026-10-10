@@ -16,7 +16,7 @@
     "sync:share-image": "node scripts/sync-share-image.mjs",
     "validate:releases": "node scripts/validate-release-registry.mjs",
     "sync:resume": "python scripts/render-founder-resume.py",
-    "test:members": "node --test tests/member-boundaries.test.mjs tests/member-adversarial.test.mjs tests/member-readiness-contract.test.mjs tests/member-future-capabilities.test.mjs tests/member-rhen-draft.test.mjs tests/member-staging.test.mjs tests/member-staging-real-acceptance.test.mjs tests/member-production-launch.test.mjs tests/member-alpaca-review.test.mjs tests/commons-v5-discussions.test.mjs && node --experimental-strip-types --test tests/member-staging-acceptance.test.mjs",
+    "test:members": "node --test tests/member-boundaries.test.mjs tests/member-adversarial.test.mjs tests/member-readiness-contract.test.mjs tests/member-future-capabilities.test.mjs tests/member-rhen-draft.test.mjs tests/member-staging.test.mjs tests/member-staging-real-acceptance.test.mjs tests/member-production-launch.test.mjs tests/member-alpaca-review.test.mjs tests/commons-v5-discussions.test.mjs tests/commons-v5-moderation.test.mjs && node --experimental-strip-types --test tests/member-staging-acceptance.test.mjs",
     "test:foundation": "node --experimental-strip-types --test tests/anevum-v5-foundation.test.mjs tests/member-v5-workspace.test.mjs tests/member-v5-workspace-browser.test.mjs tests/v5-cross-repo-schema.test.mjs tests/commons-v5-sitewide.test.mjs"
   },
   "dependencies": {

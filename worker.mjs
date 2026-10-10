@@ -442,8 +442,19 @@ export default {
 
     if (pathname.startsWith("/api/member/") || pathname === "/api/auth" || pathname.startsWith("/api/auth/")) {
       try {
+        if (pathname.startsWith("/api/member/commons/moderation/")) {
+          // Independent verified Cloudflare Access identity is REQUIRED.
+          // Better Auth must separately bind the exact same verified member.
+          const credential = await commandCredential(request, env);
+          return await memberEndpoint(request, env, pathname, {
+            moderatorAccessEmail: credential.identity.email
+          });
+        }
         return await memberEndpoint(request, env, pathname);
-      } catch {
+      } catch (error) {
+        if (error instanceof ApiError) {
+          return jsonResponse({ message: error.message }, error.status);
+        }
         return jsonResponse({ message: "Member service unavailable." }, 503);
       }
     }

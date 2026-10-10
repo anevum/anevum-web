@@ -32,3 +32,20 @@
 .c2-social-message{color:var(--accent);font-size:12px;padding:9px 0}
 @media(max-width:600px){.c2-social{margin-top:25px;padding-top:20px}.c2-social-composer{padding:15px!important}.c2-social-post{padding:15px!important}.c2-social-actions{align-items:stretch;display:grid;grid-template-columns:1fr 1fr}.c2-social-actions label{grid-column:1 / -1}.c2-social-actions select{max-width:none}.c2-social-actions button{min-width:0}}
 @media(prefers-reduced-motion:reduce){.c2-social *{animation:none!important;transition:none!important}}
+
+/* Staff review: displayed only after independent Access + Better Auth acceptance. */
+.c2-moderation{max-width:860px;margin:auto;padding-bottom:70px}
+.c2-moderation .c2-intro{margin-top:19px}
+.c2-moderation-list{display:grid;gap:15px}
+.c2-moderation-item{padding:22px!important}
+.c2-moderation-item h2{font-size:18px;line-height:1.3;letter-spacing:-.016em}
+.c2-moderation-post{font-size:13px;color:var(--sub);white-space:pre-wrap;overflow-wrap:anywhere}
+.c2-moderation-item form{display:grid;gap:9px;margin-top:17px;border-top:1px solid var(--line);padding-top:15px}
+.c2-moderation-item label{font-size:12px;font-weight:700;color:var(--text)}
+.c2-moderation-item select,.c2-moderation-item textarea{font:inherit;background:var(--panel-light);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:10px 12px;max-width:100%;min-width:0}
+.c2-moderation-item textarea{resize:vertical;min-height:85px}
+.c2-moderation-item form button{justify-self:start;border:1px solid var(--accent);background:var(--accent);color:var(--accent-contrast);padding:10px 14px;border-radius:8px;font:inherit;font-size:12px;font-weight:700;cursor:pointer}
+.c2-moderation-item form button:disabled{opacity:.48;cursor:not-allowed}
+.c2-moderation-item :is(button,select,textarea):focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+.c2-moderation-message{padding:12px 0;font-size:12px;color:var(--accent)}
+@media(max-width:600px){.c2-moderation-item{padding:15px!important}.c2-moderation-item form button{width:100%;justify-self:stretch}}

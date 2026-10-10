@@ -2,6 +2,7 @@ import { betterAuth } from "better-auth";
 import { memberRewardsStatus, memberBrokerageStatus } from "./member-capabilities.mjs";
 import { reviewerSchemaReady, reviewerEndpoint, exportReviewerConnection } from "./member-alpaca-review.mjs";
 import { commonsSocialEndpoint, socialSchemaReady, exportMemberSocial } from "./commons-social.mjs";
+import { moderationEndpoint } from "./commons-moderation.mjs";
 import { memberRhenDraftSchemaReady, readMemberRhenDraft, saveMemberRhenDraft, deleteMemberRhenDraft, validateRhenDraft } from "./member-rhen-draft.mjs";
 import { resolveMemberOrigin, memberSchemaReady } from "./member-preflight.mjs";
 import { memberRhenWorkspaceSchemaReady, readMemberRhenWorkspace, createMemberRhenWorkspace } from "./member-rhen-workspace.mjs";
@@ -126,7 +127,7 @@ export async function safeJSON(request) {
   return value;
 }
 
-export async function memberEndpoint(request, env, pathname) {
+export async function memberEndpoint(request, env, pathname, verifiedContext = {}) {
   const verifiedOrigin = resolveMemberOrigin(request, env);
   if (pathname === "/api/member/availability") {
     const available = memberConfigured(env) && Boolean(verifiedOrigin) && await memberSchemaReady(env);
@@ -152,6 +153,12 @@ export async function memberEndpoint(request, env, pathname) {
   }
 
   const db = env.MEMBER_DB;
+  if (pathname.startsWith("/api/member/commons/moderation/")) {
+    // verifiedContext is server-only from the independently verified
+    // Cloudflare Access JWT in worker.mjs; never read roles from the client.
+    return moderationEndpoint(request, env, user, verifiedOrigin, pathname,
+      verifiedContext.moderatorAccessEmail);
+  }
   if (pathname.startsWith("/api/member/commons/")) {
     // Identity and same-origin writes were already checked above.
     // The social module separately requires the isolated preview-only flag and schema.
