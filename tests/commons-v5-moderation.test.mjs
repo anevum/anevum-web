@@ -171,5 +171,14 @@ test("moderator routing is pre-authenticated by Access and also subject to Bette
   assert.match(member,/moderationEndpoint\(request, env, user, verifiedOrigin/);
   assert.match(social,/list\.length>0 && list\.includes\(memberEmail\)/);
   assert.match(schema,/report_id TEXT UNIQUE REFERENCES commons_v5_reports/);
+  const ui=read("src/commons/CommonsModeration.tsx");
+  const pages=read("src/commons/CommonsPages.tsx");
+  const app=read("src/App.tsx");
+  assert.match(pages,/pathname === "\/communities\/moderation"/);
+  assert.match(app,/<Route path="\/communities\/moderation"/);
+  assert.match(ui,/fetch\("\/api\/member\/commons\/moderation\/reports"/);
+  assert.match(ui,/moderationAuditRecorded/);
+  assert.doesNotMatch(ui,/dangerouslySetInnerHTML|localStorage\.getItem\("moderator"/);
+
   assert.doesNotMatch(social,/order_submit|trade_execute|brokerToken|\/v2\/orders/);
 });
