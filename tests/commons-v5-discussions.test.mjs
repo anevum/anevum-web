@@ -53,13 +53,13 @@ function fakeDb(){
         [...replies.values()].filter(x=>x.post_id===args[0]&&x.status==="PUBLISHED").slice(0,50):[]);
     }
     if(sql.startsWith("SELECT id,topic,title,body,status,created_at,updated_at FROM commons_v5_posts")){
-      return result([...posts.values()].filter(p=>p.author_user_id===args[0]));
+      return result([...posts.values()].filter(p=>p.author_user_id===args[0]).map(({id,topic,title,body,status,created_at,updated_at})=>({id,topic,title,body,status,created_at,updated_at})));
     }
     if(sql.startsWith("SELECT id,post_id,body,status,created_at FROM commons_v5_replies")){
-      return result([...replies.values()].filter(r=>r.author_user_id===args[0]));
+      return result([...replies.values()].filter(r=>r.author_user_id===args[0]).map(({id,post_id,body,status,created_at})=>({id,post_id,body,status,created_at})));
     }
     if(sql.startsWith("SELECT id,post_id,reason,status,created_at FROM commons_v5_reports")){
-      return result([...reports.values()].filter(r=>r.reporter_user_id===args[0]));
+      return result([...reports.values()].filter(r=>r.reporter_user_id===args[0]).map(({id,post_id,reason,status,created_at})=>({id,post_id,reason,status,created_at})));
     }
     if(sql.startsWith("INSERT INTO commons_v5_posts")){
       const [id,author_user_id,topic,title,body,created_at,updated_at,limitOwner,since]=args;
