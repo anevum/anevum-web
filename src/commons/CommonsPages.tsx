@@ -206,6 +206,7 @@ function Communities() {
     <Intro kicker="COMMONS / TOPICS" title="Explore the subjects">Browse authentic published research. Member discussion is separate and only opens after the invite-only pilot passes its moderation and privacy checks.</Intro>
     <div className="c2-grid">{types.map(([title, detail, slug]) => <article className="c2-card" key={slug}><h2>{title}</h2><p>{detail}</p><Link className="c2-text-link" to={"/field-notes?category=" + slug}>Read publications →</Link></article>)}</div>
     <div className="c2-truth">No fictional communities, membership counts, rankings, votes or endorsements are displayed.</div>
+    <p className="c2-truth">Commons discussions are for independent learning and research methods. Following a member or reading their work never grants brokerage access, copies their orders, mirrors a portfolio, or executes another person\'s trades. RHEN connections and settings remain individually controlled.</p>
     <CommonsPostsBeta/>
   </div>;
 }
