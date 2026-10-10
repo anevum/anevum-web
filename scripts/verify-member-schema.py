@@ -5,7 +5,7 @@ import sqlite3
 
 root = Path(__file__).resolve().parents[1]
 schemas = sorted((root / "migrations").glob("*.sql"))
-assert [p.name for p in schemas] == ["0001_member_platform.sql", "0002_member_rhen_drafts.sql", "0003_member_rhen_workspaces.sql"]
+assert [p.name for p in schemas] == ["0001_member_platform.sql", "0002_member_rhen_drafts.sql", "0004_member_rhen_workspaces.sql"]
 db = sqlite3.connect(":memory:")
 db.execute("PRAGMA foreign_keys = ON")
 for migration in schemas:
