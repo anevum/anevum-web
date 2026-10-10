@@ -31,7 +31,7 @@ Cloudflare Access must separately protect the moderator API path; do not rely on
 - [ ] Full exact-HEAD CI including moderator dual-auth and abuse tests.
 - [ ] Independent review of Cloudflare Access policy and server-only staff allowlist; **do not put staff identifiers or JWTs into code, GitHub comments or screenshots**.
 - [ ] Staging-only authorized D1 `0006` migration after reconciling 0004 workspace and independently approved 0005 OAuth ledger; backup/rollback proof.
-- [ ] Complete a private moderator interface (currently server contract only), keyboard/mobile accessibility, report triage workflow, communication/appeal policy, staff accountability and revocation controls.
+- [x] Draft moderator UI at `/communities/moderation`: real server-backed pending queue, explicit hide/dismiss reason and audit acknowledgement; no public link or client-derived moderator role. It is inaccessible without BOTH Access and Better Auth identity gates and remains disabled under current flags.\n- [ ] Prove keyboard/mobile accessibility in exact-head browser CI; complete staff communication/appeal policy, private permissions provisioning, audit retention and revocation controls.
 - [ ] Define content/moderation Terms, report handling retention and member data deletion/exposure handling.
 - [ ] Real two-member/staff adversarial browser acceptance with disabled membership, mismatched Access identity, cross-user session and duplicate report resolution.
 - [ ] Explicit owner sign-off before granting staff Access, enabling any staging social flag, inviting members or deploying production.
