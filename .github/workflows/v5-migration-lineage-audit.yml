@@ -6,6 +6,8 @@ on:
     paths:
       - 'migrations/**'
       - 'tests/member-preview-migration.test.mjs'
+      - 'tests/preview-d1-ledger-lineage.test.mjs'
+      - 'scripts/verify-preview-d1-ledger.mjs'
       - 'tests/member-v5-workspace.test.mjs'
       - 'scripts/verify-member-schema.py'
       - 'docs/ANEVUM_V5_FOUNDATION_2026-10-09.md'
@@ -32,7 +34,7 @@ jobs:
         with:
           python-version: '3.12'
       - name: Audit migration source naming and preview-only guard
-        run: node --test tests/member-preview-migration.test.mjs
+        run: node --test tests/member-preview-migration.test.mjs tests/preview-d1-ledger-lineage.test.mjs
       - name: Verify SQLite member schema, cascade and tenant isolation
         run: python scripts/verify-member-schema.py
       - name: Verify no production D1 migration or deploy is performed here
