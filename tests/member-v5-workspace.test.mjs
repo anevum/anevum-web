@@ -122,7 +122,7 @@ test("only preview enables member workspace allocation and schema remains broker
   assert.equal(production.vars.ANEVUM_V5_WORKSPACES_ENABLED, "false");
   assert.equal(preview.vars.ANEVUM_V5_WORKSPACES_ENABLED, "true");
   assert.notEqual(production.d1_databases[0].database_id, preview.d1_databases[0].database_id);
-  const migration = read("migrations/0003_member_rhen_workspaces.sql");
+  const migration = read("migrations/0004_member_rhen_workspaces.sql");
   assert.match(migration, /REFERENCES "user"\("id"\) ON DELETE CASCADE/);
   assert.match(migration, /workspace_id TEXT NOT NULL UNIQUE/);
   assert.doesNotMatch(migration, /access_token|broker_account|trading_order/);

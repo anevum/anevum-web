@@ -4,7 +4,7 @@ on:
   push:
     branches: [main]
   pull_request:
-    branches: [main, build/commons-v5-shell-20261009]
+    branches: [main, build/commons-v5-shell-20261009, build/anevum-v5-foundation-web-contracts-20261009]
 
 concurrency:
   group: anevum-verify-${{ github.ref }}
@@ -49,7 +49,7 @@ jobs:
       - name: Enforce one guarded production Worker deployment
         run: node --test tests/v5-verify-deploy-safety.test.mjs
       - name: Verify member D1 binding isolation
-        run: node --test tests/member-bindings.test.mjs tests/member-staging.test.mjs tests/member-preview-migration.test.mjs tests/member-command-cutover.test.mjs tests/member-command-navigation.test.mjs && node scripts/verify-member-bindings.mjs --require-config
+        run: node --test tests/member-bindings.test.mjs tests/member-staging.test.mjs tests/member-preview-migration.test.mjs tests/preview-d1-ledger-lineage.test.mjs tests/member-command-cutover.test.mjs tests/member-command-navigation.test.mjs && node scripts/verify-member-bindings.mjs --require-config
       - name: Verify Cloudflare Command Access cutover safety (offline)
         run: python -m unittest discover -s tests -p 'test_command_access_cutover.py' -v
       - name: Verify member schema and tenant separation
