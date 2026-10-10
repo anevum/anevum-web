@@ -8,7 +8,7 @@ const commons = source("src/commons/CommonsV5.tsx");
 const pages = source("src/commons/CommonsPages.tsx");
 
 test("Stage 2 public routes reuse the V5 shell rather than reentering the legacy studio shell", () => {
-  for (const path of ["/products", "/feed", "/field-notes", "/field-notes/:slug", "/about", "/products/rhen", "/products/rhen/architecture", "/products/rhen/releases", "/products/rhen/releases/:slug", "/communities", "/learn", "/privacy", "/terms", "/sign-in"]) {
+  for (const path of ["/products", "/feed", "/field-notes", "/field-notes/:slug", "/about", "/products/rhen", "/products/rhen/architecture", "/products/rhen/releases", "/products/rhen/releases/:slug", "/communities", "/learn", "/privacy", "/terms", "/sign-in", "/resume"]) {
     assert.ok(app.includes('<Route path="' + path + '" element={<Suspense fallback={<Loader />}><CommonsV5 /></Suspense>} />'), "not using public Commons shell: " + path);
   }
   assert.match(commons, /<CommonsPublicPage pathname=\{pathname\} search=\{search\}\s*\/>/);
@@ -30,4 +30,10 @@ test("V5 public content is real source-backed data with no fake member feeds", (
   assert.match(pages, /No fictional communities/);
   assert.match(pages, /Historical publication/);
   assert.doesNotMatch(pages, /Math\.random|setInterval|simulatedResults|fakeUsers/);
+});
+
+test("public RHEN product registry reflects suspended runtime and V5 redevelopment", () => {
+  const registry = source("src/data/products.ts");
+  assert.match(registry, /lifecycle: "development"/);
+  assert.match(registry, /separately gated execution/);
 });

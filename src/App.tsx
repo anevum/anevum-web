@@ -65,6 +65,7 @@ const descriptions: Record<string, string> = {
   "/about": "About ANEVUM, the independently built and operated software studio.",
   "/resume": "Professional résumé and background for the person responsible for ANEVUM.",
   "/sign-in": "ANEVUM account access.",
+  "/resume": "Public résumé and technical background for the founder of ANEVUM.",
   "/me": "Your private ANEVUM project library and follows.",
   "/me/settings": "Private ANEVUM profile and account settings.",
   "/me/rewards": "Status and future plans for ANEVUM member rewards.",
@@ -217,7 +218,7 @@ export default function App() {
         <Route path="/learn" element={<Suspense fallback={<Loader />}><CommonsV5 /></Suspense>} />
         <Route path="/field-notes/:slug" element={<Suspense fallback={<Loader />}><CommonsV5 /></Suspense>} />
         <Route path="/about" element={<Suspense fallback={<Loader />}><CommonsV5 /></Suspense>} />
-        <Route path="/resume" element={<PublicExperience><Resume /></PublicExperience>} />
+        <Route path="/resume" element={<Suspense fallback={<Loader />}><CommonsV5 /></Suspense>} />
         <Route path="/privacy" element={<Suspense fallback={<Loader />}><CommonsV5 /></Suspense>} />
         <Route path="/terms" element={<Suspense fallback={<Loader />}><CommonsV5 /></Suspense>} />
         <Route path="/sign-in" element={<Suspense fallback={<Loader />}><CommonsV5 /></Suspense>} />

@@ -26,7 +26,7 @@ This branch is **draft only** and stacked on F0 #258, which itself is stacked on
 | /privacy and /terms | Existing legal copy, legacy look | Existing legal copy hosted by V5 shell | No silent legal-text rewrite |
 | /communities | No route | Read-only topical navigation | No fake membership, posts or groups |
 | /learn | No route | Research reading path | Real notes only; no course/paywall claims |
-| /resume | Existing resume page | Deferred | Linked; asset generation remains |
+| /resume | Legacy résumé page | V5 résumé using original factual founder source | PDF generation and download unchanged |
 | /products/rhen/evidence | Public evidence adapter | Deferred / existing guarded route | Must remain truthful SUSPENDED_FOR_REBUILD |
 | /command | Member Command and owner-only operator affordance | Deferred / existing guarded route | Owner requires independent Access verification |
 | /me, /me/settings, /me/rewards, /me/verify | Member state and account lifecycle | Deferred / existing guarded route | F0 two-member isolation must remain intact |

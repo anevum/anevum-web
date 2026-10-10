@@ -189,6 +189,22 @@ function Learn() {
     <Link className="c2-text-link" to="/field-notes">All Field Notes →</Link>
   </div>;
 }
+function ResumePage() {
+  return <div className="c2-page c2-resume">
+    <Intro kicker="ANEVUM / BACKGROUND" title="Experience and background">{founder.headline}. A factual record of past roles, education and skills.</Intro>
+    <div className="c2-action-row"><a href="/devon-akins-resume.pdf" download>Download résumé PDF</a><a href={"mailto:" + founder.email}>Contact</a></div>
+    <section className="c2-section"><h2>Profile</h2><p>{founder.summary}</p></section>
+    <section className="c2-section"><h2>Experience</h2><div className="c2-stack">{founder.experience.map(role =>
+      <article className="c2-card" key={role.organization + role.role}><div className="c2-card-meta"><span>{role.organization}</span><span>{role.period}</span></div>
+        <h2>{role.role}</h2><ul>{role.bullets.map((line, i) => <li key={i}>{line}</li>)}</ul></article>)}</div></section>
+    <section className="c2-section"><h2>Technical skills</h2><div className="c2-grid">{founder.skills.map(group =>
+      <article className="c2-card" key={group.group}><h2>{group.group}</h2><p>{group.items.join(" · ")}</p></article>)}</div></section>
+    <section className="c2-section"><h2>Education</h2><div className="c2-stack">{founder.education.map(item =>
+      <article className="c2-card" key={item.school}><h2>{item.school}</h2><p>{item.study}. {item.detail}</p></article>)}</div></section>
+    <section className="c2-section"><h2>Credentials</h2><div className="c2-stack">{founder.certifications.map(item =>
+      <article className="c2-card" key={item.name}><h2>{item.name}</h2><p>{item.status}. {item.detail}</p></article>)}</div></section>
+  </div>;
+}
 function About() {
   return <div className="c2-page">
     <Intro kicker="ANEVUM / ABOUT" title="Independent work, shared openly.">
@@ -215,6 +231,7 @@ export default function CommonsPublicPage({ pathname, search }: Props) {
   if (pathname === "/communities") return <Communities/>;
   if (pathname === "/learn") return <Learn/>;
   if (pathname === "/about") return <About/>;
+  if (pathname === "/resume") return <ResumePage/>;
   if (pathname === "/privacy") return <div className="c2-page c2-legal"><Privacy/></div>;
   if (pathname === "/terms") return <div className="c2-page c2-legal"><Terms/></div>;
   if (pathname === "/sign-in") return <div className="c2-page c2-legal"><SignIn/></div>;
