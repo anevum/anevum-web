@@ -9,18 +9,19 @@ const preview = (...names) => [
 const catalog = new Set([
   "0001_member_platform.sql",
   "0002_member_rhen_drafts.sql",
+  "0003_member_billing.sql",
   "0004_member_rhen_workspaces.sql"
 ]);
 const knownBilling = "0003_member_billing.sql";
 
-test("unmerged billing 0003 in the actual preview ledger blocks workspace 0004 before any apply", () => {
+test("missing billing 0003 source still blocks any further preview migration", () => {
   const applied = preview(
     "0001_member_platform.sql",
     "0002_member_rhen_drafts.sql",
     knownBilling
   );
   assert.throws(
-    () => validatePreviewD1Ledger(applied, catalog),
+    () => validatePreviewD1Ledger(applied, new Set([...catalog].filter(name => name !== knownBilling))),
     /PREVIEW_LINEAGE_BLOCKED.*missing reviewed source for applied 0003_member_billing.sql/
   );
 });
@@ -32,7 +33,7 @@ test("explicitly reviewed billing SQL source resolves preview applied filename l
     knownBilling
   );
   const accepted = validatePreviewD1Ledger(
-    applied, new Set([...catalog, knownBilling])
+    applied, catalog
   );
   assert.deepEqual(accepted, { appliedCount: 3, allSourcesPresent: true });
   assert.equal(Object.isFrozen(accepted), true);
@@ -46,11 +47,11 @@ test("migration numbered 0004 is accepted only if corresponding local source exi
     "0004_member_rhen_workspaces.sql"
   );
   assert.throws(
-    () => validatePreviewD1Ledger(applied, catalog),
-    /missing reviewed source for applied 0003_member_billing.sql/
+    () => validatePreviewD1Ledger(applied, new Set([...catalog].filter(name => name !== "0004_member_rhen_workspaces.sql"))),
+    /missing reviewed source for applied 0004_member_rhen_workspaces.sql/
   );
   assert.deepEqual(
-    validatePreviewD1Ledger(applied, new Set([...catalog, knownBilling])),
+    validatePreviewD1Ledger(applied, catalog),
     { appliedCount: 4, allSourcesPresent: true }
   );
 });
