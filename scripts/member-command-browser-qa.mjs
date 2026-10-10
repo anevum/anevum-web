@@ -52,7 +52,16 @@ async function runCase(viewport, state) {
   const accountExpr='document.querySelector(".anevum-commons-v5-mount")?.shadowRoot?.querySelector(".c2-member .member-command")';
   let mounted=false;
   for(let i=0;i<100;i++){
-    mounted=await evaluate(`(() => {const account=${accountExpr};return !!account?.querySelector(".member-program")&&!account.textContent.includes("Checking your account");})()`);
+    mounted=await evaluate(`(() => {
+      const account=${accountExpr};
+      if(!account?.querySelector(".member-program")||account.textContent.includes("Checking your account"))return false;
+      // Authenticated controls are intentionally disabled until private data loads.
+      if(${JSON.stringify(state)}==="member"){
+        const actions=[...account.querySelectorAll(".member-card-actions button")];
+        return actions.length===2&&actions.every(el=>!el.disabled)&&!account.textContent.includes("Loading your programs");
+      }
+      return true;
+    })()`);
     if(mounted)break;
     await pause(100);
   }
