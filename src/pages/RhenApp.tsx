@@ -77,12 +77,13 @@ export default function RhenApp() {
         </aside>
         <main className="member-app-content">
           <p className="workshop-kicker">RHEN / {section}</p>
+          <p role="status"><strong>V5 rebuild:</strong> Legacy trading is suspended. Your RHEN workspace is being redesigned; broker linking and personal bots are not yet active.</p>
           {section === "overview" && <>
             <h2>Trading ideas, tested against evidence.</h2>
             <p>RHEN is my market research and execution project. This member workspace shows the same sanitized public evidence and research available on ANEVUM; it is not a personal brokerage account or a live trading control panel.</p>
             <dl className="member-app-facts">
               <div><dt>Registered release</dt><dd>{release.version}</dd></div>
-              <div><dt>Live trading scope</dt><dd>Long U.S. equities and ETFs</dd></div>
+              <div><dt>Trading status</dt><dd>Suspended for V5 rebuild</dd></div>
               <div><dt>Options</dt><dd>Research only</dd></div>
               <div><dt>Profitability</dt><dd>Not established</dd></div>
             </dl>

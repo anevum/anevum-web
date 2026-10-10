@@ -1434,3 +1434,18 @@
   }
 }
 
+
+/* V5 retirement: explicit unavailable state instead of fabricated live telemetry. */
+.pt-v5-retirement {
+  display: grid;
+  gap: 8px;
+  padding: 18px 20px;
+  margin: 16px 0 20px;
+  border: 1px solid var(--pt-line-strong);
+  border-radius: 14px;
+  background: var(--pt-panel);
+  color: var(--pt-text);
+}
+.pt-v5-retirement strong { font-size: 13px; letter-spacing: .08em; }
+.pt-v5-retirement p { max-width: 80ch; margin: 0; line-height: 1.55; color: var(--pt-muted); font-size: 14px; }
+.pt-v5-retirement a { color: var(--pt-blue); font-size: 13px; text-decoration: underline; text-underline-offset: 3px; }

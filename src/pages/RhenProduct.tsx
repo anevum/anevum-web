@@ -9,7 +9,7 @@ const publicRecords = [
   {
     href: "/products/rhen/evidence",
     title: "Public evidence",
-    detail: "Live public-safe observations, performance history, timestamps, and limitations."
+    detail: "Evidence interface paused for the V5 rebuild; prior records are not a live feed."
   },
   {
     href: "/products/rhen/releases",
@@ -48,9 +48,10 @@ export default function RhenProduct() {
               test trading ideas, and learn whether a system can make useful decisions from real evidence.
             </p>
             <p className="workshop-rhen-lead-secondary">
-              The software is operating with narrow trading authority, but a working system is not the same thing
-              as a consistently profitable strategy.
+              Legacy trading is suspended while I rebuild RHEN as a single, member-owned research and trading platform.
+              Each member, including me, will eventually link their own brokerage account through the same controlled process.
             </p>
+            <p role="status"><strong>RHEN V5 FOUNDATION:</strong> Live execution suspended. New member brokerage connections and paper trading are not available yet.</p>
             <div className="workshop-rhen-actions">
               <Link className="workshop-rhen-primary" to="/products/rhen/evidence">Explore real evidence <span aria-hidden="true">→</span></Link>
               {memberAvailability === "available" ? (
@@ -69,14 +70,13 @@ export default function RhenProduct() {
         </div>
         <div className="workshop-rhen-overview">
           <div className="workshop-rhen-description">
-            <p>RHEN gathers market observations, evaluates candidates, manages narrowly authorized execution,
-              and preserves what happened so trading ideas can be compared against later outcomes.</p>
+            <p>The previous RHEN prototype gathered market observations and tested trading strategies. Its live runtime is now retired from execution; the next RHEN is being rebuilt with isolated member workspaces, an integrated research lab, and reproducible evidence.</p>
             <p>Research and replay help decide what might be worth testing next. Those results do not automatically
               change the live trading strategy or grant new trading permissions.</p>
           </div>
           <dl className="workshop-rhen-facts">
             <div><dt>Registered release</dt><dd>{release.version} · {release.codename}</dd></div>
-            <div><dt>Long equity/ETF trading</dt><dd>Authorized scope</dd></div>
+            <div><dt>Long equity/ETF trading</dt><dd>Suspended during rebuild</dd></div>
             <div><dt>Options</dt><dd>Research only</dd></div>
             <div><dt>Short equities / leverage expansion</dt><dd>Disabled</dd></div>
             <div><dt>Strategy promotion</dt><dd>Manual approval required</dd></div>
