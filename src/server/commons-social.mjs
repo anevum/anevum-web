@@ -83,6 +83,27 @@ function presentReply(row,owner){
   return {id:row.id,postId:row.post_id,body:row.body,createdAt:row.created_at,
     ownedByMe:row.author_user_id===owner,authorLabel:"Commons member"};
 }
+export async function exportMemberSocial(db,userId){
+  // A member's account export includes their own contributions and reports
+  // regardless of whether new posting is currently enabled.
+  if(!await socialSchemaReady(db))return null;
+  const [posts,replies,reports]=await Promise.all([
+    db.prepare(
+      "SELECT id,topic,title,body,status,created_at,updated_at FROM commons_v5_posts "+
+      "WHERE author_user_id=? ORDER BY created_at ASC,id ASC"
+    ).bind(userId).all(),
+    db.prepare(
+      "SELECT id,post_id,body,status,created_at FROM commons_v5_replies "+
+      "WHERE author_user_id=? ORDER BY created_at ASC,id ASC"
+    ).bind(userId).all(),
+    db.prepare(
+      "SELECT id,post_id,reason,status,created_at FROM commons_v5_reports "+
+      "WHERE reporter_user_id=? ORDER BY created_at ASC,id ASC"
+    ).bind(userId).all()
+  ]);
+  return {posts:posts.results||[],replies:replies.results||[],reports:reports.results||[]};
+}
+
 export async function commonsSocialEndpoint(request,env,user,origin,pathname){
   if(!user?.id)return reply({message:"Authentication required."},401);
   if(!socialConfigured(env,origin))return reply({
