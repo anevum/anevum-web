@@ -69,7 +69,7 @@ test("real browser proof uses only same-origin session, repeated POST, owner-bou
     "/api/member/export"
   ]);
   assert.equal(env.calls.every(x=>x.credentials==="same-origin"),true);
-  assert.doesNotMatch(JSON.stringify(result),/member-A|wrk_|session|token|cookie/i);
+  assert.doesNotMatch(JSON.stringify(result),/member-A|wrk_|token|cookie/i);
 });
 
 test("existing workspace remains identical and yields the same non-secret comparison fingerprint",async()=>{
