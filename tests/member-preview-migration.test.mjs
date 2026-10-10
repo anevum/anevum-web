@@ -20,10 +20,13 @@ test("production and preview member D1 resources use verified distinct identitie
   assert.equal(config.vars.ANEVUM_MEMBER_PREVIEW_ENABLED, "false");
 });
 
-test("schema automation can only migrate preview D1 after main-branch merge", () => {
+test("schema migration requires manual dispatch on exact reviewed main-branch SHA", () => {
   const workflow = read(".github/workflows/member-preview-d1-migrate.yml");
-  assert.match(workflow, /branches: \[main\]/);
-  assert.match(workflow, /github\.event_name == 'push'/);
+  assert.match(workflow, /workflow_dispatch:/);
+  assert.doesNotMatch(workflow, /\n  push:/);
+  assert.match(workflow, /github\.ref == 'refs\/heads\/main'/);
+  assert.match(workflow, /inputs\.confirmation == 'MIGRATE_PREVIEW_ONLY'/);
+  assert.match(workflow, /inputs\.reviewed_head_sha == github\.sha/);
   assert.match(workflow, /--require-config/);
   assert.match(workflow, /ANEVUM_MEMBERS_ENABLED == "false"/);
   assert.match(workflow, /d1 migrations apply MEMBER_DB --remote --config wrangler\.preview-migrations\.jsonc/);
