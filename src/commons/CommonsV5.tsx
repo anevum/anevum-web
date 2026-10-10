@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { Link } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import CommonsPublicPage from "./CommonsPages";
 import Mark from "../components/Mark";
 import { fieldNotes, type FieldNote } from "../data/fieldNotes";
 import { memberAuthClient } from "../member/auth-client";
 import css from "../styles/commons-v5.css?inline";
 import polishCss from "../styles/commons-v5-polish.css?inline";
+import pagesCss from "../styles/commons-v5-pages.css?inline";
 
 /**
  * Project Commons Stage 1. V5 visual parity baseline in an isolated Shadow DOM.
@@ -64,9 +66,10 @@ function OfficialAvatar({ size = "avatar-md" }: { size?: string }) {
   return <span className={"avatar avatar-official " + size} aria-hidden="true">A</span>;
 }
 
-function Header({ onMenu, search, setSearch, onDesign, onNotice, inputRef }:{
+function Header({ onMenu, search, setSearch, onDesign, onNotice, inputRef, pathname, onSearchSubmit }:{
   onMenu: () => void; search: string; setSearch: (value: string) => void;
   onDesign: () => void; onNotice: () => void; inputRef: React.RefObject<HTMLInputElement | null>;
+  pathname: string; onSearchSubmit: () => void;
 }) {
   const { data: session } = memberAuthClient.useSession();
   return <header className="global-header">
@@ -80,13 +83,13 @@ function Header({ onMenu, search, setSearch, onDesign, onNotice, inputRef }:{
     <div className="global-search" role="search">
       <Icon name="search"/>
       <input ref={inputRef} type="search" value={search} onChange={e=>setSearch(e.target.value)}
-        placeholder="Search ANEVUM publications..." aria-label="Search published ANEVUM work" />
+        placeholder="Search ANEVUM publications..." aria-label="Search published ANEVUM work" onKeyDown={event=>{if(event.key==="Enter"){event.preventDefault();onSearchSubmit();}}} />
       <kbd>/</kbd>
     </div>
     <nav className="top-links" aria-label="Top navigation">
-      <Link to="/" className="active" aria-current="page">Commons</Link>
-      <Link to="/products">Discover</Link>
-      <Link to="/field-notes">Research</Link>
+      <Link to="/" className={pathname==="/"||pathname==="/feed"?"active":""} aria-current={pathname==="/"||pathname==="/feed"?"page":undefined}>Commons</Link>
+      <Link to="/products" className={pathname==="/products"?"active":""} aria-current={pathname==="/products"?"page":undefined}>Discover</Link>
+      <Link to="/field-notes" className={pathname.startsWith("/field-notes")?"active":""} aria-current={pathname.startsWith("/field-notes")?"page":undefined}>Research</Link>
     </nav>
     <div className="global-actions">
       <button type="button" className="create-btn" onClick={onNotice}><Icon name="plus"/><span>Create</span></button>
@@ -100,8 +103,8 @@ function Header({ onMenu, search, setSearch, onDesign, onNotice, inputRef }:{
   </header>;
 }
 
-function Sidebar({ collapsed, onClose, onNotice }: {
-  collapsed: boolean; onClose: () => void; onNotice: () => void;
+function Sidebar({ collapsed, onClose, onNotice, pathname }: {
+  collapsed: boolean; onClose: () => void; onNotice: () => void; pathname: string;
 }) {
   const { data: session } = memberAuthClient.useSession();
   const userName = session?.user?.name || "Browsing as guest";
@@ -109,20 +112,20 @@ function Sidebar({ collapsed, onClose, onNotice }: {
   return <aside id="commons-primary-navigation" className="left-sidebar" aria-label="Main navigation"><div className="sidebar-scroll">
     <div className="sidebar-nav-group">
       <span className="side-heading">EXPLORE</span>
-      <Link className="side-link active" to="/" aria-current="page" title="Home feed" onClick={onClose}><Icon name="home"/><span>Home feed</span></Link>
-      <Link className="side-link" to="/products" title="Discover" onClick={onClose}><Icon name="compass"/><span>Discover</span></Link>
-      <Link className="side-link" to="/field-notes" title="Research" onClick={onClose}><Icon name="book"/><span>Research</span></Link>
-      <button type="button" className="side-link" title="Communities" onClick={onNotice}><Icon name="users"/><span>Communities</span></button>
+      <Link className={"side-link "+(pathname==="/"||pathname==="/feed"?"active":"")} to="/" aria-current={pathname==="/"||pathname==="/feed"?"page":undefined} title="Home feed" onClick={onClose}><Icon name="home"/><span>Home feed</span></Link>
+      <Link className={"side-link "+(pathname==="/products"?"active":"")} to="/products" aria-current={pathname==="/products"?"page":undefined} title="Discover" onClick={onClose}><Icon name="compass"/><span>Discover</span></Link>
+      <Link className={"side-link "+(pathname.startsWith("/field-notes")?"active":"")} to="/field-notes" aria-current={pathname.startsWith("/field-notes")?"page":undefined} title="Research" onClick={onClose}><Icon name="book"/><span>Research</span></Link>
+      <Link className={"side-link "+(pathname==="/communities"?"active":"")} to="/communities" title="Explore topics" onClick={onClose}><Icon name="users"/><span>Topics</span></Link>
       <button type="button" className="side-link" title="Levels and awards" onClick={onNotice}><Icon name="award"/><span>Levels &amp; awards</span><span className="side-small-label">SOON</span></button>
     </div>
     <div className="side-divider"/>
     <div className="sidebar-nav-group community-nav">
-      <div className="group-heading"><span className="side-heading">EXPLORE TOPICS</span><button className="side-mini-btn" type="button" aria-label="Browse topics" onClick={onNotice}><Icon name="plus"/></button></div>
+      <div className="group-heading"><span className="side-heading">EXPLORE TOPICS</span><Link className="side-mini-btn" to="/communities" aria-label="Browse topics" onClick={onClose}><Icon name="plus"/></Link></div>
       <Link className="community-link" to="/field-notes" onClick={onClose}><span className="community-icon ci-blue">λ</span><span>Algorithms &amp; methods</span></Link>
       <Link className="community-link" to="/field-notes" onClick={onClose}><span className="community-icon ci-orange">⌘</span><span>Software &amp; builders</span></Link>
       <Link className="community-link" to="/field-notes" onClick={onClose}><span className="community-icon ci-purple">∑</span><span>Mathematics &amp; theory</span></Link>
       <Link className="community-link" to="/field-notes" onClick={onClose}><span className="community-icon ci-sky">✺</span><span>Research &amp; evidence</span></Link>
-      <Link className="sidebar-small-link" to="/field-notes" onClick={onClose}>See published research <Icon name="arrow-right"/></Link>
+      <Link className="sidebar-small-link" to="/learn" onClick={onClose}>Learn with published research <Icon name="arrow-right"/></Link>
     </div>
     <div className="side-divider"/>
     <div className="sidebar-nav-group">
@@ -326,6 +329,10 @@ function CommonsApp({prefs,setPrefs}: {prefs:Preferences;setPrefs:(next:Preferen
   const [noticeOpen,setNoticeOpen] = useState(false);
   const searchRef=useRef<HTMLInputElement>(null);
   const { data: session } = memberAuthClient.useSession();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const pathname = location.pathname;
+  const isFeed = pathname === "/" || pathname === "/feed";
 
   useEffect(()=>{
     const onKey=(event:KeyboardEvent)=>{
@@ -342,22 +349,24 @@ function CommonsApp({prefs,setPrefs}: {prefs:Preferences;setPrefs:(next:Preferen
   },[]);
 
   return <div className={"app "+(collapsed?"nav-collapsed ":"")+(drawerOpen?"drawer-open":"")}>
-    <Header search={search} setSearch={setSearch} inputRef={searchRef}
+    <Header search={search} setSearch={setSearch} inputRef={searchRef} pathname={pathname}
+      onSearchSubmit={()=>navigate("/field-notes?q="+encodeURIComponent(search.trim()))}
       onMenu={()=>{if(window.matchMedia("(max-width: 900px)").matches) setDrawerOpen(x=>!x); else setCollapsed(x=>!x);}}
       onDesign={()=>setDesignOpen(x=>!x)} onNotice={()=>setNoticeOpen(true)}/>
     <div className="shell">
-      <Sidebar collapsed={collapsed} onClose={()=>setDrawerOpen(false)} onNotice={()=>setNoticeOpen(true)}/>
+      <Sidebar collapsed={collapsed} pathname={pathname} onClose={()=>setDrawerOpen(false)} onNotice={()=>setNoticeOpen(true)}/>
       <main className="main" id="commons-main">
-        <Feed search={search} filter={filter} setFilter={setFilter} density={prefs.density}
-          setDensity={next=>setPrefs({...prefs,density:next})} onNotice={()=>setNoticeOpen(true)}/>
+        {isFeed ? <Feed search={search} filter={filter} setFilter={setFilter} density={prefs.density}
+          setDensity={next=>setPrefs({...prefs,density:next})} onNotice={()=>setNoticeOpen(true)}/> :
+          <CommonsPublicPage pathname={pathname} search={search} />}
       </main>
       <RightRail onNotice={()=>setNoticeOpen(true)}/>
     </div>
     <nav className="mobile-nav" aria-label="Mobile navigation">
-      <Link to="/" className="active" aria-current="page"><Icon name="home"/><span>Home</span></Link>
-      <Link to="/products"><Icon name="compass"/><span>Explore</span></Link>
+      <Link to="/" className={isFeed?"active":""} aria-current={isFeed?"page":undefined}><Icon name="home"/><span>Home</span></Link>
+      <Link to="/products" className={pathname==="/products"?"active":""}><Icon name="compass"/><span>Explore</span></Link>
       <button type="button" className="mobile-create" aria-label="Create a post" onClick={()=>setNoticeOpen(true)}><Icon name="plus"/></button>
-      <Link to="/field-notes"><Icon name="book"/><span>Research</span></Link>
+      <Link to="/field-notes" className={pathname.startsWith("/field-notes")?"active":""}><Icon name="book"/><span>Research</span></Link>
       <Link to={session?.user ? "/command" : "/sign-in"}><Icon name="user"/><span>Account</span></Link>
     </nav>
     {drawerOpen ? <button type="button" className="drawer-scrim" aria-label="Close navigation" onClick={()=>setDrawerOpen(false)}/> : null}
@@ -388,7 +397,7 @@ export default function CommonsV5() {
   return <div ref={mount} className="anevum-commons-v5-mount"
     data-theme={prefs.theme} data-layout={prefs.layout} data-density={prefs.density}
     data-radius={prefs.radius} data-surface={prefs.surface} style={{display:"block",minHeight:"100dvh"}}>
-    {shadow ? createPortal(<><style>{css+"\n"+polishCss}</style><CommonsApp prefs={prefs} setPrefs={setPrefs}/></>,shadow) : null}
+    {shadow ? createPortal(<><style>{css+"\n"+polishCss+"\n"+pagesCss}</style><CommonsApp prefs={prefs} setPrefs={setPrefs}/></>,shadow) : null}
   </div>;
 }
 

@@ -1,3 +1,14 @@
-# Archived pre-Vite site
+# Archived website documents (read-only)
 
-This directory retains the former site and Supabase client for historical reference. Production builds from the root Vite/React entrypoint and worker.mjs; this directory is not a public asset directory or runtime dependency. Do not deploy this client or reuse its retired auth flow.
+The old pre-Vite static homepage, styles, client-side JavaScript/Supabase code,
+headers, sitemap and old static build/serve scripts were removed from the V5
+development branch after a source dependency audit. **Do not deploy or restore
+that retired auth client.**
+
+The historical Transcosmic wiki snapshot and its documentation remain under
+site/wiki/archive/transcosmic/ for reference. Git history preserves the deleted
+static source for legitimate historical inspection.
+
+Current production website entrypoints are root index.html, Vite/React in src/,
+Cloudflare worker.mjs and the guarded .github/workflows/deploy-production.yml.
+Do not recreate a second static website or use the archived code as a runtime.

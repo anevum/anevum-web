@@ -31,6 +31,8 @@ const Terms = lazy(() => import("./pages/Terms"));
 
 const titles: Record<string, string> = {
   "/": "The Commons — ANEVUM",
+  "/communities": "Topics — ANEVUM Commons",
+  "/learn": "Learning — ANEVUM Commons",
   "/products": "Projects — ANEVUM",
   "/feed": "Updates — ANEVUM",
   "/field-notes": "Field Notes — ANEVUM",
@@ -51,11 +53,13 @@ const titles: Record<string, string> = {
 
 const descriptions: Record<string, string> = {
   "/": "The Commons is ANEVUM's evolving community for builders and researchers. Explore real first-party publications and RHEN development.",
+  "/communities": "Browse real published ANEVUM work by topic. Public community discussions are still in development.",
+  "/learn": "Learn from published ANEVUM research methods, experiments and engineering decisions.",
   "/products": "The canonical registry of public ANEVUM products. Products appear when they actually exist.",
-  "/feed": "A chronological ANEVUM record assembled from real releases, Field Notes, public-safe runtime observations, and research decisions.",
+  "/feed": "Published ANEVUM Field Notes. New community posting and social interactions remain in development.",
   "/field-notes": "ANEVUM Field Notes document research decisions, failures, engineering changes, releases, and measured evidence.",
-  "/products/rhen": "RHEN is ANEVUM's live trading and research system operating on real market data with public evidence and narrow live authority.",
-  "/products/rhen/evidence": "Inspect sanitized RHEN runtime and performance evidence without exposing protected broker, position, order, or strategy details.",
+  "/products/rhen": "RHEN is ANEVUM's research application under V5 reconstruction. Legacy live trading is suspended; member brokerage and execution are not available.",
+  "/products/rhen/evidence": "RHEN V5 rebuild and historical public evidence; no active legacy trading telemetry.",
   "/products/rhen/architecture": "Inspect RHEN execution, research, replay, forecasting, control, storage, and evidence boundaries.",
   "/products/rhen/releases": "RHEN release records document production changes, verification, limitations, and public system history.",
   "/about": "About ANEVUM, the independently built and operated software studio.",
@@ -206,15 +210,17 @@ export default function App() {
       <OverflowPan />
       <Routes>
         <Route path="/" element={<Suspense fallback={<Loader />}><CommonsV5 /></Suspense>} />
-        <Route path="/products" element={<PublicExperience><Products /></PublicExperience>} />
-        <Route path="/feed" element={<PublicExperience><Feed /></PublicExperience>} />
-        <Route path="/field-notes" element={<PublicExperience><ResearchHub /></PublicExperience>} />
-        <Route path="/field-notes/:slug" element={<PublicExperience><FieldNoteDetail /></PublicExperience>} />
-        <Route path="/about" element={<PublicExperience><Founder /></PublicExperience>} />
-        <Route path="/resume" element={<PublicExperience><Resume /></PublicExperience>} />
-        <Route path="/privacy" element={<PublicExperience><Privacy /></PublicExperience>} />
-        <Route path="/terms" element={<PublicExperience><Terms /></PublicExperience>} />
-        <Route path="/sign-in" element={<PublicExperience><SignIn /></PublicExperience>} />
+        <Route path="/products" element={<Suspense fallback={<Loader />}><CommonsV5 /></Suspense>} />
+        <Route path="/feed" element={<Suspense fallback={<Loader />}><CommonsV5 /></Suspense>} />
+        <Route path="/field-notes" element={<Suspense fallback={<Loader />}><CommonsV5 /></Suspense>} />
+        <Route path="/communities" element={<Suspense fallback={<Loader />}><CommonsV5 /></Suspense>} />
+        <Route path="/learn" element={<Suspense fallback={<Loader />}><CommonsV5 /></Suspense>} />
+        <Route path="/field-notes/:slug" element={<Suspense fallback={<Loader />}><CommonsV5 /></Suspense>} />
+        <Route path="/about" element={<Suspense fallback={<Loader />}><CommonsV5 /></Suspense>} />
+        <Route path="/resume" element={<Suspense fallback={<Loader />}><CommonsV5 /></Suspense>} />
+        <Route path="/privacy" element={<Suspense fallback={<Loader />}><CommonsV5 /></Suspense>} />
+        <Route path="/terms" element={<Suspense fallback={<Loader />}><CommonsV5 /></Suspense>} />
+        <Route path="/sign-in" element={<Suspense fallback={<Loader />}><CommonsV5 /></Suspense>} />
         <Route path="/me" element={<PublicExperience><MemberHome /></PublicExperience>} />
         <Route path="/me/settings" element={<PublicExperience><MemberSettings /></PublicExperience>} />
         <Route path="/me/rewards" element={<PublicExperience><MemberRewards /></PublicExperience>} />
@@ -223,11 +229,11 @@ export default function App() {
         <Route path="/apps/rhen/command/*" element={<LegacyRhenOperatorRoute />} />
         <Route path="/apps/rhen/*" element={<Suspense fallback={<Loader />}><RhenApp /></Suspense>} />
 
-        <Route path="/products/rhen" element={<PublicExperience><RhenProduct /></PublicExperience>} />
+        <Route path="/products/rhen" element={<Suspense fallback={<Loader />}><CommonsV5 /></Suspense>} />
         <Route path="/products/rhen/evidence" element={<PublicExperience><Live /></PublicExperience>} />
-        <Route path="/products/rhen/architecture" element={<PublicExperience><Architecture /></PublicExperience>} />
-        <Route path="/products/rhen/releases" element={<PublicExperience><Releases /></PublicExperience>} />
-        <Route path="/products/rhen/releases/:slug" element={<PublicExperience><ReleaseDetail /></PublicExperience>} />
+        <Route path="/products/rhen/architecture" element={<Suspense fallback={<Loader />}><CommonsV5 /></Suspense>} />
+        <Route path="/products/rhen/releases" element={<Suspense fallback={<Loader />}><CommonsV5 /></Suspense>} />
+        <Route path="/products/rhen/releases/:slug" element={<Suspense fallback={<Loader />}><CommonsV5 /></Suspense>} />
 
         <Route path="/live" element={<Navigate to="/products/rhen/evidence" replace />} />
         <Route path="/performance" element={<Navigate to="/products/rhen/evidence" replace />} />
