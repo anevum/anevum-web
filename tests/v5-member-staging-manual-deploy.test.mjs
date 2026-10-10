@@ -13,7 +13,8 @@ test("staging Worker deployment requires owner-approved exact main SHA",()=>{
   assert.match(yml,/github\.ref == 'refs\/heads\/main'/);
   assert.match(yml,/inputs\.reviewed_head_sha == github\.sha/);
   assert.match(yml,/inputs\.confirmation == 'DEPLOY_MEMBER_STAGING_ONLY'/);
-  assert.equal((yml.match(/if: github\.event_name == 'workflow_dispatch'/g)||[]).length,2);
+  assert.equal((yml.match(/if: github\.event_name == 'workflow_dispatch'/g)||[]).length,3);
+  assert.match(yml, /name: Reject stale approved main SHA before staging deployment/);
   assert.doesNotMatch(yml,/if: github\.event_name != 'pull_request'/);
   assert.match(yml,/name: Deploy isolated staging OAuth Worker/);
   assert.match(yml,/name: Verify staging Google identity readiness and deny operator access/);
