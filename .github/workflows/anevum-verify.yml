@@ -4,7 +4,7 @@ on:
   push:
     branches: [main]
   pull_request:
-    branches: [main, build/commons-v5-shell-20261009, build/anevum-v5-foundation-web-contracts-20261009, build/commons-v5-stage2-sitewide-20261010, build/commons-v5-stage2-integrated-20261010]
+    branches: [main, build/commons-v5-shell-20261009, build/anevum-v5-foundation-web-contracts-20261009, build/commons-v5-stage2-sitewide-20261010, build/commons-v5-stage2-integrated-20261010, build/commons-v5-alpaca-review-connect-20261010, build/commons-v5-private-rhen-parity-20261010]
 
 concurrency:
   group: anevum-verify-${{ github.ref }}
@@ -162,6 +162,7 @@ jobs:
           node scripts/codex-handoff-browser-qa.mjs
           node scripts/visual-ops-browser-qa.mjs
           node scripts/member-command-browser-qa.mjs
+          node scripts/private-rhen-browser-qa.mjs
       - name: Visual review contact sheets
         if: github.event_name == 'pull_request'
         run: python scripts/visual-ops-contact-sheet.py
@@ -176,6 +177,11 @@ jobs:
             test -s "$evidence/$name-desktop.png"
             test -s "$evidence/$name-mobile.png"
             test -s "$evidence/$name-rendered.html"
+          done
+          for width in 320 390 768 1024 1440; do
+            for section in overview account setup evidence research updates; do
+              test -s "$evidence/private-rhen-$section-member-$width.png"
+            done
           done
           grep -Fq 'anevum-commons-v5-mount' "$evidence/home-rendered.html"
           grep -Fq 'Public ANEVUM work' "$evidence/home-rendered.html"
