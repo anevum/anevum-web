@@ -7,7 +7,7 @@ const DISCLOSURE_VERSION = "alpaca-review-paper-v1";
 const TTL = 600;
 const STATE_RE = /^[A-Za-z0-9_-]{40,128}$/;
 const ACCOUNT_RE = /^[A-Za-z0-9_.:-]{8,128}$/;
-const READ_ONLY_SCOPES = new Set(["read", "account:read", "data:read"]);
+const READ_ONLY_SCOPES = new Set(["data"]);
 
 function response(data, status=200) {
   return Response.json(data, {status, headers:{
