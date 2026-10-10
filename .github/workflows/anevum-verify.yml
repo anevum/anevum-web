@@ -172,7 +172,7 @@ jobs:
         run: |
           set -euo pipefail
           evidence="$RUNNER_TEMP/anevum-visuals"
-          for name in home products feed rhen terminal research field-note architecture about resume releases; do
+          for name in home products feed rhen terminal research field-note architecture about resume releases rhen-review-disclosure; do
             test -s "$evidence/$name-desktop.png"
             test -s "$evidence/$name-mobile.png"
             test -s "$evidence/$name-rendered.html"
@@ -188,6 +188,8 @@ jobs:
           grep -Fq 'SUSPENDED_FOR_REBUILD' "$evidence/terminal-rendered.html"
           grep -Fq 'Replay' "$evidence/terminal-rendered.html"
           grep -Fq 'RHEN' "$evidence/terminal-rendered.html"
+          grep -Fq 'Authorize RHEN by ANEVUM' "$evidence/rhen-review-disclosure-rendered.html"
+          grep -Fq 'REQUIRED AUTHORIZATION DISCLOSURE' "$evidence/rhen-review-disclosure-rendered.html"
 
       - name: Upload browser QA
         if: github.event_name == 'pull_request'
