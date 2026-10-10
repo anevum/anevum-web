@@ -1,0 +1,56 @@
+name: ANEVUM V5 Preview Migration Source Audit
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'migrations/**'
+      - 'migrations-review/**'
+      - 'wrangler.alpaca-review-migrations.jsonc'
+      - 'scripts/verify-preview-d1-ledger.mjs'
+      - 'scripts/verify-v5-preview-0004-0005-offline.py'
+      - '.github/workflows/member-preview-d1-migrate.yml'
+      - '.github/workflows/member-alpaca-review-d1-migrate.yml'
+      - '.github/workflows/v5-preview-migration-source-audit.yml'
+      - 'tests/member-preview-migration.test.mjs'
+      - 'tests/preview-d1-ledger-lineage.test.mjs'
+      - 'tests/v5-preview-migration-backup-gate.test.mjs'
+  push:
+    branches: [main]
+    paths:
+      - 'migrations/**'
+      - 'migrations-review/**'
+      - '.github/workflows/member-preview-d1-migrate.yml'
+      - '.github/workflows/member-alpaca-review-d1-migrate.yml'
+      - '.github/workflows/v5-preview-migration-source-audit.yml'
+      - 'scripts/verify-v5-preview-0004-0005-offline.py'
+
+permissions:
+  contents: read
+
+jobs:
+  audit-only:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Rehearse frozen 0003, preexisting 0004 and isolated 0005 with synthetic member data
+        run: python scripts/verify-v5-preview-0004-0005-offline.py
+      - name: Verify approved migration history and preview-only workflow guards
+        run: node --test tests/member-preview-migration.test.mjs tests/preview-d1-ledger-lineage.test.mjs tests/v5-preview-migration-backup-gate.test.mjs tests/v5-release-bootstrap.test.mjs
+      - name: Validate production and staging flags remain unchanged by schema-source branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(jq -r '.name' wrangler.jsonc)" = 'anevum-web-nextgen'
+          test "$(jq -r '.vars.ANEVUM_MEMBER_PREVIEW_ENABLED' wrangler.jsonc)" = 'false'
+          test "$(jq -r '.name' wrangler.member-staging.jsonc)" = 'anevum-member-staging'
+          test "$(jq -r '.vars.ANEVUM_MEMBER_PREVIEW_ENABLED' wrangler.member-staging.jsonc)" = 'true'
+          test "$(jq -r '.d1_databases[0].database_name' wrangler.alpaca-review-migrations.jsonc)" = 'anevum-members-preview'
+          test "$(jq -r '.d1_databases[0].database_id' wrangler.alpaca-review-migrations.jsonc)" = 'a537432e-d216-4b31-8b22-19662cc3a44a'
