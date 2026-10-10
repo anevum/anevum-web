@@ -13,7 +13,8 @@
     "ANEVUM_MEMBER_PREVIEW_ENABLED": "true",
     "MEMBER_PREVIEW_ORIGIN": "https://anevum-member-staging.devonakins.workers.dev",
     "ANEVUM_V5_WORKSPACES_ENABLED": "true",
-    "ANEVUM_ALPACA_REVIEW_CONNECT_ENABLED": "false"
+    "ANEVUM_ALPACA_REVIEW_CONNECT_ENABLED": "false",
+    "ANEVUM_COMMONS_SOCIAL_PILOT_ENABLED": "false"
   },
   "assets": {
     "binding": "ASSETS",
