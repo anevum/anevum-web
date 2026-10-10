@@ -7,6 +7,7 @@ const DISCLOSURE_VERSION = "alpaca-review-paper-v1";
 const TTL = 600;
 const STATE_RE = /^[A-Za-z0-9_-]{40,128}$/;
 const ACCOUNT_RE = /^[A-Za-z0-9_.:-]{8,128}$/;
+const READ_ONLY_SCOPES = new Set(["read", "account:read", "data:read"]);
 
 function response(data, status=200) {
   return Response.json(data, {status, headers:{
@@ -195,7 +196,7 @@ export async function reviewerEndpoint(request, env, user, verifiedOrigin, pathn
       if(grant.token_type?.toLowerCase()!=="bearer" ||
         typeof grant.access_token!=="string" || grant.access_token.length<16 ||
         grant.access_token.length>4096 || /\s/.test(grant.access_token) ||
-        scopes.includes("trading") || scopes.includes("account:write"))
+        scopes.some(scope => !READ_ONLY_SCOPES.has(scope)))
         throw Error("Unexpected provider grant permissions");
       const accountRes=await fetcher(PAPER_ACCOUNT_URL,{
         method:"GET",headers:{"Authorization":"Bearer "+grant.access_token,"Accept":"application/json"},
