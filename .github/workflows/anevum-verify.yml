@@ -184,9 +184,9 @@ jobs:
           grep -Fq 'c2-about' "$evidence/about-rendered.html"
           grep -Fq 'post-list' "$evidence/feed-rendered.html"
           grep -Fq 'Release history' "$evidence/releases-rendered.html"
-          grep -Fq 'public-terminal-page' "$evidence/terminal-rendered.html"
-          grep -Fq 'RESEARCH' "$evidence/terminal-rendered.html"
-          grep -Fq 'REPLAY' "$evidence/terminal-rendered.html"
+          grep -Fq 'c2-evidence' "$evidence/terminal-rendered.html"
+          grep -Fq 'SUSPENDED_FOR_REBUILD' "$evidence/terminal-rendered.html"
+          grep -Fq 'Replay' "$evidence/terminal-rendered.html"
           grep -Fq 'RHEN' "$evidence/terminal-rendered.html"
 
       - name: Upload browser QA
