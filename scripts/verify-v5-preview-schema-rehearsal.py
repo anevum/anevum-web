@@ -70,11 +70,18 @@ def snapshot(db: sqlite3.Connection) -> dict:
 
 
 def reject_integrity(db: sqlite3.Connection, sql: str, args: tuple, label: str) -> None:
+    # A negative test may occur inside a pending migration-fixture transaction.
+    # Roll back ONLY the attempted statement; never erase previously seeded
+    # rows, migration registrations, or cross-member setup on error.
+    db.execute("SAVEPOINT expected_violation")
     try:
-        with db:
-            db.execute(sql, args)
+        db.execute(sql, args)
     except sqlite3.IntegrityError:
+        db.execute("ROLLBACK TO SAVEPOINT expected_violation")
+        db.execute("RELEASE SAVEPOINT expected_violation")
         return
+    db.execute("ROLLBACK TO SAVEPOINT expected_violation")
+    db.execute("RELEASE SAVEPOINT expected_violation")
     raise AssertionError("V5_PREVIEW_CHAIN_BLOCKED: " + label + " was accepted")
 
 
