@@ -15,12 +15,13 @@ export type WorkspaceStagingStep =
   | "DENY_QUERY" | "DENY_BODY" | "FINAL_READ" | "EXPORT" | "PROOF";
 
 export class WorkspaceStagingFailure extends Error {
-  constructor(
-    public readonly step: WorkspaceStagingStep,
-    public readonly reason: string
-  ) {
+  readonly step: WorkspaceStagingStep;
+  readonly reason: string;
+  constructor(step: WorkspaceStagingStep, reason: string) {
     super("Staging private workspace check failed.");
     this.name = "WorkspaceStagingFailure";
+    this.step = step;
+    this.reason = reason;
   }
 }
 
@@ -48,12 +49,24 @@ function isPrivate(response: Response): boolean {
 }
 async function readResponse(fetcher: typeof fetch, path: string,
   method: "GET" | "POST" = "GET", body?: string): Promise<JSONRecord> {
-  const response = await fetcher(path, requestOptions(method, body));
+  let response: Response;
+  try {
+    response = await fetcher(path, requestOptions(method, body));
+  } catch {
+    throw new Error("STAGING_NETWORK_ERROR");
+  }
+  if (response.type === "opaqueredirect" || response.status === 0)
+    throw new Error("STAGING_REDIRECT");
   if (response.status !== 200) throw new Error("STAGING_HTTP_" + response.status);
   assert(isPrivate(response), "STAGING_PRIVATE_HEADERS_MISSING");
   assert((response.headers.get("content-type") || "").includes("application/json"),
     "STAGING_RESPONSE_NOT_JSON");
-  const result: unknown = await response.json();
+  let result: unknown;
+  try {
+    result = await response.json();
+  } catch {
+    throw new Error("STAGING_INVALID_JSON");
+  }
   const parsed = record(result);
   assert(parsed !== null, "Private workspace returned an invalid object.");
   return parsed;
@@ -77,7 +90,14 @@ function approvedWorkspace(data: JSONRecord, memberId: string,
 }
 async function ensureDenied(fetcher: typeof fetch, path: string,
   method: "GET" | "POST", body?: string): Promise<void> {
-  const response = await fetcher(path, requestOptions(method, body));
+  let response: Response;
+  try {
+    response = await fetcher(path, requestOptions(method, body));
+  } catch {
+    throw new Error("STAGING_NETWORK_ERROR");
+  }
+  if (response.type === "opaqueredirect" || response.status === 0)
+    throw new Error("STAGING_REDIRECT");
   if (response.status !== 400) throw new Error("STAGING_EXPECTED_DENIAL_HTTP_" + response.status);
   assert(isPrivate(response), "STAGING_DENIAL_PRIVATE_HEADERS_MISSING");
 }
@@ -176,6 +196,9 @@ export async function runWorkspaceStagingProof(
     const message = error instanceof Error ? error.message : "";
     const http = /^STAGING_(?:EXPECTED_DENIAL_)?HTTP_([1-5][0-9]{2})$/.exec(message);
     const reason = http ? "HTTP_" + http[1]
+      : message === "STAGING_REDIRECT" ? "UNEXPECTED_REDIRECT"
+      : message === "STAGING_NETWORK_ERROR" ? "NETWORK_ERROR"
+      : message === "STAGING_INVALID_JSON" ? "INVALID_JSON"
       : message === "STAGING_PRIVATE_HEADERS_MISSING" ? "PRIVATE_HEADERS"
       : message === "STAGING_DENIAL_PRIVATE_HEADERS_MISSING" ? "DENIAL_HEADERS"
       : message === "STAGING_RESPONSE_NOT_JSON" ? "RESPONSE_NOT_JSON"
