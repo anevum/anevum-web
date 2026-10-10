@@ -82,6 +82,37 @@ export function safeMutation(request, verifiedOrigin) {
     request.headers.get("Origin") === verifiedOrigin;
 }
 
+/**
+ * A zero-length POST can reach the Cloudflare Worker with a non-null body
+ * ReadableStream (for example when the browser sends Content-Length: 0).
+ * The member workspace creation contract requires zero BYTES, not no stream.
+ *
+ * Probe the stream in bounded chunks: any actual payload, including whitespace
+ * and client-selected member/workspace IDs, fails closed. No request contents
+ * are stored, parsed or logged. This is called only after verified session and
+ * same-origin mutation checks, and the body is not used by the allocator.
+ */
+export async function workspaceCreateHasClientPayload(request) {
+  if (request.body === null) return false;
+  let reader;
+  try {
+    reader = request.body.getReader();
+    for (let i = 0; i < 8; i++) {
+      const { done, value } = await reader.read();
+      if (done) return false;
+      if (!(value instanceof Uint8Array)) return true;
+      if (value.byteLength > 0) return true;
+    }
+    // An unbounded sequence of empty chunks is not a permitted request shape.
+    return true;
+  } catch {
+    // Unreadable, locked, or errored streams must never authorize creation.
+    return true;
+  } finally {
+    try { await reader?.cancel(); } catch {}
+  }
+}
+
 export async function safeJSON(request) {
   if (request.headers.get("content-type")?.split(";")[0]?.trim().toLowerCase() !== "application/json") {
     throw new Error("JSON body required.");
@@ -130,7 +161,7 @@ export async function memberEndpoint(request, env, pathname) {
     }
     // Never allow a query-selected owner, workspace or brokerage account.
     if (new URL(request.url).search) return reply({ message: "Workspace selection is not supported." }, 400);
-    if (request.method === "POST" && request.body !== null) {
+    if (request.method === "POST" && await workspaceCreateHasClientPayload(request)) {
       return reply({ message: "Workspace creation accepts no client fields." }, 400);
     }
     if (!await memberRhenWorkspaceSchemaReady(db)) {
