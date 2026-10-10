@@ -103,6 +103,14 @@ jobs:
               "$RUNNER_TEMP/prod-launch-secret-bindings.json" >/dev/null
           done
           echo 'PASS release preflight: approved migrated D1, ten required tables, FK integrity and encrypted auth binding names.'
+      - name: Reject stale main ref before production deployment
+        shell: bash
+        run: |
+          set -euo pipefail
+          current_main="$(git ls-remote origin refs/heads/main | cut -f1)"
+          test -n "$current_main"
+          test "$current_main" = "$GITHUB_SHA"
+          test "$current_main" = "${{ inputs.reviewed_head_sha }}"
       - name: Deploy to Cloudflare Workers
         uses: cloudflare/wrangler-action@v3
         with:
