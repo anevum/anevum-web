@@ -24,7 +24,7 @@ export default function RhenApp() {
   const availability = useMemberAvailability();
   const { data: session, isPending } = memberAuthClient.useSession();
   const [operator, setOperator] = useState(false);
-  const [brokerage, setBrokerage] = useState<{ integration: string; connectionAvailable: boolean; accountConnected: boolean; paperTradingEnabled: boolean; liveTradingEnabled: boolean; depositsEnabled: boolean; withdrawalsEnabled: boolean } | null>(null);
+  const [brokerage, setBrokerage] = useState<{ integration: string; connectionAvailable: boolean; accountConnected: boolean; paperTradingEnabled: boolean; liveTradingEnabled: boolean; depositsEnabled: boolean; withdrawalsEnabled: boolean; account?: { ending: string; environment: string } | null } | null>(null);
   const [brokerError, setBrokerError] = useState(false);
   const [workspace, setWorkspace] = useState<FoundationWorkspaceState | null>(null);
   const [workspaceGate, setWorkspaceGate] = useState<"loading" | "off" | "ready" | "error">("loading");
@@ -164,9 +164,17 @@ export default function RhenApp() {
           </>}
           {section === "account" && <>
             <h2>Your brokerage workspace</h2>
-            <p>Member brokerage connections and personally configured trading bots are planned, not operational. This does not control the company operator terminal.</p>
-            <section className="member-app-ready"><p className="workshop-kicker">Personal brokerage</p><h3>Not available yet</h3><p>No member brokerage account can be connected from this workspace today.</p></section>
-            {brokerError ? <p role="alert">Brokerage capability status could not be verified.</p> : !brokerage ? <p role="status">Checking capabilities…</p> : brokerage.connectionAvailable || brokerage.accountConnected || brokerage.paperTradingEnabled || brokerage.liveTradingEnabled || brokerage.depositsEnabled || brokerage.withdrawalsEnabled ? <p role="alert">Unexpected capabilities. Financial controls remain unavailable.</p> : <dl className="member-app-readiness"><div><dt>Brokerage linking</dt><dd>Not enabled</dd></div><div><dt>Personal paper bot</dt><dd>Not enabled</dd></div><div><dt>Personal live bot</dt><dd>Not enabled</dd></div><div><dt>Funding and withdrawals</dt><dd>Not supported</dd></div></dl>}
+            <p>Each ANEVUM member controls only their own brokerage authorization. A separate read-only PAPER connection may become available in restricted staging for app review; live trading, deposits and withdrawals remain disabled.</p>
+            <section className="member-app-ready"><p className="workshop-kicker">Personal brokerage</p>
+              <h3>{brokerage?.accountConnected ? "Your paper account is connected" : brokerage?.connectionAvailable ? "Paper review authorization available" : "Not available yet"}</h3>
+              <p>{brokerage?.accountConnected ? "Authenticated paper account ending " + (brokerage.account?.ending || "—") + ". No trading orders can be submitted through RHEN." : brokerage?.connectionAvailable ? "You may review the disclosure and independently connect your own paper account. Connection does not activate a trading bot." : "Member brokerage connections are not enabled in this environment."}</p>
+              {(brokerage?.connectionAvailable || brokerage?.accountConnected) &&
+                <Link to="/apps/rhen/connect">{brokerage.accountConnected ? "Manage paper connection" : "Review brokerage authorization"}</Link>}
+            </section>
+            {brokerError ? <p role="alert">Brokerage capability status could not be verified.</p> : !brokerage ? <p role="status">Checking capabilities…</p> :
+              brokerage.paperTradingEnabled || brokerage.liveTradingEnabled || brokerage.depositsEnabled || brokerage.withdrawalsEnabled ?
+                <p role="alert">Unexpected execution/funding capability. Financial controls remain unavailable.</p> :
+                <dl className="member-app-readiness"><div><dt>Brokerage linking</dt><dd>{brokerage.accountConnected ? "Private paper account" : brokerage.connectionAvailable ? "Paper review only" : "Not enabled"}</dd></div><div><dt>Personal paper bot</dt><dd>Not enabled</dd></div><div><dt>Personal live bot</dt><dd>Not enabled</dd></div><div><dt>Funding and withdrawals</dt><dd>Not supported</dd></div></dl>}
             <p>Live member execution will require separate brokerage, regulatory, and security approval.</p>
             <Link to="/apps/rhen/setup">Create a non-executing bot draft</Link><span> · </span><Link to="/apps/rhen/evidence">Explore verified RHEN evidence</Link>
           </>}
