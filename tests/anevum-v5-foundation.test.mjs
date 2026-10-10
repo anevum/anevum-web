@@ -77,6 +77,27 @@ test("member has independent RHEN_NEXT workspace, not legacy founder terminal", 
   assert.equal(parsePrivateFoundationWorkspace(personal(), owner), null);
 });
 
+test("founder RHEN_NEXT uses exactly the same broker-link route and no inherited authority", () => {
+  const migrated = parsePrivateFoundationWorkspace(founder({
+    engine_source: "RHEN_NEXT",
+    evidence_state: "NOT_CONFIGURED",
+    execution_permission: "NONE",
+    broker_link_state: "NOT_LINKED",
+    capabilities: ["VIEW", "RESEARCH"],
+  }), owner);
+  const newcomer = parsePrivateFoundationWorkspace(personal(), member);
+  assert.ok(migrated);
+  assert.ok(newcomer);
+  assert.equal(privateFoundationLanding(migrated), privateFoundationLanding(newcomer));
+  assert.equal(migrated.execution_permission, newcomer.execution_permission);
+  assert.equal(migrated.broker_link_state, newcomer.broker_link_state);
+  assert.notEqual(migrated.workspace_id, newcomer.workspace_id);
+  assert.equal(parsePrivateFoundationWorkspace({ ...migrated, member_id: member }, owner), null);
+  assert.equal(parsePrivateFoundationWorkspace(migrated, member), null);
+  assert.equal("alpaca_api_key" in migrated, false);
+  assert.equal("admin" in migrated, false);
+});
+
 test("provider fields, brokerage secrets, private positions and balances fail closed", () => {
   for (const field of ["alpaca_token", "broker_equity", "orders", "positions", "founder_email"]) {
     assert.equal(parsePrivateFoundationWorkspace(personal({ [field]: "PRIVATE" }), member), null);
