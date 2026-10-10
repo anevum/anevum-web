@@ -71,3 +71,21 @@ test("preview migration workflow fails closed unless workspace 0004 is recorded 
   assert.match(workflow, /--config wrangler\.preview-migrations\.jsonc/);
   assert.doesNotMatch(workflow, /d1 migrations apply MEMBER_DB --remote --config wrangler\.jsonc/);
 });
+
+
+test("missing preview D1 ledger source blocks all future preview writes", () => {
+  const workflow = read(".github/workflows/member-preview-d1-migrate.yml");
+  const provenance = workflow.indexOf("Block migrations if preview history has no reviewed local SQL source");
+  const applies = workflow.indexOf("npx wrangler d1 migrations apply MEMBER_DB");
+  assert.ok(provenance > 0 && applies > provenance,
+    "Preview provenance validation must happen strictly before the first migration apply.");
+  assert.match(workflow, /SELECT name FROM d1_migrations ORDER BY id/);
+  assert.match(workflow, /node scripts\/verify-preview-d1-ledger\.mjs/);
+  assert.match(workflow, /CLOUDFLARE_D1_TOKEN/);
+  assert.match(workflow, /wrangler\.preview-migrations\.jsonc/);
+  assert.doesNotMatch(workflow, /--config wrangler\.jsonc/);
+  const validator = read("scripts/verify-preview-d1-ledger.mjs");
+  assert.match(validator, /PREVIEW_LINEAGE_BLOCKED/);
+  assert.match(validator, /missing reviewed source for applied/);
+  assert.doesNotMatch(validator, /cloudflare\.request|d1 execute|d1 migrations apply/);
+});
