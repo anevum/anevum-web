@@ -1,4 +1,5 @@
 import { Link, useSearchParams } from "react-router-dom";
+import type { ReactNode } from "react";
 import { fieldNotes, type FieldNote } from "../data/fieldNotes";
 import { publicProducts } from "../data/products";
 import { rhenReleases, rhenReleaseBySlug } from "../data/releases";
@@ -24,7 +25,7 @@ function dateLabel(value: string) {
     year: "numeric", month: "short", day: "numeric", timeZone: "UTC"
   }).format(parsed);
 }
-function Intro({ kicker, title, children }: { kicker: string; title: string; children: React.ReactNode }) {
+function Intro({ kicker, title, children }: { kicker: string; title: string; children: ReactNode }) {
   return <header className="c2-intro"><span className="c2-kicker">{kicker}</span><h1>{title}</h1><p>{children}</p></header>;
 }
 function NoteCard({ note }: { note: FieldNote }) {
@@ -158,7 +159,7 @@ function ReleaseDetail({ slug }: { slug: string }) {
     <div className="c2-truth">Archived version record. Historical execution, paper, performance or deployment references do not imply current availability.</div>
     <section className="c2-article-section"><h2>Overview</h2><p>{release.abstract}</p><p>{release.thesis}</p></section>
     <section className="c2-article-section"><h2>Verification and limitations</h2>
-      {release.verification.map((x, i) => <div key={i}><h3>{x.title || x.label}</h3><p>{x.body}</p></div>)}
+      {release.verification.map((x, i) => <div key={i}><h3>{x.label}</h3><p>{x.body}</p></div>)}
       {release.limitations.map((x, i) => <div key={i}><h3>{x.title}</h3><p>{x.body}</p></div>)}
     </section>
     <Link className="c2-text-link" to="/products/rhen">Current RHEN rebuild status →</Link>
