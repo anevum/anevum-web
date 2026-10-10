@@ -86,3 +86,11 @@ Scroll-reset QA now navigates the real ShadowRoot link, not a defunct outer
 document anchor. QA explicitly includes the new topics, learning and
 authenticated-entry screens. Fail closed on missing actual DOM and source-backed
 text.
+
+## Stage 2B — Member Command integration (stacked draft)
+
+The four member-owned account routes /command, /me, /me/settings and /me/rewards now render **their unmodified, separately authenticated React components** within the Commons V5 Shadow DOM application shell. This reuses the real member profile, saved-program, follow, private settings, data export, deletion and not-launched rewards logic; no second auth state, fake data, broker API, OAuth grant or ownership calculation was introduced.
+
+A scoped V5 account style layer maps the existing workshop member classes onto the same app palette while hiding duplicate global navigation and retaining all genuine member tools. The right discovery rail is removed from account views to give the member center additional working room. Header/sidebar/mobile account links keep working. Owner-only terminal remains routed at /command/rhen/* with existing Worker/Access authority checks, outside the shared public shell. Private member RHEN app stays at /apps/rhen/* and staging verifier remains unchanged.
+
+The member-style PR is separately stacked on Stage 2A, not F0 directly. This is a UI integration; it does not replace staging privacy acceptance or authorize production migration.
