@@ -130,41 +130,27 @@ jobs:
           test "$(curl --show-error --silent -o /dev/null -w '%{http_code}' "$base/products")" = "200"
           test "$(curl --show-error --silent -o /dev/null -w '%{http_code}' "$base/products/rhen")" = "200"
 
+          # Legacy RHEN was intentionally disarmed. These public endpoints now
+          # return an honest unavailable state; no old Railway health dependency.
           feed_file="$RUNNER_TEMP/public-trading-feed.json"
           feed_status="$(curl --show-error --silent -o "$feed_file" -w '%{http_code}' "$base/api/public/trading/live")"
-          test "$feed_status" = "200"
+          test "$feed_status" = "503"
           jq -e '
-            .ok == true and
-            .source == "rhen-core-sqlite" and
-            .disclosure.level == "aggregate_only" and
-            .systems.IREN.independent_runtime == false and
-            .systems.RHEN.independent_runtime == false and
-            .systems.GRAEN.independent_runtime == false and
-            .systems.VELUM.independent_runtime == false and
-            .systems.NOSTRA.independent_runtime == false and
-            (.systems.NOSTRA.tracking_state | type == "string") and
-            (.disclosure.excluded_fields | index("dollar_values") != null) and
-            (.disclosure.excluded_fields | index("symbols") != null) and
-            (.disclosure.excluded_fields | index("orders") != null) and
-            (.disclosure.excluded_fields | index("fills") != null) and
-            (.disclosure.excluded_fields | index("credentials") != null)
+            .ok == false and
+            .status == "SUSPENDED_FOR_REBUILD" and
+            .execution_enabled == false and
+            .broker_workspace_available == false and
+            .stale == true and
+            (has("positions") | not) and
+            (has("account_equity") | not) and
+            (has("fills") | not)
           ' "$feed_file" > /dev/null
-
-          rhen_health_file="$RUNNER_TEMP/rhen-health.json"
-          curl --fail --show-error --silent "https://alpaca-trader-production-bf3e.up.railway.app/health" > "$rhen_health_file"
-          jq '{ok, module_failures, iren: .modules.iren, graen: .modules.graen, velum: .modules.velum, nostra: .modules.nostra, research_agent: .modules.research_agent}' "$rhen_health_file"
-          jq -e '
-            .ok == true and
-            (.module_failures | length) == 0 and
-            .modules.iren.ok == true and
-            .modules.iren.body.durable_state_current == true and
-            .modules.iren.body.work_engine.running == true and
-            .modules.graen.ok == true and
-            .modules.velum.ok == true and
-            .modules.nostra.ok == true and
-            .modules.research_agent.ok == true
-          ' "$rhen_health_file" > /dev/null
-
+          for retired in /api/public/trading/events /api/public/research/readiness /api/public/theory; do
+            test "$(curl --show-error --silent -o /dev/null -w '%{http_code}' "$base$retired")" = "503"
+          done
+          # Legacy protected routes remain Cloudflare Access guarded.
+          test "$(curl --show-error --silent -o /dev/null -w '%{http_code}' "$base/api/command/trader/status")" = "401"
+          test "$(curl --show-error --silent -o /dev/null -w '%{http_code}' "$base/api/command/iren/status")" = "401"
           curl --fail --show-error --silent --head "$base/command" | grep -qi 'x-robots-tag:.*noindex'
 
       - name: Verify browser runtime and horizontal overflow
