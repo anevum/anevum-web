@@ -6,7 +6,7 @@ import path from "node:path";
 const base = process.env.BASE_URL;
 if (!base) throw new Error("BASE_URL is required");
 
-const publicRoutes = ["/", "/products", "/feed", "/products/rhen", "/products/rhen/evidence", "/products/rhen/architecture", "/field-notes", "/field-notes/prediction-outcome-evidence-chain", "/about", "/resume", "/products/rhen/releases", "/me", "/privacy", "/terms"];
+const publicRoutes = ["/", "/communities", "/learn", "/sign-in", "/command", "/me/settings", "/me/rewards", "/apps/rhen/connect", "/products", "/feed", "/products/rhen", "/products/rhen/evidence", "/products/rhen/architecture", "/field-notes", "/field-notes/prediction-outcome-evidence-chain", "/about", "/resume", "/products/rhen/releases", "/me", "/privacy", "/terms"];
 const commandRoutes = ["/command/rhen/operate", "/command/rhen/discover", "/command/rhen/review", "/command/rhen/public", "/command/rhen/system"];
 const routes = process.env.PUBLIC_ONLY === "1" ? publicRoutes : [...publicRoutes, ...commandRoutes];
 const output = path.join(process.env.RUNNER_TEMP || os.tmpdir(), "anevum-visuals");
@@ -142,18 +142,20 @@ async function runCase(route, viewport) {
         expression: `(() => {
           const pathReady = location.pathname === ${JSON.stringify(route)};
           const suspenseReady = !document.querySelector(".route-loader");
-          const homeReady = ${JSON.stringify(route)} !== "/" || Boolean(document.querySelector(".studio-home"));\n          const productsReady = ${JSON.stringify(route)} !== "/products" || Boolean(document.querySelector(".truth-products-page"));\n          const feedReady = ${JSON.stringify(route)} !== "/feed" || Boolean(document.querySelector(".feed-page"));\n          const rhenReady = ${JSON.stringify(route)} !== "/products/rhen" || Boolean(document.querySelector(".truth-rhen-page"));
-          const liveReady = ${JSON.stringify(route)} !== "/products/rhen/evidence" || Boolean(document.querySelector('[data-visual-ops="public-terminal"]'));
-          const architectureReady = ${JSON.stringify(route)} !== "/products/rhen/architecture" || Boolean(document.querySelector(".architecture-role-grid"));
-          const researchReady = ${JSON.stringify(route)} !== "/field-notes" || Boolean(document.querySelector(".studio-notes-page"));
-          const fieldNoteReady = !${JSON.stringify(route)}.startsWith("/field-notes/") || Boolean(document.querySelector(".workshop-note-detail .workshop-note-method details"));
-          const aboutReady = ${JSON.stringify(route)} !== "/about" || Boolean(document.querySelector(".studio-about-page"));
-          const resumeReady = ${JSON.stringify(route)} !== "/resume" || Boolean(document.querySelector(".resume-page .resume-sheet"));
-          const releasesReady = ${JSON.stringify(route)} !== "/products/rhen/releases" || Boolean(document.querySelector(".studio-releases-page .studio-release-feature"));
-          const memberReady = ${JSON.stringify(route)} !== "/me" || Boolean(document.querySelector(".member-command"));
-          const legalReady = !["/privacy", "/terms"].includes(${JSON.stringify(route)}) || Boolean(document.querySelector(".member-legal"));
+          const homeReady = ${JSON.stringify(route)} !== "/" || Boolean(document.querySelector(".anevum-commons-v5-mount")?.shadowRoot?.querySelector(".global-header"));\n          const productsReady = ${JSON.stringify(route)} !== "/products" || Boolean(document.querySelector(".anevum-commons-v5-mount")?.shadowRoot?.querySelector(".c2-project"));\n          const feedReady = ${JSON.stringify(route)} !== "/feed" || Boolean(document.querySelector(".anevum-commons-v5-mount")?.shadowRoot?.querySelector(".post-list .post"));\n          const rhenReady = ${JSON.stringify(route)} !== "/products/rhen" || Boolean(document.querySelector(".anevum-commons-v5-mount")?.shadowRoot?.querySelector(".c2-page .c2-truth"));
+          const liveReady = ${JSON.stringify(route)} !== "/products/rhen/evidence" || Boolean(document.querySelector(".anevum-commons-v5-mount")?.shadowRoot?.querySelector('.c2-evidence[data-evidence-state="SUSPENDED_FOR_REBUILD"]'));
+          const architectureReady = ${JSON.stringify(route)} !== "/products/rhen/architecture" || Boolean(document.querySelector(".anevum-commons-v5-mount")?.shadowRoot?.querySelector(".c2-page .c2-grid .c2-card"));
+          const researchReady = ${JSON.stringify(route)} !== "/field-notes" || Boolean(document.querySelector(".anevum-commons-v5-mount")?.shadowRoot?.querySelector(".c2-page .c2-note"));
+          const fieldNoteReady = !${JSON.stringify(route)}.startsWith("/field-notes/") || Boolean(document.querySelector(".anevum-commons-v5-mount")?.shadowRoot?.querySelector(".c2-article .c2-method"));
+          const aboutReady = ${JSON.stringify(route)} !== "/about" || Boolean(document.querySelector(".anevum-commons-v5-mount")?.shadowRoot?.querySelector(".c2-about"));
+          const resumeReady = ${JSON.stringify(route)} !== "/resume" || Boolean(document.querySelector(".anevum-commons-v5-mount")?.shadowRoot?.querySelector(".c2-resume .c2-card"));
+          const releasesReady = ${JSON.stringify(route)} !== "/products/rhen/releases" || Boolean(document.querySelector(".anevum-commons-v5-mount")?.shadowRoot?.querySelector(".c2-stack .c2-card"));
+          const memberReady = !["/me", "/command", "/me/settings", "/me/rewards"].includes(${JSON.stringify(route)}) || Boolean(document.querySelector(".anevum-commons-v5-mount")?.shadowRoot?.querySelector(".c2-member"));
+          const brokerReviewReady = ${JSON.stringify(route)} !== "/apps/rhen/connect" || (()=>{ const root=document.querySelector(".anevum-commons-v5-mount")?.shadowRoot; const disclosure=root?.querySelector(".rhen-review-disclosure"); const allow=root?.querySelector(".rhen-review-allow"); const checkbox=root?.querySelector(".rhen-review-check input"); return !!disclosure && disclosure.textContent.includes("Authorize RHEN by ANEVUM") && disclosure.textContent.includes("Alpaca does not warrant or guarantee") && allow?.disabled===true && checkbox?.disabled===true; })();
+          const legalReady = !["/privacy", "/terms"].includes(${JSON.stringify(route)}) || Boolean(document.querySelector(".anevum-commons-v5-mount")?.shadowRoot?.querySelector(".c2-legal .member-legal"));
           const commandReady = !${JSON.stringify(route)}.startsWith("/command/") || Boolean(document.querySelector(".command-v4"));
-          return {ready:pathReady && suspenseReady && homeReady && productsReady && feedReady && rhenReady && liveReady && architectureReady && researchReady && fieldNoteReady && aboutReady && resumeReady && releasesReady && memberReady && legalReady && commandReady,
+          const extraReady = !["/communities", "/learn", "/sign-in"].includes(${JSON.stringify(route)}) || Boolean(document.querySelector(".anevum-commons-v5-mount")?.shadowRoot?.querySelector(".c2-page"));
+          return {ready:pathReady && suspenseReady && homeReady && productsReady && feedReady && rhenReady && liveReady && architectureReady && researchReady && fieldNoteReady && aboutReady && resumeReady && releasesReady && memberReady && brokerReviewReady && legalReady && commandReady && extraReady,
             pathname:location.pathname,title:document.title,suspenseReady,homeReady,productsReady,feedReady,rhenReady,liveReady,architectureReady,researchReady,fieldNoteReady,aboutReady,resumeReady,releasesReady,commandReady};
         })()`,
         returnByValue:true
@@ -172,18 +174,20 @@ async function runCase(route, viewport) {
       expression: `(() => {
         const pathReady = location.pathname === ${JSON.stringify(route)};
         const suspenseReady = !document.querySelector(".route-loader");
-        const homeReady = ${JSON.stringify(route)} !== "/" || Boolean(document.querySelector(".studio-home"));\n          const productsReady = ${JSON.stringify(route)} !== "/products" || Boolean(document.querySelector(".truth-products-page"));\n          const feedReady = ${JSON.stringify(route)} !== "/feed" || Boolean(document.querySelector(".feed-page"));\n          const rhenReady = ${JSON.stringify(route)} !== "/products/rhen" || Boolean(document.querySelector(".truth-rhen-page"));
-        const liveReady = ${JSON.stringify(route)} !== "/products/rhen/evidence" || Boolean(document.querySelector('[data-visual-ops="public-terminal"]'));
-        const architectureReady = ${JSON.stringify(route)} !== "/products/rhen/architecture" || Boolean(document.querySelector(".architecture-role-grid"));
-        const researchReady = ${JSON.stringify(route)} !== "/field-notes" || Boolean(document.querySelector(".studio-notes-page"));
-        const fieldNoteReady = !${JSON.stringify(route)}.startsWith("/field-notes/") || Boolean(document.querySelector(".workshop-note-detail .workshop-note-method details"));
-        const aboutReady = ${JSON.stringify(route)} !== "/about" || Boolean(document.querySelector(".studio-about-page"));
-        const resumeReady = ${JSON.stringify(route)} !== "/resume" || Boolean(document.querySelector(".resume-page .resume-sheet"));
-          const releasesReady = ${JSON.stringify(route)} !== "/products/rhen/releases" || Boolean(document.querySelector(".studio-releases-page .studio-release-feature"));
-        const memberReady = ${JSON.stringify(route)} !== "/me" || Boolean(document.querySelector(".member-command"));
-        const legalReady = !["/privacy", "/terms"].includes(${JSON.stringify(route)}) || Boolean(document.querySelector(".member-legal"));
+        const homeReady = ${JSON.stringify(route)} !== "/" || Boolean(document.querySelector(".anevum-commons-v5-mount")?.shadowRoot?.querySelector(".global-header"));\n          const productsReady = ${JSON.stringify(route)} !== "/products" || Boolean(document.querySelector(".anevum-commons-v5-mount")?.shadowRoot?.querySelector(".c2-project"));\n          const feedReady = ${JSON.stringify(route)} !== "/feed" || Boolean(document.querySelector(".anevum-commons-v5-mount")?.shadowRoot?.querySelector(".post-list .post"));\n          const rhenReady = ${JSON.stringify(route)} !== "/products/rhen" || Boolean(document.querySelector(".anevum-commons-v5-mount")?.shadowRoot?.querySelector(".c2-page .c2-truth"));
+        const liveReady = ${JSON.stringify(route)} !== "/products/rhen/evidence" || Boolean(document.querySelector(".anevum-commons-v5-mount")?.shadowRoot?.querySelector('.c2-evidence[data-evidence-state="SUSPENDED_FOR_REBUILD"]'));
+        const architectureReady = ${JSON.stringify(route)} !== "/products/rhen/architecture" || Boolean(document.querySelector(".anevum-commons-v5-mount")?.shadowRoot?.querySelector(".c2-page .c2-grid .c2-card"));
+        const researchReady = ${JSON.stringify(route)} !== "/field-notes" || Boolean(document.querySelector(".anevum-commons-v5-mount")?.shadowRoot?.querySelector(".c2-page .c2-note"));
+        const fieldNoteReady = !${JSON.stringify(route)}.startsWith("/field-notes/") || Boolean(document.querySelector(".anevum-commons-v5-mount")?.shadowRoot?.querySelector(".c2-article .c2-method"));
+        const aboutReady = ${JSON.stringify(route)} !== "/about" || Boolean(document.querySelector(".anevum-commons-v5-mount")?.shadowRoot?.querySelector(".c2-about"));
+        const resumeReady = ${JSON.stringify(route)} !== "/resume" || Boolean(document.querySelector(".anevum-commons-v5-mount")?.shadowRoot?.querySelector(".c2-resume .c2-card"));
+          const releasesReady = ${JSON.stringify(route)} !== "/products/rhen/releases" || Boolean(document.querySelector(".anevum-commons-v5-mount")?.shadowRoot?.querySelector(".c2-stack .c2-card"));
+        const memberReady = !["/me", "/command", "/me/settings", "/me/rewards"].includes(${JSON.stringify(route)}) || Boolean(document.querySelector(".anevum-commons-v5-mount")?.shadowRoot?.querySelector(".c2-member"));
+          const brokerReviewReady = ${JSON.stringify(route)} !== "/apps/rhen/connect" || (()=>{ const root=document.querySelector(".anevum-commons-v5-mount")?.shadowRoot; const disclosure=root?.querySelector(".rhen-review-disclosure"); const allow=root?.querySelector(".rhen-review-allow"); const checkbox=root?.querySelector(".rhen-review-check input"); return !!disclosure && disclosure.textContent.includes("Authorize RHEN by ANEVUM") && disclosure.textContent.includes("Alpaca does not warrant or guarantee") && allow?.disabled===true && checkbox?.disabled===true; })();
+        const legalReady = !["/privacy", "/terms"].includes(${JSON.stringify(route)}) || Boolean(document.querySelector(".anevum-commons-v5-mount")?.shadowRoot?.querySelector(".c2-legal .member-legal"));
         const commandReady = !${JSON.stringify(route)}.startsWith("/command/") || Boolean(document.querySelector(".command-v4"));
-        return {ready:pathReady && suspenseReady && homeReady && productsReady && feedReady && rhenReady && liveReady && architectureReady && researchReady && fieldNoteReady && aboutReady && resumeReady && releasesReady && memberReady && legalReady && commandReady,
+          const extraReady = !["/communities", "/learn", "/sign-in"].includes(${JSON.stringify(route)}) || Boolean(document.querySelector(".anevum-commons-v5-mount")?.shadowRoot?.querySelector(".c2-page"));
+        return {ready:pathReady && suspenseReady && homeReady && productsReady && feedReady && rhenReady && liveReady && architectureReady && researchReady && fieldNoteReady && aboutReady && resumeReady && releasesReady && memberReady && brokerReviewReady && legalReady && commandReady && extraReady,
           pathname:location.pathname,title:document.title,suspenseReady,homeReady,productsReady,feedReady,rhenReady,liveReady,architectureReady,researchReady,fieldNoteReady,aboutReady,resumeReady,releasesReady,commandReady};
       })()`,
       returnByValue:true
@@ -191,6 +195,76 @@ async function runCase(route, viewport) {
     routeReady = result.result?.value || {};
   }
   if (!routeReady.ready) throw new Error("Route did not hydrate before visual assertion: "+JSON.stringify({route,...routeReady}));
+
+  // Stage 1 Commons parity checks: test geometry of the *rendered React app*
+  // (inside its isolated ShadowRoot), not a descriptive concept image.
+  if (route === "/") {
+    const reply = await send("Runtime.evaluate", {expression:`(() => {
+      const host = document.querySelector(".anevum-commons-v5-mount");
+      const root = host?.shadowRoot;
+      const header = root?.querySelector(".global-header");
+      const left = root?.querySelector(".left-sidebar");
+      const center = root?.querySelector(".main");
+      const right = root?.querySelector(".right-sidebar");
+      const mobile = root?.querySelector(".mobile-nav");
+      const posts = root?.querySelectorAll(".post") || [];
+      const isVisible = el => { if (!el || getComputedStyle(el).display === "none") return false; const rect=el.getBoundingClientRect(); return rect.width > 0 && rect.right > 0 && rect.left < innerWidth && rect.bottom > 0 && rect.top < innerHeight; };
+      const width = el => Math.round(el?.getBoundingClientRect().width || 0);
+      const createGlyph=root?.querySelector(".mobile-create .ico");
+      const createStyle=createGlyph ? getComputedStyle(createGlyph) : null;
+      const createGlyphPaintWidth=createGlyph && createStyle ?
+        Math.round(createGlyph.getBoundingClientRect().width -
+          parseFloat(createStyle.paddingLeft||"0") - parseFloat(createStyle.paddingRight||"0")) : 0;
+      return {
+        isolated: Boolean(host && root && !document.querySelector(".global-header")),
+        headerHeight: Math.round(header?.getBoundingClientRect().height || 0),
+        leftWidth: width(left), centerWidth: width(center), rightWidth: width(right),
+        leftVisible: isVisible(left), rightVisible: isVisible(right),
+        mobileVisible: isVisible(mobile), createGlyphPaintWidth, postCount: posts.length,
+        hasAuthenticNotes: Boolean(root?.querySelector('[href*="field-notes/anevum-lean-runtime-reset"]')),
+        containsFiction: /Mara Cole|Eli Rowan|184 votes|sample community/i.test(root?.textContent || "")
+      };
+    })()`,returnByValue:true});
+    const ui=reply.result?.value||{};
+    const desktop=viewport.width>=1200;
+    if(!ui.isolated || ui.postCount<6 || !ui.hasAuthenticNotes || ui.containsFiction ||
+      !ui.headerHeight || (desktop && (Math.abs(ui.headerHeight-64)>2 || !ui.leftVisible || !ui.rightVisible ||
+        Math.abs(ui.leftWidth-252)>4 || Math.abs(ui.rightWidth-312)>4 || ui.centerWidth<500)) ||
+      (!desktop && viewport.width<721 && (!ui.mobileVisible || ui.rightVisible || ui.leftVisible ||
+        ui.createGlyphPaintWidth<14))) {
+      throw new Error("Commons V5 rendered-app parity failed: "+JSON.stringify({viewport:viewport.name,...ui}));
+    }
+
+    // Verify that the real React state drives the ShadowRoot design tokens.
+    // Reset preferences before screenshot capture to retain a stable baseline.
+    const behavior=await send("Runtime.evaluate", {expression:`(async()=>{
+      const host=document.querySelector(".anevum-commons-v5-mount");
+      const root=host?.shadowRoot;
+      const wait=()=>new Promise(resolve=>setTimeout(resolve,140));
+      const launch=root?.querySelector(".design-launch");
+      if(!launch) return {ok:false,reason:"Missing appearance button"};
+      launch.click();
+      await wait();
+      const carbon=[...root.querySelectorAll(".theme-option")].find(button=>button.textContent.includes("Carbon"));
+      if(!carbon) return {ok:false,reason:"Missing Carbon palette control"};
+      carbon.click();
+      await wait();
+      const changedTheme=host.getAttribute("data-theme")==="carbon";
+      root.querySelector('[aria-label="Compact feed"]')?.click();
+      await wait();
+      const changedDensity=host.getAttribute("data-density")==="compact";
+      root.querySelector(".reset-design")?.click();
+      await wait();
+      const resetDefaults=host.getAttribute("data-theme")==="midnight"&&host.getAttribute("data-density")==="comfortable";
+      root.querySelector('[aria-label="Close appearance settings"]')?.click();
+      await wait();
+      const fontSize=parseFloat(getComputedStyle(root.querySelector(".post-title")).fontSize);
+      return {ok:changedTheme&&changedDensity&&resetDefaults&&fontSize>=15,changedTheme,changedDensity,resetDefaults,fontSize,closed:!root.querySelector(".design-panel")};
+    })()`,awaitPromise:true,returnByValue:true});
+    if(!behavior.result?.value?.ok || !behavior.result?.value?.closed) {
+      throw new Error("Commons V5 appearance controls failed: "+JSON.stringify(behavior.result?.value));
+    }
+  }
 
   const ops = await send("Runtime.evaluate", {expression: `(() => {
     const surface=document.querySelector("[data-visual-ops]");
@@ -208,8 +282,21 @@ async function runCase(route, viewport) {
     };
   })()`.replace("routePlaceholder", JSON.stringify(route)),returnByValue:true});
   const details=ops.result?.value||{};
-  if(route === "/products/rhen/evidence" && (!details.surface || !details.cards || !details.links)) {
-    throw new Error("Missing accessible public visual surface: "+JSON.stringify(details));
+  if(route === "/products/rhen/evidence") {
+    const response=await send("Runtime.evaluate",{expression:`(() => {
+      const root=document.querySelector(".anevum-commons-v5-mount")?.shadowRoot;
+      const page=root?.querySelector('.c2-evidence[data-evidence-state="SUSPENDED_FOR_REBUILD"]');
+      const links=[...(page?.querySelectorAll('a[href]')||[])];
+      return {
+        surface:!!page,
+        cards:page?.querySelectorAll('.c2-card').length||0,
+        links:links.length>=3&&links.every(el=>el.tabIndex>=0&&el.getAttribute("href")?.startsWith("/")),
+        status:page?.querySelector('.c2-truth')?.textContent?.includes("SUSPENDED_FOR_REBUILD")||false
+      };
+    })()`,returnByValue:true});
+    const evidence=response.result?.value||{};
+    if(!evidence.surface||evidence.cards<4||!evidence.links||!evidence.status)
+      throw new Error("Missing accurate accessible V5 public evidence surface: "+JSON.stringify(evidence));
   }
 
   if(route.startsWith("/command/")) {
@@ -299,32 +386,12 @@ async function runCase(route, viewport) {
   }
 
   if(route==="/products/rhen/architecture") {
-    const architectureGeometry = await send("Runtime.evaluate", {expression: `(() => {
-      const grid=document.querySelector(".architecture-role-grid");
-      if(!grid) return {present:false,cards:0,missingIcons:[],collapsedCards:[],labels:[]};
-      const cards=[...grid.querySelectorAll(":scope > a")];
-      const missingIcons=[];
-      const collapsedCards=[];
-      const labels=[];
-      for(const card of cards) {
-        const rect=card.getBoundingClientRect();
-        const icon=card.querySelector(".rhen-module-glyph, .system-icon");
-        const ir=icon?.getBoundingClientRect();
-        const style=icon ? getComputedStyle(icon) : null;
-        const label=card.querySelector("strong")?.textContent?.trim() || "";
-        labels.push(label);
-        if(rect.width<140 || rect.height<120) collapsedCards.push(label || "module");
-        if(!icon || !ir || ir.width<20 || ir.height<20 || style?.display==="none" || style?.visibility==="hidden") {
-          missingIcons.push(label || "module");
-        }
-      }
-      return {present:true,cards:cards.length,missingIcons,collapsedCards,labels};
-    })()`, returnByValue:true});
+    const architectureGeometry = await send("Runtime.evaluate", {expression: "(() => {\n  const root=document.querySelector(\".anevum-commons-v5-mount\")?.shadowRoot;\n  const grid=root?.querySelector(\".c2-page .c2-grid\");\n  const cards=[...(grid?.querySelectorAll(\":scope > section.c2-card\")||[])];\n  return {\n    present:Boolean(grid),\n    cards:cards.length,\n    labels:cards.map(x=>x.querySelector(\"h2\")?.textContent?.trim()||\"\"),\n    collapsed:cards.filter(x=>x.getBoundingClientRect().width<140).length,\n    outside:cards.filter(x=>x.getBoundingClientRect().right>innerWidth+1).length\n  };\n})()", returnByValue:true});
     const architecture=architectureGeometry.result?.value||{};
-    const required=["EXECUTION","CONTROL","RESEARCH","REPLAY","FORECAST","CORE / STORE","EVIDENCE REVIEW","COMMAND / API"];
-    const missingLabels=required.filter((label)=>!(architecture.labels||[]).includes(label));
-    if(!architecture.present || architecture.cards!==8 || architecture.missingIcons?.length || architecture.collapsedCards?.length || missingLabels.length) {
-      throw new Error("RHEN architecture geometry/icon failure: "+JSON.stringify({...architecture,missingLabels}));
+    const required=["Identity and privacy","Research","Replay","Forecast","Operations and evidence","Execution gates"];
+    const missingLabels=required.filter(label=>!(architecture.labels||[]).includes(label));
+    if(!architecture.present || architecture.cards!==6 || architecture.collapsed || architecture.outside || missingLabels.length) {
+      throw new Error("RHEN V5 authority-card geometry/content failure: "+JSON.stringify({...architecture,missingLabels}));
     }
   }
 
@@ -347,25 +414,36 @@ async function runCase(route, viewport) {
   // Reuse this bounded, hydrated browser target for the release evidence.
   // The duplicate CLI screenshot process could hang until the entire job died.
   const evidenceRoutes = {
-    "/":["home",["truth-home","A place for things I build."]],
-    "/products":["products",["truth-products-page","Things I’m working on."]],
-    "/products/rhen":["rhen",["truth-rhen-page","PRODUCT / RHEN","workshop-rhen-evidence","A working program is only the beginning."]],
-    "/products/rhen/evidence":["terminal",["EVIDENCE DRAWER","public-terminal-page","RESEARCH","REPLAY","RHEN"]],
-    "/field-notes":["research",["studio-notes-page","FIELD NOTES"]],
-    "/field-notes/prediction-outcome-evidence-chain":["field-note",["REPRODUCE / CHALLENGE THIS NOTE"]],
-    "/products/rhen/architecture":["architecture",["How RHEN works."]],
-    "/about":["about",["studio-about-page","ANEVUM is one person right now."]],
-    "/resume":["resume",["Technical Skills"]],
-    "/products/rhen/releases":["releases",["studio-releases-page","Every version leaves a record."]],
-    "/feed":["feed",["feed-page","PUBLIC FEED"]],
-    "/me":["member-command",["member-command","My programs","Programs"]],
+    "/":["home",["anevum-commons-v5-mount","The Commons","Public ANEVUM work"]],
+    "/products":["products",["c2-project","Projects and applications"]],
+    "/products/rhen":["rhen",["V5 foundation","RHEN","Legacy live trading is suspended"]],
+    "/products/rhen/evidence":["terminal",["c2-evidence","SUSPENDED_FOR_REBUILD","Research","Replay","RHEN"]],
+    "/field-notes":["research",["c2-note","Research and Field Notes"]],
+    "/field-notes/prediction-outcome-evidence-chain":["field-note",["c2-method","Research method and limitations"]],
+    "/products/rhen/architecture":["architecture",["Architecture and authority","Execution gates"]],
+    "/about":["about",["c2-about","Independent work, shared openly."]],
+    "/resume":["resume",["c2-resume","Technical skills"]],
+    "/products/rhen/releases":["releases",["c2-card","Release history"]],
+    "/feed":["feed",["post-list","Public ANEVUM work"]],
+    "/communities":["communities",["Explore the subjects","No fictional communities"]],
+    "/learn":["learn",["Learn by examining real work","A practical research loop"]],
+    "/sign-in":["sign-in",["member-auth-page","Your projects. Your Command."]],
+    "/me":["member-command",["c2-member","member-command","Programs"]],
+    "/command":["command",["c2-member","member-command","Programs"]],
+    "/me/settings":["settings",["c2-member","Account settings"]],
+    "/me/rewards":["rewards",["c2-member","Not launched"]],
+    "/apps/rhen/connect":["rhen-review-disclosure",["rhen-review-disclosure","Authorize RHEN by ANEVUM","REQUIRED AUTHORIZATION DISCLOSURE"]],
     "/privacy":["privacy",["member-legal"]],
     "/terms":["terms",["member-legal"]]
   };
   if (evidenceRoutes[route]) {
     const [name, markers] = evidenceRoutes[route];
     const rendered = await send("Runtime.evaluate", {
-      expression:"document.documentElement.outerHTML",returnByValue:true
+      expression:`(() => {
+        const outer = document.documentElement.outerHTML;
+        const host = document.querySelector(".anevum-commons-v5-mount");
+        return host && host.shadowRoot ? outer + "\\n<!-- V5 SHADOW DOM -->\\n" + host.shadowRoot.innerHTML : outer;
+      })()`,returnByValue:true
     });
     const html = rendered.result?.value;
     if (typeof html !== "string" || markers.some(marker => !html.includes(marker))) {
@@ -478,7 +556,7 @@ async function runScrollResetCase(viewport) {
       const readyResult = await send("Runtime.evaluate", {
         expression: `(() => {
           const scroller = document.scrollingElement || document.documentElement || null;
-          const link = document.querySelector('a[href="/products"]');
+          const link = document.querySelector(".anevum-commons-v5-mount")?.shadowRoot?.querySelector('a[href="/products"]');
           const maxScroll = scroller
             ? Math.max(0, scroller.scrollHeight - scroller.clientHeight)
             : 0;
@@ -569,7 +647,7 @@ async function runScrollResetCase(viewport) {
 
   await send("Runtime.evaluate", {
     expression: `(() => {
-      const link = document.querySelector('a[href="/products"]');
+      const link = document.querySelector(".anevum-commons-v5-mount")?.shadowRoot?.querySelector('a[href="/products"]');
       if (!link) return false;
       link.click();
       return true;
@@ -630,6 +708,9 @@ try {
       );
     }
   }
+  // Explicit narrow-phone acceptance without repeating all legacy routes.
+  const narrow = { name:"narrow",width:320,height:720,mobile:true,deviceScaleFactor:1 };
+  failures = failures.concat((await runCase("/", narrow)).map(item=>"narrow /: "+item));
 } finally {
   chrome.kill("SIGTERM");
   await Promise.race([

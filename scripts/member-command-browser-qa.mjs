@@ -47,19 +47,58 @@ async function runCase(viewport, state) {
       await pause(500);
     }
   }
-  for(let i=0;i<100;i++){if(await evaluate('document.querySelector(".member-program") && !document.body.textContent.includes("Checking your account")'))break;await pause(100);}
-  const info=await evaluate(`(() => ({text:document.body.textContent,overflow:document.documentElement.scrollWidth>innerWidth+1,operator:!!document.querySelector('a[href^="/command/rhen"]'),background:getComputedStyle(document.body).backgroundColor,buttons:[...document.querySelectorAll('.member-card-actions button')].map(el=>el.textContent)}))()`);
-  if(info.overflow||info.operator||info.background!=="rgb(248, 248, 245)")throw new Error("Member portal layout/access failure "+JSON.stringify(info));
+  // Member Command now renders inside the Commons V5 open ShadowRoot. Inspect the
+  // actual account surface, never the outer document's now-empty legacy wrapper.
+  const accountExpr='document.querySelector(".anevum-commons-v5-mount")?.shadowRoot?.querySelector(".c2-member .member-command")';
+  let mounted=false;
+  for(let i=0;i<100;i++){
+    mounted=await evaluate(`(() => {
+      const account=${accountExpr};
+      if(!account?.querySelector(".member-program")||account.textContent.includes("Checking your account"))return false;
+      // Authenticated controls are intentionally disabled until private data loads.
+      if(${JSON.stringify(state)}==="member"){
+        const actions=[...account.querySelectorAll(".member-card-actions button")];
+        return actions.length===2&&actions.every(el=>!el.disabled)&&!account.textContent.includes("Loading your programs");
+      }
+      return true;
+    })()`);
+    if(mounted)break;
+    await pause(100);
+  }
+  if(!mounted)throw new Error("Member Command did not mount in the Commons V5 ShadowRoot");
+  const info=await evaluate(`(() => {
+    const root=document.querySelector(".anevum-commons-v5-mount")?.shadowRoot;
+    const account=root?.querySelector(".c2-member .member-command");
+    const shell=root?.querySelector(".app.account-view");
+    return {
+      text:account?.textContent||"",
+      mounted:!!(root&&account&&shell),
+      overflow:document.documentElement.scrollWidth>innerWidth+1,
+      operator:!!account?.querySelector('a[href^="/command/rhen"]'),
+      background:shell?getComputedStyle(shell).backgroundColor:"",
+      buttons:[...(account?.querySelectorAll(".member-card-actions button")||[])].map(el=>el.textContent)
+    };
+  })()`);
+  if(!info.mounted||info.overflow||info.operator||!info.background||info.background==="rgba(0, 0, 0, 0)"||info.background==="transparent")
+    throw new Error("Member portal layout/access failure "+JSON.stringify(info));
   if(state==="disabled"&&(!info.text.includes("Member accounts are not open yet")||info.buttons.length))throw new Error("Disabled accounts advertised persistence");
   if(state==="signed-out"&&(!info.text.includes("Sign in to make this your Command")||info.buttons.length))throw new Error("Signed-out accounts advertised private state");
   if(state==="member") {
     if(!info.text.includes("QA Member")||info.buttons.length!==2)throw new Error("Member account did not load");
-    await evaluate(`document.querySelectorAll('.member-card-actions button')[0].click()`);await pause(350);
-    await evaluate(`document.querySelectorAll('.member-card-actions button')[1].click()`);await pause(350);
-    const saved=await evaluate(`({saved:!!document.querySelector('.member-command-saved a[href="/apps/rhen"]'),updates:document.querySelectorAll('.member-notes a').length,pressed:[...document.querySelectorAll('.member-card-actions button')].every(el=>el.getAttribute('aria-pressed')==='true'),mutations:window.__memberQa.mutations})`);
+    await evaluate(`${accountExpr}.querySelectorAll('.member-card-actions button')[0].click()`);await pause(350);
+    await evaluate(`${accountExpr}.querySelectorAll('.member-card-actions button')[1].click()`);await pause(350);
+    const saved=await evaluate(`(() => {
+      const account=${accountExpr};
+      return {
+        saved:!!account?.querySelector('.member-command-saved a[href="/apps/rhen"]'),
+        updates:account?.querySelectorAll('.member-notes a').length||0,
+        pressed:[...(account?.querySelectorAll('.member-card-actions button')||[])].every(el=>el.getAttribute('aria-pressed')==='true'),
+        mutations:window.__memberQa.mutations
+      };
+    })()`);
     if(!saved.saved||!saved.pressed||!saved.updates||saved.mutations.length!==2)throw new Error("Member save/follow flow failed "+JSON.stringify(saved));
-    await evaluate(`document.querySelectorAll('.member-card-actions button')[0].click()`);await pause(350);
-    if(await evaluate(`!!document.querySelector('.member-command-saved a')`))throw new Error("Removed program remained saved");
+    await evaluate(`${accountExpr}.querySelectorAll('.member-card-actions button')[0].click()`);await pause(350);
+    if(await evaluate(`!!${accountExpr}.querySelector('.member-command-saved a')`))throw new Error("Removed program remained saved");
   }
   const png=await send("Page.captureScreenshot",{format:"png",captureBeyondViewport:false});fs.writeFileSync(path.join(output,`member-command-${state}-${viewport.width}.png`),Buffer.from(png.data,"base64"));
   console.log(JSON.stringify({state,width:viewport.width,ok:true}));ws.close();await fetch(`http://127.0.0.1:${port}/json/close/${target.id}`);

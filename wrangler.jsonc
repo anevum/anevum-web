@@ -25,7 +25,10 @@
     "RHEN_OWNER_EMAIL": "devon@anevum.com",
     "ANEVUM_MEMBERS_ENABLED": "true",
     "ANEVUM_MEMBER_RHEN_DRAFTS_ENABLED": "false",
-    "ANEVUM_MEMBER_PREVIEW_ENABLED": "false"
+    "ANEVUM_MEMBER_PREVIEW_ENABLED": "false",
+    "ANEVUM_V5_WORKSPACES_ENABLED": "false",
+    "ANEVUM_ALPACA_REVIEW_CONNECT_ENABLED": "false",
+    "ANEVUM_COMMONS_SOCIAL_PILOT_ENABLED": "false"
   },
   "routes": [
     {

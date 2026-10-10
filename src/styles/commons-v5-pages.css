@@ -1,0 +1,67 @@
+/* V5 Stage 2 shared public pages. All rules remain in the isolated Commons Shadow DOM. */
+.c2-page{display:flex;flex-direction:column;gap:22px;min-width:0;padding:2px 0 50px}
+.c2-page h1,.c2-page h2,.c2-page h3,.c2-page p{margin-top:0}
+.c2-intro{padding:7px 0 4px}
+.c2-kicker{color:var(--accent);font-size:10px;font-weight:800;letter-spacing:.12em;text-transform:uppercase}
+.c2-intro h1{font-size:clamp(26px,3vw,38px);font-weight:760;letter-spacing:-.045em;line-height:1.12;margin:11px 0 12px}
+.c2-intro p{color:var(--sub);line-height:1.65;font-size:14px;max-width:690px;margin:0}
+.c2-truth{background:var(--panel-light);border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:var(--radius);color:var(--sub);padding:14px 17px;line-height:1.6}
+.c2-truth strong{color:var(--text)}
+.c2-tabs{display:flex;gap:7px;overflow:auto;border-bottom:1px solid var(--line);padding-bottom:12px}
+.c2-tabs a{white-space:nowrap;border:1px solid transparent;border-radius:9px;padding:8px 12px;color:var(--sub);font-weight:650}
+.c2-tabs a:hover,.c2-tabs a.selected{border-color:var(--line);background:var(--panel-light);color:var(--text)}
+.c2-tabs a.selected{box-shadow:inset 0 -2px 0 var(--accent)}
+.c2-result{font-size:12px;color:var(--sub);margin:0!important}
+.c2-stack{display:flex;flex-direction:column;gap:13px}
+.c2-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.c2-card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:20px;min-width:0}
+.c2-card h2{font-size:17px;line-height:1.35;letter-spacing:-.015em;margin:9px 0 10px}
+.c2-card p{color:var(--sub);line-height:1.6;font-size:13px;margin:0 0 16px}
+.c2-card-meta{display:flex;align-items:center;flex-wrap:wrap;gap:12px;color:var(--muted);font-size:11px;font-weight:650}
+.c2-card-meta>span:first-child{color:var(--accent)}
+.c2-tag-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:10px 0 13px}
+.c2-tag{font-size:10px;font-weight:650;border:1px solid var(--line);color:var(--sub);border-radius:7px;padding:4px 7px}
+.c2-text-link{display:inline-flex;align-items:center;gap:7px;color:var(--accent);font-weight:700;font-size:12px;width:fit-content}
+.c2-text-link:hover{text-decoration:underline;color:var(--text)}
+.c2-note h2 a:hover{text-decoration:underline;text-decoration-color:var(--accent)}
+.c2-project-icon{display:grid;place-items:center;font-weight:850;font-size:25px;letter-spacing:-.06em;background:var(--accent-alpha);color:var(--accent);width:52px;height:52px;border-radius:14px;margin-bottom:13px}
+.c2-section{border-top:1px solid var(--line);padding-top:20px}
+.c2-section h2,.c2-list-title{font-size:18px;letter-spacing:-.02em;margin-bottom:9px}
+.c2-section p{color:var(--sub);line-height:1.7;font-size:13px;max-width:670px}
+.c2-action-row{display:flex;gap:9px;flex-wrap:wrap;margin-top:12px}
+.c2-action-row a{display:inline-flex;border-radius:8px;padding:9px 13px;border:1px solid var(--line);background:var(--panel-light);color:var(--text);font-weight:700;font-size:12px}
+.c2-action-row a:hover{border-color:var(--accent);color:var(--accent)}
+.c2-article{gap:16px}
+.c2-article .c2-intro{padding-bottom:8px}
+.c2-article-section{padding:20px 0;border-top:1px solid var(--line);line-height:1.78;font-size:14px}
+.c2-article-section h2{font-size:21px;letter-spacing:-.025em;margin-bottom:15px}
+.c2-article-section h3{font-size:15px;color:var(--text);margin:16px 0 7px}
+.c2-article-section p,.c2-article-section li{color:var(--sub);margin-bottom:14px;overflow-wrap:anywhere}
+.c2-article-section strong{color:var(--text)}
+.c2-article-section li{margin-bottom:5px}
+.c2-method{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:20px}
+.c2-empty{padding:24px;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius)}
+.c2-empty h2{font-size:17px}
+.c2-empty p{color:var(--sub);line-height:1.6}
+.c2-empty a{color:var(--accent)}
+.c2-steps{line-height:2;color:var(--sub);padding-left:22px}
+.c2-about{display:grid;grid-template-columns:130px minmax(0,1fr);gap:20px}
+.c2-about img{width:130px;max-width:100%;aspect-ratio:4/5;object-fit:cover;border:1px solid var(--line);border-radius:11px}
+.c2-about h2{font-size:23px;letter-spacing:-.025em;margin-top:9px}
+.c2-legal>article,.c2-legal>section{display:block;max-width:800px}
+.c2-legal h1{font-size:30px;letter-spacing:-.035em;margin:10px 0 18px}
+.c2-legal h2{font-size:18px;margin:25px 0 8px}
+.c2-legal p{font-size:13px;line-height:1.75;color:var(--sub);margin:0 0 13px}
+.c2-legal .workshop-kicker{color:var(--accent);letter-spacing:.11em;text-transform:uppercase;font-size:10px;font-weight:750}
+.c2-legal a{color:var(--accent);text-decoration:underline}
+.c2-legal button.member-primary-action,.c2-legal a.member-primary-action{color:var(--accent-contrast);background:var(--accent);border:0;text-decoration:none;display:inline-flex;border-radius:8px;padding:11px 15px;font-weight:800}
+.c2-legal button:disabled{opacity:.55}
+.c2-legal .member-alert{color:#ffb4a6}
+.c2-legal .member-legal-date{border-top:1px solid var(--line);padding-top:15px}
+@media(max-width:720px){.c2-grid{grid-template-columns:1fr}.c2-card{padding:16px}.c2-intro h1{font-size:26px}.c2-about{grid-template-columns:95px minmax(0,1fr);gap:14px}.c2-about img{width:95px}.c2-about h2{font-size:19px}}
+@media(max-width:380px){.c2-about{display:flex;flex-direction:column}.c2-about img{width:105px}.c2-page{padding-bottom:70px}}
+@media(prefers-reduced-motion:reduce){.c2-page *{scroll-behavior:auto!important;transition:none!important}}
+
+.c2-resume .c2-card li{line-height:1.65;color:var(--sub);margin-bottom:8px}
+.c2-resume .c2-card ul{padding-left:21px;margin:8px 0 0}
+.c2-resume .c2-section>p{font-size:13px;max-width:700px;line-height:1.75;color:var(--sub)}

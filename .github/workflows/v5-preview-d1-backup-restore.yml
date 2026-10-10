@@ -47,8 +47,8 @@ jobs:
           test "$(jq -r '.d1_databases[0].database_name' wrangler.member-staging.jsonc)" = 'anevum-members-preview'
           test "$(jq -r '.d1_databases[0].database_id' wrangler.member-staging.jsonc)" = 'a537432e-d216-4b31-8b22-19662cc3a44a'
           test "$(jq -r '.d1_databases[0].database_id' wrangler.jsonc)" != 'a537432e-d216-4b31-8b22-19662cc3a44a'
-          test "$(jq -r '.vars.ANEVUM_ALPACA_REVIEW_CONNECT_ENABLED // "false"' wrangler.member-staging.jsonc)" = 'false'
-          test "$(jq -r '.vars.ANEVUM_COMMONS_SOCIAL_PILOT_ENABLED // "false"' wrangler.member-staging.jsonc)" = 'false'
+          test "$(jq -r '.vars.ANEVUM_ALPACA_REVIEW_CONNECT_ENABLED' wrangler.member-staging.jsonc)" = 'false'
+          test "$(jq -r '.vars.ANEVUM_COMMONS_SOCIAL_PILOT_ENABLED' wrangler.member-staging.jsonc)" = 'false'
           python scripts/verify-v5-preview-export-backup.py selftest
       - name: Export only the staging preview database, never log its rows or URL
         id: export

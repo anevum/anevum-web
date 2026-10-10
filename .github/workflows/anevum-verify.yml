@@ -4,7 +4,7 @@ on:
   push:
     branches: [main]
   pull_request:
-    branches: [main]
+    branches: [main, build/commons-v5-shell-20261009, build/anevum-v5-foundation-web-contracts-20261009, build/commons-v5-stage2-sitewide-20261010, build/commons-v5-stage2-integrated-20261010, build/commons-v5-alpaca-review-connect-20261010, build/commons-v5-private-rhen-parity-20261010, build/commons-v5-member-discussions-20261010, build/commons-v5-moderation-audit-20261010, build/commons-v5-alpaca-review-readonly-ui-20261010]
 
 concurrency:
   group: anevum-verify-${{ github.ref }}
@@ -42,12 +42,22 @@ jobs:
         run: node --experimental-strip-types --test tests/command-topology.test.mjs tests/command-operations.test.mjs tests/command-trading.test.mjs tests/command-research.test.mjs tests/equity-market-time.test.mjs tests/visual-ops.test.mjs tests/command-live.test.mjs tests/reconciliation-visibility.test.mjs tests/rhen-realtime.test.mjs tests/public-feed-sse.test.mjs
       - name: Verify member boundaries
         run: npm run test:members
+      - name: Verify ANEVUM V5 Foundation workspace contract
+        run: npm run test:foundation
+      - name: Enforce pinned WEB/RHEN cross-repository workspace schema parity
+        run: node scripts/verify-v5-cross-repo-schema.mjs
+      - name: Enforce one guarded production Worker deployment
+        run: node --test tests/v5-verify-deploy-safety.test.mjs
       - name: Verify member D1 binding isolation
-        run: node --test tests/member-bindings.test.mjs tests/member-staging.test.mjs tests/member-preview-migration.test.mjs tests/member-command-cutover.test.mjs tests/member-command-navigation.test.mjs && node scripts/verify-member-bindings.mjs --require-config
+        run: node --test tests/member-bindings.test.mjs tests/member-staging.test.mjs tests/member-preview-migration.test.mjs tests/preview-d1-ledger-lineage.test.mjs tests/member-command-cutover.test.mjs tests/member-command-navigation.test.mjs && node scripts/verify-member-bindings.mjs --require-config
       - name: Verify Cloudflare Command Access cutover safety (offline)
         run: python -m unittest discover -s tests -p 'test_command_access_cutover.py' -v
       - name: Verify member schema and tenant separation
         run: python scripts/verify-member-schema.py
+      - name: Rehearse all V5 preview D1 migration contracts offline
+        run: python scripts/verify-v5-preview-schema-rehearsal.py
+      - name: Verify D1 SQL export restore safety with synthetic accounts only
+        run: python scripts/verify-v5-preview-export-backup.py selftest
       - name: Typecheck and build
         run: npm run build
       - name: Verify generated artifacts
@@ -156,6 +166,7 @@ jobs:
           node scripts/codex-handoff-browser-qa.mjs
           node scripts/visual-ops-browser-qa.mjs
           node scripts/member-command-browser-qa.mjs
+          node scripts/private-rhen-browser-qa.mjs
       - name: Visual review contact sheets
         if: github.event_name == 'pull_request'
         run: python scripts/visual-ops-contact-sheet.py
@@ -166,22 +177,29 @@ jobs:
         run: |
           set -euo pipefail
           evidence="$RUNNER_TEMP/anevum-visuals"
-          for name in home products feed rhen terminal research field-note architecture about resume releases; do
+          for name in home products feed rhen terminal research field-note architecture about resume releases rhen-review-disclosure; do
             test -s "$evidence/$name-desktop.png"
             test -s "$evidence/$name-mobile.png"
             test -s "$evidence/$name-rendered.html"
           done
-          grep -Fq 'truth-home' "$evidence/home-rendered.html"
-          grep -Fq 'A place for things I build.' "$evidence/home-rendered.html"
-          grep -Fq 'truth-products-page' "$evidence/products-rendered.html"
-          grep -Fq 'truth-rhen-page' "$evidence/rhen-rendered.html"
-          grep -Fq 'studio-about-page' "$evidence/about-rendered.html"
-          grep -Fq 'feed-page' "$evidence/feed-rendered.html"
-          grep -Fq 'studio-releases-page' "$evidence/releases-rendered.html"
-          grep -Fq 'public-terminal-page' "$evidence/terminal-rendered.html"
-          grep -Fq 'RESEARCH' "$evidence/terminal-rendered.html"
-          grep -Fq 'REPLAY' "$evidence/terminal-rendered.html"
+          for width in 320 390 768 1024 1440; do
+            for section in overview account setup evidence research updates; do
+              test -s "$evidence/private-rhen-$section-member-$width.png"
+            done
+          done
+          grep -Fq 'anevum-commons-v5-mount' "$evidence/home-rendered.html"
+          grep -Fq 'Public ANEVUM work' "$evidence/home-rendered.html"
+          grep -Fq 'c2-project' "$evidence/products-rendered.html"
+          grep -Fq 'Legacy live trading is suspended' "$evidence/rhen-rendered.html"
+          grep -Fq 'c2-about' "$evidence/about-rendered.html"
+          grep -Fq 'post-list' "$evidence/feed-rendered.html"
+          grep -Fq 'Release history' "$evidence/releases-rendered.html"
+          grep -Fq 'c2-evidence' "$evidence/terminal-rendered.html"
+          grep -Fq 'SUSPENDED_FOR_REBUILD' "$evidence/terminal-rendered.html"
+          grep -Fq 'Replay' "$evidence/terminal-rendered.html"
           grep -Fq 'RHEN' "$evidence/terminal-rendered.html"
+          grep -Fq 'Authorize RHEN by ANEVUM' "$evidence/rhen-review-disclosure-rendered.html"
+          grep -Fq 'REQUIRED AUTHORIZATION DISCLOSURE' "$evidence/rhen-review-disclosure-rendered.html"
 
       - name: Upload browser QA
         if: github.event_name == 'pull_request'
