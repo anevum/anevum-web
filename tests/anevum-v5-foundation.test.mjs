@@ -1,4 +1,5 @@
 import { readFileSync } from "node:fs";
+import { createHash } from "node:crypto";
 import assert from "node:assert/strict";
 import test from "node:test";
 
@@ -54,6 +55,9 @@ test("ANEVUM V5 version and wire schema are explicit, not magic display strings"
   assert.equal(schema.properties.schema_version.const, FOUNDATION_WORKSPACE_SCHEMA);
   assert.equal(schema.additionalProperties, false);
   assert.equal(schema.properties.workspace_kind.enum.length, 2);
+  const bytes = readFileSync(new URL("../contracts/foundation/workspace-state.v1.schema.json", import.meta.url));
+  const gitBlob = createHash("sha1").update("blob " + bytes.length + "\0").update(bytes).digest("hex");
+  assert.equal(gitBlob, "7d351b2e0f4164df097fbf3a864c41ad6c8777b9", "F0 contract drift must produce a versioned schema update in both repos");
 });
 
 test("founder legacy terminal route is private and never applied to another member", () => {
