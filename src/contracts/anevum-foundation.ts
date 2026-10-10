@@ -116,7 +116,7 @@ export function parsePrivateFoundationWorkspace(
   });
 }
 
-/** Route hint only; actual route/API access must be verified by the Worker. */
+/** Owner RHEN_NEXT and member RHEN_NEXT use the same private app route.\n * Only quarantined legacy founder archives retain /command/rhen/operate.\n * Route hint only; actual route/API access must be verified by the Worker. */
 export function privateFoundationLanding(state: FoundationWorkspaceState): string {
   return state.workspace_kind === "FOUNDER_PRIVATE" && state.engine_source === "LEGACY_FOUNDER"
     ? "/command/rhen/operate"
