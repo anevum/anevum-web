@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync, readdirSync } from "node:fs";
+import { createHash } from "node:crypto";
 
 const root = new URL("../", import.meta.url);
 const read = (path) => readFileSync(new URL(path, root), "utf8");
@@ -49,13 +50,19 @@ test("workspace migration avoids the applied billing 0003 filename without rewri
   assert.deepEqual(files, [
     "0001_member_platform.sql",
     "0002_member_rhen_drafts.sql",
+    "0003_member_billing.sql",
     "0004_member_rhen_workspaces.sql"
   ]);
-  // The preview D1 ledger already has 0003_member_billing.sql from unmerged
-  // billing PR #240. That migration is NOT authorized for production by F0.
-  // A separate billing integration decision must reconcile its source before
-  // any production D1 migration, without renaming its existing ledger entry.
-  assert.equal(files.some(name => /^0003_/.test(name)), false);
+  // The preview already records 0003 billing from unmerged PR #240. Copy
+  // only the byte-identical reviewed SQL file; no checkout or billing runtime.
+  const billing = Buffer.from(read("migrations/0003_member_billing.sql"));
+  const billingBlob = createHash("sha1")
+    .update(Buffer.from("blob " + billing.length + "\0"))
+    .update(billing)
+    .digest("hex");
+  assert.equal(billingBlob, "54333fa22dfce87a58e16e3e85b2d27a59b33544");
+  assert.match(billing.toString("utf8"), /CREATE TABLE IF NOT EXISTS member_billing_customers/);
+  assert.doesNotMatch(billing.toString("utf8"), /CREATE TRIGGER|DROP TABLE|DELETE FROM|ALTER TABLE|alpaca|broker_account|place_order/i);
   const workspace = read("migrations/0004_member_rhen_workspaces.sql");
   assert.match(workspace, /CREATE TABLE IF NOT EXISTS member_rhen_workspaces/);
   assert.match(workspace, /REFERENCES "user"\("id"\) ON DELETE CASCADE/);
