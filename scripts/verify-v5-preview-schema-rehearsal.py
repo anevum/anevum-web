@@ -26,7 +26,7 @@ STEPS = (
     ("migrations-review", "0005_member_alpaca_review.sql", "40d4d282eeae1630fd89d7b08c975102cff8e341"),
     ("migrations-social", "0006_commons_v5_discussions.sql", "69df811aca79e812c3d976edb5e17b2c4c6d4fbd"),
 )
-ALLOWED_STATEMENT = re.compile(r"(?is)^(?:PRAGMA\\s+foreign_keys\\s*=\\s*ON|CREATE\\s+(?:UNIQUE\\s+)?(?:TABLE|INDEX)\\s+IF\\s+NOT\\s+EXISTS\\b)")
+ALLOWED_STATEMENT = re.compile(r"(?is)^(?:PRAGMA\s+foreign_keys\s*=\s*ON|CREATE\s+(?:UNIQUE\s+)?(?:TABLE|INDEX)\s+IF\s+NOT\s+EXISTS\b)")
 
 
 def require(condition: bool, message: str) -> None:
