@@ -92,6 +92,10 @@ jobs:
           python scripts/verify-v5-preview-export-backup.py verify-sql "$private_sql" > "$RUNNER_TEMP/backup-restore-report.json"
           test "$(jq -er '.status' "$RUNNER_TEMP/backup-restore-report.json")" = 'RESTORED_AND_VERIFIED_SQLITE_PREVIEW_ONLY'
           test "$(jq -er '.members' "$RUNNER_TEMP/backup-restore-report.json")" = '2'
+          # A new archive must include the already-registered workspace 0004.
+          # Prior 0001-0003 artifacts remain historical recovery snapshots,
+          # never a claimed post-0004 restore point for the next migration.
+          test "$(jq -er '.migration_ledger_count' "$RUNNER_TEMP/backup-restore-report.json")" -ge 4
           sha="$(jq -er '.sql_sha256' "$RUNNER_TEMP/backup-restore-report.json")"
           python scripts/verify-v5-preview-export-backup.py encrypt-sql "$private_sql" "$RUNNER_TEMP/anevum-preview-d1.sql.fernet" >/dev/null
           rm -f "$private_sql" "$RUNNER_TEMP/export-progress.json" "$RUNNER_TEMP/export-poll-body.json"
@@ -123,14 +127,14 @@ jobs:
             "$RUNNER_TEMP/anevum-recovery-verify/anevum-preview-d1.sql.fernet" \
             > "$RUNNER_TEMP/verified-archive-report.json"
           jq -e --arg expected "$EXPECTED_BACKUP_SHA" \
-            '.status=="ENCRYPTED_ARCHIVE_RESTORED_AND_VERIFIED_SQLITE_PREVIEW_ONLY" and .sql_sha256==$expected and .members==2 and .workspaces==2 and .drafts==2 and .fk_violations==0' \
+            '.status=="ENCRYPTED_ARCHIVE_RESTORED_AND_VERIFIED_SQLITE_PREVIEW_ONLY" and .sql_sha256==$expected and .migration_ledger_count >= 4 and .members==2 and .workspaces==2 and .drafts==2 and .fk_violations==0' \
             "$RUNNER_TEMP/verified-archive-report.json" >/dev/null
           {
             echo '## Private ANEVUM staging preview backup'
             echo ''
             echo 'PASS: downloaded private D1 SQL export, restored in isolated in-memory SQLite.'
             echo 'PASS: encrypted backup uploaded, downloaded again from Actions artifact storage, decrypted and restored.'
-            echo 'Two synthetic-independent identity counts preserved: 2 members, 2 workspaces, 2 drafts.'
+            echo 'Two distinct staging member workspaces and drafts preserved; registered migration 0004 included.'
             echo "SHA256 of SQL export: \`$EXPECTED_BACKUP_SHA\`."
             echo 'This is NOT a Cloudflare remote database restore and DOES NOT apply migrations.'
             echo 'Encrypted artifact retention: 30 days. Verify key custody and restore procedure before migration.'
