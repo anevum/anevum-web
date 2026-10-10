@@ -1,17 +1,16 @@
 name: Migrate ANEVUM Member Preview D1
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - 'wrangler.jsonc'
-      - 'wrangler.preview-migrations.jsonc'
-      - 'migrations/**'
-      - '.github/workflows/member-preview-d1-migrate.yml'
+  # Preview D1 has an applied billing 0003 from another unmerged workstream.
+  # Never migrate merely because migrations/** or workflow files reach main.
   workflow_dispatch:
     inputs:
       confirmation:
-        description: 'For manual preview migration, type MIGRATE_PREVIEW_ONLY'
+        description: 'Type MIGRATE_PREVIEW_ONLY after reviewing preview D1 backup and source lineage'
+        required: true
+        type: string
+      reviewed_head_sha:
+        description: 'Paste the exact reviewed 40-character main HEAD SHA for this preview schema change'
         required: true
         type: string
 
@@ -24,7 +23,7 @@ concurrency:
 
 jobs:
   migrate-preview:
-    if: github.event_name == 'push' || inputs.confirmation == 'MIGRATE_PREVIEW_ONLY'
+    if: github.ref == 'refs/heads/main' && inputs.confirmation == 'MIGRATE_PREVIEW_ONLY' && inputs.reviewed_head_sha == github.sha
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
