@@ -54,7 +54,7 @@ Canonical architectural decision: [RHEN consolidation ADR 002](https://github.co
 
 ## F0b incremental staging implementation — private RHEN_NEXT workspace allocation
 
-- New isolated D1 migration `0003_member_rhen_workspaces.sql` stores one durable random workspace ID per authenticated Better Auth member, with a unique workspace ID and cascade deletion. This is identity only: no broker ID, keys, funds, trading orders, strategy rights or extra admin access.
+- New isolated D1 migration `0004_member_rhen_workspaces.sql` stores one durable random workspace ID per authenticated Better Auth member, with a unique workspace ID and cascade deletion. This is identity only: no broker ID, keys, funds, trading orders, strategy rights or extra admin access.
 - `GET /api/member/rhen/workspace` reads the authenticated member's own state; same-origin `POST` with no payload allocates it idempotently. Query-selected member/workspace IDs and client-provided fields are explicitly denied.
 - The server emits only the byte-frozen `anevum.workspace-state.v1` projection with `MEMBER_PRIVATE`, `RHEN_NEXT`, `NOT_CONFIGURED`, `NONE`, `NOT_LINKED`, and `VIEW`. Founder is treated as a normal member for this successor workspace. The TypeScript client validates the response against the shared allowlist.
 - The RHEN overview provides a truthful staging-only provisioning action, private workspace ID and inactive engine/broker indicators. It cannot read the old operator terminal or place orders.
