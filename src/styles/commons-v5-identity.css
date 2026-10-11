@@ -36,6 +36,7 @@
 .app .v6-top-nav a .ico{width:19px;height:19px}
 .app .v6-top-nav a:hover{background:var(--panel-hover);color:var(--text)}
 .app .v6-top-nav a.active{background:var(--accent-alpha);color:var(--accent);border-color:var(--line)}
+.app .v6-top-nav a.active:after{display:none}
 .app.nav-collapsed .community-nav{display:none}
 .app.nav-collapsed .sidebar-nav-group{gap:2px}
 .app.nav-collapsed .side-link.active{
