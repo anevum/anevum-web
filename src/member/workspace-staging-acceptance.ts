@@ -4,6 +4,7 @@
 import { parsePrivateFoundationWorkspace, type FoundationWorkspaceState } from "../contracts/anevum-foundation.ts";
 
 export const WORKSPACE_STAGING_ORIGIN = "https://anevum-member-staging.devonakins.workers.dev";
+export const V5_BETA_ACCEPTANCE_ORIGIN = "https://anevum-v5-beta.devonakins.workers.dev";
 export type WorkspaceStagingProof = {
   passed: true;
   checks: readonly string[];
@@ -129,7 +130,7 @@ export async function runWorkspaceStagingProof(
   fetcher: typeof fetch, authenticatedMemberId: string, origin: string,
   onStep?: (step: WorkspaceStagingStep) => void, signal?: AbortSignal
 ): Promise<WorkspaceStagingProof> {
-  assert(origin === WORKSPACE_STAGING_ORIGIN, "Workspace acceptance is staging-only.");
+  assert(origin === WORKSPACE_STAGING_ORIGIN || origin === V5_BETA_ACCEPTANCE_ORIGIN, "Workspace acceptance is staging-only.");
   assert(typeof authenticatedMemberId === "string" && authenticatedMemberId.length > 0,
     "An authenticated member session is required.");
 
