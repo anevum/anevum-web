@@ -333,7 +333,7 @@ async function runCase(requestedRoute, viewport) {
       const posts = root?.querySelectorAll(".post") || [];
       const isVisible = el => { if (!el || getComputedStyle(el).display === "none") return false; const rect=el.getBoundingClientRect(); return rect.width > 0 && rect.right > 0 && rect.left < innerWidth && rect.bottom > 0 && rect.top < innerHeight; };
       const width = el => Math.round(el?.getBoundingClientRect().width || 0);
-      const createGlyph=root?.querySelector(".mobile-create .ico");
+      const createGlyph=root?.querySelector('.mobile-nav a[href="/products"] .ico');
       const createStyle=createGlyph ? getComputedStyle(createGlyph) : null;
       const createGlyphPaintWidth=createGlyph && createStyle ?
         Math.round(createGlyph.getBoundingClientRect().width -
@@ -378,7 +378,7 @@ async function runCase(requestedRoute, viewport) {
       const changedDensity=host.getAttribute("data-density")==="compact";
       root.querySelector(".reset-design")?.click();
       await wait();
-      const resetDefaults=host.getAttribute("data-theme")==="midnight"&&host.getAttribute("data-density")==="comfortable";
+      const resetDefaults=host.getAttribute("data-theme")==="forest"&&host.getAttribute("data-density")==="comfortable";
       root.querySelector('[aria-label="Close appearance settings"]')?.click();
       await wait();
       const fontSize=parseFloat(getComputedStyle(root.querySelector(".post-title")).fontSize);
