@@ -9,12 +9,12 @@ Owner approved **separate beta staging** on October 11, 2026. This is NOT approv
 
 | Resource | Identity | State |
 | --- | --- | --- |
-| Dedicated Worker | anevum-v5-beta | Created, not the production or Alpaca reviewer Worker |
-| Beta URL | https://anevum-v5-beta.devonakins.workers.dev | Workers subdomain enabled; public URL may be reachable but not independently HTTP acceptance-tested |
+| Dedicated Worker | anevum-v5-beta | Full V5 Worker deployed October 11, 16:13 UTC; separate from production/reviewer |
+| Beta URL | https://anevum-v5-beta.devonakins.workers.dev | Public HTML routes HTTP 200; sign-in available, external invitations still closed |
 | Dedicated D1 | anevum-v5-beta-members, b2f9b4ad-4b97-483c-ae78-5dc7c8da76bf | Created, with empty member/account data |
 | Beta authentication secret | BETTER_AUTH_SECRET on anevum-v5-beta | Independently generated and stored only as a Cloudflare secret; never printed or committed |
-| Beta Google OAuth | GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET | **Not provisioned** |
-| Beta Worker source currently deployed | Minimal non-trading holding page | HTTP 503, private no-store, noindex; NOT the full V5 React/Worker website |
+| Beta Google OAuth | GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET | Both encrypted bindings confirmed; live non-authenticating Google authorization initiation passed |
+| Beta Worker source currently deployed | Full V5 React/Worker bundle | Deployed version ae2ea588-4dab-4216-bef2-03323c298a1a from approved source a5fd820840501c897031a08d6812103ed3c7c743 |
 
 The new D1 has **only** the existing source migrations 0001 through 0004,
 verified in Cloudflare D1's own migration ledger; there are zero members,
@@ -28,10 +28,11 @@ not applied. No active production or reviewer D1 data was copied to beta.
 
 Cloudflare production Worker anevum-web-nextgen and existing reviewer
 Worker anevum-member-staging remain unchanged, including their D1 bindings.
-The beta Worker has NO imported Google client secret, broker keys, paid
-billing credentials or company owner/operator credentials.
+The beta Worker has its own encrypted Google ID/Secret and separate Better
+Auth secret; none was copied from production. No broker keys, paid billing
+credentials or company owner/operator credentials were provisioned.
 
-## Prepared source to publish actual V5 beta
+## Released beta source and isolated deployment pipeline
 
 - wrangler.v5-beta.jsonc uses only the fresh beta D1 and exact beta URL.
   Member profiles, saving/following, RHEN_NEXT workspaces and non-executing
@@ -42,19 +43,25 @@ billing credentials or company owner/operator credentials.
   Wrangler deployment targets against the known production/reviewer database
   UUIDs, exact flags, route absence and sensitive secret names. A drift fails.
 - .github/workflows/v5-isolated-beta-deploy.yml builds/tests PRs without
-  deployment. **Only** a manually approved current-main workflow_dispatch
-  with exact SHA and DEPLOY_ISOLATED_V5_BETA_ONLY can deploy a verified
-  generated Worker to anevum-v5-beta. It checks independent D1 schema 0001–0004,
-  foreign keys, existing beta script bindings/secret name, and postdeploy
-  anonymous account denial. It does not run D1 migrations or any broker call.
+  deployment; the original reviewed-main manual deployment route remains.
+  For the initial isolated beta-only release, the exact reviewed source passed
+  four independent GitHub checks, then a one-time marker-triggered workflow
+  .github/workflows/v5-beta-approved-branch-release.yml deployed only
+  anevum-v5-beta. The release action's final postdeploy check reported failure;
+  follow-up read-only live checks confirmed correct availability, anonymous
+  denial and separate D1 bindings. A later workflow correction compares
+  actual protected Worker bindings and deployment versions rather than all
+  incidental metadata. No D1 migrations or brokerage requests ran in release.
 - /me/verify, browser workspace acceptance and the read-only two-account
   acceptance script now permit the **two exact** authorized origins:
   legacy reviewer staging and this separate beta URL. Neither permits
   anevum.com, arbitrary workers.dev origins, HTTP or selected-account URLs.
-- PR source, full verification and approval are distinct from an actual
-  deployed and user-verified beta. No automatic merge/deploy was authorized.
+- The full beta Worker is deployed and its anonymous HTTP contracts passed.
+  This is NOT evidence of completed Google login, persisted member accounts,
+  two-user isolation or authorization to invite external testers. PR #309
+  remains unmerged and production remains on its existing deployment.
 
-## Beta Google login activation (owner action, no values in chat)
+## Beta Google login — configured; real member acceptance still outstanding
 
 Use a separately authorized Google Cloud OAuth web client for this beta.
 Add **exactly** the following entries to that client:
@@ -65,17 +72,21 @@ https://anevum-v5-beta.devonakins.workers.dev
 Authorized redirect URI:
 https://anevum-v5-beta.devonakins.workers.dev/api/auth/callback/google
 
-Provision GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET as Cloudflare encrypted
-secret bindings on **anevum-v5-beta**, not the reviewer or production Worker.
-Do not paste values into GitHub issues, source control, chats or account
-exports. Never copy the existing preview database, sessions, Google refresh
-tokens or production Better Auth secret. This new Worker already has its own
-fresh BETTER_AUTH_SECRET. Do not rotate it casually after real users register.
+GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET are now provisioned as encrypted
+bindings on **anevum-v5-beta** only, alongside its own BETTER_AUTH_SECRET.
+The live /api/member/availability endpoint returned
+{available:true,provider:"google"}; a bounded POST to
+/api/auth/sign-in/social returned a Google authorization URL using the exact
+beta callback and an OAuth state. This initiation did NOT follow the redirect,
+complete authentication, register a member or authorize brokerage access.
+Never paste the Google values into GitHub, chat, logs or account exports.
+Do not rotate the Better Auth secret casually once accounts exist.
 
-After an owner-reviewed V5 source commit is merged to main, run the isolated
-beta manual deployment workflow with its *current exact reviewed main SHA*.
-The workflow must report the beta origin and no production/reviewer changes.
-Google sign-in must remain unavailable if Google bindings are missing.
+If the Google OAuth consent screen remains in Testing status, the owner must
+configure the intended Google test users and use two independent browser
+profiles for the first real-account acceptance. No user cookies or exports
+should be shared. Actual Google callback and session persistence remain
+unverified until that test succeeds.
 
 ## Required acceptance before real testers are invited
 
