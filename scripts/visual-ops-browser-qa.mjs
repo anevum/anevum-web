@@ -162,7 +162,7 @@ async function runCase(requestedRoute, viewport) {
           const releaseDetailReady = !${JSON.stringify(releaseDetailRoutes)}.includes(${JSON.stringify(route)}) || Boolean(document.querySelector(".anevum-commons-v5-mount")?.shadowRoot?.querySelector(".c2-release-detail [data-release-section=boundary]"));
           const releasesReady = ${JSON.stringify(route)} !== "/products/rhen/releases" || Boolean(document.querySelector(".anevum-commons-v5-mount")?.shadowRoot?.querySelector(".c2-stack .c2-card"));
           const memberReady = !["/me", "/command", "/me/settings", "/me/rewards", "/me/beta"].includes(${JSON.stringify(route)}) || Boolean(document.querySelector(".anevum-commons-v5-mount")?.shadowRoot?.querySelector(".c2-member"));
-          const publicBetaReady = ${JSON.stringify(route)} !== "/beta" || Boolean(document.querySelector(".anevum-commons-v5-mount")?.shadowRoot?.querySelector('[data-public-beta="true"] #beta-test-title'));
+          const publicBetaReady = ${JSON.stringify(route)} !== "/beta" || (()=>{ const page=document.querySelector(".anevum-commons-v5-mount")?.shadowRoot?.querySelector('[data-public-beta="true"]'); return Boolean(page?.querySelector("#beta-test-title")) && ["Continue with Google","Open your beta checklist","Registration is not currently available"].some(text=>page?.textContent?.includes(text)); })();
           const privateBetaReady = ${JSON.stringify(route)} !== "/me/beta" || ["Beta unavailable","Sign in to test your account"].includes(document.querySelector(".anevum-commons-v5-mount")?.shadowRoot?.querySelector(".c2-member .c2-beta h1")?.textContent);
           const brokerReviewReady = ${JSON.stringify(route)} !== "/apps/rhen/connect" || (()=>{ const root=document.querySelector(".anevum-commons-v5-mount")?.shadowRoot; const disclosure=root?.querySelector(".rhen-review-disclosure"); const allow=root?.querySelector(".rhen-review-allow"); const checkbox=root?.querySelector(".rhen-review-check input"); return !!disclosure && disclosure.textContent.includes("Authorize RHEN by ANEVUM") && disclosure.textContent.includes("Alpaca does not warrant or guarantee") && allow?.disabled===true && checkbox?.disabled===true; })();
           const legalReady = !["/privacy", "/terms"].includes(${JSON.stringify(route)}) || Boolean(document.querySelector(".anevum-commons-v5-mount")?.shadowRoot?.querySelector(".c2-legal .member-legal"));
@@ -211,7 +211,7 @@ async function runCase(requestedRoute, viewport) {
           const releaseDetailReady = !${JSON.stringify(releaseDetailRoutes)}.includes(${JSON.stringify(route)}) || Boolean(document.querySelector(".anevum-commons-v5-mount")?.shadowRoot?.querySelector(".c2-release-detail [data-release-section=boundary]"));
           const releasesReady = ${JSON.stringify(route)} !== "/products/rhen/releases" || Boolean(document.querySelector(".anevum-commons-v5-mount")?.shadowRoot?.querySelector(".c2-stack .c2-card"));
         const memberReady = !["/me", "/command", "/me/settings", "/me/rewards", "/me/beta"].includes(${JSON.stringify(route)}) || Boolean(document.querySelector(".anevum-commons-v5-mount")?.shadowRoot?.querySelector(".c2-member"));
-          const publicBetaReady = ${JSON.stringify(route)} !== "/beta" || Boolean(document.querySelector(".anevum-commons-v5-mount")?.shadowRoot?.querySelector('[data-public-beta="true"] #beta-test-title'));
+          const publicBetaReady = ${JSON.stringify(route)} !== "/beta" || (()=>{ const page=document.querySelector(".anevum-commons-v5-mount")?.shadowRoot?.querySelector('[data-public-beta="true"]'); return Boolean(page?.querySelector("#beta-test-title")) && ["Continue with Google","Open your beta checklist","Registration is not currently available"].some(text=>page?.textContent?.includes(text)); })();
           const privateBetaReady = ${JSON.stringify(route)} !== "/me/beta" || ["Beta unavailable","Sign in to test your account"].includes(document.querySelector(".anevum-commons-v5-mount")?.shadowRoot?.querySelector(".c2-member .c2-beta h1")?.textContent);
           const brokerReviewReady = ${JSON.stringify(route)} !== "/apps/rhen/connect" || (()=>{ const root=document.querySelector(".anevum-commons-v5-mount")?.shadowRoot; const disclosure=root?.querySelector(".rhen-review-disclosure"); const allow=root?.querySelector(".rhen-review-allow"); const checkbox=root?.querySelector(".rhen-review-check input"); return !!disclosure && disclosure.textContent.includes("Authorize RHEN by ANEVUM") && disclosure.textContent.includes("Alpaca does not warrant or guarantee") && allow?.disabled===true && checkbox?.disabled===true; })();
         const legalReady = !["/privacy", "/terms"].includes(${JSON.stringify(route)}) || Boolean(document.querySelector(".anevum-commons-v5-mount")?.shadowRoot?.querySelector(".c2-legal .member-legal"));
@@ -249,6 +249,7 @@ async function runCase(requestedRoute, viewport) {
         heading:page?.querySelector('h1')?.textContent||"",
         cards:page?.querySelectorAll('.c2-section .c2-card').length||0,
         signup:links.includes("/sign-in"),
+        member:links.includes("/me/beta"),
         checking:page?.textContent?.includes("Checking registration availability")||false,
         unavailable:page?.textContent?.includes("Registration is not currently available")||false,
         privacy:links.includes("/privacy"),
@@ -261,7 +262,7 @@ async function runCase(requestedRoute, viewport) {
     })()`,returnByValue:true });
     const beta=inspected.result?.value||{};
     if(beta.route!=="/beta"||beta.heading!=="Build alongside ANEVUM."||
-       beta.cards!==4||!(beta.signup||beta.unavailable||beta.checking)||
+       beta.cards!==4||!(beta.signup||beta.member||beta.unavailable)||
        !beta.privacy||!beta.terms||!beta.research||beta.memberBetaIndexed||
        !beta.robots.startsWith("index")||beta.canonical!=="https://anevum.com/beta")
       throw new Error("Public beta discovery or signup truth failed: "+JSON.stringify(beta));
