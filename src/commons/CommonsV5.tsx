@@ -125,14 +125,15 @@ function Sidebar({ collapsed, onClose, pathname }: {
   const [staff,setStaff]=useState(false);
   useEffect(()=>{
     setStaff(false);
-    if(!session?.user?.id)return;
+    const memberId=session?.user?.id;
+    if(!memberId)return;
     const controller=new AbortController();
     void fetch("/api/member/studio/status",{credentials:"same-origin",cache:"no-store",
       redirect:"manual",signal:controller.signal})
       .then(async response=>response.ok?response.json():null)
       .then(value=>{
         if(!controller.signal.aborted)setStaff(value?.schemaVersion==="anevum.studio.v1" &&
-          value?.viewerMemberId===session.user.id &&
+          value?.viewerMemberId===memberId &&
           ["owner","admin"].includes(value?.role));
       }).catch(()=>{if(!controller.signal.aborted)setStaff(false);});
     return ()=>controller.abort();

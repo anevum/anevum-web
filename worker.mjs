@@ -528,7 +528,10 @@ export default {
         if (pathname.startsWith("/api/member/commons/moderation/")) {
           // Independent verified Cloudflare Access identity is REQUIRED.
           // Better Auth must separately bind the exact same verified member.
-          const credential = await commandCredential(request, env);
+          // Separate moderation staff Access identity from RHEN owner trading authority.
+          const assertion=(request.headers.get("cf-access-jwt-assertion") || "").trim();
+          if(!assertion)throw new ApiError(401,"Cloudflare Access required for moderation.");
+          const credential={identity:await verifyAccessAssertion(assertion,env)};
           return await memberEndpoint(request, env, pathname, {
             moderatorAccessEmail: credential.identity.email
           });

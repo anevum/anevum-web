@@ -3,6 +3,7 @@
 // Cloudflare Access assertion for the same allowlisted staff email.
 // Never trusts a role, member ID, moderator email, or post ID from JSON.
 import { socialConfigured, socialSchemaReady } from "./commons-social.mjs";
+import { studioRole } from "./studio-content.mjs";
 const ID=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 function reply(value,status=200){
@@ -19,6 +20,7 @@ export function moderatorAllowed(env,user,origin,accessEmail){
   const memberEmail=user.email.trim().toLowerCase();
   const credentialEmail=accessEmail.trim().toLowerCase();
   if(!memberEmail||memberEmail!==credentialEmail)return false;
+  if(env?.ANEVUM_STUDIO_ENABLED==="true" && !studioRole(env,user,accessEmail))return false;
   const list=String(env?.COMMAND_ACCESS_EMAILS||"").split(",")
     .map(x=>x.trim().toLowerCase()).filter(Boolean);
   // An empty Access allowlist is a hard denial, never a wildcard.
