@@ -12,7 +12,7 @@ const releaseDetailRoute = "/products/rhen/releases/" + release.slug;
 const releaseDetailRoutes = registry.releases.map(item => "/products/rhen/releases/" + item.slug);
 const legacyReleaseRoute = "/releases/" + release.slug;
 
-const publicRoutes = [...releaseDetailRoutes, legacyReleaseRoute,"/", "/beta", "/communities", "/learn", "/sign-in", "/command", "/me/settings", "/me/rewards", "/apps/rhen/connect", "/products", "/feed", "/products/rhen", "/products/rhen/evidence", "/products/rhen/architecture", "/field-notes", "/field-notes/prediction-outcome-evidence-chain", "/about", "/help", "/resume", "/products/rhen/releases", "/me", "/privacy", "/terms", "/not-a-real-page", "/field-notes/not-a-real-note", "/products/rhen/releases/not-a-real-release", "/communities/moderation"];
+const publicRoutes = [...releaseDetailRoutes, legacyReleaseRoute,"/", "/beta", "/communities", "/learn", "/sign-in", "/command", "/me/settings", "/me/rewards", "/me/beta", "/apps/rhen/connect", "/products", "/feed", "/products/rhen", "/products/rhen/evidence", "/products/rhen/architecture", "/field-notes", "/field-notes/prediction-outcome-evidence-chain", "/about", "/help", "/resume", "/products/rhen/releases", "/me", "/privacy", "/terms", "/not-a-real-page", "/field-notes/not-a-real-note", "/products/rhen/releases/not-a-real-release", "/communities/moderation"];
 const commandRoutes = ["/command/rhen/operate", "/command/rhen/discover", "/command/rhen/review", "/command/rhen/public", "/command/rhen/system"];
 const routes = process.env.PUBLIC_ONLY === "1" ? publicRoutes : [...publicRoutes, ...commandRoutes];
 const output = path.join(process.env.RUNNER_TEMP || os.tmpdir(), "anevum-visuals");
@@ -161,7 +161,7 @@ async function runCase(requestedRoute, viewport) {
           const resumeReady = ${JSON.stringify(route)} !== "/resume" || Boolean(document.querySelector(".anevum-commons-v5-mount")?.shadowRoot?.querySelector(".c2-resume .c2-card"));
           const releaseDetailReady = !${JSON.stringify(releaseDetailRoutes)}.includes(${JSON.stringify(route)}) || Boolean(document.querySelector(".anevum-commons-v5-mount")?.shadowRoot?.querySelector(".c2-release-detail [data-release-section=boundary]"));
           const releasesReady = ${JSON.stringify(route)} !== "/products/rhen/releases" || Boolean(document.querySelector(".anevum-commons-v5-mount")?.shadowRoot?.querySelector(".c2-stack .c2-card"));
-          const memberReady = !["/me", "/command", "/me/settings", "/me/rewards"].includes(${JSON.stringify(route)}) || Boolean(document.querySelector(".anevum-commons-v5-mount")?.shadowRoot?.querySelector(".c2-member"));
+          const memberReady = !["/me", "/command", "/me/settings", "/me/rewards", "/me/beta"].includes(${JSON.stringify(route)}) || Boolean(document.querySelector(".anevum-commons-v5-mount")?.shadowRoot?.querySelector(".c2-member"));
           const brokerReviewReady = ${JSON.stringify(route)} !== "/apps/rhen/connect" || (()=>{ const root=document.querySelector(".anevum-commons-v5-mount")?.shadowRoot; const disclosure=root?.querySelector(".rhen-review-disclosure"); const allow=root?.querySelector(".rhen-review-allow"); const checkbox=root?.querySelector(".rhen-review-check input"); return !!disclosure && disclosure.textContent.includes("Authorize RHEN by ANEVUM") && disclosure.textContent.includes("Alpaca does not warrant or guarantee") && allow?.disabled===true && checkbox?.disabled===true; })();
           const legalReady = !["/privacy", "/terms"].includes(${JSON.stringify(route)}) || Boolean(document.querySelector(".anevum-commons-v5-mount")?.shadowRoot?.querySelector(".c2-legal .member-legal"));
           const commandReady = !${JSON.stringify(route)}.startsWith("/command/") || Boolean(document.querySelector(".command-v4"));
@@ -208,7 +208,7 @@ async function runCase(requestedRoute, viewport) {
         const resumeReady = ${JSON.stringify(route)} !== "/resume" || Boolean(document.querySelector(".anevum-commons-v5-mount")?.shadowRoot?.querySelector(".c2-resume .c2-card"));
           const releaseDetailReady = !${JSON.stringify(releaseDetailRoutes)}.includes(${JSON.stringify(route)}) || Boolean(document.querySelector(".anevum-commons-v5-mount")?.shadowRoot?.querySelector(".c2-release-detail [data-release-section=boundary]"));
           const releasesReady = ${JSON.stringify(route)} !== "/products/rhen/releases" || Boolean(document.querySelector(".anevum-commons-v5-mount")?.shadowRoot?.querySelector(".c2-stack .c2-card"));
-        const memberReady = !["/me", "/command", "/me/settings", "/me/rewards"].includes(${JSON.stringify(route)}) || Boolean(document.querySelector(".anevum-commons-v5-mount")?.shadowRoot?.querySelector(".c2-member"));
+        const memberReady = !["/me", "/command", "/me/settings", "/me/rewards", "/me/beta"].includes(${JSON.stringify(route)}) || Boolean(document.querySelector(".anevum-commons-v5-mount")?.shadowRoot?.querySelector(".c2-member"));
           const brokerReviewReady = ${JSON.stringify(route)} !== "/apps/rhen/connect" || (()=>{ const root=document.querySelector(".anevum-commons-v5-mount")?.shadowRoot; const disclosure=root?.querySelector(".rhen-review-disclosure"); const allow=root?.querySelector(".rhen-review-allow"); const checkbox=root?.querySelector(".rhen-review-check input"); return !!disclosure && disclosure.textContent.includes("Authorize RHEN by ANEVUM") && disclosure.textContent.includes("Alpaca does not warrant or guarantee") && allow?.disabled===true && checkbox?.disabled===true; })();
         const legalReady = !["/privacy", "/terms"].includes(${JSON.stringify(route)}) || Boolean(document.querySelector(".anevum-commons-v5-mount")?.shadowRoot?.querySelector(".c2-legal .member-legal"));
         const commandReady = !${JSON.stringify(route)}.startsWith("/command/") || Boolean(document.querySelector(".command-v4"));
@@ -233,6 +233,54 @@ async function runCase(requestedRoute, viewport) {
     routeReady = result.result?.value || {};
   }
   if (!routeReady.ready) throw new Error("Route did not hydrate before visual assertion: "+JSON.stringify({route,...routeReady}));
+
+  if (route === "/beta") {
+    const inspected = await send("Runtime.evaluate", { expression: `(() => {
+      const root=document.querySelector(".anevum-commons-v5-mount")?.shadowRoot;
+      const page=root?.querySelector('[data-public-beta="true"]');
+      const links=[...(page?.querySelectorAll('a[href]')||[])].map(x=>x.getAttribute("href"));
+      return {
+        route:location.pathname,
+        title:document.title,
+        heading:page?.querySelector('h1')?.textContent||"",
+        cards:page?.querySelectorAll('.c2-section .c2-card').length||0,
+        signup:links.includes("/sign-in"),
+        checking:page?.textContent?.includes("Checking registration availability")||false,
+        unavailable:page?.textContent?.includes("Registration is not currently available")||false,
+        privacy:links.includes("/privacy"),
+        terms:links.includes("/terms"),
+        research:links.includes("/field-notes"),
+        memberBetaIndexed:!!root?.querySelector('[data-beta-owner-paper]'),
+        robots:document.querySelector('meta[name="robots"]')?.content||"",
+        canonical:document.querySelector('link[rel="canonical"]')?.href||""
+      };
+    })()`,returnByValue:true });
+    const beta=inspected.result?.value||{};
+    if(beta.route!=="/beta"||beta.heading!=="Build alongside ANEVUM."||
+       beta.cards!==4||!(beta.signup||beta.unavailable||beta.checking)||
+       !beta.privacy||!beta.terms||!beta.research||beta.memberBetaIndexed||
+       !beta.robots.startsWith("index")||beta.canonical!=="https://anevum.com/beta")
+      throw new Error("Public beta discovery or signup truth failed: "+JSON.stringify(beta));
+  }
+
+  if (route === "/me/beta") {
+    const inspected = await send("Runtime.evaluate", {expression: `(() => {
+      const root=document.querySelector(".anevum-commons-v5-mount")?.shadowRoot;
+      const page=root?.querySelector(".c2-member .c2-beta");
+      return {
+        private:!!page,
+        heading:page?.querySelector("h1")?.textContent||"",
+        memberCards:page?.querySelectorAll(".c2-beta-card").length||0,
+        ownerPaper:!!root?.querySelector('[data-beta-owner-paper]'),
+        robots:document.querySelector('meta[name="robots"]')?.content||"",
+        canonical:document.querySelector('link[rel="canonical"]')?.href||""
+      };
+    })()`,returnByValue:true});
+    const value=inspected.result?.value||{};
+    if(!value.private||!["Sign in to test your account","Beta unavailable"].includes(value.heading)||
+       value.memberCards||value.ownerPaper||!value.robots.startsWith("noindex")||value.canonical)
+      throw new Error("Anonymous beta route leaked member or founder authority: "+JSON.stringify(value));
+  }
 
   if (route === "/help") {
     const checked = await send("Runtime.evaluate", {expression:`(() => {
