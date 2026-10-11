@@ -128,9 +128,11 @@ export async function activateStudio(env = process.env, request = fetch) {
   await preflight(d1);
   const owner = await currentOwner(d1);
   const schema = readFileSync(join(root,"migrations-studio",STUDIO_MIGRATION),"utf8");
+  // D1 REST rejects params when sql contains multiple statements. This
+  // migration name is a fixed source constant, never a client-supplied value.
   const result = await d1(`/d1/database/${DATABASE}/query`,"POST",{
-    sql:schema + "\nINSERT INTO d1_migrations(name) SELECT ? WHERE NOT EXISTS " +
-      "(SELECT 1 FROM d1_migrations WHERE name=?);", params:[STUDIO_MIGRATION,STUDIO_MIGRATION]});
+    sql:schema + `\nINSERT INTO d1_migrations(name) SELECT '${STUDIO_MIGRATION}' WHERE NOT EXISTS ` +
+      `(SELECT 1 FROM d1_migrations WHERE name='${STUDIO_MIGRATION}');`});
   require(Array.isArray(result) && result.every(x => x.success === true));
   await preflight(d1);
   require(await currentOwner(d1) === owner);

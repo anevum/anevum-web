@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import {readFileSync,mkdtempSync,writeFileSync,rmSync} from "node:fs";
 import {tmpdir} from "node:os";
 import {join} from "node:path";
-import {releaseConfigValid,productionLineageValid,signedExportURLValid,
+import {DATABASE,LEDGER,STUDIO_MIGRATION,releaseConfigValid,productionLineageValid,signedExportURLValid,
   requireRecoveryAuthorization,activateStudio} from "../scripts/production-v5-release.mjs";
 import {probeV5LiveRelease} from "../scripts/probe-v5-live-release.mjs";
 const read=p=>readFileSync(new URL("../"+p,import.meta.url),"utf8");
@@ -52,6 +52,51 @@ test("activation rejects a mismatched archived recovery before any provider requ
       async()=>{requests++;throw Error("Provider must not be contacted");}));
     assert.equal(requests,0);
   }finally{rmSync(temp,{recursive:true,force:true});}
+});
+test("Studio activation honors D1 REST multi-statement limits and binds only the verified owner",async()=>{
+  for(const changedOwner of [false,true]){
+    const temp=mkdtempSync(join(tmpdir(),"anevum-release-provider-test-"));
+    const writes=[];let applied=false;
+    try{
+      writeFileSync(join(temp,"verified-production-recovery.json"),JSON.stringify({
+        status:"PRODUCTION_SQLITE_RECOVERY_AND_STUDIO_REHEARSAL_VERIFIED",sql_sha256:"synthetic-digest"}));
+      const env={ANEVUM_PRIVATE_RECOVERY_AUTHORIZED:"true",CLOUDFLARE_ACCOUNT_ID:"a".repeat(32),
+        CLOUDFLARE_D1_TOKEN:"synthetic-d1",CLOUDFLARE_API_TOKEN:"synthetic-worker",
+        RUNNER_TEMP:temp,EXPECTED_PRODUCTION_BACKUP_SHA:"synthetic-digest"};
+      const provider=async(url,init)=>{
+        const path=new URL(url).pathname,body=init.body?JSON.parse(init.body):null;
+        let result;
+        if(init.method==="GET")result={uuid:DATABASE,name:"anevum-members"};
+        else if(path.endsWith("/query")){
+          if(body.sql.includes("; SELECT")&&body.params)throw Error("D1 rejects multi-statement params");
+          if(body.sql.startsWith("SELECT name FROM d1_migrations"))result=[
+            {success:true,results:(applied?[...LEDGER,STUDIO_MIGRATION]:LEDGER).map(name=>({name}))},
+            {success:true,results:[]}];
+          else if(body.sql.startsWith('SELECT id FROM "user"'))result=[{success:true,results:[
+            {id:applied&&changedOwner?"synthetic-changed-owner":"synthetic-verified-owner"}]}];
+          else if(body.sql.includes("CREATE TABLE IF NOT EXISTS studio_entries")){
+            assert.equal(body.params,undefined,"migration must not bind params across statements");
+            assert.match(body.sql,/SELECT '0008_studio_editorial\.sql' WHERE NOT EXISTS/);
+            writes.push("studio-schema");applied=true;result=[{success:true,results:[]}];
+          }else if(body.sql.includes("name IN ('studio_entries','studio_entry_events')"))result=[
+            {success:true,results:[{name:"studio_entries"},{name:"studio_entry_events"}]}];
+          else throw Error("Unexpected provider query");
+        }else if(path.endsWith("/secrets")&&init.method==="PUT"){
+          assert.equal(body.name,"ANEVUM_STUDIO_OWNER_MEMBER_ID");
+          assert.equal(body.text,"synthetic-verified-owner");
+          writes.push("studio-binding");result={};
+        }else throw Error("Unexpected provider operation");
+        return Response.json({success:true,result});
+      };
+      if(changedOwner){await assert.rejects(activateStudio(env,provider));assert.deepEqual(writes,["studio-schema"]);}
+      else{
+        const receipt=await activateStudio(env,provider);
+        assert.equal(receipt.status,"STUDIO_SCHEMA_AND_OWNER_BINDING_READY");
+        assert.equal(receipt.publishingEnabled,false);
+        assert.deepEqual(writes,["studio-schema","studio-binding"]);
+      }
+    }finally{rmSync(temp,{recursive:true,force:true});}
+  }
 });
 test("only the manual pinned release may backup, migrate, bind and deploy in that order",()=>{
   const flow=read(".github/workflows/deploy-production.yml");
