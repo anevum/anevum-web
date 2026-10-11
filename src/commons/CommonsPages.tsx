@@ -50,7 +50,7 @@ function NoteIndex() {
   const filtered = orderedNotes.filter(n => (category === "all" || n.type.toLowerCase() === category) &&
     [n.title, n.summary, n.type, ...n.systems].join(" ").toLowerCase().includes(query));
   return <div className="c2-page">
-    <Intro kicker="COMMONS / FIELD NOTES" title="Research and Field Notes">
+    <Intro kicker="ANEVUM / FIELD NOTES" title="Research and Field Notes">
       Published investigations, engineering decisions, experiments and failures. These are dated records, not claims of a currently running trading service.
     </Intro>
     <nav className="c2-tabs" aria-label="Filter published work">{categories.map(c =>
@@ -88,7 +88,7 @@ function NoteDetail({ slug }: { slug: string }) {
 function Projects() {
   const products = publicProducts();
   return <div className="c2-page">
-    <Intro kicker="COMMONS / DISCOVER" title="Projects and applications">
+    <Intro kicker="ANEVUM / DISCOVER" title="Projects and applications">
       ANEVUM is an independent software workshop. RHEN is its first major application, not the entire purpose of the community.
     </Intro>
     <div className="c2-truth">Only registered ANEVUM projects appear here. An app's public information does not imply active broker execution, user enrollment or paid access.</div>
@@ -186,7 +186,7 @@ function Communities() {
     ["Releases", "What was changed and verified", "release"]
   ];
   return <div className="c2-page">
-    <Intro kicker="COMMONS / TOPICS" title="Explore the subjects">Browse authentic published research. Member discussion is separate and only opens after the invite-only pilot passes its moderation and privacy checks.</Intro>
+    <Intro kicker="ANEVUM / TOPICS" title="Explore the subjects">Browse authentic published research. Member discussion is separate and only opens after the invite-only pilot passes its moderation and privacy checks.</Intro>
     <div className="c2-grid">{types.map(([title, detail, slug]) => <article className="c2-card" key={slug}><h2>{title}</h2><p>{detail}</p><Link className="c2-text-link" to={"/field-notes?category=" + slug}>Read publications →</Link></article>)}</div>
     <div className="c2-truth">No fictional communities, membership counts, rankings, votes or endorsements are displayed.</div>
     <p className="c2-truth">Commons discussions are for independent learning and research methods. Following a member or reading their work never grants brokerage access, copies their orders, mirrors a portfolio, or executes another person\'s trades. RHEN connections and settings remain individually controlled.</p>
@@ -196,7 +196,7 @@ function Communities() {
 function Learn() {
   const notes = orderedNotes.filter(n => n.type === "RESEARCH" || n.type === "ENGINEERING").slice(0, 6);
   return <div className="c2-page">
-    <Intro kicker="COMMONS / LEARNING" title="Learn by examining real work">A reading path through methods and software experiments—not a claim that a course, trading result or personalized instruction is ready.</Intro>
+    <Intro kicker="ANEVUM / LEARNING" title="Learn by examining real work">A reading path through methods and software experiments—not a claim that a course, trading result or personalized instruction is ready.</Intro>
     <section className="c2-section"><h2>A practical research loop</h2>
       <ol className="c2-steps"><li>Frame one testable question.</li><li>Record data sources, assumptions and failure conditions.</li><li>Test against evidence without changing live authority.</li><li>Publish what worked, what failed and what remains uncertain.</li></ol>
     </section>
@@ -260,7 +260,7 @@ function BetaLanding() {
 function Help() {
   return <div className="c2-page c2-help" aria-labelledby="commons-help-title">
     <header className="c2-intro">
-      <span className="c2-kicker">COMMONS / HELP</span>
+      <span className="c2-kicker">ANEVUM / HELP</span>
       <h1 id="commons-help-title">Help and account support</h1>
       <p>Find current ANEVUM pages, manage your own account and understand which RHEN and Commons features are available. No account or brokerage connection is required to read the public work.</p>
     </header>
@@ -316,9 +316,9 @@ function About() {
 }
 function Missing() {
   return <div className="c2-page c2-empty" data-page-state="not-found">
-    <Intro kicker="COMMONS / NOT FOUND" title="Page not found">That page or record is not published at this address. It may have moved or never existed.</Intro>
+    <Intro kicker="ANEVUM / NOT FOUND" title="Page not found">That page or record is not published at this address. It may have moved or never existed.</Intro>
     <div className="c2-action-row">
-      <Link className="c2-text-link" to="/">Return to Commons →</Link>
+      <Link className="c2-text-link" to="/">Return to ANEVUM →</Link>
       <Link className="c2-text-link" to="/products">Browse projects →</Link>
       <Link className="c2-text-link" to="/field-notes">Read Field Notes →</Link>
     </div>
