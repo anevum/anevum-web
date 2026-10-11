@@ -250,7 +250,7 @@ test("Worker requires Access before Studio API and exposes no public draft route
  const app=read("src/App.tsx"),ui=read("src/pages/StudioDashboard.tsx");
  const publicUI=read("src/commons/StudioPublications.tsx");
  assert.match(worker,/pathname\.startsWith\("\/api\/member\/studio\/"\)/);
- assert.match(worker,/verifyAccessAssertion\(token,env\)/);
+ assert.match(worker,/verifyAccessAssertion\(token,env,"studio"\)/);
  assert.match(worker,/pathname\.startsWith\("\/api\/public\/studio\/"\)/);
  assert.match(member,/studioEndpoint\(request,env,user,verifiedOrigin/);
  assert.match(member,/safeMutation\(request, verifiedOrigin\)/);
