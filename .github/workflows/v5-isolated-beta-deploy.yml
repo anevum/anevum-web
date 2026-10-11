@@ -66,6 +66,16 @@ jobs:
         run: npm run build
       - name: Check generated Worker can target only the new beta service
         run: node scripts/verify-v5-beta-deploy.mjs --generated
+      - name: Read-only beta anonymous HTTP response diagnostics
+        if: github.event_name == 'pull_request'
+        shell: bash
+        run: |
+          set -euo pipefail
+          base="https://anevum-v5-beta.devonakins.workers.dev"
+          for route in /api/member/availability /api/member/me /api/member/rhen/workspace /api/member/rhen/draft /api/member/export /api/command/trader/status / /beta /sign-in /me/beta; do
+            status="$(curl --silent --show-error --max-time 15 -o /dev/null -w '%{http_code}' "$base$route" || true)"
+            printf 'BETA_ANONYMOUS_STATUS %s %s\n' "$route" "$status"
+          done
       - name: Confirm approved exact main and existing isolated beta infrastructure
         if: github.event_name == 'workflow_dispatch'
         env:
