@@ -174,8 +174,8 @@ function prettyDate(date: string) {
   return Number.isNaN(parsed.valueOf()) ? date :
     new Intl.DateTimeFormat("en-US", {month:"short", day:"numeric", year:"numeric", timeZone:"UTC"}).format(parsed);
 }
-function NotePost({ note, feature, onNotice }:{
-  note: FieldNote; feature: boolean; onNotice: () => void;
+function NotePost({ note, feature }: {
+  note: FieldNote; feature: boolean;
 }) {
   const url = "/field-notes/" + note.slug;
   const tags = note.systems.slice(0,2);
@@ -190,7 +190,6 @@ function NotePost({ note, feature, onNotice }:{
         <span className="post-meta-dot">·</span>
         <span className="post-community">Field Notes / {note.type.toLowerCase()}</span>
       </div>
-      <button type="button" className="more-btn" aria-label="More publication options" title="More options" onClick={onNotice}><Icon name="more"/></button>
     </header>
     <div className={feature ? "post-preview-split" : ""}>
       <div className="post-main">
@@ -204,23 +203,22 @@ function NotePost({ note, feature, onNotice }:{
       {feature ? <GraphArtwork/> : null}
     </div>
     <footer className="post-foot">
-      <button type="button" className="action-pill vote-pill" title="Voting is not available yet" onClick={onNotice}><Icon name="arrow-up"/><strong>Vote</strong></button>
-      <Link className="action-pill" to={url}><Icon name="comment"/>Read</Link>
-      <button className="action-pill" type="button" onClick={onNotice}><Icon name="bookmark"/>Save</button>
+      <Link className="action-pill" to={url}><Icon name="book"/>Read note</Link>
+      <Link className="action-pill" to="/field-notes"><Icon name="compass"/>More research</Link>
       <button className="action-pill share-action" type="button" onClick={()=>{
         const href = new URL(url,window.location.origin).href;
         if (navigator.share) void navigator.share({title:note.title,url:href}).catch(()=>{});
         else if (navigator.clipboard?.writeText) void navigator.clipboard.writeText(href).catch(()=>{});
-        else onNotice();
+        else window.location.assign(href);
       }}><Icon name="share"/>Share</button>
       <Link className="end-link" to={url}>Read source <Icon name="arrow-up-right"/></Link>
     </footer>
   </article>;
 }
 
-function Feed({ search, filter, setFilter, density, setDensity, onNotice }: {
+function Feed({ search, filter, setFilter, density, setDensity }: {
   search: string; filter: Filter; setFilter: (filter: Filter)=>void;
-  density: Density; setDensity: (value: Density)=>void; onNotice: ()=>void;
+  density: Density; setDensity: (value: Density)=>void;
 }) {
   const notes = useMemo(()=>[...fieldNotes].sort((a,b)=>b.date.localeCompare(a.date)),[]);
   const matching = notes.filter(note =>
@@ -266,13 +264,13 @@ function Feed({ search, filter, setFilter, density, setDensity, onNotice }: {
       <Link to="/beta">Explore member access <Icon name="arrow-up-right"/></Link>
     </div>
     <section className="post-list" aria-label="Published ANEVUM work">
-      {matching.length ? matching.map((note,index)=><NotePost note={note} feature={index===0 && filter==="all" && !search.trim()} onNotice={onNotice} key={note.slug}/>) :
+      {matching.length ? matching.map((note,index)=><NotePost note={note} feature={index===0 && filter==="all" && !search.trim()} key={note.slug}/>) :
         <div className="c-v5-empty" role="status"><strong>No matching publications</strong>Try another search term or category.</div>}
     </section>
   </>;
 }
 
-function RightRail({ onNotice }:{onNotice:()=>void}) {
+function RightRail() {
   const { data: session } = memberAuthClient.useSession();
   const notes = [...fieldNotes].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,3);
   // Derived from real first-party publications, not social activity or broker data.
@@ -324,7 +322,7 @@ function RightRail({ onNotice }:{onNotice:()=>void}) {
       <Link className="c2-text-link" to="/field-notes">Browse the records →</Link>
     </section>
     <p className="rail-footer">This feed contains published work only. Community metrics, endorsements, levels and trading returns are not simulated.</p>
-    <button type="button" className="sidebar-small-link" onClick={onNotice}>About joining Commons <Icon name="arrow-right"/></button>
+    <Link className="sidebar-small-link" to="/beta">About joining ANEVUM <Icon name="arrow-right"/></Link>
   </aside>;
 }
 
