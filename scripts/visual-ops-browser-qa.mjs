@@ -13,7 +13,7 @@ const releaseDetailRoute = "/products/rhen/releases/" + release.slug;
 const releaseDetailRoutes = registry.releases.map(item => "/products/rhen/releases/" + item.slug);
 const legacyReleaseRoute = "/releases/" + release.slug;
 
-const publicRoutes = [...releaseDetailRoutes, legacyReleaseRoute,"/", "/beta", "/communities", "/learn", "/products/rhen/learn", "/products/rhen/learn/market-orders-and-quotes", "/products/rhen/learn/risk-math-and-strategy-evidence", "/products/rhen/learn/not-a-real-lesson", "/sign-in", "/command", "/me/settings", "/me/rewards", "/me/beta", "/apps/rhen/connect", "/products", "/feed", "/products/rhen", "/products/rhen/evidence", "/products/rhen/architecture", "/field-notes", "/field-notes/prediction-outcome-evidence-chain", "/about", "/help", "/resume", "/products/rhen/releases", "/me", "/privacy", "/terms", "/not-a-real-page", "/field-notes/not-a-real-note", "/products/rhen/releases/not-a-real-release", "/communities/moderation"];
+const publicRoutes = [...releaseDetailRoutes, legacyReleaseRoute,"/", "/beta", "/communities", "/learn", "/products/rhen/learn", "/products/rhen/learn/market-orders-and-quotes", "/products/rhen/learn/risk-math-and-strategy-evidence", "/products/rhen/learn/not-a-real-lesson", "/sign-in", "/command", "/me/settings", "/me/rewards", "/me/beta", "/me/learning", "/apps/rhen/connect", "/products", "/feed", "/products/rhen", "/products/rhen/evidence", "/products/rhen/architecture", "/field-notes", "/field-notes/prediction-outcome-evidence-chain", "/about", "/help", "/resume", "/products/rhen/releases", "/me", "/privacy", "/terms", "/not-a-real-page", "/field-notes/not-a-real-note", "/products/rhen/releases/not-a-real-release", "/communities/moderation"];
 const commandRoutes = ["/command/rhen/operate", "/command/rhen/discover", "/command/rhen/review", "/command/rhen/public", "/command/rhen/system"];
 const routes = process.env.PUBLIC_ONLY === "1" ? publicRoutes : [...publicRoutes, ...commandRoutes];
 const output = path.join(process.env.RUNNER_TEMP || os.tmpdir(), "anevum-visuals");
@@ -239,6 +239,27 @@ async function runCase(requestedRoute, viewport) {
   }
   if (!routeReady.ready) throw new Error("Route did not hydrate before visual assertion: "+JSON.stringify({route,...routeReady}));
   await verifyRhenLearningPage(send, route); // data-rhen-learning public and keyboard checks
+  if (route === "/me/learning") {
+    let result;
+    for(let i=0;i<80;i++) {
+      result=await send("Runtime.evaluate",{expression:`(() => {
+        const root=document.querySelector('.anevum-commons-v5-mount')?.shadowRoot;
+        const page=root?.querySelector('[data-member-learning="true"]');
+        return {ready:page?.textContent.includes('No sign-in is needed to read.'),
+          title:page?.querySelector('h1')?.textContent,
+          buttons:page?.querySelectorAll('button').length,
+          lessons:page?.querySelectorAll('.ml-lesson').length,
+          robots:document.querySelector('meta[name="robots"]')?.content,
+          canonical:!!document.querySelector('link[rel="canonical"]')};
+      })()`,returnByValue:true});
+      if(result.result?.value?.ready)break;
+      await sleep(125);
+    }
+    const state=result.result?.value;
+    if(!state?.ready || state.title!=="My learning" || state.buttons!==0 || state.lessons!==2 ||
+       !state.robots?.startsWith("noindex") || state.canonical)
+      throw Error("Anonymous private learning route failed: "+JSON.stringify(state));
+  }
 
   if (route === "/beta") {
     const inspected = await send("Runtime.evaluate", { expression: `(() => {

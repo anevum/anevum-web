@@ -90,7 +90,7 @@ function LessonDetail({lesson}:{lesson:RhenLesson}) {
     <footer className="rh-learn-footer">
       {next?<Link className="rh-learn-next" to={"/products/rhen/learn/"+next.slug}>Continue: {next.title} →</Link>:
        <Link className="rh-learn-next" to="/products/rhen/learn">Return to the learning index →</Link>}
-      <Link to="/field-notes">Read published research records</Link><Link to="/help">Report an error</Link>
+      <Link to="/field-notes">Read published research records</Link><Link to="/me/learning">Optional saved progress</Link><Link to="/help">Report an error</Link>
     </footer>
   </article>;
 }

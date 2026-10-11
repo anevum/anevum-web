@@ -24,7 +24,8 @@ export const accountNavigation:ReadonlyArray<SiteNavItem> = Object.freeze([
   {path:"/command",label:"Saved programs",icon:"bookmark",description:"My saved projects and follows"},
   {path:"/me/settings",label:"My profile",icon:"user",description:"Personal profile and account controls"},
   {path:"/apps/rhen",label:"My RHEN workspace",icon:"chart",description:"Private non-executing research tools"},
-  {path:"/me/beta",label:"Member checklist",icon:"check",description:"Available account tests"}
+  {path:"/me/beta",label:"Member checklist",icon:"check",description:"Available account tests"},
+  {path:"/me/learning",label:"My learning",icon:"book",description:"Optional private lesson progress"}
 ].map(item=>Object.freeze(item)));
 
 export const mobileNavigation:ReadonlyArray<SiteNavItem> = Object.freeze([

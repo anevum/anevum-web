@@ -148,6 +148,6 @@ test('export still includes records with feature disabled; scoped cleanup and FK
 });
 test('migration is additive and re-applicable without erasing an existing member record',async()=>{
  const db=database();await writeLearningProgress(db,userA.id,SLUG,payload(),1000);
- db.sql.exec(readFileSync(new URL('../migrations-learning/0009_member_learning_progress.sql',import.metaurl),'utf8'));
+ db.sql.exec(readFileSync(new URL('../migrations-learning/0009_member_learning_progress.sql',import.meta.url),'utf8'));
  assert.equal((await readLearningProgress(db,userA.id))[0].revision,1);
 });
