@@ -22,3 +22,8 @@ This remains source-only and stacked on unmerged V5 WEB #312. No Cloudflare D1 m
 ## Dedicated staff Access application
 
 Studio requires its own Cloudflare Access JWT audience under `ANEVUM_STUDIO_ACCESS_AUD` and explicit `ANEVUM_STUDIO_ACCESS_EMAILS` allowlist. A missing dedicated audience or list is not allowed to fall back to RHEN Command's `CF_ACCESS_AUD` or `COMMAND_ACCESS_EMAILS`. Add the secondary administrator only to Studio Access, never to the RHEN owner Access app. Moderator endpoints use dedicated Studio Access while Studio is enabled; the old isolated pilot may use its earlier gate when Studio is disabled. All actual Cloudflare policy/configuration changes remain release-gated and unperformed.
+
+
+## Staff sign-in return
+
+The exact token `/sign-in?next=studio` returns an independently authenticated Google member to `/studio` after login. It is only a fixed navigation convenience; Studio authorization continues requiring the authenticated Better Auth member's exact pinned ID, verified email, independently validated dedicated Cloudflare staff Access identity, and server allowlist. Arbitrary callback URLs and `next=admin` remain rejected. `devon@anevum.com` still requires an actual separate Google account or an approved future identity provider; forwarding alone is not a login.

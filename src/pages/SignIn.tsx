@@ -42,7 +42,7 @@ export default function SignIn() {
           <button type="button" className="member-primary-action" onClick={() => refreshMemberAvailability()}>Recheck registration</button>
         </div>
       ) : session?.user ? (
-        <Link className="member-primary-action" to={destination}>{destination === "/me/beta" ? "Open beta checklist" : "Open Command"}</Link>
+        <Link className="member-primary-action" to={destination}>{destination === "/studio" ? "Open Studio" : destination === "/me/beta" ? "Open beta checklist" : "Open Command"}</Link>
       ) : (
         <button className="member-primary-action" type="button" disabled={redirecting} onClick={() => void signIn()}>
           {redirecting ? "Opening Google…" : "Continue with Google"}

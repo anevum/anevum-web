@@ -7,6 +7,8 @@ const source=path=>readFileSync(new URL("../"+path,import.meta.url),"utf8");
 test("the only beta signup return is a hard-coded private same-site route",()=>{
   for(const query of ["?next=beta","?campaign=invite&next=beta","?next=beta&next=https://evil.example"])
     assert.equal(signInReturnPath(query),"/me/beta");
+  for(const query of ["?next=studio", "?next=studio&next=https://evil.example"])
+    assert.equal(signInReturnPath(query),"/studio");
   for(const query of [
     "", "?foo=bar", "?next=/me/beta", "?next=%2Fme%2Fbeta",
     "?next=https://evil.example", "?next=//evil.example",
@@ -37,4 +39,15 @@ test("Google onboarding never implicitly authorizes social or brokerage access",
   assert.equal(prod.ANEVUM_COMMONS_SOCIAL_PILOT_ENABLED,"false");
   assert.equal(staging.ANEVUM_COMMONS_SOCIAL_PILOT_ENABLED,"false");
   assert.equal(prod.ANEVUM_OWNER_PAPER_OBSERVER_ENABLED,"false");
+});
+
+test("staff sign-in returns only to fixed same-origin Studio and never grants authorization",()=>{
+ const login=source("src/pages/SignIn.tsx");
+ const studio=source("src/pages/StudioDashboard.tsx");
+ assert.equal(signInReturnPath("?next=studio"),"/studio");
+ assert.equal(signInReturnPath("?next=/studio"),"/command");
+ assert.equal(signInReturnPath("?next=https://evil.example/studio"),"/command");
+ assert.match(login,/destination === "\/studio" \? "Open Studio"/);
+ assert.match(studio,/\/sign-in\?next=studio/);
+ assert.match(studio,/viewerMemberId!==id/);
 });

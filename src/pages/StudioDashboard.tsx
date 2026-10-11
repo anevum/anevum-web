@@ -198,7 +198,7 @@ function StudioMember({id,checking}:{id?:string;checking:boolean}){
   {stage==="denied"&&<div className="studio-panel"><h2>Access restricted</h2>
    <p>ANEVUM Studio requires a verified Google member, exact staff-member binding,
     and independently verified Cloudflare Access. Ordinary members cannot access it.</p>
-   <Link to={id?"/command":"/sign-in"}>Return to {id?"Command":"sign-in"}</Link></div>}
+   <Link to={id?"/command":"/sign-in?next=studio"}>Return to {id?"Command":"staff sign-in"}</Link></div>}
   {stage==="error"&&<div className="studio-panel"><h2>Studio unavailable</h2>
    <p>Identity or entry storage could not be verified.</p>
    <button type="button" onClick={()=>setReload(x=>x+1)}>Retry verification</button></div>}
