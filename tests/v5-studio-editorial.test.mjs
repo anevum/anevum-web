@@ -258,3 +258,18 @@ test("Worker requires Access before Studio API and exposes no public draft route
  assert.doesNotMatch(publicUI,/dangerouslySetInnerHTML/);
  assert.doesNotMatch(ui,/order_submit|trade_execute|\/v2\/orders|brokerToken/);
 });
+
+test("Commons homepage uses only genuine public Studio publications and a supported navigation icon",()=>{
+ const read=p=>readFileSync(new URL("../"+p,import.meta.url),"utf8");
+ const home=read("src/commons/CommonsV5.tsx");
+ const block=read("src/commons/StudioRecentPosts.tsx");
+ const icons=read("public/commons-v5-icons.svg");
+ const nav=read("src/commons/site-navigation.ts");
+ assert.match(home,/StudioRecentPosts/);
+ assert.match(block,/fetch\("\/api\/public\/studio\/entries"/);
+ assert.match(block,/value\.entries\.every\(valid\)/);
+ assert.match(block,/if\(!items\.length\)return null/);
+ assert.match(nav,/path:"\/updates",label:"Updates",icon:"file"/);
+ assert.match(icons,/id="i-file"/);
+ assert.doesNotMatch(block,/dangerouslySetInnerHTML|\.order_submit|brokerToken/);
+});

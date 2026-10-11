@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import CommonsPublicPage from "./CommonsPages";
 import StudioNavLink from "./StudioNavLink";
+import StudioRecentPosts from "./StudioRecentPosts";
 import Mark from "../components/Mark";
 import { fieldNotes, type FieldNote } from "../data/fieldNotes";
 import { memberAuthClient } from "../member/auth-client";
@@ -279,6 +280,7 @@ function Feed({ search, filter, setFilter, density, setDensity }: {
       <p>Community posting is still in development. Open research and member accounts are available separately.</p>
       <Link to="/beta">Explore member access <Icon name="arrow-up-right"/></Link>
     </div>
+    {filter==="all"&&!search.trim()?<StudioRecentPosts/>:null}
     <section className="post-list" aria-label="Published ANEVUM work">
       {matching.length ? matching.map((note,index)=><NotePost note={note} feature={index===0 && filter==="all" && !search.trim()} key={note.slug}/>) :
         <div className="c-v5-empty" role="status"><strong>No matching publications</strong>Try another search term or category.</div>}
