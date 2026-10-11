@@ -53,7 +53,10 @@ test("encrypted auth bindings and privacy verification are required both sides o
  assert.match(release,/\/api\/member\/export/);
  assert.match(release,/for route in \/ \/beta \/sign-in \/me\/beta/);
  assert.match(release,/anevum-web-nextgen anevum-member-staging/);
- assert.match(release,/\.result == \$before\[0\]\.result/);
+ assert.match(release,/\.result\.bindings == \$before\[0\]\.result\.bindings/);
+ assert.match(release,/\.result\.deployments\[0\]\.versions\[\]\.version_id/);
+ assert.match(release,/before-deployments-\$worker\.json/);
+ assert.doesNotMatch(release,/\.result == \$before\[0\]\.result/);
  assert.match(release,/Real two-account Google sign-in acceptance and external tester invitation/);
  assert.doesNotMatch(release,/ALPACA_CONNECT_CLIENT_SECRET.*secrets\.|OWNER_PERSONAL_PAPER_API_SECRET_KEY.*secrets\./);
 });
