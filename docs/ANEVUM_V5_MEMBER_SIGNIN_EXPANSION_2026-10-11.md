@@ -8,7 +8,7 @@ Parent program: #259; public opening milestone: #308.
 Google social sign-in and the member database exist on the live website.
 This patch is **source-only**. It does not create provider applications, send real emails,
 migrate a database, activate a new method, authorize external integrations, grant broker
-permission, or deploy a new Worker. Both new method flags are FALSE in all committed Worker configs.
+permission, or deploy a new Worker. Both new method flags are absent from all committed Worker configs and therefore default OFF. The pinned staging/beta variable allowlists remain unchanged.
 
 ## Proposed login order
 
@@ -33,12 +33,12 @@ be separate from minimal GitHub sign-in; never request repo write scopes to log 
 
 - Adds optional GitHub social provider with profile/email read scopes. Requires both
   `GITHUB_CLIENT_ID` and `GITHUB_CLIENT_SECRET` and
-  `ANEVUM_GITHUB_OAUTH_ENABLED=true`. Production callback:
+  `ANEVUM_GITHUB_OAUTH_ENABLED=true (provision separately outside source after approval)`. Production callback:
   `https://anevum.com/api/auth/callback/github`.
 - Adds gated email sign-in with an eight-digit, ten-minute, three-attempt hashed OTP,
   delivered by Resend from a verified `@anevum.com` sender. Required secrets:
   `ANEVUM_AUTH_RESEND_API_KEY` and `ANEVUM_AUTH_EMAIL_FROM`;
-  `ANEVUM_EMAIL_OTP_ENABLED=true` must be explicitly set after delivery tests.
+  `ANEVUM_EMAIL_OTP_ENABLED=true` must be explicitly set outside source after delivery tests.
   New outbound email service setup/fees require separate owner approval.
 - Adds server-advertised authentication capabilities to the actual sign-in form; methods
   without enabled flags AND credentials are not presented. Existing Google remains
