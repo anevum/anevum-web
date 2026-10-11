@@ -1,0 +1,36 @@
+name: V5 Learning Source Assembly (single branch, no deployment)
+on:
+  push:
+    branches: [build/anevum-v5-free-rhen-learning-20261011]
+    paths: [scripts/v5-learning-source-assembly.py]
+permissions:
+  contents: read
+concurrency:
+  group: v5-learning-source-assembly-20261011
+  cancel-in-progress: false
+jobs:
+  assemble-public-source:
+    if: github.repository == 'anevum/anevum-web' && github.ref == 'refs/heads/build/anevum-v5-free-rhen-learning-20261011'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 2
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate exact-parent replacements, run content tests and add immutable Git blobs
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 scripts/v5-learning-source-assembly.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: v5-learning-public-source-blobs
+          path: learning-integration-blobs.json
+          if-no-files-found: error
+          retention-days: 7
