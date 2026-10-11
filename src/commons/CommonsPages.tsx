@@ -264,7 +264,7 @@ function Help() {
         <p>Not through the current general member experience. Legacy live RHEN was retired for the V5 rebuild. Member research workspaces and non-executing drafts do not grant broker access or paper/live trading authority.</p>
         <Link to="/products/rhen/evidence" className="c2-text-link">Current RHEN evidence →</Link>
       </article>
-      <article className="c2-card"><h2>Can I connect Alpaca now?</h2>
+      <article className="c2-card"><h2>Can I connect a brokerage account?</h2>
         <p>Broker connections require separate provider approval and feature-specific authorization. If connecting is unavailable, registering with Commons does not unlock it. Do not send API keys, OAuth URLs, access tokens or screenshots containing secrets by email.</p>
         <Link to="/products/rhen" className="c2-text-link">RHEN product status →</Link>
       </article>
