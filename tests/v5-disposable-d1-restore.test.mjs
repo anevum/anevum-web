@@ -9,7 +9,8 @@ const runner = read("scripts/v5-disposable-d1-restore.py");
 
 test("remote D1 restoration is an explicitly reviewed main-only manual operation",()=>{
   const trigger=workflow.split("\npermissions:")[0];
-  assert.match(trigger,/^on:\s*\n\s*workflow_dispatch:/m);
+  assert.match(trigger,/^on:\s*$/m);
+  assert.match(trigger,/^  workflow_dispatch:/m);
   assert.doesNotMatch(trigger,/^\s*pull_request:|^\s*push:|^\s*schedule:/m);
   for(const item of [
     "RESTORE_DISPOSABLE_D1_ONLY",
