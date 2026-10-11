@@ -4,6 +4,14 @@
  */
 export const LEGACY_RHEN_RETIRED = true;
 
+// Only these exact, independently authenticated V5 owner routes survive
+// retirement. Every other /api/command/* path still fails closed.
+const V5_OWNER_OBSERVATION_PATHS = new Set([
+  "/api/command/session",
+  "/api/command/integrations/github",
+  "/api/command/integrations/infrastructure",
+]);
+
 const PUBLIC_LEGACY_PATHS = new Set([
   "/api/public/trading/live",
   "/api/public/trading/events",
@@ -14,7 +22,7 @@ const PUBLIC_LEGACY_PATHS = new Set([
 export function retiredRhenBoundary(pathname) {
   if (!LEGACY_RHEN_RETIRED) return null;
   if (PUBLIC_LEGACY_PATHS.has(pathname)) return "public";
-  if (pathname === "/api/command/session") return null;
+  if (V5_OWNER_OBSERVATION_PATHS.has(pathname)) return null;
   if (pathname.startsWith("/api/command/")) return "operator";
   return null;
 }
