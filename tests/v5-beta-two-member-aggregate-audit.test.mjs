@@ -35,8 +35,8 @@ test("two verified Google users must own two distinct valid workspaces",()=>{
  assert.equal(result.actualGoogleCallbackAndSessionBehavior,"REQUIRES_TWO_REAL_BROWSER_SESSIONS");
  assert.equal(result.thirdPartyInvitations,"NOT_AUTHORIZED");
  for(const row of [
-  {...ready,googleMembers:1},
-  {...ready,verifiedMembers:1},
+  {...ready,googleMembers:1,verifiedGoogleWorkspaceOwners:1},
+  {...ready,verifiedMembers:1,verifiedGoogleWorkspaceOwners:1},
   {...ready,verifiedGoogleWorkspaceOwners:1},
   {...ready,workspaces:1,workspaceOwners:1,distinctWorkspaces:1,
     verifiedGoogleWorkspaceOwners:1},
