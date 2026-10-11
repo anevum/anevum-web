@@ -24,5 +24,7 @@ test("Help links are real and never ask visitors for secret credentials",()=>{
   assert.match(qa, /"\/about", "\/help", "\/resume"/);
   assert.match(qa, /route === "\/help"/);
   assert.match(qa, /v\.cards!==6/);
+  assert.equal((qa.match(/const helpReady =/g)||[]).length,2,"initial navigation and reload must await actual Help hydration");
+  assert.equal((qa.match(/fieldNoteReady && helpReady && aboutReady/g)||[]).length,2,"Help hydration must gate readiness in both paths");
   assert.match(pkg.scripts["test:foundation"], /tests\/v5-help-public-route\.test\.mjs/);
 });
