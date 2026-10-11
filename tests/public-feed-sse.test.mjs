@@ -33,12 +33,12 @@ test("the browser uses verified SSE snapshots and safely retries REST when disco
   assert.match(hook, /Date\.now\(\) - lastEventAt > 90000/);
 });
 
-test("public RHEN monitoring explicitly distinguishes actual event push from HTTP snapshots", () => {
-  const page = read("../src/pages/Live.tsx");
+test("V5 public evidence discloses suspension while the retained owner terminal distinguishes transport", () => {
+  const page = read("../src/commons/CommonsPages.tsx");
   const terminal = read("../src/pages/RhenTerminal.tsx");
-  assert.match(page, /CANONICAL EVENT STREAM/);
-  assert.match(page, /PERIODIC HTTP SNAPSHOT/);
-  assert.match(page, /LAST SCAN/);
+  assert.match(page, /data-evidence-state="SUSPENDED_FOR_REBUILD"/);
+  assert.match(page, /empty chart must not be represented as zero performance or live activity/);
+  assert.doesNotMatch(page, /useLiveTrading|EventSource|account_return_pct/);
   assert.match(terminal, /publicTransport === "STREAM"/);
   assert.match(terminal, /PUBLIC FEED/);
 });

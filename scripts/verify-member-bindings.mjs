@@ -5,7 +5,8 @@ import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-const SECRET_NAMES = ["BETTER_AUTH_SECRET", "GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET"];
+const SECRET_NAMES = ["BETTER_AUTH_SECRET", "GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET",
+  "RHEN_OWNER_MEMBER_ID", "ANEVUM_STUDIO_OWNER_MEMBER_ID", "ANEVUM_STUDIO_ADMIN_MEMBER_ID"];
 
 function binding(config, scope, errors) {
   const databases = config?.d1_databases || [];
@@ -45,6 +46,12 @@ export function inspectMemberBindings(config, previewMigrationConfig = null, opt
   }
   if (Object.hasOwn(vars, "ANEVUM_MEMBER_RHEN_DRAFTS_ENABLED") && vars.ANEVUM_MEMBER_RHEN_DRAFTS_ENABLED !== "false") {
     errors.push("Production RHEN member draft editing must remain disabled.");
+  }
+  // Missing optional flag is disabled; an explicitly true/invalid flag is rejected.
+  // The committed production config and V5 staging acceptance still require "false".
+  if (Object.hasOwn(vars, "ANEVUM_V5_WORKSPACES_ENABLED") &&
+      vars.ANEVUM_V5_WORKSPACES_ENABLED !== "false") {
+    errors.push("Production V5 RHEN workspace provisioning must remain disabled.");
   }
   if (vars.ANEVUM_MEMBER_PREVIEW_ENABLED !== "false") {
     errors.push("The top-level Worker must not enable preview identity.");

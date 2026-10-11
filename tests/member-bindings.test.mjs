@@ -79,3 +79,17 @@ test("manual D1 provisioning uses supported Wrangler create options", () => {
   assert.doesNotMatch(workflow, /npx wrangler d1 create[^\n]*--json/);
   assert.match(workflow, /npx wrangler d1 list --json/);
 });
+
+test("V5 private RHEN workspace flag fails closed when production tries to enable it", () => {
+  const c = config();
+  c.vars.ANEVUM_MEMBERS_ENABLED = "true";
+  c.vars.ANEVUM_V5_WORKSPACES_ENABLED = "true";
+  const forbidden = inspectMemberBindings(c, preview(), { requireLive: true });
+  assert.equal(forbidden.valid, false);
+  assert.match(forbidden.errors.join("\n"), /workspace provisioning must remain disabled/);
+
+  c.vars.ANEVUM_V5_WORKSPACES_ENABLED = "false";
+  assert.equal(inspectMemberBindings(c, preview(), { requireLive: true }).valid, true);
+  delete c.vars.ANEVUM_V5_WORKSPACES_ENABLED;
+  assert.equal(inspectMemberBindings(c, preview(), { requireLive: true }).valid, true);
+});

@@ -156,7 +156,7 @@ export const fieldNotes: FieldNote[] = [
         heading: "What V4.3 changes",
         body: [
           "RHEN is now explicitly equity-first. Current broker authority is limited to long U.S. equities and ETFs, with regular-session execution and a separate 24/5 extended-equity lane whose authorization is visible rather than implied.",
-          "Whole-market discovery uses bounded Alpaca screeners and dynamic-universe logic to expand the opportunity pool without turning every listed asset into an expensive full-history request."
+          "Whole-market discovery uses bounded brokerage market-data screening and dynamic-universe logic to expand the opportunity pool without turning every listed asset into an expensive full-history request."
         ]
       },
       {
@@ -194,7 +194,7 @@ export const fieldNotes: FieldNote[] = [
       method: [
         "Retire crypto-specific current-state projections and stale adaptive scheduler work.",
         "Keep live authority scoped to long U.S. equities and ETFs.",
-        "Expand candidate discovery through bounded hierarchical Alpaca screening.",
+        "Expand candidate discovery through bounded hierarchical brokerage market-data screening.",
         "Persist exact decision-time price and completed-bar evidence for new candidates.",
         "Evaluate shadow economics and shadow allocation only after forward outcomes mature."
       ],

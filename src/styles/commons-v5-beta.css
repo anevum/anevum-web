@@ -1,0 +1,17 @@
+/* Member-only beta status: scope is the Commons Shadow DOM. */
+.c2-beta{width:min(calc(100% - 32px),980px);margin:32px auto 64px;color:var(--text)}
+.c2-beta-header{padding:12px 0 26px}
+.c2-beta h1{font-size:clamp(1.8rem,4vw,2.8rem);letter-spacing:-.035em;line-height:1.15}
+.c2-beta-header>p:not(.workshop-kicker),.c2-beta-card p,.c2-beta-guide p{color:var(--sub)}
+.c2-beta-header button{min-height:44px;padding:9px 15px;border:1px solid var(--line);border-radius:8px;color:var(--text);background:var(--panel-light)}
+.c2-beta-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px}
+.c2-beta-card{min-width:0;border:1px solid var(--line);background:var(--panel);border-radius:12px;padding:20px}
+.c2-beta-card-title{display:flex;justify-content:space-between;align-items:start;flex-wrap:wrap;gap:10px}
+.c2-beta-card h2,.c2-beta-guide h2{font-size:1.15rem;letter-spacing:-.02em;margin:0}
+.c2-beta-card-title span{font-size:.8rem;border:1px solid var(--line);border-radius:99px;padding:3px 9px;color:var(--sub)}
+.c2-beta-card-title span[data-beta-state="available"]{color:var(--positive)}
+.c2-beta-card a,.c2-beta-guide a,.c2-beta>a{color:var(--accent);font-weight:600}
+.c2-beta-muted{font-size:.87rem}
+.c2-beta-guide{border-top:1px solid var(--line);max-width:75ch;margin-top:27px;padding-top:22px}
+@media(max-width:680px){.c2-beta-grid{grid-template-columns:1fr}.c2-beta-card{padding:16px}}
+@media(prefers-reduced-motion:reduce){.c2-beta *{scroll-behavior:auto!important;transition-duration:0s!important;animation-duration:0s!important}}

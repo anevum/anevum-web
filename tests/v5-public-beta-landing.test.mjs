@@ -1,0 +1,54 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import {readFileSync} from "node:fs";
+const src=p=>readFileSync(new URL("../"+p,import.meta.url),"utf8");
+test("public beta is a real, indexed Commons page, not a private member route",()=>{
+  const routes=JSON.parse(src("src/data/public-routes.json"));
+  const beta=routes.find(x=>x.path==="/beta");
+  assert.deepEqual(beta,{path:"/beta",label:"Member Beta",nav:true,sitemap:true});
+  const app=src("src/App.tsx");
+  assert.match(app,/<Route path="\/beta" element=\{<Suspense fallback=\{<Loader \/>\}><CommonsV5 \/><\/Suspense>\} \/>/);
+  assert.match(app,/\"\/beta\": \"Join the ANEVUM Beta — ANEVUM\"/);
+  assert.match(app,/\"\/products\", \"\/beta\", \"\/feed\"/);
+  const worker=src("worker.mjs");
+  assert.match(worker,/\"\/beta\": \{/);
+  assert.match(worker,/Join the ANEVUM Beta — ANEVUM/);
+  assert.match(src("scripts/visual-ops-browser-qa.mjs"),/\"\/beta\"/);
+});
+test("signup CTA is conditional on actual backend availability, never a fake launch claim",()=>{
+  const page=src("src/commons/CommonsPages.tsx");
+  assert.match(page,/function BetaLanding\(\)/);
+  assert.match(page,/useMemberAvailability\(\)/);
+  assert.match(page,/availability===\"available\"/);
+  assert.match(page,/refreshMemberAvailability/);
+  assert.match(page,/Continue with Google/);
+  assert.match(page,/registration is not currently available/i);
+  assert.match(page,/if \(pathname === \"\/beta\"\) return <BetaLanding\/>/);
+  assert.doesNotMatch(page,/API_SECRET|apiKey|Math\.random\(\)|fake_member_count/i);
+});
+test("beta accurately separates member tools, staged research, and restricted brokerage/social permissions",()=>{
+  const page=src("src/commons/CommonsPages.tsx");
+  assert.match(page,/non-executing bot draft/);
+  assert.match(page,/restricted pilot/);
+  assert.match(page,/Joining does not connect a brokerage account/);
+  assert.match(page,/without signing up/);
+  const shell=src("src/commons/CommonsV5.tsx");
+  assert.match(shell,/to="\/beta"/);
+  assert.match(shell,/session\?\.user \? "\/me\/beta" : "\/beta"/);
+  const prod=JSON.parse(src("wrangler.jsonc"));
+  assert.equal(prod.vars.ANEVUM_COMMONS_SOCIAL_PILOT_ENABLED,"false");
+  assert.equal(prod.vars.ANEVUM_ALPACA_REVIEW_CONNECT_ENABLED,"false");
+});
+
+
+test("returning members open their checklist without another Google redirect",()=>{
+  const page=src("src/commons/CommonsPages.tsx");
+  const qa=src("scripts/visual-ops-browser-qa.mjs");
+  assert.match(page,/const \{data:session,isPending\}=memberAuthClient\.useSession\(\)/);
+  assert.match(page,/session\?\.user\?/);
+  assert.match(page,/to="\/me\/beta" className="c2-text-link">Open your beta checklist/);
+  assert.match(page,/to="\/sign-in\?next=beta" className="c2-text-link">Continue with Google/);
+  assert.match(page,/Checking member session/);
+  assert.match(qa,/Open your beta checklist/);
+  assert.match(qa,/beta\.signup\|\|beta\.member\|\|beta\.unavailable/);
+});

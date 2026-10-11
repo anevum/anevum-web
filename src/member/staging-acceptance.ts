@@ -10,23 +10,29 @@ function object(value: unknown): JsonObject {
     ? value as JsonObject : {};
 }
 
-async function probe(fetcher: typeof fetch, path: string): Promise<Probe> {
+async function probe(fetcher: typeof fetch, path: string, signal?: AbortSignal): Promise<Probe> {
+  if (signal?.aborted) throw new Error("Member verification cancelled.");
   const response = await fetcher(path, {
     method: "GET",
     credentials: "same-origin",
     cache: "no-store",
-    redirect: "manual"
+    redirect: "manual",
+    signal
   });
+  if (signal?.aborted) throw new Error("Member verification cancelled.");
   const privateHeaders = (response.headers.get("cache-control") || "").includes("no-store")
     && (response.headers.get("x-robots-tag") || "").includes("noindex");
   let body: JsonObject = {};
   if (response.ok) {
     try { body = object(await response.json()); } catch { /* Report failure below. */ }
   }
+  if (signal?.aborted) throw new Error("Member verification cancelled.");
   return { status: response.status, body, privateHeaders };
 }
 
-export async function runStagingAcceptance(fetcher: typeof fetch): Promise<AcceptanceReport> {
+export async function runStagingAcceptance(
+  fetcher: typeof fetch, expectedMemberId?: string, signal?: AbortSignal
+): Promise<AcceptanceReport> {
   const paths = [
     "/api/member/session",
     "/api/member/me",
@@ -39,13 +45,14 @@ export async function runStagingAcceptance(fetcher: typeof fetch): Promise<Accep
 
   // One failed route must not suppress independent release-boundary checks.
   const data = await Promise.all(paths.map(path =>
-    probe(fetcher, path).catch((): Probe => ({
+    probe(fetcher, path, signal).catch((): Probe => ({
       status: 0, body: {}, privateHeaders: false
     }))
   ));
   const [session, profile, exported, draft, rewards, brokerage, operator] = data;
   const id = object(session.body.user).id;
-  const idReady = typeof id === "string" && id.length > 0;
+  const idReady = typeof id === "string" && id.length > 0 &&
+    (!expectedMemberId || expectedMemberId === id) && !signal?.aborted;
   const brokerDisabled = [
     "connectionAvailable", "accountConnected", "paperTradingEnabled",
     "liveTradingEnabled", "depositsEnabled", "withdrawalsEnabled"

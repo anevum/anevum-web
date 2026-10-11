@@ -80,7 +80,8 @@ test("new staging acceptance UI cannot unlock production registration or alter d
   const app = path("src/App.tsx");
   const settings = path("src/pages/MemberSettings.tsx");
   const prod = JSON.parse(path("wrangler.jsonc"));
-  assert.match(page, /window\.location\.origin !== STAGING_ORIGIN/);
+  assert.match(page, /ALLOWED_ACCEPTANCE_ORIGINS\.has\(window\.location\.origin\)/);
+  assert.match(page, /https:\/\/anevum-v5-beta\.devonakins\.workers\.dev/);
   assert.match(page, /read-only checks/i);
   assert.match(page, /does not independently prove cross-user isolation/i);
   assert.match(app, /path="\/me\/verify"/);
@@ -88,4 +89,57 @@ test("new staging acceptance UI cannot unlock production registration or alter d
   assert.equal(prod.vars.ANEVUM_MEMBERS_ENABLED, "true");
   assert.equal(prod.vars.ANEVUM_MEMBER_RHEN_DRAFTS_ENABLED, "false");
   assert.doesNotMatch(path("src/member/staging-acceptance.ts"), /method: "(?:PUT|POST|PATCH|DELETE)"|api\/auth\/sign-in|createOrder/);
+});
+
+test("current staging verification cannot accept a different signed-in identity",async()=>{
+  const fixture=fakeFetcher(sampleData());
+  const result=await runStagingAcceptance(fixture.fetcher,"account-b");
+  assert.equal(result.passed,false);
+  assert.equal(result.checks[0].passed,false);
+  assert.equal(result.checks[1].passed,false);
+  assert.equal(result.checks[2].passed,false);
+  assert.doesNotMatch(JSON.stringify(result),/account-a|account-b|cookie|token/i);
+});
+
+test("stale/cancelled staging checks are never reported as passed",async()=>{
+  const controller=new AbortController();
+  controller.abort();
+  const stage=fakeFetcher(sampleData());
+  const report=await runStagingAcceptance(stage.fetcher,"account-a",controller.signal);
+  assert.equal(report.passed,false);
+  assert.equal(report.checks[0].passed,false);
+  assert.equal(stage.calls.length,0);
+  assert.doesNotMatch(JSON.stringify(report),/account-a|cookie|token/i);
+});
+
+test("staging verification state is keyed to a Google member and aborts old work",()=>{
+  const ui=path("src/pages/MemberStagingVerify.tsx");
+  assert.match(ui,/<StagingAccountAcceptance key=\{session\.user\.id\} memberId=\{session\.user\.id\}/);
+  assert.match(ui,/for \(const controller of inFlight\.current\) controller\.abort\(\)/);
+  assert.match(ui,/runStagingAcceptance\(fetch, memberId, controller\.signal\)/);
+  assert.match(ui,/ALLOWED_ACCEPTANCE_ORIGINS\.has\(window\.location\.origin\)/);
+  assert.match(ui,/runWorkspaceStagingProof\(\s*fetch, memberId, window\.location\.origin, undefined, controller\.signal/);
+  assert.doesNotMatch(ui,/setReport\(await runStagingAcceptance\(fetch\)\)/);
+});
+
+
+test("late session response cannot convert a signed-out verification into a PASS",async()=>{
+  const controller=new AbortController();
+  const original=fakeFetcher(sampleData());
+  let calls=0;
+  const fetcher=async(url,init)=>{
+    calls++;
+    if(url==="/api/member/session"){
+      const response=await original.fetcher(url,init);
+      controller.abort();
+      // Simulate a provider that returns a queued response despite cancellation.
+      return response;
+    }
+    return original.fetcher(url,init);
+  };
+  const result=await runStagingAcceptance(fetcher,"account-a",controller.signal);
+  assert.equal(result.passed,false);
+  assert.equal(result.checks[0].passed,false);
+  assert.ok(calls>=1);
+  assert.doesNotMatch(JSON.stringify(result),/account-a|never-log|cookie|token/i);
 });

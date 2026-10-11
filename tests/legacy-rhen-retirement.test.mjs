@@ -60,13 +60,12 @@ test("Worker guards legacy routes before old fetch handlers and authenticates pr
 });
 
 test("browser surfaces disclose retirement and stop live transport retries", () => {
-  const page = read("../src/pages/Live.tsx");
-  const product = read("../src/pages/RhenProduct.tsx");
+  const page = read("../src/commons/CommonsPages.tsx");
   const member = read("../src/pages/RhenApp.tsx");
   const hook = read("../src/hooks/useLiveTrading.ts");
-  assert.match(page, /TRADING SUSPENDED \/ V5 REBUILD/);
+  assert.match(page, /data-evidence-state="SUSPENDED_FOR_REBUILD"/);
   assert.match(page, /role="status"/);
-  assert.match(product, /Legacy trading is suspended/);
+  assert.match(page, /Legacy live trading is suspended/);
   assert.match(member, /Legacy trading is suspended/);
   assert.match(hook, /const LEGACY_RHEN_REBUILD = true/);
   assert.match(hook, /if \(LEGACY_RHEN_REBUILD\) return/);

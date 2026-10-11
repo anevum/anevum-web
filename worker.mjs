@@ -1,6 +1,12 @@
 import releaseRegistry from "./src/data/releases.json";
+import { fieldNotes } from "./src/data/fieldNotes";
 import { shadowRead } from "./shadow-transport.mjs";
 import { memberEndpoint } from "./src/server/member.mjs";
+import { studioPublicEndpoint } from "./src/server/studio-content.mjs";
+import { observeOwnerPersonalPaper } from "./src/server/owner-personal-paper.mjs";
+import { verifyOwnerMemberBinding, OwnerMemberBindingError } from "./src/server/command-owner-binding.mjs";
+import { observeOwnerGitHub } from "./src/server/github-owner-status.mjs";
+import { observeOwnerInfrastructure } from "./src/server/owner-infrastructure-status.mjs";
 import { legacyOperatorTarget } from "./src/server/operator-routes.mjs";
 import { retiredRhenBoundary, retiredRhenStatus } from "./src/server/legacy-rhen-retirement.mjs";
 
@@ -36,9 +42,11 @@ function decodeJwtJson(value) {
   return JSON.parse(new TextDecoder().decode(decodeBase64Url(value)));
 }
 
-async function verifyAccessAssertion(token, env) {
+async function verifyAccessAssertion(token, env, scope = "command") {
+  const staff = scope === "studio";
   const teamDomain = String(env?.CF_ACCESS_TEAM_DOMAIN || "").trim().replace(/\/$/, "");
-  const audience = String(env?.CF_ACCESS_AUD || "").trim();
+  // Studio must have its own Access audience and never use the broker audience.
+  const audience = String((staff ? env?.ANEVUM_STUDIO_ACCESS_AUD : env?.CF_ACCESS_AUD) || "").trim();
   if (!teamDomain.startsWith("https://") || !audience) {
     throw new ApiError(503, "Cloudflare Access is not configured.");
   }
@@ -92,13 +100,14 @@ async function verifyAccessAssertion(token, env) {
   const email = String(payload.email || "").trim().toLowerCase();
   if (!email) throw new ApiError(401, "Cloudflare Access identity is missing email.");
   const allowed = new Set(
-    String(env?.COMMAND_ACCESS_EMAILS || "")
+    String((staff ? env?.ANEVUM_STUDIO_ACCESS_EMAILS : env?.COMMAND_ACCESS_EMAILS) || "")
       .split(",")
       .map((value) => value.trim().toLowerCase())
       .filter(Boolean)
   );
+  if (staff && !allowed.size) throw new ApiError(503, "Studio Access allowlist is missing.");
   if (allowed.size && !allowed.has(email)) {
-    throw new ApiError(403, "Cloudflare Access identity is not authorized for Command.");
+    throw new ApiError(403, staff ? "Studio Access identity is not authorized." : "Cloudflare Access identity is not authorized for Command.");
   }
   return { email, source: "cloudflare_access" };
 }
@@ -109,7 +118,15 @@ async function commandCredential(request, env) {
     throw new ApiError(401, "Cloudflare Access authentication is required.");
   }
   const identity = await verifyAccessAssertion(access, env);
-  return { token: access, source: "cloudflare_access", identity };
+  let ownerMemberBound = false;
+  try {
+    ownerMemberBound = await verifyOwnerMemberBinding(request, env, identity);
+  } catch (error) {
+    if (error instanceof OwnerMemberBindingError && error.status === 403)
+      throw new ApiError(403, "This member account is not authorized for the owner terminal.");
+    throw new ApiError(503, "Owner-member authorization is unavailable.");
+  }
+  return { token: access, source: "cloudflare_access", identity, ownerMemberBound };
 }
 
 async function proxyTrader(request, upstreamPath, env) {
@@ -326,9 +343,17 @@ function publicRouteMetadata(pathname) {
       title: "Products — ANEVUM",
       description: "The canonical registry of public ANEVUM products. Products appear when they actually exist."
     },
+    "/beta": {
+      title: "Join the ANEVUM Beta — ANEVUM",
+      description: "Real member account registration and private product testing. Broker trading and Commons posting remain separate and gated."
+    },
     "/feed": {
       title: "Feed — ANEVUM",
       description: "A chronological record assembled from real releases, Field Notes, public-safe runtime observations, and research decisions."
+    },
+    "/updates": {
+      title: "Studio updates — ANEVUM",
+      description: "Published ANEVUM Studio posts, project updates and AHA records."
     },
     "/field-notes": {
       title: "Field Notes — ANEVUM",
@@ -336,11 +361,11 @@ function publicRouteMetadata(pathname) {
     },
     "/products/rhen": {
       title: "RHEN — ANEVUM",
-      description: "RHEN is ANEVUM's live trading and research system operating on real market data with public evidence and narrow live authority."
+      description: "RHEN V5 is under reconstruction. Legacy public trading is suspended; member brokerage execution is not yet available."
     },
     "/products/rhen/evidence": {
       title: "RHEN Public Evidence — ANEVUM",
-      description: "Inspect sanitized RHEN runtime and performance evidence without exposing protected broker, position, order, or strategy details."
+      description: "Published RHEN evidence and historical releases. Legacy public runtime is SUSPENDED_FOR_REBUILD, with no current public performance or broker data."
     },
     "/products/rhen/architecture": {
       title: "RHEN Architecture — ANEVUM",
@@ -354,9 +379,29 @@ function publicRouteMetadata(pathname) {
       title: "About — ANEVUM",
       description: "About ANEVUM, the independently built and operated software studio."
     },
+    "/help": {
+      title: "Help — ANEVUM Commons",
+      description: "Help with ANEVUM public research, member accounts, privacy and RHEN availability."
+    },
     "/resume": {
       title: "Résumé — ANEVUM",
       description: "Professional résumé and background for the person responsible for ANEVUM."
+    },
+    "/communities": {
+      title: "Topics — ANEVUM Commons",
+      description: "Published ANEVUM projects and research grouped by topic. Member discussion is under development."
+    },
+    "/learn": {
+      title: "Learning — ANEVUM Commons",
+      description: "Learn from published engineering and research work, with methods and limitations."
+    },
+    "/privacy": {
+      title: "Privacy — ANEVUM",
+      description: "Privacy information for ANEVUM members and public visitors."
+    },
+    "/terms": {
+      title: "Terms — ANEVUM",
+      description: "ANEVUM website and member terms."
     }
   };
 
@@ -365,6 +410,18 @@ function publicRouteMetadata(pathname) {
       ...staticRoutes[pathname],
       url: "https://anevum.com" + (pathname === "/" ? "/" : pathname)
     };
+  }
+
+  if (pathname.startsWith("/field-notes/")) {
+    const slug = pathname.slice("/field-notes/".length);
+    const note = fieldNotes.find(item => item.slug === slug);
+    if (note) {
+      return {
+        title: note.title + " — ANEVUM Field Notes",
+        description: note.summary,
+        url: "https://anevum.com/field-notes/" + note.slug
+      };
+    }
   }
 
   if (pathname.startsWith("/products/rhen/releases/")) {
@@ -387,9 +444,11 @@ async function withPublicRouteMetadata(response, pathname) {
   if (!meta) return response;
 
   let html = await response.text();
+  const escapeHtml = value => String(value).replace(/&/g, "&amp;")
+    .replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
   const setMeta = (source, attribute, key, value) => {
     const pattern = new RegExp('<meta\\s+' + attribute + '="' + key + '"\\s+content="[^"]*"\\s*\\/?>', 'i');
-    return source.replace(pattern, '<meta ' + attribute + '="' + key + '" content="' + value + '" />');
+    return source.replace(pattern, '<meta ' + attribute + '="' + key + '" content="' + escapeHtml(value) + '" />');
   };
 
   html = setMeta(html, "name", "description", meta.description);
@@ -398,8 +457,8 @@ async function withPublicRouteMetadata(response, pathname) {
   html = setMeta(html, "property", "og:url", meta.url);
   html = setMeta(html, "name", "twitter:title", meta.title);
   html = setMeta(html, "name", "twitter:description", meta.description);
-  html = html.replace(/<link\s+rel="canonical"\s+href="[^"]*"\s*\/?\s*>/i, '<link rel="canonical" href="' + meta.url + '" />');
-  html = html.replace(/<title>[^<]*<\/title>/i, '<title>' + meta.title + '</title>');
+  html = html.replace(/<link\s+rel="canonical"\s+href="[^"]*"\s*\/?\s*>/i, '<link rel="canonical" href="' + escapeHtml(meta.url) + '" />');
+  html = html.replace(/<title>[^<]*<\/title>/i, '<title>' + escapeHtml(meta.title) + '</title>');
 
   const headers = new Headers(response.headers);
   headers.set("Content-Type", "text/html; charset=utf-8");
@@ -419,9 +478,10 @@ function withSecurityHeaders(response, pathname, hostname) {
   headers.set("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
   headers.set("Cross-Origin-Opener-Policy", "same-origin");
   headers.set("X-Frame-Options", "DENY");
-  const privateOrArchived = pathname.startsWith("/me") || pathname.startsWith("/sign-in") || pathname.startsWith("/apps/") || pathname.startsWith("/command") || pathname.startsWith("/private") || pathname.startsWith("/rhenlink") || pathname.startsWith("/wiki/archive") || pathname.startsWith("/lattice") || pathname.startsWith("/store") || pathname.startsWith("/reply") || pathname.startsWith("/the-book") || pathname.startsWith("/stories/");
-  if (privateOrArchived || hostname !== "anevum.com") headers.set("X-Robots-Tag", "noindex, nofollow, noarchive");
-  if (pathname.startsWith("/command") || pathname.startsWith("/private") || pathname.startsWith("/me") || pathname.startsWith("/sign-in") || pathname.startsWith("/apps/")) headers.set("Cache-Control", "private, no-store");
+  const privateOrArchived = pathname.startsWith("/studio") || pathname === "/communities/moderation" || pathname.startsWith("/me") || pathname.startsWith("/sign-in") || pathname.startsWith("/apps/") || pathname.startsWith("/command") || pathname.startsWith("/private") || pathname.startsWith("/rhenlink") || pathname.startsWith("/wiki/archive") || pathname.startsWith("/lattice") || pathname.startsWith("/store") || pathname.startsWith("/reply") || pathname.startsWith("/the-book") || pathname.startsWith("/stories/");
+  if (privateOrArchived || !publicRouteMetadata(pathname) || hostname !== "anevum.com")
+    headers.set("X-Robots-Tag", "noindex, nofollow, noarchive");
+  if (privateOrArchived || pathname.startsWith("/command") || pathname.startsWith("/private") || pathname.startsWith("/me") || pathname.startsWith("/sign-in") || pathname.startsWith("/apps/")) headers.set("Cache-Control", "private, no-store");
 
   return new Response(response.body, {
     status: response.status,
@@ -440,10 +500,51 @@ export default {
       return Response.redirect(url.toString(), 308);
     }
 
+    if (pathname.startsWith("/api/public/studio/")) {
+      return studioPublicEndpoint(request,env,pathname);
+    }
+
+    if (pathname === "/api/member/owner-paper/status") {
+      if (request.method !== "GET") return jsonResponse({message:"Read-only account observation."},405);
+      if (url.search) return jsonResponse({message:"Account selection is forbidden."},400);
+      if (env?.ANEVUM_OWNER_PAPER_OBSERVER_ENABLED !== "true")
+        return jsonResponse({available:false,paper:true,executionEnabled:false,message:"Personal paper observation is not enabled."},503);
+      try {
+        const credential = await commandCredential(request, env);
+        if (credential.ownerMemberBound !== true) return jsonResponse({message:"Owner-member access denied."},403);
+        return await observeOwnerPersonalPaper(env);
+      } catch (error) {
+        if (error instanceof ApiError) return jsonResponse({message:error.message},error.status);
+        return jsonResponse({message:"Personal paper observation unavailable."},503);
+      }
+    }
+
     if (pathname.startsWith("/api/member/") || pathname === "/api/auth" || pathname.startsWith("/api/auth/")) {
       try {
+        if (pathname.startsWith("/api/member/studio/")) {
+          // Independent Access JWT verification; NEVER use client-provided email.
+          const token=(request.headers.get("cf-access-jwt-assertion") || "").trim();
+          if (!token) throw new ApiError(401,"Cloudflare Access is required for Studio.");
+          const identity=await verifyAccessAssertion(token,env,"studio");
+          return memberEndpoint(request,env,pathname,{studioAccessEmail:identity.email});
+        }
+        if (pathname.startsWith("/api/member/commons/moderation/")) {
+          // Independent verified Cloudflare Access identity is REQUIRED.
+          // Better Auth must separately bind the exact same verified member.
+          // Separate moderation staff Access identity from RHEN owner trading authority.
+          const assertion=(request.headers.get("cf-access-jwt-assertion") || "").trim();
+          if(!assertion)throw new ApiError(401,"Cloudflare Access required for moderation.");
+          const accessScope=env?.ANEVUM_STUDIO_ENABLED==="true"?"studio":"command";
+          const credential={identity:await verifyAccessAssertion(assertion,env,accessScope)};
+          return await memberEndpoint(request, env, pathname, {
+            moderatorAccessEmail: credential.identity.email
+          });
+        }
         return await memberEndpoint(request, env, pathname);
-      } catch {
+      } catch (error) {
+        if (error instanceof ApiError) {
+          return jsonResponse({ message: error.message }, error.status);
+        }
         return jsonResponse({ message: "Member service unavailable." }, 503);
       }
     }
@@ -539,11 +640,40 @@ export default {
           authenticated: true,
           email: credential.identity?.email || null,
           auth_source: credential.source,
-          command_admin: true
+          command_admin: true,
+          owner_member_bound: credential.ownerMemberBound === true
         });
       } catch (error) {
         if (error instanceof ApiError) return jsonResponse({ message: error.message }, error.status);
         return jsonResponse({ message: "Private authentication unavailable." }, 503);
+      }
+    }
+
+    if (pathname === "/api/command/integrations/github") {
+      if (request.method !== "GET") return jsonResponse({ message: "Read-only GitHub observations." }, 405);
+      if (url.search) return jsonResponse({ message: "Integration query parameters are not accepted." }, 400);
+      try {
+        // Do not fetch GitHub until verified Cloudflare Access AND the matching
+        // owner Better Auth member session have both succeeded.
+        await commandCredential(request, env);
+        return jsonResponse(await observeOwnerGitHub());
+      } catch (error) {
+        const status = error instanceof ApiError ? error.status : 503;
+        return jsonResponse({ message: "Owner GitHub observations unavailable." }, status);
+      }
+    }
+
+    if (pathname === "/api/command/integrations/infrastructure") {
+      if (request.method !== "GET") return jsonResponse({ message: "Read-only infrastructure observations." }, 405);
+      if (url.search) return jsonResponse({ message: "Integration query parameters are not accepted." }, 400);
+      try {
+        // Both the Cloudflare Access assertion and exact owner Better Auth
+        // member session MUST pass before any provider credential is used.
+        await commandCredential(request, env);
+        return jsonResponse(await observeOwnerInfrastructure(env));
+      } catch (error) {
+        const status = error instanceof ApiError ? error.status : 503;
+        return jsonResponse({ message: "Owner infrastructure observations unavailable." }, status);
       }
     }
 

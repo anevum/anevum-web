@@ -10,6 +10,8 @@ import CommandPerformance from "../components/CommandPerformance";
 import CommandRawLog from "../components/CommandRawLog";
 import CommandReviewDeck from "../components/CommandReviewDeck";
 import CommandTopology from "../components/CommandTopology";
+import GitHubOwnerStatus from "../components/GitHubOwnerStatus";
+import OwnerInfrastructureStatus from "../components/OwnerInfrastructureStatus";
 import CommandTradingLanes from "../components/CommandTradingLanes";
 import CommandLiveMarket from "../components/CommandLiveMarket";
 import { useCommandLiveStream } from "../hooks/useCommandLiveStream";
@@ -334,6 +336,8 @@ export default function RhenTerminal() {
           <div className="command-v4-system-stack">
             <CommandTopology observation={controlObservation} feed={publicFeed} />
             <CommandOperationsTerminal observation={controlObservation} feed={publicFeed} feedError={publicFeedError} />
+            <GitHubOwnerStatus />
+            <OwnerInfrastructureStatus />
           </div>
         )}
       </main>

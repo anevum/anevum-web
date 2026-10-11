@@ -1,0 +1,426 @@
+/*
+ * Project Commons — Stage 1, visual refinement pass V5.1.
+ * Applied AFTER the preserved V5 lab stylesheet inside the Commons shadow root.
+ * Only UI polish: no member API, broker state, payments, or access changes.
+ */
+
+/* Keep the four selectable palettes. Slightly warmer neutral contrast reduces
+   the original oversaturated navy while retaining the V5 identity. */
+:host([data-theme="midnight"]) {
+  --canvas: #0e131b;
+  --nav: #111823;
+  --panel: #18212e;
+  --panel-light: #1c2837;
+  --panel-hover: #263447;
+  --line: #313d4f;
+  --line-soft: #273342;
+  --text: #edf3fb;
+  --sub: #b7c4d6;
+  --muted: #8b9bb1;
+  --accent: #8ab6ff;
+  --accent-deep: #6496ee;
+  --accent-alpha: rgba(132, 174, 252, .14);
+}
+:host([data-theme="carbon"]) {
+  --sub: #c4c4cd;
+  --muted: #9b9da9;
+  --line: #3b3d46;
+}
+:host([data-theme="paper"]) {
+  --sub: #526176;
+  --muted: #657387;
+  --line: #d5dce9;
+}
+:host([data-theme="plum"]) {
+  --sub: #d0c1db;
+  --muted: #a999b9;
+  --line: #473b53;
+}
+
+.app {
+  font-size: 14px;
+  line-height: 1.48;
+  font-feature-settings: "ss01" on;
+  -webkit-font-smoothing: antialiased;
+}
+.global-header {
+  box-shadow: 0 1px 0 rgba(0,0,0,.1);
+}
+.brand-text strong {
+  font-weight: 790;
+  letter-spacing: .155em;
+}
+.global-search {
+  border-radius: 11px;
+}
+.global-search input {
+  font-size: 13.2px;
+}
+.icon-btn,
+.layout-btn,
+.post-header .more-btn {
+  transition: color .15s ease, background-color .15s ease, border-color .15s ease;
+}
+.icon-btn:hover,
+.layout-btn:hover,
+.post-header .more-btn:hover {
+  border-color: var(--line);
+  background: var(--panel-hover);
+}
+:where(button,a,input):focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+.create-btn {
+  box-shadow: none;
+  font-weight: 740;
+  letter-spacing: .005em;
+}
+.create-btn:hover {
+  transform: none;
+  box-shadow: 0 0 0 3px var(--accent-alpha);
+}
+
+.side-heading {
+  font-size: 10.2px;
+  letter-spacing: .105em;
+}
+.side-link,
+.community-link {
+  font-size: 13.1px;
+  font-weight: 590;
+  height: 41px;
+}
+.side-link .ico,
+.community-link .ico {
+  stroke-width: 1.95;
+}
+.side-link.active {
+  font-weight: 740;
+}
+.side-link.active:before {
+  width: 3px;
+  top: 8px;
+  bottom: 8px;
+}
+.community-icon {
+  border-radius: 9px;
+}
+.sidebar-member-card {
+  transition: border-color .14s ease, background .14s ease;
+}
+
+.feed-header h1,
+.page-head h1 {
+  font-size: 26px;
+  font-weight: 790;
+  letter-spacing: -.038em;
+}
+.feed-header p,
+.page-head p {
+  font-size: 13.25px;
+  line-height: 1.48;
+}
+.demo-strip {
+  padding: 9px 12px;
+  margin-bottom: 14px;
+  font-size: 11px;
+  background: var(--panel-light);
+}
+.feed-tabs {
+  margin-bottom: 12px;
+}
+.tab {
+  height: 34px;
+  border-radius: 9px;
+  font-size: 12.25px;
+  font-weight: 680;
+}
+.tab.active {
+  color: var(--text-strong);
+  border: 1px solid color-mix(in srgb, var(--accent) 22%, var(--line));
+  background: var(--accent-alpha);
+}
+.layout-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+}
+.layout-btn.active,
+.layout-btn[aria-pressed="true"] {
+  color: var(--accent);
+  border-color: color-mix(in srgb, var(--accent) 58%, var(--line));
+}
+.composer {
+  min-height: 57px;
+  border-radius: 12px;
+  background: var(--panel-light);
+}
+.composer-text {
+  font-size: 12.6px;
+}
+
+.post-list {
+  gap: 10px;
+}
+.post {
+  padding: 18px 19px 15px;
+  border-radius: 12px;
+  transition: border-color .17s ease, background-color .17s ease;
+}
+.post:hover {
+  border-color: color-mix(in srgb, var(--accent) 27%, var(--line));
+  background: var(--panel);
+}
+.post-header {
+  margin-bottom: 11px;
+}
+.post-header .avatar {
+  width: 35px;
+  height: 35px;
+}
+.post-author {
+  font-size: 13.2px;
+  font-weight: 770;
+}
+.post-meta,
+.post-community {
+  font-size: 11.5px;
+}
+.post-title {
+  font-size: 18px;
+  line-height: 1.32;
+  letter-spacing: -.026em;
+  font-weight: 750;
+  margin-bottom: 9px;
+}
+.post-title a:hover {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+.post-excerpt {
+  font-size: 13.3px;
+  line-height: 1.56;
+  margin-bottom: 13px;
+}
+.post-tag,
+.real-badge {
+  font-size: 10.2px;
+}
+.post-tags {
+  margin-bottom: 12px;
+}
+.post-foot {
+  gap: 6px;
+}
+.action-pill {
+  min-height: 33px;
+  border-radius: 9px;
+  font-size: 11.75px;
+  font-weight: 650;
+  padding: 0 11px;
+  background: var(--panel-light);
+  border: 1px solid var(--line-soft);
+}
+.action-pill:hover {
+  border-color: var(--line);
+  background: var(--panel-hover);
+}
+.action-pill .ico {
+  width: 17px;
+  height: 17px;
+}
+.post-foot .end-link {
+  font-size: 11.5px;
+  font-weight: 720;
+}
+
+.right-card {
+  padding: 17px;
+  border-radius: 12px;
+}
+.rail-title h3 {
+  font-size: 13.4px;
+}
+.rail-row {
+  font-size: 12.4px;
+  line-height: 1.42;
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+.rail-intro {
+  background: linear-gradient(155deg,
+    color-mix(in srgb, var(--accent) 12%, var(--panel)),
+    var(--panel) 83%);
+  border-color: var(--line);
+}
+.rail-intro:before {
+  opacity: .34;
+}
+.rail-intro h2 {
+  font-size: 17px;
+  line-height: 1.3;
+}
+.rail-intro p,
+.rail-footer {
+  line-height: 1.56;
+}
+.rail-file strong {
+  line-height: 1.42;
+}
+
+/* The compact/seamless layouts remain selectable and genuinely compact. */
+:host([data-density="compact"]) .post {
+  padding-top: 13px;
+  padding-bottom: 12px;
+}
+:host([data-density="compact"]) .post-title {
+  font-size: 16px;
+  margin-bottom: 5px;
+}
+:host([data-density="compact"]) .post-excerpt {
+  font-size: 12.6px;
+  line-height: 1.48;
+}
+:host([data-surface="seamless"]) .post {
+  border-radius: 0;
+  background: transparent;
+}
+:host([data-surface="seamless"]) .post:hover {
+  background: var(--panel);
+}
+
+@media (max-width: 900px) {
+  .main {
+    padding-top: 22px;
+  }
+}
+@media (max-width: 720px) {
+  .global-header {
+    height: 56px;
+  }
+  .feed-header h1 {
+    font-size: 23px;
+    letter-spacing: -.036em;
+  }
+  .feed-header p {
+    font-size: 12.5px;
+  }
+  .feed-header-controls .layout-btn {
+    width: 34px;
+    height: 34px;
+  }
+  .demo-strip {
+    font-size: 10.5px;
+    line-height: 1.48;
+  }
+  .post-header .avatar {
+    width: 32px;
+    height: 32px;
+  }
+  .post-author {
+    font-size: 12.6px;
+  }
+  .post-meta,
+  .post-community {
+    font-size: 10.8px;
+  }
+  .mobile-nav > a,
+  .mobile-nav > button {
+    min-width: 0;
+    touch-action: manipulation;
+  }
+  .mobile-nav > a .ico {
+    width: 20px;
+    height: 20px;
+  }
+  /* Keep the Create glyph's original 22px paint area inside the 42px button.
+     A generic 20px svg rule + 10px padding on each side made it disappear. */
+  .mobile-nav > .mobile-create .ico {
+    width: 42px;
+    height: 42px;
+    padding: 10px;
+    stroke-width: 2.5;
+  }
+  .mobile-nav > a:focus-visible,
+  .mobile-nav > button:focus-visible {
+    outline-offset: -4px;
+  }
+  .design-panel {
+    max-height: min(75dvh, 690px);
+  }
+}
+@media (max-width: 480px) {
+  .main {
+    padding-top: 20px;
+  }
+  .post {
+    padding: 14px 12px 12px;
+  }
+  .post-title {
+    font-size: 16.35px;
+    line-height: 1.34;
+    margin-bottom: 7px;
+  }
+  .post-excerpt {
+    font-size: 12.45px;
+    line-height: 1.52;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 4;
+    overflow: hidden;
+    margin-bottom: 10px;
+  }
+  .post-tags {
+    margin-bottom: 9px;
+  }
+  .post-foot {
+    gap: 5px;
+  }
+  .action-pill {
+    height: 31px;
+    min-height: 31px;
+    font-size: 10.3px;
+    padding: 0 7px;
+    gap: 5px;
+  }
+  .action-pill .ico {
+    width: 15px;
+    height: 15px;
+  }
+  .composer {
+    min-height: 52px;
+  }
+  .composer-text {
+    font-size: 11.75px;
+  }
+  .tab {
+    font-size: 11.3px;
+    height: 32px;
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+  .brand-text strong {
+    font-size: 12px;
+  }
+}
+@media (max-width: 345px) {
+  .post-preview-split {
+    grid-template-columns: minmax(0,1fr) 80px;
+  }
+  .post-title { font-size: 15.45px; }
+  .action-pill {
+    font-size: 9.7px;
+    padding: 0 6px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .app *,
+  .app *::before,
+  .app *::after {
+    animation-duration: .01ms !important;
+    transition-duration: .01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

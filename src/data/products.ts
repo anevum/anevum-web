@@ -3,6 +3,30 @@ export type ProductVisibility = "public" | "unlisted" | "private";
 export type ProductAccess = "public" | "account" | "paid" | "private";
 export type ProductSupportModel = "free" | "supporter" | "paid" | "mixed";
 
+// Hand-reviewed public source pointers only. Public GitHub visibility and
+// licensing are independent; never infer RHEN redistribution permissions.
+export type PublishedSource = {
+  repository: "anevum/anevum-web" | "anevum/rhen";
+  url: string;
+  visibility: "PUBLIC";
+  reuse: "APACHE_2_0" | "NO_REPOSITORY_LICENSE";
+};
+export const publishedSourceRecords: Readonly<{website: PublishedSource; rhen: PublishedSource}> = Object.freeze({
+  website: Object.freeze({
+    repository: "anevum/anevum-web",
+    url: "https://github.com/anevum/anevum-web",
+    visibility: "PUBLIC",
+    reuse: "APACHE_2_0"
+  }),
+  rhen: Object.freeze({
+    repository: "anevum/rhen",
+    url: "https://github.com/anevum/rhen",
+    visibility: "PUBLIC",
+    reuse: "NO_REPOSITORY_LICENSE"
+  })
+});
+
+
 export type ProductDefinition = {
   slug: string;
   name: string;
@@ -15,6 +39,7 @@ export type ProductDefinition = {
   hasApp: boolean;
   appAccess?: ProductAccess;
   supportModel: ProductSupportModel;
+  source?: PublishedSource;
   routes: {
     home: string;
     app?: string;
@@ -32,13 +57,14 @@ export const productRegistry: ProductDefinition[] = [
     name: "RHEN",
     system: "RHEN",
     visibility: "public",
-    lifecycle: "active",
+    lifecycle: "development",
     category: "Markets / research",
-    oneLine: "Live trading and research system for testing market ideas against real evidence and real operating constraints.",
+    oneLine: "Markets research application being rebuilt with private member workspaces, measured evidence, and separately gated execution.",
     publicDataAdapter: "rhen-live",
     hasApp: false,
     appAccess: "account",
     supportModel: "free",
+    source: publishedSourceRecords.rhen,
     routes: {
       home: "/products/rhen",
       app: "/apps/rhen",

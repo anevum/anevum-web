@@ -1,0 +1,12 @@
+{
+  "schema": "anevum.v5.beta.release-authorization.v1",
+  "reviewed_parent_sha": "a5fd820840501c897031a08d6812103ed3c7c743",
+  "target_worker": "anevum-v5-beta",
+  "target_d1": "b2f9b4ad-4b97-483c-ae78-5dc7c8da76bf",
+  "production_change_authorized": false,
+  "reviewer_change_authorized": false,
+  "broker_execution_authorized": false,
+  "external_invites_authorized": false,
+  "purpose": "Owner-approved private V5 beta deployment with Google sign-in for controlled two-member acceptance; no public invitations or trading.",
+  "issued_on": "2026-10-11"
+}

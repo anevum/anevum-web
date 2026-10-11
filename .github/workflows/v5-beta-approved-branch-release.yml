@@ -1,0 +1,281 @@
+name: ANEVUM V5 One-Time Approved Beta-Only Release
+
+on:
+  # The manual owner approval is represented by one exact, reviewable
+  # authorization-marker commit. A normal PR update cannot publish.
+  push:
+    branches: [build/anevum-v5-isolated-beta-deployment-20261011]
+    paths:
+      - docs/ANEVUM_V5_BETA_RELEASE_AUTHORIZATION_2026-10-11.json
+
+permissions:
+  contents: read
+  actions: read
+  pull-requests: read
+
+concurrency:
+  group: anevum-v5-one-time-beta-release
+  cancel-in-progress: false
+
+jobs:
+  deploy-beta-only:
+    if: >-
+      github.ref == 'refs/heads/build/anevum-v5-isolated-beta-deployment-20261011' &&
+      github.actor == 'anevum' &&
+      github.event.head_commit.message == 'release(v5-beta): deploy approved beta-only candidate'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      CLOUDFLARE_VITE_WRANGLER_CONFIG_PATH: wrangler.v5-beta.jsonc
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Reject any release outside the exact approved beta-only commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          umask 077
+          marker='docs/ANEVUM_V5_BETA_RELEASE_AUTHORIZATION_2026-10-11.json'
+          test "$GITHUB_REPOSITORY" = "anevum/anevum-web"
+          test "$GITHUB_REF" = "refs/heads/build/anevum-v5-isolated-beta-deployment-20261011"
+          test "$GITHUB_ACTOR" = "anevum"
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$(git ls-remote origin "$GITHUB_REF" | cut -f1)" = "$GITHUB_SHA"
+          test "$(git show -s --format=%s HEAD)" = \
+            'release(v5-beta): deploy approved beta-only candidate'
+          test "$(git diff-tree --no-commit-id --name-only -r HEAD)" = "$marker"
+          test -f "$marker"
+          parent="$(git rev-parse HEAD^)"
+          jq -e --arg parent "$parent" '
+            .schema == "anevum.v5.beta.release-authorization.v1" and
+            .reviewed_parent_sha == $parent and
+            .target_worker == "anevum-v5-beta" and
+            .target_d1 == "b2f9b4ad-4b97-483c-ae78-5dc7c8da76bf" and
+            .production_change_authorized == false and
+            .reviewer_change_authorized == false and
+            .broker_execution_authorized == false and
+            .external_invites_authorized == false
+          ' "$marker" >/dev/null
+          gh api "repos/$GITHUB_REPOSITORY/pulls/309" \
+            > "$RUNNER_TEMP/v5-beta-pull.json"
+          jq -e --arg head "$GITHUB_SHA" '
+            .head.sha == $head and .draft == true and .merged == false and
+            .base.ref == "main" and
+            .head.ref == "build/anevum-v5-isolated-beta-deployment-20261011"
+          ' "$RUNNER_TEMP/v5-beta-pull.json" >/dev/null
+          echo "REVIEWED_PARENT_SHA=$parent" >> "$GITHUB_ENV"
+      - name: Require all four independent PR checks to pass on unchanged code
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          umask 077
+          ready=0
+          for attempt in $(seq 1 90); do
+            gh api "repos/$GITHUB_REPOSITORY/actions/runs?head_sha=$REVIEWED_PARENT_SHA&per_page=100" \
+              > "$RUNNER_TEMP/v5-beta-pr-runs.json"
+            ready=1
+            for name in \
+              'ANEVUM Verify' \
+              'ANEVUM Member Staging OAuth' \
+              'ANEVUM V5 Isolated Beta Deployment' \
+              'ANEVUM V5 Release Safety Bootstrap'; do
+              state="$(jq -r --arg name "$name" --arg sha "$REVIEWED_PARENT_SHA" '
+                [.workflow_runs[] | select(.name == $name and .head_sha == $sha and
+                                          .event == "pull_request")] |
+                sort_by([.run_number, .run_attempt]) | last |
+                if . == null then "pending" else (.conclusion // "pending") end
+              ' "$RUNNER_TEMP/v5-beta-pr-runs.json")"
+              case "$state" in
+                success) ;;
+                failure|cancelled|timed_out|action_required|startup_failure)
+                  echo "Reviewed beta CI failed: $name" >&2
+                  exit 1 ;;
+                *) ready=0 ;;
+              esac
+            done
+            if [ "$ready" = 1 ]; then break; fi
+            sleep 12
+          done
+          test "$ready" = 1
+          echo 'Reviewed parent: four beta CI workflows PASS.'
+      - name: Install pinned website and rendering dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm install --no-audit --no-fund
+          python -m pip install "weasyprint==68.0" "Pillow==11.3.0"
+      - name: Recheck isolated target, member contracts and compile exact candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          node scripts/verify-v5-beta-deploy.mjs
+          npm run test:members
+          npm run test:foundation
+          npm run build
+          node scripts/verify-v5-beta-deploy.mjs --generated
+      - name: Verify bound secrets, independent D1 and unchanged protected services
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_D1_TOKEN: ${{ secrets.CLOUDFLARE_D1_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          umask 077
+          test -n "$CLOUDFLARE_API_TOKEN"
+          test -n "$CLOUDFLARE_D1_TOKEN"
+          test -n "$CLOUDFLARE_ACCOUNT_ID"
+          test "$(git ls-remote origin "$GITHUB_REF" | cut -f1)" = "$GITHUB_SHA"
+          api="https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID"
+          for worker in anevum-v5-beta anevum-web-nextgen anevum-member-staging; do
+            curl --fail --silent --show-error --max-time 25 \
+              -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+              "$api/workers/scripts/$worker/settings" \
+              > "$RUNNER_TEMP/v5-beta-before-$worker.json"
+            jq -e '.success == true and (.result.bindings | type) == "array"' \
+              "$RUNNER_TEMP/v5-beta-before-$worker.json" >/dev/null
+            if [ "$worker" != 'anevum-v5-beta' ]; then
+              curl --fail --silent --show-error --max-time 25 \
+                -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+                "$api/workers/scripts/$worker/deployments" \
+                > "$RUNNER_TEMP/v5-beta-before-deployments-$worker.json"
+              jq -e '.success == true and
+                (.result.deployments | type) == "array" and
+                (.result.deployments | length) > 0' \
+                "$RUNNER_TEMP/v5-beta-before-deployments-$worker.json" >/dev/null
+            fi
+          done
+          jq -e '
+            any(.result.bindings[]; .name == "MEMBER_DB" and .type == "d1" and
+              .database_id == "b2f9b4ad-4b97-483c-ae78-5dc7c8da76bf") and
+            all(.result.bindings[]; .type != "d1" or
+              .database_id == "b2f9b4ad-4b97-483c-ae78-5dc7c8da76bf") and
+            any(.result.bindings[]; .name == "ANEVUM_MEMBERS_ENABLED" and .text == "false")
+          ' "$RUNNER_TEMP/v5-beta-before-anevum-v5-beta.json" >/dev/null
+          curl --fail --silent --show-error --max-time 25 \
+            -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+            "$api/workers/scripts/anevum-v5-beta/secrets" \
+            > "$RUNNER_TEMP/v5-beta-secret-names.json"
+          for name in BETTER_AUTH_SECRET GOOGLE_CLIENT_ID GOOGLE_CLIENT_SECRET; do
+            jq -e --arg key "$name" '.success == true and
+              any(.result[]; .name == $key and .type == "secret_text")' \
+              "$RUNNER_TEMP/v5-beta-secret-names.json" >/dev/null
+          done
+          endpoint="$api/d1/database/b2f9b4ad-4b97-483c-ae78-5dc7c8da76bf/query"
+          curl --fail --silent --show-error --max-time 25 \
+            -H "Authorization: Bearer $CLOUDFLARE_D1_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d '{"sql":"SELECT name FROM d1_migrations ORDER BY id"}' "$endpoint" \
+            > "$RUNNER_TEMP/v5-beta-ledger.json"
+          jq -e '.success == true and [.result[0].results[].name] == [
+            "0001_member_platform.sql", "0002_member_rhen_drafts.sql",
+            "0003_member_billing.sql", "0004_member_rhen_workspaces.sql"]' \
+            "$RUNNER_TEMP/v5-beta-ledger.json" >/dev/null
+          curl --fail --silent --show-error --max-time 25 \
+            -H "Authorization: Bearer $CLOUDFLARE_D1_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d '{"sql":"PRAGMA foreign_key_check"}' "$endpoint" \
+            > "$RUNNER_TEMP/v5-beta-foreign-keys.json"
+          jq -e '.success == true and .result[0].success == true and
+            (.result[0].results | length) == 0' \
+            "$RUNNER_TEMP/v5-beta-foreign-keys.json" >/dev/null
+      - name: Deploy beta ONLY — no production or reviewer operation
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git ls-remote origin "$GITHUB_REF" | cut -f1)" = "$GITHUB_SHA"
+          node scripts/verify-v5-beta-deploy.mjs --generated
+          npx wrangler deploy
+      - name: Verify Google signup availability and anonymous privacy boundaries
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          umask 077
+          base="https://anevum-v5-beta.devonakins.workers.dev"
+          ready=0
+          for attempt in $(seq 1 25); do
+            status="$(curl --silent --show-error --max-time 15 \
+              -o "$RUNNER_TEMP/v5-beta-availability.json" -w '%{http_code}' \
+              "$base/api/member/availability" 2>/dev/null || true)"
+            if [ "$status" = 200 ]; then
+              if jq -e '.available == true and .provider == "google"' \
+                "$RUNNER_TEMP/v5-beta-availability.json" >/dev/null; then
+                ready=1; break
+              fi
+            fi
+            sleep 5
+          done
+          test "$ready" = 1
+          for route in /api/member/me /api/member/rhen/workspace \
+            /api/member/rhen/draft /api/member/export /api/command/trader/status; do
+            code="$(curl --silent --show-error --max-time 15 \
+              -o /dev/null -w '%{http_code}' "$base$route")"
+            test "$code" = 401 -o "$code" = 403 -o "$code" = 503
+          done
+          for route in / /beta /sign-in /me/beta; do
+            code="$(curl --silent --show-error --max-time 15 \
+              -o /dev/null -w '%{http_code}' "$base$route")"
+            test "$code" = 200
+          done
+          api="https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID"
+          curl --fail --silent --show-error --max-time 25 \
+            -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+            "$api/workers/scripts/anevum-v5-beta/secrets" \
+            > "$RUNNER_TEMP/v5-beta-postdeploy-secrets.json"
+          for name in BETTER_AUTH_SECRET GOOGLE_CLIENT_ID GOOGLE_CLIENT_SECRET; do
+            jq -e --arg key "$name" '.success == true and
+              any(.result[]; .name == $key and .type == "secret_text")' \
+              "$RUNNER_TEMP/v5-beta-postdeploy-secrets.json" >/dev/null
+          done
+          for worker in anevum-web-nextgen anevum-member-staging; do
+            curl --fail --silent --show-error --max-time 25 \
+              -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+              "$api/workers/scripts/$worker/settings" \
+              > "$RUNNER_TEMP/v5-beta-after-$worker.json"
+            # Compare actual settings/bindings, then exact active deployment
+            # versions. Cloudflare's incidental settings metadata can change
+            # independently, so a whole-response JSON equality test is brittle.
+            jq -e --slurpfile before "$RUNNER_TEMP/v5-beta-before-$worker.json" '
+              .success == true and
+              .result.bindings == $before[0].result.bindings and
+              .result.compatibility_date == $before[0].result.compatibility_date and
+              .result.compatibility_flags == $before[0].result.compatibility_flags' \
+              "$RUNNER_TEMP/v5-beta-after-$worker.json" >/dev/null
+            curl --fail --silent --show-error --max-time 25 \
+              -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+              "$api/workers/scripts/$worker/deployments" \
+              > "$RUNNER_TEMP/v5-beta-after-deployments-$worker.json"
+            jq -e --slurpfile before "$RUNNER_TEMP/v5-beta-before-deployments-$worker.json" '
+              .success == true and
+              ([.result.deployments[0].versions[].version_id] ==
+               [$before[0].result.deployments[0].versions[].version_id])' \
+              "$RUNNER_TEMP/v5-beta-after-deployments-$worker.json" >/dev/null
+          done
+          {
+            echo '## ANEVUM V5: isolated beta deployment'
+            echo ''
+            echo 'PASS: reviewed source, four PR checks, independent beta D1 and encrypted Google secrets.'
+            echo 'PASS: deployed only anevum-v5-beta, private API denial, public member page routes.'
+            echo 'PASS: production and reviewer Worker settings unchanged.'
+            echo ''
+            echo 'https://anevum-v5-beta.devonakins.workers.dev'
+            echo ''
+            echo 'Real two-account Google sign-in acceptance and external tester invitation are NOT yet approved.'
+          } >> "$GITHUB_STEP_SUMMARY"

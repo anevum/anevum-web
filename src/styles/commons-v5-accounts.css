@@ -1,0 +1,94 @@
+/* Stage 2B: account/Command pages within the real Commons V5 ShadowRoot.
+ * Imported legacy member CSS retains working controls and responsive behavior.
+ * These overrides remove nested legacy panel chrome and map the appearance
+ * to V5's user-selected tokens. No auth/API/ownership behavior lives here. */
+.account-view .shell{grid-template-columns:252px minmax(0,1fr)}
+.account-view .right-sidebar{display:none}
+.account-view .main{max-width:1150px}
+.c2-member{
+  --workshop-ink:var(--text);
+  --workshop-copy:var(--sub);
+  --workshop-muted:var(--muted);
+  --workshop-accent:var(--accent);
+  --workshop-line:var(--line);
+  --workshop-soft:var(--panel-light);
+  --workshop-surface:var(--panel);
+  min-width:0; color:var(--text);line-height:1.6;
+}
+.c2-member .workshop-kicker{font-size:10px;letter-spacing:.12em;font-weight:800;color:var(--accent);text-transform:uppercase}
+.c2-member .member-command{
+  margin:0;width:100%;display:flex;flex-direction:column;gap:24px;
+  color:var(--text);line-height:1.58
+}
+.c2-member .member-command-sidebar{
+  border:0;border-bottom:1px solid var(--line);padding:0 0 21px;width:100%
+}
+.c2-member .member-command-title{font-size:20px;line-height:1.2;color:var(--text)}
+.c2-member .member-command-sidebar>p:not(.workshop-kicker){font-size:13px;margin:7px 0 18px}
+.c2-member .member-command-sidebar nav{display:flex;flex-wrap:wrap;gap:6px}
+.c2-member .member-command-sidebar nav a{
+  min-height:34px; padding:8px 11px;font-size:12px;border-radius:9px;
+  border:1px solid var(--line);background:var(--panel);color:var(--sub)
+}
+.c2-member .member-command-sidebar nav a:hover,.c2-member .member-command-sidebar nav a.active{color:var(--accent);border-color:var(--accent);background:var(--panel-hover)}
+.c2-member .member-command-account{
+  margin:16px 0 0;padding:15px;background:var(--panel);border:1px solid var(--line);
+  border-radius:var(--radius);display:flex;align-items:center;flex-wrap:wrap;gap:8px 14px
+}
+.c2-member .member-command-account .member-avatar{width:35px;height:35px;margin:0;background:var(--accent-alpha);color:var(--accent)}
+.c2-member .member-command-account p{margin:0}
+.c2-member .member-command-account>span:not(.member-avatar){max-width:100%;overflow-wrap:anywhere}
+.c2-member .member-command-content{width:100%;min-width:0}
+.c2-member .member-command-heading{padding-bottom:24px}
+.c2-member .member-command-heading h1{font-size:clamp(26px,3vw,38px);font-weight:760;line-height:1.15;letter-spacing:-.045em;margin:8px 0 12px}
+.c2-member .member-command-heading p:not(.workshop-kicker){font-size:13px;line-height:1.7}
+.c2-member .member-command-section{border-color:var(--line);margin-bottom:22px}
+.c2-member .member-command-section h2{font-size:19px;margin-bottom:13px}
+.c2-member .member-program,.c2-member .member-command-notice,
+.c2-member .member-financial-status,.c2-member .member-app-ready{
+  background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+  color:var(--text)
+}
+.c2-member .member-program{padding:19px}
+.c2-member .member-program h3{font-size:22px;letter-spacing:-.02em}
+.c2-member .member-program-features{border-color:var(--line)}
+.c2-member .member-program-access{background:var(--accent-alpha);color:var(--accent)}
+.c2-member .member-program-open{background:var(--accent);border-color:var(--accent);color:var(--accent-contrast);border-radius:9px}
+.c2-member .member-program .member-card-actions button,.c2-member .member-settings button{
+  background:var(--panel-light);color:var(--text);border:1px solid var(--line);border-radius:8px;
+  min-height:40px
+}
+.c2-member .member-program .member-card-actions button[aria-pressed=true]{
+  background:var(--accent-alpha);color:var(--accent);border-color:var(--accent)
+}
+.c2-member button:focus-visible,.c2-member a:focus-visible,.c2-member input:focus-visible{
+  outline:2px solid var(--accent);outline-offset:3px
+}
+.c2-member .member-page{width:100%;margin:0;padding:0 0 45px;color:var(--text)}
+.c2-member .member-page h1{font-size:clamp(25px,3vw,37px);font-weight:770;letter-spacing:-.04em}
+.c2-member .member-page h2{font-size:19px}
+.c2-member .member-page p{font-size:13px;line-height:1.7;color:var(--sub)}
+.c2-member .member-page a{color:var(--accent)}
+.c2-member .member-settings input{
+  background:var(--panel);border:1px solid var(--line);color:var(--text);
+  min-height:43px;max-width:100%;border-radius:9px
+}
+.c2-member .member-financial-status{margin-top:12px}
+.c2-member .member-financial-steps article{border-color:var(--line)}
+.c2-member .member-financial-state{border-color:var(--line);color:var(--sub)}
+.c2-member .member-alert{color:#e49f97!important}
+.c2-member .member-danger-action{color:#e49f97!important;border-color:#8e5354!important}
+.c2-member .member-command-rewards{gap:12px;flex-wrap:wrap}
+.c2-member .member-command-saved a,.c2-member .member-notes a{border-color:var(--line)}
+@media(max-width:1320px){.account-view .shell{grid-template-columns:236px minmax(0,1fr)}}
+@media(max-width:900px){.account-view .shell{grid-template-columns:76px minmax(0,1fr)}}
+@media(max-width:720px){
+  .account-view .shell{display:block}
+  .c2-member .member-command{gap:16px}
+  .c2-member .member-command-heading{flex-direction:column;gap:6px}
+  .c2-member .member-command-heading>a{padding:0}
+  .c2-member .member-program{padding:15px}
+  .c2-member .member-program-features{grid-template-columns:1fr;gap:13px}
+  .c2-member .member-command-account{align-items:flex-start}
+}
+@media(prefers-reduced-motion:reduce){.c2-member *{transition-duration:.01ms!important;animation-duration:.01ms!important}}

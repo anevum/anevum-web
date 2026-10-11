@@ -1,0 +1,243 @@
+name: ANEVUM V5 Isolated Beta Deployment
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'wrangler.v5-beta.jsonc'
+      - '.github/workflows/v5-isolated-beta-deploy.yml'
+      - 'scripts/verify-v5-beta-deploy.mjs'
+      - 'tests/v5-isolated-beta-deploy.test.mjs'
+      - 'src/pages/MemberStagingVerify.tsx'
+      - 'src/member/**'
+      - 'src/server/**'
+      - 'src/App.tsx'
+      - 'package.json'
+      - 'worker.mjs'
+  workflow_dispatch:
+    inputs:
+      confirmation:
+        description: 'Type DEPLOY_ISOLATED_V5_BETA_ONLY'
+        required: true
+        type: string
+      reviewed_head_sha:
+        description: 'Exact reviewed current main commit SHA'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: anevum-v5-isolated-beta
+  cancel-in-progress: false
+
+jobs:
+  isolated-beta:
+    if: >-
+      github.event_name != 'workflow_dispatch' ||
+      (github.ref == 'refs/heads/main' &&
+       inputs.confirmation == 'DEPLOY_ISOLATED_V5_BETA_ONLY' &&
+       inputs.reviewed_head_sha == github.sha)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      CLOUDFLARE_VITE_WRANGLER_CONFIG_PATH: wrangler.v5-beta.jsonc
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install website build dependencies
+        run: |
+          npm install --no-audit --no-fund
+          python -m pip install "weasyprint==68.0" "Pillow==11.3.0"
+      - name: Validate beta boundaries and the member testing contracts
+        run: |
+          set -euo pipefail
+          node scripts/verify-v5-beta-deploy.mjs
+          node --experimental-strip-types --test tests/v5-isolated-beta-deploy.test.mjs
+          npm run test:members
+          npm run test:foundation
+      - name: Compile isolated V5 website Worker
+        run: npm run build
+      - name: Check generated Worker can target only the new beta service
+        run: node scripts/verify-v5-beta-deploy.mjs --generated
+      - name: Verify live isolated beta signup and protected targets read-only
+        if: github.event_name == 'pull_request'
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          umask 077
+          base='https://anevum-v5-beta.devonakins.workers.dev'
+          ok=1
+          for route in /api/member/availability /api/member/me /api/member/rhen/workspace /api/member/rhen/draft /api/member/export /api/command/trader/status / /beta /sign-in /me/beta; do
+            status="$(curl --silent --show-error --max-time 15 -o /dev/null -w '%{http_code}' "$base$route" || true)"
+            printf 'BETA_ANONYMOUS_STATUS %s %s\n' "$route" "$status"
+            case "$route" in
+              /api/member/availability|/|/beta|/sign-in|/me/beta)
+                test "$status" = 200 || ok=0 ;;
+              *)
+                case "$status" in 401|403|503) ;; *) ok=0 ;; esac ;;
+            esac
+          done
+          curl --fail --silent --show-error --max-time 15             "$base/api/member/availability" -o "$RUNNER_TEMP/beta-availability.json"
+          jq -c '{available,provider}' "$RUNNER_TEMP/beta-availability.json"
+          jq -e '.available == true and .provider == "google"'             "$RUNNER_TEMP/beta-availability.json" >/dev/null || ok=0
+          test -n "$CLOUDFLARE_API_TOKEN"
+          test -n "$CLOUDFLARE_ACCOUNT_ID"
+          api="https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID"
+          for entry in             'anevum-v5-beta:b2f9b4ad-4b97-483c-ae78-5dc7c8da76bf'             'anevum-web-nextgen:7f0d4c0c-2e85-4900-8504-1347954e1df1'             'anevum-member-staging:a537432e-d216-4b31-8b22-19662cc3a44a'; do
+            name="${entry%%:*}"
+            db="${entry#*:}"
+            curl --fail --silent --show-error --max-time 25               -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN"               "$api/workers/scripts/$name/settings"               -o "$RUNNER_TEMP/v5-beta-settings-$name.json"
+            if jq -e --arg db "$db" '.success == true and
+              ([.result.bindings[] | select(.type == "d1")] | length) == 1 and
+              any(.result.bindings[]; .name == "MEMBER_DB" and .type == "d1"
+                  and .database_id == $db)'               "$RUNNER_TEMP/v5-beta-settings-$name.json" >/dev/null; then
+              echo "BETA_ISOLATED_BINDING_OK $name"
+            else
+              echo "BETA_ISOLATED_BINDING_FAILED $name"
+              ok=0
+            fi
+          done
+          test "$ok" = 1
+      - name: Verify Google sign-in initiation with zero login and no secret output
+        if: github.event_name == 'pull_request'
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --test tests/v5-beta-google-oauth-init-smoke.test.mjs
+          node scripts/v5-beta-google-oauth-init-smoke.mjs
+      - name: Confirm approved exact main and existing isolated beta infrastructure
+        if: github.event_name == 'workflow_dispatch'
+        env:
+          REVIEWED_HEAD_SHA: ${{ inputs.reviewed_head_sha }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_D1_TOKEN: ${{ secrets.CLOUDFLARE_D1_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          umask 077
+          test "$REVIEWED_HEAD_SHA" = "$GITHUB_SHA"
+          test "$(git ls-remote origin refs/heads/main | cut -f1)" = "$GITHUB_SHA"
+          test -n "$CLOUDFLARE_API_TOKEN"
+          test -n "$CLOUDFLARE_D1_TOKEN"
+          test -n "$CLOUDFLARE_ACCOUNT_ID"
+          node scripts/verify-v5-beta-deploy.mjs --generated
+          api="https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID"
+          curl --fail --silent --show-error --max-time 20 \
+            -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+            "$api/workers/scripts/anevum-v5-beta/settings" \
+            > "$RUNNER_TEMP/v5-beta-worker-settings.json"
+          jq -e '.success == true and
+            any(.result.bindings[]; .name == "MEMBER_DB" and .type == "d1" and
+              .database_id == "b2f9b4ad-4b97-483c-ae78-5dc7c8da76bf") and
+            all(.result.bindings[]; .type != "d1" or
+              .database_id == "b2f9b4ad-4b97-483c-ae78-5dc7c8da76bf")
+          ' "$RUNNER_TEMP/v5-beta-worker-settings.json" > /dev/null
+          curl --fail --silent --show-error --max-time 20 \
+            -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+            "$api/workers/scripts/anevum-v5-beta/secrets" \
+            > "$RUNNER_TEMP/v5-beta-secret-names.json"
+          # Exact encrypted-binding names only; never print values or
+          # copy the existing production/reviewer OAuth credentials.
+          for name in BETTER_AUTH_SECRET GOOGLE_CLIENT_ID GOOGLE_CLIENT_SECRET; do
+            jq -e --arg name "$name" '
+              .success == true and
+              any(.result[]; .name == $name and .type == "secret_text")
+            ' "$RUNNER_TEMP/v5-beta-secret-names.json" > /dev/null
+          done
+          endpoint="$api/d1/database/b2f9b4ad-4b97-483c-ae78-5dc7c8da76bf/query"
+          curl --fail --silent --show-error --max-time 20 \
+            -H "Authorization: Bearer $CLOUDFLARE_D1_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d '{"sql":"SELECT name FROM d1_migrations ORDER BY id"}' "$endpoint" \
+            > "$RUNNER_TEMP/v5-beta-ledger.json"
+          jq -e '.success == true and [.result[0].results[].name] == [
+            "0001_member_platform.sql","0002_member_rhen_drafts.sql",
+            "0003_member_billing.sql","0004_member_rhen_workspaces.sql"]' \
+            "$RUNNER_TEMP/v5-beta-ledger.json" > /dev/null
+          curl --fail --silent --show-error --max-time 20 \
+            -H "Authorization: Bearer $CLOUDFLARE_D1_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d '{"sql":"PRAGMA foreign_key_check"}' "$endpoint" \
+            > "$RUNNER_TEMP/v5-beta-foreign-keys.json"
+          jq -e '.success == true and .result[0].success == true and
+            (.result[0].results | length) == 0' "$RUNNER_TEMP/v5-beta-foreign-keys.json" > /dev/null
+      - name: Deploy ONLY anevum-v5-beta Worker
+        if: github.event_name == 'workflow_dispatch'
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git ls-remote origin refs/heads/main | cut -f1)" = "$GITHUB_SHA"
+          node scripts/verify-v5-beta-deploy.mjs --generated
+          npx wrangler deploy
+      - name: Verify beta URL and anonymous API denial after deployment
+        if: github.event_name == 'workflow_dispatch'
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          base="https://anevum-v5-beta.devonakins.workers.dev"
+          ready=0
+          for attempt in $(seq 1 25); do
+            status="$(curl --silent --show-error --max-time 12 \
+              -o "$RUNNER_TEMP/v5-beta-availability.json" -w '%{http_code}' \
+              "$base/api/member/availability" 2>/dev/null || true)"
+            if [ "$status" = 200 ]; then ready=1; break; fi
+            sleep 5
+          done
+          test "$ready" = 1
+          # Google secrets and beta D1 are now required, so an unavailable
+          # signup is a failed deployment rather than a successful release.
+          jq -e '.available == true and .provider == "google"' \
+            "$RUNNER_TEMP/v5-beta-availability.json" > /dev/null
+          member="$(curl --silent --show-error --max-time 12 \
+            -o /dev/null -w '%{http_code}' "$base/api/member/me")"
+          test "$member" = 401 -o "$member" = 503
+          operator="$(curl --silent --show-error --max-time 12 \
+            -o /dev/null -w '%{http_code}' "$base/api/command/trader/status")"
+          test "$operator" = 401 -o "$operator" = 403 -o "$operator" = 503
+          for route in /api/member/rhen/workspace /api/member/rhen/draft /api/member/export; do
+            denied="$(curl --silent --show-error --max-time 12 \
+              -o /dev/null -w '%{http_code}' "$base$route")"
+            test "$denied" = 401 -o "$denied" = 403 -o "$denied" = 503
+          done
+          # Wrangler preserves encrypted secrets on deploy; verify their
+          # continued presence without accessing plaintext values.
+          api="https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID"
+          curl --fail --silent --show-error --max-time 20 \
+            -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+            "$api/workers/scripts/anevum-v5-beta/secrets" \
+            > "$RUNNER_TEMP/v5-beta-postdeploy-secret-names.json"
+          for name in BETTER_AUTH_SECRET GOOGLE_CLIENT_ID GOOGLE_CLIENT_SECRET; do
+            jq -e --arg name "$name" '
+              .success == true and
+              any(.result[]; .name == $name and .type == "secret_text")
+            ' "$RUNNER_TEMP/v5-beta-postdeploy-secret-names.json" > /dev/null
+          done
+          {
+            echo '## ANEVUM V5 separate beta deployment'
+            echo ''
+            echo 'Worker: anevum-v5-beta'
+            echo 'Database: anevum-v5-beta-members'
+            echo 'Site: https://anevum-v5-beta.devonakins.workers.dev'
+            echo 'Production and reviewer Workers untouched.'
+            echo ''
+            echo 'Verified Google secret bindings, signup availability and'
+            echo 'anonymous member/operator denial. Real two-account OAuth acceptance'
+            echo 'remains a separate gate before inviting external users.'
+          } >> "$GITHUB_STEP_SUMMARY"

@@ -2,10 +2,11 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import {
-  validateRhenDraft, memberRhenDraftSchemaReady,
+  validateRhenDraft, draftExpectedMemberMatches, memberRhenDraftSchemaReady,
   readMemberRhenDraft, saveMemberRhenDraft, deleteMemberRhenDraft
 } from "../src/server/member-rhen-draft.mjs";
 import { memberEndpoint } from "../src/server/member.mjs";
+import { parsePrivateDraftResponse } from "../src/member/private-rhen-draft-contract.ts";
 
 const valid = {
   label: "Long-only research",
@@ -87,4 +88,77 @@ test("member drafts cannot reach RHEN operator endpoint or browser secrets", () 
   assert.doesNotMatch(ui, /api\/command|api\/trader|accessToken|alpacaKey/);
   assert.equal(prod.vars.ANEVUM_MEMBER_RHEN_DRAFTS_ENABLED, "false");
   assert.equal(staging.vars.ANEVUM_MEMBER_RHEN_DRAFTS_ENABLED, "true");
+});
+
+
+test("RHEN member draft presentation accepts only exact non-executing, long-only fields",()=>{
+  const safe={
+    available:true,executionEnabled:false,brokerageConnected:false,
+    draft:{
+      label:"Own long-only research",marketScope:"us_equities_etfs",direction:"long_only",
+      maxOpenPositions:2,maxTotalExposurePercent:30,maxPositionPercent:10,
+      updatedAt:"2026-10-11 10:12:22"
+    }
+  };
+  const result=parsePrivateDraftResponse(safe,true);
+  assert.equal(result.draft.label,safe.draft.label);
+  assert.equal(Object.isFrozen(result),true);
+  assert.equal(Object.isFrozen(result.draft),true);
+  assert.equal(parsePrivateDraftResponse({...safe,draft:null}).draft,null);
+  assert.throws(()=>parsePrivateDraftResponse({...safe,draft:null},true));
+  const bad=[
+    {...safe,executionEnabled:true},
+    {...safe,brokerageConnected:true},
+    {...safe,brokerage:{token:"private"}},
+    {...safe,draft:{...safe.draft,secret:"broker-private"}},
+    {...safe,draft:{...safe.draft,direction:"short"}},
+    {...safe,draft:{...safe.draft,marketScope:"crypto"}},
+    {...safe,draft:{...safe.draft,label:""}},
+    {...safe,draft:{...safe.draft,maxPositionPercent:40}},
+    {...safe,draft:{...safe.draft,maxOpenPositions:100}},
+    {...safe,draft:{...safe.draft,updatedAt:"javascript:alert(1)"}}
+  ];
+  for(const value of bad)assert.throws(()=>parsePrivateDraftResponse(value));
+});
+
+test("RHEN draft editor is member-keyed, abortable and server-rechecked before any write",()=>{
+  const app=readFileSync(new URL("../src/pages/RhenApp.tsx",import.meta.url),"utf8");
+  const ui=readFileSync(new URL("../src/pages/RhenDraft.tsx",import.meta.url),"utf8");
+  const server=readFileSync(new URL("../src/server/member.mjs",import.meta.url),"utf8");
+  assert.match(app,/<RhenMemberWorkspace key=\{session\.user\.id\} memberId=\{session\.user\.id\}/);
+  assert.match(app,/<RhenDraft key=\{memberId\} expectedMemberId=\{memberId\}/);
+  assert.match(ui,/controller\.abort\(\)/);
+  assert.match(ui,/scope\.current === controller/);
+  assert.match(ui,/method: "GET", credentials: "same-origin"/);
+  assert.match(ui,/method: "PUT", credentials: "same-origin"/);
+  assert.match(ui,/method: "DELETE", credentials: "same-origin"/);
+  assert.match(ui,/signal: controller\.signal/);
+  assert.match(ui,/parsePrivateDraftResponse\(await response\.json\(\), true\)/);
+  assert.match(ui,/X-ANEVUM-EXPECTED-MEMBER-ID/);
+  assert.match(server,/!draftExpectedMemberMatches\(request, user\.id\)/);
+  assert.match(server,/return reply\(\{ message: "Authenticated member changed\. Reload your draft\." \}, 409\)/);
+  assert.match(server,/saveMemberRhenDraft\(db, user\.id, draft\)/);
+  assert.match(server,/deleteMemberRhenDraft\(db, user\.id\)/);
+  assert.doesNotMatch(ui,/\/v2\/orders|\/api\/command|accessToken|alpacaKey|executeOrder/);
+});
+
+
+test("stale-account write guard rejects mismatched IDs and retains read compatibility",()=>{
+  const make=(method,expected)=>{
+    const url="https://anevum.com/api/member/rhen/draft";
+    return new Request(url,{method,headers:expected===null?{}:
+      {"X-ANEVUM-EXPECTED-MEMBER-ID":expected}});
+  };
+  assert.equal(draftExpectedMemberMatches(make("PUT","member-a"),"member-a"),true);
+  assert.equal(draftExpectedMemberMatches(make("DELETE","member-a"),"member-b"),false);
+  assert.equal(draftExpectedMemberMatches(make("PUT",""),"member-a"),false);
+  assert.equal(draftExpectedMemberMatches(make("PUT",null),"member-a"),true);
+  assert.equal(draftExpectedMemberMatches(make("PUT","member-a"),""),false);
+  const backend=readFileSync(new URL("../src/server/member.mjs",import.meta.url),"utf8");
+  const route=backend.slice(backend.indexOf('if (pathname === "/api/member/rhen/draft")'));
+  assert.ok(route.indexOf('ANEVUM_MEMBER_RHEN_DRAFTS_ENABLED')>=0);
+  assert.ok(route.indexOf('ANEVUM_MEMBER_RHEN_DRAFTS_ENABLED')<
+    route.indexOf('!draftExpectedMemberMatches(request, user.id)'));
+  assert.ok(route.indexOf('!draftExpectedMemberMatches(request, user.id)')<
+    route.indexOf('saveMemberRhenDraft(db, user.id, draft)'));
 });

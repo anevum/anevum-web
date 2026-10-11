@@ -1,0 +1,33 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "anevum-v5-beta",
+  "main": "./worker.mjs",
+  "compatibility_date": "2026-09-25",
+  "workers_dev": true,
+  "preview_urls": false,
+  "vars": {
+    "COMMAND_AUTH_MODE": "cloudflare_access",
+    "COMMAND_LIVE_STREAM_ENABLED": "false",
+    "ANEVUM_MEMBERS_ENABLED": "true",
+    "ANEVUM_MEMBER_RHEN_DRAFTS_ENABLED": "true",
+    "ANEVUM_MEMBER_PREVIEW_ENABLED": "true",
+    "MEMBER_PREVIEW_ORIGIN": "https://anevum-v5-beta.devonakins.workers.dev",
+    "ANEVUM_V5_WORKSPACES_ENABLED": "true",
+    "ANEVUM_OWNER_PAPER_OBSERVER_ENABLED": "false",
+    "ANEVUM_ALPACA_REVIEW_CONNECT_ENABLED": "false",
+    "ANEVUM_COMMONS_SOCIAL_PILOT_ENABLED": "false"
+  },
+  "assets": {
+    "binding": "ASSETS",
+    "run_worker_first": true,
+    "not_found_handling": "single-page-application"
+  },
+  "d1_databases": [
+    {
+      "binding": "MEMBER_DB",
+      "database_name": "anevum-v5-beta-members",
+      "database_id": "b2f9b4ad-4b97-483c-ae78-5dc7c8da76bf",
+      "migrations_dir": "migrations"
+    }
+  ]
+}

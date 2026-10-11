@@ -1,47 +1,42 @@
-import { lazy, Suspense, useEffect, useLayoutEffect, type ReactNode } from "react";
+import { lazy, Suspense, useEffect, useLayoutEffect } from "react";
 import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { OverflowPan } from "./components/OverflowPan";
-import { PublicShell } from "./components/Shell";
 import { fieldNotes } from "./data/fieldNotes";
 import { currentRhenRelease, rhenReleaseBySlug } from "./data/releases";
 
 const RhenTerminal = lazy(() => import("./pages/RhenTerminal"));
 const Command = lazy(() => import("./pages/Command"));
-const HomeCompany = lazy(() => import("./pages/HomeCompany"));
-const Products = lazy(() => import("./pages/Products"));
-const RhenProduct = lazy(() => import("./pages/RhenProduct"));
-const Feed = lazy(() => import("./pages/Feed"));
-const Live = lazy(() => import("./pages/Live"));
-const ResearchHub = lazy(() => import("./pages/ResearchHub"));
-const FieldNoteDetail = lazy(() => import("./pages/FieldNoteDetail"));
-const Architecture = lazy(() => import("./pages/Architecture"));
-const Founder = lazy(() => import("./pages/Founder"));
-const Resume = lazy(() => import("./pages/Resume"));
-const Releases = lazy(() => import("./pages/Releases"));
-const ReleaseDetail = lazy(() => import("./pages/ReleaseDetail"));
-const SignIn = lazy(() => import("./pages/SignIn"));
+const CommonsV5 = lazy(() => import("./commons/CommonsV5"));
 const MemberHome = lazy(() => import("./pages/MemberHome"));
 const MemberSettings = lazy(() => import("./pages/MemberSettings"));
+const MemberBeta = lazy(() => import("./pages/MemberBeta"));
+const StudioDashboard = lazy(() => import("./pages/StudioDashboard"));
 const MemberRewards = lazy(() => import("./pages/MemberRewards"));
 const MemberStagingVerify = lazy(() => import("./pages/MemberStagingVerify"));
 const RhenApp = lazy(() => import("./pages/RhenApp"));
-const Privacy = lazy(() => import("./pages/Privacy"));
-const Terms = lazy(() => import("./pages/Terms"));
+const RhenReviewConnect = lazy(() => import("./pages/RhenReviewConnect"));
 
 const titles: Record<string, string> = {
-  "/": "ANEVUM — Independent Software",
+  "/": "The Commons — ANEVUM",
+  "/communities": "Topics — ANEVUM Commons",
+  "/learn": "Learning — ANEVUM Commons",
   "/products": "Projects — ANEVUM",
+  "/beta": "Join the ANEVUM Beta — ANEVUM",
   "/feed": "Updates — ANEVUM",
   "/field-notes": "Field Notes — ANEVUM",
+  "/updates": "Studio updates — ANEVUM",
+  "/studio": "ANEVUM Studio — Administration",
   "/products/rhen": "RHEN — ANEVUM",
   "/products/rhen/evidence": "RHEN Public Evidence — ANEVUM",
   "/products/rhen/architecture": "RHEN Architecture — ANEVUM",
   "/products/rhen/releases": "RHEN Releases — ANEVUM",
   "/about": "About — ANEVUM",
+  "/help": "Help — ANEVUM Commons",
   "/resume": "Résumé — ANEVUM",
   "/sign-in": "Sign in — ANEVUM",
   "/me": "Command — ANEVUM",
   "/me/settings": "Account settings — ANEVUM",
+  "/me/beta": "Member beta checklist — ANEVUM",
   "/me/rewards": "Member rewards — ANEVUM",
   "/me/verify": "Staging verification — ANEVUM",
   "/privacy": "Privacy — ANEVUM",
@@ -49,24 +44,50 @@ const titles: Record<string, string> = {
 };
 
 const descriptions: Record<string, string> = {
-  "/": "Independent software built against real problems, with real data, public evidence, and versioned work.",
+  "/": "The Commons is ANEVUM's evolving community for builders and researchers. Explore real first-party publications and RHEN development.",
+  "/communities": "Browse real published ANEVUM work by topic. Public community discussions are still in development.",
+  "/learn": "Learn from published ANEVUM research methods, experiments and engineering decisions.",
   "/products": "The canonical registry of public ANEVUM products. Products appear when they actually exist.",
-  "/feed": "A chronological ANEVUM record assembled from real releases, Field Notes, public-safe runtime observations, and research decisions.",
+  "/beta": "Explore ANEVUM member features, account sign-up and the private RHEN beta without requiring a broker.",
+  "/feed": "Published ANEVUM Field Notes. New community posting and social interactions remain in development.",
   "/field-notes": "ANEVUM Field Notes document research decisions, failures, engineering changes, releases, and measured evidence.",
-  "/products/rhen": "RHEN is ANEVUM's live trading and research system operating on real market data with public evidence and narrow live authority.",
-  "/products/rhen/evidence": "Inspect sanitized RHEN runtime and performance evidence without exposing protected broker, position, order, or strategy details.",
+  "/updates": "Real published project updates and AHA posts from ANEVUM Studio.",
+  "/studio": "Owner and administrator editorial management.",
+  "/products/rhen": "RHEN is ANEVUM's research application under V5 reconstruction. Legacy live trading is suspended; member brokerage and execution are not available.",
+  "/products/rhen/evidence": "RHEN V5 rebuild and historical public evidence; no active legacy trading telemetry.",
   "/products/rhen/architecture": "Inspect RHEN execution, research, replay, forecasting, control, storage, and evidence boundaries.",
   "/products/rhen/releases": "RHEN release records document production changes, verification, limitations, and public system history.",
   "/about": "About ANEVUM, the independently built and operated software studio.",
+  "/help": "Help with ANEVUM public research, member accounts, privacy and RHEN availability.",
   "/resume": "Professional résumé and background for the person responsible for ANEVUM.",
   "/sign-in": "ANEVUM account access.",
   "/me": "Your private ANEVUM project library and follows.",
   "/me/settings": "Private ANEVUM profile and account settings.",
+  "/me/beta": "Private member tools and test availability.",
   "/me/rewards": "Status and future plans for ANEVUM member rewards.",
   "/me/verify": "Private read-only staging member account security checks.",
   "/privacy": "ANEVUM privacy information.",
   "/terms": "ANEVUM website terms."
 };
+
+const publishedPublicPaths = new Set([
+  "/", "/products", "/beta", "/feed", "/field-notes", "/updates", "/communities", "/learn",
+  "/products/rhen", "/products/rhen/evidence", "/products/rhen/architecture",
+  "/products/rhen/releases", "/about", "/help", "/resume", "/privacy", "/terms"
+]);
+
+function isPublishedPublicPath(pathname: string) {
+  if (publishedPublicPaths.has(pathname)) return true;
+  if (/^\/updates\/[a-z0-9-]{1,96}$/.test(pathname)) return true;
+  if (pathname.startsWith("/field-notes/")) {
+    const slug = pathname.slice("/field-notes/".length);
+    return fieldNotes.some(note => note.slug === slug);
+  }
+  if (pathname.startsWith("/products/rhen/releases/")) {
+    return Boolean(rhenReleaseBySlug(pathname.slice("/products/rhen/releases/".length)));
+  }
+  return false;
+}
 
 function ensureMeta(selector: string, create: () => HTMLElement, content: string) {
   let node = document.head.querySelector(selector) as HTMLElement | null;
@@ -77,7 +98,7 @@ function ensureMeta(selector: string, create: () => HTMLElement, content: string
   node.setAttribute("content", content);
 }
 
-function setRouteMeta(pathname: string, title: string, description: string, protectedRoute: boolean) {
+function setRouteMeta(pathname: string, title: string, description: string, indexable: boolean) {
   const canonicalUrl = "https://anevum.com" + (pathname === "/" ? "/" : pathname);
   document.title = title;
   document.documentElement.dataset.route = pathname.replace(/^\//, "") || "home";
@@ -92,12 +113,12 @@ function setRouteMeta(pathname: string, title: string, description: string, prot
     const meta = document.createElement("meta");
     meta.setAttribute("name", "robots");
     return meta;
-  }, protectedRoute ? "noindex,nofollow" : "index,follow,max-image-preview:large");
+  }, indexable ? "index,follow,max-image-preview:large" : "noindex,nofollow,noarchive");
 
   for (const [property, value] of [
     ["og:title", title],
     ["og:description", description],
-    ["og:url", canonicalUrl],
+    ["og:url", indexable ? canonicalUrl : "https://anevum.com/"],
     ["twitter:title", title],
     ["twitter:description", description]
   ]) {
@@ -113,12 +134,18 @@ function setRouteMeta(pathname: string, title: string, description: string, prot
   }
 
   let canonical = document.head.querySelector('link[rel="canonical"]') as HTMLLinkElement | null;
-  if (!canonical) {
-    canonical = document.createElement("link");
-    canonical.rel = "canonical";
-    document.head.appendChild(canonical);
+  if (!indexable) {
+    // Private, moderator and missing pages must not advertise an indexable
+    // canonical URL, even when the client navigates from a public page.
+    canonical?.remove();
+  } else {
+    if (!canonical) {
+      canonical = document.createElement("link");
+      canonical.rel = "canonical";
+      document.head.appendChild(canonical);
+    }
+    canonical.href = canonicalUrl;
   }
-  canonical.href = canonicalUrl;
 }
 
 function RouteEffects() {
@@ -132,7 +159,11 @@ function RouteEffects() {
 
   useEffect(() => {
     const path = location.pathname;
-    const protectedRoute = path.startsWith("/command") || path === "/sign-in" || path.startsWith("/me") || path.startsWith("/apps/");
+    // Dynamic Studio detail pages remain noindex until server-verified per-entry metadata ships.
+    const protectedRoute = path.startsWith("/updates/") || path.startsWith("/studio") || path.startsWith("/command") || path === "/sign-in" ||
+      path.startsWith("/me") || path.startsWith("/apps/") ||
+      path === "/communities/moderation";
+    const missingRoute = !protectedRoute && !isPublishedPublicPath(path);
     let title = titles[path] || "ANEVUM — Independent Software";
     let description = descriptions[path] || descriptions["/"];
 
@@ -147,6 +178,9 @@ function RouteEffects() {
       const release = rhenReleaseBySlug(slug);
       title = release ? "RHEN " + release.version + " — " + release.codename + " — ANEVUM" : "RHEN Releases — ANEVUM";
       description = release ? "Public release record for RHEN " + release.version + " " + release.codename + ", including production changes, verification, and limits." : descriptions["/products/rhen/releases"];
+    } else if (path.startsWith("/updates/")) {
+      title = "Studio publication — ANEVUM";
+      description = "Publicly published ANEVUM update.";
     } else if (path.startsWith("/field-notes/")) {
       const slug = path.slice("/field-notes/".length);
       const note = fieldNotes.find((item) => item.slug === slug);
@@ -157,7 +191,11 @@ function RouteEffects() {
       title = "RHEN Releases — " + current.version + " " + current.codename + " — ANEVUM";
     }
 
-    setRouteMeta(path, title, description, protectedRoute);
+    if (missingRoute) {
+      title = "Page not found — ANEVUM";
+      description = "No published ANEVUM page or record exists at this address.";
+    }
+    setRouteMeta(path, title, description, !protectedRoute && !missingRoute);
   }, [location.pathname]);
 
   return null;
@@ -193,10 +231,6 @@ function Loader() {
   return <div className="route-loader"><span>ANEVUM</span><i /></div>;
 }
 
-function PublicExperience({ children }: { children: ReactNode }) {
-  return <PublicShell><Suspense fallback={<Loader />}>{children}</Suspense></PublicShell>;
-}
-
 export default function App() {
   return (
     <>
@@ -204,29 +238,39 @@ export default function App() {
       <RouteScrollReset />
       <OverflowPan />
       <Routes>
-        <Route path="/" element={<PublicExperience><HomeCompany /></PublicExperience>} />
-        <Route path="/products" element={<PublicExperience><Products /></PublicExperience>} />
-        <Route path="/feed" element={<PublicExperience><Feed /></PublicExperience>} />
-        <Route path="/field-notes" element={<PublicExperience><ResearchHub /></PublicExperience>} />
-        <Route path="/field-notes/:slug" element={<PublicExperience><FieldNoteDetail /></PublicExperience>} />
-        <Route path="/about" element={<PublicExperience><Founder /></PublicExperience>} />
-        <Route path="/resume" element={<PublicExperience><Resume /></PublicExperience>} />
-        <Route path="/privacy" element={<PublicExperience><Privacy /></PublicExperience>} />
-        <Route path="/terms" element={<PublicExperience><Terms /></PublicExperience>} />
-        <Route path="/sign-in" element={<PublicExperience><SignIn /></PublicExperience>} />
-        <Route path="/me" element={<PublicExperience><MemberHome /></PublicExperience>} />
-        <Route path="/me/settings" element={<PublicExperience><MemberSettings /></PublicExperience>} />
-        <Route path="/me/rewards" element={<PublicExperience><MemberRewards /></PublicExperience>} />
-        <Route path="/me/verify" element={<PublicExperience><MemberStagingVerify /></PublicExperience>} />
+        <Route path="/" element={<Suspense fallback={<Loader />}><CommonsV5 /></Suspense>} />
+        <Route path="/products" element={<Suspense fallback={<Loader />}><CommonsV5 /></Suspense>} />
+        <Route path="/beta" element={<Suspense fallback={<Loader />}><CommonsV5 /></Suspense>} />
+        <Route path="/feed" element={<Suspense fallback={<Loader />}><CommonsV5 /></Suspense>} />
+        <Route path="/field-notes" element={<Suspense fallback={<Loader />}><CommonsV5 /></Suspense>} />
+        <Route path="/updates" element={<Suspense fallback={<Loader />}><CommonsV5 /></Suspense>} />
+        <Route path="/updates/:slug" element={<Suspense fallback={<Loader />}><CommonsV5 /></Suspense>} />
+        <Route path="/communities" element={<Suspense fallback={<Loader />}><CommonsV5 /></Suspense>} />
+        <Route path="/communities/moderation" element={<Suspense fallback={<Loader />}><CommonsV5 /></Suspense>} />
+        <Route path="/learn" element={<Suspense fallback={<Loader />}><CommonsV5 /></Suspense>} />
+        <Route path="/field-notes/:slug" element={<Suspense fallback={<Loader />}><CommonsV5 /></Suspense>} />
+        <Route path="/about" element={<Suspense fallback={<Loader />}><CommonsV5 /></Suspense>} />
+        <Route path="/help" element={<Suspense fallback={<Loader />}><CommonsV5 /></Suspense>} />
+        <Route path="/resume" element={<Suspense fallback={<Loader />}><CommonsV5 /></Suspense>} />
+        <Route path="/privacy" element={<Suspense fallback={<Loader />}><CommonsV5 /></Suspense>} />
+        <Route path="/terms" element={<Suspense fallback={<Loader />}><CommonsV5 /></Suspense>} />
+        <Route path="/sign-in" element={<Suspense fallback={<Loader />}><CommonsV5 /></Suspense>} />
+        <Route path="/me" element={<Suspense fallback={<Loader />}><CommonsV5 content={<MemberHome />} /></Suspense>} />
+        <Route path="/me/settings" element={<Suspense fallback={<Loader />}><CommonsV5 content={<MemberSettings />} /></Suspense>} />
+        <Route path="/me/beta" element={<Suspense fallback={<Loader />}><CommonsV5 content={<MemberBeta />} /></Suspense>} />
+        <Route path="/me/rewards" element={<Suspense fallback={<Loader />}><CommonsV5 content={<MemberRewards />} /></Suspense>} />
+        <Route path="/me/verify" element={<Suspense fallback={<Loader />}><CommonsV5 content={<MemberStagingVerify />} /></Suspense>} />
+        <Route path="/studio" element={<Suspense fallback={<Loader />}><CommonsV5 content={<StudioDashboard />} /></Suspense>} />
         <Route path="/apps/rhen/terminal/*" element={<LegacyRhenOperatorRoute />} />
         <Route path="/apps/rhen/command/*" element={<LegacyRhenOperatorRoute />} />
-        <Route path="/apps/rhen/*" element={<Suspense fallback={<Loader />}><RhenApp /></Suspense>} />
+        <Route path="/apps/rhen/connect" element={<Suspense fallback={<Loader />}><CommonsV5 content={<RhenReviewConnect />} /></Suspense>} />
+        <Route path="/apps/rhen/*" element={<Suspense fallback={<Loader />}><CommonsV5 content={<RhenApp />} /></Suspense>} />
 
-        <Route path="/products/rhen" element={<PublicExperience><RhenProduct /></PublicExperience>} />
-        <Route path="/products/rhen/evidence" element={<PublicExperience><Live /></PublicExperience>} />
-        <Route path="/products/rhen/architecture" element={<PublicExperience><Architecture /></PublicExperience>} />
-        <Route path="/products/rhen/releases" element={<PublicExperience><Releases /></PublicExperience>} />
-        <Route path="/products/rhen/releases/:slug" element={<PublicExperience><ReleaseDetail /></PublicExperience>} />
+        <Route path="/products/rhen" element={<Suspense fallback={<Loader />}><CommonsV5 /></Suspense>} />
+        <Route path="/products/rhen/evidence" element={<Suspense fallback={<Loader />}><CommonsV5 /></Suspense>} />
+        <Route path="/products/rhen/architecture" element={<Suspense fallback={<Loader />}><CommonsV5 /></Suspense>} />
+        <Route path="/products/rhen/releases" element={<Suspense fallback={<Loader />}><CommonsV5 /></Suspense>} />
+        <Route path="/products/rhen/releases/:slug" element={<Suspense fallback={<Loader />}><CommonsV5 /></Suspense>} />
 
         <Route path="/live" element={<Navigate to="/products/rhen/evidence" replace />} />
         <Route path="/performance" element={<Navigate to="/products/rhen/evidence" replace />} />
@@ -242,7 +286,7 @@ export default function App() {
 
         <Route path="/iren" element={<Navigate to="/command/rhen/operate" replace />} />
         <Route path="/private" element={<Navigate to="/command/rhen/operate" replace />} />
-        <Route path="/command" element={<PublicExperience><Command /></PublicExperience>} />
+        <Route path="/command" element={<Suspense fallback={<Loader />}><CommonsV5 content={<Command />} /></Suspense>} />
         <Route path="/command/rhen/*" element={<Suspense fallback={<Loader />}><RhenTerminal /></Suspense>} />
         <Route path="/command/*" element={<LegacyTerminalRedirect />} />
         <Route path="/rhenlink" element={<Navigate to="/command/rhen/operate" replace />} />
@@ -263,7 +307,7 @@ export default function App() {
         <Route path="/lattice" element={<Navigate to="/products" replace />} />
         <Route path="/store" element={<Navigate to="/products" replace />} />
 
-        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route path="*" element={<Suspense fallback={<Loader />}><CommonsV5 /></Suspense>} />
       </Routes>
     </>
   );

@@ -464,3 +464,22 @@
 .command-v4-public{display:grid;gap:12px}
 .command-v4-public .command-v4-two{margin-top:0}
 
+
+
+/* V5 owner-only GitHub workflow evidence; not a deployment or broker widget. */
+.command-v4-github-disclaimer{
+  margin:0;padding:12px 14px;color:var(--v4-dim);
+  font-size:.8125rem;line-height:1.5;overflow-wrap:anywhere;
+}
+.command-v4-github-row>*{min-width:0;overflow-wrap:anywhere}
+.command-v4-github-row a{color:inherit;text-decoration:underline;text-underline-offset:3px}
+.command-v4-github-row a:focus-visible{outline:2px solid currentColor;outline-offset:3px}
+
+/* Owner V5 integration observer: narrow screens never hide provider state. */
+.command-v4-infra-group{padding:4px 0;border-top:1px solid var(--v4-line-soft)}
+.command-v4-infra-group h3{margin:0;padding:12px 14px;font-size:.875rem;font-weight:650}
+.command-v4-infra-row>*{min-width:0;overflow-wrap:anywhere}
+@media (max-width:480px){
+  .command-v4-infra-row>*{text-align:left}
+  .command-v4-infra-row b{text-align:left}
+}

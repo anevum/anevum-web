@@ -4,11 +4,14 @@ on:
   push:
     branches: [main]
   pull_request:
-    branches: [main]
+    branches: [main, build/commons-v5-shell-20261009, build/anevum-v5-foundation-web-contracts-20261009, build/commons-v5-stage2-sitewide-20261010, build/commons-v5-stage2-integrated-20261010, build/commons-v5-alpaca-review-connect-20261010, build/commons-v5-private-rhen-parity-20261010, build/commons-v5-member-discussions-20261010, build/commons-v5-moderation-audit-20261010, build/commons-v5-alpaca-review-readonly-ui-20261010]
 
 concurrency:
   group: anevum-verify-${{ github.ref }}
   cancel-in-progress: true
+
+permissions:
+  contents: read
 
 jobs:
   verify:
@@ -25,7 +28,7 @@ jobs:
         with:
           python-version: "3.12"
       - name: Install PDF renderer
-        run: pip install "weasyprint==68.0" "Pillow==11.3.0"
+        run: pip install "weasyprint==68.0" "Pillow==11.3.0" "cryptography==45.0.7"
       - name: Synchronize RHEN release artifacts
         run: node scripts/sync-release-artifacts.mjs
       - name: Render RHEN release packets
@@ -42,12 +45,44 @@ jobs:
         run: node --experimental-strip-types --test tests/command-topology.test.mjs tests/command-operations.test.mjs tests/command-trading.test.mjs tests/command-research.test.mjs tests/equity-market-time.test.mjs tests/visual-ops.test.mjs tests/command-live.test.mjs tests/reconciliation-visibility.test.mjs tests/rhen-realtime.test.mjs tests/public-feed-sse.test.mjs
       - name: Verify member boundaries
         run: npm run test:members
+      - name: Verify ANEVUM V5 Foundation workspace contract
+        run: npm run test:foundation
+      - name: Capture V5 reachability evidence
+        if: github.event_name == 'pull_request'
+        shell: bash
+        run: |
+          set -euo pipefail
+          node scripts/audit-v5-source-reachability.mjs --json > "$RUNNER_TEMP/anevum-v5-source-reachability.json"
+          jq -e '(.version == "anevum.v5.source-reachability.v1") and ((.runtimeUnresolved | length) == 0) and (.counts.pages >= 30)' "$RUNNER_TEMP/anevum-v5-source-reachability.json" > /dev/null
+          jq -c '{counts, runtimeDynamicCount: (.runtimeDynamic | length), runtimeUnresolvedCount: (.runtimeUnresolved | length)}' "$RUNNER_TEMP/anevum-v5-source-reachability.json"
+          node scripts/audit-v5-legacy-page-retention.mjs --json > "$RUNNER_TEMP/anevum-v5-legacy-page-retention.json"
+          jq -e '(.version == "anevum.v5.legacy-page-retention.v1") and (.deletionAuthorized == false) and ((.runtimeUnresolved | length) == 0)' "$RUNNER_TEMP/anevum-v5-legacy-page-retention.json" > /dev/null
+          jq -c '{counts, deletionAuthorized}' "$RUNNER_TEMP/anevum-v5-legacy-page-retention.json"
+      - name: Enforce pinned WEB/RHEN cross-repository workspace schema parity
+        # Public GitHub REST unauthenticated IP rate limits can return 403 in
+        # Actions runners; authenticate this read-only pinned branch check.
+        # The validator itself still fails closed on unexpected SHA or bytes.
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: node scripts/verify-v5-cross-repo-schema.mjs
+      - name: Enforce one guarded production Worker deployment
+        run: node --test tests/v5-verify-deploy-safety.test.mjs
       - name: Verify member D1 binding isolation
-        run: node --test tests/member-bindings.test.mjs tests/member-staging.test.mjs tests/member-preview-migration.test.mjs tests/member-command-cutover.test.mjs tests/member-command-navigation.test.mjs && node scripts/verify-member-bindings.mjs --require-config
+        run: node --test tests/member-bindings.test.mjs tests/member-staging.test.mjs tests/member-preview-migration.test.mjs tests/preview-d1-ledger-lineage.test.mjs tests/member-command-cutover.test.mjs tests/member-command-navigation.test.mjs && node scripts/verify-member-bindings.mjs --require-config
       - name: Verify Cloudflare Command Access cutover safety (offline)
         run: python -m unittest discover -s tests -p 'test_command_access_cutover.py' -v
+      - name: Verify isolated reviewer staging cannot change production
+        run: node --test tests/v5-alpaca-review-staging.test.mjs && node scripts/verify-v5-alpaca-review-staging.mjs
       - name: Verify member schema and tenant separation
         run: python scripts/verify-member-schema.py
+      - name: Rehearse all V5 preview D1 migration contracts offline
+        run: python scripts/verify-v5-preview-schema-rehearsal.py
+      - name: Verify D1 SQL export restore safety with synthetic accounts only
+        run: python scripts/verify-v5-preview-export-backup.py selftest
+      - name: Verify production release recovery using synthetic accounts only
+        run: |
+          python scripts/verify-v5-production-backup.py selftest
+          node --test tests/v5-production-release.test.mjs
       - name: Typecheck and build
         run: npm run build
       - name: Verify generated artifacts
@@ -156,6 +191,11 @@ jobs:
           node scripts/codex-handoff-browser-qa.mjs
           node scripts/visual-ops-browser-qa.mjs
           node scripts/member-command-browser-qa.mjs
+          node scripts/member-settings-browser-qa.mjs
+          node scripts/member-beta-browser-qa.mjs
+          node scripts/moderation-review-browser-qa.mjs
+          node scripts/discussion-lifecycle-browser-qa.mjs
+          node scripts/private-rhen-browser-qa.mjs
       - name: Visual review contact sheets
         if: github.event_name == 'pull_request'
         run: python scripts/visual-ops-contact-sheet.py
@@ -166,22 +206,54 @@ jobs:
         run: |
           set -euo pipefail
           evidence="$RUNNER_TEMP/anevum-visuals"
-          for name in home products feed rhen terminal research field-note architecture about resume releases; do
+          for name in home products feed rhen terminal research field-note architecture about resume releases release-detail rhen-review-disclosure; do
             test -s "$evidence/$name-desktop.png"
             test -s "$evidence/$name-mobile.png"
             test -s "$evidence/$name-rendered.html"
           done
-          grep -Fq 'truth-home' "$evidence/home-rendered.html"
-          grep -Fq 'A place for things I build.' "$evidence/home-rendered.html"
-          grep -Fq 'truth-products-page' "$evidence/products-rendered.html"
-          grep -Fq 'truth-rhen-page' "$evidence/rhen-rendered.html"
-          grep -Fq 'studio-about-page' "$evidence/about-rendered.html"
-          grep -Fq 'feed-page' "$evidence/feed-rendered.html"
-          grep -Fq 'studio-releases-page' "$evidence/releases-rendered.html"
-          grep -Fq 'public-terminal-page' "$evidence/terminal-rendered.html"
-          grep -Fq 'RESEARCH' "$evidence/terminal-rendered.html"
-          grep -Fq 'REPLAY' "$evidence/terminal-rendered.html"
+          for width in 320 390 768 1024 1440; do
+            test -s "$evidence/member-settings-member-$width.png"
+            test -s "$evidence/moderation-review-review-$width.png"
+            test -s "$evidence/moderation-review-form-$width.png"
+            test -s "$evidence/discussion-composer-$width.png"
+            test -s "$evidence/discussion-lifecycle-$width.png"
+            for section in overview account setup evidence research updates; do
+              test -s "$evidence/private-rhen-$section-member-$width.png"
+            done
+          done
+          for state in disabled signed-out crossed malformed failed-load failed-save switch late-load auth-errors; do
+            test -s "$evidence/member-settings-$state-390.png"
+          done
+          for state in signed-out disabled denied unavailable malformed crossed capped wrong-report wrong-decision wrong-reviewer audit-missing execution-enabled conflict network revoked switch late-load; do
+            test -s "$evidence/moderation-review-$state-390.png"
+          done
+          for state in signed-out disabled off denied malformed crossed invalid-cursor pages page-error duplicate-page bad-replies wrong-write network-write quota wrong-report wrong-remove revoked late-feed late-replies switch-write; do
+            test -s "$evidence/discussion-$state-390.png"
+          done
+          grep -Fq 'anevum-commons-v5-mount' "$evidence/home-rendered.html"
+          grep -Fq 'Public ANEVUM work' "$evidence/home-rendered.html"
+          grep -Fq 'c2-project' "$evidence/products-rendered.html"
+          grep -Fq 'Legacy live trading is suspended' "$evidence/rhen-rendered.html"
+          grep -Fq 'c2-about' "$evidence/about-rendered.html"
+          grep -Fq 'post-list' "$evidence/feed-rendered.html"
+          grep -Fq 'Release history' "$evidence/releases-rendered.html"
+          grep -Fq 'c2-evidence' "$evidence/terminal-rendered.html"
+          grep -Fq 'SUSPENDED_FOR_REBUILD' "$evidence/terminal-rendered.html"
+          grep -Fq 'Replay' "$evidence/terminal-rendered.html"
           grep -Fq 'RHEN' "$evidence/terminal-rendered.html"
+          grep -Fq 'Authorize RHEN by ANEVUM' "$evidence/rhen-review-disclosure-rendered.html"
+          grep -Fq 'REQUIRED AUTHORIZATION DISCLOSURE' "$evidence/rhen-review-disclosure-rendered.html"
+
+      - name: Upload V5 reachability evidence
+        if: github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: anevum-v5-source-reachability
+          path: |
+            ${{ runner.temp }}/anevum-v5-source-reachability.json
+            ${{ runner.temp }}/anevum-v5-legacy-page-retention.json
+          retention-days: 3
+          if-no-files-found: error
 
       - name: Upload browser QA
         if: github.event_name == 'pull_request'

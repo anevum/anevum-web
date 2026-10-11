@@ -15,12 +15,27 @@ const draft = (label, count = 1) => ({
   maxOpenPositions: count, maxTotalExposurePercent: 30,
   maxPositionPercent: 10, updatedAt: "2026-10-08"
 });
+const workspace=(memberId,suffix)=>({
+  schema_version:"anevum.workspace-state.v1",
+  workspace_id:"wrk_"+suffix.repeat(32),
+  member_id:memberId,workspace_kind:"MEMBER_PRIVATE",engine_source:"RHEN_NEXT",
+  evidence_state:"NOT_CONFIGURED",execution_permission:"NONE",
+  broker_link_state:"NOT_LINKED",capabilities:["VIEW"],updated_at:"2026-10-11T10:00:00Z"
+});
 
-function fakeStaging({ brokenExport = false, sharedDrafts = false } = {}) {
+function fakeStaging({ brokenExport = false, sharedDrafts = false,
+  wrongWorkspaceOwner = false, sharedWorkspace = false, unprovisionedB = false,
+  missingWorkspaceExport = false, invalidWorkspaceTimestamp = false } = {}) {
   const members = {
-    "private-A": { user: { id: "member-A", email: "a@example.test" }, draft: null, saved: false },
-    "private-B": { user: { id: "member-B", email: "b@example.test" }, draft: draft("My existing B draft", 3), saved: true }
+    "private-A": { user: { id: "member-A", email: "a@example.test" },
+      draft: null, saved: false, workspace:workspace("member-A","a") },
+    "private-B": { user: { id: "member-B", email: "b@example.test" },
+      draft: draft("My existing B draft", 3), saved: true,
+      workspace:unprovisionedB?null:workspace(wrongWorkspaceOwner?"member-A":"member-B",sharedWorkspace?"a":"b") }
   };
+  if (invalidWorkspaceTimestamp && members["private-A"].workspace) {
+    members["private-A"].workspace.updated_at = "unverified";
+  }
   let sharedDraft = null;
   const requests = [];
   const fetcher = async (url, options) => {
@@ -38,8 +53,15 @@ function fakeStaging({ brokenExport = false, sharedDrafts = false } = {}) {
     if (!member) return reply({ message: "Sign in required" }, 401);
     if (path === "/api/member/saved-apps/rhen") {
       if (options.headers.Origin !== STAGING_ORIGIN) return reply({ message: "Denied" }, 403);
+      if (options.headers["X-ANEVUM-EXPECTED-MEMBER-ID"] !== undefined &&
+          options.headers["X-ANEVUM-EXPECTED-MEMBER-ID"] !== member.user.id)
+        return reply({ message: "Authenticated member changed" }, 409);
       member.saved = options.method === "PUT";
-      return reply({ saved: member.saved });
+      return reply({ saved: member.saved, slug: "rhen" });
+    }
+    if (path === "/api/member/rhen/workspace") {
+      assert.equal(options.method,"GET","Live two-user acceptance must not provision a workspace implicitly");
+      return reply({available:true,workspace:member.workspace});
     }
     if (path === "/api/member/rhen/draft") {
       if (options.method === "PUT" || options.method === "DELETE") {
@@ -69,7 +91,8 @@ function fakeStaging({ brokenExport = false, sharedDrafts = false } = {}) {
     if (path === "/api/member/export") return reply({
       identity: brokenExport && cookie === "private-B"
         ? members["private-A"].user : member.user,
-      rhenDraft: sharedDrafts ? sharedDraft : member.draft
+      rhenDraft: sharedDrafts ? sharedDraft : member.draft,
+      ...(missingWorkspaceExport ? {} : { rhenWorkspace:member.workspace })
     });
     if (path === "/api/member/rewards") return reply({
       program: "not_launched", earningEnabled: false,
@@ -97,6 +120,8 @@ test("two distinct signed-in sessions pass read-only acceptance without leaked i
   const report = await runAcceptance({ ...credentials, request: stage.fetcher });
   assert.equal(report.ok, true);
   assert.equal(report.writesExercised, false);
+  assert.equal(report.workspaceIsolationProven, true);
+  assert.ok(report.checks.includes("two-account private RHEN workspace identities are distinct"));
   assert.ok(report.tested > 15);
   assert.equal(stage.members["private-A"].draft, null);
   assert.equal(stage.members["private-B"].draft.label, "My existing B draft");
@@ -128,6 +153,26 @@ test("explicit reversible write run proves draft and saved-app isolation then re
   const writes = stage.requests.filter(x => ["PUT", "DELETE"].includes(x.options.method)
     && x.options.headers.Origin === STAGING_ORIGIN);
   assert.ok(writes.length >= 6);
+  const preferenceWrites = writes.filter(x => x.url.endsWith("/api/member/saved-apps/rhen"));
+  assert.ok(preferenceWrites.length >= 3);
+  for (const write of preferenceWrites) {
+    const expected = write.options.headers.Cookie === "private-A" ? "member-A" : "member-B";
+    assert.equal(write.options.headers["X-ANEVUM-EXPECTED-MEMBER-ID"], expected);
+  }
+});
+
+test("a stale Google member cannot save or follow for a new authenticated member",async()=>{
+  const stage=fakeStaging();
+  const response=await stage.fetcher(STAGING_ORIGIN+"/api/member/saved-apps/rhen",{
+    method:"PUT",cache:"no-store",redirect:"manual",
+    headers:{
+      Cookie:"private-B",Origin:STAGING_ORIGIN,
+      "X-ANEVUM-EXPECTED-MEMBER-ID":"member-A"
+    }
+  });
+  assert.equal(response.status,409);
+  assert.equal(stage.members["private-B"].saved,true);
+  assert.equal(stage.members["private-A"].saved,false);
 });
 
 test("a cross-account export or shared draft backend fails isolation acceptance", async () => {
@@ -138,6 +183,24 @@ test("a cross-account export or shared draft backend fails isolation acceptance"
       /identity mismatch|leaked into account B|cross-account isolation failed/
     );
   }
+});
+
+
+test("read-only workspace validation rejects cross-member state and does not claim missing evidence",async()=>{
+  for(const options of [{wrongWorkspaceOwner:true},{sharedWorkspace:true},
+    {missingWorkspaceExport:true},{invalidWorkspaceTimestamp:true}]){
+    const stage=fakeStaging(options);
+    await assert.rejects(runAcceptance({...credentials,request:stage.fetcher}),
+      /unverified private workspace|cross-account isolation failed|did not include the workspace field/);
+  }
+  const stage=fakeStaging({unprovisionedB:true});
+  const report=await runAcceptance({...credentials,request:stage.fetcher});
+  assert.equal(report.ok,true);
+  assert.equal(report.workspaceIsolationProven,false);
+  assert.ok(report.checks.includes("workspace isolation not proven: account setup incomplete"));
+  assert.equal(stage.requests.some(x=>x.url.endsWith("/api/member/rhen/workspace")&&
+    x.options.method==="POST"),false);
+  assert.doesNotMatch(JSON.stringify(report),/member-A|member-B|wrk_|private-A|private-B/);
 });
 
 test("refuses duplicate session cookies and unverified staging hosts before requesting data", async () => {
@@ -152,4 +215,24 @@ test("refuses duplicate session cookies and unverified staging hosts before requ
     /exact verified ANEVUM staging Worker origin/
   );
   assert.equal(hits, 0);
+});
+
+
+test("real two-member staging acceptance sends verified identity on every reversible draft write",async()=>{
+  const stage=fakeStaging();
+  const report=await runAcceptance({
+    ...credentials,exerciseWrites:true,request:stage.fetcher
+  });
+  assert.equal(report.ok,true);
+  const draftWrites=stage.requests.filter(x=>
+    x.url.endsWith("/api/member/rhen/draft") &&
+    ["PUT","DELETE"].includes(x.options.method));
+  assert.ok(draftWrites.length>=4);
+  for(const call of draftWrites){
+    const cookie=call.options.headers.Cookie;
+    assert.ok(["private-A","private-B"].includes(cookie));
+    const expected=cookie==="private-A"?"member-A":"member-B";
+    assert.equal(call.options.headers["X-ANEVUM-EXPECTED-MEMBER-ID"],expected);
+  }
+  assert.doesNotMatch(JSON.stringify(report),/member-A|member-B|private-A|private-B/);
 });

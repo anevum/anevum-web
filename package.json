@@ -16,7 +16,8 @@
     "sync:share-image": "node scripts/sync-share-image.mjs",
     "validate:releases": "node scripts/validate-release-registry.mjs",
     "sync:resume": "python scripts/render-founder-resume.py",
-    "test:members": "node --test tests/member-boundaries.test.mjs tests/member-adversarial.test.mjs tests/member-readiness-contract.test.mjs tests/member-future-capabilities.test.mjs tests/member-rhen-draft.test.mjs tests/member-staging.test.mjs tests/member-staging-real-acceptance.test.mjs tests/member-production-launch.test.mjs && node --experimental-strip-types --test tests/member-staging-acceptance.test.mjs"
+    "test:members": "node --test tests/v5-owner-member-binding.test.mjs tests/v5-production-release.test.mjs tests/member-boundaries.test.mjs tests/member-adversarial.test.mjs tests/member-readiness-contract.test.mjs tests/member-future-capabilities.test.mjs tests/member-rhen-draft.test.mjs tests/member-staging.test.mjs tests/member-staging-real-acceptance.test.mjs tests/member-production-launch.test.mjs tests/member-alpaca-review.test.mjs tests/commons-v5-discussions.test.mjs tests/commons-v5-moderation.test.mjs tests/v5-member-staging-manual-deploy.test.mjs tests/v5-production-manual-deploy.test.mjs tests/v5-preview-encrypted-backup.test.mjs tests/v5-preview-migration-backup-gate.test.mjs && node --experimental-strip-types --test tests/member-staging-acceptance.test.mjs tests/member-paper-review-ui.test.mjs tests/v5-alpaca-public-brand-boundary.test.mjs",
+    "test:foundation": "node --experimental-strip-types --test tests/anevum-v5-foundation.test.mjs tests/member-v5-workspace.test.mjs tests/member-v5-workspace-browser.test.mjs tests/v5-cross-repo-schema.test.mjs tests/commons-v5-sitewide.test.mjs tests/v5-member-settings.test.mjs tests/v5-moderation-review.test.mjs tests/v5-discussion-contract.test.mjs tests/v5-discussion-lifecycle.test.mjs tests/v5-beta-onboarding.test.mjs tests/v5-public-beta-landing.test.mjs tests/v5-owner-personal-paper.test.mjs tests/v5-disposable-d1-restore.test.mjs tests/v5-member-beta-browser-coverage.test.mjs tests/v5-beta-auth-redirect.test.mjs tests/v5-isolated-beta-deploy.test.mjs tests/v5-beta-approved-branch-release.test.mjs tests/v5-beta-google-oauth-init-smoke.test.mjs tests/v5-beta-two-member-aggregate-audit.test.mjs tests/v5-command-preference-isolation.test.mjs tests/v5-studio-editorial.test.mjs tests/v5-studio-editor-ux.test.mjs tests/v5-studio-operations.test.mjs tests/v5-live-unified-navigation.test.mjs && node --test tests/v5-github-owner-status.test.mjs && node --test tests/v5-infrastructure-status.test.mjs tests/v5-retirement-observer-routes.test.mjs tests/v5-public-source-links.test.mjs tests/v5-help-public-route.test.mjs tests/v5-route-dependency-retirement.test.mjs tests/v5-source-reachability.test.mjs tests/v5-legacy-page-retention.test.mjs tests/v5-release-publication.test.mjs"
   },
   "dependencies": {
     "motion": "13.4.3",
@@ -32,6 +33,7 @@
     "@vitejs/plugin-react": "6.1.1",
     "typescript": "7.0.2",
     "vite": "8.3.1",
-    "wrangler": "4.135.0"
+    "wrangler": "4.135.0",
+    "@babel/parser": "7.29.9"
   }
 }

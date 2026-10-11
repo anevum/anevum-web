@@ -6,19 +6,23 @@ const source = (p) => readFileSync(new URL("../" + p, import.meta.url), "utf8");
 
 test("canonical member entry is /command and /me stays as compatibility route", () => {
   const app = source("src/App.tsx");
-  assert.match(app, /<Route path="\/command" element=\{<PublicExperience><Command \/><\/PublicExperience>\} \/>/);
-  assert.match(app, /<Route path="\/me" element=\{<PublicExperience><MemberHome \/><\/PublicExperience>\} \/>/);
+  assert.match(app, /<Route path="\/command" element=\{<Suspense fallback=\{<Loader \/>\}><CommonsV5 content=\{<Command \/>\} \/><\/Suspense>\} \/>/);
+  assert.match(app, /<Route path="\/me" element=\{<Suspense fallback=\{<Loader \/>\}><CommonsV5 content=\{<MemberHome \/>\} \/><\/Suspense>\} \/>/);
   assert.match(app, /<Route path="\/command\/rhen\/\*" element=\{<Suspense fallback=\{<Loader \/>\}><RhenTerminal \/><\/Suspense>\} \/>/);
 });
 
-test("Google callback, header and account links return members to Command", () => {
+test("Google callback defaults to Command and permits only fixed beta and Studio returns", () => {
   const signIn = source("src/pages/SignIn.tsx");
   const shell = source("src/components/Shell.tsx");
   const home = source("src/pages/MemberHome.tsx");
   const settings = source("src/pages/MemberSettings.tsx");
   const rhen = source("src/pages/RhenApp.tsx");
-  assert.match(signIn, /callbackURL:\s*"\/command"/);
-  assert.match(signIn, /to="\/command">Open Command/);
+  assert.match(signIn, /callbackURL:\s*destination/);
+  assert.match(signIn, /const destination = signInReturnPath\(location\.search\)/);
+  assert.match(signIn, /to=\{destination\}/);
+  const safeReturn = source("src/member/beta-auth-redirect.ts");
+  assert.match(safeReturn, /return intent === "beta" \? "\/me\/beta" : intent === "studio" \? "\/studio" : "\/command"/);
+  assert.doesNotMatch(safeReturn, /window\.location|location\.href|returnTo|redirectTo/);
   assert.match(shell, /session\?\.user \? "\/command" : "\/sign-in"/);
   assert.match(home, /to="\/command" aria-current="page"/);
   assert.match(home, /value\?\.command_admin === true/);
