@@ -7,6 +7,7 @@ import { fieldNotes, type FieldNote } from "../data/fieldNotes";
 import { memberAuthClient } from "../member/auth-client";
 import { primaryNavigation, accountNavigation, mobileNavigation, isSiteNavigationActive, safeAccountDestination } from "./site-navigation";
 import liveCss from "../styles/commons-v5-live-system.css?inline";
+import memberVerifierCss from "../styles/member-staging-qa.css?inline";
 import css from "../styles/commons-v5.css?inline";
 import polishCss from "../styles/commons-v5-polish.css?inline";
 import pagesCss from "../styles/commons-v5-pages.css?inline";
@@ -460,7 +461,7 @@ export default function CommonsV5({content}: {content?:ReactNode}) {
   return <div ref={mount} className="anevum-commons-v5-mount"
     data-theme={prefs.theme} data-layout={prefs.layout} data-density={prefs.density}
     data-radius={prefs.radius} data-surface={prefs.surface} style={{display:"block",minHeight:"100dvh"}}>
-    {shadow ? createPortal(<><style>{css+"\n"+polishCss+"\n"+pagesCss+"\n"+memberCommandCss+"\n"+memberBaseCss+"\n"+memberFinancialCss+"\n"+memberDraftCss+"\n"+accountCss+"\n"+privateRhenCss+"\n"+brokerReviewCss+"\n"+discussionsCss+"\n"+betaCss+"\n"+liveCss}</style><CommonsApp prefs={prefs} setPrefs={setPrefs} content={content}/></>,shadow) : null}
+    {shadow ? createPortal(<><style>{css+"\n"+polishCss+"\n"+pagesCss+"\n"+memberCommandCss+"\n"+memberBaseCss+"\n"+memberFinancialCss+"\n"+memberDraftCss+"\n"+accountCss+"\n"+privateRhenCss+"\n"+brokerReviewCss+"\n"+discussionsCss+"\n"+betaCss+"\n"+memberVerifierCss+"\n"+liveCss}</style><CommonsApp prefs={prefs} setPrefs={setPrefs} content={content}/></>,shadow) : null}
   </div>;
 }
 
