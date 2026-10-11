@@ -40,3 +40,5 @@ company's founder/operator account, founder personal PAPER observer and
 ordinary members remain separate. Real two-account Google signup, draft
 save/read/delete and cross-account acceptance must still be performed on
 an approved isolated deployment; CI fixtures are not real user proof.
+
+The existing two-real-member staging acceptance script now carries the verified expected member ID on reversible RHEN draft writes when explicitly launched with `--exercise-writes`. This permits acceptance to exercise the same browser/header consistency check after an authorized staging deployment. Its read-only default and explicit test-account restoration remain unchanged.
