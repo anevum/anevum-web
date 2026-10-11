@@ -48,6 +48,34 @@ function draftWritePayload(draft) {
   };
 }
 
+/** A read-only, fail-closed projection: reject unknown broker/owner fields.
+ * Never include raw workspace IDs or member IDs in acceptance output.
+ */
+function verifiedPrivateWorkspace(label, value, expectedId) {
+  if (value === null) return null;
+  const keys = ["broker_link_state","capabilities","engine_source","evidence_state",
+    "execution_permission","member_id","schema_version","updated_at",
+    "workspace_id","workspace_kind"];
+  if (!value || typeof value !== "object" || Array.isArray(value) ||
+      Object.keys(value).sort().join("|") !== keys.join("|") ||
+      value.member_id !== expectedId ||
+      value.schema_version !== "anevum.workspace-state.v1" ||
+      typeof value.workspace_id !== "string" ||
+      !/^wrk_[a-f0-9]{32}$/.test(value.workspace_id) ||
+      value.workspace_kind !== "MEMBER_PRIVATE" ||
+      value.engine_source !== "RHEN_NEXT" ||
+      value.evidence_state !== "NOT_CONFIGURED" ||
+      value.execution_permission !== "NONE" ||
+      value.broker_link_state !== "NOT_LINKED" ||
+      !Array.isArray(value.capabilities) ||
+      value.capabilities.length !== 1 || value.capabilities[0] !== "VIEW" ||
+      typeof value.updated_at !== "string" ||
+      !Number.isFinite(Date.parse(value.updated_at))) {
+    throw new Error(label + " returned an unverified private workspace.");
+  }
+  return {workspaceId:value.workspace_id,updatedAt:value.updated_at};
+}
+
 export async function runAcceptance({
   origin, cookieA, cookieB, exerciseWrites = false, request = fetch
 }) {
@@ -140,6 +168,30 @@ export async function runAcceptance({
     }
   }
 
+  // This phase is read-only. It can verify persisted isolation only if both
+  // test accounts previously created distinct workspaces via their own UI.
+  const readWorkspace = async (label, cookie, expectedId) => {
+    const response = await call("/api/member/rhen/workspace", cookie);
+    privateResponse("workspace " + label, response);
+    const state = await asJson("workspace " + label, response);
+    if (state.available !== true || !Object.hasOwn(state, "workspace")) {
+      throw new Error("Workspace " + label + " is not available for testing.");
+    }
+    return verifiedPrivateWorkspace("workspace " + label, state.workspace, expectedId);
+  };
+  const workspaceA = await readWorkspace("A", cookieA, a.user.id);
+  const workspaceB = await readWorkspace("B", cookieB, b.user.id);
+  const workspaceIsolationProven = workspaceA !== null && workspaceB !== null;
+  if (workspaceIsolationProven) {
+    if (workspaceA.workspaceId === workspaceB.workspaceId) {
+      throw new Error("RHEN workspace cross-account isolation failed.");
+    }
+    checks.push("two-account private RHEN workspace identities are distinct");
+  } else {
+    // An unprovisioned workspace is not evidence of cross-member isolation.
+    checks.push("workspace isolation not proven: account setup incomplete");
+  }
+
   const originalA = await readDraft("RHEN draft A", cookieA);
   const originalB = await readDraft("RHEN draft B", cookieB);
   const exportA = await readExport("export A", cookieA, a.user.id, b.user.id);
@@ -148,7 +200,17 @@ export async function runAcceptance({
       !sameDraft(exportB.rhenDraft, originalB)) {
     throw new Error("Account export draft did not match the signed-in account.");
   }
-  checks.push("two-account saved draft and export correspondence");
+  const exportedWorkspaceA = verifiedPrivateWorkspace(
+    "export workspace A", exportA.rhenWorkspace ?? null, a.user.id
+  );
+  const exportedWorkspaceB = verifiedPrivateWorkspace(
+    "export workspace B", exportB.rhenWorkspace ?? null, b.user.id
+  );
+  if ((workspaceA?.workspaceId ?? null) !== (exportedWorkspaceA?.workspaceId ?? null) ||
+      (workspaceB?.workspaceId ?? null) !== (exportedWorkspaceB?.workspaceId ?? null)) {
+    throw new Error("Account export workspace did not match its signed-in member.");
+  }
+  checks.push("two-account saved draft and workspace export correspondence");
 
   const rewards = await asJson("rewards disabled",
     await call("/api/member/rewards", cookieA));
@@ -297,7 +359,8 @@ export async function runAcceptance({
       }
     }
   }
-  return { ok: true, tested: checks.length, checks, writesExercised: exerciseWrites };
+  return { ok: true, tested: checks.length, checks, writesExercised: exerciseWrites,
+    workspaceIsolationProven };
 }
 
 const isDirect = process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url);
@@ -309,7 +372,8 @@ if (isDirect) {
     exerciseWrites: process.argv.includes("--exercise-writes")
   }).then(result => {
     console.log("Member staging acceptance: PASS (" + result.tested +
-      " checks; writes: " + (result.writesExercised ? "restored" : "not run") + ")");
+      " checks; writes: " + (result.writesExercised ? "restored" : "not run") +
+      "; workspace isolation: " + (result.workspaceIsolationProven ? "verified" : "NOT VERIFIED") + ")");
     result.checks.forEach(label => console.log("PASS " + label));
   }).catch(error => {
     console.error("Member staging acceptance: FAIL: " + error.message);
