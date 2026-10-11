@@ -34,9 +34,14 @@ function record(value: unknown): JSONRecord | null {
 function assert(condition: unknown, message: string): asserts condition {
   if (!condition) throw new Error(message);
 }
-function requestOptions(method: "GET" | "POST", body?: string): RequestInit {
+function checkActive(signal?: AbortSignal): void {
+  if (signal?.aborted) throw new Error("STAGING_SESSION_CHANGED");
+}
+function requestOptions(method: "GET" | "POST", body?: string,
+  signal?: AbortSignal): RequestInit {
   return {
     method, credentials: "same-origin", cache: "no-store", redirect: "manual",
+    signal,
     ...(body === undefined ? {} : {
       headers: { "Content-Type": "application/json" },
       body
@@ -48,13 +53,17 @@ function isPrivate(response: Response): boolean {
     (response.headers.get("x-robots-tag") || "").includes("noindex");
 }
 async function readResponse(fetcher: typeof fetch, path: string,
-  method: "GET" | "POST" = "GET", body?: string): Promise<JSONRecord> {
+  method: "GET" | "POST" = "GET", body?: string,
+  signal?: AbortSignal): Promise<JSONRecord> {
+  checkActive(signal);
   let response: Response;
   try {
-    response = await fetcher(path, requestOptions(method, body));
+    response = await fetcher(path, requestOptions(method, body, signal));
   } catch {
+    checkActive(signal);
     throw new Error("STAGING_NETWORK_ERROR");
   }
+  checkActive(signal);
   if (response.type === "opaqueredirect" || response.status === 0)
     throw new Error("STAGING_REDIRECT");
   if (response.status !== 200) throw new Error("STAGING_HTTP_" + response.status);
@@ -89,13 +98,17 @@ function approvedWorkspace(data: JSONRecord, memberId: string,
   return workspace;
 }
 async function ensureDenied(fetcher: typeof fetch, path: string,
-  method: "GET" | "POST", body?: string): Promise<void> {
+  method: "GET" | "POST", body?: string,
+  signal?: AbortSignal): Promise<void> {
+  checkActive(signal);
   let response: Response;
   try {
-    response = await fetcher(path, requestOptions(method, body));
+    response = await fetcher(path, requestOptions(method, body, signal));
   } catch {
+    checkActive(signal);
     throw new Error("STAGING_NETWORK_ERROR");
   }
+  checkActive(signal);
   if (response.type === "opaqueredirect" || response.status === 0)
     throw new Error("STAGING_REDIRECT");
   if (response.status !== 400) throw new Error("STAGING_EXPECTED_DENIAL_HTTP_" + response.status);
@@ -110,7 +123,7 @@ async function ensureDenied(fetcher: typeof fetch, path: string,
  */
 export async function runWorkspaceStagingProof(
   fetcher: typeof fetch, authenticatedMemberId: string, origin: string,
-  onStep?: (step: WorkspaceStagingStep) => void
+  onStep?: (step: WorkspaceStagingStep) => void, signal?: AbortSignal
 ): Promise<WorkspaceStagingProof> {
   assert(origin === WORKSPACE_STAGING_ORIGIN, "Workspace acceptance is staging-only.");
   assert(typeof authenticatedMemberId === "string" && authenticatedMemberId.length > 0,
@@ -118,13 +131,14 @@ export async function runWorkspaceStagingProof(
 
   let currentStep: WorkspaceStagingStep = "SESSION";
   const advance = (step: WorkspaceStagingStep) => {
+    checkActive(signal);
     currentStep = step;
     onStep?.(step);
   };
   const checks: string[] = [];
   try {
   advance("SESSION");
-  const session = await readResponse(fetcher, "/api/member/session");
+  const session = await readResponse(fetcher, "/api/member/session", "GET", undefined, signal);
   assert(session.authenticated === true &&
     record(session.user)?.id === authenticatedMemberId,
     "The server session does not match this signed-in account.");
@@ -132,14 +146,14 @@ export async function runWorkspaceStagingProof(
 
   advance("INITIAL_READ");
   const before = approvedWorkspace(
-    await readResponse(fetcher, "/api/member/rhen/workspace"),
+    await readResponse(fetcher, "/api/member/rhen/workspace", "GET", undefined, signal),
     authenticatedMemberId, false
   );
   checks.push("Initial workspace read is private and account-scoped");
 
   advance("CREATE");
   const created = approvedWorkspace(
-    await readResponse(fetcher, "/api/member/rhen/workspace", "POST"),
+    await readResponse(fetcher, "/api/member/rhen/workspace", "POST", undefined, signal),
     authenticatedMemberId, true
   );
   assert(created !== null, "Workspace was not persisted.");
@@ -149,7 +163,7 @@ export async function runWorkspaceStagingProof(
 
   advance("REPLAY");
   const replay = approvedWorkspace(
-    await readResponse(fetcher, "/api/member/rhen/workspace", "POST"),
+    await readResponse(fetcher, "/api/member/rhen/workspace", "POST", undefined, signal),
     authenticatedMemberId, true
   );
   assert(replay?.workspace_id === created.workspace_id,
@@ -157,21 +171,21 @@ export async function runWorkspaceStagingProof(
   checks.push("Repeated provisioning returns the same durable workspace");
 
   advance("DENY_QUERY");
-  await ensureDenied(fetcher, "/api/member/rhen/workspace?member_id=other", "GET");
+  await ensureDenied(fetcher, "/api/member/rhen/workspace?member_id=other", "GET", undefined, signal);
   advance("DENY_BODY");
   await ensureDenied(fetcher, "/api/member/rhen/workspace", "POST",
-    JSON.stringify({ member_id: "other" }));
+    JSON.stringify({ member_id: "other" }), signal);
   checks.push("Client-selected member IDs are rejected for reads and writes");
 
   advance("FINAL_READ");
   const after = approvedWorkspace(
-    await readResponse(fetcher, "/api/member/rhen/workspace"),
+    await readResponse(fetcher, "/api/member/rhen/workspace", "GET", undefined, signal),
     authenticatedMemberId, true
   );
   assert(after?.workspace_id === created.workspace_id,
     "Workspace changed after a rejected tenant-selection attempt.");
   advance("EXPORT");
-  const exported = await readResponse(fetcher, "/api/member/export");
+  const exported = await readResponse(fetcher, "/api/member/export", "GET", undefined, signal);
   assert(record(exported.identity)?.id === authenticatedMemberId,
     "Export identity did not match the signed-in account.");
   const exportedWorkspace = approvedWorkspace({
@@ -188,6 +202,7 @@ export async function runWorkspaceStagingProof(
   const proofCode = Array.from(new Uint8Array(digest).slice(0, 16),
     byte => byte.toString(16).padStart(2, "0")).join("");
   assert(/^[0-9a-f]{32}$/.test(proofCode), "Browser proof generation failed.");
+  checkActive(signal);
   checks.push("Generated a non-secret comparison fingerprint locally");
   return Object.freeze({ passed: true, checks: Object.freeze(checks), proofCode });
   } catch (error) {
@@ -197,6 +212,7 @@ export async function runWorkspaceStagingProof(
     const http = /^STAGING_(?:EXPECTED_DENIAL_)?HTTP_([1-5][0-9]{2})$/.exec(message);
     const reason = http ? "HTTP_" + http[1]
       : message === "STAGING_REDIRECT" ? "UNEXPECTED_REDIRECT"
+      : message === "STAGING_SESSION_CHANGED" ? "SESSION_CHANGED"
       : message === "STAGING_NETWORK_ERROR" ? "NETWORK_ERROR"
       : message === "STAGING_INVALID_JSON" ? "INVALID_JSON"
       : message === "STAGING_PRIVATE_HEADERS_MISSING" ? "PRIVATE_HEADERS"

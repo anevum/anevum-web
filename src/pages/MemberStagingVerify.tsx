@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { memberAuthClient } from "../member/auth-client";
 import { useMemberAvailability } from "../member/useMemberAvailability";
@@ -10,12 +10,6 @@ const STAGING_ORIGIN = "https://anevum-member-staging.devonakins.workers.dev";
 export default function MemberStagingVerify() {
   const availability = useMemberAvailability();
   const { data: session, isPending } = memberAuthClient.useSession();
-  const [running, setRunning] = useState(false);
-  const [report, setReport] = useState<AcceptanceReport | null>(null);
-  const [error, setError] = useState("");
-  const [workspaceRunning, setWorkspaceRunning] = useState(false);
-  const [workspaceProof, setWorkspaceProof] = useState<WorkspaceStagingProof | null>(null);
-  const [workspaceError, setWorkspaceError] = useState("");
 
   // The same static bundle ships to production, but this is an isolated
   // staging-only testing UI, not an elevated backend feature or launch flag.
@@ -38,35 +32,71 @@ export default function MemberStagingVerify() {
     </main>
   );
 
+  return <StagingAccountAcceptance key={session.user.id} memberId={session.user.id}
+    memberEmail={session.user.email || ""} />;
+}
+
+function StagingAccountAcceptance({ memberId, memberEmail }: {
+  memberId: string; memberEmail: string;
+}) {
+  const [running, setRunning] = useState(false);
+  const [report, setReport] = useState<AcceptanceReport | null>(null);
+  const [error, setError] = useState("");
+  const [workspaceRunning, setWorkspaceRunning] = useState(false);
+  const [workspaceProof, setWorkspaceProof] = useState<WorkspaceStagingProof | null>(null);
+  const [workspaceError, setWorkspaceError] = useState("");
+  const inFlight = useRef<Set<AbortController>>(new Set());
+  useEffect(() => () => {
+    // Terminate both read-only and workspace-provisioning checks on identity change.
+    for (const controller of inFlight.current) controller.abort();
+    inFlight.current.clear();
+  }, []);
+  const startRequest = () => {
+    const controller = new AbortController();
+    inFlight.current.add(controller);
+    return controller;
+  };
+
   const verify = async () => {
-    if (running) return;
+    if (running || workspaceRunning) return;
+    const controller = startRequest();
     setRunning(true);
     setError("");
     setReport(null);
-    try { setReport(await runStagingAcceptance(fetch)); }
-    catch { setError("The staging acceptance checks could not complete."); }
-    finally { setRunning(false); }
+    try {
+      const result = await runStagingAcceptance(fetch, memberId, controller.signal);
+      if (!controller.signal.aborted) setReport(result);
+    } catch {
+      if (!controller.signal.aborted) setError("The staging acceptance checks could not complete.");
+    } finally {
+      inFlight.current.delete(controller);
+      if (!controller.signal.aborted) setRunning(false);
+    }
   };
 
   const verifyWorkspace = async () => {
-    if (running || workspaceRunning || !session?.user?.id) return;
+    if (running || workspaceRunning) return;
+    const controller = startRequest();
     setWorkspaceRunning(true);
     setWorkspaceError("");
     setWorkspaceProof(null);
     try {
-      setWorkspaceProof(await runWorkspaceStagingProof(
-        fetch, session.user.id, window.location.origin
-      ));
+      const proof = await runWorkspaceStagingProof(
+        fetch, memberId, window.location.origin, undefined, controller.signal
+      );
+      if (!controller.signal.aborted) setWorkspaceProof(proof);
     } catch (failure) {
-      // Only bounded verifier step/reason codes; no raw server exceptions,
-      // member IDs, cookies, or account export contents may be displayed.
+      // No raw server errors, account IDs, cookies, or exports may be displayed.
       const diagnostic = failure instanceof WorkspaceStagingFailure
         ? failure.step + " / " + failure.reason
         : "PREFLIGHT / CHECK_FAILED";
-      setWorkspaceError("Private workspace acceptance blocked. Diagnostic: " +
-        diagnostic + ". No release approval was granted. Do not share account exports or cookies.");
+      if (!controller.signal.aborted) setWorkspaceError(
+        "Private workspace acceptance blocked. Diagnostic: " + diagnostic +
+        ". No release approval was granted. Do not share account exports or cookies."
+      );
     } finally {
-      setWorkspaceRunning(false);
+      inFlight.current.delete(controller);
+      if (!controller.signal.aborted) setWorkspaceRunning(false);
     }
   };
 
@@ -78,7 +108,7 @@ export default function MemberStagingVerify() {
 
       <section className="member-section">
         <h2>Current account</h2>
-        <p>Signed in as <strong>{session.user.email}</strong>. Use a different browser profile for each independent Google test account.</p>
+        <p>Signed in as <strong>{memberEmail}</strong>. Use a different browser profile for each independent Google test account.</p>
         <button type="button" className="member-primary-action" disabled={running} onClick={() => void verify()}>
           {running ? "Verifying…" : "Run read-only checks"}
         </button>
