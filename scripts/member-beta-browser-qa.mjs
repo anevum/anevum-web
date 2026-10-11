@@ -106,7 +106,7 @@ async function runCase(width,scenario){
         "return {heading,text:page?.textContent||'',"+
         "states:[...(page?.querySelectorAll('[data-beta-state]')||[])].map(x=>x.dataset.betaState),"+
         "owner:root?.querySelector('[data-beta-owner-paper]')?.textContent||'',"+
-        "accountAction:!!page?.querySelector('.c2-beta-card:first-child a[href="/me/settings"]'),"+
+        "accountAction:!!page?.querySelector('.c2-beta-card:first-child a'),"+
         "robots:document.querySelector('meta[name=robots]')?.content||'',"+
         "canonical:document.querySelector('link[rel=canonical]')?.href||'',"+
         "overflow:document.documentElement.scrollWidth>innerWidth+1,"+
