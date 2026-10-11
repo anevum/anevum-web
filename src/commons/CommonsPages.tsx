@@ -1,4 +1,5 @@
 import { Link, useSearchParams } from "react-router-dom";
+import RhenMark from "../components/RhenMark";
 import type { ReactNode } from "react";
 import { fieldNotes, type FieldNote } from "../data/fieldNotes";
 import { publicProducts, publishedSourceRecords } from "../data/products";
@@ -99,7 +100,7 @@ function Projects() {
           <span className="v6-project-tag">{product.name} / PUBLIC PROJECT</span>
           <span className="v6-project-axis"/>
           <span className="v6-project-orbit"/>
-          <span className="v6-project-glyph">{product.name.charAt(0)}</span>
+          <span className="v6-project-glyph">{product.slug==="rhen"?<RhenMark decorative />:product.name.charAt(0)}</span>
         </div>
         <div className="c2-project-icon" aria-hidden="true">{product.name.charAt(0)}</div>
         <span className="c2-kicker">{product.category}</span>
