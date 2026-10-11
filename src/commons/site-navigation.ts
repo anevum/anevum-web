@@ -27,7 +27,7 @@ export const accountNavigation:ReadonlyArray<SiteNavItem> = Object.freeze([
 ].map(item=>Object.freeze(item)));
 
 export const mobileNavigation:ReadonlyArray<SiteNavItem> = Object.freeze([
-  primaryNavigation[0],primaryNavigation[1],primaryNavigation[4],accountNavigation[0]
+  primaryNavigation[0],primaryNavigation[1],primaryNavigation[2],primaryNavigation[4],accountNavigation[0]
 ]);
 
 /** All route highlighting uses this function, irrespective of navbar size.
