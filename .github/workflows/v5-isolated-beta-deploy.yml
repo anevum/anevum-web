@@ -66,16 +66,48 @@ jobs:
         run: npm run build
       - name: Check generated Worker can target only the new beta service
         run: node scripts/verify-v5-beta-deploy.mjs --generated
-      - name: Read-only beta anonymous HTTP response diagnostics
+      - name: Verify live isolated beta signup and protected targets read-only
         if: github.event_name == 'pull_request'
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         shell: bash
         run: |
           set -euo pipefail
-          base="https://anevum-v5-beta.devonakins.workers.dev"
+          umask 077
+          base='https://anevum-v5-beta.devonakins.workers.dev'
+          ok=1
           for route in /api/member/availability /api/member/me /api/member/rhen/workspace /api/member/rhen/draft /api/member/export /api/command/trader/status / /beta /sign-in /me/beta; do
             status="$(curl --silent --show-error --max-time 15 -o /dev/null -w '%{http_code}' "$base$route" || true)"
             printf 'BETA_ANONYMOUS_STATUS %s %s\n' "$route" "$status"
+            case "$route" in
+              /api/member/availability|/|/beta|/sign-in|/me/beta)
+                test "$status" = 200 || ok=0 ;;
+              *)
+                case "$status" in 401|403|503) ;; *) ok=0 ;; esac ;;
+            esac
           done
+          curl --fail --silent --show-error --max-time 15             "$base/api/member/availability" -o "$RUNNER_TEMP/beta-availability.json"
+          jq -c '{available,provider}' "$RUNNER_TEMP/beta-availability.json"
+          jq -e '.available == true and .provider == "google"'             "$RUNNER_TEMP/beta-availability.json" >/dev/null || ok=0
+          test -n "$CLOUDFLARE_API_TOKEN"
+          test -n "$CLOUDFLARE_ACCOUNT_ID"
+          api="https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID"
+          for entry in             'anevum-v5-beta:b2f9b4ad-4b97-483c-ae78-5dc7c8da76bf'             'anevum-web-nextgen:7f0d4c0c-2e85-4900-8504-1347954e1df1'             'anevum-member-staging:a537432e-d216-4b31-8b22-19662cc3a44a'; do
+            name="${entry%%:*}"
+            db="${entry#*:}"
+            curl --fail --silent --show-error --max-time 25               -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN"               "$api/workers/scripts/$name/settings"               -o "$RUNNER_TEMP/v5-beta-settings-$name.json"
+            if jq -e --arg db "$db" '.success == true and
+              ([.result.bindings[] | select(.type == "d1")] | length) == 1 and
+              any(.result.bindings[]; .name == "MEMBER_DB" and .type == "d1"
+                  and .database_id == $db)'               "$RUNNER_TEMP/v5-beta-settings-$name.json" >/dev/null; then
+              echo "BETA_ISOLATED_BINDING_OK $name"
+            else
+              echo "BETA_ISOLATED_BINDING_FAILED $name"
+              ok=0
+            fi
+          done
+          test "$ok" = 1
       - name: Confirm approved exact main and existing isolated beta infrastructure
         if: github.event_name == 'workflow_dispatch'
         env:
