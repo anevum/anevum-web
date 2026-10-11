@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import {
-  memberRhenWorkspaceSchemaReady, readMemberRhenWorkspace, createMemberRhenWorkspace
+  memberRhenWorkspaceSchemaReady, readMemberRhenWorkspace, createMemberRhenWorkspace, workspaceExpectedMemberMatches
 } from "../src/server/member-rhen-workspace.mjs";
 import { parsePrivateFoundationWorkspace } from "../src/contracts/anevum-foundation.ts";
 import { memberEndpoint, safeMutation, workspaceCreateHasClientPayload } from "../src/server/member.mjs";
@@ -192,4 +192,32 @@ test("workspace zero-byte body probe fails closed on malformed, unreadable or ex
   const reader = locked.body.getReader();
   try { assert.equal(await workspaceCreateHasClientPayload(locked), true); }
   finally { reader.releaseLock(); }
+});
+
+
+test("workspace POST account guard compares the active authenticated member, never selects an owner",()=>{
+  const request=expected=>new Request("https://anevum.com/api/member/rhen/workspace",{
+    method:"POST",headers:expected===null?{}:{"X-ANEVUM-EXPECTED-MEMBER-ID":expected}
+  });
+  assert.equal(workspaceExpectedMemberMatches(request("member-A"),"member-A"),true);
+  assert.equal(workspaceExpectedMemberMatches(request("member-A"),"member-B"),false);
+  assert.equal(workspaceExpectedMemberMatches(request(""),"member-A"),false);
+  assert.equal(workspaceExpectedMemberMatches(request(null),"member-A"),true);
+  assert.equal(workspaceExpectedMemberMatches(request("member-A"),""),false);
+  const backend=read("src/server/member.mjs");
+  const route=backend.slice(backend.indexOf('if (pathname === "/api/member/rhen/workspace")'));
+  const enable=route.indexOf('ANEVUM_V5_WORKSPACES_ENABLED !== "true"');
+  const guard=route.indexOf('!workspaceExpectedMemberMatches(request, user.id)');
+  const creation=route.indexOf('createMemberRhenWorkspace(db, user.id)');
+  assert.ok(enable>=0&&guard>enable&&creation>guard);
+  assert.ok(route.indexOf('workspaceCreateHasClientPayload(request)')<creation);
+  const frontend=read("src/pages/RhenApp.tsx");
+  assert.match(frontend,/workspaceCreateScope = useRef<AbortController \| null>/);
+  assert.match(frontend,/workspaceCreateScope\.current === controller/);
+  assert.match(frontend,/controller\.abort\(\)/);
+  assert.match(frontend,/method: "POST", credentials: "same-origin", cache: "no-store"/);
+  assert.match(frontend,/"X-ANEVUM-EXPECTED-MEMBER-ID": memberId/);
+  assert.match(frontend,/signal: controller\.signal/);
+  assert.match(frontend,/if \(controller\.signal\.aborted\) return/);
+  assert.doesNotMatch(frontend,/\/v2\/orders|submitOrder|placeOrder/);
 });
