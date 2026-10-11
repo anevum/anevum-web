@@ -120,12 +120,12 @@ jobs:
               any(.result[]; .name==$key and .type=="secret_text")' \
               "$RUNNER_TEMP/public-v5-secret-names.json" > /dev/null
           done
-          npx wrangler d1 execute MEMBER_DB --remote --config wrangler.jsonc --json \
+          CLOUDFLARE_API_TOKEN="$CLOUDFLARE_D1_TOKEN" npx wrangler d1 execute MEMBER_DB --remote --config wrangler.jsonc --json \
             --command "SELECT COUNT(*) AS member_tables FROM sqlite_master WHERE type='table' AND name IN ('user','session','account','verification','rateLimit','member_profiles','member_saved_apps','member_project_follows','member_entitlements')" \
             > "$RUNNER_TEMP/public-v5-schema.json"
           jq -e '.[0].success==true and .[0].results[0].member_tables==9' \
             "$RUNNER_TEMP/public-v5-schema.json" > /dev/null
-          npx wrangler d1 execute MEMBER_DB --remote --config wrangler.jsonc --json \
+          CLOUDFLARE_API_TOKEN="$CLOUDFLARE_D1_TOKEN" npx wrangler d1 execute MEMBER_DB --remote --config wrangler.jsonc --json \
             --command 'PRAGMA foreign_key_check' > "$RUNNER_TEMP/public-v5-fk.json"
           jq -e '.[0].success==true and (.[0].results|length)==0' \
             "$RUNNER_TEMP/public-v5-fk.json" > /dev/null
