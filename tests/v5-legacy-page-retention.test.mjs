@@ -13,8 +13,10 @@ test("active validator no longer blocks retirement through obsolete public page 
   assert.ok(validatorReferences.every(page=>page.status==="RUNTIME_REACHABLE"));
   assert.equal(report.deletionAuthorized,false);
   assert.equal(report.runtimeUnresolved.length,0);
-  // Member Beta is a new active page; its source must be retained and counted.
-  assert.equal(report.counts.pages,41);
+  // Member Beta and the new Studio editor are active V5 routes, not legacy deletion candidates.
+  assert.equal(report.counts.pages,42);
+  const studio=report.pages.find(page=>page.file==="src/pages/StudioDashboard.tsx");
+  assert.equal(studio?.status,"RUNTIME_REACHABLE");
   const beta=report.pages.find(page=>page.file==="src/pages/MemberBeta.tsx");
   assert.equal(beta?.status,"RUNTIME_REACHABLE");
   const founderPaper=report.pages.find(page=>page.file==="src/pages/OwnerPersonalPaperReadiness.tsx");
