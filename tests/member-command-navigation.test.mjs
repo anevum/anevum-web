@@ -11,14 +11,17 @@ test("canonical member entry is /command and /me stays as compatibility route", 
   assert.match(app, /<Route path="\/command\/rhen\/\*" element=\{<Suspense fallback=\{<Loader \/>\}><RhenTerminal \/><\/Suspense>\} \/>/);
 });
 
-test("Google callback, header and account links return members to Command", () => {
+test("Google callback defaults to Command and permits only a fixed beta testing return", () => {
   const signIn = source("src/pages/SignIn.tsx");
   const shell = source("src/components/Shell.tsx");
   const home = source("src/pages/MemberHome.tsx");
   const settings = source("src/pages/MemberSettings.tsx");
   const rhen = source("src/pages/RhenApp.tsx");
-  assert.match(signIn, /callbackURL:\s*"\/command"/);
-  assert.match(signIn, /to="\/command">Open Command/);
+  assert.match(signIn, /callbackURL:\s*destination/);
+  assert.match(signIn, /const destination = signInReturnPath\(location\.search\)/);
+  assert.match(signIn, /to=\{destination\}/);
+  const safeReturn = source("src/member/beta-auth-redirect.ts");
+  assert.match(safeReturn, /get\("next"\) === "beta" \? "\/me\/beta" : "\/command"/);
   assert.match(shell, /session\?\.user \? "\/command" : "\/sign-in"/);
   assert.match(home, /to="\/command" aria-current="page"/);
   assert.match(home, /value\?\.command_admin === true/);
