@@ -70,6 +70,7 @@ function verifiedPrivateWorkspace(label, value, expectedId) {
       !Array.isArray(value.capabilities) ||
       value.capabilities.length !== 1 || value.capabilities[0] !== "VIEW" ||
       typeof value.updated_at !== "string" ||
+      !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z$/.test(value.updated_at) ||
       !Number.isFinite(Date.parse(value.updated_at))) {
     throw new Error(label + " returned an unverified private workspace.");
   }
@@ -199,6 +200,10 @@ export async function runAcceptance({
   if (!sameDraft(exportA.rhenDraft, originalA) ||
       !sameDraft(exportB.rhenDraft, originalB)) {
     throw new Error("Account export draft did not match the signed-in account.");
+  }
+  if (!Object.hasOwn(exportA, "rhenWorkspace") ||
+      !Object.hasOwn(exportB, "rhenWorkspace")) {
+    throw new Error("Account export did not include the workspace field.");
   }
   const exportedWorkspaceA = verifiedPrivateWorkspace(
     "export workspace A", exportA.rhenWorkspace ?? null, a.user.id
