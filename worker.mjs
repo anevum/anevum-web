@@ -3,6 +3,7 @@ import { fieldNotes } from "./src/data/fieldNotes";
 import { shadowRead } from "./shadow-transport.mjs";
 import { memberEndpoint } from "./src/server/member.mjs";
 import { verifyOwnerMemberBinding, OwnerMemberBindingError } from "./src/server/command-owner-binding.mjs";
+import { observeOwnerGitHub } from "./src/server/github-owner-status.mjs";
 import { legacyOperatorTarget } from "./src/server/operator-routes.mjs";
 import { retiredRhenBoundary, retiredRhenStatus } from "./src/server/legacy-rhen-retirement.mjs";
 
@@ -597,6 +598,20 @@ export default {
       } catch (error) {
         if (error instanceof ApiError) return jsonResponse({ message: error.message }, error.status);
         return jsonResponse({ message: "Private authentication unavailable." }, 503);
+      }
+    }
+
+    if (pathname === "/api/command/integrations/github") {
+      if (request.method !== "GET") return jsonResponse({ message: "Read-only GitHub observations." }, 405);
+      if (url.search) return jsonResponse({ message: "Integration query parameters are not accepted." }, 400);
+      try {
+        // Do not fetch GitHub until verified Cloudflare Access AND the matching
+        // owner Better Auth member session have both succeeded.
+        await commandCredential(request, env);
+        return jsonResponse(await observeOwnerGitHub());
+      } catch (error) {
+        const status = error instanceof ApiError ? error.status : 503;
+        return jsonResponse({ message: "Owner GitHub observations unavailable." }, status);
       }
     }
 
