@@ -1,0 +1,137 @@
+name: ANEVUM V5 Disposable Cloud D1 Restore Acceptance
+
+on:
+  # Explicitly authorized manual run on reviewed main only. Never trigger for PRs/pushes.
+  workflow_dispatch:
+    inputs:
+      confirmation:
+        description: 'Type RESTORE_DISPOSABLE_D1_ONLY (create/delete one unbound Cloudflare D1)'
+        type: string
+        required: true
+      reviewed_head_sha:
+        description: 'Exact reviewed current main SHA (40 characters)'
+        type: string
+        required: true
+      backup_run_id:
+        description: 'Successful encrypted preview backup plus SQLite restore run ID at the same SHA'
+        type: string
+        required: true
+      backup_reviewed:
+        description: 'Type ENCRYPTED_PREVIEW_BACKUP_VERIFIED'
+        type: string
+        required: true
+      private_data_approval:
+        description: 'Type I_AUTHORIZE_PREVIEW_DATA_IN_DISPOSABLE_D1 (private preview data temporarily copied to an unbound Cloudflare D1)'
+        type: string
+        required: true
+      cleanup_confirmation:
+        description: 'Type DELETE_ONLY_CREATED_DISPOSABLE to authorize deletion of the temporary D1'
+        type: string
+        required: true
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: anevum-v5-disposable-d1-restore
+  cancel-in-progress: false
+
+jobs:
+  disposable-restore:
+    if: >-
+      github.ref == 'refs/heads/main' &&
+      inputs.confirmation == 'RESTORE_DISPOSABLE_D1_ONLY' &&
+      inputs.reviewed_head_sha == github.sha &&
+      inputs.backup_reviewed == 'ENCRYPTED_PREVIEW_BACKUP_VERIFIED' &&
+      inputs.private_data_approval == 'I_AUTHORIZE_PREVIEW_DATA_IN_DISPOSABLE_D1' &&
+      inputs.cleanup_confirmation == 'DELETE_ONLY_CREATED_DISPOSABLE'
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install pinned encrypted recovery dependency
+        run: python -m pip install --no-cache-dir cryptography==45.0.7
+      - name: Verify reviewed source and permanently isolated real D1 UUIDs
+        env:
+          REVIEWED_HEAD_SHA: ${{ inputs.reviewed_head_sha }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          umask 077
+          test "$(git ls-remote origin refs/heads/main | cut -f1)" = "$GITHUB_SHA"
+          test "$REVIEWED_HEAD_SHA" = "$GITHUB_SHA"
+          test "$(jq -er '.name' wrangler.member-staging.jsonc)" = 'anevum-member-staging'
+          test "$(jq -er '.d1_databases[0].database_id' wrangler.member-staging.jsonc)" = 'a537432e-d216-4b31-8b22-19662cc3a44a'
+          test "$(jq -er '.d1_databases[0].database_id' wrangler.jsonc)" = '7f0d4c0c-2e85-4900-8504-1347954e1df1'
+          test "$(jq -er '.vars.ANEVUM_COMMONS_SOCIAL_PILOT_ENABLED' wrangler.member-staging.jsonc)" = 'false'
+          test "$(jq -er '.vars.ANEVUM_OWNER_PAPER_OBSERVER_ENABLED' wrangler.member-staging.jsonc)" = 'false'
+          python scripts/v5-disposable-d1-restore.py selftest
+          python scripts/verify-v5-preview-export-backup.py selftest
+      - name: Confirm exact encrypted preview backup and verified archive
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BACKUP_RUN_ID: ${{ inputs.backup_run_id }}
+          REVIEWED_HEAD_SHA: ${{ inputs.reviewed_head_sha }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          umask 077
+          [[ "$BACKUP_RUN_ID" =~ ^[0-9]{9,12}$ ]]
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$BACKUP_RUN_ID" > "$RUNNER_TEMP/v5-backup-run.json"
+          jq -e --arg sha "$REVIEWED_HEAD_SHA" '
+            .name == "ANEVUM V5 Preview D1 Encrypted Backup and Restore Test" and
+            .event == "workflow_dispatch" and
+            .head_branch == "main" and .head_sha == $sha and
+            .status == "completed" and .conclusion == "success"
+          ' "$RUNNER_TEMP/v5-backup-run.json" > /dev/null
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$BACKUP_RUN_ID/artifacts" > "$RUNNER_TEMP/v5-backup-artifacts.json"
+          jq -e --arg name "anevum-preview-d1-encrypted-$BACKUP_RUN_ID" '
+            any(.artifacts[]; .name == $name and .expired == false and
+                              .size_in_bytes > 1024 and .size_in_bytes < 134217728)
+          ' "$RUNNER_TEMP/v5-backup-artifacts.json" > /dev/null
+          mkdir -p "$RUNNER_TEMP/v5-private-restore-input"
+          gh run download "$BACKUP_RUN_ID" --repo "$GITHUB_REPOSITORY" \
+            --name "anevum-preview-d1-encrypted-$BACKUP_RUN_ID" \
+            --dir "$RUNNER_TEMP/v5-private-restore-input"
+          test -f "$RUNNER_TEMP/v5-private-restore-input/anevum-preview-d1.sql.fernet"
+      - name: Restore private backup into fresh unbound Cloudflare D1, then verify deletion
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_D1_TOKEN: ${{ secrets.CLOUDFLARE_D1_TOKEN }}
+          ANEVUM_PREVIEW_BACKUP_FERNET_KEY: ${{ secrets.ANEVUM_PREVIEW_BACKUP_FERNET_KEY }}
+          RESTORE_REVIEWED_SHA: ${{ inputs.reviewed_head_sha }}
+          RESTORE_CONFIRMATION: ${{ inputs.confirmation }}
+          RESTORE_DATA_APPROVAL: ${{ inputs.private_data_approval }}
+          RESTORE_CLEANUP_APPROVAL: ${{ inputs.cleanup_confirmation }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          umask 077
+          python scripts/v5-disposable-d1-restore.py restore \
+            "$RUNNER_TEMP/v5-private-restore-input/anevum-preview-d1.sql.fernet"
+      - name: Always retry disposable cleanup and verify its absence
+        if: always()
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_D1_TOKEN: ${{ secrets.CLOUDFLARE_D1_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          umask 077
+          python scripts/v5-disposable-d1-restore.py cleanup
+          rm -rf "$RUNNER_TEMP/v5-private-restore-input"
+      - name: State narrow recovery evidence scope
+        if: success()
+        shell: bash
+        run: |
+          set -euo pipefail
+          {
+            echo ''
+            echo 'This workflow proves a fresh, unbound Cloudflare D1 import and confirmed deletion.'
+            echo 'It does NOT apply production/preview migrations, enable social writes,'
+            echo 'authorize brokerage access, or approve a production deployment.'
+          } >> "$GITHUB_STEP_SUMMARY"
