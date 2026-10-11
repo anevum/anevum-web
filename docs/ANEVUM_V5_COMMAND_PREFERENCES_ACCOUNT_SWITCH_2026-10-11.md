@@ -51,3 +51,10 @@ testing with two independent Google accounts must still verify profile,
 save/follow, RHEN workspace, draft and export isolation. The separate
 ANEVUM V5 production launch and external tester invitation decisions
 remain unapproved.
+
+The explicit two-real-member staging acceptance script also sends the
+expected authenticated member header on reversible saved-project writes
+when `--exercise-writes` is separately authorized. Synthetic acceptance
+fixtures reject a stale member hint with HTTP 409, preserve the other
+member's preference state, and verify test data restoration. The script's
+read-only default and no-cookie-log policy remain unchanged.
