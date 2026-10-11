@@ -53,8 +53,11 @@ function fakeStaging({ brokenExport = false, sharedDrafts = false,
     if (!member) return reply({ message: "Sign in required" }, 401);
     if (path === "/api/member/saved-apps/rhen") {
       if (options.headers.Origin !== STAGING_ORIGIN) return reply({ message: "Denied" }, 403);
+      if (options.headers["X-ANEVUM-EXPECTED-MEMBER-ID"] !== undefined &&
+          options.headers["X-ANEVUM-EXPECTED-MEMBER-ID"] !== member.user.id)
+        return reply({ message: "Authenticated member changed" }, 409);
       member.saved = options.method === "PUT";
-      return reply({ saved: member.saved });
+      return reply({ saved: member.saved, slug: "rhen" });
     }
     if (path === "/api/member/rhen/workspace") {
       assert.equal(options.method,"GET","Live two-user acceptance must not provision a workspace implicitly");
@@ -150,6 +153,26 @@ test("explicit reversible write run proves draft and saved-app isolation then re
   const writes = stage.requests.filter(x => ["PUT", "DELETE"].includes(x.options.method)
     && x.options.headers.Origin === STAGING_ORIGIN);
   assert.ok(writes.length >= 6);
+  const preferenceWrites = writes.filter(x => x.url.endsWith("/api/member/saved-apps/rhen"));
+  assert.ok(preferenceWrites.length >= 3);
+  for (const write of preferenceWrites) {
+    const expected = write.options.headers.Cookie === "private-A" ? "member-A" : "member-B";
+    assert.equal(write.options.headers["X-ANEVUM-EXPECTED-MEMBER-ID"], expected);
+  }
+});
+
+test("a stale Google member cannot save or follow for a new authenticated member",async()=>{
+  const stage=fakeStaging();
+  const response=await stage.fetcher(STAGING_ORIGIN+"/api/member/saved-apps/rhen",{
+    method:"PUT",cache:"no-store",redirect:"manual",
+    headers:{
+      Cookie:"private-B",Origin:STAGING_ORIGIN,
+      "X-ANEVUM-EXPECTED-MEMBER-ID":"member-A"
+    }
+  });
+  assert.equal(response.status,409);
+  assert.equal(stage.members["private-B"].saved,true);
+  assert.equal(stage.members["private-A"].saved,false);
 });
 
 test("a cross-account export or shared draft backend fails isolation acceptance", async () => {
