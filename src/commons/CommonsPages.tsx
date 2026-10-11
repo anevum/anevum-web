@@ -229,7 +229,7 @@ function BetaLanding() {
       <h2 id="beta-join-title">Create your ANEVUM account</h2>
       <p>Sign in with Google to get your own Command, manage a private profile, save projects and follow published work.</p>
       {availability==="available"?
-        <div className="c2-action-row"><Link to="/sign-in" className="c2-text-link">Continue with Google →</Link><Link to="/help">Account help →</Link></div>:
+        <div className="c2-action-row"><Link to="/sign-in?next=beta" className="c2-text-link">Continue with Google →</Link><Link to="/help">Account help →</Link></div>:
         availability==="checking"?<p role="status">Checking registration availability…</p>:
         <div role="status"><p>Registration is not currently available. Public work is still open to read.</p>
           <button type="button" className="c2-text-link" onClick={refreshMemberAvailability}>Recheck registration</button></div>}
