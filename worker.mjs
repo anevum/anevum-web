@@ -4,6 +4,7 @@ import { shadowRead } from "./shadow-transport.mjs";
 import { memberEndpoint } from "./src/server/member.mjs";
 import { verifyOwnerMemberBinding, OwnerMemberBindingError } from "./src/server/command-owner-binding.mjs";
 import { observeOwnerGitHub } from "./src/server/github-owner-status.mjs";
+import { observeOwnerInfrastructure } from "./src/server/owner-infrastructure-status.mjs";
 import { legacyOperatorTarget } from "./src/server/operator-routes.mjs";
 import { retiredRhenBoundary, retiredRhenStatus } from "./src/server/legacy-rhen-retirement.mjs";
 
@@ -612,6 +613,20 @@ export default {
       } catch (error) {
         const status = error instanceof ApiError ? error.status : 503;
         return jsonResponse({ message: "Owner GitHub observations unavailable." }, status);
+      }
+    }
+
+    if (pathname === "/api/command/integrations/infrastructure") {
+      if (request.method !== "GET") return jsonResponse({ message: "Read-only infrastructure observations." }, 405);
+      if (url.search) return jsonResponse({ message: "Integration query parameters are not accepted." }, 400);
+      try {
+        // Both the Cloudflare Access assertion and exact owner Better Auth
+        // member session MUST pass before any provider credential is used.
+        await commandCredential(request, env);
+        return jsonResponse(await observeOwnerInfrastructure(env));
+      } catch (error) {
+        const status = error instanceof ApiError ? error.status : 503;
+        return jsonResponse({ message: "Owner infrastructure observations unavailable." }, status);
       }
     }
 
