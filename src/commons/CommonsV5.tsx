@@ -90,9 +90,9 @@ function Header({ onMenu, search, setSearch, onDesign, inputRef, pathname, onSea
   return <header className="global-header">
     <div className="header-brand">
       <button type="button" className="icon-btn nav-toggle" aria-label="Toggle navigation" onClick={onMenu}><Icon name="menu"/></button>
-      <Link className="brand" to="/" aria-label="ANEVUM Commons home">
+      <Link className="brand" to="/" aria-label="ANEVUM home">
         <span className="brand-mark"><Mark /></span>
-        <span className="brand-text"><strong>ANEVUM</strong><small>the commons</small></span>
+        <span className="brand-text"><strong>ANEVUM</strong><small>open workshop</small></span>
       </Link>
     </div>
     <div className="global-search" role="search">
@@ -101,16 +101,17 @@ function Header({ onMenu, search, setSearch, onDesign, inputRef, pathname, onSea
         placeholder="Search ANEVUM publications..." aria-label="Search published ANEVUM work" onKeyDown={event=>{if(event.key==="Enter"){event.preventDefault();onSearchSubmit();}}} />
       <kbd>/</kbd>
     </div>
-    <nav className="top-links" aria-label="Top navigation">
+    <nav className="top-links v6-top-nav" aria-label="Quick navigation">
       {primaryNavigation.filter(item=>["/","/products","/communities","/field-notes","/updates"].includes(item.path)).map(item=>
         <Link key={item.path} to={item.path} className={isSiteNavigationActive(pathname,item.path)?"active":""}
-          aria-current={isSiteNavigationActive(pathname,item.path)?"page":undefined}>{item.label}</Link>)}
+          aria-current={isSiteNavigationActive(pathname,item.path)?"page":undefined}
+          aria-label={item.label} title={item.label+" — "+item.description}><Icon name={item.icon}/></Link>)}
     </nav>
     <div className="global-actions">
       <Link className="create-btn" to={session?.user?"/apps/rhen":"/beta"}>
         <Icon name={session?.user?"chart":"arrow-up-right"}/><span>{session?.user?"My RHEN":"Get started"}</span>
       </Link>
-      <button type="button" className="icon-btn design-launch" aria-label="Customize design" title="Customize design" onClick={onDesign}><Icon name="palette"/></button>
+      <button type="button" className="icon-btn design-launch" aria-label="Customize design" title="Customize appearance" onClick={onDesign}><Icon name="palette"/></button>
       <Link to={session?.user ? "/command" : "/sign-in"} className="user-chip" aria-label={session?.user ? "My Command" : "Sign in"}>
         <span className="avatar avatar-header user-avatar">{session?.user?.name?.charAt(0).toUpperCase() || "G"}</span>
         <Icon name="chevron"/>
@@ -131,10 +132,10 @@ function Sidebar({ collapsed, onClose, pathname }: {
       {primaryNavigation.map(item=><Link key={item.path} to={item.path} onClick={onClose}
         className={"side-link "+(isSiteNavigationActive(pathname,item.path)?"active":"")}
         aria-current={isSiteNavigationActive(pathname,item.path)?"page":undefined}
-        title={item.description}><Icon name={item.icon}/><span>{item.label}</span></Link>)}
+        title={item.label+" — "+item.description} aria-label={item.label}><Icon name={item.icon}/><span>{item.label}</span></Link>)}
     </div>
     <div className="side-divider"/>
-    <div className="sidebar-nav-group community-nav">
+    <div className="sidebar-nav-group community-nav" aria-label="Topic shortcuts">
       <div className="group-heading"><span className="side-heading">EXPLORE TOPICS</span><Link className="side-mini-btn" to="/communities" aria-label="Browse topics" onClick={onClose}><Icon name="plus"/></Link></div>
       <Link className="community-link" to="/field-notes?category=systems" onClick={onClose}><span className="community-icon ci-blue">λ</span><span>Systems &amp; architecture</span></Link>
       <Link className="community-link" to="/field-notes?category=engineering" onClick={onClose}><span className="community-icon ci-orange">⌘</span><span>Engineering &amp; software</span></Link>
@@ -148,7 +149,7 @@ function Sidebar({ collapsed, onClose, pathname }: {
       {accountNavigation.map(item=><Link key={item.path} to={session?.user?item.path:"/sign-in"} onClick={onClose}
         className={"side-link "+(isSiteNavigationActive(pathname,item.path)?"active":"")}
         aria-current={isSiteNavigationActive(pathname,item.path)?"page":undefined}
-        title={item.description}><Icon name={item.icon}/><span>{item.label}</span></Link>)}
+        title={item.label+" — "+item.description} aria-label={item.label}><Icon name={item.icon}/><span>{item.label}</span></Link>)}
     </div>
     <StudioNavLink pathname={pathname} onClose={onClose}/>
     <div className="side-bottom">
@@ -301,9 +302,9 @@ function RightRail() {
   const largest = Math.max(1,...categories.map(category=>category.count));
   return <aside className="right-sidebar" aria-label="Discover">
     <section className="right-card rail-intro">
-      <span className="tiny-overline">WELCOME TO THE COMMONS</span>
+      <span className="tiny-overline">INSIDE ANEVUM</span>
       <h2>Ideas are better when we can examine them.</h2>
-      <p>Read real published ANEVUM work. Public member profiles and community participation are still being built.</p>
+      <p>Read real published ANEVUM work. Profiles and community discussion are being developed alongside real projects.</p>
       <Link to={session?.user ? "/command" : "/sign-in"} className="rail-link">{session?.user ? "Open your Command" : "Sign in to ANEVUM"} <Icon name="arrow-up-right"/></Link>
       <Link to={session?.user ? "/me/beta" : "/beta"} className="rail-link">{session?.user ? "Check your beta access" : "Explore member beta"} <Icon name="arrow-up-right"/></Link>
     </section>
@@ -358,7 +359,7 @@ function AppearancePanel({ prefs, onChange, onClose, onReset }: {
     {key:"forest",label:"Forest"},{key:"midnight",label:"Midnight"},{key:"carbon",label:"Carbon"},
     {key:"paper",label:"Daylight"},{key:"plum",label:"Plum"}
   ];
-  return <div className="design-panel" role="region" aria-label="Customize Commons appearance">
+  return <div className="design-panel" role="region" aria-label="Customize ANEVUM appearance">
     <div className="design-panel-header"><div><span className="eyebrow">INTERFACE LAB</span><h3>Make it yours.</h3></div>
       <button type="button" className="icon-btn" aria-label="Close appearance settings" onClick={onClose}><Icon name="x"/></button>
     </div>
@@ -388,7 +389,7 @@ function CommonsApp({prefs,setPrefs,content}: {prefs:Preferences;setPrefs:(next:
   const [search,setSearch] = useState("");
   const [designOpen,setDesignOpen] = useState(false);
   const [drawerOpen,setDrawerOpen] = useState(false);
-  const [collapsed,setCollapsed] = useState(false);
+  const [collapsed,setCollapsed] = useState(true);
   const searchRef=useRef<HTMLInputElement>(null);
   const { data: session } = memberAuthClient.useSession();
   const location = useLocation();
@@ -437,7 +438,7 @@ function CommonsApp({prefs,setPrefs,content}: {prefs:Preferences;setPrefs:(next:
       </main>
       {content ? null : <RightRail/>}
     </div>
-    <nav className="mobile-nav" aria-label="Mobile navigation">
+    <nav className="mobile-nav v6-mobile-dock" aria-label="Mobile navigation">
       {mobileNavigation.map(item=><Link key={item.path}
         to={item.path==="/command"?safeAccountDestination(Boolean(session?.user)):item.path}
         className={isSiteNavigationActive(pathname,item.path)?"active":""}
