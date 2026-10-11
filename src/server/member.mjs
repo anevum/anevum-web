@@ -172,7 +172,6 @@ export async function memberEndpoint(request, env, pathname, verifiedContext = {
   if (!memberConfigured(env)) return reply({ message: "Member accounts are not available yet." }, 503);
   if (!verifiedOrigin) return reply({ message: "Member API origin is not authorized." }, 403);
 
-  const auth = makeMemberAuth(env, verifiedOrigin);
   if (pathname === "/api/auth" || pathname.startsWith("/api/auth/")) {
     // Mailbox ownership alone must never become an alternate founder/owner
     // login path. Check both code issuance and redemption before Better Auth.
@@ -190,9 +189,10 @@ export async function memberEndpoint(request, env, pathname, verifiedContext = {
         return reply({ message: "Invalid email login request." }, 400);
       }
     }
-    return auth.handler(request);
+    return makeMemberAuth(env, verifiedOrigin).handler(request);
   }
 
+  const auth = makeMemberAuth(env, verifiedOrigin);
   const session = await auth.api.getSession({ headers: request.headers }).catch(() => null);
   const user = session?.user;
   if (!user?.id) return reply({ message: "Sign in required." }, 401);
