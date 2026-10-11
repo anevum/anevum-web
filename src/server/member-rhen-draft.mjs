@@ -2,6 +2,16 @@
 // The authenticated user identifier is supplied by memberEndpoint, never input.
 const FIELDS = ["label", "maxOpenPositions", "maxPositionPercent", "maxTotalExposurePercent"];
 
+/** Optional stale-tab protection for modern UI writes. Server authorization
+ * STILL uses the verified session user.id exclusively; old clients may omit
+ * the header, but a supplied mismatching identity never permits a mutation.
+ */
+export function draftExpectedMemberMatches(request, verifiedMemberId) {
+  if (typeof verifiedMemberId !== "string" || !verifiedMemberId) return false;
+  return !request.headers.has("X-ANEVUM-EXPECTED-MEMBER-ID") ||
+    request.headers.get("X-ANEVUM-EXPECTED-MEMBER-ID") === verifiedMemberId;
+}
+
 export function validateRhenDraft(value) {
   if (!value || typeof value !== "object" || Array.isArray(value)) {
     throw new Error("Expected a draft object.");
