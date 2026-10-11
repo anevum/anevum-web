@@ -12,7 +12,7 @@ const SUFFIXES=["",".ts",".tsx",".mts",".cts",".mjs",".cjs",".js",".jsx",".json"
 const SKIP=new Set([".git","node_modules","dist",".wrangler","coverage",".tmp","tmp",".cache",".next","build","artifacts"]);
 const posix=value=>value.split(path.sep).join("/");
 
-function listFiles(root) {
+export function listAuditFiles(root) {
   const found=[],pending=[root];
   while(pending.length){
     const dir=pending.pop();
@@ -89,7 +89,7 @@ export function auditSourceReachability(rootDir=process.cwd()){
   for(const required of ["src/main.tsx","worker.mjs","src/App.tsx"]){
     if(!fs.existsSync(path.join(root,required)))throw Error("V5 audit missing source root: "+required);
   }
-  const list=listFiles(root),files=new Set(list),edges=new Map(),unresolved=[],nonliteral=[];
+  const list=listAuditFiles(root),files=new Set(list),edges=new Map(),unresolved=[],nonliteral=[];
   for(const file of list){
     if(!/\.(?:[cm]?[jt]sx?|css)$/.test(file))continue;
     const refs=extract(file,fs.readFileSync(path.join(root,file),"utf8"));
@@ -118,6 +118,18 @@ export function auditSourceReachability(rootDir=process.cwd()){
   const pages=list.filter(x=>/^src\/pages\/[^/]+\.tsx$/.test(x)).map(file=>({
     file,status:runtime.has(file)?"RUNTIME_REACHABLE":auxiliary.has(file)?"NON_RUNTIME_REFERENCE":"UNREACHED_REVIEW"
   }));
+  function witnesses(start){
+    const paths=new Map(start.map(file=>[file,[file]])),todo=[...start];
+    for(let i=0;i<todo.length;i++){
+      const file=todo[i];
+      for(const dep of edges.get(file)||[]){
+        if(paths.has(dep))continue;
+        paths.set(dep,[...paths.get(file),dep]);todo.push(dep);
+      }
+    }
+    return paths;
+  }
+  const runtimePaths=witnesses(roots),auxiliaryPaths=witnesses(auxiliaryRoots);
   return {
     version:"anevum.v5.source-reachability.v1",
     runtimeRoots:roots,
@@ -129,6 +141,13 @@ export function auditSourceReachability(rootDir=process.cwd()){
       unreachedReviewPages:pages.filter(x=>x.status==="UNREACHED_REVIEW").length
     },
     pages,
+    pageEvidence:pages.map(({file})=>({
+      file,
+      runtimePath:runtimePaths.get(file)||null,
+      auxiliaryPath:auxiliaryPaths.get(file)||null,
+      importers:[...edges].filter(([,deps])=>deps.includes(file)).map(([owner])=>owner).sort(),
+      dependencies:edges.get(file)||[]
+    })),
     runtimeUnresolved:unresolved.filter(x=>runtime.has(x.file)),
     runtimeDynamic:nonliteral.filter(x=>runtime.has(x.file)),
     limitations:[

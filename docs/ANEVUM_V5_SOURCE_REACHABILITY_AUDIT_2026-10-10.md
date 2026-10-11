@@ -27,3 +27,10 @@ approval and a restore path. The CSS route split experiment remains unmerged.
 
 This audit makes no production, OAuth, D1, Railway, Stripe, account, broker
 or deployment change.
+
+## Supplemental retention review
+
+The import-only labels do not cover filesystem reads. See
+ANEVUM_V5_LEGACY_PAGE_RETENTION_REVIEW_2026-10-11.md and run
+scripts/audit-v5-legacy-page-retention.mjs for literal path references and
+import witnesses. Keep this distinction when reviewing UNREACHED_REVIEW pages.

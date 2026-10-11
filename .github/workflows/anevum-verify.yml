@@ -55,6 +55,9 @@ jobs:
           node scripts/audit-v5-source-reachability.mjs --json > "$RUNNER_TEMP/anevum-v5-source-reachability.json"
           jq -e '(.version == "anevum.v5.source-reachability.v1") and ((.runtimeUnresolved | length) == 0) and (.counts.pages >= 30)' "$RUNNER_TEMP/anevum-v5-source-reachability.json" > /dev/null
           jq -c '{counts, runtimeDynamicCount: (.runtimeDynamic | length), runtimeUnresolvedCount: (.runtimeUnresolved | length)}' "$RUNNER_TEMP/anevum-v5-source-reachability.json"
+          node scripts/audit-v5-legacy-page-retention.mjs --json > "$RUNNER_TEMP/anevum-v5-legacy-page-retention.json"
+          jq -e '(.version == "anevum.v5.legacy-page-retention.v1") and (.deletionAuthorized == false) and ((.runtimeUnresolved | length) == 0)' "$RUNNER_TEMP/anevum-v5-legacy-page-retention.json" > /dev/null
+          jq -c '{counts, deletionAuthorized}' "$RUNNER_TEMP/anevum-v5-legacy-page-retention.json"
       - name: Enforce pinned WEB/RHEN cross-repository workspace schema parity
         # Public GitHub REST unauthenticated IP rate limits can return 403 in
         # Actions runners; authenticate this read-only pinned branch check.
@@ -224,7 +227,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: anevum-v5-source-reachability
-          path: ${{ runner.temp }}/anevum-v5-source-reachability.json
+          path: |
+            ${{ runner.temp }}/anevum-v5-source-reachability.json
+            ${{ runner.temp }}/anevum-v5-legacy-page-retention.json
           retention-days: 3
           if-no-files-found: error
 
