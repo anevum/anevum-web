@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {readFileSync} from "node:fs";
 import {observeOwnerPersonalPaper,personalPaperConfigured} from "../src/server/owner-personal-paper.mjs";
+import {verifiedOwnerPaperStatus} from "../src/member/owner-paper-status.ts";
 const source=p=>readFileSync(new URL("../"+p,import.meta.url),"utf8");
 const env={
   ANEVUM_OWNER_PAPER_OBSERVER_ENABLED:"true",
@@ -86,4 +87,26 @@ test("worker route enforces exact verified Access/member before paper read",()=>
   const backend=source("src/server/owner-personal-paper.mjs");
   assert.doesNotMatch(backend,/\/v2\/orders|submitOrder|placeOrder|\/v2\/positions/);
   assert.doesNotMatch(source("src/commons/CommonsPages.tsx"),/\balpaca\b/i);
+});
+
+test("private beta accepts only masked PAPER status after owner/member authorization",()=>{
+  assert.deepEqual(verifiedOwnerPaperStatus({
+    available:true,paper:true,executionEnabled:false,
+    account:{ending:"1234",environment:"paper",status:"ACTIVE"}
+  }),{accountEnding:"1234",providerStatus:"ACTIVE"});
+  for(const value of [
+    {available:true,paper:true,executionEnabled:true,account:{ending:"1234",environment:"paper",status:"ACTIVE"}},
+    {available:true,paper:true,executionEnabled:false,account:{ending:"FULL1234",environment:"paper",status:"ACTIVE"}},
+    {available:true,paper:true,executionEnabled:false,account:{ending:"1234",environment:"live",status:"ACTIVE"}},
+    {available:true,paper:true,executionEnabled:false,account:{ending:"1234",environment:"paper",status:"ACTIVE",account_number:"FULL1234"}},
+    {available:true,paper:true,executionEnabled:false,account:{ending:"1234",environment:"paper",status:"ACTIVE"},providerToken:"secret"}
+  ]) assert.throws(()=>verifiedOwnerPaperStatus(value));
+  const page=source("src/pages/OwnerPersonalPaperReadiness.tsx");
+  assert.match(page,/owner_member_bound!==true/);
+  assert.match(page,/command_admin!==true/);
+  assert.match(page,/auth_source!=="cloudflare_access"/);
+  assert.ok(page.indexOf('fetch("/api/command/session"')<page.indexOf('fetch("/api/member/owner-paper/status"'));
+  assert.match(page,/controller\.abort\(\)/);
+  assert.doesNotMatch(page,/\bPOST\b|\bPUT\b|\bDELETE\b|API_SECRET/);
+  assert.match(source("src/pages/MemberBeta.tsx"),/<OwnerPersonalPaperReadiness memberId=\{memberId\}/);
 });
