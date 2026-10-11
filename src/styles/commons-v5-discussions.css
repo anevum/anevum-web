@@ -52,3 +52,9 @@
 .c2-review-reload:disabled{opacity:.48;cursor:not-allowed}
 .c2-review-reload:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
 @media(max-width:600px){.c2-moderation-item{padding:15px!important}.c2-moderation-item form button{width:100%;justify-self:stretch}}
+
+.c2-social button{min-height:44px}
+.c2-social-reload,.c2-social-more{margin:12px 0;max-width:100%}
+.c2-social-reply button{margin:5px 0}
+
+.c2-social,.c2-social-post{scroll-margin-top:80px}

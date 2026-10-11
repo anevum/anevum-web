@@ -264,7 +264,7 @@ test("Commons social migration is isolated and never auto-applied with F0 or OAu
   assert.deepEqual(main.sort(),["0001_member_platform.sql","0002_member_rhen_drafts.sql",
     "0003_member_billing.sql","0004_member_rhen_workspaces.sql"]);
   assert.deepEqual(review,["0005_member_alpaca_review.sql"]);
-  assert.deepEqual(social,["0006_commons_v5_discussions.sql"]);
+  assert.deepEqual(social.sort(),["0006_commons_v5_discussions.sql","0007_commons_paging_indexes.sql"]);
   assert.equal(existsSync(new URL("../migrations/0006_commons_v5_discussions.sql",import.meta.url)),false);
   const sql=src("migrations-social/0006_commons_v5_discussions.sql");
   assert.match(sql,/ON DELETE CASCADE/);

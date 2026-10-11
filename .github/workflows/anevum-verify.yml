@@ -189,6 +189,7 @@ jobs:
           node scripts/member-command-browser-qa.mjs
           node scripts/member-settings-browser-qa.mjs
           node scripts/moderation-review-browser-qa.mjs
+          node scripts/discussion-lifecycle-browser-qa.mjs
           node scripts/private-rhen-browser-qa.mjs
       - name: Visual review contact sheets
         if: github.event_name == 'pull_request'
@@ -209,6 +210,8 @@ jobs:
             test -s "$evidence/member-settings-member-$width.png"
             test -s "$evidence/moderation-review-review-$width.png"
             test -s "$evidence/moderation-review-form-$width.png"
+            test -s "$evidence/discussion-composer-$width.png"
+            test -s "$evidence/discussion-lifecycle-$width.png"
             for section in overview account setup evidence research updates; do
               test -s "$evidence/private-rhen-$section-member-$width.png"
             done
@@ -218,6 +221,9 @@ jobs:
           done
           for state in signed-out disabled denied unavailable malformed crossed capped wrong-report wrong-decision wrong-reviewer audit-missing execution-enabled conflict network revoked switch late-load; do
             test -s "$evidence/moderation-review-$state-390.png"
+          done
+          for state in signed-out disabled off denied malformed crossed invalid-cursor pages page-error duplicate-page bad-replies wrong-write network-write quota wrong-report wrong-remove revoked late-feed late-replies switch-write; do
+            test -s "$evidence/discussion-$state-390.png"
           done
           grep -Fq 'anevum-commons-v5-mount' "$evidence/home-rendered.html"
           grep -Fq 'Public ANEVUM work' "$evidence/home-rendered.html"

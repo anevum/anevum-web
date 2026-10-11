@@ -25,6 +25,7 @@ STEPS = (
     ("migrations", "0004_member_rhen_workspaces.sql", "58a6a352cf2ffd4d11f7e39ef07f2b66b08cd596"),
     ("migrations-review", "0005_member_alpaca_review.sql", "40d4d282eeae1630fd89d7b08c975102cff8e341"),
     ("migrations-social", "0006_commons_v5_discussions.sql", "69df811aca79e812c3d976edb5e17b2c4c6d4fbd"),
+    ("migrations-social", "0007_commons_paging_indexes.sql", "39fd9de119f6f48e1841aa96958d09c40188d8bc"),
 )
 ALLOWED_STATEMENT = re.compile(r"(?is)^(?:PRAGMA\s+foreign_keys\s*=\s*ON|CREATE\s+(?:UNIQUE\s+)?(?:TABLE|INDEX)\s+IF\s+NOT\s+EXISTS\b)")
 
@@ -56,7 +57,7 @@ def verify_catalog() -> list[tuple[str, str]]:
                         f"non-schema operation found in {name}")
         require("PRAGMA foreign_keys = ON" in text, f"FK requirement missing in {name}")
         contents.append((name, text))
-    require([int(name[:4]) for name, _ in contents] == [1, 2, 3, 4, 5, 6],
+    require([int(name[:4]) for name, _ in contents] == [1, 2, 3, 4, 5, 6, 7],
             "ambiguous or missing migration sequence")
     return contents
 
@@ -163,6 +164,9 @@ def execute() -> dict:
         db.executescript(catalog[5][1])
         db.execute("INSERT INTO d1_migrations(id,name) VALUES(6,?)", (catalog[5][0],))
         require(snapshot(db) == before, "0006 modified staged member data")
+        db.executescript(catalog[6][1])
+        db.execute("INSERT INTO d1_migrations(id,name) VALUES(7,?)", (catalog[6][0],))
+        require(snapshot(db) == before, "0007 modified staged member data")
         social_tables = {x[0] for x in db.execute(
             "SELECT name FROM sqlite_master WHERE type='table' AND name LIKE 'commons_v5_%'"
         )}
@@ -239,6 +243,7 @@ def execute() -> dict:
             "migration_sequence": [name for name, _ in catalog],
             "sql_blobs_pinned": True,
             "existing_state_preserved_through_0006": True,
+            "existing_state_preserved_through_0007": True,
             "cross_member_broker_reuse_blocked": True,
             "write_scope_denials": True,
             "report_moderation_uniqueness": True,
