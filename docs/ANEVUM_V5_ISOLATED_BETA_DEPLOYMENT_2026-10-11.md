@@ -88,6 +88,43 @@ profiles for the first real-account acceptance. No user cookies or exports
 should be shared. Actual Google callback and session persistence remain
 unverified until that test succeeds.
 
+
+## October 11 live controlled-beta acceptance checkpoint
+
+The **deployed** V5 beta Worker and Google OAuth initiation are now independently
+verified. The initial one-time branch release action deployed version
+ae2ea588-4dab-4216-bef2-03323c298a1a (source parent a5fd8208). Its
+post-deployment step returned failure without identifying an endpoint.
+Follow-up CI performed a live read-only probe with confirmed status:
+\`/api/member/availability\` HTTP 200 and \`{available:true,provider:"google"}\`;
+\`/\`, \`/beta\`, \`/sign-in\`, \`/me/beta\` HTTP 200; the five private member and
+operator routes HTTP 401 without credentials. All three Worker D1 bindings
+remain distinct. The new non-authenticating OAuth POST produced Google's
+HTTPS authorization route, exact beta callback, standard code flow, and state
+without logging the authorization URL or creating a member.
+
+Cloudflare's own read-only beta D1 aggregate check now reports **one**
+email-verified Google member, one linked Google account, one session, one
+independent RHEN workspace, one non-executing draft, and no orphaned
+workspace. These counts show a real account record was persisted but do
+**not** identify which person created it or prove two-user isolation.
+No raw identity, email, access/refresh token, session cookie, or member
+export was read into this checkpoint.
+
+\`scripts/v5-beta-two-member-aggregate-audit.mjs\` supplies a reusable,
+strictly read-only **prerequisite** test against the exact beta D1 UUID. It
+checks aggregate verified Google membership and ownership of two distinct
+workspaces, with no orphaned or duplicate workspace IDs. It emits only
+bounded counters/statuses, never member identity or brokerage data. This
+does not replace two actual Google sign-ins, private session checks,
+persistent drafts/exports, cross-member API denial, or separate owner
+approval for invitations. Source tests enforce this distinction.
+
+The live Worker is still the originally authorized deployed code; later
+source-only corrections to protected Worker version comparison and
+aggregate acceptance checks are **not** themselves an additional deployment.
+Neither production nor Alpaca reviewer Worker was redeployed.
+
 ## Required acceptance before real testers are invited
 
 1. Confirm exact-head V5 CI and isolated beta release preflight are green.
