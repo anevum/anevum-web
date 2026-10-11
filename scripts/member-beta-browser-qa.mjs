@@ -106,7 +106,7 @@ async function runCase(width,scenario){
         "return {heading,text:page?.textContent||'',"+
         "states:[...(page?.querySelectorAll('[data-beta-state]')||[])].map(x=>x.dataset.betaState),"+
         "owner:root?.querySelector('[data-beta-owner-paper]')?.textContent||'',"+
-        "links:[...(page?.querySelectorAll('a[href]')||[])].map(x=>x.getAttribute('href')),"+
+        "accountAction:!!page?.querySelector('.c2-beta-card:first-child a[href="/me/settings"]'),"+
         "robots:document.querySelector('meta[name=robots]')?.content||'',"+
         "canonical:document.querySelector('link[rel=canonical]')?.href||'',"+
         "overflow:document.documentElement.scrollWidth>innerWidth+1,"+
@@ -140,7 +140,7 @@ async function runCase(width,scenario){
         throw new Error("Beta capability status incorrect: "+JSON.stringify(observed));
       for(const endpoint of ["/api/member/me","/api/member/rhen/workspace","/api/member/rhen/draft","/api/member/commons/posts"])
         if(!calls.some(c=>c.path.includes(endpoint)))throw new Error("Missing member-scoped capability read: "+endpoint);
-      if(scenario==="crossed"&&(observed.links.includes("/me/settings")||
+      if(scenario==="crossed"&&(observed.accountAction||
                                   observed.text.includes("Other private name")))
         throw new Error("Cross-member account response shown as verified.");
       const paperCalls=calls.filter(c=>c.path.includes("/api/member/owner-paper/status"));
