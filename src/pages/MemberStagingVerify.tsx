@@ -6,6 +6,8 @@ import { runStagingAcceptance, type AcceptanceReport } from "../member/staging-a
 import { runWorkspaceStagingProof, WorkspaceStagingFailure, type WorkspaceStagingProof } from "../member/workspace-staging-acceptance";
 
 const STAGING_ORIGIN = "https://anevum-member-staging.devonakins.workers.dev";
+const V5_BETA_ORIGIN = "https://anevum-v5-beta.devonakins.workers.dev";
+const ALLOWED_ACCEPTANCE_ORIGINS = new Set([STAGING_ORIGIN, V5_BETA_ORIGIN]);
 
 export default function MemberStagingVerify() {
   const availability = useMemberAvailability();
@@ -13,7 +15,7 @@ export default function MemberStagingVerify() {
 
   // The same static bundle ships to production, but this is an isolated
   // staging-only testing UI, not an elevated backend feature or launch flag.
-  if (window.location.origin !== STAGING_ORIGIN) return (
+  if (!ALLOWED_ACCEPTANCE_ORIGINS.has(window.location.origin)) return (
     <main className="member-page">
       <h1>Not available</h1>
       <p>Member acceptance checks are limited to the isolated ANEVUM staging website.</p>
