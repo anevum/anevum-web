@@ -159,7 +159,8 @@ function RouteEffects() {
 
   useEffect(() => {
     const path = location.pathname;
-    const protectedRoute = path.startsWith("/studio") || path.startsWith("/command") || path === "/sign-in" ||
+    // Dynamic Studio detail pages remain noindex until server-verified per-entry metadata ships.
+    const protectedRoute = path.startsWith("/updates/") || path.startsWith("/studio") || path.startsWith("/command") || path === "/sign-in" ||
       path.startsWith("/me") || path.startsWith("/apps/") ||
       path === "/communities/moderation";
     const missingRoute = !protectedRoute && !isPublishedPublicPath(path);
@@ -194,7 +195,7 @@ function RouteEffects() {
       title = "Page not found — ANEVUM";
       description = "No published ANEVUM page or record exists at this address.";
     }
-    setRouteMeta(path, title, description, !protectedRoute && !missingRoute && !path.startsWith("/updates/"));
+    setRouteMeta(path, title, description, !protectedRoute && !missingRoute);
   }, [location.pathname]);
 
   return null;

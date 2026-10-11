@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import CommonsPublicPage from "./CommonsPages";
+import StudioNavLink from "./StudioNavLink";
 import Mark from "../components/Mark";
 import { fieldNotes, type FieldNote } from "../data/fieldNotes";
 import { memberAuthClient } from "../member/auth-client";
@@ -122,22 +123,6 @@ function Sidebar({ collapsed, onClose, pathname }: {
 }) {
   const { data: session } = memberAuthClient.useSession();
   const userName = session?.user?.name || "Browsing as guest";
-  const [staff,setStaff]=useState(false);
-  useEffect(()=>{
-    setStaff(false);
-    const memberId=session?.user?.id;
-    if(!memberId)return;
-    const controller=new AbortController();
-    void fetch("/api/member/studio/status",{credentials:"same-origin",cache:"no-store",
-      redirect:"manual",signal:controller.signal})
-      .then(async response=>response.ok?response.json():null)
-      .then(value=>{
-        if(!controller.signal.aborted)setStaff(value?.schemaVersion==="anevum.studio.v1" &&
-          value?.viewerMemberId===memberId &&
-          ["owner","admin"].includes(value?.role));
-      }).catch(()=>{if(!controller.signal.aborted)setStaff(false);});
-    return ()=>controller.abort();
-  },[session?.user?.id]);
   const userInitial = userName.charAt(0).toUpperCase();
   return <aside id="commons-primary-navigation" className="left-sidebar" aria-label="Main navigation"><div className="sidebar-scroll">
     <div className="sidebar-nav-group">
@@ -164,9 +149,7 @@ function Sidebar({ collapsed, onClose, pathname }: {
         aria-current={isSiteNavigationActive(pathname,item.path)?"page":undefined}
         title={item.description}><Icon name={item.icon}/><span>{item.label}</span></Link>)}
     </div>
-    {staff?<div className="sidebar-nav-group"><span className="side-heading">ADMINISTRATION</span>
-      <Link to="/studio" onClick={onClose} className={"side-link "+(pathname==="/studio"?"active":"")} aria-current={pathname==="/studio"?"page":undefined}>
-        <Icon name="settings"/><span>ANEVUM Studio</span></Link></div>:null}
+    <StudioNavLink pathname={pathname} onClose={onClose}/>
     <div className="side-bottom">
       <div className="side-divider"/>
       <Link className="sidebar-member-card" to={session?.user ? "/command" : "/sign-in"}>
