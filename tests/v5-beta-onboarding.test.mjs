@@ -52,5 +52,6 @@ test("beta UI is identity-keyed, read-only and not indexed",()=>{
 test("first-time signup can recheck without changing server-side authorization",()=>{
  assert.match(source("src/pages/SignIn.tsx"),/refreshMemberAvailability\(\)/);
  assert.match(source("src/member/useMemberAvailability.ts"),/controller\?\.abort\(\)/);
+ assert.doesNotMatch(source("src/member/useMemberAvailability.ts"),/addEventListener\("focus"/);
  assert.match(source("src/server/member.mjs"),/memberConfigured\(env\) && Boolean\(verifiedOrigin\) && await memberSchemaReady\(env\)/);
 });
