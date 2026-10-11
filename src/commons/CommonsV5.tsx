@@ -116,8 +116,8 @@ function Header({ onMenu, search, setSearch, onDesign, inputRef, pathname, onSea
   </header>;
 }
 
-function Sidebar({ collapsed, onClose, onNotice, pathname }: {
-  collapsed: boolean; onClose: () => void; onNotice: () => void; pathname: string;
+function Sidebar({ collapsed, onClose, pathname }: {
+  collapsed: boolean; onClose: () => void; pathname: string;
 }) {
   const { data: session } = memberAuthClient.useSession();
   const userName = session?.user?.name || "Browsing as guest";
@@ -371,7 +371,6 @@ function CommonsApp({prefs,setPrefs,content}: {prefs:Preferences;setPrefs:(next:
   const [designOpen,setDesignOpen] = useState(false);
   const [drawerOpen,setDrawerOpen] = useState(false);
   const [collapsed,setCollapsed] = useState(false);
-  const [noticeOpen,setNoticeOpen] = useState(false);
   const searchRef=useRef<HTMLInputElement>(null);
   const { data: session } = memberAuthClient.useSession();
   const location = useLocation();
@@ -397,7 +396,7 @@ function CommonsApp({prefs,setPrefs,content}: {prefs:Preferences;setPrefs:(next:
       if(event.key==="/" && !editing && !event.ctrlKey && !event.metaKey && !event.altKey){
         event.preventDefault();searchRef.current?.focus();
       }
-      if(event.key==="Escape"){setDesignOpen(false);setDrawerOpen(false);setNoticeOpen(false);}
+      if(event.key==="Escape"){setDesignOpen(false);setDrawerOpen(false);}
     };
     document.addEventListener("keydown",onKey);
     return ()=>document.removeEventListener("keydown",onKey);
@@ -412,13 +411,13 @@ function CommonsApp({prefs,setPrefs,content}: {prefs:Preferences;setPrefs:(next:
       onMenu={()=>{if(window.matchMedia("(max-width: 900px)").matches) setDrawerOpen(x=>!x); else setCollapsed(x=>!x);}}
       onDesign={()=>setDesignOpen(x=>!x)}/>
     <div className="shell">
-      <Sidebar collapsed={collapsed} pathname={pathname} onClose={()=>setDrawerOpen(false)} onNotice={()=>setNoticeOpen(true)}/>
+      <Sidebar collapsed={collapsed} pathname={pathname} onClose={()=>setDrawerOpen(false)}/>
       <main className="main" id="commons-main">
         {content ? <section className="c2-member" aria-label="Private member account presentation">{content}</section> : isFeed ? <Feed search={search} filter={filter} setFilter={setFilter} density={prefs.density}
-          setDensity={next=>setPrefs({...prefs,density:next})} onNotice={()=>setNoticeOpen(true)}/> :
+          setDensity={next=>setPrefs({...prefs,density:next})}/> :
           <CommonsPublicPage pathname={pathname} />}
       </main>
-      {content ? null : <RightRail onNotice={()=>setNoticeOpen(true)}/>}
+      {content ? null : <RightRail/>}
     </div>
     <nav className="mobile-nav" aria-label="Mobile navigation">
       {mobileNavigation.map(item=><Link key={item.path}
@@ -433,14 +432,6 @@ function CommonsApp({prefs,setPrefs,content}: {prefs:Preferences;setPrefs:(next:
     </nav>
     {drawerOpen ? <button type="button" className="drawer-scrim" aria-label="Close navigation" onClick={()=>setDrawerOpen(false)}/> : null}
     {designOpen ? <AppearancePanel prefs={prefs} onChange={setPrefs} onClose={()=>setDesignOpen(false)} onReset={()=>setPrefs(defaults)}/> : null}
-    {noticeOpen ? <div className="c-v5-dialog-backdrop" onClick={()=>setNoticeOpen(false)}>
-      <div className="c-v5-dialog" role="dialog" aria-modal="true" aria-labelledby="commons-notice-title" onClick={e=>e.stopPropagation()}>
-        <h2 id="commons-notice-title">Commons is being built.</h2>
-        <p>Commons currently publishes first-party work. Member discussions, voting, badges and notifications are not available yet; signing in does not unlock posting. Personal saved programs are available inside Command for signed-in members.</p>
-        <div className="dialog-buttons"><button type="button" className="btn-secondary" onClick={()=>setNoticeOpen(false)}>Continue browsing</button>
-          <Link className="btn-primary" to="/communities" onClick={()=>setNoticeOpen(false)}>Explore topics <Icon name="arrow-up-right"/></Link></div>
-      </div>
-    </div> : null}
   </div>;
 }
 
