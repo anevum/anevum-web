@@ -76,8 +76,8 @@ async function runCase(viewport, state) {
       overflow:document.documentElement.scrollWidth>innerWidth+1,
       operator:!!account?.querySelector('a[href^="/command/rhen"]'),
       background:shell?getComputedStyle(shell).backgroundColor:"",
-      navSaved:[...(root?.querySelectorAll(".left-sidebar a")||[])].find(el=>el.textContent?.trim()==="My Command")?.getAttribute("href")||"",
-      navProfile:[...(root?.querySelectorAll(".left-sidebar a")||[])].find(el=>el.textContent?.trim()==="Profile & settings")?.getAttribute("href")||"",
+      navSaved:[...(root?.querySelectorAll(".left-sidebar a")||[])].find(el=>el.textContent?.trim()==="Saved programs")?.getAttribute("href")||"",
+      navProfile:[...(root?.querySelectorAll(".left-sidebar a")||[])].find(el=>el.textContent?.trim()==="My profile")?.getAttribute("href")||"",
       buttons:[...(account?.querySelectorAll(".member-card-actions button")||[])].map(el=>el.textContent)
     };
   })()`);
