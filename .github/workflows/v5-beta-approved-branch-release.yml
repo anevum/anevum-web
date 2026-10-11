@@ -93,7 +93,7 @@ jobs:
               state="$(jq -r --arg name "$name" --arg sha "$REVIEWED_PARENT_SHA" '
                 [.workflow_runs[] | select(.name == $name and .head_sha == $sha and
                                           .event == "pull_request")] |
-                sort_by(.run_number, .run_attempt) | last |
+                sort_by([.run_number, .run_attempt]) | last |
                 if . == null then "pending" else (.conclusion // "pending") end
               ' "$RUNNER_TEMP/v5-beta-pr-runs.json")"
               case "$state" in
