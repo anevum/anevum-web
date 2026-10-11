@@ -1,0 +1,197 @@
+name: ANEVUM V5 Pinned Paper Reviewer Staging
+
+on:
+  # Manual only. Never deploy an owner/member trading system from a PR.
+  workflow_dispatch:
+    inputs:
+      confirmation:
+        description: 'Type DEPLOY_ALPACA_PAPER_REVIEW_STAGING_ONLY'
+        type: string
+        required: true
+      reviewed_main_sha:
+        description: 'Exact reviewed current main commit SHA'
+        type: string
+        required: true
+      approved_candidate_sha:
+        description: 'Exact reviewed CI-passed PR 275 candidate commit SHA'
+        type: string
+        required: true
+      provider_callback_reviewed:
+        description: 'Type PAPER_CALLBACK_WHITELISTED after confirming the Alpaca app callback'
+        type: string
+        required: true
+      owner_paper_scope:
+        description: 'Type OWNER_APPROVES_PAPER_ONLY for an isolated read-only paper demo'
+        type: string
+        required: true
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: anevum-v5-pinned-paper-reviewer-staging
+  cancel-in-progress: false
+
+jobs:
+  deploy-reviewer-stage:
+    if: >-
+      github.ref == 'refs/heads/main' &&
+      inputs.confirmation == 'DEPLOY_ALPACA_PAPER_REVIEW_STAGING_ONLY' &&
+      inputs.reviewed_main_sha == github.sha &&
+      inputs.approved_candidate_sha == '511de938061e4d532fb3bb1ff21ece24a5580d06' &&
+      inputs.provider_callback_reviewed == 'PAPER_CALLBACK_WHITELISTED' &&
+      inputs.owner_paper_scope == 'OWNER_APPROVES_PAPER_ONLY'
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    env:
+      CLOUDFLARE_VITE_WRANGLER_CONFIG_PATH: wrangler.alpaca-review-staging.jsonc
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify exact owner-approved main, pinned PR provenance and passing checks
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          candidate="511de938061e4d532fb3bb1ff21ece24a5580d06"
+          test "$(git ls-remote origin refs/heads/main | cut -f1)" = "$GITHUB_SHA"
+          test "$GITHUB_SHA" = "${{ inputs.reviewed_main_sha }}"
+          test "$candidate" = "${{ inputs.approved_candidate_sha }}"
+          gh api "repos/$GITHUB_REPOSITORY/pulls/275" > "$RUNNER_TEMP/reviewer-candidate-pr.json"
+          jq -e --arg sha "$candidate" --arg repo "$GITHUB_REPOSITORY" '.head.sha == $sha and .head.repo.full_name == $repo and .head.ref == "build/anevum-v5-preview-schema-rehearsal-20261010" and .state == "open" and .draft == true and .merged == false' "$RUNNER_TEMP/reviewer-candidate-pr.json" > /dev/null
+          gh api "repos/$GITHUB_REPOSITORY/commits/$candidate/check-runs?per_page=100" > "$RUNNER_TEMP/reviewer-candidate-checks.json"
+          jq -e --arg sha "$candidate" 'any(.check_runs[]; .head_sha == $sha and .name == "verify" and .conclusion == "success") and any(.check_runs[]; .head_sha == $sha and .name == "bootstrap" and .conclusion == "success")' "$RUNNER_TEMP/reviewer-candidate-checks.json" > /dev/null
+          echo 'Exact current-main release guard and immutable, CI-passed WEB draft verified.'
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.approved_candidate_sha }}
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Confirm owner-approved main and isolated source config
+        shell: bash
+        run: |
+          set -euo pipefail
+          current="$(git ls-remote origin refs/heads/main | cut -f1)"
+          test -n "$current"
+          test "$current" = "$GITHUB_SHA"
+          test "$current" = "${{ inputs.reviewed_main_sha }}"
+          test "$(git rev-parse HEAD)" = "${{ inputs.approved_candidate_sha }}"
+          node scripts/verify-v5-alpaca-review-staging.mjs
+          node --test tests/v5-alpaca-review-staging.test.mjs
+      - name: Verify encrypted secret NAMES on member staging, not values
+        id: prod-baseline
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "${CLOUDFLARE_API_TOKEN:-}"
+          test -n "${CLOUDFLARE_ACCOUNT_ID:-}"
+          url="https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/anevum-member-staging/secrets"
+          curl --fail --silent --show-error --max-time 15             -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" "$url"             -o "$RUNNER_TEMP/secret-name-inventory.json"
+          jq -e '.success == true and (.result | type == "array")' "$RUNNER_TEMP/secret-name-inventory.json" > /dev/null
+          for name in BETTER_AUTH_SECRET GOOGLE_CLIENT_ID GOOGLE_CLIENT_SECRET ALPACA_CONNECT_CLIENT_ID ALPACA_CONNECT_CLIENT_SECRET ALPACA_CONNECT_TOKEN_KEY_BASE64; do
+            if ! jq -e --arg n "$name"               'any(.result[]; .name == $n and .type == "secret_text")'               "$RUNNER_TEMP/secret-name-inventory.json" > /dev/null; then
+              echo "::error::Missing encrypted staging Worker binding: $name"
+              exit 1
+            fi
+          done
+          echo 'Staging secret bindings exist; secret values were not retrieved.'
+          prod_url="https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/anevum-web-nextgen/deployments?per_page=1"
+          curl --fail --silent --show-error --max-time 20 -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" "$prod_url" -o "$RUNNER_TEMP/prod-review-baseline.json"
+          prod_id="$(jq -er 'select(.success==true) | .result.deployments[0].id' "$RUNNER_TEMP/prod-review-baseline.json")"
+          test -n "$prod_id"
+          echo "deployment_id=$prod_id" >> "$GITHUB_OUTPUT"
+      - name: Install pinned dependencies
+        run: |
+          npm install --no-audit --no-fund
+          python -m pip install "weasyprint==68.0" "Pillow==11.3.0"
+      - name: Verify preview D1 migration lineage, identity counts, and foreign keys
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_D1_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "${CLOUDFLARE_API_TOKEN:-}"
+          test -n "${CLOUDFLARE_ACCOUNT_ID:-}"
+          node scripts/verify-member-bindings.mjs --require-config
+          npx wrangler d1 execute MEMBER_DB --remote --config wrangler.alpaca-review-migrations.jsonc --json             --command 'SELECT name FROM d1_migrations ORDER BY id' > "$RUNNER_TEMP/review-ledger.json"
+          jq -e '.[0].success == true and [.[0].results[].name] ==
+            ["0001_member_platform.sql","0002_member_rhen_drafts.sql","0003_member_billing.sql",
+             "0004_member_rhen_workspaces.sql","0005_member_alpaca_review.sql"]'             "$RUNNER_TEMP/review-ledger.json" > /dev/null
+          npx wrangler d1 execute MEMBER_DB --remote --config wrangler.alpaca-review-migrations.jsonc --json             --command "SELECT (SELECT COUNT(*) FROM \"user\") AS members,
+            (SELECT COUNT(*) FROM member_rhen_workspaces) AS workspaces,
+            (SELECT COUNT(*) FROM member_rhen_drafts) AS drafts" > "$RUNNER_TEMP/review-counts.json"
+          jq -e '.[0].success == true and .[0].results[0].members == 2 and
+            .[0].results[0].workspaces == 2 and .[0].results[0].drafts == 2'             "$RUNNER_TEMP/review-counts.json" > /dev/null
+          npx wrangler d1 execute MEMBER_DB --remote --config wrangler.alpaca-review-migrations.jsonc --json             --command "SELECT name FROM sqlite_master WHERE type='table' AND
+            name LIKE 'member_alpaca_review_%' ORDER BY name" > "$RUNNER_TEMP/review-tables.json"
+          jq -e '.[0].success == true and [.[0].results[].name] ==
+            ["member_alpaca_review_connections","member_alpaca_review_consent",
+             "member_alpaca_review_states"]' "$RUNNER_TEMP/review-tables.json" > /dev/null
+          npx wrangler d1 execute MEMBER_DB --remote --config wrangler.alpaca-review-migrations.jsonc --json             --command 'PRAGMA foreign_key_check' > "$RUNNER_TEMP/review-fk.json"
+          jq -e '.[0].success == true and (.[0].results | length) == 0'             "$RUNNER_TEMP/review-fk.json" > /dev/null
+      - name: Build and validate reviewer-only Worker bundle
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --test tests/member-alpaca-review.test.mjs tests/v5-alpaca-review-staging.test.mjs
+          npm run build
+          node scripts/verify-v5-alpaca-review-staging.mjs --generated
+      - name: Deploy reviewed staging Worker only
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "${CLOUDFLARE_API_TOKEN:-}"
+          test -n "${CLOUDFLARE_ACCOUNT_ID:-}"
+          test "$(git ls-remote origin refs/heads/main | cut -f1)" = "$GITHUB_SHA"
+          node scripts/verify-v5-alpaca-review-staging.mjs --generated
+          npx wrangler deploy
+      - name: Assert anonymous account and operator routes remain denied
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          PRODUCTION_BASELINE: ${{ steps.prod-baseline.outputs.deployment_id }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          origin="https://anevum-member-staging.devonakins.workers.dev"
+          ready=0
+          for attempt in $(seq 1 25); do
+            status="$(curl --silent --show-error --max-time 12               -o "$RUNNER_TEMP/availability.json" -w '%{http_code}'               "$origin/api/member/availability" 2>/dev/null || true)"
+            if [ "$status" = "200" ]; then ready=1; break; fi
+            sleep 5
+          done
+          test "$ready" = "1"
+          jq -e '.available == true and .provider == "google"' "$RUNNER_TEMP/availability.json" > /dev/null
+          for path in /api/member/me /api/member/brokerage /api/command/trader/status; do
+            test "$(curl --silent --show-error -o /dev/null -w '%{http_code}' "$origin$path")" = "401"
+          done
+          curl --fail --silent --show-error --head "$origin/" | grep -qi 'x-robots-tag:.*noindex'
+          api="https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts"
+          curl --fail --silent --show-error --max-time 20 -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" "$api/anevum-member-staging/settings" -o "$RUNNER_TEMP/reviewer-stage-settings.json"
+          jq -e '.success == true and any(.result.bindings[]; .name == "ANEVUM_ALPACA_REVIEW_CONNECT_ENABLED" and .type == "plain_text" and .text == "true") and any(.result.bindings[]; .name == "COMMAND_LIVE_STREAM_ENABLED" and .type == "plain_text" and .text == "false") and any(.result.bindings[]; .name == "MEMBER_DB" and .type == "d1" and .id == "a537432e-d216-4b31-8b22-19662cc3a44a")' "$RUNNER_TEMP/reviewer-stage-settings.json" > /dev/null
+          curl --fail --silent --show-error --max-time 20 -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" "$api/anevum-web-nextgen/deployments?per_page=1" -o "$RUNNER_TEMP/prod-review-after.json"
+          jq -e --arg id "$PRODUCTION_BASELINE" '.success == true and .result.deployments[0].id == $id' "$RUNNER_TEMP/prod-review-after.json" > /dev/null
+          {
+            echo '### ANEVUM Alpaca Connect reviewer staging'
+            echo 'Isolated preview D1 and paper-only reviewer mode; anonymous and operator routes denied.'
+            echo 'No real OAuth authorization or trading was attempted by this job.'
+            echo 'Rollback: manually redeploy the regular member-staging-bootstrap.yml flag-off Worker from approved main.'
+          } >> "$GITHUB_STEP_SUMMARY"
