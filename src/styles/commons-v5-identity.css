@@ -341,3 +341,56 @@
 @media(prefers-reduced-motion:reduce){
   .v5-site-pathway>a{transition:none;transform:none!important}
 }
+/* Actual member discussions use server-verified topic labels: never pretend to
+ * have individual avatars, endorsements or ranking data that does not exist. */
+.c2-social-stream{gap:9px}
+.v6-discussion-post.c2-social-post{
+  border-radius:3px;border-left:3px solid var(--line);
+  background:color-mix(in srgb,var(--panel) 70%,var(--canvas));
+  padding:18px!important
+}
+.v6-discussion-post.v6-discussion-systems{border-left-color:#7ab1a1}
+.v6-discussion-post.v6-discussion-engineering{border-left-color:#cfaa86}
+.v6-discussion-post.v6-discussion-research{border-left-color:#b4a6c5}
+.v6-discussion-post.v6-discussion-releases{border-left-color:#d4c790}
+.v6-discussion-top{display:flex;align-items:center;gap:12px;padding-bottom:13px;border-bottom:1px solid var(--line-soft)}
+.v6-discussion-sigil{
+  flex:0 0 41px;width:41px;height:41px;display:grid;place-items:center;
+  font:32px/1 Georgia,serif;background:var(--panel-hover);
+  color:var(--accent);border:1px solid var(--line-soft);border-radius:2px
+}
+.v6-discussion-engineering .v6-discussion-sigil{color:#cfaa86;font-family:ui-monospace,Consolas,monospace}
+.v6-discussion-research .v6-discussion-sigil{color:#b4a6c5}
+.v6-discussion-releases .v6-discussion-sigil{color:#d4c790}
+.v6-discussion-post .c2-card-meta{gap:5px 12px;align-items:center;line-height:1.5}
+.v6-discussion-post .c2-card-meta>span:first-child{
+  color:var(--accent);font-family:ui-monospace,Consolas,monospace;
+  letter-spacing:.09em;text-transform:uppercase;font-size:10px
+}
+.v6-discussion-post h3{font-size:19px;line-height:1.3;letter-spacing:-.03em;margin:15px 0 7px}
+.v6-discussion-post>p{font-size:13px;line-height:1.68}
+.v6-discussion-post .c2-social-actions{margin-top:15px;border-color:var(--line-soft)}
+.v6-discussion-post .c2-social-actions button{border-radius:3px;background:transparent}
+.v6-discussion-post .c2-social-replies{border-color:var(--line-soft)}
+.c2-social-composer.c2-card{border-radius:3px}
+.c2-social .c2-tabs button{border-radius:2px}
+.c2-social .c2-social-reload{border-radius:3px}
+/* Override preceding baseline ordering with specific feature layout. */
+.v6-story.v6-story-feature .v6-story-body{grid-template-columns:minmax(0,1fr) 230px}
+@media(max-width:1150px){
+  .v6-story.v6-story-feature .v6-story-body{grid-template-columns:minmax(0,1fr) 210px}
+}
+@media(max-width:900px){
+  .app.nav-collapsed.drawer-open .community-nav{display:flex}
+}
+@media(max-width:720px){
+  .v6-story.v6-story-feature .v6-story-body{grid-template-columns:minmax(0,1fr) 135px}
+  .v6-discussion-post.c2-social-post{padding:15px!important}
+}
+@media(max-width:480px){
+  .v6-story.v6-story-feature .v6-story-body{grid-template-columns:minmax(0,1fr) 105px}
+  .v6-discussion-sigil{width:36px;height:36px;flex-basis:36px;font-size:26px}
+}
+@media(max-width:365px){
+  .v6-story.v6-story-feature .v6-story-body{grid-template-columns:1fr}
+}
