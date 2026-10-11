@@ -3,7 +3,7 @@ import { memberRewardsStatus, memberBrokerageStatus } from "./member-capabilitie
 import { reviewerSchemaReady, reviewerEndpoint, exportReviewerConnection } from "./member-alpaca-review.mjs";
 import { commonsSocialEndpoint, socialSchemaReady, exportMemberSocial } from "./commons-social.mjs";
 import { moderationEndpoint } from "./commons-moderation.mjs";
-import { memberRhenDraftSchemaReady, readMemberRhenDraft, saveMemberRhenDraft, deleteMemberRhenDraft, validateRhenDraft } from "./member-rhen-draft.mjs";
+import { memberRhenDraftSchemaReady, readMemberRhenDraft, saveMemberRhenDraft, deleteMemberRhenDraft, validateRhenDraft, draftExpectedMemberMatches } from "./member-rhen-draft.mjs";
 import { resolveMemberOrigin, memberSchemaReady } from "./member-preflight.mjs";
 import { memberRhenWorkspaceSchemaReady, readMemberRhenWorkspace, createMemberRhenWorkspace } from "./member-rhen-workspace.mjs";
 const PUBLIC_PROJECTS = new Set(["rhen"]);
@@ -201,14 +201,6 @@ export async function memberEndpoint(request, env, pathname, verifiedContext = {
     }
   }
   if (pathname === "/api/member/rhen/draft") {
-    // Optional compatibility guard for current member draft UI. It is never an
-    // account selector: authorization and storage still use verified user.id.
-    // Refuse a queued old-tab mutation if the browser's active session changed.
-    if (["PUT", "DELETE"].includes(request.method) &&
-        request.headers.has("X-ANEVUM-EXPECTED-MEMBER-ID") &&
-        request.headers.get("X-ANEVUM-EXPECTED-MEMBER-ID") !== user.id) {
-      return reply({ message: "Authenticated member changed. Reload your draft." }, 409);
-    }
     if (env?.ANEVUM_MEMBER_RHEN_DRAFTS_ENABLED !== "true") {
       return reply({ message: "Personal RHEN drafts are not enabled." }, 503);
     }
@@ -217,6 +209,12 @@ export async function memberEndpoint(request, env, pathname, verifiedContext = {
     }
     if (!["GET", "PUT", "DELETE"].includes(request.method)) {
       return reply({ message: "Method not allowed." }, 405);
+    }
+    // Compatibility guard only: supplied ID never selects a tenant or overrides
+    // the Better Auth session. Only compare it to the verified member user.id.
+    if (["PUT", "DELETE"].includes(request.method) &&
+        !draftExpectedMemberMatches(request, user.id)) {
+      return reply({ message: "Authenticated member changed. Reload your draft." }, 409);
     }
     let draft;
     if (request.method === "PUT") {
