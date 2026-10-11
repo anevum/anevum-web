@@ -245,3 +245,28 @@ test("a pre-aborted verification does not contact the staging service",async()=>
   );
   assert.equal(calls,0);
 });
+
+
+test("workspace identity switch during asynchronous response parsing fails before provisioning",async()=>{
+  const controller=new AbortController();
+  let postCount=0;
+  const base=stage("member-A");
+  const fetcher=async(path,init)=>{
+    if(init.method==="POST")postCount++;
+    const response=await base.fetcher(path,init);
+    if(path==="/api/member/session"){
+      response.json=async()=>{
+        controller.abort();
+        return {authenticated:true,user:{id:"member-A"}};
+      };
+    }
+    return response;
+  };
+  await assert.rejects(
+    runWorkspaceStagingProof(fetcher,"member-A",WORKSPACE_STAGING_ORIGIN,
+      undefined,controller.signal),
+    error=>error instanceof WorkspaceStagingFailure &&
+      error.step==="SESSION" && error.reason==="SESSION_CHANGED"
+  );
+  assert.equal(postCount,0);
+});
