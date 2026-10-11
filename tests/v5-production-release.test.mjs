@@ -118,11 +118,16 @@ function mockLive(overrides={}){
   const fetcher=async(url,init)=>{
     calls.push({url,init});const path=new URL(url).pathname;
     if(overrides[path])return overrides[path]();
+    if(path==="/assets/index-v5test.js")return new Response('import(`./CommonsV5-v5test.js`)',
+      {headers:{"Content-Type":"application/javascript"}});
+    if(path==="/assets/CommonsV5-v5test.js")return new Response('anevum-commons-v5-mount Public ANEVUM work',
+      {headers:{"Content-Type":"application/javascript"}});
     if(path==="/studio"||path.startsWith("/api/member/studio/"))return new Response(null,{status:302,
       headers:{location:"https://wispy-tooth-095a.cloudflareaccess.com/login"}});
     if(path==="/api/public/studio/entries")return Response.json({schemaVersion:"anevum.studio.v1",available:true,entries:[]});
     if(path==="/api/public/trading/live")return Response.json({status:"SUSPENDED_FOR_REBUILD",execution_enabled:false},{status:503});
-    return new Response('<div id="anevum-commons-v5-mount"></div>',{headers:{"Content-Type":"text/html"}});
+    return new Response('<div id="root"></div><script type="module" src="/assets/index-v5test.js"></script>',
+      {headers:{"Content-Type":"text/html"}});
   };return {calls,fetcher};
 }
 test("post-release probes are anonymous read-only and do not claim authenticated acceptance",async()=>{
@@ -137,4 +142,18 @@ test("live acceptance rejects old homepage, missing Studio protection, public me
     {"/api/public/studio/entries":()=>Response.json({schemaVersion:"anevum.studio.v1",available:true,entries:[{id:"private-id"}]})},
     {"/api/public/trading/live":()=>Response.json({status:"LIVE",execution_enabled:true})}])
     await assert.rejects(probeV5LiveRelease(mockLive(overrides).fetcher));
+});
+test("V5 release accepts the unhydrated shell only with available same-origin V5 modules",async()=>{
+  for(const overrides of [
+    {"/":()=>new Response('<script type="module" src="https://other.example/index.js"></script>',
+      {headers:{"Content-Type":"text/html"}})},
+    {"/assets/index-v5test.js":()=>new Response("missing",{status:404})},
+    {"/assets/index-v5test.js":()=>new Response("old application",{headers:{"Content-Type":"application/javascript"}})},
+    {"/assets/CommonsV5-v5test.js":()=>new Response("missing",{status:404})},
+    {"/assets/CommonsV5-v5test.js":()=>new Response("old Commons",{headers:{"Content-Type":"application/javascript"}})},
+    {"/assets/CommonsV5-v5test.js":()=>new Response("HTML fallback",{headers:{"Content-Type":"text/html"}})}
+  ])await assert.rejects(probeV5LiveRelease(mockLive(overrides).fetcher));
+  const report=await probeV5LiveRelease(mockLive().fetcher);
+  assert.equal(report.success,true);
+  assert.equal(report.authenticatedOwnerAcceptance,"PENDING");
 });
