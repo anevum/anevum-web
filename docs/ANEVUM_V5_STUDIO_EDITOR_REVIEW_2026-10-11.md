@@ -17,3 +17,8 @@ Master release: WEB #259 · launch #308.
 ## Release gates
 
 This remains source-only and stacked on unmerged V5 WEB #312. No Cloudflare D1 migration, Staff Access policy, member creation, production deploy, social activation, broker permissions, paid services or public publication was authorized. Run the updated full Foundation suite and confirm exact-head checks before advancing. Owner and secondary admin still require independently verified sign-in and exact member-ID binding, as recorded in the #312 runbook.
+
+
+## Dedicated staff Access application
+
+Studio requires its own Cloudflare Access JWT audience under `ANEVUM_STUDIO_ACCESS_AUD` and explicit `ANEVUM_STUDIO_ACCESS_EMAILS` allowlist. A missing dedicated audience or list is not allowed to fall back to RHEN Command's `CF_ACCESS_AUD` or `COMMAND_ACCESS_EMAILS`. Add the secondary administrator only to Studio Access, never to the RHEN owner Access app. Moderator endpoints use dedicated Studio Access while Studio is enabled; the old isolated pilot may use its earlier gate when Studio is disabled. All actual Cloudflare policy/configuration changes remain release-gated and unperformed.

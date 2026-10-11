@@ -20,7 +20,7 @@ export function studioRole(env, user, verifiedAccessEmail) {
   if (!configured(env) || user?.emailVerified !== true || !MEMBER_ID.test(String(user?.id || ""))) return null;
   const email = String(user.email || "").trim().toLowerCase();
   const accessEmail = String(verifiedAccessEmail || "").trim().toLowerCase();
-  const allowed = String(env?.COMMAND_ACCESS_EMAILS || "").split(",")
+  const allowed = String(env?.ANEVUM_STUDIO_ACCESS_EMAILS || "").split(",")
     .map(x => x.trim().toLowerCase()).filter(Boolean);
   // Access assertion must have been independently verified in worker.mjs.
   if (!email || email !== accessEmail || !allowed.includes(email)) return null;

@@ -20,7 +20,8 @@ export function moderatorAllowed(env,user,origin,accessEmail){
   const memberEmail=user.email.trim().toLowerCase();
   const credentialEmail=accessEmail.trim().toLowerCase();
   if(!memberEmail||memberEmail!==credentialEmail)return false;
-  if(env?.ANEVUM_STUDIO_ENABLED==="true" && !studioRole(env,user,accessEmail))return false;
+  if(env?.ANEVUM_STUDIO_ENABLED==="true")return Boolean(studioRole(env,user,accessEmail));
+  // Legacy pilot uses the Command list only when Studio is not enabled.
   const list=String(env?.COMMAND_ACCESS_EMAILS||"").split(",")
     .map(x=>x.trim().toLowerCase()).filter(Boolean);
   // An empty Access allowlist is a hard denial, never a wildcard.

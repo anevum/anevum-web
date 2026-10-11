@@ -14,7 +14,7 @@ const ordinary={id:"ordinary-member-03",email:"tester@example.net",emailVerified
 const envBase={
  ANEVUM_STUDIO_ENABLED:"true",ANEVUM_STUDIO_PUBLISH_ENABLED:"true",
  ANEVUM_STUDIO_OWNER_MEMBER_ID:owner.id,ANEVUM_STUDIO_ADMIN_MEMBER_ID:administrator.id,
- COMMAND_ACCESS_EMAILS:"anevum.studio@gmail.com,devon@anevum.com"
+ ANEVUM_STUDIO_ACCESS_EMAILS:"anevum.studio@gmail.com,devon@anevum.com"
 };
 const payload={kind:"AHA",title:"An observable discovery",summary:"A first-party record about a reproducible result.",
  body:"This is a longer first-party write-up with meaningful content and documented limitations."};
@@ -123,7 +123,7 @@ test("primary owner and secondary admin require exact Google ID, Access assertio
  assert.equal(studioRole(envBase,{...owner,id:"fabricated-id"},owner.email),null);
  assert.equal(studioRole(envBase,{...owner,emailVerified:false},owner.email),null);
  assert.equal(studioRole({...envBase,ANEVUM_STUDIO_ENABLED:"false"},owner,owner.email),null);
- assert.equal(studioRole({...envBase,COMMAND_ACCESS_EMAILS:""},owner,owner.email),null);
+ assert.equal(studioRole({...envBase,ANEVUM_STUDIO_ACCESS_EMAILS:""},owner,owner.email),null);
  assert.equal(studioRole({...envBase,ANEVUM_STUDIO_ADMIN_MEMBER_ID:"other-id"},administrator,administrator.email),null);
 });
 test("validation excludes client role overrides, malformed documents and empty drafts",()=>{
@@ -304,4 +304,23 @@ test("Studio history is staff-only, audit-backed and revision-bound",async()=>{
  assert.equal(denied.status,403);
  assert.equal((await response(db,{route:base+"/"+id+"/history",method:"DELETE"})).status,405);
  assert.equal((await response(db,{route:base+"/00000000-0000-4000-8000-000000000000/history"})).status,404);
+});
+
+test("Studio Access never widens the RHEN Command allowlist",()=>{
+ const read=p=>readFileSync(new URL("../"+p,import.meta.url),"utf8");
+ const worker=read("worker.mjs");
+ const studio=read("src/server/studio-content.mjs");
+ const mod=read("src/server/commons-moderation.mjs");
+ assert.ok(worker.includes("ANEVUM_STUDIO_ACCESS_AUD"));
+ assert.ok(worker.includes("ANEVUM_STUDIO_ACCESS_EMAILS"));
+ assert.ok(worker.includes('verifyAccessAssertion(token,env,"studio")'));
+ assert.ok(worker.includes('env?.ANEVUM_STUDIO_ENABLED==="true"?"studio":"command"'));
+ assert.ok(studio.includes("env?.ANEVUM_STUDIO_ACCESS_EMAILS"));
+ assert.ok(!studio.includes("COMMAND_ACCESS_EMAILS"));
+ assert.ok(mod.includes("return Boolean(studioRole(env,user,accessEmail))"));
+ const staffOnly={...envBase,COMMAND_ACCESS_EMAILS:""};
+ assert.equal(studioRole(staffOnly,owner,owner.email),"owner");
+ assert.equal(studioRole(staffOnly,administrator,administrator.email),"admin");
+ assert.equal(studioRole({...staffOnly,ANEVUM_STUDIO_ACCESS_EMAILS:""},owner,owner.email),null);
+ assert.equal(studioRole({...staffOnly,ANEVUM_STUDIO_ACCESS_EMAILS:"other@example.net"},owner,owner.email),null);
 });
