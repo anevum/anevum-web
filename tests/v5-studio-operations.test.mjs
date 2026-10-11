@@ -88,7 +88,8 @@ test("moderation count is only visible when isolated pilot is genuinely configur
     return database().prepare(sql);
   }
  }});
- assert.equal(unavailable.body.moderation.state,"PILOT_READY"); // explicit fixture always has social tables
+ assert.equal(unavailable.body.moderation.state,"STORAGE_UNAVAILABLE");
+ assert.equal(unavailable.body.moderation.pendingReports,null);
 });
 test("private UI validates exact session and hides metrics on errors",()=>{
  const read=p=>readFileSync(new URL("../"+p,import.meta.url),"utf8");
@@ -103,7 +104,7 @@ test("private UI validates exact session and hides metrics on errors",()=>{
  assert.match(component,/v.viewerMemberId!==id/);
  assert.match(component,/controller.abort\(\)/);
  assert.match(component,/state==="unavailable"/);
- assert.match(component,/pendingReports:null/); // API semantics not inferred on client
+ assert.match(component,/moderation.pendingReports===null/); // API semantics not inferred on client
  assert.match(operation,/COUNT\(\*\) AS total FROM "user"/);
  assert.match(operation,/No counts were inferred|Counts not verified|Counts not verified|Counts not verified|not verified/i);
  assert.match(css,/studio-ops-metrics/);
