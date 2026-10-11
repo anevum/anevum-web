@@ -65,7 +65,9 @@ if (fs.existsSync(generatedRegistryPath)) {
 
   for (const release of registry.releases) {
     const route = "/releases/" + release.slug;
-    if (!generated.releaseRoutes.includes(route)) errors.push("Generated route missing for " + release.slug);
+    if (!generated.releaseRoutes?.includes(route)) errors.push("Generated legacy route missing for " + release.slug);
+    const canonicalRoute = "/products/rhen/releases/" + release.slug;
+    if (!generated.canonicalReleaseRoutes?.includes(canonicalRoute)) errors.push("Generated canonical route missing for " + release.slug);
   }
 }
 
@@ -81,7 +83,8 @@ if (fs.existsSync(sitemapPath)) {
     if (!sitemap.includes(url)) errors.push("Sitemap missing " + url);
   }
   for (const release of registry.releases) {
-    const url = "https://anevum.com/releases/" + release.slug;
+    const url = "https://anevum.com/products/rhen/releases/" + release.slug;
+    if (sitemap.includes("<loc>https://anevum.com/releases/" + release.slug + "</loc>")) errors.push("Sitemap contains redirect-only legacy release route: " + release.slug);
     if (!sitemap.includes(url)) errors.push("Sitemap missing " + url);
   }
 }
@@ -139,19 +142,18 @@ for (const file of files) {
   }
 }
 
+// Active current-state surfaces must not derive status from frozen publications.
+// Historical page rendering and route metadata consume the registry separately.
 const liveStateSurfaces = [
-  "src/pages/Home.tsx",
-  "src/pages/Live.tsx",
-  "src/pages/Performance.tsx",
-  "src/pages/System.tsx",
-  "src/pages/Research.tsx",
-  "src/pages/Theory.tsx",
-  "src/pages/Command.tsx"
+  "src/commons/CommonsPages.tsx",
+  "src/commons/CommonsV5.tsx",
+  "src/pages/Command.tsx",
+  "src/hooks/useLiveTrading.ts"
 ];
 for (const file of liveStateSurfaces) {
   const source = fs.readFileSync(path.join(ROOT, file), "utf8");
   if (/from\s+["'][^"']*data\/releases["']/.test(source)) {
-    errors.push("Live current-state surface must use telemetry, not frozen release snapshots: " + file);
+    errors.push("Current-state surface must not use frozen release snapshots: " + file);
   }
 }
 

@@ -121,13 +121,11 @@ test("Command deployment config has no retired Foundation or Vercel runtime path
 });
 
 
-test("V4.3 active website and Command surfaces cannot resurrect retired crypto or V3 state", () => {
+test("V5 active website and Command surfaces do not resurrect retired trading claims", () => {
   const activeSources = [
     "../src/App.tsx",
-    "../src/pages/HomeCompany.tsx",
-    "../src/pages/Architecture.tsx",
-    "../src/pages/ResearchHub.tsx",
-    "../src/pages/Live.tsx",
+    "../src/commons/CommonsPages.tsx",
+    "../src/commons/CommonsV5.tsx",
     "../src/components/CommandTradingLanes.tsx",
     "../src/components/CommandResearchLab.tsx",
     "../src/data/products.ts",
@@ -135,8 +133,11 @@ test("V4.3 active website and Command surfaces cannot resurrect retired crypto o
   ].map(path => readFileSync(new URL(path, import.meta.url), "utf8")).join("\n");
 
   assert.doesNotMatch(activeSources, /BTC|CRYPTO \/|paper canary|RHEN v3/i);
-  assert.match(activeSources, /RHEN V4\.3/);
-  assert.match(activeSources, /EXTENDED 24\/5|extended equity/i);
+  assert.match(activeSources, /SUSPENDED_FOR_REBUILD/);
+  assert.match(activeSources, /Legacy live trading is suspended/);
+});
+
+test("the frozen historical release pointer retains its original publication identity", () => {
 
   const registry = JSON.parse(readFileSync(new URL("../src/data/releases.json", import.meta.url), "utf8"));
   const current = registry.releases.find((release) => release.slug === registry.currentSlug);

@@ -25,7 +25,9 @@ test("Private owner and member routes retain existing separate routing and permi
 test("V5 public content is real source-backed data with no fake member feeds", () => {
   assert.match(pages, /import \{ fieldNotes, type FieldNote \} from "\.\.\/data\/fieldNotes"/);
   assert.match(pages, /import \{ publicProducts, publishedSourceRecords \} from "\.\.\/data\/products"/);
-  assert.match(pages, /import \{ rhenReleases, rhenReleaseBySlug \} from "\.\.\/data\/releases"/);
+  const releases = source("src/commons/CommonsReleases.tsx");
+  assert.match(releases, /import \{ rhenReleases, rhenReleaseBySlug \} from "\.\.\/data\/releases"/);
+  assert.doesNotMatch(pages, /from "\.\.\/data\/releases"/);
   assert.match(pages, /Legacy live trading is suspended/);
   assert.match(pages, /No fictional communities/);
   assert.match(pages, /Historical publication/);

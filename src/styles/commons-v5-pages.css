@@ -65,3 +65,10 @@
 .c2-resume .c2-card li{line-height:1.65;color:var(--sub);margin-bottom:8px}
 .c2-resume .c2-card ul{padding-left:21px;margin:8px 0 0}
 .c2-resume .c2-section>p{font-size:13px;max-width:700px;line-height:1.75;color:var(--sub)}
+
+/* Archive identifiers remain readable within the narrow member shell. */
+.c2-release-metadata{margin:0;display:grid;gap:12px}
+.c2-release-metadata dt{color:var(--muted);font-size:12px}
+.c2-release-metadata dd{margin:4px 0 0;overflow-wrap:anywhere;color:var(--text)}
+.c2-release-badges{display:flex;flex-wrap:wrap;gap:8px;list-style:none;padding:0}
+.c2-release-badges li{border:1px solid var(--line);border-radius:6px;padding:5px 8px;font-size:11px}

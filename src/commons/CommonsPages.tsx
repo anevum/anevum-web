@@ -2,7 +2,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import type { ReactNode } from "react";
 import { fieldNotes, type FieldNote } from "../data/fieldNotes";
 import { publicProducts, publishedSourceRecords } from "../data/products";
-import { rhenReleases, rhenReleaseBySlug } from "../data/releases";
+import { Releases, ReleaseDetail } from "./CommonsReleases";
 import founder from "../data/founder.json";
 import Privacy from "../pages/Privacy";
 import Terms from "../pages/Terms";
@@ -175,33 +175,6 @@ function RhenArchitecture() {
     <Link className="c2-text-link" to="/products/rhen">← RHEN overview</Link>
   </div>;
 }
-function Releases() {
-  const items = [...rhenReleases].sort((a, b) => b.date.localeCompare(a.date));
-  return <div className="c2-page">
-    <Intro kicker="RHEN / HISTORICAL RECORDS" title="Release history">Past version notes are retained as dated publications. They must not be mistaken for a currently deployed RHEN runtime.</Intro>
-    <div className="c2-truth">Legacy execution was retired for V5 reconstruction. Release labels, older capabilities and old performance descriptions are historical.</div>
-    <div className="c2-stack">{items.map(item => <article className="c2-card" key={item.slug}>
-      <div className="c2-card-meta"><span>Version {item.version}</span><time dateTime={item.date}>{dateLabel(item.date)}</time></div>
-      <h2><Link to={"/products/rhen/releases/" + item.slug}>{item.codename}</Link></h2><p>{item.headline}</p>
-      <Link className="c2-text-link" to={"/products/rhen/releases/" + item.slug}>Read historical record →</Link>
-    </article>)}</div>
-  </div>;
-}
-function ReleaseDetail({ slug }: { slug: string }) {
-  const release = rhenReleaseBySlug(slug);
-  if (!release) return <Missing/>;
-  return <article className="c2-page c2-article">
-    <Link className="c2-text-link" to="/products/rhen/releases">← RHEN releases</Link>
-    <Intro kicker={"RHEN " + release.version + " / " + dateLabel(release.date)} title={release.codename}>{release.headline}</Intro>
-    <div className="c2-truth">Archived version record. Historical execution, paper, performance or deployment references do not imply current availability.</div>
-    <section className="c2-article-section"><h2>Overview</h2><p>{release.abstract}</p><p>{release.thesis}</p></section>
-    <section className="c2-article-section"><h2>Verification and limitations</h2>
-      {release.verification.map((x, i) => <div key={i}><h3>{x.label}</h3><p>{x.body}</p></div>)}
-      {release.limitations.map((x, i) => <div key={i}><h3>{x.title}</h3><p>{x.body}</p></div>)}
-    </section>
-    <Link className="c2-text-link" to="/products/rhen">Current RHEN rebuild status →</Link>
-  </article>;
-}
 function Communities() {
   const types = [
     ["Systems", "Architecture and reliable operations", "systems"],
@@ -319,7 +292,7 @@ export default function CommonsPublicPage({ pathname }: Props) {
   if (pathname === "/products/rhen/evidence") return <RhenEvidence/>;
   if (pathname === "/products/rhen/architecture") return <RhenArchitecture/>;
   if (pathname === "/products/rhen/releases") return <Releases/>;
-  if (pathname.startsWith("/products/rhen/releases/")) return <ReleaseDetail slug={pathname.slice("/products/rhen/releases/".length)}/>;
+  if (pathname.startsWith("/products/rhen/releases/")) return <ReleaseDetail slug={pathname.slice("/products/rhen/releases/".length)} missing={<Missing/>}/>;
   if (pathname === "/communities/moderation") return <CommonsModeration/>;
   if (pathname === "/communities") return <Communities/>;
   if (pathname === "/learn") return <Learn/>;

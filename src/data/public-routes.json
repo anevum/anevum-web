@@ -70,5 +70,23 @@
     "label": "Learning",
     "nav": true,
     "sitemap": true
+  },
+  {
+    "path": "/help",
+    "label": "Help",
+    "nav": false,
+    "sitemap": true
+  },
+  {
+    "path": "/privacy",
+    "label": "Privacy",
+    "nav": false,
+    "sitemap": true
+  },
+  {
+    "path": "/terms",
+    "label": "Terms",
+    "nav": false,
+    "sitemap": true
   }
 ]

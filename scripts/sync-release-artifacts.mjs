@@ -9,7 +9,8 @@ const current = currentRelease(registry);
 const publicRoutes = JSON.parse(fs.readFileSync(path.join(ROOT, "src", "data", "public-routes.json"), "utf8"));
 const staticRoutes = publicRoutes.filter((route) => route.sitemap).map((route) => route.path);
 const releaseRoutes = registry.releases.map((release) => "/releases/" + release.slug);
-const routes = [...staticRoutes, ...releaseRoutes];
+const canonicalReleaseRoutes = registry.releases.map((release) => "/products/rhen/releases/" + release.slug);
+const routes = [...staticRoutes, ...canonicalReleaseRoutes];
 
 const sitemap = [
   '<?xml version="1.0" encoding="UTF-8"?>',
@@ -30,7 +31,8 @@ const generated = {
   currentLifecycle: current.lifecycle,
   currentReleaseClass: current.releaseClass,
   currentPdfPath: current.pdfPath,
-  releaseRoutes
+  releaseRoutes,
+  canonicalReleaseRoutes
 };
 
 fs.writeFileSync(

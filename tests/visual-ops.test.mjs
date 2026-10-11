@@ -123,7 +123,7 @@ test("private healthy runtime without owned work is explicitly waiting or superv
 test("operator and public status surfaces do not use decorative system instruments", () => {
   const terminal = readFileSync(new URL("../src/components/CommandOperationsTerminal.tsx", import.meta.url), "utf8");
   const visualOps = readFileSync(new URL("../src/components/operations/VisualOps.tsx", import.meta.url), "utf8");
-  const live = readFileSync(new URL("../src/pages/Live.tsx", import.meta.url), "utf8");
+  const live = readFileSync(new URL("../src/commons/CommonsPages.tsx", import.meta.url), "utf8");
 
   assert.doesNotMatch(terminal, /SystemInstrument/);
   assert.doesNotMatch(terminal, /terminal-focus-instrument/);
@@ -133,5 +133,6 @@ test("operator and public status surfaces do not use decorative system instrumen
   assert.match(visualOps, /FRESHNESS/);
   assert.match(visualOps, /SOURCE/);
   assert.doesNotMatch(live, /SystemInstrument/);
-  assert.match(live, /CURRENT PUBLIC OBSERVATION/);
+  assert.match(live, /data-evidence-state="SUSPENDED_FOR_REBUILD"/);
+  assert.match(live, /role="status"/);
 });

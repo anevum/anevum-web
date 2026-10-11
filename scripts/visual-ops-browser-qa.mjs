@@ -6,7 +6,13 @@ import path from "node:path";
 const base = process.env.BASE_URL;
 if (!base) throw new Error("BASE_URL is required");
 
-const publicRoutes = ["/", "/communities", "/learn", "/sign-in", "/command", "/me/settings", "/me/rewards", "/apps/rhen/connect", "/products", "/feed", "/products/rhen", "/products/rhen/evidence", "/products/rhen/architecture", "/field-notes", "/field-notes/prediction-outcome-evidence-chain", "/about", "/help", "/resume", "/products/rhen/releases", "/me", "/privacy", "/terms", "/not-a-real-page", "/field-notes/not-a-real-note", "/products/rhen/releases/not-a-real-release", "/communities/moderation"];
+const registry = JSON.parse(fs.readFileSync(new URL("../src/data/releases.json", import.meta.url), "utf8"));
+const release = registry.releases.find(item => item.slug === registry.currentSlug);
+const releaseDetailRoute = "/products/rhen/releases/" + release.slug;
+const releaseDetailRoutes = registry.releases.map(item => "/products/rhen/releases/" + item.slug);
+const legacyReleaseRoute = "/releases/" + release.slug;
+
+const publicRoutes = [...releaseDetailRoutes, legacyReleaseRoute,"/", "/communities", "/learn", "/sign-in", "/command", "/me/settings", "/me/rewards", "/apps/rhen/connect", "/products", "/feed", "/products/rhen", "/products/rhen/evidence", "/products/rhen/architecture", "/field-notes", "/field-notes/prediction-outcome-evidence-chain", "/about", "/help", "/resume", "/products/rhen/releases", "/me", "/privacy", "/terms", "/not-a-real-page", "/field-notes/not-a-real-note", "/products/rhen/releases/not-a-real-release", "/communities/moderation"];
 const commandRoutes = ["/command/rhen/operate", "/command/rhen/discover", "/command/rhen/review", "/command/rhen/public", "/command/rhen/system"];
 const routes = process.env.PUBLIC_ONLY === "1" ? publicRoutes : [...publicRoutes, ...commandRoutes];
 const output = path.join(process.env.RUNNER_TEMP || os.tmpdir(), "anevum-visuals");
@@ -74,7 +80,9 @@ async function closeTarget(id) {
   } catch {}
 }
 
-async function runCase(route, viewport) {
+async function runCase(requestedRoute, viewport) {
+  // Exercise the legacy alias as a real navigation and require canonical hydration.
+  const route = requestedRoute === legacyReleaseRoute ? releaseDetailRoute : requestedRoute;
   const page = await target();
   const ws = new WebSocket(page.webSocketDebuggerUrl);
   const pending = new Map();
@@ -130,7 +138,7 @@ async function runCase(route, viewport) {
   });
   await send("Emulation.setEmulatedMedia", {features:[{name:"prefers-reduced-motion",value:"reduce"}]});
   if (route.startsWith("/command/")) await send("Page.addScriptToEvaluateOnNewDocument", {source: "(" + "() => {\n    const originalFetch=window.fetch.bind(window);\n    window.fetch=async (input,init={}) => {\n      const url=String(input);\n      if(url.includes(\"/api/command/session\")) return Response.json({authenticated:true,auth_source:\"cloudflare_access\",command_admin:true,email:\"qa@example.test\"});\n      if(url.includes(\"/api/command/iren/status\")) {\n        const at=new Date().toISOString();\n        return Response.json({\n          schema_version:\"iren_command.v2\",revision:42,observed_at:at,stale:false,state:\"HEALTHY\",action_required:false,\n          topology:{services:[\"IREN\",\"RHEN\",\"GRAEN\",\"NOSTRA\",\"VELUM\"].map(name=>({service_id:name.toLowerCase(),service_name:name+\" runtime\",runtime_kind:name.toLowerCase(),independent_runtime:false,status:[\"GRAEN\",\"NOSTRA\",\"VELUM\"].includes(name)?\"IDLE\":\"HEALTHY\",liveness:true,readiness:true,observed_at:at,last_heartbeat_at:at,scope:\"qa\",revision:\"qa-fixture-not-production\",current_activity:{IREN:\"Coordinating deterministic control.\",RHEN:\"Observing the latest market cycle.\",GRAEN:\"On-demand research idle.\",NOSTRA:\"Embedded forecast loop healthy.\",VELUM:\"On-demand replay idle.\"}[name]})),dependencies:{rhen_core:{status:\"HEALTHY\",last_success:at}}},\n          incidents:[],\n          work:{active_jobs:0,requires_human:0,blocked_objectives:0,objectives:[],jobs:[],job_events:[],commands:[],handoffs:[],next_action:{title:\"No bounded research work queued\"}},\n          research:{graen_problems:[],graen_runs:[],velum_replays:[],graen_runtime:{worker_id:null,runtime_version:\"on-demand\",heartbeat_at:null,active_problem_id:null,queue_depth:0}},\n          operator:{state:\"HEALTHY\",message:\"No operator action required.\",recent_transitions:[]}\n        });\n      }\n      if(url.includes(\"/api/command/\")) return Response.json({});\n      return originalFetch(input,init);\n    };\n  }" + ")()"});
-  await send("Page.navigate", { url: base + route });
+  await send("Page.navigate", { url: base + requestedRoute });
 
   // Lazy public routes and Cloudflare asset propagation are asynchronous.
   // Assert only after the requested route is actually hydrated.
@@ -151,6 +159,7 @@ async function runCase(route, viewport) {
             Boolean(document.querySelector(".anevum-commons-v5-mount")?.shadowRoot?.querySelector(".c2-article .c2-method"));
           const helpReady = ${JSON.stringify(route)} !== "/help" || (() => { const root=document.querySelector(".anevum-commons-v5-mount")?.shadowRoot; return root?.querySelector("#commons-help-title")?.textContent === "Help and account support" && root?.querySelectorAll(".c2-help .c2-card").length === 6; })();\n          const aboutReady = ${JSON.stringify(route)} !== "/about" || Boolean(document.querySelector(".anevum-commons-v5-mount")?.shadowRoot?.querySelector(".c2-about"));
           const resumeReady = ${JSON.stringify(route)} !== "/resume" || Boolean(document.querySelector(".anevum-commons-v5-mount")?.shadowRoot?.querySelector(".c2-resume .c2-card"));
+          const releaseDetailReady = !${JSON.stringify(releaseDetailRoutes)}.includes(${JSON.stringify(route)}) || Boolean(document.querySelector(".anevum-commons-v5-mount")?.shadowRoot?.querySelector(".c2-release-detail [data-release-section=boundary]"));
           const releasesReady = ${JSON.stringify(route)} !== "/products/rhen/releases" || Boolean(document.querySelector(".anevum-commons-v5-mount")?.shadowRoot?.querySelector(".c2-stack .c2-card"));
           const memberReady = !["/me", "/command", "/me/settings", "/me/rewards"].includes(${JSON.stringify(route)}) || Boolean(document.querySelector(".anevum-commons-v5-mount")?.shadowRoot?.querySelector(".c2-member"));
           const brokerReviewReady = ${JSON.stringify(route)} !== "/apps/rhen/connect" || (()=>{ const root=document.querySelector(".anevum-commons-v5-mount")?.shadowRoot; const disclosure=root?.querySelector(".rhen-review-disclosure"); const allow=root?.querySelector(".rhen-review-allow"); const checkbox=root?.querySelector(".rhen-review-check input"); return !!disclosure && disclosure.textContent.includes("Authorize RHEN by ANEVUM") && disclosure.textContent.includes("Alpaca does not warrant or guarantee") && allow?.disabled===true && checkbox?.disabled===true; })();
@@ -169,7 +178,7 @@ async function runCase(route, viewport) {
               document.querySelector('meta[name="robots"]')?.content?.startsWith("noindex") &&
               !document.querySelector('link[rel="canonical"]');
           })();
-          return {ready:pathReady && suspenseReady && homeReady && productsReady && feedReady && rhenReady && liveReady && architectureReady && researchReady && fieldNoteReady && helpReady && aboutReady && resumeReady && releasesReady && memberReady && brokerReviewReady && legalReady && commandReady && extraReady && missingReady && moderationReady,
+          return {ready:pathReady && suspenseReady && homeReady && productsReady && feedReady && rhenReady && liveReady && architectureReady && researchReady && fieldNoteReady && helpReady && aboutReady && resumeReady && releaseDetailReady && releasesReady && memberReady && brokerReviewReady && legalReady && commandReady && extraReady && missingReady && moderationReady,
             pathname:location.pathname,title:document.title,suspenseReady,homeReady,productsReady,feedReady,rhenReady,liveReady,architectureReady,researchReady,fieldNoteReady,aboutReady,resumeReady,releasesReady,commandReady};
         })()`,
         returnByValue:true
@@ -197,6 +206,7 @@ async function runCase(route, viewport) {
             Boolean(document.querySelector(".anevum-commons-v5-mount")?.shadowRoot?.querySelector(".c2-article .c2-method"));
         const helpReady = ${JSON.stringify(route)} !== "/help" || (() => { const root=document.querySelector(".anevum-commons-v5-mount")?.shadowRoot; return root?.querySelector("#commons-help-title")?.textContent === "Help and account support" && root?.querySelectorAll(".c2-help .c2-card").length === 6; })();\n          const aboutReady = ${JSON.stringify(route)} !== "/about" || Boolean(document.querySelector(".anevum-commons-v5-mount")?.shadowRoot?.querySelector(".c2-about"));
         const resumeReady = ${JSON.stringify(route)} !== "/resume" || Boolean(document.querySelector(".anevum-commons-v5-mount")?.shadowRoot?.querySelector(".c2-resume .c2-card"));
+          const releaseDetailReady = !${JSON.stringify(releaseDetailRoutes)}.includes(${JSON.stringify(route)}) || Boolean(document.querySelector(".anevum-commons-v5-mount")?.shadowRoot?.querySelector(".c2-release-detail [data-release-section=boundary]"));
           const releasesReady = ${JSON.stringify(route)} !== "/products/rhen/releases" || Boolean(document.querySelector(".anevum-commons-v5-mount")?.shadowRoot?.querySelector(".c2-stack .c2-card"));
         const memberReady = !["/me", "/command", "/me/settings", "/me/rewards"].includes(${JSON.stringify(route)}) || Boolean(document.querySelector(".anevum-commons-v5-mount")?.shadowRoot?.querySelector(".c2-member"));
           const brokerReviewReady = ${JSON.stringify(route)} !== "/apps/rhen/connect" || (()=>{ const root=document.querySelector(".anevum-commons-v5-mount")?.shadowRoot; const disclosure=root?.querySelector(".rhen-review-disclosure"); const allow=root?.querySelector(".rhen-review-allow"); const checkbox=root?.querySelector(".rhen-review-check input"); return !!disclosure && disclosure.textContent.includes("Authorize RHEN by ANEVUM") && disclosure.textContent.includes("Alpaca does not warrant or guarantee") && allow?.disabled===true && checkbox?.disabled===true; })();
@@ -215,7 +225,7 @@ async function runCase(route, viewport) {
               document.querySelector('meta[name="robots"]')?.content?.startsWith("noindex") &&
               !document.querySelector('link[rel="canonical"]');
           })();
-          return {ready:pathReady && suspenseReady && homeReady && productsReady && feedReady && rhenReady && liveReady && architectureReady && researchReady && fieldNoteReady && helpReady && aboutReady && resumeReady && releasesReady && memberReady && brokerReviewReady && legalReady && commandReady && extraReady && missingReady && moderationReady,
+          return {ready:pathReady && suspenseReady && homeReady && productsReady && feedReady && rhenReady && liveReady && architectureReady && researchReady && fieldNoteReady && helpReady && aboutReady && resumeReady && releaseDetailReady && releasesReady && memberReady && brokerReviewReady && legalReady && commandReady && extraReady && missingReady && moderationReady,
           pathname:location.pathname,title:document.title,suspenseReady,homeReady,productsReady,feedReady,rhenReady,liveReady,architectureReady,researchReady,fieldNoteReady,aboutReady,resumeReady,releasesReady,commandReady};
       })()`,
       returnByValue:true
@@ -359,6 +369,43 @@ async function runCase(route, viewport) {
       throw new Error("Missing accurate accessible V5 public evidence surface: "+JSON.stringify(evidence));
   }
 
+  if (releaseDetailRoutes.includes(route)) {
+    const release = registry.releases.find(item => route === "/products/rhen/releases/" + item.slug);
+    const response = await send("Runtime.evaluate", {expression:`(() => {
+      const release=${JSON.stringify(release)};
+      const root=document.querySelector(".anevum-commons-v5-mount")?.shadowRoot;
+      const page=root?.querySelector(".c2-release-detail");
+      const normalize=value=>String(value).replace(/\\s+/g," ").trim();
+      const text=normalize(page?.textContent||"");
+      const fields=[release.codename,release.headline,release.abstract,release.thesis,
+        release.lifecycle,release.releaseClass,release.sourceCommit,release.activeStrategy,release.next,
+        ...release.badges,...release.capabilities.flatMap(Object.values),...release.architecture.flatMap(Object.values),
+        ...release.verification.flatMap(Object.values),...release.limitations.flatMap(Object.values),
+        ...release.changelog.flatMap(item=>[item.pr,item.title]),
+        ...[release.productionDeployment,release.shadowDeployment,release.preopenDeployment].filter(Boolean)];
+      const missing=fields.filter(value=>!text.includes(normalize(value)));
+      const pdf=page?.querySelector('a[href="'+release.pdfPath+'"]');
+      const commit=page?.querySelector('a[href$="/commit/'+release.sourceCommit+'"]');
+      const changelog=release.changelog.every(item=>page?.querySelector('a[href$="/pull/'+item.pr+'"]'));
+      const wide=[...(page?.querySelectorAll("*")||[])].filter(el=>el.scrollWidth>el.clientWidth+2&&getComputedStyle(el).display!=="inline");
+      return {surface:page?.getAttribute("data-release-slug")===release.slug,missing,
+        sections:page?.querySelectorAll("[data-release-section]").length||0,
+        historical:page?.querySelector(".c2-truth")?.textContent?.includes("do not imply current availability"),
+        pdf:!!pdf&&pdf.tabIndex>=0,commit:!!commit,changelog,
+        canonical:document.querySelector('link[rel="canonical"]')?.href===${JSON.stringify("https://anevum.com"+route)},
+        overflow:wide.map(el=>el.tagName+":"+el.className)};
+    })()`,returnByValue:true});
+    const detail=response.result?.value||{};
+    if(!detail.surface||detail.missing?.length||detail.sections!==8||!detail.historical||!detail.pdf||
+      !detail.commit||!detail.changelog||!detail.canonical||detail.overflow?.length)
+      throw new Error("Historical release parity or legacy redirect failed: "+JSON.stringify(detail));
+    const pdf=await fetch(base+release.pdfPath);
+    const packet=new Uint8Array(await pdf.arrayBuffer());
+    if(!pdf.ok||!pdf.headers.get("content-type")?.includes("application/pdf")||
+      new TextDecoder().decode(packet.slice(0,5))!=="%PDF-")
+      throw new Error("Historical release PDF is unavailable or invalid: "+release.pdfPath);
+  }
+
   if(route.startsWith("/command/")) {
     const workspace = await send("Runtime.evaluate", {expression: `(() => {
       const visible = (selector) => {
@@ -483,6 +530,7 @@ async function runCase(route, viewport) {
     "/products/rhen/architecture":["architecture",["Architecture and authority","Execution gates"]],
     "/about":["about",["c2-about","Independent work, shared openly."]],
     "/resume":["resume",["c2-resume","Technical skills"]],
+    [releaseDetailRoute]:["release-detail",["c2-release-detail","Download release PDF","Verification at publication","Changelog","Boundary at publication"]],
     "/products/rhen/releases":["releases",["c2-card","Release history"]],
     "/feed":["feed",["post-list","Public ANEVUM work"]],
     "/communities":["communities",["Explore the subjects","No fictional communities"]],

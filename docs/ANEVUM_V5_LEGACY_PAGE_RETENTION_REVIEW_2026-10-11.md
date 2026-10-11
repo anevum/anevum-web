@@ -110,3 +110,11 @@ This is source-only development. No page/asset deletion, merge, production or
 reviewer staging repin, D1 migration, provider credential, Railway change,
 Alpaca action or RHEN execution authorization is included. Exact-head CI for this
 new draft must be recorded independently before further integration.
+
+## Subsequent public-record parity work
+
+The pinned findings above describe parent #291 and the review delivered in #292.
+The next draft migrates active public checks and release validation away from
+the ten import-unreached page paths with literal source dependencies. The refreshed
+audit has zero such blockers and 27 manual-review pages; all pages remain retained.
+See ANEVUM_V5_PUBLIC_RECORD_PARITY_2026-10-11.md for scope and remaining review.

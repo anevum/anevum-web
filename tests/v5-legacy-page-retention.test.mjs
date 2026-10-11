@@ -6,13 +6,11 @@ import os from "node:os";
 import {auditLegacyPageRetention} from "../scripts/audit-v5-legacy-page-retention.mjs";
 import {listAuditFiles} from "../scripts/audit-v5-source-reachability.mjs";
 
-test("retirement review finds file reads missed by import reachability",()=>{
+test("active validator no longer blocks retirement through obsolete public page reads",()=>{
   const report=auditLegacyPageRetention();
   const validatorReferences=report.pages.filter(page=>page.references.some(ref=>ref.file==="scripts/validate-release-registry.mjs"));
-  assert.ok(validatorReferences.length>=7);
-  const blocked=validatorReferences.filter(page=>page.status==="UNREACHED_REVIEW");
-  assert.ok(blocked.length>=6);
-  assert.ok(blocked.every(page=>page.decision==="RETAIN_LITERAL_REFERENCE"));
+  assert.deepEqual(validatorReferences.map(page=>page.file),["src/pages/Command.tsx"]);
+  assert.ok(validatorReferences.every(page=>page.status==="RUNTIME_REACHABLE"));
   assert.equal(report.deletionAuthorized,false);
   assert.equal(report.runtimeUnresolved.length,0);
   assert.equal(report.counts.pages,39);
