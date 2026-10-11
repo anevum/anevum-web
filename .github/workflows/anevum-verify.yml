@@ -47,6 +47,14 @@ jobs:
         run: npm run test:members
       - name: Verify ANEVUM V5 Foundation workspace contract
         run: npm run test:foundation
+      - name: Capture V5 reachability evidence
+        if: github.event_name == 'pull_request'
+        shell: bash
+        run: |
+          set -euo pipefail
+          node scripts/audit-v5-source-reachability.mjs --json > "$RUNNER_TEMP/anevum-v5-source-reachability.json"
+          jq -e '(.version == "anevum.v5.source-reachability.v1") and ((.runtimeUnresolved | length) == 0) and (.counts.pages >= 30)' "$RUNNER_TEMP/anevum-v5-source-reachability.json" > /dev/null
+          jq -c '{counts, runtimeDynamicCount: (.runtimeDynamic | length), runtimeUnresolvedCount: (.runtimeUnresolved | length)}' "$RUNNER_TEMP/anevum-v5-source-reachability.json"
       - name: Enforce pinned WEB/RHEN cross-repository workspace schema parity
         # Public GitHub REST unauthenticated IP rate limits can return 403 in
         # Actions runners; authenticate this read-only pinned branch check.
@@ -210,6 +218,15 @@ jobs:
           grep -Fq 'RHEN' "$evidence/terminal-rendered.html"
           grep -Fq 'Authorize RHEN by ANEVUM' "$evidence/rhen-review-disclosure-rendered.html"
           grep -Fq 'REQUIRED AUTHORIZATION DISCLOSURE' "$evidence/rhen-review-disclosure-rendered.html"
+
+      - name: Upload V5 reachability evidence
+        if: github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: anevum-v5-source-reachability
+          path: ${{ runner.temp }}/anevum-v5-source-reachability.json
+          retention-days: 3
+          if-no-files-found: error
 
       - name: Upload browser QA
         if: github.event_name == 'pull_request'

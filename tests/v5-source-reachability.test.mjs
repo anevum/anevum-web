@@ -19,6 +19,17 @@ test("V5 graph distinguishes published and legacy pages without deletion",()=>{
   assert.ok(report.limitations.some(s=>s.includes("automatically deleted")));
   console.log("V5 reachability inventory: "+JSON.stringify(report.counts));
 });
+test("CI records read-only source classifications as a reviewed PR artifact",()=>{
+  const wf=readFileSync(new URL("../.github/workflows/anevum-verify.yml",import.meta.url),"utf8");
+  assert.match(wf,/Capture V5 reachability evidence/);
+  assert.match(wf,/node scripts\/audit-v5-source-reachability\.mjs --json/);
+  assert.match(wf,/runtimeUnresolved \| length/);
+  assert.match(wf,/Upload V5 reachability evidence/);
+  assert.match(wf,/name: anevum-v5-source-reachability/);
+  assert.match(wf,/if-no-files-found: error/);
+  assert.doesNotMatch(wf,/npm run audit:delete|source-reachability\.mjs.*--delete/);
+});
+
 test("relative resolver follows TSX and CSS imports and retains test-only files",()=>{
   const root=mkdtempSync(path.join(os.tmpdir(),"anevum-v5-audit-"));
   const put=(p,source)=>{
