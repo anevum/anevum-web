@@ -1,9 +1,12 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
+import { signInReturnPath } from "../member/beta-auth-redirect";
 import { memberAuthClient } from "../member/auth-client";
 import { useMemberAvailability, refreshMemberAvailability } from "../member/useMemberAvailability";
 
 export default function SignIn() {
+  const location = useLocation();
+  const destination = signInReturnPath(location.search);
   const availability = useMemberAvailability();
   const { data: session, isPending } = memberAuthClient.useSession();
   const [error, setError] = useState("");
@@ -15,7 +18,7 @@ export default function SignIn() {
     try {
       const result = await memberAuthClient.signIn.social({
         provider: "google",
-        callbackURL: "/command"
+        callbackURL: destination
       });
       if (result.error) {
         setError(result.error.message || "Sign-in could not be started.");
@@ -39,7 +42,7 @@ export default function SignIn() {
           <button type="button" className="member-primary-action" onClick={() => refreshMemberAvailability()}>Recheck registration</button>
         </div>
       ) : session?.user ? (
-        <Link className="member-primary-action" to="/command">Open Command</Link>
+        <Link className="member-primary-action" to={destination}>{destination === "/me/beta" ? "Open beta checklist" : "Open Command"}</Link>
       ) : (
         <button className="member-primary-action" type="button" disabled={redirecting} onClick={() => void signIn()}>
           {redirecting ? "Opening Google…" : "Continue with Google"}
