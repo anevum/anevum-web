@@ -98,6 +98,10 @@ test("staff queue requires dual authorization and excludes account and brokerage
   assert.equal((await invoke(db,another,another.email)).status,403);
   const {status,payload}=await invoke(db);
   assert.equal(status,200);
+  assert.equal(payload.schemaVersion,"anevum.commons-review.v1");
+  assert.equal(payload.reviewerMemberId,moderator.id);
+  assert.equal(payload.pageCap,30);
+  assert.equal(payload.olderPendingMayExist,false);
   assert.equal(payload.pending.length,1);
   assert.equal(payload.pending[0].id,reportId);
   assert.equal(payload.pending[0].post.id,postId);
@@ -112,6 +116,10 @@ test("moderator hiding a reported post leaves one durable scoped audit entry",as
     decision:"HIDE",reason:"Verified disclosure of private member information"
   });
   assert.equal(first.status,200);
+  assert.equal(first.payload.schemaVersion,"anevum.commons-review.v1");
+  assert.equal(first.payload.reviewerMemberId,moderator.id);
+  assert.equal(first.payload.reportId,reportId);
+  assert.equal(first.payload.decision,"HIDE");
   assert.equal(first.payload.moderationAuditRecorded,true);
   assert.equal(first.payload.executionEnabled,false);
   assert.equal(store.posts.get(postId).status,"HIDDEN");
@@ -178,7 +186,8 @@ test("moderator routing is pre-authenticated by Access and also subject to Bette
   assert.match(pages,/pathname === "\/communities\/moderation"/);
   assert.match(app,/<Route path="\/communities\/moderation"/);
   assert.match(ui,/fetch\("\/api\/member\/commons\/moderation\/reports"/);
-  assert.match(ui,/moderationAuditRecorded/);
+  assert.match(ui,/reviewedDecision/);
+  assert.match(read("src/commons/moderation-contract.ts"),/moderationAuditRecorded === true/);
   assert.doesNotMatch(ui,/dangerouslySetInnerHTML|localStorage\.getItem\("moderator"/);
 
   assert.doesNotMatch(social,/order_submit|trade_execute|brokerToken|\/v2\/orders/);

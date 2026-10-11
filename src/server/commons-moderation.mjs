@@ -51,7 +51,7 @@ export async function moderationEndpoint(request,env,user,origin,pathname,access
         "FROM commons_v5_reports r JOIN commons_v5_posts p ON p.id=r.post_id "+
         "WHERE r.status='PENDING' ORDER BY r.created_at ASC,r.id ASC LIMIT 30"
       ).all();
-      return reply({pending:(data.results||[]).map(x=>({
+      return reply({schemaVersion:"anevum.commons-review.v1",reviewerMemberId:user.id,pending:(data.results||[]).map(x=>({
         id:x.report_id,reason:x.reason,createdAt:x.created_at,
         post:{id:x.post_id,title:x.title,body:x.body,status:x.status}
       })),pageCap:30,olderPendingMayExist:(data.results||[]).length===30});
@@ -100,7 +100,7 @@ export async function moderationEndpoint(request,env,user,origin,pathname,access
     if(!Array.isArray(results)||results.length!==3 ||
        results[0]?.meta?.changes!==1 || results[2]?.meta?.changes!==1)
       return reply({message:"Report already resolved or unavailable."},409);
-    return reply({resolved:true,decision:choice.decision,reportId,
+    return reply({schemaVersion:"anevum.commons-review.v1",reviewerMemberId:user.id,resolved:true,decision:choice.decision,reportId,
       moderationAuditRecorded:true,executionEnabled:false});
   }catch{
     return reply({message:"Moderator decision unavailable. No success reported."},503);

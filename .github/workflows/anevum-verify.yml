@@ -188,6 +188,7 @@ jobs:
           node scripts/visual-ops-browser-qa.mjs
           node scripts/member-command-browser-qa.mjs
           node scripts/member-settings-browser-qa.mjs
+          node scripts/moderation-review-browser-qa.mjs
           node scripts/private-rhen-browser-qa.mjs
       - name: Visual review contact sheets
         if: github.event_name == 'pull_request'
@@ -206,12 +207,17 @@ jobs:
           done
           for width in 320 390 768 1024 1440; do
             test -s "$evidence/member-settings-member-$width.png"
+            test -s "$evidence/moderation-review-review-$width.png"
+            test -s "$evidence/moderation-review-form-$width.png"
             for section in overview account setup evidence research updates; do
               test -s "$evidence/private-rhen-$section-member-$width.png"
             done
           done
           for state in disabled signed-out crossed malformed failed-load failed-save switch late-load auth-errors; do
             test -s "$evidence/member-settings-$state-390.png"
+          done
+          for state in signed-out disabled denied unavailable malformed crossed capped wrong-report wrong-decision wrong-reviewer audit-missing execution-enabled conflict network revoked switch late-load; do
+            test -s "$evidence/moderation-review-$state-390.png"
           done
           grep -Fq 'anevum-commons-v5-mount' "$evidence/home-rendered.html"
           grep -Fq 'Public ANEVUM work' "$evidence/home-rendered.html"
