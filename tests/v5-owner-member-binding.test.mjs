@@ -34,18 +34,22 @@ test("every operator API shares the dual-bound commandCredential and no client-s
 test("frontend member state reset and owner link require verified owner-bound proof",()=>{
   const home=source("src/pages/MemberHome.tsx"),rhen=source("src/pages/RhenApp.tsx");
   assert.match(home,/key=\{session\?\.user\?\.id \|\| "signed-out"\}/);
-  assert.match(home,/next.user.id !== identity\?\.id/);
+  assert.match(home,/parseMemberCommandResponse\(body, identity\.id\)/);
   assert.match(home,/value\?\.owner_member_bound === true/);
   assert.match(rhen,/value\?\.owner_member_bound === true/);
   assert.match(home,/value\?\.auth_source === "cloudflare_access"/);
   assert.match(rhen,/value\?\.auth_source === "cloudflare_access"/);
 });
-test("manual V5 production release requires encrypted account binding",()=>{
+test("website testing release keeps unbound RHEN closed and requires the separate Studio binding",()=>{
   const prod=JSON.parse(source("wrangler.jsonc")),stage=JSON.parse(source("wrangler.member-staging.jsonc")),workflow=source(".github/workflows/deploy-production.yml");
   assert.equal(prod.vars.ANEVUM_V5_OWNER_MEMBER_BINDING_REQUIRED,"true");
   assert.equal(stage.vars.ANEVUM_V5_OWNER_MEMBER_BINDING_REQUIRED,undefined);
   assert.equal("RHEN_OWNER_MEMBER_ID" in prod.vars,false);
   assert.match(workflow,/\.vars\.ANEVUM_V5_OWNER_MEMBER_BINDING_REQUIRED == "true"/);
-  assert.match(workflow,/BETTER_AUTH_SECRET RHEN_OWNER_MEMBER_ID/);
+  assert.equal(prod.vars.RHEN_OBSERVER_ENABLED,"false");
+  assert.equal(prod.vars.ANEVUM_STUDIO_ENABLED,"true");
+  assert.equal(prod.vars.ANEVUM_STUDIO_PUBLISH_ENABLED,"false");
+  assert.match(workflow,/BETTER_AUTH_SECRET ANEVUM_STUDIO_OWNER_MEMBER_ID/);
+  assert.doesNotMatch(workflow,/text:.*RHEN_OWNER_MEMBER_ID/);
   assert.match(workflow,/workflow_dispatch:/);
 });

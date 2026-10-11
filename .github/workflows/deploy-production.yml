@@ -14,16 +14,22 @@ on:
         required: true
         type: string
       rollback_confirmed:
-        description: 'Type PRODUCTION_ROLLBACK_VERIFIED after restore/rollback rehearsal'
+        description: 'Type PRODUCTION_ROLLBACK_VERIFIED to require the automated recovery check'
+        required: true
+        type: string
+
+      private_recovery_authorized:
+        description: 'Type AUTHORIZE_PRIVATE_PRODUCTION_D1_RECOVERY for encrypted backup and in-memory restore in Actions'
         required: true
         type: string
 
 permissions:
   contents: read
+  actions: read
 
 concurrency:
   group: anevum-production
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   deploy:
@@ -31,9 +37,10 @@ jobs:
       github.ref == 'refs/heads/main' &&
       inputs.confirmation == 'DEPLOY_ANEVUM_PRODUCTION_V5' &&
       inputs.reviewed_head_sha == github.sha &&
-      inputs.rollback_confirmed == 'PRODUCTION_ROLLBACK_VERIFIED'
+      inputs.rollback_confirmed == 'PRODUCTION_ROLLBACK_VERIFIED' &&
+      inputs.private_recovery_authorized == 'AUTHORIZE_PRIVATE_PRODUCTION_D1_RECOVERY'
     runs-on: ubuntu-latest
-    timeout-minutes: 12
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
         with:
@@ -45,7 +52,7 @@ jobs:
         with:
           python-version: "3.12"
       - name: Install PDF renderer
-        run: pip install "weasyprint==68.0"
+        run: pip install "weasyprint==68.0" "cryptography==45.0.7"
       - name: Synchronize RHEN release artifacts
         run: node scripts/sync-release-artifacts.mjs
       - name: Render RHEN release packets
@@ -55,7 +62,10 @@ jobs:
       - name: Install
         run: npm install --no-audit --no-fund
       - name: Verify V5 trading suspension boundaries
-        run: node --test tests/legacy-rhen-retirement.test.mjs
+        run: |
+          node --test tests/legacy-rhen-retirement.test.mjs
+          npm run test:members
+          npm run test:foundation
       - name: Build
         run: npm run build
       - name: Verify generated public artifacts
@@ -63,6 +73,78 @@ jobs:
           test -s public/devon-akins-resume.pdf
           test -s dist/client/devon-akins-resume.pdf
           head -c 5 dist/client/devon-akins-resume.pdf | grep -Fq '%PDF-'
+      - name: Verify private production recovery with synthetic accounts only
+        run: |
+          node --test tests/v5-production-release.test.mjs
+          python scripts/verify-v5-production-backup.py selftest
+      - name: Reject stale main before private recovery or migration
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git ls-remote origin refs/heads/main | cut -f1)" = "$GITHUB_SHA"
+          test "$GITHUB_SHA" = "${{ inputs.reviewed_head_sha }}"
+      - name: Require successful verification of this exact main commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs?head_sha=$GITHUB_SHA&status=completed&per_page=100" \
+            > "$RUNNER_TEMP/production-source-ci.json"
+          jq -e --arg sha "$GITHUB_SHA" \
+            'any(.workflow_runs[]; .name=="ANEVUM Verify" and .head_sha==$sha and .event=="push" and .conclusion=="success")' \
+            "$RUNNER_TEMP/production-source-ci.json" >/dev/null
+      - name: Export, restore-test and encrypt the authorized production backup
+        id: recovery
+        env:
+          ANEVUM_PRIVATE_RECOVERY_AUTHORIZED: "true"
+          CLOUDFLARE_D1_TOKEN: ${{ secrets.CLOUDFLARE_D1_TOKEN }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          # Existing organization recovery key; keep its custody in encrypted
+          # secrets. Dedicated production archive and verified target below.
+          ANEVUM_PRODUCTION_BACKUP_FERNET_KEY: ${{ secrets.ANEVUM_PREVIEW_BACKUP_FERNET_KEY }}
+        run: node scripts/production-v5-release.mjs backup
+      - name: Retain encrypted production recovery and rollback metadata
+        uses: actions/upload-artifact@v4
+        with:
+          name: anevum-production-d1-encrypted-${{ github.run_id }}
+          path: |
+            ${{ runner.temp }}/anevum-production-d1.sql.fernet
+            ${{ runner.temp }}/production-recovery-report.json
+          retention-days: 30
+          if-no-files-found: error
+          compression-level: 0
+      - name: Re-download the encrypted production recovery archive
+        uses: actions/download-artifact@v4
+        with:
+          name: anevum-production-d1-encrypted-${{ github.run_id }}
+          path: ${{ runner.temp }}/production-recovery-verify
+      - name: Verify archived backup before any production migration
+        env:
+          ANEVUM_PRIVATE_RECOVERY_AUTHORIZED: "true"
+          ANEVUM_PRODUCTION_BACKUP_FERNET_KEY: ${{ secrets.ANEVUM_PREVIEW_BACKUP_FERNET_KEY }}
+          EXPECTED_PRODUCTION_BACKUP_SHA: ${{ steps.recovery.outputs.sql_sha256 }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          umask 077
+          python scripts/verify-v5-production-backup.py verify-encrypted \
+            "$RUNNER_TEMP/production-recovery-verify/anevum-production-d1.sql.fernet" \
+            > "$RUNNER_TEMP/verified-production-recovery.json"
+          jq -e --arg sha "$EXPECTED_PRODUCTION_BACKUP_SHA" \
+            '.status=="PRODUCTION_SQLITE_RECOVERY_AND_STUDIO_REHEARSAL_VERIFIED" and .sql_sha256==$sha and .existing_records_preserved==true and .foreign_key_violations==0' \
+            "$RUNNER_TEMP/verified-production-recovery.json" >/dev/null
+      - name: Reject stale main before Studio activation
+        run: test "$(git ls-remote origin refs/heads/main | cut -f1)" = "$GITHUB_SHA"
+      - name: Apply only the Studio migration and privately bind the existing owner
+        env:
+          ANEVUM_PRIVATE_RECOVERY_AUTHORIZED: "true"
+          CLOUDFLARE_D1_TOKEN: ${{ secrets.CLOUDFLARE_D1_TOKEN }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          EXPECTED_PRODUCTION_BACKUP_SHA: ${{ steps.recovery.outputs.sql_sha256 }}
+        run: node scripts/production-v5-release.mjs activate-studio
       - name: Verify production member release prerequisites before deployment
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_D1_TOKEN }}
@@ -71,7 +153,6 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          npm run test:members
           node scripts/verify-member-bindings.mjs --require-live
           jq -e '
             .name == "anevum-web-nextgen" and
@@ -80,6 +161,9 @@ jobs:
             .vars.ANEVUM_MEMBER_PREVIEW_ENABLED == "false" and
             .vars.COMMAND_LIVE_STREAM_ENABLED == "false" and
             .vars.ANEVUM_V5_OWNER_MEMBER_BINDING_REQUIRED == "true" and
+            .vars.RHEN_OBSERVER_ENABLED == "false" and
+            .vars.ANEVUM_STUDIO_ENABLED == "true" and
+            .vars.ANEVUM_STUDIO_PUBLISH_ENABLED == "false" and
             .d1_databases[0].database_id == "7f0d4c0c-2e85-4900-8504-1347954e1df1" and
             .previews.d1_databases[0].database_id == "a537432e-d216-4b31-8b22-19662cc3a44a"
           ' wrangler.jsonc >/dev/null
@@ -99,11 +183,14 @@ jobs:
             "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/anevum-web-nextgen/secrets" \
             -o "$RUNNER_TEMP/prod-launch-secret-bindings.json"
           jq -e '.success == true and (.result|type == "array")' "$RUNNER_TEMP/prod-launch-secret-bindings.json" >/dev/null
-          for name in GOOGLE_CLIENT_ID GOOGLE_CLIENT_SECRET BETTER_AUTH_SECRET RHEN_OWNER_MEMBER_ID; do
+          for name in GOOGLE_CLIENT_ID GOOGLE_CLIENT_SECRET BETTER_AUTH_SECRET ANEVUM_STUDIO_OWNER_MEMBER_ID; do
             jq -e --arg key "$name" 'any(.result[]; .name == $key and .type == "secret_text")' \
               "$RUNNER_TEMP/prod-launch-secret-bindings.json" >/dev/null
           done
-          echo 'PASS release preflight: approved migrated D1, ten required tables, FK integrity and encrypted auth binding names.'
+          npx wrangler d1 execute MEMBER_DB --remote --config wrangler.jsonc --json \
+            --command "SELECT COUNT(*) AS studio_tables FROM sqlite_master WHERE type='table' AND name IN ('studio_entries','studio_entry_events')" > "$RUNNER_TEMP/prod-studio-schema.json"
+          jq -e '.[0].success==true and .[0].results[0].studio_tables==2' "$RUNNER_TEMP/prod-studio-schema.json" >/dev/null
+          echo 'PASS release preflight: approved migrated D1, core and Studio tables, FK integrity and encrypted auth binding names.'
       - name: Reject stale main ref before production deployment
         shell: bash
         run: |
@@ -120,6 +207,8 @@ jobs:
           command: deploy
       - name: Verify production member launch boundaries
         run: node scripts/probe-member-production-launch.mjs
+      - name: Verify production V5 routes and Studio privacy
+        run: node scripts/probe-v5-live-release.mjs
       - name: Verify production visual operations
         env:
           BASE_URL: https://anevum.com
