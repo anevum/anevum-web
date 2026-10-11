@@ -13,3 +13,5 @@ The account/checklist response remains tied to verified Better Auth identity. No
 The new test suite checks allowed and rejected redirect intents, exact client routing, and unchanged broker/community gates. This is source-only development; no OAuth client credentials, provider settings, production Worker, D1 migration or public release was modified.
 
 Remaining real acceptance: first-time Google login, session return and cookie persistence, second independent member and private data isolation, protected owner binding and an independently authorized production beta release. Alpaca Connect review is NOT a prerequisite for this non-trading registration flow.
+
+Returning signed-in members opening public /beta are recognized through their real Better Auth session and receive a direct /me/beta checklist link rather than a redundant Google signup prompt. Public browser QA now waits for the resolved Google/member availability state before asserting the CTA. No additional owner or brokerage permissions are introduced.
