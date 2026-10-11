@@ -75,7 +75,7 @@ export default function MemberBeta(){
   const availability=useMemberAvailability();
   const {data:session,isPending}=memberAuthClient.useSession();
   if(availability==="checking"||isPending)return <section className="c2-beta"><p role="status">Checking member access…</p></section>;
-  if(availability!=="available")return <section className="c2-beta"><h1>Beta unavailable</h1><p>No member capabilities are enabled until registration can be verified.</p><Link to="/sign-in">Recheck sign-in</Link></section>;
-  if(!session?.user?.id)return <section className="c2-beta"><h1>Sign in to test your account</h1><Link to="/sign-in">Continue with Google</Link></section>;
+  if(availability!=="available")return <section className="c2-beta"><h1>Beta unavailable</h1><p>No member capabilities are enabled until registration can be verified.</p><Link to="/sign-in?next=beta">Recheck sign-in</Link></section>;
+  if(!session?.user?.id)return <section className="c2-beta"><h1>Sign in to test your account</h1><Link to="/sign-in?next=beta">Continue with Google</Link></section>;
   return <Checks key={session.user.id} memberId={session.user.id}/>;
 }
