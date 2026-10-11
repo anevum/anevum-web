@@ -55,3 +55,23 @@ test("first-time signup can recheck without changing server-side authorization",
  assert.doesNotMatch(source("src/member/useMemberAvailability.ts"),/addEventListener\("focus"/);
  assert.match(source("src/server/member.mjs"),/memberConfigured\(env\) && Boolean\(verifiedOrigin\) && await memberSchemaReady\(env\)/);
 });
+
+
+test("beta capability probe rejects overprivileged or malformed saved draft data",()=>{
+  const safe={
+    available:true,executionEnabled:false,brokerageConnected:false,
+    draft:{
+      label:"Member research",marketScope:"us_equities_etfs",direction:"long_only",
+      maxOpenPositions:2,maxTotalExposurePercent:30,maxPositionPercent:10,
+      updatedAt:"2026-10-11 10:12:22"
+    }
+  };
+  assert.equal(verifyBetaProbe("draft",200,safe,user),"available");
+  for(const payload of [
+    {...safe,draft:{...safe.draft,apiKey:"private"}},
+    {...safe,draft:{...safe.draft,direction:"short"}},
+    {...safe,draft:{...safe.draft,maxOpenPositions:100}},
+    {...safe,draft:{...safe.draft,maxPositionPercent:60}},
+    {...safe,brokerLink:true}
+  ])assert.throws(()=>verifyBetaProbe("draft",200,payload,user));
+});
