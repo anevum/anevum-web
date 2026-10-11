@@ -153,3 +153,23 @@ test("refuses duplicate session cookies and unverified staging hosts before requ
   );
   assert.equal(hits, 0);
 });
+
+
+test("real two-member staging acceptance sends verified identity on every reversible draft write",async()=>{
+  const stage=fakeStaging();
+  const report=await runAcceptance({
+    ...credentials,exerciseWrites:true,request:stage.fetcher
+  });
+  assert.equal(report.ok,true);
+  const draftWrites=stage.requests.filter(x=>
+    x.url.endsWith("/api/member/rhen/draft") &&
+    ["PUT","DELETE"].includes(x.options.method));
+  assert.ok(draftWrites.length>=4);
+  for(const call of draftWrites){
+    const cookie=call.options.headers.Cookie;
+    assert.ok(["private-A","private-B"].includes(cookie));
+    const expected=cookie==="private-A"?"member-A":"member-B";
+    assert.equal(call.options.headers["X-ANEVUM-EXPECTED-MEMBER-ID"],expected);
+  }
+  assert.doesNotMatch(JSON.stringify(report),/member-A|member-B|private-A|private-B/);
+});
