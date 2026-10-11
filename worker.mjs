@@ -2,6 +2,7 @@ import releaseRegistry from "./src/data/releases.json";
 import { fieldNotes } from "./src/data/fieldNotes";
 import { shadowRead } from "./shadow-transport.mjs";
 import { memberEndpoint } from "./src/server/member.mjs";
+import { observeOwnerPersonalPaper } from "./src/server/owner-personal-paper.mjs";
 import { verifyOwnerMemberBinding, OwnerMemberBindingError } from "./src/server/command-owner-binding.mjs";
 import { observeOwnerGitHub } from "./src/server/github-owner-status.mjs";
 import { observeOwnerInfrastructure } from "./src/server/owner-infrastructure-status.mjs";
@@ -489,6 +490,21 @@ export default {
     if (url.hostname === "anevum.com" && url.protocol !== "https:") {
       url.protocol = "https:";
       return Response.redirect(url.toString(), 308);
+    }
+
+    if (pathname === "/api/member/owner-paper/status") {
+      if (request.method !== "GET") return jsonResponse({message:"Read-only account observation."},405);
+      if (url.search) return jsonResponse({message:"Account selection is forbidden."},400);
+      if (env?.ANEVUM_OWNER_PAPER_OBSERVER_ENABLED !== "true")
+        return jsonResponse({available:false,paper:true,executionEnabled:false,message:"Personal paper observation is not enabled."},503);
+      try {
+        const credential = await commandCredential(request, env);
+        if (credential.ownerMemberBound !== true) return jsonResponse({message:"Owner-member access denied."},403);
+        return await observeOwnerPersonalPaper(env);
+      } catch (error) {
+        if (error instanceof ApiError) return jsonResponse({message:error.message},error.status);
+        return jsonResponse({message:"Personal paper observation unavailable."},503);
+      }
     }
 
     if (pathname.startsWith("/api/member/") || pathname === "/api/auth" || pathname.startsWith("/api/auth/")) {
