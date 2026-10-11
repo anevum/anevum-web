@@ -5,6 +5,8 @@ import CommonsPublicPage from "./CommonsPages";
 import Mark from "../components/Mark";
 import { fieldNotes, type FieldNote } from "../data/fieldNotes";
 import { memberAuthClient } from "../member/auth-client";
+import { primaryNavigation, accountNavigation, mobileNavigation, isSiteNavigationActive, safeAccountDestination } from "./site-navigation";
+import liveCss from "../styles/commons-v5-live-system.css?inline";
 import css from "../styles/commons-v5.css?inline";
 import polishCss from "../styles/commons-v5-polish.css?inline";
 import pagesCss from "../styles/commons-v5-pages.css?inline";
@@ -24,7 +26,7 @@ import memberFinancialCss from "../styles/member-financial.css?inline";
  * state, voting totals, member D1 reads/writes, or payment interactions.
  * See docs/design/commons-stage-01-public-entrance.md.
  */
-type Palette = "midnight" | "carbon" | "paper" | "plum";
+type Palette = "forest" | "midnight" | "carbon" | "paper" | "plum";
 type Layout = "social" | "focus";
 type Surface = "cards" | "seamless";
 type Density = "comfortable" | "compact";
@@ -39,11 +41,11 @@ type Preferences = {
   radius: Radius;
 };
 const defaults: Preferences = {
-  theme: "midnight", layout: "social", surface: "cards",
+  theme: "forest", layout: "social", surface: "cards",
   density: "comfortable", radius: "soft"
 };
 const choices = {
-  theme: ["midnight", "carbon", "paper", "plum"],
+  theme: ["forest", "midnight", "carbon", "paper", "plum"],
   layout: ["social", "focus"],
   surface: ["cards", "seamless"],
   density: ["comfortable", "compact"],
@@ -77,7 +79,7 @@ function OfficialAvatar({ size = "avatar-md" }: { size?: string }) {
 
 function Header({ onMenu, search, setSearch, onDesign, onNotice, inputRef, pathname, onSearchSubmit }:{
   onMenu: () => void; search: string; setSearch: (value: string) => void;
-  onDesign: () => void; onNotice: () => void; inputRef: React.RefObject<HTMLInputElement | null>;
+  onDesign: () => void; inputRef: React.RefObject<HTMLInputElement | null>;
   pathname: string; onSearchSubmit: () => void;
 }) {
   const { data: session } = memberAuthClient.useSession();
@@ -96,14 +98,14 @@ function Header({ onMenu, search, setSearch, onDesign, onNotice, inputRef, pathn
       <kbd>/</kbd>
     </div>
     <nav className="top-links" aria-label="Top navigation">
-      <Link to="/" className={pathname==="/"||pathname==="/feed"?"active":""} aria-current={pathname==="/"||pathname==="/feed"?"page":undefined}>Commons</Link>
-      <Link to="/products" className={pathname==="/products"?"active":""} aria-current={pathname==="/products"?"page":undefined}>Discover</Link>
-      <Link to="/beta" className={pathname==="/beta"?"active":""} aria-current={pathname==="/beta"?"page":undefined}>Beta</Link>
-      <Link to="/field-notes" className={pathname.startsWith("/field-notes")?"active":""} aria-current={pathname.startsWith("/field-notes")?"page":undefined}>Research</Link>
+      {primaryNavigation.filter(item=>["/","/products","/communities","/field-notes"].includes(item.path)).map(item=>
+        <Link key={item.path} to={item.path} className={isSiteNavigationActive(pathname,item.path)?"active":""}
+          aria-current={isSiteNavigationActive(pathname,item.path)?"page":undefined}>{item.label}</Link>)}
     </nav>
     <div className="global-actions">
-      <button type="button" className="create-btn" aria-label="Posting is not available yet; learn more" onClick={onNotice}><Icon name="plus"/><span>Posting soon</span></button>
-      <button type="button" className="icon-btn header-bell" aria-label="Notifications" onClick={onNotice}><Icon name="bell"/></button>
+      <Link className="create-btn" to={session?.user?"/apps/rhen":"/beta"}>
+        <Icon name={session?.user?"chart":"arrow-up-right"}/><span>{session?.user?"My RHEN":"Get started"}</span>
+      </Link>
       <button type="button" className="icon-btn design-launch" aria-label="Customize design" title="Customize design" onClick={onDesign}><Icon name="palette"/></button>
       <Link to={session?.user ? "/command" : "/sign-in"} className="user-chip" aria-label={session?.user ? "My Command" : "Sign in"}>
         <span className="avatar avatar-header user-avatar">{session?.user?.name?.charAt(0).toUpperCase() || "G"}</span>
@@ -122,12 +124,10 @@ function Sidebar({ collapsed, onClose, onNotice, pathname }: {
   return <aside id="commons-primary-navigation" className="left-sidebar" aria-label="Main navigation"><div className="sidebar-scroll">
     <div className="sidebar-nav-group">
       <span className="side-heading">EXPLORE</span>
-      <Link className={"side-link "+(pathname==="/"||pathname==="/feed"?"active":"")} to="/" aria-current={pathname==="/"||pathname==="/feed"?"page":undefined} title="Home feed" onClick={onClose}><Icon name="home"/><span>Home feed</span></Link>
-      <Link className={"side-link "+(pathname==="/products"?"active":"")} to="/products" aria-current={pathname==="/products"?"page":undefined} title="Discover" onClick={onClose}><Icon name="compass"/><span>Discover</span></Link>
-      <Link className={"side-link "+(pathname==="/beta"?"active":"")} to="/beta" aria-current={pathname==="/beta"?"page":undefined} title="Member beta" onClick={onClose}><Icon name="check"/><span>Member beta</span></Link>
-      <Link className={"side-link "+(pathname.startsWith("/field-notes")?"active":"")} to="/field-notes" aria-current={pathname.startsWith("/field-notes")?"page":undefined} title="Research" onClick={onClose}><Icon name="book"/><span>Research</span></Link>
-      <Link className={"side-link "+(pathname==="/communities"?"active":"")} to="/communities" title="Explore topics" onClick={onClose}><Icon name="users"/><span>Topics</span></Link>
-      <button type="button" className="side-link" title="Levels and awards" onClick={onNotice}><Icon name="award"/><span>Levels &amp; awards</span><span className="side-small-label">SOON</span></button>
+      {primaryNavigation.map(item=><Link key={item.path} to={item.path} onClick={onClose}
+        className={"side-link "+(isSiteNavigationActive(pathname,item.path)?"active":"")}
+        aria-current={isSiteNavigationActive(pathname,item.path)?"page":undefined}
+        title={item.description}><Icon name={item.icon}/><span>{item.label}</span></Link>)}
     </div>
     <div className="side-divider"/>
     <div className="sidebar-nav-group community-nav">
@@ -141,11 +141,10 @@ function Sidebar({ collapsed, onClose, onNotice, pathname }: {
     <div className="side-divider"/>
     <div className="sidebar-nav-group">
       <span className="side-heading">YOUR WORKSPACE</span>
-      <Link to={session?.user ? "/me/settings" : "/sign-in"} className="side-link" title="My profile" onClick={onClose}><Icon name="user"/><span>My profile</span></Link>
-      <Link to={session?.user ? "/command" : "/sign-in"} className="side-link" title="Saved programs" onClick={onClose}><Icon name="bookmark"/><span>Saved programs</span></Link>
-      <Link to="/products/rhen" className="side-link" title="RHEN"><Icon name="chart"/><span>RHEN</span><span className="mini-app">APP</span></Link>
-      <Link to={session?.user ? "/command" : "/sign-in"} className="side-link" title="My Command"><Icon name="command"/><span>My Command</span></Link>
-      {session?.user && <Link to="/me/beta" className="side-link" title="Beta testing" onClick={onClose}><Icon name="check"/><span>Beta testing</span></Link>}
+      {accountNavigation.map(item=><Link key={item.path} to={session?.user?item.path:"/sign-in"} onClick={onClose}
+        className={"side-link "+(isSiteNavigationActive(pathname,item.path)?"active":"")}
+        aria-current={isSiteNavigationActive(pathname,item.path)?"page":undefined}
+        title={item.description}><Icon name={item.icon}/><span>{item.label}</span></Link>)}
     </div>
     <div className="side-bottom">
       <div className="side-divider"/>
@@ -306,7 +305,7 @@ function AppearancePanel({ prefs, onChange, onClose, onReset }: {
     {key:"radius",title:"CORNER STYLE",options:[{key:"soft",label:"Soft"},{key:"sharp",label:"Crisp"}]}
   ];
   const themes: {key:Palette;label:string}[]=[
-    {key:"midnight",label:"Midnight"},{key:"carbon",label:"Carbon"},
+    {key:"forest",label:"Forest"},{key:"midnight",label:"Midnight"},{key:"carbon",label:"Carbon"},
     {key:"paper",label:"Daylight"},{key:"plum",label:"Plum"}
   ];
   return <div className="design-panel" role="region" aria-label="Customize Commons appearance">
@@ -347,6 +346,7 @@ function CommonsApp({prefs,setPrefs,content}: {prefs:Preferences;setPrefs:(next:
   const navigate = useNavigate();
   const pathname = location.pathname;
   const isFeed = pathname === "/" || pathname === "/feed";
+  useEffect(()=>{setDrawerOpen(false);setDesignOpen(false);},[location.pathname]);
 
   // Published-note search results belong to the URL, not to a stale search
   // input carried over from another page. Deep links and topic filters remain
@@ -378,7 +378,7 @@ function CommonsApp({prefs,setPrefs,content}: {prefs:Preferences;setPrefs:(next:
         navigate(term ? "/field-notes?q=" + encodeURIComponent(term) : "/field-notes");
       }}
       onMenu={()=>{if(window.matchMedia("(max-width: 900px)").matches) setDrawerOpen(x=>!x); else setCollapsed(x=>!x);}}
-      onDesign={()=>setDesignOpen(x=>!x)} onNotice={()=>setNoticeOpen(true)}/>
+      onDesign={()=>setDesignOpen(x=>!x)}/>
     <div className="shell">
       <Sidebar collapsed={collapsed} pathname={pathname} onClose={()=>setDrawerOpen(false)} onNotice={()=>setNoticeOpen(true)}/>
       <main className="main" id="commons-main">
@@ -389,11 +389,15 @@ function CommonsApp({prefs,setPrefs,content}: {prefs:Preferences;setPrefs:(next:
       {content ? null : <RightRail onNotice={()=>setNoticeOpen(true)}/>}
     </div>
     <nav className="mobile-nav" aria-label="Mobile navigation">
-      <Link to="/" className={isFeed?"active":""} aria-current={isFeed?"page":undefined}><Icon name="home"/><span>Home</span></Link>
-      <Link to="/products" className={pathname==="/products"?"active":""}><Icon name="compass"/><span>Explore</span></Link>
-      <button type="button" className="mobile-create" aria-label="Posting is not available yet; learn more" onClick={()=>setNoticeOpen(true)}><Icon name="plus"/></button>
-      <Link to="/field-notes" className={pathname.startsWith("/field-notes")?"active":""}><Icon name="book"/><span>Research</span></Link>
-      <Link to={session?.user ? "/command" : "/sign-in"}><Icon name="user"/><span>Account</span></Link>
+      {mobileNavigation.map(item=><Link key={item.path}
+        to={item.path==="/command"?safeAccountDestination(Boolean(session?.user)):item.path}
+        className={isSiteNavigationActive(pathname,item.path)?"active":""}
+        aria-current={isSiteNavigationActive(pathname,item.path)?"page":undefined}
+        aria-label={item.path==="/command"&&!session?.user?"Sign in":item.label}
+        onClick={()=>setDrawerOpen(false)}>
+          <Icon name={item.path==="/command"&&!session?.user?"user":item.icon}/>
+          <span>{item.path==="/command"?"Account":item.label}</span>
+        </Link>)}
     </nav>
     {drawerOpen ? <button type="button" className="drawer-scrim" aria-label="Close navigation" onClick={()=>setDrawerOpen(false)}/> : null}
     {designOpen ? <AppearancePanel prefs={prefs} onChange={setPrefs} onClose={()=>setDesignOpen(false)} onReset={()=>setPrefs(defaults)}/> : null}
@@ -423,7 +427,7 @@ export default function CommonsV5({content}: {content?:ReactNode}) {
   return <div ref={mount} className="anevum-commons-v5-mount"
     data-theme={prefs.theme} data-layout={prefs.layout} data-density={prefs.density}
     data-radius={prefs.radius} data-surface={prefs.surface} style={{display:"block",minHeight:"100dvh"}}>
-    {shadow ? createPortal(<><style>{css+"\n"+polishCss+"\n"+pagesCss+"\n"+memberCommandCss+"\n"+memberBaseCss+"\n"+memberFinancialCss+"\n"+memberDraftCss+"\n"+accountCss+"\n"+privateRhenCss+"\n"+brokerReviewCss+"\n"+discussionsCss+"\n"+betaCss}</style><CommonsApp prefs={prefs} setPrefs={setPrefs} content={content}/></>,shadow) : null}
+    {shadow ? createPortal(<><style>{css+"\n"+polishCss+"\n"+pagesCss+"\n"+memberCommandCss+"\n"+memberBaseCss+"\n"+memberFinancialCss+"\n"+memberDraftCss+"\n"+accountCss+"\n"+privateRhenCss+"\n"+brokerReviewCss+"\n"+discussionsCss+"\n"+betaCss+"\n"+liveCss}</style><CommonsApp prefs={prefs} setPrefs={setPrefs} content={content}/></>,shadow) : null}
   </div>;
 }
 
