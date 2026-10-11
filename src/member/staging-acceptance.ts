@@ -26,6 +26,7 @@ async function probe(fetcher: typeof fetch, path: string, signal?: AbortSignal):
   if (response.ok) {
     try { body = object(await response.json()); } catch { /* Report failure below. */ }
   }
+  if (signal?.aborted) throw new Error("Member verification cancelled.");
   return { status: response.status, body, privateHeaders };
 }
 
