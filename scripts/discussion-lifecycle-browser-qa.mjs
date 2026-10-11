@@ -162,7 +162,7 @@ async function runCase(width, state) {
         }
       }else{
         if((await snapshot()).posts!==2)throw Error("Lifecycle fixture did not load real-form posts");
-        await evaluate(`${surface}.scrollIntoView({block:'start'})`);await saveCapture("composer");
+        await evaluate(`${surface}.querySelector('.c2-social-composer').scrollIntoView({block:'start',behavior:'instant'})`);await pause(150);await saveCapture("composer");
         await compose();
         await send("Input.dispatchKeyEvent",{type:"keyDown",key:"Tab",code:"Tab",windowsVirtualKeyCode:9});
         await send("Input.dispatchKeyEvent",{type:"keyUp",key:"Tab",code:"Tab",windowsVirtualKeyCode:9});
@@ -181,12 +181,13 @@ async function runCase(width, state) {
         await clickText("Report",firstPost);await waitFor(`${surface}?.textContent.includes("Report recorded")`,"moderator report");
         info=await snapshot();if(info.mutations.length!==5)throw Error("Unexpected lifecycle mutation count");
         const fields=info.mutations.filter(row=>row.method==="POST").map(row=>Object.keys(row.body).sort().join(","));if(fields.join("|")!=="body,title,topic|body|reason")throw Error("Client supplied an authority field");
-        await evaluate(`${firstPost}.scrollIntoView({block:'start'})`);
+        await evaluate(`${firstPost}.scrollIntoView({block:'start',behavior:'instant'})`);
       }
     }
     const overflow=await evaluate(`(() => {const page=${surface};return document.documentElement.scrollWidth>innerWidth+1||[...(page?.querySelectorAll('*')||[])].some(el=>el.scrollWidth>el.clientWidth+2&&getComputedStyle(el).display!=="inline");})()`);
     if(overflow||errors.length)throw Error("Discussion layout/runtime error: "+JSON.stringify({overflow,errors}));
-    if(state!=="lifecycle")await evaluate(`${surface}.scrollIntoView({block:'start'})`);
+    if(state!=="lifecycle")await evaluate(`${surface}.scrollIntoView({block:'start',behavior:'instant'})`);
+    await pause(150);
     await saveCapture(state);console.log(JSON.stringify({route:"/communities",state,width,ok:true}));
   } finally {
     ws.close(); await fetch(`http://127.0.0.1:${port}/json/close/${target.id}`);
