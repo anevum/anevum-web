@@ -1,5 +1,6 @@
 // First-party editorial control. Never derive privileges from client roles.
 import {studioOperationsOverview} from "./studio-operations.mjs";
+import {readEditorialJson as readBody, validSavedEditorialRow, verifiedEditorialWrite} from "./studio-integrity.mjs";
 const OWNER_EMAIL = "anevum.studio@gmail.com";
 const ADMIN_EMAIL = "devon@anevum.com";
 const VERSION = "anevum.studio.v1";
@@ -10,7 +11,9 @@ const SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
 function json(value, status = 200, publicRead = false) {
   return Response.json(value, {status, headers: {
-    "Cache-Control": publicRead ? "public,max-age=30" : "private,no-store",
+    "Cache-Control": "private,no-store",
+    "CDN-Cache-Control": "no-store",
+    "Cloudflare-CDN-Cache-Control": "no-store",
     "X-Content-Type-Options": "nosniff",
     ...(publicRead ? {} : {"X-Robots-Tag": "noindex,nofollow,noarchive"})
   }});
@@ -56,15 +59,6 @@ export function validateEditorialEntry(data, updating = false) {
   if (!TYPES.has(kind) || !title || !summary || !body) return null;
   if (updating && (!Number.isSafeInteger(data.expectedRevision) || data.expectedRevision < 1)) return null;
   return {kind,title,summary,body,...(updating ? {expectedRevision:data.expectedRevision} : {})};
-}
-async function readBody(request, limit=15000) {
-  if (request.headers.get("Content-Type")?.split(";")[0].trim().toLowerCase() !== "application/json") return null;
-  const raw = await request.text();
-  if (!raw || raw.length > limit) return null;
-  try {
-    const data = JSON.parse(raw);
-    return data && typeof data === "object" && !Array.isArray(data) ? data : null;
-  } catch { return null; }
 }
 function currentMember(request, user) {
   const expected = request.headers.get("X-ANEVUM-EXPECTED-MEMBER-ID");
@@ -158,9 +152,11 @@ export async function studioEndpoint(request, env, user, origin, pathname, verif
       ]);
       if (result[0]?.meta?.changes!==1 || result[1]?.meta?.changes!==1)
         return json({message:"Draft commit unconfirmed. Reload Studio."},503);
+      const saved=await db.prepare("SELECT * FROM studio_entries WHERE id=?").bind(id).first();
+      if (!verifiedEditorialWrite(saved,{action:"CREATE",id,revision:1,memberId:user.id,now,draft,slug}))
+        return json({message:"Draft revision unconfirmed. Reload Studio."},503);
       return json({schemaVersion:VERSION,viewerMemberId:user.id,
-        entry:record(await db.prepare("SELECT * FROM studio_entries WHERE id=?").bind(id).first()),
-        saved:true,action:"CREATE",auditRecorded:true},201);
+        entry:record(saved),saved:true,action:"CREATE",auditRecorded:true},201);
     } catch { return json({message:"Draft save unconfirmed. Reload Studio."},503); }
   }
   // Staff-only, bounded and independently verified publication history.
@@ -188,6 +184,15 @@ export async function studioEndpoint(request, env, user, origin, pathname, verif
   if (!match || !UUID.test(match[1])) return json({message:"Studio endpoint not found."},404);
   if (!currentMember(request,user)) return json({message:"Session changed."},409);
   const action=match[2] || "edit", id=match[1];
+  // Reload the saved revision through the same staff and account boundary.
+  if (action === "edit" && request.method === "GET") {
+    try {
+      const saved=await db.prepare("SELECT * FROM studio_entries WHERE id=?").bind(id).first();
+      if (!saved) return json({message:"Studio entry not found."},404);
+      if (!validSavedEditorialRow(saved)) return json({message:"Studio entry could not be verified."},503);
+      return json({schemaVersion:VERSION,viewerMemberId:user.id,entry:record(saved)});
+    } catch { return json({message:"Studio entry unavailable."},503); }
+  }
   if (action === "edit" ? request.method !== "PATCH" : request.method !== "POST")
     return json({message:"Method not allowed."},405);
   const data=await readBody(request);
@@ -220,8 +225,11 @@ export async function studioEndpoint(request, env, user, origin, pathname, verif
     ]);
     if (result[0]?.meta?.changes!==1 || result[1]?.meta?.changes!==1)
       return json({message:"Entry has changed. Reload Studio before retrying."},409);
+    const saved=await db.prepare("SELECT * FROM studio_entries WHERE id=?").bind(id).first();
+    if (!verifiedEditorialWrite(saved,{action:action.toUpperCase(),id,revision:revision+1,
+        memberId:user.id,now,draft:payload}))
+      return json({message:"Editorial revision unconfirmed. Reload Studio."},503);
     return json({schemaVersion:VERSION,viewerMemberId:user.id,action:action.toUpperCase(),
-      entry:record(await db.prepare("SELECT * FROM studio_entries WHERE id=?").bind(id).first()),
-      saved:true,auditRecorded:true});
+      entry:record(saved),saved:true,auditRecorded:true});
   } catch { return json({message:"Editorial action unconfirmed. Reload Studio."},503); }
 }
