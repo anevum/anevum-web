@@ -358,8 +358,10 @@ def restore(archive_path: str) -> None:
 def cleanup_only() -> None:
     run_id = os.environ.get("GITHUB_RUN_ID", "")
     target_name(run_id)
-    account, token = account_env()
-    cleanup(account, token, run_id, marker_path())
+    marker = marker_path()
+    if marker.exists():
+        account, token = account_env()
+        cleanup(account, token, run_id, marker)
     print("PASS: no disposable D1 target remains for this run.")
 
 
