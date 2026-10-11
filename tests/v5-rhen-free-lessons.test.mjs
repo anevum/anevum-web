@@ -9,6 +9,7 @@ const pages=read("src/commons/CommonsPages.tsx"),shell=read("src/commons/Commons
 const page=read("src/commons/RhenLearning.tsx"),css=read("src/styles/commons-v5-rhen-learning.css");
 const routes=JSON.parse(read("src/data/public-routes.json"));
 const qa=read("scripts/visual-ops-browser-qa.mjs"),pkg=JSON.parse(read("package.json"));
+const keyboardQa=read("scripts/v5-rhen-learning-browser.mjs");
 
 test("two complete, distinct, reviewed lessons are available for free",()=>{
  assert.equal(rhenLessons.length,2);
@@ -112,4 +113,13 @@ test("no fake performance figures or financial operating authority are introduce
  assert.ok(all.includes("does not activate orders")||page.includes("No account or money is needed"));
  assert.ok(all.includes("FINRA"));
  assert.ok(all.includes("Investor.gov"));
+});
+
+test("CDP browser sends a complete physical Enter event for native keyboard disclosures",()=>{
+ // Chromium does not activate <details><summary> from a bare CDP keyDown.
+ // A real Enter also includes CR text, and the actual browser still checks open===true.
+ assert.match(keyboardQa,/type:'keyDown',key:'Enter',code:'Enter',windowsVirtualKeyCode:13,nativeVirtualKeyCode:13,text:'\\r',unmodifiedText:'\\r'/);
+ assert.match(keyboardQa,/type:'keyUp',key:'Enter'/);
+ assert.match(keyboardQa,/root\.activeElement===summary/);
+ assert.match(keyboardQa,/detail\?\.open===true/);
 });
