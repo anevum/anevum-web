@@ -8,7 +8,7 @@ import subprocess
 import urllib.request
 
 ROOT = Path.cwd()
-PARENT = '3a859bc0bb6f4fd0185d2f0953aa2462780b14aa'
+PARENT = 'e5fa31b9fc766487f7b2ef913602380de3235f24'
 assert subprocess.check_output(['git','rev-parse','HEAD^'],text=True).strip() == PARENT
 changed = {}
 
@@ -41,8 +41,8 @@ replace('src/commons/RhenLearning.tsx', '<Link to="/field-notes">Read published 
 replace('package.json', 'tests/v5-rhen-free-lessons.test.mjs ',
  'tests/v5-rhen-free-lessons.test.mjs tests/v5-learning-progress.test.mjs tests/v5-learning-progress-client.test.mjs tests/v5-learning-progress-wiring.test.mjs ')
 replace('tests/v5-learning-progress.test.mjs', 'import.metaurl', 'import.meta.url')
-replace('scripts/visual-ops-browser-qa.mjs', '"/me/beta", "/apps/rhen/connect"',
- '"/me/beta", "/me/learning", "/apps/rhen/connect"')
+replace('scripts/visual-ops-browser-qa.mjs', '"/products/rhen/learn/not-a-real-lesson", "/sign-in", "/command", "/me/settings", "/me/rewards", "/me/beta", "/apps/rhen/connect"',
+ '"/products/rhen/learn/not-a-real-lesson", "/sign-in", "/command", "/me/settings", "/me/rewards", "/me/beta", "/me/learning", "/apps/rhen/connect"')
 replace('scripts/visual-ops-browser-qa.mjs', '  await verifyRhenLearningPage(send, route); // data-rhen-learning public and keyboard checks',
  '''  await verifyRhenLearningPage(send, route); // data-rhen-learning public and keyboard checks
   if (route === "/me/learning") {
