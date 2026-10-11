@@ -123,7 +123,7 @@ function RhenOverview() {
       ].map(([title, body, href]) => <article className="c2-card" key={title}><h2>{title}</h2><p>{body}</p><Link to={href} className="c2-text-link">Explore →</Link></article>)}
     </div>
     <section className="c2-section"><h2>One application, multiple capabilities</h2>
-      <p>Research, replay and optional forecasting are modules of RHEN—not independent paid apps or always-running branded services. Research cannot enable execution. Paper and live permissions must be approved separately, and a Commons account alone grants neither.</p>
+      <p>Research, replay and optional forecasting are modules of RHEN—not independent paid apps or always-running branded services. Research cannot enable execution. Paper and live permissions must be approved separately, and an ANEVUM account alone grants neither.</p>
       <div className="c2-action-row"><Link to="/products/rhen/evidence">Public evidence status</Link><Link to="/apps/rhen">Open my RHEN workspace</Link></div>
     </section>
     <section className="c2-section" aria-label="RHEN public source and collaboration">
@@ -174,7 +174,7 @@ function RhenArchitecture() {
   return <div className="c2-page">
     <Intro kicker="RHEN / DESIGN" title="Architecture and authority">One application with isolated research, evidence and operational boundaries. This describes the V5 target, not a currently deployed trading runtime.</Intro>
     <div className="c2-grid">{sections.map(([name, body]) => <section className="c2-card" key={name}><h2>{name}</h2><p>{body}</p></section>)}</div>
-    <div className="c2-truth">The founder's historical operator terminal is separately protected. A member does not gain owner access by authenticating with Google or using Commons.</div>
+    <div className="c2-truth">The founder's historical operator terminal is separately protected. A member does not gain owner access by authenticating with Google or using ANEVUM.</div>
     <Link className="c2-text-link" to="/products/rhen">← RHEN overview</Link>
   </div>;
 }
@@ -189,7 +189,7 @@ function Communities() {
     <Intro kicker="ANEVUM / TOPICS" title="Explore the subjects">Browse authentic published research. Member discussion is separate and only opens after the invite-only pilot passes its moderation and privacy checks.</Intro>
     <div className="c2-grid">{types.map(([title, detail, slug]) => <article className="c2-card" key={slug}><h2>{title}</h2><p>{detail}</p><Link className="c2-text-link" to={"/field-notes?category=" + slug}>Read publications →</Link></article>)}</div>
     <div className="c2-truth">No fictional communities, membership counts, rankings, votes or endorsements are displayed.</div>
-    <p className="c2-truth">Commons discussions are for independent learning and research methods. Following a member or reading their work never grants brokerage access, copies their orders, mirrors a portfolio, or executes another person\'s trades. RHEN connections and settings remain individually controlled.</p>
+    <p className="c2-truth">ANEVUM discussions are for independent learning and research methods. Following a member or reading their work never grants brokerage access, copies their orders, mirrors a portfolio, or executes another person\'s trades. RHEN connections and settings remain individually controlled.</p>
     <CommonsPostsBeta/>
   </div>;
 }
@@ -262,7 +262,7 @@ function Help() {
     <header className="c2-intro">
       <span className="c2-kicker">ANEVUM / HELP</span>
       <h1 id="commons-help-title">Help and account support</h1>
-      <p>Find current ANEVUM pages, manage your own account and understand which RHEN and Commons features are available. No account or brokerage connection is required to read the public work.</p>
+      <p>Find current ANEVUM pages, manage your own account and understand which RHEN and community features are available. No account or brokerage connection is required to read the public work.</p>
     </header>
     <section className="c2-grid" aria-label="Frequently asked questions">
       <article className="c2-card"><h2>Do I need an account?</h2>
@@ -278,11 +278,11 @@ function Help() {
         <Link to="/products/rhen/evidence" className="c2-text-link">Current RHEN evidence →</Link>
       </article>
       <article className="c2-card"><h2>Can I connect a brokerage account?</h2>
-        <p>Broker connections require separate provider approval and feature-specific authorization. If connecting is unavailable, registering with Commons does not unlock it. Do not send API keys, OAuth URLs, access tokens or screenshots containing secrets by email.</p>
+        <p>Broker connections require separate provider approval and feature-specific authorization. If connecting is unavailable, registering with ANEVUM does not unlock it. Do not send API keys, OAuth URLs, access tokens or screenshots containing secrets by email.</p>
         <Link to="/products/rhen" className="c2-text-link">RHEN product status →</Link>
       </article>
       <article className="c2-card"><h2>Can I post or message other members?</h2>
-        <p>Commons posting, notifications and moderation are still under development. Public Field Notes and topic pages are real publications, not simulated user conversations. Signing in does not automatically enable posting.</p>
+        <p>Community posting, notifications and moderation are still under development. Public Field Notes and topic pages are real publications, not simulated user conversations. Signing in does not automatically enable posting.</p>
         <Link to="/communities" className="c2-text-link">Explore published topics →</Link>
       </article>
       <article className="c2-card"><h2>How do I report a problem?</h2>
