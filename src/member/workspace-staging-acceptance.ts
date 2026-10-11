@@ -38,14 +38,17 @@ function checkActive(signal?: AbortSignal): void {
   if (signal?.aborted) throw new Error("STAGING_SESSION_CHANGED");
 }
 function requestOptions(method: "GET" | "POST", body?: string,
-  signal?: AbortSignal): RequestInit {
+  signal?: AbortSignal, expectedMemberId?: string): RequestInit {
   return {
     method, credentials: "same-origin", cache: "no-store", redirect: "manual",
     signal,
-    ...(body === undefined ? {} : {
-      headers: { "Content-Type": "application/json" },
-      body
-    })
+    ...(method === "POST" ? {
+      headers: {
+        ...(body === undefined ? {} : { "Content-Type": "application/json" }),
+        ...(expectedMemberId ? { "X-ANEVUM-EXPECTED-MEMBER-ID": expectedMemberId } : {})
+      }
+    } : {}),
+    ...(body === undefined ? {} : { body })
   };
 }
 function isPrivate(response: Response): boolean {
@@ -54,11 +57,11 @@ function isPrivate(response: Response): boolean {
 }
 async function readResponse(fetcher: typeof fetch, path: string,
   method: "GET" | "POST" = "GET", body?: string,
-  signal?: AbortSignal): Promise<JSONRecord> {
+  signal?: AbortSignal, expectedMemberId?: string): Promise<JSONRecord> {
   checkActive(signal);
   let response: Response;
   try {
-    response = await fetcher(path, requestOptions(method, body, signal));
+    response = await fetcher(path, requestOptions(method, body, signal, expectedMemberId));
   } catch {
     checkActive(signal);
     throw new Error("STAGING_NETWORK_ERROR");
@@ -154,7 +157,7 @@ export async function runWorkspaceStagingProof(
 
   advance("CREATE");
   const created = approvedWorkspace(
-    await readResponse(fetcher, "/api/member/rhen/workspace", "POST", undefined, signal),
+    await readResponse(fetcher, "/api/member/rhen/workspace", "POST", undefined, signal, authenticatedMemberId),
     authenticatedMemberId, true
   );
   assert(created !== null, "Workspace was not persisted.");
@@ -164,7 +167,7 @@ export async function runWorkspaceStagingProof(
 
   advance("REPLAY");
   const replay = approvedWorkspace(
-    await readResponse(fetcher, "/api/member/rhen/workspace", "POST", undefined, signal),
+    await readResponse(fetcher, "/api/member/rhen/workspace", "POST", undefined, signal, authenticatedMemberId),
     authenticatedMemberId, true
   );
   assert(replay?.workspace_id === created.workspace_id,
