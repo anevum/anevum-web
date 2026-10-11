@@ -99,7 +99,8 @@ async function runCase(width,scenario){
     await send("Page.navigate",{url:base+"/me/beta"});
     let observed={};
     for(let attempt=0;attempt<130;attempt++){
-      observed=await evaluate("(() => {"+
+      try {
+        observed=await evaluate("(() => {"+
         "const root=document.querySelector('.anevum-commons-v5-mount')?.shadowRoot;"+
         "const page=root?.querySelector('.c2-member .c2-beta');"+
         "const heading=page?.querySelector('h1')?.textContent||'';"+
@@ -112,6 +113,13 @@ async function runCase(width,scenario){
         "overflow:document.documentElement.scrollWidth>innerWidth+1,"+
         "calls:window.__memberBetaQa?.calls||[]};"+
       "})()");
+      } catch {
+        // Chromium may replace the evaluation context while the new route hydrates.
+        // Actual in-page runtime exceptions are still fatal below.
+        if(errors.length)throw new Error("Member beta browser runtime exception");
+        await pause(100);
+        continue;
+      }
       const active=!["disabled","signed-out"].includes(scenario);
       const expectedHead=active?"Test your account and tools":
         scenario==="disabled"?"Beta unavailable":"Sign in to test your account";
