@@ -194,7 +194,7 @@ function RhenMemberWorkspace({ memberId }: { memberId: string }) {
             <p>Live member execution will require separate brokerage, regulatory, and security approval.</p>
             <Link to="/apps/rhen/setup">Create a non-executing bot draft</Link><span> · </span><Link to="/apps/rhen/evidence">Explore verified RHEN evidence</Link>
           </>}
-          {section === "setup" && <RhenDraft key={memberId} />}
+          {section === "setup" && <RhenDraft key={memberId} expectedMemberId={memberId} />}
           {section === "evidence" && <>
             <h2>Public evidence</h2>
             <p>This is the shared research record, separate from your private workspace. The former live runtime has been retired for the V5 rebuild.</p>

@@ -201,6 +201,14 @@ export async function memberEndpoint(request, env, pathname, verifiedContext = {
     }
   }
   if (pathname === "/api/member/rhen/draft") {
+    // Optional compatibility guard for current member draft UI. It is never an
+    // account selector: authorization and storage still use verified user.id.
+    // Refuse a queued old-tab mutation if the browser's active session changed.
+    if (["PUT", "DELETE"].includes(request.method) &&
+        request.headers.has("X-ANEVUM-EXPECTED-MEMBER-ID") &&
+        request.headers.get("X-ANEVUM-EXPECTED-MEMBER-ID") !== user.id) {
+      return reply({ message: "Authenticated member changed. Reload your draft." }, 409);
+    }
     if (env?.ANEVUM_MEMBER_RHEN_DRAFTS_ENABLED !== "true") {
       return reply({ message: "Personal RHEN drafts are not enabled." }, 503);
     }
