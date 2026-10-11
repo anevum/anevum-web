@@ -6,7 +6,7 @@ import path from "node:path";
 const base = process.env.BASE_URL;
 if (!base) throw new Error("BASE_URL is required");
 
-const publicRoutes = ["/", "/communities", "/learn", "/sign-in", "/command", "/me/settings", "/me/rewards", "/apps/rhen/connect", "/products", "/feed", "/products/rhen", "/products/rhen/evidence", "/products/rhen/architecture", "/field-notes", "/field-notes/prediction-outcome-evidence-chain", "/about", "/resume", "/products/rhen/releases", "/me", "/privacy", "/terms"];
+const publicRoutes = ["/", "/communities", "/learn", "/sign-in", "/command", "/me/settings", "/me/rewards", "/apps/rhen/connect", "/products", "/feed", "/products/rhen", "/products/rhen/evidence", "/products/rhen/architecture", "/field-notes", "/field-notes/prediction-outcome-evidence-chain", "/about", "/resume", "/products/rhen/releases", "/me", "/privacy", "/terms", "/not-a-real-page", "/field-notes/not-a-real-note", "/products/rhen/releases/not-a-real-release", "/communities/moderation"];
 const commandRoutes = ["/command/rhen/operate", "/command/rhen/discover", "/command/rhen/review", "/command/rhen/public", "/command/rhen/system"];
 const routes = process.env.PUBLIC_ONLY === "1" ? publicRoutes : [...publicRoutes, ...commandRoutes];
 const output = path.join(process.env.RUNNER_TEMP || os.tmpdir(), "anevum-visuals");
@@ -155,7 +155,9 @@ async function runCase(route, viewport) {
           const legalReady = !["/privacy", "/terms"].includes(${JSON.stringify(route)}) || Boolean(document.querySelector(".anevum-commons-v5-mount")?.shadowRoot?.querySelector(".c2-legal .member-legal"));
           const commandReady = !${JSON.stringify(route)}.startsWith("/command/") || Boolean(document.querySelector(".command-v4"));
           const extraReady = !["/communities", "/learn", "/sign-in"].includes(${JSON.stringify(route)}) || Boolean(document.querySelector(".anevum-commons-v5-mount")?.shadowRoot?.querySelector(".c2-page"));
-          return {ready:pathReady && suspenseReady && homeReady && productsReady && feedReady && rhenReady && liveReady && architectureReady && researchReady && fieldNoteReady && aboutReady && resumeReady && releasesReady && memberReady && brokerReviewReady && legalReady && commandReady && extraReady,
+          const missingReady = !["/not-a-real-page", "/field-notes/not-a-real-note", "/products/rhen/releases/not-a-real-release"].includes(${JSON.stringify(route)}) ||
+            Boolean(document.querySelector(".anevum-commons-v5-mount")?.shadowRoot?.querySelector('[data-page-state="not-found"]'));
+          return {ready:pathReady && suspenseReady && homeReady && productsReady && feedReady && rhenReady && liveReady && architectureReady && researchReady && fieldNoteReady && aboutReady && resumeReady && releasesReady && memberReady && brokerReviewReady && legalReady && commandReady && extraReady && missingReady,
             pathname:location.pathname,title:document.title,suspenseReady,homeReady,productsReady,feedReady,rhenReady,liveReady,architectureReady,researchReady,fieldNoteReady,aboutReady,resumeReady,releasesReady,commandReady};
         })()`,
         returnByValue:true
@@ -187,7 +189,9 @@ async function runCase(route, viewport) {
         const legalReady = !["/privacy", "/terms"].includes(${JSON.stringify(route)}) || Boolean(document.querySelector(".anevum-commons-v5-mount")?.shadowRoot?.querySelector(".c2-legal .member-legal"));
         const commandReady = !${JSON.stringify(route)}.startsWith("/command/") || Boolean(document.querySelector(".command-v4"));
           const extraReady = !["/communities", "/learn", "/sign-in"].includes(${JSON.stringify(route)}) || Boolean(document.querySelector(".anevum-commons-v5-mount")?.shadowRoot?.querySelector(".c2-page"));
-        return {ready:pathReady && suspenseReady && homeReady && productsReady && feedReady && rhenReady && liveReady && architectureReady && researchReady && fieldNoteReady && aboutReady && resumeReady && releasesReady && memberReady && brokerReviewReady && legalReady && commandReady && extraReady,
+          const missingReady = !["/not-a-real-page", "/field-notes/not-a-real-note", "/products/rhen/releases/not-a-real-release"].includes(${JSON.stringify(route)}) ||
+            Boolean(document.querySelector(".anevum-commons-v5-mount")?.shadowRoot?.querySelector('[data-page-state="not-found"]'));
+        return {ready:pathReady && suspenseReady && homeReady && productsReady && feedReady && rhenReady && liveReady && architectureReady && researchReady && fieldNoteReady && aboutReady && resumeReady && releasesReady && memberReady && brokerReviewReady && legalReady && commandReady && extraReady && missingReady,
           pathname:location.pathname,title:document.title,suspenseReady,homeReady,productsReady,feedReady,rhenReady,liveReady,architectureReady,researchReady,fieldNoteReady,aboutReady,resumeReady,releasesReady,commandReady};
       })()`,
       returnByValue:true
@@ -195,6 +199,24 @@ async function runCase(route, viewport) {
     routeReady = result.result?.value || {};
   }
   if (!routeReady.ready) throw new Error("Route did not hydrate before visual assertion: "+JSON.stringify({route,...routeReady}));
+
+  if (["/not-a-real-page", "/field-notes/not-a-real-note", "/products/rhen/releases/not-a-real-release", "/communities/moderation"].includes(route)) {
+    const checked = await send("Runtime.evaluate", {expression:`(() => {
+      const root=document.querySelector(".anevum-commons-v5-mount")?.shadowRoot;
+      return {
+        pathname:location.pathname,
+        title:document.title,
+        robots:document.querySelector('meta[name="robots"]')?.content || "",
+        canonical:document.querySelector('link[rel="canonical"]')?.href || "",
+        missing:!!root?.querySelector('[data-page-state="not-found"]')
+      };
+    })()`,returnByValue:true});
+    const value=checked.result?.value||{};
+    const isMissing=route!=="/communities/moderation";
+    if(value.pathname!==route || !value.robots.startsWith("noindex") || value.canonical ||
+        (isMissing && (!value.missing || value.title!=="Page not found — ANEVUM")))
+      throw new Error("Private or missing route accidentally published: "+JSON.stringify({route,...value}));
+  }
 
   // Stage 1 Commons parity checks: test geometry of the *rendered React app*
   // (inside its isolated ShadowRoot), not a descriptive concept image.
@@ -708,9 +730,18 @@ try {
       );
     }
   }
-  // Explicit narrow-phone acceptance without repeating all legacy routes.
-  const narrow = { name:"narrow",width:320,height:720,mobile:true,deviceScaleFactor:1 };
-  failures = failures.concat((await runCase("/", narrow)).map(item=>"narrow /: "+item));
+  // Full public-route matrix remains at 390/1440. Targeted 320/768/1024
+  // checks cover public, member and research flows without tripling CI cost.
+  for (const viewport of [
+    {name:"narrow",width:320,height:720,mobile:true,deviceScaleFactor:1},
+    {name:"tablet",width:768,height:980,mobile:false,deviceScaleFactor:1},
+    {name:"small-desktop",width:1024,height:860,mobile:false,deviceScaleFactor:1}
+  ]) {
+    for (const route of ["/", "/products", "/field-notes", "/me", "/apps/rhen/connect"]) {
+      failures = failures.concat((await runCase(route,viewport))
+        .map(item=>viewport.name+" "+route+": "+item));
+    }
+  }
 } finally {
   chrome.kill("SIGTERM");
   await Promise.race([

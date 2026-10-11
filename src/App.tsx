@@ -73,6 +73,24 @@ const descriptions: Record<string, string> = {
   "/terms": "ANEVUM website terms."
 };
 
+const publishedPublicPaths = new Set([
+  "/", "/products", "/feed", "/field-notes", "/communities", "/learn",
+  "/products/rhen", "/products/rhen/evidence", "/products/rhen/architecture",
+  "/products/rhen/releases", "/about", "/resume", "/privacy", "/terms"
+]);
+
+function isPublishedPublicPath(pathname: string) {
+  if (publishedPublicPaths.has(pathname)) return true;
+  if (pathname.startsWith("/field-notes/")) {
+    const slug = pathname.slice("/field-notes/".length);
+    return fieldNotes.some(note => note.slug === slug);
+  }
+  if (pathname.startsWith("/products/rhen/releases/")) {
+    return Boolean(rhenReleaseBySlug(pathname.slice("/products/rhen/releases/".length)));
+  }
+  return false;
+}
+
 function ensureMeta(selector: string, create: () => HTMLElement, content: string) {
   let node = document.head.querySelector(selector) as HTMLElement | null;
   if (!node) {
@@ -82,7 +100,7 @@ function ensureMeta(selector: string, create: () => HTMLElement, content: string
   node.setAttribute("content", content);
 }
 
-function setRouteMeta(pathname: string, title: string, description: string, protectedRoute: boolean) {
+function setRouteMeta(pathname: string, title: string, description: string, indexable: boolean) {
   const canonicalUrl = "https://anevum.com" + (pathname === "/" ? "/" : pathname);
   document.title = title;
   document.documentElement.dataset.route = pathname.replace(/^\//, "") || "home";
@@ -97,12 +115,12 @@ function setRouteMeta(pathname: string, title: string, description: string, prot
     const meta = document.createElement("meta");
     meta.setAttribute("name", "robots");
     return meta;
-  }, protectedRoute ? "noindex,nofollow" : "index,follow,max-image-preview:large");
+  }, indexable ? "index,follow,max-image-preview:large" : "noindex,nofollow,noarchive");
 
   for (const [property, value] of [
     ["og:title", title],
     ["og:description", description],
-    ["og:url", canonicalUrl],
+    ["og:url", indexable ? canonicalUrl : "https://anevum.com/"],
     ["twitter:title", title],
     ["twitter:description", description]
   ]) {
@@ -118,12 +136,18 @@ function setRouteMeta(pathname: string, title: string, description: string, prot
   }
 
   let canonical = document.head.querySelector('link[rel="canonical"]') as HTMLLinkElement | null;
-  if (!canonical) {
-    canonical = document.createElement("link");
-    canonical.rel = "canonical";
-    document.head.appendChild(canonical);
+  if (!indexable) {
+    // Private, moderator and missing pages must not advertise an indexable
+    // canonical URL, even when the client navigates from a public page.
+    canonical?.remove();
+  } else {
+    if (!canonical) {
+      canonical = document.createElement("link");
+      canonical.rel = "canonical";
+      document.head.appendChild(canonical);
+    }
+    canonical.href = canonicalUrl;
   }
-  canonical.href = canonicalUrl;
 }
 
 function RouteEffects() {
@@ -137,7 +161,10 @@ function RouteEffects() {
 
   useEffect(() => {
     const path = location.pathname;
-    const protectedRoute = path.startsWith("/command") || path === "/sign-in" || path.startsWith("/me") || path.startsWith("/apps/");
+    const protectedRoute = path.startsWith("/command") || path === "/sign-in" ||
+      path.startsWith("/me") || path.startsWith("/apps/") ||
+      path === "/communities/moderation";
+    const missingRoute = !protectedRoute && !isPublishedPublicPath(path);
     let title = titles[path] || "ANEVUM — Independent Software";
     let description = descriptions[path] || descriptions["/"];
 
@@ -162,7 +189,11 @@ function RouteEffects() {
       title = "RHEN Releases — " + current.version + " " + current.codename + " — ANEVUM";
     }
 
-    setRouteMeta(path, title, description, protectedRoute);
+    if (missingRoute) {
+      title = "Page not found — ANEVUM";
+      description = "No published ANEVUM page or record exists at this address.";
+    }
+    setRouteMeta(path, title, description, !protectedRoute && !missingRoute);
   }, [location.pathname]);
 
   return null;
@@ -272,7 +303,7 @@ export default function App() {
         <Route path="/lattice" element={<Navigate to="/products" replace />} />
         <Route path="/store" element={<Navigate to="/products" replace />} />
 
-        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route path="*" element={<Suspense fallback={<Loader />}><CommonsV5 /></Suspense>} />
       </Routes>
     </>
   );

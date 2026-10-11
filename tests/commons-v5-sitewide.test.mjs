@@ -86,3 +86,23 @@ test("private RHEN uses scoped draft styles, historical evidence and member-keye
   assert.match(ui, /value\.liveTradingEnabled !== false/);
   assert.match(ui, /value\.account\?\.environment !== "paper"/);
 });
+
+test("unknown public URLs remain on a truthful not-found page without a false home redirect", () => {
+  assert.match(app, /<Route path="\*" element=\{<Suspense fallback=\{<Loader \/>\}><CommonsV5 \/><\/Suspense>\} \/>/);
+  assert.match(pages, /data-page-state="not-found"/);
+  assert.match(pages, /Page not found/);
+  assert.match(app, /const missingRoute = !protectedRoute && !isPublishedPublicPath\(path\)/);
+  assert.match(app, /setRouteMeta\(path, title, description, !protectedRoute && !missingRoute\)/);
+  assert.match(app, /canonical\?\.remove\(\)/);
+});
+test("server and client do not advertise suspended RHEN or private moderator URLs as indexable", () => {
+  const worker = source("worker.mjs");
+  assert.match(worker, /pathname === "\/communities\/moderation"/);
+  assert.match(app, /path === "\/communities\/moderation"/);
+  assert.match(worker, /!publicRouteMetadata\(pathname\)/);
+  assert.match(worker, /SUSPENDED_FOR_REBUILD/);
+  assert.doesNotMatch(worker.slice(worker.indexOf('function publicRouteMetadata'),worker.indexOf('async function withPublicRouteMetadata')),/RHEN is ANEVUM's live trading and research system/);
+  assert.match(worker, /import \{ fieldNotes \} from "\.\/src\/data\/fieldNotes"/);
+  for (const path of ["/communities","/learn","/privacy","/terms"])
+    assert.ok(worker.includes('"' + path + '": {'),"missing public server metadata "+path);
+});

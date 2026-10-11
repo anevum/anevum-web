@@ -1,4 +1,5 @@
 import releaseRegistry from "./src/data/releases.json";
+import { fieldNotes } from "./src/data/fieldNotes";
 import { shadowRead } from "./shadow-transport.mjs";
 import { memberEndpoint } from "./src/server/member.mjs";
 import { legacyOperatorTarget } from "./src/server/operator-routes.mjs";
@@ -336,11 +337,11 @@ function publicRouteMetadata(pathname) {
     },
     "/products/rhen": {
       title: "RHEN — ANEVUM",
-      description: "RHEN is ANEVUM's live trading and research system operating on real market data with public evidence and narrow live authority."
+      description: "RHEN V5 is under reconstruction. Legacy public trading is suspended; member brokerage execution is not yet available."
     },
     "/products/rhen/evidence": {
       title: "RHEN Public Evidence — ANEVUM",
-      description: "Inspect sanitized RHEN runtime and performance evidence without exposing protected broker, position, order, or strategy details."
+      description: "Published RHEN evidence and historical releases. Legacy public runtime is SUSPENDED_FOR_REBUILD, with no current public performance or broker data."
     },
     "/products/rhen/architecture": {
       title: "RHEN Architecture — ANEVUM",
@@ -357,6 +358,22 @@ function publicRouteMetadata(pathname) {
     "/resume": {
       title: "Résumé — ANEVUM",
       description: "Professional résumé and background for the person responsible for ANEVUM."
+    },
+    "/communities": {
+      title: "Topics — ANEVUM Commons",
+      description: "Published ANEVUM projects and research grouped by topic. Member discussion is under development."
+    },
+    "/learn": {
+      title: "Learning — ANEVUM Commons",
+      description: "Learn from published engineering and research work, with methods and limitations."
+    },
+    "/privacy": {
+      title: "Privacy — ANEVUM",
+      description: "Privacy information for ANEVUM members and public visitors."
+    },
+    "/terms": {
+      title: "Terms — ANEVUM",
+      description: "ANEVUM website and member terms."
     }
   };
 
@@ -365,6 +382,18 @@ function publicRouteMetadata(pathname) {
       ...staticRoutes[pathname],
       url: "https://anevum.com" + (pathname === "/" ? "/" : pathname)
     };
+  }
+
+  if (pathname.startsWith("/field-notes/")) {
+    const slug = pathname.slice("/field-notes/".length);
+    const note = fieldNotes.find(item => item.slug === slug);
+    if (note) {
+      return {
+        title: note.title + " — ANEVUM Field Notes",
+        description: note.summary,
+        url: "https://anevum.com/field-notes/" + note.slug
+      };
+    }
   }
 
   if (pathname.startsWith("/products/rhen/releases/")) {
@@ -387,9 +416,11 @@ async function withPublicRouteMetadata(response, pathname) {
   if (!meta) return response;
 
   let html = await response.text();
+  const escapeHtml = value => String(value).replace(/&/g, "&amp;")
+    .replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
   const setMeta = (source, attribute, key, value) => {
     const pattern = new RegExp('<meta\\s+' + attribute + '="' + key + '"\\s+content="[^"]*"\\s*\\/?>', 'i');
-    return source.replace(pattern, '<meta ' + attribute + '="' + key + '" content="' + value + '" />');
+    return source.replace(pattern, '<meta ' + attribute + '="' + key + '" content="' + escapeHtml(value) + '" />');
   };
 
   html = setMeta(html, "name", "description", meta.description);
@@ -398,8 +429,8 @@ async function withPublicRouteMetadata(response, pathname) {
   html = setMeta(html, "property", "og:url", meta.url);
   html = setMeta(html, "name", "twitter:title", meta.title);
   html = setMeta(html, "name", "twitter:description", meta.description);
-  html = html.replace(/<link\s+rel="canonical"\s+href="[^"]*"\s*\/?\s*>/i, '<link rel="canonical" href="' + meta.url + '" />');
-  html = html.replace(/<title>[^<]*<\/title>/i, '<title>' + meta.title + '</title>');
+  html = html.replace(/<link\s+rel="canonical"\s+href="[^"]*"\s*\/?\s*>/i, '<link rel="canonical" href="' + escapeHtml(meta.url) + '" />');
+  html = html.replace(/<title>[^<]*<\/title>/i, '<title>' + escapeHtml(meta.title) + '</title>');
 
   const headers = new Headers(response.headers);
   headers.set("Content-Type", "text/html; charset=utf-8");
@@ -419,9 +450,10 @@ function withSecurityHeaders(response, pathname, hostname) {
   headers.set("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
   headers.set("Cross-Origin-Opener-Policy", "same-origin");
   headers.set("X-Frame-Options", "DENY");
-  const privateOrArchived = pathname.startsWith("/me") || pathname.startsWith("/sign-in") || pathname.startsWith("/apps/") || pathname.startsWith("/command") || pathname.startsWith("/private") || pathname.startsWith("/rhenlink") || pathname.startsWith("/wiki/archive") || pathname.startsWith("/lattice") || pathname.startsWith("/store") || pathname.startsWith("/reply") || pathname.startsWith("/the-book") || pathname.startsWith("/stories/");
-  if (privateOrArchived || hostname !== "anevum.com") headers.set("X-Robots-Tag", "noindex, nofollow, noarchive");
-  if (pathname.startsWith("/command") || pathname.startsWith("/private") || pathname.startsWith("/me") || pathname.startsWith("/sign-in") || pathname.startsWith("/apps/")) headers.set("Cache-Control", "private, no-store");
+  const privateOrArchived = pathname === "/communities/moderation" || pathname.startsWith("/me") || pathname.startsWith("/sign-in") || pathname.startsWith("/apps/") || pathname.startsWith("/command") || pathname.startsWith("/private") || pathname.startsWith("/rhenlink") || pathname.startsWith("/wiki/archive") || pathname.startsWith("/lattice") || pathname.startsWith("/store") || pathname.startsWith("/reply") || pathname.startsWith("/the-book") || pathname.startsWith("/stories/");
+  if (privateOrArchived || !publicRouteMetadata(pathname) || hostname !== "anevum.com")
+    headers.set("X-Robots-Tag", "noindex, nofollow, noarchive");
+  if (privateOrArchived || pathname.startsWith("/command") || pathname.startsWith("/private") || pathname.startsWith("/me") || pathname.startsWith("/sign-in") || pathname.startsWith("/apps/")) headers.set("Cache-Control", "private, no-store");
 
   return new Response(response.body, {
     status: response.status,

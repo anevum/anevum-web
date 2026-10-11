@@ -250,7 +250,14 @@ function About() {
   </div>;
 }
 function Missing() {
-  return <div className="c2-page c2-empty"><Intro kicker="COMMONS / NOT FOUND" title="That record was not found.">The address may be old or the record may not be published.</Intro><Link className="c2-text-link" to="/">Return to Commons →</Link></div>;
+  return <div className="c2-page c2-empty" data-page-state="not-found">
+    <Intro kicker="COMMONS / NOT FOUND" title="Page not found">That page or record is not published at this address. It may have moved or never existed.</Intro>
+    <div className="c2-action-row">
+      <Link className="c2-text-link" to="/">Return to Commons →</Link>
+      <Link className="c2-text-link" to="/products">Browse projects →</Link>
+      <Link className="c2-text-link" to="/field-notes">Read Field Notes →</Link>
+    </div>
+  </div>;
 }
 export default function CommonsPublicPage({ pathname, search }: Props) {
   if (pathname === "/products") return <Projects/>;
