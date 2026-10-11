@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import {mkdtempSync,mkdirSync,writeFileSync,rmSync} from "node:fs";
+import {mkdtempSync,mkdirSync,writeFileSync,rmSync,readFileSync} from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import {auditSourceReachability} from "../scripts/audit-v5-source-reachability.mjs";
