@@ -108,6 +108,13 @@ jobs:
             fi
           done
           test "$ok" = 1
+      - name: Verify Google sign-in initiation with zero login and no secret output
+        if: github.event_name == 'pull_request'
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --test tests/v5-beta-google-oauth-init-smoke.test.mjs
+          node scripts/v5-beta-google-oauth-init-smoke.mjs
       - name: Confirm approved exact main and existing isolated beta infrastructure
         if: github.event_name == 'workflow_dispatch'
         env:
