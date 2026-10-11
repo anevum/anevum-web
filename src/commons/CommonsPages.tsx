@@ -1,7 +1,7 @@
 import { Link, useSearchParams } from "react-router-dom";
 import type { ReactNode } from "react";
 import { fieldNotes, type FieldNote } from "../data/fieldNotes";
-import { publicProducts } from "../data/products";
+import { publicProducts, publishedSourceRecords } from "../data/products";
 import { rhenReleases, rhenReleaseBySlug } from "../data/releases";
 import founder from "../data/founder.json";
 import Privacy from "../pages/Privacy";
@@ -96,6 +96,7 @@ function Projects() {
         <h2>{product.name}</h2><p>{product.oneLine}</p>
         <div className="c2-tag-row"><span className="c2-tag">{product.slug === "rhen" ? "V5 rebuilding" : product.lifecycle}</span><span className="c2-tag">Public project</span></div>
         <Link className="c2-text-link" to={product.routes.home}>Explore project →</Link>
+        {product.source && <div className="c2-action-row"><a href={product.source.url} target="_blank" rel="noopener noreferrer" aria-label={`Inspect ${product.name} source on GitHub`}>Inspect public source ↗</a></div>}
       </article>)}</section>
     <section className="c2-section">
       <h2>Explore the work behind the software</h2><p>Research notes and release records document decisions and verified work. Published data is never a substitute for your own investigation.</p>
@@ -121,6 +122,12 @@ function RhenOverview() {
     <section className="c2-section"><h2>One application, multiple capabilities</h2>
       <p>Research, replay and optional forecasting are modules of RHEN—not independent paid apps or always-running branded services. Research cannot enable execution. Paper and live permissions must be approved separately, and a Commons account alone grants neither.</p>
       <div className="c2-action-row"><Link to="/products/rhen/evidence">Public evidence status</Link><Link to="/apps/rhen">Open my RHEN workspace</Link></div>
+    </section>
+    <section className="c2-section" aria-label="RHEN public source and collaboration">
+      <h2>Inspect the public RHEN source</h2>
+      <p>The RHEN code repository is publicly visible for inspection. It does not currently publish a repository-wide reuse license. Visibility alone does not grant permission to copy, redistribute or operate the trading system. This source also includes development work that has not been deployed or approved as a member product.</p>
+      <p>Contributions should focus on public-safe documentation, accessibility and reproducible synthetic tests. Do not post credentials, brokerage records, protected strategies or personal account information in GitHub issues.</p>
+      <div className="c2-action-row"><a href={publishedSourceRecords.rhen.url} target="_blank" rel="noopener noreferrer">View RHEN repository ↗</a><Link to="/products/rhen/architecture">Read architectural boundaries</Link></div>
     </section>
   </div>;
 }
@@ -247,6 +254,11 @@ function About() {
         <p>I'm most interested in real outcomes and honest documentation, including experiments that fail. This is a small independent project, not a claim to be a large company.</p>
         <div className="c2-action-row"><Link to="/resume">Background and résumé</Link><a href={"mailto:" + founder.email}>Contact</a></div></div></div>
     <section className="c2-section"><h2>Read the work</h2><p>Start with actual published notes and registered projects rather than invented testimonials or product promises.</p><div className="c2-action-row"><Link to="/field-notes">Field Notes</Link><Link to="/products">Projects</Link></div></section>
+    <section className="c2-section" aria-label="Website source and contribution terms">
+      <h2>Website source</h2>
+      <p>The ANEVUM website repository is publicly available under the Apache 2.0 license. Code availability does not mean the RHEN application or every ANEVUM product has the same license. The RHEN repository is visible separately, without a published repository-wide reuse license.</p>
+      <div className="c2-action-row"><a href={publishedSourceRecords.website.url} target="_blank" rel="noopener noreferrer">Website source on GitHub ↗</a><Link to="/products/rhen">RHEN project</Link></div>
+    </section>
   </div>;
 }
 function Missing() {
