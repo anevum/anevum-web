@@ -187,6 +187,20 @@ function PublishedActivity() {
     <span className="v5-activity-note">Recorded publications · not trading data</span>
   </div>;
 }
+function EditorialArt({note,feature}: {note:FieldNote;feature:boolean}) {
+  const subject=note.type.toLowerCase();
+  if(feature) return <div className={"v6-story-media v6-media-"+subject+" v6-media-featured"}>
+    <PublishedActivity/>
+  </div>;
+  const glyph:Record<string,string>={systems:"λ",engineering:"⌘",research:"∑",release:"✳"};
+  return <div className={"v6-story-media v6-media-"+subject} aria-hidden="true">
+    <span className="v6-media-grid"/>
+    <span className="v6-media-orbit v6-media-orbit-a"/>
+    <span className="v6-media-orbit v6-media-orbit-b"/>
+    <span className="v6-media-glyph">{glyph[subject]||"✳"}</span>
+    <small>{subject.toUpperCase()}</small>
+  </div>;
+}
 function prettyDate(date: string) {
   const parsed = new Date(date + "T12:00:00Z");
   return Number.isNaN(parsed.valueOf()) ? date :
@@ -197,7 +211,7 @@ function NotePost({ note, feature }: {
 }) {
   const url = "/field-notes/" + note.slug;
   const tags = note.systems.slice(0,2);
-  return <article className="post">
+  return <article className={"post v6-story v6-story-"+note.type.toLowerCase()+(feature?" v6-story-feature":"")}>
     <header className="post-header">
       <OfficialAvatar size=""/>
       <div className="post-identity">
@@ -209,7 +223,7 @@ function NotePost({ note, feature }: {
         <span className="post-community">Field Notes / {note.type.toLowerCase()}</span>
       </div>
     </header>
-    <div className={feature ? "post-preview-split" : ""}>
+    <div className={"v6-story-body"+(feature ? " post-preview-split" : "")}>
       <div className="post-main">
         <h2 className="post-title"><Link to={url}>{note.title}</Link></h2>
         <p className="post-excerpt">{note.summary}</p>
@@ -218,7 +232,7 @@ function NotePost({ note, feature }: {
           <span className="real-badge">Published source</span>
         </div>
       </div>
-      {feature ? <PublishedActivity/> : null}
+      <EditorialArt note={note} feature={feature}/>
     </div>
     <footer className="post-foot">
       <Link className="action-pill" to={url}><Icon name="book"/>Read note</Link>
