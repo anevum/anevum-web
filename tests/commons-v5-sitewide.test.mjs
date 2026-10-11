@@ -125,8 +125,10 @@ test("Commons sidebar destinations are real, authenticated member and publicatio
   for(const category of ["systems","engineering","research","release"])
     assert.ok(sidebar.includes('to="/field-notes?category='+category+'"'), "unrouted topic: "+category);
   assert.doesNotMatch(sidebar, /<button type="button" className="side-link" onClick=\{onNotice\}><Icon name="bookmark"/);
-  assert.match(commons, /navSaved/);
-  assert.match(source("scripts/member-command-browser-qa.mjs"), /info\.navSaved !== \(signedIn\?"\/command":"\/sign-in"\)/);
+  const browser = source("scripts/member-command-browser-qa.mjs");
+  assert.match(browser, /navSaved/);
+  assert.match(browser, /navProfile/);
+  assert.match(browser, /info\.navSaved !== \(signedIn\?"\/command":"\/sign-in"\)/);
 });
 
 test("Field Note search is URL-backed and does not inherit stale Commons typing",()=>{
