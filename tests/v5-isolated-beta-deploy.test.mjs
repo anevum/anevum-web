@@ -75,7 +75,7 @@ test("only two exact nonproduction origins can open staging member tests",async(
  }
  let calls=0;
  const fetcher=()=>{calls++;return Response.json({unexpected:true})};
- assert.rejects(runWorkspaceStagingProof(fetcher,"member-a","https://anevum.com"),/staging-only/);
+ await assert.rejects(runWorkspaceStagingProof(fetcher,"member-a","https://anevum.com"),/staging-only/);
  assert.equal(calls,0);
  const page=read("src/pages/MemberStagingVerify.tsx");
  assert.match(page,/ALLOWED_ACCEPTANCE_ORIGINS/);
