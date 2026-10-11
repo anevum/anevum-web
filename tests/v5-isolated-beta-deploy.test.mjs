@@ -61,7 +61,7 @@ test("beta release guard rejects swapped targets, elevated scopes or inherited s
  }
 });
 
-test("only two exact nonproduction origins can open staging member tests",()=>{
+test("only two exact nonproduction origins can open staging member tests",async()=>{
  assert.equal(stagingOrigin(STAGING_ORIGIN),STAGING_ORIGIN);
  assert.equal(stagingOrigin(V5_BETA_ORIGIN),V5_BETA_ORIGIN);
  assert.equal(V5_BETA_ORIGIN,V5_BETA_ACCEPTANCE_ORIGIN);
