@@ -125,6 +125,9 @@ async function runCase(width, state) {
         if (info.value!=="Alpha private name"||info.disabled||!info.export) throw new Error("Verified settings missing: "+JSON.stringify(info));
         await evaluate(`(() => {const input=${surface}.querySelector("input");input.focus();input.setSelectionRange(input.value.length,input.value.length);})()`);
         await send("Input.insertText", { text: " edited" });
+        // Browser focus changes must not remount settings or cancel a pending edit.
+        await evaluate('window.dispatchEvent(new Event("focus"))');
+        await pause(200);
         await evaluate(`${surface}.querySelector("form").requestSubmit()`);
         await waitFor(`${surface}?.textContent.includes(${JSON.stringify(state==="failed-save"?"Could not update your profile":"Name saved.")})`, "profile save");
         info = await snapshot();
