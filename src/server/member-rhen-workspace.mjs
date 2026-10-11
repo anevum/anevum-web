@@ -3,6 +3,15 @@
 const WORKSPACE_PATTERN = /^wrk_[a-f0-9]{32}$/;
 const UTC_TIME_PATTERN = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z$/;
 
+/** Optional stale-browser guard. The server's authenticated session is
+ * authoritative and always supplies the actual D1 tenant key.
+ */
+export function workspaceExpectedMemberMatches(request, verifiedMemberId) {
+  if (typeof verifiedMemberId !== "string" || !verifiedMemberId) return false;
+  return !request.headers.has("X-ANEVUM-EXPECTED-MEMBER-ID") ||
+    request.headers.get("X-ANEVUM-EXPECTED-MEMBER-ID") === verifiedMemberId;
+}
+
 function requireMemberId(userId) {
   if (typeof userId !== "string" || !userId || userId.length > 128) {
     throw new Error("Verified member ID required.");

@@ -5,7 +5,7 @@ import { commonsSocialEndpoint, socialSchemaReady, exportMemberSocial } from "./
 import { moderationEndpoint } from "./commons-moderation.mjs";
 import { memberRhenDraftSchemaReady, readMemberRhenDraft, saveMemberRhenDraft, deleteMemberRhenDraft, validateRhenDraft, draftExpectedMemberMatches } from "./member-rhen-draft.mjs";
 import { resolveMemberOrigin, memberSchemaReady } from "./member-preflight.mjs";
-import { memberRhenWorkspaceSchemaReady, readMemberRhenWorkspace, createMemberRhenWorkspace } from "./member-rhen-workspace.mjs";
+import { memberRhenWorkspaceSchemaReady, readMemberRhenWorkspace, createMemberRhenWorkspace, workspaceExpectedMemberMatches } from "./member-rhen-workspace.mjs";
 const PUBLIC_PROJECTS = new Set(["rhen"]);
 
 export function memberConfigured(env) {
@@ -182,6 +182,11 @@ export async function memberEndpoint(request, env, pathname, verifiedContext = {
     if (!["GET", "POST"].includes(request.method)) return reply({ message: "Method not allowed." }, 405);
     if (env?.ANEVUM_V5_WORKSPACES_ENABLED !== "true") {
       return reply({ message: "Private RHEN V5 workspaces are not enabled." }, 503);
+    }
+    // Never route a workspace by browser-supplied identity. An optional
+    // mismatching hint only rejects a stale tab; user.id still owns every query.
+    if (request.method === "POST" && !workspaceExpectedMemberMatches(request, user.id)) {
+      return reply({ message: "Authenticated member changed. Reload your workspace." }, 409);
     }
     // Never allow a query-selected owner, workspace or brokerage account.
     if (new URL(request.url).search) return reply({ message: "Workspace selection is not supported." }, 400);

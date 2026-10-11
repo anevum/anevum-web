@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import SystemIcon from "../components/company/SystemIcon";
 import { currentRhenRelease } from "../data/releases";
@@ -37,9 +37,21 @@ function RhenMemberWorkspace({ memberId }: { memberId: string }) {
   const [workspace, setWorkspace] = useState<FoundationWorkspaceState | null>(null);
   const [workspaceGate, setWorkspaceGate] = useState<"loading" | "off" | "ready" | "error">("loading");
   const [creatingWorkspace, setCreatingWorkspace] = useState(false);
+  const workspaceCreateScope = useRef<AbortController | null>(null);
   const release = currentRhenRelease();
   const segment = location.pathname.split("/")[3] || "overview";
   const section: RhenSection = ["overview", "account", "setup", "evidence", "research", "updates"].includes(segment) ? segment as RhenSection : "overview";
+
+  useEffect(() => {
+    // The editor's member-ID keyed remount cancels queued workspace creation
+    // and prevents an old-account response from populating the new account.
+    const controller = new AbortController();
+    workspaceCreateScope.current = controller;
+    return () => {
+      controller.abort();
+      if (workspaceCreateScope.current === controller) workspaceCreateScope.current = null;
+    };
+  }, [memberId]);
 
   useEffect(() => {
     let alive = true;
@@ -102,23 +114,31 @@ function RhenMemberWorkspace({ memberId }: { memberId: string }) {
   }, [memberId, section]);
 
   const initializeWorkspace = async () => {
-    if (workspaceGate !== "ready" || workspace || creatingWorkspace) return;
+    const controller = workspaceCreateScope.current;
+    if (!controller || controller.signal.aborted ||
+        workspaceGate !== "ready" || workspace || creatingWorkspace) return;
     setCreatingWorkspace(true);
     try {
       const response = await fetch("/api/member/rhen/workspace", {
-        method: "POST", credentials: "same-origin", cache: "no-store"
+        method: "POST", credentials: "same-origin", cache: "no-store",
+        redirect: "manual", signal: controller.signal,
+        // This is a stale-session comparison, NEVER a client-selected owner.
+        headers: { "X-ANEVUM-EXPECTED-MEMBER-ID": memberId }
       });
+      if (controller.signal.aborted) return;
       if (!response.ok) throw new Error("Workspace creation unavailable.");
       const payload = await response.json() as { available?: boolean; workspace?: unknown };
+      if (controller.signal.aborted) return;
       const parsed = parsePrivateFoundationWorkspace(payload.workspace, memberId);
       if (payload.available !== true || !parsed || parsed.workspace_kind !== "MEMBER_PRIVATE" ||
           parsed.engine_source !== "RHEN_NEXT" || parsed.execution_permission !== "NONE" ||
-          parsed.broker_link_state !== "NOT_LINKED") throw new Error("Workspace proof failed.");
+          parsed.broker_link_state !== "NOT_LINKED" || parsed.capabilities.length !== 1 ||
+          parsed.capabilities[0] !== "VIEW") throw new Error("Workspace proof failed.");
       setWorkspace(parsed);
     } catch {
-      setWorkspaceGate("error");
+      if (!controller.signal.aborted) setWorkspaceGate("error");
     } finally {
-      setCreatingWorkspace(false);
+      if (!controller.signal.aborted) setCreatingWorkspace(false);
     }
   };
 
