@@ -160,6 +160,27 @@ export async function studioEndpoint(request, env, user, origin, pathname, verif
         saved:true,action:"CREATE",auditRecorded:true},201);
     } catch { return json({message:"Draft save unconfirmed. Reload Studio."},503); }
   }
+  // Staff-only, bounded and independently verified publication history.
+  // Audit records are immutable; no public API can read them.
+  const history=pathname.match(/^\/api\/member\/studio\/entries\/([0-9a-f-]{36})\/history$/i);
+  if(history && UUID.test(history[1])) {
+    if(request.method!=="GET") return json({message:"Read-only Studio audit history."},405);
+    try {
+      const row=await db.prepare("SELECT id,revision FROM studio_entries WHERE id=?")
+        .bind(history[1]).first();
+      if(!row) return json({message:"Studio entry not found."},404);
+      const found=await db.prepare(
+        "SELECT action,revision,actor_member_id,created_at FROM studio_entry_events "+
+        "WHERE entry_id=? ORDER BY revision DESC LIMIT 101"
+      ).bind(row.id).all();
+      const events=(found.results||[]);
+      return json({schemaVersion:VERSION,viewerMemberId:user.id,entryId:row.id,
+        entryRevision:row.revision,events:events.slice(0,100).map(item=>({
+          action:item.action,revision:item.revision,actorMemberId:item.actor_member_id,
+          createdAt:item.created_at
+        })),olderEventsMayExist:events.length>100});
+    } catch {return json({message:"Studio history unavailable."},503);}
+  }
   const match=pathname.match(/^\/api\/member\/studio\/entries\/([0-9a-f-]{36})(?:\/(publish|unpublish|archive))?$/i);
   if (!match || !UUID.test(match[1])) return json({message:"Studio endpoint not found."},404);
   if (!currentMember(request,user)) return json({message:"Session changed."},409);

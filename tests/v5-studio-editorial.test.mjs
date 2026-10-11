@@ -44,6 +44,10 @@ function fakeDB(){
      {name:"studio_entries"},{name:"studio_entry_events"}]};
     if(sql.startsWith("SELECT * FROM studio_entries ORDER BY updated_at"))
      return {results:[...entries.values()].sort((a,b)=>b.updated_at-a.updated_at)};
+    if(sql.startsWith("SELECT action,revision,actor_member_id,created_at FROM studio_entry_events")) {
+      return {results:[...events.values()].filter(x=>x.entry_id===args[0])
+        .sort((a,b)=>b.revision-a.revision).slice(0,101)};
+    }
     if(sql.startsWith("SELECT slug,kind,title,summary,published_at FROM studio_entries")){
      return {results:[...entries.values()].filter(x=>x.status==="PUBLISHED"&&
        (args[0]===null||x.kind===args[0]))
@@ -52,6 +56,8 @@ function fakeDB(){
     throw Error("Unknown all() query: "+sql);
    },
    async first(){
+    if(sql.startsWith("SELECT id,revision FROM studio_entries WHERE id=?"))
+     return entries.get(args[0])||null;
     if(sql.startsWith("SELECT * FROM studio_entries WHERE id=?"))
      return entries.get(args[0])||null;
     if(sql.startsWith("SELECT slug,kind,title,summary,body,published_at FROM studio_entries"))
@@ -272,4 +278,30 @@ test("Commons homepage uses only genuine public Studio publications and a suppor
  assert.match(nav,/path:"\/updates",label:"Updates",icon:"file"/);
  assert.match(icons,/id="i-file"/);
  assert.doesNotMatch(block,/dangerouslySetInnerHTML|\.order_submit|brokerToken/);
+});
+
+
+test("Studio history is staff-only, audit-backed and revision-bound",async()=>{
+ const {db}=fakeDB();
+ const base="/api/member/studio/entries";
+ const created=await response(db,{route:base,method:"POST",data:payload});
+ assert.equal(created.status,201);
+ const id=created.data.entry.id;
+ const change=await response(db,{route:base+"/"+id,method:"PATCH",
+  data:{...payload,expectedRevision:1,title:"Verified research progress"}});
+ assert.equal(change.status,200);
+ const history=await response(db,{route:base+"/"+id+"/history"});
+ assert.equal(history.status,200);
+ assert.equal(history.data.viewerMemberId,owner.id);
+ assert.equal(history.data.entryId,id);
+ assert.equal(history.data.entryRevision,2);
+ assert.equal(history.data.olderEventsMayExist,false);
+ assert.deepEqual(history.data.events.map(x=>[x.action,x.revision]),
+  [["EDIT",2],["CREATE",1]]);
+ assert.ok(history.data.events.every(x=>x.actorMemberId===owner.id));
+ const denied=await response(db,{route:base+"/"+id+"/history",user:ordinary,
+  accessEmail:ordinary.email});
+ assert.equal(denied.status,403);
+ assert.equal((await response(db,{route:base+"/"+id+"/history",method:"DELETE"})).status,405);
+ assert.equal((await response(db,{route:base+"/00000000-0000-4000-8000-000000000000/history"})).status,404);
 });
