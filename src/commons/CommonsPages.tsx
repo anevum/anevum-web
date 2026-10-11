@@ -9,6 +9,7 @@ import Terms from "../pages/Terms";
 import SignIn from "../pages/SignIn";
 import CommonsPostsBeta from "./CommonsPostsBeta";
 import CommonsModeration from "./CommonsModeration";
+import StudioPublications from "./StudioPublications";
 import {useMemberAvailability,refreshMemberAvailability} from "../member/useMemberAvailability";
 import { memberAuthClient } from "../member/auth-client";
 
@@ -327,6 +328,8 @@ export default function CommonsPublicPage({ pathname }: Props) {
   if (pathname === "/products") return <Projects/>;
   if (pathname === "/beta") return <BetaLanding/>;
   if (pathname === "/field-notes") return <NoteIndex/>;
+  if (pathname === "/updates") return <StudioPublications/>;
+  if (pathname.startsWith("/updates/")) return <StudioPublications slug={pathname.slice("/updates/".length)}/>;
   if (pathname.startsWith("/field-notes/")) return <NoteDetail slug={pathname.slice("/field-notes/".length)}/>;
   if (pathname === "/products/rhen") return <RhenOverview/>;
   if (pathname === "/products/rhen/evidence") return <RhenEvidence/>;

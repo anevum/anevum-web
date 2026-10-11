@@ -16,6 +16,7 @@ export const primaryNavigation:ReadonlyArray<SiteNavItem> = Object.freeze([
   {path:"/communities",label:"Topics",icon:"users",description:"Explore research categories"},
   {path:"/learn",label:"Learning",icon:"book",description:"Methods and open resources"},
   {path:"/field-notes",label:"Field Notes",icon:"book",description:"Research and engineering records"},
+  {path:"/updates",label:"Updates",icon:"newspaper",description:"Studio and AHA publications"},
   {path:"/beta",label:"Member access",icon:"check",description:"Account and testing availability"}
 ].map(item=>Object.freeze(item)));
 
@@ -27,7 +28,7 @@ export const accountNavigation:ReadonlyArray<SiteNavItem> = Object.freeze([
 ].map(item=>Object.freeze(item)));
 
 export const mobileNavigation:ReadonlyArray<SiteNavItem> = Object.freeze([
-  primaryNavigation[0],primaryNavigation[1],primaryNavigation[2],primaryNavigation[4],accountNavigation[0]
+  primaryNavigation[0],primaryNavigation[1],primaryNavigation[3],primaryNavigation[5],accountNavigation[0]
 ]);
 
 /** All route highlighting uses this function, irrespective of navbar size.

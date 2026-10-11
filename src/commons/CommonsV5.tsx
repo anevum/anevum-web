@@ -7,6 +7,7 @@ import { fieldNotes, type FieldNote } from "../data/fieldNotes";
 import { memberAuthClient } from "../member/auth-client";
 import { primaryNavigation, accountNavigation, mobileNavigation, isSiteNavigationActive, safeAccountDestination } from "./site-navigation";
 import liveCss from "../styles/commons-v5-live-system.css?inline";
+import studioCss from "../styles/commons-v5-studio.css?inline";
 import memberVerifierCss from "../styles/member-staging-qa.css?inline";
 import css from "../styles/commons-v5.css?inline";
 import polishCss from "../styles/commons-v5-polish.css?inline";
@@ -99,7 +100,7 @@ function Header({ onMenu, search, setSearch, onDesign, inputRef, pathname, onSea
       <kbd>/</kbd>
     </div>
     <nav className="top-links" aria-label="Top navigation">
-      {primaryNavigation.filter(item=>["/","/products","/communities","/field-notes"].includes(item.path)).map(item=>
+      {primaryNavigation.filter(item=>["/","/products","/communities","/field-notes","/updates"].includes(item.path)).map(item=>
         <Link key={item.path} to={item.path} className={isSiteNavigationActive(pathname,item.path)?"active":""}
           aria-current={isSiteNavigationActive(pathname,item.path)?"page":undefined}>{item.label}</Link>)}
     </nav>
@@ -121,6 +122,21 @@ function Sidebar({ collapsed, onClose, pathname }: {
 }) {
   const { data: session } = memberAuthClient.useSession();
   const userName = session?.user?.name || "Browsing as guest";
+  const [staff,setStaff]=useState(false);
+  useEffect(()=>{
+    setStaff(false);
+    if(!session?.user?.id)return;
+    const controller=new AbortController();
+    void fetch("/api/member/studio/status",{credentials:"same-origin",cache:"no-store",
+      redirect:"manual",signal:controller.signal})
+      .then(async response=>response.ok?response.json():null)
+      .then(value=>{
+        if(!controller.signal.aborted)setStaff(value?.schemaVersion==="anevum.studio.v1" &&
+          value?.viewerMemberId===session.user.id &&
+          ["owner","admin"].includes(value?.role));
+      }).catch(()=>{if(!controller.signal.aborted)setStaff(false);});
+    return ()=>controller.abort();
+  },[session?.user?.id]);
   const userInitial = userName.charAt(0).toUpperCase();
   return <aside id="commons-primary-navigation" className="left-sidebar" aria-label="Main navigation"><div className="sidebar-scroll">
     <div className="sidebar-nav-group">
@@ -147,6 +163,9 @@ function Sidebar({ collapsed, onClose, pathname }: {
         aria-current={isSiteNavigationActive(pathname,item.path)?"page":undefined}
         title={item.description}><Icon name={item.icon}/><span>{item.label}</span></Link>)}
     </div>
+    {staff?<div className="sidebar-nav-group"><span className="side-heading">ADMINISTRATION</span>
+      <Link to="/studio" onClick={onClose} className={"side-link "+(pathname==="/studio"?"active":"")} aria-current={pathname==="/studio"?"page":undefined}>
+        <Icon name="settings"/><span>ANEVUM Studio</span></Link></div>:null}
     <div className="side-bottom">
       <div className="side-divider"/>
       <Link className="sidebar-member-card" to={session?.user ? "/command" : "/sign-in"}>
@@ -463,7 +482,7 @@ export default function CommonsV5({content}: {content?:ReactNode}) {
   return <div ref={mount} className="anevum-commons-v5-mount"
     data-theme={prefs.theme} data-layout={prefs.layout} data-density={prefs.density}
     data-radius={prefs.radius} data-surface={prefs.surface} style={{display:"block",minHeight:"100dvh"}}>
-    {shadow ? createPortal(<><style>{css+"\n"+polishCss+"\n"+pagesCss+"\n"+memberCommandCss+"\n"+memberBaseCss+"\n"+memberFinancialCss+"\n"+memberDraftCss+"\n"+accountCss+"\n"+privateRhenCss+"\n"+brokerReviewCss+"\n"+discussionsCss+"\n"+betaCss+"\n"+memberVerifierCss+"\n"+liveCss}</style><CommonsApp prefs={prefs} setPrefs={setPrefs} content={content}/></>,shadow) : null}
+    {shadow ? createPortal(<><style>{css+"\n"+polishCss+"\n"+pagesCss+"\n"+memberCommandCss+"\n"+memberBaseCss+"\n"+memberFinancialCss+"\n"+memberDraftCss+"\n"+accountCss+"\n"+privateRhenCss+"\n"+brokerReviewCss+"\n"+discussionsCss+"\n"+betaCss+"\n"+memberVerifierCss+"\n"+liveCss+"\n"+studioCss}</style><CommonsApp prefs={prefs} setPrefs={setPrefs} content={content}/></>,shadow) : null}
   </div>;
 }
 

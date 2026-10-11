@@ -24,6 +24,12 @@
     "sitemap": true
   },
   {
+    "path": "/updates",
+    "label": "Studio updates",
+    "nav": true,
+    "sitemap": true
+  },
+  {
     "path": "/field-notes",
     "label": "Field Notes",
     "nav": true,

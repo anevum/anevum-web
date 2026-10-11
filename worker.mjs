@@ -348,6 +348,10 @@ function publicRouteMetadata(pathname) {
       title: "Feed — ANEVUM",
       description: "A chronological record assembled from real releases, Field Notes, public-safe runtime observations, and research decisions."
     },
+    "/updates": {
+      title: "Studio updates — ANEVUM",
+      description: "Published ANEVUM Studio posts, project updates and AHA records."
+    },
     "/field-notes": {
       title: "Field Notes — ANEVUM",
       description: "ANEVUM Field Notes document research decisions, failures, engineering changes, releases, and measured evidence."
@@ -471,7 +475,7 @@ function withSecurityHeaders(response, pathname, hostname) {
   headers.set("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
   headers.set("Cross-Origin-Opener-Policy", "same-origin");
   headers.set("X-Frame-Options", "DENY");
-  const privateOrArchived = pathname === "/communities/moderation" || pathname.startsWith("/me") || pathname.startsWith("/sign-in") || pathname.startsWith("/apps/") || pathname.startsWith("/command") || pathname.startsWith("/private") || pathname.startsWith("/rhenlink") || pathname.startsWith("/wiki/archive") || pathname.startsWith("/lattice") || pathname.startsWith("/store") || pathname.startsWith("/reply") || pathname.startsWith("/the-book") || pathname.startsWith("/stories/");
+  const privateOrArchived = pathname.startsWith("/studio") || pathname === "/communities/moderation" || pathname.startsWith("/me") || pathname.startsWith("/sign-in") || pathname.startsWith("/apps/") || pathname.startsWith("/command") || pathname.startsWith("/private") || pathname.startsWith("/rhenlink") || pathname.startsWith("/wiki/archive") || pathname.startsWith("/lattice") || pathname.startsWith("/store") || pathname.startsWith("/reply") || pathname.startsWith("/the-book") || pathname.startsWith("/stories/");
   if (privateOrArchived || !publicRouteMetadata(pathname) || hostname !== "anevum.com")
     headers.set("X-Robots-Tag", "noindex, nofollow, noarchive");
   if (privateOrArchived || pathname.startsWith("/command") || pathname.startsWith("/private") || pathname.startsWith("/me") || pathname.startsWith("/sign-in") || pathname.startsWith("/apps/")) headers.set("Cache-Control", "private, no-store");

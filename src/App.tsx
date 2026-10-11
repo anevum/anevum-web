@@ -10,6 +10,7 @@ const CommonsV5 = lazy(() => import("./commons/CommonsV5"));
 const MemberHome = lazy(() => import("./pages/MemberHome"));
 const MemberSettings = lazy(() => import("./pages/MemberSettings"));
 const MemberBeta = lazy(() => import("./pages/MemberBeta"));
+const StudioDashboard = lazy(() => import("./pages/StudioDashboard"));
 const MemberRewards = lazy(() => import("./pages/MemberRewards"));
 const MemberStagingVerify = lazy(() => import("./pages/MemberStagingVerify"));
 const RhenApp = lazy(() => import("./pages/RhenApp"));
@@ -23,6 +24,8 @@ const titles: Record<string, string> = {
   "/beta": "Join the ANEVUM Beta — ANEVUM",
   "/feed": "Updates — ANEVUM",
   "/field-notes": "Field Notes — ANEVUM",
+  "/updates": "Studio updates — ANEVUM",
+  "/studio": "ANEVUM Studio — Administration",
   "/products/rhen": "RHEN — ANEVUM",
   "/products/rhen/evidence": "RHEN Public Evidence — ANEVUM",
   "/products/rhen/architecture": "RHEN Architecture — ANEVUM",
@@ -48,6 +51,8 @@ const descriptions: Record<string, string> = {
   "/beta": "Explore ANEVUM member features, account sign-up and the private RHEN beta without requiring a broker.",
   "/feed": "Published ANEVUM Field Notes. New community posting and social interactions remain in development.",
   "/field-notes": "ANEVUM Field Notes document research decisions, failures, engineering changes, releases, and measured evidence.",
+  "/updates": "Real published project updates and AHA posts from ANEVUM Studio.",
+  "/studio": "Owner and administrator editorial management.",
   "/products/rhen": "RHEN is ANEVUM's research application under V5 reconstruction. Legacy live trading is suspended; member brokerage and execution are not available.",
   "/products/rhen/evidence": "RHEN V5 rebuild and historical public evidence; no active legacy trading telemetry.",
   "/products/rhen/architecture": "Inspect RHEN execution, research, replay, forecasting, control, storage, and evidence boundaries.",
@@ -66,13 +71,14 @@ const descriptions: Record<string, string> = {
 };
 
 const publishedPublicPaths = new Set([
-  "/", "/products", "/beta", "/feed", "/field-notes", "/communities", "/learn",
+  "/", "/products", "/beta", "/feed", "/field-notes", "/updates", "/communities", "/learn",
   "/products/rhen", "/products/rhen/evidence", "/products/rhen/architecture",
   "/products/rhen/releases", "/about", "/help", "/resume", "/privacy", "/terms"
 ]);
 
 function isPublishedPublicPath(pathname: string) {
   if (publishedPublicPaths.has(pathname)) return true;
+  if (/^\/updates\/[a-z0-9-]{1,96}$/.test(pathname)) return true;
   if (pathname.startsWith("/field-notes/")) {
     const slug = pathname.slice("/field-notes/".length);
     return fieldNotes.some(note => note.slug === slug);
@@ -153,7 +159,7 @@ function RouteEffects() {
 
   useEffect(() => {
     const path = location.pathname;
-    const protectedRoute = path.startsWith("/command") || path === "/sign-in" ||
+    const protectedRoute = path.startsWith("/studio") || path.startsWith("/command") || path === "/sign-in" ||
       path.startsWith("/me") || path.startsWith("/apps/") ||
       path === "/communities/moderation";
     const missingRoute = !protectedRoute && !isPublishedPublicPath(path);
@@ -171,6 +177,9 @@ function RouteEffects() {
       const release = rhenReleaseBySlug(slug);
       title = release ? "RHEN " + release.version + " — " + release.codename + " — ANEVUM" : "RHEN Releases — ANEVUM";
       description = release ? "Public release record for RHEN " + release.version + " " + release.codename + ", including production changes, verification, and limits." : descriptions["/products/rhen/releases"];
+    } else if (path.startsWith("/updates/")) {
+      title = "Studio publication — ANEVUM";
+      description = "Publicly published ANEVUM update.";
     } else if (path.startsWith("/field-notes/")) {
       const slug = path.slice("/field-notes/".length);
       const note = fieldNotes.find((item) => item.slug === slug);
@@ -185,7 +194,7 @@ function RouteEffects() {
       title = "Page not found — ANEVUM";
       description = "No published ANEVUM page or record exists at this address.";
     }
-    setRouteMeta(path, title, description, !protectedRoute && !missingRoute);
+    setRouteMeta(path, title, description, !protectedRoute && !missingRoute && !path.startsWith("/updates/"));
   }, [location.pathname]);
 
   return null;
@@ -233,6 +242,8 @@ export default function App() {
         <Route path="/beta" element={<Suspense fallback={<Loader />}><CommonsV5 /></Suspense>} />
         <Route path="/feed" element={<Suspense fallback={<Loader />}><CommonsV5 /></Suspense>} />
         <Route path="/field-notes" element={<Suspense fallback={<Loader />}><CommonsV5 /></Suspense>} />
+        <Route path="/updates" element={<Suspense fallback={<Loader />}><CommonsV5 /></Suspense>} />
+        <Route path="/updates/:slug" element={<Suspense fallback={<Loader />}><CommonsV5 /></Suspense>} />
         <Route path="/communities" element={<Suspense fallback={<Loader />}><CommonsV5 /></Suspense>} />
         <Route path="/communities/moderation" element={<Suspense fallback={<Loader />}><CommonsV5 /></Suspense>} />
         <Route path="/learn" element={<Suspense fallback={<Loader />}><CommonsV5 /></Suspense>} />
@@ -248,6 +259,7 @@ export default function App() {
         <Route path="/me/beta" element={<Suspense fallback={<Loader />}><CommonsV5 content={<MemberBeta />} /></Suspense>} />
         <Route path="/me/rewards" element={<Suspense fallback={<Loader />}><CommonsV5 content={<MemberRewards />} /></Suspense>} />
         <Route path="/me/verify" element={<Suspense fallback={<Loader />}><CommonsV5 content={<MemberStagingVerify />} /></Suspense>} />
+        <Route path="/studio" element={<Suspense fallback={<Loader />}><CommonsV5 content={<StudioDashboard />} /></Suspense>} />
         <Route path="/apps/rhen/terminal/*" element={<LegacyRhenOperatorRoute />} />
         <Route path="/apps/rhen/command/*" element={<LegacyRhenOperatorRoute />} />
         <Route path="/apps/rhen/connect" element={<Suspense fallback={<Loader />}><CommonsV5 content={<RhenReviewConnect />} /></Suspense>} />
