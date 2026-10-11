@@ -378,7 +378,7 @@ async function runCase(requestedRoute, viewport) {
       const changedDensity=host.getAttribute("data-density")==="compact";
       root.querySelector(".reset-design")?.click();
       await wait();
-      const resetDefaults=host.getAttribute("data-theme")==="midnight"&&host.getAttribute("data-density")==="comfortable";
+      const resetDefaults=host.getAttribute("data-theme")==="forest"&&host.getAttribute("data-density")==="comfortable";
       root.querySelector('[aria-label="Close appearance settings"]')?.click();
       await wait();
       const fontSize=parseFloat(getComputedStyle(root.querySelector(".post-title")).fontSize);
