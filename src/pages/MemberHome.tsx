@@ -123,8 +123,12 @@ function CommandHome({ enabled = false, checking = false, identity }: {
         setError("Could not verify that preference for your current account. Reload Command.");
       }
     } finally {
-      mutationInProgress.current = false;
-      if (!controller.signal.aborted) setUpdating("");
+      // A request from a prior session must not clear the busy flag for a
+      // newer request if this component survived a pending-session transition.
+      if (scope.current === controller && !controller.signal.aborted) {
+        mutationInProgress.current = false;
+        setUpdating("");
+      }
     }
   };
   const name = data?.profile.displayName || identity?.name || "Your account";
