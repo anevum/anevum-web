@@ -405,6 +405,7 @@
 }
 .c2-page .c2-truth{background:transparent;border:0;border-left:2px solid var(--accent);border-radius:0;padding:10px 17px}
 .c2-page .c2-grid{column-gap:14px;row-gap:14px}
+.c2-page .c2-grid[aria-label="Registered projects"]{grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr))}
 .c2-page .c2-card{border-radius:3px}
 .c2-page .c2-section{border-color:var(--line-soft)}
 .c2-project.v6-project{
