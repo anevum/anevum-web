@@ -1,4 +1,6 @@
 import { betterAuth } from "better-auth";
+import { emailOTP } from "better-auth/plugins";
+import { memberGithubConfigured, memberEmailOtpConfigured, memberSignInMethods, sendMemberEmailOtp } from "./member-auth-methods.mjs";
 import { memberRewardsStatus, memberBrokerageStatus } from "./member-capabilities.mjs";
 import { reviewerSchemaReady, reviewerEndpoint, exportReviewerConnection } from "./member-alpaca-review.mjs";
 import { commonsSocialEndpoint, socialSchemaReady, exportMemberSocial } from "./commons-social.mjs";
@@ -33,8 +35,27 @@ export function makeMemberAuth(env, verifiedOrigin) {
         clientId: env.GOOGLE_CLIENT_ID,
         clientSecret: env.GOOGLE_CLIENT_SECRET,
         requireEmailVerification: true
-      }
+      },
+      ...(memberGithubConfigured(env) ? {
+        github: {
+          clientId: env.GITHUB_CLIENT_ID,
+          clientSecret: env.GITHUB_CLIENT_SECRET,
+          scope: ["read:user", "user:email"],
+          requireEmailVerification: true
+        }
+      } : {})
     },
+    plugins: [
+      ...(memberEmailOtpConfigured(env) ? [emailOTP({
+        otpLength: 8,
+        expiresIn: 600,
+        allowedAttempts: 3,
+        storeOTP: "hashed",
+        async sendVerificationOTP({ email, otp, type }) {
+          await sendMemberEmailOtp(env, { email, otp, type });
+        }
+      })] : [])
+    ],
     account: {
       encryptOAuthTokens: true,
       storeStateStrategy: "database",
@@ -63,7 +84,9 @@ export function makeMemberAuth(env, verifiedOrigin) {
       window: 60,
       max: 40,
       customRules: {
-        "/sign-in/social": { window: 60, max: 8 }
+        "/sign-in/social": { window: 60, max: 8 },
+        "/email-otp/send-verification-otp": { window: 60, max: 3 },
+        "/sign-in/email-otp": { window: 60, max: 5 }
       }
     }
   });
@@ -135,6 +158,13 @@ export async function memberEndpoint(request, env, pathname, verifiedContext = {
     const available = memberConfigured(env) && Boolean(verifiedOrigin) && await memberSchemaReady(env);
     return request.method === "GET"
       ? reply({ available, provider: available ? "google" : null })
+      : reply({ message: "Method not allowed." }, 405);
+  }
+
+  if (pathname === "/api/member/auth-methods") {
+    const available = memberConfigured(env) && Boolean(verifiedOrigin) && await memberSchemaReady(env);
+    return request.method === "GET"
+      ? reply({ available, methods: available ? memberSignInMethods(env) : [] })
       : reply({ message: "Method not allowed." }, 405);
   }
 
