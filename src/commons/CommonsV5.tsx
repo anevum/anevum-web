@@ -15,6 +15,7 @@ import memberBaseCss from "../styles/members.css?inline";
 import memberDraftCss from "../styles/member-rhen-draft.css?inline";
 import privateRhenCss from "../styles/commons-v5-private-rhen.css?inline";
 import discussionsCss from "../styles/commons-v5-discussions.css?inline";
+import betaCss from "../styles/commons-v5-beta.css?inline";
 import memberFinancialCss from "../styles/member-financial.css?inline";
 
 /**
@@ -142,6 +143,7 @@ function Sidebar({ collapsed, onClose, onNotice, pathname }: {
       <Link to={session?.user ? "/command" : "/sign-in"} className="side-link" title="Saved programs" onClick={onClose}><Icon name="bookmark"/><span>Saved programs</span></Link>
       <Link to="/products/rhen" className="side-link" title="RHEN"><Icon name="chart"/><span>RHEN</span><span className="mini-app">APP</span></Link>
       <Link to={session?.user ? "/command" : "/sign-in"} className="side-link" title="My Command"><Icon name="command"/><span>My Command</span></Link>
+      {session?.user && <Link to="/me/beta" className="side-link" title="Beta testing" onClick={onClose}><Icon name="check"/><span>Beta testing</span></Link>}
     </div>
     <div className="side-bottom">
       <div className="side-divider"/>
@@ -418,7 +420,7 @@ export default function CommonsV5({content}: {content?:ReactNode}) {
   return <div ref={mount} className="anevum-commons-v5-mount"
     data-theme={prefs.theme} data-layout={prefs.layout} data-density={prefs.density}
     data-radius={prefs.radius} data-surface={prefs.surface} style={{display:"block",minHeight:"100dvh"}}>
-    {shadow ? createPortal(<><style>{css+"\n"+polishCss+"\n"+pagesCss+"\n"+memberCommandCss+"\n"+memberBaseCss+"\n"+memberFinancialCss+"\n"+memberDraftCss+"\n"+accountCss+"\n"+privateRhenCss+"\n"+brokerReviewCss+"\n"+discussionsCss}</style><CommonsApp prefs={prefs} setPrefs={setPrefs} content={content}/></>,shadow) : null}
+    {shadow ? createPortal(<><style>{css+"\n"+polishCss+"\n"+pagesCss+"\n"+memberCommandCss+"\n"+memberBaseCss+"\n"+memberFinancialCss+"\n"+memberDraftCss+"\n"+accountCss+"\n"+privateRhenCss+"\n"+brokerReviewCss+"\n"+discussionsCss+"\n"+betaCss}</style><CommonsApp prefs={prefs} setPrefs={setPrefs} content={content}/></>,shadow) : null}
   </div>;
 }
 

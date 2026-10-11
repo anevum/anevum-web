@@ -10,6 +10,7 @@ const Command = lazy(() => import("./pages/Command"));
 const CommonsV5 = lazy(() => import("./commons/CommonsV5"));
 const MemberHome = lazy(() => import("./pages/MemberHome"));
 const MemberSettings = lazy(() => import("./pages/MemberSettings"));
+const MemberBeta = lazy(() => import("./pages/MemberBeta"));
 const MemberRewards = lazy(() => import("./pages/MemberRewards"));
 const MemberStagingVerify = lazy(() => import("./pages/MemberStagingVerify"));
 const RhenApp = lazy(() => import("./pages/RhenApp"));
@@ -32,6 +33,7 @@ const titles: Record<string, string> = {
   "/sign-in": "Sign in — ANEVUM",
   "/me": "Command — ANEVUM",
   "/me/settings": "Account settings — ANEVUM",
+  "/me/beta": "Member beta checklist — ANEVUM",
   "/me/rewards": "Member rewards — ANEVUM",
   "/me/verify": "Staging verification — ANEVUM",
   "/privacy": "Privacy — ANEVUM",
@@ -55,6 +57,7 @@ const descriptions: Record<string, string> = {
   "/sign-in": "ANEVUM account access.",
   "/me": "Your private ANEVUM project library and follows.",
   "/me/settings": "Private ANEVUM profile and account settings.",
+  "/me/beta": "Private member tools and test availability.",
   "/me/rewards": "Status and future plans for ANEVUM member rewards.",
   "/me/verify": "Private read-only staging member account security checks.",
   "/privacy": "ANEVUM privacy information.",
@@ -244,6 +247,7 @@ export default function App() {
         <Route path="/sign-in" element={<Suspense fallback={<Loader />}><CommonsV5 /></Suspense>} />
         <Route path="/me" element={<Suspense fallback={<Loader />}><CommonsV5 content={<MemberHome />} /></Suspense>} />
         <Route path="/me/settings" element={<Suspense fallback={<Loader />}><CommonsV5 content={<MemberSettings />} /></Suspense>} />
+        <Route path="/me/beta" element={<Suspense fallback={<Loader />}><CommonsV5 content={<MemberBeta />} /></Suspense>} />
         <Route path="/me/rewards" element={<Suspense fallback={<Loader />}><CommonsV5 content={<MemberRewards />} /></Suspense>} />
         <Route path="/me/verify" element={<PublicExperience><MemberStagingVerify /></PublicExperience>} />
         <Route path="/apps/rhen/terminal/*" element={<LegacyRhenOperatorRoute />} />

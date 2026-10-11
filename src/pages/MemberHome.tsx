@@ -100,6 +100,7 @@ function CommandHome({ enabled = false, checking = false, identity }: {
         <nav aria-label="Member navigation">
           <Link to="/command" aria-current="page" className="active">My programs</Link>
           {signedIn ? <a href="#command-following">Following</a> : <Link to="/feed">Updates</Link>}
+          {signedIn && <Link to="/me/beta">Beta testing</Link>}
           <Link to={signedIn ? "/me/settings" : "/sign-in"}>Profile &amp; account</Link>
           <Link to="/me/rewards">Member rewards</Link>
           <Link to="/products">All projects</Link>
@@ -115,6 +116,11 @@ function CommandHome({ enabled = false, checking = false, identity }: {
         </header>
         {checking ? <p className="member-command-notice" role="status">Checking your account…</p> : !signedIn ? <div className="member-command-notice" role="status"><strong>{enabled ? "Sign in to make this your Command." : "Member accounts are not open yet."}</strong><p>{enabled ? "Your saved programs, follows, and profile belong to your account." : "You can explore the projects and their public records now. Saving programs and profile changes will open with registration."}</p>{enabled && <Link to="/sign-in">Continue with Google</Link>}</div> : null}
         {error && <div className="member-command-notice member-alert" role="alert"><p>{error}</p><button type="button" onClick={() => void load().then(() => setError("")).catch(reason => setError(String(reason.message)))}>Retry</button></div>}
+        {signedIn && <section className="member-command-notice" aria-labelledby="member-beta-entry">
+          <strong id="member-beta-entry">Test ANEVUM</strong>
+          <p>Verify your profile and saved projects, then explore independent RHEN workspace tools when available. Brokerage and public posting remain separate.</p>
+          <Link to="/me/beta">Open member beta checklist →</Link>
+        </section>}
         {signedIn && operator && <section className="member-command-section" aria-labelledby="command-operator">
           <div className="member-command-rewards">
             <div>

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { memberAuthClient } from "../member/auth-client";
-import { useMemberAvailability } from "../member/useMemberAvailability";
+import { useMemberAvailability, refreshMemberAvailability } from "../member/useMemberAvailability";
 
 export default function SignIn() {
   const availability = useMemberAvailability();
@@ -31,11 +31,13 @@ export default function SignIn() {
     <section className="member-auth-page">
       <p className="workshop-kicker">ANEVUM account</p>
       <h1>Your projects. Your Command.</h1>
-      <p>Save software you use, follow development, and open applications that are actually available. Public projects and Field Notes never require an account.</p>
+      <p>Register with Google, save and follow projects, and test ANEVUM as a member. Public work never requires brokerage access.</p>
       {availability === "checking" || isPending ? (
         <p role="status">Checking account availability…</p>
       ) : availability === "unavailable" ? (
-        <p role="status">Member registration is not open yet. The rest of ANEVUM remains available without signing in.</p>
+        <div role="status"><p>Registration could not be verified. Public ANEVUM remains available.</p>
+          <button type="button" className="member-primary-action" onClick={() => refreshMemberAvailability()}>Recheck registration</button>
+        </div>
       ) : session?.user ? (
         <Link className="member-primary-action" to="/command">Open Command</Link>
       ) : (
