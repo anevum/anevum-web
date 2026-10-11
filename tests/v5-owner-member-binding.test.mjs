@@ -16,9 +16,13 @@ test("exact authenticated owner member plus independent Access identity required
 test("missing or malformed encrypted owner config fails closed",()=>{
   for(const invalid of [{...env,RHEN_OWNER_MEMBER_ID:""},{...env,RHEN_OWNER_MEMBER_ID:"bad id"},{...env,RHEN_OWNER_EMAIL:"broken"},{...env,RHEN_OWNER_EMAIL:undefined}])rejected(()=>assertOwnerMemberSession(invalid,identity,session),503);
 });
-test("old deployed Access-only gate stays compatible but never claims owner binding",async()=>{
-  for(const flag of [undefined,"false",""])assert.equal(await verifyOwnerMemberBinding(new Request("https://anevum.com/api/command/session"),{...env,ANEVUM_V5_OWNER_MEMBER_BINDING_REQUIRED:flag},identity),false);
-  await assert.rejects(verifyOwnerMemberBinding(new Request("https://anevum.com/api/command/session"),env,identity),e=>e instanceof OwnerMemberBindingError&&e.status===503);
+test("V5 never silently downgrades to legacy Access-only permission",async()=>{
+  for(const flag of [undefined,"false",""]){
+    await assert.rejects(verifyOwnerMemberBinding(new Request("https://anevum.com/api/command/session"),{...env,ANEVUM_V5_OWNER_MEMBER_BINDING_REQUIRED:flag},identity),
+      e=>e instanceof OwnerMemberBindingError&&e.status===503);
+  }
+  await assert.rejects(verifyOwnerMemberBinding(new Request("https://anevum.com/api/command/session"),env,identity),
+    e=>e instanceof OwnerMemberBindingError&&e.status===503);
 });
 test("every operator API shares the dual-bound commandCredential and no client-supplied identity",()=>{
   const worker=source("worker.mjs"),start=worker.indexOf("async function commandCredential("),end=worker.indexOf("async function proxyTrader(",start),section=worker.slice(start,end);

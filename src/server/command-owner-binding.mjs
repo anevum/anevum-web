@@ -27,9 +27,11 @@ export function assertOwnerMemberSession(env, accessIdentity, memberSession) {
 }
 
 export async function verifyOwnerMemberBinding(request, env, accessIdentity) {
-  // Existing deployed Access-only Command is unchanged until explicit V5 release.
-  // Manual V5 production workflow requires this flag and encrypted owner ID.
-  if (env?.ANEVUM_V5_OWNER_MEMBER_BINDING_REQUIRED !== "true") return false;
+  // The currently deployed legacy Worker remains Access-only because it runs
+  // old code. A future V5 Worker must never silently downgrade to Access-only
+  // if the required binding flag is missing, false or misconfigured.
+  if (env?.ANEVUM_V5_OWNER_MEMBER_BINDING_REQUIRED !== "true")
+    throw new OwnerMemberBindingError(503);
   const origin = resolveMemberOrigin(request, env);
   if (!origin || !memberConfigured(env)) throw new OwnerMemberBindingError(503);
   let session;

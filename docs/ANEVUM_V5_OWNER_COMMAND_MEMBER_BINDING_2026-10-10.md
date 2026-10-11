@@ -20,3 +20,5 @@ Source parent: #283 at 51be02a7affb80461904546fa1180dd5a9612144.
 6. Keep Commons social writes and Alpaca live connections OFF pending independent approvals.
 
 Current tests cover offline synthetic adversarial cases, NOT real logged-in user authorization or public deployment. No trade, token exchange or data migration is performed by this draft.
+
+**Fail-closed hardening:** Any V5 Worker without the literal `ANEVUM_V5_OWNER_MEMBER_BINDING_REQUIRED=true` rejects owner-terminal access with 503. There is no Access-only fallback in the new V5 source. The legacy deployed Worker remains unchanged until a distinct reviewed release.
