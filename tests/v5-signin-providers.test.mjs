@@ -56,3 +56,27 @@ test("login method list is server-controlled and independent of user accounts", 
     { ...env, ANEVUM_MEMBERS_ENABLED: "false" }, "/api/member/auth-methods");
   assert.deepEqual(await disabled.json(), { available: false, methods: [] });
 });
+
+test("protected Studio identity cannot request or redeem an email code", async () => {
+  const env = {
+    ANEVUM_MEMBERS_ENABLED: "true",
+    BETTER_AUTH_SECRET: "x".repeat(40),
+    GOOGLE_CLIENT_ID: "test",
+    GOOGLE_CLIENT_SECRET: "test",
+    ...emailConfig,
+    ANEVUM_STUDIO_ACCESS_EMAILS: "studio@example.org",
+    MEMBER_DB: { prepare: () => ({
+      all: async () => ({ results: REQUIRED_MEMBER_TABLES.map(name => ({ name })) })
+    }) }
+  };
+  for (const endpoint of [
+    "/api/auth/email-otp/send-verification-otp", "/api/auth/sign-in/email-otp"
+  ]) {
+    const response = await memberEndpoint(new Request("https://anevum.com" + endpoint, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Origin": "https://anevum.com" },
+      body: JSON.stringify({ email: "studio@example.org", type: "sign-in", otp: "12345678" })
+    }), env, endpoint);
+    assert.equal(response.status, 403);
+  }
+});
