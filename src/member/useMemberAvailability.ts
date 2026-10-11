@@ -26,14 +26,11 @@ export function useMemberAvailability(): Availability {
         .catch(()=>{if(active&&!signal.aborted)setAvailability("unavailable");});
     };
     refresh();
-    const onFocus=()=>{if(document.visibilityState==="visible")refresh();};
     window.addEventListener(refreshEvent,refresh);
-    window.addEventListener("focus",onFocus);
     return ()=>{
       active=false;
       controller?.abort();
       window.removeEventListener(refreshEvent,refresh);
-      window.removeEventListener("focus",onFocus);
     };
   },[]);
   return availability;
