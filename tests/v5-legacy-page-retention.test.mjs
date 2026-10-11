@@ -14,9 +14,11 @@ test("active validator no longer blocks retirement through obsolete public page 
   assert.equal(report.deletionAuthorized,false);
   assert.equal(report.runtimeUnresolved.length,0);
   // Member Beta is a new active page; its source must be retained and counted.
-  assert.equal(report.counts.pages,40);
+  assert.equal(report.counts.pages,41);
   const beta=report.pages.find(page=>page.file==="src/pages/MemberBeta.tsx");
   assert.equal(beta?.status,"RUNTIME_REACHABLE");
+  const founderPaper=report.pages.find(page=>page.file==="src/pages/OwnerPersonalPaperReadiness.tsx");
+  assert.equal(founderPaper?.status,"RUNTIME_REACHABLE");
 });
 
 test("witnesses, literal reads, join suffixes and documentary mentions remain distinct and read-only",()=>{
