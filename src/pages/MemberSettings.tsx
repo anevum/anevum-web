@@ -122,7 +122,9 @@ function AccountSettings({ identity }: { identity: Identity }) {
       <h2>Account</h2>
       <p>ANEVUM accounts save project preferences and optional, non-executing RHEN configuration drafts. Signing up does not connect you to any brokerage account.</p>
       {verified && <p><a href="/api/member/export" download="anevum-account-data.json">Download my account data (JSON)</a></p>}
-      {window.location.origin === "https://anevum-member-staging.devonakins.workers.dev" && <p><Link to="/me/verify">Run staging account verification</Link></p>}
+      {["https://anevum-member-staging.devonakins.workers.dev",
+        "https://anevum-v5-beta.devonakins.workers.dev"].includes(window.location.origin) &&
+        <p><Link to="/me/verify">Run private beta account verification</Link></p>}
       <button type="button" disabled={busy} onClick={() => void signOut()}>Sign out</button>
       <button type="button" className="member-danger-action" disabled={busy || loading || !verified} onClick={() => void remove()}>Delete account permanently</button>
     </section>
