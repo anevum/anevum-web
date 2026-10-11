@@ -100,7 +100,7 @@ function Header({ onMenu, search, setSearch, onDesign, onNotice, inputRef, pathn
       <Link to="/field-notes" className={pathname.startsWith("/field-notes")?"active":""} aria-current={pathname.startsWith("/field-notes")?"page":undefined}>Research</Link>
     </nav>
     <div className="global-actions">
-      <button type="button" className="create-btn" onClick={onNotice}><Icon name="plus"/><span>Create</span></button>
+      <button type="button" className="create-btn" aria-label="Posting is not available yet; learn more" onClick={onNotice}><Icon name="plus"/><span>Posting soon</span></button>
       <button type="button" className="icon-btn header-bell" aria-label="Notifications" onClick={onNotice}><Icon name="bell"/></button>
       <button type="button" className="icon-btn design-launch" aria-label="Customize design" title="Customize design" onClick={onDesign}><Icon name="palette"/></button>
       <Link to={session?.user ? "/command" : "/sign-in"} className="user-chip" aria-label={session?.user ? "My Command" : "Sign in"}>
@@ -129,17 +129,17 @@ function Sidebar({ collapsed, onClose, onNotice, pathname }: {
     <div className="side-divider"/>
     <div className="sidebar-nav-group community-nav">
       <div className="group-heading"><span className="side-heading">EXPLORE TOPICS</span><Link className="side-mini-btn" to="/communities" aria-label="Browse topics" onClick={onClose}><Icon name="plus"/></Link></div>
-      <Link className="community-link" to="/field-notes" onClick={onClose}><span className="community-icon ci-blue">λ</span><span>Algorithms &amp; methods</span></Link>
-      <Link className="community-link" to="/field-notes" onClick={onClose}><span className="community-icon ci-orange">⌘</span><span>Software &amp; builders</span></Link>
-      <Link className="community-link" to="/field-notes" onClick={onClose}><span className="community-icon ci-purple">∑</span><span>Mathematics &amp; theory</span></Link>
-      <Link className="community-link" to="/field-notes" onClick={onClose}><span className="community-icon ci-sky">✺</span><span>Research &amp; evidence</span></Link>
+      <Link className="community-link" to="/field-notes?category=systems" onClick={onClose}><span className="community-icon ci-blue">λ</span><span>Systems &amp; architecture</span></Link>
+      <Link className="community-link" to="/field-notes?category=engineering" onClick={onClose}><span className="community-icon ci-orange">⌘</span><span>Engineering &amp; software</span></Link>
+      <Link className="community-link" to="/field-notes?category=research" onClick={onClose}><span className="community-icon ci-purple">∑</span><span>Research &amp; methods</span></Link>
+      <Link className="community-link" to="/field-notes?category=release" onClick={onClose}><span className="community-icon ci-sky">✺</span><span>Releases &amp; changes</span></Link>
       <Link className="sidebar-small-link" to="/learn" onClick={onClose}>Learn with published research <Icon name="arrow-right"/></Link>
     </div>
     <div className="side-divider"/>
     <div className="sidebar-nav-group">
       <span className="side-heading">YOUR WORKSPACE</span>
-      <Link to={session?.user ? "/command" : "/sign-in"} className="side-link" title="My profile"><Icon name="user"/><span>My profile</span></Link>
-      <button type="button" className="side-link" onClick={onNotice}><Icon name="bookmark"/><span>Saved work</span></button>
+      <Link to={session?.user ? "/me/settings" : "/sign-in"} className="side-link" title="My profile" onClick={onClose}><Icon name="user"/><span>My profile</span></Link>
+      <Link to={session?.user ? "/command" : "/sign-in"} className="side-link" title="Saved programs" onClick={onClose}><Icon name="bookmark"/><span>Saved programs</span></Link>
       <Link to="/products/rhen" className="side-link" title="RHEN"><Icon name="chart"/><span>RHEN</span><span className="mini-app">APP</span></Link>
       <Link to={session?.user ? "/command" : "/sign-in"} className="side-link" title="My Command"><Icon name="command"/><span>My Command</span></Link>
     </div>
@@ -243,9 +243,9 @@ function Feed({ search, filter, setFilter, density, setDensity, onNotice }: {
       <span className="feed-spacer"/>
       <span className="feed-sort"><Icon name="filter"/>Latest</span>
     </div>
-    <button type="button" className="composer" onClick={onNotice}>
+    <button type="button" className="composer" aria-label="Learn about future Commons discussions" onClick={onNotice}>
       <span className="avatar avatar-official">G</span>
-      <span className="composer-text">Sign in to share your work or ask a question...</span>
+      <span className="composer-text">Community posting is not open yet. Explore published work in the meantime.</span>
       <span className="composer-tools"><span className="composer-tool"><Icon name="image"/></span><span className="composer-tool"><Icon name="plus"/></span></span>
     </button>
     <section className="post-list" aria-label="Published ANEVUM work">
@@ -256,13 +256,14 @@ function Feed({ search, filter, setFilter, density, setDensity, onNotice }: {
 }
 
 function RightRail({ onNotice }:{onNotice:()=>void}) {
+  const { data: session } = memberAuthClient.useSession();
   const notes = [...fieldNotes].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,3);
   return <aside className="right-sidebar" aria-label="Discover">
     <section className="right-card rail-intro">
       <span className="tiny-overline">WELCOME TO THE COMMONS</span>
       <h2>Ideas are better when we can examine them.</h2>
       <p>Read real published ANEVUM work. Public member profiles and community participation are still being built.</p>
-      <Link to="/sign-in" className="rail-link">Sign in to ANEVUM <Icon name="arrow-up-right"/></Link>
+      <Link to={session?.user ? "/command" : "/sign-in"} className="rail-link">{session?.user ? "Open your Command" : "Sign in to ANEVUM"} <Icon name="arrow-up-right"/></Link>
     </section>
     <section className="right-card">
       <div className="rail-title"><h3>Explore ANEVUM</h3></div>
@@ -342,6 +343,15 @@ function CommonsApp({prefs,setPrefs,content}: {prefs:Preferences;setPrefs:(next:
   const pathname = location.pathname;
   const isFeed = pathname === "/" || pathname === "/feed";
 
+  // Published-note search results belong to the URL, not to a stale search
+  // input carried over from another page. Deep links and topic filters remain
+  // reproducible across refresh, history navigation and sidebar visits.
+  useEffect(() => {
+    setSearch(pathname === "/field-notes"
+      ? new URLSearchParams(location.search).get("q") || ""
+      : "");
+  }, [pathname, location.search]);
+
   useEffect(()=>{
     const onKey=(event:KeyboardEvent)=>{
       const originalTarget=event.composedPath()[0] as HTMLElement | undefined;
@@ -358,7 +368,10 @@ function CommonsApp({prefs,setPrefs,content}: {prefs:Preferences;setPrefs:(next:
 
   return <div className={"app "+(content?"account-view ":"")+(collapsed?"nav-collapsed ":"")+(drawerOpen?"drawer-open":"")}>
     <Header search={search} setSearch={setSearch} inputRef={searchRef} pathname={pathname}
-      onSearchSubmit={()=>navigate("/field-notes?q="+encodeURIComponent(search.trim()))}
+      onSearchSubmit={() => {
+        const term = search.trim();
+        navigate(term ? "/field-notes?q=" + encodeURIComponent(term) : "/field-notes");
+      }}
       onMenu={()=>{if(window.matchMedia("(max-width: 900px)").matches) setDrawerOpen(x=>!x); else setCollapsed(x=>!x);}}
       onDesign={()=>setDesignOpen(x=>!x)} onNotice={()=>setNoticeOpen(true)}/>
     <div className="shell">
@@ -366,14 +379,14 @@ function CommonsApp({prefs,setPrefs,content}: {prefs:Preferences;setPrefs:(next:
       <main className="main" id="commons-main">
         {content ? <section className="c2-member" aria-label="Private member account presentation">{content}</section> : isFeed ? <Feed search={search} filter={filter} setFilter={setFilter} density={prefs.density}
           setDensity={next=>setPrefs({...prefs,density:next})} onNotice={()=>setNoticeOpen(true)}/> :
-          <CommonsPublicPage pathname={pathname} search={search} />}
+          <CommonsPublicPage pathname={pathname} />}
       </main>
       {content ? null : <RightRail onNotice={()=>setNoticeOpen(true)}/>}
     </div>
     <nav className="mobile-nav" aria-label="Mobile navigation">
       <Link to="/" className={isFeed?"active":""} aria-current={isFeed?"page":undefined}><Icon name="home"/><span>Home</span></Link>
       <Link to="/products" className={pathname==="/products"?"active":""}><Icon name="compass"/><span>Explore</span></Link>
-      <button type="button" className="mobile-create" aria-label="Create a post" onClick={()=>setNoticeOpen(true)}><Icon name="plus"/></button>
+      <button type="button" className="mobile-create" aria-label="Posting is not available yet; learn more" onClick={()=>setNoticeOpen(true)}><Icon name="plus"/></button>
       <Link to="/field-notes" className={pathname.startsWith("/field-notes")?"active":""}><Icon name="book"/><span>Research</span></Link>
       <Link to={session?.user ? "/command" : "/sign-in"}><Icon name="user"/><span>Account</span></Link>
     </nav>
@@ -382,9 +395,9 @@ function CommonsApp({prefs,setPrefs,content}: {prefs:Preferences;setPrefs:(next:
     {noticeOpen ? <div className="c-v5-dialog-backdrop" onClick={()=>setNoticeOpen(false)}>
       <div className="c-v5-dialog" role="dialog" aria-modal="true" aria-labelledby="commons-notice-title" onClick={e=>e.stopPropagation()}>
         <h2 id="commons-notice-title">Commons is being built.</h2>
-        <p>This first stage provides real public publications in the new interface. Member posts, voting, saving, badges and communities require separate releases and authorization.</p>
+        <p>Commons currently publishes first-party work. Member discussions, voting, badges and notifications are not available yet; signing in does not unlock posting. Personal saved programs are available inside Command for signed-in members.</p>
         <div className="dialog-buttons"><button type="button" className="btn-secondary" onClick={()=>setNoticeOpen(false)}>Continue browsing</button>
-          <Link className="btn-primary" to="/sign-in">Sign in <Icon name="arrow-up-right"/></Link></div>
+          <Link className="btn-primary" to="/communities" onClick={()=>setNoticeOpen(false)}>Explore topics <Icon name="arrow-up-right"/></Link></div>
       </div>
     </div> : null}
   </div>;

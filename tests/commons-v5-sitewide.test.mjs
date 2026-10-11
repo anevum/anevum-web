@@ -11,7 +11,7 @@ test("Stage 2 public routes reuse the V5 shell rather than reentering the legacy
   for (const path of ["/products", "/feed", "/field-notes", "/field-notes/:slug", "/about", "/products/rhen", "/products/rhen/evidence", "/products/rhen/architecture", "/products/rhen/releases", "/products/rhen/releases/:slug", "/communities", "/learn", "/privacy", "/terms", "/sign-in", "/resume"]) {
     assert.ok(app.includes('<Route path="' + path + '" element={<Suspense fallback={<Loader />}><CommonsV5 /></Suspense>} />'), "not using public Commons shell: " + path);
   }
-  assert.match(commons, /<CommonsPublicPage pathname=\{pathname\} search=\{search\}\s*\/>/);
+  assert.match(commons, /<CommonsPublicPage pathname=\{pathname\}\s*\/>/);
   assert.match(commons, /pagesCss/);
 });
 
@@ -116,4 +116,30 @@ test("moderator browser QA waits for React security metadata rather than the ini
   assert.match(qa, /document\.documentElement\.dataset\.route === "communities\/moderation"/);
   assert.match(qa, /document\.querySelector\('meta\[name="robots"\]'\)\?\.content\?\.startsWith\("noindex"\)/);
   assert.match(qa, /!document\.querySelector\('link\[rel="canonical"\]'\)/);
+});
+
+test("Commons sidebar destinations are real, authenticated member and publication routes",()=>{
+  const sidebar=commons.slice(commons.indexOf("function Sidebar("), commons.indexOf("function GraphArtwork("));
+  assert.ok(sidebar.includes('to={session?.user ? "/command" : "/sign-in"} className="side-link" title="Saved programs"'));
+  assert.ok(sidebar.includes('to={session?.user ? "/me/settings" : "/sign-in"} className="side-link" title="My profile"'));
+  for(const category of ["systems","engineering","research","release"])
+    assert.ok(sidebar.includes('to="/field-notes?category='+category+'"'), "unrouted topic: "+category);
+  assert.doesNotMatch(sidebar, /<button type="button" className="side-link" onClick=\{onNotice\}><Icon name="bookmark"/);
+  assert.match(commons, /navSaved/);
+  assert.match(source("scripts/member-command-browser-qa.mjs"), /info\.navSaved !== \(signedIn\?"\/command":"\/sign-in"\)/);
+});
+
+test("Field Note search is URL-backed and does not inherit stale Commons typing",()=>{
+  assert.match(pages, /const query = \(params\.get\("q"\) \|\| ""\)\.trim\(\)\.toLowerCase\(\)/);
+  assert.doesNotMatch(pages, /search \|\| params\.get\("q"\)/);
+  assert.match(commons, /new URLSearchParams\(location\.search\)\.get\("q"\)/);
+  assert.match(commons, /navigate\(term \? "\/field-notes\?q=" \+ encodeURIComponent\(term\) : "\/field-notes"\)/);
+});
+
+test("posting affordances truthfully disclose gated Commons features",()=>{
+  assert.match(commons, /Posting soon/);
+  assert.match(commons, /Community posting is not open yet/);
+  assert.match(commons, /signing in does not unlock posting/);
+  assert.match(commons, /Explore topics/);
+  assert.doesNotMatch(commons, /Sign in to share your work or ask a question/);
 });

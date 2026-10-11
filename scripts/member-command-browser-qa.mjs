@@ -76,11 +76,17 @@ async function runCase(viewport, state) {
       overflow:document.documentElement.scrollWidth>innerWidth+1,
       operator:!!account?.querySelector('a[href^="/command/rhen"]'),
       background:shell?getComputedStyle(shell).backgroundColor:"",
+      navSaved:[...(root?.querySelectorAll(".left-sidebar a")||[])].find(el=>el.textContent?.includes("Saved programs"))?.getAttribute("href")||"",
+      navProfile:[...(root?.querySelectorAll(".left-sidebar a")||[])].find(el=>el.textContent?.trim()==="My profile")?.getAttribute("href")||"",
       buttons:[...(account?.querySelectorAll(".member-card-actions button")||[])].map(el=>el.textContent)
     };
   })()`);
   if(!info.mounted||info.overflow||info.operator||!info.background||info.background==="rgba(0, 0, 0, 0)"||info.background==="transparent")
     throw new Error("Member portal layout/access failure "+JSON.stringify(info));
+  const signedIn = state==="member";
+  if(info.navSaved !== (signedIn?"/command":"/sign-in") ||
+     info.navProfile !== (signedIn?"/me/settings":"/sign-in"))
+    throw new Error("Commons sidebar member links ignored authenticated state");
   if(state==="disabled"&&(!info.text.includes("Member accounts are not open yet")||info.buttons.length))throw new Error("Disabled accounts advertised persistence");
   if(state==="signed-out"&&(!info.text.includes("Sign in to make this your Command")||info.buttons.length))throw new Error("Signed-out accounts advertised private state");
   if(state==="member") {

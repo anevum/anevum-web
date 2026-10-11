@@ -22,3 +22,15 @@ Source parent: #283 at 51be02a7affb80461904546fa1180dd5a9612144.
 Current tests cover offline synthetic adversarial cases, NOT real logged-in user authorization or public deployment. No trade, token exchange or data migration is performed by this draft.
 
 **Fail-closed hardening:** Any V5 Worker without the literal `ANEVUM_V5_OWNER_MEMBER_BINDING_REQUIRED=true` rejects owner-terminal access with 503. There is no Access-only fallback in the new V5 source. The legacy deployed Worker remains unchanged until a distinct reviewed release.
+
+
+## Source-only V5 member navigation and truthful Commons search — October 10 continuation
+
+The current source candidate also closes small but consequential member wayfinding defects:
+- A working **Saved programs** route now goes to authenticated Command, and **My profile** opens account settings. Signed-out visitors go to sign-in. Browser fixture QA validates these distinctions with zero live session or export access.
+- The four sidebar topic links now correspond to the actual published Field Notes type filters: systems, engineering, research and release. No invented communities or mathematical articles are implied.
+- Search results on the Field Notes index use only the reproducible URL query, with the global search control synchronized on route/search changes. A stale typed term cannot silently override the selected topic or deep link.
+- Compose/notifications and future community features remain **not yet released**, stated plainly. The notice points to real published topics rather than falsely suggesting that registration unlocks posting.
+- There are **no** social database writes, new authentication rights, finance/broker interactions, production changes or owner-member secret assignments from this patch.
+
+The source branch remains unmerged. These are interface/contract tests and browser fixtures, NOT authenticated production or Alpaca sign-in acceptance.

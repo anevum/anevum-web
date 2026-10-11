@@ -16,7 +16,7 @@ import CommonsModeration from "./CommonsModeration";
  * metrics from client state. Authenticated user/RHEN routes remain outside
  * this public shell until their separate isolation review.
  */
-type Props = { pathname: string; search: string };
+type Props = { pathname: string };
 const orderedNotes = [...fieldNotes].sort((a, b) => b.date.localeCompare(a.date));
 const categories = ["all", "systems", "engineering", "research", "release"] as const;
 type Category = (typeof categories)[number];
@@ -39,11 +39,11 @@ function NoteCard({ note }: { note: FieldNote }) {
     <Link className="c2-text-link" to={"/field-notes/" + note.slug}>Read publication <span aria-hidden="true">→</span></Link>
   </article>;
 }
-function NoteIndex({ search }: { search: string }) {
+function NoteIndex() {
   const [params] = useSearchParams();
   const selected = params.get("category")?.toLowerCase() || "all";
   const category: Category = categories.includes(selected as Category) ? selected as Category : "all";
-  const query = (search || params.get("q") || "").trim().toLowerCase();
+  const query = (params.get("q") || "").trim().toLowerCase();
   const filtered = orderedNotes.filter(n => (category === "all" || n.type.toLowerCase() === category) &&
     [n.title, n.summary, n.type, ...n.systems].join(" ").toLowerCase().includes(query));
   return <div className="c2-page">
@@ -259,9 +259,9 @@ function Missing() {
     </div>
   </div>;
 }
-export default function CommonsPublicPage({ pathname, search }: Props) {
+export default function CommonsPublicPage({ pathname }: Props) {
   if (pathname === "/products") return <Projects/>;
-  if (pathname === "/field-notes") return <NoteIndex search={search}/>;
+  if (pathname === "/field-notes") return <NoteIndex/>;
   if (pathname.startsWith("/field-notes/")) return <NoteDetail slug={pathname.slice("/field-notes/".length)}/>;
   if (pathname === "/products/rhen") return <RhenOverview/>;
   if (pathname === "/products/rhen/evidence") return <RhenEvidence/>;
