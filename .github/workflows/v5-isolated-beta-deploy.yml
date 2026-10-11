@@ -98,9 +98,14 @@ jobs:
             -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
             "$api/workers/scripts/anevum-v5-beta/secrets" \
             > "$RUNNER_TEMP/v5-beta-secret-names.json"
-          jq -e '.success == true and
-            any(.result[]; .name == "BETTER_AUTH_SECRET" and .type == "secret_text")' \
-            "$RUNNER_TEMP/v5-beta-secret-names.json" > /dev/null
+          # Exact encrypted-binding names only; never print values or
+          # copy the existing production/reviewer OAuth credentials.
+          for name in BETTER_AUTH_SECRET GOOGLE_CLIENT_ID GOOGLE_CLIENT_SECRET; do
+            jq -e --arg name "$name" '
+              .success == true and
+              any(.result[]; .name == $name and .type == "secret_text")
+            ' "$RUNNER_TEMP/v5-beta-secret-names.json" > /dev/null
+          done
           endpoint="$api/d1/database/b2f9b4ad-4b97-483c-ae78-5dc7c8da76bf/query"
           curl --fail --silent --show-error --max-time 20 \
             -H "Authorization: Bearer $CLOUDFLARE_D1_TOKEN" \
@@ -131,6 +136,9 @@ jobs:
           npx wrangler deploy
       - name: Verify beta URL and anonymous API denial after deployment
         if: github.event_name == 'workflow_dispatch'
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         shell: bash
         run: |
           set -euo pipefail
@@ -144,8 +152,9 @@ jobs:
             sleep 5
           done
           test "$ready" = 1
-          jq -e '(.available == true and .provider == "google") or
-            (.available == false and .provider == null)' \
+          # Google secrets and beta D1 are now required, so an unavailable
+          # signup is a failed deployment rather than a successful release.
+          jq -e '.available == true and .provider == "google"' \
             "$RUNNER_TEMP/v5-beta-availability.json" > /dev/null
           member="$(curl --silent --show-error --max-time 12 \
             -o /dev/null -w '%{http_code}' "$base/api/member/me")"
@@ -153,6 +162,24 @@ jobs:
           operator="$(curl --silent --show-error --max-time 12 \
             -o /dev/null -w '%{http_code}' "$base/api/command/trader/status")"
           test "$operator" = 401 -o "$operator" = 403 -o "$operator" = 503
+          for route in /api/member/rhen/workspace /api/member/rhen/draft /api/member/export; do
+            denied="$(curl --silent --show-error --max-time 12 \
+              -o /dev/null -w '%{http_code}' "$base$route")"
+            test "$denied" = 401 -o "$denied" = 403 -o "$denied" = 503
+          done
+          # Wrangler preserves encrypted secrets on deploy; verify their
+          # continued presence without accessing plaintext values.
+          api="https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID"
+          curl --fail --silent --show-error --max-time 20 \
+            -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+            "$api/workers/scripts/anevum-v5-beta/secrets" \
+            > "$RUNNER_TEMP/v5-beta-postdeploy-secret-names.json"
+          for name in BETTER_AUTH_SECRET GOOGLE_CLIENT_ID GOOGLE_CLIENT_SECRET; do
+            jq -e --arg name "$name" '
+              .success == true and
+              any(.result[]; .name == $name and .type == "secret_text")
+            ' "$RUNNER_TEMP/v5-beta-postdeploy-secret-names.json" > /dev/null
+          done
           {
             echo '## ANEVUM V5 separate beta deployment'
             echo ''
@@ -161,6 +188,7 @@ jobs:
             echo 'Site: https://anevum-v5-beta.devonakins.workers.dev'
             echo 'Production and reviewer Workers untouched.'
             echo ''
-            echo 'Google OAuth credentials and two independent member acceptance'
-            echo 'remain separate gates before inviting users.'
+            echo 'Verified Google secret bindings, signup availability and'
+            echo 'anonymous member/operator denial. Real two-account OAuth acceptance'
+            echo 'remains a separate gate before inviting external users.'
           } >> "$GITHUB_STEP_SUMMARY"
