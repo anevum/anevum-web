@@ -159,14 +159,27 @@ function Sidebar({ collapsed, onClose, pathname }: {
   </div></aside>;
 }
 
-function GraphArtwork() {
-  return <div className="post-art art-graph" aria-label="Abstract illustrative line chart, not trading data">
-    <span className="eyebrow">SYSTEMS / EDITORIAL ART</span>
-    <svg viewBox="0 0 240 130" aria-hidden="true">
-      <path className="chart-grid" d="M0 33h240M0 65h240M0 97h240M30 0v130M90 0v130M150 0v130M210 0v130"/>
-      <path className="chart-two" d="M0 98 22 89 39 94 58 74 81 82 102 64 119 76 141 60 162 71 185 57 203 64 229 35 240 43"/>
-      <path className="chart-line" d="M0 113 26 109 43 85 64 95 86 74 103 78 124 53 149 70 173 44 197 46 217 24 240 16"/>
-    </svg>
+function PublishedActivity() {
+  // Only first-party publication dates determine the values. No fake traffic,
+  // orders, users, trade P&L or implied chronological continuity.
+  const months = [...new Set(fieldNotes.map(note=>note.date.slice(0,7)))].sort().slice(-6);
+  const points = months.map(month=>({
+    month,count:fieldNotes.filter(note=>note.date.startsWith(month)).length
+  }));
+  const largest = Math.max(1,...points.map(point=>point.count));
+  const description = points.map(point=>point.month+": "+point.count+" publications").join("; ");
+  return <div className="post-art v5-activity-art" role="img"
+    aria-label={"Published ANEVUM Field Notes by month: "+description}>
+    <span className="v5-activity-title">PUBLISHED RECORDS / FIELD NOTES</span>
+    <div className="v5-activity-bars">
+      {points.map(point=><div className="v5-activity-month" key={point.month}>
+        <span className="v5-activity-track">
+          <span style={{height:(point.count/largest*100)+"%"}}/>
+        </span>
+        <small>{point.month.slice(5)}</small>
+      </div>)}
+    </div>
+    <span className="v5-activity-note">Recorded publications · not trading data</span>
   </div>;
 }
 function prettyDate(date: string) {
@@ -200,7 +213,7 @@ function NotePost({ note, feature }: {
           <span className="real-badge">Published source</span>
         </div>
       </div>
-      {feature ? <GraphArtwork/> : null}
+      {feature ? <PublishedActivity/> : null}
     </div>
     <footer className="post-foot">
       <Link className="action-pill" to={url}><Icon name="book"/>Read note</Link>
