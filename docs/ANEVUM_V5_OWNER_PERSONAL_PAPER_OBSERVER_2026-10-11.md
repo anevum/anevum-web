@@ -9,3 +9,8 @@ A backend-only read-only Alpaca Trading API paper account GET is available for a
 This source is OFF by default in both production and reviewer/member staging. It has an extra preview-only origin and exact flag gate even after owner authorization. Never enable it against the pinned Alpaca reviewer Worker without separately approved deployment/secret provisioning and source acceptance. It cannot be made live by changing only an environment hostname. Current deployed member portals and existing production brokerage are unaffected.
 
 To activate after separate owner approval: review exact SHA, obtain dual-bound owner member identity (already required elsewhere but not provisioned here), separately provision the founder's own PAPER keys in staging-only Worker secrets OWNER_PERSONAL_PAPER_API_KEY_ID and OWNER_PERSONAL_PAPER_API_SECRET_KEY, enable only ANEVUM_OWNER_PAPER_OBSERVER_ENABLED in an authorized isolated reviewer-safe deployment, and verify no cross-member reading and no outbound broker writes. Never supply keys in GitHub issues, PR text, screenshots, chats or account exports. This does not simulate the real customer OAuth connection lifecycle and does not satisfy Alpaca Connect approval.
+
+
+## Founder-only member beta presentation
+
+The private /me/beta member experience now includes an owner-only status panel, rendered only after the /api/command/session endpoint independently returns command_admin, owner_member_bound and cloudflare_access. It then reads the dual-bound owner-paper/status endpoint without mutation and accepts only exact masked PAPER status. Other members never make the provider status request. Sign-out or account switches abort prior work. This developer smoke test is not third-party OAuth acceptance.
