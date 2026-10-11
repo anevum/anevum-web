@@ -263,25 +263,50 @@ function Feed({ search, filter, setFilter, density, setDensity }: {
     {id:"release",label:"Releases"}
   ];
   return <>
-    <section className="feed-header">
-      <div><h1>The Commons<span style={{color:"var(--accent)"}}>.</span></h1><p>Build something. Learn something. Share what you find.</p></div>
+    <section className="v6-entrance" aria-label="Welcome to ANEVUM">
+      <div className="v6-entrance-copy">
+        <span className="v6-kicker"><i aria-hidden="true"/> ANEVUM / AN OPEN WORKSHOP</span>
+        <h1>Build what you need.<br/><em>Share what you learn.</em></h1>
+        <p>Independent software, experiments, and the people curious enough to make them better. Discover practical projects, examine the work behind them, and find your place in the conversation.</p>
+        <div className="v6-entrance-actions">
+          <Link className="v6-enter-primary" to="/products">Explore projects <Icon name="arrow-up-right"/></Link>
+          <Link className="v6-enter-secondary" to="/beta">Join ANEVUM <Icon name="arrow-right"/></Link>
+        </div>
+        <span className="v6-entrance-caption">REAL PROJECTS <i/> OPEN LEARNING <i/> COMMUNITY IN PROGRESS</span>
+      </div>
+      <div className="v6-entrance-visual" aria-hidden="true">
+        <div className="v6-visual-field"/>
+        <div className="v6-visual-axis v6-axis-x"/>
+        <div className="v6-visual-axis v6-axis-y"/>
+        <div className="v6-visual-ring v6-ring-one"/>
+        <div className="v6-visual-ring v6-ring-two"/>
+        <div className="v6-visual-ring v6-ring-three"/>
+        <div className="v6-visual-emblem"><Mark/></div>
+        <span className="v6-visual-tag v6-tag-one">001 / CREATE</span>
+        <span className="v6-visual-tag v6-tag-two">002 / QUESTION</span>
+        <span className="v6-visual-tag v6-tag-three">003 / SHARE</span>
+      </div>
+    </section>
+    <section className="feed-header v6-feed-heading">
+      <div><span className="v6-section-index">THE WORKBENCH / CURRENT</span><h2>What's happening at ANEVUM</h2><p>Published work and ideas worth examining.</p></div>
       <div className="feed-header-controls">
         <button type="button" className={"layout-btn "+(density==="comfortable"?"active":"")} onClick={()=>setDensity("comfortable")} aria-label="Comfortable feed" aria-pressed={density==="comfortable"}><Icon name="layout"/></button>
         <button type="button" className={"layout-btn "+(density==="compact"?"active":"")} onClick={()=>setDensity("compact")} aria-label="Compact feed" aria-pressed={density==="compact"}><Icon name="list"/></button>
       </div>
     </section>
-    <div className="demo-strip"><span className="dot"/><span><strong>Public ANEVUM work</strong> — {notes.length} authentic publications; member discussions are in development.</span></div>
+    <div className="demo-strip v6-truthline"><span className="dot"/><span><strong>{notes.length} published Field Notes</strong> from ANEVUM. Member discussions are in development; engagement counts are never simulated.</span></div>
     <section aria-label="Explore ANEVUM">
-      <div className="v5-site-pathway-title"><h2>Find your way around</h2><span>Real software, documented work</span></div>
+      <div className="v5-site-pathway-title"><h2>Find your way around</h2><span>Follow a project, explore a topic, or learn from the work</span></div>
       <nav className="v5-site-pathway" aria-label="Find your next step">
         {[
-          {index:"01",title:"Projects",detail:"Applications and their current status",path:"/products"},
-          {index:"02",title:"Field Notes",detail:"Decisions, experiments and results",path:"/field-notes"},
-          {index:"03",title:"Learning",detail:"Understand the research methods",path:"/learn"},
-          {index:"04",title:"Your workspace",detail:"Free member access and available tools",path:"/beta"}
+          {index:"01",title:"Projects",detail:"Useful applications, from ideas to real releases",path:"/products",icon:"cube"},
+          {index:"02",title:"Field Notes",detail:"What worked, what failed, and what changed",path:"/field-notes",icon:"book"},
+          {index:"03",title:"Learning",detail:"Practical methods and open explanations",path:"/learn",icon:"layers"},
+          {index:"04",title:"Your workspace",detail:"Start with an ANEVUM account, no broker needed",path:"/beta",icon:"user"}
         ].map(item=><Link key={item.path} to={item.path}>
+          <span className="v6-path-icon"><Icon name={item.icon}/></span>
           <span className="v5-path-ordinal">{item.index} / ANEVUM</span>
-          <strong>{item.title}</strong><small>{item.detail}</small>
+          <strong>{item.title}</strong><small>{item.detail}</small><Icon name="arrow-up-right" className="v6-path-arrow"/>
         </Link>)}
       </nav>
     </section>
