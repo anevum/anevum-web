@@ -1,27 +1,13 @@
-name: Deploy ANEVUM Production
+name: ANEVUM V5 Approved Production Cutover
 
 on:
-  # V5 release is a separately owner-approved MANUAL operation only. Pushing or
-  # merging to main must NEVER start an uncontrolled production deployment.
-  workflow_dispatch:
-    inputs:
-      confirmation:
-        description: 'Type DEPLOY_ANEVUM_PRODUCTION_V5 after staging acceptance'
-        required: true
-        type: string
-      reviewed_head_sha:
-        description: 'Exact reviewed 40-character main commit SHA'
-        required: true
-        type: string
-      rollback_confirmed:
-        description: 'Type PRODUCTION_ROLLBACK_VERIFIED to require the automated recovery check'
-        required: true
-        type: string
-
-      private_recovery_authorized:
-        description: 'Type AUTHORIZE_PRIVATE_PRODUCTION_D1_RECOVERY for encrypted backup and in-memory restore in Actions'
-        required: true
-        type: string
+  # Devon explicitly approved the production recovery, migration, owner binding
+  # and deployment on October 11, then requested plugin execution after the
+  # browser stalled. This branch-only trigger executes that one approval.
+  # Main retains the original manual workflow. Never merge this trigger.
+  push:
+    branches: [release/anevum-v5-approved-production-20261011]
+    paths: [.github/workflows/deploy-production.yml]
 
 permissions:
   contents: read
@@ -34,17 +20,36 @@ concurrency:
 jobs:
   deploy:
     if: >-
-      github.ref == 'refs/heads/main' &&
-      inputs.confirmation == 'DEPLOY_ANEVUM_PRODUCTION_V5' &&
-      inputs.reviewed_head_sha == github.sha &&
-      inputs.rollback_confirmed == 'PRODUCTION_ROLLBACK_VERIFIED' &&
-      inputs.private_recovery_authorized == 'AUTHORIZE_PRIVATE_PRODUCTION_D1_RECOVERY'
+      github.event_name == 'push' &&
+      github.repository == 'anevum/anevum-web' &&
+      github.ref == 'refs/heads/release/anevum-v5-approved-production-20261011' &&
+      github.actor == 'anevum' &&
+      github.event.before == '05a0052b52bc655f45a00fd8c54aec4e872d5dac' &&
+      github.event.head_commit.message == 'release(v5): execute approved production cutover via plugin'
+    env:
+      RELEASE_SOURCE_SHA: '05a0052b52bc655f45a00fd8c54aec4e872d5dac'
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          ref: 05a0052b52bc655f45a00fd8c54aec4e872d5dac
+      - name: Verify single approved trigger and immutable release source
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GITHUB_RUN_ATTEMPT" = 1
+          test "$GITHUB_REPOSITORY" = 'anevum/anevum-web'
+          test "$GITHUB_REF" = 'refs/heads/release/anevum-v5-approved-production-20261011'
+          test "$GITHUB_ACTOR" = 'anevum'
+          test "$(git rev-parse HEAD)" = "$RELEASE_SOURCE_SHA"
+          test "$(git ls-remote origin refs/heads/main | cut -f1)" = "$RELEASE_SOURCE_SHA"
+          test "$(git ls-remote origin "$GITHUB_REF" | cut -f1)" = "$GITHUB_SHA"
+          test "$(git rev-list --parents -n 1 "$GITHUB_SHA")" = "$GITHUB_SHA $RELEASE_SOURCE_SHA"
+          test "$(git show -s --format=%B "$GITHUB_SHA")" = 'release(v5): execute approved production cutover via plugin'
+          test "$(git diff-tree --no-commit-id --name-only -r "$GITHUB_SHA")" = '.github/workflows/deploy-production.yml'
+          echo 'PASS: single approved plugin trigger; exact previously verified main source.'
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -81,17 +86,17 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          test "$(git ls-remote origin refs/heads/main | cut -f1)" = "$GITHUB_SHA"
-          test "$GITHUB_SHA" = "${{ inputs.reviewed_head_sha }}"
+          test "$(git ls-remote origin refs/heads/main | cut -f1)" = "$RELEASE_SOURCE_SHA"
+          test "$RELEASE_SOURCE_SHA" = "05a0052b52bc655f45a00fd8c54aec4e872d5dac"
       - name: Require successful verification of this exact main commit
         env:
           GH_TOKEN: ${{ github.token }}
         shell: bash
         run: |
           set -euo pipefail
-          gh api "repos/$GITHUB_REPOSITORY/actions/runs?head_sha=$GITHUB_SHA&status=completed&per_page=100" \
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs?head_sha=$RELEASE_SOURCE_SHA&status=completed&per_page=100" \
             > "$RUNNER_TEMP/production-source-ci.json"
-          jq -e --arg sha "$GITHUB_SHA" \
+          jq -e --arg sha "$RELEASE_SOURCE_SHA" \
             'any(.workflow_runs[]; .name=="ANEVUM Verify" and .head_sha==$sha and .event=="push" and .conclusion=="success")' \
             "$RUNNER_TEMP/production-source-ci.json" >/dev/null
       - name: Export, restore-test and encrypt the authorized production backup
@@ -136,7 +141,10 @@ jobs:
             '.status=="PRODUCTION_SQLITE_RECOVERY_AND_STUDIO_REHEARSAL_VERIFIED" and .sql_sha256==$sha and .existing_records_preserved==true and .foreign_key_violations==0' \
             "$RUNNER_TEMP/verified-production-recovery.json" >/dev/null
       - name: Reject stale main before Studio activation
-        run: test "$(git ls-remote origin refs/heads/main | cut -f1)" = "$GITHUB_SHA"
+        run: |
+          set -euo pipefail
+          test "$(git ls-remote origin refs/heads/main | cut -f1)" = "$RELEASE_SOURCE_SHA"
+          test "$(git ls-remote origin "$GITHUB_REF" | cut -f1)" = "$GITHUB_SHA"
       - name: Apply only the Studio migration and privately bind the existing owner
         env:
           ANEVUM_PRIVATE_RECOVERY_AUTHORIZED: "true"
@@ -197,8 +205,9 @@ jobs:
           set -euo pipefail
           current_main="$(git ls-remote origin refs/heads/main | cut -f1)"
           test -n "$current_main"
-          test "$current_main" = "$GITHUB_SHA"
-          test "$current_main" = "${{ inputs.reviewed_head_sha }}"
+          test "$current_main" = "$RELEASE_SOURCE_SHA"
+          test "$current_main" = "05a0052b52bc655f45a00fd8c54aec4e872d5dac"
+          test "$(git ls-remote origin "$GITHUB_REF" | cut -f1)" = "$GITHUB_SHA"
       - name: Deploy to Cloudflare Workers
         uses: cloudflare/wrangler-action@v3
         with:
