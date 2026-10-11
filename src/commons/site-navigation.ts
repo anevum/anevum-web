@@ -20,8 +20,8 @@ export const primaryNavigation:ReadonlyArray<SiteNavItem> = Object.freeze([
 ].map(item=>Object.freeze(item)));
 
 export const accountNavigation:ReadonlyArray<SiteNavItem> = Object.freeze([
-  {path:"/command",label:"My Command",icon:"command",description:"My saved projects and follows"},
-  {path:"/me/settings",label:"Profile & settings",icon:"user",description:"Personal profile and account controls"},
+  {path:"/command",label:"Saved programs",icon:"bookmark",description:"My saved projects and follows"},
+  {path:"/me/settings",label:"My profile",icon:"user",description:"Personal profile and account controls"},
   {path:"/apps/rhen",label:"My RHEN workspace",icon:"chart",description:"Private non-executing research tools"},
   {path:"/me/beta",label:"Member checklist",icon:"check",description:"Available account tests"}
 ].map(item=>Object.freeze(item)));
