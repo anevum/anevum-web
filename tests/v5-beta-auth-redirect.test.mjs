@@ -26,7 +26,7 @@ test("public beta sign-in returns to the private beta checklist, standard login 
   assert.match(signIn,/callbackURL: destination/);
   assert.match(signIn,/to=\{destination\}/);
   assert.match(signIn,/destination === "\/me\/beta" \? "Open beta checklist" : "Open Command"/);
-  assert.match(publicPage,/to="\/sign-in\?next=beta" className="c2-text-link">Continue with Google/);
+  assert.match(publicPage,/to="\/sign-in\?next=beta" className="c2-text-link">Choose sign-in method/);
   assert.match(memberPage,/to="\/sign-in\?next=beta"/);
   assert.doesNotMatch(signIn,/callbackURL:\s*(?:location\.search|window\.location|new URLSearchParams)/);
   assert.doesNotMatch(source("src/member/beta-auth-redirect.ts"),/window\.location|new URL\(|https?:|redirectTo|returnTo/);
