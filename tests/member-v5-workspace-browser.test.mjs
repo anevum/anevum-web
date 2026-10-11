@@ -124,7 +124,8 @@ test("staging origin and account identity are checked before any request",async(
 
 test("verification UI exposes an explicitly consented write and keeps read-only probe separate",()=>{
   const page=readFileSync(new URL("../src/pages/MemberStagingVerify.tsx",import.meta.url),"utf8");
-  assert.match(page,/window\.location\.origin !== STAGING_ORIGIN/);
+  assert.match(page,/ALLOWED_ACCEPTANCE_ORIGINS\.has\(window\.location\.origin\)/);
+  assert.match(page,/https:\/\/anevum-v5-beta\.devonakins\.workers\.dev/);
   assert.match(page,/Run read-only checks/);
   assert.match(page,/Create and verify private RHEN workspace/);
   assert.match(page,/Comparison code \(not a login credential\)/);
