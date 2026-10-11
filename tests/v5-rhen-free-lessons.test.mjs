@@ -39,7 +39,7 @@ test("two complete, distinct, reviewed lessons are available for free",()=>{
    for(const source of lesson.sources){
      const url=new URL(source.url);
      assert.equal(url.protocol,"https:");
-     assert.ok(["www.investor.gov","www.finra.org"].includes(url.hostname));
+     assert.ok(["www.investor.gov","www.finra.org","scikit-learn.org"].includes(url.hostname));
      assert.ok(!urls.has(url.href));urls.add(url.href);
      assert.ok(source.context.length>30);
    }

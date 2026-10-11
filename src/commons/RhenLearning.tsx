@@ -98,11 +98,11 @@ function LessonDetail({lesson}:{lesson:RhenLesson}) {
 export default function RhenLearning({slug}:{slug?:string}) {
   if(slug===undefined)return <LessonIndex/>;
   const lesson=rhenLessonBySlug(slug);
-  if(!lesson)return <div className="c2-page rh-learn" data-rhen-learning="missing">
+  if(!lesson)return <div className="c2-page rh-learn" data-rhen-learning="missing" data-page-state="not-found">
     <nav className="rh-learn-crumb" aria-label="Breadcrumb"><Link to="/products/rhen/learn">RHEN lessons</Link></nav>
     <h1>Lesson not found</h1>
     <p>There is no reviewed RHEN lesson at this address. The published lessons are available to everyone.</p>
     <Link className="c2-text-link" to="/products/rhen/learn">Browse actual lessons →</Link>
   </div>;
-  return <LessonDetail lesson={lesson}/>;
+  return <LessonDetail key={lesson.slug} lesson={lesson}/>;
 }

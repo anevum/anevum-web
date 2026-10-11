@@ -101,6 +101,7 @@ export const rhenLessons:ReadonlyArray<RhenLesson> = [
     ],
     sources:[
       {name:"SEC Investor.gov — Understanding Order Types",url:"https://www.investor.gov/introduction-investing/general-resources/news-alerts/alerts-bulletins/investor-bulletins-14",context:"Market, limit, stop and timing instructions; updated August 18, 2026."},
+      {name:"SEC Investor.gov — Extended-Hours Trading",url:"https://www.investor.gov/introduction-investing/general-resources/news-alerts/alerts-bulletins/investor-bulletins-42",context:"Lower liquidity, wider spreads, eligible order instructions and session-specific risks."},
       {name:"SEC Investor.gov — Types of Orders",url:"https://www.investor.gov/introduction-investing/investing-basics/how-stock-markets-work/types-orders",context:"Plain-language distinction between execution and price conditions."},
       {name:"SEC Investor.gov — Online Investing",url:"https://www.investor.gov/introduction-investing/getting-started/investing-your-own/online-investing",context:"Confirm orders and cancellations, understand your broker and set price limits."}
     ]
@@ -151,7 +152,7 @@ export const rhenLessons:ReadonlyArray<RhenLesson> = [
         heading:"Costs can erase a tiny paper edge",
         paragraphs:[
           "A backtest that buys at each candle close and sells at a later close often ignores whether either price was actually executable. Quote spreads, partial fills, slippage, venue fees, market impact and borrow or financing expenses, when relevant, belong in the model. Fee schedules and liquidity vary by account and broker; they must be checked for the specific test rather than copied from another person's screenshot.",
-          "Suppose the gross hypothetical gain on a $1,000 position is 0.12%, or $1.20. If the same round trip incurs $0.40 of spread cost, $0.60 of slippage and $0.25 of other fees, net result is $1.20 − $0.40 − $0.60 − $0.25 = −$0.05. This arithmetic is illustrative, not a claim about a current broker or RHEN result."
+          "Suppose the gross hypothetical gain on a $1,000 position is 0.12%, or $1.20. If the same round trip incurs $0.40 of spread cost, $0.60 of additional slippage beyond the spread and $0.25 of other fees, net result is $1.20 − $0.40 − $0.60 − $0.25 = −$0.05. This arithmetic is illustrative, not a claim about a current broker or RHEN result."
         ]
       },
       {
@@ -211,6 +212,7 @@ export const rhenLessons:ReadonlyArray<RhenLesson> = [
     ],
     sources:[
       {name:"SEC Investor.gov — Investor Bulletin: Performance Claims",url:"https://www.investor.gov/introduction-investing/general-resources/news-alerts/alerts-bulletins/investor-bulletins-47",context:"Backtesting, hypothetical projections, past performance and cherry-picked returns."},
+      {name:"scikit-learn — Cross-validation and time-series evaluation",url:"https://scikit-learn.org/stable/modules/cross_validation.html",context:"Separating development, model selection and held-out temporal evaluation; avoiding repeated test-set selection."},
       {name:"FINRA Rule 2270 — Day-Trading Risk Disclosure Statement",url:"https://www.finra.org/rules-guidance/rulebooks/finra-rules/2270",context:"Financial risks of speculative short-term trading and the importance of capital protection."},
       {name:"SEC Investor.gov — Understanding Order Types",url:"https://www.investor.gov/introduction-investing/general-resources/news-alerts/alerts-bulletins/investor-bulletins-14",context:"Execution risk and differences between market, limit and stop instructions."}
     ]
