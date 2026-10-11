@@ -3,6 +3,7 @@ import { memberRewardsStatus, memberBrokerageStatus } from "./member-capabilitie
 import { reviewerSchemaReady, reviewerEndpoint, exportReviewerConnection } from "./member-alpaca-review.mjs";
 import { commonsSocialEndpoint, socialSchemaReady, exportMemberSocial } from "./commons-social.mjs";
 import { moderationEndpoint } from "./commons-moderation.mjs";
+import { studioEndpoint } from "./studio-content.mjs";
 import { memberRhenDraftSchemaReady, readMemberRhenDraft, saveMemberRhenDraft, deleteMemberRhenDraft, validateRhenDraft, draftExpectedMemberMatches } from "./member-rhen-draft.mjs";
 import { resolveMemberOrigin, memberSchemaReady } from "./member-preflight.mjs";
 import { preferenceExpectedMemberMatches } from "./member-preference-guard.mjs";
@@ -154,6 +155,9 @@ export async function memberEndpoint(request, env, pathname, verifiedContext = {
   }
 
   const db = env.MEMBER_DB;
+  if (pathname.startsWith("/api/member/studio/")) {
+    return studioEndpoint(request,env,user,verifiedOrigin,pathname,verifiedContext.studioAccessEmail);
+  }
   if (pathname.startsWith("/api/member/commons/moderation/")) {
     // verifiedContext is server-only from the independently verified
     // Cloudflare Access JWT in worker.mjs; never read roles from the client.

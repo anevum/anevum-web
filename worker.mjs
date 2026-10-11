@@ -2,6 +2,7 @@ import releaseRegistry from "./src/data/releases.json";
 import { fieldNotes } from "./src/data/fieldNotes";
 import { shadowRead } from "./shadow-transport.mjs";
 import { memberEndpoint } from "./src/server/member.mjs";
+import { studioPublicEndpoint } from "./src/server/studio-content.mjs";
 import { observeOwnerPersonalPaper } from "./src/server/owner-personal-paper.mjs";
 import { verifyOwnerMemberBinding, OwnerMemberBindingError } from "./src/server/command-owner-binding.mjs";
 import { observeOwnerGitHub } from "./src/server/github-owner-status.mjs";
@@ -492,6 +493,10 @@ export default {
       return Response.redirect(url.toString(), 308);
     }
 
+    if (pathname.startsWith("/api/public/studio/")) {
+      return studioPublicEndpoint(request,env,pathname);
+    }
+
     if (pathname === "/api/member/owner-paper/status") {
       if (request.method !== "GET") return jsonResponse({message:"Read-only account observation."},405);
       if (url.search) return jsonResponse({message:"Account selection is forbidden."},400);
@@ -509,6 +514,13 @@ export default {
 
     if (pathname.startsWith("/api/member/") || pathname === "/api/auth" || pathname.startsWith("/api/auth/")) {
       try {
+        if (pathname.startsWith("/api/member/studio/")) {
+          // Independent Access JWT verification; NEVER use client-provided email.
+          const token=(request.headers.get("cf-access-jwt-assertion") || "").trim();
+          if (!token) throw new ApiError(401,"Cloudflare Access is required for Studio.");
+          const identity=await verifyAccessAssertion(token,env);
+          return memberEndpoint(request,env,pathname,{studioAccessEmail:identity.email});
+        }
         if (pathname.startsWith("/api/member/commons/moderation/")) {
           // Independent verified Cloudflare Access identity is REQUIRED.
           // Better Auth must separately bind the exact same verified member.
