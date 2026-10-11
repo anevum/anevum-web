@@ -42,9 +42,11 @@ function decodeJwtJson(value) {
   return JSON.parse(new TextDecoder().decode(decodeBase64Url(value)));
 }
 
-async function verifyAccessAssertion(token, env) {
+async function verifyAccessAssertion(token, env, scope = "command") {
+  const staff = scope === "studio";
   const teamDomain = String(env?.CF_ACCESS_TEAM_DOMAIN || "").trim().replace(/\/$/, "");
-  const audience = String(env?.CF_ACCESS_AUD || "").trim();
+  // Studio must have its own Access audience and never use the broker audience.
+  const audience = String((staff ? env?.ANEVUM_STUDIO_ACCESS_AUD : env?.CF_ACCESS_AUD) || "").trim();
   if (!teamDomain.startsWith("https://") || !audience) {
     throw new ApiError(503, "Cloudflare Access is not configured.");
   }
@@ -98,13 +100,14 @@ async function verifyAccessAssertion(token, env) {
   const email = String(payload.email || "").trim().toLowerCase();
   if (!email) throw new ApiError(401, "Cloudflare Access identity is missing email.");
   const allowed = new Set(
-    String(env?.COMMAND_ACCESS_EMAILS || "")
+    String((staff ? env?.ANEVUM_STUDIO_ACCESS_EMAILS : env?.COMMAND_ACCESS_EMAILS) || "")
       .split(",")
       .map((value) => value.trim().toLowerCase())
       .filter(Boolean)
   );
+  if (staff && !allowed.size) throw new ApiError(503, "Studio Access allowlist is missing.");
   if (allowed.size && !allowed.has(email)) {
-    throw new ApiError(403, "Cloudflare Access identity is not authorized for Command.");
+    throw new ApiError(403, staff ? "Studio Access identity is not authorized." : "Cloudflare Access identity is not authorized for Command.");
   }
   return { email, source: "cloudflare_access" };
 }
@@ -522,7 +525,7 @@ export default {
           // Independent Access JWT verification; NEVER use client-provided email.
           const token=(request.headers.get("cf-access-jwt-assertion") || "").trim();
           if (!token) throw new ApiError(401,"Cloudflare Access is required for Studio.");
-          const identity=await verifyAccessAssertion(token,env);
+          const identity=await verifyAccessAssertion(token,env,"studio");
           return memberEndpoint(request,env,pathname,{studioAccessEmail:identity.email});
         }
         if (pathname.startsWith("/api/member/commons/moderation/")) {
@@ -531,7 +534,8 @@ export default {
           // Separate moderation staff Access identity from RHEN owner trading authority.
           const assertion=(request.headers.get("cf-access-jwt-assertion") || "").trim();
           if(!assertion)throw new ApiError(401,"Cloudflare Access required for moderation.");
-          const credential={identity:await verifyAccessAssertion(assertion,env)};
+          const accessScope=env?.ANEVUM_STUDIO_ENABLED==="true"?"studio":"command";
+          const credential={identity:await verifyAccessAssertion(assertion,env,accessScope)};
           return await memberEndpoint(request, env, pathname, {
             moderatorAccessEmail: credential.identity.email
           });
