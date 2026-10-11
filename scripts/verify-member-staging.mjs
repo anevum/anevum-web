@@ -348,7 +348,7 @@ export async function runAcceptance({
       try {
         await expectStatus("write saved app " + label,
           await call("/api/member/saved-apps/rhen", cookie, {
-            method: "PUT", headers: { Origin: base }
+            method: "PUT", headers: { Origin: base, "X-ANEVUM-EXPECTED-MEMBER-ID": expectedFor(cookie) }
           }), [200]);
         const updated = await asJson("read updated app " + label,
           await call("/api/member/me", cookie));
@@ -359,7 +359,7 @@ export async function runAcceptance({
         if (!initiallySaved) {
           await expectStatus("restore saved app " + label,
             await call("/api/member/saved-apps/rhen", cookie, {
-              method: "DELETE", headers: { Origin: base }
+              method: "DELETE", headers: { Origin: base, "X-ANEVUM-EXPECTED-MEMBER-ID": expectedFor(cookie) }
             }), [200]);
         }
       }
