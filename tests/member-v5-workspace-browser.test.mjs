@@ -29,7 +29,11 @@ function stage(memberId, options = {}) {
   let creates = 0;
   const calls = [];
   const fetcher = async (path, init) => {
-    calls.push({path,method:init.method,credentials:init.credentials,body:init.body});
+    calls.push({path,method:init.method,credentials:init.credentials,body:init.body,headers:init.headers});
+    if (path === "/api/member/rhen/workspace" && init.method === "POST" &&
+        init.body === undefined) {
+      assert.equal(init.headers?.["X-ANEVUM-EXPECTED-MEMBER-ID"],memberId);
+    }
     assert.equal(init.credentials, "same-origin");
     assert.equal(init.redirect, "manual");
     assert.equal(init.cache, "no-store");
@@ -69,6 +73,9 @@ test("real browser proof uses only same-origin session, repeated POST, owner-bou
     "/api/member/export"
   ]);
   assert.equal(env.calls.every(x=>x.credentials==="same-origin"),true);
+  assert.equal(env.calls.filter(x=>x.path==="/api/member/rhen/workspace"&&
+    x.method==="POST"&&x.body===undefined).every(x=>
+    x.headers?.["X-ANEVUM-EXPECTED-MEMBER-ID"]==="member-A"),true);
   assert.doesNotMatch(JSON.stringify(result),/member-A|wrk_|token|cookie/i);
 });
 
