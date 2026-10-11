@@ -10,6 +10,7 @@ import SignIn from "../pages/SignIn";
 import CommonsPostsBeta from "./CommonsPostsBeta";
 import CommonsModeration from "./CommonsModeration";
 import {useMemberAvailability,refreshMemberAvailability} from "../member/useMemberAvailability";
+import { memberAuthClient } from "../member/auth-client";
 
 /**
  * V5 Stage 2 public routes. Only published first-party records are rendered.
@@ -220,6 +221,7 @@ function ResumePage() {
 }
 function BetaLanding() {
   const availability=useMemberAvailability();
+  const {data:session,isPending}=memberAuthClient.useSession();
   return <div className="c2-page" data-public-beta="true">
     <Intro kicker="ANEVUM / MEMBER BETA" title="Build alongside ANEVUM.">
       Try a real member account, follow development and use the features that are ready. Registration does not require a brokerage account, payment or trading authorization.
@@ -229,7 +231,10 @@ function BetaLanding() {
       <h2 id="beta-join-title">Create your ANEVUM account</h2>
       <p>Sign in with Google to get your own Command, manage a private profile, save projects and follow published work.</p>
       {availability==="available"?
-        <div className="c2-action-row"><Link to="/sign-in?next=beta" className="c2-text-link">Continue with Google →</Link><Link to="/help">Account help →</Link></div>:
+        isPending?<p role="status">Checking member session…</p>:
+        session?.user?
+          <div className="c2-action-row"><Link to="/me/beta" className="c2-text-link">Open your beta checklist →</Link><Link to="/command">My Command →</Link></div>:
+          <div className="c2-action-row"><Link to="/sign-in?next=beta" className="c2-text-link">Continue with Google →</Link><Link to="/help">Account help →</Link></div>:
         availability==="checking"?<p role="status">Checking registration availability…</p>:
         <div role="status"><p>Registration is not currently available. Public work is still open to read.</p>
           <button type="button" className="c2-text-link" onClick={refreshMemberAvailability}>Recheck registration</button></div>}
