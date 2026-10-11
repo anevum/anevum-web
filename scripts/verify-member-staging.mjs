@@ -197,13 +197,24 @@ export async function runAcceptance({
       label: "Staging tenant B " + randomUUID().slice(0, 8),
       maxOpenPositions: 2, maxTotalExposurePercent: 30, maxPositionPercent: 10
     };
+    // Defensive expected-session assertion for real staging writes, never a
+    // tenant selector. All mutations still bind to Better Auth on the server.
+    const expectedFor = cookie => {
+      if (cookie === cookieA) return a.user.id;
+      if (cookie === cookieB) return b.user.id;
+      throw new Error("Unexpected staging cookie.");
+    };
     const writeDraft = (cookie, value) => call("/api/member/rhen/draft", cookie, {
       method: "PUT",
-      headers: { Origin: base, "Content-Type": "application/json" },
+      headers: {
+        Origin: base, "Content-Type": "application/json",
+        "X-ANEVUM-EXPECTED-MEMBER-ID": expectedFor(cookie)
+      },
       body: JSON.stringify(value)
     });
     const removeDraft = cookie => call("/api/member/rhen/draft", cookie, {
-      method: "DELETE", headers: { Origin: base }
+      method: "DELETE",
+      headers: { Origin: base, "X-ANEVUM-EXPECTED-MEMBER-ID": expectedFor(cookie) }
     });
     const changed = [false, false];
     let primaryFailure = null;
