@@ -98,6 +98,7 @@ function Header({ onMenu, search, setSearch, onDesign, onNotice, inputRef, pathn
     <nav className="top-links" aria-label="Top navigation">
       <Link to="/" className={pathname==="/"||pathname==="/feed"?"active":""} aria-current={pathname==="/"||pathname==="/feed"?"page":undefined}>Commons</Link>
       <Link to="/products" className={pathname==="/products"?"active":""} aria-current={pathname==="/products"?"page":undefined}>Discover</Link>
+      <Link to="/beta" className={pathname==="/beta"?"active":""} aria-current={pathname==="/beta"?"page":undefined}>Beta</Link>
       <Link to="/field-notes" className={pathname.startsWith("/field-notes")?"active":""} aria-current={pathname.startsWith("/field-notes")?"page":undefined}>Research</Link>
     </nav>
     <div className="global-actions">
@@ -123,6 +124,7 @@ function Sidebar({ collapsed, onClose, onNotice, pathname }: {
       <span className="side-heading">EXPLORE</span>
       <Link className={"side-link "+(pathname==="/"||pathname==="/feed"?"active":"")} to="/" aria-current={pathname==="/"||pathname==="/feed"?"page":undefined} title="Home feed" onClick={onClose}><Icon name="home"/><span>Home feed</span></Link>
       <Link className={"side-link "+(pathname==="/products"?"active":"")} to="/products" aria-current={pathname==="/products"?"page":undefined} title="Discover" onClick={onClose}><Icon name="compass"/><span>Discover</span></Link>
+      <Link className={"side-link "+(pathname==="/beta"?"active":"")} to="/beta" aria-current={pathname==="/beta"?"page":undefined} title="Member beta" onClick={onClose}><Icon name="check"/><span>Member beta</span></Link>
       <Link className={"side-link "+(pathname.startsWith("/field-notes")?"active":"")} to="/field-notes" aria-current={pathname.startsWith("/field-notes")?"page":undefined} title="Research" onClick={onClose}><Icon name="book"/><span>Research</span></Link>
       <Link className={"side-link "+(pathname==="/communities"?"active":"")} to="/communities" title="Explore topics" onClick={onClose}><Icon name="users"/><span>Topics</span></Link>
       <button type="button" className="side-link" title="Levels and awards" onClick={onNotice}><Icon name="award"/><span>Levels &amp; awards</span><span className="side-small-label">SOON</span></button>
@@ -266,6 +268,7 @@ function RightRail({ onNotice }:{onNotice:()=>void}) {
       <h2>Ideas are better when we can examine them.</h2>
       <p>Read real published ANEVUM work. Public member profiles and community participation are still being built.</p>
       <Link to={session?.user ? "/command" : "/sign-in"} className="rail-link">{session?.user ? "Open your Command" : "Sign in to ANEVUM"} <Icon name="arrow-up-right"/></Link>
+      <Link to={session?.user ? "/me/beta" : "/beta"} className="rail-link">{session?.user ? "Check your beta access" : "Explore member beta"} <Icon name="arrow-up-right"/></Link>
     </section>
     <section className="right-card">
       <div className="rail-title"><h3>Explore ANEVUM</h3></div>

@@ -12,7 +12,7 @@ const releaseDetailRoute = "/products/rhen/releases/" + release.slug;
 const releaseDetailRoutes = registry.releases.map(item => "/products/rhen/releases/" + item.slug);
 const legacyReleaseRoute = "/releases/" + release.slug;
 
-const publicRoutes = [...releaseDetailRoutes, legacyReleaseRoute,"/", "/communities", "/learn", "/sign-in", "/command", "/me/settings", "/me/rewards", "/apps/rhen/connect", "/products", "/feed", "/products/rhen", "/products/rhen/evidence", "/products/rhen/architecture", "/field-notes", "/field-notes/prediction-outcome-evidence-chain", "/about", "/help", "/resume", "/products/rhen/releases", "/me", "/privacy", "/terms", "/not-a-real-page", "/field-notes/not-a-real-note", "/products/rhen/releases/not-a-real-release", "/communities/moderation"];
+const publicRoutes = [...releaseDetailRoutes, legacyReleaseRoute,"/", "/beta", "/communities", "/learn", "/sign-in", "/command", "/me/settings", "/me/rewards", "/apps/rhen/connect", "/products", "/feed", "/products/rhen", "/products/rhen/evidence", "/products/rhen/architecture", "/field-notes", "/field-notes/prediction-outcome-evidence-chain", "/about", "/help", "/resume", "/products/rhen/releases", "/me", "/privacy", "/terms", "/not-a-real-page", "/field-notes/not-a-real-note", "/products/rhen/releases/not-a-real-release", "/communities/moderation"];
 const commandRoutes = ["/command/rhen/operate", "/command/rhen/discover", "/command/rhen/review", "/command/rhen/public", "/command/rhen/system"];
 const routes = process.env.PUBLIC_ONLY === "1" ? publicRoutes : [...publicRoutes, ...commandRoutes];
 const output = path.join(process.env.RUNNER_TEMP || os.tmpdir(), "anevum-visuals");

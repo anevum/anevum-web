@@ -338,6 +338,10 @@ function publicRouteMetadata(pathname) {
       title: "Products — ANEVUM",
       description: "The canonical registry of public ANEVUM products. Products appear when they actually exist."
     },
+    "/beta": {
+      title: "Join the ANEVUM Beta — ANEVUM",
+      description: "Real member account registration and private product testing. Broker trading and Commons posting remain separate and gated."
+    },
     "/feed": {
       title: "Feed — ANEVUM",
       description: "A chronological record assembled from real releases, Field Notes, public-safe runtime observations, and research decisions."

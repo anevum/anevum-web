@@ -9,6 +9,7 @@ import Terms from "../pages/Terms";
 import SignIn from "../pages/SignIn";
 import CommonsPostsBeta from "./CommonsPostsBeta";
 import CommonsModeration from "./CommonsModeration";
+import {useMemberAvailability,refreshMemberAvailability} from "../member/useMemberAvailability";
 
 /**
  * V5 Stage 2 public routes. Only published first-party records are rendered.
@@ -217,6 +218,39 @@ function ResumePage() {
       <article className="c2-card" key={item.name}><h2>{item.name}</h2><p>{item.status}. {item.detail}</p></article>)}</div></section>
   </div>;
 }
+function BetaLanding() {
+  const availability=useMemberAvailability();
+  return <div className="c2-page" data-public-beta="true">
+    <Intro kicker="ANEVUM / MEMBER BETA" title="Build alongside ANEVUM.">
+      Try a real member account, follow development and use the features that are ready. Registration does not require a brokerage account, payment or trading authorization.
+    </Intro>
+    <section className="c2-card" aria-labelledby="beta-join-title">
+      <span className="c2-kicker">START HERE</span>
+      <h2 id="beta-join-title">Create your ANEVUM account</h2>
+      <p>Sign in with Google to get your own Command, manage a private profile, save projects and follow published work.</p>
+      {availability==="available"?
+        <div className="c2-action-row"><Link to="/sign-in" className="c2-text-link">Continue with Google →</Link><Link to="/help">Account help →</Link></div>:
+        availability==="checking"?<p role="status">Checking registration availability…</p>:
+        <div role="status"><p>Registration is not currently available. Public work is still open to read.</p>
+          <button type="button" className="c2-text-link" onClick={refreshMemberAvailability}>Recheck registration</button></div>}
+    </section>
+    <section className="c2-section" aria-labelledby="beta-test-title">
+      <h2 id="beta-test-title">What you can test</h2>
+      <div className="c2-grid">
+        <article className="c2-card"><h2>Member Command</h2><p>Save projects, follow updates, change profile settings and check account export controls. Availability is verified per session.</p><Link className="c2-text-link" to="/command">My Command →</Link></article>
+        <article className="c2-card"><h2>Personal RHEN research setup</h2><p>In authorized staging, a member can reserve an independent workspace and save a non-executing bot draft. No real trading or broker authorization is granted.</p><Link className="c2-text-link" to="/products/rhen">RHEN status →</Link></article>
+        <article className="c2-card"><h2>Open research and learning</h2><p>Explore real Field Notes, historical release records and published development decisions without signing up.</p><Link className="c2-text-link" to="/field-notes">Read Field Notes →</Link></article>
+        <article className="c2-card"><h2>Community participation</h2><p>Topics are available to explore. New discussions, replies and moderation are still in a restricted pilot and are not open to general members.</p><Link className="c2-text-link" to="/communities">Explore topics →</Link></article>
+      </div>
+    </section>
+    <section className="c2-section" aria-labelledby="beta-limits-title">
+      <h2 id="beta-limits-title">Important boundaries</h2>
+      <p>Joining does not connect Alpaca, start a bot, place orders, unlock financial rewards or permit access to another member's workspace. Broker integrations are reviewed separately. Testers can use account support without sharing credentials or private exports.</p>
+      <div className="c2-action-row"><Link to="/privacy">Privacy</Link><Link to="/terms">Terms</Link><Link to="/help">Help</Link></div>
+    </section>
+  </div>;
+}
+
 function Help() {
   return <div className="c2-page c2-help" aria-labelledby="commons-help-title">
     <header className="c2-intro">
@@ -286,6 +320,7 @@ function Missing() {
 }
 export default function CommonsPublicPage({ pathname }: Props) {
   if (pathname === "/products") return <Projects/>;
+  if (pathname === "/beta") return <BetaLanding/>;
   if (pathname === "/field-notes") return <NoteIndex/>;
   if (pathname.startsWith("/field-notes/")) return <NoteDetail slug={pathname.slice("/field-notes/".length)}/>;
   if (pathname === "/products/rhen") return <RhenOverview/>;

@@ -21,6 +21,7 @@ const titles: Record<string, string> = {
   "/communities": "Topics — ANEVUM Commons",
   "/learn": "Learning — ANEVUM Commons",
   "/products": "Projects — ANEVUM",
+  "/beta": "Join the ANEVUM Beta — ANEVUM",
   "/feed": "Updates — ANEVUM",
   "/field-notes": "Field Notes — ANEVUM",
   "/products/rhen": "RHEN — ANEVUM",
@@ -45,6 +46,7 @@ const descriptions: Record<string, string> = {
   "/communities": "Browse real published ANEVUM work by topic. Public community discussions are still in development.",
   "/learn": "Learn from published ANEVUM research methods, experiments and engineering decisions.",
   "/products": "The canonical registry of public ANEVUM products. Products appear when they actually exist.",
+  "/beta": "Explore ANEVUM member features, account sign-up and the private RHEN beta without requiring a broker.",
   "/feed": "Published ANEVUM Field Notes. New community posting and social interactions remain in development.",
   "/field-notes": "ANEVUM Field Notes document research decisions, failures, engineering changes, releases, and measured evidence.",
   "/products/rhen": "RHEN is ANEVUM's research application under V5 reconstruction. Legacy live trading is suspended; member brokerage and execution are not available.",
@@ -65,7 +67,7 @@ const descriptions: Record<string, string> = {
 };
 
 const publishedPublicPaths = new Set([
-  "/", "/products", "/feed", "/field-notes", "/communities", "/learn",
+  "/", "/products", "/beta", "/feed", "/field-notes", "/communities", "/learn",
   "/products/rhen", "/products/rhen/evidence", "/products/rhen/architecture",
   "/products/rhen/releases", "/about", "/help", "/resume", "/privacy", "/terms"
 ]);
@@ -233,6 +235,7 @@ export default function App() {
       <Routes>
         <Route path="/" element={<Suspense fallback={<Loader />}><CommonsV5 /></Suspense>} />
         <Route path="/products" element={<Suspense fallback={<Loader />}><CommonsV5 /></Suspense>} />
+        <Route path="/beta" element={<Suspense fallback={<Loader />}><CommonsV5 /></Suspense>} />
         <Route path="/feed" element={<Suspense fallback={<Loader />}><CommonsV5 /></Suspense>} />
         <Route path="/field-notes" element={<Suspense fallback={<Loader />}><CommonsV5 /></Suspense>} />
         <Route path="/communities" element={<Suspense fallback={<Loader />}><CommonsV5 /></Suspense>} />

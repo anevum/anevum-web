@@ -12,6 +12,12 @@
     "sitemap": true
   },
   {
+    "path": "/beta",
+    "label": "Member Beta",
+    "nav": true,
+    "sitemap": true
+  },
+  {
     "path": "/feed",
     "label": "Updates",
     "nav": true,
