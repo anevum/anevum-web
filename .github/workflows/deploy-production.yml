@@ -186,6 +186,60 @@ jobs:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           command: deploy
+      - name: Verify public-only live site and protected worker invariants
+        if: inputs.release_scope == 'PUBLIC_V5_VISUAL_ONLY'
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          umask 077
+          base='https://anevum.com'
+          for route in / /products /communities /learn /field-notes /about /beta /privacy /terms; do
+            code="$(curl --silent --show-error --retry 2 --max-time 20 -o /dev/null -w '%{http_code}' "$base$route")"
+            test "$code" = 200
+          done
+          for route in /api/member/me /api/member/export /api/member/rhen/workspace /api/member/rhen/draft /api/command/trader/status; do
+            code="$(curl --silent --show-error --max-time 20 -o /dev/null -w '%{http_code}' "$base$route")"
+            case "$code" in 401|403|503) ;; *) exit 1 ;; esac
+          done
+          api="https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID"
+          for worker in anevum-web-nextgen anevum-member-staging; do
+            curl --fail --silent --show-error --max-time 25 \
+              -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+              "$api/workers/scripts/$worker/settings" \
+              > "$RUNNER_TEMP/public-v5-after-$worker.json"
+            jq -e --slurpfile before "$RUNNER_TEMP/public-v5-before-$worker.json" '
+              .success==true and
+              ([.result.bindings[]|select(.type=="d1")] ==
+               [$before[0].result.bindings[]|select(.type=="d1")])
+            ' "$RUNNER_TEMP/public-v5-after-$worker.json" > /dev/null
+          done
+          curl --fail --silent --show-error --max-time 25 \
+            -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+            "$api/workers/scripts/anevum-member-staging/deployments" \
+            > "$RUNNER_TEMP/public-v5-reviewer-after.json"
+          jq -e --slurpfile before "$RUNNER_TEMP/public-v5-deploy-before-anevum-member-staging.json" '
+            .success==true and
+            [.result.deployments[0].versions[].version_id] ==
+            [$before[0].result.deployments[0].versions[].version_id]
+          ' "$RUNNER_TEMP/public-v5-reviewer-after.json" > /dev/null
+          curl --fail --silent --show-error --max-time 25 \
+            -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+            "$api/workers/scripts/anevum-web-nextgen/secrets" \
+            > "$RUNNER_TEMP/public-v5-secret-names-after.json"
+          for key in BETTER_AUTH_SECRET GOOGLE_CLIENT_ID GOOGLE_CLIENT_SECRET; do
+            jq -e --arg key "$key" '.success==true and
+              any(.result[]; .name==$key and .type=="secret_text")' \
+              "$RUNNER_TEMP/public-v5-secret-names-after.json" > /dev/null
+          done
+          {
+            echo '## ANEVUM V5 — public visual update on existing production'
+            echo 'PASS: public pages, private anonymous denial, unchanged member D1 and preserved Google/Auth bindings.'
+            echo 'PASS: separate Alpaca reviewer deployment remains unchanged.'
+            echo 'RHEN operator binding and member workspaces remain separately gated.'
+          } >> "$GITHUB_STEP_SUMMARY"
       - name: Verify production member launch boundaries
         if: inputs.release_scope == 'FULL_V5_MEMBER_AUTHORIZED'
         run: node scripts/probe-member-production-launch.mjs
