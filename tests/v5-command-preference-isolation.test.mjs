@@ -80,6 +80,7 @@ test("Command session-change aborts reads and writes, never renders old user dat
  assert.match(app,/const scope = useRef<AbortController \| null>\(null\)/);
  assert.match(app,/controller\.abort\(\)/);
  assert.match(app,/scope\.current === controller/);
+ assert.match(app,/scope\.current === controller && !controller\.signal\.aborted/);
  assert.match(app,/if \(signal\.aborted\) return/);
  assert.match(app,/parseMemberCommandResponse\(body, identity\.id\)/);
  assert.match(app,/data\.user\.id !== expectedMemberId/);
