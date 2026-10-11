@@ -14,13 +14,14 @@ export const BETA_TWO_MEMBER_QUERY=[
   '(SELECT COUNT(*) FROM "member_rhen_workspaces") AS workspaces,',
   '(SELECT COUNT(DISTINCT "user_id") FROM "member_rhen_workspaces") AS workspaceOwners,',
   '(SELECT COUNT(DISTINCT "workspace_id") FROM "member_rhen_workspaces") AS distinctWorkspaces,',
+  '(SELECT COUNT(DISTINCT w.user_id) FROM "member_rhen_workspaces" w JOIN "user" u ON u.id=w.user_id JOIN "account" a ON a."userId"=u.id WHERE u."emailVerified"=1 AND a."providerId"=\'google\') AS verifiedGoogleWorkspaceOwners,',
   '(SELECT COUNT(*) FROM "member_rhen_workspaces" w LEFT JOIN "user" u ON w.user_id=u.id WHERE u.id IS NULL) AS orphanWorkspaces,',
   '(SELECT COUNT(*) FROM "member_rhen_drafts") AS drafts'
 ].join(" ");
 
 const FIELDS=Object.freeze([
   "members","verifiedMembers","googleMembers","workspaces","workspaceOwners",
-  "distinctWorkspaces","orphanWorkspaces","drafts"
+  "distinctWorkspaces","verifiedGoogleWorkspaceOwners","orphanWorkspaces","drafts"
 ]);
 
 export function assessTwoMemberAggregates(value){
@@ -36,12 +37,16 @@ export function assessTwoMemberAggregates(value){
   // Counts are aggregate-only but contradictions still fail the audit.
   if(data.verifiedMembers>data.members||data.googleMembers>data.members||
      data.workspaceOwners>data.workspaces||data.workspaces>data.members||
-     data.distinctWorkspaces>data.workspaces||data.drafts>data.members||
+     data.distinctWorkspaces>data.workspaces||
+     data.verifiedGoogleWorkspaceOwners>data.workspaceOwners||
+     data.verifiedGoogleWorkspaceOwners>data.googleMembers||
+     data.drafts>data.members||
      data.orphanWorkspaces>0||data.distinctWorkspaces!==data.workspaces||
      data.workspaceOwners!==data.workspaces)
     throw new Error("Beta account/workspace integrity inconsistent.");
   const twoMembersReady=data.members>=2&&data.verifiedMembers>=2&&data.googleMembers>=2;
-  const twoWorkspacesReady=data.workspaces>=2&&data.workspaceOwners>=2&&data.distinctWorkspaces>=2;
+  const twoWorkspacesReady=data.workspaces>=2&&data.workspaceOwners>=2&&
+    data.distinctWorkspaces>=2&&data.verifiedGoogleWorkspaceOwners>=2;
   return Object.freeze({
     readyForManualTwoAccountAcceptance:twoMembersReady&&twoWorkspacesReady,
     identityPrerequisites:twoMembersReady?"READY":"AWAITING_SECOND_VERIFIED_GOOGLE_MEMBER",
