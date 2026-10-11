@@ -89,3 +89,34 @@ test("new staging acceptance UI cannot unlock production registration or alter d
   assert.equal(prod.vars.ANEVUM_MEMBER_RHEN_DRAFTS_ENABLED, "false");
   assert.doesNotMatch(path("src/member/staging-acceptance.ts"), /method: "(?:PUT|POST|PATCH|DELETE)"|api\/auth\/sign-in|createOrder/);
 });
+
+test("current staging verification cannot accept a different signed-in identity",async()=>{
+  const fixture=fakeFetcher(sampleData());
+  const result=await runStagingAcceptance(fixture.fetcher,"account-b");
+  assert.equal(result.passed,false);
+  assert.equal(result.checks[0].passed,false);
+  assert.equal(result.checks[1].passed,false);
+  assert.equal(result.checks[2].passed,false);
+  assert.doesNotMatch(JSON.stringify(result),/account-a|account-b|cookie|token/i);
+});
+
+test("stale/cancelled staging checks are never reported as passed",async()=>{
+  const controller=new AbortController();
+  controller.abort();
+  const stage=fakeFetcher(sampleData());
+  const report=await runStagingAcceptance(stage.fetcher,"account-a",controller.signal);
+  assert.equal(report.passed,false);
+  assert.equal(report.checks[0].passed,false);
+  assert.equal(stage.calls.length,0);
+  assert.doesNotMatch(JSON.stringify(report),/account-a|cookie|token/i);
+});
+
+test("staging verification state is keyed to a Google member and aborts old work",()=>{
+  const ui=path("src/pages/MemberStagingVerify.tsx");
+  assert.match(ui,/<StagingAccountAcceptance key=\{session\.user\.id\} memberId=\{session\.user\.id\}/);
+  assert.match(ui,/for \(const controller of inFlight\.current\) controller\.abort\(\)/);
+  assert.match(ui,/runStagingAcceptance\(fetch, memberId, controller\.signal\)/);
+  assert.match(ui,/window\.location\.origin !== STAGING_ORIGIN/);
+  assert.match(ui,/runWorkspaceStagingProof\(\s*fetch, memberId, window\.location\.origin, undefined, controller\.signal/);
+  assert.doesNotMatch(ui,/setReport\(await runStagingAcceptance\(fetch\)\)/);
+});
