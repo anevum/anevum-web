@@ -66,7 +66,8 @@ export async function verifyRhenLearningPage(send, route) {
       return root.activeElement===summary && parseFloat(getComputedStyle(summary).outlineWidth)>=2;
     })()`,returnByValue:true});
     if(!focus.result?.value)throw Error('Lesson self-check has no visible keyboard focus');
-    await send('Input.dispatchKeyEvent',{type:'keyDown',key:'Enter',code:'Enter',windowsVirtualKeyCode:13});
+    // CDP keyDown without text does not synthesize native <summary> activation; mirror a real Enter key.
+    await send('Input.dispatchKeyEvent',{type:'keyDown',key:'Enter',code:'Enter',windowsVirtualKeyCode:13,nativeVirtualKeyCode:13,text:'\r',unmodifiedText:'\r'});
     await send('Input.dispatchKeyEvent',{type:'keyUp',key:'Enter',code:'Enter',windowsVirtualKeyCode:13});
     const opened=await send('Runtime.evaluate',{expression:`(() => {
       const root=document.querySelector('.anevum-commons-v5-mount')?.shadowRoot;
