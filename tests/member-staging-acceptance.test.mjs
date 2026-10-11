@@ -120,3 +120,25 @@ test("staging verification state is keyed to a Google member and aborts old work
   assert.match(ui,/runWorkspaceStagingProof\(\s*fetch, memberId, window\.location\.origin, undefined, controller\.signal/);
   assert.doesNotMatch(ui,/setReport\(await runStagingAcceptance\(fetch\)\)/);
 });
+
+
+test("late session response cannot convert a signed-out verification into a PASS",async()=>{
+  const controller=new AbortController();
+  const original=fakeFetcher(sampleData());
+  let calls=0;
+  const fetcher=async(url,init)=>{
+    calls++;
+    if(url==="/api/member/session"){
+      const response=await original.fetcher(url,init);
+      controller.abort();
+      // Simulate a provider that returns a queued response despite cancellation.
+      return response;
+    }
+    return original.fetcher(url,init);
+  };
+  const result=await runStagingAcceptance(fetcher,"account-a",controller.signal);
+  assert.equal(result.passed,false);
+  assert.equal(result.checks[0].passed,false);
+  assert.ok(calls>=1);
+  assert.doesNotMatch(JSON.stringify(result),/account-a|never-log|cookie|token/i);
+});
