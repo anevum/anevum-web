@@ -209,3 +209,39 @@ test("staging diagnostic UI displays only finite codes and never raw error paylo
   assert.match(src, /No release approval was granted/);
   assert.doesNotMatch(src, /setWorkspaceError\([^)]*failure\.message/);
 });
+
+test("staging identity switch cancels before a workspace POST can be attempted",async()=>{
+  const controller=new AbortController();
+  const base=stage("member-A");
+  let posts=0;
+  const fetcher=async(path,init)=>{
+    if(path==="/api/member/rhen/workspace" && init.method==="GET") {
+      controller.abort();
+      // Deliberately ignore the AbortSignal to model a response racing a sign-out.
+      return base.fetcher(path,init);
+    }
+    if(init.method==="POST")posts++;
+    return base.fetcher(path,init);
+  };
+  await assert.rejects(
+    runWorkspaceStagingProof(fetcher,"member-A",WORKSPACE_STAGING_ORIGIN,
+      undefined,controller.signal),
+    error=>error instanceof WorkspaceStagingFailure &&
+      error.step==="INITIAL_READ" && error.reason==="SESSION_CHANGED"
+  );
+  assert.equal(posts,0);
+  assert.equal(base.stored,null);
+});
+
+test("a pre-aborted verification does not contact the staging service",async()=>{
+  const controller=new AbortController();
+  controller.abort();
+  let calls=0;
+  await assert.rejects(
+    runWorkspaceStagingProof(async()=>{calls++;throw Error("MUST_NOT_RUN")},
+      "member-A",WORKSPACE_STAGING_ORIGIN,undefined,controller.signal),
+    error=>error instanceof WorkspaceStagingFailure &&
+      error.step==="SESSION" && error.reason==="SESSION_CHANGED"
+  );
+  assert.equal(calls,0);
+});
