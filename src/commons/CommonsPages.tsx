@@ -245,7 +245,7 @@ function BetaLanding() {
     </section>
     <section className="c2-section" aria-labelledby="beta-limits-title">
       <h2 id="beta-limits-title">Important boundaries</h2>
-      <p>Joining does not connect Alpaca, start a bot, place orders, unlock financial rewards or permit access to another member's workspace. Broker integrations are reviewed separately. Testers can use account support without sharing credentials or private exports.</p>
+      <p>Joining does not connect a brokerage account, start a bot, place orders, unlock financial rewards or permit access to another member's workspace. Broker integrations are reviewed separately. Testers can use account support without sharing credentials or private exports.</p>
       <div className="c2-action-row"><Link to="/privacy">Privacy</Link><Link to="/terms">Terms</Link><Link to="/help">Help</Link></div>
     </section>
   </div>;
