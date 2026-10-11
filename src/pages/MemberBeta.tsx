@@ -22,6 +22,9 @@ const labels: Record<State,string> = {
   restricted:"Restricted","sign-in-required":"Sign-in required",error:"Could not verify"
 };
 function Checks({memberId}:{memberId:string}) {
+  // Independent live beta acceptance runs only on this exact staging origin.
+  // The public ANEVUM site never offers the tester-only verification UI.
+  const isolatedBeta = window.location.origin === "https://anevum-v5-beta.devonakins.workers.dev";
   const [results,setResults] = useState<Results>(initial);
   const [revision,setRevision] = useState(0);
   useEffect(()=>{
@@ -63,6 +66,13 @@ function Checks({memberId}:{memberId:string}) {
       </article>)}
     </div>
     <OwnerPersonalPaperReadiness memberId={memberId}/>
+    {isolatedBeta && <section className="c2-beta-guide" aria-labelledby="beta-verification-title">
+      <h2 id="beta-verification-title">Verify your private beta account</h2>
+      <p>Run the signed-in, read-only acceptance checks and then create and verify your independent RHEN workspace.
+        Use a second Google account in a different browser profile to compare workspace codes and confirm your data stays private.</p>
+      <Link to="/me/verify">Run beta account verification →</Link>
+      <p>Each browser test proves only its own session. A complete two-account isolation pass requires both separate sessions and a server-side comparison.</p>
+    </section>}
     <section className="c2-beta-guide">
       <h2>Begin testing</h2>
       <p>Save RHEN from <Link to="/command">Command</Link>, follow project updates, edit your <Link to="/me/settings">profile</Link>, and read <Link to="/field-notes">Field Notes</Link>. Then sign out and sign back in to check persistence.</p>
