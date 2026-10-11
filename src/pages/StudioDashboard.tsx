@@ -3,6 +3,7 @@ import {Link} from "react-router-dom";
 import {memberAuthClient} from "../member/auth-client";
 import {useMemberAvailability} from "../member/useMemberAvailability";
 import {studioDraftDirty,studioDraftProblem} from "../member/studio-editorial";
+import StudioOperations from "./StudioOperations";
 
 type Kind="POST"|"UPDATE"|"AHA";
 type State="DRAFT"|"PUBLISHED"|"ARCHIVED";
@@ -208,6 +209,7 @@ function StudioMember({id,checking}:{id?:string;checking:boolean}){
    <nav className="studio-nav" aria-label="Staff destinations">
     <Link to="/updates">Public updates</Link><Link to="/communities/moderation">Moderation pilot</Link>
     <Link to="/me/settings">Account</Link><Link to="/products">Projects</Link></nav>
+   {grant.contentReady&&id&&<StudioOperations memberId={id}/>}
    {!grant.contentReady?<div className="studio-panel" role="status">
     <h2>Editorial database not yet activated</h2>
     <p>The Studio migration must pass the separate production release and data-backup gates before drafts can be saved.</p>

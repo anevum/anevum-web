@@ -64,3 +64,17 @@
 .studio-history li strong{text-transform:capitalize}
 .studio-history li span{color:var(--sub);font-size:11px}
 @media(max-width:720px){.studio-preview{padding:14px}.studio-history li{display:block}.studio-history li span{display:block;margin-top:5px}}
+
+/* Real, member-bound Studio operations aggregates; no simulated social metrics. */
+.studio-operations{margin:0 0 17px}
+.studio-ops-metrics{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}
+.studio-ops-metrics>div{border:1px solid var(--line);background:var(--panel-light);border-radius:8px;padding:13px;min-width:0}
+.studio-ops-metrics span{display:block;color:var(--sub);font-size:11px;line-height:1.4;margin-bottom:10px}
+.studio-ops-metrics strong{font-size:clamp(17px,2.1vw,25px);font-weight:800;color:var(--text);font-variant-numeric:tabular-nums}
+.studio-ops-moderation{padding-top:16px;margin-top:15px;border-top:1px solid var(--line)}
+.studio-ops-moderation h3{margin:0 0 7px;font-size:14px}
+.studio-ops-moderation p{margin:0 0 7px;color:var(--sub);font-size:12px;line-height:1.55}
+.studio-ops-stamp{margin:11px 0 0!important;font-size:11px!important;color:var(--muted)!important}
+@media(max-width:860px){.studio-ops-metrics{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:560px){.studio-ops-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(prefers-reduced-motion:reduce){.studio-operations *{transition:none!important}}

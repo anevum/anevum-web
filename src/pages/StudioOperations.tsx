@@ -9,7 +9,7 @@ type Overview={
  audit:{events:number};
  moderation:{state:"PILOT_DISABLED"|"PILOT_READY"|"STORAGE_UNAVAILABLE";pendingReports:number|null};
 };
-function validCount(value:unknown){return Number.isSafeInteger(value)&&Number(value)>=0;}
+function validCount(value:unknown){return typeof value==="number"&&Number.isSafeInteger(value)&&value>=0;}
 function verify(value:unknown,id:string):value is Overview {
  if(!value||typeof value!=="object"||Array.isArray(value))return false;
  const v=value as Record<string,unknown>;

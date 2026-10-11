@@ -1,4 +1,5 @@
 // First-party editorial control. Never derive privileges from client roles.
+import {studioOperationsOverview} from "./studio-operations.mjs";
 const OWNER_EMAIL = "anevum.studio@gmail.com";
 const ADMIN_EMAIL = "devon@anevum.com";
 const VERSION = "anevum.studio.v1";
@@ -128,6 +129,8 @@ export async function studioEndpoint(request, env, user, origin, pathname, verif
       contentKinds:[...TYPES]})
     : json({message:"Method not allowed."},405);
   if (!ready) return json({message:"Studio migration not yet applied."},503);
+  if (pathname === "/api/member/studio/overview")
+    return studioOperationsOverview(request,env,user,origin);
   if (pathname === "/api/member/studio/entries") {
     if (request.method === "GET") {
       try {
