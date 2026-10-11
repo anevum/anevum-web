@@ -76,6 +76,7 @@ async function readResponse(fetcher: typeof fetch, path: string,
   } catch {
     throw new Error("STAGING_INVALID_JSON");
   }
+  checkActive(signal);
   const parsed = record(result);
   assert(parsed !== null, "Private workspace returned an invalid object.");
   return parsed;
