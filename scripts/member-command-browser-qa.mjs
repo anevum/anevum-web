@@ -31,7 +31,7 @@ async function runCase(viewport, state) {
       if(url.includes("/api/auth/get-session"))return Response.json(state==="member"?{session:{id:"qa-session",userId:"qa-member",expiresAt:new Date(Date.now()+3600000).toISOString()},user:{id:"qa-member",name:"QA Member",email:"member@example.test",emailVerified:true}}:null);
       if(url.includes("/api/member/me"))return Response.json({user:{id:"qa-member",name:"QA Member",email:"member@example.test"},profile:{displayName:"QA Member",theme:"light"},savedApps:[...saved],follows:[...follows],entitlements:[]});
       const match=url.match(/\\/api\\/member\\/(saved-apps|follows)\\/([a-z0-9-]+)/);
-      if(match){const set=match[1]==="saved-apps"?saved:follows;if(method==="PUT")set.add(match[2]);else if(method==="DELETE")set.delete(match[2]);mutations.push({kind:match[1],slug:match[2],method});return Response.json({saved:method==="PUT"});}
+      if(match){const set=match[1]==="saved-apps"?saved:follows;if(method==="PUT")set.add(match[2]);else if(method==="DELETE")set.delete(match[2]);mutations.push({kind:match[1],slug:match[2],method});return Response.json({saved:method==="PUT",slug:match[2]});}
       if(url.includes("/api/command/"))return Response.json({message:"Operator access required"},{status:401});
       return original(input,init);
     };
@@ -76,8 +76,8 @@ async function runCase(viewport, state) {
       overflow:document.documentElement.scrollWidth>innerWidth+1,
       operator:!!account?.querySelector('a[href^="/command/rhen"]'),
       background:shell?getComputedStyle(shell).backgroundColor:"",
-      navSaved:[...(root?.querySelectorAll(".left-sidebar a")||[])].find(el=>el.textContent?.includes("Saved programs"))?.getAttribute("href")||"",
-      navProfile:[...(root?.querySelectorAll(".left-sidebar a")||[])].find(el=>el.textContent?.trim()==="My profile")?.getAttribute("href")||"",
+      navSaved:[...(root?.querySelectorAll(".left-sidebar a")||[])].find(el=>el.textContent?.trim()==="My Command")?.getAttribute("href")||"",
+      navProfile:[...(root?.querySelectorAll(".left-sidebar a")||[])].find(el=>el.textContent?.trim()==="Profile & settings")?.getAttribute("href")||"",
       buttons:[...(account?.querySelectorAll(".member-card-actions button")||[])].map(el=>el.textContent)
     };
   })()`);
