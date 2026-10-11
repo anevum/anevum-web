@@ -80,7 +80,8 @@ test("new staging acceptance UI cannot unlock production registration or alter d
   const app = path("src/App.tsx");
   const settings = path("src/pages/MemberSettings.tsx");
   const prod = JSON.parse(path("wrangler.jsonc"));
-  assert.match(page, /window\.location\.origin !== STAGING_ORIGIN/);
+  assert.match(page, /ALLOWED_ACCEPTANCE_ORIGINS\.has\(window\.location\.origin\)/);
+  assert.match(page, /https:\/\/anevum-v5-beta\.devonakins\.workers\.dev/);
   assert.match(page, /read-only checks/i);
   assert.match(page, /does not independently prove cross-user isolation/i);
   assert.match(app, /path="\/me\/verify"/);
