@@ -11,16 +11,17 @@ import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 export const STAGING_ORIGIN = "https://anevum-member-staging.devonakins.workers.dev";
+export const V5_BETA_ORIGIN = "https://anevum-v5-beta.devonakins.workers.dev";
 
 export function stagingOrigin(raw) {
   const url = new URL(String(raw || ""));
-  if (url.origin !== STAGING_ORIGIN || url.protocol !== "https:" ||
+  if (![STAGING_ORIGIN,V5_BETA_ORIGIN].includes(url.origin) || url.protocol !== "https:" ||
       url.username || url.password || url.port ||
       url.pathname !== "/" || url.search || url.hash ||
-      String(raw) !== STAGING_ORIGIN) {
+      String(raw) !== url.origin) {
     throw new Error("Only the exact verified ANEVUM staging Worker origin is allowed.");
   }
-  return STAGING_ORIGIN;
+  return url.origin;
 }
 
 function sameEditableDraft(a, b) {
