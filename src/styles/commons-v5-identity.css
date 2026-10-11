@@ -395,3 +395,127 @@
 @media(max-width:365px){
   .v6-story.v6-story-feature .v6-story-body{grid-template-columns:1fr}
 }
+
+/* Project showcase, topic library and source-backed publication index. */
+.c2-page .c2-intro{padding:10px 0 12px;border-bottom:1px solid var(--line-soft)}
+.c2-page .c2-intro .c2-kicker{font-family:ui-monospace,Consolas,monospace;font-weight:750;font-size:10px;letter-spacing:.14em;color:var(--warm)}
+.c2-page .c2-intro h1{
+  font-size:clamp(28px,3.3vw,43px);line-height:1.12;
+  max-width:800px;letter-spacing:-.045em;font-weight:810
+}
+.c2-page .c2-truth{background:transparent;border:0;border-left:2px solid var(--accent);border-radius:0;padding:10px 17px}
+.c2-page .c2-grid{column-gap:14px;row-gap:14px}
+.c2-page .c2-card{border-radius:3px}
+.c2-page .c2-section{border-color:var(--line-soft)}
+.c2-project.v6-project{
+  padding:0;overflow:hidden;position:relative;
+  display:flex;flex-direction:column;align-items:flex-start;gap:0;
+  max-width:840px;min-height:420px
+}
+.c2-project.v6-project .v6-project-art{
+  align-self:stretch;position:relative;height:206px;overflow:hidden;
+  background:
+    radial-gradient(ellipse at 70% 49%,rgba(207,229,178,.18),transparent 41%),
+    linear-gradient(134deg,#15372d,#223e35 65%,#101f1b);
+  border-bottom:1px solid var(--line)
+}
+.v6-project-art:after{
+  content:"";position:absolute;top:38px;right:16%;height:210px;width:210px;border-radius:50%;
+  border:1px solid rgba(204,232,187,.23);
+  box-shadow:0 0 0 23px rgba(204,232,187,.035),0 0 0 53px rgba(204,232,187,.03)
+}
+.v6-project-tag{
+  position:absolute;left:24px;top:18px;color:#e7e7c9;
+  font:700 10px/1.5 ui-monospace,Consolas,monospace;letter-spacing:.14em
+}
+.v6-project-orbit{
+  width:260px;height:124px;border:1px dashed rgba(229,229,189,.32);
+  transform:rotate(-28deg);position:absolute;left:38%;top:34px;border-radius:50%
+}
+.v6-project-axis{
+  width:100%;height:1px;position:absolute;left:0;top:57%;
+  background:linear-gradient(90deg,transparent,rgba(208,235,191,.38),transparent)
+}
+.v6-project-glyph{
+  position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  color:rgba(227,234,192,.75);font:500 135px/1 Georgia,serif
+}
+.c2-project.v6-project > .c2-project-icon{
+  width:49px;height:49px;border-radius:2px;margin:-25px 0 9px 23px;
+  border:1px solid var(--line);position:relative;z-index:2;background:#263f33
+}
+.c2-project.v6-project > :not(.v6-project-art):not(.c2-project-icon){margin-left:23px;margin-right:23px}
+.c2-project.v6-project > .c2-kicker{margin-top:4px;margin-bottom:7px}
+.c2-project.v6-project > h2{font-size:27px;line-height:1.1;letter-spacing:-.035em;margin-bottom:12px}
+.c2-project.v6-project > p{font-size:14px;max-width:600px;line-height:1.63}
+.c2-project.v6-project > .c2-action-row{margin-top:0;margin-bottom:22px}
+.c2-project.v6-project > .c2-text-link{margin-bottom:9px}
+.c2-project.v6-project > .c2-tag-row{margin-top:0;margin-bottom:18px}
+.v6-topics .v6-topic.c2-card{
+  min-height:205px;display:flex;flex-direction:column;
+  align-items:flex-start;padding:19px 20px;position:relative;overflow:hidden;
+  background:linear-gradient(139deg,color-mix(in srgb,var(--panel) 90%,var(--canvas)),var(--nav));
+  border-top:3px solid var(--line)
+}
+.v6-topics .v6-topic-systems{border-top-color:#78a59c}
+.v6-topics .v6-topic-engineering{border-top-color:#c7a17e}
+.v6-topics .v6-topic-research{border-top-color:#a7a0c4}
+.v6-topics .v6-topic-release{border-top-color:#cfc486}
+.v6-topic .v6-topic-glyph{
+  position:absolute;top:-28px;right:8px;color:var(--line);
+  font:120px/1 Georgia,serif;opacity:.74;pointer-events:none
+}
+.v6-topic .c2-kicker{position:relative;font-size:9px;color:var(--muted)}
+.v6-topic h2{position:relative;font-size:23px;letter-spacing:-.038em;margin:21px 0 10px}
+.v6-topic p{position:relative;max-width:240px;font-size:12px}
+.v6-topic .c2-text-link{position:relative;margin-top:auto}
+.v6-index-note.c2-note{
+  position:relative;min-height:142px;padding:17px 18px 17px 130px;
+  display:flex;flex-direction:column;justify-content:center;
+  background:transparent;border:0;border-bottom:1px solid var(--line);
+  border-radius:0
+}
+.v6-index-note.c2-note:hover{background:var(--panel-light)}
+.v6-index-note .v6-index-art{
+  position:absolute;left:11px;top:16px;bottom:16px;width:102px;
+  display:grid;place-items:center;
+  background:linear-gradient(138deg,#294f44,#1a302c);
+  border:1px solid var(--line-soft);
+  overflow:hidden
+}
+.v6-index-note .v6-index-art:before{
+  content:"";position:absolute;width:125px;height:125px;border:1px solid rgba(245,248,220,.22);
+  border-radius:50%;transform:rotate(20deg)
+}
+.v6-index-note .v6-index-art span{color:#e4e7c8;font:55px/1 Georgia,serif;position:relative;z-index:1}
+.v6-index-engineering .v6-index-art{background:linear-gradient(135deg,#514335,#292c27)}
+.v6-index-research .v6-index-art{background:linear-gradient(135deg,#50485e,#272a37)}
+.v6-index-release .v6-index-art{background:linear-gradient(135deg,#545039,#2b3428)}
+.v6-index-note .c2-card-meta{font-size:10px}
+.v6-index-note h2{font-size:18px;line-height:1.3;margin:9px 0 7px}
+.v6-index-note p{margin:0 0 11px;line-height:1.52;max-width:710px}
+.v6-index-note .c2-tag-row{margin:0 0 8px}
+.v6-index-note .c2-tag{border-radius:2px}
+/* Learning reads like a study path rather than another feature card grid. */
+.c2-page .c2-steps{padding:0 0 0 24px;margin:18px 0;line-height:1.75}
+.c2-steps li{padding:11px 14px 12px 12px;border-bottom:1px solid var(--line-soft);font-size:14px;color:var(--text)}
+.c2-steps li::marker{color:var(--warm);font-family:ui-monospace,Consolas,monospace;font-weight:800}
+@media(max-width:720px){
+  .c2-project.v6-project .v6-project-art{height:167px}
+  .c2-project.v6-project{min-height:0}
+  .v6-project-glyph{font-size:107px}
+  .v6-index-note.c2-note{min-height:128px;padding:14px 12px 14px 109px}
+  .v6-index-note .v6-index-art{left:7px;top:12px;bottom:12px;width:90px}
+  .v6-index-note .v6-index-art span{font-size:46px}
+  .v6-topics .v6-topic.c2-card{min-height:170px}
+}
+@media(max-width:480px){
+  .c2-page .c2-intro h1{font-size:27px}
+  .v6-topics .v6-topic.c2-card{padding:16px}
+  .v6-index-note.c2-note{padding:13px 10px 13px 85px;min-height:129px}
+  .v6-index-note .v6-index-art{left:6px;top:12px;bottom:12px;width:69px}
+  .v6-index-note .v6-index-art span{font-size:38px}
+  .v6-index-note h2{font-size:15px}
+  .v6-index-note p{font-size:11.7px}
+  .v6-index-note .c2-card-meta{gap:5px}
+}
