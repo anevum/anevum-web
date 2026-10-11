@@ -120,17 +120,20 @@ test("moderator browser QA waits for React security metadata rather than the ini
   assert.match(qa, /!document\.querySelector\('link\[rel="canonical"\]'\)/);
 });
 
-test("Commons sidebar destinations are real, authenticated member and publication routes",()=>{
-  const sidebar=commons.slice(commons.indexOf("function Sidebar("), commons.indexOf("function GraphArtwork("));
-  assert.ok(sidebar.includes('to={session?.user ? "/command" : "/sign-in"} className="side-link" title="Saved programs"'));
-  assert.ok(sidebar.includes('to={session?.user ? "/me/settings" : "/sign-in"} className="side-link" title="My profile"'));
+test("Commons sidebar destinations use one verified member/public route registry",()=>{
+  const sidebar=commons.slice(commons.indexOf("function Sidebar("),commons.indexOf("function PublishedActivity("));
+  const nav=source("src/commons/site-navigation.ts");
+  assert.match(sidebar,/accountNavigation\.map\(item=><Link/);
+  assert.match(sidebar,/to=\{session\?\.user\?item\.path:"\/sign-in"\}/);
+  assert.match(nav,/\{path:"\/command",label:"Saved programs"/);
+  assert.match(nav,/\{path:"\/me\/settings",label:"My profile"/);
   for(const category of ["systems","engineering","research","release"])
-    assert.ok(sidebar.includes('to="/field-notes?category='+category+'"'), "unrouted topic: "+category);
-  assert.doesNotMatch(sidebar, /<button type="button" className="side-link" onClick=\{onNotice\}><Icon name="bookmark"/);
-  const browser = source("scripts/member-command-browser-qa.mjs");
-  assert.match(browser, /navSaved/);
-  assert.match(browser, /navProfile/);
-  assert.match(browser, /info\.navSaved !== \(signedIn\?"\/command":"\/sign-in"\)/);
+    assert.ok(sidebar.includes('to="/field-notes?category='+category+'"'),"unrouted topic: "+category);
+  assert.doesNotMatch(sidebar,/onClick=\{onNotice\}/);
+  const browser=source("scripts/member-command-browser-qa.mjs");
+  assert.match(browser,/navSaved/);
+  assert.match(browser,/navProfile/);
+  assert.match(browser,/info\.navSaved !== \(signedIn\?"\/command":"\/sign-in"\)/);
 });
 
 test("Field Note search is URL-backed and does not inherit stale Commons typing",()=>{
@@ -140,10 +143,12 @@ test("Field Note search is URL-backed and does not inherit stale Commons typing"
   assert.match(commons, /navigate\(term \? "\/field-notes\?q=" \+ encodeURIComponent\(term\) : "\/field-notes"\)/);
 });
 
-test("posting affordances truthfully disclose gated Commons features",()=>{
-  assert.match(commons, /Posting soon/);
-  assert.match(commons, /Community posting is not open yet/);
-  assert.match(commons, /signing in does not unlock posting/);
-  assert.match(commons, /Explore topics/);
-  assert.doesNotMatch(commons, /Sign in to share your work or ask a question/);
+test("public V5 replaces mock posting controls with real navigation",()=>{
+  assert.match(commons,/Community posting is still in development/);
+  assert.match(commons,/Explore member access/);
+  assert.match(commons,/More research/);
+  assert.match(commons,/Find your way around/);
+  assert.doesNotMatch(commons,/Posting soon|Voting is not available yet|onClick=\{onNotice\}/);
+  assert.match(pages,/Signing in does not automatically enable posting/);
+  assert.doesNotMatch(commons,/Sign in to share your work or ask a question/);
 });
