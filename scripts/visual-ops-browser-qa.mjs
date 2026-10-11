@@ -162,6 +162,7 @@ async function runCase(requestedRoute, viewport) {
           const releaseDetailReady = !${JSON.stringify(releaseDetailRoutes)}.includes(${JSON.stringify(route)}) || Boolean(document.querySelector(".anevum-commons-v5-mount")?.shadowRoot?.querySelector(".c2-release-detail [data-release-section=boundary]"));
           const releasesReady = ${JSON.stringify(route)} !== "/products/rhen/releases" || Boolean(document.querySelector(".anevum-commons-v5-mount")?.shadowRoot?.querySelector(".c2-stack .c2-card"));
           const memberReady = !["/me", "/command", "/me/settings", "/me/rewards", "/me/beta"].includes(${JSON.stringify(route)}) || Boolean(document.querySelector(".anevum-commons-v5-mount")?.shadowRoot?.querySelector(".c2-member"));
+          const publicBetaReady = ${JSON.stringify(route)} !== "/beta" || Boolean(document.querySelector(".anevum-commons-v5-mount")?.shadowRoot?.querySelector('[data-public-beta="true"] #beta-test-title'));
           const privateBetaReady = ${JSON.stringify(route)} !== "/me/beta" || ["Beta unavailable","Sign in to test your account"].includes(document.querySelector(".anevum-commons-v5-mount")?.shadowRoot?.querySelector(".c2-member .c2-beta h1")?.textContent);
           const brokerReviewReady = ${JSON.stringify(route)} !== "/apps/rhen/connect" || (()=>{ const root=document.querySelector(".anevum-commons-v5-mount")?.shadowRoot; const disclosure=root?.querySelector(".rhen-review-disclosure"); const allow=root?.querySelector(".rhen-review-allow"); const checkbox=root?.querySelector(".rhen-review-check input"); return !!disclosure && disclosure.textContent.includes("Authorize RHEN by ANEVUM") && disclosure.textContent.includes("Alpaca does not warrant or guarantee") && allow?.disabled===true && checkbox?.disabled===true; })();
           const legalReady = !["/privacy", "/terms"].includes(${JSON.stringify(route)}) || Boolean(document.querySelector(".anevum-commons-v5-mount")?.shadowRoot?.querySelector(".c2-legal .member-legal"));
@@ -179,7 +180,7 @@ async function runCase(requestedRoute, viewport) {
               document.querySelector('meta[name="robots"]')?.content?.startsWith("noindex") &&
               !document.querySelector('link[rel="canonical"]');
           })();
-          return {ready:pathReady && suspenseReady && homeReady && productsReady && feedReady && rhenReady && liveReady && architectureReady && researchReady && fieldNoteReady && helpReady && aboutReady && resumeReady && releaseDetailReady && releasesReady && memberReady && privateBetaReady && brokerReviewReady && legalReady && commandReady && extraReady && missingReady && moderationReady,
+          return {ready:pathReady && suspenseReady && homeReady && productsReady && feedReady && rhenReady && liveReady && architectureReady && researchReady && fieldNoteReady && helpReady && aboutReady && resumeReady && releaseDetailReady && releasesReady && memberReady && publicBetaReady && privateBetaReady && brokerReviewReady && legalReady && commandReady && extraReady && missingReady && moderationReady,
             pathname:location.pathname,title:document.title,suspenseReady,homeReady,productsReady,feedReady,rhenReady,liveReady,architectureReady,researchReady,fieldNoteReady,aboutReady,resumeReady,releasesReady,commandReady};
         })()`,
         returnByValue:true
@@ -210,6 +211,7 @@ async function runCase(requestedRoute, viewport) {
           const releaseDetailReady = !${JSON.stringify(releaseDetailRoutes)}.includes(${JSON.stringify(route)}) || Boolean(document.querySelector(".anevum-commons-v5-mount")?.shadowRoot?.querySelector(".c2-release-detail [data-release-section=boundary]"));
           const releasesReady = ${JSON.stringify(route)} !== "/products/rhen/releases" || Boolean(document.querySelector(".anevum-commons-v5-mount")?.shadowRoot?.querySelector(".c2-stack .c2-card"));
         const memberReady = !["/me", "/command", "/me/settings", "/me/rewards", "/me/beta"].includes(${JSON.stringify(route)}) || Boolean(document.querySelector(".anevum-commons-v5-mount")?.shadowRoot?.querySelector(".c2-member"));
+          const publicBetaReady = ${JSON.stringify(route)} !== "/beta" || Boolean(document.querySelector(".anevum-commons-v5-mount")?.shadowRoot?.querySelector('[data-public-beta="true"] #beta-test-title'));
           const privateBetaReady = ${JSON.stringify(route)} !== "/me/beta" || ["Beta unavailable","Sign in to test your account"].includes(document.querySelector(".anevum-commons-v5-mount")?.shadowRoot?.querySelector(".c2-member .c2-beta h1")?.textContent);
           const brokerReviewReady = ${JSON.stringify(route)} !== "/apps/rhen/connect" || (()=>{ const root=document.querySelector(".anevum-commons-v5-mount")?.shadowRoot; const disclosure=root?.querySelector(".rhen-review-disclosure"); const allow=root?.querySelector(".rhen-review-allow"); const checkbox=root?.querySelector(".rhen-review-check input"); return !!disclosure && disclosure.textContent.includes("Authorize RHEN by ANEVUM") && disclosure.textContent.includes("Alpaca does not warrant or guarantee") && allow?.disabled===true && checkbox?.disabled===true; })();
         const legalReady = !["/privacy", "/terms"].includes(${JSON.stringify(route)}) || Boolean(document.querySelector(".anevum-commons-v5-mount")?.shadowRoot?.querySelector(".c2-legal .member-legal"));
@@ -227,7 +229,7 @@ async function runCase(requestedRoute, viewport) {
               document.querySelector('meta[name="robots"]')?.content?.startsWith("noindex") &&
               !document.querySelector('link[rel="canonical"]');
           })();
-          return {ready:pathReady && suspenseReady && homeReady && productsReady && feedReady && rhenReady && liveReady && architectureReady && researchReady && fieldNoteReady && helpReady && aboutReady && resumeReady && releaseDetailReady && releasesReady && memberReady && privateBetaReady && brokerReviewReady && legalReady && commandReady && extraReady && missingReady && moderationReady,
+          return {ready:pathReady && suspenseReady && homeReady && productsReady && feedReady && rhenReady && liveReady && architectureReady && researchReady && fieldNoteReady && helpReady && aboutReady && resumeReady && releaseDetailReady && releasesReady && memberReady && publicBetaReady && privateBetaReady && brokerReviewReady && legalReady && commandReady && extraReady && missingReady && moderationReady,
           pathname:location.pathname,title:document.title,suspenseReady,homeReady,productsReady,feedReady,rhenReady,liveReady,architectureReady,researchReady,fieldNoteReady,aboutReady,resumeReady,releasesReady,commandReady};
       })()`,
       returnByValue:true
