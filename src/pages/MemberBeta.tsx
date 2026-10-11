@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { memberAuthClient } from "../member/auth-client";
 import { useMemberAvailability } from "../member/useMemberAvailability";
 import { verifyBetaProbe, type BetaCheck, type BetaStatus } from "../member/beta-probe.ts";
+import OwnerPersonalPaperReadiness from "./OwnerPersonalPaperReadiness";
 type State = BetaStatus | "checking" | "error";
 type Results = Record<BetaCheck, State>;
 const initial: Results = {account:"checking",workspace:"checking",draft:"checking",discussions:"checking"};
@@ -61,6 +62,7 @@ function Checks({memberId}:{memberId:string}) {
             "Closed until approved and deployed."}</p>}
       </article>)}
     </div>
+    <OwnerPersonalPaperReadiness memberId={memberId}/>
     <section className="c2-beta-guide">
       <h2>Begin testing</h2>
       <p>Save RHEN from <Link to="/command">Command</Link>, follow project updates, edit your <Link to="/me/settings">profile</Link>, and read <Link to="/field-notes">Field Notes</Link>. Then sign out and sign back in to check persistence.</p>
