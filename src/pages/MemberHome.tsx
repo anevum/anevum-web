@@ -1,18 +1,12 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { memberAuthClient } from "../member/auth-client";
 import { publicProducts } from "../data/products";
 import { fieldNotes } from "../data/fieldNotes";
 import SystemIcon from "../components/company/SystemIcon";
 import { useMemberAvailability } from "../member/useMemberAvailability";
+import { parseMemberCommandResponse, verifiedPreferenceAcknowledgement, type MemberCommandData } from "../member/member-command-contract";
 
-type MemberData = {
-  user: { id: string; name?: string; email?: string };
-  profile: { displayName: string; theme: string };
-  savedApps: string[];
-  follows: string[];
-  entitlements: { app: string; capability: string }[];
-};
 type MemberIdentity = { id?: string | null; name?: string | null; email?: string | null };
 
 export default function MemberHome() {
@@ -29,33 +23,47 @@ function SignedInCommand() {
 function CommandHome({ enabled = false, checking = false, identity }: {
   enabled?: boolean; checking?: boolean; identity?: MemberIdentity;
 }) {
-  const [data, setData] = useState<MemberData | null>(null);
+  const [data, setData] = useState<MemberCommandData | null>(null);
   const [error, setError] = useState("");
   const [updating, setUpdating] = useState("");
   const [operator, setOperator] = useState(false);
+  const scope = useRef<AbortController | null>(null);
+  const mutationInProgress = useRef(false);
   const products = publicProducts();
-  const signedIn = enabled && Boolean(identity?.id);
-  const load = useCallback(async (signal?: AbortSignal) => {
-    const response = await fetch("/api/member/me", { cache: "no-store", signal });
-    if (!response.ok) throw new Error("Could not load your Command. Please try again.");
-    const next = await response.json() as MemberData;
-    if (!next?.user?.id || next.user.id !== identity?.id ||
-        !next.profile || typeof next.profile.displayName !== "string" ||
-        !Array.isArray(next.savedApps) || !Array.isArray(next.follows) ||
-        !Array.isArray(next.entitlements)) {
-      throw new Error("The member identity could not be verified. Sign in again.");
-    }
-    if (!signal?.aborted) setData(next);
+  const signedIn = enabled && !checking && Boolean(identity?.id);
+  const load = useCallback(async (signal: AbortSignal) => {
+    if (signal.aborted || !identity?.id) return;
+    const response = await fetch("/api/member/me", {
+      method: "GET", cache: "no-store", credentials: "same-origin",
+      redirect: "manual", signal
+    });
+    if (signal.aborted) return;
+    if (!response.ok) throw new Error("Could not verify your current Command session.");
+    const body: unknown = await response.json();
+    if (signal.aborted) return;
+    const next = parseMemberCommandResponse(body, identity.id);
+    if (!signal.aborted) setData(next);
   }, [identity?.id]);
 
   useEffect(() => {
-    setData(null); setError("");
-    if (!signedIn) return;
+    setData(null); setError(""); setUpdating("");
+    mutationInProgress.current = false;
+    if (!signedIn) {
+      scope.current = null;
+      return;
+    }
     const controller = new AbortController();
-    void load(controller.signal).catch((reason: unknown) => {
-      if (!controller.signal.aborted) setError(reason instanceof Error ? reason.message : "Could not load your account.");
+    scope.current = controller;
+    void load(controller.signal).catch(() => {
+      if (!controller.signal.aborted) {
+        setData(null);
+        setError("Could not verify your current Command account. Sign in again or retry.");
+      }
     });
-    return () => controller.abort();
+    return () => {
+      controller.abort();
+      if (scope.current === controller) scope.current = null;
+    };
   }, [signedIn, identity?.id, load]);
 
   useEffect(() => {
@@ -74,16 +82,50 @@ function CommandHome({ enabled = false, checking = false, identity }: {
     return () => controller.abort();
   }, [signedIn, identity?.id]);
 
+  const retry = async () => {
+    const controller = scope.current;
+    if (!controller || controller.signal.aborted || mutationInProgress.current || !signedIn) return;
+    setData(null); setError("");
+    try {
+      await load(controller.signal);
+    } catch {
+      if (!controller.signal.aborted) {
+        setData(null);
+        setError("Could not verify your current Command account. Sign in again or retry.");
+      }
+    }
+  };
+
   const toggle = async (kind: "saved-apps" | "follows", slug: string, selected: boolean) => {
-    setUpdating(kind + slug);
+    const controller = scope.current;
+    const expectedMemberId = identity?.id;
+    if (!signedIn || !data || !expectedMemberId || data.user.id !== expectedMemberId ||
+        !controller || controller.signal.aborted || mutationInProgress.current) return;
+    mutationInProgress.current = true;
+    setUpdating(kind + slug); setError("");
     try {
       const response = await fetch("/api/member/" + kind + "/" + slug, {
-        method: selected ? "DELETE" : "PUT", headers: { "Content-Type": "application/json" }
+        method: selected ? "DELETE" : "PUT", credentials: "same-origin",
+        cache: "no-store", redirect: "manual", signal: controller.signal,
+        headers: { "X-ANEVUM-EXPECTED-MEMBER-ID": expectedMemberId }
       });
-      if (!response.ok) throw new Error("Could not save that change. Please try again.");
-      await load(); setError("");
-    } catch (reason) { setError(reason instanceof Error ? reason.message : "Update failed."); }
-    finally { setUpdating(""); }
+      if (controller.signal.aborted) return;
+      if (!response.ok) throw new Error("Member preference was not accepted.");
+      const confirmation: unknown = await response.json();
+      if (controller.signal.aborted) return;
+      if (!verifiedPreferenceAcknowledgement(confirmation, slug, !selected))
+        throw new Error("Member preference could not be verified.");
+      await load(controller.signal);
+      if (!controller.signal.aborted) setError("");
+    } catch {
+      if (!controller.signal.aborted) {
+        setData(null);
+        setError("Could not verify that preference for your current account. Reload Command.");
+      }
+    } finally {
+      mutationInProgress.current = false;
+      if (!controller.signal.aborted) setUpdating("");
+    }
   };
   const name = data?.profile.displayName || identity?.name || "Your account";
   const initials = name.split(/\s+/).filter(Boolean).slice(0, 2).map(part => part[0]).join("").toUpperCase();
@@ -115,7 +157,7 @@ function CommandHome({ enabled = false, checking = false, identity }: {
           {signedIn && <Link to="/me/settings">Edit profile</Link>}
         </header>
         {checking ? <p className="member-command-notice" role="status">Checking your account…</p> : !signedIn ? <div className="member-command-notice" role="status"><strong>{enabled ? "Sign in to make this your Command." : "Member accounts are not open yet."}</strong><p>{enabled ? "Your saved programs, follows, and profile belong to your account." : "You can explore the projects and their public records now. Saving programs and profile changes will open with registration."}</p>{enabled && <Link to="/sign-in">Continue with Google</Link>}</div> : null}
-        {error && <div className="member-command-notice member-alert" role="alert"><p>{error}</p><button type="button" onClick={() => void load().then(() => setError("")).catch(reason => setError(String(reason.message)))}>Retry</button></div>}
+        {error && <div className="member-command-notice member-alert" role="alert"><p>{error}</p><button type="button" onClick={() => void retry()}>Retry</button></div>}
         {signedIn && <section className="member-command-notice" aria-labelledby="member-beta-entry">
           <strong id="member-beta-entry">Test ANEVUM</strong>
           <p>Verify your profile and saved projects, then explore independent RHEN workspace tools when available. Brokerage and public posting remain separate.</p>
