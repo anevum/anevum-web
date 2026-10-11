@@ -10,6 +10,7 @@ import SignIn from "../pages/SignIn";
 import CommonsPostsBeta from "./CommonsPostsBeta";
 import CommonsModeration from "./CommonsModeration";
 import StudioPublications from "./StudioPublications";
+import RhenLearning, {RhenLessonCards} from "./RhenLearning";
 import {useMemberAvailability,refreshMemberAvailability} from "../member/useMemberAvailability";
 import { memberAuthClient } from "../member/auth-client";
 
@@ -118,6 +119,7 @@ function RhenOverview() {
       {[
         ["My workspace", "Personal RHEN research and saved non-executing setup drafts. Each workspace belongs to its authenticated member.", "/apps/rhen"],
         ["Research & Field Notes", "Published investigations and methodology, with failure and uncertainty recorded rather than hidden.", "/field-notes"],
+        ["Free RHEN lessons", "Read market order mechanics and risk/evidence mathematics. No account or broker required.", "/products/rhen/learn"],
         ["Release history", "Historical versions and changes, clearly separated from current runtime availability.", "/products/rhen/releases"],
         ["Architecture", "How evidence, replay, research and execution permissions are kept apart.", "/products/rhen/architecture"]
       ].map(([title, body, href]) => <article className="c2-card" key={title}><h2>{title}</h2><p>{body}</p><Link to={href} className="c2-text-link">Explore →</Link></article>)}
@@ -196,7 +198,13 @@ function Communities() {
 function Learn() {
   const notes = orderedNotes.filter(n => n.type === "RESEARCH" || n.type === "ENGINEERING").slice(0, 6);
   return <div className="c2-page">
-    <Intro kicker="COMMONS / LEARNING" title="Learn by examining real work">A reading path through methods and software experiments—not a claim that a course, trading result or personalized instruction is ready.</Intro>
+    <Intro kicker="COMMONS / LEARNING" title="Learn by examining real work">Start with two complete, free RHEN lessons on market orders and evidence-based trading research. No payment, registration or brokerage connection is needed. The rest of this page links to actual published work.</Intro>
+    <section className="c2-section" aria-labelledby="rh-public-lessons-title">
+      <h2 id="rh-public-lessons-title">Free RHEN learning path</h2>
+      <p>Read both lessons, work the synthetic examples and check your understanding. These pages are education, not financial recommendations or live strategy reports.</p>
+      <RhenLessonCards/>
+      <div className="c2-action-row"><Link to="/products/rhen/learn">Browse the full learning path →</Link></div>
+    </section>
     <section className="c2-section"><h2>A practical research loop</h2>
       <ol className="c2-steps"><li>Frame one testable question.</li><li>Record data sources, assumptions and failure conditions.</li><li>Test against evidence without changing live authority.</li><li>Publish what worked, what failed and what remains uncertain.</li></ol>
     </section>
@@ -332,6 +340,8 @@ export default function CommonsPublicPage({ pathname }: Props) {
   if (pathname.startsWith("/updates/")) return <StudioPublications slug={pathname.slice("/updates/".length)}/>;
   if (pathname.startsWith("/field-notes/")) return <NoteDetail slug={pathname.slice("/field-notes/".length)}/>;
   if (pathname === "/products/rhen") return <RhenOverview/>;
+  if (pathname === "/products/rhen/learn") return <RhenLearning/>;
+  if (pathname.startsWith("/products/rhen/learn/")) return <RhenLearning slug={pathname.slice("/products/rhen/learn/".length)}/>;
   if (pathname === "/products/rhen/evidence") return <RhenEvidence/>;
   if (pathname === "/products/rhen/architecture") return <RhenArchitecture/>;
   if (pathname === "/products/rhen/releases") return <Releases/>;

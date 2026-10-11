@@ -1,4 +1,5 @@
 import { betterAuth } from "better-auth";
+import { learningProgressEndpoint, exportLearningProgress, deleteLearningProgress } from "./member-learning-progress.mjs";
 import { memberRewardsStatus, memberBrokerageStatus } from "./member-capabilities.mjs";
 import { reviewerSchemaReady, reviewerEndpoint, exportReviewerConnection } from "./member-alpaca-review.mjs";
 import { commonsSocialEndpoint, socialSchemaReady, exportMemberSocial } from "./commons-social.mjs";
@@ -51,6 +52,7 @@ export function makeMemberAuth(env, verifiedOrigin) {
             env.MEMBER_DB.prepare("DELETE FROM member_entitlements WHERE user_id = ?").bind(user.id),
             env.MEMBER_DB.prepare("DELETE FROM member_profiles WHERE user_id = ?").bind(user.id)
           ]);
+          await deleteLearningProgress(env.MEMBER_DB, user.id);
         }
       }
     },
@@ -155,6 +157,9 @@ export async function memberEndpoint(request, env, pathname, verifiedContext = {
   }
 
   const db = env.MEMBER_DB;
+  if (pathname === "/api/member/learning/progress" || pathname.startsWith("/api/member/learning/progress/")) {
+    return learningProgressEndpoint(request, env, user, verifiedOrigin, pathname);
+  }
   if (pathname.startsWith("/api/member/studio/")) {
     return studioEndpoint(request,env,user,verifiedOrigin,pathname,verifiedContext.studioAccessEmail);
   }
@@ -271,7 +276,8 @@ export async function memberEndpoint(request, env, pathname, verifiedContext = {
       rhenDraft,
       rhenWorkspace,
       brokerReview: reviewerConnection,
-      commonsContributions: socialContributions
+      commonsContributions: socialContributions,
+      learningProgress: await exportLearningProgress(db, user.id)
     }, null, 2), {
       status: 200,
       headers: {

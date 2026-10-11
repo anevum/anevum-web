@@ -10,6 +10,7 @@ import { memberAuthClient } from "../member/auth-client";
 import { primaryNavigation, accountNavigation, mobileNavigation, isSiteNavigationActive, safeAccountDestination } from "./site-navigation";
 import liveCss from "../styles/commons-v5-live-system.css?inline";
 import studioCss from "../styles/commons-v5-studio.css?inline";
+import rhenLearningCss from "../styles/commons-v5-rhen-learning.css?inline";
 import memberVerifierCss from "../styles/member-staging-qa.css?inline";
 import css from "../styles/commons-v5.css?inline";
 import polishCss from "../styles/commons-v5-polish.css?inline";
@@ -468,7 +469,7 @@ export default function CommonsV5({content}: {content?:ReactNode}) {
   return <div ref={mount} className="anevum-commons-v5-mount"
     data-theme={prefs.theme} data-layout={prefs.layout} data-density={prefs.density}
     data-radius={prefs.radius} data-surface={prefs.surface} style={{display:"block",minHeight:"100dvh"}}>
-    {shadow ? createPortal(<><style>{css+"\n"+polishCss+"\n"+pagesCss+"\n"+memberCommandCss+"\n"+memberBaseCss+"\n"+memberFinancialCss+"\n"+memberDraftCss+"\n"+accountCss+"\n"+privateRhenCss+"\n"+brokerReviewCss+"\n"+discussionsCss+"\n"+betaCss+"\n"+memberVerifierCss+"\n"+liveCss+"\n"+studioCss}</style><CommonsApp prefs={prefs} setPrefs={setPrefs} content={content}/></>,shadow) : null}
+    {shadow ? createPortal(<><style>{css+"\n"+polishCss+"\n"+pagesCss+"\n"+memberCommandCss+"\n"+memberBaseCss+"\n"+memberFinancialCss+"\n"+memberDraftCss+"\n"+accountCss+"\n"+privateRhenCss+"\n"+brokerReviewCss+"\n"+discussionsCss+"\n"+betaCss+"\n"+memberVerifierCss+"\n"+liveCss+"\n"+studioCss+"\n"+rhenLearningCss}</style><CommonsApp prefs={prefs} setPrefs={setPrefs} content={content}/></>,shadow) : null}
   </div>;
 }
 
