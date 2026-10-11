@@ -240,17 +240,30 @@ function Feed({ search, filter, setFilter, density, setDensity, onNotice }: {
       </div>
     </section>
     <div className="demo-strip"><span className="dot"/><span><strong>Public ANEVUM work</strong> — {notes.length} authentic publications; member discussions are in development.</span></div>
+    <section aria-label="Explore ANEVUM">
+      <div className="v5-site-pathway-title"><h2>Find your way around</h2><span>Real software, documented work</span></div>
+      <nav className="v5-site-pathway" aria-label="Find your next step">
+        {[
+          {index:"01",title:"Projects",detail:"Applications and their current status",path:"/products"},
+          {index:"02",title:"Field Notes",detail:"Decisions, experiments and results",path:"/field-notes"},
+          {index:"03",title:"Learning",detail:"Understand the research methods",path:"/learn"},
+          {index:"04",title:"Your workspace",detail:"Free member access and available tools",path:"/beta"}
+        ].map(item=><Link key={item.path} to={item.path}>
+          <span className="v5-path-ordinal">{item.index} / ANEVUM</span>
+          <strong>{item.title}</strong><small>{item.detail}</small>
+        </Link>)}
+      </nav>
+    </section>
     <div className="feed-tabs" role="group" aria-label="Publication filters">
       {tabs.map(tab=><button type="button" key={tab.id} className={"tab "+(filter===tab.id?"active":"")}
         aria-pressed={filter===tab.id} onClick={()=>setFilter(tab.id)}>{tab.label}</button>)}
       <span className="feed-spacer"/>
       <span className="feed-sort"><Icon name="filter"/>Latest</span>
     </div>
-    <button type="button" className="composer" aria-label="Learn about future Commons discussions" onClick={onNotice}>
-      <span className="avatar avatar-official">G</span>
-      <span className="composer-text">Community posting is not open yet. Explore published work in the meantime.</span>
-      <span className="composer-tools"><span className="composer-tool"><Icon name="image"/></span><span className="composer-tool"><Icon name="plus"/></span></span>
-    </button>
+    <div className="composer v5-discover-cta" role="note">
+      <p>Community posting is still in development. Open research and member accounts are available separately.</p>
+      <Link to="/beta">Explore member access <Icon name="arrow-up-right"/></Link>
+    </div>
     <section className="post-list" aria-label="Published ANEVUM work">
       {matching.length ? matching.map((note,index)=><NotePost note={note} feature={index===0 && filter==="all" && !search.trim()} onNotice={onNotice} key={note.slug}/>) :
         <div className="c-v5-empty" role="status"><strong>No matching publications</strong>Try another search term or category.</div>}
