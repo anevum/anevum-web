@@ -24,7 +24,8 @@ const workspace=(memberId,suffix)=>({
 });
 
 function fakeStaging({ brokenExport = false, sharedDrafts = false,
-  wrongWorkspaceOwner = false, sharedWorkspace = false, unprovisionedB = false } = {}) {
+  wrongWorkspaceOwner = false, sharedWorkspace = false, unprovisionedB = false,
+  missingWorkspaceExport = false, invalidWorkspaceTimestamp = false } = {}) {
   const members = {
     "private-A": { user: { id: "member-A", email: "a@example.test" },
       draft: null, saved: false, workspace:workspace("member-A","a") },
@@ -32,6 +33,9 @@ function fakeStaging({ brokenExport = false, sharedDrafts = false,
       draft: draft("My existing B draft", 3), saved: true,
       workspace:unprovisionedB?null:workspace(wrongWorkspaceOwner?"member-A":"member-B",sharedWorkspace?"a":"b") }
   };
+  if (invalidWorkspaceTimestamp && members["private-A"].workspace) {
+    members["private-A"].workspace.updated_at = "unverified";
+  }
   let sharedDraft = null;
   const requests = [];
   const fetcher = async (url, options) => {
@@ -85,7 +89,7 @@ function fakeStaging({ brokenExport = false, sharedDrafts = false,
       identity: brokenExport && cookie === "private-B"
         ? members["private-A"].user : member.user,
       rhenDraft: sharedDrafts ? sharedDraft : member.draft,
-      rhenWorkspace: member.workspace
+      ...(missingWorkspaceExport ? {} : { rhenWorkspace:member.workspace })
     });
     if (path === "/api/member/rewards") return reply({
       program: "not_launched", earningEnabled: false,
@@ -160,10 +164,11 @@ test("a cross-account export or shared draft backend fails isolation acceptance"
 
 
 test("read-only workspace validation rejects cross-member state and does not claim missing evidence",async()=>{
-  for(const options of [{wrongWorkspaceOwner:true},{sharedWorkspace:true}]){
+  for(const options of [{wrongWorkspaceOwner:true},{sharedWorkspace:true},
+    {missingWorkspaceExport:true},{invalidWorkspaceTimestamp:true}]){
     const stage=fakeStaging(options);
     await assert.rejects(runAcceptance({...credentials,request:stage.fetcher}),
-      /unverified private workspace|cross-account isolation failed/);
+      /unverified private workspace|cross-account isolation failed|did not include the workspace field/);
   }
   const stage=fakeStaging({unprovisionedB:true});
   const report=await runAcceptance({...credentials,request:stage.fetcher});
