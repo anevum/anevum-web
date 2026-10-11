@@ -1,6 +1,6 @@
 import { betterAuth } from "better-auth";
 import { emailOTP } from "better-auth/plugins";
-import { memberGithubConfigured, memberEmailOtpConfigured, memberSignInMethods, sendMemberEmailOtp } from "./member-auth-methods.mjs";
+import { memberGithubConfigured, memberEmailOtpConfigured, memberSignInMethods, sendMemberEmailOtp, isPrivilegedMemberEmail } from "./member-auth-methods.mjs";
 import { memberRewardsStatus, memberBrokerageStatus } from "./member-capabilities.mjs";
 import { reviewerSchemaReady, reviewerEndpoint, exportReviewerConnection } from "./member-alpaca-review.mjs";
 import { commonsSocialEndpoint, socialSchemaReady, exportMemberSocial } from "./commons-social.mjs";
@@ -174,6 +174,22 @@ export async function memberEndpoint(request, env, pathname, verifiedContext = {
 
   const auth = makeMemberAuth(env, verifiedOrigin);
   if (pathname === "/api/auth" || pathname.startsWith("/api/auth/")) {
+    // Mailbox ownership alone must never become an alternate founder/owner
+    // login path. Check both code issuance and redemption before Better Auth.
+    if (memberEmailOtpConfigured(env) && request.method === "POST" &&
+      (pathname === "/api/auth/email-otp/send-verification-otp" ||
+       pathname === "/api/auth/sign-in/email-otp")) {
+      try {
+        const body = await request.clone().text();
+        if (body.length > 2048) return reply({ message: "Invalid email login request." }, 400);
+        const payload = JSON.parse(body);
+        if (typeof payload?.email !== "string") return reply({ message: "Invalid email login request." }, 400);
+        if (isPrivilegedMemberEmail(env, payload.email))
+          return reply({ message: "Use your existing sign-in method for this account." }, 403);
+      } catch {
+        return reply({ message: "Invalid email login request." }, 400);
+      }
+    }
     return auth.handler(request);
   }
 
