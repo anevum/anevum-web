@@ -274,6 +274,14 @@ function Feed({ search, filter, setFilter, density, setDensity, onNotice }: {
 function RightRail({ onNotice }:{onNotice:()=>void}) {
   const { data: session } = memberAuthClient.useSession();
   const notes = [...fieldNotes].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,3);
+  // Derived from real first-party publications, not social activity or broker data.
+  const categories = ([
+    ["SYSTEMS","Systems"],["ENGINEERING","Engineering"],
+    ["RESEARCH","Research"],["RELEASE","Releases"]
+  ] as const).map(([type,label])=>({
+    type,label,count:fieldNotes.filter(note=>note.type===type).length
+  }));
+  const largest = Math.max(1,...categories.map(category=>category.count));
   return <aside className="right-sidebar" aria-label="Discover">
     <section className="right-card rail-intro">
       <span className="tiny-overline">WELCOME TO THE COMMONS</span>
@@ -301,6 +309,18 @@ function RightRail({ onNotice }:{onNotice:()=>void}) {
       {notes.map(note=><Link to={"/field-notes/"+note.slug} className="rail-file" key={note.slug}>
         <span>{prettyDate(note.date)} · {note.type}</span><strong>{note.title}</strong>
       </Link>)}
+    </section>
+    <section className="right-card v5-source-chart" aria-labelledby="v5-publication-chart">
+      <h3 id="v5-publication-chart">Published Field Notes</h3>
+      {categories.map(category=><div className="v5-chart-row" key={category.type}>
+        <span>{category.label}</span>
+        <div className="v5-chart-track" role="img" aria-label={category.label+": "+category.count+" published notes"}>
+          <span className="v5-chart-fill" style={{width:(category.count/largest*100)+"%"}}/>
+        </div>
+        <strong className="v5-chart-count">{category.count}</strong>
+      </div>)}
+      <p className="v5-chart-caption">Counts come from the published ANEVUM Field Notes registry. They are not votes, users or trading results.</p>
+      <Link className="c2-text-link" to="/field-notes">Browse the records →</Link>
     </section>
     <p className="rail-footer">This feed contains published work only. Community metrics, endorsements, levels and trading returns are not simulated.</p>
     <button type="button" className="sidebar-small-link" onClick={onNotice}>About joining Commons <Icon name="arrow-right"/></button>
