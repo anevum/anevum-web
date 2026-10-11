@@ -1,6 +1,7 @@
 /** Fail-closed, read-only beta availability projection; never an access grant. */
 import { parsePrivateFoundationWorkspace } from "../contracts/anevum-foundation.ts";
 import { parsePostPage } from "../commons/discussion-contract.ts";
+import { parsePrivateDraftResponse } from "./private-rhen-draft-contract.ts";
 export type BetaCheck = "account" | "workspace" | "draft" | "discussions";
 export type BetaStatus = "available" | "disabled" | "restricted" | "sign-in-required";
 const object = (v: unknown): v is Record<string, unknown> => v !== null && typeof v === "object" && !Array.isArray(v);
@@ -23,8 +24,9 @@ export function verifyBetaProbe(kind: BetaCheck, status: number, value: unknown,
           state.execution_permission !== "NONE" || state.broker_link_state !== "NOT_LINKED") return invalid();
     }
   } else if (kind === "draft") {
-    if (value.available !== true || value.executionEnabled !== false || value.brokerageConnected !== false ||
-        !Object.hasOwn(value, "draft") || !(value.draft === null || object(value.draft))) return invalid();
+    // A malformed/elevated draft must never make the member beta show an
+    // available capability, even if the HTTP response claims availability.
+    parsePrivateDraftResponse(value);
   } else if (kind === "discussions") {
     parsePostPage(value, memberId, "all");
   } else return invalid();
