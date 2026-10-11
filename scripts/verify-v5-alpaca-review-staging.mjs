@@ -6,11 +6,13 @@ const load=path=>JSON.parse(readFileSync(path,"utf8"));
 const PREVIEW="a537432e-d216-4b31-8b22-19662cc3a44a";
 const PRODUCTION="7f0d4c0c-2e85-4900-8504-1347954e1df1";
 const ORIGIN="https://anevum-member-staging.devonakins.workers.dev";
-const sensitive=["ALPACA_CONNECT_CLIENT_ID","ALPACA_CONNECT_CLIENT_SECRET","ALPACA_CONNECT_TOKEN_KEY_BASE64"];
+const sensitive=["ALPACA_CONNECT_CLIENT_ID","ALPACA_CONNECT_CLIENT_SECRET","ALPACA_CONNECT_TOKEN_KEY_BASE64","OWNER_PERSONAL_PAPER_API_KEY_ID","OWNER_PERSONAL_PAPER_API_SECRET_KEY"];
 export function verifyReviewerSource(stage,review,prod){
   assert.equal(stage.name,"anevum-member-staging");
   assert.equal(stage.vars.ANEVUM_ALPACA_REVIEW_CONNECT_ENABLED,"false");
   assert.equal(review.vars.ANEVUM_ALPACA_REVIEW_CONNECT_ENABLED,"true");
+  assert.equal(stage.vars.ANEVUM_OWNER_PAPER_OBSERVER_ENABLED,"false");
+  assert.equal(review.vars.ANEVUM_OWNER_PAPER_OBSERVER_ENABLED,"false");
   const normalized=JSON.parse(JSON.stringify(review));
   normalized.vars.ANEVUM_ALPACA_REVIEW_CONNECT_ENABLED="false";
   assert.deepEqual(normalized,stage,"Reviewer config must differ by exactly one staging flag");
@@ -27,6 +29,7 @@ export function verifyReviewerSource(stage,review,prod){
   assert.equal(review.d1_databases[0].database_id,PREVIEW);
   assert.equal(prod.d1_databases[0].database_id,PRODUCTION);
   assert.equal(prod.vars.ANEVUM_ALPACA_REVIEW_CONNECT_ENABLED,"false");
+  assert.equal(prod.vars.ANEVUM_OWNER_PAPER_OBSERVER_ENABLED,"false");
   assert.equal(prod.vars.ANEVUM_MEMBER_PREVIEW_ENABLED,"false");
   for(const x of [stage,review,prod]){
     for(const name of sensitive)assert.ok(!Object.hasOwn(x.vars||{},name));
@@ -39,6 +42,7 @@ export function verifyGeneratedReviewer(generated,source){
   assert.equal(generated.vars.MEMBER_PREVIEW_ORIGIN,source.vars.MEMBER_PREVIEW_ORIGIN);
   assert.equal(generated.vars.ANEVUM_MEMBER_PREVIEW_ENABLED,"true");
   assert.equal(generated.vars.ANEVUM_ALPACA_REVIEW_CONNECT_ENABLED,"true");
+  assert.equal(generated.vars.ANEVUM_OWNER_PAPER_OBSERVER_ENABLED,"false");
   assert.equal(generated.vars.ANEVUM_COMMONS_SOCIAL_PILOT_ENABLED,"false");
   assert.equal(generated.vars.COMMAND_LIVE_STREAM_ENABLED,"false");
   assert.ok(!["routes","route","custom_domains"].some(x=>Object.hasOwn(generated,x)));
