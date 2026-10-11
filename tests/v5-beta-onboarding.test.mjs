@@ -75,3 +75,21 @@ test("beta capability probe rejects overprivileged or malformed saved draft data
     {...safe,brokerLink:true}
   ])assert.throws(()=>verifyBetaProbe("draft",200,payload,user));
 });
+
+
+test("signed-in beta members can find the real verification UI only in isolated previews",()=>{
+ const page=source("src/pages/MemberBeta.tsx");
+ const settings=source("src/pages/MemberSettings.tsx");
+ const verifier=source("src/pages/MemberStagingVerify.tsx");
+ assert.match(page,/window\.location\.origin === "https:\/\/anevum-v5-beta\.devonakins\.workers\.dev"/);
+ assert.match(page,/isolatedBeta && <section/);
+ assert.match(page,/to="\/me\/verify">Run beta account verification/);
+ assert.match(page,/Each browser test proves only its own session/);
+ assert.match(settings,/https:\/\/anevum-member-staging\.devonakins\.workers\.dev/);
+ assert.match(settings,/https:\/\/anevum-v5-beta\.devonakins\.workers\.dev/);
+ assert.match(settings,/\.includes\(window\.location\.origin\)/);
+ assert.match(settings,/to="\/me\/verify">Run private beta account verification/);
+ assert.match(verifier,/const ALLOWED_ACCEPTANCE_ORIGINS = new Set\(\[STAGING_ORIGIN, V5_BETA_ORIGIN\]\)/);
+ assert.match(verifier,/if \(!ALLOWED_ACCEPTANCE_ORIGINS\.has\(window\.location\.origin\)\)/);
+ assert.doesNotMatch(page,/\/api\/member\/.*method:"POST"/);
+});
