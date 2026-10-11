@@ -1,7 +1,6 @@
-import { lazy, Suspense, useEffect, useLayoutEffect, type ReactNode } from "react";
+import { lazy, Suspense, useEffect, useLayoutEffect } from "react";
 import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { OverflowPan } from "./components/OverflowPan";
-import { PublicShell } from "./components/Shell";
 import { fieldNotes } from "./data/fieldNotes";
 import { currentRhenRelease, rhenReleaseBySlug } from "./data/releases";
 
@@ -222,10 +221,6 @@ function Loader() {
   return <div className="route-loader"><span>ANEVUM</span><i /></div>;
 }
 
-function PublicExperience({ children }: { children: ReactNode }) {
-  return <PublicShell><Suspense fallback={<Loader />}>{children}</Suspense></PublicShell>;
-}
-
 export default function App() {
   return (
     <>
@@ -252,7 +247,7 @@ export default function App() {
         <Route path="/me/settings" element={<Suspense fallback={<Loader />}><CommonsV5 content={<MemberSettings />} /></Suspense>} />
         <Route path="/me/beta" element={<Suspense fallback={<Loader />}><CommonsV5 content={<MemberBeta />} /></Suspense>} />
         <Route path="/me/rewards" element={<Suspense fallback={<Loader />}><CommonsV5 content={<MemberRewards />} /></Suspense>} />
-        <Route path="/me/verify" element={<PublicExperience><MemberStagingVerify /></PublicExperience>} />
+        <Route path="/me/verify" element={<Suspense fallback={<Loader />}><CommonsV5 content={<MemberStagingVerify />} /></Suspense>} />
         <Route path="/apps/rhen/terminal/*" element={<LegacyRhenOperatorRoute />} />
         <Route path="/apps/rhen/command/*" element={<LegacyRhenOperatorRoute />} />
         <Route path="/apps/rhen/connect" element={<Suspense fallback={<Loader />}><CommonsV5 content={<RhenReviewConnect />} /></Suspense>} />
