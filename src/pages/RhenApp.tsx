@@ -45,7 +45,10 @@ function RhenMemberWorkspace({ memberId }: { memberId: string }) {
     let alive = true;
     void fetch("/api/command/session", { cache: "no-store" })
       .then((response) => response.ok ? response.json() : null)
-      .then((value: { command_admin?: boolean } | null) => { if (alive) setOperator(value?.command_admin === true); })
+      .then((value: { command_admin?: boolean; owner_member_bound?: boolean; auth_source?: string } | null) => {
+        if (alive) setOperator(value?.command_admin === true &&
+          value?.owner_member_bound === true && value?.auth_source === "cloudflare_access");
+      })
       .catch(() => { if (alive) setOperator(false); });
     return () => { alive = false; };
   }, [memberId]);

@@ -7,13 +7,13 @@ import SystemIcon from "../components/company/SystemIcon";
 import { useMemberAvailability } from "../member/useMemberAvailability";
 
 type MemberData = {
-  user: { name?: string; email?: string };
+  user: { id: string; name?: string; email?: string };
   profile: { displayName: string; theme: string };
   savedApps: string[];
   follows: string[];
   entitlements: { app: string; capability: string }[];
 };
-type MemberIdentity = { name?: string | null; email?: string | null };
+type MemberIdentity = { id?: string | null; name?: string | null; email?: string | null };
 
 export default function MemberHome() {
   const availability = useMemberAvailability();
@@ -23,7 +23,7 @@ export default function MemberHome() {
 
 function SignedInCommand() {
   const { data: session, isPending } = memberAuthClient.useSession();
-  return <CommandHome enabled checking={isPending} identity={session?.user} />;
+  return <CommandHome key={session?.user?.id || "signed-out"} enabled checking={isPending} identity={session?.user} />;
 }
 
 function CommandHome({ enabled = false, checking = false, identity }: {
@@ -34,13 +34,19 @@ function CommandHome({ enabled = false, checking = false, identity }: {
   const [updating, setUpdating] = useState("");
   const [operator, setOperator] = useState(false);
   const products = publicProducts();
-  const signedIn = enabled && Boolean(identity);
+  const signedIn = enabled && Boolean(identity?.id);
   const load = useCallback(async (signal?: AbortSignal) => {
     const response = await fetch("/api/member/me", { cache: "no-store", signal });
     if (!response.ok) throw new Error("Could not load your Command. Please try again.");
     const next = await response.json() as MemberData;
+    if (!next?.user?.id || next.user.id !== identity?.id ||
+        !next.profile || typeof next.profile.displayName !== "string" ||
+        !Array.isArray(next.savedApps) || !Array.isArray(next.follows) ||
+        !Array.isArray(next.entitlements)) {
+      throw new Error("The member identity could not be verified. Sign in again.");
+    }
     if (!signal?.aborted) setData(next);
-  }, []);
+  }, [identity?.id]);
 
   useEffect(() => {
     setData(null); setError("");
@@ -50,7 +56,7 @@ function CommandHome({ enabled = false, checking = false, identity }: {
       if (!controller.signal.aborted) setError(reason instanceof Error ? reason.message : "Could not load your account.");
     });
     return () => controller.abort();
-  }, [signedIn, identity?.email, load]);
+  }, [signedIn, identity?.id, load]);
 
   useEffect(() => {
     // Google member identity is never enough for an owner terminal link.
@@ -60,12 +66,13 @@ function CommandHome({ enabled = false, checking = false, identity }: {
     const controller = new AbortController();
     void fetch("/api/command/session", { cache: "no-store", signal: controller.signal })
       .then(async response => response.ok ? response.json() : null)
-      .then((value: { command_admin?: boolean } | null) => {
-        if (!controller.signal.aborted) setOperator(value?.command_admin === true);
+      .then((value: { command_admin?: boolean; owner_member_bound?: boolean; auth_source?: string } | null) => {
+        if (!controller.signal.aborted) setOperator(value?.command_admin === true &&
+          value?.owner_member_bound === true && value?.auth_source === "cloudflare_access");
       })
       .catch(() => { if (!controller.signal.aborted) setOperator(false); });
     return () => controller.abort();
-  }, [signedIn, identity?.email]);
+  }, [signedIn, identity?.id]);
 
   const toggle = async (kind: "saved-apps" | "follows", slug: string, selected: boolean) => {
     setUpdating(kind + slug);

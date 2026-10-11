@@ -29,7 +29,7 @@ async function runCase(viewport, state) {
       const url=String(input);const method=init.method||"GET";
       if(url.includes("/api/member/availability"))return Response.json({available:state!=="disabled",provider:state==="disabled"?null:"google"});
       if(url.includes("/api/auth/get-session"))return Response.json(state==="member"?{session:{id:"qa-session",userId:"qa-member",expiresAt:new Date(Date.now()+3600000).toISOString()},user:{id:"qa-member",name:"QA Member",email:"member@example.test",emailVerified:true}}:null);
-      if(url.includes("/api/member/me"))return Response.json({user:{name:"QA Member",email:"member@example.test"},profile:{displayName:"QA Member",theme:"light"},savedApps:[...saved],follows:[...follows],entitlements:[]});
+      if(url.includes("/api/member/me"))return Response.json({user:{id:"qa-member",name:"QA Member",email:"member@example.test"},profile:{displayName:"QA Member",theme:"light"},savedApps:[...saved],follows:[...follows],entitlements:[]});
       const match=url.match(/\\/api\\/member\\/(saved-apps|follows)\\/([a-z0-9-]+)/);
       if(match){const set=match[1]==="saved-apps"?saved:follows;if(method==="PUT")set.add(match[2]);else if(method==="DELETE")set.delete(match[2]);mutations.push({kind:match[1],slug:match[2],method});return Response.json({saved:method==="PUT"});}
       if(url.includes("/api/command/"))return Response.json({message:"Operator access required"},{status:401});

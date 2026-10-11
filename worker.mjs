@@ -2,6 +2,7 @@ import releaseRegistry from "./src/data/releases.json";
 import { fieldNotes } from "./src/data/fieldNotes";
 import { shadowRead } from "./shadow-transport.mjs";
 import { memberEndpoint } from "./src/server/member.mjs";
+import { verifyOwnerMemberBinding, OwnerMemberBindingError } from "./src/server/command-owner-binding.mjs";
 import { legacyOperatorTarget } from "./src/server/operator-routes.mjs";
 import { retiredRhenBoundary, retiredRhenStatus } from "./src/server/legacy-rhen-retirement.mjs";
 
@@ -110,7 +111,15 @@ async function commandCredential(request, env) {
     throw new ApiError(401, "Cloudflare Access authentication is required.");
   }
   const identity = await verifyAccessAssertion(access, env);
-  return { token: access, source: "cloudflare_access", identity };
+  let ownerMemberBound = false;
+  try {
+    ownerMemberBound = await verifyOwnerMemberBinding(request, env, identity);
+  } catch (error) {
+    if (error instanceof OwnerMemberBindingError && error.status === 403)
+      throw new ApiError(403, "This member account is not authorized for the owner terminal.");
+    throw new ApiError(503, "Owner-member authorization is unavailable.");
+  }
+  return { token: access, source: "cloudflare_access", identity, ownerMemberBound };
 }
 
 async function proxyTrader(request, upstreamPath, env) {
@@ -582,7 +591,8 @@ export default {
           authenticated: true,
           email: credential.identity?.email || null,
           auth_source: credential.source,
-          command_admin: true
+          command_admin: true,
+          owner_member_bound: credential.ownerMemberBound === true
         });
       } catch (error) {
         if (error instanceof ApiError) return jsonResponse({ message: error.message }, error.status);
