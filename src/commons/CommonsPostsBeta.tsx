@@ -137,8 +137,11 @@ function DiscussionFeed({memberId,filter,onFilterChange}:{memberId:string;filter
       </nav>
       <div className="c2-social-stream" aria-label="Member discussions">
         {posts.length===0?<div className="c2-empty"><h3>No discussions in this view</h3><p>No published records were returned for this topic. Reload or select another topic.</p></div>:
-          posts.map(post=><article className="c2-card c2-social-post" key={post.id}>
-            <div className="c2-card-meta"><span>{post.topic}</span><time dateTime={isoDate(post.createdAt)}>{stamp(post.createdAt)}</time><span>{post.authorLabel}</span></div>
+          posts.map(post=><article className={"c2-card c2-social-post v6-discussion-post v6-discussion-"+post.topic} key={post.id}>
+            <div className="v6-discussion-top">
+              <span className="v6-discussion-sigil" aria-hidden="true">{post.topic==="systems"?"λ":post.topic==="engineering"?"⌘":post.topic==="research"?"∑":"✳"}</span>
+              <div className="c2-card-meta"><span>{post.topic}</span><time dateTime={isoDate(post.createdAt)}>{stamp(post.createdAt)}</time><span>{post.authorLabel}</span></div>
+            </div>
             <h3>{post.title}</h3><p>{post.body}</p>
             <div className="c2-social-actions">
               <button type="button" disabled={busy||uncertain} onClick={()=>void showReplies(post.id)}>View replies</button>
