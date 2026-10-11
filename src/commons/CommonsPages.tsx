@@ -244,6 +244,46 @@ function ResumePage() {
       <article className="c2-card" key={item.name}><h2>{item.name}</h2><p>{item.status}. {item.detail}</p></article>)}</div></section>
   </div>;
 }
+function Help() {
+  return <div className="c2-page c2-help" aria-labelledby="commons-help-title">
+    <header className="c2-intro">
+      <span className="c2-kicker">COMMONS / HELP</span>
+      <h1 id="commons-help-title">Help and account support</h1>
+      <p>Find current ANEVUM pages, manage your own account and understand which RHEN and Commons features are available. No account or brokerage connection is required to read the public work.</p>
+    </header>
+    <section className="c2-grid" aria-label="Frequently asked questions">
+      <article className="c2-card"><h2>Do I need an account?</h2>
+        <p>No. Public projects, Field Notes and learning pages can be read without registering. When member sign-in is available, a Google account lets you manage your own saved projects and profile.</p>
+        <Link to="/sign-in" className="c2-text-link">Account sign-in →</Link>
+      </article>
+      <article className="c2-card"><h2>Where can I export or delete my data?</h2>
+        <p>While signed in, open your account settings for an export and account deletion. The privacy notice explains backups, provider records and limits to deletion. Never share an account export or session cookie with support.</p>
+        <Link to="/me/settings" className="c2-text-link">My account settings →</Link>
+      </article>
+      <article className="c2-card"><h2>Can RHEN place trades for me?</h2>
+        <p>Not through the current general member experience. Legacy live RHEN was retired for the V5 rebuild. Member research workspaces and non-executing drafts do not grant broker access or paper/live trading authority.</p>
+        <Link to="/products/rhen/evidence" className="c2-text-link">Current RHEN evidence →</Link>
+      </article>
+      <article className="c2-card"><h2>Can I connect Alpaca now?</h2>
+        <p>Broker connections require separate provider approval and feature-specific authorization. If connecting is unavailable, registering with Commons does not unlock it. Do not send API keys, OAuth URLs, access tokens or screenshots containing secrets by email.</p>
+        <Link to="/products/rhen" className="c2-text-link">RHEN product status →</Link>
+      </article>
+      <article className="c2-card"><h2>Can I post or message other members?</h2>
+        <p>Commons posting, notifications and moderation are still under development. Public Field Notes and topic pages are real publications, not simulated user conversations. Signing in does not automatically enable posting.</p>
+        <Link to="/communities" className="c2-text-link">Explore published topics →</Link>
+      </article>
+      <article className="c2-card"><h2>How do I report a problem?</h2>
+        <p>Include the public page URL, what you expected, what happened and the general time of the issue. Do not include passwords, account exports, private workspace identifiers, broker balances or secret keys.</p>
+        <a className="c2-text-link" href="mailto:devon@anevum.com?subject=ANEVUM%20support">Email ANEVUM support →</a>
+      </article>
+    </section>
+    <section className="c2-section" aria-label="Policies and useful pages">
+      <h2>Policies and other resources</h2>
+      <p>For questions about what information is collected, retained or deleted, read the privacy notice. The terms explain limitations of experimental software and financial research. Public source links and contributions have separate permissions from private accounts.</p>
+      <div className="c2-action-row"><Link to="/privacy">Privacy notice</Link><Link to="/terms">Terms of use</Link><Link to="/field-notes">Field Notes</Link><Link to="/about">About ANEVUM</Link></div>
+    </section>
+  </div>;
+}
 function About() {
   return <div className="c2-page">
     <Intro kicker="ANEVUM / ABOUT" title="Independent work, shared openly.">
@@ -284,6 +324,7 @@ export default function CommonsPublicPage({ pathname }: Props) {
   if (pathname === "/communities") return <Communities/>;
   if (pathname === "/learn") return <Learn/>;
   if (pathname === "/about") return <About/>;
+  if (pathname === "/help") return <Help/>;
   if (pathname === "/resume") return <ResumePage/>;
   if (pathname === "/privacy") return <div className="c2-page c2-legal"><Privacy/></div>;
   if (pathname === "/terms") return <div className="c2-page c2-legal"><Terms/></div>;

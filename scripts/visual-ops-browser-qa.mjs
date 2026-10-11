@@ -6,7 +6,7 @@ import path from "node:path";
 const base = process.env.BASE_URL;
 if (!base) throw new Error("BASE_URL is required");
 
-const publicRoutes = ["/", "/communities", "/learn", "/sign-in", "/command", "/me/settings", "/me/rewards", "/apps/rhen/connect", "/products", "/feed", "/products/rhen", "/products/rhen/evidence", "/products/rhen/architecture", "/field-notes", "/field-notes/prediction-outcome-evidence-chain", "/about", "/resume", "/products/rhen/releases", "/me", "/privacy", "/terms", "/not-a-real-page", "/field-notes/not-a-real-note", "/products/rhen/releases/not-a-real-release", "/communities/moderation"];
+const publicRoutes = ["/", "/communities", "/learn", "/sign-in", "/command", "/me/settings", "/me/rewards", "/apps/rhen/connect", "/products", "/feed", "/products/rhen", "/products/rhen/evidence", "/products/rhen/architecture", "/field-notes", "/field-notes/prediction-outcome-evidence-chain", "/about", "/help", "/resume", "/products/rhen/releases", "/me", "/privacy", "/terms", "/not-a-real-page", "/field-notes/not-a-real-note", "/products/rhen/releases/not-a-real-release", "/communities/moderation"];
 const commandRoutes = ["/command/rhen/operate", "/command/rhen/discover", "/command/rhen/review", "/command/rhen/public", "/command/rhen/system"];
 const routes = process.env.PUBLIC_ONLY === "1" ? publicRoutes : [...publicRoutes, ...commandRoutes];
 const output = path.join(process.env.RUNNER_TEMP || os.tmpdir(), "anevum-visuals");
@@ -223,6 +223,20 @@ async function runCase(route, viewport) {
     routeReady = result.result?.value || {};
   }
   if (!routeReady.ready) throw new Error("Route did not hydrate before visual assertion: "+JSON.stringify({route,...routeReady}));
+
+  if (route === "/help") {
+    const checked = await send("Runtime.evaluate", {expression:`(() => {
+      const root=document.querySelector(".anevum-commons-v5-mount")?.shadowRoot;
+      const help=root?.querySelector("#commons-help-title");
+      const footer=root?.querySelector('.side-foot-links a[href="/help"]');
+      const legal=root?.querySelector('.c2-help a[href="/privacy"]');
+      const cards=root?.querySelectorAll('.c2-help .c2-card');
+      return {heading:help?.textContent||"",footer:!!footer,legal:!!legal,cards:cards?.length||0,missing:!!root?.querySelector('[data-page-state="not-found"]')};
+    })()`,returnByValue:true});
+    const v=checked.result?.value||{};
+    if(v.heading!=="Help and account support" || !v.footer || !v.legal || v.cards!==6 || v.missing)
+      throw new Error("Commons help route not usable: "+JSON.stringify(v));
+  }
 
   if (["/not-a-real-page", "/field-notes/not-a-real-note", "/products/rhen/releases/not-a-real-release", "/communities/moderation"].includes(route)) {
     const checked = await send("Runtime.evaluate", {expression:`(() => {

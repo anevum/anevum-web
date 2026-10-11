@@ -150,7 +150,7 @@ function Sidebar({ collapsed, onClose, onNotice, pathname }: {
         <span className="sidebar-member-meta"><strong>{userName}</strong><small>{session?.user ? "Open your private account" : "Sign in to participate"}</small></span>
         <Icon name="chevron"/>
       </Link>
-      <div className="side-foot-links"><Link to="/about">About</Link><Link to="/privacy">Privacy</Link><Link to="/terms">Terms</Link></div>
+      <div className="side-foot-links"><Link to="/about">About</Link><Link to="/help">Help</Link><Link to="/privacy">Privacy</Link><Link to="/terms">Terms</Link></div>
     </div>
   </div></aside>;
 }

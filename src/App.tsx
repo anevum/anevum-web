@@ -41,6 +41,7 @@ const titles: Record<string, string> = {
   "/products/rhen/architecture": "RHEN Architecture — ANEVUM",
   "/products/rhen/releases": "RHEN Releases — ANEVUM",
   "/about": "About — ANEVUM",
+  "/help": "Help — ANEVUM Commons",
   "/resume": "Résumé — ANEVUM",
   "/sign-in": "Sign in — ANEVUM",
   "/me": "Command — ANEVUM",
@@ -63,6 +64,7 @@ const descriptions: Record<string, string> = {
   "/products/rhen/architecture": "Inspect RHEN execution, research, replay, forecasting, control, storage, and evidence boundaries.",
   "/products/rhen/releases": "RHEN release records document production changes, verification, limitations, and public system history.",
   "/about": "About ANEVUM, the independently built and operated software studio.",
+  "/help": "Help with ANEVUM public research, member accounts, privacy and RHEN availability.",
   "/resume": "Professional résumé and background for the person responsible for ANEVUM.",
   "/sign-in": "ANEVUM account access.",
   "/me": "Your private ANEVUM project library and follows.",
@@ -76,7 +78,7 @@ const descriptions: Record<string, string> = {
 const publishedPublicPaths = new Set([
   "/", "/products", "/feed", "/field-notes", "/communities", "/learn",
   "/products/rhen", "/products/rhen/evidence", "/products/rhen/architecture",
-  "/products/rhen/releases", "/about", "/resume", "/privacy", "/terms"
+  "/products/rhen/releases", "/about", "/help", "/resume", "/privacy", "/terms"
 ]);
 
 function isPublishedPublicPath(pathname: string) {
@@ -249,6 +251,7 @@ export default function App() {
         <Route path="/learn" element={<Suspense fallback={<Loader />}><CommonsV5 /></Suspense>} />
         <Route path="/field-notes/:slug" element={<Suspense fallback={<Loader />}><CommonsV5 /></Suspense>} />
         <Route path="/about" element={<Suspense fallback={<Loader />}><CommonsV5 /></Suspense>} />
+        <Route path="/help" element={<Suspense fallback={<Loader />}><CommonsV5 /></Suspense>} />
         <Route path="/resume" element={<Suspense fallback={<Loader />}><CommonsV5 /></Suspense>} />
         <Route path="/privacy" element={<Suspense fallback={<Loader />}><CommonsV5 /></Suspense>} />
         <Route path="/terms" element={<Suspense fallback={<Loader />}><CommonsV5 /></Suspense>} />

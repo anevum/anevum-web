@@ -8,7 +8,7 @@ const commons = source("src/commons/CommonsV5.tsx");
 const pages = source("src/commons/CommonsPages.tsx");
 
 test("Stage 2 public routes reuse the V5 shell rather than reentering the legacy studio shell", () => {
-  for (const path of ["/products", "/feed", "/field-notes", "/field-notes/:slug", "/about", "/products/rhen", "/products/rhen/evidence", "/products/rhen/architecture", "/products/rhen/releases", "/products/rhen/releases/:slug", "/communities", "/learn", "/privacy", "/terms", "/sign-in", "/resume"]) {
+  for (const path of ["/products", "/feed", "/field-notes", "/field-notes/:slug", "/about", "/products/rhen", "/products/rhen/evidence", "/products/rhen/architecture", "/products/rhen/releases", "/products/rhen/releases/:slug", "/communities", "/learn", "/help", "/privacy", "/terms", "/sign-in", "/resume"]) {
     assert.ok(app.includes('<Route path="' + path + '" element={<Suspense fallback={<Loader />}><CommonsV5 /></Suspense>} />'), "not using public Commons shell: " + path);
   }
   assert.match(commons, /<CommonsPublicPage pathname=\{pathname\}\s*\/>/);

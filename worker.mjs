@@ -366,6 +366,10 @@ function publicRouteMetadata(pathname) {
       title: "About — ANEVUM",
       description: "About ANEVUM, the independently built and operated software studio."
     },
+    "/help": {
+      title: "Help — ANEVUM Commons",
+      description: "Help with ANEVUM public research, member accounts, privacy and RHEN availability."
+    },
     "/resume": {
       title: "Résumé — ANEVUM",
       description: "Professional résumé and background for the person responsible for ANEVUM."
