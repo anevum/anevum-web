@@ -27,7 +27,10 @@ export function memberSignInMethods(env) {
 
 export function isPrivilegedMemberEmail(env, email) {
   const protectedEmails = [
+    "anevum.studio@gmail.com",
+    "devon@anevum.com",
     env?.RHEN_OWNER_EMAIL,
+    ...(String(env?.COMMAND_ACCESS_EMAILS || "").split(",")),
     ...(String(env?.ANEVUM_STUDIO_ACCESS_EMAILS || "").split(","))
   ].map(item => String(item || "").trim().toLowerCase()).filter(Boolean);
   return protectedEmails.includes(String(email || "").trim().toLowerCase());
