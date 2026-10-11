@@ -441,6 +441,10 @@
   position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
   color:rgba(227,234,192,.75);font:500 135px/1 Georgia,serif
 }
+.v6-project-glyph .rhen-mark{width:125px;height:110px;stroke:#dbe9cb;fill:none;stroke-width:3.2;stroke-linecap:round;stroke-linejoin:round}
+.v6-project-glyph .rhen-star{stroke:#f7ddaf;stroke-width:2}
+.v6-project-glyph .rhen-wing{stroke-width:4.5}
+.v6-project-glyph .rhen-horizon{stroke-width:2;opacity:.7}
 .c2-project.v6-project > .c2-project-icon{
   width:49px;height:49px;border-radius:2px;margin:-25px 0 9px 23px;
   border:1px solid var(--line);position:relative;z-index:2;background:#263f33
