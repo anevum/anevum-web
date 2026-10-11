@@ -58,3 +58,10 @@ when `--exercise-writes` is separately authorized. Synthetic acceptance
 fixtures reject a stale member hint with HTTP 409, preserve the other
 member's preference state, and verify test data restoration. The script's
 read-only default and no-cookie-log policy remain unchanged.
+
+Member beta usability: the authenticated /me/beta checklist now directly
+links to /me/verify **only when accessed on the exact isolated V5 beta
+origin**. Account settings likewise offers that link on either of the two
+explicit staging origins. The existing verifier still denies all other
+origins. This makes genuine two-browser testing discoverable without opening
+an operator privilege or changing the public anevum.com experience.
