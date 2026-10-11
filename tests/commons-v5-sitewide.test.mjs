@@ -106,3 +106,14 @@ test("server and client do not advertise suspended RHEN or private moderator URL
   for (const path of ["/communities","/learn","/privacy","/terms"])
     assert.ok(worker.includes('"' + path + '": {'),"missing public server metadata "+path);
 });
+
+test("moderator browser QA waits for React security metadata rather than the initial HTML head", () => {
+  const qa = source("scripts/visual-ops-browser-qa.mjs");
+  assert.equal((qa.match(/const moderationReady =/g) || []).length, 2,
+    "both initial and fallback navigation must wait for the private route");
+  assert.equal((qa.match(/extraReady && missingReady && moderationReady/g) || []).length, 2);
+  assert.match(qa, /root\?\.querySelector\("#commons-moderation-title"\)/);
+  assert.match(qa, /document\.documentElement\.dataset\.route === "communities\/moderation"/);
+  assert.match(qa, /document\.querySelector\('meta\[name="robots"\]'\)\?\.content\?\.startsWith\("noindex"\)/);
+  assert.match(qa, /!document\.querySelector\('link\[rel="canonical"\]'\)/);
+});

@@ -159,7 +159,17 @@ async function runCase(route, viewport) {
           const extraReady = !["/communities", "/learn", "/sign-in"].includes(${JSON.stringify(route)}) || Boolean(document.querySelector(".anevum-commons-v5-mount")?.shadowRoot?.querySelector(".c2-page"));
           const missingReady = !["/not-a-real-page", "/field-notes/not-a-real-note", "/products/rhen/releases/not-a-real-release"].includes(${JSON.stringify(route)}) ||
             Boolean(document.querySelector(".anevum-commons-v5-mount")?.shadowRoot?.querySelector('[data-page-state="not-found"]'));
-          return {ready:pathReady && suspenseReady && homeReady && productsReady && feedReady && rhenReady && liveReady && architectureReady && researchReady && fieldNoteReady && aboutReady && resumeReady && releasesReady && memberReady && brokerReviewReady && legalReady && commandReady && extraReady && missingReady,
+          // A private moderator route may have loaded the static HTML while React
+          // is still hydrating. Never read its initial public index.html SEO
+          // as if it were the fully rendered private route.
+          const moderationReady = ${JSON.stringify(route)} !== "/communities/moderation" || (() => {
+            const root = document.querySelector(".anevum-commons-v5-mount")?.shadowRoot;
+            return Boolean(root?.querySelector("#commons-moderation-title")) &&
+              document.documentElement.dataset.route === "communities/moderation" &&
+              document.querySelector('meta[name="robots"]')?.content?.startsWith("noindex") &&
+              !document.querySelector('link[rel="canonical"]');
+          })();
+          return {ready:pathReady && suspenseReady && homeReady && productsReady && feedReady && rhenReady && liveReady && architectureReady && researchReady && fieldNoteReady && aboutReady && resumeReady && releasesReady && memberReady && brokerReviewReady && legalReady && commandReady && extraReady && missingReady && moderationReady,
             pathname:location.pathname,title:document.title,suspenseReady,homeReady,productsReady,feedReady,rhenReady,liveReady,architectureReady,researchReady,fieldNoteReady,aboutReady,resumeReady,releasesReady,commandReady};
         })()`,
         returnByValue:true
@@ -195,7 +205,17 @@ async function runCase(route, viewport) {
           const extraReady = !["/communities", "/learn", "/sign-in"].includes(${JSON.stringify(route)}) || Boolean(document.querySelector(".anevum-commons-v5-mount")?.shadowRoot?.querySelector(".c2-page"));
           const missingReady = !["/not-a-real-page", "/field-notes/not-a-real-note", "/products/rhen/releases/not-a-real-release"].includes(${JSON.stringify(route)}) ||
             Boolean(document.querySelector(".anevum-commons-v5-mount")?.shadowRoot?.querySelector('[data-page-state="not-found"]'));
-        return {ready:pathReady && suspenseReady && homeReady && productsReady && feedReady && rhenReady && liveReady && architectureReady && researchReady && fieldNoteReady && aboutReady && resumeReady && releasesReady && memberReady && brokerReviewReady && legalReady && commandReady && extraReady && missingReady,
+        // A private moderator route may have loaded the static HTML while React
+          // is still hydrating. Never read its initial public index.html SEO
+          // as if it were the fully rendered private route.
+          const moderationReady = ${JSON.stringify(route)} !== "/communities/moderation" || (() => {
+            const root = document.querySelector(".anevum-commons-v5-mount")?.shadowRoot;
+            return Boolean(root?.querySelector("#commons-moderation-title")) &&
+              document.documentElement.dataset.route === "communities/moderation" &&
+              document.querySelector('meta[name="robots"]')?.content?.startsWith("noindex") &&
+              !document.querySelector('link[rel="canonical"]');
+          })();
+          return {ready:pathReady && suspenseReady && homeReady && productsReady && feedReady && rhenReady && liveReady && architectureReady && researchReady && fieldNoteReady && aboutReady && resumeReady && releasesReady && memberReady && brokerReviewReady && legalReady && commandReady && extraReady && missingReady && moderationReady,
           pathname:location.pathname,title:document.title,suspenseReady,homeReady,productsReady,feedReady,rhenReady,liveReady,architectureReady,researchReady,fieldNoteReady,aboutReady,resumeReady,releasesReady,commandReady};
       })()`,
       returnByValue:true
