@@ -248,7 +248,7 @@ async function runCase(requestedRoute, viewport) {
         title:document.title,
         heading:page?.querySelector('h1')?.textContent||"",
         cards:page?.querySelectorAll('.c2-section .c2-card').length||0,
-        signup:links.includes("/sign-in"),
+        signup:links.includes("/sign-in")||links.includes("/sign-in?next=beta"),
         member:links.includes("/me/beta"),
         checking:page?.textContent?.includes("Checking registration availability")||false,
         unavailable:page?.textContent?.includes("Registration is not currently available")||false,

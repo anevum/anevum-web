@@ -1,0 +1,45 @@
+name: ANEVUM V5 Production Read-Only Verification
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [fix/anevum-v5-live-smoke-verification-20261011]
+    paths:
+      - .github/workflows/v5-production-readonly-verification.yml
+      - scripts/probe-v5-live-release.mjs
+      - scripts/visual-ops-browser-qa.mjs
+      - tests/v5-production-release.test.mjs
+
+permissions:
+  contents: read
+
+jobs:
+  verify-live:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install verification dependencies
+        run: npm install --no-audit --no-fund
+      - name: Verify release probe failure cases offline
+        run: node --test tests/v5-production-release.test.mjs
+      - name: Verify live Google and anonymous member boundaries
+        run: node scripts/probe-member-production-launch.mjs
+      - name: Verify live V5 module graph and Studio Access boundaries
+        run: node scripts/probe-v5-live-release.mjs
+      - name: Verify rendered public routes on desktop and mobile
+        env:
+          BASE_URL: https://anevum.com
+          PUBLIC_ONLY: "1"
+        run: node scripts/visual-ops-browser-qa.mjs
+      - name: Retain public production rendering evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: anevum-v5-production-readonly-visuals
+          path: ${{ runner.temp }}/anevum-visuals
+          retention-days: 7
+          if-no-files-found: error

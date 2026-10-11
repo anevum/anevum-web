@@ -23,7 +23,7 @@ No new permanent beta database, Railway service or volume is required.
 
 On October 11, read-only provider checks confirmed:
 
-- Production is still Worker `anevum-web-nextgen`, previous version
+- Production was Worker `anevum-web-nextgen`, previous version
   `4063408d-74c8-426d-9648-a22f8d322cbf`.
 - D1 `anevum-members` has the registered 0001/0002 migrations, one verified
   Studio owner, no Studio tables, and no foreign-key violations.
@@ -95,14 +95,59 @@ SQLite export recovery proves SQL portability, schema integrity, preservation
 and archive recoverability. It does not claim an actual remote production D1
 rewind has been performed. Never rewind production solely to test a backup.
 
-## Current release boundary
+## Approved production cutover — October 11, 2026
 
-Automatic approval review rejected downloading a production export into the
-development workspace because it includes private member data without specific
-authorization. That download was stopped. No production migration, owner secret
-provisioning or V5 Worker deployment is authorized by this source checkpoint.
+The owner explicitly approved merge, private recovery, Studio migration/owner
+binding and V5 deployment, then specifically approved the one-time branch push
+workflow through the GitHub plugin after the browser authentication stalled.
+The originally rejected actions were not bypassed while approval was missing.
 
-The proposed workflow likewise processes private production data and must not be
-run as a workaround for that rejection. Obtain specific authorization for the
-encrypted recovery test before dispatching it. The public website remains on
-the older release until the guarded production workflow succeeds.
+- Deployed application source: `05a0052b52bc655f45a00fd8c54aec4e872d5dac`
+  (merged PR #316), with all three exact-main push checks successful.
+- Authorized release trigger: `fa37643a380dd5839192c3e7cf1ac1e83a514bb7`,
+  on `release/anevum-v5-approved-production-20261011` only. Do not merge that
+  branch. Main retains the manually gated production workflow.
+- Cutover run: https://github.com/anevum/anevum-web/actions/runs/38178041192.
+  Encrypted recovery, migration rehearsal, uploaded/downloaded archive restore,
+  digest check, Studio-only schema/ledger, real owner binding, production
+  prerequisites, Worker deployment and all 17 member boundary checks succeeded.
+- Live Worker version: `3274dc93-1177-4c59-a61f-db61eb727fc0`, deployment
+  `edbb325f-2cd1-4152-82c6-8d52cf48e7ba`, created 2026-10-11 21:52:28 UTC.
+- Encrypted recovery artifact: `anevum-production-d1-encrypted-38178041192`,
+  artifact ID `11717031192`, retained through November 10. Its report contains
+  the exact pre-cutover Worker version and fresh Time Travel bookmark. Keep the
+  archive and decryption key private; never expose SQL or member records.
+- Provider reads confirm the exact 0001/0002/0008 ledger, both Studio tables,
+  zero foreign-key violations, and the encrypted owner binding name. Publishing
+  remains false, RHEN observation remains false, and deferred systems flags
+  remain false. Public Studio returns an empty published-only collection.
+
+The cutover run finished with a failed post-deployment verification assertion:
+it expected the React mount in raw HTML. The app uses an unhydrated HTML shell;
+the mount exists only after JavaScript runs. The failure did not invalidate or
+undo the successful deployment. PR #317 corrects this probe to verify the
+same-origin module graph and Commons V5 bundle, with regression rejection of
+missing/old/foreign modules and HTML fallbacks. The corrected read-only live
+probe passes all 13 route, Studio privacy and suspension checks. It does not
+claim authenticated owner acceptance.
+
+Production desktop/mobile rendering evidence is captured separately by the
+credential-free read-only workflow:
+https://github.com/anevum/anevum-web/actions/workflows/v5-production-readonly-verification.yml.
+Its first run also exposed an outdated beta CTA assertion: live registration
+correctly links to `/sign-in?next=beta`, while the checker recognized only the
+bare `/sign-in` path. PR #317 accepts those two exact valid links. Preview tests
+had registration disabled and did not exercise the live signup CTA.
+Inspect the latest run's result and retained public screenshots; never repeat the
+production migration or deployment solely to regenerate verification evidence.
+The read-only workflow is also manually available for future maintenance.
+
+## Next systems development gates
+
+Continue real owner/ordinary-member Studio acceptance first, including draft
+creation/editing, audit receipt, denied ordinary-member access and session
+switching. Public publishing requires its own tested activation. The website
+release does not complete the wider V5 program: actual disposable Cloudflare D1
+restore acceptance, free participation #306, member social/moderation rollout,
+independent RHEN/provider/replay validation and integrations remain on #259.
+January 1, 2027 remains the public launch target tracked by #308.
