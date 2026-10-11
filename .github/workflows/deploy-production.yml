@@ -5,6 +5,14 @@ on:
   # merging to main must NEVER start an uncontrolled production deployment.
   workflow_dispatch:
     inputs:
+      release_scope:
+        description: 'Public visual update or independently authorized full member release'
+        required: true
+        type: choice
+        default: FULL_V5_MEMBER_AUTHORIZED
+        options:
+          - PUBLIC_V5_VISUAL_ONLY
+          - FULL_V5_MEMBER_AUTHORIZED
       confirmation:
         description: 'Type DEPLOY_ANEVUM_PRODUCTION_V5 after staging acceptance'
         required: true
@@ -31,7 +39,9 @@ jobs:
       github.ref == 'refs/heads/main' &&
       inputs.confirmation == 'DEPLOY_ANEVUM_PRODUCTION_V5' &&
       inputs.reviewed_head_sha == github.sha &&
-      inputs.rollback_confirmed == 'PRODUCTION_ROLLBACK_VERIFIED'
+      inputs.rollback_confirmed == 'PRODUCTION_ROLLBACK_VERIFIED' &&
+      (inputs.release_scope == 'PUBLIC_V5_VISUAL_ONLY' ||
+       inputs.release_scope == 'FULL_V5_MEMBER_AUTHORIZED')
     runs-on: ubuntu-latest
     timeout-minutes: 12
     steps:
@@ -64,6 +74,7 @@ jobs:
           test -s dist/client/devon-akins-resume.pdf
           head -c 5 dist/client/devon-akins-resume.pdf | grep -Fq '%PDF-'
       - name: Verify production member release prerequisites before deployment
+        if: inputs.release_scope == 'FULL_V5_MEMBER_AUTHORIZED'
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_D1_TOKEN }}
           WORKER_SECRETS_READ_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -119,6 +130,7 @@ jobs:
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           command: deploy
       - name: Verify production member launch boundaries
+        if: inputs.release_scope == 'FULL_V5_MEMBER_AUTHORIZED'
         run: node scripts/probe-member-production-launch.mjs
       - name: Verify production visual operations
         env:
