@@ -133,8 +133,12 @@ claim authenticated owner acceptance.
 
 Production desktop/mobile rendering evidence is captured separately by the
 credential-free read-only workflow:
-https://github.com/anevum/anevum-web/actions/runs/38178381099.
-Inspect that run's result and retained public screenshots; never repeat the
+https://github.com/anevum/anevum-web/actions/workflows/v5-production-readonly-verification.yml.
+Its first run also exposed an outdated beta CTA assertion: live registration
+correctly links to `/sign-in?next=beta`, while the checker recognized only the
+bare `/sign-in` path. PR #317 accepts those two exact valid links. Preview tests
+had registration disabled and did not exercise the live signup CTA.
+Inspect the latest run's result and retained public screenshots; never repeat the
 production migration or deployment solely to regenerate verification evidence.
 The read-only workflow is also manually available for future maintenance.
 
