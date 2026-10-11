@@ -39,3 +39,16 @@ test("beta accurately separates member tools, staged research, and restricted br
   assert.equal(prod.vars.ANEVUM_COMMONS_SOCIAL_PILOT_ENABLED,"false");
   assert.equal(prod.vars.ANEVUM_ALPACA_REVIEW_CONNECT_ENABLED,"false");
 });
+
+
+test("returning members open their checklist without another Google redirect",()=>{
+  const page=src("src/commons/CommonsPages.tsx");
+  const qa=src("scripts/visual-ops-browser-qa.mjs");
+  assert.match(page,/const \{data:session,isPending\}=memberAuthClient\.useSession\(\)/);
+  assert.match(page,/session\?\.user\?/);
+  assert.match(page,/to="\/me\/beta" className="c2-text-link">Open your beta checklist/);
+  assert.match(page,/to="\/sign-in\?next=beta" className="c2-text-link">Continue with Google/);
+  assert.match(page,/Checking member session/);
+  assert.match(qa,/Open your beta checklist/);
+  assert.match(qa,/beta\.signup\|\|beta\.member\|\|beta\.unavailable/);
+});
