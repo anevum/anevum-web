@@ -188,6 +188,7 @@ jobs:
           node scripts/visual-ops-browser-qa.mjs
           node scripts/member-command-browser-qa.mjs
           node scripts/member-settings-browser-qa.mjs
+          node scripts/member-beta-browser-qa.mjs
           node scripts/moderation-review-browser-qa.mjs
           node scripts/discussion-lifecycle-browser-qa.mjs
           node scripts/private-rhen-browser-qa.mjs
