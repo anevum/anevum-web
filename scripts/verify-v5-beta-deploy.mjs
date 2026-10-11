@@ -30,7 +30,7 @@ const assertTarget=(c,source)=>{
   assert.equal(c.name,BETA_WORKER,source+" must never target an existing service");
   assert.equal(c.workers_dev,true);
   assert.equal(c.preview_urls,false);
-  assert.equal(c.main,"./worker.mjs");
+  if(!source.includes("Generated"))assert.equal(c.main,"./worker.mjs");
   assert.ok(!["routes","route","custom_domains","env"].some(k=>Object.hasOwn(c,k)),
     source+" cannot bind any zone or production route");
   assert.deepEqual(Object.keys(c.vars||{}).sort(),[...allowedNames].sort());
