@@ -30,7 +30,7 @@ test("beta accurately separates member tools, staged research, and restricted br
   const page=src("src/commons/CommonsPages.tsx");
   assert.match(page,/non-executing bot draft/);
   assert.match(page,/restricted pilot/);
-  assert.match(page,/Joining does not connect Alpaca/);
+  assert.match(page,/Joining does not connect a brokerage account/);
   assert.match(page,/without signing up/);
   const shell=src("src/commons/CommonsV5.tsx");
   assert.match(shell,/to="\/beta"/);
