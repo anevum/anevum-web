@@ -117,7 +117,7 @@ test("staging verification state is keyed to a Google member and aborts old work
   assert.match(ui,/<StagingAccountAcceptance key=\{session\.user\.id\} memberId=\{session\.user\.id\}/);
   assert.match(ui,/for \(const controller of inFlight\.current\) controller\.abort\(\)/);
   assert.match(ui,/runStagingAcceptance\(fetch, memberId, controller\.signal\)/);
-  assert.match(ui,/window\.location\.origin !== STAGING_ORIGIN/);
+  assert.match(ui,/ALLOWED_ACCEPTANCE_ORIGINS\.has\(window\.location\.origin\)/);
   assert.match(ui,/runWorkspaceStagingProof\(\s*fetch, memberId, window\.location\.origin, undefined, controller\.signal/);
   assert.doesNotMatch(ui,/setReport\(await runStagingAcceptance\(fetch\)\)/);
 });
