@@ -77,7 +77,7 @@ function OfficialAvatar({ size = "avatar-md" }: { size?: string }) {
   return <span className={"avatar avatar-official " + size} aria-hidden="true">A</span>;
 }
 
-function Header({ onMenu, search, setSearch, onDesign, onNotice, inputRef, pathname, onSearchSubmit }:{
+function Header({ onMenu, search, setSearch, onDesign, inputRef, pathname, onSearchSubmit }:{
   onMenu: () => void; search: string; setSearch: (value: string) => void;
   onDesign: () => void; inputRef: React.RefObject<HTMLInputElement | null>;
   pathname: string; onSearchSubmit: () => void;
