@@ -145,6 +145,16 @@ jobs:
               > "$RUNNER_TEMP/v5-beta-before-$worker.json"
             jq -e '.success == true and (.result.bindings | type) == "array"' \
               "$RUNNER_TEMP/v5-beta-before-$worker.json" >/dev/null
+            if [ "$worker" != 'anevum-v5-beta' ]; then
+              curl --fail --silent --show-error --max-time 25 \
+                -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+                "$api/workers/scripts/$worker/deployments" \
+                > "$RUNNER_TEMP/v5-beta-before-deployments-$worker.json"
+              jq -e '.success == true and
+                (.result.deployments | type) == "array" and
+                (.result.deployments | length) > 0' \
+                "$RUNNER_TEMP/v5-beta-before-deployments-$worker.json" >/dev/null
+            fi
           done
           jq -e '
             any(.result.bindings[]; .name == "MEMBER_DB" and .type == "d1" and
@@ -239,9 +249,24 @@ jobs:
               -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
               "$api/workers/scripts/$worker/settings" \
               > "$RUNNER_TEMP/v5-beta-after-$worker.json"
+            # Compare actual settings/bindings, then exact active deployment
+            # versions. Cloudflare's incidental settings metadata can change
+            # independently, so a whole-response JSON equality test is brittle.
             jq -e --slurpfile before "$RUNNER_TEMP/v5-beta-before-$worker.json" '
-              .success == true and .result == $before[0].result' \
+              .success == true and
+              .result.bindings == $before[0].result.bindings and
+              .result.compatibility_date == $before[0].result.compatibility_date and
+              .result.compatibility_flags == $before[0].result.compatibility_flags' \
               "$RUNNER_TEMP/v5-beta-after-$worker.json" >/dev/null
+            curl --fail --silent --show-error --max-time 25 \
+              -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+              "$api/workers/scripts/$worker/deployments" \
+              > "$RUNNER_TEMP/v5-beta-after-deployments-$worker.json"
+            jq -e --slurpfile before "$RUNNER_TEMP/v5-beta-before-deployments-$worker.json" '
+              .success == true and
+              ([.result.deployments[0].versions[].version_id] ==
+               [$before[0].result.deployments[0].versions[].version_id])' \
+              "$RUNNER_TEMP/v5-beta-after-deployments-$worker.json" >/dev/null
           done
           {
             echo '## ANEVUM V5: isolated beta deployment'
