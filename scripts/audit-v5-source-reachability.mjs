@@ -6,7 +6,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import {pathToFileURL} from "node:url";
-import ts from "typescript";
+import { parse } from "@babel/parser";
 
 const SUFFIXES=["",".ts",".tsx",".mts",".cts",".mjs",".cjs",".js",".jsx",".json",".css",".svg",".png",".jpg",".jpeg",".webp"];
 const SKIP=new Set([".git","node_modules","dist",".wrangler","coverage",".tmp","tmp",".cache",".next","build","artifacts"]);
@@ -33,24 +33,44 @@ function extract(file,content){
     return {imports,dynamic};
   }
   if(!/\.(?:[cm]?[jt]sx?)$/.test(file))return {imports,dynamic};
-  const kind=file.endsWith(".tsx")?ts.ScriptKind.TSX:file.endsWith(".jsx")?ts.ScriptKind.JSX:ts.ScriptKind.TS;
-  const source=ts.createSourceFile(file,content,ts.ScriptTarget.Latest,true,kind);
-  const stringValue=node=>node&&ts.isStringLiteralLike(node)?node.text:null;
-  const visit=node=>{
-    if(ts.isImportDeclaration(node)||ts.isExportDeclaration(node)){
-      const spec=stringValue(node.moduleSpecifier);
+
+  // TypeScript 7 ships a native tsc without a stable compiler API.
+  // Use the explicit Babel parser dependency; never silently downgrade
+  // the production tsc executable to TypeScript 6.
+  const isTypeScript=/\.(?:ts|tsx|mts|cts)$/.test(file);
+  const isJsx=/\.(?:tsx|jsx)$/.test(file);
+  const plugins=[
+    ...(isTypeScript?["typescript"]:[]),
+    ...(isJsx?["jsx"]:[])
+  ];
+  const ast=parse(content,{sourceType:"unambiguous",plugins});
+
+  const literal=node=>node?.type==="StringLiteral"?node.value:null;
+  function visit(node){
+    if(!node||typeof node!=="object"||typeof node.type!=="string")return;
+    if(["ImportDeclaration","ExportNamedDeclaration","ExportAllDeclaration"].includes(node.type)){
+      const spec=literal(node.source);
       if(spec!==null)imports.push(spec);
     }
-    if(ts.isCallExpression(node)&&(
-      node.expression.kind===ts.SyntaxKind.ImportKeyword||
-      (ts.isIdentifier(node.expression)&&node.expression.text==="require")
-    )){
-      const spec=stringValue(node.arguments[0]);
-      if(spec!==null)imports.push(spec); else dynamic+=1;
+    if(node.type==="ImportExpression"){
+      const spec=literal(node.source);
+      if(spec!==null)imports.push(spec); else dynamic++;
     }
-    ts.forEachChild(node,visit);
-  };
-  visit(source);
+    if(node.type==="CallExpression"&&(
+      node.callee?.type==="Import"||
+      (node.callee?.type==="Identifier"&&node.callee.name==="require")
+    )){
+      const spec=literal(node.arguments?.[0]);
+      if(spec!==null)imports.push(spec); else dynamic++;
+    }
+    for(const [key,value] of Object.entries(node)){
+      if(["loc","start","end","extra","comments","leadingComments","trailingComments","innerComments"].includes(key))continue;
+      if(Array.isArray(value)){
+        for(const item of value)if(item&&typeof item==="object")visit(item);
+      }else if(value&&typeof value==="object")visit(value);
+    }
+  }
+  visit(ast);
   return {imports,dynamic};
 }
 function resolveImport(owner,specifier,files){

@@ -7,7 +7,7 @@ Parent draft: WEB #290 at b17742a391b414857a9b8e846933eb8a9c185139
 ## Purpose and methodology
 
 The script scripts/audit-v5-source-reachability.mjs inspects the actual checked-out
-TypeScript, JavaScript and CSS import graph. Runtime roots are src/main.tsx and
+TypeScript, JavaScript and CSS import graph, with an explicit Babel parser pinned for compatibility with the TypeScript 7 native compiler (which does not export the classic compiler API). Runtime roots are src/main.tsx and
 worker.mjs. Standalone scripts and tests form auxiliary roots. Each historical
 src/pages/*.tsx file is labeled RUNTIME_REACHABLE, NON_RUNTIME_REFERENCE or
 UNREACHED_REVIEW; unresolved literal runtime imports are also detected.
