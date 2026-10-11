@@ -34,7 +34,8 @@ function Intro({ kicker, title, children }: { kicker: string; title: string; chi
   return <header className="c2-intro"><span className="c2-kicker">{kicker}</span><h1>{title}</h1><p>{children}</p></header>;
 }
 function NoteCard({ note }: { note: FieldNote }) {
-  return <article className="c2-card c2-note">
+  return <article className={"c2-card c2-note v6-index-note v6-index-"+note.type.toLowerCase()}>
+    <div className="v6-index-art" aria-hidden="true"><span>{({systems:"λ",engineering:"⌘",research:"∑",release:"✳"} as Record<string,string>)[note.type.toLowerCase()] || "✳"}</span></div>
     <div className="c2-card-meta"><span>{note.type}</span><time dateTime={note.date}>{dateLabel(note.date)}</time><span>{note.readMinutes} min read</span></div>
     <h2><Link to={"/field-notes/" + note.slug}>{note.title}</Link></h2>
     <p>{note.summary}</p>
@@ -93,7 +94,13 @@ function Projects() {
     </Intro>
     <div className="c2-truth">Only registered ANEVUM projects appear here. An app's public information does not imply active broker execution, user enrollment or paid access.</div>
     <section className="c2-grid" aria-label="Registered projects">{products.map(product =>
-      <article className="c2-card c2-project" key={product.slug}>
+      <article className={"c2-card c2-project v6-project v6-project-"+product.slug} key={product.slug}>
+        <div className="v6-project-art" aria-hidden="true">
+          <span className="v6-project-tag">{product.name} / PUBLIC PROJECT</span>
+          <span className="v6-project-axis"/>
+          <span className="v6-project-orbit"/>
+          <span className="v6-project-glyph">{product.name.charAt(0)}</span>
+        </div>
         <div className="c2-project-icon" aria-hidden="true">{product.name.charAt(0)}</div>
         <span className="c2-kicker">{product.category}</span>
         <h2>{product.name}</h2><p>{product.oneLine}</p>
@@ -187,7 +194,13 @@ function Communities() {
   ];
   return <div className="c2-page">
     <Intro kicker="ANEVUM / TOPICS" title="Explore the subjects">Browse authentic published research. Member discussion is separate and only opens after the invite-only pilot passes its moderation and privacy checks.</Intro>
-    <div className="c2-grid">{types.map(([title, detail, slug]) => <article className="c2-card" key={slug}><h2>{title}</h2><p>{detail}</p><Link className="c2-text-link" to={"/field-notes?category=" + slug}>Read publications →</Link></article>)}</div>
+    <div className="c2-grid v6-topics">{types.map(([title, detail, slug]) =>
+      <article className={"c2-card v6-topic v6-topic-"+slug} key={slug}>
+        <div className="v6-topic-glyph" aria-hidden="true">{slug==="systems"?"λ":slug==="engineering"?"⌘":slug==="research"?"∑":"✳"}</div>
+        <span className="c2-kicker">ANEVUM / TOPIC</span>
+        <h2>{title}</h2><p>{detail}</p>
+        <Link className="c2-text-link" to={"/field-notes?category=" + slug}>Read publications →</Link>
+      </article>)}</div>
     <div className="c2-truth">No fictional communities, membership counts, rankings, votes or endorsements are displayed.</div>
     <p className="c2-truth">ANEVUM discussions are for independent learning and research methods. Following a member or reading their work never grants brokerage access, copies their orders, mirrors a portfolio, or executes another person\'s trades. RHEN connections and settings remain individually controlled.</p>
     <CommonsPostsBeta/>
