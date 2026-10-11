@@ -7,27 +7,13 @@ import { currentRhenRelease, rhenReleaseBySlug } from "./data/releases";
 
 const RhenTerminal = lazy(() => import("./pages/RhenTerminal"));
 const Command = lazy(() => import("./pages/Command"));
-const HomeCompany = lazy(() => import("./pages/HomeCompany"));
 const CommonsV5 = lazy(() => import("./commons/CommonsV5"));
-const Products = lazy(() => import("./pages/Products"));
-const RhenProduct = lazy(() => import("./pages/RhenProduct"));
-const Feed = lazy(() => import("./pages/Feed"));
-const ResearchHub = lazy(() => import("./pages/ResearchHub"));
-const FieldNoteDetail = lazy(() => import("./pages/FieldNoteDetail"));
-const Architecture = lazy(() => import("./pages/Architecture"));
-const Founder = lazy(() => import("./pages/Founder"));
-const Resume = lazy(() => import("./pages/Resume"));
-const Releases = lazy(() => import("./pages/Releases"));
-const ReleaseDetail = lazy(() => import("./pages/ReleaseDetail"));
-const SignIn = lazy(() => import("./pages/SignIn"));
 const MemberHome = lazy(() => import("./pages/MemberHome"));
 const MemberSettings = lazy(() => import("./pages/MemberSettings"));
 const MemberRewards = lazy(() => import("./pages/MemberRewards"));
 const MemberStagingVerify = lazy(() => import("./pages/MemberStagingVerify"));
 const RhenApp = lazy(() => import("./pages/RhenApp"));
 const RhenReviewConnect = lazy(() => import("./pages/RhenReviewConnect"));
-const Privacy = lazy(() => import("./pages/Privacy"));
-const Terms = lazy(() => import("./pages/Terms"));
 
 const titles: Record<string, string> = {
   "/": "The Commons — ANEVUM",
