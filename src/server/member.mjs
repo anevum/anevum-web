@@ -5,6 +5,7 @@ import { commonsSocialEndpoint, socialSchemaReady, exportMemberSocial } from "./
 import { moderationEndpoint } from "./commons-moderation.mjs";
 import { memberRhenDraftSchemaReady, readMemberRhenDraft, saveMemberRhenDraft, deleteMemberRhenDraft, validateRhenDraft, draftExpectedMemberMatches } from "./member-rhen-draft.mjs";
 import { resolveMemberOrigin, memberSchemaReady } from "./member-preflight.mjs";
+import { preferenceExpectedMemberMatches } from "./member-preference-guard.mjs";
 import { memberRhenWorkspaceSchemaReady, readMemberRhenWorkspace, createMemberRhenWorkspace, workspaceExpectedMemberMatches } from "./member-rhen-workspace.mjs";
 const PUBLIC_PROJECTS = new Set(["rhen"]);
 
@@ -324,6 +325,11 @@ export async function memberEndpoint(request, env, pathname, verifiedContext = {
     const [, group, slug] = choice;
     if (!PUBLIC_PROJECTS.has(slug)) return reply({ message: "Project not registered." }, 404);
     if (!["PUT", "DELETE"].includes(request.method)) return reply({ message: "Method not allowed." }, 405);
+    // An optional stale-tab comparison may deny a write, but may never
+    // choose its owner. D1 operations below still use verified user.id.
+    if (!preferenceExpectedMemberMatches(request, user.id)) {
+      return reply({ message: "Authenticated member changed. Reload your Command." }, 409);
+    }
     const table = group === "saved-apps" ? "member_saved_apps" : "member_project_follows";
     const column = group === "saved-apps" ? "app_slug" : "project_slug";
     if (request.method === "PUT") {
