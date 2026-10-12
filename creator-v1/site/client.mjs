@@ -3,7 +3,7 @@ const main = document.getElementById('main');
 const search = document.getElementById('searchInput');
 const searchForm = document.getElementById('searchForm');
 const announcer = document.getElementById('routeAnnouncement');
-const homeLogo = document.querySelector('.brand-lockup .anevum-brand-mark')?.outerHTML || '';
+const homeLogo = document.getElementById('orbitHeroMark')?.innerHTML || document.querySelector('.brand-lockup .anevum-brand-mark')?.outerHTML || '';
 const escapeHtml = x => String(x ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
 const iconPaths = {
   home:'M3 10.5 12 3l9 7.5V21h-6v-6H9v6H3z',

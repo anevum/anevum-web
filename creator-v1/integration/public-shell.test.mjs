@@ -2,10 +2,12 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import runtime from '../site/runtime.mjs';
 import {PAGE,STYLES,CLIENT,ASSETS,BRAND_FAVICON} from '../site/generated.mjs';
-import {BRAND_MARK,BRAND_CSS} from '../shared/brand.mjs';
+import {BRAND_MARK,BRAND_MARK_FULL,BRAND_CSS} from '../shared/brand.mjs';
 
 test('new public experience uses one accessible Orbit identity and compact navigation',()=>{
   assert.ok(PAGE.includes(BRAND_MARK));
+  assert.ok(PAGE.includes(BRAND_MARK_FULL),'hero must use detailed Orbit vector, not tiny favicon mark');
+  assert.match(PAGE,/id="orbitHeroMark"/);
   assert.equal((PAGE.match(/class="anevum-brand-mark"/g)||[]).length,1);
   assert.match(PAGE,/class="site-header"/);
   assert.match(PAGE,/class="side-nav"/);

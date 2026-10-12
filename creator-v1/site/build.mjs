@@ -2,7 +2,7 @@ import {readFileSync,writeFileSync,mkdirSync} from 'node:fs';
 import {dirname,resolve} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {createHash} from 'node:crypto';
-import {BRAND_MARK,BRAND_CSS,BRAND_FAVICON,BRAND_VERSION} from '../shared/brand.mjs';
+import {BRAND_MARK,BRAND_MARK_FULL,BRAND_CSS,BRAND_FAVICON,BRAND_VERSION} from '../shared/brand.mjs';
 
 const here=dirname(fileURLToPath(import.meta.url));
 const previewPath=process.argv[2]||resolve(here,'../../community-preview/worker.js');
@@ -20,6 +20,9 @@ if(PAGE.split(marker).length!==2)throw new Error('ANEVUM mark must be injected e
 if(!PAGE.includes('src="/client.mjs"')||!PAGE.includes('href="/styles.css"')||!PAGE.includes('href="/favicon.svg"'))throw new Error('Missing public shell assets');
 if(/<script(?![^>]*\bsrc=)[^>]*>|on(?:click|load|error)\s*=|<iframe/i.test(PAGE))throw new Error('Public shell must not contain inline code');
 PAGE=PAGE.replace(marker,BRAND_MARK);
+const heroMarker='<!-- ANEVUM_HERO_MARK_FULL -->';
+if(PAGE.split(heroMarker).length!==2)throw new Error('ANEVUM hero mark must be injected exactly once');
+PAGE=PAGE.replace(heroMarker,BRAND_MARK_FULL);
 if(!PAGE.includes('ANEVUM V1 / IN DEVELOPMENT'))throw new Error('Read-only feature status disclosure missing');
 const STYLES=readFileSync(resolve(here,'shell.css'),'utf8')+'\n'+BRAND_CSS;
 const CLIENT=readFileSync(resolve(here,'client.mjs'),'utf8');

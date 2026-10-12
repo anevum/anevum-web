@@ -26,3 +26,5 @@
 - January 1, 2027 is the opening target, **not** a reason to present unaccepted source work as production-ready.
 
 **Acceptance of this slice:** V1 build, backend fixtures, public shell tests, brand regression and exact-head GitHub CI must pass before browser review.
+## Visual fidelity improvement
+The headline display uses the full-size shared Orbit vector master in a hidden HTML template, while navigation and favicon use the compact shared variant. This is intentional: the ribbon layering and orange/lavender worlds must not disappear from the prominent brand moment. Both versions remain source-controlled, not locally reinvented marks. Mobile navigation labels were increased for legibility.
