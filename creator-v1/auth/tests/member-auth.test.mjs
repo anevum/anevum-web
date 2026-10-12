@@ -31,7 +31,7 @@ const fetcher=async (url,options)=>{
   throw Error('Unexpected outgoing network call');
 };
 const app=createMemberWorker({fetcher,clock:()=>now});
-const env={COMMUNITY_DB:db,AUTH_PEPPER:'a'.repeat(64),RESEND_API_KEY:'test-sending-key',TURNSTILE_SECRET:'test-challenge-secret'};
+const env={COMMUNITY_DB:db,STAGING_JOIN_ENABLED:'true',STAGING_INVITE_EMAILS:'tester@example.com,rate@example.com,offline@example.com,second@example.com,attacked@example.com,another@example.com',AUTH_PEPPER:'a'.repeat(64),RESEND_API_KEY:'test-sending-key',TURNSTILE_SECRET:'test-challenge-secret'};
 function req(path,method='GET',body,opts={}){return new Request('https://next.anevum.com'+path,{method,headers:{origin:opts.origin??'https://next.anevum.com','sec-fetch-site':opts.fetchSite??'same-origin', 'cf-connecting-ip':opts.ip??'203.0.113.33','content-type':'application/json',...(opts.cookie?{cookie:opts.cookie}:{})},body:body===undefined?undefined:JSON.stringify(body)});}
 const post=(path,body,opts)=>app.fetch(req(path,'POST',body,opts),env);
 const get=(path,opts)=>app.fetch(req(path,'GET',undefined,opts),env);
@@ -43,13 +43,13 @@ test('staging schema includes accounts, sessions, hashed OTP, rates and migratio
  assert.ok(inspect("SELECT version FROM schema_migrations WHERE version='0003_member_identity_staging'").length);
 });
 test('responsive account interface is real, isolated and labels disabled registration honestly',async()=>{
- const html=await app.fetch(req('/join'),env);assert.equal(html.status,200);const content=await html.text();
- for(const text of ['Join ANEVUM','Creator accounts are not open yet','/join.css','/join.js','0x4AAAAAAFUPr86b6UW8tGqo'])assert.ok(content.includes(text),text);
+ const html=await app.fetch(req('/api/v1/member/join'),env);assert.equal(html.status,200);const content=await html.text();
+ for(const text of ['Join ANEVUM','Creator accounts are in private testing','/api/v1/member/join.css','/api/v1/member/join.js','0x4AAAAAAFUPr86b6UW8tGqo'])assert.ok(content.includes(text),text);
  assert.match(html.headers.get('content-security-policy'),/frame-ancestors 'none'/);
  assert.match(html.headers.get('x-robots-tag'),/noindex/);
- const style=await app.fetch(req('/join.css'),env);assert.match(style.headers.get('content-type'),/text\/css/);assert.ok((await style.text()).includes('@media(max-width:430px)'));
- const js=await app.fetch(req('/join.js'),env);assert.match(js.headers.get('content-type'),/javascript/);assert.ok((await js.text()).includes('!health.signupEnabled'));
- assert.equal((await app.fetch(req('/join/other'),env)).status,404);
+ const style=await app.fetch(req('/api/v1/member/join.css'),env);assert.match(style.headers.get('content-type'),/text\/css/);assert.ok((await style.text()).includes('@media(max-width:430px)'));
+ const js=await app.fetch(req('/api/v1/member/join.js'),env);assert.match(js.headers.get('content-type'),/javascript/);assert.ok((await js.text()).includes('!health.signupEnabled'));
+ assert.equal((await app.fetch(req('/api/v1/member/join/other'),env)).status,404);
 });
 test('healthy service reports readiness without exposing secrets',async()=>{
  const r=await get('/api/v1/member/health');assert.equal(r.status,200);assert.equal((await r.json()).signupEnabled,true);
@@ -152,4 +152,31 @@ test('missing sending configuration disables registration without issuing challe
  const cfg={...env};delete cfg.RESEND_API_KEY;
  const r=await app.fetch(req('/api/v1/member/start','POST',{email:'new@example.com',turnstileToken:'sample-token-123'}),cfg);
  assert.equal(r.status,503);assert.equal(inspect('SELECT count(*) n FROM member_email_challenges')[0].n,before);
+});
+
+test('staging invite gating prevents uninvited mail and registration',async()=>{
+  const before=fetchCount;
+  const result=await post('/api/v1/member/start',{email:'outside@example.com',turnstileToken:'sample-token-123'});
+  assert.equal(result.status,202);
+  assert.equal(fetchCount,before);
+  assert.equal(inspect('SELECT count(*) n FROM member_accounts WHERE email=?',['outside@example.com'])[0].n,0);
+  assert.equal((await post('/api/v1/member/verify',{email:'outside@example.com',code:'00000001'})).status,401);
+});
+test('explicit stage launch gate overrides configured email and Turnstile',async()=>{
+  const inactive={...env,STAGING_JOIN_ENABLED:'false'};
+  const health=await app.fetch(req('/api/v1/member/health'),inactive);
+  assert.equal((await health.json()).signupEnabled,false);
+  const r=await app.fetch(req('/api/v1/member/start','POST',{email:'tester@example.com',turnstileToken:'sample-token-123'}),inactive);
+  assert.equal(r.status,503);
+});
+test('staging identity assets are only served under a scoped member path',async()=>{
+  for(const route of ['/join','/join.js','/join.css'])assert.equal((await get(route)).status,404);
+  const html=(await (await get('/api/v1/member/join')).text());
+  assert.match(html,/src="\/api\/v1\/member\/join.js"/);
+  assert.match(html,/href="\/api\/v1\/member\/join.css"/);
+});
+
+test('invitation rules cannot be probed with an invalid Turnstile token',async()=>{
+  const r=await post('/api/v1/member/start',{email:'outside@example.com',turnstileToken:'invalid'});
+  assert.equal(r.status,403);
 });
