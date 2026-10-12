@@ -27,7 +27,7 @@ const db={prepare(sql){
 let now=1791700000;let lastCode=null;let fetchCount=0;let turnstileCount=0;let failEmail=false;
 const fetcher=async (url,options)=>{
   if(String(url).includes('siteverify')){turnstileCount++;return Response.json({success:true,hostname:'next.anevum.com'});}
-  if(String(url).includes('resend.com/emails')){fetchCount++;if(failEmail)return Response.json({error:'blocked'},{status:500});const payload=JSON.parse(options.body);lastCode=/\b(\d{8})\b/.exec(payload.text)?.[1];assert.ok(lastCode);assert.ok(!options.headers.authorization.includes('test-sign-in-code'));return Response.json({id:'email-test'});}
+  if(String(url).includes('resend.com/emails')){fetchCount++;if(failEmail)return Response.json({error:'blocked'},{status:500});const payload=JSON.parse(options.body);assert.equal(payload.template?.id,'anevum-v1-sign-in-otp');assert.equal(payload.template?.variables?.EXPIRES_MINUTES,10);lastCode=payload.template.variables.CODE;assert.match(lastCode,/^\d{8}$/);assert.ok(!options.headers.authorization.includes('test-sign-in-code'));assert.match(options.headers['idempotency-key'],/^anevum-otp\/[0-9a-f]{32}$/);return Response.json({id:'email-test'});}
   throw Error('Unexpected outgoing network call');
 };
 const app=createMemberWorker({fetcher,clock:()=>now});
