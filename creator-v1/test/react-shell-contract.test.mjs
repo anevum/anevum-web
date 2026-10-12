@@ -46,3 +46,19 @@ test('preview Worker delegates APIs to the existing Creator V1 backend and asset
   assert.match(config,/"workers_dev": true/);
   assert.doesNotMatch(config,/anevum\.com\/\*/);
 });
+
+
+test("public React discovery, creator and project screens expose real pagination and metadata",()=>{
+  const api=read("web/src/lib/api.ts");
+  const discover=read("web/src/pages/DiscoverPage.tsx");
+  const creators=read("web/src/pages/CreatorsPage.tsx");
+  const project=read("web/src/pages/ProjectPage.tsx");
+  const repository=read("web/src/components/RepositoryPanel.tsx");
+  for(const component of [discover,creators])assert.match(component,/PageNav/);
+  assert.match(discover,/cursor:cursor\|\|undefined/);
+  assert.match(creators,/cursor:cursor\|\|undefined/);
+  assert.match(project,/safeReturnPath/);
+  assert.match(project,/RepositoryPanel/);
+  assert.match(repository,/PUBLIC METADATA ONLY/);
+  assert.match(api,/\/repository/);
+});
