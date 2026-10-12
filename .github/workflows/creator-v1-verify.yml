@@ -40,6 +40,14 @@ jobs:
         run: node creator-v1/auth/build.mjs
       - name: Verify isolated staging member identity
         run: node --test creator-v1/auth/tests/member-auth.test.mjs
+      - name: Verify member project ownership and staff review workflow
+        run: node --test creator-v1/integration/member-projects.integration.test.mjs
+      - name: Check project Worker and UI syntax
+        run: |
+          node --check creator-v1/auth/projects.mjs
+          node --check creator-v1/auth/projects-ui.mjs
+          node --check creator-v1/authoring/review-snippets.mjs
+          node --check creator-v1/authoring/worker.mjs
       - name: Check member Worker syntax
         run: node --check creator-v1/auth/worker.mjs
       - name: Check deployable bundle syntax
