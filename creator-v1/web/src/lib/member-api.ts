@@ -36,8 +36,10 @@ export interface MemberAchievement {
 }
 
 export class MemberApiError extends Error {
-  constructor(public status:number, message:string){
+  readonly status:number;
+  constructor(status:number, message:string){
     super(message);
+    this.status=status;
     this.name="MemberApiError";
   }
 }
