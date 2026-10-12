@@ -19,6 +19,76 @@ export function safePublicUrl(value) {
     return u.href;
   } catch { return null; }
 }
+// Only public repository metadata is read. This never clones or executes code,
+// follows redirects, forwards visitor credentials, or fetches a creator's app.
+const repositoryCache = new Map();
+function githubSource(value) {
+  if (typeof value !== 'string' || value.length > 250 || /[\s\\]/.test(value)) return null;
+  try {
+    const u = new URL(value);
+    if (u.protocol !== 'https:' || u.hostname !== 'github.com' || u.port || u.username || u.password || u.search || u.hash) return null;
+    const m = /^\/([A-Za-z0-9][A-Za-z0-9-]{0,38})\/([A-Za-z0-9_.-]{1,100})\/?$/.exec(u.pathname);
+    if (!m) return null;
+    const name = m[2].replace(/\.git$/, '');
+    if (!name || name === '.' || name === '..') return null;
+    return 'https://github.com/' + m[1] + '/' + name;
+  } catch { return null; }
+}
+function repositoryText(value, max) {
+  return typeof value === 'string' ? value.replace(/[\u0000-\u001f\u007f]/g, ' ').trim().slice(0, max) : '';
+}
+async function readRepository(source) {
+  const key = source.toLowerCase(), now = Date.now(), cached = repositoryCache.get(key);
+  if (cached && cached.until > now) {
+    if (!cached.metadata) throw new Error('Repository retry cooldown');
+    return cached.metadata;
+  }
+  // Reserve a short cooldown before the fetch: repeated clicks and upstream
+  // failures cannot create an unbounded burst from the same Worker isolate.
+  repositoryCache.delete(key);
+  while (repositoryCache.size >= 128) repositoryCache.delete(repositoryCache.keys().next().value);
+  repositoryCache.set(key, { until: now + 60000, metadata: null });
+  const response = await fetch('https://api.github.com/repos' + new URL(source).pathname, {
+    method: 'GET', redirect: 'error', credentials: 'omit',
+    headers: { Accept: 'application/vnd.github+json', 'User-Agent': 'ANEVUM-Creator-V1' },
+    signal: AbortSignal.timeout(4500), cf: { cacheTtl: 300, cacheEverything: true }
+  });
+  if (!response.ok) throw new Error('Public repository unavailable');
+  const type = response.headers.get('Content-Type')?.split(';')[0].trim().toLowerCase();
+  if (type !== 'application/json' && type !== 'application/vnd.github+json') throw new Error('Unexpected repository content');
+  const reader = response.body?.getReader();
+  if (!reader) throw new Error('Empty repository response');
+  let total = 0, chunks = 0; const parts = [];
+  try {
+    for (;;) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      total += value.byteLength; chunks++;
+      if (total > 32768 || chunks > 1024) { await reader.cancel(); throw new Error('Repository response too large'); }
+      parts.push(value);
+    }
+  } finally { reader.releaseLock(); }
+  const bytes = new Uint8Array(total); let offset = 0;
+  for (const part of parts) { bytes.set(part, offset); offset += part.byteLength; }
+  const repo = JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(bytes));
+  const expected = new URL(source).pathname.slice(1).toLowerCase();
+  if (!repo || typeof repo !== 'object' || Array.isArray(repo) || repo.private !== false ||
+    typeof repo.full_name !== 'string' || repo.full_name.toLowerCase() !== expected ||
+    String(githubSource(repo.html_url) || '').toLowerCase() !== key) throw new Error('Repository identity mismatch');
+  const license = repositoryText(repo.license?.spdx_id, 80);
+  const metadata = { provider: 'github', sourceUrl: source, fullName: repositoryText(repo.full_name, 140),
+    description: repositoryText(repo.description, 500), language: repositoryText(repo.language, 60) || null,
+    license: license && license !== 'NOASSERTION' ? license : null, archived: repo.archived === true,
+    observedAt: new Date().toISOString(), ownershipVerified: false,
+    notice: 'Public metadata only. This is not a connected GitHub account or proof of publishing rights.' };
+  // Bounded, best-effort per-isolate caching. Public visibility is still checked
+  // against COMMUNITY_DB on EVERY request, including a cache hit.
+  repositoryCache.delete(key);
+  while (repositoryCache.size >= 128) repositoryCache.delete(repositoryCache.keys().next().value);
+  repositoryCache.set(key, { until: Date.now() + 300000, metadata });
+  return metadata;
+}
+
 function projectDto(row) {
   const item = {};
   for (const key of ['id', 'slug', 'title', 'summary', 'category', 'license', 'publishedAt', 'creatorHandle', 'creatorName']) item[key] = row[key] ?? null;
@@ -56,7 +126,8 @@ export default {
     const url = new URL(request.url), path = url.pathname;
     if (!['GET', 'HEAD'].includes(request.method)) return reply(request, { error: 'Read-only release. Account and publishing features are not enabled.' }, 405, { Allow: 'GET, HEAD' });
     const detail = /^\/api\/v1\/projects\/([A-Za-z0-9_-]{1,80})$/.exec(path);
-    const known = ['/health', '/api/v1/status', '/api/v1/categories', '/api/v1/projects'].includes(path) || detail;
+    const repository = /^\/api\/v1\/projects\/([A-Za-z0-9_-]{1,80})\/repository$/.exec(path);
+    const known = ['/health', '/api/v1/status', '/api/v1/categories', '/api/v1/projects'].includes(path) || detail || repository;
     if (!known) return reply(request, { error: 'Not found' }, 404);
     let filter;
     try {
@@ -71,10 +142,18 @@ export default {
       }
       if (path === '/api/v1/status') {
         const [totals] = await rows(env.COMMUNITY_DB, 'SELECT COUNT(*) AS projects,COUNT(DISTINCT c.member_id) AS creators ' + PUBLIC_FROM);
-        return reply(request, { version: '0.1.0', phase: 'read-only-development', counts: { publishedProjects: totals.projects, publishedCreators: totals.creators }, features: { discovery: true, accounts: false, publishing: false, voting: false, xp: false, community: false } });
+        return reply(request, { version: '0.1.0', phase: 'read-only-development', counts: { publishedProjects: totals.projects, publishedCreators: totals.creators }, features: { discovery: true, repositoryMetadata: true, accounts: false, publishing: false, voting: false, xp: false, community: false } });
       }
       if (path === '/api/v1/categories') {
         return reply(request, { categories: await rows(env.COMMUNITY_DB, 'SELECT p.category,COUNT(*) AS count ' + PUBLIC_FROM + ' GROUP BY p.category ORDER BY p.category') });
+      }
+      if (repository) {
+        const found = await rows(env.COMMUNITY_DB, 'SELECT p.source_url AS sourceUrl ' + PUBLIC_FROM + ' AND p.id=? LIMIT 1', [repository[1]]);
+        if (!found.length) return reply(request, { error: 'Project not found' }, 404);
+        const source = githubSource(found[0].sourceUrl);
+        if (!source) return reply(request, { error: 'This project does not link a supported public GitHub repository' }, 422);
+        try { return reply(request, { repository: await readRepository(source) }); }
+        catch { return reply(request, { error: 'GitHub metadata is unavailable. The project listing is still available.' }, 503, { 'Retry-After': '60' }); }
       }
       if (detail) {
         const found = await rows(env.COMMUNITY_DB, 'SELECT ' + FIELDS + ',p.description,p.ai_disclosure AS aiDisclosure,p.human_contribution AS humanContribution ' + PUBLIC_FROM + ' AND p.id=? LIMIT 1', [detail[1]]);
