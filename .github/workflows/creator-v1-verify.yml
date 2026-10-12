@@ -3,15 +3,17 @@ name: ANEVUM Creator V1 Verify
 on:
   workflow_dispatch:
   push:
-    branches: [build/anevum-v1-foundation-20261011, build/anevum-v1-newyear-overhaul-20261011]
+    branches: [production/creator-v1, build/anevum-v1-foundation-20261011, build/anevum-v1-newyear-overhaul-20261011]
     paths:
       - creator-v1/**
       - community-preview/worker.js
+      - docs/production/**
       - .github/workflows/creator-v1-verify.yml
   pull_request:
     paths:
       - creator-v1/**
       - community-preview/worker.js
+      - docs/production/**
       - .github/workflows/creator-v1-verify.yml
 
 permissions:
@@ -24,66 +26,64 @@ concurrency:
 jobs:
   verify:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 8
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Build approved identity and run isolated tests
+      - name: Preserve exact source and pre-production checkpoint
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p evidence
+          git rev-parse HEAD > evidence/source-sha.txt
+          git archive --format=zip --output=evidence/candidate-source.zip HEAD
+          git archive --format=zip --output=evidence/pre-production-source.zip e34faf8ad72d319e469eface8aec7fe26741951f
+          sha256sum evidence/*-source.zip > evidence/source-archives.sha256
+      - name: Build approved identity and run public isolated tests
         working-directory: creator-v1
-        run: npm test
-      - name: Build source-controlled member join interface
-        run: node creator-v1/auth/build.mjs
-      - name: Reject generated sign-in UI drifting from canonical brand source
-        run: git diff --exit-code -- creator-v1/auth/join.mjs
-      - name: Verify isolated staging member identity
-        run: node --test creator-v1/auth/tests/member-auth.test.mjs
-      - name: Verify member project ownership and staff review workflow
-        run: node --test creator-v1/integration/member-projects.integration.test.mjs
-      - name: Check project Worker and UI syntax
+        shell: bash
         run: |
-          node --check creator-v1/auth/projects.mjs
-          node --check creator-v1/auth/projects-ui.mjs
-          node --check creator-v1/authoring/review-snippets.mjs
-          node --check creator-v1/authoring/worker.mjs
-      - name: Verify community votes, XP and moderated reversal
-        run: node --test creator-v1/integration/community-votes.integration.test.mjs
-      - name: Check voting modules and generated browser scripts
+          set -euo pipefail
+          npm test 2>&1 | tee ../evidence/public-tests.log
+      - name: Build member interface and reject generated brand drift
         run: |
-          node --check creator-v1/auth/community.mjs
-          node --check creator-v1/auth/community-ui.mjs
-          node --check creator-v1/authoring/vote-moderation.mjs
-          node --check creator-v1/authoring/vote-moderation-ui.mjs
-          node --input-type=module -e 'import {Script} from "node:vm"; import {COMMUNITY_CLIENT} from "./creator-v1/auth/community-ui.mjs"; import {VOTE_APP} from "./creator-v1/authoring/vote-moderation-ui.mjs"; new Script(COMMUNITY_CLIENT); new Script(VOTE_APP)'
-      - name: Verify creator identity, earned badges and private library
-        run: node --test creator-v1/integration/social-profile-library.integration.test.mjs
-      - name: Check social modules and browser interface syntax
+          node creator-v1/auth/build.mjs
+          git diff --exit-code -- creator-v1/auth/join.mjs
+      - name: Verify all member, staff, privacy and integrated journey tests
+        shell: bash
         run: |
-          node --check creator-v1/auth/social.mjs
-          node --check creator-v1/auth/social-ui.mjs
-          node --input-type=module -e 'import {Script} from "node:vm"; import {SOCIAL_CLIENT} from "./creator-v1/auth/social-ui.mjs"; new Script(SOCIAL_CLIENT)'
-      - name: Verify privacy controls and member-scoped exports
-        run: node --test creator-v1/integration/privacy-account.integration.test.mjs
-      - name: Verify protected privacy queue and no destructive staff endpoint
-        run: node --test creator-v1/integration/privacy-staff.integration.test.mjs
-      - name: Check privacy modules and account page JavaScript
+          set -euo pipefail
+          node --test creator-v1/auth/tests/*.test.mjs creator-v1/integration/*.test.mjs 2>&1 | tee evidence/member-integration-tests.log
+      - name: Check deployable Workers and generated browser scripts
+        shell: bash
         run: |
-          node --check creator-v1/auth/privacy.mjs
-          node --check creator-v1/auth/privacy-ui.mjs
-          node --check creator-v1/authoring/privacy-queue.mjs
-          node --check creator-v1/authoring/privacy-queue-ui.mjs
-          node --input-type=module -e 'import {Script} from "node:vm"; import {PRIVACY_CLIENT} from "./creator-v1/auth/privacy-ui.mjs"; import {PRIVACY_APP} from "./creator-v1/authoring/privacy-queue-ui.mjs"; new Script(PRIVACY_CLIENT); new Script(PRIVACY_APP)'
-      - name: Enforce locked ANEVUM visual identity across all screens
-        run: node --test creator-v1/integration/brand-lock.test.mjs
-      - name: Check canonical shared brand module
-        run: node --check creator-v1/shared/brand.mjs
-      - name: Check member Worker syntax
-        run: node --check creator-v1/auth/worker.mjs
-      - name: Check deployable bundle syntax
-        run: node --check creator-v1/dist/worker.mjs
+          set -euo pipefail
+          for file in creator-v1/auth/*.mjs creator-v1/authoring/*.mjs creator-v1/shared/*.mjs creator-v1/site/*.mjs creator-v1/dist/worker.mjs; do
+            node --check "$file"
+          done
+          node --input-type=module -e 'import {Script} from "node:vm"; import {COMMUNITY_CLIENT} from "./creator-v1/auth/community-ui.mjs"; import {VOTE_APP} from "./creator-v1/authoring/vote-moderation-ui.mjs"; import {SOCIAL_CLIENT} from "./creator-v1/auth/social-ui.mjs"; import {PRIVACY_CLIENT} from "./creator-v1/auth/privacy-ui.mjs"; import {PRIVACY_APP} from "./creator-v1/authoring/privacy-queue-ui.mjs"; for (const source of [COMMUNITY_CLIENT,VOTE_APP,SOCIAL_CLIENT,PRIVACY_CLIENT,PRIVACY_APP]) new Script(source);'
+      - name: Preserve generated public artifact for visual review
+        if: always()
+        shell: bash
+        run: |
+          test ! -f creator-v1/site/generated.mjs || cp creator-v1/site/generated.mjs evidence/site-generated.mjs
+          test ! -f creator-v1/dist/worker.mjs || cp creator-v1/dist/worker.mjs evidence/worker.mjs
+          test ! -f creator-v1/dist/build-manifest.json || cp creator-v1/dist/build-manifest.json evidence/build-manifest.json
+      - name: Upload reproducible source, test logs and public build
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: creator-v1-build-${{ github.run_id }}
+          path: evidence/
+          retention-days: 14
+          if-no-files-found: error
 
-# Deliberately no Cloudflare secrets, deployment, migrations or broker access.
+# No Cloudflare secrets, deployment, migrations, account or broker access.

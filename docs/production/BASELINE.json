@@ -1,0 +1,21 @@
+{
+  "session": "ANEVUM.WEB.BUILD.2026-10-12.001.PRODUCTION-BASELINE",
+  "startedOn": "2026-10-12",
+  "timezone": "America/New_York",
+  "archiveRef": "archive/pre-production-20261012",
+  "sourceCheckpoint": "e34faf8ad72d319e469eface8aec7fe26741951f",
+  "sourceTree": "78133e80005d2c6627cafb7da02e5e35b616836f",
+  "productionSourceBranch": "production/creator-v1",
+  "deploymentPerformed": false,
+  "databaseExportPerformed": false,
+  "artifacts": {
+    "specification": {
+      "name": "ANEVUM-CREATOR-COMMUNITY-SPECIFICATION.md",
+      "sha256": "ae7a9b4cfacb357677b549b8c693d7b6fb16935d12fda4dfb34d0ed8aa1b35f3"
+    },
+    "package": {
+      "name": "ANEVUM-CREATOR-COMMUNITY-EXPERIENCE-2026-10-12.zip",
+      "sha256": "7c714dd38f1a7f38e4a9f5a70918df12cb027d517108798c9a63f7d3b12c34a1"
+    }
+  }
+}

@@ -19,8 +19,13 @@ const style = /<style>([\s\S]*?)<\/style>/.exec(PAGE);
 if (!style || !/<script>[\s\S]*?<\/script>/.test(PAGE)) throw new Error('Approved HTML structure changed');
 if (!PAGE.includes('class="header"') || !PAGE.includes('id="topNav"') || !PAGE.includes('id="bottomNav"') || !PAGE.includes('id="mobileDrawer"')) throw new Error('Cinematic preview layout/navigation contract changed');
 const STYLES = style[1]+'\n'+readFileSync(resolve(here, 'overrides.css'),'utf8')+'\n'+BRAND_CSS;
-const CLIENT = readFileSync(resolve(here, 'client.mjs'),'utf8');
-const logoStart = '<a href="#discover" class="logo" aria-label="ANEVUM — Discover">';
+// Small first-party module: bundle without adding a runtime dependency or route.
+const stateSource=readFileSync(resolve(here,'catalogue-state.mjs'),'utf8').replace(/^export /gm,'');
+const clientSource=readFileSync(resolve(here,'client.mjs'),'utf8');
+const stateImport=/^import \{[^}]+\} from '\.\/catalogue-state\.mjs';\n/;
+if(!stateImport.test(clientSource))throw new Error('Catalogue state import contract missing');
+const CLIENT=stateSource+'\n'+clientSource.replace(stateImport,'');
+const logoStart = '<a href="#discover" class="logo" aria-label="ANEVUM \u2014 Discover">';
 const startIndex=PAGE.indexOf(logoStart);
 const svgStart=startIndex<0?-1:PAGE.indexOf('<svg',startIndex+logoStart.length);
 const svgEnd=svgStart<0?-1:PAGE.indexOf('</svg>',svgStart);
@@ -36,7 +41,7 @@ PAGE=PAGE.replace(/<div class="fakebar">[\s\S]*?<\/div>/,'<div class="fakebar"><
 PAGE=PAGE.replace(/<div class="head-actions">[\s\S]*?<\/div>\s*<\/div><\/header>/,'<div class="head-actions"><a class="btn primary action-create" href="#status">V1 build</a><button class="iconbtn" type="button" data-route="account" aria-label="Account availability"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="7" r="4"/><path d="M4 22v-3a8 8 0 0 1 16 0v3"/></svg></button></div></div></header>');
 PAGE=PAGE.replace(/<footer class="foot">[\s\S]*?<\/footer>/,'<footer class="foot"><span>ANEVUM / CREATE. PLAY. BELONG.</span><span>V1 is in development. Concept art illustrates the community vision, not live projects.</span></footer>');
 PAGE=PAGE.replace('Search projects, creators, tags\u2026','Search published projects');
-PAGE=PAGE.replace('<title>ANEVUM / Create. Play. Belong.</title>','<meta name="description" content="ANEVUM is building a community for AI-assisted software, games and creative tools. Explore the first read-only V1 build."><title>ANEVUM / Create. Play. Belong.</title>');
+PAGE=PAGE.replace('<title>ANEVUM / Create. Play. Belong.</title>','<meta name="description" content="Discover independent games, apps and creative tools. Meet their makers on ANEVUM, a home for creators and the curious."><title>ANEVUM / Create. Play. Belong.</title>');
 if (PAGE.includes('View demo profile') || PAGE.includes('Fictional showcase data') || PAGE.includes('const p=[')) throw new Error('Demo fixture remains in release page');
 const generated = Object.entries({PAGE,STYLES,CLIENT,ASSETS,BRAND_FAVICON}).map(([k,v])=>'export const '+k+'='+JSON.stringify(v)+';').join('\n');
 writeFileSync(resolve(here,'generated.mjs'),generated);
@@ -45,5 +50,5 @@ const runtime = readFileSync(resolve(here,'runtime.mjs'),'utf8').replace(/^impor
 const bundled = '// ANEVUM V1 LIVE-DATA READ-ONLY RELEASE\n'+generated.replaceAll('export const ','const ')+'\n'+api+'\n'+runtime;
 mkdirSync(resolve(here,'../dist'),{recursive:true});
 writeFileSync(resolve(here,'../dist/worker.mjs'),bundled);
-writeFileSync(resolve(here,'../dist/build-manifest.json'),JSON.stringify({version:'0.1.0',approvedSourceSha256:createHash('sha256').update(original).digest('hex'),workerSha256:createHash('sha256').update(bundled).digest('hex'),bytes:Buffer.byteLength(bundled),artworkCount:Object.keys(ASSETS).length},null,2));
+writeFileSync(resolve(here,'../dist/build-manifest.json'),JSON.stringify({version:'0.1.0',productionBuild:'001',session:'ANEVUM.WEB.BUILD.2026-10-12.001.PRODUCTION-BASELINE',approvedSourceSha256:createHash('sha256').update(original).digest('hex'),workerSha256:createHash('sha256').update(bundled).digest('hex'),bytes:Buffer.byteLength(bundled),artworkCount:Object.keys(ASSETS).length},null,2));
 console.log('Built V1: '+Buffer.byteLength(bundled)+' bytes; '+Object.keys(ASSETS).length+' approved art assets.');
