@@ -1,5 +1,9 @@
 # ANEVUM Creator V1
 
+## October 12 — public creator discovery
+
+**Session:** `ANEVUM.WEB.BUILD.2026-10-12.004.PUBLIC-CREATOR-PROFILES`. Adds genuine read-only public creator directory, published portfolios, creator-linked project cards and validated pagination/search. No staged members, private account information, fake profiles, production signup, migration or RHEN changes. The approved Orbit cinematic experience remains the design foundation.
+
 ## Active source-only build — October 12, 2026
 
 **Session:** `ANEVUM.WEB.BUILD.2026-10-12.003.ORBIT-CREATOR-EXPERIENCE`  

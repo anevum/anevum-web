@@ -42,3 +42,19 @@ test('the public production site serves same-origin CSS, JS, favicon and artwork
    assert.ok((await r.arrayBuffer()).byteLength>100,path);
  }
 });
+
+test('creator directory and public portfolios extend the restored cinematic shell',async()=>{
+ for(const phrase of ['function creatorCards','function creatorDirectory','function creatorProfile','function creatorLink','Meet the creators'])
+   assert.ok(CLIENT.includes(phrase),phrase);
+ for(const api of ['/api/v1/creators','/api/v1/projects?'])assert.ok(CLIENT.includes(api),api);
+ assert.match(STYLES,/\.v1-creator-grid/);
+ assert.match(STYLES,/\.v1-creator-profile/);
+ for(const path of ['/creators','/creators/fixture']){
+   const r=await runtime.fetch(new Request('https://anevum.com'+path),{});
+   assert.equal(r.status,200,path);
+   assert.match(r.headers.get('content-security-policy')||'',/script-src 'self'/);
+ }
+ for(const path of ['/creators/unsafe<script>','/creators/aa','/creators/'+ 'z'.repeat(75)])
+   assert.equal((await runtime.fetch(new Request('https://anevum.com'+path),{})).status,404,path);
+ assert.equal((await runtime.fetch(new Request('https://anevum.com/creators',{method:'POST'}),{})).status,405);
+});

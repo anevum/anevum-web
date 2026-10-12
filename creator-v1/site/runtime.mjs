@@ -10,7 +10,7 @@ export default {
     const path = new URL(request.url).pathname;
     if (path === '/health' || path.startsWith('/api/')) return api.fetch(request, env);
     if (!['GET', 'HEAD'].includes(request.method)) return output(request, 'Read-only release', 'text/plain; charset=utf-8', 405, { Allow: 'GET, HEAD' });
-    const shellRoute = path === '/' || path === '/index.html' || ['/discover','/create','/community','/library','/account','/about','/status'].includes(path) || /^\/projects\/[A-Za-z0-9_-]{1,80}$/.test(path);
+    const shellRoute = path === '/' || path === '/index.html' || ['/discover','/creators','/create','/community','/library','/account','/about','/status'].includes(path) || /^\/projects\/[A-Za-z0-9_-]{1,80}$/.test(path) || /^\/creators\/[A-Za-z][A-Za-z0-9_]{2,29}$/.test(path);
     if (shellRoute) return output(request, PAGE, 'text/html; charset=utf-8', 200, { 'Content-Security-Policy': CSP });
     if (path === '/favicon.svg') return output(request, BRAND_FAVICON, 'image/svg+xml; charset=utf-8');
     if (path === '/styles.css') return output(request, STYLES, 'text/css; charset=utf-8');
