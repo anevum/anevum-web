@@ -10,7 +10,6 @@ import {PROJECT_PAGE,PROJECT_STYLE} from '../auth/projects-ui.mjs';
 import {PRIVACY_PAGE,PRIVACY_STYLE} from '../auth/privacy-ui.mjs';
 import {STUDIO_PAGE,STUDIO_STYLE} from '../authoring/worker.mjs';
 
-console.error('BRAND_DEBUG', JSON.stringify({markHas:JOIN_PAGE.includes(BRAND_MARK),markTail:JOIN_PAGE.slice(JOIN_PAGE.indexOf('viewBox')-25,JOIN_PAGE.indexOf('viewBox')+185),styleHas:JOIN_STYLE.includes(BRAND_CSS),styleTail:JOIN_STYLE.slice(-130),brandTail:BRAND_CSS.slice(-100),styleLen:JOIN_STYLE.length,brandLen:BRAND_CSS.length}));
 const screens=[
   ['member join',JOIN_PAGE,JOIN_STYLE],
   ['community',COMMUNITY_PAGE,COMMUNITY_STYLE],
