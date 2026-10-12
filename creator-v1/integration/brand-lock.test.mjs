@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {BRAND_MARK,BRAND_CSS,BRAND_VERSION,BRAND_ARCH_PATH,BRAND_FAVICON,BRAND_MARK_MONO_DARK,BRAND_MARK_MONO_LIGHT} from '../shared/brand.mjs';
+import {BRAND_MARK,BRAND_CSS,BRAND_VERSION,BRAND_ARCH_PATH,BRAND_ARCH_COMPACT_PATH,BRAND_FAVICON,BRAND_MARK_FULL,BRAND_MARK_MONO_DARK,BRAND_MARK_MONO_LIGHT} from '../shared/brand.mjs';
 import {PAGE as JOIN_PAGE,STYLE as JOIN_STYLE} from '../auth/join.mjs';
 import {COMMUNITY_PAGE,COMMUNITY_STYLE} from '../auth/community-ui.mjs';
 import {PROFILE_PAGE,LIBRARY_PAGE,SOCIAL_STYLE} from '../auth/social-ui.mjs';
@@ -18,18 +18,37 @@ const screens=[
   ['account privacy',PRIVACY_PAGE,PRIVACY_STYLE],
   ['staff studio',STUDIO_PAGE,STUDIO_STYLE]
 ];
-test('orbital portal has consistent vector geometry, safe output and standalone masters',()=>{
-  assert.equal(BRAND_VERSION,'orbital-portal-2026-10-12-v1');
-  for(const svg of [BRAND_MARK,BRAND_FAVICON,BRAND_MARK_MONO_DARK,BRAND_MARK_MONO_LIGHT]){
-    assert.ok(svg.includes(BRAND_ARCH_PATH),'A/portal arch missing');
+test('detailed hero and compact icon share the same A/orbit identity',()=>{
+  assert.equal(BRAND_VERSION,'orbital-portal-2026-10-12-v1.1');
+  for(const svg of [BRAND_MARK_FULL,BRAND_MARK_MONO_DARK,BRAND_MARK_MONO_LIGHT]){
+    assert.ok(svg.includes(BRAND_ARCH_PATH),'full-size portal arch missing');
     assert.match(svg,/viewBox="0 0 64 64"/);
-    assert.match(svg,/rotate\(-18 32 34\)/);
     assert.match(svg,/<circle cx="32" cy="33"/);
+    assert.match(svg,/rotate\(-18 32 34\)/);
+  }
+  for(const svg of [BRAND_MARK,BRAND_FAVICON]){
+    assert.ok(svg.includes(BRAND_ARCH_COMPACT_PATH),'favicon must use compact A');
+    assert.match(svg,/viewBox="0 0 64 64"/);
+    assert.doesNotMatch(svg,/<circle cx="32" cy="33"/,'tiny sphere must be omitted at 16px');
+    assert.doesNotMatch(svg,/<circle cx="57\.7"/,'tiny satellite must be omitted at 16px');
     assert.doesNotMatch(svg,/<script|<image\b|onerror=|onclick=|foreignObject/i);
   }
-  assert.equal(readFileSync(new URL('../brand/anevum-mark.svg',import.meta.url),'utf8').trim(),BRAND_FAVICON);
+  assert.equal(readFileSync(new URL('../brand/anevum-mark.svg',import.meta.url),'utf8').trim(),BRAND_MARK_FULL);
+  assert.equal(readFileSync(new URL('../brand/anevum-mark-compact.svg',import.meta.url),'utf8').trim(),BRAND_FAVICON);
   assert.equal(readFileSync(new URL('../brand/anevum-mark-mono-dark.svg',import.meta.url),'utf8').trim(),BRAND_MARK_MONO_DARK);
   assert.equal(readFileSync(new URL('../brand/anevum-mark-mono-light.svg',import.meta.url),'utf8').trim(),BRAND_MARK_MONO_LIGHT);
+});
+function relativeLuminance(hex){
+  const values=[1,3,5].map(index=>parseInt(hex.slice(index,index+2),16)/255);
+  const linear=values.map(v=>v<=.04045?v/12.92:Math.pow((v+.055)/1.055,2.4));
+  return .2126*linear[0]+.7152*linear[1]+.0722*linear[2];
+}
+test('copper action color remains legible with a dark foreground and visible focus',()=>{
+  const lo=relativeLuminance('#100d11'),hi=relativeLuminance('#d9945e');
+  assert.ok((hi+.05)/(lo+.05)>=4.5,'copper text contrast must pass AA');
+  assert.ok(BRAND_CSS.includes('--anevum-on-copper:#100d11'));
+  assert.match(BRAND_CSS,/\.btn\.primary,button\.primary/);
+  assert.match(BRAND_CSS,/\.btn\.primary:focus-visible/);
 });
 test('public and private screens have one consistent ANEVUM header mark',()=>{
   for(const [name,page] of screens){
