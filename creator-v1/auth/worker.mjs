@@ -97,11 +97,13 @@ async function turnstile(env,token,ip,fetcher) {
   const result=await res.json();
   return result?.success===true && result.hostname==='next.anevum.com';
 }
-async function emailCode(env,email,code,fetcher) {
+async function emailCode(env,email,code,challengeId,fetcher) {
   if(!env.RESEND_API_KEY)throw Error('Email disabled');
-  const payload={from:'ANEVUM <access@auth.anevum.com>',to:[email],subject:'Your ANEVUM sign-in code',
-    text:`Your ANEVUM sign-in code is ${code}. It expires in 10 minutes. Do not share this code. If you did not request it, ignore this message.`};
-  const res=await fetcher('https://api.resend.com/emails',{method:'POST',headers:{authorization:'Bearer '+env.RESEND_API_KEY,'content-type':'application/json'},body:JSON.stringify(payload),signal:AbortSignal.timeout(5500)});
+  const payload={from:'ANEVUM <access@auth.anevum.com>',to:[email],
+    template:{id:'anevum-v1-sign-in-otp',variables:{CODE:code,EXPIRES_MINUTES:10}}};
+  const res=await fetcher('https://api.resend.com/emails',{method:'POST',headers:{
+    authorization:'Bearer '+env.RESEND_API_KEY,'content-type':'application/json',
+    'idempotency-key':'anevum-otp/'+challengeId},body:JSON.stringify(payload),signal:AbortSignal.timeout(5500)});
   if(!res.ok)throw Error('Email unavailable');
 }
 export function createMemberWorker({fetcher=fetch,clock=unix}={}) {
@@ -146,7 +148,7 @@ return {async fetch(req,env) {
         VALUES(?,?,?,?,?,NULL,0) ON CONFLICT(email_key) DO UPDATE SET code_hash=excluded.code_hash,challenge_id=excluded.challenge_id,
         expires_at=excluded.expires_at,created_at=excluded.created_at,consumed_at=NULL,attempts=0`,
         [emailKey,codeHash,challengeId,now+600,now]);
-      try{await emailCode(env,email,code,fetcher)}catch{
+      try{await emailCode(env,email,code,challengeId,fetcher)}catch{
         await run(db,'DELETE FROM member_email_challenges WHERE email_key=? AND challenge_id=?',[emailKey,challengeId]);
         return fail(req,'Email temporarily unavailable',503);
       }
