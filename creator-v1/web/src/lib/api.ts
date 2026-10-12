@@ -18,6 +18,19 @@ export interface Project {
   humanContribution?: string | null;
 }
 
+export interface PublicRepositoryMetadata {
+  provider: "github";
+  sourceUrl: string;
+  fullName: string;
+  description: string;
+  language: string | null;
+  license: string | null;
+  archived: boolean;
+  observedAt: string;
+  ownershipVerified: false;
+  notice: string;
+}
+
 export interface Creator {
   handle: string;
   displayName: string;
@@ -65,6 +78,10 @@ export function readProjects(params: Record<string, string | undefined> = {}, si
 export function readProject(id: string, signal?: AbortSignal) {
   return getJson<{ item: Project }>("/api/v1/projects/" + encodeURIComponent(id), signal);
 }
+export function readRepository(id:string,signal?:AbortSignal) {
+  return getJson<{repository:PublicRepositoryMetadata}>("/api/v1/projects/"+encodeURIComponent(id)+"/repository",signal);
+}
+
 export function readCreators(params: Record<string, string | undefined> = {}, signal?: AbortSignal) {
   const query = new URLSearchParams();
   for (const [key, value] of Object.entries(params)) if (value) query.set(key, value);

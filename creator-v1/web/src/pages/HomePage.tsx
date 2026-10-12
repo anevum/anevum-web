@@ -47,7 +47,7 @@ export function HomePage() {
       </section>
 
       <div className="section-heading"><div><span className="kicker">LATEST SIGNAL</span><h2>PUBLISHED WORK</h2></div><Link to="/discover">OPEN DISCOVER <Icon name="arrow" size={15}/></Link></div>
-      {data.data.projects.items.length ? <section className="project-grid">{data.data.projects.items.map(project=><ProjectCard key={project.id} project={project}/>)}</section> : <EmptyState title="THE FIRST PROJECTS ARE STILL AHEAD" detail="ANEVUM will show genuine approved work here. No fake projects, ratings or activity will be used to make the network look busy."/>}
+      {data.data.projects.items.length ? <section className="project-grid">{data.data.projects.items.map(project=><ProjectCard key={project.id} project={project} returnTo="/"/>)}</section> : <EmptyState title="THE FIRST PROJECTS ARE STILL AHEAD" detail="ANEVUM will show genuine approved work here. No fake projects, ratings or activity will be used to make the network look busy."/>}
 
       <section className="manifesto-grid">
         <article className="manifesto-card manifesto-accent"><span className="kicker">WHY ANEVUM</span><h2>NOT ANOTHER APP STORE.</h2><p>Projects have people behind them. Follow the maker, understand the work, give useful feedback, contribute, and come back when it changes.</p></article>

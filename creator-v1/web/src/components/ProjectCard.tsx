@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import type { Project } from "../lib/api";
 import { Icon } from "./Icons";
+import { projectDetailPath } from "../lib/navigation";
 
 const labels: Record<string, string> = {
   games: "Game",
@@ -13,20 +14,21 @@ const labels: Record<string, string> = {
   other: "Project"
 };
 
-export function ProjectCard({ project }: { project: Project }) {
+export function ProjectCard({ project, returnTo = "/discover" }: { project: Project; returnTo?: string }) {
+  const href=projectDetailPath(project.id,returnTo);
   return (
     <article className="project-card">
-      <Link className="project-art" to={`/projects/${encodeURIComponent(project.id)}`} aria-label={`Open ${project.title}`}>
+      <Link className="project-art" to={href} aria-label={`Open ${project.title}`}>
         <span className={`project-glyph project-glyph-${project.category}`} aria-hidden="true"><OrbitalMini /></span>
         <span className="project-kind">{labels[project.category] || "Project"}</span>
       </Link>
       <div className="project-card-body">
         <div className="project-card-topline"><span>{project.freeToUse ? "FREE" : "EXTERNAL"}</span><span>{project.category.toUpperCase()}</span></div>
-        <h3><Link to={`/projects/${encodeURIComponent(project.id)}`}>{project.title}</Link></h3>
+        <h3><Link to={href}>{project.title}</Link></h3>
         <p>{project.summary}</p>
         <footer>
           <Link className="creator-inline" to={`/creators/${encodeURIComponent(project.creatorHandle)}`}>@{project.creatorHandle}</Link>
-          <Link className="project-arrow" to={`/projects/${encodeURIComponent(project.id)}`} aria-label={`View ${project.title}`}><Icon name="arrow" size={16} /></Link>
+          <Link className="project-arrow" to={href} aria-label={`View ${project.title}`}><Icon name="arrow" size={16} /></Link>
         </footer>
       </div>
     </article>

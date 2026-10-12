@@ -8,6 +8,6 @@
   },
   "scripts": {
     "build": "node site/build.mjs",
-    "test": "npm run build && node --test test/public-api.test.mjs test/archive-gateway.test.mjs test/repository-api.test.mjs test/catalogue-state.test.mjs test/catalogue-client.test.mjs test/react-shell-contract.test.mjs && node --test authoring/tests/authoring.test.mjs && node --test integration/public-shell.test.mjs"
+    "test": "npm run build && node --test test/public-api.test.mjs test/archive-gateway.test.mjs test/repository-api.test.mjs test/catalogue-state.test.mjs test/catalogue-client.test.mjs test/react-shell-contract.test.mjs && node --test authoring/tests/authoring.test.mjs && node --test integration/public-shell.test.mjs && node --experimental-strip-types --test test/react-public-navigation.test.mjs"
   }
 }
