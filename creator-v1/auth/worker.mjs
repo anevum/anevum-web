@@ -1,6 +1,8 @@
 import {PAGE,STYLE,CLIENT} from './join.mjs';
 import {creatorProjects} from './projects.mjs';
 import {communityRoutes} from './community.mjs';
+import {socialRoutes} from './social.mjs';
+import {PROFILE_PAGE,LIBRARY_PAGE,SOCIAL_STYLE,SOCIAL_CLIENT} from './social-ui.mjs';
 import {COMMUNITY_PAGE,COMMUNITY_STYLE,COMMUNITY_CLIENT} from './community-ui.mjs';
 import {PROJECT_PAGE,PROJECT_STYLE,PROJECT_CLIENT} from './projects-ui.mjs';
 // ANEVUM V1 — isolated, gated STAGING member-identity prototype.
@@ -125,6 +127,19 @@ return {async fetch(req,env) {
     const content=url.pathname===communityPage?COMMUNITY_PAGE:url.pathname===communityPage+'.css'?COMMUNITY_STYLE:COMMUNITY_CLIENT;
     return new Response(req.method==='HEAD'?null:content,{headers:{...BASE,'content-type':kind,'content-security-policy':CSP_UI}});
   }
+  const profileView=/^\/api\/v1\/member\/creators\/([a-z][a-z0-9_]{2,29})\/view$/.exec(url.pathname);
+  const libManage=PATH+'/library/manage';
+  const sharedAsset=url.pathname===PATH+'/social.css'||url.pathname===PATH+'/social.js';
+  if((profileView||sharedAsset||url.pathname===libManage)&&['GET','HEAD'].includes(req.method)){
+    if(!ready(env))return fail(req,'Member identity unavailable',503);
+    if(url.pathname===libManage){
+      const person=await authenticated(req,env,clock());
+      if(!person)return new Response(null,{status:303,headers:{location:JOIN_PATH,'cache-control':'no-store'}});
+    }
+    const kind=profileView||url.pathname===libManage?'text/html; charset=utf-8':url.pathname.endsWith('.css')?'text/css; charset=utf-8':'text/javascript; charset=utf-8';
+    const content=profileView?PROFILE_PAGE:url.pathname===libManage?LIBRARY_PAGE:url.pathname.endsWith('.css')?SOCIAL_STYLE:SOCIAL_CLIENT;
+    return new Response(req.method==='HEAD'?null:content,{headers:{...BASE,'content-type':kind,'content-security-policy':CSP_UI}});
+  }
   const projectsManage=PATH+'/projects/manage';
   if([projectsManage,projectsManage+'.css',projectsManage+'.js'].includes(url.pathname)&&['GET','HEAD'].includes(req.method)){
     if(!ready(env))return fail(req,'Member identity unavailable',503);
@@ -141,6 +156,11 @@ return {async fetch(req,env) {
   if(!ready(env))return fail(req,'Member identity unavailable',503);
   const db=env.COMMUNITY_DB;
   try {
+    if(path==='/library'||path.startsWith('/library/')||path.startsWith('/creators/')){
+      if(req.method==='POST'&&!checkWrite(req))return fail(req,'Request origin rejected',403);
+      const member=await authenticated(req,env,clock());
+      return socialRoutes(req,db,member,limit,clock());
+    }
     if(path==='/community/me'||path==='/community/projects'||path.startsWith('/community/projects/')){
       if(req.method==='POST'&&!checkWrite(req))return fail(req,'Request origin rejected',403);
       const member=await authenticated(req,env,clock());
