@@ -75,6 +75,7 @@ The numerical values for new XP event types, scaling curve and moderation policy
 - Staging `creator-v1/auth/social.mjs`: six achievements derived from eligible ratings, approved published projects and releases. These are currently read-only achievements; not all categories pay XP.
 - Project submission, votes, profiles, library, protected moderation and privacy are built in staging. Production remains a separate read-only catalogue without public member signup.
 - The current sixty **names** are working placeholders. The collectible artwork, balance, reward entitlement/claim flow, project XP awards and full visual prominence **are not completed**.
+- **XP balance issue to fix before launch:** current level-60 threshold is 69,620 XP, but the only currently paying action is first-time eligible rating, capped at 10 XP per day. At that theoretical maximum, reaching level 60 would take about **19 years**. This is not yet a viable central progression economy. Add diversified verified contribution events, simulate pacing for ordinary visitor and creator cohorts, and revise thresholds or rewards before public release; do not increase spam incentives.
 - The official mark/color/typography decision is a **separate open owner-approval gate** and must not be changed by this business-strategy decision.
 
 ## Metrics that matter
