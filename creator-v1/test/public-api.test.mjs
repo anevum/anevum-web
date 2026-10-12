@@ -1,0 +1,12 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import worker from '../api/worker.mjs';
+const call=(path,method='GET',env={})=>worker.fetch(new Request('https://anevum.com'+path,{method}),env);
+const all=async()=>({results:[]});
+const db={prepare:()=>({all,bind:()=>({all})})};
+test('health is honest about missing database',async()=>{const r=await call('/health');assert.equal(r.status,200);assert.equal((await r.json()).database,'not_bound')});
+test('unbound projects fail closed',async()=>{assert.equal((await call('/api/v1/projects')).status,503)});
+test('empty real community returns no invented projects',async()=>{const r=await call('/api/v1/projects','GET',{COMMUNITY_DB:db});assert.deepEqual((await r.json()).items,[])});
+test('categories derive from published records',async()=>{const r=await call('/api/v1/categories','GET',{COMMUNITY_DB:db});assert.deepEqual((await r.json()).categories,[])});
+test('reject writes and legacy private routes',async()=>{assert.equal((await call('/api/v1/projects','POST')).status,405);assert.equal((await call('/command/rhen')).status,404)});
+test('validate category and cursor',async()=>{assert.equal((await call('/api/v1/projects?category=invalid','GET',{COMMUNITY_DB:db})).status,400);assert.equal((await call('/api/v1/projects?cursor='+ 'x'.repeat(100),'GET',{COMMUNITY_DB:db})).status,400)});
