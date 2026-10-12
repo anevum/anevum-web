@@ -2,6 +2,15 @@
 
 Session: `ANEVUM.WEB.BUILD.2026-10-11.003.CREATOR-V1-ARCHIVE-CUTOVER`
 
+## Current staged member development (Oct 11, 2026)
+
+- `next.anevum.com` uses the **separate** `anevum-creator-v1-staging` D1, not production. The original shared preview/production note below was release-0.1.0 history and is superseded.
+- `next.anevum.com/join` now serves the accessible mobile-oriented creator sign-in/profile experience through a **separate** staging Worker. It accurately reports registration closed until the Resend sending credential and final external security acceptance exist.
+- `next.anevum.com/api/v1/member/*` is a narrowly scoped staging authentication route backed only by the staging D1, a secret HMAC pepper and a staging Turnstile widget.
+- Staging migration `0003_member_identity_staging` was applied to the isolated D1. The custom identity module has 16 passing in-memory tests; it is not an independently audited production login system.
+- `studio.next.anevum.com` stays the owner-only editorial and publishing app; regular member sessions never grant staff access.
+- Details: [member identity staging README](auth/README.md). Do not treat these routes as permission to open public registration or expose production data.
+
 ## Current release
 
 `anevum.com` now serves the new cinematic ANEVUM creator platform through Worker `anevum-creator-v1`. The deployed build is **0.1.0, a read-only foundation for V1**, not the completed community launch. `next.anevum.com` serves the same tested artifact through a separately deployable preview Worker.
@@ -17,7 +26,7 @@ The approved artwork, angular gold mark, orange/violet/blue palette and responsi
 - `wrangler.jsonc`: production `anevum-creator-v1`, `anevum.com/*`.
 - `wrangler.preview.jsonc`: preview `anevum-community-preview`, `next.anevum.com`.
 - Both currently have only the `COMMUNITY_DB` binding. They do not have legacy membership data, broker credentials, a Railway upstream or administrative APIs.
-- Sharing community D1 between these two strictly read-only deployments is temporary. Separate development data and credentials BEFORE adding authenticated writes or test accounts.
+- The two databases were subsequently separated: production stays read-only on its existing community D1; preview and member identity are now bound only to their own staging D1. See the staged development section above.
 - CSP permits same-origin scripts/styles/data only; no inline executable code, third-party script or hosted user code. The site remains noindex while development is incomplete.
 - Browser-opened external project links are HTTPS-filtered, not safety certifications. No server fetches or executes user-submitted projects.
 

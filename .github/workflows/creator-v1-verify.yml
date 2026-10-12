@@ -3,7 +3,7 @@ name: ANEVUM Creator V1 Verify
 on:
   workflow_dispatch:
   push:
-    branches: [build/anevum-v1-foundation-20261011]
+    branches: [build/anevum-v1-foundation-20261011, build/anevum-v1-newyear-overhaul-20261011]
     paths:
       - creator-v1/**
       - community-preview/worker.js
@@ -36,6 +36,53 @@ jobs:
       - name: Build approved identity and run isolated tests
         working-directory: creator-v1
         run: npm test
+      - name: Build source-controlled member join interface
+        run: node creator-v1/auth/build.mjs
+      - name: Reject generated sign-in UI drifting from canonical brand source
+        run: git diff --exit-code -- creator-v1/auth/join.mjs
+      - name: Verify isolated staging member identity
+        run: node --test creator-v1/auth/tests/member-auth.test.mjs
+      - name: Verify member project ownership and staff review workflow
+        run: node --test creator-v1/integration/member-projects.integration.test.mjs
+      - name: Check project Worker and UI syntax
+        run: |
+          node --check creator-v1/auth/projects.mjs
+          node --check creator-v1/auth/projects-ui.mjs
+          node --check creator-v1/authoring/review-snippets.mjs
+          node --check creator-v1/authoring/worker.mjs
+      - name: Verify community votes, XP and moderated reversal
+        run: node --test creator-v1/integration/community-votes.integration.test.mjs
+      - name: Check voting modules and generated browser scripts
+        run: |
+          node --check creator-v1/auth/community.mjs
+          node --check creator-v1/auth/community-ui.mjs
+          node --check creator-v1/authoring/vote-moderation.mjs
+          node --check creator-v1/authoring/vote-moderation-ui.mjs
+          node --input-type=module -e 'import {Script} from "node:vm"; import {COMMUNITY_CLIENT} from "./creator-v1/auth/community-ui.mjs"; import {VOTE_APP} from "./creator-v1/authoring/vote-moderation-ui.mjs"; new Script(COMMUNITY_CLIENT); new Script(VOTE_APP)'
+      - name: Verify creator identity, earned badges and private library
+        run: node --test creator-v1/integration/social-profile-library.integration.test.mjs
+      - name: Check social modules and browser interface syntax
+        run: |
+          node --check creator-v1/auth/social.mjs
+          node --check creator-v1/auth/social-ui.mjs
+          node --input-type=module -e 'import {Script} from "node:vm"; import {SOCIAL_CLIENT} from "./creator-v1/auth/social-ui.mjs"; new Script(SOCIAL_CLIENT)'
+      - name: Verify privacy controls and member-scoped exports
+        run: node --test creator-v1/integration/privacy-account.integration.test.mjs
+      - name: Verify protected privacy queue and no destructive staff endpoint
+        run: node --test creator-v1/integration/privacy-staff.integration.test.mjs
+      - name: Check privacy modules and account page JavaScript
+        run: |
+          node --check creator-v1/auth/privacy.mjs
+          node --check creator-v1/auth/privacy-ui.mjs
+          node --check creator-v1/authoring/privacy-queue.mjs
+          node --check creator-v1/authoring/privacy-queue-ui.mjs
+          node --input-type=module -e 'import {Script} from "node:vm"; import {PRIVACY_CLIENT} from "./creator-v1/auth/privacy-ui.mjs"; import {PRIVACY_APP} from "./creator-v1/authoring/privacy-queue-ui.mjs"; new Script(PRIVACY_CLIENT); new Script(PRIVACY_APP)'
+      - name: Enforce locked ANEVUM visual identity across all screens
+        run: node --test creator-v1/integration/brand-lock.test.mjs
+      - name: Check canonical shared brand module
+        run: node --check creator-v1/shared/brand.mjs
+      - name: Check member Worker syntax
+        run: node --check creator-v1/auth/worker.mjs
       - name: Check deployable bundle syntax
         run: node --check creator-v1/dist/worker.mjs
 
