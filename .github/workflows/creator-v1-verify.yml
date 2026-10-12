@@ -1,0 +1,42 @@
+name: ANEVUM Creator V1 Verify
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [build/anevum-v1-foundation-20261011]
+    paths:
+      - creator-v1/**
+      - community-preview/worker.js
+      - .github/workflows/creator-v1-verify.yml
+  pull_request:
+    paths:
+      - creator-v1/**
+      - community-preview/worker.js
+      - .github/workflows/creator-v1-verify.yml
+
+permissions:
+  contents: read
+
+concurrency:
+  group: creator-v1-verify-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Build approved identity and run isolated tests
+        working-directory: creator-v1
+        run: npm test
+      - name: Check deployable bundle syntax
+        run: node --check creator-v1/dist/worker.mjs
+
+# Deliberately no Cloudflare secrets, deployment, migrations or broker access.
