@@ -62,3 +62,9 @@ test("public React discovery, creator and project screens expose real pagination
   assert.match(repository,/PUBLIC METADATA ONLY/);
   assert.match(api,/\/repository/);
 });
+
+
+test("creator and project searches expose native searchbox semantics",()=>{
+  assert.match(read("web/src/pages/CreatorsPage.tsx"),/type="search" aria-label="Search published creators"/);
+  assert.match(read("web/src/pages/DiscoverPage.tsx"),/type="search"/);
+});

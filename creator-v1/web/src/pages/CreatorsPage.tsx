@@ -25,7 +25,7 @@ export function CreatorsPage(){
       <p>Creator profiles only appear after approved public work exists. No placeholder accounts or fabricated follower counts.</p>
     </section>
     <form className="creator-search" role="search" onSubmit={search}>
-      <input aria-label="Search published creators" value={draft} onChange={e=>setDraft(e.target.value)} maxLength={80} placeholder="SEARCH CREATOR NAMES" />
+      <input type="search" aria-label="Search published creators" value={draft} onChange={e=>setDraft(e.target.value)} maxLength={80} placeholder="SEARCH CREATOR NAMES" />
       <button type="submit">SEARCH</button>
     </form>
     {data.state==="loading"&&<LoadingState label="Finding published creators"/>}

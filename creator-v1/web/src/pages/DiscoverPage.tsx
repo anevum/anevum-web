@@ -47,7 +47,7 @@ export function DiscoverPage() {
       <p>Search real published work. Source code, demos, pricing and compatibility are kept distinct so you know what you are opening.</p>
     </section>
     <section className="discover-toolbar">
-      <form onSubmit={search}><input value={draft} onChange={e=>setDraft(e.target.value)} maxLength={100} placeholder="SEARCH PROJECTS" aria-label="Search projects"/><button type="submit">SEARCH</button></form>
+      <form onSubmit={search}><input type="search" value={draft} onChange={e=>setDraft(e.target.value)} maxLength={100} placeholder="SEARCH PROJECTS" aria-label="Search projects"/><button type="submit">SEARCH</button></form>
       <div className="filter-summary"><span>VIEW</span><strong>{activeLabel.toUpperCase()}</strong></div>
     </section>
     {data.state==="loading"&&<LoadingState label="Scanning published work"/>}
