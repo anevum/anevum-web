@@ -1,4 +1,6 @@
 import {PAGE,STYLE,CLIENT} from './join.mjs';
+import {creatorProjects} from './projects.mjs';
+import {PROJECT_PAGE,PROJECT_STYLE,PROJECT_CLIENT} from './projects-ui.mjs';
 // ANEVUM V1 — isolated, gated STAGING member-identity prototype.
 // Uses WebCrypto primitives and D1 conditional writes; requires independent security
 // review before public registration. No Better Auth/V5 session or broker integration.
@@ -115,13 +117,27 @@ return {async fetch(req,env) {
     const body=url.pathname===JOIN_PATH?PAGE:url.pathname===JOIN_PATH+'.css'?STYLE:CLIENT;
     return new Response(req.method==='HEAD'?null:body,{headers:{...BASE,'content-type':kind,'content-security-policy':CSP_UI}});
   }
+  const projectsManage=PATH+'/projects/manage';
+  if([projectsManage,projectsManage+'.css',projectsManage+'.js'].includes(url.pathname)&&['GET','HEAD'].includes(req.method)){
+    if(!ready(env))return fail(req,'Member identity unavailable',503);
+    const m=await authenticated(req,env,clock());
+    if(!m)return new Response(null,{status:303,headers:{location:JOIN_PATH,'cache-control':'no-store'}});
+    const type=url.pathname===projectsManage?'text/html; charset=utf-8':url.pathname===projectsManage+'.css'?'text/css; charset=utf-8':'text/javascript; charset=utf-8';
+    const data=url.pathname===projectsManage?PROJECT_PAGE:url.pathname===projectsManage+'.css'?PROJECT_STYLE:PROJECT_CLIENT;
+    return new Response(req.method==='HEAD'?null:data,{headers:{...BASE,'content-type':type,'content-security-policy':CSP_UI}});
+  }
   if(!url.pathname.startsWith(PATH+'/'))return fail(req,'Not found',404);
   const path=url.pathname.slice(PATH.length);
   if(req.method==='OPTIONS')return fail(req,'Not found',404); // same-origin only
-  if(!['GET','HEAD','POST'].includes(req.method))return json(req,{error:'Method not allowed'},405,{'allow':'GET, HEAD, POST'});
+  if(!['GET','HEAD','POST','PATCH'].includes(req.method))return json(req,{error:'Method not allowed'},405,{'allow':'GET, HEAD, POST, PATCH'});
   if(!ready(env))return fail(req,'Member identity unavailable',503);
   const db=env.COMMUNITY_DB;
   try {
+    if(path==='/projects'||path.startsWith('/projects/')){
+      if(['POST','PATCH'].includes(req.method)&&!checkWrite(req))return fail(req,'Request origin rejected',403);
+      const member=await authenticated(req,env,clock());
+      return creatorProjects(req,db,member,limit,clock());
+    }
     if(path==='/health'&&['GET','HEAD'].includes(req.method))return json(req,{service:'anevum-v1-member-staging',status:'ok',signupEnabled:joinEnabled(env)},200);
     if(path==='/me'&&['GET','HEAD'].includes(req.method)) {
       const member=await authenticated(req,env,clock());
