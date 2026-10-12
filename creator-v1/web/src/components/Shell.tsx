@@ -1,0 +1,44 @@
+import { NavLink, Outlet, Link, useLocation, useNavigate } from "react-router-dom";
+import { FormEvent, useEffect, useState } from "react";
+import { OrbitalMark } from "./OrbitalMark";
+import { Icon } from "./Icons";
+
+const desktopNav = [
+  ["/", "Home"], ["/discover", "Explore"], ["/creators", "Creators"], ["/community", "Community"]
+] as const;
+const mobileNav = [
+  ["/", "Home", "home"], ["/discover", "Explore", "explore"], ["/create", "Create", "create"], ["/library", "Library", "library"], ["/account", "Profile", "people"]
+] as const;
+
+export function Shell() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [query, setQuery] = useState("");
+  const [menuOpen, setMenuOpen] = useState(false);
+  useEffect(() => setMenuOpen(false), [location.pathname]);
+
+  function search(event: FormEvent) {
+    event.preventDefault();
+    const q = query.trim();
+    navigate(q ? `/discover?q=${encodeURIComponent(q)}` : "/discover");
+  }
+
+  return (
+    <div className="site-shell">
+      <header className="site-header">
+        <div className="header-inner">
+          <Link to="/" className="brand-lockup" aria-label="ANEVUM home"><OrbitalMark className="brand-mark" /><span>ANEVUM</span></Link>
+          <nav className="desktop-nav" aria-label="Primary">{desktopNav.map(([to,label]) => <NavLink key={to} to={to} end={to === "/"}>{label}</NavLink>)}</nav>
+          <form className="header-search" role="search" onSubmit={search}><Icon name="search" size={16}/><input value={query} onChange={event=>setQuery(event.target.value)} maxLength={100} placeholder="SEARCH THE UNDERGROUND" aria-label="Search published projects"/></form>
+          <Link to="/create" className="header-create">SUBMIT WORK</Link>
+          <button className="menu-button" type="button" aria-expanded={menuOpen} aria-controls="mobile-menu" onClick={()=>setMenuOpen(value=>!value)}><Icon name="menu"/></button>
+        </div>
+      </header>
+      <div className="signal-strip"><span>ANEVUM / CREATOR V1</span><span className="signal-dot"/><span>A WORLD OF THINGS PEOPLE MAKE</span><span className="signal-tail">PUBLIC PARTICIPATION OPENS AFTER ACCEPTANCE</span></div>
+      {menuOpen && <nav className="mobile-drawer" id="mobile-menu" aria-label="More navigation">{[...desktopNav,["/status","Build status"] as const].map(([to,label])=><NavLink key={to} to={to}>{label}</NavLink>)}</nav>}
+      <main id="main" className="site-main"><Outlet/></main>
+      <footer className="site-footer"><span>ANEVUM / INDEPENDENT CREATOR NETWORK</span><span>Creator V1 is in development. Public activity is never simulated.</span></footer>
+      <nav className="mobile-bottom-nav" aria-label="Mobile primary navigation">{mobileNav.map(([to,label,icon])=><NavLink key={to} to={to} end={to==="/"}><Icon name={icon} size={19}/><span>{label}</span></NavLink>)}</nav>
+    </div>
+  );
+}

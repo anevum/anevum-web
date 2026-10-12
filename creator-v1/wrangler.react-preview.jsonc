@@ -1,0 +1,20 @@
+{
+  "$schema": "../node_modules/wrangler/config-schema.json",
+  "name": "anevum-creator-v1-react-preview",
+  "main": "./web/worker.mjs",
+  "compatibility_date": "2026-10-12",
+  "workers_dev": true,
+  "preview_urls": true,
+  "assets": {
+    "directory": "./dist/web",
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application",
+    "run_worker_first": ["/api/*", "/health"]
+  },
+  "d1_databases": [{
+    "binding": "COMMUNITY_DB",
+    "database_name": "anevum-creator-v1-staging",
+    "database_id": "fa96e36d-6257-4883-bf15-074947e11a13",
+    "migrations_dir": "../community-preview/migrations"
+  }]
+}
