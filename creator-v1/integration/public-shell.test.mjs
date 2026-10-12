@@ -53,7 +53,7 @@ test('CSS, JS, favicon and approved illustrative assets are first-party only',as
   for(const [path,type] of [['/styles.css','text/css'],['/client.mjs','text/javascript'],['/favicon.svg','image/svg+xml'],['/assets/hero.webp','image/webp']]){
     const r=await runtime.fetch(new Request('https://anevum.com'+path),{});
     assert.equal(r.status,200,path);
-    assert.match(r.headers.get('content-type')||'',new RegExp(type));
+    assert.ok((r.headers.get('content-type')||'').includes(type),'Unexpected MIME type for '+path);
     assert.ok((await r.arrayBuffer()).byteLength>25,path);
   }
 });
