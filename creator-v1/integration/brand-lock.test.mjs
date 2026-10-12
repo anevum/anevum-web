@@ -19,15 +19,16 @@ const screens=[
   ['staff studio',STUDIO_PAGE,STUDIO_STYLE]
 ];
 
-test('01 ORBIT is the canonical brand, not the superseded letter-A logo',()=>{
-  assert.equal(BRAND_VERSION,'orbit-2026-10-12-v2');
+test('03 ORBITAL UNDERGROUND is the canonical brand direction',()=>{
+  assert.equal(BRAND_VERSION,'orbital-underground-2026-10-12-v1');
   for(const mark of [BRAND_MARK,BRAND_MARK_FULL,BRAND_FAVICON,BRAND_MARK_MONO_DARK,BRAND_MARK_MONO_LIGHT]){
     assert.match(mark,/viewBox="0 0 512 512"/);
-    assert.match(mark,/<circle cx="291" cy="266"/);
-    assert.match(mark,/<circle cx="408" cy="84"/);
-    assert.match(mark,/M352 82|M354 84/);
+    assert.match(mark,/<ellipse cx="256" cy="256"/);
+    assert.match(mark,/<circle cx="256" cy="256"/);
+    assert.match(mark,/<circle cx="391" cy="132"/);
+    assert.match(mark,/M256 56|M256 62/);
     assert.doesNotMatch(mark,/<script|<image\b|onclick=|onerror=|foreignObject/i);
-    assert.doesNotMatch(mark,/M12\.5 52|M5 49 30 8/);
+    assert.doesNotMatch(mark,/M352 82|M354 84|M12\.5 52|M5 49 30 8/);
   }
   assert.ok(BRAND_MARK.includes('class="anevum-brand-mark"'));
   assert.equal(readFileSync(new URL('../brand/anevum-mark.svg',import.meta.url),'utf8').trim(),BRAND_MARK_FULL);
@@ -49,17 +50,17 @@ const luminance=hex=>{
   const lin=v.map(c=>c<=.04045?c/12.92:((c+.055)/1.055)**2.4);
   return .2126*lin[0]+.7152*lin[1]+.0722*lin[2];
 };
-test('shared UI uses warm canvas and actionable contrast',()=>{
+test('shared UI uses underground palette and actionable contrast',()=>{
   for(const required of [
-    '--anevum-bg:#181418',
-    '--anevum-panel:#211b22',
-    '--anevum-copper:#dfa176',
-    '--anevum-gold:#f7dbb7',
-    '--anevum-orange:#f08e5b',
-    '--anevum-violet:#a9a1ef',
-    '--anevum-on-copper:#181418'
+    '--anevum-bg:#0b0b0d',
+    '--anevum-panel:#121214',
+    '--anevum-bone:#e8e1d6',
+    '--anevum-coral:#ff6857',
+    '--anevum-violet:#a855ff',
+    '--anevum-copper:#b87333',
+    '--anevum-on-coral:#0b0b0d'
   ]) assert.ok(BRAND_CSS.includes(required),required);
-  assert.ok((luminance('#dfa176')+.05)/(luminance('#181418')+.05)>=4.5);
+  assert.ok((luminance('#ff6857')+.05)/(luminance('#0b0b0d')+.05)>=4.5);
   assert.match(BRAND_CSS,/\.btn\.primary,button\.primary/);
   assert.match(BRAND_CSS,/focus-visible/);
   for(const [name,,style] of screens){

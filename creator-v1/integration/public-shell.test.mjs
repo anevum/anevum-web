@@ -12,7 +12,7 @@ test('recovered cinematic public layout is retained, not replaced with minimalis
  assert.ok(PAGE.includes(BRAND_MARK));
  assert.equal((PAGE.match(/class="anevum-brand-mark"/g)||[]).length,1);
  assert.match(BRAND_FAVICON,/viewBox="0 0 512 512"/);
- assert.equal(BRAND_VERSION,'orbit-2026-10-12-v2');
+ assert.equal(BRAND_VERSION,'orbital-underground-2026-10-12-v1');
  assert.ok(Object.keys(ASSETS).length>=14);
  assert.ok(Object.hasOwn(ASSETS,'hero.webp'));
  assert.ok(Object.hasOwn(ASSETS,'jam.webp'));
