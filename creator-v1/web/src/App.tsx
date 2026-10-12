@@ -6,6 +6,10 @@ import { ProjectPage } from "./pages/ProjectPage";
 import { CreatorPage, CreatorsPage } from "./pages/CreatorsPage";
 import { StatusPage } from "./pages/StatusPage";
 import { ComingPage } from "./pages/ComingPage";
+import { MemberGate } from "./components/MemberGate";
+import { MemberAccountPage } from "./pages/MemberAccountPage";
+import { MemberLibraryPage } from "./pages/MemberLibraryPage";
+import { MemberProjectsPage } from "./pages/MemberProjectsPage";
 
 export default function App(){
   return <Routes><Route element={<Shell/>}>
@@ -15,9 +19,11 @@ export default function App(){
     <Route path="creators" element={<CreatorsPage/>}/>
     <Route path="creators/:handle" element={<CreatorPage/>}/>
     <Route path="community" element={<ComingPage kind="community"/>}/>
-    <Route path="create" element={<ComingPage kind="create"/>}/>
-    <Route path="library" element={<ComingPage kind="library"/>}/>
-    <Route path="account" element={<ComingPage kind="account"/>}/>
+    <Route element={<MemberGate/>}>
+      <Route path="create" element={<MemberProjectsPage/>}/>
+      <Route path="library" element={<MemberLibraryPage/>}/>
+      <Route path="account" element={<MemberAccountPage/>}/>
+    </Route>
     <Route path="status" element={<StatusPage/>}/>
     <Route path="*" element={<Navigate to="/" replace/>}/>
   </Route></Routes>;
