@@ -1,47 +1,49 @@
-import {readFileSync,writeFileSync,mkdirSync} from 'node:fs';
-import {dirname,resolve} from 'node:path';
-import {fileURLToPath} from 'node:url';
-import {createHash} from 'node:crypto';
-import {BRAND_MARK,BRAND_MARK_FULL,BRAND_CSS,BRAND_FAVICON,BRAND_VERSION} from '../shared/brand.mjs';
-
-const here=dirname(fileURLToPath(import.meta.url));
-const previewPath=process.argv[2]||resolve(here,'../../community-preview/worker.js');
-const preview=readFileSync(previewPath,'utf8');
-if(!preview.includes('ANEVUM CINEMATIC CREATOR PREVIEW'))throw new Error('Approved artwork reference missing');
-function assetConstant(name){
-  const line=preview.split('\n').find(row=>row.startsWith('const '+name+'='));
-  if(!line)throw new Error('Missing source-controlled asset '+name);
-  return JSON.parse(line.slice(('const '+name+'=').length).replace(/;\s*$/,''));
+import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { createHash } from 'node:crypto';
+import {BRAND_MARK,BRAND_CSS,BRAND_FAVICON} from '../shared/brand.mjs';
+const here = dirname(fileURLToPath(import.meta.url));
+const originalPath = process.argv[2] || resolve(here, '../../community-preview/worker.js');
+const original = readFileSync(originalPath, 'utf8');
+if (!original.includes('ANEVUM CINEMATIC CREATOR PREVIEW')) throw new Error('Approved source marker missing');
+function constant(name) {
+  const line = original.split('\n').find(line => new RegExp('^const '+name+'\\s*=').test(line));
+  if (!line) throw new Error('Missing approved '+name);
+  return JSON.parse(line.replace(new RegExp('^const '+name+'\\s*=\\s*'),'').replace(/;\s*$/,''));
 }
-const ASSETS=assetConstant('ASSETS');
-let PAGE=readFileSync(resolve(here,'shell.html'),'utf8');
-const marker='<!-- ANEVUM_BRAND_MARK -->';
-if(PAGE.split(marker).length!==2)throw new Error('ANEVUM mark must be injected exactly once');
-if(!PAGE.includes('src="/client.mjs"')||!PAGE.includes('href="/styles.css"')||!PAGE.includes('href="/favicon.svg"'))throw new Error('Missing public shell assets');
-if(/<script(?![^>]*\bsrc=)[^>]*>|on(?:click|load|error)\s*=|<iframe/i.test(PAGE))throw new Error('Public shell must not contain inline code');
-PAGE=PAGE.replace(marker,BRAND_MARK);
-const heroMarker='<!-- ANEVUM_HERO_MARK_FULL -->';
-if(PAGE.split(heroMarker).length!==2)throw new Error('ANEVUM hero mark must be injected exactly once');
-PAGE=PAGE.replace(heroMarker,BRAND_MARK_FULL);
-if(!PAGE.includes('ANEVUM V1 / IN DEVELOPMENT'))throw new Error('Read-only feature status disclosure missing');
-const STYLES=readFileSync(resolve(here,'shell.css'),'utf8')+'\n'+BRAND_CSS;
-const CLIENT=readFileSync(resolve(here,'client.mjs'),'utf8');
-if(/const p=\[|View demo profile|stellarfox|Fictional showcase data/i.test(PAGE+CLIENT))throw new Error('Design demo fixtures are not public data');
-const generated=Object.entries({PAGE,STYLES,CLIENT,ASSETS,BRAND_FAVICON}).map(([k,v])=>'export const '+k+'='+JSON.stringify(v)+';').join('\n');
-writeFileSync(resolve(here,'generated.mjs'),generated+'\n');
-let api=readFileSync(resolve(here,'../api/worker.mjs'),'utf8').replace('export function safePublicUrl','function safePublicUrl').replace('export default {','const api = {');
-const runtime=readFileSync(resolve(here,'runtime.mjs'),'utf8').replace(/^import .*;\n/gm,'');
-const bundled='// ANEVUM CREATOR V1 PUBLIC READ-ONLY WORKER\n'+generated.replaceAll('export const ','const ')+'\n'+api+'\n'+runtime;
+const originalPage = constant('PAGE');
+const ASSETS = constant('ASSETS');
+let PAGE = originalPage;
+const style = /<style>([\s\S]*?)<\/style>/.exec(PAGE);
+if (!style || !/<script>[\s\S]*?<\/script>/.test(PAGE)) throw new Error('Approved HTML structure changed');
+if (!PAGE.includes('class="header"') || !PAGE.includes('id="topNav"') || !PAGE.includes('id="bottomNav"') || !PAGE.includes('id="mobileDrawer"')) throw new Error('Cinematic preview layout/navigation contract changed');
+const STYLES = style[1]+'\n'+readFileSync(resolve(here, 'overrides.css'),'utf8')+'\n'+BRAND_CSS;
+const CLIENT = readFileSync(resolve(here, 'client.mjs'),'utf8');
+const logoStart = '<a href="#discover" class="logo" aria-label="ANEVUM — Discover">';
+const startIndex=PAGE.indexOf(logoStart);
+const svgStart=startIndex<0?-1:PAGE.indexOf('<svg',startIndex+logoStart.length);
+const svgEnd=svgStart<0?-1:PAGE.indexOf('</svg>',svgStart);
+if(startIndex<0 || svgStart!==startIndex+logoStart.length || svgEnd<0)throw new Error('Canonical preview header logo not found');
+PAGE=PAGE.slice(0,svgStart)+BRAND_MARK+PAGE.slice(svgEnd+'</svg>'.length);
+const faviconStart=PAGE.indexOf('<link rel="icon" href="data:image/svg+xml,');
+const faviconEnd=faviconStart<0?-1:PAGE.indexOf('/>',faviconStart);
+if(faviconStart<0 || faviconEnd<0)throw new Error('Preview favicon not found');
+PAGE=PAGE.slice(0,faviconStart)+'<link rel="icon" href="/favicon.svg" type="image/svg+xml" />'+PAGE.slice(faviconEnd+2);
+PAGE=PAGE.replace('<meta name="theme-color" content="#090b13" />','<meta name="theme-color" content="#100d11" />');
+PAGE=PAGE.replace(style[0],'<link rel="stylesheet" href="/styles.css">').replace(/<script>[\s\S]*?<\/script>/,'<script type="module" src="/client.mjs"></script>');
+PAGE=PAGE.replace(/<div class="fakebar">[\s\S]*?<\/div>/,'<div class="fakebar"><strong>ANEVUM V1 / IN DEVELOPMENT</strong> &mdash; Live catalogue. Accounts, publishing and voting are not open yet.</div>');
+PAGE=PAGE.replace(/<div class="head-actions">[\s\S]*?<\/div>\s*<\/div><\/header>/,'<div class="head-actions"><a class="btn primary action-create" href="#status">V1 build</a><button class="iconbtn" type="button" data-route="account" aria-label="Account availability"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="7" r="4"/><path d="M4 22v-3a8 8 0 0 1 16 0v3"/></svg></button></div></div></header>');
+PAGE=PAGE.replace(/<footer class="foot">[\s\S]*?<\/footer>/,'<footer class="foot"><span>ANEVUM / CREATE. PLAY. BELONG.</span><span>V1 is in development. Concept art illustrates the community vision, not live projects.</span></footer>');
+PAGE=PAGE.replace('Search projects, creators, tags\u2026','Search published projects');
+PAGE=PAGE.replace('<title>ANEVUM / Create. Play. Belong.</title>','<meta name="description" content="ANEVUM is building a community for AI-assisted software, games and creative tools. Explore the first read-only V1 build."><title>ANEVUM / Create. Play. Belong.</title>');
+if (PAGE.includes('View demo profile') || PAGE.includes('Fictional showcase data') || PAGE.includes('const p=[')) throw new Error('Demo fixture remains in release page');
+const generated = Object.entries({PAGE,STYLES,CLIENT,ASSETS,BRAND_FAVICON}).map(([k,v])=>'export const '+k+'='+JSON.stringify(v)+';').join('\n');
+writeFileSync(resolve(here,'generated.mjs'),generated);
+let api = readFileSync(resolve(here,'../api/worker.mjs'),'utf8').replace('export function safePublicUrl','function safePublicUrl').replace('export default {','const api = {');
+const runtime = readFileSync(resolve(here,'runtime.mjs'),'utf8').replace(/^import .*;\n/gm,'');
+const bundled = '// ANEVUM V1 LIVE-DATA READ-ONLY RELEASE\n'+generated.replaceAll('export const ','const ')+'\n'+api+'\n'+runtime;
 mkdirSync(resolve(here,'../dist'),{recursive:true});
 writeFileSync(resolve(here,'../dist/worker.mjs'),bundled);
-writeFileSync(resolve(here,'../dist/build-manifest.json'),JSON.stringify({
-  version:'0.1.0',
-  visualBuild:'orbit-public-shell-v1',
-  brandVersion:BRAND_VERSION,
-  shellSha256:createHash('sha256').update(PAGE).digest('hex'),
-  approvedSourceSha256:createHash('sha256').update(preview).digest('hex'),
-  workerSha256:createHash('sha256').update(bundled).digest('hex'),
-  bytes:Buffer.byteLength(bundled),
-  artworkCount:Object.keys(ASSETS).length
-},null,2));
-console.log('Built ANEVUM Creator V1 Orbit shell: '+Buffer.byteLength(bundled)+' bytes, '+Object.keys(ASSETS).length+' existing artwork assets.');
+writeFileSync(resolve(here,'../dist/build-manifest.json'),JSON.stringify({version:'0.1.0',approvedSourceSha256:createHash('sha256').update(original).digest('hex'),workerSha256:createHash('sha256').update(bundled).digest('hex'),bytes:Buffer.byteLength(bundled),artworkCount:Object.keys(ASSETS).length},null,2));
+console.log('Built V1: '+Buffer.byteLength(bundled)+' bytes; '+Object.keys(ASSETS).length+' approved art assets.');

@@ -4,3 +4,11 @@
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*::before,*::after{animation:none!important;transition:none!important}}
 
 .v1-event-illustration{display:grid;place-items:center;background:radial-gradient(ellipse at 80% 20%,#8d48c955,transparent 65%),linear-gradient(125deg,#21182a,#4a2418)}.v1-event-illustration svg{width:72px;height:72px;color:var(--orange);filter:drop-shadow(0 0 16px #ff863777)}
+
+/* Preserve the cinematic composition when feature routes are not yet writable. */
+.v1-feature-preview .v1-illustrated-preview{padding:0;overflow:hidden;align-self:start}
+.v1-illustrated-preview>img{width:100%;height:clamp(190px,25vw,340px);object-fit:cover;display:block}
+.v1-illustrated-preview>p{padding:0 20px 18px}
+#topNav a:focus-visible,#bottomNav a:focus-visible,#mobileDrawer a:focus-visible,.v1-category:focus-visible{
+  outline:2px solid var(--anevum-gold,#f7dbb7);outline-offset:3px}
+@media(max-width:780px){.v1-feature-preview .v1-illustrated-preview{order:-1}}
