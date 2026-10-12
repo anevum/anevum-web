@@ -5,11 +5,18 @@
   "compatibility_date": "2026-10-11",
   "workers_dev": false,
   "preview_urls": false,
-  "routes": [{ "pattern": "next.anevum.com", "custom_domain": true }],
-  "d1_databases": [{
-    "binding": "COMMUNITY_DB",
-    "database_name": "anevum-community-preview",
-    "database_id": "6c7b5f0c-33db-4b6a-9569-0a6af5e07534",
-    "migrations_dir": "../community-preview/migrations"
-  }]
+  "routes": [
+    {
+      "pattern": "next.anevum.com",
+      "custom_domain": true
+    }
+  ],
+  "d1_databases": [
+    {
+      "binding": "COMMUNITY_DB",
+      "database_name": "anevum-creator-v1-staging",
+      "database_id": "fa96e36d-6257-4883-bf15-074947e11a13",
+      "migrations_dir": "../community-preview/migrations"
+    }
+  ]
 }
