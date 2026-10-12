@@ -1,44 +1,41 @@
-# ANEVUM Creator Platform — preview
+# ANEVUM Cinematic Creator Preview
 
-**Canonical session:** `ANEVUM.WEB.BUILD.2026-10-11.001.CREATOR-PLATFORM-SEPARATION`
+**Session:** `ANEVUM.WEB.BUILD.2026-10-11.001.CREATOR-PLATFORM-SEPARATION`
 
-**Platform vision:** a creator-first, community-owned place for AI-assisted software projects, where small useful tools, games, experiments, automations and full applications can be made, published, tried, reviewed, and improved together. Existing V5 / RHEN operations are **not** the public creator platform.
+**Status (2026-10-11):** Owner-approved cinematic UI deployed to `next.anevum.com` as Cloudflare Worker `anevum-community-preview`. Cloudflare API verified the current script, domain attachment and separate Worker version. The original `anevum.com/*` Worker route still points to `anevum-web-nextgen`. Actual public browser access outside the Cloudflare API has not yet been independently verified.
 
-## Preview now
+## What the approved UI includes
 
-- **Public preview hostname:** [next.anevum.com](https://next.anevum.com/) (Cloudflare custom Worker domain created).
-- **Worker name:** `anevum-community-preview`, source in [worker.js](worker.js).
-- **Production public domain:** `anevum.com` is **unchanged** and still serves existing V5.
-- **Protected V5 hostname:** `backstage.anevum.com` is attached to the old V5 Worker, but private Command and Studio have **not** passed hostname/auth migration acceptance.
-- **Preview database:** `anevum-community-preview` (isolated Cloudflare D1). Schema in [migrations/0001_initial_creator_platform.sql](migrations/0001_initial_creator_platform.sql). Schema applied and verified. **The current prototype Worker has no database binding yet.**
-- **Temporary source location:** this feature branch in `anevum-web`. Independent `anevum/creator-platform` repository has not yet been created.
+- Angular warm-gold ANEVUM logo and dark cinematic orange/violet/blue theme based on the approved 1536x1024 concept.
+- Artwork-rich landing page with hero, creator-focused copy, featured projects, trends, creator rankings and a jam sidebar.
+- Searchable and filterable app/tool, game, automation and template directory.
+- Distinct project page with sample preview, about/releases/reviews/discussion tabs, voting and save controls.
+- Sample creator profile with level progress, collectible emblem icons, follows and project history.
+- Community feed, Jams, Portal (first-look queue), Rankings, saved Library and Publish local-draft page.
+- Responsive desktop and mobile layouts; mobile bottom navigation and accessible drawer.
+- Fourteen locally served WebP crops from the approved image generated during this conversation. Media is embedded in the self-contained preview Worker script; no external image or execution dependencies.
 
-## What's working in the design prototype
+**All nine projects, creator names, view counts, ratings, rankings, levels and challenge events are illustrative fixtures.** The demo bar explicitly discloses that they are not live. Votes, follows, bookmarks and drafts do not contact a server and may be stored in browser localStorage only.
 
-- Distinct mobile-responsive homepage and compact icon-driven navigation.
-- Authentic RHEN and ANEVUM Field Notes seed cards, search and category filters.
-- Browser-local project draft form and link validation, draft deletion.
-- Preview-only: `robots.txt`, response `noindex`, `/health` and default-deny unknown routes.
-- D1 tables for future creator profiles, projects, versions, favorites, reviews, abuse reports and moderator event records.
+## Technical boundary
 
-No real member registration, upload, publishing, reviews, hosted demos, or authentication yet. Project drafts exist only in the browser's own `localStorage` and are not shared.
+`community-preview/worker.js` is an independent classic Cloudflare Worker. It serves `/`, `/index.html`, `/health`, `/robots.txt`, and `/assets/*.webp`. It has no database bindings, Secrets bindings or RHEN order paths. Other endpoints are 404; mutations are 405. CSP denies outbound network requests and iframe embedding. No user-generated code executes on ANEVUM infrastructure.
 
-## Security invariants
+`anevum-community-preview` D1 already has initial member/project/moderation tables under `migrations/0001_initial_creator_platform.sql`, but **this Worker is deliberately not bound to it yet**. The public V5 D1s are untouched.
 
-The community preview uses **no V5 data, no brokerage keys, no Railway services, and no order-execution path**. User-uploaded executable code must never be proxied to the public or private application origins. Prefer external HTTPS demos until a separate and audited sandbox service exists. Keep all public community data in distinct storage.
+## Verification
 
-## Deployment workflow
+- Local Node smoke script passed home/health/assets/noindex/CSP/denied private routes/writes.
+- Chromium UI tests passed at 1440px desktop, 390px and 320px mobile: successful artwork loading, no script errors or horizontal overflow, project navigation, reviews tab, local vote, drafts and responsive drawer navigation.
+- Cloudflare API upload returned success 200. Downloaded Worker verified `ANEVUM CINEMATIC CREATOR PREVIEW` marker and new version count of two.
+- `anevum.com/*` remains pointed at `anevum-web-nextgen`; `next.anevum.com` stays bound to `anevum-community-preview`.
 
-This is a source-controlled Cloudflare classic Worker. Until the new repository and a reviewed CI deploy workflow exist, deployments are intentional/manual; do not allow this branch to automatically deploy `anevum.com` and do not merge the preview to `main` merely to release it.
+Do not interpret screenshot approval as authorizing a cutover, fake activity or bypass of authentication.
 
-If editing the Worker source, validate JavaScript syntax and run browser smoke tests. After uploading an isolated preview version, check `next.anevum.com`, `/health`, unexpected paths, and confirm the original `anevum.com/*` route remains bound to `anevum-web-nextgen`.
+## Source / workflow
 
-## Implementation gates
+This file is still on feature branch `build/anevum-creator-platform-20261011` of `anevum/anevum-web`, because the new independent `anevum/creator-platform` repository has not been created. Worker code contains the HTML, styles, script and preview artwork for reproducible deployment; `tests/portal-worker.test.mjs` exercises routes and security. The canonical image reference and owner approval are recorded in `docs/creator-platform/APPROVED-CINEMATIC-IDENTITY.md`.
 
-1. Prove Backstage Cloudflare Access with allowed/denied identities and V5 session, cookie, OAuth and signed audience compatibility.
-2. Create separate `anevum/creator-platform` repository (connector lacks the create-repository action) and move preview there, preserve independent CI.
-3. Bind dedicated community D1 in an isolated Worker release; implement read-only published directory then secure auth and creator-owned submissions with moderation.
-4. Launch invitation-only testing on `next`, then obtain explicit owner authorization for the reviewed `anevum.com` cutover.
-5. Preserve one-click rollback to original V5 route and encrypted backup of V5 data.
+When a permanent repository is available, split source into normal React/TypeScript components and dedicated asset files, use a reviewed Cloudflare deployment workflow, introduce a separate community D1 binding for authenticated project publishing and add real moderation before public registration. Keep external creator execution off the main origin.
 
-See [product charter](../docs/creator-platform/PRODUCT-CHARTER.md) and [backstage migration](../docs/creator-platform/BACKSTAGE-MIGRATION.md).
+**V5 cutover and RHEN isolation:** See `docs/creator-platform/BACKSTAGE-MIGRATION.md`. All V5 owner identity, signed Access JWT audience, OAuth trusted origins, backups and permission gates must pass before moving `anevum.com` away from V5.
