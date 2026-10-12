@@ -36,7 +36,11 @@ jobs:
       - name: Build approved identity and run isolated tests
         working-directory: creator-v1
         run: npm test
-      - name: Verify isolated staging member identity\n        run: node --test creator-v1/auth/tests/member-auth.test.mjs\n      - name: Check member Worker syntax\n        run: node --check creator-v1/auth/worker.mjs\n      - name: Check deployable bundle syntax
+      - name: Verify isolated staging member identity
+        run: node --test creator-v1/auth/tests/member-auth.test.mjs
+      - name: Check member Worker syntax
+        run: node --check creator-v1/auth/worker.mjs
+      - name: Check deployable bundle syntax
         run: node --check creator-v1/dist/worker.mjs
 
 # Deliberately no Cloudflare secrets, deployment, migrations or broker access.
