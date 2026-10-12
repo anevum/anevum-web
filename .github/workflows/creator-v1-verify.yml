@@ -3,7 +3,7 @@ name: ANEVUM Creator V1 Verify
 on:
   workflow_dispatch:
   push:
-    branches: [build/anevum-v1-foundation-20261011]
+    branches: [build/anevum-v1-foundation-20261011, build/anevum-v1-newyear-overhaul-20261011]
     paths:
       - creator-v1/**
       - community-preview/worker.js
