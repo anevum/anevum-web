@@ -42,6 +42,15 @@ test('staging schema includes accounts, sessions, hashed OTP, rates and migratio
  for(const n of ['member_accounts','member_sessions','member_email_challenges','member_request_limits'])assert.ok(names.includes(n),n);
  assert.ok(inspect("SELECT version FROM schema_migrations WHERE version='0003_member_identity_staging'").length);
 });
+test('responsive account interface is real, isolated and labels disabled registration honestly',async()=>{
+ const html=await app.fetch(req('/join'),env);assert.equal(html.status,200);const content=await html.text();
+ for(const text of ['Join ANEVUM','Creator accounts are not open yet','/join.css','/join.js','0x4AAAAAAFUPr86b6UW8tGqo'])assert.ok(content.includes(text),text);
+ assert.match(html.headers.get('content-security-policy'),/frame-ancestors 'none'/);
+ assert.match(html.headers.get('x-robots-tag'),/noindex/);
+ const style=await app.fetch(req('/join.css'),env);assert.match(style.headers.get('content-type'),/text\/css/);assert.ok((await style.text()).includes('@media(max-width:430px)'));
+ const js=await app.fetch(req('/join.js'),env);assert.match(js.headers.get('content-type'),/javascript/);assert.ok((await js.text()).includes('!health.signupEnabled'));
+ assert.equal((await app.fetch(req('/join/other'),env)).status,404);
+});
 test('healthy service reports readiness without exposing secrets',async()=>{
  const r=await get('/api/v1/member/health');assert.equal(r.status,200);assert.equal((await r.json()).signupEnabled,true);
  assert.equal(r.headers.get('cache-control'),'no-store');assert.equal(r.headers.get('x-robots-tag'),'noindex, nofollow');
