@@ -38,6 +38,8 @@ jobs:
         run: npm test
       - name: Build source-controlled member join interface
         run: node creator-v1/auth/build.mjs
+      - name: Reject generated sign-in UI drifting from canonical brand source
+        run: git diff --exit-code -- creator-v1/auth/join.mjs
       - name: Verify isolated staging member identity
         run: node --test creator-v1/auth/tests/member-auth.test.mjs
       - name: Verify member project ownership and staff review workflow
