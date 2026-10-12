@@ -1,3 +1,4 @@
+import {REVIEW_PANEL,REVIEW_STYLE,REVIEW_APP} from './review-snippets.mjs';
 // ANEVUM Creator V1 — owner-only staging publishing studio.
 // Does not provide public member authentication or grant XP/votes.
 const ORIGIN = 'https://studio.next.anevum.com';
@@ -148,6 +149,36 @@ async function api(request,db,actor){
     if(!allowed.includes(p.status))return json({error:'Action not permitted for this project state'},409);
     try{const changed=await updateStatus(db,id,actor,action,nowStatus,p.status,reason);return changed?json({id,status:nowStatus}):json({error:'Project changed; refresh and retry'},409)}catch{return json({error:'Project transition unavailable'},503)}
   }
+  if(request.method==='GET'&&path==='/api/review-queue'){
+    const rows=await all(db,`SELECT p.id,p.slug,p.title,p.summary,p.description,p.category,p.source_url,p.demo_url,p.ai_disclosure,p.human_contribution,p.free_to_use,p.revision,p.updated_at,c.handle AS creatorHandle,c.display_name AS creatorName
+      FROM projects p JOIN member_accounts a ON a.id=p.owner_member_id JOIN creator_profiles c ON c.member_id=a.id
+      WHERE p.status='pending_review' AND a.status='active' AND c.status='active'
+      ORDER BY p.updated_at ASC,p.id ASC LIMIT 100`);
+    return json({projects:rows.map(p=>({id:p.id,slug:p.slug,title:p.title,summary:p.summary,description:p.description,category:p.category,demoUrl:p.demo_url,sourceUrl:p.source_url,aiDisclosure:p.ai_disclosure,humanContribution:p.human_contribution,freeToUse:p.free_to_use===1,revision:p.revision,creatorHandle:p.creatorHandle,creatorName:p.creatorName}))});
+  }
+  const review=/^\/api\/review-queue\/([a-f0-9]{32})\/(publish|request-changes|reject)$/.exec(path);
+  if(request.method==='POST'&&review){
+    const [,id,action]=review;let payload;try{payload=await parseJson(request)}catch(e){return json({error:e.message},400)}
+    let reason;try{reason=shortText(payload.reason,10,800,'review reason')}catch(e){return json({error:e.message},400)}
+    if(!Number.isSafeInteger(payload.revision)||payload.revision<1)return json({error:'Current revision required'},400);
+    const projects=await all(db,`SELECT p.revision,p.status,p.source_url,p.demo_url,p.ai_disclosure,p.human_contribution
+      FROM projects p JOIN member_accounts a ON a.id=p.owner_member_id JOIN creator_profiles c ON c.member_id=a.id
+      WHERE p.id=? AND p.status='pending_review' AND a.status='active' AND c.status='active'`,[id]);
+    if(!projects.length)return json({error:'Submission not found or no longer pending'},404);
+    const item=projects[0];if(item.revision!==payload.revision)return json({error:'Submission changed; refresh queue'},409);
+    if(action==='publish'&&(!(item.demo_url||item.source_url)||!item.ai_disclosure?.trim()||!item.human_contribution?.trim()))return json({error:'Cannot publish incomplete submission'},422);
+    const to=action==='publish'?'published':action==='request-changes'?'changes_requested':'rejected';
+    try{
+      const result=await atomic(db,[
+        stmt(db,`UPDATE projects SET status=?,revision=revision+1,published_at=CASE WHEN ?='published' THEN CURRENT_TIMESTAMP ELSE published_at END,updated_at=CURRENT_TIMESTAMP
+          WHERE id=? AND revision=? AND status='pending_review' AND owner_member_id IN (SELECT id FROM member_accounts WHERE status='active')`,[to,to,id,payload.revision]),
+        stmt(db,`INSERT INTO project_submission_events(id,project_id,actor_kind,actor_identity,action,from_status,to_status,reason)
+          SELECT ?,?,'staff',? ,?,'pending_review',?,? WHERE changes()=1`,[crypto.randomUUID(),id,actor,action==='request-changes'?'request_changes':action,to,reason])
+      ]);
+      if(Number(result[0]?.meta?.changes??result[0]?.meta?.rows_written)!==1)return json({error:'Submission changed; refresh queue'},409);
+      return json({id,status:to,revision:payload.revision+1});
+    }catch{return json({error:'Review transaction unavailable'},503)}
+  }
   return json({error:'Not found'},404);
 }
 const PAGE=`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>ANEVUM / Creator Studio</title><link rel="stylesheet" href="/studio.css"></head><body><header><span class="mark">◬</span><strong>ANEVUM</strong><span class="muted">/ CREATOR STUDIO</span><span class="pill">STAGING ONLY</span></header><main><h1>Publish the first real projects.</h1><p class="muted">This staff-only tool writes to the separate staging database. Submissions begin as drafts and require review before publication.</p><section class="layout"><form id="newProject"><h2>New project draft</h2><label>Title<input name="title" minlength="3" maxlength="100" required></label><label>Slug<input name="slug" placeholder="my-first-tool" pattern="[a-z0-9-]+" required></label><label>Category<select name="category"><option>tools</option><option>games</option><option>automation</option><option>research</option><option>creative</option><option>learning</option><option>libraries</option><option>other</option></select></label><label>Summary<textarea name="summary" minlength="10" maxlength="280" required></textarea></label><label>Description<textarea name="description" maxlength="12000"></textarea></label><label>Live demo (HTTPS)<input name="demoUrl" type="url" placeholder="https://..."></label><label>Source (HTTPS)<input name="sourceUrl" type="url" placeholder="https://github.com/..."></label><label>License<input name="license" placeholder="MIT / Proprietary / Other"></label><label>What AI assisted with<textarea name="aiDisclosure" required></textarea></label><label>Human work / verification<textarea name="humanContribution" required></textarea></label><label class="inline"><input type="checkbox" name="freeToUse" checked> Free to use</label><button type="submit">Save draft</button><p id="feedback" role="status"></p></form><section class="panel"><h2>Owner submissions</h2><p class="muted">Only real submissions appear here. Publish requires a recorded editorial reason.</p><button id="reload" type="button" class="secondary">Refresh</button><div id="projects" aria-live="polite">Loading...</div></section></section></main><script type="module" src="/studio.js"></script></body></html>`;
@@ -162,9 +193,9 @@ export default {async fetch(request,env){
   if(!env.COMMUNITY_DB)return response({error:'Staging data unavailable'},503);
   try{if(!await isOwner(env.COMMUNITY_DB))return response({error:'Studio not provisioned'},503)}catch{return response({error:'Staging data unavailable'},503)}
   const p=url.pathname;
-  if(request.method==='GET'&&p==='/')return new Response(PAGE,{headers:{...BASE,'content-type':'text/html; charset=utf-8','content-security-policy':CSP}});
-  if(request.method==='GET'&&p==='/studio.css')return new Response(STYLE,{headers:{...BASE,'content-type':'text/css; charset=utf-8'}});
-  if(request.method==='GET'&&p==='/studio.js')return new Response(APP,{headers:{...BASE,'content-type':'text/javascript; charset=utf-8'}});
+  if(request.method==='GET'&&p==='/')return new Response(PAGE.replace('</main>',REVIEW_PANEL+'</main>'),{headers:{...BASE,'content-type':'text/html; charset=utf-8','content-security-policy':CSP}});
+  if(request.method==='GET'&&p==='/studio.css')return new Response(STYLE+'\n'+REVIEW_STYLE,{headers:{...BASE,'content-type':'text/css; charset=utf-8'}});
+  if(request.method==='GET'&&p==='/studio.js')return new Response(APP+'\n'+REVIEW_APP,{headers:{...BASE,'content-type':'text/javascript; charset=utf-8'}});
   if(request.method==='GET'&&p==='/health')return json({status:'ok',service:'anevum-creator-studio',mode:'staging'});
   if(!p.startsWith('/api/'))return response({error:'Not found'},404);
   if(!['GET','POST','PATCH'].includes(request.method))return json({error:'Method not allowed'},405,{allow:'GET, POST, PATCH'});
