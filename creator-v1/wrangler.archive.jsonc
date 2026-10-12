@@ -1,0 +1,15 @@
+{
+  "$schema": "../node_modules/wrangler/config-schema.json",
+  "name": "anevum-legacy-archive",
+  "main": "./ops/archive-gateway.mjs",
+  "compatibility_date": "2026-10-11",
+  "workers_dev": false,
+  "preview_urls": false,
+  "routes": [{ "pattern": "backstage.anevum.com/*", "zone_name": "anevum.com" }],
+  "services": [{ "binding": "LEGACY", "service": "anevum-web-nextgen" }],
+  "vars": {
+    "ACCESS_ISSUER": "https://wispy-tooth-095a.cloudflareaccess.com",
+    "ACCESS_AUDIENCE": "907b154a96d47db53bb0b2509c5a79131083101beb4636bb5e53aeb0e94e30a0",
+    "ACCESS_EMAILS": "devon@anevum.com,anevum.studio@gmail.com"
+  }
+}
