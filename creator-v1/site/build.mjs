@@ -41,7 +41,7 @@ PAGE=PAGE.replace(/<div class="fakebar">[\s\S]*?<\/div>/,'<div class="fakebar"><
 PAGE=PAGE.replace(/<div class="head-actions">[\s\S]*?<\/div>\s*<\/div><\/header>/,'<div class="head-actions"><a class="btn primary action-create" href="#status">V1 build</a><button class="iconbtn" type="button" data-route="account" aria-label="Account availability"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="7" r="4"/><path d="M4 22v-3a8 8 0 0 1 16 0v3"/></svg></button></div></div></header>');
 PAGE=PAGE.replace(/<footer class="foot">[\s\S]*?<\/footer>/,'<footer class="foot"><span>ANEVUM / CREATE. PLAY. BELONG.</span><span>V1 is in development. Concept art illustrates the community vision, not live projects.</span></footer>');
 PAGE=PAGE.replace('Search projects, creators, tags\u2026','Search published projects');
-PAGE=PAGE.replace('<title>ANEVUM / Create. Play. Belong.</title>','<meta name="description" content="Discover independent games, apps and creative tools. Meet their makers on ANEVUM, a home for creators and the curious."><title>ANEVUM / Create. Play. Belong.</title>');
+PAGE=PAGE.replace('<title>ANEVUM / Create. Play. Belong.</title>','<meta name="description" content="Discover independent games, useful apps, AI experiences and open-source creations. Meet their makers on ANEVUM."><title>ANEVUM / Create. Play. Belong.</title>');
 if (PAGE.includes('View demo profile') || PAGE.includes('Fictional showcase data') || PAGE.includes('const p=[')) throw new Error('Demo fixture remains in release page');
 const generated = Object.entries({PAGE,STYLES,CLIENT,ASSETS,BRAND_FAVICON}).map(([k,v])=>'export const '+k+'='+JSON.stringify(v)+';').join('\n');
 writeFileSync(resolve(here,'generated.mjs'),generated);
@@ -50,5 +50,5 @@ const runtime = readFileSync(resolve(here,'runtime.mjs'),'utf8').replace(/^impor
 const bundled = '// ANEVUM V1 LIVE-DATA READ-ONLY RELEASE\n'+generated.replaceAll('export const ','const ')+'\n'+api+'\n'+runtime;
 mkdirSync(resolve(here,'../dist'),{recursive:true});
 writeFileSync(resolve(here,'../dist/worker.mjs'),bundled);
-writeFileSync(resolve(here,'../dist/build-manifest.json'),JSON.stringify({version:'0.1.0',productionBuild:'001',session:'ANEVUM.WEB.BUILD.2026-10-12.001.PRODUCTION-BASELINE',approvedSourceSha256:createHash('sha256').update(original).digest('hex'),workerSha256:createHash('sha256').update(bundled).digest('hex'),bytes:Buffer.byteLength(bundled),artworkCount:Object.keys(ASSETS).length},null,2));
+writeFileSync(resolve(here,'../dist/build-manifest.json'),JSON.stringify({version:'0.1.0',productionBuild:'002',session:'ANEVUM.WEB.BUILD.2026-10-12.002.CREATOR-PLATFORM-EXECUTION',approvedSourceSha256:createHash('sha256').update(original).digest('hex'),workerSha256:createHash('sha256').update(bundled).digest('hex'),bytes:Buffer.byteLength(bundled),artworkCount:Object.keys(ASSETS).length},null,2));
 console.log('Built V1: '+Buffer.byteLength(bundled)+' bytes; '+Object.keys(ASSETS).length+' approved art assets.');
