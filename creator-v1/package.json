@@ -1,0 +1,11 @@
+{
+  "name": "anevum-creator-v1",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "build": "node site/build.mjs",
+    "test": "npm run build && node --test test/public-api.test.mjs test/archive-gateway.test.mjs"
+  }
+}
