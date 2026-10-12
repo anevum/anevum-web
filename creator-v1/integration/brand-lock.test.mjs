@@ -25,7 +25,7 @@ test('03 ORBITAL UNDERGROUND is the canonical brand direction',()=>{
     assert.match(mark,/viewBox="0 0 512 512"/);
     assert.match(mark,/<ellipse cx="256" cy="256"/);
     assert.match(mark,/<circle cx="256" cy="256"/);
-    assert.match(mark,/<circle cx="408" cy="84"/);
+    assert.match(mark,/<circle cx="391" cy="132"/);
     assert.match(mark,/M256 56|M256 62/);
     assert.doesNotMatch(mark,/<script|<image\b|onclick=|onerror=|foreignObject/i);
     assert.doesNotMatch(mark,/M352 82|M354 84|M12\.5 52|M5 49 30 8/);
