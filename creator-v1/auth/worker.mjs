@@ -5,6 +5,7 @@ import {PAGE,STYLE,CLIENT} from './join.mjs';
 const ORIGIN = 'https://next.anevum.com';
 const CSP_UI="default-src 'none'; script-src 'self' https://challenges.cloudflare.com; style-src 'self'; img-src 'self' data: https://challenges.cloudflare.com; connect-src 'self' https://challenges.cloudflare.com; frame-src https://challenges.cloudflare.com; font-src 'self'; base-uri 'none'; form-action 'self'; object-src 'none'; frame-ancestors 'none'";
 const PATH = '/api/v1/member';
+const JOIN_PATH = PATH + '/join';
 const COOKIE = '__Host-anevum_stage_sid';
 const BASE = Object.freeze({
   'content-type': 'application/json; charset=utf-8',
@@ -35,6 +36,13 @@ const cookieToken = req => {
   const match = all.split(';').map(s=>s.trim()).find(s=>s.startsWith(COOKIE+'='));
   return match ? match.slice(COOKIE.length+1) : '';
 };
+function joinEnabled(env) {
+  return env?.STAGING_JOIN_ENABLED === 'true' && typeof env?.RESEND_API_KEY === 'string' && typeof env?.TURNSTILE_SECRET === 'string' &&
+    typeof env?.STAGING_INVITE_EMAILS === 'string' && env.STAGING_INVITE_EMAILS.trim().length > 0;
+}
+function invited(env,email) {
+  return String(env?.STAGING_INVITE_EMAILS || '').split(',').map(normalizedEmail).filter(Boolean).includes(email);
+}
 function ready(env) {
   return !!(env?.COMMUNITY_DB && typeof env.AUTH_PEPPER==='string' && /^[a-f0-9]{64}$/.test(env.AUTH_PEPPER));
 }
@@ -100,9 +108,9 @@ export function createMemberWorker({fetcher=fetch,clock=unix}={}) {
 return {async fetch(req,env) {
   const url=new URL(req.url);
   if(url.origin!==ORIGIN)return fail(req,'Not found',404);
-  if(['/join','/join.css','/join.js'].includes(url.pathname)&&['GET','HEAD'].includes(req.method)) {
-    const kind=url.pathname==='/join'?'text/html; charset=utf-8':url.pathname==='/join.css'?'text/css; charset=utf-8':'text/javascript; charset=utf-8';
-    const body=url.pathname==='/join'?PAGE:url.pathname==='/join.css'?STYLE:CLIENT;
+  if([JOIN_PATH,JOIN_PATH+'.css',JOIN_PATH+'.js'].includes(url.pathname)&&['GET','HEAD'].includes(req.method)) {
+    const kind=url.pathname===JOIN_PATH?'text/html; charset=utf-8':url.pathname===JOIN_PATH+'.css'?'text/css; charset=utf-8':'text/javascript; charset=utf-8';
+    const body=url.pathname===JOIN_PATH?PAGE:url.pathname===JOIN_PATH+'.css'?STYLE:CLIENT;
     return new Response(req.method==='HEAD'?null:body,{headers:{...BASE,'content-type':kind,'content-security-policy':CSP_UI}});
   }
   if(!url.pathname.startsWith(PATH+'/'))return fail(req,'Not found',404);
@@ -112,7 +120,7 @@ return {async fetch(req,env) {
   if(!ready(env))return fail(req,'Member identity unavailable',503);
   const db=env.COMMUNITY_DB;
   try {
-    if(path==='/health'&&['GET','HEAD'].includes(req.method))return json(req,{service:'anevum-v1-member-staging',status:'ok',signupEnabled:!!(env.RESEND_API_KEY&&env.TURNSTILE_SECRET)},200);
+    if(path==='/health'&&['GET','HEAD'].includes(req.method))return json(req,{service:'anevum-v1-member-staging',status:'ok',signupEnabled:joinEnabled(env)},200);
     if(path==='/me'&&['GET','HEAD'].includes(req.method)) {
       const member=await authenticated(req,env,clock());
       return member?json(req,{member:{id:member.id,email:member.email,handle:member.handle,displayName:member.displayName,bio:member.bio}}):fail(req,'Sign-in required',401);
@@ -120,11 +128,12 @@ return {async fetch(req,env) {
     if(req.method!=='POST')return fail(req,'Not found',404);
     if(!checkWrite(req))return fail(req,'Request origin rejected',403);
     if(path==='/start') {
-      if(!env.RESEND_API_KEY||!env.TURNSTILE_SECRET)return fail(req,'Registration not open',503);
+      if(!joinEnabled(env))return fail(req,'Registration not open',503);
       const input=await body(req),email=normalizedEmail(input.email);
       if(!validEmail(email))return fail(req,'Invalid email',400);
       const now=clock(),ip=req.headers.get('cf-connecting-ip')||'';
       if(!await turnstile(env,input.turnstileToken,ip,fetcher))return fail(req,'Challenge required',403);
+      if(!invited(env,email))return json(req,{message:'If eligible, an email has been sent.'},202);
       const emailKey=await digest(env,'email',email);
       const ipKey=await digest(env,'ip',ip||'unknown');
       const emailAllowed=await limit(db,'issue:e:'+emailKey,now,3,3600);
@@ -146,6 +155,8 @@ return {async fetch(req,env) {
     if(path==='/verify') {
       const input=await body(req),email=normalizedEmail(input.email),code=input.code;
       if(!validEmail(email)||!validCode(code))return fail(req,'Invalid verification request',400);
+      if(!joinEnabled(env))return fail(req,'Registration not open',503);
+      if(!invited(env,email))return fail(req,'Invalid or expired code',401);
       const now=clock(),emailKey=await digest(env,'email',email);
       const ipKey=await digest(env,'ip',req.headers.get('cf-connecting-ip')||'unknown');
       const ipAllowed=await limit(db,'verify:i:'+ipKey,now,30,3600);
