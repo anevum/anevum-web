@@ -1,7 +1,7 @@
 {
   "$schema": "./node_modules/wrangler/config-schema.json",
   "name": "anevum-web-nextgen",
-  "main": "./worker.mjs",
+  "main": "./creator-worker.mjs",
   "compatibility_date": "2026-09-25",
   "workers_dev": true,
   "preview_urls": true,
@@ -34,7 +34,9 @@
     "ANEVUM_STUDIO_ENABLED": "true",
     "ANEVUM_STUDIO_PUBLISH_ENABLED": "false",
     "ANEVUM_STUDIO_ACCESS_AUD": "7ac5c0f437f0c924d9eac1e18f49171fc60668575c519f4db73416167cb34a47",
-    "ANEVUM_STUDIO_ACCESS_EMAILS": "anevum.studio@gmail.com"
+    "ANEVUM_STUDIO_ACCESS_EMAILS": "anevum.studio@gmail.com",
+    "ANEVUM_CATALOG_ENABLED": "false",
+    "ANEVUM_CATALOG_PUBLISH_ENABLED": "false"
   },
   "routes": [
     {

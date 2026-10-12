@@ -1,5 +1,5 @@
--- Additive catalog migration; separate from the existing member migration ledger.
--- Run only after an encrypted backup and existing-record recovery verification.
+-- Additive, separately reviewed catalog schema. Not part of member auto-migrations.
+-- Apply only after encrypted production backup and recovery verification.
 CREATE TABLE IF NOT EXISTS creator_projects (
   id TEXT PRIMARY KEY,
   owner_id TEXT NOT NULL REFERENCES user(id) ON DELETE CASCADE,
@@ -31,10 +31,15 @@ CREATE TABLE IF NOT EXISTS creator_project_events (
   note TEXT NOT NULL DEFAULT '',
   created_at INTEGER NOT NULL
 );
-CREATE INDEX IF NOT EXISTS creator_events_project ON creator_project_events(project_id,created_at DESC);
+CREATE INDEX IF NOT EXISTS creator_events_project ON creator_project_events(project_id,revision DESC);
 CREATE TABLE IF NOT EXISTS creator_library (
   user_id TEXT NOT NULL REFERENCES user(id) ON DELETE CASCADE,
   project_id TEXT NOT NULL REFERENCES creator_projects(id) ON DELETE CASCADE,
   created_at INTEGER NOT NULL,
   PRIMARY KEY(user_id,project_id)
+);
+CREATE TABLE IF NOT EXISTS creator_mutation_limits (
+  user_id TEXT PRIMARY KEY REFERENCES user(id) ON DELETE CASCADE,
+  window_start INTEGER NOT NULL,
+  count INTEGER NOT NULL
 );
