@@ -48,7 +48,7 @@ test('real browser client retains filters in category, page and project links',a
 });
 test('home speaks to audiences and retains the cinematic structure',async()=>{
   const f=await fixture({hash:'#discover'}),html=f.elements.main.innerHTML;
-  for(const value of ['A HOME FOR CREATORS AND THE CURIOUS','hero-side-note','hero-metrics','v1-category-grid','Creator jams are coming'])assert.ok(html.includes(value),value);
+  for(const value of ['INDEPENDENT CREATOR NETWORK','underground-hero-mark','hero-side-note','hero-metrics','v1-category-grid','Creator jams are coming'])assert.ok(html.includes(value),value);
   assert.doesNotMatch(html,/HOME FOR AI SOFTWARE CREATORS/);
 });
 test('project names the external host and restores the previous results route',async()=>{
@@ -169,7 +169,7 @@ test('both actions retain accessible host labels and new-tab protections',async(
 });
 test('homepage and document metadata include AI without making it a requirement',async()=>{
   const f=await fixture({hash:'#discover'});
-  assert.match(f.elements.main.innerHTML,/games, useful apps, AI experiences and open-source creations/);
+  assert.match(f.elements.main.innerHTML,/Games\. Apps\. Tools\. AI\. Open source\./);
   assert.match(PAGE,/<meta name="description" content="Discover independent games, useful apps, AI experiences and open-source creations\./);
   assert.doesNotMatch(PAGE+f.elements.main.innerHTML,/HOME FOR AI SOFTWARE CREATORS|software made with AI/);
   assert.match(PAGE,/Accounts, publishing and voting are not open yet/);

@@ -35,7 +35,7 @@ const faviconStart=PAGE.indexOf('<link rel="icon" href="data:image/svg+xml,');
 const faviconEnd=faviconStart<0?-1:PAGE.indexOf('/>',faviconStart);
 if(faviconStart<0 || faviconEnd<0)throw new Error('Preview favicon not found');
 PAGE=PAGE.slice(0,faviconStart)+'<link rel="icon" href="/favicon.svg" type="image/svg+xml" />'+PAGE.slice(faviconEnd+2);
-PAGE=PAGE.replace('<meta name="theme-color" content="#090b13" />','<meta name="theme-color" content="#100d11" />');
+PAGE=PAGE.replace('<meta name="theme-color" content="#090b13" />','<meta name="theme-color" content="#0b0b0d" />');
 PAGE=PAGE.replace(style[0],'<link rel="stylesheet" href="/styles.css">').replace(/<script>[\s\S]*?<\/script>/,'<script type="module" src="/client.mjs"></script>');
 PAGE=PAGE.replace(/<div class="fakebar">[\s\S]*?<\/div>/,'<div class="fakebar"><strong>ANEVUM V1 / IN DEVELOPMENT</strong> &mdash; Live catalogue. Accounts, publishing and voting are not open yet.</div>');
 PAGE=PAGE.replace(/<div class="head-actions">[\s\S]*?<\/div>\s*<\/div><\/header>/,'<div class="head-actions"><a class="btn primary action-create" href="#status">V1 build</a><button class="iconbtn" type="button" data-route="account" aria-label="Account availability"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="7" r="4"/><path d="M4 22v-3a8 8 0 0 1 16 0v3"/></svg></button></div></div></header>');
@@ -50,5 +50,5 @@ const runtime = readFileSync(resolve(here,'runtime.mjs'),'utf8').replace(/^impor
 const bundled = '// ANEVUM V1 LIVE-DATA READ-ONLY RELEASE\n'+generated.replaceAll('export const ','const ')+'\n'+api+'\n'+runtime;
 mkdirSync(resolve(here,'../dist'),{recursive:true});
 writeFileSync(resolve(here,'../dist/worker.mjs'),bundled);
-writeFileSync(resolve(here,'../dist/build-manifest.json'),JSON.stringify({version:'0.1.0',productionBuild:'002',session:'ANEVUM.WEB.BUILD.2026-10-12.002.CREATOR-PLATFORM-EXECUTION',approvedSourceSha256:createHash('sha256').update(original).digest('hex'),workerSha256:createHash('sha256').update(bundled).digest('hex'),bytes:Buffer.byteLength(bundled),artworkCount:Object.keys(ASSETS).length},null,2));
+writeFileSync(resolve(here,'../dist/build-manifest.json'),JSON.stringify({version:'0.1.0',productionBuild:'003-design-preview',session:'ANEVUM.WEB.DESIGN.2026-10-12.003.ORBITAL-UNDERGROUND-IMPLEMENTATION',approvedSourceSha256:createHash('sha256').update(original).digest('hex'),workerSha256:createHash('sha256').update(bundled).digest('hex'),bytes:Buffer.byteLength(bundled),artworkCount:Object.keys(ASSETS).length},null,2));
 console.log('Built V1: '+Buffer.byteLength(bundled)+' bytes; '+Object.keys(ASSETS).length+' approved art assets.');
