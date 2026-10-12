@@ -1,0 +1,9 @@
+dist/
+site/generated.mjs
+.wrangler/
+node_modules/
+*.db
+*.db-*
+*.pem
+.dev.vars*
+.env*
