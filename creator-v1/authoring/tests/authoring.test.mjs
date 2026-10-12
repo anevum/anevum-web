@@ -4,7 +4,7 @@ import {mkdtempSync,rmSync,readFileSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import {spawnSync} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
-import authoring,{verifyStaffAssertion} from '../authoring/worker.mjs';
+import authoring,{verifyStaffAssertion} from '../worker.mjs';
 import publicApi from '../../api/worker.mjs';
 const base=fileURLToPath(new URL('./sqlite-bridge.py',import.meta.url));
 const path=mkdtempSync(tmpdir()+'/anevum-authoring-')+'/fixture.db';
