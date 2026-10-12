@@ -64,6 +64,17 @@ jobs:
           node --check creator-v1/auth/social.mjs
           node --check creator-v1/auth/social-ui.mjs
           node --input-type=module -e 'import {Script} from "node:vm"; import {SOCIAL_CLIENT} from "./creator-v1/auth/social-ui.mjs"; new Script(SOCIAL_CLIENT)'
+      - name: Verify privacy controls and member-scoped exports
+        run: node --test creator-v1/integration/privacy-account.integration.test.mjs
+      - name: Verify protected privacy queue and no destructive staff endpoint
+        run: node --test creator-v1/integration/privacy-staff.integration.test.mjs
+      - name: Check privacy modules and account page JavaScript
+        run: |
+          node --check creator-v1/auth/privacy.mjs
+          node --check creator-v1/auth/privacy-ui.mjs
+          node --check creator-v1/authoring/privacy-queue.mjs
+          node --check creator-v1/authoring/privacy-queue-ui.mjs
+          node --input-type=module -e 'import {Script} from "node:vm"; import {PRIVACY_CLIENT} from "./creator-v1/auth/privacy-ui.mjs"; import {PRIVACY_APP} from "./creator-v1/authoring/privacy-queue-ui.mjs"; new Script(PRIVACY_CLIENT); new Script(PRIVACY_APP)'
       - name: Check member Worker syntax
         run: node --check creator-v1/auth/worker.mjs
       - name: Check deployable bundle syntax
