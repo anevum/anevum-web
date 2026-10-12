@@ -1,4 +1,4 @@
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { readCategories, readProjects } from "../lib/api";
 import { useResource } from "../lib/useResource";
@@ -11,6 +11,7 @@ export function DiscoverPage() {
   const [params,setParams]=useSearchParams();
   const q=params.get("q")||"",category=params.get("category")||"";
   const [draft,setDraft]=useState(q);
+  useEffect(()=>setDraft(q),[q]);
   const key=q+"|"+category;
   const data=useResource(async signal=>Promise.all([readProjects({q:q||undefined,category:category||undefined,limit:"24"},signal),readCategories(signal)]).then(([projects,categories])=>({projects,categories})),[key]);
   const activeLabel=useMemo(()=>category?labels[category]||category:"Everything",[category]);

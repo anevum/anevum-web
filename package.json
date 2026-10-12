@@ -36,6 +36,7 @@
     "typescript": "7.0.2",
     "vite": "8.3.1",
     "wrangler": "4.135.0",
-    "@babel/parser": "7.29.9"
+    "@babel/parser": "7.29.9",
+    "@types/node": "^22.15.30"
   }
 }

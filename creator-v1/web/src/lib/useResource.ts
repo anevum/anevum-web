@@ -12,7 +12,7 @@ export function useResource<T>(loader: (signal: AbortSignal) => Promise<T>, deps
     const controller = new AbortController();
     setResource({ state: "loading", data: null, error: null });
     loader(controller.signal)
-      .then((data) => setResource({ state: "ready", data, error: null }))
+      .then((data) => { if (!controller.signal.aborted) setResource({ state: "ready", data, error: null }); })
       .catch((error: unknown) => {
         if (controller.signal.aborted) return;
         setResource({ state: "error", data: null, error: error instanceof Error ? error : new Error("unavailable") });

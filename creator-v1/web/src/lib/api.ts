@@ -78,8 +78,13 @@ export function safeExternal(value: string | null | undefined): URL | null {
   if (!value) return null;
   try {
     const url = new URL(value);
-    if (url.protocol !== "https:" || url.username || url.password) return null;
-    if (!url.hostname.includes(".")) return null;
+    if (url.protocol !== "https:" || url.username || url.password || (url.port && url.port !== "443")) return null;
+    const host = url.hostname.toLowerCase();
+    if (!host.includes(".") || /^\d+\.\d+\.\d+\.\d+$/.test(host) || host.includes(":") ||
+        /(?:^|\.)(?:localhost|local|internal|test|invalid)$/.test(host)) return null;
+    for (const key of url.searchParams.keys()) {
+      if (/^(?:token|access_token|api_key|secret|password)$/i.test(key)) return null;
+    }
     return url;
   } catch {
     return null;
