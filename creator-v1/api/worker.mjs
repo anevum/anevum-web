@@ -2,6 +2,7 @@
 const API_HEADERS = { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'no-referrer' };
 const CATEGORIES = new Set(['tools', 'games', 'automation', 'research', 'creative', 'learning', 'libraries', 'other']);
 const ID = /^[A-Za-z0-9_-]{1,80}$/;
+const CREATOR_HANDLE = /^[a-z][a-z0-9_]{2,29}$/i;
 // Use exactly the same visibility predicate for lists, counts and details.
 const PUBLIC_FROM = "FROM projects p JOIN creator_profiles c ON c.member_id=p.owner_member_id WHERE p.status='published' AND c.status='active' AND julianday(p.published_at)<=julianday('now')";
 const FIELDS = 'p.id,p.slug,p.title,p.summary,p.category,p.source_url AS sourceUrl,p.demo_url AS demoUrl,p.free_to_use AS freeToUse,p.license_name AS license,p.published_at AS publishedAt,c.handle AS creatorHandle,c.display_name AS creatorName';
@@ -19,6 +20,23 @@ export function safePublicUrl(value) {
     return u.href;
   } catch { return null; }
 }
+// Never enumerate unpublished members or expose private account columns.
+function creatorParameters(url) {
+  const allowed=new Set(['q','cursor','limit']);
+  for(const key of url.searchParams.keys())if(!allowed.has(key)||url.searchParams.getAll(key).length!==1)throw Error('Invalid or repeated parameter');
+  const q=(url.searchParams.get('q')||'').trim();
+  const cursor=url.searchParams.get('cursor')||'';
+  const limitText=url.searchParams.get('limit')??'24';
+  if(q.length>80||/[\u0000-\u001f\u007f]/.test(q))throw Error('Invalid creator search');
+  if(cursor&&!CREATOR_HANDLE.test(cursor))throw Error('Invalid creator cursor');
+  if(!/^[1-9]\d?$/.test(limitText)||Number(limitText)>48)throw Error('Limit must be 1 through 48');
+  return {q,cursor,limit:Number(limitText)};
+}
+const visibleCreator = row=>({
+  handle:row.handle,
+  displayName:row.displayName,
+  publishedProjects:Number(row.publishedProjects)
+});
 // Only public repository metadata is read. This never clones or executes code,
 // follows redirects, forwards visitor credentials, or fetches a creator's app.
 const repositoryCache = new Map();
@@ -109,17 +127,19 @@ async function rows(db, sql, params = []) {
   return result.results;
 }
 function parameters(url) {
-  const allowed = new Set(['category', 'q', 'cursor', 'limit']);
+  const allowed = new Set(['category', 'q', 'cursor', 'limit', 'creator']);
   for (const key of url.searchParams.keys()) if (!allowed.has(key) || url.searchParams.getAll(key).length !== 1) throw new Error('Invalid or repeated parameter');
   const category = url.searchParams.get('category') || '';
+  const creator = url.searchParams.get('creator') || '';
   const q = (url.searchParams.get('q') || '').trim();
   const cursor = url.searchParams.get('cursor') || '';
   const text = url.searchParams.get('limit') ?? '24';
   if (category && !CATEGORIES.has(category)) throw new Error('Invalid category');
+  if (creator && !CREATOR_HANDLE.test(creator)) throw new Error('Invalid creator');
   if (q.length > 100 || /[\u0000-\u001f\u007f]/u.test(q)) throw new Error('Invalid search');
   if (cursor && !ID.test(cursor)) throw new Error('Invalid cursor');
   if (!/^[1-9]\d?$/.test(text) || Number(text) > 48) throw new Error('Limit must be 1 through 48');
-  return { category, q, cursor, limit: Number(text) };
+  return { category, creator, q, cursor, limit: Number(text) };
 }
 export default {
   async fetch(request, env = {}) {
@@ -127,11 +147,13 @@ export default {
     if (!['GET', 'HEAD'].includes(request.method)) return reply(request, { error: 'Read-only release. Account and publishing features are not enabled.' }, 405, { Allow: 'GET, HEAD' });
     const detail = /^\/api\/v1\/projects\/([A-Za-z0-9_-]{1,80})$/.exec(path);
     const repository = /^\/api\/v1\/projects\/([A-Za-z0-9_-]{1,80})\/repository$/.exec(path);
-    const known = ['/health', '/api/v1/status', '/api/v1/categories', '/api/v1/projects'].includes(path) || detail || repository;
+    const creatorDetail = /^\/api\/v1\/creators\/([A-Za-z][A-Za-z0-9_]{2,29})$/.exec(path);
+    const known = ['/health', '/api/v1/status', '/api/v1/categories', '/api/v1/projects', '/api/v1/creators'].includes(path) || detail || repository || creatorDetail;
     if (!known) return reply(request, { error: 'Not found' }, 404);
     let filter;
     try {
       if (path === '/api/v1/projects') filter = parameters(url);
+      else if (path === '/api/v1/creators') filter = creatorParameters(url);
       else if (url.search) throw new Error('This endpoint does not accept query parameters');
     } catch (error) { return reply(request, { error: error.message }, 400); }
     if (!env.COMMUNITY_DB) return reply(request, { error: 'Community data is unavailable', status: 'unavailable' }, 503);
@@ -142,10 +164,30 @@ export default {
       }
       if (path === '/api/v1/status') {
         const [totals] = await rows(env.COMMUNITY_DB, 'SELECT COUNT(*) AS projects,COUNT(DISTINCT c.member_id) AS creators ' + PUBLIC_FROM);
-        return reply(request, { version: '0.1.0', phase: 'read-only-development', counts: { publishedProjects: totals.projects, publishedCreators: totals.creators }, features: { discovery: true, repositoryMetadata: true, accounts: false, publishing: false, voting: false, xp: false, community: false } });
+        return reply(request, { version: '0.1.0', phase: 'read-only-development', counts: { publishedProjects: totals.projects, publishedCreators: totals.creators }, features: { discovery: true, repositoryMetadata: true, publicCreatorProfiles: true, accounts: false, publishing: false, voting: false, xp: false, community: false } });
       }
       if (path === '/api/v1/categories') {
         return reply(request, { categories: await rows(env.COMMUNITY_DB, 'SELECT p.category,COUNT(*) AS count ' + PUBLIC_FROM + ' GROUP BY p.category ORDER BY p.category') });
+      }
+      if (path === '/api/v1/creators') {
+        let sql='SELECT c.handle AS handle,c.display_name AS displayName,COUNT(*) AS publishedProjects '+PUBLIC_FROM+
+          ' AND c.handle > ? COLLATE NOCASE';
+        const args=[filter.cursor];
+        if(filter.q){
+          const match='%'+filter.q.replace(/[\\%_]/g,'\\      if (repository) {')+'%';
+          sql+=" AND (c.handle LIKE ? ESCAPE '\\' OR c.display_name LIKE ? ESCAPE '\\')";
+          args.push(match,match);
+        }
+        sql+=' GROUP BY c.handle,c.display_name ORDER BY c.handle COLLATE NOCASE ASC LIMIT ?';
+        args.push(filter.limit+1);
+        const found=await rows(env.COMMUNITY_DB,sql,args),items=found.slice(0,filter.limit).map(visibleCreator);
+        return reply(request,{items,count:items.length,nextCursor:found.length>filter.limit?items.at(-1).handle:null});
+      }
+      if (creatorDetail) {
+        const found=await rows(env.COMMUNITY_DB,
+          'SELECT c.handle AS handle,c.display_name AS displayName,COUNT(*) AS publishedProjects '+PUBLIC_FROM+
+          ' AND c.handle=? COLLATE NOCASE GROUP BY c.handle,c.display_name LIMIT 1',[creatorDetail[1]]);
+        return found.length?reply(request,{creator:visibleCreator(found[0])}):reply(request,{error:'Creator not found'},404);
       }
       if (repository) {
         const found = await rows(env.COMMUNITY_DB, 'SELECT p.source_url AS sourceUrl ' + PUBLIC_FROM + ' AND p.id=? LIMIT 1', [repository[1]]);
@@ -162,6 +204,7 @@ export default {
       let sql = 'SELECT ' + FIELDS + ' ' + PUBLIC_FROM + ' AND p.id>?';
       const args = [filter.cursor];
       if (filter.category) { sql += ' AND p.category=?'; args.push(filter.category); }
+      if (filter.creator) { sql += ' AND c.handle=? COLLATE NOCASE'; args.push(filter.creator); }
       if (filter.q) {
         sql += " AND (p.title LIKE ? ESCAPE '\\' OR p.summary LIKE ? ESCAPE '\\')";
         const pattern = '%' + filter.q.replace(/[\\%_]/g, '\\$&') + '%'; args.push(pattern, pattern);

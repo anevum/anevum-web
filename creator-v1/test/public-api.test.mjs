@@ -14,6 +14,38 @@ const call=(path,method='GET',e=env)=>api.fetch(new Request('https://next.anevum
 const body=async(path)=>{const r=await call(path);assert.equal(r.status,200);return r.json();};
 test('catalogue excludes drafts, archived, suspended-owner, future and undated projects',async()=>{assert.deepEqual((await body('/api/v1/projects')).items.map(x=>x.id),['a','g','h','i']);});
 test('category counts use exactly the public catalogue visibility',async()=>{assert.deepEqual((await body('/api/v1/categories')).categories,[{category:'games',count:1},{category:'tools',count:3}]);});
+test('creator directory contains only approved publications by active creators',async()=>{
+ const data=await body('/api/v1/creators');
+ assert.deepEqual(data.items,[{handle:'fixture',displayName:'Fixture Creator',publishedProjects:4}]);
+ assert.equal(data.count,1);
+ assert.equal(data.nextCursor,null);
+ for(const key of ['email','member_id','owner_member_id','is_staff','status','avatar_url'])assert.ok(!Object.hasOwn(data.items[0],key));
+ assert.ok(!JSON.stringify(data).includes('member-private-1'));
+ assert.ok(!JSON.stringify(data).includes('suspended'));
+});
+test('creator profiles publish only public facts, not member identities',async()=>{
+ const res=await call('/api/v1/creators/FiXtUrE');
+ assert.equal(res.status,200);
+ assert.deepEqual((await res.json()).creator,{handle:'fixture',displayName:'Fixture Creator',publishedProjects:4});
+ for(const name of ['suspended','unknown','system'])assert.equal((await call('/api/v1/creators/'+name)).status,404);
+});
+test('creator-filtered projects obey established visibility and cursor semantics',async()=>{
+ assert.deepEqual((await body('/api/v1/projects?creator=fixture')).items.map(x=>x.id),['a','g','h','i']);
+ assert.deepEqual((await body('/api/v1/projects?creator=FiXtUrE&category=games')).items.map(x=>x.id),['h']);
+ assert.deepEqual((await body('/api/v1/projects?creator=suspended')).items,[]);
+ assert.deepEqual((await body('/api/v1/projects?creator=fixture&limit=2&cursor=g')).items.map(x=>x.id),['h','i']);
+});
+test('creator search escapes wildcards and validates untrusted inputs',async()=>{
+ assert.equal((await body('/api/v1/creators?q=Fixture')).count,1);
+ assert.equal((await body('/api/v1/creators?q=%25')).count,0);
+ assert.equal((await body('/api/v1/creators?q=_')).count,0);
+ assert.equal((await body('/api/v1/creators?cursor=fixture')).count,0);
+ for(const q of ['limit=0','limit=49','q=a&q=b','cursor=..','unexpected=x','q='+ 'x'.repeat(81)])
+   assert.equal((await call('/api/v1/creators?'+q)).status,400,q);
+ for(const q of ['creator=../../bad','creator=fixture&creator=fixture','creator=fixture+or+1=1'])
+   assert.equal((await call('/api/v1/projects?'+q)).status,400,q);
+ assert.equal((await call('/api/v1/creators/fixture?limit=3')).status,400);
+});
 test('totals count published creators, not private member registrations',async()=>{assert.deepEqual((await body('/api/v1/status')).counts,{publishedProjects:4,publishedCreators:1});});
 test('unavailable features never claim to be enabled',async()=>{const f=(await body('/api/v1/status')).features;for(const x of ['accounts','publishing','voting','xp','community'])assert.equal(f[x],false);});
 test('pagination returns no duplicates and uses an exclusive cursor',async()=>{const a=await body('/api/v1/projects?limit=2');assert.equal(a.nextCursor,'g');const b=await body('/api/v1/projects?limit=2&cursor=g');assert.deepEqual([...a.items,...b.items].map(x=>x.id),['a','g','h','i']);assert.equal(b.nextCursor,null);});
@@ -24,7 +56,7 @@ test('SQL injection string remains bound data',async()=>{assert.equal((await bod
 test('public DTO omits private ids and admin flags',async()=>{const p=(await body('/api/v1/projects')).items[0];for(const k of ['owner_member_id','member_id','is_staff','status'])assert.ok(!Object.hasOwn(p,k));});
 test('detail retains plain-text content and removes unsafe launch URL',async()=>{const p=(await body('/api/v1/projects/i')).item;assert.ok(p.description.includes('<script>'));assert.equal(p.demoUrl,null);});
 test('every hidden detail produces 404',async()=>{for(const id of ['b','c','d','e','f','unknown'])assert.equal((await call('/api/v1/projects/'+id)).status,404);});
-test('HEAD mirrors success status and has no body',async()=>{for(const p of ['/health','/api/v1/status','/api/v1/categories','/api/v1/projects','/api/v1/projects/a']){const r=await call(p,'HEAD');assert.equal(r.status,200);assert.equal(await r.text(),'');}});
+test('HEAD mirrors success status and has no body',async()=>{for(const p of ['/health','/api/v1/status','/api/v1/categories','/api/v1/projects','/api/v1/projects/a','/api/v1/creators','/api/v1/creators/fixture']){const r=await call(p,'HEAD');assert.equal(r.status,200);assert.equal(await r.text(),'');}});
 test('missing and broken database are unavailable, not zero projects',async()=>{assert.equal((await call('/health','GET',{})).status,503);const bad={COMMUNITY_DB:{prepare(){throw new Error('secret internal password')}}};const r=await call('/api/v1/projects','GET',bad);assert.equal(r.status,503);assert.ok(!(await r.text()).includes('password'));});
 test('failed D1 result status is rejected',async()=>{assert.equal((await call('/api/v1/projects','GET',{COMMUNITY_DB:{prepare(){return{bind(){return this},all:async()=>({success:false,results:[]})}}}})).status,503);});
 test('invalid, unknown and repeated query values return 400',async()=>{for(const q of ['limit=0','limit=49','limit=1.5','limit=1e1','limit=NaN','category=bad','q=a&q=b','other=x','cursor=%3Cscript%3E','q='+ 'x'.repeat(101)])assert.equal((await call('/api/v1/projects?'+q)).status,400,q);});
