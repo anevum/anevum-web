@@ -48,6 +48,15 @@ jobs:
           node --check creator-v1/auth/projects-ui.mjs
           node --check creator-v1/authoring/review-snippets.mjs
           node --check creator-v1/authoring/worker.mjs
+      - name: Verify community votes, XP and moderated reversal
+        run: node --test creator-v1/integration/community-votes.integration.test.mjs
+      - name: Check voting modules and generated browser scripts
+        run: |
+          node --check creator-v1/auth/community.mjs
+          node --check creator-v1/auth/community-ui.mjs
+          node --check creator-v1/authoring/vote-moderation.mjs
+          node --check creator-v1/authoring/vote-moderation-ui.mjs
+          node --input-type=module -e 'import {Script} from "node:vm"; import {COMMUNITY_CLIENT} from "./creator-v1/auth/community-ui.mjs"; import {VOTE_APP} from "./creator-v1/authoring/vote-moderation-ui.mjs"; new Script(COMMUNITY_CLIENT); new Script(VOTE_APP)'
       - name: Check member Worker syntax
         run: node --check creator-v1/auth/worker.mjs
       - name: Check deployable bundle syntax
