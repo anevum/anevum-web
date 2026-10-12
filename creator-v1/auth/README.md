@@ -1,7 +1,7 @@
 # ANEVUM V1 — Staging member identity prototype
 
 **Session:** `ANEVUM.WEB.BUILD.2026-10-11.004.MEMBER-IDENTITY-FOUNDATION`  
-**Status:** code and tests complete; do not enable public registration until security review and email/Turnstile acceptance.  
+**Status:** invitation-only staging sign-in is enabled; public production signup remains disabled, pending independent security and real owner-browser acceptance.  
 **Target staging route:** `https://next.anevum.com/api/v1/member/*` on independent Worker `anevum-member-auth-staging`.  
 **Staging data:** `anevum-creator-v1-staging` only. Never bind production, archive/V5, or RHEN data.
 
@@ -61,3 +61,8 @@ Node 22.13+ (`node:sqlite`) runs in-memory deterministic tests. Test email and T
 ## Next
 
 Add a real accessible join/profile UI on the approved cinematic design, full member account deletion/export, single-member ownership and project draft publishing, then verified vote/XP ledger. Do not add levels or voting before identity and moderation checks.
+## Latest staging release (2026-10-11)
+
+See [STAGING-INVITE-RELEASE-0.2.0.md](STAGING-INVITE-RELEASE-0.2.0.md) for the deployed staging configuration and acceptance gates. The signup page and assets are now inside [next.anevum.com/api/v1/member/join](https://next.anevum.com/api/v1/member/join). Email verification uses published Resend template `anevum-v1-sign-in-otp`, a sender-domain-restricted secret and a server-only invitation allowlist. Twenty local identity tests passed. The production site does not share staging secrets or identity tables.
+
+**Staging activation bindings:** `RESEND_API_KEY`, `TURNSTILE_SECRET`, `STAGING_INVITE_EMAILS` and `STAGING_JOIN_ENABLED=true` (last two are server-only Worker secrets). Existing initial deployment instructions above describe the earlier fail-closed state before invited testing was enabled.
