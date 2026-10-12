@@ -8,6 +8,6 @@
   },
   "scripts": {
     "build": "node site/build.mjs",
-    "test": "npm run build && node --test test/public-api.test.mjs test/archive-gateway.test.mjs test/repository-api.test.mjs && node --test authoring/tests/authoring.test.mjs"
+    "test": "npm run build && node --test test/public-api.test.mjs test/archive-gateway.test.mjs test/repository-api.test.mjs && node --test authoring/tests/authoring.test.mjs && node --test integration/public-shell.test.mjs"
   }
 }
