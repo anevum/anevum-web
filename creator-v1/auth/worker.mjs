@@ -2,6 +2,8 @@ import {PAGE,STYLE,CLIENT} from './join.mjs';
 import {creatorProjects} from './projects.mjs';
 import {communityRoutes} from './community.mjs';
 import {socialRoutes} from './social.mjs';
+import {privacyRoutes} from './privacy.mjs';
+import {PRIVACY_PAGE,PRIVACY_STYLE,PRIVACY_CLIENT} from './privacy-ui.mjs';
 import {PROFILE_PAGE,LIBRARY_PAGE,SOCIAL_STYLE,SOCIAL_CLIENT} from './social-ui.mjs';
 import {COMMUNITY_PAGE,COMMUNITY_STYLE,COMMUNITY_CLIENT} from './community-ui.mjs';
 import {PROJECT_PAGE,PROJECT_STYLE,PROJECT_CLIENT} from './projects-ui.mjs';
@@ -88,11 +90,11 @@ export async function authenticated(req,env,now=unix()) {
   const t=cookieToken(req);
   if(!/^[0-9a-f]{64}$/.test(t))return null;
   const hash=await digest(env,'session',t);
-  const u=await one(env.COMMUNITY_DB,`SELECT a.id,a.email,a.status,c.handle,c.display_name AS displayName,c.bio
+  const u=await one(env.COMMUNITY_DB,`SELECT a.id,a.email,a.status,s.created_at AS sessionCreatedAt,c.handle,c.display_name AS displayName,c.bio
      FROM member_sessions s JOIN member_accounts a ON a.id=s.member_id
      LEFT JOIN creator_profiles c ON c.member_id=a.id AND c.status='active'
      WHERE s.token_hash=? AND s.expires_at>? AND s.revoked_at IS NULL AND a.status='active'`,[hash,now]);
-  return u ? {id:u.id,email:u.email,handle:u.handle||null,displayName:u.displayName||null,bio:u.bio||'',tokenHash:hash}:null;
+  return u ? {id:u.id,email:u.email,handle:u.handle||null,displayName:u.displayName||null,bio:u.bio||'',tokenHash:hash,sessionCreatedAt:u.sessionCreatedAt}:null;
 }
 async function turnstile(env,token,ip,fetcher) {
   if(!env.TURNSTILE_SECRET || typeof token!=='string'||token.length<10||token.length>4096)return false;
@@ -140,6 +142,17 @@ return {async fetch(req,env) {
     const content=profileView?PROFILE_PAGE:url.pathname===libManage?LIBRARY_PAGE:url.pathname.endsWith('.css')?SOCIAL_STYLE:SOCIAL_CLIENT;
     return new Response(req.method==='HEAD'?null:content,{headers:{...BASE,'content-type':kind,'content-security-policy':CSP_UI}});
   }
+  const privacyPage=PATH+'/privacy/manage';
+  if([privacyPage,PATH+'/privacy.css',PATH+'/privacy.js'].includes(url.pathname)&&['GET','HEAD'].includes(req.method)){
+    if(!ready(env))return fail(req,'Member identity unavailable',503);
+    if(url.pathname===privacyPage){
+      const member=await authenticated(req,env,clock());
+      if(!member)return new Response(null,{status:303,headers:{location:JOIN_PATH,'cache-control':'no-store'}});
+    }
+    const kind=url.pathname===privacyPage?'text/html; charset=utf-8':url.pathname.endsWith('.css')?'text/css; charset=utf-8':'text/javascript; charset=utf-8';
+    const content=url.pathname===privacyPage?PRIVACY_PAGE:url.pathname.endsWith('.css')?PRIVACY_STYLE:PRIVACY_CLIENT;
+    return new Response(req.method==='HEAD'?null:content,{headers:{...BASE,'content-type':kind,'content-security-policy':CSP_UI}});
+  }
   const projectsManage=PATH+'/projects/manage';
   if([projectsManage,projectsManage+'.css',projectsManage+'.js'].includes(url.pathname)&&['GET','HEAD'].includes(req.method)){
     if(!ready(env))return fail(req,'Member identity unavailable',503);
@@ -156,6 +169,11 @@ return {async fetch(req,env) {
   if(!ready(env))return fail(req,'Member identity unavailable',503);
   const db=env.COMMUNITY_DB;
   try {
+    if(path==='/privacy'||path.startsWith('/privacy/')){
+      if(req.method==='POST'&&!checkWrite(req))return fail(req,'Request origin rejected',403);
+      const member=await authenticated(req,env,clock());
+      return privacyRoutes(req,db,member,limit,clock());
+    }
     if(path==='/library'||path.startsWith('/library/')||path.startsWith('/creators/')){
       if(req.method==='POST'&&!checkWrite(req))return fail(req,'Request origin rejected',403);
       const member=await authenticated(req,env,clock());
