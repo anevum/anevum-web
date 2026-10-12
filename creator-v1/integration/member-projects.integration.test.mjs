@@ -52,6 +52,7 @@ test('member requires signed-in session and completed profile before any project
  for(const m of identities){const r=await memberCall('/profile','POST',{handle:m.handle,displayName:m.handle,bio:'Open-source maker working on useful tools.'},m);assert.equal(r.status,200,await r.clone().text())}
 });
 test('draft UI and Studio queue are genuine private interfaces',async()=>{
+ const join=await memberCall('/join');assert.match(await join.text(),/Manage my projects/);
  const r=await memberCall('/projects/manage');assert.equal(r.status,200);const html=await r.text();assert.match(html,/Your projects/);assert.match(html,/\<form id="editor"/);
  assert.equal((await memberCall('/projects/manage.css')).status,200);
  assert.equal((await memberCall('/projects/manage.js')).status,200);
