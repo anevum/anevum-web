@@ -11,7 +11,25 @@ dbSqlite.exec(`PRAGMA foreign_keys=ON;
 CREATE TABLE schema_migrations(version TEXT PRIMARY KEY,applied_at TEXT DEFAULT CURRENT_TIMESTAMP);
 CREATE TABLE creator_profiles(member_id TEXT PRIMARY KEY NOT NULL,handle TEXT NOT NULL COLLATE NOCASE UNIQUE CHECK(length(handle) BETWEEN 3 AND 30),display_name TEXT NOT NULL CHECK(length(display_name) BETWEEN 1 AND 80),bio TEXT NOT NULL DEFAULT '',avatar_url TEXT,website_url TEXT,is_staff INTEGER NOT NULL DEFAULT 0 CHECK(is_staff IN (0,1)),status TEXT NOT NULL DEFAULT 'active' CHECK(status IN ('active','suspended','deleted')),created_at TEXT DEFAULT CURRENT_TIMESTAMP,updated_at TEXT DEFAULT CURRENT_TIMESTAMP);
 CREATE TABLE projects(id TEXT PRIMARY KEY NOT NULL,owner_member_id TEXT NOT NULL REFERENCES creator_profiles(member_id) ON DELETE RESTRICT,slug TEXT NOT NULL CHECK(length(slug) BETWEEN 3 AND 90),title TEXT NOT NULL CHECK(length(title) BETWEEN 1 AND 100),summary TEXT NOT NULL CHECK(length(summary) BETWEEN 1 AND 280),description TEXT NOT NULL DEFAULT '' CHECK(length(description)<=25000),category TEXT NOT NULL,status TEXT NOT NULL DEFAULT 'draft' CHECK(status IN ('draft','pending_review','changes_requested','published','rejected','archived')),free_to_use INTEGER NOT NULL DEFAULT 1 CHECK(free_to_use IN (0,1)),license_name TEXT,source_url TEXT,demo_url TEXT,ai_disclosure TEXT NOT NULL DEFAULT '',human_contribution TEXT NOT NULL DEFAULT '',published_at TEXT,created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,UNIQUE(owner_member_id,slug));`);
-for(const filename of ['../authoring/migrations/0002_staff_authoring.sql','../auth/migrations/0003_member_identity_staging.sql','../auth/migrations/0004_member_project_workflow.sql'])dbSqlite.exec(readFileSync(new URL(filename,import.meta.url),'utf8'));
+for(const filename of ['../authoring/migrations/0002_staff_authoring.sql','../auth/migrations/0003_member_identity_staging.sql','../auth/migrations/0004_member_project_workflow.sql','../auth/migrations/0005_voting_progression.sql'])dbSqlite.exec(readFileSync(new URL(filename,import.meta.url),'utf8'));
+// These two existing V1 schema tables are part of the base community
+// migration; model them explicitly in this isolated full-journey fixture.
+dbSqlite.exec(`
+CREATE TABLE project_favorites(
+ member_id TEXT NOT NULL REFERENCES creator_profiles(member_id),
+ project_id TEXT NOT NULL REFERENCES projects(id),
+ created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+ PRIMARY KEY(member_id,project_id)
+);
+CREATE TABLE project_releases(
+ id TEXT PRIMARY KEY NOT NULL,
+ project_id TEXT NOT NULL REFERENCES projects(id),
+ version TEXT NOT NULL,
+ notes TEXT NOT NULL DEFAULT '',
+ released_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+`);
+
 function statement(sql,params=[]){return {sql,params,
  bind(...p){return statement(sql,p)},
  async all(){return {success:true,results:dbSqlite.prepare(sql).all(...params).map(o=>({...o}))}},
@@ -107,4 +125,98 @@ test('staff may reject instead of publish, leaving public discovery unchanged',a
  assert.equal((await (await publicApi.fetch(new Request('https://anevum.com/api/v1/projects'),env)).json()).items.length,1);
  assert.deepEqual(projectRows().map(x=>x.status),['published','rejected']);
  assert.equal(dbSqlite.prepare("SELECT COUNT(*) AS n FROM project_submission_events WHERE action='reject'").get().n,1);
+});
+
+test('integrated journey: publication becomes public creator content and independent member participation',async()=>{
+  // Prior tests drive authenticated A -> separately signed staff review -> publish.
+  // Here the same database is used by public and member endpoints, not a
+  // projection seeded with artificial users or manually inserted ratings.
+  const publicIndex=await publicApi.fetch(new Request('https://anevum.com/api/v1/projects'),env);
+  assert.equal(publicIndex.status,200);
+  const listings=(await publicIndex.json()).items;
+  assert.deepEqual(listings.map(x=>x.id),[projectId]);
+
+  const creators=await (await publicApi.fetch(new Request('https://anevum.com/api/v1/creators'),env)).json();
+  assert.deepEqual(creators.items,[{handle:'alice_dev',displayName:'alice_dev',publishedProjects:1}]);
+  assert.equal((await publicApi.fetch(new Request('https://anevum.com/api/v1/creators/bob_dev'),env)).status,404);
+  const alicePublic=await (await publicApi.fetch(new Request('https://anevum.com/api/v1/projects?creator=alice_dev'),env)).json();
+  assert.deepEqual(alicePublic.items.map(x=>x.id),[projectId]);
+  assert.equal((await publicApi.fetch(new Request('https://anevum.com/api/v1/projects?creator=bob_dev'),env)).status,200);
+  for(const value of [JSON.stringify(creators),JSON.stringify(alicePublic)]){
+    assert.ok(!value.includes('alice@example.com'));
+    assert.ok(!value.includes('alice-member'));
+    assert.ok(!value.includes('is_staff'));
+  }
+  // Creator A may view public stats but never earn a rating for their own work.
+  assert.equal((await memberCall('/community/projects/'+projectId+'/vote','POST',{score:5,revision:0},identities[0])).status,403);
+  assert.equal((await memberCall('/community/projects/'+projectId,'GET',undefined,null)).status,200);
+  assert.equal((await memberCall('/library','GET',undefined,null)).status,401);
+  assert.equal((await memberCall('/library','GET',undefined,identities[0])).status,200);
+
+  // Member B votes and saves through the real staged endpoints.
+  const first=await memberCall('/community/projects/'+projectId+'/vote','POST',{score:5,revision:0},identities[1]);
+  assert.equal(first.status,200,await first.clone().text());
+  const voted=await first.json();
+  assert.equal(voted.changed,true);
+  assert.equal(voted.rating.votes,1);
+  assert.deepEqual(voted.rating.myVote,{score:5,revision:1});
+  assert.equal(voted.progression.xp,2);
+  const again=await memberCall('/community/projects/'+projectId+'/vote','POST',{score:5,revision:1},identities[1]);
+  assert.equal(again.status,200);
+  assert.equal((await again.json()).changed,false);
+  const save=await memberCall('/library/'+projectId,'POST',{saved:true},identities[1]);
+  assert.equal(save.status,200,await save.clone().text());
+  assert.deepEqual(await save.json(),{saved:true,changed:true});
+  const duplicateSave=await memberCall('/library/'+projectId,'POST',{saved:true},identities[1]);
+  assert.deepEqual(await duplicateSave.json(),{saved:true,changed:false});
+  const bLibrary=await (await memberCall('/library','GET',undefined,identities[1])).json();
+  assert.deepEqual(bLibrary.items.map(x=>x.id),[projectId]);
+  const aLibrary=await (await memberCall('/library','GET',undefined,identities[0])).json();
+  assert.equal(aLibrary.count,0);
+  assert.equal((await (await memberCall('/community/me','GET',undefined,identities[1])).json()).progression.xp,2);
+  assert.equal(dbSqlite.prepare("SELECT COUNT(*) AS n FROM community_xp_events WHERE member_id='bob-member'").get().n,1);
+  assert.equal(dbSqlite.prepare("SELECT is_staff FROM creator_profiles WHERE member_id='bob-member'").get().is_staff,0);
+});
+
+test('integrated journey: signed Studio moderation reverses and restores only earned XP',async()=>{
+  assert.equal((await studioCall('/api/community-votes?project='+projectId,'GET',undefined,'invalid-access-assertion')).status,401);
+  const queue=await studioCall('/api/community-votes?project='+projectId);
+  assert.equal(queue.status,200);
+  assert.equal((await queue.json()).votes.length,1);
+  assert.equal((await studioCall('/api/community-votes/'+projectId+'/bob-member/hide','POST',{reason:'bad'})).status,400);
+  const hide=await studioCall('/api/community-votes/'+projectId+'/bob-member/hide','POST',{reason:'Confirmed rating rule violation requiring staff review.'});
+  assert.equal(hide.status,200,await hide.clone().text());
+  assert.equal((await hide.json()).xpAdjustment,-2);
+  assert.equal((await (await memberCall('/community/me','GET',undefined,identities[1])).json()).progression.xp,0);
+  const hiddenRating=await (await memberCall('/community/projects/'+projectId,'GET',undefined,null)).json();
+  assert.equal(hiddenRating.rating.votes,0);
+  assert.equal((await memberCall('/community/projects/'+projectId+'/vote','POST',{score:4,revision:1},identities[1])).status,403);
+  assert.equal((await studioCall('/api/community-votes/'+projectId+'/bob-member/hide','POST',{reason:'A repeat moderation action must be rejected.'})).status,409);
+
+  const restore=await studioCall('/api/community-votes/'+projectId+'/bob-member/restore','POST',{reason:'The appeal was supported and the original rating is reinstated.'});
+  assert.equal(restore.status,200,await restore.clone().text());
+  assert.equal((await restore.json()).xpAdjustment,2);
+  assert.equal((await (await memberCall('/community/me','GET',undefined,identities[1])).json()).progression.xp,2);
+  const visibleRating=await (await memberCall('/community/projects/'+projectId,'GET',undefined,null)).json();
+  assert.equal(visibleRating.rating.votes,1);
+  assert.equal(visibleRating.rating.average,5);
+  assert.equal((await studioCall('/api/community-votes/'+projectId+'/bob-member/restore','POST',{reason:'A duplicate restoration must be rejected.'})).status,409);
+  const awards=dbSqlite.prepare("SELECT kind,amount FROM community_xp_events WHERE member_id='bob-member' ORDER BY rowid").all();
+  assert.deepEqual(awards.map(x=>x.amount),[2,-2,2]);
+  assert.equal(awards.reduce((sum,x)=>sum+x.amount,0),2);
+  assert.equal(dbSqlite.prepare("SELECT is_staff FROM creator_profiles WHERE member_id='bob-member'").get().is_staff,0);
+});
+
+test('integrated journey: sign-out revokes B while public content and A remain independent',async()=>{
+  const out=await memberCall('/sign-out','POST',{},identities[1]);
+  assert.equal(out.status,200,await out.clone().text());
+  assert.match(out.headers.get('set-cookie')||'',/Max-Age=0/);
+  assert.equal((await memberCall('/library','GET',undefined,identities[1])).status,401);
+  assert.equal((await memberCall('/community/me','GET',undefined,identities[1])).status,401);
+  assert.equal((await memberCall('/community/projects/'+projectId+'/vote','POST',{score:3,revision:1},identities[1])).status,401);
+  assert.equal((await memberCall('/me','GET',undefined,identities[0])).status,200);
+  const anonymous=await publicApi.fetch(new Request('https://anevum.com/api/v1/projects/'+projectId),env);
+  assert.equal(anonymous.status,200);
+  assert.equal((await anonymous.json()).item.creatorHandle,'alice_dev');
+  assert.equal((await publicApi.fetch(new Request('https://anevum.com/api/v1/creators/alice_dev'),env)).status,200);
 });

@@ -1,5 +1,20 @@
 # ANEVUM Creator V1
 
+## October 12 — public creator discovery
+
+**Session:** `ANEVUM.WEB.BUILD.2026-10-12.004.PUBLIC-CREATOR-PROFILES`. Adds genuine read-only public creator directory, published portfolios, creator-linked project cards and validated pagination/search. No staged members, private account information, fake profiles, production signup, migration or RHEN changes. The approved Orbit cinematic experience remains the design foundation.
+
+## Active source-only build — October 12, 2026
+
+**Session:** `ANEVUM.WEB.BUILD.2026-10-12.003.ORBIT-CREATOR-EXPERIENCE`  
+**Draft implementation:** [Orbit public experience PR #339](https://github.com/anevum/anevum-web/pull/339), stacked on [approved Orbit visual identity PR #338](https://github.com/anevum/anevum-web/pull/338), then [Creator V1 system foundation PR #334](https://github.com/anevum/anevum-web/pull/334).
+
+The new public frontend is now source-controlled in `site/shell.html`, `site/shell.css`, and `site/client.mjs` with a rebuilt `site/build.mjs` and deep-route-safe `site/runtime.mjs`. It uses the chosen ORBIT full/compact brand master and the existing real read-only V1 D1 public API, not the fictional 2026-10-11 design preview. Supported public view routes are Home, Discover/search/categories/pagination, public project details, build status and About. Create, Community, Library and Account currently show explicit not-public status rather than opening unaudited member functions. No fake submissions, votes, followers, ratings or award counts are presented.
+
+**Acceptance:** Build and GitHub CI, source-level regression, and isolated local browser layout checks at 320/390/1024/1440. Local browser screenshots used mocked empty data and QA illustrations for geometry and safety testing; they are **not** a deployed-site review. Real staging browser/provider evidence and member A → staff → member B acceptance remain open. The new frontend has **not** replaced the production Worker on `anevum.com`.
+
+The following 0.1.0 cutover and initial member-development notes describe the **currently deployed foundation or historical state**, not permission to start registration again from scratch. Preserve existing 0.2.0–0.6.0 staging auth, publishing, review, vote/XP, library and privacy modules; finish independent security and real user acceptance before public release.
+
 Session: `ANEVUM.WEB.BUILD.2026-10-11.003.CREATOR-V1-ARCHIVE-CUTOVER`
 
 ## Current staged member development (Oct 11, 2026)
@@ -19,7 +34,7 @@ The frontend reads actual community D1 data. There are currently zero published 
 
 Live capabilities: catalogue search, category filtering, cursor pagination, public project detail, accurate public counts, and feature availability. Accounts, project submission, moderation writes, voting, XP and community discussion are explicitly unavailable until implemented.
 
-The approved artwork, angular gold mark, orange/violet/blue palette and responsive navigation are retained. Category illustrations are labeled concept art, not invented live applications.
+The 0.1.0 live release retains its older approved artwork and navigation until the new Orbit public-shell candidate passes release gates. Category illustrations are explicitly concept artwork, never invented live applications.
 
 ## Runtime boundaries
 
@@ -62,4 +77,4 @@ Build and test first. Deploy the reviewed artifact to the preview Worker only, v
 
 ## Next implementation objective
 
-Build real member registration, sign-in/recovery and creator-owned profiles against the community data model. Then add draft submission and moderator review. Votes and XP must use server-authoritative, deduplicated records after account and abuse controls are in place. Do not redesign the approved identity or reactivate the RHEN roadmap.
+Accept and harden the existing staged member identity, recovery and creator-owned profiles, then validate the genuine member A → staff publish → independent member B review/save/XP workflow. Fix defects and anti-abuse/reversal semantics rather than rebuilding these modules. Finish Orbit visual/mobile/browser acceptance and exact-build recovery/rollback prior to a separately authorized production release. The RHEN/trading roadmap is not a Creator V1 launch dependency.

@@ -17,6 +17,7 @@ const ASSETS = constant('ASSETS');
 let PAGE = originalPage;
 const style = /<style>([\s\S]*?)<\/style>/.exec(PAGE);
 if (!style || !/<script>[\s\S]*?<\/script>/.test(PAGE)) throw new Error('Approved HTML structure changed');
+if (!PAGE.includes('class="header"') || !PAGE.includes('id="topNav"') || !PAGE.includes('id="bottomNav"') || !PAGE.includes('id="mobileDrawer"')) throw new Error('Cinematic preview layout/navigation contract changed');
 const STYLES = style[1]+'\n'+readFileSync(resolve(here, 'overrides.css'),'utf8')+'\n'+BRAND_CSS;
 const CLIENT = readFileSync(resolve(here, 'client.mjs'),'utf8');
 const logoStart = '<a href="#discover" class="logo" aria-label="ANEVUM — Discover">';
