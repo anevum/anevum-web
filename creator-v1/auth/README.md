@@ -11,6 +11,7 @@
 - HMAC-hashed server-side session tokens, `__Host-` Secure/HttpOnly/SameSite=Lax cookie, revocation on sign-out, active-account checks and expiry.
 - Per-email and per-IP issuance/verification throttles (keys are keyed hashes, not raw addresses), same-origin write enforcement, bounded request bodies, reserved handles, immutable member IDs, server-owned `is_staff=0` and uniqueness constraints.
 - Authenticated `/me`, first-time creator profile setup and updates; public creator project listings are handled by the existing separate read-only catalogue.
+- Approved-theme responsive `/join` screen with Turnstile placeholder, genuine disabled-registration state, and code/profile forms gated by API readiness. The static UI is a separate module, built from `ui/` using `node build.mjs`.
 - Scheduled cleanup of expired challenges, sessions and limiter entries; no arbitrary app-code execution or private brokerage access.
 - No fake creator accounts or publishing permissions; a member cannot call the staff-only Studio.
 
@@ -35,10 +36,15 @@ Required Worker bindings:
 | POST | `/api/v1/member/profile` | creates/updates only signed-in member's creator profile |
 | POST | `/api/v1/member/sign-out` | revokes only current session and clears cookie |
 
+### Join interface
+
+The extra route `next.anevum.com/join*` serves `/join`, `/join.css` and `/join.js` from the isolated member Worker. The base preview Worker and main production site remain unchanged. The page checks `/api/v1/member/health`, and accurately displays registration as closed unless both Turnstile and email bindings are configured.
+
 ### Local tests
 
 ```bash
 cd creator-v1
+node auth/build.mjs
 node --test auth/tests/member-auth.test.mjs
 ```
 
