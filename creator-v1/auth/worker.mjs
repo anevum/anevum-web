@@ -1,7 +1,9 @@
+import {PAGE,STYLE,CLIENT} from './join.mjs';
 // ANEVUM V1 — isolated, gated STAGING member-identity prototype.
 // Uses WebCrypto primitives and D1 conditional writes; requires independent security
 // review before public registration. No Better Auth/V5 session or broker integration.
 const ORIGIN = 'https://next.anevum.com';
+const CSP_UI="default-src 'none'; script-src 'self' https://challenges.cloudflare.com; style-src 'self'; img-src 'self' data: https://challenges.cloudflare.com; connect-src 'self' https://challenges.cloudflare.com; frame-src https://challenges.cloudflare.com; font-src 'self'; base-uri 'none'; form-action 'self'; object-src 'none'; frame-ancestors 'none'";
 const PATH = '/api/v1/member';
 const COOKIE = '__Host-anevum_stage_sid';
 const BASE = Object.freeze({
@@ -97,7 +99,13 @@ async function emailCode(env,email,code,fetcher) {
 export function createMemberWorker({fetcher=fetch,clock=unix}={}) {
 return {async fetch(req,env) {
   const url=new URL(req.url);
-  if(url.origin!==ORIGIN||!url.pathname.startsWith(PATH+'/'))return fail(req,'Not found',404);
+  if(url.origin!==ORIGIN)return fail(req,'Not found',404);
+  if(['/join','/join.css','/join.js'].includes(url.pathname)&&['GET','HEAD'].includes(req.method)) {
+    const kind=url.pathname==='/join'?'text/html; charset=utf-8':url.pathname==='/join.css'?'text/css; charset=utf-8':'text/javascript; charset=utf-8';
+    const body=url.pathname==='/join'?PAGE:url.pathname==='/join.css'?STYLE:CLIENT;
+    return new Response(req.method==='HEAD'?null:body,{headers:{...BASE,'content-type':kind,'content-security-policy':CSP_UI}});
+  }
+  if(!url.pathname.startsWith(PATH+'/'))return fail(req,'Not found',404);
   const path=url.pathname.slice(PATH.length);
   if(req.method==='OPTIONS')return fail(req,'Not found',404); // same-origin only
   if(!['GET','HEAD','POST'].includes(req.method))return json(req,{error:'Method not allowed'},405,{'allow':'GET, HEAD, POST'});
