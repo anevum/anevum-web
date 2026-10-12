@@ -7,6 +7,7 @@ Target: January 1, 2027 public opening
 
 ## Shipped in source
 
+- The signed-in membership page now links directly to **Manage my projects**.
 - Authenticated project workspace under `next.anevum.com/api/v1/member/projects/manage`, using the approved cinematic ANEVUM design; no fictional project activity.
 - Owner-scoped project list, private detail, create draft, revise and submit routes under `/api/v1/member/projects`. Existing signed-in staging identity, strict origin checks and database rate limiting are reused.
 - Revision numbers prevent stale saves; only drafts and requests for changes are editable. A submitted project cannot be edited until staff sends it back.
