@@ -1,23 +1,21 @@
-# ANEVUM Creator V1 — Brand lock and visual release gate
+# ANEVUM Creator V1 — current shared identity / visual release gates
 
-**Current approval:** Orbital-portal concept, copper/gold/black palette, and ANEVUM-first wordmark direction approved October 12, 2026.
-**Source and exact color values:** [ORBITAL-PORTAL-IDENTITY-2026-10-12.md](ORBITAL-PORTAL-IDENTITY-2026-10-12.md).
-**Versioned code:** `creator-v1/shared/brand.mjs` — `orbital-portal-2026-10-12-v1.1`.
-**Regression test:** `creator-v1/integration/brand-lock.test.mjs`.
+**Preferred concept:** **01 ORBIT**, owner selected October 12, 2026. The former angular A emblem is superseded.
+**Reference and vector details:** [ORBIT-MARK-ADOPTION-2026-10-12.md](ORBIT-MARK-ADOPTION-2026-10-12.md)
+**Canonical module:** `creator-v1/shared/brand.mjs` (`orbit-2026-10-12-v2`)
+**Tests:** `creator-v1/integration/brand-lock.test.mjs`
 
-The October 11 cinematic *layout, community-first journey and artwork* stay approved. Its former triangular A and orange-heavy identity lock are superseded by this explicit new owner selection. The 2026-10-11 source is historical and remains for continuity.
+## Design and functional locks
+- Never substitute a letter A, portal arch, simple character, or a generic thin Saturn line for the selected thick **orbit ribbon, central coral world, and small violet satellite**.
+- Use one shared brand token set and mark across the public homepage, join, member profile, library, community, project manager, privacy and Studio. The mark is not the same as collectible badges or utility icons.
+- The public ANEVUM website stays an inclusive, creator/community-first discovery destination, not a conventional SaaS template, a trading-first brand or a mandatory space-themed wallpaper.
+- Preserve original project content and cinematic visuals, compact responsive navigation, accessible labels, meaningful earned community XP, and truthful real-data states. No fictional ratings/projects or artificial activity.
+- Keep app/header/favicon forms geometrically related. Decorative shading can disappear in monochrome; the asymmetric ribbon and sphere must still read.
+- Never use color contrast alone to indicate moderation, errors, security, earning or status. Solid copper buttons use dark foreground.
 
-## What must not drift
-1. Public site, join, member project manager, community, creator profile, saved library, privacy and owner Studio all render the single shared ANEVUM mark. Do not insert custom page-specific glyphs.
-2. Primary background is charcoal/black, primary brand accents are copper and gold; violet/blue remain atmospheric, not dominant. UI state colors (success, warning, errors) must remain functional and distinguishable.
-3. The hero mark retains core + satellite; UI headers and the favicon use an intentionally reduced-detail A/orbit at 16–32px. Monochrome masters and the compact variant remain deterministic. Do not rely on glow or tiny satellites for recognition.
-4. Main site name is **ANEVUM**. Keep compact responsive navigation, icon labels accessible, content-led project cards, visible meaningful recognition and genuine user content.
-5. The company mark is distinct from platform utility icons and collectible badges; badges can be playful but cannot replace the ANEVUM identity.
-6. No fictitious projects, ratings or community activity. Test fixtures must be labeled.
-
-## Engineering / release rules
-- Import `BRAND_MARK` and `BRAND_CSS` from `creator-v1/shared/brand.mjs` in every staging member/staff screen. The read-only public Worker consumes the same brand module at build time.
-- Standalone primary/compact/mono masters in `creator-v1/brand/` must byte-match their exported string counterparts; source tests enforce equality.
-- Do not mutate the 2026-10-11 archived preview Worker merely to paint the new identity. Replace only the released public header and favicon through the V1 build pipeline.
-- Release requires independently captured browser/mobile/keyboard/contrast evidence; source-level CI alone is insufficient.
-- The V1 functionality/security gates tracked in #325/#328/#329/#332 remain independent and mandatory. Branding does not authorize production signup or publishing.
+## Engineering
+1. Import `BRAND_MARK` and `BRAND_CSS` from the shared module; avoid locally authored mark forks.
+2. Keep full, compact, light/dark monochrome SVG files byte-equal to the module exports. Automated source-level assertions reject old A shapes.
+3. Public V1 build replaces the archived sample site's header mark with the current canonical mark and serves a real SVG favicon; do not rewrite the archived visual prototype.
+4. Pass exact-head CI and then actual responsive/manual accessibility screenshots. Source passing alone is not production or authenticated account acceptance.
+5. Founder approval of this preferred concept is **not** authorization to expand staging invitations, migrate databases, open public accounts, deploy to the live apex, pay providers or relax V1 security gates.

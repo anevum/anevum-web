@@ -1,3 +1,5 @@
+> **Superseded visual mark (2026-10-12):** The later owner-selected **01 ORBIT** image replaces the earlier A/portal icon proposal. Preserve the earlier work as design history only. Current reference: [ORBIT-MARK-ADOPTION-2026-10-12.md](ORBIT-MARK-ADOPTION-2026-10-12.md). The platform and cinematic creator-layout direction continue unchanged.
+
 # ANEVUM orbital portal identity — approved design direction, 2026-10-12
 
 **Session:** ANEVUM.WEB.BUILD.2026-10-12.001.BRAND-MARK-INTEGRATION

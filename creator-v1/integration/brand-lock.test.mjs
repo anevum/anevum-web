@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {BRAND_MARK,BRAND_CSS,BRAND_VERSION,BRAND_ARCH_PATH,BRAND_ARCH_COMPACT_PATH,BRAND_FAVICON,BRAND_MARK_FULL,BRAND_MARK_MONO_DARK,BRAND_MARK_MONO_LIGHT} from '../shared/brand.mjs';
+import {BRAND_VERSION,BRAND_MARK,BRAND_MARK_FULL,BRAND_FAVICON,BRAND_MARK_MONO_DARK,BRAND_MARK_MONO_LIGHT,BRAND_CSS} from '../shared/brand.mjs';
 import {PAGE as JOIN_PAGE,STYLE as JOIN_STYLE} from '../auth/join.mjs';
 import {COMMUNITY_PAGE,COMMUNITY_STYLE} from '../auth/community-ui.mjs';
 import {PROFILE_PAGE,LIBRARY_PAGE,SOCIAL_STYLE} from '../auth/social-ui.mjs';
@@ -10,71 +10,70 @@ import {PRIVACY_PAGE,PRIVACY_STYLE} from '../auth/privacy-ui.mjs';
 import {STUDIO_PAGE,STUDIO_STYLE} from '../authoring/worker.mjs';
 
 const screens=[
-  ['member join',JOIN_PAGE,JOIN_STYLE],
+  ['join',JOIN_PAGE,JOIN_STYLE],
   ['community',COMMUNITY_PAGE,COMMUNITY_STYLE],
   ['creator profile',PROFILE_PAGE,SOCIAL_STYLE],
   ['saved library',LIBRARY_PAGE,SOCIAL_STYLE],
-  ['member projects',PROJECT_PAGE,PROJECT_STYLE],
+  ['projects manager',PROJECT_PAGE,PROJECT_STYLE],
   ['account privacy',PRIVACY_PAGE,PRIVACY_STYLE],
   ['staff studio',STUDIO_PAGE,STUDIO_STYLE]
 ];
-test('detailed hero and compact icon share the same A/orbit identity',()=>{
-  assert.equal(BRAND_VERSION,'orbital-portal-2026-10-12-v1.1');
-  for(const svg of [BRAND_MARK_FULL,BRAND_MARK_MONO_DARK,BRAND_MARK_MONO_LIGHT]){
-    assert.ok(svg.includes(BRAND_ARCH_PATH),'full-size portal arch missing');
-    assert.match(svg,/viewBox="0 0 64 64"/);
-    assert.match(svg,/<circle cx="32" cy="33"/);
-    assert.match(svg,/rotate\(-18 32 34\)/);
+
+test('01 ORBIT is the canonical brand, not the superseded letter-A logo',()=>{
+  assert.equal(BRAND_VERSION,'orbit-2026-10-12-v2');
+  for(const mark of [BRAND_MARK,BRAND_MARK_FULL,BRAND_FAVICON,BRAND_MARK_MONO_DARK,BRAND_MARK_MONO_LIGHT]){
+    assert.match(mark,/viewBox="0 0 512 512"/);
+    assert.match(mark,/<circle cx="291" cy="266"/);
+    assert.match(mark,/<circle cx="408" cy="84"/);
+    assert.match(mark,/M352 82|M354 84/);
+    assert.doesNotMatch(mark,/<script|<image\b|onclick=|onerror=|foreignObject/i);
+    assert.doesNotMatch(mark,/M12\.5 52|M5 49 30 8/);
   }
-  for(const svg of [BRAND_MARK,BRAND_FAVICON]){
-    assert.ok(svg.includes(BRAND_ARCH_COMPACT_PATH),'favicon must use compact A');
-    assert.match(svg,/viewBox="0 0 64 64"/);
-    assert.doesNotMatch(svg,/<circle cx="32" cy="33"/,'tiny sphere must be omitted at 16px');
-    assert.doesNotMatch(svg,/<circle cx="57\.7"/,'tiny satellite must be omitted at 16px');
-    assert.doesNotMatch(svg,/<script|<image\b|onerror=|onclick=|foreignObject/i);
-  }
+  assert.ok(BRAND_MARK.includes('class="anevum-brand-mark"'));
   assert.equal(readFileSync(new URL('../brand/anevum-mark.svg',import.meta.url),'utf8').trim(),BRAND_MARK_FULL);
   assert.equal(readFileSync(new URL('../brand/anevum-mark-compact.svg',import.meta.url),'utf8').trim(),BRAND_FAVICON);
   assert.equal(readFileSync(new URL('../brand/anevum-mark-mono-dark.svg',import.meta.url),'utf8').trim(),BRAND_MARK_MONO_DARK);
   assert.equal(readFileSync(new URL('../brand/anevum-mark-mono-light.svg',import.meta.url),'utf8').trim(),BRAND_MARK_MONO_LIGHT);
 });
-function relativeLuminance(hex){
-  const values=[1,3,5].map(index=>parseInt(hex.slice(index,index+2),16)/255);
-  const linear=values.map(v=>v<=.04045?v/12.92:Math.pow((v+.055)/1.055,2.4));
-  return .2126*linear[0]+.7152*linear[1]+.0722*linear[2];
-}
-test('copper action color remains legible with a dark foreground and visible focus',()=>{
-  const lo=relativeLuminance('#100d11'),hi=relativeLuminance('#d9945e');
-  assert.ok((hi+.05)/(lo+.05)>=4.5,'copper text contrast must pass AA');
-  assert.ok(BRAND_CSS.includes('--anevum-on-copper:#100d11'));
-  assert.match(BRAND_CSS,/\.btn\.primary,button\.primary/);
-  assert.match(BRAND_CSS,/\.btn\.primary:focus-visible/);
-});
-test('public and private screens have one consistent ANEVUM header mark',()=>{
+
+test('every member/staff page shares exactly one brand mark and readable wordmark',()=>{
   for(const [name,page] of screens){
-    assert.ok(page.includes(BRAND_MARK),name+' must render the canonical mark');
-    assert.equal((page.match(/class="anevum-brand-mark"/g)||[]).length,1,name+' must render exactly one brand mark');
-    assert.ok(page.includes('ANEVUM'),name+' must retain the wordmark');
-    assert.doesNotMatch(page,/<span[^>]*class="(?:mark|logo|brandmark)"[^>]*>(?:A|◬|&#9651;)<\/span>/u);
+    assert.ok(page.includes(BRAND_MARK),name+' identity drift');
+    assert.equal((page.match(/class="anevum-brand-mark"/g)||[]).length,1,name+' duplicate mark');
+    assert.ok(page.includes('ANEVUM'),name+' missing wordmark');
   }
 });
-test('all member/staff screens inherit the copper/gold/black identity tokens',()=>{
-  for(const part of ['--anevum-bg:#100d11','--anevum-panel:#19151b',
-    '--anevum-line:#3a303a','--anevum-text:#f8f1e7','--anevum-copper:#d9945e',
-    '--anevum-gold:#f3ca86','--anevum-violet:#8e83a9']){
-    assert.ok(BRAND_CSS.includes(part),part);
-  }
+
+const luminance=hex=>{
+  const v=[1,3,5].map(i=>parseInt(hex.slice(i,i+2),16)/255);
+  const lin=v.map(c=>c<=.04045?c/12.92:((c+.055)/1.055)**2.4);
+  return .2126*lin[0]+.7152*lin[1]+.0722*lin[2];
+};
+test('shared UI uses warm canvas and actionable contrast',()=>{
+  for(const required of [
+    '--anevum-bg:#181418',
+    '--anevum-panel:#211b22',
+    '--anevum-copper:#dfa176',
+    '--anevum-gold:#f7dbb7',
+    '--anevum-orange:#f08e5b',
+    '--anevum-violet:#a9a1ef',
+    '--anevum-on-copper:#181418'
+  ]) assert.ok(BRAND_CSS.includes(required),required);
+  assert.ok((luminance('#dfa176')+.05)/(luminance('#181418')+.05)>=4.5);
+  assert.match(BRAND_CSS,/\.btn\.primary,button\.primary/);
+  assert.match(BRAND_CSS,/focus-visible/);
   for(const [name,,style] of screens){
-    assert.ok(style.includes(BRAND_CSS),name+' must inherit the identical brand rules');
-    assert.ok(style.includes('.anevum-brand-mark'),name+' must size the common mark');
+    assert.ok(style.includes(BRAND_CSS),name+' color drift');
+    assert.ok(style.includes('.anevum-brand-mark'),name+' icon size missing');
   }
 });
-test('read-only public homepage builds the identical mark, stylesheet and favicon',async()=>{
-  const {PAGE,STYLES,BRAND_FAVICON:LIVE_ICON}=await import('../site/generated.mjs');
-  assert.ok(PAGE.includes(BRAND_MARK),'home logo differs from member and Studio');
+
+test('public V1 read-only build has the same mark and real favicon',async()=>{
+  const {PAGE,STYLES,BRAND_FAVICON:BUILT_FAVICON}=await import('../site/generated.mjs');
+  assert.ok(PAGE.includes(BRAND_MARK));
   assert.equal((PAGE.match(/class="anevum-brand-mark"/g)||[]).length,1);
   assert.ok(PAGE.includes('<link rel="icon" href="/favicon.svg" type="image/svg+xml" />'));
+  assert.ok(STYLES.includes(BRAND_CSS));
+  assert.equal(BUILT_FAVICON,BRAND_FAVICON);
   assert.doesNotMatch(PAGE,/M5 49 30 8l25 41h-8L30 22 13 49z/);
-  assert.ok(STYLES.includes(BRAND_CSS),'public stylesheet must load canonical identity');
-  assert.equal(LIVE_ICON,BRAND_FAVICON);
 });
