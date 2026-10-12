@@ -1,0 +1,36 @@
+import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { createHash } from 'node:crypto';
+const here = dirname(fileURLToPath(import.meta.url));
+const originalPath = process.argv[2] || resolve(here, '../../community-preview/worker.js');
+const original = readFileSync(originalPath, 'utf8');
+if (!original.includes('ANEVUM CINEMATIC CREATOR PREVIEW')) throw new Error('Approved source marker missing');
+function constant(name) {
+  const line = original.split('\n').find(line => new RegExp('^const '+name+'\\s*=').test(line));
+  if (!line) throw new Error('Missing approved '+name);
+  return JSON.parse(line.replace(new RegExp('^const '+name+'\\s*=\\s*'),'').replace(/;\s*$/,''));
+}
+const originalPage = constant('PAGE');
+const ASSETS = constant('ASSETS');
+let PAGE = originalPage;
+const style = /<style>([\s\S]*?)<\/style>/.exec(PAGE);
+if (!style || !/<script>[\s\S]*?<\/script>/.test(PAGE)) throw new Error('Approved HTML structure changed');
+const STYLES = style[1]+'\n'+readFileSync(resolve(here, 'overrides.css'),'utf8');
+const CLIENT = readFileSync(resolve(here, 'client.mjs'),'utf8');
+PAGE=PAGE.replace(style[0],'<link rel="stylesheet" href="/styles.css">').replace(/<script>[\s\S]*?<\/script>/,'<script type="module" src="/client.mjs"></script>');
+PAGE=PAGE.replace(/<div class="fakebar">[\s\S]*?<\/div>/,'<div class="fakebar"><strong>ANEVUM V1 / IN DEVELOPMENT</strong> &mdash; Live catalogue. Accounts, publishing and voting are not open yet.</div>');
+PAGE=PAGE.replace(/<div class="head-actions">[\s\S]*?<\/div>\s*<\/div><\/header>/,'<div class="head-actions"><a class="btn primary action-create" href="#status">V1 build</a><button class="iconbtn" type="button" data-route="account" aria-label="Account availability"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="7" r="4"/><path d="M4 22v-3a8 8 0 0 1 16 0v3"/></svg></button></div></div></header>');
+PAGE=PAGE.replace(/<footer class="foot">[\s\S]*?<\/footer>/,'<footer class="foot"><span>ANEVUM / CREATE. PLAY. BELONG.</span><span>V1 is in development. Concept art illustrates the community vision, not live projects.</span></footer>');
+PAGE=PAGE.replace('Search projects, creators, tags\u2026','Search published projects');
+PAGE=PAGE.replace('<title>ANEVUM / Create. Play. Belong.</title>','<meta name="description" content="ANEVUM is building a community for AI-assisted software, games and creative tools. Explore the first read-only V1 build."><title>ANEVUM / Create. Play. Belong.</title>');
+if (PAGE.includes('View demo profile') || PAGE.includes('Fictional showcase data') || PAGE.includes('const p=[')) throw new Error('Demo fixture remains in release page');
+const generated = Object.entries({PAGE,STYLES,CLIENT,ASSETS}).map(([k,v])=>'export const '+k+'='+JSON.stringify(v)+';').join('\n');
+writeFileSync(resolve(here,'generated.mjs'),generated);
+let api = readFileSync(resolve(here,'../api/worker.mjs'),'utf8').replace('export function safePublicUrl','function safePublicUrl').replace('export default {','const api = {');
+const runtime = readFileSync(resolve(here,'runtime.mjs'),'utf8').replace(/^import .*;\n/gm,'');
+const bundled = '// ANEVUM V1 LIVE-DATA READ-ONLY RELEASE\n'+generated.replaceAll('export const ','const ')+'\n'+api+'\n'+runtime;
+mkdirSync(resolve(here,'../dist'),{recursive:true});
+writeFileSync(resolve(here,'../dist/worker.mjs'),bundled);
+writeFileSync(resolve(here,'../dist/build-manifest.json'),JSON.stringify({version:'0.1.0',approvedSourceSha256:createHash('sha256').update(original).digest('hex'),workerSha256:createHash('sha256').update(bundled).digest('hex'),bytes:Buffer.byteLength(bundled),artworkCount:Object.keys(ASSETS).length},null,2));
+console.log('Built V1: '+Buffer.byteLength(bundled)+' bytes; '+Object.keys(ASSETS).length+' approved art assets.');
