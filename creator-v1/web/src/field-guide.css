@@ -90,3 +90,15 @@
 @media(max-width:560px){.guide-ribbon{gap:8px}.guide-ribbon>span{font-size:8px}.guide-chapters{grid-template-columns:1fr}.guide-chapter{min-height:74px;grid-template-columns:33px minmax(0,1fr) 21px}.guide-training-header{padding:12px}.guide-training-serial{font-size:8px}.guide-training-hero{grid-template-columns:1fr;min-height:0}.guide-training-headline{padding:21px}.guide-training-headline h2{font-size:clamp(34px,9vw,50px)}.guide-training-art{display:none}.guide-practice,.guide-complete{padding:18px 13px}.guide-question h3{font-size:clamp(25px,7vw,36px)}.guide-answer{font-size:11px;padding:10px;gap:9px}.guide-next{grid-template-columns:1fr;gap:17px;padding:16px}.guide-actions .button{width:100%;justify-content:center}.guide-step-indicators>span{width:23px}}
 @media(hover:none),(pointer:coarse){.guide-chapter:hover,.guide-answer:hover:not(:disabled),.guide-next-links>a:hover{transform:none}}
 @media(prefers-reduced-motion:reduce){.field-guide-page *, .field-guide-page *::before,.field-guide-page *::after{transition:none!important;animation:none!important}.guide-chapter:hover,.guide-answer:hover,.guide-next-links>a:hover{transform:none}}
+
+/* The single long word UNDERGROUND must remain fully visible at 320-390px. */
+@media(max-width:560px){
+ .field-guide-page .portal-page-heading-copy{min-width:0;max-width:100%}
+ .field-guide-page .portal-page-heading-copy h1{
+  font-size:clamp(29px,9vw,39px);
+  letter-spacing:-.018em;
+  line-height:.94;
+  overflow-wrap:anywhere;
+ }
+ .field-guide-page .portal-page-heading-copy h1 em{max-width:100%;overflow-wrap:anywhere}
+}
