@@ -107,6 +107,16 @@ export const memberLibrary=(signal?:AbortSignal)=>requestMember<{items:SavedProj
 export const memberSetSaved=(id:string,saved:boolean)=>
   requestMember<{saved:boolean;changed:boolean}>("/library/"+memberProjectId(id),{method:"POST",body:{saved}});
 export const memberProgress=(signal?:AbortSignal)=>requestMember<{progression:Progression}>("/community/me",{signal});
+export const memberCreatorProfile=(handle:string,signal?:AbortSignal)=>{
+  if(!/^[a-z][a-z0-9_]{2,29}$/.test(handle))throw new Error("Invalid public creator handle");
+  return requestMember<{
+    creator:MemberProfile;
+    contributions:{ratings:number;publishedProjects:number;releases:number};
+    progression:Progression;
+    achievements:MemberAchievement[];
+  }>("/creators/"+handle,{signal});
+};
+
 export const memberRating=(id:string,signal?:AbortSignal)=>
   requestMember<{rating:MemberRating}>("/community/projects/"+memberProjectId(id),{signal});
 export const memberVote=(id:string,score:number,revision:number)=>{

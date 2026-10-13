@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {
   memberHealth,memberMe,memberLibrary,memberCreateProject,memberProject,
-  memberSetSaved,memberVote,MemberApiError
+  memberSetSaved,memberVote,memberCreatorProfile,MemberApiError
 } from "../web/src/lib/member-api.ts";
 
 async function withFetch(stub,run){
@@ -61,4 +61,27 @@ test("401 is an explicit sign-in requirement and HTML redirects fail closed",asy
   await withFetch(async()=>new Response("<html>Login</html>",{status:200,headers:{"content-type":"text/html"}}),async()=>{
     await assert.rejects(memberMe(),e=>e instanceof MemberApiError&&e.status===503);
   });
+});
+
+
+test("optional public creator XP and achievements use existing same-origin route",async()=>{
+  let seen=null;
+  await withFetch(async(url,init)=>{
+    seen={url,init};
+    return response({
+      creator:{handle:"sample_maker",displayName:"Sample Maker",bio:"",joinedAt:"2026-10-12"},
+      progression:{xp:20,level:2,maxLevel:null,artifact:"Copper Key",artifactEarned:true,levelStartXp:20,nextLevelXp:80,progressWithinLevel:0},
+      achievements:[],
+      contributions:{ratings:1,publishedProjects:1,releases:0}
+    });
+  },async()=>{
+    const result=await memberCreatorProfile("sample_maker");
+    assert.equal(result.progression.level,2);
+    assert.equal(result.contributions.publishedProjects,1);
+  });
+  assert.equal(seen.url,"/api/v1/member/creators/sample_maker");
+  assert.equal(seen.init.method,"GET");
+  assert.equal(seen.init.credentials,"same-origin");
+  assert.equal(seen.init.cache,"no-store");
+  await assert.rejects(Promise.resolve().then(()=>memberCreatorProfile("../private")),/Invalid public creator handle/);
 });

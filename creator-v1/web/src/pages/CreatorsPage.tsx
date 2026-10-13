@@ -92,7 +92,7 @@ export function CreatorPage(){
     <section className="portal-channel-banner">
       <div className="portal-channel-avatar" aria-hidden="true"><OrbitalMark/></div>
       <div className="portal-channel-identity">
-        <span className="kicker">ANEVUM / VERIFIED PUBLISHED CHANNEL</span>
+        <span className="kicker">ANEVUM / PUBLIC CREATOR CHANNEL</span>
         <h1>{profile.displayName}</h1><p className="portal-channel-handle">@{profile.handle}</p>
         <p className="portal-channel-bio">{detailed?.creator.bio||"An independent creator sharing approved work on ANEVUM."}</p>
         <div className="portal-channel-stats"><span><strong>{profile.publishedProjects}</strong> PUBLISHED PROJECT{profile.publishedProjects===1?"":"S"}</span>
