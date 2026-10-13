@@ -11,6 +11,7 @@ import "./start-page.css";
 import "./field-guide.css";
 import "./portal-launcher.css";
 import "./cosmic-observatory.css";
+import "./forum.css";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
