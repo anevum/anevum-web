@@ -49,6 +49,8 @@ jobs:
           set -euo pipefail
           npm run check:creator-v1-web
           npm run build:creator-v1-web
+          npm run build:creator-v1-web:staging
+          node --test creator-v1/test/react-staging-route.test.mjs
       - name: Preserve exact source and pre-production checkpoint
         shell: bash
         run: |
@@ -89,6 +91,7 @@ jobs:
           test ! -f creator-v1/dist/worker.mjs || cp creator-v1/dist/worker.mjs evidence/worker.mjs
           test ! -f creator-v1/dist/build-manifest.json || cp creator-v1/dist/build-manifest.json evidence/build-manifest.json
           test ! -d creator-v1/dist/web || cp -R creator-v1/dist/web evidence/react-web
+          test ! -d creator-v1/dist/react-staging || cp -R creator-v1/dist/react-staging evidence/react-staging
       - name: Upload reproducible source, test logs and public build
         if: always()
         uses: actions/upload-artifact@v4

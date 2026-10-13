@@ -47,6 +47,10 @@ export interface Status {
 export interface CategoryCount { category: Category; count: number }
 export interface PageResult<T> { items: T[]; count: number; nextCursor: string | null }
 
+// Public catalogue API is served within the isolated /creator/ path in staging.
+const PUBLIC_API_ROOT = import.meta.env.BASE_URL === "/creator/" ? "/creator/api/v1" : "/api/v1";
+const publicPath = (path: string) => PUBLIC_API_ROOT + path;
+
 async function getJson<T>(path: string, signal?: AbortSignal): Promise<T> {
   const response = await fetch(path, {
     method: "GET",
@@ -64,32 +68,32 @@ async function getJson<T>(path: string, signal?: AbortSignal): Promise<T> {
 }
 
 export function readStatus(signal?: AbortSignal) {
-  return getJson<Status>("/api/v1/status", signal);
+  return getJson<Status>(publicPath("/status"), signal);
 }
 export function readCategories(signal?: AbortSignal) {
-  return getJson<{ categories: CategoryCount[] }>("/api/v1/categories", signal);
+  return getJson<{ categories: CategoryCount[] }>(publicPath("/categories"), signal);
 }
 export function readProjects(params: Record<string, string | undefined> = {}, signal?: AbortSignal) {
   const query = new URLSearchParams();
   for (const [key, value] of Object.entries(params)) if (value) query.set(key, value);
   if (!query.has("limit")) query.set("limit", "24");
-  return getJson<PageResult<Project>>("/api/v1/projects?" + query.toString(), signal);
+  return getJson<PageResult<Project>>(publicPath("/projects?") + query.toString(), signal);
 }
 export function readProject(id: string, signal?: AbortSignal) {
-  return getJson<{ item: Project }>("/api/v1/projects/" + encodeURIComponent(id), signal);
+  return getJson<{ item: Project }>(publicPath("/projects/") + encodeURIComponent(id), signal);
 }
 export function readRepository(id:string,signal?:AbortSignal) {
-  return getJson<{repository:PublicRepositoryMetadata}>("/api/v1/projects/"+encodeURIComponent(id)+"/repository",signal);
+  return getJson<{repository:PublicRepositoryMetadata}>(publicPath("/projects/")+encodeURIComponent(id)+"/repository",signal);
 }
 
 export function readCreators(params: Record<string, string | undefined> = {}, signal?: AbortSignal) {
   const query = new URLSearchParams();
   for (const [key, value] of Object.entries(params)) if (value) query.set(key, value);
   if (!query.has("limit")) query.set("limit", "24");
-  return getJson<PageResult<Creator>>("/api/v1/creators?" + query.toString(), signal);
+  return getJson<PageResult<Creator>>(publicPath("/creators?") + query.toString(), signal);
 }
 export function readCreator(handle: string, signal?: AbortSignal) {
-  return getJson<{ creator: Creator }>("/api/v1/creators/" + encodeURIComponent(handle), signal);
+  return getJson<{ creator: Creator }>(publicPath("/creators/") + encodeURIComponent(handle), signal);
 }
 export function safeExternal(value: string | null | undefined): URL | null {
   if (!value) return null;

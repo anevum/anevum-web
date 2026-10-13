@@ -94,3 +94,19 @@ test("public project never enables member saves or ratings without invited stagi
   assert.match(component,/kind:"closed"/);
   assert.match(component,/Public voting is not open/);
 });
+
+
+test("isolated next.anevum.com Creator V1 staging path is separate from member auth and production",()=>{
+  const vite=read("web/vite.config.ts");
+  const main=read("web/src/main.tsx");
+  const api=read("web/src/lib/api.ts");
+  const worker=read("web/staging-path-worker.mjs");
+  const cfg=read("wrangler.react-staging-path.jsonc");
+  assert.match(vite,/base: mode === "staging-path" \? "\/creator\/"/);
+  assert.match(main,/basename=/);
+  assert.match(api,/PUBLIC_API_ROOT/);
+  assert.match(worker,/PUBLISHED/);
+  assert.match(worker,/env\.ASSETS\.fetch/);
+  assert.match(cfg,/"next\.anevum\.com\/creator\/\*"/);
+  assert.doesNotMatch(worker,/AUTH_PEPPER|RESEND_API_KEY|set-cookie/i);
+});

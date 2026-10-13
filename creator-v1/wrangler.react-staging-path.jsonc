@@ -1,0 +1,27 @@
+{
+  "$schema": "../node_modules/wrangler/config-schema.json",
+  "name": "anevum-creator-v1-react-staging",
+  "main": "./web/staging-path-worker.mjs",
+  "compatibility_date": "2026-10-12",
+  "workers_dev": false,
+  "preview_urls": false,
+  "routes": [
+    {
+      "pattern": "next.anevum.com/creator/*",
+      "zone_name": "anevum.com"
+    }
+  ],
+  "assets": {
+    "directory": "./dist/react-staging",
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application",
+    "run_worker_first": true
+  },
+  "d1_databases": [
+    {
+      "binding": "COMMUNITY_DB",
+      "database_name": "anevum-creator-v1-staging",
+      "database_id": "fa96e36d-6257-4883-bf15-074947e11a13"
+    }
+  ]
+}

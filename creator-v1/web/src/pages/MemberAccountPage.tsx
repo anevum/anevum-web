@@ -13,7 +13,7 @@ export function MemberAccountPage(){
   async function signOut(){
     if(busy)return;
     setBusy(true);
-    try{await memberSignOut();window.location.replace("/");}
+    try{await memberSignOut();window.location.replace(import.meta.env.BASE_URL);}
     catch(e){setFeedback(e instanceof MemberApiError?e.message:"Sign-out is unavailable; please retry.");setBusy(false);}
   }
   return <>
