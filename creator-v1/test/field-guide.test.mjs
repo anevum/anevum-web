@@ -58,8 +58,9 @@ test("public routing connects a real guide without gated accounts or publication
   assert.match(app, /path="guide" element={<FieldGuidePage\/>}/);
   assert.match(shell, /\["\/guide", "Guide"\]/);
   assert.match(start, /to: "\/guide", label: "TRY THE FREE FIELD GUIDE"/);
-  for (const url of ["/discover", "/community", "/status", "/start"])
+  for (const url of ["/discover", "/community", "/status"])
     assert.ok(guide.includes('to="' + url + '"'), url);
+  assert.match(guide, /action={{ to: "\/start", label: "BACK TO START HERE" }}/);
   for (const disallowed of ["member-api", "memberCreateProject", "memberVote", "memberProgress", "localStorage", "sessionStorage", "fetch(", "Award XP", "achievementUnlocked"])
     assert.ok(!guide.includes(disallowed), disallowed);
   assert.match(guide, /not a badge, XP award, credential or saved account milestone/);
