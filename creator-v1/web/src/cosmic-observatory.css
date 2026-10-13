@@ -576,6 +576,82 @@ body::before{
 .levels-achievements p,.levels-rule-grid p,.levels-policy p{color:#c0d0e4}
 .levels-symbol{background:radial-gradient(circle,#344e77 0 31px,#203454 33px 41px,transparent 42px)}
 
+/* Make the genuine project cabinet part of the new universe, not a warm
+   leftover. Each category retains its own readable collectible identity. */
+.project-card-body{
+  background:linear-gradient(154deg,#1a2b48 0%,#101c34 57%,#0c1429 100%);
+  border-top:1px solid #557d9b75;
+}
+.project-card h3{color:#f1f8ff}
+.project-card footer{border-top-color:#426584;box-shadow:0 -1px 0 #07142c}
+.project-art-layer .project-glyph{color:#a7ddf4;filter:drop-shadow(1px 3px 2px #020b1a9c)}
+.project-art-shine{background:radial-gradient(circle at var(--depth-light-x) var(--depth-light-y),#d6f9ffb0,transparent 47%);opacity:.25}
+.project-kind{box-shadow:2px 3px 0 #0b1b30}
+.project-card:has(.project-glyph-games) .project-art{
+  background:radial-gradient(ellipse at 65% 28%,#6b93f051,transparent 49%),
+    repeating-linear-gradient(154deg,#1a3150 0 25px,#223f61 26px 28px,#0e1d36 29px 50px);
+}
+.project-card:has(.project-glyph-tools) .project-art{
+  background:radial-gradient(ellipse at 66% 24%,#e8c26e36,transparent 52%),
+    linear-gradient(145deg,#303d55,#172843 55%,#2b364c);
+}
+.project-card:has(.project-glyph-creative) .project-art{
+  background:radial-gradient(ellipse at 35% 48%,#ad91f859,transparent 56%),
+    linear-gradient(135deg,#2b2c62,#161c3a 62%,#2a2556);
+}
+.project-card:has(.project-glyph-libraries) .project-art{
+  background:radial-gradient(ellipse at 69% 40%,#7de7e847,transparent 56%),
+    repeating-linear-gradient(0deg,#112c40 0 9px,#1b3b51 10px 11px);
+}
+.project-card:has(.project-glyph-automation) .project-art{
+  background:radial-gradient(ellipse at 70% 30%,#9de4bf33,transparent 52%),
+    linear-gradient(140deg,#183c49,#0e263d);
+}
+.project-card:has(.project-glyph-research) .project-art{
+  background:radial-gradient(ellipse at 45% 30%,#96b0ff50,transparent 52%),
+    linear-gradient(140deg,#232e63,#111a36);
+}
+.project-card:has(.project-glyph-learning) .project-art{
+  background:radial-gradient(ellipse at 45% 30%,#e8c26e3b,transparent 54%),
+    linear-gradient(140deg,#333b57,#171c36);
+}
+.project-card .project-glyph-games{color:#9ee9ec}
+.project-card .project-glyph-tools{color:#f0d79c}
+.project-card .project-glyph-creative{color:#c1b5ff}
+.project-card .project-glyph-libraries{color:#9ce5da}
+.project-card .project-glyph-automation{color:#a5e4c0}
+.project-card .project-glyph-research{color:#aac2ff}
+.project-card .project-glyph-learning{color:#efdcaa}
+.project-card:has(.project-glyph-games) .project-kind{background:#9ae5f0}
+.project-card:has(.project-glyph-tools) .project-kind{background:#ebd49a}
+.project-card:has(.project-glyph-creative) .project-kind{background:#c4b6f8}
+.project-card:has(.project-glyph-libraries) .project-kind{background:#a6e8de}
+.project-card:has(.project-glyph-automation) .project-kind{background:#abe2c2}
+.project-card:has(.project-glyph-research) .project-kind{background:#bdc8fc}
+.project-card:has(.project-glyph-learning) .project-kind{background:#ead9a7}
+.project-card .project-kind{color:#0c1a2c}
+.portal-project-art{
+  background:radial-gradient(circle at 68% 24%,#7892f646,transparent 55%),
+    linear-gradient(130deg,#274569,#121f3d);
+  border-color:#5a759b;
+}
+.portal-project-art>svg{color:#e5f9ff;filter:drop-shadow(9px 15px 0 #0a1c3e88)}
+.portal-project-intro{background:radial-gradient(circle at 94% 2%,#7b9de933,transparent 40%)}
+.portal-project-maker{background:#183454;border-color:#507a9c}
+.portal-project-summary,.portal-project-about>p,.portal-project-discovery p{color:#c8d7e7}
+.portal-project-maker small,.portal-project-outbound{color:#b3c9df}
+.portal-project-disclosure strong{color:#a6e9f0}
+@media (min-width:901px) and (max-width:1220px){
+  .header-inner{gap:10px;padding-inline:18px}
+  .desktop-nav a{padding-inline:8px;white-space:nowrap}
+  .desktop-nav a[href$="/start"],.desktop-nav a[href$="/guide"]{display:none}
+  .header-create{white-space:nowrap;flex:none;padding-inline:11px}
+  .brand-lockup{flex:none}
+}
+@media (min-width:1221px){
+  .desktop-nav a,.header-create{white-space:nowrap}
+}
+
 /* Legibility is part of the worldbuilding. Avoid postage-stamp metadata. */
 .site-shell{font-feature-settings:"kern" 1}
 .kicker{font-size:10px;line-height:1.5}
