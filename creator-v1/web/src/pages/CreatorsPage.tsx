@@ -9,6 +9,8 @@ import {PortalHeading} from "../components/PortalHeading";
 import {LevelPanel} from "../components/LevelPanel";
 import {EmptyState,ErrorState,LoadingState} from "../components/States";
 import {OrbitalMark} from "../components/OrbitalMark";
+import {CelestialEmblem} from "../components/CelestialEmblem";
+import {achievementMotif,seriesOneMotif} from "../lib/artifact-art";
 
 export function CreatorsPage(){
   const [params,setParams]=useSearchParams();
@@ -113,7 +115,11 @@ export function CreatorPage(){
       </div>
       <aside className="portal-sidebar">
         {detailed&&<section className="portal-sidebox portal-creator-level">
-          <span className="kicker">EARNED ORBIT / SERVER VERIFIED</span><h2>LEVEL {detailed.progression.level}</h2>
+          <span className="kicker">EARNED ORBIT / SERVER VERIFIED</span>
+          <div className="portal-channel-celestial">
+            <CelestialEmblem motif={seriesOneMotif(detailed.progression.level,detailed.progression.artifact)} size="medium" state={detailed.progression.artifactEarned?"earned":"preview"}/>
+            <div><h2>LEVEL {detailed.progression.level}</h2><strong>{detailed.progression.artifact||"NO NAMED ARTIFACT IN THIS SERIES"}</strong></div>
+          </div>
           <p>{detailed.progression.artifact||"NEW ARTIFACT SERIES IN DEVELOPMENT"} · {detailed.progression.xp.toLocaleString()} XP</p>
           <div className="portal-level-progress" role="progressbar" aria-label="Creator earned level progress" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(detailed.progression.progressWithinLevel*100)}><span style={{width:Math.max(0,Math.min(100,detailed.progression.progressWithinLevel*100))+"%"}}/></div>
           <small>Levels never change voting strength or grant moderation access.</small>
@@ -121,7 +127,7 @@ export function CreatorPage(){
         <section className="portal-sidebox">
           <span className="kicker">CREATOR ACHIEVEMENT CABINET</span><h2>EARNED, NOT BOUGHT.</h2>
           {detailed?
-            earned.length?<div className="portal-earned-achievements">{earned.map(a=><div key={a.key}><span aria-hidden="true">{a.symbol}</span><span><strong>{a.name}</strong><small>{a.description}</small></span></div>)}</div>:
+            earned.length?<div className="portal-earned-achievements">{earned.map(a=><div key={a.key}><CelestialEmblem motif={achievementMotif(a.key)||"orbital"} size="small" state="earned"/><span><strong>{a.name}</strong><small>{a.description}</small></span></div>)}</div>:
               <p>No public achievements have been earned yet.</p>:
             <p>Achievement details are available where the public member-profile service is active. This listing does not invent badges.</p>}
           <Link to="/levels" className="portal-sidebox-link">LEVELS & ACHIEVEMENTS →</Link>
