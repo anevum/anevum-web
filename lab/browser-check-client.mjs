@@ -6,13 +6,28 @@ async function main(){
   const pathname=location.pathname;
   await sleep(600);
   if(pathname==='/'){
-   const cards=[...document.querySelectorAll('.project')];
-   assert(cards.length===3,'Lab must list exactly three projects');
-   assert(document.querySelectorAll('.project .button').length===3,'Project navigation missing');
-   assert(document.querySelectorAll('.project .status.pending').length===1,'Transcosmic must remain unconnected');
-   assert(document.body.textContent.includes('OPEN CONSOLE'),'RHEN research console not advertised');
-   assert(document.querySelector('.project .button[href="/projects/the-fold/"]'),'Fold play link missing');
-   assert(document.documentElement.scrollWidth<=innerWidth+1,'Lab catalog overflows width');
+   const entries=[...document.querySelectorAll('.project-entry')];
+   assert(entries.length===4,'Lab should expose four projects');
+   assert(document.body.textContent.includes('ANEVUM LAB'),'Terminal heading not found');
+   assert(document.querySelector('#terminalForm'),'DOS command line not mounted');
+   assert(document.querySelector('#selectedLink')?.getAttribute('href')==='/projects/the-fold/','First project route absent');
+   assert(document.documentElement.scrollWidth<=innerWidth+1,'Lab horizontally scrolls');
+   assert(document.documentElement.scrollHeight<=innerHeight+1,'Lab vertically scrolls');
+   document.querySelectorAll('.project-entry')[3].click();
+   assert(document.querySelector('#selectedLink')?.getAttribute('href')==='/projects/backstage/','Backstage not selectable');
+   const input=document.querySelector('#terminalInput');
+   input.value='STATUS';
+   document.querySelector('#terminalForm').dispatchEvent(new Event('submit',{bubbles:true,cancelable:true}));
+   assert(document.querySelector('#terminalLog').textContent.includes('RHEN'),'STATUS command failed');
+   input.value='SELECT 2';
+   document.querySelector('#terminalForm').dispatchEvent(new Event('submit',{bubbles:true,cancelable:true}));
+   assert(document.querySelector('#selectedLink')?.getAttribute('href')==='/projects/rhen/','SELECT command failed');
+   assert(document.documentElement.scrollHeight<=innerHeight+1,'Lab scrolls after command output');
+  }else if(pathname==='/projects/backstage/'){
+   assert(document.querySelectorAll('.ops-module').length===6,'Backstage modules missing');
+   assert(document.body.textContent.includes('NO LIVE DATA'),'Backstage must label its preview');
+   assert(document.documentElement.scrollWidth<=innerWidth+1,'Backstage horizontally scrolls');
+   assert(document.documentElement.scrollHeight<=innerHeight+1,'Backstage vertically scrolls');
   }else if(pathname==='/projects/the-fold/'){
    assert(document.querySelector('.lab-return[href="/"]'),'No Lab return link');
    assert(document.querySelector('#introPlay'),'Fold onboarding absent');
