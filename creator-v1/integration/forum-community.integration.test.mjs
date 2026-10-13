@@ -153,8 +153,10 @@ test("moderator hides/restores one reply, then entire thread, and audits each ch
  const reply=q.find(x=>x.starter===0);
  assert.equal((await f.mod("/posts/"+reply.id+"/approve","POST",{reason:"The reply is constructive and harmless"})).status,200);
  assert.equal((await f.mod("/posts/"+reply.id+"/hide","POST",{reason:"Staff later reviewed context more carefully"})).status,200);
+ assert.ok((await(await f.mod("/hidden")).json()).items.some(post=>post.id===reply.id),"Hidden forum messages remain visible to reviewed staff only");
  assert.equal((await(await f.request("/forum/threads/"+id,"GET",undefined,null)).json()).posts.length,1);
  assert.equal((await f.mod("/posts/"+reply.id+"/restore","POST",{reason:"A second review approved the original response"})).status,200);
+ assert.ok(!(await(await f.mod("/hidden")).json()).items.some(post=>post.id===reply.id),"Restored content exits the hidden queue");
  assert.equal((await(await f.request("/forum/threads/"+id,"GET",undefined,null)).json()).posts.length,2);
  assert.equal((await f.mod("/posts/"+starterId+"/hide","POST",{reason:"Staff must temporarily hide the whole discussion"})).status,200);
  assert.equal((await f.request("/forum/threads/"+id,"GET",undefined,null)).status,404);
