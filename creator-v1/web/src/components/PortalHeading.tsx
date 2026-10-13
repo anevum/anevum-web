@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { OrbitalStage } from "./OrbitalStage";
+import { CosmicHorizon } from "./CosmicHorizon";
 
 export function PortalHeading({
   eyebrow, title, accent, description, index="ANEVUM / 001",
@@ -9,6 +10,7 @@ export function PortalHeading({
   action?:{to:string;label:string};
 }){
   return <section className="portal-page-heading">
+    <CosmicHorizon/>
     <div className="portal-page-heading-copy">
       <span className="kicker">{eyebrow}</span>
       <h1>{title}<br/><em>{accent}</em></h1>
