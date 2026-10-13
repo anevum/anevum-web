@@ -81,3 +81,16 @@ test("private project editor reuses staged member API with separate moderation s
   assert.match(editor,/window\.confirm/);
   assert.match(editor,/remains private until separately approved/);
 });
+
+
+test("public project never enables member saves or ratings without invited staging identity",()=>{
+  const component=read("web/src/components/MemberEngagementPanel.tsx");
+  const project=read("web/src/pages/ProjectPage.tsx");
+  assert.match(project,/MemberEngagementPanel/);
+  assert.match(component,/memberHealth/);
+  assert.match(component,/memberMe/);
+  assert.match(component,/memberVote/);
+  assert.match(component,/memberSetSaved/);
+  assert.match(component,/kind:"closed"/);
+  assert.match(component,/Public voting is not open/);
+});

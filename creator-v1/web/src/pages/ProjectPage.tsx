@@ -5,6 +5,7 @@ import { ErrorState, LoadingState } from "../components/States";
 import { OrbitalMark } from "../components/OrbitalMark";
 import { Icon } from "../components/Icons";
 import { RepositoryPanel } from "../components/RepositoryPanel";
+import { MemberEngagementPanel } from "../components/MemberEngagementPanel";
 import { safeReturnPath } from "../lib/navigation";
 
 export function ProjectPage(){
@@ -48,5 +49,6 @@ export function ProjectPage(){
       </aside>
     </section>
     <RepositoryPanel projectId={p.id} sourceUrl={p.sourceUrl}/>
+    <MemberEngagementPanel projectId={p.id}/>
   </>;
 }

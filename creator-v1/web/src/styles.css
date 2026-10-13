@@ -128,3 +128,20 @@ a{color:inherit;text-decoration:none}button,input{font:inherit}button{cursor:poi
 .draft-history small{margin-left:14px;color:#8e847d}
 @media(max-width:900px){.draft-grid{grid-template-columns:1fr;gap:12px}}
 @media(max-width:640px){.member-draft-form{padding:16px}.draft-actions .button{width:100%;justify-content:center}}
+
+
+/* Existing backend's private invite-only rating and save actions. Public previews fail closed. */
+.engagement-panel{background:#0f0e11;border:1px solid var(--line);padding:27px;margin-top:12px}
+.engagement-panel h2{font-family:Impact,"Arial Black",sans-serif;font-size:29px;line-height:1;margin:10px 0}
+.engagement-panel>p{max-width:740px;color:#a89f97;font-size:12px}
+.engagement-heading{display:flex;align-items:flex-end;justify-content:space-between;gap:24px}
+.engagement-heading p{font-size:9px;font-weight:900;letter-spacing:.1em;color:#988b84}
+.engagement-actions{display:flex;align-items:end;gap:18px;flex-wrap:wrap;margin:18px 0}
+.engagement-votes{border:0;margin:0;padding:0}
+.engagement-votes legend{font-size:10px;font-weight:850;margin-bottom:7px;color:var(--bone)}
+.engagement-votes>div{display:flex;gap:5px}
+.engagement-votes button{width:43px;height:40px;background:#161217;border:1px solid #574b50;color:var(--bone);font-weight:900}
+.engagement-votes button:hover,.engagement-votes button.selected{color:var(--black);background:var(--coral);border-color:var(--coral)}
+.engagement-votes:disabled button{opacity:.6;cursor:not-allowed}
+.engagement-success{border-left:2px solid #5c8d5c;padding-left:12px;color:#d6efd2!important}
+@media(max-width:640px){.engagement-panel{padding:19px 15px}.engagement-heading{display:block}.engagement-votes button{width:39px;height:40px}}
