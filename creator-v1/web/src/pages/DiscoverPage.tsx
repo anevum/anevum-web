@@ -104,7 +104,7 @@ export function DiscoverPage(){
               <div><span className="kicker">NOTHING HIDDEN / NOTHING FABRICATED</span>
                 <h2>{cursor?"END OF CURRENT RELEASES":q||category||freeOnly?"NO MATCHING PROJECTS YET":"THE FIRST RELEASES ARE ON THEIR WAY."}</h2>
                 <p>ANEVUM only shows approved work. Try another portal or follow the development of the first real submissions.</p>
-                <div className="portal-empty-actions"><Link to="/discover" className="button secondary">EXPLORE ALL</Link><Link to="/status" className="button secondary">RELEASE STATUS</Link></div>
+                <div className="portal-empty-actions"><Link to="/discover" className="button secondary">EXPLORE ALL</Link><Link to="/guide" className="button secondary">FREE FIELD GUIDE</Link><Link to="/status" className="button secondary">RELEASE STATUS</Link></div>
               </div>
             </div>}
           <PageNav route="/discover" search={params} nextCursor={resource.data.projects.nextCursor} label="Project catalogue"/>
