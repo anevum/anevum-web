@@ -122,6 +122,7 @@ test('creator follows cannot be forged, posted cross-site, or leaked between acc
    assert.equal((await f.call(follow,'POST',bad)).status,400);
   assert.equal((await f.call(follow,'POST',{following:true},testUsers[0],'https://evil.example')).status,403);
   assert.equal((await f.call('/creators/absent_creator/follow','POST',{following:true})).status,404);
+  assert.equal((await f.call('/creators/chris_makes/follow','POST',{following:true})).status,404); // no public releases
   assert.equal((await f.call(follow,'GET')).status,405);
   assert.equal((await f.call(follow,'POST',{following:true})).status,200);
   const bob=await (await f.call('/following','GET',undefined,testUsers[1])).json();
@@ -134,6 +135,10 @@ test('creator follows cannot be forged, posted cross-site, or leaked between acc
 test('suspended creators disappear from follow lists, and suspended followers do not count',async()=>{
  const f=await setup();try{
   assert.equal((await f.call('/creators/bob_tests/follow','POST',{following:true})).status,200);
+  f.sqlite.prepare("UPDATE projects SET status='archived' WHERE owner_member_id='member-bob'").run();
+  assert.equal((await (await f.call('/following')).json()).items.length,0);
+  assert.equal((await f.call('/creators/bob_tests/follow','POST',{following:true})).status,404);
+  f.sqlite.prepare("UPDATE projects SET status='published' WHERE owner_member_id='member-bob'").run();
   f.sqlite.prepare("UPDATE creator_profiles SET status='suspended' WHERE member_id='member-bob'").run();
   assert.equal((await f.call('/creators/bob_tests/follow','POST',{following:true})).status,404);
   assert.equal((await (await f.call('/following')).json()).items.length,0);
