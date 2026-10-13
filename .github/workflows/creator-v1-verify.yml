@@ -138,6 +138,7 @@ jobs:
           capture 390 844 forum-thread /creator/community/thread/000000000000000000000000000000f1
           capture 390 844 forum-room /creator/community/room/arcade
           capture 390 844 forum-member /creator/community/member/nova_demo
+          capture 1440 900 member-account-forum-card /creator/account
           capture 1440 900 profile-editor /creator/account/edit
           capture 390 844 profile-editor /creator/account/edit
           capture 1440 900 project-editor /creator/create/new
