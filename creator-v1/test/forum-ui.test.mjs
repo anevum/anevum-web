@@ -61,6 +61,6 @@ test("offline screenshots mark all mock forum text as synthetic and no productio
  assert.match(fixture,/SYNTHETIC OFFLINE REVIEW/);
  assert.match(fixture,/FICTIONAL_FORUM_AUTHOR/);
  assert.match(fixture,/OFFLINE SYNTHETIC DESIGN FIXTURE/);
- assert.match(fixture,/req\.method==="GET"&&url\.pathname==="/api\/v1\/member\/forum\/rooms"/);
- assert.doesNotMatch(fixture,/req\.method==="POST"&&url\.pathname==="/api\/v1\/member\/forum/);
+ assert.ok(fixture.includes('req.method==="GET"&&url.pathname==="/api/v1/member/forum/rooms"'));
+ assert.ok(!fixture.includes('req.method==="POST"&&url.pathname==="/api/v1/member/forum'));
 });
