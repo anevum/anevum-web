@@ -49,9 +49,9 @@ test("draft creation, saves and ratings honor existing member Worker JSON method
 });
 test("member API rejects untrusted project ids locally before any fetch",async()=>{
   await withFetch(async()=>{throw Error("network must not be used")},async()=>{
-    await assert.rejects(memberProject("https://evil.example"),/Invalid project identifier/);
-    await assert.rejects(memberSetSaved("../other",true),/Invalid project identifier/);
-    await assert.rejects(memberVote("a".repeat(32),7,0),/Invalid rating/);
+    assert.throws(()=>memberProject("https://evil.example"),/Invalid project identifier/);
+    assert.throws(()=>memberSetSaved("../other",true),/Invalid project identifier/);
+    assert.throws(()=>memberVote("a".repeat(32),7,0),/Invalid rating/);
   });
 });
 test("401 is an explicit sign-in requirement and HTML redirects fail closed",async()=>{
