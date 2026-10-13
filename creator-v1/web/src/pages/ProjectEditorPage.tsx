@@ -6,6 +6,7 @@ import {
 } from "../lib/member-api";
 import { useResource } from "../lib/useResource";
 import { ErrorState,LoadingState } from "../components/States";
+import { CreatorAssetUploader } from "../components/CreatorAssetUploader";
 
 const blank:ProjectDraft={
   slug:"",title:"",summary:"",category:"games",description:"",
@@ -118,6 +119,7 @@ function Editor({project,reviewHistory=[]}:{
       {error&&<p className="member-error" role="alert">{error}</p>}
       <p className="member-caption">Server-side rules enforce ownership, revisions, submission criteria and moderation. Staff powers are independent of member XP.</p>
     </form>
+    {project&&<CreatorAssetUploader projectId={project.id} canEdit={canEdit&&!busy}/>}
     {reviewHistory.length>0&&<section className="member-panel draft-history"><span className="kicker">STAFF REVIEW RECORD</span>
       {reviewHistory.map((event,i)=><article key={i}><strong>{event.action.replaceAll("_"," ").toUpperCase()}</strong><small>{event.created_at}</small><p>{event.reason||"No reason given."}</p></article>)}
     </section>}
