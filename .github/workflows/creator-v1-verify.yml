@@ -140,6 +140,7 @@ jobs:
           capture 390 844 forum-member /creator/community/member/nova_demo
           capture 1440 900 member-account-forum-card /creator/account
           capture 1440 900 profile-editor /creator/account/edit
+          capture 390 844 member-account-forum-card /creator/account
           capture 390 844 profile-editor /creator/account/edit
           capture 1440 900 project-editor /creator/create/new
           capture 390 844 project-editor /creator/create/new
