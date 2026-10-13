@@ -133,7 +133,7 @@ test('RHEN single-screen terminal is routed with distinct research path and no b
  const css=await request('/projects/rhen/terminal.css');assert.equal(css.status,200);
  assert.match(await css.text(),/height:100dvh/);
  const js=await request('/projects/rhen/terminal.js');assert.equal(js.status,200);
- assert.match(await js.text(),/api\\/overview/);
+ assert.ok((await js.text()).includes('api/overview'));
 });
 test('RHEN read-only observation defaults to disconnected with missing data null',async()=>{
  const res=await request('/projects/rhen/api/overview');
