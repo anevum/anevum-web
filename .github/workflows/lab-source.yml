@@ -1,0 +1,27 @@
+name: ANEVUM Private Lab source verification
+on:
+  pull_request:
+    paths:
+      - 'lab/**'
+      - '.github/workflows/lab-source.yml'
+  push:
+    branches:
+      - 'build/private-lab-the-fold-20261013-001'
+    paths:
+      - 'lab/**'
+      - '.github/workflows/lab-source.yml'
+jobs:
+  private-lab:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check Lab Worker and pinned Fold source syntax
+        run: |
+          node --check lab/worker.mjs
+          node --check lab/fold-snapshot.mjs
+          node --check lab/test-worker.mjs
+      - name: Test project catalog, private host boundary, and game routes
+        run: node --test lab/test-worker.mjs
