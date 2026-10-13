@@ -1,0 +1,491 @@
+/* ANEVUM / DIMENSIONAL UNDERGROUND
+ * CSS-only tactile depth; original orbital mark and genuine member/project data.
+ * No scroll hijacking, no third-party assets, no WebGL or canvas runtime.
+ */
+:root{
+  color-scheme:dark;
+  --depth-ink:#09070d;
+  --depth-shell:#211923;
+  --depth-warm:#ff8c71;
+  --depth-rim:#94605d;
+  --depth-lilac:#b78af6;
+  --depth-face:#3d2c38;
+  --depth-edge:#0a080b;
+  --depth-highlight:rgba(255,226,199,.28);
+  --depth-drop:0 5px 0 #080608,0 15px 27px rgba(0,0,0,.43);
+  --depth-drop-raised:0 7px 0 #090608,0 22px 36px rgba(0,0,0,.53);
+}
+/* The whole portal is a room rather than floating cards on a flat black wall. */
+.site-shell{
+  min-height:100dvh;
+  background:
+    radial-gradient(ellipse 78% 680px at 48% -90px,rgba(140,72,117,.23),transparent 75%),
+    radial-gradient(ellipse 42% 540px at 3% 540px,rgba(223,100,72,.075),transparent 78%),
+    radial-gradient(ellipse 44% 530px at 98% 950px,rgba(139,93,191,.10),transparent 74%),
+    linear-gradient(180deg,#181219 0%,#0d0b0f 43%,#09090c 100%);
+}
+.site-main{position:relative;isolation:isolate}
+.site-main:before{
+  content:"";position:absolute;top:2px;left:clamp(8px,3vw,38px);right:clamp(8px,3vw,38px);
+  height:260px;z-index:-1;pointer-events:none;opacity:.18;
+  background:repeating-linear-gradient(90deg,transparent 0 46px,#74607933 47px,transparent 48px 94px),
+    repeating-linear-gradient(0deg,transparent 0 45px,#74607933 46px,transparent 47px 92px);
+  -webkit-mask-image:linear-gradient(#000,transparent);
+  mask-image:linear-gradient(#000,transparent);
+}
+.site-header{
+  background:linear-gradient(180deg,rgba(43,31,43,.99),rgba(9,8,11,.98) 90%);
+  border-bottom:2px solid #a86b68;
+  box-shadow:inset 0 1px 0 rgba(255,220,197,.22),0 5px 0 #0b090c,0 13px 34px rgba(0,0,0,.54);
+}
+.header-inner{position:relative}
+.brand-lockup{filter:drop-shadow(1px 3px 1px #000)}
+.brand-lockup .brand-mark{filter:drop-shadow(3px 4px 0 #6c3545)}
+.desktop-nav a{transition:color .16s ease,background .16s ease,transform .16s ease}
+.desktop-nav a:hover{background:linear-gradient(180deg,transparent,#583c4645)}
+.desktop-nav a:active{transform:translateY(2px)}
+.header-search{
+  background:linear-gradient(180deg,#0a080d,#1f1721);
+  box-shadow:inset 0 3px 8px #000a,0 1px 0 #7a586252;
+}
+.portal-navigation{
+  background:linear-gradient(180deg,#46303b 0%,#241821 40%,#141016 100%);
+  border-bottom:2px solid #925d64;
+  box-shadow:inset 0 1px rgba(255,234,207,.18),0 4px 0 #0a080d,0 9px 17px #0006;
+}
+.portal-navigation nav a{
+  text-shadow:0 1px 0 #0009;
+  transition:background .15s ease,color .15s ease;
+}
+.portal-navigation nav a:hover{
+  background:linear-gradient(180deg,#684450,#35232c);
+  box-shadow:inset 0 1px 0 rgba(255,228,208,.26);
+}
+.header-create,.portal-navigation-submit{
+  transition:transform .12s ease,box-shadow .12s ease,filter .12s ease;
+}
+.header-create:hover{filter:brightness(1.16);transform:translateY(-2px)}
+.header-create:active{transform:translate(2px,2px);box-shadow:1px 1px 0 #42292c}
+.mobile-drawer{
+  background:linear-gradient(150deg,#382732,#100d13);
+  box-shadow:inset 0 1px 0 #a16c785f,0 9px 0 #09070c,0 24px 38px #000b;
+  border:1px solid #956272;
+}
+.mobile-drawer a:hover{color:#fff3e4;background:#513441}
+/* Tactile, lighting-aware raised panels shared by every public and member screen. */
+:where(.portal-box,.portal-shelf,.portal-sidebox,.portal-level-box,.repo-panel,
+       .engagement-panel,.member-panel,.portal-room,.portal-creator-tile,.portal-channel-banner,
+       .portal-project-header,.levels-rule-grid article,.levels-achievements article,
+       .portal-account-achievements article,.portal-true-empty,.portal-shelf-empty,
+       .portal-new-release-empty,.member-gate,.member-header,.member-draft-form){
+  position:relative;
+  background-image:linear-gradient(156deg,rgba(255,210,196,.065),transparent 23%,transparent 73%,rgba(0,0,0,.17));
+  border-color:#76505c;
+  box-shadow:inset 1px 1px 0 rgba(255,222,195,.14),
+             inset -1px -1px 0 rgba(0,0,0,.3),
+             0 4px 0 #09070b,0 12px 24px #0006;
+}
+:where(.portal-box,.portal-shelf,.portal-sidebox,.portal-level-box,.repo-panel,
+       .engagement-panel,.member-panel,.member-header,.member-gate,.member-draft-form)::before{
+  content:"";pointer-events:none;position:absolute;z-index:0;
+  height:1px;left:1px;right:1px;top:1px;
+  background:linear-gradient(90deg,transparent,rgba(255,231,214,.22) 26%,rgba(255,231,214,.04) 76%,transparent);
+}
+:where(.portal-box,.portal-shelf,.portal-sidebox,.portal-level-box,.repo-panel,
+       .engagement-panel,.member-panel,.member-header,.member-gate,.member-draft-form) > *{
+  position:relative;
+}
+:where(.portal-box,.portal-shelf,.portal-sidebox,.portal-room,.member-panel,.portal-creator-tile) {
+  transition:box-shadow .2s ease,border-color .2s ease,filter .2s ease;
+}
+:where(.portal-box,.portal-shelf,.portal-sidebox,.portal-room,.member-panel,.portal-creator-tile):hover{
+  border-color:#996c79;
+  box-shadow:inset 1px 1px 0 rgba(255,222,195,.18),0 5px 0 #09070b,0 17px 30px #0008;
+}
+.portal-box-header{border-bottom:1px solid #7b555e;box-shadow:0 2px 0 #080609b0}
+.portal-box-header h2,.portal-sidebox h2,.portal-level-copy strong,
+.levels-achievements strong,.member-panel h2{
+  text-shadow:0 2px 0 #000,1px 3px 1px rgba(0,0,0,.4);
+}
+.kicker{letter-spacing:.16em;text-shadow:0 1px 0 #000}
+/* Raised arcade buttons with a clear tactile press action, including keyboard focus. */
+.button,.portal-wide-search button,.portal-channel-filters button,.portal-result-actions button,
+.portal-directory button,.portal-creator-tile,.portal-room a,
+.member-project-footer a,.draft-actions button,.engagement-votes button,.portal-heading-action{
+  -webkit-tap-highlight-color:transparent;
+  transition:transform .14s cubic-bezier(.2,.8,.2,1),box-shadow .14s ease,
+    border-color .14s ease,background-color .14s ease,color .14s ease;
+}
+.button,.portal-wide-search button,.portal-channel-filters button,.portal-result-actions button,
+.portal-directory button,.engagement-votes button{
+  box-shadow:inset 0 1px 0 rgba(255,240,225,.15),0 3px 0 #08060a,0 5px 13px #0006;
+}
+.button.primary,.portal-wide-search button{
+  box-shadow:inset 0 1px 0 rgba(255,252,230,.48),0 4px 0 #853f45,0 9px 20px #0009;
+}
+.button.secondary{box-shadow:inset 0 1px 0 #715967,0 3px 0 #080609,0 9px 16px #0007}
+:where(.button,.portal-wide-search button,.portal-channel-filters button,
+ .portal-result-actions button,.portal-directory button,.engagement-votes button):not(:disabled):hover{
+  transform:translateY(-2px);
+  box-shadow:inset 0 1px 0 rgba(255,251,235,.25),0 5px 0 #0b080c,0 10px 21px #0009;
+}
+:where(.button,.portal-wide-search button,.portal-channel-filters button,
+ .portal-result-actions button,.portal-directory button,.engagement-votes button):not(:disabled):active{
+  transform:translateY(2px);
+  box-shadow:inset 0 2px 7px #0008,0 1px 0 #09070a;
+}
+:where(.button,button,a,input,textarea,select):focus-visible{outline:2px solid #fff0cf;outline-offset:3px}
+/* The welcome/portal header is a cabinet containing an orbital sculpture. */
+.portal-welcome,.portal-page-heading,.levels-masthead{
+  isolation:isolate;
+  background:
+   radial-gradient(ellipse 34% 70% at 83% 25%,rgba(194,114,232,.22),transparent),
+   radial-gradient(ellipse 45% 73% at 54% 86%,rgba(224,95,84,.11),transparent),
+   repeating-linear-gradient(155deg,#231a27 0 39px,#2e202b 40px 41px,#171218 42px 78px);
+  border:1px solid #b37770;
+  border-bottom-width:4px;
+  box-shadow:inset 0 1px 0 rgba(255,233,208,.25),
+             inset 0 -8px 18px #0b0811b8,
+             0 7px 0 #09070a,0 20px 42px #000a;
+  overflow:hidden;
+}
+.portal-welcome:before,.portal-page-heading:before,.levels-masthead:before{
+  content:"";position:absolute;z-index:0;inset:0;pointer-events:none;
+  opacity:.7;background:
+   linear-gradient(114deg,transparent 0%,rgba(255,233,204,.06) 24%,transparent 32%),
+   repeating-linear-gradient(90deg,transparent 0 92px,rgba(255,205,192,.025) 94px 95px);
+}
+.portal-welcome:after,.levels-masthead:after{
+  content:"";pointer-events:none;position:absolute;inset:10px;
+  border:1px solid #d2a9a419;
+  box-shadow:inset 0 0 0 1px #120c16aa;
+}
+.portal-welcome-copy,.portal-page-heading-copy,.levels-masthead>div:first-child{position:relative;z-index:2}
+.portal-welcome h1,.portal-page-heading h1,.levels-masthead h1{
+  text-shadow:0 3px 0 #100a12,2px 6px 0 #0009,5px 8px 15px #000a;
+}
+.portal-welcome h1 em,.portal-page-heading h1 em,.levels-masthead h1 em{
+  color:#ff907c;
+  text-shadow:1px 2px 0 #482535,2px 5px 0 #000a,0 0 25px rgba(255,101,84,.19);
+}
+.portal-welcome-buttons{position:relative;z-index:2}
+.portal-welcome-emblem{width:245px;height:220px;min-width:200px;overflow:visible}
+.portal-welcome-emblem>span{
+  z-index:3;right:-28px;top:15px;position:absolute;color:#d8a7fa;
+  text-shadow:3px 4px 0 #100b14,0 0 11px #985fb966;
+  transform:rotate(5deg);
+}
+.portal-page-heading-stamp{width:190px;min-width:155px;position:relative;z-index:1}
+.portal-page-heading-stamp>span{z-index:8;right:-10px;bottom:5px;box-shadow:3px 4px 0 #120b12}
+.levels-emblem{position:relative;z-index:1}
+/* Dimensional mark: all parts purely decorative and pointer-inert. */
+.orbital-depth-stage{
+  --depth-rotate-x:0deg;--depth-rotate-y:0deg;
+  --depth-light-x:42%;--depth-light-y:30%;
+  position:relative;display:block;isolation:isolate;
+  width:100%;height:100%;min-width:0;
+  perspective:850px;
+  touch-action:pan-y;
+}
+.depth-stage-grid,.depth-stage-glow,.depth-stage-base,.depth-stage-scene,
+.depth-stage-halo,.depth-stage-backplate,.depth-stage-rim,.depth-stage-emblem,
+.depth-stage-reflection,.depth-stage-beacon,.depth-stage-tick{position:absolute;pointer-events:none}
+.depth-stage-grid{
+  inset:4%;border-radius:50%;
+  background:repeating-radial-gradient(circle,transparent 0 25px,rgba(250,194,170,.07) 26px,transparent 27px 46px);
+  transform:perspective(400px) rotateX(64deg) translateY(30%);
+  opacity:.65;
+}
+.depth-stage-glow{
+  inset:12%;border-radius:50%;filter:blur(26px);opacity:.48;
+  background:radial-gradient(circle at 45% 48%,#ff635d66,#824d9977 43%,transparent 69%);
+}
+.depth-stage-base{
+  width:72%;height:17%;bottom:4%;left:14%;border-radius:50%;
+  background:radial-gradient(ellipse,#090509 4%,#00000096 57%,transparent 73%);
+  filter:blur(7px);
+}
+.depth-stage-scene{
+  inset:3% 6% 8%;
+  transform-style:preserve-3d;
+  transform:rotateX(var(--depth-rotate-x)) rotateY(var(--depth-rotate-y));
+  transition:transform .2s cubic-bezier(.2,.8,.2,1);
+}
+.depth-stage-backplate{
+  inset:17%;border-radius:50%;
+  background:conic-gradient(from 70deg,#553549 0%,#a76769 18%,#302130 31%,#6b3c51 57%,#c37c76 72%,#382435 90%,#553549);
+  border:1px solid #e3b0a050;
+  box-shadow:inset 0 0 0 7px #19101c,0 15px 0 #0b060e,0 21px 21px #000b;
+  transform:translateZ(-5px);
+}
+.depth-stage-rim{
+  inset:12%;border-radius:50%;
+  border:3px solid rgba(232,180,153,.35);
+  box-shadow:inset 0 0 0 2px #120a16,inset 0 0 23px #000b,0 0 0 1px #382635;
+  transform:translateZ(9px);
+}
+.depth-stage-rim:before,.depth-stage-rim:after{
+  content:"";position:absolute;border-radius:50%;
+  inset:11%;border:1px dashed #e2bca85d;
+}
+.depth-stage-rim:after{inset:22%;border:1px solid #c9898955}
+.depth-stage-emblem{
+  inset:14%;display:grid;place-items:center;transform:translateZ(48px);
+  filter:drop-shadow(1px 5px 0 #47252e) drop-shadow(5px 10px 9px #000d);
+}
+.depth-stage-emblem:before{
+  content:"";position:absolute;inset:20%;border-radius:50%;
+  background:radial-gradient(circle at 34% 25%,#ffc1a4 0%,#cc677c 30%,#522a5b 80%);
+  box-shadow:inset 0 3px 7px #ffe3c54c,0 12px 17px #0008;
+}
+.depth-stage-mark{width:91%;height:91%;position:relative;color:#f4e3d0;filter:drop-shadow(2px 2px 0 #3b2631)}
+.depth-stage-emblem .mark-core-cut{fill:#44293d}
+.depth-stage-reflection{
+  inset:13%;border-radius:50%;z-index:4;opacity:.23;
+  background:radial-gradient(circle at var(--depth-light-x) var(--depth-light-y),#fff5da,transparent 41%);
+  mix-blend-mode:screen;
+}
+.depth-stage-halo{border-radius:50%;inset:0;border:2px solid #ffc7af86;transform:translateZ(3px) rotateX(70deg) rotate(-18deg);box-shadow:0 0 11px #ed7a9677}
+.depth-stage-halo-b{inset:5%;border-color:#b882ff70;transform:translateZ(5px) rotateY(69deg) rotate(28deg)}
+.depth-stage-beacon{
+  right:11%;top:8%;width:16px;height:16px;border-radius:50%;
+  background:radial-gradient(circle at 33% 29%,#fff0c9,#ff8d74 42%,#a84363);
+  border:1px solid #ffd8b0;
+  box-shadow:0 0 8px #ffae90bb,0 0 21px #f7848a66,0 6px 0 #4b202c;
+  transform:translateZ(55px);
+}
+.depth-stage-tick{height:5px;width:5px;border:1px solid #ebc0b3;background:#5b293b;transform:translateZ(25px)}
+.depth-stage-tick-a{left:9%;top:43%}.depth-stage-tick-b{right:4%;bottom:29%}
+.depth-stage-serial{
+  position:absolute;right:2%;bottom:1%;font:900 7px ui-sans-serif,system-ui,sans-serif;
+  letter-spacing:.12em;color:#c4a0aa;transform:rotate(-6deg);
+}
+.orbital-depth-stage--heading .depth-stage-scene{inset:7%}
+.orbital-depth-stage--heading .depth-stage-emblem{inset:18%}
+.orbital-depth-stage--monument .depth-stage-scene{inset:5%}
+.portal-page-heading-stamp .orbital-depth-stage{height:190px;width:190px}
+.levels-emblem .orbital-depth-stage{height:205px;width:225px}
+.levels-emblem .orbital-depth-stage + span{position:relative;z-index:2;font-size:8px;letter-spacing:.1em;font-weight:900}
+.portal-welcome-emblem .orbital-depth-stage{height:220px;width:245px}
+/* Cover cards act like illustrated miniature cabinets, not flat grey tiles. */
+.depth-hover-card{
+  --depth-rotate-x:0deg;--depth-rotate-y:0deg;
+  --depth-light-x:40%;--depth-light-y:30%;
+  position:relative;
+  isolation:isolate;
+  transform-style:preserve-3d;
+  transform:translateY(0) rotateX(0deg) rotateY(0deg);
+  box-shadow:inset 1px 1px 0 #ffffff18,0 4px 0 #0b080e,0 12px 17px #0008;
+  transition:transform .18s cubic-bezier(.2,.8,.2,1),border-color .18s ease,box-shadow .18s ease;
+}
+.depth-hover-card:hover{
+  transform:translateY(-5px) rotateX(var(--depth-rotate-x)) rotateY(var(--depth-rotate-y));
+  box-shadow:inset 1px 1px 0 #ffffff2b,0 8px 0 #0b080e,0 20px 29px #000b;
+  border-color:#e3a28a!important;
+}
+.depth-hover-card:focus-within{
+  border-color:#ffd3a6!important;
+  box-shadow:0 0 0 2px #ffd1a3,0 7px 0 #0b080e,0 19px 25px #0009;
+}
+.depth-hover-card .project-art{
+  border-bottom:2px solid #76515f;
+  background-color:#21151f;
+  overflow:hidden;perspective:560px;transform-style:preserve-3d;
+}
+.depth-hover-card .project-art:before{
+  content:"";position:absolute;z-index:2;inset:0;pointer-events:none;
+  background:linear-gradient(123deg,#fff4cb26 0%,transparent 29%,transparent 70%,#0008 100%);
+}
+.depth-hover-card .project-art:after{
+  background:repeating-linear-gradient(160deg,transparent 0 26px,#edbbcc10 27px,transparent 28px 54px);
+  opacity:.8;z-index:1;
+}
+.project-art-layer{position:absolute;inset:0;display:grid;place-items:center;perspective:480px}
+.project-art-shadow{
+  position:absolute;width:57%;height:18%;top:74%;border-radius:50%;
+  background:#000;filter:blur(17px);opacity:.75;
+}
+.project-art-inner{
+  position:relative;z-index:3;display:grid;place-items:center;
+  width:70%;max-width:175px;aspect-ratio:1;
+  border:1px solid #d4a6a34d;border-radius:17%;
+  background:radial-gradient(circle at 33% 23%,#f3c6bf24,transparent 45%),
+    linear-gradient(150deg,#593644,#241825 47%,#150f18);
+  box-shadow:inset 0 2px 1px #ffffff30,inset -4px -7px 9px #0009,
+             0 9px 0 #0d0a11,0 16px 14px #000a;
+  transform:translateY(-4px) rotate(-9deg) rotateX(-9deg) rotateY(13deg);
+  transition:transform .2s ease,box-shadow .2s ease,filter .2s ease;
+}
+.project-art-inner:before{
+  content:"";position:absolute;inset:8%;border:1px solid #f7cbd339;border-radius:15%;
+  box-shadow:inset 0 0 15px #0008;
+}
+.depth-hover-card:hover .project-art-inner{
+  transform:translateY(-8px) rotate(-5deg) rotateX(-2deg) rotateY(-11deg) scale(1.055);
+  box-shadow:inset 0 2px 1px #ffffff4a,inset -4px -7px 9px #0008,
+             0 12px 0 #0d0a11,0 22px 24px #000c;
+}
+.project-art-layer .project-glyph{
+  display:block;position:relative;z-index:4;width:65%;height:65%;
+  color:#ce8d99;filter:drop-shadow(2px 3px 1px #0007);
+  transform:none!important;
+}
+.project-art-layer .project-glyph svg{width:100%;height:100%}
+.project-art-shine{
+  position:absolute;inset:0;z-index:5;opacity:.21;pointer-events:none;
+  background:radial-gradient(circle at var(--depth-light-x) var(--depth-light-y),#ffe4dfad,transparent 45%);
+  mix-blend-mode:screen;
+}
+.project-kind{
+  z-index:7;
+  box-shadow:2px 3px 0 #170d16;
+}
+.project-card-body{
+  background:linear-gradient(152deg,#32232d 0%,#1b151d 55%,#100d12 100%);
+  border-top:1px solid #ad7b7b66;
+}
+.project-card h3{color:#f1dfd4}
+.project-card h3 a:hover{color:#ffb19e}
+.project-card footer{border-top:1px solid #725561;box-shadow:0 -1px 0 #0e0a0e}
+/* Thumbnails can still carry authentic creator uploaded art in a future release;
+   this dimensional identity is a fallback, not fabricated uploaded content. */
+.portal-shelf-projects .project-art-inner,
+.portal-recent-grid .project-art-inner,
+.portal-discover-results .project-art-inner{width:66%}
+.portal-discover-compact .project-art-inner{width:70%}
+.portal-result-toolbar{box-shadow:0 3px 0 #0d0810}
+/* Project detail is a stage. Its existing links remain external/new-tab only. */
+.portal-project-art{
+  background:
+    radial-gradient(circle at 47% 24%,rgba(255,189,152,.25),transparent 40%),
+    radial-gradient(circle at 80% 80%,rgba(123,82,193,.2),transparent 40%),
+    linear-gradient(145deg,#362330,#130e16 72%);
+  box-shadow:inset -12px -12px 26px #050407a3,inset 4px 4px 0 #e9b5b71c;
+}
+.portal-project-art > svg{
+  color:#f0cfc0;
+  filter:drop-shadow(4px 6px 0 #8d4e5c) drop-shadow(12px 20px 12px #0009);
+  transform:rotate(-9deg) rotateY(-10deg);
+  transition:transform .3s ease,filter .3s ease;
+}
+.portal-project-art:hover > svg{transform:rotate(-4deg) rotateY(8deg) scale(1.055)}
+.portal-project-intro{background:radial-gradient(circle at 94% 2%,#8b596032,transparent 40%)}
+.portal-project-header{box-shadow:inset 0 1px 0 #f5d0b130,0 6px 0 #09070a,0 15px 31px #0009}
+.portal-project-cta .button{min-height:44px}
+.portal-channel-banner{box-shadow:inset 0 1px 0 #ffd0bb2b,0 6px 0 #0b080d,0 15px 30px #0009}
+.portal-channel-avatar,.portal-creator-avatar,.portal-level-mark,.levels-symbol{
+  background:radial-gradient(circle at 30% 19%,#674459 0%,#271925 38%,#120d17 80%);
+  box-shadow:inset 0 2px 1px #ffddd05c,inset 0 -8px 12px #000c,
+             0 7px 0 #0a070b,0 12px 23px #0009;
+}
+.portal-creator-avatar svg,.portal-channel-avatar svg{
+  filter:drop-shadow(3px 4px 0 #682e42);
+  transition:transform .2s ease;
+}
+.portal-creator-tile:hover .portal-creator-avatar svg{transform:rotate(8deg) scale(1.06)}
+.portal-creator-tile:hover{transform:translateY(-5px) rotate(-.45deg)}
+.portal-creator-tile:active{transform:translateY(1px)}
+.portal-room{
+  box-shadow:inset 1px 1px 0 #ffdfc91c,0 5px 0 #0c090d,0 14px 24px #0007;
+  transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease;
+}
+.portal-room:hover{transform:translateY(-4px);box-shadow:inset 1px 1px 0 #fff4d725,0 9px 0 #0c090d,0 20px 32px #0009}
+.portal-room-top > span,.portal-directory-mark,.portal-shelf-mark,
+.portal-creator-number,.portal-new-release-stamp{
+  box-shadow:inset 1px 1px 0 #ffe9c43f,0 4px 0 #100b10,0 8px 11px #0008;
+}
+.portal-directory button{min-height:52px}
+.portal-directory button.active{box-shadow:inset 3px 0 0 var(--coral),inset 0 1px 0 #ffdbce28,0 3px 0 #130d13}
+.portal-channel-filters button.active{box-shadow:inset 0 1px 0 #ffd4b3,0 4px 0 #642d3b}
+/* Achievements as minted metal/ceramic objects with honest locked states. */
+.levels-symbol,.portal-account-achievement-symbol{
+  border-color:#c68b84;
+  box-shadow:inset 0 2px 2px #ffefde77,inset 0 -8px 13px #000c,
+             0 5px 0 #180d17,0 10px 14px #0009;
+}
+.levels-symbol>span{text-shadow:2px 5px 0 #48263d,0 0 10px #d27e9359}
+.levels-achievements article,.levels-rule-grid article{
+  box-shadow:inset 1px 1px 0 #fbdac127,0 5px 0 #0b080e,0 12px 22px #0009;
+  transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease;
+}
+.levels-achievements article:hover,.levels-rule-grid article:hover{
+  transform:translateY(-4px);
+  border-color:#ca8b80;
+  box-shadow:inset 1px 1px 0 #ffe1d049,0 9px 0 #0b080e,0 17px 26px #000b;
+}
+.portal-level-mark{border-width:3px}
+.member-level strong{color:#fff0dc;text-shadow:1px 3px 0 #492c3d}
+.member-progress{border:1px solid #825e69;background:#09070d;box-shadow:inset 0 3px 7px #000b,0 2px 0 #30202a}
+.member-progress span{box-shadow:0 0 10px #ff8a74a3}
+.portal-account-achievements article{box-shadow:inset 1px 1px 0 #ffe0c32a,0 4px 0 #0b070c,0 10px 16px #0008}
+.portal-account-achievements article.locked{box-shadow:inset 1px 1px 0 #ffffff0c,0 3px 0 #09070a;opacity:.72}
+.draft-field input,.draft-field select,.draft-field textarea,
+.portal-wide-search,.creator-search{
+  background:linear-gradient(180deg,#09070a,#1b121a);
+  border-color:#83606e;
+  box-shadow:inset 0 4px 9px #0009,0 1px 0 #77535a72;
+}
+.draft-field input:focus,.draft-field textarea:focus,.draft-field select:focus,
+.portal-wide-search:focus-within{
+  border-color:#ffc5ae;box-shadow:inset 0 3px 9px #0009,0 0 0 2px #ffa99540;
+}
+.member-status,.draft-status{box-shadow:0 3px 0 #0c070b,0 8px 18px #0006}
+.portal-true-empty,.portal-shelf-empty,.portal-new-release-empty{
+  background:
+    radial-gradient(ellipse at 88% 37%,rgba(226,94,101,.1),transparent 60%),
+    repeating-linear-gradient(135deg,#2b1b27 0 16px,#18121a 17px 18px);
+  border-style:dashed;
+}
+.portal-true-empty>.portal-empty-symbol,.portal-shelf-placeholder{
+  filter:drop-shadow(3px 5px 0 #100913);
+}
+.portal-footer-panel{
+  box-shadow:inset 0 2px 0 #fbc9a138,0 6px 0 #0b060a,0 15px 28px #0009;
+}
+.site-footer{margin-top:22px}
+/* Kinetic framing, not an endless animation loop. */
+@keyframes anevum-beacon-pulse{
+  0%,100%{box-shadow:0 0 7px #ffae90aa,0 0 17px #f7848a44,0 5px 0 #4b202c}
+  50%{box-shadow:0 0 12px #ffd1ae,0 0 25px #f7848a88,0 5px 0 #4b202c}
+}
+@media(hover:hover) and (pointer:fine){
+  .depth-stage-beacon{animation:anevum-beacon-pulse 4.6s ease-in-out infinite}
+}
+@media(max-width:1100px){
+  .portal-welcome-emblem{width:195px;min-width:150px}
+  .portal-welcome-emblem .orbital-depth-stage{width:200px;height:196px}
+  .portal-page-heading-stamp .orbital-depth-stage{width:156px;height:156px}
+  .levels-emblem .orbital-depth-stage{width:175px;height:170px}
+}
+@media(max-width:640px){
+  .site-header{box-shadow:inset 0 1px 0 #fff0de25,0 3px 0 #0b070e,0 7px 17px #0009}
+  .portal-welcome-emblem{width:190px;min-width:0;height:190px;bottom:-45px;right:-41px;opacity:.31}
+  .portal-welcome-emblem .orbital-depth-stage{width:190px;height:190px}
+  .portal-page-heading-stamp{bottom:-35px;right:-25px;width:165px;min-width:0}
+  .portal-page-heading-stamp .orbital-depth-stage{width:160px;height:160px}
+  .levels-emblem .orbital-depth-stage{width:180px;height:180px}
+  .depth-hover-card{transform:none!important;box-shadow:inset 1px 1px 0 #ffffff18,0 3px 0 #09070c,0 9px 14px #0008}
+  .depth-hover-card:hover{transform:none!important}
+  .depth-hover-card:active{transform:translateY(2px)!important;box-shadow:inset 0 2px 4px #0009,0 1px 0 #09070c}
+  .portal-creator-tile:hover,.portal-room:hover,
+  .levels-achievements article:hover,.levels-rule-grid article:hover{transform:none}
+  .portal-box,.portal-sidebox,.portal-shelf{box-shadow:inset 1px 1px 0 #ffe0c019,0 3px 0 #09070a,0 9px 16px #0008}
+  .portal-welcome,.portal-page-heading,.levels-masthead{box-shadow:inset 0 1px 0 #fff1df26,0 4px 0 #09070a,0 12px 22px #0009}
+}
+@media(hover:none),(pointer:coarse){
+  .depth-stage-scene{transform:none!important}
+  .depth-hover-card:hover{transform:none!important}
+  .depth-hover-card:hover .project-art-inner{transform:translateY(-4px) rotate(-9deg) rotateX(-9deg) rotateY(13deg)}
+  .depth-stage-beacon{animation:none}
+}
+@media(prefers-reduced-motion:reduce){
+  .site-shell *, .site-shell *::before, .site-shell *::after{
+    animation-duration:.01ms!important;animation-iteration-count:1!important;
+    transition-duration:.01ms!important;scroll-behavior:auto!important;
+  }
+  .depth-stage-scene,.depth-hover-card,.depth-hover-card:hover,
+  .depth-hover-card .project-art-inner,.depth-hover-card:hover .project-art-inner,
+  .portal-room:hover,.portal-creator-tile:hover,.levels-achievements article:hover,
+  .levels-rule-grid article:hover{transform:none!important}
+  .depth-stage-glow{filter:none;opacity:.22}
+}
