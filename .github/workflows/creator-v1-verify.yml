@@ -67,6 +67,7 @@ jobs:
           set -euo pipefail
           npm test 2>&1 | tee ../evidence/public-tests.log
           npm run test:project-readiness 2>&1 | tee ../evidence/project-readiness-tests.log
+          node --test test/approved-profile-release.test.mjs 2>&1 | tee ../evidence/approved-profile-release-tests.log
       - name: Build member interface and reject generated brand drift
         run: |
           node creator-v1/auth/build.mjs
