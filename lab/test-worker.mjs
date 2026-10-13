@@ -49,20 +49,18 @@ test('RHEN preview is a real source-backed, read-only development console',async
  const res=await request('/projects/rhen/'),html=await res.text();
  assert.equal(res.status,200);
  assert.match(html,/RHEN V5/);
- assert.match(html,/Research Console/);
- assert.match(html,/RUNTIME OFFLINE/);
- assert.match(html,/NOT RUNNING|NOT DEPLOYED|not a live broker terminal/i);
+ assert.match(html,/Terminal/);
+ assert.match(html,/ENGINE OFFLINE/);
+ assert.match(html,/NO RECENT SCAN|NOT CONNECTED/);
  assert.match(html,/app\.css/);
  assert.match(html,/app\.js/);
- assert.match(html,/id="costForm"/);
- assert.match(html,/id="net5"/);
- assert.match(html,/id="net15"/);
- assert.match(html,/id="net60"/);
+ assert.match(html,/id="metricEquity"/);
+ assert.match(html,/id="historySvg"/);
  assert.match(html,/V5/);
  assert.doesNotMatch(html,/alpaca\.markets|DATABASE_URL|api_secret/i);
  assert.doesNotMatch(html,/<iframe/i);
- assert.equal((await request('/projects/rhen/app.css')).headers.get('Content-Type'),'text/css; charset=utf-8');
- assert.match(await (await request('/projects/rhen/app.js')).text(),/Nothing here connects to any broker/);
+ assert.equal((await request('/projects/rhen/terminal.css')).headers.get('Content-Type'),'text/css; charset=utf-8');
+ assert.match(await (await request('/projects/rhen/terminal.js')).text(),/No broker credentials/);
 });
 test('RHEN actual source is pinned to the unmerged F1-F3f candidate and served safely as text',async()=>{
  assert.equal(RHEN_REVIEW.source_commit,'d68ac5ec4df6378364dfd1b893ee4d5862a834e4');
@@ -120,4 +118,32 @@ test('security headers permit optional live map but restrict origin and location
  assert.match(csp,/worker-src 'self' blob:/);
  assert.equal(r.headers.get('Permissions-Policy'),'camera=(), microphone=(), geolocation=(self)');
  assert.equal(r.headers.get('Referrer-Policy'),'no-referrer');
+});
+
+// RHEN terminal source integration: never claims a running bot or order authority.
+test('RHEN single-screen terminal is routed with distinct research path and no broker commands',async()=>{
+ const t=await request('/projects/rhen/'),html=await t.text();
+ assert.equal(t.status,200);assert.match(html,/RHEN · Terminal/);
+ assert.match(html,/id="metricEquity"/);assert.match(html,/id="scannerRows"/);
+ assert.match(html,/id="orderRows"/);assert.match(html,/id="historySvg"/);
+ assert.match(html,/terminal\\.css/);assert.match(html,/terminal\\.js/);
+ assert.doesNotMatch(html,/APCA-API-SECRET-KEY|APCA-API-KEY-ID|<form[^>]*order/i);
+ const source=await request('/projects/rhen/research/');assert.equal(source.status,200);
+ assert.match(await source.text(),/Research Console/);
+ const css=await request('/projects/rhen/terminal.css');assert.equal(css.status,200);
+ assert.match(await css.text(),/height:100dvh/);
+ const js=await request('/projects/rhen/terminal.js');assert.equal(js.status,200);
+ assert.match(await js.text(),/api\\/overview/);
+});
+test('RHEN read-only observation defaults to disconnected with missing data null',async()=>{
+ const res=await request('/projects/rhen/api/overview');
+ assert.equal(res.status,200);assert.equal(res.headers.get('Content-Type'),'application/json; charset=utf-8');
+ const data=await res.json();assert.equal(data.schema,'anevum.lab.rhen-observer.v1');
+ assert.equal(data.provider.state,'NOT_CONNECTED');assert.equal(data.account,null);
+ assert.equal(data.orders,null);assert.equal(data.positions,null);
+ assert.equal(data.scanner.state,'OFFLINE');assert.equal(data.engine.execution,'DISABLED');
+ assert.equal((await request('/projects/rhen/api/overview',{method:'POST'})).status,405);
+ assert.equal((await request('/projects/rhen/api/overview',{method:'HEAD'})).status,405);
+ assert.equal((await request('/projects/rhen/api/order',{method:'GET'})).status,404);
+ assert.equal((await request('/projects/rhen/api/overview',{method:'GET'})).headers.get('Cache-Control'),'private, no-store, max-age=0');
 });
