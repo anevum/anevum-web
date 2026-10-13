@@ -20,6 +20,7 @@ on:
         options:
           - build/creator-v1-react-shell-20261012
           - feature/creator-v1-portal-launcher-20261013
+          - design/creator-v1-transcosmic-observatory-20261013
 
 permissions:
   contents: read
@@ -53,7 +54,7 @@ jobs:
           set -euo pipefail
           printf '%s' "$REVIEWED_SHA" | grep -Eq '^[0-9a-f]{40}$'
           case "$RELEASE_REF" in
-            build/creator-v1-react-shell-20261012|feature/creator-v1-portal-launcher-20261013) ;;
+            build/creator-v1-react-shell-20261012|feature/creator-v1-portal-launcher-20261013|design/creator-v1-transcosmic-observatory-20261013) ;;
             *) echo "::error::Unreviewed or unsupported release source branch"; exit 1 ;;
           esac
           test "$(git rev-parse HEAD)" = "$REVIEWED_SHA"
@@ -129,7 +130,7 @@ jobs:
           test "$code" = 200
           grep -q 'id="root"' "$RUNNER_TEMP/creator-new-home.html"
           curl --fail --silent --show-error --max-time 20 "$base/creator/discover" | grep -q 'id="root"'
-          if [ "$RELEASE_REF" = "feature/creator-v1-portal-launcher-20261013" ]; then
+          if [ "$RELEASE_REF" = "feature/creator-v1-portal-launcher-20261013" ] || [ "$RELEASE_REF" = "design/creator-v1-transcosmic-observatory-20261013" ]; then
             curl --fail --silent --show-error --max-time 20 "$base/creator/start" | grep -q 'id="root"'
             curl --fail --silent --show-error --max-time 20 "$base/creator/guide" | grep -q 'id="root"'
             # New API parameters can briefly hit an older edge version immediately
@@ -152,6 +153,38 @@ jobs:
             fi
             echo VISITOR_GUIDE_FREE_FILTER_STAGING=PASS
           fi
+          # Design candidates must be visibly active, not just deployed as a
+          # successful Worker version while older HTML or CSS remains at the edge.
+          # Check a fixed first-party CSS path from the served React HTML and
+          # verify immutable theme markers. The candidate has already passed
+          # all feature and privacy tests before this post-deploy read-only check.
+          if [ "$RELEASE_REF" = "design/creator-v1-transcosmic-observatory-20261013" ]; then
+            theme_ready=0
+            for attempt in $(seq 1 20); do
+              html_code="$(curl --silent --show-error --max-time 20 -o "$RUNNER_TEMP/creator-observatory-home.html" -w '%{http_code}' "$base/creator/" || true)"
+              if [ "$html_code" = 200 ]; then
+                stylesheet="$(sed -n 's/.*href="\([^"]*\.css\)".*/\1/p' "$RUNNER_TEMP/creator-observatory-home.html" | head -1)"
+                case "$stylesheet" in
+                  /creator/assets/index-*.css)
+                    if curl --fail --silent --show-error --max-time 20 -o "$RUNNER_TEMP/creator-observatory.css" "$base$stylesheet" &&
+                      grep -Fq -- '--cosmos-void' "$RUNNER_TEMP/creator-observatory.css" &&
+                      grep -Fq -- '--cosmos-cyan' "$RUNNER_TEMP/creator-observatory.css"; then
+                      theme_ready=1
+                      echo "OBSERVATORY_CSS_EDGE_READY_ON_ATTEMPT=$attempt"
+                      break
+                    fi
+                    ;;
+                esac
+              fi
+              echo "::notice::Waiting for approved Observatory CSS to propagate: HTTP $html_code (attempt $attempt/20)"
+              sleep 3
+            done
+            if [ "$theme_ready" != 1 ]; then
+              echo "::error::Observatory CSS fingerprint missing from hosted React staging after bounded retries"
+              exit 1
+            fi
+            echo TRANSCOSMIC_OBSERVATORY_STAGING_THEME=PASS
+          fi
           curl --fail --silent --show-error --max-time 20 "$base/creator/api/v1/status" | jq -e '.counts.publishedProjects >= 0' >/dev/null
           curl --fail --silent --show-error --max-time 20 "$base/creator/api/v1/projects?limit=2" | jq -e '.items | type == "array"' >/dev/null
           curl --fail --silent --show-error --max-time 20 "$base/api/v1/member/health" | jq -e '.status == "ok"' >/dev/null
@@ -171,6 +204,7 @@ jobs:
             echo ''
             echo 'Candidate: ${{ inputs.reviewed_head_sha }}'
             echo 'Reviewed allowlisted source branch: ${{ inputs.reviewed_branch }}'
+            echo 'Observatory source is visual-only: existing public member and content API contracts remain unchanged.'
             echo ''
             echo 'Scope: next.anevum.com/creator/* only. No production deploy, migration or member route changes.'
             echo ''
