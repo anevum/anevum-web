@@ -23,5 +23,17 @@ jobs:
           node --check lab/worker.mjs
           node --check lab/fold-snapshot.mjs
           node --check lab/test-worker.mjs
+          node --check lab/browser-check.mjs
+          node --check lab/browser-check-client.mjs
       - name: Test project catalog, private host boundary, and game routes
         run: node --test lab/test-worker.mjs
+      - name: Responsive Chromium Lab hub and playable Fold acceptance
+        run: node lab/browser-check.mjs
+      - name: Upload private Lab responsive screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: anevum-private-lab-screens
+          path: test-artifacts/lab/*.png
+          if-no-files-found: warn
+          retention-days: 14
