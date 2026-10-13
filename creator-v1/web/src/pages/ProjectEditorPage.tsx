@@ -7,6 +7,7 @@ import {
 import { useResource } from "../lib/useResource";
 import { ErrorState,LoadingState } from "../components/States";
 import { useMemberContext } from "../components/MemberGate";
+import {canSubmitSavedProject,draftFingerprint,projectDestination,projectReadiness} from "../lib/project-readiness";
 
 const blank:ProjectDraft={
   slug:"",title:"",summary:"",category:"games",description:"",
@@ -49,21 +50,25 @@ function Editor({project,reviewHistory=[]}:{
 }){
   const navigate=useNavigate();
   const [draft,setDraft]=useState<ProjectDraft>(()=>loadDraft(project));
+  const [savedDraft,setSavedDraft]=useState<ProjectDraft|null>(()=>project?loadDraft(project):null);
+  const [refreshRequired,setRefreshRequired]=useState(false);
   const [revision,setRevision]=useState(project?.revision||0);
   const [status,setStatus]=useState(project?.status||"new");
   const [busy,setBusy]=useState(false);
   const [error,setError]=useState("");
   const [notice,setNotice]=useState("");
-  const canEdit=!project||editable(status);
-  const canSubmit=Boolean(project)&&canEdit&&Boolean(draft.sourceUrl||draft.demoUrl)&&
-    draft.aiDisclosure.trim().length>=10&&draft.humanContribution.trim().length>=10;
+  const canEdit=(!project||editable(status))&&!refreshRequired;
+  const dirty=savedDraft===null||draftFingerprint(draft)!==draftFingerprint(savedDraft);
+  const readiness=projectReadiness(draft);
+  const canSubmit=Boolean(project)&&!refreshRequired&&canSubmitSavedProject(draft,savedDraft,status,busy);
+  const demo=projectDestination(draft.demoUrl),source=projectDestination(draft.sourceUrl);
   const setText=(key:TextKey,value:string)=>{setDraft(current=>({...current,[key]:value}));setError("");setNotice("");};
   const field=(key:TextKey,label:string,max:number,opts:{rows?:number;required?:boolean;hint?:string;min?:number;type?:string}={})=>{
     const value=draft[key]??"";
-    const props={id:"draft-"+key,name:key,value,disabled:!canEdit||busy,maxLength:max,minLength:opts.min||0,required:opts.required,onChange:(e:React.ChangeEvent<HTMLInputElement|HTMLTextAreaElement>)=>setText(key,e.target.value)};
+    const props={id:"draft-"+key,name:key,value,disabled:!canEdit||busy,maxLength:max,minLength:opts.min||0,required:opts.required,"aria-describedby":opts.hint?"draft-"+key+"-help":undefined,onChange:(e:React.ChangeEvent<HTMLInputElement|HTMLTextAreaElement>)=>setText(key,e.target.value)};
     return <div className="draft-field" key={key}><label htmlFor={props.id}>{label}</label>
       {opts.rows?<textarea {...props} rows={opts.rows}/>:<input {...props} type={opts.type||"text"}/>}
-      {opts.hint&&<p className="draft-hint">{opts.hint}</p>}
+      {opts.hint&&<p className="draft-hint" id={"draft-"+key+"-help"}>{opts.hint}</p>}
     </div>;
   };
   async function save(e:FormEvent){
@@ -76,20 +81,37 @@ function Editor({project,reviewHistory=[]}:{
       } else {
         const result=await memberUpdateProject(project.id,revision,draft);
         setRevision(result.revision);setStatus(result.status);
+        // Fetch the canonical saved fields: the server trims and normalizes URLs.
+        // A failed read after a successful save must never unlock submission.
+        setSavedDraft(null);
+        setRefreshRequired(true);
+        const confirmed=await memberProject(project.id);
+        const canonical=loadDraft(confirmed.project);
+        setDraft(canonical);setSavedDraft(canonical);
+        setRevision(confirmed.project.revision);setStatus(confirmed.project.status);
+        setRefreshRequired(false);
         setNotice("Draft saved to your own staging account. Nothing has been published.");
       }
-    }catch(e){setError(e instanceof MemberApiError?e.message:"Unable to save your draft. Check your inputs and try again.");}
+    }catch(e){
+      if(e instanceof MemberApiError&&[401,403,409].includes(e.status))setRefreshRequired(true);
+      setError(e instanceof MemberApiError?e.message:"Unable to save or confirm your draft. Reload to check the saved version before submitting.");
+    }
     finally{setBusy(false);}
   }
   async function submit(){
     if(!project||!canSubmit||busy)return;
-    if(!window.confirm("Send this project to staff for moderation? It will not be published automatically."))return;
+    if(!window.confirm("Send the saved revision "+revision+" of “"+savedDraft?.title+"” to staff for moderation? It will not be published automatically."))return;
     setBusy(true);setError("");setNotice("");
     try {
       const result=await memberSubmitProject(project.id,revision);
       setRevision(result.revision);setStatus(result.status);
       setNotice("Submitted for staff review. Your project remains private until separately approved.");
-    }catch(e){setError(e instanceof MemberApiError?e.message:"Unable to submit. Please refresh your draft and try again.");}
+    }catch(e){
+      // The outcome of a failed network response may be unknown. Require a
+      // server refresh rather than retrying an old revision blindly.
+      setRefreshRequired(true);
+      setError(e instanceof MemberApiError?e.message:"Unable to confirm submission. Reload to check the current project status.");
+    }
     finally{setBusy(false);}
   }
   return <>
@@ -109,7 +131,7 @@ function Editor({project,reviewHistory=[]}:{
           </div>
           {field("summary","Short description",280,{required:true,min:10,rows:3})}
           {field("description","Full description",8000,{rows:7,hint:"Explain the genuine experience. Don't include private information."})}
-          <label className="draft-checkbox"><input type="checkbox" checked={draft.freeToUse} disabled={!canEdit||busy} onChange={e=>setDraft(d=>({...d,freeToUse:e.target.checked}))}/>Free to use</label>
+          <label className="draft-checkbox"><input type="checkbox" checked={draft.freeToUse} disabled={!canEdit||busy} onChange={e=>{setDraft(d=>({...d,freeToUse:e.target.checked}));setNotice("");setError("");}}/>Free to use</label>
         </div>
         <div className="draft-column"><span className="kicker">02 / RIGHTS + DESTINATIONS</span>
           {field("demoUrl","Hosted demo or usable experience URL",1500,{type:"url",hint:"Optional HTTPS link. The experience remains creator-hosted."})}
@@ -119,10 +141,42 @@ function Editor({project,reviewHistory=[]}:{
           {field("humanContribution","Human work and credits",1200,{rows:4,hint:"At least 10 characters describing actual human contributions are required to submit."})}
         </div>
       </div>
+      <div className="project-review-layout">
+        <section className="project-readiness" aria-labelledby="project-readiness-title">
+          <span className="kicker">03 / BEFORE STAFF REVIEW</span>
+          <h2 id="project-readiness-title">SUBMISSION CHECKLIST</h2>
+          <ul>{readiness.map(check=><li key={check.key} data-ready={check.ready}>
+            <strong>{check.ready?"READY":"NEEDED"}</strong><span>{check.label}</span>
+          </li>)}<li data-ready={savedDraft!==null&&!dirty&&!refreshRequired}>
+            <strong>{savedDraft!==null&&!dirty&&!refreshRequired?"SAVED":"NEEDED"}</strong>
+            <span>Current changes saved and confirmed by the server</span>
+          </li></ul>
+          <p className="draft-hint">These checks help prepare your submission. Staff separately verifies rights, safety and disclosures; a checklist does not grant approval.</p>
+        </section>
+        <section className="project-passport-preview" aria-labelledby="project-preview-title">
+          <span className="kicker">04 / PRIVATE PROJECT PREVIEW</span>
+          <h2 id="project-preview-title">{draft.title.trim()||"YOUR PROJECT TITLE"}</h2>
+          <p>{draft.summary.trim()||"Your short description will appear here."}</p>
+          <dl><div><dt>Category</dt><dd>{cats.find(([id])=>id===draft.category)?.[1]||"Choose a category"}</dd></div>
+            <div><dt>Access</dt><dd>{draft.freeToUse?"Free to use":"Not marked free to use"}</dd></div>
+            <div><dt>Primary destination</dt><dd>{demo?"Hosted experience · "+demo.hostname:source?"View source · "+source.hostname:"No valid destination yet"}</dd></div>
+            <div><dt>License</dt><dd>{draft.license?.trim()||"Not specified"}</dd></div>
+          </dl>
+          <details className="project-preview-disclosures"><summary>Preview description and credits</summary>
+            <h3>Full description</h3><p>{draft.description.trim()||"No full description yet."}</p>
+            <h3>AI involvement</h3><p>{draft.aiDisclosure.trim()||"Add your AI disclosure before submitting."}</p>
+            <h3>Human work and credits</h3><p>{draft.humanContribution.trim()||"Add your actual contribution and credits."}</p>
+          </details>
+          <p className="member-caption">Not a public listing. This preview includes unsaved edits; only a saved revision can go to staff review. Private family or contact information must stay out of the project passport.</p>
+        </section>
+      </div>
+      {canEdit&&<p id="draft-save-state" className="draft-save-state" role="status">{!project?"Create a private draft before submitting.":dirty?"You have unsaved changes. Save them before submitting for review.":"Your displayed draft matches the confirmed saved revision."}</p>}
       <div className="draft-actions">
         {canEdit&&<button type="submit" className="button primary" disabled={busy}>{busy?"WORKING…":project?"SAVE DRAFT":"CREATE PRIVATE DRAFT"}</button>}
-        {project&&canEdit&&<button type="button" className="button secondary" disabled={busy||!canSubmit} onClick={submit}>SUBMIT FOR STAFF REVIEW</button>}
-        {project&&!canEdit&&<span className="member-caption">Locked while in review or after publication. Staff must request changes before further editing.</span>}
+        {project&&canEdit&&<button type="button" className="button secondary" disabled={!canSubmit} aria-describedby="draft-save-state" onClick={submit}>SUBMIT FOR STAFF REVIEW</button>}
+        {refreshRequired&&<button type="button" className="button secondary" disabled={busy} onClick={()=>window.location.reload()}>RELOAD SAVED PROJECT</button>}
+        {refreshRequired&&<span className="member-caption">Reload to verify the current server revision before editing or submitting. Unsaved edits will be discarded.</span>}
+        {project&&!editable(status)&&<span className="member-caption">Locked while in review or after publication. Staff must request changes before further editing.</span>}
       </div>
       {notice&&<p className="draft-notice" role="status">{notice}</p>}
       {error&&<p className="member-error" role="alert">{error}</p>}

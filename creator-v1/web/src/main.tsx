@@ -6,6 +6,7 @@ import "./styles.css";
 import "./portal-overhaul.css";
 import "./depth-system.css";
 import "./member-profile.css";
+import "./project-editor.css";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
