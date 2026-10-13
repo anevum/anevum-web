@@ -68,7 +68,7 @@ jobs:
           set -euo pipefail
           cf() { curl --fail --silent --show-error --retry 2 --max-time 25 -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" "$1"; }
           cf https://api.cloudflare.com/client/v4/zones/8abe27259b5436af5966d3b40d9a3760/workers/routes > evidence/routes-before.json
-          jq -e '.success and any(.result[]; .id == "2659b522a96a435db4aadac49dbea8fa" and .pattern == "anevum.com/*" and .script == "anevum-creator-v1")' evidence/routes-before.json >/dev/null
+          jq -e '.success and any(.result[]; .id == "2659b522a96a435db4aadac49dbea8fa" and .pattern == "anevum.com/*" and (.script == "anevum-creator-v1" or .script == "anevum-creator-v1-main"))' evidence/routes-before.json >/dev/null
           cf "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/anevum-creator-v1/settings" > evidence/production-settings.json
           jq -e '.success and any(.result.bindings[]; .type == "d1" and .database_id == "6c7b5f0c-33db-4b6a-9569-0a6af5e07534")' evidence/production-settings.json >/dev/null
           cf "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/anevum-creator-v1/deployments" > evidence/rollback-deployment.json
@@ -84,6 +84,15 @@ jobs:
           npx wrangler deploy --config creator-v1/wrangler.main-site.jsonc > evidence/deploy.log 2>&1
           cat evidence/deploy.log
           echo MAIN_SITE_UNROUTED_UPLOAD=PASS
+      - name: Verify live public main-site assets and private boundaries after cutover
+        run: |
+          set -euo pipefail
+          if jq -e 'any(.result[]; .pattern == "anevum.com/*" and .script == "anevum-creator-v1-main")' evidence/routes-before.json >/dev/null; then
+            node creator-v1/ops/probe-main-site.mjs | tee evidence/live-acceptance.json
+            echo MAIN_SITE_HOSTED_ACCEPTANCE=PASS
+          else
+            echo 'Main Worker is uploaded but not yet routed; final cutover remains separate.'
+          fi
       - name: Retain release evidence
         if: always()
         uses: actions/upload-artifact@v4
