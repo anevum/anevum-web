@@ -18,7 +18,11 @@ async function fixture(){
  const sql=new DatabaseSync(":memory:");
  sql.exec(`PRAGMA foreign_keys=ON;
  CREATE TABLE schema_migrations(version TEXT PRIMARY KEY,applied_at TEXT DEFAULT CURRENT_TIMESTAMP);
- CREATE TABLE creator_profiles(member_id TEXT PRIMARY KEY,handle TEXT NOT NULL UNIQUE,display_name TEXT NOT NULL,bio TEXT NOT NULL DEFAULT '',status TEXT NOT NULL DEFAULT 'active');`);
+ CREATE TABLE creator_profiles(member_id TEXT PRIMARY KEY,handle TEXT NOT NULL UNIQUE,display_name TEXT NOT NULL,bio TEXT NOT NULL DEFAULT '',status TEXT NOT NULL DEFAULT 'active',created_at TEXT DEFAULT CURRENT_TIMESTAMP);
+ CREATE TABLE projects(id TEXT PRIMARY KEY,owner_member_id TEXT NOT NULL,status TEXT NOT NULL,published_at TEXT);
+ CREATE TABLE project_releases(id TEXT PRIMARY KEY,project_id TEXT NOT NULL);
+ CREATE TABLE community_project_votes(member_id TEXT NOT NULL,status TEXT NOT NULL);
+ CREATE TABLE community_xp_events(member_id TEXT NOT NULL,amount INTEGER NOT NULL);`);
  for(const file of ["0003_member_identity_staging.sql","0006_account_privacy.sql","0007_discovery_preferences.sql"]){
   sql.exec(readFileSync(new URL("../auth/migrations/"+file,import.meta.url),"utf8"));
  }
