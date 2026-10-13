@@ -125,23 +125,28 @@ jobs:
           capture 1440 900 creators /creator/creators
           capture 1440 900 project /creator/projects/00000000000000000000000000000001
           capture 1440 900 levels /creator/levels
+          capture 1440 1600 celestial-artifacts /creator/levels#artifact-museum-heading
           capture 1440 900 community /creator/community
           capture 390 844 home /creator/
           capture 390 844 start /creator/start
           capture 390 844 field-guide /creator/guide
           capture 390 844 levels /creator/levels
+          capture 390 1600 celestial-artifacts /creator/levels#artifact-museum-heading
           capture 390 844 discover /creator/discover
           capture 390 844 creators /creator/creators
+          capture 1440 900 member-cabinet /creator/account
           capture 1440 900 profile-editor /creator/account/edit
+          capture 390 844 member-cabinet /creator/account
           capture 390 844 profile-editor /creator/account/edit
           capture 1440 900 project-editor /creator/create/new
           capture 390 844 project-editor /creator/create/new
           capture 320 720 home /creator/
+          capture 320 900 levels /creator/levels
           capture 320 720 start /creator/start
           capture 320 720 field-guide /creator/guide
           capture 320 720 discover /creator/discover
           node creator-v1/test/capture-portal-launcher.mjs --chrome "$chrome" --base http://127.0.0.1:4178 --output evidence/portal-review
-          printf 'The ANEVUM Transcosmic Observatory design is a candidate theme, NOT live at anevum.com or next.anevum.com. These PNG files render the actual compiled React/Vite candidate using explicitly SYNTHETIC OFFLINE design fixtures, including a fake in-memory creator identity for the profile-editor layout only. No fixture records, accounts, cookies or codes are deployed to any staging or production database. Review desktop 1440px before phone 390px. This is visual QA, not authentication, real-user or provider acceptance.\n' > evidence/portal-review/README.txt
+          printf 'The ANEVUM Transcosmic Observatory and Celestial Artifacts designs are review candidates, NOT live at anevum.com or next.anevum.com. All achievement data in the offline member screenshot is SYNTHETIC and may not be treated as real account evidence. These PNG files render the actual compiled React/Vite candidate using explicitly SYNTHETIC OFFLINE design fixtures, including a fake in-memory creator identity for the profile-editor layout only. No fixture records, accounts, cookies or codes are deployed to any staging or production database. Review desktop 1440px before phone 390px. This is visual QA, not authentication, real-user or provider acceptance.\n' > evidence/portal-review/README.txt
           echo "PORTAL_VISUAL_CAPTURE=PASS" | tee evidence/portal-review/capture-status.txt
 
       - name: Preserve generated public artifact for visual review
