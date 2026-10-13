@@ -6,6 +6,7 @@ import {PortalShelf} from "../components/PortalShelf";
 import {LevelPanel} from "../components/LevelPanel";
 import {OrbitalStage} from "../components/OrbitalStage";
 import {OrbitalMark} from "../components/OrbitalMark";
+import {CosmicHorizon} from "../components/CosmicHorizon";
 import {ErrorState,LoadingState} from "../components/States";
 
 const shelves=[
@@ -26,6 +27,7 @@ export function HomePage(){
   },[]);
   return <div className="portal-home">
     <section className="portal-welcome" aria-labelledby="portal-home-title">
+      <CosmicHorizon/>
       <div className="portal-welcome-copy"><span className="kicker">ANEVUM / THE INDEPENDENT CREATOR UNDERGROUND</span>
         <h1 id="portal-home-title">A WORLD OF<br/><em>THINGS PEOPLE MAKE.</em></h1>
         <p>PLAY IT. TRY IT. MAKE IT. SHARE IT. Games, software, AI experiences and independent creations worth discovering.</p>
