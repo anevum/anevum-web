@@ -31,7 +31,7 @@ const journeys = [
     title: "BELONG WITHOUT HAVING TO BUILD.",
     description: "Future participation includes useful feedback, saved projects, discussions and recognition for genuine contributions. You do not have to be a developer to belong here.",
     primary: { to: "/community", label: "EXPLORE COMMUNITY PLANS" },
-    secondary: { to: "/levels", label: "SEE EARNED LEVELS" },
+    secondary: { to: "/guide", label: "TRY THE FREE FIELD GUIDE" },
     note: "The public discussion board and open member registration are not live yet."
   }
 ] as const;
@@ -130,7 +130,7 @@ export function StartPage() {
       <span className="kicker">MORE THAN A MARKETPLACE</span>
       <h2>YOU DON'T HAVE TO PUBLISH<br/>TO HAVE A PLACE HERE.</h2>
       <p>Explore freely today. As member access opens, save what matters, leave useful feedback and earn recognition through real contributions rather than spending money.</p>
-      <div><Link className="button secondary" to="/levels">HOW LEVELS WORK</Link><Link className="button secondary" to="/status">WHAT'S LIVE NOW</Link></div>
+      <div><Link className="button secondary" to="/guide">FREE FIELD GUIDE</Link><Link className="button secondary" to="/levels">HOW LEVELS WORK</Link><Link className="button secondary" to="/status">WHAT'S LIVE NOW</Link></div>
     </section>
   </div>;
 }
