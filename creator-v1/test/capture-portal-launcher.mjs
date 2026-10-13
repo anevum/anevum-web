@@ -85,9 +85,9 @@ try{
  for(const [width,height] of [[1440,900],[390,844],[320,720]]){
   await client.send("Emulation.setDeviceMetricsOverride",{width,height,deviceScaleFactor:1,mobile:width<600});
   await client.send("Page.navigate",{url:base+"/creator/start"});
-  await until(()=>evaluate("document.readyState==='complete' && !!document.querySelector('button[aria-label=\\\"Open quick navigation\\\"]')"));
-  await evaluate("document.querySelector('button[aria-label=\\\"Open quick navigation\\\"]').click()");
-  await until(()=>evaluate("!!document.querySelector('dialog.portal-launcher[open]') && document.activeElement===document.querySelector('dialog.portal-launcher input[type=\\\"search\\\"]')"));
+  await until(()=>evaluate("document.readyState==='complete' && !!document.querySelector('button.header-launcher')"));
+  await evaluate("document.querySelector('button.header-launcher').click()");
+  await until(()=>evaluate("!!document.querySelector('dialog.portal-launcher[open]') && document.activeElement===document.querySelector('dialog.portal-launcher input')"));
   const path=join(output,"launcher-open-"+width+".png");
   const shot=await client.send("Page.captureScreenshot",{format:"png",fromSurface:true});
   if(!shot.data)throw new Error("Screenshot missing at width "+width);
