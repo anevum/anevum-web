@@ -131,12 +131,12 @@ jobs:
           capture 390 844 start /creator/start
           capture 390 844 field-guide /creator/guide
           capture 390 844 levels /creator/levels
-          capture 390 1600 celestial-artifacts /creator/levels#artifact-museum-heading
+          capture 390 3300 celestial-artifacts /creator/levels
           capture 390 844 discover /creator/discover
           capture 390 844 creators /creator/creators
-          capture 1440 900 member-cabinet /creator/account
+          capture 1440 1600 member-cabinet /creator/account
           capture 1440 900 profile-editor /creator/account/edit
-          capture 390 844 member-cabinet /creator/account
+          capture 390 3000 member-cabinet /creator/account
           capture 390 844 profile-editor /creator/account/edit
           capture 1440 900 project-editor /creator/create/new
           capture 390 844 project-editor /creator/create/new
