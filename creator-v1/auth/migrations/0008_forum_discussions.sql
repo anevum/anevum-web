@@ -46,7 +46,7 @@ CREATE TABLE IF NOT EXISTS forum_moderation_events (
   id TEXT PRIMARY KEY NOT NULL CHECK(length(id)=32),
   post_id TEXT NOT NULL REFERENCES forum_posts(id) ON DELETE RESTRICT,
   actor_email TEXT NOT NULL,
-  action TEXT NOT NULL CHECK(action IN ('approve','hide')),
+  action TEXT NOT NULL CHECK(action IN ('approve','hide','restore')),
   reason TEXT NOT NULL CHECK(length(reason) BETWEEN 12 AND 600),
   from_status TEXT NOT NULL CHECK(from_status IN ('pending','visible','hidden')),
   to_status TEXT NOT NULL CHECK(to_status IN ('visible','hidden')),
