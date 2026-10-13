@@ -55,7 +55,7 @@ jobs:
           set -euo pipefail
           printf '%s' "$REVIEWED_SHA" | grep -Eq '^[0-9a-f]{40}$'
           case "$RELEASE_REF" in
-            build/creator-v1-react-shell-20261012|feature/creator-v1-portal-launcher-20261013|design/creator-v1-transcosmic-observatory-20261013|design/creator-v1-cinematic-worlds-20261013) ;;
+            build/creator-v1-react-shell-20261012|feature/creator-v1-portal-launcher-20261013|design/creator-v1-transcosmic-observatory-20261013|design/creator-v1-cinematic-worlds-20261013|release/creator-v1-main-consolidation-20261013) ;;
             *) echo "::error::Unreviewed or unsupported release source branch"; exit 1 ;;
           esac
           test "$(git rev-parse HEAD)" = "$REVIEWED_SHA"
@@ -94,15 +94,16 @@ jobs:
           zone="$(jq -r '.result[] | select(.name == "anevum.com" and .status == "active") | .id' "$dir/zones.json" | head -1)"
           test -n "$zone"
           cf "https://api.cloudflare.com/client/v4/zones/$zone/workers/routes" > "$dir/routes.json"
-          jq -e '.success == true and ([.result[] | select(.pattern == "anevum.com/*" and .script == "anevum-creator-v1")] | length) == 1' "$dir/routes.json" >/dev/null
+          jq -e '.success == true and ([.result[] | select(.pattern == "anevum.com/*" and (.script == "anevum-creator-v1" or .script == "anevum-creator-v1-main"))] | length) == 1' "$dir/routes.json" >/dev/null
           jq -e '.success == true and ([.result[] | select(.pattern == "next.anevum.com/api/v1/member/*" and .script == "anevum-member-auth-staging")] | length) == 1' "$dir/routes.json" >/dev/null
           jq -e '.success == true and ([.result[] | select(.pattern == "next.anevum.com/creator/*" and .script != "anevum-creator-v1-react-staging")] | length) == 0' "$dir/routes.json" >/dev/null
-          for worker in anevum-member-auth-staging anevum-creator-v1 anevum-community-preview; do
+          production_worker="$(jq -r '.result[] | select(.pattern == "anevum.com/*") | .script' "$dir/routes.json")"
+          for worker in anevum-member-auth-staging "$production_worker" anevum-community-preview; do
             cf "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/$worker/settings" > "$dir/$worker.json"
           done
           jq -e '.success == true and any(.result.bindings[]; .name == "COMMUNITY_DB" and .type == "d1" and .database_id == "fa96e36d-6257-4883-bf15-074947e11a13")' "$dir/anevum-member-auth-staging.json" >/dev/null
           jq -e '.success == true and any(.result.bindings[]; .name == "COMMUNITY_DB" and .type == "d1" and .database_id == "fa96e36d-6257-4883-bf15-074947e11a13")' "$dir/anevum-community-preview.json" >/dev/null
-          jq -e '.success == true and any(.result.bindings[]; .name == "COMMUNITY_DB" and .type == "d1" and .database_id == "6c7b5f0c-33db-4b6a-9569-0a6af5e07534")' "$dir/anevum-creator-v1.json" >/dev/null
+          jq -e '.success == true and any(.result.bindings[]; .name == "COMMUNITY_DB" and .type == "d1" and .database_id == "6c7b5f0c-33db-4b6a-9569-0a6af5e07534")' "$dir/$production_worker.json" >/dev/null
           echo STAGING_ROUTE_ISOLATION=PASS
       - name: Baseline existing staging homepage before routing change
         run: |
