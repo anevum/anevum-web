@@ -23,7 +23,7 @@ if operation == 'init':
         ('i','member-private-1','<img src=x onerror=alert(1)>','tools','published','2026-01-01'),
     ]
     for ident, owner, title, category, status, published in records:
-        db.execute('INSERT INTO projects VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)', (ident,owner,ident,title,'A synthetic test record.','Plain text <script>alert(1)</script>.',category,status,'https://github.com/fixture/project','javascript:alert(1)',1,'MIT',published,'Disclosed test AI use.','Fixture contribution.'))
+        db.execute('INSERT INTO projects VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)', (ident,owner,ident,title,'A synthetic test record.','Plain text <script>alert(1)</script>.',category,status,'https://github.com/fixture/project','javascript:alert(1)',0 if ident == 'g' else 1,'MIT',published,'Disclosed test AI use.','Fixture contribution.'))
     db.commit()
     print(json.dumps({'status':'created'}))
 else:
