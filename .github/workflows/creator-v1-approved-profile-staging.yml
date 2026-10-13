@@ -1,0 +1,153 @@
+name: ANEVUM Creator V1 Approved Profile Submission Staging
+
+on:
+  push:
+    branches: [release/creator-v1-profile-submission-20261013]
+    paths: [docs/production/CREATOR-STAGING-AUTHORIZATION-20261013.json]
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: anevum-creator-react-staging-release
+  cancel-in-progress: false
+
+jobs:
+  staging:
+    if: >-
+      github.ref == 'refs/heads/release/creator-v1-profile-submission-20261013' &&
+      github.actor == 'anevum' &&
+      github.event.head_commit.message == 'release(creator-v1): stage approved profile and submission fixes'
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    env:
+      REVIEWED_SOURCE: 94adc74a97ab0c979c103ba23610b8a9f786b0a8
+      CONFIG: creator-v1/wrangler.react-staging-path.jsonc
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Validate one-time approval and exact green source before credentials
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          marker='docs/production/CREATOR-STAGING-AUTHORIZATION-20261013.json'
+          test "$GITHUB_REPOSITORY" = 'anevum/anevum-web'
+          test "$GITHUB_ACTOR" = 'anevum'
+          test "$GITHUB_REF" = 'refs/heads/release/creator-v1-profile-submission-20261013'
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$(git ls-remote origin "$GITHUB_REF" | cut -f1)" = "$GITHUB_SHA"
+          test "$(git diff-tree --no-commit-id --name-only -r HEAD)" = "$marker"
+          parent="$(git rev-parse HEAD^)"
+          jq -e --arg source "$REVIEWED_SOURCE" --arg parent "$parent" '
+            .schema == "anevum.creator.staging-authorization.v1" and
+            .reviewed_source_sha == $source and .release_scaffold_sha == $parent and
+            .target_worker == "anevum-creator-v1-react-staging" and
+            .target_route == "next.anevum.com/creator/*" and
+            .target_d1 == "fa96e36d-6257-4883-bf15-074947e11a13" and
+            .production_change_authorized == false and
+            .member_worker_change_authorized == false and
+            .public_signup_authorized == false and
+            .invitations_authorized == false and .migrations_authorized == false
+          ' "$marker" >/dev/null
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs?head_sha=$REVIEWED_SOURCE&per_page=100" > "$RUNNER_TEMP/creator-approved-ci.json"
+          jq -e --arg source "$REVIEWED_SOURCE" '
+            [.workflow_runs[] | select(.name == "ANEVUM Creator V1 Verify" and .head_sha == $source and .event == "pull_request")] |
+            sort_by([.run_number,.run_attempt]) | last |
+            .status == "completed" and .conclusion == "success"
+          ' "$RUNNER_TEMP/creator-approved-ci.json" >/dev/null
+          git checkout --detach "$REVIEWED_SOURCE"
+          test "$(git rev-parse HEAD)" = "$REVIEWED_SOURCE"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Build and verify isolated site with no Cloudflare credentials
+        run: |
+          set -euo pipefail
+          npm install --ignore-scripts --no-audit --no-fund
+          node creator-v1/ops/verify-react-staging.mjs
+          npm run check:creator-v1-web
+          npm run build:creator-v1-web:staging
+          node creator-v1/ops/verify-react-staging.mjs --generated
+          node --test creator-v1/test/react-staging-route.test.mjs
+          (cd creator-v1 && npm test && npm run test:project-readiness)
+          node --test creator-v1/auth/tests/*.test.mjs creator-v1/integration/*.test.mjs
+      - name: Confirm existing Cloudflare routes and staging database bindings
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$CLOUDFLARE_API_TOKEN"
+          test -n "$CLOUDFLARE_ACCOUNT_ID"
+          umask 077
+          dir="$RUNNER_TEMP/creator-react-route-guard"
+          mkdir -p "$dir"
+          cf() { curl --fail --silent --show-error --retry 2 --max-time 20 -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" "$1"; }
+          cf "https://api.cloudflare.com/client/v4/zones?name=anevum.com" > "$dir/zones.json"
+          zone="$(jq -r '.result[] | select(.name == "anevum.com" and .status == "active") | .id' "$dir/zones.json" | head -1)"
+          test -n "$zone"
+          cf "https://api.cloudflare.com/client/v4/zones/$zone/workers/routes" > "$dir/routes.json"
+          jq -e '.success == true and ([.result[] | select(.pattern == "anevum.com/*" and .script == "anevum-creator-v1")] | length) == 1' "$dir/routes.json" >/dev/null
+          jq -e '.success == true and ([.result[] | select(.pattern == "next.anevum.com/api/v1/member/*" and .script == "anevum-member-auth-staging")] | length) == 1' "$dir/routes.json" >/dev/null
+          jq -e '.success == true and ([.result[] | select(.pattern == "next.anevum.com/creator/*" and .script != "anevum-creator-v1-react-staging")] | length) == 0' "$dir/routes.json" >/dev/null
+          for worker in anevum-member-auth-staging anevum-creator-v1 anevum-community-preview; do
+            cf "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/$worker/settings" > "$dir/$worker.json"
+          done
+          jq -e '.success == true and any(.result.bindings[]; .name == "COMMUNITY_DB" and .type == "d1" and .database_id == "fa96e36d-6257-4883-bf15-074947e11a13")' "$dir/anevum-member-auth-staging.json" >/dev/null
+          jq -e '.success == true and any(.result.bindings[]; .name == "COMMUNITY_DB" and .type == "d1" and .database_id == "fa96e36d-6257-4883-bf15-074947e11a13")' "$dir/anevum-community-preview.json" >/dev/null
+          jq -e '.success == true and any(.result.bindings[]; .name == "COMMUNITY_DB" and .type == "d1" and .database_id == "6c7b5f0c-33db-4b6a-9569-0a6af5e07534")' "$dir/anevum-creator-v1.json" >/dev/null
+          echo STAGING_ROUTE_ISOLATION=PASS
+      - name: Baseline existing staging homepage before routing change
+        run: |
+          set -euo pipefail
+          curl --fail --silent --show-error --retry 2 --max-time 30 https://next.anevum.com/ > "$RUNNER_TEMP/creator-old-home-before.html"
+          sha256sum "$RUNNER_TEMP/creator-old-home-before.html" | cut -d' ' -f1 > "$RUNNER_TEMP/creator-old-home.sha"
+      - name: Deploy ONLY isolated creator React staging path
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          test "$CONFIG" = 'creator-v1/wrangler.react-staging-path.jsonc'
+          node creator-v1/ops/verify-react-staging.mjs --generated
+          npx wrangler deploy --config "$CONFIG"
+      - name: Verify React staging and original staging member/preview boundaries
+        run: |
+          set -euo pipefail
+          base=https://next.anevum.com
+          code=0
+          for attempt in $(seq 1 20); do
+            code="$(curl --silent --show-error --max-time 15 -o "$RUNNER_TEMP/creator-new-home.html" -w '%{http_code}' "$base/creator/" || true)"
+            if [ "$code" = 200 ] && grep -q 'id="root"' "$RUNNER_TEMP/creator-new-home.html"; then break; fi
+            sleep 3
+          done
+          test "$code" = 200
+          grep -q 'id="root"' "$RUNNER_TEMP/creator-new-home.html"
+          curl --fail --silent --show-error --max-time 20 "$base/creator/discover" | grep -q 'id="root"'
+          curl --fail --silent --show-error --max-time 20 "$base/creator/api/v1/status" | jq -e '.counts.publishedProjects >= 0' >/dev/null
+          curl --fail --silent --show-error --max-time 20 "$base/creator/api/v1/projects?limit=2" | jq -e '.items | type == "array"' >/dev/null
+          curl --fail --silent --show-error --max-time 20 "$base/api/v1/member/health" | jq -e '.status == "ok"' >/dev/null
+          test "$(curl --silent --show-error --max-time 20 -o /dev/null -w '%{http_code}' "$base/api/v1/member/me")" = 401
+          test "$(curl --silent --show-error --max-time 20 -o /dev/null -w '%{http_code}' "$base/creator/api/v1/member/me")" = 404
+          curl --fail --silent --show-error --max-time 30 "$base/" > "$RUNNER_TEMP/creator-old-home-after.html"
+          after="$(sha256sum "$RUNNER_TEMP/creator-old-home-after.html" | cut -d' ' -f1)"
+          test "$after" = "$(cat "$RUNNER_TEMP/creator-old-home.sha")"
+          echo STAGING_REACT_PREFIX=PASS
+          echo STAGING_MEMBER_BOUNDARY=PASS
+          echo OLD_STAGING_HOMEPAGE_UNCHANGED=PASS
+      - name: Record exact staging scope
+        if: always()
+        run: |
+          {
+            echo '## Creator V1 approved profile/submission staging'
+            echo 'Source: 94adc74a97ab0c979c103ba23610b8a9f786b0a8'
+            echo 'Only next.anevum.com/creator/*; no production/member Worker/schema/access changes.'
+            echo 'Profile editor and saved-revision submission guard staged for invited testing.'
+            echo 'Real member A / staff / guest / member B acceptance is still outstanding.'
+            echo 'Rollback Worker version: 775bb1e8-cd0d-4021-b564-72b6774f0d25.'
+          } >> "$GITHUB_STEP_SUMMARY"

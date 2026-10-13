@@ -1,0 +1,21 @@
+{
+  "schema": "anevum.creator.staging-authorization.v1",
+  "session": "ANEVUM.WEB.BUILD.2026-10-13.009.CREATOR-SUBMISSION-READINESS",
+  "approved_at": "2026-10-13T08:08:11-04:00",
+  "owner_statement": "I approve so far. Continue development.",
+  "reviewed_source_sha": "94adc74a97ab0c979c103ba23610b8a9f786b0a8",
+  "release_scaffold_sha": "32873805d4f0d80a203e23b4772864ac45f64255",
+  "source_pr": 352,
+  "source_ci_run": 38394369436,
+  "scaffold_ci_run": 38395808328,
+  "target_worker": "anevum-creator-v1-react-staging",
+  "target_route": "next.anevum.com/creator/*",
+  "target_d1": "fa96e36d-6257-4883-bf15-074947e11a13",
+  "rollback_version": "775bb1e8-cd0d-4021-b564-72b6774f0d25",
+  "production_change_authorized": false,
+  "member_worker_change_authorized": false,
+  "public_signup_authorized": false,
+  "invitations_authorized": false,
+  "migrations_authorized": false,
+  "real_member_acceptance_complete": false
+}
