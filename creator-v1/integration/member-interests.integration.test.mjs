@@ -23,7 +23,7 @@ async function fixture(){
  CREATE TABLE project_releases(id TEXT PRIMARY KEY,project_id TEXT NOT NULL);
  CREATE TABLE community_project_votes(member_id TEXT NOT NULL,status TEXT NOT NULL);
  CREATE TABLE community_xp_events(member_id TEXT NOT NULL,amount INTEGER NOT NULL);`);
- for(const file of ["0003_member_identity_staging.sql","0006_account_privacy.sql","0007_discovery_preferences.sql"]){
+ for(const file of ["0003_member_identity_staging.sql","0006_account_privacy.sql","0007_discovery_preferences.sql","0008_creator_follows.sql"]){
   sql.exec(readFileSync(new URL("../auth/migrations/"+file,import.meta.url),"utf8"));
  }
  function statement(raw,params=[]){

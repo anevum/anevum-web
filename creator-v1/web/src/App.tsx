@@ -14,6 +14,7 @@ import { MemberAccountPage } from "./pages/MemberAccountPage";
 import { MemberProfileEditorPage } from "./pages/MemberProfileEditorPage";
 import { MemberInterestsPage } from "./pages/MemberInterestsPage";
 import { MemberLibraryPage } from "./pages/MemberLibraryPage";
+import { MemberFollowingPage } from "./pages/MemberFollowingPage";
 import { MemberProjectsPage } from "./pages/MemberProjectsPage";
 import { ProjectEditorPage } from "./pages/ProjectEditorPage";
 
@@ -32,6 +33,7 @@ export default function App(){
       <Route path="create/new" element={<ProjectEditorPage/>}/>
       <Route path="create/:projectId" element={<ProjectEditorPage/>}/>
       <Route path="library" element={<MemberLibraryPage/>}/>
+      <Route path="following" element={<MemberFollowingPage/>}/>
       <Route path="account" element={<MemberAccountPage/>}/>
       <Route path="account/edit" element={<MemberProfileEditorPage/>}/>
       <Route path="account/interests" element={<MemberInterestsPage/>}/>

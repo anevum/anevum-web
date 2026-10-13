@@ -180,7 +180,7 @@ return {async fetch(req,env) {
       const member=await authenticated(req,env,clock());
       return interestsRoutes(req,db,member,limit,clock());
     }
-    if(path==='/library'||path.startsWith('/library/')||path.startsWith('/creators/')){
+    if(path==='/following'||path==='/library'||path.startsWith('/library/')||path.startsWith('/creators/')){
       if(req.method==='POST'&&!checkWrite(req))return fail(req,'Request origin rejected',403);
       const member=await authenticated(req,env,clock());
       return socialRoutes(req,db,member,limit,clock());

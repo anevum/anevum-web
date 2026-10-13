@@ -17,6 +17,7 @@ async function requestBody(req){
 }
 const isFresh=(m,now)=>Number.isInteger(m.sessionCreatedAt)&&m.sessionCreatedAt<=now+5&&m.sessionCreatedAt>now-600;
 const sections=Object.freeze({
+ following:{key:'creatorId',sql:`SELECT creator_member_id AS creatorId,created_at AS followedAt FROM member_creator_follows WHERE follower_member_id=? AND creator_member_id>? ORDER BY creator_member_id LIMIT ?`},
  interests:{key:'memberId',sql:`SELECT member_id AS memberId,categories_json AS categoriesJson,updated_at AS updatedAt FROM member_discovery_preferences WHERE member_id=? AND member_id>? ORDER BY member_id LIMIT ?`},
  projects:{key:'id',sql:`SELECT id,slug,title,summary,description,category,status,source_url AS sourceUrl,demo_url AS demoUrl,license_name AS license,ai_disclosure AS aiDisclosure,human_contribution AS humanContribution,free_to_use AS freeToUse,revision,published_at AS publishedAt,created_at AS createdAt,updated_at AS updatedAt FROM projects WHERE owner_member_id=? AND id>? ORDER BY id LIMIT ?`},
  releases:{key:'id',sql:`SELECT r.id,r.project_id AS projectId,r.version,r.notes,r.released_at AS releasedAt FROM project_releases r JOIN projects p ON p.id=r.project_id WHERE p.owner_member_id=? AND r.id>? ORDER BY r.id LIMIT ?`},
