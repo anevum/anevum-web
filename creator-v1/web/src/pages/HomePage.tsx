@@ -33,7 +33,7 @@ export function HomePage(){
         <div className="portal-welcome-buttons"><Link className="button primary" to="/discover">EXPLORE THE WORK ↗</Link><Link className="button secondary" to="/create">SUBMIT YOUR PROJECT</Link></div>
         <span className="portal-welcome-mantra">MAKE · SHARE · PLAY · BELONG</span>
       </div>
-      <div className="portal-welcome-emblem" aria-hidden="true"><OrbitalStage variant="hero"/><span>CREATIVE<br/>BEYOND<br/>GROUND</span></div>
+      <div className="portal-welcome-emblem" aria-hidden="true"><OrbitalStage variant="hero"/></div>
     </section>
     {portal.state==="loading"&&<LoadingState label="Loading the real public catalogue"/>}
     {portal.state==="error"&&<ErrorState title="PORTAL DATA UNAVAILABLE" detail="Live public projects and creators could not be loaded. Try again shortly."/>}

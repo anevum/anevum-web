@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import type { Project } from "../lib/api";
 import { Icon } from "./Icons";
 import { projectDetailPath } from "../lib/navigation";
+import {CategoryArtifact} from "./CategoryArtifact";
 import {applyPointerDepth,clearPointerDepth} from "../lib/pointer-depth";
 
 const labels: Record<string, string> = {
@@ -20,7 +21,7 @@ export function ProjectCard({ project, returnTo = "/discover" }: { project: Proj
   return (
     <article className="project-card depth-hover-card" onPointerMove={e=>applyPointerDepth(e,8)} onPointerLeave={clearPointerDepth}>
       <Link className="project-art" to={href} aria-label={`Open ${project.title}`}>
-        <span className="project-art-layer" aria-hidden="true"><span className="project-art-shadow"/><span className="project-art-inner"><span className={`project-glyph project-glyph-${project.category}`}><OrbitalMini /></span></span><span className="project-art-shine"/></span>
+        <span className="project-art-layer" aria-hidden="true"><span className="project-art-shadow"/><span className="project-art-inner"><span className={`project-glyph project-glyph-${project.category}`}><CategoryArtifact category={project.category}/></span></span><span className="project-art-shine"/></span>
         <span className="project-kind">{labels[project.category] || "Project"}</span>
       </Link>
       <div className="project-card-body">
@@ -34,8 +35,4 @@ export function ProjectCard({ project, returnTo = "/discover" }: { project: Proj
       </div>
     </article>
   );
-}
-
-function OrbitalMini() {
-  return <svg viewBox="0 0 120 120" focusable="false"><ellipse cx="60" cy="60" rx="44" ry="17" transform="rotate(-16 60 60)" fill="none" stroke="currentColor" strokeWidth="8"/><circle cx="60" cy="60" r="17" fill="currentColor"/><path d="m60 12 5 37 13 11-13 11-5 37-5-37-13-11 13-11z" fill="currentColor"/><circle cx="92" cy="31" r="5" fill="currentColor"/></svg>;
 }

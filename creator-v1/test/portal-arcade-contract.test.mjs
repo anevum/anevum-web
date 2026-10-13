@@ -39,3 +39,19 @@ test("real staging published counts, accessible browse links and category artwor
    assert.ok(css.includes(query),query);
  assert.doesNotMatch(css,/\.mobile-bottom-nav/);
 });
+
+
+test("approved brand stays on home while every project cover uses original category-specific fallbacks",()=>{
+ const card=read("web/src/components/ProjectCard.tsx");
+ const shelf=read("web/src/components/PortalShelf.tsx");
+ const home=read("web/src/pages/HomePage.tsx");
+ const css=read("web/src/portal-arcade.css");
+ assert.match(card,/CategoryArtifact category=\{project.category\}/);
+ assert.doesNotMatch(card,/OrbitalMini|sampleThumbnail/);
+ assert.match(shelf,/CategoryArtifact category=\{category\}/);
+ assert.match(home,/OrbitalStage variant="hero"/);
+ assert.doesNotMatch(home,/CREATIVE<br\/>BEYOND<br\/>GROUND/);
+ assert.match(css,/\.portal-welcome-emblem \.depth-stage-serial\{display:none\}/);
+ for(const name of ["games","tools","creative","libraries","automation","research","learning","other"])
+   assert.ok(css.includes(".project-art-layer .project-glyph-"+name),name);
+});

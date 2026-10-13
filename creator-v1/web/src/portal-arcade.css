@@ -156,3 +156,18 @@
  .portal-arcade-tile:hover,.portal-arcade-tile:active{transform:none!important}
  .portal-arcade-tile:hover .portal-arcade-symbol{transform:none!important}
 }
+
+
+/* Category-specific starter covers are site-owned fallbacks, not creator artwork. */
+.project-art-layer .project-glyph .portal-artifact{width:94%;height:94%}
+.project-art-layer .project-glyph-games{color:#ffb48e}
+.project-art-layer .project-glyph-tools{color:#f3d089}
+.project-art-layer .project-glyph-creative{color:#d6a3fc}
+.project-art-layer .project-glyph-libraries{color:#a4e4eb}
+.project-art-layer .project-glyph-automation{color:#b9e9ab}
+.project-art-layer .project-glyph-research{color:#afc7fd}
+.project-art-layer .project-glyph-learning{color:#f4aed1}
+.project-art-layer .project-glyph-other{color:#e8d6e8}
+.portal-shelf-mark .portal-artifact{width:33px;height:33px;color:#ffb49f}
+.portal-shelf-mark{background:linear-gradient(146deg,#604456,#241823);box-shadow:inset 1px 1px 0 #ffddd73a,0 3px 0 #100b10}
+.portal-welcome-emblem .depth-stage-serial{display:none}
