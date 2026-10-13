@@ -1,6 +1,7 @@
 import {PAGE,STYLE,CLIENT} from './join.mjs';
 import {creatorProjects} from './projects.mjs';
 import {communityRoutes} from './community.mjs';
+import {forumRoutes} from './forum.mjs';
 import {socialRoutes} from './social.mjs';
 import {privacyRoutes} from './privacy.mjs';
 import {PRIVACY_PAGE,PRIVACY_STYLE,PRIVACY_CLIENT} from './privacy-ui.mjs';
@@ -178,6 +179,11 @@ return {async fetch(req,env) {
       if(req.method==='POST'&&!checkWrite(req))return fail(req,'Request origin rejected',403);
       const member=await authenticated(req,env,clock());
       return socialRoutes(req,db,member,limit,clock());
+    }
+    if(path==='/forum'||path.startsWith('/forum/')){
+      if(req.method==='POST'&&!checkWrite(req))return fail(req,'Request origin rejected',403);
+      const member=await authenticated(req,env,clock());
+      return forumRoutes(req,db,member,limit,clock());
     }
     if(path==='/community/me'||path==='/community/projects'||path.startsWith('/community/projects/')){
       if(req.method==='POST'&&!checkWrite(req))return fail(req,'Request origin rejected',403);
