@@ -117,6 +117,7 @@ jobs:
           capture 1440 900 home /creator/
           capture 1440 900 start /creator/start
           capture 1440 900 field-guide /creator/guide
+          capture 1440 900 launcher-host /creator/start
           capture 1440 900 discover-free /creator/discover?free=1
           capture 1440 900 discover /creator/discover
           capture 1440 900 creators /creator/creators
