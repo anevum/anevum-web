@@ -9,6 +9,7 @@ import { CreatorPage, CreatorsPage } from "./pages/CreatorsPage";
 import { StatusPage } from "./pages/StatusPage";
 import { LevelsPage } from "./pages/LevelsPage";
 import { CommunityPage } from "./pages/CommunityPage";
+import { ForumRoomPage, ForumThreadPage, ForumMemberPage } from "./pages/ForumPages";
 import { MemberGate } from "./components/MemberGate";
 import { MemberAccountPage } from "./pages/MemberAccountPage";
 import { MemberProfileEditorPage } from "./pages/MemberProfileEditorPage";
@@ -26,6 +27,9 @@ export default function App(){
     <Route path="creators" element={<CreatorsPage/>}/>
     <Route path="creators/:handle" element={<CreatorPage/>}/>
     <Route path="community" element={<CommunityPage/>}/>
+    <Route path="community/room/:roomId" element={<ForumRoomPage/>}/>
+    <Route path="community/thread/:threadId" element={<ForumThreadPage/>}/>
+    <Route path="community/member/:handle" element={<ForumMemberPage/>}/>
     <Route element={<MemberGate/>}>
       <Route path="create" element={<MemberProjectsPage/>}/>
       <Route path="create/new" element={<ProjectEditorPage/>}/>

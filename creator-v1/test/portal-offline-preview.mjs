@@ -29,6 +29,21 @@ const FAKE_MEMBER=Object.freeze({
  displayName:"Synthetic Creator Preview",
  bio:"An illustrative account for testing layout only. Not a real ANEVUM member."
 });
+const FICTIONAL_FORUM_AUTHOR=Object.freeze({
+ handle:"nova_demo",displayName:"Nova Studio",level:7,artifact:"Quartz Spool",
+ badges:[{key:"first-signal",name:"First Signal",symbol:"✦"},{key:"keen-eye",name:"Keen Eye",symbol:"◇"}]
+});
+const FICTIONAL_FORUM_PEER=Object.freeze({
+ handle:"moss_demo",displayName:"Moss Workshop",level:3,artifact:"Blackglass Seed",
+ badges:[{key:"first-launch",name:"First Launch",symbol:"⟡"}]
+});
+const FORUM_FIXTURE_ID="000000000000000000000000000000f1";
+const FORUM_FIXTURE_POSTS=[
+ {id:"000000000000000000000000000000e1",body:"I am experimenting with a small browser game about exploring an unknown place. What's a good way to make the first few minutes inviting without adding too many instructions?\n\nThis is an offline visual fixture, not a real member post.",createdAt:1791800000,starter:true,author:FICTIONAL_FORUM_AUTHOR},
+ {id:"000000000000000000000000000000e2",body:"You could make the first action immediately playable, then introduce one idea at a time. The atmosphere can carry a lot of discovery without a tutorial wall.",createdAt:1791800600,starter:false,author:FICTIONAL_FORUM_PEER},
+ {id:"000000000000000000000000000000e3",body:"That's useful. I'll try making the entrance itself a tutorial. Maybe the environment should teach the controls before any text appears.",createdAt:1791800900,starter:false,author:FICTIONAL_FORUM_AUTHOR}
+];
+const FORUM_FIXTURE_ROOM={id:"arcade",name:"The Arcade",subject:"Games, playtesting and interactive worlds"};
 const LOCAL_REVIEW_COOKIE="anevum_offline_visual_fixture=1";
 function offlineMember(req,res,url){
   if(url.pathname==="/api/v1/member/health"&&req.method==="GET")
@@ -39,6 +54,37 @@ function offlineMember(req,res,url){
       ?json(res,{member:FAKE_MEMBER})
       :json(res,{error:"Sign-in required"},401);
   }
+  if(req.method==="GET"&&["/api/v1/member/community/me","/api/v1/member/creators/offline_artist"].includes(url.pathname)){
+    const cookie=(req.headers.cookie||"").split(";").map(x=>x.trim());
+    if(!cookie.includes(LOCAL_REVIEW_COOKIE))return json(res,{error:"Sign-in required"},401);
+    const progression={level:4,xp:180,artifact:"Ivory Compass",maxLevel:null,artifactEarned:true,
+      levelStartXp:180,nextLevelXp:320,progressWithinLevel:0};
+    if(url.pathname==="/api/v1/member/community/me")return json(res,{progression});
+    return json(res,{creator:{handle:"offline_artist",displayName:"Synthetic Creator Preview",
+      bio:FAKE_MEMBER.bio,joinedAt:"2026-10-10"},
+      contributions:{ratings:1,publishedProjects:0,releases:0},progression,
+      achievements:[
+       {key:"first-signal",name:"First Signal",symbol:"✦",description:"Fixture-only verified badge",earned:true,progress:1,target:1},
+       {key:"keen-eye",name:"Keen Eye",symbol:"◇",description:"Fixture-only locked badge",earned:false,progress:1,target:5}
+      ]});
+  }
+  // These routes exist ONLY in the loopback screenshot fixture; all records
+  // are labeled synthetic in the visible screenshot watermark.
+  if(req.method==="GET"&&url.pathname==="/api/v1/member/forum/rooms")
+    return json(res,{rooms:[
+      {...FORUM_FIXTURE_ROOM,threads:1},
+      {id:"workshop",name:"The Workshop",subject:"Independent apps, open source and practical making",threads:0},
+      {id:"lab",name:"The Lab",subject:"Experiments, AI and creative problem-solving",threads:0},
+      {id:"commons",name:"The Commons",subject:"Questions, introductions and collaboration",threads:0}
+    ],access:"offline-synthetic"});
+  if(req.method==="GET"&&url.pathname==="/api/v1/member/forum/rooms/arcade")
+    return json(res,{room:FORUM_FIXTURE_ROOM,items:[
+      {id:FORUM_FIXTURE_ID,room:"arcade",title:"How should an unknown world teach players to explore?",createdAt:1791800000,postCount:3,author:FICTIONAL_FORUM_AUTHOR}
+    ],nextCursor:null});
+  if(req.method==="GET"&&url.pathname==="/api/v1/member/forum/threads/"+FORUM_FIXTURE_ID)
+    return json(res,{thread:{id:FORUM_FIXTURE_ID,room:"arcade",title:"How should an unknown world teach players to explore?",createdAt:1791800000,author:FICTIONAL_FORUM_AUTHOR},posts:FORUM_FIXTURE_POSTS,nextCursor:null});
+  if(req.method==="GET"&&url.pathname==="/api/v1/member/creators/nova_demo")
+    return json(res,{creator:{handle:"nova_demo",displayName:"Nova Studio",bio:"Offline synthetic maker for layout testing.",joinedAt:"2026-10-10"},contributions:{ratings:5,publishedProjects:2,releases:0},progression:{level:7,xp:720,artifact:"Quartz Spool",maxLevel:null,artifactEarned:true,levelStartXp:720,nextLevelXp:980,progressWithinLevel:0},achievements:FICTIONAL_FORUM_AUTHOR.badges.map(b=>({...b,earned:true,progress:1,target:1}))});
   // No credential verification, writes, project or staff actions in this fixture.
   return json(res,{error:"no member Worker in offline fixture"},404);
 }
@@ -79,7 +125,9 @@ createServer((req,res)=>{
   }
   if(u.pathname==="/creator"||u.pathname.startsWith("/creator/")){
     const header={"content-type":"text/html; charset=utf-8","cache-control":"no-store"};
-    // Restrict the fake member cookie to the local one-off editor visual capture.
+    // Restrict the synthetic member cookie to explicit local account/editor design captures only.
+    if(u.pathname==="/creator/account"&&req.headers.host==="127.0.0.1:4178")
+      header["set-cookie"]=LOCAL_REVIEW_COOKIE+"; Path=/; SameSite=Strict";
     if(u.pathname==="/creator/account/edit"&&req.headers.host==="127.0.0.1:4178")
       header["set-cookie"]=LOCAL_REVIEW_COOKIE+"; Path=/; SameSite=Strict";
     if(u.pathname==="/creator/create/new"&&req.headers.host==="127.0.0.1:4178")

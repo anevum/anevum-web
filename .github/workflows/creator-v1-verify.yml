@@ -126,13 +126,21 @@ jobs:
           capture 1440 900 project /creator/projects/00000000000000000000000000000001
           capture 1440 900 levels /creator/levels
           capture 1440 900 community /creator/community
+          capture 1440 900 forum-room /creator/community/room/arcade
+          capture 1440 900 forum-thread /creator/community/thread/000000000000000000000000000000f1
+          capture 1440 900 forum-member /creator/community/member/nova_demo
           capture 390 844 home /creator/
           capture 390 844 start /creator/start
           capture 390 844 field-guide /creator/guide
           capture 390 844 levels /creator/levels
           capture 390 844 discover /creator/discover
           capture 390 844 creators /creator/creators
+          capture 390 844 forum-thread /creator/community/thread/000000000000000000000000000000f1
+          capture 390 844 forum-room /creator/community/room/arcade
+          capture 390 844 forum-member /creator/community/member/nova_demo
+          capture 1440 900 member-account-forum-card /creator/account
           capture 1440 900 profile-editor /creator/account/edit
+          capture 390 844 member-account-forum-card /creator/account
           capture 390 844 profile-editor /creator/account/edit
           capture 1440 900 project-editor /creator/create/new
           capture 390 844 project-editor /creator/create/new
@@ -140,8 +148,9 @@ jobs:
           capture 320 720 start /creator/start
           capture 320 720 field-guide /creator/guide
           capture 320 720 discover /creator/discover
+          capture 320 720 forum-thread /creator/community/thread/000000000000000000000000000000f1
           node creator-v1/test/capture-portal-launcher.mjs --chrome "$chrome" --base http://127.0.0.1:4178 --output evidence/portal-review
-          printf 'The ANEVUM Transcosmic Observatory design is a candidate theme, NOT live at anevum.com or next.anevum.com. These PNG files render the actual compiled React/Vite candidate using explicitly SYNTHETIC OFFLINE design fixtures, including a fake in-memory creator identity for the profile-editor layout only. No fixture records, accounts, cookies or codes are deployed to any staging or production database. Review desktop 1440px before phone 390px. This is visual QA, not authentication, real-user or provider acceptance.\n' > evidence/portal-review/README.txt
+          printf 'The ANEVUM Creator V1 forums are an unshipped candidate: no real posts, replies, reports, badges, data migration or account registrations have been deployed. The desktop and phone profile-card/thread PNGs contain SYNTHETIC OFFLINE fixture posts, authors and sample earned badges; they are not actual ANEVUM users. This Chromium visual QA also uses a synthetic offline creator identity for the profile editor. No fixture records, accounts, cookies or codes are deployed to any staging or production database. Review desktop 1440px before phone 390px. This is visual QA, not authentication, real-user or provider acceptance.\n' > evidence/portal-review/README.txt
           echo "PORTAL_VISUAL_CAPTURE=PASS" | tee evidence/portal-review/capture-status.txt
 
       - name: Preserve generated public artifact for visual review

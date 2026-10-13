@@ -4,6 +4,7 @@ import { useMemberContext } from "../components/MemberGate";
 import { memberProgress,memberSignOut,memberCreatorProfile,MemberApiError } from "../lib/member-api";
 import { useResource } from "../lib/useResource";
 import { LoadingState } from "../components/States";
+import { ForumAuthorCard } from "../components/ForumProfileCard";
 
 export function MemberAccountPage(){
   const {member}=useMemberContext();
@@ -41,6 +42,31 @@ export function MemberAccountPage(){
         </>}
       </section>
     </div>
+    <section className="member-panel forum-account-preview">
+      <div className="forum-account-preview-heading">
+        <div><span className="kicker">YOUR COMMUNITY IDENTITY / EVERY POST</span><h2>YOUR AUTHOR CARD.</h2><p>This is the public identity that would appear beside your approved messages. Level and badges are read from real account evidence.</p></div>
+        <Link className="button secondary" to="/community">EXPLORE THE COMMONS</Link>
+      </div>
+      {(!member.handle||progress.state==="error"||cabinet.state==="error"||cabinet.state==="ready"&&!cabinet.data)?
+        <p className="forum-account-preview-unavailable" role="status">Finish your creator profile and connect the verified member progression service to see your discussion card. Unavailable awards are never estimated.</p>:
+      progress.state==="loading"||cabinet.state==="loading"?
+        <LoadingState label="Reading your verified forum profile"/>:
+      progress.state==="ready"&&cabinet.state==="ready"&&cabinet.data?
+        <div className="forum-account-preview-layout">
+          <ForumAuthorCard large author={{
+            handle:member.handle,displayName:member.displayName||member.handle,
+            level:progress.data.progression.level,artifact:progress.data.progression.artifact,
+            badges:cabinet.data.achievements.filter(a=>a.earned).map(a=>({key:a.key,name:a.name,symbol:a.symbol}))
+          }}/>
+          <div className="forum-account-preview-info">
+            <span className="kicker">THERE'S A PERSON BEHIND EVERY MESSAGE</span>
+            <h3>YOUR WORK. YOUR VOICE.</h3>
+            <p>Your card stays next to the discussions you participate in. People can visit your member channel, recognize the contributions you've really made and see your earned badges.</p>
+            <p>Your private email, internal account ID, and moderation privileges are never attached to public posts. Posting itself gives no automatic XP.</p>
+            <div className="member-actions"><Link to="/account/edit" className="button secondary">EDIT DISPLAY NAME + BIO</Link><Link to="/levels" className="button secondary">VIEW ACHIEVEMENTS</Link></div>
+          </div>
+        </div>:null}
+    </section>
     <section className="member-panel portal-account-cabinet">
       <div className="portal-box-header"><div><span className="kicker">EARNED, NOT BOUGHT / ACCOUNT MILESTONES</span><h2>MY ACHIEVEMENT CABINET</h2></div><Link to="/levels">ALL LEVELS →</Link></div>
       {cabinet.state==="loading"&&<p role="status">Loading verified achievement progress…</p>}

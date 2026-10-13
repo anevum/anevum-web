@@ -46,8 +46,10 @@ test("Community is a truthful project-and-creator hub without fabricated threads
  const page=read("web/src/pages/CommunityPage.tsx");
  assert.match(page,/readProjects/);
  assert.match(page,/readCreators/);
- assert.match(page,/PUBLIC MESSAGE BOARD IS NOT OPEN YET/);
- assert.match(page,/not live discussion threads/);
+ assert.match(page,/PUBLIC DISCUSSIONS ARE NOT OPEN YET/);
+ assert.match(page,/board\.state==="ready"/);
+ assert.match(page,/readForumRooms/);
+ assert.match(page,/human moderation/i);
  assert.doesNotMatch(page,/fakeMessage|sampleComments|createThread\(/);
 });
 test("unlimited levels preserve server authoritative progress and first named artifact series",()=>{

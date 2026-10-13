@@ -25,6 +25,9 @@ const sections=Object.freeze({
  xp:{key:'id',sql:`SELECT id,kind,target_id AS targetId,amount,award_day AS awardDay,created_at AS createdAt FROM community_xp_events WHERE member_id=? AND id>? ORDER BY id LIMIT ?`},
  reviews:{key:'id',sql:`SELECT id,project_id AS projectId,score,body,status,created_at AS createdAt,updated_at AS updatedAt FROM project_reviews WHERE member_id=? AND id>? ORDER BY id LIMIT ?`},
  reports:{key:'id',sql:`SELECT id,target_type AS targetType,target_id AS targetId,reason,details,status,created_at AS createdAt FROM project_reports WHERE reporter_member_id=? AND id>? ORDER BY id LIMIT ?`},
+ forumThreads:{key:'id',sql:`SELECT id,room,title,status,created_at AS createdAt,updated_at AS updatedAt,visible_at AS visibleAt FROM forum_threads WHERE author_member_id=? AND id>? ORDER BY id LIMIT ?`},
+ forumPosts:{key:'id',sql:`SELECT id,thread_id AS threadId,body,starter,status,created_at AS createdAt,reviewed_at AS reviewedAt FROM forum_posts WHERE author_member_id=? AND id>? ORDER BY id LIMIT ?`},
+ forumReports:{key:'id',sql:`SELECT id,post_id AS postId,reason,details,status,created_at AS createdAt,reviewed_at AS reviewedAt FROM forum_reports WHERE reporter_member_id=? AND id>? ORDER BY id LIMIT ?`},
  submissions:{key:'id',sql:`SELECT e.id,e.project_id AS projectId,e.actor_kind AS actorKind,e.action,e.from_status AS fromStatus,e.to_status AS toStatus,e.reason,e.created_at AS createdAt FROM project_submission_events e JOIN projects p ON p.id=e.project_id WHERE p.owner_member_id=? AND e.id>? ORDER BY e.id LIMIT ?`}
 });
 const SECTIONS=['account',...Object.keys(sections)];
