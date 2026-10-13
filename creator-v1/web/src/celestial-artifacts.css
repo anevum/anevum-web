@@ -31,16 +31,22 @@
  transform:translateZ(0) rotate(-6deg);
  transition:transform .48s cubic-bezier(.18,.78,.18,1),filter .42s ease;
 }
-.celestial-emblem--micro{--artifact-size:25px}
+.celestial-emblem--nano{--artifact-size:16px}
+.celestial-emblem--tiny{--artifact-size:20px}
+.celestial-emblem--micro{--artifact-size:24px}
+.celestial-emblem--compact{--artifact-size:32px}
 .celestial-emblem--small{--artifact-size:48px}
 .celestial-emblem--medium{--artifact-size:96px}
 .celestial-emblem--large{--artifact-size:146px}
 .celestial-emblem--hero{--artifact-size:220px}
-.celestial-emblem--micro svg{
+.celestial-emblem--nano svg,.celestial-emblem--tiny svg,.celestial-emblem--micro svg,.celestial-emblem--compact svg{
  transform:none;
  filter:drop-shadow(0 2px 1px #0009);
 }
-.celestial-emblem--micro::before,.celestial-emblem--micro::after{display:none}
+.celestial-emblem--nano::before,.celestial-emblem--nano::after,
+.celestial-emblem--tiny::before,.celestial-emblem--tiny::after,
+.celestial-emblem--micro::before,.celestial-emblem--micro::after,
+.celestial-emblem--compact::before,.celestial-emblem--compact::after{display:none}
 .celestial-emblem--small svg{filter:drop-shadow(0 5px 5px #000a)}
 .celestial-emblem--locked{--artifact-energy:#6d89b0}
 .celestial-emblem--locked svg{filter:grayscale(.72) saturate(.54) brightness(.75) drop-shadow(0 7px 10px #000a)}
