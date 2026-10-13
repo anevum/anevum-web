@@ -78,3 +78,10 @@ Build and test first. Deploy the reviewed artifact to the preview Worker only, v
 ## Next implementation objective
 
 Accept and harden the existing staged member identity, recovery and creator-owned profiles, then validate the genuine member A → staff publish → independent member B review/save/XP workflow. Fix defects and anti-abuse/reversal semantics rather than rebuilding these modules. Finish Orbit visual/mobile/browser acceptance and exact-build recovery/rollback prior to a separately authorized production release. The RHEN/trading roadmap is not a Creator V1 launch dependency.
+
+
+## Component frontend migration — October 12, 2026
+
+The locked Orbital Underground design is now being implemented in `creator-v1/web/` as a native React/Vite component system. This is the intended replacement for the legacy public presentation pipeline that extracts the cinematic HTML/CSS string from `community-preview/worker.js`. The existing API/D1, identity, moderation and progression work is retained. The old generator remains available during review as a rollback/reference and must not be deleted until the component shell is visually and functionally accepted.
+
+Production routing is unchanged. `wrangler.react-preview.jsonc` has no `anevum.com` route and exists only for isolated review until #335 visual approval and #325/#333 release gates pass.

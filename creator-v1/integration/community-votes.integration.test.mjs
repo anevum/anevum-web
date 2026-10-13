@@ -126,13 +126,19 @@ test('moderator-hidden votes disappear from scores and cannot be edited',async()
  assert.equal((await vote(1,5,1,people[1])).status,403);
  sqlite.prepare("UPDATE community_project_votes SET status='active' WHERE member_id=? AND project_id=?").run(people[1].id,fixed(1));
 });
-test('level thresholds and 60 unique collectible object names are deterministic',()=>{
+test('unbounded level thresholds preserve sixty series-one collectible names',()=>{
  assert.equal(thresholdForLevel(1),0);assert.equal(thresholdForLevel(2),20);assert.equal(thresholdForLevel(3),80);
  assert.equal(progressionFromXp(0).level,1);assert.equal(progressionFromXp(19).level,1);
  assert.equal(progressionFromXp(20).level,2);assert.equal(progressionFromXp(80).level,3);
- assert.equal(progressionFromXp(999999).level,60);assert.equal(progressionFromXp(999999).nextLevelXp,null);
+ const high=progressionFromXp(999999);
+ assert.ok(high.level>60);
+ assert.equal(high.maxLevel,null);
+ assert.equal(high.nextLevelXp,thresholdForLevel(high.level+1));
  const objects=new Set(Array.from({length:60},(_,i)=>progressionFromXp(thresholdForLevel(i+1)).artifact));
  assert.equal(objects.size,60);
+ assert.equal(progressionFromXp(thresholdForLevel(60)).artifact,'The First Light');
+ assert.equal(progressionFromXp(thresholdForLevel(61)).artifact,null);
+ assert.equal(progressionFromXp(thresholdForLevel(61)).artifactEarned,false);
 });
 test('unknown and unsupported community methods stay unavailable',async()=>{
  assert.equal((await call('/community/leaderboard')).status,404);
