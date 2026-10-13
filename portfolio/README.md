@@ -1,19 +1,31 @@
-# Devon Akins — UI/UX design portfolio
+# Devon Akins — Imagination, engineered.
 
 Canonical URL: https://portfolio.anevum.com/
 Worker: anevum-designer-portfolio
-Session: ANEVUM.WEB.BUILD.2026-10-13.001.DESIGNER-PORTFOLIO
+Session: ANEVUM.WEB.BUILD.2026-10-13.002.CINEMATIC-DESIGNER-PORTFOLIO
+Continues: ANEVUM.WEB.BUILD.2026-10-13.001.DESIGNER-PORTFOLIO
 
-Independent static portfolio, intentionally isolated from ANEVUM Creator V1, Member Auth, RHEN, and the Access-protected Lab. Not a client-work portfolio: every entry is an explicitly described founder-built project and every UI preview is illustrative.
+An isolated public portfolio for freelance design, employment inquiries, independent products, and creative collaboration. The original public domain and Worker are retained.
 
-## Source
-- index.html — semantic portfolio content, project links, SEO and contact CTA
-- style.css — original responsive visual system, reduced-motion and accessible focus styles
-- script.js — project filter and optional clipboard behavior
-- worker.js — generated/snapshotted single-file Classic Worker to serve the three text assets; update when changing any asset
-- Contact: devon@anevum.com (Cloudflare Email Routing rule verified enabled 2026-10-13)
+## Current source
 
-## Release and safety
-Dedicated Cloudflare Worker and custom domain; no dependencies, auth state, databases, secret bindings, analytics, forms or cookies. GET/HEAD only; hostname allowlist; strict CSP, anti-framing and privacy headers. Main anevum.com and lab.anevum.com deployments remain unchanged.
+- dist/index.html, dist/styles.css, dist/app.js: complete buildless portfolio.
+- dist/assets/: optimized actual interface screenshots, portrait, local fonts, identity and social imagery. FONT-LICENSE.txt covers the renamed Liberation font subsets.
+- build-worker.py: generates a self-contained worker.mjs from dist, including all static assets and security headers.
+- worker.js: the exact current generated deployment snapshot. Previous root index/style/script files are retained in Git history at 578c15745a55a1a0517392262bb9bb5f01ef5bb1.
 
-Manual publish procedure: edit assets, re-embed source strings in worker.js, test syntax and responsive/browser behavior, upload worker.js via Cloudflare API, confirm 100% active deployment and custom-domain ownership. CI release workflow can be added later. Never describe illustrated visuals as screenshots or self-initiated projects as paid client work.
+## Experience
+
+A live custom WebGL orbital sculpture, pointer response, copper/pearl/violet material controls, layered project exhibits, four native-dialog case studies, project filtering, capability accordions, animated scroll reveals, print styles, responsive layouts and reduced-motion support. Animations stop when offscreen or the tab is hidden and can be paused globally. CSS artwork remains visible if WebGL is unavailable.
+
+Contact uses the existing verified forwarding address devon@anevum.com. The inquiry composer opens an email draft; the website sends and stores nothing. There are no accounts, databases, analytics, cookies, trackers, or brokerage connections.
+
+## Project accuracy
+
+Every project is self-directed work, not invented paid client work. ANEVUM's actual interface screenshot contains synthetic offline review content and is explicitly labeled as an interface prototype. RHEN is a read-only research workspace with no running trading engine or brokerage account; its current successor is an unmerged development candidate. The Fold is a private illustrated demo, not a live GPS or released multiplayer game. Transcosmic's celestial image is a portfolio art study, not a shipped software screenshot. No fabricated testimonials, usage figures, awards, returns or customers.
+
+## Verification and release
+
+JavaScript syntax; HTML IDs, links, image descriptions and asset references; Worker exact binary/text responses; hostname allowlist; GET/HEAD; ETags and 304; MIME types; 404/405; CSP and security headers passed locally. Browser visual QA is unavailable because this environment lacks the supported browser-control skill. Real-device layout and GPU/interaction testing remain an owner review item; do not report them as completed.
+
+The deployment is restricted to portfolio.anevum.com, with public audience preserved and existing workers.dev/previews disabled. The source PR remains draft for visual review. Main ANEVUM, private Lab, authentication and RHEN services are outside this change.
