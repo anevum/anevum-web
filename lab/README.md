@@ -80,3 +80,16 @@ Before re-uploading:
 **Not included:** multiplayer or cross-device Fold save, real party invitations, public Creator publication, server-authenticated XP, actual RHEN research execution, brokerage access, or member brokerage workspace integration.
 
 **Related:** [ANEVUM Lab #349](https://github.com/anevum/anevum-web/issues/349), [The Fold PR #7](https://github.com/anevum/family-adventure-book/pull/7).
+
+## DOS terminal overhaul — October 13, 2026
+
+Session: `ANEVUM.WEB.BUILD.2026-10-13.001.LAB-DOS-TERMINAL-BACKSTAGE`. Source review branch: `design/lab-dos-terminal-backstage-20261013-001`.
+
+- Lab home now uses a one-screen, overflow-hidden CRT launcher with ANEVUM LAB orbital symbol, boot log, status strip, project selector and browser-only command prompt. Keyboard: 1-4 select, arrow keys change selection, slash focuses prompt, `HELP`, `DIR`, `STATUS`, `SELECT <n>`, `OPEN <n>`, `CLS`, `REBOOT`. Commands never run shell code or change server state. No external assets or font CDNs required.
+- The Fold full-screen game route and pinned source are unchanged; RHEN remains a research/source browser only with no runtime, data/broker access or execution. Transcosmic remains unconnected. A fourth project, ANEVUM BACKSTAGE, opens `/projects/backstage/`: a **static**, protected plan for staff and community operations, not live management.
+- For the eventual **separate** staff product consider `staff.anevum.com`, not the private Lab or member Command. Initial modules: report/appeal moderation, member security and roles, creator publishing review, community queues, support cases, append-only audit. Independent staff authentication and least-privilege API checks are mandatory. Lab Cloudflare owner allowlist must not grant staff authority over website member records.
+- Planned permissions: owner/operator, platform administrator, lead moderator, moderator, creator reviewer, support agent, read-only auditor. Require individual identities, 2FA, scoped access, full audit logging, reason codes, and elevated approvals for bans, account recovery, exports, permanent content removal and sensitive RHEN access.
+- No staff subdomain/DNS/Cloudflare Access app, staff roles, customer data sync, moderation actions, case records or backend APIs were deployed by this source change.
+- Update `lab/worker.mjs`, `lab/terminal-ui.mjs`, `lab/rhen-ui.mjs`, both pinned snapshots, and tests together before any protected deployment. Add `terminal-ui.mjs` as an additional ES module in the Workers multipart upload; the original four-module recipe above is obsolete for this branch.
+- New browser checks include desktop/mobile no-scroll Lab and Backstage screens and keyboard command input. Real authenticated Safari owner playtest and negative unauthorized access remain deployment acceptance gates.
+

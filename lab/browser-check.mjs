@@ -54,7 +54,8 @@ try{
   ['/projects/the-fold/',390,844,'fold'],['/projects/the-fold/',1440,900,'fold'],
   ['/projects/rhen/',390,844,'rhen'],['/projects/rhen/',1440,900,'rhen'],
   ['/projects/rhen/?scenario=cost-lens',390,844,'rhen-cost-lens'],
-  ['/projects/transcosmic',390,844,'transcosmic']
+  ['/projects/transcosmic',390,844,'transcosmic'],
+  ['/projects/backstage/',390,844,'backstage'],['/projects/backstage/',1440,900,'backstage']
  ])await screenshot(path,w,h,name);
- console.log('All nine Lab Chromium browser states passed');
+ console.log('All Lab Chromium browser states passed');
 }finally{await new Promise(resolve=>server.close(resolve));}

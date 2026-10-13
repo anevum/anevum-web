@@ -5,14 +5,14 @@ import lab from './worker.mjs';
 import {FOLD_ASSETS,FOLD_SOURCE_SHA} from './fold-snapshot.mjs';
 import {RHEN_REVIEW,RHEN_SOURCE} from './rhen-snapshot.mjs';
 const request=(path='/',opts={})=>lab.fetch(new Request('https://lab.anevum.com'+path,opts));
-test('Lab landing keeps Fold playable, RHEN research-only and Transcosmic unconnected',async()=>{
+test('Lab home lists protected Fold, RHEN research, Transcosmic and Backstage',async()=>{
  const r=await request('/');const page=await r.text();
  assert.equal(r.status,200);
- assert.match(page,/The Fold/);assert.match(page,/RHEN/);assert.match(page,/Transcosmic/);
- assert.match(page,/1 playable/);assert.match(page,/1 research console/);assert.match(page,/1 waiting/);
- assert.equal((page.match(/PLAY NOW/g)||[]).length,1);
- assert.equal((page.match(/OPEN CONSOLE/g)||[]).length,1);
- assert.equal((page.match(/NOT CONNECTED/g)||[]).length,1);
+ assert.match(page,/THE FOLD/);assert.match(page,/RHEN/);assert.match(page,/TRANSCOSMIC/);
+ assert.match(page,/PLAYABLE/);assert.match(page,/RHEN/);assert.match(page,/BACKSTAGE/);
+ assert.equal((page.match(/data-path="\/projects\/the-fold\/"/g)||[]).length,1);
+ assert.match(page,/OPEN CONSOLE/);
+ assert.match(page,/NOT LINKED/);
  assert.equal(r.headers.get('X-Robots-Tag'),'noindex, nofollow, noarchive');
  assert.match(r.headers.get('Content-Security-Policy'),/frame-ancestors 'none'/);
  assert.equal(r.headers.get('Cache-Control'),'private, no-store, max-age=0');
@@ -106,7 +106,7 @@ test('health and robots disclose only nonsensitive build state',async()=>{
  assert.equal(r.status,200);
  const info=await r.json();
  assert.equal(info.status,'ok');
- assert.equal(info.projects,3);
+ assert.equal(info.projects,4);
  assert.equal(info.rhen,RHEN_REVIEW.source_commit.slice(0,12));
  assert.equal(info.fold,FOLD_SOURCE_SHA.slice(0,12));
  assert.equal((await request('/robots.txt')).status,200);
@@ -120,4 +120,27 @@ test('security headers permit optional live map but restrict origin and location
  assert.match(csp,/worker-src 'self' blob:/);
  assert.equal(r.headers.get('Permissions-Policy'),'camera=(), microphone=(), geolocation=(self)');
  assert.equal(r.headers.get('Referrer-Policy'),'no-referrer');
+});
+
+test('Lab home uses a true no-scroll CRT layout with four commands and no dummy moderation controls',async()=>{
+ const page=await (await request('/')).text();
+ assert.match(page,/ANEVUM <em>LAB<\/em>/);
+ assert.match(page,/terminal\.css/);assert.match(page,/terminal\.js/);
+ assert.match(page,/id="terminalForm"/);assert.match(page,/id="terminalInput"/);
+ assert.equal((page.match(/class="project-entry/g)||[]).length,4);
+ for(const name of ['THE FOLD','RHEN','TRANSCOSMIC','BACKSTAGE'])assert.ok(page.includes(name),name);
+ const css=await (await request('/terminal.css')).text();
+ assert.match(css,/100dvh/);assert.match(css,/overflow:hidden/);assert.match(css,/prefers-reduced-motion/);
+ const js=await (await request('/terminal.js')).text();
+ assert.match(js,/runCommand/);assert.match(js,/Cloudflare Access/);
+ assert.doesNotMatch(page,/<iframe/i);
+});
+test('Backstage is a separate truthful planning screen, never a live privileged application',async()=>{
+ assert.equal((await request('/projects/backstage')).status,308);
+ const page=await (await request('/projects/backstage/')).text();
+ assert.match(page,/ANEVUM <em>COMMAND<\/em>/);
+ assert.match(page,/MODERATION/);assert.match(page,/AUDIT/);
+ assert.match(page,/NO LIVE DATA/);assert.match(page,/NOT BUILT/);
+ assert.match(page,/staff\.anevum\.com/);
+ assert.doesNotMatch(page,/<form.*method="post"|api\.alpaca\.markets|DATABASE_URL/i);
 });
