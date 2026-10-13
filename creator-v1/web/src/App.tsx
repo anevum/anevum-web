@@ -12,6 +12,7 @@ import { CommunityPage } from "./pages/CommunityPage";
 import { MemberGate } from "./components/MemberGate";
 import { MemberAccountPage } from "./pages/MemberAccountPage";
 import { MemberProfileEditorPage } from "./pages/MemberProfileEditorPage";
+import { MemberInterestsPage } from "./pages/MemberInterestsPage";
 import { MemberLibraryPage } from "./pages/MemberLibraryPage";
 import { MemberProjectsPage } from "./pages/MemberProjectsPage";
 import { ProjectEditorPage } from "./pages/ProjectEditorPage";
@@ -33,6 +34,7 @@ export default function App(){
       <Route path="library" element={<MemberLibraryPage/>}/>
       <Route path="account" element={<MemberAccountPage/>}/>
       <Route path="account/edit" element={<MemberProfileEditorPage/>}/>
+      <Route path="account/interests" element={<MemberInterestsPage/>}/>
     </Route>
     <Route path="levels" element={<LevelsPage/>}/>
     <Route path="status" element={<StatusPage/>}/>
