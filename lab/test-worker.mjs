@@ -5,12 +5,12 @@ import lab from './worker.mjs';
 import {FOLD_ASSETS,FOLD_SOURCE_SHA} from './fold-snapshot.mjs';
 import {RHEN_REVIEW,RHEN_SOURCE} from './rhen-snapshot.mjs';
 const request=(path='/',opts={})=>lab.fetch(new Request('https://lab.anevum.com'+path,opts));
-test('Lab landing keeps Fold playable, RHEN research-only and Transcosmic unconnected',async()=>{
+test('Lab home lists protected Fold, RHEN research, Transcosmic and Backstage',async()=>{
  const r=await request('/');const page=await r.text();
  assert.equal(r.status,200);
  assert.match(page,/THE FOLD/);assert.match(page,/RHEN/);assert.match(page,/TRANSCOSMIC/);
  assert.match(page,/PLAYABLE/);assert.match(page,/RHEN/);assert.match(page,/BACKSTAGE/);
- assert.equal((page.match(/PLAY NOW/g)||[]).length,1);
+ assert.equal((page.match(/data-path="\/projects\/the-fold\/"/g)||[]).length,1);
  assert.match(page,/OPEN CONSOLE/);
  assert.match(page,/NOT LINKED/);
  assert.equal(r.headers.get('X-Robots-Tag'),'noindex, nofollow, noarchive');
