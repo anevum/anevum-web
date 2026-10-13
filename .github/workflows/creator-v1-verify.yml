@@ -115,12 +115,15 @@ jobs:
             test -s "$output"
           }
           capture 1440 900 home /creator/
+          capture 1440 900 start /creator/start
+          capture 1440 900 discover-free /creator/discover?free=1
           capture 1440 900 discover /creator/discover
           capture 1440 900 creators /creator/creators
           capture 1440 900 project /creator/projects/00000000000000000000000000000001
           capture 1440 900 levels /creator/levels
           capture 1440 900 community /creator/community
           capture 390 844 home /creator/
+          capture 390 844 start /creator/start
           capture 390 844 discover /creator/discover
           capture 390 844 creators /creator/creators
           capture 1440 900 profile-editor /creator/account/edit
@@ -128,6 +131,7 @@ jobs:
           capture 1440 900 project-editor /creator/create/new
           capture 390 844 project-editor /creator/create/new
           capture 320 720 home /creator/
+          capture 320 720 start /creator/start
           printf 'These PNG files render the actual compiled React/Vite candidate using explicitly SYNTHETIC OFFLINE design fixtures, including a fake in-memory creator identity for the profile-editor layout only. No fixture records, accounts, cookies or codes are deployed to any staging or production database. Review desktop 1440px before phone 390px. This is visual QA, not authentication, real-user or provider acceptance.\n' > evidence/portal-review/README.txt
           echo "PORTAL_VISUAL_CAPTURE=PASS" | tee evidence/portal-review/capture-status.txt
 

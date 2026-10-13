@@ -50,6 +50,19 @@ test('totals count published creators, not private member registrations',async()
 test('unavailable features never claim to be enabled',async()=>{const f=(await body('/api/v1/status')).features;for(const x of ['accounts','publishing','voting','xp','community'])assert.equal(f[x],false);});
 test('pagination returns no duplicates and uses an exclusive cursor',async()=>{const a=await body('/api/v1/projects?limit=2');assert.equal(a.nextCursor,'g');const b=await body('/api/v1/projects?limit=2&cursor=g');assert.deepEqual([...a.items,...b.items].map(x=>x.id),['a','g','h','i']);assert.equal(b.nextCursor,null);});
 test('category filter is applied in SQL',async()=>{assert.deepEqual((await body('/api/v1/projects?category=games')).items.map(x=>x.id),['h']);});
+test('free-only discovery is SQL-backed and combines with category, search and cursor',async()=>{
+ assert.deepEqual((await body('/api/v1/projects?free=1')).items.map(x=>x.id),['a','h','i']);
+ assert.deepEqual((await body('/api/v1/projects?category=tools&free=1')).items.map(x=>x.id),['a','i']);
+ assert.deepEqual((await body('/api/v1/projects?free=1&cursor=a')).items.map(x=>x.id),['h','i']);
+ assert.deepEqual((await body('/api/v1/projects?free=1&q=%25')).items,[]);
+ assert.deepEqual((await body('/api/v1/projects?limit=2&free=1')).items.map(x=>x.id),['a','h']);
+ assert.equal((await body('/api/v1/projects?limit=2&free=1')).nextCursor,'h');
+ assert.deepEqual((await body('/api/v1/projects')).items.map(x=>x.id),['a','g','h','i']);
+ for(const q of ['free=0','free=true','free=','free=1&free=1','free=2']) assert.equal((await call('/api/v1/projects?'+q)).status,400,q);
+ assert.equal((await call('/api/v1/categories?free=1')).status,400);
+ assert.equal((await call('/api/v1/creators?free=1')).status,400);
+});
+
 test('search treats percent as literal, not wildcard',async()=>{assert.deepEqual((await body('/api/v1/projects?q=%25')).items.map(x=>x.id),['g']);});
 test('search treats underscore as literal, not wildcard',async()=>{assert.deepEqual((await body('/api/v1/projects?q=_')).items.map(x=>x.id),['h']);});
 test('SQL injection string remains bound data',async()=>{assert.equal((await body('/api/v1/projects?q='+encodeURIComponent("' OR 1=1 --"))).count,0);});

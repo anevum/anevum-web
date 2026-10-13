@@ -21,17 +21,17 @@ const channels: ReadonlyArray<{id:Category;label:string;description:string;mark:
 
 export function DiscoverPage(){
   const [params,setParams]=useSearchParams();
-  const q=params.get("q")||"",category=params.get("category")||"",cursor=params.get("cursor")||"";
+  const q=params.get("q")||"",category=params.get("category")||"",cursor=params.get("cursor")||"",freeOnly=params.get("free")==="1";
   const [draft,setDraft]=useState(q);
   const [view,setView]=useState<"covers"|"compact">("covers");
   useEffect(()=>setDraft(q),[q]);
   const resource=useResource(async signal=>{
     const [projects,categories]=await Promise.all([
-      readProjects({q:q||undefined,category:category||undefined,cursor:cursor||undefined,limit:"24"},signal),
+      readProjects({q:q||undefined,category:category||undefined,cursor:cursor||undefined,free:freeOnly?"1":undefined,limit:"24"},signal),
       readCategories(signal)
     ]);
     return {projects,categories};
-  },[q,category,cursor]);
+  },[q,category,cursor,freeOnly]);
   const current="/discover"+(params.size?"?"+params.toString():"");
   const active=useMemo(()=>channels.find(x=>x.id===category),[category]);
 
@@ -45,6 +45,12 @@ export function DiscoverPage(){
   function selectCategory(id:string){
     const next=new URLSearchParams(params);
     if(id)next.set("category",id);else next.delete("category");
+    next.delete("cursor");
+    setParams(next);
+  }
+  function toggleFreeOnly(){
+    const next=new URLSearchParams(params);
+    if(freeOnly)next.delete("free");else next.set("free","1");
     next.delete("cursor");
     setParams(next);
   }
@@ -71,17 +77,22 @@ export function DiscoverPage(){
             </button>)}
           </nav>
         </section>
+        <div className="portal-availability-filter" role="group" aria-label="Filter by access cost">
+          <span className="kicker">ACCESS / AVAILABILITY</span>
+          <button type="button" onClick={toggleFreeOnly} aria-pressed={freeOnly} className={freeOnly?"active":""}>ONLY PROJECTS MARKED FREE {freeOnly?"✓":"+"}</button>
+          <small>Based on each creator's published free-to-use declaration, not independently verified cost information.</small>
+        </div>
         {resource.state==="loading"&&<LoadingState label="Reading the live project catalogue"/>}
         {resource.state==="error"&&<ErrorState title="THE PORTAL COULD NOT LOAD" detail="Published project data is currently unavailable. No sample projects were substituted."/>}
         {resource.state==="ready"&&<>
           <div className="portal-result-toolbar">
-            <div><span className="kicker">{q?"SEARCH / "+q.toUpperCase():active?"CATEGORY / "+active.label.toUpperCase():"ALL RELEASES"}</span>
+            <div><span className="kicker">{q?"SEARCH / "+q.toUpperCase():active?"CATEGORY / "+active.label.toUpperCase():"ALL RELEASES"}{freeOnly?" / MARKED FREE":""}</span>
               <strong>{resource.data.projects.items.length} VERIFIED PUBLISHED {resource.data.projects.items.length===1?"RELEASE":"RELEASES"} ON THIS PAGE</strong>
             </div>
             <div className="portal-result-actions" role="group" aria-label="Choose project layout">
               <button type="button" className={view==="covers"?"active":""} aria-pressed={view==="covers"} onClick={()=>setView("covers")}>▦ COVERS</button>
               <button type="button" className={view==="compact"?"active":""} aria-pressed={view==="compact"} onClick={()=>setView("compact")}>☷ LIST</button>
-              {(q||category||cursor)&&<Link to="/discover">RESET</Link>}
+              {(q||category||cursor||freeOnly)&&<Link to="/discover">RESET</Link>}
             </div>
           </div>
           {resource.data.projects.items.length?
@@ -91,7 +102,7 @@ export function DiscoverPage(){
             <div className="portal-true-empty">
               <div className="portal-empty-symbol" aria-hidden="true">✳</div>
               <div><span className="kicker">NOTHING HIDDEN / NOTHING FABRICATED</span>
-                <h2>{cursor?"END OF CURRENT RELEASES":q||category?"NO MATCHING PROJECTS YET":"THE FIRST RELEASES ARE ON THEIR WAY."}</h2>
+                <h2>{cursor?"END OF CURRENT RELEASES":q||category||freeOnly?"NO MATCHING PROJECTS YET":"THE FIRST RELEASES ARE ON THEIR WAY."}</h2>
                 <p>ANEVUM only shows approved work. Try another portal or follow the development of the first real submissions.</p>
                 <div className="portal-empty-actions"><Link to="/discover" className="button secondary">EXPLORE ALL</Link><Link to="/status" className="button secondary">RELEASE STATUS</Link></div>
               </div>
