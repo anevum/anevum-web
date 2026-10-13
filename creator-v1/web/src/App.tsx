@@ -1,6 +1,7 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import { Shell } from "./components/Shell";
 import { HomePage } from "./pages/HomePage";
+import { StartPage } from "./pages/StartPage";
 import { DiscoverPage } from "./pages/DiscoverPage";
 import { ProjectPage } from "./pages/ProjectPage";
 import { CreatorPage, CreatorsPage } from "./pages/CreatorsPage";
@@ -17,6 +18,7 @@ import { ProjectEditorPage } from "./pages/ProjectEditorPage";
 export default function App(){
   return <Routes><Route element={<Shell/>}>
     <Route index element={<HomePage/>}/>
+    <Route path="start" element={<StartPage/>}/>
     <Route path="discover" element={<DiscoverPage/>}/>
     <Route path="projects/:id" element={<ProjectPage/>}/>
     <Route path="creators" element={<CreatorsPage/>}/>
