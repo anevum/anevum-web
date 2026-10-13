@@ -6,7 +6,7 @@ import { ProjectPage } from "./pages/ProjectPage";
 import { CreatorPage, CreatorsPage } from "./pages/CreatorsPage";
 import { StatusPage } from "./pages/StatusPage";
 import { LevelsPage } from "./pages/LevelsPage";
-import { ComingPage } from "./pages/ComingPage";
+import { CommunityPage } from "./pages/CommunityPage";
 import { MemberGate } from "./components/MemberGate";
 import { MemberAccountPage } from "./pages/MemberAccountPage";
 import { MemberLibraryPage } from "./pages/MemberLibraryPage";
@@ -20,7 +20,7 @@ export default function App(){
     <Route path="projects/:id" element={<ProjectPage/>}/>
     <Route path="creators" element={<CreatorsPage/>}/>
     <Route path="creators/:handle" element={<CreatorPage/>}/>
-    <Route path="community" element={<ComingPage kind="community"/>}/>
+    <Route path="community" element={<CommunityPage/>}/>
     <Route element={<MemberGate/>}>
       <Route path="create" element={<MemberProjectsPage/>}/>
       <Route path="create/new" element={<ProjectEditorPage/>}/>

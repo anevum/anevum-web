@@ -10,7 +10,7 @@ export function safeReturnPath(raw: string | null | undefined): string {
   try { url = new URL(raw, base); } catch { return "/discover"; }
   if (url.origin !== base || url.hash) return "/discover";
   const route = url.pathname;
-  if (!(route === "/" || route === "/discover" || route === "/creators" || handle.test(route)))
+  if (!(route === "/" || route === "/discover" || route === "/creators" || route === "/community" || handle.test(route)))
     return "/discover";
   const params = new URLSearchParams();
   if (route === "/discover" || route === "/creators") {

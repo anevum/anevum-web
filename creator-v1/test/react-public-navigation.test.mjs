@@ -4,6 +4,7 @@ import {safeReturnPath,projectDetailPath,cursorRoute} from "../web/src/lib/navig
 
 test("only whitelisted public routes survive return-path sanitization",()=>{
   assert.equal(safeReturnPath("/"),"/");
+  assert.equal(safeReturnPath("/community"),"/community");
   assert.equal(safeReturnPath("/discover?q=tree&category=games&cursor=abc_99"),"/discover?q=tree&category=games&cursor=abc_99");
   assert.equal(safeReturnPath("/creators?q=nova&cursor=nova"),"/creators?q=nova&cursor=nova");
   assert.equal(safeReturnPath("/creators/nova?cursor=project-1"),"/creators/nova?cursor=project-1");
