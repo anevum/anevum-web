@@ -33,7 +33,10 @@ export function LevelsPage(){
             </article>)}
           </div>
           <div className="artifact-size-bench" aria-label="Emblem scale comparison, not earned rewards">
-            <span><CelestialEmblem motif="beacon" size="micro"/><small>24PX MICRO</small></span>
+            <span><CelestialEmblem motif="beacon" size="nano"/><small>16PX</small></span>
+            <span><CelestialEmblem motif="beacon" size="tiny"/><small>20PX</small></span>
+            <span><CelestialEmblem motif="beacon" size="micro"/><small>24PX</small></span>
+            <span><CelestialEmblem motif="beacon" size="compact"/><small>32PX</small></span>
             <span><CelestialEmblem motif="beacon" size="small"/><small>48PX COMPACT</small></span>
             <span><CelestialEmblem motif="beacon" size="medium"/><small>96PX CABINET</small></span>
           </div>
