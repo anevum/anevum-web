@@ -65,7 +65,7 @@ export function MemberGate(){
       member:activeMember,
       health:session.data.health,
       onProfileSaved:(profile:Pick<MemberIdentity,"handle"|"displayName"|"bio">)=>
-        setConfirmedProfile({id:session.data.member.id,handle:profile.handle||"",displayName:profile.displayName||"",bio:profile.bio})
+        setConfirmedProfile({id:activeMember.id,handle:profile.handle||"",displayName:profile.displayName||"",bio:profile.bio})
     }}/>
   </div>;
 }
