@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { OrbitalMark } from "./OrbitalMark";
+import { OrbitalStage } from "./OrbitalStage";
 
 export function PortalHeading({
   eyebrow, title, accent, description, index="ANEVUM / 001",
@@ -16,7 +16,7 @@ export function PortalHeading({
       {action&&<Link className="portal-heading-action" to={action.to}>{action.label} <span aria-hidden="true">↗</span></Link>}
     </div>
     <div className="portal-page-heading-stamp" aria-hidden="true">
-      <OrbitalMark/><span>{index}</span>
+      <OrbitalStage variant="heading"/><span>{index}</span>
     </div>
   </section>;
 }

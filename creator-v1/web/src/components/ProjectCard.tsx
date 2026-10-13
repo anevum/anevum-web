@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import type { Project } from "../lib/api";
 import { Icon } from "./Icons";
 import { projectDetailPath } from "../lib/navigation";
+import {applyPointerDepth,clearPointerDepth} from "../lib/pointer-depth";
 
 const labels: Record<string, string> = {
   games: "Game",
@@ -17,9 +18,9 @@ const labels: Record<string, string> = {
 export function ProjectCard({ project, returnTo = "/discover" }: { project: Project; returnTo?: string }) {
   const href=projectDetailPath(project.id,returnTo);
   return (
-    <article className="project-card">
+    <article className="project-card depth-hover-card" onPointerMove={e=>applyPointerDepth(e,8)} onPointerLeave={clearPointerDepth}>
       <Link className="project-art" to={href} aria-label={`Open ${project.title}`}>
-        <span className={`project-glyph project-glyph-${project.category}`} aria-hidden="true"><OrbitalMini /></span>
+        <span className="project-art-layer" aria-hidden="true"><span className="project-art-shadow"/><span className="project-art-inner"><span className={`project-glyph project-glyph-${project.category}`}><OrbitalMini /></span></span><span className="project-art-shine"/></span>
         <span className="project-kind">{labels[project.category] || "Project"}</span>
       </Link>
       <div className="project-card-body">

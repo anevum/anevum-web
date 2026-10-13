@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { LevelPanel } from "../components/LevelPanel";
-import { OrbitalMark } from "../components/OrbitalMark";
+import { OrbitalStage } from "../components/OrbitalStage";
 
 const achievements=[
   {label:"FIRST SIGNAL",description:"Rate a published project for the first time.",symbol:"✦"},
@@ -19,7 +19,7 @@ const principles=[
 
 export function LevelsPage(){
   return <div className="levels-page">
-    <section className="levels-masthead"><div><span className="kicker">ANEVUM / UNIVERSAL PROGRESSION</span><h1>MAKE YOUR<br/><em>MARK.</em></h1><p>Every real contribution adds to your story. No ceiling. No purchased status. No higher voting power.</p><Link to="/account" className="button primary">YOUR PROFILE ↗</Link></div><div className="levels-emblem" aria-hidden="true"><OrbitalMark/><span>THE UNDERGROUND NEVER ENDS</span></div></section>
+    <section className="levels-masthead"><div><span className="kicker">ANEVUM / UNIVERSAL PROGRESSION</span><h1>MAKE YOUR<br/><em>MARK.</em></h1><p>Every real contribution adds to your story. No ceiling. No purchased status. No higher voting power.</p><Link to="/account" className="button primary">YOUR PROFILE ↗</Link></div><div className="levels-emblem" aria-hidden="true"><OrbitalStage variant="monument"/><span>THE UNDERGROUND NEVER ENDS</span></div></section>
     <div className="portal-layout levels-layout">
       <div className="portal-main">
         <section className="portal-box">
