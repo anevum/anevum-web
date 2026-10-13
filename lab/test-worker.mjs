@@ -9,7 +9,7 @@ test('Lab landing keeps Fold playable, RHEN research-only and Transcosmic unconn
  const r=await request('/');const page=await r.text();
  assert.equal(r.status,200);
  assert.match(page,/The Fold/);assert.match(page,/RHEN/);assert.match(page,/Transcosmic/);
- assert.match(page,/1 playable/);assert.match(page,/RHEN/);assert.match(page,/BACKSTAGE/);
+ assert.match(page,/PLAYABLE/);assert.match(page,/RHEN/);assert.match(page,/BACKSTAGE/);
  assert.equal((page.match(/PLAY NOW/g)||[]).length,1);
  assert.match(page,/OPEN CONSOLE/);
  assert.match(page,/NOT LINKED/);
