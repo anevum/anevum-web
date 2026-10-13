@@ -19,7 +19,7 @@ const work=seeds.map(([title,category,creatorHandle],i)=>({
  aiDisclosure:"Offline synthetic design fixture.",humanContribution:"No real human creator record."
 }));
 const categories=[...new Set(work.map(p=>p.category))].map(category=>({category,count:work.filter(p=>p.category===category).length}));
-const overlay='<style>body::after{content:"SYNTHETIC OFFLINE REVIEW — NOT REAL CONTENT";position:fixed;top:6px;right:6px;z-index:2147483647;background:#fff0b2;color:#1c1010;border:2px solid #1c1010;padding:7px 11px;font:900 10px system-ui,sans-serif}</style>';
+const overlay='<style>body::after{content:"SYNTHETIC OFFLINE REVIEW — NOT REAL CONTENT";position:fixed;bottom:78px;right:7px;z-index:2147483647;background:#fff0b2;color:#1c1010;border:2px solid #1c1010;padding:5px 8px;font:900 8px system-ui,sans-serif;max-width:230px}</style>';
 function json(res,obj,status=200){res.writeHead(status,{"content-type":"application/json; charset=utf-8","cache-control":"no-store"});res.end(JSON.stringify(obj));}
 function api(res,url){
  const path=url.pathname.slice("/creator/api/v1".length);

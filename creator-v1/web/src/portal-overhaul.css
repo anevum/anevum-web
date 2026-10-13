@@ -351,3 +351,39 @@
 .portal-account-achievements article.locked span{color:#baa7ac}
 @media(max-width:1000px){.portal-account-achievements{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:640px){.portal-account-achievements{grid-template-columns:1fr}}
+
+
+/* True category differentiation without inventing creator-uploaded thumbnails. */
+.project-card:has(.project-glyph-games) .project-art{
+  background:radial-gradient(ellipse at 70% 30%,rgba(235,99,75,.29),transparent 46%),repeating-linear-gradient(154deg,#24141a 0 25px,#341b22 26px 28px,#1b1217 29px 50px);
+}
+.project-card:has(.project-glyph-tools) .project-art{
+  background:radial-gradient(ellipse at 66% 24%,rgba(228,173,83,.21),transparent 52%),linear-gradient(145deg,#25201b,#141315 55%,#322720);
+}
+.project-card:has(.project-glyph-creative) .project-art{
+  background:radial-gradient(ellipse at 35% 48%,rgba(166,93,248,.25),transparent 55%),linear-gradient(135deg,#21172e,#17121e 62%,#291834);
+}
+.project-card:has(.project-glyph-libraries) .project-art{
+  background:radial-gradient(ellipse at 69% 40%,rgba(95,197,208,.22),transparent 55%),repeating-linear-gradient(0deg,#132124 0 9px,#1b252b 10px 11px);
+}
+.project-card:has(.project-glyph-automation) .project-art{
+  background:radial-gradient(ellipse at 70% 30%,rgba(147,201,130,.18),transparent 52%),linear-gradient(140deg,#17201a,#101617);
+}
+.project-card:has(.project-glyph-research) .project-art{
+  background:radial-gradient(ellipse at 45% 30%,rgba(126,152,216,.25),transparent 52%),linear-gradient(140deg,#191d2e,#12151c);
+}
+.project-card:has(.project-glyph-learning) .project-art{
+  background:radial-gradient(ellipse at 45% 30%,rgba(230,130,184,.17),transparent 52%),linear-gradient(140deg,#2c1e2b,#17131c);
+}
+.project-card .project-glyph-games{color:#ae5d5a}
+.project-card .project-glyph-tools{color:#a58a63}
+.project-card .project-glyph-creative{color:#8a62bd}
+.project-card .project-glyph-libraries{color:#5e96a1}
+.project-card .project-glyph-automation{color:#709475}
+.project-card .project-glyph-research{color:#6f84b2}
+.project-card .project-glyph-learning{color:#bd6d9f}
+.project-card:hover .project-glyph{color:var(--bone)}
+.project-card:has(.project-glyph-games) .project-kind{background:#efab85}
+.project-card:has(.project-glyph-tools) .project-kind{background:#ebd49a}
+.project-card:has(.project-glyph-creative) .project-kind{background:#d4b1ed}
+.project-card:has(.project-glyph-libraries) .project-kind{background:#a6d4d4}
