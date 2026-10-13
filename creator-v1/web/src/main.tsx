@@ -16,6 +16,7 @@ import "./cinematic-worlds.css";
 import "./cinematic-polish.css";
 import "./cinematic-subpages.css";
 import "./cinematic-mobile-review.css";
+import "./cinematic-raster-art.css";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

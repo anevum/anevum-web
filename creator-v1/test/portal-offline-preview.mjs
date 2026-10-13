@@ -83,7 +83,7 @@ function api(res,url){
  if(path.startsWith("/projects/")){const p=work.find(p=>p.id===path.slice(10));return json(res,p?{item:p}:{error:"not-found"},p?200:404);}
  return json(res,{error:"not-found"},404);
 }
-const mime={".css":"text/css",".js":"text/javascript",".svg":"image/svg+xml",".png":"image/png"};
+const mime={".css":"text/css",".js":"text/javascript",".svg":"image/svg+xml",".png":"image/png",".webp":"image/webp"};
 createServer((req,res)=>{
  try{
   const u=new URL(req.url,"http://127.0.0.1:4178");
@@ -92,7 +92,7 @@ createServer((req,res)=>{
   if(u.pathname.startsWith("/api/v1/member/"))return offlineMember(req,res,u);
   if(u.pathname.startsWith("/creator/assets/")){
     const rel=u.pathname.slice(9);
-    if(!/^assets\/[a-zA-Z0-9._-]+$/.test(rel))return json(res,{error:"not-found"},404);
+    if(!/^assets\/(?:[a-zA-Z0-9._-]+|cinematic\/(?:hero|categories)\/[a-zA-Z0-9._-]+\.webp)$/.test(rel))return json(res,{error:"not-found"},404);
     const path=resolve(dist,rel);
     if(!existsSync(path))return json(res,{error:"not-found"},404);
     res.writeHead(200,{"content-type":mime[extname(path)]||"application/octet-stream"});

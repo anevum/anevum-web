@@ -2,7 +2,7 @@ import {Link,useParams,useSearchParams} from "react-router-dom";
 import {readProject,safeExternal} from "../lib/api";
 import {useResource} from "../lib/useResource";
 import {ErrorState,LoadingState} from "../components/States";
-import {CosmicIllustration} from "../components/CosmicIllustration";
+import {CosmicArtwork} from "../components/CosmicArtwork";
 import {RepositoryPanel} from "../components/RepositoryPanel";
 import {MemberEngagementPanel} from "../components/MemberEngagementPanel";
 import {safeReturnPath} from "../lib/navigation";
@@ -28,7 +28,7 @@ export function ProjectPage(){
     <section className="portal-project-header">
       <div className="portal-project-art" aria-hidden="true">
         <span className="portal-project-corner">ANEVUM<br/>CATEGORY ILLUSTRATION</span>
-        <CosmicIllustration scene={p.category}/>
+        <CosmicArtwork scene={p.category}/>
         <span className="portal-project-art-tag">{types[p.category]||"PROJECT"}</span>
       </div>
       <div className="portal-project-intro">

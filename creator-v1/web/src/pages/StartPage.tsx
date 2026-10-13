@@ -5,6 +5,7 @@ import { useResource } from "../lib/useResource";
 import { PortalHeading } from "../components/PortalHeading";
 import { Icon } from "../components/Icons";
 import { OrbitalMark } from "../components/OrbitalMark";
+import { CosmicArtwork } from "../components/CosmicArtwork";
 
 const journeys = [
   {
@@ -107,6 +108,7 @@ export function StartPage() {
           const count = ready ? (counts.get(portal.category) ?? 0) : null;
           return <Link className={"start-portal start-portal-" + portal.category}
             key={portal.category} to={"/discover?category=" + encodeURIComponent(portal.category)}>
+            <span className="cw-start-portal-art" aria-hidden="true"><CosmicArtwork scene={portal.category}/></span>
             <span className="start-portal-top"><span>{portal.kicker}</span><span className="start-portal-symbol" aria-hidden="true">{portal.symbol}</span></span>
             <strong>{portal.label}</strong>
             <span className="start-portal-description">{portal.detail}</span>

@@ -1,7 +1,8 @@
 import { Link } from "react-router-dom";
 import type { Project } from "../lib/api";
 import { Icon } from "./Icons";
-import {CosmicIllustration, type CosmicScene} from "./CosmicIllustration";
+import {CosmicArtwork} from "./CosmicArtwork";
+import type {CosmicScene} from "./CosmicIllustration";
 import { projectDetailPath } from "../lib/navigation";
 import {applyPointerDepth,clearPointerDepth} from "../lib/pointer-depth";
 
@@ -26,7 +27,7 @@ export function ProjectCard({ project, returnTo = "/discover" }: { project: Proj
   return (
     <article className="project-card depth-hover-card" onPointerMove={e=>applyPointerDepth(e,8)} onPointerLeave={clearPointerDepth}>
       <Link className="project-art" to={href} aria-label={`Open ${project.title}`}>
-        <CosmicIllustration scene={scenes[project.category]}/>
+        <CosmicArtwork scene={scenes[project.category]}/>
         <span className="cw-card-art-overlay" aria-hidden="true" />
         <span className="project-kind">{labels[project.category] || "Project"}</span>
         <span className="cw-project-art-disclosure">CATEGORY ILLUSTRATION</span>

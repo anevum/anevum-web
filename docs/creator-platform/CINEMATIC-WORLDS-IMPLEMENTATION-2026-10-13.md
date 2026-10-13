@@ -35,3 +35,10 @@ Avoid merging the generated mock's fictional project names, ratings, imaginary c
 - No fabricated users, social metrics, payments, Shop links, subscriptions, hosted third-party code, RHEN account access, or public signup enablement.
 
 This candidate intentionally does not include generated raster masters, binaries or on-premise project-media storage. Those are a separately testable art production and rights-review step, not falsely reported as implemented.
+
+## Artwork integration pass — October 13, 2026 (implementation candidate)
+This revision includes 10 real versioned WebP originals under creator-v1/web/public/assets/cinematic/: two cosmic hero environments plus eight dedicated category artworks. All files were extracted from the owner's own generative concept session, checked as decorative art without fictional user statistics, and stored as first-party assets rather than unstable third-party hotlinks. Each image has a corresponding CSS/media layout with decorative alt text; the old original SVG compositor is retained only as a failed-image fallback. All public app routes, private member authentication, staff review and server-owned progression remain unchanged.
+
+The real asset mapping is implemented in web/src/components/CosmicArtwork.tsx with import.meta.env.BASE_URL to handle both the public / root and isolated /creator/ staging base. The artwork is wired into Home, project cards, project details, creator banners, community rooms, all visitor Start category portals, and shared headers (including Discover, Creators and Field Guide). Responsive sizes, lazy-loading except for the hero, CSS interaction and reduced-motion remain in the app. The synthetic browser fixture is adjusted to serve these nested WebP assets and remains strictly loopback-only.
+
+Design limitation: these first-generation images were cropped from an image-generated concept. They are not yet all hand-directed painterly scene masters at 2560px resolution, nor creator-uploaded thumbnails. Treat them as a substantial intermediate visual candidate until actual browser review. Do not report staging or production deployment solely because source CI passes.

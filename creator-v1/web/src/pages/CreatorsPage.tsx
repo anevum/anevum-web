@@ -9,7 +9,7 @@ import {PortalHeading} from "../components/PortalHeading";
 import {LevelPanel} from "../components/LevelPanel";
 import {EmptyState,ErrorState,LoadingState} from "../components/States";
 import {CelestialEmblem} from "../components/CelestialEmblem";
-import {CosmicIllustration} from "../components/CosmicIllustration";
+import {CosmicArtwork} from "../components/CosmicArtwork";
 import {achievementMotif,seriesOneMotif} from "../lib/artifact-art";
 
 export function CreatorsPage(){
@@ -91,7 +91,7 @@ export function CreatorPage(){
   const earned=detailed?.achievements?.filter(a=>a.earned)||[];
   return <div className="portal-creator-channel">
     <Link to="/creators" className="project-return">← ALL PUBLIC CREATORS</Link>
-    <section className="portal-channel-banner"><div className="cw-channel-scene" aria-hidden="true"><CosmicIllustration scene="portal"/></div>
+    <section className="portal-channel-banner"><div className="cw-channel-scene" aria-hidden="true"><CosmicArtwork scene="portal"/></div>
       <div className="portal-channel-avatar" aria-hidden="true"><span className="cw-letter-avatar">{profile.displayName.slice(0,1).toUpperCase()}</span></div>
       <div className="portal-channel-identity">
         <span className="kicker">ANEVUM / PUBLIC CREATOR CHANNEL</span>

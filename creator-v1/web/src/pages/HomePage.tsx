@@ -4,7 +4,8 @@ import {useResource} from "../lib/useResource";
 import {ProjectCard} from "../components/ProjectCard";
 import {LevelPanel} from "../components/LevelPanel";
 import {CelestialEmblem} from "../components/CelestialEmblem";
-import {CosmicIllustration, type CosmicScene} from "../components/CosmicIllustration";
+import {CosmicArtwork} from "../components/CosmicArtwork";
+import type {CosmicScene} from "../components/CosmicIllustration";
 import {Icon} from "../components/Icons";
 import {ErrorState, LoadingState} from "../components/States";
 
@@ -33,7 +34,7 @@ export function HomePage(){
 
   return <div className="cw-home">
     <section className="cw-hero" aria-labelledby="cw-hero-title">
-      <div className="cw-hero-art" aria-hidden="true"><CosmicIllustration scene="hero"/></div>
+      <div className="cw-hero-art" aria-hidden="true"><CosmicArtwork scene="hero" priority/></div>
       <div className="cw-hero-shade" aria-hidden="true"/>
       <div className="cw-hero-inner">
         <div className="cw-hero-copy">
@@ -46,7 +47,7 @@ export function HomePage(){
           </div>
         </div>
         <aside className="cw-hero-feature" aria-label="About our creative universe">
-          <div className="cw-hero-feature-art"><CosmicIllustration scene="portal"/></div>
+          <div className="cw-hero-feature-art"><CosmicArtwork scene="portal"/></div>
           <div className="cw-hero-feature-info">
             <span>THE TRANSCOSMIC ATMOSPHERE</span>
             <p>Beyond familiar boundaries. Explore original experiments and discoveries.</p>
@@ -72,7 +73,7 @@ export function HomePage(){
         {portal.state==="ready"&&(projects.length?
           <div className="cw-project-grid">{projects.slice(0,5).map(project=><ProjectCard key={project.id} project={project} returnTo="/"/>)}</div>:
           <div className="cw-world-preview-grid">{worlds.slice(0,5).map(world=><Link key={world.id} className="cw-world-preview" to={"/discover?category="+world.id}>
-            <div className="cw-world-preview-art"><CosmicIllustration scene={world.scene}/></div>
+            <div className="cw-world-preview-art"><CosmicArtwork scene={world.scene}/></div>
             <div className="cw-world-preview-label"><span>DISCOVER / {world.name.toUpperCase()}</span><strong>{world.description}</strong></div>
             <span className="cw-world-preview-cta">EXPLORE CATEGORY <Icon name="arrow" size={15}/></span>
           </Link>)}</div>)}
@@ -85,7 +86,7 @@ export function HomePage(){
           <Link to="/discover">EXPLORE ALL <Icon name="arrow" size={16}/></Link>
         </header>
         <div className="cw-small-world-grid">{worlds.slice(0,5).map(world=><Link key={world.id} to={"/discover?category="+world.id} className="cw-small-world">
-          <div aria-hidden="true" className="cw-small-world-image"><CosmicIllustration scene={world.scene}/></div>
+          <div aria-hidden="true" className="cw-small-world-image"><CosmicArtwork scene={world.scene}/></div>
           <div><strong>{world.name}</strong><small>{portal.state==="ready"?(counts.get(world.id)||0)+" PUBLISHED":world.description}</small></div>
           <Icon name="arrow" size={15}/>
         </Link>)}</div>

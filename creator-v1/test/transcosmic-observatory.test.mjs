@@ -66,7 +66,7 @@ test("primary text, quiet text and neon action surfaces meet AA non-large contra
 });
 
 test("original orbit identity is unchanged and the star map is decorative",()=>{
-  assert.match(home,/<CosmicIllustration scene="hero"\/>/);
+  assert.match(home,/<CosmicArtwork scene="hero" priority\/>/);
   assert.match(shell,/<OrbitalMark className="brand-mark"/);
   assert.match(worlds,/aria-hidden=\{title\?undefined:true\}/);
   assert.match(heading,/<CosmicHorizon\/>/);
