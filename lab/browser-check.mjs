@@ -53,7 +53,7 @@ try{
   ['/',390,844,'hub'],['/',1440,900,'hub'],
   ['/projects/the-fold/',390,844,'fold'],['/projects/the-fold/',1440,900,'fold'],
   ['/projects/rhen/',390,844,'rhen'],['/projects/rhen/',1440,900,'rhen'],
-  ['/projects/rhen/?scenario=cost-lens',390,844,'rhen-cost-lens'],
+  ['/projects/rhen/research/',390,844,'rhen-research'],
   ['/projects/transcosmic',390,844,'transcosmic']
  ])await screenshot(path,w,h,name);
  console.log('All nine Lab Chromium browser states passed');
