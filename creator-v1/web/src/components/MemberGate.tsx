@@ -60,6 +60,7 @@ export function MemberGate(){
         <NavLink to="/account/interests">MY INTERESTS</NavLink>
         <NavLink to="/create">MY PROJECTS</NavLink>
         <NavLink to="/library">LIBRARY</NavLink>
+        <NavLink to="/following">FOLLOWING</NavLink>
       </nav>
     </header>
     <Outlet context={{
