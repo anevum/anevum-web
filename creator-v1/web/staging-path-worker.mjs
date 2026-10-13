@@ -16,7 +16,12 @@ const reject=(status,content="Not found")=>
 function withSafety(res,alwaysNoStore=false){
   const headers=new Headers(res.headers);
   for(const [name,value] of Object.entries(SAFE_HEADERS))headers.set(name,value);
-  if(alwaysNoStore || headers.get("content-type")?.includes("text/html"))headers.set("cache-control","private, no-store");
+  const html=headers.get("content-type")?.includes("text/html");
+  if(alwaysNoStore || html)headers.set("cache-control","private, no-store");
+  if(html){
+    headers.set("content-security-policy","default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; font-src 'self'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'; object-src 'none'");
+    headers.set("x-frame-options","DENY");
+  }
   return new Response(res.body,{status:res.status,statusText:res.statusText,headers});
 }
 
@@ -34,7 +39,10 @@ export default {
       if(!PUBLISHED.test(relative))return reject(404);
       const forwarded=new URL(request.url);
       forwarded.pathname=relative;
-      const response=await publicApi.fetch(new Request(forwarded,request),env,ctx);
+      // Do not forward the host-scoped member session cookie or Authorization.
+      // Public catalogue reads must stay explicitly anonymous.
+      const clean=new Request(forwarded.href,{method:request.method,headers:{Accept:"application/json"}});
+      const response=await publicApi.fetch(clean,env,ctx);
       return withSafety(response,true);
     }
     // The Cloudflare ASSETS binding points only to dist/react-staging.
@@ -42,7 +50,8 @@ export default {
     // no subrequest is made to the old staging Worker.
     const target=new URL(request.url);
     target.pathname=relative||"/";
-    const response=await env.ASSETS.fetch(new Request(target,request));
+    const clean=new Request(target.href,{method:request.method,headers:{Accept:request.headers.get("accept")||"*/*"}});
+    const response=await env.ASSETS.fetch(clean);
     return withSafety(response);
   }
 };

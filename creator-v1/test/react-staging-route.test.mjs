@@ -63,3 +63,23 @@ test("route config only binds staging database and narrow prefix",()=>{
   assert.equal(config.preview_urls,false);
   assert.doesNotMatch(JSON.stringify(config),/anevum\.com\/\*|production\/creator-v1|RHEN|Alpaca/i);
 });
+
+
+test("host-scoped member session and authorization are never forwarded to preview assets",async()=>{
+ const headers=[];
+ const sample={
+   ASSETS:{fetch:async request=>{
+     headers.push({cookie:request.headers.get("cookie"),authorization:request.headers.get("authorization"),accept:request.headers.get("accept")});
+     return new Response("<!doctype html>",{headers:{"content-type":"text/html"}});
+   }}
+ };
+ const request=new Request("https://next.anevum.com/creator/account",{
+   headers:{Cookie:"__Host-anevum_stage_sid=mock-fixture","Authorization":"Bearer fake-review-token",Accept:"text/html"}
+ });
+ const response=await stage.fetch(request,sample,{});
+ assert.equal(response.status,200);
+ assert.deepEqual(headers,[{cookie:null,authorization:null,accept:"text/html"}]);
+ assert.match(response.headers.get("content-security-policy")||"",/frame-ancestors 'none'/);
+ assert.equal(response.headers.get("x-frame-options"),"DENY");
+ assert.match(response.headers.get("cache-control")||"",/no-store/);
+});

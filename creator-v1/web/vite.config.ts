@@ -10,7 +10,7 @@ export default defineConfig(({ mode }) => ({
   build: {
     outDir: fileURLToPath(new URL(mode === "staging-path" ? "../dist/react-staging" : "../dist/web", import.meta.url)),
     emptyOutDir: true,
-    sourcemap: true,
+    sourcemap: mode !== "staging-path",
     target: "es2022"
   }
 }));

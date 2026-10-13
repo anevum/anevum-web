@@ -111,3 +111,14 @@ test("isolated next.anevum.com Creator V1 staging path is separate from member a
   assert.match(cfg,/"next\.anevum\.com\/creator\/\*"/);
   assert.doesNotMatch(worker,/AUTH_PEPPER|RESEND_API_KEY|set-cookie/i);
 });
+
+
+test("staging preview carries restrictive HTML headers and strips member cookies from public fetches",()=>{
+ const w=read("web/staging-path-worker.mjs");
+ const vite=read("web/vite.config.ts");
+ assert.match(w,/content-security-policy/);
+ assert.match(w,/Authorization/);
+ assert.match(w,/new Request\(target.href/);
+ assert.match(w,/new Request\(forwarded.href/);
+ assert.match(vite,/sourcemap: mode !== "staging-path"/);
+});
