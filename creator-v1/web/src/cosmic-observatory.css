@@ -576,6 +576,52 @@ body::before{
 .levels-achievements p,.levels-rule-grid p,.levels-policy p{color:#c0d0e4}
 .levels-symbol{background:radial-gradient(circle,#344e77 0 31px,#203454 33px 41px,transparent 42px)}
 
+/* Legibility is part of the worldbuilding. Avoid postage-stamp metadata. */
+.site-shell{font-feature-settings:"kern" 1}
+.kicker{font-size:10px;line-height:1.5}
+.signal-strip{font-size:10px;letter-spacing:.11em}
+.portal-navigation nav a{font-size:11px}
+.portal-welcome p{font-size:clamp(13px,1.2vw,16px)}
+.portal-page-heading p{font-size:clamp(12px,1.12vw,15px);max-width:675px}
+.portal-box-header h2{font-size:clamp(23px,2.5vw,30px);line-height:1.03}
+.portal-shelf .portal-box-header h2{font-size:clamp(23px,2.4vw,30px)}
+.portal-box-header>a,.portal-heading-action{font-size:11px;letter-spacing:.06em}
+.portal-sidebox p{font-size:12px;line-height:1.7}
+.portal-shelf-empty p,.portal-new-release-empty p{font-size:12px;line-height:1.65}
+.portal-shelf-empty strong,.portal-new-release-empty strong{font-size:12px;line-height:1.35}
+.portal-stats>span{font-size:10px;letter-spacing:.055em}
+.portal-channel-filters button{font-size:11px;min-height:39px;line-height:1.3}
+.portal-wide-search input{font-size:13px}
+.portal-hall-stamp{font-size:10px}
+.portal-availability-filter small{font-size:11px}
+.portal-box-header .kicker,.portal-sidebox .kicker{max-width:100%}
+.project-card h3{font-size:clamp(20px,2vw,26px)}
+.project-card p{font-size:12px;line-height:1.65;min-height:48px}
+.project-kind,.project-card-topline{font-size:9px;letter-spacing:.07em}
+.creator-inline{font-size:11px}
+.start-choice strong{font-size:clamp(22px,2.1vw,30px);line-height:1.1}
+.start-portal-description,.start-detail-copy small{font-size:12px}
+.start-portal-bottom small{font-size:9px}
+.guide-chapter-copy>span,.guide-chapter-copy small{font-size:9px}
+.guide-answer{font-size:13px;line-height:1.55}
+.guide-feedback p{font-size:12px;line-height:1.6}
+.guide-visit-progress p{font-size:11px}
+.portal-launcher-result-copy small{font-size:11px}
+.portal-launcher-hint,.portal-launcher-result-meta{font-size:9px}
+.portal-launcher-search input{font-size:13px}
+.portal-launcher-result-copy strong{line-height:1.13}
+.portal-page-heading-stamp,.portal-welcome-emblem{user-select:none}
+@media(max-width:640px){
+  .kicker{font-size:9px}
+  .portal-navigation nav a{font-size:10px}
+  .portal-channel-filters button{min-height:43px}
+  .portal-welcome p,.portal-page-heading p{font-size:12px;line-height:1.65}
+  .portal-box-header h2,.portal-shelf .portal-box-header h2{font-size:clamp(20px,5.8vw,25px)}
+  .project-card p{font-size:11px}
+  .guide-answer{font-size:12px}
+  .portal-launcher-result-copy small{font-size:10px}
+}
+
 /* Fluidity without scroll hijack, touch-only tricks, or performance-heavy filters. */
 @media (hover:hover) and (pointer:fine){
   .portal-shelf,.portal-box,.portal-sidebox{transition:border-color .34s var(--cosmos-ease),box-shadow .34s var(--cosmos-ease)}
