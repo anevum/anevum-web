@@ -35,6 +35,15 @@ export interface MemberAchievement {
   earned:boolean; progress:number; target:number;
 }
 
+export interface MemberFollowEntry {handle:string;displayName:string;followedAt:number}
+export interface CreatorFollowState {following:boolean;changed:boolean;followers:number;viewerFollows:boolean}
+export const memberFollowing=(signal?:AbortSignal)=>
+  requestMember<{items:MemberFollowEntry[];hasMore:boolean}>("/following",{signal});
+export const memberSetFollowing=(handle:string,following:boolean)=>{
+  if(!/^[a-z][a-z0-9_]{2,29}$/.test(handle))throw new Error("Invalid creator handle");
+  return requestMember<CreatorFollowState>("/creators/"+handle+"/follow",{method:"POST",body:{following}});
+};
+
 export class MemberApiError extends Error {
   readonly status:number;
   constructor(status:number, message:string){
@@ -122,6 +131,8 @@ export const memberCreatorProfile=(handle:string,signal?:AbortSignal)=>{
     contributions:{ratings:number;publishedProjects:number;releases:number};
     progression:Progression;
     achievements:MemberAchievement[];
+    followers:number;
+    viewerFollows:boolean;
   }>("/creators/"+handle,{signal});
 };
 
