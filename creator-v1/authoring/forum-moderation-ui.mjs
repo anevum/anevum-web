@@ -9,6 +9,7 @@ export const FORUM_PANEL=`<section class="forum-studio" aria-label="Human-review
     <div><h3>Awaiting publication review</h3><p class="muted">Every new topic and reply requires an explicit human approval.</p><div id="forumStudioQueue" aria-live="polite">Loading member submissions…</div></div>
     <div><h3>Member reports</h3><p class="muted">The report queue is private to authenticated staff.</p><div id="forumStudioReports" aria-live="polite">Checking unresolved reports…</div></div>
   </div>
+  <div class="forum-studio-hidden"><h3>Hidden messages / possible restoration</h3><p class="muted">These messages are not public. Restore requires a separately recorded staff decision.</p><div id="forumStudioHidden" aria-live="polite">Checking hidden content…</div></div>
   <p id="forumStudioStatus" role="status" aria-live="polite"></p>
 </section>`;
 export const FORUM_STYLE=`
@@ -19,7 +20,12 @@ export const FORUM_STYLE=`
 .forum-studio-eyebrow{font-size:10px;letter-spacing:.11em;color:#95efed;font-weight:900}
 .forum-studio-columns{display:grid;grid-template-columns:1fr 1fr;gap:17px;margin-top:20px}
 .forum-studio-columns>div{min-width:0}
-.forum-studio-columns h3{margin:0;font-size:17px}
+.forum-studio-columns h3,.forum-studio-hidden h3{margin:0;font-size:17px}
+.forum-studio-hidden{margin-top:21px;border-top:1px solid #476c8e;padding-top:17px}
+.forum-studio-hidden>.muted{font-size:12px;color:#bdd3e8}
+#forumStudioHidden{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}
+#forumStudioHidden .forum-review-card{margin-top:0}
+@media(max-width:800px){#forumStudioHidden{grid-template-columns:1fr}}
 .forum-review-card{padding:15px 13px;margin-top:10px;border:1px solid #547491;border-radius:9px;background:#101d34;overflow-wrap:anywhere}
 .forum-review-card>strong,.forum-review-card>span{display:block}
 .forum-review-card>strong{font-size:13px;line-height:1.3;color:#f1fbff}
@@ -36,9 +42,10 @@ export const FORUM_STYLE=`
 export const FORUM_APP=`(()=>{
  const queue=document.getElementById('forumStudioQueue');
  const reports=document.getElementById('forumStudioReports');
+ const hidden=document.getElementById('forumStudioHidden');
  const refresh=document.getElementById('forumStudioRefresh');
  const status=document.getElementById('forumStudioStatus');
- if(!queue||!reports||!refresh||!status)return;
+ if(!queue||!reports||!hidden||!refresh||!status)return;
  const element=(name,className,content)=>{
    const node=document.createElement(name);if(className)node.className=className;
    if(content!==undefined)node.textContent=String(content);return node;
@@ -88,17 +95,29 @@ export const FORUM_APP=`(()=>{
      card.append(element('span','',r.handle+" · "+r.room+" · "+r.reason));
      card.append(element('p','forum-review-body',r.body));
      if(r.details)card.append(element('p','report-details',r.details));
-     buttons(card,[['resolve','/api/forum/reports/'+r.id+'/resolve','Resolve',true],['dismiss','/api/forum/reports/'+r.id+'/dismiss','Dismiss',false]]);
+     buttons(card,[...(r.postStatus==='visible'?[['hide','/api/forum/posts/'+r.postId+'/hide','Hide Message',false]]:[]),['resolve','/api/forum/reports/'+r.id+'/resolve','Resolve',true],['dismiss','/api/forum/reports/'+r.id+'/dismiss','Dismiss',false]]);
      reports.append(card);
+   }
+ }
+ function renderHidden(items){
+   hidden.replaceChildren();
+   if(!items.length){hidden.append(element('p','muted','No hidden messages.'));return;}
+   for(const p of items){
+     const card=element('article','forum-review-card');
+     card.append(element('strong','',p.title||"Discussion"));
+     card.append(element('span','',p.handle+" · "+p.room+" · "+(p.starter?'Opening post':'Reply')+" · hidden"));
+     card.append(element('p','forum-review-body',p.body));
+     buttons(card,[['restore','/api/forum/posts/'+p.id+'/restore','Review + Restore',true]]);
+     hidden.append(card);
    }
  }
  async function load(){
    refresh.disabled=true;status.textContent="Checking staff-only queues…";
    try{
-     const [pending,flagged]=await Promise.all([call('/api/forum/queue'),call('/api/forum/reports')]);
-     renderPosts(pending.items);renderReports(flagged.items);
-     status.textContent=pending.items.length+" pending messages · "+flagged.items.length+" unresolved reports.";
-   }catch(e){queue.textContent="Forum moderation is not provisioned in this staging build.";reports.textContent="No report queue available.";status.textContent=e.message;}
+     const [pending,flagged,hiddenPosts]=await Promise.all([call('/api/forum/queue'),call('/api/forum/reports'),call('/api/forum/hidden')]);
+     renderPosts(pending.items);renderReports(flagged.items);renderHidden(hiddenPosts.items);
+     status.textContent=pending.items.length+" pending messages · "+flagged.items.length+" unresolved reports · "+hiddenPosts.items.length+" hidden messages.";
+   }catch(e){queue.textContent="Forum moderation is not provisioned in this staging build.";reports.textContent="No report queue available.";hidden.textContent="Hidden queue unavailable.";status.textContent=e.message;}
    finally{refresh.disabled=false;}
  }
  refresh.addEventListener('click',load);load();
