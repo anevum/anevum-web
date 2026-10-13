@@ -11,7 +11,7 @@ import type { EmblemMotif } from "../lib/artifact-art";
  */
 type Props = {
   motif: EmblemMotif;
-  size?: "micro" | "small" | "medium" | "large" | "hero";
+  size?: "nano" | "tiny" | "micro" | "compact" | "small" | "medium" | "large" | "hero";
   state?: "preview" | "earned" | "locked";
   className?: string;
   title?: string;
@@ -120,7 +120,7 @@ export function CelestialEmblem({motif,size="medium",state="preview",className="
   const uid=useId().replace(/:/g,"");
   const metal=uid+"-metal",face=uid+"-face",enamel=uid+"-enamel",glass=uid+"-glass",glow=uid+"-glow",stars=uid+"-stars";
   const colors = { light:"#d5faff",warm:"#f6dba0",deep:"#243b64" };
-  if(size==="micro") return <span className={`celestial-emblem celestial-emblem--micro celestial-emblem--${state} ${className}`} data-artifact-motif={motif}>
+  if(["nano","tiny","micro","compact"].includes(size)) return <span className={`celestial-emblem celestial-emblem--${size} celestial-emblem--${state} ${className}`} data-artifact-motif={motif}>
     <svg viewBox="0 0 32 32" role={title?"img":undefined} aria-hidden={title?undefined:true} aria-label={title||undefined} focusable="false">
       <defs>
         <radialGradient id={uid+"-tiny-enamel"}><stop stopColor="#4975aa"/><stop offset="100%" stopColor="#162747"/></radialGradient>
