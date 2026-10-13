@@ -32,6 +32,14 @@ export async function forumModeration(req,db,actor){
     ORDER BY p.created_at,p.id LIMIT 60`);
   return output({items:list});
  }
+ if(req.method==='GET'&&path===ROOT+'/hidden'){
+  const list=await rows(db,`SELECT p.id,p.thread_id AS threadId,p.body,p.starter,p.status,
+     p.created_at AS createdAt,t.title,t.room,t.status AS threadStatus,c.handle
+    FROM forum_posts p JOIN forum_threads t ON t.id=p.thread_id
+    JOIN member_accounts a ON a.id=p.author_member_id JOIN creator_profiles c ON c.member_id=a.id
+    WHERE p.status='hidden' ORDER BY p.reviewed_at DESC,p.id LIMIT 60`);
+  return output({items:list});
+ }
  if(req.method==='GET'&&path===ROOT+'/reports'){
   const list=await rows(db,`SELECT r.id,r.post_id AS postId,r.reason,r.details,r.created_at AS createdAt,
     p.body,c.handle,p.status AS postStatus,t.title AS threadTitle,t.room
