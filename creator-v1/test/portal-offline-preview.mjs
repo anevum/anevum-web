@@ -54,6 +54,20 @@ function offlineMember(req,res,url){
       ?json(res,{member:FAKE_MEMBER})
       :json(res,{error:"Sign-in required"},401);
   }
+  if(req.method==="GET"&&["/api/v1/member/community/me","/api/v1/member/creators/offline_artist"].includes(url.pathname)){
+    const cookie=(req.headers.cookie||"").split(";").map(x=>x.trim());
+    if(!cookie.includes(LOCAL_REVIEW_COOKIE))return json(res,{error:"Sign-in required"},401);
+    const progression={level:4,xp:180,artifact:"Ivory Compass",maxLevel:null,artifactEarned:true,
+      levelStartXp:180,nextLevelXp:320,progressWithinLevel:0};
+    if(url.pathname==="/api/v1/member/community/me")return json(res,{progression});
+    return json(res,{creator:{handle:"offline_artist",displayName:"Synthetic Creator Preview",
+      bio:FAKE_MEMBER.bio,joinedAt:"2026-10-10"},
+      contributions:{ratings:1,publishedProjects:0,releases:0},progression,
+      achievements:[
+       {key:"first-signal",name:"First Signal",symbol:"✦",description:"Fixture-only verified badge",earned:true,progress:1,target:1},
+       {key:"keen-eye",name:"Keen Eye",symbol:"◇",description:"Fixture-only locked badge",earned:false,progress:1,target:5}
+      ]});
+  }
   // These routes exist ONLY in the loopback screenshot fixture; all records
   // are labeled synthetic in the visible screenshot watermark.
   if(req.method==="GET"&&url.pathname==="/api/v1/member/forum/rooms")
@@ -111,7 +125,9 @@ createServer((req,res)=>{
   }
   if(u.pathname==="/creator"||u.pathname.startsWith("/creator/")){
     const header={"content-type":"text/html; charset=utf-8","cache-control":"no-store"};
-    // Restrict the fake member cookie to the local one-off editor visual capture.
+    // Restrict the synthetic member cookie to explicit local account/editor design captures only.
+    if(u.pathname==="/creator/account"&&req.headers.host==="127.0.0.1:4178")
+      header["set-cookie"]=LOCAL_REVIEW_COOKIE+"; Path=/; SameSite=Strict";
     if(u.pathname==="/creator/account/edit"&&req.headers.host==="127.0.0.1:4178")
       header["set-cookie"]=LOCAL_REVIEW_COOKIE+"; Path=/; SameSite=Strict";
     if(u.pathname==="/creator/create/new"&&req.headers.host==="127.0.0.1:4178")
