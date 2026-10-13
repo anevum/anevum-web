@@ -20,6 +20,29 @@ const work=seeds.map(([title,category,creatorHandle],i)=>({
 }));
 const categories=[...new Set(work.map(p=>p.category))].map(category=>({category,count:work.filter(p=>p.category===category).length}));
 const overlay='<style>body::after{content:"SYNTHETIC OFFLINE REVIEW — NOT REAL CONTENT";position:fixed;bottom:78px;right:7px;z-index:2147483647;background:#fff0b2;color:#1c1010;border:2px solid #1c1010;padding:5px 8px;font:900 8px system-ui,sans-serif;max-width:230px}</style>';
+// Fixture is ONLY served from this local 127.0.0.1 dev script for screenshot QA.
+// It does not run in Cloudflare Workers, staging D1 or any shipped assets.
+const FAKE_MEMBER=Object.freeze({
+ id:"00000000000000000000000000000099",
+ email:"synthetic-account@anevum.invalid",
+ handle:"offline_artist",
+ displayName:"Synthetic Creator Preview",
+ bio:"An illustrative account for testing layout only. Not a real ANEVUM member."
+});
+const LOCAL_REVIEW_COOKIE="anevum_offline_visual_fixture=1";
+function offlineMember(req,res,url){
+  if(url.pathname==="/api/v1/member/health"&&req.method==="GET")
+    return json(res,{service:"OFFLINE-SYNTHETIC-FIXTURE",status:"ok",signupEnabled:false});
+  if(url.pathname==="/api/v1/member/me"&&req.method==="GET"){
+    const cookies=(req.headers.cookie||"").split(";").map(x=>x.trim());
+    return cookies.includes(LOCAL_REVIEW_COOKIE)
+      ?json(res,{member:FAKE_MEMBER})
+      :json(res,{error:"Sign-in required"},401);
+  }
+  // No credential verification, writes, project or staff actions in this fixture.
+  return json(res,{error:"no member Worker in offline fixture"},404);
+}
+
 function json(res,obj,status=200){res.writeHead(status,{"content-type":"application/json; charset=utf-8","cache-control":"no-store"});res.end(JSON.stringify(obj));}
 function api(res,url){
  const path=url.pathname.slice("/creator/api/v1".length);
@@ -45,7 +68,7 @@ createServer((req,res)=>{
   const u=new URL(req.url,"http://127.0.0.1:4178");
   if(u.pathname==="/__ready")return json(res,{ready:existsSync(resolve(dist,"index.html"))});
   if(u.pathname.startsWith("/creator/api/v1/"))return api(res,u);
-  if(u.pathname.startsWith("/api/v1/member/"))return json(res,{error:"no member Worker in offline fixture"},404);
+  if(u.pathname.startsWith("/api/v1/member/"))return offlineMember(req,res,u);
   if(u.pathname.startsWith("/creator/assets/")){
     const rel=u.pathname.slice(9);
     if(!/^assets\/[a-zA-Z0-9._-]+$/.test(rel))return json(res,{error:"not-found"},404);
@@ -55,7 +78,11 @@ createServer((req,res)=>{
     return res.end(readFileSync(path));
   }
   if(u.pathname==="/creator"||u.pathname.startsWith("/creator/")){
-    res.writeHead(200,{"content-type":"text/html; charset=utf-8","cache-control":"no-store"});
+    const header={"content-type":"text/html; charset=utf-8","cache-control":"no-store"};
+    // Restrict the fake member cookie to the local one-off editor visual capture.
+    if(u.pathname==="/creator/account/edit"&&req.headers.host==="127.0.0.1:4178")
+      header["set-cookie"]=LOCAL_REVIEW_COOKIE+"; Path=/; SameSite=Strict";
+    res.writeHead(200,header);
     return res.end(readFileSync(resolve(dist,"index.html"),"utf8").replace("</head>",overlay+"</head>"));
   }
   return json(res,{error:"not-found"},404);

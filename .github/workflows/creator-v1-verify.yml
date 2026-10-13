@@ -122,8 +122,10 @@ jobs:
           capture 390 844 home /creator/
           capture 390 844 discover /creator/discover
           capture 390 844 creators /creator/creators
+          capture 1440 900 profile-editor /creator/account/edit
+          capture 390 844 profile-editor /creator/account/edit
           capture 320 720 home /creator/
-          printf 'These PNG files render the actual compiled React/Vite candidate using explicitly SYNTHETIC OFFLINE design fixtures. No fixture records are deployed to the staging or production database. Review 1440px desktop before 390px phone. This is visual QA, not real-user acceptance.\n' > evidence/portal-review/README.txt
+          printf 'These PNG files render the actual compiled React/Vite candidate using explicitly SYNTHETIC OFFLINE design fixtures, including a fake in-memory creator identity for the profile-editor layout only. No fixture records, accounts, cookies or codes are deployed to any staging or production database. Review desktop 1440px before phone 390px. This is visual QA, not authentication, real-user or provider acceptance.\n' > evidence/portal-review/README.txt
           echo "PORTAL_VISUAL_CAPTURE=PASS" | tee evidence/portal-review/capture-status.txt
 
       - name: Preserve generated public artifact for visual review
