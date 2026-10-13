@@ -10,6 +10,7 @@ import { MemberGate } from "./components/MemberGate";
 import { MemberAccountPage } from "./pages/MemberAccountPage";
 import { MemberLibraryPage } from "./pages/MemberLibraryPage";
 import { MemberProjectsPage } from "./pages/MemberProjectsPage";
+import { ProjectEditorPage } from "./pages/ProjectEditorPage";
 
 export default function App(){
   return <Routes><Route element={<Shell/>}>
@@ -21,6 +22,8 @@ export default function App(){
     <Route path="community" element={<ComingPage kind="community"/>}/>
     <Route element={<MemberGate/>}>
       <Route path="create" element={<MemberProjectsPage/>}/>
+      <Route path="create/new" element={<ProjectEditorPage/>}/>
+      <Route path="create/:projectId" element={<ProjectEditorPage/>}/>
       <Route path="library" element={<MemberLibraryPage/>}/>
       <Route path="account" element={<MemberAccountPage/>}/>
     </Route>

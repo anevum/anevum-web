@@ -68,3 +68,16 @@ test("creator and project searches expose native searchbox semantics",()=>{
   assert.match(read("web/src/pages/CreatorsPage.tsx"),/type="search" aria-label="Search published creators"/);
   assert.match(read("web/src/pages/DiscoverPage.tsx"),/type="search"/);
 });
+
+
+test("private project editor reuses staged member API with separate moderation submission",()=>{
+  const editor=read("web/src/pages/ProjectEditorPage.tsx");
+  const app=read("web/src/App.tsx");
+  assert.match(app,/path="create\/new"/);
+  assert.match(app,/path="create\/:projectId"/);
+  assert.match(editor,/memberCreateProject/);
+  assert.match(editor,/memberUpdateProject/);
+  assert.match(editor,/memberSubmitProject/);
+  assert.match(editor,/window\.confirm/);
+  assert.match(editor,/remains private until separately approved/);
+});
