@@ -1,0 +1,67 @@
+name: ANEVUM Creator V1 staging read-only diagnostic
+on:
+  pull_request:
+    paths:
+      - .github/workflows/creator-v1-public-route-diagnostic.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  probe-public-staging:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - name: Check safe public staging routes without authentication or writes
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --input-type=module <<'JS'
+          const origin = 'https://next.anevum.com';
+          // Fixed, public GET destinations only. Do not pass any cookies,
+          // auth headers, service tokens or account/member routes here.
+          const paths = [
+            '/creator/',
+            '/creator/start',
+            '/creator/guide',
+            '/creator/discover',
+            '/creator/api/v1/status',
+            '/creator/api/v1/categories',
+            '/creator/api/v1/projects',
+            '/creator/api/v1/projects?limit=2',
+            '/creator/api/v1/projects?free=1',
+            '/creator/api/v1/projects?free=1&limit=2',
+            '/creator/api/v1/projects?category=games&free=1',
+            '/creator/api/v1/creators'
+          ];
+          let errors = 0;
+          for (const path of paths) {
+            try {
+              const response = await fetch(origin+path,{
+                method:'GET',redirect:'manual',
+                headers:{Accept:path.includes('/api/')?'application/json':'text/html'},
+                signal:AbortSignal.timeout(15000)
+              });
+              const body=await response.text();
+              const contentType=response.headers.get('content-type')||'';
+              let result='ok';
+              if (!response.ok) {
+                // Only output sanitized public error metadata, not any
+                // catalogue records or private data.
+                try {
+                  const j=JSON.parse(body);
+                  result=JSON.stringify({error:typeof j.error==='string'?j.error.slice(0,160):null,status:j.status||null});
+                }catch { result='non-JSON HTTP error'; }
+                errors++;
+              }else if(path.includes('/api/')){
+                try {const j=JSON.parse(body);result=JSON.stringify({items:Array.isArray(j.items),categories:Array.isArray(j.categories),counts:!!j.counts});}catch{errors++;result='INVALID_JSON';}
+              }else {
+                result=body.includes('id="root"')?'SPA_ROOT_PRESENT':'SPA_ROOT_MISSING';
+                if(result==='SPA_ROOT_MISSING')errors++;
+              }
+              console.log(path+' => HTTP '+response.status+' / '+contentType+' / '+result);
+            }catch(e){errors++;console.log(path+' => NETWORK_ERROR '+String(e.message||e).slice(0,150));}
+          }
+          console.log('PUBLIC_STAGING_DIAGNOSTIC_ERRORS='+errors);
+          // Diagnostics report observed failures without blocking the
+          // development/release workflows or applying a rollback.
+          JS
