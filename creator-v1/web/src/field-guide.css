@@ -91,14 +91,13 @@
 @media(hover:none),(pointer:coarse){.guide-chapter:hover,.guide-answer:hover:not(:disabled),.guide-next-links>a:hover{transform:none}}
 @media(prefers-reduced-motion:reduce){.field-guide-page *, .field-guide-page *::before,.field-guide-page *::after{transition:none!important;animation:none!important}.guide-chapter:hover,.guide-answer:hover,.guide-next-links>a:hover{transform:none}}
 
-/* The single long word UNDERGROUND must remain fully visible at 320-390px. */
+/* The shared cinematic stamp is a flex item in the base styles. On phones,
+ * make it an absolutely positioned decoration so it never steals text width. */
 @media(max-width:560px){
- .field-guide-page .portal-page-heading-copy{min-width:0;max-width:100%}
- .field-guide-page .portal-page-heading-copy h1{
-  font-size:clamp(29px,9vw,39px);
-  letter-spacing:-.018em;
-  line-height:.94;
-  overflow-wrap:anywhere;
- }
+ .field-guide-page .portal-page-heading{display:block;padding:23px 17px 28px;min-height:270px}
+ .field-guide-page .portal-page-heading-copy{position:relative;display:block;min-width:0;width:100%;max-width:100%}
+ .field-guide-page .portal-page-heading-stamp{position:absolute;right:-44px;bottom:-33px;width:160px;min-width:0;height:160px;opacity:.14;pointer-events:none}
+ .field-guide-page .portal-page-heading-copy h1{font-size:clamp(29px,8.4vw,38px);letter-spacing:-.018em;line-height:.94;overflow-wrap:anywhere}
  .field-guide-page .portal-page-heading-copy h1 em{max-width:100%;overflow-wrap:anywhere}
+ .field-guide-page .portal-page-heading-copy p{max-width:320px}
 }
