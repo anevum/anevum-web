@@ -86,3 +86,64 @@ test('request rejects extra fields, malformed JSON and out-of-range IDs',async()
 test('public profile and social JS stay safely encoded and isolated from untrusted URLs',async()=>{
  const f=await setup();try{const p=await f.call('/creators/alice_builds/view','GET',undefined,null);assert.equal(p.status,200);assert.match(p.headers.get('content-security-policy'),/connect-src 'self'/);assert.match(await p.text(),/Achievement cabinet/);assert.match((await f.call('/social.js')).headers.get('content-type'),/javascript/);assert.ok(SOCIAL_CLIENT.includes("u.protocol!=='https:'"));assert.ok(!SOCIAL_CLIENT.includes('innerHTML'));}finally{f.sqlite.close()}
 });
+test('creator follow is server-confirmed, idempotent, reversible and grants no XP',async()=>{
+ const f=await setup();try{
+  const route='/creators/bob_tests/follow';
+  const initial=await (await f.userProfile('bob_tests',null)).json();
+  assert.equal(initial.followers,0);
+  assert.equal(initial.viewerFollows,false);
+  assert.equal((await f.call(route,'POST',{following:true},null)).status,401);
+  assert.equal((await f.call('/creators/alice_builds/follow','POST',{following:true})).status,403);
+  const created=await f.call(route,'POST',{following:true});
+  assert.equal(created.status,200,await created.clone().text());
+  assert.deepEqual(await created.json(),{following:true,changed:true,followers:1,viewerFollows:true});
+  assert.deepEqual(await (await f.call(route,'POST',{following:true})).json(),{following:true,changed:false,followers:1,viewerFollows:true});
+  const publicProfile=await (await f.userProfile('bob_tests',null)).json();
+  assert.equal(publicProfile.followers,1);
+  assert.equal(publicProfile.viewerFollows,false);
+  const ownProfile=await (await f.userProfile('bob_tests',testUsers[0])).json();
+  assert.equal(ownProfile.viewerFollows,true);
+  assert.equal((await f.call('/following','GET',undefined,null)).status,401);
+  const following=await (await f.call('/following')).json();
+  assert.equal(following.items.length,1);
+  assert.equal(following.items[0].handle,'bob_tests');
+  assert.equal(following.hasMore,false);
+  assert.ok(!JSON.stringify(following).includes('member-bob'));
+  assert.equal(f.sqlite.prepare('SELECT COUNT(*) AS n FROM community_xp_events').get().n,0);
+  assert.deepEqual(await (await f.call(route,'POST',{following:false})).json(),{following:false,changed:true,followers:0,viewerFollows:false});
+  assert.deepEqual(await (await f.call(route,'POST',{following:false})).json(),{following:false,changed:false,followers:0,viewerFollows:false});
+  assert.equal((await (await f.call('/following')).json()).items.length,0);
+ }finally{f.sqlite.close()}
+});
+test('creator follows cannot be forged, posted cross-site, or leaked between accounts',async()=>{
+ const f=await setup();try{
+  const follow='/creators/bob_tests/follow';
+  for(const bad of [{following:1},{following:true,memberId:'member-bob'},{saved:true},{}])
+   assert.equal((await f.call(follow,'POST',bad)).status,400);
+  assert.equal((await f.call(follow,'POST',{following:true},testUsers[0],'https://evil.example')).status,403);
+  assert.equal((await f.call('/creators/absent_creator/follow','POST',{following:true})).status,404);
+  assert.equal((await f.call(follow,'GET')).status,405);
+  assert.equal((await f.call(follow,'POST',{following:true})).status,200);
+  const bob=await (await f.call('/following','GET',undefined,testUsers[1])).json();
+  assert.deepEqual(bob.items,[]);
+  assert.equal((await (await f.userProfile('bob_tests',testUsers[1])).json()).viewerFollows,false);
+  assert.equal((await f.call(follow,'POST',{following:false},testUsers[1])).status,403);
+  assert.equal((await (await f.call('/following')).json()).items.length,1);
+ }finally{f.sqlite.close()}
+});
+test('suspended creators disappear from follow lists, and suspended followers do not count',async()=>{
+ const f=await setup();try{
+  assert.equal((await f.call('/creators/bob_tests/follow','POST',{following:true})).status,200);
+  f.sqlite.prepare("UPDATE creator_profiles SET status='suspended' WHERE member_id='member-bob'").run();
+  assert.equal((await f.call('/creators/bob_tests/follow','POST',{following:true})).status,404);
+  assert.equal((await (await f.call('/following')).json()).items.length,0);
+  f.sqlite.prepare("UPDATE creator_profiles SET status='active' WHERE member_id='member-bob'").run();
+  f.sqlite.prepare("UPDATE member_accounts SET status='suspended' WHERE id='member-alice'").run();
+  assert.equal((await (await f.userProfile('bob_tests',null)).json()).followers,0);
+  assert.equal((await f.call('/following')).status,401);
+  f.sqlite.prepare("UPDATE member_accounts SET status='active' WHERE id='member-alice'").run();
+  assert.equal((await (await f.userProfile('bob_tests',null)).json()).followers,1);
+  f.sqlite.prepare("DELETE FROM member_accounts WHERE id='member-alice'").run();
+  assert.equal(f.sqlite.prepare("SELECT COUNT(*) AS n FROM member_creator_follows").get().n,0);
+ }finally{f.sqlite.close()}
+});
