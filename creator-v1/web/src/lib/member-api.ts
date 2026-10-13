@@ -17,7 +17,7 @@ export interface ProjectDraft {
   license:string|null; aiDisclosure:string; humanContribution:string;
 }
 export interface Progression {
-  xp:number; level:number; maxLevel:number; artifact:string; artifactEarned:boolean;
+  xp:number; level:number; maxLevel:number|null; artifact:string|null; artifactEarned:boolean;
   levelStartXp:number; nextLevelXp:number|null; progressWithinLevel:number;
 }
 export interface SavedProject {

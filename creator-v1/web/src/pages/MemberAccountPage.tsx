@@ -30,9 +30,9 @@ export function MemberAccountPage(){
         {progress.state==="error"&&<p role="status">Progression is currently unavailable. No XP or achievements have been invented.</p>}
         {progress.state==="ready"&&<>
           <div className="member-level"><strong>LEVEL {progress.data.progression.level}</strong><span>{progress.data.progression.xp} XP</span></div>
-          <p>{progress.data.progression.artifact}</p>
+          <p>{progress.data.progression.artifact||"FUTURE ARTIFACT SERIES / IN DEVELOPMENT"}</p>
           <div role="progressbar" aria-label="Level progression" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(progress.data.progression.progressWithinLevel*100)} className="member-progress"><span style={{width:(progress.data.progression.progressWithinLevel*100)+"%"}}/></div>
-          <p className="member-caption">Staging progression is provisional and does not grant staff permissions, payouts or rating power.</p>
+          <p className="member-caption">No fixed level ceiling. The first 60 artifacts form one series; the XP curve is still under review. No staff powers, payouts or stronger votes come from levels.</p>
         </>}
       </section>
     </div>

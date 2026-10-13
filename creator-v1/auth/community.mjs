@@ -7,7 +7,8 @@ const reply=(request,obj,status=200)=>new Response(request.method==='HEAD'?null:
 const idPattern=/^[a-f0-9]{32}$/;
 const dailyLimit=5;
 const firstVoteXp=2;
-const maxLevel=60;
+// The initial artifact series has 60 names; it is not a level ceiling.
+const artifactSeriesLength=60;
 const relics=[
   'Foundry Spark','Copper Key','Blackglass Seed','Ivory Compass','Iron Moth','Brass Dial','Quartz Spool','Ember Lantern','Prism Mask','Cobalt Coil',
   'Silver Needle','Aether Bell','Obsidian Feather','Sunken Astrolabe','Clockwork Finch','Glass Meridian','Furnace Rose','Amber Tuning Fork','Marble Eye','Paper Engine',
@@ -16,13 +17,20 @@ const relics=[
   'Forged Telescope','Arc Lantern','Ivory Sextant','Molten Cipher','Silver Harp','Cobalt Furnace','Night Compass','Dawn Engine','Glass Cathedral','Radiant Crucible',
   'Solar Orrery','Gravity Spindle','Quantum Leaf','Iron Comet','Aether Vessel','Obsidian Crown','Aurora Monolith','Starforge Dial','Celestial Engine','The First Light'
 ];
-export function thresholdForLevel(level){return 20*(level-1)*(level-1);}
+// Keep the current 20x quadratic pacing pending #337 balance acceptance.
+// Levels have no fixed end; cap only unsafe number inputs, not the attainable level.
+export function thresholdForLevel(level){
+ if(!Number.isSafeInteger(level)||level<1)throw Error('Invalid level');
+ return 20*(level-1)*(level-1);
+}
 export function progressionFromXp(raw){
- const xp=Math.max(0,Math.floor(Number(raw)||0));
- const level=Math.min(maxLevel,Math.floor(Math.sqrt(xp/20))+1);
+ const amount=Number(raw);
+ const xp=Number.isFinite(amount)&&amount>0 ? Math.min(Number.MAX_SAFE_INTEGER,Math.floor(amount)):0;
+ const level=Math.floor(Math.sqrt(xp/20))+1;
  const floor=thresholdForLevel(level);
- const next=level===maxLevel?null:thresholdForLevel(level+1);
- return {xp,level,maxLevel,artifact:relics[level-1],artifactEarned:true,levelStartXp:floor,nextLevelXp:next,progressWithinLevel:next===null?1:(xp-floor)/(next-floor)};
+ const next=thresholdForLevel(level+1);
+ const artifact=level<=artifactSeriesLength?relics[level-1]:null;
+ return {xp,level,maxLevel:null,artifact,artifactEarned:artifact!==null,levelStartXp:floor,nextLevelXp:next,progressWithinLevel:Math.max(0,Math.min(1,(xp-floor)/(next-floor)))};
 }
 const sql=(db,text,params=[])=>{const s=db.prepare(text);return params.length?s.bind(...params):s;};
 async function list(db,text,params=[]){const r=await sql(db,text,params).all();if(r?.success===false||!Array.isArray(r?.results))throw Error('Storage unavailable');return r.results;}
