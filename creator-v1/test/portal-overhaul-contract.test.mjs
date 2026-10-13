@@ -68,7 +68,10 @@ test("member account shows server-verified achievements and unlimited XP without
  assert.match(page,/MY ACHIEVEMENT CABINET/);
  assert.match(page,/a\.earned/);
  assert.match(page,/NO FIXED/i);
- assert.match(shell,/\/levels", "Levels", "star"/);
+ assert.match(shell,/\/"\/levels", "Levels"\/);
+ assert.match(shell,/\/"\/library","Saved library"\/);
+ assert.match(shell,/\/"\/account","My profile"\/);
+ assert.doesNotMatch(shell,/mobile-bottom-nav|const mobileNav/);
 });
 
 test("offline review fixtures never enter a production bundle or public data path",()=>{
