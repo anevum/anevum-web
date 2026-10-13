@@ -32,7 +32,7 @@ export function LevelsPage(){
         </section>
         <section className="portal-box levels-policy"><span className="kicker">CURRENT STAGING MECHANICS</span><h2>THE SYSTEM IS STILL BEING BALANCED.</h2><p>The existing backend currently grants 2 XP for the first qualifying rating of a distinct third-party published project, with at most five XP-earning ratings per day. The XP curve and additional meaningful contribution categories are under review. Removing the level ceiling does not change earned XP or make unimplemented rewards available.</p></section>
       </div>
-      <aside className="portal-sidebar"><LevelPanel/><section className="portal-sidebox"><span className="kicker">ARTIFACT COLLECTION / SERIES 01</span><h2>THE FIRST 60 ARTIFACTS.</h2><p>From Foundry Spark to The First Light, the first collection has sixty named artifacts. Higher levels continue, and later collections will be designed separately.</p><Link to="/status">VIEW DEVELOPMENT STATUS ↗</Link></section></aside>
+      <aside className="portal-sidebar"><LevelPanel/><section className="portal-sidebox"><span className="kicker">ARTIFACT COLLECTION / SERIES 01</span><h2>THE FIRST 60 ARTIFACTS.</h2><p>From Foundry Spark to The First Light, the first collection has sixty named artifacts. Higher levels continue, and later collections will be designed separately.</p><Link to="/guide">PRACTICE CONTRIBUTION SKILLS ↗</Link><Link to="/status">VIEW DEVELOPMENT STATUS ↗</Link></section></aside>
     </div>
   </div>;
 }

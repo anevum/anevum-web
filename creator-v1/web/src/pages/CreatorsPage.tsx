@@ -49,7 +49,7 @@ export function CreatorsPage(){
             )}</section>:
             <div className="portal-true-empty"><span className="portal-empty-symbol" aria-hidden="true">✳</span>
               <div><span className="kicker">A BLANK PAGE IS NOT A FAKE COMMUNITY</span><h2>{q?"NO MATCHING MAKERS YET.":"THE FIRST MAKERS ARE ON THEIR WAY."}</h2>
-                <p>Creator channels become visible with staff-approved original work. Search another name or explore the real project catalogue.</p><div className="portal-empty-actions"><Link className="button secondary" to="/creators">ALL CREATORS</Link><Link className="button secondary" to="/discover">EXPLORE PROJECTS</Link></div>
+                <p>Creator channels become visible with staff-approved original work. Search another name or explore the real project catalogue.</p><div className="portal-empty-actions"><Link className="button secondary" to="/creators">ALL CREATORS</Link><Link className="button secondary" to="/discover">EXPLORE PROJECTS</Link><Link className="button secondary" to="/guide">FREE FIELD GUIDE</Link></div>
               </div></div>}
           <PageNav route="/creators" search={params} nextCursor={data.data.nextCursor} label="Creator directory"/>
         </>}

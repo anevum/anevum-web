@@ -54,7 +54,7 @@ export function CommunityPage(){
         <section className="portal-sidebox"><span className="kicker">THE RULES / COMMUNITY CULTURE</span><h2>HELP EACH OTHER MAKE BETTER THINGS.</h2>
           <div className="portal-community-values"><p><strong>BE SPECIFIC.</strong> Useful feedback beats empty scores.</p><p><strong>CREDIT THE WORK.</strong> Disclose AI assistance and respect licenses.</p><p><strong>STAY ACCESSIBLE.</strong> Free and phone-friendly participation matters.</p><p><strong>EARN RESPECT.</strong> XP never purchases authority or stronger votes.</p></div>
         </section>
-        <section className="portal-sidebox"><span className="kicker">WHAT'S NEXT</span><h2>REAL CONVERSATIONS, REAL MODERATION.</h2><p>Public discussions, following, reporting, community guidelines and abuse handling need independent acceptance before opening.</p><Link to="/status" className="portal-sidebox-link">SEE THE ROADMAP →</Link></section>
+        <section className="portal-sidebox"><span className="kicker">WHAT'S NEXT</span><h2>REAL CONVERSATIONS, REAL MODERATION.</h2><p>Public discussions, following, reporting, community guidelines and abuse handling need independent acceptance before opening.</p><Link to="/guide" className="portal-sidebox-link">PRACTICE USEFUL FEEDBACK →</Link><Link to="/status" className="portal-sidebox-link">SEE THE ROADMAP →</Link></section>
       </aside>
     </div>
   </div>;

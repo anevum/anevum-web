@@ -79,7 +79,7 @@ export function HomePage(){
           </section>
           <section className="portal-sidebox"><header><span className="kicker">WAYS TO TAKE PART</span><h2>PLAY. BUILD. CONTRIBUTE.</h2></header>
             <div className="portal-steps"><div><strong>01 / DISCOVER</strong><p>Find something worth trying.</p></div><div><strong>02 / PARTICIPATE</strong><p>Share feedback and original work.</p></div><div><strong>03 / EARN YOUR PLACE</strong><p>Collect verified XP and achievements.</p></div></div>
-            <Link className="portal-sidebox-link" to="/levels">UNLIMITED LEVELS & ARTIFACTS →</Link>
+            <Link className="portal-sidebox-link" to="/guide">TRY THE FREE FIELD GUIDE →</Link><Link className="portal-sidebox-link" to="/levels">UNLIMITED LEVELS & ARTIFACTS →</Link>
           </section>
           <section className="portal-sidebox portal-side-seal"><OrbitalMark/><span>ANEVUM<br/>CREATIVES BEYOND GROUND.</span></section>
         </aside>
