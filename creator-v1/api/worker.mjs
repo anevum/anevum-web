@@ -127,19 +127,21 @@ async function rows(db, sql, params = []) {
   return result.results;
 }
 function parameters(url) {
-  const allowed = new Set(['category', 'q', 'cursor', 'limit', 'creator']);
+  const allowed = new Set(['category', 'q', 'cursor', 'limit', 'creator', 'free']);
   for (const key of url.searchParams.keys()) if (!allowed.has(key) || url.searchParams.getAll(key).length !== 1) throw new Error('Invalid or repeated parameter');
   const category = url.searchParams.get('category') || '';
   const creator = url.searchParams.get('creator') || '';
   const q = (url.searchParams.get('q') || '').trim();
   const cursor = url.searchParams.get('cursor') || '';
   const text = url.searchParams.get('limit') ?? '24';
+  const free = url.searchParams.get('free');
   if (category && !CATEGORIES.has(category)) throw new Error('Invalid category');
+  if (free !== null && free !== '1') throw new Error('Invalid free filter');
   if (creator && !CREATOR_HANDLE.test(creator)) throw new Error('Invalid creator');
   if (q.length > 100 || /[\u0000-\u001f\u007f]/u.test(q)) throw new Error('Invalid search');
   if (cursor && !ID.test(cursor)) throw new Error('Invalid cursor');
   if (!/^[1-9]\d?$/.test(text) || Number(text) > 48) throw new Error('Limit must be 1 through 48');
-  return { category, creator, q, cursor, limit: Number(text) };
+  return { category, creator, q, cursor, limit: Number(text), freeOnly: free === '1' };
 }
 export default {
   async fetch(request, env = {}) {
@@ -174,7 +176,7 @@ export default {
           ' AND c.handle > ? COLLATE NOCASE';
         const args=[filter.cursor];
         if(filter.q){
-          const match='%'+filter.q.replace(/[\\%_]/g,'\\      if (repository) {')+'%';
+          const match='%'+filter.q.replace(/[\\%_]/g,'\\$&')+'%';
           sql+=" AND (c.handle LIKE ? ESCAPE '\\' OR c.display_name LIKE ? ESCAPE '\\')";
           args.push(match,match);
         }
@@ -204,6 +206,7 @@ export default {
       let sql = 'SELECT ' + FIELDS + ' ' + PUBLIC_FROM + ' AND p.id>?';
       const args = [filter.cursor];
       if (filter.category) { sql += ' AND p.category=?'; args.push(filter.category); }
+      if (filter.freeOnly) sql += ' AND p.free_to_use=1';
       if (filter.creator) { sql += ' AND c.handle=? COLLATE NOCASE'; args.push(filter.creator); }
       if (filter.q) {
         sql += " AND (p.title LIKE ? ESCAPE '\\' OR p.summary LIKE ? ESCAPE '\\')";
