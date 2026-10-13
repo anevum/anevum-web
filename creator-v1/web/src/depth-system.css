@@ -239,6 +239,8 @@
   box-shadow:inset 0 3px 7px #ffe3c54c,0 12px 17px #0008;
 }
 .depth-stage-mark{width:91%;height:91%;position:relative;color:#f4e3d0;filter:drop-shadow(2px 2px 0 #3b2631)}
+/* Overrides inherited page-level generic SVG sizes inside the 3D sculpture. */
+.portal-welcome-emblem .depth-stage-mark,.portal-page-heading-stamp .depth-stage-mark,.levels-emblem .depth-stage-mark{width:91%;height:91%}
 .depth-stage-emblem .mark-core-cut{fill:#44293d}
 .depth-stage-reflection{
   inset:13%;border-radius:50%;z-index:4;opacity:.23;
