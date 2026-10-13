@@ -5,6 +5,18 @@ Prepared: October 12, 2026. Public opening target: January 1, 2027.
 
 This is an execution view of [engineering board #325](https://github.com/anevum/anevum-web/issues/325), not a second backlog. [#308](https://github.com/anevum/anevum-web/issues/308) owns dates; [#344](https://github.com/anevum/anevum-web/issues/344) owns the locked product doctrine. Keep the existing #328-#333, #335 and #337 issue owners.
 
+## Current continuation checkpoint — October 13, 2026
+
+Session: `ANEVUM.WEB.BUILD.2026-10-13.009.CREATOR-SUBMISSION-READINESS`.
+
+The working visual baseline is the owner-accepted **Dimensional Underground** React frontend, staged at `next.anevum.com/creator/` from `5a16dad48491035ba9397ddb97bb84b65d562dd4` ([deployment workflow 38373612921](https://github.com/anevum/anevum-web/actions/runs/38373612921)). This is recorded deployment evidence from #325, not a fresh provider query. No fixed bottom mobile dock; keep the header navigation and original orbital mark. Optional artwork PR #350 is deferred.
+
+Build 008 / [draft PR #351](https://github.com/anevum/anevum-web/pull/351) added member profile editing and first-time creator setup at `a64c262bf97e650240f736333ac8cd62ff310ed8`; its exact-source CI passed. Build 009 continues directly from that source with saved-revision submission protection, an advisory readiness checklist and a private project passport preview. These draft-source changes have not been merged or deployed; public production stays read-only. The earlier source/status section below is a historical Build 002 checkpoint, not the latest React review head.
+
+Levels have no product cap; the first 60 artifacts form Series One. The current curve remains `20*(level-1)^2` until accessible pacing is simulated and separately approved. Earlier fixed-60-level wording is superseded; no new XP award or rate is enabled here.
+
+Still next: complete real invited member A → separately authenticated staff → anonymous guest → independent member B acceptance with a rights-cleared, genuinely hosted project. Evergrove and The Fold remain separate development projects; unfinished games and synthetic fixtures must not be published to fill the catalogue. Production go/no-go, identity/security and recovery acceptance remain open.
+
 ## Source and status correction
 
 The current integration source is `production/creator-v1`, confirmed at `1ccaf67dac52eaa2e801f69222b289fd3d7a9631` after merged [Build 001 / PR #343](https://github.com/anevum/anevum-web/pull/343). The older `build/anevum-v1-newyear-overhaul-20261011` remains a historical/pre-production branch; do not repeat its missing UI work over the newer baseline. Archive `archive/pre-production-20261012` preserves checkpoint `e34faf8ad72d319e469eface8aec7fe26741951f`. Nothing was deleted.
@@ -69,7 +81,7 @@ Exit: one reproducible authentic accepted journey, not merely a unit-test count.
 ## 6. XP, levels and achievements (#337, #330)
 
 - [ ] Simulate accessible progression for occasional phone users, explorers, reviewers and creators. Current staging rates/curve are not final.
-- [ ] Test the proposed 60-level curve and extra contribution awards before approval; do not silently activate the proposed coefficients or XP values.
+- [ ] Simulate and approve an accessible curve with unlimited levels and the first 60 Series One artifacts, plus any proposed contribution awards; do not silently activate coefficients or XP values.
 - [ ] Implement/verify auditable, deduplicated meaningful contribution awards, limits, concurrent writes, reversals and appeals.
 - [ ] Show consistent level/progress, earn history and a polished starter achievement set in account, library and profile surfaces.
 - [ ] Preserve no bought XP, no ranking/vote power from payment, no staff authority from levels and no promised cash redemption.

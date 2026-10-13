@@ -82,6 +82,8 @@ createServer((req,res)=>{
     // Restrict the fake member cookie to the local one-off editor visual capture.
     if(u.pathname==="/creator/account/edit"&&req.headers.host==="127.0.0.1:4178")
       header["set-cookie"]=LOCAL_REVIEW_COOKIE+"; Path=/; SameSite=Strict";
+    if(u.pathname==="/creator/create/new"&&req.headers.host==="127.0.0.1:4178")
+      header["set-cookie"]=LOCAL_REVIEW_COOKIE+"; Path=/; SameSite=Strict";
     res.writeHead(200,header);
     return res.end(readFileSync(resolve(dist,"index.html"),"utf8").replace("</head>",overlay+"</head>"));
   }
