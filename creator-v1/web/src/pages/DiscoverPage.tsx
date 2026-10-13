@@ -57,7 +57,7 @@ export function DiscoverPage(){
   const categories=resource.state==="ready"?resource.data.categories.categories:[];
   const countByCategory=new Map(categories.map(x=>[x.category,x.count]));
   return <div className="portal-discover">
-    <PortalHeading eyebrow="THE PORTALS / EVERYTHING WORTH TRYING" title="EXPLORE THE" accent="UNDERGROUND." description="Games, apps, interactive experiments and independent work. Search actual published projects, not paid placement or invented activity." index="DISCOVER / 001"/>
+    <PortalHeading eyebrow="THE PORTALS / EVERYTHING WORTH TRYING" title="EXPLORE THE" accent="UNIVERSE." description="Games, apps, interactive experiments and independent work. Search actual published projects, not paid placement or invented activity." index="DISCOVER / 001"/>
     <div className="portal-browse-layout">
       <div className="portal-browse-main">
         <section className="portal-box portal-search-hall" aria-label="Search and browse published projects">

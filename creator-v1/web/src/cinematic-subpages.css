@@ -1,0 +1,72 @@
+/* Companion page art for cinematic Creator V1. Artwork is decorative; content and permissions remain authoritative. */
+.portal-page-heading{position:relative;isolation:isolate;min-height:275px;overflow:hidden;border:1px solid #39567a;border-radius:9px;background:#081428;box-shadow:0 18px 35px #0008;display:flex;align-items:center}
+.portal-page-heading .cosmic-horizon{display:none}
+.cw-heading-cosmos{position:absolute;inset:0;z-index:-2;opacity:.78;pointer-events:none}
+.cw-heading-cosmos:after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,#030917ed 0%,#051022ce 43%,#07122567 78%,#060a17ad),linear-gradient(0deg,#061023ad,transparent 65%)}
+.portal-page-heading-copy{z-index:1;position:relative;max-width:77%;padding:22px 28px}
+.portal-page-heading h1{font-family:Georgia,"Times New Roman",serif;font-size:clamp(43px,5vw,72px);line-height:.9;letter-spacing:-.04em;font-weight:500;color:#ffe2b3;text-shadow:0 2px 14px #000c}
+.portal-page-heading h1 em{color:#f5d497;font-style:normal}
+.portal-page-heading-copy>p{max-width:640px;color:#d6e6f6;font-size:13px;text-shadow:0 2px 6px #000}
+.portal-page-heading-stamp{position:relative;z-index:1;filter:drop-shadow(0 0 18px #e4bc6955)}
+.portal-page-heading-stamp>span{background:#050d1abe;color:#f3d29c;border:1px solid #d8b27d85}
+.portal-heading-action{color:#ffda95}
+.portal-project-header{border:1px solid #426482;border-radius:10px;overflow:hidden;background:linear-gradient(138deg,#142946,#071020);box-shadow:0 12px 30px #0007}
+.portal-project-art{position:relative;overflow:hidden;isolation:isolate;background:linear-gradient(130deg,#09203c,#070b18);min-height:370px}
+.portal-project-art>.cw-illustration{position:absolute;inset:0;width:100%;height:100%;z-index:-1;filter:saturate(1.1)}
+.portal-project-art:after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(0deg,#030713a0,transparent 65%),linear-gradient(90deg,#060d1a66,transparent 70%);z-index:0}
+.portal-project-corner,.portal-project-art-tag{position:absolute;z-index:2;color:#fbe4ad;text-shadow:0 2px 6px #000}
+.portal-project-art-tag{border:1px solid #ddc09a91;background:#060c18db;padding:6px 12px}
+.portal-project-intro{background:radial-gradient(circle at 100% 10%,#20375a91,transparent 55%),linear-gradient(#101e34,#081323)}
+.portal-project-intro h1{font-family:Georgia,serif;font-weight:500;color:#ffe2af;text-wrap:balance}
+.portal-project-intro p{color:#c9d7ed}
+.portal-project-maker{background:#0b1e33;border-color:#4e7094}
+.portal-facts-row strong,.portal-project-disclosure strong{color:#f3dbaf}
+.portal-project-cta .button{border-radius:6px}
+.portal-creator-tile{position:relative;overflow:hidden;border-radius:10px;border:1px solid #365776;background:radial-gradient(circle at 50% 32%,#3a346b9f,transparent 53%),linear-gradient(155deg,#142643,#070e1c)}
+.portal-creator-tile:nth-child(3n+2){background:radial-gradient(circle at 50% 32%,#1d5974a3,transparent 56%),linear-gradient(155deg,#122746,#07101d)}
+.portal-creator-tile:nth-child(3n){background:radial-gradient(circle at 50% 32%,#634b8699,transparent 55%),linear-gradient(155deg,#152743,#070e1c)}
+.portal-creator-tile:hover{border-color:#f0ce97;box-shadow:0 14px 30px #000a}
+.portal-creator-avatar,.portal-channel-avatar{border-radius:50%;border:2px solid #dfc08d;background:radial-gradient(circle at 30% 25%,#8367b6,#23456d 55%,#0a1830 92%);box-shadow:0 0 0 5px #081b32,0 0 23px #a58ac455;display:grid;place-items:center;overflow:hidden}
+.cw-letter-avatar{font:normal clamp(35px,4vw,70px)/1 Georgia,"Times New Roman",serif;color:#fbe3bc;text-shadow:0 3px 12px #030716c7}
+.portal-creator-tile-name{color:#fbe6b8;font-family:Georgia,serif;font-weight:500}
+.portal-creator-tile-cta,.portal-creator-tile-meta{color:#a9c9f4}
+.portal-channel-banner{position:relative;isolation:isolate;overflow:hidden;background:linear-gradient(110deg,#081527,#1a2c48);border:1px solid #3b668e;border-radius:10px;box-shadow:0 14px 28px #0008}
+.cw-channel-scene{position:absolute;inset:0;z-index:-1;opacity:.46;pointer-events:none}
+.cw-channel-scene:after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,#061124dc 0%,#0813288a 60%,#07142a36)}
+.portal-channel-avatar,.portal-channel-identity,.portal-channel-badge{position:relative;z-index:1}
+.portal-channel-identity h1{font-family:Georgia,"Times New Roman",serif;color:#ffe6b8;font-weight:500}
+.portal-channel-stats strong{color:#f4d694}
+.portal-room{position:relative;isolation:isolate;overflow:hidden;background:linear-gradient(145deg,#152b44,#081020);border:1px solid #3e5d7f;border-radius:9px;box-shadow:0 10px 25px #0005}
+.cw-room-world{position:absolute;inset:0;z-index:-2;opacity:.32;pointer-events:none}
+.cw-room-world:after{content:"";position:absolute;inset:0;background:linear-gradient(0deg,#06101df9 8%,#07111dd5 48%,#0713227f)}
+.portal-room>*:not(.cw-room-world){z-index:1;position:relative}
+.portal-room:hover{border-color:#d8bb8d}
+.portal-room strong{font-family:Georgia,serif;color:#fbe2b1;font-size:clamp(19px,1.7vw,28px);font-weight:500}
+.portal-room-top span{color:#f3d394}
+.portal-room a{color:#f3d89f}
+.portal-community-notice{background:#10243d;border-color:#5c7697}
+.portal-community-notice strong{color:#fbe1a7}
+.portal-community-values strong{color:#f8dda8}
+.portal-project-discovery{background:linear-gradient(130deg,#112b46,#081527)}
+.start-journey,.start-portal,.guide-training,.guide-answer,.portal-launcher,.portal-launcher button{border-color:#3d5b7b}
+.start-portal,.guide-training,.start-journey{background-color:#0a1a2e}
+.start-portal:hover,.guide-answer:hover{border-color:#f0cc88;box-shadow:0 10px 24px #0005}
+.member-panel,.member-profile-art,.project-readiness{background-color:#0c1b32;border-color:#436384}
+.portal-availability-filter button.active,.portal-result-actions button.active{background:#e5c58e;color:#07152a}
+@media(max-width:900px){
+ .portal-page-heading-copy{max-width:83%;padding:18px 15px}
+ .portal-page-heading{min-height:220px}
+ .portal-page-heading-stamp{width:130px;flex:0 0 130px}
+ .portal-project-art{min-height:260px}
+}
+@media(max-width:600px){
+ .portal-page-heading{min-height:230px}
+ .portal-page-heading-copy{max-width:100%;padding:19px}
+ .portal-page-heading-stamp{display:none}
+ .portal-page-heading h1{font-size:clamp(42px,9vw,60px)}
+ .portal-project-art{min-height:245px}
+ .cw-room-world{opacity:.24}
+}
+@media(prefers-reduced-motion:reduce){
+ .cw-heading-cosmos svg,.cw-channel-scene svg,.cw-room-world svg{animation:none!important;transform:none!important}
+}

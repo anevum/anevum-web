@@ -5,6 +5,7 @@ import {PortalHeading} from "../components/PortalHeading";
 import {LevelPanel} from "../components/LevelPanel";
 import {ProjectCard} from "../components/ProjectCard";
 import {OrbitalMark} from "../components/OrbitalMark";
+import {CosmicArtwork} from "../components/CosmicArtwork";
 import {LoadingState,ErrorState} from "../components/States";
 
 const rooms=[
@@ -28,7 +29,7 @@ export function CommunityPage(){
       <div className="portal-main">
         <section className="portal-box">
           <header className="portal-box-header"><div><span className="kicker">THE MEETING POINTS / IN DEVELOPMENT</span><h2>FIND YOUR CORNER</h2></div><span className="portal-hall-stamp">COMMUNITY ROOMS / PLANNED</span></header>
-          <div className="portal-room-grid">{rooms.map((room,i)=><article className="portal-room" key={room.name}>
+          <div className="portal-room-grid">{rooms.map((room,i)=><article className="portal-room" key={room.name}><div className="cw-room-world" aria-hidden="true"><CosmicArtwork scene={room.category}/></div>
             <div className="portal-room-top"><span aria-hidden="true">{room.symbol}</span><small>ROOM {String(i+1).padStart(2,"0")} / PLANNED</small></div>
             <strong>{room.name}</strong><span>{room.tag}</span><p>{room.description}</p>
             <Link to={"/discover?category="+encodeURIComponent(room.category)}>EXPLORE REAL WORK ↗</Link>

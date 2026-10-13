@@ -6,6 +6,8 @@ const read=path=>readFileSync(new URL("../"+path,import.meta.url),"utf8");
 const css=read("web/src/cosmic-observatory.css");
 const horizon=read("web/src/components/CosmicHorizon.tsx");
 const home=read("web/src/pages/HomePage.tsx");
+const shell=read("web/src/components/Shell.tsx");
+const worlds=read("web/src/components/CosmicIllustration.tsx");
 const heading=read("web/src/components/PortalHeading.tsx");
 const levels=read("web/src/pages/LevelsPage.tsx");
 const styles=read("web/src/main.tsx");
@@ -29,7 +31,7 @@ function token(name){
 }
 
 test("cosmic design overrides old coral skin last without deleting existing pages",()=>{
-  assert.match(html, /name="theme-color" content="#080a12"/);
+  assert.match(html, /name="theme-color" content="#040811"/);
   assert.match(styles,/import "\.\/portal-overhaul\.css"/);
   assert.match(styles,/import "\.\/depth-system\.css"/);
   assert.match(styles,/import "\.\/cosmic-observatory\.css"/);
@@ -64,8 +66,9 @@ test("primary text, quiet text and neon action surfaces meet AA non-large contra
 });
 
 test("original orbit identity is unchanged and the star map is decorative",()=>{
-  assert.match(home,/<CosmicHorizon\/>/);
-  assert.match(home,/<OrbitalStage variant="hero"\/>/);
+  assert.match(home,/<CosmicArtwork scene="hero" priority\/>/);
+  assert.match(shell,/<OrbitalMark className="brand-mark"/);
+  assert.match(worlds,/aria-hidden=\{title\?undefined:true\}/);
   assert.match(heading,/<CosmicHorizon\/>/);
   assert.match(heading,/<OrbitalStage variant="heading"\/>/);
   assert.match(levels,/<CosmicHorizon\/>/);
@@ -103,6 +106,6 @@ test("cosmic art adds no data claims, public submissions, or account/XP side eff
       assert.ok(!content.includes(phrase),phrase);
   }
   assert.match(home,/readStatus\(signal\)/);
-  assert.match(home,/readProjects\(\{limit:"6"\}/);
-  assert.match(home,/NO FABRICATED ACTIVITY/);
+  assert.match(home,/readProjects\(\{limit:"10"\}/);
+  assert.match(home,/No fake projects, ratings or activity/);
 });

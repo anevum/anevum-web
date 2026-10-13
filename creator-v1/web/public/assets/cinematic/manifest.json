@@ -1,0 +1,78 @@
+{
+  "session": "ANEVUM.WEB.BUILD.2026-10-13.001.CINEMATIC-CREATOR-OVERHAUL",
+  "provenance": "Original user-directed generative concept study; all media is decorative, never a real creator submission",
+  "kind": "STATIC_DECORATIVE_ARTWORK",
+  "status": "source-integrated candidate, pending browser review, NOT PUBLIC RELEASE",
+  "assets": [
+    {
+      "path": "categories/apps.webp",
+      "width": 900,
+      "height": 440,
+      "bytes": 34202,
+      "sha256": "f32e121d157afabb2dd6489f359dbce136fb2034cfce52f23ae6df99f921e47c"
+    },
+    {
+      "path": "categories/automation.webp",
+      "width": 900,
+      "height": 440,
+      "bytes": 35364,
+      "sha256": "d981fe683e89987d4331f47b2a160a9b0d869b794cdffac728dbb304bec50752"
+    },
+    {
+      "path": "categories/creative.webp",
+      "width": 900,
+      "height": 360,
+      "bytes": 22434,
+      "sha256": "ff0cd13547cbce039752e1ec24a7bdf73a2573b19dfffc7f24bc556ec3f0d397"
+    },
+    {
+      "path": "categories/games.webp",
+      "width": 900,
+      "height": 360,
+      "bytes": 22034,
+      "sha256": "e92829fe45e7b81ee2eca0a72965fb1ee557441187f56f1ea20b4db0e154ae41"
+    },
+    {
+      "path": "categories/learning.webp",
+      "width": 900,
+      "height": 360,
+      "bytes": 27112,
+      "sha256": "49ade8bbfb0949b2ea30ba4a66abfd6233f645a08ef6c4294ecd14965f43ae73"
+    },
+    {
+      "path": "categories/libraries.webp",
+      "width": 900,
+      "height": 440,
+      "bytes": 25374,
+      "sha256": "93b140ce710fc6296a5fd23cfe9c7b539d5d7ca6332b4c8cb7f1ea32130a60ea"
+    },
+    {
+      "path": "categories/other.webp",
+      "width": 900,
+      "height": 360,
+      "bytes": 25378,
+      "sha256": "f84c38494cf8f969628c248ef7269bc05a63bca93eb0a06c9f0a0b30d6accd5d"
+    },
+    {
+      "path": "categories/research.webp",
+      "width": 900,
+      "height": 510,
+      "bytes": 42070,
+      "sha256": "c36e5071720a7384f5dd14c8e7fe8e0efb3185248a081a2b92549b7dd4664136"
+    },
+    {
+      "path": "hero/portal-world.webp",
+      "width": 1600,
+      "height": 640,
+      "bytes": 105602,
+      "sha256": "5dece34caf849fbe48665f59815efd48644e1c1de5ede76f58f3cb321ecb1db7"
+    },
+    {
+      "path": "hero/skyward-city.webp",
+      "width": 1600,
+      "height": 620,
+      "bytes": 102536,
+      "sha256": "3bddb9dc565978802b176d42db886f833923d8a5578e940385c65510cbc6aacd"
+    }
+  ]
+}

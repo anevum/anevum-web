@@ -14,7 +14,7 @@ const api = read("api/worker.mjs");
 test("visitor onramp is reachable from homepage, desktop and mobile, independently of submission", () => {
   assert.match(app, /path="start" element={<StartPage\/>}/);
   assert.match(shell, /\["\/start", "Start Here"\]/);
-  assert.match(home, /to="\/start">FIND YOUR WAY IN/);
+  assert.match(home, /to="\/start"[^>]*>FIND YOUR PLACE/);
   assert.doesNotMatch(start, /memberCreateProject|memberSubmitProject|memberSetSaved/);
   assert.match(start, /You do not have to be a developer/);
   assert.match(start, /invitation-only during testing/);
