@@ -235,7 +235,7 @@ body::before{
   100%{transform:translate3d(1.7%,-.9%,0) scale(1.055);opacity:.86}
 }
 @keyframes cosmos-drift{from{transform:translate3d(-7px,4px,0)}to{transform:translate3d(9px,-5px,0)}}
-.portal-welcome-copy,.portal-page-heading-copy,.levels-masthead>div:first-of-type{z-index:2;position:relative}
+.portal-welcome-copy,.portal-page-heading-copy,.levels-masthead>div:not(.cosmic-horizon){z-index:2;position:relative}
 .portal-welcome h1,.portal-page-heading h1,.levels-masthead h1{
   color:#f7faff;
   text-shadow:0 3px 0 #030914,0 8px 29px #030916cc;
