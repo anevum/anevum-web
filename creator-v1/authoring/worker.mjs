@@ -1,6 +1,7 @@
 import {BRAND_MARK,BRAND_CSS} from '../shared/brand.mjs';
 import {REVIEW_PANEL,REVIEW_STYLE,REVIEW_APP} from './review-snippets.mjs';
 import {voteModeration} from './vote-moderation.mjs';
+import {forumModeration} from './forum-moderation.mjs';
 import {staffPrivacyRequests} from './privacy-queue.mjs';
 import {PRIVACY_PANEL,PRIVACY_STYLE,PRIVACY_APP} from './privacy-queue-ui.mjs';
 import {VOTE_PANEL,VOTE_STYLE,VOTE_APP} from './vote-moderation-ui.mjs';
@@ -105,6 +106,7 @@ async function api(request,db,actor){
   const url=new URL(request.url),path=url.pathname;
   if(path==='/api/privacy-requests')return staffPrivacyRequests(request,db);
   if(path==='/api/community-votes'||path.startsWith('/api/community-votes/'))return voteModeration(request,db,actor);
+  if(path==='/api/forum'||path.startsWith('/api/forum/'))return forumModeration(request,db,actor);
   if(request.method==='GET'&&path==='/api/projects'){
     const projects=await all(db,'SELECT '+columns+' FROM projects WHERE owner_member_id=? ORDER BY updated_at DESC LIMIT 100',[OWNER]);
     return json({projects:projects.map(safeProject),mode:'owner-preview'});
