@@ -24,7 +24,7 @@ test("public discussion and profile routes exist without the account gate hiding
  assert.match(page,/staff approval/i);
 });
 test("every approved message renders an actual author card with earned-only badges and no simulated uploads",()=>{
- assert.match(card,/className="forum-author-card/);
+ assert.ok(card.includes('className={"forum-author-card'));
  assert.match(card,/className="forum-author-avatar"/);
  assert.match(card,/author\.badges\.slice\(0,5\)/);
  assert.match(card,/author\.level/);
@@ -46,7 +46,7 @@ test("staging forum writes inherit existing signed-in and origin checks, moderat
  assert.match(review,/forum_moderation_events/);
  assert.match(review,/forum_report_events/);
  assert.match(server,/status:'pending'/);
- assert.match(server,/\b'visible'\b/);
+ assert.ok(server.includes("status='visible'"));
 });
 test("new styles are mobile-first and preserve reduced-motion, keyboard focus and legibility",()=>{
  assert.match(shell,/import "\.\/forum\.css";/);
