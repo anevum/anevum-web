@@ -57,6 +57,7 @@ export function MemberGate(){
       <nav aria-label="Member workspace navigation">
         <NavLink to="/account">ACCOUNT</NavLink>
         <NavLink to="/account/edit">EDIT PROFILE</NavLink>
+        <NavLink to="/account/interests">MY INTERESTS</NavLink>
         <NavLink to="/create">MY PROJECTS</NavLink>
         <NavLink to="/library">LIBRARY</NavLink>
       </nav>
