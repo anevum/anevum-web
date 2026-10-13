@@ -120,7 +120,7 @@ test('RHEN single-screen terminal is routed with distinct research path and no b
  assert.equal(t.status,200);assert.match(html,/RHEN · Terminal/);
  assert.match(html,/id="metricEquity"/);assert.match(html,/id="scannerRows"/);
  assert.match(html,/id="orderRows"/);assert.match(html,/id="historySvg"/);
- assert.ok(html.includes('terminal.css'));assert.match(html,/terminal\\.js/);
+ assert.ok(html.includes('terminal.css'));assert.ok(html.includes('terminal.js'));
  assert.doesNotMatch(html,/APCA-API-SECRET-KEY|APCA-API-KEY-ID|<form[^>]*order/i);
  const source=await request('/projects/rhen/research/');assert.equal(source.status,200);
  assert.match(await source.text(),/Research Console/);
