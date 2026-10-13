@@ -1,0 +1,245 @@
+/* ANEVUM / CELESTIAL ARTIFACTS
+ * Transcosmic Observatory asset layer / series-one illustration study.
+ * Does not represent a newly minted award, level, rarity or granted right.
+ * Decorative enamel, machined metal and glass are layered on the SVG master.
+ */
+.celestial-emblem{
+ --artifact-size:94px;
+ --artifact-energy:#8fefec;
+ --artifact-metal:#d3ddea;
+ position:relative;display:inline-grid;place-items:center;
+ width:var(--artifact-size);height:var(--artifact-size);
+ aspect-ratio:1;isolation:isolate;flex:none;
+ vertical-align:middle;overflow:visible;line-height:1;
+}
+.celestial-emblem::before{
+ content:"";position:absolute;z-index:-2;inset:7%;border-radius:50%;
+ background:radial-gradient(circle,#67dff250,transparent 66%);
+ filter:blur(14px);opacity:.75;transform:scale(1.15);
+ pointer-events:none;
+}
+.celestial-emblem::after{
+ content:"";position:absolute;z-index:-1;inset:11%;border-radius:50%;
+ border:1px solid #b6d8f032;
+ box-shadow:0 0 0 5px #b2dcfa08,0 0 0 15px #c6baf607;
+ pointer-events:none;
+}
+.celestial-emblem svg{
+ display:block;width:100%;height:100%;overflow:visible;
+ filter:drop-shadow(0 2px 0 #0a1526) drop-shadow(0 8px 0 #080f20)
+   drop-shadow(0 16px 13px #000a) drop-shadow(0 0 16px #84d4f42e);
+ transform:translateZ(0) rotate(-6deg);
+ transition:transform .48s cubic-bezier(.18,.78,.18,1),filter .42s ease;
+}
+.celestial-emblem--micro{--artifact-size:25px}
+.celestial-emblem--small{--artifact-size:48px}
+.celestial-emblem--medium{--artifact-size:96px}
+.celestial-emblem--large{--artifact-size:146px}
+.celestial-emblem--hero{--artifact-size:220px}
+.celestial-emblem--micro svg{
+ transform:none;
+ filter:drop-shadow(0 2px 1px #0009);
+}
+.celestial-emblem--micro::before,.celestial-emblem--micro::after{display:none}
+.celestial-emblem--small svg{filter:drop-shadow(0 5px 5px #000a)}
+.celestial-emblem--locked{--artifact-energy:#6d89b0}
+.celestial-emblem--locked svg{filter:grayscale(.72) saturate(.54) brightness(.75) drop-shadow(0 7px 10px #000a)}
+.celestial-emblem--locked::before{opacity:.15}
+.celestial-emblem--earned::before{
+ background:radial-gradient(circle,#d9d0a066,#76ddec2b 52%,transparent 78%);
+ opacity:1;
+}
+.celestial-emblem--earned svg{filter:drop-shadow(0 4px 0 #071526) drop-shadow(0 12px 12px #000b) drop-shadow(0 0 22px #c8ead857)}
+.celestial-emblem[data-artifact-motif="light"]{--artifact-energy:#ffe49c}
+.celestial-emblem[data-artifact-motif="atlas"]{--artifact-energy:#acacff}
+.celestial-emblem[data-artifact-motif="launch"]{--artifact-energy:#eac38e}
+.celestial-emblem[data-artifact-motif="trinity"]{--artifact-energy:#caafe9}
+@media(hover:hover) and (pointer:fine){
+ .artifact-showcase-tile:hover .celestial-emblem svg,
+ .levels-achievements article:hover .celestial-emblem svg,
+ .portal-account-achievements article.earned:hover .celestial-emblem svg{
+  transform:translateY(-7px) rotate(0deg) scale(1.06);
+  filter:drop-shadow(0 3px 0 #10182f) drop-shadow(0 17px 16px #000b) drop-shadow(0 0 24px #9adefb76);
+ }
+}
+.artifact-showcase{
+ display:grid;grid-template-columns:repeat(4,minmax(0,1fr));
+ gap:14px;
+}
+.artifact-showcase-tile{
+ position:relative;isolation:isolate;min-width:0;overflow:hidden;
+ padding:21px 14px 19px;min-height:288px;
+ display:flex;align-items:center;flex-direction:column;
+ background:
+  radial-gradient(circle at 50% 35%,#4969b74f,transparent 44%),
+  radial-gradient(circle at 100% 0%,#6584dd2b,transparent 38%),
+  linear-gradient(155deg,#1f3154,#111c36 73%,#0b142c);
+ border:1px solid #6389a9;border-radius:18px;
+ box-shadow:inset 0 1px 0 #dff9ff35,inset 0 -13px 30px #0512288f,
+  0 5px 0 #071126,0 19px 28px #0008;
+ text-align:center;transition:transform .35s cubic-bezier(.16,.8,.2,1),border-color .35s ease,box-shadow .35s ease;
+}
+.artifact-showcase-tile::before{
+ content:"";position:absolute;pointer-events:none;inset:8px;
+ border:1px solid #b4deff1f;border-radius:13px;
+ background:
+  radial-gradient(circle at 19% 30%,#b1f7ff91 0 1px,transparent 2px),
+  radial-gradient(circle at 82% 61%,#ead9aa90 0 1px,transparent 2px),
+  radial-gradient(circle at 72% 19%,#b4afff9c 0 1px,transparent 2px);
+}
+.artifact-showcase-tile::after{
+ content:"";position:absolute;z-index:-1;left:50%;top:19%;
+ width:77%;aspect-ratio:1;border:1px solid #8ccce654;border-radius:50%;
+ box-shadow:0 0 0 18px #619dce0a,0 0 0 36px #8caff808;
+ transform:translateX(-50%) rotateX(49deg);
+ pointer-events:none;
+}
+.artifact-showcase-tile:nth-child(2){background:radial-gradient(circle at 48% 36%,#98715139,transparent 46%),linear-gradient(155deg,#29354e,#1c2035 73%,#131c30);border-color:#9e8873}
+.artifact-showcase-tile:nth-child(3){background:radial-gradient(circle at 48% 36%,#756cd34a,transparent 46%),linear-gradient(155deg,#232f5a,#121a39 73%,#0b132d);border-color:#867fbb}
+.artifact-showcase-tile:nth-child(4){background:radial-gradient(circle at 48% 36%,#bba26555,transparent 46%),linear-gradient(155deg,#3c3550,#1c2140 73%,#11172e);border-color:#a99576}
+.artifact-showcase-tile>.celestial-emblem{z-index:2;margin:8px 0 15px}
+.artifact-showcase-index{
+ align-self:stretch;display:flex;justify-content:space-between;gap:7px;
+ color:#bbcee6;font-size:9px;font-weight:900;letter-spacing:.10em;
+}
+.artifact-showcase-index>span:last-child{color:#f4d79f}
+.artifact-showcase-tile>h3{margin:auto 0 8px;font:normal clamp(20px,2vw,26px)/.97 Impact,"Arial Black",sans-serif;letter-spacing:.015em;color:#f6f6ff;text-wrap:balance}
+.artifact-showcase-tile>p{color:#b8cbe5;font-size:10px;line-height:1.5;max-width:180px;margin:0}
+.artifact-section-note{
+ margin:10px 0 16px;padding:12px 14px;
+ font-size:11px;line-height:1.6;color:#cad9e9;
+ background:#0e1b35;border-left:3px solid #80dada;
+}
+.artifact-size-bench{
+ display:flex;align-items:center;flex-wrap:wrap;gap:20px;
+ padding:15px 20px;border:1px solid #445f82;border-radius:13px;
+ background:linear-gradient(90deg,#172847,#101e37);
+}
+.artifact-size-bench>span{
+ display:inline-flex;align-items:center;gap:10px;
+ color:#ccdaed;font-size:10px;font-weight:850;letter-spacing:.055em;
+}
+.artifact-size-bench>span small{font-size:9px;color:#a4bad8}
+.artifact-legend{
+ display:flex;align-items:center;justify-content:space-between;gap:15px;flex-wrap:wrap;
+ font-size:10px;line-height:1.6;color:#bac9e4;
+}
+.artifact-legend b{color:#f2dba8}
+
+/* Achievement cabinet: true condition is always from the staging member API. */
+.levels-achievements{grid-template-columns:repeat(3,minmax(0,1fr));gap:15px}
+.levels-achievements article{
+ position:relative;min-width:0;display:flex;align-items:center;flex-direction:column;
+ border-radius:16px;padding:19px 15px 22px;min-height:250px;
+ background:radial-gradient(circle at 50% 22%,#426dab5e,transparent 48%),linear-gradient(165deg,#263c61,#111d36 78%);
+ border:1px solid #5a7eaa;
+ box-shadow:inset 0 1px 0 #e9fbff35,0 5px 0 #071429,0 17px 27px #0008;
+}
+.levels-achievements article:nth-child(3n+2){background:radial-gradient(circle at 48% 22%,#7b74d45e,transparent 47%),linear-gradient(160deg,#33385f,#161f3c);border-color:#827dac}
+.levels-achievements article:nth-child(3n+3){background:radial-gradient(circle at 48% 22%,#b08c5950,transparent 47%),linear-gradient(160deg,#34435a,#18233c);border-color:#94866c}
+.levels-symbol{height:126px;display:grid;place-items:center;position:relative;width:100%;margin:0 0 10px;background:none}
+.levels-symbol::before{content:"";position:absolute;inset:16% 20%;border:1px solid #b6def64a;transform:rotate(-16deg);border-radius:50%;pointer-events:none}
+.levels-symbol .celestial-emblem{z-index:1}
+.levels-symbol small{
+ position:absolute;right:1px;top:1px;z-index:2;
+ display:grid;place-items:center;width:27px;height:27px;border-radius:50%;
+ background:#1a3054;color:#efdcac;border:1px solid #698fa6;
+ font-size:9px;font-weight:950;
+}
+.levels-achievements article>strong{font:normal 22px/1 Impact,"Arial Black",sans-serif;letter-spacing:.025em;color:#f5f8ff;margin-bottom:8px;text-align:center}
+.levels-achievements article>p{margin:0;color:#c1d1e6;font-size:11px;line-height:1.6;text-align:center}
+
+/* Member overview, private achievements, and actual public creator channels. */
+.member-artifact-preview{
+ display:flex;align-items:center;gap:16px;
+ padding:12px;margin:12px 0 17px;
+ background:radial-gradient(circle at 6% 44%,#688db04c,transparent 49%),linear-gradient(120deg,#1a2b49,#101b34);
+ border:1px solid #507796;border-radius:14px;
+}
+.member-artifact-preview>div{display:flex;flex-direction:column;gap:6px;min-width:0}
+.member-artifact-preview .kicker{font-size:9px}
+.member-artifact-preview strong{font:normal 24px/1 Impact,"Arial Black",sans-serif;color:#eef8ff}
+.member-artifact-preview small{font-size:10px;color:#b9cce3;line-height:1.5}
+.portal-account-cabinet{background:var(--cosmos-surface)}
+.portal-account-achievements{
+ display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;
+}
+.portal-account-achievements article{
+ min-width:0;display:flex;gap:12px;align-items:center;padding:15px;
+ border:1px solid #577698;border-radius:13px;
+ background:linear-gradient(145deg,#233753,#101e37);
+}
+.portal-account-achievements article.earned{border-color:#94c6b5;background:radial-gradient(circle at 15% 50%,#58c5c64a,transparent 49%),linear-gradient(130deg,#203d55,#142437)}
+.portal-account-achievements article.locked{border-color:#364d6d;background:linear-gradient(150deg,#1b2841,#0f182b)}
+.portal-account-achievements article>div:last-child{min-width:0}
+.portal-account-achievements article strong{font:normal 19px/1.12 Impact,"Arial Black",sans-serif;color:#f1f7ff;display:block}
+.portal-account-achievements article p{font-size:10px;color:#b4c7dd;line-height:1.5;margin:7px 0}
+.portal-account-achievements article span{color:#a6e3dc;font-size:9px;font-weight:900;line-height:1.45}
+.portal-account-achievements article.locked span{color:#9daec8}
+.portal-account-achievements article .celestial-emblem{flex:none}
+.portal-channel-celestial{display:flex;align-items:center;gap:12px;margin:13px 0}
+.portal-channel-celestial>div{min-width:0}
+.portal-channel-celestial strong{color:#f2f8ff;font-size:12px}
+.portal-earned-achievements>div{display:flex;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid #405c7a}
+.portal-earned-achievements>div:last-child{border-bottom:0}
+.portal-earned-achievements>div>span:last-child{display:flex;flex-direction:column;gap:4px;min-width:0}
+.portal-earned-achievements strong{color:#f1f7ff}
+.portal-earned-achievements small{color:#b7cce4;font-size:10px;line-height:1.5}
+.portal-level-mark:has(.celestial-emblem){
+ width:84px;height:84px;background:radial-gradient(circle,#274d66,#122844);
+ border:1px solid #6eaec1;border-radius:50%;box-shadow:0 0 18px #63d2da24;
+}
+.portal-level-mark:has(.celestial-emblem) svg{width:100%;height:100%;color:inherit}
+.portal-level-mark .celestial-emblem--small{--artifact-size:70px}
+.member-panel{border-color:#486889;background:linear-gradient(155deg,#1b2e4d,#101b32);border-radius:15px;box-shadow:inset 0 1px 0 #d5f8ff25,0 4px 0 #071327,0 19px 29px #0007}
+.member-panel>p,.member-panel .member-caption{color:#bdcde5;line-height:1.6}
+.member-progress{height:11px;border-radius:10px;background:#0b1932;border:1px solid #43698d;box-shadow:inset 0 2px 6px #0009}
+.member-progress span{background:linear-gradient(90deg,#83f0ec,#9d91f2,#e8c26e);box-shadow:0 0 10px #78e0ef54}
+.portal-creator-level .celestial-emblem{float:left;margin:5px 12px 6px 0}
+.portal-creator-level::after{content:"";display:block;clear:both}
+@media(max-width:1120px){
+ .artifact-showcase{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .portal-account-achievements{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:800px){
+ .levels-achievements{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .portal-account-achievements{grid-template-columns:1fr}
+}
+@media(max-width:520px){
+ .celestial-emblem--large{--artifact-size:118px}
+ .celestial-emblem--hero{--artifact-size:166px}
+ .artifact-showcase{gap:10px}
+ .artifact-showcase-tile{min-height:238px;padding:12px 10px 16px;border-radius:13px}
+ .artifact-showcase-tile>h3{font-size:clamp(18px,5vw,22px)}
+ .artifact-showcase-tile>p{font-size:9px}
+ .levels-achievements{gap:9px}
+ .levels-achievements article{padding:12px 7px 17px;min-height:239px}
+ .levels-symbol{height:110px}
+ .levels-symbol .celestial-emblem{--artifact-size:83px}
+ .levels-achievements article>strong{font-size:18px}
+ .levels-achievements article>p{font-size:10px}
+ .member-artifact-preview{gap:9px;padding:10px}
+ .member-artifact-preview strong{font-size:20px}
+ .portal-account-achievements article{padding:12px}
+ .artifact-size-bench{gap:12px}
+}
+@media(max-width:340px){
+ .artifact-showcase{grid-template-columns:1fr}
+ .artifact-showcase-tile{min-height:232px}
+ .levels-achievements{grid-template-columns:1fr}
+ .levels-achievements article{min-height:215px}
+}
+@media(hover:none),(pointer:coarse){
+ .artifact-showcase-tile:hover .celestial-emblem svg,
+ .levels-achievements article:hover .celestial-emblem svg,
+ .portal-account-achievements article:hover .celestial-emblem svg{transform:rotate(-6deg)}
+}
+@media(prefers-reduced-motion:reduce){
+ .celestial-emblem svg,.artifact-showcase-tile{transition:none!important;animation:none!important}
+ .artifact-showcase-tile:hover .celestial-emblem svg,
+ .levels-achievements article:hover .celestial-emblem svg{transform:rotate(-6deg)!important}
+}
+@media(forced-colors:active){
+ .celestial-emblem svg{filter:none}
+ .artifact-showcase-tile,.levels-achievements article,.portal-account-achievements article{border:2px solid CanvasText}
+}
