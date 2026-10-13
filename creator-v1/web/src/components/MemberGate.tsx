@@ -1,10 +1,15 @@
 import { Link, Outlet, NavLink, useOutletContext } from "react-router-dom";
+import {useState} from "react";
 import { memberHealth,memberMe,MemberApiError,type MemberHealth,type MemberIdentity } from "../lib/member-api";
 import { useResource } from "../lib/useResource";
 import { LoadingState } from "./States";
 import { OrbitalMark } from "./OrbitalMark";
 
-interface MemberContext { member:MemberIdentity;health:MemberHealth }
+export interface MemberContext {
+ member:MemberIdentity;
+ health:MemberHealth;
+ onProfileSaved:(profile:Pick<MemberIdentity,"handle"|"displayName"|"bio">)=>void;
+}
 
 export function useMemberContext():MemberContext {
   return useOutletContext<MemberContext>();
@@ -20,6 +25,11 @@ export function MemberGate(){
       throw error;
     }
   },[]);
+  // Only update the local displayed identity after the existing Member Worker
+  // confirms a successful, authorized profile write for this exact account.
+  const [confirmedProfile,setConfirmedProfile]=useState<{
+    id:string; handle:string; displayName:string; bio:string;
+  }|null>(null);
   if(session.state==="loading")return <LoadingState label="Checking private staging member access"/>;
   if(session.state==="error")return <section className="member-gate" role="status">
     <div className="member-gate-mark"><OrbitalMark/></div>
@@ -38,15 +48,24 @@ export function MemberGate(){
       <Link className="button secondary" to="/discover">EXPLORE AS A GUEST</Link>
     </div>
   </section>;
+  const activeMember=confirmedProfile?.id===session.data.member.id
+    ? {...session.data.member,...confirmedProfile}
+    : session.data.member;
   return <div className="member-shell">
     <header className="member-header">
-      <div><span className="kicker">PRIVATE MEMBER WORKSPACE / STAGING</span><strong>{session.data.member.displayName||session.data.member.handle||"YOUR ACCOUNT"}</strong></div>
+      <div><span className="kicker">PRIVATE MEMBER WORKSPACE / STAGING</span><strong>{activeMember.displayName||activeMember.handle||"YOUR ACCOUNT"}</strong></div>
       <nav aria-label="Member workspace navigation">
         <NavLink to="/account">ACCOUNT</NavLink>
+        <NavLink to="/account/edit">EDIT PROFILE</NavLink>
         <NavLink to="/create">MY PROJECTS</NavLink>
         <NavLink to="/library">LIBRARY</NavLink>
       </nav>
     </header>
-    <Outlet context={{member:session.data.member,health:session.data.health}}/>
+    <Outlet context={{
+      member:activeMember,
+      health:session.data.health,
+      onProfileSaved:(profile:Pick<MemberIdentity,"handle"|"displayName"|"bio">)=>
+        setConfirmedProfile({id:activeMember.id,handle:profile.handle||"",displayName:profile.displayName||"",bio:profile.bio})
+    }}/>
   </div>;
 }

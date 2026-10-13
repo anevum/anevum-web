@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {
   memberHealth,memberMe,memberLibrary,memberCreateProject,memberProject,
-  memberSetSaved,memberVote,memberCreatorProfile,MemberApiError
+  memberSetSaved,memberVote,memberCreatorProfile,memberSaveProfile,MemberApiError
 } from "../web/src/lib/member-api.ts";
 
 async function withFetch(stub,run){
@@ -84,4 +84,41 @@ test("optional public creator XP and achievements use existing same-origin route
   assert.equal(seen.init.credentials,"same-origin");
   assert.equal(seen.init.cache,"no-store");
   await assert.rejects(Promise.resolve().then(()=>memberCreatorProfile("../private")),/Invalid public creator handle/);
+});
+
+
+test("creator profile updates use the existing same-origin session and cannot select a different member",async()=>{
+  const requests=[];
+  await withFetch(async(url,init)=>{
+    requests.push({url,init});
+    return response({profile:{handle:"maker_one",displayName:"Maker One",bio:"I build and test independent games."}});
+  },async()=>{
+    const {profile}=await memberSaveProfile({
+      handle:"maker_one",displayName:"Maker One",bio:"I build and test independent games."
+    });
+    assert.equal(profile.handle,"maker_one");
+  });
+  assert.equal(requests.length,1);
+  assert.equal(requests[0].url,"/api/v1/member/profile");
+  assert.equal(requests[0].init.method,"POST");
+  assert.equal(requests[0].init.credentials,"same-origin");
+  assert.equal(requests[0].init.mode,"same-origin");
+  assert.equal(requests[0].init.cache,"no-store");
+  assert.equal(requests[0].init.redirect,"error");
+  assert.deepEqual(JSON.parse(requests[0].init.body),{
+    handle:"maker_one",displayName:"Maker One",bio:"I build and test independent games."
+  });
+  assert.doesNotMatch(requests[0].init.body,/"member_id"|"is_staff"|"xp"|"token"/);
+});
+test("profile write honors authentication and fails closed on non-JSON pages",async()=>{
+  await withFetch(async()=>response({error:"Sign-in required"},401),async()=>{
+    await assert.rejects(memberSaveProfile({handle:"abc",displayName:"A",bio:""}),
+      e=>e instanceof MemberApiError&&e.status===401);
+  });
+  await withFetch(async()=>new Response("<html>Intercepted</html>",{
+    status:200,headers:{"content-type":"text/html"}
+  }),async()=>{
+    await assert.rejects(memberSaveProfile({handle:"abc",displayName:"A",bio:""}),
+      e=>e instanceof MemberApiError&&e.status===503);
+  });
 });

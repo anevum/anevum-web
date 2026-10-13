@@ -9,7 +9,7 @@ export function MemberProjectsPage(){
   const projects=useResource(member.handle?memberProjects:async()=>({projects:[]}),[member.handle]);
   return <>
     <section className="member-title"><span className="kicker">CREATOR STUDIO / YOUR WORK</span><h1>MY PROJECTS.</h1><p>Your drafts, submissions and published releases. Moderation is handled separately by authorized staff.</p></section>
-    {!member.handle?<section className="member-panel"><h2>FINISH YOUR CREATOR PROFILE</h2><p>A unique handle is required before your first project.</p><a className="button primary" href="/api/v1/member/join">COMPLETE PROFILE</a></section>:<>
+    {!member.handle?<section className="member-panel"><h2>FINISH YOUR CREATOR PROFILE</h2><p>A unique handle is required before your first project.</p><Link className="button primary" to="/account/edit">COMPLETE PROFILE</Link></section>:<>
       <div className="member-toolbar"><Link className="button primary" to="/create/new">START A PROJECT DRAFT</Link><span className="member-caption">DRAFTS STAY PRIVATE UNTIL STAFF APPROVAL</span></div>
       {projects.state==="loading"&&<LoadingState label="Loading your own projects"/>}
       {projects.state==="error"&&<ErrorState title="YOUR PROJECTS ARE UNAVAILABLE" detail="The authenticated staging service could not return this member's project list."/>}
