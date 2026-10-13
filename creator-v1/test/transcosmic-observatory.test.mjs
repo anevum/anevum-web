@@ -9,6 +9,7 @@ const home=read("web/src/pages/HomePage.tsx");
 const heading=read("web/src/components/PortalHeading.tsx");
 const levels=read("web/src/pages/LevelsPage.tsx");
 const styles=read("web/src/main.tsx");
+const html=read("web/index.html");
 
 function srgb(hex){
   const channels=hex.replace("#","").match(/../g)?.map(x=>parseInt(x,16)/255);
@@ -28,6 +29,7 @@ function token(name){
 }
 
 test("cosmic design overrides old coral skin last without deleting existing pages",()=>{
+  assert.match(html, /name="theme-color" content="#080a12"/);
   assert.match(styles,/import "\.\/portal-overhaul\.css"/);
   assert.match(styles,/import "\.\/depth-system\.css"/);
   assert.match(styles,/import "\.\/cosmic-observatory\.css"/);
