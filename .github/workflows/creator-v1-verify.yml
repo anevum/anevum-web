@@ -130,6 +130,7 @@ jobs:
           capture 390 844 discover /creator/discover
           capture 390 844 creators /creator/creators
           capture 1440 900 profile-editor /creator/account/edit
+          capture 1440 900 member-interests /creator/account/interests
           capture 390 844 profile-editor /creator/account/edit
           capture 1440 900 project-editor /creator/create/new
           capture 390 844 project-editor /creator/create/new
