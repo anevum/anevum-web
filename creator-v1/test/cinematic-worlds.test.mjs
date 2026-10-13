@@ -72,3 +72,11 @@ test("secondary pages share the same world art while preserving genuine content 
   assert.match(community,/PUBLIC MESSAGE BOARD IS NOT OPEN YET/);
   assert.match(css,/prefers-reduced-motion:reduce/);
 });
+
+test("mobile QA preserves both primary hero actions without overlap by secondary feature",()=>{
+  const css=read("web/src/cinematic-mobile-review.css");
+  assert.match(css,/max-width:600px/);
+  assert.match(css,/\.cw-hero-feature\{display:none\}/);
+  assert.match(css,/\.portal-navigation\{display:none\}/);
+  assert.match(css,/\.signal-strip\{display:none\}/);
+});

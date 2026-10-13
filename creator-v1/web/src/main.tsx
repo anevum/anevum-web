@@ -15,6 +15,7 @@ import "./celestial-artifacts.css";
 import "./cinematic-worlds.css";
 import "./cinematic-polish.css";
 import "./cinematic-subpages.css";
+import "./cinematic-mobile-review.css";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
