@@ -6,6 +6,7 @@ import {
 } from "../lib/member-api";
 import { useResource } from "../lib/useResource";
 import { ErrorState,LoadingState } from "../components/States";
+import { useMemberContext } from "../components/MemberGate";
 
 const blank:ProjectDraft={
   slug:"",title:"",summary:"",category:"games",description:"",
@@ -25,6 +26,15 @@ function loadDraft(p?:MemberProject):ProjectDraft {
 }
 export function ProjectEditorPage(){
   const {projectId}=useParams();
+  const {member}=useMemberContext();
+  if(!member.handle)return <section className="member-panel">
+    <span className="kicker">CREATOR STUDIO / PROFILE REQUIRED</span>
+    <h1>FINISH YOUR CREATOR PROFILE.</h1>
+    <p>Choose your permanent creator handle and public name before starting or editing a project.
+      Your projects cannot be submitted until your verified creator identity is ready.</p>
+    <div className="member-actions"><Link className="button primary" to="/account/edit">COMPLETE CREATOR PROFILE</Link>
+      <Link className="button secondary" to="/create">BACK TO MY PROJECTS</Link></div>
+  </section>;
   return projectId?<Existing projectId={projectId} key={projectId}/>:<Editor key="new"/>;
 }
 function Existing({projectId}:{projectId:string}){

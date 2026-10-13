@@ -44,3 +44,17 @@ test("profile editor never represents editable server-owned permissions or fabri
  assert.doesNotMatch(page,/Math\.random|setInterval|dangerouslySetInnerHTML|localStorage|member_id|is_staff/);
  assert.doesNotMatch(css,/mobile-bottom-nav/);
 });
+
+
+test("first-time invited member is guided through creator setup before any project draft",()=>{
+ const projectList=read("web/src/pages/MemberProjectsPage.tsx");
+ const projectEditor=read("web/src/pages/ProjectEditorPage.tsx");
+ assert.match(projectList,/!member\.handle/);
+ assert.match(projectList,/to="\/account\/edit">COMPLETE PROFILE/);
+ assert.doesNotMatch(projectList,/href="\/api\/v1\/member\/join"/);
+ assert.match(projectEditor,/useMemberContext/);
+ assert.match(projectEditor,/if\(!member\.handle\)return/);
+ assert.match(projectEditor,/to="\/account\/edit">COMPLETE CREATOR PROFILE/);
+ assert.match(projectEditor,/memberProject\(projectId,signal\)/);
+ assert.match(projectEditor,/memberCreateProject\(draft\)/);
+});
