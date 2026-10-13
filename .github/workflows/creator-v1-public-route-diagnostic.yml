@@ -65,3 +65,19 @@ jobs:
           // Diagnostics report observed failures without blocking the
           // development/release workflows or applying a rollback.
           JS
+      - name: Reproduce exact curl smoke semantics and anonymous member guards
+        shell: bash
+        run: |
+          set -euo pipefail
+          base='https://next.anevum.com'
+          tmp="$(mktemp)"
+          trap 'rm -f "$tmp"' EXIT
+          for attempt in 1 2 3; do
+            echo "CURL_STAGING_DIAGNOSTIC_ROUND=$attempt"
+            for entry in               '/creator/discover'               '/creator/start'               '/creator/guide'               '/creator/api/v1/projects?free=1&limit=2'               '/creator/api/v1/status'               '/creator/api/v1/projects?limit=2'               '/api/v1/member/health'               '/api/v1/member/me'               '/creator/api/v1/member/me'               '/'; do
+              status="$(curl --silent --show-error --max-time 20 -o "$tmp" -w '%{http_code}' "$base$entry" || true)"
+              type="$(file -b --mime-type "$tmp" 2>/dev/null || true)"
+              echo "CURL route=$entry status=$status mime=$type"
+            done
+            sleep 2
+          done
