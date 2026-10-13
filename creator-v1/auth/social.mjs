@@ -76,6 +76,8 @@ export async function socialRoutes(req,db,member,limiter,now){
      FROM member_creator_follows f JOIN creator_profiles c ON c.member_id=f.creator_member_id
      LEFT JOIN member_accounts a ON a.id=c.member_id
      WHERE f.follower_member_id=? AND c.status='active'
+       AND EXISTS(SELECT 1 FROM projects p WHERE p.owner_member_id=c.member_id
+         AND p.status='published' AND p.published_at IS NOT NULL AND julianday(p.published_at)<=julianday('now'))
        AND (a.status='active' OR (a.id IS NULL AND c.member_id='anevum-official'))
      ORDER BY f.created_at DESC,c.handle ASC LIMIT 101`,[member.id]);
    return response(req,{items:entries.slice(0,100),hasMore:entries.length>100});
@@ -87,6 +89,9 @@ export async function socialRoutes(req,db,member,limiter,now){
    const creator=await publicProfile(db,followMatch[1]);
    if(!creator)return response(req,{error:'Creator not found'},404);
    if(creator.id===member.id)return response(req,{error:'Cannot follow your own channel'},403);
+   const released=await rows(db,`SELECT 1 AS present FROM projects WHERE owner_member_id=?
+     AND status='published' AND published_at IS NOT NULL AND julianday(published_at)<=julianday('now') LIMIT 1`,[creator.id]);
+   if(released.length!==1)return response(req,{error:'Creator channel not yet published'},404);
    let desired;try{desired=await parseFollow(req)}catch{return response(req,{error:'Invalid follow action'},400)}
    if(!await limiter(db,'follow:'+member.id,now,40,3600))return response(req,{error:'Too many follow changes'},429);
    const existing=await rows(db,'SELECT 1 AS present FROM member_creator_follows WHERE follower_member_id=? AND creator_member_id=?',[member.id,creator.id]);
