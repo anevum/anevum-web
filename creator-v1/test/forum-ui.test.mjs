@@ -54,6 +54,11 @@ test("new styles are mobile-first and preserve reduced-motion, keyboard focus an
  for(const part of [".forum-post",".forum-author-card",".forum-author-rank",".forum-author-achievements",".forum-post-message",".forum-report",".forum-composer",".forum-community-room"])assert.ok(css.includes(part),part);
  for(const part of ["max-width:640px","max-width:360px","prefers-reduced-motion:reduce","overflow-wrap:anywhere","white-space:pre-wrap"])assert.ok(css.includes(part),part);
  assert.match(client,/credentials:options\.method\?"same-origin":"omit"/);
+ const account=read("web/src/pages/MemberAccountPage.tsx");
+ assert.match(account,/<ForumAuthorCard large author=/);
+ assert.match(account,/cabinet\.data\.achievements\.filter\(a=>a\.earned\)/);
+ assert.match(account,/progress\.data\.progression\.level/);
+ assert.match(account,/real account evidence/i);
  assert.match(client,/redirect:"error"/);
  assert.match(client,/\/\^\[a-z\]/);
 });
