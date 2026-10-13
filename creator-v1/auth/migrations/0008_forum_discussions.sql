@@ -53,4 +53,13 @@ CREATE TABLE IF NOT EXISTS forum_moderation_events (
   created_at INTEGER NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_forum_moderation_post ON forum_moderation_events(post_id,created_at DESC);
+CREATE TABLE IF NOT EXISTS forum_report_events (
+  id TEXT PRIMARY KEY NOT NULL CHECK(length(id)=32),
+  report_id TEXT NOT NULL REFERENCES forum_reports(id) ON DELETE RESTRICT,
+  actor_email TEXT NOT NULL,
+  action TEXT NOT NULL CHECK(action IN ('resolve','dismiss')),
+  reason TEXT NOT NULL CHECK(length(reason) BETWEEN 12 AND 600),
+  created_at INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_forum_report_events_report ON forum_report_events(report_id,created_at DESC);
 INSERT OR IGNORE INTO schema_migrations(version) VALUES ('0008_forum_discussions');
