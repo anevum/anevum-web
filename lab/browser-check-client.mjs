@@ -44,8 +44,9 @@ async function main(){
    assert(document.querySelector('#net15')?.textContent==='-7.00 bps','15m manual net calculation incorrect');
    assert(document.querySelector('#net60')?.textContent==='—','Unobserved horizon must stay unpriced');
    document.querySelector('#spread').value='-1';
-   document.querySelector('#costForm button[type="submit"]').click();
-   assert(document.querySelector('#costError')?.textContent.includes('between 0 and 1000'),'Unsafe negative friction accepted');
+   assert(document.querySelector('#spread').validity.rangeUnderflow,'Browser failed to reject negative costs');
+   document.querySelector('#costForm').dispatchEvent(new Event('submit',{cancelable:true,bubbles:true}));
+   assert(document.querySelector('#costError')?.textContent.includes('between 0 and 1000'),'Manual validation failed to reject negative costs');
    document.querySelector('#costForm button[type="reset"]').click();
    await sleep(30);
    assert(document.querySelector('#roundtrip')?.textContent==='10.00 bps','Reset did not restore assumptions');
