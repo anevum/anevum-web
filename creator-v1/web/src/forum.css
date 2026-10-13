@@ -155,3 +155,20 @@
 @media(max-width:360px){.forum-topic-copy>strong{font-size:19px}.forum-post-body{padding:14px}.forum-author-badge-label{font-size:8px}.forum-section-tag{max-width:72px}}
 @media(hover:none),(pointer:coarse){.forum-topic:hover,.forum-community-room:hover{transform:none}.forum-author-avatar-link:hover .forum-author-avatar{transform:none}}
 @media(prefers-reduced-motion:reduce){.forum-topic,.forum-author-avatar,.forum-community-room{transition:none!important;animation:none!important}.forum-topic:hover,.forum-community-room:hover,.forum-author-avatar-link:hover .forum-author-avatar{transform:none}}
+
+/* First-party member account preview uses exactly the same author card as posts. */
+.forum-account-preview{margin:18px 0;background:radial-gradient(ellipse at 91% 0%,#557fba24,transparent 46%),linear-gradient(145deg,#1c3456,#0d1b32);border:1px solid #537a9d;border-radius:15px;box-shadow:inset 0 1px 0 #e6ffff1c,0 5px 0 #071325,0 20px 39px #0009}
+.forum-account-preview-heading{display:flex;justify-content:space-between;align-items:center;gap:18px;padding-bottom:18px;border-bottom:1px solid #507999}
+.forum-account-preview-heading>div{min-width:0}
+.forum-account-preview-heading h2{font:normal clamp(28px,3vw,40px)/1 Impact,"Arial Black",sans-serif;margin:9px 0}
+.forum-account-preview-heading p{font-size:12px;line-height:1.67;color:#d0deed;max-width:710px;margin:0}
+.forum-account-preview-heading .button{flex:none}
+.forum-account-preview-layout{display:grid;grid-template-columns:228px minmax(0,1fr);gap:22px;align-items:start;margin:22px 0 0}
+.forum-account-preview-layout>.forum-author-card{min-height:310px}
+.forum-account-preview-info{min-width:0;padding:clamp(15px,2.5vw,26px)}
+.forum-account-preview-info h3{font:normal clamp(32px,3.1vw,48px)/1 Impact,"Arial Black",sans-serif;margin:14px 0 17px;color:#f0faff}
+.forum-account-preview-info p{color:#c7d7e8;font-size:13px;line-height:1.8;max-width:700px;margin:0 0 13px}
+.forum-account-preview-info .member-actions{margin:22px 0 0}
+.forum-account-preview-unavailable{padding:22px;border:1px dashed #5980a2;border-radius:9px;background:#112642;color:#d1e3f0;font-size:12px;line-height:1.7}
+@media(max-width:760px){.forum-account-preview-heading{flex-direction:column;align-items:flex-start}.forum-account-preview-layout{grid-template-columns:1fr;gap:12px}.forum-account-preview-layout>.forum-author-card{min-height:0}.forum-account-preview-info{padding:12px 0}.forum-account-preview-info h3{font-size:32px}}
+@media(max-width:640px){.forum-account-preview{padding:17px}.forum-account-preview-heading .button{width:100%;justify-content:center}.forum-account-preview-info p{font-size:12px}.forum-account-preview-info .member-actions{display:flex;flex-wrap:wrap}}
