@@ -104,10 +104,34 @@ function Motif({name,colors}:{name:EmblemMotif;colors:{light:string;warm:string;
   }
 }
 
+function MicroMotif({name}:{name:EmblemMotif}) {
+  // Deliberately redrawn at small sizes, not a 256px etching scaled to 20px.
+  if(name==="lens") return <><ellipse cx="16" cy="16" rx="10" ry="6.4" fill="none" stroke="currentColor" strokeWidth="2"/><circle cx="16" cy="16" r="4.5" fill="#ebdbab"/><circle cx="17" cy="15" r="1.5" fill="#20345e"/></>;
+  if(name==="compass"||name==="atlas") return <><path d="M16 5 19.4 12.6 27 16 19.4 19.4 16 27 12.6 19.4 5 16 12.6 12.6Z" fill="currentColor"/><circle cx="16" cy="16" r="3.2" fill="#273960"/></>;
+  if(name==="launch")return <><path d="M12 22c-2-9 3-15 13-17 2 10-4 16-13 17Z" fill="currentColor"/><path d="m12 22-6 5m3-8-4 1" stroke="#eed39c" strokeWidth="2" strokeLinecap="round"/></>;
+  if(name==="trinity")return <><path d="m16 4 9 5.4v12L16 27l-9-5.6v-12Z" stroke="#eee0b7" strokeWidth="1.8" fill="#487cb0"/><path d="m7 9.4 9 5.6 9-5.6M16 15v12" stroke="#e2f5ff" strokeWidth="1.6" fill="none"/></>;
+  if(name==="chronometer")return <><circle cx="16" cy="17" r="10" fill="none" stroke="currentColor" strokeWidth="2.6"/><path d="M16 9v8l6-5M12 3h8" stroke="#f1dba8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none"/></>;
+  if(name==="key")return <><circle cx="11" cy="11" r="5.7" fill="none" stroke="currentColor" strokeWidth="2.7"/><path d="m15 15 11 11m-5-5-3 3" stroke="#ecd39e" strokeWidth="3.5" strokeLinecap="round"/></>;
+  if(name==="light"||name==="beacon"||name==="spark")return <><path d="m16 3 3.8 9.2L29 16l-9.2 3.8L16 29l-3.8-9.2L3 16l9.2-3.8Z" fill="currentColor"/><circle cx="16" cy="16" r="3.5" fill="#fff5c6"/></>;
+  return <><ellipse cx="16" cy="16" rx="12" ry="5" transform="rotate(-24 16 16)" fill="none" stroke="currentColor" strokeWidth="2.4"/><circle cx="16" cy="16" r="4" fill="#ffe4ae"/></>;
+}
+
 export function CelestialEmblem({motif,size="medium",state="preview",className="",title}:Props) {
   const uid=useId().replace(/:/g,"");
   const metal=uid+"-metal",face=uid+"-face",enamel=uid+"-enamel",glass=uid+"-glass",glow=uid+"-glow",stars=uid+"-stars";
   const colors = { light:"#d5faff",warm:"#f6dba0",deep:"#243b64" };
+  if(size==="micro") return <span className={`celestial-emblem celestial-emblem--micro celestial-emblem--${state} ${className}`} data-artifact-motif={motif}>
+    <svg viewBox="0 0 32 32" role={title?"img":undefined} aria-hidden={title?undefined:true} aria-label={title||undefined} focusable="false">
+      <defs>
+        <radialGradient id={uid+"-tiny-enamel"}><stop stopColor="#4975aa"/><stop offset="100%" stopColor="#162747"/></radialGradient>
+      </defs>
+      <path d="M16 1.5 20 3.2 24 2.8 27.2 7 30 12l-.5 6.3-2.7 6.1-5.1 4.1-5.7 1.8-6-1.8-5-4L2 19l-.5-7L4 7l5-4.2L13 3Z" fill="#bdb4ac" stroke="#f4e3bd" strokeWidth=".8"/>
+      <circle cx="16" cy="16" r="12.7" fill={`url(#${uid+"-tiny-enamel"})`} stroke="#e3ca96" strokeWidth="1.4"/>
+      <g color="#c8f5f6" stroke="#c8f5f6"><MicroMotif name={motif}/></g>
+      <path d="M7 10c3-5 12-7 18-2" fill="none" stroke="#fff" strokeOpacity=".38" strokeWidth="1.2" strokeLinecap="round"/>
+    </svg>
+  </span>;
+
   const labelled=Boolean(title);
   return <span className={`celestial-emblem celestial-emblem--${size} celestial-emblem--${state} ${className}`} data-artifact-motif={motif}>
     <svg viewBox="0 0 256 256" role={labelled?"img":undefined} aria-hidden={labelled?undefined:true} aria-label={labelled?title:undefined} focusable="false">
