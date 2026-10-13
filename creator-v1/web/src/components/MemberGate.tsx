@@ -48,9 +48,12 @@ export function MemberGate(){
       <Link className="button secondary" to="/discover">EXPLORE AS A GUEST</Link>
     </div>
   </section>;
+  const activeMember=confirmedProfile?.id===session.data.member.id
+    ? {...session.data.member,...confirmedProfile}
+    : session.data.member;
   return <div className="member-shell">
     <header className="member-header">
-      <div><span className="kicker">PRIVATE MEMBER WORKSPACE / STAGING</span><strong>{session.data.member.displayName||session.data.member.handle||"YOUR ACCOUNT"}</strong></div>
+      <div><span className="kicker">PRIVATE MEMBER WORKSPACE / STAGING</span><strong>{activeMember.displayName||activeMember.handle||"YOUR ACCOUNT"}</strong></div>
       <nav aria-label="Member workspace navigation">
         <NavLink to="/account">ACCOUNT</NavLink>
         <NavLink to="/account/edit">EDIT PROFILE</NavLink>
@@ -59,9 +62,7 @@ export function MemberGate(){
       </nav>
     </header>
     <Outlet context={{
-      member:confirmedProfile?.id===session.data.member.id
-        ? {...session.data.member,...confirmedProfile}
-        : session.data.member,
+      member:activeMember,
       health:session.data.health,
       onProfileSaved:(profile:Pick<MemberIdentity,"handle"|"displayName"|"bio">)=>
         setConfirmedProfile({id:session.data.member.id,handle:profile.handle||"",displayName:profile.displayName||"",bio:profile.bio})

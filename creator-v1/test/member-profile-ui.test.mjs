@@ -13,6 +13,8 @@ test("profile editor is truly member gated and shares the authenticated account 
  assert.match(account,/to="\/account\/edit"/);
  assert.match(gate,/onProfileSaved/);
  assert.match(gate,/confirmedProfile\?\.id===session\.data\.member\.id/);
+ assert.match(gate,/activeMember\.displayName\|\|activeMember\.handle/);
+ assert.match(gate,/member:activeMember/);
  assert.match(gate,/to="\/account\/edit"/);
  assert.match(page,/useMemberContext/);
  assert.match(page,/memberSaveProfile/);
@@ -33,6 +35,7 @@ test("profile editor never represents editable server-owned permissions or fabri
  assert.match(page,/HANDL[E]=\/\^\[a-z\]/);
  assert.match(page,/bio\.trim\(\)/);
  assert.match(page,/Your sign-in email remains private/);
+ assert.match(page,/may be viewed by anyone who knows their handle/);
  assert.match(page,/NOT A PUBLIC LISTING/);
  assert.match(client,/requestMember<\{profile:MemberProfileUpdate\}>\("\/profile",\{method:"POST",body:profile\}\)/);
  assert.match(main,/import "\.\/member-profile\.css"/);

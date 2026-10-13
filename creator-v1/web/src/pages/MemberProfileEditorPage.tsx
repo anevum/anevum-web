@@ -59,7 +59,7 @@ export function MemberProfileEditorPage(){
     <section className="member-title"><span className="kicker">YOUR SPACE / MEMBER IDENTITY</span>
       <h1>MAKE IT YOURS.</h1>
       <p>Edit your creator name and public introduction without leaving the ANEVUM member workspace.
-        Changes are private to your authenticated account until approved published work makes your channel discoverable.</p>
+        These changes update your account’s creator profile. Public creator channels may be viewed by anyone who knows their handle; the directory highlights creators with approved published work.</p>
     </section>
     <div className="member-profile-layout">
       <form className="member-panel member-profile-form" onSubmit={save}>
@@ -128,8 +128,8 @@ export function MemberProfileEditorPage(){
         <section className="member-panel member-profile-publishing">
           <span className="kicker">WHAT BECOMES PUBLIC?</span>
           <h2>YOUR CHANNEL, ON YOUR TERMS.</h2>
-          <p>Public creator discovery only shows staff-approved published work.
-            Drafts, your sign-in email, member sessions and privacy controls never belong in a public profile.</p>
+          <p>Creator listings feature staff-approved published work, but someone who knows your handle may be able to view its public profile.
+            Your private drafts, sign-in email, sessions and privacy controls never belong in the public directory.</p>
           <Link to="/create" className="button secondary">MY PROJECT STUDIO ↗</Link>
         </section>
       </aside>
