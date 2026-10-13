@@ -17,7 +17,8 @@ test('new shell is real-data first and keeps public feature boundaries explicit'
   const api=read('web/src/lib/api.ts');
   const home=read('web/src/pages/HomePage.tsx');
   const coming=read('web/src/pages/ComingPage.tsx');
-  for(const endpoint of ['/api/v1/status','/api/v1/categories','/api/v1/projects','/api/v1/creators']) assert.ok(api.includes(endpoint),endpoint);
+  assert.match(api,/PUBLIC_API_ROOT = import\.meta\.env\.BASE_URL === "\/creator\/" \? "\/creator\/api\/v1" : "\/api\/v1"/);
+  for(const endpoint of ['publicPath("/status")','publicPath("/categories")','publicPath("/projects?")','publicPath("/creators?")']) assert.ok(api.includes(endpoint),endpoint);
   assert.match(api,/credentials:\s*"omit"/);
   assert.match(api,/cache:\s*"no-store"/);
   assert.match(home,/No fake projects, ratings or activity/);
