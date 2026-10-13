@@ -4,7 +4,7 @@ import { OrbitalMark } from "./OrbitalMark";
 import { Icon } from "./Icons";
 
 const desktopNav = [
-  ["/", "Portal"], ["/start", "Start Here"], ["/discover", "Discover"], ["/creators", "Creators"], ["/levels", "Levels"], ["/community", "Community"]
+  ["/", "Portal"], ["/start", "Start Here"], ["/guide", "Guide"], ["/discover", "Discover"], ["/creators", "Creators"], ["/levels", "Levels"], ["/community", "Community"]
 ] as const;
 const portalCategories = [
   ["/discover?category=games", "Games"],
