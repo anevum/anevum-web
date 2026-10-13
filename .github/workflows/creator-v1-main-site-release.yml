@@ -1,0 +1,93 @@
+name: ANEVUM Main Site Consolidation
+
+# Owner authorized main-site consolidation October 13, 2026.
+# Publishes an unrouted Worker; the final apex route switch is separately recorded.
+on:
+  push:
+    branches: [release/creator-v1-main-consolidation-20261013]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+concurrency:
+  group: anevum-main-site-consolidation
+  cancel-in-progress: false
+
+jobs:
+  release:
+    if: github.ref == 'refs/heads/release/creator-v1-main-consolidation-20261013'
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify public and private boundaries without provider credentials
+        run: |
+          set -euo pipefail
+          mkdir -p evidence
+          npm install --ignore-scripts --no-audit --no-fund
+          npm run check:creator-v1-web
+          npm run build:creator-v1-web
+          npm run build:creator-v1-web:staging
+          (cd creator-v1 && npm test) > evidence/public-tests.log
+          node --test creator-v1/test/main-site.test.mjs creator-v1/auth/tests/*.test.mjs creator-v1/integration/*.test.mjs > evidence/boundary-tests.log
+          node --check creator-v1/web/main-worker.mjs
+          test -z "$(find creator-v1/dist/web -name '*.map' -print -quit)"
+          test -f creator-v1/dist/web/portfolio/index.html
+      - name: Capture compiled desktop and mobile UI before upload
+        run: |
+          set -euo pipefail
+          chrome="$(command -v google-chrome || command -v chromium-browser || command -v chromium)"
+          node creator-v1/test/portal-offline-preview.mjs > evidence/fixture.log 2>&1 &
+          fixture_pid=$!
+          trap 'kill "$fixture_pid" 2>/dev/null || true' EXIT
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent http://127.0.0.1:4178/__ready >/dev/null; then break; fi
+            sleep 0.2
+          done
+          for width in 1440 390 320; do
+            for page in home workspace; do
+              route=/creator/
+              if [ "$page" = workspace ]; then route=/creator/workspace; fi
+              timeout 35 "$chrome" --headless=new --no-sandbox --disable-dev-shm-usage --disable-gpu --hide-scrollbars --window-size="$width,1100" --virtual-time-budget=4000 --screenshot="evidence/$page-$width.png" "http://127.0.0.1:4178$route" > evidence/chrome.log 2>&1
+              test -s "evidence/$page-$width.png"
+            done
+          done
+          echo 'Screenshots use explicitly synthetic offline catalogue fixtures. No fixture records are deployed.' > evidence/visual-fixture-note.txt
+          echo MAIN_SITE_COMPILED_VISUAL_CAPTURE=PASS
+      - name: Preserve current routing and validate production D1 identity
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          cf() { curl --fail --silent --show-error --retry 2 --max-time 25 -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" "$1"; }
+          cf https://api.cloudflare.com/client/v4/zones/8abe27259b5436af5966d3b40d9a3760/workers/routes > evidence/routes-before.json
+          jq -e '.success and any(.result[]; .id == "2659b522a96a435db4aadac49dbea8fa" and .pattern == "anevum.com/*" and .script == "anevum-creator-v1")' evidence/routes-before.json >/dev/null
+          cf "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/anevum-creator-v1/settings" > evidence/production-settings.json
+          jq -e '.success and any(.result.bindings[]; .type == "d1" and .database_id == "6c7b5f0c-33db-4b6a-9569-0a6af5e07534")' evidence/production-settings.json >/dev/null
+          cf "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/anevum-creator-v1/deployments" > evidence/rollback-deployment.json
+          curl --fail --silent --show-error --max-time 30 https://anevum.com/api/v1/status > evidence/catalogue-before.json
+          echo MAIN_SITE_PRODUCTION_BINDING_GUARD=PASS
+      - name: Upload main-site Worker without replacing the old Worker or route
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          node --input-type=module -e 'import {readFileSync} from "node:fs"; const c=JSON.parse(readFileSync("creator-v1/wrangler.main-site.jsonc")); if(c.name!=="anevum-creator-v1-main"||c.routes||c.route||c.workers_dev||c.preview_urls||c.d1_databases[0].database_id!=="6c7b5f0c-33db-4b6a-9569-0a6af5e07534")throw Error("Unsafe scope");'
+          npx wrangler deploy --config creator-v1/wrangler.main-site.jsonc > evidence/deploy.log 2>&1
+          cat evidence/deploy.log
+          echo MAIN_SITE_UNROUTED_UPLOAD=PASS
+      - name: Retain release evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: main-site-consolidation-${{ github.run_id }}
+          path: evidence/
+          retention-days: 30

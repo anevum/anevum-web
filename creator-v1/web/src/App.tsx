@@ -15,6 +15,7 @@ import { MemberProfileEditorPage } from "./pages/MemberProfileEditorPage";
 import { MemberLibraryPage } from "./pages/MemberLibraryPage";
 import { MemberProjectsPage } from "./pages/MemberProjectsPage";
 import { ProjectEditorPage } from "./pages/ProjectEditorPage";
+import { WorkspacePage } from "./pages/WorkspacePage";
 
 export default function App(){
   return <Routes><Route element={<Shell/>}>
@@ -26,6 +27,7 @@ export default function App(){
     <Route path="creators" element={<CreatorsPage/>}/>
     <Route path="creators/:handle" element={<CreatorPage/>}/>
     <Route path="community" element={<CommunityPage/>}/>
+    <Route path="workspace" element={<WorkspacePage/>}/>
     <Route element={<MemberGate/>}>
       <Route path="create" element={<MemberProjectsPage/>}/>
       <Route path="create/new" element={<ProjectEditorPage/>}/>

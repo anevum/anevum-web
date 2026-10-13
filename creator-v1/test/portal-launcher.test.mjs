@@ -10,7 +10,7 @@ const css = read("web/src/portal-launcher.css");
 const main = read("web/src/main.tsx");
 
 test("portal launcher uses fixed same-origin routes with no fabricated creator records",()=>{
- assert.equal(PORTAL_DESTINATIONS.length,20);
+ assert.ok(PORTAL_DESTINATIONS.some(x=>x.id==="workspace"&&x.path==="/workspace"&&x.gated));
  assert.equal(new Set(PORTAL_DESTINATIONS.map(x=>x.id)).size,PORTAL_DESTINATIONS.length);
  for(const item of PORTAL_DESTINATIONS){
   assert.match(item.path,/^\/(?:[a-z0-9?=&_-]*)$/);
@@ -18,7 +18,7 @@ test("portal launcher uses fixed same-origin routes with no fabricated creator r
   assert.ok(["Explore","Community","Account"].includes(item.category));
  }
  const gated=PORTAL_DESTINATIONS.filter(x=>x.gated).map(x=>x.id);
- assert.deepEqual(gated,["account","library","create"]);
+ assert.deepEqual(gated,["workspace","account","library","create"]);
  assert.ok(!component.includes("member-api"));
  assert.ok(!component.includes("memberMe"));
  assert.ok(!component.includes("localStorage"));

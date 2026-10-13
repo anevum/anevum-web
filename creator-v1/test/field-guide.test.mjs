@@ -56,7 +56,7 @@ test("progress counts only practice completed during this page visit", () => {
 
 test("public routing connects a real guide without gated accounts or publications", () => {
   assert.match(app, /path="guide" element={<FieldGuidePage\/>}/);
-  assert.match(shell, /\["\/guide", "Guide"\]/);
+  assert.match(shell, /to="\/guide">Field Guide<\/Link>/);
   assert.match(start, /to: "\/guide", label: "TRY THE FREE FIELD GUIDE"/);
   for (const url of ["/discover", "/community", "/status"])
     assert.ok(guide.includes('to="' + url + '"'), url);

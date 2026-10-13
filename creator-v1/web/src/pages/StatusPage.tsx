@@ -3,7 +3,8 @@ import { useResource } from "../lib/useResource";
 import { ErrorState, LoadingState } from "../components/States";
 
 const rows=[
- ["DISCOVERY + SEARCH","SOURCE FOUNDATION","Real published project data, categories and creator pages."],
+ ["DISCOVERY + SEARCH","AVAILABLE","Browse approved public work, categories and creator pages."],
+ ["DEVON'S PORTFOLIO","AVAILABLE","Design, software and collaboration at anevum.com/portfolio/."],
  ["MEMBER ACCOUNTS","STAGING","Identity, recovery and isolation require real-user acceptance before public access."],
  ["CREATOR PUBLISHING","STAGING","Drafts and staff moderation exist in staging; public submissions remain closed."],
  ["REVIEWS + XP","STAGING","Participation and progression require anti-abuse and real-user acceptance."],

@@ -30,12 +30,12 @@ export function MemberGate(){
   const [confirmedProfile,setConfirmedProfile]=useState<{
     id:string; handle:string; displayName:string; bio:string;
   }|null>(null);
-  if(session.state==="loading")return <LoadingState label="Checking private staging member access"/>;
+  if(session.state==="loading")return <LoadingState label="Checking member access"/>;
   if(session.state==="error")return <section className="member-gate" role="status">
     <div className="member-gate-mark"><OrbitalMark/></div>
     <span className="kicker">CREATOR V1 / CONTROLLED ACCESS</span>
-    <h1>MEMBER AREA NOT AVAILABLE HERE.</h1>
-    <p>The staged membership service is separate from the public catalogue. It is not enabled on this website or preview host. No credentials or account information were requested from another domain.</p>
+    <h1>YOUR WORKSPACE IS TAKING SHAPE.</h1>
+    <p>Member profiles, saved projects and creator submissions are in invited testing. You can explore ANEVUM now; open registration and publishing will follow when they're ready.</p>
     <div className="member-actions"><Link className="button primary" to="/discover">EXPLORE PUBLISHED WORK</Link><Link className="button secondary" to="/status">BUILD STATUS</Link></div>
   </section>;
   if(!session.data.member)return <section className="member-gate">

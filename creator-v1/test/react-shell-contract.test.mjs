@@ -120,7 +120,7 @@ test("staging preview carries restrictive HTML headers and strips member cookies
  assert.match(w,/Authorization/);
  assert.match(w,/new Request\(target.href/);
  assert.match(w,/new Request\(forwarded.href/);
- assert.match(vite,/sourcemap: mode !== "staging-path"/);
+ assert.match(vite,/sourcemap: false/);
 });
 
 
