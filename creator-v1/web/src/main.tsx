@@ -5,6 +5,7 @@ import App from "./App";
 import "./styles.css";
 import "./portal-overhaul.css";
 import "./depth-system.css";
+import "./portal-arcade.css";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

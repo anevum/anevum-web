@@ -6,6 +6,7 @@ import { ProjectCard } from "../components/ProjectCard";
 import { PageNav } from "../components/PageNav";
 import { PortalHeading } from "../components/PortalHeading";
 import { LevelPanel } from "../components/LevelPanel";
+import { CategoryArtifact } from "../components/CategoryArtifact";
 import { EmptyState, ErrorState, LoadingState } from "../components/States";
 
 const channels: ReadonlyArray<{id:Category;label:string;description:string;mark:string}> = [
@@ -104,7 +105,7 @@ export function DiscoverPage(){
           <header><span className="kicker">FIND YOUR CORNER</span><h2>PORTAL DIRECTORY</h2></header>
           <nav className="portal-directory" aria-label="Project categories">
             {channels.map(x=><button type="button" key={x.id} onClick={()=>selectCategory(x.id)} className={x.id===category?"active":""} aria-pressed={x.id===category}>
-              <span className="portal-directory-mark">{x.mark}</span>
+              <span className="portal-directory-mark"><CategoryArtifact category={x.id}/></span>
               <span className="portal-directory-name"><strong>{x.label}</strong><small>{x.description}</small></span>
               <span className="portal-directory-count">{countByCategory.get(x.id)||0}</span>
             </button>)}

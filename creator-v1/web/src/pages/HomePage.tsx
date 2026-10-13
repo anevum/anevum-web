@@ -5,6 +5,7 @@ import {ProjectCard} from "../components/ProjectCard";
 import {PortalShelf} from "../components/PortalShelf";
 import {LevelPanel} from "../components/LevelPanel";
 import {OrbitalStage} from "../components/OrbitalStage";
+import {PortalArcade} from "../components/PortalArcade";
 import {OrbitalMark} from "../components/OrbitalMark";
 import {ErrorState,LoadingState} from "../components/States";
 
@@ -43,6 +44,7 @@ export function HomePage(){
         <span><b>{portal.data.categories.categories.length}</b> ACTIVE CATEGORIES</span>
         <span className="portal-stats-proof">GENUINE RELEASES ONLY / NO FABRICATED ACTIVITY</span>
       </div>
+      <PortalArcade categories={portal.data.categories.categories}/>
       <div className="portal-layout">
         <div className="portal-main">
           <section className="portal-box">
