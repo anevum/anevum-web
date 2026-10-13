@@ -39,6 +39,27 @@ function offlineMember(req,res,url){
       ?json(res,{member:FAKE_MEMBER})
       :json(res,{error:"Sign-in required"},401);
   }
+  if(url.pathname==="/api/v1/member/community/me"&&req.method==="GET"){
+    const cookies=(req.headers.cookie||"").split(";").map(x=>x.trim());
+    return cookies.includes(LOCAL_REVIEW_COOKIE)
+      ?json(res,{progression:{xp:180,level:4,maxLevel:null,artifact:"Ivory Compass",artifactEarned:true,levelStartXp:180,nextLevelXp:320,progressWithinLevel:0}})
+      :json(res,{error:"Sign-in required"},401);
+  }
+  if(url.pathname==="/api/v1/member/creators/offline_artist"&&req.method==="GET"){
+    return json(res,{
+      creator:{handle:"offline_artist",displayName:"Synthetic Creator Preview",bio:FAKE_MEMBER.bio,joinedAt:"2026-10-12"},
+      contributions:{ratings:1,publishedProjects:1,releases:0},
+      progression:{xp:180,level:4,maxLevel:null,artifact:"Ivory Compass",artifactEarned:true,levelStartXp:180,nextLevelXp:320,progressWithinLevel:0},
+      achievements:[
+        {key:"first-signal",name:"First Signal",description:"Rate your first published project",symbol:"✦",earned:true,progress:1,target:1},
+        {key:"keen-eye",name:"Keen Eye",description:"Rate five published projects",symbol:"◇",earned:false,progress:1,target:5},
+        {key:"portal-guide",name:"Portal Guide",description:"Rate twenty-five published projects",symbol:"✳",earned:false,progress:1,target:25},
+        {key:"first-launch",name:"First Launch",description:"Publish your first project after staff review",symbol:"⟡",earned:true,progress:1,target:1},
+        {key:"three-builds",name:"Three Builds",description:"Publish three projects after staff review",symbol:"⬡",earned:false,progress:1,target:3},
+        {key:"release-steward",name:"Release Steward",description:"Ship a versioned update to a published project",symbol:"✺",earned:false,progress:0,target:1}
+      ]
+    });
+  }
   // No credential verification, writes, project or staff actions in this fixture.
   return json(res,{error:"no member Worker in offline fixture"},404);
 }
@@ -80,6 +101,8 @@ createServer((req,res)=>{
   if(u.pathname==="/creator"||u.pathname.startsWith("/creator/")){
     const header={"content-type":"text/html; charset=utf-8","cache-control":"no-store"};
     // Restrict the fake member cookie to the local one-off editor visual capture.
+    if(u.pathname==="/creator/account"&&req.headers.host==="127.0.0.1:4178")
+      header["set-cookie"]=LOCAL_REVIEW_COOKIE+"; Path=/; SameSite=Strict";
     if(u.pathname==="/creator/account/edit"&&req.headers.host==="127.0.0.1:4178")
       header["set-cookie"]=LOCAL_REVIEW_COOKIE+"; Path=/; SameSite=Strict";
     if(u.pathname==="/creator/create/new"&&req.headers.host==="127.0.0.1:4178")
