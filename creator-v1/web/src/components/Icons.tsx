@@ -10,7 +10,8 @@ const paths: Record<string, string> = {
   menu: "M4 7h16 M4 12h16 M4 17h16",
   arrow: "M5 12h14 M14 7l5 5-5 5",
   star: "m12 3 2.5 5.4L20 9l-4 4 1 6-5-2.8L7 19l1-6-4-4 5.5-.6z",
-  save: "M6 4h12v17l-6-4-6 4z"
+  save: "M6 4h12v17l-6-4-6 4z",
+  close: "M5 5l14 14 M19 5 5 19"
 };
 export function Icon({ name, size = 18 }: { name: string; size?: number }) {
   return <svg aria-hidden="true" viewBox="0 0 24 24" width={size} height={size} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d={paths[name] || paths.explore} /></svg>;
