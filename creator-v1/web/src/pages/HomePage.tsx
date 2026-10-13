@@ -29,7 +29,7 @@ export function HomePage(){
       <div className="portal-welcome-copy"><span className="kicker">ANEVUM / THE INDEPENDENT CREATOR UNDERGROUND</span>
         <h1 id="portal-home-title">A WORLD OF<br/><em>THINGS PEOPLE MAKE.</em></h1>
         <p>PLAY IT. TRY IT. MAKE IT. SHARE IT. Games, software, AI experiences and independent creations worth discovering.</p>
-        <div className="portal-welcome-buttons"><Link className="button primary" to="/discover">EXPLORE THE WORK ↗</Link><Link className="button secondary" to="/create">SUBMIT YOUR PROJECT</Link></div>
+        <div className="portal-welcome-buttons"><Link className="button primary" to="/discover">EXPLORE THE WORK ↗</Link><Link className="button secondary" to="/start">FIND YOUR WAY IN ↗</Link></div>
         <span className="portal-welcome-mantra">MAKE · SHARE · PLAY · BELONG</span>
       </div>
       <div className="portal-welcome-emblem" aria-hidden="true"><OrbitalStage variant="hero"/><span>CREATIVE<br/>BEYOND<br/>GROUND</span></div>
