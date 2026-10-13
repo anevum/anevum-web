@@ -39,6 +39,12 @@ function offlineMember(req,res,url){
       ?json(res,{member:FAKE_MEMBER})
       :json(res,{error:"Sign-in required"},401);
   }
+  if(url.pathname==="/api/v1/member/interests"&&req.method==="GET"){
+    const cookies=(req.headers.cookie||"").split(";").map(x=>x.trim());
+    return cookies.includes(LOCAL_REVIEW_COOKIE)
+      ?json(res,{categories:["games","tools"],updatedAt:1791800000})
+      :json(res,{error:"Sign-in required"},401);
+  }
   // No credential verification, writes, project or staff actions in this fixture.
   return json(res,{error:"no member Worker in offline fixture"},404);
 }
@@ -80,7 +86,7 @@ createServer((req,res)=>{
   if(u.pathname==="/creator"||u.pathname.startsWith("/creator/")){
     const header={"content-type":"text/html; charset=utf-8","cache-control":"no-store"};
     // Restrict the fake member cookie to the local one-off editor visual capture.
-    if(u.pathname==="/creator/account/edit"&&req.headers.host==="127.0.0.1:4178")
+    if(["/creator/account/edit","/creator/account/interests"].includes(u.pathname)&&req.headers.host==="127.0.0.1:4178")
       header["set-cookie"]=LOCAL_REVIEW_COOKIE+"; Path=/; SameSite=Strict";
     if(u.pathname==="/creator/create/new"&&req.headers.host==="127.0.0.1:4178")
       header["set-cookie"]=LOCAL_REVIEW_COOKIE+"; Path=/; SameSite=Strict";

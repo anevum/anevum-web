@@ -10,6 +10,7 @@ import "./project-editor.css";
 import "./start-page.css";
 import "./field-guide.css";
 import "./portal-launcher.css";
+import "./member-interests.css";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

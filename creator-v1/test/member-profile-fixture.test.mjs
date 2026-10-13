@@ -10,7 +10,7 @@ test("profile editor visuals are local-only synthetic fixtures",()=>{
  assert.match(fixture,/SYNTHETIC OFFLINE REVIEW/);
  assert.match(fixture,/LOCAL_REVIEW_COOKIE/);
  assert.match(fixture,/Path=\/; SameSite=Strict/);
- assert.match(fixture,/if\(u\.pathname==="\/creator\/account\/edit"&&req\.headers\.host==="127\.0\.0\.1:4178"\)/);
+ assert.match(fixture,/if\(\["\/creator\/account\/edit","\/creator\/account\/interests"\]\.includes\(u\.pathname\)&&req\.headers\.host==="127\.0\.0\.1:4178"\)/);
  assert.match(fixture,/no member Worker in offline fixture/);
  assert.match(flow,/capture 1440 900 profile-editor \/creator\/account\/edit/);
  assert.match(flow,/capture 390 844 profile-editor \/creator\/account\/edit/);

@@ -94,6 +94,11 @@ async function requestMember<T>(
 }
 export const memberHealth=(signal?:AbortSignal)=>requestMember<MemberHealth>("/health",{signal,publicHealth:true});
 export const memberMe=(signal?:AbortSignal)=>requestMember<{member:MemberIdentity}>("/me",{signal});
+export interface MemberInterests { categories:string[]; updatedAt:number|null; saved?:boolean }
+export const memberInterests=(signal?:AbortSignal)=>requestMember<MemberInterests>("/interests",{signal});
+export const memberSaveInterests=(categories:readonly string[])=>
+  requestMember<MemberInterests>("/interests",{method:"POST",body:{categories}});
+
 export interface MemberProfileUpdate { handle:string; displayName:string; bio:string }
 export const memberSaveProfile=(profile:MemberProfileUpdate)=>
   requestMember<{profile:MemberProfileUpdate}>("/profile",{method:"POST",body:profile});
