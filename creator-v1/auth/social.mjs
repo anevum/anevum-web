@@ -90,8 +90,8 @@ export async function socialRoutes(req,db,member,limiter,now){
    let desired;try{desired=await parseFollow(req)}catch{return response(req,{error:'Invalid follow action'},400)}
    if(!await limiter(db,'follow:'+member.id,now,40,3600))return response(req,{error:'Too many follow changes'},429);
    const existing=await rows(db,'SELECT 1 AS present FROM member_creator_follows WHERE follower_member_id=? AND creator_member_id=?',[member.id,creator.id]);
-   if(desired&&existing.length)return response(req,{following:true,changed:false});
-   if(!desired&&!existing.length)return response(req,{following:false,changed:false});
+   if(desired&&existing.length)return response(req,{following:true,changed:false,...await followState(db,creator.id,member.id)});
+   if(!desired&&!existing.length)return response(req,{following:false,changed:false,...await followState(db,creator.id,member.id)});
    if(desired){
     const changed=await run(db,`INSERT INTO member_creator_follows(follower_member_id,creator_member_id,created_at)
       SELECT ?,?,? WHERE (SELECT COUNT(*) FROM member_creator_follows WHERE follower_member_id=?)<500
@@ -101,7 +101,7 @@ export async function socialRoutes(req,db,member,limiter,now){
     const changed=await run(db,'DELETE FROM member_creator_follows WHERE follower_member_id=? AND creator_member_id=?',[member.id,creator.id]);
     if(Number(changed.meta?.changes??changed.meta?.rows_written??0)!==1)return response(req,{error:'Follow changed; refresh first'},409);
    }
-   return response(req,{following:desired,changed:true});
+   return response(req,{following:desired,changed:true,...await followState(db,creator.id,member.id)});
   }
   const profileMatch=/^\/api\/v1\/member\/creators\/([a-z][a-z0-9_]{2,29})(?:\/(projects))?$/.exec(path);
   if(profileMatch){
