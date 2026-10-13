@@ -53,3 +53,22 @@ test("interactive art supports mobile, focus-visible and reduced motion",()=>{
     assert.ok(css.includes(query),query);
   assert.doesNotMatch(css,/position:fixed\s*;\s*bottom:0|scrollbar-width:\s*none/);
 });
+
+test("secondary pages share the same world art while preserving genuine content and staff/member boundaries",()=>{
+  const heading=read("web/src/components/PortalHeading.tsx");
+  const project=read("web/src/pages/ProjectPage.tsx");
+  const creators=read("web/src/pages/CreatorsPage.tsx");
+  const community=read("web/src/pages/CommunityPage.tsx");
+  const css=read("web/src/cinematic-subpages.css");
+  for(const section of [heading,project,creators,community])
+    assert.match(section,/CosmicIllustration/);
+  assert.match(project,/safeExternal/);
+  assert.match(project,/MemberEngagementPanel/);
+  assert.match(project,/CATEGORY ILLUSTRATION/);
+  assert.match(creators,/memberCreatorProfile/);
+  assert.match(creators,/detailed\?\.achievements/);
+  assert.match(community,/readProjects/);
+  assert.match(community,/readCreators/);
+  assert.match(community,/PUBLIC MESSAGE BOARD IS NOT OPEN YET/);
+  assert.match(css,/prefers-reduced-motion:reduce/);
+});

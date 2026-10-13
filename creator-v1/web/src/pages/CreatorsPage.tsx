@@ -8,8 +8,8 @@ import {PageNav} from "../components/PageNav";
 import {PortalHeading} from "../components/PortalHeading";
 import {LevelPanel} from "../components/LevelPanel";
 import {EmptyState,ErrorState,LoadingState} from "../components/States";
-import {OrbitalMark} from "../components/OrbitalMark";
 import {CelestialEmblem} from "../components/CelestialEmblem";
+import {CosmicIllustration} from "../components/CosmicIllustration";
 import {achievementMotif,seriesOneMotif} from "../lib/artifact-art";
 
 export function CreatorsPage(){
@@ -43,7 +43,7 @@ export function CreatorsPage(){
             <section aria-label="Published creator channels" className="portal-creator-grid">{data.data.items.map((c,i)=>
               <Link className="portal-creator-tile" to={"/creators/"+encodeURIComponent(c.handle)} key={c.handle}>
                 <span className="portal-creator-tile-top"><span>CREATOR CHANNEL</span><span>{String(i+1).padStart(2,"0")} / ORBIT</span></span>
-                <span className="portal-creator-avatar" aria-hidden="true"><OrbitalMark/></span>
+                <span className="portal-creator-avatar" aria-hidden="true"><span className="cw-letter-avatar">{c.displayName.slice(0,1).toUpperCase()}</span></span>
                 <span className="portal-creator-tile-name">{c.displayName}</span>
                 <span className="portal-creator-tile-meta">@{c.handle} · {c.publishedProjects} PUBLISHED {c.publishedProjects===1?"PROJECT":"PROJECTS"}</span>
                 <span className="portal-creator-tile-cta">VISIT CHANNEL <span aria-hidden="true">↗</span></span>
@@ -91,8 +91,8 @@ export function CreatorPage(){
   const earned=detailed?.achievements?.filter(a=>a.earned)||[];
   return <div className="portal-creator-channel">
     <Link to="/creators" className="project-return">← ALL PUBLIC CREATORS</Link>
-    <section className="portal-channel-banner">
-      <div className="portal-channel-avatar" aria-hidden="true"><OrbitalMark/></div>
+    <section className="portal-channel-banner"><div className="cw-channel-scene" aria-hidden="true"><CosmicIllustration scene="portal"/></div>
+      <div className="portal-channel-avatar" aria-hidden="true"><span className="cw-letter-avatar">{profile.displayName.slice(0,1).toUpperCase()}</span></div>
       <div className="portal-channel-identity">
         <span className="kicker">ANEVUM / PUBLIC CREATOR CHANNEL</span>
         <h1>{profile.displayName}</h1><p className="portal-channel-handle">@{profile.handle}</p>

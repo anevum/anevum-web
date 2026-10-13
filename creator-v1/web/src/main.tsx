@@ -14,6 +14,7 @@ import "./cosmic-observatory.css";
 import "./celestial-artifacts.css";
 import "./cinematic-worlds.css";
 import "./cinematic-polish.css";
+import "./cinematic-subpages.css";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

@@ -2,7 +2,7 @@ import {Link,useParams,useSearchParams} from "react-router-dom";
 import {readProject,safeExternal} from "../lib/api";
 import {useResource} from "../lib/useResource";
 import {ErrorState,LoadingState} from "../components/States";
-import {OrbitalMark} from "../components/OrbitalMark";
+import {CosmicIllustration} from "../components/CosmicIllustration";
 import {RepositoryPanel} from "../components/RepositoryPanel";
 import {MemberEngagementPanel} from "../components/MemberEngagementPanel";
 import {safeReturnPath} from "../lib/navigation";
@@ -27,8 +27,8 @@ export function ProjectPage(){
     <nav className="portal-crumbs" aria-label="Project breadcrumb"><Link to={from}>← {backLabel}</Link><span>/</span><Link to={"/discover?category="+encodeURIComponent(p.category)}>{p.category.toUpperCase()}</Link><span>/</span><span>PROJECT</span></nav>
     <section className="portal-project-header">
       <div className="portal-project-art" aria-hidden="true">
-        <span className="portal-project-corner">ANEVUM<br/>INDEPENDENT RELEASE</span>
-        <OrbitalMark/>
+        <span className="portal-project-corner">ANEVUM<br/>CATEGORY ILLUSTRATION</span>
+        <CosmicIllustration scene={p.category}/>
         <span className="portal-project-art-tag">{types[p.category]||"PROJECT"}</span>
       </div>
       <div className="portal-project-intro">
