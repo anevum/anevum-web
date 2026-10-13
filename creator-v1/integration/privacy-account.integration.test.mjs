@@ -67,3 +67,15 @@ test('cannot cancel a processing request and cannot skip typed confirmation',asy
 test('cross-origin POST and arbitrary member id parameters are rejected',async()=>close(await setup(),async f=>{assert.equal((await f.call('/privacy/request-deletion','POST',{email:users[0].email,confirmation:'DELETE MY ACCOUNT'},users[0],'https://bad.example')).status,403);assert.equal((await f.call('/privacy/revoke-other-sessions','POST',{confirmation:'SIGN OUT OTHER DEVICES',memberId:users[1].id})).status,400);assert.equal((await f.call('/privacy/export?section=account','GET',undefined,null)).status,401)}));
 test('session revocation affects only other tokens on the same member',async()=>close(await setup(),async f=>{const otherToken='e'.repeat(64);f.sqlite.prepare('INSERT INTO member_sessions(token_hash,member_id,expires_at,created_at) VALUES(?,?,?,?)').run(await sessionHash(otherToken),users[0].id,now+10000,now-30);const a=await f.call('/privacy/revoke-other-sessions','POST',{confirmation:'SIGN OUT OTHER DEVICES'});assert.equal(a.status,200);assert.equal((await a.json()).revokedOtherSessions,1);assert.equal((await f.call('/me')).status,200);assert.equal(f.sqlite.prepare("SELECT COUNT(*) AS n FROM member_sessions WHERE member_id='member-beta' AND revoked_at IS NULL").get().n,1);assert.equal((await f.call('/privacy/revoke-other-sessions','POST',{confirmation:'SIGN OUT OTHER DEVICES'})).status,200)}));
 test('privacy UI ships no fake account data and is same-origin only',async()=>close(await setup(),async f=>{assert.match(PRIVACY_PAGE,/manual review/);assert.match(PRIVACY_CLIENT,/URL.createObjectURL/);assert.ok(!PRIVACY_CLIENT.includes('innerHTML'));const page=await f.call('/privacy/manage');assert.match(page.headers.get('content-security-policy'),/connect-src 'self'/);const no=await f.call('/privacy/manage','GET',undefined,users[0],'https://evil.example');assert.equal(no.status,200);assert.equal((await f.call('/privacy.js')).status,200)}));
+test('creator follows are exportable only by their owner with a fresh authenticated session',async()=>close(await setup(),async f=>{
+ f.sqlite.prepare('INSERT INTO member_creator_follows(follower_member_id,creator_member_id,created_at) VALUES (?,?,?)').run(users[0].id,users[1].id,now);
+ const own=await f.call('/privacy/export?section=following');
+ assert.equal(own.status,200,await own.clone().text());
+ const ownBody=await own.json();
+ assert.equal(ownBody.items.length,1);
+ assert.equal(ownBody.items[0].creatorId,users[1].id);
+ assert.equal(ownBody.nextCursor,null);
+ const other=await (await f.call('/privacy/export?section=following','GET',undefined,users[1])).json();
+ assert.deepEqual(other.items,[]);
+ assert.equal((await f.call('/privacy/export?section=following','GET',undefined,null)).status,401);
+}));
