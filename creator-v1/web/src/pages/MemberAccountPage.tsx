@@ -1,13 +1,18 @@
 import { Link } from "react-router-dom";
 import { useState } from "react";
 import { useMemberContext } from "../components/MemberGate";
-import { memberProgress,memberSignOut,MemberApiError } from "../lib/member-api";
+import { memberProgress,memberSignOut,memberCreatorProfile,MemberApiError } from "../lib/member-api";
 import { useResource } from "../lib/useResource";
 import { LoadingState } from "../components/States";
 
 export function MemberAccountPage(){
   const {member}=useMemberContext();
   const progress=useResource(memberProgress,[]);
+  const cabinet=useResource(async signal=>{
+    if(!member.handle)return null;
+    try{return await memberCreatorProfile(member.handle,signal);}
+    catch{return null;}
+  },[member.handle]);
   const [busy,setBusy]=useState(false);
   const [feedback,setFeedback]=useState("");
   async function signOut(){
@@ -36,6 +41,20 @@ export function MemberAccountPage(){
         </>}
       </section>
     </div>
+    <section className="member-panel portal-account-cabinet">
+      <div className="portal-box-header"><div><span className="kicker">EARNED, NOT BOUGHT / ACCOUNT MILESTONES</span><h2>MY ACHIEVEMENT CABINET</h2></div><Link to="/levels">ALL LEVELS →</Link></div>
+      {cabinet.state==="loading"&&<p role="status">Loading verified achievement progress…</p>}
+      {cabinet.state==="error"&&<p role="status">The achievement service is currently unavailable. No awards have been assumed.</p>}
+      {cabinet.state==="ready"&&(!member.handle?<p>Complete your creator profile to open your achievement collection.</p>:!cabinet.data?<p>Your verified achievement collection is not currently available. Nothing has been awarded by this page.</p>:
+        <div className="portal-account-achievements">{cabinet.data.achievements.map(a=>
+          <article key={a.key} className={a.earned?"earned":"locked"}>
+            <div className="portal-account-achievement-symbol" aria-hidden="true">{a.symbol}</div>
+            <div><strong>{a.name}</strong><p>{a.description}</p>
+              <span>{a.earned?"EARNED / VERIFIED":a.progress+" / "+a.target+" VERIFIED ACTIONS"}</span>
+            </div>
+          </article>)}</div>)}
+      <p className="member-caption">Only achievements confirmed by the staging ledger appear as earned. Staff powers, votes and search ranking are independent of levels.</p>
+    </section>
     <section className="member-panel member-account-controls">
       <span className="kicker">ACCOUNT CONTROLS</span><h2>PRIVACY + SESSION</h2>
       <p>Export, deletion requests and session-revocation controls remain in the existing authenticated staging service.</p>

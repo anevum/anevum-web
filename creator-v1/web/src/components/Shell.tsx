@@ -15,7 +15,7 @@ const portalCategories = [
   ["/discover?category=learning", "Learning"]
 ] as const;
 const mobileNav = [
-  ["/", "Home", "home"], ["/discover", "Explore", "explore"], ["/create", "Create", "create"], ["/library", "Library", "library"], ["/account", "Profile", "people"]
+  ["/", "Home", "home"], ["/discover", "Explore", "explore"], ["/create", "Create", "create"], ["/levels", "Levels", "star"], ["/account", "Profile", "people"]
 ] as const;
 
 export function Shell() {

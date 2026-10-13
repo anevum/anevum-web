@@ -336,3 +336,18 @@
 @media(prefers-reduced-motion:reduce){
  .portal-creator-tile,.portal-creator-tile:hover{transition:none;transform:none}
 }
+
+
+/* Earned achievements are read directly from the existing staged ledger. */
+.portal-account-cabinet{margin-top:12px}
+.portal-account-achievements{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:15px}
+.portal-account-achievements article{display:flex;align-items:flex-start;gap:10px;border:1px solid #735056;background:#291e25;padding:12px;min-width:0}
+.portal-account-achievements article.locked{opacity:.65;background:#1b171b}
+.portal-account-achievement-symbol{flex:none;width:47px;height:47px;border-radius:50%;border:2px solid #9e605f;background:#311d27;display:grid;place-items:center;color:var(--coral);font-size:30px}
+.portal-account-achievements article.locked .portal-account-achievement-symbol{color:#a492a0;border-color:#69525d}
+.portal-account-achievements article strong{display:block;font:normal 18px/.98 Impact,"Arial Black",sans-serif;letter-spacing:.02em;margin:2px 0 7px}
+.portal-account-achievements article p{font-size:10px;color:#cbb5b3;line-height:1.4;margin:0 0 6px}
+.portal-account-achievements article span{font-size:8px;font-weight:950;letter-spacing:.08em;color:#ffb7a2}
+.portal-account-achievements article.locked span{color:#baa7ac}
+@media(max-width:1000px){.portal-account-achievements{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:640px){.portal-account-achievements{grid-template-columns:1fr}}

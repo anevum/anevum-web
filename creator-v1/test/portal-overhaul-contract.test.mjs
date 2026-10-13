@@ -61,6 +61,16 @@ test("unlimited levels preserve server authoritative progress and first named ar
  assert.match(engine,/maxLevel:null/);
  assert.doesNotMatch(engine,/Math\.min\(maxLevel/);
 });
+test("member account shows server-verified achievements and unlimited XP without guessed progress",()=>{
+ const page=read("web/src/pages/MemberAccountPage.tsx");
+ const shell=read("web/src/components/Shell.tsx");
+ assert.match(page,/memberCreatorProfile/);
+ assert.match(page,/MY ACHIEVEMENT CABINET/);
+ assert.match(page,/a\.earned/);
+ assert.match(page,/NO FIXED/i);
+ assert.match(shell,/\/levels", "Levels", "star"/);
+});
+
 test("offline review fixtures never enter a production bundle or public data path",()=>{
  const main=read("web/src/main.tsx"),page=read("web/src/pages/HomePage.tsx"),fixture=read("test/portal-offline-preview.mjs");
  assert.match(fixture,/SYNTHETIC OFFLINE REVIEW/);
