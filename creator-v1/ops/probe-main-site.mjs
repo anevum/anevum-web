@@ -41,8 +41,14 @@ const status=await (await get("/api/v1/status")).json();
 assert.ok(Number.isSafeInteger(status.counts.publishedProjects));
 const projects=await (await get("/api/v1/projects?limit=2")).json();
 assert.ok(Array.isArray(projects.items));
-for(const path of ["/api/v1/member/me","/api/v1/staff/queue","/rhen","/lab","/command","/studio","/creator/api/v1/member/me"])
+for(const path of ["/api/v1/member/me","/api/v1/staff/queue","/rhen","/lab","/command","/creator/api/v1/member/me"])
   await get(path,404);
+// Existing Cloudflare Access can reject Studio before the Worker runs.
+const studio=await fetch(base+"/studio",{redirect:"manual",signal:AbortSignal.timeout(15000)});
+if(studio.status!==404){
+  assert.ok([302,303].includes(studio.status),"Studio must be closed or Access protected");
+  assert.match(studio.headers.get("location")||"",/^https:\/\/[a-z0-9-]+\.cloudflareaccess\.com\//i);
+}
 const alias=await get("/creator/discover?category=games",308);
 assert.equal(alias.headers.get("location"),"/discover?category=games");
 const post=await fetch(base+"/api/v1/projects",{method:"POST",redirect:"manual",signal:AbortSignal.timeout(15000)});
