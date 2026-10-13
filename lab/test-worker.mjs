@@ -3,14 +3,16 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import lab from './worker.mjs';
 import {FOLD_ASSETS,FOLD_SOURCE_SHA} from './fold-snapshot.mjs';
+import {RHEN_REVIEW,RHEN_SOURCE} from './rhen-snapshot.mjs';
 const request=(path='/',opts={})=>lab.fetch(new Request('https://lab.anevum.com'+path,opts));
-test('Lab landing includes exactly the connected playable Fold and honest other entries',async()=>{
+test('Lab landing keeps Fold playable, RHEN research-only and Transcosmic unconnected',async()=>{
  const r=await request('/');const page=await r.text();
  assert.equal(r.status,200);
  assert.match(page,/The Fold/);assert.match(page,/RHEN/);assert.match(page,/Transcosmic/);
- assert.match(page,/1 playable/);assert.match(page,/2 waiting for connection/);
+ assert.match(page,/1 playable/);assert.match(page,/1 research console/);assert.match(page,/1 waiting/);
  assert.equal((page.match(/PLAY NOW/g)||[]).length,1);
- assert.equal((page.match(/NOT CONNECTED/g)||[]).length,2);
+ assert.equal((page.match(/OPEN CONSOLE/g)||[]).length,1);
+ assert.equal((page.match(/NOT CONNECTED/g)||[]).length,1);
  assert.equal(r.headers.get('X-Robots-Tag'),'noindex, nofollow, noarchive');
  assert.match(r.headers.get('Content-Security-Policy'),/frame-ancestors 'none'/);
  assert.equal(r.headers.get('Cache-Control'),'private, no-store, max-age=0');
@@ -42,13 +44,49 @@ test('Fold asset snapshot is coherent with exact source revision',async()=>{
  assert.equal((await request('/projects/the-fold/icons.svg')).headers.get('Content-Type'),'image/svg+xml; charset=utf-8');
  assert.match(FOLD_ASSETS['/projects/the-fold/index.html'],/fold-v2\.css/);
 });
-test('RHEN and Transcosmic do not disclose privileged destinations or simulate actual previews',async()=>{
- for(const slug of ['rhen','transcosmic']){
-  const r=await request('/projects/'+slug);const t=await r.text();
-  assert.equal(r.status,200);assert.match(t,/Preview not connected/);
-  assert.doesNotMatch(t,/<iframe/i);
-  assert.doesNotMatch(t,/alpaca\.markets|DATABASE_URL|api_secret/i);
+test('RHEN preview is a real source-backed, read-only development console',async()=>{
+ const redirect=await request('/projects/rhen');assert.equal(redirect.status,308);assert.equal(redirect.headers.get('Location'),'/projects/rhen/');
+ const res=await request('/projects/rhen/'),html=await res.text();
+ assert.equal(res.status,200);
+ assert.match(html,/RHEN V5/);
+ assert.match(html,/Research Console/);
+ assert.match(html,/RUNTIME OFFLINE/);
+ assert.match(html,/NOT RUNNING|NOT DEPLOYED|not a live broker terminal/i);
+ assert.match(html,/app\.css/);
+ assert.match(html,/app\.js/);
+ assert.match(html,/id="costForm"/);
+ assert.match(html,/id="net5"/);
+ assert.match(html,/id="net15"/);
+ assert.match(html,/id="net60"/);
+ assert.match(html,/V5/);
+ assert.doesNotMatch(html,/alpaca\.markets|DATABASE_URL|api_secret/i);
+ assert.doesNotMatch(html,/<iframe/i);
+ assert.equal((await request('/projects/rhen/app.css')).headers.get('Content-Type'),'text/css; charset=utf-8');
+ assert.match(await (await request('/projects/rhen/app.js')).text(),/Nothing here connects to any broker/);
+});
+test('RHEN actual source is pinned to the unmerged F1-F3f candidate and served safely as text',async()=>{
+ assert.equal(RHEN_REVIEW.source_commit,'d68ac5ec4df6378364dfd1b893ee4d5862a834e4');
+ assert.equal(RHEN_REVIEW.production,'NOT_DEPLOYED');
+ assert.equal(RHEN_REVIEW.mode,'PAPER_RESEARCH_ONLY');
+ assert.equal(RHEN_REVIEW.modules.length,5);
+ const names=['evidence_journal.py','source_attestation.py','paper_market_feed.py','research/outcomes.py','replay/scorecard.py'];
+ for(const file of names){
+  const path='/projects/rhen/source/'+file;
+  assert.ok(RHEN_SOURCE[path]?.length>200);
+  const r=await request(path);
+  assert.equal(r.status,200,file);
+  assert.equal(r.headers.get('Content-Type'),'text/plain; charset=utf-8');
+  assert.equal(await r.text(),RHEN_SOURCE[path]);
  }
+ assert.match(RHEN_SOURCE['/projects/rhen/source/replay/scorecard.py'],/gross\)\) - roundtrip|net = Decimal\(str\(gross\)\) - roundtrip/);
+ assert.equal((await request('/projects/rhen/source/private.py')).status,404);
+});
+test('Transcosmic remains a truthful unconnected private project',async()=>{
+ const r=await request('/projects/transcosmic');
+ assert.equal(r.status,200);
+ const body=await r.text();
+ assert.match(body,/Preview not connected/);
+ assert.doesNotMatch(body,/<iframe|DATABASE_URL|alpaca\.markets/i);
 });
 test('non-Lab hosts cannot reach game, even if direct Worker preview host is requested',async()=>{
  const r=await lab.fetch(new Request('https://any-user.workers.dev/projects/the-fold/'));
@@ -61,6 +99,7 @@ test('HEAD, restricted methods and unknown paths are handled safely',async()=>{
  assert.equal((await request('/',{method:'POST'})).status,405);
  assert.equal((await request('/projects/not-known')).status,404);
  assert.equal((await request('/lab/secrets')).status,404);
+ assert.equal((await request('/projects/rhen/source/private.json')).status,404);
 });
 test('health and robots disclose only nonsensitive build state',async()=>{
  const r=await request('/health');
@@ -68,6 +107,7 @@ test('health and robots disclose only nonsensitive build state',async()=>{
  const info=await r.json();
  assert.equal(info.status,'ok');
  assert.equal(info.projects,3);
+ assert.equal(info.rhen,RHEN_REVIEW.source_commit.slice(0,12));
  assert.equal(info.fold,FOLD_SOURCE_SHA.slice(0,12));
  assert.equal((await request('/robots.txt')).status,200);
  assert.match(await (await request('/robots.txt')).text(),/Disallow: \//);
