@@ -54,3 +54,13 @@
 @media(max-width:350px){.start-portal-grid{grid-template-columns:1fr}.start-portal{min-height:185px}.start-journey,.start-portals,.start-outro{padding:14px}}
 @media(hover:none),(pointer:coarse){.start-choice:hover,.start-portal:hover{transform:none}}
 @media(prefers-reduced-motion:reduce){.start-choice,.start-portal{transition:none}.start-choice:hover,.start-portal:hover{transform:none}}
+
+
+/* Free-to-use is declared by the publisher and enforced on public catalogue queries. */
+.portal-availability-filter{display:flex;align-items:center;flex-wrap:wrap;gap:9px 15px;margin:13px 0;padding:13px 17px;border:1px solid #5d414b;background:linear-gradient(100deg,#211820,#17131b);box-shadow:inset 1px 1px 0 #fff2da18,0 4px 0 #09070b}
+.portal-availability-filter .kicker{flex:none}
+.portal-availability-filter button{min-height:40px;padding:9px 15px;border:1px solid #86606b;background:#251b25;color:#e8d2cd;font-size:10px;line-height:1.3;letter-spacing:.05em;font-weight:900;box-shadow:0 3px 0 #09070b}
+.portal-availability-filter button:hover,.portal-availability-filter button.active{border-color:var(--coral);background:#57313b;color:var(--bone)}
+.portal-availability-filter button.active{box-shadow:inset 3px 0 0 #ffb59e,0 3px 0 #09070b}
+.portal-availability-filter small{font-size:10px;color:#bdaeb1;line-height:1.45;max-width:440px}
+@media(max-width:720px){.portal-availability-filter{align-items:start;flex-direction:column;padding:12px}.portal-availability-filter button{width:100%}}
