@@ -4,6 +4,8 @@ import { useMemberContext } from "../components/MemberGate";
 import { memberProgress,memberSignOut,memberCreatorProfile,MemberApiError } from "../lib/member-api";
 import { useResource } from "../lib/useResource";
 import { LoadingState } from "../components/States";
+import { CelestialEmblem } from "../components/CelestialEmblem";
+import { achievementMotif, seriesOneMotif } from "../lib/artifact-art";
 
 export function MemberAccountPage(){
   const {member}=useMemberContext();
@@ -34,6 +36,13 @@ export function MemberAccountPage(){
         {progress.state==="loading"&&<LoadingState label="Loading progression"/>}
         {progress.state==="error"&&<p role="status">Progression is currently unavailable. No XP or achievements have been invented.</p>}
         {progress.state==="ready"&&<>
+          <div className="member-artifact-preview">
+            <CelestialEmblem motif={seriesOneMotif(progress.data.progression.level,progress.data.progression.artifact)} size="large" state={progress.data.progression.artifactEarned?"earned":"preview"}/>
+            <div><span className="kicker">SERVER-VERIFIED MEMBER PROGRESSION</span>
+              <strong>LEVEL {progress.data.progression.level}</strong>
+              <small>{progress.data.progression.artifact||"ILLUSTRATIVE ORBIT / NO NAMED ARTIFACT IN THIS SERIES"}</small>
+            </div>
+          </div>
           <div className="member-level"><strong>LEVEL {progress.data.progression.level}</strong><span>{progress.data.progression.xp} XP</span></div>
           <p>{progress.data.progression.artifact||"FUTURE ARTIFACT SERIES / IN DEVELOPMENT"}</p>
           <div role="progressbar" aria-label="Level progression" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(progress.data.progression.progressWithinLevel*100)} className="member-progress"><span style={{width:(progress.data.progression.progressWithinLevel*100)+"%"}}/></div>
@@ -48,7 +57,7 @@ export function MemberAccountPage(){
       {cabinet.state==="ready"&&(!member.handle?<p>Complete your creator profile to open your achievement collection.</p>:!cabinet.data?<p>Your verified achievement collection is not currently available. Nothing has been awarded by this page.</p>:
         <div className="portal-account-achievements">{cabinet.data.achievements.map(a=>
           <article key={a.key} className={a.earned?"earned":"locked"}>
-            <div className="portal-account-achievement-symbol" aria-hidden="true">{a.symbol}</div>
+            <CelestialEmblem motif={achievementMotif(a.key)||"orbital"} size="small" state={a.earned?"earned":"locked"}/>
             <div><strong>{a.name}</strong><p>{a.description}</p>
               <span>{a.earned?"EARNED / VERIFIED":a.progress+" / "+a.target+" VERIFIED ACTIONS"}</span>
             </div>
