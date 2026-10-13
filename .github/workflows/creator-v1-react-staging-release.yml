@@ -132,7 +132,24 @@ jobs:
           if [ "$RELEASE_REF" = "feature/creator-v1-portal-launcher-20261013" ]; then
             curl --fail --silent --show-error --max-time 20 "$base/creator/start" | grep -q 'id="root"'
             curl --fail --silent --show-error --max-time 20 "$base/creator/guide" | grep -q 'id="root"'
-            curl --fail --silent --show-error --max-time 20 "$base/creator/api/v1/projects?free=1&limit=2" | jq -e '.items | type == "array"' >/dev/null
+            # New API parameters can briefly hit an older edge version immediately
+            # after the Worker is deployed. Retry only public read-only smoke,
+            # with bounded attempts and explicit endpoint/status diagnostics.
+            free_ready=0
+            for attempt in $(seq 1 20); do
+              code="$(curl --silent --show-error --max-time 20 -o "$RUNNER_TEMP/creator-free-filter.json" -w '%{http_code}' "$base/creator/api/v1/projects?free=1&limit=2" || true)"
+              if [ "$code" = 200 ] && jq -e '.items | type == "array"' "$RUNNER_TEMP/creator-free-filter.json" >/dev/null 2>&1; then
+                free_ready=1
+                echo "FREE_FILTER_EDGE_READY_ON_ATTEMPT=$attempt"
+                break
+              fi
+              echo "::notice::Awaiting verified free-filter endpoint: HTTP $code (attempt $attempt/20)"
+              sleep 3
+            done
+            if [ "$free_ready" != 1 ]; then
+              echo "::error::Public free-filter API failed after 20 attempts"
+              exit 1
+            fi
             echo VISITOR_GUIDE_FREE_FILTER_STAGING=PASS
           fi
           curl --fail --silent --show-error --max-time 20 "$base/creator/api/v1/status" | jq -e '.counts.publishedProjects >= 0' >/dev/null
