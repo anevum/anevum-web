@@ -54,6 +54,7 @@ async function main(){
    assert(document.querySelector('.panel[data-view="source"]')?.hidden===false,'Source tab does not open');
    assert(document.documentElement.scrollWidth<=innerWidth+1,'RHEN source view overflows horizontally');
    if(new URL(location.href).searchParams.get('scenario')==='cost-lens')replay.click();
+   else document.querySelector('[data-tab="overview"]').click();
  }else if(pathname==='/projects/transcosmic'){
    assert(document.body.textContent.includes('Preview not connected'),'Misleading placeholder');
    assert(document.documentElement.scrollWidth<=innerWidth+1,'Project details overflow');
