@@ -126,3 +126,9 @@ test("polished homepage removes redundant nav rows without deleting them from in
  assert.match(read("web/src/pages/DiscoverPage.tsx"),/accent="UNIVERSE\."/);
  assert.ok(existsSync(new URL("../web/public/favicon.svg",import.meta.url)));
 });
+
+test("the in-viewport feature illustration loads eagerly with the hero rather than remaining empty during initial paint",()=>{
+  const s=read("web/src/pages/HomePage.tsx");
+  assert.match(s,/<CosmicArtwork scene="hero" priority\/>/);
+  assert.match(s,/<CosmicArtwork scene="portal" priority\/>/);
+});

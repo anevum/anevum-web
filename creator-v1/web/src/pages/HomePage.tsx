@@ -47,7 +47,7 @@ export function HomePage(){
           </div>
         </div>
         <aside className="cw-hero-feature" aria-label="About our creative universe">
-          <div className="cw-hero-feature-art"><CosmicArtwork scene="portal"/></div>
+          <div className="cw-hero-feature-art"><CosmicArtwork scene="portal" priority/></div>
           <div className="cw-hero-feature-info">
             <span>THE TRANSCOSMIC ATMOSPHERE</span>
             <p>Beyond familiar boundaries. Explore original experiments and discoveries.</p>
