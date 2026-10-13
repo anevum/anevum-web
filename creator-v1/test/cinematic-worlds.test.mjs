@@ -109,3 +109,20 @@ test("the isolated offline browser fixture serves nested cinematic WebP without 
  assert.match(f,/SYNTHETIC OFFLINE REVIEW/);
  assert.match(f,/127\.0\.0\.1/);
 });
+
+test("polished homepage removes redundant nav rows without deleting them from inner pages",()=>{
+ const shell=read("web/src/components/Shell.tsx");
+ const css=read("web/src/cinematic-final-polish.css");
+ const html=read("web/index.html");
+ assert.match(shell,/site-shell--home/);
+ assert.match(shell,/portal-navigation/);
+ assert.match(shell,/signal-strip/);
+ assert.match(css,/\.site-shell--home \.portal-navigation,\.site-shell--home \.signal-strip\{display:none\}/);
+ assert.match(css,/\.site-shell--home \.cw-hero\{height:clamp/);
+ assert.match(css,/\.portal-page-heading-stamp>span\{/);
+ assert.match(html,/og:site_name/);
+ assert.match(html,/og:title/);
+ assert.match(html,/icon.*%BASE_URL%favicon\.svg/);
+ assert.match(read("web/src/pages/DiscoverPage.tsx"),/accent="UNIVERSE\."/);
+ assert.ok(existsSync(new URL("../web/public/favicon.svg",import.meta.url)));
+});

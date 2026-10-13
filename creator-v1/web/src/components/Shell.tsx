@@ -42,7 +42,7 @@ export function Shell() {
   }
 
   return (
-    <div className="site-shell">
+    <div className={"site-shell"+(location.pathname==="/"?" site-shell--home":"")}>
       <header className="site-header">
         <div className="header-inner">
           <Link to="/" className="brand-lockup" aria-label="ANEVUM home"><OrbitalMark className="brand-mark" /><span className="cw-brand-stack"><b>ANEVUM</b><small>CREATE BEYOND WORLDS</small></span></Link>

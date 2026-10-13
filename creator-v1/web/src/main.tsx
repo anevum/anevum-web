@@ -17,6 +17,7 @@ import "./cinematic-polish.css";
 import "./cinematic-subpages.css";
 import "./cinematic-mobile-review.css";
 import "./cinematic-raster-art.css";
+import "./cinematic-final-polish.css";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

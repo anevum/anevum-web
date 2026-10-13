@@ -31,7 +31,7 @@ function token(name){
 }
 
 test("cosmic design overrides old coral skin last without deleting existing pages",()=>{
-  assert.match(html, /name="theme-color" content="#080a12"/);
+  assert.match(html, /name="theme-color" content="#040811"/);
   assert.match(styles,/import "\.\/portal-overhaul\.css"/);
   assert.match(styles,/import "\.\/depth-system\.css"/);
   assert.match(styles,/import "\.\/cosmic-observatory\.css"/);
