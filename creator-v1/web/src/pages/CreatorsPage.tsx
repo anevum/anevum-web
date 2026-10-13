@@ -9,6 +9,7 @@ import {PortalHeading} from "../components/PortalHeading";
 import {LevelPanel} from "../components/LevelPanel";
 import {EmptyState,ErrorState,LoadingState} from "../components/States";
 import {OrbitalMark} from "../components/OrbitalMark";
+import {CreatorFollowPanel} from "../components/CreatorFollowPanel";
 
 export function CreatorsPage(){
   const [params,setParams]=useSearchParams();
@@ -98,6 +99,7 @@ export function CreatorPage(){
         <div className="portal-channel-stats"><span><strong>{profile.publishedProjects}</strong> PUBLISHED PROJECT{profile.publishedProjects===1?"":"S"}</span>
           {detailed&&<><span><strong>{detailed.contributions.ratings}</strong> VERIFIED RATINGS</span><span><strong>{earned.length}</strong> EARNED ACHIEVEMENTS</span></>}
         </div>
+        {detailed&&<CreatorFollowPanel key={handle} handle={handle} followers={detailed.followers} viewerFollows={detailed.viewerFollows}/>}
       </div>
       <div className="portal-channel-badge" aria-hidden="true">CREATOR<br/>IN ORBIT</div>
     </section>
