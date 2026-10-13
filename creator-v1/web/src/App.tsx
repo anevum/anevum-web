@@ -5,6 +5,7 @@ import { DiscoverPage } from "./pages/DiscoverPage";
 import { ProjectPage } from "./pages/ProjectPage";
 import { CreatorPage, CreatorsPage } from "./pages/CreatorsPage";
 import { StatusPage } from "./pages/StatusPage";
+import { LevelsPage } from "./pages/LevelsPage";
 import { ComingPage } from "./pages/ComingPage";
 import { MemberGate } from "./components/MemberGate";
 import { MemberAccountPage } from "./pages/MemberAccountPage";
@@ -27,6 +28,7 @@ export default function App(){
       <Route path="library" element={<MemberLibraryPage/>}/>
       <Route path="account" element={<MemberAccountPage/>}/>
     </Route>
+    <Route path="levels" element={<LevelsPage/>}/>
     <Route path="status" element={<StatusPage/>}/>
     <Route path="*" element={<Navigate to="/" replace/>}/>
   </Route></Routes>;

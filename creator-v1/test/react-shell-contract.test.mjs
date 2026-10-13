@@ -122,3 +122,19 @@ test("staging preview carries restrictive HTML headers and strips member cookies
  assert.match(w,/new Request\(forwarded.href/);
  assert.match(vite,/sourcemap: mode !== "staging-path"/);
 });
+
+
+test("unbounded ANEVUM level presentation is independent of member permissions",()=>{
+  const shell=read("web/src/components/Shell.tsx");
+  const app=read("web/src/App.tsx");
+  const panel=read("web/src/components/LevelPanel.tsx");
+  const levels=read("web/src/pages/LevelsPage.tsx");
+  assert.match(shell,/portalCategories/);
+  assert.match(shell,/\/levels/);
+  assert.match(app,/path="levels"/);
+  assert.match(panel,/memberProgress/);
+  assert.match(panel,/NO LEVEL CAP/);
+  assert.match(levels,/FIRST 60 ARTIFACTS/);
+  assert.match(levels,/moderation powers/);
+  assert.match(levels,/2 XP/);
+});

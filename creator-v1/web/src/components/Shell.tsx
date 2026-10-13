@@ -4,7 +4,15 @@ import { OrbitalMark } from "./OrbitalMark";
 import { Icon } from "./Icons";
 
 const desktopNav = [
-  ["/", "Home"], ["/discover", "Explore"], ["/creators", "Creators"], ["/community", "Community"]
+  ["/", "Portal"], ["/discover", "Discover"], ["/creators", "Creators"], ["/levels", "Levels"], ["/community", "Community"]
+] as const;
+const portalCategories = [
+  ["/discover?category=games", "Games"],
+  ["/discover?category=tools", "Apps & Tools"],
+  ["/discover?category=creative", "Creative / AI"],
+  ["/discover?category=libraries", "Open Source"],
+  ["/discover?category=automation", "Automation"],
+  ["/discover?category=learning", "Learning"]
 ] as const;
 const mobileNav = [
   ["/", "Home", "home"], ["/discover", "Explore", "explore"], ["/create", "Create", "create"], ["/library", "Library", "library"], ["/account", "Profile", "people"]
@@ -34,7 +42,8 @@ export function Shell() {
           <button className="menu-button" type="button" aria-expanded={menuOpen} aria-controls="mobile-menu" onClick={()=>setMenuOpen(value=>!value)}><Icon name="menu"/></button>
         </div>
       </header>
-      <div className="signal-strip"><span>ANEVUM / CREATOR V1</span><span className="signal-dot"/><span>A WORLD OF THINGS PEOPLE MAKE</span><span className="signal-tail">PUBLIC PARTICIPATION OPENS AFTER ACCEPTANCE</span></div>
+      <div className="portal-navigation"><div className="portal-navigation-inner"><span className="portal-navigation-label">THE PORTALS /</span><nav aria-label="Browse by creation type">{portalCategories.map(([to,label])=><Link to={to} key={to}>{label}</Link>)}</nav><Link to="/create" className="portal-navigation-submit">+ SUBMIT WORK</Link></div></div>
+      <div className="signal-strip"><span>ANEVUM / CREATOR UNDERGROUND</span><span className="signal-dot"/><span>A WORLD OF THINGS PEOPLE MAKE</span><span className="signal-tail">INVITED PARTICIPATION IN TESTING</span></div>
       {menuOpen && <nav className="mobile-drawer" id="mobile-menu" aria-label="More navigation">{[...desktopNav,["/status","Build status"] as const].map(([to,label])=><NavLink key={to} to={to}>{label}</NavLink>)}</nav>}
       <main id="main" className="site-main"><Outlet/></main>
       <footer className="site-footer"><span>ANEVUM / INDEPENDENT CREATOR NETWORK</span><span>Creator V1 is in development. Public activity is never simulated.</span></footer>
