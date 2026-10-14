@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {readFileSync} from "node:fs";
-import {achievementArt,achievementMotif,seriesOneMotif,seriesOneStudies} from "../web/src/lib/artifact-art.ts";
+import {achievementArt,achievementMotif,seriesOneMotif,seriesOneStudies,seriesOneArtifactMotif} from "../web/src/lib/artifact-art.ts";
 import {ACHIEVEMENTS} from "../auth/social.mjs";
 import {progressionFromXp} from "../auth/community.mjs";
 
@@ -11,6 +11,7 @@ const css=read("web/src/celestial-artifacts.css");
 const levels=read("web/src/pages/LevelsPage.tsx");
 const account=read("web/src/pages/MemberAccountPage.tsx");
 const creator=read("web/src/pages/CreatorsPage.tsx");
+const showcase=read("web/src/components/PublicAuthorShowcase.tsx");
 const panel=read("web/src/components/LevelPanel.tsx");
 const main=read("web/src/main.tsx");
 const fixture=read("test/portal-offline-preview.mjs");
@@ -82,9 +83,15 @@ test("private account and public channel never infer earned state from artwork",
  assert.match(account,/progress\.data\.progression\.artifactEarned\?"earned":"preview"/);
  assert.match(account,/cabinet\.data\.achievements\.map/);
  assert.match(panel,/p\?\.artifactEarned\?"earned":"preview"/);
- assert.match(creator,/earned=detailed\?\.achievements\?\.filter\(a=>a\.earned\)/);
- assert.match(creator,/state="earned"/);
- assert.match(creator,/detailed\.progression\.artifactEarned\?"earned":"preview"/);
+ assert.match(creator,/readPublicShowcases/);
+ assert.match(creator,/PublicAuthorShowcase/);
+ assert.match(showcase,/featuredAwards/);
+ assert.match(showcase,/state="earned"/);
+ assert.match(showcase,/seriesOneArtifactMotif\(artifact\)/);
+ assert.doesNotMatch(creator,/detailed\.progression|detailed\?\.achievements/);
+ assert.equal(seriesOneArtifactMotif("Copper Key"),"key");
+ assert.equal(seriesOneArtifactMotif("Midnight Atlas"),"atlas");
+ assert.equal(seriesOneArtifactMotif("Blackglass Seed"),"spark");
  for(const component of [levels,account,creator,panel]){
    assert.doesNotMatch(component,/localStorage|sessionStorage|onClick=\{.*award|purchaseXP/);
  }
