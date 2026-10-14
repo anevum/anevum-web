@@ -6,6 +6,7 @@ import {CosmicArtwork} from "../components/CosmicArtwork";
 import {RepositoryPanel} from "../components/RepositoryPanel";
 import {MemberEngagementPanel} from "../components/MemberEngagementPanel";
 import {safeReturnPath} from "../lib/navigation";
+import {ContextDiscussions} from "../components/ContextDiscussions";
 
 const types:Record<string,string>={
   games:"GAME / PLAYABLE",tools:"APPLICATION",creative:"CREATIVE PROJECT",libraries:"OPEN SOURCE",
@@ -51,6 +52,7 @@ export function ProjectPage(){
           <p>{p.description||p.summary}</p>
         </section>
         <MemberEngagementPanel projectId={p.id}/>
+        <ContextDiscussions projectId={p.id}/>
         <RepositoryPanel projectId={p.id} sourceUrl={p.sourceUrl}/>
         <section className="portal-box portal-project-discovery"><span className="kicker">KEEP THE PORTAL OPEN</span><h2>DISCOVER MORE IN {p.category.toUpperCase()}</h2><p>Explore other approved independent creations or visit the maker's channel. Only published, moderated work belongs in the catalogue.</p><div><Link className="button secondary" to={"/discover?category="+encodeURIComponent(p.category)}>MORE IN THIS CATEGORY →</Link><Link className="button secondary" to={"/creators/"+encodeURIComponent(p.creatorHandle)}>CREATOR CHANNEL →</Link></div></section>
       </div>

@@ -19,6 +19,13 @@ const work=seeds.map(([title,category,creatorHandle],i)=>({
  aiDisclosure:"Offline synthetic design fixture.",humanContribution:"No real human creator record."
 }));
 const categories=[...new Set(work.map(p=>p.category))].map(category=>({category,count:work.filter(p=>p.category===category).length}));
+// Browser-only scenario switch. Disabled by default; never used by a Worker.
+let contextFixtureEnabled=false;
+const contextProject={id:work[0].id,title:work[0].title,category:work[0].category,creatorHandle:work[0].creatorHandle,creatorName:work[0].creatorName};
+const discussionFixtures=[
+ {id:'a'.repeat(32),title:'Keyboard feedback for Arcade After Dark',excerpt:'SYNTHETIC OFFLINE discussion fixture: testing project context and accessible input.',body:'SYNTHETIC OFFLINE discussion fixture. This is not a real submission or earned contribution.',topic:'games',authorHandle:'moss_demo',authorName:'Moss Workshop',publishedAt:'2026-10-12T01:00:00Z',score:1,replyCount:1,project:contextProject},
+ {id:'b'.repeat(32),title:'A question about creative process',excerpt:'SYNTHETIC OFFLINE creator-activity fixture, not real engagement.',body:'SYNTHETIC OFFLINE fixture for a general community discussion.',topic:'creative',authorHandle:'nova_demo',authorName:'Nova Studio',publishedAt:'2026-10-12T02:00:00Z',score:0,replyCount:0,project:null}
+];
 const overlay='<style>body::after{content:"SYNTHETIC OFFLINE REVIEW — NOT REAL CONTENT";position:fixed;bottom:78px;right:7px;z-index:2147483647;background:#fff0b2;color:#1c1010;border:2px solid #1c1010;padding:5px 8px;font:900 8px system-ui,sans-serif;max-width:230px}</style>';
 // Fixture is ONLY served from this local 127.0.0.1 dev script for screenshot QA.
 // It does not run in Cloudflare Workers, staging D1 or any shipped assets.
@@ -67,7 +74,16 @@ function offlineMember(req,res,url){
 function json(res,obj,status=200){res.writeHead(status,{"content-type":"application/json; charset=utf-8","cache-control":"no-store"});res.end(JSON.stringify(obj));}
 function api(res,url){
  const path=url.pathname.slice("/creator/api/v1".length);
- if(path==="/status")return json(res,{version:"SYNTHETIC-FIXTURE",phase:"offline",counts:{publishedProjects:work.length,publishedCreators:people.length}});
+ if(path==="/status")return json(res,{version:"SYNTHETIC-FIXTURE",phase:"offline",counts:{publishedProjects:work.length,publishedCreators:people.length},features:{communityPosts:contextFixtureEnabled,projectDiscussions:contextFixtureEnabled}});
+ if(path==='/community/posts'&&contextFixtureEnabled){
+   const project=url.searchParams.get('project'),creator=url.searchParams.get('creator');
+   const items=discussionFixtures.filter(p=>(!project||p.project?.id===project)&&(!creator||p.authorHandle===creator));
+   return json(res,{items,count:items.length,nextCursor:null,sort:url.searchParams.get('sort')||'new'});
+ }
+ if(path.startsWith('/community/posts/')&&contextFixtureEnabled){
+   const post=discussionFixtures.find(p=>p.id===path.slice('/community/posts/'.length));
+   return json(res,post?{post,replies:post.replyCount?[{id:'c'.repeat(32),body:'SYNTHETIC OFFLINE approved reply for responsive reading checks.',authorHandle:'oxide_demo',authorName:'Oxide Collective',publishedAt:'2026-10-12T03:00:00Z'}]:[]}:{error:'not-found'},post?200:404);
+ }
  if(path==="/categories")return json(res,{categories});
  if(path==="/boards"){
   // SYNTHETIC OFFLINE visual fixtures only. Production boards use canonical SQL.
@@ -106,6 +122,10 @@ const mime={".css":"text/css",".js":"text/javascript",".svg":"image/svg+xml",".p
 createServer((req,res)=>{
  try{
   const u=new URL(req.url,"http://127.0.0.1:4178");
+  if(u.pathname==='/__context-fixture'&&req.headers.host==='127.0.0.1:4178'&&req.method==='GET'){
+    contextFixtureEnabled=u.searchParams.get('enabled')==='1';
+    return json(res,{syntheticOnly:true,enabled:contextFixtureEnabled});
+  }
   if(u.pathname==="/__ready")return json(res,{ready:existsSync(resolve(dist,"index.html"))});
   if(u.pathname.startsWith("/creator/api/v1/"))return api(res,u);
   if(u.pathname.startsWith("/api/v1/member/"))return offlineMember(req,res,u);

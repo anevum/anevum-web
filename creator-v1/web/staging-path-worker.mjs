@@ -5,7 +5,7 @@ import publicApi from "../api/worker.mjs";
 
 const SITE = "next.anevum.com";
 const PREFIX = "/creator";
-const PUBLISHED = /^\/api\/v1\/(?:status|categories|projects(?:\/[A-Za-z0-9_-]+(?:\/repository)?)?|creators(?:\/[a-z][a-z0-9_]{2,29})?)$/i;
+const PUBLISHED = /^\/api\/v1\/(?:status|categories|boards|community\/posts(?:\/[a-f0-9]{32})?|projects(?:\/[A-Za-z0-9_-]+(?:\/repository)?)?|creators(?:\/[a-z][a-z0-9_]{2,29})?)$/i;
 const SAFE_HEADERS = {
   "x-content-type-options":"nosniff",
   "x-robots-tag":"noindex, nofollow",

@@ -110,6 +110,26 @@ try{
   await evaluate('document.querySelector(".cnb-filters button:nth-child(2)").click()');
   await until(()=>evaluate('document.querySelectorAll(".cnb-project").length===3'));
   await shot("connected-community-games",width);
+  // Positive public-discussion journey with explicitly SYNTHETIC loopback data.
+  await evaluate('fetch("/__context-fixture?enabled=1").then(r=>r.json())');
+  await client.send("Page.navigate",{url:base+"/creator/atlas/projects/00000000000000000000000000000001"});
+  await until(()=>evaluate('document.querySelectorAll(".context-posts article").length===1'));
+  const projectContext=await evaluate('({title:document.querySelector(".context-posts h3")?.textContent,write:document.querySelector(".context-discussion-links a:last-child")?.getAttribute("href"),overflow:document.documentElement.scrollWidth>innerWidth+1})');
+  if(!projectContext.title?.includes('Keyboard feedback')||!projectContext.write?.includes('/community/write?project=00000000000000000000000000000001')||projectContext.overflow)throw Error('PROJECT_DISCUSSION_CONTEXT_'+width+': '+JSON.stringify(projectContext));
+  await evaluate('document.querySelector(".context-discussions").scrollIntoView({block:"start"})');
+  await shot('project-discussions',width);
+  await evaluate('document.querySelector(".context-posts h3 a").click()');
+  await until(()=>evaluate('!!document.querySelector(".discussion-project-context")&&document.querySelectorAll(".discussion-reply").length===1'));
+  if(await evaluate('!document.querySelector(".discussion-project-context a").textContent.includes("ARCADE AFTER DARK")||document.documentElement.scrollWidth>innerWidth+1'))throw Error('DISCUSSION_CONTEXT_DETAIL_'+width);
+  await shot('project-discussion-detail',width);
+  await client.send("Page.navigate",{url:base+'/creator/atlas/creators/moss_demo'});
+  await until(()=>evaluate('document.querySelectorAll(".context-posts article").length===1&&!!document.querySelector(".context-project-link")'));
+  if(await evaluate('!document.querySelector(".context-project-link").textContent.includes("ARCADE AFTER DARK")||document.documentElement.scrollWidth>innerWidth+1'))throw Error('CREATOR_DISCUSSION_ACTIVITY_'+width);
+  await evaluate('document.querySelector(".context-discussions").scrollIntoView({block:"start"})');
+  await shot('creator-discussion-activity',width);
+  // Restore empty/gated homepage fixtures before the next viewport iteration.
+  await evaluate('fetch("/__context-fixture?enabled=0").then(r=>r.json())');
+  console.log('PROJECT_CREATOR_DISCUSSION_JOURNEY_'+width+'=PASS');
   console.log("COMMUNITY_FEED_NAVIGATION_"+width+"=PASS");
  }
 }finally{client?.close();child.kill("SIGTERM");await delay(200);rmSync(profile,{recursive:true,force:true});}

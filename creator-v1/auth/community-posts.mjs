@@ -1,3 +1,4 @@
+import {communityContextEnabled,communityPostFrom} from '../shared/community-post-context.mjs';
 // STAGING-ONLY moderated community submissions and one-account post reactions.
 // Member identity and same-origin CSRF checks come from auth/worker.mjs.
 // No anonymous writes, no self-votes, no client-awarded XP.
@@ -30,7 +31,7 @@ async function active(db,memberId){
  return got.length===1;
 }
 function item(row){return {id:row.id,title:row.title,topic:row.topic,status:row.status,
- body:row.body,createdAt:row.created_at,publishedAt:row.published_at,revision:row.revision};}
+ body:row.body,createdAt:row.created_at,publishedAt:row.published_at,revision:row.revision,projectId:row.projectId||null};}
 export async function communityPostRoutes(req,db,member,limiter,now){
  const url=new URL(req.url),path=url.pathname;
  if(!path.startsWith(ROOT))return respond(req,{error:"Not found"},404);
@@ -38,8 +39,10 @@ export async function communityPostRoutes(req,db,member,limiter,now){
  if(!member.handle)return respond(req,{error:"Complete your creator profile first"},409);
  if(!await active(db,member.id))return respond(req,{error:"Creator profile unavailable"},403);
  try{
+   const context=await communityContextEnabled(db);
    if(path===ROOT+"/mine"&&["GET","HEAD"].includes(req.method)){
-     const list=await rows(db,"SELECT id,title,body,topic,status,revision,created_at,published_at FROM community_posts WHERE author_member_id=? ORDER BY created_at DESC,id DESC LIMIT 30",[member.id]);
+     const projectField=context?",(SELECT project_id FROM community_post_projects WHERE post_id=community_posts.id) AS projectId":",NULL AS projectId";
+     const list=await rows(db,"SELECT id,title,body,topic,status,revision,created_at,published_at"+projectField+" FROM community_posts WHERE author_member_id=? ORDER BY created_at DESC,id DESC LIMIT 30",[member.id]);
      return respond(req,{items:list.map(item)});
    }
    if(path===ROOT&&req.method==="POST"){
@@ -49,33 +52,41 @@ export async function communityPostRoutes(req,db,member,limiter,now){
      let data;
      try{
        const p=await payload(req);
-       if(Object.keys(p).some(key=>!["title","body","topic"].includes(key)))throw Error("Unexpected field");
-       data={title:text(p.title,8,120,"title"),body:text(p.body,20,5000,"body"),topic:p.topic};
+       if(Object.keys(p).some(key=>!["title","body","topic","projectId"].includes(key)))throw Error("Unexpected field");
+       data={title:text(p.title,8,120,"title"),body:text(p.body,20,5000,"body"),topic:p.topic,projectId:p.projectId??null};
        if(!TOPICS.has(data.topic))throw Error("Invalid topic");
+       if(data.projectId!==null&&(typeof data.projectId!=='string'||!/^[A-Za-z0-9_-]{1,80}$/.test(data.projectId)))throw Error("Invalid project reference");
      }catch(e){return respond(req,{error:e.message||"Invalid post"},400);}
+     if(data.projectId&&!context)return respond(req,{error:"Project discussions are not enabled"},503);
      const id=crypto.randomUUID().replaceAll("-","");
-     const r=await run(db,"INSERT INTO community_posts(id,author_member_id,title,body,topic,status,revision,created_at,updated_at) SELECT ?,?,?,?,?,'pending_review',1,?,? WHERE EXISTS(SELECT 1 FROM creator_profiles WHERE member_id=? AND status='active')",[id,member.id,data.title,data.body,data.topic,now,now,member.id]);
+     const insert="INSERT INTO community_posts(id,author_member_id,title,body,topic,status,revision,created_at,updated_at) SELECT ?,?,?,?,?,'pending_review',1,?,? WHERE EXISTS(SELECT 1 FROM creator_profiles WHERE member_id=? AND status='active')";
+     const args=[id,member.id,data.title,data.body,data.topic,now,now,member.id];
+     let r;
+     if(data.projectId){
+       // The post and its project reference are atomic. A private/removed project
+       // cannot produce a general post if validation or the second write fails.
+       const result=await db.batch([
+         stmt(db,insert+" AND EXISTS(SELECT 1 FROM projects cp JOIN creator_profiles cc ON cc.member_id=cp.owner_member_id WHERE cp.id=? AND cp.status='published' AND cc.status='active' AND julianday(cp.published_at)<=julianday('now'))",[...args,data.projectId]),
+         stmt(db,"INSERT INTO community_post_projects(post_id,project_id) SELECT ?,? WHERE changes()=1",[id,data.projectId])
+       ]);
+       if(!Array.isArray(result)||result.some(x=>x.success===false))throw Error('Storage unavailable');
+       r=result[0];
+       if(Number(r?.meta?.changes??r?.meta?.rows_written)!==1)return respond(req,{error:"Project unavailable for discussion"},404);
+     }else r=await run(db,insert,args);
      if(Number(r.meta?.changes??r.meta?.rows_written)!==1)return respond(req,{error:"Creator not available"},403);
      return respond(req,{id,status:"pending_review",revision:1,notice:"Your discussion was submitted privately for staff review. It is not public."},201);
    }
    const reaction=/^\/api\/v1\/member\/community\/posts\/([a-f0-9]{32})\/react$/.exec(path);
    if(reaction&&["GET","HEAD"].includes(req.method)){
      const id=reaction[1];
-     const publicRows=await rows(db,"SELECT p.id FROM community_posts p JOIN creator_profiles c ON c.member_id=p.author_member_id JOIN member_accounts a ON a.id=p.author_member_id WHERE p.id=? AND p.status='published' AND c.status='active' AND a.status='active' AND julianday(p.published_at)<=julianday('now')",[id]);
+     const publicRows=await rows(db,"SELECT p.id "+communityPostFrom(context)+" AND p.id=?",[id]);
      if(!publicRows.length)return respond(req,{error:"Discussion unavailable"},404);
      const own=await rows(db,"SELECT score,revision FROM community_post_votes WHERE post_id=? AND member_id=?",[id,member.id]);
      return respond(req,{myReaction:own.length?{score:Number(own[0].score),revision:Number(own[0].revision)}:null});
    }
-   if(reaction&&["GET","HEAD"].includes(req.method)){
-     const id=reaction[1];
-     const found=await rows(db,"SELECT p.id FROM community_posts p JOIN creator_profiles c ON c.member_id=p.author_member_id JOIN member_accounts a ON a.id=p.author_member_id WHERE p.id=? AND p.status='published' AND c.status='active' AND a.status='active' AND julianday(p.published_at)<=julianday('now')",[id]);
-     if(!found.length)return respond(req,{error:"Discussion unavailable"},404);
-     const mine=await rows(db,"SELECT score,revision FROM community_post_votes WHERE member_id=? AND post_id=?",[member.id,id]);
-     return respond(req,{myReaction:mine[0]||null});
-   }
    if(reaction&&req.method==="POST"){
      const id=reaction[1];
-     const found=await rows(db,"SELECT p.id,p.author_member_id FROM community_posts p JOIN creator_profiles c ON c.member_id=p.author_member_id JOIN member_accounts a ON a.id=p.author_member_id WHERE p.id=? AND p.status='published' AND c.status='active' AND a.status='active' AND julianday(p.published_at)<=julianday('now')",[id]);
+     const found=await rows(db,"SELECT p.id,p.author_member_id "+communityPostFrom(context)+" AND p.id=?",[id]);
      if(!found.length)return respond(req,{error:"Discussion unavailable"},404);
      if(found[0].author_member_id===member.id)return respond(req,{error:"You cannot react to your own post"},403);
      let data;
@@ -91,10 +102,10 @@ export async function communityPostRoutes(req,db,member,limiter,now){
      if(previous?.score===data.score)return respond(req,{score:previous.score,revision:previous.revision,changed:false});
      let result;
      if(previous){
-       result=await run(db,"UPDATE community_post_votes SET score=?,revision=revision+1,updated_at=? WHERE post_id=? AND member_id=? AND revision=? AND EXISTS(SELECT 1 FROM community_posts WHERE id=? AND status='published')",
+       result=await run(db,"UPDATE community_post_votes SET score=?,revision=revision+1,updated_at=? WHERE post_id=? AND member_id=? AND revision=? AND EXISTS(SELECT p.id "+communityPostFrom(context)+" AND p.id=?)",
          [data.score,now,id,member.id,previous.revision,id]);
      }else{
-       result=await run(db,"INSERT INTO community_post_votes(member_id,post_id,score,revision,created_at,updated_at) SELECT ?,?,?,1,?,? WHERE EXISTS(SELECT 1 FROM community_posts WHERE id=? AND status='published') ON CONFLICT(member_id,post_id) DO NOTHING",
+       result=await run(db,"INSERT INTO community_post_votes(member_id,post_id,score,revision,created_at,updated_at) SELECT ?,?,?,1,?,? WHERE EXISTS(SELECT p.id "+communityPostFrom(context)+" AND p.id=?) ON CONFLICT(member_id,post_id) DO NOTHING",
          [member.id,id,data.score,now,now,id]);
      }
      if(Number(result.meta?.changes??result.meta?.rows_written)!==1)return respond(req,{error:"Reaction changed; refresh first"},409);

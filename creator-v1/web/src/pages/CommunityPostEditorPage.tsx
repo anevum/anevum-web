@@ -1,5 +1,6 @@
 import {useState,type FormEvent} from "react";
-import {Link} from "react-router-dom";
+import {Link,useSearchParams} from "react-router-dom";
+import {readProject,readStatus} from "../lib/api";
 import {memberCreateDiscussion,memberMyDiscussions,MemberApiError,type DiscussionDraft} from "../lib/member-api";
 import {useMemberContext} from "../components/MemberGate";
 import {useResource} from "../lib/useResource";
@@ -19,6 +20,11 @@ function statusLabel(status:string){
  * Creating a post never publishes it automatically or awards client-side XP.
  */
 export function CommunityPostEditorPage(){
+ const [params]=useSearchParams();
+ const projectId=params.get('project');
+ return <DiscussionEditor key={projectId||'general'} projectId={projectId}/>;
+}
+function DiscussionEditor({projectId}:{projectId:string|null}){
  const {member}=useMemberContext();
  const [draft,setDraft]=useState<DiscussionDraft>(initial);
  const [pending,setPending]=useState(false);
@@ -26,15 +32,23 @@ export function CommunityPostEditorPage(){
  const [success,setSuccess]=useState("");
  const [refresh,setRefresh]=useState(0);
  const saved=useResource(member.handle?signal=>memberMyDiscussions(signal):async()=>({items:[]}),[member.handle,refresh]);
+ const context=useResource(async signal=>{
+   if(projectId===null)return null;
+   if(!/^[A-Za-z0-9_-]{1,80}$/.test(projectId))throw Error('Invalid project');
+   const status=await readStatus(signal);
+   if(status.features?.projectDiscussions!==true)throw Error('Project discussions unavailable');
+   return (await readProject(projectId,signal)).item;
+ },[projectId]);
+ const canSubmit=projectId===null||(context.state==='ready'&&context.data!==null);
  function change<K extends keyof DiscussionDraft>(key:K,value:DiscussionDraft[K]){
    setDraft(existing=>({...existing,[key]:value}));setFailure("");setSuccess("");
  }
  async function submit(event:FormEvent<HTMLFormElement>){
    event.preventDefault();
-   if(pending)return;
+   if(pending||!canSubmit)return;
    setPending(true);setFailure("");setSuccess("");
    try{
-     const result=await memberCreateDiscussion(draft);
+     const result=await memberCreateDiscussion({...draft,...(projectId?{projectId}:{})});
      if(result.status!=="pending_review")throw new Error("Unexpected moderation state");
      setSuccess("Your discussion was submitted privately for review. It is not public until a moderator approves it.");
      setDraft(initial);
@@ -54,6 +68,13 @@ export function CommunityPostEditorPage(){
    </header>
    <div className="discussion-composer-layout">
      <form className="discussion-composer-panel" onSubmit={event=>void submit(event)}>
+       {projectId!==null&&<div className="discussion-project-context">
+         <span className="nfc-eyebrow">DISCUSSION ABOUT A PUBLISHED PROJECT</span>
+         {context.state==='loading'&&<p role="status">Checking the project…</p>}
+         {context.state==='error'&&<p role="alert">This project is unavailable or project discussions are not enabled. A linked post cannot be submitted.</p>}
+         {context.state==='ready'&&context.data&&<Link to={'/atlas/projects/'+encodeURIComponent(context.data.id)}>{context.data.title} ↗</Link>}
+         <Link to="/atlas/community/write">WRITE A GENERAL DISCUSSION INSTEAD</Link>
+       </div>}
        <div><label htmlFor="discussion-topic">CHANNEL</label>
          <select id="discussion-topic" name="topic" value={draft.topic} disabled={pending} onChange={e=>change("topic",e.target.value)}>
            {TOPICS.map(([id,label])=><option key={id} value={id}>{label}</option>)}
@@ -73,7 +94,7 @@ export function CommunityPostEditorPage(){
        {failure&&<p role="alert" className="discussion-error">{failure}</p>}
        {success&&<p role="status" className="discussion-success">{success}</p>}
        <div className="discussion-composer-actions">
-         <button type="submit" disabled={pending||draft.title.trim().length<8||draft.body.trim().length<20}>{pending?"SUBMITTING…":"SUBMIT FOR REVIEW ↗"}</button>
+         <button type="submit" disabled={pending||!canSubmit||draft.title.trim().length<8||draft.body.trim().length<20}>{pending?"SUBMITTING…":"SUBMIT FOR REVIEW ↗"}</button>
          <Link to="/atlas/community">CANCEL</Link>
        </div>
      </form>

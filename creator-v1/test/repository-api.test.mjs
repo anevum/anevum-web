@@ -98,7 +98,11 @@ test('existing catalogue remains read-only and its counts and details are unchan
   const detail=await (await api.fetch(new Request('https://anevum.com/api/v1/projects/public'),f.env)).json();assert.equal(detail.item.description,'Description');
 });
 test('existing zero-dependency builder can flatten the modified API',()=>{
-  const text=readFileSync(new URL('../api/worker.mjs',import.meta.url),'utf8').replace('export function safePublicUrl','function safePublicUrl').replace('export default {','const api = {');
+  const context=readFileSync(new URL('../shared/community-post-context.mjs',import.meta.url),'utf8').replace(/^export /gm,'');
+  const source=readFileSync(new URL('../api/worker.mjs',import.meta.url),'utf8');
+  // The one local visibility module is flattened by the release builder.
+  assert.deepEqual(source.match(/^import .*$/gm),["import {communityContextEnabled,communityPostFrom,communityContextFields,communityProjectDto} from '../shared/community-post-context.mjs';"]);
+  const text=context+'\n'+source.replace(/^import .*;\n/gm,'').replace('export function safePublicUrl','function safePublicUrl').replace('export default {','const api = {');
   assert.doesNotMatch(text,/^import /m);assert.doesNotMatch(text,/^export /m);
   assert.equal(new Function(text+'; return typeof api.fetch;')(),'function');
 });

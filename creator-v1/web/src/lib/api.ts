@@ -57,6 +57,7 @@ export interface CommunityPost {
   publishedAt:string;
   score:number;
   replyCount:number;
+  project?: Pick<Project,"id"|"title"|"category"|"creatorHandle"|"creatorName"> | null;
 }
 export type CommunityPostSort="hot"|"new";
 export interface CommunityPostDetail extends CommunityPost {body:string}
@@ -121,7 +122,7 @@ export function readRepository(id:string,signal?:AbortSignal) {
   return getJson<{repository:PublicRepositoryMetadata}>(publicPath("/projects/")+encodeURIComponent(id)+"/repository",signal);
 }
 
-export function readCommunityPosts(params:{sort?:CommunityPostSort;limit?:string;cursor?:string}={},signal?:AbortSignal){
+export function readCommunityPosts(params:{sort?:CommunityPostSort;limit?:string;project?:string;creator?:string}={},signal?:AbortSignal){
   const query=new URLSearchParams();
   for(const [key,value] of Object.entries(params))if(value)query.set(key,value);
   if(!query.has("sort"))query.set("sort","hot");

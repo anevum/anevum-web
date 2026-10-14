@@ -82,3 +82,21 @@
 @media(prefers-reduced-motion:reduce){
  .discussion-page *, .discussion-composer * {scroll-behavior:auto!important;transition:none!important;animation:none!important}
 }
+.context-discussions{margin-top:22px;color:#cbd8e5;min-width:0}
+.context-discussions .portal-box-header{align-items:center;gap:12px}
+.context-discussions :is(a,button):focus-visible{outline:2px solid #f1d5a7;outline-offset:3px}
+.context-discussions button{min-width:44px;min-height:44px;background:#17253b;color:#f1d5a7;border:1px solid #9ab2c359;border-radius:7px;font-size:12px}
+.context-discussions>p,.context-discussions>div>p{padding:0 20px;line-height:1.65;font-size:13px}
+.context-posts{padding:0 20px}
+.context-posts article{padding:20px 0;border-bottom:1px solid #9ab2c359;overflow-wrap:anywhere}
+.context-posts h3{font-size:18px;margin:9px 0;color:#f1dfc5}
+.context-posts p{font-size:13px;line-height:1.7;margin:0 0 12px}
+.context-posts a:hover,.context-discussion-links a:hover{text-decoration:underline}
+.context-post-meta{display:flex;flex-wrap:wrap;gap:12px;font-size:10px;letter-spacing:.06em}
+.context-post-meta a,.context-project-link{color:#e8c590}
+.context-project-link{display:block;margin-top:13px;font-size:11px}
+.context-discussion-links{padding:20px;display:flex;flex-wrap:wrap;gap:16px;font-size:10px;font-weight:800;color:#e8c590}
+.discussion-project-context{display:flex;flex-direction:column;gap:9px;padding:18px;border:1px solid #9ab2c359;border-radius:9px;background:#17253bbf;margin-bottom:20px;overflow-wrap:anywhere}
+.discussion-project-context>a{color:#f1dfc5;font-size:15px;font-weight:700;min-height:32px}
+.discussion-project-context>small{color:#b5c6d4;font-size:11px}
+@media(max-width:640px){.context-posts{padding:0 14px}.context-discussion-links{padding:16px 14px}.context-posts h3{font-size:17px}}

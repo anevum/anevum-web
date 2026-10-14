@@ -45,9 +45,10 @@ PAGE=PAGE.replace('<title>ANEVUM / Create. Play. Belong.</title>','<meta name="d
 if (PAGE.includes('View demo profile') || PAGE.includes('Fictional showcase data') || PAGE.includes('const p=[')) throw new Error('Demo fixture remains in release page');
 const generated = Object.entries({PAGE,STYLES,CLIENT,ASSETS,BRAND_FAVICON}).map(([k,v])=>'export const '+k+'='+JSON.stringify(v)+';').join('\n');
 writeFileSync(resolve(here,'generated.mjs'),generated);
-let api = readFileSync(resolve(here,'../api/worker.mjs'),'utf8').replace('export function safePublicUrl','function safePublicUrl').replace('export default {','const api = {');
+const context=readFileSync(resolve(here,'../shared/community-post-context.mjs'),'utf8').replace(/^export /gm,'');
+let api = readFileSync(resolve(here,'../api/worker.mjs'),'utf8').replace(/^import .*;\n/gm,'').replace('export function safePublicUrl','function safePublicUrl').replace('export default {','const api = {');
 const runtime = readFileSync(resolve(here,'runtime.mjs'),'utf8').replace(/^import .*;\n/gm,'');
-const bundled = '// ANEVUM V1 LIVE-DATA READ-ONLY RELEASE\n'+generated.replaceAll('export const ','const ')+'\n'+api+'\n'+runtime;
+const bundled = '// ANEVUM V1 LIVE-DATA READ-ONLY RELEASE\n'+generated.replaceAll('export const ','const ')+'\n'+context+'\n'+api+'\n'+runtime;
 mkdirSync(resolve(here,'../dist'),{recursive:true});
 writeFileSync(resolve(here,'../dist/worker.mjs'),bundled);
 writeFileSync(resolve(here,'../dist/build-manifest.json'),JSON.stringify({version:'0.1.0',productionBuild:'003-design-preview',session:'ANEVUM.WEB.DESIGN.2026-10-12.003.ORBITAL-UNDERGROUND-IMPLEMENTATION',approvedSourceSha256:createHash('sha256').update(original).digest('hex'),workerSha256:createHash('sha256').update(bundled).digest('hex'),bytes:Buffer.byteLength(bundled),artworkCount:Object.keys(ASSETS).length},null,2));
