@@ -2,135 +2,191 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="theme-color" content="#101011">
-  <title>Devon Akins — Independent maker, designer &amp; developer</title>
-  <meta name="description" content="Devon Akins is a father, writer, UI/UX designer and independent developer making useful software, expressive interfaces, games and original worlds.">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#080b0a">
+  <meta name="color-scheme" content="dark">
+  <title>Devon Akins — Independent maker / Selected work</title>
+  <meta name="description" content="Devon Akins designs and builds independent software, immersive interfaces, systems and stories. Enter the archive of real work in progress.">
+  <meta name="robots" content="index,follow,max-image-preview:large">
   <link rel="canonical" href="https://anevum.com/portfolio/">
-  <meta property="og:url" content="https://anevum.com/portfolio/">
   <meta property="og:type" content="website">
-  <meta property="og:title" content="Devon Akins — I build what I wish existed.">
-  <meta property="og:description" content="Independent software, interfaces, stories and experiments. The projects are real, and the work is still evolving.">
+  <meta property="og:url" content="https://anevum.com/portfolio/">
+  <meta property="og:title" content="Devon Akins — Independent maker">
+  <meta property="og:description" content="Design. Software. Systems. Stories. A record of work actually being made.">
   <meta property="og:image" content="https://anevum.com/portfolio/assets/social-card.jpg">
   <meta name="twitter:card" content="summary_large_image">
   <link rel="icon" type="image/svg+xml" href="/portfolio/assets/favicon.svg">
   <link rel="stylesheet" href="/portfolio/styles.css">
-  <link rel="preload" href="/portfolio/assets/display.woff" as="font" type="font/woff" crossorigin>
   <script src="/portfolio/app.js" defer></script>
 </head>
 <body>
-  <a class="skip-link" href="#main">Skip to content</a>
-  <div class="scroll-progress" aria-hidden="true"></div>
-  <header class="site-header">
-    <a href="/" class="identity" aria-label="ANEVUM home"><span class="monogram" aria-hidden="true">d<span>a</span><i></i></span><span>Devon Akins<span class="identity-note">Design, software &amp; stories.</span></span></a>
-    <nav aria-label="Main navigation"><a href="#work">Projects <sup>04</sup></a><a href="#approach">Approach</a><a href="#about">About</a></nav>
-    <div class="header-actions"><button class="motion-button" id="motion-toggle" type="button" aria-pressed="false" aria-label="Pause animation"><span class="motion-icon" aria-hidden="true">Ⅱ</span><span class="motion-label">Motion</span></button><a class="header-contact" href="#contact">Let’s talk <span aria-hidden="true">↗</span></a></div>
+  <a class="skip-link" href="#records">Skip introduction</a>
+  <div class="noise" aria-hidden="true"></div>
+  <div class="viewport-vignette" aria-hidden="true"></div>
+  <div class="reading-line" aria-hidden="true"></div>
+  <div class="custom-pointer" id="custom-pointer" aria-hidden="true"><span></span></div>
+
+  <header class="site-header" id="site-header">
+    <a class="brand" href="#top" aria-label="Devon Akins, return to introduction">
+      <svg class="brand-sigil" viewBox="0 0 72 72" fill="none" role="img" aria-label="Distinctive interlocking D and A insignia">
+        <path d="M11 10H30C49 10 60 20 60 35S49 61 30 61H11V10Z" stroke="currentColor" stroke-width="5.5"/>
+        <path d="M24 54L48 13M36 36H62" stroke="#fa684b" stroke-width="5.5" stroke-linecap="square"/>
+        <path d="M11 10V31M11 42V61" stroke="currentColor" stroke-width="5.5"/>
+      </svg>
+      <span class="brand-type">DEVON<span>AKINS</span><small>INDEPENDENT STUDIO / FLORIDA</small></span>
+    </a>
+    <nav class="desktop-navigation" aria-label="Main navigation">
+      <a href="#records"><span>01</span> THE WORK</a>
+      <a href="#method"><span>02</span> THE METHOD</a>
+      <a href="#person"><span>03</span> THE PERSON</a>
+      <a href="#contact"><span>04</span> CONTACT</a>
+    </nav>
+    <div class="site-controls">
+      <span class="online-indicator"><i aria-hidden="true"></i> INDEPENDENT / ONGOING</span>
+      <button type="button" class="motion-switch" id="motion-toggle" aria-pressed="false" aria-label="Pause animation">MOTION <span id="motion-value">ON</span></button>
+      <a class="contact-shortcut" href="#contact" aria-label="Contact Devon">INQUIRE <span aria-hidden="true">↗</span></a>
+    </div>
   </header>
-  <main id="main">
-    <section class="hero hero-workshop" id="top" aria-labelledby="hero-title">
-      <div class="hero-grid" aria-hidden="true"></div>
-      <div class="hero-copy">
-        <div class="eyebrow hero-eyebrow"><span class="status-dot" aria-hidden="true"></span> DEVON AKINS / INDEPENDENT MAKER</div>
-        <h1 id="hero-title">I build what <em>I wish existed.</em></h1>
-        <p class="hero-description">I'm Devon. A father, writer, designer and developer who likes taking a big idea apart, figuring out how it works, and building something real from it.</p>
-        <p class="hero-personal">Software. Games. Interfaces. Stories. Usually a little of everything at once.</p>
-        <div class="hero-buttons"><a class="button primary" href="#work">See what I'm making <span aria-hidden="true">↘</span></a><a class="text-link" href="#contact">Work together <span aria-hidden="true">↗</span></a></div>
+
+  <main>
+    <section id="top" class="entry" aria-labelledby="entry-title">
+      <div class="world" id="world" aria-hidden="true">
+        <canvas id="architecture-canvas" aria-hidden="true"></canvas>
+        <div class="world-fallback"></div>
+        <div class="world-haze"></div>
+        <div class="world-beam beam-one"></div>
+        <div class="world-beam beam-two"></div>
+        <div class="world-grid"></div>
       </div>
-      <div class="hero-art hero-workbench" id="hero-art">
-        <div class="workbench-top"><span><span class="workbench-light" aria-hidden="true"></span> ON MY WORKBENCH</span><span>THREE PROJECTS / REAL DEVELOPMENT</span></div>
-        <div class="workbench-stage">
-          <div class="feature-toolbar"><span class="browser-dots" aria-hidden="true">● ● ●</span><span id="featured-path">anevum.com / discover</span><span class="feature-build-state">IN PROGRESS</span></div>
-          <div class="feature-screen" id="feature-screen">
-            <img id="featured-image" src="/portfolio/assets/anevum-interface.webp" alt="ANEVUM Discover interface prototype with synthetic review content" width="1440" height="900" decoding="async" fetchpriority="high">
-            <span class="feature-screen-corner">PROJECT PREVIEW / DEVELOPMENT INTERFACE</span>
+      <div class="entry-topline" aria-hidden="true"><span>THE AKINS ARCHIVE</span><span>FIELD RECORD / 001 — 004</span><span>NOT AN AGENCY. NOT A TEMPLATE.</span></div>
+      <div class="entry-content">
+        <div class="entry-lead">
+          <span class="overline"><span class="overline-rule"></span> SOMEWHERE BETWEEN SCIENCE AND STORY</span>
+          <h1 id="entry-title"><span>I MAKE</span><span class="knockout">THINGS</span><span class="orange-line">REAL<span class="terminal-point">.</span></span></h1>
+          <div class="entry-bottom">
+            <p>I'm Devon Akins. I design interfaces, write worlds, and build the software I wish already existed. <strong>Then I put it to the test.</strong></p>
+            <a class="enter-control magnetic" href="#records"><span class="enter-number">↳ 01</span><span>ENTER THE WORK</span><span class="enter-arrow" aria-hidden="true">↓</span></a>
           </div>
-          <div class="feature-context"><div><span class="mono" id="featured-type">01 / CREATOR COMMUNITY</span><h2 id="featured-name">ANEVUM</h2><p id="featured-caption">A home for independent projects and the people who make them.</p><span id="featured-status" class="feature-status">CREATOR V1 · ACTIVE DEVELOPMENT</span></div><button type="button" id="feature-open" class="feature-open">Read the project story <span aria-hidden="true">↗</span></button></div>
         </div>
-        <div class="feature-tabs" role="group" aria-label="Choose a project preview">
-          <button class="feature-tab active" type="button" data-feature="anevum" aria-pressed="true"><span class="feature-tab-number">01</span><span>ANEVUM<small>Community &amp; creation</small></span></button>
-          <button class="feature-tab" type="button" data-feature="fold" aria-pressed="false"><span class="feature-tab-number">02</span><span>The Fold<small>Everyday adventures</small></span></button>
-          <button class="feature-tab" type="button" data-feature="rhen" aria-pressed="false"><span class="feature-tab-number">03</span><span>RHEN<small>Research &amp; automation</small></span></button>
+        <div class="exhibit-zone" id="exhibit-zone">
+          <div class="zone-header" aria-hidden="true"><span>SELECTED OBJECT / 01</span><span class="crosshair">✛</span><span>DRAG TO EXAMINE</span></div>
+          <div class="exhibit-lights" aria-hidden="true"></div>
+          <div class="pedestal" aria-hidden="true"><span></span></div>
+          <button type="button" class="artifact" id="artifact" aria-label="Open ANEVUM project record">
+            <span class="artifact-edge" aria-hidden="true"></span>
+            <span class="artifact-surface">
+              <span class="artifact-ident" id="artifact-ident">AKINS / OBJECT 001</span>
+              <span class="artifact-image-window" id="artifact-image-window">
+                <img id="artifact-image" src="/portfolio/assets/anevum-interface.webp" alt="Development screenshot of ANEVUM, containing synthetic offline review content" width="1440" height="900" fetchpriority="high">
+                <span class="artifact-cosmic" aria-hidden="true"><i></i><b>TRANSCOSMIC</b></span>
+              </span>
+              <span class="artifact-lower"><span id="artifact-wordmark">ANEVUM</span><span class="artifact-corner-arrow" aria-hidden="true">↗</span></span>
+              <span class="artifact-imprint" id="artifact-imprint">PRODUCT / CREATOR PLATFORM</span>
+            </span>
+          </button>
+          <div class="zone-coordinates" aria-hidden="true"><span>SPECIMEN SERIES: DA / 26</span><span>X — 004.30<br>Y — 018.72</span></div>
+          <div class="exhibit-summary" aria-live="polite">
+            <div class="exhibit-number" id="exhibit-index">01 / 04</div>
+            <h2 id="exhibit-title">ANEVUM</h2>
+            <p id="exhibit-description">A home for independent projects and the people who make them.</p>
+            <div class="exhibit-actions">
+              <span class="exhibit-state" id="exhibit-state">IN ACTIVE DEVELOPMENT</span>
+              <button type="button" id="exhibit-open">OPEN RECORD <span aria-hidden="true">↗</span></button>
+            </div>
+          </div>
         </div>
-        <p class="feature-integrity">Previews show development interfaces. Each project story explains what is working, private or still a prototype.</p>
       </div>
-      <div class="hero-footer"><span>FLORIDA / WORKING INDEPENDENTLY</span><a href="#work">EXPLORE THE PROJECTS <span aria-hidden="true">↓</span></a><span class="hero-index">REAL WORK. NO FICTIONAL CLIENTS.</span></div>
-    </section>
-
-    <div class="ticker" aria-hidden="true"><div><span>MAKE SOMETHING USEFUL</span><b>✳</b><span>KEEP IT INTERESTING</span><b>✳</b><span>SHOW THE ACTUAL WORK</span><b>✳</b><span>MAKE SOMETHING USEFUL</span><b>✳</b><span>KEEP IT INTERESTING</span><b>✳</b><span>SHOW THE ACTUAL WORK</span><b>✳</b></div></div>
-
-    <section class="work section-shell" id="work" aria-labelledby="work-title">
-      <div class="section-top reveal"><span class="eyebrow">01 / SELECTED WORK</span><span class="section-side">One maker. Different problems.</span></div>
-      <div class="work-heading reveal"><h2 id="work-title">Things I’m<br><em>actually making.</em></h2><p>These projects started with something I wanted to make or understand. Some are usable now; others are prototypes or works in progress. I show the distinction.</p></div>
-      <div class="work-tools reveal"><div class="filters" role="group" aria-label="Filter projects"><button type="button" class="active" data-filter="all" aria-pressed="true">All work <sup>04</sup></button><button type="button" data-filter="product" aria-pressed="false">Products & systems</button><button type="button" data-filter="experience" aria-pressed="false">Experiences & worlds</button></div><span class="mono" id="work-count" aria-live="polite">04 PROJECTS</span></div>
-      <div class="project-grid">
-        <article class="project project-anevum reveal" data-category="product">
-          <button type="button" class="project-hit" data-project="anevum" aria-label="Explore ANEVUM project story">
-            <div class="project-visual anevum-visual"><span class="visual-index">01 / COMMUNITY & CREATION</span><div class="anevum-aura" aria-hidden="true"></div><div class="anevum-word" aria-hidden="true">ANEVUM</div><div class="browser-exhibit"><div class="browser-top"><span class="browser-dots" aria-hidden="true">● ● ●</span><span>anevum.com / discover</span><span aria-hidden="true">↗</span></div><img src="/portfolio/assets/anevum-interface.webp" alt="ANEVUM Discover interface prototype with synthetic review content" loading="lazy" width="1440" height="900"></div><span class="visual-caption">INTERFACE PROTOTYPE · SYNTHETIC REVIEW CONTENT</span><span class="exhibit-open" aria-hidden="true">↗</span></div>
-            <div class="project-meta"><div><span class="eyebrow">PRODUCT DESIGN · FRONTEND · CREATIVE DIRECTION</span><h3>ANEVUM<span>01</span></h3><p>A home for people who make things.</p></div><span class="project-state">Evolving product</span></div>
-          </button>
-        </article>
-        <article class="project project-fold reveal" data-category="experience">
-          <button type="button" class="project-hit" data-project="fold" aria-label="Explore The Fold project story">
-            <div class="project-visual fold-visual"><span class="visual-index">02 / LIFE, MADE PLAYABLE</span><div class="fold-contours" aria-hidden="true"></div><div class="fold-display" aria-hidden="true">The<br><em>Fold.</em></div><div class="phone-exhibit fold-phone"><div class="phone-island" aria-hidden="true"></div><img src="/portfolio/assets/fold-interface.webp" alt="The Fold mobile prototype with quests, local progress and an adventure interface" loading="lazy" width="390" height="844"></div><span class="visual-caption">PLAYABLE PROTOTYPE · WORKING TITLE</span><span class="exhibit-open" aria-hidden="true">↗</span></div>
-            <div class="project-meta"><div><span class="eyebrow">EXPERIENCE DESIGN · GAME SYSTEMS · PROTOTYPING</span><h3>The Fold<span>02</span></h3><p>Turn ordinary days into a shared adventure.</p></div><span class="project-state">In development</span></div>
-          </button>
-        </article>
-        <article class="project project-rhen reveal" data-category="product">
-          <button type="button" class="project-hit" data-project="rhen" aria-label="Explore RHEN project story">
-            <div class="project-visual rhen-visual"><span class="visual-index">03 / COMPLEXITY, MADE LEGIBLE</span><div class="signal-lines" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="rhen-display" aria-hidden="true">RHEN<span>RESEARCH / SYSTEMS / INTERFACES</span></div><div class="phone-exhibit rhen-phone"><div class="phone-island" aria-hidden="true"></div><img src="/portfolio/assets/rhen-interface.webp" alt="RHEN mobile research workspace showing the current interface" loading="lazy" width="390" height="844"></div><div class="rhen-chip" aria-hidden="true"><span class="label-dot"></span> clarity is a feature.</div><span class="visual-caption">ACTUAL INTERFACE · RESEARCH WORKSPACE</span><span class="exhibit-open" aria-hidden="true">↗</span></div>
-            <div class="project-meta"><div><span class="eyebrow">DASHBOARDS · AUTOMATION · SYSTEM ARCHITECTURE</span><h3>RHEN<span>03</span></h3><p>A considered interface for complicated systems.</p></div><span class="project-state">Research & development</span></div>
-          </button>
-        </article>
-        <article class="project project-transcosmic reveal" data-category="experience">
-          <button type="button" class="project-hit" data-project="transcosmic" aria-label="Explore Transcosmic project story">
-            <div class="project-visual transcosmic-visual"><span class="visual-index">04 / WORLDS BEYOND THE SCREEN</span><div class="cosmic-orbit" aria-hidden="true"></div><div class="cosmic-planet" aria-hidden="true"></div><div class="cosmic-moon" aria-hidden="true"></div><div class="cosmic-title" aria-hidden="true"><span>THE</span>TRANSCOSMIC<small>A UNIVERSE IN THE MAKING.</small></div><span class="visual-caption">PORTFOLIO ART STUDY · CREATIVE UNIVERSE</span><span class="exhibit-open" aria-hidden="true">↗</span></div>
-            <div class="project-meta"><div><span class="eyebrow">WORLDBUILDING · STORY · VISUAL EXPLORATION</span><h3>Transcosmic<span>04</span></h3><p>Imagination with an internal logic.</p></div><span class="project-state">Ongoing creative work</span></div>
-          </button>
-        </article>
-      </div>
-      <p class="work-footnote reveal">Independent projects, not invented client commissions. Open a project to see what exists and what is still being built.</p>
-    </section>
-
-    <section class="capabilities section-shell" id="capabilities" aria-labelledby="capabilities-title">
-      <div class="section-top reveal"><span class="eyebrow">02 / WHAT I BRING</span><span class="section-side">Design is only part of the job.</span></div>
-      <div class="capability-layout"><div class="capability-intro reveal"><h2 id="capabilities-title">I design it.<br><em>Then I build it.</em></h2><p>I enjoy the visual side, but I also care about the behavior behind the screen: where a click goes, what data is real, and whether the experience makes sense.</p><a class="text-link" href="#contact">Let’s find the right challenge <span aria-hidden="true">↗</span></a><span class="capability-symbol" aria-hidden="true">✳</span></div>
-      <div class="capability-list">
-        <details class="capability reveal" open><summary><span class="cap-number">01</span><h3>UI & UX design</h3><span class="detail-toggle" aria-hidden="true">+</span></summary><div class="capability-body"><p>Interfaces that feel intentional. Clear navigation, thoughtful hierarchy, responsive layouts, and interaction details that make the experience click.</p><span class="tags">INTERFACES / DESIGN SYSTEMS / PROTOTYPES</span></div></details>
-        <details class="capability reveal"><summary><span class="cap-number">02</span><h3>Product thinking</h3><span class="detail-toggle" aria-hidden="true">+</span></summary><div class="capability-body"><p>Turn a big, blurry idea into a product people can understand. Shape the core experience, prioritize useful features, and build something worth testing.</p><span class="tags">USER FLOWS / SCOPE / EXPERIENCE STRATEGY</span></div></details>
-        <details class="capability reveal"><summary><span class="cap-number">03</span><h3>Systems & automation</h3><span class="detail-toggle" aria-hidden="true">+</span></summary><div class="capability-body"><p>Bots, dashboards, and connected workflows. Make complicated behavior visible and build clear controls around what a system can do.</p><span class="tags">BOTS / DASHBOARDS / SOFTWARE SYSTEMS</span></div></details>
-        <details class="capability reveal"><summary><span class="cap-number">04</span><h3>Creative development</h3><span class="detail-toggle" aria-hidden="true">+</span></summary><div class="capability-body"><p>Bring an interface to life with code. Animation, browser-based experiments, interactive worlds, and prototypes with enough feeling to make an idea tangible.</p><span class="tags">FRONTEND / MOTION / INTERACTIVE EXPERIENCES</span></div></details>
-      </div></div>
-    </section>
-
-    <section class="process section-shell" id="process" aria-labelledby="process-title">
-      <div class="process-intro reveal"><span class="eyebrow">THE WAY I WORK</span><h2 id="process-title">No decoration<br><em>without a reason.</em></h2><p>I love motion, depth and playful details. They earn their place when they help someone discover, understand or use something. The work matters more than a flashy object spinning on the page.</p></div>
-      <div class="process-stack" aria-label="How I work">
-        <article class="process-card reveal"><span class="mono">01 / GET CURIOUS</span><h3>Find the question.</h3><p>Why doesn't this exist? Who would use it? What would make it genuinely better?</p><span class="process-stamp">RESEARCH / NOTES</span></article>
-        <article class="process-card reveal"><span class="mono">02 / MAKE IT TANGIBLE</span><h3>Build the first real version.</h3><p>Sketch the experience, code the interface, and get something working instead of endlessly talking about the idea.</p><span class="process-stamp">DESIGN / PROTOTYPE</span></article>
-        <article class="process-card reveal"><span class="mono">03 / FACE THE EVIDENCE</span><h3>Test what actually works.</h3><p>Separate a working feature from a mockup, a useful experiment from an assumption, and a release from a plan.</p><span class="process-stamp">TEST / IMPROVE</span></article>
+      <div class="entry-controls">
+        <div class="entry-controls-header"><span>THE INDEX / SELECT A FILE</span><span>ARROW KEYS OR SWIPE TO NAVIGATE <span aria-hidden="true">↔</span></span></div>
+        <div class="project-switcher" role="group" aria-label="Select featured work">
+          <button type="button" class="switch-item active" data-select="anevum" aria-pressed="true"><span class="switch-number">01</span><span class="switch-name">ANEVUM</span><span class="switch-type">SOFTWARE / COMMUNITY</span><span class="switch-arrow">↗</span></button>
+          <button type="button" class="switch-item" data-select="rhen" aria-pressed="false"><span class="switch-number">02</span><span class="switch-name">RHEN</span><span class="switch-type">AUTOMATION / RESEARCH</span><span class="switch-arrow">↗</span></button>
+          <button type="button" class="switch-item" data-select="fold" aria-pressed="false"><span class="switch-number">03</span><span class="switch-name">THE FOLD</span><span class="switch-type">GAME / EXPERIENCE</span><span class="switch-arrow">↗</span></button>
+          <button type="button" class="switch-item" data-select="transcosmic" aria-pressed="false"><span class="switch-number">04</span><span class="switch-name">TRANSCOSMIC</span><span class="switch-type">FICTION / WORLD</span><span class="switch-arrow">↗</span></button>
+        </div>
+        <div class="entry-foot"><span>© 2026 DEVON AKINS / INDEPENDENT WORK</span><a href="#records">SCROLL FOR THE RECORD <span aria-hidden="true">↓</span></a><span>REAL PROJECTS. REAL LIMITATIONS.</span></div>
       </div>
     </section>
 
-    <section class="philosophy section-shell" id="approach" aria-labelledby="philosophy-title">
-      <div class="section-top reveal"><span class="eyebrow">03 / WHAT I BELIEVE</span><span class="section-side">Useful work has personality.</span></div>
-      <h2 class="philosophy-statement reveal" id="philosophy-title">Make it useful.<br><em>Make it yours.</em><span aria-hidden="true">✳</span></h2>
-      <div class="philosophy-grid"><article class="reveal"><span class="mono">01 / START WITH A REAL NEED</span><h3>Useful comes first.</h3><p>If someone cannot understand or use a product, the polish does not save it. Good design makes the next action clear and worth taking.</p></article><article class="reveal"><span class="mono">02 / UNDERSTAND THE WHOLE</span><h3>Nothing exists in isolation.</h3><p>I like figuring out how the whole thing works, from the interface to the logic behind it. That is where my curiosity about math and science shows up.</p></article><article class="reveal"><span class="mono">03 / KEEP THE WONDER</span><h3>Leave room to play.</h3><p>Games, stories and strange ideas belong here too. I want to make practical things without designing all the fun out of them.</p></article></div>
+    <section class="records-section" id="records" aria-labelledby="records-title">
+      <div class="section-intro appear">
+        <span class="record-eyebrow">001 / THE WORK</span>
+        <h2 id="records-title">THE PROOF<br><em>IS IN THE WORK.</em></h2>
+        <p>This is an archive of things I'm building, not a portfolio of invented client wins. Each file tells you what exists, what's a prototype, and what's still an idea being tested.</p>
+      </div>
+      <div class="record-list">
+        <article class="record appear" data-record="anevum">
+          <button type="button" class="record-hit" data-open="anevum" aria-label="Open ANEVUM project record">
+            <span class="record-image record-image-anevum"><img src="/portfolio/assets/anevum-interface.webp" width="1440" height="900" loading="lazy" alt="ANEVUM Discover development interface with synthetic offline entries"><span class="record-corner">001 / UI</span></span>
+            <span class="record-data"><span class="record-top"><small>001 / PLATFORM DESIGN & DEVELOPMENT</small><small>ACTIVE BUILD</small></span><strong>ANEVUM</strong><span class="record-caption">A place where makers can publish, connect and actually be discovered.</span><span class="record-meta">DESIGN · CODE · PRODUCT DIRECTION <b>↗</b></span></span>
+          </button>
+        </article>
+        <article class="record appear" data-record="rhen">
+          <button type="button" class="record-hit" data-open="rhen" aria-label="Open RHEN project record">
+            <span class="record-image record-image-rhen"><img src="/portfolio/assets/rhen-interface.webp" width="390" height="844" loading="lazy" alt="RHEN read-only research console preview"><span class="record-corner">002 / SYSTEM</span></span>
+            <span class="record-data"><span class="record-top"><small>002 / SYSTEMS & AUTOMATION</small><small>RESEARCH BUILD</small></span><strong>RHEN</strong><span class="record-caption">An attempt to make complex research, bots and decisions legible.</span><span class="record-meta">SOFTWARE · RESEARCH · UI DESIGN <b>↗</b></span></span>
+          </button>
+        </article>
+        <article class="record appear" data-record="fold">
+          <button type="button" class="record-hit" data-open="fold" aria-label="Open The Fold project record">
+            <span class="record-image record-image-fold"><img src="/portfolio/assets/fold-interface.webp" width="390" height="844" loading="lazy" alt="The Fold illustrated private prototype interface"><span class="record-corner">003 / PLAY</span></span>
+            <span class="record-data"><span class="record-top"><small>003 / INTERACTIVE EXPERIENCE</small><small>PRIVATE PROTOTYPE</small></span><strong>THE FOLD</strong><span class="record-caption">A game built around going outside and making memories.</span><span class="record-meta">GAME SYSTEMS · EXPERIENCE · STORY <b>↗</b></span></span>
+          </button>
+        </article>
+        <article class="record appear" data-record="transcosmic">
+          <button type="button" class="record-hit" data-open="transcosmic" aria-label="Open Transcosmic project record">
+            <span class="record-image record-image-transcosmic"><span class="cosmic-star" aria-hidden="true"></span><span class="record-cosmic-type">TRANSCOSMIC<small>ORIGINAL FICTION / WORLD SYSTEMS</small></span><span class="record-corner">004 / WORLD</span></span>
+            <span class="record-data"><span class="record-top"><small>004 / WRITING & WORLDBUILDING</small><small>ONGOING WORK</small></span><strong>TRANSCOSMIC</strong><span class="record-caption">A fictional universe built through story, physics and internal logic.</span><span class="record-meta">WRITING · WORLD SYSTEMS · RESEARCH <b>↗</b></span></span>
+          </button>
+        </article>
+      </div>
+      <div class="records-footer appear"><span>OTHER EXPERIMENTS EXIST. ONLY SELECTED WORK IS SHOWN HERE.</span><a href="#contact">GOT A PROBLEM WORTH BUILDING FOR? ↗</a></div>
     </section>
 
-    <section class="about section-shell" id="about" aria-labelledby="about-title">
-      <div class="portrait-panel reveal"><img src="/portfolio/assets/devon-akins.jpg" width="560" height="560" alt="Devon Akins" loading="lazy"><div class="portrait-frame" aria-hidden="true"></div><span class="portrait-label">THE PERSON BEHIND THE PROJECTS.</span><span class="portrait-signature" aria-hidden="true">Devon.</span></div>
-      <div class="about-copy reveal"><span class="eyebrow">04 / THE PERSON DOING THE WORK</span><h2 id="about-title">A dad.<br>A writer.<br><em>A builder.</em></h2><p class="about-lead">I’m Devon Akins. I’m a father of two, an author, and the person building ANEVUM. I design interfaces and create independent software, games and stories.</p><p>I’m drawn to science, mathematics, psychology, writing, and making things by hand. I follow questions into projects, sometimes much further than expected. That curiosity is a strength, but finishing and shipping the work matters more than collecting ideas.</p><p>Family comes first. I build around that life rather than pretending work is the only thing I am. The projects here are independent, evolving, and honestly presented.</p><div class="about-bottom"><span class="mono">FLORIDA, USA / INDEPENDENT MAKER</span><a href="https://anevum.com" target="_blank" rel="noopener noreferrer" class="text-link">Visit ANEVUM <span aria-hidden="true">↗</span></a></div></div>
+    <section class="method-section" id="method" aria-labelledby="method-title">
+      <div class="method-side appear"><span class="record-eyebrow">002 / THE METHOD</span><span class="method-registration">NOTES FROM AN<br>INDEPENDENT PRACTICE.</span></div>
+      <div class="method-main appear">
+        <h2 id="method-title">THINK BIG.<br>BUILD SMALL.<br><em>FINISH SOMETHING.</em></h2>
+        <p>I'm interested in the space where design, mathematics, psychology, software and fiction run into each other. I like making complicated things feel understandable—and useful things feel worth coming back to.</p>
+        <div class="method-triad">
+          <article><span>01 / FIND THE QUESTION</span><h3>UNDERSTAND</h3><p>Start with the actual problem. Know what's real before making it beautiful.</p></article>
+          <article><span>02 / GIVE IT FORM</span><h3>EXPERIMENT</h3><p>Prototype. Break it. Work through the awkward parts where the idea becomes software.</p></article>
+          <article><span>03 / SHOW THE RESULT</span><h3>SHIP</h3><p>Make something you can test. Keep a record of the limits as well as the wins.</p></article>
+        </div>
+      </div>
     </section>
 
-    <section class="contact section-shell" id="contact" aria-labelledby="contact-title">
-      <div class="section-top reveal"><span class="eyebrow">05 / LET’S WORK TOGETHER</span><span class="section-side"><span class="status-dot" aria-hidden="true"></span> Open to conversations</span></div>
-      <div class="contact-heading reveal"><h2 id="contact-title">Have something<br><em>worth building?</em><span aria-hidden="true">↗</span></h2><p>I’m interested in thoughtful UI/UX work, useful software, automation, and creative collaborations. Tell me what you want to make and what problem it needs to solve.</p></div>
-      <div class="contact-grid"><div class="contact-direct reveal"><a class="email-link" href="mailto:devon@anevum.com">devon@anevum.com <span aria-hidden="true">↗</span></a><button type="button" id="copy-email" class="copy-button">Copy email <span aria-hidden="true">⧉</span></button><p>For freelance UI/UX work, software projects, employment inquiries and creative collaborations.</p><div class="contact-note"><span class="mono">START WITH A CONVERSATION.</span><span>Tell me what you need to build.</span></div></div>
-      <form id="brief-form" class="brief-form reveal"><fieldset><legend>What brings you here?</legend><div class="brief-options"><label><input type="radio" name="interest" value="Design a great interface" checked><span>UI / UX design</span></label><label><input type="radio" name="interest" value="Build a digital product"><span>Product / software</span></label><label><input type="radio" name="interest" value="Build a bot or automation"><span>Bots / automation</span></label><label><input type="radio" name="interest" value="Explore a role or creative collaboration"><span>Hire / collaborate</span></label></div></fieldset><label for="brief">A little about your idea</label><textarea id="brief" name="brief" rows="3" maxlength="2500" placeholder="What are you working on, and what would you like to make possible?" required></textarea><button type="submit" class="button primary">Start a conversation <span aria-hidden="true">↗</span></button><p class="form-note" id="form-status" role="status">Opens a draft in your email app. Nothing is sent by this site.</p></form></div>
+    <section class="person-section" id="person" aria-labelledby="person-title">
+      <div class="person-photo appear"><img src="/portfolio/assets/devon-akins.jpg" width="560" height="560" alt="Portrait of Devon Akins" loading="lazy"><span class="photo-code">PERSON / NOT A PERSONA</span><span class="photo-ref">DA — 1993 / FL</span></div>
+      <div class="person-copy appear">
+        <span class="record-eyebrow">003 / THE PERSON</span>
+        <h2 id="person-title">NO BIG TEAM.<br>NO MADE-UP<br><em>ORIGIN STORY.</em></h2>
+        <p class="person-lead">I'm Devon. A father of two, an author, and the person behind ANEVUM.</p>
+        <p>I've spent a lot of my life asking how things work—from math and physics to psychology, interactive stories and the software running on my screen. Building became a way to find out for myself.</p>
+        <p>Family comes first. I make this work around real life, and I want the things I build to add something to it—not replace it.</p>
+        <div class="person-fields"><span>BASED IN FLORIDA</span><span>INDEPENDENT DEVELOPMENT</span><span>DESIGN / SOFTWARE / WRITING</span></div>
+      </div>
+    </section>
+
+    <section class="contact-section" id="contact" aria-labelledby="contact-title">
+      <div class="contact-background" aria-hidden="true"><span>CONTACT</span></div>
+      <div class="contact-top appear"><span class="record-eyebrow">004 / OPEN CHANNEL</span><span>NOT A FORM FUNNEL. A REAL CONVERSATION.</span></div>
+      <div class="contact-content appear">
+        <h2 id="contact-title">GOT AN IDEA<br><em>WORTH MAKING?</em></h2>
+        <p>I'm open to UI/UX work, independent software projects, automation, and creative collaborations. Show me the problem, not just the moodboard.</p>
+        <a class="email-link magnetic" href="mailto:devon@anevum.com">DEVON@ANEVUM.COM <span aria-hidden="true">↗</span></a>
+        <div class="contact-actions"><button type="button" id="copy-email">COPY ADDRESS <span aria-hidden="true">⧉</span></button><a href="https://anevum.com">EXPLORE ANEVUM.COM ↗</a></div>
+      </div>
+      <div class="footer-line"><span>© <span id="year">2026</span> DEVON AKINS</span><span>MADE BY ONE PERSON. UNDER CONSTANT REVISION.</span><a href="#top">RETURN TO ENTRY ↑</a></div>
     </section>
   </main>
-  <footer class="site-footer section-shell"><a href="#top" class="footer-name">Devon Akins<span aria-hidden="true">✳</span></a><div class="footer-bottom"><span>© <span id="year">2026</span> DEVON AKINS</span><span>INDEPENDENT MAKER. ALWAYS LEARNING.</span><a href="#top">BACK TO THE TOP <span aria-hidden="true">↑</span></a></div></footer>
-  <dialog id="project-dialog" aria-labelledby="case-title"><div class="case-header"><span class="eyebrow" id="case-number">PROJECT 01 / SELECTED WORK</span><button type="button" class="case-close" aria-label="Close project story">Close <span aria-hidden="true">×</span></button></div><div id="case-content"></div></dialog>
-  <div class="toast" id="toast" role="status"></div>
+
+  <dialog id="dossier-dialog" class="dossier-dialog" aria-labelledby="dossier-title">
+    <div class="dossier-frame">
+      <div class="dossier-toolbar"><span>THE AKINS ARCHIVE / OPEN RECORD</span><button class="dossier-close" type="button" aria-label="Close project record">CLOSE <span aria-hidden="true">×</span></button></div>
+      <div id="dossier-content"></div>
+    </div>
+  </dialog>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
 </body>
 </html>
