@@ -45,7 +45,7 @@ function SceneLink({item,variant}:{item:Gate;variant:"gate"|"module"}){
 
 function FeaturedScene({project}:{project:Project|null}){
   const href=project?projectDetailPath(project.id,"/"):"/start";
-  const label=project?"FEATURED PUBLISHED PROJECT":"FIRST SHOWCASE / IN PREPARATION";
+  const label=project?"LATEST APPROVED RELEASE":"FIRST SHOWCASE / IN PREPARATION";
   return <aside className="cinema-feature" aria-label="Featured project">
     <div className="cinema-feature-art" aria-hidden="true">
       <CosmicArtwork scene={project?categoryArt[project.category]:"portal"} priority/>
@@ -100,7 +100,7 @@ export function CinematicLandingPage(){
             <p>An independent creative home for games, art, useful software, learning, and the people who make them. Find something worth exploring—or share what you build.</p>
             <div className="cinema-actions">
               <Link to="/discover" className="cinema-button cinema-button--primary">EXPLORE WORLDS <Icon name="arrow" size={17}/></Link>
-              <Link to="/start" className="cinema-button cinema-button--secondary">DISCOVER ANEVUM <Icon name="arrow" size={16}/></Link>
+              <a href="#community-index" className="cinema-button cinema-button--secondary">COMMUNITY INDEX <Icon name="arrow" size={16}/></a>
             </div>
           </div>
           <FeaturedScene project={featured}/>
