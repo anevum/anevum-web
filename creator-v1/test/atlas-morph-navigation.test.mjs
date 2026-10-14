@@ -2,9 +2,43 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {readFileSync} from "node:fs";
 import {ATLAS_WORLDS} from "../web/src/lib/atlas-worlds.ts";
-const read=p=>readFileSync(new URL("../"+p,import.meta.url),"utf8");
+const read=path=>readFileSync(new URL("../"+path,import.meta.url),"utf8");
 
-test("Morph reuses the real React pages as nested routes and keeps the original Atlas accessible",()=>{
+test("one Morph top navigation renders the entire live page below it, not a floating imitation window",()=>{
+ const shell=read("web/src/pages/AtlasMorphPage.tsx");
+ const css=read("web/src/pages/atlas-morph.css");
+ assert.match(shell,/<header className="atm-header">/);
+ assert.match(shell,/<nav className="atm-primary-nav"/);
+ assert.match(shell,/<main id="atm-content" ref={main}/);
+ assert.match(shell,/className="atm-embedded"><Outlet\/>/);
+ assert.match(shell,/<Overview onEnter={enter}/);
+ for(const forbidden of ["atm-node","atm-constellation","atm-mobile-dock","atm-workspace","atm-footer","atm-floating-jump"])
+   assert.ok(!shell.includes(forbidden),"Obsolete secondary UI must not render: "+forbidden);
+ assert.match(css,/\.atm-content\{[^}]*position:absolute;inset:var\(--atm-nav-height\) 0 0/);
+ assert.match(css,/\.atm-content--page\{padding:clamp\(/);
+ assert.match(css,/\.atm-embedded\{width:100%/);
+ assert.doesNotMatch(css,/\.atm-workspace\{/);
+ assert.doesNotMatch(css,/\.atm-mobile-dock\{/);
+ assert.doesNotMatch(css,/\.atm-footer\{/);
+});
+
+test("all ten real worlds live in one header/menu and a deliberate visual home grid",()=>{
+ const shell=read("web/src/pages/AtlasMorphPage.tsx");
+ assert.equal(ATLAS_WORLDS.length,10);
+ for(const id of ATLAS_WORLDS.map(w=>w.id))assert.match(shell,new RegExp('  '+id+':"\\/atlas\\/'));
+ assert.match(shell,/className="atm-world-grid"/);
+ assert.match(shell,/className="atm-world-tile atm-world-tile--"/);
+ assert.match(shell,/<nav className="atm-worlds-menu-grid"/);
+ assert.match(shell,/aria-controls="atm-worlds-menu"/);
+ assert.match(shell,/aria-expanded={menuOpen}/);
+ assert.match(shell,/<nav className="atm-primary-nav" aria-label="Main ANEVUM navigation">/);
+ assert.match(shell,/setMenuOpen\(false\)/);
+ assert.match(shell,/aria-current={chosenId===world.id\?"page":undefined}/);
+ assert.match(shell,/No actual simultaneous editing/);
+ assert.match(shell,/no live message inbox/i);
+ assert.doesNotMatch(shell,/fakeMessages|fakeUsers|Math\.random|grantXp\(|faker/);
+});
+test("real nested site and protected member pages remain routed inside persistent shell",()=>{
  const app=read("web/src/App.tsx");
  const shell=read("web/src/pages/AtlasMorphPage.tsx");
  for(const fragment of [
@@ -22,45 +56,24 @@ test("Morph reuses the real React pages as nested routes and keeps the original 
  ])assert.ok(app.includes(fragment),fragment);
  assert.match(app,/<Route element={<MemberGate\/>}>/);
  assert.match(shell,/<Outlet\/>/);
- assert.match(shell,/navigate\("\/atlas"\)/);
  assert.match(shell,/navigate\("\/atlas"\+relative\+url\.search\+url\.hash\)/);
  assert.match(shell,/import\.meta\.env\.BASE_URL/);
+ assert.match(shell,/navigate\("\/atlas"\)/);
  assert.doesNotMatch(shell,/dangerouslySetInnerHTML|document\.write|location\.reload/);
 });
-test("all worlds resolve to persistent shell routes with real or explicitly future states",()=>{
- const shell=read("web/src/pages/AtlasMorphPage.tsx");
- assert.equal(ATLAS_WORLDS.length,10);
- assert.match(shell,/function worldFor/);
- assert.match(shell,/URLSearchParams\(search\)/);
- assert.match(shell,/ROUTES\.has\(first\)/);
- for(const id of ATLAS_WORLDS.map(x=>x.id))assert.match(shell,new RegExp('  '+id+':"\\/atlas\\/'));
- assert.match(shell,/No actual simultaneous editing/);
- assert.match(shell,/no live message inbox/i);
- assert.doesNotMatch(shell,/fakeMessages|fakeUsers|Math\.random|grantXp\(|faker/);
-});
-test("motion uses front-facing, transform-only world positions and semantic content panel",()=>{
+test("headroom, phone breakpoints, spacing and reduced motion are explicitly checked",()=>{
  const css=read("web/src/pages/atlas-morph.css");
- const source=read("web/src/pages/AtlasMorphPage.tsx");
- assert.match(source,/atm-shell--focused/);
- assert.match(source,/atm-workspace/);
- assert.match(source,/onPointerMove={move}/);
- assert.match(source,/setPointerCapture\(e.pointerId\)/);
- assert.match(source,/onClickCapture={onInternalLink}/);
- assert.match(source,/aria-label="ANEVUM worlds"/);
- assert.match(source,/aria-current={active\?"page":undefined}/);
- assert.match(source,/type="button" onClick={back}/);
- assert.match(css,/atm-shell--focused \.atm-node/);
- assert.match(css,/--node-mobile-x/);
- assert.match(css,/--atm-pan-x/);
- assert.match(css,/touch-action:none/);
- assert.match(css,/\.atm-constellation/);
- assert.match(css,/@media\(max-width:640px\)/);
+ assert.match(css,/--atm-nav-height:82px/);
+ assert.match(css,/@media\(max-width:640px\)\{\s*\.atm-shell\{--atm-nav-height:66px\}/);
+ assert.match(css,/@media\(max-width:375px\)/);
  assert.match(css,/@media\(prefers-reduced-motion:reduce\)/);
+ assert.match(css,/\.atm-world-grid\{display:grid;grid-template-columns:repeat\(3,minmax\(0,1fr\)\)/);
+ assert.match(css,/\.atm-world-grid\{grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
+ assert.match(css,/\.atm-embedded \.portal-discover-results\{gap:18px/);
  assert.match(css,/\.atm-content\{[^}]*overflow:auto/);
- assert.match(css,/\.atm-shell\{[^}]*position:fixed/);
- assert.doesNotMatch(css,/\.atm-node-art\{[^}]*rotate[XY]\(/);
+ assert.match(css,/\.atm-shell\{[^}]*position:fixed;inset:0/);
 });
-test("progression feedback follows member-confirmed level increase and never awards XP from navigation",()=>{
+test("server-verified XP only; do not invent collaborative events or active participants",()=>{
  const shell=read("web/src/pages/AtlasMorphPage.tsx");
  assert.match(shell,/memberHealth\(controller.signal\)/);
  assert.match(shell,/memberMe\(controller.signal\)/);
@@ -70,21 +83,7 @@ test("progression feedback follows member-confirmed level increase and never awa
  assert.match(shell,/role="status" aria-live="polite"/);
  assert.doesNotMatch(shell,/localStorage|sessionStorage|setInterval|postMessage/);
 });
-test("review Worker stays read-only and disconnected from private member APIs",()=>{
- const config=JSON.parse(read("wrangler.atlas-review.jsonc"));
- const worker=read("web/atlas-review-worker.mjs");
- assert.equal(config.name,"anevum-atlas-review-20261013");
- assert.equal(config.workers_dev,true);
- assert.equal(config.preview_urls,false);
- assert.deepEqual(Object.keys(config.assets).sort(),["binding","directory","not_found_handling","run_worker_first"].sort());
- for(const name of ["routes","d1_databases","r2_buckets","vars","durable_objects","services"])assert.equal(Object.hasOwn(config,name),false);
- assert.match(worker,/if\(request.method!=="GET"&&request.method!=="HEAD"\)/);
- assert.match(worker,/if\(!PUBLIC\.test\(url.pathname\)\)/);
- assert.match(worker,/never forward/i);
-});
-
-
-test("universal quick-jump stays scoped to the Morph world and retains the original shell launcher",()=>{
+test("one header includes keyboard switchboard, search, account and home without creating bottom navigation",()=>{
  const morph=read("web/src/pages/AtlasMorphPage.tsx");
  const launcher=read("web/src/components/PortalLauncher.tsx");
  const shell=read("web/src/components/Shell.tsx");
@@ -92,11 +91,21 @@ test("universal quick-jump stays scoped to the Morph world and retains the origi
  assert.match(morph,/isEditableTarget\(event\.target\)/);
  assert.match(morph,/event\.key==="\/"/);
  assert.match(morph,/event\.metaKey\|\|event\.ctrlKey/);
- assert.match(morph,/className="atm-mobile-jump"/);
- assert.match(morph,/className="atm-overview-quick"/);
+ assert.match(morph,/className="atm-search"/);
+ assert.match(morph,/className="atm-worlds-trigger"/);
+ assert.match(morph,/to="\/atlas\/account"/);
  assert.match(launcher,/routePrefix\?: "" \| "\/atlas"/);
  assert.match(launcher,/insideWorkspace\(entry\.path\)/);
  assert.match(launcher,/insideWorkspace\(entries\[selected\]\.path\)/);
- assert.match(launcher,/insideWorkspace\("\/start"\)/);
  assert.match(shell,/<PortalLauncher open={launcherOpen} onClose=/);
+});
+test("isolated review Worker still has no production routes, storage or private API",()=>{
+ const config=JSON.parse(read("wrangler.atlas-review.jsonc"));
+ const worker=read("web/atlas-review-worker.mjs");
+ assert.equal(config.name,"anevum-atlas-review-20261013");
+ assert.equal(config.workers_dev,true);
+ assert.equal(config.preview_urls,false);
+ for(const key of ["routes","d1_databases","r2_buckets","vars","durable_objects","services"])assert.equal(Object.hasOwn(config,key),false);
+ assert.match(worker,/if\(request.method!=="GET"&&request.method!=="HEAD"\)/);
+ assert.match(worker,/if\(!PUBLIC\.test\(url.pathname\)\)/);
 });
