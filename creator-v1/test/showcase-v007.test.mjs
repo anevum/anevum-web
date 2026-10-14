@@ -33,7 +33,7 @@ function harness(){
    };
    return {
      all:async()=>({success:true,results:run([])}),
-     bind(...params){return {all:async()=>({success:true,results:run(params)})}};
+     bind(...params){return {all:async()=>({success:true,results:run(params)})};}
    };
  }};
  return {sqlite,db,member:{id:"m1",handle:"aurora"},close:()=>sqlite.close()};
