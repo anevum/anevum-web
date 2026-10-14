@@ -59,6 +59,19 @@ export interface CommunityPost {
   replyCount:number;
   project?: Pick<Project,"id"|"title"|"category"|"creatorHandle"|"creatorName"> | null;
 }
+/** Limited, explicitly public, server-verified identity display. No XP or account IDs. */
+export interface PublicCreatorShowcase {
+  handle:string;
+  level:number;
+  currentArtifact:string|null;
+  equippedArtifact:{name:string;series:string}|null;
+  featuredAwards:{key:string;name:string;description:string}[];
+  earnedAwardCount:number;
+}
+export interface PublicShowcasesResult {
+  source:"verified-creator-ledger";
+  items:Record<string,PublicCreatorShowcase>;
+}
 export type CommunityPostSort="hot"|"new";
 export interface CommunityPostDetail extends CommunityPost {body:string}
 export interface CommunityPostReply {
@@ -146,6 +159,15 @@ export function readCreators(params: Record<string, string | undefined> = {}, si
   if (!query.has("limit")) query.set("limit", "24");
   return getJson<PageResult<Creator>>(publicPath("/creators?") + query.toString(), signal);
 }
+export function readPublicShowcases(handles:readonly string[],signal?:AbortSignal){
+  if(handles.length<1||handles.length>10||
+    handles.some(handle=>! /^[a-z][a-z0-9_]{2,29}$/i.test(handle)) ||
+    new Set(handles.map(handle=>handle.toLowerCase())).size!==handles.length)
+    throw new Error("Invalid showcase author selection");
+  return getJson<PublicShowcasesResult>(
+    publicPath("/community/showcases?handles=")+encodeURIComponent(handles.join(",")),signal);
+}
+
 export function readCreator(handle: string, signal?: AbortSignal) {
   return getJson<{ creator: Creator }>(publicPath("/creators/") + encodeURIComponent(handle), signal);
 }
