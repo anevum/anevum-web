@@ -325,3 +325,16 @@
  .site-shell--home .desktop-nav a{font-size:10px}
  .site-shell--home .desktop-nav a svg{width:20px;height:20px}
 }
+
+/* Mobile search opens the genuine searchable PortalLauncher; no decorative control. */
+.cinema-mobile-search{display:none}
+@media(max-width:900px){
+ .site-shell--home .cinema-mobile-search{display:grid;place-items:center;flex:none;width:40px;height:40px;margin-left:auto;padding:0;border:1px solid #877193;border-radius:50%;background:linear-gradient(140deg,#151729,#090e1e);color:#f0dbcc;box-shadow:inset 0 1px 0 #fff2db1d}
+ .site-shell--home .cinema-mobile-search:hover{border-color:#efc593;color:#ffe9bf}
+ .site-shell--home .cw-account-link{margin-left:0}
+}
+@media(max-width:360px){
+ .site-shell--home .cinema-mobile-search{width:34px;height:34px}
+ .site-shell--home .cw-account-link{min-width:34px;width:34px;height:34px}
+ .site-shell--home .header-inner{gap:6px}
+}
