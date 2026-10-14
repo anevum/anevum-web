@@ -1,0 +1,41 @@
+{
+  "session": "ANEVUM.WEB.BUILD.2026-10-13.001.CINEMATIC-CREATOR-OVERHAUL",
+  "status": "REVIEW_ART_PASS_NOT_FINAL_ENVIRONMENT_MASTER",
+  "authoring": "Original alpha light and particle passes rendered with Python/Pillow and NumPy. No screenshot crops, UI, names, statistics or third-party artwork.",
+  "license": "Original ANEVUM interface decoration",
+  "target": "Locked desktop reference boards IMG_1562.png and IMG_1563.png; mobile designed responsively from references.",
+  "assets": [
+    {
+      "path": "orbital-haze-desktop.webp",
+      "width": 3840,
+      "height": 1600,
+      "alpha": true,
+      "size_bytes": 498504,
+      "sha256": "788c0b64cf83369d3cca2099365e96f5f97b3482293b7b560d5f32b4e03c4393"
+    },
+    {
+      "path": "orbital-dust-desktop.webp",
+      "width": 3840,
+      "height": 1600,
+      "alpha": true,
+      "size_bytes": 31960,
+      "sha256": "dcd7b1368d75b7e60c0ad28cc8040a743d27a580fa5558d62cfb0477a9f98a33"
+    },
+    {
+      "path": "orbital-haze-mobile.webp",
+      "width": 1440,
+      "height": 2560,
+      "alpha": true,
+      "size_bytes": 282782,
+      "sha256": "75cbdeec5efa5508fc9cf8e7f2914231b5077c7abe04bb4ccb6a2e943d9baaea"
+    },
+    {
+      "path": "orbital-dust-mobile.webp",
+      "width": 1440,
+      "height": 2560,
+      "alpha": true,
+      "size_bytes": 16888,
+      "sha256": "a2d675d79515986acbab139c62b1e55a8ebc18a4c0a3f2bb9a713d82b1873d29"
+    }
+  ]
+}
