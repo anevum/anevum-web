@@ -1,6 +1,8 @@
 import {BRAND_MARK,BRAND_CSS} from '../shared/brand.mjs';
 import {REVIEW_PANEL,REVIEW_STYLE,REVIEW_APP} from './review-snippets.mjs';
 import {voteModeration} from './vote-moderation.mjs';
+import {communityPostModeration} from './community-post-moderation.mjs';
+import {POSTS_PANEL,POSTS_STYLE,POSTS_APP} from './community-post-moderation-ui.mjs';
 import {staffPrivacyRequests} from './privacy-queue.mjs';
 import {PRIVACY_PANEL,PRIVACY_STYLE,PRIVACY_APP} from './privacy-queue-ui.mjs';
 import {VOTE_PANEL,VOTE_STYLE,VOTE_APP} from './vote-moderation-ui.mjs';
@@ -105,6 +107,7 @@ async function api(request,db,actor){
   const url=new URL(request.url),path=url.pathname;
   if(path==='/api/privacy-requests')return staffPrivacyRequests(request,db);
   if(path==='/api/community-votes'||path.startsWith('/api/community-votes/'))return voteModeration(request,db,actor);
+  if(path==='/api/community-posts'||path.startsWith('/api/community-posts/'))return communityPostModeration(request,db,actor);
   if(request.method==='GET'&&path==='/api/projects'){
     const projects=await all(db,'SELECT '+columns+' FROM projects WHERE owner_member_id=? ORDER BY updated_at DESC LIMIT 100',[OWNER]);
     return json({projects:projects.map(safeProject),mode:'owner-preview'});
@@ -201,9 +204,9 @@ export default {async fetch(request,env){
   if(!env.COMMUNITY_DB)return response({error:'Staging data unavailable'},503);
   try{if(!await isOwner(env.COMMUNITY_DB))return response({error:'Studio not provisioned'},503)}catch{return response({error:'Staging data unavailable'},503)}
   const p=url.pathname;
-  if(request.method==='GET'&&p==='/')return new Response(PAGE.replace('</main>',REVIEW_PANEL+VOTE_PANEL+PRIVACY_PANEL+'</main>'),{headers:{...BASE,'content-type':'text/html; charset=utf-8','content-security-policy':CSP}});
-  if(request.method==='GET'&&p==='/studio.css')return new Response(STYLE+'\n'+REVIEW_STYLE+'\n'+VOTE_STYLE+'\n'+PRIVACY_STYLE,{headers:{...BASE,'content-type':'text/css; charset=utf-8'}});
-  if(request.method==='GET'&&p==='/studio.js')return new Response(APP+'\n'+REVIEW_APP+'\n'+VOTE_APP+'\n'+PRIVACY_APP,{headers:{...BASE,'content-type':'text/javascript; charset=utf-8'}});
+  if(request.method==='GET'&&p==='/')return new Response(PAGE.replace('</main>',REVIEW_PANEL+VOTE_PANEL+PRIVACY_PANEL+POSTS_PANEL+'</main>'),{headers:{...BASE,'content-type':'text/html; charset=utf-8','content-security-policy':CSP}});
+  if(request.method==='GET'&&p==='/studio.css')return new Response(STYLE+'\n'+REVIEW_STYLE+'\n'+VOTE_STYLE+'\n'+PRIVACY_STYLE+'\n'+POSTS_STYLE,{headers:{...BASE,'content-type':'text/css; charset=utf-8'}});
+  if(request.method==='GET'&&p==='/studio.js')return new Response(APP+'\n'+REVIEW_APP+'\n'+VOTE_APP+'\n'+PRIVACY_APP+'\n'+POSTS_APP,{headers:{...BASE,'content-type':'text/javascript; charset=utf-8'}});
   if(request.method==='GET'&&p==='/health')return json({status:'ok',service:'anevum-creator-studio',mode:'staging'});
   if(!p.startsWith('/api/'))return response({error:'Not found'},404);
   if(!['GET','POST','PATCH'].includes(request.method))return json({error:'Method not allowed'},405,{allow:'GET, POST, PATCH'});
