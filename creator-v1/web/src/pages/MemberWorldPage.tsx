@@ -2,6 +2,7 @@ import { Link, Navigate, useParams } from "react-router-dom";
 import { readCreator, readProjects } from "../lib/api";
 import { memberCreatorProfile, memberPublicWorld, memberMe, memberWorldAppearance } from "../lib/member-api";
 import { useResource } from "../lib/useResource";
+import { readForumMemberActivity } from "../lib/forum-api";
 import { CosmicArtwork } from "../components/CosmicArtwork";
 import { CelestialEmblem } from "../components/CelestialEmblem";
 import { CreatorFollowPanel } from "../components/CreatorFollowPanel";
@@ -25,10 +26,11 @@ export function MemberWorldPage() {
 
   const data = useResource(async signal => {
     if (!valid) return null;
-    const [world, catalogue, projects] = await Promise.all([
+    const [world, catalogue, projects, activity] = await Promise.all([
       memberPublicWorld(handle, signal).catch(() => null),
       readCreator(handle, signal).catch(() => null),
-      readProjects({ creator: handle, limit: "12" }, signal).catch(() => null)
+      readProjects({ creator: handle, limit: "12" }, signal).catch(() => null),
+      readForumMemberActivity(handle, signal).catch(() => null)
     ]);
     // A private owner preview is authorized by the existing same-origin
     // session AND must match the URL handle. Guests cannot request it.
@@ -49,7 +51,7 @@ export function MemberWorldPage() {
     // Never expose a nonpublisher to a guest without public opt-in.
     if (!view && !catalogue) return null;
     const member = view ? await memberCreatorProfile(handle, signal).catch(() => null) : null;
-    return { world:view, privatePreview, member, catalogue, projects };
+    return { world:view, privatePreview, member, catalogue, projects, activity };
   }, [handle, valid]);
 
   if (!valid) return <Navigate to="/creators" replace />;
@@ -62,7 +64,7 @@ export function MemberWorldPage() {
     <Link className="button secondary" to="/creators">BROWSE PUBLIC CREATORS</Link>
   </div>;
 
-  const { world, privatePreview, member, catalogue, projects } = data.data;
+  const { world, privatePreview, member, catalogue, projects, activity } = data.data;
   const publicProfile = world?.profile || catalogue?.creator;
   const sectionOrder = world?.appearance.sections || ["work", "cabinet", "community"];
   if (!publicProfile) return <ErrorState title="PROFILE UNAVAILABLE" detail="No public creator information is available." />;
@@ -116,7 +118,16 @@ export function MemberWorldPage() {
         </section>
         <section className="member-world-panel member-world-community" style={{order:sectionOrder.indexOf("community")}}>
           <div className="member-world-panel-heading"><div><span className="kicker">03 / COMMUNITY</span><h2>PART OF THE UNIVERSE</h2></div><Link to="/community">COMMUNITY →</Link></div>
-          <p>Member discussions, follows and community activity will appear here only after the moderated forum and following services pass their independent release checks. No sample followers or posts are being shown as real.</p>
+          {activity === null ? <p>Verified discussion activity is currently unavailable. The moderated forum service has not been enabled on this host. No posts are being simulated.</p> :
+            activity.items.length === 0 ? <p>No approved public discussion posts from this member yet.</p> :
+              <div className="member-world-activity">
+                {activity.items.map(post=><Link key={post.id} to={"/community/thread/"+post.threadId} className="member-world-activity-item">
+                  <span className="kicker">{post.room.toUpperCase()} / APPROVED POST</span>
+                  <strong>{post.threadTitle}</strong>
+                  <p>{post.excerpt}</p>
+                  <small>{new Date(post.createdAt*1000).toLocaleDateString()} · VIEW DISCUSSION →</small>
+                </Link>)}
+              </div>}
         </section>
       </div>
       <aside className="member-world-aside">
