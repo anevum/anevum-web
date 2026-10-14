@@ -47,7 +47,7 @@ test("Community is a truthful project-and-creator hub with gated, moderated real
  assert.match(page,/readProjects/);
  assert.match(page,/readCreators/);
  assert.match(page,/PUBLIC MESSAGE BOARD IS NOT OPEN YET/);
- assert.match(page,/Messages become visible only after genuine member submissions and human moderation/);
+ assert.match(page,/Discussion rooms only display approved member submissions when the protected forum service is active/);
  assert.match(page,/readForumRooms/);
  assert.match(page,/board\.state==="ready"/);
  assert.doesNotMatch(page,/fakeMessage|sampleComments|createThread\(/);
