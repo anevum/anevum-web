@@ -45,7 +45,7 @@ export const REQUIRED_ACCEPTANCE=Object.freeze([
   "staff_moderation_flow",
   "owner_visual_review"
 ]);
-const saneRef=value=>typeof value==="string"&&/^[A-Za-z0-9][A-Za-z0-9._:/#-]{5,159}$/.test(value);
+const saneRef=value=>typeof value==="string"&&/^[A-Za-z0-9][A-Za-z0-9._:/#_-]{5,159}$/.test(value);
 const objects=value=>Array.isArray(value)?value.filter(x=>x&&typeof x==="object"&&!Array.isArray(x)):[];
 const route=(xs,pattern)=>xs.find(x=>x.pattern===pattern)?.script||null;
 const binding=(xs,name,type)=>xs.find(x=>x.name===name&&x.type===type)?.database_id||null;
