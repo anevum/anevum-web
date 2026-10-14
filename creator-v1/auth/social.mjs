@@ -1,6 +1,7 @@
 // ANEVUM V1 / independent staging creator profiles, achievement cabinet, saved library.
 // Achievements are read-only derived evidence, NOT XP, moderation trust or paid advantages.
 import {progressionFromXp} from './community.mjs';
+import {handleFeaturedShowcase,readFeaturedPreference,earnedFeaturedAward} from './showcase.mjs';
 
 const ROOT='/api/v1/member';
 const HANDLE=/^[a-z][a-z0-9_]{2,29}$/;
@@ -55,6 +56,7 @@ export async function socialRoutes(req,db,member,limiter,now){
  const path=new URL(req.url).pathname;
  try {
   if(!['GET','HEAD','POST'].includes(req.method))return response(req,{error:'Method not allowed'},405);
+  if(path===ROOT+'/creators/showcase')return handleFeaturedShowcase(req,db,member,limiter,now,{counts,publicProfile,deriveAchievements,response});
   const profileMatch=/^\/api\/v1\/member\/creators\/([a-z][a-z0-9_]{2,29})(?:\/(projects))?$/.exec(path);
   if(profileMatch){
    if(!['GET','HEAD'].includes(req.method))return response(req,{error:'Method not allowed'},405);
@@ -67,7 +69,9 @@ export async function socialRoutes(req,db,member,limiter,now){
     return response(req,{items:records.map(publicDto),count:records.length});
    }
    const stats=await counts(db,c.id);
-   return response(req,{creator:{handle:c.handle,displayName:c.displayName,bio:c.bio,joinedAt:c.joinedAt},contributions:{ratings:stats.ratings,publishedProjects:stats.publishedProjects,releases:stats.releases},progression:progressionFromXp(stats.xp),achievements:deriveAchievements(stats)});
+   let preference=null;try{preference=await readFeaturedPreference(db,c.id)}catch{}
+   const featuredAward=earnedFeaturedAward(stats,preference?.awardKey,deriveAchievements);
+   return response(req,{creator:{handle:c.handle,displayName:c.displayName,bio:c.bio,joinedAt:c.joinedAt},contributions:{ratings:stats.ratings,publishedProjects:stats.publishedProjects,releases:stats.releases},progression:progressionFromXp(stats.xp),achievements:deriveAchievements(stats),showcase:{featuredAward}});
   }
   if(path===ROOT+'/library'&&['GET','HEAD'].includes(req.method)){
    if(!member)return response(req,{error:'Sign-in required'},401);

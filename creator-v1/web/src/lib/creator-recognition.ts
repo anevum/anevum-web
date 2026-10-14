@@ -9,6 +9,7 @@ export type VerifiedCreatorRecognition = {
   artifact: string | null;
   earnedArtifact: boolean;
   earnedAward: { key: string; name: string } | null;
+  featuredAward?: boolean;
 };
 
 const KNOWN_AWARDS: Readonly<Record<string,string>> = Object.freeze({
@@ -40,7 +41,14 @@ export function verifiedCreatorRecognition(handle:string,raw:unknown):VerifiedCr
   const award=AWARD_PRIORITY.map(key=>achievements.find(item=>
     item?.key===key && item.earned===true && item.name===KNOWN_AWARDS[key]))
     .find(item=>item!==undefined);
-  return {handle,level,artifact,earnedArtifact,earnedAward:award?{key:award.key as string,name:award.name as string}:null};
+  const selected=record(record(result.showcase)?.featuredAward);
+  const memberChoice=selected && achievements.find(item=>
+    item?.key===selected.key && item.earned===true && item.name===selected.name &&
+    typeof selected.key==="string" && KNOWN_AWARDS[selected.key]===selected.name);
+  const shown=memberChoice||award;
+  return {handle,level,artifact,earnedArtifact,
+    earnedAward:shown?{key:shown.key as string,name:shown.name as string}:null,
+    ...(memberChoice?{featuredAward:true}:{})};
 }
 
 /** Keep a bounded number of public recognition reads per community page. */

@@ -74,7 +74,8 @@ function offlineMember(req,res,url){
       creator:{handle:"nova_demo",displayName:"Nova Studio",bio:"Offline design fixture"},
       contributions:{ratings:1,publishedProjects:2,releases:0},
       progression:{xp:16820,level:30,maxLevel:null,artifact:"Midnight Atlas",artifactEarned:true,levelStartXp:16820,nextLevelXp:18000,progressWithinLevel:0},
-      achievements:[{key:"first-launch",name:"First Launch",earned:true,progress:1,target:1}]
+      achievements:[{key:"first-launch",name:"First Launch",earned:true,progress:1,target:1}],
+      showcase:{featuredAward:{key:"first-launch",name:"First Launch",earned:true,progress:1,target:1}}
     });
   if(url.pathname==="/api/v1/member/creators/moss_demo"&&req.method==="GET")
     return json(res,{

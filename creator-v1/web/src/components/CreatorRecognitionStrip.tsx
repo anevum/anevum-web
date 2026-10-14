@@ -23,9 +23,10 @@ export function CreatorRecognitionStrip({
       <span>LVL <strong>{recognition.level}</strong></span>
     </span>
     {artifact&&<span className="ch9-artifact" title={"Earned artifact: "+artifact}>{artifact}</span>}
-    {award&&<span className="ch9-award" title={"Earned achievement (not a selected showcase award): "+award.name}>
+    {award&&<span className={"ch9-award"+(recognition.featuredAward?" ch9-award--featured":"")} title={(recognition.featuredAward?"Creator-selected featured earned award: ":"Earned achievement (not a selected showcase award): ")+award.name}>
       <CelestialEmblem motif={achievementMotif(award.key)||"orbital"} size="micro" state="earned"/>
       <span>{award.name}</span>
+      {recognition.featuredAward&&<small>FEATURED</small>}
     </span>}
   </span>;
 }

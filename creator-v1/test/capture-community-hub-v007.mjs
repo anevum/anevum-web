@@ -117,12 +117,21 @@ try {
     const recognition=await evaluate('(()=>({levels:[...document.querySelectorAll(".ch7-project .ch9-level strong")].map(el=>el.textContent),artifacts:[...document.querySelectorAll(".ch7-project .ch9-artifact")].map(el=>el.textContent),awards:[...document.querySelectorAll(".ch7-project .ch9-award")].map(el=>el.textContent),overflow:document.documentElement.scrollWidth>innerWidth+1}))()');
     if (!recognition.levels.includes("30") || !recognition.levels.includes("2") ||
         !recognition.artifacts.includes("Midnight Atlas") || !recognition.artifacts.includes("Copper Key") ||
-        !recognition.awards.includes("First Launch") || !recognition.awards.includes("First Signal") ||
+        !recognition.awards.some(x=>x.includes("First Launch")) || !recognition.awards.includes("First Signal") ||
         recognition.overflow) throw Error("V009_RECOGNITION_" + width + ":" + JSON.stringify(recognition));
     await evaluate('document.querySelector(".ch7-project .ch9-recognition").scrollIntoView({block:"center"})');
     await delay(200);
     await screenshot("community-v009-verified-recognition", width);
     console.log("COMMUNITY_V009_OFFLINE_RECOGNITION_" + width + "=" + JSON.stringify(recognition));
+    // Owner-chosen award is a real compiled UI state from an explicit
+    // SYNTHETIC OFFLINE profile response, never a public member record.
+    const picked=await evaluate('(()=>{const el=document.querySelector(".ch7-project .ch9-award--featured");return {title:el?.textContent||"",label:el?.querySelector("small")?.textContent||"",overflow:document.documentElement.scrollWidth>innerWidth+1}})()');
+    if(!picked.title.includes("First Launch")||picked.label!=="FEATURED"||picked.overflow)
+      throw Error("V010_SELECTED_OFFLINE_AWARD_"+width+":"+JSON.stringify(picked));
+    await evaluate('document.querySelector(".ch7-project .ch9-award--featured").scrollIntoView({block:"center"})');
+    await delay(150);
+    await screenshot("community-v010-selected-award",width);
+    console.log("COMMUNITY_V010_SELECTED_AWARD_"+width+"="+JSON.stringify(picked));
 
     await evaluate('document.querySelector(".ch7-tabs button:nth-child(3)").click()');
     await until(() => evaluate('document.querySelector(".ch7-tabs button:nth-child(3)")?.getAttribute("aria-pressed")==="true"'));

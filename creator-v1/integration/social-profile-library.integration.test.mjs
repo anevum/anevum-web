@@ -23,7 +23,7 @@ async function setup(){
  CREATE TABLE projects(id TEXT PRIMARY KEY NOT NULL,owner_member_id TEXT NOT NULL REFERENCES creator_profiles(member_id),slug TEXT NOT NULL,title TEXT NOT NULL,summary TEXT NOT NULL,category TEXT NOT NULL,status TEXT NOT NULL,source_url TEXT,demo_url TEXT,published_at TEXT,created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP);
  CREATE TABLE project_releases(id TEXT PRIMARY KEY NOT NULL,project_id TEXT NOT NULL REFERENCES projects(id),version TEXT NOT NULL,notes TEXT NOT NULL DEFAULT '',released_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP);
  CREATE TABLE project_favorites(member_id TEXT NOT NULL REFERENCES creator_profiles(member_id),project_id TEXT NOT NULL REFERENCES projects(id),created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,PRIMARY KEY(member_id,project_id));`);
- for(const filename of ['0003_member_identity_staging.sql','0005_voting_progression.sql'])sqlite.exec(readFileSync(new URL('../auth/migrations/'+filename,import.meta.url),'utf8'));
+ for(const filename of ['0003_member_identity_staging.sql','0005_voting_progression.sql','0014_creator_featured_awards.sql'])sqlite.exec(readFileSync(new URL('../auth/migrations/'+filename,import.meta.url),'utf8'));
  function stm(sql,params=[]){return{sql,params,bind(...args){return stm(sql,args)},async all(){return{success:true,results:sqlite.prepare(sql).all(...params)}},async run(){const r=sqlite.prepare(sql).run(...params);return{success:true,meta:{changes:Number(r.changes),rows_written:Number(r.changes)}}}}}
  const db={prepare:sql=>stm(sql),async batch(q){sqlite.exec('BEGIN IMMEDIATE');try{const results=[];for(const s of q){const r=sqlite.prepare(s.sql).run(...s.params);results.push({success:true,meta:{changes:Number(r.changes),rows_written:Number(r.changes)}})}sqlite.exec('COMMIT');return results}catch(e){sqlite.exec('ROLLBACK');throw e}}};
  for(const u of testUsers){sqlite.prepare("INSERT INTO member_accounts(id,email,verified_at,created_at,status) VALUES (?,?,?,?,'active')").run(u.id,u.email,now,now);sqlite.prepare("INSERT INTO creator_profiles(member_id,handle,display_name,bio,status) VALUES (?,?,?,'Fixture biography','active')").run(u.id,u.handle,u.handle);sqlite.prepare('INSERT INTO member_sessions(token_hash,member_id,expires_at,created_at) VALUES (?,?,?,?)').run(await sessionHash(u.token),u.id,now+86400,now)}
@@ -85,4 +85,65 @@ test('request rejects extra fields, malformed JSON and out-of-range IDs',async()
 });
 test('public profile and social JS stay safely encoded and isolated from untrusted URLs',async()=>{
  const f=await setup();try{const p=await f.call('/creators/alice_builds/view','GET',undefined,null);assert.equal(p.status,200);assert.match(p.headers.get('content-security-policy'),/connect-src 'self'/);assert.match(await p.text(),/Achievement cabinet/);assert.match((await f.call('/social.js')).headers.get('content-type'),/javascript/);assert.ok(SOCIAL_CLIENT.includes("u.protocol!=='https:'"));assert.ok(!SOCIAL_CLIENT.includes('innerHTML'));}finally{f.sqlite.close()}
+});
+
+
+test('featured awards are member-owned, earned and published only after explicit selection',async()=>{
+ const f=await setup();try{
+   const empty=await f.call('/creators/showcase');
+   assert.equal(empty.status,200);const e=await empty.json();
+   assert.deepEqual(e.selection,{awardKey:null,revision:0});
+   assert.ok(e.eligibleAwards.some(x=>x.key==='three-builds'&&x.earned));
+   assert.equal((await (await f.userProfile()).json()).showcase.featuredAward,null);
+   const set=await f.call('/creators/showcase','POST',{awardKey:'three-builds',revision:0});
+   assert.equal(set.status,200,await set.clone().text());
+   assert.deepEqual((await set.json()).selection,{awardKey:'three-builds',revision:1});
+   const publicProfile=await (await f.userProfile()).json();
+   assert.equal(publicProfile.showcase.featuredAward.key,'three-builds');
+   assert.equal(publicProfile.showcase.featuredAward.name,'Three Builds');
+   assert.equal(JSON.stringify(publicProfile).includes('member-alice'),false);
+   assert.equal((await (await f.userProfile('bob_tests')).json()).showcase.featuredAward,null);
+   assert.equal(f.sqlite.prepare('SELECT COUNT(*) n FROM community_xp_events').get().n,0);
+ }finally{f.sqlite.close()}
+});
+
+test('guests, another member, cross-site requests and forged awards cannot select identity',async()=>{
+ const f=await setup();try{
+   const req={awardKey:'three-builds',revision:0};
+   assert.equal((await f.call('/creators/showcase','POST',req,null)).status,401);
+   assert.equal((await f.call('/creators/showcase','POST',req,testUsers[0],'https://evil.example')).status,403);
+   assert.equal((await f.call('/creators/showcase','POST',req,testUsers[1])).status,409);
+   assert.equal((await f.call('/creators/showcase','POST',{...req,memberId:'member-bob'})).status,400);
+   assert.equal((await f.call('/creators/showcase','POST',{awardKey:'founder',revision:0})).status,400);
+   assert.equal((await f.call('/creators/showcase','POST',{awardKey:'first-signal',revision:0})).status,409);
+   assert.equal((await f.call('/creators/showcase','POST',{awardKey:'first-launch',revision:1})).status,409);
+   assert.equal((await (await f.userProfile('alice_builds')).json()).showcase.featuredAward,null);
+ }finally{f.sqlite.close()}
+});
+
+test('showcase revision prevents lost updates and a member can clear their choice',async()=>{
+ const f=await setup();try{
+   const first=await f.call('/creators/showcase','POST',{awardKey:'first-launch',revision:0});
+   assert.equal(first.status,200);
+   assert.equal((await f.call('/creators/showcase','POST',{awardKey:'three-builds',revision:0})).status,409);
+   const second=await f.call('/creators/showcase','POST',{awardKey:'three-builds',revision:1});
+   assert.equal(second.status,200);
+   const cleared=await f.call('/creators/showcase','POST',{awardKey:null,revision:2});
+   assert.equal(cleared.status,200);
+   assert.deepEqual((await cleared.json()).selection,{awardKey:null,revision:3});
+   assert.equal((await (await f.userProfile()).json()).showcase.featuredAward,null);
+   assert.equal((await (await f.call('/creators/showcase')).json()).selection.revision,3);
+ }finally{f.sqlite.close()}
+});
+
+test('moderation revocation immediately hides the selected award without deleting preference',async()=>{
+ const f=await setup();try{
+   assert.equal((await f.call('/creators/showcase','POST',{awardKey:'three-builds',revision:0})).status,200);
+   f.sqlite.prepare("UPDATE projects SET status='archived' WHERE id IN (?,?)").run(fixed(2),fixed(3));
+   const publicProfile=await (await f.userProfile()).json();
+   assert.equal(publicProfile.achievements.find(x=>x.key==='three-builds').earned,false);
+   assert.equal(publicProfile.showcase.featuredAward,null);
+   assert.equal((await (await f.call('/creators/showcase')).json()).selection.awardKey,'three-builds');
+   assert.equal((await f.call('/creators/showcase','POST',{awardKey:'three-builds',revision:1})).status,409);
+ }finally{f.sqlite.close()}
 });
