@@ -8,6 +8,15 @@ import { isEditableTarget } from "../lib/portal-destinations";
 const desktopNav = [
   ["/", "Home"], ["/discover", "Explore"], ["/creators", "Creators"], ["/community", "Community"], ["/levels", "Levels"]
 ] as const;
+const cinematicNav = [
+  ["/", "Home", "home"],
+  ["/discover", "Explore", "explore"],
+  ["/create", "Create", "create"],
+  ["/community", "Community", "community"],
+  ["/discover?category=tools", "Apps", "explore"],
+  ["/workspace", "Lab", "status"],
+  ["/guide", "Field Notes", "library"]
+] as const;
 const portalCategories = [
   ["/discover?category=games", "Games"],
   ["/discover?category=tools", "Apps & Tools"],
@@ -65,7 +74,7 @@ export function Shell() {
       <header className="site-header">
         <div className="header-inner">
           <Link to="/" className="brand-lockup" aria-label="ANEVUM home"><OrbitalMark className="brand-mark" /><span className="cw-brand-stack"><b>ANEVUM</b><small>CREATE BEYOND WORLDS</small></span></Link>
-          <nav className="desktop-nav" aria-label="Primary">{desktopNav.map(([to,label]) => <NavLink key={to} to={to} end={to === "/"}>{label}</NavLink>)}</nav>
+          <nav className="desktop-nav" aria-label="Primary">{location.pathname==="/" ? cinematicNav.map(([to,label,icon]) => <NavLink key={label} to={to} end={to==="/"}><Icon name={icon} size={18}/><span>{label}</span></NavLink>) : desktopNav.map(([to,label]) => <NavLink key={to} to={to} end={to === "/"}>{label}</NavLink>)}</nav>
           <form className="header-search" role="search" onSubmit={search}><Icon name="search" size={16}/><input value={query} onChange={event=>setQuery(event.target.value)} maxLength={100} placeholder="Search worlds, creators, projects..." aria-label="Search published projects"/></form>
           <button className="header-launcher" type="button" onClick={() => setLauncherOpen(true)} aria-label="Open quick navigation" aria-keyshortcuts="Control+K Meta+K"><Icon name="explore" size={19}/><span>PORTALS</span><kbd>⌘K</kbd></button>
           <Link to="/create" className="header-create">CREATE</Link>
