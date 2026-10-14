@@ -121,6 +121,17 @@ try {
     await until(() => evaluate('document.querySelector(".ch7-tabs button:nth-child(4)")?.getAttribute("aria-pressed")==="true"'));
     if (await evaluate('document.documentElement.scrollWidth>innerWidth+1')) throw Error("V007_PEOPLE_OVERFLOW_" + width);
     await screenshot("community-v007-people", width);
+    // The offline visual member is synthetic and MUST NOT become a real signed-in member.
+    await until(() => evaluate('document.querySelector(".ch8-member-desk")?.textContent.includes("Member contributions remain in controlled testing")'));
+    await evaluate('document.querySelector(".ch8-member-desk").scrollIntoView({block:"center"})');
+    await delay(260);
+    const memberDesk = await evaluate('(()=>{const node=document.querySelector(".ch8-member-desk");return {exists:!!node,write:node?.querySelectorAll("a[href=\'/community/write\']").length||0,join:node?.querySelectorAll("a[href=\'/api/v1/member/join\']").length||0,history:node?.querySelectorAll(".ch8-private-history").length||0,overflow:document.documentElement.scrollWidth>innerWidth+1,cardWidth:node?.getBoundingClientRect().width||0,textWidth:node?.querySelector(".ch8-member-content")?.getBoundingClientRect().width||0}})()');
+    if (!memberDesk.exists || memberDesk.write || memberDesk.join || memberDesk.history || memberDesk.overflow)
+      throw Error("V008_MEMBER_DESK_CLOSED_" + width + ":" + JSON.stringify(memberDesk));
+    if (width <= 640 && memberDesk.textWidth / memberDesk.cardWidth < 0.8)
+      throw Error("V008_MEMBER_DESK_PHONE_WIDTH_" + width + ":" + JSON.stringify(memberDesk));
+    await screenshot("community-v008-member-desk", width);
+    console.log("COMMUNITY_V008_MEMBER_DESK_" + width + "=" + JSON.stringify(memberDesk));
     console.log("COMMUNITY_V007_BROWSER_" + width + "=" + JSON.stringify(state));
   }
   writeFileSync(join(output, "capture-status.txt"),

@@ -9,6 +9,7 @@ import { useResource } from "../lib/useResource";
 import { projectDetailPath } from "../lib/navigation";
 import { CosmicArtwork } from "../components/CosmicArtwork";
 import { Icon } from "../components/Icons";
+import { CommunityMemberDesk } from "../components/CommunityMemberDesk";
 import { LoadingState, ErrorState } from "../components/States";
 import "./community-hub-v007.css";
 
@@ -234,6 +235,7 @@ export function CommunityPage() {
           </Link>
         </div>}
         {view === "all" && status.state === "error" && <p className="ch7-soft-warning" role="status">Conversation availability could not be verified; project discovery remains available separately.</p>}
+        <CommunityMemberDesk/>
         <footer className="ch7-index-foot"><span className="ch7-kicker">APPROVED PUBLIC RECORDS ONLY</span>
           <p>This view is a bounded sample, not a site-wide count or quality ranking. Community replies and reactions only appear after independent approval.</p>
           <Link to={view === "people" ? "/creators" : "/discover"}>{view === "people" ? "FULL CREATOR DIRECTORY" : "FULL PROJECT DISCOVERY"} <Icon name="arrow" size={14}/></Link>
@@ -256,13 +258,6 @@ export function CommunityPage() {
               <Icon name="arrow" size={14}/>
             </Link>)}</div>}
           <Link className="ch7-panel-link" to="/creators">BROWSE ALL CREATORS <Icon name="arrow" size={14}/></Link>
-        </section>
-        <section className="ch7-panel ch7-take-part"><span className="ch7-kicker">03 / YOUR PART IN THE UNIVERSE</span>
-          <h3>Not just for <em>developers.</em></h3>
-          <p>Explore for free. Help with thoughtful reviews, feedback and collaboration. Building software is not a prerequisite for belonging.</p>
-          <p className="ch7-private-note">Member participation is currently invitation-only. Public signup is not enabled.</p>
-          <Link className="ch7-panel-link" to="/start">START HERE <Icon name="arrow" size={14}/></Link>
-          <Link className="ch7-panel-link" to="/levels">LEVELS & RECOGNITION <Icon name="arrow" size={14}/></Link>
         </section>
         <section className="ch7-values"><span className="ch7-kicker">A NOTE FROM THE COMMONS</span>
           <h3>Make the next thing better.</h3>
