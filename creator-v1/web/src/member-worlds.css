@@ -159,3 +159,15 @@
 .member-world-hero>.member-world-sky::after{background:linear-gradient(0deg,rgba(7,17,33,.93) 0%,rgba(7,17,33,.3) 59%,rgba(7,17,33,.1) 100%),linear-gradient(90deg,rgba(7,17,33,.74),rgba(7,17,33,.14) 88%)}
 .member-world-hero>.member-world-identity,.member-world-hero>.member-world-hero-bottom{position:relative;z-index:1}
 @media(max-width:650px){.member-world-hero>.member-world-sky .cw-artwork-image{object-position:center 45%}.member-world-hero>.member-world-sky::after{background:linear-gradient(0deg,rgba(7,17,33,.87),rgba(7,17,33,.35) 74%,rgba(7,17,33,.12))}}
+
+
+/* Original raster relic masters: preserved pixel resolution, no SVG scaling. */
+.relic-raster{display:block;width:min(100%,160px);height:auto;aspect-ratio:1;object-fit:contain;object-position:center;filter:drop-shadow(0 12px 16px rgba(0,0,0,.52)) drop-shadow(0 0 15px rgba(221,176,100,.20));margin:auto}
+.relic-raster--large{width:min(100%,256px)}
+.series-atlas-card .relic-raster{width:min(100%,106px)}
+.series-atlas-inspector .relic-raster{width:min(100%,210px)}
+.portal-level-mark .relic-raster{width:min(100%,65px)}
+.portal-channel-celestial .relic-raster{width:min(100%,118px)}
+.member-artifact-preview .relic-raster{width:min(100%,160px)}
+@media(prefers-reduced-motion:reduce){.relic-raster{animation:none;transition:none}}
+@media(forced-colors:active){.relic-raster{filter:none}}
