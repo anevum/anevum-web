@@ -411,3 +411,32 @@
 @media(prefers-reduced-motion:reduce){
  .atm-embedded{animation:none!important;translate:none!important;filter:none!important}
 }
+
+
+/* Persistent Morph switchboard / all navigation stays in the same world shell. */
+.atm-launch{min-height:39px;display:flex;align-items:center;gap:7px;padding:0 11px;
+  background:#1d2a42dd;color:#f2dab1;border:1px solid #b3a37d84;border-radius:9px;
+  font-size:20px;line-height:1;font-weight:700}
+.atm-launch span{font-size:9px;letter-spacing:.12em;font-weight:950}
+.atm-launch:hover{background:#35486a;border-color:#e6bf85}
+.atm-overview-quick{min-height:35px;padding:0 12px;border:1px solid #9daec46e;
+  border-radius:8px;background:#111d34e6;color:#ecd0a6;
+  font-size:9px;font-weight:850;letter-spacing:.12em;box-shadow:0 8px 16px #0005}
+.atm-overview-quick:hover{border-color:#f2d6a0;background:#233751}
+.atm-overview-quick span{font-size:16px;margin-left:8px}
+.atm-mobile-jump{color:#ffdfab!important;border-color:#d8b78799!important;background:#342c29af!important}
+.atm-shell .portal-launcher{border-color:#bea575;border-radius:15px;color:#f5e9d7;
+  background:#0b1528;box-shadow:0 0 0 1px #9ebfe622 inset,0 22px 80px #000c}
+.atm-shell .portal-launcher::backdrop{background:#020716d8;backdrop-filter:blur(12px)}
+.atm-shell .portal-launcher-content{background:radial-gradient(circle at 85% 8%,#2f517853,transparent 40%),linear-gradient(160deg,#1b2d48,#0b1325 75%)}
+@media(max-width:640px){
+  .atm-launch{display:none}
+  .atm-overview-quick{min-height:34px;padding:0 10px;letter-spacing:.04em;font-size:8px}
+  .atm-overview-actions{flex-direction:row;align-items:center;flex-wrap:wrap;gap:7px}
+  .atm-overview-quick span{margin-left:3px}
+}
+@media(max-width:350px){
+  .atm-overview-actions{gap:5px}
+  .atm-overview-start{font-size:8px;padding:0 9px}
+  .atm-overview-quick{font-size:8px;padding:0 7px}
+}
