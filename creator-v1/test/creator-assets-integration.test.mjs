@@ -103,6 +103,26 @@ test("private DELETE removes R2 and database references; transient deletion fail
   assert.equal(dbSqlite.prepare("SELECT id FROM project_assets WHERE id=?").get(id),undefined);
   assert.equal((await call(first,"GET",undefined,alice,"/"+id+"/file")).status,404);
 });
+test("private object is deleted when the project is locked between R2 put and D1 commit",async()=>{
+  const before=stored.size;
+  const reserved=await call(second,"POST",file("racing.png","image/png",png.length),bob);
+  assert.equal(reserved.status,201);
+  const {id}=await reserved.json();
+  const originalPut=r2.put;
+  r2.put=async function(key,bytes,meta){
+    await originalPut.call(this,key,bytes,meta);
+    dbSqlite.prepare("UPDATE projects SET status='pending_review' WHERE id=?").run(second);
+  };
+  try{
+    const result=await call(second,"PUT",png,bob,"/"+id);
+    assert.equal(result.status,503,await result.clone().text());
+    assert.equal(stored.size,before,"Failed D1 commit must not retain its R2 object");
+    assert.notEqual(dbSqlite.prepare("SELECT status FROM project_assets WHERE id=?").get(id)?.status,"quarantined");
+  }finally{
+    r2.put=originalPut;
+    dbSqlite.prepare("UPDATE projects SET status='draft' WHERE id=?").run(second);
+  }
+});
 test("per-project asset quota is guarded by one database statement",async()=>{
   const original=first, x=file("readme.txt","text/plain",1);
   for(let i=0;i<19;i++)assert.equal((await call(original,"POST",x)).status,201);
