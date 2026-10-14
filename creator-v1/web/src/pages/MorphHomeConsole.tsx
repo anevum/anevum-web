@@ -31,6 +31,7 @@ function previewArtwork(project:Project){
 
 export function MorphHomeConsole({onExplore}:{onExplore:()=>void}){
   const [refresh,setRefresh]=useState(0);
+  const [spotlightIndex,setSpotlightIndex]=useState(0);
   const feed=useResource(async signal=>{
     const [projects,status,creators]=await Promise.allSettled([
       readProjects({limit:"16"},signal),
@@ -57,7 +58,12 @@ export function MorphHomeConsole({onExplore}:{onExplore:()=>void}){
   const releases=useMemo(()=>feed.state==="ready"?
     [...feed.data.projects.items].sort((a,b)=>(Date.parse(b.publishedAt||"")||0)-(Date.parse(a.publishedAt||"")||0))
     :[],[feed]);
-  const lead=releases[0]||null;
+  const spotlight=releases.slice(0,5);
+  const lead=spotlight[spotlightIndex%Math.max(1,spotlight.length)]||null;
+  const spotlightCount=spotlight.length;
+  const advance=(direction:1|-1)=>setSpotlightIndex(index=>(
+    spotlightCount?(index+direction+spotlightCount)%spotlightCount:0
+  ));
   const published=feed.state==="ready"?feed.data.status?.counts.publishedProjects??null:null;
   const creators=feed.state==="ready"?feed.data.creators?.items||[]:[];
 
@@ -78,6 +84,11 @@ export function MorphHomeConsole({onExplore}:{onExplore:()=>void}){
           <span className="mhc-feature-kicker">{lead?lead.category.toUpperCase()+" / "+dateLabel(lead.publishedAt):"WORLD 00 / THE FRONTIER"}</span>
           <h1>{lead?lead.title:<>THE FUTURE<br/>IS <em>CREATED.</em></>}</h1>
           <p>{lead?lead.summary:"A home for remarkable games, experimental software, digital art, and the people making them. Follow real creations as the network grows."}</p>
+          {spotlightCount>1&&<div className="mhc-spotlight-controls" aria-label="Featured approved releases">
+            <span>FEATURE {String(spotlightIndex%spotlightCount+1).padStart(2,"0")} / {String(spotlightCount).padStart(2,"0")}</span>
+            <button type="button" onClick={()=>advance(-1)} aria-label="Previous featured release">←</button>
+            <button type="button" onClick={()=>advance(1)} aria-label="Next featured release">→</button>
+          </div>}
           <div className="mhc-feature-actions">
             <Link to={lead?projectLink(lead):"/atlas/discover"} className="mhc-primary-action">
               {lead?"OPEN RELEASE":"DISCOVER WORK"} <span aria-hidden="true">↗</span>
