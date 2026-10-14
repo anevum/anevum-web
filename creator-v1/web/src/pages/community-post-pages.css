@@ -1,0 +1,53 @@
+/* ANEVUM moderated community discussion + member composer */
+.cp-wrap{max-width:1380px;margin:0 auto;padding:clamp(22px,4vw,55px);color:#f1e6d6;font:400 14px/1.65 Inter,system-ui,sans-serif;min-width:0}
+.cp-wrap *{box-sizing:border-box;min-width:0}
+.cp-wrap :is(a,button,input,select,textarea):focus-visible{outline:2px solid #e7c78f;outline-offset:3px}
+.cp-wrap a{color:inherit;text-decoration:none}
+.cp-breadcrumb{display:flex;gap:14px;align-items:center;color:#a9becf;font-size:10px;font-weight:900;letter-spacing:.12em}
+.cp-breadcrumb a{color:#e7c38d}
+.cp-heading{margin:36px 0 28px;max-width:1060px}
+.cp-kicker{color:#e3c694;font-size:10px;font-weight:900;letter-spacing:.14em}
+.cp-heading h1{margin:9px 0 14px;font:400 clamp(40px,6vw,90px)/.98 Georgia,serif;letter-spacing:-.055em;overflow-wrap:anywhere}
+.cp-heading h1 em{color:#e9c896;font-style:italic}
+.cp-heading>p{font-size:clamp(14px,1.3vw,19px);color:#bfd0df;max-width:900px;line-height:1.7}
+.cp-layout{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(260px,.63fr);gap:24px;align-items:start}
+.cp-composer,.cp-side>section{padding:clamp(18px,2.6vw,36px);border:1px solid #9cb4c177;border-radius:12px;background:linear-gradient(145deg,#15273fe5,#091627e8)}
+.cp-composer{display:flex;flex-direction:column;gap:22px}
+.cp-composer label{display:flex;flex-direction:column;gap:9px;color:#e5c694;font-weight:900;font-size:10px;letter-spacing:.12em}
+.cp-composer :is(select,input,textarea){width:100%;background:#0d1a2bee;border:1px solid #9eb4bf8a;border-radius:9px;color:#f5e7d7;padding:13px;font:400 15px/1.55 Inter,system-ui,sans-serif}
+.cp-composer textarea{min-height:180px;resize:vertical}
+.cp-composer-foot{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
+.cp-composer-foot span{font-size:10px;color:#a4b9ca;font-weight:850}
+.cp-composer-foot button,.cp-engagement button{min-height:44px;padding:10px 19px;border:1px solid #e6c894;
+ border-radius:8px;background:linear-gradient(125deg,#dfc694,#bd945e);color:#15243a;font-size:10px;font-weight:900;letter-spacing:.08em}
+.cp-composer-foot button:disabled,.cp-engagement button:disabled{opacity:.5;cursor:not-allowed}
+.cp-error,.cp-confirm{padding:12px;border-radius:7px;background:#43282b;color:#ffe6db;font-size:12px}
+.cp-confirm{background:#1e3b38;color:#d2efdf}
+.cp-side{display:flex;flex-direction:column;gap:18px}
+.cp-side h2{font:400 30px Georgia,serif;line-height:1.12;margin:10px 0 13px}
+.cp-side p{color:#b7cbd9;font-size:13px;line-height:1.7}
+.cp-private-entry{padding:12px 0;border-bottom:1px solid #adc4d255;display:flex;flex-direction:column;gap:3px}
+.cp-private-entry strong{font-size:13px}
+.cp-private-entry small{font-size:9px;color:#eacb9b;font-weight:900}
+.cp-refresh-hint{font-size:11px}
+.cp-author{display:flex;gap:16px;flex-wrap:wrap;align-items:center;color:#b9ccdb;font-size:11px;font-weight:850}
+.cp-author a,.cp-reply a{color:#eac794}
+.cp-post-body{padding:clamp(25px,4vw,58px);border:1px solid #92adc078;border-radius:13px;
+ background:linear-gradient(150deg,#172a40df,#0a172bed);white-space:pre-wrap;overflow-wrap:anywhere;
+ font-size:clamp(15px,1.35vw,19px);line-height:1.9}
+.cp-engagement{display:flex;flex-wrap:wrap;align-items:center;gap:20px;margin:24px 0 45px}
+.cp-engagement strong{font:400 21px Georgia,serif;color:#edcb95}
+.cp-engagement>span{font-size:10px;letter-spacing:.11em;color:#b5c9d6;font-weight:850}
+.cp-engagement button[aria-pressed=true]{background:#203d38;color:#e7e3b7}
+.cp-replies{border-top:1px solid #9db8c26b;padding:27px 0}
+.cp-replies h2{font:400 45px Georgia,serif;margin:13px 0 20px}
+.cp-replies>p{color:#b8cbd9}
+.cp-reply{padding:19px 0;border-bottom:1px solid #92abbd55}
+.cp-reply>div{display:flex;justify-content:space-between;gap:15px;flex-wrap:wrap;font-size:11px;font-weight:850}
+.cp-reply>div span{color:#b3c5d2}
+.cp-reply p{white-space:pre-wrap;overflow-wrap:anywhere;color:#d1dce9;line-height:1.65}
+@media(max-width:850px){.cp-layout{grid-template-columns:1fr}.cp-heading h1{font-size:clamp(38px,7vw,62px)}}
+@media(max-width:640px){.cp-wrap{padding:20px 13px 40px}.cp-heading{margin:25px 0}
+.cp-heading h1{font-size:clamp(37px,11vw,58px)}.cp-layout{gap:16px}.cp-composer{gap:16px}
+.cp-composer,.cp-side>section{padding:18px}.cp-post-body{padding:21px;font-size:15px}.cp-replies h2{font-size:37px}}
+@media(prefers-reduced-motion:reduce){.cp-wrap :is(a,button){animation:none!important;transition:none!important}}
