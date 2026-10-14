@@ -68,7 +68,7 @@ test("headroom, phone breakpoints, spacing and reduced motion are explicitly che
  assert.match(css,/@media\(max-width:375px\)/);
  assert.match(css,/@media\(prefers-reduced-motion:reduce\)/);
  assert.match(css,/\.atm-world-grid\{display:grid;grid-template-columns:repeat\(3,minmax\(0,1fr\)\)/);
- assert.match(css,/\.atm-world-grid\{grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
+ assert.match(css,/\.atm-world-grid\{grid-template-columns:1fr;gap:15px/);
  assert.match(css,/\.atm-embedded \.portal-discover-results\{gap:18px/);
  assert.match(css,/\.atm-content\{[^}]*overflow:auto/);
  assert.match(css,/\.atm-shell\{[^}]*position:fixed;inset:0/);
