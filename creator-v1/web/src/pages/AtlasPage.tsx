@@ -305,6 +305,7 @@ export function AtlasPage(){
       <span className="atlas-bottom-label">JUMP TO WORLD <i>↗</i></span>
       {ATLAS_WORLDS.map(world=><button type="button" key={world.id}
         className={focused===world.id?"is-focused":""} onClick={()=>launch(world)}
+        aria-label={world.title+" — "+typeLabel(world)}
         title={world.title+" — "+typeLabel(world)}>{world.glyph}<span>{world.title}</span></button>)}
     </nav>
     <div className="atlas-bottom-edge" aria-hidden="true"><span>ANEVUM ATLAS / INTERACTIVE CONCEPT</span><span>ORIGINAL ART + REAL DESTINATIONS · NO SYNTHETIC SOCIAL ACTIVITY</span></div>

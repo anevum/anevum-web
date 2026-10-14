@@ -268,6 +268,8 @@
   .atlas-bottom button{gap:4px;font-size:8px}
 }
 @media(max-width:900px){
+  .atlas-page .atlas-top-help{font-size:0}
+  .atlas-page .atlas-top-help span{font-size:18px}
   .atlas-page{--atlas-unit:clamp(46px,min(8vw,9dvh),83px)}
   .atlas-universe{left:54%}
   .atlas-top{height:68px}
@@ -363,6 +365,8 @@
   .atlas-top-help{position:absolute;top:70px;left:12px;width:37px;min-width:37px;padding:0;justify-content:center;background:#111d33f5}
   .atlas-exit{position:absolute;right:10px;top:13px;width:36px;min-width:36px;min-height:36px;padding:0;justify-content:center}
   .atlas-xp-mini{top:70px;right:11px}
+  .atlas-bottom button{font-size:18px}
+  .atlas-bottom button span{display:none}
 }
 @media(max-height:640px) and (min-width:641px){
   .atlas-top{height:60px}
