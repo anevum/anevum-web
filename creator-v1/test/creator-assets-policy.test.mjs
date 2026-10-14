@@ -26,7 +26,7 @@ test("private upload route denies anonymous and disables unconfigured R2",async(
 });
 test("staging Worker enforces authenticated owner route and same-origin writes",()=>{
  const worker=read("auth/worker.mjs"),assets=read("auth/assets.mjs"),editor=read("web/src/pages/ProjectEditorPage.tsx");
- assert.match(worker,/import \{creatorAssets\}/);
+ assert.match(worker,/import \{creatorAssets,cleanupExpiredAssets\}/);
  assert.match(worker,/checkWrite\(req\)/);
  assert.match(assets,/owner_member_id=\?/);
  assert.match(assets,/private-quarantine/);

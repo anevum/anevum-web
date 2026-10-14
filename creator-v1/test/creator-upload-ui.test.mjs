@@ -12,7 +12,7 @@ test("uploads do not expose storage secrets, public URLs, or pretend to be publi
  assert.match(api,/credentials:"same-origin"/);assert.match(api,/mode:"same-origin"/);
  assert.match(api,/redirect:"error"/);assert.match(api,/application\/octet-stream/);
  assert.doesNotMatch(api,/r2\.cloudflarestorage\.com|apiKey|localStorage|Bearer/);
- assert.match(ui,/They are not published, playable, or approved/);
+ assert.match(ui,/No file has been published or approved/);
  assert.match(ui,/!available/);
 });
 test("format allowlist and quotas are client preflight only",()=>{
