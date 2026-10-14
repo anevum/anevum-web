@@ -7,17 +7,18 @@ import {CelestialEmblem} from "../components/CelestialEmblem";
 import {CosmicArtwork} from "../components/CosmicArtwork";
 import type {CosmicScene} from "../components/CosmicIllustration";
 import {Icon} from "../components/Icons";
+import {WorldNavigator} from "../components/WorldNavigator";
 import {ErrorState, LoadingState} from "../components/States";
 
-const worlds: ReadonlyArray<{id:string;name:string;symbol:string;scene:CosmicScene;description:string}> = [
-  {id:"games",name:"Games",symbol:"✧",scene:"games",description:"Play and discover independent experiences"},
-  {id:"tools",name:"Apps",symbol:"⌘",scene:"tools",description:"Useful software made with imagination"},
-  {id:"creative",name:"Art & AI",symbol:"✺",scene:"creative",description:"Explore digital art and creative experiments"},
-  {id:"libraries",name:"Code",symbol:"⌘",scene:"libraries",description:"Open-source projects and shared tools"},
-  {id:"automation",name:"Automation",symbol:"⟡",scene:"automation",description:"Make the difficult things easier"},
-  {id:"learning",name:"Learning",symbol:"◇",scene:"learning",description:"Interactive lessons and experiences"},
-  {id:"research",name:"Research",symbol:"✦",scene:"research",description:"Independent investigations and ideas"},
-  {id:"other",name:"More",symbol:"◎",scene:"other",description:"Everything that defies a category"}
+const worlds: ReadonlyArray<{id:string;name:string;scene:CosmicScene;description:string}> = [
+  {id:"games",name:"Games",scene:"games",description:"Play independently made experiences"},
+  {id:"tools",name:"Apps & Tools",scene:"tools",description:"Discover software made to be used"},
+  {id:"creative",name:"Art & AI",scene:"creative",description:"Explore artwork and creative experiments"},
+  {id:"learning",name:"Learning",scene:"learning",description:"Follow curiosity into something new"},
+  {id:"research",name:"Research",scene:"research",description:"Investigate questions and ideas"},
+  {id:"libraries",name:"Open Source",scene:"libraries",description:"Build on code shared with everyone"},
+  {id:"automation",name:"Automation",scene:"automation",description:"Tools that take work off your hands"},
+  {id:"other",name:"More",scene:"other",description:"Things that cross every boundary"}
 ];
 const artifactMotifs=["spark","key","atlas","light"] as const;
 
@@ -38,11 +39,11 @@ export function HomePage(){
       <div className="cw-hero-shade" aria-hidden="true"/>
       <div className="cw-hero-inner">
         <div className="cw-hero-copy">
-          <span className="cw-kicker">A CREATIVE UNIVERSE / THE INDEPENDENT CREATOR NETWORK</span>
+          <span className="cw-kicker">ANEVUM / AN INDEPENDENT CREATIVE UNIVERSE</span>
           <h1 id="cw-hero-title">CREATE<br/>BEYOND<br/><em>WORLDS.</em></h1>
-          <p>Games. Apps. Art. Experiments. Ideas worth trying.<br/>A universe for creators, built by creators.</p>
+          <p>Games, software, art, research and the ideas between them. A home for people who make things — and people who want to explore.</p>
           <div className="cw-hero-actions">
-            <Link to="/discover" className="cw-button cw-button--gold">EXPLORE WORLDS <Icon name="arrow" size={17}/></Link>
+            <Link to="/discover" className="cw-button cw-button--gold">EXPLORE THE UNIVERSE <Icon name="arrow" size={17}/></Link>
             <Link to="/start" className="cw-button cw-button--quiet">FIND YOUR PLACE</Link>
           </div>
         </div>
@@ -50,77 +51,85 @@ export function HomePage(){
           <div className="cw-hero-feature-art"><CosmicArtwork scene="portal" priority/></div>
           <div className="cw-hero-feature-info">
             <span>THE TRANSCOSMIC ATMOSPHERE</span>
-            <p>Beyond familiar boundaries. Explore original experiments and discoveries.</p>
+            <p>Ideas do not have to fit inside familiar boundaries.</p>
             <Link to="/discover?category=creative" aria-label="Explore creative projects"><Icon name="arrow" size={18}/></Link>
           </div>
         </aside>
       </div>
     </section>
 
-    <nav className="cw-world-strip" aria-label="Explore categories">
-      <Link to="/discover" className="cw-world-strip-all"><span aria-hidden="true">◎</span><strong>All</strong></Link>
-      {worlds.map(world=><Link key={world.id} to={"/discover?category="+world.id}><span aria-hidden="true">{world.symbol}</span><strong>{world.name}</strong></Link>)}
-    </nav>
-
     <div className="cw-home-body">
-      <section className="cw-collection" aria-labelledby="cw-featured-title">
-        <header className="cw-section-header">
-          <div><span className="cw-section-emblem" aria-hidden="true">✧</span><h2 id="cw-featured-title">FEATURED WORLDS</h2><p>{projects.length?"Newest approved projects from real independent creators.":"Explore the worlds that future creators can fill."}</p></div>
-          <Link to="/discover">VIEW ALL <Icon name="arrow" size={16}/></Link>
-        </header>
+      <section className="cw-home-section cw-home-section--worlds" aria-labelledby="cw-worlds-title">
+        <div className="cw-home-heading">
+          <div><span>01 / FIND YOUR WORLD</span><h2 id="cw-worlds-title">What are you into?</h2><p>Choose a direction. Every world leads into the real public catalogue.</p></div>
+          <Link to="/discover">BROWSE EVERYTHING <Icon name="arrow" size={17}/></Link>
+        </div>
+        <WorldNavigator worlds={worlds} counts={counts} ready={portal.state==="ready"}/>
+        <nav className="cw-world-more" aria-label="More ways to explore">
+          <span>CURIOUS WHERE TO GO NEXT?</span>
+          <Link to="/discover?free=1">Find things marked free <Icon name="arrow" size={14}/></Link>
+          <Link to="/guide">Try the Field Guide <Icon name="arrow" size={14}/></Link>
+          <Link to="/creators">Meet the makers <Icon name="arrow" size={14}/></Link>
+        </nav>
+      </section>
+
+      <section className="cw-home-section" aria-labelledby="cw-featured-title">
+        <div className="cw-home-heading">
+          <div><span>02 / THE PUBLIC CATALOGUE</span><h2 id="cw-featured-title">Made by people.</h2><p>Actual approved creations, not demonstration content.</p></div>
+          <Link to="/discover">EXPLORE CREATIONS <Icon name="arrow" size={17}/></Link>
+        </div>
         {portal.state==="loading"&&<LoadingState label="Loading genuine public projects"/>}
         {portal.state==="error"&&<ErrorState title="PROJECT CATALOGUE UNAVAILABLE" detail="We could not read the real catalogue. No sample projects were substituted."/>}
         {portal.state==="ready"&&(projects.length?
           <div className="cw-project-grid">{projects.slice(0,5).map(project=><ProjectCard key={project.id} project={project} returnTo="/"/>)}</div>:
-          <div className="cw-world-preview-grid">{worlds.slice(0,5).map(world=><Link key={world.id} className="cw-world-preview" to={"/discover?category="+world.id}>
-            <div className="cw-world-preview-art"><CosmicArtwork scene={world.scene}/></div>
-            <div className="cw-world-preview-label"><span>DISCOVER / {world.name.toUpperCase()}</span><strong>{world.description}</strong></div>
-            <span className="cw-world-preview-cta">EXPLORE CATEGORY <Icon name="arrow" size={15}/></span>
-          </Link>)}</div>)}
-        {portal.state==="ready"&&<div className="cw-catalogue-footnote">{portal.data.status.counts.publishedProjects} GENUINE PUBLISHED PROJECTS · {portal.data.status.counts.publishedCreators} VERIFIED PUBLIC CREATOR CHANNELS · No fake projects, ratings or activity</div>}
+          <div className="cw-publishing-empty">
+            <div className="cw-publishing-empty-art" aria-hidden="true"><CosmicArtwork scene="portal"/></div>
+            <div className="cw-publishing-empty-copy">
+              <span>THE PUBLIC SHELVES ARE OPEN</span>
+              <h3>First releases are still ahead.</h3>
+              <p>There are no approved public projects yet. You can explore the worlds, try the free Field Guide, and see how this place is being built while publishing stays in invited testing.</p>
+              <div className="cw-publishing-empty-actions"><Link to="/guide">TRY THE FIELD GUIDE <Icon name="arrow" size={16}/></Link><Link to="/status">SEE BUILD STATUS <Icon name="arrow" size={16}/></Link></div>
+            </div>
+          </div>)}
+        {portal.state==="ready"&&<p className="cw-catalogue-footnote">{portal.data.status.counts.publishedProjects} GENUINE PUBLISHED PROJECTS · {portal.data.status.counts.publishedCreators} VERIFIED PUBLIC CREATOR CHANNELS · No fake projects, ratings or activity</p>}
       </section>
 
-      <section className="cw-collection" aria-labelledby="cw-worlds-title">
-        <header className="cw-section-header">
-          <div><span className="cw-section-emblem" aria-hidden="true">✶</span><h2 id="cw-worlds-title">FIND YOUR NEXT WORLD</h2><p>Discover something to play, use, learn, or build upon.</p></div>
-          <Link to="/discover">EXPLORE ALL <Icon name="arrow" size={16}/></Link>
-        </header>
-        <div className="cw-small-world-grid">{worlds.slice(0,5).map(world=><Link key={world.id} to={"/discover?category="+world.id} className="cw-small-world">
-          <div aria-hidden="true" className="cw-small-world-image"><CosmicArtwork scene={world.scene}/></div>
-          <div><strong>{world.name}</strong><small>{portal.state==="ready"?(counts.get(world.id)||0)+" PUBLISHED":world.description}</small></div>
-          <Icon name="arrow" size={15}/>
-        </Link>)}</div>
+      <section className="cw-home-section" aria-labelledby="cw-belong-title">
+        <div className="cw-home-heading">
+          <div><span>03 / THE PEOPLE & THE CULTURE</span><h2 id="cw-belong-title">More than a catalogue.</h2><p>Make discoveries, follow makers and find something worth learning.</p></div>
+          <Link to="/community">VISIT COMMUNITY <Icon name="arrow" size={17}/></Link>
+        </div>
+        <div className="cw-home-columns">
+          <section className="cw-home-module" aria-labelledby="cw-community-title">
+            <header className="cw-module-header"><div><span aria-hidden="true">◎</span><h3 id="cw-community-title">THE COMMONS</h3></div><Link to="/community">EXPLORE →</Link></header>
+            <p>A place for the people behind the projects.</p>
+            <div className="cw-community-entries">
+              <Link to="/community"><span aria-hidden="true">✳</span><div><strong>COMMUNITY</strong><small>See the current spaces and what is available</small></div><Icon name="arrow" size={16}/></Link>
+              <Link to="/guide"><span aria-hidden="true">◇</span><div><strong>FIELD GUIDE</strong><small>12 free exercises, no upload required</small></div><Icon name="arrow" size={16}/></Link>
+              <Link to="/start"><span aria-hidden="true">✦</span><div><strong>HOW IT WORKS</strong><small>Explore, make and participate at your own pace</small></div><Icon name="arrow" size={16}/></Link>
+            </div>
+            <span className="cw-module-notice">PUBLIC DISCUSSION AND MEMBER PRIVILEGES ARE NOT SIMULATED</span>
+          </section>
+          <section className="cw-home-module" aria-labelledby="cw-creators-title">
+            <header className="cw-module-header"><div><span aria-hidden="true">✺</span><h3 id="cw-creators-title">CREATOR CHANNELS</h3></div><Link to="/creators">BROWSE →</Link></header>
+            <p>Meet the people who share their work here.</p>
+            {portal.state==="ready"&&creators.length?
+              <div className="cw-creator-row">{creators.map(creator=><Link key={creator.handle} to={"/creators/"+encodeURIComponent(creator.handle)} className="cw-creator-person">
+                <span className="cw-creator-medallion" aria-hidden="true">{creator.displayName.slice(0,1).toUpperCase()}</span>
+                <strong>{creator.displayName}</strong><small>{creator.publishedProjects} {creator.publishedProjects===1?"project":"projects"}</small>
+              </Link>)}</div>:
+              <div className="cw-module-empty"><strong>THE FIRST CHANNELS ARE AHEAD.</strong><p>Only real public creators will appear here. Invited member testing is underway.</p><Link to="/creators">SEE CREATORS ↗</Link></div>}
+          </section>
+          <section className="cw-home-module" aria-labelledby="cw-artifacts-title">
+            <header className="cw-module-header"><div><span aria-hidden="true">✦</span><h3 id="cw-artifacts-title">LEVELS & ARTIFACTS</h3></div><Link to="/levels">EXPLORE →</Link></header>
+            <p>Illustrated milestones, earned by real participation.</p>
+            <div className="cw-artifact-showcase">{artifactMotifs.map((motif,i)=><Link key={motif} to="/levels" aria-label={"Preview Series One artifact "+(i+1)}><CelestialEmblem motif={motif} size="medium" state="preview"/><small>ART STUDY 0{i+1}</small></Link>)}</div>
+            <div className="cw-module-foot"><LevelPanel compact/></div>
+          </section>
+        </div>
       </section>
 
-      <div className="cw-home-columns">
-        <section className="cw-home-module" aria-labelledby="cw-artifacts-title">
-          <header className="cw-module-header"><div><span aria-hidden="true">✦</span><h2 id="cw-artifacts-title">CELESTIAL ARTIFACTS</h2></div><Link to="/levels">VIEW ALL →</Link></header>
-          <p>Illustrated collectibles. Recognition is earned through real participation.</p>
-          <div className="cw-artifact-showcase">{artifactMotifs.map((motif,i)=><Link key={motif} to="/levels" aria-label={"Preview Series One artifact "+(i+1)}><CelestialEmblem motif={motif} size="medium" state="preview"/><small>ART STUDY 0{i+1}</small></Link>)}</div>
-          <div className="cw-module-foot"><LevelPanel compact/></div>
-        </section>
-        <section className="cw-home-module" aria-labelledby="cw-creators-title">
-          <header className="cw-module-header"><div><span aria-hidden="true">♟</span><h2 id="cw-creators-title">FEATURED CREATORS</h2></div><Link to="/creators">VIEW ALL →</Link></header>
-          <p>The real people sharing what they make.</p>
-          {portal.state==="ready"&&creators.length?
-            <div className="cw-creator-row">{creators.map(creator=><Link key={creator.handle} to={"/creators/"+encodeURIComponent(creator.handle)} className="cw-creator-person">
-              <span className="cw-creator-medallion" aria-hidden="true">{creator.displayName.slice(0,1).toUpperCase()}</span>
-              <strong>{creator.displayName}</strong><small>{creator.publishedProjects} {creator.publishedProjects===1?"project":"projects"}</small>
-            </Link>)}</div>:
-            <div className="cw-module-empty"><strong>THE FIRST CREATOR CHANNELS ARE AHEAD.</strong><p>Join the early creative community and help define what comes next.</p><Link to="/start">START HERE ↗</Link></div>}
-        </section>
-        <section className="cw-home-module" aria-labelledby="cw-community-title">
-          <header className="cw-module-header"><div><span aria-hidden="true">◎</span><h2 id="cw-community-title">COMMUNITY ACTIVITY</h2></div><Link to="/community">VIEW ALL →</Link></header>
-          <p>The conversation belongs to the makers and the people who discover them.</p>
-          <div className="cw-community-entries">
-            <Link to="/community"><span aria-hidden="true">✳</span><div><strong>COMMUNITY FORUM</strong><small>Explore actual conversations as they become available</small></div><Icon name="arrow" size={16}/></Link>
-            <Link to="/guide"><span aria-hidden="true">◇</span><div><strong>FIELD GUIDE</strong><small>Learn and participate for free, without uploading work</small></div><Icon name="arrow" size={16}/></Link>
-            <Link to="/create"><span aria-hidden="true">✦</span><div><strong>SHARE YOUR WORK</strong><small>Creator publishing is subject to review and access limits</small></div><Icon name="arrow" size={16}/></Link>
-          </div>
-          <span className="cw-module-notice">LIVE ACTIVITY COUNTS AND MEMBER PRIVILEGES ARE NOT SIMULATED</span>
-        </section>
-      </div>
-      <div className="cw-bottom-message"><div><span>ANEVUM / THE CREATIVE UNIVERSE</span><strong>YOUR WORLD BELONGS HERE.</strong><p>MAKE · SHARE · PLAY · BELONG. Discover what others have built.</p></div><Link className="cw-button cw-button--gold" to="/start">START EXPLORING <Icon name="arrow" size={16}/></Link></div>
+      <div className="cw-bottom-message"><div><span>ANEVUM / AN OPEN DOOR</span><strong>THERE'S ROOM FOR WHAT YOU MAKE.</strong><p>MAKE · SHARE · PLAY · BELONG. Explore freely. Creator publishing is still in invited testing.</p></div><Link className="cw-button cw-button--gold" to="/start">START EXPLORING <Icon name="arrow" size={16}/></Link></div>
     </div>
   </div>;
 }

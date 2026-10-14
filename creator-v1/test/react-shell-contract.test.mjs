@@ -124,14 +124,15 @@ test("staging preview carries restrictive HTML headers and strips member cookies
 });
 
 
-test("unbounded ANEVUM level presentation is independent of member permissions",()=>{
+test("levels remain public but belong in contextual navigation, not the global menu",()=>{
   const shell=read("web/src/components/Shell.tsx");
+  const home=read("web/src/pages/HomePage.tsx");
   const app=read("web/src/App.tsx");
   const panel=read("web/src/components/LevelPanel.tsx");
   const levels=read("web/src/pages/LevelsPage.tsx");
-  assert.match(shell,/portalCategories/);
-  assert.match(shell,/\/levels/);
-  assert.match(app,/path="levels"/);
+  assert.ok(shell.includes('to="/levels">Levels & Artifacts'));
+  assert.ok(home.includes('to="/levels"'));
+  assert.ok(app.includes('path="levels"'));
   assert.match(panel,/memberProgress/);
   assert.match(panel,/NO LEVEL CAP/);
   assert.match(levels,/FIRST 60 ARTIFACTS/);
@@ -139,16 +140,21 @@ test("unbounded ANEVUM level presentation is independent of member permissions",
   assert.match(levels,/2 XP/);
 });
 
-
-test("mobile has no fixed bottom tab bar and header drawer exposes every member route",()=>{
+test("small-screen drawer is intentionally short while account tools are contextual",()=>{
   const shell=read("web/src/components/Shell.tsx");
+  const account=read("web/src/pages/MemberAccountPage.tsx");
   const css=read("web/src/styles.css");
-  assert.doesNotMatch(shell,/mobile-bottom-nav|const mobileNav/);
-  assert.doesNotMatch(css,/\.mobile-bottom-nav/);
-  assert.match(shell,/aria-label=\{menuOpen \? "Close site navigation" : "Open site navigation"\}/);
-  for(const route of ["/discover","/levels","/community","/create","/library","/account","/status"])
-    assert.ok(shell.includes('"'+route+'"'),"Missing top menu route: "+route);
-  assert.match(css,/\.site-main\{padding:10px 10px 32px\}/);
-  assert.match(css,/\.site-footer\{padding:18px 12px 24px/);
-  assert.match(css,/\.mobile-drawer\{top:59px/);
+  const experience=read("web/src/experience-navigation.css");
+  assert.doesNotMatch(shell,/mobile-bottom-nav|const mobileNav|portalCategories|portal-navigation|signal-strip/);
+  assert.ok(!css.includes(".mobile-bottom-nav"));
+  assert.match(shell,/const primaryNavigation/);
+  for(const route of ["/discover","/community","/creators"])assert.ok(shell.includes('"'+route+'"'));
+  assert.ok(!shell.includes("Saved library"));
+  assert.ok(shell.includes('aria-label={menuOpen ? "Close site navigation" : "Open site navigation"}'));
+  assert.ok(shell.includes('to="/account"'));
+  assert.ok(account.includes('to="/create"'));
+  assert.ok(account.includes('to="/library"'));
+  assert.ok(css.includes(".site-main{padding:10px 10px 32px}"));
+  assert.ok(experience.includes(".mobile-drawer{"));
+  assert.ok(experience.includes("max-width:640px"));
 });

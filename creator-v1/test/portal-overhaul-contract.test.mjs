@@ -14,15 +14,20 @@ test("all public portal routes are real React components, not empty links",()=>{
  }
  assert.doesNotMatch(app,/path="community" element={<ComingPage/);
 });
-test("Orbital Underground visual identity and responsive routes are shared site-wide",()=>{
+test("dimensional identity remains while navigation uses the reviewed immersive layout",()=>{
  const main=read("web/src/main.tsx"),css=read("web/src/portal-overhaul.css"),shell=read("web/src/components/Shell.tsx");
- assert.match(main,/import "\.\/portal-overhaul\.css"/);
- assert.match(shell,/portalCategories/);
- assert.match(shell,/\/levels/);
- for(const width of ["1200px","900px","640px","340px"]) assert.ok(css.includes(width),width);
+ const home=read("web/src/pages/HomePage.tsx"),experience=read("web/src/experience-navigation.css");
+ assert.ok(main.includes('import "./portal-overhaul.css"'));
+ assert.ok(main.includes('import "./experience-navigation.css"'));
+ assert.ok(shell.includes("const primaryNavigation"));
+ assert.ok(home.includes("<WorldNavigator"));
+ assert.ok(experience.includes(".cw-atlas-stage"));
+ assert.ok(experience.includes(".mobile-drawer{"));
+ for(const width of ["1200px","900px","640px","340px"])assert.ok(css.includes(width),width);
  for(const token of ["--portal-iron","--portal-violet","--portal-buzz"])assert.ok(css.includes(token),token);
  assert.match(css,/prefers-reduced-motion/);
 });
+
 test("Explore has real public queries, category filters, meaningful layout toggle and pagination",()=>{
  const s=read("web/src/pages/DiscoverPage.tsx");
  for(const part of ["readProjects","readCategories","PageNav","selectCategory","setView","aria-pressed","portal-discover-results"])assert.ok(s.includes(part),part);
@@ -61,16 +66,17 @@ test("unlimited levels preserve server authoritative progress and first named ar
  assert.match(engine,/maxLevel:null/);
  assert.doesNotMatch(engine,/Math\.min\(maxLevel/);
 });
-test("member account shows server-verified achievements and unlimited XP without guessed progress",()=>{
+test("member account keeps earned achievements and contextual project/library access",()=>{
  const page=read("web/src/pages/MemberAccountPage.tsx");
  const shell=read("web/src/components/Shell.tsx");
  assert.match(page,/memberCreatorProfile/);
  assert.match(page,/MY ACHIEVEMENT CABINET/);
- assert.match(page,/a\.earned/);
+ assert.ok(page.includes('a.earned'));
  assert.match(page,/NO FIXED/i);
- assert.ok(shell.includes('["/levels", "Levels"]'));
- assert.ok(shell.includes('["/library","Saved library"]'));
- assert.ok(shell.includes('["/account","My profile"]'));
+ assert.ok(shell.includes('to="/levels"'));
+ assert.ok(page.includes('to="/library"'));
+ assert.ok(page.includes('to="/create"'));
+ assert.ok(shell.includes('to="/account"'));
  assert.doesNotMatch(shell,/mobile-bottom-nav|const mobileNav/);
 });
 
