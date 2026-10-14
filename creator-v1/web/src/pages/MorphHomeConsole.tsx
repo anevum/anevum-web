@@ -24,6 +24,7 @@ function dateLabel(date:string|null):string{
   return new Intl.DateTimeFormat("en-US",{month:"short",day:"numeric",year:"numeric",timeZone:"UTC"}).format(new Date(timestamp)).toUpperCase();
 }
 function projectLink(project:Project){return "/atlas/projects/"+encodeURIComponent(project.id);}
+function featureLink(project:Project){return "/atlas/experience/"+encodeURIComponent(project.id);}
 function preferredName(project:Project){return project.creatorName||project.creatorHandle;}
 function previewArtwork(project:Project){
   return <CosmicArtwork scene={sceneFor[project.category]}/>;
@@ -74,28 +75,29 @@ export function MorphHomeConsole({onExplore}:{onExplore:()=>void}){
     </header>
     <section className="mhc-feature-zone" aria-label="What's happening on ANEVUM">
       <div className="mhc-headliner">
-        <div className="mhc-hero-art" aria-hidden="true">{lead?previewArtwork(lead):<CosmicArtwork scene="hero" priority/>}</div>
+        <div className="mhc-hero-art" aria-hidden="true">{lead?previewArtwork(lead):<CosmicArtwork scene="games" priority/>}</div>
         <div className="mhc-hero-vignette" aria-hidden="true"/>
         <div className="mhc-hero-upper">
-          <span className="mhc-hero-orbit">ANEVUM / CREATIVE NETWORK</span>
-          <span className="mhc-hero-edition">{lead?"LATEST APPROVED RELEASE":"THE NETWORK IS OPEN FOR EXPLORATION"}</span>
+          <span className="mhc-hero-orbit">ANEVUM / FEATURED EXPERIENCE</span>
+          <span className="mhc-hero-edition">{lead?"VERIFIED PUBLIC RELEASE":"FIRST-PARTY PLAYER LAB / NOT A CREATOR RELEASE"}</span>
         </div>
         <div className="mhc-hero-copy">
-          <span className="mhc-feature-kicker">{lead?lead.category.toUpperCase()+" / "+dateLabel(lead.publishedAt):"WORLD 00 / THE FRONTIER"}</span>
-          <h1>{lead?lead.title:<>THE FUTURE<br/>IS <em>CREATED.</em></>}</h1>
-          <p>{lead?lead.summary:"A home for remarkable games, experimental software, digital art, and the people making them. Follow real creations as the network grows."}</p>
+          <span className="mhc-feature-kicker">{lead?lead.category.toUpperCase()+" / "+dateLabel(lead.publishedAt):"FIRST-PARTY INTERACTIVE PROTOTYPE / 001"}</span>
+          <h1>{lead?lead.title:<>ORBIT <em>ALIGN.</em></>}</h1>
+          <p>{lead?lead.summary:"Enter a short, playable orbital puzzle built for ANEVUM Player Lab. Rotate three signals to a shared north beacon. This is a real first-party UI prototype, not a published creator submission."}</p>
           {spotlightCount>1&&<div className="mhc-spotlight-controls" aria-label="Featured approved releases">
             <span>FEATURE {String(spotlightIndex%spotlightCount+1).padStart(2,"0")} / {String(spotlightCount).padStart(2,"0")}</span>
             <button type="button" onClick={()=>advance(-1)} aria-label="Previous featured release">←</button>
             <button type="button" onClick={()=>advance(1)} aria-label="Next featured release">→</button>
           </div>}
           <div className="mhc-feature-actions">
-            <Link to={lead?projectLink(lead):"/atlas/discover"} className="mhc-primary-action">
-              {lead?"OPEN RELEASE":"DISCOVER WORK"} <span aria-hidden="true">↗</span>
+            <Link to={lead?featureLink(lead):"/atlas/lab/orbit-align"} className="mhc-primary-action">
+              {lead?"ENTER FEATURED PROJECT":"PLAY THE PROTOTYPE"} <span aria-hidden="true">↗</span>
             </Link>
             <button type="button" onClick={onExplore} className="mhc-secondary-action">EXPLORE THE WORLDS <span aria-hidden="true">⌄</span></button>
           </div>
-          {lead&&<span className="mhc-feature-attribution">BY {preferredName(lead)} / @{lead.creatorHandle} · CATEGORY ILLUSTRATION</span>}
+          {lead?<span className="mhc-feature-attribution">BY {preferredName(lead)} / @{lead.creatorHandle} · CATEGORY ILLUSTRATION</span>:
+            <span className="mhc-feature-attribution">PLAYER LAB · NO ACCOUNT REQUIRED · NO XP GRANTED</span>}
         </div>
       </div>
       <MorphActivityStream/>
