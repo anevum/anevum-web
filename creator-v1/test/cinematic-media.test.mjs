@@ -50,3 +50,9 @@ test("cinematic media budget and responsive loading contract",()=>{
   assert(page.includes("<CinematicPortalFX/>"),"scene preserves rendered portal lighting");
   assert(page.includes("<CinematicDiscoverySections"),"real public discovery is present");
 });
+
+test("offline preview explicitly allows only cinematic alpha image paths",()=>{
+  const fixture=readFileSync(path.join(root,"../test/portal-offline-preview.mjs"),"utf8").replaceAll("\\/","/");
+  assert(fixture.includes("cinematic-v2/atmosphere/orbital-(?:haze|dust)-(?:desktop|mobile)"));
+  assert(fixture.includes("if(!/^assets"),"public asset allowlist remains restricted");
+});
