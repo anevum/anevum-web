@@ -55,7 +55,7 @@ test("homepage is a clean verified community feed, never a promoted mini-game",(
  assert.match(shell,/<MorphHomeConsole onExplore=\{\(\)=>setMenuOpen\(true\)\}\/>/);
  for(const name of ["nfc-intro","nfc-network-strip","nfc-layout","nfc-spotlight","MorphActivityStream","HotCommunityPosts","nfc-makers","nfc-topics","nfc-curation-note"])
    assert.ok(home.includes(name),name);
- for(const required of ["readProjects({limit:\"24\"},signal)","readCreators({limit:\"24\"},signal)","readStatus(signal)","readCategories(signal)","Promise.allSettled","publishedProjects","publishedCreators","reported?.features?.communityPosts"])
+ for(const required of ["readProjects({sort:\"new\",limit:\"24\"},signal)","readCreators({limit:\"24\"},signal)","readStatus(signal)","readCategories(signal)","Promise.allSettled","publishedProjects","publishedCreators","reported?.features?.communityPosts"])
    assert.ok(home.includes(required),required);
  assert.match(home,/document\.visibilityState==="visible"/);
  assert.match(home,/no demo projects are substituted/i);
