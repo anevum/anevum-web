@@ -7,6 +7,7 @@ import {CosmicArtwork} from "../components/CosmicArtwork";
 import type {CosmicScene} from "../components/CosmicIllustration";
 import {LevelPanel} from "../components/LevelPanel";
 import {Icon} from "../components/Icons";
+import {CinematicSiteRail} from "../components/CinematicSiteRail";
 import {CinematicCategoryStrip,CinematicCatalogueSections} from "../components/CinematicCatalogueSections";
 import {ErrorState, LoadingState} from "../components/States";
 import {CinematicPortalFX} from "../components/CinematicPortalFX";
@@ -45,20 +46,6 @@ const categories:readonly {title:string;scene:CosmicScene;to:string}[]=[
   {title:"APPS",scene:"tools",to:"/discover?category=tools"},
   {title:"ART & AI",scene:"creative",to:"/discover?category=creative"}
 ];
-const railMain=[
-  {label:"Home",to:"/",icon:"home"},
-  {label:"Explore",to:"/discover",icon:"explore"},
-  {label:"Create",to:"/create",icon:"create"},
-  {label:"Community",to:"/community",icon:"community"},
-  {label:"Apps",to:"/discover?category=tools",icon:"explore"},
-  {label:"Lab",to:"/workspace",icon:"status"},
-  {label:"Field Notes",to:"/guide",icon:"library"}
-] as const;
-const railPersonal=[
-  {label:"Library",to:"/library",icon:"library"},
-  {label:"Rewards",to:"/levels",icon:"star"},
-  {label:"Account",to:"/account",icon:"people"}
-] as const;
 const categoryArt:Record<Project["category"],CosmicScene>={
   games:"games",tools:"tools",automation:"automation",research:"research",
   creative:"creative",learning:"learning",libraries:"libraries",other:"other"
@@ -70,22 +57,6 @@ function SceneLink({item,variant}:{item:Gate;variant:"gate"|"module"}){
     <div className="cinema-scene-link-copy"><strong>{item.title}</strong><span>{item.eyebrow}</span></div>
     <span className="cinema-scene-link-arrow" aria-hidden="true"><Icon name="arrow" size={16}/></span>
   </Link>;
-}
-
-function CinematicRail(){
-  return <aside className="cinema-rail" aria-label="Desktop navigation">
-    <nav aria-label="Main shortcuts">
-      {railMain.map(item=><Link key={item.label} to={item.to} className={item.to==="/"?"cinema-rail-active":undefined}><Icon name={item.icon} size={17}/><span>{item.label}</span></Link>)}
-    </nav>
-    <div className="cinema-rail-rule"/>
-    <nav aria-label="Personal shortcuts">
-      {railPersonal.map(item=><Link key={item.label} to={item.to}><Icon name={item.icon} size={17}/><span>{item.label}</span></Link>)}
-    </nav>
-    <div className="cinema-rail-world">
-      <CosmicArtwork scene="research"/>
-      <div><small>ANEVUM</small><strong>A WORLD OF THINGS PEOPLE MAKE.</strong></div>
-    </div>
-  </aside>;
 }
 
 function FeaturedScene({project}:{project:Project|null}){
@@ -130,18 +101,19 @@ export function CinematicLandingPage(){
   }
 
   return <div className="anevum-cinema">
-    <CinematicRail/>
+    <CinematicSiteRail/>
     <div className="cinema-content">
       <section className="cinema-hero" aria-labelledby="cinema-hero-title" onPointerMove={moveScene} onPointerLeave={resetScene}>
         <div className="cinema-hero-art" aria-hidden="true"><CosmicArtwork scene="hero" priority/></div>
         <CinematicAtmosphere/>
         <div className="cinema-hero-light" aria-hidden="true"/>
         <CinematicPortalFX/>
+        <div className="av5-orbit-wordmark" aria-hidden="true"><strong>ANEVUM</strong><span>CREATE · EXPLORE · BUILD · TOGETHER</span></div>
         <div className="cinema-hero-layout">
           <div className="cinema-hero-copy">
             <div className="cinema-kicker">A CREATIVE UNIVERSE</div>
-            <h1 id="cinema-hero-title">CREATE<br/>BEYOND<br/>WORLDS</h1>
-            <p>Games. Apps. Art. Experiments. Worlds.<br/>A universe for creators, by creators.</p>
+            <h1 id="cinema-hero-title">A CREATIVE<br/>TECHNOLOGY<br/>PLAYGROUND.</h1>
+            <p>Tools, experiences, and a community for creators, builders, learners and experimenters. From games and art to research and real-world software.</p>
             <div className="cinema-actions">
               <Link to="/discover" className="cinema-button cinema-button--primary">EXPLORE WORLDS <Icon name="arrow" size={17}/></Link>
               <Link to="/start" className="cinema-button cinema-button--secondary">DISCOVER ANEVUM <Icon name="arrow" size={16}/></Link>
