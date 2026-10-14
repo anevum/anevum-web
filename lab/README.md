@@ -93,3 +93,22 @@ Session: `ANEVUM.WEB.BUILD.2026-10-13.001.LAB-DOS-TERMINAL-BACKSTAGE`. Source re
 - Update `lab/worker.mjs`, `lab/terminal-ui.mjs`, `lab/rhen-ui.mjs`, both pinned snapshots, and tests together before any protected deployment. Add `terminal-ui.mjs` as an additional ES module in the Workers multipart upload; the original four-module recipe above is obsolete for this branch.
 - New browser checks include desktop/mobile no-scroll Lab and Backstage screens and keyboard command input. Real authenticated Safari owner playtest and negative unauthorized access remain deployment acceptance gates.
 
+
+## Four accessible workspaces — 2026-10-13 integration
+
+**Session:** `ANEVUM.WEB.BUILD.2026-10-13.002.LAB-PROJECT-INTEGRATION`.
+**Implementation PR:** [#376](https://github.com/anevum/anevum-web/pull/376), based on Lab CRT [#372](https://github.com/anevum/anevum-web/pull/372). Source revision (excluding this documentation update): `dd9d0d3c95a83ef86f5dc8c18b72dbe0ce17bd9b`.
+
+The four launcher destinations are now usable routes:
+- `/projects/the-fold/`: existing intact playable Fold V2.1 snapshot; no source change.
+- `/projects/rhen/`: RHEN V5 *single-screen observer*, no actual connected account, no running scanner or trading runtime. Preserved prior paper/source console at `/projects/rhen/research/`. All RHEN broker/engine values fail closed to disconnected/disabled unless separately configured and authorized. Read-only `/projects/rhen/api/overview` is GET-only and currently returns null broker values; it never provides order actions.
+- `/projects/transcosmic/`: genuine device-local authoring app with chapters, scenes, character/location/lore/timeline/research/note records, full text search, live word count, JSON archive import/export and per-document Markdown export. `localStorage` only; no manuscript backend, account sync, server upload, shared repository or existing canon migration. Never claim these drafts are cloud-backed.
+- `/projects/backstage/`: genuine device-local operations/case desk (manual queue, six workstreams, status/priorities, review notes, local event history and backup/restore). It **does not** read production reports, change public community data, authenticate employees or provide a tamper-resistant staff audit record. It is not `staff.anevum.com`.
+
+All routes serve static JS/CSS from the existing **single owner-only** `anevum-private-lab` Worker. No separate DNS, account, database, credentials or shared service added. Root CRT terminal remains unchanged.
+
+**Verification:** Exact-head [GitHub CI #38488372179](https://github.com/anevum/anevum-web/actions/runs/38488372179) PASS (Node route/security suite and Chromium mobile+desktop interaction flows for all four workspaces). Cloudflare Worker module upload succeeded, and the provider confirmed automatic deployment `0ad6abf7-1479-4b27-aeab-cfd0a1209586` at 100%, version `0762ce37-6901-43aa-9568-1127700bd4fc`, at `2026-10-14T00:12:46Z` (October 13 EDT). After upload, provider readback confirmed `lab.anevum.com` still maps exclusively to `anevum-private-lab`, owner-only Access allowlist unchanged, no bindings (including no broker credentials), and disabled `workers.dev` plus preview URLs.
+
+**Source worker modules now required:** `worker.mjs`, `fold-snapshot.mjs`, `rhen-snapshot.mjs`, `rhen-ui.mjs`, `terminal-ui.mjs`, `rhen-terminal.mjs`, `rhen-terminal.css.mjs`, `rhen-terminal.js.mjs`, `rhen-observer.mjs`, `transcosmic-workspace.mjs`, `backstage-workspace.mjs`. The earlier four-/five-module upload instructions in the historical sections above **do not apply** to this release.
+
+**Outstanding:** actual owner Safari acceptance, independent unauthorized-request denial, durable encrypted/cross-device Transcosmic persistence (if desired), real staff authorization and moderated case integration, separately reviewed RHEN observation keys or runtime readiness. Do not interpret source tests as authenticated owner-device acceptance or as trading/staff production readiness.
