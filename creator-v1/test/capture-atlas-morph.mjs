@@ -107,7 +107,7 @@ try{
   const actualSearch=await evaluate('({matches:[...document.querySelectorAll("dialog.portal-launcher .portal-launcher-result-copy strong")].map(e=>e.textContent),routes:[...document.querySelectorAll("dialog.portal-launcher a[href]")].map(a=>a.pathname)})');
   if(!actualSearch.matches.includes("ARCADE AFTER DARK")||!actualSearch.routes.some(path=>path.includes("/creator/atlas/projects/")))throw Error("MORPH_LIVE_PROJECT_SEARCH_"+width+": "+JSON.stringify(actualSearch));
   await shot("morph-console-live-search",width);
-  await evaluate('const input=document.querySelector("dialog.portal-launcher input");input.focus();input.select()');
+  await evaluate('(()=>{const field=document.querySelector("dialog.portal-launcher input");field.focus();field.select();})()');
   await client.send("Input.insertText",{text:"Nova"});
   await until(()=>evaluate('[...document.querySelectorAll("dialog.portal-launcher .portal-launcher-result-copy strong")].some(e=>e.textContent==="Nova Studio")'));
   const creatorSearch=await evaluate('({names:[...document.querySelectorAll("dialog.portal-launcher .portal-launcher-result-copy strong")].map(e=>e.textContent),routes:[...document.querySelectorAll("dialog.portal-launcher a[href]")].map(a=>a.pathname)})');
