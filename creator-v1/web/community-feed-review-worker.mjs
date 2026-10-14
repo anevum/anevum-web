@@ -1,6 +1,6 @@
 // ANEVUM COMMUNITY FEED — isolated read-only creator-network review, with no private resource bindings.
 const HOST="anevum-community-feed-review-20261014.devonakins.workers.dev";
-const PUBLIC=/^\/api\/v1\/(?:status|categories|projects(?:\/[A-Za-z0-9_-]+(?:\/repository)?)?|creators(?:\/[a-z][a-z0-9_]{2,29})?|community\/posts(?:\/[a-f0-9]{32})?)$/i;
+const PUBLIC=/^\/api\/v1\/(?:status|categories|boards|projects(?:\/[A-Za-z0-9_-]+(?:\/repository)?)?|creators(?:\/[a-z][a-z0-9_]{2,29})?|community\/posts(?:\/[a-f0-9]{32})?)$/i;
 const BASE={
   "x-content-type-options":"nosniff",
   "x-robots-tag":"noindex, nofollow",

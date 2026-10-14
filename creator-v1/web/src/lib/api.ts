@@ -57,6 +57,7 @@ export interface CommunityPost {
   publishedAt:string;
   score:number;
   replyCount:number;
+  project?: Pick<Project,"id"|"title"|"category"|"creatorHandle"|"creatorName"> | null;
 }
 export type CommunityPostSort="hot"|"new";
 export interface CommunityPostDetail extends CommunityPost {body:string}
@@ -68,6 +69,15 @@ export interface CommunityPostsPage {
   count:number;
   nextCursor:string|null;
   sort:CommunityPostSort;
+}
+
+export interface PublicBoards {
+  source: "approved-public-projects";
+  labels: { latestReleases: string; firstLooks: string; publishingCreators: string };
+  latestReleases: Project[];
+  firstLooks: Project[];
+  publishingCreators: Creator[];
+  qualityRankingAvailable: false;
 }
 
 export interface CategoryCount { category: Category; count: number }
@@ -112,7 +122,7 @@ export function readRepository(id:string,signal?:AbortSignal) {
   return getJson<{repository:PublicRepositoryMetadata}>(publicPath("/projects/")+encodeURIComponent(id)+"/repository",signal);
 }
 
-export function readCommunityPosts(params:{sort?:CommunityPostSort;limit?:string;cursor?:string}={},signal?:AbortSignal){
+export function readCommunityPosts(params:{sort?:CommunityPostSort;limit?:string;project?:string;creator?:string}={},signal?:AbortSignal){
   const query=new URLSearchParams();
   for(const [key,value] of Object.entries(params))if(value)query.set(key,value);
   if(!query.has("sort"))query.set("sort","hot");
@@ -123,6 +133,11 @@ export function readCommunityPosts(params:{sort?:CommunityPostSort;limit?:string
 export function readCommunityPost(id:string,signal?:AbortSignal){
   return getJson<{post:CommunityPostDetail;replies:CommunityPostReply[]}>(
     publicPath("/community/posts/")+encodeURIComponent(id),signal);
+}
+
+/** Read-only verified publication boards; no client-generated popularity score. */
+export function readPublicBoards(signal?: AbortSignal) {
+  return getJson<PublicBoards>(publicPath("/boards"), signal);
 }
 
 export function readCreators(params: Record<string, string | undefined> = {}, signal?: AbortSignal) {

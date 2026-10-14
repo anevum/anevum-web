@@ -8,6 +8,7 @@ import {OrbitalMark} from "../components/OrbitalMark";
 import {CosmicArtwork} from "../components/CosmicArtwork";
 import {LoadingState,ErrorState} from "../components/States";
 import {HotCommunityPosts} from "./HotCommunityPosts";
+import "./community-network.css";
 
 const rooms=[
   {name:"THE ARCADE",tag:"GAMES / PLAY",category:"games",description:"Talk games, discover indie experiments and exchange useful playtesting feedback.",symbol:"✦"},
@@ -26,6 +27,19 @@ export function CommunityPage(){
   return <div className="portal-community-page">
     <PortalHeading eyebrow="ANEVUM / PEOPLE BEHIND THE WORK" title="FIND YOUR" accent="PEOPLE." description="A future home for discussion, feedback, challenges, and collaborations. For now, discover genuine makers and their work while moderation and community features are tested." index="COMMUNITY / 003" action={{to:"/levels",label:"HOW PARTICIPATION EARNS RECOGNITION"}}/>
     <div className="portal-community-notice" role="status"><span className="portal-community-notice-mark" aria-hidden="true">!</span><div><strong>COMMUNITY CONVERSATIONS ARE UNDER PRIVATE REVIEW.</strong><p>Invited creators can submit discussions for staff approval. Only actual approved posts appear publicly; unlaunched rooms and engagement statistics are not simulated.</p></div><Link to="/community/write">SUBMIT FOR REVIEW ↗</Link></div>
+    <section className="portal-box cnb-home-bridge" aria-labelledby="community-public-boards">
+      <header className="portal-box-header">
+        <div><span className="kicker">PUBLIC RELEASES / DISCOVERY BOARDS</span><h2 id="community-public-boards">FOLLOW THE PEOPLE BUILDING THINGS.</h2></div>
+        <Link to="/atlas/boards">OPEN BOARDS ↗</Link>
+      </header>
+      <p>Browse verified releases, first-time creators and real project passports. These lists report approved publication activity, not invented popularity or quality rankings.</p>
+      <div className="cnb-home-links">
+        <Link to="/atlas/boards">LATEST RELEASES ↗</Link>
+        <Link to="/atlas/boards?view=firstLooks">FIRST LOOKS ↗</Link>
+        <Link to="/atlas/boards?view=publishing">CREATOR ACTIVITY ↗</Link>
+        <Link to="/atlas/creators">CREATOR DIRECTORY ↗</Link>
+      </div>
+    </section>
     <div className="portal-layout">
       <div className="portal-main">
         <HotCommunityPosts/>

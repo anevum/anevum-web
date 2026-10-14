@@ -128,7 +128,7 @@ export const memberVote=(id:string,score:number,revision:number)=>{
     "/community/projects/"+memberProjectId(id)+"/vote",{method:"POST",body:{score,revision}}
   );
 };
-export interface DiscussionDraft {title:string;body:string;topic:string}
+export interface DiscussionDraft {title:string;body:string;topic:string;projectId?:string|null}
 export interface PrivateDiscussion extends DiscussionDraft {id:string;status:string;revision:number;createdAt:number;publishedAt:string|null}
 export interface PostReaction {score:number;revision:number}
 export const memberCreateDiscussion=(draft:DiscussionDraft)=>

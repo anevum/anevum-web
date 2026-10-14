@@ -90,6 +90,46 @@ try{
   // The removed game route is asserted absent from App by a separate static route
   // contract; do not reload the whole Chromium page to test a retired URL here.
   if(await evaluate('!!document.querySelector(".fx-game")'))throw Error("Retired game UI rendered during creator navigation");
+  // Verify the actual compiled connected-board view with SYNTHETIC OFFLINE content.
+  await client.send("Page.navigate",{url:base+"/creator/atlas/boards"});
+  await until(()=>evaluate('!!document.querySelector(".cnb-hub")&&document.querySelectorAll(".cnb-project").length===8'));
+  const boardLayout=await evaluate('(()=>{const b=document.querySelector(".cnb-hub").getBoundingClientRect();return {width:innerWidth,projects:document.querySelectorAll(".cnb-project").length,tabs:document.querySelectorAll(".cnb-tabs button").length,overflow:document.documentElement.scrollWidth>innerWidth+1,mainOverflow:getComputedStyle(document.querySelector(".atm-content")).overflowY,right:b.right,left:b.left};})()');
+  if(boardLayout.projects!==8||boardLayout.tabs!==3||boardLayout.overflow||boardLayout.mainOverflow!=="auto"||boardLayout.left<0||boardLayout.right>width+1)
+    throw Error("CONNECTED_BOARDS_LAYOUT_"+width+": "+JSON.stringify(boardLayout));
+  console.log("CONNECTED_BOARDS_"+width+"="+JSON.stringify(boardLayout));
+  await shot("connected-community-releases",width);
+  await evaluate('document.querySelector(".cnb-tabs button:nth-child(2)").click()');
+  await until(()=>evaluate('document.querySelector(".cnb-tabs button:nth-child(2)").getAttribute("aria-pressed")==="true"&&!!document.querySelector(".cnb-empty")'));
+  if(await evaluate('document.querySelectorAll(".cnb-project").length')!==0)throw Error("Invented first-look creator in empty fixture");
+  await shot("connected-community-first-looks",width);
+  await evaluate('document.querySelector(".cnb-tabs button:nth-child(3)").click()');
+  await until(()=>evaluate('document.querySelectorAll(".cnb-creator").length===4'));
+  await shot("connected-community-creators",width);
+  await evaluate('document.querySelector(".cnb-tabs button:first-child").click()');
+  await until(()=>evaluate('document.querySelectorAll(".cnb-project").length===8'));
+  await evaluate('document.querySelector(".cnb-filters button:nth-child(2)").click()');
+  await until(()=>evaluate('document.querySelectorAll(".cnb-project").length===3'));
+  await shot("connected-community-games",width);
+  // Positive public-discussion journey with explicitly SYNTHETIC loopback data.
+  await evaluate('fetch("/__context-fixture?enabled=1").then(r=>r.json())');
+  await client.send("Page.navigate",{url:base+"/creator/atlas/projects/00000000000000000000000000000001"});
+  await until(()=>evaluate('document.querySelectorAll(".context-posts article").length===1'));
+  const projectContext=await evaluate('({title:document.querySelector(".context-posts h3")?.textContent,write:document.querySelector(".context-discussion-links a:last-child")?.getAttribute("href"),overflow:document.documentElement.scrollWidth>innerWidth+1})');
+  if(!projectContext.title?.includes('Keyboard feedback')||!projectContext.write?.includes('/community/write?project=00000000000000000000000000000001')||projectContext.overflow)throw Error('PROJECT_DISCUSSION_CONTEXT_'+width+': '+JSON.stringify(projectContext));
+  await evaluate('document.querySelector(".context-discussions").scrollIntoView({block:"start"})');
+  await shot('project-discussions',width);
+  await evaluate('document.querySelector(".context-posts h3 a").click()');
+  await until(()=>evaluate('!!document.querySelector(".discussion-project-context")&&document.querySelectorAll(".discussion-reply").length===1'));
+  if(await evaluate('!document.querySelector(".discussion-project-context a").textContent.includes("ARCADE AFTER DARK")||document.documentElement.scrollWidth>innerWidth+1'))throw Error('DISCUSSION_CONTEXT_DETAIL_'+width);
+  await shot('project-discussion-detail',width);
+  await client.send("Page.navigate",{url:base+'/creator/atlas/creators/moss_demo'});
+  await until(()=>evaluate('document.querySelectorAll(".context-posts article").length===1&&!!document.querySelector(".context-project-link")'));
+  if(await evaluate('!document.querySelector(".context-project-link").textContent.includes("ARCADE AFTER DARK")||document.documentElement.scrollWidth>innerWidth+1'))throw Error('CREATOR_DISCUSSION_ACTIVITY_'+width);
+  await evaluate('document.querySelector(".context-discussions").scrollIntoView({block:"start"})');
+  await shot('creator-discussion-activity',width);
+  // Restore empty/gated homepage fixtures before the next viewport iteration.
+  await evaluate('fetch("/__context-fixture?enabled=0").then(r=>r.json())');
+  console.log('PROJECT_CREATOR_DISCUSSION_JOURNEY_'+width+'=PASS');
   console.log("COMMUNITY_FEED_NAVIGATION_"+width+"=PASS");
  }
 }finally{client?.close();child.kill("SIGTERM");await delay(200);rmSync(profile,{recursive:true,force:true});}

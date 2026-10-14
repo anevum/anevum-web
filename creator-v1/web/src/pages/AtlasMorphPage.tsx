@@ -25,7 +25,7 @@ const WORLDS:Readonly<Record<AtlasWorldId,string>>={
   identity:"/atlas/account"
 };
 const ROUTES=new Set([
-  "discover","projects","creators","community","create","library","account","levels",
+  "discover","projects","creators","community","boards","create","library","account","levels",
   "workspace","status","start","guide"
 ]);
 type Progress={level:number;xp:number;artifact:string|null};
@@ -38,6 +38,7 @@ function worldFor(pathname:string,search:string):AtlasWorldId|null {
   if(pathname.startsWith("/atlas/experience/"))return "play";
   if(pathname.startsWith("/atlas/projects/"))return "discover";
   if(pathname.startsWith("/atlas/creators"))return "commons";
+  if(pathname.startsWith("/atlas/boards"))return "commons";
   if(pathname.startsWith("/atlas/community")||pathname.startsWith("/atlas/start")||pathname.startsWith("/atlas/guide"))return "commons";
   if(pathname.startsWith("/atlas/workspace")||pathname.startsWith("/atlas/collaborate"))return "collaborate";
   if(pathname.startsWith("/atlas/signals"))return "signals";
@@ -274,6 +275,7 @@ export function AtlasMorphLayout(){
             <button type="button" onClick={openSearch} className="atm-navigation-search"><span aria-hidden="true">⌕</span> FIND ANYTHING <small>⌘ / CTRL + K</small></button>
             <div className="atm-navigation-utility-links">
               <Link to="/atlas/creators" onClick={()=>setMenuOpen(false)}>CREATORS ↗</Link>
+              <Link to="/atlas/boards" onClick={()=>setMenuOpen(false)}>COMMUNITY BOARDS ↗</Link>
               <Link to="/atlas/library" onClick={()=>setMenuOpen(false)}>MY LIBRARY ↗</Link>
               <Link to="/atlas/guide" onClick={()=>setMenuOpen(false)}>FIELD GUIDE ↗</Link>
               <Link to="/" onClick={()=>setMenuOpen(false)}>STANDARD WEBSITE ↗</Link>

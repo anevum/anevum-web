@@ -71,6 +71,6 @@ export function HotCommunityPosts(){
          <span>{post.score} REACTIONS</span><span>{post.replyCount} REPLIES</span></div>
      </article>)}
    </div>}
-   <div className="nfc-module-footer"><Link to="/atlas/community">ALL COMMUNITY SPACES ↗</Link><Link to="/atlas/community/new">START A DISCUSSION ↗</Link></div>
+   <div className="nfc-module-footer"><Link to="/atlas/community">ALL COMMUNITY SPACES ↗</Link><Link to="/atlas/community/write">START A DISCUSSION ↗</Link></div>
  </section>;
 }

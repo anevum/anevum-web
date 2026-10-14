@@ -46,8 +46,14 @@ export const POSTS_APP=String.raw`
        const info=document.createElement('span');info.textContent='@'+post.authorHandle+' · '+post.topic.toUpperCase()+' · revision '+post.revision;
        const content=document.createElement('p');content.textContent=post.body;
        row.append(title,info,content);
+       if(post.linkedProjectId){
+         const context=document.createElement('p');
+         context.textContent=post.contextAvailable&&post.project?'About published project: '+post.project.title+' / @'+post.project.creatorHandle:'Linked project unavailable. Publication is blocked; reject or wait for the project to become public again.';
+         row.append(context);
+       }
        for(const [action,label] of [['publish','Approve and publish'],['reject','Reject submission']]){
          const button=document.createElement('button');button.type='button';
+         button.disabled=action==='publish'&&post.contextAvailable===false;
          button.textContent=label;button.onclick=()=>review(post,action);row.append(button);
        }
        root.append(row);

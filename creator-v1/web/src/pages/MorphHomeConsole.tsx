@@ -7,6 +7,7 @@ import {useResource} from "../lib/useResource";
 import {MorphActivityStream} from "./MorphActivityStream";
 import {HotCommunityPosts} from "./HotCommunityPosts";
 import "./morph-community-feed.css";
+import "./community-network.css";
 
 const SCENES:Record<Category,CosmicScene>={
  games:"games",tools:"tools",creative:"creative",learning:"learning",research:"research",
@@ -117,6 +118,16 @@ export function MorphHomeConsole({onExplore}:{onExplore:()=>void}){
          </div>
        </section>}
        <MorphActivityStream/>
+       <section className="cnb-home-bridge" aria-labelledby="cnb-home-heading">
+         <span className="cnb-kicker">ANEVUM / CONNECTED COMMUNITY</span>
+         <h2 id="cnb-home-heading">THE WORLD BEYOND A RELEASE.</h2>
+         <p>Every public project connects to a creator, a category, and the wider community. Find first-time makers, browse verified releases, or read approved discussions.</p>
+         <div className="cnb-home-links">
+           <Link to="/atlas/boards">DISCOVERY & CREATOR BOARDS ↗</Link>
+           <Link to="/atlas/community">COMMUNITY ROOMS ↗</Link>
+           <Link to="/atlas/levels">EARNED RECOGNITION ↗</Link>
+         </div>
+       </section>
      </main>
 
      <aside className="nfc-sidebar" aria-label="Discussions, members and topics">

@@ -1,28 +1,32 @@
+import {communityContextEnabled,communityPostFrom,communityContextFields,communityProjectDto} from '../shared/community-post-context.mjs';
 const publicCommunityPosts = (() => {
 // ANEVUM staging/public read-only discussions. Never return unreviewed posts.
 const BASE={"content-type":"application/json; charset=utf-8","cache-control":"no-store","x-content-type-options":"nosniff","referrer-policy":"no-referrer"};
 const POSTS="/api/v1/community/posts";
-const FROM="FROM community_posts p JOIN creator_profiles c ON c.member_id=p.author_member_id JOIN member_accounts a ON a.id=p.author_member_id WHERE p.status='published' AND c.status='active' AND a.status='active' AND julianday(p.published_at)<=julianday('now')";
+const VISIBLE_VOTES="SELECT SUM(v.score) FROM community_post_votes v JOIN creator_profiles vc ON vc.member_id=v.member_id JOIN member_accounts va ON va.id=v.member_id WHERE v.post_id=p.id AND vc.status='active' AND va.status='active' AND v.member_id<>p.author_member_id";
+const VISIBLE_REPLIES="SELECT COUNT(*) FROM community_post_replies r JOIN creator_profiles rc ON rc.member_id=r.author_member_id JOIN member_accounts ra ON ra.id=r.author_member_id WHERE r.post_id=p.id AND r.status='published' AND rc.status='active' AND ra.status='active' AND julianday(r.published_at)<=julianday('now')";
 const FIELDS="p.id,p.title,p.topic,p.published_at AS publishedAt,c.handle AS authorHandle,c.display_name AS authorName,"+
- "COALESCE((SELECT SUM(v.score) FROM community_post_votes v WHERE v.post_id=p.id),0) AS score,"+
- "(SELECT COUNT(*) FROM community_post_replies r WHERE r.post_id=p.id AND r.status='published' AND julianday(r.published_at)<=julianday('now')) AS replyCount";
+ "COALESCE(("+VISIBLE_VOTES+"),0) AS score,("+VISIBLE_REPLIES+") AS replyCount";
 const answer=(req,data,status=200)=>new Response(req.method==="HEAD"?null:JSON.stringify(data),{status,headers:BASE});
 function stmt(db,sql,args=[]){const prepared=db.prepare(sql);return args.length?prepared.bind(...args):prepared;}
 async function rows(db,sql,args=[]){const value=await stmt(db,sql,args).all();if(value.success===false||!Array.isArray(value.results))throw Error("Storage unavailable");return value.results;}
 function dto(row){
  return {id:row.id,title:row.title,excerpt:(row.body||"").slice(0,230),topic:row.topic,
   authorHandle:row.authorHandle,authorName:row.authorName,publishedAt:row.publishedAt,
-  score:Number(row.score||0),replyCount:Number(row.replyCount||0)};
+  score:Number(row.score||0),replyCount:Number(row.replyCount||0),project:communityProjectDto(row)};
 }
 function parameters(url,detail){
  if(detail){if(url.search)return null;return {detail:true};}
- const allowed=new Set(["limit","sort"]);
+ const allowed=new Set(["limit","sort","project","creator"]);
  for(const key of url.searchParams.keys())
    if(!allowed.has(key)||url.searchParams.getAll(key).length!==1)return null;
  const sort=url.searchParams.get("sort")||"hot";
  const limitText=url.searchParams.get("limit")||"6";
  if(!["hot","new"].includes(sort)||!/^[1-9]\d?$/.test(limitText)||Number(limitText)>24)return null;
- return {sort,limit:Number(limitText)};
+ const project=url.searchParams.get('project'),creator=url.searchParams.get('creator');
+ if(project!==null&&!/^[A-Za-z0-9_-]{1,80}$/.test(project))return null;
+ if(creator!==null&&!/^[a-z][a-z0-9_]{2,29}$/i.test(creator))return null;
+ return {sort,limit:Number(limitText),project,creator};
 }
 async function publicCommunityPosts(req,db){
  const url=new URL(req.url),path=url.pathname,detail=/^\/api\/v1\/community\/posts\/([a-f0-9]{32})$/.exec(path);
@@ -32,8 +36,14 @@ async function publicCommunityPosts(req,db){
  if(!params)return answer(req,{error:"Invalid community post query"},400);
  if(!db)return answer(req,{error:"Public post data unavailable"},503);
  try{
+   const context=await communityContextEnabled(db),FROM=communityPostFrom(context),fields=FIELDS+communityContextFields(context);
+   if(params.project&&!context)return answer(req,{error:"Project discussions are unavailable"},503);
+   const args=[],filters=[];
+   if(params.project){filters.push('link.project_id=?');args.push(params.project);}
+   if(params.creator){filters.push('c.handle=? COLLATE NOCASE');args.push(params.creator);}
+   const where=filters.length?' AND '+filters.join(' AND '):'';
    if(detail){
-     const found=await rows(db,"SELECT "+FIELDS+",p.body "+FROM+" AND p.id=? LIMIT 1",[detail[1]]);
+     const found=await rows(db,"SELECT "+fields+",p.body "+FROM+" AND p.id=? LIMIT 1",[detail[1]]);
      if(!found.length)return answer(req,{error:"Post not found"},404);
      const replies=await rows(db,"SELECT r.id,r.body,r.published_at AS publishedAt,c.handle AS authorHandle,c.display_name AS authorName "+
        "FROM community_post_replies r JOIN creator_profiles c ON c.member_id=r.author_member_id "+
@@ -45,9 +55,8 @@ async function publicCommunityPosts(req,db){
    }
    const order=params.sort==="new"?
      "p.published_at DESC,p.id DESC":
-     "(COALESCE((SELECT SUM(v.score) FROM community_post_votes v WHERE v.post_id=p.id),0)*2+"+
-     "(SELECT COUNT(*) FROM community_post_replies r WHERE r.post_id=p.id AND r.status='published'))*3 DESC,p.published_at DESC,p.id DESC";
-   const found=await rows(db,"SELECT "+FIELDS+",p.body "+FROM+" ORDER BY "+order+" LIMIT ?",[params.limit]);
+     "(COALESCE(("+VISIBLE_VOTES+"),0)*2+("+VISIBLE_REPLIES+"))*3 DESC,p.published_at DESC,p.id DESC";
+   const found=await rows(db,"SELECT "+fields+",p.body "+FROM+where+" ORDER BY "+order+" LIMIT ?",[...args,params.limit]);
    return answer(req,{items:found.map(dto),count:found.length,nextCursor:null,sort:params.sort});
  }catch{return answer(req,{error:"Community post service unavailable"},503);}
 }
@@ -210,7 +219,8 @@ export default {
     const repository = /^\/api\/v1\/projects\/([A-Za-z0-9_-]{1,80})\/repository$/.exec(path);
     const creatorDetail = /^\/api\/v1\/creators\/([A-Za-z][A-Za-z0-9_]{2,29})$/.exec(path);
     const communityPosts = path==="/api/v1/community/posts" || /^\/api\/v1\/community\/posts\/[a-f0-9]{32}$/.test(path);
-    const known = ['/health', '/api/v1/status', '/api/v1/categories', '/api/v1/projects', '/api/v1/creators'].includes(path) || detail || repository || creatorDetail || communityPosts;
+    const publicBoards = path === '/api/v1/boards';
+    const known = ['/health', '/api/v1/status', '/api/v1/categories', '/api/v1/projects', '/api/v1/creators'].includes(path) || detail || repository || creatorDetail || communityPosts || publicBoards;
     if (!known) return reply(request, { error: 'Not found' }, 404);
     let filter;
     try {
@@ -235,10 +245,38 @@ export default {
             "SELECT COUNT(*) AS n FROM sqlite_master WHERE type='table' AND name IN ('community_posts','community_post_votes','community_post_replies','community_post_review_events')");
           communityPostsReady = Number(schema?.n) === 4;
         } catch { /* Migration not present, or public post service unavailable. */ }
-        return reply(request, { version: '0.1.0', phase: 'read-only-development', counts: { publishedProjects: totals.projects, publishedCreators: totals.creators }, features: { discovery: true, repositoryMetadata: true, publicCreatorProfiles: true, accounts: false, publishing: false, voting: false, xp: false, community: false, communityPosts: communityPostsReady } });
+        const projectDiscussions=communityPostsReady&&await communityContextEnabled(env.COMMUNITY_DB);
+        return reply(request, { version: '0.1.0', phase: 'read-only-development', counts: { publishedProjects: totals.projects, publishedCreators: totals.creators }, features: { discovery: true, repositoryMetadata: true, publicCreatorProfiles: true, accounts: false, publishing: false, voting: false, xp: false, community: false, communityPosts: communityPostsReady, projectDiscussions } });
       }
       if (path === '/api/v1/categories') {
         return reply(request, { categories: await rows(env.COMMUNITY_DB, 'SELECT p.category,COUNT(*) AS count ' + PUBLIC_FROM + ' GROUP BY p.category ORDER BY p.category') });
+      }
+      if (publicBoards) {
+        // These are verifiable release lists, not quality votes or an XP-based
+        // reputation ranking. Every row uses the canonical public predicate.
+        // The first-look lane gives new, single-release creators a visible path.
+        const latest = await rows(env.COMMUNITY_DB,
+          'SELECT ' + FIELDS + ' ' + PUBLIC_FROM +
+          ' ORDER BY p.published_at DESC,p.id DESC LIMIT 12');
+        const firstLooks = await rows(env.COMMUNITY_DB,
+          'SELECT ' + FIELDS + ' ' + PUBLIC_FROM +
+          " AND (SELECT COUNT(*) FROM projects fp WHERE fp.owner_member_id=c.member_id AND fp.status='published' AND julianday(fp.published_at)<=julianday('now'))=1" +
+          ' ORDER BY p.published_at DESC,p.id DESC LIMIT 12');
+        const creators = await rows(env.COMMUNITY_DB,
+          'SELECT c.handle AS handle,c.display_name AS displayName,COUNT(*) AS publishedProjects ' + PUBLIC_FROM +
+          ' GROUP BY c.handle,c.display_name ORDER BY COUNT(*) DESC,MAX(p.published_at) DESC,c.handle COLLATE NOCASE ASC LIMIT 12');
+        return reply(request,{
+          source:'approved-public-projects',
+          labels:{
+            latestReleases:'Latest approved publications',
+            firstLooks:'Creators with one approved publication',
+            publishingCreators:'Approved release counts, not quality rankings'
+          },
+          latestReleases:latest.map(projectDto),
+          firstLooks:firstLooks.map(projectDto),
+          publishingCreators:creators.map(visibleCreator),
+          qualityRankingAvailable:false
+        });
       }
       if (path === '/api/v1/creators') {
         let sql='SELECT c.handle AS handle,c.display_name AS displayName,COUNT(*) AS publishedProjects '+PUBLIC_FROM+

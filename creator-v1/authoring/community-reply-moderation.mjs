@@ -1,3 +1,4 @@
+import {communityContextEnabled,communityPostFrom} from '../shared/community-post-context.mjs';
 // STAGING: owner-only reply review, invoked exclusively after Studio signed Access verification.
 // No anonymous reply publication, no public write handlers, no XP or artificial engagement.
 const ROOT="/api/community-post-replies";
@@ -40,10 +41,11 @@ export async function communityReplyModeration(req,db,actor){
    if(!found.length)return answer({error:"Reply not found"},404);
    if(found[0].status!==expected||found[0].revision!==data.revision)return answer({error:"Reply changed; refresh review queue"},409);
    if(action==="publish"&&found[0].postStatus!=="published")return answer({error:"Approve the parent discussion first"},409);
+   const context=await communityContextEnabled(db);
    const now=Math.floor(Date.now()/1000),eventId=crypto.randomUUID();
    const published=action==="publish"?new Date(now*1000).toISOString().replace("T"," ").replace(".000Z",""):null;
    const queries=[
-     stmt(db,"UPDATE community_post_replies SET status=?,revision=revision+1,published_at=CASE WHEN ?='published' THEN ? ELSE published_at END WHERE id=? AND status=? AND revision=? AND (?!='published' OR EXISTS(SELECT 1 FROM community_posts WHERE id=community_post_replies.post_id AND status='published'))",[target,target,published,id,expected,data.revision,target]),
+     stmt(db,"UPDATE community_post_replies SET status=?,revision=revision+1,published_at=CASE WHEN ?='published' THEN ? ELSE published_at END WHERE id=? AND status=? AND revision=? AND (?!='published' OR EXISTS(SELECT p.id "+communityPostFrom(context)+" AND p.id=community_post_replies.post_id))",[target,target,published,id,expected,data.revision,target]),
      stmt(db,"INSERT INTO community_reply_review_events(id,reply_id,staff_identity,action,from_status,to_status,reason,created_at) SELECT ?,?,?,?,?,?,?,? WHERE changes()=1",[eventId,id,actor,action,expected,target,data.reason,now])
    ];
    const result=await db.batch(queries);

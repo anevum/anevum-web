@@ -15,6 +15,9 @@ const validPostId=(value:string)=>/^[a-f0-9]{32}$/.test(value);
 /** Public published-only discussion. Never renders unapproved text or arbitrary HTML. */
 export function CommunityPostPage(){
  const {id=""}=useParams();
+ return <CommunityPostReader key={id} id={id}/>;
+}
+function CommunityPostReader({id}:{id:string}){
  const isValid=validPostId(id);
  const post=useResource(signal=>isValid?readCommunityPost(id,signal):Promise.reject(new Error("invalid-id")),[id,isValid]);
  const reaction=useResource(async signal=>{
@@ -78,6 +81,7 @@ export function CommunityPostPage(){
         <div><Link to={"/atlas/creators/"+encodeURIComponent(item.authorHandle)}>{item.authorName} / @{item.authorHandle}</Link><small>{when(item.publishedAt)} · MODERATED PUBLIC POST</small></div>
       </div>
    </header>
+   {item.project&&<nav className="discussion-project-context" aria-label="Linked published project"><span className="nfc-eyebrow">ABOUT THIS PROJECT</span><Link to={"/atlas/projects/"+encodeURIComponent(item.project.id)}>{item.project.title} ↗</Link><small>Made by {item.project.creatorName} / @{item.project.creatorHandle}. Discussion authors receive no project ownership or collaborator credit.</small></nav>}
    <div className="discussion-paper">
      <div className="discussion-body">{item.body}</div>
      <div className="discussion-reactions">
