@@ -43,6 +43,9 @@ const req=(path,method="GET",body)=>new Request("https://next.anevum.com"+path,{
  body:body===undefined?undefined:JSON.stringify(body)});
 const update=(h,body)=>memberShowcaseRoutes(req("/api/v1/member/showcase","POST",body),h.db,h.member,async()=>true,1792000000);
 const settings=h=>memberShowcaseRoutes(req("/api/v1/member/showcase"),h.db,h.member,async()=>true,1792000000);
+function publicConsent(h) {
+ h.sqlite.prepare("INSERT INTO member_showcase_selections(member_id,artifact_key,award_keys_json,is_public,revision,updated_at) VALUES('m1',NULL,'[]',1,1,1792000000)").run();
+}
 
 
 test("legacy public flatten mirror matches every issued artifact, XP threshold and earned achievement",()=>{
@@ -70,6 +73,8 @@ test("legacy public flatten mirror matches every issued artifact, XP threshold a
 
 test("projection exposes only real progress, not auto-selected or fictional awards",async()=>{
  const h=harness();try{
+  assert.equal(await readPublicShowcase(h.db,"aurora"),null,"unselected public projection must default private");
+  publicConsent(h);
   const shown=await readPublicShowcase(h.db,"aurora");
   assert.equal(shown.level,3);
   assert.equal(shown.currentArtifact,"Blackglass Seed");
@@ -90,6 +95,8 @@ test("authenticated selector accepts owned relics, earned awards, clear and hide
   assert.equal(initial.status,200);
   const data=await initial.json();
   assert.equal(data.selection.revision,0);
+  assert.equal(data.selection.isPublic,false,"never expose new member achievements by default");
+  assert.equal(await readPublicShowcase(h.db,"aurora"),null);
   assert.ok(data.availableArtifacts.includes("Copper Key"));
   assert.deepEqual(data.availableAwards.map(x=>x.key).sort(),["first-launch","first-signal"]);
   const payload={artifactKey:"Copper Key",awardKeys:["first-signal","first-launch"],isPublic:true,revision:0};
@@ -134,8 +141,23 @@ test("revoked earned award vanishes from public selection on subsequent reads",a
  }finally{h.close()}
 });
 
+test("opt-in semantics apply to batch projection and anonymous visitors",async()=>{
+ const h=harness();try{
+  const base=await publicApi.fetch(req("/api/v1/community/showcases?handles=aurora"),{COMMUNITY_DB:h.db});
+  assert.equal(base.status,200);
+  assert.deepEqual(Object.keys((await base.json()).items),[]);
+  publicConsent(h);
+  const allowed=await publicApi.fetch(req("/api/v1/community/showcases?handles=aurora"),{COMMUNITY_DB:h.db});
+  assert.deepEqual(Object.keys((await allowed.json()).items),["aurora"]);
+  h.sqlite.exec("UPDATE member_showcase_selections SET is_public=0 WHERE member_id='m1'");
+  const hidden=await publicApi.fetch(req("/api/v1/community/showcases?handles=aurora"),{COMMUNITY_DB:h.db});
+  assert.deepEqual(Object.keys((await hidden.json()).items),[]);
+ }finally{h.close()}
+});
+
 test("published-only API validates author enumeration and never writes",async()=>{
  const h=harness();try{
+  publicConsent(h);
   const call=(path,method="GET")=>publicApi.fetch(req(path,method),{COMMUNITY_DB:h.db});
   const good=await call("/api/v1/community/showcases?handles=aurora,hidden,silenced");
   assert.equal(good.status,200);
@@ -153,6 +175,7 @@ test("published-only API validates author enumeration and never writes",async()=
 
 test("a.anevum.com staging permits public GET only, strips identity, and protects apex",async()=>{
  const h=harness();try{
+  publicConsent(h);
   const env={COMMUNITY_DB:h.db,ASSETS:{fetch:async()=>new Response("ok")}};
   const call=(path,method="GET")=>stagedSite.fetch(new Request("https://a.anevum.com"+path,{method}),env,{});
   const result=await call("/api/v1/community/showcases?handles=aurora");
