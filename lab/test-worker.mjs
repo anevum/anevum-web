@@ -11,8 +11,8 @@ test('Lab home lists protected Fold, RHEN research, Transcosmic and Backstage',a
  assert.match(page,/THE FOLD/);assert.match(page,/RHEN/);assert.match(page,/TRANSCOSMIC/);
  assert.match(page,/PLAYABLE/);assert.match(page,/RHEN/);assert.match(page,/BACKSTAGE/);
  assert.equal((page.match(/data-path="\/projects\/the-fold\/"/g)||[]).length,1);
- assert.match(page,/OPEN CONSOLE/);
- assert.match(page,/NOT LINKED/);
+ assert.match(page,/OPEN TERMINAL/);
+ assert.match(page,/LOCAL STUDIO/);assert.match(page,/LOCAL DESK/);
  assert.equal(r.headers.get('X-Robots-Tag'),'noindex, nofollow, noarchive');
  assert.match(r.headers.get('Content-Security-Policy'),/frame-ancestors 'none'/);
  assert.equal(r.headers.get('Cache-Control'),'private, no-store, max-age=0');
@@ -44,25 +44,31 @@ test('Fold asset snapshot is coherent with exact source revision',async()=>{
  assert.equal((await request('/projects/the-fold/icons.svg')).headers.get('Content-Type'),'image/svg+xml; charset=utf-8');
  assert.match(FOLD_ASSETS['/projects/the-fold/index.html'],/fold-v2\.css/);
 });
-test('RHEN preview is a real source-backed, read-only development console',async()=>{
- const redirect=await request('/projects/rhen');assert.equal(redirect.status,308);assert.equal(redirect.headers.get('Location'),'/projects/rhen/');
- const res=await request('/projects/rhen/'),html=await res.text();
- assert.equal(res.status,200);
- assert.match(html,/RHEN V5/);
- assert.match(html,/Research Console/);
- assert.match(html,/RUNTIME OFFLINE/);
- assert.match(html,/NOT RUNNING|NOT DEPLOYED|not a live broker terminal/i);
- assert.match(html,/app\.css/);
- assert.match(html,/app\.js/);
- assert.match(html,/id="costForm"/);
- assert.match(html,/id="net5"/);
- assert.match(html,/id="net15"/);
- assert.match(html,/id="net60"/);
- assert.match(html,/V5/);
- assert.doesNotMatch(html,/alpaca\.markets|DATABASE_URL|api_secret/i);
- assert.doesNotMatch(html,/<iframe/i);
- assert.equal((await request('/projects/rhen/app.css')).headers.get('Content-Type'),'text/css; charset=utf-8');
- assert.match(await (await request('/projects/rhen/app.js')).text(),/Nothing here connects to any broker/);
+test('RHEN terminal is available without simulated accounts; original research is preserved',async()=>{
+ const redirect=await request('/projects/rhen');assert.equal(redirect.status,308);
+ const r=await request('/projects/rhen/'),html=await r.text();
+ assert.equal(r.status,200);assert.match(html,/RHEN · Terminal/);assert.match(html,/id="metricEquity"/);assert.match(html,/id="historySvg"/);
+ assert.match(html,/ENGINE OFFLINE/);assert.match(html,/NOT CONNECTED/);
+ assert.match(html,/OPEN RESEARCH CONSOLE/);assert.doesNotMatch(html,/APCA-API-SECRET-KEY|APCA-API-KEY-ID|<form[^>]*order/i);
+ assert.equal((await request('/projects/rhen/terminal.css')).status,200);
+ assert.equal((await request('/projects/rhen/terminal.js')).status,200);
+ assert.match(await (await request('/projects/rhen/terminal.css')).text(),/height:100dvh/);
+ assert.match(await (await request('/projects/rhen/terminal.js')).text(),/api\/overview/);
+ const research=await request('/projects/rhen/research/');assert.equal(research.status,200);
+ const rhtml=await research.text();assert.match(rhtml,/Research Console/);assert.match(rhtml,/id="costForm"/);
+ assert.equal((await request('/projects/rhen/app.css')).status,200);
+});
+test('broker observer fails closed and exposes no order or credential management routes',async()=>{
+ const res=await request('/projects/rhen/api/overview');assert.equal(res.status,200);
+ const data=await res.json();
+ assert.equal(data.schema,'anevum.lab.rhen-observer.v1');
+ assert.equal(data.provider.state,'NOT_CONNECTED');assert.equal(data.account,null);
+ assert.equal(data.orders,null);assert.equal(data.positions,null);
+ assert.equal(data.scanner.state,'OFFLINE');assert.equal(data.engine.execution,'DISABLED');
+ assert.equal((await request('/projects/rhen/api/overview',{method:'HEAD'})).status,405);
+ assert.equal((await request('/projects/rhen/api/overview',{method:'POST'})).status,405);
+ assert.equal((await request('/projects/rhen/api/order',{method:'GET'})).status,404);
+ assert.equal(res.headers.get('Cache-Control'),'private, no-store, max-age=0');
 });
 test('RHEN actual source is pinned to the unmerged F1-F3f candidate and served safely as text',async()=>{
  assert.equal(RHEN_REVIEW.source_commit,'d68ac5ec4df6378364dfd1b893ee4d5862a834e4');
@@ -81,12 +87,15 @@ test('RHEN actual source is pinned to the unmerged F1-F3f candidate and served s
  assert.match(RHEN_SOURCE['/projects/rhen/source/replay/scorecard.py'],/gross\)\) - roundtrip|net = Decimal\(str\(gross\)\) - roundtrip/);
  assert.equal((await request('/projects/rhen/source/private.py')).status,404);
 });
-test('Transcosmic remains a truthful unconnected private project',async()=>{
- const r=await request('/projects/transcosmic');
- assert.equal(r.status,200);
- const body=await r.text();
- assert.match(body,/Preview not connected/);
- assert.doesNotMatch(body,/<iframe|DATABASE_URL|alpaca\.markets/i);
+test('Transcosmic has functional local private authoring tools with no network write API',async()=>{
+ const redirect=await request('/projects/transcosmic');assert.equal(redirect.status,308);assert.equal(redirect.headers.get('Location'),'/projects/transcosmic/');
+ const r=await request('/projects/transcosmic/'),html=await r.text();
+ assert.equal(r.status,200);assert.match(html,/Transcosmic · Private Writing Studio/);
+ for(const id of ['createDoc','docTitle','docBody','docList','exportAll','importDoc','exportDoc'])assert.ok(html.includes('id="'+id+'"'));
+ assert.match(html,/LOCAL WORKSPACE/);assert.doesNotMatch(html,/<iframe|DATABASE_URL|alpaca\.markets/i);
+ const css=await (await request('/projects/transcosmic/workspace.css')).text();assert.match(css,/100dvh/);assert.match(css,/overflow:hidden/);
+ const js=await (await request('/projects/transcosmic/workspace.js')).text();assert.match(js,/transcosmic-local-v1/);assert.match(js,/localStorage/);
+ assert.equal((await request('/projects/transcosmic/api/save')).status,404);
 });
 test('non-Lab hosts cannot reach game, even if direct Worker preview host is requested',async()=>{
  const r=await lab.fetch(new Request('https://any-user.workers.dev/projects/the-fold/'));
@@ -135,12 +144,15 @@ test('Lab home uses a true no-scroll CRT layout with four commands and no dummy 
  assert.match(js,/runCommand/);assert.match(js,/Cloudflare Access/);
  assert.doesNotMatch(page,/<iframe/i);
 });
-test('Backstage is a separate truthful planning screen, never a live privileged application',async()=>{
+test('Backstage provides working local case planning, not live moderation',async()=>{
  assert.equal((await request('/projects/backstage')).status,308);
- const page=await (await request('/projects/backstage/')).text();
- assert.match(page,/ANEVUM <em>COMMAND<\/em>/);
- assert.match(page,/MODERATION/);assert.match(page,/AUDIT/);
- assert.match(page,/NO LIVE DATA/);assert.match(page,/NOT BUILT/);
- assert.match(page,/staff\.anevum\.com/);
- assert.doesNotMatch(page,/<form.*method="post"|api\.alpaca\.markets|DATABASE_URL/i);
+ const res=await request('/projects/backstage/'),html=await res.text();
+ assert.equal(res.status,200);assert.match(html,/ANEVUM BACKSTAGE/);
+ for(const id of ['newCase','caseQueue','caseDetail','caseSaveState','exportCases','importCases'])assert.ok(html.includes('id="'+id+'"'));
+ assert.match(html,/NO PRODUCTION WRITES/);assert.match(html,/NOT CONNECTED TO COMMUNITY DATA/);
+ assert.equal((await request('/projects/backstage/workspace.css')).status,200);
+ const js=await (await request('/projects/backstage/workspace.js')).text();
+ assert.match(js,/backstage-local-v1/);assert.match(js,/localStorage/);
+ assert.equal((await request('/projects/backstage/api/ban',{method:'POST'})).status,405);
+ assert.equal((await request('/projects/backstage/api/member')).status,404);
 });
