@@ -75,7 +75,10 @@ try{
   const inspect=await evaluate("({nodes:document.querySelectorAll('button.atlas-world').length,screen:getComputedStyle(document.querySelector('.atlas-page')).position,overflow:document.documentElement.scrollWidth>innerWidth,auth:!!document.querySelector('iframe'),link:!!document.querySelector('.atlas-exit[href=\"/creator/\"]')})");
   if(inspect.nodes!==10||inspect.screen!=="fixed"||inspect.overflow||inspect.auth)throw Error("Atlas map "+width+" failed "+JSON.stringify(inspect));
   const clipped=await evaluate("(()=>{const e=document.querySelector('.atlas-exit');const r=e?.getBoundingClientRect();return !r || r.right>innerWidth+1 || r.left<0;})()");
-  if(clipped)throw Error("Atlas exit control clipped at "+width);
+  if(clipped){
+    const bounds=await evaluate("(()=>{const e=document.querySelector('.atlas-exit').getBoundingClientRect();return {left:e.left,right:e.right,viewport:innerWidth}})()");
+    throw Error("Atlas exit control clipped at "+width+": "+JSON.stringify(bounds));
+  }
   const hudClipped=await evaluate("(()=>{const e=document.querySelector('.atlas-xp-mini');const r=e?.getBoundingClientRect();return !r||r.left<0||r.right>innerWidth+1;})()");
   if(hudClipped)throw Error("Atlas XP HUD clipped at "+width);
   await screenshot("atlas-map",width);
@@ -85,9 +88,10 @@ try{
   if(!await evaluate("!!document.querySelector('dialog.atlas-deck[open]')"))throw Error("Atlas deck closed unexpectedly");
   await screenshot("atlas-play-deck",width);
   if(width===1440){
-    await evaluate("document.querySelector('#atlas-catalogue-search').value='PLANET';document.querySelector('#atlas-catalogue-search').dispatchEvent(new Event('input',{bubbles:true}));");
-    // Direct DOM entry can bypass React's value tracker. The native input setter fires a true change event.
-    await evaluate("(()=>{const e=document.querySelector('#atlas-catalogue-search');const setter=Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set;setter.call(e,'PLANET');e.dispatchEvent(new Event('input',{bubbles:true}));e.closest('form').dispatchEvent(new Event('submit',{bubbles:true,cancelable:true}));})()");
+    // Use the native input setter so React receives the input event.
+    await evaluate("(()=>{const e=document.querySelector('#atlas-catalogue-search');const setter=Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set;setter.call(e,'PLANET');e.dispatchEvent(new Event('input',{bubbles:true}));})()");
+    await delay(190);
+    await evaluate("document.querySelector('.atlas-deck-search').dispatchEvent(new Event('submit',{bubbles:true,cancelable:true}))");
     await until(()=>evaluate("document.querySelector('.atlas-deck-feed-header h3')?.textContent==='SEARCH RESULTS' && document.querySelectorAll('.atlas-deck-project').length===1 && document.querySelector('dialog.atlas-deck[open]')!==null"));
     await screenshot("atlas-play-deck-search",width);
   }
