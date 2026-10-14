@@ -208,7 +208,8 @@ export default {
     const repository = /^\/api\/v1\/projects\/([A-Za-z0-9_-]{1,80})\/repository$/.exec(path);
     const creatorDetail = /^\/api\/v1\/creators\/([A-Za-z][A-Za-z0-9_]{2,29})$/.exec(path);
     const communityPosts = path==="/api/v1/community/posts" || /^\/api\/v1\/community\/posts\/[a-f0-9]{32}$/.test(path);
-    const known = ['/health', '/api/v1/status', '/api/v1/categories', '/api/v1/projects', '/api/v1/creators'].includes(path) || detail || repository || creatorDetail || communityPosts;
+    const publicBoards = path === '/api/v1/boards';
+    const known = ['/health', '/api/v1/status', '/api/v1/categories', '/api/v1/projects', '/api/v1/creators'].includes(path) || detail || repository || creatorDetail || communityPosts || publicBoards;
     if (!known) return reply(request, { error: 'Not found' }, 404);
     let filter;
     try {
@@ -237,6 +238,33 @@ export default {
       }
       if (path === '/api/v1/categories') {
         return reply(request, { categories: await rows(env.COMMUNITY_DB, 'SELECT p.category,COUNT(*) AS count ' + PUBLIC_FROM + ' GROUP BY p.category ORDER BY p.category') });
+      }
+      if (publicBoards) {
+        // These are verifiable release lists, not quality votes or an XP-based
+        // reputation ranking. Every row uses the canonical public predicate.
+        // The first-look lane gives new, single-release creators a visible path.
+        const latest = await rows(env.COMMUNITY_DB,
+          'SELECT ' + FIELDS + ' ' + PUBLIC_FROM +
+          ' ORDER BY p.published_at DESC,p.id DESC LIMIT 12');
+        const firstLooks = await rows(env.COMMUNITY_DB,
+          'SELECT ' + FIELDS + ' ' + PUBLIC_FROM +
+          " AND (SELECT COUNT(*) FROM projects fp WHERE fp.owner_member_id=c.member_id AND fp.status='published' AND julianday(fp.published_at)<=julianday('now'))=1" +
+          ' ORDER BY p.published_at DESC,p.id DESC LIMIT 12');
+        const creators = await rows(env.COMMUNITY_DB,
+          'SELECT c.handle AS handle,c.display_name AS displayName,COUNT(*) AS publishedProjects ' + PUBLIC_FROM +
+          ' GROUP BY c.handle,c.display_name ORDER BY COUNT(*) DESC,MAX(p.published_at) DESC,c.handle COLLATE NOCASE ASC LIMIT 12');
+        return reply(request,{
+          source:'approved-public-projects',
+          labels:{
+            latestReleases:'Latest approved publications',
+            firstLooks:'Creators with one approved publication',
+            publishingCreators:'Approved release counts, not quality rankings'
+          },
+          latestReleases:latest.map(projectDto),
+          firstLooks:firstLooks.map(projectDto),
+          publishingCreators:creators.map(visibleCreator),
+          qualityRankingAvailable:false
+        });
       }
       if (path === '/api/v1/creators') {
         let sql='SELECT c.handle AS handle,c.display_name AS displayName,COUNT(*) AS publishedProjects '+PUBLIC_FROM+
