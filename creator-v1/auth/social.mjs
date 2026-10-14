@@ -50,11 +50,68 @@ async function savedProject(db,id){
  const p=await rows(db,`SELECT p.id FROM projects p JOIN creator_profiles c ON c.member_id=p.owner_member_id WHERE p.id=? AND ${publicVisibility} LIMIT 1`,[id]);
  return !!p[0];
 }
+async function parseFollow(req){
+ if(!/^application\/json(?:\s*;|\s*$)/i.test(req.headers.get('content-type')||''))throw Error('JSON required');
+ if(Number(req.headers.get('content-length')||0)>96)throw Error('Payload too large');
+ const raw=await req.text();if(raw.length>96)throw Error('Payload too large');
+ const b=JSON.parse(raw);
+ if(!b||typeof b!=='object'||Array.isArray(b)||Object.keys(b).length!==1||typeof b.following!=='boolean')throw Error('Invalid follow action');
+ return b.following;
+}
+async function followState(db,creatorId,viewerId){
+ const followers=await rows(db,`SELECT COUNT(*) AS count FROM member_creator_follows f
+   JOIN member_accounts a ON a.id=f.follower_member_id AND a.status='active'
+   WHERE f.creator_member_id=?`,[creatorId]);
+ const own=viewerId?await rows(db,'SELECT 1 AS present FROM member_creator_follows WHERE follower_member_id=? AND creator_member_id=?',[viewerId,creatorId]):[];
+ return {followers:Number(followers[0]?.count||0),viewerFollows:own.length===1};
+}
 function publicDto(x){return {id:x.id,title:x.title,slug:x.slug,summary:x.summary,category:x.category,creatorHandle:x.creatorHandle,sourceUrl:x.sourceUrl,demoUrl:x.demoUrl,publishedAt:x.publishedAt};}
-export async function socialRoutes(req,db,member,limiter,now){
+export async function socialRoutes(req,db,member,limiter,now,{followsEnabled=false,worldsEnabled=false}={}){
  const path=new URL(req.url).pathname;
  try {
   if(!['GET','HEAD','POST'].includes(req.method))return response(req,{error:'Method not allowed'},405);
+  if(path===ROOT+'/following'&&['GET','HEAD'].includes(req.method)){
+   if(!followsEnabled)return response(req,{error:'Following is not enabled'},404);
+   if(!member)return response(req,{error:'Sign-in required'},401);
+   const entries=await rows(db,`SELECT c.handle,c.display_name AS displayName,f.created_at AS followedAt
+     FROM member_creator_follows f JOIN creator_profiles c ON c.member_id=f.creator_member_id
+     LEFT JOIN member_accounts a ON a.id=c.member_id
+     WHERE f.follower_member_id=? AND c.status='active'
+       AND (EXISTS(SELECT 1 FROM projects p WHERE p.owner_member_id=c.member_id
+          AND p.status='published' AND p.published_at IS NOT NULL AND julianday(p.published_at)<=julianday('now'))
+          ${worldsEnabled?"OR EXISTS(SELECT 1 FROM member_world_appearances w WHERE w.member_id=c.member_id AND w.visibility='public')":""})
+       AND (a.status='active' OR (a.id IS NULL AND c.member_id='anevum-official'))
+     ORDER BY f.created_at DESC,c.handle ASC LIMIT 101`,[member.id]);
+   return response(req,{items:entries.slice(0,100),hasMore:entries.length>100});
+  }
+  const followMatch=/^\/api\/v1\/member\/creators\/([a-z][a-z0-9_]{2,29})\/follow$/.exec(path);
+  if(followMatch){
+   if(!followsEnabled)return response(req,{error:'Following is not enabled'},404);
+   if(req.method!=='POST')return response(req,{error:'Method not allowed'},405);
+   if(!member)return response(req,{error:'Sign-in required'},401);
+   const creator=await publicProfile(db,followMatch[1]);
+   if(!creator)return response(req,{error:'Creator not found'},404);
+   if(creator.id===member.id)return response(req,{error:'Cannot follow your own channel'},403);
+   const released=await rows(db,`SELECT 1 AS present FROM projects WHERE owner_member_id=?
+     AND status='published' AND published_at IS NOT NULL AND julianday(published_at)<=julianday('now') LIMIT 1`,[creator.id]);
+   const optedIn=worldsEnabled && (await rows(db,"SELECT 1 AS present FROM member_world_appearances WHERE member_id=? AND visibility='public' LIMIT 1",[creator.id])).length===1;
+   if(released.length!==1&&!optedIn)return response(req,{error:'Creator channel not publicly available'},404);
+   let desired;try{desired=await parseFollow(req)}catch{return response(req,{error:'Invalid follow action'},400)}
+   if(!await limiter(db,'follow:'+member.id,now,40,3600))return response(req,{error:'Too many follow changes'},429);
+   const existing=await rows(db,'SELECT 1 AS present FROM member_creator_follows WHERE follower_member_id=? AND creator_member_id=?',[member.id,creator.id]);
+   if(desired&&existing.length)return response(req,{following:true,changed:false,...await followState(db,creator.id,member.id)});
+   if(!desired&&!existing.length)return response(req,{following:false,changed:false,...await followState(db,creator.id,member.id)});
+   if(desired){
+    const changed=await run(db,`INSERT INTO member_creator_follows(follower_member_id,creator_member_id,created_at)
+      SELECT ?,?,? WHERE (SELECT COUNT(*) FROM member_creator_follows WHERE follower_member_id=?)<500
+      ON CONFLICT(follower_member_id,creator_member_id) DO NOTHING`,[member.id,creator.id,now,member.id]);
+    if(Number(changed.meta?.changes??changed.meta?.rows_written??0)!==1)return response(req,{error:'Follow limit reached or account changed'},409);
+   }else{
+    const changed=await run(db,'DELETE FROM member_creator_follows WHERE follower_member_id=? AND creator_member_id=?',[member.id,creator.id]);
+    if(Number(changed.meta?.changes??changed.meta?.rows_written??0)!==1)return response(req,{error:'Follow changed; refresh first'},409);
+   }
+   return response(req,{following:desired,changed:true,...await followState(db,creator.id,member.id)});
+  }
   const profileMatch=/^\/api\/v1\/member\/creators\/([a-z][a-z0-9_]{2,29})(?:\/(projects))?$/.exec(path);
   if(profileMatch){
    if(!['GET','HEAD'].includes(req.method))return response(req,{error:'Method not allowed'},405);
@@ -66,8 +123,8 @@ export async function socialRoutes(req,db,member,limiter,now){
       WHERE p.owner_member_id=? AND ${publicVisibility} ORDER BY p.published_at DESC,p.id DESC LIMIT 48`,[c.id]);
     return response(req,{items:records.map(publicDto),count:records.length});
    }
-   const stats=await counts(db,c.id);
-   return response(req,{creator:{handle:c.handle,displayName:c.displayName,bio:c.bio,joinedAt:c.joinedAt},contributions:{ratings:stats.ratings,publishedProjects:stats.publishedProjects,releases:stats.releases},progression:progressionFromXp(stats.xp),achievements:deriveAchievements(stats)});
+   const [stats,following]=await Promise.all([counts(db,c.id),followsEnabled?followState(db,c.id,member?.id):Promise.resolve(null)]);
+   return response(req,{creator:{handle:c.handle,displayName:c.displayName,bio:c.bio,joinedAt:c.joinedAt},contributions:{ratings:stats.ratings,publishedProjects:stats.publishedProjects,releases:stats.releases},progression:progressionFromXp(stats.xp),achievements:deriveAchievements(stats),...(following||{})});
   }
   if(path===ROOT+'/library'&&['GET','HEAD'].includes(req.method)){
    if(!member)return response(req,{error:'Sign-in required'},401);
