@@ -235,6 +235,7 @@ export function CommunityPage() {
           </Link>
         </div>}
         {view === "all" && status.state === "error" && <p className="ch7-soft-warning" role="status">Conversation availability could not be verified; project discovery remains available separately.</p>}
+        <CommunityMemberDesk/>
         <footer className="ch7-index-foot"><span className="ch7-kicker">APPROVED PUBLIC RECORDS ONLY</span>
           <p>This view is a bounded sample, not a site-wide count or quality ranking. Community replies and reactions only appear after independent approval.</p>
           <Link to={view === "people" ? "/creators" : "/discover"}>{view === "people" ? "FULL CREATOR DIRECTORY" : "FULL PROJECT DISCOVERY"} <Icon name="arrow" size={14}/></Link>
@@ -258,7 +259,6 @@ export function CommunityPage() {
             </Link>)}</div>}
           <Link className="ch7-panel-link" to="/creators">BROWSE ALL CREATORS <Icon name="arrow" size={14}/></Link>
         </section>
-        <CommunityMemberDesk/>
         <section className="ch7-values"><span className="ch7-kicker">A NOTE FROM THE COMMONS</span>
           <h3>Make the next thing better.</h3>
           <p>Give useful feedback. Credit the people behind the work. Keep participation accessible. Earn recognition through genuine contribution, never payment.</p>
