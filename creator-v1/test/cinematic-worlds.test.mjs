@@ -123,7 +123,9 @@ test("polished homepage removes redundant nav rows without deleting them from in
  assert.match(html,/og:site_name/);
  assert.match(html,/og:title/);
  assert.match(html,/icon.*%BASE_URL%favicon\.svg/);
- assert.match(read("web/src/pages/DiscoverPage.tsx"),/accent="UNIVERSE\."/);
+ assert.match(read("web/src/pages/DiscoverPage.tsx"),/accent={world\?\.accent\|\|"UNIVERSE\."}/);
+  assert.match(read("web/src/pages/DiscoverPage.tsx"),/world=immersive\?immersiveWorlds/);
+  assert.match(read("web/src/App.tsx"),/path="discover" element={<DiscoverPage\/>}/);
  assert.ok(existsSync(new URL("../web/public/favicon.svg",import.meta.url)));
 });
 
