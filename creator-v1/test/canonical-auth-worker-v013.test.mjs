@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {readFileSync} from "node:fs";
+import {DatabaseSync} from "node:sqlite";
 import {
   CANONICAL_ORIGIN,CANONICAL_AUTH_PATH,CANONICAL_COOKIE_PREFIX,
   canonicalConfigState,canonicalSchemaReady,permitCanonicalUserCreation,
@@ -307,4 +308,35 @@ test("missing canonical database or schema blocks auth handler even with rollout
  const badHost=await stage.fetch(req("/api/v1/member/health",{},"https://anevum.com"),env(true));
  assert.equal(badHost.status,404);
  assert.deepEqual(calls,[]);
+});
+
+
+test("proposed isolated D1 schema is empty, enforces uniqueness and cascades sessions",()=>{
+ const sql=read("canonical-auth/migrations/0001_canonical_better_auth_core.sql");
+ assert.doesNotMatch(sql,/creator_profiles|member_accounts|ownerRole|broker|alpaca|RHEN|entitlement|community_xp_events|INSERT INTO "user"|ATTACH DATABASE/i);
+ const d=new DatabaseSync(":memory:");
+ try{
+  d.exec(sql);d.exec(sql);
+  const names=new Set(d.prepare("SELECT name FROM sqlite_master WHERE type='table'").all().map(x=>x.name));
+  assert.ok(tables.every(x=>names.has(x)));
+  assert.equal(names.has("member_accounts"),false);
+  assert.equal(names.has("member_entitlements"),false);
+  const now=1760481000;
+  const addUser=(id,email)=>d.prepare(
+    'INSERT INTO "user"("id","name","email","createdAt","updatedAt") VALUES(?,?,?,?,?)'
+  ).run(id,"Offline Fixture",email,now,now);
+  addUser("canonical-test-a","a@example.invalid");
+  addUser("canonical-test-b","b@example.invalid");
+  assert.throws(()=>addUser("canonical-test-c","a@example.invalid"),/UNIQUE/);
+  d.prepare('INSERT INTO "account"("id","accountId","providerId","userId","createdAt","updatedAt") VALUES(?,?,?,?,?,?)')
+    .run("oauth-a","provider-a","google","canonical-test-a",now,now);
+  assert.throws(()=>d.prepare('INSERT INTO "account"("id","accountId","providerId","userId","createdAt","updatedAt") VALUES(?,?,?,?,?,?)')
+    .run("oauth-b","provider-a","google","canonical-test-b",now,now),/UNIQUE/);
+  d.prepare('INSERT INTO "session"("id","expiresAt","token","createdAt","updatedAt","userId") VALUES(?,?,?,?,?,?)')
+    .run("session-a",now+3600,"secret-fixture-a",now,now,"canonical-test-a");
+  assert.equal(d.prepare('SELECT count(*) n FROM "session"').get().n,1);
+  d.prepare('DELETE FROM "user" WHERE "id"=?').run("canonical-test-a");
+  assert.equal(d.prepare('SELECT count(*) n FROM "session"').get().n,0);
+  assert.equal(d.prepare('SELECT count(*) n FROM "account"').get().n,0);
+ }finally{d.close();}
 });
