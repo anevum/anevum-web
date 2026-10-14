@@ -2,6 +2,8 @@
    Presentation only; approved artwork and account/data boundaries remain intact.
    The homepage continues to use V003. */
 .site-shell--dashboard .desktop-nav{display:none}
+/* The rail and section chips replace the old redundant category/status strips. */
+.site-shell--dashboard .portal-navigation,.site-shell--dashboard .signal-strip{display:none}
 .site-shell--dashboard .header-search{margin-left:auto}
 .site-shell--dashboard .site-main{
   width:100%;max-width:none;margin:0;padding:16px clamp(12px,1.4vw,30px) 48px;
