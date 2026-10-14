@@ -94,10 +94,14 @@ try {
     await until(() => evaluate('(()=>{const n=document.querySelector(".ch7-status strong");return !!n && n.textContent!=="—" && !!document.querySelector(".ch7-tabs button")})()'));
     await delay(450);
     const state = await evaluate('(()=>({title:document.querySelector(".ch7-hero h1")?.textContent,tabs:document.querySelectorAll(".ch7-tabs button").length,columns:!!document.querySelector(".ch7-columns"),art:!!document.querySelector(".ch7-hero-art img"),overflow:document.documentElement.scrollWidth>innerWidth+1,iframe:document.querySelectorAll("iframe").length}))()');
+    await screenshot("community-v007-top", width);
+    if (state.overflow) {
+      const offenders = await evaluate('([...document.querySelectorAll("body *")].map(el=>({name:el.tagName.toLowerCase()+"."+String(el.className).slice(0,70),left:Math.round(el.getBoundingClientRect().left),right:Math.round(el.getBoundingClientRect().right)})).filter(x=>x.left< -1||x.right>innerWidth+1).slice(0,25))');
+      console.log("V007_OVERFLOW_OFFENDERS_" + width + "=" + JSON.stringify(offenders));
+    }
     if (!state.title?.includes("Made by people") || state.tabs !== 4 || !state.columns ||
         !state.art || state.overflow || state.iframe)
       throw Error("V007_COMMUNITY_LAYOUT_" + width + ":" + JSON.stringify(state));
-    await screenshot("community-v007-top", width);
 
     await evaluate('document.querySelector(".ch7-tabs button:nth-child(2)").click()');
     await until(() => evaluate('document.querySelector(".ch7-tabs button:nth-child(2)")?.getAttribute("aria-pressed")==="true"'));
