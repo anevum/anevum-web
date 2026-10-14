@@ -42,12 +42,14 @@ test("project pages keep safe external creator-hosted actions and staging-only m
  for(const part of ["safeReturnPath","safeExternal","target=\"_blank\"","noopener noreferrer","RepositoryPanel","MemberEngagementPanel","AI INVOLVEMENT","HUMAN CONTRIBUTION"])assert.ok(page.includes(part),part);
  assert.doesNotMatch(page,/<iframe|dangerouslySetInnerHTML/);
 });
-test("Community is a truthful project-and-creator hub without fabricated threads",()=>{
+test("Community is a truthful project-and-creator hub with gated, moderated real threads",()=>{
  const page=read("web/src/pages/CommunityPage.tsx");
  assert.match(page,/readProjects/);
  assert.match(page,/readCreators/);
  assert.match(page,/PUBLIC MESSAGE BOARD IS NOT OPEN YET/);
- assert.match(page,/not live discussion threads/);
+ assert.match(page,/Messages become visible only after genuine member submissions and human moderation/);
+ assert.match(page,/readForumRooms/);
+ assert.match(page,/board\.state==="ready"/);
  assert.doesNotMatch(page,/fakeMessage|sampleComments|createThread\(/);
 });
 test("unlimited levels preserve server authoritative progress and first named artifact series",()=>{
