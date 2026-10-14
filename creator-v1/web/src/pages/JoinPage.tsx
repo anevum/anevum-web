@@ -1,4 +1,4 @@
-import {Link} from "react-router-dom";
+import {Link,useLocation} from "react-router-dom";
 import {memberMe,memberSignInCapabilities,MemberApiError,type MemberLoginMethod} from "../lib/member-api";
 import {useResource} from "../lib/useResource";
 import {OrbitalMark} from "../components/OrbitalMark";
@@ -17,6 +17,7 @@ const METHODS: ReadonlyArray<{id:MemberLoginMethod;label:string;detail:string;sy
  * The archived Better Auth login must not be mistaken for a Creator V1 session.
  */
 export function JoinPage(){
+  const inAtlas=useLocation().pathname.startsWith("/atlas/");
   const result=useResource(async signal=>{
     const [capabilities,member]=await Promise.all([
       memberSignInCapabilities(signal).catch(()=>null),
@@ -54,7 +55,7 @@ export function JoinPage(){
         <p>Your verified member session is active.</p>
         <div className="join-identity"><span className="join-identity-avatar" aria-hidden="true">◈</span>
           <div><strong>{member.displayName||member.handle||"ANEVUM MEMBER"}</strong><small>{member.handle?"@"+member.handle:"PROFILE SETUP PENDING"}</small></div></div>
-        <Link className="button primary join-main-action" to={member.handle?"/account":"/account/edit"}>
+        <Link className="button primary join-main-action" to={member.handle?(inAtlas?"/atlas/account":"/account"):(inAtlas?"/atlas/account/edit":"/account/edit")}>
           {member.handle?"OPEN MY SPACE":"COMPLETE MY PROFILE"} <span aria-hidden="true">↗</span>
         </Link>
         <p className="join-help">Your existing profile, projects and XP remain attached to your verified account.</p>
@@ -76,7 +77,7 @@ export function JoinPage(){
           result.state==="error"?"The member service could not be verified. No signup method is available.":
           emailReady?"Email access is restricted to approved invitations during testing.":
           "Public signups are closed on this site while identity integration is reviewed."}</p>
-        <Link className="join-guest-action" to="/discover">EXPLORE AS A GUEST <span aria-hidden="true">↗</span></Link>
+        <Link className="join-guest-action" to={inAtlas?"/atlas/discover":"/discover"}>EXPLORE AS A GUEST <span aria-hidden="true">↗</span></Link>
         <p className="join-more">Also under review: Discord, LinkedIn and Reddit identity options. Phone/SMS registration is deferred.</p>
       </>}
       <p className="join-security">Your sign-in never grants access to another member's account, staff controls or brokerage data. Other providers can be linked only through a future verified account-linking process.</p>
