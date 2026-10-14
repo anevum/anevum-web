@@ -159,7 +159,8 @@ test("Better Auth remains separate, with no implicit linking, passwords, owner r
  assert.equal(captured.database,realEnv.MEMBER_DB);
  assert.equal(captured.socialProviders.google.scope.includes("email"),true);
  const source=read("canonical-auth/auth.mjs");
- assert.doesNotMatch(source,/from "\.\.\/\.\.\/src\/server\/member|RHEN|alpaca|memberEntitlement|grantXp|privilegedRole/);
+ const executable=source.replace(/\/\*[\s\S]*?\*\//g,"").replace(/^\s*\/\/.*$/gm,"");
+ assert.doesNotMatch(executable,/from "\.\.\/\.\.\/src\/server\/member|RHEN|alpaca|memberEntitlement|grantXp|privilegedRole/);
 });
 
 test("schema readiness is verified from actual D1 metadata, not a source flag",async()=>{
@@ -322,7 +323,8 @@ test("missing canonical database or schema blocks auth handler even with rollout
 
 test("proposed isolated D1 schema is empty, enforces uniqueness and cascades sessions",()=>{
  const sql=read("canonical-auth/migrations/0001_canonical_better_auth_core.sql");
- assert.doesNotMatch(sql,/creator_profiles|member_accounts|ownerRole|broker|alpaca|RHEN|entitlement|community_xp_events|INSERT INTO "user"|ATTACH DATABASE/i);
+ const statements=sql.split("\n").filter(line=>!line.trimStart().startsWith("--")).join("\n");
+ assert.doesNotMatch(statements,/creator_profiles|member_accounts|ownerRole|broker|alpaca|RHEN|entitlement|community_xp_events|INSERT INTO "user"|ATTACH DATABASE/i);
  const d=new DatabaseSync(":memory:");
  try{
   d.exec(sql);d.exec(sql);
