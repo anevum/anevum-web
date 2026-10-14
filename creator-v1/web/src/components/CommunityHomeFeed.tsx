@@ -101,6 +101,7 @@ function DiscussionEntry({post,creators}:{post:CommunityPost;creators:readonly C
 
 export function CommunityHomeFeed({projects,creators,state,communityEnabled}:Props){
   const [view,setView]=useState<View>("all");
+  const [field,setField]=useState<Category|"all">("all");
   const [revision,setRevision]=useState(0);
   useEffect(()=>{
     if(!communityEnabled)return;
@@ -123,10 +124,10 @@ export function CommunityHomeFeed({projects,creators,state,communityEnabled}:Pro
   const entries:FeedItem[]=[
     ...projects.map(p=>({kind:"project" as const,key:"project:"+p.id,date:dateOrder(p.publishedAt),value:p})),
     ...postList.map(p=>({kind:"discussion" as const,key:"discussion:"+p.id,date:dateOrder(p.publishedAt),value:p}))
-  ].filter(item=>view==="all"||(view==="projects"&&item.kind==="project")||(view==="discussions"&&item.kind==="discussion")).sort((a,b)=>b.date-a.date).slice(0,10);
+  ].filter(item=>(view==="all"||(view==="projects"&&item.kind==="project")||(view==="discussions"&&item.kind==="discussion"))&&(field==="all"||(item.kind==="project"?item.value.category===field:item.value.topic===field))).sort((a,b)=>b.date-a.date).slice(0,10);
   const postUnavailable=!communityEnabled||(discussions.state==="ready"&&!discussions.data.available);
 
-  return <section className="av6-community-index" aria-labelledby="av6-index-title">
+  return <section id="community-index" className="av6-community-index" aria-labelledby="av6-index-title">
     <div className="av6-index-masthead">
       <div>
         <span className="av6-registry-line">ANEVUM / PUBLIC INDEX <span aria-hidden="true">—</span> VOL. 001</span>
@@ -141,7 +142,7 @@ export function CommunityHomeFeed({projects,creators,state,communityEnabled}:Pro
           <div className="av6-feed-tabs" role="group" aria-label="Filter the public index">
             {(["all","projects","discussions"] as const).map(tab=><button key={tab} type="button" aria-pressed={view===tab} onClick={()=>setView(tab)}>{tab==="all"?"ALL ACTIVITY":tab==="projects"?"PROJECTS":"DISCUSSIONS"}</button>)}
           </div>
-          <span className="av6-feed-order">LATEST APPROVED FIRST</span>
+          <div className="av6-feed-fields"><label htmlFor="av6-field-filter">FIELD</label><select id="av6-field-filter" value={field} onChange={event=>setField(event.target.value as Category|"all")}><option value="all">All fields</option>{categories.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</select></div>
         </div>
         {state==="loading"&&<LoadingState label="Reading real public releases"/>}
         {state==="error"&&<ErrorState title="PUBLIC INDEX UNAVAILABLE" detail="The approved public catalogue could not be loaded. No sample members or fictional posts are substituted."/>}
@@ -156,7 +157,7 @@ export function CommunityHomeFeed({projects,creators,state,communityEnabled}:Pro
           <p>{view==="discussions"&&postUnavailable?"Public conversations appear only after the discussion system and its moderation controls are approved.":"Nothing has passed public review for this view yet. You can explore categories without signing in."}</p>
           <Link className="av6-feed-action av6-feed-action--primary" to={view==="discussions"?"/boards":"/discover"}>{view==="discussions"?"VISIT BOARDS":"BROWSE WORLDS"} <Icon name="arrow" size={15}/></Link>
         </div>}
-        <div className="av6-index-footnote">INDEX POLICY / This view includes approved public records only. No synthetic members, rankings or engagement counts.</div>
+        <div className="av6-index-footnote">LATEST APPROVED FIRST / A bounded excerpt of public records only. Field filters apply to the loaded excerpt; they are not site-wide counts or rankings.</div>
       </div>
       <aside className="av6-index-aside" aria-label="Community index side panels">
         <section className="av6-aside-panel">
