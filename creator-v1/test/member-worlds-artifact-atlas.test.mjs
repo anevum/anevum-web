@@ -66,3 +66,24 @@ test("member worlds and relic atlas preserve small-screen and motion accessibili
   assert.match(css,/prefers-reduced-motion:reduce/);
   assert.match(css,/forced-colors:active/);
 });
+
+test("member world appearance UI is authenticated, feature gated and genuinely server saved",()=>{
+  const app=read("web/src/App.tsx"),page=read("web/src/pages/MemberWorldPage.tsx");
+  const editor=read("web/src/pages/MemberWorldEditorPage.tsx");
+  const worker=read("auth/worker.mjs"),module=read("auth/worlds.mjs"),memberApi=read("web/src/lib/member-api.ts");
+  assert.match(app,/path="account\/world" element={<MemberWorldEditorPage\/>}/);
+  assert.match(page,/memberPublicWorld\(handle, signal\)/);
+  assert.match(page,/if \(!world && !catalogue\) return null/);
+  assert.match(worker,/MEMBER_WORLDS_ENABLED/);
+  assert.match(worker,/checkWrite\(req\)/);
+  assert.match(module,/visibility:"private"/);
+  assert.match(module,/w\.visibility='public'/);
+  assert.match(module,/a\.status='active'/);
+  assert.match(module,/c\.status='active'/);
+  assert.match(memberApi,/export const memberSaveWorldAppearance=/);
+  assert.match(editor,/await memberSaveWorldAppearance\(draft\)/);
+  assert.match(editor,/result\.saved!==true/);
+  assert.match(editor,/PRIVATE BY DEFAULT/);
+  for(const forbidden of ["localStorage","sessionStorage","dangerouslySetInnerHTML","awardXp","fakeFollowers"])
+    assert.ok(!editor.includes(forbidden),forbidden);
+});
