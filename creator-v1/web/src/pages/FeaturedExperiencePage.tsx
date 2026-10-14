@@ -1,9 +1,8 @@
-import {Link,useLocation,useNavigate,useParams} from "react-router-dom";
+import {Link,useParams} from "react-router-dom";
 import {readProject,safeExternal} from "../lib/api";
 import {useResource} from "../lib/useResource";
 import {CosmicArtwork} from "../components/CosmicArtwork";
 import {ErrorState,LoadingState} from "../components/States";
-import {OrbitAlignDemo} from "./OrbitAlignDemo";
 import "./featured-play-experience.css";
 
 function linkFor(id:string){return "/atlas/projects/"+encodeURIComponent(id);}
@@ -21,7 +20,6 @@ function dateLabel(value:string|null){
 export function FeaturedExperiencePage(){
   const {id=""}=useParams();
   const project=useResource(signal=>readProject(id,signal),[id]);
-  const navigate=useNavigate();
   if(project.state==="loading")return <div className="fx-focus-await"><LoadingState label="Entering the approved creative experience"/></div>;
   if(project.state==="error")return <div className="fx-focus-await"><ErrorState title="EXPERIENCE NOT AVAILABLE" detail="The project may be unpublished, unavailable or withdrawn. You can return to the public catalogue."/>&nbsp;<Link to="/atlas/discover">BACK TO DISCOVERY ↗</Link></div>;
   const p=project.data.item;
@@ -71,24 +69,7 @@ export function FeaturedExperiencePage(){
         </div>
       </div>
     </section>
-    <aside className="fx-focus-lab">
-      <span>EXPERIMENTAL ANEVUM PLAYER / SEPARATE FIRST-PARTY DEMO</span>
-      <strong>Want to experience the future in-browser player?</strong>
-      <p>Try our own original Orbit Align prototype. It is separate from this creator's project and does not award account XP.</p>
-      <Link to="/atlas/lab/orbit-align" state={{returnTo:"/atlas/experience/"+encodeURIComponent(p.id)}}>TRY ORBIT ALIGN ↗</Link>
-    </aside>
+
   </div>;
 }
 
-/** A genuinely interactive first-party player stage. It is not an approved
- * creator release or a general sandbox for arbitrary uploaded applications.
- */
-export function OrbitAlignPage(){
-  const navigate=useNavigate();
-  const location=useLocation();
-  const value=(location.state as {returnTo?:unknown}|null)?.returnTo;
-  // The return destination is strictly scoped to an approved project-focus path.
-  // No arbitrary same-origin routing, external redirect or private member URL.
-  const returnTo=typeof value==="string"&&/^\/atlas\/experience\/[A-Za-z0-9_-]{1,80}$/.test(value)?value:null;
-  return <OrbitAlignDemo onExit={()=>navigate(returnTo||"/atlas")} returnToProject={returnTo!==null}/>;
-}
