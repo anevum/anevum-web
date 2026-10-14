@@ -51,7 +51,7 @@ test("Community is a truthful project-and-creator hub without fabricated threads
  assert.match(page,/communityPosts === true/);
  assert.match(page,/Only independently approved public records/);
  assert.match(page,/to="\/boards"/);
- assert.match(page,/Public signup is not enabled/);
+ assert.match(page,/<CommunityMemberDesk\/>/);
  assert.doesNotMatch(page,/fakeMessage|sampleComments|createThread\(/);
 });
 test("unlimited levels preserve server authoritative progress and first named artifact series",()=>{
