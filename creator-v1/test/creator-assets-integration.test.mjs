@@ -105,7 +105,7 @@ test("private DELETE removes R2 and database references; transient deletion fail
 });
 test("per-project asset quota is guarded by one database statement",async()=>{
   const original=first, x=file("readme.txt","text/plain",1);
-  for(let i=0;i<18;i++)assert.equal((await call(original,"POST",x)).status,201);
+  for(let i=0;i<19;i++)assert.equal((await call(original,"POST",x)).status,201);
   const limitReply=await call(original,"POST",x);
   assert.equal(limitReply.status,409);
   const count=dbSqlite.prepare("SELECT COUNT(*) n FROM project_assets WHERE project_id=?").get(original);

@@ -20,3 +20,15 @@ test("format allowlist and quotas are client preflight only",()=>{
  assert.match(policy,/png:/);assert.match(policy,/mp3:/);assert.match(policy,/pdf:/);assert.match(policy,/zip:/);
  assert.doesNotMatch(policy,/exe:|sh:|ps1:|svg:/);
 });
+
+test("private uploader drag-drop, local preview, removal, and signed-in private downloads remain gated",()=>{
+  const ui=read("web/src/components/CreatorAssetUploader.tsx");
+  const api=read("web/src/lib/member-assets.ts");
+  assert.match(ui,/onDrop=/);
+  assert.match(ui,/LOCAL PREVIEW ONLY/);
+  assert.match(ui,/privateAssetDownloadUrl/);
+  assert.match(ui,/removePrivateAsset/);
+  assert.match(ui,/window.confirm/);
+  assert.match(api,/method:"DELETE"/);
+  assert.match(api,/credentials:"same-origin"/);
+});

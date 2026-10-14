@@ -38,3 +38,13 @@ export async function uploadPrivateAsset(projectId:string,file:File,signal?:Abor
     body:file
   }));
 }
+
+export function privateAssetDownloadUrl(projectId:string,assetId:string):string {
+  return path(projectId,assetId)+"/file";
+}
+export async function removePrivateAsset(projectId:string,assetId:string):Promise<void> {
+  await result(await fetch(path(projectId,assetId),{
+    method:"DELETE",credentials:"same-origin",mode:"same-origin",redirect:"error",cache:"no-store",
+    headers:{Accept:"application/json"}
+  }));
+}
