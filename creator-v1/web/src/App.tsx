@@ -19,6 +19,7 @@ import { MemberLibraryPage } from "./pages/MemberLibraryPage";
 import { MemberProjectsPage } from "./pages/MemberProjectsPage";
 import { ProjectEditorPage } from "./pages/ProjectEditorPage";
 import { WorkspacePage } from "./pages/WorkspacePage";
+import { JoinPage } from "./pages/JoinPage";
 
 const PublicBoardsPage = lazy(() => import("./pages/PublicBoardsPage").then(mod=>({default:mod.PublicBoardsPage})));
 const AtlasPage = lazy(() => import("./pages/AtlasPage").then(mod => ({default:mod.AtlasPage})));
@@ -41,6 +42,8 @@ export default function App(){
       <Route path="boards" element={<Suspense fallback={atlasFallback}><PublicBoardsPage/></Suspense>}/>
     <Route path="community/posts/:id" element={<CommunityPostPage/>}/>
       <Route path="workspace" element={<WorkspacePage/>}/>
+      <Route path="join" element={<JoinPage/>}/>
+      <Route path="sign-in" element={<Navigate to="/atlas/join" replace/>}/>
       <Route path="collaborate" element={<AtlasCollaboration/>}/>
       <Route path="signals" element={<AtlasSignals/>}/>
       <Route path="start" element={<StartPage/>}/>
@@ -60,6 +63,8 @@ export default function App(){
     </Route>
     <Route element={<Shell/>}>
     <Route index element={<CinematicLandingPage/>}/>
+    <Route path="join" element={<JoinPage/>}/>
+    <Route path="sign-in" element={<Navigate to="/join" replace/>}/>
     <Route path="start" element={<StartPage/>}/>
     <Route path="guide" element={<FieldGuidePage/>}/>
     <Route path="discover" element={<DiscoverPage/>}/>

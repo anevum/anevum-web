@@ -49,6 +49,24 @@ function joinEnabled(env) {
   return env?.STAGING_JOIN_ENABLED === 'true' && typeof env?.RESEND_API_KEY === 'string' && typeof env?.TURNSTILE_SECRET === 'string' &&
     typeof env?.STAGING_INVITE_EMAILS === 'string' && env.STAGING_INVITE_EMAILS.trim().length > 0;
 }
+// Capabilities are only advertised for this identity backend. Separate
+// Better Auth provider configuration never implies Creator V1 access.
+export function memberSignInCapabilities(env) {
+  const canEmail = ready(env) && joinEnabled(env);
+  return {
+    version: 1,
+    registration: canEmail ? "invite-only" : "closed",
+    methods: {
+      email: { available: canEmail, path: canEmail ? JOIN_PATH : null },
+      google: { available: false },
+      github: { available: false },
+      passkey: { available: false },
+      microsoft: { available: false },
+      apple: { available: false }
+    },
+    linking: "disabled"
+  };
+}
 function invited(env,email) {
   return String(env?.STAGING_INVITE_EMAILS || '').split(',').map(normalizedEmail).filter(Boolean).includes(email);
 }
@@ -196,6 +214,8 @@ return {async fetch(req,env) {
       return creatorProjects(req,db,member,limit,clock());
     }
     if(path==='/health'&&['GET','HEAD'].includes(req.method))return json(req,{service:'anevum-v1-member-staging',status:'ok',signupEnabled:joinEnabled(env)},200);
+    if(path==='/auth-methods'&&['GET','HEAD'].includes(req.method))
+      return json(req,memberSignInCapabilities(env),200);
     if(path==='/me'&&['GET','HEAD'].includes(req.method)) {
       const member=await authenticated(req,env,clock());
       return member?json(req,{member:{id:member.id,email:member.email,handle:member.handle,displayName:member.displayName,bio:member.bio}}):fail(req,'Sign-in required',401);
