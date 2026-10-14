@@ -5,6 +5,7 @@ import { memberProgress,memberSignOut,memberCreatorProfile,MemberApiError } from
 import { useResource } from "../lib/useResource";
 import { LoadingState } from "../components/States";
 import { CelestialEmblem } from "../components/CelestialEmblem";
+import {RelicRaster,hasApprovedRelicRaster} from "../components/RelicRaster";
 import { achievementMotif, seriesOneMotif } from "../lib/artifact-art";
 
 export function MemberAccountPage(){
@@ -38,7 +39,11 @@ export function MemberAccountPage(){
         {progress.state==="error"&&<p role="status">Progression is currently unavailable. No XP or achievements have been invented.</p>}
         {progress.state==="ready"&&<>
           <div className="member-artifact-preview">
-            <CelestialEmblem motif={seriesOneMotif(progress.data.progression.level,progress.data.progression.artifact)} size="large" state={progress.data.progression.artifactEarned?"earned":"preview"}/>
+            {progress.data.progression.artifactEarned && progress.data.progression.artifact &&
+              hasApprovedRelicRaster(progress.data.progression.level,progress.data.progression.artifact)
+              ? <RelicRaster level={progress.data.progression.level} name={progress.data.progression.artifact} large/>
+              : <CelestialEmblem motif={seriesOneMotif(progress.data.progression.level,progress.data.progression.artifact)} size="large" state={progress.data.progression.artifactEarned?"earned":"preview"}/>}
+
             <div><span className="kicker">SERVER-VERIFIED MEMBER PROGRESSION</span>
               <strong>LEVEL {progress.data.progression.level}</strong>
               <small>{progress.data.progression.artifact||"ILLUSTRATIVE ORBIT / NO NAMED ARTIFACT IN THIS SERIES"}</small>
