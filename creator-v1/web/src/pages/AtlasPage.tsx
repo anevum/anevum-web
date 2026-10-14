@@ -188,14 +188,18 @@ export function AtlasPage(){
     setHelp(false);
   }
   function onPointerDown(e:ReactPointerEvent<HTMLDivElement>){
-    if(e.button!==0||selected||e.target instanceof Element && e.target.closest("a,button,input,dialog"))return;
-    drag.current={x:e.clientX,y:e.clientY,pitch:view.pitch,yaw:view.yaw,moved:false,pointerId:e.pointerId};
-    e.currentTarget.setPointerCapture(e.pointerId);
+    if(e.button!==0||selected||(e.target instanceof Element&&e.target.closest("a,input,dialog")))return;
+    // Allow a tap to open a node; capture the pointer only after actual movement.
+    // Dragging a world portrait rotates the constellation instead of trapping touch.
+    drag.current={x:e.clientX,y:e.clientY,pitch:view.pitch,yaw:view.y,moved:false,pointerId:e.pointerId};
   }
   function onPointerMove(e:ReactPointerEvent<HTMLDivElement>){
     const p=drag.current;if(!p||p.pointerId!==e.pointerId)return;
     const dx=e.clientX-p.x,dy=e.clientY-p.y;
-    if(Math.abs(dx)+Math.abs(dy)>6)p.moved=true;
+    if(!p.moved&&Math.hypot(dx,dy)>7){
+      p.moved=true;
+      if(!e.currentTarget.hasPointerCapture(e.pointerId))e.currentTarget.setPointerCapture(e.pointerId);
+    }
     if(!p.moved)return;
     setView(current=>({...current,pitch:clamp(p.pitch-dy*.12,-31,31),yaw:clamp(p.yaw+dx*.18,-59,59)}));
   }
@@ -203,6 +207,11 @@ export function AtlasPage(){
     const p=drag.current;
     if(!p||p.pointerId!==e.pointerId)return;
     drag.current=null;
+    if(p.moved){
+      // A release following a drag must not accidentally activate a world button.
+      suppressClick.current=true;
+      window.setTimeout(()=>{suppressClick.current=false;},0);
+    }
     if(e.currentTarget.hasPointerCapture(e.pointerId))e.currentTarget.releasePointerCapture(e.pointerId);
   }
   function onWheel(e:ReactWheelEvent<HTMLDivElement>){
