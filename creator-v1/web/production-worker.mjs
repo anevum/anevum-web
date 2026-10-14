@@ -5,7 +5,10 @@ import publicApi from "../api/worker.mjs";
 
 const SITE = "anevum.com";
 const PUBLIC_API = /^\/api\/v1\/(?:status|categories|boards|community\/posts(?:\/[a-f0-9]{32})?|projects(?:\/[A-Za-z0-9_-]+(?:\/repository)?)?|creators(?:\/[a-z][a-z0-9_]{2,29})?)$/i;
-const PRIVATE_PREFIX = /^\/(?:api|join|studio|staff|command|rhen|lab|private)(?:\/|$)/i;
+const PRIVATE_PREFIX = /^\/(?:api|studio|staff|command|rhen|lab|private)(?:\/|$)/i;
+// /join is a static sign-in information page only. No /join/* account,
+// registration, invitation, identity, or mutation endpoint is exposed.
+const JOIN_PREFIX = /^\/join(?:\/|$)/i;
 const HEADERS = {
   "x-content-type-options":"nosniff",
   "referrer-policy":"no-referrer",
@@ -43,9 +46,9 @@ export default {
       const clean=new Request(url.href,{method:request.method,headers:{Accept:"application/json"}});
       return safeResponse(await publicApi.fetch(clean,env,ctx),true);
     }
-    // No authenticated member, signup, staff, private lab or brokerage route
-    // is available on the public launch candidate. These need separate rollout.
-    if(PRIVATE_PREFIX.test(path))return reject(404);
+    // Only the inert /join SPA page can be read anonymously. All private
+    // registration APIs, deeper join routes and staff/broker paths stay denied.
+    if(PRIVATE_PREFIX.test(path) || (JOIN_PREFIX.test(path) && path !== "/join"))return reject(404);
     const clean=new Request(url.href,{method:request.method,headers:{Accept:request.headers.get("accept")||"*/*"}});
     return safeResponse(await env.ASSETS.fetch(clean));
   }
