@@ -231,3 +231,17 @@
 @media(prefers-reduced-motion:reduce){.ch7-hub *{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
 @media(forced-colors:active){.ch7-hero,.ch7-main,.ch7-panel,.ch7-values,.ch7-entry,.ch7-portals>a,.ch7-button{border:1px solid CanvasText}}
 @media(prefers-reduced-transparency:reduce){.ch7-status{backdrop-filter:none;background-color:#0c1129}}
+
+/* Place the full-bleed raster behind its caption. CosmicArtwork itself is a
+   span; in a flex artwork link it must not consume an image-sized flex column. */
+.ch7-entry-art>.cw-artwork{
+  position:absolute;inset:0;width:100%;height:100%;
+  padding:0;flex:none;z-index:0;pointer-events:none;
+}
+.ch7-entry-art::after{
+  z-index:1;background:linear-gradient(0deg,#060a1df2 0%,#060a1d47 31%,transparent 67%);
+}
+.ch7-entry-art>span:not(.cw-artwork){
+  position:relative;z-index:2;max-width:100%;
+  text-shadow:0 2px 10px #020614,0 0 15px #020614;
+}
