@@ -134,7 +134,7 @@ export const memberCreatorProfile=(handle:string,signal?:AbortSignal)=>{
   return requestMember<{
     creator:MemberProfile;
     contributions:{ratings:number;publishedProjects:number;releases:number};
-    progression:Progression;
+    progression:Progression|null;
     achievements:MemberAchievement[];
   }>("/creators/"+handle,{signal});
 };
