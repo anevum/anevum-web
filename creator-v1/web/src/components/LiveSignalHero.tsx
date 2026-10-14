@@ -138,7 +138,7 @@ export function LiveSignalHero({status,projects,creators,state}:Props){
     <div className="av8-signal-grid" aria-hidden="true"/>
     <div className="av8-signal-meta">
       <span className="av8-signal-brand"><span className="av8-status-light" aria-hidden="true"/> ANEVUM <b>//</b> LIVE SIGNAL</span>
-      <span className="av8-signal-clock">PUBLIC COMMONS <b>/</b> {utcClock(time)}</span>
+      <span className="av8-signal-clock"><span className="av8-clock-label">PUBLIC COMMONS <b>/</b> </span>{utcClock(time)}</span>
     </div>
     <div className="av8-signal-stage">
       <div className="av8-signal-copy">
