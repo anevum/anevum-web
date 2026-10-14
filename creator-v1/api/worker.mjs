@@ -225,7 +225,15 @@ export default {
       }
       if (path === '/api/v1/status') {
         const [totals] = await rows(env.COMMUNITY_DB, 'SELECT COUNT(*) AS projects,COUNT(DISTINCT c.member_id) AS creators ' + PUBLIC_FROM);
-        return reply(request, { version: '0.1.0', phase: 'read-only-development', counts: { publishedProjects: totals.projects, publishedCreators: totals.creators }, features: { discovery: true, repositoryMetadata: true, publicCreatorProfiles: true, accounts: false, publishing: false, voting: false, xp: false, community: false } });
+        let communityPostsReady = false;
+        try {
+          // This flag advertises *public read capability only*, not open signup or
+          // permission for unreviewed messages to appear in the visitor feed.
+          const [schema] = await rows(env.COMMUNITY_DB,
+            "SELECT COUNT(*) AS n FROM sqlite_master WHERE type='table' AND name IN ('community_posts','community_post_votes','community_post_replies','community_post_review_events')");
+          communityPostsReady = Number(schema?.n) === 4;
+        } catch { /* Migration not present, or public post service unavailable. */ }
+        return reply(request, { version: '0.1.0', phase: 'read-only-development', counts: { publishedProjects: totals.projects, publishedCreators: totals.creators }, features: { discovery: true, repositoryMetadata: true, publicCreatorProfiles: true, accounts: false, publishing: false, voting: false, xp: false, community: false, communityPosts: communityPostsReady } });
       }
       if (path === '/api/v1/categories') {
         return reply(request, { categories: await rows(env.COMMUNITY_DB, 'SELECT p.category,COUNT(*) AS count ' + PUBLIC_FROM + ' GROUP BY p.category ORDER BY p.category') });
