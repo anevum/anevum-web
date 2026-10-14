@@ -60,6 +60,11 @@ jobs:
           git archive --format=zip --output=evidence/candidate-source.zip HEAD
           git archive --format=zip --output=evidence/pre-production-source.zip e34faf8ad72d319e469eface8aec7fe26741951f
           sha256sum evidence/*-source.zip > evidence/source-archives.sha256
+      - name: Validate all 60 unique relic rendering contracts (not release acceptance)
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm --prefix creator-v1 run test:relic-manifest | tee evidence/relic-manifest.log
       - name: Rehearse member-world, following and forum D1 schema offline
         shell: bash
         run: |
