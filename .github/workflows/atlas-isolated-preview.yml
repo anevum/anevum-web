@@ -8,6 +8,8 @@ on:
     paths:
       - creator-v1/web/**
       - creator-v1/test/atlas-spatial-navigation.test.mjs
+      - creator-v1/test/atlas-morph-navigation.test.mjs
+      - creator-v1/test/capture-atlas-morph.mjs
       - creator-v1/wrangler.atlas-review.jsonc
       - creator-v1/package.json
       - .github/workflows/atlas-isolated-preview.yml
