@@ -5,6 +5,8 @@ import {
 import {Link,Outlet,useLocation,useNavigate} from "react-router-dom";
 import {OrbitalMark} from "../components/OrbitalMark";
 import {CosmicArtwork} from "../components/CosmicArtwork";
+import {PortalLauncher} from "../components/PortalLauncher";
+import {isEditableTarget} from "../lib/portal-destinations";
 import {ATLAS_WORLDS,ATLAS_MOBILE_LAYOUT,type AtlasWorld,type AtlasWorldId} from "../lib/atlas-worlds";
 import {memberHealth,memberMe,memberProgress,type Progression} from "../lib/member-api";
 import "./atlas-morph.css";
@@ -152,6 +154,7 @@ export function AtlasMorphLayout(){
   const focused=chosenId!==null;
   const [pan,setPan]=useState({x:0,y:0});
   const [guide,setGuide]=useState(false);
+  const [launcherOpen,setLauncherOpen]=useState(false);
   const drag=useRef<Drag|null>(null);
   const suppress=useRef(false);
   const surface=useRef<HTMLDivElement>(null);
@@ -161,6 +164,20 @@ export function AtlasMorphLayout(){
   const wasFocused=useRef(false);
 
   useEffect(()=>{content.current?.scrollTo({top:0,behavior:"instant"});},[location.pathname,location.search]);
+  useEffect(()=>{
+    function shortcut(event:KeyboardEvent){
+      const command=(event.metaKey||event.ctrlKey)&&event.key.toLowerCase()==="k"&&!event.altKey;
+      const slash=event.key==="/"&&!event.metaKey&&!event.ctrlKey&&!event.altKey&&!isEditableTarget(event.target);
+      if(!command&&!slash)return;
+      event.preventDefault();
+      setLauncherOpen(true);
+      setGuide(false);
+    }
+    window.addEventListener("keydown",shortcut);
+    return()=>window.removeEventListener("keydown",shortcut);
+  },[]);
+  useEffect(()=>{setLauncherOpen(false);},[location.pathname,location.search]);
+
   useEffect(()=>{
     if(focused&&!wasFocused.current){
       const request=window.requestAnimationFrame(()=>worldHeading.current?.focus({preventScroll:true}));
@@ -248,6 +265,7 @@ export function AtlasMorphLayout(){
       <div className="atm-header-center"><span className="atm-live-pulse" aria-hidden="true"/> WORLD ENGINE <strong>ANEVUM / MORPH</strong><em>PREVIEW 02</em></div>
       <nav className="atm-actions" aria-label="Universal workspace actions">
         <ProgressSignal/>
+        <button type="button" className="atm-launch" onClick={()=>setLauncherOpen(true)} aria-label="Open ANEVUM quick navigation" aria-keyshortcuts="Control+K Meta+K" title="Search all ANEVUM destinations">⌕<span>JUMP</span></button>
         <button type="button" className="atm-help" onClick={()=>setGuide(x=>!x)} aria-expanded={guide} aria-label="Interaction guide">?</button>
         <Link to="/" className="atm-standard">STANDARD SITE ↗</Link>
       </nav>
@@ -285,6 +303,8 @@ export function AtlasMorphLayout(){
         aria-label={"Switch to "+world.title} aria-current={chosenId===world.id?"page":undefined}
         onClick={()=>enter(world)}><span aria-hidden="true">{world.glyph}</span><small>{world.title}</small></button>)}
     </nav>}
+    {focused&&<button type="button" className="atm-floating-jump" aria-label="Search all ANEVUM destinations" onClick={()=>setLauncherOpen(true)} title="Open quick navigation">⌕</button>}
+    <PortalLauncher open={launcherOpen} onClose={()=>setLauncherOpen(false)} routePrefix="/atlas"/>
     <footer className="atm-footer">
       <div><span className="atm-footer-cross" aria-hidden="true">✣</span> <strong>{focused?chosen?.overline:"CHOOSE A WORLD"}</strong> <span>/ FRONT-FACING WORLD NAVIGATION</span></div>
       <div><Link to="/atlas/orbit">ORIGINAL ROTATING ATLAS ↗</Link> <span> · </span> <span>{focused?"ESC / ALL WORLDS":"DRAG EMPTY SPACE TO PAN"}</span></div>
