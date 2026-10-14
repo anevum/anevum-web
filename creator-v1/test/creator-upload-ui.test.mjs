@@ -5,7 +5,7 @@ const read=path=>readFileSync(new URL("../"+path,import.meta.url),"utf8");
 test("uploader is mounted only after private project creation",()=>{
  const editor=read("web/src/pages/ProjectEditorPage.tsx");
  assert.match(editor,/project&&<CreatorAssetUploader projectId=\{project\.id\}/);
- assert.match(editor,/canEdit=\{canEdit&&!busy\}/);
+ assert.match(editor,/canEdit=\{canEdit&&!busy&&!refreshRequired\}/);
 });
 test("uploads do not expose storage secrets, public URLs, or pretend to be published",()=>{
  const api=read("web/src/lib/member-assets.ts"),ui=read("web/src/components/CreatorAssetUploader.tsx");
