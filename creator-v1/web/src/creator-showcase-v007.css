@@ -174,3 +174,43 @@
     background:Canvas;color:CanvasText;border:1px solid CanvasText;box-shadow:none;
   }
 }
+
+/* Authenticated collection customizer: real ledger options, not demo badges. */
+.av7-settings{margin:18px 0;max-width:100%}
+.av7-settings-form{display:grid;gap:15px;margin-top:18px;max-width:900px}
+.av7-settings-head{display:flex;align-items:center;gap:14px;padding:14px;
+  border-radius:15px;border:1px solid #ad8d6975;background:#161a2f}
+.av7-settings-head .celestial-emblem{width:65px;height:65px;flex:none}
+.av7-settings-head>div{display:grid;gap:4px}
+.av7-settings-head strong{font:500 23px/1 var(--av6-editorial,Georgia,serif)}
+.av7-settings-head small{font:500 12px/1.4 var(--av6-index,monospace);color:#c5bbd0}
+.av7-settings-label,.av7-award-fieldset legend{font:650 11px/1.5 var(--av6-index,monospace);letter-spacing:.09em;color:#e6d5c4}
+.av7-settings select{
+  width:100%;padding:13px 15px;min-height:47px;border:1px solid #9a8aa6;
+  border-radius:12px;background:#191d34;color:#f6eadd;font:500 15px var(--av6-interface,system-ui,sans-serif)
+}
+.av7-award-fieldset{min-width:0;margin:0;padding:0;border:0}
+.av7-award-fieldset legend{padding:0 0 12px}
+.av7-picker-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px}
+.av7-picker-option{
+  display:flex;align-items:center;gap:10px;min-height:75px;cursor:pointer;
+  padding:10px 12px;border:1px solid #91879d;border-radius:14px;
+  background:linear-gradient(155deg,#292b45,#141a2b);
+}
+.av7-picker-option:has(input:checked){border-color:#d8b388;box-shadow:0 0 0 1px #d8b38844,inset 0 1px #ffffff30}
+.av7-picker-option input{flex:none;width:19px;height:19px;accent-color:#daa97c}
+.av7-picker-option .celestial-emblem{width:43px;height:43px;flex:none}
+.av7-picker-option span:last-child{display:grid;gap:3px;min-width:0}
+.av7-picker-option strong{font:500 17px/1.2 var(--av6-editorial,Georgia,serif);color:#f5e7de}
+.av7-picker-option small{font-size:11px;line-height:1.45;color:#bbc4db}
+.av7-privacy-setting{
+  display:flex;align-items:center;gap:12px;border:1px solid #7884a0;
+  border-radius:13px;padding:14px;color:#e4dfec;font-size:13px;line-height:1.5;
+  background:#161d34;
+}
+.av7-privacy-setting input{width:22px;height:22px;accent-color:#d6a57c;flex:none}
+.av7-settings-notice{margin:0;color:#d5e8ee;font-size:13px}
+@media(max-width:420px){.av7-picker-grid{grid-template-columns:minmax(0,1fr)}}
+@media(forced-colors:active){
+  .av7-picker-option,.av7-settings-head,.av7-privacy-setting{background:Canvas;color:CanvasText;border:1px solid CanvasText}
+}
