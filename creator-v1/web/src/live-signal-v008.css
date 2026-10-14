@@ -325,3 +325,11 @@
   }
   .av8-status-light,.av8-pulse-core,.av8-pulse-dot,.av8-terminal-caret{background:Highlight}
 }
+
+/* Last good public records remain visible when a background refresh fails. */
+.site-shell--home .av8-index-stale{
+  margin:11px 0 8px;padding:11px 14px;
+  border:1px solid #b3a0ce8c;border-radius:13px;
+  background:#272238c9;color:#e5d9f5;
+  font:500 11px/1.5 var(--av6-interface,system-ui,sans-serif);
+}
