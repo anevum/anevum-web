@@ -32,7 +32,7 @@ export function verifiedCreatorRecognition(handle:string,raw:unknown):VerifiedCr
   const result=record(raw),creator=record(result?.creator),progress=record(result?.progression);
   if(!result||!creator||!progress||creator.handle!==handle)return null;
   const level=progress.level;
-  if(!Number.isSafeInteger(level)||typeof level!=="number"||level<1||level>21_000_000)return null;
+  if(typeof level!=="number"||!Number.isSafeInteger(level)||level<1||level>21_000_000)return null;
   const earnedArtifact=progress.artifactEarned===true && typeof progress.artifact==="string"
     && progress.artifact.trim().length>0 && progress.artifact.length<=80;
   const artifact=earnedArtifact ? progress.artifact as string : null;
