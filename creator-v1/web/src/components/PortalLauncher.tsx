@@ -3,10 +3,12 @@ import { Link, useNavigate } from "react-router-dom";
 import { Icon } from "./Icons";
 import { findPortalDestinations, publishedSearchPath } from "../lib/portal-destinations";
 import { OrbitalMark } from "./OrbitalMark";
+import { readProjects,readCreators,type Project,type Creator } from "../lib/api";
 
 /**
- * The launcher indexes only hardcoded first-party routes. Published-project
- * search opens the real catalogue; it never invents results or calls private APIs.
+ * Primary navigation indexes fixed first-party routes. Inside Atlas, a debounced
+ * lookup additionally searches actual approved projects and creator channels.
+ * No private API access, invented accounts, or synthetic search results.
  */
 export function PortalLauncher({ open, onClose, routePrefix="" }: { open: boolean; onClose: () => void; routePrefix?: "" | "/atlas" }) {
   const dialog = useRef<HTMLDialogElement>(null);
@@ -15,11 +17,30 @@ export function PortalLauncher({ open, onClose, routePrefix="" }: { open: boolea
   const listId = useId();
   const [query, setQuery] = useState("");
   const [active, setActive] = useState(0);
+  const [live,setLive]=useState<{
+    status:"idle"|"loading"|"ready"|"error";
+    projects:Project[];
+    creators:Creator[];
+  }>({status:"idle",projects:[],creators:[]});
   const matches = findPortalDestinations(query);
+  const liveQuery=query.trim();
+  const liveEnabled=open&&routePrefix==="/atlas"&&liveQuery.length>=2;
   const searchPath = publishedSearchPath(query);
   const entries = [
     ...matches.map(item => ({ id: item.id, path: item.path, title: item.title, detail: item.description, category: item.category, icon: item.icon, gated: !!item.gated, liveSearch: false })),
-    ...(searchPath ? [{ id: "published-search", path: searchPath, title: "Search published projects", detail: "Search the real, approved public catalogue for “" + query.trim() + "”", category: "Explore" as const, icon: "search", gated: false, liveSearch: true }] : [])
+    ...(searchPath ? [{ id: "published-search", path: searchPath, title: "Search published projects", detail: "Search the real, approved public catalogue for “" + query.trim() + "”", category: "Explore" as const, icon: "search", gated: false, liveSearch: true }] : []),
+    ...(liveEnabled&&live.status==="ready"?[
+      ...live.projects.map(project=>({
+        id:"project-"+project.id,path:"/projects/"+encodeURIComponent(project.id),title:project.title,
+        detail:"Approved "+project.category+" by @"+project.creatorHandle,category:"Explore" as const,
+        icon:"star",gated:false,liveSearch:true
+      })),
+      ...live.creators.map(creator=>({
+        id:"creator-"+creator.handle,path:"/creators/"+encodeURIComponent(creator.handle),title:creator.displayName,
+        detail:"Creator @"+creator.handle+" · "+creator.publishedProjects+" approved projects",category:"Community" as const,
+        icon:"people",gated:false,liveSearch:true
+      }))
+    ]:[])
   ];
   const selected = Math.min(active, entries.length - 1);
   const insideWorkspace=(path:string)=>routePrefix==="/atlas"?(path==="/"||path==="/atlas"?"/atlas":"/atlas"+path):path;
@@ -37,6 +58,36 @@ export function PortalLauncher({ open, onClose, routePrefix="" }: { open: boolea
     }
   }, [open]);
   useEffect(() => { setActive(0); }, [query]);
+  useEffect(()=>{
+    if(!liveEnabled){setLive({status:"idle",projects:[],creators:[]});return;}
+    const controller=new AbortController();
+    let present=true;
+    setLive({status:"loading",projects:[],creators:[]});
+    const timer=window.setTimeout(async()=>{
+      try{
+        // Read-only public endpoints, abort and discard stale requests.
+        // Show partial real results if only one independent endpoint fails.
+        const [projects,creators]=await Promise.allSettled([
+          readProjects({q:liveQuery,limit:"5"},controller.signal),
+          readCreators({q:liveQuery,limit:"4"},controller.signal)
+        ]);
+        if(!present||controller.signal.aborted)return;
+        if(projects.status==="rejected"&&creators.status==="rejected"){
+          setLive({status:"error",projects:[],creators:[]});
+        }else{
+          setLive({
+            status:"ready",
+            projects:projects.status==="fulfilled"?projects.value.items:[],
+            creators:creators.status==="fulfilled"?creators.value.items:[]
+          });
+        }
+      }catch{
+        if(present&&!controller.signal.aborted)setLive({status:"error",projects:[],creators:[]});
+      }
+    },260);
+    return()=>{present=false;window.clearTimeout(timer);controller.abort();};
+  },[liveEnabled,liveQuery,routePrefix]);
+
 
   function leave() {
     onClose();
@@ -79,7 +130,13 @@ export function PortalLauncher({ open, onClose, routePrefix="" }: { open: boolea
           placeholder="WHERE DO YOU WANT TO GO?" aria-describedby={listId+"-hint"}/>
         <kbd>/</kbd>
       </div>
-      <p className="portal-launcher-hint" id={listId+"-hint"}>TYPE TO FILTER PAGES · ↑ ↓ TO SELECT · ENTER TO OPEN · ESC TO CLOSE</p>
+      <p className="portal-launcher-hint" id={listId+"-hint"}>{routePrefix==="/atlas"?"FIND REAL PROJECTS AND CREATORS · ↑ ↓ TO SELECT · ENTER TO OPEN · ESC TO CLOSE":"TYPE TO FILTER PAGES · ↑ ↓ TO SELECT · ENTER TO OPEN · ESC TO CLOSE"}</p>
+      {liveEnabled&&<div className="portal-launcher-live-status" role="status" aria-live="polite">
+        {live.status==="loading"?"SEARCHING REAL RELEASES AND CREATOR CHANNELS…":
+         live.status==="error"?"Live directory search is temporarily unavailable. Full catalogue search is still available.":
+         live.status==="ready"?(live.projects.length+live.creators.length)+" DIRECT MATCHES FROM THE PUBLIC DIRECTORY":
+         "SEARCH PUBLIC PROJECTS AND CREATORS"}
+      </div>}
       <div className="portal-launcher-result-top">
         <span className="kicker">{query.trim() ? "MATCHING DESTINATIONS" : "POPULAR ENTRANCES"}</span>
         <span>{entries.length} {entries.length===1?"ROUTE":"ROUTES"}</span>
