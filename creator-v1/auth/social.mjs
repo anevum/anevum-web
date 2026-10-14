@@ -67,7 +67,15 @@ export async function socialRoutes(req,db,member,limiter,now){
     return response(req,{items:records.map(publicDto),count:records.length});
    }
    const stats=await counts(db,c.id);
-   return response(req,{creator:{handle:c.handle,displayName:c.displayName,bio:c.bio,joinedAt:c.joinedAt},contributions:{ratings:stats.ratings,publishedProjects:stats.publishedProjects,releases:stats.releases},progression:progressionFromXp(stats.xp),achievements:deriveAchievements(stats)});
+   // The owner's achievement cabinet remains available after authenticated
+   // sign-in. Anonymous visitors and other members receive no raw XP,
+   // levels or complete award inventory. The separate public showcase
+   // endpoint reveals ONLY what the owner deliberately opted to display.
+   const isOwner=member?.id===c.id;
+   return response(req,{creator:{handle:c.handle,displayName:c.displayName,bio:c.bio,joinedAt:c.joinedAt},
+     contributions:{ratings:stats.ratings,publishedProjects:stats.publishedProjects,releases:stats.releases},
+     progression:isOwner?progressionFromXp(stats.xp):null,
+     achievements:isOwner?deriveAchievements(stats):[]});
   }
   if(path===ROOT+'/library'&&['GET','HEAD'].includes(req.method)){
    if(!member)return response(req,{error:'Sign-in required'},401);
