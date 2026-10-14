@@ -1,7 +1,8 @@
 import { Link } from "react-router-dom";
 import { useState } from "react";
 import {
-  memberHealth, memberMe, MemberApiError,
+  memberHealth, memberMe, memberMyDiscussions, MemberApiError,
+  type PrivateDiscussion,
   type MemberIdentity
 } from "../lib/member-api";
 import { useResource } from "../lib/useResource";
@@ -45,10 +46,18 @@ export function CommunityMemberDesk() {
       return { kind: "closed" };
     }
   }, [revision]);
-  const visitor = access.state === "ready" && access.data.kind === "guest";
+  const guestAccess = access.state === "ready" && access.data.kind === "guest" ? access.data : null;
+  const visitor = guestAccess !== null;
   const member = access.state === "ready" && access.data.kind === "member" ? access.data.identity : null;
   const signedInWithHandle = Boolean(member?.handle);
   const closed = access.state === "error" || (access.state === "ready" && access.data.kind === "closed");
+  const privateHistory = useResource<{ownerId: string | null; items: PrivateDiscussion[]}>(async signal => {
+    if (!member?.id || !member.handle) return { ownerId: null, items: [] };
+    const data = await memberMyDiscussions(signal);
+    return { ownerId: member.id, items: data.items.slice(0, 3) };
+  }, [member?.id, member?.handle]);
+  const ownHistory = member && privateHistory.state === "ready" && privateHistory.data.ownerId === member.id
+    ? privateHistory.data.items : null;
 
   return <section className="ch8-member-desk" aria-labelledby="ch8-desk-heading">
     <div className="ch8-member-orbit" aria-hidden="true"><Icon name="people" size={20}/></div>
@@ -68,10 +77,21 @@ export function CommunityMemberDesk() {
         <Link className="ch8-action-quiet" to="/account">MY SPACE</Link>
       </>}
       {member && !member.handle && <Link className="ch8-action ch8-action-primary" to="/account/edit">COMPLETE MY PROFILE <Icon name="arrow" size={14}/></Link>}
-      {visitor && access.data.invitationEnabled && <a className="ch8-action ch8-action-primary" href="/api/v1/member/join">INVITED SIGN-IN <Icon name="arrow" size={14}/></a>}
-      {visitor && !access.data.invitationEnabled && <span className="ch8-closed-note">INVITATIONS NOT ENABLED HERE</span>}
+      {visitor && guestAccess.invitationEnabled && <a className="ch8-action ch8-action-primary" href="/api/v1/member/join">INVITED SIGN-IN <Icon name="arrow" size={14}/></a>}
+      {visitor && !guestAccess.invitationEnabled && <span className="ch8-closed-note">INVITATIONS NOT ENABLED HERE</span>}
       {closed && <Link className="ch8-action" to="/start">LEARN HOW ANEVUM WORKS <Icon name="arrow" size={14}/></Link>}
       {access.state === "error" && <button type="button" className="ch8-action-quiet" onClick={() => setRevision(current => current + 1)}>RECHECK ACCESS</button>}
     </div>
+    {member && signedInWithHandle && <div className="ch8-private-history" aria-label="Your private discussion review status">
+      <div className="ch8-private-header"><span className="ch7-kicker">YOUR DISCUSSIONS / PRIVATE</span>
+        <Link to="/community/write">VIEW ALL <Icon name="arrow" size={13}/></Link></div>
+      {privateHistory.state === "loading" && <p role="status">Checking your review queue…</p>}
+      {privateHistory.state === "error" && <p role="status">Your submission history is unavailable. Check the discussion editor for your current status.</p>}
+      {ownHistory !== null && ownHistory.length === 0 && <p>No discussions submitted yet.</p>}
+      {ownHistory !== null && ownHistory.length > 0 && <div className="ch8-private-items">{ownHistory.map(item => <div key={item.id} className="ch8-private-entry">
+        <span className="ch8-review-state">{item.status === "pending_review" ? "IN REVIEW" : item.status === "published" ? "PUBLISHED" : item.status === "changes_requested" ? "CHANGES REQUESTED" : "NOT PUBLIC"}</span>
+        {item.status === "published" ? <Link to={"/community/posts/" + encodeURIComponent(item.id)}>{item.title}</Link> : <strong>{item.title}</strong>}
+      </div>)}</div>}
+    </div>}
   </section>;
 }
