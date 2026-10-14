@@ -1,0 +1,21 @@
+/* Staged Creator V1 account controls: private member-selected earned awards. */
+.ch10-showcase{display:flex;flex-direction:column;gap:12px}
+.ch10-showcase h2{font:500 clamp(23px,2.1vw,32px)/1.1 "Iowan Old Style",Georgia,serif;color:#f6f0ff;margin:0}
+.ch10-showcase p{font:400 12px/1.6 Inter,system-ui,sans-serif;color:#c0cae2;margin:0}
+.ch10-showcase form{display:grid;gap:10px}
+.ch10-showcase label{font:650 11px/1.3 "IBM Plex Mono",Consolas,monospace;letter-spacing:.045em;color:#ddd6f1}
+.ch10-showcase select{width:100%;min-height:44px;background:#111a33;border:1px solid #8994bf;border-radius:12px;color:#f5edff;padding:11px 12px;font:13px Inter,system-ui,sans-serif}
+.ch10-showcase form>button{min-height:43px;background:linear-gradient(180deg,#a4e5fc,#62b8df);color:#13263e;border:1px solid #c4f1ff;border-radius:999px;font:750 11px/1.3 Inter,system-ui,sans-serif;letter-spacing:.045em;padding:12px 17px;cursor:pointer;box-shadow:inset 0 1px #fff9,0 4px 0 #113f58}
+.ch10-showcase form>button:disabled{filter:grayscale(.8);opacity:.6;cursor:not-allowed;box-shadow:none}
+.ch10-award-preview{display:flex;align-items:center;gap:11px;background:linear-gradient(135deg,#403453a3,#1c2647b3);border:1px solid #b1a1c18a;border-radius:14px;padding:11px}
+.ch10-award-preview>span:last-child{display:flex;flex-direction:column;gap:4px}
+.ch10-award-preview strong{font:550 17px/1.2 "Iowan Old Style",Georgia,serif;color:#fcf0d6}
+.ch10-award-preview small{color:#c3b8d4;font:650 9px/1.45 "IBM Plex Mono",Consolas,monospace}
+.ch10-showcase .ch10-success{border-left:3px solid #81d4d0;padding:8px 10px;color:#b0f4ec;background:#184b4a42}
+.ch10-showcase .ch10-error{border-left:3px solid #f0abae;padding:8px 10px;color:#ffd1d1;background:#6a1c2a36}
+.ch10-showcase .ch10-note{font-size:11px;color:#aeb9cf}
+.ch10-showcase .ch10-empty{padding:10px;border:1px dashed #7d8ba4;border-radius:10px}
+.ch10-showcase button:focus-visible,.ch10-showcase select:focus-visible{outline:2px solid #a5ecff;outline-offset:3px}
+@media(max-width:640px){.ch10-showcase{padding:18px}.ch10-award-preview{min-width:0}.ch10-award-preview small{overflow-wrap:anywhere}}
+@media(prefers-reduced-motion:reduce){.ch10-showcase *{animation:none!important;transition:none!important}}
+@media(forced-colors:active){.ch10-showcase select,.ch10-showcase button,.ch10-award-preview{border:1px solid CanvasText}}
