@@ -71,9 +71,10 @@ test("secondary pages share the same world art while preserving genuine content 
   assert.match(creators,/detailed\?\.achievements/);
   assert.match(community,/readProjects/);
   assert.match(community,/readCreators/);
-  assert.match(community,/COMMUNITY CONVERSATIONS ARE UNDER PRIVATE REVIEW/);
-  assert.match(community,/<HotCommunityPosts\/>/);
-  assert.match(community,/to="\/community\/write"/);
+  assert.match(community,/readCommunityPosts/);
+  assert.match(community,/communityPosts === true/);
+  assert.match(community,/to="\/boards"/);
+  assert.match(community,/invitation-only|invited member testing|Member participation is currently invitation-only/i);
   assert.match(css,/prefers-reduced-motion:reduce/);
 });
 

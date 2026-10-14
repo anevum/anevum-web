@@ -9,7 +9,7 @@ const publicLinks = [
   {label:"Community",to:"/community",icon:"community"},
   {label:"Boards",to:"/boards",icon:"library"},
   {label:"Apps",to:"/discover?category=tools",icon:"explore"},
-  {label:"Lab",to:"/workspace",icon:"status"},
+  {label:"Creators",to:"/creators",icon:"people"},
   {label:"Field Notes",to:"/guide",icon:"library"}
 ] as const;
 const memberLinks = [
