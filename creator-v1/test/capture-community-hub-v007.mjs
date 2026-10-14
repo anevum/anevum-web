@@ -108,6 +108,9 @@ try {
     await evaluate('document.querySelector(".ch7-tabs-row").scrollIntoView({block:"start"})');
     await delay(350);
     if (await evaluate('document.documentElement.scrollWidth>innerWidth+1')) throw Error("V007_PROJECTS_OVERFLOW_" + width);
+    const artFrame = await evaluate('(()=>{const link=document.querySelector(".ch7-entry-art"),image=link?.querySelector(".cw-artwork");if(!link||!image)return null;const a=link.getBoundingClientRect(),b=image.getBoundingClientRect();return {width:a.width,artWidth:b.width,height:a.height,artHeight:b.height}})()');
+    if (!artFrame || Math.abs(artFrame.width-artFrame.artWidth)>2 || Math.abs(artFrame.height-artFrame.artHeight)>2)
+      throw Error("V007_PROJECT_ART_COVER_" + width + ":" + JSON.stringify(artFrame));
     await screenshot("community-v007-projects", width);
 
     await evaluate('document.querySelector(".ch7-tabs button:nth-child(3)").click()');
