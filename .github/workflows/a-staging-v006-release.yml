@@ -39,11 +39,13 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
       - name: Refuse drifting source or production configuration
+        env:
+          GH_TOKEN: ${{ github.token }}
         shell: bash
         run: |
           set -euo pipefail
           test "$(git rev-parse HEAD)" = "$CANDIDATE_SHA"
-          head="$(git ls-remote origin "refs/heads/$SOURCE_BRANCH" | cut -f1)"
+          head="$(curl --fail --silent --show-error --max-time 20 -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" "$GITHUB_API_URL/repos/$GITHUB_REPOSITORY/git/ref/heads/$SOURCE_BRANCH" | jq -r '.object.sha')"
           test "$head" = "$CANDIDATE_SHA"
           node --input-type=module <<'NODE'
           import fs from 'node:fs';
