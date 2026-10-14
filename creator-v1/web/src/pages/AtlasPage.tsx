@@ -1,5 +1,5 @@
-import {useEffect,useRef,useState,type CSSProperties,type PointerEvent as ReactPointerEvent,type MouseEvent as ReactMouseEvent,type WheelEvent as ReactWheelEvent} from "react";
-import {Link} from "react-router-dom";
+import {useEffect,useRef,useState,type CSSProperties,type PointerEvent as ReactPointerEvent,type MouseEvent as ReactMouseEvent,type WheelEvent as ReactWheelEvent,type KeyboardEvent as ReactKeyboardEvent} from "react";
+import {Link,useNavigate} from "react-router-dom";
 import {CosmicArtwork} from "../components/CosmicArtwork";
 import {OrbitalMark} from "../components/OrbitalMark";
 import {CelestialEmblem} from "../components/CelestialEmblem";
@@ -73,6 +73,7 @@ function AtlasEarnedSignal(){
 
 function AtlasDeck({world,onDismiss}:{world:AtlasWorld|null;onDismiss:()=>void}){
   const dialog=useRef<HTMLDialogElement>(null);
+  const navigate=useNavigate();
   const [projects,setProjects]=useState<Project[]>([]);
   const [state,setState]=useState<"loading"|"ready"|"error">("loading");
   const [query,setQuery]=useState("");
@@ -121,7 +122,7 @@ function AtlasDeck({world,onDismiss}:{world:AtlasWorld|null;onDismiss:()=>void})
             </div>
           </div>
         </div>
-        {search&&<form className="atlas-deck-search" onSubmit={e=>{e.preventDefault();if(query.trim())window.location.assign(nextPath);}}>
+        {search&&<form className="atlas-deck-search" onSubmit={e=>{e.preventDefault();navigate(nextPath);}}>
           <label htmlFor="atlas-catalogue-search">SEARCH THE APPROVED CATALOGUE</label>
           <div><input id="atlas-catalogue-search" value={query} onChange={e=>setQuery(e.target.value)}
             maxLength={100} type="search" autoComplete="off" placeholder="What are you looking for?"/>
@@ -209,7 +210,7 @@ export function AtlasPage(){
     const delta=e.deltaY>0?-.06:.06;
     setView(x=>({...x,zoom:clamp(Math.round((x.zoom+delta)*100)/100,MIN_ZOOM,MAX_ZOOM)}));
   }
-  function onMapKey(e:React.KeyboardEvent<HTMLDivElement>){
+  function onMapKey(e:ReactKeyboardEvent<HTMLDivElement>){
     if(e.target!==e.currentTarget)return;
     if(e.key==="ArrowLeft"||e.key==="ArrowRight"){
       e.preventDefault();setView(x=>({...x,yaw:clamp(x.yaw+(e.key==="ArrowRight"?8:-8),-59,59)}));

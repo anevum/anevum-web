@@ -1,4 +1,5 @@
 import { Navigate, Route, Routes } from "react-router-dom";
+import { lazy, Suspense } from "react";
 import { Shell } from "./components/Shell";
 import { HomePage } from "./pages/HomePage";
 import { FieldGuidePage } from "./pages/FieldGuidePage";
@@ -17,8 +18,11 @@ import { MemberProjectsPage } from "./pages/MemberProjectsPage";
 import { ProjectEditorPage } from "./pages/ProjectEditorPage";
 import { WorkspacePage } from "./pages/WorkspacePage";
 
+const AtlasPage = lazy(() => import("./pages/AtlasPage").then(mod => ({default:mod.AtlasPage})));
 export default function App(){
-  return <Routes><Route element={<Shell/>}>
+  return <Routes>
+    <Route path="atlas" element={<Suspense fallback={<div role="status" style={{minHeight:"100dvh",display:"grid",placeItems:"center",background:"#071022",color:"#f2d7a8"}}>OPENING ATLAS…</div>}><AtlasPage/></Suspense>}/>
+    <Route element={<Shell/>}>
     <Route index element={<HomePage/>}/>
     <Route path="start" element={<StartPage/>}/>
     <Route path="guide" element={<FieldGuidePage/>}/>
