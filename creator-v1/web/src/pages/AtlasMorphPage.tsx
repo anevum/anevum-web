@@ -1,13 +1,13 @@
 import {
   useEffect,useMemo,useRef,useState,
-  type CSSProperties,type MouseEvent as ReactMouseEvent,type PointerEvent as ReactPointerEvent
+  type CSSProperties,type MouseEvent as ReactMouseEvent
 } from "react";
 import {Link,Outlet,useLocation,useNavigate} from "react-router-dom";
 import {OrbitalMark} from "../components/OrbitalMark";
 import {CosmicArtwork} from "../components/CosmicArtwork";
 import {PortalLauncher} from "../components/PortalLauncher";
 import {isEditableTarget} from "../lib/portal-destinations";
-import {ATLAS_WORLDS,ATLAS_MOBILE_LAYOUT,type AtlasWorld,type AtlasWorldId} from "../lib/atlas-worlds";
+import {ATLAS_WORLDS,type AtlasWorld,type AtlasWorldId} from "../lib/atlas-worlds";
 import {memberHealth,memberMe,memberProgress,type Progression} from "../lib/member-api";
 import "./atlas-morph.css";
 
@@ -27,8 +27,6 @@ const ROUTES=new Set([
   "discover","projects","creators","community","create","library","account","levels",
   "workspace","status","start","guide"
 ]);
-const clamped=(v:number,a:number,b:number)=>Math.max(a,Math.min(b,v));
-type Drag={pointer:number;x:number;y:number;panX:number;panY:number;moved:boolean};
 type Progress={level:number;xp:number;artifact:string|null};
 function worldFor(pathname:string,search:string):AtlasWorldId|null {
   if(pathname==="/atlas"||pathname==="/atlas/")return null;
@@ -93,35 +91,41 @@ function ProgressSignal(){
     </div>}
   </>;
 }
-function Node({world,index,active,onOpen}:{world:AtlasWorld;index:number;active:boolean;onOpen:()=>void}){
-  const mobile=ATLAS_MOBILE_LAYOUT[world.id];
-  return <button className={"atm-node atm-node--"+world.id+(active?" atm-node--selected":"")}
-    type="button" onClick={onOpen} aria-current={active?"page":undefined}
-    aria-label={world.title+" — "+(world.status==="planned"?"planned feature":"open section")}
-    style={{
-      "--node-index":index,"--node-x":world.coordinates[0],"--node-y":world.coordinates[1],
-      "--node-mobile-x":mobile[0],"--node-mobile-y":mobile[1],
-      "--node-color":world.accent
-    } as CSSProperties}>
-    <span className="atm-node-halo" aria-hidden="true"/>
-    <span className="atm-node-art" aria-hidden="true"><CosmicArtwork scene={world.scene}/></span>
-    <span className="atm-node-sign" aria-hidden="true">{world.glyph}</span>
-    <span className="atm-node-title"><small>{world.number} / {world.status==="planned"?"PLANNED":"WORLD"}</small><strong>{world.title}</strong></span>
+const PRIMARY_WORLDS:readonly AtlasWorldId[]=["discover","play","apps","creative","commons","studio"];
+const selectedWorld=(id:AtlasWorldId)=>ATLAS_WORLDS.find(w=>w.id===id)!;
+
+function WorldTile({world,onEnter}:{world:AtlasWorld;onEnter:()=>void}){
+  return <button className={"atm-world-tile atm-world-tile--"+world.id} type="button" onClick={onEnter}
+    aria-label={world.title+" — "+world.tagline+"; "+(world.status==="planned"?"planned feature":"open world")}
+    style={{"--tile-color":world.accent} as CSSProperties}>
+    <span className="atm-world-art" aria-hidden="true"><CosmicArtwork scene={world.scene}/></span>
+    <span className="atm-world-overlay" aria-hidden="true"/>
+    <span className="atm-world-top"><span>{world.number} / {world.status==="planned"?"IN DEVELOPMENT":world.status==="invited"?"INVITED":"WORLD"}</span><b aria-hidden="true">{world.glyph}</b></span>
+    <span className="atm-world-bottom"><strong>{world.title}</strong><small>{world.tagline}</small></span>
+    <span className="atm-world-arrow" aria-hidden="true">↗</span>
   </button>;
 }
-function Overview({onEnter,onSearch}:{onEnter:()=>void;onSearch:()=>void}){
+function Overview({onEnter,onSearch}:{onEnter:(world:AtlasWorld)=>void;onSearch:()=>void}){
   return <div className="atm-overview">
-    <span className="atm-overview-eyebrow">INDEPENDENT CREATION / A NEW KIND OF INTERNET</span>
-    <h1>THE INTERNET<br/><i>IS A PLACE.</i></h1>
-    <p>Move through interconnected worlds. Make things, discover people, and build together. Every destination leads somewhere real.</p>
-    <div className="atm-overview-actions">
-      <button type="button" className="atm-overview-start" onClick={onEnter}>ENTER DISCOVERY <span aria-hidden="true">↗</span></button>
-      <button type="button" className="atm-overview-quick" onClick={onSearch} aria-label="Search all ANEVUM destinations"><span className="atm-overview-quick-label">SEARCH ALL WORLDS</span> <span aria-hidden="true">⌕</span></button>
-      <span className="atm-overview-instruction">SELECT A WORLD TO RECONFIGURE THE SPACE</span>
-    </div>
-    <div className="atm-overview-legend"><span>10 WORLDS</span><span>ONE CONNECTED ENVIRONMENT</span><span>NO FALSE ACTIVITY</span></div>
+    <section className="atm-overview-lead">
+      <span className="atm-overview-eyebrow">ANEVUM / A CREATIVE UNIVERSE</span>
+      <h1>GO<br/><em>BEYOND.</em></h1>
+      <p>Games, ideas, people, and tools worth discovering. Every world is part of one connected environment.</p>
+      <div className="atm-overview-actions">
+        <button className="atm-overview-start" type="button" onClick={()=>onEnter(selectedWorld("discover"))}>ENTER THE UNIVERSE <span aria-hidden="true">↗</span></button>
+        <button className="atm-overview-quick" type="button" onClick={onSearch} aria-label="Search all ANEVUM destinations">QUICK JUMP <span aria-hidden="true">⌕</span></button>
+      </div>
+      <div className="atm-overview-context"><span>10 INTERCONNECTED WORLDS</span><span>ONE UNINTERRUPTED EXPERIENCE</span></div>
+    </section>
+    <section className="atm-world-gallery" aria-label="Explore ANEVUM worlds">
+      <div className="atm-world-gallery-title"><span>WORLD DIRECTORY</span><span>CHOOSE WHERE TO BEGIN ↓</span></div>
+      <div className="atm-world-grid">
+        {ATLAS_WORLDS.map(world=><WorldTile world={world} onEnter={()=>onEnter(world)} key={world.id}/>)}
+      </div>
+    </section>
   </div>;
 }
+
 export function AtlasFuture({kind}:{kind:"collaborate"|"signals"}){
   const isRoom=kind==="collaborate";
   return <div className="atm-future">
@@ -151,170 +155,147 @@ export function AtlasMorphLayout(){
   const navigate=useNavigate();
   const location=useLocation();
   const chosenId=useMemo(()=>worldFor(location.pathname,location.search),[location.pathname,location.search]);
-  const chosen=chosenId?ATLAS_WORLDS.find(w=>w.id===chosenId)||null:null;
+  const chosen=chosenId?selectedWorld(chosenId):null;
   const focused=chosenId!==null;
-  const [pan,setPan]=useState({x:0,y:0});
-  const [guide,setGuide]=useState(false);
+  const [menuOpen,setMenuOpen]=useState(false);
   const [launcherOpen,setLauncherOpen]=useState(false);
-  const drag=useRef<Drag|null>(null);
-  const suppress=useRef(false);
-  const surface=useRef<HTMLDivElement>(null);
-  const content=useRef<HTMLElement>(null);
-  const worldHeading=useRef<HTMLHeadingElement>(null);
-  const navigation=useRef<HTMLButtonElement|null>(null);
-  const wasFocused=useRef(false);
+  const main=useRef<HTMLElement>(null);
+  const lastNav=useRef<HTMLElement|null>(null);
+  const previousRoute=useRef(location.pathname+location.search);
 
-  useEffect(()=>{content.current?.scrollTo({top:0,behavior:"instant"});},[location.pathname,location.search]);
+  useEffect(()=>{
+    const route=location.pathname+location.search;
+    if(previousRoute.current!==route){
+      previousRoute.current=route;
+      main.current?.scrollTo({top:0,behavior:"instant"});
+      main.current?.focus({preventScroll:true});
+    }
+    setMenuOpen(false);
+    setLauncherOpen(false);
+  },[location.pathname,location.search]);
+
   useEffect(()=>{
     function shortcut(event:KeyboardEvent){
       const command=(event.metaKey||event.ctrlKey)&&event.key.toLowerCase()==="k"&&!event.altKey;
       const slash=event.key==="/"&&!event.metaKey&&!event.ctrlKey&&!event.altKey&&!isEditableTarget(event.target);
       if(!command&&!slash)return;
       event.preventDefault();
+      setMenuOpen(false);
       setLauncherOpen(true);
-      setGuide(false);
     }
     window.addEventListener("keydown",shortcut);
     return()=>window.removeEventListener("keydown",shortcut);
   },[]);
-  useEffect(()=>{setLauncherOpen(false);},[location.pathname,location.search]);
 
-  useEffect(()=>{
-    if(focused&&!wasFocused.current){
-      const request=window.requestAnimationFrame(()=>worldHeading.current?.focus({preventScroll:true}));
-      wasFocused.current=true;
-      return()=>window.cancelAnimationFrame(request);
-    }
-    wasFocused.current=focused;
-  },[focused]);
-  // Browser Back and Forward naturally restore the visited world via React Router.
-  // Keep the permanent shell mounted; only the internal route changes.
   function enter(world:AtlasWorld){
-    if(suppress.current){suppress.current=false;return;}
-    navigation.current=document.activeElement instanceof HTMLButtonElement?document.activeElement:null;
+    lastNav.current=document.activeElement instanceof HTMLElement?document.activeElement:null;
     navigate(WORLDS[world.id]);
-    setGuide(false);
+    setMenuOpen(false);
   }
-  function back(){
+  function home(){
     navigate("/atlas");
-    requestAnimationFrame(()=>navigation.current?.focus({preventScroll:true}));
-  }
-  function down(e:ReactPointerEvent<HTMLDivElement>){
-    if(focused||e.button!==0||(e.target instanceof Element&&e.target.closest("a,button,input,nav")))return;
-    drag.current={pointer:e.pointerId,x:e.clientX,y:e.clientY,panX:pan.x,panY:pan.y,moved:false};
-  }
-  function move(e:ReactPointerEvent<HTMLDivElement>){
-    const d=drag.current;if(!d||e.pointerId!==d.pointer)return;
-    const dx=e.clientX-d.x,dy=e.clientY-d.y;
-    if(!d.moved&&Math.hypot(dx,dy)>7){
-      d.moved=true;
-      e.currentTarget.setPointerCapture(e.pointerId);
-    }
-    if(d.moved)setPan({x:clamped(d.panX+dx,-72,72),y:clamped(d.panY+dy,-65,65)});
-  }
-  function up(e:ReactPointerEvent<HTMLDivElement>){
-    const d=drag.current;if(!d||d.pointer!==e.pointerId)return;
-    drag.current=null;
-    if(d.moved){suppress.current=true;window.setTimeout(()=>{suppress.current=false;},0);}
-    if(e.currentTarget.hasPointerCapture(e.pointerId))e.currentTarget.releasePointerCapture(e.pointerId);
+    setMenuOpen(false);
   }
   function onInternalLink(e:ReactMouseEvent<HTMLElement>){
-    // Reuse existing React site components without remounting a conventional
-    // page shell. Only left-click same-origin first-party navigation is captured.
+    // Keep real site links inside the persistent Morph route, including nested project pages.
+    // Preserve explicit external, download, modified-click and private API destinations.
     if(e.defaultPrevented||e.button!==0||e.metaKey||e.ctrlKey||e.shiftKey||e.altKey)return;
     const target=e.target;
     if(!(target instanceof Element))return;
     const anchor=target.closest("a[href]");
-    if(!(anchor instanceof HTMLAnchorElement)||anchor.download||anchor.target&&anchor.target!=="_self")return;
+    if(!(anchor instanceof HTMLAnchorElement)||anchor.download||(anchor.target&&anchor.target!=="_self"))return;
     const url=new URL(anchor.href,window.location.href);
     if(url.origin!==window.location.origin)return;
-    // React Router's basename differs between apex (/), and the isolated
-    // /creator/ review route. Always resolve within the deployed app base.
     const appBase=import.meta.env.BASE_URL.replace(/\/$/,"");
     if(appBase&&!(url.pathname===appBase||url.pathname.startsWith(appBase+"/")))return;
     const relative=appBase?(url.pathname.slice(appBase.length)||"/"):url.pathname;
     if(relative.startsWith("/atlas/")||relative==="/atlas")return;
     if(relative==="/"){
-      e.preventDefault();
-      e.stopPropagation();
-      navigate("/atlas");
-      return;
+      e.preventDefault();e.stopPropagation();home();return;
     }
     const first=relative.split("/").filter(Boolean)[0];
     if(!ROUTES.has(first))return;
-    e.preventDefault();
-    e.stopPropagation();
+    e.preventDefault();e.stopPropagation();
     navigate("/atlas"+relative+url.search+url.hash);
   }
-  function onGlobalKey(e:React.KeyboardEvent<HTMLDivElement>){
-    if(e.key==="Escape"&&focused&&!(e.target instanceof Element&&e.target.closest("dialog,[role=dialog],input,textarea,select,[contenteditable]"))){
-      e.preventDefault();back();
-    }else if(e.key==="Home"&&!focused&&e.target===surface.current){
-      setPan({x:0,y:0});
-    }
+  function onShellKey(e:React.KeyboardEvent<HTMLDivElement>){
+    if(e.key!=="Escape"||launcherOpen)return;
+    if(menuOpen){e.preventDefault();setMenuOpen(false);return;}
+    if(!focused||e.target instanceof Element&&e.target.closest("dialog,[role=dialog],input,textarea,select,[contenteditable]"))return;
+    e.preventDefault();
+    home();
+    window.requestAnimationFrame(()=>lastNav.current?.focus({preventScroll:true}));
   }
-
+  function navButton(world:AtlasWorld,additional=""){
+    return <button type="button" key={world.id}
+      className={"atm-nav-link "+additional+(chosenId===world.id?" is-active":"")}
+      aria-current={chosenId===world.id?"page":undefined}
+      onClick={()=>enter(world)}>
+      <span className="atm-nav-glyph" aria-hidden="true">{world.glyph}</span>
+      <span>{world.title}</span>
+    </button>;
+  }
   return <div className={"atm-shell"+(focused?" atm-shell--focused":" atm-shell--overview")}
-    data-experience="ANEVUM MORPH / DESIGN REVIEW" data-layout={focused?"workspace":"overview"}
-    style={{"--atm-pan-x":pan.x+"px","--atm-pan-y":pan.y+"px","--atm-accent":chosen?.accent||"#e1c18a"} as CSSProperties}
-    onKeyDown={onGlobalKey}>
+    data-experience="ANEVUM MORPH / SINGLE NAV REVIEW"
+    data-layout={focused?"workspace":"overview"}
+    onKeyDown={onShellKey}
+    style={{"--atm-accent":chosen?.accent||"#e3c38f"} as CSSProperties}>
     <div className="atm-atmosphere" aria-hidden="true"><CosmicArtwork scene={chosen?.scene||"hero"} priority/></div>
     <div className="atm-atmosphere-overlay" aria-hidden="true"/>
-    <div className="atm-scanlines" aria-hidden="true"/>
     <header className="atm-header">
-      <Link to="/atlas" className="atm-brand" aria-label="ANEVUM Morph home"><OrbitalMark/><span><strong>ANEVUM</strong><small>THE LIVING NETWORK</small></span></Link>
-      <div className="atm-header-center"><span className="atm-live-pulse" aria-hidden="true"/> WORLD ENGINE <strong>ANEVUM / MORPH</strong><em>PREVIEW 02</em></div>
-      <nav className="atm-actions" aria-label="Universal workspace actions">
+      <Link to="/atlas" className="atm-brand" aria-label="ANEVUM home in Morph">
+        <OrbitalMark/>
+        <span><strong>ANEVUM</strong><small>CREATE BEYOND WORLDS</small></span>
+      </Link>
+      <nav className="atm-primary-nav" aria-label="Main ANEVUM navigation">
+        {PRIMARY_WORLDS.map(id=>navButton(selectedWorld(id),id==="apps"||id==="creative"?"atm-nav-optional":""))}
+        <button type="button" className={"atm-worlds-trigger"+(menuOpen?" is-open":"")}
+          aria-expanded={menuOpen} aria-controls="atm-worlds-menu"
+          onClick={()=>setMenuOpen(v=>!v)}>
+          <span className="atm-worlds-trigger-label">WORLDS</span>
+          <span className="atm-worlds-current">{chosen?.title||"EXPLORE"}</span>
+          <span aria-hidden="true">{menuOpen?"×":"⌄"}</span>
+        </button>
+      </nav>
+      <div className="atm-actions">
         <ProgressSignal/>
-        <button type="button" className="atm-launch" onClick={()=>setLauncherOpen(true)} aria-label="Open ANEVUM quick navigation" aria-keyshortcuts="Control+K Meta+K" title="Search all ANEVUM destinations">⌕<span>JUMP</span></button>
-        <button type="button" className="atm-help" onClick={()=>setGuide(x=>!x)} aria-expanded={guide} aria-label="Interaction guide">?</button>
-        <Link to="/" className="atm-standard">STANDARD SITE ↗</Link>
-      </nav>
-    </header>
-    <div ref={surface} className="atm-field" onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={up}
-      tabIndex={focused?-1:0} aria-label="ANEVUM worlds. Choose a front-facing world to open its workspace; drag empty space to pan.">
-      <div className="atm-lattice" aria-hidden="true"/>
-      <div className="atm-ring atm-ring--one" aria-hidden="true"/>
-      <div className="atm-ring atm-ring--two" aria-hidden="true"/>
-      <nav className="atm-constellation" aria-label="ANEVUM worlds">
-        {ATLAS_WORLDS.map((world,index)=><Node key={world.id} world={world} index={index}
-          active={world.id===chosenId} onOpen={()=>enter(world)}/>)}
-      </nav>
-      {!focused&&<Overview onEnter={()=>enter(ATLAS_WORLDS[0])} onSearch={()=>setLauncherOpen(true)}/>}
-      {focused&&<section className="atm-workspace" aria-label={chosen?.title+" workspace"}>
-        <div className="atm-workspace-top">
-          <div className="atm-workspace-identity">
-            <span>{chosen?.number} / SYSTEM WORLD</span>
-            <h2 ref={worldHeading} tabIndex={-1}>{chosen?.title}<em>.</em></h2>
-            <p>{chosen?.tagline}</p>
-          </div>
-          <div className="atm-workspace-controls">
-            <span className="atm-workspace-state">{chosen?.status==="planned"?"IN DEVELOPMENT":chosen?.status==="invited"?"INVITED ACCESS":"PUBLIC WORLD"}</span>
-            <button type="button" onClick={back} aria-label="Collapse workspace to all worlds">✕ <span>ALL WORLDS</span></button>
-          </div>
+        <button type="button" className="atm-search" onClick={()=>{setMenuOpen(false);setLauncherOpen(true);}}
+          aria-label="Search all ANEVUM destinations" aria-keyshortcuts="Control+K Meta+K" title="Quick Jump /">
+          <span aria-hidden="true">⌕</span><small>JUMP</small>
+        </button>
+        <Link to="/atlas/account" className="atm-account" aria-label="My ANEVUM account and profile">
+          <span aria-hidden="true">◈</span>
+        </Link>
+      </div>
+      {menuOpen&&<div className="atm-worlds-menu" id="atm-worlds-menu">
+        <div className="atm-worlds-menu-intro"><span>THE WORLDS OF ANEVUM</span><strong>WHERE TO NEXT?</strong></div>
+        <nav className="atm-worlds-menu-grid" aria-label="All ANEVUM worlds">
+          {ATLAS_WORLDS.map(world=><button type="button" key={world.id} onClick={()=>enter(world)}
+            className={world.id===chosenId?"is-active":""} aria-current={world.id===chosenId?"page":undefined}>
+            <span className="atm-menu-glyph" aria-hidden="true">{world.glyph}</span>
+            <span><strong>{world.title}</strong><small>{world.status==="planned"?"COMING LATER":world.tagline}</small></span>
+            <span aria-hidden="true" className="atm-menu-arrow">↗</span>
+          </button>)}
+        </nav>
+        <div className="atm-worlds-menu-utilities">
+          <Link to="/atlas/creators" onClick={()=>setMenuOpen(false)}>CREATORS</Link>
+          <Link to="/atlas/guide" onClick={()=>setMenuOpen(false)}>FIELD GUIDE</Link>
+          <Link to="/atlas/library" onClick={()=>setMenuOpen(false)}>MY LIBRARY</Link>
+          <Link to="/atlas/account/edit" onClick={()=>setMenuOpen(false)}>EDIT PROFILE</Link>
+          <Link to="/atlas/status" onClick={()=>setMenuOpen(false)}>BUILD STATUS</Link>
+          <Link to="/" onClick={()=>setMenuOpen(false)}>STANDARD SITE ↗</Link>
         </div>
-        <main ref={content} className="atm-content" onClickCapture={onInternalLink} id="atm-content" tabIndex={-1}>
-          <div key={chosenId||"overview"} className="atm-embedded"><Outlet/></div>
-        </main>
-        <div className="atm-workspace-foot"><span>ANEVUM / {chosen?.overline}</span><span>THE SHELL STAYS. THE WORLD CHANGES.</span></div>
-      </section>}
-    </div>
-    {focused&&<nav className="atm-mobile-dock" aria-label="Switch worlds without leaving your workspace">
-      <button className="atm-mobile-jump" type="button" onClick={()=>setLauncherOpen(true)} aria-label="Search all ANEVUM destinations"><span aria-hidden="true">⌕</span><small>JUMP</small></button>
-      {ATLAS_WORLDS.map(world=><button key={world.id} type="button" className={chosenId===world.id?"is-current":""}
-        aria-label={"Switch to "+world.title} aria-current={chosenId===world.id?"page":undefined}
-        onClick={()=>enter(world)}><span aria-hidden="true">{world.glyph}</span><small>{world.title}</small></button>)}
-    </nav>}
+      </div>}
+    </header>
+    {menuOpen&&<button type="button" tabIndex={-1} aria-label="Close worlds menu"
+      className="atm-menu-dismiss" onClick={()=>setMenuOpen(false)}/>}
+    <main id="atm-content" ref={main}
+      className={"atm-content"+(focused?" atm-content--page":" atm-content--overview")}
+      onClickCapture={onInternalLink} tabIndex={-1}
+      aria-label={focused?(chosen?.title||"ANEVUM")+" section":"ANEVUM universe home"}>
+      {focused?<div key={chosenId||"world"} className="atm-embedded"><Outlet/></div>
+        :<Overview onEnter={enter} onSearch={()=>{setMenuOpen(false);setLauncherOpen(true);}}/>}
+    </main>
     <PortalLauncher open={launcherOpen} onClose={()=>setLauncherOpen(false)} routePrefix="/atlas"/>
-    <footer className="atm-footer">
-      <div><span className="atm-footer-cross" aria-hidden="true">✣</span> <strong>{focused?chosen?.overline:"CHOOSE A WORLD"}</strong> <span>/ FRONT-FACING WORLD NAVIGATION</span></div>
-      <div><Link to="/atlas/orbit">ORIGINAL ROTATING ATLAS ↗</Link> <span> · </span> <span>{focused?"ESC / ALL WORLDS":"DRAG EMPTY SPACE TO PAN"}</span></div>
-    </footer>
-    {guide&&<aside className="atm-guide" aria-label="How to use ANEVUM Morph">
-      <header><strong>FIELD GUIDE / MORPH</strong><button type="button" onClick={()=>setGuide(false)} aria-label="Close guide">✕</button></header>
-      <p>Worlds always face you. Selecting one restructures the scene into a persistent workspace. The other worlds become a navigation rail.</p>
-      <p>Use the category cards or keyboard Tab and Enter. Escape or the ALL WORLDS button returns to the overview. On your phone, the lower strip switches worlds and can be swiped horizontally.</p>
-      <p>Discover, profiles, public projects and guides use real ANEVUM React pages. Private creator and account tools remain invitation-gated. Messages and realtime shared editing are not live.</p>
-    </aside>}
   </div>;
 }
