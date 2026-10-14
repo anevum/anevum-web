@@ -52,9 +52,22 @@ async function savedProject(db,id){
 }
 async function parseFollow(req){
  if(!/^application\/json(?:\s*;|\s*$)/i.test(req.headers.get('content-type')||''))throw Error('JSON required');
- if(Number(req.headers.get('content-length')||0)>96)throw Error('Payload too large');
- const raw=await req.text();if(raw.length>96)throw Error('Payload too large');
- const b=JSON.parse(raw);
+ const advertised=req.headers.get('content-length');
+ if(advertised!==null&&(!/^\d+$/.test(advertised)||Number(advertised)>96))throw Error('Payload too large');
+ const reader=req.body?.getReader();
+ if(!reader)throw Error('JSON body required');
+ let bytes=0;const chunks=[];
+ try{
+  for(;;){
+   const {done,value}=await reader.read();if(done)break;
+   bytes+=value.byteLength;
+   if(bytes>96){await reader.cancel();throw Error('Payload too large');}
+   chunks.push(value);
+  }
+ }finally{reader.releaseLock()}
+ const raw=new Uint8Array(bytes);let offset=0;
+ for(const part of chunks){raw.set(part,offset);offset+=part.byteLength}
+ const b=JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(raw));
  if(!b||typeof b!=='object'||Array.isArray(b)||Object.keys(b).length!==1||typeof b.following!=='boolean')throw Error('Invalid follow action');
  return b.following;
 }
