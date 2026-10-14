@@ -315,10 +315,10 @@
  .atm-worlds-menu-intro strong{font-size:20px}
  .atm-worlds-menu-intro span{font-size:8px}
  .atm-worlds-menu-grid{gap:7px;margin:11px 0}
- .atm-worlds-menu-grid button{gap:7px;padding:9px}
+ .atm-worlds-menu-grid button{gap:8px;padding:10px;min-height:55px}
  .atm-menu-glyph{width:30px;height:30px;font-size:17px}
- .atm-worlds-menu-grid strong{font-size:10px}
- .atm-worlds-menu-grid small{font-size:8px}
+ .atm-worlds-menu-grid strong{font-size:11px}
+ .atm-worlds-menu-grid small{font-size:9px;line-height:1.35}
  .atm-worlds-menu-utilities{gap:6px}
  .atm-worlds-menu-utilities a{font-size:8px;padding:7px 9px}
  .atm-embedded .portal-page-heading{padding:17px;min-height:178px}
@@ -329,6 +329,10 @@
  .atm-embedded .portal-page-heading + .portal-browse-layout{margin-top:14px}
  .atm-embedded .portal-box,.atm-embedded .portal-shelf,.atm-embedded .portal-sidebox{padding:16px}
  .atm-embedded .portal-search-hall{padding:17px}
+ .atm-embedded .portal-hall-stamp{display:none}
+ .atm-embedded .portal-wide-search{min-width:0}
+ .atm-embedded .portal-wide-search input{min-width:0;font-size:12px;padding-inline:10px}
+ .atm-embedded .portal-wide-search button{font-size:11px;padding-inline:14px;flex:none}
  .atm-embedded .portal-channel-filters{gap:5px}
  .atm-embedded .portal-channel-filters button{min-height:39px;padding:8px 10px;font-size:9px}
  .atm-embedded .portal-discover-results{grid-template-columns:1fr;gap:13px}
