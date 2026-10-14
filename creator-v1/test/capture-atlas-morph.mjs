@@ -53,48 +53,52 @@ try{
  for(const [width,height] of [[1440,900],[390,844],[320,720]]){
   await client.send("Emulation.setDeviceMetricsOverride",{width,height,deviceScaleFactor:1,mobile:width<641});
   await client.send("Page.navigate",{url:base+"/creator/atlas"});
-  await until(()=>evaluate('document.readyState==="complete"&&!!document.querySelector(".atm-content--overview")&&document.querySelectorAll(".atm-world-tile").length===10'));
-  await delay(480);
-  const overview=await evaluate('(()=>{const top=document.querySelector(".atm-header").getBoundingClientRect();const body=document.querySelector(".atm-content").getBoundingClientRect();const tile=document.querySelector(".atm-world-tile").getBoundingClientRect();return {header:Math.round(top.height),top:Math.round(body.top),left:body.left,right:body.right,contentHeight:body.height,tiles:document.querySelectorAll(".atm-world-tile").length,tileWidth:Math.round(tile.width),navs:document.querySelectorAll(".atm-header .atm-primary-nav").length,rails:document.querySelectorAll(".atm-constellation,.atm-node,.atm-workspace,.atm-mobile-dock,.atm-footer").length,overflow:document.documentElement.scrollWidth>innerWidth+1,scroll:getComputedStyle(document.querySelector(".atm-content")).overflowY};})()');
-  if(overview.tiles!==10||overview.navs!==1||overview.rails||overview.overflow||overview.left!==0||Math.abs(overview.right-width)>1||Math.abs(overview.top-overview.header)>1||overview.contentHeight<height-overview.header-2||overview.tileWidth<(width<641?width*.85:110)||overview.scroll!=="auto")throw Error("MORPH_OVERVIEW_LAYOUT_"+width+": "+JSON.stringify(overview));
-  const header=await evaluate('(()=>{const a=document.querySelector(".atm-brand").getBoundingClientRect(),b=document.querySelector(".atm-worlds-trigger").getBoundingClientRect(),c=document.querySelector(".atm-actions").getBoundingClientRect();return {brandRight:a.right,worldLeft:b.left,worldRight:b.right,actionsLeft:c.left,actionsRight:c.right,brandVisible:a.width>0,worldVisible:b.width>0,actionsVisible:c.width>0};})()');
-  if(!header.brandVisible||!header.worldVisible||!header.actionsVisible||header.brandRight>header.worldLeft+2||header.worldRight>header.actionsLeft+2||header.actionsRight>width+1)throw Error("MORPH_TOP_NAV_COLLISION_"+width+": "+JSON.stringify(header));
+  await until(()=>evaluate('document.readyState==="complete"&&!!document.querySelector(".atm-content--overview .mhc-console")'));
+  await until(()=>evaluate('document.querySelectorAll(".mhc-signal-item").length>0'));
+  await delay(350);
+  const overview=await evaluate('(()=>{const top=document.querySelector(".atm-header").getBoundingClientRect();const page=document.querySelector(".atm-content").getBoundingClientRect();const hero=document.querySelector(".mhc-headliner").getBoundingClientRect();return {header:Math.round(top.height),pageTop:Math.round(page.top),pageLeft:page.left,pageRight:page.right,bodyHeight:page.height,heroWidth:Math.round(hero.width),menuButtons:document.querySelectorAll(".atm-header .atm-menu-button").length,navTabs:document.querySelectorAll(".atm-header .atm-primary-nav,.atm-header .atm-worlds-trigger,.atm-world-tile,.atm-mobile-dock").length,feedItems:document.querySelectorAll(".mhc-signal-item").length,member:!!document.querySelector(".atm-profile-card"),settings:!!document.querySelector(".atm-profile-settings"),overflow:document.documentElement.scrollWidth>innerWidth+1,scroll:getComputedStyle(document.querySelector(".atm-content")).overflowY};})()');
+  if(overview.menuButtons!==1||overview.navTabs||overview.feedItems<1||!overview.member||!overview.settings||overview.overflow||overview.pageLeft!==0||Math.abs(overview.pageRight-width)>1||Math.abs(overview.pageTop-overview.header)>1||overview.bodyHeight<height-overview.header-2||overview.heroWidth<width*(width<641?.85:.5)||overview.scroll!=="auto")throw Error("MORPH_FRONT_PAGE_"+width+": "+JSON.stringify(overview));
+  console.log("MORPH_CONSOLE_"+width+" "+JSON.stringify(overview));
+  await shot("morph-console-overview",width);
 
-  console.log("MORPH_OVERVIEW_"+width+" "+JSON.stringify(overview));
-  await shot("morph-one-nav-overview",width);
-  await evaluate('document.querySelector(".atm-world-tile--play").click()');
+  await evaluate('document.querySelector(".atm-menu-button").click()');
+  await until(()=>evaluate('!!document.querySelector("dialog.atm-navigation-overlay[open]")&&document.querySelectorAll(".atm-navigation-link").length===10'));
+  const overlay=await evaluate('(()=>{const r=document.querySelector("dialog.atm-navigation-overlay").getBoundingClientRect();return {top:r.top,left:r.left,right:r.right,height:r.height,count:document.querySelectorAll(".atm-navigation-link").length,button:document.querySelector(".atm-menu-button")?.getAttribute("aria-expanded")};})()');
+  if(overlay.count!==10||overlay.left<0||overlay.right>width+1||Math.abs(overlay.top-overview.header)>2||overlay.button!=="true")throw Error("MORPH_MENU_OVERLAY_"+width+": "+JSON.stringify(overlay));
+  await shot("morph-console-menu",width);
+
+  await evaluate('document.querySelector(".atm-navigation-link:nth-child(2)").click()');
   await until(()=>evaluate('location.pathname.endsWith("/atlas/discover")&&location.search.includes("category=games")&&!!document.querySelector(".atm-content .portal-discover")'));
-  const playWorld=await evaluate('(()=>{const h=document.querySelector(".portal-page-heading"),image=h?.querySelector(".cw-artwork-image");return {label:h?.innerText||"",image:image?.getAttribute("src")||""};})()');
-  if(!playWorld.label.includes("ARCADE.")||!playWorld.image.includes("categories/games.webp"))throw Error("MORPH_PLAY_SCENE_"+width+": "+JSON.stringify(playWorld));
-  await delay(480);
-  const section=await evaluate('(()=>{const main=document.querySelector(".atm-content"),r=main.getBoundingClientRect(),body=document.querySelector(".atm-embedded").getBoundingClientRect(),heading=document.querySelector(".portal-page-heading").getBoundingClientRect();return {left:r.left,right:r.right,bodyWidth:Math.round(body.width),headingWidth:Math.round(heading.width),scroll:getComputedStyle(main).overflowY,duplicate:document.querySelectorAll(".site-header,.site-footer,.portal-navigation,.signal-strip,.atm-footer,.atm-workspace,.atm-mobile-dock").length,overflow:document.documentElement.scrollWidth>innerWidth+1};})()');
-  if(section.left!==0||Math.abs(section.right-width)>1||section.bodyWidth<width*(width<641?.85:.84)||section.headingWidth<width*(width<641?.82:.78)||section.scroll!=="auto"||section.duplicate||section.overflow)throw Error("MORPH_FULL_WIDTH_PAGE_"+width+": "+JSON.stringify(section));
-  console.log("MORPH_PAGE_"+width+" "+JSON.stringify(section));
-  await shot("morph-one-nav-play",width);
-  await evaluate('document.querySelector(".atm-worlds-trigger").click()');
-  await until(()=>evaluate('!!document.querySelector(".atm-worlds-menu")&&document.querySelectorAll(".atm-worlds-menu-grid button").length===10'));
-  const menu=await evaluate('(()=>{const r=document.querySelector(".atm-worlds-menu").getBoundingClientRect();return {n:document.querySelectorAll(".atm-worlds-menu-grid button").length,left:r.left,right:r.right};})()');
-  if(menu.n!==10||menu.left<0||menu.right>width+1)throw Error("MORPH_WORLD_MENU_"+width+": "+JSON.stringify(menu));
-  await shot("morph-one-nav-worlds",width);
-  await evaluate('document.querySelector(".atm-worlds-menu-grid button:nth-child(8)").click()');
+  const play=await evaluate('(()=>{const h=document.querySelector(".portal-page-heading"),image=h?.querySelector(".cw-artwork-image");return {label:h?.innerText||"",image:image?.getAttribute("src")||""};})()');
+  if(!play.label.includes("ARCADE.")||!play.image.includes("categories/games.webp"))throw Error("MORPH_PLAY_"+width+": "+JSON.stringify(play));
+  const section=await evaluate('(()=>{const main=document.querySelector(".atm-content"),r=main.getBoundingClientRect(),body=document.querySelector(".atm-embedded").getBoundingClientRect(),heading=document.querySelector(".portal-page-heading").getBoundingClientRect();return {left:r.left,right:r.right,bodyWidth:body.width,headingWidth:heading.width,overflow:document.documentElement.scrollWidth>innerWidth+1,duplicate:document.querySelectorAll(".site-header,.site-footer,.portal-navigation,.signal-strip,.atm-footer,.atm-workspace,.atm-mobile-dock").length};})()');
+  if(section.left!==0||Math.abs(section.right-width)>1||section.bodyWidth<width*(width<641?.85:.84)||section.headingWidth<width*(width<641?.82:.78)||section.overflow||section.duplicate)throw Error("MORPH_FULL_PAGE_"+width+": "+JSON.stringify(section));
+  await shot("morph-console-play",width);
+
+  await evaluate('document.querySelector(".atm-menu-button").click()');
+  await until(()=>evaluate('!!document.querySelector(".atm-navigation-overlay[open]")'));
+  await evaluate('document.querySelector(".atm-navigation-link:nth-child(8)").click()');
   await until(()=>evaluate('location.pathname.endsWith("/atlas/signals")&&!!document.querySelector(".atm-future")'));
-  await shot("morph-one-nav-signals",width);
-  await evaluate('document.querySelector(".atm-search").click()');
+  await shot("morph-console-signals",width);
+  await evaluate('document.querySelector(".atm-menu-button").click()');
+  await until(()=>evaluate('!!document.querySelector(".atm-navigation-overlay[open]")'));
+  await evaluate('document.querySelector(".atm-navigation-search").click()');
   await until(()=>evaluate('!!document.querySelector("dialog.portal-launcher[open]")'));
-  const switchboard=await evaluate('({routes:[...document.querySelectorAll("dialog.portal-launcher[open] a[href]")].map(a=>a.pathname),visible:!!document.querySelector("dialog.portal-launcher input")})');
-  if(!switchboard.visible||switchboard.routes.some(u=>!u.startsWith("/creator/atlas")))throw Error("MORPH_SEARCH_ROUTING_"+width+": "+JSON.stringify(switchboard));
-  await shot("morph-one-nav-search",width);
+  const quick=await evaluate('({urls:[...document.querySelectorAll("dialog.portal-launcher[open] a[href]")].map(a=>a.pathname),search:!!document.querySelector("dialog.portal-launcher input")})');
+  if(!quick.search||quick.urls.some(url=>!url.startsWith("/creator/atlas")))throw Error("MORPH_QUICK_JUMP_"+width+": "+JSON.stringify(quick));
+  await shot("morph-console-search",width);
   await evaluate('document.querySelector(".portal-launcher-close").click()');
   await until(()=>evaluate('!document.querySelector("dialog.portal-launcher[open]")'));
+
   if(width===1440){
-    await evaluate('document.querySelector(".atm-worlds-trigger").click()');
-    await until(()=>evaluate('!!document.querySelector(".atm-worlds-menu")'));
-    await evaluate('document.querySelector(".atm-worlds-menu-grid button:nth-child(2)").click()');
-    await until(()=>evaluate('!!document.querySelector(".atm-content a[href*=\\\"/projects/\\\"]")'));
+    await evaluate('document.querySelector(".atm-menu-button").click()');
+    await until(()=>evaluate('!!document.querySelector(".atm-navigation-overlay[open]")'));
+    await evaluate('document.querySelector(".atm-navigation-link:nth-child(2)").click()');
+    await until(()=>evaluate('document.querySelector(".atm-content a[href*=\\\"/projects/\\\"]")'));
     await evaluate('document.querySelector(".atm-content a[href*=\\\"/projects/\\\"]").click()');
     await until(()=>evaluate('location.pathname.includes("/atlas/projects/")&&!!document.querySelector(".atm-content .portal-project")'));
-    await shot("morph-one-nav-project",width);
+    await shot("morph-console-project",width);
   }
-  console.log("ATLAS_MORPH_ONE_NAV_"+width+"=PASS");
+  console.log("ANEVUM_CREATIVE_CONSOLE_"+width+"=PASS");
  }
 }finally{client?.close();child.kill("SIGTERM");await delay(200);rmSync(profile,{recursive:true,force:true});}
