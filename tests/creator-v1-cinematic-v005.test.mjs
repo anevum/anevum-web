@@ -9,6 +9,7 @@ const landing=get("creator-v1/web/src/pages/CinematicLandingPage.tsx");
 const rail=get("creator-v1/web/src/components/CinematicSiteRail.tsx");
 const routes=get("creator-v1/web/src/App.tsx");
 const feed=get("creator-v1/web/src/components/CommunityHomeFeed.tsx");
+const authorShowcase=get("creator-v1/web/src/components/PublicAuthorShowcase.tsx");
 const tactile=get("creator-v1/web/src/tactile-editorial-v006.css");
 const stylesheet=get("creator-v1/web/src/cinematic-world-v005.css");
 test("V005 source TSX parses and shares actual navigation",()=>{
@@ -49,7 +50,10 @@ test("V006 builds a source-backed homepage feed and links real creator identitie
   assert.match(feed,/communityEnabled/);
   assert.match(feed,/readCommunityPosts\(\{sort:"new",limit:"8"\}/);
   assert.match(feed,/projectDetailPath/);
-  assert.match(feed,/encodeURIComponent\(handle\)/);
+  assert.match(authorShowcase,/encodeURIComponent\\(handle\\)/);
+  assert.match(feed,/PublicAuthorShowcase/);
+  assert.match(feed,/readPublicShowcases/);
+  assert.doesNotThrow(()=>parse(authorShowcase,{sourceType:"module",plugins:["typescript","jsx"]}));
   assert.match(feed,/bounded excerpt of public records only/i);
   assert.doesNotMatch(feed,/fake creator|syntheticProject|inventedPost/);
 });
