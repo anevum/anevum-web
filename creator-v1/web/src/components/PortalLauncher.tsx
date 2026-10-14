@@ -8,7 +8,7 @@ import { OrbitalMark } from "./OrbitalMark";
  * The launcher indexes only hardcoded first-party routes. Published-project
  * search opens the real catalogue; it never invents results or calls private APIs.
  */
-export function PortalLauncher({ open, onClose }: { open: boolean; onClose: () => void }) {
+export function PortalLauncher({ open, onClose, routePrefix="" }: { open: boolean; onClose: () => void; routePrefix?: "" | "/atlas" }) {
   const dialog = useRef<HTMLDialogElement>(null);
   const searchField = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
@@ -22,6 +22,7 @@ export function PortalLauncher({ open, onClose }: { open: boolean; onClose: () =
     ...(searchPath ? [{ id: "published-search", path: searchPath, title: "Search published projects", detail: "Search the real, approved public catalogue for “" + query.trim() + "”", category: "Explore" as const, icon: "search", gated: false, liveSearch: true }] : [])
   ];
   const selected = Math.min(active, entries.length - 1);
+  const insideWorkspace=(path:string)=>routePrefix==="/atlas"?(path==="/"||path==="/atlas"?"/atlas":"/atlas"+path):path;
 
   useEffect(() => {
     const element = dialog.current;
@@ -50,7 +51,8 @@ export function PortalLauncher({ open, onClose }: { open: boolean; onClose: () =
       setActive(index => (index + entries.length - 1) % entries.length);
     } else if (event.key === "Enter" && selected >= 0) {
       event.preventDefault();
-      navigate(entries[selected].path);
+      if(routePrefix==="/atlas")navigate(insideWorkspace(entries[selected].path));
+      else navigate(entries[selected].path);
       leave();
     }
   }
@@ -84,7 +86,7 @@ export function PortalLauncher({ open, onClose }: { open: boolean; onClose: () =
       </div>
       <nav className="portal-launcher-results" aria-label="Quick ANEVUM destinations">
         {entries.length ? entries.map((entry, index) =>
-          <Link key={entry.id} to={entry.path} onClick={leave} onMouseEnter={()=>setActive(index)}
+          <Link key={entry.id} to={insideWorkspace(entry.path)} onClick={leave} onMouseEnter={()=>setActive(index)}
             className={"portal-launcher-result"+(index===selected?" portal-launcher-result-active":"")}>
             <span className="portal-launcher-result-icon" aria-hidden="true"><Icon name={entry.icon} size={21}/></span>
             <span className="portal-launcher-result-copy">
@@ -98,7 +100,7 @@ export function PortalLauncher({ open, onClose }: { open: boolean; onClose: () =
       </nav>
       <footer className="portal-launcher-foot">
         <span>LOCAL ROUTE SEARCH / NOT A FAKE LIVE FEED</span>
-        <Link to="/start" onClick={leave}>NEW HERE? START HERE <Icon name="arrow" size={15}/></Link>
+        <Link to={insideWorkspace("/start")} onClick={leave}>NEW HERE? START HERE <Icon name="arrow" size={15}/></Link>
       </footer>
     </div>
   </dialog>;
