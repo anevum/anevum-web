@@ -173,7 +173,7 @@ return {async fetch(req,env) {
     if(path==='/privacy'||path.startsWith('/privacy/')){
       if(req.method==='POST'&&!checkWrite(req))return fail(req,'Request origin rejected',403);
       const member=await authenticated(req,env,clock());
-      return privacyRoutes(req,db,member,limit,clock());
+      return privacyRoutes(req,db,member,limit,clock(),{worldEnabled:env.MEMBER_WORLDS_ENABLED==='true'});
     }
     if(path==='/world'||path.startsWith('/worlds/')){
       // Explicitly disabled until isolated staging DB migration, privacy export
