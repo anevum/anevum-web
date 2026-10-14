@@ -2,59 +2,85 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync, existsSync } from "node:fs";
 import { Script } from "node:vm";
+const read=path=>readFileSync(new URL("../web/public/portfolio/"+path,import.meta.url),"utf8");
+const html=read("index.html");
+const css=read("styles.css");
+const js=read("app.js");
 
-const read = path => readFileSync(new URL("../web/public/portfolio/" + path, import.meta.url), "utf8");
-const html = read("index.html");
-const css = read("styles.css");
-const js = read("app.js");
-
-test("portfolio introduces the actual person and independently developed work", () => {
-  assert.match(html, /I build what <em>I wish existed/);
-  for (const phrase of ["A dad.", "A writer.", "A builder.", "ANEVUM", "The Fold", "RHEN", "Transcosmic"]) {
-    assert.ok(html.includes(phrase), phrase);
-  }
-  assert.match(html, /Independent projects, not invented client commissions/);
-  assert.match(html, /devon@anevum.com/);
-  assert.match(html, /https:\/\/anevum.com\/portfolio\//);
+test("portfolio is an original independent maker archive, not generic portfolio sculpture",()=>{
+  assert.match(html,/I MAKE/);
+  assert.match(html,/THE PROOF/);
+  assert.match(html,/THE AKINS ARCHIVE/);
+  assert.match(html,/family|father of two/i);
+  assert.match(html,/devon@anevum.com/i);
+  assert.doesNotMatch(html,/material-note|id="play-sculpture"|data-material=|id="sculpture"/i);
+  assert.doesNotMatch(js,/class Sculpture|getContext\(['"]webgl['"]\).*sculpture/i);
+  assert.match(html,/src="\/portfolio\/app\.js"/);
+  assert.match(html,/href="\/portfolio\/styles\.css"/);
 });
 
-test("remove the irrelevant WebGL sculpture and material playground entirely", () => {
-  assert.doesNotMatch(html, /<canvas\b|id="play-scene"|id="sculpture"|data-material=/i);
-  assert.doesNotMatch(js, /createShader|vertexShader|fragmentShader|getContext\(['"]webgl|new Sculpture|setMaterial/);
-  assert.doesNotMatch(css, /\.orbital-fallback\{|\.playground\{/);
+test("3D architectural scene is real local WebGL with fallback, performance caps, safe failure",()=>{
+  assert.match(html,/<canvas id="architecture-canvas" aria-hidden="true"><\/canvas>/);
+  assert.match(html,/world-fallback/);
+  assert.match(js,/getContext\("webgl"/);
+  assert.match(js,/gl\.drawArrays\(gl\.TRIANGLES,0,6\)/);
+  assert.match(js,/class ArchitectureScene/);
+  assert.ok(js.includes("const fragment = String.raw"+String.fromCharCode(96)));
+  for(const needle of ["powerPreference:\"low-power\"","webglcontextlost","webglcontextrestored","requestAnimationFrame","document.hidden","this.isMobile?800:1350","this.isMobile?1000/20:1000/30"]){
+    assert.ok(js.includes(needle),needle);
+  }
+  assert.match(js,/worldNode\.classList\.remove\("ready"\)/);
+  assert.match(css,/\.world-fallback\{/);
 });
 
-test("selectable feature previews use local, real development images with accurate context", () => {
-  for (const key of ["anevum", "fold", "rhen"]) {
-    assert.match(html, new RegExp('data-feature="' + key + '"'));
-    assert.match(js, new RegExp('\\b' + key + ': \\{'));
-  }
-  for (const asset of ["anevum-interface.webp", "fold-interface.webp", "rhen-interface.webp"]) {
-    assert.ok(existsSync(new URL("../web/public/portfolio/assets/" + asset, import.meta.url)), asset);
-    assert.ok(js.includes(asset), asset);
-  }
-  assert.match(js, /function showFeature\(key\)/);
-  assert.match(js, /button\.setAttribute\('aria-pressed', String\(selected\)\)/);
-  assert.match(js, /openProject\(currentFeature, trigger\)/);
-  assert.match(html, /Each project story explains what is working, private or still a prototype/);
-  assert.match(html, /id="feature-open"/);
+test("Continuance Institute canon mark is exact and confined to fiction",()=>{
+  assert.match(html,/M118 35 A68 68 0 1 0 118 145/);
+  assert.match(html,/M10 69H166M10 90H166M10 111H166/);
+  assert.match(js,/const CONTINUANCE_MARK =/);
+  assert.doesNotMatch(html,/brand-sigil|interlocking D and A/i);
+  assert.match(html,/CONTINUANCE INSTITUTE ARCHIVE/);
+  assert.match(js,/fictional institutional world/);
 });
 
-test("responsive design retains touch targets, keyboard focus and motion controls", () => {
-  for (const needle of ["max-width:920px", "max-width:580px", "max-width:350px", "prefers-reduced-motion:reduce", "focus-visible", "min-height:44px"]) {
-    assert.ok(css.includes(needle), needle);
+test("all four project files remain honest and offer usable navigation",()=>{
+  for(const key of ["anevum","rhen","fold","transcosmic"]){
+    assert.match(html,new RegExp('data-select="'+key+'"'));
+    assert.match(html,new RegExp('data-open="'+key+'"'));
+    assert.match(js,new RegExp("\\b"+key+": \\{"));
   }
-  assert.match(html, /id="motion-toggle"/);
-  assert.match(html, /id="project-dialog"/);
-  assert.match(html, /id="brief-form"/);
-  assert.match(js, /motionPreference\.matches/);
-  assert.match(js, /dialog\.showModal\(\)/);
-  assert.doesNotMatch(js, /fetch\(|XMLHttpRequest|localStorage|sendBeacon/);
+  for(const file of ["anevum-interface.webp","rhen-interface.webp","fold-interface.webp","devon-akins.jpg"]){
+    assert.ok(existsSync(new URL("../web/public/portfolio/assets/"+file,import.meta.url)),file);
+  }
+  assert.match(js,/synthetic offline review/i);
+  assert.match(js,/Read-only research/i);
+  assert.match(js,/not GPS/i);
+  assert.match(js,/not presented as a real operating research institution/);
+  assert.match(js,/dossier\.showModal\(\)/);
+  assert.match(js,/dossier\.addEventListener\("close"/);
+  assert.match(js,/data-select/);
+  assert.match(js,/event\.key === "ArrowRight"/);
+  assert.match(js,/touchend/);
+  assert.match(js,/artifact\.addEventListener\("click"/);
 });
 
-test("portfolio script parses and stays self-contained", () => {
-  assert.doesNotThrow(() => new Script(js, { filename: "portfolio/app.js" }));
-  assert.match(html, /src="\/portfolio\/app\.js"/);
-  assert.match(html, /href="\/portfolio\/styles\.css"/);
-  assert.doesNotMatch(html, /https:\/\/portfolio\.anevum\.com|(?:src|href)="\/assets\//);
+test("tactile type and marks are not generic icon sets, and mobile and motion remain usable",()=>{
+  assert.match(css,/--display:Impact/);
+  assert.match(css,/\.brand-dash/);
+  assert.match(css,/\.artifact\{/);
+  assert.match(css,/perspective\(1100px\)/);
+  assert.match(css,/@media\(max-width:640px\)/);
+  assert.match(css,/@media\(max-width:375px\)/);
+  assert.match(css,/@media\(prefers-reduced-motion:reduce\)/);
+  assert.match(css,/:focus-visible/);
+  assert.match(html,/id="motion-toggle"/);
+  assert.match(js,/motionPaused=reduceQuery\.matches/);
+  assert.match(js,/setMotionState\(\)/);
+  assert.doesNotMatch(html,/fonts\.googleapis|cdnjs|unpkg|jsdelivr|three\.js/i);
+});
+
+test("script is syntactically valid and portfolio boundaries remain isolated",()=>{
+  assert.doesNotThrow(()=>new Script(js,{filename:"portfolio/app.js"}));
+  assert.doesNotMatch(js,/localStorage|XMLHttpRequest|navigator\.geolocation|new WebSocket/);
+  assert.doesNotMatch(html,/https:\/\/portfolio\.anevum\.com|(?:src|href)="\/assets\//);
+  assert.match(html,/https:\/\/anevum\.com\/portfolio\//);
 });
