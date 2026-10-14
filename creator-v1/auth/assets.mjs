@@ -182,7 +182,15 @@ export async function creatorAssets(req,env,member,limiter,now){
     "WHERE id=? AND project_id=? AND owner_member_id=? AND status='uploading' AND lease_until=? "+
     "AND EXISTS(SELECT 1 FROM projects WHERE id=? AND owner_member_id=? AND status IN ('draft','changes_requested'))",
     [sha256,assetId,projectId,member.id,leaseUntil,projectId,member.id]);
-  if(committed!==1)return fail("Private upload requires recovery",503);
+  if(committed!==1){
+    // If the project or lease changed while R2 was writing, this object must
+    // never be left as an unreferenced private billable object. Best-effort
+    // compensation; inaccessible objects from delete failures need a later
+    // inventory/reconciliation sweep before staging can be accepted.
+    try{await env.CREATOR_ASSETS.delete(selected.storage_key);}
+    catch{/* Reconciliation required: private quarantine has no public URL. */}
+    return fail("Private upload requires recovery",503);
+  }
   return json({id:assetId,status:"quarantined",sha256});
 }
 
