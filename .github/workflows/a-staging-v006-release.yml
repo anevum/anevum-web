@@ -7,6 +7,8 @@ on:
   push:
     branches: [main]
     paths: [.github/workflows/a-staging-v006-release.yml]
+  issue_comment:
+    types: [created]
 
 permissions:
   contents: read
@@ -17,7 +19,12 @@ concurrency:
 
 jobs:
   stage:
-    if: github.repository == 'anevum/anevum-web' && github.ref == 'refs/heads/main'
+    if: >-
+      github.repository == 'anevum/anevum-web' && github.ref == 'refs/heads/main' &&
+      (github.event_name == 'push' ||
+       (github.event_name == 'issue_comment' && github.event.issue.number == 391 &&
+        github.event.comment.user.login == 'anevum' &&
+        github.event.comment.body == '/deploy-a-staging-44d2d12aa92fa7c68536a0a78e540ffbcc29c3d9'))
     runs-on: ubuntu-latest
     timeout-minutes: 25
     env:
