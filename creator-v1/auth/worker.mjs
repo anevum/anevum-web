@@ -166,7 +166,9 @@ return {async fetch(req,env) {
   if(!url.pathname.startsWith(PATH+'/'))return fail(req,'Not found',404);
   const path=url.pathname.slice(PATH.length);
   if(req.method==='OPTIONS')return fail(req,'Not found',404); // same-origin only
-  if(!['GET','HEAD','POST','PATCH','PUT'].includes(req.method))return json(req,{error:'Method not allowed'},405,{'allow':'GET, HEAD, POST, PATCH'});
+  const assetPath=/^\/api\/v1\/member\/projects\/[a-f0-9]{32}\/assets(?:\/|$)/.test(url.pathname);
+  if(!['GET','HEAD','POST','PATCH'].includes(req.method)&&!(assetPath&&req.method==='PUT'))
+    return json(req,{error:'Method not allowed'},405,{'allow':'GET, HEAD, POST, PATCH'});
   if(!ready(env))return fail(req,'Member identity unavailable',503);
   const db=env.COMMUNITY_DB;
   try {
@@ -185,7 +187,7 @@ return {async fetch(req,env) {
       const member=await authenticated(req,env,clock());
       return communityRoutes(req,db,member,limit,clock());
     }
-    if(/^\/projects\/[a-f0-9]{32}\/assets(?:\/|$)/.test(path)){
+    if(assetPath){
       if(['POST','PUT'].includes(req.method)&&!checkWrite(req))return fail(req,'Request origin rejected',403);
       const member=await authenticated(req,env,clock());
       return creatorAssets(req,env,member,limit,clock());
