@@ -19,9 +19,10 @@ export function PortalLauncher({ open, onClose, routePrefix="" }: { open: boolea
   const [active, setActive] = useState(0);
   const [live,setLive]=useState<{
     status:"idle"|"loading"|"ready"|"error";
+    query:string;
     projects:Project[];
     creators:Creator[];
-  }>({status:"idle",projects:[],creators:[]});
+  }>({status:"idle",query:"",projects:[],creators:[]});
   const matches = findPortalDestinations(query);
   const liveQuery=query.trim();
   const liveEnabled=open&&routePrefix==="/atlas"&&liveQuery.length>=2;
@@ -29,7 +30,7 @@ export function PortalLauncher({ open, onClose, routePrefix="" }: { open: boolea
   const entries = [
     ...matches.map(item => ({ id: item.id, path: item.path, title: item.title, detail: item.description, category: item.category, icon: item.icon, gated: !!item.gated, liveSearch: false })),
     ...(searchPath ? [{ id: "published-search", path: searchPath, title: "Search published projects", detail: "Search the real, approved public catalogue for “" + query.trim() + "”", category: "Explore" as const, icon: "search", gated: false, liveSearch: true }] : []),
-    ...(liveEnabled&&live.status==="ready"?[
+    ...(liveEnabled&&live.query===liveQuery&&live.status==="ready"?[
       ...live.projects.map(project=>({
         id:"project-"+project.id,path:"/projects/"+encodeURIComponent(project.id),title:project.title,
         detail:"Approved "+project.category+" by @"+project.creatorHandle,category:"Explore" as const,
@@ -59,10 +60,10 @@ export function PortalLauncher({ open, onClose, routePrefix="" }: { open: boolea
   }, [open]);
   useEffect(() => { setActive(0); }, [query]);
   useEffect(()=>{
-    if(!liveEnabled){setLive({status:"idle",projects:[],creators:[]});return;}
+    if(!liveEnabled){setLive({status:"idle",query:"",projects:[],creators:[]});return;}
     const controller=new AbortController();
     let present=true;
-    setLive({status:"loading",projects:[],creators:[]});
+    setLive({status:"loading",query:liveQuery,projects:[],creators:[]});
     const timer=window.setTimeout(async()=>{
       try{
         // Read-only public endpoints, abort and discard stale requests.
@@ -73,10 +74,10 @@ export function PortalLauncher({ open, onClose, routePrefix="" }: { open: boolea
         ]);
         if(!present||controller.signal.aborted)return;
         if(projects.status==="rejected"&&creators.status==="rejected"){
-          setLive({status:"error",projects:[],creators:[]});
+          setLive({status:"error",query:liveQuery,projects:[],creators:[]});
         }else{
           setLive({
-            status:"ready",
+            status:"ready",query:liveQuery,
             projects:projects.status==="fulfilled"?projects.value.items:[],
             creators:creators.status==="fulfilled"?creators.value.items:[]
           });
