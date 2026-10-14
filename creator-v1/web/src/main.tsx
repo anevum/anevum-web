@@ -24,7 +24,6 @@ import "./cinematic-catalogue.css";
 import "./cinematic-discovery.css";
 import "./cinematic-world-v005.css";
 import "./tactile-editorial-v006.css";
-import "./live-signal-v008.css";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
