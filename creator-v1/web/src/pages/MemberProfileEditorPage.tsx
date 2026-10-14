@@ -2,6 +2,7 @@ import {type FormEvent,useState} from "react";
 import {Link} from "react-router-dom";
 import {useMemberContext} from "../components/MemberGate";
 import {OrbitalMark} from "../components/OrbitalMark";
+import {FeaturedAwardPicker} from "../components/FeaturedAwardPicker";
 import {MemberApiError,memberSaveProfile} from "../lib/member-api";
 
 const HANDLE=/^[a-z][a-z0-9_]{2,29}$/;
@@ -125,6 +126,7 @@ export function MemberProfileEditorPage(){
             <span>ANEVUM / MEMBER IDENTITY</span><span>ORBITAL UNDERGROUND</span>
           </div>
         </section>
+        {member.handle&&<FeaturedAwardPicker/>}
         <section className="member-panel member-profile-publishing">
           <span className="kicker">WHAT BECOMES PUBLIC?</span>
           <h2>YOUR CHANNEL, ON YOUR TERMS.</h2>
