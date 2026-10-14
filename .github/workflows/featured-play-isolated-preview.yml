@@ -1,0 +1,118 @@
+name: ANEVUM Featured Play Isolated Preview
+
+on:
+  push:
+    branches: [design/featured-play-interaction-20261014]
+    paths:
+      - creator-v1/web/**
+      - creator-v1/test/featured-play-interaction.test.mjs
+      - creator-v1/test/capture-featured-play.mjs
+      - creator-v1/wrangler.featured-play-review.jsonc
+      - creator-v1/package.json
+      - .github/workflows/featured-play-isolated-preview.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: anevum-featured-play-design-review
+  cancel-in-progress: true
+
+jobs:
+  featured-play-review:
+    if: github.ref == 'refs/heads/design/featured-play-interaction-20261014'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Reject private bindings or scripts on the public review origin
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --input-type=module -e '
+          import fs from "node:fs";
+          const p="creator-v1/wrangler.featured-play-review.jsonc";
+          const c=JSON.parse(fs.readFileSync(p,"utf8"));
+          if(c.name!=="anevum-featured-play-review-20261014"||!c.workers_dev||c.preview_urls!==false)throw Error("Unexpected review host");
+          for(const forbidden of ["routes","route","d1_databases","r2_buckets","kv_namespaces","vars","unsafe","services","durable_objects","send_email"]){
+            if(Object.hasOwn(c,forbidden))throw Error("Disallowed review binding: "+forbidden);
+          }
+          if(c.main!=="./web/featured-play-review-worker.mjs"||c.assets?.binding!=="ASSETS"||c.assets?.directory!=="./dist/web")throw Error("Unexpected review asset/runtime");
+          const js=fs.readFileSync("creator-v1/web/featured-play-review-worker.mjs","utf8");
+          if(/CLOUDFLARE_API_TOKEN|api[_-]?key|private_key|bearer/i.test(js))throw Error("Secret reference in public review Worker");
+          if(!js.includes("nativeCreatorHosting:false"))throw Error("Hosted creator code falsely represented as live");
+          '
+          node --check creator-v1/web/featured-play-review-worker.mjs
+      - name: Compile full interactive player and run public security contracts
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm install --ignore-scripts --no-audit --no-fund
+          npm run check:creator-v1-web
+          npm run build:creator-v1-web
+          npm run build:creator-v1-web:staging
+          (cd creator-v1 && npm test)
+          test -f creator-v1/dist/web/index.html
+          ! find creator-v1/dist/web -name '*.map' | grep -q .
+      - name: Verify actual Chromium feature-to-play interaction on phone and desktop
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p evidence/featured-play
+          chrome="$(command -v google-chrome || command -v chromium-browser || command -v chromium || true)"
+          test -n "$chrome"
+          node creator-v1/test/portal-offline-preview.mjs > evidence/featured-play/fixture.log 2>&1 &
+          fixture_pid=$!
+          trap 'kill "$fixture_pid" 2>/dev/null || true' EXIT
+          ready=0
+          for i in $(seq 1 45); do
+            if curl -fsS http://127.0.0.1:4178/__ready >/dev/null; then ready=1; break; fi
+            sleep 0.25
+          done
+          test "$ready" = 1
+          node creator-v1/test/capture-featured-play.mjs --chrome "$chrome" --base http://127.0.0.1:4178 --output evidence/featured-play
+          echo "COMPLETE_REAL_BROWSER_FLOW=PASS"
+      - name: Retain visual evidence for review
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: anevum-featured-play-chromium-review
+          path: evidence/featured-play/
+          if-no-files-found: ignore
+          retention-days: 7
+      - name: Deploy read-only workers.dev review only
+        if: success()
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$CLOUDFLARE_API_TOKEN"
+          test -n "$CLOUDFLARE_ACCOUNT_ID"
+          npx wrangler deploy --config creator-v1/wrangler.featured-play-review.jsonc
+      - name: Validate review URL and reject private traffic
+        shell: bash
+        run: |
+          set -euo pipefail
+          base="https://anevum-featured-play-review-20261014.devonakins.workers.dev"
+          ready=0
+          for attempt in $(seq 1 18); do
+            code="$(curl --silent --show-error --max-time 15 -o "$RUNNER_TEMP/play-review.html" -w '%{http_code}' "$base/atlas/lab/orbit-align" || true)"
+            if [ "$code" = 200 ] && grep -q 'id="root"' "$RUNNER_TEMP/play-review.html"; then ready=1; break; fi
+            sleep 2
+          done
+          test "$ready" = 1
+          test "$(curl -sS -o /dev/null -w '%{http_code}' "$base/api/v1/member/me")" = 404
+          test "$(curl -sS -X POST -o /dev/null -w '%{http_code}' "$base/api/v1/projects")" = 405
+          curl -fsS "$base/__review" | jq -e '.status == "DESIGN PREVIEW" and .database == false and .firstPartyPlayerLab == true and .nativeCreatorHosting == false' >/dev/null
+          curl -fsS "$base/api/v1/status" | jq -e '.counts.publishedProjects >= 0' >/dev/null
+          curl -fsSI "$base/atlas/lab/orbit-align" | grep -qi 'x-robots-tag: noindex'
+          echo "FEATURED_PLAY_READ_ONLY_REVIEW_SMOKE=PASS"
+          echo "FEATURED_PLAY_LINK=$base/atlas"
