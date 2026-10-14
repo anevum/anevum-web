@@ -6,6 +6,7 @@ const read=path=>readFileSync(new URL("../web/public/portfolio/"+path,import.met
 const html=read("index.html");
 const css=read("styles.css");
 const js=read("app.js");
+const worlds=read("worlds.js");
 
 test("portfolio is an original independent maker archive, not generic portfolio sculpture",()=>{
   assert.match(html,/I MAKE/);
@@ -25,8 +26,9 @@ test("3D architectural scene is real local WebGL with fallback, performance caps
   assert.match(js,/getContext\("webgl"/);
   assert.match(js,/gl\.drawArrays\(gl\.TRIANGLES,0,6\)/);
   assert.match(js,/class ArchitectureScene/);
-  assert.ok(js.includes("const fragment = String.raw"+String.fromCharCode(96)));
-  for(const needle of ["powerPreference:\"low-power\"","webglcontextlost","webglcontextrestored","requestAnimationFrame","document.hidden","this.isMobile?800:1350","this.isMobile?1000/20:1000/30"]){
+  assert.match(js,/const fragment = window\.PORTFOLIO_SCENES/);
+  assert.match(worlds,/fragment: String\.raw/);
+  for(const needle of ["powerPreference:\"low-power\"","webglcontextlost","webglcontextrestored","requestAnimationFrame","document.hidden","this.isMobile?640:1100","this.isMobile?1000/16:1000/30"]){
     assert.ok(js.includes(needle),needle);
   }
   assert.match(js,/worldNode\.classList\.remove\("ready"\)/);
@@ -80,7 +82,28 @@ test("tactile type and marks are not generic icon sets, and mobile and motion re
 
 test("script is syntactically valid and portfolio boundaries remain isolated",()=>{
   assert.doesNotThrow(()=>new Script(js,{filename:"portfolio/app.js"}));
+  assert.doesNotThrow(()=>new Script(worlds,{filename:"portfolio/worlds.js"}));
   assert.doesNotMatch(js,/localStorage|XMLHttpRequest|navigator\.geolocation|new WebSocket/);
   assert.doesNotMatch(html,/https:\/\/portfolio\.anevum\.com|(?:src|href)="\/assets\//);
   assert.match(html,/https:\/\/anevum\.com\/portfolio\//);
+});
+
+test("abstract worlds run as a 120-second continuous three-scene morph sequence",()=>{
+  assert.match(html,/src="\/portfolio\/worlds\.js"/);
+  assert.match(html,/id="scene-name"/);
+  assert.match(html,/id="scene-next"/);
+  assert.match(html,/id="scene-clock"/);
+  assert.match(worlds,/names: \["LUMEN", "FRACTURE", "ABYSS"\]/);
+  assert.match(worlds,/duration: 120/);
+  assert.match(worlds,/transition: 20/);
+  assert.match(worlds,/float lensWorld/);
+  assert.match(worlds,/float shardWorld/);
+  assert.match(worlds,/float coralWorld/);
+  assert.match(worlds,/d=mix\(d,sceneAt\(p,next\),u_blend\)/);
+  assert.match(js,/this\.elapsed\+=delta/);
+  assert.match(js,/linear\*linear\*\(3-2\*linear\)/);
+  assert.match(js,/this\.activeScene=\(this\.activeScene\+1\)/);
+  assert.match(js,/\$\("#scene-next"\)\?\.addEventListener/);
+  assert.match(css,/\.scene-director\{/);
+  assert.doesNotMatch(worlds,/https?:\/\/|fetch\(|WebSocket|localStorage/);
 });

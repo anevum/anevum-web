@@ -231,3 +231,19 @@ body.is-scrolled .site-header{background:rgba(7,11,10,.92);box-shadow:0 14px 35p
 .motion-paused .appear{opacity:1;transform:none;transition:none}
 @media(prefers-contrast:more){:root{--smoke:#d1d6cb;--fine:#d1d6cb88}.world::after{background:#0408079c}.record-top,.entry-foot,.entry-topline{color:var(--paper)}}
 @media print{.world,.noise,.viewport-vignette,.reading-line,.custom-pointer,.site-controls,.project-switcher,.entry-controls-header,.entry-foot,.pedestal,.artifact,.dossier-dialog{display:none!important}body{background:#fff;color:#000}.site-header{position:static;background:#fff;color:#000;border-bottom:1px solid #333}.entry{min-height:0;background:#fff}.entry-content{display:block}.entry h1{font-size:75px}.entry h1 .knockout{-webkit-text-stroke:0;color:#000}.entry-bottom p,.section-intro p,.person-copy p,.method-main>p,.record-caption,.record-meta{color:#222!important}.records-section,.method-section,.person-section,.contact-section{background:#fff;color:#000;padding-block:30px}.record{break-inside:avoid}.record-image{height:190px}.appear{opacity:1;transform:none}.contact-background{display:none}}
+
+
+/* Ambient abstract worlds: staged behind the existing interactive project exhibit. */
+.world{background:#08091a}
+.world::after{background:linear-gradient(90deg,rgba(4,6,12,.90) 0%,rgba(5,7,18,.72) 36%,rgba(6,7,17,.13) 65%,rgba(5,6,15,.40) 100%),linear-gradient(180deg,rgba(4,5,12,.38),transparent 37%,rgba(3,4,9,.29) 68%,#090b10 100%)}
+.world-fallback{background:radial-gradient(ellipse at 72% 42%,rgba(90,80,155,.52),transparent 35%),radial-gradient(ellipse at 63% 50%,rgba(188,62,122,.26),transparent 46%),#090b1d}
+.scene-director{position:absolute;right:var(--gutter);top:18%;z-index:8;display:grid;grid-template-columns:auto auto;align-items:center;column-gap:16px;row-gap:4px;width:172px;pointer-events:auto;padding:13px 14px;border:1px solid rgba(225,224,254,.22);background:rgba(8,10,22,.52);backdrop-filter:blur(16px);box-shadow:0 15px 42px rgba(0,0,0,.21)}
+.scene-director .scene-label{font:8px var(--mono);letter-spacing:.08em;color:#d6cfea;grid-column:1/-1}
+.scene-director strong{font:18px var(--display);font-weight:400;letter-spacing:.045em;color:#f0eafa}
+.scene-director #scene-position{font:8px var(--mono);color:#b0a8d7;text-align:right}
+.scene-director #scene-clock{font:9px var(--mono);color:#b8bfd5;white-space:nowrap;grid-column:1/-1}
+.scene-director button{grid-column:1/-1;font:9px var(--mono);letter-spacing:.03em;text-align:left;color:#e7b5d7;padding:9px 0 0;border-top:1px solid rgba(220,210,255,.2);background:transparent}
+.scene-director button:hover,.scene-director button:focus-visible{color:#fff}
+@media(max-width:900px){.scene-director{top:12%;right:var(--gutter);width:148px;padding:10px}.scene-director strong{font-size:15px}}
+@media(max-width:640px){.scene-director{position:relative;top:auto;right:auto;left:var(--gutter);width:calc(100% - var(--gutter)*2);grid-template-columns:1fr auto;margin-top:82px;margin-bottom:-88px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}.scene-director .scene-label{flex-basis:100%}.scene-director strong{font-size:15px}.scene-director #scene-clock{margin-left:auto}.scene-director button{border-top:0;padding:3px 0 3px 8px;border-left:1px solid rgba(220,210,255,.2)}}
+@media(prefers-reduced-motion:reduce){.world canvas{transition:none}.world-haze,.world-beam{animation:none}}

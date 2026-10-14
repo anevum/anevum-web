@@ -303,107 +303,7 @@ document.addEventListener("pointermove", event => {
 },{passive:true});
 
 const vertex = "attribute vec2 a_position; void main(){ gl_Position=vec4(a_position,0.0,1.0); }";
-const fragment = String.raw`
-#ifdef GL_FRAGMENT_PRECISION_HIGH
-precision highp float;
-#else
-precision mediump float;
-#endif
-uniform vec2 u_resolution;
-uniform vec2 u_pointer;
-uniform float u_time;
-uniform float u_scroll;
-#define FAR 53.0
-float hash(vec3 p){ p=fract(p*.1031);p+=dot(p,p.yzx+33.33);return fract((p.x+p.y)*p.z); }
-float box(vec3 p,vec3 b){vec3 d=abs(p)-b;return length(max(d,0.0))+min(max(d.x,max(d.y,d.z)),0.0);}
-vec2 add(vec2 a,vec2 b){return b.x<a.x?b:a;}
-vec2 scene(vec3 p){
- vec2 r=vec2(FAR,0.0);
- r=add(r,vec2(p.y+1.65,1.0));
- r=add(r,vec2(3.32-p.y,2.0));
- r=add(r,vec2(abs(p.x)-6.45,3.0));
- float z=mod(p.z+2.6,5.5)-2.75;
- // Basalt piers and exposed structural beams.
- float column=box(vec3(abs(p.x)-4.58,p.y-.65,z),vec3(.68,2.8,.58));
- r=add(r,vec2(column,4.0));
- float beam=box(vec3(p.x,p.y-2.75,z),vec3(6.3,.49,.42));
- r=add(r,vec2(beam,5.0));
- // Welded steel ribs recess toward a distant grounded access portal.
- float rib=box(vec3(abs(p.x)-3.82,p.y-.23,z),vec3(.082,2.38,.09));
- r=add(r,vec2(rib,6.0));
- // Two practical floor rails, not imaginary suspended structures.
- float rail=box(vec3(abs(p.x)-1.52,p.y+1.58,p.z+14.0),vec3(.055,.075,48.0));
- r=add(r,vec2(rail,6.0));
- // Copper service-light strip under the ceiling and at column seams.
- float light=box(vec3(abs(p.x)-3.78,p.y-2.39,z),vec3(.07,.062,.28));
- r=add(r,vec2(light,7.0));
- float strip=box(vec3(abs(p.x)-5.06,p.y+1.34,p.z+12.0),vec3(.025,.024,45.0));
- r=add(r,vec2(strip,7.0));
- // Heavy end wall with a credible doorway cut out of its volume.
- float wall=box(p-vec3(0.0,.62,-43.0),vec3(7.0,4.3,.75));
- float aperture=-box(p-vec3(0.0,.1,-43.0),vec3(2.3,2.2,1.1));
- r=add(r,vec2(max(wall,aperture),4.0));
- return r;
-}
-vec3 normalAt(vec3 p){
- vec2 e=vec2(.008,0.0);
- return normalize(vec3(scene(p+e.xyy).x-scene(p-e.xyy).x,scene(p+e.yxy).x-scene(p-e.yxy).x,scene(p+e.yyx).x-scene(p-e.yyx).x));
-}
-vec3 material(float id,vec3 p){
- if(id<1.5)return vec3(.17,.205,.18);
- if(id<2.5)return vec3(.115,.135,.122);
- if(id<3.5)return vec3(.18,.205,.186);
- if(id<4.5)return vec3(.34,.35,.315);
- if(id<5.5)return vec3(.21,.233,.211);
- if(id<6.5)return vec3(.085,.11,.098);
- return vec3(1.1,.47,.19);
-}
-void main(){
- vec2 uv=(gl_FragCoord.xy*2.0-u_resolution.xy)/min(u_resolution.x,u_resolution.y);
- vec3 ro=vec3(u_pointer.x*.38,.46+u_pointer.y*.24,4.4-u_scroll*3.9);
- vec3 rd=normalize(vec3(uv.x*.89-u_pointer.x*.05,uv.y*.65-u_pointer.y*.035,-1.76));
- rd.yz=mat2(.991,-.134,.134,.991)*rd.yz;
- float t=0.0;vec2 hit=vec2(FAR,0.0);vec3 p=ro;
- for(int i=0;i<76;i++){
-   p=ro+rd*t;
-   hit=scene(p);
-   if(hit.x<.003||t>FAR)break;
-   t+=max(.018,hit.x*.82);
- }
- vec3 bg=vec3(.029,.047,.041);
- float horizon=exp(-abs(uv.y+.17)*4.0)*.055;
- bg+=vec3(.045,.065,.054)*horizon;
- vec3 color=bg;
- if(t<FAR&&hit.x<.07){
-   vec3 n=normalAt(p);
-   vec3 key=normalize(vec3(-.55,.9,.65));
-   float diffuse=max(dot(n,key),0.0);
-   float bounced=max(dot(n,normalize(vec3(.8,.2,-.6))),0.0);
-   float cavity=clamp(scene(p+n*.24).x/.24,.2,1.);
-   float concrete=hash(floor(p*12.0));
-   vec3 surface=material(hit.y,p);
-   color=surface*(.19+diffuse*.53+bounced*.18)*cavity;
-   color*=mix(.84,1.07,concrete);
-   if(hit.y>6.5){
-     color=vec3(1.0,.4,.16)*(1.3+.17*sin(u_time*.8+p.z*1.1));
-   }
-   // Light thrown against nearby masonry from copper service lines.
-   float warm=exp(-abs(abs(p.x)-4.0)*.7)*exp(-abs(p.y-1.7)*.45);
-   color+=vec3(.38,.14,.062)*warm*(.36+.08*sin(u_time*.6));
-   float d=length(p-ro);
-   float fog=1.0-exp(-d*.037);
-   color=mix(color,vec3(.075,.102,.089),min(.93,fog));
- }
- float beams=exp(-pow((uv.x-.25+uv.y*.21)*3.8,2.0))*.055;
- color+=vec3(.33,.30,.24)*beams*max(.08,1.0-uv.y);
- float vign=1.0-.23*dot(uv,uv);
- color*=max(.38,vign);
- float film=hash(vec3(gl_FragCoord.xy,u_time*.01))-.5;
- color+=(film*.022);
- color=pow(max(color,0.0),vec3(.93));
- gl_FragColor=vec4(color,1.0);
-}
-`;
+const fragment = window.PORTFOLIO_SCENES?.fragment || "";
 
 class ArchitectureScene {
   constructor(canvas) {
@@ -411,6 +311,9 @@ class ArchitectureScene {
     this.pointer=[0,0];
     this.scroll=0;
     this.time=0;
+    this.elapsed=0;
+    this.lastShownSecond=-1;
+    this.activeScene=0;
     this.frame=0;
     this.lastFrame=0;
     this.visible=true;
@@ -453,7 +356,7 @@ class ArchitectureScene {
       gl.enableVertexAttribArray(position);
       gl.vertexAttribPointer(position,2,gl.FLOAT,false,0,0);
       this.uniform={};
-      ["resolution","pointer","time","scroll"].forEach(name=>{
+      ["resolution","pointer","time","scroll","scene","blend"].forEach(name=>{
         this.uniform[name]=gl.getUniformLocation(program,"u_"+name);
       });
       this.program=program;
@@ -486,11 +389,32 @@ class ArchitectureScene {
       worldNode.classList.remove("ready");
     }
   }
+  updateReadout(index,seconds,blend){
+    const second=Math.floor(this.elapsed);
+    if(second===this.lastShownSecond)return;
+    this.lastShownSecond=second;
+    const config=window.PORTFOLIO_SCENES;
+    if(!config)return;
+    const name=$("#scene-name"),position=$("#scene-position"),clock=$("#scene-clock");
+    if(name)name.textContent=config.names[index];
+    if(position)position.textContent=String(index+1).padStart(2,"0")+" / "+String(config.names.length).padStart(2,"0");
+    const remaining=Math.ceil(config.duration-seconds);
+    if(clock)clock.textContent=(blend>0?"MORPH / ":"NEXT IN / ")+String(Math.floor(remaining/60)).padStart(2,"0")+":"+String(remaining%60).padStart(2,"0");
+  }
+  nextScene(){
+    const config=window.PORTFOLIO_SCENES;
+    if(!config)return;
+    this.activeScene=(this.activeScene+1)%config.names.length;
+    this.elapsed=this.activeScene*config.duration;
+    this.lastShownSecond=-1;
+    this.updateReadout(this.activeScene,0,0);
+    this.render();
+  }
   resize(){
     if(!this.ready||!this.gl)return;
     const width=Math.max(1,innerWidth),height=Math.max(1,innerHeight);
     const ratio=Math.min(window.devicePixelRatio||1,this.isMobile ? .72 : 1.05);
-    const maxPixel= this.isMobile?800:1350;
+    const maxPixel= this.isMobile?640:1100;
     const scale=Math.min(ratio,maxPixel/Math.max(width,height));
     this.canvas.width=Math.max(1,Math.round(width*scale));
     this.canvas.height=Math.max(1,Math.round(height*scale));
@@ -505,6 +429,17 @@ class ArchitectureScene {
     gl.uniform2f(this.uniform.pointer,this.pointer[0],this.pointer[1]);
     gl.uniform1f(this.uniform.time,this.time);
     gl.uniform1f(this.uniform.scroll,this.scroll);
+    const config=window.PORTFOLIO_SCENES;
+    const duration=config.duration, transition=config.transition;
+    const cycle=this.elapsed%(duration*config.names.length);
+    const index=Math.floor(cycle/duration);
+    const seconds=cycle-index*duration;
+    const linear=Math.min(1,Math.max(0,(seconds-(duration-transition))/transition));
+    const blend=linear*linear*(3-2*linear);
+    this.activeScene=index;
+    gl.uniform1f(this.uniform.scene,index);
+    gl.uniform1f(this.uniform.blend,blend);
+    this.updateReadout(index,seconds,blend);
     gl.drawArrays(gl.TRIANGLES,0,6);
   }
   setPointer(x,y){
@@ -524,11 +459,13 @@ class ArchitectureScene {
     cancelAnimationFrame(this.frame);
     if(!this.ready||this.paused||!this.visible||document.hidden)return;
     this.lastFrame=0;
-    const cap=this.isMobile?1000/20:1000/30;
+    const cap=this.isMobile?1000/16:1000/30;
     const draw=now=>{
       if(!this.ready||this.paused||!this.visible||document.hidden)return;
       if(!this.lastFrame||now-this.lastFrame>=cap){
-        this.time+=this.lastFrame?Math.min((now-this.lastFrame)/1000,.065):0;
+        const delta=this.lastFrame?Math.min((now-this.lastFrame)/1000,.12):0;
+        this.time+=delta;
+        this.elapsed+=delta;
         this.lastFrame=now;
         this.render();
       }
@@ -538,6 +475,7 @@ class ArchitectureScene {
   }
 }
 const scene=new ArchitectureScene(worldCanvas);
+$("#scene-next")?.addEventListener("click",()=>scene.nextScene());
 setMotionState();
 feature("anevum",false);
 applyScroll();
