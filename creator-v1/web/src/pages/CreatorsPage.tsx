@@ -9,6 +9,7 @@ import {PortalHeading} from "../components/PortalHeading";
 import {LevelPanel} from "../components/LevelPanel";
 import {EmptyState,ErrorState,LoadingState} from "../components/States";
 import {CelestialEmblem} from "../components/CelestialEmblem";
+import {RelicRaster,hasApprovedRelicRaster} from "../components/RelicRaster";
 import {CreatorFollowPanel} from "../components/CreatorFollowPanel";
 import {CosmicArtwork} from "../components/CosmicArtwork";
 import {achievementMotif,seriesOneMotif} from "../lib/artifact-art";
@@ -120,7 +121,9 @@ export function CreatorPage(){
         {detailed&&<section className="portal-sidebox portal-creator-level">
           <span className="kicker">EARNED ORBIT / SERVER VERIFIED</span>
           <div className="portal-channel-celestial">
-            <CelestialEmblem motif={seriesOneMotif(detailed.progression.level,detailed.progression.artifact)} size="medium" state={detailed.progression.artifactEarned?"earned":"preview"}/>
+            {detailed.progression.artifactEarned && detailed.progression.artifact && hasApprovedRelicRaster(detailed.progression.level,detailed.progression.artifact)
+              ? <RelicRaster level={detailed.progression.level} name={detailed.progression.artifact}/>
+              : <CelestialEmblem motif={seriesOneMotif(detailed.progression.level,detailed.progression.artifact)} size="medium" state={detailed.progression.artifactEarned?"earned":"preview"}/>}
             <div><h2>LEVEL {detailed.progression.level}</h2><strong>{detailed.progression.artifact||"NO NAMED ARTIFACT IN THIS SERIES"}</strong></div>
           </div>
           <p>{detailed.progression.artifact||"NEW ARTIFACT SERIES IN DEVELOPMENT"} · {detailed.progression.xp.toLocaleString()} XP</p>
