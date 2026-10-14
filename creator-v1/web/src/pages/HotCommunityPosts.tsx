@@ -2,6 +2,7 @@ import {Link} from "react-router-dom";
 import {useState} from "react";
 import {readCommunityPosts,readStatus,type CommunityPostsPage,type CommunityPostSort} from "../lib/api";
 import {useResource} from "../lib/useResource";
+import "./morph-community-feed.css";
 
 type Availability={mode:"available";page:CommunityPostsPage}|{mode:"not-public"};
 function postedAt(value:string){
