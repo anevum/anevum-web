@@ -18,6 +18,16 @@ const work=seeds.map(([title,category,creatorHandle],i)=>({
  freeToUse:true,demoUrl:"https://example.com/",sourceUrl:null,license:null,publishedAt:"2026-10-12T00:00:00.000Z",
  aiDisclosure:"Offline synthetic design fixture.",humanContribution:"No real human creator record."
 }));
+// A visibly synthetic approved release keeps the offline member's stated
+// project count consistent with the public work shelf in screenshot QA.
+work.push({
+ id:"000000000000000000000000000000d1",slug:"synthetic-artifact-workshop",title:"ARTIFACT WORKSHOP / OFFLINE TEST",
+ category:"creative",creatorHandle:"offline_artist",creatorName:"Synthetic Creator Preview",
+ summary:"A synthetic display-only project to verify creator cards and profile layouts. Not published.",
+ description:"OFFLINE SYNTHETIC DESIGN FIXTURE. NOT A PUBLISHED PROJECT.",
+ freeToUse:true,demoUrl:null,sourceUrl:null,license:null,publishedAt:"2026-10-12T00:00:00.000Z",
+ aiDisclosure:"Offline synthetic fixture.",humanContribution:"No real human creator record."
+});
 const categories=[...new Set(work.map(p=>p.category))].map(category=>({category,count:work.filter(p=>p.category===category).length}));
 const overlay='<style>body::after{content:"SYNTHETIC OFFLINE REVIEW — NOT REAL CONTENT";position:fixed;bottom:78px;right:7px;z-index:2147483647;background:#fff0b2;color:#1c1010;border:2px solid #1c1010;padding:5px 8px;font:900 8px system-ui,sans-serif;max-width:230px}</style>';
 // Fixture is ONLY served from this local 127.0.0.1 dev script for screenshot QA.
