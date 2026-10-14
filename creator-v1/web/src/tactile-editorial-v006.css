@@ -435,3 +435,57 @@
   }
   .av6-feed-tabs button[aria-pressed="true"]{border:2px solid Highlight;color:HighlightText;background:Highlight}
 }
+/* V006 second review: bring the public index into the opening viewport. */
+.site-shell--home .anevum-cinema .cinema-hero{min-height:370px}
+.site-shell--home .anevum-cinema .cinema-hero .cinema-hero-layout{min-height:370px;padding-top:75px;padding-bottom:29px}
+.site-shell--home .av5-orbit-wordmark{top:17px}
+.site-shell--home .av5-orbit-wordmark strong{font-size:clamp(28px,3.2vw,52px)}
+.site-shell--home .anevum-cinema .cinema-feature{height:210px;min-height:210px}
+.site-shell--home .anevum-cinema .cinema-gateways{margin:-12px auto 12px}
+.av6-feed-toolbar{flex-wrap:wrap}
+.av6-feed-fields{display:flex;align-items:center;gap:9px}
+.av6-feed-fields label{font:600 10px/1.5 var(--av6-index);letter-spacing:.075em;color:#b9c5df}
+.av6-feed-fields select{
+  cursor:pointer;min-height:42px;max-width:100%;border-radius:999px;
+  color:#f2efff;background:#222844;border:1px solid #8f99cd;
+  padding:7px 13px;font:600 11px/1.3 var(--av6-interface);
+  box-shadow:inset 0 1px #ffffff24,0 3px 0 #080c1f,0 8px 18px #0007;
+}
+.av6-feed-fields select:focus-visible{outline:2px solid #99e7ff;outline-offset:3px}
+html{scroll-padding-top:85px}
+@media(max-width:900px){
+  .site-shell--home .anevum-cinema .cinema-hero .cinema-hero-layout{
+    min-height:350px;padding:58px 18px 20px;
+  }
+  .site-shell--home .anevum-cinema .cinema-hero{min-height:350px}
+  .site-shell--home .anevum-cinema .cinema-feature{height:185px;min-height:185px}
+}
+@media(max-width:700px){
+  .site-shell--home .anevum-cinema .cinema-hero{min-height:0}
+  .site-shell--home .anevum-cinema .cinema-hero .cinema-hero-layout{
+    min-height:0;padding:30px 16px 20px;gap:0;
+  }
+  .site-shell--home .anevum-cinema .cinema-hero-copy{min-height:0}
+  .site-shell--home .anevum-cinema .cinema-hero h1{
+    font-size:clamp(33px,8.6vw,44px);
+    margin:4px 0 12px;line-height:1.04;
+  }
+  .site-shell--home .anevum-cinema .cinema-hero-copy>p{
+    max-width:44ch;font-size:12px;line-height:1.5;margin:0 0 12px;
+  }
+  .site-shell--home .anevum-cinema .cinema-feature{display:none}
+  .site-shell--home .anevum-cinema .cinema-actions{flex-direction:row;flex-wrap:wrap;gap:8px}
+  .site-shell--home .anevum-cinema .cinema-actions .cinema-button{
+    min-width:0;width:auto;min-height:43px;padding:10px 14px;font-size:10px;
+  }
+  .site-shell--home .anevum-cinema .cinema-gateways{
+    margin:9px 0 12px;padding:6px 0 11px;
+  }
+  .av6-community-index{margin-top:10px}
+  .av6-feed-toolbar{display:flex;align-items:flex-start;gap:10px}
+  .av6-feed-fields{margin:0 3px 7px}
+}
+@media(max-width:360px){
+  .site-shell--home .anevum-cinema .cinema-actions .cinema-button{font-size:9px;padding:10px 12px}
+  .av6-feed-fields select{min-width:0}
+}
