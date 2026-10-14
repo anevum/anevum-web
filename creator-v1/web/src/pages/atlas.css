@@ -304,7 +304,7 @@
   .atlas-brand small{font-size:6px;letter-spacing:.06em}
   .atlas-brand small{display:none}
   .atlas-top-actions{gap:6px}
-  .atlas-xp-mini{min-width:0;padding:5px 6px;gap:5px;min-height:35px}
+  .atlas-xp-mini{position:absolute;top:69px;right:12px;min-width:0;padding:5px 8px;gap:5px;min-height:35px;background:#0b1630ed;box-shadow:0 9px 24px #000b}
   .atlas-xp-mini-mark{width:24px;height:24px;font-size:14px}
   .atlas-xp-mini small{display:none}
   .atlas-xp-mini strong{font-size:8px}
@@ -355,7 +355,7 @@
   .atlas-deck-feed-header>span{max-width:110px;white-space:normal;text-align:right;font-size:8px}
   .atlas-deck-footer{display:block}
 }
-@media(max-width:350px){.atlas-universe{top:50%}.atlas-top-help,.atlas-left-hud{display:none}}
+@media(max-width:350px){.atlas-universe{top:50%}.atlas-left-hud{display:none}}
 @media(max-height:640px) and (min-width:641px){
   .atlas-top{height:60px}
   .atlas-left-hud{top:72px}

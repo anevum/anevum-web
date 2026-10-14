@@ -48,7 +48,7 @@ export const ATLAS_WORLDS:readonly AtlasWorld[]=[
     id:"creative",title:"CREATE",overline:"THE IMAGINATION FIELD",
     tagline:"Art. Experiments. Unusual ideas.",description:"Explore creative work, prototypes and AI-assisted experiments alongside traditionally built work.",
     type:"catalogue",status:"public",route:"/discover?category=creative",action:"EXPLORE CREATIONS",category:"creative",
-    scene:"creative",accent:"#f7a8e9",number:"03",coordinates:[-3.15,-1.45,-.6],glyph:"✺"
+    scene:"creative",accent:"#f7a8e9",number:"03",coordinates:[-3.65,-1.3,-.6],glyph:"✺"
   },
   {
     id:"studio",title:"STUDIO",overline:"THE CREATOR DECK",
@@ -84,7 +84,7 @@ export const ATLAS_WORLDS:readonly AtlasWorld[]=[
     id:"identity",title:"IDENTITY",overline:"YOUR CORNER OF THE UNIVERSE",
     tagline:"A world that feels like you.",description:"Personal profiles, a saved library and future customization. Private account access remains invitation-only until acceptance.",
     type:"participation",status:"invited",route:"/account",action:"OPEN MY SPACE",
-    scene:"hero",accent:"#ffa98e",number:"09",coordinates:[-1.75,-2.15,1.26],glyph:"◈"
+    scene:"hero",accent:"#ffa98e",number:"09",coordinates:[-1.9,-2.75,1.26],glyph:"◈"
   }
 ];
 export const ATLAS_WORLD_BY_ID=new Map(ATLAS_WORLDS.map(world=>[world.id,world]));

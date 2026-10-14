@@ -76,6 +76,8 @@ try{
   if(inspect.nodes!==10||inspect.screen!=="fixed"||inspect.overflow||inspect.auth)throw Error("Atlas map "+width+" failed "+JSON.stringify(inspect));
   const clipped=await evaluate("(()=>{const e=document.querySelector('.atlas-exit');const r=e?.getBoundingClientRect();return !r || r.right>innerWidth+1 || r.left<0;})()");
   if(clipped)throw Error("Atlas exit control clipped at "+width);
+  const hudClipped=await evaluate("(()=>{const e=document.querySelector('.atlas-xp-mini');const r=e?.getBoundingClientRect();return !r||r.left<0||r.right>innerWidth+1;})()");
+  if(hudClipped)throw Error("Atlas XP HUD clipped at "+width);
   await screenshot("atlas-map",width);
   await evaluate("document.querySelector('button.atlas-world--play').click()");
   await until(()=>evaluate("!!document.querySelector('dialog.atlas-deck[open]') && document.querySelector('#atlas-deck-title')?.textContent?.includes('PLAY')"));
