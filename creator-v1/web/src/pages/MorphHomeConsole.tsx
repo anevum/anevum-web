@@ -1,162 +1,168 @@
-import {useEffect,useMemo,useState,type CSSProperties} from "react";
+import {useEffect,useMemo,useState} from "react";
 import {Link} from "react-router-dom";
 import {CosmicArtwork} from "../components/CosmicArtwork";
 import type {CosmicScene} from "../components/CosmicIllustration";
-import {readCreators,readProjects,readStatus,type Category,type Project} from "../lib/api";
+import {readCategories,readCreators,readProjects,readStatus,type Category,type Creator,type Project,type CategoryCount} from "../lib/api";
 import {useResource} from "../lib/useResource";
 import {MorphActivityStream} from "./MorphActivityStream";
-import "./morph-home-console.css";
+import {HotCommunityPosts} from "./HotCommunityPosts";
+import "./morph-community-feed.css";
 
-const CATEGORIES:ReadonlyArray<{id:"games"|"tools"|"creative"|"learning";name:string;lead:string;scene:CosmicScene;eyebrow:string}>= [
-  {id:"games",name:"THE ARCADE",lead:"Play something unexpected.",scene:"games",eyebrow:"01 / PLAY"},
-  {id:"tools",name:"THE WORKSHOP",lead:"Make something useful.",scene:"tools",eyebrow:"02 / BUILD"},
-  {id:"creative",name:"THE STUDIO",lead:"Explore something original.",scene:"creative",eyebrow:"03 / IMAGINE"},
-  {id:"learning",name:"THE LIBRARY",lead:"Learn something new.",scene:"learning",eyebrow:"04 / LEARN"}
-];
-const sceneFor:Record<Category,CosmicScene>={
-  games:"games",tools:"tools",creative:"creative",learning:"learning",research:"research",
-  automation:"automation",libraries:"libraries",other:"other"
+const SCENES:Record<Category,CosmicScene>={
+ games:"games",tools:"tools",creative:"creative",learning:"learning",research:"research",
+ automation:"automation",libraries:"libraries",other:"other"
 };
-function dateLabel(date:string|null):string{
-  if(!date)return "APPROVED RELEASE";
-  const timestamp=Date.parse(date);
-  if(!Number.isFinite(timestamp))return "APPROVED RELEASE";
-  return new Intl.DateTimeFormat("en-US",{month:"short",day:"numeric",year:"numeric",timeZone:"UTC"}).format(new Date(timestamp)).toUpperCase();
+const TOPICS:readonly {id:Category;label:string;tag:string}[]=[
+ {id:"games",label:"Games",tag:"PLAY"},
+ {id:"tools",label:"Software",tag:"BUILD"},
+ {id:"creative",label:"Art & Creative",tag:"MAKE"},
+ {id:"learning",label:"Learning",tag:"LEARN"},
+ {id:"libraries",label:"Open Source",tag:"SHARE"},
+ {id:"research",label:"Research",tag:"DISCOVER"}
+];
+function dateLabel(value:string|null){
+ if(!value)return "RECENT RELEASE";
+ const date=new Date(value);
+ return Number.isFinite(date.getTime())?
+   new Intl.DateTimeFormat("en-US",{month:"short",day:"numeric",year:"numeric",timeZone:"UTC"}).format(date).toUpperCase():"RECENT RELEASE";
 }
-function projectLink(project:Project){return "/atlas/projects/"+encodeURIComponent(project.id);}
-function featureLink(project:Project){return "/atlas/experience/"+encodeURIComponent(project.id);}
-function preferredName(project:Project){return project.creatorName||project.creatorHandle;}
-function previewArtwork(project:Project){
-  return <CosmicArtwork scene={sceneFor[project.category]}/>;
-}
+function creatorPath(handle:string){return "/atlas/creators/"+encodeURIComponent(handle);}
+function projectPath(id:string){return "/atlas/experience/"+encodeURIComponent(id);}
 
+/** One real-data community homepage. No fake discussion counts, invented people,
+ * synthetic post reactions or unrelated first-party mini-games.
+ */
 export function MorphHomeConsole({onExplore}:{onExplore:()=>void}){
-  const [refresh,setRefresh]=useState(0);
-  const [spotlightIndex,setSpotlightIndex]=useState(0);
-  const feed=useResource(async signal=>{
-    const [projects,status,creators]=await Promise.allSettled([
-      readProjects({limit:"16"},signal),
-      readStatus(signal),
-      readCreators({limit:"6"},signal)
-    ]);
-    // Recent releases and public projects stay usable if the status and
-    // creator directory services experience an independent outage.
-    if(projects.status!=="fulfilled")throw projects.reason;
-    return {
-      projects:projects.value,
-      status:status.status==="fulfilled"?status.value:null,
-      creators:creators.status==="fulfilled"?creators.value:null
-    };
-  },[refresh]);
-  useEffect(()=>{
-    const onVisible=()=>{if(document.visibilityState==="visible")setRefresh(value=>value+1);};
-    const timer=window.setInterval(()=>{
-      if(document.visibilityState==="visible")setRefresh(value=>value+1);
-    },120000);
-    document.addEventListener("visibilitychange",onVisible);
-    return()=>{window.clearInterval(timer);document.removeEventListener("visibilitychange",onVisible);};
-  },[]);
-  const releases=useMemo(()=>feed.state==="ready"?
-    [...feed.data.projects.items].sort((a,b)=>(Date.parse(b.publishedAt||"")||0)-(Date.parse(a.publishedAt||"")||0))
-    :[],[feed]);
-  const spotlight=releases.slice(0,5);
-  const lead=spotlight[spotlightIndex%Math.max(1,spotlight.length)]||null;
-  const spotlightCount=spotlight.length;
-  const advance=(direction:1|-1)=>setSpotlightIndex(index=>(
-    spotlightCount?(index+direction+spotlightCount)%spotlightCount:0
-  ));
-  const published=feed.state==="ready"?feed.data.status?.counts.publishedProjects??null:null;
-  const creators=feed.state==="ready"?feed.data.creators?.items||[]:[];
+ const [refresh,setRefresh]=useState(0);
+ const data=useResource(async signal=>{
+   const [projects,creators,status,categories]=await Promise.allSettled([
+     readProjects({limit:"24"},signal),
+     readCreators({limit:"24"},signal),
+     readStatus(signal),
+     readCategories(signal)
+   ]);
+   return {
+     projects:projects.status==="fulfilled"?projects.value.items:null,
+     creators:creators.status==="fulfilled"?creators.value.items:null,
+     status:status.status==="fulfilled"?status.value:null,
+     categories:categories.status==="fulfilled"?categories.value.categories:null
+   };
+ },[refresh]);
+ useEffect(()=>{
+   const update=()=>{if(document.visibilityState==="visible")setRefresh(value=>value+1);};
+   const timer=window.setInterval(update,120000);
+   document.addEventListener("visibilitychange",update);
+   return()=>{window.clearInterval(timer);document.removeEventListener("visibilitychange",update);};
+ },[]);
 
-  return <div className="mhc-console">
-    <header className="mhc-broadcast">
-      <span><b aria-hidden="true">◉</b> ANEVUM NETWORK / FRONT PAGE</span>
-      <span>INDEPENDENT DIGITAL CREATION · PUBLIC EDITION</span>
-    </header>
-    <section className="mhc-feature-zone" aria-label="What's happening on ANEVUM">
-      <div className="mhc-headliner">
-        <div className="mhc-hero-art" aria-hidden="true">{lead?previewArtwork(lead):<CosmicArtwork scene="games" priority/>}</div>
-        <div className="mhc-hero-vignette" aria-hidden="true"/>
-        <div className="mhc-hero-upper">
-          <span className="mhc-hero-orbit">ANEVUM / FEATURED EXPERIENCE</span>
-          <span className="mhc-hero-edition">{lead?"VERIFIED PUBLIC RELEASE":"FIRST-PARTY PLAYER LAB / NOT A CREATOR RELEASE"}</span>
-        </div>
-        <div className="mhc-hero-copy">
-          <span className="mhc-feature-kicker">{lead?lead.category.toUpperCase()+" / "+dateLabel(lead.publishedAt):"FIRST-PARTY INTERACTIVE PROTOTYPE / 001"}</span>
-          <h1>{lead?lead.title:<>ORBIT <em>ALIGN.</em></>}</h1>
-          <p>{lead?lead.summary:"Enter a short, playable orbital puzzle built for ANEVUM Player Lab. Rotate three signals to a shared north beacon. This is a real first-party UI prototype, not a published creator submission."}</p>
-          {spotlightCount>1&&<div className="mhc-spotlight-controls" aria-label="Featured approved releases">
-            <span>FEATURE {String(spotlightIndex%spotlightCount+1).padStart(2,"0")} / {String(spotlightCount).padStart(2,"0")}</span>
-            <button type="button" onClick={()=>advance(-1)} aria-label="Previous featured release">←</button>
-            <button type="button" onClick={()=>advance(1)} aria-label="Next featured release">→</button>
-          </div>}
-          <div className="mhc-feature-actions">
-            <Link to={lead?featureLink(lead):"/atlas/lab/orbit-align"} className="mhc-primary-action">
-              {lead?"ENTER FEATURED PROJECT":"PLAY THE PROTOTYPE"} <span aria-hidden="true">↗</span>
-            </Link>
-            <button type="button" onClick={onExplore} className="mhc-secondary-action">EXPLORE THE WORLDS <span aria-hidden="true">⌄</span></button>
-          </div>
-          {lead?<span className="mhc-feature-attribution">BY {preferredName(lead)} / @{lead.creatorHandle} · CATEGORY ILLUSTRATION</span>:
-            <span className="mhc-feature-attribution">PLAYER LAB · NO ACCOUNT REQUIRED · NO XP GRANTED</span>}
-        </div>
-      </div>
-      <MorphActivityStream/>
-    </section>
+ const projects=useMemo(()=>data.state==="ready"&&data.data.projects?
+   [...data.data.projects].sort((a,b)=>((Date.parse(b.publishedAt||"")||0)-(Date.parse(a.publishedAt||"")||0))||a.id.localeCompare(b.id))
+   :[],[data]);
+ const lead:Project|null=projects[0]||null;
+ const makers:Creator[]=data.state==="ready"&&data.data.creators?
+   [...data.data.creators].sort((a,b)=>b.publishedProjects-a.publishedProjects||a.handle.localeCompare(b.handle)).slice(0,5):[];
+ const topics:CategoryCount[]=data.state==="ready"&&data.data.categories?data.data.categories:[];
+ const reported=data.state==="ready"?data.data.status:null;
+ const postOpen=reported?.features?.communityPosts===true;
 
-    <section className="mhc-newsroom" aria-labelledby="mhc-news-heading">
-      <div className="mhc-section-title">
-        <div><span>THE CREATIVE NETWORK / CURRENT ISSUE</span><h2 id="mhc-news-heading">RECENT <em>ARRIVALS.</em></h2></div>
-        <Link to="/atlas/discover">THE FULL ARCHIVE <span aria-hidden="true">↗</span></Link>
-      </div>
-      {feed.state==="ready"&&releases.length>0?
-        <div className="mhc-release-rail">
-          {releases.slice(0,4).map((project,i)=><article className="mhc-release" key={project.id}>
-            <Link to={projectLink(project)} className="mhc-release-media" aria-label={"Open "+project.title}>
-              {previewArtwork(project)}<span>CATEGORY ILLUSTRATION</span>
-            </Link>
-            <div className="mhc-release-copy"><span>{String(i+1).padStart(2,"0")} / {project.category.toUpperCase()} · {dateLabel(project.publishedAt)}</span>
-              <h3><Link to={projectLink(project)}>{project.title}</Link></h3><p>{project.summary}</p>
-              <Link to={projectLink(project)} className="mhc-release-open">VIEW RELEASE ↗</Link>
-            </div>
-          </article>)}
-        </div>:
-        <div className="mhc-release-empty">
-          <span>✧</span><div><strong>{feed.state==="error"?"PUBLIC RELEASES ARE UNAVAILABLE":"THE STORY IS JUST BEGINNING."}</strong>
-          <p>{feed.state==="error"?"Please retry the public catalogue.":"The first approved creator releases will appear here. Explore a category while the community takes shape."}</p></div>
-          <Link to="/atlas/discover">BROWSE DISCOVERY ↗</Link>
-        </div>}
-    </section>
+ return <div className="nfc-home">
+   <header className="nfc-intro">
+     <div>
+       <span className="nfc-eyebrow"><span className="nfc-indicator" aria-hidden="true"/> ANEVUM / COMMUNITY NETWORK</span>
+       <h1>WHAT'S HAPPENING <em>ON ANEVUM?</em></h1>
+       <p>New creations, useful conversations, and the people building things together.</p>
+     </div>
+     <nav className="nfc-intro-actions" aria-label="Community quick actions">
+       <Link className="nfc-share" to="/atlas/create/new"><span aria-hidden="true">＋</span> SHARE A PROJECT</Link>
+       <button type="button" onClick={onExplore}>EXPLORE <span aria-hidden="true">⌄</span></button>
+     </nav>
+   </header>
 
-    <div className="mhc-bottom-grid">
-      <section className="mhc-departments" aria-labelledby="mhc-departments-heading">
-        <div className="mhc-section-title">
-          <div><span>STUDIOS / PROGRAMS / DEPARTMENTS</span><h2 id="mhc-departments-heading">FIND YOUR <em>FREQUENCY.</em></h2></div>
-        </div>
-        <div className="mhc-department-rows">
-          {CATEGORIES.map(row=><Link className="mhc-department" to={"/atlas/discover?category="+row.id} key={row.id}>
-            <div className="mhc-department-art" aria-hidden="true"><CosmicArtwork scene={row.scene}/></div>
-            <span className="mhc-department-code">{row.eyebrow}</span>
-            <span className="mhc-department-name"><strong>{row.name}</strong><small>{row.lead}</small></span>
-            <span className="mhc-department-arrow" aria-hidden="true">↗</span>
-          </Link>)}
-        </div>
-      </section>
-      <aside className="mhc-community" aria-labelledby="mhc-community-heading">
-        <div className="mhc-section-title"><div><span>PEOPLE / PUBLIC CHANNELS</span><h2 id="mhc-community-heading">THE <em>MAKERS.</em></h2></div></div>
-        <p>Find independent creators, explore their published work, and follow the development of our collaborative spaces.</p>
-        {feed.state==="ready"&&creators.length?
-          <div className="mhc-maker-list">{creators.slice(0,4).map((creator,i)=><Link to={"/atlas/creators/"+encodeURIComponent(creator.handle)} key={creator.handle}>
-            <span className="mhc-maker-number">{String(i+1).padStart(2,"0")}</span>
-            <span><strong>{creator.displayName}</strong><small>@{creator.handle} · {creator.publishedProjects} RELEASES</small></span>
-            <span className="mhc-maker-open" aria-hidden="true">↗</span>
-          </Link>)}</div>:
-          <div className="mhc-community-pending">No public creator channels are available to display. We don't invent people, posts or participation.</div>}
-        <Link className="mhc-maker-cta" to="/atlas/community">EXPLORE COMMUNITY ↗</Link>
-      </aside>
-    </div>
-    <footer className="mhc-console-end">
-      <span>ANEVUM / AN INDEPENDENT CREATOR NETWORK</span>
-      <span>{published===null?"PUBLIC METRICS UNAVAILABLE":published+" APPROVED PUBLIC PROJECTS"} · IREN EDITORIAL AUTOMATION PLANNED</span>
-    </footer>
-  </div>;
+   <section className="nfc-network-strip" aria-label="Verified network information">
+     <div><span>NETWORK</span><strong>PUBLIC CREATOR SPACE</strong></div>
+     <div><span>RELEASES</span><strong>{reported?reported.counts.publishedProjects:"—"} APPROVED</strong></div>
+     <div><span>CREATORS</span><strong>{reported?reported.counts.publishedCreators:"—"} PUBLISHED CHANNELS</strong></div>
+     <button type="button" onClick={()=>setRefresh(value=>value+1)} aria-label="Refresh public network information">↻ <span>SYNC</span></button>
+   </section>
+
+   <div className="nfc-layout">
+     <main className="nfc-main" aria-label="Public submissions and network activity">
+       <div className="nfc-region-heading">
+         <div><span className="nfc-eyebrow">SUBMISSIONS / SELECTED WORK</span><h2>FROM THE <em>NETWORK.</em></h2></div>
+         <Link to="/atlas/discover">BROWSE PROJECTS ↗</Link>
+       </div>
+       {lead?<article className="nfc-spotlight">
+         <Link to={projectPath(lead.id)} className="nfc-spotlight-visual" aria-label={"Explore "+lead.title}>
+           <CosmicArtwork scene={SCENES[lead.category]}/>
+           <span>CATEGORY ARTWORK</span>
+         </Link>
+         <div className="nfc-spotlight-content">
+           <span className="nfc-spotlight-label">PUBLIC RELEASE / {lead.category.toUpperCase()}</span>
+           <h3><Link to={projectPath(lead.id)}>{lead.title}</Link></h3>
+           <p>{lead.summary}</p>
+           <Link to={creatorPath(lead.creatorHandle)} className="nfc-spotlight-creator">BY {lead.creatorName} · @{lead.creatorHandle}</Link>
+           <div className="nfc-spotlight-actions">
+             <Link to={projectPath(lead.id)}>EXPLORE PROJECT <span aria-hidden="true">↗</span></Link>
+             <span>{dateLabel(lead.publishedAt)}</span>
+           </div>
+         </div>
+       </article>:
+       <section className="nfc-spotlight-empty" aria-label="Awaiting approved community creations">
+         <span aria-hidden="true">✳</span>
+         <div><strong>THE NEXT FEATURED CREATION COULD BE YOURS.</strong>
+           <p>{data.state==="loading"?"Finding approved projects…":
+             data.state==="ready"&&data.data.projects===null?"Approved releases are temporarily unavailable.":
+             "This space will feature real community submissions after they're approved. No demo projects are substituted."}</p>
+           <Link to="/atlas/discover">EXPLORE THE CATALOGUE ↗</Link>
+         </div>
+       </section>}
+       <MorphActivityStream/>
+     </main>
+
+     <aside className="nfc-sidebar" aria-label="Discussions, members and topics">
+       <HotCommunityPosts/>
+       <section className="nfc-module nfc-makers" aria-labelledby="nfc-makers-title">
+         <div className="nfc-module-heading"><div><span className="nfc-eyebrow">PUBLIC CHANNELS / PEOPLE</span>
+           <h2 id="nfc-makers-title">MEET THE <em>MAKERS.</em></h2></div>
+           <Link to="/atlas/creators" aria-label="All published creator profiles">↗</Link></div>
+         {makers.length?<div className="nfc-maker-list">
+           {makers.map((creator,i)=><Link to={creatorPath(creator.handle)} key={creator.handle} className="nfc-maker">
+             <span className="nfc-maker-avatar" aria-hidden="true">{creator.displayName.charAt(0).toUpperCase()}</span>
+             <span className="nfc-maker-details"><strong>{creator.displayName}</strong><small>@{creator.handle} · {creator.publishedProjects} APPROVED {creator.publishedProjects===1?"RELEASE":"RELEASES"}</small></span>
+             <span className="nfc-maker-arrow" aria-hidden="true">↗</span>
+           </Link>)}
+         </div>:<div className="nfc-module-empty">
+           <p>{data.state==="loading"?"Loading creator profiles…":
+             data.state==="ready"&&data.data.creators===null?"Creator channels are temporarily unavailable.":
+             "Verified creator channels will appear as real projects are published."}</p>
+         </div>}
+         <div className="nfc-module-footer"><Link to="/atlas/creators">VIEW ALL CREATORS ↗</Link></div>
+       </section>
+
+       <section className="nfc-module nfc-topics" aria-labelledby="nfc-topics-title">
+         <div className="nfc-module-heading"><div><span className="nfc-eyebrow">EXPLORE / CREATIVE CHANNELS</span>
+           <h2 id="nfc-topics-title">YOUR <em>CORNER.</em></h2></div></div>
+         <div className="nfc-topic-list">
+           {TOPICS.map((topic,i)=>{
+             const count=topics.find(item=>item.category===topic.id)?.count;
+             return <Link to={"/atlas/discover?category="+topic.id} key={topic.id} className="nfc-topic">
+               <span className="nfc-topic-index">{String(i+1).padStart(2,"0")}</span>
+               <span className="nfc-topic-label"><strong>{topic.label}</strong><small>{topic.tag}</small></span>
+               <span className="nfc-topic-count">{count===undefined?"—":count}</span>
+               <span className="nfc-topic-arrow" aria-hidden="true">↗</span>
+             </Link>;
+           })}
+         </div>
+       </section>
+       <aside className="nfc-curation-note" aria-label="Network editorial status">
+         <span>IREN / NETWORK CURATION</span>
+         <p>{postOpen?
+           "Verified public discussions and approved submissions can appear in this network view.":
+           "IREN editorial automation and community post publication are not enabled here yet. Feed items currently come from approved public projects."}</p>
+         <Link to="/atlas/status">VIEW NETWORK STATUS ↗</Link>
+       </aside>
+     </aside>
+   </div>
+   <footer className="nfc-footer"><span>ANEVUM / CREATOR COMMUNITY</span><span>REAL SUBMISSIONS · VERIFIED PROFILES · MODERATED CONVERSATIONS WHEN AVAILABLE</span></footer>
+ </div>;
 }
