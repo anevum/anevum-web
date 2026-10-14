@@ -25,7 +25,7 @@ const pageContext:Record<DashboardSection,{
   discover:{
     eyebrow:"THE UNIVERSE / DISCOVER",title:"Explore the archive",
     description:"Independent creations. Real published releases only.",
-    links:[{to:"/discover",label:"All work"},{to:"/discover?category=games",label:"Games"},{to:"/discover?category=tools",label:"Apps"},{to:"/discover?category=creative",label:"Art & AI"}]
+    links:[{to:"/creators",label:"People"},{to:"/community",label:"Community"},{to:"/start",label:"Start here"}]
   },
   creators:{
     eyebrow:"THE UNIVERSE / PEOPLE",title:"Meet the makers",
@@ -40,17 +40,17 @@ const pageContext:Record<DashboardSection,{
   community:{
     eyebrow:"THE UNIVERSE / COMMONS",title:"Build together",
     description:"Planned discussion rooms are labelled until launch acceptance.",
-    links:[{to:"/community",label:"Community"},{to:"/creators",label:"People"},{to:"/guide",label:"Community guide"}]
+    links:[{to:"/creators",label:"People"},{to:"/discover",label:"Explore work"},{to:"/guide",label:"Field guide"}]
   },
   levels:{
     eyebrow:"THE UNIVERSE / PROGRESSION",title:"Earn your orbit",
     description:"Recognition is earned through verified participation, never purchased.",
-    links:[{to:"/levels",label:"Levels"},{to:"/community",label:"Community"},{to:"/guide",label:"How it works"}]
+    links:[{to:"/account",label:"My achievements"},{to:"/community",label:"Community"},{to:"/guide",label:"How it works"}]
   },
   member:{
     eyebrow:"YOUR SPACE / PROTECTED",title:"Creator workspace",
     description:"Private projects, identity, and library stay behind existing member access.",
-    links:[{to:"/account",label:"Account"},{to:"/create",label:"My projects"},{to:"/library",label:"My library"},{to:"/account/edit",label:"Edit profile"}]
+    links:[{to:"/discover",label:"Explore work"},{to:"/guide",label:"Field guide"},{to:"/status",label:"Build status"}]
   }
 };
 
