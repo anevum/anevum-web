@@ -50,7 +50,7 @@ test("public and private pages use an explicit route allowlist",()=>{
   }
   assert.ok(bar.includes('return null'));
   assert.ok(bar.includes('Section shortcuts'));
-  for(const route of ['/discover','/creators','/community','/levels','/account','/create','/library','/account/edit']){
+  for(const route of ['/discover','/creators','/community','/levels','/account','/guide','/start','/status']){
     assert.ok(bar.includes('to:"'+route+'"')||bar.includes('to:"'+route+'?'),"Missing existing section link: "+route);
   }
 });
@@ -72,6 +72,7 @@ test("shared dashboard styles respect responsive breakpoints and accessibility",
   assert.ok(entry.includes('import "./dashboard-sitewide-v004.css"'));
   assert.ok(entry.indexOf('dashboard-sitewide-v004.css')>entry.indexOf('dashboard-home-v003.css'));
   assert.ok(css.includes('.site-shell--dashboard .site-main'));
+  assert.ok(css.includes('.site-shell--dashboard .portal-navigation,.site-shell--dashboard .signal-strip{display:none}'));
   assert.ok(css.includes('.av4-page-frame .av3-navrail'));
   assert.ok(css.includes('.av4-page-content .member-header'));
   assert.match(css,/@media\(max-width:880px\)/);
