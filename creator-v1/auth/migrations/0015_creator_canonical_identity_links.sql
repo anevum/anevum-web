@@ -6,15 +6,15 @@ CREATE TABLE IF NOT EXISTS creator_canonical_identity_links (
   legacy_member_id TEXT PRIMARY KEY NOT NULL
     REFERENCES member_accounts(id) ON DELETE CASCADE,
   canonical_subject TEXT NOT NULL UNIQUE
-    CHECK(length(canonical_subject) BETWEEN 8 AND 128),
+    CHECK(length(canonical_subject) BETWEEN 8 AND 128 AND instr(canonical_subject, '@') = 0),
   canonical_issuer TEXT NOT NULL
     CHECK(canonical_issuer = 'anevum-better-auth-staging-v1'),
   proof_digest TEXT NOT NULL UNIQUE
-    CHECK(length(proof_digest) = 64),
+    CHECK(length(proof_digest) = 64 AND proof_digest NOT GLOB '*[^0-9a-f]*'),
   status TEXT NOT NULL DEFAULT 'verified'
     CHECK(status IN ('verified', 'revoked')),
   verified_at INTEGER NOT NULL CHECK(verified_at > 0),
-  reviewed_at INTEGER NOT NULL CHECK(reviewed_at > 0),
+  reviewed_at INTEGER NOT NULL CHECK(reviewed_at > 0 AND reviewed_at >= verified_at),
   revoked_at INTEGER,
   CHECK (
     (status = 'verified' AND revoked_at IS NULL) OR
