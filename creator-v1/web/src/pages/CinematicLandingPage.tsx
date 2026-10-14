@@ -1,4 +1,5 @@
 import {Link} from "react-router-dom";
+import type {PointerEvent} from "react";
 import {readCreators, readProjects, readStatus, type Project} from "../lib/api";
 import {useResource} from "../lib/useResource";
 import {projectDetailPath} from "../lib/navigation";
@@ -10,8 +11,9 @@ import {ErrorState, LoadingState} from "../components/States";
 
 /**
  * LOCKED DIRECTION 2026-10-13
- * Desktop and mobile source references:
+ * Owner-supplied reference screenshots A + B:
  * ANEVUM/Visual-References/2026-10-13-Cinematic-World.
+ * Both are desktop design boards. Mobile geometry is designed separately.
  *
  * Real controls and genuine API data always sit above decorative scene imagery.
  * Nothing inside a raster environment is an imitation navigation or fake statistic.
@@ -108,7 +110,7 @@ export function CinematicLandingPage(){
   const projects=isReady?portal.data.projects:[];
   const creators=isReady?portal.data.creators:[];
   const featured=projects[0]??null;
-  function moveScene(event:React.PointerEvent<HTMLElement>){
+  function moveScene(event:PointerEvent<HTMLElement>){
     if(event.pointerType==="touch")return;
     const node=event.currentTarget;
     const bounds=node.getBoundingClientRect();
@@ -117,7 +119,7 @@ export function CinematicLandingPage(){
     node.style.setProperty("--cinema-pointer-x",x.toFixed(3));
     node.style.setProperty("--cinema-pointer-y",y.toFixed(3));
   }
-  function resetScene(event:React.PointerEvent<HTMLElement>){
+  function resetScene(event:PointerEvent<HTMLElement>){
     event.currentTarget.style.setProperty("--cinema-pointer-x","0");
     event.currentTarget.style.setProperty("--cinema-pointer-y","0");
   }
