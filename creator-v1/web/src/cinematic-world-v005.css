@@ -220,3 +220,33 @@
     background-color:#070b19;
   }
 }
+
+
+/* Owner screenshot review (desktop/phone): keep the introductory copy subordinate
+   to the illustrated portal and central mark, not an oversized billboard. */
+.site-shell--home .anevum-cinema .cinema-hero-copy{
+  width:min(100%,340px);max-width:340px;min-width:0;
+}
+.site-shell--home .anevum-cinema .cinema-hero h1{
+  font-family:Inter,ui-sans-serif,system-ui,sans-serif;
+  font-size:clamp(24px,2.4vw,35px);
+  font-weight:750;line-height:1.12;letter-spacing:.035em;
+  max-width:340px;overflow-wrap:normal;
+}
+@media(max-width:900px){
+  .site-shell--home .anevum-cinema .cinema-hero-copy{width:100%;max-width:100%;min-height:0}
+  .site-shell--home .anevum-cinema .cinema-hero h1{
+    font-size:clamp(27px,5vw,37px);max-width:100%;
+    letter-spacing:.02em;line-height:1.12;
+  }
+}
+@media(max-width:640px){
+  .site-shell--home .anevum-cinema .cinema-hero-copy{min-height:310px}
+  .site-shell--home .anevum-cinema .cinema-hero h1{
+    font-size:clamp(26px,7.2vw,31px);
+    line-height:1.14;letter-spacing:.012em;
+  }
+  .site-shell--home .anevum-cinema .cinema-hero-copy>p{
+    max-width:35ch;font-size:12px;line-height:1.52;
+  }
+}
