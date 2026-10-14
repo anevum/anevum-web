@@ -23,6 +23,7 @@ import "./cinematic-reference.css";
 import "./cinematic-catalogue.css";
 import "./cinematic-discovery.css";
 import "./cinematic-world-v005.css";
+import "./tactile-editorial-v006.css";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
