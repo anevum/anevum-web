@@ -199,13 +199,19 @@ export function AtlasMorphLayout(){
     if(!(target instanceof Element))return;
     const anchor=target.closest("a[href]");
     if(!(anchor instanceof HTMLAnchorElement)||anchor.download||anchor.target&&anchor.target!=="_self")return;
-    const url=new URL(anchor.href,location.pathname?window.location.origin:window.location.href);
-    if(url.origin!==window.location.origin||url.pathname.startsWith("/atlas/")||url.pathname==="/atlas")return;
-    const first=url.pathname.split("/").filter(Boolean)[0];
+    const url=new URL(anchor.href,window.location.href);
+    if(url.origin!==window.location.origin)return;
+    // React Router's basename differs between apex (/), and the isolated
+    // /creator/ review route. Always resolve within the deployed app base.
+    const appBase=import.meta.env.BASE_URL.replace(/\/$/,"");
+    if(appBase&&!(url.pathname===appBase||url.pathname.startsWith(appBase+"/")))return;
+    const relative=appBase?(url.pathname.slice(appBase.length)||"/"):url.pathname;
+    if(relative.startsWith("/atlas/")||relative==="/atlas")return;
+    const first=relative.split("/").filter(Boolean)[0];
     if(!ROUTES.has(first))return;
     e.preventDefault();
     e.stopPropagation();
-    navigate("/atlas"+url.pathname+url.search+url.hash);
+    navigate("/atlas"+relative+url.search+url.hash);
   }
   function onGlobalKey(e:React.KeyboardEvent<HTMLDivElement>){
     if(e.key==="Escape"&&focused&&!(e.target instanceof Element&&e.target.closest("dialog,[role=dialog]"))){
