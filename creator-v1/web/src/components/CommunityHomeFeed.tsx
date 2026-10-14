@@ -6,6 +6,9 @@ import {projectDetailPath} from "../lib/navigation";
 import {CosmicArtwork} from "./CosmicArtwork";
 import type {CosmicScene} from "./CosmicIllustration";
 import {Icon} from "./Icons";
+import {CreatorRecognitionStrip} from "./CreatorRecognitionStrip";
+import {useVerifiedCreatorRecognition} from "../lib/useVerifiedCreatorRecognition";
+import type {VerifiedCreatorRecognition} from "../lib/creator-recognition";
 import {ErrorState,LoadingState} from "./States";
 
 /** A real public index, never a synthetic social feed. Private, queued and
@@ -41,7 +44,7 @@ function dateLabel(raw:string|null|undefined){
   const value=dateOrder(raw);
   return value?new Intl.DateTimeFormat("en-US",{month:"short",day:"numeric",year:"numeric",timeZone:"UTC"}).format(value):"Date unavailable";
 }
-function ProfileCard({handle,name,known}:{handle:string;name:string;known?:Creator}){
+function ProfileCard({handle,name,known,recognition}:{handle:string;name:string;known?:Creator;recognition?:VerifiedCreatorRecognition}){
   const href="/creators/"+encodeURIComponent(handle);
   return <aside className="av6-author" aria-label={"Creator "+name}>
     <span className="av6-author-label">CREATOR / PUBLIC CHANNEL</span>
@@ -50,10 +53,11 @@ function ProfileCard({handle,name,known}:{handle:string;name:string;known?:Creat
       <span className="av6-author-identity"><strong>{name}</strong><small>@{handle}</small></span>
     </Link>
     {known&&<span className="av6-author-stat">{known.publishedProjects} {known.publishedProjects===1?"published work":"published works"}</span>}
+    {recognition&&<div className="ch9-in-person"><CreatorRecognitionStrip recognition={recognition} compact/></div>}
     <Link to={href} className="av6-author-visit">VIEW CHANNEL <Icon name="arrow" size={13}/></Link>
   </aside>;
 }
-function ProjectEntry({project,creators}:{project:Project;creators:readonly Creator[]}){
+function ProjectEntry({project,creators,recognition}:{project:Project;creators:readonly Creator[];recognition?:VerifiedCreatorRecognition}){
   const author=creators.find(c=>c.handle===project.creatorHandle);
   const title=project.title;
   const href=projectDetailPath(project.id,"/");
@@ -74,11 +78,11 @@ function ProjectEntry({project,creators}:{project:Project;creators:readonly Crea
           <Link to={"/discover?category="+project.category} className="av6-feed-inline">{cat?.name||"Browse category"}</Link>
         </div>
       </div>
-      <ProfileCard handle={project.creatorHandle} name={project.creatorName||project.creatorHandle} known={author}/>
+      <ProfileCard handle={project.creatorHandle} name={project.creatorName||project.creatorHandle} known={author} recognition={recognition}/>
     </div>
   </article>;
 }
-function DiscussionEntry({post,creators}:{post:CommunityPost;creators:readonly Creator[]}){
+function DiscussionEntry({post,creators,recognition}:{post:CommunityPost;creators:readonly Creator[];recognition?:VerifiedCreatorRecognition}){
   const author=creators.find(c=>c.handle===post.authorHandle);
   const href="/community/posts/"+encodeURIComponent(post.id);
   return <article className="av6-feed-item av6-feed-discussion">
@@ -94,7 +98,7 @@ function DiscussionEntry({post,creators}:{post:CommunityPost;creators:readonly C
           <span className="av6-feed-inline">{post.replyCount} {post.replyCount===1?"reply":"replies"} · {post.score} reactions</span>
         </div>
       </div>
-      <ProfileCard handle={post.authorHandle} name={post.authorName||post.authorHandle} known={author}/>
+      <ProfileCard handle={post.authorHandle} name={post.authorName||post.authorHandle} known={author} recognition={recognition}/>
     </div>
   </article>;
 }
@@ -126,6 +130,7 @@ export function CommunityHomeFeed({projects,creators,state,communityEnabled}:Pro
     ...postList.map(p=>({kind:"discussion" as const,key:"discussion:"+p.id,date:dateOrder(p.publishedAt),value:p}))
   ].filter(item=>(view==="all"||(view==="projects"&&item.kind==="project")||(view==="discussions"&&item.kind==="discussion"))&&(field==="all"||(item.kind==="project"?item.value.category===field:item.value.topic===field))).sort((a,b)=>b.date-a.date).slice(0,10);
   const postUnavailable=!communityEnabled||(discussions.state==="ready"&&!discussions.data.available);
+  const recognition=useVerifiedCreatorRecognition(entries.map(item=>item.kind==="project"?item.value.creatorHandle:item.value.authorHandle));
 
   return <section id="community-index" className="av6-community-index" aria-labelledby="av6-index-title">
     <div className="av6-index-masthead">
@@ -149,8 +154,8 @@ export function CommunityHomeFeed({projects,creators,state,communityEnabled}:Pro
         {view==="discussions"&&communityEnabled&&discussions.state==="loading"&&<LoadingState label="Checking approved conversations"/>}
         {view==="discussions"&&communityEnabled&&discussions.state==="error"&&<ErrorState title="DISCUSSIONS UNAVAILABLE" detail="The approved discussion index could not be reached."/>}
         {state==="ready"&&entries.map(entry=>entry.kind==="project"?
-          <ProjectEntry key={entry.key} project={entry.value} creators={creators}/>:
-          <DiscussionEntry key={entry.key} post={entry.value} creators={creators}/>)}
+          <ProjectEntry key={entry.key} project={entry.value} creators={creators} recognition={recognition[entry.value.creatorHandle]}/>:
+          <DiscussionEntry key={entry.key} post={entry.value} creators={creators} recognition={recognition[entry.value.authorHandle]}/>)}
         {state==="ready"&&!entries.length&&!(view==="discussions"&&communityEnabled&&discussions.state==="loading")&&!(view==="discussions"&&communityEnabled&&discussions.state==="error")&&<div className="av6-index-empty">
           <span className="av6-registry-line">ARCHIVE / OPEN RECORD</span>
           <h3>{view==="discussions"&&postUnavailable?"The conversation space is preparing.":"The first entries are ahead."}</h3>
