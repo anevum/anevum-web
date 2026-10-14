@@ -43,3 +43,14 @@ test("existing invited sign-in offers member workspace after verified profile",(
  assert.match(CLIENT,/\$\('mySpace'\)\.hidden=!me\.member\.handle/);
  assert.match(CLIENT,/\$\('mySpace'\)\.hidden=false/);
 });
+
+test("health and advertised sign-in capabilities agree under missing storage",async()=>{
+ const worker=createMemberWorker();
+ const origin="https://next.anevum.com/api/v1/member/health";
+ const ready=await worker.fetch(new Request(origin),stage);
+ assert.equal(ready.status,200);
+ assert.equal((await ready.json()).signupEnabled,true);
+ const unavailable=await worker.fetch(new Request(origin),{...stage,COMMUNITY_DB:{}});
+ assert.equal(unavailable.status,200);
+ assert.equal((await unavailable.json()).signupEnabled,false);
+});
