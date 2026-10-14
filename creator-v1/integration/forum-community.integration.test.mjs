@@ -246,3 +246,23 @@ test("client rendering remains text-only and never claims moderation/XP authorit
   assert.ok(!source.includes(bad)&&!cards.includes(bad),bad);
  }
 });
+
+test("public member activity lists only approved messages and respects active-account privacy",async()=>using(async f=>{
+ const {id}=await makeApproved(f);
+ const route="/forum/members/alice_makes/activity";
+ let response=await f.request(route,"GET",undefined,null);
+ assert.equal(response.status,200);
+ let result=await response.json();
+ assert.equal(result.items.length,1);
+ assert.equal(result.items[0].threadId,id);
+ assert.match(result.items[0].excerpt,/useful playtesting/i);
+ for(const secret of ["alice_member","alice@fixture.test","token_hash","reporter_member_id"])
+   assert.ok(!JSON.stringify(result).includes(secret),secret);
+ const pending=await f.request("/forum/threads/"+id+"/replies","POST",{body:"This is private until staff approves it."},members[0]);
+ assert.equal(pending.status,202);
+ result=await(await f.request(route,"GET",undefined,null)).json();
+ assert.equal(result.items.length,1,"Unreviewed replies must never appear");
+ assert.equal((await f.request("/forum/members/does_not_exist/activity","GET",undefined,null)).status,404);
+ f.sqlite.prepare("UPDATE member_accounts SET status='suspended' WHERE id=?").run(members[0].id);
+ assert.equal((await f.request(route,"GET",undefined,null)).status,404);
+}));
