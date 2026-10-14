@@ -7,6 +7,7 @@ import {CelestialEmblem} from "../components/CelestialEmblem";
 import {CosmicArtwork} from "../components/CosmicArtwork";
 import type {CosmicScene} from "../components/CosmicIllustration";
 import {Icon} from "../components/Icons";
+import {DashboardLeftRail,DashboardRightRail} from "../components/DashboardRails";
 import {ErrorState, LoadingState} from "../components/States";
 
 const worlds: ReadonlyArray<{id:string;name:string;symbol:string;scene:CosmicScene;description:string}> = [
@@ -32,7 +33,9 @@ export function HomePage(){
   const creators=portal.state==="ready"?portal.data.creators.items:[];
   const counts=new Map<string,number>(portal.state==="ready"?portal.data.categories.categories.map(x=>[x.category,x.count] as const):[]);
 
-  return <div className="cw-home">
+  return <div className="cw-home av3-home">
+    <DashboardLeftRail/>
+    <div className="av3-home__center">
     <section className="cw-hero" aria-labelledby="cw-hero-title">
       <div className="cw-hero-art" aria-hidden="true"><CosmicArtwork scene="hero" priority/></div>
       <div className="cw-hero-shade" aria-hidden="true"/>
@@ -122,5 +125,7 @@ export function HomePage(){
       </div>
       <div className="cw-bottom-message"><div><span>ANEVUM / THE CREATIVE UNIVERSE</span><strong>YOUR WORLD BELONGS HERE.</strong><p>MAKE · SHARE · PLAY · BELONG. Discover what others have built.</p></div><Link className="cw-button cw-button--gold" to="/start">START EXPLORING <Icon name="arrow" size={16}/></Link></div>
     </div>
+    </div>
+    <DashboardRightRail counts={portal.state==="ready"?portal.data.status.counts:undefined} loading={portal.state==="loading"} error={portal.state==="error"}/>
   </div>;
 }
