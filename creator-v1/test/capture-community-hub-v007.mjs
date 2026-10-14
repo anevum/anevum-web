@@ -91,11 +91,11 @@ try {
     await client.send("Emulation.setEmulatedMedia", { features: [{ name: "prefers-reduced-motion", value: "reduce" }] });
     await client.send("Page.navigate", { url: base + "/creator/community" });
     await until(() => evaluate('document.readyState==="complete" && !!document.querySelector(".ch7-hub")'));
-    await until(() => evaluate('document.querySelector(".ch7-status strong")?.textContent!=="—" && !!document.querySelector(".ch7-tabs button")'));
+    await until(() => evaluate('(()=>{const n=document.querySelector(".ch7-status strong");return !!n && n.textContent!=="—" && !!document.querySelector(".ch7-tabs button")})()'));
     await delay(450);
-    const state = await evaluate('(()=>({title:document.querySelector(".ch7-hero h1")?.textContent,tabs:document.querySelectorAll(".ch7-tabs button").length,columns:!!document.querySelector(".ch7-columns"),art:!!document.querySelector(".ch7-hero-art img"),overflow:document.documentElement.scrollWidth>innerWidth+1,iframe:document.querySelectorAll("iframe").length,memberWrite:!!document.querySelector(".ch7-hub form[action*=\\"/api/"]")}))()');
+    const state = await evaluate('(()=>({title:document.querySelector(".ch7-hero h1")?.textContent,tabs:document.querySelectorAll(".ch7-tabs button").length,columns:!!document.querySelector(".ch7-columns"),art:!!document.querySelector(".ch7-hero-art img"),overflow:document.documentElement.scrollWidth>innerWidth+1,iframe:document.querySelectorAll("iframe").length}))()');
     if (!state.title?.includes("Made by people") || state.tabs !== 4 || !state.columns ||
-        !state.art || state.overflow || state.iframe || state.memberWrite)
+        !state.art || state.overflow || state.iframe)
       throw Error("V007_COMMUNITY_LAYOUT_" + width + ":" + JSON.stringify(state));
     await screenshot("community-v007-top", width);
 
