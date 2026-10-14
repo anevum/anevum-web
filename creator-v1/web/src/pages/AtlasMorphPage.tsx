@@ -26,7 +26,7 @@ const WORLDS:Readonly<Record<AtlasWorldId,string>>={
 };
 const ROUTES=new Set([
   "discover","projects","creators","community","boards","create","library","account","levels",
-  "workspace","status","start","guide"
+  "workspace","status","start","guide","join"
 ]);
 type Progress={level:number;xp:number;artifact:string|null};
 function worldFor(pathname:string,search:string):AtlasWorldId|null {
@@ -43,7 +43,7 @@ function worldFor(pathname:string,search:string):AtlasWorldId|null {
   if(pathname.startsWith("/atlas/workspace")||pathname.startsWith("/atlas/collaborate"))return "collaborate";
   if(pathname.startsWith("/atlas/signals"))return "signals";
   if(pathname.startsWith("/atlas/create"))return "studio";
-  if(pathname.startsWith("/atlas/account")||pathname.startsWith("/atlas/library"))return "identity";
+  if(pathname.startsWith("/atlas/account")||pathname.startsWith("/atlas/library")||pathname.startsWith("/atlas/join"))return "identity";
   if(pathname.startsWith("/atlas/levels"))return "artifacts";
   if(pathname.startsWith("/atlas/status"))return "discover";
   return null;
@@ -84,7 +84,7 @@ function ProgressSignal(){
     return()=>window.clearTimeout(timeout);
   },[milestone]);
   return <>
-    <Link to="/atlas/account" className="atm-profile-card" aria-label={name?"My ANEVUM account for "+name:"Invited member account information"}>
+    <Link to={verified?"/atlas/account":"/atlas/join"} className="atm-profile-card" aria-label={name?"My ANEVUM account for "+name:"Join ANEVUM or check member access"}>
       <span className="atm-profile-avatar" aria-hidden="true">◈</span>
       <span className="atm-profile-text"><strong>{name||"VISITOR"}</strong><small>{verified?"LV "+verified.level+" · "+verified.xp.toLocaleString()+" XP":"PRIVATE SPACE / INVITED"}</small></span>
       <span className="atm-profile-chevron" aria-hidden="true">↗</span>
