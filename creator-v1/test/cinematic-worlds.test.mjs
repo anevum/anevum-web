@@ -68,7 +68,9 @@ test("secondary pages share the same world art while preserving genuine content 
   assert.match(project,/MemberEngagementPanel/);
   assert.match(project,/CATEGORY ILLUSTRATION/);
   assert.match(creators,/memberCreatorProfile/);
-  assert.match(creators,/readPublicShowcases/);\n  assert.match(creators,/PublicAuthorShowcase/);\n  assert.doesNotMatch(creators,/detailed\\.progression|detailed\\?\\.achievements/);
+  assert.match(creators,/readPublicShowcases/);
+  assert.match(creators,/PublicAuthorShowcase/);
+  assert.doesNotMatch(creators,/detailed\.progression|detailed\?\.achievements/);
   assert.match(community,/readProjects/);
   assert.match(community,/readCreators/);
   assert.match(community,/COMMUNITY CONVERSATIONS ARE UNDER PRIVATE REVIEW/);
