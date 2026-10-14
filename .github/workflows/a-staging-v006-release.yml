@@ -1,0 +1,148 @@
+name: ANEVUM A Staging V006 Isolated Cutover
+
+# Single reviewed release of public read-only community UI to a.anevum.com only.
+# Do not copy this to a recurring workflow or alter apex construction Worker.
+on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/a-staging-v006-release.yml]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: anevum-a-staging-cutover-v006
+  cancel-in-progress: false
+
+jobs:
+  stage:
+    if: github.repository == 'anevum/anevum-web' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      CANDIDATE_SHA: 7fe8b0a2bc90642640205477d2f6b442b6cf0770
+      SOURCE_BRANCH: release/a-staging-community-v006-20261014
+      CF_WORKER: anevum-creator-v1-a-staging
+    steps:
+      - name: Checkout the exact reviewed staging branch commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.CANDIDATE_SHA }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Refuse drifting source or production configuration
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$CANDIDATE_SHA"
+          head="$(git ls-remote origin "refs/heads/$SOURCE_BRANCH" | cut -f1)"
+          test "$head" = "$CANDIDATE_SHA"
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          import assert from 'node:assert/strict';
+          const c=JSON.parse(fs.readFileSync('creator-v1/wrangler.a-staging.jsonc','utf8'));
+          assert.equal(c.name,'anevum-creator-v1-a-staging');
+          assert.equal(c.main,'./web/a-staging-worker.mjs');
+          assert.equal(c.routes,undefined);
+          assert.equal(c.assets?.directory,'./dist/web');
+          assert.equal(c.assets?.binding,'ASSETS');
+          assert.equal(c.workers_dev,false);
+          assert.equal(c.preview_urls,false);
+          assert.deepEqual(c.d1_databases?.map(b=>[b.binding,b.database_id]),[
+            ['COMMUNITY_DB','fa96e36d-6257-4883-bf15-074947e11a13']
+          ]);
+          NODE
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Build, typecheck and test the complete public staging candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm install --ignore-scripts --no-audit --no-fund
+          npm run check:creator-v1-web
+          npm run build:creator-v1-web
+          npm run build:creator-v1-web:staging
+          node --test tests/creator-v1-cinematic-v005.test.mjs tests/creator-v1-a-staging.test.mjs
+          (cd creator-v1 && npm test && npm run test:project-readiness)
+          node --test creator-v1/auth/tests/*.test.mjs creator-v1/integration/*.test.mjs
+          node --check creator-v1/web/a-staging-worker.mjs
+          test -s creator-v1/dist/web/index.html
+      - name: Verify untouched domain routes and production launch terminal
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "${CLOUDFLARE_API_TOKEN:-}"
+          test -n "${CLOUDFLARE_ACCOUNT_ID:-}"
+          umask 077
+          api=https://api.cloudflare.com/client/v4
+          cf() { curl --fail --silent --show-error --retry 2 --max-time 25 -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" "$1"; }
+          cf "$api/zones?name=anevum.com" > "$RUNNER_TEMP/zones.json"
+          zone="$(jq -r '.result[] | select(.name=="anevum.com" and .status=="active") | .id' "$RUNNER_TEMP/zones.json" | head -1)"
+          test -n "$zone"
+          echo "$zone" > "$RUNNER_TEMP/a-zone.txt"
+          cf "$api/zones/$zone/workers/routes" > "$RUNNER_TEMP/routes-before.json"
+          jq -e '.success and ([.result[]|select(.pattern=="anevum.com/*" and .script=="anevum-construction-terminal")]|length)==1' "$RUNNER_TEMP/routes-before.json" >/dev/null
+          jq -e '.success and ([.result[]|select(.pattern=="a.anevum.com/*" and .script=="anevum-a-archive-adapter")]|length)==1' "$RUNNER_TEMP/routes-before.json" >/dev/null
+          jq -e '.success and ([.result[]|select(.pattern=="next.anevum.com/api/v1/member/*" and .script=="anevum-member-auth-staging")]|length)==1' "$RUNNER_TEMP/routes-before.json" >/dev/null
+          echo STAGING_PRE_DEPLOY_SCOPE=PASS
+      - name: Upload V006 Worker and static files without routing changes
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          npx wrangler deploy --config creator-v1/wrangler.a-staging.jsonc
+      - name: Inspect Worker bindings before cutover
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --fail --silent --show-error --max-time 25 -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/$CF_WORKER/settings" > "$RUNNER_TEMP/a-settings.json"
+          jq -e '.success and ([.result.bindings[]|select(.type=="d1" and .name=="COMMUNITY_DB" and .database_id=="fa96e36d-6257-4883-bf15-074947e11a13")]|length)==1 and ([.result.bindings[]|select(.type=="assets" and .name=="ASSETS")]|length)==1 and ([.result.bindings[]|select(.type!="assets" and .type!="d1")]|length)==0' "$RUNNER_TEMP/a-settings.json" >/dev/null
+          echo STAGING_PRIVACY_BINDINGS=PASS
+      - name: Route only a.anevum.com and smoke test with automatic rollback
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          api=https://api.cloudflare.com/client/v4
+          zone="$(cat "$RUNNER_TEMP/a-zone.txt")"
+          id="$(jq -r '.result[] | select(.pattern=="a.anevum.com/*" and .script=="anevum-a-archive-adapter") | .id' "$RUNNER_TEMP/routes-before.json")"
+          test -n "$id"
+          endpoint="$api/zones/$zone/workers/routes/$id"
+          done=0
+          rollback() {
+            if [ "$done" = 1 ]; then return; fi
+            echo "::error::Smoke failed; restoring original a.anevum.com route"
+            curl --fail --silent --show-error --max-time 25 -X PUT -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" -H 'Content-Type: application/json' --data "{\"id\":\"$id\",\"pattern\":\"a.anevum.com/*\",\"script\":\"anevum-a-archive-adapter\"}" "$endpoint" || true
+          }
+          trap rollback EXIT
+          curl --fail --silent --show-error --max-time 25 -X PUT -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" -H 'Content-Type: application/json' --data "{\"id\":\"$id\",\"pattern\":\"a.anevum.com/*\",\"script\":\"$CF_WORKER\"}" "$endpoint" > "$RUNNER_TEMP/a-route-switch.json"
+          jq -e '.success and .result.script=="anevum-creator-v1-a-staging"' "$RUNNER_TEMP/a-route-switch.json" >/dev/null
+          ready=0
+          for attempt in $(seq 1 20); do
+            code="$(curl --silent --show-error --max-time 18 -o "$RUNNER_TEMP/a-home.html" -w '%{http_code}' https://a.anevum.com/ || true)"
+            if [ "$code" = 200 ] && grep -q 'id="root"' "$RUNNER_TEMP/a-home.html"; then
+              if curl --fail --silent --show-error --max-time 18 https://a.anevum.com/health | jq -e '.status=="ok" and .mode=="public-read-only"' >/dev/null; then ready=1; break; fi
+            fi
+            sleep 3
+          done
+          test "$ready" = 1
+          curl --fail --silent --show-error --max-time 18 https://a.anevum.com/discover | grep -q 'id="root"'
+          curl --fail --silent --show-error --max-time 18 https://a.anevum.com/api/v1/status | jq -e '.counts.publishedProjects>=0' >/dev/null
+          curl --fail --silent --show-error --max-time 18 'https://a.anevum.com/api/v1/projects?limit=2' | jq -e '.items|type=="array"' >/dev/null
+          test "$(curl --silent --show-error --max-time 18 -o /dev/null -w '%{http_code}' https://a.anevum.com/api/v1/member/me)" = 404
+          curl --fail --silent --show-error --max-time 18 -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" "$api/zones/$zone/workers/routes" > "$RUNNER_TEMP/routes-after.json"
+          jq -e '.success and ([.result[]|select(.pattern=="anevum.com/*" and .script=="anevum-construction-terminal")]|length)==1 and ([.result[]|select(.pattern=="a.anevum.com/*" and .script=="anevum-creator-v1-a-staging")]|length)==1' "$RUNNER_TEMP/routes-after.json" >/dev/null
+          done=1
+          echo STAGING_CUTOVER_AND_API_SMOKE=PASS
+          echo "V006 staging: https://a.anevum.com/ at $CANDIDATE_SHA" >> "$GITHUB_STEP_SUMMARY"
+          echo "Rollback: change the a.anevum.com/* route back to anevum-a-archive-adapter" >> "$GITHUB_STEP_SUMMARY"
