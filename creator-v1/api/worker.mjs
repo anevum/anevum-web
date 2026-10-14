@@ -158,7 +158,7 @@ export default {
     try {
       if (path === '/api/v1/projects') filter = parameters(url);
       else if (path === '/api/v1/creators') filter = creatorParameters(url);
-      else if (url.search) throw new Error('This endpoint does not accept query parameters');
+      else if (url.search && !communityPosts) throw new Error('This endpoint does not accept query parameters');
     } catch (error) { return reply(request, { error: error.message }, 400); }
     if (!env.COMMUNITY_DB) return reply(request, { error: 'Community data is unavailable', status: 'unavailable' }, 503);
     if (communityPosts) return publicCommunityPosts(request,env.COMMUNITY_DB);
