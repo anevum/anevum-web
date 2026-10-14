@@ -120,7 +120,24 @@ try{
   console.log("V007_SHOWCASE_BROWSER_"+width+"=PASS");
  }
  writeFileSync(join(output,"v007-showcase-browser.json"),JSON.stringify(captures,null,2));
-}finally{client?.close();browser.kill("SIGTERM");await sleep(180);rmSync(profile,{recursive:true,force:true})}
+}finally{
+ // Chrome can still mutate its profile after SIGTERM. Wait for the spawned
+ // browser to exit before filesystem cleanup so a successful screenshot run
+ // cannot fail with ENOTEMPTY on an ephemeral runner directory.
+ client?.close();
+ if(browser.exitCode===null){
+  const stopped=new Promise(resolve=>browser.once("exit",resolve));
+  browser.kill("SIGTERM");
+  await Promise.race([stopped,sleep(1800)]);
+ }
+ try{
+  rmSync(profile,{recursive:true,force:true,maxRetries:8,retryDelay:160});
+ }catch(error){
+  // This fixture contains synthetic, disposable browser cache only. Report a
+  // non-blocking cleanup warning rather than invalidating passed browser tests.
+  console.warn("V007_BROWSER_TEMP_CLEANUP_WARNING",error?.code||String(error));
+ }
+}
 async function documentScroll(evaluate){
   // Global CSS uses smooth scrolling: without behavior:"instant", a narrow
   // phone screenshot captures a midpoint around the legacy achievement list.
