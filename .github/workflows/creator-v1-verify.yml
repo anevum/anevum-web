@@ -87,6 +87,13 @@ jobs:
             node --check "$file"
           done
           node --input-type=module -e 'import {Script} from "node:vm"; import {COMMUNITY_CLIENT} from "./creator-v1/auth/community-ui.mjs"; import {VOTE_APP} from "./creator-v1/authoring/vote-moderation-ui.mjs"; import {SOCIAL_CLIENT} from "./creator-v1/auth/social-ui.mjs"; import {PRIVACY_CLIENT} from "./creator-v1/auth/privacy-ui.mjs"; import {PRIVACY_APP} from "./creator-v1/authoring/privacy-queue-ui.mjs"; for (const source of [COMMUNITY_CLIENT,VOTE_APP,SOCIAL_CLIENT,PRIVACY_CLIENT,PRIVACY_APP]) new Script(source);'
+      - name: Bundle disabled canonical auth candidate (dry-run only, no Cloudflare deployment)
+        shell: bash
+        run: |
+          set -euo pipefail
+          for file in creator-v1/canonical-auth/*.mjs; do node --check "$file"; done
+          npx wrangler deploy --dry-run --config creator-v1/wrangler.canonical-stage.candidate.jsonc --outdir evidence/canonical-auth-bundle > evidence/canonical-auth-dry-run.log 2>&1
+          test -s evidence/canonical-auth-dry-run.log
       - name: Require actual V007 Commons browser captures at desktop and phone widths
         shell: bash
         run: |

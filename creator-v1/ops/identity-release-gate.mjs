@@ -18,6 +18,8 @@ export const IDENTITY_STAGE={
   creatorStageDb:"fa96e36d-6257-4883-bf15-074947e11a13",
   productionDb:"6c7b5f0c-33db-4b6a-9569-0a6af5e07534",
   olderV5PreviewDb:"b2f9b4ad-4b97-483c-ae78-5dc7c8da76bf",
+  olderMemberPreviewDb:"a537432e-d216-4b31-8b22-19662cc3a44a",
+  olderMemberMainDb:"7f0d4c0c-2e85-4900-8504-1347954e1df1",
   canonicalIssuer:"anevum-better-auth-staging-v1"
 };
 export const REQUIRED_CREATOR_MIGRATIONS=Object.freeze([
@@ -72,7 +74,9 @@ export function assessIdentityStageInventory(input){
   const canonicalDb=binding(objects(canonical?.bindings),"MEMBER_DB","d1");
   if(stageDb!==IDENTITY_STAGE.creatorStageDb||legacyDb!==IDENTITY_STAGE.creatorStageDb)
     reasons.push("CREATOR_AND_LEGACY_D1_NOT_PINNED");
-  if(!canonicalDb || [IDENTITY_STAGE.creatorStageDb,IDENTITY_STAGE.productionDb].includes(canonicalDb))
+  if(!canonicalDb || [IDENTITY_STAGE.creatorStageDb,IDENTITY_STAGE.productionDb,
+    IDENTITY_STAGE.olderV5PreviewDb,IDENTITY_STAGE.olderMemberPreviewDb,
+    IDENTITY_STAGE.olderMemberMainDb].includes(canonicalDb))
     reasons.push("CANONICAL_AUTH_D1_NOT_ISOLATED");
   if(canonical?.issuer!==IDENTITY_STAGE.canonicalIssuer||canonical?.sessionOrigin!=="https://a.anevum.com")
     reasons.push("CANONICAL_ISSUER_AND_COOKIE_ORIGIN_UNVERIFIED");
