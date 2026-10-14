@@ -67,4 +67,4 @@ export const reportForumPost=(id:string,reason:"spam"|"harassment"|"unsafe"|"cop
  if(!ID.test(id))throw Error("Invalid post identifier");
  return forumRequest<{recorded:boolean;notice:string}>("/posts/"+id+"/report",{method:"POST",body:{reason,details}});
 };
-export const forumMemberPath=(handle:string)=>HANDLE.test(handle)?"/community/member/"+handle:"/community";
+export const forumMemberPath=(handle:string)=>HANDLE.test(handle)?"/@"+handle:"/community";
