@@ -1,4 +1,4 @@
-// ANEVUM FEATURED PLAY — isolated read-only creative-player review, with no private resource bindings.
+// ANEVUM COMMUNITY FEED — isolated read-only creator-network review, with no private resource bindings.
 const HOST="anevum-featured-play-review-20261014.devonakins.workers.dev";
 const PUBLIC=/^\/api\/v1\/(?:status|categories|projects(?:\/[A-Za-z0-9_-]+(?:\/repository)?)?|creators(?:\/[a-z][a-z0-9_]{2,29})?)$/i;
 const BASE={
@@ -27,7 +27,7 @@ export default {
     if(request.method!=="GET"&&request.method!=="HEAD")return reject("Read-only Atlas review",405);
     if(url.pathname==="/robots.txt")return reject(request.method==="HEAD"?null:"User-agent: *\nDisallow: /\n",200);
     if(url.pathname==="/__review")return reject(request.method==="HEAD"?null:JSON.stringify({
-      project:"ANEVUM FEATURED PLAYER",status:"DESIGN PREVIEW",database:false,memberAccess:false,privateMessaging:false,nativeCreatorHosting:false,firstPartyPlayerLab:true,
+      project:"ANEVUM COMMUNITY FEED",status:"DESIGN PREVIEW",database:false,memberAccess:false,privateMessaging:false,nativeCreatorHosting:false,firstPartyPlayerLab:false,communityPostsOpen:false,
       productionDeployment:false,publicProjectData:"anonymous read-only anevum.com API"
     }),200,"application/json; charset=utf-8");
     if(url.pathname.startsWith("/api/")){
