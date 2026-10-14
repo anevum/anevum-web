@@ -29,6 +29,7 @@ export const PORTAL_DESTINATIONS: readonly PortalDestination[] = [
   {id:"guide",title:"Field Guide",description:"Twelve free practice decisions",path:"/guide",category:"Community",icon:"star",keywords:"practice safety guide skills"},
   {id:"levels",title:"Levels & Artifacts",description:"See how earned progression is designed",path:"/levels",category:"Community",icon:"star",keywords:"xp achievements medals badges unlimited"},
   {id:"status",title:"Build Status",description:"What is deployed and what is still gated",path:"/status",category:"Community",icon:"status",keywords:"development roadmap release"},
+  {id:"join",title:"Join ANEVUM",description:"View verified membership and available sign-in methods",path:"/join",category:"Account",icon:"people",keywords:"join signup register signin sign-in google github email passkey apple microsoft"},
   {id:"workspace",title:"Private Workspace",description:"Entry to invited creator tools and the protected owner lab",path:"/workspace",category:"Account",icon:"create",keywords:"lab private owner fold rhen workspace",gated:true},
   {id:"account",title:"My Account",description:"Invitation-only member workspace",path:"/account",category:"Account",icon:"people",keywords:"profile settings signin login",gated:true},
   {id:"library",title:"My Library",description:"Saved projects for invited members",path:"/library",category:"Account",icon:"library",keywords:"saved bookmarks favorites",gated:true},
@@ -38,7 +39,7 @@ export const PORTAL_DESTINATIONS: readonly PortalDestination[] = [
 const clean = (s:string) => s.trim().toLocaleLowerCase("en").replace(/\s+/g," ");
 export function findPortalDestinations(search:string): PortalDestination[] {
   const query=clean(search).slice(0,100);
-  if (!query) return PORTAL_DESTINATIONS.filter(x=>["atlas","start","discover","games","tools","community","guide","status"].includes(x.id));
+  if (!query) return PORTAL_DESTINATIONS.filter(x=>["atlas","start","discover","games","tools","community","guide","join","status"].includes(x.id));
   const words=query.split(" ").filter(Boolean);
   if(words.length===0) return [];
   return PORTAL_DESTINATIONS
