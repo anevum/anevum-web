@@ -9,6 +9,7 @@ import {PortalHeading} from "../components/PortalHeading";
 import {LevelPanel} from "../components/LevelPanel";
 import {EmptyState,ErrorState,LoadingState} from "../components/States";
 import {CelestialEmblem} from "../components/CelestialEmblem";
+import {CreatorFollowPanel} from "../components/CreatorFollowPanel";
 import {CosmicArtwork} from "../components/CosmicArtwork";
 import {achievementMotif,seriesOneMotif} from "../lib/artifact-art";
 
@@ -114,6 +115,8 @@ export function CreatorPage(){
         </section>
       </div>
       <aside className="portal-sidebar">
+        {detailed&&typeof detailed.followers==="number"&&typeof detailed.viewerFollows==="boolean"&&
+          <CreatorFollowPanel key={handle} handle={handle} followers={detailed.followers} viewerFollows={detailed.viewerFollows}/>}
         {detailed&&<section className="portal-sidebox portal-creator-level">
           <span className="kicker">EARNED ORBIT / SERVER VERIFIED</span>
           <div className="portal-channel-celestial">
