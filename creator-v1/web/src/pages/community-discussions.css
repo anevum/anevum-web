@@ -82,3 +82,32 @@
 @media(prefers-reduced-motion:reduce){
  .discussion-page *, .discussion-composer * {scroll-behavior:auto!important;transition:none!important;animation:none!important}
 }
+
+
+/* Invite-only, server-reviewed replies. The public reading layout remains available. */
+.discussion-reply-composer{margin:25px auto;max-width:1130px;padding:24px clamp(15px,3vw,32px);
+ border:1px solid #a4bdc165;border-radius:11px;background:linear-gradient(145deg,#1a293fdc,#0a1a2ce8)}
+.discussion-reply-composer form{display:flex;flex-direction:column;gap:10px;margin-top:19px}
+.discussion-reply-composer label{font-size:10px;letter-spacing:.12em;color:#e5c495;font-weight:900}
+.discussion-reply-composer textarea{resize:vertical;min-height:125px;width:100%;color:#f4e8d4;
+ border:1px solid #a5bac57d;border-radius:9px;padding:13px;background:#081629;
+ font:400 14px/1.6 Inter,ui-sans-serif,system-ui,sans-serif}
+.discussion-reply-composer textarea:focus-visible{outline:2px solid #eccb9a;outline-offset:2px}
+.discussion-reply-actions{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:11px}
+.discussion-reply-actions small{font-size:9px;color:#b0c5d4;letter-spacing:.075em;font-weight:850}
+.discussion-reply-actions button{min-height:45px;border:1px solid #d8b987;border-radius:8px;
+ padding:10px 15px;background:linear-gradient(110deg,#dcca9e,#b28c5f);color:#111e2d;
+ font-size:10px;font-weight:900;letter-spacing:.06em}
+.discussion-reply-actions button:disabled{opacity:.48;cursor:not-allowed}
+.discussion-reply-notice{padding:12px;border:1px solid #b6c19b6f;color:#e0d4b4;
+ background:#273f3770;border-radius:7px;font-size:12px}
+.discussion-own-replies{margin-top:20px;border-top:1px solid #aac2ce5c;padding-top:13px}
+.discussion-own-replies>strong{color:#e4c497;font-size:10px;letter-spacing:.12em}
+.discussion-own-replies article{padding:12px 0;border-bottom:1px solid #a7b9c046}
+.discussion-own-replies small{display:block;color:#9fc9be;font-size:9px;font-weight:900;letter-spacing:.09em}
+.discussion-own-replies p{white-space:pre-wrap;overflow-wrap:anywhere;color:#c8d7e3;font-size:12px;line-height:1.6}
+@media(max-width:640px){
+ .discussion-reply-composer{margin:18px 9px;padding:18px 13px}
+ .discussion-reply-actions{align-items:stretch;flex-direction:column}
+ .discussion-reply-actions button{width:100%;min-height:46px}
+}
