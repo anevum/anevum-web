@@ -135,9 +135,9 @@ export function CinematicLandingPage(){
         <CinematicPortalFX/>
         <div className="cinema-hero-layout">
           <div className="cinema-hero-copy">
-            <div className="cinema-kicker">CREATE <span>·</span> EXPLORE <span>·</span> TOGETHER</div>
-            <h1 id="cinema-hero-title">A CREATIVE<br/>TECHNOLOGY<br/>PLAYGROUND</h1>
-            <p>Build worlds. Create without limits.<br/>Explore a universe of imagination.</p>
+            <div className="cinema-kicker">A CREATIVE UNIVERSE</div>
+            <h1 id="cinema-hero-title">CREATE<br/>BEYOND<br/>WORLDS</h1>
+            <p>Games. Apps. Art. Experiments. Worlds.<br/>A universe for creators, by creators.</p>
             <div className="cinema-actions">
               <Link to="/discover" className="cinema-button cinema-button--primary">EXPLORE WORLDS <Icon name="arrow" size={17}/></Link>
               <Link to="/start" className="cinema-button cinema-button--secondary">DISCOVER ANEVUM <Icon name="arrow" size={16}/></Link>
