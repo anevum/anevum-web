@@ -142,8 +142,8 @@ export function CommunityPage() {
     ...postItems.map(value => ({ kind: "conversation" as const, id: "discussion:" + value.id, at: asTime(value.publishedAt), value }))
   ].sort((a, b) => b.at - a.at || a.id.localeCompare(b.id));
   const entries: Entry[] = view === "all" ? combined.slice(0, 18)
-    : view === "projects" ? projectItems.map(value => ({ kind: "project", id: value.id, at: asTime(value.publishedAt), value }))
-    : view === "conversations" ? postItems.map(value => ({ kind: "conversation", id: value.id, at: asTime(value.publishedAt), value })) : [];
+    : view === "projects" ? projectItems.map(value => ({ kind: "project" as const, id: value.id, at: asTime(value.publishedAt), value }))
+    : view === "conversations" ? postItems.map(value => ({ kind: "conversation" as const, id: value.id, at: asTime(value.publishedAt), value })) : [];
   const loading = view === "people" ? creators.state === "loading"
     : view === "projects" ? projects.state === "loading"
     : view === "conversations" ? status.state === "loading" || (enabled && conversations.state === "loading")
