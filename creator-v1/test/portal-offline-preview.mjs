@@ -67,6 +67,22 @@ function offlineMember(req,res,url){
       ]
     });
   }
+  // SYNTHETIC OFFLINE V009 recognition records for browser QA only.
+  // These people and awards do not exist in a real ANEVUM account or D1 store.
+  if(url.pathname==="/api/v1/member/creators/nova_demo"&&req.method==="GET")
+    return json(res,{
+      creator:{handle:"nova_demo",displayName:"Nova Studio",bio:"Offline design fixture"},
+      contributions:{ratings:1,publishedProjects:2,releases:0},
+      progression:{xp:16820,level:30,maxLevel:null,artifact:"Midnight Atlas",artifactEarned:true,levelStartXp:16820,nextLevelXp:18000,progressWithinLevel:0},
+      achievements:[{key:"first-launch",name:"First Launch",earned:true,progress:1,target:1}]
+    });
+  if(url.pathname==="/api/v1/member/creators/moss_demo"&&req.method==="GET")
+    return json(res,{
+      creator:{handle:"moss_demo",displayName:"Moss Workshop",bio:"Offline design fixture"},
+      contributions:{ratings:1,publishedProjects:2,releases:0},
+      progression:{xp:20,level:2,maxLevel:null,artifact:"Copper Key",artifactEarned:true,levelStartXp:20,nextLevelXp:80,progressWithinLevel:0},
+      achievements:[{key:"first-signal",name:"First Signal",earned:true,progress:1,target:1}]
+    });
   // No credential verification, writes, project or staff actions in this fixture.
   return json(res,{error:"no member Worker in offline fixture"},404);
 }
