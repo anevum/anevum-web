@@ -168,7 +168,7 @@ export async function forumRoutes(req,db,member,rateLimit,now){
    const list=await rows(db,`SELECT p.id,p.body,p.starter,p.created_at AS createdAt,p.author_member_id AS authorId
      FROM forum_posts p JOIN member_accounts a ON a.id=p.author_member_id JOIN creator_profiles c ON c.member_id=p.author_member_id
      WHERE p.thread_id=? AND p.status='visible' AND ${activeAuthor} ${extra}
-     ORDER BY p.created_at,p.id LIMIT 41`,parameters);
+     ORDER BY p.starter DESC,p.created_at,p.id LIMIT 41`,parameters);
    const authors=await authorMap(db,[thread.authorId,...list.map(x=>x.authorId)]);
    const posts=list.slice(0,40).map(p=>publishedPostDto(p,authors)).filter(Boolean);
    const last=posts.at(-1);
