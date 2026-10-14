@@ -10,6 +10,8 @@ import { CreatorPage, CreatorsPage } from "./pages/CreatorsPage";
 import { StatusPage } from "./pages/StatusPage";
 import { LevelsPage } from "./pages/LevelsPage";
 import { CommunityPage } from "./pages/CommunityPage";
+import {CommunityPostPage} from "./pages/CommunityPostPage";
+import {CommunityPostEditorPage} from "./pages/CommunityPostEditorPage";
 import { MemberGate } from "./components/MemberGate";
 import { MemberAccountPage } from "./pages/MemberAccountPage";
 import { MemberProfileEditorPage } from "./pages/MemberProfileEditorPage";
@@ -37,6 +39,8 @@ export default function App(){
       <Route path="creators" element={<CreatorsPage/>}/>
       <Route path="creators/:handle" element={<CreatorPage/>}/>
       <Route path="community" element={<CommunityPage/>}/>
+    <Route path="community/posts/:id" element={<CommunityPostPage/>}/>
+      <Route path="community/posts/:id" element={<CommunityPostPage/>}/>
       <Route path="community/posts/:id" element={<Suspense fallback={atlasFallback}><CommunityPostPage/></Suspense>}/>
       <Route path="workspace" element={<WorkspacePage/>}/>
       <Route path="collaborate" element={<AtlasCollaboration/>}/>
@@ -48,6 +52,7 @@ export default function App(){
         <Route path="community/new" element={<Suspense fallback={atlasFallback}><CommunityComposerPage/></Suspense>}/>
         <Route path="create" element={<MemberProjectsPage/>}/>
         <Route path="create/new" element={<ProjectEditorPage/>}/>
+        <Route path="community/write" element={<CommunityPostEditorPage/>}/>
         <Route path="create/:projectId" element={<ProjectEditorPage/>}/>
         <Route path="library" element={<MemberLibraryPage/>}/>
         <Route path="account" element={<MemberAccountPage/>}/>
@@ -69,6 +74,7 @@ export default function App(){
     <Route element={<MemberGate/>}>
       <Route path="create" element={<MemberProjectsPage/>}/>
       <Route path="create/new" element={<ProjectEditorPage/>}/>
+    <Route path="community/write" element={<CommunityPostEditorPage/>}/>
       <Route path="create/:projectId" element={<ProjectEditorPage/>}/>
       <Route path="library" element={<MemberLibraryPage/>}/>
       <Route path="account" element={<MemberAccountPage/>}/>
