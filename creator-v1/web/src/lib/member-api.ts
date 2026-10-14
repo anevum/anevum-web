@@ -128,4 +128,16 @@ export const memberVote=(id:string,score:number,revision:number)=>{
     "/community/projects/"+memberProjectId(id)+"/vote",{method:"POST",body:{score,revision}}
   );
 };
+export interface DiscussionDraft {title:string;body:string;topic:string}
+export interface PrivateDiscussion extends DiscussionDraft {id:string;status:string;revision:number;createdAt:number;publishedAt:string|null}
+export interface PostReaction {score:number;revision:number}
+export const memberCreateDiscussion=(draft:DiscussionDraft)=>
+  requestMember<{id:string;status:string;revision:number;notice:string}>("/community/posts",{method:"POST",body:draft});
+export const memberMyDiscussions=(signal?:AbortSignal)=>
+  requestMember<{items:PrivateDiscussion[]}>("/community/posts/mine",{signal});
+export const memberPostReaction=(id:string,signal?:AbortSignal)=>
+  requestMember<{myReaction:PostReaction|null}>("/community/posts/"+memberProjectId(id)+"/react",{signal});
+export const memberReactPost=(id:string,score:0|1,revision:number)=>
+  requestMember<{score:number;revision:number;changed:boolean}>("/community/posts/"+memberProjectId(id)+"/react",{method:"POST",body:{score,revision}});
+
 export const memberSignOut=()=>requestMember<{signedOut:boolean}>("/sign-out",{method:"POST",body:{}});
