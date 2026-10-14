@@ -1,5 +1,6 @@
 import {Link} from "react-router-dom";
 import {readCreators,readProjects,readStatus} from "../lib/api";
+import {readForumRooms} from "../lib/forum-api";
 import {useResource} from "../lib/useResource";
 import {PortalHeading} from "../components/PortalHeading";
 import {LevelPanel} from "../components/LevelPanel";
@@ -16,6 +17,7 @@ const rooms=[
 ] as const;
 
 export function CommunityPage(){
+  const board=useResource(readForumRooms,[]);
   const data=useResource(async signal=>{
     const [status,projects,creators]=await Promise.all([
       readStatus(signal),readProjects({limit:"4"},signal),readCreators({limit:"4"},signal)
@@ -24,9 +26,21 @@ export function CommunityPage(){
   },[]);
   return <div className="portal-community-page">
     <PortalHeading eyebrow="ANEVUM / PEOPLE BEHIND THE WORK" title="FIND YOUR" accent="PEOPLE." description="A future home for discussion, feedback, challenges, and collaborations. For now, discover genuine makers and their work while moderation and community features are tested." index="COMMUNITY / 003" action={{to:"/levels",label:"HOW PARTICIPATION EARNS RECOGNITION"}}/>
-    <div className="portal-community-notice" role="status"><span className="portal-community-notice-mark" aria-hidden="true">!</span><div><strong>THE PUBLIC MESSAGE BOARD IS NOT OPEN YET.</strong><p>These rooms are navigation and roadmap previews, not live discussion threads. No messages, likes, users, or engagement totals have been fabricated.</p></div><Link to="/status">BUILD STATUS ↗</Link></div>
+    <div className="portal-community-notice" role="status"><span className="portal-community-notice-mark" aria-hidden="true">!</span><div><strong>{board.state==="ready"?"INVITED MODERATED DISCUSSIONS / STAGING":"THE PUBLIC MESSAGE BOARD IS NOT OPEN YET."}</strong><p>Discussion rooms only display approved member submissions when the protected forum service is active. No invented posts, likes, member accounts or activity totals.</p></div><Link to="/status">BUILD STATUS ↗</Link></div>
     <div className="portal-layout">
       <div className="portal-main">
+        <section className="portal-box forum-community-entry">
+          <header className="portal-box-header"><div><span className="kicker">THE COMMONS / REAL DISCUSSION</span><h2>MESSAGE BOARDS + MEMBER IDENTITY</h2></div><span className="portal-hall-stamp">HUMAN MODERATION FIRST</span></header>
+          <p>Explore communities where your own level, avatar and earned achievements accompany your words. Every post keeps its creator visible, like a member signature—not a faceless feed.</p>
+          {board.state==="loading"&&<LoadingState label="Checking verified community rooms"/>}
+          {board.state==="error"&&<p className="forum-community-pending">The member discussion service is not open on this build yet. This is a genuine launch gate, not an empty simulated conversation.</p>}
+          {board.state==="ready"&&<div className="forum-community-room-grid">{board.data.rooms.map(room=><Link key={room.id} to={"/community/room/"+room.id} className={"forum-community-room forum-community-room-"+room.id}>
+            <span className="forum-community-symbol" aria-hidden="true">{room.id==="arcade"?"✦":room.id==="workshop"?"⌘":room.id==="lab"?"✳":"⟡"}</span>
+            <span><strong>{room.name}</strong><small>{room.subject}</small></span>
+            <span className="forum-community-count">{room.threads} APPROVED {room.threads===1?"TOPIC":"TOPICS"} <span aria-hidden="true">↗</span></span>
+          </Link>)}</div>}
+          <div className="forum-community-footer"><span>MEMBER PROFILE CARDS · VERIFIED LEVELS · EARNED BADGES · REPORT TO STAFF</span><Link to="/levels">HOW RECOGNITION WORKS ↗</Link></div>
+        </section>
         <section className="portal-box">
           <header className="portal-box-header"><div><span className="kicker">THE MEETING POINTS / IN DEVELOPMENT</span><h2>FIND YOUR CORNER</h2></div><span className="portal-hall-stamp">COMMUNITY ROOMS / PLANNED</span></header>
           <div className="portal-room-grid">{rooms.map((room,i)=><article className="portal-room" key={room.name}><div className="cw-room-world" aria-hidden="true"><CosmicArtwork scene={room.category}/></div>
