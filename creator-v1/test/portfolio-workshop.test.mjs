@@ -73,7 +73,7 @@ test("tactile type and marks are not generic icon sets, and mobile and motion re
   assert.match(css,/@media\(prefers-reduced-motion:reduce\)/);
   assert.match(css,/:focus-visible/);
   assert.match(html,/id="motion-toggle"/);
-  assert.match(js,/motionPaused=reduceQuery\.matches/);
+  assert.match(js,/motionPaused\s*=\s*reduceQuery\.matches/);
   assert.match(js,/setMotionState\(\)/);
   assert.doesNotMatch(html,/fonts\.googleapis|cdnjs|unpkg|jsdelivr|three\.js/i);
 });
