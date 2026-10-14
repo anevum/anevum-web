@@ -126,3 +126,24 @@
 @media (forced-colors:active){
  .cinema-world-tile,.cinema-latest-tile,.cinema-social-panel,.cinema-category-ribbon{border:1px solid CanvasText}
 }
+
+/* Genuine high-resolution alpha artwork; desktop and mobile sources swap in picture.
+ * These media are transparent decorative passes, never controls or copy.
+ */
+.cinema-atmosphere{position:absolute;inset:0;z-index:-1;pointer-events:none;overflow:hidden;isolation:isolate}
+.cinema-atmosphere-layer,.cinema-atmosphere-layer img{position:absolute;inset:0;display:block;width:100%;height:100%}
+.cinema-atmosphere-layer img{object-fit:cover;object-position:center;image-rendering:auto;user-select:none}
+.cinema-atmosphere-haze{opacity:.76;mix-blend-mode:screen}
+.cinema-atmosphere-dust{opacity:.86;mix-blend-mode:screen}
+@media (hover:hover) and (prefers-reduced-motion:no-preference){
+ .cinema-atmosphere-haze img{transform:translate3d(calc(var(--cinema-pointer-x)*4px),calc(var(--cinema-pointer-y)*3px),0) scale(1.025);transition:transform .8s ease-out}
+ .cinema-atmosphere-dust img{transform:translate3d(calc(var(--cinema-pointer-x)*-7px),calc(var(--cinema-pointer-y)*-5px),0) scale(1.03);transition:transform .7s ease-out}
+}
+@media (max-width:640px){
+ .cinema-atmosphere-layer img{object-position:center 23%}
+ .cinema-atmosphere-haze{opacity:.69}
+ .cinema-atmosphere-dust{opacity:.72}
+}
+@media (prefers-reduced-motion:reduce){
+ .cinema-atmosphere-layer img{animation:none!important;transition:none!important;transform:none!important}
+}
