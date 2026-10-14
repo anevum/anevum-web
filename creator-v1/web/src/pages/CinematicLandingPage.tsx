@@ -12,6 +12,7 @@ import {ErrorState, LoadingState} from "../components/States";
 import {CinematicPortalFX} from "../components/CinematicPortalFX";
 import {CinematicAtmosphere} from "../components/CinematicAtmosphere";
 import {CinematicDiscoverySections} from "../components/CinematicDiscoverySections";
+import {HotCommunityPosts} from "./HotCommunityPosts";
 
 /**
  * LOCKED DIRECTION 2026-10-13
@@ -158,6 +159,15 @@ export function CinematicLandingPage(){
       {isReady&&<CinematicCatalogueSections projects={projects} creators={creators}/>}
 
       <CinematicDiscoverySections projects={projects} creators={creators} state={portal.state}/>
+
+      <section className="cinema-community" aria-label="Connected community boards and discussions">
+        <div className="cinema-panel cinema-community-board">
+          <div className="cinema-panel-heading"><h2>FROM THE COMMUNITY</h2><Link to="/boards">OPEN BOARDS <Icon name="arrow" size={14}/></Link></div>
+          <p>Discover approved releases, give new makers a first look, and follow the conversation around their work.</p>
+          <nav aria-label="Community board views"><Link className="cinema-button cinema-button--secondary" to="/boards">LATEST RELEASES</Link><Link className="cinema-button cinema-button--secondary" to="/boards?view=firstLooks">FIRST LOOKS</Link><Link className="cinema-button cinema-button--secondary" to="/boards?view=publishing">CREATOR ACTIVITY</Link></nav>
+        </div>
+        <HotCommunityPosts/>
+      </section>
 
       <section className="cinema-modules" aria-label="More to discover">
         {modules.map(item=><SceneLink key={item.title} item={item} variant="module"/>)}

@@ -72,3 +72,12 @@
 }
 @media(hover:none),(pointer:coarse){.portal-launcher-result:hover,.header-launcher:hover{transform:none}}
 @media(prefers-reduced-motion:reduce){.portal-launcher-result,.header-launcher{transition:none!important}.portal-launcher-result:hover,.header-launcher:hover{transform:none}}
+
+
+/* Morph universal search reports real project/creator lookup state, not invented matches. */
+.portal-launcher-live-status{
+ margin:7px 0 0;padding:8px 14px;
+ border-bottom:1px solid #a5bad263;color:#e4c58c;
+ font-size:10px;font-weight:850;letter-spacing:.08em;line-height:1.4;
+}
+@media(max-width:640px){.portal-launcher-live-status{font-size:9px;padding:8px 11px}}

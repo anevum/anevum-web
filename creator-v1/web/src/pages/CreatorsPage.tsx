@@ -11,6 +11,7 @@ import {EmptyState,ErrorState,LoadingState} from "../components/States";
 import {CelestialEmblem} from "../components/CelestialEmblem";
 import {CosmicArtwork} from "../components/CosmicArtwork";
 import {achievementMotif,seriesOneMotif} from "../lib/artifact-art";
+import {ContextDiscussions} from "../components/ContextDiscussions";
 
 export function CreatorsPage(){
   const [params,setParams]=useSearchParams();
@@ -112,6 +113,7 @@ export function CreatorPage(){
             <EmptyState title={cursor?"NO MORE PUBLIC RELEASES":"NO PUBLIC RELEASES AVAILABLE"} detail="Only currently approved published projects appear here. Private drafts cannot be browsed."/>}
           <PageNav route={path} search={params} nextCursor={projects.nextCursor} label="Creator project releases"/>
         </section>
+        <ContextDiscussions creator={profile.handle}/>
       </div>
       <aside className="portal-sidebar">
         {detailed&&<section className="portal-sidebox portal-creator-level">

@@ -71,7 +71,9 @@ test("secondary pages share the same world art while preserving genuine content 
   assert.match(creators,/detailed\?\.achievements/);
   assert.match(community,/readProjects/);
   assert.match(community,/readCreators/);
-  assert.match(community,/PUBLIC MESSAGE BOARD IS NOT OPEN YET/);
+  assert.match(community,/COMMUNITY CONVERSATIONS ARE UNDER PRIVATE REVIEW/);
+  assert.match(community,/<HotCommunityPosts\/>/);
+  assert.match(community,/to="\/community\/write"/);
   assert.match(css,/prefers-reduced-motion:reduce/);
 });
 
@@ -123,7 +125,9 @@ test("polished homepage removes redundant nav rows without deleting them from in
  assert.match(html,/og:site_name/);
  assert.match(html,/og:title/);
  assert.match(html,/icon.*%BASE_URL%favicon\.svg/);
- assert.match(read("web/src/pages/DiscoverPage.tsx"),/accent="UNIVERSE\."/);
+ assert.match(read("web/src/pages/DiscoverPage.tsx"),/accent={world\?\.accent\|\|"UNIVERSE\."}/);
+  assert.match(read("web/src/pages/DiscoverPage.tsx"),/world=immersive\?immersiveWorlds/);
+  assert.match(read("web/src/App.tsx"),/path="discover" element={<DiscoverPage\/>}/);
  assert.ok(existsSync(new URL("../web/public/favicon.svg",import.meta.url)));
 });
 

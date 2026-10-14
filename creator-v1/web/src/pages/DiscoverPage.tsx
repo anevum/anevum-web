@@ -19,7 +19,28 @@ const channels: ReadonlyArray<{id:Category;label:string;description:string;mark:
   {id:"other",label:"More",description:"Everything else worth discovering",mark:"+"}
 ];
 
-export function DiscoverPage(){
+const immersiveWorlds:Partial<Record<Category,{
+  eyebrow:string;title:string;accent:string;description:string;index:string;
+  scene:"games"|"tools"|"creative";searchTitle:string;stamp:string;
+}>>={
+  games:{
+    eyebrow:"ANEVUM / THE PLAY WORLD",title:"ENTER THE",accent:"ARCADE.",
+    description:"Find independently created games and interactive experiments. Try approved creator-hosted experiences; native ANEVUM game hosting is still in development.",
+    index:"PLAY / 001",scene:"games",searchTitle:"FIND SOMETHING TO PLAY",stamp:"GAMES / TRY / PLAY"
+  },
+  tools:{
+    eyebrow:"ANEVUM / THE MAKER'S TOOLBOX",title:"SOFTWARE",accent:"WITH SOUL.",
+    description:"Discover useful software built by independent people. Follow authentic demos and sources, without fabricated usage or sponsorship rankings.",
+    index:"TOOLS / 002",scene:"tools",searchTitle:"FIND YOUR NEXT TOOL",stamp:"APPS / SOFTWARE"
+  },
+  creative:{
+    eyebrow:"ANEVUM / UNUSUAL CREATIONS",title:"FIND THE",accent:"UNEXPECTED.",
+    description:"Explore independently made art, interactive experiences and AI-assisted experiments. Every public project comes from the real approved catalogue.",
+    index:"CREATE / 003",scene:"creative",searchTitle:"EXPLORE NEW IDEAS",stamp:"ART / EXPERIMENTS"
+  }
+};
+
+export function DiscoverPage({immersive=false}:{immersive?:boolean}={}){
   const [params,setParams]=useSearchParams();
   const q=params.get("q")||"",category=params.get("category")||"",cursor=params.get("cursor")||"",freeOnly=params.get("free")==="1";
   const [draft,setDraft]=useState(q);
@@ -34,6 +55,7 @@ export function DiscoverPage(){
   },[q,category,cursor,freeOnly]);
   const current="/discover"+(params.size?"?"+params.toString():"");
   const active=useMemo(()=>channels.find(x=>x.id===category),[category]);
+  const world=immersive?immersiveWorlds[category as Category]:undefined;
 
   function search(e:FormEvent){
     e.preventDefault();
@@ -57,13 +79,17 @@ export function DiscoverPage(){
   const categories=resource.state==="ready"?resource.data.categories.categories:[];
   const countByCategory=new Map(categories.map(x=>[x.category,x.count]));
   return <div className="portal-discover">
-    <PortalHeading eyebrow="THE PORTALS / EVERYTHING WORTH TRYING" title="EXPLORE THE" accent="UNIVERSE." description="Games, apps, interactive experiments and independent work. Search actual published projects, not paid placement or invented activity." index="DISCOVER / 001"/>
+    <PortalHeading
+      eyebrow={world?.eyebrow||"THE PORTALS / EVERYTHING WORTH TRYING"}
+      title={world?.title||"EXPLORE THE"} accent={world?.accent||"UNIVERSE."}
+      description={world?.description||"Games, apps, interactive experiments and independent work. Search actual published projects, not paid placement or invented activity."}
+      index={world?.index||"DISCOVER / 001"} scene={world?.scene||"portal"}/>
     <div className="portal-browse-layout">
       <div className="portal-browse-main">
         <section className="portal-box portal-search-hall" aria-label="Search and browse published projects">
           <div className="portal-box-header">
-            <div><span className="kicker">THE CATALOGUE / PUBLISHED WORK</span><h2>FIND YOUR NEXT FAVORITE</h2></div>
-            <span className="portal-hall-stamp">GAMES / APPS / MORE</span>
+            <div><span className="kicker">THE CATALOGUE / PUBLISHED WORK</span><h2>{world?.searchTitle||"FIND YOUR NEXT FAVORITE"}</h2></div>
+            <span className="portal-hall-stamp">{world?.stamp||"GAMES / APPS / MORE"}</span>
           </div>
           <form className="portal-wide-search" role="search" onSubmit={search}>
             <label htmlFor="portal-project-query" className="visually-hidden">Search published projects</label>

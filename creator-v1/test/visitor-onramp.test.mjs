@@ -42,7 +42,7 @@ test("wayfinding works on narrow screens and honors reduced motion", () => {
 });
 
 test("free-to-use discovery filter is server-backed and URL-driven", () => {
-  assert.match(api, /new Set\(\['category', 'q', 'cursor', 'limit', 'creator', 'free'\]\)/);
+  assert.match(api, /new Set\(\['category', 'q', 'cursor', 'limit', 'creator', 'free', 'sort'\]\)/);
   assert.match(api, /free !== null && free !== '1'/);
   assert.match(api, /if \(filter.freeOnly\) sql \+= ' AND p.free_to_use=1'/);
   assert.match(discover, /free:freeOnly\?"1":undefined/);

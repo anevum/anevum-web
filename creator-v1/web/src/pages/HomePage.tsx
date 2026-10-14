@@ -44,6 +44,7 @@ export function HomePage(){
           <div className="cw-hero-actions">
             <Link to="/discover" className="cw-button cw-button--gold">EXPLORE WORLDS <Icon name="arrow" size={17}/></Link>
             <Link to="/start" className="cw-button cw-button--quiet">FIND YOUR PLACE</Link>
+            <Link to="/atlas" className="cw-button cw-button--quiet cw-button--atlas">ENTER ATLAS <span aria-hidden="true">↗</span></Link>
           </div>
         </div>
         <aside className="cw-hero-feature" aria-label="About our creative universe">

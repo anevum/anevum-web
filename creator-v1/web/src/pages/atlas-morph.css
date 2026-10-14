@@ -1,0 +1,532 @@
+/* ANEVUM MORPH / single navigation + complete viewport
+ * Owner-directed review: the header is the only navigation plane.
+ * Every real ANEVUM page uses the full remaining viewport; content may scroll
+ * in that page, never inside an inset imitation app window.
+ */
+.atm-shell{
+ --atm-nav-height:82px;
+ --atm-accent:#e3c38f;
+ --atm-gold:#e6c58e;
+ --atm-slate:#aebfd5;
+ --coral:#e6c58e;
+ --bone:#f5ede0;
+ --violet:#8cbbea;
+ --line:#779ab05e;
+ --line-soft:#779ab043;
+ --content:2000px;
+ position:fixed;inset:0;isolation:isolate;overflow:hidden;z-index:150;
+ background:#070e1d;color:#f2e9da;
+ font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+ font-size:14px;line-height:1.58;
+}
+.atm-shell *{box-sizing:border-box}
+.atm-shell :is(button,input,a){font:inherit}
+.atm-shell button{cursor:pointer}
+.atm-shell a{text-decoration:none}
+.atm-shell :is(button,a,input,[tabindex]):focus-visible{outline:2px solid #f5ce8f;outline-offset:3px}
+.atm-atmosphere{position:absolute;inset:-3%;z-index:-3;pointer-events:none;overflow:hidden}
+.atm-atmosphere .cw-artwork{width:100%;height:100%;display:block}
+.atm-atmosphere .cw-artwork-image{width:100%;height:100%;object-fit:cover;object-position:center;
+ filter:brightness(.39) saturate(.73) contrast(1.12);
+ transform:scale(1.07);
+ transition:transform 1s cubic-bezier(.2,.85,.3,1),filter 1s ease}
+.atm-shell--focused .atm-atmosphere .cw-artwork-image{
+ transform:scale(1.12);filter:brightness(.25) saturate(.65) contrast(1.12)}
+.atm-atmosphere .cw-artwork-glaze{background:linear-gradient(180deg,#061020a8,transparent 45%,#050915cc),radial-gradient(ellipse at 58% 46%,transparent 8%,#020714b3 93%)}
+.atm-atmosphere-overlay{position:absolute;inset:0;pointer-events:none;z-index:-2;
+ background:radial-gradient(ellipse at 65% 30%,#2948733c,transparent 66%),
+ radial-gradient(ellipse at 5% 92%,#48356924,transparent 63%),
+ linear-gradient(180deg,#071122ab,#040b18b3);
+}
+.atm-header{
+ position:absolute;z-index:35;top:0;right:0;left:0;
+ height:var(--atm-nav-height);
+ display:flex;align-items:center;gap:clamp(10px,1.5vw,28px);
+ padding:0 clamp(17px,2.8vw,50px);
+ border-bottom:1px solid #b9c6d044;
+ background:linear-gradient(180deg,#111c2ff5,#091526f2);
+ backdrop-filter:blur(15px);
+ box-shadow:0 10px 38px #01040c73;
+}
+.atm-brand{flex:none;display:flex;align-items:center;gap:11px;color:#f6e5c9;min-width:0}
+.atm-brand svg{width:44px;height:44px;filter:drop-shadow(0 0 11px #e7b77846)}
+.atm-brand .mark-core-cut{fill:#0b1526}
+.atm-brand>span{display:flex;flex-direction:column;line-height:1.05}
+.atm-brand strong{font:500 26px Georgia,serif;letter-spacing:.12em;white-space:nowrap}
+.atm-brand small{font-size:7px;letter-spacing:.2em;color:#c2c9d1;font-weight:900;margin-top:7px;white-space:nowrap}
+.atm-primary-nav{display:flex;align-items:center;justify-content:center;gap:clamp(3px,.5vw,11px);min-width:0;flex:1;height:100%}
+.atm-nav-link,.atm-worlds-trigger{
+ position:relative;min-height:46px;display:flex;align-items:center;justify-content:center;
+ gap:7px;padding:0 clamp(8px,.85vw,17px);
+ border:1px solid transparent;border-radius:10px;
+ background:transparent;color:#cdd7e4;font-weight:900!important;font-size:10px!important;
+ letter-spacing:.075em;white-space:nowrap;
+ transition:background .22s,border-color .22s,color .22s;
+}
+.atm-nav-link:hover,.atm-nav-link.is-active{color:#ffdfab;background:#253752b7;border-color:#a5bdd34c}
+.atm-nav-link.is-active:after{content:"";height:2px;position:absolute;left:16px;right:16px;bottom:-18px;background:var(--atm-accent);box-shadow:0 0 11px var(--atm-accent)}
+.atm-nav-glyph{color:#e6c990;font:500 17px Georgia,serif;line-height:1}
+.atm-worlds-trigger{border-color:#adbbc36b;background:#14243aeb;color:#f0e3d1;gap:9px}
+.atm-worlds-trigger:hover,.atm-worlds-trigger.is-open{border-color:#e3c590;background:#2b3a53}
+.atm-worlds-trigger-label{font-size:10px}
+.atm-worlds-current{display:none}
+.atm-worlds-trigger>span:last-child{color:#f4d499;font-size:16px;line-height:1}
+.atm-actions{display:flex;align-items:center;justify-content:flex-end;gap:8px;flex:none}
+.atm-progress{display:flex;align-items:center;gap:7px;min-height:42px;padding:4px 10px;
+ border:1px solid #a5b2bd5f;border-radius:10px;color:#f0e6d6;background:#18273dcc;white-space:nowrap}
+.atm-progress>span:first-child{font:400 22px Georgia,serif;color:#e8c996}
+.atm-progress>span:last-child{display:flex;flex-direction:column;gap:2px}
+.atm-progress small{font-size:7px;color:#aebed1;font-weight:900;letter-spacing:.1em}
+.atm-progress strong{font-size:9px;font-weight:900;letter-spacing:.05em}
+.atm-search,.atm-account{
+ display:flex;align-items:center;justify-content:center;gap:6px;height:44px;min-width:44px;
+ border-radius:9px;border:1px solid #a8bdd067;background:#1b2c44b8;color:#f0debf}
+.atm-search:hover,.atm-account:hover{background:#344968;border-color:#eac58d}
+.atm-search>span{font:400 25px Georgia,serif;line-height:1}
+.atm-search small{font-size:9px;font-weight:900;letter-spacing:.05em}
+.atm-account>span{font:400 22px Georgia,serif;line-height:1}
+.atm-worlds-menu{
+ position:absolute;top:calc(100% + 7px);right:clamp(15px,2.8vw,51px);
+ width:min(770px,calc(100vw - 30px));max-height:calc(100dvh - var(--atm-nav-height) - 19px);
+ overflow-y:auto;overscroll-behavior:contain;padding:21px;
+ z-index:51;border-radius:15px;border:1px solid #c9bb9b8e;
+ box-shadow:0 20px 80px #000d,0 0 0 1px #b7cfe129 inset;
+ background:radial-gradient(ellipse at 85% 0%,#3a53694d,transparent 52%),linear-gradient(160deg,#13243e,#081323);
+ backdrop-filter:blur(22px);
+}
+.atm-worlds-menu-intro{display:flex;justify-content:space-between;align-items:baseline;gap:12px;border-bottom:1px solid #b5bfca43;padding:0 2px 13px}
+.atm-worlds-menu-intro span{color:#e9cb98;font-size:9px;font-weight:900;letter-spacing:.16em}
+.atm-worlds-menu-intro strong{color:#f9e7c9;font:400 26px Georgia,serif}
+.atm-worlds-menu-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin:15px 0}
+.atm-worlds-menu-grid button{min-width:0;display:flex;align-items:center;text-align:left;gap:12px;padding:12px;border:1px solid #9ab0c05c;border-radius:10px;background:#172b4499;color:#f3e9d8}
+.atm-worlds-menu-grid button:hover,.atm-worlds-menu-grid button.is-active{border-color:#e8cf9c;background:#304764a6}
+.atm-menu-glyph{flex:none;width:40px;height:40px;display:grid;place-items:center;border-radius:50%;border:1px solid #e3c58f91;color:#f0d29d;font:400 23px Georgia,serif;background:#0c1930}
+.atm-worlds-menu-grid button>span:nth-child(2){display:flex;flex-direction:column;gap:2px;min-width:0}
+.atm-worlds-menu-grid strong{font-size:12px;font-weight:900;letter-spacing:.07em}
+.atm-worlds-menu-grid small{color:#bbcadc;font-size:10px;line-height:1.35;font-weight:500}
+.atm-menu-arrow{margin-left:auto;color:#e8c897;font-size:17px}
+.atm-worlds-menu-utilities{display:flex;align-items:center;flex-wrap:wrap;gap:8px;border-top:1px solid #b7c3d14d;padding-top:15px}
+.atm-worlds-menu-utilities a{border:1px solid #aebbc45c;padding:8px 12px;color:#f0ddbd;border-radius:7px;background:#14263a;font-size:9px;font-weight:900;letter-spacing:.07em}
+.atm-worlds-menu-utilities a:hover{border-color:#e6c58e;background:#263953}
+.atm-menu-dismiss{position:fixed;inset:var(--atm-nav-height) 0 0;z-index:34;border:0;background:#010713b5;cursor:default!important}
+.atm-content{
+ position:absolute;inset:var(--atm-nav-height) 0 0;z-index:2;
+ overflow:auto;overscroll-behavior:contain;scrollbar-color:#957e65 #101a2a;
+ background:linear-gradient(160deg,#09152b7d,#080e1c8a 55%,#060b15bb);
+ scroll-behavior:auto;
+}
+.atm-content:focus{outline:none}
+.atm-content--page{padding:clamp(18px,2.3vw,40px) clamp(17px,3.5vw,64px) 70px}
+.atm-content--overview{padding:clamp(22px,3vw,48px) clamp(20px,3vw,56px) 55px}
+.atm-embedded{width:100%;min-width:0;max-width:1800px;margin:0 auto;
+ animation:atm-section-enter .5s cubic-bezier(.15,.8,.2,1) both}
+@keyframes atm-section-enter{from{opacity:0;translate:0 12px;filter:blur(3px)}to{opacity:1;translate:0 0;filter:blur(0)}}
+.atm-embedded>div{min-width:0;max-width:none;width:100%;margin:0 auto}
+.atm-embedded :is(.portal-discover,.levels-page,.member-shell,.portal-community-page,.portal-project,.portal-creators){max-width:none;width:100%;min-width:0}
+.atm-embedded .portal-page-heading{
+ min-height:clamp(195px,21vw,284px);border-radius:14px;
+ border:1px solid #8ab0d07b;
+ background:linear-gradient(105deg,#10223d,#0a1b32);
+ overflow:hidden;padding:clamp(25px,3vw,46px);
+ box-shadow:0 12px 39px #01071671;
+}
+.atm-embedded .portal-page-heading-copy{padding:10px 0;max-width:min(78%,880px)}
+.atm-embedded .portal-page-heading h1{font:500 clamp(49px,5vw,80px)/.98 Georgia,"Times New Roman",serif;letter-spacing:-.04em;margin:10px 0 14px}
+.atm-embedded .portal-page-heading p{font-size:clamp(13px,1.12vw,16px);line-height:1.65;max-width:700px}
+.atm-embedded .portal-page-heading .kicker{font-size:10px;letter-spacing:.14em}
+.atm-embedded .portal-page-heading-stamp{flex-basis:170px;opacity:.7}
+.atm-embedded .portal-page-heading-stamp svg{width:165px;height:165px}
+.atm-embedded .portal-page-heading + .portal-browse-layout{margin-top:24px}
+.atm-embedded .portal-browse-layout{grid-template-columns:minmax(0,1fr) minmax(254px,295px);gap:24px}
+.atm-embedded .portal-browse-main{gap:22px}
+.atm-embedded .portal-box,.atm-embedded .portal-shelf,.atm-embedded .portal-sidebox{
+ padding:clamp(17px,1.65vw,27px);
+ border-color:#668cab60;
+ border-radius:12px;background:linear-gradient(160deg,#16243aeb,#101a2cee);
+}
+.atm-embedded .portal-search-hall{padding:clamp(23px,2.1vw,35px)}
+.atm-embedded .portal-result-toolbar{gap:16px;padding:12px 0 16px}
+.atm-embedded .portal-wide-search{min-height:58px}
+.atm-embedded .portal-channel-filters{gap:9px;margin-top:18px}
+.atm-embedded .portal-channel-filters button{min-height:43px;padding:11px 16px;font-size:11px}
+.atm-embedded .portal-discover-results{gap:18px;grid-template-columns:repeat(3,minmax(0,1fr))}
+.atm-embedded .portal-discover-results .project-art{height:clamp(185px,16vw,275px)}
+.atm-embedded .portal-discover-results .project-card-body{padding:clamp(16px,1.5vw,25px)}
+.atm-embedded .portal-layout{gap:24px;grid-template-columns:minmax(0,1fr) minmax(260px,302px)}
+.atm-embedded .portal-main{gap:22px}
+.atm-embedded .portal-sidebar{gap:18px}
+.atm-embedded .member-shell{min-height:0}
+.atm-embedded .member-header{padding:23px 28px;border-radius:12px;gap:24px}
+/* The account-local navigation is already covered by the one global Worlds menu. */
+.atm-embedded .member-header nav{display:none}
+.atm-embedded .member-header strong{font-size:clamp(26px,2.3vw,36px);line-height:1.2}
+.atm-embedded .portal-project-detail-layout{gap:23px}
+.atm-overview{
+ max-width:1900px;min-height:calc(100dvh - var(--atm-nav-height) - 120px);
+ margin:0 auto;display:grid;grid-template-columns:minmax(290px,.72fr) minmax(610px,1.75fr);
+ gap:clamp(32px,4vw,86px);align-items:center;
+}
+.atm-overview-lead{padding:clamp(12px,2vw,37px) 0;min-width:0}
+.atm-overview-eyebrow{font-size:11px;font-weight:900;letter-spacing:.18em;color:#f2ce9c}
+.atm-overview-lead h1{
+ font:400 clamp(58px,7.4vw,118px)/.91 Georgia,"Times New Roman",serif;letter-spacing:-.065em;
+ margin:25px 0 27px;text-shadow:0 14px 36px #01050ad4}
+.atm-overview-lead h1 em{font-weight:400;color:#e5c897}
+.atm-overview-lead p{font-size:clamp(15px,1.4vw,20px);line-height:1.7;color:#c6d4e6;max-width:480px;margin:0 0 30px}
+.atm-overview-actions{display:flex;flex-wrap:wrap;align-items:center;gap:12px}
+.atm-overview-start,.atm-overview-quick{min-height:51px;display:inline-flex;align-items:center;justify-content:center;gap:15px;
+ padding:0 20px;border:1px solid #e3c68d;border-radius:10px;font-size:11px;font-weight:900;letter-spacing:.09em}
+.atm-overview-start{background:linear-gradient(125deg,#ead4a3,#c29d62);color:#0d182b;box-shadow:0 7px 0 #553e2475,0 18px 36px #0008}
+.atm-overview-quick{background:#15253bd9;color:#f2d9b0;border-color:#aabec67d}
+.atm-overview-start:hover,.atm-overview-quick:hover{transform:translateY(-2px);filter:brightness(1.1)}
+.atm-overview-context{display:flex;flex-wrap:wrap;gap:15px;border-top:1px solid #afc5d444;padding-top:25px;margin-top:47px;
+ font-size:9px;font-weight:900;letter-spacing:.11em;color:#a9b9cd}
+.atm-world-gallery{min-width:0;width:100%}
+.atm-world-gallery-title{display:flex;justify-content:space-between;align-items:center;gap:14px;padding:0 1px 15px;
+ border-bottom:1px solid #b4c2d15d;color:#e4c793;font-size:10px;letter-spacing:.12em;font-weight:900}
+.atm-world-gallery-title span+span{color:#abc0d8}
+.atm-world-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:15px;margin-top:17px}
+.atm-world-tile{
+ position:relative;aspect-ratio:1.41;display:block;width:100%;min-width:0;min-height:145px;
+ overflow:hidden;isolation:isolate;padding:0;
+ border:1px solid #b8c4d08a;border-radius:14px;
+ background:#17263b;color:#f7ead6;text-align:left;
+ box-shadow:0 11px 27px #0008,0 0 0 1px #162d4c inset;
+ transition:transform .4s cubic-bezier(.19,.9,.28,1),border-color .3s,box-shadow .3s;
+}
+.atm-world-tile:hover,.atm-world-tile:focus-visible{transform:translateY(-5px);border-color:var(--tile-color);
+ box-shadow:0 15px 35px #000a,0 0 23px color-mix(in srgb,var(--tile-color) 40%,transparent)}
+.atm-world-art{position:absolute;inset:0;display:block;z-index:-2}
+.atm-world-art .cw-artwork{width:100%;height:100%}
+.atm-world-art .cw-artwork-image{width:100%;height:100%;object-fit:cover;filter:brightness(.72) saturate(1.12);transition:transform .7s ease}
+.atm-world-tile:hover .atm-world-art .cw-artwork-image{transform:scale(1.11)}
+.atm-world-overlay{position:absolute;inset:0;z-index:-1;
+ background:radial-gradient(circle at 50% 15%,transparent,#050a18a1 75%),linear-gradient(0deg,#030813ea 3%,transparent 82%);
+ pointer-events:none}
+.atm-world-top{position:absolute;left:16px;right:16px;top:13px;display:flex;align-items:center;justify-content:space-between;
+ color:#e6d5bc;font-size:9px;font-weight:900;letter-spacing:.08em}
+.atm-world-top b{font:500 23px Georgia,serif;color:var(--tile-color);text-shadow:0 2px 17px #000}
+.atm-world-bottom{position:absolute;bottom:14px;left:17px;right:36px;display:flex;flex-direction:column;gap:3px}
+.atm-world-bottom strong{font:500 clamp(23px,2.3vw,38px)/1.05 Georgia,serif;letter-spacing:-.02em;white-space:nowrap}
+.atm-world-bottom small{font-size:clamp(9px,.85vw,12px);color:#cbd7e5;line-height:1.3;max-width:95%}
+.atm-world-arrow{position:absolute;right:15px;bottom:18px;color:#edca95;font-size:18px}
+.atm-future{max-width:none;width:100%;min-height:470px;margin:0 auto;
+ padding:clamp(35px,5vw,90px);border:1px solid #83a5c777;border-radius:16px;
+ background:radial-gradient(circle at 84% 18%,#2c4d754d,transparent 55%),linear-gradient(125deg,#10213b,#071223)}
+.atm-future-mark{font:400 clamp(76px,9vw,150px)/1 Georgia,serif;color:#eac68a;text-shadow:0 0 30px #dcbb816d}
+.atm-future-index{display:block;color:#efcb8b;font-size:11px;font-weight:950;letter-spacing:.16em;margin-top:5px}
+.atm-future h2{font:400 clamp(42px,6vw,90px)/1 Georgia,serif;letter-spacing:-.05em;margin:19px 0}
+.atm-future h2 em{color:#e5c58d}
+.atm-future>p{font-size:clamp(15px,1.4vw,19px);color:#c5d2e2;line-height:1.75;max-width:900px}
+.atm-future-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px;margin:40px 0}
+.atm-future-grid article{padding:30px;min-width:0;border:1px solid #8eabc36a;border-radius:12px;background:#0e1d34d9}
+.atm-future-grid article span{font-size:10px;font-weight:900;color:#e6c38c;letter-spacing:.15em}
+.atm-future-grid article strong{display:block;font:400 27px Georgia,serif;margin:14px 0 8px}
+.atm-future-grid article p{color:#b5c8dc;font-size:14px;line-height:1.6}
+.atm-future-action{display:inline-flex;align-items:center;min-height:46px;padding:0 20px;border:1px solid #e2c58c;border-radius:9px;
+ background:#15253f;color:#eed4a4;font-size:11px;font-weight:900;letter-spacing:.08em}
+.atm-shell .portal-launcher{border-color:#ceb88d;border-radius:14px;background:#111e33;box-shadow:0 24px 100px #000c}
+.atm-shell .portal-launcher::backdrop{background:#020814d9;backdrop-filter:blur(9px)}
+.atm-shell .portal-launcher-content{background:radial-gradient(circle at 90% 5%,#2c4d7750,transparent 48%),linear-gradient(155deg,#172a43,#0a1223)}
+.atm-milestone{position:absolute;z-index:70;left:50%;top:50%;transform:translate(-50%,-50%);
+ width:min(470px,calc(100vw - 36px));padding:42px 24px;text-align:center;border:1px solid #e2c895;border-radius:20px;
+ background:radial-gradient(circle at 50% 15%,#344e71,#0d1930 80%);box-shadow:0 0 0 999vmax #020711d4,0 17px 90px #000a;
+ animation:atm-section-enter .5s ease both}
+.atm-milestone-stars{color:#e8c591;font:400 48px Georgia,serif}
+.atm-milestone>span{display:block;font-size:10px;letter-spacing:.14em;color:#e9ca95;font-weight:900;margin:12px 0 4px}
+.atm-milestone>strong{display:block;font:400 61px Georgia,serif}
+.atm-milestone p{font-size:14px;color:#c5d3e3}
+.atm-milestone button{padding:12px 20px;color:#f2d9a4;background:#182b48;border:1px solid #c4ad86;border-radius:9px}
+@media(max-width:1450px){
+ .atm-header{gap:13px;padding-inline:22px}
+ .atm-brand strong{font-size:23px}
+ .atm-brand small{font-size:6px}
+ .atm-brand svg{width:39px;height:39px}
+ .atm-nav-link,.atm-worlds-trigger{padding-inline:9px}
+ .atm-actions{gap:5px}
+ .atm-progress small{display:none}
+ .atm-world-grid{gap:13px}
+ .atm-overview{grid-template-columns:minmax(260px,.75fr) minmax(570px,1.7fr);gap:35px}
+}
+@media(max-width:1150px){
+ .atm-nav-optional{display:none}
+ .atm-overview{grid-template-columns:minmax(250px,.75fr) minmax(500px,1.7fr);gap:22px}
+ .atm-overview-lead h1{font-size:65px}
+ .atm-overview-lead p{font-size:15px}
+ .atm-embedded .portal-browse-layout{gap:17px;grid-template-columns:minmax(0,1fr) 255px}
+ .atm-embedded .portal-discover-results{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:900px){
+ .atm-header{padding-inline:17px}
+ .atm-primary-nav>.atm-nav-link{display:none}
+ .atm-primary-nav{justify-content:flex-start;flex:0 1 auto;margin-left:auto}
+ .atm-worlds-trigger{padding:0 15px;gap:8px}
+ .atm-worlds-current{display:inline;font-size:9px;color:#b6c8dc;font-weight:900}
+ .atm-actions{flex:none}
+ .atm-overview{grid-template-columns:1fr;gap:30px;min-height:0;align-items:start}
+ .atm-overview-lead{padding:15px 0;max-width:680px}
+ .atm-overview-lead h1{font-size:clamp(63px,11vw,110px)}
+ .atm-overview-lead p{font-size:17px}
+ .atm-overview-context{margin-top:25px}
+ .atm-world-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+ .atm-embedded .portal-browse-layout,.atm-embedded .portal-layout{grid-template-columns:1fr}
+ .atm-embedded .portal-discover-results{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:640px){
+ .atm-shell{--atm-nav-height:66px}
+ .atm-header{gap:7px;padding:0 11px}
+ .atm-brand{gap:6px}
+ .atm-brand svg{width:31px;height:31px}
+ .atm-brand strong{font-size:19px;letter-spacing:.07em}
+ .atm-brand small{font-size:6px;letter-spacing:.09em;margin-top:4px}
+ .atm-primary-nav{margin-left:auto}
+ .atm-worlds-trigger{min-height:40px;padding:0 10px}
+ .atm-worlds-trigger-label{font-size:9px}
+ .atm-worlds-current{display:none}
+ .atm-progress{min-height:38px;padding:0 7px;gap:3px}
+ .atm-progress>span:first-child{font-size:17px}
+ .atm-progress small{display:none}
+ .atm-progress strong{display:none}
+ .atm-progress{min-width:36px;justify-content:center}
+ .atm-search,.atm-account{min-width:38px;height:38px;border-radius:8px}
+ .atm-search small{display:none}
+ .atm-search>span{font-size:24px}
+ .atm-account>span{font-size:20px}
+ .atm-content--page{padding:16px 13px 45px}
+ .atm-content--overview{padding:18px 14px 38px}
+ .atm-overview-lead{padding:6px 0}
+ .atm-overview-eyebrow{font-size:9px;letter-spacing:.13em}
+ .atm-overview-lead h1{font-size:clamp(55px,14vw,86px);margin:16px 0 19px}
+ .atm-overview-lead p{font-size:15px;line-height:1.6;margin-bottom:21px}
+ .atm-overview-actions{gap:9px}
+ .atm-overview-start,.atm-overview-quick{min-height:44px;padding:0 12px;font-size:9px;letter-spacing:.04em}
+ .atm-overview-context{margin-top:23px;padding-top:16px;gap:10px;font-size:8px}
+ .atm-world-gallery-title{font-size:9px}
+ .atm-world-grid{grid-template-columns:1fr;gap:15px;margin-top:15px}
+ .atm-world-tile{min-height:195px;aspect-ratio:1.85;border-radius:13px}
+ .atm-world-top{left:10px;right:10px;top:9px;font-size:8px}
+ .atm-world-top b{font-size:20px}
+ .atm-world-bottom{left:11px;bottom:11px;right:22px}
+ .atm-world-bottom strong{font-size:clamp(30px,8vw,42px)}
+ .atm-world-bottom small{font-size:12px;max-width:95%}
+ .atm-world-arrow{right:10px;bottom:10px}
+ .atm-worlds-menu{top:calc(100% + 5px);left:8px;right:8px;width:auto;padding:12px}
+ .atm-worlds-menu-intro{padding-bottom:9px}
+ .atm-worlds-menu-intro strong{font-size:20px}
+ .atm-worlds-menu-intro span{font-size:8px}
+ .atm-worlds-menu-grid{gap:7px;margin:11px 0}
+ .atm-worlds-menu-grid button{gap:8px;padding:10px;min-height:55px}
+ .atm-menu-glyph{width:30px;height:30px;font-size:17px}
+ .atm-worlds-menu-grid strong{font-size:11px}
+ .atm-worlds-menu-grid small{font-size:9px;line-height:1.35}
+ .atm-worlds-menu-utilities{gap:6px}
+ .atm-worlds-menu-utilities a{font-size:8px;padding:7px 9px}
+ .atm-embedded .portal-page-heading{padding:17px;min-height:178px}
+ .atm-embedded .portal-page-heading-copy{padding:0;max-width:100%}
+ .atm-embedded .portal-page-heading h1{font-size:clamp(37px,10vw,54px);line-height:1.03}
+ .atm-embedded .portal-page-heading p{font-size:12px;line-height:1.5}
+ .atm-embedded .portal-page-heading-stamp{display:none}
+ .atm-embedded .portal-page-heading + .portal-browse-layout{margin-top:14px}
+ .atm-embedded .portal-box,.atm-embedded .portal-shelf,.atm-embedded .portal-sidebox{padding:16px}
+ .atm-embedded .portal-search-hall{padding:17px}
+ .atm-embedded .portal-hall-stamp{display:none}
+ .atm-embedded .portal-wide-search{min-width:0}
+ .atm-embedded .portal-wide-search input{min-width:0;font-size:12px;padding-inline:10px}
+ .atm-embedded .portal-wide-search button{font-size:11px;padding-inline:14px;flex:none}
+ .atm-embedded .portal-channel-filters{gap:5px}
+ .atm-embedded .portal-channel-filters button{min-height:39px;padding:8px 10px;font-size:9px}
+ .atm-embedded .portal-discover-results{grid-template-columns:1fr;gap:13px}
+ .atm-embedded .portal-discover-results .project-art{height:200px}
+ .atm-embedded .portal-discover-results .project-card-body{padding:17px}
+ .atm-embedded .portal-result-toolbar{flex-wrap:wrap}
+ .atm-embedded .portal-layout,.atm-embedded .portal-browse-layout{grid-template-columns:1fr;gap:15px}
+ .atm-embedded .portal-layout>.portal-sidebar,.atm-embedded .portal-browse-layout>.portal-sidebar{display:flex;flex-direction:column;gap:12px}
+ .atm-embedded .member-header{padding:17px;flex-wrap:wrap}
+ .atm-embedded .member-header nav{justify-content:flex-start}
+ .atm-future{padding:26px 19px;min-height:0}
+ .atm-future-mark{font-size:74px}
+ .atm-future h2{font-size:clamp(36px,10vw,50px)}
+ .atm-future>p{font-size:14px}
+ .atm-future-grid{grid-template-columns:1fr;gap:12px;margin:26px 0}
+ .atm-future-grid article{padding:21px}
+}
+@media(max-width:375px){
+ .atm-brand small{display:none}
+ .atm-brand strong{font-size:18px}
+ .atm-progress strong{display:none}
+ .atm-progress{min-width:32px;justify-content:center}
+ .atm-worlds-trigger{padding-inline:8px}
+ .atm-search,.atm-account{min-width:35px;height:36px}
+ .atm-account{display:none}
+ .atm-header{gap:5px;padding:0 8px}
+ .atm-world-tile{min-height:182px}
+ .atm-world-bottom strong{font-size:29px}
+}
+@media(prefers-reduced-motion:reduce){
+ .atm-shell *,.atm-shell *:before,.atm-shell *:after{
+   animation-duration:.01ms!important;animation-iteration-count:1!important;
+   transition-duration:.01ms!important;scroll-behavior:auto!important}
+ .atm-atmosphere .cw-artwork-image{transform:none!important}
+}
+
+
+/* MORPH V4 / owner-directed single Menu overlay + signed-in member identity.
+   The old top-level category tab navigation and the front-page world-button
+   gallery have been removed from the component, not merely hidden by CSS. */
+.atm-content--overview{padding:0;background:linear-gradient(160deg,#070f20b9,#070c1cb9)}
+.atm-header{gap:clamp(12px,1.6vw,27px);justify-content:space-between}
+.atm-header-spacer{display:flex;align-items:center;justify-content:center;gap:16px;flex:1;
+ min-width:0;color:#b4c4d3;font-size:9px;letter-spacing:.13em;font-weight:900;white-space:nowrap}
+.atm-header-spacer b{font:400 22px Georgia,serif;color:#e8c895}
+.atm-menu-button{display:flex;align-items:center;justify-content:center;gap:12px;flex:none;
+ min-height:46px;padding:0 15px;border:1px solid #b5c6d570;border-radius:9px;
+ background:linear-gradient(135deg,#243551cf,#15243bef);color:#f4ddba;
+ font-size:11px!important;letter-spacing:.13em;font-weight:950!important;
+ transition:border-color .25s,background .25s,transform .25s}
+.atm-menu-button:hover,.atm-menu-button.is-open{border-color:#efd3a4;background:#304464}
+.atm-menu-icon{display:flex;flex-direction:column;align-items:flex-start;gap:5px;width:22px;flex:none}
+.atm-menu-icon i{display:block;width:22px;height:2px;background:#eccb95;border-radius:1px;transition:width .22s,transform .22s}
+.atm-menu-icon i:nth-child(2){width:15px}
+.atm-menu-icon i:nth-child(3){width:19px}
+.atm-menu-button:hover .atm-menu-icon i:nth-child(2){width:22px}
+.atm-actions{flex:none;margin-left:0;gap:7px}
+.atm-profile-card{display:flex;align-items:center;gap:10px;padding:5px 13px 5px 6px;
+ max-width:225px;min-height:49px;border:1px solid #b4c0cb66;border-radius:11px;
+ background:linear-gradient(135deg,#1e324ad6,#131d2fdc);color:#f2e8db;
+ transition:border-color .22s,background .22s}
+.atm-profile-card:hover{border-color:#edcf95;background:#293d57}
+.atm-profile-avatar{width:38px;height:38px;flex:none;display:grid;place-items:center;border-radius:10px;
+ border:1px solid #e0c69998;background:radial-gradient(circle at 35% 35%,#536c8b,#17253e 72%);
+ color:#f3d8a3;font:400 24px Georgia,serif}
+.atm-profile-text{min-width:0;display:flex;flex-direction:column;align-items:flex-start;gap:2px}
+.atm-profile-text strong{max-width:130px;overflow:hidden;text-overflow:ellipsis;
+ color:#f4e6d0;font-size:11px;font-weight:950;letter-spacing:.06em;white-space:nowrap}
+.atm-profile-text small{font-size:8px;letter-spacing:.04em;color:#b6c6d6;font-weight:850;white-space:nowrap}
+.atm-profile-chevron{margin-left:auto;color:#f0d4a5;font-size:15px}
+.atm-profile-settings{width:49px;height:49px;flex:none;display:grid;place-items:center;
+ border:1px solid #b3c2cf62;border-radius:10px;background:#15263bd7;color:#edd1a4;font-size:22px!important}
+.atm-profile-settings:hover{border-color:#f0cd90;background:#293f5f}
+.atm-navigation-overlay{position:fixed;inset:var(--atm-nav-height) 0 0;width:100vw;
+ height:calc(100dvh - var(--atm-nav-height));max-width:none;max-height:none;margin:0;padding:0;
+ border:0;border-top:1px solid #a1b9cd56;overflow:hidden;
+ color:#f2e5d3;background:#070f20;box-shadow:0 20px 80px #01040dba}
+.atm-navigation-overlay::backdrop{background:transparent}
+.atm-navigation-overlay[open]{animation:atm-nav-reveal .42s cubic-bezier(.19,.82,.25,1) both}
+@keyframes atm-nav-reveal{from{opacity:0;transform:translateY(-20px)}to{opacity:1;transform:translateY(0)}}
+.atm-navigation-inside{display:grid;grid-template-columns:minmax(310px,.8fr) minmax(540px,1.45fr);
+ width:100%;height:100%;min-height:0}
+.atm-navigation-feature{position:relative;isolation:isolate;overflow:hidden;
+ border-right:1px solid #bac7d152;background:#101b2e}
+.atm-navigation-art{position:absolute;inset:0;z-index:-2;animation:atm-menu-image .5s ease both}
+@keyframes atm-menu-image{from{opacity:0;scale:1.04}to{opacity:1;scale:1}}
+.atm-navigation-art .cw-artwork{width:100%;height:100%;display:block}
+.atm-navigation-art .cw-artwork-image{width:100%;height:100%;object-fit:cover;object-position:55% 48%;filter:brightness(.83) saturate(1.12)}
+.atm-navigation-veil{position:absolute;inset:0;z-index:-1;
+ background:linear-gradient(0deg,#030914ed,transparent 67%),
+ linear-gradient(90deg,#0b172e98,transparent),radial-gradient(circle at 50% 34%,transparent,#030b1c91 80%)}
+.atm-navigation-feature-copy{position:absolute;bottom:clamp(23px,4vw,70px);left:clamp(23px,4vw,65px);
+ right:clamp(23px,4vw,65px);display:flex;flex-direction:column;gap:10px}
+.atm-navigation-feature-copy>span{font-size:11px;font-weight:900;letter-spacing:.19em;color:#f0cd92}
+.atm-navigation-feature-copy h3{font:400 clamp(54px,6vw,97px)/.96 Georgia,serif;letter-spacing:-.06em;
+ margin:0;overflow-wrap:anywhere;text-shadow:0 11px 22px #000c}
+.atm-navigation-feature-copy h3 em{color:#f3cb8e;font-style:normal}
+.atm-navigation-feature-copy p{font:400 clamp(18px,1.7vw,26px) Georgia,serif;margin:0;color:#e8d6be}
+.atm-navigation-feature-copy small{font-size:10px;letter-spacing:.1em;color:#c8d4df;font-weight:850;margin-top:14px}
+.atm-navigation-directory{display:flex;flex-direction:column;min-height:0;padding:clamp(17px,2.5vw,39px);
+ background:radial-gradient(ellipse at 98% 0%,#263f5c54,transparent 50%),linear-gradient(175deg,#15253c,#071021)}
+.atm-navigation-head{display:flex;justify-content:space-between;align-items:start;gap:18px;
+ padding-bottom:20px;border-bottom:1px solid #aab9c861}
+.atm-navigation-head>div>span{font-size:10px;color:#edc995;font-weight:900;letter-spacing:.15em}
+.atm-navigation-head h2{font:400 clamp(36px,3.45vw,56px)/1 Georgia,serif;letter-spacing:-.04em;margin:9px 0 0}
+.atm-navigation-head h2 em{font-style:italic;color:#eacb9d}
+.atm-navigation-close{display:flex;align-items:center;gap:13px;flex:none;
+ min-height:42px;padding:0 12px;border:1px solid #aebfd273;border-radius:8px;
+ background:#1f3249;color:#eedabb;font-size:10px!important;letter-spacing:.1em;font-weight:900!important}
+.atm-navigation-close span{font-size:22px}
+.atm-navigation-close:hover{background:#314765;border-color:#eed39e}
+.atm-navigation-links{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-auto-rows:minmax(73px,1fr);
+ gap:0 24px;overflow-y:auto;min-height:0;padding:12px 0;scrollbar-color:#a28665 #10203a}
+.atm-navigation-link{position:relative;display:flex;align-items:center;min-width:0;
+ text-align:left;gap:14px;padding:13px 3px;border:0;border-bottom:1px solid #9eb4c44e;
+ background:transparent;color:#f2e5d3;transition:background .2s,color .2s}
+.atm-navigation-link:hover,.atm-navigation-link:focus-visible,.atm-navigation-link.is-active{
+ background:linear-gradient(90deg,#e9d2a413,#abc9f50a);color:#ffd69c}
+.atm-navigation-number{font:400 24px Georgia,serif;color:#cbac7d;width:37px;flex:none}
+.atm-navigation-link-copy{display:flex;flex-direction:column;gap:5px;min-width:0}
+.atm-navigation-link-copy strong{font:400 clamp(23px,1.85vw,33px)/1.04 Georgia,serif;letter-spacing:-.025em}
+.atm-navigation-link-copy small{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+ color:#aebfd0;font-size:10px;letter-spacing:.01em}
+.atm-navigation-arrow{margin-left:auto;color:#edc790;font-size:17px;flex:none}
+.atm-navigation-tools{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;
+ gap:13px;padding-top:21px;border-top:1px solid #abc0d66b}
+.atm-navigation-search{display:flex;align-items:center;gap:11px;border:1px solid #e2c38e75;
+ background:#2a3547;color:#f4ddbd;border-radius:8px;padding:10px 13px;
+ font-size:10px!important;letter-spacing:.09em;font-weight:950!important}
+.atm-navigation-search>span{font:400 26px Georgia,serif;line-height:1}
+.atm-navigation-search small{color:#b9c9d7;font-size:9px;margin-left:5px}
+.atm-navigation-utility-links{display:flex;flex-wrap:wrap;align-items:center;gap:12px}
+.atm-navigation-utility-links a{font-size:9px;font-weight:900;letter-spacing:.04em;color:#e5c997!important}
+.atm-navigation-utility-links a:hover{text-decoration:underline}
+@media(max-width:1200px){
+  .atm-header-spacer{display:none}
+  .atm-brand{margin-right:auto}
+  .atm-navigation-inside{grid-template-columns:minmax(255px,.58fr) minmax(0,1.42fr)}
+  .atm-navigation-links{column-gap:16px}
+  .atm-navigation-link-copy strong{font-size:25px}
+}
+@media(max-width:900px){
+  .atm-navigation-inside{grid-template-columns:1fr}
+  .atm-navigation-feature{display:none}
+  .atm-navigation-directory{padding:23px 25px}
+  .atm-navigation-links{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:640px){
+  .atm-header{gap:7px;justify-content:space-between;padding-inline:11px}
+  .atm-menu-button{min-height:42px;gap:7px;padding:0 9px;font-size:9px!important}
+  .atm-menu-icon{gap:4px;width:18px}
+  .atm-menu-icon i{width:18px}
+  .atm-menu-icon i:nth-child(2){width:12px}
+  .atm-menu-icon i:nth-child(3){width:16px}
+  .atm-brand{gap:6px}
+  .atm-brand svg{width:31px;height:31px}
+  .atm-brand strong{font-size:19px}
+  .atm-brand small{font-size:6px;letter-spacing:.08em}
+  .atm-actions{gap:4px}
+  .atm-profile-card{min-height:40px;padding:3px 6px 3px 3px;gap:5px;border-radius:8px}
+  .atm-profile-avatar{width:33px;height:33px;border-radius:7px;font-size:20px}
+  .atm-profile-text strong{max-width:77px;font-size:9px}
+  .atm-profile-text small{font-size:7px}
+  .atm-profile-chevron{display:none}
+  .atm-profile-settings{width:37px;height:40px;border-radius:8px;font-size:20px!important}
+  .atm-navigation-directory{padding:21px 17px}
+  .atm-navigation-head{padding-bottom:13px}
+  .atm-navigation-head>div>span{font-size:8px;letter-spacing:.09em}
+  .atm-navigation-head h2{font-size:38px}
+  .atm-navigation-close{min-height:37px;font-size:9px!important;padding:0 9px}
+  .atm-navigation-links{grid-template-columns:1fr;grid-auto-rows:minmax(62px,auto);overflow-y:auto;gap:0}
+  .atm-navigation-link{padding:10px 3px;gap:12px}
+  .atm-navigation-number{font-size:19px;width:29px}
+  .atm-navigation-link-copy strong{font-size:25px}
+  .atm-navigation-link-copy small{font-size:9px}
+  .atm-navigation-tools{padding-top:13px;gap:10px}
+  .atm-navigation-search{padding:9px;font-size:9px!important}
+  .atm-navigation-utility-links{gap:12px}
+  .atm-navigation-utility-links a{font-size:8px}
+}
+@media(max-width:375px){
+  .atm-header{gap:4px;padding-inline:7px}
+  .atm-brand strong{font-size:16px}
+  .atm-brand small{display:none}
+  .atm-menu-button{padding-inline:7px}
+  .atm-profile-text small{display:none}
+  .atm-profile-text strong{max-width:61px;font-size:9px}
+  .atm-profile-avatar{width:30px;height:30px}
+  .atm-profile-card{min-height:36px;padding-right:5px}
+  .atm-profile-settings{width:31px;height:37px;font-size:18px!important}
+  .atm-navigation-head h2{font-size:31px}
+  .atm-navigation-close{font-size:0!important;min-width:37px}
+  .atm-navigation-close span{font-size:23px}
+}
+@media(prefers-reduced-motion:reduce){
+  .atm-navigation-overlay[open],.atm-navigation-art{animation:none!important;transform:none!important}
+}

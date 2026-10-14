@@ -58,6 +58,7 @@ jobs:
               test -s "evidence/$page-$width.png"
             done
           done
+          node creator-v1/test/capture-community-feed.mjs --chrome "$chrome" --base http://127.0.0.1:4178 --output evidence/community-review
           echo 'Screenshots use explicitly synthetic offline catalogue fixtures. No fixture records are deployed.' > evidence/visual-fixture-note.txt
           echo MAIN_SITE_COMPILED_VISUAL_CAPTURE=PASS
       - name: Preserve current routing and validate production D1 identity

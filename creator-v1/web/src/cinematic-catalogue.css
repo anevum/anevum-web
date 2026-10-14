@@ -14,3 +14,7 @@
 @media(max-width:640px){.cinema-category-strip{margin-top:7px}.cinema-category-strip a{flex:0 0 90px;padding:10px 7px;font-size:9px}.cinema-section-head{align-items:flex-start}.cinema-section-head h2{font-size:11px}.cinema-section-head p{font-size:9px}.cinema-featured-world-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.cinema-world-card{min-height:171px}.cinema-featured-world-grid>.cinema-world-card:nth-child(n+5){display:none}.cinema-recent-grid{grid-template-columns:1fr 1fr}.cinema-recent-grid>.cinema-recent-item:nth-child(n+5){display:none}.cinema-reference-panel{min-height:175px}.cinema-artifact-tile .celestial-emblem{--artifact-size:clamp(44px,16vw,67px)}.cinema-reference-avatar{width:clamp(42px,12vw,56px);height:clamp(42px,12vw,56px)}}
 @media(max-width:360px){.cinema-featured-world-grid{grid-template-columns:1fr 1fr}.cinema-artifact-row{gap:1px}.cinema-artifact-tile .celestial-emblem{--artifact-size:45px}.cinema-recent-grid{grid-template-columns:1fr}}
 @media(prefers-reduced-motion:reduce){.cinema-world-card{transition:none}}
+.cinema-community{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px;margin:26px 0}
+.cinema-community-board p{color:#bbcad8;font-size:14px;line-height:1.7;padding:0 20px}
+.cinema-community-board nav{display:flex;flex-wrap:wrap;gap:10px;padding:12px 20px 22px}
+@media(max-width:800px){.cinema-community{grid-template-columns:1fr;gap:16px}}
