@@ -1,5 +1,21 @@
 # ANEVUM ATLAS — Spatial Universe, Living Decks, Shared Spaces
 
+## Approved direction update — October 14, 2026 (supersedes earlier spatial navigation layout)
+
+**Canonical design rule:** ANEVUM Morph has exactly **one persistent top navigation system**. The **entire remaining viewport is the website**, not a floating Deck, side rail, terminal window, bottom dock, or stacked navigation. This latest owner instruction supersedes the rotating constellation / modal Deck language retained below as design history.
+
+- **Single header:** ANEVUM identity, a small number of prominent real destinations, one Worlds control for all ten categories, search/quick-jump, and current member entry. On mobile, consolidate links into the same top-header Worlds menu. No bottom navigation and no desktop side rail.
+- **Full-size native content:** `/atlas` is a cinematic home with spacious interactive world cards. Selecting a world animates into `/atlas/<section>` within the same React shell. The actual approved project catalogue, creator pages, project passports, community, learning, levels and permission-gated tools fill the full width below the header. Page content scrolls independently when necessary for reading or editing; the shell does not add decorative inset frames.
+- **One coherent layout:** spacious sections, aligned artwork and cards, consistent page gutters, readable headings and touch targets on phone. Avoid nested gigantic headers, squashed thumbnails, clipped text, double cards or redundant UI. Existing source pages can be restyled for Morph but should retain their real data/semantics and safe error/empty states.
+- **No fake services:** private messages, real-time presence, collaboration, XP awards, notifications or published games must not appear live before their actual backends and moderation pass end-to-end acceptance.
+- **Motion:** animated transitions between entire real sections; cards remain face-forward; reduced-motion preference respected. Animation should not interfere with keyboard, screen readers, layout stability or mobile performance.
+- **Review:** exact-head GitHub compile and browser screenshot passes on 1440×900, 390×844 and 320×720; live `workers.dev` read-only preview for owner feedback. The original `/atlas/orbit` remains comparison-only. No unapproved production deployment or public account expansion.
+
+**Current implementation:** draft [PR #380](https://github.com/anevum/anevum-web/pull/380), isolated review URL `https://anevum-atlas-review-20261013.devonakins.workers.dev/atlas`. Compiled interactive review does not constitute final visual sign-off.
+
+---
+
+
 **Design status:** founder-directed research prototype; visual acceptance pending.
 **Source prototype:** Draft PR #380, route /atlas, branched from canonical production/creator-v1.
 **Product owners:** #325 canonical Creator V1; #335 visual; #331 discovery/community; #337 XP; #328 identity; #332 security; #333 release.
