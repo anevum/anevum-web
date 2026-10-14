@@ -58,3 +58,13 @@ test("Atlas is accessible from the existing portal and mobile menu",()=>{
  assert.match(shell,/\["\/atlas","Atlas \/ Spatial Navigation"\]/);
  assert.match(nav,/id:"atlas".*path:"\/atlas"/);
 });
+
+test("Deck search stays in the same full-screen experience and queries the approved catalogue",()=>{
+ const page=read("web/src/pages/AtlasPage.tsx");
+ const css=read("web/src/pages/atlas.css");
+ assert.match(page,/setSubmittedQuery\(query\.trim\(\)\.slice\(0,100\)\)/);
+ assert.match(page,/q:submittedQuery\|\|undefined/);
+ assert.match(page,/SEARCH RESULTS/);
+ assert.doesNotMatch(page,/navigate\(nextPath\)|window\.location\.assign/);
+ assert.match(css,/\.atlas-deck-search button/);
+});

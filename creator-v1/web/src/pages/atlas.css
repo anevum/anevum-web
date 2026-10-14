@@ -214,7 +214,7 @@
 .atlas-deck-search label{display:block;font-size:10px;font-weight:900;letter-spacing:.16em;color:#f0ce95;margin-bottom:11px}
 .atlas-deck-search>div{display:flex;gap:10px}
 .atlas-deck-search input{flex:1;min-width:0;min-height:45px;border:1px solid #9db8cd5a;background:#090f1b;border-radius:7px;color:white;padding:0 14px;font-size:14px}
-.atlas-deck-search a{min-height:45px;display:grid;place-items:center;border-radius:7px;border:1px solid #e3c68c8a;padding:0 19px;white-space:nowrap;color:#f0d3a2;font-size:11px;font-weight:950}
+.atlas-deck-search button{min-height:45px;display:grid;place-items:center;border-radius:7px;border:1px solid #e3c68c8a;padding:0 19px;white-space:nowrap;color:#f0d3a2;font-size:11px;font-weight:950}
 .atlas-deck-feed-header{display:flex;gap:20px;align-items:center;justify-content:space-between;border-bottom:1px solid #829cbb5b;padding-bottom:12px}
 .atlas-deck-feed-header h3,.atlas-deck-roadmap h3{font-family:Georgia,serif;font-weight:400;letter-spacing:.02em;font-size:30px;margin:0}
 .atlas-deck-feed-header>span{color:#a6b7ce;font-size:9px;letter-spacing:.16em;font-weight:900}
@@ -350,7 +350,7 @@
   .atlas-deck-projects{grid-template-columns:1fr}
   .atlas-deck-search{padding:12px}
   .atlas-deck-search input{font-size:13px}
-  .atlas-deck-search a{font-size:9px;padding:0 9px}
+  .atlas-deck-search button{font-size:9px;padding:0 9px}
   .atlas-deck-feed-header h3{font-size:24px}
   .atlas-deck-feed-header>span{max-width:110px;white-space:normal;text-align:right;font-size:8px}
   .atlas-deck-footer{display:block}

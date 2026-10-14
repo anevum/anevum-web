@@ -1,5 +1,5 @@
 import {useEffect,useRef,useState,type CSSProperties,type PointerEvent as ReactPointerEvent,type MouseEvent as ReactMouseEvent,type WheelEvent as ReactWheelEvent,type KeyboardEvent as ReactKeyboardEvent} from "react";
-import {Link,useNavigate} from "react-router-dom";
+import {Link} from "react-router-dom";
 import {CosmicArtwork} from "../components/CosmicArtwork";
 import {OrbitalMark} from "../components/OrbitalMark";
 import {CelestialEmblem} from "../components/CelestialEmblem";
@@ -73,10 +73,11 @@ function AtlasEarnedSignal(){
 
 function AtlasDeck({world,onDismiss}:{world:AtlasWorld|null;onDismiss:()=>void}){
   const dialog=useRef<HTMLDialogElement>(null);
-  const navigate=useNavigate();
   const [projects,setProjects]=useState<Project[]>([]);
   const [state,setState]=useState<"loading"|"ready"|"error">("loading");
   const [query,setQuery]=useState("");
+  const [submittedQuery,setSubmittedQuery]=useState("");
+  useEffect(()=>{setQuery("");setSubmittedQuery("");},[world?.id]);
   useEffect(()=>{
     const el=dialog.current;
     if(!el)return;
@@ -87,16 +88,15 @@ function AtlasDeck({world,onDismiss}:{world:AtlasWorld|null;onDismiss:()=>void})
     if(!world||world.type!=="catalogue"){setProjects([]);setState("ready");return;}
     const abort=new AbortController();
     setState("loading");setProjects([]);
-    readProjects(world.category?{category:world.category,limit:"6"}:{limit:"6"},abort.signal).then(
+    readProjects(world.category?{category:world.category,limit:"6",q:submittedQuery||undefined}:{limit:"6",q:submittedQuery||undefined},abort.signal).then(
       r=>{if(!abort.signal.aborted){setProjects(r.items);setState("ready");}},
       ()=>{if(!abort.signal.aborted)setState("error");}
     );
     return()=>abort.abort();
-  },[world?.id]);
+  },[world?.id,submittedQuery]);
   if(!world)return <dialog ref={dialog} className="atlas-deck"/>;
   function onBackground(e:ReactMouseEvent<HTMLDialogElement>){if(e.target===dialog.current)onDismiss();}
   const search=world.id==="discover"||world.id==="play"||world.id==="apps"||world.id==="creative";
-  const nextPath=query.trim()?"/discover?q="+encodeURIComponent(query.trim().slice(0,100)):"/discover";
   return <dialog ref={dialog} className="atlas-deck" aria-labelledby="atlas-deck-title"
     onCancel={onDismiss} onClick={onBackground}>
     <div className="atlas-deck-shell" style={{"--world-color":world.accent} as CSSProperties}>
@@ -122,14 +122,14 @@ function AtlasDeck({world,onDismiss}:{world:AtlasWorld|null;onDismiss:()=>void})
             </div>
           </div>
         </div>
-        {search&&<form className="atlas-deck-search" onSubmit={e=>{e.preventDefault();navigate(nextPath);}}>
+        {search&&<form className="atlas-deck-search" onSubmit={e=>{e.preventDefault();setSubmittedQuery(query.trim().slice(0,100));}}>
           <label htmlFor="atlas-catalogue-search">SEARCH THE APPROVED CATALOGUE</label>
           <div><input id="atlas-catalogue-search" value={query} onChange={e=>setQuery(e.target.value)}
             maxLength={100} type="search" autoComplete="off" placeholder="What are you looking for?"/>
-            <Link to={nextPath}>SEARCH ↗</Link></div>
+            <button type="submit" aria-label="Search within this world">SEARCH ↗</button></div>
         </form>}
         {world.type==="catalogue"&&<div className="atlas-deck-feed">
-          <div className="atlas-deck-feed-header"><h3>REAL RELEASES</h3><span>APPROVED PUBLIC PROJECTS ONLY</span></div>
+          <div className="atlas-deck-feed-header"><h3>{submittedQuery?"SEARCH RESULTS":"REAL RELEASES"}</h3><span>APPROVED PUBLIC PROJECTS ONLY</span></div>
           {state==="loading"&&<p role="status">Connecting to the real ANEVUM catalogue…</p>}
           {state==="error"&&<p role="status">Catalogue unavailable. No placeholder projects were substituted.</p>}
           {state==="ready"&&(projects.length?
