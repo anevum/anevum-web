@@ -4,7 +4,7 @@
 import publicApi from "../api/worker.mjs";
 
 const SITE = "a.anevum.com";
-const PUBLISHED = /^\/api\/v1\/(?:status|categories|boards|community\/posts(?:\/[a-f0-9]{32})?|projects(?:\/[A-Za-z0-9_-]+(?:\/repository)?)?|creators(?:\/[a-z][a-z0-9_]{2,29})?)$/i;
+const PUBLISHED = /^\/api\/v1\/(?:status|categories|boards|community\/posts(?:\/[a-f0-9]{32})?|community\/showcases|projects(?:\/[A-Za-z0-9_-]+(?:\/repository)?)?|creators(?:\/[a-z][a-z0-9_]{2,29})?)$/i;
 const SECURITY = {
   "x-content-type-options":"nosniff",
   "x-robots-tag":"noindex, nofollow, noarchive",
