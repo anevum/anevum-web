@@ -157,7 +157,9 @@
 .atm-embedded .portal-sidebar{gap:18px}
 .atm-embedded .member-shell{min-height:0}
 .atm-embedded .member-header{padding:23px 28px;border-radius:12px;gap:24px}
-.atm-embedded .member-header nav{flex-wrap:wrap;justify-content:flex-end}
+/* The account-local navigation is already covered by the one global Worlds menu. */
+.atm-embedded .member-header nav{display:none}
+.atm-embedded .member-header strong{font-size:clamp(26px,2.3vw,36px);line-height:1.2}
 .atm-embedded .portal-project-detail-layout{gap:23px}
 .atm-overview{
  max-width:1900px;min-height:calc(100dvh - var(--atm-nav-height) - 120px);
