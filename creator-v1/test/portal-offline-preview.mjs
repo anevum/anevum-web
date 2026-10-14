@@ -69,6 +69,25 @@ function api(res,url){
  const path=url.pathname.slice("/creator/api/v1".length);
  if(path==="/status")return json(res,{version:"SYNTHETIC-FIXTURE",phase:"offline",counts:{publishedProjects:work.length,publishedCreators:people.length}});
  if(path==="/categories")return json(res,{categories});
+ if(path==="/boards"){
+  // SYNTHETIC OFFLINE visual fixtures only. Production boards use canonical SQL.
+  // This script cannot publish content and is never shipped as a Worker.
+  const sorted=[...work].sort((a,b)=>b.publishedAt.localeCompare(a.publishedAt)||b.id.localeCompare(a.id));
+  const firstMakers=new Set(people.filter(p=>p.publishedProjects===1).map(p=>p.handle));
+  return json(res,{
+    source:"approved-public-projects",
+    labels:{
+      latestReleases:"Latest approved publications",
+      firstLooks:"Creators with one approved publication",
+      publishingCreators:"Approved release counts, not quality rankings"
+    },
+    latestReleases:sorted.slice(0,12),
+    firstLooks:sorted.filter(p=>firstMakers.has(p.creatorHandle)).slice(0,12),
+    publishingCreators:[...people].sort((a,b)=>b.publishedProjects-a.publishedProjects||a.handle.localeCompare(b.handle)).slice(0,12),
+    qualityRankingAvailable:false
+  });
+ }
+
  if(path==="/creators"){
   const q=(url.searchParams.get("q")||"").toLowerCase();
   const items=people.filter(p=>!q||(p.handle+" "+p.displayName).toLowerCase().includes(q));
