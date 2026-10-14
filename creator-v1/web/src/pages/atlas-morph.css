@@ -444,3 +444,10 @@
 /* Final review-width guard: desktop rail adjustments must NEVER shrink phone workspaces. */
 @media(max-width:830px) and (min-width:641px){.atm-workspace{left:115px}}
 @media(max-width:640px){.atm-workspace{left:7px;right:7px;top:7px;bottom:72px}}
+
+/* Compact utility icon keeps the first row of phone worlds clear. */
+@media(max-width:640px){
+ .atm-overview-quick{flex:0 0 40px;width:40px;min-width:40px;min-height:37px;padding:0;display:grid;place-items:center}
+ .atm-overview-quick-label{display:none}
+ .atm-overview-quick span:last-child{font-size:23px;margin:0;line-height:1}
+}
