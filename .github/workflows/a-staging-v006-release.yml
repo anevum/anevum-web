@@ -20,7 +20,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 25
     env:
-      CANDIDATE_SHA: 7fe8b0a2bc90642640205477d2f6b442b6cf0770
+      CANDIDATE_SHA: 44d2d12aa92fa7c68536a0a78e540ffbcc29c3d9
       SOURCE_BRANCH: release/a-staging-community-v006-20261014
       CF_WORKER: anevum-creator-v1-a-staging
     steps:
