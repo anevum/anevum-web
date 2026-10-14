@@ -7,6 +7,7 @@ import {ProjectCard} from "../components/ProjectCard";
 import {OrbitalMark} from "../components/OrbitalMark";
 import {CosmicArtwork} from "../components/CosmicArtwork";
 import {LoadingState,ErrorState} from "../components/States";
+import {HotCommunityPosts} from "./HotCommunityPosts";
 
 const rooms=[
   {name:"THE ARCADE",tag:"GAMES / PLAY",category:"games",description:"Talk games, discover indie experiments and exchange useful playtesting feedback.",symbol:"✦"},
@@ -24,9 +25,10 @@ export function CommunityPage(){
   },[]);
   return <div className="portal-community-page">
     <PortalHeading eyebrow="ANEVUM / PEOPLE BEHIND THE WORK" title="FIND YOUR" accent="PEOPLE." description="A future home for discussion, feedback, challenges, and collaborations. For now, discover genuine makers and their work while moderation and community features are tested." index="COMMUNITY / 003" action={{to:"/levels",label:"HOW PARTICIPATION EARNS RECOGNITION"}}/>
-    <div className="portal-community-notice" role="status"><span className="portal-community-notice-mark" aria-hidden="true">!</span><div><strong>THE PUBLIC MESSAGE BOARD IS NOT OPEN YET.</strong><p>These rooms are navigation and roadmap previews, not live discussion threads. No messages, likes, users, or engagement totals have been fabricated.</p></div><Link to="/status">BUILD STATUS ↗</Link></div>
+    <div className="portal-community-notice" role="status"><span className="portal-community-notice-mark" aria-hidden="true">!</span><div><strong>COMMUNITY CONVERSATIONS ARE UNDER PRIVATE REVIEW.</strong><p>Invited creators can submit discussions for staff approval. Only actual approved posts appear publicly; unlaunched rooms and engagement statistics are not simulated.</p></div><Link to="/community/write">SUBMIT FOR REVIEW ↗</Link></div>
     <div className="portal-layout">
       <div className="portal-main">
+        <HotCommunityPosts/>
         <section className="portal-box">
           <header className="portal-box-header"><div><span className="kicker">THE MEETING POINTS / IN DEVELOPMENT</span><h2>FIND YOUR CORNER</h2></div><span className="portal-hall-stamp">COMMUNITY ROOMS / PLANNED</span></header>
           <div className="portal-room-grid">{rooms.map((room,i)=><article className="portal-room" key={room.name}><div className="cw-room-world" aria-hidden="true"><CosmicArtwork scene={room.category}/></div>
