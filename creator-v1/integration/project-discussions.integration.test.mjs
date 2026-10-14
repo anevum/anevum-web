@@ -5,6 +5,7 @@ import {readFileSync} from 'node:fs';
 import api from '../api/worker.mjs';
 import {communityPostRoutes} from '../auth/community-posts.mjs';
 import {communityPostModeration} from '../authoring/community-post-moderation.mjs';
+import {communityReplyModeration} from '../authoring/community-reply-moderation.mjs';
 import staging from '../web/staging-path-worker.mjs';
 import main from '../web/main-worker.mjs';
 
@@ -22,6 +23,7 @@ function fixture(context=true){
    sql.prepare('INSERT INTO projects VALUES(?,?,?,?,?,?)').run(id,who,'Project '+id,'games',status,date);
  sql.prepare("UPDATE creator_profiles SET status='suspended' WHERE member_id='three'").run();
  sql.exec(readFileSync(new URL('../auth/migrations/0007_community_post_stream.sql',import.meta.url),'utf8'));
+ sql.exec(readFileSync(new URL('../auth/migrations/0008_community_reply_reviews.sql',import.meta.url),'utf8'));
  if(context)sql.exec(readFileSync(new URL('../auth/migrations/0013_community_post_projects.sql',import.meta.url),'utf8'));
  const stmt=(query,args=[])=>({query,args,bind(...values){return stmt(query,values)},async all(){return {success:true,results:sql.prepare(query).all(...args).map(x=>({...x}))}},async run(){const r=sql.prepare(query).run(...args);return {success:true,meta:{changes:Number(r.changes)}}}});
  const db={prepare:query=>stmt(query),async batch(statements){sql.exec('BEGIN IMMEDIATE');try{const result=[];for(const s of statements)result.push(await s.run());sql.exec('COMMIT');return result;}catch(e){sql.exec('ROLLBACK');throw e;}}};
@@ -78,6 +80,8 @@ test('withdrawal, creator suspension and deletion suppress every public and reac
      assert.equal((await f.publicCall('/'+id)).status,404);
      assert.equal((await f.member('/'+id+'/react','three','GET')).status,404);
      assert.equal((await f.member('/'+id+'/react','three','POST',{score:1,revision:0})).status,404);
+     assert.equal((await f.member('/'+id+'/replies','three','POST',{body:'Useful independent feedback for the project.'})).status,404);
+     assert.equal((await f.member('/'+id+'/replies/mine','three','GET')).status,404);
      f.sql.exec("UPDATE projects SET status='published',published_at='2026-10-01' WHERE id='public'; UPDATE creator_profiles SET status='active' WHERE member_id='one'");
    }
    f.sql.exec("UPDATE projects SET title='Current title' WHERE id='public'");
@@ -129,6 +133,18 @@ test('missing context table after migration cannot turn linked posts into genera
    assert.equal((await f.publicCall()).status,503);
    assert.equal((await f.publicCall('/'+id)).status,503);
    assert.equal((await f.member('/'+id+'/react','one','GET')).status,503);
+ }finally{f.sql.close();}
+});
+test('concurrent reply workflow cannot publish a reply after its linked project is withdrawn',async()=>{
+ const f=fixture();try{
+   const id=await f.submit('public');await f.staff(id);
+   const pending=await f.member('/'+id+'/replies','one','POST',{body:'Independent project feedback that requires moderation.'});
+   assert.equal(pending.status,201);const replyId=(await pending.json()).id;
+   f.sql.exec("UPDATE projects SET status='draft' WHERE id='public'");
+   const review=await communityReplyModeration(new Request('https://studio.next.anevum.com/api/community-post-replies/'+replyId+'/publish',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({reason:'Reviewed genuine project feedback for safe public participation.',revision:1})}),f.db,'staff@example.com');
+   assert.equal(review.status,409);
+   assert.equal(f.sql.prepare('SELECT status FROM community_post_replies WHERE id=?').get(replyId).status,'pending_review');
+   assert.equal(f.sql.prepare('SELECT COUNT(*) AS n FROM community_reply_review_events').get().n,0);
  }finally{f.sql.close();}
 });
 test('public gateways admit only the read-only boards and approved post routes',async()=>{

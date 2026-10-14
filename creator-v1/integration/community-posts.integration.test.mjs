@@ -5,10 +5,12 @@ import {DatabaseSync} from "node:sqlite";
 import api from "../api/worker.mjs";
 import {communityPostRoutes} from "../auth/community-posts.mjs";
 import {communityPostModeration} from "../authoring/community-post-moderation.mjs";
+import {communityReplyModeration} from "../authoring/community-reply-moderation.mjs";
 
 const now=Math.floor(Date.now()/1000)-120;
 const fixed=n=>n.toString(16).padStart(32,"0");
 let postId="";
+let replyId="";
 const sqlite=new DatabaseSync(":memory:");
 sqlite.exec("PRAGMA foreign_keys=ON");
 sqlite.exec([
@@ -35,6 +37,8 @@ const memberCall=(path,who="one",method="GET",data=undefined,limit=allowed)=>
  communityPostRoutes(new Request(url("/api/v1/member/community/posts"+path),{method,headers:{"content-type":"application/json"},body:data===undefined?undefined:JSON.stringify(data)}),db,members[who]||null,limit,now);
 const staffCall=(path,method="GET",data=undefined)=>
  communityPostModeration(new Request("https://studio.next.anevum.com/api/community-posts"+path,{method,headers:{"content-type":"application/json"},body:data===undefined?undefined:JSON.stringify(data)}),db,"staff@anevum.example");
+const staffReplyCall=(path,method="GET",data=undefined)=>
+ communityReplyModeration(new Request("https://studio.next.anevum.com/api/community-post-replies"+path,{method,headers:{"content-type":"application/json"},body:data===undefined?undefined:JSON.stringify(data)}),db,"staff@anevum.example");
 test.after(()=>sqlite.close());
 
 test("public feed remains gated before community migration",async()=>{
@@ -44,8 +48,9 @@ test("public feed remains gated before community migration",async()=>{
 });
 test("private community tables are installed only in the staging fixture",()=>{
  sqlite.exec(readFileSync(new URL("../auth/migrations/0007_community_post_stream.sql",import.meta.url),"utf8"));
+ sqlite.exec(readFileSync(new URL("../auth/migrations/0008_community_reply_reviews.sql",import.meta.url),"utf8"));
  const available=sqlite.prepare("SELECT name FROM sqlite_master WHERE type='table'").all().map(x=>x.name);
- for(const name of ["community_posts","community_post_votes","community_post_replies","community_post_review_events"])assert.ok(available.includes(name));
+ for(const name of ["community_posts","community_post_votes","community_post_replies","community_post_review_events","community_reply_review_events"])assert.ok(available.includes(name));
  assert.equal(sqlite.prepare("SELECT COUNT(*) AS n FROM schema_migrations WHERE version='0007_community_post_stream'").get().n,1);
 });
 test("real signed-in creator submissions are private, validated, and rate limited",async()=>{
@@ -112,11 +117,46 @@ test("real reactions are member-only, self-rating banned, rate-limited and revis
  assert.deepEqual(await (await memberCall(path,"two","POST",{score:0,revision:1})).json(),{score:0,revision:2,changed:true});
  assert.equal((await (await publicCall("/api/v1/community/posts?sort=hot")).json()).items[0].score,0);
 });
+test("real member replies are private, rate-limited and staff approved before public visibility",async()=>{
+ const path="/"+postId+"/replies";
+ assert.equal((await communityPostRoutes(new Request(url("/api/v1/member/community/posts"+path),{method:"POST"}),db,null,allowed,now)).status,401);
+ assert.equal((await memberCall(path,"two","POST",{body:"short"})).status,400);
+ assert.equal((await memberCall(path,"two","POST",{body:"Valid content for review",untrusted:1})).status,400);
+ assert.equal((await memberCall(path,"two","POST",{body:"I tested the mobile viewport and have detailed feedback."},async()=>false)).status,429);
+ const created=await memberCall(path,"two","POST",{body:"I tested the mobile viewport and have detailed feedback."});
+ assert.equal(created.status,201);
+ const receipt=await created.json();
+ assert.equal(receipt.status,"pending_review");
+ replyId=receipt.id;assert.match(replyId,/^[a-f0-9]{32}$/);
+ const authored=(await (await memberCall(path+"/mine","two")).json()).items;
+ assert.equal(authored.length,1);assert.equal(authored[0].status,"pending_review");
+ assert.deepEqual((await (await memberCall(path+"/mine","one")).json()).items,[]);
+ const before=(await (await publicCall("/api/v1/community/posts/"+postId)).json());
+ assert.equal(before.replies.length,0);
+ assert.equal(before.post.replyCount,0);
+ const review=(await (await staffReplyCall("?status=pending_review")).json()).items;
+ assert.equal(review.length,1);assert.equal(review[0].id,replyId);
+ assert.equal((await staffReplyCall("/"+replyId+"/publish","POST",{reason:"too short",revision:1})).status,400);
+ const passed=await staffReplyCall("/"+replyId+"/publish","POST",{reason:"Reviewed constructive test feedback for community visibility.",revision:1});
+ assert.equal(passed.status,200);assert.equal((await passed.json()).revision,2);
+ assert.equal((await staffReplyCall("/"+replyId+"/publish","POST",{reason:"Reviewed constructive test feedback for community visibility.",revision:1})).status,409);
+ const publicDetail=(await (await publicCall("/api/v1/community/posts/"+postId)).json());
+ assert.equal(publicDetail.replies.length,1);
+ assert.equal(publicDetail.post.replyCount,1);
+ assert.equal(publicDetail.replies[0].authorHandle,"tester_two");
+ assert.doesNotMatch(JSON.stringify(publicDetail.replies),/author_member_id|staff@anevum\.example/);
+ const events=sqlite.prepare("SELECT action,to_status,reason FROM community_reply_review_events WHERE reply_id=?").all(replyId);
+ assert.equal(events.length,1);assert.equal(events[0].action,"publish");
+});
 test("approved replies are counted; staff-hidden posts disappear immediately",async()=>{
- sqlite.prepare("INSERT INTO community_post_replies(id,post_id,author_member_id,body,status,created_at,published_at) VALUES(?,?,?,?,?,?,datetime('now','-1 hour'))").run(fixed(100),postId,"two","I tried the input, and the phone-first layout worked.","published",now);
  const detail=await (await publicCall("/api/v1/community/posts/"+postId)).json();
  assert.equal(detail.replies.length,1);
  assert.equal(detail.post.replyCount,1);
+ const replyHidden=await staffReplyCall("/"+replyId+"/hide","POST",{reason:"Reviewed a report; reply is no longer appropriate for the community.",revision:2});
+ assert.equal(replyHidden.status,200);
+ const afterReplyHidden=await (await publicCall("/api/v1/community/posts/"+postId)).json();
+ assert.equal(afterReplyHidden.replies.length,0);assert.equal(afterReplyHidden.post.replyCount,0);
+ assert.equal(sqlite.prepare("SELECT COUNT(*) AS n FROM community_reply_review_events WHERE reply_id=?").get(replyId).n,2);
  const hidden=await staffCall("/"+postId+"/hide","POST",{reason:"A valid recorded staff moderation reason to remove it.",revision:2});
  assert.equal(hidden.status,200);
  assert.equal((await publicCall("/api/v1/community/posts/"+postId)).status,404);
@@ -130,4 +170,5 @@ test("staff write routes are behind Cloudflare Access and members have same-orig
  assert.match(member,/checkWrite\(req\)/);
  assert.match(studio,/verifyStaffAssertion\(request\.headers\.get\('cf-access-jwt-assertion'\),env\)/);
  assert.match(studio,/communityPostModeration\(request,db,actor\)/);
+ assert.match(studio,/communityReplyModeration\(request,db,actor\)/);
 });

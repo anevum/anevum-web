@@ -1,7 +1,7 @@
 import {useParams,Link} from "react-router-dom";
-import {useState} from "react";
+import {useState,type FormEvent} from "react";
 import {readCommunityPost} from "../lib/api";
-import {memberPostReaction,memberReactPost,MemberApiError} from "../lib/member-api";
+import {memberPostReaction,memberReactPost,memberCreateReply,memberMyReplies,MemberApiError} from "../lib/member-api";
 import {useResource} from "../lib/useResource";
 import {LoadingState,ErrorState} from "../components/States";
 import "./community-discussions.css";
@@ -28,6 +28,31 @@ function CommunityPostReader({id}:{id:string}){
    }catch{return {myReaction:null,available:false};}
  },[id,isValid]);
  const [local,setLocal]=useState<{score:0|1;revision:number}|null>(null);
+ const [replyText,setReplyText]=useState("");
+ const [replyPending,setReplyPending]=useState(false);
+ const [replyNotice,setReplyNotice]=useState("");
+ const [replyVersion,setReplyVersion]=useState(0);
+ const ownReplies=useResource(async signal=>{
+   if(!isValid)return {items:[],available:false};
+   try{
+     const data=await memberMyReplies(id,signal);
+     return {...data,available:true};
+   }catch{return {items:[],available:false};}
+ },[id,isValid,replyVersion]);
+ async function submitReply(event:FormEvent<HTMLFormElement>){
+   event.preventDefault();
+   if(replyPending||replyText.trim().length<10)return;
+   setReplyPending(true);setReplyNotice("");
+   try{
+     const created=await memberCreateReply(id,replyText);
+     if(created.status!=="pending_review")throw new Error("Unexpected review state");
+     setReplyText("");
+     setReplyNotice("Reply submitted privately for review. It will not appear publicly until approved.");
+     setReplyVersion(current=>current+1);
+   }catch(error){
+     setReplyNotice(error instanceof MemberApiError?error.message:"Reply could not be submitted. Nothing was published.");
+   }finally{setReplyPending(false);}
+ }
  const [working,setWorking]=useState(false);
  const [message,setMessage]=useState("");
  async function rate(score:0|1){
@@ -78,6 +103,30 @@ function CommunityPostReader({id}:{id:string}){
        </div>
        <p>{reply.body}</p>
      </article>):<p className="discussion-muted">No approved replies yet. Replies are being introduced through the moderation workflow.</p>}
+   </section>
+   <section className="discussion-reply-composer" aria-label="Contribute to this discussion">
+     <div className="discussion-section-head"><span className="nfc-eyebrow">COMMUNITY / PARTICIPATE</span><h2>ADD YOUR PERSPECTIVE.</h2></div>
+     {ownReplies.state==="loading"&&<p className="discussion-muted">Checking invited-member reply access…</p>}
+     {ownReplies.state==="ready"&&ownReplies.data.available?
+       <form onSubmit={event=>void submitReply(event)}>
+         <label htmlFor="community-reply-body">YOUR REPLY</label>
+         <textarea id="community-reply-body" rows={5} minLength={10} maxLength={2000} required disabled={replyPending}
+           value={replyText} onChange={event=>setReplyText(event.target.value)}
+           placeholder="Share thoughtful feedback, a question, or something you learned…"/>
+         <div className="discussion-reply-actions"><small>{replyText.length} / 2000 · STAFF REVIEW REQUIRED</small>
+           <button type="submit" disabled={replyPending||replyText.trim().length<10}>{replyPending?"SUBMITTING…":"SUBMIT REPLY FOR REVIEW ↗"}</button>
+         </div>
+         {replyNotice&&<p role="status" className="discussion-reply-notice">{replyNotice}</p>}
+       </form>:
+       <p className="discussion-muted">Replying is available to invited members when authenticated community services are enabled. Public reading remains free.</p>}
+     {ownReplies.state==="ready"&&ownReplies.data.available&&ownReplies.data.items.length>0&&
+       <div className="discussion-own-replies" aria-label="Your private reply moderation status">
+         <strong>YOUR SUBMITTED REPLIES</strong>
+         {ownReplies.data.items.map(entry=><article key={entry.id}>
+           <small>{entry.status==="pending_review"?"AWAITING STAFF REVIEW":entry.status==="published"?"PUBLISHED":"NOT PUBLIC"} · {when(new Date(entry.createdAt*1000).toISOString())}</small>
+           <p>{entry.body}</p>
+         </article>)}
+       </div>}
    </section>
    <div className="discussion-end"><Link to="/atlas/community">← ALL COMMUNITY SPACES</Link><Link to="/atlas">FRONT PAGE ↗</Link></div>
  </article>;

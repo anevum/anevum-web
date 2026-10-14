@@ -140,4 +140,18 @@ export const memberPostReaction=(id:string,signal?:AbortSignal)=>
 export const memberReactPost=(id:string,score:0|1,revision:number)=>
   requestMember<{score:number;revision:number;changed:boolean}>("/community/posts/"+memberProjectId(id)+"/react",{method:"POST",body:{score,revision}});
 
+export interface PrivateCommunityReply {
+  id:string;body:string;status:string;createdAt:number;publishedAt:string|null;revision:number;
+}
+export const memberCreateReply=(id:string,body:string)=>{
+  if(body.trim().length<10||body.length>2000)throw new Error("Reply must contain 10–2000 characters");
+  return requestMember<{id:string;status:"pending_review";notice:string}>(
+    "/community/posts/"+memberProjectId(id)+"/replies",{method:"POST",body:{body}}
+  );
+};
+export const memberMyReplies=(id:string,signal?:AbortSignal)=>
+  requestMember<{items:PrivateCommunityReply[]}>(
+    "/community/posts/"+memberProjectId(id)+"/replies/mine",{signal}
+  );
+
 export const memberSignOut=()=>requestMember<{signedOut:boolean}>("/sign-out",{method:"POST",body:{}});
