@@ -20,6 +20,8 @@ import { WorkspacePage } from "./pages/WorkspacePage";
 
 const AtlasPage = lazy(() => import("./pages/AtlasPage").then(mod => ({default:mod.AtlasPage})));
 const FeaturedExperiencePage = lazy(() => import("./pages/FeaturedExperiencePage").then(mod=>({default:mod.FeaturedExperiencePage})));
+const CommunityPostPage = lazy(()=>import("./pages/CommunityPostPages").then(mod=>({default:mod.CommunityPostPage})));
+const CommunityComposerPage = lazy(()=>import("./pages/CommunityPostPages").then(mod=>({default:mod.CommunityComposerPage})));
 const AtlasMorphLayout = lazy(() => import("./pages/AtlasMorphPage").then(mod => ({default:mod.AtlasMorphLayout})));
 const AtlasCollaboration = lazy(() => import("./pages/AtlasMorphPage").then(mod => ({default:()=><mod.AtlasFuture kind="collaborate"/>})));
 const AtlasSignals = lazy(() => import("./pages/AtlasMorphPage").then(mod => ({default:()=><mod.AtlasFuture kind="signals"/>})));
@@ -35,6 +37,7 @@ export default function App(){
       <Route path="creators" element={<CreatorsPage/>}/>
       <Route path="creators/:handle" element={<CreatorPage/>}/>
       <Route path="community" element={<CommunityPage/>}/>
+      <Route path="community/posts/:id" element={<Suspense fallback={atlasFallback}><CommunityPostPage/></Suspense>}/>
       <Route path="workspace" element={<WorkspacePage/>}/>
       <Route path="collaborate" element={<AtlasCollaboration/>}/>
       <Route path="signals" element={<AtlasSignals/>}/>
@@ -42,6 +45,7 @@ export default function App(){
       <Route path="guide" element={<FieldGuidePage/>}/>
       <Route path="status" element={<StatusPage/>}/>
       <Route element={<MemberGate/>}>
+        <Route path="community/new" element={<Suspense fallback={atlasFallback}><CommunityComposerPage/></Suspense>}/>
         <Route path="create" element={<MemberProjectsPage/>}/>
         <Route path="create/new" element={<ProjectEditorPage/>}/>
         <Route path="create/:projectId" element={<ProjectEditorPage/>}/>
