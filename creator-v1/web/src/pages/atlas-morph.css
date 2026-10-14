@@ -344,3 +344,70 @@
    scroll-behavior:auto!important;transition-duration:.01ms!important}
  .atm-node,.atm-ring,.atm-lattice{will-change:auto}
 }
+
+
+/* MORPH QA refinements / desktop rail text, in-deck page chrome, world transitions.
+ * Legacy pages stay fully rendered and accessible; compact their repeated hero
+ * inside a workspace rather than placing a full homepage inside a window. */
+.atm-shell--focused .atm-node{
+  left:66px;top:calc(5.4% + var(--node-index)*9.65%);
+  width:112px;gap:4px;flex-direction:column;align-items:center;justify-content:center}
+.atm-shell--focused .atm-node{--portrait-size:41px}
+.atm-shell--focused .atm-node-title{max-width:105px;min-width:0;white-space:nowrap;align-items:center;justify-content:center}
+.atm-shell--focused .atm-node-title strong{
+  font-size:10px;letter-spacing:.055em;white-space:nowrap;text-align:center;overflow:visible;overflow-wrap:normal}
+.atm-shell--focused .atm-node--selected:before{inset:-4px -5px;border-radius:12px}
+.atm-workspace{left:139px}
+.atm-embedded{animation:atm-world-content-in .46s cubic-bezier(.18,.82,.28,1) both}
+@keyframes atm-world-content-in{
+  from{opacity:0;translate:0 16px;filter:blur(5px)}
+  to{opacity:1;translate:0 0;filter:blur(0)}
+}
+.atm-embedded .portal-page-heading{
+  min-height:112px;padding:14px 18px;gap:12px;
+  border-color:#708bad66;
+  box-shadow:none;background:#10223add;
+}
+.atm-embedded .portal-page-heading .cw-heading-cosmos{opacity:.24}
+.atm-embedded .portal-page-heading .cosmic-horizon{display:none}
+.atm-embedded .portal-page-heading-copy{
+  max-width:100%;padding:0 9px 0 0;min-width:0
+}
+.atm-embedded .portal-page-heading .kicker{
+  font-size:8px;letter-spacing:.1em;color:#edc88f
+}
+.atm-embedded .portal-page-heading h1{
+  font:500 clamp(25px,2.6vw,38px)/1.06 Georgia,"Times New Roman",serif;
+  letter-spacing:-.035em;margin:4px 0 5px;text-shadow:0 2px 12px #000a
+}
+.atm-embedded .portal-page-heading h1 br{display:none}
+.atm-embedded .portal-page-heading h1 em{font-style:italic;color:#f1ca92}
+.atm-embedded .portal-page-heading p{max-width:820px;font-size:11px;line-height:1.45}
+.atm-embedded .portal-page-heading-stamp{
+  flex:0 0 79px;width:79px;height:68px;align-self:center;opacity:.65;transform:none
+}
+.atm-embedded .portal-page-heading-stamp svg{width:75px;height:75px}
+.atm-embedded .portal-page-heading-stamp span{font-size:7px;bottom:-5px;right:0}
+.atm-embedded .portal-heading-action{display:inline-block;font-size:9px;margin-top:5px}
+.atm-embedded .portal-page-heading + .portal-browse-layout{margin-top:13px}
+@media(max-width:830px) and (min-width:641px){
+  .atm-shell--focused .atm-node{left:54px;width:101px;--portrait-size:37px}
+  .atm-shell--focused .atm-node-title strong{font-size:9px}
+  .atm-workspace{left:115px}
+}
+@media(max-width:640px){
+  .atm-embedded .portal-page-heading{
+    min-height:88px;padding:10px 12px;border-radius:8px
+  }
+  .atm-embedded .portal-page-heading-copy{max-width:100%;padding:0}
+  .atm-embedded .portal-page-heading .kicker{font-size:7px}
+  .atm-embedded .portal-page-heading h1{font-size:clamp(23px,6vw,29px);margin:4px 0}
+  .atm-embedded .portal-page-heading p{font-size:10px;line-height:1.4}
+  .atm-embedded .portal-page-heading-stamp{display:none}
+  .atm-embedded .portal-browse-layout,.atm-embedded .portal-project-detail-layout{min-width:0}
+  .atm-embedded .portal-box,.atm-embedded .portal-sidebox{min-width:0}
+  .atm-embedded .portal-page-heading + .portal-browse-layout{margin-top:10px}
+}
+@media(prefers-reduced-motion:reduce){
+ .atm-embedded{animation:none!important;translate:none!important;filter:none!important}
+}
