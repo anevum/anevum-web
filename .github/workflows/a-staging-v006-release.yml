@@ -1,6 +1,7 @@
 name: ANEVUM A Staging V006 Isolated Cutover
 
 # Single reviewed release of public read-only community UI to a.anevum.com only.
+# Final pinned public-stage rollout request, 2026-10-14. Never route production.
 # Do not copy this to a recurring workflow or alter apex construction Worker.
 on:
   push:
