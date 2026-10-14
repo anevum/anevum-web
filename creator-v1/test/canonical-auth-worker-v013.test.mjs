@@ -332,7 +332,8 @@ test("proposed isolated D1 schema is empty, enforces uniqueness and cascades ses
   assert.ok(tables.every(x=>names.has(x)));
   assert.ok(names.has("canonical_identity_manifest"));
   const issuer=d.prepare("SELECT issuer,migration FROM canonical_identity_manifest WHERE id=1").get();
-  assert.deepEqual(issuer,{issuer:"anevum-better-auth-staging-v1",migration:"0001_canonical_better_auth_core"});
+  assert.equal(issuer.issuer,"anevum-better-auth-staging-v1");
+  assert.equal(issuer.migration,"0001_canonical_better_auth_core");
   assert.equal(names.has("member_accounts"),false);
   assert.equal(names.has("member_entitlements"),false);
   const now=1760481000;
