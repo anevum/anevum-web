@@ -317,3 +317,11 @@
  .site-shell--home .desktop-nav a svg{width:16px;height:16px}
  .site-shell--home .cw-brand-stack small{display:none}
 }
+
+/* Legacy :nth-child pseudo-glyphs must not duplicate real Lucide SVGs. */
+.site-shell--home .desktop-nav a::before,
+.site-shell--home .desktop-nav a:nth-child(n)::before{content:none!important;display:none!important}
+@media(min-width:1201px){
+ .site-shell--home .desktop-nav a{font-size:10px}
+ .site-shell--home .desktop-nav a svg{width:20px;height:20px}
+}
