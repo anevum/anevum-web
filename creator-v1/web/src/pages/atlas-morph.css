@@ -284,7 +284,8 @@
  .atm-progress{min-height:38px;padding:0 7px;gap:3px}
  .atm-progress>span:first-child{font-size:17px}
  .atm-progress small{display:none}
- .atm-progress strong{font-size:8px}
+ .atm-progress strong{display:none}
+ .atm-progress{min-width:36px;justify-content:center}
  .atm-search,.atm-account{min-width:38px;height:38px;border-radius:8px}
  .atm-search small{display:none}
  .atm-search>span{font-size:24px}
@@ -350,6 +351,7 @@
  .atm-progress{min-width:32px;justify-content:center}
  .atm-worlds-trigger{padding-inline:8px}
  .atm-search,.atm-account{min-width:35px;height:36px}
+ .atm-account{display:none}
  .atm-header{gap:5px;padding:0 8px}
  .atm-world-tile{min-height:139px}
  .atm-world-bottom strong{font-size:22px}
