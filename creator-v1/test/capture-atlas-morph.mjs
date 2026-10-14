@@ -65,6 +65,13 @@ try{
   const focused=await evaluate("(()=>{const c=document.querySelector('.atm-content'),r=document.querySelector('.atm-workspace').getBoundingClientRect();return {scroll:getComputedStyle(c).overflowY,visible:r.left>=0&&r.right<=innerWidth&&r.top>=0&&r.bottom<=innerHeight,navigation:innerWidth<641?!!document.querySelector('.atm-mobile-dock'):!!document.querySelector('.atm-shell--focused .atm-node--play'),overflow:document.documentElement.scrollWidth>innerWidth}})()");
   if(focused.scroll!=="auto"||!focused.visible||!focused.navigation||focused.overflow)throw Error("Morph workspace "+width+": "+JSON.stringify(focused));
   await shot("morph-play-world",width);
+  await evaluate("document.querySelector(innerWidth<641?'.atm-mobile-jump':'.atm-launch').click()");
+  await until(()=>evaluate("!!document.querySelector('dialog.portal-launcher[open]')"));
+  const switchboard=await evaluate("({links:[...document.querySelectorAll('dialog.portal-launcher[open] a[href]')].map(a=>a.pathname),visible:!!document.querySelector('.portal-launcher-search input')})");
+  if(!switchboard.visible||switchboard.links.some(path=>!path.startsWith("/creator/atlas")))throw Error("Morph switchboard escaped workspace "+width+": "+JSON.stringify(switchboard));
+  await shot("morph-switchboard",width);
+  await evaluate("document.querySelector('.portal-launcher-close').click()");
+  await until(()=>evaluate("!document.querySelector('dialog.portal-launcher[open]')"));
   if(width===1440){
     await until(()=>evaluate("!!document.querySelector('.atm-content a[href*=\"/projects/\"]')"));
     await evaluate("document.querySelector('.atm-content a[href*=\"/projects/\"]').click()");
