@@ -20,7 +20,8 @@ const work=seeds.map(([title,category,creatorHandle],i)=>({
 }));
 const categories=[...new Set(work.map(p=>p.category))].map(category=>({category,count:work.filter(p=>p.category===category).length}));
 const overlay='<style>body::after{content:"SYNTHETIC OFFLINE REVIEW — NOT REAL CONTENT";position:fixed;bottom:78px;right:7px;z-index:2147483647;background:#fff0b2;color:#1c1010;border:2px solid #1c1010;padding:5px 8px;font:900 8px system-ui,sans-serif;max-width:230px}.cinema-portal-fx{display:none!important}.cinema-hero-art,.cinema-atmosphere-layer img{animation:none!important;transition:none!important}</style>';
-// The offline screenshot fixture freezes continuous ambient motion for reliable static captures.\n// Fixture is ONLY served from this local 127.0.0.1 dev script for screenshot QA.
+// The offline screenshot fixture freezes continuous ambient motion for reliable static captures.
+// Fixture is ONLY served from this local 127.0.0.1 dev script for screenshot QA.
 // It does not run in Cloudflare Workers, staging D1 or any shipped assets.
 const FAKE_MEMBER=Object.freeze({
  id:"00000000000000000000000000000099",
