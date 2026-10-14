@@ -37,6 +37,14 @@ export function MorphActivityStream(){
   const cursorInFlight=useRef<string|null>(null);
 
   useEffect(()=>{
+    if(cursor)return; // Never disrupt a person reading later activity pages.
+    const onVisible=()=>{if(document.visibilityState==="visible")setRevision(n=>n+1);};
+    const timer=window.setInterval(onVisible,120000);
+    document.addEventListener("visibilitychange",onVisible);
+    return()=>{window.clearInterval(timer);document.removeEventListener("visibilitychange",onVisible);};
+  },[cursor]);
+
+  useEffect(()=>{
     const controller=new AbortController();
     let active=true;
     const paging=cursor.length>0;
