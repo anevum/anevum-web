@@ -147,7 +147,7 @@ jobs:
           capture 320 720 discover /creator/discover
           node creator-v1/test/capture-portal-launcher.mjs --chrome "$chrome" --base http://127.0.0.1:4178 --output evidence/portal-review
           node creator-v1/test/capture-atlas.mjs --chrome "$chrome" --base http://127.0.0.1:4178 --output evidence/portal-review
-          node creator-v1/test/capture-atlas-morph.mjs --chrome "$chrome" --base http://127.0.0.1:4178 --output evidence/portal-review
+          node creator-v1/test/capture-community-feed.mjs --chrome "$chrome" --base http://127.0.0.1:4178 --output evidence/portal-review
           printf 'The ANEVUM Transcosmic Observatory and Celestial Artifacts designs are review candidates, NOT live at anevum.com or next.anevum.com. All achievement data in the offline member screenshot is SYNTHETIC and may not be treated as real account evidence. These PNG files render the actual compiled React/Vite candidate using explicitly SYNTHETIC OFFLINE design fixtures, including a fake in-memory creator identity for the profile-editor layout only. No fixture records, accounts, cookies or codes are deployed to any staging or production database. Review desktop 1440px before phone 390px. This is visual QA, not authentication, real-user or provider acceptance.\n' > evidence/portal-review/README.txt
           echo "PORTAL_VISUAL_CAPTURE=PASS" | tee evidence/portal-review/capture-status.txt
 

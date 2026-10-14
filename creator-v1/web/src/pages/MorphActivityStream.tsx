@@ -1,5 +1,6 @@
 import {useEffect,useRef,useState} from "react";
 import {Link} from "react-router-dom";
+import {CosmicArtwork} from "../components/CosmicArtwork";
 import {readProjects,type Category,type Project} from "../lib/api";
 
 type FeedFilter="all"|"games"|"tools"|"creative"|"learning";
@@ -54,6 +55,7 @@ export function MorphActivityStream(){
     cursorInFlight.current=cursor;
     readProjects({
       limit:PAGE_SIZE,
+      sort:"new",
       ...(filter!=="all"?{category:filter as Category}:{}),
       ...(paging?{cursor}:{})
     },controller.signal).then(page=>{
@@ -95,12 +97,12 @@ export function MorphActivityStream(){
 
   return <aside className="mhc-signal" aria-label="Approved release activity">
     <div className="mhc-signal-head">
-      <span className="mhc-signal-index"><span aria-hidden="true">⌁</span> SIGNAL / REAL RELEASES</span>
+      <span className="mhc-signal-index"><span aria-hidden="true">⌁</span> SUBMISSIONS / APPROVED</span>
       <button type="button" onClick={refresh} disabled={busy} aria-label="Refresh actual public submissions">↻ <span>REFRESH</span></button>
     </div>
     <div className="mhc-signal-heading">
-      <h2>THE<br/><em>PULSE.</em></h2>
-      <p>Approved creator releases, directly from ANEVUM's public catalogue.</p>
+      <h2>CREATOR <em>SUBMISSIONS.</em></h2>
+      <p>Browse actual approved projects from the community. Choose a channel or open a creator's work.</p>
     </div>
     <div className="mhc-signal-source">
       <span className="mhc-signal-light" aria-hidden="true"/>
@@ -115,9 +117,12 @@ export function MorphActivityStream(){
       {items.map((project,i)=><Link to={"/atlas/projects/"+encodeURIComponent(project.id)}
         className="mhc-signal-item" key={project.id}>
         <span className="mhc-signal-item-number">{String(i+1).padStart(2,"0")}</span>
+        <span className="mhc-feed-image" aria-hidden="true"><CosmicArtwork scene={project.category}/></span>
         <span className="mhc-signal-item-content">
           <small>{project.category.toUpperCase()} · {publishLabel(project.publishedAt)}</small>
-          <strong>{project.title}</strong><em>by @{project.creatorHandle}</em>
+          <strong>{project.title}</strong>
+          <em>{project.summary}</em>
+          <small>BY @{project.creatorHandle}</small>
         </span>
         <span className="mhc-signal-arrow" aria-hidden="true">↗</span>
       </Link>)}

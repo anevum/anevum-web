@@ -49,6 +49,21 @@ test('creator search escapes wildcards and validates untrusted inputs',async()=>
 test('totals count published creators, not private member registrations',async()=>{assert.deepEqual((await body('/api/v1/status')).counts,{publishedProjects:4,publishedCreators:1});});
 test('unavailable features never claim to be enabled',async()=>{const f=(await body('/api/v1/status')).features;for(const x of ['accounts','publishing','voting','xp','community'])assert.equal(f[x],false);});
 test('pagination returns no duplicates and uses an exclusive cursor',async()=>{const a=await body('/api/v1/projects?limit=2');assert.equal(a.nextCursor,'g');const b=await body('/api/v1/projects?limit=2&cursor=g');assert.deepEqual([...a.items,...b.items].map(x=>x.id),['a','g','h','i']);assert.equal(b.nextCursor,null);});
+test('recent public project feed is chronological with exclusive stable published-at/id pagination',async()=>{
+ const catalogue=(await body('/api/v1/projects')).items;
+ const expected=[...catalogue].sort((a,b)=>
+   (Date.parse(b.publishedAt||'')||0)-(Date.parse(a.publishedAt||'')||0)||b.id.localeCompare(a.id));
+ const first=await body('/api/v1/projects?sort=new&limit=2');
+ assert.equal(first.items.length,2);
+ assert.ok(first.nextCursor);
+ const second=await body('/api/v1/projects?sort=new&limit=2&cursor='+encodeURIComponent(first.nextCursor));
+ assert.deepEqual([...first.items,...second.items].map(x=>x.id),expected.map(x=>x.id));
+ assert.equal(new Set([...first.items,...second.items].map(x=>x.id)).size,catalogue.length);
+ assert.equal(second.nextCursor,null);
+ assert.deepEqual((await body('/api/v1/projects?sort=new&category=games')).items.map(x=>x.id),['h']);
+ for(const q of ['sort=popular','sort=recent','sort=new&sort=new','sort=new&cursor=../../private'])
+   assert.equal((await call('/api/v1/projects?'+q)).status,400,q);
+});
 test('category filter is applied in SQL',async()=>{assert.deepEqual((await body('/api/v1/projects?category=games')).items.map(x=>x.id),['h']);});
 test('free-only discovery is SQL-backed and combines with category, search and cursor',async()=>{
  assert.deepEqual((await body('/api/v1/projects?free=1')).items.map(x=>x.id),['a','h','i']);

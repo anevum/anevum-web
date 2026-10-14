@@ -1,0 +1,124 @@
+name: ANEVUM Community Feed Isolated Preview
+
+on:
+  push:
+    branches: [design/featured-play-interaction-20261014]
+    paths:
+      - creator-v1/web/**
+      - creator-v1/test/**
+      - creator-v1/test/capture-community-feed.mjs
+      - creator-v1/wrangler.community-feed-review.jsonc
+      - creator-v1/auth/migrations/0007_community_post_stream.sql
+      - creator-v1/authoring/community-post-moderation-ui.mjs
+      - creator-v1/package.json
+      - creator-v1/api/**
+      - creator-v1/auth/community-posts.mjs
+      - creator-v1/authoring/community-post-moderation.mjs
+      - creator-v1/integration/community-posts.integration.test.mjs
+      - .github/workflows/community-feed-isolated-preview.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: anevum-community-feed-design-review
+  cancel-in-progress: true
+
+jobs:
+  community-feed-review:
+    if: github.ref == 'refs/heads/design/featured-play-interaction-20261014'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Reject private bindings or scripts on the public review origin
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --input-type=module -e '
+          import fs from "node:fs";
+          const p="creator-v1/wrangler.community-feed-review.jsonc";
+          const c=JSON.parse(fs.readFileSync(p,"utf8"));
+          if(c.name!=="anevum-community-feed-review-20261014"||!c.workers_dev||c.preview_urls!==false)throw Error("Unexpected review host");
+          for(const forbidden of ["routes","route","d1_databases","r2_buckets","kv_namespaces","vars","unsafe","services","durable_objects","send_email"]){
+            if(Object.hasOwn(c,forbidden))throw Error("Disallowed review binding: "+forbidden);
+          }
+          if(c.main!=="./web/community-feed-review-worker.mjs"||c.assets?.binding!=="ASSETS"||c.assets?.directory!=="./dist/web")throw Error("Unexpected review asset/runtime");
+          const js=fs.readFileSync("creator-v1/web/community-feed-review-worker.mjs","utf8");
+          if(/CLOUDFLARE_API_TOKEN|api[_-]?key|private_key|bearer/i.test(js))throw Error("Secret reference in public review Worker");
+          if(!js.includes("nativeCreatorHosting:false"))throw Error("Hosted creator code falsely represented as live");
+          '
+          node --check creator-v1/web/community-feed-review-worker.mjs
+      - name: Compile community creator network and run public security contracts
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm install --ignore-scripts --no-audit --no-fund
+          npm run check:creator-v1-web
+          npm run build:creator-v1-web
+          npm run build:creator-v1-web:staging
+          (cd creator-v1 && npm test)
+          test -f creator-v1/dist/web/index.html
+          ! find creator-v1/dist/web -name '*.map' | grep -q .
+      - name: Verify actual Chromium community feed on phone and desktop
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p evidence/community-feed
+          chrome="$(command -v google-chrome || command -v chromium-browser || command -v chromium || true)"
+          test -n "$chrome"
+          node creator-v1/test/portal-offline-preview.mjs > evidence/community-feed/fixture.log 2>&1 &
+          fixture_pid=$!
+          trap 'kill "$fixture_pid" 2>/dev/null || true' EXIT
+          ready=0
+          for i in $(seq 1 45); do
+            if curl -fsS http://127.0.0.1:4178/__ready >/dev/null; then ready=1; break; fi
+            sleep 0.25
+          done
+          test "$ready" = 1
+          node creator-v1/test/capture-community-feed.mjs --chrome "$chrome" --base http://127.0.0.1:4178 --output evidence/community-feed
+          echo "COMMUNITY_FEED_REAL_BROWSER_FLOW=PASS"
+      - name: Retain visual evidence for review
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: anevum-community-feed-chromium-review
+          path: evidence/community-feed/
+          if-no-files-found: ignore
+          retention-days: 7
+      - name: Deploy read-only workers.dev review only
+        if: success()
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$CLOUDFLARE_API_TOKEN"
+          test -n "$CLOUDFLARE_ACCOUNT_ID"
+          npx wrangler deploy --config creator-v1/wrangler.community-feed-review.jsonc
+      - name: Validate review URL and reject private traffic
+        shell: bash
+        run: |
+          set -euo pipefail
+          base="https://anevum-community-feed-review-20261014.devonakins.workers.dev"
+          ready=0
+          for attempt in $(seq 1 18); do
+            code="$(curl --silent --show-error --max-time 15 -o "$RUNNER_TEMP/community-review.html" -w '%{http_code}' "$base/atlas" || true)"
+            if [ "$code" = 200 ] && grep -q 'id="root"' "$RUNNER_TEMP/community-review.html"; then ready=1; break; fi
+            sleep 2
+          done
+          test "$ready" = 1
+          test "$(curl -sS -o /dev/null -w '%{http_code}' "$base/api/v1/member/me")" = 404
+          test "$(curl -sS -X POST -o /dev/null -w '%{http_code}' "$base/api/v1/projects")" = 405
+          curl -fsS "$base/__review" | jq -e '.status == "DESIGN PREVIEW" and .database == false and .firstPartyPlayerLab == false and .nativeCreatorHosting == false' >/dev/null
+          curl -fsS "$base/api/v1/status" | jq -e '.counts.publishedProjects >= 0' >/dev/null
+          curl -fsSI "$base/atlas" | grep -qi 'x-robots-tag: noindex'
+          echo "COMMUNITY_FEED_READ_ONLY_REVIEW_SMOKE=PASS"
+          echo "COMMUNITY_FEED_LINK=$base/atlas"
