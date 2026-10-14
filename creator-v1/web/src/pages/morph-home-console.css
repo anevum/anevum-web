@@ -265,3 +265,15 @@
  .mhc-signal-items{max-height:355px;overflow-y:auto;padding-inline:17px}
  .mhc-feed-pager{min-height:49px}
 }
+
+
+/* A real, manually controlled featured-release player. No artificial autoplay. */
+.mhc-spotlight-controls{display:flex;align-items:center;gap:8px;color:#e5cfab;
+ font-size:10px;font-weight:900;letter-spacing:.12em;margin:0 0 16px}
+.mhc-spotlight-controls>span{margin-right:5px;padding:6px 11px;border:1px solid #c9d3d472;
+ background:#0b1526b5;border-radius:5px}
+.mhc-spotlight-controls button{display:grid;place-items:center;min-width:43px;min-height:43px;
+ border:1px solid #cbb98e8f;border-radius:8px;background:#1a304ad9;
+ color:#f6dcaf;font-size:21px;line-height:1}
+.mhc-spotlight-controls button:hover{background:#35516a;border-color:#e7d4ac}
+@media(max-width:640px){.mhc-spotlight-controls{margin-bottom:11px;font-size:9px}}
