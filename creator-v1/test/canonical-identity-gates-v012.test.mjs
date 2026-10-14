@@ -64,9 +64,15 @@ test("even a complete synthetic plan is only a candidate for owner review, never
  assert.deepEqual(answer.reasons,[]);
  assert.equal(answer.candidateForOwnerReview,true);
  assert.ok(!Object.hasOwn(answer,"deployAllowed"));
- const cross=clone(plan);
- cross.workers.find(x=>x.name===IDENTITY_STAGE.canonicalWorker).bindings[0].database_id=IDENTITY_STAGE.creatorStageDb;
- absent(reasons(cross),"CANONICAL_AUTH_D1_NOT_ISOLATED");
+ for(const usedId of [
+   IDENTITY_STAGE.creatorStageDb,IDENTITY_STAGE.productionDb,
+   IDENTITY_STAGE.olderV5PreviewDb,IDENTITY_STAGE.olderMemberPreviewDb,
+   IDENTITY_STAGE.olderMemberMainDb
+ ]){
+  const cross=clone(plan);
+  cross.workers.find(x=>x.name===IDENTITY_STAGE.canonicalWorker).bindings[0].database_id=usedId;
+  absent(reasons(cross),"CANONICAL_AUTH_D1_NOT_ISOLATED");
+ }
  const migrated=clone(plan);
  migrated.creatorMigrationVersions=migrated.creatorMigrationVersions.filter(x=>x!=="0015_creator_canonical_identity_links");
  absent(reasons(migrated),"STAGING_MIGRATIONS_NOT_APPLIED");
