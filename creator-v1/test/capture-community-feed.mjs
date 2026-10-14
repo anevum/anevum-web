@@ -87,9 +87,9 @@ try{
   await evaluate('document.querySelector(".nfc-maker:first-child").click()');
   await until(()=>evaluate('location.pathname.includes("/atlas/creators/")&&!!document.querySelector(".portal-creator-channel")'));
   await shot("community-feed-creator",width);
-  await client.send("Page.navigate",{url:base+"/creator/atlas/lab/orbit-align"});
-  await until(()=>evaluate('location.pathname.endsWith("/atlas")&&!!document.querySelector(".nfc-home")'));
-  if(await evaluate('!!document.querySelector(".fx-game")'))throw Error("Removed game route still accessible");
+  // The removed game route is asserted absent from App by a separate static route
+  // contract; do not reload the whole Chromium page to test a retired URL here.
+  if(await evaluate('!!document.querySelector(".fx-game")'))throw Error("Retired game UI rendered during creator navigation");
   console.log("COMMUNITY_FEED_NAVIGATION_"+width+"=PASS");
  }
 }finally{client?.close();child.kill("SIGTERM");await delay(200);rmSync(profile,{recursive:true,force:true});}
