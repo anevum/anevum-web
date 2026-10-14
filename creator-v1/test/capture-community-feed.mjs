@@ -87,6 +87,26 @@ try{
   await evaluate('document.querySelector(".nfc-maker:first-child").click()');
   await until(()=>evaluate('location.pathname.includes("/atlas/creators/")&&!!document.querySelector(".portal-creator-channel")'));
   await shot("community-feed-creator",width);
+  // Verify the actual compiled connected-board view with SYNTHETIC OFFLINE content.
+  await client.send("Page.navigate",{url:base+"/creator/atlas/boards"});
+  await until(()=>evaluate('!!document.querySelector(".cnb-hub")&&document.querySelectorAll(".cnb-project").length===8'));
+  const boardLayout=await evaluate('(()=>{const b=document.querySelector(".cnb-hub").getBoundingClientRect();return {width:innerWidth,projects:document.querySelectorAll(".cnb-project").length,tabs:document.querySelectorAll(".cnb-tabs button").length,overflow:document.documentElement.scrollWidth>innerWidth+1,mainOverflow:getComputedStyle(document.querySelector(".atm-content")).overflowY,right:b.right,left:b.left};})()');
+  if(boardLayout.projects!==8||boardLayout.tabs!==3||boardLayout.overflow||boardLayout.mainOverflow!=="auto"||boardLayout.left<0||boardLayout.right>width+1)
+    throw Error("CONNECTED_BOARDS_LAYOUT_"+width+": "+JSON.stringify(boardLayout));
+  console.log("CONNECTED_BOARDS_"+width+"="+JSON.stringify(boardLayout));
+  await shot("connected-community-releases",width);
+  await evaluate('document.querySelector(".cnb-tabs button:nth-child(2)").click()');
+  await until(()=>evaluate('document.querySelector(".cnb-tabs button:nth-child(2)").getAttribute("aria-pressed")==="true"&&!!document.querySelector(".cnb-empty")'));
+  if(await evaluate('document.querySelectorAll(".cnb-project").length')!==0)throw Error("Invented first-look creator in empty fixture");
+  await shot("connected-community-first-looks",width);
+  await evaluate('document.querySelector(".cnb-tabs button:nth-child(3)").click()');
+  await until(()=>evaluate('document.querySelectorAll(".cnb-creator").length===4'));
+  await shot("connected-community-creators",width);
+  await evaluate('document.querySelector(".cnb-tabs button:first-child").click()');
+  await until(()=>evaluate('document.querySelectorAll(".cnb-project").length===8'));
+  await evaluate('document.querySelector(".cnb-filters button:nth-child(2)").click()');
+  await until(()=>evaluate('document.querySelectorAll(".cnb-project").length===3'));
+  await shot("connected-community-games",width);
   await client.send("Page.navigate",{url:base+"/creator/atlas/lab/orbit-align"});
   await until(()=>evaluate('location.pathname.endsWith("/atlas")&&!!document.querySelector(".nfc-home")'));
   if(await evaluate('!!document.querySelector(".fx-game")'))throw Error("Removed game route still accessible");
