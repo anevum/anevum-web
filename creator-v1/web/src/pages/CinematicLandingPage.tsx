@@ -7,6 +7,7 @@ import {CosmicArtwork} from "../components/CosmicArtwork";
 import type {CosmicScene} from "../components/CosmicIllustration";
 import {LevelPanel} from "../components/LevelPanel";
 import {Icon} from "../components/Icons";
+import {CinematicCategoryStrip,CinematicCatalogueSections} from "../components/CinematicCatalogueSections";
 import {ErrorState, LoadingState} from "../components/States";
 import {CinematicPortalFX} from "../components/CinematicPortalFX";
 import {CinematicAtmosphere} from "../components/CinematicAtmosphere";
@@ -153,6 +154,8 @@ export function CinematicLandingPage(){
         {gates.map(item=><SceneLink key={item.title} item={item} variant="gate"/>)}
       </nav>
 
+      <CinematicCategoryStrip/>
+      {isReady&&<CinematicCatalogueSections projects={projects} creators={creators}/>}
       <section className="cinema-modules" aria-label="More to discover">
         {modules.map(item=><SceneLink key={item.title} item={item} variant="module"/>)}
       </section>
