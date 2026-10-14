@@ -17,7 +17,7 @@ test("homepage never invents projects, accounts, levels, prices or usage metrics
   assert.match(home,/projects\.slice\(0,5\)\.map/);
   assert.match(home,/creators\.map/);
   assert.match(home,/portal\.state==="ready"/);
-  assert.match(home,/CATEGORY/);
+  assert.ok(home.includes('WorldNavigator') && home.includes('id:"games"'));
   assert.match(card,/CATEGORY ILLUSTRATION/);
   assert.doesNotMatch(home,/Math\.random|sampleVotes|nova_demo|fakeMessage|example\.com|15000\s*XP/);
   assert.doesNotMatch(card,/Math\.random|sampleVotes|fakeMessage/);
@@ -38,17 +38,21 @@ test("original deterministic illustration supports all published content categor
   assert.match(svg,/useId\(\)/);
   assert.doesNotMatch(svg,/<image|<foreignObject|Math\.random|setInterval/);
 });
-test("home preserves linked discovery, real creator channels and existing member services",()=>{
+test("home preserves real discovery, creator channels and contextual member services",()=>{
   const home=read("web/src/pages/HomePage.tsx");
   const shell=read("web/src/components/Shell.tsx");
-  for(const link of ['/discover','/start','/community','/levels','/creators','/guide','/create'])
+  const account=read("web/src/pages/MemberAccountPage.tsx");
+  for(const link of ["/discover","/start","/community","/levels","/creators","/guide"])
     assert.ok(home.includes(link)||shell.includes(link),link);
-  for(const route of ["/library","/account","/status"])assert.ok(shell.includes(route),route);
+  for(const route of ["/library","/create"])assert.ok(account.includes(route),route);
+  for(const route of ["/account","/status"])assert.ok(shell.includes(route),route);
   assert.match(home,/CelestialEmblem/);
   assert.match(home,/LevelPanel/);
   assert.match(home,/CosmicArtwork/);
+  assert.match(home,/WorldNavigator/);
   assert.doesNotMatch(shell,/mobile-bottom-nav/);
 });
+
 test("interactive art supports mobile, focus-visible and reduced motion",()=>{
   const css=read("web/src/cinematic-worlds.css")+read("web/src/cinematic-polish.css");
   for(const query of ["max-width:1380px","max-width:1100px","max-width:820px","max-width:600px","max-width:360px","prefers-reduced-motion:reduce","forced-colors:active","focus-visible"])
@@ -110,20 +114,21 @@ test("the isolated offline browser fixture serves nested cinematic WebP without 
  assert.match(f,/127\.0\.0\.1/);
 });
 
-test("polished homepage removes redundant nav rows without deleting them from inner pages",()=>{
+test("homepage keeps its cinematic art without duplicate global toolbars",()=>{
  const shell=read("web/src/components/Shell.tsx");
  const css=read("web/src/cinematic-final-polish.css");
  const html=read("web/index.html");
+ const experience=read("web/src/experience-navigation.css");
  assert.match(shell,/site-shell--home/);
- assert.match(shell,/portal-navigation/);
- assert.match(shell,/signal-strip/);
- assert.match(css,/\.site-shell--home \.portal-navigation,\.site-shell--home \.signal-strip\{display:none\}/);
- assert.match(css,/\.site-shell--home \.cw-hero\{height:clamp/);
- assert.match(css,/\.portal-page-heading-stamp>span\{/);
+ assert.doesNotMatch(shell,/className="portal-navigation"|className="signal-strip"/);
+ assert.ok(experience.includes(".cw-atlas-stage"));
+ assert.match(css,/site-shell--home/);
+ assert.ok(css.includes('.site-shell--home .cw-hero'));
+ assert.ok(css.includes('.portal-page-heading-stamp>span{'));
  assert.match(html,/og:site_name/);
  assert.match(html,/og:title/);
- assert.match(html,/icon.*%BASE_URL%favicon\.svg/);
- assert.match(read("web/src/pages/DiscoverPage.tsx"),/accent="UNIVERSE\."/);
+ assert.ok(html.includes('%BASE_URL%favicon.svg'));
+ assert.ok(read("web/src/pages/DiscoverPage.tsx").includes('accent="UNIVERSE."'));
  assert.ok(existsSync(new URL("../web/public/favicon.svg",import.meta.url)));
 });
 
