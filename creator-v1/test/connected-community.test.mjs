@@ -79,8 +79,11 @@ test("React includes genuine board and approved-post routes, no fake ranking sig
   assert.match(shell,/pathname\.startsWith\("\/atlas\/boards"\)/);
   assert.match(shell,/"community","boards","create"/);
   assert.match(home,/to="\/atlas\/boards"/);
-  assert.match(community,/HotCommunityPosts/);
-  assert.match(community,/OPEN BOARDS/);
+  assert.match(community,/readCommunityPosts/);
+  assert.match(community,/readStatus/);
+  assert.match(community,/communityPosts === true/);
+  assert.match(community,/to="/boards"/);
+  assert.match(community,/No fabricated activity/);
   assert.match(forum,/\/atlas\/community\/posts\//);
   assert.match(api,/readPublicBoards/);
   assert.match(api,/readCommunityPost/);
