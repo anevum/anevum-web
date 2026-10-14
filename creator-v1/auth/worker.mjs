@@ -52,7 +52,7 @@ function joinEnabled(env) {
 // Capabilities are only advertised for this identity backend. Separate
 // Better Auth provider configuration never implies Creator V1 access.
 export function memberSignInCapabilities(env) {
-  const canEmail = ready(env) && joinEnabled(env);
+  const canEmail = ready(env) && typeof env.COMMUNITY_DB.prepare === 'function' && joinEnabled(env);
   return {
     version: 1,
     registration: canEmail ? "invite-only" : "closed",
@@ -214,8 +214,10 @@ return {async fetch(req,env) {
       return creatorProjects(req,db,member,limit,clock());
     }
     if(path==='/health'&&['GET','HEAD'].includes(req.method))return json(req,{service:'anevum-v1-member-staging',status:'ok',signupEnabled:joinEnabled(env)},200);
-    if(path==='/auth-methods'&&['GET','HEAD'].includes(req.method))
-      return json(req,memberSignInCapabilities(env),200);
+    if(path==='/auth-methods')
+      return ['GET','HEAD'].includes(req.method)
+        ? json(req,memberSignInCapabilities(env),200)
+        : fail(req,'Method not allowed',405);
     if(path==='/me'&&['GET','HEAD'].includes(req.method)) {
       const member=await authenticated(req,env,clock());
       return member?json(req,{member:{id:member.id,email:member.email,handle:member.handle,displayName:member.displayName,bio:member.bio}}):fail(req,'Sign-in required',401);
