@@ -31,6 +31,20 @@ Source files:
 | Original styles | `web/src/creator-showcase-v007.css` |
 | Tests | `creator-v1/test/showcase-v007.test.mjs` |
 
+## Verified staging state and deployment prerequisites (October 14, 2026)
+
+Read-only audit of ANEVUM's actual Cloudflare account:
+
+- `anevum-creator-v1-a-staging` is the current Worker for `a.anevum.com`, deployed V006 at `d2a980ae-dfe6-45f5-9555-da6024964d86`; bindings are only static `ASSETS` and the dedicated D1 `COMMUNITY_DB` (`anevum-creator-v1-staging`).
+- `anevum-member-auth-staging` is a separate Worker using that D1 database. It has existing identity bindings; its current deployed version predates V007. Neither deployment was changed by this work.
+- D1's actual `schema_migrations` contains `0001` through `0006` only. There is NO `community_posts` or `member_showcase_selections` table yet. The repository contains proposed `0007`, `0008`, `0013`, `0015` and another upload proposal references `0014`; resolve prerequisites/conflicts and run a staging D1 backup before any migration.
+- Aggregates at audit time: **1 active member, 2 active creator profiles, 0 approved published projects, 0 XP ledger events and 0 active project ratings**. Real member reward cards therefore cannot yet be truthfully demonstrated through public data. No sample records were inserted into staging.
+- The exact source branch for V007 has changed since the first successful CI run. Final CI/screenshots must be taken against the final head commit.
+
+The **default is now PRIVATE**, including absence of the migration, absence of a saved selection, and a saved `is_public=0` preference. A member must explicitly save `is_public=true` before anonymous reward details appear. The legacy public member-profile API now redacts raw XP and full achievement inventory for non-owners; authenticated owners retain their private cabinet. Public creator channels also use the explicit public showcase projection, not the old raw member data.
+
+Visual acceptance uses `creator-v1/test/portal-offline-preview.mjs` and the real compiled React in `capture-v007-showcase.mjs`. These showcase specimens include explicitly synthetic, offline examples of an equipped earlier artifact, selected awards and an opted-out creator. The captured pages are watermarked and cannot publish any fake record to D1.
+
 ## Data and security constraints
 
 Public showcase endpoint: **GET/HEAD only**, `/api/v1/community/showcases?handles=<1–10 handles>`.
@@ -56,6 +70,7 @@ Existing published post visibility and editorial/staff review remain authoritati
 
 - New universal collectible inventory with externally uploaded image models, rarity metadata and themed animated treatments is **not yet backed by authoritative issuance/storage**. The existing 60 progression artifacts and six verified achievements are reused.
 - Public creator profile avatars are letter-avatar placeholders because real approved member avatar media contract is not available here; don't fetch unverified user uploads.
+- The existing 60 names are server-defined, but only four pieces have unique established emblem studies. The remaining names now receive category-relevant temporary ornamental motifs; they are NOT 60 bespoke high-definition collectible renders. A separate illustration/asset validation pipeline remains necessary.
 - Editing can be enabled only after the approved member identity/migration gates; `a.anevum.com` remains READ-ONLY without account cookies.
 - Community features remain bounded by moderation, security and real published data. No infinite scroll, notifications, follower totals or fabricated world stats are introduced.
 - Additional full-profile and reply-card layouts, richer original illustration assets, award art beyond existing motifs, and device-grade visual acceptance can follow after first CI and owner review.
