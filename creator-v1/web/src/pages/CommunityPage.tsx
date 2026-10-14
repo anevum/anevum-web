@@ -41,14 +41,14 @@ export function CommunityPage(){
           </Link>)}</div>}
           <div className="forum-community-footer"><span>MEMBER PROFILE CARDS · VERIFIED LEVELS · EARNED BADGES · REPORT TO STAFF</span><Link to="/levels">HOW RECOGNITION WORKS ↗</Link></div>
         </section>
-        <section className="portal-box">
+        {board.state!=="ready"&&<section className="portal-box">
           <header className="portal-box-header"><div><span className="kicker">THE MEETING POINTS / IN DEVELOPMENT</span><h2>FIND YOUR CORNER</h2></div><span className="portal-hall-stamp">COMMUNITY ROOMS / PLANNED</span></header>
           <div className="portal-room-grid">{rooms.map((room,i)=><article className="portal-room" key={room.name}><div className="cw-room-world" aria-hidden="true"><CosmicArtwork scene={room.category}/></div>
             <div className="portal-room-top"><span aria-hidden="true">{room.symbol}</span><small>ROOM {String(i+1).padStart(2,"0")} / PLANNED</small></div>
             <strong>{room.name}</strong><span>{room.tag}</span><p>{room.description}</p>
             <Link to={"/discover?category="+encodeURIComponent(room.category)}>EXPLORE REAL WORK ↗</Link>
           </article>)}</div>
-        </section>
+        </section>}
         {data.state==="loading"&&<LoadingState label="Checking the public creation network"/>}
         {data.state==="error"&&<ErrorState title="LIVE PROJECT SIGNAL UNAVAILABLE" detail="The community roadmap is visible, but real project data could not be loaded."/>}
         {data.state==="ready"&&<>
