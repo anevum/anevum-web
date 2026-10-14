@@ -42,7 +42,7 @@ function dateLabel(raw:string|null|undefined){
   const value=dateOrder(raw);
   return value?new Intl.DateTimeFormat("en-US",{month:"short",day:"numeric",year:"numeric",timeZone:"UTC"}).format(value):"Date unavailable";
 }
-function ProjectEntry({project,creators,showcases}:{project:Project;creators:readonly Creator[];showcases:Record<string,PublicCreatorShowcase>}){
+function ProjectEntry({project,creators,showcases,priority=false}:{project:Project;creators:readonly Creator[];showcases:Record<string,PublicCreatorShowcase>;priority?:boolean}){
   const author=creators.find(c=>c.handle===project.creatorHandle);
   const title=project.title;
   const href=projectDetailPath(project.id,"/");
@@ -51,7 +51,7 @@ function ProjectEntry({project,creators,showcases}:{project:Project;creators:rea
     <div className="av6-feed-record"><span>PUBLIC INDEX <b>/</b> PROJECT <b>/</b> {project.category.toUpperCase()}</span><time dateTime={project.publishedAt||undefined}>{dateLabel(project.publishedAt)}</time></div>
     <div className="av6-feed-item-body">
       <Link to={href} className="av6-feed-art" aria-label={"Open "+title}>
-        <CosmicArtwork scene={categoryScene[project.category]}/>
+        <CosmicArtwork scene={categoryScene[project.category]} priority={priority}/>
         <span>CATEGORY ILLUSTRATION</span>
       </Link>
       <div className="av6-feed-description">
@@ -146,8 +146,8 @@ export function CommunityHomeFeed({projects,creators,state,communityEnabled}:Pro
         {state==="error"&&<ErrorState title="PUBLIC INDEX UNAVAILABLE" detail="The approved public catalogue could not be loaded. No sample members or fictional posts are substituted."/>}
         {view==="discussions"&&communityEnabled&&discussions.state==="loading"&&<LoadingState label="Checking approved conversations"/>}
         {view==="discussions"&&communityEnabled&&discussions.state==="error"&&<ErrorState title="DISCUSSIONS UNAVAILABLE" detail="The approved discussion index could not be reached."/>}
-        {state==="ready"&&entries.map(entry=>entry.kind==="project"?
-          <ProjectEntry key={entry.key} project={entry.value} creators={creators} showcases={showcaseItems}/>:
+        {state==="ready"&&entries.map((entry,index)=>entry.kind==="project"?
+          <ProjectEntry key={entry.key} project={entry.value} creators={creators} showcases={showcaseItems} priority={index<2}/>:
           <DiscussionEntry key={entry.key} post={entry.value} creators={creators} showcases={showcaseItems}/>)}
         {state==="ready"&&!entries.length&&!(view==="discussions"&&communityEnabled&&discussions.state==="loading")&&!(view==="discussions"&&communityEnabled&&discussions.state==="error")&&<div className="av6-index-empty">
           <span className="av6-registry-line">ARCHIVE / OPEN RECORD</span>
