@@ -156,11 +156,12 @@ export function CinematicLandingPage(){
 
       <CinematicCategoryStrip/>
       {isReady&&<CinematicCatalogueSections projects={projects} creators={creators}/>}
+
+      <CinematicDiscoverySections projects={projects} creators={creators} state={portal.state}/>
+
       <section className="cinema-modules" aria-label="More to discover">
         {modules.map(item=><SceneLink key={item.title} item={item} variant="module"/>)}
       </section>
-
-      <CinematicDiscoverySections projects={projects} creators={creators} state={portal.state}/>
 
       <section className="cinema-dashboard cinema-dashboard--private" aria-label="Private workspace and member progression">
         <div className="cinema-panel cinema-rhen">
