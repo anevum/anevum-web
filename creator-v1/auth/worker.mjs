@@ -1,6 +1,7 @@
 import {PAGE,STYLE,CLIENT} from './join.mjs';
 import {creatorProjects} from './projects.mjs';
 import {communityRoutes} from './community.mjs';
+import {memberShowcaseRoutes} from './showcase.mjs';
 import {communityPostRoutes} from './community-posts.mjs';
 import {socialRoutes} from './social.mjs';
 import {privacyRoutes} from './privacy.mjs';
@@ -174,6 +175,11 @@ return {async fetch(req,env) {
       if(req.method==='POST'&&!checkWrite(req))return fail(req,'Request origin rejected',403);
       const member=await authenticated(req,env,clock());
       return privacyRoutes(req,db,member,limit,clock());
+    }
+    if(path==='/showcase'){
+      if(req.method==='POST'&&!checkWrite(req))return fail(req,'Request origin rejected',403);
+      const member=await authenticated(req,env,clock());
+      return memberShowcaseRoutes(req,db,member,limit,clock());
     }
     if(path==='/library'||path.startsWith('/library/')||path.startsWith('/creators/')){
       if(req.method==='POST'&&!checkWrite(req))return fail(req,'Request origin rejected',403);
