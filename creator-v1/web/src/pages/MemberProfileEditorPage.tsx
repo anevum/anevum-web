@@ -1,5 +1,5 @@
 import {type FormEvent,useState} from "react";
-import {Link} from "react-router-dom";
+import {Link,useLocation} from "react-router-dom";
 import {useMemberContext} from "../components/MemberGate";
 import {OrbitalMark} from "../components/OrbitalMark";
 import {FeaturedAwardPicker} from "../components/FeaturedAwardPicker";
@@ -10,6 +10,8 @@ const FORBIDDEN=/[\u0000-\u001f\u007f]/;
 
 export function MemberProfileEditorPage(){
   const {member,onProfileSaved}=useMemberContext();
+  const location=useLocation();
+  const accountPath=location.pathname.startsWith("/atlas/")?"/atlas/account":"/account";
   const [handle,setHandle]=useState(member.handle||"");
   const [displayName,setDisplayName]=useState(member.displayName||"");
   const [bio,setBio]=useState(member.bio||"");
@@ -56,7 +58,7 @@ export function MemberProfileEditorPage(){
   }
 
   return <div className="member-profile-page">
-    <Link className="project-return" to="/account">← BACK TO ACCOUNT</Link>
+    <Link className="project-return" to={accountPath}>← BACK TO ACCOUNT</Link>
     <section className="member-title"><span className="kicker">YOUR SPACE / MEMBER IDENTITY</span>
       <h1>MAKE IT YOURS.</h1>
       <p>Edit your creator name and public introduction without leaving the ANEVUM member workspace.
@@ -103,9 +105,9 @@ export function MemberProfileEditorPage(){
           <button className="button primary" type="submit" disabled={busy}>
             {busy?"SAVING PROFILE…":"SAVE CREATOR IDENTITY"}
           </button>
-          <Link className="button secondary" to="/account">CANCEL</Link>
+          <Link className="button secondary" to={accountPath}>CANCEL</Link>
         </div>
-        {saved&&<p role="status" className="draft-notice">Your creator profile was saved by the staging member service.</p>}
+        {saved&&<div role="status" className="draft-notice"><p>Your creator profile was saved by the staging member service.</p><Link className="button primary" to={accountPath}>OPEN MY MEMBER SPACE</Link></div>}
         {error&&<p role="alert" className="member-error">{error}</p>}
         <p className="member-caption">All changes are verified by the existing staging Member Worker.
           Profile editing does not grant staff roles, publishing approval, XP or voting power.</p>

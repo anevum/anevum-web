@@ -23,7 +23,7 @@ test("cross-host requests, dangerous methods, member/staff/private routes fail c
    const res=await worker.fetch(new Request(url),fixture,{});
    assert.equal(res.status,404,url);
  }
- for(const path of ["/api/v1/member/health","/api/v1/member/me","/api/v1/member/projects","/api/v1/staff/queue","/api/private","/join","/studio","/rhen","/lab","/command","/private"]){
+ for(const path of ["/api/v1/member/health","/api/v1/member/me","/api/v1/member/projects","/api/v1/staff/queue","/api/private","/join/private","/join/api","/studio","/rhen","/lab","/command","/private"]){
    const res=await worker.fetch(new Request("https://anevum.com"+path,{headers:{Authorization:"Bearer should-never-forward",Cookie:"session=no"}}),fixture,{});
    assert.equal(res.status,404,path);
    assert.equal(res.headers.get("set-cookie"),null,path);
@@ -32,6 +32,30 @@ test("cross-host requests, dangerous methods, member/staff/private routes fail c
    const res=await worker.fetch(new Request("https://anevum.com/api/v1/projects",{method}),fixture,{});
    assert.equal(res.status,405,method);
  }
+});
+
+test("the exact public join page is readable without exposing identity endpoints",async()=>{
+  let seen;
+  const env={ASSETS:{fetch:async req=>{
+    seen=req;
+    return new Response("<html>ANEVUM join shell</html>",{
+      headers:{"content-type":"text/html","set-cookie":"must-not-leak=secret"}
+    });
+  }}};
+  const response=await worker.fetch(new Request("https://anevum.com/join",{
+    headers:{Cookie:"private-session=never-forward",Authorization:"Bearer never-forward"}
+  }),env,{});
+  assert.equal(response.status,200);
+  assert.equal(response.headers.get("set-cookie"),null);
+  assert.equal(new URL(seen.url).pathname,"/join");
+  assert.equal(seen.headers.get("cookie"),null);
+  assert.equal(seen.headers.get("authorization"),null);
+  assert.match(response.headers.get("content-security-policy"),/frame-ancestors 'none'/);
+  for(const path of ["/join/verify","/join/email","/join/reset","/api/v1/member/auth-methods","/api/v1/member/join"]){
+    const denied=await worker.fetch(new Request("https://anevum.com"+path),env,{});
+    assert.equal(denied.status,404,path);
+  }
+  assert.equal((await worker.fetch(new Request("https://anevum.com/join",{method:"POST"}),env,{})).status,405);
 });
 
 test("anonymous React SPA has strict HTML headers and no leaked source cookies",async()=>{
