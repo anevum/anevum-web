@@ -26,11 +26,15 @@ const sections=Object.freeze({
  reviews:{key:'id',sql:`SELECT id,project_id AS projectId,score,body,status,created_at AS createdAt,updated_at AS updatedAt FROM project_reviews WHERE member_id=? AND id>? ORDER BY id LIMIT ?`},
  reports:{key:'id',sql:`SELECT id,target_type AS targetType,target_id AS targetId,reason,details,status,created_at AS createdAt FROM project_reports WHERE reporter_member_id=? AND id>? ORDER BY id LIMIT ?`},
  submissions:{key:'id',sql:`SELECT e.id,e.project_id AS projectId,e.actor_kind AS actorKind,e.action,e.from_status AS fromStatus,e.to_status AS toStatus,e.reason,e.created_at AS createdAt FROM project_submission_events e JOIN projects p ON p.id=e.project_id WHERE p.owner_member_id=? AND e.id>? ORDER BY e.id LIMIT ?`},
- world:{key:'memberId',sql:`SELECT member_id AS memberId,visibility,theme,scene,section_order AS sectionOrder,created_at AS createdAt,updated_at AS updatedAt FROM member_world_appearances WHERE member_id=? AND member_id>? ORDER BY member_id LIMIT ?`}
+ world:{key:'memberId',sql:`SELECT member_id AS memberId,visibility,theme,scene,section_order AS sectionOrder,created_at AS createdAt,updated_at AS updatedAt FROM member_world_appearances WHERE member_id=? AND member_id>? ORDER BY member_id LIMIT ?`},
+ following:{key:'creatorId',sql:`SELECT creator_member_id AS creatorId,created_at AS followedAt FROM member_creator_follows WHERE follower_member_id=? AND creator_member_id>? ORDER BY creator_member_id LIMIT ?`},
+ forumThreads:{key:'id',sql:`SELECT id,room,title,status,created_at AS createdAt,updated_at AS updatedAt,visible_at AS visibleAt FROM forum_threads WHERE author_member_id=? AND id>? ORDER BY id LIMIT ?`},
+ forumPosts:{key:'id',sql:`SELECT id,thread_id AS threadId,body,starter,status,created_at AS createdAt,reviewed_at AS reviewedAt FROM forum_posts WHERE author_member_id=? AND id>? ORDER BY id LIMIT ?`},
+ forumReports:{key:'id',sql:`SELECT id,post_id AS postId,reason,details,status,created_at AS createdAt,reviewed_at AS reviewedAt FROM forum_reports WHERE reporter_member_id=? AND id>? ORDER BY id LIMIT ?`}
 });
-const SECTIONS=['account',...Object.keys(sections).filter(x=>x!=='world')];
+const SECTIONS=['account',...Object.keys(sections).filter(x=>!['world','following','forumThreads','forumPosts','forumReports'].includes(x))];
 export async function privacyRoutes(req,db,member,rateLimit,now,options={}){
- const available=options.worldEnabled?[...SECTIONS,'world']:SECTIONS;
+ const available=[...SECTIONS,...(options.worldEnabled?['world']:[]),...(options.followsEnabled?['following']:[]),...(options.forumEnabled?['forumThreads','forumPosts','forumReports']:[])];
  const u=new URL(req.url),path=u.pathname;
  if(!path.startsWith(ROOT))return error('Not found',404);
  if(!member)return error('Sign-in required',401);
