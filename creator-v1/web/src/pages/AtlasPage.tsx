@@ -191,7 +191,7 @@ export function AtlasPage(){
     if(e.button!==0||selected||(e.target instanceof Element&&e.target.closest("a,input,dialog")))return;
     // Allow a tap to open a node; capture the pointer only after actual movement.
     // Dragging a world portrait rotates the constellation instead of trapping touch.
-    drag.current={x:e.clientX,y:e.clientY,pitch:view.pitch,yaw:view.y,moved:false,pointerId:e.pointerId};
+    drag.current={x:e.clientX,y:e.clientY,pitch:view.pitch,yaw:view.yaw,moved:false,pointerId:e.pointerId};
   }
   function onPointerMove(e:ReactPointerEvent<HTMLDivElement>){
     const p=drag.current;if(!p||p.pointerId!==e.pointerId)return;
