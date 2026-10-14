@@ -112,6 +112,17 @@ try {
     if (!artFrame || Math.abs(artFrame.width-artFrame.artWidth)>2 || Math.abs(artFrame.height-artFrame.artHeight)>2)
       throw Error("V007_PROJECT_ART_COVER_" + width + ":" + JSON.stringify(artFrame));
     await screenshot("community-v007-projects", width);
+    // V009 recognition is backed ONLY by visibly labeled offline fixture records.
+    await until(() => evaluate('document.querySelectorAll(".ch7-project .ch9-recognition").length>=2'));
+    const recognition=await evaluate('(()=>({levels:[...document.querySelectorAll(".ch7-project .ch9-level strong")].map(el=>el.textContent),artifacts:[...document.querySelectorAll(".ch7-project .ch9-artifact")].map(el=>el.textContent),awards:[...document.querySelectorAll(".ch7-project .ch9-award")].map(el=>el.textContent),overflow:document.documentElement.scrollWidth>innerWidth+1}))()');
+    if (!recognition.levels.includes("30") || !recognition.levels.includes("2") ||
+        !recognition.artifacts.includes("Midnight Atlas") || !recognition.artifacts.includes("Copper Key") ||
+        !recognition.awards.includes("First Launch") || !recognition.awards.includes("First Signal") ||
+        recognition.overflow) throw Error("V009_RECOGNITION_" + width + ":" + JSON.stringify(recognition));
+    await evaluate('document.querySelector(".ch7-project .ch9-recognition").scrollIntoView({block:"center"})');
+    await delay(200);
+    await screenshot("community-v009-verified-recognition", width);
+    console.log("COMMUNITY_V009_OFFLINE_RECOGNITION_" + width + "=" + JSON.stringify(recognition));
 
     await evaluate('document.querySelector(".ch7-tabs button:nth-child(3)").click()');
     await until(() => evaluate('document.querySelector(".ch7-tabs button:nth-child(3)")?.getAttribute("aria-pressed")==="true"'));

@@ -64,7 +64,7 @@ test("401 is an explicit sign-in requirement and HTML redirects fail closed",asy
 });
 
 
-test("optional public creator XP and achievements use existing same-origin route",async()=>{
+test("optional public creator XP and achievements use an anonymous same-origin request",async()=>{
   let seen=null;
   await withFetch(async(url,init)=>{
     seen={url,init};
@@ -81,7 +81,7 @@ test("optional public creator XP and achievements use existing same-origin route
   });
   assert.equal(seen.url,"/api/v1/member/creators/sample_maker");
   assert.equal(seen.init.method,"GET");
-  assert.equal(seen.init.credentials,"same-origin");
+  assert.equal(seen.init.credentials,"omit");
   assert.equal(seen.init.cache,"no-store");
   await assert.rejects(Promise.resolve().then(()=>memberCreatorProfile("../private")),/Invalid public creator handle/);
 });
