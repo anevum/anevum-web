@@ -55,6 +55,7 @@ export function MorphActivityStream(){
     cursorInFlight.current=cursor;
     readProjects({
       limit:PAGE_SIZE,
+      sort:"new",
       ...(filter!=="all"?{category:filter as Category}:{}),
       ...(paging?{cursor}:{})
     },controller.signal).then(page=>{
