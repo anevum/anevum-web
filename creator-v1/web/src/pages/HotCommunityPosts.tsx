@@ -1,5 +1,5 @@
 import {Link} from "react-router-dom";
-import {useState} from "react";
+import {useEffect,useState} from "react";
 import {readCommunityPosts,readStatus,type CommunityPostsPage,type CommunityPostSort} from "../lib/api";
 import {useResource} from "../lib/useResource";
 import "./morph-community-feed.css";
@@ -16,6 +16,12 @@ function postedAt(value:string){
 export function HotCommunityPosts(){
  const [sort,setSort]=useState<CommunityPostSort>("hot");
  const [revision,setRevision]=useState(0);
+ useEffect(()=>{
+   const update=()=>{if(document.visibilityState==="visible")setRevision(v=>v+1);};
+   const timer=window.setInterval(update,120000);
+   document.addEventListener("visibilitychange",update);
+   return()=>{window.clearInterval(timer);document.removeEventListener("visibilitychange",update);};
+ },[]);
  const resource=useResource<Availability>(async signal=>{
    try{
      // The homepage does not query an unprovisioned public post service.
