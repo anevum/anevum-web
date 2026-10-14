@@ -91,14 +91,16 @@ export function Shell() {
       </header>
       <div className="portal-navigation"><div className="portal-navigation-inner"><span className="portal-navigation-label">EXPLORE WORLDS /</span><nav aria-label="Browse by creation type">{portalCategories.map(([to,label])=><Link to={to} key={to}>{label}</Link>)}</nav><Link to="/create" className="portal-navigation-submit">+ SUBMIT WORK</Link></div></div>
       <div className="signal-strip"><span>ANEVUM / CREATIVE UNIVERSE</span><span className="signal-dot"/><span>CREATE BEYOND WORLDS</span><span className="signal-tail">INVITED PARTICIPATION IN TESTING</span></div>
-      {menuOpen && <nav className="mobile-drawer" id="mobile-menu" aria-label="More navigation">{[...desktopNav,["/atlas","Atlas / Spatial Navigation"] as const,["/start","Start Here"] as const,["/guide","Field Guide"] as const,["/create","Submit work"] as const,["/library","Saved library"] as const,["/account","My profile"] as const,["/workspace","Private workspace"] as const,["/status","Build status"] as const].map(([to,label])=><NavLink key={to} to={to} end={to==="/"}>{label}</NavLink>)}<a href="/portfolio/">Devon's portfolio</a></nav>}
+      {menuOpen && <nav className="mobile-drawer" id="mobile-menu" aria-label="Mobile site navigation">
+        {[["/","Home"],["/discover","Explore"],["/creators","Creators"],["/community","Community"],["/boards","Boards"],["/levels","Levels"],["/create","Create"],["/guide","Field Guide"],["/account","My Account"],["/library","My Library"]].map(([to,label])=><NavLink key={to} to={to} end={to==="/"}>{label}</NavLink>)}
+      </nav>
       <PortalLauncher open={launcherOpen} onClose={() => setLauncherOpen(false)}/>
       <main id="main" tabIndex={-1} className="site-main">{cinematicPublic ?
         <div className="av5-site-frame">
           <CinematicSiteRail/>
           <div className="av5-site-content"><Outlet/></div>
         </div> : <Outlet/>}</main>
-      <footer className="site-footer"><span>ANEVUM / A WORLD OF THINGS PEOPLE MAKE</span><nav aria-label="Useful links"><Link to="/start">Start Here</Link><Link to="/guide">Field Guide</Link><a href="/portfolio/">Devon's portfolio</a><Link to="/workspace">Private workspace</Link><Link to="/status">What's live</Link></nav><span>Explore freely. Member participation is in invited testing.</span></footer>
+      <footer className="site-footer"><span>ANEVUM / A WORLD OF THINGS PEOPLE MAKE</span><nav aria-label="Useful links"><Link to="/start">Start Here</Link><Link to="/guide">Field Guide</Link><Link to="/creators">Creator Directory</Link><Link to="/boards">Community Boards</Link></nav><span>Explore freely. Member participation is in invited testing.</span></footer>
       
     </div>
   );
