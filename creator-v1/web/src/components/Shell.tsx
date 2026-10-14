@@ -78,6 +78,7 @@ export function Shell() {
           <form className="header-search" role="search" onSubmit={search}><Icon name="search" size={16}/><input value={query} onChange={event=>setQuery(event.target.value)} maxLength={100} placeholder="Search worlds, creators, projects..." aria-label="Search published projects"/></form>
           <button className="header-launcher" type="button" onClick={() => setLauncherOpen(true)} aria-label="Open quick navigation" aria-keyshortcuts="Control+K Meta+K"><Icon name="explore" size={19}/><span>PORTALS</span><kbd>⌘K</kbd></button>
           <Link to="/create" className="header-create">CREATE</Link>
+          {location.pathname==="/"&&<button type="button" className="cinema-mobile-search" aria-label="Search ANEVUM pages and published projects" onClick={()=>setLauncherOpen(true)}><Icon name="search" size={19}/></button>}
           <Link to="/account" className="cw-account-link" aria-label="Your member account"><Icon name="people" size={19}/></Link>
           <button ref={menuButton} className="menu-button" type="button" aria-label={menuOpen ? "Close site navigation" : "Open site navigation"} aria-expanded={menuOpen} aria-controls="mobile-menu" onClick={()=>setMenuOpen(value=>!value)}><Icon name={menuOpen ? "close" : "menu"}/></button>
         </div>
