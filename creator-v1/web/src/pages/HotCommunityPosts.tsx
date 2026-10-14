@@ -1,6 +1,6 @@
 import {Link} from "react-router-dom";
 import {useState} from "react";
-import {readCommunityPosts,type CommunityPostsPage,type CommunityPostSort} from "../lib/api";
+import {readCommunityPosts,readStatus,type CommunityPostsPage,type CommunityPostSort} from "../lib/api";
 import {useResource} from "../lib/useResource";
 
 type Availability={mode:"available";page:CommunityPostsPage}|{mode:"not-public"};
@@ -17,6 +17,10 @@ export function HotCommunityPosts(){
  const [revision,setRevision]=useState(0);
  const resource=useResource<Availability>(async signal=>{
    try{
+     // The homepage does not query an unprovisioned public post service.
+     // Only staff-reviewed, published discussions can be considered available.
+     const status=await readStatus(signal);
+     if(status.features?.communityPosts!==true)return {mode:"not-public"};
      const page=await readCommunityPosts({sort,limit:"5"},signal);
      return {mode:"available",page};
    }catch(error){
