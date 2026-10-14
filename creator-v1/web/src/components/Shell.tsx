@@ -93,7 +93,7 @@ export function Shell() {
       <div className="signal-strip"><span>ANEVUM / CREATIVE UNIVERSE</span><span className="signal-dot"/><span>CREATE BEYOND WORLDS</span><span className="signal-tail">INVITED PARTICIPATION IN TESTING</span></div>
       {menuOpen && <nav className="mobile-drawer" id="mobile-menu" aria-label="Mobile site navigation">
         {[["/","Home"],["/discover","Explore"],["/creators","Creators"],["/community","Community"],["/boards","Boards"],["/levels","Levels"],["/create","Create"],["/guide","Field Guide"],["/account","My Account"],["/library","My Library"]].map(([to,label])=><NavLink key={to} to={to} end={to==="/"}>{label}</NavLink>)}
-      </nav>
+      </nav>}
       <PortalLauncher open={launcherOpen} onClose={() => setLauncherOpen(false)}/>
       <main id="main" tabIndex={-1} className="site-main">{cinematicPublic ?
         <div className="av5-site-frame">
