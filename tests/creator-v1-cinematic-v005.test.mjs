@@ -62,3 +62,13 @@ test("V006 visual controls are rounded, tactile, and editorial without changing 
   assert.match(tactile,/forced-colors:active/);
   assert.match(routes,/<MemberGate\s*\/>/);
 });
+
+test("V006 second pass keeps bounded field selection and mobile-first content",()=>{
+  assert.match(feed,/id="community-index"/);
+  assert.match(feed,/id="av6-field-filter"/);
+  assert.match(feed,/field==="all"/);
+  assert.match(feed,/Latest approved|LATEST APPROVED FIRST/);
+  assert.match(landing,/href="#community-index"/);
+  assert.match(tactile,/\.cinema-feature\{display:none\}/);
+  assert.match(tactile,/\.av6-feed-fields select:focus-visible/);
+});
