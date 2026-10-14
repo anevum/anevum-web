@@ -7,7 +7,7 @@ const COLORS=["#e9b98b","#9bc5e8","#cab5f7"] as const;
 /** Original first-party UI mechanics demo. This is NOT a hosted creator submission.
  *  No purchases, server XP, accounts or persistent high scores.
  */
-export function OrbitAlignDemo({onExit}:{onExit:()=>void}){
+export function OrbitAlignDemo({onExit,returnToProject=false}:{onExit:()=>void;returnToProject?:boolean}){
   const [game,dispatch]=useReducer(orbitReducer,undefined,initialOrbitState);
   const {phase,slots,moves}=game;
   const [seconds,setSeconds]=useState(0);
@@ -117,7 +117,7 @@ export function OrbitAlignDemo({onExit}:{onExit:()=>void}){
         {phase==="ready"&&<button className="fx-game-overlay-start" type="button" onClick={()=>{dispatch({type:"start"});stage.current?.focus({preventScroll:true});}}>START EXPERIENCE <span aria-hidden="true">→</span></button>}
         {phase==="paused"&&<button className="fx-game-overlay-start" type="button" onClick={()=>{dispatch({type:"resume"});stage.current?.focus({preventScroll:true});}}>RESUME <span aria-hidden="true">▶</span></button>}
         {phase==="complete"&&<button className="fx-game-overlay-start" type="button" onClick={restart}>PLAY AGAIN <span aria-hidden="true">↻</span></button>}
-        <button type="button" className="fx-game-overlay-exit" onClick={onExit}>BACK TO PROJECT</button>
+        <button type="button" className="fx-game-overlay-exit" onClick={onExit}>{returnToProject?"BACK TO FEATURED PROJECT":"RETURN TO NETWORK"}</button>
       </div>
     </div>}
   </div>;
