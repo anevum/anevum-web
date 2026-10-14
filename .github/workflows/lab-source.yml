@@ -27,9 +27,16 @@ jobs:
           node --check lab/browser-check-client.mjs
           node --check lab/rhen-snapshot.mjs
           node --check lab/rhen-ui.mjs
+          node --check lab/rhen-observer.mjs
+          node --check lab/rhen-terminal.mjs
+          node --check lab/rhen-terminal.css.mjs
+          node --check lab/rhen-terminal.js.mjs
+          node --check lab/terminal-ui.mjs
+          node --check lab/transcosmic-workspace.mjs
+          node --check lab/backstage-workspace.mjs
       - name: Test project catalog, private host boundary, and game routes
         run: node --test lab/test-worker.mjs
-      - name: Responsive Chromium Lab, Fold and RHEN research console acceptance
+      - name: Responsive Chromium Lab and all four project workspaces acceptance
         run: node lab/browser-check.mjs
       - name: Upload private Lab responsive screenshots
         if: always()
