@@ -19,7 +19,7 @@ const rooms=[
 export function CommunityPage(){
   const data=useResource(async signal=>{
     const [status,projects,creators]=await Promise.all([
-      readStatus(signal),readProjects({limit:"4"},signal),readCreators({limit:"4"},signal)
+      readStatus(signal),readProjects({sort:"new",limit:"4"},signal),readCreators({limit:"4"},signal)
     ]);
     return {status,projects,creators};
   },[]);
