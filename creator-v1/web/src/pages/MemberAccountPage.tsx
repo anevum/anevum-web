@@ -29,7 +29,8 @@ export function MemberAccountPage(){
       <section className="member-panel">
         <span className="kicker">CREATOR IDENTITY</span><h2>{member.handle?"@"+member.handle:"PROFILE NOT FINISHED"}</h2>
         <p>{member.bio||"Add a creator profile to participate in the private publishing tests."}</p>
-        <div className="member-actions"><Link className="button secondary" to="/account/edit">EDIT CREATOR PROFILE</Link><Link className="button secondary" to="/create">MY PROJECTS</Link></div>
+        <div className="member-actions"><Link className="button secondary" to="/account/edit">EDIT CREATOR PROFILE</Link><Link className="button secondary" to="/create">MY PROJECTS</Link>{member.handle&&<Link className="button secondary" to={"/@"+member.handle}>PREVIEW MY MEMBER WORLD ↗</Link>}</div>
+        {member.handle&&<p className="member-caption">Preview address: anevum.com/@{member.handle}. The public page only shows information available through approved profile services; public noncreator listings remain release-gated.</p>}
       </section>
       <section className="member-panel">
         <span className="kicker">EARNED RECOGNITION / STAGING</span>
