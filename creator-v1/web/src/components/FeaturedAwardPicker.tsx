@@ -55,7 +55,7 @@ export function FeaturedAwardPicker(){
       </div>}
       {!data.data.eligibleAwards.length&&<p className="ch10-empty">No earned achievements are available for featuring. You can still participate and collect awards as you contribute.</p>}
       <button type="submit" disabled={busy||(
-        choice===(data.data.eligibleAwards.some(x=>x.key===data.data.selection.awardKey)?data.data.selection.awardKey:"") )}>
+        choice===(data.data.selection.awardKey||"") )}>
         {busy?"SAVING…":"SAVE FEATURED AWARD"}
       </button>
     </form>}
