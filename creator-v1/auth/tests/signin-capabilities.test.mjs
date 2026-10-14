@@ -1,7 +1,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {createMemberWorker,memberSignInCapabilities} from "../worker.mjs";
-const stage={AUTH_PEPPER:"a".repeat(64),COMMUNITY_DB:{},STAGING_JOIN_ENABLED:"true",RESEND_API_KEY:"restricted-sending-credential",TURNSTILE_SECRET:"challenge-key",STAGING_INVITE_EMAILS:"invitee@example.com"};
+import {PAGE,CLIENT} from "../join.mjs";
+const stage={AUTH_PEPPER:"a".repeat(64),COMMUNITY_DB:{prepare(){}},STAGING_JOIN_ENABLED:"true",RESEND_API_KEY:"restricted-sending-credential",TURNSTILE_SECRET:"challenge-key",STAGING_INVITE_EMAILS:"invitee@example.com"};
 test("only invited email is ready",()=>{
  const state=memberSignInCapabilities(stage);
  assert.equal(state.registration,"invite-only");
@@ -22,4 +23,23 @@ test("same-origin capabilities route does not set cookies",async()=>{
  assert.equal(r.headers.get("set-cookie"),null);
  assert.equal((await r.json()).methods.email.available,true);
  assert.equal((await worker.fetch(new Request("https://a.anevum.com/api/v1/member/auth-methods"),stage)).status,404);
+});
+
+test("credential without a usable D1 binding must never advertise signup",()=>{
+ const env={...stage,COMMUNITY_DB:{}};
+ assert.equal(memberSignInCapabilities(env).methods.email.available,false);
+ assert.equal(memberSignInCapabilities(env).registration,"closed");
+});
+test("capability discovery rejects write methods and foreign hosts",async()=>{
+ const worker=createMemberWorker();
+ const request=new Request("https://next.anevum.com/api/v1/member/auth-methods",{method:"POST",headers:{origin:"https://next.anevum.com"}});
+ const method=await worker.fetch(request,stage);
+ assert.equal(method.status,405);
+ const foreign=await worker.fetch(new Request("https://a.anevum.com/api/v1/member/auth-methods"),stage);
+ assert.equal(foreign.status,404);
+});
+test("existing invited sign-in offers member workspace after verified profile",()=>{
+ assert.match(PAGE,/id="mySpace" hidden href="\/creator\/account"/);
+ assert.match(CLIENT,/\$\('mySpace'\)\.hidden=!me\.member\.handle/);
+ assert.match(CLIENT,/\$\('mySpace'\)\.hidden=false/);
 });
