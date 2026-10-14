@@ -30,9 +30,9 @@ export function CinematicPortalFX(){
       if(disposed||width<2||height<2)return;
       const seconds=milliseconds/1000;
       const mobile=width<650;
-      const cx=width*(mobile?.64:.594),cy=height*(mobile?.245:.39);
-      const radius=Math.min(height*(mobile?.245:.36),width*(mobile?.175:.135));
-      const ringHeight=radius*(mobile?.83:.88);
+      const cx=width*(mobile ? 0.64 : 0.594),cy=height*(mobile ? 0.245 : 0.39);
+      const radius=Math.min(height*(mobile ? 0.245 : 0.36),width*(mobile ? 0.175 : 0.135));
+      const ringHeight=radius*(mobile ? 0.83 : 0.88);
       ctx!.clearRect(0,0,width,height);
       ctx!.save();
       ctx!.globalCompositeOperation="screen";
@@ -48,7 +48,7 @@ export function CinematicPortalFX(){
         const extent=radius*(1+ring*.105);
         const ellipseHeight=ringHeight*(1+ring*.085);
         const segments=ring===0?18:12;
-        const speed=(ring%2?-1:1)*(ring===0?.026:.018);
+        const speed=(ring%2?-1:1)*(ring===0 ? 0.026 : 0.018);
         for(let i=0;i<segments;i++){
           const phase=(i/segments)*tau+seconds*speed;
           const span=(tau/segments)*(.38+.35*(.5+.5*Math.sin(i*4.1+ring)));
@@ -68,7 +68,7 @@ export function CinematicPortalFX(){
       }
       const count=mobile?17:29;
       for(let i=0;i<count;i++){
-        const theta=i*2.399963+seconds*(i%3===0?.012:-.008);
+        const theta=i*2.399963+seconds*(i%3===0 ? 0.012 : -0.008);
         const distance=radius*(.91+(i%11)*.058);
         const px=cx+Math.cos(theta)*distance;
         const py=cy+Math.sin(theta)*distance*.78;
