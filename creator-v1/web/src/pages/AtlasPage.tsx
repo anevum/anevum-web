@@ -93,7 +93,7 @@ function AtlasDeck({world,onDismiss}:{world:AtlasWorld|null;onDismiss:()=>void})
     );
     return()=>abort.abort();
   },[world?.id]);
-  if(!world)return <dialog ref={dialog} className="atlas-deck" onClose={onDismiss}/>;
+  if(!world)return <dialog ref={dialog} className="atlas-deck"/>;
   function onBackground(e:ReactMouseEvent<HTMLDialogElement>){if(e.target===dialog.current)onDismiss();}
   const search=world.id==="discover"||world.id==="play"||world.id==="apps"||world.id==="creative";
   const nextPath=query.trim()?"/discover?q="+encodeURIComponent(query.trim().slice(0,100)):"/discover";
