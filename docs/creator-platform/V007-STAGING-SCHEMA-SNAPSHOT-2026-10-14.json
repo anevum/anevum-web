@@ -1,0 +1,36 @@
+{
+  "database": "anevum-creator-v1-staging",
+  "source": "cloudflare-read-only",
+  "captured_date": "2026-10-14",
+  "captured_for": "ANEVUM V007 release preflight — metadata only; refresh from Cloudflare immediately before staging migration",
+  "migrations": [
+    "0001_initial_creator_platform",
+    "0002_staff_authoring",
+    "0003_member_identity_staging",
+    "0004_member_project_workflow",
+    "0005_voting_progression",
+    "0006_account_privacy"
+  ],
+  "tables": [
+    "schema_migrations",
+    "creator_profiles",
+    "projects",
+    "project_releases",
+    "project_favorites",
+    "project_reviews",
+    "project_reports",
+    "moderation_events",
+    "project_workflow_events",
+    "member_accounts",
+    "member_email_challenges",
+    "member_sessions",
+    "member_request_limits",
+    "project_submission_events",
+    "community_project_votes",
+    "community_vote_events",
+    "community_xp_events",
+    "member_deletion_requests"
+  ],
+  "excluded": "No member emails, IDs, session tokens, secrets, raw rows or cloud authentication metadata are included.",
+  "deployment_authorization": "NONE — snapshot is dated and may not be replayed as a fresh production check"
+}
