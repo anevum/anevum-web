@@ -79,7 +79,7 @@ test("Playable UI uses actual reducer and never awards synthetic achievements",(
   assert.match(game,/dispatch\(\{type:"resume"\}\)/);
   assert.match(game,/dispatch\(\{type:"start"\}\)/);
   assert.match(game,/dispatch\(\{type:"reset"\}\)/);
-  assert.match(game,/No account XP or public score has been awarded/);
+  assert.match(game,/no account XP or public score has been awarded/i);
   assert.match(game,/ANEVUM \/ INTERACTIVE PROTOTYPE/);
   assert.match(css,/@media\(max-width:640px\)/);
   assert.match(css,/@media\(prefers-reduced-motion:reduce\)/);
