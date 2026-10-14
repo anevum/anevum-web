@@ -1,6 +1,6 @@
 import { Link, Navigate, useParams } from "react-router-dom";
 import { readCreator, readProjects } from "../lib/api";
-import { memberCreatorProfile, memberPublicWorld } from "../lib/member-api";
+import { memberCreatorProfile, memberPublicWorld, memberMe, memberWorldAppearance } from "../lib/member-api";
 import { useResource } from "../lib/useResource";
 import { CosmicArtwork } from "../components/CosmicArtwork";
 import { CelestialEmblem } from "../components/CelestialEmblem";
@@ -29,12 +29,26 @@ export function MemberWorldPage() {
       readCreator(handle, signal).catch(() => null),
       readProjects({ creator: handle, limit: "12" }, signal).catch(() => null)
     ]);
-    // Never expose a member-only profile through this vanity route without
-    // the owner's public-world opt-in. Published catalogue creators remain
-    // available through their existing public publication records.
-    if (!world && !catalogue) return null;
-    const member = world ? await memberCreatorProfile(handle, signal).catch(() => null) : null;
-    return { world, member, catalogue, projects };
+    // A private owner preview is authorized by the existing same-origin
+    // session AND must match the URL handle. Guests cannot request it.
+    let privatePreview = false;
+    let view = world;
+    if (!view) {
+      const [self, privateSettings] = await Promise.all([
+        memberMe(signal).catch(() => null),
+        memberWorldAppearance(signal).catch(() => null)
+      ]);
+      if (self?.member.handle === handle && privateSettings) {
+        view = {profile: {
+          handle,displayName:self.member.displayName || handle,bio:self.member.bio || ""
+        },appearance:privateSettings.appearance};
+        privatePreview = true;
+      }
+    }
+    // Never expose a nonpublisher to a guest without public opt-in.
+    if (!view && !catalogue) return null;
+    const member = view ? await memberCreatorProfile(handle, signal).catch(() => null) : null;
+    return { world:view, privatePreview, member, catalogue, projects };
   }, [handle, valid]);
 
   if (!valid) return <Navigate to="/creators" replace />;
@@ -47,7 +61,7 @@ export function MemberWorldPage() {
     <Link className="button secondary" to="/creators">BROWSE PUBLIC CREATORS</Link>
   </div>;
 
-  const { world, member, catalogue, projects } = data.data;
+  const { world, privatePreview, member, catalogue, projects } = data.data;
   const publicProfile = world?.profile || catalogue?.creator;
   const sectionOrder = world?.appearance.sections || ["work", "cabinet", "community"];
   if (!publicProfile) return <ErrorState title="PROFILE UNAVAILABLE" detail="No public creator information is available." />;
@@ -73,7 +87,7 @@ export function MemberWorldPage() {
         </div>
       </div>
       <div className="member-world-hero-bottom">
-        <span>PERSONAL SPACE / NOT A PROJECT SUBMISSION</span>
+        <span>{privatePreview?"PRIVATE OWNER PREVIEW / NOT PUBLIC":"PERSONAL SPACE / NOT A PROJECT SUBMISSION"}</span>
         <span>ALL PUBLIC DETAILS COME FROM VERIFIED SERVICES</span>
       </div>
     </section>
