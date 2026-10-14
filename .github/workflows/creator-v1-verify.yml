@@ -51,6 +51,7 @@ jobs:
           npm run build:creator-v1-web
           npm run build:creator-v1-web:staging
           node --test creator-v1/test/react-staging-route.test.mjs
+          node --test tests/creator-v1-dashboard-v003.test.mjs
       - name: Preserve exact source and pre-production checkpoint
         shell: bash
         run: |
