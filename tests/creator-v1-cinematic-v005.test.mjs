@@ -50,7 +50,7 @@ test("V006 builds a source-backed homepage feed and links real creator identitie
   assert.match(feed,/readCommunityPosts\(\{sort:"new",limit:"8"\}/);
   assert.match(feed,/projectDetailPath/);
   assert.match(feed,/encodeURIComponent\(handle\)/);
-  assert.match(feed,/approved public records only/i);
+  assert.match(feed,/bounded excerpt of public records only/i);
   assert.doesNotMatch(feed,/fake creator|syntheticProject|inventedPost/);
 });
 test("V006 visual controls are rounded, tactile, and editorial without changing member gates",()=>{
