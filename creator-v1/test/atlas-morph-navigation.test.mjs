@@ -23,7 +23,8 @@ test("Morph reuses the real React pages as nested routes and keeps the original 
  assert.match(app,/<Route element={<MemberGate\/>}>/);
  assert.match(shell,/<Outlet\/>/);
  assert.match(shell,/navigate\("\/atlas"\)/);
- assert.match(shell,/navigate\("\/atlas"\+url\.pathname\+url\.search\+url\.hash\)/);
+ assert.match(shell,/navigate\("\/atlas"\+relative\+url\.search\+url\.hash\)/);
+ assert.match(shell,/import\.meta\.env\.BASE_URL/);
  assert.doesNotMatch(shell,/dangerouslySetInnerHTML|document\.write|location\.reload/);
 });
 test("all worlds resolve to persistent shell routes with real or explicitly future states",()=>{
