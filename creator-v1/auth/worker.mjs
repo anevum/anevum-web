@@ -213,7 +213,7 @@ return {async fetch(req,env) {
       const member=await authenticated(req,env,clock());
       return creatorProjects(req,db,member,limit,clock());
     }
-    if(path==='/health'&&['GET','HEAD'].includes(req.method))return json(req,{service:'anevum-v1-member-staging',status:'ok',signupEnabled:joinEnabled(env)},200);
+    if(path==='/health'&&['GET','HEAD'].includes(req.method))return json(req,{service:'anevum-v1-member-staging',status:'ok',signupEnabled:memberSignInCapabilities(env).methods.email.available},200);
     if(path==='/auth-methods')
       return ['GET','HEAD'].includes(req.method)
         ? json(req,memberSignInCapabilities(env),200)
