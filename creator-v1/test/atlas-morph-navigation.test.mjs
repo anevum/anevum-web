@@ -109,3 +109,21 @@ test("isolated review Worker still has no production routes, storage or private 
  assert.match(worker,/if\(request.method!=="GET"&&request.method!=="HEAD"\)/);
  assert.match(worker,/if\(!PUBLIC\.test\(url.pathname\)\)/);
 });
+
+
+test("Play, Tools and Creative become bespoke visual worlds only inside Morph",()=>{
+ const app=read("web/src/App.tsx");
+ const discover=read("web/src/pages/DiscoverPage.tsx");
+ const heading=read("web/src/components/PortalHeading.tsx");
+ assert.match(app,/path="discover" element={<DiscoverPage immersive\/>}/);
+ assert.match(app,/path="discover" element={<DiscoverPage\/>}/);
+ assert.match(discover,/export function DiscoverPage\(\{immersive=false\}/);
+ for(const phrase of ["games:{","tools:{","creative:{","ENTER THE","ARCADE.","SOFTWARE","WITH SOUL.","FIND THE","UNEXPECTED.","scene:\"games\"","scene:\"tools\"","scene:\"creative\""]){
+   assert.ok(discover.includes(phrase),phrase);
+ }
+ assert.match(discover,/world=immersive\?immersiveWorlds\[category as Category\]:undefined/);
+ assert.match(discover,/scene={world\?\.scene\|\|"portal"}/);
+ assert.match(heading,/scene="portal"/);
+ assert.match(heading,/CosmicArtwork scene={scene}/);
+ assert.doesNotMatch(discover,/Math\.random|fakeProjects|fabricatedResult/);
+});
