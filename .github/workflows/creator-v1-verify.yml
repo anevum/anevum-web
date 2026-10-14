@@ -105,6 +105,12 @@ jobs:
             sleep 0.2
           done
           test "$ready" = 1
+          # Browser captures must not silently omit the new environment passes.
+          # These are public, static assets; all protected routes remain excluded.
+          for media in orbital-haze-desktop.webp orbital-haze-mobile.webp orbital-dust-desktop.webp orbital-dust-mobile.webp; do
+            curl --fail --silent --show-error --output /dev/null "http://127.0.0.1:4178/creator/assets/cinematic-v2/atmosphere/$media"
+          done
+          echo "CINEMATIC_MEDIA_HTTP=PASS" | tee evidence/portal-review/media-status.txt
           capture() {
             width="$1"
             height="$2"
@@ -115,6 +121,7 @@ jobs:
             test -s "$output"
           }
           capture 1440 900 home /creator/
+          capture 1920 1080 home /creator/
           capture 1024 768 home /creator/
           capture 1440 900 start /creator/start
           capture 1440 900 field-guide /creator/guide
@@ -128,6 +135,7 @@ jobs:
           capture 1440 1600 celestial-artifacts /creator/levels#artifact-museum-heading
           capture 1440 900 community /creator/community
           capture 390 844 home /creator/
+          capture 768 1024 home /creator/
           capture 390 844 start /creator/start
           capture 390 844 field-guide /creator/guide
           capture 390 844 levels /creator/levels
