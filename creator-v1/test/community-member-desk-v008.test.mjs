@@ -16,6 +16,7 @@ test("V008 member desk is syntactically valid and embedded in the real community
   assert.match(desk,/community-member-desk-v008\.css/);
   assert.match(hub,/import \{ CommunityMemberDesk \}/);
   assert.match(hub,/<CommunityMemberDesk\/>/);
+  assert.match(hub,/<CommunityMemberDesk\/>[\s\S]*<footer className="ch7-index-foot"/);
   assert.doesNotMatch(hub,/ch7-take-part/);
 });
 test("invitation entry requires verified same-origin member service and a real session",()=>{
