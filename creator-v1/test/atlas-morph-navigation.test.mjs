@@ -44,23 +44,54 @@ test("native full-height overlay exposes all real destinations and honest featur
   assert.doesNotMatch(shell,/fakeMessages|fakeUsers|Math\.random|grantXp\(|faker/);
 });
 
-test("front page is a content-first console, backed by real public catalogue data",()=>{
+test("front page is a functioning console of actual public data and navigable releases",()=>{
   const shell=read("web/src/pages/AtlasMorphPage.tsx");
   const home=read("web/src/pages/MorphHomeConsole.tsx");
+  const feed=read("web/src/pages/MorphActivityStream.tsx");
   const css=read("web/src/pages/morph-home-console.css");
   assert.match(shell,/<MorphHomeConsole onExplore=\{\(\)=>setMenuOpen\(true\)\}\/>/);
-  for(const signal of ["mhc-feature-zone","mhc-headliner","mhc-signal","mhc-newsroom","mhc-release-rail","mhc-departments","mhc-community"]){
+  for(const signal of ["mhc-feature-zone","mhc-headliner","MorphActivityStream","mhc-newsroom","mhc-release-rail","mhc-departments","mhc-community"]){
     assert.ok(home.includes(signal),signal);
   }
-  for(const signal of ["readStatus(signal)","readProjects({limit:\"16\"},signal)","readCreators({limit:\"6\"},signal)","approved public","IREN AUTOMATED EDITORIAL: NOT CONNECTED YET","No approved public submissions","No activity has been fabricated"]){
+  for(const signal of ["readStatus(signal)","readProjects({limit:\"16\"},signal)","readCreators({limit:\"6\"},signal)","Promise.allSettled","publishedAt","spotlightIndex","advance(-1)","advance(1)"]){
     assert.ok(home.includes(signal),signal);
   }
   assert.match(home,/document\.visibilityState==="visible"/);
   assert.match(home,/dateLabel\(project\.publishedAt\)/);
   assert.match(css,/\.mhc-feature-zone\{display:grid/);
+  assert.match(css,/\.mhc-spotlight-controls/);
   assert.match(css,/@media\(max-width:640px\)/);
   assert.match(css,/\.mhc-release-rail\{grid-template-columns:1fr/);
-  assert.doesNotMatch(home,/fakeUsers|fakeProjects|Math\.random|manufactured|awardXp\(/);
+  assert.match(feed,/readProjects\(\{/);
+  assert.match(feed,/limit:PAGE_SIZE/);
+  assert.match(feed,/category:filter as Category/);
+  assert.match(feed,/page\.nextCursor/);
+  assert.match(feed,/aria-pressed={filter===item.id}/);
+  assert.match(feed,/LOAD MORE RELEASES/);
+  assert.match(feed,/document\.visibilityState==="visible"/);
+  assert.match(feed,/if\(cursor\)return;/);
+  assert.match(feed,/IREN EDITORIAL: NOT CONNECTED/);
+  assert.match(feed,/No activity was invented/);
+  assert.match(css,/\.mhc-feed-filters/);
+  assert.match(css,/\.mhc-feed-pager/);
+  assert.doesNotMatch(home+feed,/fakeUsers|fakeProjects|Math\.random|manufactured|awardXp\(/);
+});
+
+test("Atlas Quick Jump searches approved project records and genuine creator channels while retaining local routes",()=>{
+  const launcher=read("web/src/components/PortalLauncher.tsx");
+  const css=read("web/src/portal-launcher.css");
+  assert.match(launcher,/readProjects\(\{q:liveQuery,limit:"5"\},controller\.signal\)/);
+  assert.match(launcher,/readCreators\(\{q:liveQuery,limit:"4"\},controller\.signal\)/);
+  assert.match(launcher,/Promise\.allSettled/);
+  assert.match(launcher,/AbortController\(\)/);
+  assert.match(launcher,/window\.setTimeout\(async\(\)=>\{/);
+  assert.match(launcher,/controller\.abort\(\)/);
+  assert.match(launcher,/live\.query===liveQuery/);
+  assert.match(launcher,/\/projects\/"\+encodeURIComponent\(project\.id\)/);
+  assert.match(launcher,/\/creators\/"\+encodeURIComponent\(creator\.handle\)/);
+  assert.match(launcher,/role="status" aria-live="polite"/);
+  assert.match(launcher,/insideWorkspace\(entry\.path\)/);
+  assert.match(css,/\.portal-launcher-live-status/);
 });
 
 test("all real nested site routes and member permissions persist with navigation",()=>{
