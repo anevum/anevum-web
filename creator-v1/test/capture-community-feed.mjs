@@ -85,7 +85,7 @@ try{
   await evaluate('document.querySelector(".fx-focus-return").click()');
   await until(()=>evaluate('location.pathname.endsWith("/atlas")&&!!document.querySelector(".nfc-home")'));
   await evaluate('document.querySelector(".nfc-maker:first-child").click()');
-  await until(()=>evaluate('location.pathname.includes("/atlas/creators/")&&!!document.querySelector(".portal-creator")'));
+  await until(()=>evaluate('location.pathname.includes("/atlas/creators/")&&!!document.querySelector(".portal-creator-channel")'));
   await shot("community-feed-creator",width);
   await client.send("Page.navigate",{url:base+"/creator/atlas/lab/orbit-align"});
   await until(()=>evaluate('location.pathname.endsWith("/atlas")&&!!document.querySelector(".nfc-home")'));
