@@ -116,7 +116,7 @@ function Overview({onEnter,onSearch}:{onEnter:()=>void;onSearch:()=>void}){
     <p>Move through interconnected worlds. Make things, discover people, and build together. Every destination leads somewhere real.</p>
     <div className="atm-overview-actions">
       <button type="button" className="atm-overview-start" onClick={onEnter}>ENTER DISCOVERY <span aria-hidden="true">↗</span></button>
-      <button type="button" className="atm-overview-quick" onClick={onSearch}>SEARCH ALL WORLDS <span aria-hidden="true">⌕</span></button>
+      <button type="button" className="atm-overview-quick" onClick={onSearch} aria-label="Search all ANEVUM destinations"><span className="atm-overview-quick-label">SEARCH ALL WORLDS</span> <span aria-hidden="true">⌕</span></button>
       <span className="atm-overview-instruction">SELECT A WORLD TO RECONFIGURE THE SPACE</span>
     </div>
     <div className="atm-overview-legend"><span>10 WORLDS</span><span>ONE CONNECTED ENVIRONMENT</span><span>NO FALSE ACTIVITY</span></div>
