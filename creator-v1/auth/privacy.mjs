@@ -25,22 +25,24 @@ const sections=Object.freeze({
  xp:{key:'id',sql:`SELECT id,kind,target_id AS targetId,amount,award_day AS awardDay,created_at AS createdAt FROM community_xp_events WHERE member_id=? AND id>? ORDER BY id LIMIT ?`},
  reviews:{key:'id',sql:`SELECT id,project_id AS projectId,score,body,status,created_at AS createdAt,updated_at AS updatedAt FROM project_reviews WHERE member_id=? AND id>? ORDER BY id LIMIT ?`},
  reports:{key:'id',sql:`SELECT id,target_type AS targetType,target_id AS targetId,reason,details,status,created_at AS createdAt FROM project_reports WHERE reporter_member_id=? AND id>? ORDER BY id LIMIT ?`},
- submissions:{key:'id',sql:`SELECT e.id,e.project_id AS projectId,e.actor_kind AS actorKind,e.action,e.from_status AS fromStatus,e.to_status AS toStatus,e.reason,e.created_at AS createdAt FROM project_submission_events e JOIN projects p ON p.id=e.project_id WHERE p.owner_member_id=? AND e.id>? ORDER BY e.id LIMIT ?`}
+ submissions:{key:'id',sql:`SELECT e.id,e.project_id AS projectId,e.actor_kind AS actorKind,e.action,e.from_status AS fromStatus,e.to_status AS toStatus,e.reason,e.created_at AS createdAt FROM project_submission_events e JOIN projects p ON p.id=e.project_id WHERE p.owner_member_id=? AND e.id>? ORDER BY e.id LIMIT ?`},
+ world:{key:'memberId',sql:`SELECT member_id AS memberId,visibility,theme,scene,section_order AS sectionOrder,created_at AS createdAt,updated_at AS updatedAt FROM member_world_appearances WHERE member_id=? AND member_id>? ORDER BY member_id LIMIT ?`}
 });
-const SECTIONS=['account',...Object.keys(sections)];
-export async function privacyRoutes(req,db,member,rateLimit,now){
+const SECTIONS=['account',...Object.keys(sections).filter(x=>x!=='world')];
+export async function privacyRoutes(req,db,member,rateLimit,now,options={}){
+ const available=options.worldEnabled?[...SECTIONS,'world']:SECTIONS;
  const u=new URL(req.url),path=u.pathname;
  if(!path.startsWith(ROOT))return error('Not found',404);
  if(!member)return error('Sign-in required',401);
  if(req.method==='HEAD')return error('Not found',404);
  if(req.method==='GET'&&path===ROOT){
   const requests=await query(db,"SELECT id,state,requested_at AS requestedAt,updated_at AS updatedAt FROM member_deletion_requests WHERE member_id=? ORDER BY requested_at DESC,id DESC LIMIT 5",[member.id]);
-  return json({account:{email:member.email,handle:member.handle},recentSession:isFresh(member,now),deletionRequests:requests,availableExportSections:SECTIONS,notice:'Deletion requests are queued for manual review; records are not deleted when a request is submitted.'});
+  return json({account:{email:member.email,handle:member.handle},recentSession:isFresh(member,now),deletionRequests:requests,availableExportSections:available,notice:'Deletion requests are queued for manual review; records are not deleted when a request is submitted.'});
  }
  if(req.method==='GET'&&path===ROOT+'/export'){
   if(!isFresh(member,now))return error('Re-verify your email before exporting account data',403);
   const section=u.searchParams.get('section')||'account';
-  if(!SECTIONS.includes(section))return error('Unknown export section',400);
+  if(!available.includes(section))return error('Unknown export section',400);
   const cursor=u.searchParams.get('cursor')||'';
   if(cursor&&!/^[a-zA-Z0-9_-]{1,80}$/.test(cursor))return error('Invalid cursor',400);
   if(section==='account'){
