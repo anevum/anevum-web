@@ -16,6 +16,8 @@ import { MemberLibraryPage } from "./pages/MemberLibraryPage";
 import { MemberProjectsPage } from "./pages/MemberProjectsPage";
 import { ProjectEditorPage } from "./pages/ProjectEditorPage";
 import { WorkspacePage } from "./pages/WorkspacePage";
+import { MemberWorldPage } from "./pages/MemberWorldPage";
+import { MemberWorldEditorPage } from "./pages/MemberWorldEditorPage";
 
 export default function App(){
   return <Routes><Route element={<Shell/>}>
@@ -35,9 +37,12 @@ export default function App(){
       <Route path="library" element={<MemberLibraryPage/>}/>
       <Route path="account" element={<MemberAccountPage/>}/>
       <Route path="account/edit" element={<MemberProfileEditorPage/>}/>
+      <Route path="account/world" element={<MemberWorldEditorPage/>}/>
     </Route>
     <Route path="levels" element={<LevelsPage/>}/>
     <Route path="status" element={<StatusPage/>}/>
+    {/* Review-only vanity route: all other named routes keep their exact match. */}
+    <Route path=":vanity" element={<MemberWorldPage/>}/>
     <Route path="*" element={<Navigate to="/" replace/>}/>
   </Route></Routes>;
 }

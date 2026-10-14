@@ -35,6 +35,17 @@ export interface MemberAchievement {
   earned:boolean; progress:number; target:number;
 }
 
+export interface WorldAppearance {
+  visibility: "private" | "public";
+  theme: "astral" | "ember" | "verdigris" | "obsidian";
+  scene: "portal" | "games" | "research" | "creative";
+  sections: Array<"work" | "cabinet" | "community">;
+}
+export interface MemberPublicWorld {
+  profile: {handle:string;displayName:string;bio:string};
+  appearance: WorldAppearance;
+}
+
 export class MemberApiError extends Error {
   readonly status:number;
   constructor(status:number, message:string){
@@ -110,6 +121,15 @@ export const memberLibrary=(signal?:AbortSignal)=>requestMember<{items:SavedProj
 export const memberSetSaved=(id:string,saved:boolean)=>
   requestMember<{saved:boolean;changed:boolean}>("/library/"+memberProjectId(id),{method:"POST",body:{saved}});
 export const memberProgress=(signal?:AbortSignal)=>requestMember<{progression:Progression}>("/community/me",{signal});
+export const memberWorldAppearance=(signal?:AbortSignal)=>
+  requestMember<{appearance:WorldAppearance;saved:boolean}>("/world",{signal});
+export const memberSaveWorldAppearance=(appearance:WorldAppearance)=>
+  requestMember<{appearance:WorldAppearance;saved:boolean}>("/world",{method:"POST",body:appearance});
+export const memberPublicWorld=(handle:string,signal?:AbortSignal)=>{
+  if(!/^[a-z][a-z0-9_]{2,29}$/.test(handle))throw new Error("Invalid member handle");
+  return requestMember<MemberPublicWorld>("/worlds/"+handle,{signal,publicHealth:true});
+};
+
 export const memberCreatorProfile=(handle:string,signal?:AbortSignal)=>{
   if(!/^[a-z][a-z0-9_]{2,29}$/.test(handle))throw new Error("Invalid public creator handle");
   return requestMember<{

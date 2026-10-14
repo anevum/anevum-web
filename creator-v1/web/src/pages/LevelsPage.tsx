@@ -4,6 +4,7 @@ import { OrbitalStage } from "../components/OrbitalStage";
 import { CosmicHorizon } from "../components/CosmicHorizon";
 import { CelestialEmblem } from "../components/CelestialEmblem";
 import { achievementArt, seriesOneStudies } from "../lib/artifact-art";
+import { ArtifactAtlas } from "../components/ArtifactAtlas";
 
 const principles=[
   {title:"NO FINAL LEVEL",text:"Keep earning XP as long as you contribute. The first sixty collectible artifact names are a series, not a finish line."},
@@ -41,6 +42,7 @@ export function LevelsPage(){
             <span><CelestialEmblem motif="beacon" size="medium"/><small>96PX CABINET</small></span>
           </div>
         </section>
+        <ArtifactAtlas/>
         <section className="portal-box">
           <header className="portal-box-header"><div><span className="kicker">ACHIEVEMENT CABINET / VISUAL REFERENCE</span><h2>THINGS WORTH EARNING</h2></div><span className="portal-box-aside">SIX DEFINED ACHIEVEMENTS</span></header>
           <p className="artifact-section-note">Six defined achievement conditions. These images are <strong>unearned examples</strong>; private and public profiles show the earned state only after the existing member service verifies it.</p>

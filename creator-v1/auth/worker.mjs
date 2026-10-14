@@ -2,6 +2,7 @@ import {PAGE,STYLE,CLIENT} from './join.mjs';
 import {creatorProjects} from './projects.mjs';
 import {communityRoutes} from './community.mjs';
 import {socialRoutes} from './social.mjs';
+import {worldRoutes} from './worlds.mjs';
 import {privacyRoutes} from './privacy.mjs';
 import {PRIVACY_PAGE,PRIVACY_STYLE,PRIVACY_CLIENT} from './privacy-ui.mjs';
 import {PROFILE_PAGE,LIBRARY_PAGE,SOCIAL_STYLE,SOCIAL_CLIENT} from './social-ui.mjs';
@@ -172,7 +173,15 @@ return {async fetch(req,env) {
     if(path==='/privacy'||path.startsWith('/privacy/')){
       if(req.method==='POST'&&!checkWrite(req))return fail(req,'Request origin rejected',403);
       const member=await authenticated(req,env,clock());
-      return privacyRoutes(req,db,member,limit,clock());
+      return privacyRoutes(req,db,member,limit,clock(),{worldEnabled:env.MEMBER_WORLDS_ENABLED==='true'});
+    }
+    if(path==='/world'||path.startsWith('/worlds/')){
+      // Explicitly disabled until isolated staging DB migration, privacy export
+      // and independent account-visibility acceptance are complete.
+      if(env.MEMBER_WORLDS_ENABLED!=='true')return fail(req,'Member worlds not enabled',404);
+      if(req.method==='POST'&&!checkWrite(req))return fail(req,'Request origin rejected',403);
+      const member=await authenticated(req,env,clock());
+      return worldRoutes(req,db,member,limit,clock());
     }
     if(path==='/library'||path.startsWith('/library/')||path.startsWith('/creators/')){
       if(req.method==='POST'&&!checkWrite(req))return fail(req,'Request origin rejected',403);
