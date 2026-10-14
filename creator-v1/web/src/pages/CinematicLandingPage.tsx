@@ -1,5 +1,5 @@
 import {useEffect,useState} from "react";
-import {readCreators,readProjects,readStatus} from "../lib/api";
+import {readCreators,readProjects,readStatus,type Creator,type Project,type Status} from "../lib/api";
 import {useResource} from "../lib/useResource";
 import {CinematicSiteRail} from "../components/CinematicSiteRail";
 import {LiveSignalHero} from "../components/LiveSignalHero";
@@ -11,7 +11,10 @@ import {CommunityHomeFeed} from "../components/CommunityHomeFeed";
  * No fictitious statistics, paid ranking or unmoderated publication.
  * The independent member, staff, Atlas and Lab routes are unchanged.
  */
+type PublicSnapshot={status:Status;projects:Project[];creators:Creator[]};
+
 export function CinematicLandingPage(){
+  const [lastVerified,setLastVerified]=useState<PublicSnapshot|null>(null);
   const [revision,setRevision]=useState(0);
   useEffect(()=>{
     const refresh=()=>{if(document.visibilityState==="visible")setRevision(v=>v+1);};
@@ -27,16 +30,23 @@ export function CinematicLandingPage(){
     ]);
     return {status,projects:projectResponse.items,creators:creatorResponse.items};
   },[revision]);
-  const isReady=portal.state==="ready";
-  const projects=isReady?portal.data.projects:[];
-  const creators=isReady?portal.data.creators:[];
-  const status=isReady?portal.data.status:null;
+  useEffect(()=>{
+    if(portal.state==="ready")setLastVerified(portal.data);
+  },[portal]);
+  // Preserve the last verified public index while checking for newer data.
+  const snapshot=portal.state==="ready"?portal.data:lastVerified;
+  const hasVerifiedData=snapshot!==null;
+  const projects=snapshot?.projects||[];
+  const creators=snapshot?.creators||[];
+  const status=snapshot?.status||null;
+  const displayState=hasVerifiedData?"ready":portal.state;
+  const signalState=portal.state==="error"?"error":displayState;
 
   return <div className="anevum-cinema">
     <CinematicSiteRail/>
     <div className="cinema-content">
       <LiveSignalHero
-        state={portal.state}
+        state={signalState}
         status={status}
         projects={projects}
         creators={creators}
@@ -44,10 +54,11 @@ export function CinematicLandingPage(){
       <CommunityHomeFeed
         projects={projects}
         creators={creators}
-        state={portal.state}
+        state={displayState}
         communityEnabled={status?.features?.communityPosts===true}
       />
-      {isReady&&<div className="cinema-verification-note">
+      {portal.state==="error"&&hasVerifiedData&&<p className="av8-index-stale" role="status">The latest refresh failed. Previously verified public content remains available while the connection is restored.</p>}
+      {hasVerifiedData&&status&&<div className="cinema-verification-note">
         {status.counts.publishedProjects} APPROVED PUBLIC PROJECTS · {status.counts.publishedCreators} PUBLIC CREATOR CHANNELS · Only genuine published activity is shown.
       </div>}
     </div>
