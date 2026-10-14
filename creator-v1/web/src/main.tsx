@@ -22,6 +22,7 @@ import "./main-site-polish.css";
 import "./member-worlds.css";
 import "./forum.css";
 import "./creator-follows.css";
+import "./community-worlds-polish.css";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
