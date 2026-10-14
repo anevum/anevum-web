@@ -41,3 +41,17 @@
   .ch9-level,.ch9-artifact,.ch9-award{border:1px solid CanvasText;color:CanvasText;background:Canvas}
 }
 @media(prefers-reduced-motion:reduce){.ch9-recognition *{animation:none!important;transition:none!important}}
+
+/* V010: only server-validated, member-selected *earned* achievements may use
+   this highlighted state. A paid or self-awarded title is never implied. */
+.ch9-award--featured{
+  border-color:#f1d597bd;
+  background:linear-gradient(135deg,#5b4729dc,#29263edb);
+  box-shadow:inset 0 1px #fff7,0 0 0 1px #edcf7130,0 3px 12px #0006;
+}
+.ch9-award--featured small{
+  display:inline-block;margin-left:2px;padding:3px 5px;border-radius:999px;
+  color:#30281b;background:#f2dcad;
+  font:800 7px/1 "IBM Plex Mono",Consolas,monospace;letter-spacing:.045em;
+}
+@media(max-width:640px){.ch9-award--featured{max-width:100%;flex-wrap:wrap}}
