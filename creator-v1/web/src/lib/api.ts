@@ -70,6 +70,15 @@ export interface CommunityPostsPage {
   sort:CommunityPostSort;
 }
 
+export interface PublicBoards {
+  source: "approved-public-projects";
+  labels: { latestReleases: string; firstLooks: string; publishingCreators: string };
+  latestReleases: Project[];
+  firstLooks: Project[];
+  publishingCreators: Creator[];
+  qualityRankingAvailable: false;
+}
+
 export interface CategoryCount { category: Category; count: number }
 export interface PageResult<T> { items: T[]; count: number; nextCursor: string | null }
 
@@ -123,6 +132,11 @@ export function readCommunityPosts(params:{sort?:CommunityPostSort;limit?:string
 export function readCommunityPost(id:string,signal?:AbortSignal){
   return getJson<{post:CommunityPostDetail;replies:CommunityPostReply[]}>(
     publicPath("/community/posts/")+encodeURIComponent(id),signal);
+}
+
+/** Read-only verified publication boards; no client-generated popularity score. */
+export function readPublicBoards(signal?: AbortSignal) {
+  return getJson<PublicBoards>(publicPath("/boards"), signal);
 }
 
 export function readCreators(params: Record<string, string | undefined> = {}, signal?: AbortSignal) {
