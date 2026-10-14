@@ -20,7 +20,6 @@ import { WorkspacePage } from "./pages/WorkspacePage";
 
 const AtlasPage = lazy(() => import("./pages/AtlasPage").then(mod => ({default:mod.AtlasPage})));
 const FeaturedExperiencePage = lazy(() => import("./pages/FeaturedExperiencePage").then(mod=>({default:mod.FeaturedExperiencePage})));
-const OrbitAlignPage = lazy(() => import("./pages/FeaturedExperiencePage").then(mod=>({default:mod.OrbitAlignPage})));
 const AtlasMorphLayout = lazy(() => import("./pages/AtlasMorphPage").then(mod => ({default:mod.AtlasMorphLayout})));
 const AtlasCollaboration = lazy(() => import("./pages/AtlasMorphPage").then(mod => ({default:()=><mod.AtlasFuture kind="collaborate"/>})));
 const AtlasSignals = lazy(() => import("./pages/AtlasMorphPage").then(mod => ({default:()=><mod.AtlasFuture kind="signals"/>})));
@@ -32,7 +31,6 @@ export default function App(){
       <Route index element={<></>}/>
       <Route path="discover" element={<DiscoverPage immersive/>}/>
       <Route path="experience/:id" element={<Suspense fallback={<div role="status" className="fx-focus-await">ENTERING THE PROJECT EXPERIENCE…</div>}><FeaturedExperiencePage/></Suspense>}/>
-      <Route path="lab/orbit-align" element={<Suspense fallback={<div role="status" className="fx-focus-await">LOADING ANEVUM PLAYER LAB…</div>}><OrbitAlignPage/></Suspense>}/>
       <Route path="projects/:id" element={<ProjectPage/>}/>
       <Route path="creators" element={<CreatorsPage/>}/>
       <Route path="creators/:handle" element={<CreatorPage/>}/>
