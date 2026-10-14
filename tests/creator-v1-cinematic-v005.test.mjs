@@ -50,7 +50,7 @@ test("V006 builds a source-backed homepage feed and links real creator identitie
   assert.match(feed,/communityEnabled/);
   assert.match(feed,/readCommunityPosts\(\{sort:"new",limit:"8"\}/);
   assert.match(feed,/projectDetailPath/);
-  assert.match(authorShowcase,/encodeURIComponent\\(handle\\)/);
+  assert.match(authorShowcase,/encodeURIComponent\(handle\)/);
   assert.match(feed,/PublicAuthorShowcase/);
   assert.match(feed,/readPublicShowcases/);
   assert.doesNotThrow(()=>parse(authorShowcase,{sourceType:"module",plugins:["typescript","jsx"]}));
