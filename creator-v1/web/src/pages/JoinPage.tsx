@@ -32,7 +32,8 @@ export function JoinPage(){
   const capabilities=result.state==="ready"?result.data.capabilities:null;
   const emailReady=capabilities?.methods.email.available===true &&
     capabilities.methods.email.path==="/api/v1/member/join";
-  const status=result.state==="loading"?"CHECKING ACCESS":
+  const status=member?"SIGNED IN":
+    result.state==="loading"?"CHECKING ACCESS":
     result.state==="error"?"SERVICE UNAVAILABLE":
     capabilities?.registration==="invite-only"?"INVITATION ONLY":
     capabilities?.registration==="open"?"REGISTRATION OPEN":"REGISTRATION CLOSED";
