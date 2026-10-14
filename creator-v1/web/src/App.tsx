@@ -28,7 +28,7 @@ export default function App(){
     <Route path="atlas/orbit" element={<Suspense fallback={atlasFallback}><AtlasPage/></Suspense>}/>
     <Route path="atlas" element={<Suspense fallback={atlasFallback}><AtlasMorphLayout/></Suspense>}>
       <Route index element={<></>}/>
-      <Route path="discover" element={<DiscoverPage/>}/>
+      <Route path="discover" element={<DiscoverPage immersive/>}/>
       <Route path="projects/:id" element={<ProjectPage/>}/>
       <Route path="creators" element={<CreatorsPage/>}/>
       <Route path="creators/:handle" element={<CreatorPage/>}/>
