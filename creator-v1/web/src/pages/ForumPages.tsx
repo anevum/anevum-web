@@ -23,7 +23,7 @@ function MemberPostingNotice({account}:{account:ReturnType<typeof useOptionalMem
  if(account.state==="error")return <p className="forum-small-note">Member sign-in is not available here. Public reading does not require an account.</p>;
  if(!account.data)return <p className="forum-small-note">Writing is currently limited to invited members with a verified profile. <a href="/api/v1/member/join">Invited member sign-in ↗</a></p>;
  if(!account.data.handle)return <p className="forum-small-note">Set up your public identity to write. <Link to="/account/edit">Complete profile ↗</Link></p>;
- return <p className="forum-small-note">Posting as <strong>@{account.data.handle}</strong>. New messages require staff approval and do not award XP.</p>;
+ return <p className="forum-small-note">Posting as <strong>@{account.data.handle}</strong>. New messages require staff approval and do not award XP. If approved, your message, display name, handle and verified earned badges become public even if your personal profile is private.</p>;
 }
 const sent=(v:number)=>new Date(v*1000).toLocaleDateString(undefined,{year:"numeric",month:"short",day:"numeric"});
 export function ForumRoomPage(){
