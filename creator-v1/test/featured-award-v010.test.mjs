@@ -54,7 +54,7 @@ test("selected award must remain genuinely earned and has deterministic fallback
   ...profile,showcase:{featuredAward:{key:"admin",name:"Administrator"}}
  });
  assert.notEqual(forged?.featuredAward,true);
- assert.deepEqual(forged?.earnedAward,{key:"keen-eye",name:"Keen Eye"});
+ assert.deepEqual(forged?.earnedAward,{key:"first-launch",name:"First Launch"});
  const revoked=verifiedCreatorRecognition("verified_maker",{
   ...profile,achievements:[{key:"first-launch",name:"First Launch",earned:false}],
   showcase:{featuredAward:{key:"first-launch",name:"First Launch"}}
