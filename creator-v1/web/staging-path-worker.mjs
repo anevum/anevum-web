@@ -19,7 +19,7 @@ function withSafety(res,alwaysNoStore=false){
   const html=headers.get("content-type")?.includes("text/html");
   if(alwaysNoStore || html)headers.set("cache-control","private, no-store");
   if(html){
-    headers.set("content-security-policy","default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; font-src 'self'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'; object-src 'none'");
+    headers.set("content-security-policy","default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src blob:; connect-src 'self'; font-src 'self'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'; object-src 'none'");
     headers.set("x-frame-options","DENY");
   }
   return new Response(res.body,{status:res.status,statusText:res.statusText,headers});
