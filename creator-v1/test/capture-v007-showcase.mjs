@@ -88,11 +88,12 @@ try{
      privateNotExposed:!relay?.querySelector('.av7-level-panel'),
      overflow:document.documentElement.scrollWidth>innerWidth+1,
      synthetic:document.body.textContent.includes('Illustrative')};
-   document.querySelector('#community-index')?.scrollIntoView({block:'start'});
+   document.querySelector('#community-index')?.scrollIntoView({block:'start',behavior:'instant'});
    return result;
   })()`);
   if(summary.cards<4||summary.levels<3||summary.rewards<2||!summary.equipped||!summary.privateNotExposed||summary.overflow||!summary.synthetic)
    throw Error("V007_FEED_SHOWCASE_"+width+": "+JSON.stringify(summary));
+  await until(()=>evalPage("(()=>{const img=document.querySelector('.av6-feed-art .cw-artwork-image');return !!img&&img.complete&&img.naturalWidth>0;})()"));
   await sleep(180);
   await photo("v007-community-dossiers",width);
   await visit("/creator/creators/moss_demo","!!document.querySelector('.portal-channel-content .av7-author')");
@@ -121,6 +122,15 @@ try{
  writeFileSync(join(output,"v007-showcase-browser.json"),JSON.stringify(captures,null,2));
 }finally{client?.close();browser.kill("SIGTERM");await sleep(180);rmSync(profile,{recursive:true,force:true})}
 async function documentScroll(evaluate){
- await evaluate("document.querySelector('.av7-settings')?.scrollIntoView({block:'start'})");
- await sleep(150);
+  // Global CSS uses smooth scrolling: without behavior:"instant", a narrow
+  // phone screenshot captures a midpoint around the legacy achievement list.
+  const selector=".av7-settings-live-preview";
+  await evaluate(`document.querySelector(${JSON.stringify(selector)})?.scrollIntoView({block:'center',behavior:'instant'})`);
+  await sleep(240);
+  const bounds=await evaluate(`(()=>{
+    const box=document.querySelector(${JSON.stringify(selector)})?.getBoundingClientRect();
+    return box?{top:box.top,bottom:box.bottom,height:innerHeight}:null;
+  })()`);
+  if(!bounds||bounds.bottom<75||bounds.top>bounds.height-90)
+    throw Error("V007_CUSTOMIZER_SCREENSHOT_NOT_VISIBLE: "+JSON.stringify(bounds));
 }
