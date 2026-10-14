@@ -58,6 +58,33 @@ export async function communityPostRoutes(req,db,member,limiter,now){
      if(Number(r.meta?.changes??r.meta?.rows_written)!==1)return respond(req,{error:"Creator not available"},403);
      return respond(req,{id,status:"pending_review",revision:1,notice:"Your discussion was submitted privately for staff review. It is not public."},201);
    }
+   const replies=/^\/api\/v1\/member\/community\/posts\/([a-f0-9]{32})\/replies(?:\/(mine))?$/.exec(path);
+   if(replies){
+     if(url.search)return respond(req,{error:"Invalid reply request"},400);
+     const id=replies[1];
+     const published=await rows(db,"SELECT p.id FROM community_posts p JOIN creator_profiles c ON c.member_id=p.author_member_id JOIN member_accounts a ON a.id=p.author_member_id WHERE p.id=? AND p.status='published' AND c.status='active' AND a.status='active' AND julianday(p.published_at)<=julianday('now')",[id]);
+     if(!published.length)return respond(req,{error:"Discussion unavailable"},404);
+     if(replies[2]==="mine"&&["GET","HEAD"].includes(req.method)){
+       const mine=await rows(db,"SELECT id,body,status,created_at AS createdAt,published_at AS publishedAt,revision FROM community_post_replies WHERE post_id=? AND author_member_id=? ORDER BY created_at DESC,id DESC LIMIT 20",[id,member.id]);
+       return respond(req,{items:mine});
+     }
+     if(!replies[2]&&req.method==="POST"){
+       if(!await limiter(db,"community-reply:"+member.id,now,10,3600))return respond(req,{error:"Reply submission limit reached"},429);
+       const pending=await rows(db,"SELECT COUNT(*) AS n FROM community_post_replies WHERE author_member_id=? AND status='pending_review'",[member.id]);
+       if(Number(pending[0]?.n||0)>=5)return respond(req,{error:"Wait for existing replies to be reviewed"},429);
+       let content;
+       try{
+         const input=await payload(req,2300);
+         if(Object.keys(input).some(key=>key!=="body"))throw Error("Unexpected reply field");
+         content=text(input.body,10,2000,"reply");
+       }catch(e){return respond(req,{error:e.message||"Invalid reply"},400);}
+       const replyId=crypto.randomUUID().replaceAll("-","");
+       const result=await run(db,"INSERT INTO community_post_replies(id,post_id,author_member_id,body,status,created_at,published_at,revision) SELECT ?,?,?,?,'pending_review',?,NULL,1 WHERE EXISTS(SELECT 1 FROM community_posts p JOIN creator_profiles c ON c.member_id=p.author_member_id JOIN member_accounts a ON a.id=p.author_member_id WHERE p.id=? AND p.status='published' AND c.status='active' AND a.status='active' AND julianday(p.published_at)<=julianday('now'))",[replyId,id,member.id,content,now,id]);
+       if(Number(result.meta?.changes??result.meta?.rows_written)!==1)return respond(req,{error:"Discussion no longer available"},409);
+       return respond(req,{id:replyId,status:"pending_review",notice:"Your reply is private until staff approval; it is not visible in the public conversation."},201);
+     }
+     return respond(req,{error:"Method not allowed"},405);
+   }
    const reaction=/^\/api\/v1\/member\/community\/posts\/([a-f0-9]{32})\/react$/.exec(path);
    if(reaction&&["GET","HEAD"].includes(req.method)){
      const id=reaction[1];
@@ -65,13 +92,6 @@ export async function communityPostRoutes(req,db,member,limiter,now){
      if(!publicRows.length)return respond(req,{error:"Discussion unavailable"},404);
      const own=await rows(db,"SELECT score,revision FROM community_post_votes WHERE post_id=? AND member_id=?",[id,member.id]);
      return respond(req,{myReaction:own.length?{score:Number(own[0].score),revision:Number(own[0].revision)}:null});
-   }
-   if(reaction&&["GET","HEAD"].includes(req.method)){
-     const id=reaction[1];
-     const found=await rows(db,"SELECT p.id FROM community_posts p JOIN creator_profiles c ON c.member_id=p.author_member_id JOIN member_accounts a ON a.id=p.author_member_id WHERE p.id=? AND p.status='published' AND c.status='active' AND a.status='active' AND julianday(p.published_at)<=julianday('now')",[id]);
-     if(!found.length)return respond(req,{error:"Discussion unavailable"},404);
-     const mine=await rows(db,"SELECT score,revision FROM community_post_votes WHERE member_id=? AND post_id=?",[member.id,id]);
-     return respond(req,{myReaction:mine[0]||null});
    }
    if(reaction&&req.method==="POST"){
      const id=reaction[1];
