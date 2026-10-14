@@ -40,11 +40,11 @@ function ModuleHead({index,title,to,action}:{index:string;title:string;to:string
     <Link to={to}>{action} <Icon name="arrow" size={14}/></Link>
   </div>;
 }
-function LatestReleases({projects}:{projects:readonly Project[]}){
+function LatestReleases({projects,state}:{projects:readonly Project[];state:Props["state"]}){
   const recent=sortByPublication(projects).slice(0,3);
   return <section className="av8-module av8-module--releases" aria-label="Latest published projects">
     <ModuleHead index="01 / RECORD" title="Latest releases" to="/discover" action="VIEW ALL"/>
-    {recent.length?<div className="av8-module-list">
+    {state!=="ready"?<div className="av8-module-empty"><strong>{state==="loading"?"CHECKING PUBLIC RELEASES":"RELEASES UNAVAILABLE"}</strong><p>{state==="loading"?"Reading approved project records…":"The public project index could not be reached."}</p></div>:recent.length?<div className="av8-module-list">
       {recent.map(project=><Link className="av8-release" key={project.id} to={projectDetailPath(project.id,"/")}>
         <span className="av8-release-date">{monthDay(project.publishedAt)}</span>
         <span className="av8-release-title"><strong>{project.title}</strong><small>{project.creatorName||"@"+project.creatorHandle} / {project.category.toUpperCase()}</small></span>
@@ -80,10 +80,10 @@ function RecentConversations({enabled}:{enabled:boolean}){
       <div className="av8-module-empty"><strong>COMMONS / PUBLIC READING</strong><p>Conversations appear after community publication and moderation. Explore the existing boards meanwhile.</p><Link to="/boards">READ THE BOARDS <Icon name="arrow" size={13}/></Link></div>}
   </section>;
 }
-function MakerChannels({creators}:{creators:readonly Creator[]}){
+function MakerChannels({creators,state}:{creators:readonly Creator[];state:Props["state"]}){
   return <section className="av8-module av8-module--makers" aria-label="Published creator channels">
     <ModuleHead index="03 / PEOPLE" title="Creator channels" to="/creators" action="DISCOVER"/>
-    {creators.length?<div className="av8-maker-list">{creators.slice(0,3).map(creator=>
+    {state!=="ready"?<div className="av8-module-empty"><strong>{state==="loading"?"READING CHANNELS":"CHANNELS UNAVAILABLE"}</strong><p>{state==="loading"?"Finding published creator channels…":"The creator directory cannot be checked."}</p></div>:creators.length?<div className="av8-maker-list">{creators.slice(0,3).map(creator=>
       <Link to={"/creators/"+encodeURIComponent(creator.handle)} key={creator.handle} className="av8-maker">
         <span className="av8-maker-avatar" aria-hidden="true">{(creator.displayName.charAt(0)||"A").toUpperCase()}</span>
         <span><strong>{creator.displayName}</strong><small>@{creator.handle} · {creator.publishedProjects} published</small></span>
@@ -158,9 +158,9 @@ export function LiveSignalHero({status,projects,creators,state}:Props){
       <div className="av8-orbit-label" aria-hidden="true"><span>CELESTIAL<br/>TRANSMISSION</span><span>∞</span></div>
     </div>
     <div className="av8-module-grid">
-      <LatestReleases projects={projects}/>
+      <LatestReleases projects={projects} state={state}/>
       <RecentConversations enabled={state==="ready"&&status?.features?.communityPosts===true}/>
-      <MakerChannels creators={creators}/>
+      <MakerChannels creators={creators} state={state}/>
       <IndexPulse status={status} state={state} clock={utcClock(time)}/>
     </div>
     <div className="av8-signal-bottom"><span>NETWORK / CREATIVE COMMONS</span><a href="#community-index">SCROLL TO THE PUBLIC INDEX <Icon name="arrow" size={14}/></a><span>SOURCE // ANEVUM</span></div>
