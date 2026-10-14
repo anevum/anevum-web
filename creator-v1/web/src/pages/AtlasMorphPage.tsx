@@ -275,7 +275,7 @@ export function AtlasMorphLayout(){
           </div>
         </div>
         <main ref={content} className="atm-content" onClickCapture={onInternalLink} id="atm-content" tabIndex={-1}>
-          <div className="atm-embedded"><Outlet/></div>
+          <div key={chosenId||"overview"} className="atm-embedded"><Outlet/></div>
         </main>
         <div className="atm-workspace-foot"><span>ANEVUM / {chosen?.overline}</span><span>THE SHELL STAYS. THE WORLD CHANGES.</span></div>
       </section>}
