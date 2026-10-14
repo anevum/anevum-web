@@ -302,13 +302,13 @@
  .atm-overview-start,.atm-overview-quick{min-height:44px;padding:0 12px;font-size:9px;letter-spacing:.04em}
  .atm-overview-context{margin-top:23px;padding-top:16px;gap:10px;font-size:8px}
  .atm-world-gallery-title{font-size:9px}
- .atm-world-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:12px}
- .atm-world-tile{min-height:148px;aspect-ratio:1.13;border-radius:11px}
+ .atm-world-grid{grid-template-columns:1fr;gap:15px;margin-top:15px}
+ .atm-world-tile{min-height:195px;aspect-ratio:1.85;border-radius:13px}
  .atm-world-top{left:10px;right:10px;top:9px;font-size:8px}
  .atm-world-top b{font-size:20px}
  .atm-world-bottom{left:11px;bottom:11px;right:22px}
- .atm-world-bottom strong{font-size:clamp(23px,6vw,31px)}
- .atm-world-bottom small{font-size:10px}
+ .atm-world-bottom strong{font-size:clamp(30px,8vw,42px)}
+ .atm-world-bottom small{font-size:12px;max-width:95%}
  .atm-world-arrow{right:10px;bottom:10px}
  .atm-worlds-menu{top:calc(100% + 5px);left:8px;right:8px;width:auto;padding:12px}
  .atm-worlds-menu-intro{padding-bottom:9px}
@@ -359,8 +359,8 @@
  .atm-search,.atm-account{min-width:35px;height:36px}
  .atm-account{display:none}
  .atm-header{gap:5px;padding:0 8px}
- .atm-world-tile{min-height:139px}
- .atm-world-bottom strong{font-size:22px}
+ .atm-world-tile{min-height:182px}
+ .atm-world-bottom strong{font-size:29px}
 }
 @media(prefers-reduced-motion:reduce){
  .atm-shell *,.atm-shell *:before,.atm-shell *:after{
