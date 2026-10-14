@@ -87,6 +87,23 @@ jobs:
             node --check "$file"
           done
           node --input-type=module -e 'import {Script} from "node:vm"; import {COMMUNITY_CLIENT} from "./creator-v1/auth/community-ui.mjs"; import {VOTE_APP} from "./creator-v1/authoring/vote-moderation-ui.mjs"; import {SOCIAL_CLIENT} from "./creator-v1/auth/social-ui.mjs"; import {PRIVACY_CLIENT} from "./creator-v1/auth/privacy-ui.mjs"; import {PRIVACY_APP} from "./creator-v1/authoring/privacy-queue-ui.mjs"; for (const source of [COMMUNITY_CLIENT,VOTE_APP,SOCIAL_CLIENT,PRIVACY_CLIENT,PRIVACY_APP]) new Script(source);'
+      - name: Require actual V007 Commons browser captures at desktop and phone widths
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p evidence/community-v007-review
+          chrome="$(command -v google-chrome || command -v chromium-browser || command -v chromium || true)"
+          test -n "$chrome"
+          node creator-v1/test/portal-offline-preview.mjs > evidence/community-v007-review/fixture.log 2>&1 &
+          fixture_pid=$!
+          trap 'kill "$fixture_pid" 2>/dev/null || true' EXIT
+          ready=0
+          for i in $(seq 1 60); do
+            if curl --fail --silent http://127.0.0.1:4178/__ready >/dev/null; then ready=1; break; fi
+            sleep 0.2
+          done
+          test "$ready" = 1
+          node creator-v1/test/capture-community-hub-v007.mjs --chrome "$chrome" --base http://127.0.0.1:4178 --output evidence/community-v007-review
       - name: Capture real React at desktop and phone widths for owner design review
         if: success()
         continue-on-error: true
