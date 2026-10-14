@@ -1,9 +1,10 @@
 import {useParams,Link} from "react-router-dom";
 import {useState,type FormEvent} from "react";
-import {readCommunityPost} from "../lib/api";
+import {readCommunityPost,readPublicShowcases,type PublicCreatorShowcase} from "../lib/api";
 import {memberPostReaction,memberReactPost,memberCreateReply,memberMyReplies,MemberApiError} from "../lib/member-api";
 import {useResource} from "../lib/useResource";
 import {LoadingState,ErrorState} from "../components/States";
+import {PublicAuthorShowcase} from "../components/PublicAuthorShowcase";
 import "./community-discussions.css";
 
 function when(value:string){
@@ -20,6 +21,10 @@ export function CommunityPostPage(){
 function CommunityPostReader({id}:{id:string}){
  const isValid=validPostId(id);
  const post=useResource(signal=>isValid?readCommunityPost(id,signal):Promise.reject(new Error("invalid-id")),[id,isValid]);
+ const authorHandle=post.state==="ready"?post.data.post.authorHandle.toLowerCase():"";
+ const authorShowcase=useResource(async signal=>/^[a-z][a-z0-9_]{2,29}$/.test(authorHandle)
+   ?readPublicShowcases([authorHandle],signal)
+   :{source:"verified-creator-ledger" as const,items:{} as Record<string,PublicCreatorShowcase>},[authorHandle]);
  const reaction=useResource(async signal=>{
    if(!isValid)return {myReaction:null,available:false};
    try{
@@ -76,10 +81,9 @@ function CommunityPostReader({id}:{id:string}){
    <nav aria-label="Discussion breadcrumb" className="discussion-crumb"><Link to="/atlas">NETWORK</Link><span>/</span><Link to="/atlas/community">COMMUNITY</Link><span>/</span><span>DISCUSSION</span></nav>
    <header className="discussion-article-head"><span className="nfc-eyebrow">PUBLIC / APPROVED DISCUSSION · {item.topic.toUpperCase()}</span>
       <h1>{item.title}</h1>
-      <div className="discussion-identity">
-        <span className="discussion-avatar">{item.authorName.charAt(0).toUpperCase()}</span>
-        <div><Link to={"/atlas/creators/"+encodeURIComponent(item.authorHandle)}>{item.authorName} / @{item.authorHandle}</Link><small>{when(item.publishedAt)} · MODERATED PUBLIC POST</small></div>
-      </div>
+      <PublicAuthorShowcase variant="post" handle={item.authorHandle} name={item.authorName}
+        showcase={authorShowcase.state==="ready"?authorShowcase.data.items[item.authorHandle.toLowerCase()]:undefined}/>
+      <small className="discussion-post-meta">{when(item.publishedAt)} · MODERATED PUBLIC POST</small>
    </header>
    {item.project&&<nav className="discussion-project-context" aria-label="Linked published project"><span className="nfc-eyebrow">ABOUT THIS PROJECT</span><Link to={"/atlas/projects/"+encodeURIComponent(item.project.id)}>{item.project.title} ↗</Link><small>Made by {item.project.creatorName} / @{item.project.creatorHandle}. Discussion authors receive no project ownership or collaborator credit.</small></nav>}
    <div className="discussion-paper">

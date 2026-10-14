@@ -87,6 +87,43 @@ jobs:
             node --check "$file"
           done
           node --input-type=module -e 'import {Script} from "node:vm"; import {COMMUNITY_CLIENT} from "./creator-v1/auth/community-ui.mjs"; import {VOTE_APP} from "./creator-v1/authoring/vote-moderation-ui.mjs"; import {SOCIAL_CLIENT} from "./creator-v1/auth/social-ui.mjs"; import {PRIVACY_CLIENT} from "./creator-v1/auth/privacy-ui.mjs"; import {PRIVACY_APP} from "./creator-v1/authoring/privacy-queue-ui.mjs"; for (const source of [COMMUNITY_CLIENT,VOTE_APP,SOCIAL_CLIENT,PRIVACY_CLIENT,PRIVACY_APP]) new Script(source);'
+      - name: Rehearse V007 D1 changes offline and deny unresolved release collisions
+        if: success()
+        working-directory: creator-v1
+        shell: bash
+        run: |
+          set -euo pipefail
+          node ops/verify-v007-migration-readiness.mjs --snapshot ../docs/creator-platform/V007-STAGING-SCHEMA-SNAPSHOT-2026-10-14.json | tee ../evidence/v007-migration-preflight.json
+          grep -q '"liveMigrationAuthorization": "MIGRATION_REVIEW_REQUIRED"' ../evidence/v007-migration-preflight.json
+          grep -q '"rehearsal": "PASS"' ../evidence/v007-migration-preflight.json
+          echo 'V007_SCHEMA_REHEARSAL=PASS; LIVE_DB_MIGRATION=DENIED'
+      - name: Verify V007 profile showcases at phone and desktop widths
+        if: success()
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p evidence/portal-review
+          chrome="$(command -v google-chrome || command -v chromium-browser || command -v chromium || true)"
+          if [ -z "$chrome" ]; then
+            echo "V007_BROWSER_UNAVAILABLE: headless Chrome is required for this release acceptance"
+            exit 1
+          fi
+          node --check creator-v1/test/capture-v007-showcase.mjs
+          node creator-v1/test/portal-offline-preview.mjs > evidence/portal-review/v007-fixture.log 2>&1 &
+          fixture_pid=$!
+          trap 'kill "$fixture_pid" 2>/dev/null || true' EXIT
+          ready=0
+          for i in $(seq 1 50); do
+            if curl --fail --silent http://127.0.0.1:4178/__ready >/dev/null; then ready=1; break; fi
+            sleep 0.2
+          done
+          test "$ready" = 1
+          node creator-v1/test/capture-v007-showcase.mjs --chrome "$chrome" --base http://127.0.0.1:4178 --output evidence/portal-review 2>&1 | tee evidence/portal-review/v007-browser.log
+          test -s evidence/portal-review/v007-showcase-browser.json
+          test -s evidence/portal-review/v007-community-dossiers-320.png
+          test -s evidence/portal-review/v007-community-dossiers-390.png
+          test -s evidence/portal-review/v007-community-dossiers-1440.png
+          echo "V007_SHOWCASE_BROWSER_CAPTURE=PASS" | tee evidence/portal-review/v007-capture-status.txt
       - name: Capture real React at desktop and phone widths for owner design review
         if: success()
         continue-on-error: true
@@ -151,7 +188,7 @@ jobs:
           node creator-v1/test/capture-portal-launcher.mjs --chrome "$chrome" --base http://127.0.0.1:4178 --output evidence/portal-review
           node creator-v1/test/capture-atlas.mjs --chrome "$chrome" --base http://127.0.0.1:4178 --output evidence/portal-review
           node creator-v1/test/capture-community-feed.mjs --chrome "$chrome" --base http://127.0.0.1:4178 --output evidence/portal-review
-          printf 'The ANEVUM Transcosmic Observatory and Celestial Artifacts designs are review candidates, NOT live at anevum.com or next.anevum.com. All achievement data in the offline member screenshot is SYNTHETIC and may not be treated as real account evidence. These PNG files render the actual compiled React/Vite candidate using explicitly SYNTHETIC OFFLINE design fixtures, including a fake in-memory creator identity for the profile-editor layout only. No fixture records, accounts, cookies or codes are deployed to any staging or production database. Review desktop 1440px before phone 390px. This is visual QA, not authentication, real-user or provider acceptance.\n' > evidence/portal-review/README.txt
+          printf 'V007 showcase captures are SYNTHETIC OFFLINE specimens rendered from the compiled React application at 320, 390 and 1440px. Their badges, levels and creator identities are NOT actual members or authorized public content. The ANEVUM Transcosmic Observatory and Celestial Artifacts designs are review candidates, NOT live at anevum.com or next.anevum.com. All achievement data in the offline member screenshot is SYNTHETIC and may not be treated as real account evidence. These PNG files render the actual compiled React/Vite candidate using explicitly SYNTHETIC OFFLINE design fixtures, including a fake in-memory creator identity for the profile-editor layout only. No fixture records, accounts, cookies or codes are deployed to any staging or production database. Review desktop 1440px before phone 390px. This is visual QA, not authentication, real-user or provider acceptance.\n' > evidence/portal-review/README.txt
           echo "PORTAL_VISUAL_CAPTURE=PASS" | tee evidence/portal-review/capture-status.txt
 
       - name: Preserve generated public artifact for visual review

@@ -1,4 +1,5 @@
 import {communityContextEnabled,communityPostFrom,communityContextFields,communityProjectDto} from '../shared/community-post-context.mjs';
+import {readPublicShowcases} from '../shared/public-showcase.mjs';
 const publicCommunityPosts = (() => {
 // ANEVUM staging/public read-only discussions. Never return unreviewed posts.
 const BASE={"content-type":"application/json; charset=utf-8","cache-control":"no-store","x-content-type-options":"nosniff","referrer-policy":"no-referrer"};
@@ -219,17 +220,31 @@ export default {
     const repository = /^\/api\/v1\/projects\/([A-Za-z0-9_-]{1,80})\/repository$/.exec(path);
     const creatorDetail = /^\/api\/v1\/creators\/([A-Za-z][A-Za-z0-9_]{2,29})$/.exec(path);
     const communityPosts = path==="/api/v1/community/posts" || /^\/api\/v1\/community\/posts\/[a-f0-9]{32}$/.test(path);
+    const communityShowcases=path==='/api/v1/community/showcases';
     const publicBoards = path === '/api/v1/boards';
-    const known = ['/health', '/api/v1/status', '/api/v1/categories', '/api/v1/projects', '/api/v1/creators'].includes(path) || detail || repository || creatorDetail || communityPosts || publicBoards;
+    const known = ['/health', '/api/v1/status', '/api/v1/categories', '/api/v1/projects', '/api/v1/creators'].includes(path) || detail || repository || creatorDetail || communityPosts || communityShowcases || publicBoards;
     if (!known) return reply(request, { error: 'Not found' }, 404);
     let filter;
     try {
       if (path === '/api/v1/projects') filter = parameters(url);
       else if (path === '/api/v1/creators') filter = creatorParameters(url);
+      else if(communityShowcases){
+        if(url.searchParams.size!==1||url.searchParams.getAll('handles').length!==1)throw Error('Invalid showcase query');
+        const raw=url.searchParams.get('handles')||'',handles=raw.split(',');
+        if(!raw||raw.length>320||handles.length>10||new Set(handles.map(x=>x.toLowerCase())).size!==handles.length||
+           handles.some(x=>!CREATOR_HANDLE.test(x)))throw Error('Invalid showcase handles');
+        filter={handles};
+      }
       else if (url.search && !communityPosts) throw new Error('This endpoint does not accept query parameters');
     } catch (error) { return reply(request, { error: error.message }, 400); }
     if (!env.COMMUNITY_DB) return reply(request, { error: 'Community data is unavailable', status: 'unavailable' }, 503);
     if (communityPosts) return publicCommunityPosts(request,env.COMMUNITY_DB);
+    if(communityShowcases){
+      try{
+        const items=await readPublicShowcases(env.COMMUNITY_DB,filter.handles);
+        return reply(request,{source:'verified-creator-ledger',items});
+      }catch{return reply(request,{error:'Creator showcases unavailable'},503);}
+    }
     try {
       if (path === '/health') {
         await rows(env.COMMUNITY_DB, 'SELECT 1 AS ready');

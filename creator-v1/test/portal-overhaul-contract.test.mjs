@@ -32,9 +32,10 @@ test("Explore has real public queries, category filters, meaningful layout toggl
 test("creator identity is a public project-based channel, never a guessed or purchased level",()=>{
  const page=read("web/src/pages/CreatorsPage.tsx");
  const api=read("web/src/lib/member-api.ts");
- for(const part of ["readCreators","readCreator","readProjects","memberCreatorProfile","achievements","progression","PageNav"])assert.ok(page.includes(part),part);
+ for(const part of ["readCreators","readCreator","readProjects","memberCreatorProfile","readPublicShowcases","publicShowcase","PageNav"])assert.ok(page.includes(part),part);
  assert.match(api,/^export const memberCreatorProfile=/m);
- assert.match(page,/detailed\?\.achievements/);
+ assert.match(page,/PublicAuthorShowcase/);
+ assert.doesNotMatch(page,/detailed\.progression|detailed\?\.achievements/);
  assert.doesNotMatch(page,/followerCount|fakeCreator|createFake/);
 });
 test("project pages keep safe external creator-hosted actions and staging-only member engagement",()=>{

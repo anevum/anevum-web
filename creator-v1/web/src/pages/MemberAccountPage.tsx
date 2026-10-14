@@ -6,6 +6,7 @@ import { useResource } from "../lib/useResource";
 import { LoadingState } from "../components/States";
 import { CelestialEmblem } from "../components/CelestialEmblem";
 import { achievementMotif, seriesOneMotif } from "../lib/artifact-art";
+import {MemberShowcaseSettings} from "../components/MemberShowcaseSettings";
 
 export function MemberAccountPage(){
   const {member}=useMemberContext();
@@ -64,6 +65,7 @@ export function MemberAccountPage(){
           </article>)}</div>)}
       <p className="member-caption">Only achievements confirmed by the staging ledger appear as earned. Staff powers, votes and search ranking are independent of levels.</p>
     </section>
+    {member.handle&&<MemberShowcaseSettings/>}
     <section className="member-panel member-account-controls">
       <span className="kicker">ACCOUNT CONTROLS</span><h2>PRIVACY + SESSION</h2>
       <p>Export, deletion requests and session-revocation controls remain in the existing authenticated staging service.</p>

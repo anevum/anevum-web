@@ -99,10 +99,15 @@ test('existing catalogue remains read-only and its counts and details are unchan
 });
 test('existing zero-dependency builder can flatten the modified API',()=>{
   const context=readFileSync(new URL('../shared/community-post-context.mjs',import.meta.url),'utf8').replace(/^export /gm,'');
+  const showcase=readFileSync(new URL('../shared/public-showcase.mjs',import.meta.url),'utf8').replace(/^export /gm,'');
   const source=readFileSync(new URL('../api/worker.mjs',import.meta.url),'utf8');
-  // The one local visibility module is flattened by the release builder.
-  assert.deepEqual(source.match(/^import .*$/gm),["import {communityContextEnabled,communityPostFrom,communityContextFields,communityProjectDto} from '../shared/community-post-context.mjs';"]);
-  const text=context+'\n'+source.replace(/^import .*;\n/gm,'').replace('export function safePublicUrl','function safePublicUrl').replace('export default {','const api = {');
+  // Both approved self-contained public modules are flattened by the builder.
+  assert.deepEqual(source.match(/^import .*$/gm),[
+    "import {communityContextEnabled,communityPostFrom,communityContextFields,communityProjectDto} from '../shared/community-post-context.mjs';",
+    "import {readPublicShowcases} from '../shared/public-showcase.mjs';"
+  ]);
+  assert.doesNotMatch(showcase,/^import /m);
+  const text=context+'\n'+showcase+'\n'+source.replace(/^import .*;\n/gm,'').replace('export function safePublicUrl','function safePublicUrl').replace('export default {','const api = {');
   assert.doesNotMatch(text,/^import /m);assert.doesNotMatch(text,/^export /m);
   assert.equal(new Function(text+'; return typeof api.fetch;')(),'function');
 });

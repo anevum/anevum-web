@@ -17,6 +17,14 @@ const relics=[
   'Forged Telescope','Arc Lantern','Ivory Sextant','Molten Cipher','Silver Harp','Cobalt Furnace','Night Compass','Dawn Engine','Glass Cathedral','Radiant Crucible',
   'Solar Orrery','Gravity Spindle','Quantum Leaf','Iron Comet','Aether Vessel','Obsidian Crown','Aurora Monolith','Starforge Dial','Celestial Engine','The First Light'
 ];
+/** Server-authoritative earned Series One items. A member may equip any
+ * previously earned item in this series, not arbitrary client-provided art.
+ * Levels above 60 remain valid but do not mint non-existent extra items.
+ */
+export function earnedArtifactsThroughLevel(level){
+ if(!Number.isSafeInteger(level)||level<1)return [];
+ return relics.slice(0,Math.min(level,relics.length));
+}
 // Keep the current 20x quadratic pacing pending #337 balance acceptance.
 // Levels have no fixed end; cap only unsafe number inputs, not the attainable level.
 export function thresholdForLevel(level){

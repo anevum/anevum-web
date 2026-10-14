@@ -30,6 +30,20 @@ export interface MemberRating {
 export interface MemberProfile {
   handle:string; displayName:string; bio:string; joinedAt:string;
 }
+export interface MemberShowcaseSelection {
+  artifactKey:string|null;
+  awardKeys:string[];
+  isPublic:boolean;
+  revision:number;
+}
+export interface MemberShowcaseSettings {
+  selection:MemberShowcaseSelection;
+  level:number;
+  currentArtifact:string|null;
+  availableArtifacts:string[];
+  availableAwards:{key:string;name:string;description:string}[];
+}
+
 export interface MemberAchievement {
   key:string; name:string; description:string; symbol:string;
   earned:boolean; progress:number; target:number;
@@ -110,12 +124,17 @@ export const memberLibrary=(signal?:AbortSignal)=>requestMember<{items:SavedProj
 export const memberSetSaved=(id:string,saved:boolean)=>
   requestMember<{saved:boolean;changed:boolean}>("/library/"+memberProjectId(id),{method:"POST",body:{saved}});
 export const memberProgress=(signal?:AbortSignal)=>requestMember<{progression:Progression}>("/community/me",{signal});
+export const memberShowcase=(signal?:AbortSignal)=>
+  requestMember<MemberShowcaseSettings>("/showcase",{signal});
+export const memberSaveShowcase=(selection:MemberShowcaseSelection)=>
+  requestMember<MemberShowcaseSettings>("/showcase",{method:"POST",body:selection});
+
 export const memberCreatorProfile=(handle:string,signal?:AbortSignal)=>{
   if(!/^[a-z][a-z0-9_]{2,29}$/.test(handle))throw new Error("Invalid public creator handle");
   return requestMember<{
     creator:MemberProfile;
     contributions:{ratings:number;publishedProjects:number;releases:number};
-    progression:Progression;
+    progression:Progression|null;
     achievements:MemberAchievement[];
   }>("/creators/"+handle,{signal});
 };

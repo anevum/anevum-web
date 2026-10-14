@@ -37,6 +37,17 @@ const FAKE_MEMBER=Object.freeze({
  bio:"An illustrative account for testing layout only. Not a real ANEVUM member."
 });
 const LOCAL_REVIEW_COOKIE="anevum_offline_visual_fixture=1";
+// V007 synthetic showcase specimens: never derive from real members, never
+// published, never shipped or bound to Cloudflare. Local overlay marks origin.
+const SYNTHETIC_SHOWCASES=Object.freeze({
+ nova_demo:{handle:"nova_demo",level:2,currentArtifact:"Copper Key",equippedArtifact:{name:"Copper Key",series:"SERIES ONE"},earnedAwardCount:2,
+   featuredAwards:[{key:"first-signal",name:"First Signal",description:"Synthetic badge for layout QA"},{key:"first-launch",name:"First Launch",description:"Synthetic badge for layout QA"}]},
+ moss_demo:{handle:"moss_demo",level:30,currentArtifact:"Midnight Atlas",equippedArtifact:{name:"Copper Key",series:"SERIES ONE"},earnedAwardCount:4,
+   featuredAwards:[{key:"first-signal",name:"First Signal",description:"Synthetic badge for layout QA"},{key:"keen-eye",name:"Keen Eye",description:"Synthetic badge for layout QA"},{key:"portal-guide",name:"Portal Guide",description:"Synthetic badge for layout QA"}]},
+ oxide_demo:{handle:"oxide_demo",level:1,currentArtifact:"Foundry Spark",equippedArtifact:null,earnedAwardCount:0,featuredAwards:[]}
+ // relay_demo demonstrates an opted-out member: no projection at all.
+});
+
 function offlineMember(req,res,url){
   if(url.pathname==="/api/v1/member/health"&&req.method==="GET")
     return json(res,{service:"OFFLINE-SYNTHETIC-FIXTURE",status:"ok",signupEnabled:false});
@@ -51,6 +62,14 @@ function offlineMember(req,res,url){
     return cookies.includes(LOCAL_REVIEW_COOKIE)
       ?json(res,{progression:{xp:180,level:4,maxLevel:null,artifact:"Ivory Compass",artifactEarned:true,levelStartXp:180,nextLevelXp:320,progressWithinLevel:0}})
       :json(res,{error:"Sign-in required"},401);
+  }
+  if(url.pathname==="/api/v1/member/showcase"&&req.method==="GET"){
+    const cookies=(req.headers.cookie||"").split(";").map(x=>x.trim());
+    if(!cookies.includes(LOCAL_REVIEW_COOKIE))return json(res,{error:"Sign-in required"},401);
+    return json(res,{selection:{artifactKey:"Copper Key",awardKeys:["first-signal","first-launch"],isPublic:false,revision:7},
+      level:4,currentArtifact:"Ivory Compass",availableArtifacts:["Foundry Spark","Copper Key","Blackglass Seed","Ivory Compass"],
+      availableAwards:[{key:"first-signal",name:"First Signal",description:"Synthetic offline fixture"},
+        {key:"first-launch",name:"First Launch",description:"Synthetic offline fixture"}]});
   }
   if(url.pathname==="/api/v1/member/creators/offline_artist"&&req.method==="GET"){
     return json(res,{
@@ -75,6 +94,16 @@ function json(res,obj,status=200){res.writeHead(status,{"content-type":"applicat
 function api(res,url){
  const path=url.pathname.slice("/creator/api/v1".length);
  if(path==="/status")return json(res,{version:"SYNTHETIC-FIXTURE",phase:"offline",counts:{publishedProjects:work.length,publishedCreators:people.length},features:{communityPosts:contextFixtureEnabled,projectDiscussions:contextFixtureEnabled}});
+ if(path==="/community/showcases"){
+   const raw=url.searchParams.get("handles")||"";
+   const handles=raw.split(",");
+   if(url.searchParams.size!==1||!raw||handles.length>10||handles.some(x=>!/^[a-z][a-z0-9_]{2,29}$/.test(x)))
+     return json(res,{error:"Invalid synthetic showcase request"},400);
+   const items={};
+   for(const handle of handles)if(SYNTHETIC_SHOWCASES[handle])items[handle]=SYNTHETIC_SHOWCASES[handle];
+   return json(res,{source:"verified-creator-ledger",items});
+ }
+
  if(path==='/community/posts'&&contextFixtureEnabled){
    const project=url.searchParams.get('project'),creator=url.searchParams.get('creator');
    const items=discussionFixtures.filter(p=>(!project||p.project?.id===project)&&(!creator||p.authorHandle===creator));
