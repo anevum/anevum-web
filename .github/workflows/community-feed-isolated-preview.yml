@@ -7,8 +7,12 @@ on:
       - creator-v1/web/**
       - creator-v1/test/atlas-morph-navigation.test.mjs
       - creator-v1/test/capture-community-feed.mjs
-      - creator-v1/wrangler.featured-play-review.jsonc
+      - creator-v1/wrangler.community-feed-review.jsonc
       - creator-v1/package.json
+      - creator-v1/api/**
+      - creator-v1/auth/community-posts.mjs
+      - creator-v1/authoring/community-post-moderation.mjs
+      - creator-v1/integration/community-posts.integration.test.mjs
       - .github/workflows/community-feed-isolated-preview.yml
   workflow_dispatch:
 
@@ -37,18 +41,18 @@ jobs:
           set -euo pipefail
           node --input-type=module -e '
           import fs from "node:fs";
-          const p="creator-v1/wrangler.featured-play-review.jsonc";
+          const p="creator-v1/wrangler.community-feed-review.jsonc";
           const c=JSON.parse(fs.readFileSync(p,"utf8"));
-          if(c.name!=="anevum-featured-play-review-20261014"||!c.workers_dev||c.preview_urls!==false)throw Error("Unexpected review host");
+          if(c.name!=="anevum-community-feed-review-20261014"||!c.workers_dev||c.preview_urls!==false)throw Error("Unexpected review host");
           for(const forbidden of ["routes","route","d1_databases","r2_buckets","kv_namespaces","vars","unsafe","services","durable_objects","send_email"]){
             if(Object.hasOwn(c,forbidden))throw Error("Disallowed review binding: "+forbidden);
           }
-          if(c.main!=="./web/featured-play-review-worker.mjs"||c.assets?.binding!=="ASSETS"||c.assets?.directory!=="./dist/web")throw Error("Unexpected review asset/runtime");
-          const js=fs.readFileSync("creator-v1/web/featured-play-review-worker.mjs","utf8");
+          if(c.main!=="./web/community-feed-review-worker.mjs"||c.assets?.binding!=="ASSETS"||c.assets?.directory!=="./dist/web")throw Error("Unexpected review asset/runtime");
+          const js=fs.readFileSync("creator-v1/web/community-feed-review-worker.mjs","utf8");
           if(/CLOUDFLARE_API_TOKEN|api[_-]?key|private_key|bearer/i.test(js))throw Error("Secret reference in public review Worker");
           if(!js.includes("nativeCreatorHosting:false"))throw Error("Hosted creator code falsely represented as live");
           '
-          node --check creator-v1/web/featured-play-review-worker.mjs
+          node --check creator-v1/web/community-feed-review-worker.mjs
       - name: Compile community creator network and run public security contracts
         shell: bash
         run: |
@@ -96,12 +100,12 @@ jobs:
           set -euo pipefail
           test -n "$CLOUDFLARE_API_TOKEN"
           test -n "$CLOUDFLARE_ACCOUNT_ID"
-          npx wrangler deploy --config creator-v1/wrangler.featured-play-review.jsonc
+          npx wrangler deploy --config creator-v1/wrangler.community-feed-review.jsonc
       - name: Validate review URL and reject private traffic
         shell: bash
         run: |
           set -euo pipefail
-          base="https://anevum-featured-play-review-20261014.devonakins.workers.dev"
+          base="https://anevum-community-feed-review-20261014.devonakins.workers.dev"
           ready=0
           for attempt in $(seq 1 18); do
             code="$(curl --silent --show-error --max-time 15 -o "$RUNNER_TEMP/community-review.html" -w '%{http_code}' "$base/atlas" || true)"
