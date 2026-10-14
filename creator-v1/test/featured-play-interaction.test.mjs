@@ -64,6 +64,9 @@ test("Cinematic focus safely treats creator demos as external, never arbitrary e
   assert.match(focus,/This creator experience is hosted independently/);
   assert.match(focus,/separate from this creator's project/);
   assert.match(focus,/to="\/atlas\/lab\/orbit-align"/);
+  assert.match(focus,/state=\{\{returnTo:"\/atlas\/experience\/"/);
+  assert.match(focus,/returnTo=typeof value==="string"/);
+  assert.match(focus,/returnToProject=\{returnTo!==null\}/);
   assert.doesNotMatch(focus,/<iframe|dangerouslySetInnerHTML|allow-same-origin|allow-scripts|document\.write/);
   assert.match(shell,/pathname\.startsWith\("\/atlas\/experience\/"\)/);
   assert.match(shell,/pathname\.startsWith\("\/atlas\/lab\/orbit-align"\)/);
@@ -81,6 +84,7 @@ test("Playable UI uses actual reducer and never awards synthetic achievements",(
   assert.match(game,/dispatch\(\{type:"reset"\}\)/);
   assert.match(game,/no account XP or public score has been awarded/i);
   assert.match(game,/ANEVUM \/ INTERACTIVE PROTOTYPE/);
+  assert.match(game,/returnToProject\?"BACK TO FEATURED PROJECT":"RETURN TO NETWORK"/);
   assert.match(css,/@media\(max-width:640px\)/);
   assert.match(css,/@media\(prefers-reduced-motion:reduce\)/);
   assert.match(css,/\.atm-content--page:has\(\.fx-game\)/);
