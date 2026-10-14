@@ -85,6 +85,7 @@
 .atm-shell--focused .atm-ring--two{opacity:.08;width:210px;height:520px}
 .atm-constellation{position:absolute;inset:0;z-index:5;pointer-events:none;transform:translateX(14vw);
   transition:transform 1s cubic-bezier(.17,.82,.27,1)}
+.atm-shell--overview .atm-constellation{transform:translate(calc(14vw + var(--atm-pan-x)),var(--atm-pan-y))}
 .atm-shell--focused .atm-constellation{transform:none}
 .atm-node{--portrait-size:clamp(78px,10.8vmin,130px);--portrait-radius:50%;
   position:absolute;left:50%;top:50%;width:clamp(84px,12vmin,149px);
@@ -236,7 +237,7 @@
  .atm-overview h1{font-size:41px}
  .atm-overview p{font-size:11px}
  .atm-shell{--atm-unit:clamp(38px,6vmin,61px)}
- .atm-constellation{transform:translateX(18vw)}
+ .atm-shell--overview .atm-constellation{transform:translate(calc(18vw + var(--atm-pan-x)),var(--atm-pan-y))}
  .atm-workspace{left:110px;right:10px}
  .atm-workspace-top{padding:10px 13px;min-height:76px}
  .atm-workspace-identity h2{font-size:30px}
@@ -261,10 +262,11 @@
  .atm-progress strong{font-size:8px}
  .atm-help,.atm-standard{min-height:34px;min-width:34px;border-radius:7px}
  .atm-standard{font-size:8px;letter-spacing:0;padding:0 7px}
- .atm-field{inset:59px 0 28px;touch-action:pan-y}
+ .atm-field{inset:59px 0 28px;touch-action:none}
+ .atm-shell--focused .atm-field{touch-action:auto}
  .atm-ring{display:none}
  .atm-lattice{width:94%;height:72%;transform:translate(-50%,-24%)!important}
- .atm-constellation{transform:translateY(58px)}
+ .atm-shell--overview .atm-constellation{transform:translate(var(--atm-pan-x),calc(58px + var(--atm-pan-y)))}
  .atm-shell--overview .atm-node{
    left:50%;top:50%;width:80px;gap:6px;
    transform:translate(calc(var(--node-mobile-x)*var(--atm-unit)),calc(var(--node-mobile-y)*var(--atm-unit)))}
@@ -324,7 +326,7 @@
  .atm-workspace-controls button span{display:none}
  .atm-workspace-controls button{font-size:15px}
  .atm-overview h1{font-size:29px}
- .atm-constellation{transform:translateY(64px)}
+ .atm-shell--overview .atm-constellation{transform:translate(var(--atm-pan-x),calc(64px + var(--atm-pan-y)))}
 }
 @media(max-height:620px) and (min-width:641px){
  .atm-header{height:58px}
