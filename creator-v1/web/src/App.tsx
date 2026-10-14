@@ -9,6 +9,7 @@ import { CreatorPage, CreatorsPage } from "./pages/CreatorsPage";
 import { StatusPage } from "./pages/StatusPage";
 import { LevelsPage } from "./pages/LevelsPage";
 import { CommunityPage } from "./pages/CommunityPage";
+import { ForumRoomPage, ForumThreadPage, ForumMemberPage } from "./pages/ForumPages";
 import { MemberGate } from "./components/MemberGate";
 import { MemberAccountPage } from "./pages/MemberAccountPage";
 import { MemberProfileEditorPage } from "./pages/MemberProfileEditorPage";
@@ -18,6 +19,7 @@ import { ProjectEditorPage } from "./pages/ProjectEditorPage";
 import { WorkspacePage } from "./pages/WorkspacePage";
 import { MemberWorldPage } from "./pages/MemberWorldPage";
 import { MemberWorldEditorPage } from "./pages/MemberWorldEditorPage";
+import { MemberFollowingPage } from "./pages/MemberFollowingPage";
 
 export default function App(){
   return <Routes><Route element={<Shell/>}>
@@ -29,6 +31,9 @@ export default function App(){
     <Route path="creators" element={<CreatorsPage/>}/>
     <Route path="creators/:handle" element={<CreatorPage/>}/>
     <Route path="community" element={<CommunityPage/>}/>
+    <Route path="community/room/:roomId" element={<ForumRoomPage/>}/>
+    <Route path="community/thread/:threadId" element={<ForumThreadPage/>}/>
+    <Route path="community/member/:handle" element={<ForumMemberPage/>}/>
     <Route path="workspace" element={<WorkspacePage/>}/>
     <Route element={<MemberGate/>}>
       <Route path="create" element={<MemberProjectsPage/>}/>
@@ -38,6 +43,7 @@ export default function App(){
       <Route path="account" element={<MemberAccountPage/>}/>
       <Route path="account/edit" element={<MemberProfileEditorPage/>}/>
       <Route path="account/world" element={<MemberWorldEditorPage/>}/>
+      <Route path="account/following" element={<MemberFollowingPage/>}/>
     </Route>
     <Route path="levels" element={<LevelsPage/>}/>
     <Route path="status" element={<StatusPage/>}/>
