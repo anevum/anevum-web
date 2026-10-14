@@ -1,0 +1,344 @@
+/* ANEVUM MORPH / An immersive, persistent content environment.
+   Always front-facing card surfaces; browser-native routed React content.
+   No fabricated social interaction or member data. */
+.atm-shell{
+  --atm-unit:clamp(41px,7.4vmin,85px);
+  --atm-copper:#e0b87b;--atm-bone:#f4e7d3;--atm-mist:#a7b9d0;
+  --atm-ink:#060a14;--atm-stroke:#bdc8db40;
+  position:fixed;inset:0;z-index:150;overflow:hidden;isolation:isolate;
+  color:#f1e9da;background:#060b17;
+  font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  line-height:1.5;font-size:13px;
+}
+.atm-shell *{box-sizing:border-box}
+.atm-shell button{cursor:pointer;font:inherit}
+.atm-shell a{text-decoration:none}
+.atm-shell :is(a,button,input,[tabindex]):focus-visible{outline:2px solid #f7d9a7;outline-offset:3px}
+.atm-atmosphere{position:absolute;inset:-2%;z-index:-8;overflow:hidden;pointer-events:none}
+.atm-atmosphere .cw-artwork{display:block;height:100%;width:100%}
+.atm-atmosphere img{height:100%;width:100%;object-fit:cover;object-position:center;
+  filter:brightness(.48) saturate(.7) contrast(1.1);transform:scale(1.08);
+  transition:filter .9s ease,transform 1.2s cubic-bezier(.22,1,.3,1)}
+.atm-shell--focused .atm-atmosphere img{filter:brightness(.27) saturate(.62) contrast(1.14);transform:scale(1.2)}
+.atm-atmosphere .cw-artwork-glaze{background:linear-gradient(180deg,#060b1dc9,transparent 38%,#020713ed),radial-gradient(circle at 51% 41%,transparent 2%,#050919db 86%)}
+.atm-atmosphere-overlay{position:absolute;inset:0;z-index:-7;pointer-events:none;
+ background:radial-gradient(ellipse 60% 65% at 54% 58%,#385a8744,transparent 78%),
+   radial-gradient(ellipse 55% 55% at 16% 12%,#9b59872d,transparent 85%),
+   radial-gradient(ellipse 40% 55% at 91% 17%,#a7854b28,transparent 85%),
+   linear-gradient(180deg,#060c1ec2,transparent 34%,#050816ad)}
+.atm-atmosphere-overlay:before{content:"";position:absolute;inset:0;pointer-events:none;
+ background-image:radial-gradient(1px 1px at 12% 17%,#eff6ff 97%,transparent),
+ radial-gradient(2px 2px at 27% 68%,#95baed 97%,transparent),
+ radial-gradient(1px 1px at 38% 26%,#e0b98f 97%,transparent),
+ radial-gradient(1px 1px at 53% 81%,#b4bdeb 97%,transparent),
+ radial-gradient(1px 1px at 69% 12%,#f7dfb2 97%,transparent),
+ radial-gradient(1px 1px at 86% 62%,#bddafa 97%,transparent),
+ radial-gradient(2px 2px at 95% 25%,#ad9be8 97%,transparent);
+ opacity:.64;animation:atm-breathe 22s ease-in-out infinite alternate}
+@keyframes atm-breathe{from{opacity:.4;transform:translateY(0)}to{opacity:.79;transform:translateY(-12px)}}
+.atm-scanlines{position:absolute;inset:0;z-index:15;pointer-events:none;opacity:.13;
+ background:repeating-linear-gradient(0deg,transparent,transparent 5px,#bec9e41c 6px,transparent 7px);
+ mix-blend-mode:screen}
+.atm-header{position:absolute;z-index:21;top:0;left:0;right:0;height:76px;padding:0 clamp(16px,3vw,47px);
+ display:flex;align-items:center;gap:24px;
+ border-bottom:1px solid #9eb6d33f;
+ background:linear-gradient(180deg,#080e21f2,#10182bbe);
+ backdrop-filter:blur(18px);box-shadow:0 10px 38px #0006}
+.atm-brand{display:flex;align-items:center;gap:10px;color:#f7ead0;flex:none}
+.atm-brand svg{width:43px;height:43px;color:#e2bc87;filter:drop-shadow(0 0 10px #e6bf836a)}
+.atm-brand .mark-core-cut{fill:#0c1528}
+.atm-brand>span{display:flex;flex-direction:column;line-height:1.12}
+.atm-brand strong{font:500 28px Georgia,serif;letter-spacing:.11em}
+.atm-brand small{font-size:8px;letter-spacing:.18em;font-weight:900;color:#b4c2d6;margin-top:4px}
+.atm-header-center{margin:auto;color:#a8bad3;display:flex;align-items:center;gap:12px;font-weight:850;font-size:9px;letter-spacing:.18em;white-space:nowrap}
+.atm-header-center strong{color:#e7c68d;letter-spacing:.13em}
+.atm-header-center em{font-style:normal;border:1px solid #ab956356;border-radius:6px;padding:6px;color:#e5d3b9}
+.atm-live-pulse{width:6px;height:6px;border-radius:50%;background:#bde6d7;box-shadow:0 0 12px #93c5ad}
+.atm-actions{margin-left:auto;display:flex;align-items:center;gap:11px;flex:none}
+.atm-progress{display:flex;align-items:center;gap:7px;padding:5px 11px;border:1px solid #b4bfd24a;
+  background:#121d33bd;border-radius:10px;color:#f0e8d9;min-height:40px}
+.atm-progress>span:first-child{font-size:23px;line-height:1;color:#eac895}
+.atm-progress>span:last-child{display:flex;flex-direction:column;gap:1px}
+.atm-progress small{color:#a9b8ce;font-size:8px;font-weight:900;letter-spacing:.12em}
+.atm-progress strong{font-size:10px;letter-spacing:.05em;white-space:nowrap}
+.atm-help,.atm-standard{min-height:39px;min-width:39px;display:grid;place-items:center;border:1px solid #a8bfd45f;border-radius:9px;background:#152039cf;color:#e9ddcb;font-size:16px;font-weight:900}
+.atm-help:hover,.atm-standard:hover{background:#263858;border-color:#e0bd85}
+.atm-standard{padding:0 13px;white-space:nowrap;font-size:10px;letter-spacing:.1em;background:#654e36df}
+.atm-field{position:absolute;inset:76px 0 34px;isolation:isolate;
+  touch-action:pan-y;overscroll-behavior:contain;outline:none}
+.atm-lattice{position:absolute;left:50%;top:50%;width:calc(var(--atm-unit)*11);height:calc(var(--atm-unit)*8);
+  transform:translate(calc(-50% + 14vw),-50%);pointer-events:none;opacity:.45;
+  background:radial-gradient(ellipse 45% 45% at 50% 50%,#f5d9a725,transparent 65%),
+  repeating-linear-gradient(90deg,transparent 0 37px,#92b5e414 38px,transparent 39px),
+  repeating-linear-gradient(0deg,transparent 0 37px,#92b5e414 38px,transparent 39px);
+  mask-image:radial-gradient(ellipse at center,#000,transparent 69%);
+  transition:opacity .65s,transform .95s cubic-bezier(.19,.9,.3,1)}
+.atm-shell--focused .atm-lattice{opacity:.12;transform:translate(-48%,-50%) scale(1.36)}
+.atm-ring{position:absolute;left:calc(50% + 14vw);top:50%;pointer-events:none;border-radius:50%;
+  border:1px solid #efcf9e4c;box-shadow:0 0 36px #8ba4d41e,inset 0 0 38px #bb90d423;
+  transform:translate(-50%,-50%) rotate(-26deg);
+  transition:left .95s,top .95s,width .95s,height .95s,opacity .5s,transform .95s}
+.atm-ring--one{width:min(65vw,740px);height:min(48vw,510px);border-style:dashed;animation:atm-ring-shine 26s ease-in-out infinite alternate}
+.atm-ring--two{width:min(76vw,850px);height:min(37vw,440px);transform:translate(-50%,-50%) rotate(24deg);border-color:#8fbee345}
+@keyframes atm-ring-shine{from{filter:brightness(.65)}to{filter:brightness(1.35)}}
+.atm-shell--focused .atm-ring{left:55px;opacity:.17;width:150px;height:440px;transform:translate(-50%,-50%) rotate(0deg)}
+.atm-shell--focused .atm-ring--two{opacity:.08;width:210px;height:520px}
+.atm-constellation{position:absolute;inset:0;z-index:5;pointer-events:none;transform:translateX(14vw);
+  transition:transform 1s cubic-bezier(.17,.82,.27,1)}
+.atm-shell--focused .atm-constellation{transform:none}
+.atm-node{--portrait-size:clamp(78px,10.8vmin,130px);--portrait-radius:50%;
+  position:absolute;left:50%;top:50%;width:clamp(84px,12vmin,149px);
+  display:flex;align-items:center;flex-direction:column;gap:10px;border:0;padding:0;background:transparent;color:#f5e9d6;
+  translate:-50% -50%;
+  transform:translate(calc(var(--node-x)*var(--atm-unit)),calc(var(--node-y)*var(--atm-unit)));
+  pointer-events:auto;isolation:isolate;filter:drop-shadow(0 14px 18px #000b);
+  transition:transform .95s cubic-bezier(.19,.86,.29,1),top .95s cubic-bezier(.19,.86,.29,1),
+    left .95s cubic-bezier(.19,.86,.29,1),width .9s,filter .35s}
+.atm-node-halo{position:absolute;inset:-32px -35px -14px;z-index:-1;
+  background:radial-gradient(ellipse,var(--node-color),transparent 64%);
+  filter:blur(28px);opacity:.28;pointer-events:none;transition:opacity .35s}
+.atm-node-art{display:block;width:var(--portrait-size);height:var(--portrait-size);
+  border:3px solid #f2d7a1b0;border-radius:var(--portrait-radius);
+  background:#10182a;box-shadow:0 0 0 6px #172039ec,0 0 0 8px color-mix(in srgb,var(--node-color) 55%,transparent),0 10px 28px #000b,inset 0 0 35px #0009;
+  overflow:hidden;position:relative;transform:rotate(-6deg);
+  transition:width .8s,height .8s,border-radius .8s,box-shadow .35s,transform .35s}
+.atm-node-art .cw-artwork{display:block;width:100%;height:100%}
+.atm-node-art img{width:100%;height:100%;object-fit:cover;filter:contrast(1.07) saturate(1.13)}
+.atm-node-art:after{content:"";position:absolute;inset:0;pointer-events:none;
+ background:radial-gradient(circle at 37% 25%,#fcebc333,transparent 35%),linear-gradient(0deg,#02061299,transparent 60%)}
+.atm-node-sign{position:absolute;top:calc(var(--portrait-size)*.27);left:50%;translate:-50% 0;
+  width:clamp(29px,3.6vmin,42px);height:clamp(29px,3.6vmin,42px);
+  display:grid;place-items:center;border-radius:50%;font-size:22px;color:#f5d5a0;
+  border:1px solid #dfbc847e;background:#142039df;box-shadow:0 0 19px #020b26b0;
+  pointer-events:none;transition:opacity .25s}
+.atm-node-title{display:flex;align-items:center;flex-direction:column;gap:3px;max-width:100%;padding:5px 9px 7px;
+  border:1px solid #bbcad059;border-radius:6px;text-align:center;white-space:nowrap;
+  background:linear-gradient(180deg,#172036e9,#070d1bed);
+  box-shadow:0 7px 22px #000a;line-height:1.2}
+.atm-node-title small{font-size:7px;letter-spacing:.1em;color:#afbcd3;font-weight:850}
+.atm-node-title strong{font-size:10px;letter-spacing:.14em;font-weight:950}
+.atm-node:hover .atm-node-halo,.atm-node:focus-visible .atm-node-halo,.atm-node--selected .atm-node-halo{opacity:.72}
+.atm-node:hover .atm-node-art,.atm-node:focus-visible .atm-node-art{transform:rotate(0) scale(1.07);box-shadow:0 0 0 6px #182843,0 0 0 9px var(--node-color),0 0 27px var(--node-color)}
+.atm-node:focus-visible{outline:2px solid #f5d49a;outline-offset:9px}
+.atm-node--selected .atm-node-title{color:#f5ce92;border-color:#f2cf9796}
+.atm-shell--focused .atm-node{
+  --portrait-size:48px;--portrait-radius:14px;
+  left:59px;top:calc(5.75% + var(--node-index)*9.65%);
+  width:91px;gap:4px;transform:translate(0,0);
+  flex-direction:row;justify-content:center;align-items:center;filter:drop-shadow(0 7px 12px #0009)}
+.atm-shell--focused .atm-node-halo{inset:-12px -15px;filter:blur(12px);opacity:.12}
+.atm-shell--focused .atm-node-art{flex:none;border-width:1px;transform:none;box-shadow:0 0 0 3px #1e2c43,0 0 0 4px color-mix(in srgb,var(--node-color) 50%,transparent)}
+.atm-shell--focused .atm-node-sign{opacity:0}
+.atm-shell--focused .atm-node-title{border:0;background:transparent;box-shadow:none;padding:0;white-space:normal;min-width:0}
+.atm-shell--focused .atm-node-title small{display:none}
+.atm-shell--focused .atm-node-title strong{font-size:8px;letter-spacing:0;line-height:1.2;text-align:left;overflow-wrap:anywhere}
+.atm-shell--focused .atm-node--selected .atm-node-art{box-shadow:0 0 0 3px #1c2e4b,0 0 0 6px var(--node-color),0 0 24px var(--node-color)}
+.atm-shell--focused .atm-node--selected:before{content:"";position:absolute;inset:-7px -7px -7px -9px;z-index:-1;border-radius:10px;border:1px solid color-mix(in srgb,var(--node-color) 65%,transparent);background:#1b2941a8}
+.atm-overview{position:absolute;z-index:2;left:clamp(25px,4.5vw,75px);top:50%;transform:translateY(-50%);
+  width:min(330px,30vw);pointer-events:none;animation:atm-overview-in .9s cubic-bezier(.22,.84,.33,1) both}
+@keyframes atm-overview-in{from{opacity:0;filter:blur(15px);translate:0 18px}to{opacity:1;filter:blur(0);translate:0 0}}
+.atm-overview-eyebrow{font-size:9px;letter-spacing:.18em;font-weight:950;color:#e7c790}
+.atm-overview h1{font:400 clamp(44px,4.8vw,79px)/.97 Georgia,"Times New Roman",serif;letter-spacing:-.065em;
+  margin:17px 0;color:#f5ebdd;text-shadow:0 12px 32px #02060dc9}
+.atm-overview h1 i{color:#dfc69c;font-weight:400;letter-spacing:-.07em}
+.atm-overview p{font-size:13px;color:#c1cee0;line-height:1.75;max-width:305px;margin-bottom:24px}
+.atm-overview-actions{display:flex;flex-direction:column;align-items:flex-start;gap:13px;pointer-events:auto}
+.atm-overview-start{min-height:48px;padding:0 21px;border:1px solid #f3dbb0;border-radius:8px;
+  background:linear-gradient(125deg,#e5c68e,#b9905a);color:#111629;font-weight:950;letter-spacing:.12em;
+  box-shadow:0 7px 0 #6b4c288e,0 16px 30px #0008;font-size:11px}
+.atm-overview-start span{margin-left:10px}
+.atm-overview-start:hover{transform:translateY(-2px);filter:brightness(1.12)}
+.atm-overview-instruction{font-size:9px;letter-spacing:.15em;color:#90b6dc;font-weight:850}
+.atm-overview-legend{margin-top:34px;padding-top:15px;border-top:1px solid #c7d2e047;display:flex;flex-wrap:wrap;gap:10px;font-size:8px;color:#9aaccc;letter-spacing:.1em;font-weight:850}
+.atm-workspace{position:absolute;z-index:4;inset:clamp(10px,2.2vw,27px) clamp(12px,3vw,47px) clamp(9px,1vw,17px) 135px;
+  border:1px solid #bbac8a8a;border-radius:14px;
+  background:linear-gradient(156deg,#19273be8,#080d19f7 26%,#090f20f7);
+  box-shadow:0 0 0 1px #d2e3fa1e inset,0 18px 90px #000b,0 0 42px color-mix(in srgb,var(--atm-accent) 13%,transparent);
+  display:flex;flex-direction:column;min-width:0;min-height:0;
+  overflow:hidden;animation:atm-workspace-enter .7s cubic-bezier(.14,.84,.26,1) both}
+@keyframes atm-workspace-enter{from{opacity:0;transform:translate(12%,15px) scale(.97);filter:blur(10px)}to{opacity:1;transform:translate(0,0) scale(1);filter:blur(0)}}
+.atm-workspace:before{content:"";position:absolute;left:0;top:0;bottom:0;width:2px;z-index:3;background:linear-gradient(0deg,transparent,var(--atm-accent) 50%,transparent);pointer-events:none}
+.atm-workspace-top{min-height:93px;display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding:16px 25px;border-bottom:1px solid #a4b3c44a;background:
+  radial-gradient(ellipse at 75% 0%,color-mix(in srgb,var(--atm-accent) 13%,transparent),transparent 73%),
+  linear-gradient(180deg,#172238ee,#0a1323e8);flex:none}
+.atm-workspace-identity>span{color:var(--atm-accent);font-size:9px;letter-spacing:.19em;font-weight:950}
+.atm-workspace-identity h2{font:400 clamp(27px,3.4vw,46px)/.98 Georgia,serif;letter-spacing:-.045em;margin:4px 0;color:#f8eddf}
+.atm-workspace-identity h2 em{font-style:normal;color:var(--atm-accent)}
+.atm-workspace-identity p{color:#a7bad2;font-size:11px;margin:3px 0 0}
+.atm-workspace-controls{display:flex;gap:14px;align-items:center}
+.atm-workspace-state{color:#d1c9b9;background:#192840d8;border:1px solid #8babc456;font-size:9px;white-space:nowrap;font-weight:850;letter-spacing:.1em;padding:7px 9px;border-radius:6px}
+.atm-workspace-controls button{border:1px solid #ceb1857a;border-radius:7px;background:#332f2acc;color:#f1e3d0;
+ font-weight:900;font-size:10px;letter-spacing:.07em;min-height:39px;padding:0 12px;white-space:nowrap}
+.atm-workspace-controls button:hover{background:#654f36}
+.atm-content{flex:1;min-height:0;overflow:auto;overscroll-behavior:contain;scrollbar-color:#977c62 #0d1626;
+  background:linear-gradient(160deg,#111d31de,#0a1221ec);
+  scroll-behavior:auto}
+.atm-content:focus-visible{outline-offset:-3px}
+.atm-embedded{padding:20px clamp(14px,2.5vw,31px) 36px;max-width:1550px;margin:auto;min-width:0}
+.atm-embedded>div{max-width:100%;margin:0 auto}
+.atm-embedded :is(.portal-box,.portal-sidebox,.portal-project,.portal-room){max-width:100%}
+.atm-embedded :is(.portal-hero,.portal-discover,.portal-community-page,.portal-creators,.portal-project,.levels-page,.member-gate,.member-shell){
+  width:100%;min-width:0;margin:0 auto}
+.atm-workspace-foot{height:30px;flex:none;display:flex;justify-content:space-between;align-items:center;
+  padding:0 17px;color:#8c9eb5;font-weight:850;letter-spacing:.12em;font-size:8px;border-top:1px solid #95a9c334;background:#091222}
+.atm-footer{position:absolute;z-index:15;bottom:0;left:0;right:0;height:34px;padding:0 clamp(14px,2.5vw,45px);
+  border-top:1px solid #adbfda39;display:flex;align-items:center;justify-content:space-between;gap:12px;
+  background:#08101dd9;color:#9dabc0;font-size:8px;letter-spacing:.12em}
+.atm-footer>div{white-space:nowrap}
+.atm-footer strong,.atm-footer a{color:#e9c792}
+.atm-footer a:hover{text-decoration:underline}
+.atm-footer-cross{font-size:12px;color:#eac68e}
+.atm-mobile-dock{display:none}
+.atm-future{max-width:940px;padding:clamp(24px,4vw,60px);border-radius:12px;
+  background:radial-gradient(circle at 86% 20%,#334f7147,transparent 53%),linear-gradient(120deg,#0f1c34,#090e1b)}
+.atm-future-mark{font:400 clamp(70px,9vw,144px)/1 Georgia,serif;color:#ebc78c;text-shadow:0 0 32px #d2b17c88}
+.atm-future-index{font-size:10px;letter-spacing:.19em;color:#dfc28d;font-weight:950}
+.atm-future h2{font:400 clamp(37px,6vw,73px)/.98 Georgia,serif;letter-spacing:-.065em;margin:14px 0 16px}
+.atm-future h2 em{color:#e6c389}
+.atm-future>p{max-width:620px;color:#c1cdde;font-size:14px;line-height:1.8}
+.atm-future-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:11px;margin:33px 0}
+.atm-future-grid article{padding:20px;min-width:0;border:1px solid #93adc060;border-radius:11px;background:#0c1a2ed9}
+.atm-future-grid article span{display:block;font-size:9px;letter-spacing:.15em;color:#e0c18e;font-weight:850;margin-bottom:15px}
+.atm-future-grid article strong{font:400 24px Georgia,serif;color:#f0e5d7}
+.atm-future-grid article p{font-size:12px;line-height:1.65;color:#a9c1d7}
+.atm-future-action{display:inline-flex;min-height:45px;align-items:center;padding:0 17px;border:1px solid #e1bf89;border-radius:8px;color:#edcc91;font-weight:850;font-size:11px;letter-spacing:.08em}
+.atm-guide{position:absolute;right:clamp(16px,3vw,45px);top:82px;z-index:30;
+  width:min(370px,calc(100vw - 32px));border:1px solid #bda57d8e;border-radius:11px;background:#0b1729f4;
+  color:#e4e8f0;box-shadow:0 15px 55px #000c;padding:20px;backdrop-filter:blur(14px)}
+.atm-guide header{display:flex;justify-content:space-between;align-items:center;color:#edcc90;font-size:11px;letter-spacing:.14em}
+.atm-guide header button{border:0;background:transparent;color:#f4e2c8;font-size:21px}
+.atm-guide p{font-size:12px;line-height:1.7;color:#b5c8dc}
+.atm-milestone{position:absolute;top:50%;left:50%;z-index:40;transform:translate(-50%,-50%);
+  width:min(420px,calc(100vw - 30px));border:1px solid #e0ca9d;border-radius:22px;
+  padding:34px 22px;text-align:center;
+  background:radial-gradient(circle at 50% 20%,#355276,#0b1830 72%);box-shadow:0 0 0 999vmax #030717d8,0 0 80px #dbc39151;
+  animation:atm-milestone-enter .75s cubic-bezier(.16,.89,.2,1) both}
+@keyframes atm-milestone-enter{from{opacity:0;scale:.78;filter:blur(14px)}to{opacity:1;scale:1;filter:blur(0)}}
+.atm-milestone-stars{font:400 48px Georgia,serif;letter-spacing:.1em;color:#f2ce94;animation:atm-twinkle 3s ease-in-out infinite alternate}
+@keyframes atm-twinkle{from{filter:brightness(.75);transform:scale(.9)}to{filter:brightness(1.3);transform:scale(1.08)}}
+.atm-milestone>span{display:block;margin:12px 0 4px;color:#e7ca95;letter-spacing:.16em;font-size:10px;font-weight:950}
+.atm-milestone>strong{font:400 57px Georgia,serif;letter-spacing:-.04em}
+.atm-milestone p{color:#d7cbae;font-size:14px}
+.atm-milestone button{padding:11px 15px;border:1px solid #b6a17a;border-radius:8px;color:#e8dccb;background:#1d304c}
+@media(max-width:1200px){
+ .atm-header-center{display:none}
+ .atm-actions{margin-left:auto}
+ .atm-shell{--atm-unit:clamp(39px,7vmin,71px)}
+ .atm-overview{width:270px}
+ .atm-overview h1{font-size:52px}
+ .atm-workspace{left:130px;right:15px}
+}
+@media(max-width:830px){
+ .atm-header{height:66px}
+ .atm-field{top:66px}
+ .atm-overview{left:24px;top:42%;max-width:235px}
+ .atm-overview h1{font-size:41px}
+ .atm-overview p{font-size:11px}
+ .atm-shell{--atm-unit:clamp(38px,6vmin,61px)}
+ .atm-constellation{transform:translateX(18vw)}
+ .atm-workspace{left:110px;right:10px}
+ .atm-workspace-top{padding:10px 13px;min-height:76px}
+ .atm-workspace-identity h2{font-size:30px}
+ .atm-workspace-controls{gap:6px}
+ .atm-workspace-state{display:none}
+ .atm-shell--focused .atm-node{left:51px;width:82px}
+ .atm-shell--focused .atm-node{--portrait-size:43px}
+ .atm-ring{left:calc(50% + 18vw)}
+}
+@media(max-width:640px){
+ .atm-shell{--atm-unit:clamp(29px,9.2vw,37px)}
+ .atm-header{height:59px;padding:0 10px;gap:8px}
+ .atm-brand{gap:6px}
+ .atm-brand svg{width:29px;height:29px}
+ .atm-brand strong{font-size:18px}
+ .atm-brand small{font-size:6px;letter-spacing:.08em}
+ .atm-header-center{display:none}
+ .atm-actions{gap:5px}
+ .atm-progress{padding:5px 7px;min-height:33px}
+ .atm-progress>span:first-child{font-size:16px}
+ .atm-progress small{display:none}
+ .atm-progress strong{font-size:8px}
+ .atm-help,.atm-standard{min-height:34px;min-width:34px;border-radius:7px}
+ .atm-standard{font-size:8px;letter-spacing:0;padding:0 7px}
+ .atm-field{inset:59px 0 28px;touch-action:pan-y}
+ .atm-ring{display:none}
+ .atm-lattice{width:94%;height:72%;transform:translate(-50%,-24%)!important}
+ .atm-constellation{transform:translateY(58px)}
+ .atm-shell--overview .atm-node{
+   left:50%;top:50%;width:80px;gap:6px;
+   transform:translate(calc(var(--node-mobile-x)*var(--atm-unit)),calc(var(--node-mobile-y)*var(--atm-unit)))}
+ .atm-shell--overview .atm-node{--portrait-size:62px}
+ .atm-node-sign{top:calc(var(--portrait-size)*.27);width:26px;height:26px;font-size:16px}
+ .atm-node-title{padding:4px 7px 5px}
+ .atm-node-title strong{font-size:8px;letter-spacing:.05em}
+ .atm-node-title small{font-size:6px}
+ .atm-overview{left:16px;right:16px;top:7px;transform:none;max-width:none;width:auto}
+ .atm-overview-eyebrow{font-size:8px}
+ .atm-overview h1{font-size:clamp(30px,8vw,39px);margin:6px 0;line-height:1.05}
+ .atm-overview p{max-width:340px;margin:7px 0 9px;font-size:10px;line-height:1.5}
+ .atm-overview-start{min-height:36px;padding:0 12px;font-size:9px;box-shadow:0 5px 0 #6b4c2877}
+ .atm-overview-actions{gap:4px}
+ .atm-overview-instruction{display:none}
+ .atm-overview-legend{display:none}
+ .atm-shell--focused .atm-constellation{display:none}
+ .atm-shell--focused .atm-lattice{opacity:.08}
+ .atm-workspace{inset:7px 7px 72px 7px;border-radius:10px}
+ .atm-workspace-top{min-height:78px;align-items:center;padding:10px 11px}
+ .atm-workspace-identity>span{font-size:7px}
+ .atm-workspace-identity h2{font-size:30px}
+ .atm-workspace-identity p{font-size:9px;line-height:1.35;max-width:185px}
+ .atm-workspace-controls button{min-height:34px;padding:0 8px}
+ .atm-workspace-controls button span{font-size:8px}
+ .atm-content{background:#0a1425f6}
+ .atm-embedded{padding:11px 9px 24px}
+ .atm-workspace-foot{height:23px;padding:0 8px;font-size:7px}
+ .atm-workspace-foot span+span{display:none}
+ .atm-mobile-dock{position:absolute;left:7px;right:7px;bottom:35px;z-index:12;display:flex;align-items:center;gap:4px;
+   height:60px;padding:5px;overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:thin;
+   border:1px solid #a6b7cf6b;border-radius:11px;background:#101d32eb;
+   box-shadow:0 6px 30px #000a;backdrop-filter:blur(16px)}
+ .atm-mobile-dock button{flex:0 0 59px;min-height:49px;border:1px solid transparent;border-radius:8px;
+   display:flex;flex-direction:column;align-items:center;justify-content:center;
+   background:transparent;color:#c3d2e4}
+ .atm-mobile-dock button span{font-size:20px;line-height:22px}
+ .atm-mobile-dock button small{font-size:8px;font-weight:900;white-space:nowrap;letter-spacing:.03em}
+ .atm-mobile-dock button.is-current{color:#f1d3a0;border-color:#d8b7877e;background:#2a3e56af}
+ .atm-footer{height:28px;padding:0 11px;font-size:7px;letter-spacing:.04em}
+ .atm-footer>div:first-child span:not(.atm-footer-cross){display:none}
+ .atm-footer>div:last-child span{display:none}
+ .atm-future{padding:18px 12px}
+ .atm-future-mark{font-size:62px}
+ .atm-future h2{font-size:39px}
+ .atm-future>p{font-size:12px}
+ .atm-future-grid{grid-template-columns:1fr;gap:7px;margin:17px 0}
+ .atm-future-grid article{padding:13px}
+ .atm-future-grid article span{margin-bottom:5px}
+ .atm-future-grid article strong{font-size:21px}
+ .atm-guide{right:9px;top:64px;padding:13px}
+}
+@media(max-width:350px){
+ .atm-shell{--atm-unit:29px}
+ .atm-header .atm-progress{min-width:0}
+ .atm-standard{font-size:7px;padding:0 5px}
+ .atm-workspace-controls button span{display:none}
+ .atm-workspace-controls button{font-size:15px}
+ .atm-overview h1{font-size:29px}
+ .atm-constellation{transform:translateY(64px)}
+}
+@media(max-height:620px) and (min-width:641px){
+ .atm-header{height:58px}
+ .atm-field{top:58px}
+ .atm-overview h1{font-size:38px}
+ .atm-overview p{display:none}
+ .atm-workspace-top{min-height:58px;padding:7px 14px}
+ .atm-workspace-identity h2{font-size:27px}
+ .atm-shell--focused .atm-node{--portrait-size:33px}
+ .atm-shell--focused .atm-node-title strong{font-size:7px}
+}
+@media(prefers-reduced-motion:reduce){
+ .atm-shell *,.atm-shell *:before,.atm-shell *:after{
+   animation-duration:.01ms!important;animation-iteration-count:1!important;
+   scroll-behavior:auto!important;transition-duration:.01ms!important}
+ .atm-node,.atm-ring,.atm-lattice{will-change:auto}
+}
