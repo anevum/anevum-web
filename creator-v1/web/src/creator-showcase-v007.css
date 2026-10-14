@@ -1,0 +1,176 @@
+/* ANEVUM V007 / Creator dossiers. Source-backed. No fake item rarities.
+ * Pairs institutional editorial type with genuine, embossed ANEVUM emblems.
+ */
+.av7-author{
+  gap:12px;padding:15px;border-radius:20px;
+  border:1px solid #82769ca6;
+  background:
+    radial-gradient(ellipse 90% 130px at 50% -10%,#5e537b48,transparent 85%),
+    linear-gradient(152deg,#242940ef,#11182deb 63%,#0c1225f5);
+  box-shadow:inset 0 1px #ffffff35,inset 0 0 19px #9a7bbd0b,0 8px 24px #0009;
+}
+.av7-author .av7-register{
+  color:#bdabbf;font:600 9px/1.5 var(--av6-index,ui-monospace,monospace);
+  letter-spacing:.1em;border-bottom:1px solid #c0a2bd39;padding-bottom:9px;
+}
+.av7-identity{gap:11px;min-width:0;display:flex}
+.av7-avatar{
+  width:46px;height:46px;border-radius:50%;
+  border:2px solid #c8a97f;outline:2px solid #5f4f72;outline-offset:2px;
+  font:500 25px/1 var(--av6-editorial,Georgia,serif);
+  background:radial-gradient(circle at 31% 15%,#9184b4,#454769 51%,#15182e 75%);
+  box-shadow:inset 0 2px #ffffff63,0 5px 11px #000b;
+}
+.av7-identity .av6-author-identity strong{
+  font:500 clamp(16px,1.25vw,20px)/1.08 var(--av6-editorial,Georgia,serif);
+  color:#f7edeb;letter-spacing:.005em;
+}
+.av7-identity .av6-author-identity small{
+  font:500 10px/1.4 var(--av6-index,ui-monospace,monospace);color:#b9c5db;
+}
+.av7-section-name{
+  display:block;font:650 9px/1.45 var(--av6-index,ui-monospace,monospace);
+  letter-spacing:.095em;color:#dfba8d;margin-bottom:8px;
+}
+.av7-level-panel,.av7-artifact-panel,.av7-award-panel{
+  min-width:0;padding-top:10px;border-top:1px solid #a99eb33c;
+}
+.av7-level-button,.av7-artifact-button,.av7-award{
+  cursor:pointer;color:inherit;font:inherit;
+  background:none;border:0;min-width:0;text-align:left;
+}
+.av7-level-button{
+  width:100%;display:flex;gap:11px;align-items:center;
+  padding:4px 5px 4px 0;border-radius:13px;
+}
+.av7-level-crest{
+  flex:none;position:relative;width:59px;height:59px;display:grid;place-items:center;
+  border-radius:50%;background:radial-gradient(circle,#272b4a 20%,#6d5260aa 58%,#171b2c 72%);
+  border:1px solid #a8886588;box-shadow:0 0 16px #b88b6330,inset 0 0 15px #0006;
+}
+.av7-level-crest .celestial-emblem{display:block;width:54px;height:54px}
+.av7-level-crest b{
+  position:absolute;bottom:-5px;left:50%;transform:translateX(-50%);
+  min-width:33px;padding:3px 6px;border-radius:999px;
+  border:1px solid #caa980;background:linear-gradient(#332a3b,#141a2b);
+  color:#f7dcb0;text-align:center;font:750 10px/1 var(--av6-index,ui-monospace,monospace);
+  box-shadow:0 3px 8px #000b;
+}
+.av7-level-copy{display:grid;gap:4px;min-width:0}
+.av7-level-copy strong{font:500 17px/1.1 var(--av6-editorial,Georgia,serif);color:#ffe8cc}
+.av7-level-copy small{font:500 9px/1.25 var(--av6-index,ui-monospace,monospace);color:#c0b6d0}
+.av7-artifact-button{
+  width:100%;display:flex;gap:9px;align-items:center;
+  padding:7px;border:1px solid #8974629f;border-radius:13px;
+  background:linear-gradient(160deg,#3a3240,#171b30);
+  box-shadow:inset 0 1px #fff3,0 4px 0 #090d1e,0 9px 17px #0007;
+}
+.av7-item-face{
+  width:52px;height:52px;flex:none;display:grid;place-items:center;border-radius:9px;
+  border:1px solid #a7886388;
+  background:radial-gradient(ellipse at 40% 25%,#70645a,#2f2c3c 55%,#151622);
+}
+.av7-item-face .celestial-emblem{width:45px;height:45px;display:block}
+.av7-item-meta{min-width:0;display:grid;gap:5px;overflow-wrap:anywhere}
+.av7-item-meta strong{font:500 16px/1.12 var(--av6-editorial,Georgia,serif);color:#f6e7d8}
+.av7-item-meta small{color:#aebbcc;font:600 8px/1.3 var(--av6-index,ui-monospace,monospace);letter-spacing:.025em}
+.av7-awards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}
+.av7-award{
+  min-width:0;display:flex;flex-direction:column;align-items:center;gap:6px;
+  padding:6px 2px 7px;border:1px solid #88839f72;border-radius:12px;
+  background:linear-gradient(165deg,#2b2b45,#151c2f);
+  box-shadow:inset 0 1px #ffffff24,0 3px 0 #080c18;
+}
+.av7-award .celestial-emblem{height:41px;width:41px;flex:none;display:block}
+.av7-award span:last-child{
+  font:600 9px/1.18 var(--av6-index,ui-monospace,monospace);
+  text-align:center;color:#dcd5e4;overflow-wrap:anywhere;
+}
+.av7-artifact-button:hover,.av7-level-button:hover,.av7-award:hover{
+  border-color:#e1b890;filter:brightness(1.09);
+}
+.av7-artifact-button:active,.av7-award:active{transform:translateY(2px);box-shadow:inset 0 2px 10px #000a}
+.av7-level-button:focus-visible,.av7-artifact-button:focus-visible,.av7-award:focus-visible,
+.av7-detail button:focus-visible,.av7-author a:focus-visible{
+  outline:2px solid #acdff9;outline-offset:3px;
+}
+.av7-award[aria-pressed="true"]{border-color:#d5b68c;background:linear-gradient(#453a43,#1d2435)}
+.av7-detail{
+  min-width:0;border-radius:12px;border:1px solid #aa977d;background:#101629;
+  padding:11px;color:#e1d9e8;overflow-wrap:anywhere;
+}
+.av7-detail strong{color:#ffe2b9;font:500 16px/1.2 var(--av6-editorial,Georgia,serif)}
+.av7-detail p{font-size:11px;line-height:1.5;margin:6px 0 9px}
+.av7-detail button{
+  border:1px solid #ac9ca1;border-radius:999px;background:#242b43;color:#f8e9d5;
+  padding:8px 13px;font:600 10px var(--av6-index,ui-monospace,monospace);cursor:pointer;
+}
+.av7-card-footer{
+  display:flex;flex-wrap:wrap;gap:7px;align-items:center;justify-content:space-between;
+  padding-top:10px;border-top:1px solid #a99eb33c;
+}
+.av7-card-footer .av6-author-stat{font-size:10px}
+.av7-card-footer .av6-author-visit{color:#e6c39e;font-size:9px}
+
+/* The author dossier is a part of each post, NOT another site sidebar. */
+@media(min-width:901px){
+  .av6-feed-item-body{
+    display:grid;grid-template-columns:minmax(185px,218px) minmax(115px,170px) minmax(0,1fr);
+    grid-template-areas:"author art detail";gap:13px;align-items:start;
+  }
+  .av6-feed-item-body>.av7-author{grid-area:author}
+  .av6-feed-item-body>.av6-feed-art,.av6-feed-item-body>.av6-discussion-emblem{grid-area:art}
+  .av6-feed-item-body>.av6-feed-description{grid-area:detail}
+}
+@media(min-width:701px) and (max-width:900px){
+  .av6-feed-item-body{
+    display:grid;grid-template-columns:minmax(185px,230px) minmax(0,1fr);
+    grid-template-areas:"author art" "author detail";gap:13px;align-items:start;
+  }
+  .av6-feed-item-body>.av7-author{grid-area:author}
+  .av6-feed-item-body>.av6-feed-art,.av6-feed-item-body>.av6-discussion-emblem{grid-area:art;height:155px}
+  .av6-feed-item-body>.av6-feed-description{grid-area:detail}
+}
+@media(max-width:700px){
+  .av6-feed-item-body{display:flex;flex-direction:column;gap:13px}
+  .av6-feed-item-body>.av7-author{order:-1}
+  .av7-author{
+    display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.12fr);gap:12px 10px;
+    padding:13px;
+  }
+  .av7-author>.av7-register,.av7-author>.av7-identity,
+  .av7-author>.av7-award-panel,.av7-author>.av7-detail,.av7-author>.av7-card-footer{grid-column:1/-1}
+  .av7-author>.av7-level-panel{grid-column:1}
+  .av7-author>.av7-artifact-panel{grid-column:2}
+  .av7-level-panel,.av7-artifact-panel{margin-top:0}
+  .av7-level-button{gap:6px}
+  .av7-level-crest{width:47px;height:47px}
+  .av7-level-crest .celestial-emblem{width:43px;height:43px}
+  .av7-level-copy strong{font-size:15px}
+  .av7-level-copy small{font-size:8px}
+  .av7-artifact-button{gap:6px;padding:5px}
+  .av7-item-face{width:41px;height:43px}
+  .av7-item-face .celestial-emblem{width:38px;height:38px}
+  .av7-item-meta strong{font-size:14px}
+  .av7-awards{gap:8px}
+  .av7-award{min-height:75px}
+  .av7-award span:last-child{font-size:10px}
+}
+@media(max-width:350px){
+  .av7-author{gap:9px 6px;padding:10px}
+  .av7-register{font-size:8px}
+  .av7-section-name{font-size:8px}
+  .av7-level-button{flex-direction:column;align-items:flex-start}
+  .av7-award .celestial-emblem{width:35px;height:35px}
+  .av7-award span:last-child{font-size:8px}
+  .av7-item-face{width:38px}
+  .av7-item-meta strong{font-size:13px}
+}
+@media(prefers-reduced-motion:reduce){
+  .av7-author *{transition:none!important;animation:none!important}
+}
+@media(forced-colors:active){
+  .av7-author,.av7-item-face,.av7-artifact-button,.av7-award,.av7-detail{
+    background:Canvas;color:CanvasText;border:1px solid CanvasText;box-shadow:none;
+  }
+}
