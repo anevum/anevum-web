@@ -69,7 +69,7 @@ try{
  };
  for(const [width,height] of [[1440,900],[390,844],[320,720]]){
   await client.send("Emulation.setDeviceMetricsOverride",{width,height,deviceScaleFactor:1,mobile:width<600});
-  await client.send("Page.navigate",{url:base+"/creator/atlas"});
+  await client.send("Page.navigate",{url:base+"/creator/atlas/orbit"});
   await until(()=>evaluate("document.readyState==='complete' && document.querySelectorAll('button.atlas-world').length===10"));
   await delay(650);
   const inspect=await evaluate("({nodes:document.querySelectorAll('button.atlas-world').length,screen:getComputedStyle(document.querySelector('.atlas-page')).position,overflow:document.documentElement.scrollWidth>innerWidth,auth:!!document.querySelector('iframe'),link:!!document.querySelector('.atlas-exit[href=\"/creator/\"]')})");
