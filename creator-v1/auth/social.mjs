@@ -117,6 +117,17 @@ export async function socialRoutes(req,db,member,limiter,now,{followsEnabled=fal
    if(!['GET','HEAD'].includes(req.method))return response(req,{error:'Method not allowed'},405);
    const handle=profileMatch[1],c=await publicProfile(db,handle);
    if(!c)return response(req,{error:'Creator not found'},404);
+   // When member worlds are enabled, a nonpublisher's public profile requires
+   // explicit visibility consent. Authenticated owners can still preview.
+   if(worldsEnabled&&c.id!=='anevum-official'&&member?.id!==c.id){
+    const published=await rows(db,`SELECT 1 AS present FROM projects
+      WHERE owner_member_id=? AND status='published' AND published_at IS NOT NULL
+      AND julianday(published_at)<=julianday('now') LIMIT 1`,[c.id]);
+    if(!published.length){
+     const consent=await rows(db,"SELECT 1 AS present FROM member_world_appearances WHERE member_id=? AND visibility='public' LIMIT 1",[c.id]);
+     if(!consent.length)return response(req,{error:'Creator not found'},404);
+    }
+   }
    if(profileMatch[2]){
     const records=await rows(db,`SELECT p.id,p.slug,p.title,p.summary,p.category,p.source_url AS sourceUrl,p.demo_url AS demoUrl,p.published_at AS publishedAt,c.handle AS creatorHandle
       FROM projects p JOIN creator_profiles c ON c.member_id=p.owner_member_id
