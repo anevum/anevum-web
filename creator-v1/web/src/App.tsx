@@ -1,6 +1,6 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import { Shell } from "./components/Shell";
-import { HomePage } from "./pages/HomePage";
+import { CinematicLandingPage } from "./pages/CinematicLandingPage";
 import { FieldGuidePage } from "./pages/FieldGuidePage";
 import { StartPage } from "./pages/StartPage";
 import { DiscoverPage } from "./pages/DiscoverPage";
@@ -19,7 +19,7 @@ import { WorkspacePage } from "./pages/WorkspacePage";
 
 export default function App(){
   return <Routes><Route element={<Shell/>}>
-    <Route index element={<HomePage/>}/>
+    <Route index element={<CinematicLandingPage/>}/>
     <Route path="start" element={<StartPage/>}/>
     <Route path="guide" element={<FieldGuidePage/>}/>
     <Route path="discover" element={<DiscoverPage/>}/>
