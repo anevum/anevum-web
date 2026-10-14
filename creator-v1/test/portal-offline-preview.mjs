@@ -18,6 +18,16 @@ const work=seeds.map(([title,category,creatorHandle],i)=>({
  freeToUse:true,demoUrl:"https://example.com/",sourceUrl:null,license:null,publishedAt:"2026-10-12T00:00:00.000Z",
  aiDisclosure:"Offline synthetic design fixture.",humanContribution:"No real human creator record."
 }));
+// A visibly synthetic approved release keeps the offline member's stated
+// project count consistent with the public work shelf in screenshot QA.
+work.push({
+ id:"000000000000000000000000000000d1",slug:"synthetic-artifact-workshop",title:"ARTIFACT WORKSHOP / OFFLINE TEST",
+ category:"creative",creatorHandle:"offline_artist",creatorName:"Synthetic Creator Preview",
+ summary:"A synthetic display-only project to verify creator cards and profile layouts. Not published.",
+ description:"OFFLINE SYNTHETIC DESIGN FIXTURE. NOT A PUBLISHED PROJECT.",
+ freeToUse:true,demoUrl:null,sourceUrl:null,license:null,publishedAt:"2026-10-12T00:00:00.000Z",
+ aiDisclosure:"Offline synthetic fixture.",humanContribution:"No real human creator record."
+});
 const categories=[...new Set(work.map(p=>p.category))].map(category=>({category,count:work.filter(p=>p.category===category).length}));
 const overlay='<style>body::after{content:"SYNTHETIC OFFLINE REVIEW — NOT REAL CONTENT";position:fixed;bottom:78px;right:7px;z-index:2147483647;background:#fff0b2;color:#1c1010;border:2px solid #1c1010;padding:5px 8px;font:900 8px system-ui,sans-serif;max-width:230px}</style>';
 // Fixture is ONLY served from this local 127.0.0.1 dev script for screenshot QA.
@@ -29,6 +39,18 @@ const FAKE_MEMBER=Object.freeze({
  displayName:"Synthetic Creator Preview",
  bio:"An illustrative account for testing layout only. Not a real ANEVUM member."
 });
+// Explicitly synthetic browser-only discussion data. NEVER part of the
+// production build or deployed D1. Every capture displays the fixed watermark.
+const FICTIONAL_FORUM_AUTHOR=Object.freeze({
+ handle:"offline_artist",displayName:"Synthetic Creator Preview",level:4,artifact:"Ivory Compass",
+ badges:[{key:"first-signal",name:"First Signal",symbol:"✦"}]
+});
+const FICTIONAL_FORUM_ID="000000000000000000000000000000f1";
+const FICTIONAL_FORUM_POST=Object.freeze({
+ id:"000000000000000000000000000000e1",body:"OFFLINE SYNTHETIC DESIGN FIXTURE. Discuss a small experimental world and how its introduction could teach the player.",
+ createdAt:1791800000,starter:true,author:FICTIONAL_FORUM_AUTHOR
+});
+const FICTIONAL_FORUM_ROOM=Object.freeze({id:"arcade",name:"The Arcade",subject:"Games, playtesting and interactive worlds"});
 const LOCAL_REVIEW_COOKIE="anevum_offline_visual_fixture=1";
 function offlineMember(req,res,url){
   if(url.pathname==="/api/v1/member/health"&&req.method==="GET")
@@ -60,6 +82,30 @@ function offlineMember(req,res,url){
       ]
     });
   }
+  if(req.method==="GET"&&url.pathname==="/api/v1/member/worlds/offline_artist")
+    return json(res,{profile:{handle:FAKE_MEMBER.handle,displayName:FAKE_MEMBER.displayName,bio:FAKE_MEMBER.bio},
+      appearance:{visibility:"public",theme:"astral",scene:"portal",sections:["work","cabinet","community"]}});
+  if(req.method==="GET"&&url.pathname==="/api/v1/member/world"){
+    const cookies=(req.headers.cookie||"").split(";").map(x=>x.trim());
+    if(!cookies.includes(LOCAL_REVIEW_COOKIE))return json(res,{error:"Sign-in required"},401);
+    return json(res,{appearance:{visibility:"private",theme:"astral",scene:"portal",sections:["work","cabinet","community"]},saved:false});
+  }
+  if(req.method==="GET"&&url.pathname==="/api/v1/member/forum/rooms")
+    return json(res,{rooms:[{...FICTIONAL_FORUM_ROOM,threads:1},
+      {id:"workshop",name:"The Workshop",subject:"Independent apps, open source and practical making",threads:0},
+      {id:"lab",name:"The Lab",subject:"Experiments, AI and creative problem-solving",threads:0},
+      {id:"commons",name:"The Commons",subject:"Questions, introductions and collaboration",threads:0}],access:"offline-synthetic"});
+  if(req.method==="GET"&&url.pathname==="/api/v1/member/forum/rooms/arcade")
+    return json(res,{room:FICTIONAL_FORUM_ROOM,items:[{id:FICTIONAL_FORUM_ID,room:"arcade",
+      title:"How should an unknown world teach people to explore?",createdAt:1791800000,postCount:1,
+      author:FICTIONAL_FORUM_AUTHOR}],nextCursor:null});
+  if(req.method==="GET"&&url.pathname==="/api/v1/member/forum/threads/"+FICTIONAL_FORUM_ID)
+    return json(res,{thread:{id:FICTIONAL_FORUM_ID,room:"arcade",title:"How should an unknown world teach people to explore?",
+      createdAt:1791800000,author:FICTIONAL_FORUM_AUTHOR},posts:[FICTIONAL_FORUM_POST],nextCursor:null});
+  if(req.method==="GET"&&url.pathname==="/api/v1/member/forum/members/offline_artist/activity")
+    return json(res,{items:[{id:FICTIONAL_FORUM_POST.id,threadId:FICTIONAL_FORUM_ID,room:"arcade",
+      threadTitle:"How should an unknown world teach people to explore?",
+      excerpt:FICTIONAL_FORUM_POST.body,createdAt:1791800000}]});
   // No credential verification, writes, project or staff actions in this fixture.
   return json(res,{error:"no member Worker in offline fixture"},404);
 }
@@ -102,6 +148,8 @@ createServer((req,res)=>{
     const header={"content-type":"text/html; charset=utf-8","cache-control":"no-store"};
     // Restrict the fake member cookie to the local one-off editor visual capture.
     if(u.pathname==="/creator/account"&&req.headers.host==="127.0.0.1:4178")
+      header["set-cookie"]=LOCAL_REVIEW_COOKIE+"; Path=/; SameSite=Strict";
+    if(u.pathname==="/creator/account/world"&&req.headers.host==="127.0.0.1:4178")
       header["set-cookie"]=LOCAL_REVIEW_COOKIE+"; Path=/; SameSite=Strict";
     if(u.pathname==="/creator/account/edit"&&req.headers.host==="127.0.0.1:4178")
       header["set-cookie"]=LOCAL_REVIEW_COOKIE+"; Path=/; SameSite=Strict";

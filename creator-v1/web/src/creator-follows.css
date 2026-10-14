@@ -1,0 +1,18 @@
+/* Creator V1: real, server-confirmed following. No simulated followers. */
+.portal-follow-panel{display:flex;align-items:center;flex-wrap:wrap;gap:12px 18px;min-width:0;margin-top:16px;padding:13px 15px;background:linear-gradient(125deg,#251922,#1b1520);border:1px solid #84616c;box-shadow:inset 2px 2px 0 #fff2df16,0 5px 0 #0b080e}
+.portal-follow-panel>div:first-child{flex:1;min-width:140px}
+.portal-follow-panel .kicker{font-size:9px;color:#e2a4ac}
+.portal-follow-panel p{font-size:12px;color:#ead8d7;line-height:1.5;margin:5px 0}
+.portal-follow-panel p strong{font:normal 25px/1 Impact,"Arial Black",sans-serif;color:#ffcfb2}
+.portal-follow-panel .button{min-height:44px}
+.portal-follow-panel [aria-pressed="true"]{border-color:#d2a9cf;background:#60415e;color:#fff7ec}
+.portal-follow-panel [role="alert"],.portal-follow-panel .engagement-success{flex-basis:100%}
+.member-follow-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,275px),1fr));align-items:stretch;gap:14px;margin:16px 0 20px}
+.member-follow-grid .member-panel{min-width:0;display:flex;flex-direction:column;gap:8px}
+.member-follow-grid h2{overflow-wrap:anywhere;margin:5px 0;font:normal clamp(25px,3vw,37px)/1 Impact,"Arial Black",sans-serif}
+.member-follow-grid h2 a{color:inherit}
+.member-follow-grid p{margin:0 0 auto;color:#d5c5cd}
+.member-follow-grid .member-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.member-follow-grid .button{min-height:44px}
+@media(max-width:480px){.portal-follow-panel{align-items:stretch}.portal-follow-panel>.button{flex:1 1 100%;text-align:center}}
+@media(prefers-reduced-motion:reduce){.portal-follow-panel *,.member-follow-grid *{animation:none!important;transition:none!important}}

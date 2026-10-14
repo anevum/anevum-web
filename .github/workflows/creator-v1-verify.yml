@@ -60,6 +60,16 @@ jobs:
           git archive --format=zip --output=evidence/candidate-source.zip HEAD
           git archive --format=zip --output=evidence/pre-production-source.zip e34faf8ad72d319e469eface8aec7fe26741951f
           sha256sum evidence/*-source.zip > evidence/source-archives.sha256
+      - name: Validate all 60 unique relic rendering contracts (not release acceptance)
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm --prefix creator-v1 run test:relic-manifest | tee evidence/relic-manifest.log
+      - name: Rehearse member-world, following and forum D1 schema offline
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm --prefix creator-v1 run test:community-migrations | tee evidence/community-migrations.log
       - name: Build approved identity and run public isolated tests
         working-directory: creator-v1
         shell: bash
@@ -127,6 +137,10 @@ jobs:
           capture 1440 900 levels /creator/levels
           capture 1440 1600 celestial-artifacts /creator/levels#artifact-museum-heading
           capture 1440 900 community /creator/community
+          capture 1440 1100 member-world /creator/@offline_artist
+          capture 1440 1000 world-editor /creator/account/world
+          capture 1440 1200 forum-room /creator/community/room/arcade
+          capture 1440 1200 forum-thread /creator/community/thread/000000000000000000000000000000f1
           capture 390 844 home /creator/
           capture 390 844 start /creator/start
           capture 390 844 field-guide /creator/guide
@@ -134,6 +148,10 @@ jobs:
           capture 390 3300 celestial-artifacts /creator/levels
           capture 390 844 discover /creator/discover
           capture 390 844 creators /creator/creators
+          capture 390 1000 member-world /creator/@offline_artist
+          capture 390 1100 world-editor /creator/account/world
+          capture 390 1200 forum-room /creator/community/room/arcade
+          capture 390 1400 forum-thread /creator/community/thread/000000000000000000000000000000f1
           capture 1440 1600 member-cabinet /creator/account
           capture 1440 900 profile-editor /creator/account/edit
           capture 390 3000 member-cabinet /creator/account
@@ -145,6 +163,8 @@ jobs:
           capture 320 720 start /creator/start
           capture 320 720 field-guide /creator/guide
           capture 320 720 discover /creator/discover
+          capture 320 1050 member-world /creator/@offline_artist
+          capture 320 1050 forum-thread /creator/community/thread/000000000000000000000000000000f1
           node creator-v1/test/capture-portal-launcher.mjs --chrome "$chrome" --base http://127.0.0.1:4178 --output evidence/portal-review
           printf 'The ANEVUM Transcosmic Observatory and Celestial Artifacts designs are review candidates, NOT live at anevum.com or next.anevum.com. All achievement data in the offline member screenshot is SYNTHETIC and may not be treated as real account evidence. These PNG files render the actual compiled React/Vite candidate using explicitly SYNTHETIC OFFLINE design fixtures, including a fake in-memory creator identity for the profile-editor layout only. No fixture records, accounts, cookies or codes are deployed to any staging or production database. Review desktop 1440px before phone 390px. This is visual QA, not authentication, real-user or provider acceptance.\n' > evidence/portal-review/README.txt
           echo "PORTAL_VISUAL_CAPTURE=PASS" | tee evidence/portal-review/capture-status.txt

@@ -46,6 +46,9 @@ export interface MemberPublicWorld {
   appearance: WorldAppearance;
 }
 
+export interface MemberFollowEntry {handle:string;displayName:string;followedAt:number}
+export interface CreatorFollowState {following:boolean;changed:boolean;followers:number;viewerFollows:boolean}
+
 export class MemberApiError extends Error {
   readonly status:number;
   constructor(status:number, message:string){
@@ -130,6 +133,13 @@ export const memberPublicWorld=(handle:string,signal?:AbortSignal)=>{
   return requestMember<MemberPublicWorld>("/worlds/"+handle,{signal,publicHealth:true});
 };
 
+export const memberFollowing=(signal?:AbortSignal)=>
+  requestMember<{items:MemberFollowEntry[];hasMore:boolean}>("/following",{signal});
+export const memberSetFollowing=(handle:string,following:boolean)=>{
+  if(!/^[a-z][a-z0-9_]{2,29}$/.test(handle))throw new Error("Invalid creator handle");
+  return requestMember<CreatorFollowState>("/creators/"+handle+"/follow",{method:"POST",body:{following}});
+};
+
 export const memberCreatorProfile=(handle:string,signal?:AbortSignal)=>{
   if(!/^[a-z][a-z0-9_]{2,29}$/.test(handle))throw new Error("Invalid public creator handle");
   return requestMember<{
@@ -137,6 +147,8 @@ export const memberCreatorProfile=(handle:string,signal?:AbortSignal)=>{
     contributions:{ratings:number;publishedProjects:number;releases:number};
     progression:Progression;
     achievements:MemberAchievement[];
+    followers?:number;
+    viewerFollows?:boolean;
   }>("/creators/"+handle,{signal});
 };
 

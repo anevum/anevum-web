@@ -50,7 +50,9 @@ test("personal @handle pages are valid and fail closed when public identity is u
   assert.match(page,/readCreator\(handle, signal\)/);
   assert.match(page,/readProjects\(\{ creator: handle, limit: "12" \}, signal\)/);
   assert.match(page,/THIS WORLD IS NOT PUBLIC/);
-  assert.match(page,/No sample followers or posts are being shown as real/);
+  assert.match(page,/No posts are being simulated/);
+  assert.match(page,/readForumMemberActivity\(handle, signal\)/);
+  assert.match(page,/activity\.items\.map/);
   assert.match(page,/achievements\.filter\(achievement => achievement\.earned\)/);
   assert.doesNotMatch(page,/localStorage|sessionStorage|Math\.random|fakeFollowers|setEarned|awardXp|dangerouslySetInnerHTML/);
   assert.ok(app.indexOf('path="status"') < app.indexOf('path=":vanity"'),"Static app routes must precede the vanity route");

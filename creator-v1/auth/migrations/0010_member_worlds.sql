@@ -14,3 +14,4 @@ CREATE TABLE IF NOT EXISTS member_world_appearances (
 CREATE INDEX IF NOT EXISTS idx_member_world_appearance_public
  ON member_world_appearances(visibility,updated_at)
  WHERE visibility='public';
+INSERT OR IGNORE INTO schema_migrations(version) VALUES('0010_member_worlds');

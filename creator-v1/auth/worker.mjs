@@ -3,6 +3,7 @@ import {creatorProjects} from './projects.mjs';
 import {communityRoutes} from './community.mjs';
 import {socialRoutes} from './social.mjs';
 import {worldRoutes} from './worlds.mjs';
+import {forumRoutes} from './forum.mjs';
 import {privacyRoutes} from './privacy.mjs';
 import {PRIVACY_PAGE,PRIVACY_STYLE,PRIVACY_CLIENT} from './privacy-ui.mjs';
 import {PROFILE_PAGE,LIBRARY_PAGE,SOCIAL_STYLE,SOCIAL_CLIENT} from './social-ui.mjs';
@@ -173,7 +174,7 @@ return {async fetch(req,env) {
     if(path==='/privacy'||path.startsWith('/privacy/')){
       if(req.method==='POST'&&!checkWrite(req))return fail(req,'Request origin rejected',403);
       const member=await authenticated(req,env,clock());
-      return privacyRoutes(req,db,member,limit,clock(),{worldEnabled:env.MEMBER_WORLDS_ENABLED==='true'});
+      return privacyRoutes(req,db,member,limit,clock(),{worldEnabled:env.MEMBER_WORLDS_ENABLED==='true',followsEnabled:env.MEMBER_FOLLOWS_ENABLED==='true',forumEnabled:env.MEMBER_FORUM_ENABLED==='true'});
     }
     if(path==='/world'||path.startsWith('/worlds/')){
       // Explicitly disabled until isolated staging DB migration, privacy export
@@ -183,10 +184,25 @@ return {async fetch(req,env) {
       const member=await authenticated(req,env,clock());
       return worldRoutes(req,db,member,limit,clock());
     }
-    if(path==='/library'||path.startsWith('/library/')||path.startsWith('/creators/')){
+    if(path==='/forum'||path.startsWith('/forum/')){
+      // Public reads and protected writes share the same independently gated
+      // staging D1 schema. Nothing is enabled by a source merge.
+      if(env.MEMBER_FORUM_ENABLED!=='true')return fail(req,'Community forum not enabled',404);
       if(req.method==='POST'&&!checkWrite(req))return fail(req,'Request origin rejected',403);
       const member=await authenticated(req,env,clock());
-      return socialRoutes(req,db,member,limit,clock());
+      return forumRoutes(req,db,member,limit,clock());
+    }
+    if(path==='/following'&&env.MEMBER_FOLLOWS_ENABLED!=='true')
+      return fail(req,'Following not enabled',404);
+    if(/^\/creators\/[a-z][a-z0-9_]{2,29}\/follow$/.test(path)&&env.MEMBER_FOLLOWS_ENABLED!=='true')
+      return fail(req,'Following not enabled',404);
+    if(path==='/library'||path.startsWith('/library/')||path.startsWith('/creators/')||path==='/following'){
+      if(req.method==='POST'&&!checkWrite(req))return fail(req,'Request origin rejected',403);
+      const member=await authenticated(req,env,clock());
+      return socialRoutes(req,db,member,limit,clock(),{
+        followsEnabled:env.MEMBER_FOLLOWS_ENABLED==='true',
+        worldsEnabled:env.MEMBER_WORLDS_ENABLED==='true'
+      });
     }
     if(path==='/community/me'||path==='/community/projects'||path.startsWith('/community/projects/')){
       if(req.method==='POST'&&!checkWrite(req))return fail(req,'Request origin rejected',403);

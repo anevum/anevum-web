@@ -5,6 +5,7 @@ import { memberProgress,memberSignOut,memberCreatorProfile,MemberApiError } from
 import { useResource } from "../lib/useResource";
 import { LoadingState } from "../components/States";
 import { CelestialEmblem } from "../components/CelestialEmblem";
+import {RelicRaster,hasApprovedRelicRaster} from "../components/RelicRaster";
 import { achievementMotif, seriesOneMotif } from "../lib/artifact-art";
 
 export function MemberAccountPage(){
@@ -29,7 +30,7 @@ export function MemberAccountPage(){
       <section className="member-panel">
         <span className="kicker">CREATOR IDENTITY</span><h2>{member.handle?"@"+member.handle:"PROFILE NOT FINISHED"}</h2>
         <p>{member.bio||"Add a creator profile to participate in the private publishing tests."}</p>
-        <div className="member-actions"><Link className="button secondary" to="/account/edit">EDIT CREATOR PROFILE</Link><Link className="button secondary" to="/create">MY PROJECTS</Link>{member.handle&&<Link className="button secondary" to={"/@"+member.handle}>PREVIEW MY MEMBER WORLD ↗</Link>}{member.handle&&<Link className="button secondary" to="/account/world">CUSTOMIZE MY WORLD</Link>}</div>
+        <div className="member-actions"><Link className="button secondary" to="/account/edit">EDIT CREATOR PROFILE</Link><Link className="button secondary" to="/create">MY PROJECTS</Link><Link className="button secondary" to="/account/following">FOLLOWING</Link>{member.handle&&<Link className="button secondary" to={"/@"+member.handle}>PREVIEW MY MEMBER WORLD ↗</Link>}{member.handle&&<Link className="button secondary" to="/account/world">CUSTOMIZE MY WORLD</Link>}</div>
         {member.handle&&<p className="member-caption">Preview address: anevum.com/@{member.handle}. The public page only shows information available through approved profile services; public noncreator listings remain release-gated.</p>}
       </section>
       <section className="member-panel">
@@ -38,7 +39,11 @@ export function MemberAccountPage(){
         {progress.state==="error"&&<p role="status">Progression is currently unavailable. No XP or achievements have been invented.</p>}
         {progress.state==="ready"&&<>
           <div className="member-artifact-preview">
-            <CelestialEmblem motif={seriesOneMotif(progress.data.progression.level,progress.data.progression.artifact)} size="large" state={progress.data.progression.artifactEarned?"earned":"preview"}/>
+            {progress.data.progression.artifactEarned && progress.data.progression.artifact &&
+              hasApprovedRelicRaster(progress.data.progression.level,progress.data.progression.artifact)
+              ? <RelicRaster level={progress.data.progression.level} name={progress.data.progression.artifact} large/>
+              : <CelestialEmblem motif={seriesOneMotif(progress.data.progression.level,progress.data.progression.artifact)} size="large" state={progress.data.progression.artifactEarned?"earned":"preview"}/>}
+
             <div><span className="kicker">SERVER-VERIFIED MEMBER PROGRESSION</span>
               <strong>LEVEL {progress.data.progression.level}</strong>
               <small>{progress.data.progression.artifact||"ILLUSTRATIVE ORBIT / NO NAMED ARTIFACT IN THIS SERIES"}</small>

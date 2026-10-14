@@ -4,6 +4,8 @@ import {voteModeration} from './vote-moderation.mjs';
 import {staffPrivacyRequests} from './privacy-queue.mjs';
 import {PRIVACY_PANEL,PRIVACY_STYLE,PRIVACY_APP} from './privacy-queue-ui.mjs';
 import {VOTE_PANEL,VOTE_STYLE,VOTE_APP} from './vote-moderation-ui.mjs';
+import {FORUM_PANEL,FORUM_STYLE,FORUM_APP} from './forum-moderation-ui.mjs';
+import {forumModeration} from './forum-moderation.mjs';
 // ANEVUM Creator V1 — owner-only staging publishing studio.
 // Does not provide public member authentication or grant XP/votes.
 const ORIGIN = 'https://studio.next.anevum.com';
@@ -101,8 +103,9 @@ async function updateStatus(db,projectId,actor,action,to,from,reason){
   const r=await atomic(db,queries);const changes=r[0]?.meta?.changes??r[0]?.meta?.rows_written;
   return Number(changes)===1;
 }
-async function api(request,db,actor){
+async function api(request,db,actor,{forumEnabled=false}={}){
   const url=new URL(request.url),path=url.pathname;
+  if(path.startsWith('/api/forum'))return forumEnabled?forumModeration(request,db,actor):json({error:'Forum moderation not enabled'},404);
   if(path==='/api/privacy-requests')return staffPrivacyRequests(request,db);
   if(path==='/api/community-votes'||path.startsWith('/api/community-votes/'))return voteModeration(request,db,actor);
   if(request.method==='GET'&&path==='/api/projects'){
@@ -201,9 +204,9 @@ export default {async fetch(request,env){
   if(!env.COMMUNITY_DB)return response({error:'Staging data unavailable'},503);
   try{if(!await isOwner(env.COMMUNITY_DB))return response({error:'Studio not provisioned'},503)}catch{return response({error:'Staging data unavailable'},503)}
   const p=url.pathname;
-  if(request.method==='GET'&&p==='/')return new Response(PAGE.replace('</main>',REVIEW_PANEL+VOTE_PANEL+PRIVACY_PANEL+'</main>'),{headers:{...BASE,'content-type':'text/html; charset=utf-8','content-security-policy':CSP}});
-  if(request.method==='GET'&&p==='/studio.css')return new Response(STYLE+'\n'+REVIEW_STYLE+'\n'+VOTE_STYLE+'\n'+PRIVACY_STYLE,{headers:{...BASE,'content-type':'text/css; charset=utf-8'}});
-  if(request.method==='GET'&&p==='/studio.js')return new Response(APP+'\n'+REVIEW_APP+'\n'+VOTE_APP+'\n'+PRIVACY_APP,{headers:{...BASE,'content-type':'text/javascript; charset=utf-8'}});
+  if(request.method==='GET'&&p==='/')return new Response(PAGE.replace('</main>',REVIEW_PANEL+VOTE_PANEL+PRIVACY_PANEL+(env.FORUM_MODERATION_ENABLED==='true'?FORUM_PANEL:'')+'</main>'),{headers:{...BASE,'content-type':'text/html; charset=utf-8','content-security-policy':CSP}});
+  if(request.method==='GET'&&p==='/studio.css')return new Response(STYLE+'\n'+REVIEW_STYLE+'\n'+VOTE_STYLE+'\n'+PRIVACY_STYLE+(env.FORUM_MODERATION_ENABLED==='true'?'\n'+FORUM_STYLE:''),{headers:{...BASE,'content-type':'text/css; charset=utf-8'}});
+  if(request.method==='GET'&&p==='/studio.js')return new Response(APP+'\n'+REVIEW_APP+'\n'+VOTE_APP+'\n'+PRIVACY_APP+(env.FORUM_MODERATION_ENABLED==='true'?'\n'+FORUM_APP:''),{headers:{...BASE,'content-type':'text/javascript; charset=utf-8'}});
   if(request.method==='GET'&&p==='/health')return json({status:'ok',service:'anevum-creator-studio',mode:'staging'});
   if(!p.startsWith('/api/'))return response({error:'Not found'},404);
   if(!['GET','POST','PATCH'].includes(request.method))return json({error:'Method not allowed'},405,{allow:'GET, POST, PATCH'});
@@ -211,5 +214,5 @@ export default {async fetch(request,env){
     if(request.headers.get('origin')!==ORIGIN)return json({error:'Origin rejected'},403);
     if(request.headers.get('sec-fetch-site')&&!['same-origin','none'].includes(request.headers.get('sec-fetch-site')))return json({error:'Cross-site request rejected'},403);
   }
-  try{return await api(request,env.COMMUNITY_DB,principal.email)}catch{return json({error:'Staging operation unavailable'},503)}
+  try{return await api(request,env.COMMUNITY_DB,principal.email,{forumEnabled:env.FORUM_MODERATION_ENABLED==='true'})}catch{return json({error:'Staging operation unavailable'},503)}
 }};
