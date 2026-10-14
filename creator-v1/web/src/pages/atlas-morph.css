@@ -440,3 +440,7 @@
   .atm-overview-start{font-size:8px;padding:0 9px}
   .atm-overview-quick{font-size:8px;padding:0 7px}
 }
+
+/* Final review-width guard: desktop rail adjustments must NEVER shrink phone workspaces. */
+@media(max-width:830px) and (min-width:641px){.atm-workspace{left:115px}}
+@media(max-width:640px){.atm-workspace{left:7px;right:7px;top:7px;bottom:72px}}
