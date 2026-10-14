@@ -57,6 +57,8 @@ try{
   await delay(360);
   const overview=await evaluate("(()=>{const nodes=[...document.querySelectorAll('.atm-node')];return {nodes:nodes.length,layout:document.querySelector('.atm-shell')?.dataset.layout,outerScroll:document.documentElement.scrollWidth>innerWidth,node3d:nodes.some(n=>getComputedStyle(n).transform.startsWith('matrix3d')),missing:nodes.filter(n=>{const r=n.getBoundingClientRect();return r.right<0||r.left>innerWidth||r.bottom<0||r.top>innerHeight}).length,oldAtlas:!!document.querySelector('a[href=\"/creator/atlas/orbit\"]')}})()");
   if(overview.nodes!==10||overview.layout!=="overview"||overview.outerScroll||overview.node3d||overview.missing||!overview.oldAtlas)throw Error("Morph overview "+width+": "+JSON.stringify(overview));
+  const buttonCollision=await evaluate("(()=>{if(innerWidth>640)return false;const action=document.querySelector('.atm-overview-quick');if(!action)return true;const a=action.getBoundingClientRect();return [...document.querySelectorAll('.atm-node')].some(node=>{const b=node.getBoundingClientRect();return a.left<b.right&&a.right>b.left&&a.top<b.bottom&&a.bottom>b.top;});})()");
+  if(buttonCollision)throw Error("Phone search control overlaps first-row worlds at "+width);
   await shot("morph-overview",width);
   await evaluate("document.querySelector('.atm-node--play').click()");
   await until(()=>evaluate("!!document.querySelector('.atm-shell--focused .atm-workspace')&&location.pathname.endsWith('/atlas/discover')&&location.search.includes('category=games')"));
