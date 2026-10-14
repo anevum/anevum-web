@@ -60,6 +60,22 @@ try{
   if(overview.menuButtons!==1||overview.navTabs||overview.feedItems<1||!overview.member||!overview.settings||overview.overflow||overview.pageLeft!==0||Math.abs(overview.pageRight-width)>1||Math.abs(overview.pageTop-overview.header)>1||overview.bodyHeight<height-overview.header-2||overview.heroWidth<width*(width<641?.85:.5)||overview.scroll!=="auto")throw Error("MORPH_FRONT_PAGE_"+width+": "+JSON.stringify(overview));
   console.log("MORPH_CONSOLE_"+width+" "+JSON.stringify(overview));
   await shot("morph-console-overview",width);
+  const activeHeadline=await evaluate('document.querySelector(".mhc-headliner h1")?.textContent||""');
+  const featureButtons=await evaluate('document.querySelectorAll(".mhc-spotlight-controls button").length');
+  if(featureButtons===2){
+    await evaluate('document.querySelector(".mhc-spotlight-controls button:last-child").click()');
+    await until(()=>evaluate('document.querySelector(".mhc-headliner h1")?.textContent!==' + JSON.stringify(activeHeadline)));
+    await shot("morph-console-feature-next",width);
+    await evaluate('document.querySelector(".mhc-spotlight-controls button:first-of-type").click()');
+    await until(()=>evaluate('document.querySelector(".mhc-headliner h1")?.textContent===' + JSON.stringify(activeHeadline)));
+  }
+  await evaluate('document.querySelector(".mhc-feed-filters button:nth-child(2)").click()');
+  await until(()=>evaluate('!!document.querySelector(".mhc-feed-filters button[aria-pressed=true]")&&document.querySelectorAll(".mhc-signal-item").length===3'));
+  const playFeed=await evaluate('({rows:[...document.querySelectorAll(".mhc-signal-item-content small")].map(e=>e.textContent||""),pager:!!document.querySelector(".mhc-feed-pager")})');
+  if(!playFeed.pager||playFeed.rows.some(v=>!v.startsWith("GAMES")))throw Error("MORPH_REAL_FILTER_"+width+": "+JSON.stringify(playFeed));
+  await shot("morph-console-filtered-activity",width);
+  await evaluate('document.querySelector(".mhc-feed-filters button:first-child").click()');
+  await until(()=>evaluate('document.querySelectorAll(".mhc-signal-item").length===8'));
 
   await evaluate('document.querySelector(".atm-menu-button").click()');
   await until(()=>evaluate('!!document.querySelector("dialog.atm-navigation-overlay[open]")&&document.querySelectorAll(".atm-navigation-link").length===10'));
@@ -86,7 +102,16 @@ try{
   await until(()=>evaluate('!!document.querySelector("dialog.portal-launcher[open]")'));
   const quick=await evaluate('({urls:[...document.querySelectorAll("dialog.portal-launcher[open] a[href]")].map(a=>a.pathname),search:!!document.querySelector("dialog.portal-launcher input")})');
   if(!quick.search||quick.urls.some(url=>!url.startsWith("/creator/atlas")))throw Error("MORPH_QUICK_JUMP_"+width+": "+JSON.stringify(quick));
-  await shot("morph-console-search",width);
+  await client.send("Input.insertText",{text:"ARCADE"});
+  await until(()=>evaluate('[...document.querySelectorAll("dialog.portal-launcher .portal-launcher-result-copy strong")].some(e=>e.textContent==="ARCADE AFTER DARK")'));
+  const actualSearch=await evaluate('({matches:[...document.querySelectorAll("dialog.portal-launcher .portal-launcher-result-copy strong")].map(e=>e.textContent),routes:[...document.querySelectorAll("dialog.portal-launcher a[href]")].map(a=>a.pathname)})');
+  if(!actualSearch.matches.includes("ARCADE AFTER DARK")||!actualSearch.routes.some(path=>path.includes("/creator/atlas/projects/")))throw Error("MORPH_LIVE_PROJECT_SEARCH_"+width+": "+JSON.stringify(actualSearch));
+  await shot("morph-console-live-search",width);
+  await evaluate('const input=document.querySelector("dialog.portal-launcher input");input.focus();input.select()');
+  await client.send("Input.insertText",{text:"Nova"});
+  await until(()=>evaluate('[...document.querySelectorAll("dialog.portal-launcher .portal-launcher-result-copy strong")].some(e=>e.textContent==="Nova Studio")'));
+  const creatorSearch=await evaluate('({names:[...document.querySelectorAll("dialog.portal-launcher .portal-launcher-result-copy strong")].map(e=>e.textContent),routes:[...document.querySelectorAll("dialog.portal-launcher a[href]")].map(a=>a.pathname)})');
+  if(!creatorSearch.names.includes("Nova Studio")||!creatorSearch.routes.includes("/creator/atlas/creators/nova_demo"))throw Error("MORPH_LIVE_CREATOR_SEARCH_"+width+": "+JSON.stringify(creatorSearch));
   await evaluate('document.querySelector(".portal-launcher-close").click()');
   await until(()=>evaluate('!document.querySelector("dialog.portal-launcher[open]")'));
 
