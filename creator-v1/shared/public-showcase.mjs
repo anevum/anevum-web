@@ -80,6 +80,7 @@ export function publicSelection(saved,stats){
 export async function readPublicShowcase(db,handle,schema){
  if(!SHOWCASE_HANDLE.test(handle))return null;
  const safeSchema=schema||await showcaseSchema(db);
+ if(!safeSchema.selections)return null; // No consent store means no public member progression.
  const conditions=safeSchema.posts?'('+SHOWCASE_APPROVED_PROJECT+' OR '+SHOWCASE_APPROVED_POST+')':SHOWCASE_APPROVED_PROJECT;
  const found=await showcaseRows(db,`SELECT c.member_id AS id,c.handle FROM creator_profiles c
  LEFT JOIN member_accounts a ON a.id=c.member_id
@@ -87,12 +88,9 @@ export async function readPublicShowcase(db,handle,schema){
  AND a.status='active'
  AND ${conditions} LIMIT 1`,[handle]);
  const creator=found[0];if(!creator)return null;
- let saved=null;
- if(safeSchema.selections){
-  const entries=await showcaseRows(db,'SELECT artifact_key,award_keys_json,is_public FROM member_showcase_selections WHERE member_id=?',[creator.id]);
-  saved=entries[0]||null;
-  if(saved&&Number(saved.is_public)!==1)return null;
- }
+ const entries=await showcaseRows(db,'SELECT artifact_key,award_keys_json,is_public FROM member_showcase_selections WHERE member_id=?',[creator.id]);
+ const saved=entries[0]||null;
+ if(!saved||Number(saved.is_public)!==1)return null; // Positive opt-in only.
  const [ratings,publications,releases,xp]=await Promise.all([
   showcaseRows(db,"SELECT COUNT(*) AS n FROM community_project_votes WHERE member_id=? AND status='active'",[creator.id]),
   showcaseRows(db,`SELECT COUNT(*) AS n FROM projects p JOIN creator_profiles c ON c.member_id=p.owner_member_id
@@ -114,6 +112,7 @@ export async function readPublicShowcases(db,handles){
  const wanted=[...new Set(handles.map(x=>x.toLowerCase()).filter(x=>SHOWCASE_HANDLE.test(x)))].slice(0,10);
  if(!wanted.length)return {};
  const schema=await showcaseSchema(db);
+ if(!schema.selections)return {}; // Not migrated = no public reveal.
  const placeholders=wanted.map(()=>'?').join(',');
  const publishedPost=schema.posts?` OR EXISTS(SELECT 1 FROM community_posts cp
     WHERE cp.author_member_id=c.member_id AND cp.status='published'
@@ -146,7 +145,7 @@ export async function readPublicShowcases(db,handles){
  const items=Object.create(null);
  for(const row of found){
   const preference=saved.get(row.id)||null;
-  if(preference&&Number(preference.is_public)!==1)continue;
+  if(!preference||Number(preference.is_public)!==1)continue;
   const {id:_,...stats}=row;
   const handle=String(row.handle).toLowerCase();
   items[handle]={handle,...publicSelection(preference,stats)};
