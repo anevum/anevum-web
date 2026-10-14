@@ -50,15 +50,7 @@ jobs:
             if curl --fail --silent http://127.0.0.1:4178/__ready >/dev/null; then break; fi
             sleep 0.2
           done
-          for width in 1440 390 320; do
-            for page in home workspace; do
-              route=/creator/
-              if [ "$page" = workspace ]; then route=/creator/workspace; fi
-              timeout 35 "$chrome" --headless=new --no-sandbox --disable-dev-shm-usage --disable-gpu --hide-scrollbars --window-size="$width,1100" --virtual-time-budget=4000 --screenshot="evidence/$page-$width.png" "http://127.0.0.1:4178$route" > evidence/chrome.log 2>&1
-              test -s "evidence/$page-$width.png"
-            done
-          done
-          node creator-v1/test/capture-community-feed.mjs --chrome "$chrome" --base http://127.0.0.1:4178 --output evidence/community-review
+          node creator-v1/test/capture-community-feed.mjs --chrome "$chrome" --base http://127.0.0.1:4178 --output evidence/community-review --main-site
           echo 'Screenshots use explicitly synthetic offline catalogue fixtures. No fixture records are deployed.' > evidence/visual-fixture-note.txt
           echo MAIN_SITE_COMPILED_VISUAL_CAPTURE=PASS
       - name: Preserve current routing and validate production D1 identity

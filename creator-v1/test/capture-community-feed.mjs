@@ -28,6 +28,7 @@ function connect(url){
 }
 const args=process.argv.slice(2),opt=n=>{const i=args.indexOf(n);return i<0?null:args[i+1]};
 const chrome=opt("--chrome"),base=opt("--base"),output=opt("--output");
+const mainSite=args.includes('--main-site');
 if(!chrome||!output||!/^http:\/\/127\.0\.0\.1:\d+$/.test(base||""))throw Error("Chrome and localhost fixture required");
 mkdirSync(output,{recursive:true});
 const profile=mkdtempSync(join(tmpdir(),"anevum-morph-"));
@@ -52,6 +53,21 @@ try{
  };
  for(const [width,height] of [[1440,900],[390,844],[320,720]]){
   await client.send("Emulation.setDeviceMetricsOverride",{width,height,deviceScaleFactor:1,mobile:width<641});
+  if(mainSite){
+    await client.send('Page.navigate',{url:base+'/creator/'});
+    await until(()=>evaluate('document.readyState==="complete"&&!!document.querySelector(".anevum-cinema")&&!!document.querySelector(".cinema-community")'));
+    await delay(700);
+    const home=await evaluate('({title:document.querySelector(".cinema-hero h1")?.textContent,boards:[...document.querySelectorAll(".cinema-community-board nav a")].map(a=>a.getAttribute("href")),atmosphere:!!document.querySelector(".cinema-atmosphere"),overflow:document.documentElement.scrollWidth>innerWidth+1,privateIframes:document.querySelectorAll("iframe").length})');
+    if(!home.title?.includes('WORLDS')||home.boards.length!==3||!home.boards.some(x=>x?.endsWith('/boards?view=firstLooks'))||home.overflow||home.privateIframes)throw Error('MAIN_SITE_HOME_'+width+': '+JSON.stringify(home));
+    await shot('main-site-home',width);
+    await evaluate('document.querySelector(".cinema-community").scrollIntoView({block:"start"})');
+    await shot('main-site-community-entry',width);
+    await client.send('Page.navigate',{url:base+'/creator/workspace'});
+    await until(()=>evaluate('document.readyState==="complete"&&!!document.querySelector(".site-main h1")'));
+    if(await evaluate('document.documentElement.scrollWidth>innerWidth+1||document.querySelectorAll("iframe").length>0'))throw Error('MAIN_SITE_WORKSPACE_'+width);
+    await shot('main-site-workspace',width);
+    console.log('MAIN_SITE_CONTROLLED_BROWSER_'+width+'=PASS');
+  }
   await client.send("Page.navigate",{url:base+"/creator/atlas"});
   await until(()=>evaluate('document.readyState==="complete"&&!!document.querySelector(".nfc-home")&&document.querySelectorAll(".mhc-signal-item").length===8'));
   await delay(370);
