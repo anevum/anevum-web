@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import {createMemberWorker,memberSignInCapabilities} from "../auth/worker.mjs";
+import {createMemberWorker,memberSignInCapabilities} from "../worker.mjs";
 const stage={AUTH_PEPPER:"a".repeat(64),COMMUNITY_DB:{},STAGING_JOIN_ENABLED:"true",RESEND_API_KEY:"restricted-sending-credential",TURNSTILE_SECRET:"challenge-key",STAGING_INVITE_EMAILS:"invitee@example.com"};
 test("only invited email is ready",()=>{
  const state=memberSignInCapabilities(stage);
