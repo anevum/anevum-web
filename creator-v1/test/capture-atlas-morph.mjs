@@ -62,8 +62,8 @@ try{
   await until(()=>evaluate("!!document.querySelector('.atm-shell--focused .atm-workspace')&&location.pathname.endsWith('/atlas/discover')&&location.search.includes('category=games')"));
   await until(()=>evaluate("!!document.querySelector('.atm-content .portal-discover')"));
   await delay(470);
-  const focused=await evaluate("(()=>{const c=document.querySelector('.atm-content'),r=document.querySelector('.atm-workspace').getBoundingClientRect();return {scroll:getComputedStyle(c).overflowY,visible:r.left>=0&&r.right<=innerWidth&&r.top>=0&&r.bottom<=innerHeight,navigation:innerWidth<641?!!document.querySelector('.atm-mobile-dock'):!!document.querySelector('.atm-shell--focused .atm-node--play'),overflow:document.documentElement.scrollWidth>innerWidth}})()");
-  if(focused.scroll!=="auto"||!focused.visible||!focused.navigation||focused.overflow)throw Error("Morph workspace "+width+": "+JSON.stringify(focused));
+  const focused=await evaluate("(()=>{const c=document.querySelector('.atm-content'),r=document.querySelector('.atm-workspace').getBoundingClientRect();return {scroll:getComputedStyle(c).overflowY,visible:r.left>=0&&r.right<=innerWidth&&r.top>=0&&r.bottom<=innerHeight,phoneWidth:innerWidth>=641||(r.left<=12&&r.width>=innerWidth-24),navigation:innerWidth<641?!!document.querySelector('.atm-mobile-dock'):!!document.querySelector('.atm-shell--focused .atm-node--play'),overflow:document.documentElement.scrollWidth>innerWidth}})()");
+  if(focused.scroll!=="auto"||!focused.visible||!focused.phoneWidth||!focused.navigation||focused.overflow)throw Error("Morph workspace "+width+": "+JSON.stringify(focused));
   await shot("morph-play-world",width);
   await evaluate("document.querySelector(innerWidth<641?'.atm-mobile-jump':'.atm-launch').click()");
   await until(()=>evaluate("!!document.querySelector('dialog.portal-launcher[open]')"));
