@@ -68,7 +68,16 @@ export async function canonicalSchemaReady(env){
     const x=await env.MEMBER_DB.prepare("SELECT name FROM sqlite_master WHERE type = 'table'").all();
     if(x?.success===false||!Array.isArray(x?.results))return false;
     const tables=new Set(x.results.map(row=>row?.name).filter(x=>typeof x==="string"));
-    return REQUIRED_CANONICAL_TABLES.every(name=>tables.has(name));
+    if(!REQUIRED_CANONICAL_TABLES.every(name=>tables.has(name)) ||
+      !tables.has("canonical_identity_manifest"))return false;
+    // An existing V5 D1 can have ALL Better Auth tables; accepting it would
+    // silently mix accounts. Require a deliberately provisioned issuer marker.
+    const marker=await env.MEMBER_DB.prepare(
+      "SELECT issuer,migration FROM canonical_identity_manifest WHERE id=1"
+    ).all();
+    return marker?.success!==false && Array.isArray(marker?.results) &&
+      marker.results.length===1 && marker.results[0]?.issuer===CANONICAL_ISSUER &&
+      marker.results[0]?.migration==="0001_canonical_better_auth_core";
   }catch{return false;}
 }
 
