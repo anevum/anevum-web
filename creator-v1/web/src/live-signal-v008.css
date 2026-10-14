@@ -96,7 +96,7 @@
 .av8-terminal-type{
   display:block;flex:0 1 auto;min-width:0;max-width:47ch;
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
-  animation:av8-transmission-in .75s steps(14,end) 1;
+  animation:av8-transmission-in .48s steps(8,end) 1;
 }
 .av8-terminal-caret{
   flex:none;width:6px;height:13px;background:#95e8ff;
@@ -258,7 +258,7 @@
 .av8-signal-bottom a:hover{color:white}
 @keyframes av8-caret{0%,49%{opacity:1}50%,100%{opacity:0}}
 @keyframes av8-wave{from{transform:scaleY(.45);opacity:.6}to{transform:scaleY(1.12);opacity:1}}
-@keyframes av8-transmission-in{from{clip-path:inset(0 100% 0 0)}to{clip-path:inset(0 0 0 0)}}
+@keyframes av8-transmission-in{from{opacity:.62;filter:brightness(.82)}to{opacity:1;filter:brightness(1)}}
 @media(max-width:1250px){
   .av8-orbit-label{right:5%;top:30%}
   .av8-signal-stage{min-height:297px}
@@ -332,4 +332,27 @@
   border:1px solid #b3a0ce8c;border-radius:13px;
   background:#272238c9;color:#e5d9f5;
   font:500 11px/1.5 var(--av6-interface,system-ui,sans-serif);
+}
+
+
+/* V008 screenshot QA / 320 and 390: do not let tiny metadata wrap, and
+ * keep the site menu visible rather than clipping the final controls.
+ * Ticker text must be readable at every animation frame. */
+.av8-signal-brand,.av8-signal-clock{white-space:nowrap}
+@media(max-width:600px){
+  .av8-clock-label{display:none}
+  .av8-signal-brand{letter-spacing:.045em}
+}
+@media(max-width:355px){
+  .site-shell--home .header-create,
+  .site-shell--cinematic .header-create{display:none!important}
+  .site-shell--home .header-inner,
+  .site-shell--cinematic .header-inner{padding-left:7px;padding-right:7px;gap:6px}
+  .site-shell--home .brand-lockup,
+  .site-shell--cinematic .brand-lockup{gap:6px}
+  .av8-signal-detail span:last-child{display:none}
+  .av8-release-date{width:55px;font-size:8px}
+  .av8-release-title strong{white-space:normal;overflow-wrap:anywhere;text-overflow:clip}
+  .av8-release-title small{white-space:normal;overflow-wrap:anywhere}
+  .av8-release{min-height:58px}
 }
