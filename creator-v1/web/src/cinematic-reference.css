@@ -350,3 +350,24 @@
  .site-shell--home .cw-brand-stack b{font-size:14px;letter-spacing:.14em}
  .site-shell--home .header-inner{gap:5px}
 }
+
+/* Visual QA refinement: small displays retain clear readable content and
+   avoid low-resolution forced enlargement. No extra desktop navigation rows. */
+@media(max-width:900px){
+ .site-shell--home .site-header{height:64px}
+ .site-shell--home .header-inner{padding-inline:12px}
+ .site-shell--home .brand-lockup{min-width:0;gap:7px}
+}
+@media(max-width:640px){
+ .site-shell--home .site-header{height:60px}
+ .site-shell--home .cw-brand-stack b{font-size:clamp(15px,4.6vw,20px);letter-spacing:.13em}
+ .site-shell--home .brand-mark{width:32px;height:32px}
+ .cinema-feature{border-radius:12px}
+ .cinema-scene-link--gate{flex-basis:clamp(132px,37vw,160px)}
+ .cinema-hero h1{text-wrap:balance}
+ .cinema-hero-copy>p{max-width:34ch}
+}
+@media(prefers-reduced-transparency:reduce){
+ .site-shell--home .site-header{backdrop-filter:none;background:#060811}
+ .cinema-panel,.cinema-rail,.cinema-feature{background-color:#09101b}
+}
