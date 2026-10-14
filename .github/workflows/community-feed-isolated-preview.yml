@@ -5,9 +5,11 @@ on:
     branches: [design/featured-play-interaction-20261014]
     paths:
       - creator-v1/web/**
-      - creator-v1/test/atlas-morph-navigation.test.mjs
+      - creator-v1/test/**
       - creator-v1/test/capture-community-feed.mjs
       - creator-v1/wrangler.community-feed-review.jsonc
+      - creator-v1/auth/migrations/0007_community_post_stream.sql
+      - creator-v1/authoring/community-post-moderation-ui.mjs
       - creator-v1/package.json
       - creator-v1/api/**
       - creator-v1/auth/community-posts.mjs

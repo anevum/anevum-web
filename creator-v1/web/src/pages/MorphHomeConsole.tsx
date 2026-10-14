@@ -37,7 +37,7 @@ export function MorphHomeConsole({onExplore}:{onExplore:()=>void}){
  const [refresh,setRefresh]=useState(0);
  const data=useResource(async signal=>{
    const [projects,creators,status,categories]=await Promise.allSettled([
-     readProjects({limit:"24"},signal),
+     readProjects({sort:"new",limit:"24"},signal),
      readCreators({limit:"24"},signal),
      readStatus(signal),
      readCategories(signal)

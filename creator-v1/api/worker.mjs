@@ -184,7 +184,7 @@ async function rows(db, sql, params = []) {
   return result.results;
 }
 function parameters(url) {
-  const allowed = new Set(['category', 'q', 'cursor', 'limit', 'creator', 'free']);
+  const allowed = new Set(['category', 'q', 'cursor', 'limit', 'creator', 'free', 'sort']);
   for (const key of url.searchParams.keys()) if (!allowed.has(key) || url.searchParams.getAll(key).length !== 1) throw new Error('Invalid or repeated parameter');
   const category = url.searchParams.get('category') || '';
   const creator = url.searchParams.get('creator') || '';
@@ -192,13 +192,15 @@ function parameters(url) {
   const cursor = url.searchParams.get('cursor') || '';
   const text = url.searchParams.get('limit') ?? '24';
   const free = url.searchParams.get('free');
+  const sort = url.searchParams.get('sort') || '';
+  if (sort && sort !== 'new') throw new Error('Invalid project order');
   if (category && !CATEGORIES.has(category)) throw new Error('Invalid category');
   if (free !== null && free !== '1') throw new Error('Invalid free filter');
   if (creator && !CREATOR_HANDLE.test(creator)) throw new Error('Invalid creator');
   if (q.length > 100 || /[\u0000-\u001f\u007f]/u.test(q)) throw new Error('Invalid search');
   if (cursor && !ID.test(cursor)) throw new Error('Invalid cursor');
   if (!/^[1-9]\d?$/.test(text) || Number(text) > 48) throw new Error('Limit must be 1 through 48');
-  return { category, creator, q, cursor, limit: Number(text), freeOnly: free === '1' };
+  return { category, creator, q, cursor, sort, limit: Number(text), freeOnly: free === '1' };
 }
 export default {
   async fetch(request, env = {}) {
@@ -298,8 +300,19 @@ export default {
         const found = await rows(env.COMMUNITY_DB, 'SELECT ' + FIELDS + ',p.description,p.ai_disclosure AS aiDisclosure,p.human_contribution AS humanContribution ' + PUBLIC_FROM + ' AND p.id=? LIMIT 1', [detail[1]]);
         return found.length ? reply(request, { item: projectDto(found[0]) }) : reply(request, { error: 'Project not found' }, 404);
       }
-      let sql = 'SELECT ' + FIELDS + ' ' + PUBLIC_FROM + ' AND p.id>?';
-      const args = [filter.cursor];
+      const recent=filter.sort==='new';
+      let sql='SELECT ' + FIELDS + ' ' + PUBLIC_FROM;
+      // Sort=new is a stable (publication date,id) keyset. Existing catalogue
+      // id-order semantics are unchanged for all other readers.
+      const args=[];
+      if(recent&&filter.cursor){
+        sql+=" AND (julianday(p.published_at)<(SELECT julianday(published_at) FROM projects WHERE id=?)"+
+          " OR (julianday(p.published_at)=(SELECT julianday(published_at) FROM projects WHERE id=?) AND p.id<?))";
+        args.push(filter.cursor,filter.cursor,filter.cursor);
+      }else if(!recent){
+        sql+=' AND p.id>?';
+        args.push(filter.cursor);
+      }
       if (filter.category) { sql += ' AND p.category=?'; args.push(filter.category); }
       if (filter.freeOnly) sql += ' AND p.free_to_use=1';
       if (filter.creator) { sql += ' AND c.handle=? COLLATE NOCASE'; args.push(filter.creator); }
@@ -307,7 +320,8 @@ export default {
         sql += " AND (p.title LIKE ? ESCAPE '\\' OR p.summary LIKE ? ESCAPE '\\')";
         const pattern = '%' + filter.q.replace(/[\\%_]/g, '\\$&') + '%'; args.push(pattern, pattern);
       }
-      sql += ' ORDER BY p.id ASC LIMIT ?'; args.push(filter.limit + 1);
+      sql += recent ? ' ORDER BY julianday(p.published_at) DESC,p.id DESC LIMIT ?' : ' ORDER BY p.id ASC LIMIT ?';
+      args.push(filter.limit + 1);
       const found = await rows(env.COMMUNITY_DB, sql, args), items = found.slice(0, filter.limit).map(projectDto);
       return reply(request, { items, nextCursor: found.length > filter.limit ? items.at(-1).id : null, count: items.length });
     } catch { return reply(request, { error: 'Community data is temporarily unavailable', status: 'unavailable' }, 503); }
