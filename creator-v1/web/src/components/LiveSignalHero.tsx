@@ -103,7 +103,7 @@ function IndexPulse({status,state,clock}:{status:Status|null;state:Props["state"
           <div><dt>PUBLIC PROJECTS</dt><dd>{status.counts.publishedProjects.toLocaleString("en-US")}</dd></div>
           <div><dt>CREATOR CHANNELS</dt><dd>{status.counts.publishedCreators.toLocaleString("en-US")}</dd></div>
         </>}
-        <div><dt>DISCUSSIONS</dt><dd>{status?.features?.communityPosts===true?"ENABLED":"GATED"}</dd></div>
+        <div><dt>DISCUSSIONS</dt><dd>{!status?"UNKNOWN":status.features?.communityPosts===true?"ENABLED":"GATED"}</dd></div>
         <div><dt>INDEX CLOCK</dt><dd>{clock}</dd></div>
       </dl>
     </div>
@@ -120,7 +120,7 @@ export function LiveSignalHero({status,projects,creators,state}:Props){
   const signature=messages.join("|");
   useEffect(()=>setActive(0),[signature]);
   useEffect(()=>{
-    if(messages.length<2)return;
+    if(messages.length<2||window.matchMedia("(prefers-reduced-motion: reduce)").matches)return;
     const timer=window.setInterval(()=>{
       if(document.visibilityState==="visible")setActive(i=>(i+1)%messages.length);
     },7400);
