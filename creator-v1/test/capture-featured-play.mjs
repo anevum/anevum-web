@@ -67,6 +67,7 @@ try{
   await until(()=>evaluate('!!document.querySelector(".mhc-headliner h1")&&document.querySelector(".mhc-primary-action")?.getAttribute("href")?.includes("/atlas/experience/")'));
   const home=await evaluate('({href:document.querySelector(".mhc-primary-action")?.getAttribute("href"),title:document.querySelector(".mhc-headliner h1")?.textContent,overflow:document.documentElement.scrollWidth>innerWidth+1})');
   if(!home.href?.startsWith("/creator/atlas/experience/")||home.overflow)throw Error("FEATURED_HOME_"+width+": "+JSON.stringify(home));
+  await evaluate('document.querySelector(".atm-content").scrollTop=120');
   await shot("feature-entry",width);
   await evaluate('document.querySelector(".mhc-primary-action").click()');
   await until(()=>evaluate('location.pathname.includes("/atlas/experience/")&&!!document.querySelector(".fx-focus-intro h1")'));
@@ -104,8 +105,16 @@ try{
   const reset=await evaluate('({moves:document.querySelectorAll(".fx-game-hud strong")[1]?.textContent,ready:!!document.querySelector(".fx-game--ready")})');
   if(reset.moves!=="0"||!reset.ready)throw Error("FEATURED_RESET_"+width+": "+JSON.stringify(reset));
   await evaluate('document.querySelector(".fx-game-overlay-exit").click()');
+  await until(()=>evaluate('location.pathname.includes("/atlas/experience/")&&!!document.querySelector(".fx-focus-intro h1")'));
+  const back=await evaluate('({target:location.pathname,project:!!document.querySelector(".fx-focus-intro")})');
+  if(!back.project)throw Error("FEATURED_RETURN_TO_PROJECT_"+width+": "+JSON.stringify(back));
+  await shot("feature-return",width);
+  await evaluate('document.querySelector(".fx-focus-return").click()');
   await until(()=>evaluate('location.pathname.endsWith("/atlas")&&!!document.querySelector(".mhc-headliner")'));
-  console.log("FEATURED_ENTER_PLAY_PAUSE_WIN_RESET_EXIT_"+width+"=PASS");
+  await delay(250);
+  const restored=await evaluate('({scroll:document.querySelector(".atm-content").scrollTop,hero:document.querySelector(".mhc-headliner h1")?.textContent})');
+  if(restored.scroll<80||restored.hero!==home.title)throw Error("FEATURED_RETURN_TO_HOME_"+width+": "+JSON.stringify(restored));
+  console.log("FEATURED_ENTER_PLAY_PAUSE_WIN_RESET_RETURN_"+width+"=PASS");
  }
 }finally{
  client?.close();child.kill("SIGTERM");await delay(160);rmSync(profile,{recursive:true,force:true});
