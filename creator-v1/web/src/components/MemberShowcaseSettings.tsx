@@ -2,7 +2,7 @@ import {useEffect,useState,type FormEvent} from "react";
 import {memberSaveShowcase,memberShowcase,MemberApiError,type MemberShowcaseSelection} from "../lib/member-api";
 import {useResource} from "../lib/useResource";
 import {CelestialEmblem} from "./CelestialEmblem";
-import {achievementMotif,seriesOneMotif} from "../lib/artifact-art";
+import {achievementMotif,seriesOneArtifactMotif} from "../lib/artifact-art";
 
 /** Authenticated settings only. No demo ownership, local-only save claims, or
  * public editing actions. Writes need the existing session and origin checks.
@@ -47,10 +47,10 @@ export function MemberShowcaseSettings(){
     {resource.state==="error"&&<p role="status">Your showcase is not available on this identity service yet. No changes were made.</p>}
     {resource.state==="ready"&&draft&&<form onSubmit={event=>void save(event)} className="av7-settings-form">
       <div className="av7-settings-head">
-        <CelestialEmblem motif={seriesOneMotif(resource.data.level,resource.data.currentArtifact)} size="small" state="earned"/>
+        <CelestialEmblem motif={seriesOneArtifactMotif(draft.artifactKey||resource.data.currentArtifact)} size="small" state="earned"/>
         <div><span className="kicker">SERVER-VERIFIED</span>
           <strong>LEVEL {resource.data.level}</strong>
-          <small>{resource.data.currentArtifact||"No issued Series One artifact at this level"}</small>
+          <small>{draft.artifactKey||resource.data.currentArtifact||"No issued Series One artifact at this level"}</small>
         </div>
       </div>
       <label className="av7-settings-label" htmlFor="av7-artifact-select">EQUIPPED ARTIFACT</label>
@@ -59,6 +59,16 @@ export function MemberShowcaseSettings(){
         <option value="">Use current earned artifact</option>
         {resource.data.availableArtifacts.map(name=><option key={name} value={name}>{name}</option>)}
       </select>
+      <div className="av7-settings-live-preview" aria-label="Selected public showcase preview">
+        <div className="av7-settings-preview-relic" aria-hidden="true">
+          <CelestialEmblem motif={seriesOneArtifactMotif(draft.artifactKey||resource.data.currentArtifact)} size="medium" state="earned"/>
+        </div>
+        <div>
+          <span className="kicker">EXHIBIT / {draft.isPublic?"PUBLIC WHEN SAVED":"PRIVATE"}</span>
+          <strong>{draft.artifactKey||resource.data.currentArtifact||"CURRENT ARTIFACT UNAVAILABLE"}</strong>
+          <small>LEVEL {String(resource.data.level).padStart(2,"0")} · SERIES ONE · {draft.awardKeys.length} FEATURED AWARDS</small>
+        </div>
+      </div>
       <fieldset className="av7-award-fieldset" disabled={saving}>
         <legend>FEATURED AWARDS / {draft.awardKeys.length} OF 3</legend>
         {resource.data.availableAwards.length===0&&<p>No verified achievements to feature yet. Keep contributing to unlock them.</p>}
