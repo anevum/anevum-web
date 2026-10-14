@@ -41,7 +41,7 @@ test("V007 provides meaningful filters, accessible identities and non-fabricated
   assert.match(hub, /role="status"/);
   assert.match(hub, /<LoadingState/);
   assert.match(hub, /<ErrorState/);
-  assert.match(hub, /Public signup is not enabled/);
+  assert.match(hub, /<CommunityMemberDesk\/>/);
   assert.match(hub, /independently reviewed|independently approved/i);
   assert.match(hub, /readCommunityPosts\(\{ sort:/);
 });
