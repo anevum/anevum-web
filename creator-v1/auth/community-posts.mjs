@@ -66,6 +66,13 @@ export async function communityPostRoutes(req,db,member,limiter,now){
      const own=await rows(db,"SELECT score,revision FROM community_post_votes WHERE post_id=? AND member_id=?",[id,member.id]);
      return respond(req,{myReaction:own.length?{score:Number(own[0].score),revision:Number(own[0].revision)}:null});
    }
+   if(reaction&&["GET","HEAD"].includes(req.method)){
+     const id=reaction[1];
+     const found=await rows(db,"SELECT p.id FROM community_posts p JOIN creator_profiles c ON c.member_id=p.author_member_id JOIN member_accounts a ON a.id=p.author_member_id WHERE p.id=? AND p.status='published' AND c.status='active' AND a.status='active' AND julianday(p.published_at)<=julianday('now')",[id]);
+     if(!found.length)return respond(req,{error:"Discussion unavailable"},404);
+     const mine=await rows(db,"SELECT score,revision FROM community_post_votes WHERE member_id=? AND post_id=?",[member.id,id]);
+     return respond(req,{myReaction:mine[0]||null});
+   }
    if(reaction&&req.method==="POST"){
      const id=reaction[1];
      const found=await rows(db,"SELECT p.id,p.author_member_id FROM community_posts p JOIN creator_profiles c ON c.member_id=p.author_member_id JOIN member_accounts a ON a.id=p.author_member_id WHERE p.id=? AND p.status='published' AND c.status='active' AND a.status='active' AND julianday(p.published_at)<=julianday('now')",[id]);
