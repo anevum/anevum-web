@@ -44,6 +44,28 @@ export interface Status {
   features?: Record<string, boolean>;
 }
 
+/** Moderated, public-only community posts. Future staging endpoint remains fail-closed
+ * until a real review queue and moderation backend are accepted.
+ */
+export interface CommunityPost {
+  id:string;
+  title:string;
+  excerpt:string;
+  authorHandle:string;
+  authorName:string;
+  topic:string;
+  publishedAt:string;
+  score:number;
+  replyCount:number;
+}
+export type CommunityPostSort="hot"|"new";
+export interface CommunityPostsPage {
+  items:CommunityPost[];
+  count:number;
+  nextCursor:string|null;
+  sort:CommunityPostSort;
+}
+
 export interface CategoryCount { category: Category; count: number }
 export interface PageResult<T> { items: T[]; count: number; nextCursor: string | null }
 
@@ -84,6 +106,14 @@ export function readProject(id: string, signal?: AbortSignal) {
 }
 export function readRepository(id:string,signal?:AbortSignal) {
   return getJson<{repository:PublicRepositoryMetadata}>(publicPath("/projects/")+encodeURIComponent(id)+"/repository",signal);
+}
+
+export function readCommunityPosts(params:{sort?:CommunityPostSort;limit?:string;cursor?:string}={},signal?:AbortSignal){
+  const query=new URLSearchParams();
+  for(const [key,value] of Object.entries(params))if(value)query.set(key,value);
+  if(!query.has("sort"))query.set("sort","hot");
+  if(!query.has("limit"))query.set("limit","6");
+  return getJson<CommunityPostsPage>(publicPath("/community/posts?")+query.toString(),signal);
 }
 
 export function readCreators(params: Record<string, string | undefined> = {}, signal?: AbortSignal) {
