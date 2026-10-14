@@ -35,7 +35,7 @@ function worldFor(pathname:string,search:string):AtlasWorldId|null {
     const category=new URLSearchParams(search).get("category");
     return category==="games"?"play":category==="tools"?"apps":category==="creative"?"creative":"discover";
   }
-  if(pathname.startsWith("/atlas/experience/")||pathname.startsWith("/atlas/lab/orbit-align"))return "play";
+  if(pathname.startsWith("/atlas/experience/"))return "play";
   if(pathname.startsWith("/atlas/projects/"))return "discover";
   if(pathname.startsWith("/atlas/creators"))return "commons";
   if(pathname.startsWith("/atlas/community")||pathname.startsWith("/atlas/start")||pathname.startsWith("/atlas/guide"))return "commons";
