@@ -248,3 +248,57 @@
 @media(forced-colors:active){
   .av7-settings-live-preview,.av7-settings-preview-relic{background:Canvas;color:CanvasText;border-color:CanvasText}
 }
+
+/* V007 visual acceptance correction: dossier as a horizontal, tactile member
+   exhibit, with a properly sized category artwork below. This prevents a
+   tall medal column from leaving a large empty project description beside it. */
+@media(min-width:701px){
+  .av6-feed-item-body{
+    grid-template-columns:minmax(230px,37%) minmax(0,1fr);
+    grid-template-areas:"author author" "art detail";
+    align-items:stretch;gap:15px;padding:17px;
+  }
+  .av6-feed-item-body>.av7-author{
+    grid-area:author;display:flex;flex-direction:row;flex-wrap:wrap;
+    gap:10px 14px;align-items:center;padding:13px 17px;
+  }
+  .av6-feed-item-body>.av7-author>.av7-register{
+    flex:1 0 100%;padding-bottom:8px;margin-bottom:0;
+  }
+  .av6-feed-item-body>.av7-author>.av7-identity{
+    flex:1 1 166px;min-width:135px;
+  }
+  .av6-feed-item-body>.av7-author>.av7-level-panel{
+    flex:0.7 1 118px;min-width:112px;
+    border:0;border-left:1px solid #b8a1b64a;padding:0 0 0 12px;
+  }
+  .av6-feed-item-body>.av7-author>.av7-artifact-panel{
+    flex:1 1 170px;min-width:157px;
+    border:0;border-left:1px solid #b8a1b64a;padding:0 0 0 12px;
+  }
+  .av6-feed-item-body>.av7-author>.av7-award-panel{
+    flex:1 1 185px;min-width:170px;
+    border:0;border-left:1px solid #b8a1b64a;padding:0 0 0 12px;
+  }
+  .av6-feed-item-body>.av7-author>.av7-card-footer{
+    flex:1 0 100%;padding-top:8px;margin-top:1px;
+  }
+  .av6-feed-item-body>.av7-author>.av7-detail{flex:1 0 100%}
+  .av6-feed-item-body>.av6-feed-art,
+  .av6-feed-item-body>.av6-discussion-emblem{
+    grid-area:art;min-height:220px;height:auto;
+  }
+  .av6-feed-item-body>.av6-feed-description{
+    grid-area:detail;padding:13px 7px 12px 4px;min-height:220px;
+  }
+  .av6-feed-item-body .av6-feed-description h3{
+    font-size:clamp(24px,2.45vw,35px);line-height:1.08;
+  }
+  .av6-feed-item-body .av6-feed-description p{font-size:13px;line-height:1.7}
+}
+@media(max-width:900px) and (min-width:701px){
+  .av6-feed-item-body{grid-template-columns:minmax(200px,40%) minmax(0,1fr)}
+}
+@media(max-width:700px){
+  .av6-feed-item-body>.av6-feed-art{height:185px;min-height:185px}
+}
