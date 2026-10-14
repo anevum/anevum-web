@@ -56,11 +56,14 @@ try{
   if(mainSite){
     await client.send('Page.navigate',{url:base+'/creator/'});
     await until(()=>evaluate('document.readyState==="complete"&&!!document.querySelector(".anevum-cinema")&&!!document.querySelector(".cinema-community")'));
+    await until(()=>evaluate('[...document.querySelectorAll(".cinema-atmosphere img")].every(img=>img.complete&&img.naturalWidth>0)'));
     await delay(700);
     const home=await evaluate('({title:document.querySelector(".cinema-hero h1")?.textContent,boards:[...document.querySelectorAll(".cinema-community-board nav a")].map(a=>a.getAttribute("href")),atmosphere:!!document.querySelector(".cinema-atmosphere"),overflow:document.documentElement.scrollWidth>innerWidth+1,privateIframes:document.querySelectorAll("iframe").length})');
     if(!home.title?.includes('WORLDS')||home.boards.length!==3||!home.boards.some(x=>x?.endsWith('/boards?view=firstLooks'))||home.overflow||home.privateIframes)throw Error('MAIN_SITE_HOME_'+width+': '+JSON.stringify(home));
     await shot('main-site-home',width);
     await evaluate('document.querySelector(".cinema-community").scrollIntoView({block:"start"})');
+    await delay(900);
+    if(await evaluate('document.querySelector(".cinema-community").getBoundingClientRect().top>innerHeight||document.querySelector(".cinema-community").getBoundingClientRect().bottom<0'))throw Error('MAIN_SITE_COMMUNITY_ENTRY_'+width);
     await shot('main-site-community-entry',width);
     await client.send('Page.navigate',{url:base+'/creator/workspace'});
     await until(()=>evaluate('document.readyState==="complete"&&!!document.querySelector(".site-main h1")'));
