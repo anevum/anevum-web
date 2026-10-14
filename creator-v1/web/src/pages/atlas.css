@@ -322,7 +322,7 @@
   .atlas-world-copy strong{font-size:9px;letter-spacing:.03em}
   .atlas-view-controls{bottom:147px;right:10px}
   .atlas-bottom{bottom:21px;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));grid-template-rows:repeat(2,44px);gap:3px;padding:6px;border-radius:13px}
-  .atlas-bottom button{min-height:42px;flex-direction:column;gap:0;font-size:15px}
+  .atlas-bottom button{min-height:44px;flex-direction:column;gap:0;font-size:15px}
   .atlas-bottom button span{font-size:7px;letter-spacing:0;max-width:100%}
   .atlas-bottom-edge{left:9px;right:9px;justify-content:center}
   .atlas-bottom-edge span+span{display:none}
@@ -350,6 +350,7 @@
   .atlas-deck-feed-header>span{max-width:110px;white-space:normal;text-align:right;font-size:8px}
   .atlas-deck-footer{display:block}
 }
+@media(max-width:350px){.atlas-universe{top:calc(50% + 20px)}.atlas-top-help{display:none}}
 @media(max-height:640px) and (min-width:641px){
   .atlas-top{height:60px}
   .atlas-left-hud{top:72px}
