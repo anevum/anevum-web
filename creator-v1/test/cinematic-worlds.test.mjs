@@ -71,7 +71,9 @@ test("secondary pages share the same world art while preserving genuine content 
   assert.match(creators,/detailed\?\.achievements/);
   assert.match(community,/readProjects/);
   assert.match(community,/readCreators/);
-  assert.match(community,/PUBLIC MESSAGE BOARD IS NOT OPEN YET/);
+  assert.match(community,/COMMUNITY CONVERSATIONS ARE UNDER PRIVATE REVIEW/);
+  assert.match(community,/<HotCommunityPosts\/>/);
+  assert.match(community,/to="\/community\/write"/);
   assert.match(css,/prefers-reduced-motion:reduce/);
 });
 
