@@ -50,7 +50,7 @@ test("V005 supplies mobile, reduced motion and forced-colors behavior",()=>{
 
 test("V006 builds a source-backed homepage feed and links real creator identities",()=>{
   assert.doesNotThrow(()=>parse(feed,{sourceType:"module",plugins:["typescript","jsx"]}));
-  assert.match(landing,/<CommunityHomeFeed /);
+  assert.match(landing,/<CommunityHomeFeed\b/);
   assert.match(feed,/readCommunityPosts/);
   assert.match(feed,/communityEnabled/);
   assert.match(feed,/readCommunityPosts\(\{sort:"new",limit:"8"\}/);
