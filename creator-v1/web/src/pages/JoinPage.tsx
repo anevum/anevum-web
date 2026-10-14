@@ -37,6 +37,7 @@ export function JoinPage(){
     capabilities?.registration==="invite-only"?"INVITATION ONLY":
     capabilities?.registration==="open"?"REGISTRATION OPEN":"REGISTRATION CLOSED";
   return <section className="join-experience" aria-labelledby="join-title">
+    <img className="join-world-art" src={import.meta.env.BASE_URL+"assets/cinematic/hero/skyward-city.webp"} alt="" aria-hidden="true" draggable={false}/>
     <div className="join-story">
       <span className="join-orbit-art" aria-hidden="true"><OrbitalMark/></span>
       <p className="kicker">ANEVUM / CREATOR IDENTITY</p>
