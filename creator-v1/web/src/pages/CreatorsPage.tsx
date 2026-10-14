@@ -1,6 +1,6 @@
 import {FormEvent,useEffect,useState} from "react";
 import {Link,useParams,useSearchParams} from "react-router-dom";
-import {readCreator,readCreators,readProjects} from "../lib/api";
+import {readCreator,readCreators,readProjects,readPublicShowcases} from "../lib/api";
 import {memberCreatorProfile} from "../lib/member-api";
 import {useResource} from "../lib/useResource";
 import {ProjectCard} from "../components/ProjectCard";
@@ -8,10 +8,9 @@ import {PageNav} from "../components/PageNav";
 import {PortalHeading} from "../components/PortalHeading";
 import {LevelPanel} from "../components/LevelPanel";
 import {EmptyState,ErrorState,LoadingState} from "../components/States";
-import {CelestialEmblem} from "../components/CelestialEmblem";
 import {CosmicArtwork} from "../components/CosmicArtwork";
-import {achievementMotif,seriesOneMotif} from "../lib/artifact-art";
 import {ContextDiscussions} from "../components/ContextDiscussions";
+import {PublicAuthorShowcase} from "../components/PublicAuthorShowcase";
 
 export function CreatorsPage(){
   const [params,setParams]=useSearchParams();
@@ -83,13 +82,23 @@ export function CreatorPage(){
     if(!/^[a-z][a-z0-9_]{2,29}$/.test(handle))return null;
     try{return await memberCreatorProfile(handle,signal);}catch{return null;}
   },[handle]);
+  // The standalone public identity endpoint governs collectible visibility.
+  // Never render raw levels/awards from the legacy anonymous member endpoint:
+  // only the creator's explicit, server-verified public selection can appear.
+  const showcaseResource=useResource(async signal=>{
+    if(!/^[a-z][a-z0-9_]{2,29}$/.test(handle))return null;
+    try{
+      const response=await readPublicShowcases([handle],signal);
+      return response.items[handle.toLowerCase()]||null;
+    }catch{return null;}
+  },[handle]);
   if(data.state==="loading")return <LoadingState label="Opening a real creator channel"/>;
   if(data.state==="error")return <ErrorState title="CREATOR NOT AVAILABLE" detail="This creator has no available public profile, or the public catalogue cannot be reached."/>;
   const {profile,projects}=data.data;
   const path="/creators/"+encodeURIComponent(handle);
   const current=path+(params.size?"?"+params.toString():"");
   const detailed=channel.state==="ready"?channel.data:null;
-  const earned=detailed?.achievements?.filter(a=>a.earned)||[];
+  const publicShowcase=showcaseResource.state==="ready"?showcaseResource.data:null;
   return <div className="portal-creator-channel">
     <Link to="/creators" className="project-return">← ALL PUBLIC CREATORS</Link>
     <section className="portal-channel-banner"><div className="cw-channel-scene" aria-hidden="true"><CosmicArtwork scene="portal"/></div>
@@ -99,7 +108,7 @@ export function CreatorPage(){
         <h1>{profile.displayName}</h1><p className="portal-channel-handle">@{profile.handle}</p>
         <p className="portal-channel-bio">{detailed?.creator.bio||"An independent creator sharing approved work on ANEVUM."}</p>
         <div className="portal-channel-stats"><span><strong>{profile.publishedProjects}</strong> PUBLISHED PROJECT{profile.publishedProjects===1?"":"S"}</span>
-          {detailed&&<><span><strong>{detailed.contributions.ratings}</strong> VERIFIED RATINGS</span><span><strong>{earned.length}</strong> EARNED ACHIEVEMENTS</span></>}
+          {detailed&&<span><strong>{detailed.contributions.ratings}</strong> VERIFIED RATINGS</span>}{publicShowcase&&<span><strong>{publicShowcase.earnedAwardCount}</strong> EARNED ACHIEVEMENTS</span>}
         </div>
       </div>
       <div className="portal-channel-badge" aria-hidden="true">CREATOR<br/>IN ORBIT</div>
@@ -116,24 +125,14 @@ export function CreatorPage(){
         <ContextDiscussions creator={profile.handle}/>
       </div>
       <aside className="portal-sidebar">
-        {detailed&&<section className="portal-sidebox portal-creator-level">
-          <span className="kicker">EARNED ORBIT / SERVER VERIFIED</span>
-          <div className="portal-channel-celestial">
-            <CelestialEmblem motif={seriesOneMotif(detailed.progression.level,detailed.progression.artifact)} size="medium" state={detailed.progression.artifactEarned?"earned":"preview"}/>
-            <div><h2>LEVEL {detailed.progression.level}</h2><strong>{detailed.progression.artifact||"NO NAMED ARTIFACT IN THIS SERIES"}</strong></div>
-          </div>
-          <p>{detailed.progression.artifact||"NEW ARTIFACT SERIES IN DEVELOPMENT"} · {detailed.progression.xp.toLocaleString()} XP</p>
-          <div className="portal-level-progress" role="progressbar" aria-label="Creator earned level progress" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(detailed.progression.progressWithinLevel*100)}><span style={{width:Math.max(0,Math.min(100,detailed.progression.progressWithinLevel*100))+"%"}}/></div>
-          <small>Levels never change voting strength or grant moderation access.</small>
-        </section>}
-        <section className="portal-sidebox">
-          <span className="kicker">CREATOR ACHIEVEMENT CABINET</span><h2>EARNED, NOT BOUGHT.</h2>
-          {detailed?
-            earned.length?<div className="portal-earned-achievements">{earned.map(a=><div key={a.key}><CelestialEmblem motif={achievementMotif(a.key)||"orbital"} size="small" state="earned"/><span><strong>{a.name}</strong><small>{a.description}</small></span></div>)}</div>:
-              <p>No public achievements have been earned yet.</p>:
-            <p>Achievement details are available where the public member-profile service is active. This listing does not invent badges.</p>}
-          <Link to="/levels" className="portal-sidebox-link">LEVELS & ACHIEVEMENTS →</Link>
-        </section>
+        {publicShowcase?
+          <PublicAuthorShowcase handle={profile.handle} name={profile.displayName} showcase={publicShowcase} known={profile} variant="post"/>:
+          <section className="portal-sidebox">
+            <span className="kicker">CREATOR SHOWCASE / PRIVATE BY DEFAULT</span>
+            <h2>COLLECTIBLES ARE PERSONAL.</h2>
+            <p>This member has not chosen to publish a level, equipped artifact or featured awards. Their approved work remains available.</p>
+            <Link to="/levels" className="portal-sidebox-link">ABOUT LEVELS & ARTIFACTS →</Link>
+          </section>}
         <section className="portal-sidebox"><span className="kicker">DISCOVER MORE</span><h2>KEEP EXPLORING.</h2><p>Follow the work itself: visit projects, try demos hosted by their creators, and find original things worth returning to.</p><Link className="portal-sidebox-link" to="/discover">BACK TO THE PORTAL →</Link></section>
       </aside>
     </div>
