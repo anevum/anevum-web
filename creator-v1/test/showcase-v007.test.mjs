@@ -174,10 +174,10 @@ test("creator page and selected emblems cannot bypass public opt-in",()=>{
  const artwork=readFileSync(new URL("../web/src/components/PublicAuthorShowcase.tsx",import.meta.url),"utf8");
  assert.match(creator,/readPublicShowcases/);
  assert.match(creator,/publicShowcase/);
- assert.doesNotMatch(creator,/detailed\\.progression|detailed\\.achievements/);
- assert.match(legacy,/progression:isOwner\\?/);
- assert.match(legacy,/achievements:isOwner\\?/);
- assert.match(artwork,/seriesOneArtifactMotif\\(artifact\\)/,"equipped art uses the equipped name, not current level");
+ assert.doesNotMatch(creator,/detailed\.progression|detailed\.achievements/);
+ assert.match(legacy,/progression:isOwner\?/);
+ assert.match(legacy,/achievements:isOwner\?/);
+ assert.match(artwork,/seriesOneArtifactMotif\(artifact\)/,"equipped art uses the equipped name, not current level");
 });
 
 test("published-only API validates author enumeration and never writes",async()=>{
