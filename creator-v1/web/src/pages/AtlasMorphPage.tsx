@@ -109,13 +109,14 @@ function Node({world,index,active,onOpen}:{world:AtlasWorld;index:number;active:
     <span className="atm-node-title"><small>{world.number} / {world.status==="planned"?"PLANNED":"WORLD"}</small><strong>{world.title}</strong></span>
   </button>;
 }
-function Overview({onEnter}:{onEnter:()=>void}){
+function Overview({onEnter,onSearch}:{onEnter:()=>void;onSearch:()=>void}){
   return <div className="atm-overview">
     <span className="atm-overview-eyebrow">INDEPENDENT CREATION / A NEW KIND OF INTERNET</span>
     <h1>THE INTERNET<br/><i>IS A PLACE.</i></h1>
     <p>Move through interconnected worlds. Make things, discover people, and build together. Every destination leads somewhere real.</p>
     <div className="atm-overview-actions">
       <button type="button" className="atm-overview-start" onClick={onEnter}>ENTER DISCOVERY <span aria-hidden="true">↗</span></button>
+      <button type="button" className="atm-overview-quick" onClick={onSearch}>SEARCH ALL WORLDS <span aria-hidden="true">⌕</span></button>
       <span className="atm-overview-instruction">SELECT A WORLD TO RECONFIGURE THE SPACE</span>
     </div>
     <div className="atm-overview-legend"><span>10 WORLDS</span><span>ONE CONNECTED ENVIRONMENT</span><span>NO FALSE ACTIVITY</span></div>
@@ -279,7 +280,7 @@ export function AtlasMorphLayout(){
         {ATLAS_WORLDS.map((world,index)=><Node key={world.id} world={world} index={index}
           active={world.id===chosenId} onOpen={()=>enter(world)}/>)}
       </nav>
-      {!focused&&<Overview onEnter={()=>enter(ATLAS_WORLDS[0])}/>}
+      {!focused&&<Overview onEnter={()=>enter(ATLAS_WORLDS[0])} onSearch={()=>setLauncherOpen(true)}/>}
       {focused&&<section className="atm-workspace" aria-label={chosen?.title+" workspace"}>
         <div className="atm-workspace-top">
           <div className="atm-workspace-identity">
@@ -299,11 +300,11 @@ export function AtlasMorphLayout(){
       </section>}
     </div>
     {focused&&<nav className="atm-mobile-dock" aria-label="Switch worlds without leaving your workspace">
+      <button className="atm-mobile-jump" type="button" onClick={()=>setLauncherOpen(true)} aria-label="Search all ANEVUM destinations"><span aria-hidden="true">⌕</span><small>JUMP</small></button>
       {ATLAS_WORLDS.map(world=><button key={world.id} type="button" className={chosenId===world.id?"is-current":""}
         aria-label={"Switch to "+world.title} aria-current={chosenId===world.id?"page":undefined}
         onClick={()=>enter(world)}><span aria-hidden="true">{world.glyph}</span><small>{world.title}</small></button>)}
     </nav>}
-    {focused&&<button type="button" className="atm-floating-jump" aria-label="Search all ANEVUM destinations" onClick={()=>setLauncherOpen(true)} title="Open quick navigation">⌕</button>}
     <PortalLauncher open={launcherOpen} onClose={()=>setLauncherOpen(false)} routePrefix="/atlas"/>
     <footer className="atm-footer">
       <div><span className="atm-footer-cross" aria-hidden="true">✣</span> <strong>{focused?chosen?.overline:"CHOOSE A WORLD"}</strong> <span>/ FRONT-FACING WORLD NAVIGATION</span></div>
