@@ -2,7 +2,7 @@ import {useState} from "react";
 import {Link} from "react-router-dom";
 import type {Creator,PublicCreatorShowcase} from "../lib/api";
 import {CelestialEmblem} from "./CelestialEmblem";
-import {achievementMotif,seriesOneMotif} from "../lib/artifact-art";
+import {achievementMotif,seriesOneArtifactMotif} from "../lib/artifact-art";
 
 type Props={
   handle:string;
@@ -41,7 +41,7 @@ export function PublicAuthorShowcase({handle,name,known,showcase,variant="feed"}
         aria-expanded={detail?.title==="LEVEL "+level} onClick={()=>toggle("LEVEL "+level,
           "Level and current artifact are derived from verified ANEVUM progression, not member-entered scores.")}>
         <span className="av7-level-crest">
-          <CelestialEmblem motif={seriesOneMotif(level,currentArtifact)} size="small" state="earned"/>
+          <CelestialEmblem motif={seriesOneArtifactMotif(currentArtifact)} size="small" state="earned"/>
           <b>{level}</b>
         </span>
         <span className="av7-level-copy"><strong>LEVEL {String(level).padStart(2,"0")}</strong>
@@ -55,7 +55,7 @@ export function PublicAuthorShowcase({handle,name,known,showcase,variant="feed"}
           "This Series One artifact has been chosen for public display from items already earned by this member.":
           "This is the current artifact confirmed by the ANEVUM progression service. The member has not yet equipped a personal selection.")}>
         <span className="av7-item-face" aria-hidden="true"><CelestialEmblem
-          motif={seriesOneMotif(level||1,artifact)} size="small" state="earned"/></span>
+          motif={seriesOneArtifactMotif(artifact)} size="small" state="earned"/></span>
         <span className="av7-item-meta"><strong>{artifact}</strong><small>SERIES ONE / EARNED</small></span>
       </button>
     </div>}
