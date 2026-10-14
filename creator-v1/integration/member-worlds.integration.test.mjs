@@ -17,6 +17,7 @@ async function hashed(token) {
 async function fixture(){
  const sqlite=new DatabaseSync(":memory:");
  sqlite.exec(`PRAGMA foreign_keys=ON;
+ CREATE TABLE schema_migrations(version TEXT PRIMARY KEY,applied_at TEXT DEFAULT CURRENT_TIMESTAMP);
  CREATE TABLE creator_profiles(member_id TEXT PRIMARY KEY NOT NULL,handle TEXT UNIQUE COLLATE NOCASE NOT NULL,
  display_name TEXT NOT NULL,bio TEXT NOT NULL DEFAULT '',status TEXT NOT NULL DEFAULT 'active',
  is_staff INTEGER NOT NULL DEFAULT 0,created_at TEXT DEFAULT CURRENT_TIMESTAMP,updated_at TEXT DEFAULT CURRENT_TIMESTAMP);`);
