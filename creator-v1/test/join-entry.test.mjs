@@ -30,5 +30,5 @@ test("unverified signup options are not actionable and public Worker keeps membe
  assert.match(join,/join-method-unavailable/);
  assert.doesNotMatch(join,/signIn\.social|linkSocial|window\.location\.replace|oauth.*callback/);
  assert.match(api,/credentials: options\.publicHealth\?"omit":"same-origin"/);
- assert.match(publicWorker,/if\(PRIVATE_PREFIX\.test\(path\)\)return reject\(404\)/);
+ assert.ok(publicWorker.includes('if(PRIVATE_PREFIX.test(path) || (JOIN_PREFIX.test(path) && path !== "/join"))return reject(404);'));
 });
