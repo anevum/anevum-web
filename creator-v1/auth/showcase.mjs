@@ -37,7 +37,7 @@ async function readSettings(db,id){
  const entry=entries[0]||null;
  let awardKeys=[];
  try{const parsed=JSON.parse(entry?.award_keys_json??'[]');if(Array.isArray(parsed)&&parsed.every(x=>typeof x==='string'))awardKeys=parsed.slice(0,3);}catch{}
- return {artifactKey:entry?.artifact_key??null,awardKeys,isPublic:entry?entry.is_public===1:true,
+ return {artifactKey:entry?.artifact_key??null,awardKeys,isPublic:entry?entry.is_public===1:false,
    revision:Number(entry?.revision||0)};
 }
 async function parseWrite(req){
