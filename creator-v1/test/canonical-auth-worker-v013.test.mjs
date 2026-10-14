@@ -147,8 +147,9 @@ test("Better Auth remains separate, with no implicit linking, passwords, owner r
    {data:{email:"pilot_one@fixture.invalid"}});
  assert.equal(await on.databaseHooks.user.create.before({email:"unauthorized@fixture.invalid"}),false);
  let captured;
- createCanonicalAuth(env(true),options=>(captured=options,{handler:()=>{}}));
- assert.equal(captured.database,env(true).MEMBER_DB===captured.database?captured.database:captured.database);
+ const realEnv=env(true);
+ createCanonicalAuth(realEnv,options=>(captured=options,{handler:()=>{}}));
+ assert.equal(captured.database,realEnv.MEMBER_DB);
  assert.equal(captured.socialProviders.google.scope.includes("email"),true);
  const source=read("canonical-auth/auth.mjs");
  assert.doesNotMatch(source,/from "\.\.\/\.\.\/src\/server\/member|RHEN|alpaca|memberEntitlement|grantXp|privilegedRole/);
