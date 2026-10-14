@@ -45,6 +45,12 @@ async function forumRequest<T>(route:string,options:{method?:"POST";body?:unknow
  return response.json() as Promise<T>;
 }
 export const readForumRooms=(signal?:AbortSignal)=>forumRequest<{rooms:ForumRoom[];access:string}>("/rooms",{signal});
+export interface ForumMemberActivity {id:string;threadId:string;threadTitle:string;room:ForumRoomId;excerpt:string;createdAt:number}
+export const readForumMemberActivity=(handle:string,signal?:AbortSignal)=>{
+ if(!HANDLE.test(handle))throw Error("Invalid member handle");
+ return forumRequest<{items:ForumMemberActivity[]}>("/members/"+handle+"/activity",{signal});
+};
+
 export const isForumRoom=(room:string):room is ForumRoomId=>ROOMS.has(room);
 export const readForumRoom=(id:string,cursor="",signal?:AbortSignal)=>{
  if(!isForumRoom(id))throw Error("Invalid forum room");
