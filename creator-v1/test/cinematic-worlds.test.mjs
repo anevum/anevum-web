@@ -17,7 +17,7 @@ test("homepage never invents projects, accounts, levels, prices or usage metrics
   assert.match(home,/projects\.slice\(0,5\)\.map/);
   assert.match(home,/creators\.map/);
   assert.match(home,/portal\.state==="ready"/);
-  assert.match(home,/CATEGORY/);
+  assert.ok(home.includes('WorldNavigator') && home.includes('id:"games"'));
   assert.match(card,/CATEGORY ILLUSTRATION/);
   assert.doesNotMatch(home,/Math\.random|sampleVotes|nova_demo|fakeMessage|example\.com|15000\s*XP/);
   assert.doesNotMatch(card,/Math\.random|sampleVotes|fakeMessage/);
