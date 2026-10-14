@@ -20,6 +20,7 @@ import "./cinematic-raster-art.css";
 import "./cinematic-final-polish.css";
 import "./main-site-polish.css";
 import "./cinematic-reference.css";
+import "./cinematic-discovery.css";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
