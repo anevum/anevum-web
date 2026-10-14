@@ -176,85 +176,15 @@ export async function forumRoutes(req,db,member,rateLimit,now){
        author:authors.get(thread.authorId)||null},
      posts,nextCursor:list.length>40&&last?`${last.createdAt}.${last.id}`:null});
   }
-  const activityMatch=new RegExp('^'+ROOT+'/members/([a-z][a-z0-9_]{2,29})/activity
-  if(u.search)return failure(req,'Invalid query',400);
-  if(!member)return failure(req,'Sign-in required',401);
-  if(!await memberAllowed(db,member))return failure(req,'Complete your active creator profile to participate',403);
-  if(path===ROOT+'/threads'){
-   const data=await input(req,['room','title','body'],3500);
-   if(!data||!ROOM_IDS.has(data.room))return failure(req,'Invalid discussion',400);
-   const title=clean(data.title,5,110),body=clean(data.body,2,2400,true);
-   if(!title||!body)return failure(req,'Discussion title or message is invalid',400);
-   if(!await rateLimit(db,'forum:new:'+member.id,now,3,3600))return failure(req,'Discussion limit reached',429);
-   const id=dt(),first=dt();
-   const out=await batch(db,[
-     prepare(db,`INSERT INTO forum_threads(id,room,author_member_id,title,status,created_at,updated_at)
-       SELECT ?,?,?,?,'pending',?,? WHERE EXISTS
-       (SELECT 1 FROM creator_profiles c JOIN member_accounts a ON a.id=c.member_id
-        WHERE c.member_id=? AND c.status='active' AND a.status='active')`,
-       [id,data.room,member.id,title,now,now,member.id]),
-     prepare(db,`INSERT INTO forum_posts(id,thread_id,author_member_id,body,starter,status,created_at)
-       SELECT ?,?,?,?,1,'pending',? WHERE EXISTS(SELECT 1 FROM forum_threads WHERE id=? AND status='pending')`,
-       [first,id,member.id,body,now,id])
-   ]);
-   if(changes(out[0])!==1||changes(out[1])!==1)return failure(req,'Discussion could not be submitted',403);
-   return respond(req,{id,status:'pending',notice:'Your discussion is awaiting human moderation; it is not publicly visible.'},202);
-  }
-  const replyMatch=new RegExp('^'+ROOT+'/threads/([a-f0-9]{32})/replies$').exec(path);
-  if(replyMatch){
-   const data=await input(req,['body'],3300);
-   const body=data&&clean(data.body,2,2400,true);
-   if(!body)return failure(req,'Message is invalid',400);
-   const thread=await oneThread(db,replyMatch[1]);
-   if(!thread)return failure(req,'Discussion unavailable',404);
-   if(!await rateLimit(db,'forum:reply:'+member.id,now,8,3600))return failure(req,'Reply limit reached',429);
-   const id=dt();
-   const result=await prepare(db,`INSERT INTO forum_posts(id,thread_id,author_member_id,body,starter,status,created_at)
-      SELECT ?,?,?,?,0,'pending',? WHERE EXISTS(
-      SELECT 1 FROM forum_threads t JOIN forum_posts s ON s.thread_id=t.id AND s.starter=1
-      WHERE t.id=? AND t.status='visible' AND s.status='visible')`,[id,thread.id,member.id,body,now,thread.id]).run();
-   if(result?.success===false||changes(result)!==1)return failure(req,'Discussion changed; reload first',409);
-   return respond(req,{id,status:'pending',notice:'Your reply is awaiting human moderation.'},202);
-  }
-  const reportMatch=new RegExp('^'+ROOT+'/posts/([a-f0-9]{32})/report$').exec(path);
-  if(reportMatch){
-   const data=await input(req,['reason','details'],750);
-   const reasons=new Set(['spam','harassment','unsafe','copyright','other']);
-   const details=data&&clean(data.details,0,500,true);
-   if(!data||!reasons.has(data.reason)||details===null)return failure(req,'Invalid report',400);
-   const found=await rows(db,`SELECT p.id,p.author_member_id AS authorId FROM forum_posts p
-      JOIN forum_threads t ON t.id=p.thread_id
-      JOIN forum_posts starter ON starter.thread_id=t.id AND starter.starter=1
-      JOIN member_accounts a ON a.id=p.author_member_id JOIN creator_profiles c ON c.member_id=p.author_member_id
-      JOIN member_accounts ta ON ta.id=t.author_member_id JOIN creator_profiles tc ON tc.member_id=t.author_member_id
-      WHERE p.id=? AND p.status='visible' AND ${activeAuthor} AND ${visibleThread} LIMIT 1`,[reportMatch[1]]);
-   if(!found.length)return failure(req,'Message unavailable',404);
-   if(found[0].authorId===member.id)return failure(req,'Cannot report your own message',403);
-   if(!await rateLimit(db,'forum:report:'+member.id,now,12,3600))return failure(req,'Report limit reached',429);
-   const response=await prepare(db,`INSERT INTO forum_reports(id,post_id,reporter_member_id,reason,details,status,created_at)
-      SELECT ?,?,?,?,?, 'open',? WHERE EXISTS(SELECT 1 FROM forum_posts WHERE id=? AND status='visible')
-      ON CONFLICT(post_id,reporter_member_id) DO NOTHING`,[dt(),reportMatch[1],member.id,data.reason,details,now,reportMatch[1]]).run();
-   if(response?.success===false)return failure(req,'Report unavailable',503);
-   return respond(req,{recorded:true,notice:'Your report has been submitted to the staff review queue.'},202);
-  }
-  return failure(req,'Not found',404);
- }catch{
-  return failure(req,'Forum temporarily unavailable',503);
- }
-}
-).exec(path);
+  const activityMatch=new RegExp('^'+ROOT+'/members/([a-z][a-z0-9_]{2,29})/activity$').exec(path);
   if(activityMatch&&(req.method==='GET'||req.method==='HEAD')){
    if(u.search)return failure(req,'Invalid query',400);
-   const found=await rows(db,`SELECT c.handle FROM creator_profiles c
-     JOIN member_accounts a ON a.id=c.member_id
+   const match=await rows(db,`SELECT c.handle FROM creator_profiles c JOIN member_accounts a ON a.id=c.member_id
      WHERE c.handle=? AND c.status='active' AND a.status='active' LIMIT 1`,[activityMatch[1]]);
-   if(found.length!==1)return failure(req,'Member not found',404);
-   // Only approved posts inside approved, active-author threads are visible.
-   // Never include unreviewed messages, reporter data or account identifiers.
+   if(match.length!==1)return failure(req,'Member not found',404);
    const items=await rows(db,`SELECT p.id,p.thread_id AS threadId,t.title AS threadTitle,t.room,
-      SUBSTR(p.body,1,320) AS excerpt,p.created_at AS createdAt
-     FROM forum_posts p
-     JOIN forum_threads t ON t.id=p.thread_id
+       SUBSTR(p.body,1,320) AS excerpt,p.created_at AS createdAt
+     FROM forum_posts p JOIN forum_threads t ON t.id=p.thread_id
      JOIN forum_posts starter ON starter.thread_id=t.id AND starter.starter=1
      JOIN creator_profiles c ON c.member_id=p.author_member_id
      JOIN member_accounts a ON a.id=p.author_member_id
