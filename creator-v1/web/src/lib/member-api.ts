@@ -101,8 +101,34 @@ async function requestMember<T>(
   return response.json() as Promise<T>;
 }
 export const memberHealth=(signal?:AbortSignal)=>requestMember<MemberHealth>("/health",{signal,publicHealth:true});
-export const memberSignInCapabilities=(signal?:AbortSignal)=>
-  requestMember<MemberSignInCapabilities>("/auth-methods",{signal,publicHealth:true});
+/**
+ * The Creator V1 identity endpoint owns these sign-in methods. Unknown JSON,
+ * foreign backend shapes and provider rollout flags from another auth service
+ * are not registration authority. Only invite-only email can be advertised
+ * until an independently accepted canonical identity replaces this service.
+ */
+export function verifiedMemberSignInCapabilities(raw:unknown):MemberSignInCapabilities {
+  const disabled:MemberSignInCapabilities={
+    version:1,registration:"closed",linking:"disabled",
+    methods:{
+      email:{available:false,path:null},
+      google:{available:false},github:{available:false},
+      passkey:{available:false},microsoft:{available:false},apple:{available:false}
+    }
+  };
+  if(!raw||typeof raw!=="object"||Array.isArray(raw))return disabled;
+  const obj=raw as Record<string,unknown>;
+  if(obj.version!==1||obj.linking!=="disabled"||obj.registration!=="invite-only")return disabled;
+  if(!obj.methods||typeof obj.methods!=="object"||Array.isArray(obj.methods))return disabled;
+  const methods=obj.methods as Record<string,unknown>;
+  if(!methods.email||typeof methods.email!=="object"||Array.isArray(methods.email))return disabled;
+  const email=methods.email as Record<string,unknown>;
+  if(email.available!==true||email.path!=="/api/v1/member/join")return disabled;
+  // Even a malformed or stale backend cannot enable unsupported providers.
+  return {...disabled,registration:"invite-only",methods:{...disabled.methods,email:{available:true,path:"/api/v1/member/join"}}};
+}
+export const memberSignInCapabilities=async(signal?:AbortSignal):Promise<MemberSignInCapabilities>=>
+  verifiedMemberSignInCapabilities(await requestMember<unknown>("/auth-methods",{signal,publicHealth:true}));
 export const memberMe=(signal?:AbortSignal)=>requestMember<{member:MemberIdentity}>("/me",{signal});
 export interface MemberProfileUpdate { handle:string; displayName:string; bio:string }
 export const memberSaveProfile=(profile:MemberProfileUpdate)=>
