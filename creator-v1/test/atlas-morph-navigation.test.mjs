@@ -15,7 +15,7 @@ test("one compact Menu and actual member identity use the sole top navigation",(
   assert.match(shell,/memberMe\(controller.signal\)/);
   assert.match(shell,/setName\(member\.displayName\?\.trim\(\)\|\|member\.handle\|\|"MEMBER"\)/);
   assert.match(shell,/to="\/atlas\/account\/edit"/);
-  assert.match(shell,/to="\/atlas\/account"/);
+  assert.match(shell,/to=\{verified\?"\/atlas\/account":"\/atlas\/join"\}/);
   assert.doesNotMatch(shell,/<nav className="atm-primary-nav"/);
   for(const forbidden of ["atm-node","atm-constellation","atm-mobile-dock","atm-workspace","atm-footer","atm-floating-jump","atm-world-tile"])
     assert.ok(!shell.includes(forbidden),"The obsolete secondary navigation must not render: "+forbidden);

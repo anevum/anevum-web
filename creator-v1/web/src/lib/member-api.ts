@@ -4,6 +4,14 @@
 export const MEMBER_ROOT="/api/v1/member";
 
 export interface MemberHealth { service:string; status:string; signupEnabled:boolean }
+// The API must belong to the same backend that owns this Creator V1 session.
+export type MemberLoginMethod = "email"|"google"|"github"|"passkey"|"microsoft"|"apple";
+export interface MemberSignInCapabilities {
+  version:1;
+  registration:"closed"|"invite-only"|"open";
+  methods:Record<MemberLoginMethod,{available:boolean;path?:string|null}>;
+  linking:"disabled";
+}
 export interface MemberIdentity { id:string; email:string; handle:string|null; displayName:string|null; bio:string }
 export interface MemberProject {
   id:string; slug:string; title:string; summary:string; description:string; category:string;
@@ -93,6 +101,8 @@ async function requestMember<T>(
   return response.json() as Promise<T>;
 }
 export const memberHealth=(signal?:AbortSignal)=>requestMember<MemberHealth>("/health",{signal,publicHealth:true});
+export const memberSignInCapabilities=(signal?:AbortSignal)=>
+  requestMember<MemberSignInCapabilities>("/auth-methods",{signal,publicHealth:true});
 export const memberMe=(signal?:AbortSignal)=>requestMember<{member:MemberIdentity}>("/me",{signal});
 export interface MemberProfileUpdate { handle:string; displayName:string; bio:string }
 export const memberSaveProfile=(profile:MemberProfileUpdate)=>
