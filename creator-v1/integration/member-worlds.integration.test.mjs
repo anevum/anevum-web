@@ -20,7 +20,8 @@ async function fixture(){
  CREATE TABLE schema_migrations(version TEXT PRIMARY KEY,applied_at TEXT DEFAULT CURRENT_TIMESTAMP);
  CREATE TABLE creator_profiles(member_id TEXT PRIMARY KEY NOT NULL,handle TEXT UNIQUE COLLATE NOCASE NOT NULL,
  display_name TEXT NOT NULL,bio TEXT NOT NULL DEFAULT '',status TEXT NOT NULL DEFAULT 'active',
- is_staff INTEGER NOT NULL DEFAULT 0,created_at TEXT DEFAULT CURRENT_TIMESTAMP,updated_at TEXT DEFAULT CURRENT_TIMESTAMP);`);
+ is_staff INTEGER NOT NULL DEFAULT 0,created_at TEXT DEFAULT CURRENT_TIMESTAMP,updated_at TEXT DEFAULT CURRENT_TIMESTAMP);
+ CREATE TABLE member_deletion_requests(id TEXT PRIMARY KEY,member_id TEXT NOT NULL,state TEXT NOT NULL,requested_at INTEGER NOT NULL,updated_at INTEGER NOT NULL);`);
  sqlite.exec(readFileSync(new URL("../auth/migrations/0003_member_identity_staging.sql",import.meta.url),"utf8"));
  sqlite.exec(readFileSync(new URL("../auth/migrations/0010_member_worlds.sql",import.meta.url),"utf8"));
  function stmt(sql,args=[]){return{bind(...p){return stmt(sql,p)},async all(){return{success:true,results:sqlite.prepare(sql).all(...args)}},async run(){const r=sqlite.prepare(sql).run(...args);return{success:true,meta:{changes:Number(r.changes),rows_written:Number(r.changes)}}}};}
