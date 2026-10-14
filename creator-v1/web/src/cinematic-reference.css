@@ -338,3 +338,15 @@
  .site-shell--home .cw-account-link{min-width:34px;width:34px;height:34px}
  .site-shell--home .header-inner{gap:6px}
 }
+
+/* Phone: the owner/member entry is a real protected link, not decorative avatar art. */
+@media(max-width:900px){
+ .site-shell--home .cinema-mobile-search{width:44px;height:44px}
+ .site-shell--home .cw-account-link{display:grid;place-items:center;flex:none;min-width:44px;width:44px;height:44px;margin-left:0;border:1px solid #ad85aa;border-radius:50%;background:radial-gradient(circle at 32% 28%,#7a538f,#211834 72%);color:#f1cfbf;box-shadow:inset 0 1px 0 #ffffff2b,0 0 10px #966ac433}
+}
+@media(max-width:360px){
+ .site-shell--home .cinema-mobile-search{width:44px;height:44px}
+ .site-shell--home .cw-account-link{min-width:44px;width:44px;height:44px}
+ .site-shell--home .cw-brand-stack b{font-size:14px;letter-spacing:.14em}
+ .site-shell--home .header-inner{gap:5px}
+}
