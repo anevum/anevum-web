@@ -136,7 +136,7 @@ function feature(key, withAnimation = true) {
       {opacity:.35,filter:"blur(9px)", transform:"perspective(1100px) rotateY(-29deg) translateY(16px) scale(.96)"},
       {opacity:1,filter:"blur(0)", transform:"perspective(1100px) rotateY(-16deg) rotateX(6deg) rotateZ(-2deg) scale(1)"}
     ],{duration:650,easing:"cubic-bezier(.19,1,.22,1)"});
-    $("#exhibit-summary")?.animate?.([{opacity:.25,transform:"translateY(9px)"},{opacity:1,transform:"translateY(0)"}],{duration:400,easing:"ease-out"});
+    $(".exhibit-summary")?.animate?.([{opacity:.25,transform:"translateY(9px)"},{opacity:1,transform:"translateY(0)"}],{duration:400,easing:"ease-out"});
   }
 }
 
@@ -303,7 +303,7 @@ document.addEventListener("pointermove", event => {
 },{passive:true});
 
 const vertex = "attribute vec2 a_position; void main(){ gl_Position=vec4(a_position,0.0,1.0); }";
-const fragment = String.raw\`
+const fragment = String.raw`
 #ifdef GL_FRAGMENT_PRECISION_HIGH
 precision highp float;
 #else
@@ -403,7 +403,7 @@ void main(){
  color=pow(max(color,0.0),vec3(.93));
  gl_FragColor=vec4(color,1.0);
 }
-\`;
+`;
 
 class ArchitectureScene {
   constructor(canvas) {
@@ -489,7 +489,7 @@ class ArchitectureScene {
   resize(){
     if(!this.ready||!this.gl)return;
     const width=Math.max(1,innerWidth),height=Math.max(1,innerHeight);
-    const ratio=Math.min(window.devicePixelRatio||1,this.isMobile?.72:1.05);
+    const ratio=Math.min(window.devicePixelRatio||1,this.isMobile ? .72 : 1.05);
     const maxPixel= this.isMobile?800:1350;
     const scale=Math.min(ratio,maxPixel/Math.max(width,height));
     this.canvas.width=Math.max(1,Math.round(width*scale));
