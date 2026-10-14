@@ -10,6 +10,9 @@ import { projectDetailPath } from "../lib/navigation";
 import { CosmicArtwork } from "../components/CosmicArtwork";
 import { Icon } from "../components/Icons";
 import { CommunityMemberDesk } from "../components/CommunityMemberDesk";
+import { CreatorRecognitionStrip } from "../components/CreatorRecognitionStrip";
+import { useVerifiedCreatorRecognition } from "../lib/useVerifiedCreatorRecognition";
+import type { VerifiedCreatorRecognition } from "../lib/creator-recognition";
 import { LoadingState, ErrorState } from "../components/States";
 import "./community-hub-v007.css";
 
@@ -53,7 +56,7 @@ const asDate = (value: string | null | undefined) => {
 };
 const creatorPath = (handle: string) => "/creators/" + encodeURIComponent(handle);
 
-function ProjectEntry({ item }: { item: Project }) {
+function ProjectEntry({ item, recognition }: { item: Project; recognition?:VerifiedCreatorRecognition }) {
   const destination = projectDetailPath(item.id, "/community");
   const field = fields.find(field => field.id === item.category);
   return <article className="ch7-entry ch7-project">
@@ -69,13 +72,14 @@ function ProjectEntry({ item }: { item: Project }) {
         <span>BY <Link to={creatorPath(item.creatorHandle)}>{item.creatorName || "@" + item.creatorHandle}</Link></span>
         {item.freeToUse && <span className="ch7-pill">FREE TO EXPLORE</span>}
       </div>
+      {recognition&&<div className="ch9-in-record"><CreatorRecognitionStrip recognition={recognition}/></div>}
       <div className="ch7-entry-actions"><Link className="ch7-button ch7-button-primary" to={destination}>OPEN PROJECT <Icon name="arrow" size={14}/></Link>
         <Link className="ch7-inline" to={"/discover?category=" + item.category}>MORE IN THIS FIELD</Link></div>
     </div>
   </article>;
 }
 
-function ConversationEntry({ item }: { item: CommunityPost }) {
+function ConversationEntry({ item, recognition }: { item: CommunityPost; recognition?:VerifiedCreatorRecognition }) {
   const destination = "/community/posts/" + encodeURIComponent(item.id);
   return <article className="ch7-entry ch7-conversation">
     <div className="ch7-conversation-art" aria-hidden="true"><Icon name="community" size={32}/><span>PUBLIC CONVERSATION</span></div>
@@ -87,17 +91,19 @@ function ConversationEntry({ item }: { item: CommunityPost }) {
       <div className="ch7-byline"><span className="ch7-avatar" aria-hidden="true">{(item.authorName || item.authorHandle).charAt(0).toUpperCase()}</span>
         <span>BY <Link to={creatorPath(item.authorHandle)}>{item.authorName || "@" + item.authorHandle}</Link></span>
         <span className="ch7-reactions">{item.replyCount} {item.replyCount === 1 ? "REPLY" : "REPLIES"} · {item.score} REACTIONS</span></div>
+      {recognition&&<div className="ch9-in-record"><CreatorRecognitionStrip recognition={recognition}/></div>}
       <div className="ch7-entry-actions"><Link className="ch7-button ch7-button-primary" to={destination}>READ DISCUSSION <Icon name="arrow" size={14}/></Link></div>
     </div>
   </article>;
 }
 
-function CreatorEntry({ item }: { item: Creator }) {
+function CreatorEntry({ item, recognition }: { item: Creator; recognition?:VerifiedCreatorRecognition }) {
   return <article className="ch7-person">
     <div className="ch7-person-avatar" aria-hidden="true">{(item.displayName || item.handle).charAt(0).toUpperCase()}</div>
     <div className="ch7-person-copy"><span className="ch7-kicker">PUBLIC CREATOR CHANNEL</span>
       <h3><Link to={creatorPath(item.handle)}>{item.displayName}</Link></h3>
-      <span>@{item.handle}</span><p>{item.publishedProjects} APPROVED {item.publishedProjects === 1 ? "RELEASE" : "RELEASES"}</p></div>
+      <span>@{item.handle}</span><p>{item.publishedProjects} APPROVED {item.publishedProjects === 1 ? "RELEASE" : "RELEASES"}</p>
+      {recognition&&<div className="ch9-in-person"><CreatorRecognitionStrip recognition={recognition} compact/></div>}</div>
     <Link className="ch7-button" to={creatorPath(item.handle)} aria-label={"Visit " + item.displayName + "'s public channel"}>VIEW CHANNEL <Icon name="arrow" size={14}/></Link>
   </article>;
 }
@@ -145,6 +151,9 @@ export function CommunityPage() {
   const entries: Entry[] = view === "all" ? combined.slice(0, 18)
     : view === "projects" ? projectItems.map(value => ({ kind: "project" as const, id: value.id, at: asTime(value.publishedAt), value }))
     : view === "conversations" ? postItems.map(value => ({ kind: "conversation" as const, id: value.id, at: asTime(value.publishedAt), value })) : [];
+  const recognition = useVerifiedCreatorRecognition(view === "people"
+    ? creatorItems.map(item=>item.handle)
+    : [...entries.map(entry=>entry.kind==="project"?entry.value.creatorHandle:entry.value.authorHandle),...creatorItems.slice(0,5).map(item=>item.handle)]);
   const loading = view === "people" ? creators.state === "loading"
     : view === "projects" ? projects.state === "loading"
     : view === "conversations" ? status.state === "loading" || (enabled && conversations.state === "loading")
@@ -217,10 +226,10 @@ export function CommunityPage() {
         {loading && <LoadingState label="Reading verified public community records"/>}
         {failed && <ErrorState title="COMMUNITY RECORDS UNAVAILABLE" detail="The live public data could not be reached. No fictional members or projects are substituted."/>}
         {!loading && !failed && (view === "people" ? <div className="ch7-people">
-          {creatorItems.map(item => <CreatorEntry item={item} key={item.handle}/>)}
+          {creatorItems.map(item => <CreatorEntry item={item} recognition={recognition[item.handle]} key={item.handle}/>)}
         </div> : <div className="ch7-stream" aria-live="polite">
-          {entries.map(entry => entry.kind === "project" ? <ProjectEntry key={entry.id} item={entry.value}/> :
-            <ConversationEntry key={entry.id} item={entry.value}/>)}
+          {entries.map(entry => entry.kind === "project" ? <ProjectEntry key={entry.id} item={entry.value} recognition={recognition[entry.value.creatorHandle]}/> :
+            <ConversationEntry key={entry.id} item={entry.value} recognition={recognition[entry.value.authorHandle]}/>)}
         </div>)}
         {!loading && !failed && (view === "people" ? creatorItems.length === 0 : entries.length === 0) && <div className="ch7-empty" role="status">
           <span className="ch7-kicker">THE COMMONS / PUBLIC RECORD</span>
@@ -254,7 +263,7 @@ export function CommunityPage() {
           {creators.state === "ready" && creatorItems.length > 0 && <div className="ch7-featured-people">
             {creatorItems.slice(0, 5).map(item => <Link key={item.handle} to={creatorPath(item.handle)}>
               <span className="ch7-avatar" aria-hidden="true">{item.displayName.charAt(0).toUpperCase()}</span>
-              <span><strong>{item.displayName}</strong><small>@{item.handle}</small></span>
+              <span><strong>{item.displayName}</strong><small>@{item.handle}</small>{recognition[item.handle]&&<span className="ch9-in-sidebar"><CreatorRecognitionStrip recognition={recognition[item.handle]} compact/></span>}</span>
               <Icon name="arrow" size={14}/>
             </Link>)}</div>}
           <Link className="ch7-panel-link" to="/creators">BROWSE ALL CREATORS <Icon name="arrow" size={14}/></Link>
