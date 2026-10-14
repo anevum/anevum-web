@@ -117,7 +117,19 @@ export const memberCreatorProfile=(handle:string,signal?:AbortSignal)=>{
     contributions:{ratings:number;publishedProjects:number;releases:number};
     progression:Progression;
     achievements:MemberAchievement[];
+    showcase?:{featuredAward:MemberAchievement|null};
   }>("/creators/"+handle,{signal,publicHealth:true}); // Public, anonymous creator profile: never send member cookies.
+
+export interface MemberFeaturedAwardSelection {awardKey:string|null;revision:number}
+export const memberFeaturedAward=(signal?:AbortSignal)=>
+  requestMember<{selection:MemberFeaturedAwardSelection;eligibleAwards:MemberAchievement[]}>("/creators/showcase",{signal});
+export const memberSetFeaturedAward=(awardKey:string|null,revision:number)=>{
+  if(awardKey!==null&&!/^[a-z][a-z0-9-]{2,40}$/.test(awardKey))throw Error("Invalid award key");
+  if(!Number.isSafeInteger(revision)||revision<0)throw Error("Invalid showcase revision");
+  return requestMember<{selection:MemberFeaturedAwardSelection}>(
+    "/creators/showcase",{method:"POST",body:{awardKey,revision}}
+  );
+};
 };
 
 export const memberRating=(id:string,signal?:AbortSignal)=>
