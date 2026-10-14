@@ -155,6 +155,31 @@ test("opt-in semantics apply to batch projection and anonymous visitors",async()
  }finally{h.close()}
 });
 
+
+test("unmigrated staging never reveals earned artifacts and member selections remain unavailable",async()=>{
+ const h=harness();try{
+  h.sqlite.exec("DROP TABLE member_showcase_selections");
+  assert.equal(await readPublicShowcase(h.db,"aurora"),null);
+  const publicResult=await publicApi.fetch(req("/api/v1/community/showcases?handles=aurora"),{COMMUNITY_DB:h.db});
+  assert.equal(publicResult.status,200);
+  assert.deepEqual(Object.keys((await publicResult.json()).items),[]);
+  const privateResult=await settings(h);
+  assert.equal(privateResult.status,503,"requires the approved migration");
+ }finally{h.close()}
+});
+
+test("creator page and selected emblems cannot bypass public opt-in",()=>{
+ const creator=readFileSync(new URL("../web/src/pages/CreatorsPage.tsx",import.meta.url),"utf8");
+ const legacy=readFileSync(new URL("../auth/social.mjs",import.meta.url),"utf8");
+ const artwork=readFileSync(new URL("../web/src/components/PublicAuthorShowcase.tsx",import.meta.url),"utf8");
+ assert.match(creator,/readPublicShowcases/);
+ assert.match(creator,/publicShowcase/);
+ assert.doesNotMatch(creator,/detailed\\.progression|detailed\\.achievements/);
+ assert.match(legacy,/progression:isOwner\\?/);
+ assert.match(legacy,/achievements:isOwner\\?/);
+ assert.match(artwork,/seriesOneArtifactMotif\\(artifact\\)/,"equipped art uses the equipped name, not current level");
+});
+
 test("published-only API validates author enumeration and never writes",async()=>{
  const h=harness();try{
   publicConsent(h);
