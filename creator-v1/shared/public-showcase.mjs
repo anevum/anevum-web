@@ -107,11 +107,49 @@ export async function readPublicShowcase(db,handle,schema){
   releases:Number(releases[0]?.n||0),xp:Number(xp[0]?.n||0)};
  return {handle:creator.handle,...publicSelection(saved,stats)};
 }
+/** One bounded SQL aggregation for at most 10 author identities.
+ * Never issues one database roundtrip per post or exposes account IDs publicly.
+ */
 export async function readPublicShowcases(db,handles){
- const schema=await showcaseSchema(db),items={};
- for(const handle of [...new Set(handles.map(s=>s.toLowerCase()))]){
-  const result=await readPublicShowcase(db,handle,schema);
-  if(result)items[result.handle]=result;
+ const wanted=[...new Set(handles.map(x=>x.toLowerCase()).filter(x=>SHOWCASE_HANDLE.test(x)))].slice(0,10);
+ if(!wanted.length)return {};
+ const schema=await showcaseSchema(db);
+ const placeholders=wanted.map(()=>'?').join(',');
+ const publishedPost=schema.posts?` OR EXISTS(SELECT 1 FROM community_posts cp
+    WHERE cp.author_member_id=c.member_id AND cp.status='published'
+      AND julianday(cp.published_at)<=julianday('now'))`:'';
+ const found=await showcaseRows(db,`SELECT c.member_id AS id,c.handle,
+   (SELECT COUNT(*) FROM community_project_votes v
+      WHERE v.member_id=c.member_id AND v.status='active') AS ratings,
+   (SELECT COUNT(*) FROM projects p
+      WHERE p.owner_member_id=c.member_id AND p.status='published'
+        AND julianday(p.published_at)<=julianday('now')) AS publishedProjects,
+   (SELECT COUNT(*) FROM project_releases r JOIN projects p ON p.id=r.project_id
+      WHERE p.owner_member_id=c.member_id AND p.status='published'
+        AND julianday(p.published_at)<=julianday('now')) AS releases,
+   (SELECT COALESCE(SUM(x.amount),0) FROM community_xp_events x
+      WHERE x.member_id=c.member_id) AS xp
+   FROM creator_profiles c JOIN member_accounts a ON a.id=c.member_id
+   WHERE c.status='active' AND a.status='active'
+    AND c.handle COLLATE NOCASE IN (${placeholders})
+    AND (EXISTS(SELECT 1 FROM projects p
+      WHERE p.owner_member_id=c.member_id AND p.status='published'
+      AND julianday(p.published_at)<=julianday('now'))${publishedPost})
+   LIMIT 10`,wanted);
+ const saved=new Map();
+ if(schema.selections&&found.length){
+  const ids=found.map(row=>row.id);
+  const selected=await showcaseRows(db,`SELECT member_id,artifact_key,award_keys_json,is_public
+    FROM member_showcase_selections WHERE member_id IN (${ids.map(()=>'?').join(',')})`,ids);
+  for(const entry of selected)saved.set(entry.member_id,entry);
+ }
+ const items=Object.create(null);
+ for(const row of found){
+  const preference=saved.get(row.id)||null;
+  if(preference&&Number(preference.is_public)!==1)continue;
+  const {id:_,...stats}=row;
+  const handle=String(row.handle).toLowerCase();
+  items[handle]={handle,...publicSelection(preference,stats)};
  }
  return items;
 }
