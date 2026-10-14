@@ -101,5 +101,10 @@ test("V008 typography, controls and mobile motion respect public UX boundaries",
   assert.match(signalCss,/@media\(forced-colors:active\)/);
   assert.match(signalCss,/focus-visible/);
   assert.doesNotMatch(landing,/CinematicCatalogueSections|CinematicDiscoverySections|HotCommunityPosts|RHEN TERMINAL/);
+  assert.match(hero,/window\.matchMedia/);
+  assert.match(hero,/av8-clock-label/);
+  assert.match(signalCss,/\.site-shell--home \.header-create/);
+  assert.match(signalCss,/av8-release-title strong\{/);
+  assert.doesNotMatch(signalCss,/clip-path:inset\(0 100%/);
   assert.match(routes,/<MemberGate\s*\/>/);
 });
