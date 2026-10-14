@@ -46,10 +46,12 @@ test("Community is a truthful project-and-creator hub without fabricated threads
  const page=read("web/src/pages/CommunityPage.tsx");
  assert.match(page,/readProjects/);
  assert.match(page,/readCreators/);
- assert.match(page,/COMMUNITY CONVERSATIONS ARE UNDER PRIVATE REVIEW/);
- assert.match(page,/Only actual approved posts appear publicly/);
- assert.match(page,/<HotCommunityPosts\/>/);
- assert.match(page,/to="\/community\/write"/);
+ assert.match(page,/readStatus/);
+ assert.match(page,/readCommunityPosts/);
+ assert.match(page,/communityPosts === true/);
+ assert.match(page,/Only independently approved public records/);
+ assert.match(page,/to="\/boards"/);
+ assert.match(page,/Public signup is not enabled/);
  assert.doesNotMatch(page,/fakeMessage|sampleComments|createThread\(/);
 });
 test("unlimited levels preserve server authoritative progress and first named artifact series",()=>{
