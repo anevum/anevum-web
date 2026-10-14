@@ -15,11 +15,17 @@ const read=p=>readFileSync(new URL("../"+p,import.meta.url),"utf8");
 const candidate=JSON.parse(read("wrangler.canonical-stage.candidate.jsonc"));
 const inventory=JSON.parse(read("test/fixtures/identity-stage-inventory-2026-10-14.json"));
 const tables=["user","session","account","verification","rateLimit"];
-const db=names=>({
+const db=(names,opts={})=>({
  prepare(sql){
   return {async all(){
-   if(!/sqlite_master/.test(sql))throw Error("No executable fixture query");
-   return {success:true,results:names.map(name=>({name}))};
+   if(/sqlite_master/.test(sql))
+     return {success:true,results:[...names,...(opts.markerTable===false?[]:["canonical_identity_manifest"])].map(name=>({name}))};
+   if(/SELECT issuer,migration FROM canonical_identity_manifest/.test(sql))
+     return {success:true,results:opts.markerTable===false?[]:[{
+       issuer:opts.issuer??"anevum-better-auth-staging-v1",
+       migration:opts.migration??"0001_canonical_better_auth_core"
+     }]};
+   throw Error("No executable fixture query");
   }};
  },
  async batch(){return [];}
@@ -160,6 +166,9 @@ test("schema readiness is verified from actual D1 metadata, not a source flag",a
  assert.equal(await canonicalSchemaReady(env()),true);
  assert.equal(await canonicalSchemaReady({...env(),MEMBER_DB:db(tables.slice(0,4))}),false);
  assert.equal(await canonicalSchemaReady({...env(),MEMBER_DB:db([])}),false);
+ assert.equal(await canonicalSchemaReady({...env(),MEMBER_DB:db(tables,{markerTable:false})}),false);
+ assert.equal(await canonicalSchemaReady({...env(),MEMBER_DB:db(tables,{issuer:"anevum-v5-beta"})}),false);
+ assert.equal(await canonicalSchemaReady({...env(),MEMBER_DB:db(tables,{migration:"old-schema"})}),false);
  assert.equal(await canonicalSchemaReady({...env(),MEMBER_DB:{prepare(){throw Error("D1 offline")},batch(){}}}),false);
  assert.equal(await canonicalSchemaReady({...env(),MEMBER_DB:null}),false);
 });
@@ -319,6 +328,9 @@ test("proposed isolated D1 schema is empty, enforces uniqueness and cascades ses
   d.exec(sql);d.exec(sql);
   const names=new Set(d.prepare("SELECT name FROM sqlite_master WHERE type='table'").all().map(x=>x.name));
   assert.ok(tables.every(x=>names.has(x)));
+  assert.ok(names.has("canonical_identity_manifest"));
+  const issuer=d.prepare("SELECT issuer,migration FROM canonical_identity_manifest WHERE id=1").get();
+  assert.deepEqual(issuer,{issuer:"anevum-better-auth-staging-v1",migration:"0001_canonical_better_auth_core"});
   assert.equal(names.has("member_accounts"),false);
   assert.equal(names.has("member_entitlements"),false);
   const now=1760481000;
