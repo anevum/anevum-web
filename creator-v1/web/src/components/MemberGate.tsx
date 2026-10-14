@@ -1,4 +1,4 @@
-import { Link, Outlet, NavLink, useOutletContext } from "react-router-dom";
+import { Link, Outlet, NavLink, Navigate, useLocation, useOutletContext } from "react-router-dom";
 import {useState} from "react";
 import { memberHealth,memberMe,MemberApiError,type MemberHealth,type MemberIdentity } from "../lib/member-api";
 import { useResource } from "../lib/useResource";
@@ -15,6 +15,7 @@ export function useMemberContext():MemberContext {
   return useOutletContext<MemberContext>();
 }
 export function MemberGate(){
+  const location=useLocation();
   const session=useResource(async signal=>{
     const health=await memberHealth(signal);
     try{
@@ -51,6 +52,10 @@ export function MemberGate(){
   const activeMember=confirmedProfile?.id===session.data.member.id
     ? {...session.data.member,...confirmedProfile}
     : session.data.member;
+  // Invitees who open their account for the first time get the actual
+  // member-owned profile editor. Guest browsing remains available.
+  if(!activeMember.handle && (location.pathname==="/account" || location.pathname==="/atlas/account"))
+    return <Navigate to={location.pathname.startsWith("/atlas/")?"/atlas/account/edit":"/account/edit"} replace/>;
   return <div className="member-shell">
     <header className="member-header">
       <div><span className="kicker">PRIVATE MEMBER WORKSPACE / STAGING</span><strong>{activeMember.displayName||activeMember.handle||"YOUR ACCOUNT"}</strong></div>
