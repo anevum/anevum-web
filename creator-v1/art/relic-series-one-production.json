@@ -1,0 +1,566 @@
+{
+  "schema": "anevum.relic-art-direction.v1",
+  "artSeries": 1,
+  "assetMasterSpec": {
+    "pixels": 2048,
+    "format": "WEBP",
+    "alpha": true,
+    "background": "transparent",
+    "litScene": "physically based directional key and edge lights, dark internal occlusion, high contrast silhouette",
+    "camera": "orthographic 3/4 view with full object silhouette, centered 10% transparent margin",
+    "displaySizes": [
+      48,
+      96,
+      192,
+      384,
+      768
+    ],
+    "smallTreatment": "bespoke 24px silhouette, not a downscaled detail master",
+    "copyAndRights": "original proprietary ANEVUM art; no third-party marks"
+  },
+  "requiredMasters": 60,
+  "preparedForProduction": true,
+  "releaseStatus": "blocked-no-raster-masters",
+  "specs": [
+    {
+      "level": 1,
+      "name": "Foundry Spark",
+      "renderKey": "series-01/01-foundry-spark",
+      "visualSubject": "forged three-prong ignition cage suspending a blazing ember crystal",
+      "materials": "heat-blackened copper, volcanic slag, gold filaments",
+      "state": "master-pending",
+      "assetRole": "presentation-only"
+    },
+    {
+      "level": 2,
+      "name": "Copper Key",
+      "renderKey": "series-01/02-copper-key",
+      "visualSubject": "long asymmetrical ward-key with a spiraled bow and three toothed tines",
+      "materials": "aged copper, bright sapphire inset, machine engraved lines",
+      "state": "master-pending",
+      "assetRole": "presentation-only"
+    },
+    {
+      "level": 3,
+      "name": "Blackglass Seed",
+      "renderKey": "series-01/03-blackglass-seed",
+      "visualSubject": "faceted obsidian seed pod split along one luminous living seam",
+      "materials": "mirror blackglass, internal violet fluorescence, iron dust",
+      "state": "master-pending",
+      "assetRole": "presentation-only"
+    },
+    {
+      "level": 4,
+      "name": "Ivory Compass",
+      "renderKey": "series-01/04-ivory-compass",
+      "visualSubject": "folding dual-ring navigator with an ivory directional needle",
+      "materials": "carved fossil ivory, dark brass pivots, pearl enamel",
+      "state": "master-pending",
+      "assetRole": "presentation-only"
+    },
+    {
+      "level": 5,
+      "name": "Iron Moth",
+      "renderKey": "series-01/05-iron-moth",
+      "visualSubject": "outspread articulated nocturnal moth with antennae and vented wings",
+      "materials": "riveted cold iron, gunmetal mesh, amber light joints",
+      "state": "master-pending",
+      "assetRole": "presentation-only"
+    },
+    {
+      "level": 6,
+      "name": "Brass Dial",
+      "renderKey": "series-01/06-brass-dial",
+      "visualSubject": "towering radial brass dial on three collapsing legs",
+      "materials": "aged brass, blue enamel numerals, brushed gears",
+      "state": "master-pending",
+      "assetRole": "presentation-only"
+    },
+    {
+      "level": 7,
+      "name": "Quartz Spool",
+      "renderKey": "series-01/07-quartz-spool",
+      "visualSubject": "tightly wound helix of milky crystal filament around a spindle",
+      "materials": "clear smoky quartz, silver core, refracted starlight",
+      "state": "master-pending",
+      "assetRole": "presentation-only"
+    },
+    {
+      "level": 8,
+      "name": "Ember Lantern",
+      "renderKey": "series-01/08-ember-lantern",
+      "visualSubject": "hooded glass lantern holding a flame shaped like a miniature sun",
+      "materials": "burnished copper hood, soot glass, fiery orange plasma",
+      "state": "master-pending",
+      "assetRole": "presentation-only"
+    },
+    {
+      "level": 9,
+      "name": "Prism Mask",
+      "renderKey": "series-01/09-prism-mask",
+      "visualSubject": "angular masquerade mask formed from eight refracting crystal blades",
+      "materials": "prismatic glass, pale gold inner rim, black silk recess",
+      "state": "master-pending",
+      "assetRole": "presentation-only"
+    },
+    {
+      "level": 10,
+      "name": "Cobalt Coil",
+      "renderKey": "series-01/10-cobalt-coil",
+      "visualSubject": "vertical cylindrical electromagnet with open coils and an exposed core",
+      "materials": "cobalt steel windings, iridescent ceramic, icy arcs",
+      "state": "master-pending",
+      "assetRole": "presentation-only"
+    },
+    {
+      "level": 11,
+      "name": "Silver Needle",
+      "renderKey": "series-01/11-silver-needle",
+      "visualSubject": "piercing silver stylus balanced on an interlocking star-shaped brace",
+      "materials": "mirror silver, engraved obsidian anchor, tiny turquoise gems",
+      "state": "master-pending",
+      "assetRole": "presentation-only"
+    },
+    {
+      "level": 12,
+      "name": "Aether Bell",
+      "renderKey": "series-01/12-aether-bell",
+      "visualSubject": "hanging resonant bell with a levitating clapper and split sound rings",
+      "materials": "antique bronze, aether-blue interior, silver suspension chain",
+      "state": "master-pending",
+      "assetRole": "presentation-only"
+    },
+    {
+      "level": 13,
+      "name": "Obsidian Feather",
+      "renderKey": "series-01/13-obsidian-feather",
+      "visualSubject": "single weightless black feather with plated shaft and razor edges",
+      "materials": "polished obsidian quills, charcoal enamel, gold vein",
+      "state": "master-pending",
+      "assetRole": "presentation-only"
+    },
+    {
+      "level": 14,
+      "name": "Sunken Astrolabe",
+      "renderKey": "series-01/14-sunken-astrolabe",
+      "visualSubject": "waterworn navigational armillary raised from an ancient sea floor",
+      "materials": "salt-stained bronze, turquoise patina, damp pearl lenses",
+      "state": "master-pending",
+      "assetRole": "presentation-only"
+    },
+    {
+      "level": 15,
+      "name": "Clockwork Finch",
+      "renderKey": "series-01/15-clockwork-finch",
+      "visualSubject": "small skeletal mechanical finch standing on a brass balance branch",
+      "materials": "clockwork brass wings, black nickel skeleton, ruby eye",
+      "state": "master-pending",
+      "assetRole": "presentation-only"
+    },
+    {
+      "level": 16,
+      "name": "Glass Meridian",
+      "renderKey": "series-01/16-glass-meridian",
+      "visualSubject": "tall transparent meridian arc balancing over a needle fine base",
+      "materials": "curved optical glass, platinum etching, lilac horizon glare",
+      "state": "master-pending",
+      "assetRole": "presentation-only"
+    },
+    {
+      "level": 17,
+      "name": "Furnace Rose",
+      "renderKey": "series-01/17-furnace-rose",
+      "visualSubject": "metallic rose in a suspended crucible with molten petals unfolding",
+      "materials": "forged steel thorns, liquid ember-red petals, ash",
+      "state": "master-pending",
+      "assetRole": "presentation-only"
+    },
+    {
+      "level": 18,
+      "name": "Amber Tuning Fork",
+      "renderKey": "series-01/18-amber-tuning-fork",
+      "visualSubject": "forked tuning instrument encircling a hovering amber resonator",
+      "materials": "carved amber, aged bronze, thin sonic rings",
+      "state": "master-pending",
+      "assetRole": "presentation-only"
+    },
+    {
+      "level": 19,
+      "name": "Marble Eye",
+      "renderKey": "series-01/19-marble-eye",
+      "visualSubject": "single sculpted marble eye inside a cracked astronomical mount",
+      "materials": "ivory marble, dark basalt iris, flecks of gold",
+      "state": "master-pending",
+      "assetRole": "presentation-only"
+    },
+    {
+      "level": 20,
+      "name": "Paper Engine",
+      "renderKey": "series-01/20-paper-engine",
+      "visualSubject": "folded paperlike motor with tiny spinning turbine and pinned wings",
+      "materials": "parchment ceramic, tin axles, pale graphite inlays",
+      "state": "master-pending",
+      "assetRole": "presentation-only"
+    },
+    {
+      "level": 21,
+      "name": "Ceramic Ghost",
+      "renderKey": "series-01/21-ceramic-ghost",
+      "visualSubject": "ghostly porcelain figurine emerging from a broken vessel shell",
+      "materials": "pale ceramic, spectral cyan vapor, hairline cobalt cracks",
+      "state": "master-pending",
+      "assetRole": "presentation-only"
+    },
+    {
+      "level": 22,
+      "name": "Mercury Hourglass",
+      "renderKey": "series-01/22-mercury-hourglass",
+      "visualSubject": "upright mercury-filled hourglass with floating silver droplets",
+      "materials": "chrome mercury, smoked quartz bulbs, dark nickel frame",
+      "state": "master-pending",
+      "assetRole": "presentation-only"
+    },
+    {
+      "level": 23,
+      "name": "Saffron Beacon",
+      "renderKey": "series-01/23-saffron-beacon",
+      "visualSubject": "triangular beacon tower topped by a saffron fire halo",
+      "materials": "amber brass, saffron enamel, white-hot crown",
+      "state": "master-pending",
+      "assetRole": "presentation-only"
+    },
+    {
+      "level": 24,
+      "name": "Gilded Gear",
+      "renderKey": "series-01/24-gilded-gear",
+      "visualSubject": "massive offset toothed gear suspended on tiny magnetic braces",
+      "materials": "gilded titanium, indigo cavities, greenish grease",
+      "state": "master-pending",
+      "assetRole": "presentation-only"
+    },
+    {
+      "level": 25,
+      "name": "Basalt Crown",
+      "renderKey": "series-01/25-basalt-crown",
+      "visualSubject": "five-pronged black volcanic crown resting on a stone plinth",
+      "materials": "rough black basalt, molten copper faults, dull bone points",
+      "state": "master-pending",
+      "assetRole": "presentation-only"
+    },
+    {
+      "level": 26,
+      "name": "Lunar Caliper",
+      "renderKey": "series-01/26-lunar-caliper",
+      "visualSubject": "long technical caliper whose movable jaws frame a glowing moon",
+      "materials": "matte nickel, ice quartz, luminous silver lunar disc",
+      "state": "master-pending",
+      "assetRole": "presentation-only"
+    },
+    {
+      "level": 27,
+      "name": "Magnetic Rose",
+      "renderKey": "series-01/27-magnetic-rose",
+      "visualSubject": "magnetized thorny rose assembled from hovering shard petals",
+      "materials": "ferrous hematite, scarlet iron filings, cobalt poles",
+      "state": "master-pending",
+      "assetRole": "presentation-only"
+    },
+    {
+      "level": 28,
+      "name": "Aurora Cartridge",
+      "renderKey": "series-01/28-aurora-cartridge",
+      "visualSubject": "cartridge-like prism containing a swirling aurora liquid",
+      "materials": "frosted capsule glass, violet titanium, northern green light",
+      "state": "master-pending",
+      "assetRole": "presentation-only"
+    },
+    {
+      "level": 29,
+      "name": "Bronze Orrery",
+      "renderKey": "series-01/29-bronze-orrery",
+      "visualSubject": "miniature planetary orrery with three off-axis copper orbits",
+      "materials": "bronze rings, pale gold planets, midnight navy core",
+      "state": "master-pending",
+      "assetRole": "presentation-only"
+    },
+    {
+      "level": 30,
+      "name": "Midnight Atlas",
+      "renderKey": "series-01/30-midnight-atlas",
+      "visualSubject": "folded astronomical atlas book with floating star-map pages",
+      "materials": "leather blackglass cover, platinum constellations, midnight ink",
+      "state": "master-pending",
+      "assetRole": "presentation-only"
+    },
+    {
+      "level": 31,
+      "name": "Jade Relay",
+      "renderKey": "series-01/31-jade-relay",
+      "visualSubject": "emerald relay mechanism with retractable golden signal arms",
+      "materials": "carved jade, fine brass connectors, emerald laser light",
+      "state": "master-pending",
+      "assetRole": "presentation-only"
+    },
+    {
+      "level": 32,
+      "name": "Tidal Key",
+      "renderKey": "series-01/32-tidal-key",
+      "visualSubject": "heavy four-bit tidal door key wound in suspended droplets",
+      "materials": "sea-worn silver, ocean-glass fins, deep blue pearls",
+      "state": "master-pending",
+      "assetRole": "presentation-only"
+    },
+    {
+      "level": 33,
+      "name": "Hollow Star",
+      "renderKey": "series-01/33-hollow-star",
+      "visualSubject": "hollow eight-pointed star with a void at its exact center",
+      "materials": "chrome platinum spokes, black enamel, pale nebula core",
+      "state": "master-pending",
+      "assetRole": "presentation-only"
+    },
+    {
+      "level": 34,
+      "name": "Crystal Loom",
+      "renderKey": "series-01/34-crystal-loom",
+      "visualSubject": "horizontal crystal loom weaving strands of solid light",
+      "materials": "clear quartz bars, gold heddles, cyan threads",
+      "state": "master-pending",
+      "assetRole": "presentation-only"
+    },
+    {
+      "level": 35,
+      "name": "Auric Beetle",
+      "renderKey": "series-01/35-auric-beetle",
+      "visualSubject": "armored gilded beetle with segmented wing-cases partially open",
+      "materials": "satin auric gold, violet underwings, lapis joints",
+      "state": "master-pending",
+      "assetRole": "presentation-only"
+    },
+    {
+      "level": 36,
+      "name": "Sundial Heart",
+      "renderKey": "series-01/36-sundial-heart",
+      "visualSubject": "clock-faced anatomical heart beating under its sundial cage",
+      "materials": "oxidized copper, ruby pulsing crystal, charcoal numerals",
+      "state": "master-pending",
+      "assetRole": "presentation-only"
+    },
+    {
+      "level": 37,
+      "name": "Sable Pendant",
+      "renderKey": "series-01/37-sable-pendant",
+      "visualSubject": "flat sable pendant that catches tiny constellations in black enamel",
+      "materials": "polished onyx, blackened silver chain, starlit silver edge",
+      "state": "master-pending",
+      "assetRole": "presentation-only"
+    },
+    {
+      "level": 38,
+      "name": "Velvet Catalyst",
+      "renderKey": "series-01/38-velvet-catalyst",
+      "visualSubject": "velvet-covered catalyst vial containing a fluorescent chemical storm",
+      "materials": "deep plum velvet, bronze cork, acidic chartreuse fluid",
+      "state": "master-pending",
+      "assetRole": "presentation-only"
+    },
+    {
+      "level": 39,
+      "name": "Amber Gyroscope",
+      "renderKey": "series-01/39-amber-gyroscope",
+      "visualSubject": "interlocking spinning amber gyroscope with three unequal rings",
+      "materials": "transparent honey amber, copper axle, floating iron core",
+      "state": "master-pending",
+      "assetRole": "presentation-only"
+    },
+    {
+      "level": 40,
+      "name": "Echo Prism",
+      "renderKey": "series-01/40-echo-prism",
+      "visualSubject": "faceted echo prism surrounded by concentric sonic glass arcs",
+      "materials": "icy cyan crystal, polished gold, translucent vibration rings",
+      "state": "master-pending",
+      "assetRole": "presentation-only"
+    },
+    {
+      "level": 41,
+      "name": "Forged Telescope",
+      "renderKey": "series-01/41-forged-telescope",
+      "visualSubject": "long extendable forged telescope balanced on angular tripod legs",
+      "materials": "hammered iron, dark red lacquer, astronomical glass",
+      "state": "master-pending",
+      "assetRole": "presentation-only"
+    },
+    {
+      "level": 42,
+      "name": "Arc Lantern",
+      "renderKey": "series-01/42-arc-lantern",
+      "visualSubject": "arching fire lamp fed by two hovering electric conductors",
+      "materials": "nickel silver frame, blue electrical arc, warm brass feet",
+      "state": "master-pending",
+      "assetRole": "presentation-only"
+    },
+    {
+      "level": 43,
+      "name": "Ivory Sextant",
+      "renderKey": "series-01/43-ivory-sextant",
+      "visualSubject": "compass-like ivory sextant with crescent lens and rotating wedge",
+      "materials": "aged ivory, silver indexing teeth, aquamarine eye",
+      "state": "master-pending",
+      "assetRole": "presentation-only"
+    },
+    {
+      "level": 44,
+      "name": "Molten Cipher",
+      "renderKey": "series-01/44-molten-cipher",
+      "visualSubject": "circular molten cipher tablet with symbols cut through liquid metal",
+      "materials": "lava gold, scorched tungsten, deep red carved glyphs",
+      "state": "master-pending",
+      "assetRole": "presentation-only"
+    },
+    {
+      "level": 45,
+      "name": "Silver Harp",
+      "renderKey": "series-01/45-silver-harp",
+      "visualSubject": "compact seven-string harp whose strings are beams of light",
+      "materials": "bright sterling silver, pearl harp body, violet filaments",
+      "state": "master-pending",
+      "assetRole": "presentation-only"
+    },
+    {
+      "level": 46,
+      "name": "Cobalt Furnace",
+      "renderKey": "series-01/46-cobalt-furnace",
+      "visualSubject": "towering blast furnace with a cobalt reactor behind sliding gates",
+      "materials": "dark steel, neon cobalt core, orange vapor vents",
+      "state": "master-pending",
+      "assetRole": "presentation-only"
+    },
+    {
+      "level": 47,
+      "name": "Night Compass",
+      "renderKey": "series-01/47-night-compass",
+      "visualSubject": "four-armed night compass with points orbiting away from its hub",
+      "materials": "black titanium, bone white needle, blue galaxy center",
+      "state": "master-pending",
+      "assetRole": "presentation-only"
+    },
+    {
+      "level": 48,
+      "name": "Dawn Engine",
+      "renderKey": "series-01/48-dawn-engine",
+      "visualSubject": "interlocking dawn clock engine unfurling mechanical solar petals",
+      "materials": "rose gold, pale brass gears, sunrise translucent quartz",
+      "state": "master-pending",
+      "assetRole": "presentation-only"
+    },
+    {
+      "level": 49,
+      "name": "Glass Cathedral",
+      "renderKey": "series-01/49-glass-cathedral",
+      "visualSubject": "translucent cathedral-shaped reliquary with carved flying buttresses",
+      "materials": "leaded glass, frosted crystal spires, platinum arcs",
+      "state": "master-pending",
+      "assetRole": "presentation-only"
+    },
+    {
+      "level": 50,
+      "name": "Radiant Crucible",
+      "renderKey": "series-01/50-radiant-crucible",
+      "visualSubject": "heavy radiant crucible blooming with a contained stellar flare",
+      "materials": "forged tungsten, liquid gold rim, white-gold plasma",
+      "state": "master-pending",
+      "assetRole": "presentation-only"
+    },
+    {
+      "level": 51,
+      "name": "Solar Orrery",
+      "renderKey": "series-01/51-solar-orrery",
+      "visualSubject": "sunlit planetary orrery with a crown of orbiting miniature suns",
+      "materials": "polished golden armature, champagne glass, amber suns",
+      "state": "master-pending",
+      "assetRole": "presentation-only"
+    },
+    {
+      "level": 52,
+      "name": "Gravity Spindle",
+      "renderKey": "series-01/52-gravity-spindle",
+      "visualSubject": "spindle winding gravity into a luminous gravitational lens",
+      "materials": "dark carbon tungsten, sapphire screw, warped violet rings",
+      "state": "master-pending",
+      "assetRole": "presentation-only"
+    },
+    {
+      "level": 53,
+      "name": "Quantum Leaf",
+      "renderKey": "series-01/53-quantum-leaf",
+      "visualSubject": "tiny iridescent botanical leaf in a faceted quantum containment frame",
+      "materials": "emerald crystal veins, obsidian stem, silver probability sparks",
+      "state": "master-pending",
+      "assetRole": "presentation-only"
+    },
+    {
+      "level": 54,
+      "name": "Iron Comet",
+      "renderKey": "series-01/54-iron-comet",
+      "visualSubject": "splintered iron meteor suspended between triangular prongs",
+      "materials": "brushed iron, glowing impact fractures, vapor trail",
+      "state": "master-pending",
+      "assetRole": "presentation-only"
+    },
+    {
+      "level": 55,
+      "name": "Aether Vessel",
+      "renderKey": "series-01/55-aether-vessel",
+      "visualSubject": "cylindrical aether vessel built from floating rings and sealed glass",
+      "materials": "opalescent sapphire glass, nickel bindings, teal vapor",
+      "state": "master-pending",
+      "assetRole": "presentation-only"
+    },
+    {
+      "level": 56,
+      "name": "Obsidian Crown",
+      "renderKey": "series-01/56-obsidian-crown",
+      "visualSubject": "black crown of six rising obelisks with no connecting base",
+      "materials": "obsidian, platinum accents, faint red starfire",
+      "state": "master-pending",
+      "assetRole": "presentation-only"
+    },
+    {
+      "level": 57,
+      "name": "Aurora Monolith",
+      "renderKey": "series-01/57-aurora-monolith",
+      "visualSubject": "monolithic slab split by a vertical shimmering aurora ribbon",
+      "materials": "dark basalt glass, arctic green plasma, icy blue edges",
+      "state": "master-pending",
+      "assetRole": "presentation-only"
+    },
+    {
+      "level": 58,
+      "name": "Starforge Dial",
+      "renderKey": "series-01/58-starforge-dial",
+      "visualSubject": "circular starforge dial with thirty-six machined rune slots",
+      "materials": "blackened gold, cobalt engraving, pulsing ember disk",
+      "state": "master-pending",
+      "assetRole": "presentation-only"
+    },
+    {
+      "level": 59,
+      "name": "Celestial Engine",
+      "renderKey": "series-01/59-celestial-engine",
+      "visualSubject": "intricate cathedral-sized miniature celestial engine in a glass case",
+      "materials": "golden interlocking gyres, silver clockwork, ultraviolet core",
+      "state": "master-pending",
+      "assetRole": "presentation-only"
+    },
+    {
+      "level": 60,
+      "name": "The First Light",
+      "renderKey": "series-01/60-the-first-light",
+      "visualSubject": "radiating twelve-point cosmological light object with distinct floating petals",
+      "materials": "white gold filigree, transparent diamond glass, first-light radiance",
+      "state": "master-pending",
+      "assetRole": "presentation-only"
+    }
+  ]
+}
