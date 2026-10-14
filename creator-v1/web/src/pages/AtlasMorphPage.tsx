@@ -158,8 +158,17 @@ export function AtlasMorphLayout(){
   const content=useRef<HTMLElement>(null);
   const worldHeading=useRef<HTMLHeadingElement>(null);
   const navigation=useRef<HTMLButtonElement|null>(null);
+  const wasFocused=useRef(false);
 
   useEffect(()=>{content.current?.scrollTo({top:0,behavior:"instant"});},[location.pathname,location.search]);
+  useEffect(()=>{
+    if(focused&&!wasFocused.current){
+      const request=window.requestAnimationFrame(()=>worldHeading.current?.focus({preventScroll:true}));
+      wasFocused.current=true;
+      return()=>window.cancelAnimationFrame(request);
+    }
+    wasFocused.current=focused;
+  },[focused]);
   // Browser Back and Forward naturally restore the visited world via React Router.
   // Keep the permanent shell mounted; only the internal route changes.
   function enter(world:AtlasWorld){
@@ -207,6 +216,12 @@ export function AtlasMorphLayout(){
     if(appBase&&!(url.pathname===appBase||url.pathname.startsWith(appBase+"/")))return;
     const relative=appBase?(url.pathname.slice(appBase.length)||"/"):url.pathname;
     if(relative.startsWith("/atlas/")||relative==="/atlas")return;
+    if(relative==="/"){
+      e.preventDefault();
+      e.stopPropagation();
+      navigate("/atlas");
+      return;
+    }
     const first=relative.split("/").filter(Boolean)[0];
     if(!ROUTES.has(first))return;
     e.preventDefault();
@@ -214,7 +229,7 @@ export function AtlasMorphLayout(){
     navigate("/atlas"+relative+url.search+url.hash);
   }
   function onGlobalKey(e:React.KeyboardEvent<HTMLDivElement>){
-    if(e.key==="Escape"&&focused&&!(e.target instanceof Element&&e.target.closest("dialog,[role=dialog]"))){
+    if(e.key==="Escape"&&focused&&!(e.target instanceof Element&&e.target.closest("dialog,[role=dialog],input,textarea,select,[contenteditable]"))){
       e.preventDefault();back();
     }else if(e.key==="Home"&&!focused&&e.target===surface.current){
       setPan({x:0,y:0});
