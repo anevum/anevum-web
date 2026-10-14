@@ -82,3 +82,21 @@ test("review Worker stays read-only and disconnected from private member APIs",(
  assert.match(worker,/if\(!PUBLIC\.test\(url.pathname\)\)/);
  assert.match(worker,/never forward/i);
 });
+
+
+test("universal quick-jump stays scoped to the Morph world and retains the original shell launcher",()=>{
+ const morph=read("web/src/pages/AtlasMorphPage.tsx");
+ const launcher=read("web/src/components/PortalLauncher.tsx");
+ const shell=read("web/src/components/Shell.tsx");
+ assert.match(morph,/<PortalLauncher open={launcherOpen} onClose=\{\(\)=>setLauncherOpen\(false\)\} routePrefix="\/atlas"\/>/);
+ assert.match(morph,/isEditableTarget\(event\.target\)/);
+ assert.match(morph,/event\.key==="\/"/);
+ assert.match(morph,/event\.metaKey\|\|event\.ctrlKey/);
+ assert.match(morph,/className="atm-mobile-jump"/);
+ assert.match(morph,/className="atm-overview-quick"/);
+ assert.match(launcher,/routePrefix\?: "" \| "\/atlas"/);
+ assert.match(launcher,/insideWorkspace\(entry\.path\)/);
+ assert.match(launcher,/insideWorkspace\(entries\[selected\]\.path\)/);
+ assert.match(launcher,/insideWorkspace\("\/start"\)/);
+ assert.match(shell,/<PortalLauncher open={launcherOpen} onClose=/);
+});
