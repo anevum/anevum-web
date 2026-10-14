@@ -6,6 +6,8 @@ import publicApi from "../api/worker.mjs";
 import stagedSite from "../web/a-staging-worker.mjs";
 import {memberShowcaseRoutes} from "../auth/showcase.mjs";
 import {readPublicShowcase,publicSelection} from "../shared/public-showcase.mjs";
+import {progressionFromXp,earnedArtifactsThroughLevel} from "../auth/community.mjs";
+import {deriveAchievements} from "../auth/social.mjs";
 
 function harness(){
  const sqlite=new DatabaseSync(":memory:");
@@ -41,6 +43,30 @@ const req=(path,method="GET",body)=>new Request("https://next.anevum.com"+path,{
  body:body===undefined?undefined:JSON.stringify(body)});
 const update=(h,body)=>memberShowcaseRoutes(req("/api/v1/member/showcase","POST",body),h.db,h.member,async()=>true,1792000000);
 const settings=h=>memberShowcaseRoutes(req("/api/v1/member/showcase"),h.db,h.member,async()=>true,1792000000);
+
+
+test("legacy public flatten mirror matches every issued artifact, XP threshold and earned achievement",()=>{
+ for(let level=1;level<=65;level++){
+  const xp=20*(level-1)*(level-1);
+  const authoritative=progressionFromXp(xp);
+  const roster=earnedArtifactsThroughLevel(level);
+  const stats={xp,ratings:26,publishedProjects:4,releases:1};
+  const awards=deriveAchievements(stats).filter(a=>a.earned);
+  const selected=awards.slice(0,3).map(a=>a.key);
+  for(const item of [roster[0],roster.at(-1),undefined]){
+   const projection=publicSelection({
+     artifact_key:item||null,award_keys_json:JSON.stringify(selected)},stats);
+   assert.equal(projection.level,authoritative.level);
+   assert.equal(projection.currentArtifact,authoritative.artifact);
+   assert.equal(projection.earnedAwardCount,awards.length);
+   assert.deepEqual(projection.featuredAwards.map(x=>x.key),selected);
+   assert.equal(projection.equippedArtifact?.name||null,item||null);
+  }
+ }
+ const unknown=publicSelection(null,{xp:0,ratings:0,publishedProjects:0,releases:0});
+ assert.equal(unknown.level,1);
+ assert.deepEqual(unknown.featuredAwards,[]);
+});
 
 test("projection exposes only real progress, not auto-selected or fictional awards",async()=>{
  const h=harness();try{
