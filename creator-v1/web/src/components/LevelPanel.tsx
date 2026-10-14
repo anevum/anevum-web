@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { useResource } from "../lib/useResource";
 import { memberHealth, memberMe, memberProgress, MemberApiError, type Progression } from "../lib/member-api";
 import { CelestialEmblem } from "./CelestialEmblem";
+import {RelicRaster,hasApprovedRelicRaster} from "./RelicRaster";
 import { seriesOneMotif } from "../lib/artifact-art";
 
 type LevelState={kind:"member"; progression:Progression}|{kind:"guest"}|{kind:"closed"};
@@ -24,7 +25,9 @@ export function LevelPanel({compact=false}:{compact?:boolean}){
   return <section className={"portal-level-box"+(compact?" portal-level-compact":"")} aria-label="ANEVUM levels and earned progression">
     <header className="portal-level-top"><span className="kicker">YOUR PLACE IN ORBIT</span><span className="portal-level-kicker">XP / LEVELS / ARTIFACTS</span></header>
     <div className="portal-level-main">
-      <div className="portal-level-mark"><CelestialEmblem motif={p?seriesOneMotif(p.level,p.artifact):"orbital"} size="small" state={p?.artifactEarned?"earned":"preview"}/></div>
+      <div className="portal-level-mark">{p?.artifactEarned && p?.artifact && hasApprovedRelicRaster(p.level,p.artifact)
+        ? <RelicRaster level={p.level} name={p.artifact}/>
+        : <CelestialEmblem motif={p?seriesOneMotif(p.level,p.artifact):"orbital"} size="small" state={p?.artifactEarned?"earned":"preview"}/>}</div>
       <div className="portal-level-copy">
         <span className="portal-level-overline">{p?"YOUR VERIFIED STAGING LEVEL":"THE ANEVUM LEVEL SYSTEM"}</span>
         <strong>{p?"LEVEL "+p.level:"NO LEVEL CAP"}</strong>
