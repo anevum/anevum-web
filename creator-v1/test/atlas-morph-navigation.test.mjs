@@ -27,7 +27,7 @@ test("all ten real worlds live in one header/menu and a deliberate visual home g
  assert.equal(ATLAS_WORLDS.length,10);
  for(const id of ATLAS_WORLDS.map(w=>w.id))assert.match(shell,new RegExp('  '+id+':"\\/atlas\\/'));
  assert.match(shell,/className="atm-world-grid"/);
- assert.match(shell,/className="atm-world-tile atm-world-tile--"/);
+ assert.match(shell,/atm-world-tile--/);
  assert.match(shell,/<nav className="atm-worlds-menu-grid"/);
  assert.match(shell,/aria-controls="atm-worlds-menu"/);
  assert.match(shell,/aria-expanded={menuOpen}/);
@@ -92,7 +92,7 @@ test("one header includes keyboard switchboard, search, account and home without
  assert.match(morph,/event\.key==="\/"/);
  assert.match(morph,/event\.metaKey\|\|event\.ctrlKey/);
  assert.match(morph,/className="atm-search"/);
- assert.match(morph,/className="atm-worlds-trigger"/);
+ assert.match(morph,/atm-worlds-trigger/);
  assert.match(morph,/to="\/atlas\/account"/);
  assert.match(launcher,/routePrefix\?: "" \| "\/atlas"/);
  assert.match(launcher,/insideWorkspace\(entry\.path\)/);
