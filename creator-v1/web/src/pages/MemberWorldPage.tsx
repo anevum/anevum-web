@@ -4,6 +4,7 @@ import { memberCreatorProfile, memberPublicWorld, memberMe, memberWorldAppearanc
 import { useResource } from "../lib/useResource";
 import { CosmicArtwork } from "../components/CosmicArtwork";
 import { CelestialEmblem } from "../components/CelestialEmblem";
+import { CreatorFollowPanel } from "../components/CreatorFollowPanel";
 import { achievementMotif, seriesOneMotif, seriesOneStudies } from "../lib/artifact-art";
 import { ErrorState, LoadingState } from "../components/States";
 
@@ -119,6 +120,8 @@ export function MemberWorldPage() {
         </section>
       </div>
       <aside className="member-world-aside">
+        {!privatePreview&&member&&typeof member.followers==="number"&&typeof member.viewerFollows==="boolean"&&
+          <CreatorFollowPanel key={handle} handle={handle} followers={member.followers} viewerFollows={member.viewerFollows}/>}
         <section className="member-world-panel member-world-progress">
           <span className="kicker">EARNED PROGRESSION / NOT PURCHASED</span>
           {level ? <>
