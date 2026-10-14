@@ -74,9 +74,13 @@ try{
   await delay(650);
   const inspect=await evaluate("({nodes:document.querySelectorAll('button.atlas-world').length,screen:getComputedStyle(document.querySelector('.atlas-page')).position,overflow:document.documentElement.scrollWidth>innerWidth,auth:!!document.querySelector('iframe'),link:!!document.querySelector('.atlas-exit[href=\"/creator/\"]')})");
   if(inspect.nodes!==10||inspect.screen!=="fixed"||inspect.overflow||inspect.auth)throw Error("Atlas map "+width+" failed "+JSON.stringify(inspect));
+  const clipped=await evaluate("(()=>{const e=document.querySelector('.atlas-exit');const r=e?.getBoundingClientRect();return !r || r.right>innerWidth+1 || r.left<0;})()");
+  if(clipped)throw Error("Atlas exit control clipped at "+width);
   await screenshot("atlas-map",width);
   await evaluate("document.querySelector('button.atlas-world--play').click()");
   await until(()=>evaluate("!!document.querySelector('dialog.atlas-deck[open]') && document.querySelector('#atlas-deck-title')?.textContent?.includes('PLAY')"));
+  await delay(520);
+  if(!await evaluate("!!document.querySelector('dialog.atlas-deck[open]')"))throw Error("Atlas deck closed unexpectedly");
   await screenshot("atlas-play-deck",width);
   const play=await evaluate("({open:document.querySelector('dialog.atlas-deck').open,primary:document.querySelector('.atlas-deck-action')?.getAttribute('href'),overscroll:document.documentElement.scrollWidth>innerWidth})");
   if(!play.open||!play.primary||play.overscroll)throw Error("Atlas game deck "+width+" failed "+JSON.stringify(play));
@@ -85,6 +89,8 @@ try{
   if(width===1440){
    await evaluate("document.querySelector('button.atlas-world--collaborate').click()");
    await until(()=>evaluate("!!document.querySelector('dialog.atlas-deck[open]') && document.querySelector('.atlas-deck-roadmap')?.textContent?.includes('No actual live presence')"));
+   await delay(520);
+   if(!await evaluate("!!document.querySelector('dialog.atlas-deck[open]')"))throw Error("Collaboration deck unexpectedly dismissed");
    await screenshot("atlas-collab-deck",width);
   }
   console.log("ATLAS_COMPILED_INTERACTION_"+width+"=PASS");

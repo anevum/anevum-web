@@ -98,7 +98,7 @@ function AtlasDeck({world,onDismiss}:{world:AtlasWorld|null;onDismiss:()=>void})
   const search=world.id==="discover"||world.id==="play"||world.id==="apps"||world.id==="creative";
   const nextPath=query.trim()?"/discover?q="+encodeURIComponent(query.trim().slice(0,100)):"/discover";
   return <dialog ref={dialog} className="atlas-deck" aria-labelledby="atlas-deck-title"
-    onClose={onDismiss} onCancel={onDismiss} onClick={onBackground}>
+    onCancel={onDismiss} onClick={onBackground}>
     <div className="atlas-deck-shell" style={{"--world-color":world.accent} as CSSProperties}>
       <header className="atlas-deck-topbar">
         <div className="atlas-deck-identity"><span className="atlas-deck-mini-glyph">{world.glyph}</span><div>
@@ -240,7 +240,7 @@ export function AtlasPage(){
       <nav className="atlas-top-actions" aria-label="Atlas utilities">
         <AtlasEarnedSignal/>
         <button type="button" onClick={()=>setHelp(x=>!x)} aria-expanded={help} className="atlas-top-help">HOW TO MOVE <span>?</span></button>
-        <Link to="/" className="atlas-exit">EXIT ATLAS ↗</Link>
+        <Link to="/" className="atlas-exit" aria-label="Exit Atlas and return to ANEVUM home">EXIT ATLAS ↗</Link>
       </nav>
     </header>
     <aside className="atlas-left-hud" aria-label="Current world">
