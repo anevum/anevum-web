@@ -5,6 +5,7 @@ import { useResource } from "../lib/useResource";
 import { readForumMemberActivity } from "../lib/forum-api";
 import { CosmicArtwork } from "../components/CosmicArtwork";
 import { CelestialEmblem } from "../components/CelestialEmblem";
+import {RelicRaster,hasApprovedRelicRaster} from "../components/RelicRaster";
 import { CreatorFollowPanel } from "../components/CreatorFollowPanel";
 import { achievementMotif, seriesOneMotif, seriesOneStudies } from "../lib/artifact-art";
 import { ErrorState, LoadingState } from "../components/States";
@@ -72,6 +73,7 @@ export function MemberWorldPage() {
   const level = member?.progression;
   const earned = member?.achievements.filter(achievement => achievement.earned) || [];
   const illustrated = !!level && seriesOneStudies.some(study => study.level === level.level && study.name === level.artifact);
+  const raster = !!level?.artifact && hasApprovedRelicRaster(level.level,level.artifact);
   const publicProjects = projects?.items || [];
   const reportedProjects = member?.contributions.publishedProjects ?? catalogue?.creator.publishedProjects ?? null;
 
@@ -137,7 +139,7 @@ export function MemberWorldPage() {
           <span className="kicker">EARNED PROGRESSION / NOT PURCHASED</span>
           {level ? <>
             <div className="member-world-level-emblem">
-              {illustrated
+              {raster ? <RelicRaster level={level.level} name={level.artifact||""} large/> : illustrated
                 ? <CelestialEmblem motif={seriesOneMotif(level.level, level.artifact)} size="large" state="earned" />
                 : <span aria-label={"Level " + level.level} className="member-world-level-number">{level.level}</span>}
             </div>
