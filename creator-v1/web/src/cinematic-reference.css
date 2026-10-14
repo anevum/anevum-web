@@ -299,3 +299,21 @@
  .cinema-hero,.cinema-feature,.cinema-rail,.cinema-scene-link,.cinema-panel{border:1px solid CanvasText}
  .cinema-button,.cinema-feature-action,.cinema-terminal-action{border:1px solid LinkText}
 }
+
+/* Locked screenshot A: compact icon-above-label primary navigation. */
+@media (min-width:901px){
+ .site-shell--home .header-inner{max-width:1800px;gap:clamp(9px,1.2vw,19px);padding-inline:clamp(12px,2vw,28px)}
+ .site-shell--home .desktop-nav{gap:1px;flex-shrink:0}
+ .site-shell--home .desktop-nav a{display:flex;flex-direction:column;justify-content:center;align-items:center;gap:3px;min-width:62px;padding:8px 6px;font-size:9px;line-height:1.2;text-transform:none;letter-spacing:.02em;color:#e3dbe5;font-weight:550}
+ .site-shell--home .desktop-nav a svg{width:18px;height:18px;color:#e8c8b8;stroke-width:1.5}
+ .site-shell--home .desktop-nav a:hover svg,.site-shell--home .desktop-nav a.active svg{color:#ffdda7}
+ .site-shell--home .desktop-nav a.active:after{left:14px;right:14px;height:2px;background:#f5cb8e;box-shadow:0 0 10px #efbc77}
+ .site-shell--home .header-launcher,.site-shell--home .header-create{display:none}
+ .site-shell--home .header-search{min-width:140px;max-width:265px;width:clamp(140px,17vw,265px)}
+ .site-shell--home .cw-account-link{flex-shrink:0;border:1px solid #b586ae80;border-radius:50%;width:36px;height:36px;display:grid;place-items:center;background:radial-gradient(circle at 30% 28%,#875ea6,#1b1732);box-shadow:0 0 12px #b27cce35}
+}
+@media (min-width:901px) and (max-width:1200px){
+ .site-shell--home .desktop-nav a{min-width:51px;font-size:8px;padding:7px 3px}
+ .site-shell--home .desktop-nav a svg{width:16px;height:16px}
+ .site-shell--home .cw-brand-stack small{display:none}
+}
