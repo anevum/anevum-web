@@ -59,6 +59,10 @@ export interface CommunityPost {
   replyCount:number;
 }
 export type CommunityPostSort="hot"|"new";
+export interface CommunityPostDetail extends CommunityPost {body:string}
+export interface CommunityPostReply {
+ id:string;body:string;publishedAt:string;authorHandle:string;authorName:string;
+}
 export interface CommunityPostsPage {
   items:CommunityPost[];
   count:number;
@@ -114,6 +118,11 @@ export function readCommunityPosts(params:{sort?:CommunityPostSort;limit?:string
   if(!query.has("sort"))query.set("sort","hot");
   if(!query.has("limit"))query.set("limit","6");
   return getJson<CommunityPostsPage>(publicPath("/community/posts?")+query.toString(),signal);
+}
+
+export function readCommunityPost(id:string,signal?:AbortSignal){
+  return getJson<{post:CommunityPostDetail;replies:CommunityPostReply[]}>(
+    publicPath("/community/posts/")+encodeURIComponent(id),signal);
 }
 
 export function readCreators(params: Record<string, string | undefined> = {}, signal?: AbortSignal) {
