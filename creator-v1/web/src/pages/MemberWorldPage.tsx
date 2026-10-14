@@ -1,6 +1,6 @@
 import { Link, Navigate, useParams } from "react-router-dom";
 import { readCreator, readProjects } from "../lib/api";
-import { memberCreatorProfile } from "../lib/member-api";
+import { memberCreatorProfile, memberPublicWorld } from "../lib/member-api";
 import { useResource } from "../lib/useResource";
 import { CosmicArtwork } from "../components/CosmicArtwork";
 import { CelestialEmblem } from "../components/CelestialEmblem";
@@ -24,13 +24,17 @@ export function MemberWorldPage() {
 
   const data = useResource(async signal => {
     if (!valid) return null;
-    const [member, catalogue, projects] = await Promise.all([
-      memberCreatorProfile(handle, signal).catch(() => null),
+    const [world, catalogue, projects] = await Promise.all([
+      memberPublicWorld(handle, signal).catch(() => null),
       readCreator(handle, signal).catch(() => null),
       readProjects({ creator: handle, limit: "12" }, signal).catch(() => null)
     ]);
-    if (!member && !catalogue) return null;
-    return { member, catalogue, projects };
+    // Never expose a member-only profile through this vanity route without
+    // the owner's public-world opt-in. Published catalogue creators remain
+    // available through their existing public publication records.
+    if (!world && !catalogue) return null;
+    const member = world ? await memberCreatorProfile(handle, signal).catch(() => null) : null;
+    return { world, member, catalogue, projects };
   }, [handle, valid]);
 
   if (!valid) return <Navigate to="/creators" replace />;
@@ -43,8 +47,9 @@ export function MemberWorldPage() {
     <Link className="button secondary" to="/creators">BROWSE PUBLIC CREATORS</Link>
   </div>;
 
-  const { member, catalogue, projects } = data.data;
-  const publicProfile = member?.creator || catalogue?.creator;
+  const { world, member, catalogue, projects } = data.data;
+  const publicProfile = world?.profile || catalogue?.creator;
+  const sectionOrder = world?.appearance.sections || ["work", "cabinet", "community"];
   if (!publicProfile) return <ErrorState title="PROFILE UNAVAILABLE" detail="No public creator information is available." />;
   const name = publicProfile.displayName;
   const level = member?.progression;
@@ -53,17 +58,17 @@ export function MemberWorldPage() {
   const publicProjects = projects?.items || [];
   const reportedProjects = member?.contributions.publishedProjects ?? catalogue?.creator.publishedProjects ?? null;
 
-  return <div className="member-world">
+  return <div className={"member-world member-world--" + (world?.appearance.theme || "astral")}>
     <div className="member-world-breadcrumb"><Link to="/creators">PEOPLE</Link><span aria-hidden="true">/</span><span>@{handle}</span></div>
     <section className="member-world-hero" aria-label={name + " member profile"}>
-      <div className="member-world-sky" aria-hidden="true"><CosmicArtwork scene="portal" /></div>
+      <div className="member-world-sky" aria-hidden="true"><CosmicArtwork scene={world?.appearance.scene || "portal"} /></div>
       <div className="member-world-identity">
         <div className="member-world-portrait" aria-hidden="true">{name.slice(0, 1).toUpperCase()}</div>
         <div className="member-world-name">
           <span className="kicker">ANEVUM / MEMBER WORLD</span>
           <h1>{name}</h1>
           <p className="member-world-handle">@{handle}</p>
-          <p className="member-world-bio">{member?.creator.bio || "This member has not added a public introduction."}</p>
+          <p className="member-world-bio">{world?.profile.bio || "This member has not added a public introduction."}</p>
           <span className="member-world-permalink">PERSONAL LINK · ANEVUM.COM/@{handle.toUpperCase()}</span>
         </div>
       </div>
@@ -75,7 +80,7 @@ export function MemberWorldPage() {
 
     <div className="member-world-layout">
       <div className="member-world-main">
-        <section className="member-world-panel" id="member-work">
+        <section className="member-world-panel" id="member-work" style={{order:sectionOrder.indexOf("work")}}>
           <div className="member-world-panel-heading"><div><span className="kicker">01 / ORIGINAL WORK</span><h2>CREATIONS</h2></div><span>{reportedProjects === null ? "COUNT UNAVAILABLE" : reportedProjects + " PUBLISHED"}</span></div>
           {projects === null ? <p className="member-world-status">Published projects could not be loaded. This does not imply the member has none.</p> :
             publicProjects.length === 0 ? <p className="member-world-status">No approved public projects appear here yet. Private drafts are never listed.</p> :
@@ -85,7 +90,7 @@ export function MemberWorldPage() {
               </article>)}</div>}
           {publicProjects.length > 0 && <Link to={"/creators/" + encodeURIComponent(handle)} className="member-world-all-work">ALL PUBLIC RELEASES →</Link>}
         </section>
-        <section className="member-world-panel" id="member-achievements">
+        <section className="member-world-panel" id="member-achievements" style={{order:sectionOrder.indexOf("cabinet")}}>
           <div className="member-world-panel-heading"><div><span className="kicker">02 / VERIFIED MILESTONES</span><h2>THE COLLECTION</h2></div><Link to="/levels">LEVEL SYSTEM →</Link></div>
           {!member ? <p className="member-world-status">Earned achievements are shown only when the verified member service is available.</p> :
             earned.length === 0 ? <p className="member-world-status">No public achievements have been earned yet.</p> :
@@ -94,7 +99,7 @@ export function MemberWorldPage() {
                 <div><strong>{achievement.name}</strong><small>{achievement.description}</small></div>
               </article>)}</div>}
         </section>
-        <section className="member-world-panel member-world-community">
+        <section className="member-world-panel member-world-community" style={{order:sectionOrder.indexOf("community")}}>
           <div className="member-world-panel-heading"><div><span className="kicker">03 / COMMUNITY</span><h2>PART OF THE UNIVERSE</h2></div><Link to="/community">COMMUNITY →</Link></div>
           <p>Member discussions, follows and community activity will appear here only after the moderated forum and following services pass their independent release checks. No sample followers or posts are being shown as real.</p>
         </section>
