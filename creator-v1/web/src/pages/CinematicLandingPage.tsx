@@ -9,6 +9,7 @@ import {LevelPanel} from "../components/LevelPanel";
 import {Icon} from "../components/Icons";
 import {ErrorState, LoadingState} from "../components/States";
 import {CinematicPortalFX} from "../components/CinematicPortalFX";
+import {CinematicAtmosphere} from "../components/CinematicAtmosphere";
 import {CinematicDiscoverySections} from "../components/CinematicDiscoverySections";
 
 /**
@@ -131,6 +132,7 @@ export function CinematicLandingPage(){
     <div className="cinema-content">
       <section className="cinema-hero" aria-labelledby="cinema-hero-title" onPointerMove={moveScene} onPointerLeave={resetScene}>
         <div className="cinema-hero-art" aria-hidden="true"><CosmicArtwork scene="hero" priority/></div>
+        <CinematicAtmosphere/>
         <div className="cinema-hero-light" aria-hidden="true"/>
         <CinematicPortalFX/>
         <div className="cinema-hero-layout">
