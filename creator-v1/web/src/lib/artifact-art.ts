@@ -48,8 +48,8 @@ export function seriesOneArtifactMotif(artifact:string|null):EmblemMotif {
  if(/compass|sextant|meridian|astrolabe|orrery|telescope|caliper|atlas/.test(words))return "atlas";
  if(/solar|sun|dawn|aurora|star|lantern|beacon|light|radiant|ember|furnace/.test(words))return "light";
  if(/clock|dial|engine|gyroscope|hourglass|gear|spool|relay/.test(words))return "chronometer";
- if(/lens|prism|eye|glass|quartz|crystal/.test(words))return "lens";
  if(/moth|finch|beetle|feather|leaf|rose|seed/.test(words))return "spark";
+ if(/lens|prism|eye|glass|quartz|crystal/.test(words))return "lens";
  if(/cathedral|loom|monolith|trinity|crown|vessel/.test(words))return "trinity";
  if(/launch|comet|aether|gravity/.test(words))return "launch";
  return "orbital";
