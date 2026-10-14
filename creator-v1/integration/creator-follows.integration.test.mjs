@@ -23,7 +23,7 @@ async function setup(){
  CREATE TABLE projects(id TEXT PRIMARY KEY NOT NULL,owner_member_id TEXT NOT NULL REFERENCES creator_profiles(member_id),slug TEXT NOT NULL,title TEXT NOT NULL,summary TEXT NOT NULL,category TEXT NOT NULL,status TEXT NOT NULL,source_url TEXT,demo_url TEXT,published_at TEXT,created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP);
  CREATE TABLE project_releases(id TEXT PRIMARY KEY NOT NULL,project_id TEXT NOT NULL REFERENCES projects(id),version TEXT NOT NULL,notes TEXT NOT NULL DEFAULT '',released_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP);
  CREATE TABLE project_favorites(member_id TEXT NOT NULL REFERENCES creator_profiles(member_id),project_id TEXT NOT NULL REFERENCES projects(id),created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,PRIMARY KEY(member_id,project_id));`);
- for(const filename of ['0003_member_identity_staging.sql','0005_voting_progression.sql','0011_creator_follows.sql'])sqlite.exec(readFileSync(new URL('../auth/migrations/'+filename,import.meta.url),'utf8'));
+ for(const filename of ['0003_member_identity_staging.sql','0005_voting_progression.sql','0010_member_worlds.sql','0011_creator_follows.sql'])sqlite.exec(readFileSync(new URL('../auth/migrations/'+filename,import.meta.url),'utf8'));
  function stm(sql,params=[]){return{sql,params,bind(...args){return stm(sql,args)},async all(){return{success:true,results:sqlite.prepare(sql).all(...params)}},async run(){const r=sqlite.prepare(sql).run(...params);return{success:true,meta:{changes:Number(r.changes),rows_written:Number(r.changes)}}}}}
  const db={prepare:sql=>stm(sql),async batch(q){sqlite.exec('BEGIN IMMEDIATE');try{const results=[];for(const s of q){const r=sqlite.prepare(s.sql).run(...s.params);results.push({success:true,meta:{changes:Number(r.changes),rows_written:Number(r.changes)}})}sqlite.exec('COMMIT');return results}catch(e){sqlite.exec('ROLLBACK');throw e}}};
  for(const u of testUsers){sqlite.prepare("INSERT INTO member_accounts(id,email,verified_at,created_at,status) VALUES (?,?,?,?,'active')").run(u.id,u.email,now,now);sqlite.prepare("INSERT INTO creator_profiles(member_id,handle,display_name,bio,status) VALUES (?,?,?,'Fixture biography','active')").run(u.id,u.handle,u.handle);sqlite.prepare('INSERT INTO member_sessions(token_hash,member_id,expires_at,created_at) VALUES (?,?,?,?)').run(await sessionHash(u.token),u.id,now+86400,now)}
@@ -35,7 +35,7 @@ async function setup(){
  const call=(path,method='GET',data=undefined,user=testUsers[0],origin='https://next.anevum.com')=>app.fetch(new Request('https://next.anevum.com/api/v1/member'+path,{method,headers:{origin,'sec-fetch-site':origin==='https://next.anevum.com'?'same-origin':'cross-site','content-type':'application/json',...(user?{cookie:'__Host-anevum_stage_sid='+user.token}:{})},body:data===undefined?undefined:JSON.stringify(data)}),env);
  const save=(i,saved=true,user=testUsers[0],origin='https://next.anevum.com')=>call('/library/'+fixed(i),'POST',{saved},user,origin);
  const userProfile=(handle='alice_builds',user=null)=>call('/creators/'+handle,'GET',undefined,user);
- return {sqlite,db,call,save,userProfile,insert};
+ return {sqlite,db,env,call,save,userProfile,insert};
 }
 
 test('achievement catalog is defined and locked before reaching thresholds',()=>{
@@ -150,5 +150,29 @@ test('suspended creators disappear from follow lists, and suspended followers do
   assert.equal((await (await f.userProfile('bob_tests',null)).json()).followers,1);
   f.sqlite.prepare("DELETE FROM member_accounts WHERE id='member-alice'").run();
   assert.equal(f.sqlite.prepare("SELECT COUNT(*) AS n FROM member_creator_follows").get().n,0);
+ }finally{f.sqlite.close()}
+});
+
+test('nonpublisher identities are private until their own account opts in; follows honor public consent',async()=>{
+ const f=await setup();
+ try{
+  f.env.MEMBER_WORLDS_ENABLED='true';
+  assert.equal((await f.call('/creators/chris_makes','GET',undefined,null)).status,404);
+  assert.equal((await f.call('/creators/chris_makes/follow','POST',{following:true})).status,404);
+  assert.equal((await f.call('/worlds/chris_makes','GET',undefined,null)).status,404);
+  const draft={visibility:'public',theme:'astral',scene:'portal',sections:['work','cabinet','community']};
+  assert.equal((await f.call('/world','POST',draft,testUsers[2])).status,200);
+  const publicWorld=await f.call('/worlds/chris_makes','GET',undefined,null);
+  assert.equal(publicWorld.status,200);
+  assert.equal((await publicWorld.json()).profile.handle,'chris_makes');
+  const profile=await f.call('/creators/chris_makes','GET',undefined,null);
+  assert.equal(profile.status,200);
+  assert.equal((await f.call('/creators/chris_makes/follow','POST',{following:true})).status,200);
+  const followed=await (await f.call('/following')).json();
+  assert.ok(followed.items.some(x=>x.handle==='chris_makes'));
+  assert.equal((await f.call('/world','POST',{...draft,visibility:'private'},testUsers[2])).status,200);
+  assert.equal((await f.call('/creators/chris_makes','GET',undefined,null)).status,404);
+  assert.equal((await f.call('/worlds/chris_makes','GET',undefined,null)).status,404);
+  assert.ok(!(await (await f.call('/following')).json()).items.some(x=>x.handle==='chris_makes'));
  }finally{f.sqlite.close()}
 });
