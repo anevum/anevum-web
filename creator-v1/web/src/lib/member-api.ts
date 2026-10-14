@@ -119,6 +119,7 @@ export const memberCreatorProfile=(handle:string,signal?:AbortSignal)=>{
     achievements:MemberAchievement[];
     showcase?:{featuredAward:MemberAchievement|null};
   }>("/creators/"+handle,{signal,publicHealth:true}); // Public, anonymous creator profile: never send member cookies.
+};
 
 export interface MemberFeaturedAwardSelection {awardKey:string|null;revision:number}
 export const memberFeaturedAward=(signal?:AbortSignal)=>
@@ -129,7 +130,6 @@ export const memberSetFeaturedAward=(awardKey:string|null,revision:number)=>{
   return requestMember<{selection:MemberFeaturedAwardSelection}>(
     "/creators/showcase",{method:"POST",body:{awardKey,revision}}
   );
-};
 };
 
 export const memberRating=(id:string,signal?:AbortSignal)=>
