@@ -1,5 +1,6 @@
 import {PAGE,STYLE,CLIENT} from './join.mjs';
 import {creatorProjects} from './projects.mjs';
+import {creatorAssets,cleanupExpiredAssets} from './assets.mjs';
 import {communityRoutes} from './community.mjs';
 import {socialRoutes} from './social.mjs';
 import {privacyRoutes} from './privacy.mjs';
@@ -165,7 +166,9 @@ return {async fetch(req,env) {
   if(!url.pathname.startsWith(PATH+'/'))return fail(req,'Not found',404);
   const path=url.pathname.slice(PATH.length);
   if(req.method==='OPTIONS')return fail(req,'Not found',404); // same-origin only
-  if(!['GET','HEAD','POST','PATCH'].includes(req.method))return json(req,{error:'Method not allowed'},405,{'allow':'GET, HEAD, POST, PATCH'});
+  const assetPath=/^\/api\/v1\/member\/projects\/[a-f0-9]{32}\/assets(?:\/|$)/.test(url.pathname);
+  if(!['GET','HEAD','POST','PATCH'].includes(req.method)&&!(assetPath&&['PUT','DELETE'].includes(req.method)))
+    return json(req,{error:'Method not allowed'},405,{'allow':'GET, HEAD, POST, PATCH'});
   if(!ready(env))return fail(req,'Member identity unavailable',503);
   const db=env.COMMUNITY_DB;
   try {
@@ -183,6 +186,11 @@ return {async fetch(req,env) {
       if(req.method==='POST'&&!checkWrite(req))return fail(req,'Request origin rejected',403);
       const member=await authenticated(req,env,clock());
       return communityRoutes(req,db,member,limit,clock());
+    }
+    if(assetPath){
+      if(['POST','PUT','DELETE'].includes(req.method)&&!checkWrite(req))return fail(req,'Request origin rejected',403);
+      const member=await authenticated(req,env,clock());
+      return creatorAssets(req,env,member,limit,clock());
     }
     if(path==='/projects'||path.startsWith('/projects/')){
       if(['POST','PATCH'].includes(req.method)&&!checkWrite(req))return fail(req,'Request origin rejected',403);
@@ -288,5 +296,6 @@ export default {
   fetch:defaultWorker.fetch,
   async scheduled(event,env,ctx) {
     if(ready(env))ctx.waitUntil(cleanupStaging(env.COMMUNITY_DB));
+    if(env?.CREATOR_ASSETS)ctx.waitUntil(cleanupExpiredAssets(env,Math.floor(Date.now()/1000)));
   }
 };

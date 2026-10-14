@@ -83,3 +83,14 @@ test("host-scoped member session and authorization are never forwarded to previe
  assert.equal(response.headers.get("x-frame-options"),"DENY");
  assert.match(response.headers.get("cache-control")||"",/no-store/);
 });
+
+test("private draft local previews permit image/audio blob URLs but never blob scripts",async()=>{
+ const a=env();
+ const response=await stage.fetch(req("/creator/create/new"),a,{});
+ const csp=response.headers.get("content-security-policy")||"";
+ assert.match(csp,/img-src 'self' data: blob:/);
+ assert.match(csp,/media-src blob:/);
+ assert.match(csp,/script-src 'self';/);
+ assert.doesNotMatch(csp,/script-src[^;]*blob:/);
+ assert.match(csp,/object-src 'none'/);
+});
