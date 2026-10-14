@@ -87,6 +87,16 @@ jobs:
             node --check "$file"
           done
           node --input-type=module -e 'import {Script} from "node:vm"; import {COMMUNITY_CLIENT} from "./creator-v1/auth/community-ui.mjs"; import {VOTE_APP} from "./creator-v1/authoring/vote-moderation-ui.mjs"; import {SOCIAL_CLIENT} from "./creator-v1/auth/social-ui.mjs"; import {PRIVACY_CLIENT} from "./creator-v1/auth/privacy-ui.mjs"; import {PRIVACY_APP} from "./creator-v1/authoring/privacy-queue-ui.mjs"; for (const source of [COMMUNITY_CLIENT,VOTE_APP,SOCIAL_CLIENT,PRIVACY_CLIENT,PRIVACY_APP]) new Script(source);'
+      - name: Rehearse V007 D1 changes offline and deny unresolved release collisions
+        if: success()
+        working-directory: creator-v1
+        shell: bash
+        run: |
+          set -euo pipefail
+          node ops/verify-v007-migration-readiness.mjs --snapshot ../docs/creator-platform/V007-STAGING-SCHEMA-SNAPSHOT-2026-10-14.json | tee ../evidence/v007-migration-preflight.json
+          grep -q '"liveMigrationAuthorization": "MIGRATION_REVIEW_REQUIRED"' ../evidence/v007-migration-preflight.json
+          grep -q '"rehearsal": "PASS"' ../evidence/v007-migration-preflight.json
+          echo 'V007_SCHEMA_REHEARSAL=PASS; LIVE_DB_MIGRATION=DENIED'
       - name: Verify V007 profile showcases at phone and desktop widths
         if: success()
         shell: bash
