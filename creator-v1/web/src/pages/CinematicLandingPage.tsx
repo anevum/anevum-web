@@ -8,6 +8,8 @@ import type {CosmicScene} from "../components/CosmicIllustration";
 import {LevelPanel} from "../components/LevelPanel";
 import {Icon} from "../components/Icons";
 import {ErrorState, LoadingState} from "../components/States";
+import {CinematicPortalFX} from "../components/CinematicPortalFX";
+import {CinematicDiscoverySections} from "../components/CinematicDiscoverySections";
 
 /**
  * LOCKED DIRECTION 2026-10-13
@@ -130,6 +132,7 @@ export function CinematicLandingPage(){
       <section className="cinema-hero" aria-labelledby="cinema-hero-title" onPointerMove={moveScene} onPointerLeave={resetScene}>
         <div className="cinema-hero-art" aria-hidden="true"><CosmicArtwork scene="hero" priority/></div>
         <div className="cinema-hero-light" aria-hidden="true"/>
+        <CinematicPortalFX/>
         <div className="cinema-hero-layout">
           <div className="cinema-hero-copy">
             <div className="cinema-kicker">CREATE <span>·</span> EXPLORE <span>·</span> TOGETHER</div>
@@ -152,39 +155,9 @@ export function CinematicLandingPage(){
         {modules.map(item=><SceneLink key={item.title} item={item} variant="module"/>)}
       </section>
 
-      <section className="cinema-dashboard" aria-label="Discover creators, projects, and your ANEVUM space">
-        <div className="cinema-panel cinema-creators">
-          <div className="cinema-panel-heading"><h2>FEATURED CREATORS</h2><Link to="/creators">VIEW ALL <Icon name="arrow" size={14}/></Link></div>
-          {portal.state==="loading"&&<LoadingState label="Reading public creators"/>}
-          {portal.state==="error"&&<ErrorState title="CREATORS UNAVAILABLE" detail="Unable to retrieve public creator channels."/>}
-          {isReady&&(creators.length?
-            <div className="cinema-creator-grid">{creators.map(creator=><Link className="cinema-creator" key={creator.handle} to={"/creators/"+encodeURIComponent(creator.handle)}>
-              <span className="cinema-creator-avatar" aria-hidden="true">{creator.displayName.slice(0,1).toUpperCase()}</span>
-              <strong>{creator.displayName}</strong>
-              <span>{creator.publishedProjects} {creator.publishedProjects===1?"project":"projects"}</span>
-            </Link>)}</div>:
-            <div className="cinema-creator-empty"><CosmicArtwork scene="creative"/><strong>Meet the first creators.</strong><p>Public channels appear here after real publication approval.</p><Link to="/start">HOW TO PARTICIPATE <Icon name="arrow" size={14}/></Link></div>)}
-        </div>
+      <CinematicDiscoverySections projects={projects} creators={creators} state={portal.state}/>
 
-        <div className="cinema-panel cinema-projects">
-          <div className="cinema-panel-heading"><h2>EXPLORE PROJECTS</h2><Link to="/discover">VIEW ALL <Icon name="arrow" size={14}/></Link></div>
-          <div className="cinema-filter-labels" aria-label="Browse project categories"><Link to="/discover">ALL</Link>{categories.map(item=><Link key={item.title} to={item.to}>{item.title}</Link>)}</div>
-          {portal.state==="loading"&&<LoadingState label="Reading real published projects"/>}
-          {portal.state==="error"&&<ErrorState title="CATALOGUE UNAVAILABLE" detail="Public catalogue data could not be loaded."/>}
-          {isReady&&(projects.length?
-            <div className="cinema-project-list">{projects.slice(0,3).map(project=><Link key={project.id} className="cinema-project-tile" to={projectDetailPath(project.id,"/")}>
-              <div className="cinema-project-art"><CosmicArtwork scene={categoryArt[project.category]}/><span>CATEGORY ART</span></div>
-              <strong>{project.title}</strong><small>@{project.creatorHandle}</small>
-            </Link>)}</div>:
-            <div className="cinema-discovery-empty">
-              <p>THE FIRST PUBLIC PROJECTS ARE AHEAD.</p>
-              <div className="cinema-project-list">{categories.map(item=><Link key={item.title} to={item.to} className="cinema-project-tile">
-                <div className="cinema-project-art"><CosmicArtwork scene={item.scene}/></div>
-                <strong>{item.title}</strong><small>EXPLORE CATEGORY</small>
-              </Link>)}</div>
-            </div>)}
-        </div>
-
+      <section className="cinema-dashboard cinema-dashboard--private" aria-label="Private workspace and member progression">
         <div className="cinema-panel cinema-rhen">
           <div className="cinema-panel-heading"><h2><span className="cinema-status-dot"/> RHEN TERMINAL</h2><Link to="/workspace">PRIVATE <Icon name="arrow" size={14}/></Link></div>
           <div className="cinema-terminal-scene" aria-hidden="true"><CosmicArtwork scene="tools"/></div>
