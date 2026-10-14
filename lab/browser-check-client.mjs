@@ -87,7 +87,7 @@ async function main(){
    const title=document.querySelector('#docTitle');title.value='Test Chapter';title.dispatchEvent(new Event('input',{bubbles:true}));
    const editor=document.querySelector('#docBody');editor.value='Testing an ANEVUM Lab local chapter editor.';editor.dispatchEvent(new Event('input',{bubbles:true}));
    assert(document.querySelector('#docCount')?.textContent==='1','Library did not register new chapter');
-   assert(document.querySelector('#wordsCount')?.textContent==='8','Word count incorrect');
+   assert(document.querySelector('#wordsCount')?.textContent==='7','Word count incorrect');
    const backing=JSON.parse(localStorage.getItem('anevum.lab.transcosmic.documents.v1'));
    assert(backing.documents[0].body.includes('local chapter'),'Local document did not persist');
    assert(document.documentElement.scrollWidth<=innerWidth+1,'Transcosmic horizontally scrolls');
