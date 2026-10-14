@@ -1,7 +1,5 @@
-import {useEffect,useRef,useState,type KeyboardEvent} from "react";
-
-type GamePhase="ready"|"playing"|"paused"|"complete";
-const INITIAL:readonly [number,number,number]=[6,3,5];
+import {useEffect,useReducer,useRef,useState,type KeyboardEvent} from "react";
+import {initialOrbitState,orbitReducer} from "../lib/orbit-align-logic";
 const RINGS=["OUTER","MIDDLE","INNER"] as const;
 const RADII=[158,116,75] as const;
 const COLORS=["#e9b98b","#9bc5e8","#cab5f7"] as const;
@@ -10,9 +8,8 @@ const COLORS=["#e9b98b","#9bc5e8","#cab5f7"] as const;
  *  No purchases, server XP, accounts or persistent high scores.
  */
 export function OrbitAlignDemo({onExit}:{onExit:()=>void}){
-  const [phase,setPhase]=useState<GamePhase>("ready");
-  const [slots,setSlots]=useState<number[]>([...INITIAL]);
-  const [moves,setMoves]=useState(0);
+  const [game,dispatch]=useReducer(orbitReducer,undefined,initialOrbitState);
+  const {phase,slots,moves}=game;
   const [seconds,setSeconds]=useState(0);
   const stage=useRef<HTMLDivElement>(null);
   useEffect(()=>{stage.current?.focus({preventScroll:true});},[]);
@@ -21,16 +18,8 @@ export function OrbitAlignDemo({onExit}:{onExit:()=>void}){
     const timer=window.setInterval(()=>setSeconds(n=>n+1),1000);
     return()=>window.clearInterval(timer);
   },[phase]);
-  function rotate(index:number){
-    if(phase!=="playing"||index<0||index>2)return;
-    const next=slots.map((value,i)=>i===index?(value+1)%8:value);
-    setSlots(next);
-    setMoves(n=>n+1);
-    if(next.every(value=>value===0))setPhase("complete");
-  }
-  function restart(){
-    setSlots([...INITIAL]);setMoves(0);setSeconds(0);setPhase("ready");
-  }
+  function rotate(index:number){dispatch({type:"rotate",ring:index});}
+  function restart(){dispatch({type:"reset"});setSeconds(0);}
   function onKeyboard(event:KeyboardEvent<HTMLDivElement>){
     const target=event.target;
     if(target instanceof HTMLElement&&target.matches("input,textarea,select,[contenteditable=true]"))return;
@@ -39,10 +28,11 @@ export function OrbitAlignDemo({onExit}:{onExit:()=>void}){
       rotate(Number(event.key)-1);
     }else if(event.key.toLowerCase()==="p"||event.key==="Escape"){
       event.preventDefault();event.stopPropagation();
-      setPhase(current=>current==="playing"?"paused":current==="paused"?"playing":current);
+      if(phase==="playing")dispatch({type:"pause"});
+      else if(phase==="paused")dispatch({type:"resume"});
     }else if((event.key===" "||event.key==="Enter")&&event.target===stage.current){
       event.preventDefault();event.stopPropagation();
-      if(phase==="ready")setPhase("playing");
+      if(phase==="ready")dispatch({type:"start"});
     }
   }
   const aligned=slots.filter(slot=>slot===0).length;
@@ -110,7 +100,7 @@ export function OrbitAlignDemo({onExit}:{onExit:()=>void}){
           </button>)}
         </div>
         <div className="fx-game-foot-controls"><span>KEYBOARD: 1 · 2 · 3 / P TO PAUSE</span>
-          {phase==="playing"&&<button type="button" onClick={()=>setPhase("paused")}>PAUSE Ⅱ</button>}
+          {phase==="playing"&&<button type="button" onClick={()=>dispatch({type:"pause"})}>PAUSE Ⅱ</button>}
           {phase!=="playing"&&<button type="button" onClick={restart}>RESET ↺</button>}
         </div>
       </aside>
@@ -124,8 +114,8 @@ export function OrbitAlignDemo({onExit}:{onExit:()=>void}){
         <p>{phase==="complete"?"All three orbital signals are aligned. This result is local to your session; no account XP or public score has been awarded.":
              phase==="paused"?"Your current moves and ring positions are preserved until you resume or reset.":
              "An original first-party puzzle demonstrating ANEVUM's in-platform game transitions. This is not a published creator submission."}</p>
-        {phase==="ready"&&<button className="fx-game-overlay-start" type="button" onClick={()=>{setPhase("playing");stage.current?.focus({preventScroll:true});}}>START EXPERIENCE <span aria-hidden="true">→</span></button>}
-        {phase==="paused"&&<button className="fx-game-overlay-start" type="button" onClick={()=>{setPhase("playing");stage.current?.focus({preventScroll:true});}}>RESUME <span aria-hidden="true">▶</span></button>}
+        {phase==="ready"&&<button className="fx-game-overlay-start" type="button" onClick={()=>{dispatch({type:"start"});stage.current?.focus({preventScroll:true});}}>START EXPERIENCE <span aria-hidden="true">→</span></button>}
+        {phase==="paused"&&<button className="fx-game-overlay-start" type="button" onClick={()=>{dispatch({type:"resume"});stage.current?.focus({preventScroll:true});}}>RESUME <span aria-hidden="true">▶</span></button>}
         {phase==="complete"&&<button className="fx-game-overlay-start" type="button" onClick={restart}>PLAY AGAIN <span aria-hidden="true">↻</span></button>}
         <button type="button" className="fx-game-overlay-exit" onClick={onExit}>BACK TO PROJECT</button>
       </div>
