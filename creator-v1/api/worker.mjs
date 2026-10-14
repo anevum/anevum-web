@@ -1,3 +1,4 @@
+import {publicCommunityPosts} from "./community-posts.mjs";
 // ANEVUM V1 read-only public catalogue. No legacy database or broker access.
 const API_HEADERS = { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'no-referrer' };
 const CATEGORIES = new Set(['tools', 'games', 'automation', 'research', 'creative', 'learning', 'libraries', 'other']);
@@ -150,7 +151,8 @@ export default {
     const detail = /^\/api\/v1\/projects\/([A-Za-z0-9_-]{1,80})$/.exec(path);
     const repository = /^\/api\/v1\/projects\/([A-Za-z0-9_-]{1,80})\/repository$/.exec(path);
     const creatorDetail = /^\/api\/v1\/creators\/([A-Za-z][A-Za-z0-9_]{2,29})$/.exec(path);
-    const known = ['/health', '/api/v1/status', '/api/v1/categories', '/api/v1/projects', '/api/v1/creators'].includes(path) || detail || repository || creatorDetail;
+    const communityPosts = path==="/api/v1/community/posts" || /^\/api\/v1\/community\/posts\/[a-f0-9]{32}$/.test(path);
+    const known = ['/health', '/api/v1/status', '/api/v1/categories', '/api/v1/projects', '/api/v1/creators'].includes(path) || detail || repository || creatorDetail || communityPosts;
     if (!known) return reply(request, { error: 'Not found' }, 404);
     let filter;
     try {
@@ -159,6 +161,7 @@ export default {
       else if (url.search) throw new Error('This endpoint does not accept query parameters');
     } catch (error) { return reply(request, { error: error.message }, 400); }
     if (!env.COMMUNITY_DB) return reply(request, { error: 'Community data is unavailable', status: 'unavailable' }, 503);
+    if (communityPosts) return publicCommunityPosts(request,env.COMMUNITY_DB);
     try {
       if (path === '/health') {
         await rows(env.COMMUNITY_DB, 'SELECT 1 AS ready');
