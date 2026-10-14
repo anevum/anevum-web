@@ -83,7 +83,7 @@ export function PortalLauncher({ open, onClose, routePrefix="" }: { open: boolea
           });
         }
       }catch{
-        if(present&&!controller.signal.aborted)setLive({status:"error",projects:[],creators:[]});
+        if(present&&!controller.signal.aborted)setLive({status:"error",query:liveQuery,projects:[],creators:[]});
       }
     },260);
     return()=>{present=false;window.clearTimeout(timer);controller.abort();};
