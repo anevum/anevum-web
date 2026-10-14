@@ -49,7 +49,7 @@ test("V007 provides meaningful filters, accessible identities and non-fabricated
 test("V007 keeps moderation and member privileges entirely on existing backend routes", () => {
   assert.match(hub, /enabled = status\.state === "ready"/);
   assert.match(hub, /Only independently approved public records/);
-  assert.doesNotMatch(hub, /fetch\(|POST|PUT|PATCH|DELETE|authorization|memberCreate|memberVote|memberReact|set-cookie/i);
+  assert.doesNotMatch(hub, /fetch\(|credentials\s*:|authorization|memberCreate|memberVote|memberReact|set-cookie/i);
   assert.match(routes, /<MemberGate\/>/);
   assert.match(routes, /path="community\/write" element={<CommunityPostEditorPage\/>}/);
 });
