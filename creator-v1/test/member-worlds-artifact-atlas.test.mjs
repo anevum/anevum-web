@@ -73,7 +73,9 @@ test("member world appearance UI is authenticated, feature gated and genuinely s
   const worker=read("auth/worker.mjs"),module=read("auth/worlds.mjs"),memberApi=read("web/src/lib/member-api.ts");
   assert.match(app,/path="account\/world" element={<MemberWorldEditorPage\/>}/);
   assert.match(page,/memberPublicWorld\(handle, signal\)/);
-  assert.match(page,/if \(!world && !catalogue\) return null/);
+  assert.match(page,/if \(!view && !catalogue\) return null/);
+  assert.match(page,/self\?\.member\.handle === handle/);
+  assert.match(page,/PRIVATE OWNER PREVIEW \/ NOT PUBLIC/);
   assert.match(worker,/MEMBER_WORLDS_ENABLED/);
   assert.match(worker,/checkWrite\(req\)/);
   assert.match(module,/visibility:"private"/);
