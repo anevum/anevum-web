@@ -51,13 +51,13 @@ export function CinematicLandingPage(){
         projects={projects}
         creators={creators}
       />
+      {portal.state==="error"&&hasVerifiedData&&<p className="av8-index-stale" role="status">The latest refresh failed. Previously verified public content remains available while the connection is restored.</p>}
       <CommunityHomeFeed
         projects={projects}
         creators={creators}
         state={displayState}
         communityEnabled={status?.features?.communityPosts===true}
       />
-      {portal.state==="error"&&hasVerifiedData&&<p className="av8-index-stale" role="status">The latest refresh failed. Previously verified public content remains available while the connection is restored.</p>}
       {hasVerifiedData&&status&&<div className="cinema-verification-note">
         {status.counts.publishedProjects} APPROVED PUBLIC PROJECTS · {status.counts.publishedCreators} PUBLIC CREATOR CHANNELS · Only genuine published activity is shown.
       </div>}
