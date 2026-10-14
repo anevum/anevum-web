@@ -44,37 +44,38 @@ test("native full-height overlay exposes all real destinations and honest featur
   assert.doesNotMatch(shell,/fakeMessages|fakeUsers|Math\.random|grantXp\(|faker/);
 });
 
-test("front page is a functioning console of actual public data and navigable releases",()=>{
-  const shell=read("web/src/pages/AtlasMorphPage.tsx");
-  const home=read("web/src/pages/MorphHomeConsole.tsx");
-  const feed=read("web/src/pages/MorphActivityStream.tsx");
-  const css=read("web/src/pages/morph-home-console.css");
-  assert.match(shell,/<MorphHomeConsole onExplore=\{\(\)=>setMenuOpen\(true\)\}\/>/);
-  for(const signal of ["mhc-feature-zone","mhc-headliner","MorphActivityStream","mhc-newsroom","mhc-release-rail","mhc-departments","mhc-community"]){
-    assert.ok(home.includes(signal),signal);
-  }
-  for(const signal of ["readStatus(signal)","readProjects({limit:\"16\"},signal)","readCreators({limit:\"6\"},signal)","Promise.allSettled","publishedAt","spotlightIndex","advance(-1)","advance(1)"]){
-    assert.ok(home.includes(signal),signal);
-  }
-  assert.match(home,/document\.visibilityState==="visible"/);
-  assert.match(home,/dateLabel\(project\.publishedAt\)/);
-  assert.match(css,/\.mhc-feature-zone\{display:grid/);
-  assert.match(css,/\.mhc-spotlight-controls/);
-  assert.match(css,/@media\(max-width:640px\)/);
-  assert.match(css,/\.mhc-release-rail\{grid-template-columns:1fr/);
-  assert.match(feed,/readProjects\(\{/);
-  assert.match(feed,/limit:PAGE_SIZE/);
-  assert.match(feed,/category:filter as Category/);
-  assert.match(feed,/page\.nextCursor/);
-  assert.match(feed,/aria-pressed={filter===item.id}/);
-  assert.match(feed,/LOAD MORE RELEASES/);
-  assert.match(feed,/document\.visibilityState==="visible"/);
-  assert.match(feed,/if\(cursor\)return;/);
-  assert.match(feed,/IREN EDITORIAL: NOT CONNECTED/);
-  assert.match(feed,/No activity was invented/);
-  assert.match(css,/\.mhc-feed-filters/);
-  assert.match(css,/\.mhc-feed-pager/);
-  assert.doesNotMatch(home+feed,/fakeUsers|fakeProjects|Math\.random|manufactured|awardXp\(/);
+test("homepage is a clean verified community feed, never a promoted mini-game",()=>{
+ const shell=read("web/src/pages/AtlasMorphPage.tsx");
+ const home=read("web/src/pages/MorphHomeConsole.tsx");
+ const activity=read("web/src/pages/MorphActivityStream.tsx");
+ const discussions=read("web/src/pages/HotCommunityPosts.tsx");
+ const css=read("web/src/pages/morph-community-feed.css");
+ const api=read("web/src/lib/api.ts");
+ const app=read("web/src/App.tsx");
+ assert.match(shell,/<MorphHomeConsole onExplore=\{\(\)=>setMenuOpen\(true\)\}\/>/);
+ for(const name of ["nfc-intro","nfc-network-strip","nfc-layout","nfc-spotlight","MorphActivityStream","HotCommunityPosts","nfc-makers","nfc-topics","nfc-curation-note"])
+   assert.ok(home.includes(name),name);
+ for(const required of ["readProjects({limit:\"24\"},signal)","readCreators({limit:\"24\"},signal)","readStatus(signal)","readCategories(signal)","Promise.allSettled","publishedProjects","publishedCreators","reported?.features?.communityPosts"])
+   assert.ok(home.includes(required),required);
+ assert.match(home,/document\.visibilityState==="visible"/);
+ assert.match(home,/no demo projects are substituted/i);
+ assert.match(activity,/CosmicArtwork scene={project.category}/);
+ assert.match(activity,/page\.nextCursor/);
+ assert.match(activity,/aria-pressed={filter===item.id}/);
+ assert.match(activity,/LOAD MORE RELEASES/);
+ assert.match(activity,/if\(cursor\)return/);
+ assert.match(discussions,/readCommunityPosts\(\{sort,limit:"5"\},signal\)/);
+ assert.match(discussions,/status===404/);
+ assert.match(discussions,/No public discussions have been opened or ranked yet/);
+ assert.match(discussions,/nfc-post-meta/);
+ assert.match(api,/export interface CommunityPost/);
+ assert.match(api,/export function readCommunityPosts/);
+ assert.match(css,/\.nfc-layout\{display:grid/);
+ assert.match(css,/\.nfc-main \.mhc-signal-items\{padding:0 19px;max-height:none;overflow:visible/);
+ assert.match(css,/@media\(max-width:640px\)/);
+ assert.match(css,/@media\(prefers-reduced-motion:reduce\)/);
+ assert.doesNotMatch(home+app,/orbit-align|OrbitAlign|PLAY THE PROTOTYPE|PLAYER LAB|FIRST-PARTY INTERACTIVE PROTOTYPE/);
+ assert.doesNotMatch(home+activity+discussions,/fakeUsers|fakePosts|Math\.random|awardXp\(|grantXp\(/);
 });
 
 test("Atlas Quick Jump searches approved project records and genuine creator channels while retaining local routes",()=>{
