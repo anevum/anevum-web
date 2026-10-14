@@ -94,3 +94,13 @@ export const ATLAS_LINKS:readonly (readonly [AtlasWorldId,AtlasWorldId])[]=[
   ["discover","artifacts"],["discover","identity"],["play","creative"],["apps","collaborate"],
   ["studio","collaborate"],["commons","signals"],["artifacts","identity"]
 ];
+
+/** Accessible compact constellation layout for narrow phones (three columns, four rows).
+ * Points are independent of genuine project/category data and never encode rankings.
+ */
+export const ATLAS_MOBILE_LAYOUT:Readonly<Record<AtlasWorldId,readonly [number,number]>>={
+  discover:[0,-4.8],play:[-2.7,-4.8],apps:[2.7,-4.8],
+  creative:[-2.7,-1.6],studio:[0,-1.6],commons:[2.7,-1.6],
+  artifacts:[-2.7,1.6],collaborate:[0,1.6],signals:[2.7,1.6],
+  identity:[0,4.8]
+};

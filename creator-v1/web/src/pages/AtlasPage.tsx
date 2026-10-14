@@ -6,7 +6,7 @@ import {CelestialEmblem} from "../components/CelestialEmblem";
 import {seriesOneMotif} from "../lib/artifact-art";
 import {readProjects,readStatus,type Project,type Status} from "../lib/api";
 import {memberHealth,memberMe,memberProgress,type Progression} from "../lib/member-api";
-import {ATLAS_LINKS,ATLAS_WORLDS,ATLAS_WORLD_BY_ID,type AtlasWorld,type AtlasWorldId} from "../lib/atlas-worlds";
+import {ATLAS_LINKS,ATLAS_WORLDS,ATLAS_WORLD_BY_ID,ATLAS_MOBILE_LAYOUT,type AtlasWorld,type AtlasWorldId} from "../lib/atlas-worlds";
 import "./atlas.css";
 
 type View={pitch:number;yaw:number;zoom:number};
@@ -259,12 +259,19 @@ export function AtlasPage(){
         <div className="atlas-ring atlas-ring-outer" aria-hidden="true"/>
         <div className="atlas-ring atlas-ring-inner" aria-hidden="true"/>
         <div className="atlas-ring atlas-ring-tilted" aria-hidden="true"/>
-        <svg className="atlas-lattice" viewBox="-500 -380 1000 760" aria-hidden="true">
+        <svg className="atlas-lattice atlas-lattice--desktop" viewBox="-500 -380 1000 760" aria-hidden="true">
           <defs><linearGradient id="atlas-tether-paint" x1="0" x2="1" y1="0" y2="1"><stop offset="0%" stopColor="#7e9dce" stopOpacity=".35"/><stop offset="54%" stopColor="#dcbd83" stopOpacity=".7"/><stop offset="100%" stopColor="#cf93cf" stopOpacity=".3"/></linearGradient></defs>
           {ATLAS_LINKS.map(([start,end])=>{
             const a=ATLAS_WORLD_BY_ID.get(start)!,b=ATLAS_WORLD_BY_ID.get(end)!;
             return <line key={start+end} x1={a.coordinates[0]*100} y1={a.coordinates[1]*100}
               x2={b.coordinates[0]*100} y2={b.coordinates[1]*100} stroke="url(#atlas-tether-paint)" strokeWidth="1.2" strokeDasharray="3 7"/>;
+          })}
+        </svg>
+        <svg className="atlas-lattice atlas-lattice--mobile" viewBox="-500 -700 1000 1400" aria-hidden="true">
+          {ATLAS_LINKS.map(([start,end])=>{
+            const a=ATLAS_MOBILE_LAYOUT[start],b=ATLAS_MOBILE_LAYOUT[end];
+            return <line key={start+end} x1={a[0]*100} y1={a[1]*100}
+              x2={b[0]*100} y2={b[1]*100} stroke="#c7b98a" strokeOpacity=".29" strokeWidth="1.5" strokeDasharray="4 11"/>;
           })}
         </svg>
         {ATLAS_WORLDS.map(world=><button type="button" key={world.id}
@@ -275,7 +282,7 @@ export function AtlasPage(){
           onPointerDown={e=>{if(e.button!==0)return; /* Keep focus and native button click available for touch and keyboard. */}}
           onClick={()=>launch(world)}
           onFocus={()=>setFocused(world.id)}
-          style={{"--atlas-x":world.coordinates[0],"--atlas-y":world.coordinates[1],"--atlas-z":world.coordinates[2],"--world-color":world.accent} as CSSProperties}>
+          style={{"--atlas-x":world.coordinates[0],"--atlas-y":world.coordinates[1],"--atlas-z":world.coordinates[2],"--atlas-mobile-x":ATLAS_MOBILE_LAYOUT[world.id][0],"--atlas-mobile-y":ATLAS_MOBILE_LAYOUT[world.id][1],"--world-color":world.accent} as CSSProperties}>
           <span className="atlas-world-aura" aria-hidden="true"/>
           <span className="atlas-world-portrait" aria-hidden="true"><CosmicArtwork scene={world.scene}/></span>
           <span className="atlas-world-medallion" aria-hidden="true">{world.glyph}</span>

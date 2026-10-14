@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {readFileSync,existsSync} from "node:fs";
-import {ATLAS_WORLDS,ATLAS_WORLD_BY_ID,ATLAS_LINKS} from "../web/src/lib/atlas-worlds.ts";
+import {ATLAS_WORLDS,ATLAS_WORLD_BY_ID,ATLAS_LINKS,ATLAS_MOBILE_LAYOUT} from "../web/src/lib/atlas-worlds.ts";
 const read=path=>readFileSync(new URL("../"+path,import.meta.url),"utf8");
 test("Atlas is lazy-loaded as a full-viewport route, preserving the live homepage and existing Shell",()=>{
  const app=read("web/src/App.tsx"),page=read("web/src/pages/AtlasPage.tsx"),home=read("web/src/pages/HomePage.tsx");
@@ -42,6 +42,16 @@ test("dragging, keyboard input, dialogs, mobile and reduced motion are implement
    assert.ok(css.includes(rule),rule);
  }
  assert.ok(existsSync(new URL("../web/src/pages/atlas.css",import.meta.url)));
+});
+test("phone layout preserves ten unique tappable positions within bounded horizontal reach",()=>{
+ const positions=Object.values(ATLAS_MOBILE_LAYOUT);
+ assert.equal(positions.length,10);
+ assert.equal(new Set(positions.map(p=>p.join(","))).size,10);
+ assert.ok(positions.every(([x,y])=>Math.abs(x)<=2.7&&Math.abs(y)<=4.8));
+ const css=read("web/src/pages/atlas.css"),page=read("web/src/pages/AtlasPage.tsx");
+ assert.match(css,/--atlas-mobile-x/);
+ assert.match(css,/atlas-lattice--mobile/);
+ assert.match(page,/ATLAS_MOBILE_LAYOUT\[world\.id\]/);
 });
 test("Atlas is accessible from the existing portal and mobile menu",()=>{
  const shell=read("web/src/components/Shell.tsx"),nav=read("web/src/lib/portal-destinations.ts");
