@@ -62,5 +62,15 @@ CREATE TABLE IF NOT EXISTS "rateLimit" (
   "lastRequest" INTEGER NOT NULL
 );
 
+-- Explicit isolation marker. Existing V5/member D1s share Better Auth tables
+-- but DO NOT carry this marker. Core-table existence alone is insufficient.
+CREATE TABLE IF NOT EXISTS canonical_identity_manifest (
+  id INTEGER PRIMARY KEY NOT NULL CHECK(id=1),
+  issuer TEXT NOT NULL CHECK(issuer='anevum-better-auth-staging-v1'),
+  migration TEXT NOT NULL CHECK(migration='0001_canonical_better_auth_core')
+);
+INSERT OR IGNORE INTO canonical_identity_manifest(id,issuer,migration)
+VALUES(1,'anevum-better-auth-staging-v1','0001_canonical_better_auth_core');
+
 -- No member entitlement, staff, broker, Creator V1, XP or transfer tables.
 -- No existing rows are imported and no ALTER on another environment.
