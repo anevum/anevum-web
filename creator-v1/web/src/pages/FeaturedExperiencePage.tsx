@@ -1,4 +1,4 @@
-import {Link,useNavigate,useParams} from "react-router-dom";
+import {Link,useLocation,useNavigate,useParams} from "react-router-dom";
 import {readProject,safeExternal} from "../lib/api";
 import {useResource} from "../lib/useResource";
 import {CosmicArtwork} from "../components/CosmicArtwork";
@@ -75,7 +75,7 @@ export function FeaturedExperiencePage(){
       <span>EXPERIMENTAL ANEVUM PLAYER / SEPARATE FIRST-PARTY DEMO</span>
       <strong>Want to experience the future in-browser player?</strong>
       <p>Try our own original Orbit Align prototype. It is separate from this creator's project and does not award account XP.</p>
-      <Link to="/atlas/lab/orbit-align">TRY ORBIT ALIGN ↗</Link>
+      <Link to="/atlas/lab/orbit-align" state={{returnTo:"/atlas/experience/"+encodeURIComponent(p.id)}}>TRY ORBIT ALIGN ↗</Link>
     </aside>
   </div>;
 }
@@ -85,5 +85,10 @@ export function FeaturedExperiencePage(){
  */
 export function OrbitAlignPage(){
   const navigate=useNavigate();
-  return <OrbitAlignDemo onExit={()=>navigate("/atlas")}/>;
+  const location=useLocation();
+  const value=(location.state as {returnTo?:unknown}|null)?.returnTo;
+  // The return destination is strictly scoped to an approved project-focus path.
+  // No arbitrary same-origin routing, external redirect or private member URL.
+  const returnTo=typeof value==="string"&&/^\/atlas\/experience\/[A-Za-z0-9_-]{1,80}$/.test(value)?value:null;
+  return <OrbitAlignDemo onExit={()=>navigate(returnTo||"/atlas")} returnToProject={returnTo!==null}/>;
 }
