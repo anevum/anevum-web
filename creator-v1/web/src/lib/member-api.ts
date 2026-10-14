@@ -117,7 +117,7 @@ export const memberCreatorProfile=(handle:string,signal?:AbortSignal)=>{
     contributions:{ratings:number;publishedProjects:number;releases:number};
     progression:Progression;
     achievements:MemberAchievement[];
-  }>("/creators/"+handle,{signal});
+  }>("/creators/"+handle,{signal,publicHealth:true}); // Public, anonymous creator profile: never send member cookies.
 };
 
 export const memberRating=(id:string,signal?:AbortSignal)=>
