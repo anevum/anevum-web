@@ -35,6 +35,7 @@ function worldFor(pathname:string,search:string):AtlasWorldId|null {
     const category=new URLSearchParams(search).get("category");
     return category==="games"?"play":category==="tools"?"apps":category==="creative"?"creative":"discover";
   }
+  if(pathname.startsWith("/atlas/experience/")||pathname.startsWith("/atlas/lab/orbit-align"))return "play";
   if(pathname.startsWith("/atlas/projects/"))return "discover";
   if(pathname.startsWith("/atlas/creators"))return "commons";
   if(pathname.startsWith("/atlas/community")||pathname.startsWith("/atlas/start")||pathname.startsWith("/atlas/guide"))return "commons";
@@ -135,14 +136,22 @@ export function AtlasMorphLayout(){
   const main=useRef<HTMLElement>(null);
   const menuDialog=useRef<HTMLDialogElement>(null);
   const previousRoute=useRef(location.pathname+location.search);
+  const homeScroll=useRef(0);
   const menuPreview=selectedWorld(previewWorld);
 
   useEffect(()=>{
     const route=location.pathname+location.search;
     if(previousRoute.current!==route){
       previousRoute.current=route;
-      main.current?.scrollTo({top:0,behavior:"instant"});
-      main.current?.focus({preventScroll:true});
+      if(route==="/atlas"){
+        // Return to exactly the homepage section the visitor was reading.
+        const frame=window.requestAnimationFrame(()=>main.current?.scrollTo({top:homeScroll.current,behavior:"instant"}));
+        // The animation is only one frame; no global scroll handler or browser storage.
+        void frame;
+      }else{
+        main.current?.scrollTo({top:0,behavior:"instant"});
+        main.current?.focus({preventScroll:true});
+      }
     }
     setMenuOpen(false);
     setLauncherOpen(false);
@@ -275,10 +284,14 @@ export function AtlasMorphLayout(){
     </dialog>
     <main id="atm-content" ref={main}
       className={"atm-content"+(focused?" atm-content--page":" atm-content--overview")}
-      onClickCapture={onInternalLink} tabIndex={-1}
+      onClickCapture={onInternalLink}
+      onScroll={event=>{if(!focused)homeScroll.current=event.currentTarget.scrollTop;}}
+      tabIndex={-1}
       aria-label={focused?(chosen?.title||"ANEVUM")+" section":"ANEVUM front page"}>
-      {focused?<div key={chosenId||"world"} className="atm-embedded"><Outlet/></div>
-        :<MorphHomeConsole onExplore={()=>setMenuOpen(true)}/>}
+      <div className="fx-home-preserved" hidden={focused}>
+        <MorphHomeConsole onExplore={()=>setMenuOpen(true)}/>
+      </div>
+      {focused&&<div key={chosenId||"world"} className="atm-embedded"><Outlet/></div>}
     </main>
     <PortalLauncher open={launcherOpen} onClose={()=>setLauncherOpen(false)} routePrefix="/atlas"/>
   </div>;
