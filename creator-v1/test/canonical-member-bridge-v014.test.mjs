@@ -107,8 +107,8 @@ function mockedAuth(response){
 
 test("V014 read-only bridge is disabled and unbound in the checked-in Worker configuration",()=>{
  const config=JSON.parse(read("wrangler.canonical-stage.candidate.jsonc"));
- assert.equal(config.vars.ANEVUM_CANONICAL_CREATOR_BRIDGE_READ_ENABLED,undefined);
- assert.equal(config.vars.CREATOR_BRIDGE_SCHEMA_APPROVED,undefined);
+ assert.equal(config.vars.ANEVUM_CANONICAL_CREATOR_BRIDGE_READ_ENABLED,"false");
+ assert.equal(config.vars.CREATOR_BRIDGE_SCHEMA_APPROVED,"false");
  assert.equal(config.vars.CREATOR_BRIDGE_D1_ID,undefined);
  assert.deepEqual(config.routes,[]);
  assert.equal(config.d1_databases,undefined);
