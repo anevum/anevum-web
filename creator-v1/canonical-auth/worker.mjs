@@ -4,10 +4,15 @@ import {
   isCanonicalOrigin,withoutForeignCookies
 } from "./policy.mjs";
 import {createCanonicalAuth} from "./auth.mjs";
+import {canonicalCreatorSchemaReady,canonicalCreatorMember,canonicalPublicCreator} from "./profile.mjs";
+import {permitCanonicalUserCreation} from "./policy.mjs";
 
 const HEALTH=CANONICAL_PREFIX+"/health";
 const METHODS=CANONICAL_PREFIX+"/auth-methods";
 const READ_METHODS=new Set(["GET","HEAD"]);
+const PROFILE=CANONICAL_PREFIX+"/creator-profile";
+const PUBLIC_MEMBER=/^\/api\/v1\/members\/([a-z][a-z0-9_]{2,29})$/;
+const EMAIL=/^[^\s@]{1,64}@[^\s@]{1,190}$/;
 const SECURITY={
   "cache-control":"private, no-store",
   "x-content-type-options":"nosniff",
@@ -66,6 +71,26 @@ async function boundedProviderBody(request){
   }catch{return null;}
 }
 
+async function boundedEmailBody(request,verification){
+  if(!/^application\/json(?:\s*;|\s*$)/i.test(request.headers.get("content-type")||""))return null;
+  const n=Number(request.headers.get("content-length")||0);
+  if(!Number.isFinite(n)||n>512)return null;
+  let raw;
+  try{raw=await request.text();if(raw.length>512)return null;}catch{return null;}
+  let data;
+  try{data=JSON.parse(raw);}catch{return null;}
+  if(!data||typeof data!=="object"||Array.isArray(data))return null;
+  const expected=verification?["email","otp","name"]:["email","type"];
+  if(Object.keys(data).some(key=>!expected.includes(key)))return null;
+  if(typeof data.email!=="string"||data.email.length>254||!EMAIL.test(data.email)||data.email!==data.email.toLowerCase().trim())return null;
+  if(verification){
+    if(typeof data.otp!=="string"||!/^\d{8}$/.test(data.otp))return null;
+    if(data.name!==undefined&&(typeof data.name!=="string"||data.name.length>80))return null;
+    return JSON.stringify({email:data.email,otp:data.otp,name:"ANEVUM MEMBER"});
+  }
+  if(data.type!=="sign-in")return null;
+  return JSON.stringify({email:data.email,type:"sign-in"});
+}
 /**
  * An independent, UNROUTED Better Auth candidate. The endpoint will remain
  * closed if config, schema, account issuer, route or host evidence is missing.
@@ -75,17 +100,22 @@ export function createCanonicalStageWorker({authFactory=createCanonicalAuth}={})
   return {async fetch(request,env){
     if(!isCanonicalOrigin(request))return fail(request,404);
     const url=new URL(request.url),path=url.pathname;
-    if(path!==HEALTH && path!==METHODS &&
+    const publicHandle=path.match(PUBLIC_MEMBER);
+    const ownProfile=path===PROFILE;
+    if(path!==HEALTH && path!==METHODS && !publicHandle && !ownProfile &&
       !(path.startsWith(CANONICAL_AUTH_PATH+"/") &&
         (AUTH_ALLOWLIST[request.method]?.has(path)??false)))
       return fail(request,404);
 
+    if(publicHandle && !READ_METHODS.has(request.method))return fail(request,404);
+    if(ownProfile && !["GET","POST","PATCH"].includes(request.method))return fail(request,404);
     if((path===HEALTH||path===METHODS)&&!READ_METHODS.has(request.method))
       return safeJson(request,{error:"Read-only endpoint"},405);
 
     const configured=canonicalConfigState(env);
     // The flag is never sufficient: verify the actual isolated schema.
-    const ready=configured.operational&&await canonicalSchemaReady(env);
+    const ready=configured.operational&&await canonicalSchemaReady(env)&&
+      await canonicalCreatorSchemaReady(env.MEMBER_DB);
     if(path===HEALTH)return safeJson(request,{
       service:"anevum-canonical-auth-staging",
       status:ready?"ready":"closed",
@@ -96,19 +126,37 @@ export function createCanonicalStageWorker({authFactory=createCanonicalAuth}={})
       version:2,
       issuer:"anevum-better-auth-staging-v1",
       registration:ready&&configured.invited?"invite-only":"closed",
-      methods:{google:{available:Boolean(ready)},email:{available:false},
+      methods:{google:{available:Boolean(ready&&configured.google&&configured.invited)},
+        email:{available:Boolean(ready&&configured.email&&configured.invited)},
         github:{available:false},passkey:{available:false},
         microsoft:{available:false},apple:{available:false}},
       linking:"disabled"
     });
     if(!ready)return fail(request,503);
+    if(publicHandle){
+      const clean=new Request(request.url,{method:request.method,headers:{accept:"application/json"}});
+      return safeResponse(await canonicalPublicCreator(clean,env,CANONICAL_ORIGIN,publicHandle[1]));
+    }
 
     // No inherited V5/Creator legacy cookies and no Authorization.
     let clean=withoutForeignCookies(request);
     if(request.method==="POST"){
       if(!sameOriginMutation(request))return safeJson(request,{error:"Same-origin request required"},403);
       if(url.search)return safeJson(request,{error:"Invalid request"},400);
-      if(path===CANONICAL_AUTH_PATH+"/sign-in/social"){
+      if(ownProfile && !sameOriginMutation(request))return safeJson(request,{error:"Same-origin request required"},403);
+      if(path===CANONICAL_AUTH_PATH+"/email-otp/send-verification-otp"||
+        path===CANONICAL_AUTH_PATH+"/sign-in/email-otp"){
+        if(!configured.email||!configured.invited)return fail(request,503);
+        const verifying=path.endsWith("/sign-in/email-otp");
+        const safeBody=await boundedEmailBody(clean,verifying);
+        if(!safeBody)return safeJson(request,{error:"Invalid email verification request"},400);
+        const parsed=JSON.parse(safeBody);
+        if(!permitCanonicalUserCreation(env,parsed.email))
+          return safeJson(request,{error:"Invitation required"},403);
+        const headers=new Headers(clean.headers);
+        headers.set("content-type","application/json");
+        clean=new Request(request.url,{method:"POST",headers,body:safeBody});
+      }else if(path===CANONICAL_AUTH_PATH+"/sign-in/social"){
         const safeBody=await boundedProviderBody(clean);
         if(!safeBody)return safeJson(request,{error:"Invalid provider request"},400);
         clean=new Request(request.url,{
@@ -133,6 +181,11 @@ export function createCanonicalStageWorker({authFactory=createCanonicalAuth}={})
 
     try{
       const auth=authFactory(env);
+      if(ownProfile){
+        const session=await auth.api.getSession({headers:clean.headers});
+        if(!session?.user)return safeJson(request,{error:"Sign-in required"},401);
+        return safeResponse(await canonicalCreatorMember(clean,env,session.user,CANONICAL_ORIGIN));
+      }
       const result=await auth.handler(clean);
       return safeResponse(result);
     }catch{
