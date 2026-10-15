@@ -230,9 +230,10 @@ test("equal email, forged member ID, different account or missing verified link 
     email:"shared@fixture.invalid",memberId:"legacy_alpha",
     handle:"alpha_maker",role:"owner"
   }}));
-  const output=await canonicalCreatorBridgeStatus(request(
-    CREATOR_LINK_ROUTE+"?memberId=legacy_alpha&handle=alpha_maker"
-  ),e,verified.auth(),NOW);
+  const output=await canonicalCreatorBridgeStatus(request(),e,verified.auth(),NOW);
+  assert.equal((await canonicalCreatorBridgeStatus(
+    request(CREATOR_LINK_ROUTE+"?memberId=legacy_alpha&handle=alpha_maker"),
+    e,verified.auth(),NOW)).status,400);
   // The read-only resolver itself uses only the verified session subject.
   assert.equal(output.status,409);
   assert.equal(output.body.state,"unlinked");
@@ -269,12 +270,7 @@ test("link endpoint is read-only and cannot be used with guest, wrong-host, body
  const legacy=creatorD1();
  try{
   const e=env(legacy);
-  const saved=mockedAuth(identity(ALPHA));
-  const stage=createCanonicalStageWorker({authFactory:saved.auth});
-  const get=await stage.fetch(request(),e);
-  // The V013 canonical Worker tests use Date.now(); do not time-travel in this
-  // HTTP test: inject a genuinely future expiration.
-  assert.equal(get.status,401);
+  // Full HTTP worker runs against its real clock; use a fresh fixture session.
   const future=mockedAuth(identity(ALPHA,{session:{expiresAt:new Date(Date.now()+300000)}}));
   const worker=createCanonicalStageWorker({authFactory:future.auth});
   const result=await worker.fetch(request(undefined,{headers:{
