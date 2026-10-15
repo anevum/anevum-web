@@ -4,6 +4,7 @@ import { OrbitalMark } from "./OrbitalMark";
 import { CosmicArtwork } from "./CosmicArtwork";
 import { Icon } from "./Icons";
 import { PortalLauncher } from "./PortalLauncher";
+import {VisualKitAtmosphere,publicVisualRoom} from "./VisualKit";
 import { isEditableTarget } from "../lib/portal-destinations";
 
 /** ANEVUM V009 — one public navigation system across every Creator V1 page.
@@ -141,6 +142,7 @@ export function Shell(){
     </dialog>
     <PortalLauncher open={launcherOpen} onClose={()=>setLauncherOpen(false)}/>
     <main id="main" tabIndex={-1} className="site-main av9-main">
+      <VisualKitAtmosphere room={publicVisualRoom(location.pathname)}/>
       {home?<Outlet/>:<div className="av5-site-frame av9-unified-frame"><div className="av5-site-content"><Outlet/></div></div>}
     </main>
     <footer className="site-footer av9-footer">

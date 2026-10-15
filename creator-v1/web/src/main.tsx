@@ -27,6 +27,7 @@ import "./tactile-editorial-v006.css";
 import "./live-signal-v008.css";
 import "./creator-showcase-v007.css";
 import "./site-experience-v009.css";
+import "./visual-kit-v010.css";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
