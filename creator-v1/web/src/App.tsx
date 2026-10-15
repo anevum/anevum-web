@@ -69,7 +69,7 @@ export default function App(){
     <Route path="sign-in" element={<Navigate to="/join" replace/>}/>
     <Route path="member" element={<Phase1MemberPage/>}/>
     <Route path="member/setup" element={<Navigate to="/member" replace/>}/>
-    <Route path="@:handle" element={<Phase1PublicMemberPage/>}/>
+    <Route path=":memberHandle" element={<Phase1PublicMemberPage/>}/>
     <Route path="start" element={<StartPage/>}/>
     <Route path="guide" element={<FieldGuidePage/>}/>
     <Route path="discover" element={<DiscoverPage/>}/>
