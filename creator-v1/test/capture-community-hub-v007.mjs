@@ -130,7 +130,20 @@ try {
     const dossier=await evaluate('(()=>{const card=document.querySelector(".av6-feed-project"),a=card?.querySelector(".av7-author");return {width:innerWidth,overflow:document.documentElement.scrollWidth>innerWidth+1,dossiers:document.querySelectorAll(".av7-author").length,level:!!a?.querySelector(".av7-level-panel"),artifact:!!a?.querySelector(".av7-artifact-panel"),awards:a?.querySelectorAll(".av7-award").length,watermark:getComputedStyle(document.body,"::after").content.includes("SYNTHETIC OFFLINE REVIEW")};})()');
     if(dossier.overflow||dossier.dossiers<1||!dossier.level||!dossier.artifact||!dossier.awards||!dossier.watermark)
       throw Error("V009_DOSSIER_LAYOUT_"+width+":"+JSON.stringify(dossier));
+    // V011 final visual-flow acceptance — assert the actual rendered positions.
+    const flow=await evaluate('(()=>{const selectors=[".av8-live-signal","#world-gateways",".av11-live-index","#community-index"];const y=selectors.map(selector=>{const el=document.querySelector(selector);return el?Math.round(el.getBoundingClientRect().top+window.scrollY):null});const modules=document.querySelector(".av11-live-index .av8-module-grid");return {y,modules:modules?.children.length||0,overflow:document.documentElement.scrollWidth>innerWidth+1,portalTarget:!!document.querySelector("#world-gateways .av9-world-gateway")};})()');
+    if(flow.overflow||flow.modules!==4||!flow.portalTarget||
+      flow.y.some(value=>value===null)||
+      !(flow.y[0]<flow.y[1]&&flow.y[1]<flow.y[2]&&flow.y[2]<flow.y[3]))
+      throw Error("V011_HOMEPAGE_ORDER_"+width+":"+JSON.stringify(flow));
+    console.log("V011_HOMEPAGE_ORDER_"+width+"="+JSON.stringify(flow));
     await screenshot("v009-home-top",width);
+    await evaluate('document.querySelector("#world-gateways").scrollIntoView({block:"start"})');
+    await delay(250);
+    await screenshot("v011-world-gateways",width);
+    await evaluate('document.querySelector(".av11-live-index").scrollIntoView({block:"start"})');
+    await delay(250);
+    await screenshot("v011-public-index",width);
     await evaluate('document.querySelector(".av6-feed-project").scrollIntoView({block:"start"})');
     await delay(500);
     await screenshot("v009-creator-dossier",width);
