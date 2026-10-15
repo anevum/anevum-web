@@ -34,6 +34,20 @@
 .site-shell .mobile-drawer .nav-drawer-entry:focus-visible{
   outline:2px solid currentColor;outline-offset:2px;
 }
+.site-shell .mobile-drawer .nav-drawer-more{
+  border-top:1px solid var(--line-soft,#282427);margin-top:8px;padding-top:5px;
+}
+.site-shell .mobile-drawer .nav-drawer-more summary{
+  cursor:pointer;display:list-item;list-style-position:inside;padding:10px 12px;
+  min-height:44px;border-radius:11px;font-size:12px;font-weight:750;
+  color:var(--bone,#eee7dd);
+}
+.site-shell .mobile-drawer .nav-drawer-more summary:focus-visible{
+  outline:2px solid currentColor;outline-offset:2px;
+}
+.site-shell .mobile-drawer .nav-drawer-more .nav-drawer-group{
+  border-top:1px solid var(--line-soft,#282427);padding-top:6px;
+}
 .site-shell .mobile-drawer .nav-drawer-footer{
   margin-top:9px;padding:9px 12px 5px;
   color:var(--bone-dim,#b7afa6);font-size:11px;line-height:1.5;
