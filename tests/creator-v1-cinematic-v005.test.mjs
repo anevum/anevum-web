@@ -79,7 +79,12 @@ test("V006 second pass keeps bounded field selection and mobile-first content",(
   assert.match(feed,/id="av6-field-filter"/);
   assert.match(feed,/field==="all"/);
   assert.match(feed,/Latest approved|LATEST APPROVED FIRST/);
-  assert.match(hero,/href="#community-index"/);
+  // V011 puts illustrated discovery before the public telemetry grid on all screens.
+  assert.match(hero,/href="#world-gateways"/);
+  assert.match(landing,/<WorldGatewayDeck\/>/);
+  assert.match(landing,/<LiveSignalModules/);
+  assert.ok(landing.indexOf("<WorldGatewayDeck/>")<landing.indexOf("<LiveSignalModules"));
+  assert.match(feed,/id="community-index"/);
   assert.match(tactile,/\.cinema-feature\{display:none\}/);
   assert.match(tactile,/\.av6-feed-fields select:focus-visible/);
 });
