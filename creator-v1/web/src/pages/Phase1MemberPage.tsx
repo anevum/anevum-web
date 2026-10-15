@@ -4,6 +4,7 @@ import {canonicalAuthClient,canonicalClaim,canonicalEdit,canonicalMe,canonicalRe
   type CanonicalProfile} from "../lib/canonical-beta";
 import {useResource} from "../lib/useResource";
 import {OrbitalMark} from "../components/OrbitalMark";
+import {MemberExperienceMap} from "../components/MemberExperienceMap";
 
 const HANDLE=/^[a-z][a-z0-9_]{2,29}$/;
 const CONTROL=/[\u0000-\u001f\u007f]/;
@@ -86,6 +87,7 @@ function MemberEditor({memberId,memberName}:{memberId:string;memberName:string})
       <div className="av12-account-banner-links"><Link to="/discover">EXPLORE THE NETWORK ↗</Link>
         <button type="button" onClick={()=>void signOut()} disabled={busy}>SIGN OUT</button></div>
     </div>
+    {ready&&<MemberExperienceMap profile={persisted}/>}
     <div className="av12-account-layout">
       <section className="av12-editor-panel" aria-labelledby="av12-editor-heading">
         <span className="kicker">01 / IDENTITY PROFILE</span>
