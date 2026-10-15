@@ -87,6 +87,16 @@ jobs:
             node --check "$file"
           done
           node --input-type=module -e 'import {Script} from "node:vm"; import {COMMUNITY_CLIENT} from "./creator-v1/auth/community-ui.mjs"; import {VOTE_APP} from "./creator-v1/authoring/vote-moderation-ui.mjs"; import {SOCIAL_CLIENT} from "./creator-v1/auth/social-ui.mjs"; import {PRIVACY_CLIENT} from "./creator-v1/auth/privacy-ui.mjs"; import {PRIVACY_APP} from "./creator-v1/authoring/privacy-queue-ui.mjs"; for (const source of [COMMUNITY_CLIENT,VOTE_APP,SOCIAL_CLIENT,PRIVACY_CLIENT,PRIVACY_APP]) new Script(source);'
+      - name: Verify canonical email OTP and existing V013 identity boundaries
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --test creator-v1/test/canonical-auth-worker-v013.test.mjs creator-v1/test/canonical-email-signup-v016.test.mjs 2>&1 | tee evidence/canonical-email-tests.log
+      - name: Validate isolated canonical invited email signup
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --test creator-v1/test/canonical-auth-worker-v013.test.mjs creator-v1/test/canonical-auth-email-signup.test.mjs 2>&1 | tee evidence/canonical-auth-tests.log
       - name: Bundle disabled canonical auth candidate (dry-run only, no Cloudflare deployment)
         shell: bash
         run: |

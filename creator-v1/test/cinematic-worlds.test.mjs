@@ -43,7 +43,9 @@ test("home preserves linked discovery, real creator channels and existing member
   const shell=read("web/src/components/Shell.tsx");
   for(const link of ['/discover','/start','/community','/levels','/creators','/guide','/create'])
     assert.ok(home.includes(link)||shell.includes(link),link);
-  for(const route of ["/library","/account","/status"])assert.ok(shell.includes(route),route);
+  for(const route of ["/library","/member","/status"])assert.ok(shell.includes(route),route);
+  const app=read("web/src/App.tsx");
+  assert.ok(app.includes('path="account"')&&app.includes("<MemberGate/>"),"Legacy Creator V1 account route remains safely gated, not merged into canonical identity");
   assert.match(home,/CelestialEmblem/);
   assert.match(home,/LevelPanel/);
   assert.match(home,/CosmicArtwork/);

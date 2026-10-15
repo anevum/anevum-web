@@ -10,7 +10,8 @@ const api=read("web/src/lib/member-api.ts");
 const publicWorker=read("web/production-worker.mjs");
 
 test("join is reachable through standard, Atlas and quick-navigation routes",()=>{
- assert.match(app,/path="join" element={<JoinPage\/>}/);
+ assert.match(app,/path="join" element={<Phase1JoinPage\/>}/);
+ assert.match(app,/path="member" element={<Phase1MemberPage\/>}/);
  assert.match(app,/path="sign-in" element={<Navigate to="\/join" replace\/>}/);
  assert.match(app,/path="sign-in" element={<Navigate to="\/atlas\/join" replace\/>}/);
  assert.match(atlas,/pathname.startsWith\("\/atlas\/join"\)/);

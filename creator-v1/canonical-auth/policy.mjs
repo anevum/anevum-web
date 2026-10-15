@@ -18,6 +18,8 @@ export const AUTH_ALLOWLIST=Object.freeze({
   ]),
   "POST":new Set([
     CANONICAL_AUTH_PATH+"/sign-in/social",
+    CANONICAL_AUTH_PATH+"/email-otp/send-verification-otp",
+    CANONICAL_AUTH_PATH+"/sign-in/email-otp",
     CANONICAL_AUTH_PATH+"/sign-out"
   ])
 });
@@ -40,14 +42,18 @@ export function canonicalConfigState(env){
   const restricted=list(env?.CANONICAL_PROTECTED_EMAILS);
   const invited=list(env?.CANONICAL_INVITE_EMAILS);
   const protectedConfigured=restricted.size>0;
-  const operational=enabled&&schemaApproved&&db&&secret&&google&&protectedConfigured;
+  const email=env?.CANONICAL_EMAIL_ENABLED==="true" &&
+    isSecret(env?.CANONICAL_RESEND_API_KEY);
+  const operational=enabled&&schemaApproved&&db&&secret&&(google||email)&&protectedConfigured;
   const inviteMode=operational &&
     env?.CANONICAL_INVITED_SIGNUP_ENABLED==="true" && invited.size>=2;
   return {
     operational:Boolean(operational),
     invited:Boolean(inviteMode),
+    email:Boolean(email),
+    google:Boolean(google),
     // No account roles, provider grants or cross-origin linking.
-    provider:operational?"google":null,
+    provider:operational?(email?"email":"google"):null,
     issuer:CANONICAL_ISSUER
   };
 }
