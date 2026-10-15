@@ -5,27 +5,15 @@ import { Icon } from "./Icons";
 import { PortalLauncher } from "./PortalLauncher";
 import { CinematicSiteRail } from "./CinematicSiteRail";
 import { isEditableTarget } from "../lib/portal-destinations";
+import { PRIMARY_NAV, DISCOVERY_NAV, MEMBER_NAV, SUPPORT_NAV, isSiteLinkSelected, type SiteLink } from "../lib/site-navigation";
 
-const desktopNav = [
-  ["/", "Home"], ["/discover", "Explore"], ["/creators", "Creators"], ["/community", "Community"], ["/levels", "Levels"]
-] as const;
-const cinematicNav = [
-  ["/", "Home", "home"],
-  ["/discover", "Explore", "explore"],
-  ["/create", "Create", "create"],
-  ["/community", "Community", "community"],
-  ["/discover?category=tools", "Apps", "explore"],
-  ["/workspace", "Lab", "status"],
-  ["/guide", "Field Notes", "library"]
-] as const;
-const portalCategories = [
-  ["/discover?category=games", "Games"],
-  ["/discover?category=tools", "Apps & Tools"],
-  ["/discover?category=creative", "Creative / AI"],
-  ["/discover?category=libraries", "Open Source"],
-  ["/discover?category=automation", "Automation"],
-  ["/discover?category=learning", "Learning"]
-] as const;
+/** All destinations reuse real current routes; gated routes stay behind MemberGate. */
+const DRAWER_GROUPS: readonly { title:string; links:readonly SiteLink[] }[] = [
+  {title:"NAVIGATE",links:PRIMARY_NAV},
+  {title:"EXPLORE",links:DISCOVERY_NAV},
+  {title:"YOUR SPACE",links:MEMBER_NAV},
+  {title:"MORE",links:SUPPORT_NAV}
+];
 export function Shell() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -38,6 +26,8 @@ export function Shell() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [launcherOpen, setLauncherOpen] = useState(false);
   const menuButton = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLElement>(null);
+  const firstMenuLink = useRef<HTMLAnchorElement>(null);
   const previousPage = useRef(location.pathname + location.search);
   useEffect(() => { setMenuOpen(false); setLauncherOpen(false); }, [location.pathname, location.search]);
   useEffect(() => {
@@ -49,13 +39,22 @@ export function Shell() {
   }, [location.pathname, location.search, location.hash]);
   useEffect(() => {
     if (!menuOpen) return;
+    firstMenuLink.current?.focus();
     function dismiss(event: KeyboardEvent) {
       if (event.key !== "Escape") return;
       setMenuOpen(false);
       menuButton.current?.focus();
     }
+    function dismissOutside(event: PointerEvent) {
+      if (menuRef.current?.contains(event.target as Node) || menuButton.current?.contains(event.target as Node)) return;
+      setMenuOpen(false);
+    }
     window.addEventListener("keydown", dismiss);
-    return () => window.removeEventListener("keydown", dismiss);
+    window.addEventListener("pointerdown", dismissOutside);
+    return () => {
+      window.removeEventListener("keydown", dismiss);
+      window.removeEventListener("pointerdown", dismissOutside);
+    };
   }, [menuOpen]);
   useEffect(() => {
     function onShortcut(event: KeyboardEvent) {
@@ -80,19 +79,28 @@ export function Shell() {
       <header className="site-header">
         <div className="header-inner">
           <Link to="/" className="brand-lockup" aria-label="ANEVUM home"><OrbitalMark className="brand-mark" /><span className="cw-brand-stack"><b>ANEVUM</b><small>CREATE BEYOND WORLDS</small></span></Link>
-          <nav className="desktop-nav" aria-label="Primary">{(location.pathname==="/" || cinematicPublic) ? cinematicNav.map(([to,label,icon]) => <NavLink key={label} to={to} end={to==="/"}><Icon name={icon} size={18}/><span>{label}</span></NavLink>) : desktopNav.map(([to,label]) => <NavLink key={to} to={to} end={to === "/"}>{label}</NavLink>)}</nav>
+          {/* Navigation lives in one concise menu, not several competing toolbars. */}
           <form className="header-search" role="search" onSubmit={search}><Icon name="search" size={16}/><input value={query} onChange={event=>setQuery(event.target.value)} maxLength={100} placeholder="Search worlds, creators, projects..." aria-label="Search published projects"/></form>
-          <button className="header-launcher" type="button" onClick={() => setLauncherOpen(true)} aria-label="Open quick navigation" aria-keyshortcuts="Control+K Meta+K"><Icon name="explore" size={19}/><span>PORTALS</span><kbd>⌘K</kbd></button>
-          <Link to="/create" className="header-create">CREATE</Link>
-          {location.pathname==="/"&&<button type="button" className="cinema-mobile-search" aria-label="Search ANEVUM pages and published projects" onClick={()=>setLauncherOpen(true)}><Icon name="search" size={19}/></button>}
+          <button className="header-launcher" type="button" onClick={() => setLauncherOpen(true)} aria-label="Search or jump to an ANEVUM page" aria-keyshortcuts="Control+K Meta+K"><Icon name="explore" size={19}/><span>SEARCH</span><kbd>⌘K</kbd></button>
+          <button type="button" className="cinema-mobile-search" aria-label="Search ANEVUM pages and approved projects" onClick={() => setLauncherOpen(true)}><Icon name="search" size={19}/></button>
           <Link to="/account" className="cw-account-link" aria-label="Your member account"><Icon name="people" size={19}/></Link>
           <button ref={menuButton} className="menu-button" type="button" aria-label={menuOpen ? "Close site navigation" : "Open site navigation"} aria-expanded={menuOpen} aria-controls="mobile-menu" onClick={()=>setMenuOpen(value=>!value)}><Icon name={menuOpen ? "close" : "menu"}/></button>
         </div>
       </header>
-      <div className="portal-navigation"><div className="portal-navigation-inner"><span className="portal-navigation-label">EXPLORE WORLDS /</span><nav aria-label="Browse by creation type">{portalCategories.map(([to,label])=><Link to={to} key={to}>{label}</Link>)}</nav><Link to="/create" className="portal-navigation-submit">+ SUBMIT WORK</Link></div></div>
       <div className="signal-strip"><span>ANEVUM / CREATIVE UNIVERSE</span><span className="signal-dot"/><span>CREATE BEYOND WORLDS</span><span className="signal-tail">INVITED PARTICIPATION IN TESTING</span></div>
-      {menuOpen && <nav className="mobile-drawer" id="mobile-menu" aria-label="Mobile site navigation">
-        {[["/","Home"],["/discover","Explore"],["/creators","Creators"],["/community","Community"],["/boards","Boards"],["/atlas","Atlas / Spatial Navigation"],["/levels","Levels"],["/create","Create"],["/guide","Field Guide"],["/account","My profile"],["/library","Saved library"]].map(([to,label])=><NavLink key={to} to={to} end={to==="/"}>{label}</NavLink>)}
+      {menuOpen && <nav ref={menuRef} className="mobile-drawer" id="mobile-menu" aria-label="ANEVUM site navigation">
+        {DRAWER_GROUPS.map((group,groupIndex)=><div key={group.title} className="nav-drawer-group">
+          <span className="nav-drawer-heading">{group.title}</span>
+          {group.links.map((item,itemIndex)=><NavLink
+            key={item.key} ref={groupIndex===0&&itemIndex===0?firstMenuLink:undefined}
+            className="nav-drawer-entry" to={item.to} end={item.to==="/"}
+            aria-current={isSiteLinkSelected(location.pathname,item.to)?"page":undefined}
+            onClick={()=>setMenuOpen(false)}>
+            <Icon name={item.icon} size={18}/>
+            <span><strong>{item.label}</strong><small>{item.detail}</small></span>
+          </NavLink>)}
+        </div>)}
+        <p className="nav-drawer-footer">Member tools require a verified account. Messages and collaboration will be available only after private security testing.</p>
       </nav>}
       <PortalLauncher open={launcherOpen} onClose={() => setLauncherOpen(false)}/>
       <main id="main" tabIndex={-1} className="site-main">{cinematicPublic ?
