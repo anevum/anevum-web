@@ -30,7 +30,8 @@ test("public navigation omits unselected experimental and owner material",()=>{
  assert.doesNotMatch(nav,/path:"\/atlas"|path:"\/workspace"|title:"The Commons"/);
  assert.match(nav,/id:"boards".*path:"\/boards"/);
  assert.doesNotMatch(shell+status,/DEVON.S PORTFOLIO|lab\.anevum\.com|\/portfolio\//i);
- assert.match(shell,/to="\/account"/);
+ assert.match(shell,/canonicalMember\?"\/member":"\/join"/);
+ assert.match(read("web/src/App.tsx"),/path="account" element={<MemberAccountPage\/>}/);
  assert.match(read("web/src/pages/AtlasMorphPage.tsx"),/export function AtlasMorphLayout/);
  assert.match(read("web/src/pages/WorkspacePage.tsx"),/PRIVATE LAB/);
 });
