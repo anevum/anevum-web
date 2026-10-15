@@ -14,7 +14,7 @@ test("profile editor visuals are local-only synthetic fixtures",()=>{
  assert.match(fixture,/no member Worker in offline fixture/);
  const visual=read("test/capture-sitewide-v012.mjs");
  assert.match(flow,/Require canonical V012 page captures at desktop and phone widths/);
- assert.match(flow,/capture-sitewide-v012\\.mjs/);
+ assert.match(flow,/capture-sitewide-v012\.mjs/);
  assert.match(visual,/\["member-profile-editor","\/account\/edit"/);
  assert.match(visual,/\[\[1440,900\],\[1024,768\],\[390,844\],\[320,720\]\]/);
  assert.match(visual,/SITEWIDE_V012_BROWSER_CAPTURE=PASS/);
