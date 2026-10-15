@@ -116,24 +116,25 @@ export function createCanonicalStageWorker({authFactory=createCanonicalAuth}={})
     // The flag is never sufficient: verify the actual isolated schema.
     const ready=configured.operational&&await canonicalSchemaReady(env);
     const profilesReady=ready&&await canonicalCreatorSchemaReady(env.MEMBER_DB);
+    const stageReady=ready&&profilesReady;
     if(path===HEALTH)return safeJson(request,{
       service:"anevum-canonical-auth-staging",
-      status:ready?"ready":"closed",
-      registration:ready&&configured.invited?"invite-only":"closed",
+      status:stageReady?"ready":"closed",
+      registration:stageReady&&configured.invited?"invite-only":"closed",
       linkedCreatorAccounts:false
     });
     if(path===METHODS)return safeJson(request,{
       version:2,
       issuer:"anevum-better-auth-staging-v1",
-      registration:ready&&configured.invited?"invite-only":"closed",
-      methods:{google:{available:Boolean(ready&&configured.google)},
-        email:{available:Boolean(ready&&configured.email&&configured.invited)},
+      registration:stageReady&&configured.invited?"invite-only":"closed",
+      methods:{google:{available:Boolean(stageReady&&configured.google)},
+        email:{available:Boolean(stageReady&&configured.email&&configured.invited)},
         github:{available:false},passkey:{available:false},
         microsoft:{available:false},apple:{available:false}},
       linking:"disabled"
     });
-    if(!ready)return fail(request,503);
-    if((publicHandle||ownProfile)&&!profilesReady)return fail(request,503);
+    // Never accept new identities without their required profile schema.
+    if(!stageReady)return fail(request,503);
     if(publicHandle){
       const clean=new Request(request.url,{method:request.method,headers:{accept:"application/json"}});
       return safeResponse(await canonicalPublicCreator(clean,env,CANONICAL_ORIGIN,publicHandle[1]));
