@@ -57,7 +57,7 @@ test('RHEN preview is a real source-backed, read-only development console',async
  assert.match(html,/id="costForm"/);
  assert.match(html,/data-tab="reserve"/);
  assert.match(html,/data-tab="challenge"/);
- assert.match(html,/RHEN Reserve/);
+ assert.match(html,/RHEN <em>Reserve/);
  assert.match(html,/NOT A BANK OR LIVE PRODUCT/);
  assert.match(html,/RHEN-10-2026-001/);
  assert.match(html,/Monthly investment|Monthly addition|monthly investment/i);
