@@ -46,10 +46,12 @@ test("Community is a truthful project-and-creator hub without fabricated threads
  const page=read("web/src/pages/CommunityPage.tsx");
  assert.match(page,/readProjects/);
  assert.match(page,/readCreators/);
- assert.match(page,/COMMUNITY CONVERSATIONS ARE UNDER PRIVATE REVIEW/);
- assert.match(page,/Only actual approved posts appear publicly/);
- assert.match(page,/<HotCommunityPosts\/>/);
- assert.match(page,/to="\/community\/write"/);
+ assert.match(page,/readStatus/);
+ assert.match(page,/readCommunityPosts/);
+ assert.match(page,/communityPosts === true/);
+ assert.match(page,/Only independently approved public records/);
+ assert.match(page,/to="\/boards"/);
+ assert.match(page,/Public signup is not enabled/);
  assert.doesNotMatch(page,/fakeMessage|sampleComments|createThread\(/);
 });
 test("unlimited levels preserve server authoritative progress and first named artifact series",()=>{
@@ -70,9 +72,10 @@ test("member account shows server-verified achievements and unlimited XP without
  assert.match(page,/MY ACHIEVEMENT CABINET/);
  assert.match(page,/a\.earned/);
  assert.match(page,/NO FIXED/i);
- assert.ok(shell.includes('["/levels", "Levels"]'));
- assert.ok(shell.includes('["/library","Saved library"]'));
- assert.ok(shell.includes('["/account","My profile"]'));
+ assert.match(shell,/to:"\/levels",label:"Artifacts & levels"/);
+ assert.match(shell,/to:"\/library",label:"My library"/);
+ assert.match(shell,/to:"\/account",label:"My profile"/);
+ assert.match(shell,/<dialog ref=\{menuDialog\}/);
  assert.doesNotMatch(shell,/mobile-bottom-nav|const mobileNav/);
 });
 

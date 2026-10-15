@@ -84,6 +84,27 @@ function api(res,url){
    const post=discussionFixtures.find(p=>p.id===path.slice('/community/posts/'.length));
    return json(res,post?{post,replies:post.replyCount?[{id:'c'.repeat(32),body:'SYNTHETIC OFFLINE approved reply for responsive reading checks.',authorHandle:'oxide_demo',authorName:'Oxide Collective',publishedAt:'2026-10-12T03:00:00Z'}]:[]}:{error:'not-found'},post?200:404);
  }
+ if(path==="/community/showcases"){
+  // SYNTHETIC OFFLINE creator ledger; this is fixture-only review media.
+  // No such member, badge, level or selected award exists in deployed D1.
+  const requested=(url.searchParams.get("handles")||"").split(",").filter(Boolean);
+  const items={};
+  for(const handle of requested){
+    if(!people.some(person=>person.handle===handle))continue;
+    const developed=handle==="nova_demo"||handle==="moss_demo";
+    if(!developed)continue; // Also exercise private/opted-out fallback.
+    items[handle]={
+      handle,level:handle==="nova_demo"?2:4,currentArtifact:"Copper Key",
+      equippedArtifact:{name:handle==="nova_demo"?"Copper Key":"Ivory Compass",series:"Series One"},
+      featuredAwards:handle==="nova_demo"?
+        [{key:"first-signal",name:"First Signal",description:"SYNTHETIC OFFLINE milestone"}]:
+        [{key:"first-launch",name:"First Launch",description:"SYNTHETIC OFFLINE milestone"},
+         {key:"keen-eye",name:"Keen Eye",description:"SYNTHETIC OFFLINE milestone"}],
+      earnedAwardCount:handle==="nova_demo"?1:2
+    };
+  }
+  return json(res,{source:"verified-creator-ledger",items});
+ }
  if(path==="/categories")return json(res,{categories});
  if(path==="/boards"){
   // SYNTHETIC OFFLINE visual fixtures only. Production boards use canonical SQL.

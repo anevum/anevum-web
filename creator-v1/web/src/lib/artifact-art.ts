@@ -33,3 +33,24 @@ export function seriesOneMotif(level:number, artifact:string|null):EmblemMotif {
   if(!Number.isSafeInteger(level) || level < 1 || !artifact || level > 60) return "orbital";
   return seriesOneStudies.find(item => item.level === level && item.name === artifact)?.motif || "orbital";
 }
+
+/** Visual treatment for a chosen Series One item, independent of the wearer's
+ * current level. Exact illustration studies win; the remaining issued names
+ * receive a semantic motif until individually art-directed media is approved.
+ * Presentation-only: the server alone validates whether a relic was earned.
+ */
+export function seriesOneArtifactMotif(artifact:string|null):EmblemMotif {
+ if(!artifact)return "orbital";
+ const study=seriesOneStudies.find(item=>item.name===artifact);
+ if(study)return study.motif;
+ const words=artifact.toLowerCase();
+ if(/key|cipher/.test(words))return "key";
+ if(/compass|sextant|meridian|astrolabe|orrery|telescope|caliper|atlas/.test(words))return "atlas";
+ if(/solar|sun|dawn|aurora|star|lantern|beacon|light|radiant|ember|furnace/.test(words))return "light";
+ if(/clock|dial|engine|gyroscope|hourglass|gear|spool|relay/.test(words))return "chronometer";
+ if(/moth|finch|beetle|feather|leaf|rose|seed/.test(words))return "spark";
+ if(/lens|prism|eye|glass|quartz|crystal/.test(words))return "lens";
+ if(/cathedral|loom|monolith|trinity|crown|vessel/.test(words))return "trinity";
+ if(/launch|comet|aether|gravity/.test(words))return "launch";
+ return "orbital";
+}

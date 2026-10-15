@@ -51,6 +51,9 @@ jobs:
           npm run build:creator-v1-web
           npm run build:creator-v1-web:staging
           node --test creator-v1/test/react-staging-route.test.mjs
+      - name: Validate cinematic V005 public site contract
+        shell: bash
+        run: node --test tests/creator-v1-cinematic-v005.test.mjs
       - name: Preserve exact source and pre-production checkpoint
         shell: bash
         run: |
@@ -84,72 +87,44 @@ jobs:
             node --check "$file"
           done
           node --input-type=module -e 'import {Script} from "node:vm"; import {COMMUNITY_CLIENT} from "./creator-v1/auth/community-ui.mjs"; import {VOTE_APP} from "./creator-v1/authoring/vote-moderation-ui.mjs"; import {SOCIAL_CLIENT} from "./creator-v1/auth/social-ui.mjs"; import {PRIVACY_CLIENT} from "./creator-v1/auth/privacy-ui.mjs"; import {PRIVACY_APP} from "./creator-v1/authoring/privacy-queue-ui.mjs"; for (const source of [COMMUNITY_CLIENT,VOTE_APP,SOCIAL_CLIENT,PRIVACY_CLIENT,PRIVACY_APP]) new Script(source);'
-      - name: Capture real React at desktop and phone widths for owner design review
-        if: success()
-        continue-on-error: true
+      - name: Require actual V007 Commons browser captures at desktop and phone widths
         shell: bash
         run: |
           set -euo pipefail
-          mkdir -p evidence/portal-review
+          mkdir -p evidence/community-v007-review
           chrome="$(command -v google-chrome || command -v chromium-browser || command -v chromium || true)"
-          if [ -z "$chrome" ]; then
-            echo "CAPTURE_UNAVAILABLE: headless browser not installed" | tee evidence/portal-review/capture-status.txt
-            exit 1
-          fi
-          node creator-v1/test/portal-offline-preview.mjs > evidence/portal-review/fixture.log 2>&1 &
+          test -n "$chrome"
+          node creator-v1/test/portal-offline-preview.mjs > evidence/community-v007-review/fixture.log 2>&1 &
           fixture_pid=$!
           trap 'kill "$fixture_pid" 2>/dev/null || true' EXIT
           ready=0
-          for i in $(seq 1 35); do
+          for i in $(seq 1 60); do
             if curl --fail --silent http://127.0.0.1:4178/__ready >/dev/null; then ready=1; break; fi
             sleep 0.2
           done
           test "$ready" = 1
-          capture() {
-            width="$1"
-            height="$2"
-            name="$3"
-            route="$4"
-            output="evidence/portal-review/$name-$width.png"
-            timeout 35 "$chrome" --headless=new --no-sandbox --disable-dev-shm-usage --disable-gpu --disable-background-networking --hide-scrollbars --window-size="$width,$height" --virtual-time-budget=4500 --screenshot="$output" "http://127.0.0.1:4178$route" > evidence/portal-review/chrome-log.txt 2>&1
-            test -s "$output"
-          }
-          capture 1440 900 home /creator/
-          capture 1024 768 home /creator/
-          capture 1440 900 start /creator/start
-          capture 1440 900 field-guide /creator/guide
-          capture 1440 900 launcher-host /creator/start
-          capture 1440 900 discover-free /creator/discover?free=1
-          capture 1440 900 discover /creator/discover
-          capture 1024 768 discover /creator/discover
-          capture 1440 900 creators /creator/creators
-          capture 1440 900 project /creator/projects/00000000000000000000000000000001
-          capture 1440 900 levels /creator/levels
-          capture 1440 1600 celestial-artifacts /creator/levels#artifact-museum-heading
-          capture 1440 900 community /creator/community
-          capture 390 844 home /creator/
-          capture 390 844 start /creator/start
-          capture 390 844 field-guide /creator/guide
-          capture 390 844 levels /creator/levels
-          capture 390 3300 celestial-artifacts /creator/levels
-          capture 390 844 discover /creator/discover
-          capture 390 844 creators /creator/creators
-          capture 1440 1600 member-cabinet /creator/account
-          capture 1440 900 profile-editor /creator/account/edit
-          capture 390 3000 member-cabinet /creator/account
-          capture 390 844 profile-editor /creator/account/edit
-          capture 1440 900 project-editor /creator/create/new
-          capture 390 844 project-editor /creator/create/new
-          capture 320 720 home /creator/
-          capture 320 900 levels /creator/levels
-          capture 320 720 start /creator/start
-          capture 320 720 field-guide /creator/guide
-          capture 320 720 discover /creator/discover
-          node creator-v1/test/capture-portal-launcher.mjs --chrome "$chrome" --base http://127.0.0.1:4178 --output evidence/portal-review
-          node creator-v1/test/capture-atlas.mjs --chrome "$chrome" --base http://127.0.0.1:4178 --output evidence/portal-review
-          node creator-v1/test/capture-community-feed.mjs --chrome "$chrome" --base http://127.0.0.1:4178 --output evidence/portal-review
-          printf 'The ANEVUM Transcosmic Observatory and Celestial Artifacts designs are review candidates, NOT live at anevum.com or next.anevum.com. All achievement data in the offline member screenshot is SYNTHETIC and may not be treated as real account evidence. These PNG files render the actual compiled React/Vite candidate using explicitly SYNTHETIC OFFLINE design fixtures, including a fake in-memory creator identity for the profile-editor layout only. No fixture records, accounts, cookies or codes are deployed to any staging or production database. Review desktop 1440px before phone 390px. This is visual QA, not authentication, real-user or provider acceptance.\n' > evidence/portal-review/README.txt
-          echo "PORTAL_VISUAL_CAPTURE=PASS" | tee evidence/portal-review/capture-status.txt
+          node creator-v1/test/capture-community-hub-v007.mjs --chrome "$chrome" --base http://127.0.0.1:4178 --output evidence/community-v007-review
+      - name: Require canonical V012 page captures at desktop and phone widths
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p evidence/sitewide-v012-review
+          chrome="$(command -v google-chrome || command -v chromium-browser || command -v chromium || true)"
+          test -n "$chrome"
+          node creator-v1/test/portal-offline-preview.mjs > evidence/sitewide-v012-review/fixture.log 2>&1 &
+          fixture_pid=$!
+          trap 'kill "$fixture_pid" 2>/dev/null || true' EXIT
+          ready=0
+          for i in $(seq 1 70); do
+            if curl --fail --silent http://127.0.0.1:4178/__ready >/dev/null; then ready=1; break; fi
+            sleep 0.2
+          done
+          test "$ready" = 1
+          node creator-v1/test/capture-sitewide-v012.mjs --chrome "$chrome" --base http://127.0.0.1:4178 --output evidence/sitewide-v012-review
+          test -s evidence/sitewide-v012-review/capture-status.txt
+          test -s evidence/sitewide-v012-review/home-1440.png
+          test -s evidence/sitewide-v012-review/discussion-390.png
+          printf '%s\n' 'Offline synthetic screenshots only; not deployed staging content or real members.' > evidence/sitewide-v012-review/README.txt
 
       - name: Preserve generated public artifact for visual review
         if: always()

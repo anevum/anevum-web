@@ -1,0 +1,87 @@
+/* Creator V1 V012: one cinematic design vocabulary for every active page.
+ * Applied after V009-V011. No account, API, storage or permission changes. */
+.av9-shell :is(.cnb-hub,.discussion-page,.discussion-composer,.member-shell,.status-list,.member-gate) {
+ color:var(--av9-paper);font-family:var(--av9-body);
+}
+.av9-shell :is(.cnb-kicker,.discussion-crumb,.discussion-identity small,
+ .member-title .kicker,.member-header .kicker,.member-gate .kicker,.status-list em) {
+ font-family:var(--av10-register,var(--av9-label));font-variant-numeric:tabular-nums;letter-spacing:.085em;
+}
+.av9-shell :is(.cnb-hero h1,.cnb-deck-intro h2,.cnb-coming h2,
+ .discussion-article-head h1,.discussion-composer>header h1,
+ .member-title h1,.member-gate h1,.page-masthead h1,
+ .levels-masthead h1,.start-page h1,.field-guide-page h1) {
+ font-family:var(--av10-editorial,var(--av9-display));font-weight:400;letter-spacing:-.04em;text-wrap:balance;
+}
+.av9-shell :is(.cnb-hub,.discussion-page,.discussion-composer) :is(a,button,input,textarea,select):focus-visible {
+ outline:3px solid var(--av9-cyan);outline-offset:3px;
+}
+.av9-shell :is(.cnb-hero,.cnb-project,.cnb-creator,.discussion-paper,.discussion-reply,
+ .discussion-reply-composer,.discussion-composer-layout,.member-panel,.member-gate,.state-card) {
+ border-color:var(--av9-border);border-radius:18px;box-shadow:var(--av9-glass-line);
+}
+.av9-shell :is(.cnb-project,.cnb-creator,.discussion-paper,.discussion-reply,
+ .discussion-reply-composer,.member-panel,.member-gate) {background:var(--av9-glass)}
+.av9-shell :is(.cnb-hero-actions a,.cnb-tabs button,.cnb-filters button,
+ .discussion-reactions button,.discussion-reply-composer button,
+ .discussion-composer button,.member-shell button,.member-shell .button) {
+ border-radius:12px;min-height:44px;
+ transition:background .18s ease,box-shadow .18s ease,transform .18s ease;
+}
+.av9-shell :is(.discussion-page,.discussion-composer,.member-shell,.member-gate) :is(input,textarea,select) {
+ color:var(--av9-paper);background:#0d1630;border:1px solid var(--av9-border);
+ border-radius:12px;font-family:var(--av9-body);
+}
+.av9-shell :is(.discussion-page,.discussion-composer,.cnb-hub) :is(p,li) {
+ line-height:1.65;overflow-wrap:anywhere;
+}
+.av9-shell .cnb-hero{border-radius:24px}
+.av9-shell .discussion-avatar{border-radius:14px}
+.av9-shell :is(.cnb-hub,.discussion-page,.discussion-composer,.member-shell){min-width:0;max-width:100%}
+@media(max-width:700px){
+ /* Existing 3D emblem must not consume flex width on a phone. The prior
+    mobile positioning was overridden by later global cosmetic CSS. */
+ .av9-shell .levels-masthead {
+   min-height:350px;
+   align-items:center;
+   isolation:isolate;
+ }
+ .av9-shell .levels-masthead > div:not(.cosmic-horizon):not(.levels-emblem){
+   position:relative;
+   z-index:3;
+   flex:1 1 100%;
+   width:100%;
+   max-width:100%;
+   min-width:0;
+ }
+ .av9-shell .levels-masthead .levels-emblem{
+   position:absolute;
+   right:-35px;
+   bottom:-35px;
+   width:200px;
+   height:200px;
+   opacity:.21;
+   z-index:1;
+   pointer-events:none;
+ }
+ .av9-shell .levels-masthead .levels-emblem>span{display:none}
+ .av9-shell .levels-masthead p{
+   max-width:min(40ch,100%);
+   font-size:clamp(13px,3.5vw,15px);
+   line-height:1.62;
+   overflow-wrap:normal;
+ }
+}
+@media(max-width:700px){
+ .av9-shell :is(.cnb-hub,.discussion-page,.discussion-composer){padding:20px 13px 36px}
+ .av9-shell :is(.cnb-hero,.discussion-paper,.member-panel){border-radius:16px}
+ .av9-shell :is(.cnb-hero-actions a,.discussion-composer button,.member-shell button){min-height:44px}
+}
+@media(prefers-reduced-motion:reduce){
+ .av9-shell :is(.cnb-hub,.discussion-page,.discussion-composer,.member-shell) :is(a,button){transition:none;animation:none}
+}
+@media(forced-colors:active){
+ .av9-shell :is(.cnb-hero,.cnb-project,.cnb-creator,.discussion-paper,.discussion-reply,.member-panel){
+ border:1px solid CanvasText;box-shadow:none;
+ }
+}

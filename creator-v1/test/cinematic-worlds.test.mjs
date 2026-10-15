@@ -71,9 +71,10 @@ test("secondary pages share the same world art while preserving genuine content 
   assert.match(creators,/detailed\?\.achievements/);
   assert.match(community,/readProjects/);
   assert.match(community,/readCreators/);
-  assert.match(community,/COMMUNITY CONVERSATIONS ARE UNDER PRIVATE REVIEW/);
-  assert.match(community,/<HotCommunityPosts\/>/);
-  assert.match(community,/to="\/community\/write"/);
+  assert.match(community,/readCommunityPosts/);
+  assert.match(community,/communityPosts === true/);
+  assert.match(community,/to="\/boards"/);
+  assert.match(community,/invitation-only|invited member testing|Member participation is currently invitation-only/i);
   assert.match(css,/prefers-reduced-motion:reduce/);
 });
 
@@ -112,14 +113,17 @@ test("the isolated offline browser fixture serves nested cinematic WebP without 
  assert.match(f,/127\.0\.0\.1/);
 });
 
-test("polished homepage removes redundant nav rows without deleting them from inner pages",()=>{
+test("unified V009 keeps one navigation plane across homepage and inner pages",()=>{
  const shell=read("web/src/components/Shell.tsx");
  const css=read("web/src/cinematic-final-polish.css");
  const html=read("web/index.html");
  assert.match(shell,/site-shell--home/);
- assert.match(shell,/portal-navigation/);
- assert.match(shell,/signal-strip/);
- assert.match(css,/\.site-shell--home \.portal-navigation,\.site-shell--home \.signal-strip\{display:none\}/);
+ const unified=read("web/src/site-experience-v009.css");
+ assert.match(shell,/av9-header/);
+ assert.match(shell,/av9-menu-trigger/);
+ assert.match(shell,/<dialog ref=\{menuDialog\}/);
+ assert.doesNotMatch(shell,/<CinematicSiteRail\/>/);
+ assert.match(unified,/\.av9-shell \.portal-navigation,\.av9-shell \.signal-strip\{display:none!important\}/);
  assert.match(css,/\.site-shell--home \.cw-hero\{height:clamp/);
  assert.match(css,/\.portal-page-heading-stamp>span\{/);
  assert.match(html,/og:site_name/);

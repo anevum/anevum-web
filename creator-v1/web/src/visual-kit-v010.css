@@ -1,0 +1,124 @@
+/* ANEVUM V010 — authenticated-agnostic visual kit adaptation.
+ * Extends V009. Original cinematic masters remain primary, while optional,
+ * checksum-verified V004 artwork provides atmosphere and tactile decoration.
+ * The procedural source art is NOT the missing 4K cinematic key-art package.
+ */
+.av9-shell{
+  --av10-editorial:"EB Garamond",Baskerville,"Iowan Old Style",Palatino,Georgia,serif;
+  --av10-register:"IBM Plex Mono",Cousine,"SFMono-Regular",Consolas,monospace;
+  --av10-interface:Inter,"Avenir Next",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --av10-hairline:#c5cede42;
+  --av10-ink:#f4f0ed;
+}
+.av9-shell .av9-brand .cw-brand-stack b{
+  font-family:var(--av10-editorial)!important;
+  font-variant-caps:small-caps;font-weight:600;
+  letter-spacing:.17em;
+}
+.av9-shell :is(.av9-primary a,.av9-overline,.av8-signal-kicker,
+  .av8-module-index,.av6-registry-line,.av6-feed-record,
+  .av7-section-name,.av9-world-gateway-meta,.av9-world-gateway-entry,
+  .av9-navigation-foot){
+  font-family:var(--av10-register)!important;
+  font-variant-numeric:tabular-nums lining-nums;
+  letter-spacing:.085em;
+}
+.av9-shell :is(.av8-signal-copy h1,.av9-world-deck h2,.av6-index-masthead h2,
+  .av6-feed-description h3,.av9-navigation-top h2){
+  font-family:var(--av10-editorial)!important;
+  font-weight:400!important;
+  font-kerning:normal;
+  letter-spacing:-.042em!important;
+  text-wrap:balance;
+}
+.av9-shell .av8-signal-copy h1{font-size:clamp(53px,6.3vw,107px)!important;line-height:.965!important}
+.av9-shell .av8-signal-copy>p{font-family:var(--av10-interface)}
+.av9-shell .av8-signal-meta,.av9-shell .av8-signal-detail{
+  border-color:var(--av10-hairline);
+}
+/* Visual layers are pointer-transparent and never contain fictitious content.
+   The V009 cinematic hero painting stays directly beneath real HTML text. */
+.av9-shell .av8-live-signal{isolation:isolate}
+.av9-shell .av10-atmosphere{
+  pointer-events:none;user-select:none;position:absolute;overflow:hidden;
+  contain:paint;inset:0;z-index:0;max-width:100%;
+}
+.av9-shell .av10-atmosphere span{pointer-events:none;position:absolute;display:block}
+.av9-shell .av10-atmosphere--hero{z-index:-1;opacity:.58}
+.av9-shell .av10-atmosphere--hero .av10-scene{
+  inset:0 0 auto;height:min(100%,640px);
+  background-image:linear-gradient(90deg,#080d20f9 0%,#0c1128d1 48%,#0b143019),
+                   var(--av10-room-scene);
+  background-position:center,center 35%;
+  background-size:cover,cover;
+  opacity:.21;mix-blend-mode:screen;filter:saturate(.82) blur(.5px);
+}
+.av9-shell .av10-atmosphere .av10-haze{
+  inset:-10% 0 auto;height:68%;background:var(--av10-room-haze) center/cover no-repeat;
+  opacity:.15;mix-blend-mode:screen;transform-origin:center;
+  animation:av10-breathe 17s ease-in-out infinite alternate;
+}
+.av9-shell .av10-atmosphere .av10-orbit{
+  right:0;top:0;width:58%;height:58%;
+  background:var(--av10-room-orbit) center/contain no-repeat;
+  opacity:.14;transform:rotate(-8deg);
+}
+.av9-shell .av10-atmosphere .av10-grain{
+  inset:0;background:var(--av10-room-grain) repeat;
+  opacity:.08;mix-blend-mode:soft-light;
+}
+.av9-shell .site-main.av9-main{position:relative;isolation:isolate}
+.av9-shell .site-main>.av10-atmosphere--page{z-index:-1;opacity:.55}
+.av9-shell .av10-atmosphere--page .av10-scene{
+  inset:0;min-height:100%;
+  background:linear-gradient(180deg,#080d1fda 0%,#070d20f8 82%),var(--av10-room-scene) center top/100% auto no-repeat;
+  opacity:.24;filter:saturate(.66);
+}
+.av9-shell .av10-atmosphere--page .av10-haze{
+  inset:0 0 auto;height:min(610px,65vh);opacity:.17;
+}
+.av9-shell .av10-atmosphere--page .av10-orbit{
+  right:0;top:0;width:min(44vw,570px);height:min(44vw,570px);opacity:.1
+}
+.av9-shell .av9-unified-frame{position:relative;z-index:1}
+.av9-shell :is(.av8-module,.av9-world-gateway,.av7-author,.av6-feed-item){
+  box-shadow:inset 0 1px #ffffff4a,0 12px 30px #0009;
+}
+.av9-shell :is(.av8-module,.av7-author,.av6-feed-item){
+  border-color:#aabbd778;
+}
+.av9-shell .av9-world-gateway:hover .cw-artwork-image{transform:scale(1.035)}
+/* Register-like rules echo the stand-alone Institutional Type V2 package.
+   They must not move the first public content record off the first mobile fold. */
+.av9-shell :is(.av9-world-deck-head,.av6-index-masthead){
+  border-top:1px solid var(--av10-hairline);
+  padding-top:clamp(10px,1.5vw,18px);
+}
+.av9-shell :is(.av9-world-deck-head,.av6-index-masthead)::before{
+  content:"";position:absolute;top:-1px;left:0;width:58px;height:1px;
+  background:#cee0ee9c;pointer-events:none;
+}
+.av9-shell :is(.av9-world-deck-head,.av6-index-masthead){position:relative}
+.av9-shell :is(.av9-hero-primary,.av9-hero-secondary,.av9-header-actions button,.av9-header-actions a){
+  -webkit-tap-highlight-color:transparent;touch-action:manipulation;
+}
+@keyframes av10-breathe{from{transform:scale(1) translateY(-1%)}to{transform:scale(1.045) translateY(2%)}}
+@media(max-width:700px){
+ .av9-shell .av8-signal-copy h1{
+   font-size:clamp(41px,10vw,57px)!important;line-height:.98!important;
+ }
+ .av9-shell .av10-atmosphere--hero .av10-scene{
+   opacity:.14;background-position:center,65% 18%
+ }
+ .av9-shell .av10-atmosphere .av10-orbit{opacity:.07;width:80%;height:37%}
+ .av9-shell :is(.av9-world-deck-head,.av6-index-masthead){padding-top:12px}
+}
+@media(prefers-reduced-motion:reduce){
+ .av9-shell .av10-atmosphere *, .av9-shell .av9-world-gateway .cw-artwork-image{
+   animation:none!important;transition:none!important;
+ }
+}
+@media(forced-colors:active){
+ .av9-shell .av10-atmosphere{display:none!important}
+ .av9-shell :is(.av8-module,.av7-author,.av6-feed-item){border:1px solid CanvasText;box-shadow:none}
+}

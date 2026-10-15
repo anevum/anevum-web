@@ -1,0 +1,263 @@
+/* ANEVUM WEB V005: owner-approved cinematic portal concept, Oct 14 2026.
+   Source: actual Creator V1 production; visual-only and reversible.
+   Image layers are non-interactive. All interactions remain DOM/API driven. */
+.site-shell--home,.site-shell--cinematic{
+  --av5-violet:#a58aff;
+  --av5-cyan:#6ddcff;
+  --av5-coral:#ff977f;
+  --av5-text:#f3f1ff;
+  --av5-muted:#b9c3e4;
+  --av5-edge:#6668a570;
+  --cw-gold:#dfc5f9;
+  background:#050610;
+}
+.site-shell--home .site-header,.site-shell--cinematic .site-header{
+  background:linear-gradient(110deg,#070711f9,#0b1023fb 60%,#090a15fc);
+  border-bottom:1px solid #7375b15e;
+  box-shadow:0 9px 28px #0009;
+}
+.site-shell--home .site-header .brand-mark,.site-shell--cinematic .site-header .brand-mark{
+  filter:drop-shadow(0 0 10px #c679fb85);
+}
+.site-shell--home .site-header .brand-lockup,.site-shell--cinematic .site-header .brand-lockup{flex-shrink:0}
+.site-shell--home .header-search,.site-shell--cinematic .header-search{
+  background:#101227ea;border-color:#535a88;border-radius:24px;
+}
+.site-shell--home .header-search:focus-within,.site-shell--cinematic .header-search:focus-within{border-color:var(--av5-cyan)}
+.site-shell--home .portal-navigation,.site-shell--cinematic .portal-navigation,
+.site-shell--home .signal-strip,.site-shell--cinematic .signal-strip{display:none}
+.site-shell--home .site-main,.site-shell--cinematic .site-main{
+  background:radial-gradient(ellipse 65% 510px at 55% -90px,#46307072,transparent 85%),#050610;
+}
+.site-shell--home .site-footer,.site-shell--cinematic .site-footer{border-top-color:#525982}
+@media(min-width:901px){
+  .site-shell--home .desktop-nav,.site-shell--cinematic .desktop-nav{gap:2px}
+  .site-shell--home .desktop-nav a,.site-shell--cinematic .desktop-nav a{
+    display:inline-flex;flex-direction:row;min-width:0;padding:12px 9px;
+    font:700 10px/1.4 Inter,system-ui,sans-serif;letter-spacing:.09em;
+    text-transform:uppercase;color:#dce0fa;
+  }
+  .site-shell--home .desktop-nav a svg,.site-shell--cinematic .desktop-nav a svg{display:none}
+  .site-shell--home .desktop-nav a:hover,.site-shell--cinematic .desktop-nav a:hover,
+  .site-shell--home .desktop-nav a.active,.site-shell--cinematic .desktop-nav a.active{
+    color:#fff;background:#45406d58;
+  }
+  .site-shell--home .desktop-nav a.active:after,.site-shell--cinematic .desktop-nav a.active:after{
+    background:var(--av5-cyan);box-shadow:0 0 9px #69cfff;
+  }
+  .site-shell--home .header-search,.site-shell--cinematic .header-search{max-width:260px;min-width:140px}
+  .site-shell--cinematic .header-launcher,.site-shell--cinematic .header-create{display:none}
+}
+.anevum-cinema{
+  --cinema-bone:#f4efff;--cinema-copper:#e6b1ff;
+  --cinema-lavender:#b6a5ff;--cinema-electric:#76e0ff;
+  --cinema-edge:#7275ac69;
+  grid-template-columns:154px minmax(0,1fr);gap:12px;
+  padding-top:9px;max-width:1860px;
+}
+.anevum-cinema .cinema-rail,.av5-site-frame .cinema-rail{
+  border-color:#6c69a477;background:linear-gradient(160deg,#121328f2,#090c1bfa 76%);
+  box-shadow:inset 0 1px #afa4f01a,0 15px 35px #0009;
+}
+.av5-rail-label{
+  display:flex;gap:8px;align-items:center;padding:8px 7px 13px;
+  color:#f7f1ff;border-bottom:1px solid #72769a61;
+}
+.av5-rail-label strong{font-size:10px;letter-spacing:.21em}
+.av5-rail-label small{font-size:8px;letter-spacing:.08em;color:#9cadd2;margin-left:auto}
+.av5-rail-orbit{font-size:16px;color:#e0a0ff;text-shadow:0 0 15px #915aff}
+.av5-rail-subtitle{padding:2px 11px 0;font-size:9px;color:#98aed2;letter-spacing:.15em}
+.cinema-rail nav a.cinema-rail-active{
+  background:linear-gradient(95deg,#253c74d8,#251c49b8);
+  border-color:#6d8ddd9e;box-shadow:inset 3px 0 var(--av5-cyan),0 0 17px #525cbe42;
+  color:white;
+}
+.cinema-rail nav a.cinema-rail-active svg{color:var(--av5-cyan)}
+.cinema-rail nav a:hover,.cinema-rail nav a:focus-visible{
+  background:#4e40805c;border-color:#988ada;color:#fff;
+}
+.cinema-hero{
+  min-height:590px;border-color:#716aa98c;
+  border-radius:12px;box-shadow:0 16px 51px #000c,0 0 38px #6e67d71b;
+}
+.cinema-hero-art .cw-artwork-image{object-position:52% 44%;filter:saturate(1.3) contrast(1.08)}
+.cinema-hero-art .cw-artwork-glaze{
+  background:linear-gradient(90deg,#030717c7 0%,#08091d60 30%,#10083a13 56%,#0709199e 100%),
+    linear-gradient(0deg,#060617e5,transparent 34%,#10102b42 90%);
+}
+.cinema-hero-light{
+  background:radial-gradient(circle at 52% 20%,#b44bfc45,transparent 27%),
+    radial-gradient(ellipse at 73% 45%,#3a6dff20,transparent 55%),
+    radial-gradient(ellipse at 90% 93%,#fd997635,transparent 30%);
+}
+.av5-orbit-wordmark{
+  position:absolute;z-index:1;top:140px;left:27%;right:24%;
+  text-align:center;pointer-events:none;
+  text-shadow:0 4px 14px #04030a,0 0 36px #6820ed;
+}
+.av5-orbit-wordmark strong{
+  display:block;font:500 clamp(32px,3.9vw,70px)/1.05 Inter,system-ui,sans-serif;
+  letter-spacing:.35em;color:#f3edff;padding-left:.35em;
+}
+.av5-orbit-wordmark span{
+  display:block;margin-top:10px;font-size:10px;font-weight:650;
+  letter-spacing:.2em;color:#d5d9ff;
+}
+.cinema-hero-layout{grid-template-columns:minmax(0,1fr) minmax(240px,315px);min-height:590px;
+  padding:260px clamp(19px,2.8vw,44px) 115px;gap:30px}
+.cinema-hero-copy{align-self:start;max-width:320px}
+.cinema-hero .cinema-kicker{color:#e5c6ff;font-size:10px}
+.cinema-hero h1{
+  font:750 clamp(26px,2.1vw,37px)/1.07 Inter,system-ui,sans-serif;
+  letter-spacing:.025em;text-transform:uppercase;color:#f5f5ff;
+}
+.cinema-hero-copy>p{max-width:340px;line-height:1.56;color:#e9e9fa;font-size:12px}
+.cinema-actions{gap:9px}
+.cinema-button--primary{
+  background:linear-gradient(110deg,#55cfff,#72dcff);color:#071025!important;
+  border-color:#a4e9ff;box-shadow:0 0 23px #249ef780;
+}
+.cinema-button--secondary{border-color:#7979a8;background:#090c1ddf}
+.cinema-feature{
+  align-self:start;margin-top:-46px;min-height:270px;height:270px;
+  border-color:#9682be;background:#080c1c;
+  box-shadow:0 0 0 4px #09091abc,0 17px 43px #000d,0 0 19px #905cef4d;
+}
+.cinema-feature-art .cw-artwork-glaze{
+  background:linear-gradient(0deg,#07091af2,#09112416 90%);
+}
+.cinema-feature-overlay{justify-content:flex-end}
+.cinema-feature h2{font:700 clamp(21px,1.7vw,28px)/1.1 Inter,system-ui,sans-serif;color:#fff}
+.cinema-feature p{color:#e7e7ff}
+.cinema-feature-action{border-color:#6aa8e5;background:#121d41de}
+.cinema-gateways{
+  width:min(730px,78%);margin:-118px auto 12px;
+  padding:0;gap:10px;
+}
+.cinema-scene-link{border-color:#8a7bb0;background:#11162d;
+  box-shadow:0 6px 22px #0009,0 0 13px #8359d72b}
+.cinema-scene-link:hover{border-color:var(--av5-cyan);box-shadow:0 0 18px #718cff80,0 15px 34px #000b}
+.cinema-section-heading h2,.cinema-section-head h2{color:#ebd7ff}
+.cinema-category-strip,.cinema-category-ribbon,.cinema-panel{
+  border-color:#666c9a;background:linear-gradient(145deg,#10182be9,#090c1df2);
+}
+.cinema-category-ribbon>a:first-child{background:#383b7d;color:#f2f7ff}
+.cinema-world-card,.cinema-world-tile{border-color:#6e70a5}
+.cinema-world-card:hover,.cinema-world-tile:hover{border-color:#91dbff}
+.cinema-verification-note{color:#a9b8df}
+
+/* All existing public page components render inside this consistent site frame.
+   MemberGate routes and independent Atlas retain their prior shells and controls. */
+.site-shell--cinematic .site-main{max-width:none;width:100%;padding:12px clamp(10px,1.4vw,24px) 45px;margin:0}
+.av5-site-frame{
+  display:grid;grid-template-columns:154px minmax(0,1fr);align-items:start;
+  max-width:1860px;gap:14px;margin:0 auto;min-width:0;
+}
+.av5-site-rail{position:sticky;top:80px;min-height:min(790px,calc(100dvh - 100px))}
+.av5-site-content{min-width:0}
+.av5-site-content>*{min-width:0;max-width:none;margin-inline:0}
+.site-shell--cinematic .portal-page-heading,
+.site-shell--cinematic .portal-project-header,
+.site-shell--cinematic .levels-masthead{
+  border-color:#6872aa;border-radius:14px;
+  box-shadow:inset 0 1px #f5f2ff1a,0 22px 50px #0008;
+}
+.site-shell--cinematic .portal-box,
+.site-shell--cinematic .portal-sidebox,
+.site-shell--cinematic .member-panel{
+  border-color:#495c8a;background:linear-gradient(150deg,#142038f4,#0a1128f5);
+  box-shadow:0 13px 33px #0006,inset 0 1px #e4dcff0c;
+}
+.site-shell--cinematic .portal-project-art,
+.site-shell--cinematic .project-art{border-color:#525e99}
+.site-shell--cinematic .project-card{
+  border-color:#59659c;background:linear-gradient(155deg,#141d39,#090f25);
+}
+.site-shell--cinematic .project-card:hover{border-color:#8cbdff}
+.site-shell--cinematic .portal-channel-banner{border-color:#8581bd;border-radius:14px}
+.site-shell--cinematic .portal-browse-layout,
+.site-shell--cinematic .portal-layout{min-width:0}
+.site-shell--cinematic .site-main a:focus-visible,.site-shell--home .site-main a:focus-visible{
+  outline:2px solid #a6eaff;outline-offset:3px;
+}
+@media(max-width:1180px){
+  .av5-orbit-wordmark{left:22%;right:24%;top:105px}
+  .cinema-hero-layout{padding-top:225px}
+  .cinema-gateways{width:83%}
+}
+@media(max-width:900px){
+  .site-shell--cinematic .site-main{padding:9px 12px 35px}
+  .av5-site-frame{display:block}
+  .av5-site-rail{display:none}
+  .anevum-cinema{display:block}
+  .av5-orbit-wordmark{display:none}
+  .cinema-hero{min-height:0}
+  .cinema-hero-layout{min-height:0;padding:44px 19px 28px}
+  .cinema-hero h1{font-size:clamp(31px,4.5vw,45px)}
+  .cinema-feature{margin-top:0}
+  .cinema-gateways{width:auto;margin:10px 0 0;padding:8px 3px}
+}
+@media(max-width:640px){
+  .cinema-hero-layout{padding:48px 13px 14px}
+  .cinema-hero-copy{max-width:100%}
+  .cinema-hero h1{font-size:clamp(29px,8vw,41px)}
+  .cinema-gateways{display:flex;overflow-x:auto;scroll-snap-type:x mandatory}
+  .cinema-button--primary{box-shadow:0 0 12px #249ef768}
+  .site-shell--cinematic .site-main{padding:0 9px 32px}
+}
+@media(prefers-reduced-motion:reduce){
+  .site-shell--cinematic *, .site-shell--cinematic *::before,.site-shell--cinematic *::after{
+    animation:none!important;scroll-behavior:auto!important;transition:none!important;
+  }
+  .cinema-scene-link:hover,.cinema-button:hover{transform:none}
+}
+@media(forced-colors:active){
+  .av5-site-rail,.cinema-hero,.cinema-feature,.cinema-scene-link,
+  .site-shell--cinematic .project-card{border:1px solid CanvasText}
+}
+@media(prefers-reduced-transparency:reduce){
+  .site-shell--cinematic .portal-box,.site-shell--cinematic .portal-sidebox,.av5-site-rail{
+    background-color:#070b19;
+  }
+}
+
+
+/* Owner screenshot review (desktop/phone): keep the introductory copy subordinate
+   to the illustrated portal and central mark, not an oversized billboard. */
+.site-shell--home .anevum-cinema .cinema-hero-copy{
+  width:min(100%,340px);max-width:340px;min-width:0;
+}
+.site-shell--home .anevum-cinema .cinema-hero h1{
+  font-family:Inter,ui-sans-serif,system-ui,sans-serif;
+  font-size:clamp(24px,2.4vw,35px);
+  font-weight:750;line-height:1.12;letter-spacing:.035em;
+  max-width:340px;overflow-wrap:normal;
+}
+@media(max-width:900px){
+  .site-shell--home .anevum-cinema .cinema-hero-copy{width:100%;max-width:100%;min-height:0}
+  .site-shell--home .anevum-cinema .cinema-hero h1{
+    font-size:clamp(27px,5vw,37px);max-width:100%;
+    letter-spacing:.02em;line-height:1.12;
+  }
+}
+@media(max-width:640px){
+  .site-shell--home .anevum-cinema .cinema-hero-copy{min-height:310px}
+  .site-shell--home .anevum-cinema .cinema-hero h1{
+    font-size:clamp(26px,7.2vw,31px);
+    line-height:1.14;letter-spacing:.012em;
+  }
+  .site-shell--home .anevum-cinema .cinema-hero-copy>p{
+    max-width:35ch;font-size:12px;line-height:1.52;
+  }
+}
+
+/* V007 viewport acceptance: keep the persistent account control inside the
+   901-1180px header, without reducing readable community content width. */
+@media(min-width:901px) and (max-width:1180px){
+  .site-shell--home .header-inner,.site-shell--cinematic .header-inner{
+    padding-inline:14px;gap:12px;
+  }
+  .site-shell--home .desktop-nav a,.site-shell--cinematic .desktop-nav a{
+    padding-inline:7px;
+  }
+}

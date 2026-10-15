@@ -25,11 +25,22 @@ export function MemberAccountPage(){
   }
   return <>
     <section className="member-title"><span className="kicker">YOUR SPACE / PRIVATE ACCOUNT</span><h1>{member.displayName||member.handle||"YOUR ACCOUNT"}</h1><p>Signed in as {member.email}. Your personal data is visible only in this authenticated staging session.</p></section>
+    <section className="member-panel member-account-hub" aria-labelledby="member-hub-title">
+      <span className="kicker">ACCOUNT / YOUR ACTIVITY</span>
+      <h2 id="member-hub-title">YOUR ANEVUM WORKSPACE</h2>
+      <p>Your saved projects, creator drafts and public profile tools share one verified member identity.</p>
+      <nav className="member-actions" aria-label="Account destinations">
+        <Link className="button primary" to="/account/studio">CREATOR STUDIO</Link>
+        <Link className="button secondary" to="/library">SAVED LIBRARY</Link>
+        <Link className="button secondary" to="/account/edit">PROFILE SETTINGS</Link>
+      </nav>
+      <p className="member-caption member-account-hub-note">Private messages and shared project rooms are planned, not available in this staging release. Uploaded files must pass independent review before publication.</p>
+    </section>
     <div className="member-dashboard-grid">
       <section className="member-panel">
         <span className="kicker">CREATOR IDENTITY</span><h2>{member.handle?"@"+member.handle:"PROFILE NOT FINISHED"}</h2>
         <p>{member.bio||"Add a creator profile to participate in the private publishing tests."}</p>
-        <div className="member-actions"><Link className="button secondary" to="/account/edit">EDIT CREATOR PROFILE</Link><Link className="button secondary" to="/create">MY PROJECTS</Link></div>
+        <div className="member-actions"><Link className="button secondary" to="/account/edit">EDIT CREATOR PROFILE</Link></div>
       </section>
       <section className="member-panel">
         <span className="kicker">EARNED RECOGNITION / STAGING</span>
