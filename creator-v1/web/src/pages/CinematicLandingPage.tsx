@@ -1,7 +1,7 @@
 import {useEffect,useState} from "react";
 import {readCreators,readProjects,readStatus,type Creator,type Project,type Status} from "../lib/api";
 import {useResource} from "../lib/useResource";
-import {CinematicSiteRail} from "../components/CinematicSiteRail";
+import {WorldGatewayDeck} from "../components/WorldGatewayDeck";
 import {LiveSignalHero} from "../components/LiveSignalHero";
 import {CommunityHomeFeed} from "../components/CommunityHomeFeed";
 
@@ -42,8 +42,7 @@ export function CinematicLandingPage(){
   const displayState=hasVerifiedData?"ready":portal.state;
   const signalState=portal.state==="error"?"error":displayState;
 
-  return <div className="anevum-cinema">
-    <CinematicSiteRail/>
+  return <div className="anevum-cinema av9-home">
     <div className="cinema-content">
       <LiveSignalHero
         state={signalState}
@@ -51,6 +50,7 @@ export function CinematicLandingPage(){
         projects={projects}
         creators={creators}
       />
+      <WorldGatewayDeck/>
       {portal.state==="error"&&hasVerifiedData&&<p className="av8-index-stale" role="status">The latest refresh failed. Previously verified public content remains available while the connection is restored.</p>}
       <CommunityHomeFeed
         projects={projects}

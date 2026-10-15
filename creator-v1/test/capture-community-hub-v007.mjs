@@ -121,6 +121,20 @@ try {
     await until(() => evaluate('document.querySelector(".ch7-tabs button:nth-child(4)")?.getAttribute("aria-pressed")==="true"'));
     if (await evaluate('document.documentElement.scrollWidth>innerWidth+1')) throw Error("V007_PEOPLE_OVERFLOW_" + width);
     await screenshot("community-v007-people", width);
+
+    // V009 HOME + CREATOR DOSSIER — compiled React, synthetic published fixture.
+    await client.send("Page.navigate", {url:base+"/creator/"});
+    await until(()=>evaluate('document.readyState==="complete"&&!!document.querySelector(".av8-live-signal")&&!!document.querySelector(".av6-feed-project .av7-author")'));
+    await until(()=>evaluate('!!document.querySelector(".av6-feed-project .av7-author .av7-artifact-panel")&&!!document.querySelector(".av6-feed-project .av7-author .av7-award-panel")'));
+    await delay(600);
+    const dossier=await evaluate('(()=>{const card=document.querySelector(".av6-feed-project"),a=card?.querySelector(".av7-author");return {width:innerWidth,overflow:document.documentElement.scrollWidth>innerWidth+1,dossiers:document.querySelectorAll(".av7-author").length,level:!!a?.querySelector(".av7-level-panel"),artifact:!!a?.querySelector(".av7-artifact-panel"),awards:a?.querySelectorAll(".av7-award").length,watermark:getComputedStyle(document.body,"::after").content.includes("SYNTHETIC OFFLINE REVIEW")};})()');
+    if(dossier.overflow||dossier.dossiers<1||!dossier.level||!dossier.artifact||!dossier.awards||!dossier.watermark)
+      throw Error("V009_DOSSIER_LAYOUT_"+width+":"+JSON.stringify(dossier));
+    await screenshot("v009-home-top",width);
+    await evaluate('document.querySelector(".av6-feed-project").scrollIntoView({block:"start"})');
+    await delay(500);
+    await screenshot("v009-creator-dossier",width);
+    console.log("V009_DOSSIER_"+width+"="+JSON.stringify(dossier));
     console.log("COMMUNITY_V007_BROWSER_" + width + "=" + JSON.stringify(state));
   }
   writeFileSync(join(output, "capture-status.txt"),

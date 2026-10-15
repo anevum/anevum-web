@@ -1,12 +1,13 @@
 import {Link} from "react-router-dom";
 import {useEffect,useState} from "react";
-import {readCommunityPosts,type Category,type CommunityPost,type Creator,type Project} from "../lib/api";
+import {readCommunityPosts,readPublicShowcases,type Category,type CommunityPost,type Creator,type Project,type PublicCreatorShowcase} from "../lib/api";
 import {useResource} from "../lib/useResource";
 import {projectDetailPath} from "../lib/navigation";
 import {CosmicArtwork} from "./CosmicArtwork";
 import type {CosmicScene} from "./CosmicIllustration";
 import {Icon} from "./Icons";
 import {ErrorState,LoadingState} from "./States";
+import {PublicAuthorShowcase} from "./PublicAuthorShowcase";
 
 /** A real public index, never a synthetic social feed. Private, queued and
  * unreviewed records must remain excluded by their authoritative API.
@@ -41,19 +42,7 @@ function dateLabel(raw:string|null|undefined){
   const value=dateOrder(raw);
   return value?new Intl.DateTimeFormat("en-US",{month:"short",day:"numeric",year:"numeric",timeZone:"UTC"}).format(value):"Date unavailable";
 }
-function ProfileCard({handle,name,known}:{handle:string;name:string;known?:Creator}){
-  const href="/creators/"+encodeURIComponent(handle);
-  return <aside className="av6-author" aria-label={"Creator "+name}>
-    <span className="av6-author-label">CREATOR / PUBLIC CHANNEL</span>
-    <Link to={href} className="av6-author-person">
-      <span className="av6-author-avatar" aria-hidden="true">{(name.trim().charAt(0)||handle.charAt(0)||"A").toUpperCase()}</span>
-      <span className="av6-author-identity"><strong>{name}</strong><small>@{handle}</small></span>
-    </Link>
-    {known&&<span className="av6-author-stat">{known.publishedProjects} {known.publishedProjects===1?"published work":"published works"}</span>}
-    <Link to={href} className="av6-author-visit">VIEW CHANNEL <Icon name="arrow" size={13}/></Link>
-  </aside>;
-}
-function ProjectEntry({project,creators}:{project:Project;creators:readonly Creator[]}){
+function ProjectEntry({project,creators,showcases,priority=false}:{project:Project;creators:readonly Creator[];showcases:Record<string,PublicCreatorShowcase>;priority?:boolean}){
   const author=creators.find(c=>c.handle===project.creatorHandle);
   const title=project.title;
   const href=projectDetailPath(project.id,"/");
@@ -62,7 +51,7 @@ function ProjectEntry({project,creators}:{project:Project;creators:readonly Crea
     <div className="av6-feed-record"><span>PUBLIC INDEX <b>/</b> PROJECT <b>/</b> {project.category.toUpperCase()}</span><time dateTime={project.publishedAt||undefined}>{dateLabel(project.publishedAt)}</time></div>
     <div className="av6-feed-item-body">
       <Link to={href} className="av6-feed-art" aria-label={"Open "+title}>
-        <CosmicArtwork scene={categoryScene[project.category]}/>
+        <CosmicArtwork scene={categoryScene[project.category]} priority={priority}/>
         <span>CATEGORY ILLUSTRATION</span>
       </Link>
       <div className="av6-feed-description">
@@ -74,11 +63,11 @@ function ProjectEntry({project,creators}:{project:Project;creators:readonly Crea
           <Link to={"/discover?category="+project.category} className="av6-feed-inline">{cat?.name||"Browse category"}</Link>
         </div>
       </div>
-      <ProfileCard handle={project.creatorHandle} name={project.creatorName||project.creatorHandle} known={author}/>
+      <PublicAuthorShowcase handle={project.creatorHandle} name={project.creatorName||project.creatorHandle} known={author} showcase={showcases[project.creatorHandle.toLowerCase()]}/>
     </div>
   </article>;
 }
-function DiscussionEntry({post,creators}:{post:CommunityPost;creators:readonly Creator[]}){
+function DiscussionEntry({post,creators,showcases}:{post:CommunityPost;creators:readonly Creator[];showcases:Record<string,PublicCreatorShowcase>}){
   const author=creators.find(c=>c.handle===post.authorHandle);
   const href="/community/posts/"+encodeURIComponent(post.id);
   return <article className="av6-feed-item av6-feed-discussion">
@@ -94,7 +83,7 @@ function DiscussionEntry({post,creators}:{post:CommunityPost;creators:readonly C
           <span className="av6-feed-inline">{post.replyCount} {post.replyCount===1?"reply":"replies"} · {post.score} reactions</span>
         </div>
       </div>
-      <ProfileCard handle={post.authorHandle} name={post.authorName||post.authorHandle} known={author}/>
+      <PublicAuthorShowcase handle={post.authorHandle} name={post.authorName||post.authorHandle} known={author} showcase={showcases[post.authorHandle.toLowerCase()]}/>
     </div>
   </article>;
 }
@@ -125,6 +114,15 @@ export function CommunityHomeFeed({projects,creators,state,communityEnabled}:Pro
     ...projects.map(p=>({kind:"project" as const,key:"project:"+p.id,date:dateOrder(p.publishedAt),value:p})),
     ...postList.map(p=>({kind:"discussion" as const,key:"discussion:"+p.id,date:dateOrder(p.publishedAt),value:p}))
   ].filter(item=>(view==="all"||(view==="projects"&&item.kind==="project")||(view==="discussions"&&item.kind==="discussion"))&&(field==="all"||(item.kind==="project"?item.value.category===field:item.value.topic===field))).sort((a,b)=>b.date-a.date).slice(0,10);
+  // One bounded, cache-disabled public read for visible authors. Missing or
+  // opted-out public showcases fall back to plain, truthful creator identity.
+  const authorHandles=[...new Set(entries.map(item=>(item.kind==="project"?item.value.creatorHandle:item.value.authorHandle).toLowerCase()))]
+    .filter(handle=>/^[a-z][a-z0-9_]{2,29}$/.test(handle)).slice(0,10);
+  const authorSignature=authorHandles.join(",");
+  const dossiers=useResource(async signal=>authorHandles.length
+    ?readPublicShowcases(authorHandles,signal)
+    :{source:"verified-creator-ledger" as const,items:{} as Record<string,PublicCreatorShowcase>},[authorSignature]);
+  const showcaseItems:Record<string,PublicCreatorShowcase>=dossiers.state==="ready"?dossiers.data.items:{};
   const postUnavailable=!communityEnabled||(discussions.state==="ready"&&!discussions.data.available);
 
   return <section id="community-index" className="av6-community-index" aria-labelledby="av6-index-title">
@@ -148,9 +146,9 @@ export function CommunityHomeFeed({projects,creators,state,communityEnabled}:Pro
         {state==="error"&&<ErrorState title="PUBLIC INDEX UNAVAILABLE" detail="The approved public catalogue could not be loaded. No sample members or fictional posts are substituted."/>}
         {view==="discussions"&&communityEnabled&&discussions.state==="loading"&&<LoadingState label="Checking approved conversations"/>}
         {view==="discussions"&&communityEnabled&&discussions.state==="error"&&<ErrorState title="DISCUSSIONS UNAVAILABLE" detail="The approved discussion index could not be reached."/>}
-        {state==="ready"&&entries.map(entry=>entry.kind==="project"?
-          <ProjectEntry key={entry.key} project={entry.value} creators={creators}/>:
-          <DiscussionEntry key={entry.key} post={entry.value} creators={creators}/>)}
+        {state==="ready"&&entries.map((entry,index)=>entry.kind==="project"?
+          <ProjectEntry key={entry.key} project={entry.value} creators={creators} showcases={showcaseItems} priority={index<2}/>:
+          <DiscussionEntry key={entry.key} post={entry.value} creators={creators} showcases={showcaseItems}/>)}
         {state==="ready"&&!entries.length&&!(view==="discussions"&&communityEnabled&&discussions.state==="loading")&&!(view==="discussions"&&communityEnabled&&discussions.state==="error")&&<div className="av6-index-empty">
           <span className="av6-registry-line">ARCHIVE / OPEN RECORD</span>
           <h3>{view==="discussions"&&postUnavailable?"The conversation space is preparing.":"The first entries are ahead."}</h3>
