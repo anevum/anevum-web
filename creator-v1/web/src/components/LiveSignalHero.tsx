@@ -143,8 +143,12 @@ export function LiveSignalHero({status,projects,creators,state}:Props){
     <div className="av8-signal-stage">
       <div className="av8-signal-copy">
         <span className="av8-signal-kicker">[ OPEN TRANSMISSION / 001 ]</span>
-        <h1 id="av8-hero-title">Live <em>Signal.</em></h1>
-        <p>What's being made, published, and shared across ANEVUM.</p>
+        <h1 id="av8-hero-title">A world made <em>by people.</em></h1>
+        <p>Discover independent games, useful apps, open knowledge and the people building them.</p>
+        <div className="av9-hero-actions">
+          <Link to="/discover" className="av9-hero-primary">EXPLORE WORLDS <Icon name="arrow" size={16}/></Link>
+          <Link to="/community" className="av9-hero-secondary">MEET THE COMMUNITY <Icon name="arrow" size={16}/></Link>
+        </div>
         <div className="av8-terminal-line" aria-label={"Latest approved signal: "+line}>
           <span className="av8-terminal-prompt" aria-hidden="true">&gt;</span>
           <span className="av8-terminal-type" key={line} aria-hidden="true">{line}</span>
