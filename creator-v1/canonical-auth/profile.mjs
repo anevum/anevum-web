@@ -166,3 +166,40 @@ export async function canonicalCreatorMember(req,env,user,origin,now=Math.floor(
   return failure(req,503,"Creator profile service unavailable");
  }
 }
+
+/**
+ * Member-controlled privacy export. This intentionally does not enumerate
+ * Creator V1, RHEN, legacy account tables, sessions, OTP secrets or OAuth
+ * credentials. Identity comes exclusively from the verified Better Auth cookie.
+ */
+export async function canonicalExportMember(req,env,user,origin){
+ if(req.method!=="GET")return failure(req,405,"Method not allowed");
+ if(!canonicalBetaConfigured(env,origin))return failure(req,503,"Member export unavailable");
+ if(!properMember(user))return failure(req,403,"Verified member email required");
+ if(new URL(req.url).search)return failure(req,400,"Query not supported");
+ if(!await canonicalCreatorSchemaReady(env.MEMBER_DB))
+   return failure(req,503,"Member export unavailable");
+ try{
+   const profile=privateProfile(await ownProfile(env.MEMBER_DB,user.id));
+   const payload={
+     format:"ANEVUM_CANONICAL_MEMBER_EXPORT_V1",
+     scope:"canonical-member-profile-only",
+     exportedAt:new Date().toISOString(),
+     member:{
+       id:user.id,
+       name:typeof user.name==="string"?user.name:"",
+       email:user.email,
+       emailVerified:true
+     },
+     profile
+   };
+   return new Response(JSON.stringify(payload,null,2),{
+     status:200,
+     headers:{
+       ...HEADERS,
+       "content-disposition":'attachment; filename="anevum-member-export.json"',
+       "cross-origin-resource-policy":"same-origin"
+     }
+   });
+ }catch{return failure(req,503,"Member export unavailable")}
+}
