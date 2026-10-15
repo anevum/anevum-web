@@ -22,9 +22,6 @@ import { WorkspacePage } from "./pages/WorkspacePage";
 import {Phase1JoinPage} from "./pages/Phase1JoinPage";
 import {Phase1MemberPage} from "./pages/Phase1MemberPage";
 import {Phase1PublicMemberPage} from "./pages/Phase1PublicMemberPage";
-import {Phase1JoinPage} from "./pages/Phase1JoinPage";
-import {Phase1MemberPage} from "./pages/Phase1MemberPage";
-import {Phase1PublicMemberPage} from "./pages/Phase1PublicMemberPage";
 
 const PublicBoardsPage = lazy(() => import("./pages/PublicBoardsPage").then(mod=>({default:mod.PublicBoardsPage})));
 const AtlasPage = lazy(() => import("./pages/AtlasPage").then(mod => ({default:mod.AtlasPage})));
