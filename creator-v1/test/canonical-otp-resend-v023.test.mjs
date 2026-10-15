@@ -10,7 +10,7 @@ test("resend button sends a fresh email OTP instead of just resetting a form",()
  assert.match(join,/async function requestReplacementCode\(\)/);
  const body=join.split("async function requestReplacementCode()")[1].split("function resetCode()")[0];
  assert.match(body,/canonicalAuthClient\.emailOtp\.sendVerificationOtp\(\{email:normalized,type:"sign-in"\}\)/);
- assert.match(body,/setOtp\("","?\)/);
+ assert.match(body,/setOtp\(""\)/);
  assert.match(join,/onClick=\{\(\)=>void requestReplacementCode\(\)\}/);
  assert.doesNotMatch(join,/onClick=\{resetCode\}[^>]*>SEND A NEW CODE/);
 });
