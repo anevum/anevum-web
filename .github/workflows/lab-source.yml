@@ -28,7 +28,7 @@ jobs:
           node --check lab/rhen-snapshot.mjs
           node --check lab/rhen-ui.mjs
       - name: Test project catalog, private host boundary, and game routes
-        run: node --test lab/test-worker.mjs
+        run: node --test lab/test-worker.mjs lab/test-currency.mjs lab/deployment/test-overlay.mjs
       - name: Responsive Chromium Lab, Fold and RHEN research console acceptance
         run: node lab/browser-check.mjs
       - name: Upload private Lab responsive screenshots

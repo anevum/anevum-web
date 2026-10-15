@@ -96,3 +96,34 @@ Before re-uploading:
 **Not included:** multiplayer or cross-device Fold save, real party invitations, public Creator publication, server-authenticated XP, actual RHEN research execution, brokerage access, or member brokerage workspace integration.
 
 **Related:** [ANEVUM Lab #349](https://github.com/anevum/anevum-web/issues/349), [The Fold PR #7](https://github.com/anevum/family-adventure-book/pull/7).
+
+## Currency sandbox — October 15, 2026
+
+Session: `ANEVUM.RHEN.BUILD.2026-10-15.001.CURRENCY-SANDBOX`.
+
+Source candidate at `/projects/rhen/currency/`, linked from the existing RHEN console. No hosting rollout is included in this change.
+
+- Browser-memory-only demonstration with invented SIM units, simulated 1:1 backing, explicit review/confirmation, transfers to two demonstration recipients, redemption/burn and JSON export.
+- Integer minor-unit ledger enforces nonnegative balances, matching supply/reserves and summed wallet balances. Duplicate request IDs return the original state; conflicting reuse fails. Rejected operations do not modify balances.
+- Versioned, revocable fixed 20% equipment-goal allocation rule; earmarks stay inside the owner's balance. Stale reviewed transfer/redemption requests are rejected following a policy change. Goal funds can be released explicitly.
+- Incident test pauses movement until local reconciliation succeeds. This demonstrates a control flow, not bank/broker reconciliation or actual independent verification.
+- No AI provider, blockchain, public issuance, custody, payment/broker APIs, keys, real deposits, fees, investment returns or persistence. Issuer structure, reserve custody, economic model and legal readiness remain unresolved. Currency name/ticker is not finalized.
+- Editable sources: `lab/currency/`. Run `node lab/build-currency-snapshot.mjs` after edits. Worker imports the generated static asset map. Include `currency-snapshot.mjs` in any future reviewed Worker module upload.
+- Tests: `node --test lab/test-worker.mjs lab/test-currency.mjs`. Existing Chromium runner now covers confirmation, issuance, duplicates, protected earmarks, transfers, stale permission rejection, redemption, incident pause and responsive layouts at 1440, 390 and 320 pixels.
+- Repaired inherited `rhen-ui.mjs` corruption (duplicated module declarations/CSS spliced into the Challenge formatter) that prevented the base branch from importing. Existing Reserve and Challenge content is retained. Added script parsing regression coverage and corrected stale browser assertion from four to six console tabs.
+
+Keep the owner-only Access policy and disabled Worker direct URLs unchanged. Public ANEVUM signup and launch-page work remain separate.
+
+### Currency permissions editor — October 15, 2026
+
+The sandbox now supports a reviewed 0–100% equipment allocation, a per-transfer ceiling, and a cumulative session transfer ceiling. Policy approval itself uses the review/confirmation screen. Editing or revoking automatic allocation does not reset prior session spending; payment ceilings remain applicable. Redemption is independent of transfer ceilings. Goal funds still require explicit release before redemption. Rejected model instructions are shown separately and included in the simulation export; they never alter the accounting ledger. Invalid amount edits clear a previous unconfirmed instruction. UI terminology remains fixed-rule automation rather than AI execution.
+
+Validation: 22 local tests. Additional Chromium coverage exercises custom allocation, per-transfer rejection, cumulative cap rejection, receipt/rejection history and mobile overflow. No hosted rollout or real currency issuance is included.
+
+### Export replay verification — October 15, 2026
+
+The session export is now version 2 and records both requested and resulting policy versions so policy changes can be replayed faithfully. The local file verifier rebuilds all accepted instructions from an empty simulated ledger, checks every generated receipt and resulting state, and rejects duplicates, modified receipt content, sequence errors and changed balances. Verification never imports balances into the active session. Files are limited to 2 MiB and 1,000 accepted receipts. Earlier version-1 exports are explicitly unsupported rather than silently inferred.
+
+A replay match establishes internal consistency only. It is not cryptographic authenticity, independent financial verification, real reserve evidence or custody. Rejected-instruction text is outside replay validation and is labeled unverified. No server/file upload or persistence is used. Special request identifiers such as `__proto__` now use safe own data properties to preserve duplicate protection.
+
+Validation: 26 local tests pass. Browser coverage exports the actual session Blob, reopens it via the local file control, verifies a good record, rejects changed balances and confirms the active session stays intact.

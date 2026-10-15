@@ -28,7 +28,7 @@ async function main(){
    await sleep(150);
    assert(document.querySelector('#intro')?.hidden,'Fold start button failed');
   }else if(pathname==='/projects/rhen/'){
-   assert(document.querySelectorAll('#rhenTabs button').length===4,'RHEN research navigation missing');
+   assert(document.querySelectorAll('#rhenTabs button').length===6,'RHEN research navigation missing');
    assert(document.body.textContent.includes('RUNTIME OFFLINE'),'Trading runtime misrepresented');
    assert(document.querySelector('.panel[data-view="overview"]')?.hidden===false,'Overview panel not visible');
    assert(document.querySelectorAll('.source-file a').length===5,'Actual pinned source modules missing');
@@ -55,6 +55,46 @@ async function main(){
    assert(document.documentElement.scrollWidth<=innerWidth+1,'RHEN source view overflows horizontally');
    if(new URL(location.href).searchParams.get('scenario')==='cost-lens')replay.click();
    else document.querySelector('[data-tab="overview"]').click();
+ }else if(pathname==='/projects/rhen/currency/'){
+   const get=id=>document.getElementById(id);
+   assert(document.body.textContent.includes('SIMULATION · NO MONETARY VALUE'),'Simulation label missing');
+   const submit=(type,amount)=>{get('operation').value=type;get('amount').value=amount;get('transaction').dispatchEvent(new Event('submit',{cancelable:true,bubbles:true}));};
+   get('approve').click();get('confirm').click();submit('issue','100.00');get('confirm').click();
+   assert(get('owner').textContent==='100.00'&&get('goal').textContent==='20.00','Issue or automatic allocation failed');
+   get('repeat').click();assert(get('owner').textContent==='100.00','Duplicate issuance changed balance');
+   submit('transfer','90');get('confirm').click();
+   assert(get('status').dataset.error==='true'&&get('owner').textContent==='100.00','Protected goal was spent');
+   submit('transfer','25');get('confirm').click();assert(get('collaborator').textContent==='25.00','Transfer failed');
+   submit('redeem','5');get('revoke').click();get('confirm').click();
+   assert(get('status').textContent.includes('Permissions changed'),'Stale permissions accepted');
+   submit('redeem','5');get('confirm').click();assert(get('supply').textContent==='95.00','Redemption did not burn supply');
+   get('pause').click();submit('issue','10');get('confirm').click();assert(get('status').textContent.includes('paused'),'Paused issuance accepted');
+   get('reconcile').click();get('release').click();
+   assert(get('available').textContent==='70.00','Goal release failed');
+   assert(document.documentElement.scrollWidth<=innerWidth+1,'Currency sandbox overflows width');
+   assert(get('receipts').children.length===8,'Receipt count differs from accepted operations');
+   get('goal-percent').value='30';get('payment-limit').value='10';get('session-limit').value='50';
+   get('approve').click();get('confirm').click();
+   submit('transfer','12');get('confirm').click();assert(get('status').textContent.includes('payment limit'),'Per-transfer limit bypassed');
+   submit('transfer','10');get('confirm').click();submit('transfer','10');get('confirm').click();
+   submit('transfer','10');get('confirm').click();assert(get('status').textContent.includes('payment limit'),'Session cap bypassed');
+   assert(get('collaborator').textContent==='45.00','Session spending incorrect');
+   submit('issue','10');get('confirm').click();assert(get('goal').textContent==='3.00','Custom allocation failed');
+   assert(get('rejections').children.length===5,'Rejected instruction history missing');
+   assert(document.documentElement.scrollWidth<=innerWidth+1,'Permission editor overflows width');
+   let exportedBlob;
+   const originalURL=URL.createObjectURL,originalClick=HTMLAnchorElement.prototype.click;
+   URL.createObjectURL=blob=>{exportedBlob=blob;return originalURL(blob);};
+   HTMLAnchorElement.prototype.click=function(){};
+   try{get('export').click();}finally{URL.createObjectURL=originalURL;HTMLAnchorElement.prototype.click=originalClick;}
+   assert(exportedBlob,'Simulation export missing');
+   const exportText=await exportedBlob.text(),beforeVerification=get('owner').textContent;
+   const upload=async text=>{const transfer=new DataTransfer();transfer.items.add(new File([text],'simulation.json',{type:'application/json'}));get('verify-file').files=transfer.files;const complete=new Promise(resolve=>{const observer=new MutationObserver(()=>{if(get('verification').textContent){observer.disconnect();resolve();}});observer.observe(get('verification'),{childList:true,subtree:true,characterData:true});});get('verify-file').dispatchEvent(new Event('change'));await complete;};
+   await upload(exportText);assert(get('verification').textContent.includes('LOCAL REPLAY MATCHED'),'Valid simulation export failed replay');
+   const tampered=JSON.parse(exportText);tampered.balances.owner++;
+   await upload(JSON.stringify(tampered));assert(get('verification').textContent.includes('VERIFICATION FAILED'),'Changed balances accepted');
+   assert(get('owner').textContent===beforeVerification,'File verification replaced active session');
+   get('transaction').scrollIntoView({block:'center'});
  }else if(pathname==='/projects/transcosmic'){
    assert(document.body.textContent.includes('Preview not connected'),'Misleading placeholder');
    assert(document.documentElement.scrollWidth<=innerWidth+1,'Project details overflow');
