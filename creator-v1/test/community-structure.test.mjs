@@ -10,6 +10,9 @@ test("one shared site map drives a four-destination pop-out menu",()=>{
    assert.ok(navigation.includes(route),"Primary destination missing: "+route);
  assert.match(navigation,/PRIMARY_NAV/);
  assert.match(shell,/DRAWER_GROUPS\.map/);
+ assert.match(shell,/SECONDARY_DRAWER_GROUPS\.map/);
+ assert.match(shell,/<details className="nav-drawer-more">/);
+ assert.match(shell,/<summary>More destinations<\/summary>/);
  assert.match(shell,/aria-controls="mobile-menu"/);
  assert.match(shell,/firstMenuLink\.current\?\.focus/);
  assert.match(shell,/dismissOutside/);
@@ -74,4 +77,5 @@ test("No private DM, unreviewed asset execution or game award endpoint is opened
  assert.match(css,/@media\(max-width:640px\)/);
  assert.match(css,/@media\(prefers-reduced-motion:reduce\)/);
  assert.match(css,/min-height:44px/);
+ assert.match(css,/nav-drawer-more summary:focus-visible/);
 });
