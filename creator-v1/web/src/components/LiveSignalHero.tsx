@@ -5,6 +5,7 @@ import {useResource} from "../lib/useResource";
 import {projectDetailPath} from "../lib/navigation";
 import {CosmicArtwork} from "./CosmicArtwork";
 import {Icon} from "./Icons";
+import {VisualKitAtmosphere} from "./VisualKit";
 
 type Props={
   status:Status|null;
@@ -136,6 +137,7 @@ export function LiveSignalHero({status,projects,creators,state}:Props){
   return <section className="av8-live-signal" aria-labelledby="av8-hero-title">
     <div className="av8-signal-art" aria-hidden="true"><CosmicArtwork scene="hero" priority/></div>
     <div className="av8-signal-grid" aria-hidden="true"/>
+    <VisualKitAtmosphere room="home" placement="hero"/>
     <div className="av8-signal-meta">
       <span className="av8-signal-brand"><span className="av8-status-light" aria-hidden="true"/> ANEVUM <b>//</b> LIVE SIGNAL</span>
       <span className="av8-signal-clock"><span className="av8-clock-label">PUBLIC COMMONS <b>/</b> </span>{utcClock(time)}</span>
