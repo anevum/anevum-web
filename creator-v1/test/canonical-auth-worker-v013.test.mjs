@@ -18,6 +18,7 @@ const tables=["user","session","account","verification","rateLimit"];
 const db=(names,opts={})=>({
  prepare(sql){
   return {async all(){
+   if(/PRAGMA table_info\(member_creator_profiles\)/.test(sql))return {success:true,results:["user_id","handle","display_name","bio","visibility","revision","headline","world_theme","focus_json"].map(name=>({name}))};
    if(/sqlite_master/.test(sql))
      return {success:true,results:[...names,...(opts.markerTable===false?[]:["canonical_identity_manifest"])].map(name=>({name}))};
    if(/SELECT issuer,migration FROM canonical_identity_manifest/.test(sql))
