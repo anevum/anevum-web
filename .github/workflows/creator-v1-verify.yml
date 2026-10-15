@@ -141,9 +141,9 @@ jobs:
           test -s evidence/portal-review/v007-community-dossiers-320.png
           test -s evidence/portal-review/v007-community-dossiers-390.png
           test -s evidence/portal-review/v007-community-dossiers-1440.png
-          test -s evidence/portal-review/phase1-invited-join-320.png
-          test -s evidence/portal-review/phase1-invited-join-390.png
-          test -s evidence/portal-review/phase1-invited-join-1440.png
+          test -s evidence/portal-review/phase1-invited-join-closed-320.png
+          test -s evidence/portal-review/phase1-invited-join-closed-390.png
+          test -s evidence/portal-review/phase1-invited-join-closed-1440.png
           test -s evidence/portal-review/phase1-unlisted-member-390.png
           test -s evidence/portal-review/phase1-protected-account-390.png
           echo "V007_SHOWCASE_BROWSER_CAPTURE=PASS" | tee evidence/portal-review/v007-capture-status.txt
