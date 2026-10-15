@@ -1,6 +1,7 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import { lazy, Suspense } from "react";
 import { Shell } from "./components/Shell";
+import { InstallPage } from "./pages/InstallPage";
 import { CinematicLandingPage } from "./pages/CinematicLandingPage";
 import { FieldGuidePage } from "./pages/FieldGuidePage";
 import { StartPage } from "./pages/StartPage";
@@ -56,6 +57,7 @@ export default function App(){
         <Route path="account/edit" element={<MemberProfileEditorPage/>}/>
       </Route>
       <Route path="levels" element={<LevelsPage/>}/>
+      <Route path="install" element={<InstallPage/>}/>
       <Route path="*" element={<Navigate to="/atlas" replace/>}/>
     </Route>
     <Route element={<Shell/>}>
