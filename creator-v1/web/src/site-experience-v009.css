@@ -572,3 +572,43 @@
   .av9-shell .av7-author{gap:8px 6px;padding:10px}
   .av9-shell .av7-level-button{flex-direction:column;align-items:flex-start}
 }
+
+
+/* V009 screenshot correction: the two hero actions must be physical controls,
+   not bare links that disappear into cinematic artwork. */
+.av9-shell .av9-hero-actions{
+  display:flex;flex-wrap:wrap;align-items:center;gap:12px;
+  position:relative;z-index:3;width:100%;
+  margin:2px 0 22px;
+}
+.av9-shell .av9-hero-actions>a{
+  display:inline-flex;align-items:center;justify-content:space-between;
+  gap:20px;min-height:50px;padding:13px clamp(17px,1.8vw,27px);
+  border:1px solid #b9d6eeaa;border-radius:999px;
+  text-decoration:none;font:750 12px/1.2 var(--av9-body);
+  letter-spacing:.06em;white-space:nowrap;
+  box-shadow:inset 0 1px #fff8,0 5px 0 #060d1ca8,0 14px 27px #0009;
+  transition:transform .2s var(--av9-ease),border-color .2s,box-shadow .2s,background .2s
+}
+.av9-shell .av9-hero-primary{
+  background:linear-gradient(180deg,#e8faff 0%,#afe4fc 55%,#80bcdb 100%);
+  border-color:#edfbff!important;color:#10243b!important;
+}
+.av9-shell .av9-hero-secondary{
+  background:linear-gradient(180deg,#374265e8,#202a4be8 80%,#19213dec);
+  border-color:#c3b9f0a9!important;color:#f6f0ff!important
+}
+.av9-shell .av9-hero-actions>a:hover{
+  transform:translateY(-3px);border-color:#ffffff!important;
+  box-shadow:inset 0 1px #fff9,0 8px 0 #050c1caf,0 19px 32px #000b
+}
+.av9-shell .av9-hero-actions>a:active{
+  transform:translateY(2px);box-shadow:inset 0 1px #fff8,0 2px 0 #050c1caf
+}
+@media(max-width:700px){
+  .av9-shell .av9-hero-actions{gap:10px;max-width:420px;margin:7px 0 20px}
+  .av9-shell .av9-hero-actions>a{
+    width:100%;min-height:51px;padding:12px 19px;white-space:normal;
+    font-size:12px
+  }
+}

@@ -62,6 +62,8 @@ test("V009 design finishes public pages without unlocking member writes",()=>{
  }
  assert.doesNotMatch(css,/position:fixed;\s*bottom:0|scrollbar-width:\s*none/);
  assert.match(css,/image-rendering:auto/);
+ assert.match(css,/\.av9-shell \.av9-hero-actions>a/);
+ assert.match(css,/min-height:50px/);
  assert.match(main,/creator-showcase-v007\.css/);
  assert.match(css,/\.av9-shell \.av7-author/);
  assert.match(read("web/src/components/PublicAuthorShowcase.tsx"),/CHOSEN AWARDS/);
