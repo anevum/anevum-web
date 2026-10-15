@@ -22,7 +22,7 @@
     },
     {
       "binding": "MEMBER_DB",
-      "database_name": "NEW-ISOLATED-ANE VUM-PHASE1-BETA-D1-REQUIRED",
+      "database_name": "NEW-ISOLATED-ANEVUM-PHASE1-BETA-D1-REQUIRED",
       "database_id": "REPLACE-WITH-NEW-STAGING-BETTER-AUTH-D1-ID"
     }
   ],
