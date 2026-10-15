@@ -4,11 +4,10 @@ import { ErrorState, LoadingState } from "../components/States";
 
 const rows=[
  ["DISCOVERY + SEARCH","AVAILABLE","Browse approved public work, categories and creator pages."],
- ["DEVON'S PORTFOLIO","AVAILABLE","Design, software and collaboration at anevum.com/portfolio/."],
  ["MEMBER ACCOUNTS","STAGING","Identity, recovery and isolation require real-user acceptance before public access."],
  ["CREATOR PUBLISHING","STAGING","Drafts and staff moderation exist in staging; public submissions remain closed."],
  ["REVIEWS + XP","STAGING","Participation and progression require anti-abuse and real-user acceptance."],
- ["COMMUNITY","BUILDING","Discussion, follows and collaboration are part of the Creator V1 roadmap."]
+ ["COMMUNITY","READ ONLY","Approved work and moderated discussions are visible; member participation is still gated."]
 ];
 export function StatusPage(){
  const data=useResource(readStatus,[]);

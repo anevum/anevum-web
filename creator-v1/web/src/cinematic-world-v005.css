@@ -250,3 +250,14 @@
     max-width:35ch;font-size:12px;line-height:1.52;
   }
 }
+
+/* V007 viewport acceptance: keep the persistent account control inside the
+   901-1180px header, without reducing readable community content width. */
+@media(min-width:901px) and (max-width:1180px){
+  .site-shell--home .header-inner,.site-shell--cinematic .header-inner{
+    padding-inline:14px;gap:12px;
+  }
+  .site-shell--home .desktop-nav a,.site-shell--cinematic .desktop-nav a{
+    padding-inline:7px;
+  }
+}

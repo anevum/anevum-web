@@ -10,15 +10,16 @@ const css = read("web/src/portal-launcher.css");
 const main = read("web/src/main.tsx");
 
 test("portal launcher uses fixed same-origin routes with no fabricated creator records",()=>{
- assert.ok(PORTAL_DESTINATIONS.some(x=>x.id==="workspace"&&x.path==="/workspace"&&x.gated));
+ assert.ok(PORTAL_DESTINATIONS.some(x=>x.id==="boards"&&x.path==="/boards"));
+ assert.ok(!PORTAL_DESTINATIONS.some(x=>["workspace","atlas"].includes(x.id)));
  assert.equal(new Set(PORTAL_DESTINATIONS.map(x=>x.id)).size,PORTAL_DESTINATIONS.length);
  for(const item of PORTAL_DESTINATIONS){
-  assert.match(item.path,/^\/[a-z0-9/?=&_-]*$/);
-  assert.doesNotMatch(item.path,/^\/\/|\/api\/|https?:|\/command|^\/studio(?:\/|$)/);
+  assert.match(item.path,/^\/(?:[a-z0-9?=&_-]*)$/);
+  assert.doesNotMatch(item.path,/^\/\/|\/api\/|https?:|\/command|\/studio/);
   assert.ok(["Explore","Community","Account"].includes(item.category));
  }
  const gated=PORTAL_DESTINATIONS.filter(x=>x.gated).map(x=>x.id);
- assert.deepEqual(gated,["workspace","account","library","create"]);
+ assert.deepEqual(gated,["account","library","create"]);
  assert.ok(!component.includes("member-api"));
  assert.ok(!component.includes("memberMe"));
  assert.ok(!component.includes("localStorage"));
@@ -28,7 +29,7 @@ test("portal launcher uses fixed same-origin routes with no fabricated creator r
 });
 
 test("keyword search is local, predictable, insensitive to case and bounded",()=>{
- assert.ok(findPortalDestinations("").some(x=>x.id==="home"));
+ assert.ok(findPortalDestinations("").some(x=>x.id==="guide"));
  assert.ok(findPortalDestinations("").some(x=>x.id==="discover"));
  assert.equal(findPortalDestinations("GUIDE")[0].id,"guide");
  assert.equal(findPortalDestinations("play")[0].id,"games");
@@ -65,7 +66,7 @@ test("slash shortcuts never hijack normal typing fields",()=>{
 
 test("native modal traps focus, supports escape and keyboard choice, and works on mobile",()=>{
  assert.match(shell,/<PortalLauncher open={launcherOpen} onClose=/);
- assert.match(shell,/aria-label="Search or jump to an ANEVUM page"/);
+ assert.match(shell,/aria-label="Open quick navigation"/);
  assert.match(component,/<dialog ref={dialog} onClose={leave}/);
  assert.match(component,/element\.showModal\(\)/);
  assert.match(component,/searchField\.current\?\.focus\(\)/);

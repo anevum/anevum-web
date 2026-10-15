@@ -69,19 +69,19 @@ function CommunityPostReader({id}:{id:string}){
  }
  if(!isValid)return <div className="discussion-page"><ErrorState title="DISCUSSION NOT FOUND" detail="The discussion reference is invalid."/></div>;
  if(post.state==="loading")return <div className="discussion-page"><LoadingState label="Reading moderated public conversation"/></div>;
- if(post.state==="error")return <div className="discussion-page"><ErrorState title="DISCUSSION UNAVAILABLE" detail="This post may have been withdrawn, hidden, or is not publicly approved."/><Link to="/atlas/community">RETURN TO COMMUNITY ↗</Link></div>;
+ if(post.state==="error")return <div className="discussion-page"><ErrorState title="DISCUSSION UNAVAILABLE" detail="This post may have been withdrawn, hidden, or is not publicly approved."/><Link to="/community">RETURN TO COMMUNITY ↗</Link></div>;
  const {post:item,replies}=post.data;
  const myReaction=local||(reaction.state==="ready"?reaction.data.myReaction:null);
  return <article className="discussion-page">
-   <nav aria-label="Discussion breadcrumb" className="discussion-crumb"><Link to="/atlas">NETWORK</Link><span>/</span><Link to="/atlas/community">COMMUNITY</Link><span>/</span><span>DISCUSSION</span></nav>
+   <nav aria-label="Discussion breadcrumb" className="discussion-crumb"><Link to="/">NETWORK</Link><span>/</span><Link to="/community">COMMUNITY</Link><span>/</span><span>DISCUSSION</span></nav>
    <header className="discussion-article-head"><span className="nfc-eyebrow">PUBLIC / APPROVED DISCUSSION · {item.topic.toUpperCase()}</span>
       <h1>{item.title}</h1>
       <div className="discussion-identity">
         <span className="discussion-avatar">{item.authorName.charAt(0).toUpperCase()}</span>
-        <div><Link to={"/atlas/creators/"+encodeURIComponent(item.authorHandle)}>{item.authorName} / @{item.authorHandle}</Link><small>{when(item.publishedAt)} · MODERATED PUBLIC POST</small></div>
+        <div><Link to={"/creators/"+encodeURIComponent(item.authorHandle)}>{item.authorName} / @{item.authorHandle}</Link><small>{when(item.publishedAt)} · MODERATED PUBLIC POST</small></div>
       </div>
    </header>
-   {item.project&&<nav className="discussion-project-context" aria-label="Linked published project"><span className="nfc-eyebrow">ABOUT THIS PROJECT</span><Link to={"/atlas/projects/"+encodeURIComponent(item.project.id)}>{item.project.title} ↗</Link><small>Made by {item.project.creatorName} / @{item.project.creatorHandle}. Discussion authors receive no project ownership or collaborator credit.</small></nav>}
+   {item.project&&<nav className="discussion-project-context" aria-label="Linked published project"><span className="nfc-eyebrow">ABOUT THIS PROJECT</span><Link to={"/projects/"+encodeURIComponent(item.project.id)}>{item.project.title} ↗</Link><small>Made by {item.project.creatorName} / @{item.project.creatorHandle}. Discussion authors receive no project ownership or collaborator credit.</small></nav>}
    <div className="discussion-paper">
      <div className="discussion-body">{item.body}</div>
      <div className="discussion-reactions">
@@ -99,7 +99,7 @@ function CommunityPostReader({id}:{id:string}){
      <div className="discussion-section-head"><span className="nfc-eyebrow">COMMUNITY / FOLLOW-UP</span><h2>THE CONVERSATION.</h2></div>
      {replies.length?replies.map(reply=><article key={reply.id} className="discussion-reply">
        <div className="discussion-identity"><span className="discussion-avatar">{reply.authorName.charAt(0).toUpperCase()}</span>
-         <div><Link to={"/atlas/creators/"+encodeURIComponent(reply.authorHandle)}>{reply.authorName} / @{reply.authorHandle}</Link><small>{when(reply.publishedAt)}</small></div>
+         <div><Link to={"/creators/"+encodeURIComponent(reply.authorHandle)}>{reply.authorName} / @{reply.authorHandle}</Link><small>{when(reply.publishedAt)}</small></div>
        </div>
        <p>{reply.body}</p>
      </article>):<p className="discussion-muted">No approved replies yet. Replies are being introduced through the moderation workflow.</p>}
@@ -128,6 +128,6 @@ function CommunityPostReader({id}:{id:string}){
          </article>)}
        </div>}
    </section>
-   <div className="discussion-end"><Link to="/atlas/community">← ALL COMMUNITY SPACES</Link><Link to="/atlas">FRONT PAGE ↗</Link></div>
+   <div className="discussion-end"><Link to="/community">← ALL COMMUNITY SPACES</Link><Link to="/">FRONT PAGE ↗</Link></div>
  </article>;
 }
