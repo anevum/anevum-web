@@ -43,6 +43,7 @@ const browser=spawn(chrome,["--headless=new","--no-sandbox","--disable-dev-shm-u
  "--disable-background-networking","--remote-allow-origins=*","--remote-debugging-port=0",
  "--user-data-dir="+profile,"about:blank"],{stdio:"ignore"});
 let client;
+let acceptancePassed=false;
 const captures=[];
 try{
  const port=await until(()=>{
@@ -116,10 +117,51 @@ try{
    throw Error("V007_MEMBER_CUSTOMIZER_"+width+": "+JSON.stringify(account));
   await documentScroll(evalPage);
   await photo("v007-member-customizer",width);
-  captures.push({width,fixture:"SYNTHETIC OFFLINE — NOT REAL EARNED RECORDS",summary,creator,account});
+  // Phase 1: real compiled React, provider CLOSED in offline fixture.
+  // A visible join page never authorizes a real signup without canonical D1.
+  await visit("/creator/join","!!document.querySelector('.av12-phase1-join')");
+  await until(()=>evalPage("document.querySelector('.join-state')?.textContent.includes('REGISTRATION CLOSED')"));
+  const join=await evalPage(`({
+     heading:document.querySelector('#phase1-join-title')?.textContent,
+     readyProviders:document.querySelectorAll('.join-method-ready').length,
+     availableButtons:document.querySelectorAll('.join-method-open:not(:disabled)').length,
+     overflow:document.documentElement.scrollWidth>innerWidth+1
+  })`);
+  if(!join.heading?.includes("UNIVERSE")||join.readyProviders!==0||
+     join.availableButtons!==0||join.overflow)
+   throw Error("PHASE1_INVITE_FAIL_CLOSED_"+width+": "+JSON.stringify(join));
+  await photo("phase1-invited-join-closed",width);
+  await visit("/creator/@unlisted_member","true");
+  const routeEvidence=await evalPage(`({
+   pathname:location.pathname,
+   routeHeading:document.querySelector('h1')?.textContent,
+   publicWorld:!!document.querySelector('.av12-public-world'),
+   snippet:document.querySelector('main')?.textContent?.slice(0,360),
+   routeError:document.querySelector('[role="alert"]')?.textContent?.slice(0,160)
+  })`);
+  if(!routeEvidence.publicWorld)
+   throw Error("PHASE1_MEMBER_ROUTE_NOT_MATCHED_"+width+": "+JSON.stringify(routeEvidence));
+  await until(()=>evalPage("document.querySelector('#av12-world-heading')?.textContent.includes('PRIVATE WORLD')"));
+  const publicWorld=await evalPage(`({
+    private:document.querySelector('#av12-world-heading')?.textContent.includes("PRIVATE WORLD"),
+    leaked:!!document.querySelector('.av12-world-bio'),
+    overflow:document.documentElement.scrollWidth>innerWidth+1
+  })`);
+  if(!publicWorld.private||publicWorld.leaked||publicWorld.overflow)
+    throw Error("PHASE1_PRIVATE_MEMBER_"+width+": "+JSON.stringify(publicWorld));
+  await photo("phase1-unlisted-member",width);
+  await visit("/creator/member","!!document.querySelector('.av12-account-await')");
+  await until(()=>evalPage("document.querySelector('.av12-account-await h1')?.textContent.includes('MEMBER ACCESS IS CLOSED')"));
+  const closed=await evalPage("document.documentElement.scrollWidth<=innerWidth+1");
+  if(!closed)throw Error("PHASE1_PRIVATE_ACCOUNT_OVERFLOW_"+width);
+  await photo("phase1-protected-account",width);
+  captures.push({width,fixture:"SYNTHETIC OFFLINE — NOT REAL EARNED RECORDS",summary,creator,account,
+    phase1:{join,publicWorld,closedAccount:true,origin:"OFFLINE SYNTHETIC; canonical signup disabled"}});
+  console.log("PHASE1_CANONICAL_BROWSER_"+width+"=PASS");
   console.log("V007_SHOWCASE_BROWSER_"+width+"=PASS");
  }
  writeFileSync(join(output,"v007-showcase-browser.json"),JSON.stringify(captures,null,2));
+ acceptancePassed=true; // all width assertions + artifact writes completed
 }finally{
  // Chrome can still mutate its profile after SIGTERM. Wait for the spawned
  // browser to exit before filesystem cleanup so a successful screenshot run
@@ -136,6 +178,13 @@ try{
   // This fixture contains synthetic, disposable browser cache only. Report a
   // non-blocking cleanup warning rather than invalidating passed browser tests.
   console.warn("V007_BROWSER_TEMP_CLEANUP_WARNING",error?.code||String(error));
+ }
+ // Ephemeral Chrome cleanup is not a functional acceptance gate. A valid
+ // success requires every assertion and synchronous evidence file to have
+ // passed before this finally block. CI separately verifies all screenshots.
+ if(acceptancePassed){
+  console.log("ANEVUM_BROWSER_ACCEPTANCE=PASS");
+  process.exit(0);
  }
 }
 async function documentScroll(evaluate){

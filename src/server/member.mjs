@@ -1,4 +1,5 @@
 import { betterAuth } from "better-auth";
+import {canonicalBetaConfigured,canonicalCreatorSchemaReady,canonicalCreatorMember,verifyInvitedCanonicalCreation} from "./canonical-creator-profile.mjs";
 import { memberRewardsStatus, memberBrokerageStatus } from "./member-capabilities.mjs";
 import { reviewerSchemaReady, reviewerEndpoint, exportReviewerConnection } from "./member-alpaca-review.mjs";
 import { commonsSocialEndpoint, socialSchemaReady, exportMemberSocial } from "./commons-social.mjs";
@@ -40,6 +41,13 @@ export function makeMemberAuth(env, verifiedOrigin) {
       storeStateStrategy: "database",
       accountLinking: { disableImplicitLinking: true }
     },
+    ...(verifiedOrigin === "https://a.anevum.com" ? {
+      // Staging-only Better Auth registration gate; existing V5 sessions
+      // and the already launched Google provider remain unaffected.
+      databaseHooks: {
+        user: { create: { before: async (user) => verifyInvitedCanonicalCreation(env,user) } }
+      }
+    } : {}),
     user: {
       deleteUser: {
         enabled: true,
@@ -132,7 +140,11 @@ export async function safeJSON(request) {
 export async function memberEndpoint(request, env, pathname, verifiedContext = {}) {
   const verifiedOrigin = resolveMemberOrigin(request, env);
   if (pathname === "/api/member/availability") {
-    const available = memberConfigured(env) && Boolean(verifiedOrigin) && await memberSchemaReady(env);
+    const stageBeta=verifiedOrigin==="https://a.anevum.com";
+    const available = memberConfigured(env) && Boolean(verifiedOrigin) &&
+      (!stageBeta || (canonicalBetaConfigured(env,verifiedOrigin) &&
+          await canonicalCreatorSchemaReady(env.MEMBER_DB))) &&
+      await memberSchemaReady(env);
     return request.method === "GET"
       ? reply({ available, provider: available ? "google" : null })
       : reply({ message: "Method not allowed." }, 405);
@@ -141,6 +153,12 @@ export async function memberEndpoint(request, env, pathname, verifiedContext = {
   // The API cannot open accidentally on a new preview or after missing secrets.
   if (!memberConfigured(env)) return reply({ message: "Member accounts are not available yet." }, 503);
   if (!verifiedOrigin) return reply({ message: "Member API origin is not authorized." }, 403);
+  if (verifiedOrigin==="https://a.anevum.com" && !canonicalBetaConfigured(env,verifiedOrigin)) {
+    return reply({ message: "Staging member invitations are not activated." }, 503);
+  }
+  if (verifiedOrigin==="https://a.anevum.com" && !await canonicalCreatorSchemaReady(env.MEMBER_DB)) {
+    return reply({ message: "Canonical staging profiles are not ready." }, 503);
+  }
 
   const auth = makeMemberAuth(env, verifiedOrigin);
   if (pathname === "/api/auth" || pathname.startsWith("/api/auth/")) {
@@ -155,6 +173,9 @@ export async function memberEndpoint(request, env, pathname, verifiedContext = {
   }
 
   const db = env.MEMBER_DB;
+  if (pathname==="/api/member/creator-profile") {
+    return canonicalCreatorMember(request,env,user,verifiedOrigin);
+  }
   if (pathname.startsWith("/api/member/studio/")) {
     return studioEndpoint(request,env,user,verifiedOrigin,pathname,verifiedContext.studioAccessEmail);
   }

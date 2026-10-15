@@ -25,6 +25,8 @@ import "./cinematic-discovery.css";
 import "./cinematic-world-v005.css";
 import "./tactile-editorial-v006.css";
 import "./creator-showcase-v007.css";
+import "./join-page.css";
+import "./phase1-member.css";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
