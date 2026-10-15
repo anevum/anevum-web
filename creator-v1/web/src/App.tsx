@@ -44,7 +44,7 @@ export default function App(){
       <Route path="boards" element={<Suspense fallback={atlasFallback}><PublicBoardsPage/></Suspense>}/>
     <Route path="community/posts/:id" element={<CommunityPostPage/>}/>
       <Route path="workspace" element={<WorkspacePage/>}/>
-      <Route path="join" element={<Navigate to="/join" replace/>}/>
+      <Route path="join" element={<JoinPage/>}/>
       <Route path="member" element={<Navigate to="/member" replace/>}/>
       <Route path="sign-in" element={<Navigate to="/atlas/join" replace/>}/>
       <Route path="collaborate" element={<AtlasCollaboration/>}/>
