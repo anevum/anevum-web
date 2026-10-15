@@ -12,7 +12,6 @@ export type PortalDestination = {
 // Fixed first-party paths only. No URLs, external redirects or fabricated records.
 export const PORTAL_DESTINATIONS: readonly PortalDestination[] = [
   {id:"home",title:"The Portal",description:"Return to the ANEVUM entrance",path:"/",category:"Explore",icon:"home",keywords:"home frontpage main"},
-  {id:"atlas",title:"Atlas / Spatial Universe",description:"Navigate a constellation of real ANEVUM destinations and focused world decks",path:"/atlas",category:"Explore",icon:"explore",keywords:"atlas spatial universe 3d constellation navigation immersive"},
   {id:"start",title:"Start Here",description:"Choose a path through the underground",path:"/start",category:"Explore",icon:"explore",keywords:"onboarding welcome first visit"},
   {id:"discover",title:"Discover All",description:"Browse genuine public releases",path:"/discover",category:"Explore",icon:"search",keywords:"search projects catalogue browse"},
   {id:"games",title:"Games & Play",description:"Find independently made games",path:"/discover?category=games",category:"Explore",icon:"star",keywords:"arcade play interactive"},
@@ -25,11 +24,11 @@ export const PORTAL_DESTINATIONS: readonly PortalDestination[] = [
   {id:"other",title:"More Creations",description:"Everything that crosses categories",path:"/discover?category=other",category:"Explore",icon:"explore",keywords:"miscellaneous other"},
   {id:"free",title:"Marked Free",description:"Filter public projects marked free-to-use",path:"/discover?free=1",category:"Explore",icon:"save",keywords:"free zero cost"},
   {id:"creators",title:"Creators",description:"Visit public creator channels",path:"/creators",category:"Community",icon:"people",keywords:"members people maker profiles"},
-  {id:"community",title:"The Commons",description:"Community rooms and launch boundaries",path:"/community",category:"Community",icon:"community",keywords:"commons threads forum conversations"},
+  {id:"community",title:"Community",description:"Moderated discussions, genuine projects and creator activity",path:"/community",category:"Community",icon:"community",keywords:"commons threads forum conversations"},
+  {id:"boards",title:"Public Boards",description:"Approved releases, first looks and genuine creator records",path:"/boards",category:"Community",icon:"library",keywords:"boards latest first looks creators approved releases"},
   {id:"guide",title:"Field Guide",description:"Twelve free practice decisions",path:"/guide",category:"Community",icon:"star",keywords:"practice safety guide skills"},
   {id:"levels",title:"Levels & Artifacts",description:"See how earned progression is designed",path:"/levels",category:"Community",icon:"star",keywords:"xp achievements medals badges unlimited"},
   {id:"status",title:"Build Status",description:"What is deployed and what is still gated",path:"/status",category:"Community",icon:"status",keywords:"development roadmap release"},
-  {id:"workspace",title:"Private Workspace",description:"Entry to invited creator tools and the protected owner lab",path:"/workspace",category:"Account",icon:"create",keywords:"lab private owner fold rhen workspace",gated:true},
   {id:"account",title:"My Account",description:"Invitation-only member workspace",path:"/account",category:"Account",icon:"people",keywords:"profile settings signin login",gated:true},
   {id:"library",title:"My Library",description:"Saved projects for invited members",path:"/library",category:"Account",icon:"library",keywords:"saved bookmarks favorites",gated:true},
   {id:"create",title:"Creator Workspace",description:"Private drafts and creator tools for invited members",path:"/create",category:"Account",icon:"create",keywords:"submit upload drafts studio",gated:true}
@@ -38,7 +37,7 @@ export const PORTAL_DESTINATIONS: readonly PortalDestination[] = [
 const clean = (s:string) => s.trim().toLocaleLowerCase("en").replace(/\s+/g," ");
 export function findPortalDestinations(search:string): PortalDestination[] {
   const query=clean(search).slice(0,100);
-  if (!query) return PORTAL_DESTINATIONS.filter(x=>["atlas","start","discover","games","tools","community","guide","status"].includes(x.id));
+  if (!query) return PORTAL_DESTINATIONS.filter(x=>["home","start","discover","games","tools","community","creators","boards","guide"].includes(x.id));
   const words=query.split(" ").filter(Boolean);
   if(words.length===0) return [];
   return PORTAL_DESTINATIONS

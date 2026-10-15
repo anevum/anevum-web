@@ -35,9 +35,10 @@ test("V008 homepage preserves the source-backed public release and creator index
   assert.match(hero,/status\.counts\.publishedProjects/);
   assert.doesNotMatch(hero,/12\.4K|3\.1K|8,921|fakeProject/);
 });
-test("V005 does not change separate authenticated and Atlas route boundaries",()=>{
+test("V012 preserves member boundaries while retiring duplicate Atlas navigation",()=>{
   assert.match(routes,/<MemberGate\s*\/>/);
-  assert.match(routes,/path="atlas"/);
+  assert.match(routes,/path="atlas\/\*" element={<LegacyAtlasRedirect\/>}/);
+  assert.doesNotMatch(routes,/<AtlasMorphLayout\/>|<AtlasPage\/>/);
   assert.match(routes,/path="community\/write"/);
   assert.match(routes,/PublicBoardsPage/);
   assert.match(shell,/site-shell--cinematic/);
@@ -79,7 +80,12 @@ test("V006 second pass keeps bounded field selection and mobile-first content",(
   assert.match(feed,/id="av6-field-filter"/);
   assert.match(feed,/field==="all"/);
   assert.match(feed,/Latest approved|LATEST APPROVED FIRST/);
-  assert.match(hero,/href="#community-index"/);
+  // V011 puts illustrated discovery before the public telemetry grid on all screens.
+  assert.match(hero,/href="#world-gateways"/);
+  assert.match(landing,/<WorldGatewayDeck\/>/);
+  assert.match(landing,/<LiveSignalModules/);
+  assert.ok(landing.indexOf("<WorldGatewayDeck/>")<landing.indexOf("<LiveSignalModules"));
+  assert.match(feed,/id="community-index"/);
   assert.match(tactile,/\.cinema-feature\{display:none\}/);
   assert.match(tactile,/\.av6-feed-fields select:focus-visible/);
 });

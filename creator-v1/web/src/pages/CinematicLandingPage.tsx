@@ -2,7 +2,7 @@ import {useEffect,useState} from "react";
 import {readCreators,readProjects,readStatus,type Creator,type Project,type Status} from "../lib/api";
 import {useResource} from "../lib/useResource";
 import {WorldGatewayDeck} from "../components/WorldGatewayDeck";
-import {LiveSignalHero} from "../components/LiveSignalHero";
+import {LiveSignalHero,LiveSignalModules} from "../components/LiveSignalHero";
 import {CommunityHomeFeed} from "../components/CommunityHomeFeed";
 
 /**
@@ -44,13 +44,14 @@ export function CinematicLandingPage(){
 
   return <div className="anevum-cinema av9-home">
     <div className="cinema-content">
-      <LiveSignalHero
-        state={signalState}
+      <LiveSignalHero state={signalState} projects={projects}/>
+      <WorldGatewayDeck/>
+      <LiveSignalModules
         status={status}
         projects={projects}
         creators={creators}
+        state={signalState}
       />
-      <WorldGatewayDeck/>
       {portal.state==="error"&&hasVerifiedData&&<p className="av8-index-stale" role="status">The latest refresh failed. Previously verified public content remains available while the connection is restored.</p>}
       <CommunityHomeFeed
         projects={projects}

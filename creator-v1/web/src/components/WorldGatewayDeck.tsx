@@ -13,7 +13,7 @@ const gateways=[
 ] as const;
 
 export function WorldGatewayDeck(){
-  return <section className="av9-world-deck" aria-labelledby="av9-worlds-heading">
+  return <section id="world-gateways" className="av9-world-deck" aria-labelledby="av9-worlds-heading">
     <header className="av9-world-deck-head">
       <div><span className="av9-overline">CHAPTER 01 / THE PORTALS</span><h2 id="av9-worlds-heading">Find your <em>next world.</em></h2></div>
       <p>Real projects, real creators. Find a place to play, make, learn or contribute.</p>

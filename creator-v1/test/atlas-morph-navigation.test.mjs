@@ -95,30 +95,17 @@ test("Atlas Quick Jump searches approved project records and genuine creator cha
   assert.match(css,/\.portal-launcher-live-status/);
 });
 
-test("all real nested site routes and member permissions persist with navigation",()=>{
-  const app=read("web/src/App.tsx");
-  const shell=read("web/src/pages/AtlasMorphPage.tsx");
-  for(const fragment of [
-    'path="atlas/orbit"','path="atlas"','<AtlasMorphLayout/>',
-    'path="discover" element={<DiscoverPage immersive/>}',
-    'path="projects/:id" element={<ProjectPage/>}',
-    'path="creators/:handle" element={<CreatorPage/>}',
-    'path="community" element={<CommunityPage/>}',
-    'path="workspace" element={<WorkspacePage/>}',
-    'path="create/new" element={<ProjectEditorPage/>}',
-    'path="levels" element={<LevelsPage/>}',
-    'path="signals" element={<AtlasSignals/>}',
-    'path="collaborate" element={<AtlasCollaboration/>}',
-    'path="*" element={<Navigate to="/atlas" replace/>}'
-  ])assert.ok(app.includes(fragment),fragment);
-  assert.match(app,/<Route element={<MemberGate\/>}>/);
-  assert.match(shell,/<Outlet\/>/);
-  assert.match(shell,/navigate\("\/atlas"\+relative\+url\.search\+url\.hash\)/);
-  assert.match(shell,/import\.meta\.env\.BASE_URL/);
-  assert.match(shell,/navigate\("\/atlas"\)/);
-  assert.doesNotMatch(shell,/dangerouslySetInnerHTML|document\.write|location\.reload/);
+test("Atlas remains archived while real site entrypoints use one shell",()=>{
+ const app=read("web/src/App.tsx");
+ const archive=read("web/src/pages/AtlasMorphPage.tsx");
+ assert.match(app,/path="atlas\/\*" element={<LegacyAtlasRedirect\/>}/);
+ assert.match(app,/function LegacyAtlasRedirect/);
+ assert.match(app,/<Route element={<Shell\/>}>/);
+ assert.match(app,/<MemberGate\/>/);
+ assert.match(app,/path="workspace" element={<Navigate to="\/account" replace\/>}/);
+ assert.doesNotMatch(app,/<AtlasMorphLayout\/>|<AtlasPage\/>/);
+ assert.match(archive,/<Outlet\/>/);
 });
-
 test("member card uses genuine server-confirmed progression and no random rewards",()=>{
   const shell=read("web/src/pages/AtlasMorphPage.tsx");
   assert.match(shell,/memberHealth\(controller.signal\)/);
@@ -150,7 +137,6 @@ test("Play, Tools and Creative still have distinct existing art and original Dis
   const app=read("web/src/App.tsx");
   const discover=read("web/src/pages/DiscoverPage.tsx");
   const heading=read("web/src/components/PortalHeading.tsx");
-  assert.match(app,/path="discover" element={<DiscoverPage immersive\/>}/);
   assert.match(app,/path="discover" element={<DiscoverPage\/>}/);
   assert.match(discover,/export function DiscoverPage\(\{immersive=false\}/);
   for(const phrase of ["games:{","tools:{","creative:{","ENTER THE","ARCADE.","SOFTWARE","WITH SOUL.","FIND THE","UNEXPECTED.","scene:\"games\"","scene:\"tools\"","scene:\"creative\""])

@@ -91,6 +91,8 @@ test("React includes genuine board and approved-post routes, no fake ranking sig
   assert.match(page,/QUALITY MUST BE/);
   assert.match(page,/quality or popularity leaderboards/);
   assert.match(thread,/readCommunityPost\(id,signal\)/);
+  assert.doesNotMatch(page+thread,/\/atlas\//);
+  assert.match(page,/\/projects\//);
   assert.match(thread,/item\.body/);
   assert.match(thread,/replies\.map/);
   assert.match(css,/@media\(max-width:640px\)/);

@@ -1,0 +1,121 @@
+name: ANEVUM V011 Isolated Visual Review
+
+# Branch-only read-only workers.dev preview; never changes apex or a.anevum.com.
+on:
+  push:
+    branches: [design/creator-v1-cinematic-depth-v011-20261014]
+    paths:
+      - creator-v1/web/**
+      - creator-v1/test/**
+      - creator-v1/package.json
+      - creator-v1/wrangler.creator-v011-review.jsonc
+      - tests/creator-v1-cinematic-v005.test.mjs
+      - .github/workflows/creator-v011-isolated-preview.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: anevum-v011-isolated-review
+  cancel-in-progress: true
+
+jobs:
+  preview:
+    if: github.ref == 'refs/heads/design/creator-v1-cinematic-depth-v011-20261014'
+    runs-on: ubuntu-latest
+    timeout-minutes: 22
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Ensure preview cannot touch private systems
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --test creator-v1/test/creator-v011-review.test.mjs
+          node --check creator-v1/web/creator-v011-review-worker.mjs
+          node --input-type=module -e '
+          import fs from "node:fs";
+          const c=JSON.parse(fs.readFileSync("creator-v1/wrangler.creator-v011-review.jsonc","utf8"));
+          if(c.name!=="anevum-v011-depth-review-20261014"||!c.workers_dev||c.preview_urls!==false)throw Error("Unexpected preview host");
+          if(c.main!=="./web/creator-v011-review-worker.mjs"||c.assets?.binding!=="ASSETS")throw Error("Unexpected public asset source");
+          for(const forbidden of ["routes","route","d1_databases","r2_buckets","kv_namespaces","vars","unsafe","services","durable_objects","send_email"]){
+            if(Object.hasOwn(c,forbidden))throw Error("Forbidden preview binding: "+forbidden);
+          }'
+      - name: Build canonical Creator V1 frontend
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm install --ignore-scripts --no-audit --no-fund
+          npm run check:creator-v1-web
+          npm run build:creator-v1-web
+          npm run build:creator-v1-web:staging
+          node --test tests/creator-v1-cinematic-v005.test.mjs
+          (cd creator-v1 && npm test)
+          node --test creator-v1/test/cinematic-depth-v011.test.mjs
+          test -f creator-v1/dist/web/index.html
+          test -f creator-v1/dist/web/assets/cinematic-v2/atmosphere/orbital-haze-desktop.webp
+          test -f creator-v1/dist/web/assets/cinematic-v2/atmosphere/orbital-haze-mobile.webp
+          test -f creator-v1/dist/web/assets/cinematic-v2/atmosphere/orbital-dust-desktop.webp
+          test -f creator-v1/dist/web/assets/cinematic-v2/atmosphere/orbital-dust-mobile.webp
+          ! find creator-v1/dist/web -name '*.map' | grep -q .
+      - name: Capture labelled synthetic browser review
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p evidence/v011
+          chrome="$(command -v google-chrome || command -v chromium-browser || command -v chromium || true)"
+          test -n "$chrome"
+          node creator-v1/test/portal-offline-preview.mjs > evidence/v011/fixture.log 2>&1 &
+          fixture_pid=$!
+          trap 'kill "$fixture_pid" 2>/dev/null || true' EXIT
+          ready=0
+          for attempt in $(seq 1 50); do
+            if curl -fsS http://127.0.0.1:4178/__ready >/dev/null; then ready=1; break; fi
+            sleep 0.2
+          done
+          test "$ready" = 1
+          node creator-v1/test/capture-community-hub-v007.mjs --chrome "$chrome" --base http://127.0.0.1:4178 --output evidence/v011
+          printf 'V011 screenshots show genuine committed atmosphere passes and compiled React with SYNTHETIC OFFLINE FIXTURES. These accounts, posts and releases are fictional QA data only; they were never deployed to a database. The separate workers.dev review links to real approved staging-public catalogue records, which may be empty.\n' > evidence/v011/README.txt
+      - name: Publish isolated assets-only workers.dev preview
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$CLOUDFLARE_API_TOKEN"
+          test -n "$CLOUDFLARE_ACCOUNT_ID"
+          npx wrangler deploy --config creator-v1/wrangler.creator-v011-review.jsonc
+      - name: Verify public preview isolation
+        shell: bash
+        run: |
+          set -euo pipefail
+          base="https://anevum-v011-depth-review-20261014.devonakins.workers.dev"
+          ready=0
+          for attempt in $(seq 1 18); do
+            code="$(curl -sS --max-time 15 -o "$RUNNER_TEMP/v011.html" -w '%{http_code}' "$base/" || true)"
+            if [ "$code" = 200 ] && grep -q 'id="root"' "$RUNNER_TEMP/v011.html"; then ready=1; break; fi
+            sleep 2
+          done
+          test "$ready" = 1
+          test "$(curl -sS -o /dev/null -w '%{http_code}' "$base/api/v1/member/me")" = 404
+          test "$(curl -sS -X POST -o /dev/null -w '%{http_code}' "$base/api/v1/projects")" = 405
+          curl -fsS "$base/__review" | jq -e '.status=="DESIGN PREVIEW" and .database==false and .memberAccess==false and .productionDeployment==false' >/dev/null
+          curl -fsSI "$base/" | grep -qi 'x-robots-tag: noindex'
+          curl -fsSI "$base/assets/cinematic-v2/atmosphere/orbital-haze-desktop.webp" | grep -qi 'content-type: image/webp'
+          curl -fsSI "$base/assets/cinematic-v2/atmosphere/orbital-haze-mobile.webp" | grep -qi 'content-type: image/webp'
+          echo "V011_REVIEW_HOSTED_ACCEPTANCE=PASS"
+          echo "V011_REVIEW_LINK=$base/"
+      - name: Preserve labelled visual evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: anevum-v011-visual-review-${{ github.run_id }}
+          path: evidence/v011/
+          retention-days: 14
+          if-no-files-found: warn
