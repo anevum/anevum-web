@@ -19,7 +19,9 @@ import { MemberLibraryPage } from "./pages/MemberLibraryPage";
 import { MemberProjectsPage } from "./pages/MemberProjectsPage";
 import { ProjectEditorPage } from "./pages/ProjectEditorPage";
 import { WorkspacePage } from "./pages/WorkspacePage";
-import { JoinPage } from "./pages/JoinPage";
+import {Phase1JoinPage} from "./pages/Phase1JoinPage";
+import {Phase1MemberPage} from "./pages/Phase1MemberPage";
+import {Phase1PublicMemberPage} from "./pages/Phase1PublicMemberPage";
 import {Phase1JoinPage} from "./pages/Phase1JoinPage";
 import {Phase1MemberPage} from "./pages/Phase1MemberPage";
 import {Phase1PublicMemberPage} from "./pages/Phase1PublicMemberPage";
@@ -71,6 +73,9 @@ export default function App(){
     <Route path="member" element={<Phase1MemberPage/>}/>
     <Route path="member/setup" element={<Navigate to="/member" replace/>}/>
     <Route path="sign-in" element={<Navigate to="/join" replace/>}/>
+    <Route path="member" element={<Phase1MemberPage/>}/>
+    <Route path="member/setup" element={<Navigate to="/member" replace/>}/>
+    <Route path=":memberHandle" element={<Phase1PublicMemberPage/>}/>
     <Route path="start" element={<StartPage/>}/>
     <Route path="guide" element={<FieldGuidePage/>}/>
     <Route path="discover" element={<DiscoverPage/>}/>
