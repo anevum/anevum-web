@@ -1,3 +1,4 @@
+import {createExport,verifyExport,MAX_EXPORT_BYTES} from './verification.mjs';
 import {initialState,execute,parseAmount} from './model.mjs';
 let state=initialState(), pending=null, last=null, rejections=[];
 const $=id=>document.getElementById(id);
@@ -52,9 +53,24 @@ $('approve').addEventListener('click',()=>{
  }catch(error){pending=null;$('review').hidden=true;message(error.message,true);}
 });
 for(const [id,type] of [['revoke','revoke'],['release','release-goal'],['pause','pause'],['reconcile','reconcile']]) $(id).addEventListener('click',()=>command(type));
-$('reset').addEventListener('click',()=>{state=initialState();pending=null;last=null;rejections=[];$('review').hidden=true;render();message('Simulation reset. No data was stored.');});
+$('reset').addEventListener('click',()=>{verificationGeneration++;$('verification').textContent='';$('verify-file').value='';state=initialState();pending=null;last=null;rejections=[];$('review').hidden=true;render();message('Simulation reset. No data was stored.');});
 $('export').addEventListener('click',()=>{
- const url=URL.createObjectURL(new Blob([JSON.stringify({classification:'SIMULATION_NO_MONETARY_VALUE',session:'ANEVUM.RHEN.BUILD.2026-10-15.001.CURRENCY-SANDBOX',...state,rejectedInstructions:rejections},null,2)],{type:'application/json'}));
- const a=document.createElement('a');a.href=url;a.download='RHEN-simulation.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+ try{
+  const text=createExport(state,rejections);
+  const url=URL.createObjectURL(new Blob([text],{type:'application/json'}));
+  const a=document.createElement('a');a.href=url;a.download='RHEN-simulation.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+ }catch(error){message(error.message,true);}
+});
+let verificationGeneration=0;
+$('verify-file').addEventListener('change',async event=>{
+ const generation=++verificationGeneration, file=event.target.files?.[0];
+ $('verification').textContent='';
+ if(!file)return;
+ try{
+  if(file.size>MAX_EXPORT_BYTES)throw Error('Choose a file no larger than 2 MiB.');
+  const result=verifyExport(await file.text());
+  if(generation!==verificationGeneration)return;
+  $('verification').textContent=`LOCAL REPLAY MATCHED · ${result.acceptedInstructions} accepted instructions · ${fmt(result.supply)} SIM outstanding. Movement status: ${result.reconciled?'reconciled':'paused'}. Rejected-history text is unverified. This is not proof of real backing or authenticity.`;
+ }catch(error){if(generation===verificationGeneration)$('verification').textContent='VERIFICATION FAILED · '+error.message;}
 });
 render();

@@ -119,3 +119,11 @@ Keep the owner-only Access policy and disabled Worker direct URLs unchanged. Pub
 The sandbox now supports a reviewed 0–100% equipment allocation, a per-transfer ceiling, and a cumulative session transfer ceiling. Policy approval itself uses the review/confirmation screen. Editing or revoking automatic allocation does not reset prior session spending; payment ceilings remain applicable. Redemption is independent of transfer ceilings. Goal funds still require explicit release before redemption. Rejected model instructions are shown separately and included in the simulation export; they never alter the accounting ledger. Invalid amount edits clear a previous unconfirmed instruction. UI terminology remains fixed-rule automation rather than AI execution.
 
 Validation: 22 local tests. Additional Chromium coverage exercises custom allocation, per-transfer rejection, cumulative cap rejection, receipt/rejection history and mobile overflow. No hosted rollout or real currency issuance is included.
+
+### Export replay verification — October 15, 2026
+
+The session export is now version 2 and records both requested and resulting policy versions so policy changes can be replayed faithfully. The local file verifier rebuilds all accepted instructions from an empty simulated ledger, checks every generated receipt and resulting state, and rejects duplicates, modified receipt content, sequence errors and changed balances. Verification never imports balances into the active session. Files are limited to 2 MiB and 1,000 accepted receipts. Earlier version-1 exports are explicitly unsupported rather than silently inferred.
+
+A replay match establishes internal consistency only. It is not cryptographic authenticity, independent financial verification, real reserve evidence or custody. Rejected-instruction text is outside replay validation and is labeled unverified. No server/file upload or persistence is used. Special request identifiers such as `__proto__` now use safe own data properties to preserve duplicate protection.
+
+Validation: 26 local tests pass. Browser coverage exports the actual session Blob, reopens it via the local file control, verifies a good record, rejects changed balances and confirms the active session stays intact.

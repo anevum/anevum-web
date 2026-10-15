@@ -60,7 +60,7 @@ test('deterministic mixed transactions retain accounting invariants',()=>{
  assert.equal(s.receipts.length,1000);
 });
 test('snapshot matches editable source; existing console script parses',async()=>{
- for(const file of ['index.html','style.css','client.mjs','model.mjs'])assert.equal(CURRENCY_ASSETS['/projects/rhen/currency/'+(file==='index.html'?'':file)],await readFile(new URL('./currency/'+file,import.meta.url),'utf8'));
+ for(const file of ['index.html','style.css','client.mjs','model.mjs','verification.mjs'])assert.equal(CURRENCY_ASSETS['/projects/rhen/currency/'+(file==='index.html'?'':file)],await readFile(new URL('./currency/'+file,import.meta.url),'utf8'));
  assert.doesNotThrow(()=>new vm.Script(RHEN_JS));
 });
 test('sandbox routes keep private host, method, no-store and noindex boundaries',async()=>{
@@ -95,4 +95,31 @@ test('policy content participates in duplicate identity and stale reviews fail',
  assert.throws(()=>execute(s,{...r,goalPercent:20}),/different operation/);
  assert.throws(()=>execute(s,req('policy',{policyVersion:0,goalPercent:20})),/Permissions changed/);
  assert.throws(()=>execute(s,req('issue',{policyVersion:0,amount:100})),/Permissions changed/);
+});
+
+import {createExport,verifyExport,MAX_EXPORT_BYTES} from './currency/verification.mjs';
+test('export verifier replays approvals, allocations, transfers, revocation and redemption',()=>{
+ let s=execute(initialState(),req('policy',{goalPercent:25,policyVersion:0}));
+ s=execute(s,req('issue',{amount:10000,policyVersion:1}));
+ s=execute(s,req('transfer',{amount:1000,recipient:'collaborator',policyVersion:1}));
+ s=execute(s,req('revoke'));s=execute(s,req('release-goal'));
+ s=execute(s,req('redeem',{amount:9000,policyVersion:2}));
+ const copy=structuredClone(s),summary=verifyExport(createExport(s));
+ assert.equal(summary.acceptedInstructions,6);assert.equal(summary.supply,1000);assert.deepEqual(s,copy);
+});
+test('export verification rejects changed balances, receipt content, sequence and duplicates',()=>{
+ const original=JSON.parse(createExport(funded()));
+ for(const change of [d=>d.balances.owner++,d=>d.receipts[0].amount++,d=>d.receipts[0].detail='fabricated',d=>d.receipts[0].sequence=9,d=>d.receipts.push({...d.receipts[0],sequence:2}),d=>d.receipts[0].provenance='LIVE',d=>d.requests={}]){
+  const data=structuredClone(original);change(data);assert.throws(()=>verifyExport(JSON.stringify(data)));
+ }
+});
+test('export verifier rejects malformed, oversized, unsupported and excessively long histories',()=>{
+ for(const text of ['null','{}','oops',' '.repeat(MAX_EXPORT_BYTES+1)])assert.throws(()=>verifyExport(text));
+ const data=JSON.parse(createExport(initialState()));data.receipts=Array(1001).fill({});assert.throws(()=>verifyExport(JSON.stringify(data)),/1,000/);
+ data.version=1;assert.throws(()=>verifyExport(JSON.stringify(data)),/Unsupported/);
+});
+test('special valid request identifiers preserve duplicate protection and replay',()=>{
+ const s=execute(initialState(),{id:'__proto__',type:'issue',amount:100});
+ assert.equal(execute(s,{id:'__proto__',type:'issue',amount:100}),s);
+ assert.equal(verifyExport(createExport(s)).supply,100);
 });

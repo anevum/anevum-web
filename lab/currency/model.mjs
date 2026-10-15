@@ -1,7 +1,7 @@
 // Browser-only simulation. Integer minor units; no keys, issuer, chain, or money APIs.
 export const LIMIT = 100_000_000;
 export function initialState() {
-  return {version:1, reserves:0, supply:0, balances:{owner:0, collaborator:0, merchant:0}, goal:0,
+  return {version:2, reserves:0, supply:0, balances:{owner:0, collaborator:0, merchant:0}, goal:0,
     policy:{enabled:false, version:0, goalPercent:20, perTransferLimit:LIMIT, sessionTransferLimit:LIMIT}, transferred:0, reconciled:true, receipts:[], requests:{}};
 }
 function amount(value) {
@@ -71,7 +71,7 @@ export function execute(state, request) {
     next.reconciled=true; detail='Local ledger invariants checked; simulated movement resumed.';
   }
   assertState(next);
-  next.requests[request.id]=fingerprint;
-  next.receipts.push({sequence:next.receipts.length+1,id:request.id,...intent,policyVersion:next.policy.version,provenance:'SIMULATION',detail});
+  Object.defineProperty(next.requests,request.id,{value:fingerprint,enumerable:true,writable:true,configurable:true});
+  next.receipts.push({sequence:next.receipts.length+1,id:request.id,...intent,requestPolicyVersion:request.policyVersion??null,policyVersion:next.policy.version,provenance:'SIMULATION',detail});
   return next;
 }

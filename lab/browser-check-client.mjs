@@ -82,6 +82,18 @@ async function main(){
    submit('issue','10');get('confirm').click();assert(get('goal').textContent==='3.00','Custom allocation failed');
    assert(get('rejections').children.length===5,'Rejected instruction history missing');
    assert(document.documentElement.scrollWidth<=innerWidth+1,'Permission editor overflows width');
+   let exportedBlob;
+   const originalURL=URL.createObjectURL,originalClick=HTMLAnchorElement.prototype.click;
+   URL.createObjectURL=blob=>{exportedBlob=blob;return originalURL(blob);};
+   HTMLAnchorElement.prototype.click=function(){};
+   try{get('export').click();}finally{URL.createObjectURL=originalURL;HTMLAnchorElement.prototype.click=originalClick;}
+   assert(exportedBlob,'Simulation export missing');
+   const exportText=await exportedBlob.text(),beforeVerification=get('owner').textContent;
+   const upload=async text=>{const transfer=new DataTransfer();transfer.items.add(new File([text],'simulation.json',{type:'application/json'}));get('verify-file').files=transfer.files;get('verify-file').dispatchEvent(new Event('change'));await sleep(100);};
+   await upload(exportText);assert(get('verification').textContent.includes('LOCAL REPLAY MATCHED'),'Valid simulation export failed replay');
+   const tampered=JSON.parse(exportText);tampered.balances.owner++;
+   await upload(JSON.stringify(tampered));assert(get('verification').textContent.includes('VERIFICATION FAILED'),'Changed balances accepted');
+   assert(get('owner').textContent===beforeVerification,'File verification replaced active session');
    get('transaction').scrollIntoView({block:'center'});
  }else if(pathname==='/projects/transcosmic'){
    assert(document.body.textContent.includes('Preview not connected'),'Misleading placeholder');
