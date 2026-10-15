@@ -59,7 +59,7 @@ test("V011 emissive motion sleeps when hidden, and has static accessible fallbac
   assert.match(css,/forced-colors:active/);
   assert.match(css,/pointer-events:none/);
   assert.match(css,/max-width:700px/);
-  assert.match(css,/\\.av11-depth-emissive \\.cinema-portal-fx/);
+  assert.match(css,/\.av11-depth-emissive \.cinema-portal-fx/);
   assert.match(css,/av11-depth-foreground/);
   assert.doesNotMatch(css,/overflow-x:hidden|animation:.*infinite.*glare/i);
 });
