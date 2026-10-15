@@ -29,6 +29,7 @@ import "./creator-showcase-v007.css";
 import "./site-experience-v009.css";
 import "./visual-kit-v010.css";
 import "./cinematic-depth-v011.css";
+import "./sitewide-cleanup-v012.css";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

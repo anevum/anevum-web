@@ -67,7 +67,7 @@ function RecentConversations({enabled}:{enabled:boolean}){
     }
   },[enabled]);
   return <section className="av8-module av8-module--community" aria-label="Latest approved conversations">
-    <ModuleHead index="02 / COMMONS" title="Conversations" to="/community" action="OPEN"/>
+    <ModuleHead index="02 / COMMUNITY" title="Conversations" to="/community" action="OPEN"/>
     {enabled&&resource.state==="loading"&&<p className="av8-module-message">Checking reviewed public conversations…</p>}
     {enabled&&resource.state==="error"&&<p className="av8-module-message" role="status">Discussions cannot be loaded right now.</p>}
     {resource.state==="ready"&&resource.data.mode==="active"&&resource.data.posts.length>0?
@@ -79,7 +79,7 @@ function RecentConversations({enabled}:{enabled:boolean}){
         </Link>)}
       </div>:
       (!enabled||(resource.state==="ready"&&(!resource.data.posts.length||resource.data.mode==="inactive")))&&
-      <div className="av8-module-empty"><strong>COMMONS / PUBLIC READING</strong><p>Conversations appear after community publication and moderation. Explore the existing boards meanwhile.</p><Link to="/boards">READ THE BOARDS <Icon name="arrow" size={13}/></Link></div>}
+      <div className="av8-module-empty"><strong>COMMUNITY / PUBLIC READING</strong><p>Conversations appear after community publication and moderation. Explore the existing boards meanwhile.</p><Link to="/boards">READ THE BOARDS <Icon name="arrow" size={13}/></Link></div>}
   </section>;
 }
 function MakerChannels({creators,state}:{creators:readonly Creator[];state:Props["state"]}){
@@ -141,7 +141,7 @@ export function LiveSignalHero({projects,state}:Pick<Props,"projects"|"state">){
     <VisualKitAtmosphere room="home" placement="hero"/>
     <div className="av8-signal-meta">
       <span className="av8-signal-brand"><span className="av8-status-light" aria-hidden="true"/> ANEVUM <b>//</b> LIVE SIGNAL</span>
-      <span className="av8-signal-clock"><span className="av8-clock-label">PUBLIC COMMONS <b>/</b> </span>{utcClock(time)}</span>
+      <span className="av8-signal-clock"><span className="av8-clock-label">PUBLIC NETWORK <b>/</b> </span>{utcClock(time)}</span>
     </div>
     <div className="av8-signal-stage">
       <div className="av8-signal-copy">
@@ -165,7 +165,7 @@ export function LiveSignalHero({projects,state}:Pick<Props,"projects"|"state">){
       <div className="av8-orbit-label" aria-hidden="true"><span>CELESTIAL<br/>TRANSMISSION</span><span>∞</span></div>
     </div>
 
-    <div className="av8-signal-bottom"><span>NETWORK / CREATIVE COMMONS</span><a href="#world-gateways">EXPLORE THE PORTALS <Icon name="arrow" size={14}/></a><span>SOURCE // ANEVUM</span></div>
+    <div className="av8-signal-bottom"><span>ANEVUM / CREATOR NETWORK</span><a href="#world-gateways">EXPLORE THE PORTALS <Icon name="arrow" size={14}/></a><span>SOURCE // ANEVUM</span></div>
   </section>;
 }
 
@@ -184,7 +184,7 @@ export function LiveSignalModules({status,projects,creators,state}:Props){
     <header className="av11-live-index-heading">
       <div>
         <span className="av9-overline">CHAPTER 02 / THE VERIFIED INDEX</span>
-        <h2 id="av11-live-index-heading">Signals from <em>the commons.</em></h2>
+        <h2 id="av11-live-index-heading">Signals from <em>the community.</em></h2>
       </div>
       <p>What creators are publishing and discussing, drawn only from approved public records.</p>
     </header>

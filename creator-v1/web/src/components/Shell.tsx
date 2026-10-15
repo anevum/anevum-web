@@ -28,10 +28,7 @@ const directory = [
   {to:"/levels",label:"Artifacts & levels",detail:"Earned contributions and recognition"},
   {to:"/create",label:"Creator Studio",detail:"Invited member publishing"},
   {to:"/library",label:"My library",detail:"Your saved work, when signed in"},
-  {to:"/account",label:"My profile",detail:"Private member controls"},
-  {to:"/start",label:"Start here",detail:"How ANEVUM works"},
-  {to:"/guide",label:"Field guide",detail:"Learn and explore"},
-  {to:"/status",label:"Platform status",detail:"What's genuinely available"}
+  {to:"/account",label:"My profile",detail:"Private member controls"}
 ] as const;
 
 export function Shell(){
