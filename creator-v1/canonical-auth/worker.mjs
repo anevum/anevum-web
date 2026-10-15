@@ -126,7 +126,7 @@ export function createCanonicalStageWorker({authFactory=createCanonicalAuth}={})
       version:2,
       issuer:"anevum-better-auth-staging-v1",
       registration:ready&&configured.invited?"invite-only":"closed",
-      methods:{google:{available:Boolean(ready&&configured.google&&configured.invited)},
+      methods:{google:{available:Boolean(ready&&configured.google)},
         email:{available:Boolean(ready&&configured.email&&configured.invited)},
         github:{available:false},passkey:{available:false},
         microsoft:{available:false},apple:{available:false}},
@@ -160,6 +160,7 @@ export function createCanonicalStageWorker({authFactory=createCanonicalAuth}={})
         headers.set("content-type","application/json");
         clean=new Request(request.url,{method:"POST",headers,body:safeBody});
       }else if(path===CANONICAL_AUTH_PATH+"/sign-in/social"){
+        if(!configured.google)return fail(request,503);
         const safeBody=await boundedProviderBody(clean);
         if(!safeBody)return safeJson(request,{error:"Invalid provider request"},400);
         clean=new Request(request.url,{
