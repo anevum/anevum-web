@@ -28,7 +28,7 @@ const directory = [
   {to:"/levels",label:"Artifacts & levels",detail:"Earned contributions and recognition"},
   {to:"/create",label:"Creator Studio",detail:"Invited member publishing"},
   {to:"/library",label:"My library",detail:"Your saved work, when signed in"},
-  {to:"/account",label:"My account",detail:"Invited member workspace"},
+  {to:"/account",label:"My profile",detail:"Private member controls"},
   {to:"/join",label:"Join ANEVUM",detail:"Registration availability and private profile"}
 ] as const;
 
