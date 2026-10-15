@@ -6,6 +6,7 @@ import {projectDetailPath} from "../lib/navigation";
 import {CosmicArtwork} from "./CosmicArtwork";
 import {Icon} from "./Icons";
 import {VisualKitAtmosphere} from "./VisualKit";
+import {CinematicDepthLayers} from "./CinematicDepthLayers";
 
 type Props={
   status:Status|null;
@@ -135,7 +136,7 @@ export function LiveSignalHero({status,projects,creators,state}:Props){
   },[]);
   const line=messages[active%messages.length];
   return <section className="av8-live-signal" aria-labelledby="av8-hero-title">
-    <div className="av8-signal-art" aria-hidden="true"><CosmicArtwork scene="hero" priority/></div>
+    <div className="av8-signal-art" aria-hidden="true"><CosmicArtwork scene="hero" priority/><CinematicDepthLayers/></div>
     <div className="av8-signal-grid" aria-hidden="true"/>
     <VisualKitAtmosphere room="home" placement="hero"/>
     <div className="av8-signal-meta">

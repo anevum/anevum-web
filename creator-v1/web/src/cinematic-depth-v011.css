@@ -1,0 +1,85 @@
+/* V011 — independently controlled atmosphere, emissive orbit and near-field stage.
+ * Existing original portal-world.webp remains the primary key image.
+ * Real navigation, labels, CTAs and API data are not drawn into art.
+ */
+.av9-shell .av8-signal-art{isolation:isolate}
+.av9-shell .av8-signal-art>.cw-artwork{
+  position:absolute;inset:0;z-index:0;display:block;width:100%;height:100%;
+}
+.av9-shell .av11-depth-layers{
+  position:absolute;inset:0;z-index:1;pointer-events:none;
+  overflow:hidden;isolation:isolate;transform:translateZ(0);
+  contain:layout paint;
+}
+.av9-shell .av11-depth-layers :is(div,span,picture,canvas,svg,img){pointer-events:none}
+.av9-shell .av11-depth-atmosphere,
+.av9-shell .av11-depth-atmosphere .cinema-atmosphere{
+  position:absolute;inset:0;width:100%;height:100%;
+}
+.av9-shell .av11-depth-atmosphere .cinema-atmosphere-layer{
+  position:absolute;inset:0;display:block;overflow:hidden;width:100%;height:100%;
+}
+.av9-shell .av11-depth-atmosphere .cinema-atmosphere-layer img{
+  display:block;width:100%;height:100%;
+  object-fit:cover;object-position:50% 44%;image-rendering:auto;
+}
+.av9-shell .av11-depth-atmosphere .cinema-atmosphere-haze{
+  opacity:.27;mix-blend-mode:screen;filter:saturate(.92);
+  animation:av11-nebula-drift 25s ease-in-out infinite alternate;
+}
+.av9-shell .av11-depth-atmosphere .cinema-atmosphere-dust{
+  opacity:.24;mix-blend-mode:screen;
+  animation:av11-dust-drift 32s ease-in-out infinite alternate;
+}
+.av9-shell .av11-depth-ambient{
+  position:absolute;inset:0;display:block;opacity:.7;
+  background:radial-gradient(ellipse 33% 64% at 64% 37%,#ffb78f10,transparent 68%),
+    radial-gradient(ellipse 35% 55% at 79% 13%,#988fff13,transparent 78%);
+  mix-blend-mode:screen;
+}
+.av9-shell .av11-depth-emissive{
+  position:absolute;inset:0;overflow:hidden;opacity:.36;mix-blend-mode:screen;
+}
+.av9-shell .av11-depth-emissive .cinema-portal-fx{
+  display:block;position:absolute;inset:0;width:100%;height:100%;
+  transform:translate(-4.5%,4%);object-fit:fill;
+}
+.av9-shell .av11-depth-foreground{
+  position:absolute;inset:0;width:100%;height:100%;
+  opacity:.45;mix-blend-mode:normal;
+}
+.av9-shell .av11-depth-layers:after{
+  content:"";position:absolute;inset:0;
+  background:linear-gradient(180deg,#05081920 0%,transparent 35%,transparent 63%,#070b1b63 100%);
+  pointer-events:none;
+}
+@keyframes av11-nebula-drift{
+  from{transform:translate3d(-.6%,0,0) scale(1.004)}
+  to{transform:translate3d(.7%,-.5%,0) scale(1.018)}
+}
+@keyframes av11-dust-drift{
+  from{transform:translate3d(.35%,0,0)}
+  to{transform:translate3d(-.5%,.25%,0)}
+}
+@media(max-width:700px){
+  .av9-shell .av11-depth-atmosphere .cinema-atmosphere-haze{
+    opacity:.18;animation-duration:32s;
+  }
+  .av9-shell .av11-depth-atmosphere .cinema-atmosphere-dust{opacity:.12}
+  .av9-shell .av11-depth-emissive{opacity:.16}
+  .av9-shell .av11-depth-emissive .cinema-portal-fx{transform:translate(1.2%,3%)}
+  .av9-shell .av11-depth-foreground{opacity:.27}
+}
+@media(prefers-reduced-motion:reduce){
+ .av9-shell .av11-depth-atmosphere .cinema-atmosphere-haze,
+ .av9-shell .av11-depth-atmosphere .cinema-atmosphere-dust{
+   animation:none!important;transform:none!important;
+ }
+ .av9-shell .av11-depth-emissive{opacity:.2}
+}
+@media(prefers-reduced-transparency:reduce){
+ .av9-shell .av11-depth-layers{opacity:.35}
+}
+@media(forced-colors:active){
+ .av9-shell .av11-depth-layers{display:none!important}
+}
