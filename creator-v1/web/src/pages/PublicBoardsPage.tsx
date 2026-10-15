@@ -29,17 +29,17 @@ function date(value:string|null){
 }
 function ProjectRow({item}:{item:Project}){
   return <article className="cnb-project" key={item.id}>
-    <Link className="cnb-project-art" to={"/atlas/experience/"+encodeURIComponent(item.id)} aria-label={"Explore "+item.title}>
+    <Link className="cnb-project-art" to={"/projects/"+encodeURIComponent(item.id)} aria-label={"Explore "+item.title}>
       <CosmicArtwork scene={item.category}/>
       <span>CATEGORY ARTWORK</span>
     </Link>
     <div className="cnb-project-body">
       <small>{item.category.toUpperCase()} / {date(item.publishedAt)}</small>
-      <h3><Link to={"/atlas/experience/"+encodeURIComponent(item.id)}>{item.title}</Link></h3>
+      <h3><Link to={"/experience/"+encodeURIComponent(item.id)}>{item.title}</Link></h3>
       <p>{item.summary}</p>
       <div className="cnb-project-links">
-        <Link to={"/atlas/creators/"+encodeURIComponent(item.creatorHandle)}>@{item.creatorHandle}</Link>
-        <Link to={"/atlas/projects/"+encodeURIComponent(item.id)}>PROJECT PASSPORT ↗</Link>
+        <Link to={"/creators/"+encodeURIComponent(item.creatorHandle)}>@{item.creatorHandle}</Link>
+        <Link to={"/projects/"+encodeURIComponent(item.id)}>PROJECT PASSPORT ↗</Link>
       </div>
     </div>
   </article>;
@@ -49,7 +49,7 @@ function CreatorRow({item,index}:{item:Creator;index:number}){
     <span className="cnb-creator-index" aria-hidden="true">{String(index+1).padStart(2,"0")}</span>
     <div className="cnb-creator-avatar" aria-hidden="true">{item.displayName.charAt(0).toUpperCase()}</div>
     <div className="cnb-creator-data">
-      <h3><Link to={"/atlas/creators/"+encodeURIComponent(item.handle)}>{item.displayName}</Link></h3>
+      <h3><Link to={"/creators/"+encodeURIComponent(item.handle)}>{item.displayName}</Link></h3>
       <small>@{item.handle}</small>
     </div>
     <div className="cnb-creator-count">
@@ -82,8 +82,8 @@ export function PublicBoardsPage(){
         <h1>THE PEOPLE <em>BEHIND THE WORK.</em></h1>
         <p>Real creations. New voices. Publicly verifiable progress. Browse recent releases and discover creators without paying for visibility.</p>
         <div className="cnb-hero-actions">
-          <Link to="/atlas/discover">EXPLORE PROJECTS ↗</Link>
-          <Link to="/atlas/community">COMMUNITY SPACES ↗</Link>
+          <Link to="/discover">EXPLORE PROJECTS ↗</Link>
+          <Link to="/community">COMMUNITY SPACES ↗</Link>
         </div>
       </div>
     </header>
@@ -127,11 +127,11 @@ export function PublicBoardsPage(){
           <strong>NO ELIGIBLE PUBLICATIONS IN THIS VIEW.</strong>
           <p>{category!=="all"?"Try another category. These filters apply to the displayed public releases, not the entire catalogue.":
             "This board activates as genuine creations receive independent approval. No demo profiles, reactions, or rankings are being substituted."}</p>
-          <Link to="/atlas/discover">VISIT THE FULL CATALOGUE ↗</Link>
+          <Link to="/discover">VISIT THE FULL CATALOGUE ↗</Link>
         </div>}
       <div className="cnb-board-foot">
         <p>These are factual public lists, not quality or popularity leaderboards. The release sample is limited to twelve records per board. Creator activity means approved release count; it does not measure reputation, downloads or genuine plays.</p>
-        <Link to="/atlas/creators">ALL CREATOR CHANNELS ↗</Link>
+        <Link to="/creators">ALL CREATOR CHANNELS ↗</Link>
       </div>
     </section>
 
@@ -143,7 +143,7 @@ export function PublicBoardsPage(){
         <article><span>02 / CONTRIBUTE</span><h3>VALUABLE HELPERS</h3><p>Useful accepted reviews, reproduced issues, credited improvements and moderation reversals will power future recognition.</p></article>
         <article><span>03 / COMMUNITY</span><h3>CREATIVE EVENTS</h3><p>Jams and challenges will publish rules and results before showing ranked outcomes. Participation remains meaningfully free.</p></article>
       </div>
-      <Link to="/atlas/levels">HOW VERIFIED PROGRESSION WORKS ↗</Link>
+      <Link to="/levels">HOW VERIFIED PROGRESSION WORKS ↗</Link>
     </section>
   </div>;
 }

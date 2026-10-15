@@ -59,10 +59,10 @@ function DiscussionEditor({projectId}:{projectId:string|null}){
  }
  if(!member.handle)return <section className="discussion-composer"><span className="nfc-eyebrow">COMMUNITY / PROFILE REQUIRED</span>
    <h1>COMPLETE YOUR CREATOR IDENTITY.</h1><p>An authenticated creator handle is required before you can submit discussions for staff review.</p>
-   <Link to="/atlas/account/edit">EDIT CREATOR PROFILE ↗</Link>
+   <Link to="/account/edit">EDIT CREATOR PROFILE ↗</Link>
  </section>;
  return <div className="discussion-composer">
-   <nav className="discussion-crumb" aria-label="Community breadcrumb"><Link to="/atlas">NETWORK</Link><span>/</span><Link to="/atlas/community">COMMUNITY</Link><span>/</span><span>NEW DISCUSSION</span></nav>
+   <nav className="discussion-crumb" aria-label="Community breadcrumb"><Link to="/">NETWORK</Link><span>/</span><Link to="/community">COMMUNITY</Link><span>/</span><span>NEW DISCUSSION</span></nav>
    <header><span className="nfc-eyebrow">CREATOR NETWORK / INVITED MEMBERS</span><h1>START A <em>CONVERSATION.</em></h1>
       <p>Share a useful question, development note, or creative discussion. Posts are private until staff review. Approval and visibility are not automatic.</p>
    </header>
@@ -72,8 +72,8 @@ function DiscussionEditor({projectId}:{projectId:string|null}){
          <span className="nfc-eyebrow">DISCUSSION ABOUT A PUBLISHED PROJECT</span>
          {context.state==='loading'&&<p role="status">Checking the project…</p>}
          {context.state==='error'&&<p role="alert">This project is unavailable or project discussions are not enabled. A linked post cannot be submitted.</p>}
-         {context.state==='ready'&&context.data&&<Link to={'/atlas/projects/'+encodeURIComponent(context.data.id)}>{context.data.title} ↗</Link>}
-         <Link to="/atlas/community/write">WRITE A GENERAL DISCUSSION INSTEAD</Link>
+         {context.state==='ready'&&context.data&&<Link to={'/projects/'+encodeURIComponent(context.data.id)}>{context.data.title} ↗</Link>}
+         <Link to="/community/write">WRITE A GENERAL DISCUSSION INSTEAD</Link>
        </div>}
        <div><label htmlFor="discussion-topic">CHANNEL</label>
          <select id="discussion-topic" name="topic" value={draft.topic} disabled={pending} onChange={e=>change("topic",e.target.value)}>
@@ -95,7 +95,7 @@ function DiscussionEditor({projectId}:{projectId:string|null}){
        {success&&<p role="status" className="discussion-success">{success}</p>}
        <div className="discussion-composer-actions">
          <button type="submit" disabled={pending||!canSubmit||draft.title.trim().length<8||draft.body.trim().length<20}>{pending?"SUBMITTING…":"SUBMIT FOR REVIEW ↗"}</button>
-         <Link to="/atlas/community">CANCEL</Link>
+         <Link to="/community">CANCEL</Link>
        </div>
      </form>
      <aside className="discussion-composer-panel">
@@ -106,7 +106,7 @@ function DiscussionEditor({projectId}:{projectId:string|null}){
        {saved.state==="ready"&&saved.data.items.length>0&&<div className="discussion-private-list">
          {saved.data.items.map(item=><article key={item.id}><span className="nfc-eyebrow">{item.topic.toUpperCase()} / {statusLabel(item.status)}</span><strong>{item.title}</strong>
            <p>{item.body}</p>
-           {item.status==="published"&&<Link to={"/atlas/community/posts/"+encodeURIComponent(item.id)}>READ PUBLIC DISCUSSION ↗</Link>}
+           {item.status==="published"&&<Link to={"/community/posts/"+encodeURIComponent(item.id)}>READ PUBLIC DISCUSSION ↗</Link>}
          </article>)}
        </div>}
      </aside>
