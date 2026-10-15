@@ -114,8 +114,8 @@ export function createCanonicalStageWorker({authFactory=createCanonicalAuth}={})
 
     const configured=canonicalConfigState(env);
     // The flag is never sufficient: verify the actual isolated schema.
-    const ready=configured.operational&&await canonicalSchemaReady(env)&&
-      await canonicalCreatorSchemaReady(env.MEMBER_DB);
+    const ready=configured.operational&&await canonicalSchemaReady(env);
+    const profilesReady=ready&&await canonicalCreatorSchemaReady(env.MEMBER_DB);
     if(path===HEALTH)return safeJson(request,{
       service:"anevum-canonical-auth-staging",
       status:ready?"ready":"closed",
@@ -133,17 +133,20 @@ export function createCanonicalStageWorker({authFactory=createCanonicalAuth}={})
       linking:"disabled"
     });
     if(!ready)return fail(request,503);
+    if((publicHandle||ownProfile)&&!profilesReady)return fail(request,503);
     if(publicHandle){
       const clean=new Request(request.url,{method:request.method,headers:{accept:"application/json"}});
       return safeResponse(await canonicalPublicCreator(clean,env,CANONICAL_ORIGIN,publicHandle[1]));
     }
+
+    if(ownProfile && ["POST","PATCH"].includes(request.method) && !sameOriginMutation(request))
+      return safeJson(request,{error:"Same-origin request required"},403);
 
     // No inherited V5/Creator legacy cookies and no Authorization.
     let clean=withoutForeignCookies(request);
     if(request.method==="POST"){
       if(!sameOriginMutation(request))return safeJson(request,{error:"Same-origin request required"},403);
       if(url.search)return safeJson(request,{error:"Invalid request"},400);
-      if(ownProfile && !sameOriginMutation(request))return safeJson(request,{error:"Same-origin request required"},403);
       if(path===CANONICAL_AUTH_PATH+"/email-otp/send-verification-otp"||
         path===CANONICAL_AUTH_PATH+"/sign-in/email-otp"){
         if(!configured.email||!configured.invited)return fail(request,503);
