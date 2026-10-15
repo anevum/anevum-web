@@ -143,9 +143,11 @@ export function createCanonicalStageWorker({authFactory=createCanonicalAuth}={})
       return safeJson(request,{error:"Same-origin request required"},403);
 
     // No inherited V5/Creator legacy cookies and no Authorization.
+    // Enforce same-origin CSRF boundary for both POST and PATCH profile edits.
+    if(["POST","PATCH"].includes(request.method)&&!sameOriginMutation(request))
+      return safeJson(request,{error:"Same-origin request required"},403);
     let clean=withoutForeignCookies(request);
     if(request.method==="POST"){
-      if(!sameOriginMutation(request))return safeJson(request,{error:"Same-origin request required"},403);
       if(url.search)return safeJson(request,{error:"Invalid request"},400);
       if(path===CANONICAL_AUTH_PATH+"/email-otp/send-verification-otp"||
         path===CANONICAL_AUTH_PATH+"/sign-in/email-otp"){
@@ -154,8 +156,13 @@ export function createCanonicalStageWorker({authFactory=createCanonicalAuth}={})
         const safeBody=await boundedEmailBody(clean,verifying);
         if(!safeBody)return safeJson(request,{error:"Invalid email verification request"},400);
         const parsed=JSON.parse(safeBody);
+        // Do not reveal which email addresses have been invited to a visitor.
+        // A non-invited send returns the same generic response without sending mail;
+        // verification fails with the same non-specific error as a wrong code.
         if(!permitCanonicalUserCreation(env,parsed.email))
-          return safeJson(request,{error:"Invitation required"},403);
+          return verifying
+            ? safeJson(request,{error:"Code unavailable"},400)
+            : safeJson(request,{ok:true},200);
         const headers=new Headers(clean.headers);
         headers.set("content-type","application/json");
         clean=new Request(request.url,{method:"POST",headers,body:safeBody});
