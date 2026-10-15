@@ -94,6 +94,12 @@ try{
    const state=await evaluate('(()=>({path:location.pathname,header:document.querySelectorAll(".site-header.av9-header").length,main:document.querySelectorAll("#main").length,cinematic:!!document.querySelector(".site-shell--cinematic.av9-shell"),overflow:document.documentElement.scrollWidth>innerWidth+1,width:innerWidth,atlas:!!document.querySelector(".atm-header,.atlas-universe-viewport"),fixture:getComputedStyle(document.body,"::after").content.includes("SYNTHETIC OFFLINE REVIEW")}))()');
    if(!state.cinematic||state.header!==1||state.main!==1||state.overflow||state.atlas||!state.fixture)
     throw Error("SITEWIDE_V012_INCONSISTENT_"+name+"_"+width+":"+JSON.stringify(state));
+   if(name==="levels"){
+    const metrics=await evaluate('(()=>{const hero=document.querySelector(".levels-masthead"),paragraph=hero?.querySelector("p"),emblem=hero?.querySelector(".levels-emblem");return {heroWidth:hero?.getBoundingClientRect().width,textWidth:paragraph?.getBoundingClientRect().width,emblemPosition:emblem?getComputedStyle(emblem).position:null}})()');
+    if(!metrics.textWidth||(width<=700&&metrics.textWidth<Math.min(240,width*.67))||
+      (width<=700&&metrics.emblemPosition!=="absolute"))
+      throw Error("SITEWIDE_V012_LEVELS_TEXT_SQUEEZED_"+width+":"+JSON.stringify(metrics));
+   }
    await screenshot(name+"-"+width);
    results.push({page:name,width,...state});
    console.log("SITEWIDE_V012_"+name.toUpperCase()+"_"+width+"=PASS");

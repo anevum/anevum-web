@@ -42,6 +42,9 @@ test("visual tokens extend to old community and private pages without changing g
  for(const name of [".cnb-hub",".discussion-page",".discussion-composer",".member-shell"])assert.ok(css.includes(name),name);
  assert.match(css,/prefers-reduced-motion:reduce/);
  assert.match(css,/forced-colors:active/);
+ assert.match(css,/\.levels-masthead \.levels-emblem\s*\{/);
+ assert.match(css,/position:absolute;/);
+ assert.match(css,/\.levels-masthead p\s*\{/);
  const gate=read("web/src/components/MemberGate.tsx");
  assert.match(gate,/memberHealth\(signal\)/);
  assert.match(gate,/memberMe\(signal\)/);

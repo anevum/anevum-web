@@ -39,6 +39,40 @@
 .av9-shell .discussion-avatar{border-radius:14px}
 .av9-shell :is(.cnb-hub,.discussion-page,.discussion-composer,.member-shell){min-width:0;max-width:100%}
 @media(max-width:700px){
+ /* Existing 3D emblem must not consume flex width on a phone. The prior
+    mobile positioning was overridden by later global cosmetic CSS. */
+ .av9-shell .levels-masthead {
+   min-height:350px;
+   align-items:center;
+   isolation:isolate;
+ }
+ .av9-shell .levels-masthead > div:not(.cosmic-horizon):not(.levels-emblem){
+   position:relative;
+   z-index:3;
+   flex:1 1 100%;
+   width:100%;
+   max-width:100%;
+   min-width:0;
+ }
+ .av9-shell .levels-masthead .levels-emblem{
+   position:absolute;
+   right:-35px;
+   bottom:-35px;
+   width:200px;
+   height:200px;
+   opacity:.21;
+   z-index:1;
+   pointer-events:none;
+ }
+ .av9-shell .levels-masthead .levels-emblem>span{display:none}
+ .av9-shell .levels-masthead p{
+   max-width:min(29ch,100%);
+   font-size:clamp(13px,3.5vw,15px);
+   line-height:1.62;
+   overflow-wrap:normal;
+ }
+}
+@media(max-width:700px){
  .av9-shell :is(.cnb-hub,.discussion-page,.discussion-composer){padding:20px 13px 36px}
  .av9-shell :is(.cnb-hero,.discussion-paper,.member-panel){border-radius:16px}
  .av9-shell :is(.cnb-hero-actions a,.discussion-composer button,.member-shell button){min-height:44px}
