@@ -60,7 +60,7 @@ test("V006 builds a source-backed homepage feed and links real creator identitie
   assert.match(feed,/communityEnabled/);
   assert.match(feed,/readCommunityPosts\(\{sort:"new",limit:"8"\}/);
   assert.match(feed,/projectDetailPath/);
-  assert.match(feed,/encodeURIComponent\(handle\)/);
+  assert.match(get("creator-v1/web/src/components/PublicAuthorShowcase.tsx"),/encodeURIComponent\(handle\)/);
   assert.match(feed,/A bounded excerpt of public records only/i);
   assert.doesNotMatch(feed,/fake creator|syntheticProject|inventedPost/);
 });
