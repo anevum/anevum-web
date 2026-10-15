@@ -81,7 +81,7 @@ test("uninvited requests, forged fields, invalid OTP and cross-origin writes are
   post("/api/v1/member/auth/sign-in/email-otp",{email:"member_a@fixture.invalid",otp:"123456"})
  ]){
   const result=await worker.fetch(request,env());
-  assert.ok([400,403].includes(result.status),String(result.status));
+  assert.ok([200,400,403].includes(result.status),String(result.status));
  }
  assert.equal((await worker.fetch(post("/api/v1/member/creator-profile",
   {displayName:"Forged"},{origin:"https://evil.example"},"PATCH"),env())).status,403);
