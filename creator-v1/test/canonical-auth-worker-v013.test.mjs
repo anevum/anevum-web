@@ -268,7 +268,7 @@ test("OAuth login accepts only bounded Google provider and fixed on-site callbac
  response=await stage.fetch(post("/api/v1/member/auth/sign-in/social",{provider:"google",callbackURL:"/join"}),env(true));
  assert.equal(response.status,200);
  for(const payload of [
-  {provider:"github"},
+  {provider:"unknown-provider"},
   {provider:"google",callbackURL:"https://other.example"},
   {provider:"google",callbackURL:"//evil.example"},
   {provider:"google",callbackURL:"/account"},
