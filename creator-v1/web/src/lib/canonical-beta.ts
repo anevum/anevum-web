@@ -64,7 +64,7 @@ async function request<T>(path:string,method:"GET"|"POST"|"PATCH"="GET",body?:un
  return safeJson<T>(response);
 }
 export type CanonicalMethods={
-  registration:"closed"|"invite-only";
+  registration:"closed"|"invite-only"|"open";
   methods:{email:{available:boolean};google:{available:boolean}};
 };
 export const canonicalMethods=(signal?:AbortSignal)=>
@@ -72,7 +72,7 @@ export const canonicalMethods=(signal?:AbortSignal)=>
 export async function canonicalReady(signal?:AbortSignal):Promise<boolean>{
  try{
    const data=await canonicalMethods(signal);
-   return data.registration==="invite-only"&&(data.methods.email.available===true||data.methods.google.available===true);
+   return (data.registration==="invite-only"||data.registration==="open")&&(data.methods.email.available===true||data.methods.google.available===true);
  }catch{return false;}
 }
 export const canonicalMe=(signal?:AbortSignal)=>
