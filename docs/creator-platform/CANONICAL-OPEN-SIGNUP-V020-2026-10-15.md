@@ -19,3 +19,9 @@ Five isolated release-gate tests pass locally in Node 22; the existing runtime o
 
 ## Suggested next execution
 Finish the isolated D1 export and destructive restore rehearsal against a disposable copy; approve privacy/age/deletion terms; add isolated secret bindings; conduct two independent real OTP sessions on authorized staging; verify code abuse, owner access exclusion, profile private/public toggles, account exports and deletion; then owner review for **staging only** open enrollment. Preserve the already approved V006 cinematic UI and the January 1 launch countdown.
+
+## V021 — CI enrollment (October 15)
+
+Commit `58e283733583f5ce17f07c16d4b81433a92fce2e` adds the V020 fail-closed registration gate tests to both `creator-v1/package.json` `test` and `test:signup-activation` scripts. This ensures the tests run under the normal GitHub Creator V1 workflow, which executes `npm test` under `creator-v1`. Before this change, the gate source tests existed but were not part of that standard command; the prior successful PR workflow therefore did not independently prove those new tests passed. Do not report the updated test suite as passing until the exact-head run completes successfully.
+
+The recovery test from V019 is a disposable local SQLite `VACUUM INTO` rehearsal. It is **not** a real Cloudflare D1 export and restore. The next remote recovery operation must require separate backup/restore authorization and must never run against production or silently migrate the existing isolated canonical D1.
