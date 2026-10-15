@@ -1,4 +1,5 @@
 import {canonicalConfigState,permitCanonicalUserCreation} from "./policy.mjs";
+import {normalizeWorldUpdate,worldFromRow} from "./worlds.mjs";
 // ANEVUM Phase 1 / canonical Better Auth creator identity.
 // Does NOT read legacy Creator V1 OTP tables or broker/owner entitlements.
 const STAGING_ORIGIN="https://a.anevum.com";
@@ -27,7 +28,12 @@ export async function canonicalCreatorSchemaReady(db){
  try{
   const result=await db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name IN ('user','member_creator_profiles','member_creator_edit_limits')").all();
   const names=new Set((result?.results||[]).map(x=>x.name));
-  return ["user","member_creator_profiles","member_creator_edit_limits"].every(x=>names.has(x));
+  if(!["user","member_creator_profiles","member_creator_edit_limits"].every(x=>names.has(x)))return false;
+  const columns=await db.prepare("PRAGMA table_info(member_creator_profiles)").all();
+  if(columns?.success===false||!Array.isArray(columns?.results))return false;
+  const present=new Set(columns.results.map(c=>c?.name));
+  return ["user_id","handle","display_name","bio","visibility","revision",
+    "headline","world_theme","focus_json"].every(name=>present.has(name));
  }catch{return false}
 }
 function safeHandle(raw){
@@ -48,11 +54,11 @@ async function changedRows(db,sql,values){
  return result.results;
 }
 async function ownProfile(db,id){
- return await db.prepare("SELECT handle,display_name,bio,visibility,revision,created_at,updated_at FROM member_creator_profiles WHERE user_id=?").bind(id).first();
+ return await db.prepare("SELECT handle,display_name,bio,visibility,revision,created_at,updated_at,headline,world_theme,focus_json FROM member_creator_profiles WHERE user_id=?").bind(id).first();
 }
 const privateProfile=row=>row?({handle:row.handle,displayName:row.display_name,bio:row.bio,
   visibility:row.visibility,revision:Number(row.revision),createdAt:Number(row.created_at),
-  updatedAt:Number(row.updated_at)}):null;
+  updatedAt:Number(row.updated_at),...worldFromRow(row)}):null;
 async function boundedMutation(db,userId,now){
  const start=now-3600;
  const rows=await changedRows(db,
@@ -86,13 +92,13 @@ export async function canonicalPublicCreator(req,env,origin,handle){
    return failure(req,503,"Creator profiles unavailable");
  try{
   const row=await env.MEMBER_DB.prepare(
-    "SELECT p.handle,p.display_name,p.bio,p.created_at "+
+    "SELECT p.handle,p.display_name,p.bio,p.created_at,p.headline,p.world_theme,p.focus_json "+
     "FROM member_creator_profiles p JOIN \"user\" u ON u.id=p.user_id "+
     "WHERE p.handle=? AND p.visibility='public' AND u.emailVerified=1 LIMIT 1"
   ).bind(normalized).first();
   if(!row)return failure(req,404,"Profile not public");
   return answer(req,{profile:{handle:row.handle,displayName:row.display_name,
-    bio:row.bio,joinedAt:Number(row.created_at)}});
+    bio:row.bio,joinedAt:Number(row.created_at),...worldFromRow(row)}});
  }catch{return failure(req,503,"Creator profiles unavailable")}
 }
 export async function canonicalCreatorMember(req,env,user,origin,now=Math.floor(Date.now()/1000)){
@@ -121,7 +127,7 @@ export async function canonicalCreatorMember(req,env,user,origin,now=Math.floor(
       "INSERT INTO member_creator_profiles "+
       "(user_id,handle,display_name,bio,created_at,updated_at) "+
       "VALUES(?,?,?,?,?,?) ON CONFLICT(user_id) DO NOTHING "+
-      "RETURNING handle,display_name,bio,visibility,revision,created_at,updated_at",
+      "RETURNING handle,display_name,bio,visibility,revision,created_at,updated_at,headline,world_theme,focus_json",
       [user.id,handle,name,bio,now,now]);
    if(rows.length!==1)return failure(req,409,"A profile already exists");
    return answer(req,{memberId:user.id,profile:privateProfile(rows[0])},201);
