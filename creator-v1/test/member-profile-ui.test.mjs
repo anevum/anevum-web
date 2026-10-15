@@ -15,7 +15,8 @@ test("profile editor is truly member gated and shares the authenticated account 
  assert.match(gate,/confirmedProfile\?\.id===session\.data\.member\.id/);
  assert.match(gate,/activeMember\.displayName\|\|activeMember\.handle/);
  assert.match(gate,/member:activeMember/);
- assert.match(gate,/to="\/account\/edit"/);
+ assert.match(read("web/src/lib/site-navigation.ts"),/to:"\/account\/edit"/);
+ assert.match(gate,/to="\/account\/studio"/);
  assert.match(page,/useMemberContext/);
  assert.match(page,/memberSaveProfile/);
  assert.match(page,/onProfileSaved\(profile\)/);
