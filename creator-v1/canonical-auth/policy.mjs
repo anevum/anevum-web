@@ -62,7 +62,7 @@ export function canonicalConfigState(env){
     google:Boolean(google),
     github:Boolean(github),apple:Boolean(apple),microsoft:Boolean(microsoft),
     // No account roles, provider grants or cross-origin linking.
-    provider:operational?(email?"email":"google"):null,
+    provider:operational?(email?"email":google?"google":github?"github":apple?"apple":"microsoft"):null,
     issuer:CANONICAL_ISSUER
   };
 }
