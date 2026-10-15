@@ -87,6 +87,16 @@ jobs:
             node --check "$file"
           done
           node --input-type=module -e 'import {Script} from "node:vm"; import {COMMUNITY_CLIENT} from "./creator-v1/auth/community-ui.mjs"; import {VOTE_APP} from "./creator-v1/authoring/vote-moderation-ui.mjs"; import {SOCIAL_CLIENT} from "./creator-v1/auth/social-ui.mjs"; import {PRIVACY_CLIENT} from "./creator-v1/auth/privacy-ui.mjs"; import {PRIVACY_APP} from "./creator-v1/authoring/privacy-queue-ui.mjs"; for (const source of [COMMUNITY_CLIENT,VOTE_APP,SOCIAL_CLIENT,PRIVACY_CLIENT,PRIVACY_APP]) new Script(source);'
+      - name: Verify Better Auth canonical invited onboarding and member-world isolation
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --check src/server/canonical-creator-profile.mjs
+          node --check src/server/member.mjs
+          node --check creator-v1/web/a-staging-worker.mjs
+          npm run check
+          node --test tests/phase1-canonical-creator-profile.test.mjs 2>&1 | tee evidence/phase1-member-onboarding-tests.log
+          echo 'PHASE1_CANONICAL_PROFILE=PASS; AUTH_AND_MIGRATION_DEPLOYMENT=NOT_AUTHORIZED'
       - name: Rehearse V007 D1 changes offline and deny unresolved release collisions
         if: success()
         working-directory: creator-v1
