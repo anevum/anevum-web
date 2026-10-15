@@ -72,7 +72,7 @@ export const canonicalMethods=(signal?:AbortSignal)=>
 export async function canonicalReady(signal?:AbortSignal):Promise<boolean>{
  try{
    const data=await canonicalMethods(signal);
-   return (data.registration==="invite-only"||data.registration==="open")&&(data.methods.email.available===true||data.methods.google.available===true);
+   return (data.registration==="invite-only"||data.registration==="open")&&(Object.values(data.methods).some(method=>method.available===true));
  }catch{return false;}
 }
 export const canonicalMe=(signal?:AbortSignal)=>
