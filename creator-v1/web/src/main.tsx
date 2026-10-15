@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
 import App from "./App";
 import "./styles.css";
+import "./install-page.css";
 import "./portal-overhaul.css";
 import "./depth-system.css";
 import "./member-profile.css";
