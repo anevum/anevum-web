@@ -132,20 +132,32 @@ export async function canonicalCreatorMember(req,env,user,origin,now=Math.floor(
    if(rows.length!==1)return failure(req,409,"A profile already exists");
    return answer(req,{memberId:user.id,profile:privateProfile(rows[0])},201);
   }
-  if(!hasOnly(payload,["displayName","bio","visibility","revision"]))
-   return failure(req,400,"Invalid profile fields");
+  const legacy=hasOnly(payload,["displayName","bio","visibility","revision"]);
+  const personalized=hasOnly(payload,["displayName","bio","visibility","revision",
+    "headline","worldTheme","focus"]);
+  if(!legacy&&!personalized)return failure(req,400,"Invalid profile fields");
   const name=normalizeCopy(payload.displayName,80,true),
     bio=normalizeCopy(payload.bio,1200,false);
+  const world=personalized?normalizeWorldUpdate(payload):null;
   if(name===null||bio===null||!["private","public"].includes(payload.visibility)||
-     !Number.isSafeInteger(payload.revision)||payload.revision<1||payload.revision>2147483646)
+     !Number.isSafeInteger(payload.revision)||payload.revision<1||payload.revision>2147483646||
+     (personalized&&!world))
     return failure(req,400,"Invalid profile data");
   if(!await boundedMutation(db,user.id,now))return failure(req,429,"Profile edit limit reached");
+  // Previous clients preserve visual preferences. All updates share one
+  // revision counter and the owner ID derived from the verified session.
+  const changes=personalized?
+    "display_name=?,bio=?,visibility=?,headline=?,world_theme=?,focus_json=?,":
+    "display_name=?,bio=?,visibility=?,";
+  const binds=personalized?
+    [name,bio,payload.visibility,world.headline,world.worldTheme,world.focusJson]:
+    [name,bio,payload.visibility];
   const rows=await changedRows(db,
-      "UPDATE member_creator_profiles "+
-      "SET display_name=?,bio=?,visibility=?,revision=revision+1,updated_at=? "+
+      "UPDATE member_creator_profiles SET "+changes+
+      "revision=revision+1,updated_at=? "+
       "WHERE user_id=? AND revision=? AND revision<2147483647 "+
-      "RETURNING handle,display_name,bio,visibility,revision,created_at,updated_at",
-      [name,bio,payload.visibility,now,user.id,payload.revision]);
+      "RETURNING handle,display_name,bio,visibility,revision,created_at,updated_at,headline,world_theme,focus_json",
+      [...binds,now,user.id,payload.revision]);
   if(rows.length!==1)return failure(req,409,"Profile changed; reload before saving");
   return answer(req,{memberId:user.id,profile:privateProfile(rows[0])});
  }catch(error){
