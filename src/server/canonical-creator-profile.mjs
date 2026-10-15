@@ -15,6 +15,10 @@ export function canonicalBetaConfigured(env,origin){
  return origin===STAGING_ORIGIN &&
    env?.ANEVUM_MEMBER_PREVIEW_ENABLED==="true" &&
    env?.MEMBER_PREVIEW_ORIGIN===STAGING_ORIGIN &&
+   env?.ANEVUM_MEMBERS_ENABLED==="true" &&
+   typeof env?.BETTER_AUTH_SECRET==="string" && env.BETTER_AUTH_SECRET.length>=32 &&
+   typeof env?.GOOGLE_CLIENT_ID==="string" && env.GOOGLE_CLIENT_ID.length>0 &&
+   typeof env?.GOOGLE_CLIENT_SECRET==="string" && env.GOOGLE_CLIENT_SECRET.length>0 &&
    env?.ANEVUM_PHASE1_CREATOR_ENABLED==="true" &&
    env?.ANEVUM_PHASE1_INVITE_ONLY==="true" &&
    typeof env?.ANEVUM_PHASE1_INVITE_EMAILS==="string" &&
