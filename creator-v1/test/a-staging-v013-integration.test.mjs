@@ -9,7 +9,7 @@ test("V013 keeps the V012 public shell with closed canonical signup UI",()=>{
     assert.ok(app.includes('path="'+route+'"'),route);
   assert.match(app,/LegacyAtlasRedirect/);
   assert.doesNotMatch(app,/<AtlasMorphLayout\/>|<AtlasPage\/>|<WorkspacePage\/>/);
-  assert.match(shell,/to="\/join"/);
+  assert.match(shell,/to:"\/join"/);
   assert.match(read("web/src/pages/Phase1JoinPage.tsx"),/REGISTRATION CLOSED/);
   assert.match(read("web/src/lib/canonical-beta.ts"),/registration==="invite-only"/);
 });
