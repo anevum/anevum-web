@@ -23,7 +23,7 @@ function fixture(){
       const statement={
         sql,get args(){return params},
         bind(...args){params=args;return statement},
-        async all(){return {success:true,results:compile().all(...params)}},
+        async all(){return {success:true,results:compile().all(...params),meta:{changes:0,last_row_id:0,changed_db:false}}},
         async first(column){const row=compile().get(...params)||null;return column?row?.[column]??null:row},
         async raw(options){const query=compile();const rows=query.all(...params).map(Object.values);
           return options?.columnNames?[query.columns().map(c=>c.name),...rows]:rows;},
@@ -35,7 +35,7 @@ function fixture(){
     },
     async batch(statements){const result=[];db.exec("SAVEPOINT better_auth_fixture");try{
       for(const stmt of statements){const query=db.prepare(stmt.sql);
-        if(query.columns().length>0)result.push({success:true,results:query.all(...stmt.args)});
+        if(query.columns().length>0)result.push({success:true,results:query.all(...stmt.args),meta:{changes:0,last_row_id:0,changed_db:false}});
         else {const change=query.run(...stmt.args);result.push({success:true,results:[],
           meta:{changes:Number(change.changes),last_row_id:Number(change.lastInsertRowid)}});}
       }
