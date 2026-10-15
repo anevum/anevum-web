@@ -96,7 +96,7 @@ export function Shell(){
           <button type="button" className="av9-search-mobile" onClick={()=>setLauncherOpen(true)}
             aria-label="Open quick navigation" aria-keyshortcuts="Control+K Meta+K"><Icon name="search" size={20}/></button>
           <Link to="/create" className="header-create av9-create"><Icon name="create" size={17}/><span>Share work</span></Link>
-          <Link to="/join" className="cw-account-link av9-account" aria-label="Member registration and sign-in status"><Icon name="people" size={20}/></Link>
+          <Link to="/account" className="cw-account-link av9-account" aria-label="Member account; sign-in availability depends on invitation"><Icon name="people" size={20}/></Link>
           <button ref={menuButton} className="menu-button av9-menu-trigger" type="button"
             aria-label={menuOpen ? "Close site navigation" : "Open site navigation"}
             aria-haspopup="dialog" aria-expanded={menuOpen} aria-controls="av9-navigation"
