@@ -5,7 +5,10 @@ import {OrbitalMark} from "../components/OrbitalMark";
 
 const HANDLE=/^[a-z][a-z0-9_]{2,29}$/;
 export function Phase1PublicMemberPage(){
- const {handle=""}=useParams<{handle:string}>();
+ const {memberHandle=""}=useParams<{memberHandle:string}>();
+ // React Router dynamic params occupy whole segments. Public handles use
+ // one @-prefixed segment, not unsupported partial `@:handle` matching.
+ const handle=memberHandle.startsWith("@")?memberHandle.slice(1):"";
  const valid=HANDLE.test(handle);
  const profile=useResource(async signal=>valid?canonicalPublic(handle,signal):Promise.resolve(null),[handle]);
  const data:CanonicalPublicResponse["profile"]|null=
