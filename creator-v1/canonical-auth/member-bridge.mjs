@@ -6,7 +6,7 @@
  * or permission to read or mutate private creator projects.
  */
 import {
-  CANONICAL_ISSUER,withoutForeignCookies
+  CANONICAL_ISSUER,withoutForeignCookies,isCanonicalOrigin
 } from "./policy.mjs";
 import {IDENTITY_STAGE} from "../ops/identity-release-gate.mjs";
 
@@ -109,6 +109,13 @@ export async function findVerifiedCreator(env,canonicalSubject){
  * authorization. The frontend member client cannot use this as a /me session.
  */
 export async function canonicalCreatorBridgeStatus(request,env,auth,now=Date.now()){
+  if(!isCanonicalOrigin(request)||
+     new URL(request.url).pathname!==CREATOR_LINK_ROUTE)
+    return {status:404,body:{state:"unavailable",creator:null}};
+  if(!["GET","HEAD"].includes(request.method))
+    return {status:405,body:{state:"unavailable",creator:null}};
+  if(new URL(request.url).search)
+    return {status:400,body:{state:"unavailable",creator:null}};
   if(!bridgeConfigured(env))return {
     status:503,body:{state:"unavailable",creator:null}
   };
