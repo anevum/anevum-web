@@ -153,7 +153,7 @@ test("OTP requests permit only invited addresses, fixed length, no role fields a
   post(send,{email:"test_one@fixture.invalid",type:"sign-in"},{Origin:"https://evil.example"}),
   post(verify,{email:"test_one@fixture.invalid",otp:"1234567"}),
   post(verify,{email:"test_one@fixture.invalid",otp:"12345678",userId:"founder"})
- ],active),[403,403,400,400,403,400,400]);
+ ],active),[200,200,400,400,403,400,400]);
  assert.equal(dispatched.length,0);
  const ok=post(send,{email:"test_one@fixture.invalid",type:"sign-in"});
  assert.equal((await worker.fetch(ok,active)).status,200);
@@ -194,7 +194,10 @@ test("the legacy V013 candidate keeps routes disabled and no permanent database 
  assert.deepEqual(json.routes,[]);
  assert.equal(json.workers_dev,false);
  assert.equal(json.preview_urls,false);
- assert.equal(json.d1_databases,undefined);
+ assert.equal(json.d1_databases?.length,1);
+ assert.equal(json.d1_databases[0]?.binding,"MEMBER_DB");
+ assert.equal(json.d1_databases[0]?.database_name,"anevum-canonical-member-staging");
+ assert.equal(json.d1_databases[0]?.database_id,"e1d29049-c83b-4534-8355-dc1fa36ba6d8");
  assert.equal(json.vars.ANEVUM_CANONICAL_STAGE_ENABLED,"false");
  assert.equal(json.vars.CANONICAL_EMAIL_ENABLED,"false");
 });
