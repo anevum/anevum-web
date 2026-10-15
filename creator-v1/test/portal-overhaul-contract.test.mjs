@@ -72,9 +72,10 @@ test("member account shows server-verified achievements and unlimited XP without
  assert.match(page,/MY ACHIEVEMENT CABINET/);
  assert.match(page,/a\.earned/);
  assert.match(page,/NO FIXED/i);
- assert.ok(shell.includes('["/levels", "Levels"]'));
- assert.ok(shell.includes('["/library","Saved library"]'));
- assert.ok(shell.includes('["/account","My profile"]'));
+ assert.match(shell,/to:"\/levels",label:"Artifacts & levels"/);
+ assert.match(shell,/to:"\/library",label:"My library"/);
+ assert.match(shell,/to:"\/account",label:"My profile"/);
+ assert.match(shell,/<dialog ref=\{menuDialog\}/);
  assert.doesNotMatch(shell,/mobile-bottom-nav|const mobileNav/);
 });
 
