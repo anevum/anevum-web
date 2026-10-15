@@ -13,6 +13,7 @@ import { CommunityPage } from "./pages/CommunityPage";
 import {CommunityPostPage} from "./pages/CommunityPostPage";
 import {CommunityPostEditorPage} from "./pages/CommunityPostEditorPage";
 import { MemberGate } from "./components/MemberGate";
+import { LoadingState } from "./components/States";
 import { MemberAccountPage } from "./pages/MemberAccountPage";
 import { MemberProfileEditorPage } from "./pages/MemberProfileEditorPage";
 import { MemberLibraryPage } from "./pages/MemberLibraryPage";
@@ -20,7 +21,7 @@ import { MemberProjectsPage } from "./pages/MemberProjectsPage";
 import { ProjectEditorPage } from "./pages/ProjectEditorPage";
 
 const PublicBoardsPage = lazy(() => import("./pages/PublicBoardsPage").then(mod=>({default:mod.PublicBoardsPage})));
-const atlasFallback=<div role="status" style={{minHeight:"100dvh",display:"grid",placeItems:"center",background:"#071022",color:"#f2d7a8"}}>OPENING THE ANEVUM UNIVERSE…</div>;
+const pageFallback=<LoadingState label="Opening approved public boards"/>;
 
 /** Historical Atlas links return to the canonical public experience.
  * Retains experimental files without mounting a second site theme. */
@@ -48,7 +49,7 @@ export default function App(){
     <Route path="creators" element={<CreatorsPage/>}/>
     <Route path="creators/:handle" element={<CreatorPage/>}/>
     <Route path="community" element={<CommunityPage/>}/>
-      <Route path="boards" element={<Suspense fallback={atlasFallback}><PublicBoardsPage/></Suspense>}/>
+      <Route path="boards" element={<Suspense fallback={pageFallback}><PublicBoardsPage/></Suspense>}/>
     <Route path="community/posts/:id" element={<CommunityPostPage/>}/>
     <Route path="workspace" element={<Navigate to="/account" replace/>}/>
     <Route element={<MemberGate/>}>
