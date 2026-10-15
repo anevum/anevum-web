@@ -28,8 +28,8 @@ export function canonicalAuthOptions(env){
         clientSecret:env.CANONICAL_GOOGLE_CLIENT_SECRET,
         scope:["email","profile"],
         requireEmailVerification:true,
-        disableSignUp:!stage.invited,
-        disableImplicitSignUp:!stage.invited
+        disableSignUp:!(stage.invited||stage.open),
+        disableImplicitSignUp:!(stage.invited||stage.open)
       }
     }:{},
     plugins:stage.email?[emailOTP({
@@ -37,7 +37,7 @@ export function canonicalAuthOptions(env){
       expiresIn:600,
       allowedAttempts:3,
       storeOTP:"hashed",
-      disableSignUp:!stage.invited,
+      disableSignUp:!(stage.invited||stage.open),
       async sendVerificationOTP({email,otp,type}){
         if(type!=="sign-in"||!permitCanonicalUserCreation(env,email))throw Error("OTP not permitted");
         const response=await fetch("https://api.resend.com/emails",{
