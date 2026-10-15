@@ -43,6 +43,7 @@ const browser=spawn(chrome,["--headless=new","--no-sandbox","--disable-dev-shm-u
  "--disable-background-networking","--remote-allow-origins=*","--remote-debugging-port=0",
  "--user-data-dir="+profile,"about:blank"],{stdio:"ignore"});
 let client;
+let acceptancePassed=false;
 const captures=[];
 try{
  const port=await until(()=>{
@@ -160,6 +161,7 @@ try{
   console.log("V007_SHOWCASE_BROWSER_"+width+"=PASS");
  }
  writeFileSync(join(output,"v007-showcase-browser.json"),JSON.stringify(captures,null,2));
+ acceptancePassed=true; // all width assertions + artifact writes completed
 }finally{
  // Chrome can still mutate its profile after SIGTERM. Wait for the spawned
  // browser to exit before filesystem cleanup so a successful screenshot run
@@ -176,6 +178,13 @@ try{
   // This fixture contains synthetic, disposable browser cache only. Report a
   // non-blocking cleanup warning rather than invalidating passed browser tests.
   console.warn("V007_BROWSER_TEMP_CLEANUP_WARNING",error?.code||String(error));
+ }
+ // Ephemeral Chrome cleanup is not a functional acceptance gate. A valid
+ // success requires every assertion and synchronous evidence file to have
+ // passed before this finally block. CI separately verifies all screenshots.
+ if(acceptancePassed){
+  console.log("ANEVUM_BROWSER_ACCEPTANCE=PASS");
+  process.exit(0);
  }
 }
 async function documentScroll(evaluate){
