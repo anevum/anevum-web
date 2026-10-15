@@ -58,16 +58,16 @@ export function Shell(){
     document.getElementById("main")?.focus({preventScroll:true});
   },[location.pathname,location.search,location.hash]);
   useEffect(()=>{
-    function shortcut(event:KeyboardEvent){
-      const command=(event.metaKey||event.ctrlKey)&&event.key.toLowerCase()==="k"&&!event.altKey;
-      const slash=event.key==="/"&&!event.metaKey&&!event.ctrlKey&&!event.altKey&&!isEditableTarget(event.target);
+    function onShortcut(event:KeyboardEvent){
+      const command=(event.metaKey || event.ctrlKey)&&event.key.toLowerCase()==="k"&&!event.altKey;
+      const slash=event.key === "/"&&!event.metaKey&&!event.ctrlKey&&!event.altKey&&!isEditableTarget(event.target);
       if(!command&&!slash)return;
       event.preventDefault();
       setMenuOpen(false);
       setLauncherOpen(true);
     }
-    window.addEventListener("keydown",shortcut);
-    return()=>window.removeEventListener("keydown",shortcut);
+    window.addEventListener("keydown",onShortcut);
+    return()=>window.removeEventListener("keydown", onShortcut);
   },[]);
 
   function search(event:FormEvent<HTMLFormElement>){
@@ -95,7 +95,7 @@ export function Shell(){
         </form>
         <div className="av9-header-actions">
           <button type="button" className="av9-search-mobile" onClick={()=>setLauncherOpen(true)}
-            aria-label="Search ANEVUM" aria-keyshortcuts="Control+K Meta+K"><Icon name="search" size={20}/></button>
+            aria-label="Open quick navigation" aria-keyshortcuts="Control+K Meta+K"><Icon name="search" size={20}/></button>
           <Link to="/create" className="header-create av9-create"><Icon name="create" size={17}/><span>Share work</span></Link>
           <Link to="/account" className="cw-account-link av9-account" aria-label="Member account; sign-in availability depends on invitation"><Icon name="people" size={20}/></Link>
           <button ref={menuButton} className="menu-button av9-menu-trigger" type="button"
@@ -145,7 +145,7 @@ export function Shell(){
     </main>
     <footer className="site-footer av9-footer">
       <span>ANEVUM / A WORLD OF THINGS PEOPLE MAKE</span>
-      <nav aria-label="Site information"><Link to="/start">Start here</Link><Link to="/guide">Field guide</Link><Link to="/boards">Boards</Link><Link to="/status">Status</Link></nav>
+      <nav aria-label="Site information"><Link to="/start">Start Here</Link><Link to="/guide">Field Guide</Link><Link to="/boards">Boards</Link><Link to="/status">Status</Link></nav>
       <span>PUBLIC DISCOVERY IS OPEN · MEMBER ACCESS IS IN TESTING</span>
     </footer>
   </div>;
