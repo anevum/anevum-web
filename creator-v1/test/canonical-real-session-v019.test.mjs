@@ -4,7 +4,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {readFileSync} from "node:fs";
 import {DatabaseSync} from "node:sqlite";
-import {createCanonicalStageWorker} from "../canonical-auth/worker.mjs";
+import worker from "../web/a-canonical-stage.review.mjs";
 import {createCanonicalAuth} from "../canonical-auth/auth.mjs";
 
 const ORIGIN="https://a.anevum.com";
@@ -72,9 +72,10 @@ function cookieFrom(response){
   return first;
 }
 
-test("two independent invited users complete real OTP sessions and cannot share profiles", {timeout:30000}, async()=>{
+for(const mode of ["invite-only","open"])test(`two independent users complete composed ${mode} OTP sessions without sharing profiles`, {timeout:30000}, async()=>{
   const {db,env}=fixture();
-  const worker=createCanonicalStageWorker();
+  env.CANONICAL_PUBLIC_SIGNUP_ENABLED=mode==="open"?"true":"false";
+  if(mode==="open")env.CANONICAL_INVITE_EMAILS="";
   const priorFetch=globalThis.fetch;
   const sent=new Map();
   globalThis.fetch=async (input,options)=>{
@@ -88,7 +89,7 @@ test("two independent invited users complete real OTP sessions and cannot share 
   try{
     const methods=await worker.fetch(get("/api/v1/member/auth-methods"),env);
     assert.equal(methods.status,200);
-    assert.equal((await methods.json()).registration,"invite-only");
+    assert.equal((await methods.json()).registration,mode);
     const open=await worker.fetch(post(auth+"/email-otp/send-verification-otp",{
       email:"pilot_a@fixture.invalid",type:"sign-in"}),env);
     if(open.status!==200){

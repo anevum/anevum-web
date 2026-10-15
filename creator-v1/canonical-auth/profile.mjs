@@ -1,5 +1,6 @@
 import {canonicalConfigState,permitCanonicalUserCreation} from "./policy.mjs";
 import {normalizeWorldUpdate,worldFromRow} from "./worlds.mjs";
+import {boundedText} from "./request-body.mjs";
 // ANEVUM Phase 1 / canonical Better Auth creator identity.
 // Does NOT read legacy Creator V1 OTP tables or broker/owner entitlements.
 const STAGING_ORIGIN="https://a.anevum.com";
@@ -73,9 +74,8 @@ async function boundedMutation(db,userId,now){
 async function bodyJSON(req){
  if(!/^application\/json(?:\s*;|\s*$)/i.test(req.headers.get("content-type")||""))
    throw Error("Expected JSON");
- if(Number(req.headers.get("content-length")||0)>1900)throw Error("Too large");
- const raw=await req.text();
- if(raw.length>1900)throw Error("Too large");
+ const raw=await boundedText(req,1900);
+ if(raw===null)throw Error("Too large or invalid UTF-8");
  const obj=JSON.parse(raw);
  if(!obj||typeof obj!=="object"||Array.isArray(obj))throw Error("Invalid profile");
  return obj;

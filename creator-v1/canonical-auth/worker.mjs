@@ -6,6 +6,7 @@ import {
 import {createCanonicalAuth} from "./auth.mjs";
 import {canonicalCreatorSchemaReady,canonicalCreatorMember,canonicalPublicCreator,canonicalExportMember} from "./profile.mjs";
 import {permitCanonicalUserCreation} from "./policy.mjs";
+import {boundedText} from "./request-body.mjs";
 
 const HEALTH=CANONICAL_PREFIX+"/health";
 const METHODS=CANONICAL_PREFIX+"/auth-methods";
@@ -43,25 +44,10 @@ function safeResponse(original){
 async function boundedProviderBody(request){
   if(!/^application\/json(?:\s*;|\s*$)/i.test(request.headers.get("content-type")||""))
     return null;
-  const length=Number(request.headers.get("content-length")||0);
-  if(!Number.isFinite(length)||length>512)return null;
-  const reader=request.body?.getReader();
-  if(!reader)return null;
-  const chunks=[];let total=0;
+  const raw=await boundedText(request,512);
+  if(raw===null)return null;
   try{
-    for(;;){
-      const {done,value}=await reader.read();
-      if(done)break;
-      total+=value.byteLength;
-      if(total>512){await reader.cancel();return null;}
-      chunks.push(value);
-    }
-  }catch{return null;}
-  finally{reader.releaseLock();}
-  const buffer=new Uint8Array(total);let offset=0;
-  for(const chunk of chunks){buffer.set(chunk,offset);offset+=chunk.byteLength;}
-  try{
-    const input=JSON.parse(new TextDecoder("utf-8",{fatal:true}).decode(buffer));
+    const input=JSON.parse(raw);
     if(!input||typeof input!=="object"||Array.isArray(input))return null;
     // Explicit allowlist: never accept user-selected OAuth destination,
     // server identity, organization, trusted origin, scopes, or privileges.
@@ -74,10 +60,8 @@ async function boundedProviderBody(request){
 
 async function boundedEmailBody(request,verification){
   if(!/^application\/json(?:\s*;|\s*$)/i.test(request.headers.get("content-type")||""))return null;
-  const n=Number(request.headers.get("content-length")||0);
-  if(!Number.isFinite(n)||n>512)return null;
-  let raw;
-  try{raw=await request.text();if(raw.length>512)return null;}catch{return null;}
+  const raw=await boundedText(request,512);
+  if(raw===null)return null;
   let data;
   try{data=JSON.parse(raw);}catch{return null;}
   if(!data||typeof data!=="object"||Array.isArray(data))return null;

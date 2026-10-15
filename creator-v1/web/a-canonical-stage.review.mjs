@@ -1,5 +1,5 @@
-// REVIEW-ONLY: same-origin member routes grafted onto the retained public V006/V007 reader.
-// This file is NOT the a.anevum.com deployed Worker; use only with a separately approved rollout.
+// Same-origin canonical member composition over the retained public V006/V007 reader.
+// The review config remains unrouted; the signup staging config targets only the existing a Worker.
 // Canonical email sessions never enter the public Worker or legacy V5/Creator service.
 import publicStage from "./a-staging-worker.mjs";
 import canonicalIdentity from "../canonical-auth/worker.mjs";

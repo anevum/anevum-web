@@ -1,0 +1,40 @@
+{
+  "$schema": "../node_modules/wrangler/config-schema.json",
+  "name": "anevum-creator-v1-a-staging",
+  "account_id": "2f7ee83107240152097efd956a4e8335",
+  "main": "./web/a-canonical-stage.review.mjs",
+  "compatibility_date": "2026-10-14",
+  "compatibility_flags": ["nodejs_compat"],
+  "workers_dev": false,
+  "preview_urls": false,
+  "routes": [],
+  "assets": {
+    "directory": "./dist/web",
+    "binding": "ASSETS",
+    "run_worker_first": true,
+    "not_found_handling": "single-page-application"
+  },
+  "d1_databases": [
+    {
+      "binding": "COMMUNITY_DB",
+      "database_name": "anevum-creator-v1-staging",
+      "database_id": "fa96e36d-6257-4883-bf15-074947e11a13"
+    },
+    {
+      "binding": "MEMBER_DB",
+      "database_name": "anevum-canonical-member-staging",
+      "database_id": "e1d29049-c83b-4534-8355-dc1fa36ba6d8"
+    }
+  ],
+  "vars": {
+    "ANEVUM_CANONICAL_STAGE_ENABLED": "true",
+    "CANONICAL_SCHEMA_APPROVED": "true",
+    "CANONICAL_EMAIL_ENABLED": "true",
+    "CANONICAL_INVITED_SIGNUP_ENABLED": "false",
+    "CANONICAL_PUBLIC_SIGNUP_ENABLED": "false",
+    "CANONICAL_GOOGLE_ENABLED": "false",
+    "CANONICAL_GITHUB_ENABLED": "false",
+    "CANONICAL_APPLE_ENABLED": "false",
+    "CANONICAL_MICROSOFT_ENABLED": "false"
+  }
+}
