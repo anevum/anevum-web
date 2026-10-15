@@ -41,7 +41,7 @@ jobs:
           node --input-type=module -e '
           import fs from "node:fs";
           const c=JSON.parse(fs.readFileSync("creator-v1/wrangler.creator-v011-review.jsonc","utf8"));
-          if(c.name!=="anevum-v011-visual-review-20261014"||!c.workers_dev||c.preview_urls!==false)throw Error("Unexpected preview host");
+          if(c.name!=="anevum-v011-depth-review-20261014"||!c.workers_dev||c.preview_urls!==false)throw Error("Unexpected preview host");
           if(c.main!=="./web/creator-v011-review-worker.mjs"||c.assets?.binding!=="ASSETS")throw Error("Unexpected public asset source");
           for(const forbidden of ["routes","route","d1_databases","r2_buckets","kv_namespaces","vars","unsafe","services","durable_objects","send_email"]){
             if(Object.hasOwn(c,forbidden))throw Error("Forbidden preview binding: "+forbidden);

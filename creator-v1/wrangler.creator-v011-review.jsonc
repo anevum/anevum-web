@@ -1,6 +1,6 @@
 {
   "$schema": "../node_modules/wrangler/config-schema.json",
-  "name": "anevum-v011-visual-review-20261014",
+  "name": "anevum-v011-depth-review-20261014",
   "main": "./web/creator-v011-review-worker.mjs",
   "compatibility_date": "2026-10-14",
   "workers_dev": true,
