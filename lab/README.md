@@ -45,6 +45,22 @@ This is a **playtest copy**, not a merge or automatic CI deployment of the Fold 
 - **CI:** Static route/source assertions and actual Chromium checks for mobile/desktop RHEN Overview and Cost Lens, including invalid costs and no-source states. This is not an authenticated iPhone Safari acceptance test.
 - **Future:** To run real research jobs and view accurate accounts, provision an independently reviewed, authenticated RHEN successor runtime and per-user data boundaries. Never infer a running backend from green source tests.
 
+
+## RHEN Reserve and RHEN-10-2026-001 (proposed; source update October 15, 2026)
+
+**Source-only update, not deployed:** The Lab branch extends the existing `/projects/rhen/` source-review console with **Reserve** and **$10 Test** tabs. Neither is a financial service, broker integration, real performance dashboard or bank account. The original read-only Overview, Research, Cost Lens and Source panels remain in place. The private Lab home card acknowledges the research proposal.
+
+- **Working product name:** RHEN Reserve (future); existing RHEN research engine stays distinct.
+- **Selected visual reference:** the owner's second Reserve logo concept: quiet orbital R, near-black/navy, cold blue light, champagne titanium and restrained Continuance Institute/Transcosmic typography. It is a *direction*, not a final approved logo file or trademark.
+- **Cash / investments:** Future partner-held bank cash and independently custodied broker investments are separate amounts; no double-counting transfers. Member-controlled consent capsules and protected minimum cash are proposed safeguards. Investment losses are possible, and bank/deposit insurance does not cover market losses.
+- **TPD:** Trading Percentage Daily means measured daily investment return net of applicable trading costs and adjusted for contributions/withdrawals. Negative days must be visible. The +0.10% daily number is an **unvalidated stretch research target** rather than APY, a forecast, or guaranteed interest.
+- **$10 study:** RHEN-10-2026-001 proposes $10.44 initial funding, $10 more on each monthly anniversary, 12 months of recordkeeping and comparisons against cash and a diversified low-cost baseline. Paper-only until a successor runtime, evidence gate, broker authorization and a separate owner funding approval are verified. The read-only interactive compounding calculator models assumed constant returns, not observed RHEN trades.
+- **Security thesis:** independent deterministic policy gate, separate financial custody and withdrawal authority, versioned member permissions, IREN oversight, passkeys, audit/proof ledger and NIST-aligned post-quantum algorithm migration planning. These are **design requirements, not existing Lab protections**.
+- **Revenue caution:** charging $10 per month for software to invest $10 per month overwhelms the nominal first-year capital; show fees and member net outcome instead of manufacturing TPD.
+- **Release gate:** No regulated financial claims, member onboarding, public offers, broker keys, bank connectivity, fund movement or production deploy are authorized by this update.
+
+The source branch update must pass `node --check` for the changed JS modules and `node --test lab/test-worker.mjs` plus Chromium smoke, including tab navigation, negative-rate handling, zero-return baseline, calculation fee sensitivity and absence of actual account data, before another Cloudflare Worker deployment. Keep the existing Access owner allowlist and disabled Worker preview endpoints intact.
+
 ## Reproducible source and provider operations
 
 `lab/worker.mjs`, `lab/fold-snapshot.mjs`, `lab/rhen-snapshot.mjs`, and `lab/rhen-ui.mjs` are the four Worker ES modules. Upload them together via Cloudflare Workers Script API in multipart form, using `worker.mjs` as `main_module`, `fold-snapshot.mjs`, `rhen-snapshot.mjs` and `rhen-ui.mjs` as named imported modules and a pinned compatibility date. This does not need a new Railway service, database or R2 bucket.
