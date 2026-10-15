@@ -12,8 +12,12 @@ test("profile editor visuals are local-only synthetic fixtures",()=>{
  assert.match(fixture,/Path=\/; SameSite=Strict/);
  assert.match(fixture,/if\(u\.pathname==="\/creator\/account\/edit"&&req\.headers\.host==="127\.0\.0\.1:4178"\)/);
  assert.match(fixture,/no member Worker in offline fixture/);
- assert.match(flow,/capture 1440 900 profile-editor \/creator\/account\/edit/);
- assert.match(flow,/capture 390 844 profile-editor \/creator\/account\/edit/);
+ const visual=read("test/capture-sitewide-v012.mjs");
+ assert.match(flow,/Require canonical V012 page captures at desktop and phone widths/);
+ assert.match(flow,/capture-sitewide-v012\\.mjs/);
+ assert.match(visual,/\["member-profile-editor","\/account\/edit"/);
+ assert.match(visual,/\[\[1440,900\],\[1024,768\],\[390,844\],\[320,720\]\]/);
+ assert.match(visual,/SITEWIDE_V012_BROWSER_CAPTURE=PASS/);
  assert.doesNotMatch(read("web/src/App.tsx"),/offline_visual|FAKE_MEMBER/);
  assert.doesNotMatch(read("web/src/lib/member-api.ts"),/offline_visual|FAKE_MEMBER/);
  assert.doesNotMatch(read("web/staging-path-worker.mjs"),/offline_visual|FAKE_MEMBER/);
