@@ -28,7 +28,7 @@ async function main(){
    await sleep(150);
    assert(document.querySelector('#intro')?.hidden,'Fold start button failed');
   }else if(pathname==='/projects/rhen/'){
-   assert(document.querySelectorAll('#rhenTabs button').length===4,'RHEN research navigation missing');
+   assert(document.querySelectorAll('#rhenTabs button').length===6,'RHEN research navigation missing');
    assert(document.body.textContent.includes('RUNTIME OFFLINE'),'Trading runtime misrepresented');
    assert(document.querySelector('.panel[data-view="overview"]')?.hidden===false,'Overview panel not visible');
    assert(document.querySelectorAll('.source-file a').length===5,'Actual pinned source modules missing');
@@ -55,6 +55,25 @@ async function main(){
    assert(document.documentElement.scrollWidth<=innerWidth+1,'RHEN source view overflows horizontally');
    if(new URL(location.href).searchParams.get('scenario')==='cost-lens')replay.click();
    else document.querySelector('[data-tab="overview"]').click();
+ }else if(pathname==='/projects/rhen/currency/'){
+   const get=id=>document.getElementById(id);
+   assert(document.body.textContent.includes('SIMULATION · NO MONETARY VALUE'),'Simulation label missing');
+   const submit=(type,amount)=>{get('operation').value=type;get('amount').value=amount;get('transaction').dispatchEvent(new Event('submit',{cancelable:true,bubbles:true}));};
+   get('approve').click();submit('issue','100.00');get('confirm').click();
+   assert(get('owner').textContent==='100.00'&&get('goal').textContent==='20.00','Issue or automatic allocation failed');
+   get('repeat').click();assert(get('owner').textContent==='100.00','Duplicate issuance changed balance');
+   submit('transfer','90');get('confirm').click();
+   assert(get('status').dataset.error==='true'&&get('owner').textContent==='100.00','Protected goal was spent');
+   submit('transfer','25');get('confirm').click();assert(get('collaborator').textContent==='25.00','Transfer failed');
+   submit('redeem','5');get('revoke').click();get('confirm').click();
+   assert(get('status').textContent.includes('Permissions changed'),'Stale permissions accepted');
+   submit('redeem','5');get('confirm').click();assert(get('supply').textContent==='95.00','Redemption did not burn supply');
+   get('pause').click();submit('issue','10');get('confirm').click();assert(get('status').textContent.includes('paused'),'Paused issuance accepted');
+   get('reconcile').click();get('release').click();
+   assert(get('available').textContent==='70.00','Goal release failed');
+   assert(document.documentElement.scrollWidth<=innerWidth+1,'Currency sandbox overflows width');
+   assert(get('receipts').children.length===8,'Receipt count differs from accepted operations');
+   get('transaction').scrollIntoView({block:'center'});
  }else if(pathname==='/projects/transcosmic'){
    assert(document.body.textContent.includes('Preview not connected'),'Misleading placeholder');
    assert(document.documentElement.scrollWidth<=innerWidth+1,'Project details overflow');

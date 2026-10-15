@@ -4,6 +4,7 @@
 // This Worker also fails closed for requests to a different hostname.
 import {FOLD_SOURCE_SHA,FOLD_ASSETS} from './fold-snapshot.mjs';
 import {RHEN_REVIEW,RHEN_SOURCE} from './rhen-snapshot.mjs';
+import {CURRENCY_ASSETS} from './currency-snapshot.mjs';
 import {renderRhenPage,RHEN_CSS,RHEN_JS} from './rhen-ui.mjs';
 const HOST='lab.anevum.com';
 const VERSION='2026-10-15.lab.v3-rhen-reserve-review';
@@ -59,7 +60,9 @@ export default {async fetch(request){
  if(path==='/'||path==='/projects'||path==='/projects/')res=response(landing());
  else if(path==='/projects/the-fold')res=response(null,'text/plain; charset=utf-8',308,{Location:'/projects/the-fold/'});
  else if(path==='/projects/rhen')res=response(null,'text/plain; charset=utf-8',308,{Location:'/projects/rhen/'});
- else if(path==='/projects/rhen/'||path==='/projects/rhen/index.html')res=response(renderRhenPage());
+ else if(path==='/projects/rhen/'||path==='/projects/rhen/index.html')res=response(renderRhenPage().replace('<nav id="rhenTabs"','<p><a class="back" href="/projects/rhen/currency/">OPEN CURRENCY SANDBOX →</a></p><nav id="rhenTabs"'));
+ else if(path==='/projects/rhen/currency')res=response(null,'text/plain; charset=utf-8',308,{Location:'/projects/rhen/currency/'});
+ else if(Object.prototype.hasOwnProperty.call(CURRENCY_ASSETS,path))res=response(CURRENCY_ASSETS[path],path.endsWith('.css')?'text/css; charset=utf-8':path.endsWith('.mjs')?'text/javascript; charset=utf-8':'text/html; charset=utf-8');
  else if(path==='/projects/rhen/app.css')res=response(RHEN_CSS,'text/css; charset=utf-8');
  else if(path==='/projects/rhen/app.js')res=response(RHEN_JS,'text/javascript; charset=utf-8');
  else if(Object.prototype.hasOwnProperty.call(RHEN_SOURCE,path))res=response(RHEN_SOURCE[path],'text/plain; charset=utf-8');

@@ -96,3 +96,20 @@ Before re-uploading:
 **Not included:** multiplayer or cross-device Fold save, real party invitations, public Creator publication, server-authenticated XP, actual RHEN research execution, brokerage access, or member brokerage workspace integration.
 
 **Related:** [ANEVUM Lab #349](https://github.com/anevum/anevum-web/issues/349), [The Fold PR #7](https://github.com/anevum/family-adventure-book/pull/7).
+
+## Currency sandbox — October 15, 2026
+
+Session: `ANEVUM.RHEN.BUILD.2026-10-15.001.CURRENCY-SANDBOX`.
+
+Source candidate at `/projects/rhen/currency/`, linked from the existing RHEN console. No hosting rollout is included in this change.
+
+- Browser-memory-only demonstration with invented SIM units, simulated 1:1 backing, explicit review/confirmation, transfers to two demonstration recipients, redemption/burn and JSON export.
+- Integer minor-unit ledger enforces nonnegative balances, matching supply/reserves and summed wallet balances. Duplicate request IDs return the original state; conflicting reuse fails. Rejected operations do not modify balances.
+- Versioned, revocable fixed 20% equipment-goal allocation rule; earmarks stay inside the owner's balance. Stale reviewed transfer/redemption requests are rejected following a policy change. Goal funds can be released explicitly.
+- Incident test pauses movement until local reconciliation succeeds. This demonstrates a control flow, not bank/broker reconciliation or actual independent verification.
+- No AI provider, blockchain, public issuance, custody, payment/broker APIs, keys, real deposits, fees, investment returns or persistence. Issuer structure, reserve custody, economic model and legal readiness remain unresolved. Currency name/ticker is not finalized.
+- Editable sources: `lab/currency/`. Run `node lab/build-currency-snapshot.mjs` after edits. Worker imports the generated static asset map. Include `currency-snapshot.mjs` in any future reviewed Worker module upload.
+- Tests: `node --test lab/test-worker.mjs lab/test-currency.mjs`. Existing Chromium runner now covers confirmation, issuance, duplicates, protected earmarks, transfers, stale permission rejection, redemption, incident pause and responsive layouts at 1440, 390 and 320 pixels.
+- Repaired inherited `rhen-ui.mjs` corruption (duplicated module declarations/CSS spliced into the Challenge formatter) that prevented the base branch from importing. Existing Reserve and Challenge content is retained. Added script parsing regression coverage and corrected stale browser assertion from four to six console tabs.
+
+Keep the owner-only Access policy and disabled Worker direct URLs unchanged. Public ANEVUM signup and launch-page work remain separate.

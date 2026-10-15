@@ -50,6 +50,7 @@ async function screenshot(path,width,height,label){
 }
 try{
  for(const [path,w,h,name] of [
+  ['/projects/rhen/currency/',1440,1000,'currency'],['/projects/rhen/currency/',390,844,'currency'],['/projects/rhen/currency/',320,844,'currency'],
   ['/',390,844,'hub'],['/',1440,900,'hub'],
   ['/projects/the-fold/',390,844,'fold'],['/projects/the-fold/',1440,900,'fold'],
   ['/projects/rhen/',390,844,'rhen'],['/projects/rhen/',1440,900,'rhen'],
