@@ -13,7 +13,7 @@ const publicLinks = [
   {label:"Field Notes",to:"/guide",icon:"library"}
 ] as const;
 const memberLinks = [
-  {label:"Profile",to:"/account",icon:"people"},
+  {label:"Profile",to:"/member",icon:"people"},
   {label:"Library",to:"/library",icon:"library"},
   {label:"Rewards",to:"/levels",icon:"star"}
 ] as const;
