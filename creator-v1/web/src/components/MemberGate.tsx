@@ -36,7 +36,7 @@ export function MemberGate(){
     <span className="kicker">CREATOR V1 / CONTROLLED ACCESS</span>
     <h1>YOUR WORKSPACE IS TAKING SHAPE.</h1>
     <p>Member profiles, saved projects and creator submissions are in invited testing. You can explore ANEVUM now; open registration and publishing will follow when they're ready.</p>
-    <div className="member-actions"><Link className="button primary" to="/discover">EXPLORE PUBLISHED WORK</Link><Link className="button secondary" to="/status">BUILD STATUS</Link></div>
+    <div className="member-actions"><Link className="button primary" to="/discover">EXPLORE PUBLISHED WORK</Link><Link className="button secondary" to="/join">MEMBERSHIP STATUS</Link></div>
   </section>;
   if(!session.data.member)return <section className="member-gate">
     <div className="member-gate-mark"><OrbitalMark/></div>
@@ -45,7 +45,7 @@ export function MemberGate(){
     <p>Member accounts are in private staging. A real invitation and verified email are required; public registration is not yet open.</p>
     <div className="member-actions">
       {session.data.health.signupEnabled&&<a className="button primary" href="/api/v1/member/join">INVITED MEMBER SIGN-IN</a>}
-      <Link className="button secondary" to="/discover">EXPLORE AS A GUEST</Link>
+      <Link className="button secondary" to="/discover">EXPLORE AS A GUEST</Link><Link className="button secondary" to="/join">MEMBER STATUS</Link>
     </div>
   </section>;
   const activeMember=confirmedProfile?.id===session.data.member.id

@@ -3,12 +3,11 @@ import assert from "node:assert/strict";
 import {readFileSync,existsSync} from "node:fs";
 import {ATLAS_WORLDS,ATLAS_WORLD_BY_ID,ATLAS_LINKS,ATLAS_MOBILE_LAYOUT} from "../web/src/lib/atlas-worlds.ts";
 const read=path=>readFileSync(new URL("../"+path,import.meta.url),"utf8");
-test("Atlas is lazy-loaded as a full-viewport route, preserving the live homepage and existing Shell",()=>{
- const app=read("web/src/App.tsx"),page=read("web/src/pages/AtlasPage.tsx"),home=read("web/src/pages/HomePage.tsx");
- assert.match(app,/lazy\(\(\) => import\("\.\/pages\/AtlasPage"\)/);
- assert.match(app,/path="atlas"/);
+test("Atlas spatial source is retained but public site uses one unified theme",()=>{
+ const app=read("web/src/App.tsx"),page=read("web/src/pages/AtlasPage.tsx");
+ assert.match(app,/path="atlas\/\*" element={<LegacyAtlasRedirect\/>}/);
  assert.match(app,/<Route element={<Shell\/>}>/);
- assert.match(home,/to="\/atlas"/);
+ assert.doesNotMatch(app,/<AtlasMorphLayout\/>|<AtlasPage\/>/);
  assert.match(page,/className="atlas-universe-viewport"/);
  assert.doesNotMatch(page,/dangerouslySetInnerHTML|<iframe|Math\.random/);
 });
@@ -53,12 +52,12 @@ test("phone layout preserves ten unique tappable positions within bounded horizo
  assert.match(css,/atlas-lattice--mobile/);
  assert.match(page,/ATLAS_MOBILE_LAYOUT\[world\.id\]/);
 });
-test("Atlas is accessible from the existing portal and mobile menu",()=>{
+test("Atlas remains available through the quick launcher without restoring duplicate public menus",()=>{
  const shell=read("web/src/components/Shell.tsx"),nav=read("web/src/lib/portal-destinations.ts");
- const siteNav=read("web/src/lib/site-navigation.ts");
- assert.match(shell,/DRAWER_GROUPS\.map/);
- assert.match(siteNav,/to:"\/atlas"/);
- assert.match(nav,/id:"atlas".*path:"\/atlas"/);
+ assert.match(shell,/PortalLauncher/);
+ assert.match(shell,/aria-keyshortcuts="Control\+K Meta\+K"/);
+ assert.doesNotMatch(nav,/id:"atlas".*path:"\/atlas"/);
+ assert.doesNotMatch(shell,/\["\/atlas","Atlas \/ Spatial Navigation"\]/);
 });
 
 test("Deck search stays in the same full-screen experience and queries the approved catalogue",()=>{

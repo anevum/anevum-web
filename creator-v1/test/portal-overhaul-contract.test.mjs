@@ -17,7 +17,7 @@ test("all public portal routes are real React components, not empty links",()=>{
 test("Orbital Underground visual identity and responsive routes are shared site-wide",()=>{
  const main=read("web/src/main.tsx"),css=read("web/src/portal-overhaul.css"),shell=read("web/src/components/Shell.tsx");
  assert.match(main,/import "\.\/portal-overhaul\.css"/);
- assert.match(read("web/src/lib/site-navigation.ts"),/PRIMARY_NAV/);
+ assert.match(shell,/portalCategories/);
  assert.match(shell,/\/levels/);
  for(const width of ["1200px","900px","640px","340px"]) assert.ok(css.includes(width),width);
  for(const token of ["--portal-iron","--portal-violet","--portal-buzz"])assert.ok(css.includes(token),token);
@@ -42,16 +42,17 @@ test("project pages keep safe external creator-hosted actions and staging-only m
  for(const part of ["safeReturnPath","safeExternal","target=\"_blank\"","noopener noreferrer","RepositoryPanel","MemberEngagementPanel","AI INVOLVEMENT","HUMAN CONTRIBUTION"])assert.ok(page.includes(part),part);
  assert.doesNotMatch(page,/<iframe|dangerouslySetInnerHTML/);
 });
-test("Community is a forum-first, moderated thread hub without fabricated rooms",()=>{
+test("Community is a truthful project-and-creator hub without fabricated threads",()=>{
  const page=read("web/src/pages/CommunityPage.tsx");
- const forum=read("web/src/pages/HotCommunityPosts.tsx");
- assert.match(page,/COMMUNITY CONVERSATIONS ARE UNDER PRIVATE REVIEW/);
- assert.match(page,/Only actual approved posts appear publicly/);
- assert.match(page,/<HotCommunityPosts\/>/);
- assert.match(page,/to="\/community\/write"/);
- assert.match(page,/OPEN BOARDS/);
- assert.match(forum,/readCommunityPosts/);
- assert.doesNotMatch(page,/portal-room-grid|fakeMessage|sampleComments|createThread\(/);
+ assert.match(page,/readProjects/);
+ assert.match(page,/readCreators/);
+ assert.match(page,/readStatus/);
+ assert.match(page,/readCommunityPosts/);
+ assert.match(page,/communityPosts === true/);
+ assert.match(page,/Only independently approved public records/);
+ assert.match(page,/to="\/boards"/);
+ assert.match(page,/Public signup is not enabled/);
+ assert.doesNotMatch(page,/fakeMessage|sampleComments|createThread\(/);
 });
 test("unlimited levels preserve server authoritative progress and first named artifact series",()=>{
  const levels=read("web/src/pages/LevelsPage.tsx");
@@ -67,15 +68,14 @@ test("unlimited levels preserve server authoritative progress and first named ar
 test("member account shows server-verified achievements and unlimited XP without guessed progress",()=>{
  const page=read("web/src/pages/MemberAccountPage.tsx");
  const shell=read("web/src/components/Shell.tsx");
- const nav=read("web/src/lib/site-navigation.ts");
  assert.match(page,/memberCreatorProfile/);
  assert.match(page,/MY ACHIEVEMENT CABINET/);
  assert.match(page,/a\.earned/);
  assert.match(page,/NO FIXED/i);
- assert.match(nav,/to:"\/levels"/);
- assert.match(nav,/to:"\/library"/);
- assert.match(nav,/to:"\/account"/);
- assert.match(page,/CREATOR STUDIO/);
+ assert.match(shell,/to:"\/levels",label:"Artifacts & levels"/);
+ assert.match(shell,/to:"\/library",label:"My library"/);
+ assert.match(shell,/to:"\/account",label:"My profile"/);
+ assert.match(shell,/<dialog ref=\{menuDialog\}/);
  assert.doesNotMatch(shell,/mobile-bottom-nav|const mobileNav/);
 });
 
