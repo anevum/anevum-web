@@ -112,7 +112,7 @@ function IndexPulse({status,state,clock}:{status:Status|null;state:Props["state"
     <p className="av8-pulse-policy">Read-only · Approved public records · No synthetic presence or activity</p>
   </section>;
 }
-export function LiveSignalHero({status,projects,creators,state}:Props){
+export function LiveSignalHero({projects,state}:Pick<Props,"projects"|"state">){
   const recent=sortByPublication(projects).slice(0,4);
   const messages=recent.length?recent.map(p=>"INDEXED / "+p.title):[
     state==="ready"?"AWAITING FIRST APPROVED RELEASE":state==="error"?"PUBLIC INDEX UNAVAILABLE":"CONNECTING TO PUBLIC INDEX"
@@ -164,12 +164,35 @@ export function LiveSignalHero({status,projects,creators,state}:Props){
       </div>
       <div className="av8-orbit-label" aria-hidden="true"><span>CELESTIAL<br/>TRANSMISSION</span><span>∞</span></div>
     </div>
+
+    <div className="av8-signal-bottom"><span>NETWORK / CREATIVE COMMONS</span><a href="#world-gateways">EXPLORE THE PORTALS <Icon name="arrow" size={14}/></a><span>SOURCE // ANEVUM</span></div>
+  </section>;
+}
+
+/** ANEVUM mobile-first: verified index modules follow the primary discovery
+ * portals. No duplicated cards, synthetic projects or extra member API calls.
+ * Reuses exactly the previously approved public-read components. */
+export function LiveSignalModules({status,projects,creators,state}:Props){
+  const [time,setTime]=useState(()=>new Date());
+  useEffect(()=>{
+    const timer=window.setInterval(()=>{
+      if(document.visibilityState==="visible")setTime(new Date());
+    },30000);
+    return()=>window.clearInterval(timer);
+  },[]);
+  return <section className="av11-live-index" aria-labelledby="av11-live-index-heading">
+    <header className="av11-live-index-heading">
+      <div>
+        <span className="av9-overline">CHAPTER 02 / THE VERIFIED INDEX</span>
+        <h2 id="av11-live-index-heading">Signals from <em>the commons.</em></h2>
+      </div>
+      <p>What creators are publishing and discussing, drawn only from approved public records.</p>
+    </header>
     <div className="av8-module-grid">
       <LatestReleases projects={projects} state={state}/>
       <RecentConversations enabled={state==="ready"&&status?.features?.communityPosts===true}/>
       <MakerChannels creators={creators} state={state}/>
       <IndexPulse status={status} state={state} clock={utcClock(time)}/>
     </div>
-    <div className="av8-signal-bottom"><span>NETWORK / CREATIVE COMMONS</span><a href="#community-index">SCROLL TO THE PUBLIC INDEX <Icon name="arrow" size={14}/></a><span>SOURCE // ANEVUM</span></div>
   </section>;
 }

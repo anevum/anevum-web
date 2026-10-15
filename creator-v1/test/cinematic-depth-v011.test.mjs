@@ -63,3 +63,26 @@ test("V011 emissive motion sleeps when hidden, and has static accessible fallbac
   assert.match(css,/av11-depth-foreground/);
   assert.doesNotMatch(css,/overflow-x:hidden|animation:.*infinite.*glare/i);
 });
+
+test("V011 homepage prioritizes cinematic worlds ahead of public status cards",()=>{
+  const home=source("web/src/pages/CinematicLandingPage.tsx");
+  const signal=source("web/src/components/LiveSignalHero.tsx");
+  const deck=source("web/src/components/WorldGatewayDeck.tsx");
+  const entry=home.indexOf("<LiveSignalHero ");
+  const worlds=home.indexOf("<WorldGatewayDeck/>");
+  const index=home.indexOf("<LiveSignalModules");
+  const feed=home.indexOf("<CommunityHomeFeed");
+  assert.ok(entry>=0&&entry<worlds&&worlds<index&&index<feed,
+    "homepage must introduce discovery before dashboard status modules");
+  assert.match(signal,/export function LiveSignalModules/);
+  assert.match(signal,/readCommunityPosts/);
+  assert.match(signal,/LatestReleases projects=/);
+  assert.match(signal,/RecentConversations enabled=/);
+  assert.match(signal,/MakerChannels creators=/);
+  assert.match(signal,/IndexPulse status=/);
+  assert.match(deck,/id="world-gateways"/);
+  assert.match(signal,/href="#world-gateways"/);
+  assert.match(css,/\.av11-live-index-heading/);
+  assert.match(css,/max-width:700px/);
+  assert.doesNotMatch(home,/fakeMember|fakeProject|Math\.random/);
+});
