@@ -53,10 +53,12 @@ test("phone layout preserves ten unique tappable positions within bounded horizo
  assert.match(css,/atlas-lattice--mobile/);
  assert.match(page,/ATLAS_MOBILE_LAYOUT\[world\.id\]/);
 });
-test("Atlas is accessible from the existing portal and mobile menu",()=>{
+test("Atlas remains available through the quick launcher without restoring duplicate public menus",()=>{
  const shell=read("web/src/components/Shell.tsx"),nav=read("web/src/lib/portal-destinations.ts");
- assert.match(shell,/\["\/atlas","Atlas \/ Spatial Navigation"\]/);
+ assert.match(shell,/PortalLauncher/);
+ assert.match(shell,/aria-keyshortcuts="Control\+K Meta\+K"/);
  assert.match(nav,/id:"atlas".*path:"\/atlas"/);
+ assert.doesNotMatch(shell,/\["\/atlas","Atlas \/ Spatial Navigation"\]/);
 });
 
 test("Deck search stays in the same full-screen experience and queries the approved catalogue",()=>{
