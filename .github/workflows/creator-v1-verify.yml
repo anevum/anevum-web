@@ -87,6 +87,14 @@ jobs:
             node --check "$file"
           done
           node --input-type=module -e 'import {Script} from "node:vm"; import {COMMUNITY_CLIENT} from "./creator-v1/auth/community-ui.mjs"; import {VOTE_APP} from "./creator-v1/authoring/vote-moderation-ui.mjs"; import {SOCIAL_CLIENT} from "./creator-v1/auth/social-ui.mjs"; import {PRIVACY_CLIENT} from "./creator-v1/auth/privacy-ui.mjs"; import {PRIVACY_APP} from "./creator-v1/authoring/privacy-queue-ui.mjs"; for (const source of [COMMUNITY_CLIENT,VOTE_APP,SOCIAL_CLIENT,PRIVACY_CLIENT,PRIVACY_APP]) new Script(source);'
+      - name: Bundle canonical member staging Worker without deployment
+        shell: bash
+        run: |
+          set -euo pipefail
+          # This is a compilation-only dry run: never uploads a script,
+          # provisions a Cloudflare binding, or modifies a live route.
+          npx wrangler deploy --dry-run --config creator-v1/wrangler.a-staging.jsonc --outdir evidence/phase1-worker-dryrun 2>&1 | tee evidence/phase1-worker-bundle.log
+          echo 'PHASE1_STAGING_WORKER_DRYRUN=PASS; DEPLOYMENT=NOT_AUTHORIZED'
       - name: Verify Better Auth canonical invited onboarding and member-world isolation
         shell: bash
         run: |
