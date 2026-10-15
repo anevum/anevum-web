@@ -36,7 +36,7 @@ test("V010 preserves original master images, brand, and data access",()=>{
 });
 test("V010 installer locks V004 provenance and never bulk-promotes optional art",()=>{
  assert.match(importer,/EXPECTED_ZIP_SHA256/);
- assert.match(importer,/assets-optional\/\+relative/);
+ assert.match(importer,/key="assets-optional\/"\+relative/);
  assert.match(importer,/checksums\.get\(key\)/);
  assert.match(importer,/source_kind/);
  assert.doesNotMatch(importer,/production\/creator-v1|anevum\.com|wrangler deploy/);
