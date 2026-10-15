@@ -88,7 +88,9 @@ test("V011 retains V010 featured-award editor, protected routes and both join en
  const hub=read("web/src/pages/CommunityPage.tsx"),entry=read("web/src/pages/JoinPage.tsx");
  const shell=read("web/src/components/Shell.tsx"),styles=read("web/src/join-page.css");
  const worker=read("web/production-worker.mjs");
+ assert.match(app,/path="join" element={<Phase1JoinPage\/>}/);
  assert.match(app,/path="join" element={<JoinPage\/>}/);
+ assert.match(app,/path="member" element={<Phase1MemberPage\/>}/);
  assert.match(app,/path="sign-in" element={<Navigate to="\/join" replace\/>}/);
  assert.match(app,/path="sign-in" element={<Navigate to="\/atlas\/join" replace\/>}/);
  assert.match(gate,/!activeMember\.handle/);
