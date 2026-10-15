@@ -2,8 +2,8 @@
 // Only the staging public D1 is bound. All member/admin/broker APIs fail closed.
 // Independent from the January 1 apex construction Worker and next.anevum.com auth.
 import publicApi from "../api/worker.mjs";
-import {memberEndpoint} from "../../../src/server/member.mjs";
-import {canonicalBetaConfigured,canonicalPublicCreator} from "../../../src/server/canonical-creator-profile.mjs";
+import {memberEndpoint} from "../../src/server/member.mjs";
+import {canonicalBetaConfigured,canonicalPublicCreator} from "../../src/server/canonical-creator-profile.mjs";
 
 const SITE = "a.anevum.com";
 const PUBLISHED = /^\/api\/v1\/(?:status|categories|boards|community\/posts(?:\/[a-f0-9]{32})?|community\/showcases|projects(?:\/[A-Za-z0-9_-]+(?:\/repository)?)?|creators(?:\/[a-z][a-z0-9_]{2,29})?)$/i;
