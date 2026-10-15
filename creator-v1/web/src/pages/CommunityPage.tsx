@@ -159,7 +159,7 @@ export function CommunityPage() {
   return <div className="ch7-hub">
     <section className="ch7-hero" aria-labelledby="ch7-hero-title">
       <div className="ch7-hero-art" aria-hidden="true"><CosmicArtwork scene="creative"/></div>
-      <div className="ch7-hero-copy"><span className="ch7-kicker">ANEVUM / COMMUNITY / THE COMMONS</span>
+      <div className="ch7-hero-copy"><span className="ch7-kicker">ANEVUM / COMMUNITY / PUBLIC DISCUSSIONS</span>
         <h1 id="ch7-hero-title">Made by people.<br/><em>Better together.</em></h1>
         <p>A gathering place for independent games, art, useful software, ideas and the people who make them. Discover something worth exploring. Help something new take shape.</p>
         <div className="ch7-hero-actions"><Link className="ch7-button ch7-button-primary" to="/discover">EXPLORE THE WORK <Icon name="arrow" size={15}/></Link>
@@ -181,7 +181,7 @@ export function CommunityPage() {
       <Link to="/levels"><Icon name="star" size={19}/><span><strong>RECOGNITION</strong><small>Progress earned fairly</small></span><Icon name="arrow" size={15}/></Link>
     </nav>
 
-    <header className="ch7-section-header"><div><span className="ch7-kicker">ANEVUM / OPEN PUBLIC INDEX</span><h2>Inside the <em>commons.</em></h2></div>
+    <header className="ch7-section-header"><div><span className="ch7-kicker">ANEVUM / OPEN PUBLIC INDEX</span><h2>Inside the <em>community.</em></h2></div>
       <p>Real approved projects, genuine creators and independently moderated discussion. Anything private or still awaiting review stays private.</p>
     </header>
 
@@ -222,7 +222,7 @@ export function CommunityPage() {
             <ConversationEntry key={entry.id} item={entry.value}/>)}
         </div>)}
         {!loading && !failed && (view === "people" ? creatorItems.length === 0 : entries.length === 0) && <div className="ch7-empty" role="status">
-          <span className="ch7-kicker">THE COMMONS / PUBLIC RECORD</span>
+          <span className="ch7-kicker">COMMUNITY / PUBLIC RECORD</span>
           <h3>{view === "conversations" && !enabled ? "Conversations are in private testing." :
             view === "people" && creatorQuery ? "No public creators match that search." : "The first chapter is still being written."}</h3>
           <p>{view === "conversations" && !enabled
@@ -264,7 +264,7 @@ export function CommunityPage() {
           <Link className="ch7-panel-link" to="/start">START HERE <Icon name="arrow" size={14}/></Link>
           <Link className="ch7-panel-link" to="/levels">LEVELS & RECOGNITION <Icon name="arrow" size={14}/></Link>
         </section>
-        <section className="ch7-values"><span className="ch7-kicker">A NOTE FROM THE COMMONS</span>
+        <section className="ch7-values"><span className="ch7-kicker">A NOTE FROM ANEVUM</span>
           <h3>Make the next thing better.</h3>
           <p>Give useful feedback. Credit the people behind the work. Keep participation accessible. Earn recognition through genuine contribution, never payment.</p>
         </section>
