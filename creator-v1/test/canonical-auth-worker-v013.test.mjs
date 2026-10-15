@@ -283,6 +283,8 @@ test("OAuth login accepts only bounded Google provider and fixed on-site callbac
   assert.equal(res.status,400,JSON.stringify(payload));
   assert.equal(calls.length,before);
  }
+ const unavailable=await stage.fetch(post("/api/v1/member/auth/sign-in/social",{provider:"github"}),env(true));
+ assert.equal(unavailable.status,503);
  const tooLarge="x".repeat(700);
  assert.equal((await stage.fetch(post("/api/v1/member/auth/sign-in/social",tooLarge),env(true))).status,400);
 });
