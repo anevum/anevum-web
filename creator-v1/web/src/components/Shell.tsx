@@ -6,6 +6,7 @@ import { Icon } from "./Icons";
 import { PortalLauncher } from "./PortalLauncher";
 import {VisualKitAtmosphere,publicVisualRoom} from "./VisualKit";
 import { isEditableTarget } from "../lib/portal-destinations";
+import { canonicalAuthClient } from "../lib/canonical-beta";
 
 /** ANEVUM V009 — one public navigation system across every Creator V1 page.
  * This component is presentation only. Private routes remain MemberGate-owned;
@@ -28,11 +29,14 @@ const directory = [
   {to:"/levels",label:"Artifacts & levels",detail:"Earned contributions and recognition"},
   {to:"/create",label:"Creator Studio",detail:"Invited member publishing"},
   {to:"/library",label:"My library",detail:"Your saved work, when signed in"},
-  {to:"/account",label:"My profile",detail:"Private member controls"},
+  {to:"/member",label:"My profile",detail:"Your verified account and public profile settings"},
   {to:"/join",label:"Join ANEVUM",detail:"Registration availability and private profile"}
 ] as const;
 
 export function Shell(){
+  const {data:canonicalSession}=canonicalAuthClient.useSession();
+  const canonicalMember=Boolean(canonicalSession?.user?.id&&canonicalSession.user.emailVerified===true);
+  const memberDestination=canonicalMember?"/member":"/join";
   const navigate=useNavigate();
   const location=useLocation();
   const [query,setQuery]=useState("");
@@ -95,8 +99,8 @@ export function Shell(){
         <div className="av9-header-actions">
           <button type="button" className="av9-search-mobile" onClick={()=>setLauncherOpen(true)}
             aria-label="Open quick navigation" aria-keyshortcuts="Control+K Meta+K"><Icon name="search" size={20}/></button>
-          <Link to="/create" className="header-create av9-create"><Icon name="create" size={17}/><span>Share work</span></Link>
-          <Link to="/account" className="cw-account-link av9-account" aria-label="Member account; sign-in availability depends on invitation"><Icon name="people" size={20}/></Link>
+          <Link to={memberDestination} className="header-create av9-create"><Icon name={canonicalMember?"people":"create"} size={17}/><span>{canonicalMember?"My space":"Join"}</span></Link>
+          <Link to={memberDestination} className="cw-account-link av9-account" aria-label={canonicalMember?"Open my verified member account":"Join ANEVUM or sign in"}><Icon name="people" size={20}/></Link>
           <button ref={menuButton} className="menu-button av9-menu-trigger" type="button"
             aria-label={menuOpen ? "Close site navigation" : "Open site navigation"}
             aria-haspopup="dialog" aria-expanded={menuOpen} aria-controls="av9-navigation"

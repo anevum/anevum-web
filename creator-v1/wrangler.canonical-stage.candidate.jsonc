@@ -1,0 +1,19 @@
+{
+  "$schema": "../node_modules/wrangler/config-schema.json",
+  "name": "anevum-canonical-member-staging",
+  "main": "./canonical-auth/worker.mjs",
+  "compatibility_date": "2026-10-14",
+  "compatibility_flags": [
+    "nodejs_compat"
+  ],
+  "workers_dev": false,
+  "preview_urls": false,
+  "routes": [],
+  "vars": {
+    "ANEVUM_CANONICAL_STAGE_ENABLED": "false",
+    "CANONICAL_SCHEMA_APPROVED": "false",
+    "CANONICAL_GOOGLE_ENABLED": "false",
+    "CANONICAL_INVITED_SIGNUP_ENABLED": "false",
+    "CANONICAL_EMAIL_ENABLED": "false"
+  }
+}

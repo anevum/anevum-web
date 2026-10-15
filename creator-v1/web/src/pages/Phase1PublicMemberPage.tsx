@@ -1,5 +1,5 @@
 import {Link,useParams} from "react-router-dom";
-import {canonicalPublic,type CanonicalPublicResponse} from "../lib/canonical-beta";
+import {canonicalPublic,FOCUS_OPTIONS,type CanonicalPublicResponse} from "../lib/canonical-beta";
 import {useResource} from "../lib/useResource";
 import {OrbitalMark} from "../components/OrbitalMark";
 
@@ -13,7 +13,7 @@ export function Phase1PublicMemberPage(){
  const profile=useResource(async signal=>valid?canonicalPublic(handle,signal):Promise.resolve(null),[handle]);
  const data:CanonicalPublicResponse["profile"]|null=
    valid&&profile.state==="ready"?profile.data?.profile||null:null;
- return <section className="av12-public-world" aria-labelledby="av12-world-heading">
+ return <section className={"av12-public-world av18-world-"+(data?.worldTheme||"continuance")} aria-labelledby="av12-world-heading">
    <div className="av12-public-atmosphere" aria-hidden="true"/>
    <span className="kicker">ANEVUM / MEMBER WORLD</span>
    {profile.state==="loading"&&valid?<p role="status">Finding this member’s public world…</p>:
@@ -22,7 +22,11 @@ export function Phase1PublicMemberPage(){
       <p className="av12-world-eyebrow">THIS WORLD WAS OPENED BY</p>
       <h1 id="av12-world-heading">{data.displayName}</h1>
       <p className="av12-world-handle">@{data.handle}</p>
+      {data.headline&&<p className="av18-public-headline">{data.headline}</p>}
       <p className="av12-world-bio">{data.bio||"This member has not written an introduction yet."}</p>
+      {data.focus.length>0&&<div className="av18-public-focus" aria-label="Creative interests">
+        {data.focus.map(item=><span key={item}>{FOCUS_OPTIONS.find(option=>option.id===item)?.label}</span>)}
+      </div>}
       <div className="av12-world-sections">
         <section><span className="kicker">CURRENT EXHIBIT / 01</span><h2>THE BEGINNING.</h2>
           <p>This is this member’s verified, voluntarily public introduction.

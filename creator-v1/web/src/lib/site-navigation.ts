@@ -15,7 +15,7 @@ export const PRIMARY_NAV:readonly SiteLink[]=[
   {key:"home",label:"Home",to:"/",icon:"home",detail:"Community dashboard"},
   {key:"discover",label:"Discover",to:"/discover",icon:"explore",detail:"Creations and creator channels"},
   {key:"community",label:"Community",to:"/community",icon:"community",detail:"Public conversations and project forums"},
-  {key:"account",label:"Account",to:"/account",icon:"people",detail:"Your private dashboard and tools"}
+  {key:"account",label:"Account",to:"/member",icon:"people",detail:"Your verified identity and personal world"}
 ];
 
 export const DISCOVERY_NAV:readonly SiteLink[]=[
@@ -27,7 +27,7 @@ export const DISCOVERY_NAV:readonly SiteLink[]=[
 export const MEMBER_NAV:readonly SiteLink[]=[
   {key:"studio",label:"Creator Studio",to:"/account/studio",icon:"create",detail:"Private projects and moderated submissions"},
   {key:"library",label:"Saved Library",to:"/library",icon:"library",detail:"Your saved, approved creations"},
-  {key:"profile",label:"Profile Settings",to:"/account/edit",icon:"people",detail:"Your creator identity"}
+  {key:"profile",label:"Profile Settings",to:"/member",icon:"people",detail:"Your verified member profile, handle and visibility"}
 ];
 
 export const SUPPORT_NAV:readonly SiteLink[]=[
@@ -40,7 +40,7 @@ export const SUPPORT_NAV:readonly SiteLink[]=[
 // privacy-reviewed and deployed. Their proposed contract lives in build docs.
 export function isSiteLinkSelected(pathname:string,to:string):boolean{
   if(to==="/")return pathname==="/";
-  if(to==="/account")return pathname==="/account";
+  if(to==="/member")return pathname==="/member"||pathname==="/member/setup";
   if(to==="/account/studio")return pathname==="/account/studio"||pathname==="/create"||pathname.startsWith("/create/");
   if(to==="/discover")return pathname==="/discover";
   return pathname===to;
