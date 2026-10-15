@@ -130,7 +130,16 @@ try{
      join.availableButtons!==0||join.overflow)
    throw Error("PHASE1_INVITE_FAIL_CLOSED_"+width+": "+JSON.stringify(join));
   await photo("phase1-invited-join-closed",width);
-  await visit("/creator/@unlisted_member","!!document.querySelector('.av12-public-world')");
+  await visit("/creator/@unlisted_member","true");
+  const routeEvidence=await evalPage(`({
+   pathname:location.pathname,
+   routeHeading:document.querySelector('h1')?.textContent,
+   publicWorld:!!document.querySelector('.av12-public-world'),
+   snippet:document.querySelector('main')?.textContent?.slice(0,360),
+   routeError:document.querySelector('[role="alert"]')?.textContent?.slice(0,160)
+  })`);
+  if(!routeEvidence.publicWorld)
+   throw Error("PHASE1_MEMBER_ROUTE_NOT_MATCHED_"+width+": "+JSON.stringify(routeEvidence));
   await until(()=>evalPage("document.querySelector('#av12-world-heading')?.textContent.includes('PRIVATE WORLD')"));
   const publicWorld=await evalPage(`({
     private:document.querySelector('#av12-world-heading')?.textContent.includes("PRIVATE WORLD"),
