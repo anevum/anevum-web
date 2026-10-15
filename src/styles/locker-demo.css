@@ -1,0 +1,51 @@
+.locker-demo {
+  box-sizing: border-box;
+  color: #e8edf6;
+  border: 1px solid rgba(175, 192, 224, .25);
+  border-radius: 26px;
+  padding: clamp(18px, 3.8vw, 38px);
+  background: radial-gradient(ellipse at 85% -20%, rgba(69, 89, 134, .45), transparent 54%),
+    radial-gradient(ellipse at -15% 90%, rgba(32, 84, 93, .26), transparent 60%),
+    linear-gradient(145deg, #101723, #0a101a);
+  font-family: inherit;
+  max-width: 1120px;
+  margin: 0 auto;
+  line-height: 1.55;
+}
+.locker-demo * { box-sizing: border-box; }
+.locker-demo a { color: #b7e6dc; }
+.locker-demo h1, .locker-demo h2, .locker-demo h3 { color: #f5f6f6; margin: 0; line-height: 1.24; }
+.locker-demo p { color: #c2cfdf; margin: 8px 0 0; }
+.locker-demo .locker-eyebrow { color: #b3dacc; letter-spacing: .18em; text-transform: uppercase; font-size: .7rem; font-weight: 700; }
+.locker-demo .locker-topline { display: flex; align-items: start; justify-content: space-between; gap: 20px; flex-wrap: wrap; }
+.locker-demo h1 { font-size: clamp(2rem, 5vw, 3.8rem); font-weight: 650; letter-spacing: -.045em; margin-top: 12px; }
+.locker-demo .locker-subtitle { max-width: 66ch; font-size: 1rem; }
+.locker-demo .locker-pill { border: 1px solid #8ca3a6; border-radius: 100px; padding: 6px 12px; font-size: .72rem; color: #d3e5e4; letter-spacing: .07em; white-space: nowrap; }
+.locker-demo .locker-warning { border: 1px solid #826f4b; background: rgba(127, 101, 53, .13); color: #f6e2bd; border-radius: 14px; padding: 12px 16px; margin-top: 24px; font-size: .88rem; }
+.locker-demo .locker-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 16px; margin-top: 24px; }
+.locker-demo .locker-balance { border: 1px solid rgba(163, 185, 214, .23); border-radius: 20px; padding: 22px; background: rgba(255, 255, 255, .035); }
+.locker-demo .locker-balance span { display: block; font-size: .74rem; color: #b6c7d9; text-transform: uppercase; letter-spacing: .09em; }
+.locker-demo .locker-balance strong { font-size: clamp(1.5rem, 3.4vw, 2.4rem); font-weight: 500; display: block; letter-spacing: -.035em; margin-top: 8px; font-variant-numeric: tabular-nums; }
+.locker-demo .locker-balance small { display: block; color: #b6c7d9; margin-top: 8px; }
+.locker-demo .locker-panel { margin-top: 22px; border: 1px solid rgba(163, 185, 214, .19); border-radius: 20px; padding: 22px; }
+.locker-demo .locker-panel h2 { font-size: 1.2rem; }
+.locker-demo .locker-input-row { display: flex; align-items: center; gap: 12px; margin-top: 14px; }
+.locker-demo label { display: block; color: #d6e2ef; font-weight: 600; font-size: .89rem; margin-top: 16px; }
+.locker-demo input { width: 100%; min-width: 0; background: #151e2c; border: 1px solid #607283; color: #fff; padding: 12px 14px; border-radius: 12px; font-size: 1rem; }
+.locker-demo button { font: inherit; font-size: .88rem; font-weight: 650; cursor: pointer; border-radius: 13px; border: 1px solid rgba(169, 228, 213, .7); padding: 11px 15px; color: #09201f; background: #a9e4d4; }
+.locker-demo button.secondary { background: transparent; color: #d2e8e5; }
+.locker-demo button:focus-visible, .locker-demo input:focus-visible { outline: 3px solid #d5f5e7; outline-offset: 3px; }
+.locker-demo .locker-buttons { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
+.locker-demo .locker-error { color: #ffbdbd; }
+.locker-demo .locker-metrics { display: flex; flex-wrap: wrap; gap: 14px 26px; margin-top: 18px; color: #b9d4cb; font-size: .83rem; }
+.locker-demo .locker-metrics b { color: #e7f8ee; }
+.locker-demo .locker-history { list-style: none; padding: 0; margin: 14px 0 0; }
+.locker-demo .locker-history li { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 7px 16px; padding: 11px 0; border-top: 1px solid rgba(150, 171, 202, .18); }
+.locker-demo .locker-history small { color: #a6c3ba; display: block; }
+.locker-demo .locker-history strong { font-variant-numeric: tabular-nums; }
+.locker-demo .locker-foot { border-top: 1px solid rgba(150, 171, 202, .19); margin-top: 26px; padding-top: 17px; font-size: .83rem; }
+@media (max-width: 650px) {
+  .locker-demo .locker-grid { grid-template-columns: 1fr; }
+  .locker-demo .locker-panel { padding: 16px; }
+  .locker-demo .locker-input-row { display: block; }
+}
