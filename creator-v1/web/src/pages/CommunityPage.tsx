@@ -1,6 +1,7 @@
 import {Link} from "react-router-dom";
 import {PortalHeading} from "../components/PortalHeading";
 import {LevelPanel} from "../components/LevelPanel";
+import {CosmicArtwork} from "../components/CosmicArtwork";
 import {HotCommunityPosts} from "./HotCommunityPosts";
 import "./community-network.css";
 
@@ -27,7 +28,7 @@ export function CommunityPage(){
       <Link to="/community/write">SUBMIT FOR REVIEW ↗</Link>
     </div>
     <div className="portal-layout">
-      <main className="portal-main" aria-label="Public community conversations">
+      <section className="portal-main" aria-label="Public community conversations">
         <HotCommunityPosts/>
         <section className="portal-box cnb-home-bridge" aria-labelledby="community-public-boards">
           <header className="portal-box-header">
@@ -53,7 +54,7 @@ export function CommunityPage(){
             <Link to="/guide">COMMUNITY GUIDELINES ↗</Link>
           </div>
         </section>
-      </main>
+      </section>
       <aside className="portal-sidebar">
         <LevelPanel compact/>
         <section className="portal-sidebox"><span className="kicker">THE RULES / COMMUNITY CULTURE</span><h2>HELP EACH OTHER MAKE BETTER THINGS.</h2>
@@ -64,7 +65,7 @@ export function CommunityPage(){
             <p><strong>EARN RESPECT.</strong> XP never purchases authority or stronger votes.</p>
           </div>
         </section>
-        <section className="portal-sidebox"><span className="kicker">PRIVATE COLLABORATION / FUTURE</span>
+        <section className="portal-sidebox"><div className="cw-room-world" aria-hidden="true"><CosmicArtwork scene="creative"/></div><span className="kicker">PRIVATE COLLABORATION / FUTURE</span>
           <h2>BUILD WITH OTHER CREATORS.</h2>
           <p>Invite-only project rooms, private messages and shared files require separate security, consent, moderation and storage acceptance. They are not publicly available yet.</p>
           <Link to="/status" className="portal-sidebox-link">WHAT IS READY →</Link>
