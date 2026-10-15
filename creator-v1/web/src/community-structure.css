@@ -1,0 +1,50 @@
+/* ANEVUM V1 IA only: reuse current cinematic tokens, art and tactile controls. */
+.site-shell .menu-button{
+  display:inline-flex;align-items:center;justify-content:center;flex:0 0 42px;
+  width:42px;height:42px;border:1px solid var(--line,#49506b);
+  border-radius:13px;background:var(--panel,#101526);color:inherit;
+}
+.site-shell .menu-button:hover{border-color:currentColor}
+.site-shell .mobile-drawer{
+  position:fixed;top:72px;right:12px;left:auto;
+  width:min(340px,calc(100vw - 24px));max-height:calc(100dvh - 84px);
+  overflow-y:auto;padding:9px;border-radius:18px;
+  background:var(--panel,#101526);border:1px solid var(--line,#535a88);
+  box-shadow:0 22px 60px #000a;z-index:90;
+}
+.site-shell .mobile-drawer .nav-drawer-heading{
+  display:block;padding:10px 12px 5px;font-size:10px;
+  letter-spacing:.13em;font-weight:800;text-transform:uppercase;
+  color:var(--bone-dim,#b7afa6);
+}
+.site-shell .mobile-drawer .nav-drawer-group+ .nav-drawer-group{
+  border-top:1px solid var(--line-soft,#282427);margin-top:8px;padding-top:5px;
+}
+.site-shell .mobile-drawer .nav-drawer-entry{
+  display:flex;align-items:center;gap:10px;min-height:44px;padding:10px 12px;
+  border:0;border-radius:11px;color:inherit;text-decoration:none;
+  font-weight:700;letter-spacing:.02em;text-transform:none;font-size:13px;
+}
+.site-shell .mobile-drawer .nav-drawer-entry small{
+  display:block;line-height:1.35;font-size:11px;letter-spacing:0;
+  font-weight:400;color:var(--bone-dim,#b7afa6);
+}
+.site-shell .mobile-drawer .nav-drawer-entry[aria-current="page"]{
+  background:rgba(180,150,220,.14);
+}
+.site-shell .mobile-drawer .nav-drawer-entry:focus-visible{
+  outline:2px solid currentColor;outline-offset:2px;
+}
+.site-shell .mobile-drawer .nav-drawer-footer{
+  margin-top:9px;padding:9px 12px 5px;
+  color:var(--bone-dim,#b7afa6);font-size:11px;line-height:1.5;
+}
+.site-shell .member-account-hub .member-actions{gap:10px;flex-wrap:wrap}
+.site-shell .member-account-hub .member-account-hub-note{margin-top:14px}
+@media(max-width:640px){
+  .site-shell .mobile-drawer{top:59px;max-height:calc(100dvh - 68px)}
+  .site-shell .menu-button{flex-basis:42px;min-width:42px}
+}
+@media(prefers-reduced-motion:reduce){
+  .site-shell .mobile-drawer *{scroll-behavior:auto!important}
+}
