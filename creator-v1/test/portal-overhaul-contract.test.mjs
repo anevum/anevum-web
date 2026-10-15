@@ -74,7 +74,8 @@ test("member account shows server-verified achievements and unlimited XP without
  assert.match(page,/NO FIXED/i);
  assert.match(shell,/to:"\/levels",label:"Artifacts & levels"/);
  assert.match(shell,/to:"\/library",label:"My library"/);
- assert.match(shell,/to:"\/account",label:"My profile"/);
+ assert.match(shell,/to:"\/member",label:"My profile"/);
+ assert.match(read("web/src/App.tsx"),/path="account" element={<MemberAccountPage\/>}/);
  assert.match(shell,/<dialog ref=\{menuDialog\}/);
  assert.doesNotMatch(shell,/mobile-bottom-nav|const mobileNav/);
 });
