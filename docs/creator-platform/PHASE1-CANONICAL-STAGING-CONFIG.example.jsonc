@@ -1,0 +1,42 @@
+{
+  // REVIEW TEMPLATE ONLY. NOT deployable until provisioned and authorized.
+  // The deployed a.anevum.com V006 Worker and its wrangler.a-staging.jsonc
+  // are unchanged. Do NOT route production or share RHEN/owner D1.
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "anevum-creator-phase1-review-UNDEPLOYED",
+  "main": "../../creator-v1/web/a-staging-worker.mjs",
+  "compatibility_date": "2026-10-14",
+  "workers_dev": false,
+  "preview_urls": false,
+  "assets": {
+    "directory": "../../creator-v1/dist/web",
+    "binding": "ASSETS",
+    "run_worker_first": true,
+    "not_found_handling": "single-page-application"
+  },
+  "d1_databases": [
+    {
+      "binding": "COMMUNITY_DB",
+      "database_name": "anevum-creator-v1-staging",
+      "database_id": "fa96e36d-6257-4883-bf15-074947e11a13"
+    },
+    {
+      "binding": "MEMBER_DB",
+      "database_name": "NEW-ISOLATED-ANE VUM-PHASE1-BETA-D1-REQUIRED",
+      "database_id": "REPLACE-WITH-NEW-STAGING-BETTER-AUTH-D1-ID"
+    }
+  ],
+  "vars": {
+    "ANEVUM_MEMBERS_ENABLED": "false",
+    "ANEVUM_MEMBER_PREVIEW_ENABLED": "false",
+    "MEMBER_PREVIEW_ORIGIN": "https://a.anevum.com",
+    "ANEVUM_PHASE1_CREATOR_ENABLED": "false",
+    "ANEVUM_PHASE1_INVITE_ONLY": "false"
+  }
+  // Operator-provisioned secrets ONLY after written release approval:
+  // BETTER_AUTH_SECRET, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET,
+  // ANEVUM_PHASE1_INVITE_EMAILS. Never put values in GitHub.
+  // Google callback must match the same origin:
+  // https://a.anevum.com/api/auth/callback/google
+  // No routes/custom_domains configured: template MUST NOT replace a.anevum.com.
+}
