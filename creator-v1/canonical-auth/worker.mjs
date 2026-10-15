@@ -123,15 +123,15 @@ export function createCanonicalStageWorker({authFactory=createCanonicalAuth}={})
     if(path===HEALTH)return safeJson(request,{
       service:"anevum-canonical-auth-staging",
       status:stageReady?"ready":"closed",
-      registration:stageReady&&configured.invited?"invite-only":"closed",
+      registration:stageReady?(configured.open?"open":configured.invited?"invite-only":"closed"):"closed",
       linkedCreatorAccounts:false
     });
     if(path===METHODS)return safeJson(request,{
       version:2,
       issuer:"anevum-better-auth-staging-v1",
-      registration:stageReady&&configured.invited?"invite-only":"closed",
+      registration:stageReady?(configured.open?"open":configured.invited?"invite-only":"closed"):"closed",
       methods:{google:{available:Boolean(stageReady&&configured.google)},
-        email:{available:Boolean(stageReady&&configured.email&&configured.invited)},
+        email:{available:Boolean(stageReady&&configured.email&&(configured.invited||configured.open))},
         github:{available:false},passkey:{available:false},
         microsoft:{available:false},apple:{available:false}},
       linking:"disabled"
@@ -155,7 +155,7 @@ export function createCanonicalStageWorker({authFactory=createCanonicalAuth}={})
       if(url.search)return safeJson(request,{error:"Invalid request"},400);
       if(path===CANONICAL_AUTH_PATH+"/email-otp/send-verification-otp"||
         path===CANONICAL_AUTH_PATH+"/sign-in/email-otp"){
-        if(!configured.email||!configured.invited)return fail(request,503);
+        if(!configured.email||!(configured.invited||configured.open))return fail(request,503);
         const verifying=path.endsWith("/sign-in/email-otp");
         const safeBody=await boundedEmailBody(clean,verifying);
         if(!safeBody)return safeJson(request,{error:"Invalid email verification request"},400);
