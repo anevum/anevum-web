@@ -72,3 +72,27 @@ test('sandbox routes keep private host, method, no-store and noindex boundaries'
  }
  assert.match(await (await worker.fetch(new Request('https://lab.anevum.com/projects/rhen/'))).text(),/OPEN CURRENCY SANDBOX/);
 });
+test('custom goal percentage rounds down and new policy affects future receipts only',()=>{
+ let s=execute(funded(),req('policy',{goalPercent:37,perTransferLimit:100,sessionTransferLimit:200}));
+ assert.equal(s.goal,0);s=execute(s,req('issue',{amount:101}));assert.equal(s.goal,37);
+ for(const goalPercent of [-1,101,NaN,0.5])assert.throws(()=>execute(s,req('policy',{goalPercent})),/percentage/);
+ for(const perTransferLimit of [0,-1,Infinity,1.1])assert.throws(()=>execute(s,req('policy',{perTransferLimit})));
+});
+test('per-transfer and cumulative limits survive editing, retry and allocation revocation',()=>{
+ let s=execute(funded(),req('policy',{goalPercent:0,perTransferLimit:1000,sessionTransferLimit:1500}));
+ const payment=req('transfer',{amount:1000,recipient:'merchant',policyVersion:1});
+ s=execute(s,payment);assert.equal(execute(s,payment).transferred,1000);
+ assert.throws(()=>execute(s,req('transfer',{amount:501,recipient:'merchant',policyVersion:1})),/payment limit/);
+ s=execute(s,req('policy',{perTransferLimit:1200,sessionTransferLimit:1500}));
+ assert.equal(s.transferred,1000);s=execute(s,req('revoke'));
+ assert.throws(()=>execute(s,req('transfer',{amount:501,recipient:'merchant',policyVersion:3})),/payment limit/);
+ // Spending ceilings never prevent redeeming available owner units.
+ s=execute(s,req('redeem',{amount:9000,policyVersion:3}));assert.equal(s.balances.owner,0);
+});
+test('policy content participates in duplicate identity and stale reviews fail',()=>{
+ let s=funded();const r=req('policy',{goalPercent:10,policyVersion:0});s=execute(s,r);
+ assert.equal(execute(s,r),s);
+ assert.throws(()=>execute(s,{...r,goalPercent:20}),/different operation/);
+ assert.throws(()=>execute(s,req('policy',{policyVersion:0,goalPercent:20})),/Permissions changed/);
+ assert.throws(()=>execute(s,req('issue',{policyVersion:0,amount:100})),/Permissions changed/);
+});

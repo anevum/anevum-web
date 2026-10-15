@@ -113,3 +113,9 @@ Source candidate at `/projects/rhen/currency/`, linked from the existing RHEN co
 - Repaired inherited `rhen-ui.mjs` corruption (duplicated module declarations/CSS spliced into the Challenge formatter) that prevented the base branch from importing. Existing Reserve and Challenge content is retained. Added script parsing regression coverage and corrected stale browser assertion from four to six console tabs.
 
 Keep the owner-only Access policy and disabled Worker direct URLs unchanged. Public ANEVUM signup and launch-page work remain separate.
+
+### Currency permissions editor — October 15, 2026
+
+The sandbox now supports a reviewed 0–100% equipment allocation, a per-transfer ceiling, and a cumulative session transfer ceiling. Policy approval itself uses the review/confirmation screen. Editing or revoking automatic allocation does not reset prior session spending; payment ceilings remain applicable. Redemption is independent of transfer ceilings. Goal funds still require explicit release before redemption. Rejected model instructions are shown separately and included in the simulation export; they never alter the accounting ledger. Invalid amount edits clear a previous unconfirmed instruction. UI terminology remains fixed-rule automation rather than AI execution.
+
+Validation: 22 local tests. Additional Chromium coverage exercises custom allocation, per-transfer rejection, cumulative cap rejection, receipt/rejection history and mobile overflow. No hosted rollout or real currency issuance is included.

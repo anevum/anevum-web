@@ -59,7 +59,7 @@ async function main(){
    const get=id=>document.getElementById(id);
    assert(document.body.textContent.includes('SIMULATION · NO MONETARY VALUE'),'Simulation label missing');
    const submit=(type,amount)=>{get('operation').value=type;get('amount').value=amount;get('transaction').dispatchEvent(new Event('submit',{cancelable:true,bubbles:true}));};
-   get('approve').click();submit('issue','100.00');get('confirm').click();
+   get('approve').click();get('confirm').click();submit('issue','100.00');get('confirm').click();
    assert(get('owner').textContent==='100.00'&&get('goal').textContent==='20.00','Issue or automatic allocation failed');
    get('repeat').click();assert(get('owner').textContent==='100.00','Duplicate issuance changed balance');
    submit('transfer','90');get('confirm').click();
@@ -73,6 +73,15 @@ async function main(){
    assert(get('available').textContent==='70.00','Goal release failed');
    assert(document.documentElement.scrollWidth<=innerWidth+1,'Currency sandbox overflows width');
    assert(get('receipts').children.length===8,'Receipt count differs from accepted operations');
+   get('goal-percent').value='30';get('payment-limit').value='10';get('session-limit').value='50';
+   get('approve').click();get('confirm').click();
+   submit('transfer','12');get('confirm').click();assert(get('status').textContent.includes('payment limit'),'Per-transfer limit bypassed');
+   submit('transfer','10');get('confirm').click();submit('transfer','10');get('confirm').click();
+   submit('transfer','10');get('confirm').click();assert(get('status').textContent.includes('payment limit'),'Session cap bypassed');
+   assert(get('collaborator').textContent==='45.00','Session spending incorrect');
+   submit('issue','10');get('confirm').click();assert(get('goal').textContent==='3.00','Custom allocation failed');
+   assert(get('rejections').children.length===5,'Rejected instruction history missing');
+   assert(document.documentElement.scrollWidth<=innerWidth+1,'Permission editor overflows width');
    get('transaction').scrollIntoView({block:'center'});
  }else if(pathname==='/projects/transcosmic'){
    assert(document.body.textContent.includes('Preview not connected'),'Misleading placeholder');
