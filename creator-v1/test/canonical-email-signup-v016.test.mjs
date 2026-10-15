@@ -21,6 +21,7 @@ function fakeDatabase(profile){
     bind(...values){args=values;return this;},
     async all(){
      if(sql.includes("sqlite_master"))return {success:true,results:schema.map(name=>({name}))};
+     if(sql.includes("PRAGMA table_info(member_creator_profiles)"))return {success:true,results:["user_id","handle","display_name","bio","visibility","revision","headline","world_theme","focus_json"].map(name=>({name}))};
      if(sql.includes("canonical_identity_manifest WHERE id=1"))
        return {success:true,results:[{issuer:"anevum-better-auth-staging-v1",migration:"0001_canonical_better_auth_core"}]};
      return {success:true,results:[]};
@@ -100,6 +101,7 @@ test("real isolated SQLite migrations start with zero accounts and private, uniq
  try{
   db.exec(file("canonical-auth/migrations/0001_canonical_better_auth_core.sql"));
   db.exec(file("canonical-auth/migrations/0002_member_creator_profiles.sql"));
+  db.exec(file("canonical-auth/migrations/0003_member_world_personalization.sql"));
   assert.equal(db.prepare('SELECT count(*) n FROM "user"').get().n,0);
   assert.equal(db.prepare("SELECT count(*) n FROM member_creator_profiles").get().n,0);
   const now=1760481000;
