@@ -130,6 +130,34 @@ test("two independent invited users complete real OTP sessions and cannot share 
     assert.equal(privateA.profile.handle,"pilot_alpha");
     assert.equal(privateB.profile.handle,"pilot_beta");
     assert.notEqual(privateA.memberId,privateB.memberId);
+
+    // Self-service export includes only the verified canonical owner and
+    // private profile; never sessions, OTPs, other members or legacy data.
+    const exportPath="/api/v1/member/account-export";
+    assert.equal((await worker.fetch(get(exportPath),env)).status,401);
+    const exportedResponse=await worker.fetch(get(exportPath,cookieA),env);
+    assert.equal(exportedResponse.status,200);
+    assert.match(exportedResponse.headers.get("content-disposition")||"",/attachment/);
+    assert.match(exportedResponse.headers.get("cache-control")||"",/no-store/);
+    assert.equal(exportedResponse.headers.get("access-control-allow-origin"),null);
+    const exported=await exportedResponse.json();
+    assert.equal(exported.format,"ANEVUM_CANONICAL_MEMBER_EXPORT_V1");
+    assert.equal(exported.member.email,"pilot_a@fixture.invalid");
+    assert.equal(exported.member.id,privateA.memberId);
+    assert.equal(exported.profile.handle,"pilot_alpha");
+    const exportedText=JSON.stringify(exported);
+    assert.ok(!exportedText.includes("pilot_b@fixture.invalid"));
+    assert.ok(!exportedText.includes("pilot_beta"));
+    assert.ok(!exportedText.includes(cookieA));
+    assert.ok(!exportedText.includes(sent.get("pilot_a@fixture.invalid")));
+    assert.equal(exported.session,undefined);
+    assert.equal(exported.role,undefined);
+    assert.equal(exported.account,undefined);
+    assert.equal((await worker.fetch(post(exportPath,{},cookieA),env)).status,404);
+    const exportB=await (await worker.fetch(get(exportPath,cookieB),env)).json();
+    assert.equal(exportB.member.email,"pilot_b@fixture.invalid");
+    assert.equal(exportB.profile.handle,"pilot_beta");
+
     const cross=await worker.fetch(post(me,{
       handle:"pilot_alpha",displayName:"Stolen",bio:""},cookieB),env);
     assert.equal(cross.status,409);
@@ -137,6 +165,7 @@ test("two independent invited users complete real OTP sessions and cannot share 
     assert.equal(signedOut.status,200);
     const after=await worker.fetch(get(auth+"/get-session",cookieA),env);
     assert.equal((await after.json())?.user??null,null);
+    assert.equal((await worker.fetch(get("/api/v1/member/account-export",cookieA),env)).status,401);
   }finally{
     globalThis.fetch=priorFetch;
     db.close();
