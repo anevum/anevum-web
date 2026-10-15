@@ -138,6 +138,9 @@ export function createCanonicalStageWorker({authFactory=createCanonicalAuth}={})
     });
     // Never accept new identities without their required profile schema.
     if(!stageReady)return fail(request,503);
+    // Never forward callbacks for disabled OAuth providers.
+    const callback=path.match(/^\/api\/v1\/member\/auth\/callback\/(google|github|apple|microsoft)$/);
+    if(callback&&!configured[callback[1]])return fail(request,404);
     if(publicHandle){
       const clean=new Request(request.url,{method:request.method,headers:{accept:"application/json"}});
       return safeResponse(await canonicalPublicCreator(clean,env,CANONICAL_ORIGIN,publicHandle[1]));
