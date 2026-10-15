@@ -66,9 +66,9 @@ async function boundedProviderBody(request){
     // Explicit allowlist: never accept user-selected OAuth destination,
     // server identity, organization, trusted origin, scopes, or privileges.
     if(Object.keys(input).some(x=>!["provider","callbackURL"].includes(x)))return null;
-    if(input.provider!=="google"||
+    if(!["google","github","apple","microsoft"].includes(input.provider)||
       (input.callbackURL!==undefined&&input.callbackURL!=="/join"))return null;
-    return JSON.stringify({provider:"google",callbackURL:"/join"});
+    return JSON.stringify({provider:input.provider,callbackURL:"/join"});
   }catch{return null;}
 }
 
@@ -132,8 +132,8 @@ export function createCanonicalStageWorker({authFactory=createCanonicalAuth}={})
       registration:stageReady?(configured.open?"open":configured.invited?"invite-only":"closed"):"closed",
       methods:{google:{available:Boolean(stageReady&&configured.google)},
         email:{available:Boolean(stageReady&&configured.email&&(configured.invited||configured.open))},
-        github:{available:false},passkey:{available:false},
-        microsoft:{available:false},apple:{available:false}},
+        github:{available:Boolean(stageReady&&configured.github)},passkey:{available:false},
+        microsoft:{available:Boolean(stageReady&&configured.microsoft)},apple:{available:Boolean(stageReady&&configured.apple)}},
       linking:"disabled"
     });
     // Never accept new identities without their required profile schema.
@@ -171,9 +171,10 @@ export function createCanonicalStageWorker({authFactory=createCanonicalAuth}={})
         headers.set("content-type","application/json");
         clean=new Request(request.url,{method:"POST",headers,body:safeBody});
       }else if(path===CANONICAL_AUTH_PATH+"/sign-in/social"){
-        if(!configured.google)return fail(request,503);
+        if(![configured.google,configured.github,configured.apple,configured.microsoft].some(Boolean))return fail(request,503);
         const safeBody=await boundedProviderBody(clean);
         if(!safeBody)return safeJson(request,{error:"Invalid provider request"},400);
+        if(!configured[JSON.parse(safeBody).provider])return fail(request,503);
         clean=new Request(request.url,{
           method:"POST",headers:{
             "content-type":"application/json",
