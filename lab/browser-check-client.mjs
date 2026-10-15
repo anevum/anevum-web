@@ -89,7 +89,7 @@ async function main(){
    try{get('export').click();}finally{URL.createObjectURL=originalURL;HTMLAnchorElement.prototype.click=originalClick;}
    assert(exportedBlob,'Simulation export missing');
    const exportText=await exportedBlob.text(),beforeVerification=get('owner').textContent;
-   const upload=async text=>{const transfer=new DataTransfer();transfer.items.add(new File([text],'simulation.json',{type:'application/json'}));get('verify-file').files=transfer.files;get('verify-file').dispatchEvent(new Event('change'));await sleep(100);};
+   const upload=async text=>{const transfer=new DataTransfer();transfer.items.add(new File([text],'simulation.json',{type:'application/json'}));get('verify-file').files=transfer.files;const complete=new Promise(resolve=>{const observer=new MutationObserver(()=>{if(get('verification').textContent){observer.disconnect();resolve();}});observer.observe(get('verification'),{childList:true,subtree:true,characterData:true});});get('verify-file').dispatchEvent(new Event('change'));await complete;};
    await upload(exportText);assert(get('verification').textContent.includes('LOCAL REPLAY MATCHED'),'Valid simulation export failed replay');
    const tampered=JSON.parse(exportText);tampered.balances.owner++;
    await upload(JSON.stringify(tampered));assert(get('verification').textContent.includes('VERIFICATION FAILED'),'Changed balances accepted');
