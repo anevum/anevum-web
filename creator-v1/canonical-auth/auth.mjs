@@ -22,16 +22,29 @@ export function canonicalAuthOptions(env){
     secret:env.CANONICAL_BETTER_AUTH_SECRET,
     database:env.MEMBER_DB,
     emailAndPassword:{enabled:false},
-    socialProviders:stage.google?{
-      google:{
-        clientId:env.CANONICAL_GOOGLE_CLIENT_ID,
-        clientSecret:env.CANONICAL_GOOGLE_CLIENT_SECRET,
-        scope:["email","profile"],
-        requireEmailVerification:true,
+    socialProviders:{
+      ...(stage.google?{google:{
+        clientId:env.CANONICAL_GOOGLE_CLIENT_ID,clientSecret:env.CANONICAL_GOOGLE_CLIENT_SECRET,
+        scope:["email","profile"],requireEmailVerification:true,
         disableSignUp:!(stage.invited||stage.open),
         disableImplicitSignUp:!(stage.invited||stage.open)
-      }
-    }:{},
+      }}:{}),
+      ...(stage.github?{github:{
+        clientId:env.CANONICAL_GITHUB_CLIENT_ID,clientSecret:env.CANONICAL_GITHUB_CLIENT_SECRET,
+        scope:["read:user","user:email"],disableSignUp:!(stage.invited||stage.open),
+        disableImplicitSignUp:!(stage.invited||stage.open)
+      }}:{}),
+      ...(stage.apple?{apple:{
+        clientId:env.CANONICAL_APPLE_CLIENT_ID,clientSecret:env.CANONICAL_APPLE_CLIENT_SECRET,
+        disableSignUp:!(stage.invited||stage.open),
+        disableImplicitSignUp:!(stage.invited||stage.open)
+      }}:{}),
+      ...(stage.microsoft?{microsoft:{
+        clientId:env.CANONICAL_MICROSOFT_CLIENT_ID,clientSecret:env.CANONICAL_MICROSOFT_CLIENT_SECRET,
+        tenantId:"common",disableSignUp:!(stage.invited||stage.open),
+        disableImplicitSignUp:!(stage.invited||stage.open)
+      }}:{})
+    },
     plugins:stage.email?[emailOTP({
       otpLength:8,
       expiresIn:600,
