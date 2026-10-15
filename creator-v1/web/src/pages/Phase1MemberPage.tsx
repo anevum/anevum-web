@@ -101,6 +101,9 @@ function MemberEditor({memberId,memberName}:{memberId:string;memberName:string})
       <h1 id="av12-account-title">{claimed?"YOUR OWN UNIVERSE.":"BEGIN YOUR PROFILE."}</h1>
       <p>Define who you are in the ANEVUM community. Your account, session and private information remain yours.</p>
       <div className="av12-account-banner-links"><Link to="/discover">EXPLORE THE NETWORK ↗</Link>
+        <a href="/api/v1/member/account-export" download="anevum-member-export.json">
+          DOWNLOAD MY DATA ↓
+        </a>
         <button type="button" onClick={()=>void signOut()} disabled={busy}>SIGN OUT</button></div>
     </div>
     {ready&&<MemberExperienceMap profile={persisted}/>}
