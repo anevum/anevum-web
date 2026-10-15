@@ -26,8 +26,7 @@
   font-weight:700;letter-spacing:.02em;text-transform:none;font-size:13px;
 }
 .site-shell .mobile-drawer .nav-drawer-entry small{
-  display:block;line-height:1.35;font-size:11px;letter-spacing:0;
-  font-weight:400;color:var(--bone-dim,#b7afa6);
+  display:none;
 }
 .site-shell .mobile-drawer .nav-drawer-entry[aria-current="page"]{
   background:rgba(180,150,220,.14);
@@ -48,3 +47,17 @@
 @media(prefers-reduced-motion:reduce){
   .site-shell .mobile-drawer *{scroll-behavior:auto!important}
 }
+
+/* One mobile/laptop search affordance works on every route, not only Home.
+   The full input remains on large desktop; the accessible quick finder is reusable. */
+@media(max-width:1200px){
+  .site-shell .header-search,.site-shell .header-launcher{display:none}
+  .site-shell .cinema-mobile-search{
+    display:grid;place-items:center;flex:none;width:44px;height:44px;
+    margin-left:auto;padding:0;border:1px solid #877193;border-radius:50%;
+    background:linear-gradient(140deg,#151729,#090e1e);
+    color:#f0dbcc;box-shadow:inset 0 1px 0 #fff2db1d;
+  }
+  .site-shell .cw-account-link{display:grid;place-items:center;flex:none;min-width:44px;min-height:44px}
+}
+@media(min-width:1201px){.site-shell .header-launcher,.site-shell .cinema-mobile-search{display:none}}
