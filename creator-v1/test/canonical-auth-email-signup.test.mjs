@@ -9,6 +9,7 @@ const ORIGIN="https://a.anevum.com";
 const tables=["user","session","account","verification","rateLimit","canonical_identity_manifest","member_creator_profiles","member_creator_edit_limits"];
 const db={prepare(sql){return {bind(){return this},async all(){
  if(sql.includes("sqlite_master"))return {success:true,results:tables.map(name=>({name}))};
+ if(sql.includes("PRAGMA table_info(member_creator_profiles)"))return {success:true,results:["user_id","handle","display_name","bio","visibility","revision","headline","world_theme","focus_json"].map(name=>({name}))};
  if(sql.includes("canonical_identity_manifest"))return {success:true,results:[{issuer:"anevum-better-auth-staging-v1",migration:"0001_canonical_better_auth_core"}]};
  return {success:true,results:[]};
 },async first(){return null}}},async batch(){return []}};
@@ -93,6 +94,7 @@ test("isolated profile schema enforces private defaults, unique handles and dele
   const read=p=>readFileSync(new URL("../canonical-auth/migrations/"+p,import.meta.url),"utf8");
   d.exec(read("0001_canonical_better_auth_core.sql"));
   d.exec(read("0002_member_creator_profiles.sql"));
+  d.exec(read("0003_member_world_personalization.sql"));
   const now=1760481000;
   const insert=(id,email)=>d.prepare('INSERT INTO "user" ("id","name","email","emailVerified","createdAt","updatedAt") VALUES(?,?,?,?,?,?)')
     .run(id,"Test",email,1,now,now);
