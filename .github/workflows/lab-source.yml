@@ -1,0 +1,41 @@
+name: ANEVUM Private Lab source verification
+on:
+  pull_request:
+    paths:
+      - 'lab/**'
+      - '.github/workflows/lab-source.yml'
+  push:
+    branches:
+      - 'build/private-lab-the-fold-20261013-001'
+    paths:
+      - 'lab/**'
+      - '.github/workflows/lab-source.yml'
+jobs:
+  private-lab:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check Lab Worker and pinned Fold source syntax
+        run: |
+          node --check lab/worker.mjs
+          node --check lab/fold-snapshot.mjs
+          node --check lab/test-worker.mjs
+          node --check lab/browser-check.mjs
+          node --check lab/browser-check-client.mjs
+          node --check lab/rhen-snapshot.mjs
+          node --check lab/rhen-ui.mjs
+      - name: Test project catalog, private host boundary, and game routes
+        run: node --test lab/test-worker.mjs
+      - name: Responsive Chromium Lab, Fold and RHEN research console acceptance
+        run: node lab/browser-check.mjs
+      - name: Upload private Lab responsive screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: anevum-private-lab-screens
+          path: test-artifacts/lab/*.png
+          if-no-files-found: warn
+          retention-days: 14
