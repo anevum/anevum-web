@@ -515,3 +515,60 @@
   }
   .av9-shell .av9-world-gateway-art,.av9-navigation-world-art{opacity:.35}
 }
+
+
+/* V009 | Verified creator dossiers are part of each project/discussion.
+   Their award and equipped-artifact panels appear only when the read-only
+   publicly verified creator ledger provides those fields. */
+.av9-shell .av7-author{
+  padding:17px;border:1px solid #c0acda93;border-radius:20px;
+  background:radial-gradient(ellipse at 75% -8%,#63547f68,transparent 85%),
+    linear-gradient(150deg,#292c48ef,#10182cf7);
+  box-shadow:inset 0 1px #ffffff50,0 15px 28px #0009;
+}
+.av9-shell .av7-identity .av6-author-identity strong{font-size:clamp(16px,1.5vw,21px)}
+.av9-shell .av7-section-name,.av9-shell .av7-register{font-size:10px}
+.av9-shell .av7-level-button,.av9-shell .av7-artifact-button,.av9-shell .av7-award{
+  min-height:44px;border-radius:14px
+}
+.av9-shell .av7-award{min-height:70px}
+.av9-shell .av7-card-footer .av6-author-visit{font-size:10px}
+@media(min-width:1101px){
+  .av9-shell .av6-feed-item-body:has(>.av7-author){
+    display:grid;grid-template-columns:minmax(205px,265px) minmax(175px,27%) minmax(0,1fr);
+    grid-template-areas:"author art detail";gap:clamp(13px,1.5vw,23px);align-items:start
+  }
+  .av9-shell .av6-feed-item-body>.av7-author{display:grid;grid-area:author;align-self:stretch}
+  .av9-shell .av6-feed-item-body>.av6-feed-art,
+  .av9-shell .av6-feed-item-body>.av6-discussion-emblem{grid-area:art;align-self:stretch}
+  .av9-shell .av6-feed-item-body>.av6-feed-description{grid-area:detail}
+}
+@media(min-width:701px) and (max-width:1100px){
+  .av9-shell .av6-feed-item-body:has(>.av7-author){
+    display:grid;grid-template-columns:minmax(205px,32%) minmax(0,1fr);
+    grid-template-areas:"author art" "author detail";gap:13px;align-items:start
+  }
+  .av9-shell .av6-feed-item-body>.av7-author{display:grid;grid-area:author;align-self:stretch}
+  .av9-shell .av6-feed-item-body>.av6-feed-art,
+  .av9-shell .av6-feed-item-body>.av6-discussion-emblem{grid-area:art;min-height:205px}
+  .av9-shell .av6-feed-item-body>.av6-feed-description{grid-area:detail}
+}
+@media(max-width:700px){
+  .av9-shell .av6-feed-item-body:has(>.av7-author){display:flex;flex-direction:column}
+  .av9-shell .av6-feed-item-body>.av7-author{
+    display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+    order:-1;padding:13px;gap:11px 9px;align-items:start
+  }
+  .av9-shell .av7-author>.av7-register,.av9-shell .av7-author>.av7-identity,
+  .av9-shell .av7-author>.av7-award-panel,.av9-shell .av7-author>.av7-detail,
+  .av9-shell .av7-author>.av7-card-footer{grid-column:1/-1}
+  .av9-shell .av7-author>.av7-level-panel{grid-column:1}
+  .av9-shell .av7-author>.av7-artifact-panel{grid-column:2}
+  .av9-shell .av7-author .av6-author-visit{margin-left:auto}
+  .av9-shell .av7-author .av6-author-person{width:100%}
+  .av9-shell .av7-award span:last-child{font-size:10px}
+}
+@media(max-width:359px){
+  .av9-shell .av7-author{gap:8px 6px;padding:10px}
+  .av9-shell .av7-level-button{flex-direction:column;align-items:flex-start}
+}

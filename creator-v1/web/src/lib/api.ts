@@ -59,6 +59,16 @@ export interface CommunityPost {
   replyCount:number;
   project?: Pick<Project,"id"|"title"|"category"|"creatorHandle"|"creatorName"> | null;
 }
+/** Explicitly public earned recognition, never client-awarded progression. */
+export interface PublicCreatorShowcase {
+ handle:string; level:number; currentArtifact:string|null;
+ equippedArtifact:{name:string;series:string}|null;
+ featuredAwards:{key:string;name:string;description:string}[];
+ earnedAwardCount:number;
+}
+export interface PublicShowcasesResult {
+ source:"verified-creator-ledger"; items:Record<string,PublicCreatorShowcase>;
+}
 export type CommunityPostSort="hot"|"new";
 export interface CommunityPostDetail extends CommunityPost {body:string}
 export interface CommunityPostReply {
@@ -145,6 +155,31 @@ export function readCreators(params: Record<string, string | undefined> = {}, si
   for (const [key, value] of Object.entries(params)) if (value) query.set(key, value);
   if (!query.has("limit")) query.set("limit", "24");
   return getJson<PageResult<Creator>>(publicPath("/creators?") + query.toString(), signal);
+}
+/** Bounded anonymous same-origin lookup; gated/unknown response fails closed. */
+export async function readPublicShowcases(handles:readonly string[],signal?:AbortSignal){
+ if(handles.length<1||handles.length>10||
+   handles.some(handle=>! /^[a-z][a-z0-9_]{2,29}$/.test(handle))||
+   new Set(handles).size!==handles.length)throw new Error("Invalid showcase author selection");
+ const response=await getJson<PublicShowcasesResult>(
+   publicPath("/community/showcases?handles=")+encodeURIComponent(handles.join(",")),signal);
+ if(response.source!=="verified-creator-ledger"||!response.items||
+   typeof response.items!=="object"||Array.isArray(response.items))
+   throw new Error("Unverified public showcase response");
+ const items:Record<string,PublicCreatorShowcase>={};
+ for(const handle of handles){
+   const item=response.items[handle];
+   if(!item||item.handle!==handle||!Number.isSafeInteger(item.level)||item.level<1||
+     (item.currentArtifact!==null&&typeof item.currentArtifact!=="string")||
+     (item.equippedArtifact!==null&&(!item.equippedArtifact||
+       typeof item.equippedArtifact.name!=="string"||typeof item.equippedArtifact.series!=="string"))||
+     !Array.isArray(item.featuredAwards)||item.featuredAwards.length>3||
+     item.featuredAwards.some(a=>!a||typeof a.key!=="string"||
+       typeof a.name!=="string"||typeof a.description!=="string")||
+     !Number.isSafeInteger(item.earnedAwardCount)||item.earnedAwardCount<0)continue;
+   items[handle]=item;
+ }
+ return {source:"verified-creator-ledger" as const,items};
 }
 export function readCreator(handle: string, signal?: AbortSignal) {
   return getJson<{ creator: Creator }>(publicPath("/creators/") + encodeURIComponent(handle), signal);

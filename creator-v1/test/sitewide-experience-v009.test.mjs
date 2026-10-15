@@ -41,6 +41,9 @@ test("V009 homepage is assembled from verified public data and real world links"
  assert.match(signal,/A world made/);
  assert.match(signal,/readCommunityPosts/);
  assert.match(feed,/readCommunityPosts/);
+ assert.match(feed,/readPublicShowcases/);
+ assert.match(feed,/PublicAuthorShowcase/);
+ assert.match(feed,/showcaseItems/);
  assert.match(feed,/communityEnabled/);
  assert.match(feed,/state==="ready"/);
  assert.doesNotMatch(portals+signal+feed,/Math\.random|fakeUser|fakeActivity|fakeXp|dangerouslySetInnerHTML/);
@@ -59,4 +62,8 @@ test("V009 design finishes public pages without unlocking member writes",()=>{
  }
  assert.doesNotMatch(css,/position:fixed;\s*bottom:0|scrollbar-width:\s*none/);
  assert.match(css,/image-rendering:auto/);
+ assert.match(main,/creator-showcase-v007\.css/);
+ assert.match(css,/\.av9-shell \.av7-author/);
+ assert.match(read("web/src/components/PublicAuthorShowcase.tsx"),/CHOSEN AWARDS/);
+ assert.match(read("web/src/lib/api.ts"),/verified-creator-ledger/);
 });
