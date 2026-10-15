@@ -186,5 +186,6 @@ test("old Creator OTP and Better Auth canonical records cannot be linked by hand
  assert.match(member,/disableImplicitLinking: true/);
  assert.match(profile,/member_creator_profiles p JOIN/);
  assert.doesNotMatch(profile,/COMMUNITY_DB/);
- assert.doesNotMatch(migration,/community_xp_events|broker|RHEN|staff_role/);
+ const executableSql=migration.split("\n").filter(line=>!line.trim().startsWith("--")).join("\n");
+ assert.doesNotMatch(executableSql,/community_xp_events|broker|RHEN|staff_role/i);
 });
