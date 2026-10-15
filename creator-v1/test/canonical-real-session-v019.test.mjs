@@ -5,6 +5,7 @@ import assert from "node:assert/strict";
 import {readFileSync} from "node:fs";
 import {DatabaseSync} from "node:sqlite";
 import {createCanonicalStageWorker} from "../canonical-auth/worker.mjs";
+import {createCanonicalAuth} from "../canonical-auth/auth.mjs";
 
 const ORIGIN="https://a.anevum.com";
 const read=p=>readFileSync(new URL("../canonical-auth/migrations/"+p,import.meta.url),"utf8");
@@ -78,7 +79,13 @@ test("two independent invited users complete real OTP sessions and cannot share 
     assert.equal((await methods.json()).registration,"invite-only");
     const open=await worker.fetch(post(auth+"/email-otp/send-verification-otp",{
       email:"pilot_a@fixture.invalid",type:"sign-in"}),env);
-    assert.equal(open.status,200);
+    if(open.status!==200){
+      // Debug only, with local invalid test identifiers, never deployed secrets.
+      const direct=await createCanonicalAuth(env).handler(
+        post(auth+"/email-otp/send-verification-otp",{
+          email:"pilot_a@fixture.invalid",type:"sign-in"}));
+      assert.equal(open.status,200,"Worker rejected real Better Auth OTP; direct status "+direct.status);
+    }
     assert.ok(sent.has("pilot_a@fixture.invalid"));
     const invalid=await worker.fetch(post(auth+"/sign-in/email-otp",{
       email:"pilot_a@fixture.invalid",otp:"00000000"}),env);
