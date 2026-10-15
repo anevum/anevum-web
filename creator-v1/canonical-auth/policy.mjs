@@ -45,11 +45,13 @@ export function canonicalConfigState(env){
   const email=env?.CANONICAL_EMAIL_ENABLED==="true" &&
     isSecret(env?.CANONICAL_RESEND_API_KEY);
   const operational=enabled&&schemaApproved&&db&&secret&&(google||email)&&protectedConfigured;
-  const inviteMode=operational &&
+  const openMode=operational && env?.CANONICAL_PUBLIC_SIGNUP_ENABLED==="true";
+  const inviteMode=operational && !openMode &&
     env?.CANONICAL_INVITED_SIGNUP_ENABLED==="true" && invited.size>=2;
   return {
     operational:Boolean(operational),
     invited:Boolean(inviteMode),
+    open:Boolean(openMode),
     email:Boolean(email),
     google:Boolean(google),
     // No account roles, provider grants or cross-origin linking.
@@ -62,9 +64,9 @@ export function canonicalConfigState(env){
 export function permitCanonicalUserCreation(env,email){
   const status=canonicalConfigState(env);
   const normalized=typeof email==="string"?email.trim().toLowerCase():"";
-  if(!status.invited||!EMAIL.test(normalized)||normalized.length>254)return false;
+  if(!(status.invited||status.open)||!EMAIL.test(normalized)||normalized.length>254)return false;
   if(list(env.CANONICAL_PROTECTED_EMAILS).has(normalized))return false;
-  return list(env.CANONICAL_INVITE_EMAILS).has(normalized);
+  return status.open || list(env.CANONICAL_INVITE_EMAILS).has(normalized);
 }
 
 /** Must be independently verified against an isolated D1, not a source flag. */
