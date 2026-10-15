@@ -35,7 +35,7 @@ function ProjectRow({item}:{item:Project}){
     </Link>
     <div className="cnb-project-body">
       <small>{item.category.toUpperCase()} / {date(item.publishedAt)}</small>
-      <h3><Link to={"/experience/"+encodeURIComponent(item.id)}>{item.title}</Link></h3>
+      <h3><Link to={"/projects/"+encodeURIComponent(item.id)}>{item.title}</Link></h3>
       <p>{item.summary}</p>
       <div className="cnb-project-links">
         <Link to={"/creators/"+encodeURIComponent(item.creatorHandle)}>@{item.creatorHandle}</Link>
