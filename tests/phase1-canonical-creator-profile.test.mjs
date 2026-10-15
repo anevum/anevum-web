@@ -180,7 +180,7 @@ test("old Creator OTP and Better Auth canonical records cannot be linked by hand
  const profile=readFileSync(new URL("../src/server/canonical-creator-profile.mjs",import.meta.url),"utf8");
  const migration=readFileSync(new URL("../migrations/0005_member_creator_profiles.sql",import.meta.url),"utf8");
  assert.match(source,/canonicalBetaConfigured/);
- assert.match(source,/\\/api\\/member\\/creator-profile/);
+ assert.ok(source.includes("/api/member/creator-profile"));
  assert.doesNotMatch(source,/STAGING_JOIN_ENABLED|anevum_stage_sid/);
  assert.match(member,/verifyInvitedCanonicalCreation/);
  assert.match(member,/disableImplicitLinking: true/);
