@@ -111,7 +111,9 @@ test("real isolated SQLite migrations start with zero accounts and private, uniq
   const own=db.prepare("SELECT visibility FROM member_creator_profiles WHERE user_id='test-a'").get();
   assert.equal(own.visibility,"private");
   assert.throws(()=>db.prepare("INSERT INTO member_creator_profiles(user_id,handle,display_name,bio,created_at,updated_at) VALUES(?,?,?,?,?,?)")
-   .run("test-b","FIRST_PILOT","Pilot B","",now,now),/UNIQUE/);
+   .run("test-b","first_pilot","Pilot B","",now,now),/UNIQUE/);
+  assert.throws(()=>db.prepare("INSERT INTO member_creator_profiles(user_id,handle,display_name,bio,created_at,updated_at) VALUES(?,?,?,?,?,?)")
+   .run("test-b","FIRST_PILOT","Pilot B","",now,now),/CHECK/);
   db.prepare('DELETE FROM "user" WHERE "id"=?').run("test-a");
   assert.equal(db.prepare("SELECT count(*) n FROM member_creator_profiles").get().n,0);
  }finally{db.close();}
