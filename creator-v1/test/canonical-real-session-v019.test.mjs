@@ -21,17 +21,29 @@ function fixture(){
       let params=[];
       const compile=()=>db.prepare(sql);
       const statement={
+        sql,get args(){return params},
         bind(...args){params=args;return statement},
         async all(){return {success:true,results:compile().all(...params)}},
         async first(column){const row=compile().get(...params)||null;return column?row?.[column]??null:row},
-        async run(){const result=compile().run(...params);return {success:true,meta:{changes:result.changes,last_row_id:result.lastInsertRowid,changed_db:result.changes>0}}}
+        async raw(options){const query=compile();const rows=query.all(...params).map(Object.values);
+          return options?.columnNames?[query.columns().map(c=>c.name),...rows]:rows;},
+        async run(){const result=compile().run(...params);return {success:true,meta:{
+          changes:Number(result.changes),last_row_id:Number(result.lastInsertRowid),
+          changed_db:result.changes>0},results:[]}}
       };
       return statement;
     },
-    async batch(statements){const result=[];db.exec("BEGIN");try{
-      for(const stmt of statements)result.push(await stmt.run());
-      db.exec("COMMIT");
-    }catch(e){db.exec("ROLLBACK");throw e}return result}
+    async batch(statements){const result=[];db.exec("SAVEPOINT better_auth_fixture");try{
+      for(const stmt of statements){const query=db.prepare(stmt.sql);
+        if(query.columns().length>0)result.push({success:true,results:query.all(...stmt.args)});
+        else {const change=query.run(...stmt.args);result.push({success:true,results:[],
+          meta:{changes:Number(change.changes),last_row_id:Number(change.lastInsertRowid)}});}
+      }
+      db.exec("RELEASE SAVEPOINT better_auth_fixture");
+    }catch(e){db.exec("ROLLBACK TO SAVEPOINT better_auth_fixture");db.exec("RELEASE SAVEPOINT better_auth_fixture");throw e}return result},
+    async exec(sql){db.exec(sql);return {count:1,duration:0}},
+    async dump(){throw Error("Dump is unavailable in local test fixture")},
+    withSession(){return {prepare:adapter.prepare,batch:adapter.batch,getBookmark:()=>null}}
   };
   const env={
     ANEVUM_CANONICAL_STAGE_ENABLED:"true",CANONICAL_SCHEMA_APPROVED:"true",
