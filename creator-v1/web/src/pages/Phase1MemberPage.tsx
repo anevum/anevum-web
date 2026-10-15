@@ -21,7 +21,6 @@ function MemberEditor({memberId,memberName}:{memberId:string;memberName:string})
   const [notice,setNotice]=useState("");
   const [persisted,setPersisted]=useState<CanonicalProfile|null>(null);
   const [loaded,setLoaded]=useState(false);
-  const profile=current.state==="ready"&&current.data?.memberId===memberId?current.data.profile:null;
 
   useEffect(()=>{
     if(current.state!=="ready"||current.data?.memberId!==memberId)return;
