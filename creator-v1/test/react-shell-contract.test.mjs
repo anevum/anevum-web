@@ -129,8 +129,9 @@ test("unbounded ANEVUM level presentation is independent of member permissions",
   const app=read("web/src/App.tsx");
   const panel=read("web/src/components/LevelPanel.tsx");
   const levels=read("web/src/pages/LevelsPage.tsx");
-  assert.match(shell,/portalCategories/);
-  assert.match(shell,/\/levels/);
+  const nav=read("web/src/lib/site-navigation.ts");
+  assert.match(nav,/DISCOVERY_NAV/);
+  assert.match(nav,/to:"\/levels"/);
   assert.match(app,/path="levels"/);
   assert.match(panel,/memberProgress/);
   assert.match(panel,/NO LEVEL CAP/);
@@ -140,15 +141,18 @@ test("unbounded ANEVUM level presentation is independent of member permissions",
 });
 
 
-test("mobile has no fixed bottom tab bar and header drawer exposes every member route",()=>{
+test("mobile has one grouped, keyboard-accessible site menu with real member routes",()=>{
   const shell=read("web/src/components/Shell.tsx");
-  const css=read("web/src/styles.css");
+  const nav=read("web/src/lib/site-navigation.ts");
+  const css=read("web/src/community-structure.css");
   assert.doesNotMatch(shell,/mobile-bottom-nav|const mobileNav/);
-  assert.doesNotMatch(css,/\.mobile-bottom-nav/);
   assert.match(shell,/aria-label=\{menuOpen \? "Close site navigation" : "Open site navigation"\}/);
-  for(const route of ["/discover","/levels","/community","/create","/library","/account","/status"])
-    assert.ok(shell.includes('"'+route+'"'),"Missing top menu route: "+route);
-  assert.match(css,/\.site-main\{padding:10px 10px 32px\}/);
-  assert.match(css,/\.site-footer\{padding:18px 12px 24px/);
-  assert.match(css,/\.mobile-drawer\{top:59px/);
+  assert.match(shell,/DRAWER_GROUPS\.map/);
+  assert.match(shell,/dismissOutside/);
+  assert.match(shell,/firstMenuLink\.current\?\.focus/);
+  for(const route of ["/discover","/levels","/community","/account/studio","/library","/account","/status"])
+    assert.ok(nav.includes('to:"'+route+'"'),"Missing existing route in shared navigation: "+route);
+  assert.match(css,/@media\(max-width:640px\)/);
+  assert.match(css,/@media\(prefers-reduced-motion:reduce\)/);
+  assert.match(css,/min-height:44px/);
 });
