@@ -1,77 +1,75 @@
 import {Link} from "react-router-dom";
-import {readCreators,readProjects,readStatus} from "../lib/api";
-import {useResource} from "../lib/useResource";
 import {PortalHeading} from "../components/PortalHeading";
 import {LevelPanel} from "../components/LevelPanel";
-import {ProjectCard} from "../components/ProjectCard";
-import {OrbitalMark} from "../components/OrbitalMark";
 import {CosmicArtwork} from "../components/CosmicArtwork";
-import {LoadingState,ErrorState} from "../components/States";
 import {HotCommunityPosts} from "./HotCommunityPosts";
 import "./community-network.css";
 
-const rooms=[
-  {name:"THE ARCADE",tag:"GAMES / PLAY",category:"games",description:"Talk games, discover indie experiments and exchange useful playtesting feedback.",symbol:"✦"},
-  {name:"THE WORKSHOP",tag:"APPS / OPEN SOURCE",category:"tools",description:"Build software, improve projects and share what actually works.",symbol:"⌘"},
-  {name:"THE LAB",tag:"EXPERIMENTS / AI",category:"creative",description:"Discuss original creative experiments and responsible AI-assisted work.",symbol:"✳"},
-  {name:"THE COMMON THREAD",tag:"PEOPLE / COLLABORATION",category:"libraries",description:"Open contributions, lessons learned and useful independent creations.",symbol:"⟡"}
-] as const;
-
+/** The community route is a truthful, forum-first public hub, not a second
+ * catalogue and not a rendered list of fictional discussion rooms.
+ * Existing public threads, moderated submission route, creator pages and
+ * independent staff approval remain the only content sources.
+ */
 export function CommunityPage(){
-  const data=useResource(async signal=>{
-    const [status,projects,creators]=await Promise.all([
-      readStatus(signal),readProjects({sort:"new",limit:"4"},signal),readCreators({limit:"4"},signal)
-    ]);
-    return {status,projects,creators};
-  },[]);
   return <div className="portal-community-page">
-    <PortalHeading eyebrow="ANEVUM / PEOPLE BEHIND THE WORK" title="FIND YOUR" accent="PEOPLE." description="A future home for discussion, feedback, challenges, and collaborations. For now, discover genuine makers and their work while moderation and community features are tested." index="COMMUNITY / 003" action={{to:"/levels",label:"HOW PARTICIPATION EARNS RECOGNITION"}}/>
-    <div className="portal-community-notice" role="status"><span className="portal-community-notice-mark" aria-hidden="true">!</span><div><strong>COMMUNITY CONVERSATIONS ARE UNDER PRIVATE REVIEW.</strong><p>Invited creators can submit discussions for staff approval. Only actual approved posts appear publicly; unlaunched rooms and engagement statistics are not simulated.</p></div><Link to="/community/write">SUBMIT FOR REVIEW ↗</Link></div>
-    <section className="portal-box cnb-home-bridge" aria-labelledby="community-public-boards">
-      <header className="portal-box-header">
-        <div><span className="kicker">PUBLIC RELEASES / DISCOVERY BOARDS</span><h2 id="community-public-boards">FOLLOW THE PEOPLE BUILDING THINGS.</h2></div>
-        <Link to="/atlas/boards">OPEN BOARDS ↗</Link>
-      </header>
-      <p>Browse verified releases, first-time creators and real project passports. These lists report approved publication activity, not invented popularity or quality rankings.</p>
-      <div className="cnb-home-links">
-        <Link to="/atlas/boards">LATEST RELEASES ↗</Link>
-        <Link to="/atlas/boards?view=firstLooks">FIRST LOOKS ↗</Link>
-        <Link to="/atlas/boards?view=publishing">CREATOR ACTIVITY ↗</Link>
-        <Link to="/atlas/creators">CREATOR DIRECTORY ↗</Link>
+    <PortalHeading
+      eyebrow="ANEVUM / COMMUNITY FORUM"
+      title="MAKE THINGS"
+      accent="TOGETHER."
+      description="Discuss independent games, software, stories and art. Offer constructive feedback, find people building things, and connect conversations to genuine creator projects."
+      index="COMMUNITY / 003"
+      action={{to:"/community/write",label:"START A DISCUSSION"}}
+    />
+    <div className="portal-community-notice" role="status">
+      <span className="portal-community-notice-mark" aria-hidden="true">!</span>
+      <div><strong>COMMUNITY CONVERSATIONS ARE UNDER PRIVATE REVIEW.</strong>
+        <p>Posting is currently limited to invited members and staff moderation. Only actual approved posts appear publicly. If the forum is empty, no sample conversations are substituted.</p>
       </div>
-    </section>
+      <Link to="/community/write">SUBMIT FOR REVIEW ↗</Link>
+    </div>
     <div className="portal-layout">
-      <div className="portal-main">
+      <section className="portal-main" aria-label="Public community conversations">
         <HotCommunityPosts/>
-        <section className="portal-box">
-          <header className="portal-box-header"><div><span className="kicker">THE MEETING POINTS / IN DEVELOPMENT</span><h2>FIND YOUR CORNER</h2></div><span className="portal-hall-stamp">COMMUNITY ROOMS / PLANNED</span></header>
-          <div className="portal-room-grid">{rooms.map((room,i)=><article className="portal-room" key={room.name}><div className="cw-room-world" aria-hidden="true"><CosmicArtwork scene={room.category}/></div>
-            <div className="portal-room-top"><span aria-hidden="true">{room.symbol}</span><small>ROOM {String(i+1).padStart(2,"0")} / PLANNED</small></div>
-            <strong>{room.name}</strong><span>{room.tag}</span><p>{room.description}</p>
-            <Link to={"/discover?category="+encodeURIComponent(room.category)}>EXPLORE REAL WORK ↗</Link>
-          </article>)}</div>
+        <section className="portal-box cnb-home-bridge" aria-labelledby="community-public-boards">
+          <header className="portal-box-header">
+            <div><span className="kicker">REAL PROJECTS / APPROVED PUBLIC RECORDS</span><h2 id="community-public-boards">FIND SOMETHING TO TALK ABOUT.</h2></div>
+            <Link to="/boards">OPEN BOARDS ↗</Link>
+          </header>
+          <p>Discover genuine releases, new creators and project discussions. Boards use published data—not invented ratings, activity or featured members.</p>
+          <div className="cnb-home-links">
+            <Link to="/boards">LATEST RELEASES ↗</Link>
+            <Link to="/boards?view=firstLooks">FIRST LOOKS ↗</Link>
+            <Link to="/creators">CREATOR DIRECTORY ↗</Link>
+            <Link to="/discover">BROWSE CREATIONS ↗</Link>
+          </div>
         </section>
-        {data.state==="loading"&&<LoadingState label="Checking the public creation network"/>}
-        {data.state==="error"&&<ErrorState title="LIVE PROJECT SIGNAL UNAVAILABLE" detail="The community roadmap is visible, but real project data could not be loaded."/>}
-        {data.state==="ready"&&<>
-          <section className="portal-box">
-            <header className="portal-box-header"><div><span className="kicker">REAL WORK / START HERE</span><h2>DISCOVER SOMETHING TO DISCUSS</h2></div><Link to="/discover">ALL PROJECTS ↗</Link></header>
-            {data.data.projects.items.length?<div className="portal-shelf-projects">{data.data.projects.items.map(project=><ProjectCard key={project.id} project={project} returnTo="/community"/>)}</div>:
-              <div className="portal-side-empty portal-community-empty"><OrbitalMark/><p>There are no publicly approved projects to discuss yet. That is the real catalogue state, not a placeholder community feed.</p><Link to="/status">FOLLOW DEVELOPMENT →</Link></div>}
-          </section>
-          <section className="portal-box">
-            <header className="portal-box-header"><div><span className="kicker">PEOPLE / VERIFIED PUBLIC CHANNELS</span><h2>MEET SOME MAKERS</h2></div><Link to="/creators">CREATOR DIRECTORY →</Link></header>
-            {data.data.creators.items.length?<div className="portal-community-creators">{data.data.creators.items.map(c=><Link to={"/creators/"+encodeURIComponent(c.handle)} key={c.handle}><span className="portal-community-creator-icon" aria-hidden="true"><OrbitalMark/></span><span><strong>{c.displayName}</strong><small>@{c.handle} / {c.publishedProjects} APPROVED RELEASES</small></span><span aria-hidden="true">↗</span></Link>)}</div>:
-              <p className="portal-community-creator-empty">Public creator channels will appear after real approved releases, never through dummy accounts.</p>}
-          </section>
-        </>}
-      </div>
+        <section className="portal-box" aria-labelledby="community-contribute-heading">
+          <header className="portal-box-header">
+            <div><span className="kicker">THE WEBSITE IS A COMMUNITY PROJECT</span><h2 id="community-contribute-heading">HELP SHAPE ANEVUM.</h2></div>
+          </header>
+          <p>Share a practical feature proposal, report a problem, offer tested feedback or contribute a project. Public ideas are discussions, not edits to the live website. Code, artwork and releases require a separate rights, security and staff review before adoption.</p>
+          <div className="cnb-home-links">
+            <Link to="/community/write">PROPOSE A DISCUSSION ↗</Link>
+            <Link to="/status">CURRENT RELEASE STATUS ↗</Link>
+            <Link to="/guide">COMMUNITY GUIDELINES ↗</Link>
+          </div>
+        </section>
+      </section>
       <aside className="portal-sidebar">
         <LevelPanel compact/>
         <section className="portal-sidebox"><span className="kicker">THE RULES / COMMUNITY CULTURE</span><h2>HELP EACH OTHER MAKE BETTER THINGS.</h2>
-          <div className="portal-community-values"><p><strong>BE SPECIFIC.</strong> Useful feedback beats empty scores.</p><p><strong>CREDIT THE WORK.</strong> Disclose AI assistance and respect licenses.</p><p><strong>STAY ACCESSIBLE.</strong> Free and phone-friendly participation matters.</p><p><strong>EARN RESPECT.</strong> XP never purchases authority or stronger votes.</p></div>
+          <div className="portal-community-values">
+            <p><strong>BE SPECIFIC.</strong> Useful feedback beats empty scores.</p>
+            <p><strong>CREDIT THE WORK.</strong> Disclose AI assistance and respect licenses.</p>
+            <p><strong>STAY ACCESSIBLE.</strong> Free, phone-friendly participation matters.</p>
+            <p><strong>EARN RESPECT.</strong> XP never purchases authority or stronger votes.</p>
+          </div>
         </section>
-        <section className="portal-sidebox"><span className="kicker">WHAT'S NEXT</span><h2>REAL CONVERSATIONS, REAL MODERATION.</h2><p>Public discussions, following, reporting, community guidelines and abuse handling need independent acceptance before opening.</p><Link to="/guide" className="portal-sidebox-link">PRACTICE USEFUL FEEDBACK →</Link><Link to="/status" className="portal-sidebox-link">SEE THE ROADMAP →</Link></section>
+        <section className="portal-sidebox"><div className="cw-room-world" aria-hidden="true"><CosmicArtwork scene="creative"/></div><span className="kicker">PRIVATE COLLABORATION / FUTURE</span>
+          <h2>BUILD WITH OTHER CREATORS.</h2>
+          <p>Invite-only project rooms, private messages and shared files require separate security, consent, moderation and storage acceptance. They are not publicly available yet.</p>
+          <Link to="/status" className="portal-sidebox-link">WHAT IS READY →</Link>
+        </section>
       </aside>
     </div>
   </div>;

@@ -55,7 +55,9 @@ test("phone layout preserves ten unique tappable positions within bounded horizo
 });
 test("Atlas is accessible from the existing portal and mobile menu",()=>{
  const shell=read("web/src/components/Shell.tsx"),nav=read("web/src/lib/portal-destinations.ts");
- assert.match(shell,/\["\/atlas","Atlas \/ Spatial Navigation"\]/);
+ const siteNav=read("web/src/lib/site-navigation.ts");
+ assert.match(shell,/DRAWER_GROUPS\.map/);
+ assert.match(siteNav,/to:"\/atlas"/);
  assert.match(nav,/id:"atlas".*path:"\/atlas"/);
 });
 

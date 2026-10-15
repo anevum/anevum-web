@@ -39,7 +39,7 @@ export function HotCommunityPosts(){
  return <section className="nfc-module nfc-discussions" aria-labelledby="nfc-discussion-title">
    <div className="nfc-module-heading">
      <div><span className="nfc-eyebrow">COMMUNITY / CONVERSATIONS</span><h2 id="nfc-discussion-title">HOT <em>DISCUSSIONS</em></h2></div>
-     <Link to="/atlas/community" aria-label="Explore ANEVUM community">↗</Link>
+     <Link to="/community" aria-label="Explore ANEVUM community">↗</Link>
    </div>
    <div className="nfc-discussion-switch" role="group" aria-label="Order approved discussion posts">
      <button type="button" aria-pressed={sort==="hot"} onClick={()=>setSort("hot")}>HOT</button>
@@ -55,22 +55,22 @@ export function HotCommunityPosts(){
      <span className="nfc-discussion-mark" aria-hidden="true">✳</span>
      <strong>THE CONVERSATION STARTS HERE.</strong>
      <p>Community posting is being built. No public discussions have been opened or ranked yet.</p>
-     <Link to="/atlas/community">VISIT COMMUNITY ↗</Link>
+     <Link to="/community">VISIT COMMUNITY ↗</Link>
    </div>}
    {data&&!data.items.length&&<div className="nfc-discussion-empty">
       <strong>NO APPROVED POSTS YET.</strong>
       <p>New discussions will appear after real community submissions pass review.</p>
-      <Link to="/atlas/community">EXPLORE THE COMMUNITY ↗</Link>
+      <Link to="/community">EXPLORE THE COMMUNITY ↗</Link>
     </div>}
    {data&&data.items.length>0&&<div className="nfc-posts">
      {data.items.map((post,i)=><article key={post.id} className="nfc-post">
        <div className="nfc-post-top"><span>{String(i+1).padStart(2,"0")} · {post.topic.toUpperCase()}</span><span>{postedAt(post.publishedAt)}</span></div>
-       <h3><Link to={"/atlas/community/posts/"+encodeURIComponent(post.id)}>{post.title}</Link></h3>
+       <h3><Link to={"/community/posts/"+encodeURIComponent(post.id)}>{post.title}</Link></h3>
        <p>{post.excerpt}</p>
-       <div className="nfc-post-meta"><Link to={"/atlas/creators/"+encodeURIComponent(post.authorHandle)}>@{post.authorHandle}</Link>
+       <div className="nfc-post-meta"><Link to={"/creators/"+encodeURIComponent(post.authorHandle)}>@{post.authorHandle}</Link>
          <span>{post.score} REACTIONS</span><span>{post.replyCount} REPLIES</span></div>
      </article>)}
    </div>}
-   <div className="nfc-module-footer"><Link to="/atlas/community">ALL COMMUNITY SPACES ↗</Link><Link to="/atlas/community/write">START A DISCUSSION ↗</Link></div>
+   <div className="nfc-module-footer"><Link to="/community">ALL COMMUNITY SPACES ↗</Link><Link to="/community/write">START A DISCUSSION ↗</Link></div>
  </section>;
 }

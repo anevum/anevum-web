@@ -41,9 +41,10 @@ test("original deterministic illustration supports all published content categor
 test("home preserves linked discovery, real creator channels and existing member services",()=>{
   const home=read("web/src/pages/HomePage.tsx");
   const shell=read("web/src/components/Shell.tsx");
+  const nav=read("web/src/lib/site-navigation.ts");
   for(const link of ['/discover','/start','/community','/levels','/creators','/guide','/create'])
-    assert.ok(home.includes(link)||shell.includes(link),link);
-  for(const route of ["/library","/account","/status"])assert.ok(shell.includes(route),route);
+    assert.ok(home.includes(link)||shell.includes(link)||nav.includes(link),link);
+  for(const route of ["/library","/account","/status"])assert.ok(nav.includes(route),route);
   assert.match(home,/CelestialEmblem/);
   assert.match(home,/LevelPanel/);
   assert.match(home,/CosmicArtwork/);
@@ -69,8 +70,8 @@ test("secondary pages share the same world art while preserving genuine content 
   assert.match(project,/CATEGORY ILLUSTRATION/);
   assert.match(creators,/memberCreatorProfile/);
   assert.match(creators,/detailed\?\.achievements/);
-  assert.match(community,/readProjects/);
-  assert.match(community,/readCreators/);
+  assert.match(community,/HotCommunityPosts/);
+  assert.match(community,/OPEN BOARDS/);
   assert.match(community,/COMMUNITY CONVERSATIONS ARE UNDER PRIVATE REVIEW/);
   assert.match(community,/<HotCommunityPosts\/>/);
   assert.match(community,/to="\/community\/write"/);
@@ -117,7 +118,7 @@ test("polished homepage removes redundant nav rows without deleting them from in
  const css=read("web/src/cinematic-final-polish.css");
  const html=read("web/index.html");
  assert.match(shell,/site-shell--home/);
- assert.match(shell,/portal-navigation/);
+ assert.doesNotMatch(shell,/className="portal-navigation"/);
  assert.match(shell,/signal-strip/);
  assert.match(css,/\.site-shell--home \.portal-navigation,\.site-shell--home \.signal-strip\{display:none\}/);
  assert.match(css,/\.site-shell--home \.cw-hero\{height:clamp/);

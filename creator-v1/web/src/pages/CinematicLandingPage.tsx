@@ -25,7 +25,7 @@ import {CommunityHomeFeed} from "../components/CommunityHomeFeed";
 type Gate = {title:string;eyebrow:string;to:string;scene:CosmicScene};
 const gates:readonly Gate[]=[
   {title:"EXPLORE",eyebrow:"WORLDS & PROJECTS",to:"/discover",scene:"creative"},
-  {title:"CREATE",eyebrow:"TOOLS & STUDIO",to:"/create",scene:"tools"},
+  {title:"CREATE",eyebrow:"YOUR ACCOUNT / STUDIO",to:"/account/studio",scene:"tools"},
   {title:"PLAY",eyebrow:"EXPERIENCES",to:"/discover?category=games",scene:"games"},
   {title:"LEARN",eyebrow:"GUIDES & RESEARCH",to:"/guide",scene:"learning"},
   {title:"COMMUNITY",eyebrow:"CREATORS & FRIENDS",to:"/community",scene:"other"}
@@ -95,23 +95,23 @@ export function CinematicLandingPage(){
         <div className="av5-orbit-wordmark" aria-hidden="true"><strong>ANEVUM</strong><span>CREATE · EXPLORE · BUILD · TOGETHER</span></div>
         <div className="cinema-hero-layout">
           <div className="cinema-hero-copy">
-            <div className="cinema-kicker">ANEVUM / PUBLIC COMMONS</div>
+            <div className="cinema-kicker">ANEVUM / COMMUNITY DASHBOARD</div>
             <h1 id="cinema-hero-title">A universe<br/>made by <em>people.</em></h1>
-            <p>An independent creative home for games, art, useful software, learning, and the people who make them. Find something worth exploring—or share what you build.</p>
+            <p>An independent creative home for games, art, useful software, learning, and the people who make them. Explore approved work, take part in genuine conversations, and find people making something worth sharing.</p>
             <div className="cinema-actions">
-              <Link to="/discover" className="cinema-button cinema-button--primary">EXPLORE WORLDS <Icon name="arrow" size={17}/></Link>
-              <a href="#community-index" className="cinema-button cinema-button--secondary">COMMUNITY INDEX <Icon name="arrow" size={16}/></a>
+              <Link to="/discover" className="cinema-button cinema-button--primary">EXPLORE CREATIONS <Icon name="arrow" size={17}/></Link>
+              <a href="#community-index" className="cinema-button cinema-button--secondary">LATEST ACTIVITY <Icon name="arrow" size={16}/></a>
             </div>
           </div>
           <FeaturedScene project={featured}/>
         </div>
       </section>
 
-      <nav className="cinema-gateways" aria-label="Explore ANEVUM worlds">
+      <CommunityHomeFeed projects={projects} creators={creators} state={portal.state} communityEnabled={isReady&&portal.data.status.features?.communityPosts===true}/>
+
+      <nav className="cinema-gateways" aria-label="Browse ANEVUM creations and community">
         {gates.map(item=><SceneLink key={item.title} item={item} variant="gate"/>)}
       </nav>
-
-      <CommunityHomeFeed projects={projects} creators={creators} state={portal.state} communityEnabled={isReady&&portal.data.status.features?.communityPosts===true}/>
 
       {isReady&&<div className="cinema-verification-note">{portal.data.status.counts.publishedProjects} APPROVED PUBLIC PROJECTS · {portal.data.status.counts.publishedCreators} PUBLIC CREATOR CHANNELS · Only genuine published activity is shown.</div>}
     </div>
