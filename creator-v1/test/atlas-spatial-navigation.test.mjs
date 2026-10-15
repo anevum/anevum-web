@@ -5,11 +5,11 @@ import {ATLAS_WORLDS,ATLAS_WORLD_BY_ID,ATLAS_LINKS,ATLAS_MOBILE_LAYOUT} from "..
 const read=path=>readFileSync(new URL("../"+path,import.meta.url),"utf8");
 test("Atlas spatial source is retained but public site uses one unified theme",()=>{
  const app=read("web/src/App.tsx"),page=read("web/src/pages/AtlasPage.tsx");
- assert.match(app,/path="atlas\\/\\*" element={<LegacyAtlasRedirect\\/>}/);
- assert.match(app,/<Route element={<Shell\\/>}>/);
- assert.doesNotMatch(app,/<AtlasMorphLayout\\/>|<AtlasPage\\/>/);
+ assert.match(app,/path="atlas\/\*" element={<LegacyAtlasRedirect\/>}/);
+ assert.match(app,/<Route element={<Shell\/>}>/);
+ assert.doesNotMatch(app,/<AtlasMorphLayout\/>|<AtlasPage\/>/);
  assert.match(page,/className="atlas-universe-viewport"/);
- assert.doesNotMatch(page,/dangerouslySetInnerHTML|<iframe|Math\\.random/);
+ assert.doesNotMatch(page,/dangerouslySetInnerHTML|<iframe|Math\.random/);
 });
 test("all worlds are first-party authentic destinations, with no invented live collaboration",()=>{
  assert.equal(ATLAS_WORLDS.length,10);

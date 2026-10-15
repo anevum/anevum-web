@@ -98,13 +98,13 @@ test("Atlas Quick Jump searches approved project records and genuine creator cha
 test("Atlas remains archived while real site entrypoints use one shell",()=>{
  const app=read("web/src/App.tsx");
  const archive=read("web/src/pages/AtlasMorphPage.tsx");
- assert.match(app,/path="atlas\\/\\*" element={<LegacyAtlasRedirect\\/>}/);
+ assert.match(app,/path="atlas\/\*" element={<LegacyAtlasRedirect\/>}/);
  assert.match(app,/function LegacyAtlasRedirect/);
- assert.match(app,/<Route element={<Shell\\/>}>/);
- assert.match(app,/<MemberGate\\/>/);
- assert.match(app,/path="workspace" element={<Navigate to="\\/account" replace\\/>}/);
- assert.doesNotMatch(app,/<AtlasMorphLayout\\/>|<AtlasPage\\/>/);
- assert.match(archive,/<Outlet\\/>/);
+ assert.match(app,/<Route element={<Shell\/>}>/);
+ assert.match(app,/<MemberGate\/>/);
+ assert.match(app,/path="workspace" element={<Navigate to="\/account" replace\/>}/);
+ assert.doesNotMatch(app,/<AtlasMorphLayout\/>|<AtlasPage\/>/);
+ assert.match(archive,/<Outlet\/>/);
 });
 test("member card uses genuine server-confirmed progression and no random rewards",()=>{
   const shell=read("web/src/pages/AtlasMorphPage.tsx");
