@@ -165,3 +165,43 @@
   .av9-shell .av11-live-index .av8-module{min-height:0;border-radius:19px}
   .av9-shell #world-gateways{scroll-margin-top:80px}
 }
+
+
+/* Visual QA 1440/390: high-key paintings require local reading contrast,
+   not blanket desaturation or another composited UI panel. Artwork and real
+   interactive HTML remain independently editable. */
+.av9-shell .av9-world-gateway-art:after{
+  background:
+    linear-gradient(92deg,#060b1ddc 0%,#061026ad 40%,#07122d4f 73%,#070e2018 100%),
+    linear-gradient(0deg,#030716f5 0%,#04091cdb 24%,#070f2545 71%,transparent 100%);
+  pointer-events:none;
+}
+.av9-shell .av9-world-gateway-content>strong{
+  color:#fcf5ff;
+  text-shadow:0 3px 22px #030611f5,0 1px 3px #000e;
+}
+.av9-shell .av9-world-gateway-desc{
+  color:#edf3fd;max-width:440px;
+  text-shadow:0 2px 13px #020612ee,0 1px 3px #000c;
+}
+.av9-shell .av9-world-gateway-meta{
+  color:#bdf3ff;text-shadow:0 2px 9px #000e;
+}
+.av9-shell .av9-world-gateway-entry{
+  background:linear-gradient(180deg,#374969f5,#16233cf5);
+  border:1px solid #c4d9f4c2;
+  box-shadow:inset 0 1px #ffffff69,0 4px 0 #02071cd9,0 11px 19px #000b;
+}
+@media(max-width:700px){
+  .av9-shell .av9-world-gateway-art:after{
+    background:
+      linear-gradient(95deg,#050a1ccf,#050c2095 65%,#06102935),
+      linear-gradient(0deg,#030615fa,#05091ad5 29%,#07122542 85%,transparent);
+  }
+}
+@media(forced-colors:active){
+  .av9-shell .av9-world-gateway-art{opacity:.32!important}
+  .av9-shell .av9-world-gateway-entry{
+    background:ButtonFace;color:ButtonText;border:1px solid ButtonText;box-shadow:none;
+  }
+}

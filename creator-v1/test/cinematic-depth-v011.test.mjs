@@ -86,3 +86,13 @@ test("V011 homepage prioritizes cinematic worlds ahead of public status cards",(
   assert.match(css,/max-width:700px/);
   assert.doesNotMatch(home,/fakeMember|fakeProject|Math\.random/);
 });
+
+test("V011 world gateways maintain legible text over bright image regions",()=>{
+  const overlay=source("web/src/cinematic-depth-v011.css");
+  assert.match(overlay,/\.av9-shell \.av9-world-gateway-art:after/);
+  assert.match(overlay,/text-shadow:0 3px 22px/);
+  assert.match(overlay,/\.av9-world-gateway-desc/);
+  assert.match(overlay,/\.av9-world-gateway-entry/);
+  assert.match(overlay,/forced-colors:active/);
+  assert.doesNotMatch(overlay,/backdrop-filter:blur\([1-9][0-9]+px\)/);
+});
