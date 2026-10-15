@@ -63,7 +63,7 @@ test("canonical stage feature requires explicit single origin and complete provi
   assert.equal(canonicalBetaConfigured(h.env,"https://next.anevum.com"),false);
   assert.equal(invitedCanonicalEmail(h.env,"ALICE@INVALID.TEST"),true);
   assert.equal(invitedCanonicalEmail(h.env,"stranger@invalid.test"),false);
-  assert.deepEqual(verifyInvitedCanonicalCreation(h.env,{email:"alice@invalid.test"}),Promise.resolve({data:{email:"alice@invalid.test"}}));
+  assert.equal(invitedCanonicalEmail(h.env,"bob@invalid.test"),true);
  }finally{h.close()}
 });
 
