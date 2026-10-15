@@ -30,7 +30,6 @@ export function Phase1JoinPage(){
  const [busy,setBusy]=useState(false),[error,setError]=useState("");
  const ready=capability.state==="ready"&&(capability.data.registration==="invite-only"||capability.data.registration==="open");
  const emailReady=ready&&capability.data.methods.email.available===true;
- const googleReady=ready&&capability.data.methods.google.available===true;
  const socialReady=(key:string)=>ready&&["google","github","apple","microsoft"].includes(key)&&capability.data.methods[key as "google"|"github"|"apple"|"microsoft"]?.available===true;
  const member=session?.user;
  async function startSocial(provider:"google"|"github"|"apple"|"microsoft"){
@@ -38,7 +37,7 @@ export function Phase1JoinPage(){
    setBusy(true);setError("");
    try{
      const response=await canonicalAuthClient.signIn.social({provider,callbackURL:"/join"});
-     if(response.error)throw Error("Google sign-in could not be started.");
+     if(response.error)throw Error("Social sign-in could not be started.");
    }catch{
      setError("Sign-in is currently unavailable. No account was created.");
    }finally{setBusy(false)}
