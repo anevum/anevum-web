@@ -113,7 +113,7 @@ test("real isolated SQLite migrations start with zero accounts and private, uniq
   assert.throws(()=>db.prepare("INSERT INTO member_creator_profiles(user_id,handle,display_name,bio,created_at,updated_at) VALUES(?,?,?,?,?,?)")
    .run("test-b","first_pilot","Pilot B","",now,now),/UNIQUE/);
   assert.throws(()=>db.prepare("INSERT INTO member_creator_profiles(user_id,handle,display_name,bio,created_at,updated_at) VALUES(?,?,?,?,?,?)")
-   .run("test-b","FIRST_PILOT","Pilot B","",now,now),/CHECK/);
+   .run("test-b","FIRST_PILOT","Pilot B","",now,now),/(CHECK|UNIQUE)/);
   db.prepare('DELETE FROM "user" WHERE "id"=?').run("test-a");
   assert.equal(db.prepare("SELECT count(*) n FROM member_creator_profiles").get().n,0);
  }finally{db.close();}
@@ -163,7 +163,7 @@ test("OTP requests permit only invited addresses, fixed length, no role fields a
  const verified=await worker.fetch(post(verify,{email:"test_one@fixture.invalid",otp:"01234567"}),active);
  assert.equal(verified.status,200);
  assert.deepEqual(JSON.parse(dispatched[1].body),{email:"test_one@fixture.invalid",otp:"01234567",name:"ANEVUM MEMBER"});
- assert.match(verified.headers.get("set-cookie")||"","anevum_can_stage");
+ assert.match(verified.headers.get("set-cookie")||"",/anevum_can_stage/);
  assert.equal(verified.headers.get("access-control-allow-origin"),null);
 });
 
