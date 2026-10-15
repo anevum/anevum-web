@@ -72,6 +72,12 @@ export function assessIdentityStageInventory(input){
   const legacyDb=binding(objects(byName(IDENTITY_STAGE.legacyMemberWorker)?.bindings),"COMMUNITY_DB","d1");
   const canonical=byName(IDENTITY_STAGE.canonicalWorker);
   const canonicalDb=binding(objects(canonical?.bindings),"MEMBER_DB","d1");
+  const creatorBridgeDb=binding(objects(canonical?.bindings),"CREATOR_BRIDGE_DB","d1");
+  // The canonical login D1 and Creator content D1 must be independent and
+  // pin the same known Creator staging resource, never a similarly named D1.
+  if(creatorBridgeDb!==IDENTITY_STAGE.creatorStageDb ||
+     creatorBridgeDb===canonicalDb)
+    reasons.push("CANONICAL_CREATOR_BRIDGE_D1_NOT_PINNED");
   if(stageDb!==IDENTITY_STAGE.creatorStageDb||legacyDb!==IDENTITY_STAGE.creatorStageDb)
     reasons.push("CREATOR_AND_LEGACY_D1_NOT_PINNED");
   if(!canonicalDb || [IDENTITY_STAGE.creatorStageDb,IDENTITY_STAGE.productionDb,
