@@ -16,10 +16,13 @@ const tactile=get("creator-v1/web/src/tactile-editorial-v006.css");
 const stylesheet=get("creator-v1/web/src/cinematic-world-v005.css");
 test("V005 source TSX parses and shares actual navigation",()=>{
   for(const src of [shell,landing,rail,hero])assert.doesNotThrow(()=>parse(src,{sourceType:"module",plugins:["typescript","jsx"]}));
-  assert.match(landing,/<CinematicSiteRail\s*\/>/);
-  assert.match(shell,/<CinematicSiteRail\s*\/>/);
-  assert.match(shell,/cinematicPublic\s*\?/);
-  assert.match(rail,/aria-current/);
+  assert.match(landing,/<WorldGatewayDeck\s*\/>/);
+  assert.match(shell,/className="site-main av9-main"/);
+  assert.match(shell,/<dialog ref=\{menuDialog\}/);
+  assert.match(shell,/aria-haspopup="dialog"/);
+  assert.match(shell,/showModal\(\)/);
+  assert.match(rail,/aria-current/); // Legacy rail remains available for source comparison, not mounted.
+  assert.doesNotMatch(landing+shell,/<CinematicSiteRail\s*\/>/);
 });
 test("V008 homepage preserves the source-backed public release and creator index",()=>{
   assert.match(landing,/readProjects/);
@@ -37,8 +40,10 @@ test("V005 does not change separate authenticated and Atlas route boundaries",()
   assert.match(routes,/path="atlas"/);
   assert.match(routes,/path="community\/write"/);
   assert.match(routes,/PublicBoardsPage/);
-  assert.match(shell,/location\.pathname\.startsWith\("\/community\/posts\/"\)/);
-  assert.doesNotMatch(shell,/location\.pathname\.startsWith\("\/account"/);
+  assert.match(shell,/site-shell--cinematic/);
+  assert.match(shell,/to="\/account"/);
+  assert.match(shell,/PortalLauncher/);
+  assert.doesNotMatch(shell,/memberHealth|memberSignIn|staffApprove|RHEN TERMINAL|portfolio/);
 });
 test("V005 supplies mobile, reduced motion and forced-colors behavior",()=>{
   assert.match(stylesheet,/@media\(max-width:900px\)/);
