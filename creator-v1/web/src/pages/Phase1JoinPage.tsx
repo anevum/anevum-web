@@ -6,8 +6,8 @@ import {useResource} from "../lib/useResource";
 import {OrbitalMark} from "../components/OrbitalMark";
 
 const METHODS=[
- {key:"google",name:"Google",initial:"G",caption:"Verified Google account • invitation required"},
- {key:"email",name:"Email code",initial:"@",caption:"Passwordless verification • invitation required"},
+ {key:"google",name:"Google",initial:"G",caption:"Verified Google account"},
+ {key:"email",name:"Email code",initial:"@",caption:"Passwordless verification"},
  {key:"github",name:"GitHub",initial:"GH",caption:"Developer sign-in • awaiting security review"},
  {key:"passkey",name:"Passkey",initial:"PK",caption:"Secure device unlock • in development"},
  {key:"microsoft",name:"Microsoft",initial:"MS",caption:"Account provider • planned"},
@@ -28,7 +28,7 @@ export function Phase1JoinPage(){
  const [notice,setNotice]=useState("");
  const {data:session,isPending}=canonicalAuthClient.useSession();
  const [busy,setBusy]=useState(false),[error,setError]=useState("");
- const ready=capability.state==="ready"&&capability.data.registration==="invite-only";
+ const ready=capability.state==="ready"&&(capability.data.registration==="invite-only"||capability.data.registration==="open");
  const emailReady=ready&&capability.data.methods.email.available===true;
  const googleReady=ready&&capability.data.methods.google.available===true;
  const member=session?.user;
@@ -54,14 +54,14 @@ export function Phase1JoinPage(){
      if(!codeSent){
        const result=await canonicalAuthClient.emailOtp.sendVerificationOtp({email:normalized,type:"sign-in"});
        if(result.error)throw Error("Email verification could not be started");
-       setEmail(normalized);setCodeSent(true);setNotice("If your email is invited, an 8-digit code has been sent. Check your inbox.");
+       setEmail(normalized);setCodeSent(true);setNotice("If delivery is available, an 8-digit code has been sent. Check your inbox.");
      }else{
        if(!/^\d{8}$/.test(otp))throw Error("Invalid code");
        const result=await canonicalAuthClient.signIn.emailOtp({email:normalized,otp,name:"ANEVUM MEMBER"});
        if(result.error)throw Error("Invalid or expired verification code");
        navigate("/member",{replace:true});
      }
-   }catch{setError(codeSent?"The code could not be verified. Request a new code or try again.":"Email verification is unavailable or this invitation is not active.");}
+   }catch{setError(codeSent?"The code could not be verified. Request a new code or try again.":"Email verification is temporarily unavailable.");}
    finally{setBusy(false);}
  }
  function resetCode(){setCodeSent(false);setOtp("");setNotice("");setError("");}
@@ -84,7 +84,7 @@ export function Phase1JoinPage(){
      <div className="join-panel-top"><span className="kicker">IDENTITY PORTAL / PHASE 1</span>
        <span className="join-state" role="status">
          {capability.state==="loading"||isPending?"VERIFYING SERVICE":
-           ready?"INVITATION BETA":"REGISTRATION CLOSED"}
+           ready?(capability.data.registration==="open"?"OPEN REGISTRATION":"INVITATION BETA"):"REGISTRATION CLOSED"}
        </span>
      </div>
      {member&&ready?<div className="join-return">
@@ -126,7 +126,7 @@ export function Phase1JoinPage(){
          {notice&&<p role="status">{notice}</p>}
        </form>}
        <p className="join-service-note" role="status">{ready?
-         "Sign-in is limited to invited, verified accounts while the staging beta is being tested.":
+         capability.data.registration==="open"?"Create a free account with any enabled verification method.":"Registration is currently limited to invited accounts.":
          "Registration is not yet activated. The public catalogue remains available."}</p>
        {error&&<p role="alert" className="av12-join-error">{error}</p>}
        <Link className="join-guest-action" to="/discover">EXPLORE AS A GUEST <span aria-hidden="true">↗</span></Link>
