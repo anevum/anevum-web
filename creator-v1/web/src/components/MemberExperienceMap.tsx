@@ -30,6 +30,23 @@ export function MemberExperienceMap({profile}:{profile:CanonicalProfile|null}){
    {publicPage?<Link to={"/@"+profile!.handle}>OPEN PUBLIC PROFILE <span aria-hidden="true">↗</span></Link>:
     <a href="#av12-editor-heading">{claimed?"EDIT VISIBILITY":"CLAIM YOUR HANDLE"} <span aria-hidden="true">↘</span></a>}
   </div>
+  <div className="av18-member-destinations" aria-label="Explore your member network">
+   <Link to="/community" className="av18-member-destination">
+    <span>01 / COMMUNITY</span><strong>Join the conversation.</strong>
+    <p>Read approved discussions and see what other people are creating.</p>
+    <small>EXPLORE COMMONS ↗</small>
+   </Link>
+   <Link to="/discover?category=games" className="av18-member-destination">
+    <span>02 / EXPLORE</span><strong>Discover new worlds.</strong>
+    <p>Browse published games and experiences without installing an app.</p>
+    <small>BROWSE GAMES ↗</small>
+   </Link>
+   <div className="av18-member-destination av18-member-destination-locked">
+    <span>03 / CREATOR TOOLS</span><strong>Your Creator Studio.</strong>
+    <p>Private uploads, publishing and player integration will unlock only after the creator identity boundary is verified.</p>
+    <small>NOT YET ENABLED</small>
+   </div>
+  </div>
   <p className="av17-membership-boundary">Publishing, playable uploads, XP and achievements are separate features under development. Joining now does not grant legacy Creator Studio or staff access.</p>
  </section>;
 }
