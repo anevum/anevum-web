@@ -47,6 +47,7 @@ export default function App(){
       <Route path="guide" element={<FieldGuidePage/>}/>
       <Route path="status" element={<StatusPage/>}/>
       <Route element={<MemberGate/>}>
+        <Route path="account/studio" element={<MemberProjectsPage/>}/>
         <Route path="create" element={<MemberProjectsPage/>}/>
         <Route path="create/new" element={<ProjectEditorPage/>}/>
         <Route path="community/write" element={<CommunityPostEditorPage/>}/>
@@ -71,7 +72,8 @@ export default function App(){
     <Route path="community/posts/:id" element={<CommunityPostPage/>}/>
     <Route path="workspace" element={<WorkspacePage/>}/>
     <Route element={<MemberGate/>}>
-      <Route path="create" element={<MemberProjectsPage/>}/>
+      <Route path="account/studio" element={<MemberProjectsPage/>}/>
+        <Route path="create" element={<MemberProjectsPage/>}/>
       <Route path="create/new" element={<ProjectEditorPage/>}/>
     <Route path="community/write" element={<CommunityPostEditorPage/>}/>
       <Route path="create/:projectId" element={<ProjectEditorPage/>}/>
