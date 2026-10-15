@@ -14,7 +14,10 @@ export const REQUIRED_CANONICAL_TABLES=Object.freeze(["user","session","account"
 export const AUTH_ALLOWLIST=Object.freeze({
   "GET":new Set([
     CANONICAL_AUTH_PATH+"/get-session",
-    CANONICAL_AUTH_PATH+"/callback/google"
+    CANONICAL_AUTH_PATH+"/callback/google",
+    CANONICAL_AUTH_PATH+"/callback/github",
+    CANONICAL_AUTH_PATH+"/callback/apple",
+    CANONICAL_AUTH_PATH+"/callback/microsoft"
   ]),
   "POST":new Set([
     CANONICAL_AUTH_PATH+"/sign-in/social",
@@ -39,12 +42,15 @@ export function canonicalConfigState(env){
   const google=env?.CANONICAL_GOOGLE_ENABLED==="true" &&
     isProviderSecret(env?.CANONICAL_GOOGLE_CLIENT_ID) &&
     isProviderSecret(env?.CANONICAL_GOOGLE_CLIENT_SECRET);
+  const github=env?.CANONICAL_GITHUB_ENABLED==="true" && isProviderSecret(env?.CANONICAL_GITHUB_CLIENT_ID) && isProviderSecret(env?.CANONICAL_GITHUB_CLIENT_SECRET);
+  const apple=env?.CANONICAL_APPLE_ENABLED==="true" && isProviderSecret(env?.CANONICAL_APPLE_CLIENT_ID) && isProviderSecret(env?.CANONICAL_APPLE_CLIENT_SECRET);
+  const microsoft=env?.CANONICAL_MICROSOFT_ENABLED==="true" && isProviderSecret(env?.CANONICAL_MICROSOFT_CLIENT_ID) && isProviderSecret(env?.CANONICAL_MICROSOFT_CLIENT_SECRET);
   const restricted=list(env?.CANONICAL_PROTECTED_EMAILS);
   const invited=list(env?.CANONICAL_INVITE_EMAILS);
   const protectedConfigured=restricted.size>0;
   const email=env?.CANONICAL_EMAIL_ENABLED==="true" &&
     isSecret(env?.CANONICAL_RESEND_API_KEY);
-  const operational=enabled&&schemaApproved&&db&&secret&&(google||email)&&protectedConfigured;
+  const operational=enabled&&schemaApproved&&db&&secret&&(google||github||apple||microsoft||email)&&protectedConfigured;
   const openMode=operational && env?.CANONICAL_PUBLIC_SIGNUP_ENABLED==="true";
   const inviteMode=operational && !openMode &&
     env?.CANONICAL_INVITED_SIGNUP_ENABLED==="true" && invited.size>=2;
@@ -54,6 +60,7 @@ export function canonicalConfigState(env){
     open:Boolean(openMode),
     email:Boolean(email),
     google:Boolean(google),
+    github:Boolean(github),apple:Boolean(apple),microsoft:Boolean(microsoft),
     // No account roles, provider grants or cross-origin linking.
     provider:operational?(email?"email":"google"):null,
     issuer:CANONICAL_ISSUER
