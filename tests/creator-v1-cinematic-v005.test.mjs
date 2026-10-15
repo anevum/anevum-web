@@ -37,8 +37,8 @@ test("V008 homepage preserves the source-backed public release and creator index
 });
 test("V012 preserves member boundaries while retiring duplicate Atlas navigation",()=>{
   assert.match(routes,/<MemberGate\s*\/>/);
-  assert.match(routes,/path="atlas\\/\\*" element={<LegacyAtlasRedirect\\/>}/);
-  assert.doesNotMatch(routes,/<AtlasMorphLayout\\/>|<AtlasPage\\/>/);
+  assert.match(routes,/path="atlas\/\*" element={<LegacyAtlasRedirect\/>}/);
+  assert.doesNotMatch(routes,/<AtlasMorphLayout\/>|<AtlasPage\/>/);
   assert.match(routes,/path="community\/write"/);
   assert.match(routes,/PublicBoardsPage/);
   assert.match(shell,/site-shell--cinematic/);
