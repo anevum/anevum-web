@@ -92,7 +92,7 @@ try{
    }catch(error){throw Error("SITEWIDE_V012_PAGE_MISSING_"+name+"_"+width+":"+String(error));}
    await delay(240);
    const state=await evaluate('(()=>({path:location.pathname,header:document.querySelectorAll(".site-header.av9-header").length,main:document.querySelectorAll("#main").length,cinematic:!!document.querySelector(".site-shell--cinematic.av9-shell"),overflow:document.documentElement.scrollWidth>innerWidth+1,width:innerWidth,atlas:!!document.querySelector(".atm-header,.atlas-universe-viewport"),fixture:getComputedStyle(document.body,"::after").content.includes("SYNTHETIC OFFLINE REVIEW")}))()');
-   const presentation=await evaluate(`(()=>{
+   const presentation=await evaluate(String.raw`(()=>{
      const root=document.querySelector(".site-shell--cinematic.av9-shell");
      if(!root)return {missingRoot:true};
       const styles=getComputedStyle(root);
