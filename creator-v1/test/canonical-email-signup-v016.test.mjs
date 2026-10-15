@@ -196,10 +196,13 @@ test("the legacy V013 candidate keeps routes disabled and no permanent database 
  assert.deepEqual(json.routes,[]);
  assert.equal(json.workers_dev,false);
  assert.equal(json.preview_urls,false);
- assert.equal(json.d1_databases?.length,1);
- assert.equal(json.d1_databases[0]?.binding,"MEMBER_DB");
- assert.equal(json.d1_databases[0]?.database_name,"anevum-canonical-member-staging");
- assert.equal(json.d1_databases[0]?.database_id,"e1d29049-c83b-4534-8355-dc1fa36ba6d8");
+ assert.equal(json.d1_databases,undefined);
+ const review=JSON.parse(readFileSync(new URL("../wrangler.canonical-stage.review.jsonc",import.meta.url),"utf8"));
+ assert.deepEqual(review.routes,[]);
+ assert.equal(review.d1_databases?.length,1);
+ assert.equal(review.d1_databases[0]?.binding,"MEMBER_DB");
+ assert.equal(review.d1_databases[0]?.database_name,"anevum-canonical-member-staging");
+ assert.equal(review.d1_databases[0]?.database_id,"e1d29049-c83b-4534-8355-dc1fa36ba6d8");
  assert.equal(json.vars.ANEVUM_CANONICAL_STAGE_ENABLED,"false");
  assert.equal(json.vars.CANONICAL_EMAIL_ENABLED,"false");
 });
