@@ -92,6 +92,29 @@ try{
    }catch(error){throw Error("SITEWIDE_V012_PAGE_MISSING_"+name+"_"+width+":"+String(error));}
    await delay(240);
    const state=await evaluate('(()=>({path:location.pathname,header:document.querySelectorAll(".site-header.av9-header").length,main:document.querySelectorAll("#main").length,cinematic:!!document.querySelector(".site-shell--cinematic.av9-shell"),overflow:document.documentElement.scrollWidth>innerWidth+1,width:innerWidth,atlas:!!document.querySelector(".atm-header,.atlas-universe-viewport"),fixture:getComputedStyle(document.body,"::after").content.includes("SYNTHETIC OFFLINE REVIEW")}))()');
+   const presentation=await evaluate(`(()=>{
+     const root=document.querySelector(".site-shell--cinematic.av9-shell");
+     const styles=getComputedStyle(root);
+     const active=document.querySelector(".av9-menu-trigger");
+     const forbidden=[...document.querySelectorAll(".site-header a,.av9-navigation a,.site-main a,.site-footer a")]
+       .map(a=>a.getAttribute("href")).filter(Boolean)
+       .filter(href=>{
+         const url=new URL(href,location.href);
+         if(["lab.anevum.com","portfolio.anevum.com"].includes(url.hostname))return true;
+         if(url.origin!==location.origin)return false;
+         const pathname=url.pathname.replace(/^\/creator(?=\/|$)/,"");
+         return /^\/(?:atlas|experience|workspace|portfolio)(?:\/|$)/.test(pathname);
+       }).slice(0,8);
+     return {
+       tokens:["--av9-space","--av9-paper","--av9-display","--av9-glass","--av10-editorial"]
+         .every(token=>Boolean(styles.getPropertyValue(token).trim())),
+       roundedControl:parseFloat(getComputedStyle(active).borderTopLeftRadius)>=8,
+       forbidden,
+       legacyBrand:/\bTHE COMMONS\b/i.test(document.getElementById("main")?.innerText||"")
+     };
+   })()`);
+   if(!presentation.tokens||!presentation.roundedControl||presentation.forbidden.length||presentation.legacyBrand)
+     throw Error("SITEWIDE_V012_VISUAL_OR_ROUTE_DRIFT_"+name+"_"+width+":"+JSON.stringify(presentation));
    if(!state.cinematic||state.header!==1||state.main!==1||state.overflow||state.atlas||!state.fixture)
     throw Error("SITEWIDE_V012_INCONSISTENT_"+name+"_"+width+":"+JSON.stringify(state));
    if(name==="levels"){

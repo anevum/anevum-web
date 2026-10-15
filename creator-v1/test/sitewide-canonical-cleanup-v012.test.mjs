@@ -42,6 +42,11 @@ test("visual tokens extend to old community and private pages without changing g
  for(const name of [".cnb-hub",".discussion-page",".discussion-composer",".member-shell"])assert.ok(css.includes(name),name);
  assert.match(css,/prefers-reduced-motion:reduce/);
  assert.match(css,/forced-colors:active/);
+ const browser=read("test/capture-sitewide-v012.mjs");
+ assert.match(browser,/SITEWIDE_V012_VISUAL_OR_ROUTE_DRIFT/);
+ assert.match(browser,/--av10-editorial/);
+ assert.match(browser,/forbidden/);
+
  assert.match(css,/\.levels-masthead \.levels-emblem\s*\{/);
  assert.match(css,/position:absolute;/);
  assert.match(css,/\.levels-masthead p\s*\{/);
