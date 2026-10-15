@@ -21,6 +21,7 @@ async function safe(response){
   for(const sensitive of ["set-cookie","location","access-control-allow-credentials"])headers.delete(sensitive);
   const html=(headers.get("content-type")||"").includes("text/html");
   if(html){
+    for(const stale of ["content-length","content-encoding","etag"])headers.delete(stale);
     headers.set("content-security-policy",CSP);
     const banner='<div role="status" aria-label="Unpublished design preview" style="position:fixed;bottom:10px;left:10px;z-index:99999;max-width:calc(100vw - 20px);padding:7px 11px;border:1px solid #c6e7ff;border-radius:12px;background:#07152af2;color:#d6f5ff;font:700 10px/1.3 system-ui,sans-serif;box-shadow:0 5px 20px #000c;pointer-events:none">V009 DESIGN REVIEW · READ ONLY · NOT THE LIVE SITE</div>';
     const body=(await response.text()).replace("</body>",banner+"</body>");
