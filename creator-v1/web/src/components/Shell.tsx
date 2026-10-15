@@ -9,10 +9,12 @@ import { PRIMARY_NAV, DISCOVERY_NAV, MEMBER_NAV, SUPPORT_NAV, isSiteLinkSelected
 
 /** All destinations reuse real current routes; gated routes stay behind MemberGate. */
 const DRAWER_GROUPS: readonly { title:string; links:readonly SiteLink[] }[] = [
-  {title:"NAVIGATE",links:PRIMARY_NAV},
-  {title:"EXPLORE",links:DISCOVERY_NAV},
+  {title:"NAVIGATE",links:PRIMARY_NAV}
+];
+const SECONDARY_DRAWER_GROUPS: readonly { title:string; links:readonly SiteLink[] }[] = [
+  {title:"DISCOVER MORE",links:DISCOVERY_NAV},
   {title:"YOUR SPACE",links:MEMBER_NAV},
-  {title:"MORE",links:SUPPORT_NAV}
+  {title:"HELP & MORE",links:SUPPORT_NAV}
 ];
 export function Shell() {
   const navigate = useNavigate();
@@ -100,7 +102,19 @@ export function Shell() {
             <span><strong>{item.label}</strong><small>{item.detail}</small></span>
           </NavLink>)}
         </div>)}
-        <p className="nav-drawer-footer">Member tools require a verified account. Messages and collaboration will be available only after private security testing.</p>
+        <details className="nav-drawer-more">
+          <summary>More destinations</summary>
+          {SECONDARY_DRAWER_GROUPS.map(group=><div key={group.title} className="nav-drawer-group">
+            <span className="nav-drawer-heading">{group.title}</span>
+            {group.links.map(item=><NavLink key={item.key} className="nav-drawer-entry" to={item.to}
+              aria-current={isSiteLinkSelected(location.pathname,item.to)?"page":undefined}
+              onClick={()=>setMenuOpen(false)}>
+              <Icon name={item.icon} size={18}/>
+              <span><strong>{item.label}</strong><small>{item.detail}</small></span>
+            </NavLink>)}
+          </div>)}
+        </details>
+        <p className="nav-drawer-footer">Member tools require a verified account. Private messaging and collaboration are not available yet.</p>
       </nav>}
       <PortalLauncher open={launcherOpen} onClose={() => setLauncherOpen(false)}/>
       <main id="main" tabIndex={-1} className="site-main">{cinematicPublic ?
