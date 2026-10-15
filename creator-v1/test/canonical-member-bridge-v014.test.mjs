@@ -20,7 +20,7 @@ const C="canonical_staff_verified";
 function creatorD1({links=true}={}){
   const sqlite=new DatabaseSync(":memory:");
   sqlite.exec("PRAGMA foreign_keys=ON");
-  sqlite.exec(read("community-preview/migrations/0001_initial_creator_platform.sql"));
+  sqlite.exec(read("../community-preview/migrations/0001_initial_creator_platform.sql"));
   sqlite.exec(read("auth/migrations/0003_member_identity_staging.sql"));
   sqlite.exec(read("auth/migrations/0006_account_privacy.sql"));
   if(links)sqlite.exec(read("auth/migrations/0015_creator_canonical_identity_links.sql"));
