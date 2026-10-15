@@ -4,6 +4,7 @@ import {
   isCanonicalOrigin,withoutForeignCookies
 } from "./policy.mjs";
 import {createCanonicalAuth} from "./auth.mjs";
+import {CREATOR_LINK_ROUTE,canonicalCreatorBridgeStatus} from "./member-bridge.mjs";
 
 const HEALTH=CANONICAL_PREFIX+"/health";
 const METHODS=CANONICAL_PREFIX+"/auth-methods";
@@ -75,7 +76,7 @@ export function createCanonicalStageWorker({authFactory=createCanonicalAuth}={})
   return {async fetch(request,env){
     if(!isCanonicalOrigin(request))return fail(request,404);
     const url=new URL(request.url),path=url.pathname;
-    if(path!==HEALTH && path!==METHODS &&
+    if(path!==HEALTH && path!==METHODS && path!==CREATOR_LINK_ROUTE &&
       !(path.startsWith(CANONICAL_AUTH_PATH+"/") &&
         (AUTH_ALLOWLIST[request.method]?.has(path)??false)))
       return fail(request,404);
@@ -101,6 +102,16 @@ export function createCanonicalStageWorker({authFactory=createCanonicalAuth}={})
         microsoft:{available:false},apple:{available:false}},
       linking:"disabled"
     });
+    if(path===CREATOR_LINK_ROUTE){
+      if(!READ_METHODS.has(request.method))
+        return safeJson(request,{error:"Read-only endpoint"},405);
+      if(url.search)return safeJson(request,{error:"Invalid request"},400);
+      if(!ready)return fail(request,503);
+      try{
+        const snapshot=await canonicalCreatorBridgeStatus(request,env,authFactory(env));
+        return safeJson(request,snapshot.body,snapshot.status);
+      }catch{return fail(request,503);}
+    }
     if(!ready)return fail(request,503);
 
     // No inherited V5/Creator legacy cookies and no Authorization.
