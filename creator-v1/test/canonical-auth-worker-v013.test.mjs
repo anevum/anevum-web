@@ -84,10 +84,14 @@ test("V013 candidate is explicitly unbound and disabled in source control",()=>{
  assert.equal(candidate.vars.CANONICAL_SCHEMA_APPROVED,"false");
  assert.equal(candidate.vars.CANONICAL_GOOGLE_ENABLED,"false");
  assert.equal(candidate.vars.CANONICAL_INVITED_SIGNUP_ENABLED,"false");
- assert.equal(candidate.d1_databases?.length,1);
- assert.equal(candidate.d1_databases[0]?.binding,"MEMBER_DB");
- assert.equal(candidate.d1_databases[0]?.database_name,"anevum-canonical-member-staging");
- assert.equal(candidate.d1_databases[0]?.database_id,"e1d29049-c83b-4534-8355-dc1fa36ba6d8");
+ assert.equal(candidate.d1_databases,undefined);
+ const review=JSON.parse(read("wrangler.canonical-stage.review.jsonc"));
+ assert.deepEqual(review.routes,[]);
+ assert.equal(review.workers_dev,false);
+ assert.equal(review.d1_databases?.length,1);
+ assert.equal(review.d1_databases[0]?.binding,"MEMBER_DB");
+ assert.equal(review.d1_databases[0]?.database_name,"anevum-canonical-member-staging");
+ assert.equal(review.d1_databases[0]?.database_id,"e1d29049-c83b-4534-8355-dc1fa36ba6d8");
  assert.equal(candidate.vars.CANONICAL_EMAIL_ENABLED,"false");
  const serialized=JSON.stringify(candidate);
  assert.doesNotMatch(serialized,/anevum\.com\/\*|RHEN|Alpaca|BETTER_AUTH_SECRET|GOOGLE_CLIENT_SECRET|fa96e36d|b2f9b4ad|6c7b5f0c/i);
@@ -213,7 +217,7 @@ test("only allowlisted Better Auth endpoints function once config and schema pas
  const active=env();
  const methods=await parse(await stage.fetch(req("/api/v1/member/auth-methods"),active));
  assert.equal(methods.registration,"closed");
- assert.equal(methods.methods.google.available,false);
+ assert.equal(methods.methods.google.available,true);
  const invitedMethods=await parse(await stage.fetch(req("/api/v1/member/auth-methods"),env(true)));
  assert.equal(invitedMethods.methods.google.available,true);
  assert.equal(invitedMethods.methods.email.available,false);
