@@ -4,13 +4,14 @@ import {
   isCanonicalOrigin,withoutForeignCookies
 } from "./policy.mjs";
 import {createCanonicalAuth} from "./auth.mjs";
-import {canonicalCreatorSchemaReady,canonicalCreatorMember,canonicalPublicCreator} from "./profile.mjs";
+import {canonicalCreatorSchemaReady,canonicalCreatorMember,canonicalPublicCreator,canonicalExportMember} from "./profile.mjs";
 import {permitCanonicalUserCreation} from "./policy.mjs";
 
 const HEALTH=CANONICAL_PREFIX+"/health";
 const METHODS=CANONICAL_PREFIX+"/auth-methods";
 const READ_METHODS=new Set(["GET","HEAD"]);
 const PROFILE=CANONICAL_PREFIX+"/creator-profile";
+const EXPORT=CANONICAL_PREFIX+"/account-export";
 const PUBLIC_MEMBER=/^\/api\/v1\/members\/([a-z][a-z0-9_]{2,29})$/;
 const EMAIL=/^[^\s@]{1,64}@[^\s@]{1,190}$/;
 const SECURITY={
@@ -102,13 +103,15 @@ export function createCanonicalStageWorker({authFactory=createCanonicalAuth}={})
     const url=new URL(request.url),path=url.pathname;
     const publicHandle=path.match(PUBLIC_MEMBER);
     const ownProfile=path===PROFILE;
-    if(path!==HEALTH && path!==METHODS && !publicHandle && !ownProfile &&
+    const ownExport=path===EXPORT;
+    if(path!==HEALTH && path!==METHODS && !publicHandle && !ownProfile && !ownExport &&
       !(path.startsWith(CANONICAL_AUTH_PATH+"/") &&
         (AUTH_ALLOWLIST[request.method]?.has(path)??false)))
       return fail(request,404);
 
     if(publicHandle && !READ_METHODS.has(request.method))return fail(request,404);
     if(ownProfile && !["GET","POST","PATCH"].includes(request.method))return fail(request,404);
+    if(ownExport && request.method!=="GET")return fail(request,404);
     if((path===HEALTH||path===METHODS)&&!READ_METHODS.has(request.method))
       return safeJson(request,{error:"Read-only endpoint"},405);
 
@@ -193,10 +196,12 @@ export function createCanonicalStageWorker({authFactory=createCanonicalAuth}={})
 
     try{
       const auth=authFactory(env);
-      if(ownProfile){
+      if(ownProfile||ownExport){
         const session=await auth.api.getSession({headers:clean.headers});
         if(!session?.user)return safeJson(request,{error:"Sign-in required"},401);
-        return safeResponse(await canonicalCreatorMember(clean,env,session.user,CANONICAL_ORIGIN));
+        return safeResponse(ownExport?
+          await canonicalExportMember(clean,env,session.user,CANONICAL_ORIGIN):
+          await canonicalCreatorMember(clean,env,session.user,CANONICAL_ORIGIN));
       }
       const result=await auth.handler(clean);
       return safeResponse(result);
