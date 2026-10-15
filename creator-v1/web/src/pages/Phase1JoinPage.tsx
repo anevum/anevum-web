@@ -8,10 +8,10 @@ import {OrbitalMark} from "../components/OrbitalMark";
 const METHODS=[
  {key:"google",name:"Google",initial:"G",caption:"Verified Google account"},
  {key:"email",name:"Email code",initial:"@",caption:"Passwordless verification"},
- {key:"github",name:"GitHub",initial:"GH",caption:"Developer sign-in • awaiting security review"},
+ {key:"github",name:"GitHub",initial:"GH",caption:"Developer sign-in"},
  {key:"passkey",name:"Passkey",initial:"PK",caption:"Secure device unlock • in development"},
- {key:"microsoft",name:"Microsoft",initial:"MS",caption:"Account provider • planned"},
- {key:"apple",name:"Apple",initial:"AP",caption:"Apple ID • planned"}
+ {key:"microsoft",name:"Microsoft",initial:"MS",caption:"Microsoft account"},
+ {key:"apple",name:"Apple",initial:"AP",caption:"Apple ID"}
 ] as const;
 
 /** Phase 1 only: no Creator OTP hand-off or cross-origin Google redirect.
@@ -31,12 +31,13 @@ export function Phase1JoinPage(){
  const ready=capability.state==="ready"&&(capability.data.registration==="invite-only"||capability.data.registration==="open");
  const emailReady=ready&&capability.data.methods.email.available===true;
  const googleReady=ready&&capability.data.methods.google.available===true;
+ const socialReady=(key:string)=>ready&&["google","github","apple","microsoft"].includes(key)&&capability.data.methods[key as "google"|"github"|"apple"|"microsoft"]?.available===true;
  const member=session?.user;
- async function startGoogle(){
-   if(!googleReady||busy)return;
+ async function startSocial(provider:"google"|"github"|"apple"|"microsoft"){
+   if(!socialReady(provider)||busy)return;
    setBusy(true);setError("");
    try{
-     const response=await canonicalAuthClient.signIn.social({provider:"google",callbackURL:"/join"});
+     const response=await canonicalAuthClient.signIn.social({provider,callbackURL:"/join"});
      if(response.error)throw Error("Google sign-in could not be started.");
    }catch{
      setError("Sign-in is currently unavailable. No account was created.");
@@ -97,11 +98,11 @@ export function Phase1JoinPage(){
        <h2>THE NEXT CHAPTER.</h2>
        <p className="join-lead">Free community membership. No payment, brokerage account, or project required.</p>
        <div className="join-methods" aria-label="Member sign-in methods">
-         {METHODS.map(method=><div className={"join-method"+(((method.key==="google"&&googleReady)||(method.key==="email"&&emailReady))?" join-method-ready":"")} key={method.key}>
+         {METHODS.map(method=><div className={"join-method"+((socialReady(method.key)||(method.key==="email"&&emailReady))?" join-method-ready":"")} key={method.key}>
            <span className="join-method-symbol" aria-hidden="true">{method.initial}</span>
            <div className="join-method-copy"><strong>{method.name}</strong><small>{method.caption}</small></div>
-           {(method.key==="google"&&googleReady)||(method.key==="email"&&emailReady)?
-             <button className="join-method-open" type="button" onClick={method.key==="email"?()=>setEmailOpen(true):()=>void startGoogle()} disabled={busy}>
+           {(socialReady(method.key))||(method.key==="email"&&emailReady)?
+             <button className="join-method-open" type="button" onClick={method.key==="email"?()=>setEmailOpen(true):()=>void startSocial(method.key as "google"|"github"|"apple"|"microsoft")} disabled={busy}>
                {busy?"OPENING":"CONTINUE"} <span aria-hidden="true">↗</span>
              </button>:
              <span className="join-method-unavailable">NOT ENABLED</span>}
