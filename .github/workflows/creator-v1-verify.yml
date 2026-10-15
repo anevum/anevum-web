@@ -92,6 +92,11 @@ jobs:
         run: |
           set -euo pipefail
           node --test creator-v1/test/canonical-auth-worker-v013.test.mjs creator-v1/test/canonical-email-signup-v016.test.mjs 2>&1 | tee evidence/canonical-email-tests.log
+      - name: Validate isolated canonical invited email signup
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --test creator-v1/test/canonical-auth-worker-v013.test.mjs creator-v1/test/canonical-auth-email-signup.test.mjs 2>&1 | tee evidence/canonical-auth-tests.log
       - name: Bundle disabled canonical auth candidate (dry-run only, no Cloudflare deployment)
         shell: bash
         run: |
