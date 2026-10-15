@@ -75,7 +75,7 @@ test("new migration preserves existing private profiles and blocks signup before
   db.exec(file("0003_member_world_personalization.sql"));
   assert.equal(await canonicalCreatorSchemaReady(adapter),true);
   const p=db.prepare("SELECT visibility,world_theme,focus_json,headline FROM member_creator_profiles WHERE user_id=?").get("alpha");
-  assert.deepEqual(p,{visibility:"private",world_theme:"continuance",focus_json:"[]",headline:""});
+  assert.deepEqual({...p},{visibility:"private",world_theme:"continuance",focus_json:"[]",headline:""});
   assert.throws(()=>db.prepare("UPDATE member_creator_profiles SET world_theme=? WHERE user_id=?")
     .run("arbitrary","alpha"),/CHECK/);
  }finally{db.close()}
