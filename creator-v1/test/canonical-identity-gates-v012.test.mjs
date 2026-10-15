@@ -55,7 +55,10 @@ test("even a complete synthetic plan is only a candidate for owner review, never
  plan.workers.push({name:IDENTITY_STAGE.canonicalWorker,
    issuer:IDENTITY_STAGE.canonicalIssuer,
    sessionOrigin:"https://a.anevum.com",
-   bindings:[{name:"MEMBER_DB",type:"d1",database_id:"test-isolated-canonical-stage-db"}]});
+   bindings:[
+     {name:"MEMBER_DB",type:"d1",database_id:"test-isolated-canonical-stage-db"},
+     {name:"CREATOR_BRIDGE_DB",type:"d1",database_id:IDENTITY_STAGE.creatorStageDb}
+   ]});
  plan.creatorMigrationVersions=[...new Set([...plan.creatorMigrationVersions,...REQUIRED_CREATOR_MIGRATIONS])];
  plan.counts.creatorMembers=2;
  for(const key of REQUIRED_ACCEPTANCE)plan.acceptance[key]={result:"passed",evidence:"test-review-"+key};
@@ -73,6 +76,15 @@ test("even a complete synthetic plan is only a candidate for owner review, never
   cross.workers.find(x=>x.name===IDENTITY_STAGE.canonicalWorker).bindings[0].database_id=usedId;
   absent(reasons(cross),"CANONICAL_AUTH_D1_NOT_ISOLATED");
  }
+ const missingBridge=clone(plan);
+ missingBridge.workers.find(x=>x.name===IDENTITY_STAGE.canonicalWorker).bindings.pop();
+ absent(reasons(missingBridge),"CANONICAL_CREATOR_BRIDGE_D1_NOT_PINNED");
+ const wrongBridge=clone(plan);
+ wrongBridge.workers.find(x=>x.name===IDENTITY_STAGE.canonicalWorker).bindings[1].database_id=IDENTITY_STAGE.productionDb;
+ absent(reasons(wrongBridge),"CANONICAL_CREATOR_BRIDGE_D1_NOT_PINNED");
+ const sameBridge=clone(plan);
+ sameBridge.workers.find(x=>x.name===IDENTITY_STAGE.canonicalWorker).bindings[1].database_id="test-isolated-canonical-stage-db";
+ absent(reasons(sameBridge),"CANONICAL_CREATOR_BRIDGE_D1_NOT_PINNED");
  const migrated=clone(plan);
  migrated.creatorMigrationVersions=migrated.creatorMigrationVersions.filter(x=>x!=="0015_creator_canonical_identity_links");
  absent(reasons(migrated),"STAGING_MIGRATIONS_NOT_APPLIED");
