@@ -19,6 +19,7 @@ import { MemberLibraryPage } from "./pages/MemberLibraryPage";
 import { MemberProjectsPage } from "./pages/MemberProjectsPage";
 import { ProjectEditorPage } from "./pages/ProjectEditorPage";
 import { WorkspacePage } from "./pages/WorkspacePage";
+import { JoinPage } from "./pages/JoinPage";
 import {Phase1JoinPage} from "./pages/Phase1JoinPage";
 import {Phase1MemberPage} from "./pages/Phase1MemberPage";
 import {Phase1PublicMemberPage} from "./pages/Phase1PublicMemberPage";
