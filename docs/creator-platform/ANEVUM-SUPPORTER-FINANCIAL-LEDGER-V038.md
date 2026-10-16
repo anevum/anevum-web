@@ -12,6 +12,7 @@ The /support page already shows verified staging infrastructure facts. Operating
 - Expense invoices grouped into seven allowed categories: hosting, storage, delivery, email, moderation, software and other. Every amount is integer US cents with a unique private reference and SHA-256 evidence digest.
 - Supporter-only Stripe balance movements: positive charges, negative refunds, negative dispute reversals, and zero-amount fee adjustments; processing fees separately recorded and signed for adjustments.
 - Official Stripe gross/fee/refund/dispute/net totals MUST match the private entries; otherwise approved public aggregate generation fails closed.
+- Separately review remaining sales-tax liability already collected for government authorities. Tax reserve evidence, an explicit review flag and a verified nonnegative cents amount are required before calling any Stripe cash spendable or showing operating-cost coverage. Avoid double subtracting remittances already withheld by the processor.
 - Owner/reviewer attests source completeness, reconciliation, active supporter count and any approved funding goal independently. Incomplete financial metrics remain null; missing revenue is NOT zero.
 - The public output is strictly allowlisted. Raw invoice IDs, transaction IDs, evidence hashes, customer names, emails and financial account credentials never appear in the public JSON.
 
@@ -26,10 +27,10 @@ The /support page already shows verified staging infrastructure facts. Operating
 7. Validate page wording, identity isolation and financial period in CI and browser before owner-authorized staging deployment.
 
 ## Financial disclosure semantics
-- Net supporter cash received = settled supporter charges less Stripe processing fees, refunds and dispute reversals for the stated period.
+- Stripe settled cash before taxes = supporter charges less Stripe processing fees, refunds and dispute reversals for the stated period. Spendable supporter cash = that settled cash minus the independently reviewed REMAINING tax liability reserve; unreviewed tax treatment keeps spendable cash and the coverage meter UNKNOWN.
 - Annual subscription payments appear only as cash received in their actual period. These do NOT constitute twelve guaranteed months of sustainable recurring income. Monthly recurring run-rate needs its own independently verified subscription report.
 - Operating expense totals must come from actual invoices; never derive them from database bytes or Railway CPU activity.
-- Cost-coverage meter requires a separately verified expense denominator and reconciled supporter net cash for the SAME period; a zero expense denominator or unknown data produces no percentage.
+- Cost-coverage meter requires a separately verified expense denominator and spendable supporter cash AFTER the remaining tax reserve for the SAME period; a zero expense denominator or unknown data produces no percentage.
 - Verified zero differs from a missing record.
 - Review dates and published periods must remain visible, with month-to-date amounts clearly distinguished from closed-month results.
 - Supporter data is a commercial service, not a tax-deductible donation or investment return.
