@@ -69,17 +69,99 @@ export function CommunityForums(){
  <p className="cf-disclosure">Only approved public threads and members appear here. Posting and replying do not automatically award XP.</p></section>;
 }
 export function CommunityThread(){
- const {id=''}=useParams(),[revision,setRevision]=useState(0),[body,setBody]=useState(''),[requestId,setRequestId]=useState(()=>crypto.randomUUID()),[busy,setBusy]=useState(false),[notice,setNotice]=useState(''),[liked,setLiked]=useState(false);
+ const {id=''}=useParams();
  const {data:session}=canonicalAuthClient.useSession();
- const t=useResource(signal=>UUID.test(id)?request<{thread:Thread}>('/api/v1/community/threads/'+id,'GET',undefined,signal):Promise.reject(Error('Invalid thread')),[id,revision]);
- const replies=useResource(signal=>UUID.test(id)?request<{items:Reply[]}>('/api/v1/community/threads/'+id+'/replies','GET',undefined,signal):Promise.reject(Error('Invalid thread')),[id,revision]);
- async function action(method:string,path:string,body?:unknown){setBusy(true);setNotice('');try{await request(path,method,body);setRevision(x=>x+1);return true}catch(e){setNotice(e instanceof Error?e.message:'Action unavailable');return false}finally{setBusy(false)}}
- async function submit(e:FormEvent){e.preventDefault();if(await action('POST','/api/v1/community/threads/'+id+'/replies',{body,requestId})){setBody('');setRequestId(crypto.randomUUID());setNotice('Reply submitted for independent review.')}} 
- return <section className="cf-forums cf-detail"><Link to="/community">← RETURN TO COMMUNITY</Link>
- {t.state==='loading'&&<p>Opening discussion…</p>}{t.state==='error'&&<p role="alert">This thread is unavailable or not approved for public viewing.</p>}
- {t.state==='ready'&&<><header className="cf-header"><div><span className="cf-kicker">COMMUNITY / {t.data.thread.topic.toUpperCase()} / APPROVED</span><h1>{t.data.thread.title}</h1><AuthorCard author={t.data.thread.author}/></div></header>
- <article className="cf-thread"><p className="cf-fullbody">{t.data.thread.body}</p><div className="cf-thread-foot"><span>{t.data.thread.reactions} REACTIONS · {t.data.thread.replyCount} REPLIES</span>{session?.user&&<><button type="button" disabled={busy} onClick={async()=>{if(await action(liked?'DELETE':'POST','/api/v1/community/threads/'+id+'/reaction'))setLiked(!liked)}}>{liked?'REMOVE REACTION':'APPRECIATE'}</button><button type="button" disabled={busy} onClick={()=>void action('POST','/api/v1/community/reports',{targetKind:'thread',targetId:id,reason:'other'})}>REPORT</button></>}</div></article>
- <h2>RESPONSES</h2>{replies.state==='loading'&&<p>Reading reviewed replies…</p>}{replies.state==='ready'&&(replies.data.items.length?replies.data.items.map(r=><article className="cf-thread" key={r.id}><AuthorCard author={r.author}/><p className="cf-fullbody">{r.body}</p><time>{date(r.publishedAt)}</time></article>):<p className="cf-note">No approved replies yet.</p>)}
- {session?.user?<form className="cf-compose" onSubmit={e=>void submit(e)}><label>ADD YOUR PERSPECTIVE<textarea minLength={10} maxLength={2000} rows={5} required value={body} onChange={e=>setBody(e.target.value)}/></label><button className="cf-primary" disabled={busy||body.trim().length<10}>SUBMIT REPLY FOR REVIEW</button></form>:<p className="cf-note"><Link to="/join">Sign in</Link> to participate.</p>}
- {notice&&<p role="status" className="cf-notice">{notice}</p>}</>}</section>;
+ const memberId=session?.user?.id??null;
+ const [revision,setRevision]=useState(0),[body,setBody]=useState('');
+ const [requestId,setRequestId]=useState(()=>crypto.randomUUID());
+ const [busy,setBusy]=useState(false),[notice,setNotice]=useState('');
+ const [likedOverride,setLikedOverride]=useState<boolean|null>(null);
+ const [reportTarget,setReportTarget]=useState<{kind:'thread'|'reply';id:string}|null>(null);
+ const [reportReason,setReportReason]=useState<'spam'|'harassment'|'unsafe'|'other'>('spam');
+ useEffect(()=>{setLikedOverride(null);setReportTarget(null);setNotice('')},[id,memberId]);
+ const valid=UUID.test(id);
+ const thread=useResource(signal=>valid?request<{thread:Thread}>('/api/v1/community/threads/'+id,'GET',undefined,signal):Promise.reject(Error('Invalid thread')),[id,revision]);
+ const replies=useResource(signal=>valid?request<{items:Reply[]}>('/api/v1/community/threads/'+id+'/replies','GET',undefined,signal):Promise.reject(Error('Invalid thread')),[id,revision]);
+ const reaction=useResource(signal=>memberId&&valid?request<{reacted:boolean}>('/api/v1/community/threads/'+id+'/reaction','GET',undefined,signal):Promise.resolve({reacted:false}),[id,memberId,revision]);
+ const liked=likedOverride??(reaction.state==='ready'&&reaction.data.reacted);
+ async function action(method:string,path:string,payload?:unknown){
+  if(busy)return false;
+  setBusy(true);setNotice('');
+  try{await request(path,method,payload);setRevision(x=>x+1);return true}
+  catch(e){setNotice(e instanceof Error?e.message:'Action unavailable');return false}
+  finally{setBusy(false)}
+ }
+ async function submitReply(e:FormEvent<HTMLFormElement>){
+  e.preventDefault();
+  if(body.trim().length<10)return;
+  if(await action('POST','/api/v1/community/threads/'+id+'/replies',{body,requestId})){
+   setBody('');setRequestId(crypto.randomUUID());
+   setNotice('Your reply was received for independent review. It is not public yet.');
+  }
+ }
+ async function submitReport(e:FormEvent<HTMLFormElement>){
+  e.preventDefault();
+  if(!reportTarget)return;
+  if(await action('POST','/api/v1/community/reports',{targetKind:reportTarget.kind,targetId:reportTarget.id,reason:reportReason})){
+   setReportTarget(null);
+   setNotice('Report recorded for a moderator to review.');
+  }
+ }
+ async function toggleReaction(){
+  if(await action(liked?'DELETE':'POST','/api/v1/community/threads/'+id+'/reaction'))setLikedOverride(!liked);
+ }
+ return <section className="cf-forums cf-detail">
+  <Link to="/community">← RETURN TO COMMUNITY</Link>
+  {thread.state==='loading'&&<p role="status">Opening discussion…</p>}
+  {thread.state==='error'&&<p role="alert">This thread is unavailable or not approved for public viewing.</p>}
+  {thread.state==='ready'&&<>
+   <header className="cf-header"><div>
+    <span className="cf-kicker">COMMUNITY / {thread.data.thread.topic.toUpperCase()} / APPROVED</span>
+    <h1>{thread.data.thread.title}</h1>
+    <AuthorCard author={thread.data.thread.author}/>
+   </div></header>
+   <article className="cf-thread">
+    <p className="cf-fullbody">{thread.data.thread.body}</p>
+    <div className="cf-thread-foot"><span>{thread.data.thread.reactions} REACTIONS · {thread.data.thread.replyCount} APPROVED REPLIES</span>
+     {memberId&&<>
+      <button type="button" aria-pressed={liked} disabled={busy||reaction.state==='loading'||reaction.state==='error'} onClick={()=>void toggleReaction()}>{liked?'REMOVE REACTION':'APPRECIATE'}</button>
+      <button type="button" disabled={busy} onClick={()=>setReportTarget({kind:'thread',id})}>REPORT THREAD</button>
+     </>}
+    </div>
+   </article>
+   <h2>THE CONVERSATION</h2>
+   {replies.state==='loading'&&<p role="status">Reading reviewed replies…</p>}
+   {replies.state==='error'&&<p role="status">Approved replies are temporarily unavailable.</p>}
+   {replies.state==='ready'&&(replies.data.items.length?replies.data.items.map(reply=>
+    <article className="cf-thread" key={reply.id}>
+     <AuthorCard author={reply.author}/>
+     <p className="cf-fullbody">{reply.body}</p>
+     <div className="cf-thread-foot"><time>{date(reply.publishedAt)}</time>
+      {memberId&&<button type="button" disabled={busy} onClick={()=>setReportTarget({kind:'reply',id:reply.id})}>REPORT REPLY</button>}
+     </div>
+    </article>):<p className="cf-note">No approved replies yet.</p>)}
+   {memberId?<form className="cf-compose" onSubmit={e=>void submitReply(e)}>
+    <h3>ADD YOUR PERSPECTIVE</h3>
+    <label>YOUR REPLY<textarea minLength={10} maxLength={2000} rows={5} required value={body} disabled={busy} onChange={e=>setBody(e.target.value)} placeholder="Give constructive feedback or ask a thoughtful question…"/></label>
+    <p>Replies enter a review queue and appear only after approval.</p>
+    <button className="cf-primary" disabled={busy||body.trim().length<10}>{busy?'SENDING…':'SUBMIT REPLY FOR REVIEW'}</button>
+   </form>:<p className="cf-note"><Link to="/join">Sign in</Link> to join the conversation.</p>}
+   {memberId&&reportTarget&&<form className="cf-report" onSubmit={e=>void submitReport(e)}>
+    <h3>REPORT {reportTarget.kind.toUpperCase()}</h3>
+    <p>Reports are private to the moderation team. Please choose the most accurate reason.</p>
+    <label htmlFor="cf-report-reason">REASON</label>
+    <select id="cf-report-reason" value={reportReason} disabled={busy} onChange={e=>setReportReason(e.target.value as typeof reportReason)}>
+     <option value="spam">Spam or manipulation</option>
+     <option value="harassment">Harassment or abuse</option>
+     <option value="unsafe">Unsafe content</option>
+     <option value="other">Other rule violation</option>
+    </select>
+    <div className="cf-report-actions">
+     <button type="submit" disabled={busy}>SUBMIT REPORT</button>
+     <button type="button" disabled={busy} onClick={()=>setReportTarget(null)}>CANCEL</button>
+    </div>
+   </form>}
+   {notice&&<p role="status" className="cf-notice">{notice}</p>}
+  </>}
+ </section>;
 }
