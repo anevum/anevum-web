@@ -128,6 +128,18 @@ try{
  // New progression: real fixed XP, a live level-up, persistent notices and artwork.
  await page.goto(base+'/thebutton',{waitUntil:'domcontentloaded'});await page.locator('.an-xp-button').waitFor();
  await until(async()=>await page.locator('.an-xp-button').isEnabled());
+ // Observe the earned toast from before the XP sequence. WebKit can render
+ // and dismiss it while later presses are still running: its absence at the
+ // end of the sequence is not evidence that no notification was presented.
+ await page.evaluate(()=>{
+   window.__anevumObservedLevel3=false;
+   const scan=()=>{for(const el of document.querySelectorAll('.an-toast-level')){
+     if((el.textContent||'').includes('Level 3 reached'))window.__anevumObservedLevel3=true;
+   }};
+   const observer=new MutationObserver(scan);
+   observer.observe(document.body,{childList:true,subtree:true,characterData:true});
+   scan();
+ });
  assert.equal(db.prepare('SELECT COUNT(*) AS n FROM member_xp_events').get().n,0);
  for(let i=1;i<=13;i++){
   await page.locator('.an-xp-button').click();
@@ -136,19 +148,29 @@ try{
  }
  await until(async()=>/100 XP/.test(await page.locator('.an-button-progress').innerText()));
  assert.match(await page.locator('.an-button-progress').innerText(),/Level 3/);
- async function drain(){for(let i=0;i<20;i++){if(!await page.locator('.an-toast').count())break;await page.locator('.an-toast-open button').waitFor({timeout:10000});await page.locator('.an-toast-open button').click();await delay(100)}}
- // Dismiss earlier receipts in order until the real level-three unlock arrives.
- for(let i=0;i<20;i++){
-  await page.locator('.an-toast-open').waitFor({timeout:10000});
-  if(await page.locator('.an-toast-level').count()&&/Level 3 reached/.test(await page.locator('.an-toast-level').innerText()))break;
-  await page.locator('.an-toast-open button').click();await delay(100);
+ async function drain(){
+   for(let i=0;i<32;i++){
+     const toast=page.locator('.an-toast');
+     if(!await toast.count())break;
+     const close=page.locator('.an-toast-open button');
+     if(await close.count())await close.click();else await delay(350);
+     await delay(100);
+   }
+   await until(async()=>await page.locator('.an-toast').count()===0,12000);
  }
+ // The persisted level event and observed real animation are the assertion.
+ // A temporary toast is not required to remain visible after thirteen presses.
+ assert.equal(db.prepare("SELECT COUNT(*) AS n FROM member_reward_notifications WHERE kind='level' AND level=3").get().n,1);
+ await until(()=>evaluate('window.__anevumObservedLevel3 === true'),20000);
+ // Use a clearly labeled, non-awarding replay for repeatable viewport screenshots.
+ await drain();
+ await page.locator('.an-preview-controls button').filter({hasText:'PREVIEW LEVEL UP'}).click();
  await page.locator('.an-toast-level.an-toast-open').waitFor();
- assert.match(await page.locator('.an-toast-level').innerText(),/Level 3 reached/);
+ assert.match(await page.locator('.an-toast-level').innerText(),/ANIMATION PREVIEW/);
  for(const [width,height] of [[1440,900],[390,844],[320,720]]){
   await page.setViewportSize({width,height});await delay(80);
   assert.equal(await evaluate('document.documentElement.scrollWidth>innerWidth+1'),false,'Button overflow '+width);
-  await page.screenshot({path:join(out,'xp-button-level-up-'+width+'.png')});
+  await page.screenshot({path:join(out,'xp-button-level-up-preview-'+width+'.png')});
  }
  await drain();
  await page.locator('.an-preview-controls button').filter({hasText:'PREVIEW MEDAL'}).click();
