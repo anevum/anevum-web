@@ -1,7 +1,7 @@
 import {type FormEvent,useEffect,useState} from "react";
 import {Link,Navigate,useNavigate} from "react-router-dom";
 import {canonicalAuthClient,canonicalClaim,canonicalEdit,canonicalMe,canonicalReady,
-  type CanonicalProfile,type WorldTheme,type FocusKey,WORLD_THEME_OPTIONS,FOCUS_OPTIONS} from "../lib/canonical-beta";
+  CanonicalBetaError,type CanonicalProfile,type WorldTheme,type FocusKey,WORLD_THEME_OPTIONS,FOCUS_OPTIONS} from "../lib/canonical-beta";
 import {useResource} from "../lib/useResource";
 import {OrbitalMark} from "../components/OrbitalMark";
 import {MemberExperienceMap} from "../components/MemberExperienceMap";
@@ -75,8 +75,9 @@ function MemberEditor({memberId,memberName}:{memberId:string;memberName:string})
       setFocus(checked.profile.focus);
       setPublicVisible(checked.profile.visibility==="public");
       setNotice(claimed?"Your profile changes were saved.":"Your identity is saved. Welcome to ANEVUM. You can explore now and customize your profile later.");
-    }catch{
-      setError("Your profile was not confirmed as saved. Your account remains signed in. Check your connection and try saving again.");
+    }catch(cause){
+      setError(cause instanceof CanonicalBetaError?cause.message:
+        "The server did not confirm your save. Your account remains signed in; refresh and try again.");
     }finally{setBusy(false)}
   }
   async function signOut(){
