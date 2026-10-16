@@ -113,7 +113,7 @@ test('reward selector persists only unlocked owner picks with optimistic revisio
   assert.equal(own.revision,0);
   const future=await supporterRewardsRoute(endpoint('PATCH',{seal:'continuance',frame:'lumen',aura:'aurora',revision:0}),env,a,{now:NOW});
   assert.equal(future.status,400);
-  const invalid=await supporterRewardsRoute(endpoint('PATCH',{seal:'orbit',frame:'stellar',aura:'aurora',revision:0}),env,a,{now:NOW});
+  const invalid=await supporterRewardsRoute(endpoint('PATCH',{seal:'orbit',frame:'stellar',aura:'nebula',revision:0}),env,a,{now:NOW});
   assert.equal(invalid.status,400);
   const first=await supporterRewardsRoute(endpoint('PATCH',{seal:'orbit',frame:'rose',aura:'ember',revision:0}),env,a,{now:NOW});
   assert.equal(first.status,200);
