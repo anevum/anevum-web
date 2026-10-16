@@ -6,6 +6,8 @@ Desktop uses four collections across; tablets use two; phones use a native, keyb
 
 No invented people, projects, activity, achievements, rankings or unlocked publishing. Reuse the existing approved-data components and route gates.
 
+Screenshot review also confirmed the main hero painting was visibly soft. The new portal-world original now supplies the hero and matching category illustration, while the other new originals supply their corresponding category/feed thumbnails. Historical assets remain versioned, and other categories retain their existing artwork. No creator-supplied covers are replaced. The existing Chromium capture runners now wait for browser exit before cleaning up profiles, fixing a teardown race observed after all first-run page checks passed.
+
 ## Artwork brief
 Built-in Image Generation; original decorative category art, never submission covers. Each illustration is one full-frame landscape, premium cinematic science fantasy with an indigo/obsidian, ivory-light, violet and restrained-copper Continuance Institute atmosphere. Clearly resolved materials and shapes, no UI, text, logos, collage or pixel art.
 
