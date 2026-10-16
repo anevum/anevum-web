@@ -51,6 +51,9 @@ test('existing Backstage and canonical forum boundaries remain documented in sou
  const doc=readFileSync(new URL('../../docs/creator-platform/ANEVUM.WEB.BUILD.2026-10-16.002.MODERATOR-CONSOLE.md',import.meta.url),'utf8');
  assert.match(doc,/Better Auth canonical member identity/i);
  assert.match(doc,/same-origin/i);
+ assert.match(doc,/Private Lab Backstage integration/i);
+ assert.match(doc,/lab\.anevum\.com\/projects\/backstage\/moderation/);
+ assert.match(doc,/separate.*promoting the canonical V042/i);
  assert.match(doc,/No account bans/i);
  assert.match(doc,/staging release/i);
  const reviewer=readFileSync(new URL('../../creator-v1/canonical-auth/forums.mjs',import.meta.url),'utf8');
