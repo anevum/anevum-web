@@ -54,7 +54,7 @@ try{
  await client.send("Page.enable");await client.send("Runtime.enable");
  const evaluate=async expression=>{
   const result=await client.send("Runtime.evaluate",{expression,returnByValue:true,awaitPromise:true});
-  if(result.exceptionDetails)throw Error(result.exceptionDetails.text||"SITEWIDE_V012_EVALUATE_FAILED");
+  if(result.exceptionDetails)throw Error(result.exceptionDetails.exception?.description||result.exceptionDetails.text||"SITEWIDE_V012_EVALUATE_FAILED");
   return result.result?.value;
  };
  const screenshot=async label=>{
@@ -125,6 +125,34 @@ try{
       throw Error("SITEWIDE_V012_LEVELS_TEXT_SQUEEZED_"+width+":"+JSON.stringify(metrics));
    }
    await screenshot(name+"-"+width);
+   if(name==="home"){
+    await evaluate('document.getElementById("world-gateways").scrollIntoView({block:"start"})');
+    if(width<541){
+     // Native lazy loading deliberately defers offscreen horizontal cards.
+     // Exercise each card before requiring all four decoded originals.
+     for(let index=0;index<4;index++){
+      await evaluate('document.querySelectorAll(".av9-world-gateway")['+index+'].scrollIntoView({block:"nearest",inline:"nearest",behavior:"instant"})');
+      await until(()=>evaluate('(()=>{const image=document.querySelectorAll(".av9-world-gateway-art>img")['+index+'];return image?.complete&&image.naturalWidth>0;})()'));
+     }
+     await evaluate('document.getElementById("community-portal-cards").scrollTo({left:0,behavior:"instant"});document.getElementById("world-gateways").scrollIntoView({block:"start"})');
+     await until(()=>evaluate('document.getElementById("community-portal-cards").scrollLeft<5'));
+    }
+    await until(()=>evaluate('document.querySelectorAll(".av9-world-gateway-art>img").length===4&&Array.from(document.querySelectorAll(".av9-world-gateway-art>img")).every(image=>image.complete&&image.naturalWidth>0)'));
+    // naturalWidth is density-corrected with width-descriptor srcsets. Decode
+    // the selected file itself to verify physical source pixels instead.
+    const portals=await evaluate('(async()=>({images:document.querySelectorAll(".av9-world-gateway-art>img[srcset]").length,resolutions:await Promise.all([...document.querySelectorAll(".av9-world-gateway-art>img")].map(async image=>{const bitmap=await createImageBitmap(await(await fetch(image.currentSrc)).blob());const width=bitmap.width;bitmap.close();return width;})),links:[...document.querySelectorAll(".av9-world-gateway")].map(a=>a.getAttribute("href")),readingSurface:[...document.querySelectorAll(".av9-world-gateway-content")].every(el=>getComputedStyle(el).position!=="absolute"),overflow:document.documentElement.scrollWidth>innerWidth+1}))()');
+    if(portals.images!==4||portals.resolutions.some(width=>width<768)||!portals.readingSurface||portals.overflow||portals.links.some(href=>!href.includes("/discover?category=")))
+     throw Error("COMMUNITY_PORTAL_ART_OR_LAYOUT_"+width+":"+JSON.stringify(portals));
+    if(width<541){
+     await evaluate("document.querySelector("+JSON.stringify('button[aria-label="Next collection"]')+").click()");
+     await until(()=>evaluate('document.getElementById("community-portal-cards").scrollLeft>100'));
+     await evaluate("document.querySelector("+JSON.stringify('button[aria-label="Previous collection"]')+").click()");
+     await until(()=>evaluate('document.getElementById("community-portal-cards").scrollLeft<5'));
+    }
+    await screenshot("home-collections-"+width);
+    await evaluate('document.querySelector(".av11-live-index").scrollIntoView({block:"start"})');
+    await screenshot("home-community-modules-"+width);
+   }
    results.push({page:name,width,...state});
    console.log("SITEWIDE_V012_"+name.toUpperCase()+"_"+width+"=PASS");
   }
@@ -145,6 +173,13 @@ try{
  writeFileSync(join(output,"capture-status.txt"),"SITEWIDE_V012_BROWSER_CAPTURE=PASS\nAll records are synthetic offline visual fixtures; no live member acceptance.\n");
  console.log("SITEWIDE_V012_BROWSER_CAPTURE=PASS; PAGES="+results.length);
 }finally{
- client?.close();child.kill("SIGTERM");await delay(180);
- rmSync(profile,{recursive:true,force:true});
+ try{if(client)await client.send("Browser.close");}catch{}
+ client?.close();
+ if(child.exitCode===null){
+  const exited=new Promise(resolve=>child.once("exit",resolve));
+  child.kill("SIGTERM");await Promise.race([exited,delay(2000)]);
+  if(child.exitCode===null){child.kill("SIGKILL");await Promise.race([exited,delay(1000)]);}
+ }
+ try{rmSync(profile,{recursive:true,force:true,maxRetries:5,retryDelay:200});}
+ catch(error){if(!["ENOTEMPTY","EBUSY"].includes(error.code))throw error;console.warn("Temporary browser profile cleanup deferred:",error.code);}
 }

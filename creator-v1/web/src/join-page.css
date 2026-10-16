@@ -19,3 +19,32 @@
 @media(prefers-reduced-motion:reduce){.join-method{transition:none}}
 
 .join-world-art{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.48;filter:saturate(.8) brightness(.65);z-index:-1;pointer-events:none;user-select:none}
+
+/* V026 — clean, email-first membership entry; cinematic source art is retained. */
+.av12-phase1-join .join-panel{max-width:480px;width:100%;justify-self:end}
+.av12-phase1-join .join-panel h2{margin-top:26px;font-size:clamp(28px,3vw,38px)}
+.av12-phase1-join .join-lead{margin-bottom:20px}
+.av12-phase1-join .av12-email-entry{display:grid;gap:11px;margin-top:20px}
+.av12-phase1-join .av12-email-entry label{font-size:10px;font-weight:800;letter-spacing:.12em;color:#e8c8b1}
+.av12-phase1-join .av12-email-entry input{width:100%;min-height:54px;border:1px solid #c0929294;border-radius:15px;padding:13px 16px;background:#151622;color:#fff5e7;font-size:16px;box-shadow:inset 0 1px 4px #0007}
+.av12-phase1-join .av12-email-entry input:focus-visible{outline:2px solid #eeb58b;outline-offset:2px}
+.av12-phase1-join .av12-email-entry input:disabled{opacity:.75}
+.av12-phase1-join .av12-email-entry .av12-email-submit{min-height:54px;border-radius:15px;background:linear-gradient(140deg,#f8d2ad,#e69a82);color:#21121b;font-weight:850;letter-spacing:.035em;box-shadow:0 12px 32px #0006,inset 0 1px 0 #fff9}
+.av12-phase1-join .av12-email-entry .av12-email-reset{min-height:42px;border-radius:12px;background:#ffffff0b;border:1px solid #a98b926f;color:#e9c9be;font-size:11px;font-weight:700}
+.av12-phase1-join .av12-email-entry .av12-email-guidance{color:#c2b8c6;line-height:1.5}
+.av12-phase1-join .join-methods{margin-top:16px}
+.av12-phase1-join .join-methods button.join-method{width:100%;text-align:left;color:inherit}
+.av12-phase1-join .join-chapters{max-width:450px}
+.av12-phase1-join .join-security a{color:#e8b99e;text-decoration:underline}
+@media(max-width:900px){.av12-phase1-join .join-panel{justify-self:center;max-width:660px}}
+@media(max-width:500px){.av12-phase1-join .join-panel{padding:24px 19px}.av12-phase1-join .join-story{padding:0 10px}.av12-phase1-join .join-chapters{display:none}.av12-phase1-join .join-story h1{font-size:clamp(43px,12vw,60px)}.av12-phase1-join .join-experience{gap:10px}}
+
+/* Onboarding V026: show only the essential identity fields before first claim. */
+.av26-first-visit .av12-account-banner{max-width:790px;margin-inline:auto}
+.av26-first-visit .av12-account-layout{display:block;max-width:640px;margin-inline:auto}
+.av26-first-visit .av12-editor-panel{width:100%;max-width:none}
+.av26-first-visit .av12-profile-form{display:grid;gap:13px}
+.av26-first-visit .av12-save-button{min-height:54px}
+
+.av26-continue-world{display:flex;justify-content:center;align-items:center;gap:10px;padding:15px 20px;border-radius:16px;background:linear-gradient(135deg,#f2c8a9,#dc937f);color:#22121a;font-weight:800;text-decoration:none;min-height:52px}
+.av26-continue-world:hover{filter:brightness(1.08)}
