@@ -122,7 +122,9 @@ for(const mode of ["invite-only","open"])test(`two independent users complete co
     // Some WebKit and in-app contexts do not attach Sec-Fetch-Site to a
    // legitimate same-origin POST. Origin remains mandatory and exact.
    const safariLikeClaim=new Request(ORIGIN+me,{
-     method:"POST",headers:{"origin":ORIGIN,"content-type":"application/json","cookie":cookieA},
+     method:"POST",headers:{"origin":ORIGIN,"sec-fetch-site":"same-site",
+       "x-anevum-profile-intent":"anevum-profile-write-v1",
+       "content-type":"application/json","cookie":cookieA},
      body:JSON.stringify({handle:"pilot_alpha",displayName:"Pilot Alpha",bio:"First private world"})
    });
    const claimedA=await worker.fetch(safariLikeClaim,env);
