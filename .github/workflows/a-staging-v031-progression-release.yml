@@ -1,6 +1,6 @@
 name: ANEVUM A Staging Levels Awards and Alerts V031
 
-# Task-authorized staging-only progression release. Read-only D1 schema verification revision 6; do not re-import existing migration. Never deploy the apex countdown.
+# Task-authorized staging-only progression release. Conditional V031 health schema verification revision 8; preserve disabled health API. Never deploy the apex countdown.
 on:
   push:
     branches: [build/levels-awards-alerts-v031-20261016]

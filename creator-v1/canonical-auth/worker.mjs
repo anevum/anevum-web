@@ -122,9 +122,11 @@ export function createCanonicalStageWorker({authFactory=createCanonicalAuth}={})
       status:stageReady?"ready":"closed",
       registration:stageReady?(configured.open?"open":configured.invited?"invite-only":"closed"):"closed",
       linkedCreatorAccounts:false,
-      // Anonymous readiness reports schema availability only, never private XP,
-      // member records or database identifiers.
-      progressionReady:stageReady&&env.CANONICAL_XP_TEST_ENABLED==='true' ? await progressionReady(env.MEMBER_DB) : false
+      // Keep the disabled service's original inert health contract unchanged.
+      // V031 staging alone includes a schema-readiness signal, no private data.
+      ...(env.CANONICAL_XP_TEST_ENABLED==='true'?{
+        progressionReady:Boolean(stageReady&&await progressionReady(env.MEMBER_DB))
+      }:{})
     });
     if(path===METHODS)return safeJson(request,{
       version:2,
