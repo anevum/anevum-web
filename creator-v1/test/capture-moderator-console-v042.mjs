@@ -163,60 +163,71 @@ try{
   await client.send('Page.navigate',{url:base+path});
   await until(()=>evaluate("document.readyState==='complete'"));
  }
- await goto('/community');
- await until(()=>evaluate("document.querySelectorAll('.cf-forums .cf-thread').length===20"));
- const first=await evaluate("({count:document.querySelectorAll('.cf-forums .cf-thread').length,more:!!document.querySelector('.cf-more'),secret:document.body.innerText.includes('PRIVATE THREAD MUST NEVER APPEAR'),author:!!document.querySelector('.cf-author-level .level-emblem')})");
- assert.equal(first.count,20);assert.equal(first.more,true);
- assert.equal(first.secret,false);assert.equal(first.author,true);
- result.authorCards=true;result.privateThreadExcluded=true;
- await evaluate("document.querySelector('.cf-more').click()");
- await until(()=>evaluate("document.querySelectorAll('.cf-forums .cf-thread').length===25"));
- result.pagination=true;
- await evaluate("document.querySelectorAll('.cf-forums .cf-thread h3 a')[24].click()");
- await until(()=>evaluate("!!document.querySelector('.cf-detail .cf-fullbody')"));
- assert.equal(await evaluate("!!document.querySelector('.cf-detail .cf-author-level')"),true);
- result.threadNavigation=true;
- await client.send('Emulation.setDeviceMetricsOverride',{width:390,height:844,deviceScaleFactor:1,mobile:true});
- await evaluate("(()=>{const e=document.querySelector('.cf-detail');window.scrollTo(0,e.getBoundingClientRect().top+window.scrollY-82)})()");
- await delay(220);
- const detailShot=await client.send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});
- writeFileSync(join(out,'forum-detail-390.png'),Buffer.from(detailShot.data,'base64'));
- await goto('/');
- await until(()=>evaluate("!!document.querySelector('.cf-highlights')"));
- result.homeHighlights=true;
- await client.send('Emulation.setDeviceMetricsOverride',{width:390,height:844,deviceScaleFactor:1,mobile:true});
- await evaluate("document.querySelector('.cf-highlights').scrollIntoView({block:'start'})");
- await delay(500);
- await evaluate("document.querySelector('.cf-highlights').scrollIntoView({block:'start'})");
- await delay(300);
- const homePosition=await evaluate("(()=>{const r=document.querySelector('.cf-highlights').getBoundingClientRect();return {top:r.top,bottom:r.bottom}})()");
- assert.ok(homePosition.top<844&&homePosition.bottom>75,JSON.stringify(homePosition));
- result.homeCaptureVisible=true;
- const homeShot=await client.send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});
- writeFileSync(join(out,'forum-home-highlights-390.png'),Buffer.from(homeShot.data,'base64'));
- await goto('/community');
- await until(()=>evaluate("document.querySelectorAll('.cf-forums .cf-thread').length===20"));
+ await goto('/community/review');
+ await until(()=>evaluate("!!document.querySelector('.mc-console .mc-metrics')"));
+ result.staffSession=true;
+ const first=await evaluate("({cases:document.querySelectorAll('.mc-case').length,totals:[...document.querySelectorAll('.mc-metrics strong')].map(x=>x.textContent.trim()),hasReport:document.body.innerText.includes('SAFETY / THREAD')})");
+ assert.deepEqual(first.totals,['2','0','1']);
+ assert.ok(first.cases>=3,JSON.stringify(first));
+ assert.equal(first.hasReport,true);result.reportEvidence=true;
+
  for(const [width,height] of [[1440,900],[1024,768],[390,844],[320,720]]){
-  await client.send('Emulation.setDeviceMetricsOverride',
-   {width,height,deviceScaleFactor:1,mobile:width<=390});
-  await delay(200);
-  await evaluate("(()=>{const e=document.querySelector('.cf-forums');window.scrollTo(0,e.getBoundingClientRect().top+window.scrollY-84)})()");
-  await delay(160);
-  const layout=await evaluate("(()=>{const e=document.querySelector('.cf-forums');const r=e.getBoundingClientRect();return {viewport:innerWidth,left:r.left,right:r.right,overflow:e.scrollWidth>e.clientWidth+2,cards:document.querySelectorAll('.cf-forums .cf-thread').length}})()");
+  await client.send('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:1,mobile:width<=390});
+  await delay(180);
+  await evaluate("document.querySelector('.mc-summary').scrollIntoView({block:'start'})");
+  await delay(250);
+  const layout=await evaluate("(()=>{const e=document.querySelector('.mc-console');const r=e.getBoundingClientRect();return {viewport:innerWidth,left:r.left,right:r.right,overflow:e.scrollWidth>e.clientWidth+2,hasSummary:!!document.querySelector('.mc-metrics')}})()");
   assert.equal(layout.overflow,false,JSON.stringify({width,...layout}));
   assert.ok(layout.left>=-2&&layout.right<=width+3,JSON.stringify(layout));
   const shot=await client.send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});
-  assert.ok(shot.data);writeFileSync(join(out,'forum-'+width+'.png'),Buffer.from(shot.data,'base64'));
+  assert.ok(shot.data);
+  writeFileSync(join(out,'moderator-'+width+'.png'),Buffer.from(shot.data,'base64'));
   result.widths.push({width,...layout});
  }
- // Turning the feature off must remove the new forum without hiding the legacy community.
- env.CANONICAL_FORUM_ENABLED='false';
- await goto('/community');
- await until(()=>evaluate("!!document.querySelector('.ch7-hub')&&!document.querySelector('.cf-forums')"));
- result.disabledHidesForum=true;
+ // A reported thread shows real excerpt/author context while protecting reporters.
+ await evaluate("document.querySelector('.mc-rail .mc-nav:nth-child(4)').click()");
+ await until(()=>evaluate("document.querySelector('.mc-section-heading')?.textContent?.includes('MEMBER REPORTS')"));
+ assert.equal(await evaluate("document.querySelector('.mc-evidence')?.textContent?.includes('accessible')"),true);
+ assert.equal(await evaluate("document.querySelector('.mc-privacy')?.textContent?.includes('REPORTER IDENTITY IS WITHHELD')"),true);
+ await evaluate("document.querySelector('.mc-evidence').scrollIntoView({block:'center'})");
+ await delay(250);
+ const reportShot=await client.send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});
+ writeFileSync(join(out,'moderator-report-390.png'),Buffer.from(reportShot.data,'base64'));
+ // First thread is from a different author; own staff-authored post cannot self-approve.
+ await evaluate("document.querySelector('.mc-rail .mc-nav:nth-child(2)').click()");
+ await until(()=>evaluate("document.querySelectorAll('.mc-case').length===2"));
+ assert.equal(await evaluate("document.querySelectorAll('.mc-case .mc-approve:disabled').length"),1);
+ assert.equal(await evaluate("document.querySelectorAll('.mc-case .mc-approve:not(:disabled)').length"),1);
+ result.independentApproval=true;
+ await evaluate("document.querySelector('.mc-case .mc-approve:not(:disabled)').click()");
+ await until(()=>evaluate("document.querySelector('.mc-dialog')?.open===true"));
+ result.decisionModal=true;
+ const modalShot=await client.send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});
+ writeFileSync(join(out,'moderator-confirm-390.png'),Buffer.from(modalShot.data,'base64'));
+ await evaluate("document.querySelector('.mc-dialog-controls button:first-child').click()");
+ await until(()=>evaluate("!document.querySelector('.mc-dialog')"));
+ assert.equal(db.prepare('SELECT status FROM member_forum_threads WHERE id=?').get(pendingThread).status,'pending_review');
+ await evaluate("document.querySelector('.mc-case .mc-approve:not(:disabled)').click()");
+ await until(()=>evaluate("document.querySelector('.mc-dialog')?.open===true"));
+ await evaluate("document.querySelector('.mc-dialog-controls button:last-child').click()");
+ await until(()=>evaluate("document.querySelectorAll('.mc-case').length===1"));
+ assert.equal(db.prepare('SELECT status FROM member_forum_threads WHERE id=?').get(pendingThread).status,'published');
+ result.serverApproval=true;
+ await evaluate("document.querySelector('.mc-rail .mc-nav:nth-child(4)').click()");
+ await until(()=>evaluate("!!document.querySelector('.mc-report .mc-danger:not(:disabled)')"));
+ await evaluate("document.querySelector('.mc-report .mc-danger:not(:disabled)').click()");
+ await until(()=>evaluate("document.querySelector('.mc-dialog')?.open===true"));
+ await evaluate("document.querySelector('.mc-dialog-controls button:last-child').click()");
+ await until(()=>evaluate("document.querySelectorAll('.mc-report').length===0"));
+ assert.equal(db.prepare('SELECT status FROM member_forum_threads WHERE id=?').get(threadId).status,'hidden');
+ assert.equal(db.prepare('SELECT COUNT(*) AS n FROM member_forum_reports WHERE resolved_at IS NULL').get().n,0);
+ result.serverHide=true;
+ await evaluate("document.querySelector('.mc-rail .mc-nav:nth-child(5)').click()");
+ await until(()=>evaluate("document.querySelectorAll('.mc-log-entry').length>=4"));
+ result.auditTrail=true;
  writeFileSync(join(out,'acceptance.json'),JSON.stringify(result,null,2));
- console.log('V041_CANONICAL_FORUM_GUEST_BROWSER=PASS');
-}catch(e){console.error('V041_FORUM_BROWSER_FAILED='+String(e));throw e}
+ console.log('V042_MODERATOR_CONSOLE_BROWSER=PASS');
+ }catch(e){console.error('V041_FORUM_BROWSER_FAILED='+String(e));throw e}
 finally{
  client?.close();
  child.kill();
