@@ -8,13 +8,27 @@ export const canonicalAuthClient=createAuthClient({
   plugins:[emailOTPClient()]
 });
 
+export const WORLD_THEME_OPTIONS = [
+  {id:"continuance",name:"Continuance",detail:"Archival rose and violet"},
+  {id:"nocturne",name:"Nocturne",detail:"Deep blue and pale starlight"},
+  {id:"verdant",name:"Evergrove",detail:"Forest green and amber"}
+] as const;
+export type WorldTheme=typeof WORLD_THEME_OPTIONS[number]["id"];
+export const FOCUS_OPTIONS = [
+  {id:"games",label:"Games"},{id:"apps",label:"Apps"},{id:"art",label:"Art"},
+  {id:"writing",label:"Writing"},{id:"music",label:"Music"},{id:"research",label:"Research"},
+  {id:"learning",label:"Learning"},{id:"tools",label:"Tools"},{id:"community",label:"Community"}
+] as const;
+export type FocusKey=typeof FOCUS_OPTIONS[number]["id"];
 export type CanonicalProfile={
   handle:string;displayName:string;bio:string;
+  headline:string;worldTheme:WorldTheme;focus:FocusKey[];
   visibility:"private"|"public";revision:number;createdAt:number;updatedAt:number;
 };
 export type CanonicalPrivateResponse={memberId:string;profile:CanonicalProfile|null};
 export type CanonicalPublicResponse={profile:{
-  handle:string;displayName:string;bio:string;joinedAt:number
+  handle:string;displayName:string;bio:string;joinedAt:number;
+  headline:string;worldTheme:WorldTheme;focus:FocusKey[];
 }};
 export class CanonicalBetaError extends Error {
   constructor(readonly status:number,message:string){super(message);this.name="CanonicalBetaError"}
@@ -50,22 +64,23 @@ async function request<T>(path:string,method:"GET"|"POST"|"PATCH"="GET",body?:un
  return safeJson<T>(response);
 }
 export type CanonicalMethods={
-  registration:"closed"|"invite-only";
-  methods:{email:{available:boolean};google:{available:boolean}};
+  registration:"closed"|"invite-only"|"open";
+  methods:{email:{available:boolean};google:{available:boolean};github:{available:boolean};apple:{available:boolean};microsoft:{available:boolean};passkey:{available:boolean}};
 };
 export const canonicalMethods=(signal?:AbortSignal)=>
  request<CanonicalMethods>("/api/v1/member/auth-methods","GET",undefined,signal);
 export async function canonicalReady(signal?:AbortSignal):Promise<boolean>{
  try{
    const data=await canonicalMethods(signal);
-   return data.registration==="invite-only"&&(data.methods.email.available===true||data.methods.google.available===true);
+   return (data.registration==="invite-only"||data.registration==="open")&&(Object.values(data.methods).some(method=>method.available===true));
  }catch{return false;}
 }
 export const canonicalMe=(signal?:AbortSignal)=>
  request<CanonicalPrivateResponse>("/api/v1/member/creator-profile","GET",undefined,signal);
 export const canonicalClaim=(body:{handle:string;displayName:string;bio:string})=>
  request<CanonicalPrivateResponse>("/api/v1/member/creator-profile","POST",body);
-export const canonicalEdit=(body:{displayName:string;bio:string;visibility:"private"|"public";revision:number})=>
+export const canonicalEdit=(body:{displayName:string;bio:string;visibility:"private"|"public";revision:number;
+  headline:string;worldTheme:WorldTheme;focus:FocusKey[]})=>
  request<CanonicalPrivateResponse>("/api/v1/member/creator-profile","PATCH",body);
 export const canonicalPublic=(handle:string,signal?:AbortSignal)=>
  request<CanonicalPublicResponse>("/api/v1/members/"+handle,"GET",undefined,signal,true);

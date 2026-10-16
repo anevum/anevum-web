@@ -6,12 +6,12 @@ import {useResource} from "../lib/useResource";
 import {OrbitalMark} from "../components/OrbitalMark";
 
 const METHODS=[
- {key:"google",name:"Google",initial:"G",caption:"Verified Google account • invitation required"},
- {key:"email",name:"Email code",initial:"@",caption:"Passwordless verification • invitation required"},
- {key:"github",name:"GitHub",initial:"GH",caption:"Developer sign-in • awaiting security review"},
+ {key:"google",name:"Google",initial:"G",caption:"Verified Google account"},
+ {key:"email",name:"Email code",initial:"@",caption:"Passwordless verification"},
+ {key:"github",name:"GitHub",initial:"GH",caption:"Developer sign-in"},
  {key:"passkey",name:"Passkey",initial:"PK",caption:"Secure device unlock • in development"},
- {key:"microsoft",name:"Microsoft",initial:"MS",caption:"Account provider • planned"},
- {key:"apple",name:"Apple",initial:"AP",caption:"Apple ID • planned"}
+ {key:"microsoft",name:"Microsoft",initial:"MS",caption:"Microsoft account"},
+ {key:"apple",name:"Apple",initial:"AP",caption:"Apple ID"}
 ] as const;
 
 /** Phase 1 only: no Creator OTP hand-off or cross-origin Google redirect.
@@ -28,16 +28,16 @@ export function Phase1JoinPage(){
  const [notice,setNotice]=useState("");
  const {data:session,isPending}=canonicalAuthClient.useSession();
  const [busy,setBusy]=useState(false),[error,setError]=useState("");
- const ready=capability.state==="ready"&&capability.data.registration==="invite-only";
+ const ready=capability.state==="ready"&&(capability.data.registration==="invite-only"||capability.data.registration==="open");
  const emailReady=ready&&capability.data.methods.email.available===true;
- const googleReady=ready&&capability.data.methods.google.available===true;
+ const socialReady=(key:string)=>ready&&["google","github","apple","microsoft"].includes(key)&&capability.data.methods[key as "google"|"github"|"apple"|"microsoft"]?.available===true;
  const member=session?.user;
- async function startGoogle(){
-   if(!googleReady||busy)return;
+ async function startSocial(provider:"google"|"github"|"apple"|"microsoft"){
+   if(!socialReady(provider)||busy)return;
    setBusy(true);setError("");
    try{
-     const response=await canonicalAuthClient.signIn.social({provider:"google",callbackURL:"/join"});
-     if(response.error)throw Error("Google sign-in could not be started.");
+     const response=await canonicalAuthClient.signIn.social({provider,callbackURL:"/join"});
+     if(response.error)throw Error("Social sign-in could not be started.");
    }catch{
      setError("Sign-in is currently unavailable. No account was created.");
    }finally{setBusy(false)}
@@ -54,15 +54,33 @@ export function Phase1JoinPage(){
      if(!codeSent){
        const result=await canonicalAuthClient.emailOtp.sendVerificationOtp({email:normalized,type:"sign-in"});
        if(result.error)throw Error("Email verification could not be started");
-       setEmail(normalized);setCodeSent(true);setNotice("If your email is invited, an 8-digit code has been sent. Check your inbox.");
+       setEmail(normalized);setCodeSent(true);setNotice("If delivery is available, an 8-digit code has been sent. Check your inbox.");
      }else{
        if(!/^\d{8}$/.test(otp))throw Error("Invalid code");
        const result=await canonicalAuthClient.signIn.emailOtp({email:normalized,otp,name:"ANEVUM MEMBER"});
        if(result.error)throw Error("Invalid or expired verification code");
        navigate("/member",{replace:true});
      }
-   }catch{setError(codeSent?"The code could not be verified. Request a new code or try again.":"Email verification is unavailable or this invitation is not active.");}
+   }catch{setError(codeSent?"Code verification failed. No replacement is sent automatically; tap SEND A NEW CODE to request one.":"Email verification is temporarily unavailable.");}
    finally{setBusy(false);}
+ }
+ async function requestReplacementCode(){
+   if(!emailReady||busy||!codeSent)return;
+   const normalized=email.trim().toLowerCase();
+   if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalized)||normalized.length>254){
+     setError("Enter a valid email address.");return;
+   }
+   setBusy(true);setError("");setNotice("");
+   try{
+     // A "resend" must actually contact the email service, not merely reset the form.
+     // The server enforces both rate limits and eligibility without disclosing invite status.
+     const result=await canonicalAuthClient.emailOtp.sendVerificationOtp({email:normalized,type:"sign-in"});
+     if(result.error)throw Error("Replacement email code unavailable");
+     setOtp("");
+     setNotice("If delivery is available, a replacement code has been requested. Use the newest 8-digit code.");
+   }catch{
+     setError("Could not request a replacement code. If you have requested several, wait up to 10 minutes and retry.");
+   }finally{setBusy(false);}
  }
  function resetCode(){setCodeSent(false);setOtp("");setNotice("");setError("");}
  return <section className="join-experience av12-phase1-join" aria-labelledby="phase1-join-title">
@@ -84,7 +102,7 @@ export function Phase1JoinPage(){
      <div className="join-panel-top"><span className="kicker">IDENTITY PORTAL / PHASE 1</span>
        <span className="join-state" role="status">
          {capability.state==="loading"||isPending?"VERIFYING SERVICE":
-           ready?"INVITATION BETA":"REGISTRATION CLOSED"}
+           ready?(capability.data.registration==="open"?"OPEN REGISTRATION":"INVITATION BETA"):"REGISTRATION CLOSED"}
        </span>
      </div>
      {member&&ready?<div className="join-return">
@@ -97,11 +115,11 @@ export function Phase1JoinPage(){
        <h2>THE NEXT CHAPTER.</h2>
        <p className="join-lead">Free community membership. No payment, brokerage account, or project required.</p>
        <div className="join-methods" aria-label="Member sign-in methods">
-         {METHODS.map(method=><div className={"join-method"+(((method.key==="google"&&googleReady)||(method.key==="email"&&emailReady))?" join-method-ready":"")} key={method.key}>
+         {METHODS.map(method=><div className={"join-method"+((socialReady(method.key)||(method.key==="email"&&emailReady))?" join-method-ready":"")} key={method.key}>
            <span className="join-method-symbol" aria-hidden="true">{method.initial}</span>
            <div className="join-method-copy"><strong>{method.name}</strong><small>{method.caption}</small></div>
-           {(method.key==="google"&&googleReady)||(method.key==="email"&&emailReady)?
-             <button className="join-method-open" type="button" onClick={method.key==="email"?()=>setEmailOpen(true):()=>void startGoogle()} disabled={busy}>
+           {(socialReady(method.key))||(method.key==="email"&&emailReady)?
+             <button className="join-method-open" type="button" onClick={method.key==="email"?()=>setEmailOpen(true):()=>void startSocial(method.key as "google"|"github"|"apple"|"microsoft")} disabled={busy}>
                {busy?"OPENING":"CONTINUE"} <span aria-hidden="true">↗</span>
              </button>:
              <span className="join-method-unavailable">NOT ENABLED</span>}
@@ -118,7 +136,10 @@ export function Phase1JoinPage(){
              pattern="[0-9]{8}" minLength={8} maxLength={8} value={otp}
              onChange={event=>setOtp(event.target.value.replace(/\D/g,"").slice(0,8))}
              disabled={busy} placeholder="8-digit code" required/>
-           <button type="button" className="av12-email-reset" onClick={resetCode} disabled={busy}>SEND A NEW CODE</button>
+           <small className="av12-email-guidance">One valid code signs you in. A second code is not required unless verification fails or expires.</small>
+           <button type="button" className="av12-email-reset" onClick={()=>void requestReplacementCode()} disabled={busy}>
+             {busy?"REQUESTING…":"SEND A NEW CODE"}
+           </button>
          </>}
          <button type="submit" className="av12-email-submit" disabled={busy}>
            {busy?"CHECKING…":codeSent?"VERIFY AND SIGN IN":"SEND VERIFICATION CODE"}
@@ -126,7 +147,7 @@ export function Phase1JoinPage(){
          {notice&&<p role="status">{notice}</p>}
        </form>}
        <p className="join-service-note" role="status">{ready?
-         "Sign-in is limited to invited, verified accounts while the staging beta is being tested.":
+         capability.data.registration==="open"?"Create a free account with any enabled verification method.":"Registration is currently limited to invited accounts.":
          "Registration is not yet activated. The public catalogue remains available."}</p>
        {error&&<p role="alert" className="av12-join-error">{error}</p>}
        <Link className="join-guest-action" to="/discover">EXPLORE AS A GUEST <span aria-hidden="true">↗</span></Link>

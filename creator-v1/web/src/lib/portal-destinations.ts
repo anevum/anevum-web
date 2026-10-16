@@ -29,7 +29,8 @@ export const PORTAL_DESTINATIONS: readonly PortalDestination[] = [
   {id:"guide",title:"Field Guide",description:"Twelve free practice decisions",path:"/guide",category:"Community",icon:"star",keywords:"practice safety guide skills"},
   {id:"levels",title:"Levels & Artifacts",description:"See how earned progression is designed",path:"/levels",category:"Community",icon:"star",keywords:"xp achievements medals badges unlimited"},
   {id:"status",title:"Build Status",description:"What is deployed and what is still gated",path:"/status",category:"Community",icon:"status",keywords:"development roadmap release"},
-  {id:"account",title:"My Account",description:"Invitation-only member workspace",path:"/account",category:"Account",icon:"people",keywords:"profile settings signin login",gated:true},
+  {id:"join",title:"Join ANEVUM",description:"See available sign-in methods and invitation status",path:"/join",category:"Account",icon:"people",keywords:"join signup sign up register login signin sign in membership"},
+  {id:"account",title:"My Member Space",description:"Private verified profile and visibility controls",path:"/member",category:"Account",icon:"people",keywords:"profile account dashboard settings signin login",gated:true},
   {id:"library",title:"My Library",description:"Saved projects for invited members",path:"/library",category:"Account",icon:"library",keywords:"saved bookmarks favorites",gated:true},
   {id:"create",title:"Creator Workspace",description:"Private drafts and creator tools for invited members",path:"/create",category:"Account",icon:"create",keywords:"submit upload drafts studio",gated:true}
 ];

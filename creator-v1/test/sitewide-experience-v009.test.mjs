@@ -16,10 +16,11 @@ test("V009 unifies site navigation and retains native route boundaries",()=>{
  assert.match(shell,/site-shell--cinematic/);
  assert.doesNotMatch(shell,/<CinematicSiteRail\/>/);
  assert.doesNotMatch(shell,/portfolio|RHEN TERMINAL|mobile-bottom-nav/i);
- for(const path of ["/discover","/community","/creators","/levels","/create","/library","/account","/status"]){
+ for(const path of ["/discover","/community","/creators","/levels","/create","/library","/member","/join","/status"]){
    assert.ok(shell.includes(path),"missing genuine destination "+path);
  }
  assert.match(app,/<MemberGate\/>/);
+ assert.match(app,/path="account" element={<MemberAccountPage\/>}/);
  assert.match(app,/path="community\/write"/);
 });
 test("V009 homepage is assembled from verified public data and real world links",()=>{
