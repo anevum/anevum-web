@@ -29,8 +29,8 @@ const size=(value:number|null)=>value===null?'NOT VERIFIED':value<1024?value+' B
 const money=(value:number|null)=>value===null?'NOT VERIFIED':new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(value);
 function Meter({label,value,total,unit}:{label:string;value:number|null;total:number|null;unit?:string}){
  const usable=typeof value==='number'&&Number.isFinite(value)&&typeof total==='number'&&Number.isFinite(total)&&total>0;
- const actualPercent=usable?Math.max(0,(value/total)*100):0;
- const visualPercent=Math.min(100,actualPercent);
+ const actualPercent=usable?(value/total)*100:0;
+ const visualPercent=Math.min(100,Math.max(0,actualPercent));
  return <div className="av37-meter">
   <div className="av37-meter-label"><span>{label}</span><strong>{usable?actualPercent.toFixed(1)+'%':'AWAITING VERIFIED TARGET'}</strong></div>
   <div className="av37-meter-track" role="progressbar" aria-label={label} aria-valuemin={0}
@@ -99,7 +99,7 @@ export function SupporterTransparency(){
    <div className="av37-split">
     <article className="av37-panel"><span className="av32-index">ACTIVE MEMBER MEDIA LIMITS</span><h4>Profile media</h4>
      <p>Current source permits two profile image slots per member: one square avatar and one banner. Each JPEG is limited to <strong>256 KiB</strong>. This is a per-image upload rule, not an account storage allowance.</p>
-     <Meter label="Avatar upload limit" value={null} total={s.storage.perImageUploadMaxBytes} unit="bytes"/>
+     <Meter label="Staging profile image slots filled (not global storage capacity)" value={s.storage.memberImageCount} total={s.community.stagingMemberAccounts*s.storage.imageSlotsPerMember} unit="slots"/>
      <p className="av37-footnote">No individual member's storage usage is exposed here. Public creator asset quotas are not verified.</p>
     </article>
     <article className="av37-panel"><span className="av32-index">STORAGE EXPANSION / PROPOSED</span><h4>What support can unlock</h4>
