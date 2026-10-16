@@ -70,7 +70,9 @@ test("public Level Gallery is explicitly illustrative; genuine progress remains 
  assert.match(levels,/illustrative artwork studies/);
  assert.match(levels,/unearned examples/);
  assert.match(levels,/member service verifies it/);
- assert.match(levels,/2 XP/);
+ assert.match(levels,/10 XP/);
+ assert.match(levels,/25 XP/);
+ assert.match(levels,/does not grant extra XP/);
  assert.match(levels,/FIRST 60 ARTIFACTS/);
  for(const bad of ["memberAward","awardXp","createAchievement","fetch(", "Math.random"])
    assert.ok(!levels.includes(bad),bad);

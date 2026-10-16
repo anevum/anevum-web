@@ -1,3 +1,4 @@
+import {spaceReady,grantMilestones,spaceSnapshot} from "./space.mjs";
 import {canonicalConfigState,permitCanonicalUserCreation} from "./policy.mjs";
 import {normalizeWorldUpdate,worldFromRow} from "./worlds.mjs";
 import {boundedText} from "./request-body.mjs";
@@ -42,7 +43,7 @@ function safeHandle(raw){
  return raw;
 }
 function normalizeCopy(value,max,required){
- if(typeof value!=="string"||value.length>max||CONTROLS.test(value))return null;
+ if(typeof value!=="string"||value.length>max||(max===1200?/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/.test(value):CONTROLS.test(value)))return null;
  const copy=value.trim().normalize("NFC");
  if(copy.length>max||(required&&!copy))return null;
  return copy;
@@ -159,6 +160,7 @@ export async function canonicalCreatorMember(req,env,user,origin,now=Math.floor(
       "RETURNING handle,display_name,bio,visibility,revision,created_at,updated_at,headline,world_theme,focus_json",
       [...binds,now,user.id,payload.revision]);
   if(rows.length!==1)return failure(req,409,"Profile changed; reload before saving");
+  if(await spaceReady(db))await grantMilestones(db,user.id,now);
   return answer(req,{memberId:user.id,profile:privateProfile(rows[0])});
  }catch(error){
   if(/UNIQUE constraint failed|SQLITE_CONSTRAINT_UNIQUE/i.test(String(error?.message||"")))
@@ -191,7 +193,10 @@ export async function canonicalExportMember(req,env,user,origin){
        email:user.email,
        emailVerified:true
      },
-     profile
+     profile,
+     ...(await spaceReady(env.MEMBER_DB)?{space:await spaceSnapshot(env.MEMBER_DB,user.id),
+       wall:(await env.MEMBER_DB.prepare("SELECT id,body,created_at,updated_at,revision FROM member_wall_posts WHERE user_id=? ORDER BY created_at DESC").bind(user.id).all()).results,
+       images:(await env.MEMBER_DB.prepare("SELECT slot,data,version,updated_at FROM member_space_media WHERE user_id=?").bind(user.id).all()).results.map(row=>({...row,data:Array.from(new Uint8Array(row.data))}))}: {})
    };
    return new Response(JSON.stringify(payload,null,2),{
      status:200,

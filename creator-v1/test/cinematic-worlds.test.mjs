@@ -44,7 +44,7 @@ test("home preserves linked discovery, real creator channels and existing member
   for(const link of ['/discover','/start','/community','/levels','/creators','/guide','/create'])
     assert.ok(home.includes(link)||shell.includes(link),link);
   for(const route of ["/library","/member","/join","/status"])assert.ok(shell.includes(route),route);
-   assert.match(read("web/src/App.tsx"),/path="account" element={<MemberAccountPage\/>}/);
+   assert.match(read("web/src/App.tsx"),/path="account" element={<Navigate to="\/member" replace\/>}/);
   assert.match(home,/CelestialEmblem/);
   assert.match(home,/LevelPanel/);
   assert.match(home,/CosmicArtwork/);

@@ -59,6 +59,10 @@ async function request<T>(path:string,method:"GET"|"POST"|"PATCH"="GET",body?:un
      response.status===429?"Too many changes. Try again in an hour.":
      "Account service unavailable. No changes were saved.";
    if(response.status===400)message="Check your handle (3–30 lowercase letters, numbers or underscores) and display name.";
+   if(response.status===403){const reason=await response.json().catch(()=>null);
+     if(reason?.error==="Same-origin request required")message="This browser could not verify the request. Open a.anevum.com directly, sign in and try again.";
+     if(reason?.error==="Verified member email required")message="Your email verification could not be confirmed. Sign in again to continue.";
+   }
    throw new CanonicalBetaError(response.status,message);
  }
  return safeJson<T>(response);
@@ -84,3 +88,22 @@ export const canonicalEdit=(body:{displayName:string;bio:string;visibility:"priv
  request<CanonicalPrivateResponse>("/api/v1/member/creator-profile","PATCH",body);
 export const canonicalPublic=(handle:string,signal?:AbortSignal)=>
  request<CanonicalPublicResponse>("/api/v1/members/"+handle,"GET",undefined,signal,true);
+
+export type SpaceAward={id:string;name:string;detail:string;xp:number;symbol:string;earnedAt:number|null};
+export type SpaceStats={wallPosts:number;awards:number;xp:number;level:number;levelStart:number;nextLevel:number};
+export type MemberSpace={media:{avatar?:number;banner?:number};awards:SpaceAward[];featuredAwards:string[];showStats:boolean;revision:number;stats?:SpaceStats};
+export type WallEntry={id:string;body:string;createdAt:number;updatedAt:number;revision:number};
+export async function spaceRequest<T>(path:string,method="GET",body?:unknown,signal?:AbortSignal):Promise<T>{
+ if(!/^\/api\/v1\/(?:member\/(?:space|wall(?:\/[a-f0-9-]{36})?|media\/(?:avatar|banner))|members\/[a-z][a-z0-9_]{2,29}\/(?:space|wall))$/.test(path))throw Error("Invalid space route");
+ const response=await fetch(path,{method,mode:"same-origin",credentials:path.includes('/members/')?"omit":"same-origin",cache:"no-store",redirect:"error",signal,
+  headers:body instanceof Blob?{"Content-Type":"image/jpeg"}:body===undefined?{Accept:"application/json"}:{"Content-Type":"application/json",Accept:"application/json"},
+  body:body===undefined?undefined:body instanceof Blob?body:JSON.stringify(body)});
+ if(!response.ok){
+  let message=response.status===401?"Your session has ended. Sign in again to continue.":response.status===403?"Your account could not authorize this change. Sign in again and retry.":response.status===429?"You have made several changes. Try again in an hour.":response.status===409?"This space has changed. Reload before saving.":"Your space could not be saved. Try again.";
+  if([400,409,503].includes(response.status)){const data=await response.json().catch(()=>null);if(typeof data?.error==='string'&&data.error.length<150)message=data.error;}
+  throw new CanonicalBetaError(response.status,message);
+ }
+ return safeJson<T>(response);
+}
+export const canonicalSpace=(signal?:AbortSignal)=>spaceRequest<MemberSpace>('/api/v1/member/space','GET',undefined,signal);
+export const canonicalWall=(signal?:AbortSignal)=>spaceRequest<{posts:WallEntry[]}>('/api/v1/member/wall','GET',undefined,signal);

@@ -3,13 +3,14 @@ import assert from "node:assert/strict";
 import {readFileSync} from "node:fs";
 const read=p=>readFileSync(new URL("../"+p,import.meta.url),"utf8");
 
-test("profile editor is truly member gated and shares the authenticated account identity",()=>{
+test("account aliases use canonical identity while retained creator tools remain member gated",()=>{
  const app=read("web/src/App.tsx");
  const gate=read("web/src/components/MemberGate.tsx");
  const account=read("web/src/pages/MemberAccountPage.tsx");
  const page=read("web/src/pages/MemberProfileEditorPage.tsx");
- assert.match(app,/path="account\/edit" element=\{<MemberProfileEditorPage\/>\}/);
- assert.ok(app.indexOf('<Route path="account/edit"')>app.indexOf('<Route element={<MemberGate/>}>'));
+ assert.match(app,/path="account\/edit" element=\{<Navigate to="\/member" replace\/>\}/);
+ assert.ok(app.indexOf('<Route path="account/edit"')<app.indexOf('<Route element={<MemberGate/>}>'));
+ assert.match(read("web/src/pages/Phase1MemberPage.tsx"),/canonicalAuthClient.useSession/);
  assert.match(account,/to="\/account\/edit"/);
  assert.match(gate,/onProfileSaved/);
  assert.match(gate,/confirmedProfile\?\.id===session\.data\.member\.id/);
