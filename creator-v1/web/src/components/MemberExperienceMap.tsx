@@ -27,6 +27,7 @@ export function MemberExperienceMap({profile}:{profile:CanonicalProfile|null}){
   </ol>
   <div className="av17-member-actions">
    <Link to="/community">EXPLORE COMMUNITY <span aria-hidden="true">↗</span></Link>
+   <Link to="/quanto/demo">QUANTO SIMULATION / NO REAL VALUE <span aria-hidden="true">↗</span></Link>
    {publicPage?<Link to={"/@"+profile!.handle}>OPEN PUBLIC PROFILE <span aria-hidden="true">↗</span></Link>:
     <a href="#av12-editor-heading">{claimed?"EDIT VISIBILITY":"CLAIM YOUR HANDLE"} <span aria-hidden="true">↘</span></a>}
   </div>
