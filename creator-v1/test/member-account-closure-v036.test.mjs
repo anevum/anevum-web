@@ -137,20 +137,20 @@ test('canonical authenticated closure route rejects cross-site and logged-out de
  const {db,env}=setup();
  const worker=createCanonicalStageWorker({authFactory:()=>({
   api:{getSession:async({headers})=>
-   headers.get('cookie')==='good'?{user:person,session}:{user:null,session:null}},
+   headers.get('cookie')==='anevum_can_stage.session_token=good'?{user:person,session}:{user:null,session:null}},
   handler:async()=>new Response('{}',{status:200})
  })});
  try{
   const noAuth=await worker.fetch(req('POST',confirmation),env);
   assert.equal(noAuth.status,401);
   const foreign=new Request(ORIGIN+PATH,{method:'POST',
-   headers:{origin:'https://evil.invalid','sec-fetch-site':'cross-site','content-type':'application/json',cookie:'good'},
+   headers:{origin:'https://evil.invalid','sec-fetch-site':'cross-site','content-type':'application/json',cookie:'anevum_can_stage.session_token=good'},
    body:JSON.stringify(confirmation)});
   assert.equal((await worker.fetch(foreign,env)).status,403);
-  const method=new Request(ORIGIN+PATH,{method:'DELETE',headers:{origin:ORIGIN,cookie:'good'}});
+  const method=new Request(ORIGIN+PATH,{method:'DELETE',headers:{origin:ORIGIN,cookie:'anevum_can_stage.session_token=good'}});
   assert.equal((await worker.fetch(method,env)).status,405);
   const successful=new Request(ORIGIN+PATH,{method:'POST',
-   headers:{origin:ORIGIN,'content-type':'application/json',cookie:'good'},
+   headers:{origin:ORIGIN,'content-type':'application/json',cookie:'anevum_can_stage.session_token=good'},
    body:JSON.stringify(confirmation)});
   assert.equal((await worker.fetch(successful,env)).status,200);
   assert.equal(db.prepare('SELECT COUNT(*) AS n FROM user WHERE id=?').get(person.id).n,0);
