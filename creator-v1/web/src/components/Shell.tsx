@@ -132,7 +132,7 @@ export function Shell(){
           </section>
           <div className="av9-navigation-links">
             <span className="av9-overline">COMMUNITY / MEMBER SPACES</span>
-            {directory.map(item=><Link key={item.to} to={item.to} onClick={()=>setMenuOpen(false)}>
+            {directory.map(item=><Link key={item.to} to={item.to==="/library"&&canonicalMember?"/saved":item.to} onClick={()=>setMenuOpen(false)}>
               <span><strong>{item.label}</strong><small>{item.detail}</small></span><Icon name="arrow" size={17}/>
             </Link>)}
             <button className="av9-open-switcher" type="button" onClick={()=>{setMenuOpen(false);setLauncherOpen(true);}}>

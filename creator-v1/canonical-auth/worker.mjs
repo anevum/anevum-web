@@ -111,7 +111,8 @@ export function createCanonicalStageWorker({authFactory=createCanonicalAuth}={})
     const ownProfile=path===PROFILE;
     const ownExport=path===EXPORT;
     const ownClosure=path===CLOSURE;
-    const ownProjectSave=/^\/api\/v1\/member\/project-saves\/[a-f0-9]{32}$/.test(path);
+    const ownProjectSave=path===CANONICAL_PREFIX+"/project-saves" ||
+      /^\/api\/v1\/member\/project-saves\/[a-f0-9]{32}$/.test(path);
     // This is a proposed, source-only pilot. Do not expose even a GET
     // endpoint without a deliberate rollout flag and an approved D1 schema.
     if(ownProjectSave&&env?.CANONICAL_PROJECT_SAVES_ENABLED!=="true")return fail(request,404);

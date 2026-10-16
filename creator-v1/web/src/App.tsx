@@ -15,6 +15,7 @@ import {CommunityPostEditorPage} from "./pages/CommunityPostEditorPage";
 import { MemberGate } from "./components/MemberGate";
 import { LoadingState } from "./components/States";
 import { MemberLibraryPage } from "./pages/MemberLibraryPage";
+import {CanonicalSavedWorksPage} from "./pages/CanonicalSavedWorksPage";
 import { MemberProjectsPage } from "./pages/MemberProjectsPage";
 import { ProjectEditorPage } from "./pages/ProjectEditorPage";
 import {Phase1JoinPage} from "./pages/Phase1JoinPage";
@@ -63,6 +64,7 @@ export default function App(){
     <Route path="guide" element={<FieldGuidePage/>}/>
     <Route path="discover" element={<DiscoverPage/>}/>
     <Route path="projects/:id" element={<ProjectPage/>}/>
+    <Route path="saved" element={<CanonicalSavedWorksPage/>}/>
     <Route path="creators" element={<CreatorsPage/>}/>
     <Route path="creators/:handle" element={<CreatorPage/>}/>
     <Route path="community" element={<CommunityPage/>}/>

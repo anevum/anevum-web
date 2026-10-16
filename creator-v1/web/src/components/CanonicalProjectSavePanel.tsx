@@ -66,6 +66,7 @@ function CanonicalSaveControls({projectId,initialSaved}:{projectId:string;initia
    <button className="button secondary avp-canonical-save-button" type="button" aria-pressed={saved} disabled={busy} onClick={()=>{void change();}}>
     {busy?"UPDATING…":saved?"REMOVE SAVED PROJECT":"SAVE PROJECT"}
    </button>
+   <Link className="button secondary" to="/saved">MY SAVED WORKS →</Link>
    <Link className="button secondary" to="/community">EXPLORE COMMUNITY →</Link>
   </div>
   {message&&<p role="status" className="engagement-success">{message}</p>}
