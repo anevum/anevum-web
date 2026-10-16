@@ -1,8 +1,9 @@
 import {betterAuth} from "better-auth";
+import {APIError} from "better-auth/api";
 import {emailOTP} from "better-auth/plugins";
 import {
   CANONICAL_ORIGIN,CANONICAL_AUTH_PATH,CANONICAL_COOKIE_PREFIX,
-  canonicalConfigState,permitCanonicalUserCreation
+  canonicalConfigState,permitCanonicalUserCreation,isProtectedCanonicalEmail
 } from "./policy.mjs";
 
 /**
@@ -21,6 +22,15 @@ export function canonicalAuthOptions(env){
     basePath:CANONICAL_AUTH_PATH,
     secret:env.CANONICAL_BETTER_AUTH_SECRET,
     database:env.MEMBER_DB,
+    // Separate from registration. Disabled on all existing Workers unless
+    // explicit scoped erasure approval has been installed.
+    user:{deleteUser:{
+      enabled:env.CANONICAL_ACCOUNT_ERASURE_ENABLED==="true",
+      beforeDelete:async user=>{
+        if(isProtectedCanonicalEmail(env,user?.email))
+          throw new APIError("FORBIDDEN",{message:"Protected account"});
+      }
+    }},
     emailAndPassword:{enabled:false},
     socialProviders:{
       ...(stage.google?{google:{
