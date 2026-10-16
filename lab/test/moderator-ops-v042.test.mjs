@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {MODERATOR_LAB_CSS,MODERATOR_LAB_JS,renderLabModeratorConsole} from '../moderator-ops-v042.mjs';
+import {installLabModeratorBridge,LAB_V042_VERSION} from '../private-lab-moderator-bridge-v042.mjs';
 
 test('V042 Lab moderator page renders a separate private planning workbench',()=>{
  const page=renderLabModeratorConsole();
@@ -55,4 +56,33 @@ test('existing Backstage and canonical forum boundaries remain documented in sou
  const reviewer=readFileSync(new URL('../../creator-v1/canonical-auth/forums.mjs',import.meta.url),'utf8');
  assert.match(reviewer,/CANONICAL_FORUM_REVIEWER_IDS/);
  assert.match(reviewer,/Independent review is required/);
+});
+
+test('V042 Lab bridge inserts a single isolated path and preserves all original scope gates',()=>{
+ const original=[
+  "import {BACKSTAGE_CSS,BACKSTAGE_JS,renderBackstageWorkspace} from './backstage-workspace.mjs';",
+  "const HOST='lab.anevum.com';",
+  "const VERSION='2026-10-16.lab.v6-cadets-family-game';",
+  "if(url.hostname!==HOST)return response('Not Found');",
+  "if(!['GET','HEAD'].includes(request.method))return response('Method not allowed');",
+  "else if(path==='/projects/backstage/'||path==='/projects/backstage/index.html')res=response(renderBackstageWorkspace());",
+  "else if(path==='/projects/transcosmic')res=response(null,'text/plain; charset=utf-8',308,{Location:'/projects/transcosmic/'});",
+  "else if(path==='/projects/cadets')res=response(null,'text/plain; charset=utf-8',308);",
+  "else if(path==='/projects/the-fold/'||path==='/projects/the-fold/index.html')res=response(null);",
+  "//"+'Lab private source is intentionally never included in public tests. '.repeat(30)
+ ].join('\n');
+ const patched=installLabModeratorBridge(original);
+ assert.match(patched,/renderLabModeratorConsole/);
+ assert.match(patched,/MODERATOR_LAB_CSS/);
+ assert.match(patched,/MODERATOR_LAB_JS/);
+ assert.match(patched,/renderLinkedBackstage/);
+ assert.match(patched,/projects\/backstage\/moderation\/console\.js/);
+ assert.match(patched,/projects\/backstage\/moderation\/console\.css/);
+ assert.ok(patched.includes(LAB_V042_VERSION));
+ assert.match(patched,/if\(url\.hostname!==HOST\)/);
+ assert.match(patched,/if\(!\['GET','HEAD'\]\.includes\(request\.method\)\)/);
+ assert.match(patched,/projects\/the-fold/);
+ assert.match(patched,/projects\/cadets/);
+ assert.throws(()=>installLabModeratorBridge(patched),/already present/);
+ assert.throws(()=>installLabModeratorBridge(original.replace("const HOST='lab.anevum.com';","const HOST='other.example';")),/missing or ambiguous/);
 });
