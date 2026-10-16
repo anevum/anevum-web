@@ -39,12 +39,14 @@ jobs:
           node --check lab/cadets-snapshot.mjs
           node --check lab/build-cadets-snapshot.mjs
           node --check lab/test-cadets.mjs
+          node --check lab/deployment/cadets-overlay.mjs
+          node --check lab/deployment/test-cadets-overlay.mjs
       - name: Verify generated Cadets snapshot is in sync
         run: |
           node lab/build-cadets-snapshot.mjs
           git diff --exit-code -- lab/cadets-snapshot.mjs
       - name: Test project catalog, private host boundary, and game routes
-        run: node --test lab/test-worker.mjs lab/test-cadets.mjs
+        run: node --test lab/test-worker.mjs lab/test-cadets.mjs lab/deployment/test-cadets-overlay.mjs
       - name: Responsive Chromium Lab and five project workspaces acceptance
         run: node lab/browser-check.mjs
       - name: Upload private Lab responsive screenshots
