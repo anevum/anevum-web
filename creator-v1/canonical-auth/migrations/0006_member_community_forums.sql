@@ -50,6 +50,9 @@ CREATE TABLE IF NOT EXISTS member_forum_reports (
  target_id TEXT NOT NULL,
  reason TEXT NOT NULL CHECK(reason IN ('spam','harassment','unsafe','other')),
  created_at INTEGER NOT NULL,
+ resolved_at INTEGER,
+ resolution TEXT CHECK(resolution IN ('hidden','dismissed')),
+ resolved_by TEXT REFERENCES "user"(id),
  UNIQUE(reporter_id,target_kind,target_id)
 );
 CREATE INDEX IF NOT EXISTS member_forum_reports_target
@@ -57,9 +60,9 @@ CREATE INDEX IF NOT EXISTS member_forum_reports_target
 CREATE TABLE IF NOT EXISTS member_forum_review_log (
  id TEXT PRIMARY KEY NOT NULL,
  reviewer_id TEXT NOT NULL REFERENCES "user"(id) ON DELETE CASCADE,
- target_kind TEXT NOT NULL CHECK(target_kind IN ('thread','reply')),
+ target_kind TEXT NOT NULL CHECK(target_kind IN ('thread','reply','report')),
  target_id TEXT NOT NULL,
- action TEXT NOT NULL CHECK(action IN ('publish','reject','hide')),
+ action TEXT NOT NULL CHECK(action IN ('publish','reject','hide','dismiss_report')),
  created_at INTEGER NOT NULL
 );
 CREATE INDEX IF NOT EXISTS member_forum_review_target
