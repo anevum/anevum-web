@@ -89,6 +89,32 @@ rather than seeded activity. Manual Refresh fetches current server state.
 - No browser fixture or synthetic member records are uploaded to canonical
   staging D1. Screenshots are labeled synthetic acceptance, not live usage.
 
+
+### Private Lab Backstage integration (V042)
+
+- **Lab route:** \`https://lab.anevum.com/projects/backstage/moderation/\` (Cloudflare Access protected).
+- **Lab source:** \`lab/moderator-ops-v042.mjs\`, \`lab/private-lab-moderator-bridge-v042.mjs\`.
+- **Mode:** local Backstage case planning only. This deliberately uses the existing
+  \`anevum.lab.backstage.cases.v1\` storage schema on the same-origin Lab hostname;
+  it does not create a second remote case database or import private accounts.
+- **Workflow:** discover local moderation cases, create a case, record status and
+  rationale, and read the local event chronology. Cases also appear in the
+  established Backstage desk on the same browser/device.
+- **Secure handoff:** one explicit link to
+  \`https://a.anevum.com/community/review\` opens the canonical reviewer in its
+  own origin and independently authenticated Better Auth member session.
+  No cookies, tokens, privileged API calls, moderation decisions or reports
+  travel from the private Lab to the canonical community.
+- **Visual behavior:** Continuance typography, archival plum/rose palette,
+  320/390/1024/1440-width browser acceptance, reduced-motion support.
+- **Release boundaries:** unchanged Lab main project directory, The Fold,
+  RHEN, Transcosmic, Cadets, Cloudflare Access policy, 5-project health count,
+  existing Backstage local storage schema and canonical staging D1 tables.
+- **Lab integration verification:** dedicated
+  \`.github/workflows/lab-moderator-v042-verify.yml\` gate. Deployment of the
+  private Lab Worker is **separate** from promoting the canonical V042 forum
+  reviewer on a.anevum.com.
+
 ### Next release gate
 
 Complete offline UI/API tests and visual QA. Obtain explicit staging release
