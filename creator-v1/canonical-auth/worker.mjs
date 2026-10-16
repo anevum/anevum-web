@@ -7,7 +7,7 @@ import {createCanonicalAuth} from "./auth.mjs";
 import {canonicalCreatorSchemaReady,canonicalCreatorMember,canonicalPublicCreator,canonicalExportMember} from "./profile.mjs";
 import {permitCanonicalUserCreation} from "./policy.mjs";
 import {canonicalCommunity} from "./community.mjs";
-import {canonicalProgression} from './progression.mjs';
+import {canonicalProgression,progressionReady} from './progression.mjs';
 import {canonicalSpace} from "./space.mjs";
 import {boundedText} from "./request-body.mjs";
 
@@ -121,7 +121,10 @@ export function createCanonicalStageWorker({authFactory=createCanonicalAuth}={})
       service:"anevum-canonical-auth-staging",
       status:stageReady?"ready":"closed",
       registration:stageReady?(configured.open?"open":configured.invited?"invite-only":"closed"):"closed",
-      linkedCreatorAccounts:false
+      linkedCreatorAccounts:false,
+      // Anonymous readiness reports schema availability only, never private XP,
+      // member records or database identifiers.
+      progressionReady:stageReady&&env.CANONICAL_XP_TEST_ENABLED==='true' ? await progressionReady(env.MEMBER_DB) : false
     });
     if(path===METHODS)return safeJson(request,{
       version:2,
