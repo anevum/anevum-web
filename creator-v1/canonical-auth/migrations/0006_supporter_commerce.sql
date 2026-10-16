@@ -61,3 +61,12 @@ CREATE TABLE IF NOT EXISTS supporter_checkout_guards(
   expires_at_ms INTEGER NOT NULL,
   created_at_ms INTEGER NOT NULL
 );
+
+-- A verified refund or card dispute suspends cosmetic entitlements until
+-- reviewed. This hold is NOT an earned medal or monetary member balance.
+CREATE TABLE IF NOT EXISTS supporter_billing_holds(
+ stripe_customer_id TEXT PRIMARY KEY NOT NULL REFERENCES supporter_customers(stripe_customer_id) ON DELETE CASCADE,
+ reason TEXT NOT NULL CHECK(reason IN ('dispute','refund')),
+ stripe_event_id TEXT NOT NULL,
+ created_at_ms INTEGER NOT NULL
+);
