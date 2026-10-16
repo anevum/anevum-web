@@ -1,5 +1,5 @@
 import {boundedText} from './request-body.mjs';
-import {publicSupporterForMember} from './supporter.mjs';
+import {readSupporterRewards} from './supporter-rewards.mjs';
 
 import {MILESTONES} from './rewards.mjs';
 export {MILESTONES} from './rewards.mjs';
@@ -142,7 +142,12 @@ export async function canonicalSpace(req,env,user,publicHandle=null,now=Math.flo
   if(path.endsWith('/space')){
    if(req.method==='GET'){
     const data=await spaceSnapshot(db,id);
-    if(isPublic){delete data.revision;if(!data.showStats)delete data.stats;data.awards=data.awards.filter(a=>a.earnedAt&&data.featuredAwards.includes(a.id));data.supporter=await publicSupporterForMember(env,id,now*1000);}
+    if(isPublic){delete data.revision;if(!data.showStats)delete data.stats;data.awards=data.awards.filter(a=>a.earnedAt&&data.featuredAwards.includes(a.id));}
+    // Public cosmetics require explicit member opt-in; private previews
+    // remain visible to their authenticated owner while subscribed.
+    const supporter=await readSupporterRewards(env,id,now*1000,isPublic);
+    data.supporter=Boolean(supporter);
+    if(supporter)data.supporterAppearance=supporter.selected;
     return json(data);
    }
    if(isPublic||req.method!=='PATCH')return error(405,'Read only');
