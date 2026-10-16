@@ -150,7 +150,7 @@ export async function canonicalForums(req,env,user=null,now=Math.floor(Date.now(
    const existing=await db.prepare('SELECT status FROM member_forum_threads WHERE id=? AND author_id=?').bind(mineId[1],user.id).first();
    return existing?fail(409,'Thread is already closed'):fail(404,'Submission not found');
   }
-  if(req.method!=='POST'&&req.method!=='DELETE')return fail(405,'Method not allowed');
+  if(req.method!=='POST'&&req.method!=='DELETE'&&!(react&&req.method==='GET'))return fail(405,'Method not allowed');
   if(url.search)return fail(400,'Query unsupported for writes');
   // Reporting and private reactions do not force members to publish their identities.
   // Public identity is required only for authored thread/reply submissions.
