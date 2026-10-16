@@ -4,6 +4,7 @@ import {useResource} from "../lib/useResource";
 import {WorldGatewayDeck} from "../components/WorldGatewayDeck";
 import {LiveSignalHero,LiveSignalModules} from "../components/LiveSignalHero";
 import {CommunityHomeFeed} from "../components/CommunityHomeFeed";
+import {MemberForumHighlights} from "../components/MemberForumHighlights";
 
 /**
  * ANEVUM / cinematic public homepage V008.
@@ -59,6 +60,7 @@ export function CinematicLandingPage(){
         state={displayState}
         communityEnabled={status?.features?.communityPosts===true}
       />
+      <MemberForumHighlights/>
       {hasVerifiedData&&status&&<div className="cinema-verification-note">
         {status.counts.publishedProjects} APPROVED PUBLIC PROJECTS · {status.counts.publishedCreators} PUBLIC CREATOR CHANNELS · Only genuine published activity is shown.
       </div>}

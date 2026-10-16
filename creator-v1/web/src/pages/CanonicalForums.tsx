@@ -1,30 +1,13 @@
-import {useEffect,useState,type FormEvent} from 'react';
+import {useEffect,useRef,useState,type FormEvent} from 'react';
 import {Link,useParams} from 'react-router-dom';
 import {canonicalAuthClient} from '../lib/canonical-beta';
 import {useResource} from '../lib/useResource';
-import {LevelEmblem,AwardEmblem} from '../components/LevelEmblem';
-import {MemberPortrait} from '../components/MemberPortrait';
+import {ForumAuthorCard as AuthorCard} from '../components/ForumAuthorCard';
+import {forumRequest as request,FORUM_TOPICS as topics,FORUM_ID as UUID,ForumApiError,
+ type ForumThread as Thread,type ForumReply as Reply,type MemberSubmission as MyThread,
+ type ForumThreadPage} from '../lib/member-forums';
 import './forums.css';
-type Author={handle:string;displayName:string;avatar:boolean;level:number|null;featuredAwards:string[]};
-type Thread={id:string;topic:string;title:string;body:string;publishedAt:number;author:Author;replyCount:number;reactions:number};
-type Reply={id:string;body:string;publishedAt:number;author:Author};
-type MyThread={id:string;topic:string;title:string;body:string;status:'pending_review'|'published'|'rejected'|'hidden';created_at:number};
-const topics=[['all','ALL SIGNALS'],['games','GAMES & PLAY'],['making','SOFTWARE & MAKING'],['arts','ART, MEDIA & STORIES'],['community','COMMUNITY & COLLABORATION']] as const;
-const UUID=/^[a-f0-9-]{36}$/;
-async function request<T>(path:string,method='GET',body?:unknown,signal?:AbortSignal):Promise<T>{
- const privateRoute=path.startsWith('/api/v1/member/')||path.endsWith('/reaction');
- const response=await fetch(path,{method,credentials:privateRoute||method!=='GET'?'same-origin':'omit',mode:'same-origin',cache:'no-store',redirect:'error',headers:body?{Accept:'application/json','Content-Type':'application/json'}:{Accept:'application/json'},body:body?JSON.stringify(body):undefined,signal});
- const result=await response.json().catch(()=>({error:'Community service unavailable'}));
- if(!response.ok)throw Error(result.error||'Community service unavailable');return result as T;
-}
 function date(seconds:number){return new Date(seconds*1000).toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'})}
-function AuthorCard({author}:{author:Author}){
- return <Link className="cf-author" to={'/@'+author.handle}>
-  <MemberPortrait name={author.displayName} src={author.avatar?'/api/v1/members/'+author.handle+'/media/avatar':undefined}/>
-  <span className="cf-author-copy"><strong>{author.displayName}</strong><small>@{author.handle}</small><span className="cf-author-awards">{author.featuredAwards.map(id=><span key={id} title={id.replaceAll('_',' ')}><AwardEmblem award={id}/></span>)}</span></span>
-  {author.level!==null&&<span className="cf-author-level"><LevelEmblem level={author.level} size={45}/><small>LVL {author.level}</small></span>}
- </Link>;
-}
 function MySubmissions({memberId}:{memberId:string}){
  const [revision,setRevision]=useState(0);
  const saved=useResource(signal=>request<{items:MyThread[]}>('/api/v1/member/forum-submissions','GET',undefined,signal),[memberId,revision]);
@@ -46,11 +29,34 @@ export function CommunityForums(){
  const [title,setTitle]=useState(''),[body,setBody]=useState(''),[draftTopic,setDraftTopic]=useState('community'),[busy,setBusy]=useState(false),[notice,setNotice]=useState(''),[error,setError]=useState('');
  const threads=useResource(signal=>request<{items:Thread[]}>('/api/v1/community/threads'+(topic==='all'?'':'?topic='+topic),'GET',undefined,signal),[topic,revision]);
  const [requestId,setRequestId]=useState(()=>crypto.randomUUID());
+ const streamKey=topic+'|'+revision;
+ const activeStream=useRef(streamKey);activeStream.current=streamKey;
+ const [extra,setExtra]=useState<{key:string;items:Thread[];nextCursor:string|null}>({key:'',items:[],nextCursor:null});
+ const [morePending,setMorePending]=useState(false),[moreFailure,setMoreFailure]=useState('');
+ const additional=extra.key===streamKey?extra.items:[];
+ const listed=threads.state==='ready'?[...threads.data.items,...additional]:[];
+ const nextCursor=extra.key===streamKey?extra.nextCursor:threads.state==='ready'?threads.data.nextCursor:null;
+ async function loadMore(){
+  if(!nextCursor||morePending||threads.state!=='ready')return;
+  const key=streamKey;setMorePending(true);setMoreFailure('');
+  const params=new URLSearchParams({after:nextCursor});if(topic!=='all')params.set('topic',topic);
+  try{
+   const next=await request<ForumThreadPage>('/api/v1/community/threads?'+params.toString());
+   if(activeStream.current!==key)return;
+   setExtra(prev=>{
+    const carried=prev.key===key?prev.items:[];
+    const known=new Set([...threads.data.items,...carried].map(entry=>entry.id));
+    return {key,items:[...carried,...next.items.filter(entry=>!known.has(entry.id))],nextCursor:next.nextCursor};
+   });
+  }catch(error){if(activeStream.current===key)setMoreFailure(error instanceof Error?error.message:'More threads could not be loaded');}
+  finally{setMorePending(false)}
+ }
  async function submit(e:FormEvent){e.preventDefault();if(busy)return;setBusy(true);setError('');try{
   await request('/api/v1/community/threads','POST',{topic:draftTopic,title,body,requestId});
   setTitle('');setBody('');setDraftTopic('community');setRequestId(crypto.randomUUID());setCompose(false);
   setNotice('Your thread is saved for staff review. It will appear publicly only when approved.');setRevision(x=>x+1);
  }catch(e){setError(e instanceof Error?e.message:'Nothing was saved')}finally{setBusy(false)}}
+ if(threads.state==='error'&&threads.error instanceof ForumApiError&&threads.error.status===404)return null;
  return <section className="cf-forums" aria-labelledby="cf-title"><header className="cf-header"><div><span className="cf-kicker">CONTINUANCE INSTITUTE / PUBLIC COMMONS</span><h2 id="cf-title">The conversation <em>continues.</em></h2><p>Questions, ideas, feedback and creative work, organized by the people behind them.</p></div>
  <button type="button" className="cf-primary" disabled={threads.state!=='ready'} onClick={()=>{setCompose(x=>!x);setError('')}}>{compose?'CLOSE COMPOSER':'START A THREAD'}</button></header>
  <nav className="cf-topics" aria-label="Discussion topic filters">{topics.map(([id,label])=><button type="button" key={id} aria-pressed={topic===id} onClick={()=>setTopic(id)}>{label}</button>)}</nav>
@@ -63,8 +69,10 @@ export function CommunityForums(){
  {notice&&<p role="status" className="cf-notice">{notice}</p>}{error&&<p role="alert" className="cf-error">{error}</p>}
  {threads.state==='loading'&&<p role="status" className="cf-note">Reading approved public conversations…</p>}
  {threads.state==='error'&&<div className="cf-note" role="status"><p>The next-generation member forum is not enabled in this environment yet. Existing community spaces remain accessible below.</p><button type="button" onClick={()=>setRevision(x=>x+1)}>RECHECK AVAILABILITY</button></div>}
- {threads.state==='ready'&&<div className="cf-list">{threads.data.items.length===0&&<p className="cf-note">No approved threads in this channel yet. Be the first to start a conversation.</p>}
- {threads.data.items.map(t=><article className="cf-thread" key={t.id}><div className="cf-thread-meta"><span>{topics.find(x=>x[0]===t.topic)?.[1]}</span><time>{date(t.publishedAt)}</time></div><h3><Link to={'/community/threads/'+t.id}>{t.title}</Link></h3><p>{t.body.length>320?t.body.slice(0,317)+'…':t.body}</p><div className="cf-thread-foot"><AuthorCard author={t.author}/><Link to={'/community/threads/'+t.id} className="cf-count">{t.replyCount} REPLIES · {t.reactions} REACTIONS ↗</Link></div></article>)}</div>}
+ {threads.state==='ready'&&<div className="cf-list">{listed.length===0&&<p className="cf-note">No approved threads in this channel yet. Be the first to start a conversation.</p>}
+ {listed.map(t=><article className="cf-thread" key={t.id}><div className="cf-thread-meta"><span>{topics.find(x=>x[0]===t.topic)?.[1]}</span><time>{date(t.publishedAt)}</time></div><h3><Link to={'/community/threads/'+t.id}>{t.title}</Link></h3><p>{t.body.length>320?t.body.slice(0,317)+'…':t.body}</p><div className="cf-thread-foot"><AuthorCard author={t.author}/><Link to={'/community/threads/'+t.id} className="cf-count">{t.replyCount} REPLIES · {t.reactions} REACTIONS ↗</Link></div></article>)}}
+ {nextCursor&&<button type="button" className="cf-more" disabled={morePending} onClick={()=>void loadMore()}>{morePending?'READING MORE…':'LOAD MORE DISCUSSIONS'}</button>}
+ {moreFailure&&<p role="alert" className="cf-error">{moreFailure}</p>}</div>}
  {session?.user?.id&&threads.state==='ready'&&<MySubmissions key={session.user.id} memberId={session.user.id}/>}
  <p className="cf-disclosure">Only approved public threads and members appear here. Posting and replying do not automatically award XP.</p></section>;
 }

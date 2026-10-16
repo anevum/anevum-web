@@ -28,3 +28,18 @@
 .cf-report select{max-width:500px;background:#131018;color:#f4e9ee;border:1px solid #70546c;border-radius:12px;padding:12px}
 .cf-report-actions{display:flex;gap:10px;flex-wrap:wrap}
 .cf-forums button:disabled{opacity:.56;cursor:not-allowed}
+
+.cf-more{width:100%;margin-top:16px;background:linear-gradient(130deg,#312838,#211b29);border:1px solid #775e76;border-radius:12px;padding:16px 22px;color:#ebdbe7;font-size:12px;letter-spacing:.12em;font-weight:700}
+.cf-more:hover{background:#49344b;border-color:#e8a6c1}
+.cf-highlights{max-width:1460px;margin:52px auto;padding:clamp(24px,4vw,56px);border-top:1px solid #594451;color:#ede4ea}
+.cf-highlight-head{display:flex;align-items:end;justify-content:space-between;gap:20px;margin-bottom:24px}
+.cf-highlight-head h2{font-family:Georgia,serif;font-weight:500;font-size:clamp(27px,4vw,48px);line-height:1.05;margin:8px 0}
+.cf-highlight-head em{color:#e7b3c9}
+.cf-highlight-head p{color:#d0c2cf;margin:0}
+.cf-highlight-head>a{white-space:nowrap;font-size:12px;letter-spacing:.1em;color:#f5c9d9}
+.cf-highlight-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.cf-highlight{background:linear-gradient(130deg,#312439,#1b1a25);border:1px solid #58435b;border-radius:19px;padding:clamp(18px,2.5vw,29px)}
+.cf-highlight h3{font-family:Georgia,serif;font-weight:500;font-size:clamp(21px,2vw,30px);line-height:1.2;margin:14px 0 8px}
+.cf-highlight>p{color:#d5c9d1;line-height:1.7;overflow-wrap:anywhere}
+.cf-highlight .cf-author-level{min-width:46px}
+@media(max-width:680px){.cf-highlight-list{grid-template-columns:1fr}.cf-highlight-head{align-items:start;flex-direction:column}}
