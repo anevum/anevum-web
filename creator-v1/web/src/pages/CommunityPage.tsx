@@ -12,6 +12,7 @@ import { Icon } from "../components/Icons";
 import { LoadingState, ErrorState } from "../components/States";
 import "./community-hub-v007.css";
 import {CommunityMemberCard,PublicMemberDirectory,PublicMemberActivity} from "../components/MemberCommunity";
+import {CommunityForums} from "./CanonicalForums";
 
 /**
  * Creator V1 / Community V007.
@@ -176,6 +177,7 @@ export function CommunityPage() {
     </section>
 
     <CommunityMemberCard onPosted={()=>setRevision(value=>value+1)}/>
+    <CommunityForums/>
 
     <nav className="ch7-portals" aria-label="Community destinations">
       <Link to="/discover"><Icon name="explore" size={19}/><span><strong>DISCOVER</strong><small>Explore new creations</small></span><Icon name="arrow" size={15}/></Link>
