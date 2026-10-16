@@ -39,10 +39,11 @@ const server=createServer({key:readFileSync(join(temp,'key.pem')),cert:readFileS
 await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));base='https://127.0.0.1:'+server.address().port;
 const delay=ms=>new Promise(r=>setTimeout(r,ms));
 async function until(fn,timeout=18000){const end=Date.now()+timeout;while(Date.now()<end){try{const v=await fn();if(v)return v}catch{}await delay(100)}throw Error('Browser regression timed out')}
-const browser=await (engine==='webkit'?webkit.launch({headless:true}):chromium.launch({headless:true,executablePath:chrome,args:['--no-sandbox','--disable-dev-shm-usage']}));
+const launchBrowser=()=>engine==='webkit'?webkit.launch({headless:true}):chromium.launch({headless:true,executablePath:chrome,args:['--no-sandbox','--disable-dev-shm-usage']});
+let browser=await launchBrowser();
 let page;
 try{
- const context=await browser.newContext({ignoreHTTPSErrors:true,viewport:{width:390,height:844}});
+ let context=await browser.newContext({ignoreHTTPSErrors:true,viewport:{width:390,height:844}});
  page=await context.newPage();
  const evaluate=expression=>page.evaluate(expression);
  const fill=async(selector,value)=>evaluate(`(()=>{const el=document.querySelector(${JSON.stringify(selector)});if(!el)throw Error('Input missing');const proto=el.tagName==='TEXTAREA'?HTMLTextAreaElement.prototype:HTMLInputElement.prototype;Object.getOwnPropertyDescriptor(proto,'value').set.call(el,${JSON.stringify(value)});el.dispatchEvent(new Event('input',{bubbles:true}));})()`);
@@ -115,8 +116,17 @@ try{
  assert.equal(await page.locator('.ms-wall-entry.is-target').evaluate(el=>el===document.activeElement),true);
  await page.reload();await wait('.ms-wall-entry.is-target');
  Object.assign(results,{privateCommunityComposer:true,publicOptInDirectory:true,interestFilter:true,publicCommunityComposer:true,wallDeepLink:true});
+ // Release earlier community/image screenshot surfaces before the next WebKit journey.
+ // Restore the real fixture session in a new process; the original authenticated
+ // user and SQLite state remain unchanged while renderer memory is reclaimed.
+ const preservedSession=await context.storageState();
+ await context.close();
+ await browser.close();
+ browser=await launchBrowser();
+ context=await browser.newContext({ignoreHTTPSErrors:true,viewport:{width:390,height:844},storageState:preservedSession});
+ page=await context.newPage();
  // New progression: real fixed XP, a live level-up, persistent notices and artwork.
- await page.goto(base+'/thebutton');await page.locator('.an-xp-button').waitFor();
+ await page.goto(base+'/thebutton',{waitUntil:'domcontentloaded'});await page.locator('.an-xp-button').waitFor();
  await until(async()=>await page.locator('.an-xp-button').isEnabled());
  assert.equal(db.prepare('SELECT COUNT(*) AS n FROM member_xp_events').get().n,0);
  for(let i=1;i<=13;i++){

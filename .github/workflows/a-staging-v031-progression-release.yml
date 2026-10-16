@@ -1,6 +1,6 @@
 name: ANEVUM A Staging Levels Awards and Alerts V031
 
-# Task-authorized staging-only member spaces release. Chromium and WebKit community regression revision 3. Never deploy the apex countdown.
+# Task-authorized staging-only progression release. Browser fixture rotation revision 4; rerun Chromium and WebKit. Never deploy the apex countdown.
 on:
   push:
     branches: [build/levels-awards-alerts-v031-20261016]
