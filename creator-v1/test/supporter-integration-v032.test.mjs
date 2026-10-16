@@ -244,8 +244,9 @@ test('canceled member reuses customer instead of creating orphaned second accoun
 });
 test('atomic checkout lease prevents racing payment sessions and is released after storage',async()=>{
  const {db,env,a}=setup();
- let release;
+ let release,markReached;
  const withheld=new Promise(resolve=>{release=resolve});
+ const reached=new Promise(resolve=>{markReached=resolve});
  let stripePosts=0;
  const http=async(url,opts)=>{
   if(url.includes('/prices/'))return json({
@@ -254,6 +255,7 @@ test('atomic checkout lease prevents racing payment sessions and is released aft
   });
   if(url.endsWith('/checkout/sessions')&&opts.method==='POST'){
    stripePosts++;
+   markReached();
    await withheld;
    return json(checkout);
   }
@@ -261,7 +263,7 @@ test('atomic checkout lease prevents racing payment sessions and is released aft
  };
  try{
   const first=supporterMember(request('/checkout','POST',{interval:'month'}),env,a,{now:NOW,http});
-  for(let i=0;i<200&&stripePosts===0;i++)await new Promise(resolve=>setImmediate(resolve));
+  await Promise.race([reached,new Promise((_,reject)=>setTimeout(()=>reject(Error('Checkout never reached Stripe')),5000))]);
   assert.equal(stripePosts,1,'first checkout has acquired guard and reached Stripe');
   const second=await supporterMember(request('/checkout','POST',{interval:'month'}),env,a,{now:NOW+1,http});
   assert.equal(second.status,409);
