@@ -4,11 +4,13 @@ import {spawn} from "node:child_process";
 import {existsSync,readFileSync,writeFileSync,mkdirSync,mkdtempSync,rmSync} from "node:fs";
 import {tmpdir} from "node:os";
 import {join} from "node:path";
+import {canonicalAvailabilityProbe,canonicalParticipationProbe} from "./player-browser-probes.mjs";
 const delay=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 async function until(fn,timeout=18000){
  const stop=Date.now()+timeout;
- while(Date.now()<stop){try{let value=await fn();if(value)return value;}catch{}await delay(140);}
- throw Error("SITEWIDE_V012_BROWSER_TIMEOUT");
+ let lastError=null;
+ while(Date.now()<stop){try{let value=await fn();if(value)return value;}catch(error){lastError=error;}await delay(140);}
+ throw Error("SITEWIDE_V012_BROWSER_TIMEOUT"+(lastError?": "+String(lastError).slice(0,350):""));
 }
 function connect(url){
  return new Promise((resolve,reject)=>{
@@ -84,6 +86,11 @@ try{
    ["home","discover","project","community","boards","levels","guest-library"].includes(id));
   for(const [name,path,selector] of selected){
    if(name==="guest-library")await client.send("Network.clearBrowserCookies");
+   // Simulate the real canonical staging capability only for project routes.
+   if(name==="project"){
+     const healthMode=await fetch(base+"/__player-member-fixture?mode=canonical");
+     if(!healthMode.ok)throw Error("PLAYER_V005_FIXTURE_GATE_UNAVAILABLE");
+   }
    const target=base+"/creator"+path;
    const result=await client.send("Page.navigate",{url:target});
    if(result.errorText)throw Error("SITEWIDE_V012_NAVIGATION_"+name+"_"+width+":"+result.errorText);
@@ -125,6 +132,157 @@ try{
       throw Error("SITEWIDE_V012_LEVELS_TEXT_SQUEEZED_"+width+":"+JSON.stringify(metrics));
    }
    await screenshot(name+"-"+width);
+
+   // V002 compiled browser acceptance: synthetic player cases only.
+   if(name==="project"){
+     const cases=[
+       ["external-game","00000000000000000000000000000001","PLAY ON CREATOR SITE","example.com"],
+       ["source-only",String(9001).padStart(32,"0"),"VIEW SOURCE CODE","github.com"],
+       ["unsafe-fallback",String(9002).padStart(32,"0"),"VIEW SOURCE CODE","github.com"],
+       ["no-link",String(9003).padStart(32,"0"),null,null],
+       ["external-app",String(9004).padStart(32,"0"),"TRY ON CREATOR SITE","example.com"],
+       ["long-content",String(9005).padStart(32,"0"),"PLAY ON CREATOR SITE","example.com"]
+     ];
+     for(const [variant,id,expectedAction,expectedHost] of cases){
+       if(variant!=="external-game"){
+         const navigation=await client.send("Page.navigate",{url:base+"/creator/projects/"+id});
+         if(navigation.errorText)throw Error("PLAYER_V002_NAVIGATION_"+variant+"_"+width+":"+navigation.errorText);
+       }
+       await until(()=>evaluate('location.pathname==='+JSON.stringify("/creator/projects/"+id)+'&&!!document.querySelector(".avp-stage")&&!!document.querySelector(".avp-passport")'));
+       await until(()=>evaluate('(()=>{const a=document.querySelector(".avp-stage-art img");return !a||(a.complete&&a.naturalWidth>0);})()'));
+       await until(()=>evaluate(canonicalAvailabilityProbe));
+       const participation=await evaluate(canonicalParticipationProbe);
+       if(participation.status!=="canonical-readonly"||participation.label!=="PARTICIPATE"||
+          participation.hasVotes||participation.hasSave||!participation.invitation||!participation.falsePromise||
+          !participation.links.some(x=>x.href==="/creator/community")||
+          !participation.links.some(x=>x.href==="/creator/join"))
+         throw Error("PLAYER_V005_CANONICAL_PARTICIPATION_"+variant+"_"+width+":"+JSON.stringify(participation));
+       const requestTrace=await (await fetch(base+"/__player-member-requests")).json();
+       if(!requestTrace.syntheticOnly||!Array.isArray(requestTrace.requests)||requestTrace.requests.length)
+         throw Error("PLAYER_V006_CANONICAL_LEGACY_REQUEST_"+variant+"_"+width+":"+JSON.stringify(requestTrace));
+       const state=await evaluate('(()=>{const st=document.querySelector(".avp-stage"),pas=document.querySelector(".avp-passport"),a=st?.querySelector(".avp-primary-action"),s=st?.getBoundingClientRect(),p=pas?.getBoundingClientRect(),art=st?.querySelector(".avp-stage-art img");return {heading:st?.querySelector("h1")?.textContent,kind:st?.className,primary:a?.textContent?.trim()||null,href:a?.getAttribute("href")||null,hostname:a?new URL(a.href).hostname:null,target:a?.getAttribute("target")||null,rel:a?.getAttribute("rel")||null,secondary:st?.querySelectorAll(".avp-secondary-action").length||0,unavailable:!!st?.querySelector(".avp-no-action"),art:!!art&&(art.complete&&art.naturalWidth>0),rect:s?{left:s.left,right:s.right,top:s.top,bottom:s.bottom,width:s.width}:null,passport:p?{left:p.left,right:p.right,top:p.top,bottom:p.bottom}:null,overflow:document.documentElement.scrollWidth>innerWidth+1,iframe:document.querySelectorAll("iframe").length,synthetic:getComputedStyle(document.body,"::after").content.includes("SYNTHETIC OFFLINE REVIEW")};})()');
+       if(state.overflow||state.iframe||!state.synthetic||!state.heading||!state.rect||!state.passport||!state.art||
+          (expectedAction?(!state.primary?.includes(expectedAction)||state.hostname!==expectedHost||state.target!=="_blank"||!state.rel?.includes("noopener")||!state.rel?.includes("noreferrer")):(Boolean(state.primary)||!state.unavailable))||
+          state.rect.left< -1||state.rect.right>width+1||
+          (width>1040?state.passport.left<state.rect.right-3:state.passport.top<state.rect.bottom-3))
+         throw Error("PLAYER_V002_VISUAL_OR_OUTBOUND_"+variant+"_"+width+":"+JSON.stringify(state));
+       if(variant==="unsafe-fallback"&&state.kind.includes("external-game"))throw Error("PLAYER_V002_UNSAFE_URL_USED_"+width);
+       if(variant==="long-content"){
+         const compact=await evaluate('(()=>{const s=document.querySelector(".avp-stage"),t=s?.querySelector("h1"),p=s?.querySelector(".avp-stage-summary"),link=s?.querySelector(".avp-stage-readmore"),action=s?.querySelector(".avp-primary-action"),about=document.querySelector("#avp-about");return {longTitle:s?.classList.contains("avp-stage--long-title"),clamped:p?.classList.contains("avp-stage-summary--long"),lines:p?getComputedStyle(p).webkitLineClamp:null,font:t?parseFloat(getComputedStyle(t).fontSize):null,readmore:link?.getAttribute("href"),actionTop:action?.getBoundingClientRect().top,aboutFull:about?.textContent?.includes("A deliberately lengthy project summary")};})()');
+         if(!compact.longTitle||!compact.clamped||compact.lines!=="4"||compact.readmore!=="#avp-about"||!compact.aboutFull||
+            (width<=390&&compact.font>41))
+           throw Error("PLAYER_V003_LONG_CONTENT_LAYOUT_"+width+":"+JSON.stringify(compact));
+       }
+       await screenshot("player-v002-"+variant+"-"+width);
+       if(variant==="external-game"){
+         await evaluate('document.getElementById("avp-participation").scrollIntoView({block:"start",behavior:"instant"})');
+         await until(()=>evaluate('(()=>{const p=document.querySelector(".avp-participation-preview");const r=p?.getBoundingClientRect();return !!r&&r.top>=-1&&r.top<innerHeight-80;})()'));
+         const layout=await evaluate('(()=>{const panel=document.querySelector(".avp-participation-preview"),r=panel.getBoundingClientRect(),actions=[...panel.querySelectorAll(".avp-participation-actions a")].map(a=>{const b=a.getBoundingClientRect();return {text:a.textContent.trim(),width:b.width,height:b.height,left:b.left,right:b.right};});return {panel:{top:r.top,left:r.left,right:r.right,bottom:r.bottom},actions,overflow:document.documentElement.scrollWidth>innerWidth+1,hasVoteInputs:!!panel.querySelector(".engagement-votes"),hasSaveButton:!!panel.querySelector("button")};})()');
+         if(layout.overflow||layout.panel.left < -1||layout.panel.right > width+1||layout.hasVoteInputs||layout.hasSaveButton||
+           layout.actions.length!==2||layout.actions.some(a=>a.height<44||a.width<70||a.left < -1||a.right > width+1))
+           throw Error("PLAYER_V006_PARTICIPATION_LAYOUT_"+width+":"+JSON.stringify(layout));
+         await screenshot("player-v006-canonical-participation-"+width);
+         console.log("PLAYER_V006_PARTICIPATION_SCREEN_"+width+"=PASS");
+       }
+       results.push({page:"player-v002-"+variant,width,primary:state.primary,host:state.hostname,art:state.art,overflow:state.overflow});
+       console.log("PLAYER_V002_"+variant.toUpperCase()+"_"+width+"=PASS");
+       if(variant==="external-game"&&(width===1440||width===390)){
+         await evaluate('(()=>{Object.defineProperty(navigator,"share",{configurable:true,value:undefined});Object.defineProperty(navigator,"clipboard",{configurable:true,value:{writeText:async text=>{window.__playerShareCopy=text;}}});document.querySelector(".avp-stage-shortcuts button").click();})()');
+         await until(()=>evaluate('!!window.__playerShareCopy&&!!document.querySelector(".avp-share-status")?.textContent?.includes("copied")'));
+         const copied=await evaluate('window.__playerShareCopy');
+         if(copied!==base+"/creator/projects/"+id)throw Error("PLAYER_V002_SHARE_URL_"+width+":"+copied);
+         await evaluate('document.querySelector(".avp-stage-shortcuts a[href=\\"#avp-participation\\"]").click()');
+         await until(()=>evaluate('location.hash==="#avp-participation"'));
+         if(!await evaluate('!!document.getElementById("avp-participation")'))throw Error("PLAYER_V002_PARTICIPATION_ANCHOR_"+width);
+       }
+     }
+     // Legacy and unavailable capability must remain independently fail-closed.
+     if(width===1440||width===390){
+       for(const [mode,expected] of [["legacy","legacy-guest"],["offline","closed"]]){
+         const change=await fetch(base+"/__player-member-fixture?mode="+mode);
+         if(!change.ok)throw Error("PLAYER_V005_MEMBER_MODE_SETUP_"+mode);
+         await client.send("Page.navigate",{url:base+"/creator/projects/00000000000000000000000000000001"});
+         await until(()=>evaluate('document.querySelector(".engagement-panel")?.getAttribute("data-avp-availability")==='+JSON.stringify(expected)));
+         const info=await evaluate('(()=>{const p=document.querySelector(".engagement-panel");return {kind:p?.dataset.avpAvailability,hasVotes:!!p?.querySelector(".engagement-votes"),hasSave:!!p?.querySelector("button"),heading:p?.querySelector("h2")?.textContent};})()');
+         if(info.kind!==expected||info.hasVotes||info.hasSave||!info.heading)throw Error("PLAYER_V005_MEMBER_GATE_"+mode+"_"+width+":"+JSON.stringify(info));
+         console.log("PLAYER_V005_MEMBER_GATE_"+mode.toUpperCase()+"_"+width+"=PASS");
+       }
+     }
+     // Opt-in future save flow; the underlying staging flag is OFF. This is
+     // a loopback-only synthetic member with no genuine account or publication.
+     const setupSaves=await fetch(base+"/__player-member-fixture?mode=canonical-saves");
+     if(!setupSaves.ok)throw Error("PLAYER_V008_SAVE_FIXTURE_UNAVAILABLE_"+width);
+     await client.send("Network.clearBrowserCookies");
+     const saveUrl=base+"/creator/projects/00000000000000000000000000000001";
+     await client.send("Page.navigate",{url:saveUrl});
+     await until(()=>evaluate('document.querySelector(".engagement-panel")?.getAttribute("data-avp-availability")==="canonical-saves-guest"'));
+     const guest=await evaluate('(()=>{const p=document.querySelector(".engagement-panel"),links=[...p.querySelectorAll("a")].map(a=>a.getAttribute("href"));return {button:!!p.querySelector("button"),registration:p.textContent.includes("invite-only"),links};})()');
+     if(guest.button||!guest.registration||!guest.links.includes("/creator/join"))
+       throw Error("PLAYER_V008_SAVE_GUEST_"+width+":"+JSON.stringify(guest));
+     await screenshot("player-v008-canonical-save-guest-"+width);
+     await evaluate('document.cookie="anevum_offline_visual_fixture=1; Path=/; SameSite=Strict"');
+     await client.send("Page.navigate",{url:saveUrl});
+     await until(()=>evaluate('document.querySelector(".engagement-panel")?.getAttribute("data-avp-availability")==="canonical-saves-member"'));
+     const before=await evaluate('(()=>{const b=document.querySelector(".avp-canonical-save-button"),r=b?.getBoundingClientRect();return {pressed:b?.getAttribute("aria-pressed"),text:b?.textContent,rect:r?{left:r.left,right:r.right,height:r.height}:null,overflow:document.documentElement.scrollWidth>innerWidth+1};})()');
+     if(before.pressed!=="false"||!before.text?.includes("SAVE PROJECT")||!before.rect||before.rect.height<44||
+        before.rect.left < -1||before.rect.right>width+1||before.overflow)
+       throw Error("PLAYER_V008_SAVE_MEMBER_LAYOUT_"+width+":"+JSON.stringify(before));
+     await evaluate('document.querySelector(".avp-canonical-save-button").scrollIntoView({block:"center",behavior:"instant"})');
+     await screenshot("player-v008-canonical-save-before-"+width);
+     await evaluate('document.querySelector(".avp-canonical-save-button").click()');
+     await until(()=>evaluate('document.querySelector(".avp-canonical-save-button")?.getAttribute("aria-pressed")==="true"'));
+     const marked=await evaluate('(()=>{const b=document.querySelector(".avp-canonical-save-button"),p=document.querySelector(".avp-canonical-save");return {label:b?.textContent,status:p?.querySelector("[role=status]")?.textContent,hasVoting:!!p?.querySelector(".engagement-votes")};})()');
+     if(!marked.label?.includes("REMOVE SAVED PROJECT")||!marked.status?.includes("saved privately")||marked.hasVoting)
+       throw Error("PLAYER_V008_SAVE_ACTION_"+width+":"+JSON.stringify(marked));
+     await screenshot("player-v008-canonical-save-after-"+width);
+     await evaluate('document.querySelector(".avp-canonical-save-button").click()');
+     await until(()=>evaluate('document.querySelector(".avp-canonical-save-button")?.getAttribute("aria-pressed")==="false"'));
+     const reverted=await evaluate('document.querySelector(".avp-canonical-save [role=status]")?.textContent');
+     if(!reverted?.includes("removed"))throw Error("PLAYER_V008_REMOVE_ACTION_"+width+":"+reverted);
+     const trace=await (await fetch(base+"/__player-member-requests")).json();
+     if(!trace.syntheticOnly||trace.requests.length)throw Error("PLAYER_V008_LEGACY_IDENTITY_LEAK_"+width+":"+JSON.stringify(trace));
+     console.log("PLAYER_V008_PRIVATE_SAVE_"+width+"=PASS");
+     // V009: exercise the canonical private saved-works collection with
+     // a synthetic verified browser session and one synthetic project.
+     await evaluate('document.querySelector(".avp-canonical-save-button").click()');
+     await until(()=>evaluate('document.querySelector(".avp-canonical-save-button")?.getAttribute("aria-pressed")==="true"'));
+     const savedRoute=base+"/creator/saved";
+     const collectionNav=await client.send("Page.navigate",{url:savedRoute});
+     if(collectionNav.errorText)throw Error("PLAYER_V009_SAVED_NAVIGATION_"+width+":"+collectionNav.errorText);
+     await until(()=>evaluate('location.pathname==="/creator/saved"&&document.querySelectorAll(".avsaved-card").length===1'));
+     const savedCard=await evaluate('(()=>{const card=document.querySelector(".avsaved-card"),remove=card?.querySelector("button"),bounds=remove?.getBoundingClientRect();return {title:card?.querySelector("h2")?.textContent,credit:card?.querySelector(".avsaved-card-maker")?.textContent,open:card?.querySelector("a.avsaved-open")?.getAttribute("href"),btn:remove?.textContent,bounds:bounds?{left:bounds.left,right:bounds.right,height:bounds.height}:null,overflow:document.documentElement.scrollWidth>innerWidth+1,legacy:!!document.querySelector(".member-library-grid")};})()');
+     if(savedCard.title!=="ARCADE AFTER DARK"||!savedCard.credit?.includes("@nova_demo")||
+        !savedCard.open?.includes("from=%2Fsaved")||!savedCard.btn?.includes("REMOVE")||
+        !savedCard.bounds||savedCard.bounds.height<44||savedCard.bounds.left < -1||
+        savedCard.bounds.right > width+1||savedCard.overflow||savedCard.legacy)
+       throw Error("PLAYER_V009_SAVED_LAYOUT_"+width+":"+JSON.stringify(savedCard));
+     await evaluate('document.querySelector(".avsaved-card").scrollIntoView({block:"center",behavior:"instant"})');
+     await screenshot("player-v009-canonical-saved-before-"+width);
+     await evaluate('document.querySelector(".avsaved-card-actions button").click()');
+     await until(()=>evaluate('document.querySelector(".avsaved-empty")!==null&&document.querySelectorAll(".avsaved-card").length===0'));
+     const cleared=await evaluate('(()=>({empty:document.querySelector(".avsaved-empty h2")?.textContent,notice:document.querySelector(".avsaved-notice")?.textContent,overflow:document.documentElement.scrollWidth>innerWidth+1}))()');
+     if(!cleared.empty?.includes("YOUR COLLECTION")||!cleared.notice?.includes("removed")||cleared.overflow)
+       throw Error("PLAYER_V009_SAVED_REMOVE_"+width+":"+JSON.stringify(cleared));
+     await evaluate('document.querySelector(".avsaved-empty").scrollIntoView({block:"center",behavior:"instant"})');
+     await screenshot("player-v009-canonical-saved-empty-"+width);
+     await client.send("Network.clearBrowserCookies");
+     await client.send("Page.navigate",{url:savedRoute});
+     await until(()=>evaluate('document.querySelector(".avsaved-inactive")?.textContent?.includes("Sign in with your verified ANEVUM member account")'));
+     const guestSaved=await evaluate('(()=>{const panel=document.querySelector(".avsaved-inactive");return {href:panel?.querySelector("a")?.getAttribute("href"),items:document.querySelectorAll(".avsaved-card").length};})()');
+     if(guestSaved.href!=="/creator/join"||guestSaved.items!==0)
+       throw Error("PLAYER_V009_SAVED_GUEST_"+width+":"+JSON.stringify(guestSaved));
+     await screenshot("player-v009-canonical-saved-guest-"+width);
+     const staged=await fetch(base+"/__player-member-fixture?mode=canonical");
+     if(!staged.ok)throw Error("PLAYER_V009_DISABLED_SETUP");
+     await client.send("Page.navigate",{url:savedRoute});
+     await until(()=>evaluate('document.querySelector(".avsaved-inactive")?.textContent?.includes("SAVED WORKS ARE NOT YET ACTIVE")'));
+     const disabledSaved=await evaluate('(()=>({items:document.querySelectorAll(".avsaved-card").length,copy:document.querySelector(".avsaved-inactive")?.textContent}))()');
+     if(disabledSaved.items!==0||!disabledSaved.copy?.includes("not enabled"))
+       throw Error("PLAYER_V009_SAVED_DISABLED_"+width+":"+JSON.stringify(disabledSaved));
+     console.log("PLAYER_V009_SAVED_WORKS_"+width+"=PASS");
+     const reset=await fetch(base+"/__player-member-fixture?mode=legacy");
+     if(!reset.ok)throw Error("PLAYER_V005_MEMBER_RESET_FAILED");
+   }
    if(name==="home"){
     await evaluate('document.getElementById("world-gateways").scrollIntoView({block:"start"})');
     if(width<541){

@@ -18,15 +18,35 @@ const work=seeds.map(([title,category,creatorHandle],i)=>({
  freeToUse:true,demoUrl:"https://example.com/",sourceUrl:null,license:null,publishedAt:"2026-10-12T00:00:00.000Z",
  aiDisclosure:"Offline synthetic design fixture.",humanContribution:"No real human creator record."
 }));
+
+// Synthetic-only player cases live in the loopback fixture, not the public listings.
+// No real creator or approval is inferred from these test records.
+const playerCases=new Map([
+  [9001,"SOURCE ARCHIVE / OFFLINE REVIEW","games",null,"https://github.com/example/source-archive"],
+  [9002,"BLOCKED DEMO / SAFE SOURCE","games","http://insecure.example.com/game","https://github.com/example/safe-source"],
+  [9003,"NO LINKED EXPERIENCE / OFFLINE REVIEW","games",null,null],
+  [9004,"APPLICATION DESK / OFFLINE REVIEW","tools","https://example.com/application",null],
+  [9005,"CHRONICLES OF THE PERPETUALLY UNFOLDING CONSTELLATION — VOLUME VII","games","https://example.com/long-title-demo",null]
+].map(([number,title,category,demoUrl,sourceUrl])=>{
+  const id=String(number).padStart(32,"0");
+  return [id,{...work[0],id,slug:null,title,category,demoUrl,sourceUrl,
+    creatorName:number===9005?"THE CARTOGRAPHERS OF THE ECHOING CONSTELLATIONS":work[0].creatorName,
+    summary:number===9005?"SYNTHETIC OFFLINE REVIEW. A deliberately lengthy project summary exercises wrap, reading order and touch controls on narrow phones without asserting actual creator data. ".repeat(3):"SYNTHETIC OFFLINE project for player control and layout testing.",
+    description:"OFFLINE SYNTHETIC DESIGN FIXTURE. NOT A PUBLISHED PROJECT."}];
+}));
 const categories=[...new Set(work.map(p=>p.category))].map(category=>({category,count:work.filter(p=>p.category===category).length}));
 // Browser-only scenario switch. Disabled by default; never used by a Worker.
 let contextFixtureEnabled=false;
+// Separate project participation health simulation; never shipped or persisted.
+let playerMemberHealthMode="legacy";
+let syntheticProjectSaved=false;
+const projectMemberRequests=[]; // Only local fixture traces, never credential content.
 const contextProject={id:work[0].id,title:work[0].title,category:work[0].category,creatorHandle:work[0].creatorHandle,creatorName:work[0].creatorName};
 const discussionFixtures=[
  {id:'a'.repeat(32),title:'Keyboard feedback for Arcade After Dark',excerpt:'SYNTHETIC OFFLINE discussion fixture: testing project context and accessible input.',body:'SYNTHETIC OFFLINE discussion fixture. This is not a real submission or earned contribution.',topic:'games',authorHandle:'moss_demo',authorName:'Moss Workshop',publishedAt:'2026-10-12T01:00:00Z',score:1,replyCount:1,project:contextProject},
  {id:'b'.repeat(32),title:'A question about creative process',excerpt:'SYNTHETIC OFFLINE creator-activity fixture, not real engagement.',body:'SYNTHETIC OFFLINE fixture for a general community discussion.',topic:'creative',authorHandle:'nova_demo',authorName:'Nova Studio',publishedAt:'2026-10-12T02:00:00Z',score:0,replyCount:0,project:null}
 ];
-const overlay='<style>body::after{content:"SYNTHETIC OFFLINE REVIEW — NOT REAL CONTENT";position:fixed;bottom:78px;right:7px;z-index:2147483647;background:#fff0b2;color:#1c1010;border:2px solid #1c1010;padding:5px 8px;font:900 8px system-ui,sans-serif;max-width:230px}</style>';
+const overlay='<style>body::after{content:"SYNTHETIC OFFLINE REVIEW — NOT REAL CONTENT";position:fixed;bottom:5px;right:7px;pointer-events:none;z-index:2147483647;background:#fff0b2;color:#1c1010;border:2px solid #1c1010;padding:5px 8px;font:900 8px system-ui,sans-serif;max-width:230px}</style>';
 // Fixture is ONLY served from this local 127.0.0.1 dev script for screenshot QA.
 // It does not run in Cloudflare Workers, staging D1 or any shipped assets.
 const FAKE_MEMBER=Object.freeze({
@@ -38,8 +58,59 @@ const FAKE_MEMBER=Object.freeze({
 });
 const LOCAL_REVIEW_COOKIE="anevum_offline_visual_fixture=1";
 function offlineMember(req,res,url){
-  if(url.pathname==="/api/v1/member/health"&&req.method==="GET")
+  // Synthetic auth and saved works are loopback-only and do not exist in the
+  // compiled production Worker. No actual session can be created here.
+  if(url.pathname==="/api/v1/member/auth/get-session"&&req.method==="GET"){
+    const loggedIn=(req.headers.cookie||"").split(";").some(x=>x.trim()===LOCAL_REVIEW_COOKIE);
+    return json(res,loggedIn?{
+      user:{id:"00000000000000000000000000000099",name:"Offline Synthetic Member",
+        email:"synthetic-account@anevum.invalid",emailVerified:true,
+        createdAt:"2026-10-12T00:00:00.000Z",updatedAt:"2026-10-12T00:00:00.000Z"},
+      session:{id:"synthetic-session-not-valid",userId:"00000000000000000000000000000099",
+        expiresAt:"2027-01-01T00:00:00.000Z",createdAt:"2026-10-12T00:00:00.000Z",
+        updatedAt:"2026-10-12T00:00:00.000Z"}
+    }:null);
+  }
+  if(url.pathname==="/api/v1/member/project-saves"&&req.method==="GET"){
+    if(playerMemberHealthMode!=="canonical-saves")
+      return json(res,{error:"not-available"},404);
+    if(!(req.headers.cookie||"").split(";").some(x=>x.trim()===LOCAL_REVIEW_COOKIE))
+      return json(res,{error:"Sign-in required"},401);
+    const item=work[0];
+    return json(res,{items:syntheticProjectSaved?[{
+      id:item.id,title:item.title,summary:item.summary,category:item.category,
+      creatorHandle:item.creatorHandle,creatorName:item.creatorName,
+      publishedAt:item.publishedAt,savedAt:1791763200
+    }]:[],nextCursor:null});
+  }
+  const savePath=/^\/api\/v1\/member\/project-saves\/([a-f0-9]{32})$/.exec(url.pathname);
+  if(savePath){
+    if(playerMemberHealthMode!=="canonical-saves"||savePath[1]!==work[0].id)
+      return json(res,{error:"not-available"},404);
+    if(!(req.headers.cookie||"").split(";").some(x=>x.trim()===LOCAL_REVIEW_COOKIE))
+      return json(res,{error:"Sign-in required"},401);
+    if(req.method==="GET")return json(res,{available:true,saved:syntheticProjectSaved});
+    if(req.method==="PUT"||req.method==="DELETE"){
+      const wanted=req.method==="PUT",changed=syntheticProjectSaved!==wanted;
+      syntheticProjectSaved=wanted;
+      return json(res,{saved:syntheticProjectSaved,changed});
+    }
+    return json(res,{error:"method-not-allowed"},405);
+  }
+  if(/^\/api\/v1\/member\/(?:me|library(?:\/|$)|community\/projects(?:\/|$))/.test(url.pathname))
+    projectMemberRequests.push({path:url.pathname,method:req.method});
+  if(url.pathname==="/api/v1/member/health"&&req.method==="GET"){
+    if(playerMemberHealthMode==="canonical-saves")return json(res,{
+      service:"anevum-canonical-auth-staging",status:"ready",registration:"invite-only",
+      linkedCreatorAccounts:false,projectSavesReady:true
+    });
+    if(playerMemberHealthMode==="canonical")return json(res,{
+      service:"anevum-canonical-auth-staging",status:"ready",registration:"invite-only",
+      linkedCreatorAccounts:false,progressionReady:true
+    });
+    if(playerMemberHealthMode==="offline")return json(res,{error:"unavailable"},503);
     return json(res,{service:"OFFLINE-SYNTHETIC-FIXTURE",status:"ok",signupEnabled:false});
+  }
   if(url.pathname==="/api/v1/member/me"&&req.method==="GET"){
     const cookies=(req.headers.cookie||"").split(";").map(x=>x.trim());
     return cookies.includes(LOCAL_REVIEW_COOKIE)
@@ -136,13 +207,23 @@ function api(res,url){
   const items=work.filter(p=>(!cat||p.category===cat)&&(!q||p.title.toLowerCase().includes(q))&&(!who||who===p.creatorHandle)).slice(0,Math.min(24,Number(url.searchParams.get("limit"))||24));
   return json(res,{items,count:items.length,nextCursor:null});
  }
- if(path.startsWith("/projects/")){const p=work.find(p=>p.id===path.slice(10));return json(res,p?{item:p}:{error:"not-found"},p?200:404);}
+ if(path.startsWith("/projects/")){const id=path.slice(10);const p=work.find(p=>p.id===id)||playerCases.get(id);return json(res,p?{item:p}:{error:"not-found"},p?200:404);}
  return json(res,{error:"not-found"},404);
 }
 const mime={".css":"text/css",".js":"text/javascript",".svg":"image/svg+xml",".png":"image/png",".webp":"image/webp"};
 createServer((req,res)=>{
  try{
   const u=new URL(req.url,"http://127.0.0.1:4178");
+  if(u.pathname==="/__player-member-fixture"&&req.headers.host==="127.0.0.1:4178"&&req.method==="GET"){
+    const mode=u.searchParams.get("mode");
+    if(!["canonical","canonical-saves","legacy","offline"].includes(mode))return json(res,{error:"invalid-mode"},400);
+    playerMemberHealthMode=mode;
+    projectMemberRequests.length=0;
+    syntheticProjectSaved=false;
+    return json(res,{syntheticOnly:true,mode:playerMemberHealthMode});
+  }
+  if(u.pathname==="/__player-member-requests"&&req.headers.host==="127.0.0.1:4178"&&req.method==="GET")
+    return json(res,{syntheticOnly:true,requests:[...projectMemberRequests]});
   if(u.pathname==='/__context-fixture'&&req.headers.host==='127.0.0.1:4178'&&req.method==='GET'){
     contextFixtureEnabled=u.searchParams.get('enabled')==='1';
     return json(res,{syntheticOnly:true,enabled:contextFixtureEnabled});

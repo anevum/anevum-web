@@ -5,8 +5,12 @@ import {
   MemberApiError,type MemberRating
 } from "../lib/member-api";
 import { useResource } from "../lib/useResource";
+import {projectEngagementGateway} from "../lib/project-engagement";
+import {CanonicalProjectSavePanel} from "./CanonicalProjectSavePanel";
 
 type Availability=
+  | {kind:"canonical-readonly";registration:"open"|"invite-only"|"closed"}
+  | {kind:"canonical-saves";registration:"open"|"invite-only"|"closed"}
   | {kind:"closed"}
   | {kind:"guest";signupEnabled:boolean}
   | {kind:"member";rating:MemberRating;saved:boolean;libraryTruncated:boolean};
@@ -16,7 +20,9 @@ export function MemberEngagementPanel({projectId}:{projectId:string}){
     if(!/^[a-f0-9]{32}$/.test(projectId))return {kind:"closed"};
     let health;
     try{health=await memberHealth(signal);}catch{return {kind:"closed"};}
-    if(health.status!=="ok")return {kind:"closed"};
+    const gateway=projectEngagementGateway(health);
+    if(gateway.kind==="canonical-readonly"||gateway.kind==="canonical-saves")return gateway;
+    if(gateway.kind!=="legacy")return {kind:"closed"};
     try{await memberMe(signal);}
     catch(e){
       if(e instanceof MemberApiError&&e.status===401)return {kind:"guest",signupEnabled:health.signupEnabled};
@@ -31,8 +37,19 @@ export function MemberEngagementPanel({projectId}:{projectId:string}){
 
   if(available.state==="loading")return <section className="engagement-panel" aria-label="Member project participation"><span className="kicker">COMMUNITY SIGNAL</span><p role="status">Checking private member availability…</p></section>;
   if(available.state==="error")return <section className="engagement-panel" aria-label="Member project participation"><span className="kicker">COMMUNITY SIGNAL</span><p role="status">Member actions are temporarily unavailable. Public project information is still accessible.</p></section>;
-  if(available.data.kind==="closed")return <section className="engagement-panel" aria-label="Member project participation"><span className="kicker">COMMUNITY SIGNAL / IN DEVELOPMENT</span><h2>PLAY NOW. PARTICIPATE LATER.</h2><p>Saving, rating and progression are undergoing invited member testing. Public voting is not open on this site.</p></section>;
-  if(available.data.kind==="guest")return <section className="engagement-panel" aria-label="Member project participation"><span className="kicker">COMMUNITY SIGNAL / INVITED MEMBERS</span><h2>YOUR INPUT MATTERS.</h2><p>Invited members can rate and save published work. Public accounts and voting remain closed.</p>
+  if(available.data.kind==="canonical-saves")return <CanonicalProjectSavePanel key={projectId} projectId={projectId} registration={available.data.registration}/>;
+  if(available.data.kind==="canonical-readonly")return <section className="engagement-panel avp-participation-preview" data-avp-availability="canonical-readonly" aria-label="Project participation availability">
+    <header className="avp-participation-heading"><span className="kicker">COMMUNITY SIGNAL / MEMBER NETWORK</span><span className="avp-participation-status">RATINGS NOT ACTIVE</span></header>
+    <h2>BE PART OF WHAT'S NEXT.</h2>
+    <p>Project rating and saving are not connected to this member network yet. You can explore the community and share this creator's work now.</p>
+    <div className="avp-participation-actions">
+      <Link className="button secondary" to="/community">EXPLORE COMMUNITY →</Link>
+      {available.data.registration!=="closed"&&<Link className="button secondary" to="/join">MEMBER ACCESS →</Link>}
+    </div>
+    <p className="member-caption">{available.data.registration==="invite-only"?"Member access is currently invite-only. ":available.data.registration==="closed"?"New member registration is currently unavailable. ":"Member registration is currently open. "}Signing in does not activate project rating, saving, or XP.</p>
+  </section>;
+  if(available.data.kind==="closed")return <section className="engagement-panel" data-avp-availability="closed" aria-label="Member project participation"><span className="kicker">COMMUNITY SIGNAL / IN DEVELOPMENT</span><h2>EXPLORE NOW. PARTICIPATE LATER.</h2><p>Rating, saving and related progression are not available for this project on this site. Public voting is not open.</p></section>;
+  if(available.data.kind==="guest")return <section className="engagement-panel" data-avp-availability="legacy-guest" aria-label="Member project participation"><span className="kicker">COMMUNITY SIGNAL / INVITED MEMBERS</span><h2>YOUR INPUT MATTERS.</h2><p>Invited members can rate and save published work. Public accounts and voting remain closed.</p>
     {available.data.signupEnabled&&<a className="button secondary" href="/api/v1/member/join">INVITED MEMBER SIGN-IN</a>}
   </section>;
   return <Controls key={projectId} projectId={projectId} initialRating={available.data.rating} initialSaved={available.data.saved} truncated={available.data.libraryTruncated}/>;
@@ -63,7 +80,7 @@ function Controls({projectId,initialRating,initialSaved,truncated}:{
     }catch(e){setError(e instanceof MemberApiError?e.message:"Unable to update your library.");}
     finally{setBusy(false);}
   }
-  return <section className="engagement-panel" aria-label="Invited member project participation">
+  return <section className="engagement-panel" data-avp-availability="legacy-member" aria-label="Invited member project participation">
     <div className="engagement-heading">
       <div><span className="kicker">COMMUNITY SIGNAL / INVITED MEMBERS</span><h2>RATE THE WORK. KEEP IT CLOSE.</h2></div>
       <p>{rating.votes+" VERIFIED RATINGS"+(rating.average===null?"":(" / "+rating.average.toFixed(2)+" AVERAGE"))}</p>

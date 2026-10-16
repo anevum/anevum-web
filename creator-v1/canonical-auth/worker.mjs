@@ -14,6 +14,7 @@ import {supporterMember,supporterWebhook} from "./supporter.mjs";
 import {supporterRewardsRoute} from "./supporter-rewards.mjs";
 import {canonicalAccountClosure} from "./account-closure.mjs";
 import {publicSupporterTelemetry,PUBLIC_TELEMETRY_PATH} from "./public-supporter-telemetry.mjs";
+import {canonicalProjectSave,canonicalProjectSaveReady} from "./project-saves.mjs";
 
 const HEALTH=CANONICAL_PREFIX+"/health";
 const METHODS=CANONICAL_PREFIX+"/auth-methods";
@@ -110,7 +111,12 @@ export function createCanonicalStageWorker({authFactory=createCanonicalAuth}={})
     const ownProfile=path===PROFILE;
     const ownExport=path===EXPORT;
     const ownClosure=path===CLOSURE;
-    if(path!==HEALTH && path!==METHODS && !publicHandle && !ownProfile && !ownExport && !ownClosure && !ownSpace && !publicSpace && !publicCommunity && !publicMetrics && !ownProgression && !ownSupporter &&
+    const ownProjectSave=path===CANONICAL_PREFIX+"/project-saves" ||
+      /^\/api\/v1\/member\/project-saves\/[a-f0-9]{32}$/.test(path);
+    // This is a proposed, source-only pilot. Do not expose even a GET
+    // endpoint without a deliberate rollout flag and an approved D1 schema.
+    if(ownProjectSave&&env?.CANONICAL_PROJECT_SAVES_ENABLED!=="true")return fail(request,404);
+    if(path!==HEALTH && path!==METHODS && !publicHandle && !ownProfile && !ownExport && !ownClosure && !ownSpace && !publicSpace && !publicCommunity && !publicMetrics && !ownProgression && !ownSupporter && !ownProjectSave &&
       !(path.startsWith(CANONICAL_AUTH_PATH+"/") &&
         (AUTH_ALLOWLIST[request.method]?.has(path)??false)))
       return fail(request,404);
@@ -119,6 +125,7 @@ export function createCanonicalStageWorker({authFactory=createCanonicalAuth}={})
     if(publicMetrics&&request.method!=="GET")return fail(request,405);
     if(ownProfile && !["GET","POST","PATCH"].includes(request.method))return fail(request,404);
     if(ownExport && request.method!=="GET")return fail(request,404);
+    if(ownProjectSave && !["GET","PUT","DELETE"].includes(request.method))return fail(request,405);
     if(ownClosure && !["GET","POST"].includes(request.method))return fail(request,405);
     if(ownSupporter && !((["/supporter","/supporter/rewards"].some(suffix=>path===CANONICAL_PREFIX+suffix)&&["GET","PATCH"].includes(request.method)) ||
       (["/supporter/checkout","/supporter/portal","/supporter/webhook"].some(suffix=>path===CANONICAL_PREFIX+suffix)&&request.method==="POST")))return fail(request,405);
@@ -135,6 +142,9 @@ export function createCanonicalStageWorker({authFactory=createCanonicalAuth}={})
       status:stageReady?"ready":"closed",
       registration:stageReady?(configured.open?"open":configured.invited?"invite-only":"closed"):"closed",
       linkedCreatorAccounts:false,
+      ...(env.CANONICAL_PROJECT_SAVES_ENABLED==="true"?{
+        projectSavesReady:Boolean(stageReady&&await canonicalProjectSaveReady(env))
+      }:{}),
       // Keep the disabled service's original inert health contract unchanged.
       // V031 staging alone includes a schema-readiness signal, no private data.
       ...(env.CANONICAL_XP_TEST_ENABLED==='true'?{
@@ -225,10 +235,11 @@ export function createCanonicalStageWorker({authFactory=createCanonicalAuth}={})
 
     try{
       const auth=authFactory(env);
-      if(ownProfile||ownExport||ownClosure||ownSpace||ownProgression||ownSupporter){
+      if(ownProfile||ownExport||ownClosure||ownSpace||ownProgression||ownSupporter||ownProjectSave){
         const session=await auth.api.getSession({headers:clean.headers});
         if(!session?.user)return safeJson(request,{error:"Sign-in required"},401);
         if(ownClosure)return safeResponse(await canonicalAccountClosure(clean,env,session.user,session.session));
+        if(ownProjectSave)return safeResponse(await canonicalProjectSave(clean,env,session.user));
         if(ownProgression)return safeResponse(await canonicalProgression(clean,env,session.user));
         if(ownSupporter)return safeResponse(path===CANONICAL_PREFIX+"/supporter/rewards"
           ?await supporterRewardsRoute(clean,env,session.user)
