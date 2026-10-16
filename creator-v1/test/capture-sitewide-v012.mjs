@@ -54,7 +54,7 @@ try{
  await client.send("Page.enable");await client.send("Runtime.enable");
  const evaluate=async expression=>{
   const result=await client.send("Runtime.evaluate",{expression,returnByValue:true,awaitPromise:true});
-  if(result.exceptionDetails)throw Error(result.exceptionDetails.text||"SITEWIDE_V012_EVALUATE_FAILED");
+  if(result.exceptionDetails)throw Error(result.exceptionDetails.exception?.description||result.exceptionDetails.text||"SITEWIDE_V012_EVALUATE_FAILED");
   return result.result?.value;
  };
  const screenshot=async label=>{
@@ -144,9 +144,9 @@ try{
     if(portals.images!==4||portals.resolutions.some(width=>width<768)||!portals.readingSurface||portals.overflow||portals.links.some(href=>!href.includes("/discover?category=")))
      throw Error("COMMUNITY_PORTAL_ART_OR_LAYOUT_"+width+":"+JSON.stringify(portals));
     if(width<541){
-     await evaluate('document.querySelector("button[aria-label=\"Next collection\"]").click()');
+     await evaluate("document.querySelector("+JSON.stringify('button[aria-label="Next collection"]')+").click()");
      await until(()=>evaluate('document.getElementById("community-portal-cards").scrollLeft>100'));
-     await evaluate('document.querySelector("button[aria-label=\"Previous collection\"]").click()');
+     await evaluate("document.querySelector("+JSON.stringify('button[aria-label="Previous collection"]')+").click()");
      await until(()=>evaluate('document.getElementById("community-portal-cards").scrollLeft<5'));
     }
     await screenshot("home-collections-"+width);
