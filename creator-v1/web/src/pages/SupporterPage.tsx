@@ -4,7 +4,7 @@ import {canonicalAuthClient} from '../lib/canonical-beta';
 import {OrbitalMark} from '../components/OrbitalMark';
 
 type Interval='month'|'year';
-type Billing={available:boolean;supporter:boolean;status:string;until?:number|null;cancelAtPeriodEnd?:boolean;interval?:Interval|null;plans:{month:number;year:number}};
+type Billing={available:boolean;supporter:boolean;status:string;until?:number|null;cancelAtPeriodEnd?:boolean;interval?:Interval|null;publicInsignia?:boolean;revision?:number;plans:{month:number;year:number}};
 function destination(value:unknown,host:string){
  if(typeof value!=='string')return null;
  try{const u=new URL(value);return u.protocol==='https:'&&u.hostname===host&&!u.username&&!u.password?u.href:null}catch{return null}
@@ -49,6 +49,23 @@ export function SupporterPage(){
   }catch(e){setError(e instanceof Error?e.message:'This action is unavailable.')}
   finally{setBusy(false)}
  }
+ async function updateDisplay(show:boolean){
+  if(!id||!billing?.available||!billing.supporter||checking||busy)return;
+  setBusy(true);setError('');
+  try{
+   const response=await fetch('/api/v1/member/supporter',{
+    method:'PATCH',mode:'same-origin',credentials:'same-origin',cache:'no-store',
+    redirect:'error',referrerPolicy:'same-origin',
+    headers:{'content-type':'application/json',accept:'application/json'},
+    body:JSON.stringify({publicInsignia:show,revision:billing.revision??0})
+   });
+   if(!response.ok)throw Error(response.status===409?'Your membership or display preference changed. Recheck your status.':'Could not change supporter display.');
+   const changed=await response.json() as {publicInsignia:boolean;revision:number};
+   if(typeof changed.publicInsignia!=='boolean'||!Number.isSafeInteger(changed.revision))throw Error('Display change not verified.');
+   setBilling(old=>old?{...old,...changed}:old);
+  }catch(e){setError(e instanceof Error?e.message:'Display change unavailable.')}
+  finally{setBusy(false)}
+ }
  const enabled=Boolean(id&&billing?.available),supporter=Boolean(billing?.supporter);
  return <div className="av32-support">
   <section className="av32-hero" aria-labelledby="av32-title">
@@ -86,6 +103,7 @@ export function SupporterPage(){
     <button type="button" className="av32-primary" disabled={!enabled||busy||checking} onClick={()=>void action(supporter?'portal':'checkout')}>
      {busy?'OPENING…':!enabled?'CHECKOUT NOT OPEN':supporter?'TEST BILLING MANAGEMENT ↗':'TEST SUPPORTER CHECKOUT ↗'}
     </button>
+    {supporter&&<label className="av32-privacy-setting"><input type="checkbox" checked={billing?.publicInsignia===true} disabled={busy||checking} onChange={e=>void updateDisplay(e.target.checked)}/><span><strong>Show my founding supporter insignia</strong><small>Off by default. Visible on your public wall only when you choose to display it and your test membership is active. This does not affect earned awards.</small></span></label>}
     {id&&<button type="button" className="av32-refresh" disabled={checking||busy} onClick={()=>{setError('');void refresh()}}>RECHECK STATUS</button>}
     {!id&&!isPending&&<Link className="av32-link" to="/join">JOIN OR SIGN IN ↗</Link>}
     <p className="av32-legal">Final benefits, recurring payment terms, cancellation, refunds and tax information must be published before live enrollment. This does not offer investment returns or early financial benefits.</p>
