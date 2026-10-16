@@ -7,3 +7,8 @@ node_modules/
 *.pem
 .dev.vars*
 .env*
+# V038: private expense receipts and Stripe reconciliation input are NEVER source artifacts
+finance/private/
+finance/*.private.json
+private-ledgers/
+*.anevum-private-ledger.json
