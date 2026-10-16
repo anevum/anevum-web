@@ -125,5 +125,6 @@ finally{
   const timer=setTimeout(resolve,3000);child.once('exit',()=>{clearTimeout(timer);resolve()});
  });
  await new Promise(resolve=>server.close(()=>resolve()));
- rmSync(temp,{recursive:true,force:true,maxRetries:8,retryDelay:200});
+ try{rmSync(temp,{recursive:true,force:true,maxRetries:20,retryDelay:200})}
+ catch(e){console.warn('Browser process cleanup deferred: '+String(e?.code||e))}
 }
