@@ -1,0 +1,178 @@
+{
+  "schemaVersion": 1,
+  "verifiedOn": "2026-10-16",
+  "publishedOn": null,
+  "collection": "Manual read-only provider and source audit",
+  "reportingScope": "ANEVUM development and staging; no production revenue report",
+  "liveTelemetry": false,
+  "storage": {
+    "canonicalMemberD1FileBytes": 475136,
+    "communityD1FileBytes": 278528,
+    "memberUploadedImageBlobBytes": 285792,
+    "memberImageCount": 2,
+    "r2ProfileObjectBytes": 0,
+    "r2ProfileObjectCount": 0,
+    "perImageUploadMaxBytes": 262144,
+    "imageSlotsPerMember": 2,
+    "generalCreatorAssetQuotaBytes": null,
+    "d1AccountPlan": null,
+    "r2StandardIncludedMonthlyGbMonths": 10
+  },
+  "community": {
+    "stagingMemberAccounts": 2,
+    "stagingCreatorProfiles": 1,
+    "stagingWallPosts": 1,
+    "productionAccounts": null,
+    "publiclyPublishedCreatorSubmissions": null
+  },
+  "operations": {
+    "railwayStagingProbeCpuCurrent": 0,
+    "railwayStagingProbeMemoryGbCurrent": 0,
+    "railwayStagingProbeDiskGbCurrent": 0,
+    "railwayStagingProbePeriodHours": 24,
+    "railwayStagingProbeActiveDeployments": 0,
+    "actualCloudflareMonthlyInvoiceUsd": null,
+    "actualRailwayMonthlyInvoiceUsd": null,
+    "actualOtherMonthlyExpensesUsd": null,
+    "verifiedMonthlyOperatingCostUsd": null
+  },
+  "funding": {
+    "verifiedMonthlySupporterGrossUsd": null,
+    "verifiedMonthlySupporterNetUsd": null,
+    "verifiedActiveSupporterCount": null,
+    "approvedMonthlyTargetUsd": null,
+    "ledgerConnected": false,
+    "reason": "No verified recurring-revenue ledger, reconciled expenses or approved public funding target."
+  },
+  "offer": {
+    "title": "Founding Supporter",
+    "productConfiguredInactive": true,
+    "monthlyUsd": 5,
+    "annualUsd": 36,
+    "activeCheckout": false,
+    "note": "Live Stripe catalog objects exist but remain disabled; supporter payments are not available."
+  },
+  "milestones": [
+    {
+      "id": "foundation",
+      "stage": "priority-1",
+      "title": "Maintain an independent foundation",
+      "goal": "Cover verified essential operating expenses before adding new recurring infrastructure.",
+      "fundingGoalUsdMonthly": null,
+      "verifiedRaisedUsdMonthly": null,
+      "status": "cost-baseline-pending",
+      "deliverables": [
+        "Publish actual recurring expense breakdown",
+        "Maintain free community access",
+        "Keep signup, security and backups reliable"
+      ]
+    },
+    {
+      "id": "storage",
+      "stage": "priority-2",
+      "title": "Expand creator storage",
+      "goal": "Increase practical upload capacity only after safely measuring cost per active creator.",
+      "fundingGoalUsdMonthly": null,
+      "verifiedRaisedUsdMonthly": null,
+      "status": "cost-baseline-pending",
+      "deliverables": [
+        "Measure storage and bandwidth at production scale",
+        "Publish transparent creator upload allowances",
+        "Increase safe storage capacity when funded"
+      ]
+    },
+    {
+      "id": "publishing",
+      "stage": "priority-3",
+      "title": "Improve publishing and discovery",
+      "goal": "Fund moderation, creator tooling and reliable delivery without paid reach or intrusive ads.",
+      "fundingGoalUsdMonthly": null,
+      "verifiedRaisedUsdMonthly": null,
+      "status": "planning",
+      "deliverables": [
+        "Faster content review",
+        "Better creator publishing tools",
+        "More reliable media previews and discovery"
+      ]
+    },
+    {
+      "id": "community",
+      "stage": "priority-4",
+      "title": "Build a durable creative network",
+      "goal": "Fund community features, accessibility and creator-first experiences when core operating obligations are covered.",
+      "fundingGoalUsdMonthly": null,
+      "verifiedRaisedUsdMonthly": null,
+      "status": "planning",
+      "deliverables": [
+        "Community collaboration tools",
+        "Accessible profile and award experiences",
+        "Future creator payouts only after compliant marketplace release"
+      ]
+    }
+  ],
+  "releaseChecks": [
+    {
+      "id": "commerce-source",
+      "label": "Subscription and billing code",
+      "state": "source-verified"
+    },
+    {
+      "id": "rewards-source",
+      "label": "Badges, frames and supporter studio",
+      "state": "source-verified"
+    },
+    {
+      "id": "recovery-source",
+      "label": "Checkout recovery and billing safeguards",
+      "state": "source-verified"
+    },
+    {
+      "id": "account-source",
+      "label": "Member billing-safe closure",
+      "state": "source-verified"
+    },
+    {
+      "id": "impact-source",
+      "label": "Public transparency page",
+      "state": "source-in-review"
+    },
+    {
+      "id": "stripe-test",
+      "label": "Real Stripe sandbox payment tests",
+      "state": "blocked"
+    },
+    {
+      "id": "database",
+      "label": "Verified backup and staging database migration",
+      "state": "blocked"
+    },
+    {
+      "id": "policy",
+      "label": "Approved taxes, refunds, cancellation and support",
+      "state": "blocked"
+    },
+    {
+      "id": "launch",
+      "label": "Separate owner-approved live enrollment",
+      "state": "blocked"
+    }
+  ],
+  "sourceNotes": [
+    {
+      "title": "Cloudflare D1 and R2",
+      "detail": "Read-only Cloudflare metadata and aggregate SQL; database file footprint is not a monthly bill, and image blobs already count inside member D1."
+    },
+    {
+      "title": "Railway",
+      "detail": "Connected ANEVUM Core staging evidence probe (24 hours) has no recorded CPU, memory, disk or network consumption; this does not establish the workspace's invoice."
+    },
+    {
+      "title": "Stripe",
+      "detail": "ANEVUM Founding Supporter product and $5/$36 recurring Prices are inactive; billing receipts, Stripe fees and subscription income are not published until verified."
+    },
+    {
+      "title": "Source-controlled limits",
+      "detail": "Canonical member uploads allow one JPEG avatar and one JPEG banner, each at most 262,144 bytes. These are profile media limits, not creator publishing quotas."
+    }
+  ]
+}

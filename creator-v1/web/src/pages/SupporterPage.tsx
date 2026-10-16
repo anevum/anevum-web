@@ -3,6 +3,7 @@ import {Link} from 'react-router-dom';
 import {canonicalAuthClient} from '../lib/canonical-beta';
 import {OrbitalMark} from '../components/OrbitalMark';
 import {SupporterRewardsStudio} from '../components/SupporterRewardsStudio';
+import {SupporterTransparency} from '../components/SupporterTransparency';
 
 type Interval='month'|'year';
 type Billing={available:boolean;supporter:boolean;status:string;until?:number|null;cancelAtPeriodEnd?:boolean;interval?:Interval|null;publicInsignia?:boolean;revision?:number;plans:{month:number;year:number}};
@@ -112,6 +113,7 @@ export function SupporterPage(){
     <p className="av32-legal">Final benefits, recurring payment terms, cancellation, refunds and tax information must be published before live enrollment. This does not offer investment returns or early financial benefits.</p>
    </article>
   </section>
+  <SupporterTransparency/>
   <SupporterRewardsStudio memberId={id}/>
   <section className="av32-afterword"><span className="av32-index">CONTINUANCE / PRINCIPLE 001</span>
    <blockquote>Creativity should be funded by people who believe in it, without selling their attention.</blockquote>
