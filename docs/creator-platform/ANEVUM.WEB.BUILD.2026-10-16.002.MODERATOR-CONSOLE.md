@@ -3,11 +3,12 @@
 
 **Canonical session:** ANEVUM.WEB.BUILD.2026-10-16.002.MODERATOR-CONSOLE  
 **Lab identifier:** LAB.WEB.COMMUNITY-INTEGRITY.V042  
-**Status:** Active development / draft review. Not deployed.  
+**Status:** Private Lab Backstage workstation DEPLOYED October 16, 2026; canonical a.anevum.com V042 reviewer design remains source-only (not yet promoted).  
 **Working source:** build/community-moderator-console-v042-20261016  
 **Pull request:** https://github.com/anevum/anevum-web/pull/451  
 **Established baseline:** V041 staging forums on a.anevum.com, source merged in PR #449.  
-**Route after a future gated release:** /community/review
+**Existing canonical V041 reviewer route:** /community/review (unchanged until separate V042 staging promotion).
+**Private Lab route:** https://lab.anevum.com/projects/backstage/moderation/ (deployed, Cloudflare Access protected).
 
 ### Intent
 
@@ -114,6 +115,21 @@ rather than seeded activity. Manual Refresh fetches current server state.
   \`.github/workflows/lab-moderator-v042-verify.yml\` gate. Deployment of the
   private Lab Worker is **separate** from promoting the canonical V042 forum
   reviewer on a.anevum.com.
+
+
+### Lab release record (October 16, 2026)
+
+- **Verified source commit:** \`37851dfe91357cf06bc4daf63da067f45317539e\`.
+- **Synthetic Lab QA:** [GitHub Actions 38982824010](https://github.com/anevum/anevum-web/actions/runs/38982824010), completed successfully. Chrome render and local case lifecycle passed at 1440, 1024, 390 and 320 px. No real community identities or records used.
+- **Cloudflare Worker:** \`anevum-private-lab\` on protected custom domain \`lab.anevum.com\`.
+- **Pre-release active version:** \`a9f56c24-6c85-4326-b016-0d8fe0330b50\` (version 9, retained for rollback).
+- **New active version:** \`3e3b94de-3b7f-473b-9f59-18a27b3eff61\` (version 10).
+- **Deployment ID:** \`f9be4e9f-860b-4d07-acd7-c5341c13f8e6\`; 100% of the private Lab Worker, no route/DNS change.
+- **Safety parity:** 13 original source modules retained byte-for-byte; new \`moderator-ops-v042.mjs\` is the sole added module. The existing Backstage page gets a link to the new nested route. Original Fold, RHEN, Transcosmic and Cadets routing, read-only Worker method gate, compatibility date and empty binding set preserved. New module bytes match the reviewed source exactly.
+- **Access:** existing self-hosted Cloudflare Access Lab application remains in place with its existing policy. No bypasses, staff grants, auth keys or database migrations.
+- **Independence:** canonical a.anevum.com V041 still handles real moderation and retains its existing active V041 worker; Lab cannot change forum content. Public \`anevum.com\` and its launch page are unchanged.
+- **Rollback:** redeploy version 9 to \`anevum-private-lab\` at 100% using Cloudflare versioned deployments. No local browser Backstage records are deleted on rollback.
+- **Runtime QA limitation:** an anonymous browser cannot traverse the Access-protected page. API deployment, Worker module parity and offline authenticated-layout fixture were verified; final owner-signed-in Lab inspection remains an optional follow-up.
 
 ### Next release gate
 
