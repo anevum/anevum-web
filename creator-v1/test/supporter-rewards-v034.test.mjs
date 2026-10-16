@@ -8,7 +8,7 @@ import {
 } from '../supporter/rewards.mjs';
 import {readSupporterRewards,supporterRewardsRoute} from '../canonical-auth/supporter-rewards.mjs';
 import {subscriptionProjection,supporterConfig} from '../supporter/stripe.mjs';
-import {supporterSchemaReady} from '../canonical-auth/supporter.mjs';
+import {supporterSchemaReady,reconcileSupporterSubscriptions} from '../canonical-auth/supporter.mjs';
 import canonicalWorker from '../web/a-canonical-stage.review.mjs';
 import {canonicalSpace} from '../canonical-auth/space.mjs';
 
@@ -187,5 +187,68 @@ test('public profile only renders equipped cosmetics with active status and cons
   const revoked=await read(true);
   assert.equal(revoked.supporter,false);
   assert.equal('supporterAppearance' in revoked,false);
+ }finally{db.close()}
+});
+
+test('daily bounded refresh keeps annual supporter cosmetics verified beyond three days',async()=>{
+ const {db,env,users}=setup();const a=users[0];
+ try{
+  const start=NOW-181*DAY;
+  const {customer,subscription}=support(db,env,a,start);
+  db.prepare('UPDATE supporter_subscriptions SET synced_at_ms=? WHERE member_user_id=?').run(NOW-4*DAY,a.id);
+  assert.equal(await readSupporterRewards(env,a.id,NOW),null);
+  const http=async(url)=>{
+   assert.equal(url,'https://api.stripe.com/v1/subscriptions/'+subscription);
+   return new Response(JSON.stringify({
+    id:subscription,customer,status:'active',start_date:Math.floor(start/1000),
+    cancel_at_period_end:false,items:{data:[{quantity:1,
+      current_period_end:Math.floor((NOW+15*DAY)/1000),
+      price:{id:env.CANONICAL_STRIPE_MONTHLY_PRICE_ID,currency:'usd',
+        unit_amount:500,recurring:{interval:'month'}}}]}
+   }),{status:200,headers:{'content-type':'application/json'}});
+  };
+  const run=await reconcileSupporterSubscriptions(env,{now:NOW,http});
+  assert.deepEqual(run,{available:true,examined:1,refreshed:1,failed:0});
+  const fresh=await readSupporterRewards(env,a.id,NOW);
+  assert.equal(fresh.supporter,true);
+  assert.equal(fresh.unlocks.tier,'constellation');
+  assert.equal(db.prepare('SELECT started_at_ms FROM supporter_subscriptions').get().started_at_ms,start);
+  const repeat=await reconcileSupporterSubscriptions(env,{now:NOW+5000,http});
+  assert.equal(repeat.examined,0,'no unnecessary repeated Stripe API traffic');
+ }finally{db.close()}
+});
+test('scheduled Stripe data can revoke cosmetically active subscriptions',async()=>{
+ const {db,env,users}=setup();const a=users[0];
+ try{
+  const {subscription,customer}=support(db,env,a,NOW-365*DAY);
+  db.prepare('UPDATE supporter_subscriptions SET synced_at_ms=? WHERE member_user_id=?').run(NOW-2*DAY,a.id);
+  const http=async()=>new Response(JSON.stringify({
+   id:subscription,customer,status:'canceled',cancel_at_period_end:false,
+   start_date:Math.floor((NOW-365*DAY)/1000),
+   items:{data:[{quantity:1,current_period_end:Math.floor((NOW+2*DAY)/1000),
+    price:{id:env.CANONICAL_STRIPE_MONTHLY_PRICE_ID,currency:'usd',
+      unit_amount:500,recurring:{interval:'month'}}}]}
+  }),{status:200});
+  assert.equal((await reconcileSupporterSubscriptions(env,{now:NOW,http})).refreshed,1);
+  assert.equal(await readSupporterRewards(env,a.id,NOW),null);
+  assert.equal(db.prepare('SELECT status FROM supporter_subscriptions').get().status,'canceled');
+ }finally{db.close()}
+});
+test('scheduled reconciliation is test-mode locked and limited to forty subscriptions',async()=>{
+ const {db,env,users}=setup();
+ try{
+  const prod={...env,CANONICAL_STRIPE_SECRET_KEY:'sk_live_'+('x'.repeat(40))};
+  assert.deepEqual(await reconcileSupporterSubscriptions(prod),{available:false,examined:0,refreshed:0,failed:0});
+  await assert.rejects(()=>reconcileSupporterSubscriptions(env,{limit:41}),/batch limit/);
+  const {customer,subscription}=support(db,env,users[0],NOW-20*DAY);
+  db.prepare('UPDATE supporter_subscriptions SET synced_at_ms=? WHERE member_user_id=?').run(NOW-2*DAY,users[0].id);
+  const bad=async()=>new Response(JSON.stringify({
+   id:subscription,customer,status:'active',start_date:Math.floor((NOW-20*DAY)/1000),
+   items:{data:[{quantity:1,current_period_end:Math.floor((NOW+2*DAY)/1000),
+    price:{id:'price_Unexpected77777',currency:'usd',unit_amount:500,recurring:{interval:'month'}}}]}
+  }),{status:200});
+  const outcome=await reconcileSupporterSubscriptions(env,{now:NOW,http:bad,limit:1});
+  assert.deepEqual(outcome,{available:true,examined:1,refreshed:0,failed:1});
+  assert.equal(await readSupporterRewards(env,users[0].id,NOW),null,'stale records are not elevated on bad API data');
  }finally{db.close()}
 });
