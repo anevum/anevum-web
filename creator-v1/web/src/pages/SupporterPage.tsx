@@ -67,6 +67,7 @@ export function SupporterPage(){
   finally{setBusy(false)}
  }
  const enabled=Boolean(id&&billing?.available),supporter=Boolean(billing?.supporter);
+ const billingReview=billing?.status==='billing-review';
  return <div className="av32-support">
   <section className="av32-hero" aria-labelledby="av32-title">
    <div className="av32-hero-copy"><span className="av32-index">ANEVUM / COMMUNITY CONTINUANCE / 001</span>
@@ -96,13 +97,14 @@ export function SupporterPage(){
      <li><strong>A more personal space</strong><small>Additional optional cosmetic profile treatments planned</small></li>
      <li><strong>Keep the network independent</strong><small>Support hosting, development, creative infrastructure and upkeep</small></li>
     </ul>
-    <p role="status" className="av32-test-note">{supporter?'TEST MEMBERSHIP VERIFIED':enabled?'TEST MODE ONLY · NO LIVE CHARGES':'Enrollment not open. Pricing and benefits are proposals, not a live sale.'}</p>
+    <p role="status" className="av32-test-note">{billingReview?'BILLING REVIEW REQUIRED · MEMBERSHIP PRIVILEGES PAUSED':supporter?'TEST MEMBERSHIP VERIFIED':enabled?'TEST MODE ONLY · NO LIVE CHARGES':'Enrollment not open. Pricing and benefits are proposals, not a live sale.'}</p>
     {supporter&&billing?.until&&<p>Recorded access through {new Date(billing.until).toLocaleDateString()}{billing.cancelAtPeriodEnd?' · Cancels at period end':''}.</p>}
     {id&&checking&&<p role="status">Checking billing status…</p>}
     {error&&<p role="alert" className="av32-error">{error}</p>}
-    <button type="button" className="av32-primary" disabled={!enabled||busy||checking} onClick={()=>void action(supporter?'portal':'checkout')}>
-     {busy?'OPENING…':!enabled?'CHECKOUT NOT OPEN':supporter?'TEST BILLING MANAGEMENT ↗':'TEST SUPPORTER CHECKOUT ↗'}
+    <button type="button" className="av32-primary" disabled={!enabled||billingReview||busy||checking} onClick={()=>void action(supporter?'portal':'checkout')}>
+     {busy?'OPENING…':billingReview?'CONTACT SUPPORT BEFORE CONTINUING':!enabled?'CHECKOUT NOT OPEN':supporter?'TEST BILLING MANAGEMENT ↗':'TEST SUPPORTER CHECKOUT ↗'}
     </button>
+    {billingReview&&<button className="av32-refresh" type="button" disabled={!enabled||busy||checking} onClick={()=>void action('portal')}>OPEN BILLING MANAGEMENT ↗</button>}
     {supporter&&<label className="av32-privacy-setting"><input type="checkbox" checked={billing?.publicInsignia===true} disabled={busy||checking} onChange={e=>void updateDisplay(e.target.checked)}/><span><strong>Show my founding supporter insignia</strong><small>Off by default. Visible on your public wall only when you choose to display it and your test membership is active. This does not affect earned awards.</small></span></label>}
     {id&&<button type="button" className="av32-refresh" disabled={checking||busy} onClick={()=>{setError('');void refresh()}}>RECHECK STATUS</button>}
     {!id&&!isPending&&<Link className="av32-link" to="/join">JOIN OR SIGN IN ↗</Link>}
