@@ -314,3 +314,75 @@ test('reused customer checkout cannot attach an unexpected Stripe customer',asyn
   assert.equal(db.prepare('SELECT COUNT(*) AS n FROM supporter_subscriptions').get().n,0);
  }finally{db.close()}
 });
+
+
+test('signed refunds and disputes hold verified billing without changing XP',async()=>{
+ const {db,env,a}=setup();
+ const charge='ch_SupportedTestCharge12345';
+ const http=async(url)=>{
+  if(url.endsWith('/charges/'+charge))return json({id:charge,customer,livemode:false});
+  throw Error('Unexpected Stripe operation '+url);
+ };
+ try{
+  // Out-of-order: the refund can arrive before Checkout completion.
+  const refund=await signed(env,'refund.created',{id:'re_Test123456789',charge,status:'succeeded'},'hold123456');
+  assert.equal((await supporterWebhook(refund,env,{now:NOW,http})).status,200);
+  assert.equal(db.prepare('SELECT reason FROM supporter_billing_holds').get().reason,'refund');
+  db.prepare('INSERT INTO supporter_customers(member_user_id,stripe_customer_id,created_at_ms) VALUES(?,?,?)')
+    .run(a.id,customer,NOW);
+  db.prepare("INSERT INTO supporter_subscriptions(stripe_subscription_id,member_user_id,stripe_customer_id,stripe_price_id,billing_interval,status,current_period_end_ms,cancel_at_period_end,synced_at_ms) VALUES(?,?,?,?,?,'active',?,0,?)")
+    .run(subId,a.id,customer,env.CANONICAL_STRIPE_MONTHLY_PRICE_ID,'month',NOW+86400000,NOW);
+  db.prepare('INSERT INTO supporter_visibility(member_user_id,public_insignia,revision,updated_at_ms) VALUES(?,1,1,?)').run(a.id,NOW);
+  const status=await (await supporterMember(request(''),env,a,{now:NOW,http})).json();
+  assert.equal(status.status,'billing-review');
+  assert.equal(status.supporter,false);
+  assert.equal(await publicSupporterForMember(env,a.id,NOW),false);
+  assert.equal((await supporterMember(request('/checkout','POST',{interval:'month'}),env,a,{now:NOW,http})).status,409);
+  assert.equal((await supporterMember(new Request(ORIGIN+'/api/v1/member/supporter',{method:'PATCH',headers:{'content-type':'application/json'},body:JSON.stringify({publicInsignia:true,revision:1})}),env,a,{now:NOW,http})).status,409);
+  assert.equal(db.prepare('SELECT COUNT(*) AS n FROM member_xp_events').get().n,0);
+ }finally{db.close()}
+});
+test('signed dispute holds customer; non-final refunds do not hold billing',async()=>{
+ const {db,env,a}=setup();
+ const charge='ch_DisputeTestCharge1234',customerId='cus_DisputeTestUser12345';
+ const http=async(url)=>{
+  if(url.endsWith('/charges/'+charge))return json({id:charge,customer:customerId,livemode:false});
+  throw Error('Unexpected Stripe operation '+url);
+ };
+ try{
+  const pending=await signed(env,'refund.created',{charge,status:'pending'},'nonfinal123');
+  assert.equal((await supporterWebhook(pending,env,{now:NOW,http})).status,200);
+  assert.equal(db.prepare('SELECT COUNT(*) AS n FROM supporter_billing_holds').get().n,0);
+  const dispute=await signed(env,'charge.dispute.created',{id:'dp_Test123456',charge},'dispute123');
+  assert.equal((await supporterWebhook(dispute,env,{now:NOW,http})).status,200);
+  assert.equal(db.prepare('SELECT reason FROM supporter_billing_holds').get().reason,'dispute');
+  assert.equal(db.prepare('SELECT stripe_customer_id FROM supporter_billing_holds').get().stripe_customer_id,customerId);
+  const tamper=await signed(env,'charge.refunded',{id:'ch_BadMissingCharge1234'},'badcharge12');
+  assert.equal((await supporterWebhook(tamper,env,{now:NOW,http})).status,503);
+  assert.equal(db.prepare('SELECT COUNT(*) AS n FROM supporter_billing_holds').get().n,1);
+ }finally{db.close()}
+});
+test('delayed asynchronous Checkout only grants after verified paid event',async()=>{
+ const {db,env,a}=setup();
+ let paid=false;
+ const http=async(url,opts)=>{
+  if(url.includes('/prices/'))return json({
+   id:env.CANONICAL_STRIPE_MONTHLY_PRICE_ID,active:true,type:'recurring',
+   billing_scheme:'per_unit',currency:'usd',unit_amount:500,recurring:{interval:'month',interval_count:1}
+  });
+  if(url.endsWith('/checkout/sessions')&&opts.method==='POST')return json(checkout);
+  if(url.endsWith('/checkout/sessions/'+checkout.id))return json({
+   ...checkout,customer,subscription:subId,payment_status:paid?'paid':'unpaid'
+  });
+  if(url.endsWith('/subscriptions/'+subId))return json(sub(env));
+  throw Error('Unexpected Stripe operation '+url);
+ };
+ try{
+  assert.equal((await supporterMember(request('/checkout','POST',{interval:'month'}),env,a,{now:NOW,http})).status,200);
+  assert.equal((await supporterWebhook(await signed(env,'checkout.session.completed',{id:checkout.id},'initial100'),env,{now:NOW,http})).status,200);
+  assert.equal((await (await supporterMember(request(''),env,a,{now:NOW,http})).json()).supporter,false);
+  paid=true;
+  assert.equal((await supporterWebhook(await signed(env,'checkout.session.async_payment_succeeded',{id:checkout.id},'asyncpaid1'),env,{now:NOW+1000,http})).status,200);
+  assert.equal((await (await supporterMember(request(''),env,a,{now:NOW+1000,http})).json()).supporter,true);
+ }finally{db.close()}
+});
