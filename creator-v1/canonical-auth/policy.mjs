@@ -76,6 +76,14 @@ export function permitCanonicalUserCreation(env,email){
   return status.open || list(env.CANONICAL_INVITE_EMAILS).has(normalized);
 }
 
+/** Fail closed when owner denylist is missing; never erase a protected identity. */
+export function isProtectedCanonicalEmail(env,email){
+  const normalized=typeof email==="string"?email.trim().toLowerCase():"";
+  const protectedEmails=list(env?.CANONICAL_PROTECTED_EMAILS);
+  return !EMAIL.test(normalized)||normalized.length>254||
+    protectedEmails.size===0||protectedEmails.has(normalized);
+}
+
 /** Must be independently verified against an isolated D1, not a source flag. */
 export async function canonicalSchemaReady(env){
   if(!configured(env?.MEMBER_DB))return false;
