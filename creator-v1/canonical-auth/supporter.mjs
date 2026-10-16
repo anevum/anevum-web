@@ -31,8 +31,8 @@ const apply=async(db,sql,...params)=>{
 export async function supporterSchemaReady(db){
   if(!db?.prepare)return false;
   try{
-    const found=await rows(db,"SELECT name FROM sqlite_master WHERE type='table' AND name IN ('supporter_checkout_intents','supporter_customers','supporter_subscriptions','supporter_webhook_events','supporter_visibility','supporter_checkout_guards','supporter_billing_holds')");
-    return found.length===7;
+    const found=await rows(db,"SELECT name FROM sqlite_master WHERE type='table' AND name IN ('supporter_checkout_intents','supporter_customers','supporter_subscriptions','supporter_webhook_events','supporter_visibility','supporter_checkout_guards','supporter_billing_holds','supporter_appearance')");
+    return found.length===8;
   }catch{return false;}
 }
 const dataReady=async env=>supporterConfig(env).enabled&&await supporterSchemaReady(env.MEMBER_DB);
@@ -245,13 +245,14 @@ async function syncSubscription(env,memberId,expectedCustomer,subscriptionId,now
   await apply(db,'INSERT OR IGNORE INTO supporter_customers(member_user_id,stripe_customer_id,created_at_ms) VALUES(?,?,?)',
     memberId,expectedCustomer,now);
   await apply(db,
-    'INSERT INTO supporter_subscriptions(stripe_subscription_id,member_user_id,stripe_customer_id,stripe_price_id,billing_interval,status,current_period_end_ms,cancel_at_period_end,synced_at_ms) '+
-    'SELECT ?,member_user_id,stripe_customer_id,?,?,?,?,?,? FROM supporter_customers WHERE member_user_id=? AND stripe_customer_id=? '+
+    'INSERT INTO supporter_subscriptions(stripe_subscription_id,member_user_id,stripe_customer_id,stripe_price_id,billing_interval,status,current_period_end_ms,started_at_ms,cancel_at_period_end,synced_at_ms) '+
+    'SELECT ?,member_user_id,stripe_customer_id,?,?,?,?,?,?,? FROM supporter_customers WHERE member_user_id=? AND stripe_customer_id=? '+
     'ON CONFLICT(stripe_subscription_id) DO UPDATE SET stripe_price_id=excluded.stripe_price_id,billing_interval=excluded.billing_interval,status=excluded.status,'+
-    'current_period_end_ms=excluded.current_period_end_ms,cancel_at_period_end=excluded.cancel_at_period_end,synced_at_ms=excluded.synced_at_ms '+
+    'current_period_end_ms=excluded.current_period_end_ms,started_at_ms=CASE WHEN excluded.started_at_ms>0 THEN excluded.started_at_ms ELSE supporter_subscriptions.started_at_ms END,'+
+    'cancel_at_period_end=excluded.cancel_at_period_end,synced_at_ms=excluded.synced_at_ms '+
     'WHERE supporter_subscriptions.member_user_id=excluded.member_user_id AND supporter_subscriptions.stripe_customer_id=excluded.stripe_customer_id',
     projection.subscriptionId,projection.priceId,projection.interval,projection.status,
-    projection.currentPeriodEnd,projection.cancelAtPeriodEnd?1:0,now,memberId,expectedCustomer);
+    projection.currentPeriodEnd,projection.startedAt,projection.cancelAtPeriodEnd?1:0,now,memberId,expectedCustomer);
   const record=await row(db,
     'SELECT member_user_id,stripe_customer_id FROM supporter_subscriptions WHERE stripe_subscription_id=?',
     subscriptionId);
