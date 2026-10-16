@@ -54,5 +54,14 @@
  .avp-project .avp-stage-shortcuts a:first-child{border-color:#d8b588;background:linear-gradient(145deg,#3b302c,#231f29);color:#f7d8ae}
 }
 @media(max-width:340px){.avp-project .avp-stage-shortcuts{gap:6px}.avp-project .avp-stage-shortcuts a,.avp-project .avp-stage-shortcuts button{font-size:9px;padding-inline:5px}}
+
+/* Long records keep the launch action readable without cutting off the full About content. */
+.avp-project .avp-stage--long-title .avp-stage-body h1{font-size:clamp(30px,3.7vw,60px);line-height:1.065;letter-spacing:-.032em}
+.avp-project .avp-stage-summary--long{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:4;overflow:hidden;margin-bottom:8px}
+.avp-project .avp-stage-readmore{display:inline-flex;align-items:center;gap:7px;min-height:44px;padding:7px 0;margin-bottom:14px;color:#f6c990;text-decoration:underline;text-underline-offset:4px;font:800 10px/1.4 var(--av10-register,Inter,system-ui,sans-serif);letter-spacing:.08em}
+@media(max-width:700px){
+ .avp-project .avp-stage--long-title .avp-stage-body h1{font-size:clamp(27px,7.3vw,40px);line-height:1.07;letter-spacing:-.03em}
+ .avp-project .avp-stage-summary--long{-webkit-line-clamp:4}
+}
 @media(prefers-reduced-motion:reduce){.avp-project .avp-stage-actions a{transition:none}.avp-project .avp-stage-actions a:hover{transform:none}}
 @media(forced-colors:active){.avp-project .avp-stage,.avp-project .avp-passport .portal-sidebox{border:1px solid CanvasText}.avp-project .avp-primary-action{background:ButtonFace;color:ButtonText!important}}

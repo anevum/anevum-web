@@ -150,6 +150,12 @@ try{
           (width>1040?state.passport.left<state.rect.right-3:state.passport.top<state.rect.bottom-3))
          throw Error("PLAYER_V002_VISUAL_OR_OUTBOUND_"+variant+"_"+width+":"+JSON.stringify(state));
        if(variant==="unsafe-fallback"&&state.kind.includes("external-game"))throw Error("PLAYER_V002_UNSAFE_URL_USED_"+width);
+       if(variant==="long-content"){
+         const compact=await evaluate('(()=>{const s=document.querySelector(".avp-stage"),t=s?.querySelector("h1"),p=s?.querySelector(".avp-stage-summary"),link=s?.querySelector(".avp-stage-readmore"),action=s?.querySelector(".avp-primary-action"),about=document.querySelector("#avp-about");return {longTitle:s?.classList.contains("avp-stage--long-title"),clamped:p?.classList.contains("avp-stage-summary--long"),lines:p?getComputedStyle(p).webkitLineClamp:null,font:t?parseFloat(getComputedStyle(t).fontSize):null,readmore:link?.getAttribute("href"),actionTop:action?.getBoundingClientRect().top,aboutFull:about?.textContent?.includes("A deliberately lengthy project summary")};})()');
+         if(!compact.longTitle||!compact.clamped||compact.lines!=="4"||compact.readmore!=="#avp-about"||!compact.aboutFull||
+            (width<=390&&compact.font>41))
+           throw Error("PLAYER_V003_LONG_CONTENT_LAYOUT_"+width+":"+JSON.stringify(compact));
+       }
        await screenshot("player-v002-"+variant+"-"+width);
        results.push({page:"player-v002-"+variant,width,primary:state.primary,host:state.hostname,art:state.art,overflow:state.overflow});
        console.log("PLAYER_V002_"+variant.toUpperCase()+"_"+width+"=PASS");

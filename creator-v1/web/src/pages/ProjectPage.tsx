@@ -54,6 +54,7 @@ export function ProjectPage(){
       <div className="portal-project-main">
         <section className="portal-box portal-project-about" id="avp-about">
           <header className="portal-box-header"><div><span className="kicker">WHAT THE CREATOR ACTUALLY MADE</span><h2>ABOUT THIS PROJECT</h2></div><span className="portal-hall-stamp">PUBLIC PROJECT RECORD</span></header>
+          {p.summary.length>240&&p.description&&p.description!==p.summary&&<p>{p.summary}</p>}
           <p>{p.description||p.summary}</p>
         </section>
         <div id="avp-participation"><MemberEngagementPanel projectId={p.id}/></div>

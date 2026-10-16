@@ -42,6 +42,15 @@ test("verified offline browser suite covers safe player variants and long creato
  assert.match(browser,/PLAYER_V002_UNSAFE_URL_USED/);
  assert.match(browser,/PLAYER_V002_SHARE_URL/);
  assert.match(browser,/PLAYER_V002_PARTICIPATION_ANCHOR/);
+ assert.match(browser,/PLAYER_V003_LONG_CONTENT_LAYOUT/);
+ const player=read("web/src/components/ProjectPlayerShell.tsx");
+ const css=read("web/src/components/project-player-shell.css");
+ assert.match(player,/avp-stage--long-title/);
+ assert.match(player,/avp-stage-summary--long/);
+ assert.match(player,/READ FULL SUMMARY/);
+ assert.match(css,/-webkit-line-clamp:4/);
+ const page=read("web/src/pages/ProjectPage.tsx");
+ assert.match(page,/p\.summary\.length>240/);
  assert.match(fixture,/SYNTHETIC OFFLINE REVIEW/);
  assert.match(fixture,/9005/);
  assert.match(fixture,/A deliberately lengthy project summary/);

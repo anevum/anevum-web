@@ -11,6 +11,8 @@ export function ProjectPlayerShell({project,demo,source}:{
 }){
   const selection=selectPlayer(project.category,Boolean(demo),Boolean(source));
   const primary=demo||source;
+  const longTitle=project.title.length>50;
+  const longSummary=project.summary.length>240;
   const [shareStatus,setShareStatus]=useState("");
 
   async function shareProject(){
@@ -31,7 +33,7 @@ export function ProjectPlayerShell({project,demo,source}:{
   }
 
   return <div className="avp-stage-column">
-    <section className={"avp-stage avp-stage--"+selection.kind} aria-labelledby="avp-project-title">
+    <section className={"avp-stage avp-stage--"+selection.kind+(longTitle?" avp-stage--long-title":"")} aria-labelledby="avp-project-title">
       <div className="avp-stage-art" aria-hidden="true"><CosmicArtwork scene={project.category} priority/></div>
       <div className="avp-stage-shade" aria-hidden="true"/>
       <div className="avp-stage-top">
@@ -41,7 +43,8 @@ export function ProjectPlayerShell({project,demo,source}:{
       <div className="avp-stage-body">
         <span className="avp-stage-kicker">{selection.format} / {project.category.toUpperCase()}</span>
         <h1 id="avp-project-title">{project.title}</h1>
-        <p className="avp-stage-summary">{project.summary}</p>
+        <p className={"avp-stage-summary"+(longSummary?" avp-stage-summary--long":"")}>{project.summary}</p>
+        {longSummary&&<a className="avp-stage-readmore" href="#avp-about">READ FULL SUMMARY <span aria-hidden="true">↓</span></a>}
         <div className="avp-stage-actions">
           {primary&&selection.primaryAction?
             <a className="avp-primary-action" href={primary.href} target="_blank" rel="noopener noreferrer"
