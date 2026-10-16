@@ -146,8 +146,14 @@ try{
  await goto('/');
  await until(()=>evaluate("!!document.querySelector('.cf-highlights')"));
  result.homeHighlights=true;
- await evaluate("(()=>{const e=document.querySelector('.cf-highlights');window.scrollTo(0,e.getBoundingClientRect().top+window.scrollY-82)})()");
- await delay(220);
+ await client.send('Emulation.setDeviceMetricsOverride',{width:390,height:844,deviceScaleFactor:1,mobile:true});
+ await evaluate("document.querySelector('.cf-highlights').scrollIntoView({block:'start'})");
+ await delay(500);
+ await evaluate("document.querySelector('.cf-highlights').scrollIntoView({block:'start'})");
+ await delay(300);
+ const homePosition=await evaluate("(()=>{const r=document.querySelector('.cf-highlights').getBoundingClientRect();return {top:r.top,bottom:r.bottom}})()");
+ assert.ok(homePosition.top<844&&homePosition.bottom>75,JSON.stringify(homePosition));
+ result.homeCaptureVisible=true;
  const homeShot=await client.send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});
  writeFileSync(join(out,'forum-home-highlights-390.png'),Buffer.from(homeShot.data,'base64'));
  await goto('/community');
