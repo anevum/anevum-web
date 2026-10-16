@@ -54,15 +54,33 @@ export function Phase1JoinPage(){
      if(!codeSent){
        const result=await canonicalAuthClient.emailOtp.sendVerificationOtp({email:normalized,type:"sign-in"});
        if(result.error)throw Error("Email verification could not be started");
-       setEmail(normalized);setCodeSent(true);setNotice("If your email is invited, an 8-digit code has been sent. Check your inbox.");
+       setEmail(normalized);setCodeSent(true);setNotice("If delivery is available, an 8-digit code has been sent. Check your inbox.");
      }else{
        if(!/^\d{8}$/.test(otp))throw Error("Invalid code");
        const result=await canonicalAuthClient.signIn.emailOtp({email:normalized,otp,name:"ANEVUM MEMBER"});
        if(result.error)throw Error("Invalid or expired verification code");
        navigate("/member",{replace:true});
      }
-   }catch{setError(codeSent?"The code could not be verified. Request a new code or try again.":"Email verification is unavailable or this invitation is not active.");}
+   }catch{setError(codeSent?"Code verification failed. No replacement is sent automatically; tap SEND A NEW CODE to request one.":"Email verification is temporarily unavailable.");}
    finally{setBusy(false);}
+ }
+ async function requestReplacementCode(){
+   if(!emailReady||busy||!codeSent)return;
+   const normalized=email.trim().toLowerCase();
+   if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalized)||normalized.length>254){
+     setError("Enter a valid email address.");return;
+   }
+   setBusy(true);setError("");setNotice("");
+   try{
+     // A "resend" must actually contact the email service, not merely reset the form.
+     // The server enforces both rate limits and eligibility without disclosing invite status.
+     const result=await canonicalAuthClient.emailOtp.sendVerificationOtp({email:normalized,type:"sign-in"});
+     if(result.error)throw Error("Replacement email code unavailable");
+     setOtp("");
+     setNotice("If delivery is available, a replacement code has been requested. Use the newest 8-digit code.");
+   }catch{
+     setError("Could not request a replacement code. If you have requested several, wait up to 10 minutes and retry.");
+   }finally{setBusy(false);}
  }
  function resetCode(){setCodeSent(false);setOtp("");setNotice("");setError("");}
  return <section className="join-experience av12-phase1-join" aria-labelledby="phase1-join-title">
@@ -118,7 +136,10 @@ export function Phase1JoinPage(){
              pattern="[0-9]{8}" minLength={8} maxLength={8} value={otp}
              onChange={event=>setOtp(event.target.value.replace(/\D/g,"").slice(0,8))}
              disabled={busy} placeholder="8-digit code" required/>
-           <button type="button" className="av12-email-reset" onClick={resetCode} disabled={busy}>SEND A NEW CODE</button>
+           <small className="av12-email-guidance">One valid code signs you in. A second code is not required unless verification fails or expires.</small>
+           <button type="button" className="av12-email-reset" onClick={()=>void requestReplacementCode()} disabled={busy}>
+             {busy?"REQUESTING…":"SEND A NEW CODE"}
+           </button>
          </>}
          <button type="submit" className="av12-email-submit" disabled={busy}>
            {busy?"CHECKING…":codeSent?"VERIFY AND SIGN IN":"SEND VERIFICATION CODE"}
