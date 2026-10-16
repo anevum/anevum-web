@@ -7,7 +7,7 @@ async function main(){
   await sleep(600);
   if(pathname==='/'){
    const entries=[...document.querySelectorAll('.project-entry')];
-   assert(entries.length===4,'Lab should expose four projects');
+   assert(entries.length===5,'Lab should expose five projects');
    assert(document.body.textContent.includes('ANEVUM LAB'),'Terminal heading not found');
    assert(document.querySelector('#terminalForm'),'DOS command line not mounted');
    assert(document.querySelector('#selectedLink')?.getAttribute('href')==='/projects/the-fold/','First project route absent');
@@ -23,6 +23,28 @@ async function main(){
    document.querySelector('#terminalForm').dispatchEvent(new Event('submit',{bubbles:true,cancelable:true}));
    assert(document.querySelector('#selectedLink')?.getAttribute('href')==='/projects/rhen/','SELECT command failed');
    assert(document.documentElement.scrollHeight<=innerHeight+1,'Lab scrolls after command output');
+
+  }else if(pathname==='/projects/cadets/'){
+   assert(document.body.textContent.includes('CONTINUANCE CADETS'),'Cadets title missing');
+   assert(document.querySelectorAll('.crew-chip').length===2,'Two explorers not rendered');
+   assert(document.querySelectorAll('.mission-card').length===8,'Expected eight starter objectives');
+   assert(document.querySelector('#balanceText')?.textContent==='0','New balance should be empty');
+   assert(document.querySelector('#levelText')?.textContent==='01','New Cadet should be level one');
+   document.querySelector('[data-mission="launch"]').click();
+   assert(document.querySelector('.mission-action.pending'),'Mission request not queued');
+   const saved=JSON.parse(localStorage.getItem('anevum.lab.continuance-cadets.save.v1'));
+   assert(saved?.requests?.length===1 && saved?.transactions?.length===0,'Parent approval boundary failed');
+   document.querySelector('[data-kid="c2"]').click();
+   assert(document.querySelector('#balanceText')?.textContent==='0','Second explorer balance must be separate');
+   document.querySelector('[data-view="wardrobe"]').click();
+   document.querySelector('[data-palette="mint"]').click();
+   assert(document.body.dataset.palette==='mint','Character color selection failed');
+   document.querySelector('[data-view="rewards"]').click();
+   assert(document.querySelectorAll('.reward-card').length===3,'Reward vault missing');
+   document.querySelector('[data-view="parent"]').click();
+   assert(document.querySelector('#parentGate')&&!document.querySelector('#parentGate').hidden,'Parent passcode gate missing');
+   assert(document.querySelector('#parentControls').hidden,'Parent controls should not be open initially');
+   assert(document.documentElement.scrollWidth<=innerWidth+1,'Cadets horizontal overflow');
   }else if(pathname==='/projects/backstage/'){
    assert(document.querySelector('#caseShell'),'Backstage case desk missing');
    assert(document.querySelector('#countAll')?.textContent==='0','Empty local queue should show 0 cases');
