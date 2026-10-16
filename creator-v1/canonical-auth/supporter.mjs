@@ -31,8 +31,8 @@ const apply=async(db,sql,...params)=>{
 export async function supporterSchemaReady(db){
   if(!db?.prepare)return false;
   try{
-    const found=await rows(db,"SELECT name FROM sqlite_master WHERE type='table' AND name IN ('supporter_checkout_intents','supporter_customers','supporter_subscriptions','supporter_webhook_events','supporter_visibility')");
-    return found.length===5;
+    const found=await rows(db,"SELECT name FROM sqlite_master WHERE type='table' AND name IN ('supporter_checkout_intents','supporter_customers','supporter_subscriptions','supporter_webhook_events','supporter_visibility','supporter_checkout_guards')");
+    return found.length===6;
   }catch{return false;}
 }
 const dataReady=async env=>supporterConfig(env).enabled&&await supporterSchemaReady(env.MEMBER_DB);
@@ -141,6 +141,28 @@ export async function supporterMember(request,env,user,{http=fetch,now=Date.now(
           return out({url:old.url});
         return err(409,'Your previous checkout must complete or expire before starting another.');
       }
+      // Reuse the member's original Stripe customer after cancellation.
+      // A second Stripe Customer cannot be silently linked to the same member:
+      // this would charge successfully but fail entitlement reconciliation.
+      const existingCustomer=await row(env.MEMBER_DB,
+        'SELECT stripe_customer_id FROM supporter_customers WHERE member_user_id=?',user.id);
+      if(existingCustomer&&!stripeId('cus',existingCustomer.stripe_customer_id))
+        return err(503,'Billing customer identity unavailable');
+
+      // Acquire a one-member lease with a single atomic D1 statement.
+      // Concurrent requests cannot both initiate a Stripe Checkout, even
+      // when they both observed no pending checkout in the preceding query.
+      const nonce=crypto.randomUUID();
+      const lease=await rows(env.MEMBER_DB,
+        'INSERT INTO supporter_checkout_guards(member_user_id,billing_interval,request_nonce,expires_at_ms,created_at_ms) VALUES(?,?,?,?,?) '+
+        'ON CONFLICT(member_user_id) DO UPDATE SET billing_interval=excluded.billing_interval,request_nonce=excluded.request_nonce,'+
+        'expires_at_ms=excluded.expires_at_ms,created_at_ms=excluded.created_at_ms '+
+        'WHERE supporter_checkout_guards.expires_at_ms<=? RETURNING request_nonce',
+        user.id,plan.interval,nonce,now+1800000,now,now);
+      if(lease.length!==1||lease[0].request_nonce!==nonce)
+        return err(409,'A checkout is already being prepared. Recheck shortly.');
+      let checkoutAttempted=false;
+      try{
       // Inspect the actual Stripe Price: an environment variable alone cannot
       // prove that the charged amount equals the price shown on the website.
       const livePrice=await stripeRequest(env,'/v1/prices/'+plan.priceId,{},http);
@@ -148,11 +170,12 @@ export async function supporterMember(request,env,user,{http=fetch,now=Date.now(
       const clock=Math.floor(now/3600000);
       const digest=new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(user.id+'|'+plan.interval+'|'+clock)));
       const key='anevum-v032-checkout-'+Array.from(digest,x=>x.toString(16).padStart(2,'0')).join('');
+      checkoutAttempted=true;
       const session=await stripeRequest(env,'/v1/checkout/sessions',{
         method:'POST',idempotencyKey:key,fields:{
           mode:'subscription','line_items[0][price]':plan.priceId,'line_items[0][quantity]':'1',
           client_reference_id:user.id,
-          customer_email:user.email,
+          ...(existingCustomer?{customer:existingCustomer.stripe_customer_id}:{customer_email:user.email}),
           'metadata[anevum_member_id]':user.id,
           'subscription_data[metadata][anevum_member_id]':user.id,
           success_url:'https://a.anevum.com/support?checkout=returned',
@@ -167,8 +190,19 @@ export async function supporterMember(request,env,user,{http=fetch,now=Date.now(
         valid.id,user.id,plan.interval,now);
       const stored=await row(env.MEMBER_DB,
         'SELECT member_user_id FROM supporter_checkout_intents WHERE stripe_checkout_session_id=?',valid.id);
-      if(stored?.member_user_id!==user.id)return err(409,'Checkout ownership conflict');
+      if(stored?.member_user_id!==user.id)throw Error('Checkout ownership conflict');
+      await apply(env.MEMBER_DB,
+        'DELETE FROM supporter_checkout_guards WHERE member_user_id=? AND request_nonce=?',user.id,nonce);
       return out({url:valid.url});
+      }finally{
+        // If Stripe might have created a session but we could not record it,
+        // preserve the lease for its 30-minute timeout instead of immediately
+        // issuing a second session and risking a duplicate subscription.
+        if(!checkoutAttempted){
+          await apply(env.MEMBER_DB,
+            'DELETE FROM supporter_checkout_guards WHERE member_user_id=? AND request_nonce=?',user.id,nonce);
+        }
+      }
     }
     if(request.headers.get('content-length')&&!/^(?:0)$/.test(request.headers.get('content-length')||''))
       return err(400,'Portal request must be empty');
@@ -241,6 +275,10 @@ export async function supporterWebhook(request,env,{http=fetch,now=Date.now()}={
         const session=await stripeRequest(env,'/v1/checkout/sessions/'+object.id,{},http);
         if(session.id!==object.id||session.mode!=='subscription'||
           session.client_reference_id!==intent.member_user_id)throw Error('Checkout session mismatch');
+        const linked=await row(db,
+          'SELECT stripe_customer_id FROM supporter_customers WHERE member_user_id=?',intent.member_user_id);
+        if(linked&&linked.stripe_customer_id!==session.customer)
+          throw Error('Checkout customer does not match existing account owner');
         if(session.payment_status==='paid'&&stripeId('cus',session.customer)&&stripeId('sub',session.subscription)){
           await syncSubscription(env,intent.member_user_id,session.customer,session.subscription,now,http);
           await apply(db,'UPDATE supporter_checkout_intents SET completed_at_ms=?,stripe_customer_id=?,stripe_subscription_id=? WHERE stripe_checkout_session_id=? AND member_user_id=?',
