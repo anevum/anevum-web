@@ -119,9 +119,14 @@ for(const mode of ["invite-only","open"])test(`two independent users complete co
     const cookieB=cookieFrom(b);
     assert.notEqual(cookieA,cookieB);
     const me="/api/v1/member/creator-profile";
-    const claimedA=await worker.fetch(post(me,{
-      handle:"pilot_alpha",displayName:"Pilot Alpha",bio:"First private world"},cookieA),env);
-    assert.equal(claimedA.status,201);
+    // Some WebKit and in-app contexts do not attach Sec-Fetch-Site to a
+   // legitimate same-origin POST. Origin remains mandatory and exact.
+   const safariLikeClaim=new Request(ORIGIN+me,{
+     method:"POST",headers:{"origin":ORIGIN,"content-type":"application/json","cookie":cookieA},
+     body:JSON.stringify({handle:"pilot_alpha",displayName:"Pilot Alpha",bio:"First private world"})
+   });
+   const claimedA=await worker.fetch(safariLikeClaim,env);
+   assert.equal(claimedA.status,201,"Exact-Origin member claim succeeds without optional Fetch Metadata");
     const claimedB=await worker.fetch(post(me,{
       handle:"pilot_beta",displayName:"Pilot Beta",bio:"Second private world"},cookieB),env);
     assert.equal(claimedB.status,201);

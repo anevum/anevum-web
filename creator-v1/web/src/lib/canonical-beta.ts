@@ -58,7 +58,7 @@ async function request<T>(path:string,method:"GET"|"POST"|"PATCH"="GET",body?:un
      response.status===409?"This handle or profile has changed. Reload and try again.":
      response.status===429?"Too many changes. Try again in an hour.":
      "Account service unavailable. No changes were saved.";
-   if(response.status===400)message="Check your handle and profile details.";
+   if(response.status===400)message="Check your handle (3–30 lowercase letters, numbers or underscores) and display name.";
    throw new CanonicalBetaError(response.status,message);
  }
  return safeJson<T>(response);
