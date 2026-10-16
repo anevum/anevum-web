@@ -1,6 +1,6 @@
-name: ANEVUM A Staging Series One V034 Illustrated Preview
+name: ANEVUM A Staging Series One V037 Transparent Preview
 
-# Owner-authorized staging-only Series One artwork and cabinet release. Preserve closed signup and disabled health API. Never deploy the apex countdown.
+# Owner-authorized staging-only V037 transparent replacement. Preserve the existing staged Worker configuration. Preserve closed signup and disabled health API. Never deploy the apex countdown.
 on:
   push:
     branches: [build/series-one-cabinet-polish-v034-20261016]
@@ -21,7 +21,7 @@ jobs:
     env:
       CANDIDATE_SHA: ${{ github.sha }}
       SOURCE_BRANCH: build/series-one-cabinet-polish-v034-20261016
-      VITE_SERIES_ONE_V033_PREVIEW: 'true'
+      VITE_SERIES_ONE_V037_TRANSPARENT: 'true'
       CF_WORKER: anevum-creator-v1-a-staging
       CF_ZONE: 8abe27259b5436af5966d3b40d9a3760
       CF_ACCOUNT_EXPECTED: 2f7ee83107240152097efd956a4e8335
@@ -78,27 +78,12 @@ jobs:
         with:
           node-version: '22'
 
-      - name: Verify all sixty approved WebP preview assets
+      - name: Verify all sixty transparent V037 images, alpha flags and checksums
         shell: bash
         run: |
           set -euo pipefail
-          node --input-type=module <<'NODE'
-          import assert from 'node:assert/strict';
-          import {readFileSync,existsSync} from 'node:fs';
-          import {createHash} from 'node:crypto';
-          const root='creator-v1/web/public/assets/levels/series-one-v033/';
-          const m=JSON.parse(readFileSync(root+'manifest.json','utf8'));
-          assert.equal(m.source_sha256,'894d26408955049e9c0c37b1e66c9972d09a0b826c5770bb600ceb2637801896');
-          assert.equal(m.items.length,60);
-          const names=JSON.parse(readFileSync('creator-v1/shared/level-artifacts.json','utf8'));
-          for(let i=1;i<=60;i++){
-            const e=m.items[i-1];assert.equal(e.level,i);assert.equal(e.canonical_name,names[i-1].name);
-            const f=root+'level-'+String(i).padStart(2,'0')+'.webp';assert.ok(existsSync(f));
-            const b=readFileSync(f);assert.equal(b.toString('ascii',0,4),'RIFF');assert.equal(b.toString('ascii',8,12),'WEBP');
-            assert.equal(createHash('sha256').update(b).digest('hex'),e.sha256);
-          }
-          NODE
-          echo APPROVED_60_WEBP_ASSETS=PASS
+          node --test creator-v1/test/series-one-v037-artwork.test.mjs
+          echo V037_TRANSPARENT_ARTWORK_INTEGRITY=PASS
 
       - name: Build and run complete Creator V1 verification
         shell: bash
@@ -107,8 +92,8 @@ jobs:
           npm install --ignore-scripts --no-audit --no-fund
           npm run check:creator-v1-web
           npm run build:creator-v1-web
-          grep -R -l 'series-one-v033' creator-v1/dist/web/assets/*.js >/dev/null
-          for level in 01 30 60; do cmp "creator-v1/web/public/assets/levels/series-one-v033/level-$level.webp" "creator-v1/dist/web/assets/levels/series-one-v033/level-$level.webp"; done
+          grep -R -l 'series-one-v037' creator-v1/dist/web/assets/*.js >/dev/null
+          for level in 01 10 20 30 40 50 60; do cmp "creator-v1/web/public/assets/levels/series-one-v037/level-$level.webp" "creator-v1/dist/web/assets/levels/series-one-v037/level-$level.webp"; done
           (cd creator-v1 && npm test)
           node --check creator-v1/web/a-canonical-stage.review.mjs
           node --check creator-v1/canonical-auth/worker.mjs
@@ -161,7 +146,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          expected="51b7186f-9a70-4ee3-a2d2-aa4991456557"
+          expected="33510e51-41f9-4438-b2b9-31e445e063b2"
           actual="$(cat "$RUNNER_TEMP/rollback-version.txt")"
           test "$actual" = "$expected" || { echo "::error::Staging version drifted. Refusing to overwrite another release."; exit 1; }
 
@@ -212,8 +197,8 @@ jobs:
           validated=0
           rollback() {
             if [ "$deployed" != 1 ] || [ "$validated" = 1 ]; then return; fi
-            echo "::error::V034 validation failed, restoring the previously active staging Worker version."
-            jq -nc --arg id "$old_version" '{strategy:"percentage",versions:[{version_id:$id,percentage:100}],annotations:{"workers/message":"ANEVUM.WEB.BUILD.2026-10-16.004.SERIES-ONE safe rollback"}}' > "$RUNNER_TEMP/rollback-request.json"
+            echo "::error::V037 validation failed, restoring the previously active staging Worker version."
+            jq -nc --arg id "$old_version" '{strategy:"percentage",versions:[{version_id:$id,percentage:100}],annotations:{"workers/message":"ANEVUM.WEB.BUILD.2026-10-16.037.TRANSPARENT safe rollback"}}' > "$RUNNER_TEMP/rollback-request.json"
             curl --fail --silent --show-error --max-time 30 -X POST -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" -H "Content-Type: application/json" --data-binary @"$RUNNER_TEMP/rollback-request.json" "$api/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/$CF_WORKER/deployments" > "$RUNNER_TEMP/rollback-response.json" || true
             if jq -e '.success' "$RUNNER_TEMP/rollback-response.json" >/dev/null 2>&1; then echo ROLLBACK_REQUESTED=PASS; else echo "::error::Rollback requires manual intervention"; fi
           }
@@ -278,11 +263,13 @@ jobs:
             curl --fail --silent --show-error --max-time 20 "https://a.anevum.com/assets/levels/level-$level.svg" -o "$RUNNER_TEMP/level-$level.svg"
             cmp "creator-v1/web/public/assets/levels/level-$level.svg" "$RUNNER_TEMP/level-$level.svg"
           done
-          for level in 01 30 60; do
-            curl --fail --silent --show-error --max-time 20 "https://a.anevum.com/assets/levels/series-one-v033/level-$level.webp" -o "$RUNNER_TEMP/v034-level-$level.webp"
-            cmp "creator-v1/web/public/assets/levels/series-one-v033/level-$level.webp" "$RUNNER_TEMP/v034-level-$level.webp"
+          for level in 01 10 20 30 40 50 60; do
+            curl --fail --silent --show-error --max-time 20 "https://a.anevum.com/assets/levels/series-one-v037/level-$level.webp" -o "$RUNNER_TEMP/v037-level-$level.webp"
+            cmp "creator-v1/web/public/assets/levels/series-one-v037/level-$level.webp" "$RUNNER_TEMP/v037-level-$level.webp"
           done
-          echo "V034_ARTWORK_HOSTED_AND_PROGRESSION_ISOLATED=PASS"
+          curl --fail --silent --show-error --max-time 20 https://a.anevum.com/assets/levels/series-one-v037/manifest.json -o "$RUNNER_TEMP/v037-manifest.json"
+          cmp creator-v1/web/public/assets/levels/series-one-v037/manifest.json "$RUNNER_TEMP/v037-manifest.json"
+          echo "V037_TRANSPARENT_ARTWORK_HOSTED_AND_PROGRESSION_ISOLATED=PASS"
           curl --fail --silent --show-error --max-time 20 https://a.anevum.com/api/v1/member/auth/get-session | jq -e '. == null' >/dev/null
           index_js="$(grep -oE '/assets/index-[^"]+\.js' creator-v1/dist/web/index.html | head -1)"
           test -n "$index_js"
@@ -290,7 +277,19 @@ jobs:
           cmp "creator-v1/dist/web$index_js" "$RUNNER_TEMP/hosted-index.js"
           curl --fail --silent --show-error --max-time 20 https://anevum.com/ -o "$RUNNER_TEMP/apex.html"
           grep -q 'THE TRANSMISSION' "$RUNNER_TEMP/apex.html"
+          export ANEVUM_CHROME="$(command -v google-chrome || command -v chromium-browser || command -v chromium || true)"
+          test -n "$ANEVUM_CHROME"
+          ANEVUM_V037_OUTPUT=evidence/series-one-v037-hosted node creator-v1/test/series-one-v037-hosted-smoke.mjs
           validated=1
-          echo "ANEVUM V034 SERIES ONE STAGING RELEASE PASS: $CANDIDATE_SHA" >> "$GITHUB_STEP_SUMMARY"
+          echo "ANEVUM V037 TRANSPARENT SERIES ONE STAGING RELEASE PASS: $CANDIDATE_SHA" >> "$GITHUB_STEP_SUMMARY"
           echo "Live: https://a.anevum.com/join — invite-only; public registration remains OFF." >> "$GITHUB_STEP_SUMMARY"
           echo "Unchanged: https://anevum.com/ countdown, production routes, and existing staging D1 IDs." >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Preserve hosted V037 phone and desktop screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: v037-series-one-hosted-${{ github.run_id }}
+          path: evidence/series-one-v037-hosted/
+          if-no-files-found: warn
+          retention-days: 14
