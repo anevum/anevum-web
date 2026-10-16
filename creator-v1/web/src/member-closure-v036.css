@@ -1,0 +1,20 @@
+/* ANEVUM V036 / Canonical account closure.
+   Account deletion is ALWAYS gated by the server and disabled by default. */
+.av36-closure{max-width:1100px;margin:34px auto 60px;padding:clamp(23px,4vw,45px);border:1px solid #e4c5d359;border-radius:22px;background:linear-gradient(155deg,#2b2339ef,#141827e8);box-shadow:inset 0 1px #ffffff2e,0 21px 48px #07061360;color:#f6e6ec}
+.av36-closure h2{font:400 clamp(30px,3vw,43px)/1.15 Georgia,serif;letter-spacing:-.03em;margin:15px 0 16px}
+.av36-closure>p{font:400 14px/1.7 system-ui,sans-serif;color:#d2c3d1;max-width:820px}
+.av36-closure>a,.av36-closure-note a{display:inline-flex;padding:10px 0;color:#eecad3;font:700 11px/1.5 ui-monospace,monospace;letter-spacing:.07em}
+.av36-closure-note{padding:15px 18px;margin:24px 0;border-radius:14px;background:#ffffff0b;border:1px solid #e9c5d45a;color:#e4d2de;font:400 13px/1.7 system-ui,sans-serif}
+.av36-closure-note strong{font-size:15px;color:#f5e3e8}
+.av36-closure-note p{margin:8px 0}
+.av36-closure-form{display:grid;gap:13px;max-width:650px;margin:28px 0 0}
+.av36-closure-form>p{font:400 13px/1.6 system-ui,sans-serif;color:#d3becd;margin:0 0 8px}
+.av36-closure-form label{font:600 13px/1.45 system-ui,sans-serif;color:#f1d9df}
+.av36-closure-form label strong{color:#f6bdc3;font:700 12px/1.5 ui-monospace,monospace}
+.av36-closure-form input{border:1px solid #d9bdd461;border-radius:11px;background:#100e20;color:#fff;padding:13px 15px;min-height:47px;max-width:100%;font:400 14px/1.5 system-ui,sans-serif}
+.av36-closure-form input:focus-visible,.av36-delete:focus-visible,.av36-closure a:focus-visible{outline:3px solid #ffe2c9;outline-offset:3px}
+.av36-delete{margin-top:10px;min-height:50px;border-radius:12px;padding:13px 18px;border:1px solid #e8a5b4;color:#fff2ef;background:linear-gradient(160deg,#873c56,#5c2b49);font:700 11px/1.4 ui-monospace,monospace;letter-spacing:.06em}
+.av36-delete:disabled{cursor:not-allowed;opacity:.5}
+.av36-closure-error{margin-top:20px;color:#ffd4d4;font:600 13px/1.6 system-ui,sans-serif}
+@media(max-width:600px){.av36-closure{margin:24px 12px 40px;padding:23px 16px}.av36-delete{font-size:10px}}
+@media(prefers-reduced-motion:reduce){.av36-delete{transition:none}}
