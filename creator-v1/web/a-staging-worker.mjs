@@ -22,7 +22,7 @@ function protect(response,method,forceNoStore=false){
   if(forceNoStore||html)headers.set("cache-control","private, no-store");
   if(html)headers.set("content-security-policy",
     "default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; "+
-    "img-src 'self' data:; connect-src 'self'; font-src 'self'; "+
+    "img-src 'self' data: blob:; connect-src 'self'; font-src 'self'; "+
     "base-uri 'none'; form-action 'self'; frame-ancestors 'none'; object-src 'none'");
   headers.delete("set-cookie");
   return new Response(method==="HEAD"?null:response.body,{
