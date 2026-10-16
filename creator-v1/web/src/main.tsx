@@ -47,3 +47,4 @@ createRoot(document.getElementById("root")!).render(
 );
 
 import "./member-space.css";
+import "./supporter-v032.css";
