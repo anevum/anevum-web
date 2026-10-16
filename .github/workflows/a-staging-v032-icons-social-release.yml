@@ -175,13 +175,33 @@ jobs:
             sleep 3
           done
           test "$ok" = 1
-          curl --fail --silent --show-error --max-time 20 https://a.anevum.com/ -o "$RUNNER_TEMP/index.html"
-          grep -Fq 'rel="apple-touch-icon"' "$RUNNER_TEMP/index.html"
-          grep -Fq 'property="og:image"' "$RUNNER_TEMP/index.html"
-          grep -Fq 'https://a.anevum.com/anevum-social-share-v1.png' "$RUNNER_TEMP/index.html"
-          grep -Fq 'summary_large_image' "$RUNNER_TEMP/index.html"
+          # Edge asset and Worker version activation may take several seconds.
+          # Do not treat a still-cached old index as a permanent failure.
+          html_ok=0
+          for i in $(seq 1 24); do
+            if curl --fail --silent --show-error --max-time 20 "https://a.anevum.com/?anevum-share-check=v032" -o "$RUNNER_TEMP/index.html" &&
+               grep -Fq 'rel="apple-touch-icon"' "$RUNNER_TEMP/index.html" &&
+               grep -Fq 'property="og:image"' "$RUNNER_TEMP/index.html" &&
+               grep -Fq 'https://a.anevum.com/anevum-social-share-v1.png' "$RUNNER_TEMP/index.html" &&
+               grep -Fq 'summary_large_image' "$RUNNER_TEMP/index.html"; then
+              html_ok=1
+              echo "HOSTED_SOCIAL_META=PASS after $i checks"
+              break
+            fi
+            echo "Waiting for hosted HTML propagation attempt $i/24"
+            sleep 3
+          done
+          test "$html_ok" = 1 || { echo '::error::New HTML and OG tags not visible after propagation timeout'; exit 1; }
           for path in apple-touch-icon.png icon-192.png icon-512.png anevum-social-share-v1.png; do
-            curl --fail --silent --show-error --max-time 20 "https://a.anevum.com/$path" -o "$RUNNER_TEMP/$path"
+            asset_ok=0
+            for i in $(seq 1 12); do
+              if curl --fail --silent --show-error --max-time 20 "https://a.anevum.com/$path" -o "$RUNNER_TEMP/$path"; then
+                asset_ok=1
+                break
+              fi
+              sleep 3
+            done
+            test "$asset_ok" = 1 || { echo "::error::Hosted asset failed: $path"; exit 1; }
           done
           curl --fail --silent --show-error --max-time 20 https://a.anevum.com/site.webmanifest -o "$RUNNER_TEMP/site.webmanifest"
           python3 - <<'PY'
