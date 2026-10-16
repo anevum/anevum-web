@@ -68,6 +68,20 @@ export async function supporterMember(request,env,user,{http=fetch,now=Date.now(
     const available=await dataReady(env);
     if(!available)return out({available:false,supporter:false,status:'not-launched',plans:{month:500,year:3600},publicInsignia:false,revision:0});
     try{
+      // Recover a missed Checkout webhook on the next account status read.
+      // A one-minute D1 checkpoint caps Stripe polling on repeated refreshes.
+      const candidate=await row(env.MEMBER_DB,
+        'SELECT stripe_checkout_session_id,member_user_id,billing_interval FROM supporter_checkout_intents WHERE member_user_id=? AND completed_at_ms IS NULL AND abandoned_at_ms IS NULL AND last_checked_at_ms<? ORDER BY created_at_ms DESC LIMIT 1',
+        user.id,now-60000);
+      if(candidate){
+        const locked=await rows(env.MEMBER_DB,
+          'UPDATE supporter_checkout_intents SET last_checked_at_ms=? WHERE stripe_checkout_session_id=? AND member_user_id=? AND completed_at_ms IS NULL AND abandoned_at_ms IS NULL AND last_checked_at_ms<? RETURNING stripe_checkout_session_id',
+          now,candidate.stripe_checkout_session_id,user.id,now-60000);
+        if(locked.length===1){
+          try{await reconcileCheckoutIntent(env,candidate,now,http);}
+          catch{/* Do not claim support on failed Stripe verification; cron can retry. */}
+        }
+      }
       const records=await rows(env.MEMBER_DB,
         'SELECT status,current_period_end_ms,cancel_at_period_end,synced_at_ms,billing_interval FROM supporter_subscriptions WHERE member_user_id=? ORDER BY synced_at_ms DESC LIMIT 12',user.id);
       const hold=await row(env.MEMBER_DB,
@@ -409,4 +423,39 @@ export async function reconcileSupporterSubscriptions(env,{now=Date.now(),http=f
     }
   }
   return {available:true,examined,refreshed,failed};
+}
+
+/**
+ * Recovers known Checkout sessions when Stripe's signed webhook is delayed,
+ * unavailable or delivered out of order. Does not initiate any new payment.
+ * Tracks read attempts in D1 before HTTP I/O to prevent overlapping scans.
+ * Never uses member-owned session IDs or arbitrary Stripe customer metadata.
+ */
+export async function reconcileSupporterCheckouts(env,{now=Date.now(),http=fetch,limit=40}={}){
+  if(!await dataReady(env))return {available:false,examined:0,completed:0,expired:0,pending:0,failed:0};
+  if(!Number.isSafeInteger(limit)||limit<1||limit>40)
+    throw Error('Checkout recovery batch limit exceeded');
+  const db=env.MEMBER_DB;
+  let examined=0,completed=0,expired=0,pending=0,failed=0;
+  const due=await rows(db,
+    'SELECT stripe_checkout_session_id,member_user_id,billing_interval FROM supporter_checkout_intents '+
+    'WHERE completed_at_ms IS NULL AND abandoned_at_ms IS NULL AND last_checked_at_ms<? '+
+    'ORDER BY last_checked_at_ms ASC,created_at_ms ASC LIMIT ?',
+    now-300000,limit);
+  for(const intent of due){
+    const lease=await rows(db,
+      'UPDATE supporter_checkout_intents SET last_checked_at_ms=? WHERE stripe_checkout_session_id=? '+
+      'AND completed_at_ms IS NULL AND abandoned_at_ms IS NULL AND last_checked_at_ms<? '+
+      'RETURNING stripe_checkout_session_id',
+      now,intent.stripe_checkout_session_id,now-300000);
+    if(lease.length!==1)continue;
+    examined++;
+    try{
+      const state=await reconcileCheckoutIntent(env,intent,now,http);
+      if(state==='completed')completed++;
+      else if(state==='expired')expired++;
+      else pending++;
+    }catch{failed++}
+  }
+  return {available:true,examined,completed,expired,pending,failed};
 }
