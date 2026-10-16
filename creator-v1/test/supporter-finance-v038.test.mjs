@@ -54,7 +54,7 @@ test('verified synthetic month calculates exact cash gross, Stripe fees, refund,
  assert.equal(report.activeSupporters,3);
  assert.equal(report.approvedMonthlyTargetCents,6000);
  assert.equal(report.cashCoveragePercent,147.48);
- assert.match(report.methodology,/Annual upfront/);
+ assert.match(report.methodology,/annual upfront/i);
 });
 test('private supplier IDs, digest references, customer details and vendor invoice IDs cannot leak to aggregate',()=>{
  const input=ledger();
