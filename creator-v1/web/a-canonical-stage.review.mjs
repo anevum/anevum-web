@@ -14,7 +14,7 @@ export default {
    if(url.origin!==ORIGIN || url.protocol!=="https:"){
      return new Response("Not found",{status:404,headers:{"cache-control":"no-store"}});
    }
-   if(CANONICAL_PATH.test(url.pathname)||PUBLIC_IDENTITY.test(url.pathname)||/^\/api\/v1\/community\/(?:members|activity|threads(?:\/[a-f0-9-]{36}(?:\/(?:replies|reaction))?)?|reports)$/.test(url.pathname)||url.pathname==="/api/v1/member/forum-submissions"){
+   if(CANONICAL_PATH.test(url.pathname)||PUBLIC_IDENTITY.test(url.pathname)||/^\/api\/v1\/community\/(?:members|activity|threads(?:\/[a-f0-9-]{36}(?:\/(?:replies|reaction))?)?|reports)$/.test(url.pathname)||(url.pathname==="/api/v1/member/forum-submissions"||url.pathname==="/api/v1/member/forum-review")){
      // This Worker itself checks exact origin, issuer, dedicated D1, CSRF,
      // route/method allowlists and account opt-in. Never proxy older sessions.
      return canonicalIdentity.fetch(request,env,ctx);
