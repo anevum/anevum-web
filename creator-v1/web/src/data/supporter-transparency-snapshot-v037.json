@@ -2,14 +2,14 @@
   "schemaVersion": 1,
   "verifiedOn": "2026-10-16",
   "publishedOn": null,
-  "collection": "Manual read-only provider and source audit",
-  "reportingScope": "ANEVUM development and staging; no production revenue report",
+  "collection": "Provider footprint audit and privacy-redacted staging snapshot; low-cohort member activity suppressed",
+  "reportingScope": "ANEVUM development and staging; no production activity or verified financial report",
   "liveTelemetry": false,
   "storage": {
     "canonicalMemberD1FileBytes": 475136,
     "communityD1FileBytes": 278528,
-    "memberUploadedImageBlobBytes": 285792,
-    "memberImageCount": 2,
+    "memberUploadedImageBlobBytes": null,
+    "memberImageCount": null,
     "r2ProfileObjectBytes": 0,
     "r2ProfileObjectCount": 0,
     "perImageUploadMaxBytes": 262144,
@@ -19,9 +19,9 @@
     "r2StandardIncludedMonthlyGbMonths": 10
   },
   "community": {
-    "stagingMemberAccounts": 2,
-    "stagingCreatorProfiles": 1,
-    "stagingWallPosts": 1,
+    "stagingMemberAccounts": null,
+    "stagingCreatorProfiles": null,
+    "stagingWallPosts": null,
     "productionAccounts": null,
     "publiclyPublishedCreatorSubmissions": null
   },
@@ -173,6 +173,16 @@
     {
       "title": "Source-controlled limits",
       "detail": "Canonical member uploads allow one JPEG avatar and one JPEG banner, each at most 262,144 bytes. These are profile media limits, not creator publishing quotas."
+    },
+    {
+      "title": "Minimum-cohort privacy",
+      "detail": "Public app assets deliberately exclude precise staging member counts, member media bytes and posts for populations under 25 distinct contributors. The server returns null, not zero, until its independent source threshold is met."
     }
-  ]
+  ],
+  "privacy": {
+    "policyVersion": 2,
+    "minimumDistinctContributors": 25,
+    "smallCohortSourceValuesPublished": false,
+    "meaningOfNull": "withheld or unavailable; never zero"
+  }
 }
