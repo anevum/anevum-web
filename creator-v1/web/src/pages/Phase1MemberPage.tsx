@@ -74,9 +74,9 @@ function MemberEditor({memberId,memberName}:{memberId:string;memberName:string})
       setWorldTheme(checked.profile.worldTheme);
       setFocus(checked.profile.focus);
       setPublicVisible(checked.profile.visibility==="public");
-      setNotice(claimed?"Your profile changes were saved.":"Your unique handle is claimed. Your profile is private. You can now customize your personal world.");
+      setNotice(claimed?"Your profile changes were saved.":"Your identity is saved. Welcome to ANEVUM. You can explore now and customize your profile later.");
     }catch{
-      setError("Your changes were not verified. Reload this page before trying again.");
+      setError("Your profile was not confirmed as saved. Your account remains signed in. Check your connection and try saving again.");
     }finally{setBusy(false)}
   }
   async function signOut(){
@@ -166,6 +166,7 @@ function MemberEditor({memberId,memberName}:{memberId:string;memberName:string})
             {busy?"SAVING…":claimed?"SAVE MY PROFILE":"ENTER ANEVUM"}
           </button>
           {notice&&<p role="status" className="av12-save-notice">{notice}</p>}
+          {notice&&claimed&&<Link to="/discover" className="av26-continue-world">ENTER THE COMMUNITY <span aria-hidden="true">↗</span></Link>}
           {error&&<p role="alert" className="av12-save-error">{error}</p>}
         </form>}
       </section>
