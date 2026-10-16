@@ -21,7 +21,7 @@ function Metric({label,value,detail}:{label:string;value:string;detail:string}){
 }
 export function SupporterTransparency(){
  const s=snapshot;
- const verifiedBudget=s.funding.verifiedMonthlyOperatingCostUsd;
+ const verifiedBudget=s.operations.verifiedMonthlyOperatingCostUsd;
  const raised=s.funding.verifiedMonthlySupporterNetUsd;
  return <div className="av37-transparency" id="transparency">
   <header className="av37-intro">
