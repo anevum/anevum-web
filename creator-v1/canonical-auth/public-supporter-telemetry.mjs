@@ -1,82 +1,115 @@
 /**
- * ANEVUM V039 / PUBLIC STAGING TRANSPARENCY FEED
+ * ANEVUM V040 / PRIVACY-SAFE SUPPORTER TRANSPARENCY AGGREGATES
  *
- * Bounded, opt-in, cached, aggregate-only D1 reads. No user identifier, profile
- * image, Stripe/customer data, private post body or billing information.
+ * Never publish raw member IDs, small-cohort totals, private file sizes,
+ * user-generated content, Stripe identifiers or financial records.
  *
- * Runtime availability requires an explicit flag, the canonical issuer/schema
- * checks already provided by worker.mjs, and a functioning edge cache.
+ * Public measurements are independent lower-bound buckets, subject to at
+ * least 25 DISTINCT contributors in the relevant cohort. The date and
+ * technical upload limits remain visible even if all counts are suppressed.
  *
- * All totals refer only to canonical STAGING member D1. They are NOT
- * production adoption, file storage capacity, payments, or operating costs.
+ * This endpoint is disabled by default, limited to the canonical staging
+ * issuer/schema in worker.mjs and requires a Cloudflare Cache API instance.
  */
 import {CANONICAL_ORIGIN} from './policy.mjs';
 
 export const PUBLIC_TELEMETRY_PATH='/api/v1/public/supporter/metrics';
 export const PUBLIC_TELEMETRY_CACHE_SECONDS=900;
-const CACHE_URL=CANONICAL_ORIGIN+PUBLIC_TELEMETRY_PATH;
+export const PUBLIC_TELEMETRY_MIN_COHORT=25;
+export const PUBLIC_TELEMETRY_COUNT_GRANULARITY=25;
+export const PUBLIC_TELEMETRY_BYTES_GRANULARITY=1048576;
+const POLICY_VERSION='v2';
+const CACHE_URL=CANONICAL_ORIGIN+PUBLIC_TELEMETRY_PATH+'?policy='+POLICY_VERSION;
 const AGGREGATE_SQL='SELECT '+
-  '(SELECT COUNT(*) FROM "user") AS member_count,'+
-  '(SELECT COUNT(*) FROM member_creator_profiles) AS creator_count,'+
-  '(SELECT COUNT(*) FROM member_wall_posts) AS wall_post_count,'+
-  '(SELECT COUNT(*) FROM member_space_media) AS media_count,'+
-  '(SELECT COALESCE(SUM(LENGTH(data)),0) FROM member_space_media) AS media_bytes';
+ '(SELECT COUNT(*) FROM "user") AS member_count,'+
+ '(SELECT COUNT(*) FROM member_creator_profiles) AS creator_count,'+
+ '(SELECT COUNT(*) FROM member_wall_posts) AS wall_post_count,'+
+ '(SELECT COUNT(DISTINCT user_id) FROM member_wall_posts) AS wall_author_count,'+
+ '(SELECT COUNT(*) FROM member_space_media) AS media_count,'+
+ '(SELECT COUNT(DISTINCT user_id) FROM member_space_media) AS media_owner_count,'+
+ '(SELECT COALESCE(SUM(LENGTH(data)),0) FROM member_space_media) AS media_bytes';
 
-const errorResponse=(status,message)=>Response.json(
-  {error:message},
-  {status,headers:{
-    'cache-control':'private, no-store',
-    'content-type':'application/json; charset=utf-8',
-    'x-content-type-options':'nosniff',
-    'x-robots-tag':'noindex, nofollow, noarchive',
-    'referrer-policy':'no-referrer'
-  }}
-);
-const positiveInt=(value)=>{
- const result=typeof value==='number'?value:Number.NaN;
- return Number.isSafeInteger(result)&&result>=0?result:null;
+const RESP_HEADERS={
+ 'x-content-type-options':'nosniff',
+ 'x-robots-tag':'noindex, nofollow, noarchive',
+ 'referrer-policy':'no-referrer'
 };
+const errorResponse=(status,message)=>Response.json(
+ {error:message},
+ {status,headers:{...RESP_HEADERS,'cache-control':'private, no-store',
+   'content-type':'application/json; charset=utf-8'}}
+);
+const checkedInteger=value=>typeof value==='number'&&Number.isSafeInteger(value)&&value>=0?value:null;
 function validateRow(row){
  if(!row||typeof row!=='object'||Array.isArray(row))return null;
- const memberAccounts=positiveInt(row.member_count);
- const creatorProfiles=positiveInt(row.creator_count);
- const wallPosts=positiveInt(row.wall_post_count);
- const mediaObjects=positiveInt(row.media_count);
- const mediaBytes=positiveInt(row.media_bytes);
- if([memberAccounts,creatorProfiles,wallPosts,mediaObjects,mediaBytes].some(x=>x===null)||
-  creatorProfiles>memberAccounts||mediaObjects>memberAccounts*2||
-  !Number.isSafeInteger(memberAccounts*2))return null;
- return {memberAccounts,creatorProfiles,wallPosts,mediaObjects,mediaBytes};
+ const keys=['member_count','creator_count','wall_post_count','wall_author_count',
+   'media_count','media_owner_count','media_bytes'];
+ const values=keys.map(key=>checkedInteger(row[key]));
+ if(values.some(value=>value===null))return null;
+ const [members,creators,posts,authors,objects,owners,bytes]=values;
+ if(creators>members||authors>members||owners>members||
+   authors>posts||owners>objects||objects>members*2||
+   !Number.isSafeInteger(members*2)|| (objects===0&&bytes!==0))return null;
+ return {members,creators,posts,authors,objects,owners,bytes};
 }
+const bucket=(value,step)=>Math.floor(value/step)*step;
+const privacyCount=(count,distinctContributors)=>
+ distinctContributors>=PUBLIC_TELEMETRY_MIN_COHORT
+  ?bucket(count,PUBLIC_TELEMETRY_COUNT_GRANULARITY):null;
 function publishedSnapshot(totals,now){
+ const members=privacyCount(totals.members,totals.members);
+ const creators=privacyCount(totals.creators,totals.creators);
+ const posts=privacyCount(totals.posts,totals.authors);
+ const imageOwnersEligible=totals.owners>=PUBLIC_TELEMETRY_MIN_COHORT;
  return {
-  schemaVersion:1,
-  source:'canonical-member-d1-aggregate',
+  schemaVersion:2,
+  source:'canonical-member-d1-privacy-aggregate',
   scope:'ANEVUM_STAGING_ONLY',
   dataAsOf:new Date(now).toISOString(),
   cacheTtlSeconds:PUBLIC_TELEMETRY_CACHE_SECONDS,
+  privacy:{
+   minimumDistinctContributors:PUBLIC_TELEMETRY_MIN_COHORT,
+   countLowerBoundStep:PUBLIC_TELEMETRY_COUNT_GRANULARITY,
+   imageByteLowerBoundStep:PUBLIC_TELEMETRY_BYTES_GRANULARITY,
+   suppressedValuesAreNull:true
+  },
   community:{
-   memberAccounts:totals.memberAccounts,
-   creatorProfiles:totals.creatorProfiles,
-   wallPosts:totals.wallPosts
+   memberAccountsLowerBound:members,
+   creatorProfilesLowerBound:creators,
+   wallPostsLowerBound:posts
   },
   media:{
-   imageObjects:totals.mediaObjects,
-   imageBytes:totals.mediaBytes,
+   imageObjectsLowerBound:imageOwnersEligible
+    ?privacyCount(totals.objects,totals.owners):null,
+   imageBytesLowerBound:imageOwnersEligible
+    ?bucket(totals.bytes,PUBLIC_TELEMETRY_BYTES_GRANULARITY):null,
    imageSlotsPerMember:2,
    imageUploadMaxBytes:262144
   },
   excluded:[
-   'private-member-data','production-members','creator-submission-capacity',
-   'provider-storage-capacity','operating-costs','customer-payments'
+   'personal-records','small-cohort-totals','exact-participant-counts',
+   'exact-member-image-bytes','production-members','creator-storage-capacity',
+   'provider-storage-capacity','financial-records'
   ]
  };
 }
-
+function cachePayloadValid(value,now){
+ if(!value||typeof value!=='object'||value.schemaVersion!==2||
+   value.source!=='canonical-member-d1-privacy-aggregate'||
+   value.scope!=='ANEVUM_STAGING_ONLY'||
+   value.cacheTtlSeconds!==PUBLIC_TELEMETRY_CACHE_SECONDS||
+   value.privacy?.minimumDistinctContributors!==PUBLIC_TELEMETRY_MIN_COHORT||
+   value.privacy?.countLowerBoundStep!==PUBLIC_TELEMETRY_COUNT_GRANULARITY||
+   value.privacy?.imageByteLowerBoundStep!==PUBLIC_TELEMETRY_BYTES_GRANULARITY)return false;
+ const timestamp=Date.parse(value.dataAsOf);
+ const diff=now-timestamp;
+ return Number.isFinite(timestamp)&&diff>=0&&
+   diff<=PUBLIC_TELEMETRY_CACHE_SECONDS*1000;
+}
 /**
- * Public GET route. No cookies, no request parameters, no custom SQL, no
- * client-controlled measurement range. HEAD/POST and extra query fields
- * are refused before any D1 access. Failed checks do not cache errors.
+ * GET-only public route. The query and cache key are fixed by source code,
+ * not user parameters. Any disabled flag, invalid issuer, unavailable cache,
+ * stale cache or failed aggregate returns a non-revealing error.
  */
 export async function publicSupporterTelemetry(
  request,env,{now=Date.now(),cache=globalThis.caches?.default}={}
@@ -86,37 +119,33 @@ export async function publicSupporterTelemetry(
  if(url.origin!==CANONICAL_ORIGIN||url.pathname!==PUBLIC_TELEMETRY_PATH||
    url.search||url.hash)return errorResponse(404,'Not found');
  if(request.method!=='GET')return errorResponse(405,'Read-only endpoint');
- if(env?.CANONICAL_SUPPORTER_PUBLIC_METRICS_ENABLED!=='true')return errorResponse(404,'Not available');
+ if(env?.CANONICAL_SUPPORTER_PUBLIC_METRICS_ENABLED!=='true')
+  return errorResponse(404,'Not available');
  if(!env?.MEMBER_DB?.prepare||typeof cache?.match!=='function'||
    typeof cache?.put!=='function')return errorResponse(503,'Aggregate metrics unavailable');
  if(!Number.isSafeInteger(now)||now<0)return errorResponse(503,'Aggregate metrics unavailable');
-
  const key=new Request(CACHE_URL,{method:'GET'});
  try{
   const cached=await cache.match(key);
-  if(cached?.ok&&cached.headers.get('x-anevum-public-telemetry')==='v1')
-   return cached;
+  if(cached?.ok&&cached.headers.get('x-anevum-public-telemetry')===POLICY_VERSION){
+   const payload=await cached.clone().json().catch(()=>null);
+   if(cachePayloadValid(payload,now))return cached;
+  }
  }catch{return errorResponse(503,'Aggregate metrics unavailable')}
-
- // Fixed SQL, read-only. R2 bucket totals and D1 file footprints require
- // separate provider-level data and remain the dated manual snapshot.
  try{
   const result=await env.MEMBER_DB.prepare(AGGREGATE_SQL).all();
   if(result?.success===false||!Array.isArray(result?.results)||result.results.length!==1)
    return errorResponse(503,'Aggregate metrics unavailable');
   const totals=validateRow(result.results[0]);
   if(!totals)return errorResponse(503,'Aggregate metrics unavailable');
-  const payload=publishedSnapshot(totals,now);
-  const response=Response.json(payload,{headers:{
+  const response=Response.json(publishedSnapshot(totals,now),{headers:{
+   ...RESP_HEADERS,
    'cache-control':'public, max-age=0, s-maxage='+PUBLIC_TELEMETRY_CACHE_SECONDS,
    'content-type':'application/json; charset=utf-8',
-   'x-content-type-options':'nosniff',
-   'x-robots-tag':'noindex, nofollow, noarchive',
-   'x-anevum-public-telemetry':'v1',
-   'referrer-policy':'no-referrer'
+   'x-anevum-public-telemetry':POLICY_VERSION
   }});
-  // Do not return successful uncached responses if edge caching fails.
-  // This would turn a public page into an unbounded D1 query path.
+  // A failed cache write must not turn the public endpoint into uncapped D1
+  // reads. Cloudflare Cache API is per data center, not one global cache.
   await cache.put(key,response.clone());
   return response;
  }catch{return errorResponse(503,'Aggregate metrics unavailable')}
