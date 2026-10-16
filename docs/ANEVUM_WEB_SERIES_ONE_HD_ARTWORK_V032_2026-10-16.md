@@ -8,9 +8,9 @@
 
 The 60 simple SVG emblems in V031 are valid scalable **fallbacks**, not final art direction. The original generated 60-piece ANEVUM Series One illustrated collection was recovered from the owner's Library. All sixty independently named 1254×1254 RGBA PNG source files were verified; originals remain unmodified.
 
-Delivered to the owner as **ANEVUM-Series-One-HD-Illustrated-Artwork.zip** (SHA-256 `91b890d904c8ebe67560fc4ae4178a4c2495556fd2bc431719ad0e7ea513fdae`). Includes:
+Delivered to the owner as **ANEVUM-Series-One-HD-Illustrated-Artwork.zip** (SHA-256 `e0dbf6363d9e02ec7c53eebd1bf977c41ec4ac52a2bd0839960336b47df923a8`). Includes:
 
-- 60 original artwork provenance entries in `manifest.json`, with source filenames, SHA-256 fingerprints and nontransparent bounds.
+- 60 original artwork provenance entries in `manifest.json`, with source filenames, SHA-256 fingerprints, individual WebP SHA-256 hashes and nontransparent bounds.
 - 180 transparent WebP production variants: `128`, `512` and `1254` (60 each), totaling approximately 34 MB.
 - Searchable, chapter-filtered interactive `preview.html` and three gallery contact sheets; one 16:9 key-art board.
 - No recreated or generated visuals; these are the prior image-led concepts.
@@ -39,3 +39,12 @@ Without the art bundle or feature flag, V031 remains pixel-equivalent in functio
 - Mobile Safari review and dark/transcosmic typography consistency before staging cutover.
 
 **Scope boundary:** Source/code preparation only; do not merge, deploy to staging, enable the art flag, or open public registration from this PR.
+
+### Verified asset import
+The review ZIP contains `install_artwork.py`. Once the owner approves the visual collection, this script validates all 180 WebP files against the manifest and installs only the known `level-XX.webp` paths into a checkout:
+
+```bash
+python ANEVUM-Series-One/install_artwork.py ANEVUM-Series-One-HD-Illustrated-Artwork.zip --repository /path/to/anevum-web
+```
+
+The installer fails closed if an image is missing, renamed, malformed, or fails its SHA-256 check. It does not enable the illustrated build flag or deploy anything. The source tree also contains a copy of the importer for engineering convenience.

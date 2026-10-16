@@ -36,3 +36,11 @@ test('art viewer never invents earned status; notifications and member panel reu
  assert.match(notice,/<LevelEmblem level=\{active\.level!\} size=\{56\} priority\/>/);
  assert.match(panel,/<LevelEmblem level=\{p\?\.level\|\|1\} size=\{64\} priority\/>/);
 });
+
+test('fullscreen artwork preview keeps its focus trap while paging within the collection',()=>{
+ const collection=read('web/src/components/LevelCollection.tsx');
+ assert.match(collection,/const previewOpen=selectedLevel!==null/);
+ assert.match(collection,/\},\[previewOpen\]\)/);
+ assert.match(collection,/if\(event\.key==='Escape'\)/);
+ assert.match(collection,/if\(event\.key==='Tab'\)/);
+});

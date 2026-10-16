@@ -10,8 +10,9 @@ export function LevelCollection(){
  const closeButton=useRef<HTMLButtonElement|null>(null);
  const {progression:p}=useMemberProgression();
  const chosen=selectedLevel===null?null:LEVEL_ARTIFACTS[selectedLevel-1];
+ const previewOpen=selectedLevel!==null;
  useEffect(()=>{
-  if(selectedLevel===null)return;
+  if(!previewOpen)return;
   const previousOverflow=document.body.style.overflow;
   document.body.style.overflow='hidden';
   closeButton.current?.focus();
@@ -30,7 +31,7 @@ export function LevelCollection(){
   };
   window.addEventListener('keydown',onKey);
   return()=>{document.body.style.overflow=previousOverflow;window.removeEventListener('keydown',onKey);opener.current?.focus()};
- },[selectedLevel]);
+ },[previewOpen]);
  const shown=LEVEL_ARTIFACTS.filter(a=>!chapter||Math.ceil(a.level/10)===chapter);
  const select=(level:number,button:HTMLButtonElement)=>{opener.current=button;setSelectedLevel(level)};
  return <>
