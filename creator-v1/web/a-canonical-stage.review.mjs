@@ -3,12 +3,18 @@
 // Canonical email sessions never enter the public Worker or legacy V5/Creator service.
 import publicStage from "./a-staging-worker.mjs";
 import canonicalIdentity from "../canonical-auth/worker.mjs";
+import {reconcileSupporterSubscriptions} from "../canonical-auth/supporter.mjs";
 
 const ORIGIN="https://a.anevum.com";
 const CANONICAL_PATH=/^\/api\/v1\/member\//;
 const PUBLIC_IDENTITY=/^\/api\/v1\/members\/[a-z][a-z0-9_]{2,29}(?:\/(?:space|wall|media\/(?:avatar|banner)))?$/;
 
 export default {
+ async scheduled(_controller,env,ctx){
+   // Strict staging flag and sk_test_ gate in the reconciler. Never run a
+   // live account payout, checkout or billing mutation from a cron job.
+   ctx.waitUntil(reconcileSupporterSubscriptions(env));
+ },
  async fetch(request,env,ctx){
    const url=new URL(request.url);
    if(url.origin!==ORIGIN || url.protocol!=="https:"){

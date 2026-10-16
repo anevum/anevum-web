@@ -39,5 +39,10 @@
     "CANONICAL_APPLE_ENABLED": "false",
     "CANONICAL_MICROSOFT_ENABLED": "false",
     "CANONICAL_XP_TEST_ENABLED": "true"
+  },
+  "triggers": {
+    "crons": [
+      "17 5 * * *"
+    ]
   }
 }

@@ -28,6 +28,8 @@ CREATE TABLE IF NOT EXISTS supporter_subscriptions(
   billing_interval TEXT NOT NULL CHECK(billing_interval IN ('month','year')),
   status TEXT NOT NULL CHECK(status IN ('active','trialing','incomplete','incomplete_expired','past_due','canceled','unpaid','paused')),
   current_period_end_ms INTEGER NOT NULL CHECK(current_period_end_ms>0),
+  -- Verified Stripe subscription start; zero means unknown, no tenure bonus.
+  started_at_ms INTEGER NOT NULL DEFAULT 0 CHECK(started_at_ms>=0),
   cancel_at_period_end INTEGER NOT NULL CHECK(cancel_at_period_end IN (0,1)),
   synced_at_ms INTEGER NOT NULL
 );
@@ -71,4 +73,16 @@ CREATE TABLE IF NOT EXISTS supporter_billing_holds(
  reason TEXT NOT NULL CHECK(reason IN ('dispute','refund')),
  stripe_event_id TEXT NOT NULL,
  created_at_ms INTEGER NOT NULL
+);
+
+-- Cosmetic reward choices are a separate user-owned space, not earned XP,
+-- medals or contributor rank. Defaults remain visually ordinary until a
+-- verified active subscription and deliberate display consent are present.
+CREATE TABLE IF NOT EXISTS supporter_appearance (
+ member_user_id TEXT PRIMARY KEY NOT NULL REFERENCES "user"(id) ON DELETE CASCADE,
+ selected_seal TEXT NOT NULL DEFAULT 'signal',
+ selected_frame TEXT NOT NULL DEFAULT 'orbital',
+ selected_aura TEXT NOT NULL DEFAULT 'aurora',
+ revision INTEGER NOT NULL DEFAULT 1,
+ updated_at_ms INTEGER NOT NULL
 );
