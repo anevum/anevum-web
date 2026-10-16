@@ -4,6 +4,8 @@ import {canonicalAuthClient} from '../lib/canonical-beta';
 import {OrbitalMark} from '../components/OrbitalMark';
 import {SupporterRewardsStudio} from '../components/SupporterRewardsStudio';
 import {SupporterTransparency} from '../components/SupporterTransparency';
+import {SupporterBenefitAtlas} from '../components/SupporterBenefitAtlas';
+import {SupporterQuestions} from '../components/SupporterQuestions';
 
 type Interval='month'|'year';
 type Billing={available:boolean;supporter:boolean;status:string;until?:number|null;cancelAtPeriodEnd?:boolean;interval?:Interval|null;publicInsignia?:boolean;revision?:number;plans:{month:number;year:number}};
@@ -76,11 +78,21 @@ export function SupporterPage(){
     <h1 id="av32-title">Keep the <em>signal</em> alive.</h1>
     <p>ANEVUM is an independent home for people who make, explore and share things. Supporting the network should be a choice, never the price of belonging.</p>
     <div className="av32-ethics"><span>NO INTRUSIVE ADS</span><span>NO PURCHASED XP</span><span>NO PAY-TO-WIN</span></div>
-    <p className="av32-availability">FOUNDING SUPPORTER / <strong>PRE-LAUNCH PROPOSAL</strong></p>
+    <p className="av32-availability">FOUNDING SUPPORTER / <strong>PRE-LAUNCH · LIVE PAYMENTS CLOSED</strong></p>
    </div>
    <div className="av32-orbit" aria-hidden="true"><div className="av32-ring av32-ring-one"/><div className="av32-ring av32-ring-two"/><div className="av32-ring av32-ring-three"/><OrbitalMark/></div>
   </section>
-  <section className="av32-grid" aria-label="Founding supporter membership">
+  <nav className="av41-page-nav" aria-label="Supporter page sections">
+   <span className="av41-nav-title">ANEVUM / SUPPORTER FIELD GUIDE</span>
+   <div className="av41-nav-links">
+    <a href="#supporter-plans">MEMBERSHIP</a>
+    <a href="#supporter-benefits">REWARD ATLAS</a>
+    <a href="#transparency">OPEN FINANCES</a>
+    <a href="#supporter-studio">COLLECTOR STUDIO</a>
+    <a href="#supporter-questions">QUESTIONS</a>
+   </div>
+  </nav>
+  <section className="av32-grid" id="supporter-plans" aria-label="Founding supporter membership">
    <article className="av32-panel"><span className="av32-index">01 / FREE MEMBERSHIP</span><h2>Belonging stays free.</h2>
     <p>Every member can have a profile and wall, discover creative work, take part in community and make submissions when publishing opens. XP, sixty level artifacts and medals stay earned.</p>
     <div className="av32-statement"><strong>Support is not an achievement.</strong><span>Payment never improves your level, earned awards, search placement, moderation privileges or creator eligibility.</span></div>
@@ -113,8 +125,10 @@ export function SupporterPage(){
     <p className="av32-legal">Final benefits, recurring payment terms, cancellation, refunds and tax information must be published before live enrollment. This does not offer investment returns or early financial benefits.</p>
    </article>
   </section>
+  <SupporterBenefitAtlas/>
   <SupporterTransparency/>
-  <SupporterRewardsStudio memberId={id}/>
+  <div id="supporter-studio"><SupporterRewardsStudio memberId={id}/></div>
+  <SupporterQuestions/>
   <section className="av32-afterword"><span className="av32-index">CONTINUANCE / PRINCIPLE 001</span>
    <blockquote>Creativity should be funded by people who believe in it, without selling their attention.</blockquote>
    <p>Creator sales and payouts are a separate future phase. ANEVUM will not hold creator funds or process marketplace transactions until verified publishing and payout systems are ready.</p>
