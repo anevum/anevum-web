@@ -34,6 +34,7 @@ import "./join-page.css";
 import "./phase1-member.css";
 import "./canonical-email.css";
 import "./staging-integration-v013.css";
+import "./community-home-v014.css";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

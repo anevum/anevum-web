@@ -125,6 +125,22 @@ try{
       throw Error("SITEWIDE_V012_LEVELS_TEXT_SQUEEZED_"+width+":"+JSON.stringify(metrics));
    }
    await screenshot(name+"-"+width);
+   if(name==="home"){
+    await evaluate('document.getElementById("world-gateways").scrollIntoView({block:"start"})');
+    await until(()=>evaluate('Array.from(document.querySelectorAll(".av9-world-gateway-art>img")).every(image=>image.complete&&image.naturalWidth>=768)'));
+    const portals=await evaluate('(()=>({images:document.querySelectorAll(".av9-world-gateway-art>img[srcset]").length,links:[...document.querySelectorAll(".av9-world-gateway")].map(a=>a.getAttribute("href")),readingSurface:[...document.querySelectorAll(".av9-world-gateway-content")].every(el=>getComputedStyle(el).position!=="absolute"),overflow:document.documentElement.scrollWidth>innerWidth+1}))()');
+    if(portals.images!==4||!portals.readingSurface||portals.overflow||portals.links.some(href=>!href.includes("/discover?category=")))
+     throw Error("COMMUNITY_PORTAL_ART_OR_LAYOUT_"+width+":"+JSON.stringify(portals));
+    if(width<541){
+     await evaluate('document.querySelector("button[aria-label=\"Next collection\"]").click()');
+     await until(()=>evaluate('document.getElementById("community-portal-cards").scrollLeft>100'));
+     await evaluate('document.querySelector("button[aria-label=\"Previous collection\"]").click()');
+     await until(()=>evaluate('document.getElementById("community-portal-cards").scrollLeft<5'));
+    }
+    await screenshot("home-collections-"+width);
+    await evaluate('document.querySelector(".av11-live-index").scrollIntoView({block:"start"})');
+    await screenshot("home-community-modules-"+width);
+   }
    results.push({page:name,width,...state});
    console.log("SITEWIDE_V012_"+name.toUpperCase()+"_"+width+"=PASS");
   }
