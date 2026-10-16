@@ -115,7 +115,7 @@ test('health and robots disclose only nonsensitive build state',async()=>{
  assert.equal(r.status,200);
  const info=await r.json();
  assert.equal(info.status,'ok');
- assert.equal(info.projects,4);
+ assert.equal(info.projects,5);
  assert.equal(info.rhen,RHEN_REVIEW.source_commit.slice(0,12));
  assert.equal(info.fold,FOLD_SOURCE_SHA.slice(0,12));
  assert.equal((await request('/robots.txt')).status,200);
@@ -131,13 +131,13 @@ test('security headers permit optional live map but restrict origin and location
  assert.equal(r.headers.get('Referrer-Policy'),'no-referrer');
 });
 
-test('Lab home uses a true no-scroll CRT layout with four commands and no dummy moderation controls',async()=>{
+test('Lab home uses a true no-scroll CRT layout with five projects and no dummy moderation controls',async()=>{
  const page=await (await request('/')).text();
  assert.match(page,/ANEVUM <em>LAB<\/em>/);
  assert.match(page,/terminal\.css/);assert.match(page,/terminal\.js/);
  assert.match(page,/id="terminalForm"/);assert.match(page,/id="terminalInput"/);
- assert.equal((page.match(/class="project-entry/g)||[]).length,4);
- for(const name of ['THE FOLD','RHEN','TRANSCOSMIC','BACKSTAGE'])assert.ok(page.includes(name),name);
+ assert.equal((page.match(/class="project-entry/g)||[]).length,5);
+ for(const name of ['THE FOLD','RHEN','TRANSCOSMIC','BACKSTAGE','CONTINUANCE CADETS'])assert.ok(page.includes(name),name);
  const css=await (await request('/terminal.css')).text();
  assert.match(css,/100dvh/);assert.match(css,/overflow:hidden/);assert.match(css,/prefers-reduced-motion/);
  const js=await (await request('/terminal.js')).text();
@@ -155,4 +155,30 @@ test('Backstage provides working local case planning, not live moderation',async
  assert.match(js,/backstage-local-v1/);assert.match(js,/localStorage/);
  assert.equal((await request('/projects/backstage/api/ban',{method:'POST'})).status,405);
  assert.equal((await request('/projects/backstage/api/member')).status,404);
+});
+
+test('Cadets remains local-only and serves exactly the scoped private game routes',async()=>{
+ const redirect=await request('/projects/cadets');
+ assert.equal(redirect.status,308);assert.equal(redirect.headers.get('Location'),'/projects/cadets/');
+ const page=await request('/projects/cadets/');
+ assert.equal(page.status,200);
+ assert.equal(page.headers.get('Cache-Control'),'private, no-store, max-age=0');
+ assert.match(page.headers.get('Content-Security-Policy'),/frame-ancestors 'none'/);
+ const html=await page.text();
+ for(const id of ['crewSwitch','dailyMissions','weeklyMissions','rewardsGrid','parentGate','approvalQueue','pinInput'])assert.match(html,new RegExp('id="'+id+'"'));
+ assert.match(html,/CONTINUANCE/);assert.match(html,/LOCAL STORAGE ONLY/);
+ assert.doesNotMatch(html,/<iframe|<script[^>]+https:\/\//i);
+ for(const asset of ['index.html','style.css','app.mjs','rules.mjs']){
+  const r=await request('/projects/cadets/'+asset);
+  assert.equal(r.status,200,asset);
+  assert.ok((await r.text()).length>500,asset);
+ }
+ const js=await (await request('/projects/cadets/app.mjs')).text();
+ assert.match(js,/approve\(/);assert.match(js,/derivePin/);
+ assert.equal((await request('/projects/cadets/api/save')).status,404);
+ assert.equal((await request('/projects/cadets/private-record.json')).status,404);
+ assert.equal((await request('/projects/cadets/',{method:'HEAD'})).status,200);
+ assert.equal((await request('/projects/cadets/',{method:'POST'})).status,405);
+ const wrong=await lab.fetch(new Request('https://any-user.workers.dev/projects/cadets/'));
+ assert.equal(wrong.status,404);
 });
