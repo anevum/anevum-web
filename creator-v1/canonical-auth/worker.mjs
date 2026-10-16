@@ -147,7 +147,7 @@ export function createCanonicalStageWorker({authFactory=createCanonicalAuth}={})
     if(callback&&!configured[callback[1]])return fail(request,404);
     if(publicCommunity)return safeResponse(await canonicalCommunity(request,env));
     if(forumRoute){
-      const publicForumRead=request.method==="GET" && !path.endsWith("/forum-submissions") && !path.endsWith("/reaction");
+      const publicForumRead=request.method==="GET" && !path.endsWith("/forum-submissions") && !path.endsWith("/forum-review") && !path.endsWith("/reaction");
       if(!publicForumRead&&!["GET","POST","DELETE"].includes(request.method))return fail(request,405);
       if(!publicForumRead&&["POST","PATCH","PUT","DELETE"].includes(request.method)&&!sameOriginMutation(request))return safeJson(request,{error:"Same-origin request required"},403);
       if(publicForumRead)return safeResponse(await canonicalForums(request,env));
