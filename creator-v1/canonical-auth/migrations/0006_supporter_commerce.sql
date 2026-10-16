@@ -90,3 +90,14 @@ CREATE TABLE IF NOT EXISTS supporter_appearance (
  revision INTEGER NOT NULL DEFAULT 1,
  updated_at_ms INTEGER NOT NULL
 );
+
+
+-- V036: prevent simultaneous Checkout enrollment while a canonical member
+-- requests account deletion. The row cascades with the owner identity.
+-- No irreversible deletion is permitted merely because the row exists.
+CREATE TABLE IF NOT EXISTS member_account_closure_guards (
+ member_user_id TEXT PRIMARY KEY NOT NULL REFERENCES "user"(id) ON DELETE CASCADE,
+ request_nonce TEXT NOT NULL UNIQUE,
+ expires_at_ms INTEGER NOT NULL,
+ created_at_ms INTEGER NOT NULL
+);
