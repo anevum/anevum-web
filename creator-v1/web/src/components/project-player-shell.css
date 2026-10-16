@@ -46,5 +46,13 @@
 @media(max-width:1040px){.avp-project .avp-experience-layout{grid-template-columns:minmax(0,1fr)}.avp-project .avp-passport.portal-sidebar{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.avp-project .avp-passport .portal-project-passport{grid-row:span 2}}
 @media(max-width:700px){.avp-project .avp-stage{min-height:540px;border-radius:16px}.avp-project .avp-stage-body{padding:38px 19px 24px}.avp-project .avp-stage-body h1{font-size:clamp(42px,10.5vw,65px);margin:12px 0 16px}.avp-project .avp-stage-summary{font-size:15px}.avp-project .avp-stage-top,.avp-project .avp-stage-foot{padding:15px;font-size:9px}.avp-project .avp-stage-foot{align-items:flex-start}.avp-project .avp-stage-identity{align-items:stretch}.avp-project .avp-passport.portal-sidebar{display:flex;flex-direction:column}}
 @media(max-width:390px){.avp-project .avp-stage-actions{flex-direction:column;align-items:stretch}.avp-project .avp-stage-actions a{width:100%}.avp-project .avp-stage-shortcuts{width:100%}.avp-project .avp-stage-shortcuts a,.avp-project .avp-stage-shortcuts button{flex:1}.avp-project .avp-stage-foot span:last-child{display:none}}
+/* Mobile participation remains visible as a distinct action row below creator credit. */
+@media(max-width:700px){
+ .avp-project .avp-stage-identity{gap:15px;padding:17px 1px 16px}
+ .avp-project .avp-stage-shortcuts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));width:100%;gap:9px}
+ .avp-project .avp-stage-shortcuts a,.avp-project .avp-stage-shortcuts button{width:100%;min-width:0;min-height:48px;padding:11px 7px;font-size:10px;line-height:1.35;white-space:normal;text-align:center;border-color:#c6b49c99;background:linear-gradient(150deg,#1c2437,#111a2a);box-shadow:inset 0 1px #ffffff12,0 3px 10px #0005}
+ .avp-project .avp-stage-shortcuts a:first-child{border-color:#d8b588;background:linear-gradient(145deg,#3b302c,#231f29);color:#f7d8ae}
+}
+@media(max-width:340px){.avp-project .avp-stage-shortcuts{gap:6px}.avp-project .avp-stage-shortcuts a,.avp-project .avp-stage-shortcuts button{font-size:9px;padding-inline:5px}}
 @media(prefers-reduced-motion:reduce){.avp-project .avp-stage-actions a{transition:none}.avp-project .avp-stage-actions a:hover{transform:none}}
 @media(forced-colors:active){.avp-project .avp-stage,.avp-project .avp-passport .portal-sidebox{border:1px solid CanvasText}.avp-project .avp-primary-action{background:ButtonFace;color:ButtonText!important}}
