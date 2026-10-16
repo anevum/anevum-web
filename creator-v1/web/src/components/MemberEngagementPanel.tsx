@@ -45,7 +45,7 @@ export function MemberEngagementPanel({projectId}:{projectId:string}){
     </div>
     <p className="member-caption">{available.data.registration==="invite-only"?"Member access is currently invite-only. ":available.data.registration==="closed"?"New member registration is currently unavailable. ":"Member registration is currently open. "}Signing in does not activate project rating, saving, or XP.</p>
   </section>;
-  if(available.data.kind==="closed")return <section className="engagement-panel" data-avp-availability="closed" aria-label="Member project participation"><span className="kicker">COMMUNITY SIGNAL / IN DEVELOPMENT</span><h2>EXPLORE NOW. PARTICIPATE LATER.</h2><p>Rating, saving and related progression are not available for this project on this site.</p></section>;
+  if(available.data.kind==="closed")return <section className="engagement-panel" data-avp-availability="closed" aria-label="Member project participation"><span className="kicker">COMMUNITY SIGNAL / IN DEVELOPMENT</span><h2>EXPLORE NOW. PARTICIPATE LATER.</h2><p>Rating, saving and related progression are not available for this project on this site. Public voting is not open.</p></section>;
   if(available.data.kind==="guest")return <section className="engagement-panel" data-avp-availability="legacy-guest" aria-label="Member project participation"><span className="kicker">COMMUNITY SIGNAL / INVITED MEMBERS</span><h2>YOUR INPUT MATTERS.</h2><p>Invited members can rate and save published work. Public accounts and voting remain closed.</p>
     {available.data.signupEnabled&&<a className="button secondary" href="/api/v1/member/join">INVITED MEMBER SIGN-IN</a>}
   </section>;
