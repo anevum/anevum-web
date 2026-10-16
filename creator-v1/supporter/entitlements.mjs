@@ -43,7 +43,13 @@ export function acceptStripeEventType(type){
     "customer.subscription.updated",
     "customer.subscription.deleted",
     "invoice.paid",
-    "invoice.payment_failed"
+    "invoice.payment_failed",
+    "checkout.session.async_payment_succeeded",
+    "checkout.session.async_payment_failed",
+    "charge.dispute.created",
+    "charge.refunded",
+    "refund.created",
+    "refund.updated"
   ]).has(type);
 }
 export function validateStripeIdentity(input){
