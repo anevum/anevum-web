@@ -161,6 +161,8 @@ test("server limits saves to 200 and 60 actual changes per hour",async()=>{
   const stmt=f.db.prepare("INSERT INTO member_project_saves(member_user_id,public_project_id,saved_at) VALUES(?,?,?)");
   for(let i=0;i<200;i++)stmt.run(alice.id,String(i).padStart(32,"0"),1700000000+i);
   assert.equal((await canonicalProjectSave(req(projectId,"PUT"),f.env,alice,{now:1700000000000})).status,409);
+  assert.equal(f.db.prepare("SELECT COUNT(*) AS n FROM member_project_save_rate_limits WHERE member_user_id=?").get(alice.id).n,0,
+    "A rejected over-capacity save must not consume mutation allowance");
   f.db.prepare("DELETE FROM member_project_saves WHERE member_user_id=?").run(alice.id);
   for(let i=0;i<60;i++){
    const method=i%2===0?"PUT":"DELETE";

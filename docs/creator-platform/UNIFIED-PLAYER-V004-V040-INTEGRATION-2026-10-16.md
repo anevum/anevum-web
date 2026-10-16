@@ -63,3 +63,7 @@ This is not a merge of existing PRs, an authorization to use V040 on a live site
 - Canonical health advertises `projectSavesReady` only while deliberately enabled, contingent on both isolated D1 schemas. A private export contains owned saved project IDs when the saved-project table is present, regardless of the current rollout flag.
 - **Source-only, flag OFF, migration NOT APPLIED, no button enabled, not deployed.** Cross-database publication revocation cannot be made a distributed transaction; every read validates public status and never exposes withdrawn project content.
 - Launch gates: migration inventory approval + separate staging backup/rollback; Creator publication integrity review; real canonical A and B sessions (owner isolation), withdrawn/private project tests; privacy export and erasure; owner sign-off. Do not combine this draft pilot with automatic billing, moderation, public signup or any XP award.
+
+## V007 verification correction
+- First combined CI run identified a real accounting error: rejecting a save over the 200-item capacity incorrectly consumed one of the 60 hourly mutation tokens. Corrected by checking the capacity before consuming allowance; the database INSERT retains its own atomic capacity predicate.
+- An explicit regression assertion now verifies zero quota usage for an over-capacity rejection. Read-only, disabled-by-default staging and private member ownership contracts remain unchanged.

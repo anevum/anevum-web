@@ -95,6 +95,11 @@ export async function canonicalProjectSave(request,env,user,{now=Date.now()}={})
    if(!await published(env,id))return error(404,"Project not available");
    if(request.method==="GET")return json({available:true,saved:await saved(db,user.id,id)});
    if(await saved(db,user.id,id))return json({saved:true,changed:false});
+   // A full library is not a member mutation; reject before consuming an
+   // hourly allowance. The atomic INSERT below still rechecks the cap.
+   const current=await first(db,
+     "SELECT COUNT(*) AS total FROM member_project_saves WHERE member_user_id=?",user.id);
+   if(Number(current?.total)>=200)return error(409,"Private library limit reached");
    if(!await allowance(db,user.id,now))return error(429,"Save changes temporarily limited");
    // Count and insertion are on the same authoritative MEMBER_DB statement.
    // D1 cannot transact across the two isolated databases. Withdrawal causes
