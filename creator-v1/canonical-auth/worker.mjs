@@ -12,12 +12,14 @@ import {canonicalSpace} from "./space.mjs";
 import {boundedText} from "./request-body.mjs";
 import {supporterMember,supporterWebhook} from "./supporter.mjs";
 import {supporterRewardsRoute} from "./supporter-rewards.mjs";
+import {canonicalAccountClosure} from "./account-closure.mjs";
 
 const HEALTH=CANONICAL_PREFIX+"/health";
 const METHODS=CANONICAL_PREFIX+"/auth-methods";
 const READ_METHODS=new Set(["GET","HEAD"]);
 const PROFILE=CANONICAL_PREFIX+"/creator-profile";
 const EXPORT=CANONICAL_PREFIX+"/account-export";
+const CLOSURE=CANONICAL_PREFIX+"/account-closure";
 const OWN_SPACE=/^\/api\/v1\/member\/(?:space|wall(?:\/[a-f0-9-]{36})?|media\/(?:avatar|banner))$/;
 const PUBLIC_SPACE=/^\/api\/v1\/members\/([a-z][a-z0-9_]{2,29})\/(?:space|wall|media\/(?:avatar|banner))$/;
 const PUBLIC_MEMBER=/^\/api\/v1\/members\/([a-z][a-z0-9_]{2,29})$/;
@@ -105,7 +107,8 @@ export function createCanonicalStageWorker({authFactory=createCanonicalAuth}={})
     const supporterHook=path===CANONICAL_PREFIX+"/supporter/webhook";
     const ownProfile=path===PROFILE;
     const ownExport=path===EXPORT;
-    if(path!==HEALTH && path!==METHODS && !publicHandle && !ownProfile && !ownExport && !ownSpace && !publicSpace && !publicCommunity && !ownProgression && !ownSupporter &&
+    const ownClosure=path===CLOSURE;
+    if(path!==HEALTH && path!==METHODS && !publicHandle && !ownProfile && !ownExport && !ownClosure && !ownSpace && !publicSpace && !publicCommunity && !ownProgression && !ownSupporter &&
       !(path.startsWith(CANONICAL_AUTH_PATH+"/") &&
         (AUTH_ALLOWLIST[request.method]?.has(path)??false)))
       return fail(request,404);
@@ -113,6 +116,7 @@ export function createCanonicalStageWorker({authFactory=createCanonicalAuth}={})
     if((publicHandle||publicSpace) && !READ_METHODS.has(request.method))return fail(request,404);
     if(ownProfile && !["GET","POST","PATCH"].includes(request.method))return fail(request,404);
     if(ownExport && request.method!=="GET")return fail(request,404);
+    if(ownClosure && !["GET","POST"].includes(request.method))return fail(request,405);
     if(ownSupporter && !((["/supporter","/supporter/rewards"].some(suffix=>path===CANONICAL_PREFIX+suffix)&&["GET","PATCH"].includes(request.method)) ||
       (["/supporter/checkout","/supporter/portal","/supporter/webhook"].some(suffix=>path===CANONICAL_PREFIX+suffix)&&request.method==="POST")))return fail(request,405);
     if((path===HEALTH||path===METHODS)&&!READ_METHODS.has(request.method))
@@ -217,9 +221,10 @@ export function createCanonicalStageWorker({authFactory=createCanonicalAuth}={})
 
     try{
       const auth=authFactory(env);
-      if(ownProfile||ownExport||ownSpace||ownProgression||ownSupporter){
+      if(ownProfile||ownExport||ownClosure||ownSpace||ownProgression||ownSupporter){
         const session=await auth.api.getSession({headers:clean.headers});
         if(!session?.user)return safeJson(request,{error:"Sign-in required"},401);
+        if(ownClosure)return safeResponse(await canonicalAccountClosure(clean,env,session.user,session.session));
         if(ownProgression)return safeResponse(await canonicalProgression(clean,env,session.user));
         if(ownSupporter)return safeResponse(path===CANONICAL_PREFIX+"/supporter/rewards"
           ?await supporterRewardsRoute(clean,env,session.user)
