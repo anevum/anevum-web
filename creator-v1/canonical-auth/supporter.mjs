@@ -31,15 +31,31 @@ const apply=async(db,sql,...params)=>{
 export async function supporterSchemaReady(db){
   if(!db?.prepare)return false;
   try{
-    const found=await rows(db,"SELECT name FROM sqlite_master WHERE type='table' AND name IN ('supporter_checkout_intents','supporter_customers','supporter_subscriptions','supporter_webhook_events')");
-    return found.length===4;
+    const found=await rows(db,"SELECT name FROM sqlite_master WHERE type='table' AND name IN ('supporter_checkout_intents','supporter_customers','supporter_subscriptions','supporter_webhook_events','supporter_visibility')");
+    return found.length===5;
   }catch{return false;}
 }
 const dataReady=async env=>supporterConfig(env).enabled&&await supporterSchemaReady(env.MEMBER_DB);
-const verified=user=>typeof user?.id==='string'&&user.id.length>0&&user.emailVerified===true;
+const verified=user=>typeof user?.id==='string'&&user.id.length>0&&user.emailVerified===true &&
+  typeof user.email==='string'&&user.email.length<=254&&/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(user.email);
 const activeRow=(record,now)=>record?supporterState({
   status:record.status,currentPeriodEnd:record.current_period_end_ms
 },now):supporterState(null,now);
+/**
+ * Only public when the member has voluntarily opted in, their world is public,
+ * and the server has recent verified subscription evidence. Not a level/medal.
+ */
+export async function publicSupporterForMember(env,id,now=Date.now()){
+  if(!supporterConfig(env).enabled||!await supporterSchemaReady(env.MEMBER_DB))return false;
+  try{
+    const consent=await row(env.MEMBER_DB,
+      'SELECT public_insignia FROM supporter_visibility WHERE member_user_id=?',id);
+    if(consent?.public_insignia!==1)return false;
+    const p=await rows(env.MEMBER_DB,
+      'SELECT status,current_period_end_ms,synced_at_ms FROM supporter_subscriptions WHERE member_user_id=? ORDER BY synced_at_ms DESC LIMIT 12',id);
+    return p.some(x=>now-Number(x.synced_at_ms)<=259200000&&activeRow(x,now).supporter);
+  }catch{return false}
+}
 
 export async function supporterMember(request,env,user,{http=fetch,now=Date.now()}={}){
   const path=new URL(request.url).pathname;
@@ -47,15 +63,51 @@ export async function supporterMember(request,env,user,{http=fetch,now=Date.now(
   if(new URL(request.url).search)return err(400,'Unexpected query');
   if(path===PREFIX&&request.method==='GET'){
     const available=await dataReady(env);
-    if(!available)return out({available:false,supporter:false,status:'not-launched',plans:{month:500,year:3600}});
+    if(!available)return out({available:false,supporter:false,status:'not-launched',plans:{month:500,year:3600},publicInsignia:false,revision:0});
     try{
       const records=await rows(env.MEMBER_DB,
         'SELECT status,current_period_end_ms,cancel_at_period_end,synced_at_ms,billing_interval FROM supporter_subscriptions WHERE member_user_id=? ORDER BY synced_at_ms DESC LIMIT 12',user.id);
       const valid=records.find(value=>now-Number(value.synced_at_ms)<=259200000 && activeRow(value,now).supporter);
+      const consent=await row(env.MEMBER_DB,'SELECT public_insignia,revision FROM supporter_visibility WHERE member_user_id=?',user.id);
       return out({available:true,supporter:Boolean(valid),status:valid?'active':records.length?'inactive':'none',
+        publicInsignia:consent?.public_insignia===1,revision:Number(consent?.revision)||0,
         until:valid?.current_period_end_ms??null,cancelAtPeriodEnd:valid?.cancel_at_period_end===1,
         interval:valid?.billing_interval??null,plans:{month:500,year:3600}});
     }catch{return err(503,'Supporter status unavailable');}
+  }
+  if(path===PREFIX&&request.method==='PATCH'){
+    if(!await dataReady(env))return err(404,'Supporter enrollment is not open');
+    if(!/^application\/json(?:\s*;|$)/i.test(request.headers.get('content-type')||''))return err(400,'Invalid request');
+    const raw=await boundedText(request,128);
+    let input;
+    try{input=JSON.parse(raw)}catch{return err(400,'Invalid request')}
+    if(!input||typeof input!=='object'||Array.isArray(input)||
+       Object.keys(input).sort().join(',')!=='publicInsignia,revision'||
+       typeof input.publicInsignia!=='boolean'||!Number.isSafeInteger(input.revision)||input.revision<0)
+      return err(400,'Invalid display settings');
+    try{
+      const db=env.MEMBER_DB;
+      const existing=await row(db,'SELECT revision FROM supporter_visibility WHERE member_user_id=?',user.id);
+      if((existing?.revision??0)!==input.revision)return err(409,'Supporter display settings have changed');
+      if(input.publicInsignia){
+        const subs=await rows(db,
+          'SELECT status,current_period_end_ms,synced_at_ms FROM supporter_subscriptions WHERE member_user_id=? ORDER BY synced_at_ms DESC LIMIT 12',user.id);
+        if(!subs.some(v=>now-Number(v.synced_at_ms)<=259200000&&activeRow(v,now).supporter))
+          return err(409,'An active supporter membership is required');
+      }
+      if(existing){
+        const change=await rows(db,
+          'UPDATE supporter_visibility SET public_insignia=?,revision=revision+1,updated_at_ms=? WHERE member_user_id=? AND revision=? RETURNING revision',
+          input.publicInsignia?1:0,now,user.id,input.revision);
+        if(change.length!==1)return err(409,'Display setting changed; reload');
+        return out({publicInsignia:input.publicInsignia,revision:change[0].revision});
+      }
+      const created=await rows(db,
+        'INSERT OR IGNORE INTO supporter_visibility(member_user_id,public_insignia,revision,updated_at_ms) VALUES(?,?,1,?) RETURNING revision',
+        user.id,input.publicInsignia?1:0,now);
+      return created.length===1?out({publicInsignia:input.publicInsignia,revision:1})
+        :err(409,'Display setting changed; reload');
+    }catch{return err(503,'Display settings unavailable')}
   }
   if(path!==PREFIX+'/checkout'&&path!==PREFIX+'/portal')return err(404,'Not found');
   if(request.method!=='POST')return err(405,'Method not allowed');
