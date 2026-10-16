@@ -43,7 +43,9 @@ test("V012 preserves member boundaries while retiring duplicate Atlas navigation
   assert.match(routes,/PublicBoardsPage/);
   assert.match(shell,/site-shell--cinematic/);
   assert.match(shell,/canonicalMember\?"\/member":"\/join"/);
-  assert.match(routes,/path="account" element={<MemberAccountPage\/>}/);
+  assert.match(routes,/path="account" element={<Navigate to="\/member" replace\/>}/);
+  assert.match(routes,/path="account\/edit" element={<Navigate to="\/member" replace\/>}/);
+  assert.doesNotMatch(routes,/path="account" element={<MemberAccountPage\/>}/);
   assert.match(shell,/PortalLauncher/);
   assert.doesNotMatch(shell,/memberHealth|memberSignIn|staffApprove|RHEN TERMINAL|portfolio/);
 });
