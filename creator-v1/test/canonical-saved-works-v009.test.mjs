@@ -125,7 +125,7 @@ test("saved works remains off in deployment inventory with no unreviewed data pa
  assert.match(worker,/CANONICAL_PROJECT_SAVES_ENABLED/);
  const fixture=read("test/portal-offline-preview.mjs");
  const browser=read("test/capture-sitewide-v012.mjs");
- assert.match(fixture,/url.pathname==="/api\/v1\/member\/project-saves"/);
+ assert.ok(fixture.includes('url.pathname==="/api/v1/member/project-saves"'));
  assert.match(fixture,/syntheticProjectSaved/);
  assert.match(browser,/PLAYER_V009_SAVED_WORKS_/);
  assert.match(browser,/PLAYER_V009_SAVED_LAYOUT_/);
