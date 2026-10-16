@@ -157,6 +157,9 @@ try{
           !participation.links.some(x=>x.href==="/creator/community")||
           !participation.links.some(x=>x.href==="/creator/join"))
          throw Error("PLAYER_V005_CANONICAL_PARTICIPATION_"+variant+"_"+width+":"+JSON.stringify(participation));
+       const requestTrace=await (await fetch(base+"/__player-member-requests")).json();
+       if(!requestTrace.syntheticOnly||!Array.isArray(requestTrace.requests)||requestTrace.requests.length)
+         throw Error("PLAYER_V006_CANONICAL_LEGACY_REQUEST_"+variant+"_"+width+":"+JSON.stringify(requestTrace));
        const state=await evaluate('(()=>{const st=document.querySelector(".avp-stage"),pas=document.querySelector(".avp-passport"),a=st?.querySelector(".avp-primary-action"),s=st?.getBoundingClientRect(),p=pas?.getBoundingClientRect(),art=st?.querySelector(".avp-stage-art img");return {heading:st?.querySelector("h1")?.textContent,kind:st?.className,primary:a?.textContent?.trim()||null,href:a?.getAttribute("href")||null,hostname:a?new URL(a.href).hostname:null,target:a?.getAttribute("target")||null,rel:a?.getAttribute("rel")||null,secondary:st?.querySelectorAll(".avp-secondary-action").length||0,unavailable:!!st?.querySelector(".avp-no-action"),art:!!art&&(art.complete&&art.naturalWidth>0),rect:s?{left:s.left,right:s.right,top:s.top,bottom:s.bottom,width:s.width}:null,passport:p?{left:p.left,right:p.right,top:p.top,bottom:p.bottom}:null,overflow:document.documentElement.scrollWidth>innerWidth+1,iframe:document.querySelectorAll("iframe").length,synthetic:getComputedStyle(document.body,"::after").content.includes("SYNTHETIC OFFLINE REVIEW")};})()');
        if(state.overflow||state.iframe||!state.synthetic||!state.heading||!state.rect||!state.passport||!state.art||
           (expectedAction?(!state.primary?.includes(expectedAction)||state.hostname!==expectedHost||state.target!=="_blank"||!state.rel?.includes("noopener")||!state.rel?.includes("noreferrer")):(Boolean(state.primary)||!state.unavailable))||
@@ -171,6 +174,16 @@ try{
            throw Error("PLAYER_V003_LONG_CONTENT_LAYOUT_"+width+":"+JSON.stringify(compact));
        }
        await screenshot("player-v002-"+variant+"-"+width);
+       if(variant==="external-game"){
+         await evaluate('document.getElementById("avp-participation").scrollIntoView({block:"start",behavior:"instant"})');
+         await until(()=>evaluate('(()=>{const p=document.querySelector(".avp-participation-preview");const r=p?.getBoundingClientRect();return !!r&&r.top>=-1&&r.top<innerHeight-80;})()'));
+         const layout=await evaluate('(()=>{const panel=document.querySelector(".avp-participation-preview"),r=panel.getBoundingClientRect(),actions=[...panel.querySelectorAll(".avp-participation-actions a")].map(a=>{const b=a.getBoundingClientRect();return {text:a.textContent.trim(),width:b.width,height:b.height,left:b.left,right:b.right};});return {panel:{top:r.top,left:r.left,right:r.right,bottom:r.bottom},actions,overflow:document.documentElement.scrollWidth>innerWidth+1,hasVoteInputs:!!panel.querySelector(".engagement-votes"),hasSaveButton:!!panel.querySelector("button")};})()');
+         if(layout.overflow||layout.panel.left < -1||layout.panel.right > width+1||layout.hasVoteInputs||layout.hasSaveButton||
+           layout.actions.length!==2||layout.actions.some(a=>a.height<44||a.width<70||a.left < -1||a.right > width+1))
+           throw Error("PLAYER_V006_PARTICIPATION_LAYOUT_"+width+":"+JSON.stringify(layout));
+         await screenshot("player-v006-canonical-participation-"+width);
+         console.log("PLAYER_V006_PARTICIPATION_SCREEN_"+width+"=PASS");
+       }
        results.push({page:"player-v002-"+variant,width,primary:state.primary,host:state.hostname,art:state.art,overflow:state.overflow});
        console.log("PLAYER_V002_"+variant.toUpperCase()+"_"+width+"=PASS");
        if(variant==="external-game"&&(width===1440||width===390)){

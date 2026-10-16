@@ -38,3 +38,9 @@ This is not a merge of existing PRs, an authorization to use V040 on a live site
 ## V005 browser-probe verification fix
 - Corrected CDP Runtime.evaluate expressions for quoted CSS attribute selectors. Probe source now lives in `test/player-browser-probes.mjs` and is syntax-checked with Node's VM parser and a synthetic DOM contract before browser acceptance. Timeouts report the last exception instead of hiding parse errors.
 - This is an offline-test correction only. Its green combined CI run, including canonical/legacy/closed browser states, remains a required gate.
+ 
+## V006 browser proof for canonical participation
+- Every synthetic canonical player route now checks a loopback-only request trace: no calls to legacy `/me`, `/library`, project rating or vote routes are allowed. The trace resets on each scenario so stale requests cannot pass.
+- At all four viewport widths, the browser scrolls directly to the canonical participation panel, checks that both outbound-on-platform actions are readable, at least 44px tall, entirely within the viewport, and that no voting or saving controls are rendered.
+- The CI artifact includes dedicated `player-v006-canonical-participation-<width>.png` captures for owner review. The synthetic-only watermark is moved to the bottom edge so it does not conceal the shortcut controls.
+- This verifies read-only presentation only; it does not constitute authenticated member voting, rights clearance or a deployment authorization.

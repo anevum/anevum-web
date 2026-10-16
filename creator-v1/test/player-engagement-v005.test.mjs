@@ -47,6 +47,12 @@ test("compiled browser fixture tests canonical invite-only, legacy guest and out
  assert.match(capture,/PLAYER_V005_CANONICAL_PARTICIPATION/);
  assert.match(capture,/PLAYER_V005_MEMBER_GATE/);
  assert.match(capture,/PLAYER_V005_MEMBER_RESET_FAILED/);
+ assert.match(capture,/PLAYER_V006_CANONICAL_LEGACY_REQUEST/);
+ assert.match(capture,/PLAYER_V006_PARTICIPATION_LAYOUT/);
+ assert.match(capture,/PLAYER_V006_PARTICIPATION_SCREEN/);
+ assert.match(fixture,/__player-member-requests/);
+ assert.match(fixture,/projectMemberRequests\.push/);
+ assert.match(fixture,/projectMemberRequests\.length=0/);
  assert.doesNotMatch(read("web/src/main.tsx"),/__player-member-fixture|playerMemberHealthMode/);
 });
 
