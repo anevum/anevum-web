@@ -44,11 +44,17 @@ async function safeJson<T>(response:Response):Promise<T>{
 async function request<T>(path:string,method:"GET"|"POST"|"PATCH"="GET",body?:unknown,signal?:AbortSignal,publicRead=false):Promise<T>{
  if(!/^\/api\/v1\/(?:member\/(?:auth-methods|creator-profile)|members\/[a-z][a-z0-9_]{2,29})$/.test(path))
    throw new Error("Unsupported canonical member route");
+ // A custom non-simple header distinguishes a same-origin profile fetch from
+ // a cross-site form post when mobile browsers omit optional security hints.
+ // This is a CSRF intent signal only; it is NOT an authentication credential.
+ const profileWrite=path==="/api/v1/member/creator-profile"&&
+   (method==="POST"||method==="PATCH");
  const response=await fetch(path,{
   method,mode:"same-origin",credentials:publicRead?"omit":"same-origin",
   redirect:"error",cache:"no-store",
   headers:body===undefined?{Accept:"application/json"}:
-    {Accept:"application/json","Content-Type":"application/json"},
+    {Accept:"application/json","Content-Type":"application/json",
+      ...(profileWrite?{"X-ANEVUM-Profile-Intent":"anevum-profile-write-v1"}:{})},
   body:body===undefined?undefined:JSON.stringify(body),signal
  });
  if(!response.ok){
