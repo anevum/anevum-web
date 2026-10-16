@@ -49,3 +49,8 @@ This is not a merge of existing PRs, an authorization to use V040 on a live site
 - The first V006 browser run rejected the real 1440px participation actions at **43 CSS px**, below the 44px touch-target floor, even though the source styling had a 48px minimum. It did not fail the canonical identity isolation check.
 - Increased the specific participation links' nominal minimum size to 56px without modifying unrelated buttons. Keep the rendered 44px browser assertion at all viewports; a source-only CSS assertion is not a substitute.
 - Recheck V006 exact-head browser screenshots, canonical request tracing, and full V040 combined tests before treating this change as verified.
+ 
+## V006 final CSS cascade diagnosis
+- The first minimum-size adjustment still rendered 43px because the later site-wide selector `.av9-shell :is(.button, ...)` had equal effective specificity to `.avp-project .avp-participation-actions a` and overrode its `min-height`.
+- Target the canonical participation links with `.av9-shell .avp-project .avp-participation-actions a`; this has higher specificity while remaining scoped to this player. No global design tokens or other controls change.
+- Verified with the **actual compiled site stylesheet** in a minimal Chromium DOM: original selector rendered 43px, scoped selector rendered 56px. The full compiled offline site and all four viewport checks still require exact-head CI acceptance.

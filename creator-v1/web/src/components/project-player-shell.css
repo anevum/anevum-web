@@ -70,7 +70,7 @@
 .avp-project .avp-participation-preview h2{font:400 clamp(26px,3.5vw,40px)/1.13 var(--av10-editorial,Georgia,serif);letter-spacing:-.035em;color:#fff0de;margin:15px 0}
 .avp-project .avp-participation-preview>p:not(.member-caption){max-width:65ch;line-height:1.7;color:#e1dce0}
 .avp-project .avp-participation-actions{display:flex;gap:10px;flex-wrap:wrap;margin:17px 0}
-.avp-project .avp-participation-actions a{display:inline-flex;align-items:center;justify-content:center;min-height:56px;padding:12px 18px;border:1px solid #d8b99188;border-radius:11px;color:#f7e4ca;text-decoration:none;letter-spacing:.06em}
+.av9-shell .avp-project .avp-participation-actions a{display:inline-flex;align-items:center;justify-content:center;min-height:56px;padding:12px 18px;border:1px solid #d8b99188;border-radius:11px;color:#f7e4ca;text-decoration:none;letter-spacing:.06em}
 .avp-project .avp-participation-actions a:first-child{background:linear-gradient(145deg,#4b3836,#272032);border-color:#d8b991}
 .avp-project .avp-participation-preview .member-caption{max-width:70ch;color:#c6b8b4;line-height:1.6}
 @media(max-width:390px){.avp-project .avp-participation-actions{flex-direction:column}.avp-project .avp-participation-actions a{width:100%}}
