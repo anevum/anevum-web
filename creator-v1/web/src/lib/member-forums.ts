@@ -21,7 +21,7 @@ export class ForumApiError extends Error {
  constructor(readonly status:number,message:string){super(message);this.name='ForumApiError'}
 }
 export async function forumRequest<T>(path:string,method='GET',body?:unknown,signal?:AbortSignal):Promise<T>{
- if(!/^\/api\/v1\/(?:community\/(?:threads(?:\/[a-f0-9-]{36}(?:\/(?:replies|reaction))?)?|reports)|member\/forum-submissions)$/.test(path.split('?')[0]))
+ if(!/^\/api\/v1\/(?:community\/(?:threads(?:\/[a-f0-9-]{36}(?:\/(?:replies|reaction))?)?|reports)|member\/forum-submissions(?:\/[a-f0-9-]{36})?)$/.test(path.split('?')[0]))
   throw new Error('Unsupported community endpoint');
  const privateRoute=path.startsWith('/api/v1/member/')||path.split('?')[0].endsWith('/reaction');
  const response=await fetch(path,{

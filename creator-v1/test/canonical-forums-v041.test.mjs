@@ -155,3 +155,26 @@ test('thread and reply submission limits are enforced by database and requests r
   assert.equal((await canonicalForums(req('/api/v1/community/threads','POST',{...payload,title:'x',requestId:id()}),f.env,author,2000)).status,400);
  }finally{f.db.close()}
 });
+
+test('only a thread owner may withdraw a pending or published submission',async()=>{
+ const f=setup();try{
+  const a=f.seed('author'),b=f.seed('other'),staff=f.seed('reviewer');
+  const input=(requestId)=>({requestId,topic:'community',title:'A member-led project discussion',body:'Should we collaborate on a public member challenge together?'});
+  const pending=await (await canonicalForums(req('/api/v1/community/threads','POST',input(id())),f.env,a,2000)).json();
+  const route='/api/v1/member/forum-submissions/'+pending.id;
+  assert.equal((await canonicalForums(req(route,'DELETE'),f.env,b,2001)).status,404);
+  assert.equal((await canonicalForums(req(route,'DELETE'),f.env)).status,401);
+  assert.equal((await canonicalForums(req(route,'DELETE'),f.env,a,2002)).status,200);
+  assert.equal((await canonicalForums(req(route,'DELETE'),f.env,a,2003)).status,409);
+  const queued=await (await canonicalForums(req('/api/v1/member/forum-review'),f.env,staff)).json();
+  assert.equal(queued.threads.find(x=>x.id===pending.id),undefined);
+  const published=await (await canonicalForums(req('/api/v1/community/threads','POST',input(id())),f.env,a,2005)).json();
+  assert.equal((await canonicalForums(req('/api/v1/member/forum-review','POST',{targetKind:'thread',targetId:published.id,action:'publish'}),f.env,staff,2006)).status,200);
+  assert.equal((await canonicalForums(req('/api/v1/community/threads/'+published.id),f.env)).status,200);
+  f.db.prepare("UPDATE member_creator_profiles SET visibility='private' WHERE user_id='author'").run();
+  assert.equal((await canonicalForums(req('/api/v1/member/forum-submissions/'+published.id,'DELETE'),f.env,a,2007)).status,200);
+  assert.equal((await canonicalForums(req('/api/v1/community/threads/'+published.id),f.env)).status,404);
+  assert.equal(f.db.prepare('SELECT status FROM member_forum_threads WHERE id=?').get(published.id).status,'hidden');
+  assert.equal((await canonicalForums(req('/api/v1/member/forum-submissions/'+published.id,'GET'),f.env,a)).status,405);
+ }finally{f.db.close()}
+});

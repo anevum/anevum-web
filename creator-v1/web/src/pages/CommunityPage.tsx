@@ -268,7 +268,7 @@ export function CommunityPage() {
         <section className="ch7-panel ch7-take-part"><span className="ch7-kicker">03 / YOUR PART IN THE UNIVERSE</span>
           <h3>Not just for <em>developers.</em></h3>
           <p>Explore for free. Help with thoughtful reviews, feedback and collaboration. Building software is not a prerequisite for belonging.</p>
-          <p className="ch7-private-note">Member participation is currently invitation-only. Public signup is not enabled.</p>
+          <p className="ch7-private-note">Visit Join for the current account options. You control whether your member wall is public.</p>
           <Link className="ch7-panel-link" to="/start">START HERE <Icon name="arrow" size={14}/></Link>
           <Link className="ch7-panel-link" to="/levels">LEVELS & RECOGNITION <Icon name="arrow" size={14}/></Link>
         </section>

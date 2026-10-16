@@ -47,10 +47,11 @@ export async function canonicalForums(req,env,user=null,now=Math.floor(Date.now(
  const react=path.match(/^\/api\/v1\/community\/threads\/([a-f0-9-]{36})\/reaction$/);
  const report=path==='/api/v1/community/reports';
  const mine=path==='/api/v1/member/forum-submissions';
+ const mineId=path.match(/^\/api\/v1\/member\/forum-submissions\/([a-f0-9-]{36})$/);
  const review=path==='/api/v1/member/forum-review';
- if(!item&&!reply&&!react&&!report&&!mine&&!review&&path!=='/api/v1/community/threads')return fail(404,'Not found');
- if((item&&!UUID.test(item[1]))||(reply&&!UUID.test(reply[1]))||(react&&!UUID.test(react[1])))return fail(404,'Not found');
- const publicRead=req.method==='GET'&&!mine&&!react&&!report&&!review;
+ if(!item&&!reply&&!react&&!report&&!mine&&!mineId&&!review&&path!=='/api/v1/community/threads')return fail(404,'Not found');
+ if((item&&!UUID.test(item[1]))||(reply&&!UUID.test(reply[1]))||(react&&!UUID.test(react[1]))||(mineId&&!UUID.test(mineId[1])))return fail(404,'Not found');
+ const publicRead=req.method==='GET'&&!mine&&!mineId&&!react&&!report&&!review;
  if(!publicRead&&(!user?.id||user.emailVerified!==true))return fail(401,'Sign in with a verified account');
  try{
   if(publicRead){
@@ -136,6 +137,14 @@ export async function canonicalForums(req,env,user=null,now=Math.floor(Date.now(
   if(mine&&req.method==='GET'){
    const r=await db.prepare("SELECT id,topic,title,body,status,created_at FROM member_forum_threads WHERE author_id=? ORDER BY created_at DESC LIMIT 30").bind(user.id).all();
    return json({items:r.results});
+  }
+  if(mineId){
+   if(req.method!=='DELETE')return fail(405,'Method not allowed');
+   if(url.search)return fail(400,'Unexpected filters');
+   const withdrawn=await db.prepare("UPDATE member_forum_threads SET status='hidden',updated_at=?,revision=revision+1 WHERE id=? AND author_id=? AND status IN ('pending_review','published') RETURNING id").bind(now,mineId[1],user.id).all();
+   if(withdrawn.results?.length===1)return json({ok:true,status:'hidden'});
+   const existing=await db.prepare('SELECT status FROM member_forum_threads WHERE id=? AND author_id=?').bind(mineId[1],user.id).first();
+   return existing?fail(409,'Thread is already closed'):fail(404,'Submission not found');
   }
   if(req.method!=='POST'&&req.method!=='DELETE')return fail(405,'Method not allowed');
   if(url.search)return fail(400,'Query unsupported for writes');

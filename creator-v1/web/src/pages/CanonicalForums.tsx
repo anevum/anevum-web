@@ -9,17 +9,31 @@ import {forumRequest as request,FORUM_TOPICS as topics,FORUM_ID as UUID,ForumApi
 import './forums.css';
 function date(seconds:number){return new Date(seconds*1000).toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'})}
 function MySubmissions({memberId}:{memberId:string}){
- const [revision,setRevision]=useState(0);
+ const [revision,setRevision]=useState(0),[withdrawing,setWithdrawing]=useState<string|null>(null),[error,setError]=useState(''),[notice,setNotice]=useState('');
  const saved=useResource(signal=>request<{items:MyThread[]}>('/api/v1/member/forum-submissions','GET',undefined,signal),[memberId,revision]);
+ async function withdraw(item:MyThread){
+  if(withdrawing||!window.confirm(item.status==='published'?'Withdraw this published thread from public view?':'Withdraw this pending discussion from review?'))return;
+  setWithdrawing(item.id);setError('');setNotice('');
+  try{
+   await request('/api/v1/member/forum-submissions/'+item.id,'DELETE');
+   setRevision(x=>x+1);setNotice('Thread withdrawn from public view and the review queue.');
+  }catch(e){setError(e instanceof Error?e.message:'The thread could not be withdrawn.');}
+  finally{setWithdrawing(null)}
+ }
  return <section className="cf-mine" aria-labelledby="cf-my-title">
   <div className="cf-mine-head"><h3 id="cf-my-title">YOUR TRANSMISSIONS</h3><button type="button" disabled={saved.state==='loading'} onClick={()=>setRevision(v=>v+1)}>REFRESH</button></div>
   <p>Submissions are private until approved. Your account sees the review status of its own threads.</p>
+  {error&&<p className="cf-error" role="alert">{error}</p>}
+  {notice&&<p className="cf-notice" role="status">{notice}</p>}
   {saved.state==='loading'&&<p role="status">Checking your submissions…</p>}
   {saved.state==='error'&&<p role="status">Your private submission history could not be verified.</p>}
   {saved.state==='ready'&&<div className="cf-mine-list">{saved.data.items.length===0&&<p>No threads submitted yet.</p>}
    {saved.data.items.map(item=><article key={item.id}><span className="cf-mine-status" data-state={item.status}>{item.status==='pending_review'?'AWAITING REVIEW':item.status==='published'?'PUBLISHED':item.status==='rejected'?'NOT APPROVED':'HIDDEN'}</span>
     <h4>{item.status==='published'?<Link to={'/community/threads/'+item.id}>{item.title}</Link>:item.title}</h4>
     <small>{item.topic.toUpperCase()} / {date(item.created_at)}</small>
+    {(item.status==='pending_review'||item.status==='published')&&
+     <button className="cf-withdraw" type="button" disabled={Boolean(withdrawing)}
+      onClick={()=>void withdraw(item)}>{withdrawing===item.id?'WITHDRAWING…':'WITHDRAW THREAD'}</button>}
    </article>)}</div>}
  </section>;
 }

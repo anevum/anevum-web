@@ -98,7 +98,7 @@ export function createCanonicalStageWorker({authFactory=createCanonicalAuth}={})
     const url=new URL(request.url),path=url.pathname;
     const publicHandle=path.match(PUBLIC_MEMBER);
     const publicCommunity=/^\/api\/v1\/community\/(?:members|activity)$/.test(path);
-    const forumRoute=/^\/api\/v1\/community\/(?:threads(?:\/[a-f0-9-]{36}(?:\/(?:replies|reaction))?|\/?)?|reports)$/.test(path)||(path==="/api/v1/member/forum-submissions"||path==="/api/v1/member/forum-review");
+    const forumRoute=/^\/api\/v1\/community\/(?:threads(?:\/[a-f0-9-]{36}(?:\/(?:replies|reaction))?|\/?)?|reports)$/.test(path)||(/^\/api\/v1\/member\/forum-submissions(?:\/[a-f0-9-]{36})?$/.test(path)||path==="/api/v1/member/forum-review");
     const ownSpace=OWN_SPACE.test(path),publicSpace=path.match(PUBLIC_SPACE);
     const ownProgression=/^\/api\/v1\/member\/(?:progression|notifications(?:\/ack)?|xp-test)$/.test(path);
     const ownProfile=path===PROFILE;
@@ -147,7 +147,7 @@ export function createCanonicalStageWorker({authFactory=createCanonicalAuth}={})
     if(callback&&!configured[callback[1]])return fail(request,404);
     if(publicCommunity)return safeResponse(await canonicalCommunity(request,env));
     if(forumRoute){
-      const publicForumRead=request.method==="GET" && !path.endsWith("/forum-submissions") && !path.endsWith("/forum-review") && !path.endsWith("/reaction");
+      const publicForumRead=request.method==="GET" && !path.includes("/forum-submissions") && !path.endsWith("/forum-review") && !path.endsWith("/reaction");
       if(!publicForumRead&&!["GET","POST","DELETE"].includes(request.method))return fail(request,405);
       if(!publicForumRead&&["POST","PATCH","PUT","DELETE"].includes(request.method)&&!sameOriginMutation(request))return safeJson(request,{error:"Same-origin request required"},403);
       if(publicForumRead)return safeResponse(await canonicalForums(request,env));

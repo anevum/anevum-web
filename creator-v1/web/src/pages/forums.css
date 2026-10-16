@@ -43,3 +43,5 @@
 .cf-highlight>p{color:#d5c9d1;line-height:1.7;overflow-wrap:anywhere}
 .cf-highlight .cf-author-level{min-width:46px}
 @media(max-width:680px){.cf-highlight-list{grid-template-columns:1fr}.cf-highlight-head{align-items:start;flex-direction:column}}
+
+.cf-withdraw{display:block;margin-top:14px;border:1px solid #8e686d;border-radius:10px;background:transparent;color:#f0c5c6;padding:10px 14px;font-size:11px;letter-spacing:.11em;font-weight:700;min-height:42px}.cf-withdraw:hover{background:#4b292f}.cf-withdraw:focus-visible{outline:2px solid #eeb4cf;outline-offset:3px}
