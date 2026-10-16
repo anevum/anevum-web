@@ -21,6 +21,9 @@ import {Phase1JoinPage} from "./pages/Phase1JoinPage";
 import {Phase1MemberPage} from "./pages/Phase1MemberPage";
 import {Phase1PublicMemberPage} from "./pages/Phase1PublicMemberPage";
 
+import {AnevumNotifications} from './components/AnevumNotifications';
+import {TheButtonPage} from './pages/TheButtonPage';
+
 const PublicBoardsPage = lazy(() => import("./pages/PublicBoardsPage").then(mod=>({default:mod.PublicBoardsPage})));
 const pageFallback=<LoadingState label="Opening approved public boards"/>;
 
@@ -47,7 +50,7 @@ function CanonicalPublicHandle(){
     ? <Phase1PublicMemberPage/> : <Navigate to="/" replace/>;
 }
 export default function App(){
-  return <Routes>
+  return <AnevumNotifications><Routes>
     <Route path="atlas/*" element={<LegacyAtlasRedirect/>}/>
     <Route element={<Shell/>}>
     <Route index element={<CinematicLandingPage/>}/>
@@ -76,9 +79,10 @@ export default function App(){
       <Route path="library" element={<MemberLibraryPage/>}/>
 
     </Route>
+    <Route path="thebutton" element={<TheButtonPage/>}/>
     <Route path="levels" element={<LevelsPage/>}/>
     <Route path="status" element={<StatusPage/>}/>
     <Route path=":memberHandle" element={<CanonicalPublicHandle/>}/>
     <Route path="*" element={<Navigate to="/" replace/>}/>
-  </Route></Routes>;
+  </Route></Routes></AnevumNotifications>;
 }

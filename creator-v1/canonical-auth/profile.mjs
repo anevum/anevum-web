@@ -1,3 +1,4 @@
+import {progressionReady,readProgression} from './progression.mjs';
 import {spaceReady,grantMilestones,spaceSnapshot} from "./space.mjs";
 import {canonicalConfigState,permitCanonicalUserCreation} from "./policy.mjs";
 import {normalizeWorldUpdate,worldFromRow} from "./worlds.mjs";
@@ -194,6 +195,7 @@ export async function canonicalExportMember(req,env,user,origin){
        emailVerified:true
      },
      profile,
+     ...(await progressionReady(env.MEMBER_DB)?{progression:await readProgression(env.MEMBER_DB,user.id),xpEvents:(await env.MEMBER_DB.prepare('SELECT request_id,source,amount,created_at FROM member_xp_events WHERE user_id=? ORDER BY id').bind(user.id).all()).results}:{}),
      ...(await spaceReady(env.MEMBER_DB)?{space:await spaceSnapshot(env.MEMBER_DB,user.id),
        wall:(await env.MEMBER_DB.prepare("SELECT id,body,created_at,updated_at,revision FROM member_wall_posts WHERE user_id=? ORDER BY created_at DESC").bind(user.id).all()).results,
        images:(await env.MEMBER_DB.prepare("SELECT slot,data,version,updated_at FROM member_space_media WHERE user_id=?").bind(user.id).all()).results.map(row=>({...row,data:Array.from(new Uint8Array(row.data))}))}: {})

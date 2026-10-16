@@ -60,7 +60,7 @@ test("unlimited levels preserve server authoritative progress and first named ar
  const engine=read("auth/community.mjs");
  assert.match(levels,/FIRST 60 ARTIFACTS/);
  assert.match(levels,/NO FINAL LEVEL/);
- assert.match(panel,/memberProgress/);
+ assert.match(panel,/useMemberProgression/);
  assert.match(panel,/NO LEVEL CAP/);
  assert.match(engine,/maxLevel:null/);
  assert.doesNotMatch(engine,/Math\.min\(maxLevel/);

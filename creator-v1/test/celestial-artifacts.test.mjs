@@ -63,19 +63,13 @@ test("full-detail emblems use isolated SVG defs, original gradient/material laye
  assert.match(main,/import "\.\/cosmic-observatory\.css";\s*import "\.\/celestial-artifacts\.css";/);
 });
 
-test("public Level Gallery is explicitly illustrative; genuine progress remains server-controlled",()=>{
- assert.match(levels,/seriesOneStudies\.map/);
- assert.match(levels,/achievementArt\.map/);
- assert.match(levels,/FOUR ARTWORK STUDIES \/ NOT AWARDED/);
- assert.match(levels,/illustrative artwork studies/);
- assert.match(levels,/unearned examples/);
- assert.match(levels,/member service verifies it/);
- assert.match(levels,/10 XP/);
- assert.match(levels,/25 XP/);
- assert.match(levels,/does not grant extra XP/);
- assert.match(levels,/FIRST 60 ARTIFACTS/);
- for(const bad of ["memberAward","awardXp","createAchievement","fetch(", "Math.random"])
-   assert.ok(!levels.includes(bad),bad);
+test("public level collection and medal states remain server-controlled",()=>{
+ assert.match(levels,/<LevelCollection\/>/);
+ assert.match(levels,/useMemberProgression/);
+ assert.match(levels,/earned=Boolean\(p\?\.awards/);
+ assert.match(levels,/earned=\{earned\}/);
+ for(const text of ['10 XP','25 XP','does not grant extra XP','FIRST 60 ARTIFACTS'])assert.ok(levels.includes(text));
+ assert.doesNotMatch(levels,/localStorage|sessionStorage|purchaseXP/);
 });
 
 test("private account and public channel never infer earned state from artwork",()=>{
@@ -83,7 +77,8 @@ test("private account and public channel never infer earned state from artwork",
  assert.match(account,/seriesOneMotif\(progress\.data\.progression\.level,progress\.data\.progression\.artifact\)/);
  assert.match(account,/progress\.data\.progression\.artifactEarned\?"earned":"preview"/);
  assert.match(account,/cabinet\.data\.achievements\.map/);
- assert.match(panel,/p\?\.artifactEarned\?"earned":"preview"/);
+ assert.match(panel,/useMemberProgression/);
+ assert.match(panel,/<LevelEmblem level=\{p\?\.level\|\|1\}/);
  assert.match(creator,/earned=detailed\?\.achievements\?\.filter\(a=>a\.earned\)/);
  assert.match(creator,/state="earned"/);
  assert.match(creator,/detailed\.progression\.artifactEarned\?"earned":"preview"/);

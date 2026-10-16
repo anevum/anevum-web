@@ -1,0 +1,7 @@
+import {useState} from 'react';
+import {LEVEL_ARTIFACTS,LevelEmblem} from './LevelEmblem';
+import {useMemberProgression} from './AnevumNotifications';
+export function LevelCollection(){
+ const [chapter,setChapter]=useState(0);const {progression:p}=useMemberProgression();
+ return <section className="an-series" aria-labelledby="an-series-heading"><header><div><span className="kicker">CONTINUANCE INSTITUTE / ARTIFACT REGISTRY / SERIES 01</span><h2 id="an-series-heading">The first sixty signals.</h2><p>Sixty distinct emblems, from Foundry Spark to The First Light. Each unlocks at its level. The journey continues beyond the first collection.</p></div></header><div className="an-series-filters" role="group" aria-label="Level icon collection"><button aria-pressed={chapter===0} onClick={()=>setChapter(0)}>ALL 60</button>{[1,2,3,4,5,6].map(n=><button key={n} aria-pressed={chapter===n} onClick={()=>setChapter(n)}>{String(n*10-9).padStart(2,'0')}–{n*10}</button>)}</div><div className="an-series-grid">{LEVEL_ARTIFACTS.filter(a=>!chapter||Math.ceil(a.level/10)===chapter).map(a=><article key={a.level} className={'an-artifact-card'+(p&&p.level>=a.level?' is-earned':'')}><small>LEVEL {String(a.level).padStart(2,'0')}</small><LevelEmblem level={a.level} size={128}/><h3>{a.name}</h3><p>{(25*(a.level-1)**2).toLocaleString()} XP</p><span>{p?p.level>=a.level?'UNLOCKED':'TO BE DISCOVERED':'SERIES 01 / LEVEL EMBLEM'}</span></article>)}</div></section>;
+}
