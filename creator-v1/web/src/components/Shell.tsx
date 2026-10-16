@@ -27,6 +27,7 @@ const portalCategories = [
 const directory = [
   {to:"/boards",label:"Public boards",detail:"Reviewed releases and first looks"},
   {to:"/levels",label:"Artifacts & levels",detail:"Earned contributions and recognition"},
+  {to:"/support",label:"Support ANEVUM",detail:"Supporter benefits, infrastructure and open transparency"},
   {to:"/create",label:"Creator Studio",detail:"Invited member publishing"},
   {to:"/library",label:"My library",detail:"Your saved work, when signed in"},
   {to:"/member",label:"My profile",detail:"Your verified account and public profile settings"},
@@ -131,7 +132,7 @@ export function Shell(){
           </section>
           <div className="av9-navigation-links">
             <span className="av9-overline">COMMUNITY / MEMBER SPACES</span>
-            {directory.map(item=><Link key={item.to} to={item.to} onClick={()=>setMenuOpen(false)}>
+            {directory.map(item=><Link key={item.to} to={item.to==="/library"&&canonicalMember?"/saved":item.to} onClick={()=>setMenuOpen(false)}>
               <span><strong>{item.label}</strong><small>{item.detail}</small></span><Icon name="arrow" size={17}/>
             </Link>)}
             <button className="av9-open-switcher" type="button" onClick={()=>{setMenuOpen(false);setLauncherOpen(true);}}>

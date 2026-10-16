@@ -17,6 +17,7 @@ import {CommunityPostEditorPage} from "./pages/CommunityPostEditorPage";
 import { MemberGate } from "./components/MemberGate";
 import { LoadingState } from "./components/States";
 import { MemberLibraryPage } from "./pages/MemberLibraryPage";
+import {CanonicalSavedWorksPage} from "./pages/CanonicalSavedWorksPage";
 import { MemberProjectsPage } from "./pages/MemberProjectsPage";
 import { ProjectEditorPage } from "./pages/ProjectEditorPage";
 import {Phase1JoinPage} from "./pages/Phase1JoinPage";
@@ -25,6 +26,7 @@ import {Phase1PublicMemberPage} from "./pages/Phase1PublicMemberPage";
 
 import {AnevumNotifications} from './components/AnevumNotifications';
 import {TheButtonPage} from './pages/TheButtonPage';
+import {SupporterPage} from './pages/SupporterPage';
 
 const PublicBoardsPage = lazy(() => import("./pages/PublicBoardsPage").then(mod=>({default:mod.PublicBoardsPage})));
 const pageFallback=<LoadingState label="Opening approved public boards"/>;
@@ -64,6 +66,7 @@ export default function App(){
     <Route path="guide" element={<FieldGuidePage/>}/>
     <Route path="discover" element={<DiscoverPage/>}/>
     <Route path="projects/:id" element={<ProjectPage/>}/>
+    <Route path="saved" element={<CanonicalSavedWorksPage/>}/>
     <Route path="creators" element={<CreatorsPage/>}/>
     <Route path="creators/:handle" element={<CreatorPage/>}/>
     <Route path="community" element={<CommunityPage/>}/>
@@ -85,6 +88,7 @@ export default function App(){
     </Route>
     <Route path="thebutton" element={<TheButtonPage/>}/>
     <Route path="levels" element={<LevelsPage/>}/>
+    <Route path="support" element={<SupporterPage/>}/>
     <Route path="status" element={<StatusPage/>}/>
     <Route path=":memberHandle" element={<CanonicalPublicHandle/>}/>
     <Route path="*" element={<Navigate to="/" replace/>}/>
