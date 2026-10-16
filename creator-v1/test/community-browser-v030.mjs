@@ -96,7 +96,7 @@ try{
  for(const [width,height] of [[1440,900],[390,844],[320,720]]){
   await page.setViewportSize({width,height});await delay(150);
   assert.equal(await evaluate('document.documentElement.scrollWidth>innerWidth+1'),false,'Directory overflow '+width);
-  await page.screenshot({path:join(out,'community-people-'+width+'.png')});
+  await page.locator('.mc-directory').screenshot({path:join(out,'community-people-'+width+'.png')});
  }
  await page.locator('.mc-wall-link').first().click();await wait('.ms-wall-entry');
  assert.equal(await page.locator('.ms-wall-entry').count(),2);
@@ -108,14 +108,16 @@ try{
  for(const [width,height] of [[1440,900],[390,844],[320,720]]){
   await page.setViewportSize({width,height});await delay(150);
   assert.equal(await evaluate('document.documentElement.scrollWidth>innerWidth+1'),false,'Community overflow '+width);
-  await page.screenshot({path:join(out,'community-activity-'+width+'.png')});
+  await page.locator('.mc-activity').screenshot({path:join(out,'community-activity-'+width+'.png')});
  }
- await page.locator('.mc-update .mc-wall-link').first().click();await wait('.ms-wall-entry:target');
- assert.match(await page.locator('.ms-wall-entry:target').innerText(),/public signal/);
+ await page.locator('.mc-update').filter({hasText:'A public signal from the community.'}).locator('.mc-wall-link').click();await wait('.ms-wall-entry.is-target');
+ assert.match(await page.locator('.ms-wall-entry.is-target').innerText(),/public signal/);
+ assert.equal(await page.locator('.ms-wall-entry.is-target').evaluate(el=>el===document.activeElement),true);
+ await page.reload();await wait('.ms-wall-entry.is-target');
  Object.assign(results,{privateCommunityComposer:true,publicOptInDirectory:true,interestFilter:true,publicCommunityComposer:true,wallDeepLink:true});
  writeFileSync(join(out,'acceptance.json'),JSON.stringify(results,null,2));console.log('BROWSER_SIGNUP_PROFILE_COMMUNITY_PRIVACY_AND_RESPONSIVE_CHECKS=PASS');
 }catch(error){
- if(page){const state=await page.evaluate('({url:location.pathname,text:document.body.innerText.slice(-5000)})').catch(()=>null);console.error('BROWSER_FAILURE_STATE='+JSON.stringify(state));await page.screenshot({path:join(out,'failure.png')}).catch(()=>{});}
+ if(page){const state=await page.evaluate('({url:location.pathname+location.hash,text:document.body.innerText.slice(-5000)})').catch(()=>null);console.error('BROWSER_FAILURE_STATE='+JSON.stringify(state));await page.screenshot({path:join(out,'failure.png')}).catch(()=>{});}
  throw error;
 }finally{
  await browser.close();
