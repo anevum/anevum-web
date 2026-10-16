@@ -37,6 +37,8 @@ const playerCases=new Map([
 const categories=[...new Set(work.map(p=>p.category))].map(category=>({category,count:work.filter(p=>p.category===category).length}));
 // Browser-only scenario switch. Disabled by default; never used by a Worker.
 let contextFixtureEnabled=false;
+// Separate project participation health simulation; never shipped or persisted.
+let playerMemberHealthMode="legacy";
 const contextProject={id:work[0].id,title:work[0].title,category:work[0].category,creatorHandle:work[0].creatorHandle,creatorName:work[0].creatorName};
 const discussionFixtures=[
  {id:'a'.repeat(32),title:'Keyboard feedback for Arcade After Dark',excerpt:'SYNTHETIC OFFLINE discussion fixture: testing project context and accessible input.',body:'SYNTHETIC OFFLINE discussion fixture. This is not a real submission or earned contribution.',topic:'games',authorHandle:'moss_demo',authorName:'Moss Workshop',publishedAt:'2026-10-12T01:00:00Z',score:1,replyCount:1,project:contextProject},
@@ -54,8 +56,14 @@ const FAKE_MEMBER=Object.freeze({
 });
 const LOCAL_REVIEW_COOKIE="anevum_offline_visual_fixture=1";
 function offlineMember(req,res,url){
-  if(url.pathname==="/api/v1/member/health"&&req.method==="GET")
+  if(url.pathname==="/api/v1/member/health"&&req.method==="GET"){
+    if(playerMemberHealthMode==="canonical")return json(res,{
+      service:"anevum-canonical-auth-staging",status:"ready",registration:"invite-only",
+      linkedCreatorAccounts:false,progressionReady:true
+    });
+    if(playerMemberHealthMode==="offline")return json(res,{error:"unavailable"},503);
     return json(res,{service:"OFFLINE-SYNTHETIC-FIXTURE",status:"ok",signupEnabled:false});
+  }
   if(url.pathname==="/api/v1/member/me"&&req.method==="GET"){
     const cookies=(req.headers.cookie||"").split(";").map(x=>x.trim());
     return cookies.includes(LOCAL_REVIEW_COOKIE)
@@ -159,6 +167,12 @@ const mime={".css":"text/css",".js":"text/javascript",".svg":"image/svg+xml",".p
 createServer((req,res)=>{
  try{
   const u=new URL(req.url,"http://127.0.0.1:4178");
+  if(u.pathname==="/__player-member-fixture"&&req.headers.host==="127.0.0.1:4178"&&req.method==="GET"){
+    const mode=u.searchParams.get("mode");
+    if(!["canonical","legacy","offline"].includes(mode))return json(res,{error:"invalid-mode"},400);
+    playerMemberHealthMode=mode;
+    return json(res,{syntheticOnly:true,mode:playerMemberHealthMode});
+  }
   if(u.pathname==='/__context-fixture'&&req.headers.host==='127.0.0.1:4178'&&req.method==='GET'){
     contextFixtureEnabled=u.searchParams.get('enabled')==='1';
     return json(res,{syntheticOnly:true,enabled:contextFixtureEnabled});

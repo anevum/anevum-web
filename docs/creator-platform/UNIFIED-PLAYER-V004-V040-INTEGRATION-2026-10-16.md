@@ -27,3 +27,10 @@ This is not a merge of existing PRs, an authorization to use V040 on a live site
 6. Before any authorized staging deployment, verify current A-worker version and complete rollback, double-check the two D1 bindings, secrets and Worker routes, and validate no public `anevum.com` change.
 
 **No automatic merge, staging push, public launch or real billing action.**
+
+## V005: canonical project participation, source-only QA
+- The published project shortcut is now `PARTICIPATE`, not `RATE / SAVE` on a host where those actions cannot be completed.
+- The original Creator V1 member participation panel now explicitly classifies only the known canonical A-staging member health schema (`service=anevum-canonical-auth-staging`) as `canonical-readonly`, and intentionally makes **no** rating, saving, project identity bridge, or XP request. It displays a clearly labeled not-active state, real community link, and invite-only member access link; sign-in is never presented as enabling rating.
+- Existing legacy `ok` member service keeps its server-authorized rating/save path; unknown or failing health remains closed. No replacement login, cookies, token storage, client XP, Worker routes or D1 changes.
+- The synthetic offline browser now asserts canonical preview on every player variant and viewport, and checks independent legacy-guest and unavailable states on desktop and phone. This fixture is not bundled into deployed assets.
+- No schema/auth server change or live staging deployment is implied. Canonical member project voting/saving needs an independently designed, authorized backend and cross-account E2E before activation.

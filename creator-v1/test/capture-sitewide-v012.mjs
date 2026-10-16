@@ -84,6 +84,11 @@ try{
    ["home","discover","project","community","boards","levels","guest-library"].includes(id));
   for(const [name,path,selector] of selected){
    if(name==="guest-library")await client.send("Network.clearBrowserCookies");
+   // Simulate the real canonical staging capability only for project routes.
+   if(name==="project"){
+     const healthMode=await fetch(base+"/__player-member-fixture?mode=canonical");
+     if(!healthMode.ok)throw Error("PLAYER_V005_FIXTURE_GATE_UNAVAILABLE");
+   }
    const target=base+"/creator"+path;
    const result=await client.send("Page.navigate",{url:target});
    if(result.errorText)throw Error("SITEWIDE_V012_NAVIGATION_"+name+"_"+width+":"+result.errorText);
@@ -143,6 +148,13 @@ try{
        }
        await until(()=>evaluate('location.pathname==='+JSON.stringify("/creator/projects/"+id)+'&&!!document.querySelector(".avp-stage")&&!!document.querySelector(".avp-passport")'));
        await until(()=>evaluate('(()=>{const a=document.querySelector(".avp-stage-art img");return !a||(a.complete&&a.naturalWidth>0);})()'));
+       await until(()=>evaluate('!!document.querySelector(".engagement-panel[data-avp-availability=\"canonical-readonly\"]")'));
+       const participation=await evaluate('(()=>{const panel=document.querySelector(".engagement-panel"),nav=document.querySelector(".avp-stage-shortcuts"),links=[...panel.querySelectorAll("a")].map(a=>({text:a.textContent.trim(),href:a.getAttribute("href")}));return {status:panel.getAttribute("data-avp-availability"),label:nav.querySelector("a[href=\"#avp-participation\"]")?.textContent?.trim(),hasVotes:!!panel.querySelector(".engagement-votes,button[aria-label^=\"Rate \"]"),hasSave:panel.textContent.includes("SAVE TO LIBRARY"),links,invitation:panel.textContent.includes("invite-only"),falsePromise:panel.textContent.includes("Signing in does not activate")};})()');
+       if(participation.status!=="canonical-readonly"||participation.label!=="PARTICIPATE"||
+          participation.hasVotes||participation.hasSave||!participation.invitation||!participation.falsePromise||
+          !participation.links.some(x=>x.href==="/creator/community")||
+          !participation.links.some(x=>x.href==="/creator/join"))
+         throw Error("PLAYER_V005_CANONICAL_PARTICIPATION_"+variant+"_"+width+":"+JSON.stringify(participation));
        const state=await evaluate('(()=>{const st=document.querySelector(".avp-stage"),pas=document.querySelector(".avp-passport"),a=st?.querySelector(".avp-primary-action"),s=st?.getBoundingClientRect(),p=pas?.getBoundingClientRect(),art=st?.querySelector(".avp-stage-art img");return {heading:st?.querySelector("h1")?.textContent,kind:st?.className,primary:a?.textContent?.trim()||null,href:a?.getAttribute("href")||null,hostname:a?new URL(a.href).hostname:null,target:a?.getAttribute("target")||null,rel:a?.getAttribute("rel")||null,secondary:st?.querySelectorAll(".avp-secondary-action").length||0,unavailable:!!st?.querySelector(".avp-no-action"),art:!!art&&(art.complete&&art.naturalWidth>0),rect:s?{left:s.left,right:s.right,top:s.top,bottom:s.bottom,width:s.width}:null,passport:p?{left:p.left,right:p.right,top:p.top,bottom:p.bottom}:null,overflow:document.documentElement.scrollWidth>innerWidth+1,iframe:document.querySelectorAll("iframe").length,synthetic:getComputedStyle(document.body,"::after").content.includes("SYNTHETIC OFFLINE REVIEW")};})()');
        if(state.overflow||state.iframe||!state.synthetic||!state.heading||!state.rect||!state.passport||!state.art||
           (expectedAction?(!state.primary?.includes(expectedAction)||state.hostname!==expectedHost||state.target!=="_blank"||!state.rel?.includes("noopener")||!state.rel?.includes("noreferrer")):(Boolean(state.primary)||!state.unavailable))||
@@ -169,6 +181,20 @@ try{
          if(!await evaluate('!!document.getElementById("avp-participation")'))throw Error("PLAYER_V002_PARTICIPATION_ANCHOR_"+width);
        }
      }
+     // Legacy and unavailable capability must remain independently fail-closed.
+     if(width===1440||width===390){
+       for(const [mode,expected] of [["legacy","legacy-guest"],["offline","closed"]]){
+         const change=await fetch(base+"/__player-member-fixture?mode="+mode);
+         if(!change.ok)throw Error("PLAYER_V005_MEMBER_MODE_SETUP_"+mode);
+         await client.send("Page.navigate",{url:base+"/creator/projects/00000000000000000000000000000001"});
+         await until(()=>evaluate('document.querySelector(".engagement-panel")?.getAttribute("data-avp-availability")==='+JSON.stringify(expected)));
+         const info=await evaluate('(()=>{const p=document.querySelector(".engagement-panel");return {kind:p?.dataset.avpAvailability,hasVotes:!!p?.querySelector(".engagement-votes"),hasSave:!!p?.querySelector("button"),heading:p?.querySelector("h2")?.textContent};})()');
+         if(info.kind!==expected||info.hasVotes||info.hasSave||!info.heading)throw Error("PLAYER_V005_MEMBER_GATE_"+mode+"_"+width+":"+JSON.stringify(info));
+         console.log("PLAYER_V005_MEMBER_GATE_"+mode.toUpperCase()+"_"+width+"=PASS");
+       }
+     }
+     const reset=await fetch(base+"/__player-member-fixture?mode=legacy");
+     if(!reset.ok)throw Error("PLAYER_V005_MEMBER_RESET_FAILED");
    }
    if(name==="home"){
     await evaluate('document.getElementById("world-gateways").scrollIntoView({block:"start"})');

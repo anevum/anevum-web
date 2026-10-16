@@ -63,5 +63,16 @@
  .avp-project .avp-stage--long-title .avp-stage-body h1{font-size:clamp(27px,7.3vw,40px);line-height:1.07;letter-spacing:-.03em}
  .avp-project .avp-stage-summary--long{-webkit-line-clamp:4}
 }
+/* Honest read-only participation on canonical A-staging; no phantom voting controls. */
+.avp-project .avp-participation-preview{position:relative;overflow:hidden;border:1px solid #b79b785e;border-radius:19px;padding:clamp(20px,3vw,34px);background:linear-gradient(135deg,#151a2ce8 0%,#101726f5 54%,#201a2dcc 100%);box-shadow:inset 0 1px #f5d2a514,0 12px 30px #0003}
+.avp-project .avp-participation-heading{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:9px}
+.avp-project .avp-participation-status{padding:7px 10px;border-radius:100px;border:1px solid #bb9b7a87;color:#efd4b7;font:800 9px/1.4 var(--av10-register,Inter,sans-serif);letter-spacing:.08em}
+.avp-project .avp-participation-preview h2{font:400 clamp(26px,3.5vw,40px)/1.13 var(--av10-editorial,Georgia,serif);letter-spacing:-.035em;color:#fff0de;margin:15px 0}
+.avp-project .avp-participation-preview>p:not(.member-caption){max-width:65ch;line-height:1.7;color:#e1dce0}
+.avp-project .avp-participation-actions{display:flex;gap:10px;flex-wrap:wrap;margin:17px 0}
+.avp-project .avp-participation-actions a{display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:12px 18px;border:1px solid #d8b99188;border-radius:11px;color:#f7e4ca;text-decoration:none;letter-spacing:.06em}
+.avp-project .avp-participation-actions a:first-child{background:linear-gradient(145deg,#4b3836,#272032);border-color:#d8b991}
+.avp-project .avp-participation-preview .member-caption{max-width:70ch;color:#c6b8b4;line-height:1.6}
+@media(max-width:390px){.avp-project .avp-participation-actions{flex-direction:column}.avp-project .avp-participation-actions a{width:100%}}
 @media(prefers-reduced-motion:reduce){.avp-project .avp-stage-actions a{transition:none}.avp-project .avp-stage-actions a:hover{transform:none}}
 @media(forced-colors:active){.avp-project .avp-stage,.avp-project .avp-passport .portal-sidebox{border:1px solid CanvasText}.avp-project .avp-primary-action{background:ButtonFace;color:ButtonText!important}}

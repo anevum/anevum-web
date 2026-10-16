@@ -72,7 +72,7 @@ export function ProjectPlayerShell({project,demo,source}:{
         <span aria-hidden="true">↗</span>
       </Link>
       <nav className="avp-stage-shortcuts" aria-label="Project participation">
-        <a href="#avp-participation">RATE / SAVE</a>
+        <a href="#avp-participation">PARTICIPATE</a>
         <a href="#avp-discussion">COMMUNITY</a>
         <button type="button" onClick={()=>{void shareProject();}}>SHARE</button>
       </nav>
