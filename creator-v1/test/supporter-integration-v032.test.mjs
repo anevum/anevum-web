@@ -47,9 +47,9 @@ async function signature(raw,secret,time=t){
  const data=await crypto.subtle.sign('HMAC',key,new TextEncoder().encode(time+'.'+raw));
  return 't='+time+',v1='+Array.from(new Uint8Array(data),n=>n.toString(16).padStart(2,'0')).join('');
 }
-async function signed(env,kind,object){
+async function signed(env,kind,object,tag='12345678'){
  const payload=JSON.stringify({
-  id:'evt_'+kind.replace(/[^a-z]/gi,'')+'12345678',
+  id:'evt_'+kind.replace(/[^a-z]/gi,'')+tag,
   type:kind,livemode:false,created:t,data:{object}
  });
  return new Request(ORIGIN+'/api/v1/member/supporter/webhook',{
@@ -192,5 +192,125 @@ test('canonical router blocks forged browser POST and no-origin webhook cannot b
    method:'POST',headers:{'content-type':'application/json','stripe-signature':'t=1234567890,v1=wrong'},body:'{"id":"evt_wrong"}'
   });
   assert.equal((await canonicalWorker.fetch(forged,env)).status,400);
+ }finally{db.close()}
+});
+
+
+test('canceled member reuses customer instead of creating orphaned second account',async()=>{
+ const {db,env,a}=setup();
+ const second='sub_Renewal987654321';
+ const firstCheckout={...checkout,id:'cs_test_Original12345678'};
+ const nextCheckout={...checkout,id:'cs_test_Return12345678'};
+ let current=firstCheckout,oldStatus='active';
+ const posts=[];
+ const http=async(url,opts)=>{
+  if(url.endsWith('/prices/'+env.CANONICAL_STRIPE_MONTHLY_PRICE_ID))return json({
+   id:env.CANONICAL_STRIPE_MONTHLY_PRICE_ID,active:true,type:'recurring',billing_scheme:'per_unit',
+   currency:'usd',unit_amount:500,recurring:{interval:'month',interval_count:1}
+  });
+  if(url.endsWith('/checkout/sessions')&&opts.method==='POST'){
+   posts.push(new URLSearchParams(opts.body));
+   return json(current);
+  }
+  if(url.endsWith('/checkout/sessions/'+firstCheckout.id))return json({
+   ...firstCheckout,payment_status:'paid',customer,subscription:subId
+  });
+  if(url.endsWith('/checkout/sessions/'+nextCheckout.id))return json({
+   ...nextCheckout,payment_status:'paid',customer,subscription:second
+  });
+  if(url.endsWith('/subscriptions/'+subId))return json(sub(env,oldStatus));
+  if(url.endsWith('/subscriptions/'+second))return json({...sub(env),id:second,status:'active'});
+  throw Error('Unexpected Stripe request: '+url);
+ };
+ try{
+  assert.equal((await supporterMember(request('/checkout','POST',{interval:'month'}),env,a,{now:NOW,http})).status,200);
+  assert.equal((await supporterWebhook(await signed(env,'checkout.session.completed',{id:firstCheckout.id},'first12345'),env,{now:NOW,http})).status,200);
+  oldStatus='canceled';
+  assert.equal((await supporterWebhook(await signed(env,'customer.subscription.deleted',{id:subId},'canceled1'),env,{now:NOW+1000,http})).status,200);
+  assert.equal((await (await supporterMember(request(''),env,a,{now:NOW+1000,http})).json()).supporter,false);
+  current=nextCheckout;
+  const returning=await supporterMember(request('/checkout','POST',{interval:'month'}),env,a,{now:NOW+1500,http});
+  assert.equal(returning.status,200);
+  assert.equal(posts.length,2);
+  assert.equal(posts[0].get('customer'),null);
+  assert.equal(posts[0].get('customer_email'),a.email);
+  assert.equal(posts[1].get('customer'),customer);
+  assert.equal(posts[1].get('customer_email'),null);
+  assert.equal((await supporterWebhook(await signed(env,'checkout.session.completed',{id:nextCheckout.id},'second1234'),env,{now:NOW+2000,http})).status,200);
+  assert.equal((await (await supporterMember(request(''),env,a,{now:NOW+2000,http})).json()).supporter,true);
+  assert.equal(db.prepare('SELECT COUNT(*) AS n FROM supporter_customers').get().n,1);
+  assert.equal(db.prepare('SELECT COUNT(*) AS n FROM supporter_subscriptions').get().n,2);
+ }finally{db.close()}
+});
+test('atomic checkout lease prevents racing payment sessions and is released after storage',async()=>{
+ const {db,env,a}=setup();
+ let release;
+ const withheld=new Promise(resolve=>{release=resolve});
+ let stripePosts=0;
+ const http=async(url,opts)=>{
+  if(url.includes('/prices/'))return json({
+   id:env.CANONICAL_STRIPE_MONTHLY_PRICE_ID,active:true,type:'recurring',
+   billing_scheme:'per_unit',currency:'usd',unit_amount:500,recurring:{interval:'month',interval_count:1}
+  });
+  if(url.endsWith('/checkout/sessions')&&opts.method==='POST'){
+   stripePosts++;
+   await withheld;
+   return json(checkout);
+  }
+  throw Error('Unexpected Stripe operation: '+url);
+ };
+ try{
+  const first=supporterMember(request('/checkout','POST',{interval:'month'}),env,a,{now:NOW,http});
+  for(let i=0;i<200&&stripePosts===0;i++)await new Promise(resolve=>setImmediate(resolve));
+  assert.equal(stripePosts,1,'first checkout has acquired guard and reached Stripe');
+  const second=await supporterMember(request('/checkout','POST',{interval:'month'}),env,a,{now:NOW+1,http});
+  assert.equal(second.status,409);
+  assert.equal(stripePosts,1);
+  assert.equal(db.prepare('SELECT COUNT(*) AS n FROM supporter_checkout_guards').get().n,1);
+  release();
+  assert.equal((await first).status,200);
+  assert.equal(db.prepare('SELECT COUNT(*) AS n FROM supporter_checkout_guards').get().n,0);
+  assert.equal(db.prepare('SELECT COUNT(*) AS n FROM supporter_checkout_intents').get().n,1);
+ }finally{release?.();db.close()}
+});
+test('mismatched Stripe Price is rejected before Checkout, with retry lease released',async()=>{
+ const {db,env,a}=setup();
+ let valid=false,sessionPosts=0;
+ const http=async(url,opts)=>{
+  if(url.includes('/prices/'))return json({
+   id:env.CANONICAL_STRIPE_MONTHLY_PRICE_ID,active:true,type:'recurring',billing_scheme:'per_unit',
+   currency:'usd',unit_amount:valid?500:499,recurring:{interval:'month',interval_count:1}
+  });
+  if(url.endsWith('/checkout/sessions')&&opts.method==='POST'){
+   sessionPosts++;return json(checkout);
+  }
+  throw Error('Unexpected Stripe operation: '+url);
+ };
+ try{
+  assert.equal((await supporterMember(request('/checkout','POST',{interval:'month'}),env,a,{now:NOW,http})).status,503);
+  assert.equal(sessionPosts,0);
+  assert.equal(db.prepare('SELECT COUNT(*) AS n FROM supporter_checkout_guards').get().n,0);
+  valid=true;
+  assert.equal((await supporterMember(request('/checkout','POST',{interval:'month'}),env,a,{now:NOW+5000,http})).status,200);
+  assert.equal(sessionPosts,1);
+ }finally{db.close()}
+});
+test('reused customer checkout cannot attach an unexpected Stripe customer',async()=>{
+ const {db,env,a}=setup();
+ try{
+  db.prepare('INSERT INTO supporter_customers(member_user_id,stripe_customer_id,created_at_ms) VALUES(?,?,?)')
+    .run(a.id,customer,NOW-100000);
+  db.prepare("INSERT INTO supporter_checkout_intents(stripe_checkout_session_id,member_user_id,billing_interval,created_at_ms) VALUES(?,?,?,?)")
+    .run(checkout.id,a.id,'month',NOW);
+  const rogue='cus_OtherUnknownUser123';
+  const http=async(url)=>{
+   if(url.endsWith('/checkout/sessions/'+checkout.id))return json({
+    ...checkout,payment_status:'paid',customer:rogue,subscription:subId
+   });
+   throw Error('Unexpected Stripe operation: '+url);
+  };
+  const event=await signed(env,'checkout.session.completed',{id:checkout.id},'rogue12345');
+  assert.equal((await supporterWebhook(event,env,{now:NOW,http})).status,503);
+  assert.equal(db.prepare('SELECT COUNT(*) AS n FROM supporter_subscriptions').get().n,0);
  }finally{db.close()}
 });
