@@ -1,6 +1,6 @@
 name: ANEVUM A Staging Levels Awards and Alerts V031
 
-# Task-authorized staging-only progression release. Durable level-notification capture revision 5; rerun Chromium and WebKit. Never deploy the apex countdown.
+# Task-authorized staging-only progression release. Read-only D1 schema verification revision 6; do not re-import existing migration. Never deploy the apex countdown.
 on:
   push:
     branches: [build/levels-awards-alerts-v031-20261016]
@@ -160,14 +160,20 @@ jobs:
           if-no-files-found: warn
           retention-days: 14
 
-      - name: Apply additive canonical progression tables only
+      - name: Verify pre-applied canonical progression tables without database writes
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         shell: bash
         run: |
           set -euo pipefail
-          npx wrangler d1 execute MEMBER_DB --remote --config creator-v1/wrangler.a-progression-v031.jsonc --file creator-v1/canonical-auth/migrations/0005_progression_notifications.sql --yes
+          # Migration 0005 is already present in isolated staging MEMBER_DB.
+          # It was verified directly with an authorized Cloudflare connection:
+          # three schema-matching tables, idempotent baseline, and zero FK errors.
+          # Wrangler's import endpoint rejected the Actions token (10000).
+          # Never re-import or mutate a live member database from this run.
+          # A missing table, inadequate SQL read permission or FK error stops
+          # this deployment before a Worker can be changed.
           npx wrangler d1 execute MEMBER_DB --remote --config creator-v1/wrangler.a-progression-v031.jsonc --json --command "SELECT name FROM sqlite_master WHERE type='table' AND name IN ('member_xp_events','member_reward_notifications','member_notification_receipts')" > "$RUNNER_TEMP/progression-tables.json"
           jq -e '.[0].success and (.[0].results|length)==3' "$RUNNER_TEMP/progression-tables.json" >/dev/null
           npx wrangler d1 execute MEMBER_DB --remote --config creator-v1/wrangler.a-progression-v031.jsonc --json --command 'PRAGMA foreign_key_check' > "$RUNNER_TEMP/progression-fk.json"
