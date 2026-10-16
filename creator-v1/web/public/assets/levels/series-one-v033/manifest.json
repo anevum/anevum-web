@@ -1,0 +1,429 @@
+{
+  "status": "concept preview only; not canonical individual art masters",
+  "source": "a_high_detail_cinematic_concept_art_poster_collec.png",
+  "source_sha256": "894d26408955049e9c0c37b1e66c9972d09a0b826c5770bb600ceb2637801896",
+  "size": "128x128",
+  "transparent": false,
+  "items": [
+    {
+      "level": 1,
+      "canonical_name": "Foundry Spark",
+      "source_atlas_label_may_differ": true,
+      "file": "concept-crops/level-01.webp",
+      "sha256": "04343437e7c93c7b1602cba9a187983ab36a3556efce4544a412f2e40620b2d7"
+    },
+    {
+      "level": 2,
+      "canonical_name": "Copper Key",
+      "source_atlas_label_may_differ": true,
+      "file": "concept-crops/level-02.webp",
+      "sha256": "53f0964848dd69f1071a48e8ec365649cb51b1f2606e4fbe9d7f60b79e097925"
+    },
+    {
+      "level": 3,
+      "canonical_name": "Blackglass Seed",
+      "source_atlas_label_may_differ": true,
+      "file": "concept-crops/level-03.webp",
+      "sha256": "4c6635c6a22437dfd4164e2748d1783b4991c4eb91d5757b7985a778b40f8d84"
+    },
+    {
+      "level": 4,
+      "canonical_name": "Ivory Compass",
+      "source_atlas_label_may_differ": true,
+      "file": "concept-crops/level-04.webp",
+      "sha256": "262dd8811e855be6b5fe59e2ba9fa51514816bca0ee8eb343706093137ca945a"
+    },
+    {
+      "level": 5,
+      "canonical_name": "Iron Moth",
+      "source_atlas_label_may_differ": true,
+      "file": "concept-crops/level-05.webp",
+      "sha256": "1da167cb0605c7fd541a28f94f12b234e3b80d389e4290d712995abe6fcfe273"
+    },
+    {
+      "level": 6,
+      "canonical_name": "Brass Dial",
+      "source_atlas_label_may_differ": true,
+      "file": "concept-crops/level-06.webp",
+      "sha256": "f92cf2129f8e3beb64d4cc2eee57c35770a748c8454ebe2416b00f2aab0b8d88"
+    },
+    {
+      "level": 7,
+      "canonical_name": "Quartz Spool",
+      "source_atlas_label_may_differ": true,
+      "file": "concept-crops/level-07.webp",
+      "sha256": "5ef812e9274e3d5b8b49466207057876f252493d5668cb8eef58f4307619b08c"
+    },
+    {
+      "level": 8,
+      "canonical_name": "Ember Lantern",
+      "source_atlas_label_may_differ": true,
+      "file": "concept-crops/level-08.webp",
+      "sha256": "1fe5d0e3aa9d9b520d35350c5cf9e5c004f2125bd6a664393a344e7fb4f14613"
+    },
+    {
+      "level": 9,
+      "canonical_name": "Prism Mask",
+      "source_atlas_label_may_differ": true,
+      "file": "concept-crops/level-09.webp",
+      "sha256": "c9c9f080cd5cd80246118936ca1c2c44242c0f717ee3c035653fbf2c5199742b"
+    },
+    {
+      "level": 10,
+      "canonical_name": "Cobalt Coil",
+      "source_atlas_label_may_differ": true,
+      "file": "concept-crops/level-10.webp",
+      "sha256": "18859a30dd24019c2877ff2e1b9d8f8ead32790931ba7c4be294452f69a124b6"
+    },
+    {
+      "level": 11,
+      "canonical_name": "Silver Needle",
+      "source_atlas_label_may_differ": true,
+      "file": "concept-crops/level-11.webp",
+      "sha256": "418f5f601cd6ee4468c697f0e1534809b692dab93db40b91e6fa246b31976d11"
+    },
+    {
+      "level": 12,
+      "canonical_name": "Aether Bell",
+      "source_atlas_label_may_differ": true,
+      "file": "concept-crops/level-12.webp",
+      "sha256": "8cee5522e846c67257128a9ff56c44c04c356241deea3412024563a75dfc508e"
+    },
+    {
+      "level": 13,
+      "canonical_name": "Obsidian Feather",
+      "source_atlas_label_may_differ": true,
+      "file": "concept-crops/level-13.webp",
+      "sha256": "380c8d6e13a71e3c5aa927a5029d460663546e9384bee482f61c1cc7d4065574"
+    },
+    {
+      "level": 14,
+      "canonical_name": "Sunken Astrolabe",
+      "source_atlas_label_may_differ": true,
+      "file": "concept-crops/level-14.webp",
+      "sha256": "c8dd8970f7c4189fbab724ac698bdc21810cd83ee5d39ffa7234d6ca5c401cfe"
+    },
+    {
+      "level": 15,
+      "canonical_name": "Clockwork Finch",
+      "source_atlas_label_may_differ": true,
+      "file": "concept-crops/level-15.webp",
+      "sha256": "493bbba85581e4cb3435bae3efea46b66f8c0fb6207cd478d32bfcb3df9c95fc"
+    },
+    {
+      "level": 16,
+      "canonical_name": "Glass Meridian",
+      "source_atlas_label_may_differ": true,
+      "file": "concept-crops/level-16.webp",
+      "sha256": "511086b76281270c48168bcd322cf1dd12072cd8826ecff8d3b895a98752f9cc"
+    },
+    {
+      "level": 17,
+      "canonical_name": "Furnace Rose",
+      "source_atlas_label_may_differ": true,
+      "file": "concept-crops/level-17.webp",
+      "sha256": "cdc972bbb29f08a36f61437280661d2c08cac8ffb1981101b798a41a3a297bbf"
+    },
+    {
+      "level": 18,
+      "canonical_name": "Amber Tuning Fork",
+      "source_atlas_label_may_differ": true,
+      "file": "concept-crops/level-18.webp",
+      "sha256": "2ab9203d794acf69a73cf71383ce0429acd5f26f5ac788ad919d7706884facc8"
+    },
+    {
+      "level": 19,
+      "canonical_name": "Marble Eye",
+      "source_atlas_label_may_differ": true,
+      "file": "concept-crops/level-19.webp",
+      "sha256": "7bf908434fe8d8cc3e11a7c1124bf6f9a4c4c3cbb66a3bd178137cb0b659041a"
+    },
+    {
+      "level": 20,
+      "canonical_name": "Paper Engine",
+      "source_atlas_label_may_differ": true,
+      "file": "concept-crops/level-20.webp",
+      "sha256": "e2a8803c467ccf05c881793fcc667ab13403ecb2ea68f601825775ab52992e3c"
+    },
+    {
+      "level": 21,
+      "canonical_name": "Ceramic Ghost",
+      "source_atlas_label_may_differ": true,
+      "file": "concept-crops/level-21.webp",
+      "sha256": "9cd4da6b9a5c25c67f409c9cd765d9074a37a94413f6dd4642542a92175ee716"
+    },
+    {
+      "level": 22,
+      "canonical_name": "Mercury Hourglass",
+      "source_atlas_label_may_differ": true,
+      "file": "concept-crops/level-22.webp",
+      "sha256": "3d15577f48175a8c303c082244211454ed45352581927616b59da357adf9a2d7"
+    },
+    {
+      "level": 23,
+      "canonical_name": "Saffron Beacon",
+      "source_atlas_label_may_differ": true,
+      "file": "concept-crops/level-23.webp",
+      "sha256": "3416f78ed5f6bcc38cc05eb1ea457b4d72a8c4304d0cfb0679872cd163606d31"
+    },
+    {
+      "level": 24,
+      "canonical_name": "Gilded Gear",
+      "source_atlas_label_may_differ": true,
+      "file": "concept-crops/level-24.webp",
+      "sha256": "8a72e2b9ba3b382c17b4801567d61269f8bdfe643dab693b6e2602d13bd6b92f"
+    },
+    {
+      "level": 25,
+      "canonical_name": "Basalt Crown",
+      "source_atlas_label_may_differ": true,
+      "file": "concept-crops/level-25.webp",
+      "sha256": "4bf51627dde55f8c75fdb54f11e697fc031f2fce3428cb5a798e8ce39983b1f5"
+    },
+    {
+      "level": 26,
+      "canonical_name": "Lunar Caliper",
+      "source_atlas_label_may_differ": true,
+      "file": "concept-crops/level-26.webp",
+      "sha256": "fe2d775c786db301fff57c3e40e21d2660638f2ef25e38d2ffe2de9f5a865c88"
+    },
+    {
+      "level": 27,
+      "canonical_name": "Magnetic Rose",
+      "source_atlas_label_may_differ": true,
+      "file": "concept-crops/level-27.webp",
+      "sha256": "69061984c56a60969e9b1760054e4dccdce07bbe94c774172ee9cce9b67e8818"
+    },
+    {
+      "level": 28,
+      "canonical_name": "Aurora Cartridge",
+      "source_atlas_label_may_differ": true,
+      "file": "concept-crops/level-28.webp",
+      "sha256": "0623c33ada925382cea4f98b347ca8c0d209da1f20c7ffb7f706ccb899c70bff"
+    },
+    {
+      "level": 29,
+      "canonical_name": "Bronze Orrery",
+      "source_atlas_label_may_differ": true,
+      "file": "concept-crops/level-29.webp",
+      "sha256": "ea2d63cd2a1646ecbd6f698cf9ab0ac34082e3892468bf0d85692bdd40e865ab"
+    },
+    {
+      "level": 30,
+      "canonical_name": "Midnight Atlas",
+      "source_atlas_label_may_differ": true,
+      "file": "concept-crops/level-30.webp",
+      "sha256": "60518d732cb2db1101a596bf850ac6134fece1bb562176cd88b676f99e29075e"
+    },
+    {
+      "level": 31,
+      "canonical_name": "Jade Relay",
+      "source_atlas_label_may_differ": true,
+      "file": "concept-crops/level-31.webp",
+      "sha256": "017c241c27a80751821c9b74dc2dab9e19ecdd62f3e79bbb3be7376c22cdcf9e"
+    },
+    {
+      "level": 32,
+      "canonical_name": "Tidal Key",
+      "source_atlas_label_may_differ": true,
+      "file": "concept-crops/level-32.webp",
+      "sha256": "e26a27875452cfc60f21d1ddfcf7c33153393bc8a3ac49886a2c24fb6da3f5c9"
+    },
+    {
+      "level": 33,
+      "canonical_name": "Hollow Star",
+      "source_atlas_label_may_differ": true,
+      "file": "concept-crops/level-33.webp",
+      "sha256": "be191faafb45e9802c823df81f0b7d786a8a6b487c051e104a2fbe30aabb2c51"
+    },
+    {
+      "level": 34,
+      "canonical_name": "Crystal Loom",
+      "source_atlas_label_may_differ": true,
+      "file": "concept-crops/level-34.webp",
+      "sha256": "7c8b2a46de4bfb750fedf1fadd377bcfbca6a1a741a2654ca371d328332fbac3"
+    },
+    {
+      "level": 35,
+      "canonical_name": "Auric Beetle",
+      "source_atlas_label_may_differ": true,
+      "file": "concept-crops/level-35.webp",
+      "sha256": "999658e7bf58e6a720b0a503e1b50623f0a68a117aa55c14214424381d55adef"
+    },
+    {
+      "level": 36,
+      "canonical_name": "Sundial Heart",
+      "source_atlas_label_may_differ": true,
+      "file": "concept-crops/level-36.webp",
+      "sha256": "4a0cecc0408a843579c6bc585e2ead9dc5f30b2d9311dbf7742e48be5f8ee15e"
+    },
+    {
+      "level": 37,
+      "canonical_name": "Sable Pendant",
+      "source_atlas_label_may_differ": true,
+      "file": "concept-crops/level-37.webp",
+      "sha256": "81509c52ed69babe9ee11ce2b72974ebc2a75343ff35dbbf45b5571e69c035bc"
+    },
+    {
+      "level": 38,
+      "canonical_name": "Velvet Catalyst",
+      "source_atlas_label_may_differ": true,
+      "file": "concept-crops/level-38.webp",
+      "sha256": "a528e83795b9a4b6fa9cf85579084ac4672beeb14c67c32f6ecf4840be609362"
+    },
+    {
+      "level": 39,
+      "canonical_name": "Amber Gyroscope",
+      "source_atlas_label_may_differ": true,
+      "file": "concept-crops/level-39.webp",
+      "sha256": "b60ba0e56fbdd3cc8a8a5aff205a1079ae7ce17fe637ab1c6c04c9263114fff0"
+    },
+    {
+      "level": 40,
+      "canonical_name": "Echo Prism",
+      "source_atlas_label_may_differ": true,
+      "file": "concept-crops/level-40.webp",
+      "sha256": "2fa09e107b2a93a3644c7065e7a886e32df6566657f1c5d336412573f568da83"
+    },
+    {
+      "level": 41,
+      "canonical_name": "Forged Telescope",
+      "source_atlas_label_may_differ": true,
+      "file": "concept-crops/level-41.webp",
+      "sha256": "394f109712da374a16e9d7c51639830fe7eb8e75e352525c49809970340c09a3"
+    },
+    {
+      "level": 42,
+      "canonical_name": "Arc Lantern",
+      "source_atlas_label_may_differ": true,
+      "file": "concept-crops/level-42.webp",
+      "sha256": "2085533b7b6ffa9ba006ce90a15e02103f2b5fdf0708fb772627bef0a7901272"
+    },
+    {
+      "level": 43,
+      "canonical_name": "Ivory Sextant",
+      "source_atlas_label_may_differ": true,
+      "file": "concept-crops/level-43.webp",
+      "sha256": "253b3b4a112b502b101241c585936c24957a97479cd8b04957a6f5a04fc21484"
+    },
+    {
+      "level": 44,
+      "canonical_name": "Molten Cipher",
+      "source_atlas_label_may_differ": true,
+      "file": "concept-crops/level-44.webp",
+      "sha256": "2e5c854195d62f5ceff9310ec865e6ef1b03b172c5752f8753f6e1c1f3ffc9dc"
+    },
+    {
+      "level": 45,
+      "canonical_name": "Silver Harp",
+      "source_atlas_label_may_differ": true,
+      "file": "concept-crops/level-45.webp",
+      "sha256": "ff22a114d5d4011a8019c1e9b7a5e928cc7373c4300c47464cefe389374c9247"
+    },
+    {
+      "level": 46,
+      "canonical_name": "Cobalt Furnace",
+      "source_atlas_label_may_differ": true,
+      "file": "concept-crops/level-46.webp",
+      "sha256": "e6ef96737a53e9ac82182d1a0f8c7a926f58af460bcfcca7799f657cc512927d"
+    },
+    {
+      "level": 47,
+      "canonical_name": "Night Compass",
+      "source_atlas_label_may_differ": true,
+      "file": "concept-crops/level-47.webp",
+      "sha256": "1a42e94e350244b2ff91c1a0a3b034ec1b9aa1edf5763e4c74a461c095089806"
+    },
+    {
+      "level": 48,
+      "canonical_name": "Dawn Engine",
+      "source_atlas_label_may_differ": true,
+      "file": "concept-crops/level-48.webp",
+      "sha256": "a46e17bcfd0c32ee7b21b92b9cee5f0e8be80066df82db68e420aa9d93c8039c"
+    },
+    {
+      "level": 49,
+      "canonical_name": "Glass Cathedral",
+      "source_atlas_label_may_differ": true,
+      "file": "concept-crops/level-49.webp",
+      "sha256": "96314024ece06756db0d88f26d695255883b9a5b020c2f526eba4cb944f14d33"
+    },
+    {
+      "level": 50,
+      "canonical_name": "Radiant Crucible",
+      "source_atlas_label_may_differ": true,
+      "file": "concept-crops/level-50.webp",
+      "sha256": "981c099b5666b5c99fc4ecd87f3ba74e8e81463c64e56df28e90d5da39c4273a"
+    },
+    {
+      "level": 51,
+      "canonical_name": "Solar Orrery",
+      "source_atlas_label_may_differ": true,
+      "file": "concept-crops/level-51.webp",
+      "sha256": "05675bc87ad504c9dca85b4e5a43dc6e620c07ec54b3998b71f6bef5007f2172"
+    },
+    {
+      "level": 52,
+      "canonical_name": "Gravity Spindle",
+      "source_atlas_label_may_differ": true,
+      "file": "concept-crops/level-52.webp",
+      "sha256": "d88e346897ae0f2fca61740887ee7da727c8f0bbfe194ffcbb89cb8ab56793d0"
+    },
+    {
+      "level": 53,
+      "canonical_name": "Quantum Leaf",
+      "source_atlas_label_may_differ": true,
+      "file": "concept-crops/level-53.webp",
+      "sha256": "b2febe12ecd238e9cb8e5eb838b2e4324d52de3cc8cc5815d9e711e599d720bf"
+    },
+    {
+      "level": 54,
+      "canonical_name": "Iron Comet",
+      "source_atlas_label_may_differ": true,
+      "file": "concept-crops/level-54.webp",
+      "sha256": "6dd5579ca156a49152019445d7c35de289787ba9f6c382fb94c98f7fa8068ac9"
+    },
+    {
+      "level": 55,
+      "canonical_name": "Aether Vessel",
+      "source_atlas_label_may_differ": true,
+      "file": "concept-crops/level-55.webp",
+      "sha256": "63ebc1d1f549a342050c301df43fb195c093a33d04d9ae401f4eea2bf0c6424a"
+    },
+    {
+      "level": 56,
+      "canonical_name": "Obsidian Crown",
+      "source_atlas_label_may_differ": true,
+      "file": "concept-crops/level-56.webp",
+      "sha256": "8cbcaf9a689c90b74f84078f813a5d30972a2c55f16934fb80f43e4455650123"
+    },
+    {
+      "level": 57,
+      "canonical_name": "Aurora Monolith",
+      "source_atlas_label_may_differ": true,
+      "file": "concept-crops/level-57.webp",
+      "sha256": "69dea4be07cabb157ae420726303bed021816df408101807800a450262556743"
+    },
+    {
+      "level": 58,
+      "canonical_name": "Starforge Dial",
+      "source_atlas_label_may_differ": true,
+      "file": "concept-crops/level-58.webp",
+      "sha256": "da6e2ff29254012924130ac1d31dfd5288f236f0cb36b8c418014879d19ad1f3"
+    },
+    {
+      "level": 59,
+      "canonical_name": "Celestial Engine",
+      "source_atlas_label_may_differ": true,
+      "file": "concept-crops/level-59.webp",
+      "sha256": "d971c9d287b06afafd072a3097f1557e344e2a799563dfc341aa8e49aaf76ca2"
+    },
+    {
+      "level": 60,
+      "canonical_name": "The First Light",
+      "source_atlas_label_may_differ": true,
+      "file": "concept-crops/level-60.webp",
+      "sha256": "c1e0227703494cb6384421044bf63af097c4ef7dfe53b3323766a072435a5db8"
+    }
+  ]
+}
