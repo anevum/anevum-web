@@ -47,3 +47,19 @@ Rewards require a current verified subscription plus unlocked server ID. All des
 - Product visibility in Stripe does not mean a user can subscribe today.
 
 Session: ANEVUM.WEB.BUILD.2026-10-16.003.SUPPORTER-REWARDS
+
+
+## V034 public surfaces
+In addition to the profile wall, the public member directory and activity feed now read the opt-in supporter appearance projection. A member with publicInsignia disabled is represented as an ordinary free member; no billing customer ID, subscription start, payment status, charge or refund metadata is published. The member's own composer always reflects their private selected cosmetics for accurate preview, independent of public consent.
+
+## Scheduled status verification
+The source-only staging Worker now has a daily Cloudflare Cron schedule at **05:17 UTC**, using its existing Worker and canonical D1 (no new Railway deployment).
+- Reads the 40 stalest subscription projections per run when their last verified Stripe state is more than 24 hours old.
+- Calls Stripe's API using only the secured sk_test_ secret bound to the existing worker and reuses the same customer/Price ownership verification as signed webhook reconciliation.
+- Invalid state/Price/customer mismatches never extend access; the public appearance automatically disappears when data exceeds the 72-hour freshness window.
+- Billing verification runs after successful test-mode configuration; no schedules, credentials or database objects have been installed in the existing deployed staging environment.
+- Before scaling beyond 40 active subscriptions, implement batching/pagination and compare Worker/D1 request quotas to avoid silent entitlement loss.
+- Do not configure a live secret until a dedicated audited live release separates test and production payments.
+
+## Design treatment
+No image generation costs, new object storage or CDN fetches are required for the initial reward art. Portrait frames and banner atmospheres use CSS materials, the existing official vector mark and semantic HTML. This is the first implementation, not a substitute for later 4K/art-director-approved masters. Future optional artwork upgrades must not be a prerequisite for delivered membership benefits.
