@@ -242,7 +242,7 @@ test('scheduled reconciliation is test-mode locked and limited to forty subscrip
   assert.deepEqual(await reconcileSupporterSubscriptions(prod),{available:false,examined:0,refreshed:0,failed:0});
   await assert.rejects(()=>reconcileSupporterSubscriptions(env,{limit:41}),/batch limit/);
   const {customer,subscription}=support(db,env,users[0],NOW-20*DAY);
-  db.prepare('UPDATE supporter_subscriptions SET synced_at_ms=? WHERE member_user_id=?').run(NOW-2*DAY,users[0].id);
+  db.prepare('UPDATE supporter_subscriptions SET synced_at_ms=? WHERE member_user_id=?').run(NOW-4*DAY,users[0].id);
   const bad=async()=>new Response(JSON.stringify({
    id:subscription,customer,status:'active',start_date:Math.floor((NOW-20*DAY)/1000),
    items:{data:[{quantity:1,current_period_end:Math.floor((NOW+2*DAY)/1000),
