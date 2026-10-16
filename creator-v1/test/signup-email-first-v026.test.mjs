@@ -4,9 +4,9 @@ import {readFileSync} from "node:fs";
 const source=readFileSync(new URL("../web/src/pages/Phase1JoinPage.tsx",import.meta.url),"utf8");
 const css=readFileSync(new URL("../web/src/join-page.css",import.meta.url),"utf8");
 test("signup opens the email form immediately and retains live server method verification",()=>{
- assert.match(source,/useState\(true\)/);
+ assert.doesNotMatch(source,/emailOpen/);
  assert.match(source,/useResource\(canonicalMethods,\[\]\)/);
- assert.match(source,/emailReady&&emailOpen&&<form/);
+ assert.match(source,/emailReady&&<form/);
  assert.doesNotMatch(source,/join-method-unavailable/);
  assert.match(source,/METHODS\.filter\(method=>method\.key!=="email"&&socialReady/);
 });
