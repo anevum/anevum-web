@@ -5,6 +5,7 @@ PRAGMA foreign_keys=ON;
 CREATE TABLE IF NOT EXISTS supporter_checkout_intents(
   stripe_checkout_session_id TEXT PRIMARY KEY NOT NULL,
   member_user_id TEXT NOT NULL REFERENCES "user"(id) ON DELETE CASCADE,
+  billing_interval TEXT NOT NULL CHECK(billing_interval IN ('month','year')),
   created_at_ms INTEGER NOT NULL,
   completed_at_ms INTEGER,
   stripe_subscription_id TEXT,
