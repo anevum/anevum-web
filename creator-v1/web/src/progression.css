@@ -82,3 +82,30 @@
 @media(forced-colors:active){
  .an-series-v034 .an-artifact-visual .level-emblem.is-illustrated{mix-blend-mode:normal;mask-image:none;-webkit-mask-image:none}
 }
+
+/* V036: adaptive cinematic card presentation, tuned for narrow iPhone screens. */
+.an-series-v034 .an-artifact-card-v034{contain:layout style;transform-style:preserve-3d}
+.an-series-v034 .an-artifact-card-v034 .an-artifact-visual{overflow:visible}
+.an-series-v034 .an-artifact-card-v034 .an-artifact-visual .level-emblem.is-illustrated{
+ image-rendering:auto;
+ -webkit-backface-visibility:hidden;
+ backface-visibility:hidden;
+}
+.an-series-v034 .an-artifact-card-v034:focus-within{outline:2px solid #d9b995;outline-offset:3px}
+.an-series-v034 .an-artifact-card-v034.is-earned::before{
+ background:radial-gradient(ellipse 70% 52% at 50% 41%,rgba(233,174,105,.13),transparent 76%);
+}
+.an-series-v034 .an-artifact-card-v034:not(.is-earned) .an-artifact-visual .level-emblem.is-illustrated{filter:saturate(.84) contrast(1.07) brightness(.91)}
+.an-series-v034 .an-series-filters button:focus-visible{outline:2px solid #e1c4a6;outline-offset:3px}
+@media(max-width:390px){
+ .an-series-v034 .an-series-grid{gap:10px}
+ .an-series-v034 .an-artifact-card-v034{min-height:270px;border-radius:18px;padding:11px 8px 15px}
+ .an-series-v034 .an-artifact-visual{min-height:136px;margin:2px -4px 6px}
+ .an-series-v034 .an-artifact-visual .level-emblem.is-illustrated{width:132px;height:132px}
+ .an-series-v034 .an-artifact-card-head small{font-size:7px;letter-spacing:.035em}
+ .an-series-v034 .an-artifact-card h3{font-size:16px}
+ .an-series-v034 .an-artifact-state{padding:5px 8px}
+}
+@media(prefers-reduced-motion:reduce){
+ .an-series-v034 .an-artifact-card-v034{transform:none!important}
+}
