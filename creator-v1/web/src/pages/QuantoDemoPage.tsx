@@ -1,5 +1,6 @@
 import {useState, type ChangeEvent, type FormEvent} from "react";
 import {Link} from "react-router-dom";
+import "../quanto-v001.css";
 import {OrbitalMark} from "../components/OrbitalMark";
 import {
   applyQuantoInstruction, assertQuantoInvariants, createQuantoLedger,
@@ -237,7 +238,7 @@ export function QuantoDemoPage() {
           <li key={entry.requestId}>
             <span>#{String(entry.sequence).padStart(3,"0")}</span>
             <strong>{entry.type.toUpperCase()}</strong>
-            <span>{entry.type==="issue" ? "ISSUER → " + walletLabel(entry.command.to as QuantoWallet)
+            <span>{entry.type==="issue" ? "ISSUER → " + walletLabel((entry.command as Extract<QuantoInstruction, {type:"issue"}>).to)
               : entry.type==="transfer" ? walletLabel((entry.command as Extract<QuantoInstruction, {type:"transfer"}>).from) + " → " + walletLabel((entry.command as Extract<QuantoInstruction, {type:"transfer"}>).to)
               : walletLabel((entry.command as Extract<QuantoInstruction, {type:"redeem"}>).from) + " → ISSUER"}</span>
             <b>{format(entry.amountCents)}</b>
