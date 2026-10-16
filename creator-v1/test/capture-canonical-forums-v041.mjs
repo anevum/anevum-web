@@ -138,15 +138,26 @@ try{
  await until(()=>evaluate("!!document.querySelector('.cf-detail .cf-fullbody')"));
  assert.equal(await evaluate("!!document.querySelector('.cf-detail .cf-author-level')"),true);
  result.threadNavigation=true;
+ await client.send('Emulation.setDeviceMetricsOverride',{width:390,height:844,deviceScaleFactor:1,mobile:true});
+ await evaluate("(()=>{const e=document.querySelector('.cf-detail');window.scrollTo(0,e.getBoundingClientRect().top+window.scrollY-82)})()");
+ await delay(220);
+ const detailShot=await client.send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});
+ writeFileSync(join(out,'forum-detail-390.png'),Buffer.from(detailShot.data,'base64'));
  await goto('/');
  await until(()=>evaluate("!!document.querySelector('.cf-highlights')"));
  result.homeHighlights=true;
+ await evaluate("(()=>{const e=document.querySelector('.cf-highlights');window.scrollTo(0,e.getBoundingClientRect().top+window.scrollY-82)})()");
+ await delay(220);
+ const homeShot=await client.send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});
+ writeFileSync(join(out,'forum-home-highlights-390.png'),Buffer.from(homeShot.data,'base64'));
  await goto('/community');
  await until(()=>evaluate("document.querySelectorAll('.cf-forums .cf-thread').length===20"));
  for(const [width,height] of [[1440,900],[1024,768],[390,844],[320,720]]){
   await client.send('Emulation.setDeviceMetricsOverride',
    {width,height,deviceScaleFactor:1,mobile:width<=390});
   await delay(200);
+  await evaluate("(()=>{const e=document.querySelector('.cf-forums');window.scrollTo(0,e.getBoundingClientRect().top+window.scrollY-84)})()");
+  await delay(160);
   const layout=await evaluate("(()=>{const e=document.querySelector('.cf-forums');const r=e.getBoundingClientRect();return {viewport:innerWidth,left:r.left,right:r.right,overflow:e.scrollWidth>e.clientWidth+2,cards:document.querySelectorAll('.cf-forums .cf-thread').length}})()");
   assert.equal(layout.overflow,false,JSON.stringify({width,...layout}));
   assert.ok(layout.left>=-2&&layout.right<=width+3,JSON.stringify(layout));
@@ -154,6 +165,11 @@ try{
   assert.ok(shot.data);writeFileSync(join(out,'forum-'+width+'.png'),Buffer.from(shot.data,'base64'));
   result.widths.push({width,...layout});
  }
+ // Turning the feature off must remove the new forum without hiding the legacy community.
+ env.CANONICAL_FORUM_ENABLED='false';
+ await goto('/community');
+ await until(()=>evaluate("!!document.querySelector('.ch7-hub')&&!document.querySelector('.cf-forums')"));
+ result.disabledHidesForum=true;
  writeFileSync(join(out,'acceptance.json'),JSON.stringify(result,null,2));
  console.log('V041_CANONICAL_FORUM_GUEST_BROWSER=PASS');
 }catch(e){console.error('V041_FORUM_BROWSER_FAILED='+String(e));throw e}

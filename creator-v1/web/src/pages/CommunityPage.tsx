@@ -165,7 +165,12 @@ export function CommunityPage() {
         <h1 id="ch7-hero-title">Made by people.<br/><em>Better together.</em></h1>
         <p>A gathering place for independent games, art, useful software, ideas and the people who make them. Discover something worth exploring. Help something new take shape.</p>
         <div className="ch7-hero-actions"><Link className="ch7-button ch7-button-primary" to="/discover">EXPLORE THE WORK <Icon name="arrow" size={15}/></Link>
-          <a className="ch7-button" href="#ch7-stream" onClick={() => setView("conversations")}>READ DISCUSSIONS <Icon name="community" size={15}/></a></div>
+          <a className="ch7-button" href="#ch7-stream" onClick={event => {
+            setView("conversations");
+            const forum=document.getElementById("cf-title");
+            if(forum){event.preventDefault();forum.scrollIntoView({block:"start",
+              behavior:window.matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth"});}
+          }}>READ DISCUSSIONS <Icon name="community" size={15}/></a></div>
       </div>
       <aside className="ch7-status" aria-label="Verified public community counts"><span className="ch7-kicker">PUBLISHED WORK / VERIFIED</span>
         <div className="ch7-count-grid">
