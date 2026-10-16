@@ -26,7 +26,12 @@ const SECURITY={
 const sameOriginMutation=request=>{
   const origin=request.headers.get("origin");
   const site=request.headers.get("sec-fetch-site");
-  return origin===CANONICAL_ORIGIN && (site==="same-origin"||site==="none");
+  // The Origin header is mandatory and bound to the exact staging host.
+  // Fetch Metadata is an additional signal, not a mandatory browser feature:
+  // some WebKit/in-app browsers omit Sec-Fetch-Site on valid same-origin POSTs.
+  // Reject any explicitly cross-site/same-site header even if Origin matches.
+  return origin===CANONICAL_ORIGIN &&
+    (site===null||site==="same-origin"||site==="none");
 };
 const safeJson=(request,value,status=200)=>{
   const headers={...SECURITY,"content-type":"application/json; charset=utf-8"};
