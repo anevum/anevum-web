@@ -187,6 +187,9 @@ try{
  await page.locator('.an-inbox-toggle').click();await page.locator('.an-history').waitFor();
  assert.match(await page.locator('.an-history').innerText(),/Level 3 reached/);
  await page.locator('.an-history header button').click();
+ // Capture the animated card collection in stable reduced-motion mode.
+ // Moving emblems never become Playwright-stable scroll targets otherwise.
+ await page.emulateMedia({reducedMotion:'reduce'});
  await page.goto(base+'/levels');await wait('.an-artifact-card');
  assert.equal(await page.locator('.an-artifact-card').count(),60);
  for(const [width,height] of [[1440,900],[390,844],[320,720]]){

@@ -1,6 +1,6 @@
 name: ANEVUM A Staging Series One V037 Transparent Preview
 
-# Owner-authorized staging-only V037 transparent replacement. Preserve the existing staged Worker configuration. Preserve closed signup and disabled health API. Never deploy the apex countdown.
+# Owner-authorized staging-only V037 transparent replacement. Stable reduced-motion visual regression retry; preserve the existing staged Worker configuration. Preserve closed signup and disabled health API. Never deploy the apex countdown.
 on:
   push:
     branches: [build/series-one-cabinet-polish-v034-20261016]
