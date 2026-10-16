@@ -13,6 +13,7 @@ import {boundedText} from "./request-body.mjs";
 import {supporterMember,supporterWebhook} from "./supporter.mjs";
 import {supporterRewardsRoute} from "./supporter-rewards.mjs";
 import {canonicalAccountClosure} from "./account-closure.mjs";
+import {publicSupporterTelemetry,PUBLIC_TELEMETRY_PATH} from "./public-supporter-telemetry.mjs";
 
 const HEALTH=CANONICAL_PREFIX+"/health";
 const METHODS=CANONICAL_PREFIX+"/auth-methods";
@@ -101,6 +102,7 @@ export function createCanonicalStageWorker({authFactory=createCanonicalAuth}={})
     const url=new URL(request.url),path=url.pathname;
     const publicHandle=path.match(PUBLIC_MEMBER);
     const publicCommunity=/^\/api\/v1\/community\/(?:members|activity)$/.test(path);
+    const publicMetrics=path===PUBLIC_TELEMETRY_PATH;
     const ownSpace=OWN_SPACE.test(path),publicSpace=path.match(PUBLIC_SPACE);
     const ownProgression=/^\/api\/v1\/member\/(?:progression|notifications(?:\/ack)?|xp-test)$/.test(path);
     const ownSupporter=/^\/api\/v1\/member\/supporter(?:\/(?:checkout|portal|webhook|rewards))?$/.test(path);
@@ -108,12 +110,13 @@ export function createCanonicalStageWorker({authFactory=createCanonicalAuth}={})
     const ownProfile=path===PROFILE;
     const ownExport=path===EXPORT;
     const ownClosure=path===CLOSURE;
-    if(path!==HEALTH && path!==METHODS && !publicHandle && !ownProfile && !ownExport && !ownClosure && !ownSpace && !publicSpace && !publicCommunity && !ownProgression && !ownSupporter &&
+    if(path!==HEALTH && path!==METHODS && !publicHandle && !ownProfile && !ownExport && !ownClosure && !ownSpace && !publicSpace && !publicCommunity && !publicMetrics && !ownProgression && !ownSupporter &&
       !(path.startsWith(CANONICAL_AUTH_PATH+"/") &&
         (AUTH_ALLOWLIST[request.method]?.has(path)??false)))
       return fail(request,404);
 
     if((publicHandle||publicSpace) && !READ_METHODS.has(request.method))return fail(request,404);
+    if(publicMetrics&&request.method!=="GET")return fail(request,405);
     if(ownProfile && !["GET","POST","PATCH"].includes(request.method))return fail(request,404);
     if(ownExport && request.method!=="GET")return fail(request,404);
     if(ownClosure && !["GET","POST"].includes(request.method))return fail(request,405);
@@ -153,6 +156,7 @@ export function createCanonicalStageWorker({authFactory=createCanonicalAuth}={})
     // Never forward callbacks for disabled OAuth providers.
     const callback=path.match(/^\/api\/v1\/member\/auth\/callback\/(google|github|apple|microsoft)$/);
     if(callback&&!configured[callback[1]])return fail(request,404);
+    if(publicMetrics)return safeResponse(await publicSupporterTelemetry(request,env));
     if(publicCommunity)return safeResponse(await canonicalCommunity(request,env));
     if(publicSpace){
       if(request.method!=="GET")return fail(request,405);
