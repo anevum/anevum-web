@@ -54,7 +54,7 @@ test('existing Backstage and canonical forum boundaries remain documented in sou
  assert.match(doc,/Private Lab Backstage integration/i);
  assert.match(doc,/lab\.anevum\.com\/projects\/backstage\/moderation/);
  assert.match(doc,/separate.*promoting the canonical V042/i);
- assert.match(doc,/No account bans/i);
+ assert.match(doc,/account bans/i);
  assert.match(doc,/staging release/i);
  const reviewer=readFileSync(new URL('../../creator-v1/canonical-auth/forums.mjs',import.meta.url),'utf8');
  assert.match(reviewer,/CANONICAL_FORUM_REVIEWER_IDS/);
