@@ -186,11 +186,13 @@ export async function supporterMember(request,env,user,{http=fetch,now=Date.now(
       // when they both observed no pending checkout in the preceding query.
       const nonce=crypto.randomUUID();
       const lease=await rows(env.MEMBER_DB,
-        'INSERT INTO supporter_checkout_guards(member_user_id,billing_interval,request_nonce,expires_at_ms,created_at_ms) VALUES(?,?,?,?,?) '+
+        'INSERT INTO supporter_checkout_guards(member_user_id,billing_interval,request_nonce,expires_at_ms,created_at_ms) '+
+        'SELECT ?,?,?,?,? WHERE NOT EXISTS(SELECT 1 FROM member_account_closure_guards WHERE member_user_id=? AND expires_at_ms>?) '+
         'ON CONFLICT(member_user_id) DO UPDATE SET billing_interval=excluded.billing_interval,request_nonce=excluded.request_nonce,'+
         'expires_at_ms=excluded.expires_at_ms,created_at_ms=excluded.created_at_ms '+
-        'WHERE supporter_checkout_guards.expires_at_ms<=? RETURNING request_nonce',
-        user.id,plan.interval,nonce,now+7200000,now,now);
+        'WHERE supporter_checkout_guards.expires_at_ms<=? '+
+        'AND NOT EXISTS(SELECT 1 FROM member_account_closure_guards WHERE member_user_id=? AND expires_at_ms>?) RETURNING request_nonce',
+        user.id,plan.interval,nonce,now+7200000,now,user.id,now,now,user.id,now);
       if(lease.length!==1||lease[0].request_nonce!==nonce)
         return err(409,'A checkout is already being prepared. Recheck shortly.');
       let checkoutAttempted=false;
