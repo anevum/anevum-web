@@ -125,6 +125,44 @@ try{
       throw Error("SITEWIDE_V012_LEVELS_TEXT_SQUEEZED_"+width+":"+JSON.stringify(metrics));
    }
    await screenshot(name+"-"+width);
+
+   // V002 compiled browser acceptance: synthetic player cases only.
+   if(name==="project"){
+     const cases=[
+       ["external-game","00000000000000000000000000000001","PLAY ON CREATOR SITE","example.com"],
+       ["source-only",String(9001).padStart(32,"0"),"VIEW SOURCE CODE","github.com"],
+       ["unsafe-fallback",String(9002).padStart(32,"0"),"VIEW SOURCE CODE","github.com"],
+       ["no-link",String(9003).padStart(32,"0"),null,null],
+       ["external-app",String(9004).padStart(32,"0"),"TRY ON CREATOR SITE","example.com"]
+     ];
+     for(const [variant,id,expectedAction,expectedHost] of cases){
+       if(variant!=="external-game"){
+         const navigation=await client.send("Page.navigate",{url:base+"/creator/projects/"+id});
+         if(navigation.errorText)throw Error("PLAYER_V002_NAVIGATION_"+variant+"_"+width+":"+navigation.errorText);
+       }
+       await until(()=>evaluate('location.pathname==='+JSON.stringify("/creator/projects/"+id)+'&&!!document.querySelector(".avp-stage")&&!!document.querySelector(".avp-passport")'));
+       await until(()=>evaluate('(()=>{const a=document.querySelector(".avp-stage-art img");return !a||(a.complete&&a.naturalWidth>0);})()'));
+       const state=await evaluate('(()=>{const st=document.querySelector(".avp-stage"),pas=document.querySelector(".avp-passport"),a=st?.querySelector(".avp-primary-action"),s=st?.getBoundingClientRect(),p=pas?.getBoundingClientRect(),art=st?.querySelector(".avp-stage-art img");return {heading:st?.querySelector("h1")?.textContent,kind:st?.className,primary:a?.textContent?.trim()||null,href:a?.getAttribute("href")||null,hostname:a?new URL(a.href).hostname:null,target:a?.getAttribute("target")||null,rel:a?.getAttribute("rel")||null,secondary:st?.querySelectorAll(".avp-secondary-action").length||0,unavailable:!!st?.querySelector(".avp-no-action"),art:!!art&&(art.complete&&art.naturalWidth>0),rect:s?{left:s.left,right:s.right,top:s.top,bottom:s.bottom,width:s.width}:null,passport:p?{left:p.left,right:p.right,top:p.top,bottom:p.bottom}:null,overflow:document.documentElement.scrollWidth>innerWidth+1,iframe:document.querySelectorAll("iframe").length,synthetic:getComputedStyle(document.body,"::after").content.includes("SYNTHETIC OFFLINE REVIEW")};})()');
+       if(state.overflow||state.iframe||!state.synthetic||!state.heading||!state.rect||!state.passport||!state.art||
+          (expectedAction?(!state.primary?.includes(expectedAction)||state.hostname!==expectedHost||state.target!=="_blank"||!state.rel?.includes("noopener")||!state.rel?.includes("noreferrer")):(Boolean(state.primary)||!state.unavailable))||
+          state.rect.left< -1||state.rect.right>width+1||
+          (width>1040?state.passport.left<state.rect.right-3:state.passport.top<state.rect.bottom-3))
+         throw Error("PLAYER_V002_VISUAL_OR_OUTBOUND_"+variant+"_"+width+":"+JSON.stringify(state));
+       if(variant==="unsafe-fallback"&&state.kind.includes("external-game"))throw Error("PLAYER_V002_UNSAFE_URL_USED_"+width);
+       await screenshot("player-v002-"+variant+"-"+width);
+       results.push({page:"player-v002-"+variant,width,primary:state.primary,host:state.hostname,art:state.art,overflow:state.overflow});
+       console.log("PLAYER_V002_"+variant.toUpperCase()+"_"+width+"=PASS");
+       if(variant==="external-game"&&(width===1440||width===390)){
+         await evaluate('(()=>{Object.defineProperty(navigator,"share",{configurable:true,value:undefined});Object.defineProperty(navigator,"clipboard",{configurable:true,value:{writeText:async text=>{window.__playerShareCopy=text;}}});document.querySelector(".avp-stage-shortcuts button").click();})()');
+         await until(()=>evaluate('!!window.__playerShareCopy&&!!document.querySelector(".avp-share-status")?.textContent?.includes("copied")'));
+         const copied=await evaluate('window.__playerShareCopy');
+         if(copied!==base+"/creator/projects/"+id)throw Error("PLAYER_V002_SHARE_URL_"+width+":"+copied);
+         await evaluate('document.querySelector(".avp-stage-shortcuts a[href=\\"#avp-participation\\"]").click()');
+         await until(()=>evaluate('location.hash==="#avp-participation"'));
+         if(!await evaluate('!!document.getElementById("avp-participation")'))throw Error("PLAYER_V002_PARTICIPATION_ANCHOR_"+width);
+       }
+     }
+   }
    if(name==="home"){
     await evaluate('document.getElementById("world-gateways").scrollIntoView({block:"start"})');
     if(width<541){
