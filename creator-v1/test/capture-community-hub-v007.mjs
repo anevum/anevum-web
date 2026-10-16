@@ -153,6 +153,7 @@ try {
   writeFileSync(join(output, "capture-status.txt"),
     "COMMUNITY_V007_BROWSER_CAPTURE=PASS\nAll records in these screenshots are offline synthetic review fixtures, not live user activity. No staff, member, D1 or production mutations.\n");
 } finally {
+  try{if(client)await client.send("Browser.close");}catch{}
   client?.close();
   if(child.exitCode===null){
     const exited=new Promise(resolve=>child.once("exit",resolve));
@@ -160,5 +161,6 @@ try {
     await Promise.race([exited,delay(2000)]);
     if(child.exitCode===null){child.kill("SIGKILL");await Promise.race([exited,delay(1000)]);}
   }
-  rmSync(profile, { recursive: true, force: true, maxRetries:5, retryDelay:200 });
+  try{rmSync(profile, { recursive: true, force: true, maxRetries:5, retryDelay:200 });}
+  catch(error){if(!["ENOTEMPTY","EBUSY"].includes(error.code))throw error;console.warn("Temporary browser profile cleanup deferred:",error.code);}
 }
