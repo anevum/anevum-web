@@ -81,32 +81,56 @@ export async function canonicalForums(req,env,user=null,now=Math.floor(Date.now(
    }
   }
   if(review){
-   // Reviewer authorization is server-owned, not a client profile or user metadata field.
-   const ids=(env.CANONICAL_FORUM_REVIEWER_IDS||'').split(',').map(x=>x.trim()).filter(Boolean);
-   if(!ids.includes(user.id))return fail(403,'Reviewer access required');
+   // Only a server-configured verified Better Auth user ID may review content.
+   const reviewers=(env.CANONICAL_FORUM_REVIEWER_IDS||'').split(',').map(x=>x.trim()).filter(Boolean);
+   if(!reviewers.includes(user.id))return fail(403,'Reviewer access required');
    if(req.method==='GET'){
-     const threads=await db.prepare("SELECT id,topic,title,body,created_at FROM member_forum_threads WHERE status='pending_review' ORDER BY created_at ASC LIMIT 50").all();
-     const replies=await db.prepare("SELECT id,thread_id,body,created_at FROM member_forum_replies WHERE status='pending_review' ORDER BY created_at ASC LIMIT 50").all();
-     return json({threads:threads.results,replies:replies.results});
+    if(url.search)return fail(400,'Unexpected filters');
+    const [threads,replies,reports]=await Promise.all([
+     db.prepare("SELECT t.id,t.topic,t.title,t.body,t.created_at,p.handle,p.display_name FROM member_forum_threads t JOIN member_creator_profiles p ON p.user_id=t.author_id WHERE t.status='pending_review' ORDER BY t.created_at ASC LIMIT 50").all(),
+     db.prepare("SELECT r.id,r.thread_id,r.body,r.created_at,p.handle,p.display_name FROM member_forum_replies r JOIN member_creator_profiles p ON p.user_id=r.author_id WHERE r.status='pending_review' ORDER BY r.created_at ASC LIMIT 50").all(),
+     db.prepare("SELECT id,target_kind,target_id,reason,created_at FROM member_forum_reports WHERE resolved_at IS NULL ORDER BY created_at ASC LIMIT 50").all()
+    ]);
+    return json({threads:threads.results,replies:replies.results,reports:reports.results});
    }
-   if(req.method!=='POST')return fail(405,'Method not allowed');
+   if(req.method!=='POST'||url.search)return fail(405,'Method not allowed');
    const v=await payload(req);
-   if(!v||!permitted(v,['targetKind','targetId','action'])||!['thread','reply'].includes(v.targetKind)||!UUID.test(v.targetId)||!['publish','reject','hide'].includes(v.action))return fail(400,'Invalid review');
+   if(!v||!permitted(v,['targetKind','targetId','action'])||!UUID.test(v.targetId)||
+      !['thread','reply','report'].includes(v.targetKind)||
+      !['publish','reject','hide','dismiss_report'].includes(v.action)||
+      (v.targetKind==='report')!==(v.action==='dismiss_report'))
+    return fail(400,'Invalid review');
+   const auditId=crypto.randomUUID();
+   if(v.targetKind==='report'){
+    const results=await db.batch([
+     db.prepare("UPDATE member_forum_reports SET resolved_at=?,resolution='dismissed',resolved_by=? WHERE id=? AND resolved_at IS NULL").bind(now,user.id,v.targetId),
+     db.prepare("INSERT INTO member_forum_review_log(id,reviewer_id,target_kind,target_id,action,created_at) SELECT ?,?,'report',?,'dismiss_report',? WHERE changes()=1").bind(auditId,user.id,v.targetId,now)
+    ]);
+    return results[0].meta?.changes===1?json({ok:true,status:'dismissed'}):fail(409,'Report already reviewed');
+   }
    const table=v.targetKind==='thread'?'member_forum_threads':'member_forum_replies';
    const target=await db.prepare(`SELECT status,author_id FROM ${table} WHERE id=?`).bind(v.targetId).first();
    if(!target)return fail(404,'Not found');
-   if(v.action==='hide'&&target.status!=='published'||v.action!=='hide'&&target.status!=='pending_review')return fail(409,'Review state changed');
-   const author=await db.prepare("SELECT visibility FROM member_creator_profiles WHERE user_id=?").bind(target.author_id).first();
-   if(v.action==='publish'&&author?.visibility!=='public')return fail(409,'Author is no longer public');
-   if(v.targetKind==='reply'&&v.action==='publish'){
-     const parent=await db.prepare(`SELECT t.status,p.visibility FROM member_forum_replies r JOIN member_forum_threads t ON t.id=r.thread_id JOIN member_creator_profiles p ON p.user_id=t.author_id WHERE r.id=?`).bind(v.targetId).first();
+   if(v.action==='hide'?target.status!=='published':target.status!=='pending_review')
+    return fail(409,'Review state changed');
+   if(v.action==='publish'){
+    const author=await db.prepare("SELECT visibility FROM member_creator_profiles WHERE user_id=?").bind(target.author_id).first();
+    if(author?.visibility!=='public')return fail(409,'Author is not public');
+    if(v.targetKind==='reply'){
+     const parent=await db.prepare("SELECT t.status,p.visibility FROM member_forum_replies r JOIN member_forum_threads t ON t.id=r.thread_id JOIN member_creator_profiles p ON p.user_id=t.author_id WHERE r.id=?").bind(v.targetId).first();
      if(parent?.status!=='published'||parent?.visibility!=='public')return fail(409,'Parent thread is not public');
+    }
    }
    const next=v.action==='publish'?'published':v.action==='reject'?'rejected':'hidden';
-   const updated=await db.prepare(`UPDATE ${table} SET status=?,published_at=CASE WHEN ?='published' THEN ? ELSE published_at END,updated_at=?,revision=revision+1 WHERE id=? AND status=?`).bind(next,next,now,now,v.targetId,target.status).run();
-   if(updated.meta?.changes!==1)return fail(409,'Review state changed');
-   await db.prepare('INSERT INTO member_forum_review_log(id,reviewer_id,target_kind,target_id,action,created_at) VALUES(?,?,?,?,?,?)').bind(crypto.randomUUID(),user.id,v.targetKind,v.targetId,v.action,now).run();
-   return json({ok:true,status:next});
+   const statements=[
+    db.prepare(`UPDATE ${table} SET status=?,published_at=CASE WHEN ?='published' THEN ? ELSE published_at END,updated_at=?,revision=revision+1 WHERE id=? AND status=?`).bind(next,next,now,now,v.targetId,target.status),
+    db.prepare("INSERT INTO member_forum_review_log(id,reviewer_id,target_kind,target_id,action,created_at) SELECT ?,?,?,?,?,? WHERE changes()=1").bind(auditId,user.id,v.targetKind,v.targetId,v.action,now)
+   ];
+   if(v.action==='hide')statements.push(
+    db.prepare("UPDATE member_forum_reports SET resolved_at=?,resolution='hidden',resolved_by=? WHERE target_kind=? AND target_id=? AND resolved_at IS NULL AND EXISTS(SELECT 1 FROM member_forum_review_log WHERE id=?)").bind(now,user.id,v.targetKind,v.targetId,auditId)
+   );
+   const results=await db.batch(statements);
+   return results[0].meta?.changes===1?json({ok:true,status:next}):fail(409,'Review state changed');
   }
   if(mine&&req.method==='GET'){
    const r=await db.prepare("SELECT id,topic,title,body,status,created_at FROM member_forum_threads WHERE author_id=? ORDER BY created_at DESC LIMIT 30").bind(user.id).all();
