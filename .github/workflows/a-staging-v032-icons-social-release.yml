@@ -195,10 +195,13 @@ jobs:
           for path in apple-touch-icon.png icon-192.png icon-512.png anevum-social-share-v1.png; do
             asset_ok=0
             for i in $(seq 1 12); do
-              if curl --fail --silent --show-error --max-time 20 "https://a.anevum.com/$path" -o "$RUNNER_TEMP/$path"; then
+              if curl --fail --silent --show-error --max-time 20 "https://a.anevum.com/$path" -o "$RUNNER_TEMP/$path" &&
+                 test "$(od -An -tx1 -N8 "$RUNNER_TEMP/$path" | tr -d '[:space:]')" = "89504e470d0a1a0a"; then
                 asset_ok=1
+                echo "HOSTED_PNG_READY=$path after $i checks"
                 break
               fi
+              echo "Waiting for hosted PNG asset $path attempt $i/12"
               sleep 3
             done
             test "$asset_ok" = 1 || { echo "::error::Hosted asset failed: $path"; exit 1; }
