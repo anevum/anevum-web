@@ -31,8 +31,8 @@ const apply=async(db,sql,...params)=>{
 export async function supporterSchemaReady(db){
   if(!db?.prepare)return false;
   try{
-    const found=await rows(db,"SELECT name FROM sqlite_master WHERE type='table' AND name IN ('supporter_checkout_intents','supporter_customers','supporter_subscriptions','supporter_webhook_events','supporter_visibility','supporter_checkout_guards')");
-    return found.length===6;
+    const found=await rows(db,"SELECT name FROM sqlite_master WHERE type='table' AND name IN ('supporter_checkout_intents','supporter_customers','supporter_subscriptions','supporter_webhook_events','supporter_visibility','supporter_checkout_guards','supporter_billing_holds')");
+    return found.length===7;
   }catch{return false;}
 }
 const dataReady=async env=>supporterConfig(env).enabled&&await supporterSchemaReady(env.MEMBER_DB);
@@ -48,6 +48,9 @@ const activeRow=(record,now)=>record?supporterState({
 export async function publicSupporterForMember(env,id,now=Date.now()){
   if(!supporterConfig(env).enabled||!await supporterSchemaReady(env.MEMBER_DB))return false;
   try{
+    const hold=await row(env.MEMBER_DB,
+      'SELECT h.stripe_customer_id FROM supporter_billing_holds h JOIN supporter_customers c ON c.stripe_customer_id=h.stripe_customer_id WHERE c.member_user_id=?',id);
+    if(hold)return false;
     const consent=await row(env.MEMBER_DB,
       'SELECT public_insignia FROM supporter_visibility WHERE member_user_id=?',id);
     if(consent?.public_insignia!==1)return false;
@@ -67,9 +70,11 @@ export async function supporterMember(request,env,user,{http=fetch,now=Date.now(
     try{
       const records=await rows(env.MEMBER_DB,
         'SELECT status,current_period_end_ms,cancel_at_period_end,synced_at_ms,billing_interval FROM supporter_subscriptions WHERE member_user_id=? ORDER BY synced_at_ms DESC LIMIT 12',user.id);
-      const valid=records.find(value=>now-Number(value.synced_at_ms)<=259200000 && activeRow(value,now).supporter);
+      const hold=await row(env.MEMBER_DB,
+        'SELECT h.reason FROM supporter_billing_holds h JOIN supporter_customers c ON c.stripe_customer_id=h.stripe_customer_id WHERE c.member_user_id=?',user.id);
+      const valid=hold?undefined:records.find(value=>now-Number(value.synced_at_ms)<=259200000 && activeRow(value,now).supporter);
       const consent=await row(env.MEMBER_DB,'SELECT public_insignia,revision FROM supporter_visibility WHERE member_user_id=?',user.id);
-      return out({available:true,supporter:Boolean(valid),status:valid?'active':records.length?'inactive':'none',
+      return out({available:true,supporter:Boolean(valid),status:hold?'billing-review':valid?'active':records.length?'inactive':'none',
         publicInsignia:consent?.public_insignia===1,revision:Number(consent?.revision)||0,
         until:valid?.current_period_end_ms??null,cancelAtPeriodEnd:valid?.cancel_at_period_end===1,
         interval:valid?.billing_interval??null,plans:{month:500,year:3600}});
@@ -90,6 +95,9 @@ export async function supporterMember(request,env,user,{http=fetch,now=Date.now(
       const existing=await row(db,'SELECT revision FROM supporter_visibility WHERE member_user_id=?',user.id);
       if((existing?.revision??0)!==input.revision)return err(409,'Supporter display settings have changed');
       if(input.publicInsignia){
+        const hold=await row(db,
+          'SELECT h.stripe_customer_id FROM supporter_billing_holds h JOIN supporter_customers c ON c.stripe_customer_id=h.stripe_customer_id WHERE c.member_user_id=?',user.id);
+        if(hold)return err(409,'This billing account requires review');
         const subs=await rows(db,
           'SELECT status,current_period_end_ms,synced_at_ms FROM supporter_subscriptions WHERE member_user_id=? ORDER BY synced_at_ms DESC LIMIT 12',user.id);
         if(!subs.some(v=>now-Number(v.synced_at_ms)<=259200000&&activeRow(v,now).supporter))
@@ -116,6 +124,9 @@ export async function supporterMember(request,env,user,{http=fetch,now=Date.now(
     if(!await row(env.MEMBER_DB,'SELECT user_id FROM member_creator_profiles WHERE user_id=?',user.id))
       return err(409,'Create your profile before supporting.');
     if(path===PREFIX+'/checkout'){
+      const hold=await row(env.MEMBER_DB,
+        'SELECT h.stripe_customer_id FROM supporter_billing_holds h JOIN supporter_customers c ON c.stripe_customer_id=h.stripe_customer_id WHERE c.member_user_id=?',user.id);
+      if(hold)return err(409,'This billing account requires review');
       if(!/^application\/json(?:\s*;|$)/i.test(request.headers.get('content-type')||''))return err(400,'Invalid request');
       const raw=await boundedText(request,128);
       let input;
@@ -268,7 +279,22 @@ export async function supporterWebhook(request,env,{http=fetch,now=Date.now()}={
       return out({received:true});
     const object=event.data.object;
     let result='ignored';
-    if(event.type==='checkout.session.completed' && stripeId('cs',object.id)&&object.id.startsWith('cs_test_')){
+    if(['charge.dispute.created','charge.refunded','refund.created','refund.updated'].includes(event.type)){
+      const refund=event.type.startsWith('refund.');
+      if(!refund||object.status==='succeeded'){
+        const chargeId=refund?object.charge:
+          event.type==='charge.refunded'?object.id:object.charge;
+        if(!stripeId('ch',chargeId))throw Error('Charge identity missing');
+        const charge=await stripeRequest(env,'/v1/charges/'+chargeId,{},http);
+        if(charge?.id!==chargeId||charge.livemode!==false||
+          !stripeId('cus',charge.customer))throw Error('Charge not verifiable');
+        await apply(db,
+          'INSERT OR IGNORE INTO supporter_billing_holds(stripe_customer_id,reason,stripe_event_id,created_at_ms) VALUES(?,?,?,?)',
+          charge.customer,event.type==='charge.dispute.created'?'dispute':'refund',event.id,now);
+        result='synced';
+      }
+    }else if(['checkout.session.completed','checkout.session.async_payment_succeeded'].includes(event.type) &&
+      stripeId('cs',object.id)&&object.id.startsWith('cs_test_')){
       const intent=await row(db,
         'SELECT member_user_id FROM supporter_checkout_intents WHERE stripe_checkout_session_id=?',object.id);
       if(intent){
