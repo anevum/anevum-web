@@ -11,12 +11,18 @@ import {canonicalForums} from "./forums.mjs";
 import {canonicalProgression,progressionReady} from './progression.mjs';
 import {canonicalSpace} from "./space.mjs";
 import {boundedText} from "./request-body.mjs";
+import {supporterMember,supporterWebhook} from "./supporter.mjs";
+import {supporterRewardsRoute} from "./supporter-rewards.mjs";
+import {canonicalAccountClosure} from "./account-closure.mjs";
+import {publicSupporterTelemetry,PUBLIC_TELEMETRY_PATH} from "./public-supporter-telemetry.mjs";
+import {canonicalProjectSave,canonicalProjectSaveReady} from "./project-saves.mjs";
 
 const HEALTH=CANONICAL_PREFIX+"/health";
 const METHODS=CANONICAL_PREFIX+"/auth-methods";
 const READ_METHODS=new Set(["GET","HEAD"]);
 const PROFILE=CANONICAL_PREFIX+"/creator-profile";
 const EXPORT=CANONICAL_PREFIX+"/account-export";
+const CLOSURE=CANONICAL_PREFIX+"/account-closure";
 const OWN_SPACE=/^\/api\/v1\/member\/(?:space|wall(?:\/[a-f0-9-]{36})?|media\/(?:avatar|banner))$/;
 const PUBLIC_SPACE=/^\/api\/v1\/members\/([a-z][a-z0-9_]{2,29})\/(?:space|wall|media\/(?:avatar|banner))$/;
 const PUBLIC_MEMBER=/^\/api\/v1\/members\/([a-z][a-z0-9_]{2,29})$/;
@@ -99,18 +105,32 @@ export function createCanonicalStageWorker({authFactory=createCanonicalAuth}={})
     const publicHandle=path.match(PUBLIC_MEMBER);
     const publicCommunity=/^\/api\/v1\/community\/(?:members|activity)$/.test(path);
     const forumRoute=/^\/api\/v1\/community\/(?:threads(?:\/[a-f0-9-]{36}(?:\/(?:replies|reaction))?|\/?)?|reports)$/.test(path)||(/^\/api\/v1\/member\/forum-submissions(?:\/[a-f0-9-]{36})?$/.test(path)||path==="/api/v1/member/forum-review");
+    const publicMetrics=path===PUBLIC_TELEMETRY_PATH;
     const ownSpace=OWN_SPACE.test(path),publicSpace=path.match(PUBLIC_SPACE);
     const ownProgression=/^\/api\/v1\/member\/(?:progression|notifications(?:\/ack)?|xp-test)$/.test(path);
+    const ownSupporter=/^\/api\/v1\/member\/supporter(?:\/(?:checkout|portal|webhook|rewards))?$/.test(path);
+    const supporterHook=path===CANONICAL_PREFIX+"/supporter/webhook";
     const ownProfile=path===PROFILE;
     const ownExport=path===EXPORT;
-    if(path!==HEALTH && path!==METHODS && !publicHandle && !ownProfile && !ownExport && !ownSpace && !publicSpace && !publicCommunity && !forumRoute && !ownProgression &&
+    const ownClosure=path===CLOSURE;
+    const ownProjectSave=path===CANONICAL_PREFIX+"/project-saves" ||
+      /^\/api\/v1\/member\/project-saves\/[a-f0-9]{32}$/.test(path);
+    // This is a proposed, source-only pilot. Do not expose even a GET
+    // endpoint without a deliberate rollout flag and an approved D1 schema.
+    if(ownProjectSave&&env?.CANONICAL_PROJECT_SAVES_ENABLED!=="true")return fail(request,404);
+    if(path!==HEALTH && path!==METHODS && !publicHandle && !ownProfile && !ownExport && !ownClosure && !ownSpace && !publicSpace && !publicCommunity && !forumRoute && !publicMetrics && !ownProgression && !ownSupporter && !ownProjectSave &&
       !(path.startsWith(CANONICAL_AUTH_PATH+"/") &&
         (AUTH_ALLOWLIST[request.method]?.has(path)??false)))
       return fail(request,404);
 
     if((publicHandle||publicSpace) && !READ_METHODS.has(request.method))return fail(request,404);
+    if(publicMetrics&&request.method!=="GET")return fail(request,405);
     if(ownProfile && !["GET","POST","PATCH"].includes(request.method))return fail(request,404);
     if(ownExport && request.method!=="GET")return fail(request,404);
+    if(ownProjectSave && !["GET","PUT","DELETE"].includes(request.method))return fail(request,405);
+    if(ownClosure && !["GET","POST"].includes(request.method))return fail(request,405);
+    if(ownSupporter && !((["/supporter","/supporter/rewards"].some(suffix=>path===CANONICAL_PREFIX+suffix)&&["GET","PATCH"].includes(request.method)) ||
+      (["/supporter/checkout","/supporter/portal","/supporter/webhook"].some(suffix=>path===CANONICAL_PREFIX+suffix)&&request.method==="POST")))return fail(request,405);
     if((path===HEALTH||path===METHODS)&&!READ_METHODS.has(request.method))
       return safeJson(request,{error:"Read-only endpoint"},405);
 
@@ -124,6 +144,9 @@ export function createCanonicalStageWorker({authFactory=createCanonicalAuth}={})
       status:stageReady?"ready":"closed",
       registration:stageReady?(configured.open?"open":configured.invited?"invite-only":"closed"):"closed",
       linkedCreatorAccounts:false,
+      ...(env.CANONICAL_PROJECT_SAVES_ENABLED==="true"?{
+        projectSavesReady:Boolean(stageReady&&await canonicalProjectSaveReady(env))
+      }:{}),
       // Keep the disabled service's original inert health contract unchanged.
       // V031 staging alone includes a schema-readiness signal, no private data.
       ...(env.CANONICAL_XP_TEST_ENABLED==='true'?{
@@ -145,6 +168,7 @@ export function createCanonicalStageWorker({authFactory=createCanonicalAuth}={})
     // Never forward callbacks for disabled OAuth providers.
     const callback=path.match(/^\/api\/v1\/member\/auth\/callback\/(google|github|apple|microsoft)$/);
     if(callback&&!configured[callback[1]])return fail(request,404);
+    if(publicMetrics)return safeResponse(await publicSupporterTelemetry(request,env));
     if(publicCommunity)return safeResponse(await canonicalCommunity(request,env));
     if(forumRoute){
       const publicForumRead=request.method==="GET" && !path.includes("/forum-submissions") && !path.endsWith("/forum-review") && !path.endsWith("/reaction");
@@ -166,6 +190,10 @@ export function createCanonicalStageWorker({authFactory=createCanonicalAuth}={})
       const clean=new Request(request.url,{method:request.method,headers:{accept:"application/json"}});
       return safeResponse(await canonicalPublicCreator(clean,env,CANONICAL_ORIGIN,publicHandle[1]));
     }
+
+    // Stripe does not send a browser Origin. This exact endpoint relies on
+    // raw-body HMAC verification, test-mode lock and a durable event ledger.
+    if(supporterHook)return safeResponse(await supporterWebhook(request,env));
 
     if(ownProfile && ["POST","PATCH"].includes(request.method) && !sameOriginMutation(request))
       return safeJson(request,{error:"Same-origin request required"},403);
@@ -221,10 +249,15 @@ export function createCanonicalStageWorker({authFactory=createCanonicalAuth}={})
 
     try{
       const auth=authFactory(env);
-      if(ownProfile||ownExport||ownSpace||ownProgression){
+      if(ownProfile||ownExport||ownClosure||ownSpace||ownProgression||ownSupporter||ownProjectSave){
         const session=await auth.api.getSession({headers:clean.headers});
         if(!session?.user)return safeJson(request,{error:"Sign-in required"},401);
+        if(ownClosure)return safeResponse(await canonicalAccountClosure(clean,env,session.user,session.session));
+        if(ownProjectSave)return safeResponse(await canonicalProjectSave(clean,env,session.user));
         if(ownProgression)return safeResponse(await canonicalProgression(clean,env,session.user));
+        if(ownSupporter)return safeResponse(path===CANONICAL_PREFIX+"/supporter/rewards"
+          ?await supporterRewardsRoute(clean,env,session.user)
+          :await supporterMember(clean,env,session.user));
         if(ownSpace)return safeResponse(await canonicalSpace(clean,env,session.user));
         return safeResponse(ownExport?
           await canonicalExportMember(clean,env,session.user,CANONICAL_ORIGIN):

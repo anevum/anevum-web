@@ -6,11 +6,12 @@ import {useResource} from "../lib/useResource";
 import {OrbitalMark} from "../components/OrbitalMark";
 import {MemberSpaceDashboard} from "../components/MemberSpaceDashboard";
 import {MemberExperienceMap} from "../components/MemberExperienceMap";
+import {MemberClosurePanel} from "../components/MemberClosurePanel";
 
 const HANDLE=/^[a-z][a-z0-9_]{2,29}$/;
 const CONTROL=/[\u0000-\u001f\u007f]/;
 
-function MemberEditor({memberId,memberName}:{memberId:string;memberName:string}){
+function MemberEditor({memberId,memberName,memberEmail}:{memberId:string;memberName:string;memberEmail:string}){
   // Force an entirely new form/key when the verified Better Auth user changes.
   const navigate=useNavigate();
   const current=useResource(canonicalMe,[memberId]);
@@ -189,7 +190,8 @@ function MemberEditor({memberId,memberName}:{memberId:string;memberName:string})
       </aside>}
     </div>
   </section>;
-  return claimed&&persisted?<MemberSpaceDashboard profile={persisted} editor={editor} newMember={newMember} onSetupComplete={()=>setNewMember(false)}/>:editor;
+  const privacyControls=<MemberClosurePanel memberId={memberId} memberEmail={memberEmail}/>;
+  return <><div>{claimed&&persisted?<MemberSpaceDashboard profile={persisted} editor={editor} newMember={newMember} onSetupComplete={()=>setNewMember(false)}/>:editor}</div>{privacyControls}</>;
 }
 export function Phase1MemberPage(){
  const {data:session,isPending}=canonicalAuthClient.useSession();
@@ -206,5 +208,5 @@ export function Phase1MemberPage(){
    return <section className="av12-account-await"><h1>VERIFY YOUR EMAIL.</h1>
      <p>A verified account is required before opening the profile editor.</p>
      <Link to="/join">RETURN TO SIGN-IN</Link></section>;
- return <MemberEditor key={member.id} memberId={member.id} memberName={member.name||"ANEVUM MEMBER"}/>;
+ return <MemberEditor key={member.id} memberId={member.id} memberName={member.name||"ANEVUM MEMBER"} memberEmail={member.email||""}/>;
 }

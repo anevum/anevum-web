@@ -1,5 +1,5 @@
-import type {FocusKey,WorldTheme} from './canonical-beta';
-export type PublicMember={handle:string;displayName:string;headline:string;worldTheme:WorldTheme;focus:FocusKey[];avatar:boolean;joinedAt:number};
+import type {FocusKey,WorldTheme,SupporterAppearance} from './canonical-beta';
+export type PublicMember={handle:string;displayName:string;headline:string;worldTheme:WorldTheme;focus:FocusKey[];avatar:boolean;joinedAt:number;supporterAppearance?:SupporterAppearance};
 export type PublicWallUpdate=PublicMember&{id:string;excerpt:string;createdAt:number;updatedAt:number};
 export type MemberIndex<T>={items:T[];nextCursor:string|null};
 export async function readMemberCommunity<T>(kind:'members'|'activity',filters:{q?:string;focus?:string;after?:string}={},signal?:AbortSignal):Promise<MemberIndex<T>>{

@@ -4,6 +4,7 @@ import {canonicalAuthClient,canonicalMe,canonicalSpace,spaceRequest,FOCUS_OPTION
 import {readMemberCommunity,type PublicMember,type PublicWallUpdate} from '../lib/member-community';
 import {useResource} from '../lib/useResource';
 import {MemberPortrait} from './MemberPortrait';
+import {SupporterIdentity} from './SupporterSeal';
 import '../member-community.css';
 
 export function CommunityMemberCard({onPosted}:{onPosted:()=>void}){
@@ -27,14 +28,14 @@ function CommunityMemberSession({id,isPending,onPosted}:{id?:string;isPending:bo
  if(own.state==='error')return <section className="mc-own"><p>Your member space could not be loaded.</p><Link className="mc-button" to="/member">OPEN MY SPACE ↗</Link></section>;
  const data=own.state==='ready'?own.data:null,p=data?.profile;
  if(!p)return <section className="mc-own"><div><h2>Your account is ready.</h2><p>Choose your name to open your wall.</p></div><Link className="mc-button" to="/member">CREATE MY SPACE ↗</Link></section>;
- return <section className="mc-own" aria-label="Your community space"><div className="mc-own-top"><Link className="mc-member-identity" to="/member"><MemberPortrait src={data?.space?.media.avatar?'/api/v1/member/media/avatar':undefined} name={p.displayName}/><div><strong>{p.displayName}</strong><span>@{p.handle} · {p.visibility==='public'?'PUBLIC WALL':'PRIVATE WALL'}</span></div></Link><div className="mc-own-actions"><button className="mc-button" onClick={()=>{setWriting(v=>!v);setNotice('')}} aria-expanded={writing}>WRITE ON MY WALL</button><Link to="/member">MY SPACE ↗</Link></div></div>
+ return <section className="mc-own" aria-label="Your community space"><div className="mc-own-top"><Link className="mc-member-identity" to="/member"><MemberPortrait src={data?.space?.media.avatar?'/api/v1/member/media/avatar':undefined} name={p.displayName} supporterFrame={data?.space?.supporterAppearance?.frame}/><div><strong>{p.displayName}</strong><span>@{p.handle} · {p.visibility==='public'?'PUBLIC WALL':'PRIVATE WALL'}</span>{data?.space?.supporterAppearance&&<SupporterIdentity appearance={data.space.supporterAppearance} compact/>}</div></Link><div className="mc-own-actions"><button className="mc-button" onClick={()=>{setWriting(v=>!v);setNotice('')}} aria-expanded={writing}>WRITE ON MY WALL</button><Link to="/member">MY SPACE ↗</Link></div></div>
   {writing&&<form className="mc-compose" onSubmit={event=>void submit(event)}><label htmlFor="community-wall-update">What are you making or exploring?</label><textarea id="community-wall-update" maxLength={2000} rows={4} value={body} onChange={event=>setBody(event.target.value)} disabled={busy} required placeholder="A work in progress, a question, a small discovery…"/><div><small>{p.visibility==='public'?'This entry will be public on your wall and in member activity.':'Your wall is private. This entry will be visible only to you.'} <Link to="/member?tab=profile">EDIT VISIBILITY</Link></small><button className="mc-button" disabled={busy||!body.trim()}>{busy?'SAVING…':p.visibility==='public'?'POST TO PUBLIC WALL':'SAVE TO PRIVATE WALL'}</button></div></form>}
   {error&&<p className="mc-error" role="alert">{error}</p>}{notice&&<p className="mc-notice" role="status">{notice} <Link to="/member?tab=wall">VIEW MY WALL ↗</Link></p>}
  </section>;
 }
 
 function MemberIdentity({member}:{member:PublicMember}){
- return <Link className="mc-member-identity" to={'/@'+member.handle}><MemberPortrait src={member.avatar?'/api/v1/members/'+member.handle+'/media/avatar':undefined} name={member.displayName}/><div><strong>{member.displayName}</strong><span>@{member.handle}</span></div></Link>;
+ return <Link className="mc-member-identity" to={'/@'+member.handle}><MemberPortrait src={member.avatar?'/api/v1/members/'+member.handle+'/media/avatar':undefined} name={member.displayName} supporterFrame={member.supporterAppearance?.frame}/><div><strong>{member.displayName}</strong><span>@{member.handle}</span>{member.supporterAppearance&&<SupporterIdentity appearance={member.supporterAppearance} compact/>}</div></Link>;
 }
 export function PublicMemberDirectory(){
  const [input,setInput]=useState(''),[query,setQuery]=useState(''),[focus,setFocus]=useState('');

@@ -1,0 +1,91 @@
+/* ANEVUM V034 / ANEVUM SUPPORTER COLLECTIBLES
+   Institutional / continuance design package, server-verified cosmetic only.
+   Classes are from a fixed server-approved catalog: NEVER accept user CSS. */
+.av34-studio{color:#f8e9e7;margin:32px 0 10px}
+.av34-intro{max-width:810px;padding:35px 4px 25px}
+.av34-intro h2{font:400 clamp(43px,5vw,72px)/1.08 Georgia,"Iowan Old Style",serif;letter-spacing:-.045em;margin:16px 0}
+.av34-intro h2 em{font-style:italic;color:#e6b6d1}
+.av34-intro p{font:400 16px/1.75 system-ui,sans-serif;color:#d9c4d7;max-width:690px}
+.av34-grid{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(265px,1fr);gap:18px;align-items:start}
+.av34-collection{display:grid;gap:18px;min-width:0}
+.av34-shelf{border:1px solid #c7afc44d;border-radius:22px;background:linear-gradient(145deg,#30263c9c,#151628eb 80%);box-shadow:inset 0 1px #ffffff24,0 20px 35px #08071357;padding:24px 22px}
+.av34-shelf-head{display:flex;align-items:start;gap:14px;justify-content:space-between;margin-bottom:24px}
+.av34-shelf-head h3{font:500 clamp(26px,2.7vw,34px)/1.25 Georgia,serif;letter-spacing:-.02em;color:#f5e5e2;margin:0 0 9px}
+.av34-shelf-head p{font:400 13px/1.6 system-ui,sans-serif;color:#c3b5c7;margin:0;max-width:550px}
+.av34-shelf-head>span{font:700 9px/1.5 ui-monospace,monospace;letter-spacing:.09em;color:#eecab8;white-space:nowrap;padding:7px 0}
+.av34-options{display:grid;grid-template-columns:repeat(auto-fit,minmax(106px,1fr));gap:10px}
+.av34-choice{color:#f2e2eb;background:linear-gradient(150deg,#4e3b586b,#201e33db);border:1px solid #d8bdd04b;border-radius:16px;min-width:0;min-height:170px;padding:12px 6px 14px;display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;box-shadow:inset 0 1px #fff1,0 8px 18px #04030945;transition:border-color .2s,transform .2s}
+.av34-choice:not(:disabled):hover{border-color:#f5d6da;transform:translateY(-2px)}
+.av34-choice.is-selected{border-color:#f6e4d7;box-shadow:0 0 0 1px #f6d8ca8a,inset 0 1px #fff4,0 10px 21px #07041095}
+.av34-choice:disabled{cursor:not-allowed}
+.av34-choice.is-locked{opacity:.68;filter:saturate(.65)}
+.av34-choice strong{font:600 12px/1.4 system-ui,sans-serif;text-align:center;color:#f3e3e8}
+.av34-choice small{color:#ddc6d0;font:700 9px/1.4 ui-monospace,monospace;letter-spacing:.06em;text-align:center}
+.av34-choice-art{position:relative;width:86px;height:82px;display:grid;place-items:center}
+.av34-choice-core{width:61px;height:61px;border-radius:18px;border:2px solid #f1ccda9a;display:grid;place-items:center;background:radial-gradient(circle at 29% 20%,#d3b0d5bb,#6a486c 60%,#26233d);box-shadow:inset 0 1px #fff5,0 5px 15px #0302077d;color:#f8e2df;font:500 30px/1 Georgia,serif}
+.av34-choice-frame-rose .av34-choice-core{border-color:#f6c4cc;background:radial-gradient(circle at 35% 22%,#f7d4d8,#96607f,#452745)}
+.av34-choice-frame-lumen .av34-choice-core{border-color:#c7ecee;background:radial-gradient(circle at 35% 22%,#e4f5e7,#548ea5,#293b65)}
+.av34-choice-frame-stellar .av34-choice-core{border-color:#b4a5ec;background:radial-gradient(circle at 32% 22%,#e2d3fa,#6960a7,#25254f)}
+.av34-choice-frame-continuance .av34-choice-core{border-color:#eacb94;background:radial-gradient(circle at 28% 20%,#fff4d4,#ba8c78,#433455)}
+.av34-choice-aura-eclipse .av34-choice-core{background:radial-gradient(circle at 31% 19%,#d7c5e0,#534469,#080b1a)}
+.av34-choice-aura-ember .av34-choice-core{background:radial-gradient(circle at 31% 19%,#fff0b4,#ce7379,#54284f)}
+.av34-choice-aura-nebula .av34-choice-core{background:radial-gradient(circle at 31% 19%,#a6d6f9,#6165ba,#33234e)}
+.av34-choice-aura-transcosmic .av34-choice-core{background:radial-gradient(circle at 31% 19%,#faf2df,#a9b4df,#582f72)}
+.av34-preview-panel{min-width:0;position:sticky;top:28px;border-radius:23px;overflow:hidden;border:1px solid #ddbecc63;background:linear-gradient(140deg,#312437,#171727);box-shadow:inset 0 1px #fff3,0 22px 48px #03030b8a}
+.av34-preview-top{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:20px 21px;border-bottom:1px solid #dbc4cc42}
+.av34-preview-top>span:last-child{font:600 9px/1.3 ui-monospace,monospace;letter-spacing:.13em;color:#e1b6ca;white-space:nowrap}
+.av34-preview-world{position:relative;isolation:isolate;display:flex;flex-direction:column;align-items:center;justify-content:end;padding:46px 15px 28px;min-height:270px;overflow:hidden;background:radial-gradient(ellipse at 50% 17%,#8f739661,transparent 58%),linear-gradient(#332441,#242b42)}
+.av34-preview-world:before{content:"";position:absolute;z-index:-1;inset:0;background:radial-gradient(circle at 70% 60%,#d5bad74a,transparent 45%);pointer-events:none}
+.av34-preview-world .ms-portrait{margin-bottom:19px;transform:scale(.88);transform-origin:bottom;z-index:2}
+.av34-preview-world .av34-identity{position:relative;z-index:2}
+.av34-preview-shimmer{position:absolute;pointer-events:none;inset:-35% 0 0;opacity:.45;background:conic-gradient(from 20deg at 48% 50%,transparent,#bd9bc726,transparent,#e5bdc31f,transparent);animation:av34-preview-spin 20s linear infinite}
+.av34-preview-id{font:600 9px/1.5 ui-monospace,monospace;letter-spacing:.1em;color:#f1d5d0;margin-top:15px;z-index:2}
+.av34-preview-copy{padding:23px 25px 30px}
+.av34-preview-copy h3{font:500 30px/1.25 Georgia,serif;color:#f6e3e0;margin:0 0 13px}
+.av34-preview-copy p{font:400 13px/1.75 system-ui,sans-serif;color:#d8c7d3}
+.av34-preview-copy .av34-tenure{font:600 10px/1.5 ui-monospace,monospace;color:#f2c9b9;letter-spacing:.09em}
+.av34-preview-copy>small{display:block;font:400 11px/1.65 system-ui,sans-serif;color:#bdaebb;margin-top:22px}
+.av34-preview-copy .av32-primary{width:100%}
+.av34-preview-copy .av32-refresh{display:block;margin-inline:auto}
+.av34-seal{position:relative;isolation:isolate;display:inline-grid;place-items:center;width:68px;height:68px;flex:none;vertical-align:middle;border-radius:50%;border:1px solid #f5dcce82;background:radial-gradient(circle at 30% 22%,#bb8da8,#684c7f 55%,#302139 78%);box-shadow:inset 0 2px 7px #fff6,inset 0 -7px 10px #100b2455,0 0 23px #d3a7c43b,0 8px 15px #0009;color:#f7dde0}
+.av34-seal svg{width:38px;height:38px;filter:drop-shadow(0 2px 3px #231026);z-index:2;color:#fff0ea}
+.av34-seal svg .mark-core-cut{fill:#604b71}
+.av34-seal-ring{position:absolute;inset:6px;border:1px solid #f3dcd090;border-radius:50%;transform:rotate(-35deg) scaleY(.62);box-shadow:0 0 12px #f2c9cf66}
+.av34-seal-star{position:absolute;right:3px;top:2px;z-index:2;font-size:17px;color:#ffeac6}
+.av34-seal-orbit{background:radial-gradient(circle at 27% 18%,#d7c5e4,#716fb0 56%,#333362 85%)}
+.av34-seal-constellation{background:radial-gradient(circle at 29% 20%,#bce0eb,#6180b2 52%,#2f3556 86%)}
+.av34-seal-continuance{background:radial-gradient(circle at 28% 16%,#fff1c7,#b999a4 45%,#6d517d 77%,#332044)}
+.av34-seal-compact{width:46px;height:46px}
+.av34-seal-compact svg{width:27px;height:27px}
+.av34-seal-compact .av34-seal-star{font-size:12px}
+.av34-seal-compact .av34-seal-ring{inset:4px}
+.av34-identity{display:inline-flex;align-items:center;gap:11px;padding:7px 15px 7px 7px;background:linear-gradient(110deg,#cf9cbe3b,#8b74aa30);border:1px solid #e9c3d57d;border-radius:40px;box-shadow:inset 0 1px #fff3,0 3px 18px #0006;max-width:100%}
+.av34-identity>span:last-child{display:grid;gap:3px;min-width:0}
+.av34-identity strong{font:600 12px/1.15 system-ui,sans-serif;color:#fbe6e1;white-space:normal}
+.av34-identity small{font:700 8px/1.25 ui-monospace,monospace;letter-spacing:.13em;color:#ebc8da}
+.av34-identity-compact{gap:9px;padding:5px 13px 5px 5px}
+.av34-identity-compact strong{font-size:11px}
+.ms-cover .av34-identity{margin:7px 0 12px;max-width:310px}
+.ms-portrait.av34-frame{position:relative;overflow:visible;isolation:isolate;border:3px solid #e8cbd6;border-radius:25px;box-shadow:inset 0 2px 1px #fff9,0 0 0 3px #ad8ea68a,0 10px 35px #0a0615ca,0 0 30px #eebcc158;background:radial-gradient(circle at 30% 15%,#bc96b5,#383b58)}
+.ms-portrait.av34-frame img{border-radius:20px}
+.ms-portrait.av34-frame::after{content:"";position:absolute;z-index:1;inset:-8px;border:1px solid #f2ddd6a0;border-radius:29px;transform:scale(1.045);pointer-events:none}
+.ms-portrait.av34-frame-rose{border-color:#f2becb;box-shadow:inset 0 2px #fff9,0 0 0 3px #ca79967a,0 0 28px #ffbfd786,0 10px 25px #0009}
+.ms-portrait.av34-frame-lumen{border-color:#c6e8f1;box-shadow:inset 0 2px #fff9,0 0 0 3px #72b0c17f,0 0 28px #b9f3e98a,0 10px 25px #0009}
+.ms-portrait.av34-frame-stellar{border-color:#d3c2fb;box-shadow:inset 0 2px #fff9,0 0 0 4px #8680bb7f,0 0 38px #aa99ef9c,0 10px 30px #0009}
+.ms-portrait.av34-frame-continuance{border-color:#fae1bc;box-shadow:inset 0 2px #fff9,0 0 0 4px #bd91a97f,0 0 45px #f8ca9b9c,0 10px 30px #0009}
+.av34-aura{position:relative;isolation:isolate;--av34-glow:radial-gradient(ellipse at 70% 20%,#b998c372,transparent 56%)}
+.av34-aura:after{content:"";position:absolute;z-index:0;pointer-events:none;inset:0;background:var(--av34-glow);opacity:.72;mix-blend-mode:screen}
+.av34-aura-eclipse{--av34-glow:radial-gradient(ellipse at 77% 28%,#9da5d06b,transparent 45%),linear-gradient(140deg,#1e22355e,#070d20a1)}
+.av34-aura-ember{--av34-glow:radial-gradient(ellipse at 72% 30%,#efb38c8e,transparent 45%),linear-gradient(140deg,#632c4c66,#401b3680)}
+.av34-aura-nebula{--av34-glow:radial-gradient(ellipse at 68% 20%,#91bce891,transparent 52%),linear-gradient(140deg,#614d997d,#2c355985)}
+.av34-aura-transcosmic{--av34-glow:radial-gradient(ellipse at 67% 19%,#ecd5e39e,transparent 40%),radial-gradient(ellipse at 18% 70%,#a4a8e882,transparent 50%),linear-gradient(140deg,#5c3b6b92,#1e315399)}
+.av34-preview-world.av34-aura:after{z-index:0}
+.av34-preview-world>.av34-preview-shimmer{z-index:1}
+.av34-support-note{padding:15px 20px;border:1px solid #e1b8cb5a;border-radius:14px;background:#292136;color:#ebd9e2;font:400 13px/1.6 system-ui,sans-serif}
+.av34-studio :is(button,a):focus-visible{outline:3px solid #ffe5bf;outline-offset:4px}
+@keyframes av34-preview-spin{to{transform:rotate(360deg)}}
+@media(max-width:1040px){.av34-grid{grid-template-columns:1fr}.av34-preview-panel{position:static}.av34-preview-world{min-height:290px}}
+@media(max-width:600px){.av34-shelf{padding:22px 13px}.av34-options{grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}.av34-choice{min-height:145px;padding:12px 4px}.av34-choice-art{width:70px;height:70px}.av34-choice strong{font-size:10px}.av34-choice small{font-size:8px}.av34-seal{width:60px;height:60px}.av34-seal-compact{width:45px;height:45px}.av34-intro{padding:30px 3px}.av34-preview-panel{border-radius:19px}.av34-shelf-head{flex-wrap:wrap}.ms-identity .av34-identity{max-width:250px}}
+@media(max-width:345px){.av34-options{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(prefers-reduced-motion:reduce){.av34-preview-shimmer{animation:none}.av34-choice{transition:none}.av34-choice:hover{transform:none}}
+@media(forced-colors:active){.av34-shelf,.av34-choice,.av34-preview-panel,.av34-seal,.av34-identity{border:1px solid CanvasText}.av34-choice.is-locked{opacity:1}}

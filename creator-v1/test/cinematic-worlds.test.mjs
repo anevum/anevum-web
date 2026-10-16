@@ -60,14 +60,17 @@ test("interactive art supports mobile, focus-visible and reduced motion",()=>{
 test("secondary pages share the same world art while preserving genuine content and staff/member boundaries",()=>{
   const heading=read("web/src/components/PortalHeading.tsx");
   const project=read("web/src/pages/ProjectPage.tsx");
+  const projectPlayer=read("web/src/components/ProjectPlayerShell.tsx");
   const creators=read("web/src/pages/CreatorsPage.tsx");
   const community=read("web/src/pages/CommunityPage.tsx");
   const css=read("web/src/cinematic-subpages.css");
-  for(const section of [heading,project,creators,community])
+  for(const section of [heading,projectPlayer,creators,community])
     assert.match(section,/CosmicArtwork/);
   assert.match(project,/safeExternal/);
   assert.match(project,/MemberEngagementPanel/);
-  assert.match(project,/CATEGORY ILLUSTRATION/);
+  assert.match(project,/ProjectPlayerShell/);
+  assert.match(projectPlayer,/CosmicArtwork/);
+  assert.match(projectPlayer,/scene={project.category}/);
   assert.match(creators,/memberCreatorProfile/);
   assert.match(creators,/detailed\?\.achievements/);
   assert.match(community,/readProjects/);
@@ -75,7 +78,7 @@ test("secondary pages share the same world art while preserving genuine content 
   assert.match(community,/readCommunityPosts/);
   assert.match(community,/communityPosts === true/);
   assert.match(community,/to="\/boards"/);
-  assert.match(community,/Visit Join for the current account options/);
+  assert.match(community,/invitation-only|invited member testing|Member participation is currently invitation-only|Visit Join for the current account options/i);
   assert.match(css,/prefers-reduced-motion:reduce/);
 });
 
