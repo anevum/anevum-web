@@ -96,7 +96,7 @@ export const canonicalPublic=(handle:string,signal?:AbortSignal)=>
 
 export type SpaceAward={id:string;name:string;detail:string;xp:number;symbol:string;earnedAt:number|null};
 export type SpaceStats={wallPosts:number;awards:number;xp:number;level:number;levelStart:number;nextLevel:number;testXp?:number;artifact?:string|null};
-export type MemberSpace={media:{avatar?:number;banner?:number};awards:SpaceAward[];featuredAwards:string[];showStats:boolean;revision:number;stats?:SpaceStats};
+export type MemberSpace={supporter?:boolean;media:{avatar?:number;banner?:number};awards:SpaceAward[];featuredAwards:string[];showStats:boolean;revision:number;stats?:SpaceStats};
 export type WallEntry={id:string;body:string;createdAt:number;updatedAt:number;revision:number};
 export async function spaceRequest<T>(path:string,method="GET",body?:unknown,signal?:AbortSignal):Promise<T>{
  const owner=alertAccount();
