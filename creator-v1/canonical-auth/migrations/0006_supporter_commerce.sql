@@ -40,3 +40,12 @@ CREATE TABLE IF NOT EXISTS supporter_webhook_events(
   processed_at_ms INTEGER NOT NULL,
   result TEXT NOT NULL CHECK(result IN ('synced','ignored'))
 );
+
+-- Supporter recognition is not a medal or an earned level. A visible
+-- insignia requires explicit opt-in and a currently verified subscription.
+CREATE TABLE IF NOT EXISTS supporter_visibility(
+  member_user_id TEXT PRIMARY KEY NOT NULL REFERENCES "user"(id) ON DELETE CASCADE,
+  public_insignia INTEGER NOT NULL DEFAULT 0 CHECK(public_insignia IN (0,1)),
+  revision INTEGER NOT NULL DEFAULT 1,
+  updated_at_ms INTEGER NOT NULL
+);
