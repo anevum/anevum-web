@@ -2,6 +2,7 @@ import {useCallback,useEffect,useState} from 'react';
 import {Link} from 'react-router-dom';
 import {canonicalAuthClient} from '../lib/canonical-beta';
 import {OrbitalMark} from '../components/OrbitalMark';
+import {SupporterRewardsStudio} from '../components/SupporterRewardsStudio';
 
 type Interval='month'|'year';
 type Billing={available:boolean;supporter:boolean;status:string;until?:number|null;cancelAtPeriodEnd?:boolean;interval?:Interval|null;publicInsignia?:boolean;revision?:number;plans:{month:number;year:number}};
@@ -93,8 +94,8 @@ export function SupporterPage(){
     <div className="av32-price"><strong>{'$'+(interval==='month'?'5':'36')}</strong><span>USD / {interval==='month'?'MONTH':'YEAR'}</span></div>
     <p className="av32-subprice">{interval==='year'?'Equivalent to $3 per month. One payment per year.':'Recurring monthly until cancelled.'}</p>
     <ul className="av32-perks">
-     <li><strong>Distinctive supporter insignia</strong><small>Planned opt-in designation, separate from earned medals</small></li>
-     <li><strong>A more personal space</strong><small>Additional optional cosmetic profile treatments planned</small></li>
+     <li><strong>Collectible subscriber seals</strong><small>Four distinctive milestone marks, earned by verified subscription age, not XP</small></li>
+     <li><strong>Profile frames and wall auras</strong><small>Five illuminated portrait frames and five atmospheric banner treatments</small></li>
      <li><strong>Keep the network independent</strong><small>Support hosting, development, creative infrastructure and upkeep</small></li>
     </ul>
     <p role="status" className="av32-test-note">{billingReview?'BILLING REVIEW REQUIRED · MEMBERSHIP PRIVILEGES PAUSED':supporter?'TEST MEMBERSHIP VERIFIED':enabled?'TEST MODE ONLY · NO LIVE CHARGES':'Enrollment not open. Pricing and benefits are proposals, not a live sale.'}</p>
@@ -111,6 +112,7 @@ export function SupporterPage(){
     <p className="av32-legal">Final benefits, recurring payment terms, cancellation, refunds and tax information must be published before live enrollment. This does not offer investment returns or early financial benefits.</p>
    </article>
   </section>
+  <SupporterRewardsStudio memberId={id}/>
   <section className="av32-afterword"><span className="av32-index">CONTINUANCE / PRINCIPLE 001</span>
    <blockquote>Creativity should be funded by people who believe in it, without selling their attention.</blockquote>
    <p>Creator sales and payouts are a separate future phase. ANEVUM will not hold creator funds or process marketplace transactions until verified publishing and payout systems are ready.</p>
