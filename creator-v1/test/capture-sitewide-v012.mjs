@@ -127,9 +127,11 @@ try{
    await screenshot(name+"-"+width);
    if(name==="home"){
     await evaluate('document.getElementById("world-gateways").scrollIntoView({block:"start"})');
-    await until(()=>evaluate('Array.from(document.querySelectorAll(".av9-world-gateway-art>img")).every(image=>image.complete&&image.naturalWidth>=768)'));
-    const portals=await evaluate('(()=>({images:document.querySelectorAll(".av9-world-gateway-art>img[srcset]").length,links:[...document.querySelectorAll(".av9-world-gateway")].map(a=>a.getAttribute("href")),readingSurface:[...document.querySelectorAll(".av9-world-gateway-content")].every(el=>getComputedStyle(el).position!=="absolute"),overflow:document.documentElement.scrollWidth>innerWidth+1}))()');
-    if(portals.images!==4||!portals.readingSurface||portals.overflow||portals.links.some(href=>!href.includes("/discover?category=")))
+    await until(()=>evaluate('document.querySelectorAll(".av9-world-gateway-art>img").length===4&&Array.from(document.querySelectorAll(".av9-world-gateway-art>img")).every(image=>image.complete&&image.naturalWidth>0)'));
+    // naturalWidth is density-corrected with width-descriptor srcsets. Decode
+    // the selected file itself to verify physical source pixels instead.
+    const portals=await evaluate('(async()=>({images:document.querySelectorAll(".av9-world-gateway-art>img[srcset]").length,resolutions:await Promise.all([...document.querySelectorAll(".av9-world-gateway-art>img")].map(async image=>{const bitmap=await createImageBitmap(await(await fetch(image.currentSrc)).blob());const width=bitmap.width;bitmap.close();return width;})),links:[...document.querySelectorAll(".av9-world-gateway")].map(a=>a.getAttribute("href")),readingSurface:[...document.querySelectorAll(".av9-world-gateway-content")].every(el=>getComputedStyle(el).position!=="absolute"),overflow:document.documentElement.scrollWidth>innerWidth+1}))()');
+    if(portals.images!==4||portals.resolutions.some(width=>width<768)||!portals.readingSurface||portals.overflow||portals.links.some(href=>!href.includes("/discover?category=")))
      throw Error("COMMUNITY_PORTAL_ART_OR_LAYOUT_"+width+":"+JSON.stringify(portals));
     if(width<541){
      await evaluate('document.querySelector("button[aria-label=\"Next collection\"]").click()');
