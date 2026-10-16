@@ -65,3 +65,16 @@ CREATE TABLE IF NOT EXISTS member_studio_rate_limits (
   requests INTEGER NOT NULL CHECK(requests BETWEEN 1 AND 60),
   PRIMARY KEY(user_id,action)
 );
+
+-- Staff-only requests for changes or rejection. Approval/publication requires a
+-- separate, audited release and verified public-catalogue ingestion system.
+CREATE TABLE IF NOT EXISTS member_studio_review_log (
+ id TEXT PRIMARY KEY NOT NULL CHECK(length(id)=36),
+ project_id TEXT NOT NULL REFERENCES member_studio_projects(id) ON DELETE CASCADE,
+ reviewer_id TEXT NOT NULL REFERENCES "user"(id) ON DELETE RESTRICT,
+ action TEXT NOT NULL CHECK(action IN ('changes_requested','rejected')),
+ reason TEXT NOT NULL CHECK(length(reason) BETWEEN 12 AND 1200),
+ created_at INTEGER NOT NULL CHECK(created_at>0)
+);
+CREATE INDEX IF NOT EXISTS idx_member_studio_review_log
+ ON member_studio_review_log(project_id,created_at DESC);
