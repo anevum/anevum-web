@@ -2,7 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {fixture} from './helpers/canonical-fixture.mjs';
-import {supporterMember,reconcileSupporterCheckouts} from '../canonical-auth/supporter.mjs';
+import {supporterMember,reconcileSupporterCheckouts,supporterExportMember} from '../canonical-auth/supporter.mjs';
+import {canonicalExportMember} from '../canonical-auth/profile.mjs';
 import {readSupporterRewards} from '../canonical-auth/supporter-rewards.mjs';
 const ORIGIN='https://a.anevum.com',NOW=1792155000000,DAY=86400000;
 const firstId='cs_test_RecoveryFirst12345',secondId='cs_test_RecoverySecond12345';
@@ -145,6 +146,7 @@ test('cron reconciles paid, expired and incomplete checkouts without minting XP'
  const http=async url=>{
   if(url.endsWith('/checkout/sessions/'+firstId))return json(session(firstId,badOwner?'member-two':'member-one'));
   if(url.endsWith('/checkout/sessions/'+secondId))return json(session(secondId,'member-two','expired','unpaid'));
+  if(url.endsWith('/checkout/sessions/cs_test_RecoveryThird12345'))return json(session('cs_test_RecoveryThird12345','member-one'));
   if(url.endsWith('/subscriptions/'+subId))return json(subscription(env));
   throw Error('Unexpected Stripe URL '+url);
  };
@@ -179,5 +181,43 @@ test('mismatched Checkout interval or owner cannot grant cosmetics',async()=>{
   assert.equal(db.prepare('SELECT COUNT(*) AS n FROM supporter_subscriptions').get().n,0);
   assert.equal(db.prepare('SELECT completed_at_ms FROM supporter_checkout_intents').get().completed_at_ms,null);
   assert.equal(await readSupporterRewards(env,member.id,NOW),null);
+ }finally{db.close()}
+});
+
+test('member privacy export includes own billing and cosmetics but not other accounts',async()=>{
+ const {db,env,member}=setup();
+ try{
+  db.prepare('INSERT INTO supporter_customers(member_user_id,stripe_customer_id,created_at_ms) VALUES(?,?,?)')
+   .run(member.id,customer,NOW);
+  db.prepare('INSERT INTO supporter_customers(member_user_id,stripe_customer_id,created_at_ms) VALUES(?,?,?)')
+   .run('member-two','cus_OtherAccount12345678',NOW);
+  db.prepare('INSERT INTO supporter_visibility(member_user_id,public_insignia,revision,updated_at_ms) VALUES(?,1,1,?)')
+   .run(member.id,NOW);
+  db.prepare('INSERT INTO supporter_appearance(member_user_id,selected_seal,selected_frame,selected_aura,revision,updated_at_ms) VALUES(?,?,?,?,1,?)')
+   .run(member.id,'signal','rose','ember',NOW);
+  const own=await supporterExportMember(env,member.id);
+  assert.equal(own.customerId,customer);
+  assert.equal(own.display.publicInsignia,true);
+  assert.equal(own.appearance.frame,'rose');
+  assert.equal(JSON.stringify(own).includes('cus_OtherAccount12345678'),false);
+  const response=await canonicalExportMember(new Request(ORIGIN+'/api/v1/member/account-export'),env,member,ORIGIN);
+  assert.equal(response.status,200);
+  const exportData=await response.json();
+  assert.equal(exportData.supporter.customerId,customer);
+  assert.equal(exportData.supporter.display.publicInsignia,true);
+  assert.equal(exportData.supporter.appearance.aura,'ember');
+  assert.equal(JSON.stringify(exportData).includes(env.CANONICAL_STRIPE_SECRET_KEY),false);
+  assert.equal(JSON.stringify(exportData).includes('cus_OtherAccount12345678'),false);
+ }finally{db.close()}
+});
+test('export without any supporter schema continues to return the existing member profile',async()=>{
+ const {db,env}=fixture();
+ const member={id:'member-one',email:'member-one@fixture.invalid',emailVerified:true,name:'One'};
+ try{
+  db.prepare('INSERT INTO user(id,name,email,emailVerified,createdAt,updatedAt) VALUES(?,?,?,1,0,0)')
+   .run(member.id,member.name,member.email);
+  const result=await canonicalExportMember(new Request(ORIGIN+'/api/v1/member/account-export'),env,member,ORIGIN);
+  assert.equal(result.status,200);
+  assert.equal('supporter' in await result.json(),false);
  }finally{db.close()}
 });
