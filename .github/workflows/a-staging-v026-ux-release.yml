@@ -48,7 +48,7 @@ jobs:
           node --input-type=module <<'NODE'
           import assert from "node:assert/strict";
           import {readFileSync} from "node:fs";
-          const c=JSON.parse(readFileSync("creator-v1/wrangler.a-canonical-invited-v026.jsonc","utf8"));
+          const c=JSON.parse(readFileSync("creator-v1/wrangler.a-canonical-invited-v024.jsonc","utf8"));
           assert.equal(c.name,"anevum-creator-v1-a-staging");
           assert.equal(c.account_id,"2f7ee83107240152097efd956a4e8335");
           assert.equal(c.main,"./web/a-canonical-stage.review.mjs");
@@ -165,7 +165,7 @@ jobs:
           }
           trap rollback EXIT
           deployed=1
-          npx wrangler deploy --config creator-v1/wrangler.a-canonical-invited-v026.jsonc --keep-vars
+          npx wrangler deploy --config creator-v1/wrangler.a-canonical-invited-v024.jsonc --keep-vars
           cf "$api/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/$CF_WORKER/settings" > "$RUNNER_TEMP/stage-settings-after.json"
           jq -e '
             .success and
