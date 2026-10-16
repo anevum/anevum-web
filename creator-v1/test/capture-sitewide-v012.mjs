@@ -70,6 +70,7 @@ try{
   ["community","/community",".ch7-hub"],["boards","/boards",".cnb-hub"],
   ["levels","/levels",".levels-page"],["start","/start",".start-page"],
   ["guide","/guide",".field-guide-page"],["status","/status",".status-list"],
+  ["quanto-demo","/quanto/demo",".qt0"],
   ["guest-library","/library",".member-gate"],
   ["member-account","/account",".member-shell"],
   ["member-profile-editor","/account/edit",".member-profile-page"],
@@ -81,7 +82,7 @@ try{
   await client.send("Emulation.setDeviceMetricsOverride",{width,height,deviceScaleFactor:1,mobile:width<641});
   await client.send("Emulation.setEmulatedMedia",{features:[{name:"prefers-reduced-motion",value:"reduce"}]});
   const selected=width===1440||width===390?pages:pages.filter(([id])=>
-   ["home","discover","project","community","boards","levels","guest-library"].includes(id));
+   ["home","discover","project","community","boards","levels","guest-library","quanto-demo"].includes(id));
   for(const [name,path,selector] of selected){
    if(name==="guest-library")await client.send("Network.clearBrowserCookies");
    const target=base+"/creator"+path;
@@ -125,6 +126,60 @@ try{
       throw Error("SITEWIDE_V012_LEVELS_TEXT_SQUEEZED_"+width+":"+JSON.stringify(metrics));
    }
    await screenshot(name+"-"+width);
+
+   if(name==="quanto-demo"){
+     // All instructions are fictional and remain inside browser React memory.
+     const prepare=async(count,amountText)=>{
+       await evaluate('document.querySelector(".qt0-primary").click()');
+       await until(()=>evaluate('!!document.querySelector(".qt0-confirm")'));
+       const description=await evaluate('document.querySelector(".qt0-confirm p")?.textContent||""');
+       if(!description.includes(amountText))
+         throw Error("QUANTO_BROWSER_WRONG_REVIEW_"+width+":"+description);
+       await evaluate('document.querySelector(".qt0-confirm button:first-child").click()');
+       await until(()=>evaluate('document.querySelector(".qt0-journal")?.children.length==='+count));
+     };
+     const mode=async index=>{
+       await evaluate('document.querySelector(".qt0-modes button:nth-child('+index+')").click()');
+       await until(()=>evaluate('document.querySelector(".qt0-modes button:nth-child('+index+')")?.getAttribute("aria-pressed")==="true"'));
+     };
+     const selected=async(selector,value)=>{
+       await evaluate('(()=>{const el=document.querySelector('+JSON.stringify(selector)+');if(!el)throw Error("missing select");el.value='+JSON.stringify(value)+';el.dispatchEvent(new Event("change",{bubbles:true}));return el.value;})()');
+     };
+     const setAmount=async value=>{
+       await evaluate('(()=>{const el=document.querySelector("#qt0-amount");Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,"value").set.call(el,'+JSON.stringify(value)+');el.dispatchEvent(new Event("input",{bubbles:true}));return el.value;})()');
+     };
+     const signal=await evaluate('document.querySelector(".qt0-signal")?.innerText||""');
+     if(!signal.includes("NO REAL MONEY"))throw Error("QUANTO_BROWSER_VALUE_BOUNDARY_"+width);
+     await prepare(1,"25.00");
+     await mode(2); // Transfer between fictional wallets.
+     await selected("#qt0-from","creator");
+     await selected("#qt0-to","studio");
+     await setAmount("9.25");
+     await prepare(2,"9.25");
+     await mode(3); // Burn units through simulated redemption.
+     await selected("#qt0-from","studio");
+     await setAmount("2.00");
+     await prepare(3,"2.00");
+     const ledger=await evaluate('(()=>({cards:[...document.querySelectorAll(".qt0-wallet strong")].map(el=>el.textContent),reserve:document.querySelector(".qt0-stats>div:nth-child(2) strong")?.textContent,overflow:document.documentElement.scrollWidth>innerWidth+1,lines:document.querySelectorAll(".qt0-journal li").length}))()');
+     if(ledger.cards.join("|")!=="0.00 QTO|15.75 QTO|7.25 QTO"||
+       ledger.reserve!=="23.00 sim-USD"||ledger.lines!==3||ledger.overflow)
+       throw Error("QUANTO_BROWSER_ACCOUNTING_"+width+":"+JSON.stringify(ledger));
+     await screenshot("quanto-after-"+width);
+     await mode(2);
+     await selected("#qt0-from","operator");
+     await selected("#qt0-to","studio");
+     await setAmount("10.00");
+     await evaluate('document.querySelector(".qt0-primary").click()');
+     await until(()=>evaluate('!!document.querySelector(".qt0-error")'));
+     if(await evaluate('!!document.querySelector(".qt0-confirm")'))
+       throw Error("QUANTO_BROWSER_OVERDRAW_REVIEWED_"+width);
+     await evaluate('(()=>{const buttons=[...document.querySelectorAll(".qt0-actions button")];buttons.find(el=>el.textContent.includes("RESET SIMULATION")).click()})()');
+     await until(()=>evaluate('!document.querySelector(".qt0-journal") && !!document.querySelector(".qt0-empty")'));
+     const empty=await evaluate('document.querySelector(".qt0-stats strong")?.textContent');
+     if(empty!=="0.00 QTO")throw Error("QUANTO_BROWSER_RESET_FAILED_"+width+":"+empty);
+     results.push({page:"quanto-interaction",width,passed:true,fictional:true});
+     console.log("QUANTO_BROWSER_"+width+"=PASS");
+   }
    results.push({page:name,width,...state});
    console.log("SITEWIDE_V012_"+name.toUpperCase()+"_"+width+"=PASS");
   }
