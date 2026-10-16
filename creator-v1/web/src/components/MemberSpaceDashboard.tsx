@@ -1,5 +1,5 @@
 import {type ReactNode,useEffect,useState} from 'react';
-import {Link} from 'react-router-dom';
+import {Link,useSearchParams} from 'react-router-dom';
 import {canonicalAuthClient,canonicalSpace,canonicalWall,spaceRequest,type CanonicalProfile,type MemberSpace,type WallEntry} from '../lib/canonical-beta';
 import {MemberPortrait} from './MemberPortrait';
 import {ProfileImageEditor} from './ProfileImageEditor';
@@ -13,7 +13,10 @@ export function SpaceProgress({space}:{space:MemberSpace}){
  <dl className="ms-stat-grid"><div><dt>Wall entries</dt><dd>{s.wallPosts}</dd></div><div><dt>Awards earned</dt><dd>{s.awards}</dd></div><div><dt>Member XP</dt><dd>{s.xp}</dd></div></dl></section>;
 }
 export function MemberSpaceDashboard({profile,editor,newMember=false,onSetupComplete}:{profile:CanonicalProfile;editor:ReactNode;newMember?:boolean;onSetupComplete:()=>void}){
- const [tab,setTab]=useState<Tab>(newMember?'appearance':'overview');
+ const [params,setParams]=useSearchParams();
+ const selected=params.get('tab');
+ const tab:Tab=['overview','profile','appearance','awards','wall'].includes(selected||'')?selected as Tab:newMember?'appearance':'overview';
+ function setTab(value:Tab){const next=new URLSearchParams(params);next.set('tab',value);setParams(next)}
  const [space,setSpace]=useState<MemberSpace|null>(null),[posts,setPosts]=useState<WallEntry[]>([]),[loading,setLoading]=useState(true);
  const [error,setError]=useState(''),[notice,setNotice]=useState(''),[busy,setBusy]=useState(false);
  const [featured,setFeatured]=useState<string[]>([]),[showStats,setShowStats]=useState(true);
@@ -30,7 +33,7 @@ export function MemberSpaceDashboard({profile,editor,newMember=false,onSetupComp
    <button className="ms-cover-edit" onClick={()=>setTab('appearance')}>EDIT BANNER ↗</button>
    <div className="ms-identity"><button className="ms-avatar-button" onClick={()=>setTab('appearance')} aria-label="Change profile picture"><MemberPortrait src={avatar} key={space?.media.avatar} name={profile.displayName}/><span>EDIT</span></button><div><p className="ms-handle">@{profile.handle}</p><h1 id="ms-title" tabIndex={-1}>{profile.displayName}</h1><p>{profile.headline||'Your place in the continuance.'}</p></div></div>
   </header>
-  <div className="ms-toolbar"><nav aria-label="My space sections">{([['overview','Dashboard'],['wall','My wall'],['profile','Edit profile'],['appearance','Appearance'],['awards','Awards & stats']] as [Tab,string][]).map(([key,label])=><button key={key} aria-current={tab===key?'page':undefined} onClick={()=>{setTab(key);setNotice('')}}>{label}</button>)}</nav><div className="ms-toolbar-links">{profile.visibility==='public'?<Link to={'/@'+profile.handle}>VIEW PUBLIC WALL ↗</Link>:<button onClick={()=>setTab('profile')}>VISIBILITY SETTINGS</button>}</div></div>
+  <div className="ms-toolbar"><nav aria-label="My space sections">{([['overview','Dashboard'],['wall','My wall'],['profile','Edit profile'],['appearance','Appearance'],['awards','Awards & stats']] as [Tab,string][]).map(([key,label])=><button key={key} aria-current={tab===key?'page':undefined} onClick={()=>{setTab(key);setNotice('')}}>{label}</button>)}</nav><div className="ms-toolbar-links"><Link to="/community">COMMUNITY ↗</Link> {profile.visibility==='public'?<Link to={'/@'+profile.handle}>VIEW PUBLIC WALL ↗</Link>:<button onClick={()=>setTab('profile')}>VISIBILITY SETTINGS</button>}</div></div>
   {newMember&&<section className="ms-welcome" aria-label="Finish setting up your space"><div><span className="kicker">IDENTITY SAVED / MAKE YOURSELF AT HOME</span><h2>Welcome to your own corner of ANEVUM.</h2><p>Add a portrait and a banner, then look around. You can change these anytime.</p></div><div className="ms-actions"><button className="ms-primary" onClick={()=>{onSetupComplete();setTab('wall')}}>CONTINUE TO MY WALL →</button><button onClick={()=>{onSetupComplete();setTab('overview')}}>SKIP FOR NOW</button></div></section>}
   <div className="ms-body">
    {loading&&<p role="status">Opening your space…</p>}

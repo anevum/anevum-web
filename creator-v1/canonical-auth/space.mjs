@@ -122,7 +122,8 @@ export async function canonicalSpace(req,env,user,publicHandle=null,now=Math.flo
    }
    if(!['POST','PATCH'].includes(req.method)||Boolean(postId)!==(req.method==='PATCH'))return error(405,'Method not allowed');
    const body=await input(req);
-   if(!body||!keys(body,postId?['body','revision']:['body'])||typeof body.body!=='string'||!body.body.trim()||body.body.length>2000||/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/.test(body.body)||
+   if(!body||!keys(body,postId?['body','revision']:Object.hasOwn(body,'expectedVisibility')?['body','expectedVisibility']:['body'])||typeof body.body!=='string'||!body.body.trim()||body.body.length>2000||/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/.test(body.body)||
+     (!postId&&Object.hasOwn(body,'expectedVisibility')&&!['public','private'].includes(body.expectedVisibility))||
      (postId&&(!Number.isSafeInteger(body.revision)||body.revision<1)))return error(400,'Write an entry of 1–2,000 characters.');
    if(!await allowance(db,id,now))return error(429,'Too many changes. Try again in an hour.');
    if(postId){
@@ -131,8 +132,8 @@ export async function canonicalSpace(req,env,user,publicHandle=null,now=Math.flo
    }else{
     const count=await db.prepare('SELECT COUNT(*) AS count FROM member_wall_posts WHERE user_id=?').bind(id).first();
     if(count.count>=50)return error(409,'Your wall holds 50 entries. Remove an older entry before posting.');
-    const inserted=await rows(db,'INSERT INTO member_wall_posts(id,user_id,body,created_at,updated_at) SELECT ?,?,?,?,? WHERE (SELECT COUNT(*) FROM member_wall_posts WHERE user_id=?)<50 RETURNING id',crypto.randomUUID(),id,body.body.trim(),now,now,id);
-    if(!inserted.length)return error(409,'Your wall holds 50 entries. Remove an older entry before posting.');
+    const inserted=await rows(db,'INSERT INTO member_wall_posts(id,user_id,body,created_at,updated_at) SELECT ?,?,?,?,? WHERE (SELECT COUNT(*) FROM member_wall_posts WHERE user_id=?)<50 AND (? IS NULL OR EXISTS(SELECT 1 FROM member_creator_profiles WHERE user_id=? AND visibility=?)) RETURNING id',crypto.randomUUID(),id,body.body.trim(),now,now,id,body.expectedVisibility??null,id,body.expectedVisibility??null);
+    if(!inserted.length)return error(409,'Your wall or its visibility changed. Reload before posting.');
    }
    await grantMilestones(db,id,now);return json({ok:true},postId?200:201);
   }

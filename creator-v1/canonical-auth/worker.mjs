@@ -6,6 +6,7 @@ import {
 import {createCanonicalAuth} from "./auth.mjs";
 import {canonicalCreatorSchemaReady,canonicalCreatorMember,canonicalPublicCreator,canonicalExportMember} from "./profile.mjs";
 import {permitCanonicalUserCreation} from "./policy.mjs";
+import {canonicalCommunity} from "./community.mjs";
 import {canonicalSpace} from "./space.mjs";
 import {boundedText} from "./request-body.mjs";
 
@@ -94,10 +95,11 @@ export function createCanonicalStageWorker({authFactory=createCanonicalAuth}={})
     if(!isCanonicalOrigin(request))return fail(request,404);
     const url=new URL(request.url),path=url.pathname;
     const publicHandle=path.match(PUBLIC_MEMBER);
+    const publicCommunity=/^\/api\/v1\/community\/(?:members|activity)$/.test(path);
     const ownSpace=OWN_SPACE.test(path),publicSpace=path.match(PUBLIC_SPACE);
     const ownProfile=path===PROFILE;
     const ownExport=path===EXPORT;
-    if(path!==HEALTH && path!==METHODS && !publicHandle && !ownProfile && !ownExport && !ownSpace && !publicSpace &&
+    if(path!==HEALTH && path!==METHODS && !publicHandle && !ownProfile && !ownExport && !ownSpace && !publicSpace && !publicCommunity &&
       !(path.startsWith(CANONICAL_AUTH_PATH+"/") &&
         (AUTH_ALLOWLIST[request.method]?.has(path)??false)))
       return fail(request,404);
@@ -134,6 +136,7 @@ export function createCanonicalStageWorker({authFactory=createCanonicalAuth}={})
     // Never forward callbacks for disabled OAuth providers.
     const callback=path.match(/^\/api\/v1\/member\/auth\/callback\/(google|github|apple|microsoft)$/);
     if(callback&&!configured[callback[1]])return fail(request,404);
+    if(publicCommunity)return safeResponse(await canonicalCommunity(request,env));
     if(publicSpace){
       if(request.method!=="GET")return fail(request,405);
       return safeResponse(await canonicalSpace(request,env,null,publicSpace[1]));

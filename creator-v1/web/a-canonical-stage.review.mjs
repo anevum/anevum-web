@@ -14,7 +14,7 @@ export default {
    if(url.origin!==ORIGIN || url.protocol!=="https:"){
      return new Response("Not found",{status:404,headers:{"cache-control":"no-store"}});
    }
-   if(CANONICAL_PATH.test(url.pathname)||PUBLIC_IDENTITY.test(url.pathname)){
+   if(CANONICAL_PATH.test(url.pathname)||PUBLIC_IDENTITY.test(url.pathname)||/^\/api\/v1\/community\/(?:members|activity)$/.test(url.pathname)){
      // This Worker itself checks exact origin, issuer, dedicated D1, CSRF,
      // route/method allowlists and account opt-in. Never proxy older sessions.
      return canonicalIdentity.fetch(request,env,ctx);

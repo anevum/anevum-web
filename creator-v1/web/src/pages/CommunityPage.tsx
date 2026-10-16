@@ -11,6 +11,7 @@ import { CosmicArtwork } from "../components/CosmicArtwork";
 import { Icon } from "../components/Icons";
 import { LoadingState, ErrorState } from "../components/States";
 import "./community-hub-v007.css";
+import {CommunityMemberCard,PublicMemberDirectory,PublicMemberActivity} from "../components/MemberCommunity";
 
 /**
  * Creator V1 / Community V007.
@@ -26,7 +27,7 @@ const views: readonly { id: View; label: string; hint: string }[] = [
   { id: "all", label: "LATEST", hint: "Approved projects and conversations" },
   { id: "projects", label: "PROJECTS", hint: "Things the community has made" },
   { id: "conversations", label: "DISCUSSIONS", hint: "Moderated public conversations" },
-  { id: "people", label: "PEOPLE", hint: "Public creator channels" }
+  { id: "people", label: "PEOPLE", hint: "Member walls and public creator channels" }
 ];
 const fields: readonly { id: Category; label: string }[] = [
   { id: "games", label: "Games & Play" },
@@ -165,7 +166,7 @@ export function CommunityPage() {
         <div className="ch7-hero-actions"><Link className="ch7-button ch7-button-primary" to="/discover">EXPLORE THE WORK <Icon name="arrow" size={15}/></Link>
           <a className="ch7-button" href="#ch7-stream" onClick={() => setView("conversations")}>READ DISCUSSIONS <Icon name="community" size={15}/></a></div>
       </div>
-      <aside className="ch7-status" aria-label="Verified public community counts"><span className="ch7-kicker">PUBLIC RECORD / VERIFIED</span>
+      <aside className="ch7-status" aria-label="Verified public community counts"><span className="ch7-kicker">PUBLISHED WORK / VERIFIED</span>
         <div className="ch7-count-grid">
           <div><strong>{status.state === "ready" ? status.data.counts.publishedProjects : "—"}</strong><span>APPROVED PROJECTS</span></div>
           <div><strong>{status.state === "ready" ? status.data.counts.publishedCreators : "—"}</strong><span>PUBLIC CREATORS</span></div>
@@ -174,24 +175,29 @@ export function CommunityPage() {
       </aside>
     </section>
 
+    <CommunityMemberCard onPosted={()=>setRevision(value=>value+1)}/>
+
     <nav className="ch7-portals" aria-label="Community destinations">
       <Link to="/discover"><Icon name="explore" size={19}/><span><strong>DISCOVER</strong><small>Explore new creations</small></span><Icon name="arrow" size={15}/></Link>
       <Link to="/boards"><Icon name="library" size={19}/><span><strong>THE BOARDS</strong><small>Releases & first looks</small></span><Icon name="arrow" size={15}/></Link>
-      <Link to="/create"><Icon name="create" size={19}/><span><strong>MAKE & SHARE</strong><small>Invited member testing</small></span><Icon name="arrow" size={15}/></Link>
+      <Link to="/member?tab=wall"><Icon name="create" size={19}/><span><strong>YOUR WALL</strong><small>Write, share & make it yours</small></span><Icon name="arrow" size={15}/></Link>
       <Link to="/levels"><Icon name="star" size={19}/><span><strong>RECOGNITION</strong><small>Progress earned fairly</small></span><Icon name="arrow" size={15}/></Link>
     </nav>
 
     <header className="ch7-section-header"><div><span className="ch7-kicker">ANEVUM / OPEN PUBLIC INDEX</span><h2>Inside the <em>community.</em></h2></div>
-      <p>Real approved projects, genuine creators and independently moderated discussion. Anything private or still awaiting review stays private.</p>
+      <p>Public member worlds, approved projects and moderated discussions. Meet someone new or share a signal from your wall.</p>
     </header>
 
-    <div className="ch7-columns">
-      <section className="ch7-main" id="ch7-stream" aria-label="Community activity">
         <div className="ch7-tabs-row"><div className="ch7-tabs" role="group" aria-label="Choose a community view">
           {views.map(item => <button key={item.id} type="button" aria-pressed={view === item.id}
             title={item.hint} onClick={() => setView(item.id)}>{item.label}</button>)}</div>
           <button className="ch7-refresh" type="button" disabled={loading} onClick={() => setRevision(current => current + 1)}>↻ REFRESH</button>
         </div>
+    {view==="all"&&<PublicMemberActivity revision={revision}/>}
+    {view==="people"&&<PublicMemberDirectory/>}
+
+    <div className="ch7-columns">
+      <section className="ch7-main" id="ch7-stream" aria-label="Community activity">
         <div className="ch7-toolbar">
           <div><span className="ch7-kicker">{view === "people" ? "CREATOR DIRECTORY" : view === "conversations" ? "MODERATED CONVERSATIONS" : "THE LATEST VERIFIED WORK"}</span>
             <p>{view === "all" ? "A recent excerpt, newest first. Never a simulated social feed." :
