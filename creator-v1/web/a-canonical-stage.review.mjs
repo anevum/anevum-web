@@ -6,7 +6,7 @@ import canonicalIdentity from "../canonical-auth/worker.mjs";
 
 const ORIGIN="https://a.anevum.com";
 const CANONICAL_PATH=/^\/api\/v1\/member\//;
-const PUBLIC_IDENTITY=/^\/api\/v1\/members\/[a-z][a-z0-9_]{2,29}$/;
+const PUBLIC_IDENTITY=/^\/api\/v1\/members\/[a-z][a-z0-9_]{2,29}(?:\/(?:space|wall|media\/(?:avatar|banner)))?$/;
 
 export default {
  async fetch(request,env,ctx){

@@ -136,7 +136,9 @@ test("unbounded ANEVUM level presentation is independent of member permissions",
   assert.match(panel,/NO LEVEL CAP/);
   assert.match(levels,/FIRST 60 ARTIFACTS/);
   assert.match(levels,/moderation powers/);
-  assert.match(levels,/2 XP/);
+  assert.match(levels,/10 XP/);
+ assert.match(levels,/25 XP/);
+ assert.match(levels,/does not grant extra XP/);
 });
 
 

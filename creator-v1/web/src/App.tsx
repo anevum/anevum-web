@@ -14,8 +14,6 @@ import {CommunityPostPage} from "./pages/CommunityPostPage";
 import {CommunityPostEditorPage} from "./pages/CommunityPostEditorPage";
 import { MemberGate } from "./components/MemberGate";
 import { LoadingState } from "./components/States";
-import { MemberAccountPage } from "./pages/MemberAccountPage";
-import { MemberProfileEditorPage } from "./pages/MemberProfileEditorPage";
 import { MemberLibraryPage } from "./pages/MemberLibraryPage";
 import { MemberProjectsPage } from "./pages/MemberProjectsPage";
 import { ProjectEditorPage } from "./pages/ProjectEditorPage";
@@ -67,6 +65,8 @@ export default function App(){
       <Route path="boards" element={<Suspense fallback={pageFallback}><PublicBoardsPage/></Suspense>}/>
     <Route path="community/posts/:id" element={<CommunityPostPage/>}/>
     <Route path="workspace" element={<Navigate to="/account" replace/>}/>
+    <Route path="account" element={<Navigate to="/member" replace/>}/>
+    <Route path="account/edit" element={<Navigate to="/member" replace/>}/>
     <Route element={<MemberGate/>}>
       <Route path="account/studio" element={<MemberProjectsPage/>}/>
       <Route path="create" element={<MemberProjectsPage/>}/>
@@ -74,8 +74,7 @@ export default function App(){
     <Route path="community/write" element={<CommunityPostEditorPage/>}/>
       <Route path="create/:projectId" element={<ProjectEditorPage/>}/>
       <Route path="library" element={<MemberLibraryPage/>}/>
-      <Route path="account" element={<MemberAccountPage/>}/>
-      <Route path="account/edit" element={<MemberProfileEditorPage/>}/>
+
     </Route>
     <Route path="levels" element={<LevelsPage/>}/>
     <Route path="status" element={<StatusPage/>}/>

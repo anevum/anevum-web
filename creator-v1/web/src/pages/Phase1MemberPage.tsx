@@ -4,6 +4,7 @@ import {canonicalAuthClient,canonicalClaim,canonicalEdit,canonicalMe,canonicalRe
   CanonicalBetaError,type CanonicalProfile,type WorldTheme,type FocusKey,WORLD_THEME_OPTIONS,FOCUS_OPTIONS} from "../lib/canonical-beta";
 import {useResource} from "../lib/useResource";
 import {OrbitalMark} from "../components/OrbitalMark";
+import {MemberSpaceDashboard} from "../components/MemberSpaceDashboard";
 import {MemberExperienceMap} from "../components/MemberExperienceMap";
 
 const HANDLE=/^[a-z][a-z0-9_]{2,29}$/;
@@ -25,18 +26,20 @@ function MemberEditor({memberId,memberName}:{memberId:string;memberName:string})
   const [notice,setNotice]=useState("");
   const [persisted,setPersisted]=useState<CanonicalProfile|null>(null);
   const [loaded,setLoaded]=useState(false);
+  const [newMember,setNewMember]=useState(false);
 
   useEffect(()=>{
     if(current.state!=="ready"||current.data?.memberId!==memberId)return;
     const value=current.data.profile;
     setHandle(value?.handle||"");
-    setDisplayName(value?.displayName||memberName);
+    setDisplayName(value?.displayName||(memberName==="ANEVUM MEMBER"?"":memberName));
     setBio(value?.bio||"");
     setHeadline(value?.headline||"");
     setWorldTheme(value?.worldTheme||"continuance");
     setFocus(value?.focus||[]);
     setPublicVisible(value?.visibility==="public");
     setPersisted(value);
+    if(!value)setNewMember(true);
     setLoaded(true);
   },[current.state, current.state==="ready"?current.data?.profile?.revision:null,memberId,memberName]);
 
@@ -48,7 +51,7 @@ function MemberEditor({memberId,memberName}:{memberId:string;memberName:string})
     const name=displayName.trim(),description=bio.trim();
     const requestedHandle=handle.trim().toLowerCase();
     if((!claimed&&(!HANDLE.test(requestedHandle)))||!name||name.length>80||
-       description.length>1200||CONTROL.test(name+description+headline)||headline.length>120||
+       description.length>1200||(CONTROL.test(name+headline)||/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/.test(description))||headline.length>120||
        focus.length>4){
       setError("Check the handle, display name and biography.");return;
     }
@@ -95,19 +98,19 @@ function MemberEditor({memberId,memberName}:{memberId:string;memberName:string})
     setFocus(value=>value.includes(key)?value.filter(item=>item!==key):
       value.length<4?[...value,key]:value);
   }
-  return <section className={"av12-account"+(claimed?"":" av26-first-visit")} aria-labelledby="av12-account-title">
+  const editor = <section className={"av12-account"+(claimed?"":" av26-first-visit")} aria-labelledby="av12-account-title">
     <div className="av12-account-banner">
       <div className="av12-account-orb" aria-hidden="true"><OrbitalMark/></div>
       <p className="kicker">ANEVUM / MEMBER ATLAS</p>
       <h1 id="av12-account-title">{claimed?"YOUR OWN UNIVERSE.":"CHOOSE YOUR NAME."}</h1>
-      <p>{claimed?"Shape your presence in the ANEVUM community.":"Pick your unique handle and display name to finish joining. Everything else can wait."}</p>
+      <p>{claimed?"Shape your presence in the ANEVUM community.":"Your email is verified. Choose a handle and the name people will see. Your wall is next."}</p>
       <div className="av12-account-banner-links">{claimed&&<Link to="/discover">EXPLORE THE NETWORK ↗</Link>}
         {claimed&&<a href="/api/v1/member/account-export" download="anevum-member-export.json">
           DOWNLOAD MY DATA ↓
         </a>}
         <button type="button" onClick={()=>void signOut()} disabled={busy}>SIGN OUT</button></div>
     </div>
-    {ready&&<MemberExperienceMap profile={persisted}/>}
+    {ready&&claimed&&<MemberExperienceMap profile={persisted}/>}
     <div className="av12-account-layout">
       <section className="av12-editor-panel" aria-labelledby="av12-editor-heading">
         <span className="kicker">01 / IDENTITY PROFILE</span>
@@ -127,7 +130,7 @@ function MemberEditor({memberId,memberName}:{memberId:string;memberName:string})
             "This handle belongs to your account and cannot be changed in this beta.":
             "3–30 lowercase letters, numbers or underscores. Start with a letter. Your handle is permanent."}</small>
           <label htmlFor="av12-display">Display name</label>
-          <input id="av12-display" maxLength={80} value={displayName} required disabled={busy}
+          <input id="av12-display" autoComplete="nickname" placeholder="The name people will see" maxLength={80} value={displayName} required disabled={busy}
             onChange={e=>setDisplayName(e.target.value)}/>
           {claimed&&<><label htmlFor="av12-bio">Your introduction</label>
           <textarea id="av12-bio" rows={5} maxLength={1200} value={bio} disabled={busy}
@@ -164,7 +167,7 @@ function MemberEditor({memberId,memberName}:{memberId:string;memberName:string})
                Public pages show only your chosen name and biography—not your email or account ID.</small></span>
            </label>:<p className="av12-privacy-note">Your new profile is private by default. You can opt in to a public page afterward.</p>}
           <button className="av12-save-button" type="submit" disabled={busy}>
-            {busy?"SAVING…":claimed?"SAVE MY PROFILE":"ENTER ANEVUM"}
+            {busy?"SAVING…":claimed?"SAVE MY PROFILE":"CREATE MY SPACE →"}
           </button>
           {notice&&<p role="status" className="av12-save-notice">{notice}</p>}
           {notice&&claimed&&<Link to="/discover" className="av26-continue-world">ENTER THE COMMUNITY <span aria-hidden="true">↗</span></Link>}
@@ -186,6 +189,7 @@ function MemberEditor({memberId,memberName}:{memberId:string;memberName:string})
       </aside>}
     </div>
   </section>;
+  return claimed&&persisted?<MemberSpaceDashboard profile={persisted} editor={editor} newMember={newMember} onSetupComplete={()=>setNewMember(false)}/>:editor;
 }
 export function Phase1MemberPage(){
  const {data:session,isPending}=canonicalAuthClient.useSession();
