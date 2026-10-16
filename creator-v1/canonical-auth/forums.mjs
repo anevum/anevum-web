@@ -6,6 +6,15 @@ const TOPICS=new Set(['games','making','arts','community']);
 const UUID=/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/;
 const CTRL=/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/;
 const permitted=(v,keys)=>Object.keys(v).sort().join('|')===keys.sort().join('|');
+function decodeCursor(value){
+ if(value===null)return null;
+ if(value.length>180)return false;
+ try{
+  const data=JSON.parse(atob(value));
+  return Array.isArray(data)&&data.length===2&&Number.isSafeInteger(data[0])&&data[0]>0&&UUID.test(data[1])?data:false;
+ }catch{return false}
+}
+const encodeCursor=(at,id)=>btoa(JSON.stringify([Number(at),id]));
 async function payload(req){if(!/^application\/json(?:\s*;|$)/i.test(req.headers.get('content-type')||''))return null;const s=await boundedText(req,7000);try{const p=JSON.parse(s);return p&&typeof p==='object'&&!Array.isArray(p)?p:null}catch{return null}}
 const card=(r)=>({handle:r.handle,displayName:r.display_name,avatar:Boolean(r.avatar),level:r.show_stats===0?null:Number(r.level)||1,featuredAwards:JSON.parse(r.featured_json||'[]').filter(x=>['first_signal','world_shaper'].includes(x)).slice(0,3)});
 const authorSql=`JOIN member_creator_profiles p ON p.user_id=t.author_id JOIN "user" u ON u.id=p.user_id
@@ -19,7 +28,9 @@ const selectThread=`SELECT t.id,t.topic,t.title,t.body,t.status,t.created_at,t.p
    COALESCE((SELECT SUM(CASE milestone WHEN 'first_signal' THEN 10 WHEN 'world_shaper' THEN 25 ELSE 0 END)
    FROM member_space_milestones z WHERE z.user_id=t.author_id),0))/25.0
  )) AS INTEGER)) AS level,
- (SELECT COUNT(*) FROM member_forum_replies r WHERE r.thread_id=t.id AND r.status='published') AS reply_count,
+ (SELECT COUNT(*) FROM member_forum_replies r JOIN member_creator_profiles rp ON rp.user_id=r.author_id
+ JOIN "user" ru ON ru.id=rp.user_id WHERE r.thread_id=t.id AND r.status='published'
+ AND rp.visibility='public' AND ru.emailVerified=1) AS reply_count,
  (SELECT COUNT(*) FROM member_forum_reactions v WHERE v.thread_id=t.id) AS reactions
  FROM member_forum_threads t ${authorSql} AND t.status='published'`;
 const threadRow=r=>({id:r.id,topic:r.topic,title:r.title,body:r.body,createdAt:r.created_at,publishedAt:r.published_at,updatedAt:r.updated_at,author:card(r),replyCount:r.reply_count,reactions:r.reactions});
@@ -30,7 +41,7 @@ export async function canonicalForums(req,env,user=null,now=Math.floor(Date.now(
  const url=new URL(req.url),path=url.pathname;
  if([...url.searchParams.keys()].some(x=>!['topic','after'].includes(x))||[...url.searchParams.keys()].some(x=>url.searchParams.getAll(x).length!==1))return fail(400,'Invalid filters');
  const topic=url.searchParams.get('topic');if(topic&&!TOPICS.has(topic))return fail(400,'Invalid topic');
- const after=url.searchParams.get('after');if(after&&!UUID.test(after))return fail(400,'Invalid cursor');
+ const after=decodeCursor(url.searchParams.get('after'));if(after===false)return fail(400,'Invalid cursor');
  const item=path.match(/^\/api\/v1\/community\/threads\/([a-f0-9-]{36})$/);
  const reply=path.match(/^\/api\/v1\/community\/threads\/([a-f0-9-]{36})\/replies$/);
  const react=path.match(/^\/api\/v1\/community\/threads\/([a-f0-9-]{36})\/reaction$/);
@@ -43,12 +54,15 @@ export async function canonicalForums(req,env,user=null,now=Math.floor(Date.now(
  if(!publicRead&&(!user?.id||user.emailVerified!==true))return fail(401,'Sign in with a verified account');
  try{
   if(publicRead){
+   if((topic||after)&&path!=='/api/v1/community/threads')return fail(400,'Unexpected filters');
    if(!item&&!reply&&path==='/api/v1/community/threads'){
-    const a=[...(topic?[topic]:[]),...(after?[after]:[])];
-    const sql=selectThread+(topic?' AND t.topic=?':'')+(after?' AND t.id<?':'')+' ORDER BY t.published_at DESC,t.id DESC LIMIT 21';
+    const a=[...(topic?[topic]:[]),...(after?[after[0],after[0],after[1]]:[])];
+    const sql=selectThread+(topic?' AND t.topic=?':'')+
+      (after?' AND (t.published_at<? OR (t.published_at=? AND t.id<?))':'')+
+      ' ORDER BY t.published_at DESC,t.id DESC LIMIT 21';
     const result=await db.prepare(sql).bind(...a).all();
-    const rows=result.results.slice(0,20);
-    return json({items:rows.map(threadRow),nextCursor:null});
+    const rows=result.results.slice(0,20),last=rows.at(-1);
+    return json({items:rows.map(threadRow),nextCursor:result.results.length>20&&last?encodeCursor(last.published_at,last.id):null});
    }
    if(item){
     const row=await db.prepare(selectThread+' AND t.id=?').bind(item[1]).first();
