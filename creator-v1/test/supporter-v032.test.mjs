@@ -28,7 +28,11 @@ test("public profile only exposes badge boolean and earned designation",()=>{
 });
 test("explicit event allowlist and identity checks",()=>{
   assert.equal(acceptStripeEventType("customer.subscription.updated"),true);
-  assert.equal(acceptStripeEventType("charge.refunded"),false);
+  assert.equal(acceptStripeEventType("charge.refunded"),true);
+  assert.equal(acceptStripeEventType("charge.dispute.created"),true);
+  assert.equal(acceptStripeEventType("refund.created"),true);
+  assert.equal(acceptStripeEventType("checkout.session.async_payment_succeeded"),true);
+  assert.equal(acceptStripeEventType("charge.succeeded"),false);
   assert.equal(validateStripeIdentity({stripeCustomerId:"cus_abc123",stripeSubscriptionId:"sub_abc123",memberUserId:"canonical-member-1"}),true);
   assert.equal(validateStripeIdentity({stripeCustomerId:"attacker",stripeSubscriptionId:"sub_abc123",memberUserId:"canonical-member-1"}),false);
 });
