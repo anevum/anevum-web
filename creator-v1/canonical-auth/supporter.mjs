@@ -8,7 +8,7 @@
 import {supporterState,acceptStripeEventType} from '../supporter/entitlements.mjs';
 import {
   stripeId,supporterConfig,stripePlan,stripeRequest,verifyStripeWebhook,
-  stripeCheckoutSession,stripePortalSession,subscriptionProjection
+  stripeCheckoutSession,stripePortalSession,stripePriceMatches,subscriptionProjection
 } from '../supporter/stripe.mjs';
 import {boundedText} from './request-body.mjs';
 
@@ -129,6 +129,22 @@ export async function supporterMember(request,env,user,{http=fetch,now=Date.now(
         'SELECT status,current_period_end_ms,synced_at_ms FROM supporter_subscriptions WHERE member_user_id=? ORDER BY synced_at_ms DESC LIMIT 12',user.id);
       if(existing.some(record=>now-Number(record.synced_at_ms)<=259200000&&activeRow(record,now).supporter))
         return err(409,'You are already a supporter. Manage your membership instead.');
+      const pending=await row(env.MEMBER_DB,
+        'SELECT stripe_checkout_session_id,billing_interval FROM supporter_checkout_intents WHERE member_user_id=? AND completed_at_ms IS NULL AND created_at_ms>=? ORDER BY created_at_ms DESC LIMIT 1',
+        user.id,now-30*60*1000);
+      if(pending){
+        if(pending.billing_interval!==plan.interval)
+          return err(409,'Another billing interval is already in checkout. Resume or wait for it to expire.');
+        const previous=await stripeRequest(env,'/v1/checkout/sessions/'+pending.stripe_checkout_session_id,{},http);
+        const old=stripeCheckoutSession(previous);
+        if(old&&previous.client_reference_id===user.id&&previous.mode==='subscription'&&previous.status==='open')
+          return out({url:old.url});
+        return err(409,'Your previous checkout must complete or expire before starting another.');
+      }
+      // Inspect the actual Stripe Price: an environment variable alone cannot
+      // prove that the charged amount equals the price shown on the website.
+      const livePrice=await stripeRequest(env,'/v1/prices/'+plan.priceId,{},http);
+      if(!stripePriceMatches(livePrice,plan))return err(503,'Displayed and Stripe pricing do not match.');
       const clock=Math.floor(now/3600000);
       const digest=new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(user.id+'|'+plan.interval+'|'+clock)));
       const key='anevum-v032-checkout-'+Array.from(digest,x=>x.toString(16).padStart(2,'0')).join('');
@@ -145,10 +161,10 @@ export async function supporterMember(request,env,user,{http=fetch,now=Date.now(
         }
       },http);
       const valid=stripeCheckoutSession(session);
-      if(!valid)return err(503,'Checkout response could not be verified');
+      if(!valid||session.mode!=='subscription'||session.client_reference_id!==user.id)return err(503,'Checkout response could not be verified');
       await apply(env.MEMBER_DB,
-        'INSERT OR IGNORE INTO supporter_checkout_intents(stripe_checkout_session_id,member_user_id,created_at_ms) VALUES(?,?,?)',
-        valid.id,user.id,now);
+        'INSERT OR IGNORE INTO supporter_checkout_intents(stripe_checkout_session_id,member_user_id,billing_interval,created_at_ms) VALUES(?,?,?,?)',
+        valid.id,user.id,plan.interval,now);
       const stored=await row(env.MEMBER_DB,
         'SELECT member_user_id FROM supporter_checkout_intents WHERE stripe_checkout_session_id=?',valid.id);
       if(stored?.member_user_id!==user.id)return err(409,'Checkout ownership conflict');
