@@ -45,6 +45,7 @@ jobs:
           test "$(status /api/v1/community/reports)" = 401
           test "$(curl --silent --show-error --max-time 25 -o /dev/null -w '%{http_code}' -X POST -H 'Origin: https://a.anevum.com' -H 'Content-Type: application/json' --data-binary '{}' "$root/api/v1/community/threads")" = 401
           test "$(curl --silent --show-error --max-time 25 -o /dev/null -w '%{http_code}' -X POST -H 'Origin: https://foreign.invalid' -H 'Content-Type: application/json' --data-binary '{}' "$root/api/v1/community/threads")" = 403
+          echo FORUM_READS_AND_AUTH_ACCESS=PASS
           get /api/v1/member/health | jq -e '.status=="ready" and .progressionReady==true' >/dev/null
           get /api/v1/member/auth-methods | jq -e '.methods.email.available==true' >/dev/null
           get /api/v1/member/auth/get-session | jq -e '. == null' >/dev/null
@@ -52,12 +53,13 @@ jobs:
             get "/api/v1/community/$route" | jq -e '(.items|type)=="array" and has("nextCursor")' >/dev/null
           done
           for route in / /community /community/review /join /levels /thebutton; do
-            get "$route" | grep -q 'id="root"'
+            get "$route" | grep 'id="root"' >/dev/null
           done
+          echo HOSTED_ROUTES_AND_COMMUNITY=PASS
           for level in 01 30 60; do
             curl --fail --silent --show-error --max-time 25 "$root/assets/levels/series-one-v037/level-$level.webp" -o "/tmp/v041-level-$level.webp"
             test -s "/tmp/v041-level-$level.webp"
           done
-          curl --fail --silent --show-error --max-time 25 https://anevum.com/ | grep -q 'THE TRANSMISSION'
+          curl --fail --silent --show-error --max-time 25 https://anevum.com/ | grep 'THE TRANSMISSION' >/dev/null
           echo 'V041_STAGING_LIVE_FORUMS_AUTH_PRIVACY_AND_APEX=PASS' >> "$GITHUB_STEP_SUMMARY"
           echo 'Only anonymous reads and unauthorized-denied writes were exercised; no real member records were created.' >> "$GITHUB_STEP_SUMMARY"
