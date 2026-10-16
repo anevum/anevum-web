@@ -8,10 +8,10 @@ type PublicFinance={
  mode:'closed-month'|'month-to-date'|null;scope:string;currency:string;
  reviewedAt:string|null;methodology:string;
  expenses:{totalCents:MoneyCents;categories:Record<string,MoneyCents>};
- receipts:{grossCents:MoneyCents;feesCents:MoneyCents;refundsCents:MoneyCents;disputesCents:MoneyCents;netCents:MoneyCents};
+ receipts:{grossCents:MoneyCents;feesCents:MoneyCents;refundsCents:MoneyCents;disputesCents:MoneyCents;netCents:MoneyCents;taxReservedCents:MoneyCents;availableCents:MoneyCents};
  activeSupporters:number|null;approvedMonthlyTargetCents:MoneyCents;
  cashCoveragePercent:number|null;
- completeness:{expenses:boolean;supporterReceipts:boolean;activeSupporters:boolean;fundraisingGoal:boolean};
+ completeness:{expenses:boolean;supporterReceipts:boolean;taxReserve:boolean;activeSupporters:boolean;fundraisingGoal:boolean};
 };
 const finance=rawFinancialReport as unknown as PublicFinance;
 const verifiedFinance=finance.schemaVersion===1&&finance.published===true&&finance.verified===true&&
@@ -47,8 +47,8 @@ export function SupporterTransparency(){
  const s=snapshot;
  const verifiedBudget=verifiedFinance&&finance.completeness.expenses?
   centsToUsd(finance.expenses.totalCents):s.operations.verifiedMonthlyOperatingCostUsd;
- const raised=verifiedFinance&&finance.completeness.supporterReceipts?
-  centsToUsd(finance.receipts.netCents):s.funding.verifiedMonthlySupporterNetUsd;
+ const raised=verifiedFinance&&finance.completeness.supporterReceipts&&finance.completeness.taxReserve?
+  centsToUsd(finance.receipts.availableCents):s.funding.verifiedMonthlySupporterNetUsd;
  const supporterCount=verifiedFinance&&finance.completeness.activeSupporters?
   finance.activeSupporters:s.funding.verifiedActiveSupporterCount;
  const fundingTarget=verifiedFinance&&finance.completeness.fundraisingGoal?
@@ -65,7 +65,7 @@ export function SupporterTransparency(){
    <div className="av37-section-heading"><span className="av32-index">01 / FUNDING THE NETWORK</span><h3 id="av37-funding">Where we stand.</h3></div>
    <div className="av37-metrics">
     <Metric label="REPORTED OPERATING EXPENSES" value={money(verifiedBudget)} detail="Actual approved invoices for the stated reporting period, or unverified"/>
-    <Metric label="NET SUPPORTER CASH RECEIPTS" value={money(raised)} detail="Collected amounts less Stripe fees, refunds and disputes; annual payments count only when received"/>
+    <Metric label="SUPPORTER CASH AVAILABLE TO OPERATE" value={money(raised)} detail="Collected cash after processing fees, refunds, disputes and verified remaining sales-tax reserve"/>
     <Metric label="VERIFIED ACTIVE SUPPORTERS" value={fmt(supporterCount)} detail="A separately confirmed active member count, not a checkout conversion estimate"/>
     <Metric label="APPROVED MONTHLY FUNDING TARGET" value={money(fundingTarget)} detail="Only published after owner approval and supporting evidence"/>
    </div>
@@ -80,13 +80,13 @@ export function SupporterTransparency(){
      <p>These are actual invoiced costs for the stated window, not theoretical maximum infrastructure capacity.</p>
     </section>
     <section className="av38-finance-panel" aria-labelledby="av38-receipts-heading"><h4 id="av38-receipts-heading">Where supporter payments go</h4>
-     {[['Gross collected',finance.receipts.grossCents],['Payment processing fees',finance.receipts.feesCents],['Refunds',finance.receipts.refundsCents],['Disputes / reversals',finance.receipts.disputesCents],['Net cash receipts',finance.receipts.netCents]].map(([name,amount])=>
+     {[['Gross collected',finance.receipts.grossCents],['Payment processing fees',finance.receipts.feesCents],['Refunds',finance.receipts.refundsCents],['Disputes / reversals',finance.receipts.disputesCents],['Net settled before taxes',finance.receipts.netCents],['Verified remaining tax reserve',finance.receipts.taxReservedCents],['Available for operating costs',finance.receipts.availableCents]].map(([name,amount])=>
       <div key={String(name)} className="av38-finance-row"><span>{name}</span><strong>{money(centsToUsd(amount as MoneyCents))}</strong></div>)}
      <p>{finance.methodology}</p>
     </section>
    </div>}
    {!verifiedFinance&&<p className="av38-unpublished">Income, Stripe fees, invoices and fundraising totals have not been reconciled or approved. The bars intentionally show no percentage until their sources are verified.</p>}
-   <p className="av37-footnote">Annual memberships are collected upfront, so one month of cash receipts is not recurring monthly revenue. Cash coverage reflects the stated period only. Publishing a complete monthly run-rate requires a separate verified active-subscription report. Unverified or partial categories remain unavailable.</p>
+   <p className="av37-footnote">Annual memberships are collected upfront, so one month of cash receipts is not recurring monthly revenue. Costs can be covered only by reconciled cash after verified outstanding tax reserves; we do not treat tax collections as ANEVUM operating money. Publishing a complete monthly run-rate requires a separate active-subscription report. Unverified or partial categories remain unavailable.</p>
   </section>
   <section aria-labelledby="av37-storage">
    <div className="av37-section-heading"><span className="av32-index">02 / STORAGE AND CAPACITY</span><h3 id="av37-storage">Our current footprint.</h3></div>
