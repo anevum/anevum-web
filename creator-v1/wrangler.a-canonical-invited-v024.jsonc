@@ -38,6 +38,5 @@
     "CANONICAL_GITHUB_ENABLED": "false",
     "CANONICAL_APPLE_ENABLED": "false",
     "CANONICAL_MICROSOFT_ENABLED": "false"
-  },
-  "keep_vars": true
+  }
 }
