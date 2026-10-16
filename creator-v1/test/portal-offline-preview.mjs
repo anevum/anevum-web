@@ -18,6 +18,22 @@ const work=seeds.map(([title,category,creatorHandle],i)=>({
  freeToUse:true,demoUrl:"https://example.com/",sourceUrl:null,license:null,publishedAt:"2026-10-12T00:00:00.000Z",
  aiDisclosure:"Offline synthetic design fixture.",humanContribution:"No real human creator record."
 }));
+
+// Synthetic-only player cases live in the loopback fixture, not the public listings.
+// No real creator or approval is inferred from these test records.
+const playerCases=new Map([
+  [9001,"SOURCE ARCHIVE / OFFLINE REVIEW","games",null,"https://github.com/example/source-archive"],
+  [9002,"BLOCKED DEMO / SAFE SOURCE","games","http://insecure.example.com/game","https://github.com/example/safe-source"],
+  [9003,"NO LINKED EXPERIENCE / OFFLINE REVIEW","games",null,null],
+  [9004,"APPLICATION DESK / OFFLINE REVIEW","tools","https://example.com/application",null],
+  [9005,"CHRONICLES OF THE PERPETUALLY UNFOLDING CONSTELLATION — VOLUME VII","games","https://example.com/long-title-demo",null]
+].map(([number,title,category,demoUrl,sourceUrl])=>{
+  const id=String(number).padStart(32,"0");
+  return [id,{...work[0],id,slug:null,title,category,demoUrl,sourceUrl,
+    creatorName:number===9005?"THE CARTOGRAPHERS OF THE ECHOING CONSTELLATIONS":work[0].creatorName,
+    summary:number===9005?"SYNTHETIC OFFLINE REVIEW. A deliberately lengthy project summary exercises wrap, reading order and touch controls on narrow phones without asserting actual creator data. ".repeat(3):"SYNTHETIC OFFLINE project for player control and layout testing.",
+    description:"OFFLINE SYNTHETIC DESIGN FIXTURE. NOT A PUBLISHED PROJECT."}];
+}));
 const categories=[...new Set(work.map(p=>p.category))].map(category=>({category,count:work.filter(p=>p.category===category).length}));
 // Browser-only scenario switch. Disabled by default; never used by a Worker.
 let contextFixtureEnabled=false;
@@ -136,7 +152,7 @@ function api(res,url){
   const items=work.filter(p=>(!cat||p.category===cat)&&(!q||p.title.toLowerCase().includes(q))&&(!who||who===p.creatorHandle)).slice(0,Math.min(24,Number(url.searchParams.get("limit"))||24));
   return json(res,{items,count:items.length,nextCursor:null});
  }
- if(path.startsWith("/projects/")){const p=work.find(p=>p.id===path.slice(10));return json(res,p?{item:p}:{error:"not-found"},p?200:404);}
+ if(path.startsWith("/projects/")){const id=path.slice(10);const p=work.find(p=>p.id===id)||playerCases.get(id);return json(res,p?{item:p}:{error:"not-found"},p?200:404);}
  return json(res,{error:"not-found"},404);
 }
 const mime={".css":"text/css",".js":"text/javascript",".svg":"image/svg+xml",".png":"image/png",".webp":"image/webp"};
