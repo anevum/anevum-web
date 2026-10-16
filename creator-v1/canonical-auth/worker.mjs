@@ -11,6 +11,7 @@ import {canonicalProgression,progressionReady} from './progression.mjs';
 import {canonicalSpace} from "./space.mjs";
 import {boundedText} from "./request-body.mjs";
 import {supporterMember,supporterWebhook} from "./supporter.mjs";
+import {supporterRewardsRoute} from "./supporter-rewards.mjs";
 
 const HEALTH=CANONICAL_PREFIX+"/health";
 const METHODS=CANONICAL_PREFIX+"/auth-methods";
@@ -100,7 +101,7 @@ export function createCanonicalStageWorker({authFactory=createCanonicalAuth}={})
     const publicCommunity=/^\/api\/v1\/community\/(?:members|activity)$/.test(path);
     const ownSpace=OWN_SPACE.test(path),publicSpace=path.match(PUBLIC_SPACE);
     const ownProgression=/^\/api\/v1\/member\/(?:progression|notifications(?:\/ack)?|xp-test)$/.test(path);
-    const ownSupporter=/^\/api\/v1\/member\/supporter(?:\/(?:checkout|portal|webhook))?$/.test(path);
+    const ownSupporter=/^\/api\/v1\/member\/supporter(?:\/(?:checkout|portal|webhook|rewards))?$/.test(path);
     const supporterHook=path===CANONICAL_PREFIX+"/supporter/webhook";
     const ownProfile=path===PROFILE;
     const ownExport=path===EXPORT;
@@ -112,8 +113,8 @@ export function createCanonicalStageWorker({authFactory=createCanonicalAuth}={})
     if((publicHandle||publicSpace) && !READ_METHODS.has(request.method))return fail(request,404);
     if(ownProfile && !["GET","POST","PATCH"].includes(request.method))return fail(request,404);
     if(ownExport && request.method!=="GET")return fail(request,404);
-    if(ownSupporter && !((path===CANONICAL_PREFIX+"/supporter"&&["GET","PATCH"].includes(request.method)) ||
-      (path!==CANONICAL_PREFIX+"/supporter"&&request.method==="POST")))return fail(request,405);
+    if(ownSupporter && !((["/supporter","/supporter/rewards"].some(suffix=>path===CANONICAL_PREFIX+suffix)&&["GET","PATCH"].includes(request.method)) ||
+      (["/supporter/checkout","/supporter/portal","/supporter/webhook"].some(suffix=>path===CANONICAL_PREFIX+suffix)&&request.method==="POST")))return fail(request,405);
     if((path===HEALTH||path===METHODS)&&!READ_METHODS.has(request.method))
       return safeJson(request,{error:"Read-only endpoint"},405);
 
@@ -220,7 +221,9 @@ export function createCanonicalStageWorker({authFactory=createCanonicalAuth}={})
         const session=await auth.api.getSession({headers:clean.headers});
         if(!session?.user)return safeJson(request,{error:"Sign-in required"},401);
         if(ownProgression)return safeResponse(await canonicalProgression(clean,env,session.user));
-        if(ownSupporter)return safeResponse(await supporterMember(clean,env,session.user));
+        if(ownSupporter)return safeResponse(path===CANONICAL_PREFIX+"/supporter/rewards"
+          ?await supporterRewardsRoute(clean,env,session.user)
+          :await supporterMember(clean,env,session.user));
         if(ownSpace)return safeResponse(await canonicalSpace(clean,env,session.user));
         return safeResponse(ownExport?
           await canonicalExportMember(clean,env,session.user,CANONICAL_ORIGIN):
