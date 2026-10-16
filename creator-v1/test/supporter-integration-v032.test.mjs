@@ -34,7 +34,7 @@ const request=(route,method='GET',body)=>new Request(ORIGIN+'/api/v1/member/supp
  body:body===undefined?undefined:JSON.stringify(body)
 });
 const json=value=>new Response(JSON.stringify(value),{status:200,headers:{'content-type':'application/json'}});
-const checkout={id:'cs_test_Creator123456789',url:'https://checkout.stripe.com/c/pay/testsession'};
+const checkout={id:'cs_test_Creator123456789',url:'https://checkout.stripe.com/c/pay/testsession',mode:'subscription',status:'open',client_reference_id:'member-alpha'};
 const customer='cus_Creator123456789',subId='sub_Creator123456789';
 function sub(env,status='active',price=env.CANONICAL_STRIPE_MONTHLY_PRICE_ID){
  return {id:subId,customer,status,cancel_at_period_end:false,
@@ -86,6 +86,11 @@ test('checkout, signed settlement, private entitlement, duplicate event and port
  const calls=[];
  const http=async(url,opts)=>{
   calls.push({url,opts});
+  if(url.endsWith('/prices/'+env.CANONICAL_STRIPE_MONTHLY_PRICE_ID))return json({
+   id:env.CANONICAL_STRIPE_MONTHLY_PRICE_ID,active:true,type:'recurring',
+   billing_scheme:'per_unit',currency:'usd',unit_amount:500,
+   recurring:{interval:'month',interval_count:1}
+  });
   if(url.endsWith('/checkout/sessions')&&opts.method==='POST')return json(checkout);
   if(url.endsWith('/checkout/sessions/'+checkout.id))return json({
    ...checkout,mode:'subscription',payment_status:'paid',client_reference_id:a.id,customer,subscription:subId
@@ -105,7 +110,13 @@ test('checkout, signed settlement, private entitlement, duplicate event and port
   assert.equal(reject.status,400);
   const created=await supporterMember(request('/checkout','POST',{interval:'month'}),env,a,{now:NOW,http});
   assert.equal(created.status,200);assert.equal((await created.json()).url,checkout.url);
-  const params=new URLSearchParams(calls[0].opts.body);
+  const createdAgain=await supporterMember(request('/checkout','POST',{interval:'month'}),env,a,{now:NOW+1000,http});
+  assert.equal(createdAgain.status,200);
+  assert.equal((await createdAgain.json()).url,checkout.url);
+  assert.equal((await supporterMember(request('/checkout','POST',{interval:'year'}),env,a,{now:NOW+1000,http})).status,409);
+  assert.equal(calls.filter(call=>call.url.endsWith('/checkout/sessions')&&call.opts.method==='POST').length,1);
+  const sessionCall=calls.find(call=>call.url.endsWith('/checkout/sessions')&&call.opts.method==='POST');
+  const params=new URLSearchParams(sessionCall.opts.body);
   assert.equal(params.get('customer_email'),a.email);
   assert.equal(params.get('line_items[0][price]'),env.CANONICAL_STRIPE_MONTHLY_PRICE_ID);
   assert.equal(params.get('client_reference_id'),a.id);
@@ -144,6 +155,10 @@ test('subscription cancellation and invalid client-reference events cannot grant
  const {db,env,a}=setup();
  let cancelled=false,foreign=false;
  const http=async(url,opts)=>{
+  if(url.endsWith('/prices/'+env.CANONICAL_STRIPE_MONTHLY_PRICE_ID))return json({
+   id:env.CANONICAL_STRIPE_MONTHLY_PRICE_ID,active:true,type:'recurring',billing_scheme:'per_unit',
+   currency:'usd',unit_amount:500,recurring:{interval:'month',interval_count:1}
+  });
   if(url.endsWith('/checkout/sessions')&&opts.method==='POST')return json(checkout);
   if(url.endsWith('/checkout/sessions/'+checkout.id))return json({
    ...checkout,mode:'subscription',payment_status:'paid',client_reference_id:foreign?'member-beta':a.id,
