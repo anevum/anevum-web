@@ -71,8 +71,11 @@ try{
   ["levels","/levels",".levels-page"],["start","/start",".start-page"],
   ["guide","/guide",".field-guide-page"],["status","/status",".status-list"],
   ["guest-library","/library",".member-gate"],
-  ["member-account","/account",".member-shell"],
-  ["member-profile-editor","/account/edit",".member-profile-page"],
+  ["member-signup","/join",".join-experience"],
+  // These legacy links now redirect to canonical member onboarding. An offline
+  // guest can see an access gate or sign-in, never a private member editor.
+  ["member-account","/account",".av12-account-await"],
+  ["member-profile-editor","/account/edit",".av12-account-await"],
   ["member-studio","/create",".member-shell"],["member-draft","/create/new",".member-shell"]
  ];
  const context=await fetch(base+"/__context-fixture?enabled=1");
@@ -88,7 +91,12 @@ try{
    const result=await client.send("Page.navigate",{url:target});
    if(result.errorText)throw Error("SITEWIDE_V012_NAVIGATION_"+name+"_"+width+":"+result.errorText);
    try{
-    await until(()=>evaluate("document.readyState==='complete'&&location.pathname==="+JSON.stringify("/creator"+path)+"&&!!document.querySelector("+JSON.stringify(selector)+")"));
+    const canonicalAlias=name==="member-account"||name==="member-profile-editor";
+    if(canonicalAlias){
+     await until(()=>evaluate("document.readyState==='complete'&&((location.pathname==='/creator/member'&&!!document.querySelector('.av12-account-await'))||(location.pathname==='/creator/join'&&!!document.querySelector('.join-experience')))&&!document.querySelector('.av12-profile-form')"));
+    }else{
+     await until(()=>evaluate("document.readyState==='complete'&&location.pathname==="+JSON.stringify("/creator"+path)+"&&!!document.querySelector("+JSON.stringify(selector)+")"));
+    }
    }catch(error){throw Error("SITEWIDE_V012_PAGE_MISSING_"+name+"_"+width+":"+String(error));}
    await delay(240);
    const state=await evaluate('(()=>({path:location.pathname,header:document.querySelectorAll(".site-header.av9-header").length,main:document.querySelectorAll("#main").length,cinematic:!!document.querySelector(".site-shell--cinematic.av9-shell"),overflow:document.documentElement.scrollWidth>innerWidth+1,width:innerWidth,atlas:!!document.querySelector(".atm-header,.atlas-universe-viewport"),fixture:getComputedStyle(document.body,"::after").content.includes("SYNTHETIC OFFLINE REVIEW")}))()');
