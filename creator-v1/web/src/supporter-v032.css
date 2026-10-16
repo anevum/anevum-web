@@ -53,3 +53,11 @@
 @media(max-width:790px){.av32-hero{grid-template-columns:1fr;min-height:0}.av32-hero-copy{padding:36px 25px 16px}.av32-hero h1{margin-top:22px}.av32-orbit{max-width:270px;margin:0 auto 12px}.av32-grid{grid-template-columns:1fr}.av32-afterword{margin-top:55px}}
 @media(max-width:390px){.av32-support{padding:14px 10px 80px}.av32-hero,.av32-panel{border-radius:21px}.av32-panel{padding:23px 19px}.av32-price strong{font-size:68px}.av32-ethics span{font-size:9px}}
 @media(prefers-reduced-motion:reduce){.av32-ring{animation:none!important}}
+
+/* Separate from earned-level marks: explicitly opted-in profile inscription. */
+.av32-public-insignia{display:inline-flex;align-items:center;gap:8px;margin:8px 0 11px;padding:7px 13px 7px 8px;border:1px solid #ebc4d879;border-radius:999px;background:linear-gradient(125deg,#c99fb323,#8c81bb20);box-shadow:inset 0 1px #fff2,0 5px 14px #07061480;color:#efd8d2;font:700 9px/1.3 ui-monospace,monospace;letter-spacing:.14em}
+.av32-public-insignia svg{width:23px;height:23px;flex:none;color:#f4c9c6}
+.av32-public-insignia .mark-core-cut{fill:#30253a}
+.av32-privacy-setting{display:flex;gap:12px;align-items:flex-start;font:400 13px/1.6 system-ui,sans-serif;color:#e7d6e4;padding:14px 15px;margin-top:16px;border:1px solid #e6bbd13a;border-radius:12px;background:#ffffff07}
+.av32-privacy-setting input{width:18px;height:18px;flex:none;accent-color:#eed2d7;margin-top:2px}
+.av32-privacy-setting small{display:block;color:#b9aabc;font-size:12px;margin-top:4px}
