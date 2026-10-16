@@ -112,7 +112,7 @@ export function createCanonicalStageWorker({authFactory=createCanonicalAuth}={})
     if((publicHandle||publicSpace) && !READ_METHODS.has(request.method))return fail(request,404);
     if(ownProfile && !["GET","POST","PATCH"].includes(request.method))return fail(request,404);
     if(ownExport && request.method!=="GET")return fail(request,404);
-    if(ownSupporter && !((path===CANONICAL_PREFIX+"/supporter"&&request.method==="GET") ||
+    if(ownSupporter && !((path===CANONICAL_PREFIX+"/supporter"&&["GET","PATCH"].includes(request.method)) ||
       (path!==CANONICAL_PREFIX+"/supporter"&&request.method==="POST")))return fail(request,405);
     if((path===HEALTH||path===METHODS)&&!READ_METHODS.has(request.method))
       return safeJson(request,{error:"Read-only endpoint"},405);
