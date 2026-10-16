@@ -11,8 +11,9 @@ test('published snapshot is explicitly dated, staging scoped and never pretends 
  assert.equal(snapshot.funding.ledgerConnected,false);
 });
 test('unverified operating cost, net revenue and supporter counts remain null',()=>{
- for(const key of ['verifiedMonthlyOperatingCostUsd','verifiedMonthlySupporterNetUsd','verifiedActiveSupporterCount','approvedMonthlyTargetUsd'])
+ for(const key of ['verifiedMonthlySupporterNetUsd','verifiedActiveSupporterCount','approvedMonthlyTargetUsd'])
   assert.equal(snapshot.funding[key],null,key+' must not be a fabricated 0');
+ assert.equal(snapshot.operations.verifiedMonthlyOperatingCostUsd,null,'verified monthly operating cost must remain unverified');
  for(const key of ['actualCloudflareMonthlyInvoiceUsd','actualRailwayMonthlyInvoiceUsd','actualOtherMonthlyExpensesUsd','verifiedMonthlyOperatingCostUsd'])
   assert.equal(snapshot.operations[key],null);
  assert.equal(snapshot.offer.activeCheckout,false);
