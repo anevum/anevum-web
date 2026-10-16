@@ -126,6 +126,18 @@ jobs:
           test -s evidence/sitewide-v012-review/discussion-390.png
           printf '%s\n' 'Offline synthetic screenshots only; not deployed staging content or real members.' > evidence/sitewide-v012-review/README.txt
 
+      - name: Verify V041 canonical forum browser and mobile author cards
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p evidence/forum-v041-review
+          chrome="$(command -v google-chrome || command -v chromium-browser || command -v chromium || true)"
+          test -n "$chrome"
+          node creator-v1/test/capture-canonical-forums-v041.mjs --chrome "$chrome" --output evidence/forum-v041-review
+          test -s evidence/forum-v041-review/acceptance.json
+          test -s evidence/forum-v041-review/forum-390.png
+          printf '%s\n' 'Synthetic loopback forum fixture; not real member or deployed content.' > evidence/forum-v041-review/README.txt
+
       - name: Preserve generated public artifact for visual review
         if: always()
         shell: bash
