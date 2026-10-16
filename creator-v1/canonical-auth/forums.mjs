@@ -114,6 +114,7 @@ export async function canonicalForums(req,env,user=null,now=Math.floor(Date.now(
    if(v.action==='hide'?target.status!=='published':target.status!=='pending_review')
     return fail(409,'Review state changed');
    if(v.action==='publish'){
+    if(target.author_id===user.id)return fail(403,'Independent review is required');
     const author=await db.prepare("SELECT visibility FROM member_creator_profiles WHERE user_id=?").bind(target.author_id).first();
     if(author?.visibility!=='public')return fail(409,'Author is not public');
     if(v.targetKind==='reply'){
