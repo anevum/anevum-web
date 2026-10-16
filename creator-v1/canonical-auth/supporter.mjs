@@ -68,6 +68,20 @@ export async function supporterMember(request,env,user,{http=fetch,now=Date.now(
     const available=await dataReady(env);
     if(!available)return out({available:false,supporter:false,status:'not-launched',plans:{month:500,year:3600},publicInsignia:false,revision:0});
     try{
+      // Recover a missed Checkout webhook on the next account status read.
+      // A one-minute D1 checkpoint caps Stripe polling on repeated refreshes.
+      const candidate=await row(env.MEMBER_DB,
+        'SELECT stripe_checkout_session_id,member_user_id,billing_interval FROM supporter_checkout_intents WHERE member_user_id=? AND completed_at_ms IS NULL AND abandoned_at_ms IS NULL AND last_checked_at_ms<? ORDER BY created_at_ms DESC LIMIT 1',
+        user.id,now-60000);
+      if(candidate){
+        const locked=await rows(env.MEMBER_DB,
+          'UPDATE supporter_checkout_intents SET last_checked_at_ms=? WHERE stripe_checkout_session_id=? AND member_user_id=? AND completed_at_ms IS NULL AND abandoned_at_ms IS NULL AND last_checked_at_ms<? RETURNING stripe_checkout_session_id',
+          now,candidate.stripe_checkout_session_id,user.id,now-60000);
+        if(locked.length===1){
+          try{await reconcileCheckoutIntent(env,candidate,now,http);}
+          catch{/* Do not claim support on failed Stripe verification; cron can retry. */}
+        }
+      }
       const records=await rows(env.MEMBER_DB,
         'SELECT status,current_period_end_ms,cancel_at_period_end,synced_at_ms,billing_interval FROM supporter_subscriptions WHERE member_user_id=? ORDER BY synced_at_ms DESC LIMIT 12',user.id);
       const hold=await row(env.MEMBER_DB,
@@ -141,16 +155,23 @@ export async function supporterMember(request,env,user,{http=fetch,now=Date.now(
       if(existing.some(record=>now-Number(record.synced_at_ms)<=259200000&&activeRow(record,now).supporter))
         return err(409,'You are already a supporter. Manage your membership instead.');
       const pending=await row(env.MEMBER_DB,
-        'SELECT stripe_checkout_session_id,billing_interval FROM supporter_checkout_intents WHERE member_user_id=? AND completed_at_ms IS NULL AND created_at_ms>=? ORDER BY created_at_ms DESC LIMIT 1',
-        user.id,now-30*60*1000);
+        'SELECT stripe_checkout_session_id,member_user_id,billing_interval FROM supporter_checkout_intents WHERE member_user_id=? AND completed_at_ms IS NULL AND abandoned_at_ms IS NULL ORDER BY created_at_ms DESC LIMIT 1',
+        user.id);
       if(pending){
-        if(pending.billing_interval!==plan.interval)
-          return err(409,'Another billing interval is already in checkout. Resume or wait for it to expire.');
-        const previous=await stripeRequest(env,'/v1/checkout/sessions/'+pending.stripe_checkout_session_id,{},http);
-        const old=stripeCheckoutSession(previous);
-        if(old&&previous.client_reference_id===user.id&&previous.mode==='subscription'&&previous.status==='open')
+        // A Checkout can remain payable much longer than thirty minutes.
+        // NEVER issue another one before verifying the prior session ended.
+        const state=await reconcileCheckoutIntent(env,pending,now,http);
+        if(state==='open'){
+          if(pending.billing_interval!==plan.interval)
+            return err(409,'A different billing interval is already in checkout. Return to that checkout or let it expire.');
+          const previous=await stripeRequest(env,'/v1/checkout/sessions/'+pending.stripe_checkout_session_id,{},http);
+          const old=stripeCheckoutSession(previous);
+          if(!old)return err(503,'Existing checkout destination is invalid');
           return out({url:old.url});
-        return err(409,'Your previous checkout must complete or expire before starting another.');
+        }
+        if(state==='completed')return err(409,'Your payment is recorded. Recheck your supporter status.');
+        if(state==='pending')return err(409,'Payment confirmation is pending. Recheck your supporter status.');
+        if(state!=='expired')return err(503,'Existing checkout could not be verified');
       }
       // Reuse the member's original Stripe customer after cancellation.
       // A second Stripe Customer cannot be silently linked to the same member:
@@ -169,7 +190,7 @@ export async function supporterMember(request,env,user,{http=fetch,now=Date.now(
         'ON CONFLICT(member_user_id) DO UPDATE SET billing_interval=excluded.billing_interval,request_nonce=excluded.request_nonce,'+
         'expires_at_ms=excluded.expires_at_ms,created_at_ms=excluded.created_at_ms '+
         'WHERE supporter_checkout_guards.expires_at_ms<=? RETURNING request_nonce',
-        user.id,plan.interval,nonce,now+1800000,now,now);
+        user.id,plan.interval,nonce,now+7200000,now,now);
       if(lease.length!==1||lease[0].request_nonce!==nonce)
         return err(409,'A checkout is already being prepared. Recheck shortly.');
       let checkoutAttempted=false;
@@ -178,9 +199,9 @@ export async function supporterMember(request,env,user,{http=fetch,now=Date.now(
       // prove that the charged amount equals the price shown on the website.
       const livePrice=await stripeRequest(env,'/v1/prices/'+plan.priceId,{},http);
       if(!stripePriceMatches(livePrice,plan))return err(503,'Displayed and Stripe pricing do not match.');
-      const clock=Math.floor(now/3600000);
-      const digest=new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(user.id+'|'+plan.interval+'|'+clock)));
-      const key='anevum-v032-checkout-'+Array.from(digest,x=>x.toString(16).padStart(2,'0')).join('');
+      // A fresh nonce makes an explicitly expired session restart possible.
+      // It is persisted in the creation lease BEFORE contacting Stripe.
+      const key='anevum-v032-checkout-'+nonce;
       checkoutAttempted=true;
       const session=await stripeRequest(env,'/v1/checkout/sessions',{
         method:'POST',idempotencyKey:key,fields:{
@@ -191,7 +212,11 @@ export async function supporterMember(request,env,user,{http=fetch,now=Date.now(
           'subscription_data[metadata][anevum_member_id]':user.id,
           success_url:'https://a.anevum.com/support?checkout=returned',
           cancel_url:'https://a.anevum.com/support?checkout=cancelled',
-          billing_address_collection:'auto'
+          billing_address_collection:'auto',
+          // Stripe hosted Checkout can otherwise remain payable for 24h.
+          // Thirty minutes limits ambiguous post-create failures; the
+          // two-hour lease prevents a second session after a network error.
+          expires_at:String(Math.ceil(now/1000)+1800)
         }
       },http);
       const valid=stripeCheckoutSession(session);
@@ -207,8 +232,9 @@ export async function supporterMember(request,env,user,{http=fetch,now=Date.now(
       return out({url:valid.url});
       }finally{
         // If Stripe might have created a session but we could not record it,
-        // preserve the lease for its 30-minute timeout instead of immediately
-        // issuing a second session and risking a duplicate subscription.
+        // preserve the lease for two hours, beyond the requested 30-minute
+        // Stripe session expiry. Never issue a second payable session on an
+        // ambiguous network or database failure.
         if(!checkoutAttempted){
           await apply(env.MEMBER_DB,
             'DELETE FROM supporter_checkout_guards WHERE member_user_id=? AND request_nonce=?',user.id,nonce);
@@ -236,11 +262,12 @@ export async function supporterMember(request,env,user,{http=fetch,now=Date.now(
   }
 }
 
-async function syncSubscription(env,memberId,expectedCustomer,subscriptionId,now,http){
+async function syncSubscription(env,memberId,expectedCustomer,subscriptionId,now,http,expectedInterval=null){
   const db=env.MEMBER_DB;
   const value=await stripeRequest(env,'/v1/subscriptions/'+subscriptionId,{},http);
   const projection=subscriptionProjection(value,env,expectedCustomer);
-  if(!projection)throw Error('Subscription identity or price mismatch');
+  if(!projection||(expectedInterval!==null&&projection.interval!==expectedInterval))
+    throw Error('Subscription identity, price or interval mismatch');
   // Enforce ownership with database uniqueness, not webhook metadata.
   await apply(db,'INSERT OR IGNORE INTO supporter_customers(member_user_id,stripe_customer_id,created_at_ms) VALUES(?,?,?)',
     memberId,expectedCustomer,now);
@@ -258,6 +285,47 @@ async function syncSubscription(env,memberId,expectedCustomer,subscriptionId,now
     subscriptionId);
   if(record?.member_user_id!==memberId||record.stripe_customer_id!==expectedCustomer)
     throw Error('Subscription is not owned by that member');
+  return projection;
+}
+
+/**
+ * Reconcile a known intent by reading Stripe, never trusting browser claims.
+ * Persist the member's paid entitlement before marking Checkout completed.
+ * An expired, unpaid Checkout is explicitly retired, allowing a safe retry.
+ * A completed but unpaid Checkout remains pending for async settlement.
+ */
+async function reconcileCheckoutIntent(env,intent,now,http){
+  const db=env.MEMBER_DB,id=intent.stripe_checkout_session_id;
+  if(!stripeId('cs',id)||!id.startsWith('cs_test_')||
+     typeof intent.member_user_id!=='string'||!['month','year'].includes(intent.billing_interval))
+    throw Error('Invalid recorded checkout intent');
+  const session=await stripeRequest(env,'/v1/checkout/sessions/'+id,{},http);
+  if(session.id!==id||session.mode!=='subscription'||
+     session.client_reference_id!==intent.member_user_id||
+     session.livemode===true)throw Error('Checkout ownership or mode mismatch');
+  if(session.status==='complete'){
+    if(session.payment_status!=='paid')return 'pending';
+    if(!stripeId('cus',session.customer)||!stripeId('sub',session.subscription))
+      throw Error('Completed checkout missing verified subscription');
+    const linked=await row(db,
+      'SELECT stripe_customer_id FROM supporter_customers WHERE member_user_id=?',intent.member_user_id);
+    if(linked&&linked.stripe_customer_id!==session.customer)
+      throw Error('Checkout customer does not match existing member');
+    await syncSubscription(env,intent.member_user_id,session.customer,
+      session.subscription,now,http,intent.billing_interval);
+    await apply(db,
+      'UPDATE supporter_checkout_intents SET completed_at_ms=?,stripe_customer_id=?,stripe_subscription_id=?,last_checked_at_ms=? WHERE stripe_checkout_session_id=? AND member_user_id=? AND completed_at_ms IS NULL',
+      now,session.customer,session.subscription,now,id,intent.member_user_id);
+    return 'completed';
+  }
+  if(session.status==='expired'&&session.payment_status!=='paid'){
+    await apply(db,
+      'UPDATE supporter_checkout_intents SET abandoned_at_ms=?,last_checked_at_ms=? WHERE stripe_checkout_session_id=? AND member_user_id=? AND completed_at_ms IS NULL',
+      now,now,id,intent.member_user_id);
+    return 'expired';
+  }
+  if(session.status==='open'&&session.payment_status!=='paid')return 'open';
+  throw Error('Unrecognized or contradictory Stripe Checkout state');
 }
 
 export async function supporterWebhook(request,env,{http=fetch,now=Date.now()}={}){
@@ -297,21 +365,10 @@ export async function supporterWebhook(request,env,{http=fetch,now=Date.now()}={
     }else if(['checkout.session.completed','checkout.session.async_payment_succeeded'].includes(event.type) &&
       stripeId('cs',object.id)&&object.id.startsWith('cs_test_')){
       const intent=await row(db,
-        'SELECT member_user_id FROM supporter_checkout_intents WHERE stripe_checkout_session_id=?',object.id);
+        'SELECT stripe_checkout_session_id,member_user_id,billing_interval FROM supporter_checkout_intents WHERE stripe_checkout_session_id=?',object.id);
       if(intent){
-        const session=await stripeRequest(env,'/v1/checkout/sessions/'+object.id,{},http);
-        if(session.id!==object.id||session.mode!=='subscription'||
-          session.client_reference_id!==intent.member_user_id)throw Error('Checkout session mismatch');
-        const linked=await row(db,
-          'SELECT stripe_customer_id FROM supporter_customers WHERE member_user_id=?',intent.member_user_id);
-        if(linked&&linked.stripe_customer_id!==session.customer)
-          throw Error('Checkout customer does not match existing account owner');
-        if(session.payment_status==='paid'&&stripeId('cus',session.customer)&&stripeId('sub',session.subscription)){
-          await syncSubscription(env,intent.member_user_id,session.customer,session.subscription,now,http);
-          await apply(db,'UPDATE supporter_checkout_intents SET completed_at_ms=?,stripe_customer_id=?,stripe_subscription_id=? WHERE stripe_checkout_session_id=? AND member_user_id=?',
-            now,session.customer,session.subscription,object.id,intent.member_user_id);
-          result='synced';
-        }
+        const state=await reconcileCheckoutIntent(env,intent,now,http);
+        if(state==='completed')result='synced';
       }
     } else {
       let subscriptionId=null;
@@ -366,4 +423,71 @@ export async function reconcileSupporterSubscriptions(env,{now=Date.now(),http=f
     }
   }
   return {available:true,examined,refreshed,failed};
+}
+
+/**
+ * Recovers known Checkout sessions when Stripe's signed webhook is delayed,
+ * unavailable or delivered out of order. Does not initiate any new payment.
+ * Tracks read attempts in D1 before HTTP I/O to prevent overlapping scans.
+ * Never uses member-owned session IDs or arbitrary Stripe customer metadata.
+ */
+export async function reconcileSupporterCheckouts(env,{now=Date.now(),http=fetch,limit=40}={}){
+  if(!await dataReady(env))return {available:false,examined:0,completed:0,expired:0,pending:0,failed:0};
+  if(!Number.isSafeInteger(limit)||limit<1||limit>40)
+    throw Error('Checkout recovery batch limit exceeded');
+  const db=env.MEMBER_DB;
+  let examined=0,completed=0,expired=0,pending=0,failed=0;
+  const due=await rows(db,
+    'SELECT stripe_checkout_session_id,member_user_id,billing_interval FROM supporter_checkout_intents '+
+    'WHERE completed_at_ms IS NULL AND abandoned_at_ms IS NULL AND last_checked_at_ms<? '+
+    'ORDER BY last_checked_at_ms ASC,created_at_ms ASC LIMIT ?',
+    now-300000,limit);
+  for(const intent of due){
+    const lease=await rows(db,
+      'UPDATE supporter_checkout_intents SET last_checked_at_ms=? WHERE stripe_checkout_session_id=? '+
+      'AND completed_at_ms IS NULL AND abandoned_at_ms IS NULL AND last_checked_at_ms<? '+
+      'RETURNING stripe_checkout_session_id',
+      now,intent.stripe_checkout_session_id,now-300000);
+    if(lease.length!==1)continue;
+    examined++;
+    try{
+      const state=await reconcileCheckoutIntent(env,intent,now,http);
+      if(state==='completed')completed++;
+      else if(state==='expired')expired++;
+      else pending++;
+    }catch{failed++}
+  }
+  return {available:true,examined,completed,expired,pending,failed};
+}
+
+/**
+ * Member data portability: private summary of exactly this verified account's
+ * billing and cosmetic data. Card details and webhook secrets never reside in
+ * MEMBER_DB and are never part of the export. Works even when sales are paused.
+ */
+export async function supporterExportMember(env,memberId){
+  const db=env?.MEMBER_DB;
+  if(typeof memberId!=='string'||!memberId||!await supporterSchemaReady(db))return null;
+  const customer=await row(db,'SELECT stripe_customer_id,created_at_ms FROM supporter_customers WHERE member_user_id=?',memberId);
+  const subscriptions=await rows(db,
+    'SELECT stripe_subscription_id,stripe_price_id,billing_interval,status,current_period_end_ms,started_at_ms,cancel_at_period_end,synced_at_ms '+
+    'FROM supporter_subscriptions WHERE member_user_id=? ORDER BY started_at_ms DESC LIMIT 500',memberId);
+  const checkouts=await rows(db,
+    'SELECT stripe_checkout_session_id,billing_interval,created_at_ms,completed_at_ms,abandoned_at_ms '+
+    'FROM supporter_checkout_intents WHERE member_user_id=? ORDER BY created_at_ms DESC LIMIT 500',memberId);
+  const consent=await row(db,
+    'SELECT public_insignia,revision,updated_at_ms FROM supporter_visibility WHERE member_user_id=?',memberId);
+  const appearance=await row(db,
+    'SELECT selected_seal,selected_frame,selected_aura,revision,updated_at_ms FROM supporter_appearance WHERE member_user_id=?',memberId);
+  const holds=await rows(db,
+    'SELECT h.reason,h.created_at_ms FROM supporter_billing_holds h '+
+    'JOIN supporter_customers c ON c.stripe_customer_id=h.stripe_customer_id WHERE c.member_user_id=?',
+    memberId);
+  return {service:'stripe',customerId:customer?.stripe_customer_id??null,
+    subscriptions,checkouts,display:consent?{
+      publicInsignia:consent.public_insignia===1,revision:consent.revision,updatedAt:consent.updated_at_ms
+    }:null,appearance:appearance?{
+      seal:appearance.selected_seal,frame:appearance.selected_frame,aura:appearance.selected_aura,
+      revision:appearance.revision,updatedAt:appearance.updated_at_ms
+    }:null,billingHolds:holds};
 }

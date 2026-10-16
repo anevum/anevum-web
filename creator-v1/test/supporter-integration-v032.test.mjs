@@ -83,7 +83,7 @@ test('raw-body signature checks reject tampering, replay age and unknown secret'
 });
 test('checkout, signed settlement, private entitlement, duplicate event and portal',async()=>{
  const {db,env,a,b}=setup();
- const calls=[];
+ const calls=[];let settled=false;
  const http=async(url,opts)=>{
   calls.push({url,opts});
   if(url.endsWith('/prices/'+env.CANONICAL_STRIPE_MONTHLY_PRICE_ID))return json({
@@ -93,7 +93,7 @@ test('checkout, signed settlement, private entitlement, duplicate event and port
   });
   if(url.endsWith('/checkout/sessions')&&opts.method==='POST')return json(checkout);
   if(url.endsWith('/checkout/sessions/'+checkout.id))return json({
-   ...checkout,mode:'subscription',payment_status:'paid',client_reference_id:a.id,customer,subscription:subId
+   ...checkout,mode:'subscription',status:settled?'complete':'open',payment_status:settled?'paid':'unpaid',client_reference_id:a.id,customer,subscription:subId
   });
   if(url.endsWith('/subscriptions/'+subId))return json(sub(env));
   if(url.endsWith('/billing_portal/sessions'))return json({url:'https://billing.stripe.com/p/session/validtest'});
@@ -121,6 +121,7 @@ test('checkout, signed settlement, private entitlement, duplicate event and port
   assert.equal(params.get('line_items[0][price]'),env.CANONICAL_STRIPE_MONTHLY_PRICE_ID);
   assert.equal(params.get('client_reference_id'),a.id);
   assert.equal(db.prepare('SELECT COUNT(*) AS n FROM supporter_checkout_intents').get().n,1);
+  settled=true;
   const event=await signed(env,'checkout.session.completed',{id:checkout.id});
   assert.equal((await supporterWebhook(event.clone(),env,{now:NOW,http})).status,200);
   assert.equal((await supporterWebhook(event.clone(),env,{now:NOW,http})).status,200);
@@ -161,7 +162,7 @@ test('subscription cancellation and invalid client-reference events cannot grant
   });
   if(url.endsWith('/checkout/sessions')&&opts.method==='POST')return json(checkout);
   if(url.endsWith('/checkout/sessions/'+checkout.id))return json({
-   ...checkout,mode:'subscription',payment_status:'paid',client_reference_id:foreign?'member-beta':a.id,
+   ...checkout,mode:'subscription',status:'complete',payment_status:'paid',client_reference_id:foreign?'member-beta':a.id,
    customer,subscription:subId
   });
   if(url.endsWith('/subscriptions/'+subId))return json(sub(env,cancelled?'canceled':'active'));
@@ -213,10 +214,10 @@ test('canceled member reuses customer instead of creating orphaned second accoun
    return json(current);
   }
   if(url.endsWith('/checkout/sessions/'+firstCheckout.id))return json({
-   ...firstCheckout,payment_status:'paid',customer,subscription:subId
+   ...firstCheckout,status:'complete',payment_status:'paid',customer,subscription:subId
   });
   if(url.endsWith('/checkout/sessions/'+nextCheckout.id))return json({
-   ...nextCheckout,payment_status:'paid',customer,subscription:second
+   ...nextCheckout,status:'complete',payment_status:'paid',customer,subscription:second
   });
   if(url.endsWith('/subscriptions/'+subId))return json(sub(env,oldStatus));
   if(url.endsWith('/subscriptions/'+second))return json({...sub(env),id:second,status:'active'});
@@ -307,7 +308,7 @@ test('reused customer checkout cannot attach an unexpected Stripe customer',asyn
   const rogue='cus_OtherUnknownUser123';
   const http=async(url)=>{
    if(url.endsWith('/checkout/sessions/'+checkout.id))return json({
-    ...checkout,payment_status:'paid',customer:rogue,subscription:subId
+    ...checkout,status:'complete',payment_status:'paid',customer:rogue,subscription:subId
    });
    throw Error('Unexpected Stripe operation: '+url);
   };
@@ -374,7 +375,7 @@ test('delayed asynchronous Checkout only grants after verified paid event',async
   });
   if(url.endsWith('/checkout/sessions')&&opts.method==='POST')return json(checkout);
   if(url.endsWith('/checkout/sessions/'+checkout.id))return json({
-   ...checkout,customer,subscription:subId,payment_status:paid?'paid':'unpaid'
+   ...checkout,status:'complete',customer,subscription:subId,payment_status:paid?'paid':'unpaid'
   });
   if(url.endsWith('/subscriptions/'+subId))return json(sub(env));
   throw Error('Unexpected Stripe operation '+url);
