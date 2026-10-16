@@ -135,6 +135,11 @@ test('concurrent Checkout guard blocks deletion and closure guard blocks new Str
 });
 test('canonical authenticated closure route rejects cross-site and logged-out deletion',async()=>{
  const {db,env}=setup();
+ // The Worker evaluates Date.now() itself; use the current test clock for
+ // this one end-to-end route exercise, not the deterministic frozen NOW.
+ const current=Date.now();
+ db.prepare('UPDATE session SET createdAt=?,expiresAt=? WHERE id=?')
+  .run(current-60000,current+DAY,sess);
  const worker=createCanonicalStageWorker({authFactory:()=>({
   api:{getSession:async({headers})=>
    headers.get('cookie')==='anevum_can_stage.session_token=good'?{user:person,session}:{user:null,session:null}},
