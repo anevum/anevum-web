@@ -104,8 +104,11 @@ export function subscriptionProjection(sub,env,expectedCustomer=null){
   if(!Number.isSafeInteger(end)||end<=0||end*1000>Number.MAX_SAFE_INTEGER)return null;
   const statuses=['active','trialing','incomplete','incomplete_expired','past_due','canceled','unpaid','paused'];
   if(!statuses.includes(sub.status))return null;
+  const start=(Number.isSafeInteger(sub.start_date)&&sub.start_date>0&&sub.start_date<=end&&
+    sub.start_date*1000<=Number.MAX_SAFE_INTEGER)?sub.start_date*1000:0;
   return {
     subscriptionId:sub.id,customerId:sub.customer,priceId:price.id,interval,
-    status:sub.status,currentPeriodEnd:end*1000,cancelAtPeriodEnd:sub.cancel_at_period_end===true
+    status:sub.status,currentPeriodEnd:end*1000,startedAt:start,
+    cancelAtPeriodEnd:sub.cancel_at_period_end===true
   };
 }
