@@ -7,12 +7,14 @@ import {createCanonicalAuth} from "./auth.mjs";
 import {canonicalCreatorSchemaReady,canonicalCreatorMember,canonicalPublicCreator,canonicalExportMember} from "./profile.mjs";
 import {permitCanonicalUserCreation} from "./policy.mjs";
 import {boundedText} from "./request-body.mjs";
+import {assessCanonicalErasureIntent} from "./erasure.mjs";
 
 const HEALTH=CANONICAL_PREFIX+"/health";
 const METHODS=CANONICAL_PREFIX+"/auth-methods";
 const READ_METHODS=new Set(["GET","HEAD"]);
 const PROFILE=CANONICAL_PREFIX+"/creator-profile";
 const EXPORT=CANONICAL_PREFIX+"/account-export";
+const ERASE=CANONICAL_PREFIX+"/account-delete";
 const PUBLIC_MEMBER=/^\/api\/v1\/members\/([a-z][a-z0-9_]{2,29})$/;
 const EMAIL=/^[^\s@]{1,64}@[^\s@]{1,190}$/;
 const SECURITY={
@@ -88,7 +90,8 @@ export function createCanonicalStageWorker({authFactory=createCanonicalAuth}={})
     const publicHandle=path.match(PUBLIC_MEMBER);
     const ownProfile=path===PROFILE;
     const ownExport=path===EXPORT;
-    if(path!==HEALTH && path!==METHODS && !publicHandle && !ownProfile && !ownExport &&
+    const ownErase=path===ERASE;
+    if(path!==HEALTH && path!==METHODS && !publicHandle && !ownProfile && !ownExport && !ownErase &&
       !(path.startsWith(CANONICAL_AUTH_PATH+"/") &&
         (AUTH_ALLOWLIST[request.method]?.has(path)??false)))
       return fail(request,404);
@@ -96,6 +99,7 @@ export function createCanonicalStageWorker({authFactory=createCanonicalAuth}={})
     if(publicHandle && !READ_METHODS.has(request.method))return fail(request,404);
     if(ownProfile && !["GET","POST","PATCH"].includes(request.method))return fail(request,404);
     if(ownExport && request.method!=="GET")return fail(request,404);
+    if(ownErase && (request.method!=="POST"||env?.CANONICAL_ACCOUNT_ERASURE_ENABLED!=="true"))return fail(request,404);
     if((path===HEALTH||path===METHODS)&&!READ_METHODS.has(request.method))
       return safeJson(request,{error:"Read-only endpoint"},405);
 
@@ -184,9 +188,22 @@ export function createCanonicalStageWorker({authFactory=createCanonicalAuth}={})
 
     try{
       const auth=authFactory(env);
-      if(ownProfile||ownExport){
+      if(ownProfile||ownExport||ownErase){
         const session=await auth.api.getSession({headers:clean.headers});
         if(!session?.user)return safeJson(request,{error:"Sign-in required"},401);
+        if(ownErase){
+          const accepted=await assessCanonicalErasureIntent(clean,session,env);
+          if(!accepted.ok)return safeJson(request,{error:accepted.error},accepted.status);
+          // Do not expose the native Better Auth destructive endpoint directly.
+          // Replace client body with the native empty request: only verified
+          // session ownership, never a client-controlled user ID, is forwarded.
+          const headers=new Headers(clean.headers);
+          headers.set("content-type","application/json");
+          const native=new Request(CANONICAL_ORIGIN+CANONICAL_AUTH_PATH+"/delete-user",{
+            method:"POST",headers,body:"{}"
+          });
+          return safeResponse(await auth.handler(native));
+        }
         return safeResponse(ownExport?
           await canonicalExportMember(clean,env,session.user,CANONICAL_ORIGIN):
           await canonicalCreatorMember(clean,env,session.user,CANONICAL_ORIGIN));
