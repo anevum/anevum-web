@@ -1,3 +1,4 @@
+import {useEffect,useState} from 'react';
 import {Link} from 'react-router-dom';
 import snapshot from '../data/supporter-transparency-snapshot-v037.json';
 import rawFinancialReport from '../data/supporter-public-finance-v038.json';
@@ -19,6 +20,22 @@ const verifiedFinance=finance.schemaVersion===1&&finance.published===true&&finan
  /^20[2-9][0-9]-(0[1-9]|1[0-2])$/.test(finance.period??'')&&
  ['closed-month','month-to-date'].includes(finance.mode??'');
 const centsToUsd=(value:MoneyCents)=>value===null?null:value/100;
+type Telemetry={
+ schemaVersion:number;source:string;scope:string;dataAsOf:string;cacheTtlSeconds:number;
+ community:{memberAccounts:number;creatorProfiles:number;wallPosts:number};
+ media:{imageObjects:number;imageBytes:number;imageSlotsPerMember:number;imageUploadMaxBytes:number};
+};
+const isCount=(value:unknown)=>typeof value==='number'&&Number.isSafeInteger(value)&&value>=0;
+function validTelemetry(x:unknown):x is Telemetry{
+ if(!x||typeof x!=='object'||Array.isArray(x))return false;
+ const v=x as Partial<Telemetry>;
+ return v.schemaVersion===1&&v.source==='canonical-member-d1-aggregate'&&
+  v.scope==='ANEVUM_STAGING_ONLY'&&typeof v.dataAsOf==='string'&&
+  typeof v.cacheTtlSeconds==='number'&&v.cacheTtlSeconds===900&&
+  Boolean(v.community&&isCount(v.community.memberAccounts)&&isCount(v.community.creatorProfiles)&&isCount(v.community.wallPosts))&&
+  Boolean(v.media&&isCount(v.media.imageObjects)&&isCount(v.media.imageBytes)&&
+  v.media.imageSlotsPerMember===2&&v.media.imageUploadMaxBytes===262144);
+}
 const categoryNames:Record<string,string>={
  hosting:'Hosting',storage:'Storage',delivery:'Bandwidth & delivery',
  email:'Email',moderation:'Moderation',software:'Software',other:'Other infrastructure'
@@ -45,6 +62,20 @@ function Metric({label,value,detail}:{label:string;value:string;detail:string}){
 }
 export function SupporterTransparency(){
  const s=snapshot;
+ const [telemetry,setTelemetry]=useState<Telemetry|null>(null);
+ useEffect(()=>{
+  const controller=new AbortController();
+  void (async()=>{
+   try{
+    const res=await fetch('/api/v1/public/supporter/metrics',{method:'GET',credentials:'omit',mode:'same-origin',redirect:'error',cache:'default',signal:controller.signal,headers:{accept:'application/json'}});
+    if(!res.ok)return;
+    const body:unknown=await res.json();
+    if(!controller.signal.aborted&&validTelemetry(body))setTelemetry(body);
+   }catch{/* Explicit static snapshot fallback when telemetry is disabled or offline. */}
+  })();
+  return()=>controller.abort();
+ },[]);
+ const live=telemetry!==null;
  const verifiedBudget=verifiedFinance&&finance.completeness.expenses?
   centsToUsd(finance.expenses.totalCents):s.operations.verifiedMonthlyOperatingCostUsd;
  const raised=verifiedFinance&&finance.completeness.supporterReceipts&&finance.completeness.taxReserve?
@@ -58,9 +89,9 @@ export function SupporterTransparency(){
    <div><span className="av32-index">ANEVUM / OPEN OPERATIONS / 002</span>
     <h2>Know what keeps <em>the signal alive.</em></h2>
     <p>Supporting ANEVUM should be an informed choice. Here is what we can verify, what is still unknown, and which improvements support would help make possible.</p></div>
-   <div className="av37-stamp"><span>LAST VERIFIED</span><strong>{s.verifiedOn}</strong><small>MANUAL SNAPSHOT · STAGING ONLY</small></div>
+   <div className="av37-stamp"><span>LAST VERIFIED</span><strong>{live?telemetry.dataAsOf.slice(0,10):s.verifiedOn}</strong><small>{live?'CACHED STAGING AGGREGATES':'MANUAL SNAPSHOT · STAGING ONLY'}</small></div>
   </header>
-  <div className="av37-notice" role="note"><strong>Transparency standard</strong><p>Numbers below are a dated engineering snapshot, not live telemetry. A blank funding meter means we do not yet have verified finances or an approved goal—not that ANEVUM has raised $0. Database storage, user-uploaded image bytes and R2 storage must not be added together as if they were independent bills.</p></div>
+  <div className="av37-notice" role="note"><strong>Transparency standard</strong><p>{live?'Community and profile-media figures use a cached, read-only staging aggregate. Database file sizes, R2, Railway and finances remain dated or unavailable.':'Numbers below are a dated engineering snapshot, not live telemetry.'} A blank funding meter means we do not yet have verified finances or an approved goal—not that ANEVUM has raised $0. Database storage, user-uploaded image bytes and R2 storage must not be added together as if they were independent bills.</p></div>
   <section aria-labelledby="av37-funding">
    <div className="av37-section-heading"><span className="av32-index">01 / FUNDING THE NETWORK</span><h3 id="av37-funding">Where we stand.</h3></div>
    <div className="av37-metrics">
@@ -93,13 +124,13 @@ export function SupporterTransparency(){
    <div className="av37-metrics">
     <Metric label="CANONICAL MEMBER DATABASE" value={size(s.storage.canonicalMemberD1FileBytes)} detail="Cloudflare D1 reported file size, staging"/>
     <Metric label="CREATOR STAGING DATABASE" value={size(s.storage.communityD1FileBytes)} detail="Separate Cloudflare D1 reported file size"/>
-    <Metric label="MEMBER AVATAR + BANNER DATA" value={size(s.storage.memberUploadedImageBlobBytes)} detail="Included inside the canonical member database, not additional storage"/>
+    <Metric label="MEMBER AVATAR + BANNER DATA" value={size(live?telemetry.media.imageBytes:s.storage.memberUploadedImageBlobBytes)} detail="Included inside the canonical member database, not additional storage"/>
     <Metric label="PROFILE-MEDIA R2 OBJECTS" value={fmt(s.storage.r2ProfileObjectCount)} detail="0 objects at audit time; R2 bucket exists but is not the active profile image store"/>
    </div>
    <div className="av37-split">
     <article className="av37-panel"><span className="av32-index">ACTIVE MEMBER MEDIA LIMITS</span><h4>Profile media</h4>
      <p>Current source permits two profile image slots per member: one square avatar and one banner. Each JPEG is limited to <strong>256 KiB</strong>. This is a per-image upload rule, not an account storage allowance.</p>
-     <Meter label="Staging profile image slots filled (not global storage capacity)" value={s.storage.memberImageCount} total={s.community.stagingMemberAccounts*s.storage.imageSlotsPerMember} unit="slots"/>
+     <Meter label="Staging profile image slots filled (not global storage capacity)" value={live?telemetry.media.imageObjects:s.storage.memberImageCount} total={(live?telemetry.community.memberAccounts:s.community.stagingMemberAccounts)*s.storage.imageSlotsPerMember} unit="slots"/>
      <p className="av37-footnote">No individual member's storage usage is exposed here. Public creator asset quotas are not verified.</p>
     </article>
     <article className="av37-panel"><span className="av32-index">STORAGE EXPANSION / PROPOSED</span><h4>What support can unlock</h4>
@@ -111,9 +142,9 @@ export function SupporterTransparency(){
   <section aria-labelledby="av37-activity">
    <div className="av37-section-heading"><span className="av32-index">03 / DEVELOPMENT SIGNAL</span><h3 id="av37-activity">Real activity, clearly scoped.</h3></div>
    <div className="av37-metrics">
-    <Metric label="CANONICAL STAGING ACCOUNTS" value={fmt(s.community.stagingMemberAccounts)} detail="Test and development identities; not a public member total"/>
-    <Metric label="STAGING CREATOR PROFILES" value={fmt(s.community.stagingCreatorProfiles)} detail="Canonical member profiles"/>
-    <Metric label="STAGING WALL POSTS" value={fmt(s.community.stagingWallPosts)} detail="Private development environment"/>
+    <Metric label="CANONICAL STAGING ACCOUNTS" value={fmt(live?telemetry.community.memberAccounts:s.community.stagingMemberAccounts)} detail="Test and development identities; not a public member total"/>
+    <Metric label="STAGING CREATOR PROFILES" value={fmt(live?telemetry.community.creatorProfiles:s.community.stagingCreatorProfiles)} detail="Canonical member profiles"/>
+    <Metric label="STAGING WALL POSTS" value={fmt(live?telemetry.community.wallPosts:s.community.stagingWallPosts)} detail="Private development environment"/>
     <Metric label="RAILWAY STAGING PROBE" value="0 RECORDED" detail="24-hour CPU, memory, disk and network sample; not a billing statement"/>
    </div>
    <p className="av37-footnote">Production members, submissions, impressions and engagement are not reported until an independently validated analytics source is available. We will not represent staging activity as a public community.</p>
@@ -147,7 +178,7 @@ export function SupporterTransparency(){
    </div>
    <details className="av37-sources"><summary>Data sources and reporting limitations</summary>
     {s.sourceNotes.map(note=><p key={note.title}><strong>{note.title}:</strong> {note.detail}</p>)}
-    <p>Infrastructure snapshot figures were collected {s.verifiedOn}. The finance report, if published, is a separately reviewed offline aggregate with an explicit reporting period and review date. Neither automatically updates, and private invoices/customer transactions are never exposed here.</p>
+    <p>{live?`Community and media aggregates updated ${telemetry.dataAsOf} (cached for ${telemetry.cacheTtlSeconds} seconds); no personal records included. `:``}Infrastructure snapshot figures were collected {s.verifiedOn}. The finance report, if published, is a separately reviewed offline aggregate with an explicit reporting period and review date. Neither automatically updates, and private invoices/customer transactions are never exposed here.</p>
    </details>
   </section>
   <div className="av37-bottom"><span className="av32-index">CONTINUANCE / SUPPORT WITHOUT CONTROL</span><p>Supporters help keep the creative network available. They do not buy XP, medals, creator rank, moderation power, visibility or influence over editorial decisions.</p><Link to="/join">JOIN THE COMMUNITY ↗</Link></div>
