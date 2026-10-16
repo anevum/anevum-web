@@ -384,6 +384,16 @@ test("exact Origin permits missing optional Fetch Metadata but never cross-site 
  const stageEnv=env(true);
  const absent=await secure.fetch(mk(CANONICAL_ORIGIN,undefined),stageEnv);
  assert.equal(absent.status,401,"No Fetch Metadata must reach session auth, never be treated as CSRF");
+ const profileIntent=(site,origin=CANONICAL_ORIGIN)=>req(endpoint,{
+   method:"POST",
+   headers:{"origin":origin,"sec-fetch-site":site,
+     "content-type":"application/json",
+     "x-anevum-profile-intent":"anevum-profile-write-v1"},
+   body:JSON.stringify({handle:"fixture_test",displayName:"Test",bio:""})
+ });
+ assert.equal((await secure.fetch(profileIntent("same-site"),stageEnv)).status,401);
+ assert.equal((await secure.fetch(profileIntent("cross-site"),stageEnv)).status,403);
+ assert.equal((await secure.fetch(profileIntent("same-site","https://other.anevum.com"),stageEnv)).status,403);
  for(const [origin,site] of [
   ["https://evil.example",undefined],
   ["https://evil.example","same-origin"],
