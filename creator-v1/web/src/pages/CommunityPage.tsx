@@ -12,6 +12,7 @@ import { Icon } from "../components/Icons";
 import { LoadingState, ErrorState } from "../components/States";
 import "./community-hub-v007.css";
 import {CommunityMemberCard,PublicMemberDirectory,PublicMemberActivity} from "../components/MemberCommunity";
+import {CommunityForums} from "./CanonicalForums";
 
 /**
  * Creator V1 / Community V007.
@@ -164,7 +165,12 @@ export function CommunityPage() {
         <h1 id="ch7-hero-title">Made by people.<br/><em>Better together.</em></h1>
         <p>A gathering place for independent games, art, useful software, ideas and the people who make them. Discover something worth exploring. Help something new take shape.</p>
         <div className="ch7-hero-actions"><Link className="ch7-button ch7-button-primary" to="/discover">EXPLORE THE WORK <Icon name="arrow" size={15}/></Link>
-          <a className="ch7-button" href="#ch7-stream" onClick={() => setView("conversations")}>READ DISCUSSIONS <Icon name="community" size={15}/></a></div>
+          <a className="ch7-button" href="#ch7-stream" onClick={event => {
+            setView("conversations");
+            const forum=document.getElementById("cf-title");
+            if(forum){event.preventDefault();forum.scrollIntoView({block:"start",
+              behavior:window.matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth"});}
+          }}>READ DISCUSSIONS <Icon name="community" size={15}/></a></div>
       </div>
       <aside className="ch7-status" aria-label="Verified public community counts"><span className="ch7-kicker">PUBLISHED WORK / VERIFIED</span>
         <div className="ch7-count-grid">
@@ -176,6 +182,7 @@ export function CommunityPage() {
     </section>
 
     <CommunityMemberCard onPosted={()=>setRevision(value=>value+1)}/>
+    <CommunityForums/>
 
     <nav className="ch7-portals" aria-label="Community destinations">
       <Link to="/discover"><Icon name="explore" size={19}/><span><strong>DISCOVER</strong><small>Explore new creations</small></span><Icon name="arrow" size={15}/></Link>
@@ -266,7 +273,7 @@ export function CommunityPage() {
         <section className="ch7-panel ch7-take-part"><span className="ch7-kicker">03 / YOUR PART IN THE UNIVERSE</span>
           <h3>Not just for <em>developers.</em></h3>
           <p>Explore for free. Help with thoughtful reviews, feedback and collaboration. Building software is not a prerequisite for belonging.</p>
-          <p className="ch7-private-note">Member participation is currently invitation-only. Public signup is not enabled.</p>
+          <p className="ch7-private-note">Visit Join for the current account options. You control whether your member wall is public.</p>
           <Link className="ch7-panel-link" to="/start">START HERE <Icon name="arrow" size={14}/></Link>
           <Link className="ch7-panel-link" to="/levels">LEVELS & RECOGNITION <Icon name="arrow" size={14}/></Link>
         </section>

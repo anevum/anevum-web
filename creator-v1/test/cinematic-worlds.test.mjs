@@ -75,7 +75,7 @@ test("secondary pages share the same world art while preserving genuine content 
   assert.match(community,/readCommunityPosts/);
   assert.match(community,/communityPosts === true/);
   assert.match(community,/to="\/boards"/);
-  assert.match(community,/invitation-only|invited member testing|Member participation is currently invitation-only/i);
+  assert.match(community,/Visit Join for the current account options/);
   assert.match(css,/prefers-reduced-motion:reduce/);
 });
 
