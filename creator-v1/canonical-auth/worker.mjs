@@ -26,15 +26,25 @@ const SECURITY={
   "x-frame-options":"DENY",
   "vary":"Origin"
 };
-const sameOriginMutation=request=>{
+const PROFILE_WRITE_INTENT="anevum-profile-write-v1";
+const sameOriginMutation=(request,profileWrite=false)=>{
   const origin=request.headers.get("origin");
   const site=request.headers.get("sec-fetch-site");
-  // The Origin header is mandatory and bound to the exact staging host.
-  // Fetch Metadata is an additional signal, not a mandatory browser feature:
-  // some WebKit/in-app browsers omit Sec-Fetch-Site on valid same-origin POSTs.
-  // Reject any explicitly cross-site/same-site header even if Origin matches.
-  return origin===CANONICAL_ORIGIN &&
-    (site===null||site==="same-origin"||site==="none");
+  const intent=request.headers.get("x-anevum-profile-intent")===PROFILE_WRITE_INTENT;
+  // Browser Origin and Sec-Fetch-Site are independent hints. Reject explicit
+  // foreign origins and explicitly cross-site requests, regardless of intent.
+  if(origin!==null&&origin!==CANONICAL_ORIGIN)return false;
+  if(site!==null&&!["same-origin","same-site","none"].includes(site))return false;
+  // Existing same-origin browser clients are supported, with either signal.
+  if(origin===CANONICAL_ORIGIN&&(site===null||site==="same-origin"||site==="none"))return true;
+  if(origin===null&&site==="same-origin")return true;
+  // Some iOS in-app browsers omit both hints or report 'same-site'.
+  // Only the profile writer may use a custom, non-simple request header
+  // as proof of an actual same-origin fetch; cross-origin web pages cannot
+  // set this header without a CORS preflight, which this Worker denies.
+  return profileWrite&&intent&&
+    (origin===CANONICAL_ORIGIN||
+      (origin===null&&(site===null||site==="none")));
 };
 const safeJson=(request,value,status=200)=>{
   const headers={...SECURITY,"content-type":"application/json; charset=utf-8"};
@@ -143,12 +153,12 @@ export function createCanonicalStageWorker({authFactory=createCanonicalAuth}={})
       return safeResponse(await canonicalPublicCreator(clean,env,CANONICAL_ORIGIN,publicHandle[1]));
     }
 
-    if(ownProfile && ["POST","PATCH"].includes(request.method) && !sameOriginMutation(request))
+    if(ownProfile && ["POST","PATCH"].includes(request.method) && !sameOriginMutation(request,true))
       return safeJson(request,{error:"Same-origin request required"},403);
 
     // No inherited V5/Creator legacy cookies and no Authorization.
     // Enforce same-origin CSRF boundary for both POST and PATCH profile edits.
-    if(["POST","PATCH","PUT","DELETE"].includes(request.method)&&!sameOriginMutation(request))
+    if(["POST","PATCH","PUT","DELETE"].includes(request.method)&&!sameOriginMutation(request,ownProfile))
       return safeJson(request,{error:"Same-origin request required"},403);
     let clean=withoutForeignCookies(request);
     if(request.method==="POST"){
