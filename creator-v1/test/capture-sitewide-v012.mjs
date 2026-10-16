@@ -127,6 +127,16 @@ try{
    await screenshot(name+"-"+width);
    if(name==="home"){
     await evaluate('document.getElementById("world-gateways").scrollIntoView({block:"start"})');
+    if(width<541){
+     // Native lazy loading deliberately defers offscreen horizontal cards.
+     // Exercise each card before requiring all four decoded originals.
+     for(let index=0;index<4;index++){
+      await evaluate('document.querySelectorAll(".av9-world-gateway")['+index+'].scrollIntoView({block:"nearest",inline:"nearest",behavior:"instant"})');
+      await until(()=>evaluate('(()=>{const image=document.querySelectorAll(".av9-world-gateway-art>img")['+index+'];return image?.complete&&image.naturalWidth>0;})()'));
+     }
+     await evaluate('document.getElementById("community-portal-cards").scrollTo({left:0,behavior:"instant"});document.getElementById("world-gateways").scrollIntoView({block:"start"})');
+     await until(()=>evaluate('document.getElementById("community-portal-cards").scrollLeft<5'));
+    }
     await until(()=>evaluate('document.querySelectorAll(".av9-world-gateway-art>img").length===4&&Array.from(document.querySelectorAll(".av9-world-gateway-art>img")).every(image=>image.complete&&image.naturalWidth>0)'));
     // naturalWidth is density-corrected with width-descriptor srcsets. Decode
     // the selected file itself to verify physical source pixels instead.
