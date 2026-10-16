@@ -23,7 +23,6 @@ export function Phase1JoinPage(){
  const capability=useResource(canonicalMethods,[]);
  const [email,setEmail]=useState("");
  const [otp,setOtp]=useState("");
- const [emailOpen,setEmailOpen]=useState(true);
  const [codeSent,setCodeSent]=useState(false);
  const [notice,setNotice]=useState("");
  const {data:session,isPending}=canonicalAuthClient.useSession();
@@ -122,7 +121,7 @@ export function Phase1JoinPage(){
            <span className="join-method-copy"><strong>Continue with {method.name}</strong></span>
          </button>)}
        </div>}
-       {emailReady&&emailOpen&&<form className="av12-email-entry" onSubmit={event=>void submitEmail(event)}>
+       {emailReady&&<form className="av12-email-entry" onSubmit={event=>void submitEmail(event)}>
          <label htmlFor="anevum-email">{codeSent?"VERIFICATION SENT TO":"YOUR EMAIL ADDRESS"}</label>
          <input id="anevum-email" type="email" autoComplete="email" placeholder="you@example.com" value={email}
            onChange={event=>{setEmail(event.target.value);if(codeSent)resetCode();}}
@@ -150,7 +149,7 @@ export function Phase1JoinPage(){
        {error&&<p role="alert" className="av12-join-error">{error}</p>}
        <Link className="join-guest-action" to="/discover">EXPLORE AS A GUEST <span aria-hidden="true">↗</span></Link>
      </>}
-     <p className="join-security">Your profile starts private. You choose what others can see. <Link to="/privacy">Privacy</Link> · <Link to="/terms">Terms</Link></p>
+     <p className="join-security">Your profile starts private. You choose what others can see.</p>
    </div>
  </section>;
 }
