@@ -47,7 +47,7 @@ export async function verifyStripeWebhook(raw,signature,secret,now=Date.now()){
 export async function stripeRequest(env,path,{method='GET',fields=null,idempotencyKey=null}={},http=fetch){
   const config=supporterConfig(env);
   if(!config.enabled)throw Error('Commerce unavailable');
-  if(!/^\/v1\/(?:checkout\/sessions(?:\/cs_test_[A-Za-z0-9]+)?|billing_portal\/sessions|subscriptions\/sub_[A-Za-z0-9]+|prices\/price_[A-Za-z0-9]+)$/.test(path))
+  if(!/^\/v1\/(?:checkout\/sessions(?:\/cs_test_[A-Za-z0-9]+)?|billing_portal\/sessions|subscriptions\/sub_[A-Za-z0-9]+|prices\/price_[A-Za-z0-9]+|charges\/ch_[A-Za-z0-9]+)$/.test(path))
     throw Error('Invalid Stripe operation');
   if(method!=='GET'&&method!=='POST')throw Error('Invalid Stripe method');
   if(method==='POST'&&(!idempotencyKey||!/^anevum-v032-[A-Za-z0-9_-]{10,130}$/.test(idempotencyKey)))
