@@ -11,6 +11,7 @@ import {subscriptionProjection,supporterConfig} from '../supporter/stripe.mjs';
 import {supporterSchemaReady,reconcileSupporterSubscriptions} from '../canonical-auth/supporter.mjs';
 import canonicalWorker from '../web/a-canonical-stage.review.mjs';
 import {canonicalSpace} from '../canonical-auth/space.mjs';
+import {canonicalCommunity} from '../canonical-auth/community.mjs';
 
 const NOW=1792155000000,DAY=86400000,ORIGIN='https://a.anevum.com';
 function setup(){
@@ -250,5 +251,37 @@ test('scheduled reconciliation is test-mode locked and limited to forty subscrip
   const outcome=await reconcileSupporterSubscriptions(env,{now:NOW,http:bad,limit:1});
   assert.deepEqual(outcome,{available:true,examined:1,refreshed:0,failed:1});
   assert.equal(await readSupporterRewards(env,users[0].id,NOW),null,'stale records are not elevated on bad API data');
+ }finally{db.close()}
+});
+
+test('community directory and activity render only consented supporter cosmetics',async()=>{
+ const {db,env,users}=setup();const [a,b]=users;
+ try{
+  support(db,env,a,NOW-180*DAY);
+  db.prepare("UPDATE member_creator_profiles SET visibility='public'").run();
+  db.prepare('INSERT INTO supporter_appearance(member_user_id,selected_seal,selected_frame,selected_aura,revision,updated_at_ms) VALUES(?,?,?,?,1,?)')
+   .run(a.id,'constellation','stellar','nebula',NOW);
+  db.prepare('INSERT INTO member_wall_posts(id,user_id,body,created_at,updated_at) VALUES(?,?,?,?,?)')
+   .run('f3e6a4d2-1928-4dc9-a142-aabbccddeeff',a.id,'Hello from the public wall',Math.floor(NOW/1000),Math.floor(NOW/1000));
+  const get=async(kind)=>{
+   const response=await canonicalCommunity(new Request(ORIGIN+'/api/v1/community/'+kind),env);
+   assert.equal(response.status,200);
+   return response.json();
+  };
+  const initial=await get('members');
+  assert.equal(initial.items.length,2);
+  assert.equal(initial.items.some(x=>x.supporterAppearance),false);
+  db.prepare('INSERT INTO supporter_visibility(member_user_id,public_insignia,revision,updated_at_ms) VALUES(?,1,1,?)').run(a.id,NOW);
+  const members=await get('members');
+  const owner=members.items.find(x=>x.handle==='alpha'),other=members.items.find(x=>x.handle==='beta');
+  assert.deepEqual(owner.supporterAppearance,{seal:'constellation',frame:'stellar',aura:'nebula'});
+  assert.equal('supporterAppearance' in other,false);
+  assert.equal('stripe_customer_id' in owner,false);
+  const activity=await get('activity');
+  assert.equal(activity.items.length,1);
+  assert.equal(activity.items[0].supporterAppearance.seal,'constellation');
+  db.prepare('UPDATE supporter_visibility SET public_insignia=0 WHERE member_user_id=?').run(a.id);
+  const hidden=await get('activity');
+  assert.equal('supporterAppearance' in hidden.items[0],false);
  }finally{db.close()}
 });
