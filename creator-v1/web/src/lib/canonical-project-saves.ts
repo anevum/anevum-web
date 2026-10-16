@@ -4,7 +4,8 @@
 export type CanonicalProjectSaveState={available:true;saved:boolean};
 export type CanonicalProjectSaveMutation={saved:boolean;changed:boolean};
 export class CanonicalProjectSaveError extends Error{
- constructor(readonly status:number,message:string){super(message);this.name="CanonicalProjectSaveError"}
+ readonly status:number;
+ constructor(status:number,message:string){super(message);this.status=status;this.name="CanonicalProjectSaveError"}
 }
 const ID=/^[a-f0-9]{32}$/;
 function route(projectId:string){

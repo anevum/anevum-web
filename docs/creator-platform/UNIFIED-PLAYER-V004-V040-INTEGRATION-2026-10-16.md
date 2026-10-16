@@ -74,3 +74,8 @@ This is not a merge of existing PRs, an authorization to use V040 on a live site
 - Guests are offered member access; verified members can save/remove privately with server-confirmed results and error feedback. Community remains accessible in every state; XP and ratings remain inactive.
 - **The flag remains absent from Wrangler; no migration has been applied.** The default A-staging view remains the verified V006 read-only participation design until separately authorized.
 - The V008 unit contract tests same-origin request semantics, invalid project ID rejection and the health-gated UI. Browser coverage for guest/member save interactions remains a follow-on release gate.
+
+## V008 compiled-browser acceptance (synthetic only)
+- The loopback-only fixture simulates a canonical save-enabled capability and an explicitly synthetic invited member. It does not touch real Better Auth, public Creator projects, Member D1, Stripe or XP.
+- At 1440, 1024, 390 and 320px, the browser checks guest sign-in state, verified-member save/remove buttons, minimum 44px rendered touch target, no horizontal overflow, server-confirmed save and removal, and absence of legacy identity calls or voting controls.
+- Each viewport produces `player-v008-canonical-save-guest/before/after-<width>.png` screenshots for visual acceptance. **No activation flag, database migration or real-member acceptance is performed.**

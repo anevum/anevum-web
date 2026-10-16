@@ -39,6 +39,7 @@ const categories=[...new Set(work.map(p=>p.category))].map(category=>({category,
 let contextFixtureEnabled=false;
 // Separate project participation health simulation; never shipped or persisted.
 let playerMemberHealthMode="legacy";
+let syntheticProjectSaved=false;
 const projectMemberRequests=[]; // Only local fixture traces, never credential content.
 const contextProject={id:work[0].id,title:work[0].title,category:work[0].category,creatorHandle:work[0].creatorHandle,creatorName:work[0].creatorName};
 const discussionFixtures=[
@@ -57,9 +58,27 @@ const FAKE_MEMBER=Object.freeze({
 });
 const LOCAL_REVIEW_COOKIE="anevum_offline_visual_fixture=1";
 function offlineMember(req,res,url){
+  const savePath=/^\/api\/v1\/member\/project-saves\/([a-f0-9]{32})$/.exec(url.pathname);
+  if(savePath){
+    if(playerMemberHealthMode!=="canonical-saves"||savePath[1]!==work[0].id)
+      return json(res,{error:"not-available"},404);
+    if(!(req.headers.cookie||"").split(";").some(x=>x.trim()===LOCAL_REVIEW_COOKIE))
+      return json(res,{error:"Sign-in required"},401);
+    if(req.method==="GET")return json(res,{available:true,saved:syntheticProjectSaved});
+    if(req.method==="PUT"||req.method==="DELETE"){
+      const wanted=req.method==="PUT",changed=syntheticProjectSaved!==wanted;
+      syntheticProjectSaved=wanted;
+      return json(res,{saved:syntheticProjectSaved,changed});
+    }
+    return json(res,{error:"method-not-allowed"},405);
+  }
   if(/^\/api\/v1\/member\/(?:me|library(?:\/|$)|community\/projects(?:\/|$))/.test(url.pathname))
     projectMemberRequests.push({path:url.pathname,method:req.method});
   if(url.pathname==="/api/v1/member/health"&&req.method==="GET"){
+    if(playerMemberHealthMode==="canonical-saves")return json(res,{
+      service:"anevum-canonical-auth-staging",status:"ready",registration:"invite-only",
+      linkedCreatorAccounts:false,projectSavesReady:true
+    });
     if(playerMemberHealthMode==="canonical")return json(res,{
       service:"anevum-canonical-auth-staging",status:"ready",registration:"invite-only",
       linkedCreatorAccounts:false,progressionReady:true
@@ -172,9 +191,10 @@ createServer((req,res)=>{
   const u=new URL(req.url,"http://127.0.0.1:4178");
   if(u.pathname==="/__player-member-fixture"&&req.headers.host==="127.0.0.1:4178"&&req.method==="GET"){
     const mode=u.searchParams.get("mode");
-    if(!["canonical","legacy","offline"].includes(mode))return json(res,{error:"invalid-mode"},400);
+    if(!["canonical","canonical-saves","legacy","offline"].includes(mode))return json(res,{error:"invalid-mode"},400);
     playerMemberHealthMode=mode;
     projectMemberRequests.length=0;
+    syntheticProjectSaved=false;
     return json(res,{syntheticOnly:true,mode:playerMemberHealthMode});
   }
   if(u.pathname==="/__player-member-requests"&&req.headers.host==="127.0.0.1:4178"&&req.method==="GET")

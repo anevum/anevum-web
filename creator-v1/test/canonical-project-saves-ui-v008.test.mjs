@@ -105,4 +105,12 @@ test("save UI retains guest, unavailable, and verified-member states without XP 
  assert.doesNotMatch(save,/memberVote|memberMe|memberSetSaved|localStorage|awardXp|grantXp/);
  assert.match(css,/\.avp-project \.avp-canonical-save \.avp-participation-actions button\{[^}]*min-height:56px/);
  assert.equal(config.vars?.CANONICAL_PROJECT_SAVES_ENABLED,undefined);
+ const fixture=read("test/portal-offline-preview.mjs");
+ const capture=read("test/capture-sitewide-v012.mjs");
+ assert.match(fixture,/playerMemberHealthMode==="canonical-saves"/);
+ assert.match(fixture,/syntheticProjectSaved/);
+ assert.match(capture,/PLAYER_V008_PRIVATE_SAVE_/);
+ assert.match(capture,/PLAYER_V008_LEGACY_IDENTITY_LEAK_/);
+ assert.match(capture,/player-v008-canonical-save-before-/);
+ assert.doesNotMatch(read("web/src/main.tsx"),/syntheticProjectSaved|__player-member-fixture/);
 });

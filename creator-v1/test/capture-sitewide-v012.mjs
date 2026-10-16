@@ -208,6 +208,40 @@ try{
          console.log("PLAYER_V005_MEMBER_GATE_"+mode.toUpperCase()+"_"+width+"=PASS");
        }
      }
+     // Opt-in future save flow; the underlying staging flag is OFF. This is
+     // a loopback-only synthetic member with no genuine account or publication.
+     const setupSaves=await fetch(base+"/__player-member-fixture?mode=canonical-saves");
+     if(!setupSaves.ok)throw Error("PLAYER_V008_SAVE_FIXTURE_UNAVAILABLE_"+width);
+     await client.send("Network.clearBrowserCookies");
+     const saveUrl=base+"/creator/projects/00000000000000000000000000000001";
+     await client.send("Page.navigate",{url:saveUrl});
+     await until(()=>evaluate('document.querySelector(".engagement-panel")?.getAttribute("data-avp-availability")==="canonical-saves-guest"'));
+     const guest=await evaluate('(()=>{const p=document.querySelector(".engagement-panel"),links=[...p.querySelectorAll("a")].map(a=>a.getAttribute("href"));return {button:!!p.querySelector("button"),registration:p.textContent.includes("invite-only"),links};})()');
+     if(guest.button||!guest.registration||!guest.links.includes("/creator/join"))
+       throw Error("PLAYER_V008_SAVE_GUEST_"+width+":"+JSON.stringify(guest));
+     await screenshot("player-v008-canonical-save-guest-"+width);
+     await evaluate('document.cookie="anevum_offline_visual_fixture=1; Path=/; SameSite=Strict"');
+     await client.send("Page.navigate",{url:saveUrl});
+     await until(()=>evaluate('document.querySelector(".engagement-panel")?.getAttribute("data-avp-availability")==="canonical-saves-member"'));
+     const before=await evaluate('(()=>{const b=document.querySelector(".avp-canonical-save-button"),r=b?.getBoundingClientRect();return {pressed:b?.getAttribute("aria-pressed"),text:b?.textContent,rect:r?{left:r.left,right:r.right,height:r.height}:null,overflow:document.documentElement.scrollWidth>innerWidth+1};})()');
+     if(before.pressed!=="false"||!before.text?.includes("SAVE PROJECT")||!before.rect||before.rect.height<44||
+        before.rect.left < -1||before.rect.right>width+1||before.overflow)
+       throw Error("PLAYER_V008_SAVE_MEMBER_LAYOUT_"+width+":"+JSON.stringify(before));
+     await evaluate('document.querySelector(".avp-canonical-save-button").scrollIntoView({block:"center",behavior:"instant"})');
+     await screenshot("player-v008-canonical-save-before-"+width);
+     await evaluate('document.querySelector(".avp-canonical-save-button").click()');
+     await until(()=>evaluate('document.querySelector(".avp-canonical-save-button")?.getAttribute("aria-pressed")==="true"'));
+     const marked=await evaluate('(()=>{const b=document.querySelector(".avp-canonical-save-button"),p=document.querySelector(".avp-canonical-save");return {label:b?.textContent,status:p?.querySelector("[role=status]")?.textContent,hasVoting:!!p?.querySelector(".engagement-votes")};})()');
+     if(!marked.label?.includes("REMOVE SAVED PROJECT")||!marked.status?.includes("saved privately")||marked.hasVoting)
+       throw Error("PLAYER_V008_SAVE_ACTION_"+width+":"+JSON.stringify(marked));
+     await screenshot("player-v008-canonical-save-after-"+width);
+     await evaluate('document.querySelector(".avp-canonical-save-button").click()');
+     await until(()=>evaluate('document.querySelector(".avp-canonical-save-button")?.getAttribute("aria-pressed")==="false"'));
+     const reverted=await evaluate('document.querySelector(".avp-canonical-save [role=status]")?.textContent');
+     if(!reverted?.includes("removed"))throw Error("PLAYER_V008_REMOVE_ACTION_"+width+":"+reverted);
+     const trace=await (await fetch(base+"/__player-member-requests")).json();
+     if(!trace.syntheticOnly||trace.requests.length)throw Error("PLAYER_V008_LEGACY_IDENTITY_LEAK_"+width+":"+JSON.stringify(trace));
+     console.log("PLAYER_V008_PRIVATE_SAVE_"+width+"=PASS");
      const reset=await fetch(base+"/__player-member-fixture?mode=legacy");
      if(!reset.ok)throw Error("PLAYER_V005_MEMBER_RESET_FAILED");
    }
