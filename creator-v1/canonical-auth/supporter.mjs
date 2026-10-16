@@ -459,3 +459,35 @@ export async function reconcileSupporterCheckouts(env,{now=Date.now(),http=fetch
   }
   return {available:true,examined,completed,expired,pending,failed};
 }
+
+/**
+ * Member data portability: private summary of exactly this verified account's
+ * billing and cosmetic data. Card details and webhook secrets never reside in
+ * MEMBER_DB and are never part of the export. Works even when sales are paused.
+ */
+export async function supporterExportMember(env,memberId){
+  const db=env?.MEMBER_DB;
+  if(typeof memberId!=='string'||!memberId||!await supporterSchemaReady(db))return null;
+  const customer=await row(db,'SELECT stripe_customer_id,created_at_ms FROM supporter_customers WHERE member_user_id=?',memberId);
+  const subscriptions=await rows(db,
+    'SELECT stripe_subscription_id,stripe_price_id,billing_interval,status,current_period_end_ms,started_at_ms,cancel_at_period_end,synced_at_ms '+
+    'FROM supporter_subscriptions WHERE member_user_id=? ORDER BY started_at_ms DESC LIMIT 500',memberId);
+  const checkouts=await rows(db,
+    'SELECT stripe_checkout_session_id,billing_interval,created_at_ms,completed_at_ms,abandoned_at_ms '+
+    'FROM supporter_checkout_intents WHERE member_user_id=? ORDER BY created_at_ms DESC LIMIT 500',memberId);
+  const consent=await row(db,
+    'SELECT public_insignia,revision,updated_at_ms FROM supporter_visibility WHERE member_user_id=?',memberId);
+  const appearance=await row(db,
+    'SELECT selected_seal,selected_frame,selected_aura,revision,updated_at_ms FROM supporter_appearance WHERE member_user_id=?',memberId);
+  const holds=await rows(db,
+    'SELECT h.reason,h.created_at_ms FROM supporter_billing_holds h '+
+    'JOIN supporter_customers c ON c.stripe_customer_id=h.stripe_customer_id WHERE c.member_user_id=?',
+    memberId);
+  return {service:'stripe',customerId:customer?.stripe_customer_id??null,
+    subscriptions,checkouts,display:consent?{
+      publicInsignia:consent.public_insignia===1,revision:consent.revision,updatedAt:consent.updated_at_ms
+    }:null,appearance:appearance?{
+      seal:appearance.selected_seal,frame:appearance.selected_frame,aura:appearance.selected_aura,
+      revision:appearance.revision,updatedAt:appearance.updated_at_ms
+    }:null,billingHolds:holds};
+}
