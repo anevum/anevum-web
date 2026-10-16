@@ -55,7 +55,8 @@ try{
   ['/projects/rhen/',390,844,'rhen'],['/projects/rhen/',1440,900,'rhen'],
   ['/projects/rhen/research/',390,844,'rhen-research'],
   ['/projects/transcosmic/',390,844,'transcosmic'],['/projects/transcosmic/',1440,900,'transcosmic'],
-  ['/projects/backstage/',390,844,'backstage'],['/projects/backstage/',1440,900,'backstage']
+  ['/projects/backstage/',390,844,'backstage'],['/projects/backstage/',1440,900,'backstage'],
+  ['/projects/cadets/',390,844,'cadets'],['/projects/cadets/',1440,900,'cadets'],['/projects/cadets/',320,680,'cadets-small']
  ])await screenshot(path,w,h,name);
  console.log('All Lab Chromium browser states passed');
 }finally{await new Promise(resolve=>server.close(resolve));}
