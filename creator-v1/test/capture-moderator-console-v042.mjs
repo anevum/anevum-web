@@ -25,6 +25,7 @@ function seed(key,handle,visibility='public'){
 }
 const author=seed('author','orbit_writer'),reader=seed('reader','orbit_reader');
 const reviewer=seed('reviewer','orbit_reviewer'),privateUser=seed('private','private_orbit','private');
+const queueAuthor=seed('queueauthor','orbit_queue_author');
 const origin='https://a.anevum.com';
 const request=(path,method='GET',body)=>new Request(origin+path,{
  method,headers:{origin,...(body?{'content-type':'application/json'}:{})},
@@ -56,7 +57,7 @@ db.prepare("INSERT INTO member_forum_threads(id,author_id,client_request_id,topi
 const pendingResult=await canonicalForums(request('/api/v1/community/threads','POST',{
  requestId:id(),topic:'making',title:'Accessible member tools and software',
  body:'How can we create a more accessible software workshop for the community?'
-}),env,author,1400);
+}),env,queueAuthor,1400);
 assert.equal(pendingResult.status,201);const pendingThread=(await pendingResult.json()).id;
 const ownResult=await canonicalForums(request('/api/v1/community/threads','POST',{
  requestId:id(),topic:'community',title:'Second reviewer required for staff content',
