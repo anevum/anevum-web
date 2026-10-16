@@ -157,4 +157,16 @@ try{
  writeFileSync(join(out,'acceptance.json'),JSON.stringify(result,null,2));
  console.log('V041_CANONICAL_FORUM_GUEST_BROWSER=PASS');
 }catch(e){console.error('V041_FORUM_BROWSER_FAILED='+String(e));throw e}
-finally{client?.close();child.kill();server.close();db.close();rmSync(temp,{recursive:true,force:true,maxRetries:5,retryDelay:100})}
+finally{
+ client?.close();
+ child.kill();
+ await new Promise(resolve=>{
+  if(child.exitCode!==null||child.signalCode!==null){resolve();return}
+  const timer=setTimeout(resolve,4000);
+  child.once('exit',()=>{clearTimeout(timer);resolve()});
+ });
+ await new Promise(resolve=>server.close(()=>resolve()));
+ db.close();
+ try{rmSync(temp,{recursive:true,force:true,maxRetries:20,retryDelay:200})}
+ catch(e){console.warn('Temporary Chrome profile cleanup deferred: '+String(e?.code||e));}
+}
