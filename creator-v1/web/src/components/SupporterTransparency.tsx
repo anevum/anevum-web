@@ -29,13 +29,14 @@ const size=(value:number|null)=>value===null?'NOT VERIFIED':value<1024?value+' B
 const money=(value:number|null)=>value===null?'NOT VERIFIED':new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(value);
 function Meter({label,value,total,unit}:{label:string;value:number|null;total:number|null;unit?:string}){
  const usable=typeof value==='number'&&Number.isFinite(value)&&typeof total==='number'&&Number.isFinite(total)&&total>0;
- const percent=usable?Math.min(100,Math.max(0,(value/total)*100)):0;
+ const actualPercent=usable?Math.max(0,(value/total)*100):0;
+ const visualPercent=Math.min(100,actualPercent);
  return <div className="av37-meter">
-  <div className="av37-meter-label"><span>{label}</span><strong>{usable?percent.toFixed(1)+'%':'AWAITING VERIFIED TARGET'}</strong></div>
+  <div className="av37-meter-label"><span>{label}</span><strong>{usable?actualPercent.toFixed(1)+'%':'AWAITING VERIFIED TARGET'}</strong></div>
   <div className="av37-meter-track" role="progressbar" aria-label={label} aria-valuemin={0}
-   aria-valuemax={usable?total??undefined:undefined} aria-valuenow={usable?value??undefined:undefined}
+   aria-valuemax={usable?Math.max(total,value,1):undefined} aria-valuenow={usable?Math.max(0,value):undefined}
    aria-valuetext={usable?String(value)+' of '+String(total)+(unit?' '+unit:''):'No verified denominator available'}>
-   <span style={{width:percent+'%'}}/>
+   <span style={{width:visualPercent+'%'}}/>
   </div>
  </div>;
 }
