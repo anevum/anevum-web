@@ -6,6 +6,7 @@ import {ProfileImageEditor} from './ProfileImageEditor';
 import {MemberWall} from './MemberWall';
 
 import {LevelEmblem,AwardEmblem} from './LevelEmblem';
+import {SupporterIdentity} from './SupporterSeal';
 
 type Tab='overview'|'profile'|'appearance'|'awards'|'wall';
 export function SpaceProgress({space}:{space:MemberSpace}){
@@ -30,10 +31,10 @@ export function MemberSpaceDashboard({profile,editor,newMember=false,onSetupComp
  const avatar=space?.media.avatar?'/api/v1/member/media/avatar':undefined;
  const banner=space?.media.banner?'/api/v1/member/media/banner':undefined;
  return <section className={'ms-dashboard av18-world-'+profile.worldTheme} aria-labelledby="ms-title">
-  <header className="ms-cover">{banner&&<img className="ms-cover-art" src={banner} key={space?.media.banner} alt="Your wall banner"/>}<div className="ms-cover-shade"/>
+  <header className={'ms-cover'+(space?.supporterAppearance?' av34-aura av34-aura-'+space.supporterAppearance.aura:'')}>{banner&&<img className="ms-cover-art" src={banner} key={space?.media.banner} alt="Your wall banner"/>}<div className="ms-cover-shade"/>
    <div className="ms-cover-meta"><span className="kicker">ANEVUM / PERSONAL CONTINUANCE</span><span className="ms-visibility">{profile.visibility==='public'?'PUBLIC WORLD':'PRIVATE WORLD'}</span></div>
    <button className="ms-cover-edit" onClick={()=>setTab('appearance')}>EDIT BANNER ↗</button>
-   <div className="ms-identity"><button className="ms-avatar-button" onClick={()=>setTab('appearance')} aria-label="Change profile picture"><MemberPortrait src={avatar} key={space?.media.avatar} name={profile.displayName}/><span>EDIT</span></button><div><p className="ms-handle">@{profile.handle}</p><h1 id="ms-title" tabIndex={-1}>{profile.displayName}</h1><p>{profile.headline||'Your place in the continuance.'}</p></div></div>
+   <div className="ms-identity"><button className="ms-avatar-button" onClick={()=>setTab('appearance')} aria-label="Change profile picture"><MemberPortrait src={avatar} key={space?.media.avatar} name={profile.displayName} supporterFrame={space?.supporterAppearance?.frame}/><span>EDIT</span></button><div><p className="ms-handle">@{profile.handle}</p>{space?.supporterAppearance&&<SupporterIdentity appearance={space.supporterAppearance} compact/>}<h1 id="ms-title" tabIndex={-1}>{profile.displayName}</h1><p>{profile.headline||'Your place in the continuance.'}</p></div></div>
   </header>
   <div className="ms-toolbar"><nav aria-label="My space sections">{([['overview','Dashboard'],['wall','My wall'],['profile','Edit profile'],['appearance','Appearance'],['awards','Awards & stats']] as [Tab,string][]).map(([key,label])=><button key={key} aria-current={tab===key?'page':undefined} onClick={()=>{setTab(key);setNotice('')}}>{label}</button>)}</nav><div className="ms-toolbar-links"><Link to="/thebutton">XP TEST ↗</Link><Link to="/community">COMMUNITY ↗</Link> <Link to="/support">SUPPORT ANEVUM ↗</Link> {profile.visibility==='public'?<Link to={'/@'+profile.handle}>VIEW PUBLIC WALL ↗</Link>:<button onClick={()=>setTab('profile')}>VISIBILITY SETTINGS</button>}</div></div>
   {newMember&&<section className="ms-welcome" aria-label="Finish setting up your space"><div><span className="kicker">IDENTITY SAVED / MAKE YOURSELF AT HOME</span><h2>Welcome to your own corner of ANEVUM.</h2><p>Add a portrait and a banner, then look around. You can change these anytime.</p></div><div className="ms-actions"><button className="ms-primary" onClick={()=>{onSetupComplete();setTab('wall')}}>CONTINUE TO MY WALL →</button><button onClick={()=>{onSetupComplete();setTab('overview')}}>SKIP FOR NOW</button></div></section>}
