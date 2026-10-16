@@ -214,3 +214,20 @@ export async function canonicalStudioReview(req,env,user,now=Math.floor(Date.now
     json({ok:true,status:raw.action}):fail(409,'Submission changed during review');
  }catch{return fail(503,'Studio review unavailable');}
 }
+
+/**
+ * Export member-owned Studio metadata even if the feature is paused. Raw asset
+ * bytes stay accessible through authenticated private downloads while enabled;
+ * never include internal R2 keys, auth credentials or a public object URL.
+ */
+export async function canonicalStudioExport(env,userId){
+ if(!await canonicalStudioSchemaReady(env))return null;
+ const projects=(await rows(env.MEMBER_DB,'SELECT '+COLS+' FROM member_studio_projects WHERE user_id=? ORDER BY created_at ASC LIMIT 50',[userId])).map(dbRow);
+ const assets=await rows(env.MEMBER_DB,
+  'SELECT id,project_id,filename,kind,content_type,size_bytes,status,sha256,uploaded_at FROM member_studio_assets WHERE user_id=? ORDER BY created_at ASC LIMIT 500',
+  [userId]);
+ return {projects,assets:assets.map(a=>({
+  id:a.id,projectId:a.project_id,name:a.filename,kind:a.kind,contentType:a.content_type,
+  sizeBytes:Number(a.size_bytes),status:a.status,sha256:a.sha256,uploadedAt:a.uploaded_at
+ }))};
+}
