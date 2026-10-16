@@ -9,3 +9,22 @@
 .cf-review .cf-fullbody{white-space:pre-wrap;overflow-wrap:anywhere;max-width:80ch;line-height:1.7}
 .cf-forums button:focus-visible,.cf-forums a:focus-visible,.cf-forums textarea:focus-visible{outline:2px solid #eeb4cf;outline-offset:3px}
 @media(max-width:640px){.cf-review .cf-thread-foot button{width:100%}.cf-review-totals span{flex:1 1 120px}}
+
+.cf-mine{margin:32px 0;padding:clamp(16px,3vw,28px);background:linear-gradient(145deg,#28202f,#17161e);border:1px solid #645063;border-radius:18px}
+.cf-mine-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.cf-mine h3{font-size:13px;letter-spacing:.15em;margin:0}
+.cf-mine>p,.cf-mine-list p{font-size:13px;color:#c8bcc7}
+.cf-mine-head button,.cf-report button{border:1px solid #775871;border-radius:11px;padding:11px 15px;background:#36283b;color:#f4e7ec;cursor:pointer}
+.cf-mine-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,270px),1fr));gap:12px}
+.cf-mine-list article{padding:17px;background:#211d2a;border:1px solid #544251;border-radius:13px}
+.cf-mine-list h4{margin:10px 0 6px;font-family:Georgia,serif;font-size:21px;line-height:1.2}
+.cf-mine-list small{color:#c7afc0}
+.cf-mine-status{font-size:10px;letter-spacing:.12em;color:#d9b8cc}
+.cf-mine-status[data-state="rejected"],.cf-mine-status[data-state="hidden"]{color:#f2c1bb}
+.cf-mine-status[data-state="published"]{color:#b7e0c1}
+.cf-report{display:grid;gap:12px;margin:20px 0;padding:20px;border:1px solid #735065;background:#231a29;border-radius:15px}
+.cf-report h3{margin:0;font-size:17px;letter-spacing:.11em}
+.cf-report label{font-size:11px;letter-spacing:.12em}
+.cf-report select{max-width:500px;background:#131018;color:#f4e9ee;border:1px solid #70546c;border-radius:12px;padding:12px}
+.cf-report-actions{display:flex;gap:10px;flex-wrap:wrap}
+.cf-forums button:disabled{opacity:.56;cursor:not-allowed}
