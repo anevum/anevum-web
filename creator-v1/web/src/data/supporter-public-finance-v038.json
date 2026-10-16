@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "published": false,
+  "verified": false,
+  "period": null,
+  "mode": null,
+  "scope": "ANEVUM_CORE",
+  "currency": "USD",
+  "reviewedAt": null,
+  "methodology": "Private receipts and expenses have not been reconciled and approved for public reporting.",
+  "expenses": {
+    "totalCents": null,
+    "categories": {
+      "hosting": null,
+      "storage": null,
+      "delivery": null,
+      "email": null,
+      "moderation": null,
+      "software": null,
+      "other": null
+    }
+  },
+  "receipts": {
+    "grossCents": null,
+    "feesCents": null,
+    "refundsCents": null,
+    "disputesCents": null,
+    "netCents": null
+  },
+  "activeSupporters": null,
+  "approvedMonthlyTargetCents": null,
+  "cashCoveragePercent": null,
+  "completeness": {
+    "expenses": false,
+    "supporterReceipts": false,
+    "activeSupporters": false,
+    "fundraisingGoal": false
+  }
+}
