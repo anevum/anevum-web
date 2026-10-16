@@ -14,9 +14,11 @@ const authorSql=`JOIN member_creator_profiles p ON p.user_id=t.author_id JOIN "u
 const selectThread=`SELECT t.id,t.topic,t.title,t.body,t.status,t.created_at,t.published_at,t.updated_at,
  p.handle,p.display_name,s.featured_json,s.show_stats,
  EXISTS(SELECT 1 FROM member_space_media m WHERE m.user_id=p.user_id AND m.slot='avatar') AS avatar,
- (SELECT 1+CAST(SQRT(MAX(0,COALESCE((SELECT SUM(amount) FROM member_xp_events x WHERE x.user_id=t.author_id),0)+
- COALESCE((SELECT SUM(CASE milestone WHEN 'first_signal' THEN 10 WHEN 'world_shaper' THEN 25 ELSE 0 END)
- FROM member_space_milestones z WHERE z.user_id=t.author_id),0))/25)) AS INT)) AS level,
+ (1+CAST(SQRT(MAX(0,
+   (COALESCE((SELECT SUM(amount) FROM member_xp_events x WHERE x.user_id=t.author_id),0)+
+   COALESCE((SELECT SUM(CASE milestone WHEN 'first_signal' THEN 10 WHEN 'world_shaper' THEN 25 ELSE 0 END)
+   FROM member_space_milestones z WHERE z.user_id=t.author_id),0))/25.0
+ )) AS INTEGER)) AS level,
  (SELECT COUNT(*) FROM member_forum_replies r WHERE r.thread_id=t.id AND r.status='published') AS reply_count,
  (SELECT COUNT(*) FROM member_forum_reactions v WHERE v.thread_id=t.id) AS reactions
  FROM member_forum_threads t ${authorSql} AND t.status='published'`;
@@ -37,7 +39,7 @@ export async function canonicalForums(req,env,user=null,now=Math.floor(Date.now(
  const review=path==='/api/v1/member/forum-review';
  if(!item&&!reply&&!react&&!report&&!mine&&!review&&path!=='/api/v1/community/threads')return fail(404,'Not found');
  if((item&&!UUID.test(item[1]))||(reply&&!UUID.test(reply[1]))||(react&&!UUID.test(react[1])))return fail(404,'Not found');
- const publicRead=req.method==='GET'&&!mine&&!react&&!report;
+ const publicRead=req.method==='GET'&&!mine&&!react&&!report&&!review;
  if(!publicRead&&(!user?.id||user.emailVerified!==true))return fail(401,'Sign in with a verified account');
  try{
   if(publicRead){
