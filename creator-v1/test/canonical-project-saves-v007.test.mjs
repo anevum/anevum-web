@@ -7,6 +7,7 @@ import {fixture} from "./helpers/canonical-fixture.mjs";
 import {createCanonicalStageWorker} from "../canonical-auth/worker.mjs";
 import {canonicalProjectSave,canonicalProjectSaveReady,canonicalProjectSaveExport,parseProjectSaveCursor} from "../canonical-auth/project-saves.mjs";
 import {canonicalExportMember} from "../canonical-auth/profile.mjs";
+import publicCreatorApi from "../api/worker.mjs";
 const ORIGIN="https://a.anevum.com",PATH="/api/v1/member/project-saves/",projectId="a".repeat(32);
 const alice={id:"pilot-alice",name:"Alice",email:"alice@fixture.invalid",emailVerified:true};
 const bob={id:"pilot-bob",name:"Bob",email:"bob@fixture.invalid",emailVerified:true};
@@ -26,12 +27,18 @@ function setup({enabled=true,migrate=true,published=true}={}){
   "INSERT INTO user(id,name,email,emailVerified,createdAt,updatedAt) VALUES(?,?,?,1,?,?)"
  ).run(person.id,person.name,person.email,100,100);
  const publicDb=new DatabaseSync(":memory:");
+ // Mirrors the real public Creator API's required projection so staging
+ // schema drift breaks both the read-only catalogue and this save pilot.
  publicDb.exec("CREATE TABLE creator_profiles(member_id TEXT PRIMARY KEY,status TEXT NOT NULL,"+
    "handle TEXT NOT NULL DEFAULT 'offline_maker',display_name TEXT NOT NULL DEFAULT 'Offline Maker');"+
    "CREATE TABLE projects(id TEXT PRIMARY KEY,owner_member_id TEXT NOT NULL,"+
    "status TEXT NOT NULL,published_at TEXT,title TEXT NOT NULL DEFAULT 'Verified Project',"+
    "summary TEXT NOT NULL DEFAULT 'A verified sample for isolated tests',"+
-   "category TEXT NOT NULL DEFAULT 'games');");
+   "category TEXT NOT NULL DEFAULT 'games',slug TEXT NOT NULL DEFAULT 'verified-project',"+
+   "source_url TEXT,demo_url TEXT,free_to_use INTEGER NOT NULL DEFAULT 1,"+
+   "license_name TEXT,description TEXT NOT NULL DEFAULT 'Approved fixture record',"+
+   "ai_disclosure TEXT NOT NULL DEFAULT 'No AI in fixture',"+
+   "human_contribution TEXT NOT NULL DEFAULT 'Offline testing');");
  publicDb.prepare("INSERT INTO creator_profiles(member_id,status) VALUES(?,?)").run("original-creator","active");
  publicDb.prepare("INSERT INTO projects(id,owner_member_id,status,published_at) VALUES(?,?,?,?)")
   .run(projectId,"original-creator",published?"published":"draft","2000-01-01 00:00:00");
@@ -314,5 +321,68 @@ test("canonical collection never hydrates withdrawn metadata and allows private 
   assert.doesNotMatch(JSON.stringify(list),/Private work|Verified Project/);
   assert.deepEqual(await data(await canonicalProjectSave(req(projectId,"DELETE"),f.env,alice)),{saved:false,changed:true});
   assert.equal(f.db.prepare("SELECT COUNT(*) AS n FROM member_project_saves").get().n,0);
+ }finally{f.close()}
+});
+
+
+test("readiness compiles real public and private column projections; incomplete schemas fail closed",async()=>{
+ for(const change of [
+  f=>f.publicDb.exec("ALTER TABLE projects RENAME COLUMN title TO unavailable_title"),
+  f=>f.publicDb.exec("ALTER TABLE creator_profiles RENAME COLUMN handle TO hidden_handle"),
+  f=>f.db.exec("ALTER TABLE member_project_saves RENAME COLUMN saved_at TO old_saved_at"),
+  f=>f.db.exec("ALTER TABLE member_project_save_rate_limits RENAME COLUMN requests TO old_requests")
+ ]){
+  const f=setup();try{
+   assert.equal(await canonicalProjectSaveReady(f.env),true);
+   change(f);
+   assert.equal(await canonicalProjectSaveReady(f.env),false);
+   const worker=withAccount(f).worker;
+   const health=await data(await worker.fetch(
+    new Request(ORIGIN+"/api/v1/member/health"),f.env));
+   assert.equal(health.projectSavesReady,false);
+   assert.equal((await worker.fetch(req(projectId,"GET",{headers:{
+    cookie:"__Secure-anevum_can_stage.session_token=alice"
+   }}),f.env)).status,503);
+  }finally{f.close()}
+ }
+});
+
+test("project saves and collection use the exact visible public API approval boundary",async()=>{
+ const f=setup();try{
+  const worker=withAccount(f).worker;
+  const publicDetail=async()=>publicCreatorApi.fetch(
+   new Request(ORIGIN+"/api/v1/projects/"+projectId),{COMMUNITY_DB:f.env.COMMUNITY_DB});
+  const publicList=async()=>publicCreatorApi.fetch(
+   new Request(ORIGIN+"/api/v1/projects?limit=24"),{COMMUNITY_DB:f.env.COMMUNITY_DB});
+  const assertEqualVisibility=async visible=>{
+   const detail=await publicDetail(),list=await data(await publicList());
+   const canonical=await worker.fetch(req(projectId,"GET",{headers:{
+     cookie:"__Secure-anevum_can_stage.session_token=alice"
+   }}),f.env);
+   const collectionData=await data(await worker.fetch(collection(),f.env));
+   assert.equal(detail.status,visible?200:404);
+   assert.equal(list.items.some(x=>x.id===projectId),visible);
+   assert.equal(canonical.status,visible?200:404);
+   assert.equal(collectionData.items.length,visible?1:0);
+   if(visible){
+    const details=await data(detail),save=collectionData.items[0];
+    for(const [publicName,savedName] of [
+     ["id","id"],["title","title"],["summary","summary"],["category","category"],
+     ["creatorHandle","creatorHandle"],["creatorName","creatorName"],
+     ["publishedAt","publishedAt"]
+    ])assert.equal(details.item[publicName],save[savedName]);
+   }
+  };
+  await canonicalProjectSave(req(projectId,"PUT"),f.env,alice);
+  await assertEqualVisibility(true);
+  f.publicDb.prepare("UPDATE projects SET status='draft' WHERE id=?").run(projectId);
+  await assertEqualVisibility(false);
+  f.publicDb.prepare("UPDATE projects SET status='published',published_at='2999-01-01' WHERE id=?").run(projectId);
+  await assertEqualVisibility(false);
+  f.publicDb.prepare("UPDATE projects SET published_at='2000-01-01 00:00:00' WHERE id=?").run(projectId);
+  f.publicDb.prepare("UPDATE creator_profiles SET status='inactive'").run();
+  await assertEqualVisibility(false);
+  f.publicDb.prepare("UPDATE creator_profiles SET status='active'").run();
+  await assertEqualVisibility(true);
  }finally{f.close()}
 });

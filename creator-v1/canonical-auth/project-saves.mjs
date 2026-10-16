@@ -26,6 +26,18 @@ const json=(data,status=200)=>new Response(JSON.stringify(data),{status,headers:
 const error=(status,message)=>json({error:message},status);
 const SAVES=["member_project_saves","member_project_save_rate_limits"];
 const PUBLIC=["projects","creator_profiles"];
+// Readiness must verify usable *column contracts*, not only table names.
+// LIMIT 0 compiles without fetching private records or public project data.
+const PRIVATE_SCHEMA_CHECK='SELECT s.member_user_id,s.public_project_id,s.saved_at,'+
+ 'r.member_user_id AS rate_member,r.window_start,r.requests,u.id AS owner_id '+
+ 'FROM member_project_saves s JOIN "user" u ON u.id=s.member_user_id '+
+ 'LEFT JOIN member_project_save_rate_limits r ON r.member_user_id=s.member_user_id LIMIT 0';
+const PUBLIC_SCHEMA_CHECK='SELECT p.id,p.slug,p.title,p.summary,p.category,'+
+ 'p.source_url,p.demo_url,p.free_to_use,p.license_name,p.published_at,'+
+ 'p.owner_member_id,p.status,c.member_id,c.handle,c.display_name,c.status '+
+ "FROM projects p JOIN creator_profiles c ON c.member_id=p.owner_member_id "+
+ "WHERE p.status='published' AND c.status='active' "+
+ "AND julianday(p.published_at)<=julianday('now') LIMIT 0";
 
 function validDatabases(env){
  return env?.CANONICAL_PROJECT_SAVES_ENABLED==="true"&&
@@ -39,13 +51,22 @@ async function hasTables(db,tables){
  return result?.success!==false && Array.isArray(result?.results) &&
    tables.every(name=>result.results.some(row=>row.name===name));
 }
+async function canCompile(db,sql){
+ const result=await db.prepare(sql).all();
+ return result?.success!==false&&Array.isArray(result?.results);
+}
 export async function canonicalProjectSaveReady(env){
  if(!validDatabases(env))return false;
  try{
    const [privateReady,publicReady]=await Promise.all([
      hasTables(env.MEMBER_DB,SAVES),hasTables(env.COMMUNITY_DB,PUBLIC)
    ]);
-   return privateReady&&publicReady;
+   if(!privateReady||!publicReady)return false;
+   const [privateColumns,publicColumns]=await Promise.all([
+     canCompile(env.MEMBER_DB,PRIVATE_SCHEMA_CHECK),
+     canCompile(env.COMMUNITY_DB,PUBLIC_SCHEMA_CHECK)
+   ]);
+   return privateColumns&&publicColumns;
  }catch{return false}
 }
 async function first(db,sql,...params){return db.prepare(sql).bind(...params).first()}
