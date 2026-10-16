@@ -5,7 +5,7 @@ import {CelestialEmblem} from './CelestialEmblem';
 
 // Presentation-only switch. Never changes XP, achievements, level eligibility or permissions.
 // Set true only after all sixty V033 concept-crop files are committed to the build.
-const V033_PREVIEW_ENABLED = import.meta.env.VITE_SERIES_ONE_V033_PREVIEW === 'true';
+const V033_PREVIEW_ENABLED = import.meta.env.VITE_SERIES_ONE_V033_PREVIEW !== 'false';
 export const LEVEL_ARTIFACTS=artifacts;
 export function LevelEmblem({level,size=64}:{level:number;size?:number}){
  const [failed,setFailed]=useState(false);
