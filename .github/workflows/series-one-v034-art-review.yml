@@ -1,0 +1,62 @@
+name: ANEVUM Series One V034 Art Review
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [design/series-one-v034-responsive-art-20261016]
+    paths:
+      - 'creator-v1/web/src/components/LevelEmblem.tsx'
+      - 'creator-v1/web/src/components/LevelPanel.tsx'
+      - 'creator-v1/web/src/components/AnevumNotifications.tsx'
+      - 'creator-v1/web/src/progression.css'
+      - 'creator-v1/ops/install-series-one-illustrations-v034.py'
+      - 'creator-v1/test/illustrated-art-delivery-v034.test.mjs'
+      - 'creator-v1/package.json'
+      - '.github/workflows/series-one-v034-art-review.yml'
+  pull_request:
+    paths:
+      - 'creator-v1/web/src/components/LevelEmblem.tsx'
+      - 'creator-v1/web/src/components/LevelPanel.tsx'
+      - 'creator-v1/web/src/components/AnevumNotifications.tsx'
+      - 'creator-v1/web/src/progression.css'
+      - 'creator-v1/ops/install-series-one-illustrations-v034.py'
+      - 'creator-v1/test/illustrated-art-delivery-v034.test.mjs'
+      - 'creator-v1/package.json'
+      - '.github/workflows/series-one-v034-art-review.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: v034-art-review-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install toolchain without scripts
+        run: npm install --ignore-scripts --no-audit --no-fund
+      - name: Assert opt-in rules and corruption-safe installer
+        run: node --test creator-v1/test/illustrated-art-delivery-v034.test.mjs
+      - name: Typecheck component frontend
+        run: npm run check:creator-v1-web
+      - name: Compile normal and staging-path frontends (no deployment)
+        run: |
+          npm run build:creator-v1-web
+          npm run build:creator-v1-web:staging
+      - name: Preserve default-off artwork gate
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "${VITE_ANEVUM_ILLUSTRATED_LEVELS:-}" != true
+          test ! -d creator-v1/web/public/assets/levels/illustrated
+          printf '%s\n' 'ART_ASSETS=private-owner-review; FLAG=OFF; DEPLOYMENT=NONE'
