@@ -6,6 +6,7 @@ export type ForumThread={
  author:ForumAuthor;replyCount:number;reactions:number
 };
 export type ForumReply={id:string;body:string;publishedAt:number;author:ForumAuthor};
+export type ForumReplyPage={items:ForumReply[];nextCursor:string|null};
 export type MemberSubmission={
  id:string;topic:string;title:string;body:string;
  status:'pending_review'|'published'|'rejected'|'hidden';created_at:number

@@ -5,7 +5,7 @@ import {useResource} from '../lib/useResource';
 import {ForumAuthorCard as AuthorCard} from '../components/ForumAuthorCard';
 import {forumRequest as request,FORUM_TOPICS as topics,FORUM_ID as UUID,ForumApiError,
  type ForumThread as Thread,type ForumReply as Reply,type MemberSubmission as MyThread,
- type ForumThreadPage} from '../lib/member-forums';
+ type ForumThreadPage,type ForumReplyPage} from '../lib/member-forums';
 import './forums.css';
 function date(seconds:number){return new Date(seconds*1000).toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'})}
 function MySubmissions({memberId}:{memberId:string}){
@@ -103,7 +103,28 @@ export function CommunityThread(){
  useEffect(()=>{setLikedOverride(null);setReportTarget(null);setNotice('')},[id,memberId]);
  const valid=UUID.test(id);
  const thread=useResource(signal=>valid?request<{thread:Thread}>('/api/v1/community/threads/'+id,'GET',undefined,signal):Promise.reject(Error('Invalid thread')),[id,revision]);
- const replies=useResource(signal=>valid?request<{items:Reply[]}>('/api/v1/community/threads/'+id+'/replies','GET',undefined,signal):Promise.reject(Error('Invalid thread')),[id,revision]);
+ const replies=useResource(signal=>valid?request<ForumReplyPage>('/api/v1/community/threads/'+id+'/replies','GET',undefined,signal):Promise.reject(Error('Invalid thread')),[id,revision]);
+ const replyKey=id+'|'+revision;
+ const activeReplyKey=useRef(replyKey);activeReplyKey.current=replyKey;
+ const [extraReplies,setExtraReplies]=useState<{key:string;items:Reply[];nextCursor:string|null}>({key:'',items:[],nextCursor:null});
+ const [moreReplyPending,setMoreReplyPending]=useState(false),[moreReplyError,setMoreReplyError]=useState('');
+ const shownReplies=replies.state==='ready'?[...replies.data.items,...(extraReplies.key===replyKey?extraReplies.items:[])]:[];
+ const nextReplyCursor=extraReplies.key===replyKey?extraReplies.nextCursor:replies.state==='ready'?replies.data.nextCursor:null;
+ async function loadMoreReplies(){
+  if(!nextReplyCursor||moreReplyPending||replies.state!=='ready')return;
+  const key=replyKey;
+  setMoreReplyPending(true);setMoreReplyError('');
+  try{
+   const more=await request<ForumReplyPage>('/api/v1/community/threads/'+id+'/replies?after='+encodeURIComponent(nextReplyCursor));
+   if(activeReplyKey.current!==key)return;
+   setExtraReplies(prev=>{
+    const carried=prev.key===key?prev.items:[];
+    const seen=new Set([...replies.data.items,...carried].map(x=>x.id));
+    return {key,items:[...carried,...more.items.filter(x=>!seen.has(x.id))],nextCursor:more.nextCursor};
+   });
+  }catch(e){if(activeReplyKey.current===key)setMoreReplyError(e instanceof Error?e.message:'More replies could not be loaded.');}
+  finally{setMoreReplyPending(false)}
+ }
  const reaction=useResource(signal=>memberId&&valid?request<{reacted:boolean}>('/api/v1/community/threads/'+id+'/reaction','GET',undefined,signal):Promise.resolve({reacted:false}),[id,memberId,revision]);
  const liked=likedOverride??(reaction.state==='ready'&&reaction.data.reacted);
  async function action(method:string,path:string,payload?:unknown){
@@ -154,7 +175,7 @@ export function CommunityThread(){
    <h2>THE CONVERSATION</h2>
    {replies.state==='loading'&&<p role="status">Reading reviewed replies…</p>}
    {replies.state==='error'&&<p role="status">Approved replies are temporarily unavailable.</p>}
-   {replies.state==='ready'&&(replies.data.items.length?replies.data.items.map(reply=>
+   {replies.state==='ready'&&(shownReplies.length?shownReplies.map(reply=>
     <article className="cf-thread" key={reply.id}>
      <AuthorCard author={reply.author}/>
      <p className="cf-fullbody">{reply.body}</p>
@@ -162,6 +183,8 @@ export function CommunityThread(){
       {memberId&&<button type="button" disabled={busy} onClick={()=>setReportTarget({kind:'reply',id:reply.id})}>REPORT REPLY</button>}
      </div>
     </article>):<p className="cf-note">No approved replies yet.</p>)}
+   {nextReplyCursor&&<button type="button" className="cf-more" disabled={moreReplyPending} onClick={()=>void loadMoreReplies()}>{moreReplyPending?'READING MORE REPLIES…':'LOAD MORE REPLIES'}</button>}
+   {moreReplyError&&<p className="cf-error" role="alert">{moreReplyError}</p>}
    {memberId?<form className="cf-compose" onSubmit={e=>void submitReply(e)}>
     <h3>ADD YOUR PERSPECTIVE</h3>
     <label>YOUR REPLY<textarea minLength={10} maxLength={2000} rows={5} required value={body} disabled={busy} onChange={e=>setBody(e.target.value)} placeholder="Give constructive feedback or ask a thoughtful question…"/></label>

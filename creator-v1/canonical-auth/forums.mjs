@@ -55,7 +55,8 @@ export async function canonicalForums(req,env,user=null,now=Math.floor(Date.now(
  if(!publicRead&&(!user?.id||user.emailVerified!==true))return fail(401,'Sign in with a verified account');
  try{
   if(publicRead){
-   if((topic||after)&&path!=='/api/v1/community/threads')return fail(400,'Unexpected filters');
+   if((topic&&path!=='/api/v1/community/threads')||(after&&path!=='/api/v1/community/threads'&&!reply))
+    return fail(400,'Unexpected filters');
    if(!item&&!reply&&path==='/api/v1/community/threads'){
     const a=[...(topic?[topic]:[]),...(after?[after[0],after[0],after[1]]:[])];
     const sql=selectThread+(topic?' AND t.topic=?':'')+
@@ -77,8 +78,11 @@ export async function canonicalForums(req,env,user=null,now=Math.floor(Date.now(
       (1+CAST(SQRT(MAX(0,(COALESCE((SELECT SUM(amount) FROM member_xp_events x WHERE x.user_id=r.author_id),0)+COALESCE((SELECT SUM(CASE milestone WHEN 'first_signal' THEN 10 WHEN 'world_shaper' THEN 25 ELSE 0 END) FROM member_space_milestones z WHERE z.user_id=r.author_id),0))/25.0)) AS INTEGER)) AS level FROM member_forum_replies r JOIN member_creator_profiles p ON r.author_id=p.user_id JOIN "user" u ON u.id=p.user_id
       LEFT JOIN member_space_settings s ON s.user_id=p.user_id
       WHERE r.thread_id=? AND r.status='published' AND p.visibility='public' AND u.emailVerified=1
-      ORDER BY r.published_at ASC,r.id ASC LIMIT 100`).bind(reply[1]).all();
-    return json({items:r.results.map(v=>({id:v.id,body:v.body,publishedAt:v.published_at,author:card(v)}))});
+      ${after?'AND (r.published_at>? OR (r.published_at=? AND r.id>?))':''}
+      ORDER BY r.published_at ASC,r.id ASC LIMIT 26`).bind(reply[1],...(after?[after[0],after[0],after[1]]:[])).all();
+    const visible=r.results.slice(0,25),last=visible.at(-1);
+    return json({items:visible.map(v=>({id:v.id,body:v.body,publishedAt:v.published_at,author:card(v)})),
+      nextCursor:r.results.length>25&&last?encodeCursor(last.published_at,last.id):null});
    }
   }
   if(review){
@@ -148,8 +152,8 @@ export async function canonicalForums(req,env,user=null,now=Math.floor(Date.now(
   }
   if(req.method!=='POST'&&req.method!=='DELETE')return fail(405,'Method not allowed');
   if(url.search)return fail(400,'Query unsupported for writes');
-  const profile=await db.prepare("SELECT handle,visibility FROM member_creator_profiles WHERE user_id=?").bind(user.id).first();
-  if(!profile||profile.visibility!=='public')return fail(403,'Enable your public member profile before participating');
+  // Reporting and private reactions do not force members to publish their identities.
+  // Public identity is required only for authored thread/reply submissions.
   if(report&&req.method==='POST'){
    const v=await payload(req);
    if(!v||!permitted(v,['targetKind','targetId','reason'])||!['thread','reply'].includes(v.targetKind)||!UUID.test(v.targetId)||!['spam','harassment','unsafe','other'].includes(v.reason))return fail(400,'Invalid report');
@@ -185,6 +189,8 @@ export async function canonicalForums(req,env,user=null,now=Math.floor(Date.now(
    return json({ok:true});
   }
   if(req.method!=='POST')return fail(405,'Method not allowed');
+  const profile=await db.prepare("SELECT handle,visibility FROM member_creator_profiles WHERE user_id=?").bind(user.id).first();
+  if(!profile||profile.visibility!=='public')return fail(403,'Enable your public member profile before posting');
   const v=await payload(req);
   if(!v||!permitted(v,reply?['body','requestId']:['title','body','topic','requestId'])||!UUID.test(v.requestId)||typeof v.body!=='string'||CTRL.test(v.body))return fail(400,'Invalid submission');
   const body=v.body.trim(),isReply=Boolean(reply);

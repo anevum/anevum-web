@@ -178,3 +178,44 @@ test('only a thread owner may withdraw a pending or published submission',async(
   assert.equal((await canonicalForums(req('/api/v1/member/forum-submissions/'+published.id,'GET'),f.env,a)).status,405);
  }finally{f.db.close()}
 });
+
+test('public replies use stable 25-entry cursor pages and reject malformed cursors',async()=>{
+ const f=setup();try{
+  const a=f.seed('author'),reader=f.seed('reader'),staff=f.seed('reviewer');
+  const created=await (await canonicalForums(req('/api/v1/community/threads','POST',{
+   requestId:id(),topic:'community',title:'A constructive community forum',body:'How can we collaborate and help new members find their way?'
+  }),f.env,a,1000)).json();
+  assert.equal((await canonicalForums(req('/api/v1/member/forum-review','POST',
+   {targetKind:'thread',targetId:created.id,action:'publish'}),f.env,staff,1001)).status,200);
+  for(let i=0;i<31;i++)f.db.prepare("INSERT INTO member_forum_replies(id,thread_id,author_id,client_request_id,body,status,created_at,published_at,updated_at) VALUES(?,?,?,?,?,'published',?,?,?)")
+   .run(id(),created.id,reader.id,id(),'A useful reviewed forum reply '+i+'.',2000+i,2000+i,2000+i);
+  const first=await (await canonicalForums(req('/api/v1/community/threads/'+created.id+'/replies'),f.env)).json();
+  assert.equal(first.items.length,25);assert.ok(first.nextCursor);
+  const second=await (await canonicalForums(req('/api/v1/community/threads/'+created.id+'/replies?after='+encodeURIComponent(first.nextCursor)),f.env)).json();
+  assert.equal(second.items.length,6);assert.equal(second.nextCursor,null);
+  const joined=[...first.items,...second.items];
+  assert.equal(new Set(joined.map(x=>x.id)).size,31);
+  for(let i=1;i<joined.length;i++)assert.ok(joined[i-1].publishedAt<=joined[i].publishedAt);
+  assert.equal((await canonicalForums(req('/api/v1/community/threads/'+created.id+'/replies?after=bad'),f.env)).status,400);
+  assert.equal((await canonicalForums(req('/api/v1/community/threads/'+created.id+'/replies?topic=arts'),f.env)).status,400);
+ }finally{f.db.close()}
+});
+test('verified private members may report and appreciate public content without publishing their profile',async()=>{
+ const f=setup();try{
+  const author=f.seed('author'),privateMember=f.seed('private','private'),staff=f.seed('reviewer');
+  const created=await (await canonicalForums(req('/api/v1/community/threads','POST',{
+   requestId:id(),topic:'games',title:'Welcoming game designers',body:'How can our community support people making their first game?'
+  }),f.env,author,1000)).json();
+  await canonicalForums(req('/api/v1/member/forum-review','POST',
+   {targetKind:'thread',targetId:created.id,action:'publish'}),f.env,staff,1001);
+  assert.equal((await canonicalForums(req('/api/v1/community/threads/'+created.id+'/reaction','POST'),f.env,privateMember,1002)).status,200);
+  assert.equal((await (await canonicalForums(req('/api/v1/community/threads/'+created.id+'/reaction','GET'),f.env,privateMember)).json()).reacted,true);
+  assert.equal((await canonicalForums(req('/api/v1/community/reports','POST',
+   {targetKind:'thread',targetId:created.id,reason:'unsafe'}),f.env,privateMember,1003)).status,201);
+  const leaked=JSON.stringify(await (await canonicalForums(req('/api/v1/community/threads'),f.env)).json());
+  assert.equal(leaked.includes('test_private'),false);
+  assert.equal((await canonicalForums(req('/api/v1/community/threads','POST',{
+   requestId:id(),topic:'games',title:'Private author topic attempt',body:'This should not be published by a private member.'
+  }),f.env,privateMember,1004)).status,403);
+ }finally{f.db.close()}
+});
