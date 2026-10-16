@@ -2,7 +2,7 @@
 Session: ANEVUM.WEB.BUILD.2026-10-16.001.COMMUNITY-DISCUSSIONS
 Environment: a.anevum.com canonical staging ONLY.
 PR: https://github.com/anevum/anevum-web/pull/449
-Status: Source-implemented, deployment gated. No DNS, live D1 or production changes authorized here.
+Status: DEPLOYED AND ENABLED on a.anevum.com staging (2026-10-16). No DNS, apex or production changes.
 
 ## Purpose
 Extend the established canonical member system into one real forum experience with four topics: Games & Play; Software & Making; Art, Media & Stories; Community & Collaboration. Thread and reply author cards show the same public avatar, earned level emblem, and chosen real awards as member worlds. Private member submissions, independent staff approval, community reporting and owner withdrawal are included.
@@ -18,17 +18,20 @@ No new account issuer or linkage to the older Creator V1 members. No automatic a
 - UI: /community forum is added ahead of existing archive; /community/threads/:id is the public thread; /community/review is the guarded moderator desk. Existing member walls, creator catalogue, old discussion URLs, and home screen remain intact.
 - Content: users may submit plaintext; no user HTML execution, file attachments or URLs auto-embedded. 4 threads/member/hour, 12 replies/member/hour, 10 new reports/member/day; DB-enforced idempotent submission keys.
 
-## Required acceptance gates before deployment
-1. Review base/head of PR #449, confirm all checks are green for EXACT final SHA, including Creator V1 build, existing member acceptance, and dedicated forum API and browser screenshots at 1440, 1024, 390 and 320 px. CI screenshots are fixtures, not proof of live D1 readiness.
-2. Confirm the live staging routing and current deploy source independently. Take a verified D1 backup and restoration checkpoint of only MEMBER_DB; account and binding identifiers must match the staging manifest before any migration.
-3. Apply ONLY 0006 to canonical staging MEMBER_DB after owner sign-off. Verify all five tables exist and no existing account, profile, wall or progression records changed.
-4. Deploy the reviewed exact build to a.anevum.com, feature OFF first. Verify other routes/signup and existing community feed still work. Enable flag only through a separately approved staging release action and set reviewers by verified user id.
-5. Independently test member A creates pending thread, staff B (different account) approves, anonymous guest reads only approved content, member C replies/reports/reacts, staff resolves report, member A withdraws, and guest URL stops exposing it. Verify A cannot review own thread and B cannot withdraw it.
-6. Confirm mobile 320/390, keyboard focus, no overlapping cards or broken text, errors, back/forward, session switching, privacy toggle, no client-side XP and no surprise page/API egress.
-7. Obtain explicit separate authorization before merging/releasing staging, enabling the flag, applying any D1 migration or taking public launch action.
+## Staging release outcome and evidence (October 16, 2026)
+- Source release GitHub Actions [38976436738](https://github.com/anevum/anevum-web/actions/runs/38976436738) **completed successfully**, deploying the exact reviewed application build from `78933fdb678a017af84ca5e74b8fad1472f646c3` with the forum flag OFF first. Browser regression included Chromium, WebKit, member signup/profile, V041 forum and responsive checks.
+- Canonical staging `MEMBER_DB` additive migration `0006_member_community_forums.sql` was applied by the Cloudflare connection and all five tables verified. Pre-migration D1 recovery bookmark was recorded privately; no destructive table action. The original counts were 2 users, 1 creator profile and 38 XP events, and remained unchanged after the migration. `PRAGMA foreign_key_check` returned zero violations; the public D1 SQL read was executed successfully. No real or synthetic forum submissions were seeded.
+- Cloudflare Worker `anevum-creator-v1-a-staging` was then enabled using an atomic, versioned secrets update. `CANONICAL_FORUM_ENABLED` is `true`; `CANONICAL_FORUM_REVIEWER_IDS` holds the verified canonical `@devon` account ID without publishing the identifier in GitHub. Other Worker secrets, both D1 bindings and the public countdown route were preserved. Moderator self-approval is intentionally forbidden.
+- Independent **hosted** smoke run [38977120012](https://github.com/anevum/anevum-web/actions/runs/38977120012) **passed**, including approved-thread GET, topic query, invalid cursor/topic rejection, protected moderator/submission endpoints, Origin/CSRF checks, existing member health/auth routes, community feed, level artwork and unchanged `anevum.com`.
+- The project remains a staging community. `CANONICAL_PUBLIC_SIGNUP_ENABLED` remains OFF; the existing invite/email access policy was not expanded during the forum release. `anevum.com` remains the January 1, 2027 coming-soon page.
+
+## Remaining acceptance beyond deployment
+- Perform a real signed-in member-to-member journey on staging: member A creates a thread, different staff B approves, member C replies/reports/reacts, staff resolves, author withdraws, and public reads cease. Synthetic isolated CI covers those flows; live real-account participation must be checked separately.
+- Appoint a trusted second reviewer before `@devon` submits threads intended for public publication, because `@devon` cannot approve their own submissions.
+- Review ongoing community guidelines and incident escalation before a broader public onboarding launch. Public registration and production promotion require separately scoped decisions.
 
 ## Rollback
-Set CANONICAL_FORUM_ENABLED=false first; leaves existing /community and all other public paths available. Revert Worker to the previously recorded staging SHA. Leave additive table records intact unless an authorized, verified restoration calls for removal. Never roll back the unrelated canonical auth/session tables.
+Set the versioned `CANONICAL_FORUM_ENABLED` binding to literal `false` first; leave existing `/community` and all other public paths available. If necessary restore the last checked pre-V041 staging Worker version through a versioned Cloudflare deployment. Leave additive table records intact unless an authorized, verified restoration calls for removal. Never roll back the unrelated canonical auth/session tables.
 
-## Ongoing work
-Member-to-member manual acceptance, in-place staging verification and final release sign-off remain open. Review the moderation policy and escalation protocol before opening guest contribution beyond pilot accounts.
+## Continuing work
+Finish manual authenticated multi-account staging acceptance, configure a second trusted reviewer, and continue community discovery/search, member moderation tools, and new creator/community integrations without affecting apex or production.
