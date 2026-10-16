@@ -57,7 +57,7 @@ export async function canonicalForums(req,env,user=null,now=Math.floor(Date.now(
     if(!parent)return fail(404,'Thread is not public');
     const r=await db.prepare(`SELECT r.id,r.body,r.published_at,p.handle,p.display_name,s.featured_json,s.show_stats,
       EXISTS(SELECT 1 FROM member_space_media m WHERE m.user_id=p.user_id AND m.slot='avatar') AS avatar,
-      1 AS level FROM member_forum_replies r JOIN member_creator_profiles p ON r.author_id=p.user_id JOIN "user" u ON u.id=p.user_id
+      NULL AS level FROM member_forum_replies r JOIN member_creator_profiles p ON r.author_id=p.user_id JOIN "user" u ON u.id=p.user_id
       LEFT JOIN member_space_settings s ON s.user_id=p.user_id
       WHERE r.thread_id=? AND r.status='published' AND p.visibility='public' AND u.emailVerified=1
       ORDER BY r.published_at ASC,r.id ASC LIMIT 100`).bind(reply[1]).all();
