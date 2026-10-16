@@ -73,7 +73,7 @@ export async function canonicalForums(req,env,user=null,now=Math.floor(Date.now(
     if(!parent)return fail(404,'Thread is not public');
     const r=await db.prepare(`SELECT r.id,r.body,r.published_at,p.handle,p.display_name,s.featured_json,s.show_stats,
       EXISTS(SELECT 1 FROM member_space_media m WHERE m.user_id=p.user_id AND m.slot='avatar') AS avatar,
-      NULL AS level FROM member_forum_replies r JOIN member_creator_profiles p ON r.author_id=p.user_id JOIN "user" u ON u.id=p.user_id
+      (1+CAST(SQRT(MAX(0,(COALESCE((SELECT SUM(amount) FROM member_xp_events x WHERE x.user_id=r.author_id),0)+COALESCE((SELECT SUM(CASE milestone WHEN 'first_signal' THEN 10 WHEN 'world_shaper' THEN 25 ELSE 0 END) FROM member_space_milestones z WHERE z.user_id=r.author_id),0))/25.0)) AS INTEGER)) AS level FROM member_forum_replies r JOIN member_creator_profiles p ON r.author_id=p.user_id JOIN "user" u ON u.id=p.user_id
       LEFT JOIN member_space_settings s ON s.user_id=p.user_id
       WHERE r.thread_id=? AND r.status='published' AND p.visibility='public' AND u.emailVerified=1
       ORDER BY r.published_at ASC,r.id ASC LIMIT 100`).bind(reply[1]).all();
@@ -143,11 +143,33 @@ export async function canonicalForums(req,env,user=null,now=Math.floor(Date.now(
   if(report&&req.method==='POST'){
    const v=await payload(req);
    if(!v||!permitted(v,['targetKind','targetId','reason'])||!['thread','reply'].includes(v.targetKind)||!UUID.test(v.targetId)||!['spam','harassment','unsafe','other'].includes(v.reason))return fail(400,'Invalid report');
-   await db.prepare('INSERT OR IGNORE INTO member_forum_reports(id,reporter_id,target_kind,target_id,reason,created_at) VALUES(?,?,?,?,?,?)').bind(crypto.randomUUID(),user.id,v.targetKind,v.targetId,v.reason,now).run();
-   return json({ok:true},201);
+   // Only reports on currently public, approved content are accepted.
+   const publicTarget=v.targetKind==='thread'
+    ?await db.prepare(selectThread+' AND t.id=?').bind(v.targetId).first()
+    :await db.prepare(`SELECT r.id FROM member_forum_replies r
+      JOIN member_forum_threads t ON t.id=r.thread_id
+      JOIN member_creator_profiles author ON author.user_id=r.author_id
+      JOIN member_creator_profiles parent ON parent.user_id=t.author_id
+      JOIN "user" a ON a.id=author.user_id JOIN "user" b ON b.id=parent.user_id
+      WHERE r.id=? AND r.status='published' AND t.status='published'
+      AND author.visibility='public' AND parent.visibility='public'
+      AND a.emailVerified=1 AND b.emailVerified=1`).bind(v.targetId).first();
+   if(!publicTarget)return fail(404,'Content is not public');
+   const result=await db.prepare(`INSERT OR IGNORE INTO member_forum_reports
+     (id,reporter_id,target_kind,target_id,reason,created_at)
+     SELECT ?,?,?,?,?,? WHERE (SELECT COUNT(*) FROM member_forum_reports
+     WHERE reporter_id=? AND created_at>?)<10`)
+     .bind(crypto.randomUUID(),user.id,v.targetKind,v.targetId,v.reason,now,user.id,now-86400).run();
+   if(result.meta?.changes===1)return json({ok:true},201);
+   const old=await db.prepare('SELECT id FROM member_forum_reports WHERE reporter_id=? AND target_kind=? AND target_id=?').bind(user.id,v.targetKind,v.targetId).first();
+   return old?json({ok:true,previouslyReported:true}):fail(429,'Daily report limit reached');
   }
-  if(react&&['POST','DELETE'].includes(req.method)){
+  if(react&&['GET','POST','DELETE'].includes(req.method)){
    if(!await db.prepare(selectThread+' AND t.id=?').bind(react[1]).first())return fail(404,'Thread is not public');
+   if(req.method==='GET'){
+    const mine=await db.prepare('SELECT 1 AS found FROM member_forum_reactions WHERE thread_id=? AND user_id=?').bind(react[1],user.id).first();
+    return json({reacted:Boolean(mine)});
+   }
    if(req.method==='POST')await db.prepare('INSERT OR IGNORE INTO member_forum_reactions(thread_id,user_id,created_at) VALUES(?,?,?)').bind(react[1],user.id,now).run();
    else await db.prepare('DELETE FROM member_forum_reactions WHERE thread_id=? AND user_id=?').bind(react[1],user.id).run();
    return json({ok:true});
@@ -162,13 +184,21 @@ export async function canonicalForums(req,env,user=null,now=Math.floor(Date.now(
   const table=isReply?'member_forum_replies':'member_forum_threads';
   const existing=await db.prepare(`SELECT id,status FROM ${table} WHERE author_id=? AND client_request_id=?`).bind(user.id,v.requestId).first();
   if(existing)return json({id:existing.id,status:existing.status,replayed:true});
-  const count=await db.prepare(`SELECT COUNT(*) AS n FROM ${table} WHERE author_id=? AND created_at>?`).bind(user.id,now-3600).first();
-  if(count.n>=(isReply?12:4))return fail(429,'Community posting limit reached. Try again later');
-  const id=crypto.randomUUID();
-  const statement=isReply?
-   db.prepare("INSERT INTO member_forum_replies(id,thread_id,author_id,client_request_id,body,created_at,updated_at) VALUES(?,?,?,?,?,?,?)").bind(id,reply[1],user.id,v.requestId,body,now,now):
-   db.prepare("INSERT INTO member_forum_threads(id,author_id,client_request_id,topic,title,body,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?)").bind(id,user.id,v.requestId,v.topic,v.title.trim(),body,now,now);
-  await statement.run();
-  return json({id,status:'pending_review'},201);
+  const id=crypto.randomUUID(),limit=isReply?12:4;
+  const saved=isReply?
+   await db.prepare(`INSERT INTO member_forum_replies
+    (id,thread_id,author_id,client_request_id,body,created_at,updated_at)
+    SELECT ?,?,?,?,?,?,? WHERE (SELECT COUNT(*) FROM member_forum_replies WHERE author_id=? AND created_at>?)<?
+    ON CONFLICT(author_id,client_request_id) DO NOTHING RETURNING id,status`)
+    .bind(id,reply[1],user.id,v.requestId,body,now,now,user.id,now-3600,limit).all():
+   await db.prepare(`INSERT INTO member_forum_threads
+    (id,author_id,client_request_id,topic,title,body,created_at,updated_at)
+    SELECT ?,?,?,?,?,?,?,? WHERE (SELECT COUNT(*) FROM member_forum_threads WHERE author_id=? AND created_at>?)<?
+    ON CONFLICT(author_id,client_request_id) DO NOTHING RETURNING id,status`)
+    .bind(id,user.id,v.requestId,v.topic,v.title.trim(),body,now,now,user.id,now-3600,limit).all();
+  const inserted=saved.results?.[0];
+  if(inserted)return json({id:inserted.id,status:inserted.status},201);
+  const replay=await db.prepare(`SELECT id,status FROM ${table} WHERE author_id=? AND client_request_id=?`).bind(user.id,v.requestId).first();
+  return replay?json({id:replay.id,status:replay.status,replayed:true}):fail(429,'Community posting limit reached. Try again later');
  }catch{return fail(503,'Community service unavailable')}
 }
