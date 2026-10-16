@@ -337,3 +337,33 @@ export async function supporterWebhook(request,env,{http=fetch,now=Date.now()}={
     return err(503,'Webhook reconciliation unavailable');
   }
 }
+
+
+/**
+ * Bounded, idempotent scheduled reconciliation. Real supporter memberships
+ * cannot depend on an annual invoice event to refresh their 72-hour projection.
+ * Runs only when strictly test-mode commerce + canonical schema are enabled.
+ * Never creates checkout, changes plans, deletes customers, or grants XP.
+ */
+export async function reconcileSupporterSubscriptions(env,{now=Date.now(),http=fetch,limit=40}={}){
+  if(!await dataReady(env))return {available:false,examined:0,refreshed:0,failed:0};
+  if(!Number.isSafeInteger(limit)||limit<1||limit>40)throw Error('Reconciliation batch limit exceeded');
+  const db=env.MEMBER_DB;
+  let examined=0,refreshed=0,failed=0;
+  const records=await rows(db,
+    'SELECT stripe_subscription_id,stripe_customer_id,member_user_id FROM supporter_subscriptions '+
+    'WHERE synced_at_ms<? ORDER BY synced_at_ms ASC LIMIT ?',
+    now-86400000,limit);
+  for(const record of records){
+    examined++;
+    try{
+      await syncSubscription(env,record.member_user_id,record.stripe_customer_id,
+        record.stripe_subscription_id,now,http);
+      refreshed++;
+    }catch{
+      // A failed or tampered Stripe read NEVER extends member cosmetics.
+      failed++;
+    }
+  }
+  return {available:true,examined,refreshed,failed};
+}
