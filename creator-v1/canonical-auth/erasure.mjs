@@ -24,6 +24,8 @@ function sessionStartMillis(raw){
 function rejected(status,error){return {ok:false,status,error};}
 
 export async function assessCanonicalErasureIntent(request,verifiedSession,env,now=Date.now()){
+  if(env?.CANONICAL_ACCOUNT_ERASURE_ENABLED!=="true")
+    return rejected(404,"Account removal route unavailable");
   if(request.method!=="POST")return rejected(404,"Account removal route unavailable");
   if(!verifiedSession?.user?.id||verifiedSession.user.emailVerified!==true)
     return rejected(401,"Sign in with a verified account");
