@@ -25,7 +25,7 @@ test("OTP retry is explicit, guarded while busy, and errors do not imply deliver
 });
 
 test("server still verifies same-origin and applies OTP throttling",()=>{
- assert.match(worker,/!sameOriginMutation\(request\)/);
+ assert.match(worker,/!sameOriginMutation\(request,ownProfile\)/);
  assert.match(auth,/\/email-otp\/send-verification-otp":\{window:600,max:3\}/);
  assert.match(auth,/otpLength:8/);
 });
