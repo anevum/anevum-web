@@ -23,7 +23,7 @@ test('V042 Lab only links to canonical reviewer, never authenticates through a c
  const page=renderLabModeratorConsole();
  assert.match(page,/href="https:\/\/a\.anevum\.com\/community\/review"/);
  assert.match(page,/target="_blank" rel="noopener noreferrer"/);
- assert.match(page,/verified member session and server-side reviewer authorization/i);
+ assert.match(page,/ANEVUM member session and server-side reviewer authorization/i);
  assert.match(page,/No account bans, review approvals, public posts, API tokens or cross-domain session transfers/);
  assert.doesNotMatch(MODERATOR_LAB_JS,/fetch\(|XMLHttpRequest|navigator\.sendBeacon|document\.cookie|postMessage|Authorization/);
  assert.doesNotMatch(MODERATOR_LAB_JS,/innerHTML|outerHTML|insertAdjacentHTML|eval\(/);
@@ -49,7 +49,7 @@ test('V042 Lab mobile layout and reduced-motion behavior do not force horizontal
 });
 test('existing Backstage and canonical forum boundaries remain documented in source',()=>{
  const doc=readFileSync(new URL('../../docs/creator-platform/ANEVUM.WEB.BUILD.2026-10-16.002.MODERATOR-CONSOLE.md',import.meta.url),'utf8');
- assert.match(doc,/canonical member system/i);
+ assert.match(doc,/Better Auth canonical member identity/i);
  assert.match(doc,/same-origin/i);
  assert.match(doc,/No account bans/i);
  assert.match(doc,/staging release/i);
