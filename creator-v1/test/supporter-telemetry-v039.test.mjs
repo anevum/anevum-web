@@ -28,17 +28,19 @@ test('disabled telemetry returns 404 and never queries private database',async()
   assert.equal(stats().reads,0);
  }finally{db.close()}
 });
-test('enabled metrics report bounded, cached aggregates with no identity or billing information',async()=>{
+test('small staging cohorts return privacy-suppressed, cached aggregates with no identity or billing information',async()=>{
  const {db,env,fakeCache,stats}=setup();env.CANONICAL_SUPPORTER_PUBLIC_METRICS_ENABLED='true';
  try{
   const one=await publicSupporterTelemetry(new Request(BASE,{headers:{cookie:'private=confidential'}}),env,{now:1792155000000,cache:fakeCache});
   assert.equal(one.status,200);
   const body=await one.json();
-  assert.deepEqual(body.community,{memberAccounts:1,creatorProfiles:1,wallPosts:1});
-  assert.deepEqual(body.media,{imageObjects:1,imageBytes:10,imageSlotsPerMember:2,imageUploadMaxBytes:262144});
+  assert.deepEqual(body.community,{memberAccountsLowerBound:null,creatorProfilesLowerBound:null,wallPostsLowerBound:null});
+  assert.deepEqual(body.media,{imageObjectsLowerBound:null,imageBytesLowerBound:null,imageSlotsPerMember:2,imageUploadMaxBytes:262144});
+  assert.equal(body.schemaVersion,2);
   assert.equal(body.scope,'ANEVUM_STAGING_ONLY');
+  assert.equal(body.privacy.minimumDistinctContributors,25);
   assert.equal(body.cacheTtlSeconds,900);
-  assert.equal(one.headers.get('x-anevum-public-telemetry'),'v1');
+  assert.equal(one.headers.get('x-anevum-public-telemetry'),'v2');
   const serialized=JSON.stringify(body);
   for(const leak of ['staging-user','test@fixture.invalid','private example','stripe','customer_id','private=confidential']){
    assert.equal(serialized.includes(leak),false,leak);
@@ -46,7 +48,7 @@ test('enabled metrics report bounded, cached aggregates with no identity or bill
   db.prepare('DELETE FROM member_wall_posts').run();
   const cached=await publicSupporterTelemetry(new Request(BASE),env,{now:1792155001000,cache:fakeCache});
   assert.equal(cached.status,200);
-  assert.equal((await cached.json()).community.wallPosts,1,'cached totals are not re-queried');
+  assert.equal((await cached.json()).dataAsOf,body.dataAsOf,'cached snapshot must not be regenerated');
   assert.equal(stats().writes,1);
  }finally{db.close()}
 });
