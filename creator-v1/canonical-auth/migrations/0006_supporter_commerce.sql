@@ -50,3 +50,14 @@ CREATE TABLE IF NOT EXISTS supporter_visibility(
   revision INTEGER NOT NULL DEFAULT 1,
   updated_at_ms INTEGER NOT NULL
 );
+
+-- One pending Checkout creation per canonical member. This lease is acquired
+-- atomically before calling Stripe, so competing requests cannot charge twice.
+-- Locks expire after 30 minutes even if an external API call was interrupted.
+CREATE TABLE IF NOT EXISTS supporter_checkout_guards(
+  member_user_id TEXT PRIMARY KEY NOT NULL REFERENCES "user"(id) ON DELETE CASCADE,
+  billing_interval TEXT NOT NULL CHECK(billing_interval IN ('month','year')),
+  request_nonce TEXT NOT NULL UNIQUE,
+  expires_at_ms INTEGER NOT NULL,
+  created_at_ms INTEGER NOT NULL
+);
