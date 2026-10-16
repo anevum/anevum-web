@@ -307,6 +307,67 @@ Visual iteration order follows concept and material coverage rather than level o
 **Reject:** No level ceiling symbol, prize chest, occult seal or duplicate engine sphere.
 **Scale check:** visible at 96px, retains distinct filled silhouette at 32px, and has a manually simplified microglyph at 16/24px when needed.
 
+## Chapter 1 production briefs — 04–10 (review concepts, not masters)
+
+The first three items (01 Foundry Spark, 02 Copper Key, 03 Blackglass Seed) already have detailed twelve-anchor specifications above. The seven missing Chapter 1 briefs below complete the exact canonical **Ignition** sequence. These do not replace the sixty-item catalogue or alter any XP state. New separately generated **single-object** concept requests for 01–10 are pending inspection: initiating image generation is **not** evidence that any master was approved, transparently rendered, delivered at native 2048px or rights-cleared.
+
+### ANV-LVL-S1-004 — Ivory Compass
+**Intent:** Navigation learned through disciplined measurement, never a generic north-star medallion.
+**Silhouette:** Open asymmetric compass instrument: two mineral-ivory directional arms crossing a platinum graduated track, one visible mechanical datum pivot and one sapphire-glass sight line. The spaces between arms are as important as the blades.
+**Materials/optics:** Opaque milled ivory ceramic, satin platinum hinges, dark nickel pins and a single deep sapphire refractive objective; cool pinlight, minimal warm response on metal.
+**Reject:** Glowing five- or eight-point star, ornate circular shield, impossible pivot geometry, compass lettering, a shared golden halo copied from the key.
+**Scale:** Angular open geometry at 96px; distinct compass-sight microglyph required for any 16–24px placement.
+
+### ANV-LVL-S1-005 — Iron Moth
+**Intent:** First encounter with engineered life; unmistakably biological in silhouette but manufactured in material.
+**Silhouette:** Asymmetric four-wing moth with distinct upper and lower planes, articulated fine antennae, narrow load-bearing thorax, engineered wing veins and tiny paired inset amber compound optics. Show real wing hinge structure, not decoration layered on a shield.
+**Materials/optics:** Darkened iron and blue-black oxide, ceramic vein plates, minimal amber optical reflections, near-zero ambient glow.
+**Reject:** Gold heraldic eagle, butterfly emoji, decorative symmetrical crest, feathers, generic insect drone or copy of any other level.
+**Scale:** Moth wing contour must survive 96px; simplified unfolded wing pair for 24px.
+
+### ANV-LVL-S1-006 — Brass Dial
+**Intent:** Precise feedback from a measured real-world instrument.
+**Silhouette:** Thick offset C-shaped brass gauge section, one needle spindle, partial nonnumeric graduation track and hinged casing; open negative space exposes functional indicator architecture. Deliberately distinct from the complete Ivory Compass silhouette.
+**Materials/optics:** Tarnished satin brass, restrained turquoise lens, graphite bearings and enamel separators. One bright reflection through glass, otherwise mostly metal.
+**Reject:** Round badge, miniature clock face, arbitrary coordinates, legible pseudo-scientific text, rotating compass copy, neon circular arc.
+**Scale:** Meaningful needle and C-shaped gauge readable at 96px and simplified as a gauge at 24px.
+
+### ANV-LVL-S1-007 — Quartz Spool
+**Intent:** A first machine for storing and converting a signal.
+**Silhouette:** Vertically suspended transparent quartz bobbin with two crystal end caps, exposed wound fine luminous fiber and visibly tensioned asymmetrical guide arms. A practical thread path should be recognizable from an oblique three-quarter view.
+**Materials/optics:** Structurally thick fused quartz, warm copper winding, dark ceramic ball bearings, tiny isolated amber thread reflections; physically plausible internal refraction.
+**Reject:** Hourglass silhouette, crystal trophy, hovering rings in place of fiber, unrealistic disconnected bobbin.
+**Scale:** Distinguishable wound-thread layers and both caps at 96px; compact spool at 24px.
+
+### ANV-LVL-S1-008 — Ember Lantern
+**Intent:** Energy contained safely in a useful handheld signal instrument.
+**Silhouette:** Tall but compact portable protective lantern, practical handle, vented upper crown, four irregular ceramic louvers around one contained faceted ember crystal, weighted base and real serviceable hinge.
+**Materials/optics:** Blackened aged copper, dark mineral ceramic, narrowly glowing fractured amber core behind transparent refracting protective glazing.
+**Reject:** Fantasy chandelier, fire outside the housing, storm of glowing particles, generic floating fireball, repeated ornate frame from Foundry Spark.
+**Scale:** Cage/handle/contained ember remain separately readable at 96px.
+
+### ANV-LVL-S1-009 — Prism Mask
+**Intent:** A first tool for perception, not an ornamental disguise.
+**Silhouette:** Angular single-piece wearable faceplate with explicit twin eye-line structure, asymmetric ceramic cheeks, precision side attachment points and a small faceted prism that directs a sight path.
+**Materials/optics:** Obsidian ceramic, platinum struts, deep blue-violet optical crystal, crisp transparent internal interfaces rather than broad surrounding glow.
+**Reject:** Demon/occult mask, horns, superhero crest, cathedral ornament, stained-glass texture, generic jewel with no wearable geometry.
+**Scale:** Central optical prism and recognizable faceplate silhouette at 96px.
+
+### ANV-LVL-S1-010 — Cobalt Coil
+**Intent:** A genuinely different mechanical climax to the first ten, suggesting contained induction rather than bigger rarity.
+**Silhouette:** Ascending open S-shaped induction device: layered cobalt-enamel wire around a central glass spindle held by dark nickel stepped electrodes, one distinct ceramic insulation collar and visible credible cable termination.
+**Materials/optics:** Brushed steel, hard cobalt enamel, sapphire interior glass, champagne copper contacts; restrained electric-blue energy only within winding gaps.
+**Reject:** Generic blue power sphere, Tesla lightning bolt, ornate trophy, round badge, duplicate Quartz Spool, or milestone-ending imagery implying a level cap.
+**Scale:** S-frame and wound coil readable at 96px; simplified dual-electrode microglyph when needed.
+
+### Chapter 1 verification before implementation
+
+- Create and inspect ten **individual** object candidates for levels 01–10, one native file per canonical ID. Any ten-up poster, image with text baked in, wrong name or unrelated object must be rejected, even when visually attractive.
+- Compare each to its recovered original 1254px lossless Library PNG without claiming the original was a final master. Preserve both lineage and rights/approval status; **no approved renders yet**.
+- Verify native source resolution and actual alpha edges; target >=2048px native master (3072px preferred) without enlarging smaller sources. A 1024px generated illustration is a concept, not a compliant production master.
+- Conduct side-by-side unique-silhouette checks against neighboring levels at 512px, 96px and 24px; test black, near-black, white and checkerboard backgrounds, color contrast and phone UI.
+- Only after owner sign-off install responsive web derivatives on the staging build with the existing fallbacks, verify all ten previews and level-to-name mapping, and separately authorize any broader Series One rollout. Never alter XP rules, canonical signup controls or the apex countdown.
+
 ## Master and delivery contract
 
 - Preserve all original generated references unchanged, privately, with **file ID, source session, original filename, resolution, alpha, SHA-256, creator/rights evidence, clearance status and approval status**. Do not silently relabel them as cleared or approved; existing registry currently marks rights **Unverified**.
