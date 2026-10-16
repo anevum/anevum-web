@@ -10,7 +10,7 @@ function ledger(){
   review:{
    approved:true,reviewedAt:'2026-10-03T16:10:11Z',evidenceSha256:SHA,
    expenseCoverageComplete:true,supporterCoverageComplete:true,
-   balanceReconciled:true,accountCountReconciled:true,goalApproved:true
+   balanceReconciled:true,taxReserveReviewed:true,accountCountReconciled:true,goalApproved:true
   },
   expenses:[
    {id:'host-inv-12345',category:'hosting',cents:2000,invoiceSha256:SHA2},
@@ -23,7 +23,7 @@ function ledger(){
   ],
   reconciliation:{
    grossCents:4100,feeCents:208,refundCents:500,disputeCents:0,
-   netCents:3392,stripeBalanceEvidenceSha256:SHA3
+   netCents:3392,taxLiabilityReserveCents:100,taxReserveEvidenceSha256:SHA2,stripeBalanceEvidenceSha256:SHA3
   },
   activeSupporters:{activeCount:3,asOf:'2026-10-03T15:50:00Z',evidenceSha256:SHA},
   goal:{monthlyTargetCents:6000,evidenceSha256:SHA2}
@@ -49,11 +49,11 @@ test('verified synthetic month calculates exact cash gross, Stripe fees, refund,
  assert.equal(report.expenses.categories.storage,300);
  assert.equal(report.expenses.categories.email,0);
  assert.deepEqual(report.receipts,{
-  grossCents:4100,feesCents:208,refundsCents:500,disputesCents:0,netCents:3392
+  grossCents:4100,feesCents:208,refundsCents:500,disputesCents:0,netCents:3392,taxReservedCents:100,availableCents:3292
  });
  assert.equal(report.activeSupporters,3);
  assert.equal(report.approvedMonthlyTargetCents,6000);
- assert.equal(report.cashCoveragePercent,147.48);
+ assert.equal(report.cashCoveragePercent,143.13);
  assert.match(report.methodology,/annual upfront/i);
 });
 test('private supplier IDs, digest references, customer details and vendor invoice IDs cannot leak to aggregate',()=>{
@@ -80,6 +80,7 @@ test('partial Stripe reconciliation never displays made-up income or supporter c
  const input=ledger();
  input.review.supporterCoverageComplete=false;
  input.review.balanceReconciled=false;
+ input.review.taxReserveReviewed=false;
  input.reconciliation=null;
  input.review.accountCountReconciled=false;
  input.activeSupporters=null;
@@ -124,10 +125,36 @@ test('zero receipts require explicit reviewed reconciliation and are not inferre
  const input=ledger();
  input.supporterMovements=[];
  input.reconciliation={
-  grossCents:0,feeCents:0,refundCents:0,disputeCents:0,netCents:0,stripeBalanceEvidenceSha256:SHA
+  grossCents:0,feeCents:0,refundCents:0,disputeCents:0,netCents:0,taxLiabilityReserveCents:0,taxReserveEvidenceSha256:SHA2,stripeBalanceEvidenceSha256:SHA
  };
  const output=buildPublicFinanceReport(input);
  assert.equal(output.receipts.netCents,0);
+ assert.equal(output.receipts.availableCents,0);
  assert.equal(output.expenses.totalCents,2300);
  assert.equal(output.cashCoveragePercent,0);
+});
+
+test('verified Stripe cash is not called spendable until sales-tax reserves are reviewed',()=>{
+ const input=ledger();
+ input.review.taxReserveReviewed=false;
+ input.reconciliation.taxLiabilityReserveCents=null;
+ input.reconciliation.taxReserveEvidenceSha256=null;
+ const output=buildPublicFinanceReport(input);
+ assert.equal(output.receipts.netCents,3392,'gross-minus-fees/refunds may be independently reconciled');
+ assert.equal(output.receipts.taxReservedCents,null);
+ assert.equal(output.receipts.availableCents,null);
+ assert.equal(output.cashCoveragePercent,null,'coverage cannot claim potentially owed tax money');
+ assert.equal(output.completeness.taxReserve,false);
+});
+test('fake or negative tax liability reserve cannot enter public report',()=>{
+ let input=ledger();
+ input.reconciliation.taxLiabilityReserveCents=-1;
+ assert.throws(()=>buildPublicFinanceReport(input),/integer number of cents/);
+ input=ledger();
+ input.reconciliation.taxReserveEvidenceSha256='unverified';
+ assert.throws(()=>buildPublicFinanceReport(input),/SHA-256/);
+ input=ledger();
+ input.reconciliation.taxLiabilityReserveCents=null;
+ input.reconciliation.taxReserveEvidenceSha256=null;
+ assert.throws(()=>buildPublicFinanceReport(input),/tax reserve cannot be called verified/);
 });
