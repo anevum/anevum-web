@@ -23,8 +23,8 @@ const CACHE_URL=CANONICAL_ORIGIN+PUBLIC_TELEMETRY_PATH+'?policy='+POLICY_VERSION
 const AGGREGATE_SQL='SELECT '+
  '(SELECT COUNT(*) FROM "user") AS member_count,'+
  '(SELECT COUNT(*) FROM member_creator_profiles) AS creator_count,'+
- '(SELECT COUNT(*) FROM member_wall_posts) AS wall_post_count,'+
- '(SELECT COUNT(DISTINCT user_id) FROM member_wall_posts) AS wall_author_count,'+
+ '(SELECT COUNT(*) FROM member_wall_posts p JOIN member_creator_profiles m ON m.user_id=p.user_id WHERE m.visibility=\'public\') AS wall_post_count,'+
+ '(SELECT COUNT(DISTINCT p.user_id) FROM member_wall_posts p JOIN member_creator_profiles m ON m.user_id=p.user_id WHERE m.visibility=\'public\') AS wall_author_count,'+
  '(SELECT COUNT(*) FROM member_space_media) AS media_count,'+
  '(SELECT COUNT(DISTINCT user_id) FROM member_space_media) AS media_owner_count,'+
  '(SELECT COALESCE(SUM(LENGTH(data)),0) FROM member_space_media) AS media_bytes';
@@ -87,7 +87,7 @@ function publishedSnapshot(totals,now){
    imageUploadMaxBytes:262144
   },
   excluded:[
-   'personal-records','small-cohort-totals','exact-participant-counts',
+   'personal-records','small-cohort-totals','exact-participant-counts','private-wall-posts',
    'exact-member-image-bytes','production-members','creator-storage-capacity',
    'provider-storage-capacity','financial-records'
   ]
