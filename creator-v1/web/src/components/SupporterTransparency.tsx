@@ -20,21 +20,39 @@ const verifiedFinance=finance.schemaVersion===1&&finance.published===true&&finan
  /^20[2-9][0-9]-(0[1-9]|1[0-2])$/.test(finance.period??'')&&
  ['closed-month','month-to-date'].includes(finance.mode??'');
 const centsToUsd=(value:MoneyCents)=>value===null?null:value/100;
+type AggregateCount=number|null;
 type Telemetry={
- schemaVersion:number;source:string;scope:string;dataAsOf:string;cacheTtlSeconds:number;
- community:{memberAccounts:number;creatorProfiles:number;wallPosts:number};
- media:{imageObjects:number;imageBytes:number;imageSlotsPerMember:number;imageUploadMaxBytes:number};
+ schemaVersion:2;source:'canonical-member-d1-privacy-aggregate';
+ scope:'ANEVUM_STAGING_ONLY';dataAsOf:string;cacheTtlSeconds:900;
+ privacy:{minimumDistinctContributors:25;countLowerBoundStep:25;
+  imageByteLowerBoundStep:1048576;suppressedValuesAreNull:true};
+ community:{memberAccountsLowerBound:AggregateCount;creatorProfilesLowerBound:AggregateCount;
+  wallPostsLowerBound:AggregateCount};
+ media:{imageObjectsLowerBound:AggregateCount;imageBytesLowerBound:AggregateCount;
+  imageSlotsPerMember:2;imageUploadMaxBytes:262144};
 };
-const isCount=(value:unknown)=>typeof value==='number'&&Number.isSafeInteger(value)&&value>=0;
+const isLowerBound=(value:unknown,step:number)=>value===null||
+ (typeof value==='number'&&Number.isSafeInteger(value)&&value>=step&&value%step===0);
 function validTelemetry(x:unknown):x is Telemetry{
  if(!x||typeof x!=='object'||Array.isArray(x))return false;
  const v=x as Partial<Telemetry>;
- return v.schemaVersion===1&&v.source==='canonical-member-d1-aggregate'&&
-  v.scope==='ANEVUM_STAGING_ONLY'&&typeof v.dataAsOf==='string'&&
-  typeof v.cacheTtlSeconds==='number'&&v.cacheTtlSeconds===900&&
-  Boolean(v.community&&isCount(v.community.memberAccounts)&&isCount(v.community.creatorProfiles)&&isCount(v.community.wallPosts))&&
-  Boolean(v.media&&isCount(v.media.imageObjects)&&isCount(v.media.imageBytes)&&
-  v.media.imageSlotsPerMember===2&&v.media.imageUploadMaxBytes===262144);
+ const time=typeof v.dataAsOf==='string'?Date.parse(v.dataAsOf):NaN;
+ const age=Date.now()-time;
+ if(v.schemaVersion!==2||v.source!=='canonical-member-d1-privacy-aggregate'||
+  v.scope!=='ANEVUM_STAGING_ONLY'||v.cacheTtlSeconds!==900||
+  !Number.isFinite(time)||age<0||age>900000||
+  v.privacy?.minimumDistinctContributors!==25||v.privacy?.countLowerBoundStep!==25||
+  v.privacy?.imageByteLowerBoundStep!==1048576||v.privacy?.suppressedValuesAreNull!==true)return false;
+ const c=v.community,m=v.media;
+ return Boolean(c&&
+  isLowerBound(c.memberAccountsLowerBound,25)&&
+  isLowerBound(c.creatorProfilesLowerBound,25)&&
+  isLowerBound(c.wallPostsLowerBound,25)&&
+  (c.memberAccountsLowerBound!==null||c.creatorProfilesLowerBound===null)&&
+  m&&isLowerBound(m.imageObjectsLowerBound,25)&&
+  (m.imageBytesLowerBound===null||typeof m.imageBytesLowerBound==='number'&&Number.isSafeInteger(m.imageBytesLowerBound)&&m.imageBytesLowerBound>=0&&m.imageBytesLowerBound%1048576===0)&&
+  ((m.imageObjectsLowerBound===null)===(m.imageBytesLowerBound===null))&&
+  m.imageSlotsPerMember===2&&m.imageUploadMaxBytes===262144);
 }
 const categoryNames:Record<string,string>={
  hosting:'Hosting',storage:'Storage',delivery:'Bandwidth & delivery',
@@ -42,6 +60,8 @@ const categoryNames:Record<string,string>={
 };
 
 const fmt=(value:number|null)=>value===null?'NOT VERIFIED':new Intl.NumberFormat('en-US').format(value);
+const protectedCount=(value:number|null)=>value===null?'WITHHELD':new Intl.NumberFormat('en-US').format(value)+'+';
+const protectedSize=(value:number|null)=>value===null?'WITHHELD': 'AT LEAST '+(value/1048576).toFixed(0)+' MiB';
 const size=(value:number|null)=>value===null?'NOT VERIFIED':value<1024?value+' B':(value/1024).toFixed(1)+' KiB';
 const money=(value:number|null)=>value===null?'NOT VERIFIED':new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(value);
 function Meter({label,value,total,unit}:{label:string;value:number|null;total:number|null;unit?:string}){
@@ -91,7 +111,7 @@ export function SupporterTransparency(){
     <p>Supporting ANEVUM should be an informed choice. Here is what we can verify, what is still unknown, and which improvements support would help make possible.</p></div>
    <div className="av37-stamp"><span>LAST VERIFIED</span><strong>{live?telemetry.dataAsOf.slice(0,10):s.verifiedOn}</strong><small>{live?'CACHED STAGING AGGREGATES':'MANUAL SNAPSHOT · STAGING ONLY'}</small></div>
   </header>
-  <div className="av37-notice" role="note"><strong>Transparency standard</strong><p>{live?'Community and profile-media figures use a cached, read-only staging aggregate. Database file sizes, R2, Railway and finances remain dated or unavailable.':'Numbers below are a dated engineering snapshot, not live telemetry.'} A blank funding meter means we do not yet have verified finances or an approved goal—not that ANEVUM has raised $0. Database storage, user-uploaded image bytes and R2 storage must not be added together as if they were independent bills.</p></div>
+  <div className="av37-notice" role="note"><strong>Transparency standard</strong><p>{live?'Staging community and media metrics use privacy-protected, cached lower bounds. Exact small-population values are never published. Database files, R2 and finances remain dated or unavailable.':'Numbers below are a dated engineering snapshot, not live telemetry; exact small-cohort activity values are deliberately withheld.'} A blank funding meter means we do not yet have verified finances or an approved goal—not that ANEVUM has raised $0. Database storage, user-uploaded image bytes and R2 storage must not be added together as if they were independent bills.</p></div>
   <section aria-labelledby="av37-funding">
    <div className="av37-section-heading"><span className="av32-index">01 / FUNDING THE NETWORK</span><h3 id="av37-funding">Where we stand.</h3></div>
    <div className="av37-metrics">
@@ -124,14 +144,13 @@ export function SupporterTransparency(){
    <div className="av37-metrics">
     <Metric label="CANONICAL MEMBER DATABASE" value={size(s.storage.canonicalMemberD1FileBytes)} detail="Cloudflare D1 reported file size, staging"/>
     <Metric label="CREATOR STAGING DATABASE" value={size(s.storage.communityD1FileBytes)} detail="Separate Cloudflare D1 reported file size"/>
-    <Metric label="MEMBER AVATAR + BANNER DATA" value={size(live?telemetry.media.imageBytes:s.storage.memberUploadedImageBlobBytes)} detail="Included inside the canonical member database, not additional storage"/>
+    <Metric label="MEMBER AVATAR + BANNER DATA" value={live?protectedSize(telemetry.media.imageBytesLowerBound):'WITHHELD'} detail="Individual-sized cohorts withheld. Any displayed lower bound is already inside member D1, not an extra bill"/>
     <Metric label="PROFILE-MEDIA R2 OBJECTS" value={fmt(s.storage.r2ProfileObjectCount)} detail="0 objects at audit time; R2 bucket exists but is not the active profile image store"/>
    </div>
    <div className="av37-split">
     <article className="av37-panel"><span className="av32-index">ACTIVE MEMBER MEDIA LIMITS</span><h4>Profile media</h4>
      <p>Current source permits two profile image slots per member: one square avatar and one banner. Each JPEG is limited to <strong>256 KiB</strong>. This is a per-image upload rule, not an account storage allowance.</p>
-     <Meter label="Staging profile image slots filled (not global storage capacity)" value={live?telemetry.media.imageObjects:s.storage.memberImageCount} total={(live?telemetry.community.memberAccounts:s.community.stagingMemberAccounts)*s.storage.imageSlotsPerMember} unit="slots"/>
-     <p className="av37-footnote">No individual member's storage usage is exposed here. Public creator asset quotas are not verified.</p>
+     <p className="av37-footnote">Staging upload occupancy is withheld: exact member and image counts could reveal individual activity in a small group. Profile-media allowance is still one avatar and one banner per member. Neither the platform-wide storage limit nor creator upload quota is verified.</p>
     </article>
     <article className="av37-panel"><span className="av32-index">STORAGE EXPANSION / PROPOSED</span><h4>What support can unlock</h4>
      <p>First establish actual storage, delivery, and moderation costs. Then publish a fair free upload allowance and fund additional creator capacity. No paid storage tier is promised until capacity and costs are validated.</p>
@@ -142,12 +161,12 @@ export function SupporterTransparency(){
   <section aria-labelledby="av37-activity">
    <div className="av37-section-heading"><span className="av32-index">03 / DEVELOPMENT SIGNAL</span><h3 id="av37-activity">Real activity, clearly scoped.</h3></div>
    <div className="av37-metrics">
-    <Metric label="CANONICAL STAGING ACCOUNTS" value={fmt(live?telemetry.community.memberAccounts:s.community.stagingMemberAccounts)} detail="Test and development identities; not a public member total"/>
-    <Metric label="STAGING CREATOR PROFILES" value={fmt(live?telemetry.community.creatorProfiles:s.community.stagingCreatorProfiles)} detail="Canonical member profiles"/>
-    <Metric label="STAGING WALL POSTS" value={fmt(live?telemetry.community.wallPosts:s.community.stagingWallPosts)} detail="Private development environment"/>
+    <Metric label="CANONICAL STAGING ACCOUNTS" value={protectedCount(live?telemetry.community.memberAccountsLowerBound:null)} detail="Shown only as a coarse lower bound with at least 25 members; never a public adoption figure"/>
+    <Metric label="STAGING CREATOR PROFILES" value={protectedCount(live?telemetry.community.creatorProfilesLowerBound:null)} detail="Withheld if fewer than 25 creator profiles exist; separate from production"/>
+    <Metric label="STAGING WALL POSTS" value={protectedCount(live?telemetry.community.wallPostsLowerBound:null)} detail="Shown only when at least 25 distinct authors contributed; amounts are bucketed"/>
     <Metric label="RAILWAY STAGING PROBE" value="0 RECORDED" detail="24-hour CPU, memory, disk and network sample; not a billing statement"/>
    </div>
-   <p className="av37-footnote">Production members, submissions, impressions and engagement are not reported until an independently validated analytics source is available. We will not represent staging activity as a public community.</p>
+   <p className="av37-footnote">WITHHELD means a privacy threshold has not been met or the restricted feed is disabled. Public metrics require 25 distinct contributors per relevant metric, and published counts are 25-unit lower bounds, not exact totals. Production members and engagement are not reported without an independent source.</p>
   </section>
   <section aria-labelledby="av37-goals">
    <div className="av37-section-heading"><span className="av32-index">04 / FUNDING ROADMAP</span><h3 id="av37-goals">What support would build.</h3></div>
@@ -178,7 +197,7 @@ export function SupporterTransparency(){
    </div>
    <details className="av37-sources"><summary>Data sources and reporting limitations</summary>
     {s.sourceNotes.map(note=><p key={note.title}><strong>{note.title}:</strong> {note.detail}</p>)}
-    <p>{live?`Community and media aggregates updated ${telemetry.dataAsOf} (cached for ${telemetry.cacheTtlSeconds} seconds); no personal records included. `:``}Infrastructure snapshot figures were collected {s.verifiedOn}. The finance report, if published, is a separately reviewed offline aggregate with an explicit reporting period and review date. Neither automatically updates, and private invoices/customer transactions are never exposed here.</p>
+    <p>{live?`Privacy-protected community aggregates dated ${telemetry.dataAsOf}, with a 25-person minimum cohort and ${telemetry.cacheTtlSeconds}-second edge cache. `:`Small-cohort staging counts are withheld from the static source. `}Infrastructure snapshot figures were collected {s.verifiedOn}. The finance report, if published, is a separately reviewed offline aggregate with an explicit reporting period and review date. Neither automatically updates, and private invoices/customer transactions are never exposed here.</p>
    </details>
   </section>
   <div className="av37-bottom"><span className="av32-index">CONTINUANCE / SUPPORT WITHOUT CONTROL</span><p>Supporters help keep the creative network available. They do not buy XP, medals, creator rank, moderation power, visibility or influence over editorial decisions.</p><Link to="/join">JOIN THE COMMUNITY ↗</Link></div>
