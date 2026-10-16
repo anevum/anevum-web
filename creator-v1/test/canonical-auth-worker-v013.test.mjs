@@ -369,3 +369,29 @@ test("proposed isolated D1 schema is empty, enforces uniqueness and cascades ses
   assert.equal(d.prepare('SELECT count(*) n FROM "account"').get().n,0);
  }finally{d.close();}
 });
+
+test("exact Origin permits missing optional Fetch Metadata but never cross-site profile writes",async()=>{
+ const secure=createCanonicalStageWorker({
+   authFactory:()=>({api:{getSession:async()=>null}})
+ });
+ const endpoint="/api/v1/member/creator-profile";
+ const mk=(origin,site)=>req(endpoint,{
+   method:"POST",headers:{
+     "origin":origin,"content-type":"application/json",
+     ...(site===undefined?{}:{"sec-fetch-site":site})
+   },body:JSON.stringify({handle:"devon",displayName:"Devon",bio:""})
+ });
+ const stageEnv=env(true);
+ const absent=await secure.fetch(mk(CANONICAL_ORIGIN,undefined),stageEnv);
+ assert.equal(absent.status,401,"No Fetch Metadata must reach session auth, never be treated as CSRF");
+ for(const [origin,site] of [
+  ["https://evil.example",undefined],
+  ["https://evil.example","same-origin"],
+  [CANONICAL_ORIGIN,"cross-site"],
+  [CANONICAL_ORIGIN,"same-site"],
+  [CANONICAL_ORIGIN,"none-but-forged"]
+ ]){
+  const res=await secure.fetch(mk(origin,site),stageEnv);
+  assert.equal(res.status,403,`Refuse origin ${origin}, Fetch Metadata ${site}`);
+ }
+});
