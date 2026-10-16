@@ -10,6 +10,7 @@ import {readSupporterRewards,supporterRewardsRoute} from '../canonical-auth/supp
 import {subscriptionProjection,supporterConfig} from '../supporter/stripe.mjs';
 import {supporterSchemaReady} from '../canonical-auth/supporter.mjs';
 import canonicalWorker from '../web/a-canonical-stage.review.mjs';
+import {canonicalSpace} from '../canonical-auth/space.mjs';
 
 const NOW=1792155000000,DAY=86400000,ORIGIN='https://a.anevum.com';
 function setup(){
@@ -151,5 +152,40 @@ test('CSRF and authenticated source router enforce private reward writes',async(
   assert.ok([401,403].includes(noCookies.status));
   const unauthorized=await supporterRewardsRoute(endpoint('PATCH',{seal:'signal',frame:'orbital',aura:'aurora',revision:0}),env,users[1],{now:NOW});
   assert.equal(unauthorized.status,409);
+ }finally{db.close()}
+});
+
+test('public profile only renders equipped cosmetics with active status and consent',async()=>{
+ const {db,env,users}=setup();const [a]=users;
+ try{
+  support(db,env,a,NOW-180*DAY);
+  db.prepare("UPDATE member_creator_profiles SET visibility='public' WHERE user_id=?").run(a.id);
+  const target='/api/v1/members/alpha/space';
+  const ownTarget='/api/v1/member/space';
+  const read=async(publicRead)=>{
+   const req=new Request(ORIGIN+(publicRead?target:ownTarget),{method:'GET'});
+   const response=await canonicalSpace(req,env,publicRead?null:a,publicRead?'alpha':null,Math.floor(NOW/1000));
+   assert.equal(response.status,200);
+   return response.json();
+  };
+  const privateView=await read(false);
+  assert.equal(privateView.supporter,true);
+  assert.equal(privateView.supporterAppearance.seal,'signal');
+  const hidden=await read(true);
+  assert.equal(hidden.supporter,false);
+  assert.equal('supporterAppearance' in hidden,false);
+  db.prepare('INSERT INTO supporter_visibility(member_user_id,public_insignia,revision,updated_at_ms) VALUES(?,1,1,?)').run(a.id,NOW);
+  const shown=await read(true);
+  assert.equal(shown.supporter,true);
+  assert.equal(shown.supporterAppearance.aura,'aurora');
+  assert.equal('stripeCustomerId' in shown,false);
+  assert.equal('startedAt' in shown,false);
+  await supporterRewardsRoute(endpoint('PATCH',{seal:'constellation',frame:'stellar',aura:'nebula',revision:0}),env,a,{now:NOW});
+  const updated=await read(true);
+  assert.deepEqual(updated.supporterAppearance,{seal:'constellation',frame:'stellar',aura:'nebula'});
+  db.prepare("UPDATE supporter_subscriptions SET status='canceled' WHERE member_user_id=?").run(a.id);
+  const revoked=await read(true);
+  assert.equal(revoked.supporter,false);
+  assert.equal('supporterAppearance' in revoked,false);
  }finally{db.close()}
 });
