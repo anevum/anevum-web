@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {fixture} from './helpers/canonical-fixture.mjs';
-import {supporterMember,supporterWebhook,supporterSchemaReady} from '../canonical-auth/supporter.mjs';
+import {supporterMember,supporterWebhook,supporterSchemaReady,publicSupporterForMember} from '../canonical-auth/supporter.mjs';
 import {stripePlan,supporterConfig,verifyStripeWebhook,subscriptionProjection} from '../supporter/stripe.mjs';
 import {supporterState} from '../supporter/entitlements.mjs';
 import canonicalWorker from '../web/a-canonical-stage.review.mjs';
@@ -97,6 +97,10 @@ test('checkout, signed settlement, private entitlement, duplicate event and port
  try{
   const initial=await (await supporterMember(request(''),env,a,{now:NOW,http})).json();
   assert.equal(initial.supporter,false);
+  assert.equal(initial.publicInsignia,false);
+  assert.equal(initial.revision,0);
+  assert.equal(await publicSupporterForMember(env,a.id,NOW),false);
+  assert.equal((await supporterMember(new Request(ORIGIN+'/api/v1/member/supporter',{method:'PATCH',headers:{origin:ORIGIN,'content-type':'application/json'},body:JSON.stringify({publicInsignia:true,revision:0})}),env,a,{now:NOW,http})).status,409);
   const reject=await supporterMember(request('/checkout','POST',{interval:'month',amount:1}),env,a,{now:NOW,http});
   assert.equal(reject.status,400);
   const created=await supporterMember(request('/checkout','POST',{interval:'month'}),env,a,{now:NOW,http});
@@ -113,6 +117,20 @@ test('checkout, signed settlement, private entitlement, duplicate event and port
   const statusA=await (await supporterMember(request(''),env,a,{now:NOW,http})).json();
   const statusB=await (await supporterMember(request(''),env,b,{now:NOW,http})).json();
   assert.equal(statusA.supporter,true);assert.equal(statusB.supporter,false);
+  const patch=(user,publicInsignia,revision)=>new Request(ORIGIN+'/api/v1/member/supporter',{
+    method:'PATCH',headers:{origin:ORIGIN,'content-type':'application/json'},body:JSON.stringify({publicInsignia,revision})
+  });
+  const aOpt=await supporterMember(patch(a,true,0),env,a,{now:NOW,http});
+  assert.equal(aOpt.status,200);
+  assert.deepEqual(await aOpt.json(),{publicInsignia:true,revision:1});
+  assert.equal(await publicSupporterForMember(env,a.id,NOW),true);
+  assert.equal(await publicSupporterForMember(env,b.id,NOW),false);
+  assert.equal((await supporterMember(patch(b,true,0),env,b,{now:NOW,http})).status,409);
+  assert.equal((await supporterMember(patch(a,false,0),env,a,{now:NOW,http})).status,409);
+  const aHide=await supporterMember(patch(a,false,1),env,a,{now:NOW,http});
+  assert.equal(aHide.status,200);
+  assert.deepEqual(await aHide.json(),{publicInsignia:false,revision:2});
+  assert.equal(await publicSupporterForMember(env,a.id,NOW),false);
   assert.equal(statusA.until,(t+86400)*1000);
   assert.equal((await supporterMember(request('/portal','POST'),env,b,{now:NOW,http})).status,409);
   const p=await supporterMember(request('/portal','POST'),env,a,{now:NOW,http});
@@ -145,6 +163,7 @@ test('subscription cancellation and invalid client-reference events cannot grant
   assert.equal((await supporterWebhook(await signed(env,'customer.subscription.deleted',{id:subId}),env,{now:NOW+1000,http})).status,200);
   const state=await (await supporterMember(request(''),env,a,{now:NOW+1000,http})).json();
   assert.equal(state.supporter,false);
+  assert.equal(await publicSupporterForMember(env,a.id,NOW+1000),false);
  }finally{db.close()}
 });
 test('canonical router blocks forged browser POST and no-origin webhook cannot bypass signature',async()=>{
