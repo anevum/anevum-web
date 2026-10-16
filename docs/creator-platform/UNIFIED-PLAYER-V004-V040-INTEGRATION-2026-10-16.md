@@ -34,3 +34,7 @@ This is not a merge of existing PRs, an authorization to use V040 on a live site
 - Existing legacy `ok` member service keeps its server-authorized rating/save path; unknown or failing health remains closed. No replacement login, cookies, token storage, client XP, Worker routes or D1 changes.
 - The synthetic offline browser now asserts canonical preview on every player variant and viewport, and checks independent legacy-guest and unavailable states on desktop and phone. This fixture is not bundled into deployed assets.
 - No schema/auth server change or live staging deployment is implied. Canonical member project voting/saving needs an independently designed, authorized backend and cross-account E2E before activation.
+
+## V005 browser-probe verification fix
+- Corrected CDP Runtime.evaluate expressions for quoted CSS attribute selectors. Probe source now lives in `test/player-browser-probes.mjs` and is syntax-checked with Node's VM parser and a synthetic DOM contract before browser acceptance. Timeouts report the last exception instead of hiding parse errors.
+- This is an offline-test correction only. Its green combined CI run, including canonical/legacy/closed browser states, remains a required gate.

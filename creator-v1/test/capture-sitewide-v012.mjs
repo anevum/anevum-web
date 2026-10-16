@@ -4,11 +4,13 @@ import {spawn} from "node:child_process";
 import {existsSync,readFileSync,writeFileSync,mkdirSync,mkdtempSync,rmSync} from "node:fs";
 import {tmpdir} from "node:os";
 import {join} from "node:path";
+import {canonicalAvailabilityProbe,canonicalParticipationProbe} from "./player-browser-probes.mjs";
 const delay=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 async function until(fn,timeout=18000){
  const stop=Date.now()+timeout;
- while(Date.now()<stop){try{let value=await fn();if(value)return value;}catch{}await delay(140);}
- throw Error("SITEWIDE_V012_BROWSER_TIMEOUT");
+ let lastError=null;
+ while(Date.now()<stop){try{let value=await fn();if(value)return value;}catch(error){lastError=error;}await delay(140);}
+ throw Error("SITEWIDE_V012_BROWSER_TIMEOUT"+(lastError?": "+String(lastError).slice(0,350):""));
 }
 function connect(url){
  return new Promise((resolve,reject)=>{
@@ -148,8 +150,8 @@ try{
        }
        await until(()=>evaluate('location.pathname==='+JSON.stringify("/creator/projects/"+id)+'&&!!document.querySelector(".avp-stage")&&!!document.querySelector(".avp-passport")'));
        await until(()=>evaluate('(()=>{const a=document.querySelector(".avp-stage-art img");return !a||(a.complete&&a.naturalWidth>0);})()'));
-       await until(()=>evaluate('!!document.querySelector(".engagement-panel[data-avp-availability=\"canonical-readonly\"]")'));
-       const participation=await evaluate('(()=>{const panel=document.querySelector(".engagement-panel"),nav=document.querySelector(".avp-stage-shortcuts"),links=[...panel.querySelectorAll("a")].map(a=>({text:a.textContent.trim(),href:a.getAttribute("href")}));return {status:panel.getAttribute("data-avp-availability"),label:nav.querySelector("a[href=\"#avp-participation\"]")?.textContent?.trim(),hasVotes:!!panel.querySelector(".engagement-votes,button[aria-label^=\"Rate \"]"),hasSave:panel.textContent.includes("SAVE TO LIBRARY"),links,invitation:panel.textContent.includes("invite-only"),falsePromise:panel.textContent.includes("Signing in does not activate")};})()');
+       await until(()=>evaluate(canonicalAvailabilityProbe));
+       const participation=await evaluate(canonicalParticipationProbe);
        if(participation.status!=="canonical-readonly"||participation.label!=="PARTICIPATE"||
           participation.hasVotes||participation.hasSave||!participation.invitation||!participation.falsePromise||
           !participation.links.some(x=>x.href==="/creator/community")||

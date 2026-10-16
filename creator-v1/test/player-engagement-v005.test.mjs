@@ -1,6 +1,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {readFileSync} from "node:fs";
+import {Script,runInNewContext} from "node:vm";
+import {canonicalAvailabilityProbe,canonicalParticipationProbe} from "./player-browser-probes.mjs";
 import {projectEngagementGateway} from "../web/src/lib/project-engagement.ts";
 const read=path=>readFileSync(new URL("../"+path,import.meta.url),"utf8");
 
@@ -46,4 +48,38 @@ test("compiled browser fixture tests canonical invite-only, legacy guest and out
  assert.match(capture,/PLAYER_V005_MEMBER_GATE/);
  assert.match(capture,/PLAYER_V005_MEMBER_RESET_FAILED/);
  assert.doesNotMatch(read("web/src/main.tsx"),/__player-member-fixture|playerMemberHealthMode/);
+});
+
+test("V005 browser probes compile and inspect a canonical read-only participation DOM",()=>{
+ for(const expression of [canonicalAvailabilityProbe,canonicalParticipationProbe]){
+  assert.doesNotThrow(()=>new Script(expression));
+ }
+ const status={
+  textContent:"RATINGS NOT ACTIVE. Member access is currently invite-only. Signing in does not activate project rating, saving, or XP.",
+  getAttribute(name){return name==="data-avp-availability"?"canonical-readonly":null},
+  querySelector(){return null},
+  querySelectorAll(){return [
+    {textContent:"EXPLORE COMMUNITY",getAttribute:()=>"/creator/community"},
+    {textContent:"MEMBER ACCESS",getAttribute:()=>"/creator/join"}
+  ]}
+ };
+ const nav={querySelector(selector){
+  assert.equal(selector,'a[href="#avp-participation"]');
+  return {textContent:"PARTICIPATE"}
+ }};
+ const document={querySelector(selector){
+  if(selector==='.engagement-panel[data-avp-availability="canonical-readonly"]')return status;
+  if(selector===".engagement-panel")return status;
+  if(selector===".avp-stage-shortcuts")return nav;
+  throw Error("Unexpected selector: "+selector);
+ }};
+ assert.equal(runInNewContext(canonicalAvailabilityProbe,{document}),true);
+ const result=runInNewContext(canonicalParticipationProbe,{document});
+ assert.equal(result.status,"canonical-readonly");
+ assert.equal(result.label,"PARTICIPATE");
+ assert.equal(result.hasVotes,false);
+ assert.equal(result.hasSave,false);
+ assert.equal(result.invitation,true);
+ assert.equal(result.falsePromise,true);
+ assert.deepEqual(Array.from(result.links,x=>x.href),["/creator/community","/creator/join"]);
 });
