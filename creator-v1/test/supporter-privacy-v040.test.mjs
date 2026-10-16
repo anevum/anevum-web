@@ -127,6 +127,18 @@ test('expired cached responses are recomputed; older v1 cached values are never 
   assert.equal(checked.body.schemaVersion,2);
   assert.equal('memberAccounts' in checked.body.community,false);
   assert.equal(alternate.stats().writes,1);
+  const forged=fakeCache();
+  const candidate=JSON.parse(JSON.stringify(checked.body));
+  candidate.community.memberAccountsLowerBound=26;
+  candidate.privateMemberEmail='private@example.invalid';
+  forged.seed(URI+'?policy=v2',new Response(JSON.stringify(candidate),{
+   status:200,headers:{'x-anevum-public-telemetry':'v2'}
+  }));
+  const safe=await t.query({cache:forged,now});
+  assert.equal(safe.status,200);
+  assert.equal(safe.body.community.memberAccountsLowerBound,50);
+  assert.equal('privateMemberEmail' in safe.body,false);
+  assert.equal(forged.stats().writes,1,'invalid policy-compliant-looking cache must be replaced');
  }finally{t.db.close()}
 });
 test('cache write failure prevents public response and does not disclose aggregate payload',async()=>{
