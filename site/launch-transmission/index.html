@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#070911">
+<meta name="robots" content="noindex,nofollow">
+<meta name="description" content="ANEVUM. A new world is taking shape. Official launch January 1, 2027.">
+<title>ANEVUM // THE TRANSMISSION</title>
+<style>
+:root{color-scheme:dark;--void:#070911;--shade:#10121f;--cream:#f2eadd;--cream-dim:#bdb4b7;--violet:#ab9ac8;--silver:#97aec2;--copper:#bfa58d;--edge:rgba(185,172,192,.29);font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;background:var(--void);color:var(--cream)}
+body{overflow-x:hidden;isolation:isolate}
+.ambient,.ambient:before,.ambient:after{position:fixed;inset:0;pointer-events:none}
+.ambient{z-index:-2;background:radial-gradient(ellipse 49% 55% at 50% 40%,rgba(91,75,125,.23),transparent 75%),radial-gradient(ellipse 39% 36% at 6% 93%,rgba(43,75,108,.27),transparent 83%),radial-gradient(ellipse 45% 36% at 96% 5%,rgba(116,81,92,.15),transparent 80%),linear-gradient(170deg,#090a14,#060810 67%,#070b13)}
+.ambient:before{content:"";background:radial-gradient(#e6dbea45 .7px,transparent 1px),radial-gradient(#a9c6dd3b .7px,transparent 1.2px),radial-gradient(#c6abb839 .6px,transparent 1px);background-size:197px 181px,263px 211px,153px 257px;background-position:16px 19px,91px 73px,58px 124px;opacity:.42;mask-image:linear-gradient(to bottom,#000,transparent 96%)}
+.ambient:after{content:"";background-image:linear-gradient(rgba(176,168,205,.039) 1px,transparent 1px),linear-gradient(90deg,rgba(176,168,205,.039) 1px,transparent 1px);background-size:72px 72px;mask-image:radial-gradient(ellipse 70% 65% at 50% 45%,#0008,transparent)}
+.texture{z-index:5;position:fixed;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,transparent 0 3px,rgba(1,2,8,.2) 3px 4px);opacity:.18}
+.vignette{z-index:6;position:fixed;inset:0;pointer-events:none;background:radial-gradient(ellipse 83% 95% at center,transparent 37%,rgba(0,0,5,.69))}
+.shell{position:relative;z-index:1;min-height:100svh;padding:clamp(17px,3.1vh,36px) clamp(16px,4.5vw,68px);display:flex;align-items:center;justify-content:center}
+.frame{width:min(1130px,100%);position:relative}
+.masthead,.base-note{display:flex;align-items:center;justify-content:space-between;gap:14px;color:#9695a7;font-size:10px;font-weight:500;letter-spacing:.22em;line-height:1.5;text-transform:uppercase}
+.masthead{padding:0 3px 16px}.masthead .right{color:#bdafa2;text-align:right}.base-note{padding:16px 4px 0;font-size:9px;letter-spacing:.19em}.base-note .seal{color:#b6a8c0}
+.dash{color:#a79ab6}
+.display{position:relative;overflow:hidden;border:1px solid var(--edge);background:linear-gradient(145deg,rgba(24,23,39,.94),rgba(9,13,23,.965) 54%,rgba(10,12,23,.97));box-shadow:inset 0 0 0 1px rgba(232,216,234,.025),0 22px 95px rgba(0,0,0,.57),0 0 90px rgba(61,49,100,.14)}
+.display:before,.display:after{content:"";position:absolute;z-index:3;width:25px;height:25px;pointer-events:none}.display:before{left:-1px;top:-1px;border-top:1px solid #d9c3a5;border-left:1px solid #d9c3a5}.display:after{right:-1px;bottom:-1px;border-bottom:1px solid #d9c3a5;border-right:1px solid #d9c3a5}
+.headbar{min-height:43px;display:flex;align-items:center;justify-content:space-between;gap:12px;border-bottom:1px solid rgba(200,184,205,.18);padding:0 clamp(18px,3.8vw,45px);color:#9f9cae;font-size:10px;letter-spacing:.15em;background:linear-gradient(90deg,#a28db50a,transparent)}
+.headbar .group{display:flex;align-items:center;gap:11px}.lights{display:flex;gap:5px}.lights i{width:5px;height:5px;border:1px solid #8d819d;border-radius:50%}.lights i:first-child{background:#bb9cc9;box-shadow:0 0 9px rgba(191,158,227,.73)}.carrier{white-space:nowrap;color:#c0b0c7}.carrier:before{content:"";display:inline-block;width:5px;height:5px;border-radius:50%;margin-right:8px;background:#b7a0cc;box-shadow:0 0 8px #aa96c6;animation:carrier 3.9s ease-in-out infinite}
+.content{padding:clamp(21px,3.7vw,46px) clamp(21px,6.1vw,77px) clamp(21px,3vw,36px)}
+.status{display:flex;justify-content:space-between;align-items:center;gap:16px;color:#9a97aa;font-size:9px;letter-spacing:.19em}.status strong{font-weight:500;color:#c3b5a9}
+.identity{display:grid;grid-template-columns:minmax(0,1fr) minmax(190px,273px);align-items:center;gap:22px;min-height:270px;margin-top:8px;margin-bottom:25px}
+.identity-copy{position:relative;z-index:1}
+.section-code{margin:0 0 18px;color:#b1a2bc;font-size:11px;letter-spacing:.23em}
+h1{font-family:"Baskerville","Iowan Old Style","Palatino Linotype",Georgia,serif;font-weight:400;font-size:clamp(64px,8.6vw,119px);line-height:.95;letter-spacing:.075em;margin:0 0 18px;color:var(--cream);text-shadow:0 0 32px rgba(207,191,226,.1);white-space:nowrap}
+.name-underline{width:min(415px,94%);height:1px;margin-bottom:18px;background:linear-gradient(90deg,#d2b799ba,#b1a1c181,transparent)}
+.descriptor{color:#bcafbd;font-size:clamp(10px,1.4vw,12px);letter-spacing:.24em;margin:0;line-height:1.75;text-transform:uppercase}
+.descriptor .cmd{color:#bc9d89;margin-right:10px}.descriptor .cursor{display:inline-block;background:#e5d2bf;width:.58em;height:1.1em;vertical-align:-.16em;animation:blink 1.1s steps(1) infinite}
+.smallprint{margin:19px 0 0;color:#85889d;line-height:1.7;font-size:10px;letter-spacing:.11em;max-width:43ch}
+.emblem-stage{position:relative;display:grid;place-items:center;min-height:260px;isolation:isolate}
+.emblem-halo{position:absolute;width:255px;height:255px;border-radius:50%;background:radial-gradient(circle,rgba(160,143,195,.14) 0%,rgba(61,62,111,.09) 39%,transparent 65%);filter:blur(5px)}
+.emblem-ring{position:absolute;width:237px;height:237px;border-radius:50%;border:1px solid rgba(186,170,200,.17);box-shadow:0 0 0 16px #9e8db305,0 0 0 42px #9e8db303;transform:rotate(-17deg)}
+.emblem-ring:before,.emblem-ring:after{content:"";position:absolute;inset:-11px;border-radius:50%;border:1px dashed rgba(182,162,194,.21)}.emblem-ring:after{inset:18px;border-style:solid;border-color:#bdacb615}
+.anevum-mark{width:205px;height:205px;overflow:visible;filter:drop-shadow(0 0 25px rgba(194,175,214,.1));transform:translateZ(0)}
+.anevum-mark .outer{stroke:#a79bbd}.anevum-mark .glyph{stroke:#eee3d6}.anevum-mark .spine{stroke:#c4a994}.anevum-mark .node{fill:#eee3d6}
+.mark-signal{position:absolute;width:219px;height:219px;border-radius:50%;pointer-events:none;opacity:.12;background:repeating-linear-gradient(178deg,transparent 0 5px,rgba(228,216,252,.39) 6px 7px,transparent 8px 12px);mix-blend-mode:screen;animation:emblem-static 8.2s steps(1) infinite}
+.emblem-stage.is-breaching .anevum-mark{filter:drop-shadow(-4px 1px 2px rgba(90,183,225,.63)) drop-shadow(3px -1px 2px rgba(229,125,178,.53))}.emblem-stage.is-breaching .mark-signal{opacity:.54}
+.countdown-title{padding-top:17px;border-top:1px solid rgba(187,169,192,.35);display:flex;align-items:center;justify-content:space-between;gap:14px;color:#aaa4b2;font-size:10px;letter-spacing:.2em;line-height:1.7}.countdown-title strong{font-weight:500;color:#d3c2b2;text-align:right}
+.countdown{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:13px;margin-top:13px}
+.unit{position:relative;overflow:hidden;min-width:0;border:1px solid rgba(195,177,208,.27);background:linear-gradient(160deg,rgba(54,46,67,.35),rgba(13,18,31,.42));padding:17px 11px 14px;text-align:center}
+.unit:before{content:"";position:absolute;left:0;top:0;height:2px;width:37%;background:linear-gradient(90deg,rgba(200,176,143,.59),transparent)}
+.digit{display:block;font-family:"Baskerville","Iowan Old Style",Georgia,serif;font-variant-numeric:lining-nums tabular-nums;font-size:clamp(40px,5.3vw,68px);font-weight:400;line-height:1.09;letter-spacing:.05em;color:#f2e8dd;text-shadow:0 0 18px rgba(212,196,226,.15)}
+.unit-label{display:block;margin-top:7px;color:#9e9aaa;font-size:9px;letter-spacing:.25em}
+.telemetry{margin-top:21px;border:1px solid rgba(183,167,193,.19);background:rgba(2,7,15,.5)}
+.telemetry-head{padding:11px 14px;display:flex;align-items:center;justify-content:space-between;gap:12px;border-bottom:1px solid rgba(182,165,203,.17);font-size:9px;letter-spacing:.12em;color:#9998ac}
+.meter{display:flex;align-items:end;gap:4px;height:11px}.meter i{display:block;width:10px;height:3px;background:#b2a0c2;animation:meter 1.2s ease-in-out infinite alternate}.meter i:nth-child(2){animation-delay:.2s}.meter i:nth-child(3){animation-delay:.4s}.meter i:nth-child(4){animation-delay:.6s}
+.terminal{padding:12px 15px 15px;min-height:94px;font-size:11px;letter-spacing:.04em;color:#c8bfc6;line-height:1.85;display:flex;flex-direction:column;justify-content:flex-end;overflow:hidden}
+.entry{white-space:pre-wrap;word-break:break-word}.entry .prompt{color:#c8a88b}.entry.muted{color:#9294a8}.entry.success{color:#cfbfce}.entry .caret{display:inline-block;width:.58em;height:1.03em;background:#ded2c5;vertical-align:-.2em;animation:blink 1.05s steps(1) infinite}
+.footbar{display:flex;justify-content:space-between;gap:14px;align-items:center;margin-top:20px;padding-top:17px;border-top:1px solid rgba(195,177,201,.22);color:#9191a2;font-size:9px;letter-spacing:.15em;line-height:1.5}.footbar .alert{color:#ceb79d}
+/* The following fragments are decorative simulations of the future interface, not a live staging embed. */
+.breaches{position:fixed;z-index:4;inset:0;pointer-events:none;overflow:hidden;contain:layout paint style}
+.breach{position:absolute;overflow:hidden;border:1px solid rgba(204,204,231,.72);background:radial-gradient(ellipse 55% 66% at 72% 40%,rgba(144,139,199,.5),transparent 80%),linear-gradient(120deg,#0b1528,#242042 59%,#121726);box-shadow:0 0 2px rgba(232,225,255,.7),0 0 31px rgba(104,110,184,.5),0 0 75px rgba(74,119,177,.29),0 16px 35px #000a;clip-path:polygon(0 8%,6% 0,63% 4%,77% 0,100% 12%,97% 89%,90% 98%,24% 100%,0 92%);animation:open-breach var(--life,620ms) steps(2,end) both}
+.breach:before{content:"";position:absolute;z-index:5;inset:0;background:repeating-linear-gradient(0deg,transparent 0 2px,rgba(226,218,255,.34) 3px 4px,transparent 5px 9px),repeating-linear-gradient(90deg,transparent 0 30px,rgba(209,197,247,.12) 31px 32px);opacity:.42;mix-blend-mode:screen;animation:noise-shift .17s steps(2,end) infinite}
+.breach:after{content:"";position:absolute;z-index:6;inset:0;box-shadow:inset 0 0 21px rgba(190,176,252,.57);border-left:2px solid #ead9ee;border-top:1px solid #ead9ee}
+.breach-world{position:absolute;inset:0;overflow:hidden;background:radial-gradient(ellipse at 66% 47%,#bca6cb33,transparent 28%),radial-gradient(ellipse at 48% 100%,#345d887d,transparent 51%)}
+.breach-world:before{content:"";position:absolute;right:15%;top:3%;width:190px;height:190px;border-radius:50%;border:1px solid #d7cfeb93;box-shadow:0 0 29px #b5b9ff3d,inset 0 0 33px #7f9cd640;transform:rotateX(63deg) rotate(-24deg)}
+.breach-world:after{content:"";position:absolute;right:20%;top:22%;width:110px;height:110px;border-radius:50%;border:2px solid rgba(222,207,205,.59);box-shadow:0 0 30px #a5b8ec50}
+.breach-ui{position:absolute;inset:0;padding:13px 17px;z-index:2;display:flex;flex-direction:column;justify-content:space-between;background:linear-gradient(90deg,rgba(4,10,22,.9),transparent 86%);text-shadow:0 2px 7px #000}
+.breach-head{font-size:9px;letter-spacing:.18em;color:#d1c9e1}.breach-title{max-width:78%;font:400 clamp(20px,3vw,32px)/1.04 Baskerville,Georgia,serif;color:#eee7e3}.breach-tracks{display:flex;gap:5px}.breach-tracks i{width:41px;height:5px;background:#a4a4d188}.breach-tracks i:nth-child(2){width:26px;background:#d7ba9a99}.breach-tracks i:nth-child(3){width:73px;background:#89b9de66}
+@keyframes open-breach{0%{opacity:0;transform:translateX(-18px) skewX(-3deg)}16%{opacity:.9;transform:translateX(5px) skewX(1deg)}70%{opacity:.84;transform:none}100%{opacity:0;transform:translateX(11px) skewX(-2deg)}}
+@keyframes noise-shift{to{transform:translate(7px,-4px)}}
+@keyframes emblem-static{0%,83%,88%,95%,100%{opacity:.08;transform:none}84%{opacity:.33;transform:translate(3px,-2px)}86%{opacity:.25;transform:translate(-3px,2px)}96%{opacity:.21;transform:translate(2px,0)}}
+@keyframes blink{50%{opacity:0}}@keyframes carrier{50%{opacity:.45;box-shadow:none}}@keyframes meter{to{height:10px;opacity:.38}}
+@media(max-width:800px){.identity{grid-template-columns:minmax(0,1fr) 180px;min-height:234px}.emblem-stage{min-height:210px}.anevum-mark{width:163px;height:163px}.mark-signal{width:169px;height:169px}.emblem-ring{width:193px;height:193px}.emblem-halo{width:193px;height:193px}h1{font-size:clamp(59px,9vw,77px)}.content{padding:26px 29px}.unit{padding:15px 7px}.digit{font-size:clamp(37px,6vw,55px)}}
+@media(max-width:620px){.shell{align-items:start;padding:14px 11px 23px}.masthead{font-size:8px;letter-spacing:.1em;padding:0 4px 12px}.base-note{font-size:8px;letter-spacing:.09em;align-items:start}.headbar{min-height:39px;padding:0 13px;font-size:8px;letter-spacing:.08em}.content{padding:18px 17px 22px}.status{font-size:8px;letter-spacing:.08em}.identity{grid-template-columns:1fr;gap:0;margin:0 0 21px;display:flex;flex-direction:column-reverse;min-height:0}.emblem-stage{min-height:158px}.anevum-mark{width:128px;height:128px}.mark-signal{width:136px;height:136px}.emblem-ring{width:156px;height:156px}.emblem-halo{width:167px;height:167px}.identity-copy{text-align:center}.section-code{margin:0 0 12px;font-size:9px}.identity h1{font-size:clamp(48px,12vw,72px);margin-bottom:13px;letter-spacing:.035em}.name-underline{margin:0 auto 13px;width:81%}.descriptor{font-size:9px;letter-spacing:.11em}.smallprint{font-size:9px;letter-spacing:.055em;margin:10px auto 0}.countdown-title{font-size:8px;letter-spacing:.08em;padding-top:14px}.countdown{gap:6px;margin-top:10px}.unit{padding:13px 4px 11px}.digit{font-size:clamp(28px,8vw,45px)}.unit-label{font-size:8px;letter-spacing:.05em}.telemetry{margin-top:18px}.telemetry-head{padding:9px 11px;font-size:8px}.terminal{min-height:72px;padding:9px 11px 11px;font-size:9px}.footbar{margin-top:17px;padding-top:13px;font-size:8px;letter-spacing:.04em}.breach{max-width:76vw!important;max-height:145px!important}.breach-title{font-size:20px}}
+@media(max-width:360px){.masthead{font-size:7px}.headbar{font-size:7px}.status{font-size:7px}.emblem-stage{min-height:133px}.anevum-mark{width:110px;height:110px}.mark-signal{width:118px;height:118px}.emblem-ring{width:134px;height:134px}.identity h1{font-size:45px}.countdown-title{font-size:7px}.digit{font-size:28px}.unit-label{font-size:7px}}
+@media(min-width:801px) and (max-height:950px){.content{padding-top:29px;padding-bottom:26px}.identity{min-height:236px;margin-bottom:16px}.emblem-stage{min-height:227px}.emblem-ring{width:214px;height:214px}.anevum-mark{width:187px;height:187px}.mark-signal{width:200px;height:200px}.emblem-halo{width:228px;height:228px}.countdown-title{padding-top:15px}.unit{padding-top:12px;padding-bottom:11px}.telemetry{margin-top:16px}.terminal{min-height:78px;padding-top:10px;padding-bottom:12px}.footbar{margin-top:16px;padding-top:13px}}
+@media(max-height:685px) and (min-width:621px){.shell{align-items:start}.identity{min-height:186px;margin-bottom:12px}.emblem-stage{min-height:191px}.anevum-mark{width:157px;height:157px}.emblem-ring{width:190px;height:190px}.mark-signal{width:166px;height:166px}.section-code{margin-bottom:10px}.identity h1{font-size:70px}.telemetry{margin-top:14px}.terminal{min-height:64px}.footbar{margin-top:14px}.content{padding-top:21px;padding-bottom:20px}}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important}.breaches{display:none}.mark-signal{opacity:.07}}
+</style>
+</head>
+<body>
+<div class="ambient" aria-hidden="true"></div><div class="texture" aria-hidden="true"></div><div class="vignette" aria-hidden="true"></div>
+<div class="breaches" id="breaches" aria-hidden="true"></div>
+<main class="shell"><div class="frame">
+ <div class="masthead"><span>ANEVUM <span class="dash">/</span> THE CONTINUANCE CHANNEL</span><span class="right">ARCHIVE 001 <span class="dash">//</span> 01.01.27</span></div>
+ <section class="display" aria-labelledby="brand-heading">
+  <div class="headbar"><div class="group"><span class="lights" aria-hidden="true"><i></i><i></i><i></i></span><span>INSTITUTE ARCHIVE / SIGNAL 001</span></div><span class="carrier">CARRIER ACTIVE</span></div>
+  <div class="content"><div class="status"><span>MODE: TRANSMISSION LOCK</span><span id="utc">UTC --:--:--</span></div>
+   <div class="identity">
+    <div class="identity-copy">
+     <p class="section-code">[ THE WORLD BETWEEN WORLDS ]</p>
+     <h1 id="brand-heading">ANEVUM</h1>
+     <div class="name-underline"></div>
+     <p class="descriptor"><span class="cmd">&gt;</span> <span id="subtitle">PUBLIC ACCESS REMAINS SEALED</span><span class="cursor" aria-hidden="true"></span></p>
+     <p class="smallprint">Something is forming behind the signal.<br>Transmission window: 01 January 2027.</p>
+    </div>
+    <div class="emblem-stage" id="emblem-stage" aria-hidden="true"><div class="emblem-halo"></div><div class="emblem-ring"></div>
+      <svg class="anevum-mark" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" role="presentation">
+        <circle class="outer" cx="50" cy="50" r="43" fill="none" stroke-width=".75" stroke-opacity=".57"/>
+        <path class="glyph" d="M50 14C47 34 39 58 20 78M50 14C53 34 61 58 80 78" fill="none" stroke-width="4.5" stroke-linecap="round"/>
+        <path class="glyph" d="M50 31C45 49 40 62 33 69M50 31C55 49 60 62 67 69" fill="none" stroke-width="2.2" stroke-linecap="round"/>
+        <path class="spine" d="M50 52V78" fill="none" stroke-width="1.2" stroke-opacity=".71" stroke-linecap="round"/>
+        <circle class="node" cx="50" cy="81" r="5"/>
+      </svg>
+     <div class="mark-signal"></div>
+    </div>
+   </div>
+   <div class="countdown-title"><span>TIME UNTIL THE PUBLIC SIGNAL OPENS</span><strong>01 JAN 2027 / 00:00 EST</strong></div>
+   <div class="countdown" role="timer" aria-label="Time remaining until January 1, 2027">
+     <div class="unit"><span class="digit" id="days">--</span><span class="unit-label">DAYS</span></div>
+     <div class="unit"><span class="digit" id="hours">--</span><span class="unit-label">HOURS</span></div>
+     <div class="unit"><span class="digit" id="minutes">--</span><span class="unit-label">MINUTES</span></div>
+     <div class="unit"><span class="digit" id="seconds">--</span><span class="unit-label">SECONDS</span></div>
+   </div>
+   <div class="telemetry"><div class="telemetry-head"><span>C:\ANEVUM\TRANSMISSION.LOG</span><span class="meter" aria-hidden="true"><i></i><i></i><i></i><i></i></span></div>
+      <div class="terminal" id="terminal" aria-label="Decorative transmission log"><div class="entry">C:\ANEVUM&gt; SIGNAL /STANDBY<span class="caret" aria-hidden="true"></span></div></div>
+   </div>
+   <div class="footbar"><span class="alert">[ INCOMING SIGNAL DETECTED ]</span><span>THIS CHANNEL IS READ-ONLY</span></div>
+  </div>
+ </section>
+ <div class="base-note"><span>THE TRANSMISSION IS HELD</span><span class="seal">ANEVUM <span class="dash">/</span> 2027</span></div>
+</div></main>
+<script>
+(function(){
+  'use strict';
+  const target=Date.parse('2027-01-01T00:00:00-05:00');
+  const byId=(x)=>document.getElementById(x);
+  const pad=(x)=>String(x).padStart(2,'0');
+  function updateClock(){
+    const now=Date.now(),left=Math.max(0,Math.floor((target-now)/1000));
+    byId('days').textContent=pad(Math.floor(left/86400));
+    byId('hours').textContent=pad(Math.floor((left%86400)/3600));
+    byId('minutes').textContent=pad(Math.floor((left%3600)/60));
+    byId('seconds').textContent=pad(left%60);
+    byId('utc').textContent='UTC '+new Date(now).toISOString().slice(11,19);
+    if(left===0)byId('subtitle').textContent='LAUNCH WINDOW OPEN';
+  }
+  updateClock();setInterval(updateClock,1000);
+  const terminal=byId('terminal');
+  const reduced=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)');
+  const sleep=(ms)=>new Promise((done)=>setTimeout(done,ms));
+  const commands=[
+    ['C:\\ANEVUM>', 'VERIFY /CARRIER', 'cmd'],
+    ['', '[ OK ] PUBLIC CHANNEL ISOLATED', 'success'],
+    ['', '[ OK ] LAUNCH WINDOW SYNCHRONIZED', 'success'],
+    ['', '[ NOTICE ] UNRECOGNIZED SIGNAL FRAGMENTS', 'muted'],
+    ['C:\\ANEVUM>', 'INSPECT /ORIGIN', 'cmd'],
+    ['', '  SOURCE ............ UNKNOWN', 'muted'],
+    ['', '  SYSTEM ............ FORMING', 'muted'],
+    ['', '  ACCESS ............ 01 JAN 2027', 'success'],
+    ['', '[ STANDBY ] A WORLD BEYOND THE SIGNAL', 'success']
+  ];
+  async function printLog(){
+    if(!terminal)return;
+    while(true){
+      for(const [prompt,line,kind] of commands){
+        const row=document.createElement('div');row.className='entry '+kind;
+        if(prompt){const p=document.createElement('span');p.className='prompt';p.textContent=prompt+' ';row.append(p);}
+        const txt=document.createElement('span');row.append(txt);terminal.append(row);
+        if(!reduced.matches){for(const c of line){txt.textContent+=c;await sleep(18+Math.random()*13);}}else txt.textContent=line;
+        while(terminal.children.length>3)terminal.firstChild.remove();
+        if(!reduced.matches)await sleep(240);
+      }
+      if(reduced.matches)break;
+      await sleep(4100);
+    }
+  }
+  printLog();
+  const container=byId('breaches');const emblem=byId('emblem-stage');
+  const scenes=[
+    ['PORTAL / 01', 'A world beyond the signal'],
+    ['COMMUNITY / 02', 'Find your universe'],
+    ['STUDIO / 03', 'Make what does not exist'],
+    ['ARCHIVE / 04', 'Stories still unwritten'],
+    ['CREATOR / 05', 'The threshold is opening']
+  ];
+  let timer=0;
+  function breach(){
+    if(document.hidden||reduced.matches)return;
+    const scene=scenes[Math.floor(Math.random()*scenes.length)];
+    const width=Math.min(420,Math.max(175,window.innerWidth*.68),240+Math.random()*178);
+    const height=Math.min(195,Math.max(97,window.innerHeight*.24),102+Math.random()*87);
+    const x=Math.round(8+Math.random()*Math.max(1,window.innerWidth-width-16));
+    const y=Math.round(8+Math.random()*Math.max(1,window.innerHeight-height-16));
+    const life=Math.round(470+Math.random()*270);
+    const node=document.createElement('div');node.className='breach';
+    node.style.cssText=`left:${x}px;top:${y}px;width:${Math.round(width)}px;height:${Math.round(height)}px;--life:${life}ms`;
+    const world=document.createElement('div');world.className='breach-world';
+    const ui=document.createElement('div');ui.className='breach-ui';
+    const head=document.createElement('div');head.className='breach-head';head.textContent='ANEVUM // '+scene[0];
+    const heading=document.createElement('strong');heading.className='breach-title';heading.textContent=scene[1];
+    const tracks=document.createElement('div');tracks.className='breach-tracks';
+    for(let i=0;i<3;i++)tracks.append(document.createElement('i'));
+    ui.append(head,heading,tracks);node.append(world,ui);container.append(node);
+    emblem.classList.add('is-breaching');
+    setTimeout(()=>{node.remove();if(!container.children.length)emblem.classList.remove('is-breaching');},life+40);
+  }
+  function schedule(){
+    clearTimeout(timer);
+    if(reduced.matches||document.hidden)return;
+    timer=setTimeout(()=>{breach();if(Math.random()<.18)setTimeout(breach,320);schedule();},6200+Math.random()*9100);
+  }
+  timer=setTimeout(()=>{breach();schedule();},2600+Math.random()*1900);
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden)schedule();else clearTimeout(timer);});
+  if(reduced.addEventListener)reduced.addEventListener('change',()=>{container.replaceChildren();emblem.classList.remove('is-breaching');schedule();});
+})();
+</script>
+</body>
+</html>
