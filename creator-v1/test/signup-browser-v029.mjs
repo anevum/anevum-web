@@ -53,8 +53,8 @@ try{
  await client.send('Emulation.setDeviceMetricsOverride',{width:390,height:844,deviceScaleFactor:1,mobile:true});
  await client.send('Page.navigate',{url:base+'/join'});await wait('#anevum-email');
  // Demonstrate the original standard-browser failure without bypassing CSRF.
- const originProbe=await evaluate(`(async()=>({old:await (await fetch('/__origin',{method:'POST',mode:'same-origin'})).json(),fixed:await (await fetch('/__origin',{method:'POST',mode:'same-origin',referrerPolicy:'same-origin'})).json()}))()`);
- assert.equal(originProbe.old.origin,'null');assert.equal(originProbe.fixed.origin,base);
+ const originProbe=await evaluate(`(async()=>({inherited:await (await fetch('/__origin',{method:'POST',mode:'same-origin'})).json(),old:await (await fetch('/__origin',{method:'POST',mode:'same-origin',referrerPolicy:'no-referrer'})).json(),fixed:await (await fetch('/__origin',{method:'POST',mode:'same-origin',referrerPolicy:'same-origin'})).json()}))()`);
+ console.log('ORIGIN_POLICY_PROBE='+JSON.stringify(originProbe));assert.equal(originProbe.old.origin,'null');assert.equal(originProbe.fixed.origin,base);
  await fill('#anevum-email','pilot_a@fixture.invalid');await submit('.av12-email-entry');await wait('#anevum-otp');
  await until(()=>sent.get('pilot_a@fixture.invalid'));await fill('#anevum-otp',sent.get('pilot_a@fixture.invalid'));await submit('.av12-email-entry');await wait('#av12-handle');
  await fill('#av12-handle','browser_pilot');await fill('#av12-display','Browser Pilot');await submit('.av12-profile-form');await wait('.ms-dashboard');
@@ -69,7 +69,7 @@ try{
  await image('avatar');await image('banner');assert.equal(db.prepare('SELECT COUNT(*) AS n FROM member_space_media').get().n,2);
  await evaluate(`[...document.querySelectorAll('.ms-toolbar nav button')].find(b=>b.textContent==='Edit profile').click()`);await wait('#av12-bio');await fill('#av12-bio','A saved introduction from a real browser test.');await submit('.av12-profile-form');await until(()=>db.prepare('SELECT bio FROM member_creator_profiles').get().bio.length>0);
  await evaluate(`[...document.querySelectorAll('.ms-toolbar nav button')].find(b=>b.textContent==='My wall').click()`);await wait('#wall-entry');await fill('#wall-entry','First browser transmission.');await submit('.ms-wall-compose');await until(()=>db.prepare('SELECT COUNT(*) AS n FROM member_wall_posts').get().n===1);await wait('.ms-wall-entry');
- const results={originalOrigin:originProbe.old.origin,correctedOriginMatches:true,realOtpSignup:true,profileSaved:true,avatarAndBannerUploaded:true,wallSaved:true,widths:[]};
+ const results={inheritedOrigin:originProbe.inherited.origin,originalOrigin:originProbe.old.origin,correctedOriginMatches:true,realOtpSignup:true,profileSaved:true,avatarAndBannerUploaded:true,wallSaved:true,widths:[]};
  for(const [width,height] of [[1440,900],[390,844],[320,720]]){
   await client.send('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:1,mobile:width<600});await delay(150);
   const state=await evaluate(`({overflow:document.documentElement.scrollWidth>innerWidth+1,wall:!!document.querySelector('.ms-wall-entry'),image:[...document.querySelectorAll('.ms-cover img,.ms-portrait img')].every(i=>i.complete&&i.naturalWidth>0)})`);
@@ -77,6 +77,9 @@ try{
   const shot=await client.send('Page.captureScreenshot',{format:'png',fromSurface:true});writeFileSync(join(out,'member-wall-'+width+'.png'),Buffer.from(shot.data,'base64'));results.widths.push(width);
  }
  writeFileSync(join(out,'acceptance.json'),JSON.stringify(results,null,2));console.log('BROWSER_ORIGIN_SIGNUP_PROFILE_IMAGES_WALL_AND_RESPONSIVE_CHECKS=PASS');
+}catch(error){
+ if(client){const state=await client.send('Runtime.evaluate',{expression:'({url:location.pathname,text:document.body.innerText.slice(-5000)})',returnByValue:true}).catch(()=>null);console.error('BROWSER_FAILURE_STATE='+JSON.stringify(state?.result?.value));const shot=await client.send('Page.captureScreenshot',{format:'png'}).catch(()=>null);if(shot?.data)writeFileSync(join(out,'failure.png'),Buffer.from(shot.data,'base64'));}
+ throw error;
 }finally{
  if(client){await client.send('Browser.close').catch(()=>{});client.close()}
  if(child.exitCode===null)await Promise.race([new Promise(r=>child.once('exit',r)),delay(3000)]);

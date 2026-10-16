@@ -1,6 +1,6 @@
 name: ANEVUM A Staging Member Spaces V029
 
-# Task-authorized staging-only member spaces release. Never deploy the apex countdown.
+# Task-authorized staging-only member spaces release. Browser regression revision 2. Never deploy the apex countdown.
 on:
   push:
     branches: [patch/signup-origin-policy-v029-20261016]
