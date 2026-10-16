@@ -1,6 +1,6 @@
 name: ANEVUM A Staging Community and Member UX V030
 
-# Task-authorized staging-only member spaces release. Chromium and WebKit community regression revision 2. Never deploy the apex countdown.
+# Task-authorized staging-only member spaces release. Chromium and WebKit community regression revision 3. Never deploy the apex countdown.
 on:
   push:
     branches: [update/community-profile-ux-v030-20261016]

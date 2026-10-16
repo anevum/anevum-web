@@ -46,7 +46,7 @@ try{
  page=await context.newPage();
  const evaluate=expression=>page.evaluate(expression);
  const fill=async(selector,value)=>evaluate(`(()=>{const el=document.querySelector(${JSON.stringify(selector)});if(!el)throw Error('Input missing');const proto=el.tagName==='TEXTAREA'?HTMLTextAreaElement.prototype:HTMLInputElement.prototype;Object.getOwnPropertyDescriptor(proto,'value').set.call(el,${JSON.stringify(value)});el.dispatchEvent(new Event('input',{bubbles:true}));})()`);
- const click=async selector=>evaluate(`document.querySelector(${JSON.stringify(selector)}).click()`);
+ const click=async selector=>page.locator(selector).click();
  const submit=async selector=>evaluate(`document.querySelector(${JSON.stringify(selector)}).requestSubmit()`);
  const wait=async selector=>until(()=>evaluate(`!!document.querySelector(${JSON.stringify(selector)})`));
  await page.setViewportSize({width:390,height:844});
