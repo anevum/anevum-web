@@ -30,12 +30,12 @@ export function ProjectPage(){
       <ProjectPlayerShell project={p} demo={demo} source={source}/>
       <aside className="portal-sidebar avp-passport" aria-label="Published project passport">
         <section className="portal-sidebox portal-project-passport"><span className="kicker">THE PASSPORT / PUBLIC FACTS</span><h2>PROJECT DETAILS</h2>
-          <div className="portal-facts-row"><span>ACCESS</span><strong>{p.freeToUse?"FREE TO USE":"CHECK CREATOR PRICING"}</strong></div>
+          <div className="portal-facts-row"><span>ACCESS</span><strong>{p.freeToUse?"LISTED AS FREE":"CHECK CREATOR TERMS"}</strong></div>
           <div className="portal-facts-row"><span>CATEGORY</span><strong>{types[p.category]||p.category.toUpperCase()}</strong></div>
           <div className="portal-facts-row"><span>EXPERIENCE</span><strong>{demo?"EXTERNAL DEMO":source?"SOURCE ONLY":"NO LINKED DEMO"}</strong></div>
           <div className="portal-facts-row"><span>DEVICE SUPPORT</span><strong>NOT SPECIFIED</strong></div>
           <div className="portal-facts-row"><span>PUBLISHED</span><strong>{published.toUpperCase()}</strong></div>
-          <div className="portal-facts-row"><span>PROJECT LICENSE</span><strong>{p.license||"NOT SPECIFIED"}</strong></div>
+          <div className="portal-facts-row"><span>LICENSE AS LISTED</span><strong>{p.license||"NOT SPECIFIED"}</strong></div>
           <div className="portal-facts-row"><span>REVIEW STATUS</span><strong>PUBLIC / APPROVED</strong></div>
           {demo&&<div className="portal-facts-row"><span>CREATOR HOST</span><strong>{demo.hostname}</strong></div>}
         </section>
@@ -53,7 +53,7 @@ export function ProjectPage(){
     <div className="portal-project-detail-layout avp-below">
       <div className="portal-project-main">
         <section className="portal-box portal-project-about" id="avp-about">
-          <header className="portal-box-header"><div><span className="kicker">WHAT THE CREATOR ACTUALLY MADE</span><h2>ABOUT THIS PROJECT</h2></div><span className="portal-hall-stamp">ORIGINAL WORK</span></header>
+          <header className="portal-box-header"><div><span className="kicker">WHAT THE CREATOR ACTUALLY MADE</span><h2>ABOUT THIS PROJECT</h2></div><span className="portal-hall-stamp">PUBLIC PROJECT RECORD</span></header>
           <p>{p.description||p.summary}</p>
         </section>
         <div id="avp-participation"><MemberEngagementPanel projectId={p.id}/></div>

@@ -133,7 +133,8 @@ try{
        ["source-only",String(9001).padStart(32,"0"),"VIEW SOURCE CODE","github.com"],
        ["unsafe-fallback",String(9002).padStart(32,"0"),"VIEW SOURCE CODE","github.com"],
        ["no-link",String(9003).padStart(32,"0"),null,null],
-       ["external-app",String(9004).padStart(32,"0"),"TRY ON CREATOR SITE","example.com"]
+       ["external-app",String(9004).padStart(32,"0"),"TRY ON CREATOR SITE","example.com"],
+       ["long-content",String(9005).padStart(32,"0"),"PLAY ON CREATOR SITE","example.com"]
      ];
      for(const [variant,id,expectedAction,expectedHost] of cases){
        if(variant!=="external-game"){

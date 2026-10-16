@@ -25,11 +25,13 @@ const playerCases=new Map([
   [9001,"SOURCE ARCHIVE / OFFLINE REVIEW","games",null,"https://github.com/example/source-archive"],
   [9002,"BLOCKED DEMO / SAFE SOURCE","games","http://insecure.example.com/game","https://github.com/example/safe-source"],
   [9003,"NO LINKED EXPERIENCE / OFFLINE REVIEW","games",null,null],
-  [9004,"APPLICATION DESK / OFFLINE REVIEW","tools","https://example.com/application",null]
+  [9004,"APPLICATION DESK / OFFLINE REVIEW","tools","https://example.com/application",null],
+  [9005,"CHRONICLES OF THE PERPETUALLY UNFOLDING CONSTELLATION — VOLUME VII","games","https://example.com/long-title-demo",null]
 ].map(([number,title,category,demoUrl,sourceUrl])=>{
   const id=String(number).padStart(32,"0");
   return [id,{...work[0],id,slug:null,title,category,demoUrl,sourceUrl,
-    summary:"SYNTHETIC OFFLINE project for player control and layout testing.",
+    creatorName:number===9005?"THE CARTOGRAPHERS OF THE ECHOING CONSTELLATIONS":work[0].creatorName,
+    summary:number===9005?"SYNTHETIC OFFLINE REVIEW. A deliberately lengthy project summary exercises wrap, reading order and touch controls on narrow phones without asserting actual creator data. ".repeat(3):"SYNTHETIC OFFLINE project for player control and layout testing.",
     description:"OFFLINE SYNTHETIC DESIGN FIXTURE. NOT A PUBLISHED PROJECT."}];
 }));
 const categories=[...new Set(work.map(p=>p.category))].map(category=>({category,count:work.filter(p=>p.category===category).length}));
