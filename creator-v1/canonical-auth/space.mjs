@@ -1,7 +1,7 @@
 import {boundedText} from './request-body.mjs';
 
 export const MILESTONES=Object.freeze([
- {id:'first_signal',name:'First Signal',detail:'Publish your first wall entry.',xp:10,symbol:'✦'},
+ {id:'first_signal',name:'First Signal',detail:'Save your first wall entry.',xp:10,symbol:'✦'},
  {id:'world_shaper',name:'World Shaper',detail:'Add an introduction, portrait and banner.',xp:25,symbol:'◈'}
 ]);
 const HEADERS={'cache-control':'private, no-store','content-type':'application/json; charset=utf-8','x-content-type-options':'nosniff','cross-origin-resource-policy':'same-origin'};

@@ -46,7 +46,7 @@ async function request<T>(path:string,method:"GET"|"POST"|"PATCH"="GET",body?:un
    throw new Error("Unsupported canonical member route");
  const response=await fetch(path,{
   method,mode:"same-origin",credentials:publicRead?"omit":"same-origin",
-  redirect:"error",cache:"no-store",
+  redirect:"error",cache:"no-store",referrerPolicy:"same-origin",
   headers:body===undefined?{Accept:"application/json"}:
     {Accept:"application/json","Content-Type":"application/json"},
   body:body===undefined?undefined:JSON.stringify(body),signal
@@ -95,7 +95,7 @@ export type MemberSpace={media:{avatar?:number;banner?:number};awards:SpaceAward
 export type WallEntry={id:string;body:string;createdAt:number;updatedAt:number;revision:number};
 export async function spaceRequest<T>(path:string,method="GET",body?:unknown,signal?:AbortSignal):Promise<T>{
  if(!/^\/api\/v1\/(?:member\/(?:space|wall(?:\/[a-f0-9-]{36})?|media\/(?:avatar|banner))|members\/[a-z][a-z0-9_]{2,29}\/(?:space|wall))$/.test(path))throw Error("Invalid space route");
- const response=await fetch(path,{method,mode:"same-origin",credentials:path.includes('/members/')?"omit":"same-origin",cache:"no-store",redirect:"error",signal,
+ const response=await fetch(path,{method,mode:"same-origin",credentials:path.includes('/members/')?"omit":"same-origin",cache:"no-store",redirect:"error",referrerPolicy:"same-origin",signal,
   headers:body instanceof Blob?{"Content-Type":"image/jpeg"}:body===undefined?{Accept:"application/json"}:{"Content-Type":"application/json",Accept:"application/json"},
   body:body===undefined?undefined:body instanceof Blob?body:JSON.stringify(body)});
  if(!response.ok){
