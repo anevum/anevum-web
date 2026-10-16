@@ -25,7 +25,9 @@
     "feesCents": null,
     "refundsCents": null,
     "disputesCents": null,
-    "netCents": null
+    "netCents": null,
+    "taxReservedCents": null,
+    "availableCents": null
   },
   "activeSupporters": null,
   "approvedMonthlyTargetCents": null,
@@ -34,6 +36,7 @@
     "expenses": false,
     "supporterReceipts": false,
     "activeSupporters": false,
-    "fundraisingGoal": false
+    "fundraisingGoal": false,
+    "taxReserve": false
   }
 }
