@@ -23,7 +23,7 @@ export function Phase1JoinPage(){
  const capability=useResource(canonicalMethods,[]);
  const [email,setEmail]=useState("");
  const [otp,setOtp]=useState("");
- const [emailOpen,setEmailOpen]=useState(false);
+ const [emailOpen,setEmailOpen]=useState(true);
  const [codeSent,setCodeSent]=useState(false);
  const [notice,setNotice]=useState("");
  const {data:session,isPending}=canonicalAuthClient.useSession();
@@ -89,17 +89,16 @@ export function Phase1JoinPage(){
    <div className="join-story">
      <div className="join-orbit-art" aria-hidden="true"><OrbitalMark/></div>
      <p className="kicker">ANEVUM / THE MEMBER NETWORK</p>
-     <h1 id="phase1-join-title">YOUR OWN<br/><em>UNIVERSE.</em></h1>
-     <p>Claim your place in a community of creators, builders and explorers.
-       Keep your profile, projects and discoveries together. Membership will remain free.</p>
-     <div className="join-chapters">
-       <div><span>01</span><strong>Enter</strong><small>Verify your account on the canonical member service.</small></div>
-       <div><span>02</span><strong>Become</strong><small>Claim a unique handle and establish your private profile.</small></div>
-       <div><span>03</span><strong>Connect</strong><small>Publish your world only when you decide it is ready.</small></div>
+     <h1 id="phase1-join-title">ENTER THE<br/><em>CONTINUANCE.</em></h1>
+     <p>Discover new worlds, share what you make, and find your people. Your free account is the beginning.</p>
+     <div className="join-chapters" aria-label="Three-step membership">
+       <div><span>01</span><strong>Join</strong><small>Enter your email.</small></div>
+       <div><span>02</span><strong>Verify</strong><small>Confirm your eight-digit code.</small></div>
+       <div><span>03</span><strong>Belong</strong><small>Choose your name and enter the community.</small></div>
      </div>
    </div>
    <div className="join-panel">
-     <div className="join-panel-top"><span className="kicker">IDENTITY PORTAL / PHASE 1</span>
+     <div className="join-panel-top"><span className="kicker">ANEVUM / MEMBER ACCESS</span>
        <span className="join-state" role="status">
          {capability.state==="loading"||isPending?"VERIFYING SERVICE":
            ready?(capability.data.registration==="open"?"OPEN REGISTRATION":"INVITATION BETA"):"REGISTRATION CLOSED"}
@@ -112,48 +111,46 @@ export function Phase1JoinPage(){
          <div><strong>{member.name||"ANEVUM MEMBER"}</strong><small>CANONICAL MEMBER SESSION</small></div></div>
        <Link className="button primary join-main-action" to="/member">OPEN MY PROFILE <span aria-hidden="true">↗</span></Link>
      </div>:<>
-       <h2>THE NEXT CHAPTER.</h2>
-       <p className="join-lead">Free community membership. No payment, brokerage account, or project required.</p>
-       <div className="join-methods" aria-label="Member sign-in methods">
-         {METHODS.map(method=><div className={"join-method"+((socialReady(method.key)||(method.key==="email"&&emailReady))?" join-method-ready":"")} key={method.key}>
+       <h2>{codeSent?"CHECK YOUR INBOX.":"YOUR STORY STARTS HERE."}</h2>
+       <p className="join-lead">{codeSent?"Enter the latest eight-digit code sent to your email.":"One email, one verification, and you are in. Membership is free."}</p>
+       {ready&&!emailReady&&<p role="status" className="join-service-note">Email sign-in is temporarily unavailable.</p>}
+       {ready&&(["google","github","apple","microsoft"] as const).some(socialReady)&&<div className="join-methods" aria-label="Other available sign-in methods">
+         {METHODS.filter(method=>method.key!=="email"&&socialReady(method.key)).map(method=><button
+           key={method.key} className="join-method join-method-ready" type="button"
+           onClick={()=>void startSocial(method.key as "google"|"github"|"apple"|"microsoft")} disabled={busy}>
            <span className="join-method-symbol" aria-hidden="true">{method.initial}</span>
-           <div className="join-method-copy"><strong>{method.name}</strong><small>{method.caption}</small></div>
-           {(socialReady(method.key))||(method.key==="email"&&emailReady)?
-             <button className="join-method-open" type="button" onClick={method.key==="email"?()=>setEmailOpen(true):()=>void startSocial(method.key as "google"|"github"|"apple"|"microsoft")} disabled={busy}>
-               {busy?"OPENING":"CONTINUE"} <span aria-hidden="true">↗</span>
-             </button>:
-             <span className="join-method-unavailable">NOT ENABLED</span>}
-         </div>)}
-       </div>
+           <span className="join-method-copy"><strong>Continue with {method.name}</strong></span>
+         </button>)}
+       </div>}
        {emailReady&&emailOpen&&<form className="av12-email-entry" onSubmit={event=>void submitEmail(event)}>
-         <label htmlFor="anevum-email">Email address</label>
+         <label htmlFor="anevum-email">{codeSent?"VERIFICATION SENT TO":"YOUR EMAIL ADDRESS"}</label>
          <input id="anevum-email" type="email" autoComplete="email" placeholder="you@example.com" value={email}
            onChange={event=>{setEmail(event.target.value);if(codeSent)resetCode();}}
-           disabled={busy} required maxLength={254}/>
+           disabled={busy||codeSent} required maxLength={254}/>
          {codeSent&&<>
            <label htmlFor="anevum-otp">Verification code</label>
            <input id="anevum-otp" type="text" inputMode="numeric" autoComplete="one-time-code"
              pattern="[0-9]{8}" minLength={8} maxLength={8} value={otp}
              onChange={event=>setOtp(event.target.value.replace(/\D/g,"").slice(0,8))}
              disabled={busy} placeholder="8-digit code" required/>
-           <small className="av12-email-guidance">One valid code signs you in. A second code is not required unless verification fails or expires.</small>
+           <small className="av12-email-guidance">Use the latest code. It expires after a short time. We will never ask for it in chat.</small>
            <button type="button" className="av12-email-reset" onClick={()=>void requestReplacementCode()} disabled={busy}>
              {busy?"REQUESTING…":"SEND A NEW CODE"}
            </button>
+           <button type="button" className="av12-email-reset" onClick={resetCode} disabled={busy}>USE A DIFFERENT EMAIL</button>
          </>}
          <button type="submit" className="av12-email-submit" disabled={busy}>
-           {busy?"CHECKING…":codeSent?"VERIFY AND SIGN IN":"SEND VERIFICATION CODE"}
+           {busy?"WORKING…":codeSent?"VERIFY & CONTINUE":"CONTINUE WITH EMAIL"}
          </button>
          {notice&&<p role="status">{notice}</p>}
        </form>}
        <p className="join-service-note" role="status">{ready?
-         capability.data.registration==="open"?"Create a free account with any enabled verification method.":"Registration is currently limited to invited accounts.":
+         capability.data.registration==="open"?"Registration is open.":"Early access is currently limited to invited accounts.":
          "Registration is not yet activated. The public catalogue remains available."}</p>
        {error&&<p role="alert" className="av12-join-error">{error}</p>}
        <Link className="join-guest-action" to="/discover">EXPLORE AS A GUEST <span aria-hidden="true">↗</span></Link>
      </>}
-     <p className="join-security">Personal profiles start private. You choose when to show them.
-       Joining never unlocks staff controls, private creator drafts, or RHEN brokerage access.</p>
+     <p className="join-security">Your profile starts private. You choose what others can see. <Link to="/privacy">Privacy</Link> · <Link to="/terms">Terms</Link></p>
    </div>
  </section>;
 }
