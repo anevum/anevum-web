@@ -7,6 +7,7 @@ import {createCanonicalAuth} from "./auth.mjs";
 import {canonicalCreatorSchemaReady,canonicalCreatorMember,canonicalPublicCreator,canonicalExportMember} from "./profile.mjs";
 import {permitCanonicalUserCreation} from "./policy.mjs";
 import {canonicalCommunity} from "./community.mjs";
+import {canonicalProgression} from './progression.mjs';
 import {canonicalSpace} from "./space.mjs";
 import {boundedText} from "./request-body.mjs";
 
@@ -97,9 +98,10 @@ export function createCanonicalStageWorker({authFactory=createCanonicalAuth}={})
     const publicHandle=path.match(PUBLIC_MEMBER);
     const publicCommunity=/^\/api\/v1\/community\/(?:members|activity)$/.test(path);
     const ownSpace=OWN_SPACE.test(path),publicSpace=path.match(PUBLIC_SPACE);
+    const ownProgression=/^\/api\/v1\/member\/(?:progression|notifications(?:\/ack)?|xp-test)$/.test(path);
     const ownProfile=path===PROFILE;
     const ownExport=path===EXPORT;
-    if(path!==HEALTH && path!==METHODS && !publicHandle && !ownProfile && !ownExport && !ownSpace && !publicSpace && !publicCommunity &&
+    if(path!==HEALTH && path!==METHODS && !publicHandle && !ownProfile && !ownExport && !ownSpace && !publicSpace && !publicCommunity && !ownProgression &&
       !(path.startsWith(CANONICAL_AUTH_PATH+"/") &&
         (AUTH_ALLOWLIST[request.method]?.has(path)??false)))
       return fail(request,404);
@@ -200,9 +202,10 @@ export function createCanonicalStageWorker({authFactory=createCanonicalAuth}={})
 
     try{
       const auth=authFactory(env);
-      if(ownProfile||ownExport||ownSpace){
+      if(ownProfile||ownExport||ownSpace||ownProgression){
         const session=await auth.api.getSession({headers:clean.headers});
         if(!session?.user)return safeJson(request,{error:"Sign-in required"},401);
+        if(ownProgression)return safeResponse(await canonicalProgression(clean,env,session.user));
         if(ownSpace)return safeResponse(await canonicalSpace(clean,env,session.user));
         return safeResponse(ownExport?
           await canonicalExportMember(clean,env,session.user,CANONICAL_ORIGIN):

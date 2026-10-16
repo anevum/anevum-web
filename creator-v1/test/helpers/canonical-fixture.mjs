@@ -4,7 +4,7 @@ const read=p=>readFileSync(new URL("../../canonical-auth/migrations/"+p,import.m
 export function fixture(){
   const db=new DatabaseSync(":memory:");
   for(const file of ["0001_canonical_better_auth_core.sql",
-    "0002_member_creator_profiles.sql","0003_member_world_personalization.sql","0004_member_spaces.sql"]){
+    "0002_member_creator_profiles.sql","0003_member_world_personalization.sql","0004_member_spaces.sql","0005_progression_notifications.sql"]){
     db.exec(read(file));
   }
   const adapter={
@@ -37,7 +37,7 @@ export function fixture(){
     withSession(){return {prepare:adapter.prepare,batch:adapter.batch,getBookmark:()=>null}}
   };
   const env={
-    ANEVUM_CANONICAL_STAGE_ENABLED:"true",CANONICAL_SCHEMA_APPROVED:"true",
+    CANONICAL_XP_TEST_ENABLED:"true",ANEVUM_CANONICAL_STAGE_ENABLED:"true",CANONICAL_SCHEMA_APPROVED:"true",
     CANONICAL_EMAIL_ENABLED:"true",CANONICAL_GOOGLE_ENABLED:"false",
     CANONICAL_INVITED_SIGNUP_ENABLED:"true",
     CANONICAL_BETTER_AUTH_SECRET:"private-fixture-unique-not-deployed-value".padEnd(48,"x"),
