@@ -1,18 +1,42 @@
 import {Link} from 'react-router-dom';
 import snapshot from '../data/supporter-transparency-snapshot-v037.json';
+import rawFinancialReport from '../data/supporter-public-finance-v038.json';
+
+type MoneyCents=number|null;
+type PublicFinance={
+ schemaVersion:number;published:boolean;verified:boolean;period:string|null;
+ mode:'closed-month'|'month-to-date'|null;scope:string;currency:string;
+ reviewedAt:string|null;methodology:string;
+ expenses:{totalCents:MoneyCents;categories:Record<string,MoneyCents>};
+ receipts:{grossCents:MoneyCents;feesCents:MoneyCents;refundsCents:MoneyCents;disputesCents:MoneyCents;netCents:MoneyCents;taxReservedCents:MoneyCents;availableCents:MoneyCents};
+ activeSupporters:number|null;approvedMonthlyTargetCents:MoneyCents;
+ cashCoveragePercent:number|null;
+ completeness:{expenses:boolean;supporterReceipts:boolean;taxReserve:boolean;activeSupporters:boolean;fundraisingGoal:boolean};
+};
+const finance=rawFinancialReport as unknown as PublicFinance;
+const verifiedFinance=finance.schemaVersion===1&&finance.published===true&&finance.verified===true&&
+ finance.scope==='ANEVUM_CORE'&&finance.currency==='USD'&&
+ /^20[2-9][0-9]-(0[1-9]|1[0-2])$/.test(finance.period??'')&&
+ ['closed-month','month-to-date'].includes(finance.mode??'');
+const centsToUsd=(value:MoneyCents)=>value===null?null:value/100;
+const categoryNames:Record<string,string>={
+ hosting:'Hosting',storage:'Storage',delivery:'Bandwidth & delivery',
+ email:'Email',moderation:'Moderation',software:'Software',other:'Other infrastructure'
+};
 
 const fmt=(value:number|null)=>value===null?'NOT VERIFIED':new Intl.NumberFormat('en-US').format(value);
 const size=(value:number|null)=>value===null?'NOT VERIFIED':value<1024?value+' B':(value/1024).toFixed(1)+' KiB';
 const money=(value:number|null)=>value===null?'NOT VERIFIED':new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(value);
 function Meter({label,value,total,unit}:{label:string;value:number|null;total:number|null;unit?:string}){
  const usable=typeof value==='number'&&Number.isFinite(value)&&typeof total==='number'&&Number.isFinite(total)&&total>0;
- const percent=usable?Math.min(100,Math.max(0,(value/total)*100)):0;
+ const actualPercent=usable?(value/total)*100:0;
+ const visualPercent=Math.min(100,Math.max(0,actualPercent));
  return <div className="av37-meter">
-  <div className="av37-meter-label"><span>{label}</span><strong>{usable?percent.toFixed(1)+'%':'AWAITING VERIFIED TARGET'}</strong></div>
+  <div className="av37-meter-label"><span>{label}</span><strong>{usable?actualPercent.toFixed(1)+'%':'AWAITING VERIFIED TARGET'}</strong></div>
   <div className="av37-meter-track" role="progressbar" aria-label={label} aria-valuemin={0}
-   aria-valuemax={usable?total??undefined:undefined} aria-valuenow={usable?value??undefined:undefined}
+   aria-valuemax={usable?Math.max(total,value,1):undefined} aria-valuenow={usable?Math.max(0,value):undefined}
    aria-valuetext={usable?String(value)+' of '+String(total)+(unit?' '+unit:''):'No verified denominator available'}>
-   <span style={{width:percent+'%'}}/>
+   <span style={{width:visualPercent+'%'}}/>
   </div>
  </div>;
 }
@@ -21,8 +45,14 @@ function Metric({label,value,detail}:{label:string;value:string;detail:string}){
 }
 export function SupporterTransparency(){
  const s=snapshot;
- const verifiedBudget=s.operations.verifiedMonthlyOperatingCostUsd;
- const raised=s.funding.verifiedMonthlySupporterNetUsd;
+ const verifiedBudget=verifiedFinance&&finance.completeness.expenses?
+  centsToUsd(finance.expenses.totalCents):s.operations.verifiedMonthlyOperatingCostUsd;
+ const raised=verifiedFinance&&finance.completeness.supporterReceipts&&finance.completeness.taxReserve?
+  centsToUsd(finance.receipts.availableCents):s.funding.verifiedMonthlySupporterNetUsd;
+ const supporterCount=verifiedFinance&&finance.completeness.activeSupporters?
+  finance.activeSupporters:s.funding.verifiedActiveSupporterCount;
+ const fundingTarget=verifiedFinance&&finance.completeness.fundraisingGoal?
+  centsToUsd(finance.approvedMonthlyTargetCents):s.funding.approvedMonthlyTargetUsd;
  return <div className="av37-transparency" id="transparency">
   <header className="av37-intro">
    <div><span className="av32-index">ANEVUM / OPEN OPERATIONS / 002</span>
@@ -34,13 +64,29 @@ export function SupporterTransparency(){
   <section aria-labelledby="av37-funding">
    <div className="av37-section-heading"><span className="av32-index">01 / FUNDING THE NETWORK</span><h3 id="av37-funding">Where we stand.</h3></div>
    <div className="av37-metrics">
-    <Metric label="VERIFIED MONTHLY OPERATING COST" value={money(verifiedBudget)} detail="Railway, Cloudflare and other actual invoices must be reconciled first"/>
-    <Metric label="VERIFIED MONTHLY SUPPORTER NET" value={money(raised)} detail="After processing fees and refunds; not yet linked to a verified ledger"/>
-    <Metric label="VERIFIED ACTIVE SUPPORTERS" value={fmt(s.funding.verifiedActiveSupporterCount)} detail="Never inferred from test checkout sessions"/>
-    <Metric label="MONTHLY FUNDING TARGET" value={money(s.funding.approvedMonthlyTargetUsd)} detail="Will be set from actual recurring expenses, not a marketing guess"/>
+    <Metric label="REPORTED OPERATING EXPENSES" value={money(verifiedBudget)} detail="Actual approved invoices for the stated reporting period, or unverified"/>
+    <Metric label="SUPPORTER CASH AVAILABLE TO OPERATE" value={money(raised)} detail="Collected cash after processing fees, refunds, disputes and verified remaining sales-tax reserve"/>
+    <Metric label="VERIFIED ACTIVE SUPPORTERS" value={fmt(supporterCount)} detail="A separately confirmed active member count, not a checkout conversion estimate"/>
+    <Metric label="APPROVED MONTHLY FUNDING TARGET" value={money(fundingTarget)} detail="Only published after owner approval and supporting evidence"/>
    </div>
-   <Meter label="Essential monthly operating coverage" value={raised} total={verifiedBudget} unit="USD"/>
-   <p className="av37-footnote">Public fundraising totals will be enabled only after a verified financial ledger and approved reporting policy exist. Expenses, gross income, net receipts, and what is reinvested will be separated.</p>
+   <p className="av37-period" role="status">{verifiedFinance
+    ? 'REPORTING '+finance.period+' / '+(finance.mode==='closed-month'?'CLOSED PERIOD':'MONTH TO DATE')+' / REVIEWED '+new Date(finance.reviewedAt??'').toLocaleDateString()
+    : 'NO APPROVED FINANCIAL REPORT HAS BEEN PUBLISHED'}</p>
+   <Meter label="Net supporter cash received vs verified operating expenses for the same period" value={raised} total={verifiedBudget} unit="USD"/>
+   {verifiedFinance&&<div className="av38-finance" aria-label="Verified finance breakdown">
+    <section className="av38-finance-panel" aria-labelledby="av38-expense-heading"><h4 id="av38-expense-heading">Operating expense categories</h4>
+     {Object.entries(finance.expenses.categories).filter(([key])=>key in categoryNames).map(([key,amount])=>
+      <div className="av38-finance-row" key={key}><span>{categoryNames[key]}</span><strong>{money(centsToUsd(amount))}</strong></div>)}
+     <p>These are actual invoiced costs for the stated window, not theoretical maximum infrastructure capacity.</p>
+    </section>
+    <section className="av38-finance-panel" aria-labelledby="av38-receipts-heading"><h4 id="av38-receipts-heading">Where supporter payments go</h4>
+     {[['Gross collected',finance.receipts.grossCents],['Payment processing fees',finance.receipts.feesCents],['Refunds',finance.receipts.refundsCents],['Disputes / reversals',finance.receipts.disputesCents],['Net settled before taxes',finance.receipts.netCents],['Verified remaining tax reserve',finance.receipts.taxReservedCents],['Available for operating costs',finance.receipts.availableCents]].map(([name,amount])=>
+      <div key={String(name)} className="av38-finance-row"><span>{name}</span><strong>{money(centsToUsd(amount as MoneyCents))}</strong></div>)}
+     <p>{finance.methodology}</p>
+    </section>
+   </div>}
+   {!verifiedFinance&&<p className="av38-unpublished">Income, Stripe fees, invoices and fundraising totals have not been reconciled or approved. The bars intentionally show no percentage until their sources are verified.</p>}
+   <p className="av37-footnote">Annual memberships are collected upfront, so one month of cash receipts is not recurring monthly revenue. Costs can be covered only by reconciled cash after verified outstanding tax reserves; we do not treat tax collections as ANEVUM operating money. Publishing a complete monthly run-rate requires a separate active-subscription report. Unverified or partial categories remain unavailable.</p>
   </section>
   <section aria-labelledby="av37-storage">
    <div className="av37-section-heading"><span className="av32-index">02 / STORAGE AND CAPACITY</span><h3 id="av37-storage">Our current footprint.</h3></div>
@@ -53,7 +99,7 @@ export function SupporterTransparency(){
    <div className="av37-split">
     <article className="av37-panel"><span className="av32-index">ACTIVE MEMBER MEDIA LIMITS</span><h4>Profile media</h4>
      <p>Current source permits two profile image slots per member: one square avatar and one banner. Each JPEG is limited to <strong>256 KiB</strong>. This is a per-image upload rule, not an account storage allowance.</p>
-     <Meter label="Avatar upload limit" value={null} total={s.storage.perImageUploadMaxBytes} unit="bytes"/>
+     <Meter label="Staging profile image slots filled (not global storage capacity)" value={s.storage.memberImageCount} total={s.community.stagingMemberAccounts*s.storage.imageSlotsPerMember} unit="slots"/>
      <p className="av37-footnote">No individual member's storage usage is exposed here. Public creator asset quotas are not verified.</p>
     </article>
     <article className="av37-panel"><span className="av32-index">STORAGE EXPANSION / PROPOSED</span><h4>What support can unlock</h4>
@@ -101,7 +147,7 @@ export function SupporterTransparency(){
    </div>
    <details className="av37-sources"><summary>Data sources and reporting limitations</summary>
     {s.sourceNotes.map(note=><p key={note.title}><strong>{note.title}:</strong> {note.detail}</p>)}
-    <p>All snapshot figures were collected {s.verifiedOn}. The site does not automatically update this report.</p>
+    <p>Infrastructure snapshot figures were collected {s.verifiedOn}. The finance report, if published, is a separately reviewed offline aggregate with an explicit reporting period and review date. Neither automatically updates, and private invoices/customer transactions are never exposed here.</p>
    </details>
   </section>
   <div className="av37-bottom"><span className="av32-index">CONTINUANCE / SUPPORT WITHOUT CONTROL</span><p>Supporters help keep the creative network available. They do not buy XP, medals, creator rank, moderation power, visibility or influence over editorial decisions.</p><Link to="/join">JOIN THE COMMUNITY ↗</Link></div>
