@@ -50,12 +50,12 @@ function asUsd(cents){return Math.round(cents)/USD;}
 function lastDay(period){const [y,m]=period.split('-').map(Number);return Date.UTC(y,m,0,23,59,59,999)}
 function nonnegativeAmount(v,label){return integer(v,label)}
 function parseReviewer(review,period){
- exactKeys(review,['approved','reviewedAt','evidenceSha256','expenseCoverageComplete','supporterCoverageComplete','balanceReconciled','accountCountReconciled','goalApproved'],'review');
+ exactKeys(review,['approved','reviewedAt','evidenceSha256','expenseCoverageComplete','supporterCoverageComplete','balanceReconciled','taxReserveReviewed','accountCountReconciled','goalApproved'],'review');
  ensure(review.approved===true,'a human-reviewed release is required');
  formatDate(review.reviewedAt,'reviewedAt');
  ensure(Date.parse(review.reviewedAt)>=Date.parse(period+'-01T00:00:00.000Z'),'review date predates report');
  digest(review.evidenceSha256,'review.evidenceSha256');
- for(const k of ['expenseCoverageComplete','supporterCoverageComplete','balanceReconciled','accountCountReconciled','goalApproved'])
+ for(const k of ['expenseCoverageComplete','supporterCoverageComplete','balanceReconciled','taxReserveReviewed','accountCountReconciled','goalApproved'])
    ensure(typeof review[k]==='boolean','invalid review completeness flag '+k);
  return review;
 }
@@ -102,7 +102,13 @@ function parseMovements(entries){
  return result;
 }
 function reconcile(actual,expected){
- exactKeys(expected,['grossCents','feeCents','refundCents','disputeCents','netCents','stripeBalanceEvidenceSha256'],'reconciliation');
+ exactKeys(expected,['grossCents','feeCents','refundCents','disputeCents','netCents','taxLiabilityReserveCents','taxReserveEvidenceSha256','stripeBalanceEvidenceSha256'],'reconciliation');
+ if(expected.taxLiabilityReserveCents!==null){
+   nonnegativeAmount(expected.taxLiabilityReserveCents,'reconciliation.taxLiabilityReserveCents');
+   digest(expected.taxReserveEvidenceSha256,'reconciliation.taxReserveEvidenceSha256');
+ }else{
+   ensure(expected.taxReserveEvidenceSha256===null,'unverified tax reserve must not have attestation');
+ }
  digest(expected.stripeBalanceEvidenceSha256,'reconciliation.stripeBalanceEvidenceSha256');
  for(const k of ['grossCents','refundCents','disputeCents'])
   nonnegativeAmount(expected[k],'reconciliation.'+k);
@@ -168,10 +174,18 @@ export function buildPublicFinanceReport(privateLedger){
    'unapproved goal must remain null');
  const operating=safeExpense?costsCents:null;
  const net=safeReceipts?movement.netCents:null;
- // Do not use a monthly coverage percentage if its denominator is zero or
- // the publisher has only partial records for one side.
- const coverage=operating!==null&&operating>0&&net!==null
-   ?Math.max(0,Math.round(net/operating*10000)/100)
+ // Gross Stripe cash less Stripe fees/refunds is NOT all spendable income:
+ // sales tax collected for a government may still be owed after settlement.
+ // Publish available-to-operate cash and a funding coverage bar only when
+ // that specific remaining tax reserve has independently been reconciled.
+ const taxReserve=safeReceipts&&review.taxReserveReviewed
+   ?privateLedger.reconciliation.taxLiabilityReserveCents:null;
+ ensure(!review.taxReserveReviewed||(
+   safeReceipts&&taxReserve!==null
+ ),'tax reserve cannot be called verified without complete Stripe reconciliation');
+ const available=net!==null&&taxReserve!==null?net-taxReserve:null;
+ const coverage=operating!==null&&operating>0&&available!==null
+   ?Math.round(available/operating*10000)/100
    :null;
  return {
    schemaVersion:1,
@@ -182,7 +196,7 @@ export function buildPublicFinanceReport(privateLedger){
    scope:'ANEVUM_CORE',
    currency:'USD',
    reviewedAt:review.reviewedAt,
-   methodology:'Verified booked cash movements for supporter Prices, including annual upfront payments, less processing fees, refunds and dispute reversals. Expenses reflect verified operating invoice lines for this reporting window. No promise of recurring income.',
+   methodology:'Verified booked cash movements for supporter Prices, including annual upfront payments, less processing fees, refunds and dispute reversals. Remaining verified tax liabilities are reserved before cash is treated as available for operations. Expenses reflect invoiced costs for this window. No promise of recurring income or cash-basis profit.',
    expenses: {
      totalCents:operating,
      categories:Object.fromEntries(CATEGORIES.map(k=>[k,safeExpense?costs[k]:null]))
@@ -192,7 +206,9 @@ export function buildPublicFinanceReport(privateLedger){
      feesCents:safeReceipts?movement.feeCents:null,
      refundsCents:safeReceipts?movement.refundCents:null,
      disputesCents:safeReceipts?movement.disputeCents:null,
-     netCents:net
+     netCents:net,
+     taxReservedCents:taxReserve,
+     availableCents:available
    },
    activeSupporters:count,
    approvedMonthlyTargetCents:goalCents,
@@ -200,6 +216,7 @@ export function buildPublicFinanceReport(privateLedger){
    completeness:{
      expenses:safeExpense,
      supporterReceipts:safeReceipts,
+     taxReserve:taxReserve!==null,
      activeSupporters:review.accountCountReconciled,
      fundraisingGoal:review.goalApproved
    }
