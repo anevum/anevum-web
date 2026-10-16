@@ -94,23 +94,23 @@ function MemberEditor({memberId,memberName}:{memberId:string;memberName:string})
     setFocus(value=>value.includes(key)?value.filter(item=>item!==key):
       value.length<4?[...value,key]:value);
   }
-  return <section className="av12-account" aria-labelledby="av12-account-title">
+  return <section className={"av12-account"+(claimed?"":" av26-first-visit")} aria-labelledby="av12-account-title">
     <div className="av12-account-banner">
       <div className="av12-account-orb" aria-hidden="true"><OrbitalMark/></div>
       <p className="kicker">ANEVUM / MEMBER ATLAS</p>
-      <h1 id="av12-account-title">{claimed?"YOUR OWN UNIVERSE.":"BEGIN YOUR PROFILE."}</h1>
-      <p>Define who you are in the ANEVUM community. Your account, session and private information remain yours.</p>
-      <div className="av12-account-banner-links"><Link to="/discover">EXPLORE THE NETWORK ↗</Link>
-        <a href="/api/v1/member/account-export" download="anevum-member-export.json">
+      <h1 id="av12-account-title">{claimed?"YOUR OWN UNIVERSE.":"CHOOSE YOUR NAME."}</h1>
+      <p>{claimed?"Shape your presence in the ANEVUM community.":"Pick your unique handle and display name to finish joining. Everything else can wait."}</p>
+      <div className="av12-account-banner-links">{claimed&&<Link to="/discover">EXPLORE THE NETWORK ↗</Link>}
+        {claimed&&<a href="/api/v1/member/account-export" download="anevum-member-export.json">
           DOWNLOAD MY DATA ↓
-        </a>
+        </a>}
         <button type="button" onClick={()=>void signOut()} disabled={busy}>SIGN OUT</button></div>
     </div>
     {ready&&<MemberExperienceMap profile={persisted}/>}
     <div className="av12-account-layout">
       <section className="av12-editor-panel" aria-labelledby="av12-editor-heading">
         <span className="kicker">01 / IDENTITY PROFILE</span>
-        <h2 id="av12-editor-heading">{claimed?"MAKE IT YOURS.":"CLAIM YOUR HANDLE."}</h2>
+        <h2 id="av12-editor-heading">{claimed?"MAKE IT YOURS.":"YOUR PLACE IN ANEVUM."}</h2>
         {current.state==="loading"&&<p role="status">Loading your verified member profile…</p>}
         {current.state==="error"&&<p role="alert">Your profile cannot be verified. No changes can be made right now.</p>}
         {current.state==="ready"&&current.data.memberId!==memberId&&
@@ -128,11 +128,11 @@ function MemberEditor({memberId,memberName}:{memberId:string;memberName:string})
           <label htmlFor="av12-display">Display name</label>
           <input id="av12-display" maxLength={80} value={displayName} required disabled={busy}
             onChange={e=>setDisplayName(e.target.value)}/>
-          <label htmlFor="av12-bio">Your introduction</label>
+          {claimed&&<><label htmlFor="av12-bio">Your introduction</label>
           <textarea id="av12-bio" rows={5} maxLength={1200} value={bio} disabled={busy}
             placeholder="What do you like to make, discover, learn or collaborate on?"
             onChange={e=>setBio(e.target.value)}/>
-          <small>{bio.length}/1200 characters. Do not share private contact information.</small>
+          <small>{bio.length}/1200 characters. Do not share private contact information.</small></>}
           {claimed&&<fieldset className="av18-world-customizer" disabled={busy}>
             <legend>SHAPE YOUR WORLD</legend>
             <p>Select one approved visual atmosphere for your personal page. This does not change the website's overall theme.</p>
@@ -163,13 +163,13 @@ function MemberEditor({memberId,memberName}:{memberId:string;memberName:string})
                Public pages show only your chosen name and biography—not your email or account ID.</small></span>
            </label>:<p className="av12-privacy-note">Your new profile is private by default. You can opt in to a public page afterward.</p>}
           <button className="av12-save-button" type="submit" disabled={busy}>
-            {busy?"VERIFYING SAVE…":claimed?"SAVE MY PROFILE":"CREATE MY PRIVATE PROFILE"}
+            {busy?"SAVING…":claimed?"SAVE MY PROFILE":"ENTER ANEVUM"}
           </button>
           {notice&&<p role="status" className="av12-save-notice">{notice}</p>}
           {error&&<p role="alert" className="av12-save-error">{error}</p>}
         </form>}
       </section>
-      <aside className={"av12-profile-preview av18-world-"+worldTheme} aria-label="Your current profile preview">
+      {claimed&&<aside className={"av12-profile-preview av18-world-"+worldTheme} aria-label="Your current profile preview">
         <span className="kicker">02 / PERSONAL WORLD</span>
         <div className="av12-preview-portrait" aria-hidden="true"><OrbitalMark/></div>
         <h2>{displayName||"NEW MEMBER"}</h2>
@@ -181,7 +181,7 @@ function MemberEditor({memberId,memberName}:{memberId:string;memberName:string})
         {persisted?.visibility==="public"&&<Link to={"/@"+persisted.handle}
           className="av12-preview-open">VIEW PUBLIC PROFILE ↗</Link>}
         <p className="av12-preview-foot">This is a local appearance preview until you save. Public visibility is controlled separately. Achievements and artifacts require server-verified progression.</p>
-      </aside>
+      </aside>}
     </div>
   </section>;
 }
