@@ -24,6 +24,7 @@ import {Phase1MemberPage} from "./pages/Phase1MemberPage";
 import {Phase1PublicMemberPage} from "./pages/Phase1PublicMemberPage";
 
 const PublicBoardsPage = lazy(() => import("./pages/PublicBoardsPage").then(mod=>({default:mod.PublicBoardsPage})));
+const QuantoDemoPage = lazy(() => import("./pages/QuantoDemoPage").then(mod=>({default:mod.QuantoDemoPage})));
 const pageFallback=<LoadingState label="Opening approved public boards"/>;
 
 /** Historical Atlas links return to the canonical public experience.
@@ -79,6 +80,7 @@ export default function App(){
     </Route>
     <Route path="levels" element={<LevelsPage/>}/>
     <Route path="status" element={<StatusPage/>}/>
+    <Route path="quanto/demo" element={<Suspense fallback={<LoadingState label="Opening Quanto simulation"/>}><QuantoDemoPage/></Suspense>}/>
     <Route path=":memberHandle" element={<CanonicalPublicHandle/>}/>
     <Route path="*" element={<Navigate to="/" replace/>}/>
   </Route></Routes>;
