@@ -84,8 +84,12 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add creator-v1/web/public/anevum-social-share-v1.png
-          git commit -m 'Render ANEVUM orbital Open Graph share card V032'
-          git push origin HEAD:"$SOURCE_BRANCH"
+          if git diff --cached --quiet; then
+            echo SOCIAL_SHARE_PNG_ALREADY_COMMITTED=PASS
+          else
+            git commit -m 'Render ANEVUM orbital Open Graph share card V032'
+            git push origin HEAD:"$SOURCE_BRANCH"
+          fi
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
