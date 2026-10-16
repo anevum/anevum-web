@@ -123,6 +123,16 @@ test("saved works remains off in deployment inventory with no unreviewed data pa
  const worker=read("canonical-auth/worker.mjs");
  assert.match(worker,/path===CANONICAL_PREFIX\+"\/project-saves"/);
  assert.match(worker,/CANONICAL_PROJECT_SAVES_ENABLED/);
+ const fixture=read("test/portal-offline-preview.mjs");
+ const browser=read("test/capture-sitewide-v012.mjs");
+ assert.match(fixture,/url.pathname==="/api\/v1\/member\/project-saves"/);
+ assert.match(fixture,/syntheticProjectSaved/);
+ assert.match(browser,/PLAYER_V009_SAVED_WORKS_/);
+ assert.match(browser,/PLAYER_V009_SAVED_LAYOUT_/);
+ assert.match(browser,/player-v009-canonical-saved-before-/);
+ assert.match(browser,/PLAYER_V009_SAVED_GUEST_/);
+ assert.match(browser,/PLAYER_V009_SAVED_DISABLED_/);
+ assert.doesNotMatch(read("web/src/main.tsx"),/syntheticProjectSaved|playerMemberHealthMode/);
  assert.match(worker,/withoutForeignCookies/);
  assert.match(read("canonical-auth/project-saves.mjs"),/SAFE_PUBLIC_PROJECTS/);
  assert.match(read("canonical-auth/project-saves.mjs"),/p.status='published'/);

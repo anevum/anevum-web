@@ -58,6 +58,31 @@ const FAKE_MEMBER=Object.freeze({
 });
 const LOCAL_REVIEW_COOKIE="anevum_offline_visual_fixture=1";
 function offlineMember(req,res,url){
+  // Synthetic auth and saved works are loopback-only and do not exist in the
+  // compiled production Worker. No actual session can be created here.
+  if(url.pathname==="/api/v1/member/auth/get-session"&&req.method==="GET"){
+    const loggedIn=(req.headers.cookie||"").split(";").some(x=>x.trim()===LOCAL_REVIEW_COOKIE);
+    return json(res,loggedIn?{
+      user:{id:"00000000000000000000000000000099",name:"Offline Synthetic Member",
+        email:"synthetic-account@anevum.invalid",emailVerified:true,
+        createdAt:"2026-10-12T00:00:00.000Z",updatedAt:"2026-10-12T00:00:00.000Z"},
+      session:{id:"synthetic-session-not-valid",userId:"00000000000000000000000000000099",
+        expiresAt:"2027-01-01T00:00:00.000Z",createdAt:"2026-10-12T00:00:00.000Z",
+        updatedAt:"2026-10-12T00:00:00.000Z"}
+    }:null);
+  }
+  if(url.pathname==="/api/v1/member/project-saves"&&req.method==="GET"){
+    if(playerMemberHealthMode!=="canonical-saves")
+      return json(res,{error:"not-available"},404);
+    if(!(req.headers.cookie||"").split(";").some(x=>x.trim()===LOCAL_REVIEW_COOKIE))
+      return json(res,{error:"Sign-in required"},401);
+    const item=work[0];
+    return json(res,{items:syntheticProjectSaved?[{
+      id:item.id,title:item.title,summary:item.summary,category:item.category,
+      creatorHandle:item.creatorHandle,creatorName:item.creatorName,
+      publishedAt:item.publishedAt,savedAt:1791763200
+    }]:[],nextCursor:null});
+  }
   const savePath=/^\/api\/v1\/member\/project-saves\/([a-f0-9]{32})$/.exec(url.pathname);
   if(savePath){
     if(playerMemberHealthMode!=="canonical-saves"||savePath[1]!==work[0].id)

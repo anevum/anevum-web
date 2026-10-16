@@ -87,3 +87,8 @@ This is not a merge of existing PRs, an authorization to use V040 on a live site
 - The existing canonical project save panel gains a "MY SAVED WORKS" shortcut. The player breadcrumb may safely return to `/saved` but cannot redirect off-site.
 - Unit and isolated SQLite tests cover private account A/B data isolation, no unsupported method or arbitrary identity input, bounded cursor pagination, unpublished/future/withdrawn/creator-suspended visibility, no XP and correct source-only release flags.
 - **This is not a release authorization.** Migration 0007 has not been applied, the rollout flag is absent from Wrangler, and no staging or apex Worker is changed. A valid, rights-cleared first public project and two genuine canonical accounts remain separate release gates.
+
+## V009 full compiled-browser acceptance — synthetic only
+- Local loopback preview now provides a clearly synthetic Better Auth get-session response and save/list operations. No real authentication, account ID, email, database, moderation or public publication is involved.
+- The four-width browser suite (1440/1024/390/320) navigates from a verified synthetic project save to `/saved`, checks the project card title, creator attribution, safe return link, 44px removal target, no overflow, removal confirmed by the server fixture, guest separation after cookie clearing, and disabled default health behavior.
+- Screenshot artifacts: `player-v009-canonical-saved-before/empty/guest-<width>.png` for independent mobile/desktop visual review. All release gates remain unchanged.

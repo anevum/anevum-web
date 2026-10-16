@@ -242,6 +242,44 @@ try{
      const trace=await (await fetch(base+"/__player-member-requests")).json();
      if(!trace.syntheticOnly||trace.requests.length)throw Error("PLAYER_V008_LEGACY_IDENTITY_LEAK_"+width+":"+JSON.stringify(trace));
      console.log("PLAYER_V008_PRIVATE_SAVE_"+width+"=PASS");
+     // V009: exercise the canonical private saved-works collection with
+     // a synthetic verified browser session and one synthetic project.
+     await evaluate('document.querySelector(".avp-canonical-save-button").click()');
+     await until(()=>evaluate('document.querySelector(".avp-canonical-save-button")?.getAttribute("aria-pressed")==="true"'));
+     const savedRoute=base+"/creator/saved";
+     const collectionNav=await client.send("Page.navigate",{url:savedRoute});
+     if(collectionNav.errorText)throw Error("PLAYER_V009_SAVED_NAVIGATION_"+width+":"+collectionNav.errorText);
+     await until(()=>evaluate('location.pathname==="/creator/saved"&&document.querySelectorAll(".avsaved-card").length===1'));
+     const savedCard=await evaluate('(()=>{const card=document.querySelector(".avsaved-card"),remove=card?.querySelector("button"),bounds=remove?.getBoundingClientRect();return {title:card?.querySelector("h2")?.textContent,credit:card?.querySelector(".avsaved-card-maker")?.textContent,open:card?.querySelector("a.avsaved-open")?.getAttribute("href"),btn:remove?.textContent,bounds:bounds?{left:bounds.left,right:bounds.right,height:bounds.height}:null,overflow:document.documentElement.scrollWidth>innerWidth+1,legacy:!!document.querySelector(".member-library-grid")};})()');
+     if(savedCard.title!=="ARCADE AFTER DARK"||!savedCard.credit?.includes("@nova_demo")||
+        !savedCard.open?.includes("from=%2Fsaved")||!savedCard.btn?.includes("REMOVE")||
+        !savedCard.bounds||savedCard.bounds.height<44||savedCard.bounds.left < -1||
+        savedCard.bounds.right > width+1||savedCard.overflow||savedCard.legacy)
+       throw Error("PLAYER_V009_SAVED_LAYOUT_"+width+":"+JSON.stringify(savedCard));
+     await evaluate('document.querySelector(".avsaved-card").scrollIntoView({block:"center",behavior:"instant"})');
+     await screenshot("player-v009-canonical-saved-before-"+width);
+     await evaluate('document.querySelector(".avsaved-card-actions button").click()');
+     await until(()=>evaluate('document.querySelector(".avsaved-empty")!==null&&document.querySelectorAll(".avsaved-card").length===0'));
+     const cleared=await evaluate('(()=>({empty:document.querySelector(".avsaved-empty h2")?.textContent,notice:document.querySelector(".avsaved-notice")?.textContent,overflow:document.documentElement.scrollWidth>innerWidth+1}))()');
+     if(!cleared.empty?.includes("YOUR COLLECTION")||!cleared.notice?.includes("removed")||cleared.overflow)
+       throw Error("PLAYER_V009_SAVED_REMOVE_"+width+":"+JSON.stringify(cleared));
+     await evaluate('document.querySelector(".avsaved-empty").scrollIntoView({block:"center",behavior:"instant"})');
+     await screenshot("player-v009-canonical-saved-empty-"+width);
+     await client.send("Network.clearBrowserCookies");
+     await client.send("Page.navigate",{url:savedRoute});
+     await until(()=>evaluate('document.querySelector(".avsaved-inactive")?.textContent?.includes("Sign in with your verified ANEVUM member account")'));
+     const guestSaved=await evaluate('(()=>{const panel=document.querySelector(".avsaved-inactive");return {href:panel?.querySelector("a")?.getAttribute("href"),items:document.querySelectorAll(".avsaved-card").length};})()');
+     if(guestSaved.href!=="/creator/join"||guestSaved.items!==0)
+       throw Error("PLAYER_V009_SAVED_GUEST_"+width+":"+JSON.stringify(guestSaved));
+     await screenshot("player-v009-canonical-saved-guest-"+width);
+     const staged=await fetch(base+"/__player-member-fixture?mode=canonical");
+     if(!staged.ok)throw Error("PLAYER_V009_DISABLED_SETUP");
+     await client.send("Page.navigate",{url:savedRoute});
+     await until(()=>evaluate('document.querySelector(".avsaved-inactive")?.textContent?.includes("SAVED WORKS ARE NOT YET ACTIVE")'));
+     const disabledSaved=await evaluate('(()=>({items:document.querySelectorAll(".avsaved-card").length,copy:document.querySelector(".avsaved-inactive")?.textContent}))()');
+     if(disabledSaved.items!==0||!disabledSaved.copy?.includes("not enabled"))
+       throw Error("PLAYER_V009_SAVED_DISABLED_"+width+":"+JSON.stringify(disabledSaved));
+     console.log("PLAYER_V009_SAVED_WORKS_"+width+"=PASS");
      const reset=await fetch(base+"/__player-member-fixture?mode=legacy");
      if(!reset.ok)throw Error("PLAYER_V005_MEMBER_RESET_FAILED");
    }
