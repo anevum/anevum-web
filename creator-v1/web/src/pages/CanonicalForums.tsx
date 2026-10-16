@@ -27,7 +27,7 @@ export function CommunityForums(){
  const {data:session}=canonicalAuthClient.useSession();
  const [topic,setTopic]=useState('all'),[revision,setRevision]=useState(0),[compose,setCompose]=useState(false);
  const [title,setTitle]=useState(''),[body,setBody]=useState(''),[draftTopic,setDraftTopic]=useState('community'),[busy,setBusy]=useState(false),[notice,setNotice]=useState(''),[error,setError]=useState('');
- const threads=useResource(signal=>request<{items:Thread[]}>('/api/v1/community/threads'+(topic==='all'?'':'?topic='+topic),'GET',undefined,signal),[topic,revision]);
+ const threads=useResource(signal=>request<ForumThreadPage>('/api/v1/community/threads'+(topic==='all'?'':'?topic='+topic),'GET',undefined,signal),[topic,revision]);
  const [requestId,setRequestId]=useState(()=>crypto.randomUUID());
  const streamKey=topic+'|'+revision;
  const activeStream=useRef(streamKey);activeStream.current=streamKey;
@@ -70,7 +70,7 @@ export function CommunityForums(){
  {threads.state==='loading'&&<p role="status" className="cf-note">Reading approved public conversations…</p>}
  {threads.state==='error'&&<div className="cf-note" role="status"><p>The next-generation member forum is not enabled in this environment yet. Existing community spaces remain accessible below.</p><button type="button" onClick={()=>setRevision(x=>x+1)}>RECHECK AVAILABILITY</button></div>}
  {threads.state==='ready'&&<div className="cf-list">{listed.length===0&&<p className="cf-note">No approved threads in this channel yet. Be the first to start a conversation.</p>}
- {listed.map(t=><article className="cf-thread" key={t.id}><div className="cf-thread-meta"><span>{topics.find(x=>x[0]===t.topic)?.[1]}</span><time>{date(t.publishedAt)}</time></div><h3><Link to={'/community/threads/'+t.id}>{t.title}</Link></h3><p>{t.body.length>320?t.body.slice(0,317)+'…':t.body}</p><div className="cf-thread-foot"><AuthorCard author={t.author}/><Link to={'/community/threads/'+t.id} className="cf-count">{t.replyCount} REPLIES · {t.reactions} REACTIONS ↗</Link></div></article>)}}
+ {listed.map(t=><article className="cf-thread" key={t.id}><div className="cf-thread-meta"><span>{topics.find(x=>x[0]===t.topic)?.[1]}</span><time>{date(t.publishedAt)}</time></div><h3><Link to={'/community/threads/'+t.id}>{t.title}</Link></h3><p>{t.body.length>320?t.body.slice(0,317)+'…':t.body}</p><div className="cf-thread-foot"><AuthorCard author={t.author}/><Link to={'/community/threads/'+t.id} className="cf-count">{t.replyCount} REPLIES · {t.reactions} REACTIONS ↗</Link></div></article>)}
  {nextCursor&&<button type="button" className="cf-more" disabled={morePending} onClick={()=>void loadMore()}>{morePending?'READING MORE…':'LOAD MORE DISCUSSIONS'}</button>}
  {moreFailure&&<p role="alert" className="cf-error">{moreFailure}</p>}</div>}
  {session?.user?.id&&threads.state==='ready'&&<MySubmissions key={session.user.id} memberId={session.user.id}/>}

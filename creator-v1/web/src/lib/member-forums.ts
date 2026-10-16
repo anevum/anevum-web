@@ -37,5 +37,5 @@ export async function forumRequest<T>(path:string,method='GET',body?:unknown,sig
   result?.error|| (response.status===404?'Forum not available':'Community service unavailable'));
  if(!result||typeof result!=='object'||Array.isArray(result))
   throw new ForumApiError(503,'Invalid forum service response');
- return result as T;
+ return result as unknown as T;
 }
