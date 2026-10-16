@@ -93,14 +93,49 @@ function publishedSnapshot(totals,now){
   ]
  };
 }
+const exactKeys=(value,names)=>
+ value&&typeof value==='object'&&!Array.isArray(value)&&
+ Object.keys(value).sort().join('|')===names.slice().sort().join('|');
+const coarse=(value,step,min=step)=>value===null||
+ typeof value==='number'&&Number.isSafeInteger(value)&&value>=min&&value%step===0;
+const CACHE_EXCLUDED=Object.freeze([
+ 'personal-records','small-cohort-totals','exact-participant-counts','private-wall-posts',
+ 'exact-member-image-bytes','production-members','creator-storage-capacity',
+ 'provider-storage-capacity','financial-records'
+]);
 function cachePayloadValid(value,now){
- if(!value||typeof value!=='object'||value.schemaVersion!==2||
+ if(!exactKeys(value,[
+   'schemaVersion','source','scope','dataAsOf','cacheTtlSeconds',
+   'privacy','community','media','excluded'
+ ])||value.schemaVersion!==2||
    value.source!=='canonical-member-d1-privacy-aggregate'||
    value.scope!=='ANEVUM_STAGING_ONLY'||
    value.cacheTtlSeconds!==PUBLIC_TELEMETRY_CACHE_SECONDS||
-   value.privacy?.minimumDistinctContributors!==PUBLIC_TELEMETRY_MIN_COHORT||
-   value.privacy?.countLowerBoundStep!==PUBLIC_TELEMETRY_COUNT_GRANULARITY||
-   value.privacy?.imageByteLowerBoundStep!==PUBLIC_TELEMETRY_BYTES_GRANULARITY)return false;
+   !exactKeys(value.privacy,[
+     'minimumDistinctContributors','countLowerBoundStep',
+     'imageByteLowerBoundStep','suppressedValuesAreNull'
+   ])||
+   value.privacy.minimumDistinctContributors!==PUBLIC_TELEMETRY_MIN_COHORT||
+   value.privacy.countLowerBoundStep!==PUBLIC_TELEMETRY_COUNT_GRANULARITY||
+   value.privacy.imageByteLowerBoundStep!==PUBLIC_TELEMETRY_BYTES_GRANULARITY||
+   value.privacy.suppressedValuesAreNull!==true||
+   !exactKeys(value.community,[
+     'memberAccountsLowerBound','creatorProfilesLowerBound','wallPostsLowerBound'
+   ])||
+   !exactKeys(value.media,[
+     'imageObjectsLowerBound','imageBytesLowerBound',
+     'imageSlotsPerMember','imageUploadMaxBytes'
+   ])||
+   !coarse(value.community.memberAccountsLowerBound,PUBLIC_TELEMETRY_COUNT_GRANULARITY)||
+   !coarse(value.community.creatorProfilesLowerBound,PUBLIC_TELEMETRY_COUNT_GRANULARITY)||
+   !coarse(value.community.wallPostsLowerBound,PUBLIC_TELEMETRY_COUNT_GRANULARITY)||
+   !coarse(value.media.imageObjectsLowerBound,PUBLIC_TELEMETRY_COUNT_GRANULARITY)||
+   !coarse(value.media.imageBytesLowerBound,PUBLIC_TELEMETRY_BYTES_GRANULARITY,0)||
+   (value.media.imageObjectsLowerBound===null)!==(value.media.imageBytesLowerBound===null)||
+   value.media.imageSlotsPerMember!==2||value.media.imageUploadMaxBytes!==262144||
+   !Array.isArray(value.excluded)||value.excluded.length!==CACHE_EXCLUDED.length||
+   CACHE_EXCLUDED.some((entry,index)=>value.excluded[index]!==entry)
+ )return false;
  const timestamp=Date.parse(value.dataAsOf);
  const diff=now-timestamp;
  return Number.isFinite(timestamp)&&diff>=0&&
