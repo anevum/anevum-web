@@ -10,6 +10,7 @@ import {canonicalCommunity} from "./community.mjs";
 import {canonicalProgression,progressionReady} from './progression.mjs';
 import {canonicalSpace} from "./space.mjs";
 import {boundedText} from "./request-body.mjs";
+import {supporterMember,supporterWebhook} from "./supporter.mjs";
 
 const HEALTH=CANONICAL_PREFIX+"/health";
 const METHODS=CANONICAL_PREFIX+"/auth-methods";
@@ -99,9 +100,11 @@ export function createCanonicalStageWorker({authFactory=createCanonicalAuth}={})
     const publicCommunity=/^\/api\/v1\/community\/(?:members|activity)$/.test(path);
     const ownSpace=OWN_SPACE.test(path),publicSpace=path.match(PUBLIC_SPACE);
     const ownProgression=/^\/api\/v1\/member\/(?:progression|notifications(?:\/ack)?|xp-test)$/.test(path);
+    const ownSupporter=/^\/api\/v1\/member\/supporter(?:\/(?:checkout|portal|webhook))?$/.test(path);
+    const supporterHook=path===CANONICAL_PREFIX+"/supporter/webhook";
     const ownProfile=path===PROFILE;
     const ownExport=path===EXPORT;
-    if(path!==HEALTH && path!==METHODS && !publicHandle && !ownProfile && !ownExport && !ownSpace && !publicSpace && !publicCommunity && !ownProgression &&
+    if(path!==HEALTH && path!==METHODS && !publicHandle && !ownProfile && !ownExport && !ownSpace && !publicSpace && !publicCommunity && !ownProgression && !ownSupporter &&
       !(path.startsWith(CANONICAL_AUTH_PATH+"/") &&
         (AUTH_ALLOWLIST[request.method]?.has(path)??false)))
       return fail(request,404);
@@ -109,6 +112,8 @@ export function createCanonicalStageWorker({authFactory=createCanonicalAuth}={})
     if((publicHandle||publicSpace) && !READ_METHODS.has(request.method))return fail(request,404);
     if(ownProfile && !["GET","POST","PATCH"].includes(request.method))return fail(request,404);
     if(ownExport && request.method!=="GET")return fail(request,404);
+    if(ownSupporter && !((path===CANONICAL_PREFIX+"/supporter"&&request.method==="GET") ||
+      (path!==CANONICAL_PREFIX+"/supporter"&&request.method==="POST")))return fail(request,405);
     if((path===HEALTH||path===METHODS)&&!READ_METHODS.has(request.method))
       return safeJson(request,{error:"Read-only endpoint"},405);
 
@@ -152,6 +157,10 @@ export function createCanonicalStageWorker({authFactory=createCanonicalAuth}={})
       const clean=new Request(request.url,{method:request.method,headers:{accept:"application/json"}});
       return safeResponse(await canonicalPublicCreator(clean,env,CANONICAL_ORIGIN,publicHandle[1]));
     }
+
+    // Stripe does not send a browser Origin. This exact endpoint relies on
+    // raw-body HMAC verification, test-mode lock and a durable event ledger.
+    if(supporterHook)return safeResponse(await supporterWebhook(request,env));
 
     if(ownProfile && ["POST","PATCH"].includes(request.method) && !sameOriginMutation(request))
       return safeJson(request,{error:"Same-origin request required"},403);
@@ -207,10 +216,11 @@ export function createCanonicalStageWorker({authFactory=createCanonicalAuth}={})
 
     try{
       const auth=authFactory(env);
-      if(ownProfile||ownExport||ownSpace||ownProgression){
+      if(ownProfile||ownExport||ownSpace||ownProgression||ownSupporter){
         const session=await auth.api.getSession({headers:clean.headers});
         if(!session?.user)return safeJson(request,{error:"Sign-in required"},401);
         if(ownProgression)return safeResponse(await canonicalProgression(clean,env,session.user));
+        if(ownSupporter)return safeResponse(await supporterMember(clean,env,session.user));
         if(ownSpace)return safeResponse(await canonicalSpace(clean,env,session.user));
         return safeResponse(ownExport?
           await canonicalExportMember(clean,env,session.user,CANONICAL_ORIGIN):
