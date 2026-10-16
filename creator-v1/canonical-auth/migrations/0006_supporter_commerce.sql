@@ -8,11 +8,15 @@ CREATE TABLE IF NOT EXISTS supporter_checkout_intents(
   billing_interval TEXT NOT NULL CHECK(billing_interval IN ('month','year')),
   created_at_ms INTEGER NOT NULL,
   completed_at_ms INTEGER,
+  last_checked_at_ms INTEGER NOT NULL DEFAULT 0,
+  abandoned_at_ms INTEGER,
   stripe_subscription_id TEXT,
   stripe_customer_id TEXT
 );
 CREATE INDEX IF NOT EXISTS supporter_checkout_member_idx
  ON supporter_checkout_intents(member_user_id,created_at_ms DESC);
+CREATE INDEX IF NOT EXISTS supporter_checkout_recovery_idx
+ ON supporter_checkout_intents(completed_at_ms,abandoned_at_ms,last_checked_at_ms,created_at_ms);
 
 CREATE TABLE IF NOT EXISTS supporter_customers(
   member_user_id TEXT PRIMARY KEY NOT NULL REFERENCES "user"(id) ON DELETE CASCADE,
