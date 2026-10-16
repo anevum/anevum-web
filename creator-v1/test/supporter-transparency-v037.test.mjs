@@ -21,8 +21,14 @@ test('unverified operating cost, net revenue and supporter counts remain null',(
 test('storage snapshot preserves scope, accounting and source-controlled limits',()=>{
  assert.equal(snapshot.storage.canonicalMemberD1FileBytes,475136);
  assert.equal(snapshot.storage.communityD1FileBytes,278528);
- assert.equal(snapshot.storage.memberUploadedImageBlobBytes,285792);
- assert.ok(snapshot.storage.memberUploadedImageBlobBytes<=snapshot.storage.canonicalMemberD1FileBytes);
+ assert.equal(snapshot.storage.memberUploadedImageBlobBytes,null,'small-cohort image data must be withheld');
+ assert.equal(snapshot.storage.memberImageCount,null);
+ assert.equal(snapshot.community.stagingMemberAccounts,null);
+ assert.equal(snapshot.community.stagingCreatorProfiles,null);
+ assert.equal(snapshot.community.stagingWallPosts,null);
+ assert.equal(snapshot.privacy.policyVersion,2);
+ assert.equal(snapshot.privacy.minimumDistinctContributors,25);
+ assert.equal(snapshot.privacy.smallCohortSourceValuesPublished,false);
  assert.equal(snapshot.storage.r2ProfileObjectCount,0);
  assert.equal(snapshot.storage.perImageUploadMaxBytes,262144);
  assert.equal(snapshot.storage.imageSlotsPerMember,2);
