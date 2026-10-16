@@ -65,6 +65,15 @@ async function request<T>(path:string,method:"GET"|"POST"|"PATCH"="GET",body?:un
      response.status===429?"Too many changes. Try again in an hour.":
      "Account service unavailable. No changes were saved.";
    if(response.status===400)message="Check your handle (3–30 lowercase letters, numbers or underscores) and display name.";
+   if(profileWrite&&response.status===403){
+     // The server returns one of two safe reasons for this endpoint. Do not
+     // show arbitrary upstream error text or expose account/session details.
+     const payload=await response.clone().json().catch(()=>null) as {error?:unknown}|null;
+     if(payload?.error==="Same-origin request required")
+       message="Your browser blocked the profile save security check. Open a.anevum.com directly in Safari, then retry.";
+     if(payload?.error==="Verified member email required")
+       message="Your email verification is no longer confirmed. Sign out and sign in again.";
+   }
    throw new CanonicalBetaError(response.status,message);
  }
  return safeJson<T>(response);
