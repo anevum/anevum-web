@@ -38,3 +38,10 @@
 .av12-phase1-join .join-security a{color:#e8b99e;text-decoration:underline}
 @media(max-width:900px){.av12-phase1-join .join-panel{justify-self:center;max-width:660px}}
 @media(max-width:500px){.av12-phase1-join .join-panel{padding:24px 19px}.av12-phase1-join .join-story{padding:0 10px}.av12-phase1-join .join-chapters{display:none}.av12-phase1-join .join-story h1{font-size:clamp(43px,12vw,60px)}.av12-phase1-join .join-experience{gap:10px}}
+
+/* Onboarding V026: show only the essential identity fields before first claim. */
+.av26-first-visit .av12-account-banner{max-width:790px;margin-inline:auto}
+.av26-first-visit .av12-account-layout{display:block;max-width:640px;margin-inline:auto}
+.av26-first-visit .av12-editor-panel{width:100%;max-width:none}
+.av26-first-visit .av12-profile-form{display:grid;gap:13px}
+.av26-first-visit .av12-save-button{min-height:54px}
