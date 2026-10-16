@@ -154,7 +154,11 @@ try {
     "COMMUNITY_V007_BROWSER_CAPTURE=PASS\nAll records in these screenshots are offline synthetic review fixtures, not live user activity. No staff, member, D1 or production mutations.\n");
 } finally {
   client?.close();
-  child.kill("SIGTERM");
-  await delay(250);
-  rmSync(profile, { recursive: true, force: true });
+  if(child.exitCode===null){
+    const exited=new Promise(resolve=>child.once("exit",resolve));
+    child.kill("SIGTERM");
+    await Promise.race([exited,delay(2000)]);
+    if(child.exitCode===null){child.kill("SIGKILL");await Promise.race([exited,delay(1000)]);}
+  }
+  rmSync(profile, { recursive: true, force: true, maxRetries:5, retryDelay:200 });
 }

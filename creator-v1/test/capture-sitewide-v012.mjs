@@ -161,6 +161,11 @@ try{
  writeFileSync(join(output,"capture-status.txt"),"SITEWIDE_V012_BROWSER_CAPTURE=PASS\nAll records are synthetic offline visual fixtures; no live member acceptance.\n");
  console.log("SITEWIDE_V012_BROWSER_CAPTURE=PASS; PAGES="+results.length);
 }finally{
- client?.close();child.kill("SIGTERM");await delay(180);
- rmSync(profile,{recursive:true,force:true});
+ client?.close();
+ if(child.exitCode===null){
+  const exited=new Promise(resolve=>child.once("exit",resolve));
+  child.kill("SIGTERM");await Promise.race([exited,delay(2000)]);
+  if(child.exitCode===null){child.kill("SIGKILL");await Promise.race([exited,delay(1000)]);}
+ }
+ rmSync(profile,{recursive:true,force:true,maxRetries:5,retryDelay:200});
 }
