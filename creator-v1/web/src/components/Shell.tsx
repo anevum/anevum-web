@@ -27,6 +27,7 @@ const portalCategories = [
 const directory = [
   {to:"/boards",label:"Public boards",detail:"Reviewed releases and first looks"},
   {to:"/levels",label:"Artifacts & levels",detail:"Earned contributions and recognition"},
+  {to:"/support",label:"Support ANEVUM",detail:"Optional founding supporter proposal"},
   {to:"/create",label:"Creator Studio",detail:"Invited member publishing"},
   {to:"/library",label:"My library",detail:"Your saved work, when signed in"},
   {to:"/member",label:"My profile",detail:"Your verified account and public profile settings"},
