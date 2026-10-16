@@ -1,4 +1,5 @@
 import {boundedText} from './request-body.mjs';
+import {forumReviewSnapshot} from './forum-review-console.mjs';
 const HEAD={'content-type':'application/json; charset=utf-8','cache-control':'private, no-store','x-content-type-options':'nosniff'};
 const json=(data,status=200)=>Response.json(data,{status,headers:HEAD});
 const fail=(status,message)=>json({error:message},status);
@@ -91,12 +92,7 @@ export async function canonicalForums(req,env,user=null,now=Math.floor(Date.now(
    if(!reviewers.includes(user.id))return fail(403,'Reviewer access required');
    if(req.method==='GET'){
     if(url.search)return fail(400,'Unexpected filters');
-    const [threads,replies,reports]=await Promise.all([
-     db.prepare("SELECT t.id,t.topic,t.title,t.body,t.created_at,p.handle,p.display_name FROM member_forum_threads t JOIN member_creator_profiles p ON p.user_id=t.author_id WHERE t.status='pending_review' ORDER BY t.created_at ASC LIMIT 50").all(),
-     db.prepare("SELECT r.id,r.thread_id,r.body,r.created_at,p.handle,p.display_name FROM member_forum_replies r JOIN member_creator_profiles p ON p.user_id=r.author_id WHERE r.status='pending_review' ORDER BY r.created_at ASC LIMIT 50").all(),
-     db.prepare("SELECT id,target_kind,target_id,reason,created_at FROM member_forum_reports WHERE resolved_at IS NULL ORDER BY created_at ASC LIMIT 50").all()
-    ]);
-    return json({threads:threads.results,replies:replies.results,reports:reports.results});
+    return json(await forumReviewSnapshot(db,user.id,now));
    }
    if(req.method!=='POST'||url.search)return fail(405,'Method not allowed');
    const v=await payload(req);
@@ -120,11 +116,11 @@ export async function canonicalForums(req,env,user=null,now=Math.floor(Date.now(
     return fail(409,'Review state changed');
    if(v.action==='publish'){
     if(target.author_id===user.id)return fail(403,'Independent review is required');
-    const author=await db.prepare("SELECT visibility FROM member_creator_profiles WHERE user_id=?").bind(target.author_id).first();
-    if(author?.visibility!=='public')return fail(409,'Author is not public');
+    const author=await db.prepare("SELECT p.visibility,u.emailVerified AS verified FROM member_creator_profiles p JOIN \"user\" u ON u.id=p.user_id WHERE p.user_id=?").bind(target.author_id).first();
+    if(author?.visibility!=='public'||!author.verified)return fail(409,'Author is not public and verified');
     if(v.targetKind==='reply'){
-     const parent=await db.prepare("SELECT t.status,p.visibility FROM member_forum_replies r JOIN member_forum_threads t ON t.id=r.thread_id JOIN member_creator_profiles p ON p.user_id=t.author_id WHERE r.id=?").bind(v.targetId).first();
-     if(parent?.status!=='published'||parent?.visibility!=='public')return fail(409,'Parent thread is not public');
+     const parent=await db.prepare("SELECT t.status,p.visibility,u.emailVerified AS verified FROM member_forum_replies r JOIN member_forum_threads t ON t.id=r.thread_id JOIN member_creator_profiles p ON p.user_id=t.author_id JOIN \"user\" u ON u.id=t.author_id WHERE r.id=?").bind(v.targetId).first();
+     if(parent?.status!=='published'||parent?.visibility!=='public'||!parent.verified)return fail(409,'Parent thread is not public');
     }
    }
    const next=v.action==='publish'?'published':v.action==='reject'?'rejected':'hidden';

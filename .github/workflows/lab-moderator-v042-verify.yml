@@ -1,0 +1,65 @@
+name: ANEVUM Lab Moderator V042 Verify
+
+on:
+  push:
+    branches: [build/community-moderator-console-v042-20261016]
+    paths:
+      - "lab/**"
+      - ".github/workflows/lab-moderator-v042-verify.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: lab-moderator-v042
+  cancel-in-progress: true
+
+jobs:
+  lab-review:
+    if: github.repository == 'anevum/anevum-web'
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - name: Checkout exact lab build
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Check preview and protected Worker bridge syntax
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --check lab/moderator-ops-v042.mjs
+          node --check lab/private-lab-moderator-bridge-v042.mjs
+          node --check lab/test/capture-moderator-lab-v042.mjs
+          node --test lab/test/moderator-ops-v042.test.mjs
+
+      - name: Run local-only interactive moderation browser acceptance
+        shell: bash
+        run: |
+          set -euo pipefail
+          chrome="$(command -v google-chrome || command -v chromium-browser || command -v chromium || true)"
+          test -n "$chrome"
+          mkdir -p evidence/lab-moderation-v042
+          node lab/test/capture-moderator-lab-v042.mjs --chrome "$chrome" --output evidence/lab-moderation-v042
+          test -s evidence/lab-moderation-v042/acceptance.json
+          test -s evidence/lab-moderation-v042/lab-moderation-1440.png
+          test -s evidence/lab-moderation-v042/lab-moderation-1024.png
+          test -s evidence/lab-moderation-v042/lab-moderation-390.png
+          test -s evidence/lab-moderation-v042/lab-moderation-320.png
+          printf '%s\n' 'Synthetic browser-only cases. No Cloudflare, private Lab records, authenticated members or production data were accessed.' > evidence/lab-moderation-v042/README.txt
+          echo LAB_MODERATOR_V042_VERIFIED=PASS >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Preserve synthetic Lab screenshot evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lab-moderation-v042-${{ github.run_id }}
+          path: evidence/lab-moderation-v042/
+          if-no-files-found: warn
+          retention-days: 14
