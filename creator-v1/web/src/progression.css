@@ -109,3 +109,63 @@
 @media(prefers-reduced-motion:reduce){
  .an-series-v034 .an-artifact-card-v034{transform:none!important}
 }
+
+
+/* V037 | Series One image replacement: true-alpha art, no pasted square matte. */
+.an-series-v034 .an-artifact-visual{
+  background:
+    radial-gradient(ellipse 67% 64% at 50% 52%,rgba(194,160,119,.16),transparent 78%),
+    radial-gradient(ellipse 92% 82% at 50% 54%,rgba(87,106,156,.13),transparent 86%);
+}
+.an-series-v034 .an-artifact-visual .level-emblem.is-illustrated[data-artwork="v037-transparent-preview"]{
+  display:block;
+  position:relative;
+  z-index:1;
+  width:176px;
+  height:176px;
+  max-width:100%;
+  margin:0;
+  object-fit:contain;
+  mix-blend-mode:normal; /* WebP carries real alpha; do not screen-blend away the material. */
+  -webkit-mask-image:none;
+  mask-image:none;
+  image-rendering:auto;
+  will-change:transform;
+  filter:drop-shadow(0 10px 15px rgba(0,0,0,.52)) drop-shadow(0 0 15px rgba(225,177,122,.16));
+  transform-origin:50% 50%;
+  animation:an-v035-artifact-drift 7s ease-in-out infinite;
+  animation-delay:calc(var(--artifact-arc,1) * -.8s);
+}
+.an-series-v034 .an-artifact-card-v034:hover .level-emblem.is-illustrated[data-artwork="v037-transparent-preview"]{
+  filter:drop-shadow(0 15px 22px rgba(0,0,0,.55)) drop-shadow(0 0 19px rgba(236,187,132,.34));
+}
+.an-series-v034 .an-artifact-card-v034:not(.is-earned) .level-emblem.is-illustrated[data-artwork="v037-transparent-preview"]{
+  filter:brightness(.86) saturate(.78) drop-shadow(0 9px 13px rgba(0,0,0,.5));
+}
+.an-series-v034 .an-artifact-card-v034.is-earned .an-artifact-visual:after{
+  border-color:rgba(247,196,136,.42);
+  box-shadow:0 0 24px rgba(228,165,98,.18);
+}
+@media(max-width:640px){
+  .an-series-v034 .an-artifact-visual .level-emblem.is-illustrated[data-artwork="v037-transparent-preview"]{
+    width:150px;height:150px;max-width:100%;
+  }
+}
+@media(max-width:390px){
+  .an-series-v034 .an-artifact-visual .level-emblem.is-illustrated[data-artwork="v037-transparent-preview"]{
+    width:134px;height:134px;
+  }
+}
+@media(prefers-reduced-motion:reduce){
+  .an-series-v034 .an-artifact-visual .level-emblem.is-illustrated[data-artwork="v037-transparent-preview"]{
+    animation:none!important;
+    will-change:auto;
+  }
+}
+@media(forced-colors:active){
+  .an-series-v034 .an-artifact-visual .level-emblem.is-illustrated[data-artwork="v037-transparent-preview"]{
+    mix-blend-mode:normal;
+    -webkit-mask-image:none;
+    mask-image:none;
+  }
+}
