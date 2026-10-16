@@ -44,3 +44,8 @@ This is not a merge of existing PRs, an authorization to use V040 on a live site
 - At all four viewport widths, the browser scrolls directly to the canonical participation panel, checks that both outbound-on-platform actions are readable, at least 44px tall, entirely within the viewport, and that no voting or saving controls are rendered.
 - The CI artifact includes dedicated `player-v006-canonical-participation-<width>.png` captures for owner review. The synthetic-only watermark is moved to the bottom edge so it does not conceal the shortcut controls.
 - This verifies read-only presentation only; it does not constitute authenticated member voting, rights clearance or a deployment authorization.
+ 
+## V006 touch-target correction
+- The first V006 browser run rejected the real 1440px participation actions at **43 CSS px**, below the 44px touch-target floor, even though the source styling had a 48px minimum. It did not fail the canonical identity isolation check.
+- Increased the specific participation links' nominal minimum size to 56px without modifying unrelated buttons. Keep the rendered 44px browser assertion at all viewports; a source-only CSS assertion is not a substitute.
+- Recheck V006 exact-head browser screenshots, canonical request tracing, and full V040 combined tests before treating this change as verified.

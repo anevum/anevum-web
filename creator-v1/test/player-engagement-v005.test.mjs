@@ -34,6 +34,8 @@ test("canonical display explicitly disables rating, saving and XP without access
  assert.match(panel,/Signing in does not activate project rating, saving, or XP/);
  assert.match(panel,/to="\/join"/);
  assert.match(panel,/to="\/community"/);
+ const style=read("web/src/components/project-player-shell.css");
+ assert.match(style,/\.avp-project \.avp-participation-actions a\{[^}]*min-height:56px/);
  assert.match(shortcut,/>PARTICIPATE<\/a>/);
  assert.doesNotMatch(shortcut,/>RATE \/ SAVE<\/a>/);
 });
