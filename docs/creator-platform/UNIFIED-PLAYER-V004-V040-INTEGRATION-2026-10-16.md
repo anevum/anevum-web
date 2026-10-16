@@ -67,3 +67,10 @@ This is not a merge of existing PRs, an authorization to use V040 on a live site
 ## V007 verification correction
 - First combined CI run identified a real accounting error: rejecting a save over the 200-item capacity incorrectly consumed one of the 60 hourly mutation tokens. Corrected by checking the capacity before consuming allowance; the database INSERT retains its own atomic capacity predicate.
 - An explicit regression assertion now verifies zero quota usage for an over-capacity rejection. Read-only, disabled-by-default staging and private member ownership contracts remain unchanged.
+
+## V008: feature-gated canonical save controls
+- Added a canonical-only project save client that uses the same-origin Better Auth cookie and GET/PUT/DELETE `/api/v1/member/project-saves/:id` with no user IDs, browser XP, legacy token, client-side ratings or local storage.
+- The existing `projectEngagementGateway` switches from the read-only panel to a real save/remove control **only if** canonical health explicitly returns `projectSavesReady: true` and `status: ready`. Missing flag, missing migration, unknown health, unauthenticated session, unpublished project and network errors remain non-mutating.
+- Guests are offered member access; verified members can save/remove privately with server-confirmed results and error feedback. Community remains accessible in every state; XP and ratings remain inactive.
+- **The flag remains absent from Wrangler; no migration has been applied.** The default A-staging view remains the verified V006 read-only participation design until separately authorized.
+- The V008 unit contract tests same-origin request semantics, invalid project ID rejection and the health-gated UI. Browser coverage for guest/member save interactions remains a follow-on release gate.

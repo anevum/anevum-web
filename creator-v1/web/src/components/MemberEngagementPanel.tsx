@@ -6,9 +6,11 @@ import {
 } from "../lib/member-api";
 import { useResource } from "../lib/useResource";
 import {projectEngagementGateway} from "../lib/project-engagement";
+import {CanonicalProjectSavePanel} from "./CanonicalProjectSavePanel";
 
 type Availability=
   | {kind:"canonical-readonly";registration:"open"|"invite-only"|"closed"}
+  | {kind:"canonical-saves";registration:"open"|"invite-only"|"closed"}
   | {kind:"closed"}
   | {kind:"guest";signupEnabled:boolean}
   | {kind:"member";rating:MemberRating;saved:boolean;libraryTruncated:boolean};
@@ -19,7 +21,7 @@ export function MemberEngagementPanel({projectId}:{projectId:string}){
     let health;
     try{health=await memberHealth(signal);}catch{return {kind:"closed"};}
     const gateway=projectEngagementGateway(health);
-    if(gateway.kind==="canonical-readonly")return gateway;
+    if(gateway.kind==="canonical-readonly"||gateway.kind==="canonical-saves")return gateway;
     if(gateway.kind!=="legacy")return {kind:"closed"};
     try{await memberMe(signal);}
     catch(e){
@@ -35,6 +37,7 @@ export function MemberEngagementPanel({projectId}:{projectId:string}){
 
   if(available.state==="loading")return <section className="engagement-panel" aria-label="Member project participation"><span className="kicker">COMMUNITY SIGNAL</span><p role="status">Checking private member availability…</p></section>;
   if(available.state==="error")return <section className="engagement-panel" aria-label="Member project participation"><span className="kicker">COMMUNITY SIGNAL</span><p role="status">Member actions are temporarily unavailable. Public project information is still accessible.</p></section>;
+  if(available.data.kind==="canonical-saves")return <CanonicalProjectSavePanel key={projectId} projectId={projectId} registration={available.data.registration}/>;
   if(available.data.kind==="canonical-readonly")return <section className="engagement-panel avp-participation-preview" data-avp-availability="canonical-readonly" aria-label="Project participation availability">
     <header className="avp-participation-heading"><span className="kicker">COMMUNITY SIGNAL / MEMBER NETWORK</span><span className="avp-participation-status">RATINGS NOT ACTIVE</span></header>
     <h2>BE PART OF WHAT'S NEXT.</h2>

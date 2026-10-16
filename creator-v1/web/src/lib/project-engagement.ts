@@ -5,6 +5,7 @@
  */
 export type ProjectEngagementGateway=
   | {kind:"canonical-readonly";registration:"invite-only"|"open"|"closed"}
+  | {kind:"canonical-saves";registration:"invite-only"|"open"|"closed"}
   | {kind:"legacy"}
   | {kind:"closed"};
 
@@ -15,6 +16,8 @@ export function projectEngagementGateway(health:unknown):ProjectEngagementGatewa
     const registration=value.status==="ready"&&
       (value.registration==="open"||value.registration==="invite-only")
         ?value.registration:"closed";
+    if(value.status==="ready"&&value.projectSavesReady===true)
+      return {kind:"canonical-saves",registration};
     return {kind:"canonical-readonly",registration};
   }
   if(value.status==="ok"&&typeof value.signupEnabled==="boolean")return {kind:"legacy"};
