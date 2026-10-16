@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-labelledby="title desc">
+<title id="title">ANEVUM — Create Beyond Worlds</title>
+<desc id="desc">The official ANEVUM orbital mark and brand message, a creator universe for games, apps, art and worlds.</desc>
+<rect width="1200" height="630" fill="#0b0b0d"/>
+<g fill="none" stroke="#37333b" stroke-width="1"><rect x="26.5" y="26.5" width="1147" height="577"/><path d="M26 87.5H1174M26 530.5H1174M461.5 114V506"/></g>
+<path d="M48 55h44v4H48z" fill="#ff6857"/><path d="M96 55h35v4H96z" fill="#a855ff"/>
+<g font-family="DejaVu Sans Mono,monospace" font-size="16" fill="#b0a9a7"><text x="148" y="61" letter-spacing="1">ANEVUM // CREATOR UNIVERSE</text><text x="952" y="61">IDENTITY / 01</text></g>
+<g fill="none" stroke="#242228" stroke-width="1"><circle cx="249.5" cy="324.5" r="171.5"/><circle cx="249.5" cy="324.5" r="133.5"/><path d="M79 322.5H122M382 322.5H422M249.5 153V196M249.5 453V496"/></g>
+<!-- Geometry matches creator-v1/brand/anevum-mark-compact.svg exactly. -->
+<g transform="translate(72 145) scale(.693359375)">
+  <ellipse cx="256" cy="256" rx="184" ry="73" transform="rotate(-17 256 256)" fill="none" stroke="#e8e1d6" stroke-width="42" stroke-linecap="round"/>
+  <path d="M256 62 276 214 326 256 276 298 256 450 236 298 186 256 236 214Z" fill="#e8e1d6"/>
+  <circle cx="256" cy="256" r="72" fill="#e8e1d6"/><circle cx="270" cy="251" r="34" fill="#0b0b0d"/><circle cx="391" cy="132" r="22" fill="#e8e1d6"/>
+</g>
+<circle cx="499" cy="181" r="5" fill="#ff6857"/>
+<g font-family="DejaVu Sans Mono,monospace"><text x="519" y="185" font-size="16" fill="#aaa39a">CREATIVE UNIVERSE   /   COMMUNITY</text></g>
+<text x="482" y="310" font-family="DejaVu Sans,sans-serif" font-weight="900" font-size="98" letter-spacing="-5" fill="#e8e1d6">ANEVUM</text>
+<path d="M487 348.5H1137" fill="none" stroke="#55505a" stroke-width="1"/><path d="M487 348h66v3h-66z" fill="#ff6857"/>
+<text x="487" y="392" font-family="DejaVu Sans,sans-serif" font-size="25" font-weight="700" letter-spacing="1" fill="#e8e1d6">CREATE BEYOND WORLDS</text>
+<g font-family="DejaVu Sans,sans-serif" font-size="18" fill="#aaa39a"><text x="487" y="441">Independent games, apps, art and original worlds.</text><text x="487" y="471">Discover. Make. Share.</text></g>
+<circle cx="54" cy="564" r="4" fill="#ff6857"/>
+<g font-family="DejaVu Sans Mono,monospace" font-size="16" fill="#e8e1d6"><text x="75" y="568">A PLACE FOR WHAT COMES NEXT</text></g><text x="952" y="568" font-family="DejaVu Sans Mono,monospace" font-size="16" fill="#aaa39a">A.ANEVUM.COM</text>
+</svg>

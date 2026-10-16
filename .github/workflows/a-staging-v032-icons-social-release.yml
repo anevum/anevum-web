@@ -1,0 +1,198 @@
+name: ANEVUM A Staging Home Screen and Social Share V032
+on:
+  push:
+    branches: [patch/orbital-homescreen-icons-20261016]
+    paths: [.github/workflows/a-staging-v032-icons-social-release.yml]
+permissions:
+  contents: write
+concurrency:
+  group: anevum-a-canonical-v032-icon-share
+  cancel-in-progress: false
+jobs:
+  release:
+    if: github.repository == 'anevum/anevum-web' && github.ref == 'refs/heads/patch/orbital-homescreen-icons-20261016'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      CF_WORKER: anevum-creator-v1-a-staging
+      CF_ZONE: 8abe27259b5436af5966d3b40d9a3760
+      CF_ACCOUNT_EXPECTED: 2f7ee83107240152097efd956a4e8335
+      CF_PREVIOUS_VERSION: 776d7f7e-76a2-4d97-9838-e908d446fe09
+      SOURCE_BRANCH: patch/orbital-homescreen-icons-20261016
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: true
+      - name: Pin approved V031 lineage and staging configuration
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          git merge-base --is-ancestor f3d5ba451472ba978ac53243eb7f0cbcceeff194 HEAD
+          node --input-type=module <<'NODE'
+          import assert from 'node:assert/strict';
+          import {readFileSync} from 'node:fs';
+          const c=JSON.parse(readFileSync('creator-v1/wrangler.a-progression-v031.jsonc','utf8'));
+          assert.equal(c.name,'anevum-creator-v1-a-staging');
+          assert.equal(c.account_id,'2f7ee83107240152097efd956a4e8335');
+          assert.equal(c.main,'./web/a-canonical-stage.review.mjs');
+          assert.deepEqual(c.routes,[]);
+          assert.equal(c.workers_dev,false);
+          assert.equal(c.preview_urls,false);
+          assert.equal(c.assets.directory,'./dist/web');
+          assert.equal(c.assets.run_worker_first,true);
+          assert.deepEqual(c.d1_databases.map(x=>[x.binding,x.database_id]),[
+            ['COMMUNITY_DB','fa96e36d-6257-4883-bf15-074947e11a13'],
+            ['MEMBER_DB','e1d29049-c83b-4534-8355-dc1fa36ba6d8']
+          ]);
+          assert.equal(c.vars.CANONICAL_INVITED_SIGNUP_ENABLED,'true');
+          assert.equal(c.vars.CANONICAL_PUBLIC_SIGNUP_ENABLED,'false');
+          assert.equal(c.vars.CANONICAL_XP_TEST_ENABLED,'true');
+          assert.equal(c.vars.CANONICAL_GOOGLE_ENABLED,'false');
+          assert.equal(c.vars.CANONICAL_GITHUB_ENABLED,'false');
+          NODE
+      - name: Render and commit verified PNG social share asset
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m venv "$RUNNER_TEMP/social-venv"
+          "$RUNNER_TEMP/social-venv/bin/pip" install --disable-pip-version-check --quiet CairoSVG==2.8.2
+          "$RUNNER_TEMP/social-venv/bin/python" - <<'PY'
+          from pathlib import Path
+          from xml.etree import ElementTree as ET
+          import struct
+          import cairosvg
+          source=Path('creator-v1/web/public/anevum-social-share.svg')
+          official=Path('creator-v1/brand/anevum-mark-compact.svg')
+          dst=Path('creator-v1/web/public/anevum-social-share-v1.png')
+          svg=source.read_text()
+          assert official.exists()
+          ET.fromstring(svg)
+          for part in ('rx="184" ry="73"', 'stroke-width="42"', 'M256 62 276 214 326 256 276 298 256 450', 'cx="391" cy="132" r="22"'):
+              assert part in svg and part in official.read_text(),part
+          cairosvg.svg2png(bytestring=svg.encode(),write_to=str(dst),output_width=1200,output_height=630)
+          body=dst.read_bytes()
+          assert body[:8]==bytes.fromhex('89504e470d0a1a0a')
+          assert struct.unpack('>II',body[16:24])==(1200,630)
+          assert 5000<len(body)<300000, len(body)
+          print('Rendered OG PNG',len(body),'bytes')
+          PY
+          git fetch origin "$SOURCE_BRANCH"
+          test "$(git rev-parse "origin/$SOURCE_BRANCH")" = "$GITHUB_SHA"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add creator-v1/web/public/anevum-social-share-v1.png
+          git commit -m 'Render ANEVUM orbital Open Graph share card V032'
+          git push origin HEAD:"$SOURCE_BRANCH"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify full unchanged creator source plus install/share contracts
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm install --ignore-scripts --no-audit --no-fund
+          npm run check:creator-v1-web
+          npm run build:creator-v1-web
+          (cd creator-v1 && npm test)
+          node --check creator-v1/web/a-canonical-stage.review.mjs
+          node --check creator-v1/canonical-auth/worker.mjs
+          node --input-type=module <<'NODE'
+          import assert from 'node:assert/strict';
+          import {readFileSync,statSync} from 'node:fs';
+          const root='creator-v1/dist/web/';
+          const h=readFileSync(root+'index.html','utf8');
+          for(const needle of ['rel="apple-touch-icon"','rel="manifest"','property="og:image"','https://a.anevum.com/anevum-social-share-v1.png','summary_large_image','name="twitter:image"']){
+            assert(h.includes(needle),'missing metadata '+needle);
+          }
+          const m=JSON.parse(readFileSync(root+'site.webmanifest','utf8'));
+          assert.equal(m.display,'standalone');
+          assert.deepEqual(m.icons.map(x=>x.sizes),['192x192','512x512']);
+          const expected=[['apple-touch-icon.png',180,180],['icon-192.png',192,192],['icon-512.png',512,512],['anevum-social-share-v1.png',1200,630]];
+          for(const [path,w,h] of expected){
+            const b=readFileSync(root+path);
+            assert.equal(b.subarray(0,8).toString('hex'),'89504e470d0a1a0a');
+            assert.equal(b.readUInt32BE(16),w);
+            assert.equal(b.readUInt32BE(20),h);
+            assert(statSync(root+path).size>500,'empty image '+path);
+          }
+          console.log('STATIC_ICON_SHARE_ASSETS=PASS');
+          NODE
+      - name: Guard active V031 staging Worker and private configuration
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$CLOUDFLARE_API_TOKEN"
+          test "$CLOUDFLARE_ACCOUNT_ID" = "$CF_ACCOUNT_EXPECTED"
+          umask 077
+          api=https://api.cloudflare.com/client/v4
+          cf() { curl --fail --silent --show-error --max-time 30 -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" "$1"; }
+          cf "$api/zones/$CF_ZONE/workers/routes" > "$RUNNER_TEMP/routes.json"
+          jq -e ' .success and ([.result[]|select(.pattern=="anevum.com/*" and .script=="anevum-construction-terminal")]|length)==1 and ([.result[]|select(.pattern=="a.anevum.com/*" and .script=="anevum-creator-v1-a-staging")]|length)==1 ' "$RUNNER_TEMP/routes.json" >/dev/null
+          cf "$api/accounts/$CF_ACCOUNT_EXPECTED/workers/scripts/$CF_WORKER/settings" > "$RUNNER_TEMP/settings.json"
+          jq -e ' .success and ([.result.bindings[]|select(.type=="d1")]|length)==2 and ([.result.bindings[]|select(.type=="d1" and .name=="COMMUNITY_DB" and ((.id//.database_id)=="fa96e36d-6257-4883-bf15-074947e11a13"))]|length)==1 and ([.result.bindings[]|select(.type=="d1" and .name=="MEMBER_DB" and ((.id//.database_id)=="e1d29049-c83b-4534-8355-dc1fa36ba6d8"))]|length)==1 and ([.result.bindings[]|select(.type=="secret_text" and .name=="CANONICAL_BETTER_AUTH_SECRET")]|length)==1 and ([.result.bindings[]|select(.type=="secret_text" and .name=="CANONICAL_RESEND_API_KEY")]|length)==1 and ([.result.bindings[]|select(.type=="secret_text" and .name=="CANONICAL_INVITE_EMAILS")]|length)==1 and ([.result.bindings[]|select(.type=="secret_text" and .name=="CANONICAL_PROTECTED_EMAILS")]|length)==1 and ([.result.bindings[]|select(.type=="plain_text" and .name=="CANONICAL_PUBLIC_SIGNUP_ENABLED" and .text=="false")]|length)==1 and ([.result.bindings[]|select(.type=="plain_text" and .name=="CANONICAL_XP_TEST_ENABLED" and .text=="true")]|length)==1 ' "$RUNNER_TEMP/settings.json" >/dev/null
+          cf "$api/accounts/$CF_ACCOUNT_EXPECTED/workers/scripts/$CF_WORKER/deployments?per_page=1" > "$RUNNER_TEMP/deployments.json"
+          jq -er '.result.deployments[0].versions[] | select(.percentage==100) | .version_id' "$RUNNER_TEMP/deployments.json" > "$RUNNER_TEMP/previous-version.txt"
+          test "$(cat "$RUNNER_TEMP/previous-version.txt")" = "$CF_PREVIOUS_VERSION" || { echo '::error::Concurrent staging change detected; aborting before deployment.'; exit 1; }
+          echo STAGING_ROUTES_BINDINGS_AND_VERSION_PIN=PASS
+      - name: Deploy only staging assets with rollback and live image checks
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          umask 077
+          api=https://api.cloudflare.com/client/v4
+          cf() { curl --fail --silent --show-error --max-time 30 -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" "$1"; }
+          previous="$(cat "$RUNNER_TEMP/previous-version.txt")"
+          preflight="$(cf "$api/accounts/$CF_ACCOUNT_EXPECTED/workers/scripts/$CF_WORKER/deployments?per_page=1" | jq -er '.result.deployments[0].versions[] | select(.percentage==100) | .version_id')"
+          test "$preflight" = "$previous" || { echo '::error::Staging drift before deployment'; exit 1; }
+          deployed=0
+          validated=0
+          rollback() {
+            if [ "$deployed" != 1 ] || [ "$validated" = 1 ]; then return; fi
+            echo '::error::Static share/icon rollout failed; restoring previous staging Worker.'
+            jq -nc --arg id "$previous" '{strategy:"percentage",versions:[{version_id:$id,percentage:100}],annotations:{"workers/message":"V032 icon/share rollback"}}' > "$RUNNER_TEMP/rollback.json"
+            curl --fail --silent --show-error --max-time 30 -X POST -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" -H 'Content-Type: application/json' --data-binary @"$RUNNER_TEMP/rollback.json" "$api/accounts/$CF_ACCOUNT_EXPECTED/workers/scripts/$CF_WORKER/deployments" > "$RUNNER_TEMP/rollback-out.json" || true
+            jq -e '.success' "$RUNNER_TEMP/rollback-out.json" >/dev/null 2>&1 && echo ROLLBACK_REQUESTED=PASS || echo '::error::Manual rollback needed'
+          }
+          trap rollback EXIT
+          deployed=1
+          npx wrangler deploy --config creator-v1/wrangler.a-progression-v031.jsonc --keep-vars
+          ok=0
+          for i in $(seq 1 15); do
+            if curl --fail --silent --show-error --max-time 15 https://a.anevum.com/api/v1/member/health | jq -e '.status=="ready" and .registration=="invite-only" and .progressionReady==true' >/dev/null 2>&1; then ok=1; break; fi
+            sleep 3
+          done
+          test "$ok" = 1
+          curl --fail --silent --show-error --max-time 20 https://a.anevum.com/ -o "$RUNNER_TEMP/index.html"
+          grep -Fq 'rel="apple-touch-icon"' "$RUNNER_TEMP/index.html"
+          grep -Fq 'property="og:image"' "$RUNNER_TEMP/index.html"
+          grep -Fq 'https://a.anevum.com/anevum-social-share-v1.png' "$RUNNER_TEMP/index.html"
+          grep -Fq 'summary_large_image' "$RUNNER_TEMP/index.html"
+          for path in apple-touch-icon.png icon-192.png icon-512.png anevum-social-share-v1.png; do
+            curl --fail --silent --show-error --max-time 20 "https://a.anevum.com/$path" -o "$RUNNER_TEMP/$path"
+          done
+          curl --fail --silent --show-error --max-time 20 https://a.anevum.com/site.webmanifest -o "$RUNNER_TEMP/site.webmanifest"
+          python3 - <<'PY'
+          import pathlib,struct,json,os
+          root=pathlib.Path(os.environ['RUNNER_TEMP'])
+          for fn,sz in [('apple-touch-icon.png',(180,180)),('icon-192.png',(192,192)),('icon-512.png',(512,512)),('anevum-social-share-v1.png',(1200,630))]:
+              b=(root/fn).read_bytes()
+              assert b[:8]==bytes.fromhex('89504e470d0a1a0a'),fn
+              assert struct.unpack('>II',b[16:24])==sz,fn
+          m=json.loads((root/'site.webmanifest').read_text())
+          assert m['display']=='standalone'
+          assert [x['sizes'] for x in m['icons']]==['192x192','512x512']
+          print('HOSTED_PNG_AND_INSTALL_METADATA=PASS')
+          PY
+          test "$(curl --silent --show-error --max-time 20 -o /dev/null -w '%{http_code}' https://a.anevum.com/api/v1/member/creator-profile)" = 401
+          cf "$api/zones/$CF_ZONE/workers/routes" | jq -e '.success and ([.result[]|select(.pattern=="anevum.com/*" and .script=="anevum-construction-terminal")]|length)==1 and ([.result[]|select(.pattern=="a.anevum.com/*" and .script=="anevum-creator-v1-a-staging")]|length)==1' >/dev/null
+          validated=1
+          echo A_STAGING_V032_ICON_AND_SHARE_DEPLOYED=PASS
