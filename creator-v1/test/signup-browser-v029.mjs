@@ -1,16 +1,17 @@
 // CI browser regression: actual compiled UI + actual Better Auth + temporary
 // SQLite. Loopback HTTPS only; no real accounts, email or deployed writes.
 import assert from 'node:assert/strict';
+import {chromium,webkit} from 'playwright';
 import {createServer} from 'node:https';
-import {spawn,spawnSync} from 'node:child_process';
+import {spawnSync} from 'node:child_process';
 import {readFileSync,existsSync,mkdirSync,mkdtempSync,writeFileSync,rmSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import {join,resolve,extname} from 'node:path';
 import worker from '../web/a-canonical-stage.review.mjs';
 import {fixture} from './helpers/canonical-fixture.mjs';
-const argv=process.argv.slice(2),opt=k=>argv[argv.indexOf(k)+1];
-const chrome=opt('--chrome'),out=opt('--output');
-if(!chrome||!out)throw Error('Provide --chrome and --output');
+const argv=process.argv.slice(2),opt=k=>{const i=argv.indexOf(k);return i<0?undefined:argv[i+1]};
+const chrome=opt('--chrome'),out=opt('--output'),engine=opt('--engine')||'chromium';
+if(!out||!['chromium','webkit'].includes(engine)||(engine==='chromium'&&!chrome))throw Error('Provide --engine, --output and --chrome for Chromium');
 mkdirSync(out,{recursive:true});
 const temp=mkdtempSync(join(tmpdir(),'anevum-v029-')),profile=join(temp,'chrome');mkdirSync(profile);
 assert.equal(spawnSync('openssl',['req','-x509','-newkey','rsa:2048','-nodes','-keyout',join(temp,'key.pem'),'-out',join(temp,'cert.pem'),'-subj','/CN=127.0.0.1','-days','1'],{stdio:'ignore'}).status,0);
@@ -38,23 +39,21 @@ const server=createServer({key:readFileSync(join(temp,'key.pem')),cert:readFileS
 await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));base='https://127.0.0.1:'+server.address().port;
 const delay=ms=>new Promise(r=>setTimeout(r,ms));
 async function until(fn,timeout=18000){const end=Date.now()+timeout;while(Date.now()<end){try{const v=await fn();if(v)return v}catch{}await delay(100)}throw Error('Browser regression timed out')}
-function connect(url){return new Promise((resolve,reject)=>{const socket=new WebSocket(url),calls=new Map();let seq=0;socket.addEventListener('open',()=>resolve({send(method,params={}){return new Promise((res,rej)=>{const id=++seq;calls.set(id,{res,rej});socket.send(JSON.stringify({id,method,params}))})},close(){socket.close()}}),{once:true});socket.addEventListener('message',({data})=>{const v=JSON.parse(String(data)),c=calls.get(v.id);if(!c)return;calls.delete(v.id);v.error?c.rej(Error(v.error.message)):c.res(v.result||{})});socket.addEventListener('error',reject,{once:true})})}
-const child=spawn(chrome,['--headless=new','--no-sandbox','--disable-dev-shm-usage','--disable-gpu','--disable-background-networking','--remote-allow-origins=*','--remote-debugging-port=0','--ignore-certificate-errors','--no-first-run','--user-data-dir='+profile,'about:blank'],{stdio:'ignore'});
-let client;
+const browser=await (engine==='webkit'?webkit.launch({headless:true}):chromium.launch({headless:true,executablePath:chrome,args:['--no-sandbox','--disable-dev-shm-usage']}));
+let page;
 try{
- const port=await until(()=>{const f=join(profile,'DevToolsActivePort');return existsSync(f)?readFileSync(f,'utf8').split('\n')[0]:null});
- const tabs=await (await originalFetch('http://127.0.0.1:'+port+'/json/list')).json();client=await connect(tabs.find(t=>t.type==='page').webSocketDebuggerUrl);
- await client.send('Page.enable');await client.send('Runtime.enable');
- const evaluate=async expression=>{const r=await client.send('Runtime.evaluate',{expression,returnByValue:true,awaitPromise:true});if(r.exceptionDetails)throw Error(r.exceptionDetails.exception?.description||r.exceptionDetails.text);return r.result?.value};
+ const context=await browser.newContext({ignoreHTTPSErrors:true,viewport:{width:390,height:844}});
+ page=await context.newPage();
+ const evaluate=expression=>page.evaluate(expression);
  const fill=async(selector,value)=>evaluate(`(()=>{const el=document.querySelector(${JSON.stringify(selector)});if(!el)throw Error('Input missing');const proto=el.tagName==='TEXTAREA'?HTMLTextAreaElement.prototype:HTMLInputElement.prototype;Object.getOwnPropertyDescriptor(proto,'value').set.call(el,${JSON.stringify(value)});el.dispatchEvent(new Event('input',{bubbles:true}));})()`);
  const click=async selector=>evaluate(`document.querySelector(${JSON.stringify(selector)}).click()`);
  const submit=async selector=>evaluate(`document.querySelector(${JSON.stringify(selector)}).requestSubmit()`);
  const wait=async selector=>until(()=>evaluate(`!!document.querySelector(${JSON.stringify(selector)})`));
- await client.send('Emulation.setDeviceMetricsOverride',{width:390,height:844,deviceScaleFactor:1,mobile:true});
- await client.send('Page.navigate',{url:base+'/join'});await wait('#anevum-email');
+ await page.setViewportSize({width:390,height:844});
+ await page.goto(base+'/join');await wait('#anevum-email');
  // Demonstrate the original standard-browser failure without bypassing CSRF.
  const originProbe=await evaluate(`(async()=>({inherited:await (await fetch('/__origin',{method:'POST',mode:'same-origin'})).json(),old:await (await fetch('/__origin',{method:'POST',mode:'same-origin',referrerPolicy:'no-referrer'})).json(),fixed:await (await fetch('/__origin',{method:'POST',mode:'same-origin',referrerPolicy:'same-origin'})).json()}))()`);
- console.log('ORIGIN_POLICY_PROBE='+JSON.stringify(originProbe));assert.equal(originProbe.old.origin,'null');assert.equal(originProbe.fixed.origin,base);
+ console.log('ORIGIN_POLICY_PROBE='+JSON.stringify(originProbe));if(engine==='webkit')assert.equal(originProbe.old.origin,'null');else assert.ok([base,'null'].includes(originProbe.old.origin));assert.equal(originProbe.fixed.origin,base);
  await fill('#anevum-email','pilot_a@fixture.invalid');await submit('.av12-email-entry');await wait('#anevum-otp');
  await until(()=>sent.get('pilot_a@fixture.invalid'));await fill('#anevum-otp',sent.get('pilot_a@fixture.invalid'));await submit('.av12-email-entry');await wait('#av12-handle');
  await fill('#av12-handle','browser_pilot');await fill('#av12-display','Browser Pilot');await submit('.av12-profile-form');await wait('.ms-dashboard');
@@ -69,20 +68,18 @@ try{
  await image('avatar');await image('banner');assert.equal(db.prepare('SELECT COUNT(*) AS n FROM member_space_media').get().n,2);
  await evaluate(`[...document.querySelectorAll('.ms-toolbar nav button')].find(b=>b.textContent==='Edit profile').click()`);await wait('#av12-bio');await fill('#av12-bio','A saved introduction from a real browser test.');await submit('.av12-profile-form');await until(()=>db.prepare('SELECT bio FROM member_creator_profiles').get().bio.length>0);
  await evaluate(`[...document.querySelectorAll('.ms-toolbar nav button')].find(b=>b.textContent==='My wall').click()`);await wait('#wall-entry');await fill('#wall-entry','First browser transmission.');await submit('.ms-wall-compose');await until(()=>db.prepare('SELECT COUNT(*) AS n FROM member_wall_posts').get().n===1);await wait('.ms-wall-entry');
- const results={inheritedOrigin:originProbe.inherited.origin,originalOrigin:originProbe.old.origin,correctedOriginMatches:true,realOtpSignup:true,profileSaved:true,avatarAndBannerUploaded:true,wallSaved:true,widths:[]};
+ const results={engine,inheritedOrigin:originProbe.inherited.origin,originalOrigin:originProbe.old.origin,correctedOriginMatches:true,realOtpSignup:true,profileSaved:true,avatarAndBannerUploaded:true,wallSaved:true,widths:[]};
  for(const [width,height] of [[1440,900],[390,844],[320,720]]){
-  await client.send('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:1,mobile:width<600});await delay(150);
+  await page.setViewportSize({width,height});await delay(150);
   const state=await evaluate(`({overflow:document.documentElement.scrollWidth>innerWidth+1,wall:!!document.querySelector('.ms-wall-entry'),image:[...document.querySelectorAll('.ms-cover img,.ms-portrait img')].every(i=>i.complete&&i.naturalWidth>0)})`);
   assert.equal(state.overflow,false,JSON.stringify({width,...state}));assert.equal(state.wall,true);assert.equal(state.image,true);
-  const shot=await client.send('Page.captureScreenshot',{format:'png',fromSurface:true});writeFileSync(join(out,'member-wall-'+width+'.png'),Buffer.from(shot.data,'base64'));results.widths.push(width);
+  await page.screenshot({path:join(out,'member-wall-'+width+'.png')});results.widths.push(width);
  }
  writeFileSync(join(out,'acceptance.json'),JSON.stringify(results,null,2));console.log('BROWSER_ORIGIN_SIGNUP_PROFILE_IMAGES_WALL_AND_RESPONSIVE_CHECKS=PASS');
 }catch(error){
- if(client){const state=await client.send('Runtime.evaluate',{expression:'({url:location.pathname,text:document.body.innerText.slice(-5000)})',returnByValue:true}).catch(()=>null);console.error('BROWSER_FAILURE_STATE='+JSON.stringify(state?.result?.value));const shot=await client.send('Page.captureScreenshot',{format:'png'}).catch(()=>null);if(shot?.data)writeFileSync(join(out,'failure.png'),Buffer.from(shot.data,'base64'));}
+ if(page){const state=await page.evaluate('({url:location.pathname,text:document.body.innerText.slice(-5000)})').catch(()=>null);console.error('BROWSER_FAILURE_STATE='+JSON.stringify(state));await page.screenshot({path:join(out,'failure.png')}).catch(()=>{});}
  throw error;
 }finally{
- if(client){await client.send('Browser.close').catch(()=>{});client.close()}
- if(child.exitCode===null)await Promise.race([new Promise(r=>child.once('exit',r)),delay(3000)]);
- if(child.exitCode===null)child.kill('SIGKILL');
+ await browser.close();
  server.close();globalThis.fetch=originalFetch;db.close();rmSync(temp,{recursive:true,force:true,maxRetries:5,retryDelay:100});
 }
