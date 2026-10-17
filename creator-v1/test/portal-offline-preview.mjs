@@ -120,14 +120,14 @@ function offlineMember(req,res,url){
   if(url.pathname==="/api/v1/member/community/me"&&req.method==="GET"){
     const cookies=(req.headers.cookie||"").split(";").map(x=>x.trim());
     return cookies.includes(LOCAL_REVIEW_COOKIE)
-      ?json(res,{progression:{xp:180,level:4,maxLevel:null,artifact:"Ivory Compass",artifactEarned:true,levelStartXp:180,nextLevelXp:320,progressWithinLevel:0}})
+      ?json(res,{progression:{xp:180,level:2,maxLevel:30,artifact:"Vacuum Whisper",artifactEarned:true,levelStartXp:75,nextLevelXp:300,progressWithinLevel:105/225}})
       :json(res,{error:"Sign-in required"},401);
   }
   if(url.pathname==="/api/v1/member/creators/offline_artist"&&req.method==="GET"){
     return json(res,{
       creator:{handle:"offline_artist",displayName:"Synthetic Creator Preview",bio:FAKE_MEMBER.bio,joinedAt:"2026-10-12"},
       contributions:{ratings:1,publishedProjects:1,releases:0},
-      progression:{xp:180,level:4,maxLevel:null,artifact:"Ivory Compass",artifactEarned:true,levelStartXp:180,nextLevelXp:320,progressWithinLevel:0},
+      progression:{xp:180,level:2,maxLevel:30,artifact:"Vacuum Whisper",artifactEarned:true,levelStartXp:75,nextLevelXp:300,progressWithinLevel:105/225},
       achievements:[
         {key:"first-signal",name:"First Signal",description:"Rate your first published project",symbol:"✦",earned:true,progress:1,target:1},
         {key:"keen-eye",name:"Keen Eye",description:"Rate five published projects",symbol:"◇",earned:false,progress:1,target:5},
@@ -165,8 +165,8 @@ function api(res,url){
     const developed=handle==="nova_demo"||handle==="moss_demo";
     if(!developed)continue; // Also exercise private/opted-out fallback.
     items[handle]={
-      handle,level:handle==="nova_demo"?2:4,currentArtifact:"Copper Key",
-      equippedArtifact:{name:handle==="nova_demo"?"Copper Key":"Ivory Compass",series:"Series One"},
+      handle,level:handle==="nova_demo"?2:4,currentArtifact:handle==="nova_demo"?"Vacuum Whisper":"Symmetry Field",
+      equippedArtifact:{name:handle==="nova_demo"?"Vacuum Whisper":"Symmetry Field",series:"Evolution of Everything"},
       featuredAwards:handle==="nova_demo"?
         [{key:"first-signal",name:"First Signal",description:"SYNTHETIC OFFLINE milestone"}]:
         [{key:"first-launch",name:"First Launch",description:"SYNTHETIC OFFLINE milestone"},
