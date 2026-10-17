@@ -1,4 +1,5 @@
 import {useEffect,useState} from 'react';
+import {Link} from 'react-router-dom';
 import type {CanonicalProfile,MemberSpace} from '../lib/canonical-beta';
 import {BADGE_CATALOG,DISTINCTION_CATALOG,
  type BadgeDisplay,type PlayerAura} from '../lib/player-recognition';
@@ -24,7 +25,7 @@ const MODES:readonly {id:BadgeDisplay['mode'];label:string;help:string}[]=[
  {id:'hidden',label:'Keep private',help:'No badges on public player cards'}
 ];
 
-export function PlayerCardStudio({profile,space}:{profile:CanonicalProfile;space:MemberSpace}){
+export function PlayerCardStudio({profile,space,onAvailabilityChange}:{profile:CanonicalProfile;space:MemberSpace;onAvailabilityChange?:(enabled:boolean)=>void}){
  const [data,setData]=useState<RecognitionSettings|null>(null);
  const [notEnabled,setNotEnabled]=useState(false);
  const [loading,setLoading]=useState(true),[saving,setSaving]=useState(false);
@@ -41,13 +42,14 @@ export function PlayerCardStudio({profile,space}:{profile:CanonicalProfile;space
  useEffect(()=>{
   let active=true;const c=new AbortController();
   setLoading(true);setError('');setMessage('');setNotEnabled(false);
-  readRecognition(c.signal).then(next=>{if(active)apply(next)}).catch(e=>{
+  readRecognition(c.signal).then(next=>{if(active){apply(next);onAvailabilityChange?.(true)}}).catch(e=>{
    if(!active)return;
+   onAvailabilityChange?.(false);
    if((e as {status?:number})?.status===404)setNotEnabled(true);
    else setError(e instanceof Error?e.message:'Recognition settings unavailable');
   }).finally(()=>{if(active)setLoading(false)});
   return()=>{active=false;c.abort()};
- },[profile.handle]);
+ },[profile.handle,onAvailabilityChange]);
  async function save(){
   if(!data||saving)return;
   setSaving(true);setError('');setMessage('');
@@ -72,7 +74,8 @@ export function PlayerCardStudio({profile,space}:{profile:CanonicalProfile;space
  return <section className="av65-studio ms-card" aria-labelledby="av65-studio-heading">
   <header className="av65-studio-head"><div><span className="kicker">CONTINUANCE INSTITUTE / PLAYER REGISTRY</span>
    <h2 id="av65-studio-heading">Your public signature.</h2>
-   <p>One identity on every forum, creation, conversation and member wall. Only server-earned marks can appear.</p></div>
+   <p>One identity on every forum, creation, conversation and member wall. Only server-earned marks can appear.</p>
+   <Link to="/recognition" className="av65-studio-archive-link">OPEN THE BADGE & MEDAL ARCHIVE ↗</Link></div>
    <span className="av65-studio-step">IDENTITY / 01</span></header>
   {loading&&<p role="status">Loading your earned recognition…</p>}
   {notEnabled&&<p className="av65-studio-note">The expanded recognition archive has not been activated. Your existing earned level and awards still appear in the member interface; no new medals or ribbons have been issued here.</p>}
