@@ -4,6 +4,7 @@ import type {Creator,PublicCreatorShowcase} from "../lib/api";
 import {CelestialEmblem} from "./CelestialEmblem";
 import {achievementMotif} from "../lib/artifact-art";
 import {LevelEmblem,LEVEL_ARTIFACTS} from './LevelEmblem';
+import {CompactMemberIdentity} from './CompactMemberIdentity';
 
 type Props={
   handle:string;
@@ -30,13 +31,7 @@ export function PublicAuthorShowcase({handle,name,known,showcase,variant="feed"}
 
   return <aside className={`av6-author av7-author av7-author--${variant}`} aria-label={"Public creator profile of "+name}>
     <span className="av6-author-label av7-register">ANEVUM / CREATOR DOSSIER</span>
-    <Link to={href} className="av6-author-person av7-identity">
-      <span className="av6-author-avatar av7-avatar" aria-hidden="true">{(name.trim()[0]||handle[0]||"A").toUpperCase()}</span>
-      <span className="av6-author-identity">
-        <strong>{name}</strong>
-        <small>@{handle}</small>
-      </span>
-    </Link>
+    <CompactMemberIdentity member={{handle,displayName:name,avatar:false,level:null,featuredAwards:[],source:'creator-channel'}} href={href} className="av65-channel-identity" size="standard"/>
     {level!==null&&<div className="av7-level-panel">
       <span className="av7-section-name">VERIFIED LEVEL</span>
       <button type="button" className="av7-level-button" aria-label={`Level ${level}. Show level information`}
