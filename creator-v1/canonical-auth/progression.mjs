@@ -43,8 +43,8 @@ export async function canonicalProgression(req,env,user,now=Math.floor(Date.now(
    await syncRewardNotifications(db,user.id,now);
    const receipt=await db.prepare('SELECT through_id FROM member_notification_receipts WHERE user_id=?').bind(user.id).first();
    const after=Number(receipt?.through_id)||0;
-   const items=await rows(db,'SELECT id,kind,reference,level,created_at FROM member_reward_notifications WHERE user_id=? AND id>? AND (kind!='level' OR (reference LIKE 'evo60-%' AND level<=30)) ORDER BY id LIMIT 24',user.id,after);
-   const recent=await rows(db,'SELECT id,kind,reference,level,created_at FROM member_reward_notifications WHERE user_id=? AND (kind!='level' OR (reference LIKE 'evo60-%' AND level<=30)) ORDER BY id DESC LIMIT 12',user.id);
+   const items=await rows(db,`SELECT id,kind,reference,level,created_at FROM member_reward_notifications WHERE user_id=? AND id>? AND (kind!='level' OR (reference LIKE 'evo60-%' AND level<=30)) ORDER BY id LIMIT 24`,user.id,after);
+   const recent=await rows(db,`SELECT id,kind,reference,level,created_at FROM member_reward_notifications WHERE user_id=? AND (kind!='level' OR (reference LIKE 'evo60-%' AND level<=30)) ORDER BY id DESC LIMIT 12`,user.id);
    return json({items:items.map(notification),recent:recent.map(notification)});
   }
   if(path.endsWith('/notifications/ack')&&req.method==='POST'){

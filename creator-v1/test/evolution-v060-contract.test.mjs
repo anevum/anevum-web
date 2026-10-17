@@ -20,7 +20,7 @@ test('retired icon set is not selected anywhere in the active level UI',()=>{
  assert.match(panel,/FINAL LEVEL/);
 });
 test('all thirty exact V059 specimen names and thresholds remain unchanged',()=>{
- const original=JSON.parse(read('design/evolution-v059/docs/ARTWORK-MANIFEST.json'));
+ const original=JSON.parse(readFileSync(new URL('../../design/evolution-v059/docs/ARTWORK-MANIFEST.json',import.meta.url),'utf8'));
  assert.equal(original.levels.length,30);
  for(const item of original.levels){
   const installed=ARTIFACTS[item.level-1];
