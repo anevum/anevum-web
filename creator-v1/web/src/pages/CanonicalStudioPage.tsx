@@ -8,6 +8,7 @@ import {
  studioReviewDecision,type StudioDraft,type StudioProject,type StudioAsset,type StudioCategory,
  type StudioReviewProject,type StudioReviewHistory,type StudioReviewManifest,type StudioReviewReceipt
 } from '../lib/canonical-studio';
+import {StudioGuestDiscovery,StudioLaunchpad} from './StudioLaunchpad';
 import './canonical-studio.css';
 
 const CATEGORY_GUIDE:Record<StudioCategory,string>={
@@ -69,11 +70,9 @@ export function CanonicalStudioPage({mode='list'}:{mode?:Mode}){
   return()=>{live=false;controller.abort();};
  },[id,session?.user?.emailVerified]);
  if(isPending)return <section className="st-status" role="status">VERIFYING CANONICAL MEMBER SESSION…</section>;
- if(!id||session?.user?.emailVerified!==true)return <section className="st-status">
-  <span className="st-kicker">CONTINUANCE INSTITUTE / CREATOR STUDIO</span>
-  <h1>SIGN IN TO CREATE.</h1><p>Private drafts belong to your verified ANEVUM account.</p>
-  <Link className="st-action" to="/join">MEMBER SIGN-IN ↗</Link>
- </section>;
+ if(!id||session?.user?.emailVerified!==true)return <main className="st-root" aria-label="Explore Creator Studio">
+  <StudioGuestDiscovery/>
+ </main>;
  if(phase==='loading')return <section className="st-status" role="status">OPENING PRIVATE CREATOR STUDIO…</section>;
  if(phase==='unavailable')return <section className="st-status">
   <span className="st-kicker">STAGING / FEATURE NOT ACTIVE</span><h1>THE STUDIO IS IN DEVELOPMENT.</h1>
@@ -89,77 +88,19 @@ export function CanonicalStudioPage({mode='list'}:{mode?:Mode}){
   <header className="st-header">
    <div><Link className="st-back" to="/member">← MEMBER ATLAS</Link>
     <p className="st-kicker">ANEVUM / CONTINUANCE INSTITUTE / CREATOR STUDIO</p>
-    <h1>{mode==='review'?'SUBMISSION REVIEW.':mode==='list'?'YOUR CREATIVE ARCHIVE.':mode==='new'?'BEGIN A NEW WORK.':'PROJECT WORKSPACE.'}</h1>
-    <p>Build privately, preserve versions, and prepare original work for independent review.</p>
+    <h1>{mode==='review'?'SUBMISSION REVIEW.':mode==='list'?'YOUR CREATOR STUDIO.':mode==='new'?'BEGIN A NEW WORK.':'PROJECT WORKSPACE.'}</h1>
+    <p>From your first idea to your next creation. All drafts stay private until you choose to submit for review.</p>
    </div>
    <div className="st-identity"><span>VERIFIED CREATOR</span><strong>@{identity?.handle}</strong><small>PRIVATE STAGING WORKSPACE</small></div>
   </header>
   <nav className="st-nav" aria-label="Studio navigation">
-   <Link to="/studio" aria-current={mode==='list'?'page':undefined}>MY PROJECTS</Link>
-   <Link to="/studio/new" aria-current={mode==='new'?'page':undefined}>NEW SUBMISSION</Link>
+   <Link to="/studio" aria-current={mode==='list'?'page':undefined}>LAUNCHPAD</Link>
+   <Link to="/studio/new" aria-current={mode==='new'?'page':undefined}>ADVANCED PROJECT</Link>
    {canReview&&<Link to="/studio/review" aria-current={mode==='review'?'page':undefined}>REVIEW DESK</Link>}
    <Link to="/discover">DISCOVER ↗</Link>
   </nav>
-  {mode==='list'?<StudioLibrary/>:mode==='review'?<StudioReview/>:<StudioEditor create={mode==='new'} uploadsReady={uploads}/>}
+  {mode==='list'?<StudioLaunchpad uploadsReady={uploads}/>:mode==='review'?<StudioReview/>:<StudioEditor create={mode==='new'} uploadsReady={uploads}/>}
  </main>;
-}
-
-function StudioLibrary(){
- const [items,setItems]=useState<StudioProject[]>([]),[error,setError]=useState(''),[loading,setLoading]=useState(true);
- const [search,setSearch]=useState('');
- const [statusFilter,setStatusFilter]=useState<'all'|'draft'|'pending_review'|'changes_requested'|'rejected'>('all');
- useEffect(()=>{
-  const ac=new AbortController();
-  studioList(ac.signal).then(r=>setItems(r.projects)).catch(e=>{if(!ac.signal.aborted)setError(showError(e))})
-   .finally(()=>{if(!ac.signal.aborted)setLoading(false)});
-  return()=>ac.abort();
- },[]);
- const drafts=items.filter(p=>p.status==='draft'||p.status==='changes_requested').length;
- const pending=items.filter(p=>p.status==='pending_review').length;
- const needle=search.trim().toLocaleLowerCase();
- const visible=items.filter(p=>(statusFilter==='all'||p.status===statusFilter)&&
-  (!needle||[p.title,p.summary,p.slug,p.category].some(v=>v.toLocaleLowerCase().includes(needle))));
- return <>
-  <section className="st-metrics" aria-label="Your projects status">
-   <div><span>TOTAL WORKS</span><strong>{loading?'—':items.length}</strong></div>
-   <div><span>IN PROGRESS</span><strong>{loading?'—':drafts}</strong></div>
-   <div><span>AWAITING REVIEW</span><strong>{loading?'—':pending}</strong></div>
-   <div><span>PUBLIC RELEASES</span><strong>NOT YET ACTIVE</strong></div>
-  </section>
-  <section className="st-panel">
-   <div className="st-section-head"><div><p className="st-kicker">01 / PERSONAL WORKSPACE</p><h2>PROJECT RECORDS</h2></div>
-    <Link className="st-action" to="/studio/new">+ CREATE PROJECT</Link></div>
-   <p className="st-muted">Your project records are private. Public publication, native gameplay and XP are not enabled through Studio uploads.</p>
-   {items.length>0&&<div className="st-filters">
-    <label className="st-field"><span>SEARCH YOUR PROJECTS</span>
-     <input type="search" maxLength={100} placeholder="Title, summary, slug, category"
-      value={search} onChange={e=>setSearch(e.target.value)}/></label>
-    <label className="st-field"><span>STATUS</span>
-     <select value={statusFilter} onChange={e=>setStatusFilter(e.target.value as typeof statusFilter)}>
-      <option value="all">All projects</option>
-      <option value="draft">Draft</option>
-      <option value="pending_review">Pending review</option>
-      <option value="changes_requested">Changes requested</option>
-      <option value="rejected">Rejected</option>
-     </select></label>
-    <span className="st-filter-count">{visible.length} OF {items.length} WORKS</span>
-   </div>}
-   {loading&&<p role="status">Retrieving private projects…</p>}
-   {error&&<p role="alert" className="st-error">{error}</p>}
-   {!loading&&!error&&items.length===0&&<div className="st-empty">
-    <span aria-hidden="true" className="st-orb">◎</span><h3>NO CREATIONS IN THE ARCHIVE.</h3>
-    <p>Your first draft starts here. Try SIGNAL 001 or something entirely your own.</p>
-    <Link className="st-action" to="/studio/new">START A PROJECT →</Link>
-   </div>}
-   {!loading&&!error&&items.length>0&&visible.length===0&&<p role="status" className="st-muted">No projects match these filters. Adjust your search or status selection.</p>}
-   <div className="st-project-grid">{visible.map(p=><Link className="st-project" to={'/studio/'+p.id} key={p.id}>
-    <div className="st-project-art" aria-hidden="true"><span>◌</span><small>{p.category.toUpperCase()}</small></div>
-    <div className="st-project-body"><span className="st-kicker">REV {String(p.revision).padStart(2,'0')} / {pretty(p.status)}</span>
-     <h3>{p.title}</h3><p>{p.summary}</p><small>EDITED {new Date(p.updatedAt*1000).toLocaleDateString()}</small></div>
-    <span className="st-project-arrow">↗</span>
-   </Link>)}</div>
-  </section>
- </>;
 }
 
 function StudioEditor({create,uploadsReady}:{create:boolean;uploadsReady:boolean}){
@@ -174,6 +115,7 @@ function StudioEditor({create,uploadsReady}:{create:boolean;uploadsReady:boolean
  const [loading,setLoading]=useState(!create),[busy,setBusy]=useState(false);
  const [error,setError]=useState(''),[notice,setNotice]=useState('');
  const [mustReload,setMustReload]=useState(false);
+ const [editorView,setEditorView]=useState<'simple'|'advanced'>(create?'advanced':'simple');
  const createId=useRef(crypto.randomUUID());
  useEffect(()=>{
   if(create||!id)return;
@@ -186,6 +128,32 @@ function StudioEditor({create,uploadsReady}:{create:boolean;uploadsReady:boolean
  },[id,create]);
  const canEdit=!project||editable(project);
  const dirty=saved===null||JSON.stringify(saved)!==JSON.stringify(draft);
+ // A private draft has no autosave. Protect changes from ordinary navigation
+ // and browser unload; never imply a revision has persisted prematurely.
+ const hasNewWork=Boolean(draft.title.trim()||draft.summary.trim()||draft.description.trim());
+ const unsavedChanges=!loading&&canEdit&&dirty&&(project!==null||(create&&hasNewWork));
+ useEffect(()=>{
+  if(!unsavedChanges)return;
+  const beforeUnload=(event:BeforeUnloadEvent)=>{event.preventDefault();event.returnValue='';};
+  const beforeNavigation=(event:MouseEvent)=>{
+   if(event.defaultPrevented||event.button!==0||event.metaKey||event.ctrlKey||event.altKey||event.shiftKey)return;
+   if(!(event.target instanceof Element))return;
+   const anchor=event.target.closest('a[href]');
+   if(!(anchor instanceof HTMLAnchorElement)||anchor.hasAttribute('download')||anchor.target==='_blank')return;
+   let destination:URL;
+   try{destination=new URL(anchor.href,window.location.href);}catch{return;}
+   if(destination.origin!==window.location.origin)return;
+   if(destination.pathname===window.location.pathname&&destination.search===window.location.search)return;
+   if(!window.confirm('You have unsaved changes in this private creation. Leave without saving?'))
+    event.preventDefault();
+  };
+  window.addEventListener('beforeunload',beforeUnload);
+  document.addEventListener('click',beforeNavigation,true);
+  return()=>{
+   window.removeEventListener('beforeunload',beforeUnload);
+   document.removeEventListener('click',beforeNavigation,true);
+  };
+ },[unsavedChanges]);
  const eligibleAttachment=Boolean(assetSummary?.some(a=>a.status==='quarantined'&&
   studioEligibleUpload(draft.category,a.kind)));
  const ready=Boolean((draft.demoUrl||draft.sourceUrl||eligibleAttachment)&&draft.license.trim().length>=2&&
@@ -249,22 +217,35 @@ function StudioEditor({create,uploadsReady}:{create:boolean;uploadsReady:boolean
   {mustReload&&<button className="st-button" onClick={()=>window.location.reload()}>RELOAD CURRENT REVISION</button>}
   {!loading&&(!id||project)&&<div className="st-editor">
    <form className="st-panel st-editor-form" onSubmit={save}>
-    <div className="st-section-head"><div><p className="st-kicker">01 / WORK IDENTITY</p><h2>{project?'REFINE THE RECORD.':'GIVE YOUR WORK A NAME.'}</h2></div>
+    <div className="st-section-head"><div><p className="st-kicker">01 / CREATE & REFINE</p><h2>{project?'KEEP BUILDING YOUR IDEA.':'BEGIN YOUR CREATION.'}</h2></div>
      {project&&<span className="st-tag">{pretty(project.status)} · REV {project.revision}</span>}</div>
-    {input('title','PROJECT TITLE',100,0,'3–100 characters.')}
-    {input('slug','PROJECT SLUG',90,0,'Lowercase letters, numbers and hyphens; unique per creator.')}
+    <div className="st-editor-modes" role="group" aria-label="Creator editing mode">
+     <button type="button" aria-pressed={editorView==='simple'} onClick={()=>setEditorView('simple')}>
+      SIMPLE EDITOR</button>
+     <button type="button" aria-pressed={editorView==='advanced'} onClick={()=>setEditorView('advanced')}>
+      ADVANCED DETAILS</button>
+    </div>
+    <p className="st-muted">Your creation is a private, editable draft. Focus on the idea first; attribution, external links and review preparation can come later.</p>
+    <p className="st-save-state" role="status" data-unsaved={unsavedChanges}>
+     {busy?'SAVING PRIVATE REVISION…':unsavedChanges?
+      'UNSAVED CHANGES — SAVE BELOW BEFORE LEAVING.':
+      project?'ALL CHANGES TO THIS REVISION ARE SAVED PRIVATELY.':'NEW WORK — NOT SAVED YET.'}
+    </p>
+    {input('title','PROJECT TITLE',100,0,'Give your work a name you can change later.')}
+    {editorView==='advanced'&&input('slug','PROJECT URL IDENTIFIER',90,0,'Used internally for a future project URL. Lowercase letters, numbers and hyphens.')}
     <label className="st-field"><span>CREATION TYPE</span>
      <select value={draft.category} disabled={locked} onChange={e=>assign('category',e.target.value as StudioCategory)}>
       {CATEGORIES.map(([key,name])=><option value={key} key={key}>{name}</option>)}
      </select>
      <small>{CATEGORY_GUIDE[draft.category]}</small>
     </label>
-    {input('summary','SHORT SUMMARY',280,3,'10–280 characters; appears on the eventual project card.')}
-    {input('description','ABOUT THIS CREATION',8000,6)}
+    {input('summary','WHAT ARE YOU MAKING?',280,3,'A short description of your idea, story, sound, game or artwork.')}
+    {input('description','YOUR IDEAS & PROJECT NOTES',8000,7,'Explore ideas, sketch scenes or list what you want to try.')}
+    {editorView==='advanced'&&<>
     <label className="st-check"><input type="checkbox" checked={draft.freeToUse} disabled={locked}
-      onChange={e=>assign('freeToUse',e.target.checked)}/> This work is listed as free to access.</label>
+      onChange={e=>assign('freeToUse',e.target.checked)}/> I intend this work to be free to access when publication becomes available.</label>
     <hr className="st-rule"/>
-    <div className="st-section-head"><div><p className="st-kicker">02 / CONNECTIONS & RIGHTS</p><h2>PROVENANCE MATTERS.</h2></div></div>
+    <div className="st-section-head"><div><p className="st-kicker">02 / RELEASE PREPARATION</p><h2>CREDITS, LINKS & RIGHTS.</h2></div></div>
     <label className="st-field"><span>WORKING DEMO URL (HTTPS)</span>
      <input type="url" value={draft.demoUrl||''} disabled={locked} maxLength={1500}
       onChange={e=>assign('demoUrl',e.target.value||null)}/>
@@ -276,9 +257,10 @@ function StudioEditor({create,uploadsReady}:{create:boolean;uploadsReady:boolean
     {input('license','RIGHTS OR LICENSE',80,0,'Identify your actual rights; a public repository does not automatically grant reuse.')}
     {input('aiDisclosure','AI INVOLVEMENT',1200,3,'Explain any AI assistance, or write that none was used.')}
     {input('humanContribution','HUMAN CREATION & CREDITS',1200,3,'Credit your own work and collaborators.')}
+    </>}
     <div className="st-actions">
      <button className="st-action" type="submit" disabled={locked||!dirty}>
-      {busy?'SAVING PRIVATE REVISION…':project?'SAVE CHANGES':'CREATE PRIVATE DRAFT'}</button>
+      {busy?'SAVING PRIVATE REVISION…':project?'SAVE PRIVATE CHANGES':'CREATE PRIVATE DRAFT'}</button>
      <Link className="st-link" to="/studio">RETURN TO PROJECTS ↗</Link>
     </div>
     {notice&&<p role="status" className="st-success">{notice}</p>}
@@ -310,7 +292,9 @@ function StudioEditor({create,uploadsReady}:{create:boolean;uploadsReady:boolean
       <li data-ready={draft.aiDisclosure.trim().length>=6}><span>{draft.aiDisclosure.trim().length>=6?'✓':'○'}</span> AI involvement disclosed</li>
       <li data-ready={draft.humanContribution.trim().length>=10}><span>{draft.humanContribution.trim().length>=10?'✓':'○'}</span> Human contributions credited</li>
      </ul>
-     <p className="st-muted">A submitted project enters a private queue. There is no automated publication, game execution, or XP reward.</p>
+     <p className="st-muted">Preparing a release is optional. A submitted project enters a private queue; there is no automatic publication, gameplay or XP reward.</p>
+     {editorView==='simple'&&!ready&&<button type="button" className="st-link"
+      onClick={()=>setEditorView('advanced')}>OPEN RELEASE DETAILS & CREDITS ↗</button>}
      {project&&<button className="st-button" disabled={!ready||dirty||locked||!editable(project)}
       onClick={()=>void submit()}>SUBMIT SAVED REVISION FOR REVIEW ↗</button>}
      {project?.status==='pending_review'&&<button className="st-button" disabled={busy||mustReload}
