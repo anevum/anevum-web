@@ -96,7 +96,7 @@ export function NativePackExperience({kind,document,urls}:{kind:PackKind;documen
 
 /** Folded into signed-in Studio. All pack operations stay local to this browser. */
 export function NativePackLab({title,creator,document,onImportDocument,disabled}:{
- title:string;creator:string;document:StudioBlockDocument;
+ title:string;creator:string;document:StudioBlockDocument|null;
  onImportDocument:(value:StudioBlockDocument)=>void;disabled:boolean;
 }){
  const [kind,setKind]=useState<PackKind>('game');
@@ -160,7 +160,10 @@ export function NativePackLab({title,creator,document,onImportDocument,disabled}
  }
  function currentDocument():PackDocument{
   if(kind==='game')return {schema:'anevum.game.v1',startScene:scenes[0].id,scenes};
-  if(kind==='project')return document;
+  if(kind==='project'){
+   if(!document)throw Error('Convert your notes to Workbench blocks before exporting a .anvp document.');
+   return document;
+  }
   if(kind==='album')return {schema:'anevum.album.v1',tracks:media.map((m,i)=>({
    id:'track-'+(i+1),title:m.title,file:mediaPath(i,m.file)}))};
   if(kind==='series')return {schema:'anevum.series.v1',episodes:media.map((m,i)=>({
@@ -266,7 +269,8 @@ export function NativePackLab({title,creator,document,onImportDocument,disabled}
         onClick={()=>setMedia(v=>v.filter((_,j)=>i!==j))}>×</button>
       </div>)}
      </div>}
-     {kind==='project'&&<p className="np-small">Exports your current private Workbench blocks as an
+     {kind==='project'&&<p className="np-small">{document?'Exports your current private Workbench blocks as an':
+      'Convert your notes into Workbench pieces first to export an'}
       editable .anvp file. The export includes only this document, not account records or server attachments.</p>}
      <button type="button" className="np-primary" disabled={busy}
       onClick={()=>void exportPack()}>{busy?'PROCESSING…':'EXPORT .'+
