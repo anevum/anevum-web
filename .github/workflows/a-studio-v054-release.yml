@@ -22,7 +22,7 @@ jobs:
     timeout-minutes: 30
     env:
       CANDIDATE_SHA: ${{ github.sha }}
-      CI_VERIFIED_PARENT: 10327b84651e46f503377ebdbeda3b71c2beaf37
+      CI_VERIFIED_PARENT: c98a711994f7fdcca75c64a59e257686873d5116
       CI_VERIFIED_INTEGRATION: ba166d7a22aa23b9663269695acad17ce64e5ed6
       CI_VERIFIED_SOURCE: 8c00f078b823fd97c3b40cab013c71f86943f94a
       EXPECTED_ACTIVE_WORKER: c6f651f0-9afa-4314-9aca-6c062bf1fb78
@@ -34,7 +34,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: ${{ github.sha }}
-          fetch-depth: 2
+          fetch-depth: 8
           persist-credentials: false
 
       - name: Prove integration CI was green and code unchanged since verification
@@ -45,9 +45,12 @@ jobs:
           set -euo pipefail
           test "$(git rev-parse HEAD)" = "$CANDIDATE_SHA"
           test "$(git rev-parse HEAD^)" = "$CI_VERIFIED_PARENT"
-          test "$(git rev-parse HEAD~2)" = "$CI_VERIFIED_INTEGRATION"
-          test "$(git diff --name-only HEAD^ HEAD)" = ".github/workflows/a-studio-v054-release.yml"
-          test "$(git diff --name-only HEAD~2 HEAD^)" = ".github/workflows/a-studio-v054-release.yml"
+          git merge-base --is-ancestor "$CI_VERIFIED_INTEGRATION" HEAD
+          # No application code, schema, policy or built assets changed after the
+          # reviewed, exact-head integrated source commit. All subsequent edits
+          # must affect this guarded release workflow only.
+          changed="$(git diff --name-only "$CI_VERIFIED_INTEGRATION" HEAD)"
+          test "$changed" = ".github/workflows/a-studio-v054-release.yml"
           head="$(curl --fail --silent --show-error --max-time 25 -H "Authorization: Bearer $GH_TOKEN" \
             "$GITHUB_API_URL/repos/$GITHUB_REPOSITORY/git/ref/heads/release/a-studio-v054-workbench-20261016" | jq -r '.object.sha')"
           test "$head" = "$CANDIDATE_SHA"
@@ -287,7 +290,7 @@ jobs:
         with:
           name: a-studio-v054-release-receipt-${{ github.run_id }}
           path: |
-            evidence/a-studio-v053-*.txt
+            evidence/a-studio-v054-*.txt
             evidence/studio-v053-browser/*.png
           retention-days: 7
           if-no-files-found: warn
