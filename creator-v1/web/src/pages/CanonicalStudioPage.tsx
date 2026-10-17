@@ -53,12 +53,16 @@ export function CanonicalStudioPage({mode='list'}:{mode?:Mode}){
   if(!id||session?.user?.emailVerified!==true)return;
   let live=true;const controller=new AbortController();
   setPhase('loading');setMessage('');
-  Promise.all([studioHealth(controller.signal),canonicalMe(controller.signal)]).then(([health,profile])=>{
+  Promise.all([studioHealth(controller.signal),canonicalMe(controller.signal)]).then(async([health,profile])=>{
    if(!live)return;
    if(profile.memberId!==id)throw Error('Member identity changed. Sign in again.');
    if(!health.studioReady){setPhase('unavailable');return;}
    if(!profile.profile?.handle){setPhase('incomplete');return;}
-   setIdentity(profile.profile);setUploads(health.studioUploadsReady===true);setPhase('ready');
+   // Health reports the environment capability; only this signed-in user's
+   // canonical API response can grant upload pilot access.
+   const memberStudio=await studioList(controller.signal);
+   if(!live)return;
+   setIdentity(profile.profile);setUploads(memberStudio.uploadsReady===true);setPhase('ready');
   }).catch(e=>{if(live){setMessage(showError(e));setPhase('unavailable')}});
   return()=>{live=false;controller.abort();};
  },[id,session?.user?.emailVerified]);

@@ -125,7 +125,7 @@ export async function canonicalStudio(req,env,user,now=Math.floor(Date.now()/100
   if(!id){
    if(req.method==='GET'){
     const items=await rows(db,'SELECT '+COLS+' FROM member_studio_projects WHERE user_id=? ORDER BY updated_at DESC,id DESC LIMIT 50',[user.id]);
-    return json({projects:items.map(dbRow),uploadsReady:studioUploadReady(env)});
+    return json({projects:items.map(dbRow),uploadsReady:studioUploadReady(env,user.id)});
    }
    if(req.method!=='POST')return fail(405,'Method not allowed');
    const incoming=await body(req);
@@ -193,7 +193,7 @@ export async function canonicalStudio(req,env,user,now=Math.floor(Date.now()/100
   if(req.method==='GET'){
    const history=await rows(db,
     'SELECT action,reason,created_at FROM member_studio_review_log WHERE project_id=? ORDER BY created_at DESC LIMIT 20',[id]);
-   return json({project:dbRow(selected),uploadsReady:studioUploadReady(env),reviewHistory:history.map(x=>({action:x.action,reason:x.reason,createdAt:Number(x.created_at)}))});
+   return json({project:dbRow(selected),uploadsReady:studioUploadReady(env,user.id),reviewHistory:history.map(x=>({action:x.action,reason:x.reason,createdAt:Number(x.created_at)}))});
   }
   if(req.method==='DELETE'){
    const input=await body(req,500);

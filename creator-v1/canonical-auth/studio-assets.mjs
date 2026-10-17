@@ -89,12 +89,18 @@ export function studioStorageReady(env){
  return env?.CANONICAL_CREATOR_STUDIO_ENABLED==='true'&&
    Boolean(env?.CREATOR_ASSETS?.get&&env?.CREATOR_ASSETS?.put&&env?.CREATOR_ASSETS?.delete);
 }
-export function studioUploadReady(env){
- return env?.CANONICAL_CREATOR_UPLOADS_ENABLED==='true'&&studioStorageReady(env);
+export function studioUploadReady(env,userId){
+ // Closed pilot until an explicitly bounded opt-in rollout is approved.
+ // This is a canonical Better Auth member ID allowlist, never an email,
+ // handle, forum role, legacy session, or public registration flag.
+ const ids=String(env?.CANONICAL_CREATOR_UPLOAD_PILOT_MEMBER_IDS||'').split(',')
+   .map(x=>x.trim()).filter(Boolean);
+ return env?.CANONICAL_CREATOR_UPLOADS_ENABLED==='true'&&studioStorageReady(env)&&
+  ids.length>0&&(userId===undefined?true:ids.includes(userId));
 }
 export async function canonicalStudioAssets(req,env,user,project,{asset=null,file=null,now=Math.floor(Date.now()/1000),pace}){
  const db=env.MEMBER_DB,store=env.CREATOR_ASSETS;
- const uploadsEnabled=studioUploadReady(env),storageConnected=studioStorageReady(env);
+ const uploadsEnabled=studioUploadReady(env,user.id),storageConnected=studioStorageReady(env);
  if(asset&&!HEX.test(asset))return fail(404,'Not found');
  try{
   if(!asset){

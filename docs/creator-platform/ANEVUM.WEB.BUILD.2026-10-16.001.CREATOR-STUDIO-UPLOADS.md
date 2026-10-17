@@ -47,3 +47,7 @@ The immediate QA target is npm run test:studio, then npm test from creator-v1. P
 
 ## V044 private storage pause semantics
 New upload reservations and binary writes stop when CANONICAL_CREATOR_UPLOADS_ENABLED is false, but a signed-in owner can still list existing file metadata. If the private CREATOR_ASSETS binding remains present, existing files can still be downloaded as forced attachments or permanently removed, including on review-locked projects. If R2 is disconnected, metadata remains readable and byte removal is blocked rather than losing the only object reference. The staging expiry reaper continues when new uploads are paused and isolated R2 is still provisioned; it remains inert when the Studio itself or the storage binding is absent.
+
+
+## Bounded private pilot scope
+CANONICAL_CREATOR_UPLOAD_PILOT_MEMBER_IDS (comma-separated canonical member UUIDs or IDs) must be present AND nonempty for all private upload writes; the upload flag and dedicated R2 binding alone do not open uploading to the general member population. The API returns the effective per-account upload capability, and the Studio UI uses the authenticated member response rather than trusting the public health endpoint. The pilot ID list must be stored as a secret, not logged, committed, or inferred from member emails, handles, or forum moderator roles. Removing the allowlist disables further reservations/PUTs without removing existing files.

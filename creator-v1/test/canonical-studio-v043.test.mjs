@@ -35,7 +35,8 @@ function setup({enabled=true,migrate=true,uploads=false}={}){
  };
  const env={...f.env,CANONICAL_CREATOR_STUDIO_ENABLED:enabled?'true':'false',
   CANONICAL_CREATOR_UPLOADS_ENABLED:uploads?'true':'false',CREATOR_ASSETS:uploads?store:undefined,
-  CANONICAL_STUDIO_REVIEWER_IDS:'pilot-bob'};
+  CANONICAL_STUDIO_REVIEWER_IDS:'pilot-bob',
+  CANONICAL_CREATOR_UPLOAD_PILOT_MEMBER_IDS:uploads?'pilot-alice,pilot-bob':''};
  let sessions=0;
  const worker=createCanonicalStageWorker({authFactory:()=>({api:{getSession:async({headers})=>{
   sessions++;
@@ -331,5 +332,32 @@ test('expired private upload leases still clean up after new uploads are paused'
   s.env.CANONICAL_CREATOR_UPLOADS_ENABLED='false';
   assert.equal((await cleanupCanonicalStudioAssets(s.env,now)).cleaned,1);
   assert.equal(s.objects.size,0);
+ }finally{s.close();}
+});
+
+
+test('closed canonical member allowlist gates binary upload without blocking private drafts',async()=>{
+ const s=setup({uploads:true});try{
+  s.env.CANONICAL_CREATOR_UPLOAD_PILOT_MEMBER_IDS='pilot-alice';
+  const a=await j(await s.call(ROOT,'GET','alice'));
+  const b=await j(await s.call(ROOT,'GET','bob'));
+  assert.equal(a.uploadsReady,true);
+  assert.equal(b.uploadsReady,false);
+  const bobProject=(await j(await s.call(ROOT,'POST','bob',
+    {clientRequestId:crypto.randomUUID(),draft:{...draft,slug:'member-bob-project'}}))).project;
+  const route=ROOT+'/'+bobProject.id+'/assets';
+  const assetList=await j(await s.call(route,'GET','bob'));
+  assert.equal(assetList.uploadsReady,false);
+  assert.equal(assetList.storageReady,true);
+  const denied=await s.call(route,'POST','bob',{
+    name:'blocked.gif',sizeBytes:6,contentType:'image/gif'
+  });
+  assert.equal(denied.status,404);
+  // Removing the allowlist instantly halts new private uploads for everyone,
+  // while existing member drafts remain private and editable.
+  s.env.CANONICAL_CREATOR_UPLOAD_PILOT_MEMBER_IDS='';
+  assert.equal((await j(await s.call(ROOT,'GET','alice'))).uploadsReady,false);
+  assert.equal((await s.call(ROOT,'POST','alice',
+    {clientRequestId:crypto.randomUUID(),draft:{...draft,slug:'second-private-work'}})).status,201);
  }finally{s.close();}
 });
