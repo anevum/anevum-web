@@ -209,7 +209,7 @@ export function StaffBridge({myId,peers,online,expanded}:{myId:string;peers:Staf
     }}>DECLINE</button>
    </div>
    {!joined&&<p>Join voice or video first, then accept.</p>}
-  </div>
+  </div>}
   <div className="ir-videos" hidden={!joined||!expanded}>
    <div><video ref={localVideoRef} muted playsInline autoPlay aria-label="Your camera"/>
     <small>LOCAL / {withVideo?'CAMERA':'AUDIO ONLY'}</small></div>
