@@ -298,7 +298,8 @@ function StudioEditor({create,uploadsReady}:{create:boolean;uploadsReady:boolean
       <p>{item.reason}</p>
      </div>)}
     </section>}
-    {project&&<StudioUploader project={project} uploadsReady={uploadsReady} onAssetsChanged={setAssetSummary}/>}
+    {project&&<StudioUploader project={project} uploadsReady={uploadsReady}
+     onAssetsChanged={setAssetSummary} onProjectChanged={setProject}/>}
     <section className="st-panel">
      <p className="st-kicker">04 / REVIEW READINESS</p><h2>SUBMISSION CHECK.</h2>
      <ul className="st-checklist">
@@ -321,7 +322,10 @@ function StudioEditor({create,uploadsReady}:{create:boolean;uploadsReady:boolean
  </>;
 }
 
-function StudioUploader({project,uploadsReady,onAssetsChanged}:{project:StudioProject;uploadsReady:boolean;onAssetsChanged:(assets:StudioAsset[])=>void}){
+function StudioUploader({project,uploadsReady,onAssetsChanged,onProjectChanged}:{
+ project:StudioProject;uploadsReady:boolean;onAssetsChanged:(assets:StudioAsset[])=>void;
+ onProjectChanged:(project:StudioProject)=>void
+}){
  const [assets,setAssets]=useState<StudioAsset[]>([]);
  const [storageReady,setStorageReady]=useState(false);
  const [memberBytes,setMemberBytes]=useState(0);
@@ -379,9 +383,22 @@ function StudioUploader({project,uploadsReady,onAssetsChanged}:{project:StudioPr
  async function remove(a:StudioAsset){
   // Private file withdrawal remains available when a draft is review-locked.
   if(busy)return;
-  if(!window.confirm('Remove the private file '+a.name+' from this project?'))return;
+  const warning=project.status==='pending_review'?
+   'Removing a file will also withdraw this project from the pending review queue. Continue?' :
+   'Permanently remove the private file '+a.name+' from this project?';
+  if(!window.confirm(warning))return;
   setBusy(true);setError('');setNotice('');
-  try{await studioDeleteAsset(project.id,a.id);await refresh();setNotice('Private file removed.');}
+  try{
+   const changed=await studioDeleteAsset(project.id,a.id);
+   await refresh();
+   if(project.status==='pending_review'){
+    const latest=await studioGet(project.id);
+    onProjectChanged(latest.project);
+   }
+   setNotice(changed.withdrawnFromReview?
+    'Private file removed. This submission was automatically withdrawn from review and is editable again.':
+    'Private file removed.');
+  }
   catch(e){setError(showError(e));}finally{setBusy(false);}
  }
  function dropped(e:DragEvent<HTMLDivElement>){e.preventDefault();setDrag(false);accept(e.dataTransfer.files);}
