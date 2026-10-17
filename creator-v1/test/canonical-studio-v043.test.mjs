@@ -137,6 +137,10 @@ test('review queue is staff-only, independent and change-request-only',async()=>
   const c=await j(await s.call(ROOT,'POST','alice',projectRequest()));
   await s.call(ROOT+'/'+c.project.id+'/submit','POST','alice',{revision:1});
   assert.equal((await s.call('/api/v1/member/studio/review','GET','alice')).status,403);
+  const memberList=await j(await s.call(ROOT,'GET','alice'));
+  const reviewerList=await j(await s.call(ROOT,'GET','bob'));
+  assert.equal(memberList.canReview,false);
+  assert.equal(reviewerList.canReview,true);
   const queue=await j(await s.call('/api/v1/member/studio/review','GET','bob'));
   assert.equal(queue.projects.length,1);
   assert.equal(queue.projects[0].handle,'alice');
