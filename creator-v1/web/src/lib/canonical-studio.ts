@@ -77,7 +77,7 @@ async function request<T>(path:string,method:'GET'|'POST'|'PATCH'|'PUT'|'DELETE'
 }
 export const studioHealth=async(signal?:AbortSignal):Promise<StudioHealth>=>
  read<StudioHealth>(await fetch('/api/v1/member/health',{credentials:'same-origin',mode:'same-origin',cache:'no-store',redirect:'error',signal}));
-export const studioList=(signal?:AbortSignal)=>request<{projects:StudioProject[];uploadsReady:boolean}>(projectPath(), 'GET',undefined,signal);
+export const studioList=(signal?:AbortSignal)=>request<{projects:StudioProject[];uploadsReady:boolean;canReview:boolean}>(projectPath(), 'GET',undefined,signal);
 export const studioGet=(id:string,signal?:AbortSignal)=>request<{project:StudioProject;uploadsReady:boolean;reviewHistory:StudioReviewHistory[]}>(projectPath(id),'GET',undefined,signal);
 export const studioCreate=(draft:StudioDraft,clientRequestId:string)=>request<{project:StudioProject;replayed:boolean}>(projectPath(),'POST',{draft,clientRequestId:validId(clientRequestId)});
 export const studioUpdate=(id:string,revision:number,draft:StudioDraft)=>request<{project:StudioProject}>(projectPath(id),'PATCH',{revision,draft});
