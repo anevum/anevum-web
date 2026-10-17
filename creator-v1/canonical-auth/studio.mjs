@@ -176,24 +176,22 @@ export async function canonicalStudio(req,env,user,now=Math.floor(Date.now()/100
     return fail(409,'Project revision changed');
    const kinds=ELIGIBLE_ASSET_KINDS[selected.category]||[];
    const hasExternal=Boolean(selected.demo_url||selected.source_url);
-   const proof=kinds.length?
-    "EXISTS(SELECT 1 FROM member_studio_assets a WHERE a.project_id=? AND a.user_id=? AND a.status='quarantined' AND a.kind IN ("+
-     kinds.map(()=>'?').join(',')+"))":"0=1";
-   const proofArgs=[id,user.id,...kinds];
    const eligible=hasExternal?true:kinds.length?Boolean(await getOne(db,
-    'SELECT a.id FROM member_studio_assets a WHERE a.project_id=? AND a.user_id=? AND a.status=\'quarantined\' AND a.kind IN ('+
-    kinds.map(()=>'?').join(',')+') LIMIT 1',proofArgs)):false;
+    "SELECT id FROM member_studio_assets WHERE project_id=? AND user_id=? AND status='quarantined' "+
+    "AND sha256 IS NOT NULL AND kind IN ("+kinds.map(()=>'?').join(',')+") LIMIT 1",
+    [id,user.id,...kinds])):false;
    if(!readyToSubmit(selected,eligible))return fail(422,
-    'Add a matching quarantined creation file OR a public HTTPS destination, plus license and accurate contribution disclosures before review');
+    'A matching completed file or HTTPS destination, license and accurate contribution disclosures are required');
+   const unfinished=await getOne(db,
+    "SELECT id FROM member_studio_assets WHERE project_id=? AND user_id=? AND status<>'quarantined' LIMIT 1",
+    [id,user.id]);
+   if(unfinished)return fail(409,'Finish or remove incomplete uploads before submitting for review');
    if(!await pace(db,user.id,'project',now,30))return fail(429,'Too many project updates');
-   // Recheck file existence atomically with submission to defeat concurrent
-   // private file withdrawals. No object becomes public.
-   const found=await rows(db,
-    "UPDATE member_studio_projects SET status='pending_review',revision=revision+1,updated_at=?,submitted_at=? "+
-    "WHERE id=? AND user_id=? AND revision=? AND status IN ('draft','changes_requested') "+
-    (hasExternal?'':"AND "+proof+" ")+"RETURNING "+COLS,
-    [now,now,id,user.id,value.revision,...(hasExternal?[]:proofArgs)]);
-   return found.length===1?json({project:dbRow(found[0]),note:'Private review queue only; no publication or gameplay activation'}):fail(409,'Project revision changed');
+   const frozen=await freezeStudioReview(db,selected,user.id,now,kinds,hasExternal);
+   return frozen?json({project:dbRow(frozen.project),submissionId:frozen.submissionId,
+    attachmentCount:frozen.assetCount,
+    note:'Review snapshot locked privately. No publication, video playback or gameplay activation.'}):
+    fail(409,'Submission changed; reload the project');
   }
   if(sub)return fail(404,'Not found');
   if(req.method==='GET'){
