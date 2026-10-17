@@ -89,6 +89,10 @@
  font-weight:700;cursor:pointer}
 .st-editor-modes button[aria-pressed=true]{background:#b9d9d7;border-color:#d0eae5;color:#0d1929}
 .st-editor-modes button:focus-visible{outline:2px solid var(--st-cyan);outline-offset:2px}
+.st-save-state{margin:4px 0 3px;border:1px solid rgba(166,218,202,.25);background:rgba(108,157,137,.07);
+ padding:12px 14px;color:#c3eadc;font-size:.68rem;font-weight:730;letter-spacing:.08em;line-height:1.48}
+.st-save-state[data-unsaved=true]{border-color:rgba(223,185,141,.45);color:#f2d7a8;
+ background:rgba(188,129,65,.085)}
 
 .st-editor-form .st-section-head{margin-bottom:1px}
 .st-sidebar{display:grid;gap:18px;min-width:0}
