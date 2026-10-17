@@ -1,4 +1,4 @@
-import {Link} from "react-router-dom";
+import {Link,useSearchParams} from "react-router-dom";
 import {type FormEvent,useState} from "react";
 import {useNavigate} from "react-router-dom";
 import {canonicalAuthClient,canonicalMethods} from "../lib/canonical-beta";
@@ -20,6 +20,15 @@ const METHODS=[
  */
 export function Phase1JoinPage(){
  const navigate=useNavigate();
+ const [searchParams]=useSearchParams();
+ const oauthFailure=searchParams.get("error");
+ const oauthFeedback=oauthFailure==="account_not_linked"
+   ?"This sign-in method is not connected to your existing ANEVUM member account. Use your original sign-in method below, open your member page, and connect the provider under Connected Sign-in Methods."
+   :oauthFailure==="access_denied"||oauthFailure==="oauth_access_denied"
+   ?"Provider authorization was cancelled. Your ANEVUM account is unchanged."
+   :oauthFailure
+   ?"Your provider could not finish signing you in. Try your original method; your ANEVUM account is unchanged."
+   :null;
  const capability=useResource(canonicalMethods,[]);
  const [email,setEmail]=useState("");
  const [otp,setOtp]=useState("");
@@ -112,6 +121,7 @@ export function Phase1JoinPage(){
      </div>:<>
        <h2>{codeSent?"CHECK YOUR INBOX.":"YOUR STORY STARTS HERE."}</h2>
        <p className="join-lead">{codeSent?"Enter the latest eight-digit code sent to your email.":"One email, one verification, and you are in. Membership is free."}</p>
+       {oauthFeedback&&<p role="alert" className="av12-join-error">{oauthFeedback}</p>}
        {ready&&!emailReady&&<p role="status" className="join-service-note">Email sign-in is temporarily unavailable.</p>}
        {ready&&(["google","github","apple","microsoft"] as const).some(socialReady)&&<div className="join-methods" aria-label="Other available sign-in methods">
          {METHODS.filter(method=>method.key!=="email"&&socialReady(method.key)).map(method=><button
