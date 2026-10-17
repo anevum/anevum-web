@@ -35,3 +35,14 @@ test("social callbacks return to account-safe error recovery, not a dead-end pag
  assert.match(memberSource,/RETRY PROVIDER CHECK/);
  assert.doesNotMatch(memberSource,/disabled=\{Boolean\(busy\)\|\|Boolean\(error\)\}/);
 });
+
+test("unverified OAuth sessions cannot enter the member page without OTP verification",()=>{
+ assert.match(source,/member\?\.emailVerified===true&&ready/);
+ assert.match(source,/requiresEmailVerification/);
+ assert.match(source,/sessionEmail/);
+ assert.match(source,/emailForVerification\.trim\(\)\.toLowerCase\(\)/);
+ assert.match(source,/readOnly=\{requiresEmailVerification\}/);
+ assert.match(source,/EMAIL VERIFICATION REQUIRED/);
+ assert.match(source,/signOutUnverified/);
+ assert.match(source,/\!requiresEmailVerification&&\(\["google"/);
+});
