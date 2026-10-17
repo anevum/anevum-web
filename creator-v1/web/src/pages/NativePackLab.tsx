@@ -115,13 +115,14 @@ export function NativePackLab({title,creator,document,onImportDocument,disabled}
   const urls:Record<string,string>={};
   media.forEach((entry,i)=>{urls[mediaPath(i,entry.file)]=URL.createObjectURL(entry.file);});
   setMediaUrls(urls);
-  return()=>Object.values(urls).forEach(URL.revokeObjectURL);
+  return()=>Object.values(urls).forEach(url=>URL.revokeObjectURL(url));
  },[media]);
  useEffect(()=>()=>{
   importSeq.current++;
-  ownedUrls.current.forEach(URL.revokeObjectURL);
+  ownedUrls.current.forEach(url=>URL.revokeObjectURL(url));
  },[]);
  function switchKind(next:PackKind){
+  ownedUrls.current.forEach(url=>URL.revokeObjectURL(url));ownedUrls.current=[];
   setKind(next);setMedia([]);setOpened(null);setMessageText('');setExperienceKey(n=>n+1);
  }
  function updateScene(change:Partial<Scene>){
@@ -153,8 +154,8 @@ export function NativePackLab({title,creator,document,onImportDocument,disabled}
   if(incoming.some(entry=>!allowed.includes(ext(entry.file))||!entry.file.size))
    return setMessageText('Choose supported local media: '+allowed.join(', ')+'.');
   const all=[...media,...incoming];
-  if(all.length>32||all.reduce((sum,entry)=>sum+entry.file.size,0)>MAX_PACK_BYTES-65536)
-   return setMessageText('Local packages support at most 32 items and 20 MiB total.');
+  if(all.length>31||all.reduce((sum,entry)=>sum+entry.file.size,0)>MAX_PACK_BYTES-65536)
+   return setMessageText('Local packages support at most 31 media items and 20 MiB total.');
   setMedia(all);setMessageText('');
  }
  function currentDocument():PackDocument{
@@ -196,7 +197,7 @@ export function NativePackLab({title,creator,document,onImportDocument,disabled}
    }
    ownedUrls.current.forEach(URL.revokeObjectURL);
    ownedUrls.current=Object.values(urls);
-   setOpened({...pack,document:pack.document as PackDocument,urls});
+   setOpened({manifest:pack.manifest,document:pack.document as PackDocument,urls});
    setExperienceKey(n=>n+1);
    setMessageText('Validated '+file.name+'. Preview is local only; no upload or publishing occurred.');
   }catch(error){if(seq===importSeq.current)setMessageText(message(error));}
