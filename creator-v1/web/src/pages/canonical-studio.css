@@ -270,3 +270,142 @@
  .st-root--workbench .st-editor-form .st-section-head h2{font-size:1.2rem}
  .st-root--workbench .st-editor-form .st-section-head{gap:6px}
 }
+
+
+/* V054.2: real creative workspace before project administration */
+.st-root--workbench .st-header{
+ padding:4px 0 11px;gap:14px;align-items:center;border-bottom:1px solid rgba(178,192,219,.16)}
+.st-root--workbench .st-header h1{font-size:clamp(.93rem,1.9vw,1.35rem);
+ letter-spacing:.06em;line-height:1.2;margin:0;color:#d7dbea}
+.st-root--workbench .st-header .st-kicker{display:none}
+.st-root--workbench .st-header>div>p:last-child{display:none}
+.st-root--workbench .st-back{margin-bottom:7px;font-size:.67rem;color:#b8dcd8!important}
+.st-root--workbench .st-identity{padding:9px 12px;min-width:unset}
+.st-root--workbench .st-identity>span,.st-root--workbench .st-identity>small{display:none}
+.st-root--workbench .st-nav{padding:9px 0 11px;gap:19px;border-bottom-color:rgba(178,192,219,.16)}
+.st-root--workbench .st-nav a{min-height:33px;display:flex;align-items:center;font-size:.63rem;padding:4px 0}
+.st-root--workbench .st-editor--canvas{display:block;margin-top:13px}
+.st-root--workbench .st-canvas-form{display:grid;gap:0;padding:0;background:none;border:0}
+.st-creation-toolbar{display:flex;align-items:center;justify-content:space-between;
+ gap:18px;min-width:0;padding:13px 20px;margin-bottom:12px;
+ background:linear-gradient(115deg,#15243a,#101a2e);
+ border:1px solid rgba(175,197,225,.24);border-radius:9px}
+.st-creation-identity{display:grid;gap:2px;min-width:0;flex:1}
+.st-creation-identity label{color:#a4d2d2;font-size:.57rem;font-weight:710;letter-spacing:.15em}
+.st-creation-identity input{
+ min-width:0;max-width:640px;width:100%;
+ background:transparent;color:#f5ebf5;border:1px solid transparent;border-radius:4px;
+ font:inherit;font-size:clamp(1.23rem,2.5vw,2.1rem);font-weight:520;
+ letter-spacing:-.035em;line-height:1.25;padding:3px 6px 3px 0}
+.st-creation-identity input::placeholder{color:#c9bfd0}
+.st-creation-identity input:hover{border-bottom-color:rgba(181,212,225,.4)}
+.st-creation-identity input:focus-visible{
+ border-color:#aee1d9;outline:2px solid #aee1d9;outline-offset:2px;padding-left:8px}
+.st-creation-identity>span{font-size:.57rem;color:#a2b4c9;letter-spacing:.09em}
+.st-creation-controls{display:flex;gap:12px;align-items:center;justify-content:end;flex-wrap:wrap}
+.st-creation-controls .st-save-state{border:0;padding:0;margin:0;
+ background:transparent;font-size:.62rem;letter-spacing:.06em;white-space:nowrap;color:#b5e5d9}
+.st-creation-controls .st-save-state[data-unsaved=true]{color:#eed2ab}
+.st-creation-controls .st-action{
+ border-radius:6px;white-space:nowrap;min-height:43px;font-size:.68rem;padding:11px 17px}
+.st-creation-underbar{display:flex;justify-content:space-between;align-items:center;
+ gap:15px;flex-wrap:wrap;padding:13px 4px 19px}
+.st-creation-underbar>span{color:#97aec2;font-size:.61rem;line-height:1.4;letter-spacing:.06em}
+.st-creation-underbar .st-link{min-height:36px;color:#b8e3de!important}
+.st-project-settings,.st-review-drawer{
+ margin:13px 0 0;background:linear-gradient(120deg,#101d30,#0b1627);
+ border:1px solid rgba(180,197,222,.23);border-radius:8px;overflow:hidden;
+ scroll-margin-top:30px}
+.st-project-settings>summary,.st-review-drawer>summary{
+ display:flex;align-items:center;gap:16px;list-style:none;
+ min-height:85px;padding:17px 21px;cursor:pointer;color:#eae5f1}
+.st-project-settings>summary::-webkit-details-marker,
+.st-review-drawer>summary::-webkit-details-marker{display:none}
+.st-project-settings>summary:hover,.st-review-drawer>summary:hover{
+ background:rgba(170,154,194,.08)}
+.st-project-settings>summary>span:nth-child(2),
+.st-review-drawer>summary>span:nth-child(2){display:grid;gap:6px;flex:1;min-width:0}
+.st-project-settings>summary strong,.st-review-drawer>summary strong{
+ display:block;font-size:1rem;font-weight:560;letter-spacing:-.025em}
+.st-project-settings>summary small,.st-review-drawer>summary small{
+ display:block;color:#a7b9c9;font-size:.74rem;line-height:1.35}
+.st-project-settings>summary>span:last-child,
+.st-review-drawer>summary>span:last-child{font-size:1.4rem;color:#c5b0d7}
+.st-settings-icon,.st-review-drawer-mark{
+ height:38px;width:38px;min-width:38px;display:grid;place-items:center;
+ background:rgba(173,134,194,.12);border:1px solid rgba(204,183,218,.28);
+ border-radius:50%;color:#e0c2e2;font-size:1.2rem}
+.st-settings-content{border-top:1px solid rgba(178,196,223,.17);
+ padding:20px clamp(17px,3vw,35px) 28px}
+.st-settings-content .st-editor-modes{width:max-content;max-width:100%;margin-bottom:19px}
+.st-settings-fields{display:grid;gap:17px;max-width:690px}
+.st-settings-fields .st-muted{margin:0}
+.st-settings-fields .st-field{gap:8px}
+.st-settings-fields .st-check{line-height:1.5}
+.st-review-drawer{margin-top:17px}
+.st-review-drawer-content{padding:20px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;
+ border-top:1px solid rgba(178,196,223,.17)}
+.st-review-drawer-content>.st-panel{margin:0;min-width:0}
+.st-review-readiness{align-self:start;display:grid;gap:10px}
+.st-review-readiness .st-checklist{margin:6px 0;gap:9px}
+.st-review-readiness .st-button,.st-review-readiness .st-link{justify-self:start}
+.st-review-drawer-content>.st-assets{grid-column:1/-1}
+.st-review-drawer-content>.st-panel:only-child{grid-column:1/-1}
+@media(max-width:940px){
+ .st-review-drawer-content{grid-template-columns:1fr}
+ .st-review-drawer-content>.st-assets{grid-column:auto}
+}
+@media(max-width:620px){
+ .st-root--workbench{padding:12px}
+ .st-root--workbench .st-header{padding:3px 0 7px}
+ .st-root--workbench .st-header h1{font-size:.97rem}
+ .st-root--workbench .st-header .st-back{margin:0}
+ .st-root--workbench .st-nav{padding:6px 0 8px;gap:19px}
+ .st-root--workbench .st-identity{display:none}
+ .st-root--workbench .st-editor--canvas{margin-top:10px}
+ .st-creation-toolbar{padding:12px;display:grid;gap:11px}
+ .st-creation-identity input{font-size:1.36rem}
+ .st-creation-controls{display:flex;justify-content:space-between}
+ .st-creation-controls .st-save-state{font-size:.61rem}
+ .st-creation-controls .st-action{width:auto;min-height:41px;padding:9px 13px}
+ .st-creation-underbar{padding:10px 0 15px;flex-direction:column;align-items:start;gap:6px}
+ .st-project-settings>summary,.st-review-drawer>summary{
+  padding:14px 12px;gap:10px;min-height:70px}
+ .st-project-settings>summary strong,.st-review-drawer>summary strong{font-size:.95rem}
+ .st-project-settings>summary small,.st-review-drawer>summary small{font-size:.7rem}
+ .st-settings-icon,.st-review-drawer-mark{height:31px;width:31px;min-width:31px}
+ .st-settings-content,.st-review-drawer-content{padding:13px}
+ .st-settings-content .st-editor-modes{width:100%}
+ .st-settings-content .st-editor-modes button{flex:1;min-width:0;font-size:.61rem;padding:9px 6px}
+ .st-review-readiness .st-button,.st-review-readiness .st-link{justify-self:stretch}
+}
+
+/* V054.2 visual QA: remove repetitive administrative mastheads from maker routes.
+   The site navigation already identifies ANEVUM; the Studio only needs a return path. */
+.st-compact-chrome{
+ display:flex;align-items:center;justify-content:space-between;gap:14px;
+ min-height:43px;padding:5px 2px 10px;margin:0 0 6px;
+ border-bottom:1px solid rgba(179,195,216,.14);
+ color:#a4b9cf;font-size:.63rem;font-weight:680;letter-spacing:.11em;
+}
+.st-compact-chrome>span{white-space:nowrap;color:#b0d4d5;font-size:.62rem}
+.st-compact-chrome>span>span{padding:0 5px;color:#bd98be}
+.st-compact-chrome>div{display:flex;gap:14px;justify-content:flex-end;align-items:center}
+.st-compact-chrome a{display:inline-flex;align-items:center;min-height:33px;
+ color:#d2c4df!important;white-space:nowrap}
+.st-compact-chrome a:hover{color:#b6e8e1!important}
+.st-root--launchpad .sl-landing-hero{margin-top:10px}
+.st-root--workbench .st-editor--canvas{margin-top:8px}
+@media(max-width:620px){
+ .st-compact-chrome{min-height:38px;padding:2px 0 8px;gap:9px;
+ font-size:.6rem;letter-spacing:.06em}
+ .st-compact-chrome>span{font-size:.57rem;letter-spacing:.04em}
+ .st-compact-chrome>div{gap:8px}
+ .st-compact-chrome a{min-height:34px}
+ .st-root--launchpad .sl-landing-hero{margin-top:6px}
+ .st-root--workbench .st-editor--canvas{margin-top:6px}
+}
+@media(max-width:350px){
+ .st-compact-chrome>span{font-size:.54rem}
+ .st-compact-chrome>div{gap:5px}
+}

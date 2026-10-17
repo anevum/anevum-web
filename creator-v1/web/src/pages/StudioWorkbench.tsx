@@ -1,6 +1,6 @@
-import {useEffect,useState} from 'react';
+import {useEffect,useLayoutEffect,useRef,useState} from 'react';
 import {
- BLOCK_TYPES,MAX_BLOCKS,BLOCK_PREFIX,decodeStudioBlockDocument,encodeStudioBlockDocument,
+ BLOCK_TYPES,MAX_BLOCKS,decodeStudioBlockDocument,encodeStudioBlockDocument,
  isStudioBlockDescription,newStudioBlock,createStudioBlockDocumentFromNotes,
  moveStudioBlock,removeStudioBlock,getVisibleWorkbenchBlocks,
  type StudioBlock,type StudioBlockDocument,type StudioBlockType
@@ -8,20 +8,27 @@ import {
 import './studio-workbench.css';
 
 const TYPE_NAMES:Record<StudioBlockType,string>={
- heading:'Heading',paragraph:'Text',quote:'Quotation',divider:'Section break',
- scene:'Story scene',choice:'Reader choice',caption:'Art caption',credits:'Creator credits'
+ heading:'Title',paragraph:'Writing',quote:'Quote',divider:'Break',
+ scene:'Scene',choice:'Choice',caption:'Artwork',credits:'Credits'
 };
 const TYPE_HINTS:Record<StudioBlockType,string>={
- heading:'An introduction or chapter title.',
- paragraph:'A moment, idea, paragraph or description.',
- quote:'An emphasized quote or reflection.',
- divider:'Separate chapters or sections.',
- scene:'A location or moment readers can navigate to.',
- choice:'A decision that moves to a chosen scene.',
- caption:'Label a future artwork or describe a visual piece.',
- credits:'Name your contributors and their roles.'
+ heading:'Give this moment a name…',
+ paragraph:'Start writing here…',
+ quote:'A thought worth remembering…',
+ divider:'',
+ scene:'Where are we now? What happens here?',
+ choice:'What can your reader choose?',
+ caption:'Describe this piece and what it means…',
+ credits:'Who helped make this?'
 };
-const NARRATIVE=new Set<StudioBlockType>(['scene','choice']);
+const QUICK_TOOLS:{type:StudioBlockType;name:string;symbol:string}[]=[
+ {type:'paragraph',name:'Write',symbol:'≡'},
+ {type:'heading',name:'Title',symbol:'T'},
+ {type:'scene',name:'Scene',symbol:'◇'},
+ {type:'choice',name:'Choice',symbol:'↗'},
+ {type:'quote',name:'Quote',symbol:'❝'},
+ {type:'caption',name:'Artwork',symbol:'▧'}
+];
 const MAX_TEXT=2500;
 function PreviewBlock({block,onChoice,enabled}:{block:StudioBlock;onChoice:(id:string)=>void;enabled:boolean}){
  if(block.type==='heading')return <h3>{block.text||'Untitled heading'}</h3>;
@@ -41,62 +48,83 @@ function PreviewBlock({block,onChoice,enabled}:{block:StudioBlock;onChoice:(id:s
  </aside>;
  return null;
 }
+
 export function StudioWorkbench({value,onChange,disabled}:{
  value:string;onChange:(value:string)=>void;disabled:boolean;
 }){
  const document=decodeStudioBlockDocument(value);
  const encoded=isStudioBlockDescription(value);
- const [mode,setMode]=useState<'edit'|'preview'>('edit');
- const [newType,setNewType]=useState<StudioBlockType>('paragraph');
+ const [mode,setMode]=useState<'compose'|'experience'>('compose');
+ const [newType,setNewType]=useState<StudioBlockType>('credits');
  const [error,setError]=useState('');
- const [notice,setNotice]=useState('');
  const [scene,setScene]=useState<string|null>(null);
+ const editRef=useRef<HTMLDivElement>(null);
+ const focusTarget=useRef<string|null>(null);
  const scenes=document?.blocks.filter(b=>b.type==='scene')||[];
  useEffect(()=>{
   if(scene!==null&&(!document||!scenes.some(x=>x.id===scene)))setScene(null);
  },[scene,value]);
+ useEffect(()=>{
+  if(!focusTarget.current||mode!=='compose')return;
+  const target=editRef.current?.querySelector<HTMLTextAreaElement>(
+   '[data-block-id="'+focusTarget.current+'"]');
+  if(target){target.focus();focusTarget.current=null;}
+ },[value,mode]);
+ // Textareas are backed by the validated private block schema but should feel
+ // like live writing, not fixed-size form inputs. Measure on initial load,
+ // editing, undo-like changes and return from Experience mode.
+ useLayoutEffect(()=>{
+  if(mode!=='compose')return;
+  const fitToContent=()=>{
+   editRef.current?.querySelectorAll<HTMLTextAreaElement>('.wb-inline-text').forEach(field=>{
+    field.style.height='auto';
+    field.style.height=field.scrollHeight+'px';
+   });
+  };
+  fitToContent();
+  window.addEventListener('resize',fitToContent);
+  return()=>window.removeEventListener('resize',fitToContent);
+ },[value,mode]);
  function change(next:StudioBlockDocument){
   try{
-   const encoded=encodeStudioBlockDocument(next);
-   onChange(encoded);setError('');setNotice('Workbench changed. Save the private revision below.');
-  }catch(e){setError(e instanceof Error?e.message:'Workbench is unavailable. Your draft has not changed.');}
+   onChange(encodeStudioBlockDocument(next));
+   setError('');
+  }catch(e){setError(e instanceof Error?e.message:'Cannot change this draft without losing data.');}
  }
  function makeWorkbench(){
-  try{
-   const doc=createStudioBlockDocumentFromNotes(value);
-   change(doc);
-   setMode('edit');
-  }catch(e){setError(e instanceof Error?e.message:'Unable to convert notes without data loss.');}
+  try{change(createStudioBlockDocumentFromNotes(value));setMode('compose');}
+  catch(e){setError(e instanceof Error?e.message:'Cannot convert these notes.');}
  }
  if(!document){
   if(encoded)return <section className="wb-root wb-invalid" aria-label="Workbench document recovery">
-   <span className="st-kicker">VISUAL WORKBENCH / READ-ONLY RECOVERY</span>
-   <h3>THIS VERSION NEEDS RECOVERY.</h3>
-   <p>The saved block document could not be verified. It has not been changed. Preserve a copy before making any edits.</p>
-   <details><summary>Show exact stored project data</summary>
-    <textarea readOnly value={value} rows={6} aria-label="Stored Workbench data for recovery"/></details>
+   <span className="st-kicker">PRESERVED / READ-ONLY</span>
+   <h3>THIS DOCUMENT NEEDS RECOVERY.</h3>
+   <p>These blocks did not pass validation. Your stored text remains unchanged.</p>
+   <details><summary>View original data for recovery</summary>
+    <textarea readOnly rows={6} value={value} aria-label="Stored Workbench data for recovery"/></details>
   </section>;
   return <section className="wb-root wb-intro" aria-label="Creative notes or Workbench">
    <div className="wb-intro-head">
-    <div><span className="st-kicker">YOUR PRIVATE NOTES / V054</span>
-     <h3>IDEAS BECOME EXPERIENCES.</h3>
-     <p>Keep writing in notes, or transform this text into movable sections. You will be able to preview the result without publishing it.</p></div>
+    <div><span className="st-kicker">CONTINUE / YOUR ORIGINAL NOTES</span>
+     <h3>YOUR WORDS, YOUR WORK.</h3>
+     <p>You can keep writing here, or turn these notes into pieces you can arrange and experience.</p>
+    </div>
     <button type="button" className="wb-convert" disabled={disabled}
-     onClick={makeWorkbench}>OPEN VISUAL WORKBENCH ↗</button>
+     onClick={makeWorkbench}>OPEN CREATIVE SURFACE ↗</button>
    </div>
-   <label className="wb-notes-label" htmlFor="wb-existing-notes">WHAT ARE YOU CREATING?</label>
-   <textarea id="wb-existing-notes" rows={7} maxLength={8000} disabled={disabled} value={value}
-    placeholder="Describe the work, draft your story, outline a game, or record ideas."
+   <label htmlFor="wb-existing-notes" className="wb-notes-label">PRIVATE WORKING NOTES</label>
+   <textarea id="wb-existing-notes" rows={10} maxLength={8000} disabled={disabled}
+    value={value} placeholder="What do you want to make?"
     onChange={e=>{onChange(e.target.value);setError('');}}/>
-   <p className="wb-help">Conversion is optional and does not upload media or create a public release. Content over 2,500 characters should be shortened or separated first.</p>
-   {error&&<p className="wb-error" role="alert">{error}</p>}
+   <p className="wb-help">Notes remain editable. Converting is optional and limited to 2,500 characters; no media or executable files are involved.</p>
+   {error&&<p role="alert" className="wb-error">{error}</p>}
   </section>;
  }
  const workDocument:StudioBlockDocument=document;
  const rows=workDocument.blocks;
  const present=getVisibleWorkbenchBlocks(document,scene);
  function updateBlock(id:string,field:'type'|'text'|'target',newValue:string){
-  const next=workDocument.blocks.map(b=>{
+  const next=rows.map(b=>{
    if(b.id!==id)return b;
    if(field==='type'){
     const type=newValue as StudioBlockType;
@@ -106,82 +134,110 @@ export function StudioWorkbench({value,onChange,disabled}:{
   });
   change({...workDocument,blocks:next});
  }
- function addBlock(){
-  if(rows.length>=MAX_BLOCKS){setError('Maximum of '+MAX_BLOCKS+' sections reached.');return;}
-  change({...workDocument,blocks:[...rows,newStudioBlock(newType)]});
+ function addBlock(type:StudioBlockType){
+  if(disabled)return;
+  if(rows.length>=MAX_BLOCKS){setError('This canvas is at its 28-piece limit.');return;}
+  const piece=newStudioBlock(type);
+  focusTarget.current=type==='divider'?null:piece.id;
+  change({...workDocument,blocks:[...rows,piece]});
+  setMode('compose');
  }
  function move(id:string,delta:-1|1){change(moveStudioBlock(workDocument,id,delta));}
  function remove(id:string){change(removeStudioBlock(workDocument,id));}
- function resetStory(){setScene(null);}
- return <section className="wb-root wb-builder" aria-label="Visual creative Workbench">
-  <header className="wb-head">
-   <div>
-    <span className="st-kicker">V054 / SAFE VISUAL WORKBENCH</span>
-    <h3>BUILD YOUR CREATION.</h3>
-    <p>Compose writing, visual captions, scenes and choices. Everything remains private until a separate reviewed release is approved.</p>
+ const preview=<div className="wb-preview" aria-label="Private creation preview" aria-live="polite">
+  <div className="wb-preview-top"><span>LOCAL PREVIEW / NOT PUBLISHED</span>
+   {scenes.length>0&&<button type="button" onClick={()=>setScene(null)}>RESTART ↶</button>}
+  </div>
+  <div className="wb-preview-paper">
+   {present.length===0&&<p>A blank universe. Add your first piece to see it take shape.</p>}
+   {present.map(b=><PreviewBlock key={b.id} block={b} enabled={scenes.length>0}
+    onChoice={setScene}/>)}
+  </div>
+  <p className="wb-preview-footer">This is a private text-only experience. No creator HTML, scripts, or external assets run here.</p>
+ </div>;
+ return <section className="wb-root wb-builder wb-canvas-first" aria-label="Visual creative Workbench">
+  <div className="wb-head">
+   <div><span className="st-kicker">CREATIVE SURFACE / PRIVATE</span>
+    <h3>MAKE SOMETHING.</h3>
+    <p>Create directly. Explore it as you go. You can deal with the details later.</p>
    </div>
    <div className="wb-switch" role="group" aria-label="Workbench mode">
-    <button type="button" aria-pressed={mode==='edit'} onClick={()=>setMode('edit')}>BUILD</button>
-    <button type="button" aria-pressed={mode==='preview'} onClick={()=>setMode('preview')}>PREVIEW</button>
+    <button type="button" aria-pressed={mode==='compose'} onClick={()=>setMode('compose')}>MAKE</button>
+    <button type="button" aria-pressed={mode==='experience'} onClick={()=>setMode('experience')}>EXPERIENCE ↗</button>
    </div>
-  </header>
-  <div className="wb-progress"><span>{rows.length} / {MAX_BLOCKS} SECTIONS</span>
-   <span>{value.length} / 8,000 CHARACTERS</span></div>
-  <p className="wb-help">Your changes are not automatically saved. Use <strong>SAVE PRIVATE CHANGES</strong> below after editing.</p>
-  {error&&<p className="wb-error" role="alert">{error}</p>}
-  {notice&&<p className="wb-notice" role="status">{notice}</p>}
-  {mode==='edit'?<div className="wb-edit" aria-label="Reorderable creation sections">
-   {rows.length===0&&<p className="wb-empty">Add a text section or a scene to begin your creation.</p>}
-   {rows.map((b,index)=><article className="wb-block" key={b.id} aria-label={'Section '+(index+1)}>
-    <div className="wb-block-top">
-     <span className="wb-block-number">SECTION {String(index+1).padStart(2,'0')}</span>
-     <div className="wb-block-actions">
-      <button type="button" aria-label={'Move section '+(index+1)+' up'} disabled={disabled||index===0}
-       onClick={()=>move(b.id,-1)}>↑</button>
-      <button type="button" aria-label={'Move section '+(index+1)+' down'} disabled={disabled||index===rows.length-1}
-       onClick={()=>move(b.id,1)}>↓</button>
-      <button type="button" aria-label={'Remove section '+(index+1)} disabled={disabled}
-       onClick={()=>remove(b.id)}>REMOVE</button>
+  </div>
+  <div className="wb-tools" role="toolbar" aria-label="Add to your creation">
+   {QUICK_TOOLS.map(tool=><button type="button" key={tool.type}
+    disabled={disabled||rows.length>=MAX_BLOCKS} onClick={()=>addBlock(tool.type)}>
+    <span aria-hidden="true">{tool.symbol}</span>{tool.name}</button>)}
+   <div className="wb-more-tools">
+    <span>MORE</span>
+    <select aria-label="More pieces to add" disabled={disabled||rows.length>=MAX_BLOCKS}
+     value={newType} onChange={e=>setNewType(e.target.value as StudioBlockType)}>
+     {BLOCK_TYPES.map(type=><option key={type} value={type}>{TYPE_NAMES[type]}</option>)}
+    </select>
+    <button type="button" disabled={disabled||rows.length>=MAX_BLOCKS}
+     onClick={()=>addBlock(newType)}>+</button>
+   </div>
+  </div>
+  {error&&<p role="alert" className="wb-error">{error}</p>}
+  <div className={'wb-workspace'+(mode==='experience'?' is-experience':'')}>
+   <div className="wb-edit" ref={editRef} aria-label="Editable creation canvas">
+    {rows.length===0&&<div className="wb-blank">
+     <div className="wb-blank-orbit" aria-hidden="true">◌</div>
+     <h4>Nothing here yet. That is the point.</h4>
+     <p>Choose Write, Title, Scene, or another tool above to begin.</p>
+     <button type="button" disabled={disabled} onClick={()=>addBlock('paragraph')}>+ START WRITING</button>
+    </div>}
+    {rows.map((b,index)=><article className={'wb-block wb-kind-'+b.type} key={b.id}
+     aria-label={'Section '+(index+1)}>
+     <div className="wb-block-top">
+      <span className="wb-block-number">{TYPE_NAMES[b.type]} <em>/{String(index+1).padStart(2,'0')}</em></span>
+      <div className="wb-block-actions">
+       <button type="button" aria-label={'Move section '+(index+1)+' up'}
+        disabled={disabled||index===0} onClick={()=>move(b.id,-1)}>↑</button>
+       <button type="button" aria-label={'Move section '+(index+1)+' down'}
+        disabled={disabled||index===rows.length-1} onClick={()=>move(b.id,1)}>↓</button>
+       <details className="wb-block-options">
+        <summary>TYPE</summary>
+        <label className="wb-field"><span>CHANGE PIECE</span>
+         <select aria-label={'Type for section '+(index+1)} value={b.type} disabled={disabled}
+          onChange={e=>updateBlock(b.id,'type',e.target.value)}>
+          {BLOCK_TYPES.map(type=><option key={type} value={type}>{TYPE_NAMES[type]}</option>)}
+         </select>
+        </label>
+       </details>
+       <button type="button" className="wb-remove" aria-label={'Remove section '+(index+1)}
+        disabled={disabled} onClick={()=>remove(b.id)}>×</button>
+      </div>
      </div>
-    </div>
-    <label className="wb-field"><span>SECTION TYPE</span>
-     <select value={b.type} disabled={disabled} onChange={e=>updateBlock(b.id,'type',e.target.value)}>
-      {BLOCK_TYPES.map(type=><option value={type} key={type}>{TYPE_NAMES[type]}</option>)}
-     </select>
-    </label>
-    {b.type!=='divider'&&<label className="wb-field"><span>{TYPE_NAMES[b.type].toUpperCase()}</span>
-     <textarea value={b.text} rows={b.type==='paragraph'?4:2} maxLength={MAX_TEXT}
-      disabled={disabled} onChange={e=>updateBlock(b.id,'text',e.target.value)}
-      placeholder={TYPE_HINTS[b.type]} />
-    </label>}
-    {b.type==='choice'&&<label className="wb-field"><span>GO TO SCENE</span>
-     <select disabled={disabled} value={b.target||''} onChange={e=>updateBlock(b.id,'target',e.target.value)}>
-      <option value="">Choose a scene</option>
-      {scenes.map(t=><option key={t.id} value={t.id}>{t.text.trim()||'Untitled scene'}</option>)}
-     </select>
-     <small>Choices work only inside this local preview. They cannot navigate to other sites or issue XP.</small>
-    </label>}
+     {b.type==='divider'?<hr className="wb-inline-divider"/>:
+      <textarea className="wb-inline-text" data-block-id={b.id}
+       aria-label={TYPE_NAMES[b.type]+' section '+(index+1)}
+       rows={1} maxLength={MAX_TEXT}
+       value={b.text} disabled={disabled}
+       onChange={e=>updateBlock(b.id,'text',e.target.value)}
+       placeholder={TYPE_HINTS[b.type]}/>}
+     {b.type==='choice'&&<label className="wb-choice-destination">
+      <span>CONTINUE TO</span>
+      <select disabled={disabled} value={b.target||''}
+       onChange={e=>updateBlock(b.id,'target',e.target.value)}>
+       <option value="">Choose a scene…</option>
+       {scenes.map(t=><option key={t.id} value={t.id}>{t.text.trim()||'Untitled scene'}</option>)}
+      </select>
+     </label>}
     </article>)}
-   <div className="wb-add">
-    <label className="wb-field"><span>ADD A SECTION</span>
-     <select value={newType} disabled={disabled||rows.length>=MAX_BLOCKS}
-      onChange={e=>setNewType(e.target.value as StudioBlockType)}>
-      {BLOCK_TYPES.map(type=><option key={type} value={type}>{TYPE_NAMES[type]}</option>)}
-     </select>
-    </label>
-    <button type="button" className="wb-add-button" disabled={disabled||rows.length>=MAX_BLOCKS}
-     onClick={addBlock}>+ ADD SECTION</button>
+    {rows.length>0&&<div className="wb-last-action">
+     <button type="button" disabled={disabled||rows.length>=MAX_BLOCKS}
+      onClick={()=>addBlock('paragraph')}>+ KEEP MAKING</button>
+    </div>}
    </div>
-  </div>:<div className="wb-preview" aria-label="Private creation preview" aria-live="polite">
-   <div className="wb-preview-top"><span>LOCAL PREVIEW / NOT PUBLISHED</span>
-    {scenes.length>0&&<button type="button" onClick={resetStory}>RESTART STORY ↶</button>}
-   </div>
-   <div className="wb-preview-paper">
-    {present.length===0&&<p>Add some sections to see how your work could look.</p>}
-    {present.map(b=><PreviewBlock key={b.id} block={b} enabled={scenes.length>0}
-     onChoice={setScene}/>)}
-   </div>
-   <p className="wb-preview-footer">This is a private, text-only rendering. No files, external embeds, uploaded HTML, or game code are executed.</p>
-  </div>}
+   {preview}
+  </div>
+  <div className="wb-canvas-footer">
+   <span>{rows.length} / {MAX_BLOCKS} PIECES</span>
+   <span>{value.length} / 8,000 CHARACTERS</span>
+   <span>Save your private revision using the Studio toolbar.</span>
+  </div>
  </section>;
 }

@@ -105,7 +105,10 @@ const server=createServer((req,res)=>void fixture(req,res));
 await new Promise(r=>server.listen(port,'127.0.0.1',r));
 const child=spawn(chrome,['--headless=new','--no-sandbox','--disable-dev-shm-usage','--disable-gpu',
  '--disable-background-networking','--remote-allow-origins=*','--remote-debugging-port=0',
- '--no-first-run','--user-data-dir='+profile,'about:blank'],{stdio:'ignore'});
+ '--no-first-run','--user-data-dir='+profile,'about:blank'],{
+  stdio:'ignore',
+  detached:process.platform!=='win32' // isolate Chrome descendants for reliable teardown
+ });
 let c;
 try{
  const debugPort=await until(()=>existsSync(join(profile,'DevToolsActivePort'))?
@@ -140,16 +143,22 @@ try{
   await screenshot('studio-v053-guest-'+width);
   await c.send('Network.setCookie',{name:'studio_v053_fake_member',value:'1',url:base+'/'});
   await visit('/studio');
-  await until(()=>evaluate('!!document.querySelector(".sl-idea-form")'));
+  await until(()=>evaluate('!!document.querySelector(".sl-landing-hero")'));
+  assert.equal(await evaluate('document.querySelectorAll(".st-root--launchpad .st-header").length'),0);
+  assert.equal(await evaluate('document.querySelectorAll(".st-root--launchpad .st-compact-chrome").length'),1);
   await check(width);
-  const firstAction=await evaluate('(()=>{const n=document.querySelector("#sl-idea");const b=n?.getBoundingClientRect();return {top:b?.top,below:b?.top>=innerHeight-105};})()');
+  const firstAction=await evaluate('(()=>{const n=document.querySelector(".sl-landing-actions .sl-primary");const b=n?.getBoundingClientRect();return {top:b?.top,below:b?.top>=innerHeight-105};})()');
   assert.ok(firstAction.top>0&&!firstAction.below,'First idea input should be visible without scrolling at '+width+' px: '+JSON.stringify(firstAction));
   await screenshot('studio-v053-launchpad-'+width);
+  await evaluate('document.querySelector(".sl-spark-drawer>button").click()');
+  await until(()=>evaluate('!!document.querySelector("#sl-idea")'));
   await evaluate('document.querySelector("#sl-idea").focus()');
   await c.send('Input.insertText',{text:'A forgotten observatory with an interactive mystery'});
-  await until(()=>evaluate('document.querySelector(".sl-idea-form button[type=submit]")?.disabled===false'));
-  await evaluate('document.querySelector(".sl-idea-form button[type=submit]").click()');
-  await until(()=>evaluate('location.pathname.startsWith("/creator/studio/")&&!!document.querySelector(".st-editor-modes")'));
+  await until(()=>evaluate('document.querySelector(".sl-spark-form button[type=submit]")?.disabled===false'));
+  await evaluate('document.querySelector(".sl-spark-form button[type=submit]").click()');
+  await until(()=>evaluate('location.pathname.startsWith("/creator/studio/")&&!!document.querySelector(".st-creation-toolbar")'));
+  assert.equal(await evaluate('document.querySelectorAll(".st-root--workbench .st-header").length'),0);
+  assert.equal(await evaluate('document.querySelectorAll(".st-root--workbench .st-compact-chrome").length'),1);
   await check(width);await screenshot('studio-v053-editor-'+width);
   const first=await (await fetch(base+'/__state')).json();
   assert.equal(first.projects.length,1);assert.equal(first.actions.filter(x=>x.method==='POST').length,1);
@@ -157,21 +166,22 @@ try{
   await evaluate('document.querySelector(".st-editor-form textarea").focus()');
   await c.send('Input.insertText',{text:' Additional mystery clue.'});
   await until(()=>evaluate('document.querySelector(".st-save-state")?.dataset.unsaved==="true"'));
-  await evaluate('window.confirm=()=>false;document.querySelector(".st-actions a[href]")?.click()');
+  await evaluate('window.confirm=()=>false;document.querySelector(".st-creation-underbar a[href]")?.click()');
   assert.match(await evaluate('location.pathname'),/^\/creator\/studio\/[a-f0-9-]{36}$/);
   await evaluate('document.querySelector(".st-editor-form button[type=submit]").click()');
   await until(()=>evaluate('document.querySelector(".st-save-state")?.dataset.unsaved==="false"'));
   const saved=await (await fetch(base+'/__state')).json();
   assert.equal(saved.projects[0].revision,2);
   assert.equal(saved.actions.filter(x=>x.method==='PATCH').length,1);
+  await evaluate('document.querySelector(".st-project-settings").open=true');
   await evaluate('document.querySelector(".st-editor-modes button:last-child").click()');
   await until(()=>evaluate('!!document.querySelector(".st-editor-form input[type=url]")'));
   await check(width);await screenshot('studio-v053-advanced-'+width);
   await visit('/studio');
-  await until(()=>evaluate('!!document.querySelector(".sl-quick-resume")&&document.querySelectorAll(".sl-work").length===1'));
+  await until(()=>evaluate('!!document.querySelector(".sl-return-action")&&document.querySelectorAll(".sl-project-card").length===1'));
   await check(width);await screenshot('studio-v053-resume-'+width);
   // V054: an actual starter now opens the structured block editor.
-  await evaluate('document.querySelector(".sl-template-inspector .st-action").click()');
+  await evaluate('document.querySelector(".sl-path-story").click()');
   await until(()=>evaluate('location.pathname.startsWith("/creator/studio/")&&!!document.querySelector(".wb-builder .wb-block")'));
   await evaluate('document.querySelector(".wb-builder").scrollIntoView({block:"start",behavior:"instant"})');
   await check(width);await screenshot('studio-v054-story-edit-'+width);
@@ -197,10 +207,9 @@ try{
   assert.equal(storySaved.revision,2);
   assert.ok(storySaved.description.includes('<img src=x onerror=alert(1)>'));
   // The branching story scene navigation is a local declarative interaction.
-  await visit('/studio');await until(()=>evaluate('document.querySelectorAll(".sl-template").length===5'));
-  await evaluate('document.querySelectorAll(".sl-template")[3].click()');
-  await until(()=>evaluate('document.querySelector(".sl-template-inspector h3")?.textContent?.includes("Branching narrative")'));
-  await evaluate('document.querySelector(".sl-template-inspector .st-action").click()');
+  await visit('/studio');await until(()=>evaluate('document.querySelectorAll(".sl-path-card").length===5'));
+  await evaluate('document.querySelector(".sl-path-choices").click()');
+
   await until(()=>evaluate('!!document.querySelector(".wb-builder")'));
   await evaluate('document.querySelector(".wb-switch button:last-child").click()');
   await until(()=>evaluate('!!document.querySelector(".wb-choice")'));
@@ -211,12 +220,54 @@ try{
   assert.equal(await evaluate('document.querySelectorAll(".wb-preview-paper iframe,.wb-preview-paper script").length'),0);
   await evaluate('document.querySelector(".wb-preview").scrollIntoView({block:"start",behavior:"instant"})');
   await check(width);await screenshot('studio-v054-choice-target-'+width);
+  // V054.2: one-click blank creation starts with a truly empty canvas.
+  await visit('/studio');
+  await until(()=>evaluate('!!document.querySelector(".sl-landing-actions .sl-primary")'));
+  await evaluate('document.querySelector(".sl-landing-actions .sl-primary").click()');
+  await until(()=>evaluate('!!document.querySelector(".wb-blank")'));
+  const blank=(await (await fetch(base+'/__state')).json()).projects.find(x=>x.title==='Untitled creation');
+  assert.ok(blank&&blank.description.includes('"blocks":[]'));
+  await check(width);await screenshot('studio-v0542-blank-'+width);
+  await evaluate('document.querySelector(".wb-tools button:first-child").click()');
+  await until(()=>evaluate('!!document.querySelector(".wb-inline-text")'));
+  await evaluate('document.querySelector(".wb-inline-text").focus()');
+  await c.send('Input.insertText',{text:'My first creation starts here.\nA second line grows naturally.'});
+  await until(()=>evaluate('document.querySelector(".st-save-state")?.dataset.unsaved==="true"'));
+  const writingField=await evaluate('(()=>{const n=document.querySelector(".wb-inline-text");return {height:n.clientHeight,contentHeight:n.scrollHeight,resize:getComputedStyle(n).resize};})()');
+  assert.equal(writingField.resize,'none');
+  assert.ok(writingField.height>=writingField.contentHeight-4,'Canvas content must fit without inner scrollbars: '+JSON.stringify(writingField));
+  await evaluate('window.dispatchEvent(new KeyboardEvent("keydown",{key:"s",ctrlKey:true,cancelable:true,bubbles:true}))');
+  await until(()=>evaluate('document.querySelector(".st-save-state")?.dataset.unsaved==="false"'));
+  const keyboardSaved=(await (await fetch(base+'/__state')).json()).projects.find(x=>x.title==='Untitled creation');
+  assert.ok(keyboardSaved&&keyboardSaved.revision===2&&keyboardSaved.description.includes('My first creation starts here.'));
+  await check(width);await screenshot('studio-v0542-writing-'+width);
   console.log('STUDIO_V054_WORKBENCH_'+width+'=PASS');
   console.log('STUDIO_V053_INTERACTIVE_'+width+'=PASS');
  }
  console.log('STUDIO_V053_LOCAL_ONLY_BROWSER_QA=PASS');
 }finally{
  try{c?.close();}catch{}
- child.kill('SIGKILL');await new Promise(r=>server.close(r));
- rmSync(profile,{recursive:true,force:true});
+ // Chrome launches subprocesses which may outlive its main PID. Shut down the
+ // isolated process group, wait for the parent to exit, then remove the profile.
+ try{
+  if(process.platform!=='win32'&&child.pid)process.kill(-child.pid,'SIGKILL');
+  else child.kill('SIGKILL');
+ }catch{try{child.kill('SIGKILL');}catch{/* already exited */}}
+ if(child.exitCode===null&&child.signalCode===null){
+  await new Promise(resolve=>{
+   const timer=setTimeout(resolve,2000);
+   child.once('exit',()=>{clearTimeout(timer);resolve();});
+  });
+ }
+ await new Promise(r=>server.close(r));
+ try{
+  rmSync(profile,{recursive:true,force:true,maxRetries:5,retryDelay:200});
+ }catch(error){
+  // The browser test already asserted its actual behavior and wrote evidence.
+  // This scratch directory is ephemeral on CI, so a final process-write race
+  // should be reported without mislabeling the functional test as a failure.
+  if(error?.code==='ENOTEMPTY'||error?.code==='EBUSY')
+   console.warn('CHROME_PROFILE_CLEANUP_DEFERRED: '+error.code);
+  else throw error;
+ }
 }
