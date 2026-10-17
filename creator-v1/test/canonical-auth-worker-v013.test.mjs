@@ -270,15 +270,16 @@ test("OAuth login accepts only bounded Google provider and fixed on-site callbac
  calls.length=0;
  let response=await stage.fetch(post("/api/v1/member/auth/sign-in/social",{provider:"google"}),env(true));
  assert.equal(response.status,200);
- assert.deepEqual(JSON.parse(calls.at(-1).body),{provider:"google",callbackURL:"/join",errorCallbackURL:"/join"});
+ assert.deepEqual(JSON.parse(calls.at(-1).body),{provider:"google",callbackURL:"/member",errorCallbackURL:"/join"});
  assert.equal(calls.at(-1).authorization,null);
  assert.equal(calls.at(-1).cookie,null);
- response=await stage.fetch(post("/api/v1/member/auth/sign-in/social",{provider:"google",callbackURL:"/join",errorCallbackURL:"/join"}),env(true));
+ response=await stage.fetch(post("/api/v1/member/auth/sign-in/social",{provider:"google",callbackURL:"/member",errorCallbackURL:"/join"}),env(true));
  assert.equal(response.status,200);
  for(const payload of [
   {provider:"unknown-provider"},
   {provider:"google",callbackURL:"https://other.example"},
   {provider:"google",callbackURL:"//evil.example"},
+  {provider:"google",callbackURL:"/join"},
   {provider:"google",errorCallbackURL:"https://attacker.example/steal"},
   {provider:"google",errorCallbackURL:"/member"},
   {provider:"google",errorCallbackURL:"//evil.example"},
