@@ -1,0 +1,36 @@
+{
+  "$schema": "../node_modules/wrangler/config-schema.json",
+  "name": "anevum-iren-apex-staff-v002",
+  "account_id": "2f7ee83107240152097efd956a4e8335",
+  "main": "./staff-portal/worker.mjs",
+  "compatibility_date": "2026-10-17",
+  "compatibility_flags": [
+    "nodejs_compat"
+  ],
+  "workers_dev": false,
+  "preview_urls": false,
+  "routes": [],
+  "assets": {
+    "directory": "./dist/staff",
+    "binding": "ASSETS",
+    "run_worker_first": true,
+    "not_found_handling": "single-page-application"
+  },
+  "d1_databases": [
+    {
+      "binding": "MEMBER_DB",
+      "database_name": "anevum-canonical-member-staging",
+      "database_id": "e1d29049-c83b-4534-8355-dc1fa36ba6d8"
+    }
+  ],
+  "services": [
+    {
+      "binding": "APEX_AUTH",
+      "service": "anevum-apex-prelaunch-gateway"
+    }
+  ],
+  "vars": {
+    "CANONICAL_STAFF_OPS_ENABLED": "false",
+    "CANONICAL_FORUM_ENABLED": "true"
+  }
+}
