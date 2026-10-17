@@ -141,6 +141,8 @@ try{
   await c.send('Network.setCookie',{name:'studio_v053_fake_member',value:'1',url:base+'/'});
   await visit('/studio');
   await until(()=>evaluate('!!document.querySelector(".sl-landing-hero")'));
+  assert.equal(await evaluate('document.querySelectorAll(".st-root--launchpad .st-header").length'),0);
+  assert.equal(await evaluate('document.querySelectorAll(".st-root--launchpad .st-compact-chrome").length'),1);
   await check(width);
   const firstAction=await evaluate('(()=>{const n=document.querySelector(".sl-landing-actions .sl-primary");const b=n?.getBoundingClientRect();return {top:b?.top,below:b?.top>=innerHeight-105};})()');
   assert.ok(firstAction.top>0&&!firstAction.below,'First idea input should be visible without scrolling at '+width+' px: '+JSON.stringify(firstAction));
@@ -152,6 +154,8 @@ try{
   await until(()=>evaluate('document.querySelector(".sl-spark-form button[type=submit]")?.disabled===false'));
   await evaluate('document.querySelector(".sl-spark-form button[type=submit]").click()');
   await until(()=>evaluate('location.pathname.startsWith("/creator/studio/")&&!!document.querySelector(".st-creation-toolbar")'));
+  assert.equal(await evaluate('document.querySelectorAll(".st-root--workbench .st-header").length'),0);
+  assert.equal(await evaluate('document.querySelectorAll(".st-root--workbench .st-compact-chrome").length'),1);
   await check(width);await screenshot('studio-v053-editor-'+width);
   const first=await (await fetch(base+'/__state')).json();
   assert.equal(first.projects.length,1);assert.equal(first.actions.filter(x=>x.method==='POST').length,1);
