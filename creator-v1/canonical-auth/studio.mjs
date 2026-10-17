@@ -190,7 +190,7 @@ export async function canonicalStudio(req,env,user,now=Math.floor(Date.now()/100
    const frozen=await freezeStudioReview(db,selected,user.id,now,kinds,hasExternal);
    return frozen?json({project:dbRow(frozen.project),submissionId:frozen.submissionId,
     attachmentCount:frozen.assetCount,
-    note:'Review snapshot locked privately. No publication, video playback or gameplay activation.'}):
+    note:'Review snapshot locked privately; no publication, video playback or gameplay activation.'}):
     fail(409,'Submission changed; reload the project');
   }
   if(sub)return fail(404,'Not found');
