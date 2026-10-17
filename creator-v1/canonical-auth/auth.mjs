@@ -2,6 +2,7 @@ import {betterAuth} from "better-auth";
 import {emailOTP} from "better-auth/plugins";
 import {
   CANONICAL_ORIGIN,CANONICAL_AUTH_PATH,CANONICAL_COOKIE_PREFIX,
+  canonicalRequestOrigin,canonicalCookiePrefix,
   canonicalConfigState,permitCanonicalUserCreation
 } from "./policy.mjs";
 
@@ -17,7 +18,7 @@ export function canonicalAuthOptions(env){
   if(!stage.operational)throw new Error("Canonical staging identity disabled");
   return {
     appName:"ANEVUM Canonical Identity — Staging",
-    baseURL:CANONICAL_ORIGIN,
+    baseURL:canonicalRequestOrigin(env),
     basePath:CANONICAL_AUTH_PATH,
     secret:env.CANONICAL_BETTER_AUTH_SECRET,
     database:env.MEMBER_DB,
@@ -81,11 +82,11 @@ export function canonicalAuthOptions(env){
       storeStateStrategy:"database",
       accountLinking:{enabled:true,disableImplicitLinking:true,allowDifferentEmails:false,allowUnlinkingAll:false,updateUserInfoOnLink:false}
     },
-    trustedOrigins:stage.apple?[CANONICAL_ORIGIN,"https://appleid.apple.com"]:[CANONICAL_ORIGIN],
+    trustedOrigins:stage.apple?[canonicalRequestOrigin(env),"https://appleid.apple.com"]:[canonicalRequestOrigin(env)],
     advanced:{
       useSecureCookies:true,
-      cookiePrefix:CANONICAL_COOKIE_PREFIX,
-      // No crossSubDomainCookies: the default confines sessions to a.anevum.com
+      cookiePrefix:canonicalCookiePrefix(env),
+      // Host-only sessions: a.anevum.com and anevum.com use distinct cookie prefixes.
       ipAddress:{ipAddressHeaders:["cf-connecting-ip"]}
     },
     session:{freshAge:600},
