@@ -108,14 +108,18 @@ function CommandWorkspace({memberId}:{memberId:string}){
  const canvasEventsRef=useRef<CanvasEntry[]>([]);
  const chatEndRef=useRef<HTMLDivElement|null>(null);
  const roomRef=useRef<Room>(room);
- roomRef.current=room;
+ const paneRef=useRef<Pane>(pane);
+ roomRef.current=room;paneRef.current=pane;
 
  useEffect(()=>{
-  let cancelled=false,inFlight=false;
+  let cancelled=false,inFlight=false,lastFetched=0;
   const controller=new AbortController();
   setLoading(true);setSnapshot(null);setFault('');
   const poll=async()=>{
-   if(inFlight||cancelled)return;inFlight=true;
+   if(inFlight||cancelled)return;
+   const minAge=paneRef.current==='communications'||paneRef.current==='board'?6000:20000;
+   if(lastFetched&&Date.now()-lastFetched<minAge)return;
+   inFlight=true;lastFetched=Date.now();
    try{
     const next=await staffRequest<StaffSnapshot>('GET',undefined,'room='+room,controller.signal);
     if(!cancelled){setSnapshot(next);setFault('');setLoading(false)}
@@ -123,7 +127,7 @@ function CommandWorkspace({memberId}:{memberId:string}){
    finally{inFlight=false}
   };
   void poll();
-  const id=window.setInterval(()=>void poll(),3500);
+  const id=window.setInterval(()=>{if(document.visibilityState!=='hidden')void poll()},2000);
   return()=>{cancelled=true;controller.abort();window.clearInterval(id)};
  },[memberId,room]);
  useEffect(()=>{
@@ -137,7 +141,9 @@ function CommandWorkspace({memberId}:{memberId:string}){
    }catch(e){if(!disposed){setReviewFault(errorOf(e));setQueue(null)}}
    finally{fetching=false}
   };
-  void poll();const id=window.setInterval(()=>void poll(),17000);
+  void poll();const id=window.setInterval(()=>{
+   if(document.visibilityState!=='hidden'&&(paneRef.current==='overview'||paneRef.current==='moderation'))void poll();
+  },45000);
   return()=>{disposed=true;window.clearInterval(id)};
  },[snapshot?.memberId]);
 
@@ -334,7 +340,7 @@ function CommandWorkspace({memberId}:{memberId:string}){
       </div>}
       {pane==='communications'&&<div className="ir-comms">
        <div className="ir-pane-heading"><div><span className="ir-kicker">ENCRYPTED IN TRANSIT / STAFF-ONLY</span><h2>Live transmissions</h2></div>
-        <Badge label="APPROX. 3.5 S SYNC" kind="active"/></div>
+        <Badge label="APPROX. 6 S SYNC" kind="active"/></div>
        <div className="ir-room-tabs" role="group" aria-label="Choose communication channel">
         {rooms.map(r=><button key={r.id} type="button" className={room===r.id?'is-selected':''}
          onClick={()=>setRoom(r.id)}>{r.name.toUpperCase()}</button>)}
@@ -356,7 +362,7 @@ function CommandWorkspace({memberId}:{memberId:string}){
       </div>}
       {pane==='board'&&<div className="ir-board">
        <div className="ir-pane-heading"><div><span className="ir-kicker">VISUAL COLLABORATION / LIVE EVENT STREAM</span><h2>Shared whiteboard</h2></div>
-        <Badge label="SYNC / 3.5 S" kind="active"/></div>
+        <Badge label="SYNC / 6 S" kind="active"/></div>
        <div className="ir-board-tools"><div className="ir-room-tabs">
         {rooms.map(r=><button type="button" key={r.id} onClick={()=>setRoom(r.id)}
          className={room===r.id?'is-selected':''}>{r.name.toUpperCase()}</button>)}</div>
