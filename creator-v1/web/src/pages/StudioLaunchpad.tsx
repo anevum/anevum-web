@@ -9,11 +9,6 @@ const kindLabels:Record<StudioCategory,string>={
  music:'Music or audio',art:'Artwork or gallery',video:'Film or animation',
  writing:'Writing',learning:'Learning project',research:'Research',other:'Something else'
 };
-const sampleIdeas=[
- 'A mystery story where the reader follows strange signals',
- 'An illustrated collection inspired by the night sky',
- 'An interactive experience about exploring a forgotten station'
-];
 const statusLabels:Record<StudioProject['status'],string>={
  draft:'Private draft',pending_review:'In private review',
  changes_requested:'Needs revisions',rejected:'Review not accepted'
