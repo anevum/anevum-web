@@ -7,6 +7,7 @@
 - Canonical Better Auth /studio, /studio/new, /studio/:id and restricted /studio/review.
 - MEMBER_DB project drafts, assets, limits and staff audit history; no separate Creator V1 member session or identity linking.
 - Draft creation idempotency, optimistic revision updates, publication-safe status state, metadata and disclosure editing.
+- Explicit owner withdrawal from pending review back to a private draft, plus revision-confirmed draft deletion when no asset records remain. Owners can withdraw quarantined file bytes even while a submission is review-locked.
 - Staff-only change requests or rejection. No approval/publication action until a separate public-catalogue bridge exists.
 - Quarantined private R2 upload service: PNG/JPEG/WebP/GIF up to 10 MiB; MP3/WAV/ZIP up to 20 MiB; PDF up to 10 MiB; TXT/MD up to 1 MiB. Max 20 assets per project and 100 MiB per account.
 - Upload reservations, atomic quota checks, bounded upload stream, MIME and magic checks, SHA-256, private downloads, deletion, lease recovery helper.
