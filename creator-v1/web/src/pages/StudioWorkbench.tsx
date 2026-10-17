@@ -75,10 +75,15 @@ export function StudioWorkbench({value,onChange,disabled}:{
  // editing, undo-like changes and return from Experience mode.
  useLayoutEffect(()=>{
   if(mode!=='compose')return;
-  editRef.current?.querySelectorAll<HTMLTextAreaElement>('.wb-inline-text').forEach(field=>{
-   field.style.height='auto';
-   field.style.height=field.scrollHeight+'px';
-  });
+  const fitToContent=()=>{
+   editRef.current?.querySelectorAll<HTMLTextAreaElement>('.wb-inline-text').forEach(field=>{
+    field.style.height='auto';
+    field.style.height=field.scrollHeight+'px';
+   });
+  };
+  fitToContent();
+  window.addEventListener('resize',fitToContent);
+  return()=>window.removeEventListener('resize',fitToContent);
  },[value,mode]);
  function change(next:StudioBlockDocument){
   try{
