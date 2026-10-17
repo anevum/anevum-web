@@ -111,7 +111,7 @@ test('idempotent creation, revision-checked edits and no automatic publication',
   const current=(await j(b)).project;
   assert.equal(current.revision,p.revision+1);
   assert.equal((await s.call(ROOT+'/'+p.id,'PATCH','alice',{revision:p.revision,draft})).status,409);
-  const submit=await s.call(ROOT+'/'+p.id+'/submit','alice',{revision:current.revision});
+  const submit=await s.call(ROOT+'/'+p.id+'/submit','POST','alice',{revision:current.revision});
   assert.equal(submit.status,200);
   const record=(await j(submit)).project;
   assert.equal(record.status,'pending_review');
@@ -126,7 +126,7 @@ test('idempotent creation, revision-checked edits and no automatic publication',
 test('review queue is staff-only, independent and change-request-only',async()=>{
  const s=setup();try{
   const c=await j(await s.call(ROOT,'POST','alice',projectRequest()));
-  await s.call(ROOT+'/'+c.project.id+'/submit','alice',{revision:1});
+  await s.call(ROOT+'/'+c.project.id+'/submit','POST','alice',{revision:1});
   assert.equal((await s.call('/api/v1/member/studio/review','GET','alice')).status,403);
   const queue=await j(await s.call('/api/v1/member/studio/review','GET','bob'));
   assert.equal(queue.projects.length,1);
