@@ -4,9 +4,9 @@ import {canonicalAuthClient,canonicalMe,type CanonicalProfile} from '../lib/cano
 import {
  studioHealth,studioList,studioGet,studioCreate,studioUpdate,studioSubmit,studioAssets,
  studioUpload,studioCheckFile,studioDeleteAsset,studioDownloadUrl,studioWithdraw,studioDeleteProject,studioReviewQueue,
- studioEligibleUpload,studioReviewManifest,
+ studioEligibleUpload,studioReviewManifest,studioReviewReceipts,
  studioReviewDecision,type StudioDraft,type StudioProject,type StudioAsset,type StudioCategory,
- type StudioReviewProject,type StudioReviewHistory,type StudioReviewManifest
+ type StudioReviewProject,type StudioReviewHistory,type StudioReviewManifest,type StudioReviewReceipt
 } from '../lib/canonical-studio';
 import './canonical-studio.css';
 
@@ -298,6 +298,7 @@ function StudioEditor({create,uploadsReady}:{create:boolean;uploadsReady:boolean
       <p>{item.reason}</p>
      </div>)}
     </section>}
+    {project&&<StudioReceipts projectId={project.id} revision={project.revision}/>}
     {project&&<StudioUploader project={project} uploadsReady={uploadsReady}
      onAssetsChanged={setAssetSummary} onProjectChanged={setProject}/>}
     <section className="st-panel">
@@ -320,6 +321,38 @@ function StudioEditor({create,uploadsReady}:{create:boolean;uploadsReady:boolean
    </div>
   </div>}
  </>;
+}
+
+
+function StudioReceipts({projectId,revision}:{projectId:string;revision:number}){
+ const [history,setHistory]=useState<StudioReviewReceipt[]>([]),[error,setError]=useState('');
+ const [loading,setLoading]=useState(true);
+ useEffect(()=>{
+  const ac=new AbortController();setLoading(true);setError('');
+  studioReviewReceipts(projectId,ac.signal).then(({submissions})=>{
+   if(!ac.signal.aborted)setHistory(submissions);
+  }).catch(e=>{if(!ac.signal.aborted)setError(showError(e))})
+   .finally(()=>{if(!ac.signal.aborted)setLoading(false)});
+  return()=>ac.abort();
+ },[projectId,revision]);
+ if(!loading&&!error&&history.length===0)return null;
+ return <section className="st-panel" aria-label="Immutable private submission receipts">
+  <p className="st-kicker">SUBMISSION HISTORY / PRIVATE</p><h2>REVIEW RECEIPTS.</h2>
+  <p className="st-muted">Each version records the submitted details and exact file hashes. It does not grant publication or allow files to run.</p>
+  {loading&&<p role="status">Loading private review versions…</p>}
+  {error&&<p className="st-error" role="alert">{error}</p>}
+  {history.map(entry=><article className="st-feedback" key={entry.id}>
+   <strong>REV {entry.revision} / {pretty(entry.status)}</strong>
+   <small>SUBMITTED {new Date(entry.submittedAt*1000).toLocaleString()}</small>
+   <h3>{entry.title}</h3>
+   <p>{entry.summary}</p>
+   <small>{entry.assets.length} ATTACHED FILE{entry.assets.length===1?'':'S'}</small>
+   {entry.assets.map(asset=><div key={asset.id} className="st-manifest-file">
+    <strong>{asset.name} · {size(asset.sizeBytes)}</strong>
+    <code>SHA-256: {asset.sha256}</code>
+   </div>)}
+  </article>)}
+ </section>;
 }
 
 function StudioUploader({project,uploadsReady,onAssetsChanged,onProjectChanged}:{
