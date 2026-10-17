@@ -287,20 +287,24 @@ function Workspace({memberId}:{memberId:string}){
     </div>}
     {lane==='threads'&&<section aria-labelledby="mc-threads-title"><h3 className="mc-section-heading" id="mc-threads-title">THREAD REVIEW / OLDEST FIRST</h3>
      {opening('threads',visible.threads.length)}{visible.threads.length===0?<p className="mc-empty">No matching pending threads.</p>:threadCards(visible.threads)}
+     {moreButton('threads')}
     </section>}
     {lane==='replies'&&<section aria-labelledby="mc-replies-title"><h3 className="mc-section-heading" id="mc-replies-title">REPLY REVIEW / OLDEST FIRST</h3>
      {opening('replies',visible.replies.length)}{visible.replies.length===0?<p className="mc-empty">No matching pending replies.</p>:replyCards(visible.replies)}
+     {moreButton('replies')}
     </section>}
     {lane==='reports'&&<section aria-labelledby="mc-reports-title"><h3 className="mc-section-heading" id="mc-reports-title">MEMBER REPORTS / SAFETY REASON FIRST</h3>
      {opening('reports',visible.reports.length)}{visible.reports.length===0?<p className="mc-empty">No matching member reports.</p>:reportCards(visible.reports)}
+     {moreButton('reports')}
     </section>}
     {lane==='activity'&&<section aria-labelledby="mc-activity-title"><h3 className="mc-section-heading" id="mc-activity-title">STAFF DECISION RECORD / MOST RECENT FIRST</h3>
-     <p className="mc-scope">Showing the latest {data.auditSize} audited decisions, not a complete historical export. Reporter identities and account IDs are never included.</p>
+     <p className="mc-scope">{'Showing '+visible.recent.length+' matching of '+combined.recent.length+' loaded audit entries.'} Load older decisions when available. Reporter identities and account IDs are never included.</p>
      {visible.recent.length===0?<p className="mc-empty">No matching audited decisions.</p>:auditCards(visible.recent)}
-    </section>}
+     {moreButton('activity')}
+    </section>
     <footer className="mc-disclosure">
      <span>REVIEW WINDOW / {data.pageSize} PER QUEUE</span>
-     <p>Totals include all open records; lists are limited to the oldest {data.pageSize} entries in each category. Search filters only the loaded window. All approvals and removals require a separate server-authorized decision.</p>
+     <p>Totals include all open records; additional history loads in keyset pages of {data.pageSize} items. Search filters currently loaded records only. All approvals and removals require a separate server-authorized decision.</p>
      <p>Snapshot · {displayTime(data.checkedAt)}. Reports identify the reported content, not the person who filed the report. Nothing in this console awards XP.</p>
     </footer>
    </div>
