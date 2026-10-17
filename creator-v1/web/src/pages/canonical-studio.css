@@ -239,3 +239,34 @@
  .st-root--launchpad .st-nav a{min-height:34px;display:inline-flex;align-items:center;
   letter-spacing:.07em;font-size:.66rem;padding-bottom:5px}
 }
+
+/* V054: The editor is a canvas, not a second marketing landing page.
+   Compact only /studio/:projectId while preserving full review/editor tools. */
+.st-root--workbench .st-header{align-items:center;gap:20px;padding:3px 0 15px}
+.st-root--workbench .st-back{margin-bottom:6px}
+.st-root--workbench .st-header h1{font-size:clamp(1.7rem,3.2vw,2.8rem);
+ line-height:1.07;margin:5px 0 7px;letter-spacing:-.033em}
+.st-root--workbench .st-header>div>p:last-child{margin:3px 0 0;font-size:.82rem;
+ line-height:1.43;max-width:600px}
+.st-root--workbench .st-identity{padding:12px 15px;min-width:160px;gap:3px}
+.st-root--workbench .st-identity>strong{font-size:1rem}
+.st-root--workbench .st-nav{padding:12px 0 14px;gap:23px}
+.st-root--workbench .st-nav a{padding-bottom:6px}
+.st-root--workbench .st-editor{margin-top:14px}
+.st-root--workbench .st-editor-form{gap:12px}
+.st-root--workbench .st-section-head{margin-bottom:6px}
+.st-root--workbench .st-save-state{margin:0}
+@media(max-width:620px){
+ .st-root--workbench .st-header{padding:0 2px 9px;gap:6px}
+ .st-root--workbench .st-back{margin-bottom:2px}
+ .st-root--workbench .st-header h1{font-size:clamp(1.6rem,7vw,1.95rem);margin:3px 0}
+ .st-root--workbench .st-header>div>p:last-child{display:none}
+ .st-root--workbench .st-identity{display:none}
+ .st-root--workbench .st-nav{padding:9px 0 10px;gap:20px}
+ .st-root--workbench .st-nav a{font-size:.65rem;min-height:34px;
+  display:inline-flex;align-items:center}
+ .st-root--workbench .st-editor{margin-top:11px}
+ .st-root--workbench .st-editor-form{gap:10px}
+ .st-root--workbench .st-editor-form .st-section-head h2{font-size:1.2rem}
+ .st-root--workbench .st-editor-form .st-section-head{gap:6px}
+}

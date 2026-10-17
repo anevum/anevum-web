@@ -85,7 +85,7 @@ export function CanonicalStudioPage({mode='list'}:{mode?:Mode}){
   <p>Complete your account profile before creating private projects.</p>
   <Link className="st-action" to="/member">OPEN MEMBER PROFILE ↗</Link>
  </section>;
- return <main className={'st-root'+(mode==='list'?' st-root--launchpad':'')} aria-label="Creator Studio">
+ return <main className={'st-root'+(mode==='list'?' st-root--launchpad':mode==='edit'?' st-root--workbench':'')} aria-label="Creator Studio">
   <header className="st-header">
    <div><Link className="st-back" to="/member">← MEMBER ATLAS</Link>
     <p className="st-kicker">ANEVUM / CONTINUANCE INSTITUTE / CREATOR STUDIO</p>

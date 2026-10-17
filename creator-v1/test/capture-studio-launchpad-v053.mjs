@@ -173,12 +173,14 @@ try{
   // V054: an actual starter now opens the structured block editor.
   await evaluate('document.querySelector(".sl-template-inspector .st-action").click()');
   await until(()=>evaluate('location.pathname.startsWith("/creator/studio/")&&!!document.querySelector(".wb-builder .wb-block")'));
+  await evaluate('document.querySelector(".wb-builder").scrollIntoView({block:"start",behavior:"instant"})');
   await check(width);await screenshot('studio-v054-story-edit-'+width);
   const story=(await (await fetch(base+'/__state')).json()).projects.find(x=>x.category==='writing');
   assert.ok(story&&story.description.startsWith('ANEVUM_BLOCKS_V1\n'));
   assert.equal(story.revision,1);
   await evaluate('document.querySelector(".wb-switch button:last-child").click()');
   await until(()=>evaluate('document.querySelector(".wb-preview-paper h3")?.textContent?.includes("Your story title")'));
+  await evaluate('document.querySelector(".wb-preview").scrollIntoView({block:"start",behavior:"instant"})');
   await check(width);await screenshot('studio-v054-story-preview-'+width);
   // Content is rendered as text, never interpreted as HTML or JavaScript.
   await evaluate('document.querySelector(".wb-switch button:first-child").click()');
@@ -202,10 +204,12 @@ try{
   await until(()=>evaluate('!!document.querySelector(".wb-builder")'));
   await evaluate('document.querySelector(".wb-switch button:last-child").click()');
   await until(()=>evaluate('!!document.querySelector(".wb-choice")'));
+  await evaluate('document.querySelector(".wb-preview").scrollIntoView({block:"start",behavior:"instant"})');
   await screenshot('studio-v054-choice-start-'+width);
   await evaluate('document.querySelector(".wb-choice").click()');
   await until(()=>evaluate('document.querySelector(".wb-preview-paper .wb-scene-heading")?.textContent?.includes("The Archive")'));
   assert.equal(await evaluate('document.querySelectorAll(".wb-preview-paper iframe,.wb-preview-paper script").length'),0);
+  await evaluate('document.querySelector(".wb-preview").scrollIntoView({block:"start",behavior:"instant"})');
   await check(width);await screenshot('studio-v054-choice-target-'+width);
   console.log('STUDIO_V054_WORKBENCH_'+width+'=PASS');
   console.log('STUDIO_V053_INTERACTIVE_'+width+'=PASS');
