@@ -69,10 +69,11 @@ async function boundedProviderBody(request,callbackURL="/join"){
     if(!input||typeof input!=="object"||Array.isArray(input))return null;
     // Explicit allowlist: never accept user-selected OAuth destination,
     // server identity, organization, trusted origin, scopes, or privileges.
-    if(Object.keys(input).some(x=>!["provider","callbackURL"].includes(x)))return null;
+    if(Object.keys(input).some(x=>!["provider","callbackURL","errorCallbackURL"].includes(x)))return null;
     if(!["google","github","apple","microsoft"].includes(input.provider)||
-      (input.callbackURL!==undefined&&input.callbackURL!==callbackURL))return null;
-    return JSON.stringify({provider:input.provider,callbackURL});
+      (input.callbackURL!==undefined&&input.callbackURL!==callbackURL)||
+      (input.errorCallbackURL!==undefined&&input.errorCallbackURL!==callbackURL))return null;
+    return JSON.stringify({provider:input.provider,callbackURL,errorCallbackURL:callbackURL});
   }catch{return null;}
 }
 
