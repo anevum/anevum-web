@@ -8,7 +8,7 @@ import {
  studioReviewDecision,type StudioDraft,type StudioProject,type StudioAsset,type StudioCategory,
  type StudioReviewProject,type StudioReviewHistory,type StudioReviewManifest,type StudioReviewReceipt
 } from '../lib/canonical-studio';
-import {StudioLaunchpad} from './StudioLaunchpad';
+import {StudioGuestDiscovery,StudioLaunchpad} from './StudioLaunchpad';
 import './canonical-studio.css';
 
 const CATEGORY_GUIDE:Record<StudioCategory,string>={
@@ -70,11 +70,9 @@ export function CanonicalStudioPage({mode='list'}:{mode?:Mode}){
   return()=>{live=false;controller.abort();};
  },[id,session?.user?.emailVerified]);
  if(isPending)return <section className="st-status" role="status">VERIFYING CANONICAL MEMBER SESSION…</section>;
- if(!id||session?.user?.emailVerified!==true)return <section className="st-status">
-  <span className="st-kicker">CONTINUANCE INSTITUTE / CREATOR STUDIO</span>
-  <h1>SIGN IN TO CREATE.</h1><p>Private drafts belong to your verified ANEVUM account.</p>
-  <Link className="st-action" to="/join">MEMBER SIGN-IN ↗</Link>
- </section>;
+ if(!id||session?.user?.emailVerified!==true)return <main className="st-root" aria-label="Explore Creator Studio">
+  <StudioGuestDiscovery/>
+ </main>;
  if(phase==='loading')return <section className="st-status" role="status">OPENING PRIVATE CREATOR STUDIO…</section>;
  if(phase==='unavailable')return <section className="st-status">
   <span className="st-kicker">STAGING / FEATURE NOT ACTIVE</span><h1>THE STUDIO IS IN DEVELOPMENT.</h1>
