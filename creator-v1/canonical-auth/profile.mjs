@@ -2,6 +2,7 @@ import {progressionReady,readProgression} from './progression.mjs';
 import {spaceReady,grantMilestones,spaceSnapshot} from "./space.mjs";
 import {supporterExportMember} from "./supporter.mjs";
 import {canonicalProjectSaveExport} from "./project-saves.mjs";
+import {canonicalStudioExport} from "./studio.mjs";
 import {canonicalConfigState,permitCanonicalUserCreation} from "./policy.mjs";
 import {normalizeWorldUpdate,worldFromRow} from "./worlds.mjs";
 import {boundedText} from "./request-body.mjs";
@@ -202,6 +203,7 @@ export async function canonicalExportMember(req,env,user,origin){
        wall:(await env.MEMBER_DB.prepare("SELECT id,body,created_at,updated_at,revision FROM member_wall_posts WHERE user_id=? ORDER BY created_at DESC").bind(user.id).all()).results,
        images:(await env.MEMBER_DB.prepare("SELECT slot,data,version,updated_at FROM member_space_media WHERE user_id=?").bind(user.id).all()).results.map(row=>({...row,data:Array.from(new Uint8Array(row.data))}))}: {}),
      ...(await canonicalProjectSaveExport(env.MEMBER_DB,user.id).then(ids=>ids===null?{}:{savedPublicProjectIds:ids})),
+     ...(await canonicalStudioExport(env,user.id).then(v=>v===null?{}:{creatorStudio:v})),
      ...(await supporterExportMember(env,user.id).then(billing=>billing?{supporter:billing}:{}))
    };
    return new Response(JSON.stringify(payload,null,2),{

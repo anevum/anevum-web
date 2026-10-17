@@ -18,8 +18,7 @@ import { MemberGate } from "./components/MemberGate";
 import { LoadingState } from "./components/States";
 import { MemberLibraryPage } from "./pages/MemberLibraryPage";
 import {CanonicalSavedWorksPage} from "./pages/CanonicalSavedWorksPage";
-import { MemberProjectsPage } from "./pages/MemberProjectsPage";
-import { ProjectEditorPage } from "./pages/ProjectEditorPage";
+import { CanonicalStudioPage } from "./pages/CanonicalStudioPage";
 import {Phase1JoinPage} from "./pages/Phase1JoinPage";
 import {Phase1MemberPage} from "./pages/Phase1MemberPage";
 import {Phase1PublicMemberPage} from "./pages/Phase1PublicMemberPage";
@@ -48,6 +47,11 @@ function LegacyAtlasRedirect(){
   return <Navigate to={safe?candidate+search:"/"} replace/>;
 }
 
+function LegacyStudioRedirect(){
+  const {projectId=""}=useParams<{projectId:string}>();
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/.test(projectId)
+    ?<Navigate to={"/studio/"+projectId} replace/>:<Navigate to="/studio" replace/>;
+}
 function CanonicalPublicHandle(){
   const {memberHandle=""}=useParams<{memberHandle:string}>();
   return /^@[a-z][a-z0-9_]{2,29}$/.test(memberHandle)
@@ -77,12 +81,16 @@ export default function App(){
     <Route path="workspace" element={<Navigate to="/account" replace/>}/>
     <Route path="account" element={<Navigate to="/member" replace/>}/>
     <Route path="account/edit" element={<Navigate to="/member" replace/>}/>
+    <Route path="account/studio" element={<Navigate to="/studio" replace/>}/>
+    <Route path="create" element={<Navigate to="/studio" replace/>}/>
+    <Route path="create/new" element={<Navigate to="/studio/new" replace/>}/>
+    <Route path="create/:projectId" element={<LegacyStudioRedirect/>}/>
+    <Route path="studio" element={<CanonicalStudioPage/>}/>
+    <Route path="studio/new" element={<CanonicalStudioPage mode="new"/>}/>
+    <Route path="studio/review" element={<CanonicalStudioPage mode="review"/>}/>
+    <Route path="studio/:projectId" element={<CanonicalStudioPage mode="edit"/>}/>
     <Route element={<MemberGate/>}>
-      <Route path="account/studio" element={<MemberProjectsPage/>}/>
-      <Route path="create" element={<MemberProjectsPage/>}/>
-      <Route path="create/new" element={<ProjectEditorPage/>}/>
-    <Route path="community/write" element={<CommunityPostEditorPage/>}/>
-      <Route path="create/:projectId" element={<ProjectEditorPage/>}/>
+      <Route path="community/write" element={<CommunityPostEditorPage/>}/>
       <Route path="library" element={<MemberLibraryPage/>}/>
 
     </Route>

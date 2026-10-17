@@ -75,7 +75,9 @@ try{
   ["guest-library","/library",".member-gate"],
   ["member-account","/account",".av12-account-await"],
   ["member-profile-editor","/account/edit",".av12-account-await"],
-  ["member-studio","/create",".member-shell"],["member-draft","/create/new",".member-shell"]
+  // Legacy /create routes now lead into the canonical Better Auth Studio.
+  // The fixture is an unauthenticated browser, so no draft or upload appears.
+  ["member-studio","/create",".st-status"],["member-draft","/create/new",".st-status"]
  ];
  const context=await fetch(base+"/__context-fixture?enabled=1");
  if(!context.ok)throw Error("SITEWIDE_V012_FIXTURE_UNAVAILABLE");
@@ -95,7 +97,8 @@ try{
    const result=await client.send("Page.navigate",{url:target});
    if(result.errorText)throw Error("SITEWIDE_V012_NAVIGATION_"+name+"_"+width+":"+result.errorText);
    try{
-    await until(()=>evaluate("document.readyState==='complete'&&location.pathname==="+JSON.stringify("/creator"+(path==="/account"||path==="/account/edit"?"/member":path))+"&&!!document.querySelector("+JSON.stringify(selector)+")"));
+    await until(()=>evaluate("document.readyState==='complete'&&location.pathname==="+JSON.stringify("/creator"+(path==="/account"||path==="/account/edit"?"/member":
+      name==="member-studio"?"/studio":name==="member-draft"?"/studio/new":path))+"&&!!document.querySelector("+JSON.stringify(selector)+")"));
    }catch(error){throw Error("SITEWIDE_V012_PAGE_MISSING_"+name+"_"+width+":"+String(error));}
    await delay(240);
    const state=await evaluate('(()=>({path:location.pathname,header:document.querySelectorAll(".site-header.av9-header").length,main:document.querySelectorAll("#main").length,cinematic:!!document.querySelector(".site-shell--cinematic.av9-shell"),overflow:document.documentElement.scrollWidth>innerWidth+1,width:innerWidth,atlas:!!document.querySelector(".atm-header,.atlas-universe-viewport"),fixture:getComputedStyle(document.body,"::after").content.includes("SYNTHETIC OFFLINE REVIEW")}))()');

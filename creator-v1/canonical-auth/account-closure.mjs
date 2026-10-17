@@ -50,6 +50,13 @@ async function recentSession(db,session,memberId,now){
   created>0&&created<=now+30000&&now-created<=600000&&expires>now;
 }
 async function closureBlockers(db,memberId,now){
+ // Private objects cannot be removed by a cascading D1 delete. Always block
+ // account erasure while owned R2 asset records exist, even with Studio OFF.
+ const studioTable=await db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='member_studio_assets'").first();
+ if(studioTable){
+  const retained=await one(db,'SELECT id FROM member_studio_assets WHERE user_id=? LIMIT 1',memberId);
+  if(retained)return 'creator-assets-review';
+ }
  const customer=await one(db,'SELECT member_user_id FROM supporter_customers WHERE member_user_id=?',memberId);
  const subscription=await one(db,'SELECT member_user_id FROM supporter_subscriptions WHERE member_user_id=? LIMIT 1',memberId);
  const intent=await one(db,'SELECT member_user_id FROM supporter_checkout_intents WHERE member_user_id=? LIMIT 1',memberId);
@@ -82,7 +89,9 @@ export async function canonicalAccountClosure(request,env,user,session,{now=Date
    return out({available:true,canClose:!reason,reason,reauthRequired:!fresh});
   // No browser-origin auth or Better Auth token arrives here as a user ID:
   // the enclosing Worker enforces CSRF and supplies the verified session.
-  if(reason)return fail(409,reason==='billing-review'
+  if(reason)return fail(409,reason==='creator-assets-review'
+    ?'Private Creator Studio files must be removed before account closure; contact staff if a submitted draft cannot be edited.'
+    :reason==='billing-review'
     ?'Billing history requires assisted closure. Manage subscriptions before requesting permanent deletion.'
     :reason==='checkout-review'
       ?'A prior checkout must be verified and closed before deleting this account.'
