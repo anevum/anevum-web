@@ -196,14 +196,18 @@ test('private binary upload validates types, quotas, ownership and forced downlo
   // Submitting locks writes, never locks the owner's right to withdraw bytes.
   assert.equal((await s.call(ROOT+'/'+p.id+'/submit','POST','alice',{revision:1})).status,200);
   assert.equal((await s.call(base,'POST','alice',{name:'another.gif',sizeBytes:6,contentType:'image/gif'})).status,409);
-  assert.equal((await s.call(base+'/'+reserved,'DELETE','alice')).status,200);
+  const erasure=await s.call(base+'/'+reserved,'DELETE','alice');
+  assert.equal(erasure.status,200);
+  assert.equal((await j(erasure)).withdrawnFromReview,true);
   assert.equal(s.objects.size,0);
   assert.equal((await j(await s.call(base))).assets.length,0);
-  assert.equal((await s.call(ROOT+'/'+p.id,'DELETE','alice',{revision:2})).status,409,
-   'A pending review must be withdrawn before deletion');
-  const withdrawn=await s.call(ROOT+'/'+p.id+'/withdraw','POST','alice',{revision:2});
-  assert.equal(withdrawn.status,200);
-  assert.equal((await j(withdrawn)).project.status,'draft');
+  const latest=(await j(await s.call(ROOT+'/'+p.id,'GET','alice'))).project;
+  assert.equal(latest.status,'draft');
+  assert.equal(latest.revision,3);
+  assert.equal(latest.submittedAt,null);
+  assert.equal((await j(await s.call('/api/v1/member/studio/review','GET','bob'))).projects.length,0,
+   'Reviewer must not act on a withdrawn, mutated asset set');
+  assert.equal((await s.call(ROOT+'/'+p.id+'/withdraw','POST','alice',{revision:2})).status,409);
   assert.equal((await s.call(ROOT+'/'+p.id,'DELETE','alice',{revision:3})).status,200);
   assert.equal((await j(await s.call(ROOT,'GET','alice'))).projects.length,0);
  }finally{s.close();}
