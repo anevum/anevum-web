@@ -24,6 +24,7 @@ test("published open email-only registration is green with all social logins hid
   assert.equal(result.ok,true);
   assert.deepEqual(result.failures,[]);
   assert.deepEqual(result.availableMethods,["email"]);
+  assert.equal(CANONICAL_LIVE_AUTH.origin,"https://anevum.com","Canary must probe the active canonical site, not retired a.anevum.com");
   assert.equal(result.registration,"open");
   assert.deepEqual(CANONICAL_LIVE_AUTH.paths,[
     "/api/v1/member/health","/api/v1/member/auth-methods"]);
