@@ -9,10 +9,10 @@ const COLLECTION=PREFIX+'/projects';
 const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
 const CATS=new Set(['games','tools','creative','music','art','video','writing','learning','research','other']);
 // Quarantined files count as *submission evidence*, not as publishable media.
-// Games/tools require a ZIP; video still needs an external public HTTPS link.
+// Games/tools require a ZIP; video requires a matching private MP4/WebM or HTTPS link.
 const ELIGIBLE_ASSET_KINDS=Object.freeze({
  games:['package'],tools:['package'],creative:['image','audio','document','package'],
- music:['audio'],art:['image'],video:[],writing:['document'],
+ music:['audio'],art:['image'],video:['video'],writing:['document'],
  learning:['document','package'],research:['document','package'],
  other:['image','audio','document','package']
 });
