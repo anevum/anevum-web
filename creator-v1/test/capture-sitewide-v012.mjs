@@ -77,7 +77,7 @@ try{
   ["member-profile-editor","/account/edit",".av12-account-await"],
   // Legacy /create routes now lead into the canonical Better Auth Studio.
   // The fixture is an unauthenticated browser, so no draft or upload appears.
-  ["member-studio","/create",".st-status"],["member-draft","/create/new",".st-status"]
+  ["member-studio","/create",".sl-guest-hero"],["member-draft","/create/new",".sl-guest-hero"]
  ];
  const context=await fetch(base+"/__context-fixture?enabled=1");
  if(!context.ok)throw Error("SITEWIDE_V012_FIXTURE_UNAVAILABLE");
@@ -87,7 +87,7 @@ try{
   const selected=width===1440||width===390?pages:pages.filter(([id])=>
    ["home","discover","project","community","boards","levels","guest-library"].includes(id));
   for(const [name,path,selector] of selected){
-   if(name==="guest-library")await client.send("Network.clearBrowserCookies");
+   if(["guest-library","member-studio","member-draft"].includes(name))await client.send("Network.clearBrowserCookies");
    // Simulate the real canonical staging capability only for project routes.
    if(name==="project"){
      const healthMode=await fetch(base+"/__player-member-fixture?mode=canonical");
