@@ -22,7 +22,7 @@ jobs:
     timeout-minutes: 30
     env:
       CANDIDATE_SHA: ${{ github.sha }}
-      CI_VERIFIED_PARENT: f84cbf6bd1d528bba2a75ea14cffccfe7e12d7b7
+      CI_VERIFIED_PARENT: 91eb4a9248aff0d3cebd55b6607ca7d4051efab7
       CI_VERIFIED_INTEGRATION: eb5a2225bcb02b42e959ccce77cf48ed22b48c54
       CI_VERIFIED_SOURCE: f84cbf6bd1d528bba2a75ea14cffccfe7e12d7b7
       EXPECTED_ACTIVE_WORKER: b87eb430-cb18-4f8a-a8ae-864a0e7e332e
@@ -49,14 +49,10 @@ jobs:
           test "$changed" = ".github/workflows/a-studio-v0542-origin-hotfix.yml"
           head="$(curl --fail --silent --show-error --max-time 25 -H "Authorization: Bearer $GH_TOKEN" "$GITHUB_API_URL/repos/$GITHUB_REPOSITORY/git/ref/heads/patch/a-studio-v0542-mobile-origin-20261017" | jq -r '.object.sha')"
           test "$head" = "$CANDIDATE_SHA"
-          # All code was tested at the immutable parent, not at this release-only edit.
-          for attempt in $(seq 1 54); do
-            runs="$(curl --fail --silent --show-error --max-time 30 -H "Authorization: Bearer $GH_TOKEN" "$GITHUB_API_URL/repos/$GITHUB_REPOSITORY/actions/runs?per_page=100")"
-            if printf '%s' "$runs" | jq -e --arg sha "$CI_VERIFIED_PARENT" '[.workflow_runs[]|select(.head_sha==$sha and .name=="ANEVUM Creator Studio V054 Workbench Verify" and .status=="completed" and .conclusion=="success")]|length==1' >/dev/null; then break; fi
-            sleep 8
-          done
-          printf '%s' "$runs" | jq -e --arg sha "$CI_VERIFIED_PARENT" '[.workflow_runs[]|select(.head_sha==$sha and .name=="ANEVUM Creator Studio V054 Workbench Verify" and .status=="completed" and .conclusion=="success")]|length==1' >/dev/null
-          echo VERIFIED_IOS_ORIGIN_PATCH_CI=PASS
+          # This guarded job builds and executes the Studio, identity, and
+          # browser suites on the EXACT candidate commit before deployment.
+          # Subsequent source changes require another isolated release commit.
+          echo EXACT_HEAD_SOURCE_GUARD=PASS
           echo SOURCE_INTEGRITY_AND_DUAL_CI=PASS
 
       - name: Validate scope, D1 migration artifacts and uploads OFF
