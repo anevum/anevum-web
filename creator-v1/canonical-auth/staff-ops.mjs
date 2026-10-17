@@ -18,23 +18,19 @@ const CONTROL=/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/;
 const splitIds=(value)=>typeof value==='string'?value.split(',').map(x=>x.trim()).filter(Boolean).slice(0,40):[];
 const unique=(array)=>[...new Set(array)];
 
-export function staffOpsPermission(env,user){
- if(!user?.id||user.emailVerified!==true)return null;
- const owners=splitIds(env?.CANONICAL_STAFF_OWNER_IDS);
- const reviewers=unique([
-  ...splitIds(env?.CANONICAL_FORUM_REVIEWER_IDS),
-  ...splitIds(env?.CANONICAL_FORUM_ADDITIONAL_REVIEWER_IDS)
- ]);
- if(owners.includes(user.id))return {memberId:user.id,role:'owner'};
- if(reviewers.includes(user.id))return {memberId:user.id,role:'reviewer'};
- return null;
+// Server-authoritative roles: only verified canonical D1 grants confer access.
+export async function staffOpsPermission(env,user){
+ if(!user?.id||user.emailVerified!==true||!env?.MEMBER_DB)return null;
+ try{
+  const row=await env.MEMBER_DB.prepare("SELECT role FROM staff_access_grants WHERE member_id=? AND revoked_at IS NULL").bind(user.id).first();
+  return row&&['owner','reviewer'].includes(row.role)?{memberId:user.id,role:row.role}:null;
+ }catch{return null}
 }
-export function staffRosterIds(env){
- return unique([
-  ...splitIds(env?.CANONICAL_STAFF_OWNER_IDS),
-  ...splitIds(env?.CANONICAL_FORUM_REVIEWER_IDS),
-  ...splitIds(env?.CANONICAL_FORUM_ADDITIONAL_REVIEWER_IDS)
- ]).slice(0,40);
+export async function staffRosterIds(db){
+ try{
+  const rows=await db.prepare("SELECT g.member_id AS id FROM staff_access_grants g JOIN \"user\" u ON u.id=g.member_id WHERE g.revoked_at IS NULL AND u.emailVerified=1 ORDER BY CASE g.role WHEN 'owner' THEN 0 ELSE 1 END,g.created_at LIMIT 40").all();
+  return (rows.results||[]).map(x=>x.id);
+ }catch{return []}
 }
 export function validCanvasStroke(value){
  if(!value||typeof value!=='object'||Array.isArray(value))return false;
@@ -53,7 +49,7 @@ async function ready(db){
   const rows=await db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name LIKE 'staff_%'").all();
   const tables=new Set((rows.results||[]).map(x=>x.name));
   return ['staff_invitation_log','staff_task_log','staff_chat_log','staff_canvas_log',
-   'staff_presence','staff_webrtc_signals','staff_ops_audit','staff_ops_limits'].every(x=>tables.has(x));
+   'staff_presence','staff_webrtc_signals','staff_ops_audit','staff_ops_limits','staff_access_grants','staff_access_audit'].every(x=>tables.has(x));
  }catch{return false;}
 }
 async function limited(db,memberId,operation,now,max){
@@ -68,24 +64,41 @@ const audit=(db,type,id,memberId,now)=>db.prepare(
  "INSERT INTO staff_ops_audit(event_type,entity_id,actor_id,created_at) VALUES(?,?,?,?)"
 ).bind(type,id,memberId,now);
 async function readSnapshot(db,env,permit,room,now){
- const rosterIds=staffRosterIds(env);
- const roster=rosterIds.length?
-  (await db.prepare("SELECT u.id,COALESCE(p.display_name,u.name,'STAFF') AS name,COALESCE(p.handle,'') AS handle,u.emailVerified AS verified FROM \"user\" u LEFT JOIN member_creator_profiles p ON p.user_id=u.id WHERE u.id IN ("+
-   rosterIds.map(()=>'?').join(',')+")").bind(...rosterIds).all()).results.filter(x=>x.verified===1).map(x=>({
-    id:x.id,name:x.name,handle:x.handle,role:splitIds(env.CANONICAL_STAFF_OWNER_IDS).includes(x.id)?'owner':'reviewer'
-   })):[];
- const [invites,tasks,messages,canvas,history,peers,memberMetrics]=await Promise.all([
+ const rosterResult=await db.prepare(
+  "SELECT g.member_id AS id,g.role,COALESCE(p.display_name,u.name,'STAFF') AS name,COALESCE(p.handle,'') AS handle "+
+  "FROM staff_access_grants g JOIN \"user\" u ON u.id=g.member_id "+
+  "LEFT JOIN member_creator_profiles p ON p.user_id=g.member_id "+
+  "WHERE g.revoked_at IS NULL AND u.emailVerified=1 "+
+  "ORDER BY CASE g.role WHEN 'owner' THEN 0 ELSE 1 END,g.created_at LIMIT 40"
+ ).all();
+ const roster=rosterResult.results||[];
+ const rosterIds=roster.map(r=>r.id);
+ const [invites,tasks,messages,canvas,history,peers,memberMetrics,eligibleMembers]=await Promise.all([
   db.prepare("SELECT id,alias,channel,stage,note,created_at AS createdAt,updated_at AS updatedAt FROM staff_invitation_log ORDER BY updated_at DESC LIMIT 80").all(),
   db.prepare("SELECT id,title,stage,priority,updated_at AS updatedAt FROM staff_task_log ORDER BY updated_at DESC LIMIT 80").all(),
   db.prepare("SELECT m.seq,m.id,m.room,m.author_id AS authorId,m.body,m.created_at AS createdAt,COALESCE(p.display_name,u.name,'STAFF') AS author FROM staff_chat_log m JOIN \"user\" u ON u.id=m.author_id LEFT JOIN member_creator_profiles p ON p.user_id=m.author_id WHERE m.room=? ORDER BY m.seq DESC LIMIT 70").bind(room).all(),
   db.prepare("SELECT seq,id,actor_id AS authorId,event_type AS eventType,event_data AS eventData,created_at AS createdAt FROM staff_canvas_log WHERE room=? ORDER BY seq DESC LIMIT 240").bind(room).all(),
   db.prepare("SELECT a.seq,a.event_type AS eventType,a.entity_id AS entityId,a.created_at AS createdAt,COALESCE(p.handle,'STAFF') AS actor FROM staff_ops_audit a LEFT JOIN member_creator_profiles p ON p.user_id=a.actor_id ORDER BY a.seq DESC LIMIT 40").all(),
   db.prepare("SELECT member_id AS id,last_seen_at AS lastSeen FROM staff_presence WHERE room='bridge' AND last_seen_at>? ORDER BY last_seen_at DESC").bind(now-50).all(),
-  permit.role==='owner'?db.prepare('SELECT COUNT(*) AS total,COALESCE(SUM(CASE WHEN emailVerified=1 THEN 1 ELSE 0 END),0) AS verified FROM "user"').first():Promise.resolve(null)
+  permit.role==='owner'?db.prepare(
+   "SELECT COUNT(*) AS total,"+
+   "COALESCE(SUM(CASE WHEN emailVerified=1 THEN 1 ELSE 0 END),0) AS verified,"+
+   "COALESCE(SUM(CASE WHEN julianday(createdAt)>=julianday('now')-1 THEN 1 ELSE 0 END),0) AS new24h,"+
+   "COALESCE(SUM(CASE WHEN julianday(createdAt)>=julianday('now')-7 THEN 1 ELSE 0 END),0) AS new7d,"+
+   "COALESCE(SUM(CASE WHEN julianday(createdAt)>=julianday('now')-30 THEN 1 ELSE 0 END),0) AS new30d,"+
+   "(SELECT COUNT(*) FROM member_creator_profiles) AS profiles FROM \"user\""
+  ).first():Promise.resolve(null),
+  permit.role==='owner'?db.prepare(
+   "SELECT u.id,COALESCE(p.display_name,u.name,'MEMBER') AS name,COALESCE(p.handle,'') AS handle "+
+   "FROM \"user\" u LEFT JOIN member_creator_profiles p ON p.user_id=u.id "+
+   "LEFT JOIN staff_access_grants g ON g.member_id=u.id AND g.revoked_at IS NULL "+
+   "WHERE u.emailVerified=1 AND g.member_id IS NULL ORDER BY u.createdAt DESC LIMIT 40"
+  ).all():Promise.resolve({results:[]})
  ]);
  return {
   role:permit.role,memberId:permit.memberId,room,checkedAt:now,
-  memberMetrics:memberMetrics?{total:memberMetrics.total,verified:memberMetrics.verified}:null,
+  memberMetrics:memberMetrics?{total:memberMetrics.total,verified:memberMetrics.verified,profiles:memberMetrics.profiles,new24h:memberMetrics.new24h,new7d:memberMetrics.new7d,new30d:memberMetrics.new30d}:null,
+  eligibleMembers:permit.role==='owner'?(eligibleMembers.results||[]):[],
   invitationMode:'manual-only',liveMode:'short-poll',callMode:'peer-preview',
   invitations:invites.results||[],tasks:tasks.results||[],
   messages:(messages.results||[]).reverse(),
@@ -189,7 +202,7 @@ async function postCommand(req,db,env,permit,now){
   return json({ok:true});
  }
  if(v.kind==='signal'){
-  const roster=staffRosterIds(env);
+  const roster=await staffRosterIds(db);
   if(!exact(v,['kind','recipientId','signalType','data'])||
    typeof v.recipientId!=='string'||v.recipientId===memberId||!roster.includes(v.recipientId)||
    !['offer','answer','candidate','leave'].includes(v.signalType)||
@@ -222,7 +235,7 @@ export async function cleanupStaffOps(env,now=Math.floor(Date.now()/1000)){
 export async function canonicalStaffOps(req,env,user,now=Math.floor(Date.now()/1000)){
  if(env?.CANONICAL_STAFF_OPS_ENABLED!=='true')return fail(404,'Not found');
  if(!user?.id||user.emailVerified!==true)return fail(401,'Verified sign-in required');
- const permit=staffOpsPermission(env,user);
+ const permit=await staffOpsPermission(env,user);
  if(!permit)return fail(403,'Staff authorization required');
  const db=env.MEMBER_DB;
  if(!await ready(db))return fail(503,'Staff database not prepared');
