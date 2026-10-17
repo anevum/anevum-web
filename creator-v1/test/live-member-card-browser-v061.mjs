@@ -55,5 +55,6 @@ try{
 }finally{
  try{ws?.close()}catch{}
  chrome.kill('SIGTERM');
- await fs.rm(profile,{recursive:true,force:true});
+ try{await Promise.race([new Promise(resolve=>chrome.once('exit',resolve)),wait(1400)]);}catch{}
+ await fs.rm(profile,{recursive:true,force:true,maxRetries:10,retryDelay:250}).catch(()=>{});
 }

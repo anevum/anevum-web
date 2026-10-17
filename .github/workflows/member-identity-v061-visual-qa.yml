@@ -1,3 +1,4 @@
+# Browser teardown is best-effort; successful image decoding must not fail on Chromium profile cleanup races.
 name: ANEVUM V061 Mini Specimen Browser QA
 on:
   push:
