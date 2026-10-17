@@ -1,4 +1,5 @@
 import {boundedText} from './request-body.mjs';
+import {forumApprovalBadgeStatements} from './recognition-issuer.mjs';
 import {publicMemberColumns,hydratedPublicMemberCard} from './public-member-card.mjs';
 const HEAD={'content-type':'application/json; charset=utf-8','cache-control':'private, no-store','x-content-type-options':'nosniff'};
 const json=(data,status=200)=>Response.json(data,{status,headers:HEAD});
@@ -132,6 +133,7 @@ export async function canonicalForums(req,env,user=null,now=Math.floor(Date.now(
    if(v.action==='hide')statements.push(
     db.prepare("UPDATE member_forum_reports SET resolved_at=?,resolution='hidden',resolved_by=? WHERE target_kind=? AND target_id=? AND resolved_at IS NULL AND EXISTS(SELECT 1 FROM member_forum_review_log WHERE id=?)").bind(now,user.id,v.targetKind,v.targetId,auditId)
    );
+   if(v.action==='publish')statements.push(...await forumApprovalBadgeStatements(db,{kind:v.targetKind,targetId:v.targetId,reviewId:auditId,reviewerId:user.id,enabled:env.CANONICAL_RECOGNITION_ENABLED==='true',now}));
    const results=await db.batch(statements);
    return results[0].meta?.changes===1?json({ok:true,status:next}):fail(409,'Review state changed');
   }
