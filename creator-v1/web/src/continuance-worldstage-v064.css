@@ -1,0 +1,243 @@
+/* ANEVUM.WEB.UPDATE.2026-10-17.002.CONTINUANCE-WORLD-STAGES
+   High-DPI procedural atmosphere + dimensional sitewide surfaces.
+   Supports native V062 specimens and the existing cinematic image masters.
+   Content, controls and factual member/project states stay real HTML.
+   No remote assets or new fonts. No sweeping glare. */
+
+/* The environment is a persistent spatial layer, not part of any click target. */
+.av9-shell{isolation:isolate;--av64-glint:#f6deef;--av64-line:#c9b4db65}
+.av9-shell>.av64-worldstage{
+  position:fixed;inset:0;z-index:0;pointer-events:none;
+  overflow:hidden;user-select:none;contain:strict;
+  opacity:.81;mix-blend-mode:screen;
+  --av64-primary:#ae8be5;--av64-secondary:#ec9a99;
+}
+.av9-shell .site-main.av9-main{position:relative;z-index:1}
+.av9-shell .site-footer.av9-footer{position:relative;z-index:1}
+.av64-worldstage>*{position:absolute;inset:0;display:block;pointer-events:none}
+.av64-worldstage-nebula{
+  inset:-6%;background:
+    radial-gradient(ellipse 51% 31% at 88% 22%,color-mix(in srgb,var(--av64-primary) 16%,transparent),transparent 83%),
+    radial-gradient(ellipse 29% 38% at 10% 72%,color-mix(in srgb,var(--av64-secondary) 8%,transparent),transparent 88%),
+    radial-gradient(ellipse 65% 55% at 50% -25%,#c0c6fe12,transparent 84%);
+  transform-origin:75% 35%;animation:av64-nebula-breath 28s ease-in-out infinite alternate;
+}
+.av64-worldstage-field{
+  inset:0;width:100%;height:100%;opacity:.87;image-rendering:auto;
+  filter:drop-shadow(0 0 4px #dab6f238);
+}
+.av64-worldstage-crown{
+  inset:auto -18vw auto auto;top:-28vh;width:min(95vw,930px);height:min(95vw,930px);
+  aspect-ratio:1;border-radius:50%;
+  background:conic-gradient(from 24deg,
+    transparent 0deg,color-mix(in srgb,var(--av64-primary) 28%,transparent) 38deg,
+    transparent 73deg,color-mix(in srgb,var(--av64-secondary) 15%,transparent) 150deg,
+    transparent 195deg,color-mix(in srgb,var(--av64-primary) 17%,transparent) 267deg,
+    transparent 305deg);
+  -webkit-mask-image:radial-gradient(circle,transparent 45%,#0007 58%,#000 60%,transparent 69%);
+  mask-image:radial-gradient(circle,transparent 45%,#0007 58%,#000 60%,transparent 69%);
+  opacity:.36;transform:rotate(-25deg);animation:av64-orbital-turn 130s linear infinite;
+}
+.av64-worldstage-vignette{
+  background:linear-gradient(90deg,#05081359,transparent 23%,transparent 76%,#05081365),
+    linear-gradient(180deg,#06091528,transparent 19%,transparent 79%,#06091554);
+}
+.av64-worldstage--home{opacity:.29}
+.av64-worldstage--discover{--av64-primary:#90b9ff;--av64-secondary:#bfa2e9}
+.av64-worldstage--community{--av64-primary:#db90b2;--av64-secondary:#889ce6}
+.av64-worldstage--creators{--av64-primary:#b898f1;--av64-secondary:#77bac7}
+.av64-worldstage--levels{--av64-primary:#d9b57d;--av64-secondary:#8bd2d6;opacity:.58}
+.av64-worldstage--support{--av64-primary:#e9a5ba;--av64-secondary:#a58bdb}
+.av64-worldstage--studio{--av64-primary:#8ebdc9;--av64-secondary:#e0a5b6}
+.av64-worldstage--member{--av64-primary:#c5a7d8;--av64-secondary:#85b5d7}
+.av64-worldstage--field{--av64-primary:#8abadd;--av64-secondary:#d59dae}
+
+/* Real image masters remain crisp. Preserve their responsive srcSet crop and
+   don't magnify raster artwork beyond native resolution. */
+.av9-shell :is(.av9-world-gateway-art,.ch7-entry-art,.ch7-hero-art,
+  .av9-navigation-world-art) :is(img,.cw-artwork-image){
+  image-rendering:auto;backface-visibility:hidden;
+  filter:contrast(1.075) saturate(1.08);
+  transition:transform .64s cubic-bezier(.21,.77,.25,1),filter .45s ease;
+}
+.av9-shell :is(.av9-world-gateway:hover,.av9-navigation-world:hover,
+  .ch7-entry-art:hover) :is(img,.cw-artwork-image){
+  filter:contrast(1.095) saturate(1.13);
+}
+.av9-shell .av9-world-gateway-art:after{
+  background:
+    linear-gradient(0deg,#050918f9 0%,#050919de 25%,#07112670 63%,#080e2222 100%),
+    linear-gradient(110deg,#eeb0d30a,#080b1800 40%,#8c9dff10 85%);
+}
+.av9-shell .av9-world-gateway{
+  border-color:#d5caee85;
+  box-shadow:inset 0 1px #ffffff50,inset 0 0 0 1px #ffffff09,
+    0 12px 19px #0009,0 29px 57px #0007;
+}
+.av9-shell .av9-world-gateway:hover{
+  border-color:#fae2dbaa;
+  box-shadow:inset 0 1px #ffffff74,0 13px 24px #000b,0 30px 60px #0009,0 0 28px #dcaad12b;
+}
+.av9-shell .av9-world-gateway-content>strong{
+  text-shadow:0 2px 5px #040817f5,0 12px 26px #000b;letter-spacing:-.03em;
+}
+.av9-shell .av9-world-gateway-entry{
+  box-shadow:inset 0 1px #ffffff8a,inset 0 -1px #07112690,
+    0 4px 0 #020717,0 11px 22px #0009;
+  border-color:#dfe8f0cb;
+  backdrop-filter:blur(12px);
+}
+.av9-shell .av9-world-gateway:hover .av9-world-gateway-entry{
+  border-color:#fbdce4;color:#fff6ef;
+}
+
+/* The shared UI should feel built from enameled metal and glass, not flat cards.
+   Avoid changing dimensions/positioning of real forms or player controls. */
+.av9-shell :is(.av8-module,.ch7-panel,.ch7-status,.ch7-portals>a,
+  .cnb-project,.cnb-creator,.discussion-paper,.st-panel,.st-identity,
+  .member-panel,.ms-panel,.av45-buy,.an-artifact-card-v034){
+  border-color:#d1b9dc6b;
+  background-blend-mode:normal;
+  box-shadow:inset 0 1px #ffffff3d,
+    inset 0 0 0 1px #ffffff08,0 6px 15px #0006,
+    0 19px 40px #0005,0 0 32px #ba92d407;
+}
+.av9-shell :is(.av8-module,.ch7-panel,.ch7-status,.ch7-portals>a,
+  .cnb-project,.cnb-creator,.st-panel,.member-panel,.ms-panel,
+  .an-artifact-card-v034):hover{
+  border-color:#e1c1e28f;
+  box-shadow:inset 0 1px #ffffff61,inset 0 0 0 1px #ffffff12,
+    0 12px 27px #0009,0 27px 48px #0006,0 0 36px #ac89e11c;
+}
+
+/* Real published cards have legible typographic hierarchy over the art. */
+.av9-shell :is(.ch7-entry,.cnb-project,.av6-feed-item,.av8-release,.ch7-person)
+  :is(h2,h3,strong){
+  text-rendering:optimizeLegibility;
+}
+.av9-shell :is(.ch7-entry-copy,.cnb-project,.av6-feed-item-copy,.ch7-person-copy) p{
+  color:#d4d5e3;line-height:1.58;
+}
+.av9-shell :is(.ch7-entry,.ch7-person,.av6-feed-item,.av8-release){
+  border-color:#c3b9d967;
+}
+.av9-shell .av8-module-empty{
+  background:
+    radial-gradient(ellipse at 82% 20%,#987aca1d,transparent 54%),
+    radial-gradient(ellipse at 13% 78%,#6d99bb16,transparent 58%),
+    linear-gradient(150deg,#141b30,#0b1425);
+  border:1px solid #c8b8d44a;
+  border-radius:13px;
+  box-shadow:inset 0 1px #ffffff26;
+}
+.av9-shell .ch7-conversation-art{
+  background:radial-gradient(circle at 55% 42%,#ae96dc2e,#10182cea 72%);
+  border-color:#ceb6df79;
+}
+.av9-shell :is(.ch7-person-avatar,.ch7-avatar,.discussion-avatar){
+  box-shadow:inset 0 1px #ffffff58,0 3px 12px #0008,0 0 19px #c5a0e12b;
+}
+.av9-shell .av61-identity{
+  border-color:#d1b9d96f;
+  background-image:radial-gradient(ellipse at 10% 0%,#be92cf1d,transparent 68%),
+    linear-gradient(150deg,#2b2b48cf,#101828e0);
+  box-shadow:inset 0 1px #ffffff29,0 8px 20px #0005;
+}
+.av9-shell .av61-identity :is(img,.level-emblem){
+  image-rendering:auto;
+}
+
+/* Member wall and Creator Studio retain real assets and writes, with better depth
+   and contrast at editing scale. */
+.av9-shell :is(.ms-dashboard,.ms-public,.st-root,.discussion-page,.member-shell){
+  --av64-edit-line:#d6bfd87d;
+}
+.av9-shell .ms-cover{
+  background-blend-mode:normal;
+  border-bottom:1px solid #dfbfda72;
+  box-shadow:inset 0 -42px 67px #06091780,inset 0 1px #ffffff2e;
+}
+.av9-shell .ms-portrait{
+  box-shadow:0 0 0 2px #ebc5e0bd,0 0 0 6px #141525c4,
+    0 12px 32px #0009,0 0 32px #e7b3db4d;
+}
+.av9-shell .st-panel{
+  background-image:radial-gradient(ellipse at 3% 0%,#b49dc91c,transparent 63%),
+    linear-gradient(154deg,#25293de8,#151e2de9 58%,#0c1425f2);
+  border-color:#d0c5e17b;
+}
+.av9-shell .st-header,.av9-shell .ms-toolbar{
+  border-color:#d2bad66c;
+}
+.av9-shell :is(.st-root,.ms-dashboard) :is(input,textarea,select):focus-visible{
+  box-shadow:0 0 0 3px #a2e5e228,0 0 20px #84c8e514;
+}
+.av9-shell .ms-cover-meta,
+.av9-shell .ms-identity{
+  text-shadow:0 2px 19px #030513dc;
+}
+/* Progression artwork and earned award identity get dedicated illumination. */
+.av9-shell .an-artifact-visual .level-emblem{
+  filter:drop-shadow(0 11px 13px #000b) drop-shadow(0 0 19px #d7a4cb31);
+}
+.av9-shell .an-artifact-card-v034.is-earned{
+  border-color:#edceaa8e;
+  box-shadow:inset 0 1px #ffffff4b,0 11px 32px #0008,0 0 29px #d4b68817;
+}
+.av9-shell .an-artifact-state{letter-spacing:.11em}
+.av9-shell .an-history{
+  border-color:#edd2e2a1;
+  box-shadow:inset 0 1px #ffffff40,0 20px 51px #000d,0 0 30px #9d75d127;
+}
+
+/* Support remains a concise invitation, not a sprawling dashboard. */
+.av9-shell .av45-hero{
+  border-color:#e4bacb8e;
+  background:
+    radial-gradient(ellipse at 75% 28%,#b87dac54,transparent 48%),
+    radial-gradient(ellipse at 5% 85%,#744e7d3f,transparent 54%),
+    linear-gradient(132deg,#24223d,#131b2c 68%,#0a1326);
+  box-shadow:inset 0 1px #ffffff44,0 23px 52px #0009,0 0 47px #bc91cc14;
+}
+.av9-shell .av45-buy{border-color:#dfbbd88c}
+.av9-shell .av45-primary{box-shadow:inset 0 1px #ffffffa6,0 7px 20px #0008,0 0 22px #efb5d035}
+.av9-shell .av45-symbol{filter:drop-shadow(0 0 24px #dda4db49)}
+
+/* Small, localized motion only. No sweep, zooming page or scroll hijacking. */
+@keyframes av64-nebula-breath{
+  from{transform:translate3d(-.4%,0,0) scale(1)}
+  to{transform:translate3d(.55%,-.4%,0) scale(1.026)}
+}
+@keyframes av64-orbital-turn{
+  from{transform:rotate(-25deg)}
+  to{transform:rotate(335deg)}
+}
+@media(max-width:700px){
+  .av9-shell>.av64-worldstage{opacity:.58}
+  .av64-worldstage--home{opacity:.23!important}
+  .av64-worldstage-crown{
+    width:110vw;height:110vw;right:-50vw;top:-3vh;opacity:.21;
+  }
+  .av64-worldstage-field{opacity:.67}
+  .av9-shell .av9-world-gateway{
+    box-shadow:inset 0 1px #ffffff49,0 10px 22px #0009;
+  }
+  .av9-shell :is(.av8-module,.ch7-panel,.st-panel,.ms-panel,.member-panel){
+    box-shadow:inset 0 1px #ffffff29,0 9px 21px #0007;
+  }
+}
+@media(prefers-reduced-motion:reduce){
+  .av64-worldstage-nebula,.av64-worldstage-crown{animation:none!important;transform:none!important}
+  .av9-shell :is(.av9-world-gateway-art,.ch7-entry-art,.ch7-hero-art,
+    .av9-navigation-world-art) :is(img,.cw-artwork-image){transition:none!important}
+}
+@media(prefers-reduced-transparency:reduce){
+  .av9-shell>.av64-worldstage{opacity:.23}
+  .av9-shell :is(.st-panel,.ch7-panel,.av8-module,.ms-panel){background-color:#121829}
+}
+@media(forced-colors:active){
+  .av9-shell>.av64-worldstage{display:none!important}
+  .av9-shell :is(.st-panel,.ch7-panel,.av8-module,.ms-panel,.member-panel,.av9-world-gateway){
+    background:Canvas;color:CanvasText;border:1px solid CanvasText;box-shadow:none;
+  }
+}
