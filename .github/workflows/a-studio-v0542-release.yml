@@ -1,4 +1,4 @@
-name: ANEVUM A Staging Creator Studio V054.2.2 Release
+name: ANEVUM A Staging Creator Studio V054.2 Release
 
 # Exact-head owner-authorized staging-only release. Studio private drafts ON.
 # Quarantined uploads, R2, public executable games and awards remain OFF.
@@ -22,7 +22,7 @@ jobs:
     timeout-minutes: 30
     env:
       CANDIDATE_SHA: ${{ github.sha }}
-      CI_VERIFIED_PARENT: eb5a2225bcb02b42e959ccce77cf48ed22b48c54
+      CI_VERIFIED_PARENT: 681e84543dd8e7b4a36fda06e616a4265bb61c0a
       CI_VERIFIED_INTEGRATION: eb5a2225bcb02b42e959ccce77cf48ed22b48c54
       CI_VERIFIED_SOURCE: d15cb13224b5b1bbbb61f4e5bfe304d115b09462
       EXPECTED_ACTIVE_WORKER: f5df3330-7db7-4718-93a4-bac0cf47579f
@@ -49,14 +49,19 @@ jobs:
           test "$changed" = ".github/workflows/a-studio-v0542-release.yml"
           head="$(curl --fail --silent --show-error --max-time 25 -H "Authorization: Bearer $GH_TOKEN" "$GITHUB_API_URL/repos/$GITHUB_REPOSITORY/git/ref/heads/release/a-studio-v0542-canvas-first-20261017" | jq -r '.object.sha')"
           test "$head" = "$CANDIDATE_SHA"
-          for workflow in "ANEVUM Creator Studio V054.2 Workbench Verify" "ANEVUM Creator V1 Verify"; do
+          # Only staging invite config and CI metadata changed since fully reviewed source.
+          allowed="$(git diff --name-only "$CI_VERIFIED_SOURCE" "$CI_VERIFIED_PARENT" | sort)"
+          expected="$(printf '%s\n' '.github/workflows/a-studio-v0542-release.yml' '.github/workflows/studio-v054-verify.yml' 'creator-v1/wrangler.a-progression-v031.jsonc' | sort)"
+          test "$allowed" = "$expected" || { echo "::error::Release contains unreviewed app changes"; exit 1; }
+          for pair in "ANEVUM Creator Studio V054 Workbench Verify:$CI_VERIFIED_SOURCE" "ANEVUM Creator V1 Verify:$CI_VERIFIED_SOURCE" "ANEVUM Creator Studio V054 Workbench Verify:$CI_VERIFIED_PARENT"; do
+            name="${pair%%:*}"; sha="${pair##*:}"
             found=0
             for attempt in $(seq 1 48); do
               runs="$(curl --fail --silent --show-error --max-time 30 -H "Authorization: Bearer $GH_TOKEN" "$GITHUB_API_URL/repos/$GITHUB_REPOSITORY/actions/runs?per_page=100")"
-              if printf '%s' "$runs" | jq -e --arg sha "$CI_VERIFIED_PARENT" --arg name "$workflow" '[.workflow_runs[]|select(.head_sha==$sha and .name==$name and .status=="completed" and .conclusion=="success")]|length>=1' >/dev/null; then found=1;break;fi
+              if printf '%s' "$runs" | jq -e --arg sha "$sha" --arg name "$name" '[.workflow_runs[]|select(.head_sha==$sha and .name==$name and .status=="completed" and .conclusion=="success")]|length>=1' >/dev/null; then found=1;break;fi
               sleep 10
             done
-            test "$found" = 1 || { echo "::error::Missing successful exact-source workflow: $workflow";exit 1; }
+            test "$found" = 1 || { echo "::error::Missing successful workflow $name at $sha";exit 1; }
           done
           echo SOURCE_INTEGRITY_AND_DUAL_CI=PASS
 
@@ -156,7 +161,7 @@ jobs:
           cf "$api/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/$CF_WORKER/deployments?per_page=1" > "$RUNNER_TEMP/studio-deployments-before.json"
           jq -er '.result.deployments[0].versions[] | select(.percentage==100) | .version_id' "$RUNNER_TEMP/studio-deployments-before.json" > "$RUNNER_TEMP/studio-rollback-version.txt"
           test "$(cat "$RUNNER_TEMP/studio-rollback-version.txt")" = "$EXPECTED_ACTIVE_WORKER" || {
-            echo "::error::Staging Worker drifted from exact V054.2.2 baseline. Refusing deployment."; exit 1;
+            echo "::error::Staging Worker drifted from exact V054.2 baseline. Refusing deployment."; exit 1;
           }
           cf "$api/zones/$CF_ZONE/workers/routes" > "$RUNNER_TEMP/studio-routes-before.json"
           jq -e '
