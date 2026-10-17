@@ -1,7 +1,7 @@
 import {
   CANONICAL_ORIGIN,CANONICAL_PREFIX,CANONICAL_AUTH_PATH,
   AUTH_ALLOWLIST,canonicalConfigState,canonicalSchemaReady,
-  isCanonicalOrigin,withoutForeignCookies
+  isCanonicalOrigin,withoutForeignCookies,canonicalRequestOrigin
 } from "./policy.mjs";
 import {createCanonicalAuth} from "./auth.mjs";
 import {canonicalCreatorSchemaReady,canonicalCreatorMember,canonicalPublicCreator,canonicalExportMember} from "./profile.mjs";
@@ -36,14 +36,14 @@ const SECURITY={
   "x-frame-options":"DENY",
   "vary":"Origin"
 };
-const sameOriginMutation=request=>{
+const sameOriginMutation=(request,env)=>{
   const origin=request.headers.get("origin");
   const site=request.headers.get("sec-fetch-site");
   // The Origin header is mandatory and bound to the exact staging host.
   // Fetch Metadata is an additional signal, not a mandatory browser feature:
   // some WebKit/in-app browsers omit Sec-Fetch-Site on valid same-origin POSTs.
   // Reject any explicitly cross-site/same-site header even if Origin matches.
-  return origin===CANONICAL_ORIGIN &&
+  return origin===canonicalRequestOrigin(env) &&
     (site===null||site==="same-origin"||site==="none");
 };
 const safeJson=(request,value,status=200)=>{
@@ -102,7 +102,7 @@ async function boundedEmailBody(request,verification){
  */
 export function createCanonicalStageWorker({authFactory=createCanonicalAuth}={}){
   return {async fetch(request,env){
-    if(!isCanonicalOrigin(request))return fail(request,404);
+    if(!isCanonicalOrigin(request,env))return fail(request,404);
     const url=new URL(request.url),path=url.pathname;
     const publicHandle=path.match(PUBLIC_MEMBER);
     const publicCommunity=/^\/api\/v1\/community\/(?:members|activity)$/.test(path);
@@ -182,11 +182,11 @@ export function createCanonicalStageWorker({authFactory=createCanonicalAuth}={})
     if(forumRoute){
       const publicForumRead=request.method==="GET" && !path.includes("/forum-submissions") && !path.endsWith("/forum-review") && !path.endsWith("/reaction");
       if(!publicForumRead&&!["GET","POST","DELETE"].includes(request.method))return fail(request,405);
-      if(!publicForumRead&&["POST","PATCH","PUT","DELETE"].includes(request.method)&&!sameOriginMutation(request))return safeJson(request,{error:"Same-origin request required"},403);
+      if(!publicForumRead&&["POST","PATCH","PUT","DELETE"].includes(request.method)&&!sameOriginMutation(request,env))return safeJson(request,{error:"Same-origin request required"},403);
       if(publicForumRead)return safeResponse(await canonicalForums(request,env));
       try{
         const auth=authFactory(env);
-        const clean=withoutForeignCookies(request);
+        const clean=withoutForeignCookies(request,env);
         const session=await auth.api.getSession({headers:clean.headers});
         return safeResponse(await canonicalForums(clean,env,session?.user));
       }catch{return fail(request,503)}
@@ -197,14 +197,14 @@ export function createCanonicalStageWorker({authFactory=createCanonicalAuth}={})
     }
     if(publicHandle){
       const clean=new Request(request.url,{method:request.method,headers:{accept:"application/json"}});
-      return safeResponse(await canonicalPublicCreator(clean,env,CANONICAL_ORIGIN,publicHandle[1]));
+      return safeResponse(await canonicalPublicCreator(clean,env,canonicalRequestOrigin(env),publicHandle[1]));
     }
 
     // Stripe does not send a browser Origin. This exact endpoint relies on
     // raw-body HMAC verification, test-mode lock and a durable event ledger.
     if(supporterHook)return safeResponse(await supporterWebhook(request,env));
 
-    if(ownProfile && ["POST","PATCH"].includes(request.method) && !sameOriginMutation(request))
+    if(ownProfile && ["POST","PATCH"].includes(request.method) && !sameOriginMutation(request,env))
       return safeJson(request,{error:"Same-origin request required"},403);
 
     // No inherited V5/Creator legacy cookies and no Authorization.
@@ -215,9 +215,9 @@ export function createCanonicalStageWorker({authFactory=createCanonicalAuth}={})
     const isAppleFormPost=request.method==="POST" && path===CANONICAL_AUTH_PATH+"/callback/apple" &&
       configured.apple && /^application\/x-www-form-urlencoded(?:;|$)/i.test(request.headers.get("content-type")||"") &&
       (!request.headers.get("origin") || request.headers.get("origin")==="https://appleid.apple.com");
-    if(["POST","PATCH","PUT","DELETE"].includes(request.method)&&!sameOriginMutation(request)&&!isAppleFormPost)
+    if(["POST","PATCH","PUT","DELETE"].includes(request.method)&&!sameOriginMutation(request,env)&&!isAppleFormPost)
       return safeJson(request,{error:"Same-origin request required"},403);
-    let clean=withoutForeignCookies(request);
+    let clean=withoutForeignCookies(request,env);
     if(request.method==="POST"){
       if(url.search)return safeJson(request,{error:"Invalid request"},400);
       if(isAppleFormPost){
@@ -252,7 +252,7 @@ export function createCanonicalStageWorker({authFactory=createCanonicalAuth}={})
         clean=new Request(request.url,{
           method:"POST",headers:{
             "content-type":"application/json",
-            origin:CANONICAL_ORIGIN,
+            origin:canonicalRequestOrigin(env),
             "sec-fetch-site":"same-origin",
             "accept":"application/json",
             "cf-connecting-ip":request.headers.get("cf-connecting-ip")||""
@@ -297,8 +297,8 @@ export function createCanonicalStageWorker({authFactory=createCanonicalAuth}={})
           :await supporterMember(clean,env,session.user));
         if(ownSpace)return safeResponse(await canonicalSpace(clean,env,session.user));
         return safeResponse(ownExport?
-          await canonicalExportMember(clean,env,session.user,CANONICAL_ORIGIN):
-          await canonicalCreatorMember(clean,env,session.user,CANONICAL_ORIGIN));
+          await canonicalExportMember(clean,env,session.user,canonicalRequestOrigin(env)):
+          await canonicalCreatorMember(clean,env,session.user,canonicalRequestOrigin(env)));
       }
       const result=await auth.handler(clean);
       return safeResponse(result);
