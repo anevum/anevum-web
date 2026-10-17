@@ -37,7 +37,8 @@ test("candidate Worker stays unrouted, isolated, owner-only and countdown-first"
     ["COMMUNITY_DB","fa96e36d-6257-4883-bf15-074947e11a13"],
     ["MEMBER_DB","e1d29049-c83b-4534-8355-dc1fa36ba6d8"]
   ]);
-  assert.equal(Object.keys(cfg.vars).some(k=>/SECRET|TOKEN|_EMAILS|_AUD/.test(k)),false);
+  assert.equal(cfg.vars.ANEVUM_ACCESS_AUD,"6efab9f2821297fa4c965f18813d78d7433ebf7823a8e9e6d9ecfb7e4b2ccde1");
+  assert.equal(Object.keys(cfg.vars).some(k=>/SECRET|TOKEN|_EMAILS/.test(k)),false);
   for(const provider of ["GOOGLE","APPLE","MICROSOFT","GITHUB"]){
     assert.equal(cfg.vars["CANONICAL_"+provider+"_ENABLED"],"false");
   }
