@@ -40,16 +40,18 @@ export async function canonicalForums(req,env,user=null,now=Math.floor(Date.now(
  if(env.CANONICAL_FORUM_ENABLED!=='true')return fail(404,'Forums are not enabled');
  const db=env.MEMBER_DB;if(!await dbReady(db))return fail(503,'Forum database is not prepared');
  const url=new URL(req.url),path=url.pathname;
- if([...url.searchParams.keys()].some(x=>!['topic','after'].includes(x))||[...url.searchParams.keys()].some(x=>url.searchParams.getAll(x).length!==1))return fail(400,'Invalid filters');
- const topic=url.searchParams.get('topic');if(topic&&!TOPICS.has(topic))return fail(400,'Invalid topic');
- const after=decodeCursor(url.searchParams.get('after'));if(after===false)return fail(400,'Invalid cursor');
+ // Staff-only cursors and public forum filters have independent validation.
+ // Staff auth and reviewer grants run before page cursors are parsed.
+ const review=path==='/api/v1/member/forum-review';
+ if(!review&&([...url.searchParams.keys()].some(x=>!['topic','after'].includes(x))||[...url.searchParams.keys()].some(x=>url.searchParams.getAll(x).length!==1)))return fail(400,'Invalid filters');
+ const topic=review?null:url.searchParams.get('topic');if(topic&&!TOPICS.has(topic))return fail(400,'Invalid topic');
+ const after=review?null:decodeCursor(url.searchParams.get('after'));if(after===false)return fail(400,'Invalid cursor');
  const item=path.match(/^\/api\/v1\/community\/threads\/([a-f0-9-]{36})$/);
  const reply=path.match(/^\/api\/v1\/community\/threads\/([a-f0-9-]{36})\/replies$/);
  const react=path.match(/^\/api\/v1\/community\/threads\/([a-f0-9-]{36})\/reaction$/);
  const report=path==='/api/v1/community/reports';
  const mine=path==='/api/v1/member/forum-submissions';
  const mineId=path.match(/^\/api\/v1\/member\/forum-submissions\/([a-f0-9-]{36})$/);
- const review=path==='/api/v1/member/forum-review';
  if(!item&&!reply&&!react&&!report&&!mine&&!mineId&&!review&&path!=='/api/v1/community/threads')return fail(404,'Not found');
  if((item&&!UUID.test(item[1]))||(reply&&!UUID.test(reply[1]))||(react&&!UUID.test(react[1]))||(mineId&&!UUID.test(mineId[1])))return fail(404,'Not found');
  const publicRead=req.method==='GET'&&!mine&&!mineId&&!react&&!report&&!review;
