@@ -296,32 +296,24 @@ try{
      if(!reset.ok)throw Error("PLAYER_V005_MEMBER_RESET_FAILED");
    }
    if(name==="home"){
-    await evaluate('document.getElementById("world-gateways").scrollIntoView({block:"start"})');
-    if(width<541){
-     // Native lazy loading deliberately defers offscreen horizontal cards.
-     // Exercise each card before requiring all four decoded originals.
-     for(let index=0;index<4;index++){
-      await evaluate('document.querySelectorAll(".av9-world-gateway")['+index+'].scrollIntoView({block:"nearest",inline:"nearest",behavior:"instant"})');
-      await until(()=>evaluate('(()=>{const image=document.querySelectorAll(".av9-world-gateway-art>img")['+index+'];return image?.complete&&image.naturalWidth>0;})()'));
-     }
-     await evaluate('document.getElementById("community-portal-cards").scrollTo({left:0,behavior:"instant"});document.getElementById("world-gateways").scrollIntoView({block:"start"})');
-     await until(()=>evaluate('document.getElementById("community-portal-cards").scrollLeft<5'));
+    await evaluate('document.getElementById("world-gateways").scrollIntoView({block:"nearest"})');
+    // V065 source art is still backed by actual locally shipped HD images.
+    for(let index=0;index<4;index++){
+     await evaluate('document.querySelectorAll(".av65-door")['+index+'].scrollIntoView({block:"nearest",inline:"nearest",behavior:"instant"})');
+     await until(()=>evaluate('(()=>{const image=document.querySelectorAll(".av65-door-image>img")['+index+'];return !!image&&image.complete&&image.naturalWidth>0;})()'));
     }
-    await until(()=>evaluate('document.querySelectorAll(".av9-world-gateway-art>img").length===4&&Array.from(document.querySelectorAll(".av9-world-gateway-art>img")).every(image=>image.complete&&image.naturalWidth>0)'));
-    // naturalWidth is density-corrected with width-descriptor srcsets. Decode
-    // the selected file itself to verify physical source pixels instead.
-    const portals=await evaluate('(async()=>({images:document.querySelectorAll(".av9-world-gateway-art>img[srcset]").length,resolutions:await Promise.all([...document.querySelectorAll(".av9-world-gateway-art>img")].map(async image=>{const bitmap=await createImageBitmap(await(await fetch(image.currentSrc)).blob());const width=bitmap.width;bitmap.close();return width;})),links:[...document.querySelectorAll(".av9-world-gateway")].map(a=>a.getAttribute("href")),readingSurface:[...document.querySelectorAll(".av9-world-gateway-content")].every(el=>getComputedStyle(el).position!=="absolute"),overflow:document.documentElement.scrollWidth>innerWidth+1}))()');
-    if(portals.images!==4||portals.resolutions.some(width=>width<768)||!portals.readingSurface||portals.overflow||portals.links.some(href=>!href.includes("/discover?category=")))
-     throw Error("COMMUNITY_PORTAL_ART_OR_LAYOUT_"+width+":"+JSON.stringify(portals));
-    if(width<541){
-     await evaluate("document.querySelector("+JSON.stringify('button[aria-label="Next collection"]')+").click()");
-     await until(()=>evaluate('document.getElementById("community-portal-cards").scrollLeft>100'));
-     await evaluate("document.querySelector("+JSON.stringify('button[aria-label="Previous collection"]')+").click()");
-     await until(()=>evaluate('document.getElementById("community-portal-cards").scrollLeft<5'));
-    }
+    const portals=await evaluate('(async()=>({images:document.querySelectorAll(".av65-door-image>img").length,resolutions:await Promise.all([...document.querySelectorAll(".av65-door-image>img")].map(async image=>{const bitmap=await createImageBitmap(await(await fetch(image.currentSrc)).blob());const width=bitmap.width;bitmap.close();return width;})),links:[...document.querySelectorAll(".av65-door")].map(a=>a.getAttribute("href")),readingSurface:[...document.querySelectorAll(".av65-door-content")].every(el=>getComputedStyle(el).position!=="absolute"),overflow:document.documentElement.scrollWidth>innerWidth+1}))()');
+    if(portals.images!==4||portals.resolutions.some(x=>x<768)||!portals.readingSurface||portals.overflow||
+      !portals.links.some(href=>href.includes("/discover?category=games"))||
+      !portals.links.some(href=>href.endsWith("/community"))||
+      !portals.links.some(href=>href.endsWith("/studio")))
+      throw Error("V065_PORTAL_ART_OR_LAYOUT_"+width+":"+JSON.stringify(portals));
     await screenshot("home-collections-"+width);
-    await evaluate('document.querySelector(".av11-live-index").scrollIntoView({block:"start"})');
-    await screenshot("home-community-modules-"+width);
+    await evaluate('document.querySelector(".av65-preview-controls button:nth-child(2)").click()');
+    await until(()=>evaluate('document.querySelector(".av65-arrival")?.getAttribute("data-active-portal")==="discover"'));
+    await screenshot("home-portal-preview-"+width);
+    await evaluate('document.querySelector("#community-index")?.scrollIntoView({block:"start"})');
+    await screenshot("home-community-feed-"+width);
    }
    results.push({page:name,width,...state});
    console.log("SITEWIDE_V012_"+name.toUpperCase()+"_"+width+"=PASS");
