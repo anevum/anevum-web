@@ -66,7 +66,7 @@ try{
   writeFileSync(join(output,label+".png"),bytes);
  };
  const pages=[
-  ["home","/",".av8-live-signal"],["discover","/discover",".portal-discover"],
+  ["home","/",".av65-arrival"],["discover","/discover",".portal-discover"],
   ["project","/projects/00000000000000000000000000000001",".portal-project"],
   ["creators","/creators",".portal-creators"],["creator-channel","/creators/nova_demo",".portal-creator-channel"],
   ["community","/community",".ch7-hub"],["boards","/boards",".cnb-hub"],
@@ -128,6 +128,15 @@ try{
      throw Error("SITEWIDE_V012_VISUAL_OR_ROUTE_DRIFT_"+name+"_"+width+":"+JSON.stringify(presentation));
    if(!state.cinematic||state.header!==1||state.main!==1||state.overflow||state.atlas||!state.fixture)
     throw Error("SITEWIDE_V012_INCONSISTENT_"+name+"_"+width+":"+JSON.stringify(state));
+   if(name==="home"){
+    const firstContact=await evaluate('(()=>{const el=document.querySelector(".av65-arrival"),doors=[...document.querySelectorAll(".av65-door")];return {doors:doors.length,active:el?.getAttribute("data-active-portal"),oldHero:!!document.querySelector(".av8-live-signal"),actions:doors.map(a=>a.getAttribute("href")),visibleDoors:doors.filter(a=>a.getBoundingClientRect().top<innerHeight).length,preview:document.querySelectorAll(".av65-preview-controls button").length}})()');
+    if(firstContact.doors!==4||firstContact.active!=="play"||firstContact.oldHero||firstContact.preview!==2||
+      !firstContact.actions.some(a=>a?.includes("/discover?category=games"))||
+      !firstContact.actions.some(a=>a?.endsWith("/community"))||
+      !firstContact.actions.some(a=>a?.endsWith("/studio"))||
+      (width<=390&&firstContact.visibleDoors<2))
+      throw Error("SITEWIDE_V065_ENTRANCE_"+width+":"+JSON.stringify(firstContact));
+   }
    if(name==="levels"){
     const metrics=await evaluate('(()=>{const hero=document.querySelector(".levels-masthead"),paragraph=hero?.querySelector("p"),emblem=hero?.querySelector(".levels-emblem");return {heroWidth:hero?.getBoundingClientRect().width,textWidth:paragraph?.getBoundingClientRect().width,emblemPosition:emblem?getComputedStyle(emblem).position:null}})()');
     if(!metrics.textWidth||(width<=700&&metrics.textWidth<Math.min(240,width*.67))||
