@@ -1,0 +1,44 @@
+name: Evolution V059 artwork review
+on:
+  push:
+    branches: [design/evolution-hyperres-v059-20261017-008]
+    paths: ['design/evolution-v059/**', '.github/workflows/evolution-v059-review.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  offline-review:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install asset renderer dependencies
+        run: |
+          python -m pip install numpy==2.2.6 scipy==1.15.3 Pillow==11.2.1
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq libegl1 libgl1 libgl1-mesa-dri
+      - name: Rebuild native collection and offline review
+        working-directory: design/evolution-v059
+        run: |
+          mkdir -p artwork/{native,textures,vector,masters,web,compact} docs dist previews
+          python src/textures.py
+          python src/export_native.py
+          python src/render.py
+          python src/build.py
+      - name: Test real desktop and simulated mobile Chromium
+        working-directory: design/evolution-v059
+        env:
+          CHROME_PATH: /usr/bin/google-chrome
+        run: node src/review-ci.mjs .
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: evolution-v059-browser-evidence
+          path: design/evolution-v059/qa-browser/
+          retention-days: 14

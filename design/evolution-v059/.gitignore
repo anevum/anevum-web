@@ -1,0 +1,12 @@
+__pycache__/
+artwork/native/
+artwork/vector/
+artwork/masters/
+artwork/web/
+artwork/compact/
+artwork/textures/*
+!artwork/textures/obsidian-albedo-source.jpg
+ANEVUM-V059-INTERACTIVE.html
+dist/
+previews/
+qa-browser/

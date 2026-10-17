@@ -1,0 +1,1147 @@
+{
+  "schema": "anevum.evolution.artwork.v059",
+  "session": "ANEVUM.WEB.BUILD.2026-10-17.008.EVOLUTION-HYPERRES-ARTWORK",
+  "branch": "design/evolution-hyperres-v059-20261017-008",
+  "status": "reconstruction-review-candidate-not-deployed",
+  "levelCap": 30,
+  "chapterCount": 6,
+  "xpFormula": "75*(L-1)^2",
+  "level30XP": 63075,
+  "chapters": [
+    "Before Form",
+    "First Matter",
+    "Stellar Dawn",
+    "Cosmic Architecture",
+    "Worlds & Life",
+    "Continuance"
+  ],
+  "levels": [
+    {
+      "level": 1,
+      "name": "Pre-Grain",
+      "subtitle": "Before there was something",
+      "description": "A single disturbance in the unrecorded dark. Nothing recognizable has formed. Even the idea of a particle is still ahead.",
+      "detail": "An intentionally speculative visual metaphor: it is not a depiction of an observed pre-Big-Bang object.",
+      "material": "Obsidian-black, weathered surface / cold mica / one warm fissure",
+      "accent": "#c2cbd1",
+      "xp": 0,
+      "next": 75,
+      "chapter": "before",
+      "chapterIndex": 1,
+      "chapterName": "Before Form",
+      "silhouette": "Fractured upright obsidian splinter",
+      "motion": "A near-imperceptible angular fluctuation and one slow incipient fissure pulse.",
+      "nativeParts": 3,
+      "triangles": 3740,
+      "source": "src/geometry.py: Scene.build / level 1",
+      "assets": {
+        "scene": "artwork/native/level-01.scene.json",
+        "gltf": "artwork/native/level-01.gltf",
+        "master": "artwork/masters/level-01-2048.png",
+        "web": {
+          "256": "artwork/web/level-01-256.webp",
+          "512": "artwork/web/level-01-512.webp",
+          "1024": "artwork/web/level-01-1024.webp"
+        },
+        "compact": {
+          "32": "artwork/compact/level-01-32.png",
+          "64": "artwork/compact/level-01-64.png",
+          "128": "artwork/compact/level-01-128.png",
+          "256": "artwork/compact/level-01-256.png"
+        },
+        "vectorField": "artwork/vector/level-01-field.svg",
+        "animation": "previews/level-01-motion.mp4"
+      }
+    },
+    {
+      "level": 2,
+      "name": "Vacuum Whisper",
+      "subtitle": "The silence is not still",
+      "description": "An almost empty interval begins to register tiny fluctuations. Nothing stable has emerged, yet the quiet cannot hold perfectly.",
+      "detail": "The opposing surfaces illustrate the uncertainty of a vacuum without claiming that empty space literally contains visible blades.",
+      "material": "Pale refractive film / optical black / faint silver interference",
+      "accent": "#a9c7d4",
+      "xp": 75,
+      "next": 300,
+      "chapter": "before",
+      "chapterIndex": 1,
+      "chapterName": "Before Form",
+      "silhouette": "Two torn interference veils",
+      "motion": "Independent field flutter and traveling interference fringes.",
+      "nativeParts": 7,
+      "triangles": 9276,
+      "source": "src/geometry.py: Scene.build / level 2",
+      "assets": {
+        "scene": "artwork/native/level-02.scene.json",
+        "gltf": "artwork/native/level-02.gltf",
+        "master": "artwork/masters/level-02-2048.png",
+        "web": {
+          "256": "artwork/web/level-02-256.webp",
+          "512": "artwork/web/level-02-512.webp",
+          "1024": "artwork/web/level-02-1024.webp"
+        },
+        "compact": {
+          "32": "artwork/compact/level-02-32.png",
+          "64": "artwork/compact/level-02-64.png",
+          "128": "artwork/compact/level-02-128.png",
+          "256": "artwork/compact/level-02-256.png"
+        },
+        "vectorField": "artwork/vector/level-02-field.svg",
+        "animation": "previews/level-02-motion.mp4"
+      }
+    },
+    {
+      "level": 3,
+      "name": "Quantum Foam",
+      "subtitle": "A brief architecture of uncertainty",
+      "description": "Fleeting pockets rise and collapse in a turbulent speculative visualization of quantum scale. Shape appears for an instant, then dissolves.",
+      "detail": "Artistic metaphor for Planck-scale speculation, not a directly observed structure.",
+      "material": "Pearl membrane / ice-blue refraction / vapor-violet internal light",
+      "accent": "#b4aed9",
+      "xp": 300,
+      "next": 675,
+      "chapter": "before",
+      "chapterIndex": 1,
+      "chapterName": "Before Form",
+      "silhouette": "Cluster of short-lived iridescent cavities",
+      "motion": "Cavities swell, contract and fade out of phase.",
+      "nativeParts": 14,
+      "triangles": 8064,
+      "source": "src/geometry.py: Scene.build / level 3",
+      "assets": {
+        "scene": "artwork/native/level-03.scene.json",
+        "gltf": "artwork/native/level-03.gltf",
+        "master": "artwork/masters/level-03-2048.png",
+        "web": {
+          "256": "artwork/web/level-03-256.webp",
+          "512": "artwork/web/level-03-512.webp",
+          "1024": "artwork/web/level-03-1024.webp"
+        },
+        "compact": {
+          "32": "artwork/compact/level-03-32.png",
+          "64": "artwork/compact/level-03-64.png",
+          "128": "artwork/compact/level-03-128.png",
+          "256": "artwork/compact/level-03-256.png"
+        },
+        "vectorField": "artwork/vector/level-03-field.svg",
+        "animation": "previews/level-03-motion.mp4"
+      }
+    },
+    {
+      "level": 4,
+      "name": "Symmetry Field",
+      "subtitle": "The first balance",
+      "description": "Opposing forces hold a transient geometric equilibrium. For a moment, the emerging universe can be read as a rule rather than a shape.",
+      "detail": "An abstract depiction of mathematical symmetry. It does not claim an observed pre-cosmological object.",
+      "material": "Ivory ceramic / cold slate glass / precise coral dividing light",
+      "accent": "#d5c9b9",
+      "xp": 675,
+      "next": 1200,
+      "chapter": "before",
+      "chapterIndex": 1,
+      "chapterName": "Before Form",
+      "silhouette": "Opposing folded symmetry blades",
+      "motion": "Opposed planes approach alignment around a glowing symmetry axis.",
+      "nativeParts": 3,
+      "triangles": 4110,
+      "source": "src/geometry.py: Scene.build / level 4",
+      "assets": {
+        "scene": "artwork/native/level-04.scene.json",
+        "gltf": "artwork/native/level-04.gltf",
+        "master": "artwork/masters/level-04-2048.png",
+        "web": {
+          "256": "artwork/web/level-04-256.webp",
+          "512": "artwork/web/level-04-512.webp",
+          "1024": "artwork/web/level-04-1024.webp"
+        },
+        "compact": {
+          "32": "artwork/compact/level-04-32.png",
+          "64": "artwork/compact/level-04-64.png",
+          "128": "artwork/compact/level-04-128.png",
+          "256": "artwork/compact/level-04-256.png"
+        },
+        "vectorField": "artwork/vector/level-04-field.svg",
+        "animation": "previews/level-04-motion.mp4"
+      }
+    },
+    {
+      "level": 5,
+      "name": "First Expansion",
+      "subtitle": "The interval widens",
+      "description": "A compact event unfolds into space. The surface does not fly through space: the represented distances themselves begin to grow.",
+      "detail": "A conceptual artistic representation of cosmic expansion, not an actual photographed initial condition.",
+      "material": "Molten copper / blackglass membrane / thin gold-white horizon",
+      "accent": "#f2b58c",
+      "xp": 1200,
+      "next": 1875,
+      "chapter": "before",
+      "chapterIndex": 1,
+      "chapterName": "Before Form",
+      "silhouette": "An expanding open causal membrane",
+      "motion": "The causal membrane and released shards expand and settle.",
+      "nativeParts": 2,
+      "triangles": 5488,
+      "source": "src/geometry.py: Scene.build / level 5",
+      "assets": {
+        "scene": "artwork/native/level-05.scene.json",
+        "gltf": "artwork/native/level-05.gltf",
+        "master": "artwork/masters/level-05-2048.png",
+        "web": {
+          "256": "artwork/web/level-05-256.webp",
+          "512": "artwork/web/level-05-512.webp",
+          "1024": "artwork/web/level-05-1024.webp"
+        },
+        "compact": {
+          "32": "artwork/compact/level-05-32.png",
+          "64": "artwork/compact/level-05-64.png",
+          "128": "artwork/compact/level-05-128.png",
+          "256": "artwork/compact/level-05-256.png"
+        },
+        "vectorField": "artwork/vector/level-05-field.svg",
+        "animation": "previews/level-05-motion.mp4"
+      }
+    },
+    {
+      "level": 6,
+      "name": "Primordial Plasma",
+      "subtitle": "Light trapped in a sea of charge",
+      "description": "The young cosmos glows with charged, interacting matter. It is luminous and opaque, as energy and material remain tightly coupled.",
+      "detail": "Inspired by early hot plasma before neutral atoms form.",
+      "material": "Radiant coral plasma / cobalt ion haze / dark filamentary currents",
+      "accent": "#ef9878",
+      "xp": 1875,
+      "next": 2700,
+      "chapter": "matter",
+      "chapterIndex": 2,
+      "chapterName": "First Matter",
+      "silhouette": "Twisting asymmetric plasma plume",
+      "motion": "Charge currents deform while luminous turbulence travels through them.",
+      "nativeParts": 12,
+      "triangles": 36160,
+      "source": "src/geometry.py: Scene.build / level 6",
+      "assets": {
+        "scene": "artwork/native/level-06.scene.json",
+        "gltf": "artwork/native/level-06.gltf",
+        "master": "artwork/masters/level-06-2048.png",
+        "web": {
+          "256": "artwork/web/level-06-256.webp",
+          "512": "artwork/web/level-06-512.webp",
+          "1024": "artwork/web/level-06-1024.webp"
+        },
+        "compact": {
+          "32": "artwork/compact/level-06-32.png",
+          "64": "artwork/compact/level-06-64.png",
+          "128": "artwork/compact/level-06-128.png",
+          "256": "artwork/compact/level-06-256.png"
+        },
+        "vectorField": "artwork/vector/level-06-field.svg",
+        "animation": "previews/level-06-motion.mp4"
+      }
+    },
+    {
+      "level": 7,
+      "name": "Quark Wake",
+      "subtitle": "The smallest bonds begin",
+      "description": "Colored constituents and the field binding them form a dynamic, unsettled cluster: structure without a familiar surface.",
+      "detail": "Stylized color-charge interaction, not a literal photograph of three colored quarks.",
+      "material": "Charged indigo / cyan ion light / orange binding filaments",
+      "accent": "#a6b0f1",
+      "xp": 2700,
+      "next": 3675,
+      "chapter": "matter",
+      "chapterIndex": 2,
+      "chapterName": "First Matter",
+      "silhouette": "Three unequal charge knots connected by flux",
+      "motion": "Charge knots move independently as binding flux flexes.",
+      "nativeParts": 6,
+      "triangles": 5460,
+      "source": "src/geometry.py: Scene.build / level 7",
+      "assets": {
+        "scene": "artwork/native/level-07.scene.json",
+        "gltf": "artwork/native/level-07.gltf",
+        "master": "artwork/masters/level-07-2048.png",
+        "web": {
+          "256": "artwork/web/level-07-256.webp",
+          "512": "artwork/web/level-07-512.webp",
+          "1024": "artwork/web/level-07-1024.webp"
+        },
+        "compact": {
+          "32": "artwork/compact/level-07-32.png",
+          "64": "artwork/compact/level-07-64.png",
+          "128": "artwork/compact/level-07-128.png",
+          "256": "artwork/compact/level-07-256.png"
+        },
+        "vectorField": "artwork/vector/level-07-field.svg",
+        "animation": "previews/level-07-motion.mp4"
+      }
+    },
+    {
+      "level": 8,
+      "name": "Proton Seed",
+      "subtitle": "A durable center",
+      "description": "The chaos gathers into a compact nucleus of possibility. A stable constituent emerges from the earlier disturbance.",
+      "detail": "The shell and plates are visual shorthand for confinement, not physical mechanical parts of a proton.",
+      "material": "Compacted iron-grey plasma / rust-red luminous core / sharp ceramic facets",
+      "accent": "#dda6a1",
+      "xp": 3675,
+      "next": 4800,
+      "chapter": "matter",
+      "chapterIndex": 2,
+      "chapterName": "First Matter",
+      "silhouette": "A dense three-lobed bound nucleus",
+      "motion": "The bound lobes remain stable while pressure seams change luminosity.",
+      "nativeParts": 11,
+      "triangles": 13088,
+      "source": "src/geometry.py: Scene.build / level 8",
+      "assets": {
+        "scene": "artwork/native/level-08.scene.json",
+        "gltf": "artwork/native/level-08.gltf",
+        "master": "artwork/masters/level-08-2048.png",
+        "web": {
+          "256": "artwork/web/level-08-256.webp",
+          "512": "artwork/web/level-08-512.webp",
+          "1024": "artwork/web/level-08-1024.webp"
+        },
+        "compact": {
+          "32": "artwork/compact/level-08-32.png",
+          "64": "artwork/compact/level-08-64.png",
+          "128": "artwork/compact/level-08-128.png",
+          "256": "artwork/compact/level-08-256.png"
+        },
+        "vectorField": "artwork/vector/level-08-field.svg",
+        "animation": "previews/level-08-motion.mp4"
+      }
+    },
+    {
+      "level": 9,
+      "name": "Proto-Atom",
+      "subtitle": "A new kind of enclosure",
+      "description": "Bound nuclei and electron clouds make the first neutral arrangements possible. A recognizable grammar for ordinary matter appears.",
+      "detail": "The luminous tracks depict probability distributions symbolically; electrons do not travel in these tidy planetary orbits.",
+      "material": "Smoked-blue probability glass / amber nucleus / translucent pale orbital membranes",
+      "accent": "#a9d2dc",
+      "xp": 4800,
+      "next": 6075,
+      "chapter": "matter",
+      "chapterIndex": 2,
+      "chapterName": "First Matter",
+      "silhouette": "Paired probability lobes around a nucleus",
+      "motion": "Probability lobes and contours precess independently.",
+      "nativeParts": 7,
+      "triangles": 11448,
+      "source": "src/geometry.py: Scene.build / level 9",
+      "assets": {
+        "scene": "artwork/native/level-09.scene.json",
+        "gltf": "artwork/native/level-09.gltf",
+        "master": "artwork/masters/level-09-2048.png",
+        "web": {
+          "256": "artwork/web/level-09-256.webp",
+          "512": "artwork/web/level-09-512.webp",
+          "1024": "artwork/web/level-09-1024.webp"
+        },
+        "compact": {
+          "32": "artwork/compact/level-09-32.png",
+          "64": "artwork/compact/level-09-64.png",
+          "128": "artwork/compact/level-09-128.png",
+          "256": "artwork/compact/level-09-256.png"
+        },
+        "vectorField": "artwork/vector/level-09-field.svg",
+        "animation": "previews/level-09-motion.mp4"
+      }
+    },
+    {
+      "level": 10,
+      "name": "Ancient Afterglow",
+      "subtitle": "The universe leaves a trace",
+      "description": "The first light travels outward, carrying a record of what has already passed. A dim remnant spreads through the growing universe.",
+      "detail": "Inspired by the cosmic microwave background, represented as an imagined physical specimen.",
+      "material": "Smoked glass / oxidized titanium / ancient amber radiation",
+      "accent": "#f0b187",
+      "xp": 6075,
+      "next": 7500,
+      "chapter": "matter",
+      "chapterIndex": 2,
+      "chapterName": "First Matter",
+      "silhouette": "A draped anisotropy fossil",
+      "motion": "A low-frequency wave passes across a barely moving radiation fossil.",
+      "nativeParts": 10,
+      "triangles": 17516,
+      "source": "src/geometry.py: Scene.build / level 10",
+      "assets": {
+        "scene": "artwork/native/level-10.scene.json",
+        "gltf": "artwork/native/level-10.gltf",
+        "master": "artwork/masters/level-10-2048.png",
+        "web": {
+          "256": "artwork/web/level-10-256.webp",
+          "512": "artwork/web/level-10-512.webp",
+          "1024": "artwork/web/level-10-1024.webp"
+        },
+        "compact": {
+          "32": "artwork/compact/level-10-32.png",
+          "64": "artwork/compact/level-10-64.png",
+          "128": "artwork/compact/level-10-128.png",
+          "256": "artwork/compact/level-10-256.png"
+        },
+        "vectorField": "artwork/vector/level-10-field.svg",
+        "animation": "previews/level-10-motion.mp4"
+      }
+    },
+    {
+      "level": 11,
+      "name": "Quiet Epoch",
+      "subtitle": "A darkness full of possibility",
+      "description": "After neutral atoms form, there are no stars yet. Gravity quietly gathers primordial gas through a long cosmic dark age.",
+      "detail": "The sculpted cloud is an artistic visualization of neutral hydrogen, not a literal object visible during the cosmic dark ages.",
+      "material": "Unlit hydrogen mist / graphite-blue interference / frozen ivory rim",
+      "accent": "#adb9d8",
+      "xp": 7500,
+      "next": 9075,
+      "chapter": "stellar",
+      "chapterIndex": 3,
+      "chapterName": "Stellar Dawn",
+      "silhouette": "A dark filamentary hydrogen cloud",
+      "motion": "Cold hydrogen banks gather almost imperceptibly around dim density knots.",
+      "nativeParts": 5,
+      "triangles": 960,
+      "source": "src/geometry.py: Scene.build / level 11",
+      "assets": {
+        "scene": "artwork/native/level-11.scene.json",
+        "gltf": "artwork/native/level-11.gltf",
+        "master": "artwork/masters/level-11-2048.png",
+        "web": {
+          "256": "artwork/web/level-11-256.webp",
+          "512": "artwork/web/level-11-512.webp",
+          "1024": "artwork/web/level-11-1024.webp"
+        },
+        "compact": {
+          "32": "artwork/compact/level-11-32.png",
+          "64": "artwork/compact/level-11-64.png",
+          "128": "artwork/compact/level-11-128.png",
+          "256": "artwork/compact/level-11-256.png"
+        },
+        "vectorField": "artwork/vector/level-11-field.svg",
+        "animation": "previews/level-11-motion.mp4"
+      }
+    },
+    {
+      "level": 12,
+      "name": "Gravity Well",
+      "subtitle": "Matter learns to fall together",
+      "description": "Invisible attraction becomes visible in its consequences. Gas falls into the densest region and begins the slow assembly of a future star.",
+      "detail": "The warped lens is a symbolic diagram of gravitational collapse, not a directly photographed spacetime funnel.",
+      "material": "Blackglass concavity / blue-grey gas / thin gravitational lensing",
+      "accent": "#abc7e0",
+      "xp": 9075,
+      "next": 10800,
+      "chapter": "stellar",
+      "chapterIndex": 3,
+      "chapterName": "Stellar Dawn",
+      "silhouette": "A deep spacetime funnel",
+      "motion": "The curved geodesic funnel rotates around its dark focus.",
+      "nativeParts": 12,
+      "triangles": 24364,
+      "source": "src/geometry.py: Scene.build / level 12",
+      "assets": {
+        "scene": "artwork/native/level-12.scene.json",
+        "gltf": "artwork/native/level-12.gltf",
+        "master": "artwork/masters/level-12-2048.png",
+        "web": {
+          "256": "artwork/web/level-12-256.webp",
+          "512": "artwork/web/level-12-512.webp",
+          "1024": "artwork/web/level-12-1024.webp"
+        },
+        "compact": {
+          "32": "artwork/compact/level-12-32.png",
+          "64": "artwork/compact/level-12-64.png",
+          "128": "artwork/compact/level-12-128.png",
+          "256": "artwork/compact/level-12-256.png"
+        },
+        "vectorField": "artwork/vector/level-12-field.svg",
+        "animation": "previews/level-12-motion.mp4"
+      }
+    },
+    {
+      "level": 13,
+      "name": "Star Ignition",
+      "subtitle": "The first star catches",
+      "description": "At last the first stars ignite. A young stellar heart shines into a universe that has known only scattered relic radiation.",
+      "detail": "The early star is inspired by massive metal-poor Population III star formation, with a stylized anisotropic corona.",
+      "material": "Blue-white photosphere / champagne plasma / ionized cyan corona",
+      "accent": "#d2eff6",
+      "xp": 10800,
+      "next": 12675,
+      "chapter": "stellar",
+      "chapterIndex": 3,
+      "chapterName": "Stellar Dawn",
+      "silhouette": "A kindling star with magnetic coronal arches",
+      "motion": "An unstable photosphere breathes as coronal arches and streamers deform.",
+      "nativeParts": 48,
+      "triangles": 27400,
+      "source": "src/geometry.py: Scene.build / level 13",
+      "assets": {
+        "scene": "artwork/native/level-13.scene.json",
+        "gltf": "artwork/native/level-13.gltf",
+        "master": "artwork/masters/level-13-2048.png",
+        "web": {
+          "256": "artwork/web/level-13-256.webp",
+          "512": "artwork/web/level-13-512.webp",
+          "1024": "artwork/web/level-13-1024.webp"
+        },
+        "compact": {
+          "32": "artwork/compact/level-13-32.png",
+          "64": "artwork/compact/level-13-64.png",
+          "128": "artwork/compact/level-13-128.png",
+          "256": "artwork/compact/level-13-256.png"
+        },
+        "vectorField": "artwork/vector/level-13-field.svg",
+        "animation": "previews/level-13-motion.mp4"
+      }
+    },
+    {
+      "level": 14,
+      "name": "Fusion Ember",
+      "subtitle": "A furnace that makes new matter",
+      "description": "Stellar cores fuse light nuclei, forging the first steps toward a chemically richer universe. The star becomes a factory of elements.",
+      "detail": "An impossible cutaway visualizes the process of fusion. The layers and channels are not actual rigid structures inside a star.",
+      "material": "Incandescent helium plasma / dark convective ridges / gold-white central furnace",
+      "accent": "#f1b489",
+      "xp": 12675,
+      "next": 14700,
+      "chapter": "stellar",
+      "chapterIndex": 3,
+      "chapterName": "Stellar Dawn",
+      "silhouette": "A granulated stellar ember",
+      "motion": "A stable photosphere rotates beneath independently changing prominences.",
+      "nativeParts": 7,
+      "triangles": 8836,
+      "source": "src/geometry.py: Scene.build / level 14",
+      "assets": {
+        "scene": "artwork/native/level-14.scene.json",
+        "gltf": "artwork/native/level-14.gltf",
+        "master": "artwork/masters/level-14-2048.png",
+        "web": {
+          "256": "artwork/web/level-14-256.webp",
+          "512": "artwork/web/level-14-512.webp",
+          "1024": "artwork/web/level-14-1024.webp"
+        },
+        "compact": {
+          "32": "artwork/compact/level-14-32.png",
+          "64": "artwork/compact/level-14-64.png",
+          "128": "artwork/compact/level-14-128.png",
+          "256": "artwork/compact/level-14-256.png"
+        },
+        "vectorField": "artwork/vector/level-14-field.svg",
+        "animation": "previews/level-14-motion.mp4"
+      }
+    },
+    {
+      "level": 15,
+      "name": "Nebula Bloom",
+      "subtitle": "The first stellar nursery",
+      "description": "The heavens fill with structured clouds of gas and dust. Stellar radiation sculpts illuminated ridges and shadowed pillars where future generations form.",
+      "detail": "A cinematic nebular illustration with intentionally enlarged ionization fronts and sculptural gas pillars; not an astrophotograph.",
+      "material": "Volumetric indigo and cyan gas / coral emission / dust-carved pillars",
+      "accent": "#dba6cb",
+      "xp": 14700,
+      "next": 16875,
+      "chapter": "stellar",
+      "chapterIndex": 3,
+      "chapterName": "Stellar Dawn",
+      "silhouette": "A wispy multicolored stellar nursery",
+      "motion": "Independent density banks drift around an embedded newborn star.",
+      "nativeParts": 8,
+      "triangles": 2716,
+      "source": "src/geometry.py: Scene.build / level 15",
+      "assets": {
+        "scene": "artwork/native/level-15.scene.json",
+        "gltf": "artwork/native/level-15.gltf",
+        "master": "artwork/masters/level-15-2048.png",
+        "web": {
+          "256": "artwork/web/level-15-256.webp",
+          "512": "artwork/web/level-15-512.webp",
+          "1024": "artwork/web/level-15-1024.webp"
+        },
+        "compact": {
+          "32": "artwork/compact/level-15-32.png",
+          "64": "artwork/compact/level-15-64.png",
+          "128": "artwork/compact/level-15-128.png",
+          "256": "artwork/compact/level-15-256.png"
+        },
+        "vectorField": "artwork/vector/level-15-field.svg",
+        "animation": "previews/level-15-motion.mp4"
+      }
+    },
+    {
+      "level": 16,
+      "name": "Element Forge",
+      "subtitle": "A star scatters the elements",
+      "description": "Successive stellar generations enrich space with heavier elements. The aftermath of stellar death becomes the raw material for new worlds.",
+      "detail": "A sculpted explosive stellar remnant is a narrative shorthand; not all heavy elements form in the same kind of stellar explosion.",
+      "material": "Fractured iron-blue stellar crust / heated silicon / oxygen-teal emission / luminous ejecta",
+      "accent": "#e9a58b",
+      "xp": 16875,
+      "next": 19200,
+      "chapter": "architecture",
+      "chapterIndex": 4,
+      "chapterName": "Cosmic Architecture",
+      "silhouette": "An elemental crucible shedding luminous ejecta",
+      "motion": "Elemental ejecta expand from a pulsing stellar crucible.",
+      "nativeParts": 16,
+      "triangles": 17704,
+      "source": "src/geometry.py: Scene.build / level 16",
+      "assets": {
+        "scene": "artwork/native/level-16.scene.json",
+        "gltf": "artwork/native/level-16.gltf",
+        "master": "artwork/masters/level-16-2048.png",
+        "web": {
+          "256": "artwork/web/level-16-256.webp",
+          "512": "artwork/web/level-16-512.webp",
+          "1024": "artwork/web/level-16-1024.webp"
+        },
+        "compact": {
+          "32": "artwork/compact/level-16-32.png",
+          "64": "artwork/compact/level-16-64.png",
+          "128": "artwork/compact/level-16-128.png",
+          "256": "artwork/compact/level-16-256.png"
+        },
+        "vectorField": "artwork/vector/level-16-field.svg",
+        "animation": "previews/level-16-motion.mp4"
+      }
+    },
+    {
+      "level": 17,
+      "name": "Galactic Seed",
+      "subtitle": "A hidden structure gathers",
+      "description": "Gas falls into growing dark-matter structures. Turbulent streams converge until the first luminous galactic systems can assemble.",
+      "detail": "The dark-matter scaffolding and filament currents are symbolic, not a representation of directly imaged dark matter.",
+      "material": "Shadowed cobalt gas / smoke-violet halo / pearl lensing / cold-blue nuclei",
+      "accent": "#9dbada",
+      "xp": 19200,
+      "next": 21675,
+      "chapter": "architecture",
+      "chapterIndex": 4,
+      "chapterName": "Cosmic Architecture",
+      "silhouette": "An assembling spiral seed",
+      "motion": "Spiral inflows gather while the first stellar population turns.",
+      "nativeParts": 7,
+      "triangles": 8764,
+      "source": "src/geometry.py: Scene.build / level 17",
+      "assets": {
+        "scene": "artwork/native/level-17.scene.json",
+        "gltf": "artwork/native/level-17.gltf",
+        "master": "artwork/masters/level-17-2048.png",
+        "web": {
+          "256": "artwork/web/level-17-256.webp",
+          "512": "artwork/web/level-17-512.webp",
+          "1024": "artwork/web/level-17-1024.webp"
+        },
+        "compact": {
+          "32": "artwork/compact/level-17-32.png",
+          "64": "artwork/compact/level-17-64.png",
+          "128": "artwork/compact/level-17-128.png",
+          "256": "artwork/compact/level-17-256.png"
+        },
+        "vectorField": "artwork/vector/level-17-field.svg",
+        "animation": "previews/level-17-motion.mp4"
+      }
+    },
+    {
+      "level": 18,
+      "name": "First Galaxy",
+      "subtitle": "Light becomes a civilization of stars",
+      "description": "Gravity organizes stars, dust and gas into an immense luminous community. The first galaxies establish enduring structure in the growing cosmos.",
+      "detail": "Its spiral silhouette is an illustrative synthesis of later spiral structure; the earliest galaxies were often more irregular.",
+      "material": "Dusty blue starlight / warm pearl core / indigo lanes / sparse coral emission",
+      "accent": "#c0c2ea",
+      "xp": 21675,
+      "next": 24300,
+      "chapter": "architecture",
+      "chapterIndex": 4,
+      "chapterName": "Cosmic Architecture",
+      "silhouette": "An inclined four-arm stellar galaxy",
+      "motion": "Thousands of stars rotate with the inclined spiral geometry.",
+      "nativeParts": 9,
+      "triangles": 20208,
+      "source": "src/geometry.py: Scene.build / level 18",
+      "assets": {
+        "scene": "artwork/native/level-18.scene.json",
+        "gltf": "artwork/native/level-18.gltf",
+        "master": "artwork/masters/level-18-2048.png",
+        "web": {
+          "256": "artwork/web/level-18-256.webp",
+          "512": "artwork/web/level-18-512.webp",
+          "1024": "artwork/web/level-18-1024.webp"
+        },
+        "compact": {
+          "32": "artwork/compact/level-18-32.png",
+          "64": "artwork/compact/level-18-64.png",
+          "128": "artwork/compact/level-18-128.png",
+          "256": "artwork/compact/level-18-256.png"
+        },
+        "vectorField": "artwork/vector/level-18-field.svg",
+        "animation": "previews/level-18-motion.mp4"
+      }
+    },
+    {
+      "level": 19,
+      "name": "Cosmic Web",
+      "subtitle": "Everything begins to connect",
+      "description": "Matter is distributed across enormous filaments and nodes, with vast dark voids between them. Clusters and galaxies occupy the intersections.",
+      "detail": "The web is compressed into a readable miniature. Real cosmic filaments extend across immense astronomical scales.",
+      "material": "Pale cyan filament fog / dark indigo voids / pinpoint stellar density knots",
+      "accent": "#91ced6",
+      "xp": 24300,
+      "next": 27075,
+      "chapter": "architecture",
+      "chapterIndex": 4,
+      "chapterName": "Cosmic Architecture",
+      "silhouette": "A branching cosmic filament network",
+      "motion": "Luminosity propagates along independently deforming filaments.",
+      "nativeParts": 29,
+      "triangles": 29248,
+      "source": "src/geometry.py: Scene.build / level 19",
+      "assets": {
+        "scene": "artwork/native/level-19.scene.json",
+        "gltf": "artwork/native/level-19.gltf",
+        "master": "artwork/masters/level-19-2048.png",
+        "web": {
+          "256": "artwork/web/level-19-256.webp",
+          "512": "artwork/web/level-19-512.webp",
+          "1024": "artwork/web/level-19-1024.webp"
+        },
+        "compact": {
+          "32": "artwork/compact/level-19-32.png",
+          "64": "artwork/compact/level-19-64.png",
+          "128": "artwork/compact/level-19-128.png",
+          "256": "artwork/compact/level-19-256.png"
+        },
+        "vectorField": "artwork/vector/level-19-field.svg",
+        "animation": "previews/level-19-motion.mp4"
+      }
+    },
+    {
+      "level": 20,
+      "name": "Stellar System",
+      "subtitle": "A star gains an entourage",
+      "description": "A star and the matter around it assemble a family of worlds. Dust, ice and rock settle into enduring orbital patterns.",
+      "detail": "The orrery-like presentation compresses timescales and distances; planets and their orbits are not shown to scale.",
+      "material": "Incandescent amber photosphere / basalt planets / ice-cobalt world / slate-blue dust",
+      "accent": "#e4be98",
+      "xp": 27075,
+      "next": 30000,
+      "chapter": "architecture",
+      "chapterIndex": 4,
+      "chapterName": "Cosmic Architecture",
+      "silhouette": "A primary star and four independent worlds",
+      "motion": "Four worlds orbit at different speeds around a stellar primary.",
+      "nativeParts": 10,
+      "triangles": 11288,
+      "source": "src/geometry.py: Scene.build / level 20",
+      "assets": {
+        "scene": "artwork/native/level-20.scene.json",
+        "gltf": "artwork/native/level-20.gltf",
+        "master": "artwork/masters/level-20-2048.png",
+        "web": {
+          "256": "artwork/web/level-20-256.webp",
+          "512": "artwork/web/level-20-512.webp",
+          "1024": "artwork/web/level-20-1024.webp"
+        },
+        "compact": {
+          "32": "artwork/compact/level-20-32.png",
+          "64": "artwork/compact/level-20-64.png",
+          "128": "artwork/compact/level-20-128.png",
+          "256": "artwork/compact/level-20-256.png"
+        },
+        "vectorField": "artwork/vector/level-20-field.svg",
+        "animation": "previews/level-20-motion.mp4"
+      }
+    },
+    {
+      "level": 21,
+      "name": "Planetary Accretion",
+      "subtitle": "A world starts as collision",
+      "description": "Dust and stone collide inside a young stellar system. Gravity draws fragments toward an incandescent protoplanet; the earliest crust forms, breaks, and reforms.",
+      "detail": "This is an artistic composite of accretion, molten differentiation, and impact debris, not a literal instantaneous view of planet formation.",
+      "material": "Black basalt / iron oxide / exposed silicate magma / steel-blue impact dust",
+      "accent": "#d8aa91",
+      "xp": 30000,
+      "next": 33075,
+      "chapter": "worlds",
+      "chapterIndex": 5,
+      "chapterName": "Worlds & Life",
+      "silhouette": "A rocky accretion body with orbiting debris",
+      "motion": "Planetesimals drift inward while an accreting world turns.",
+      "nativeParts": 19,
+      "triangles": 12188,
+      "source": "src/geometry.py: Scene.build / level 21",
+      "assets": {
+        "scene": "artwork/native/level-21.scene.json",
+        "gltf": "artwork/native/level-21.gltf",
+        "master": "artwork/masters/level-21-2048.png",
+        "web": {
+          "256": "artwork/web/level-21-256.webp",
+          "512": "artwork/web/level-21-512.webp",
+          "1024": "artwork/web/level-21-1024.webp"
+        },
+        "compact": {
+          "32": "artwork/compact/level-21-32.png",
+          "64": "artwork/compact/level-21-64.png",
+          "128": "artwork/compact/level-21-128.png",
+          "256": "artwork/compact/level-21-256.png"
+        },
+        "vectorField": "artwork/vector/level-21-field.svg",
+        "animation": "previews/level-21-motion.mp4"
+      }
+    },
+    {
+      "level": 22,
+      "name": "Ocean World",
+      "subtitle": "The surface learns to flow",
+      "description": "As young worlds cool, liquid water can gather at the surface wherever the conditions permit. Atmosphere, mineral coastlines and enormous bodies of water transform a battered planet.",
+      "detail": "An imagined ocean-bearing planet. Water is not a guaranteed next step for every planet, and the image is deliberately not to scale.",
+      "material": "Liquid teal / midnight ocean / pale carbonate cloud / translucent upper atmosphere",
+      "accent": "#9bc9d0",
+      "xp": 33075,
+      "next": 36300,
+      "chapter": "worlds",
+      "chapterIndex": 5,
+      "chapterName": "Worlds & Life",
+      "silhouette": "A deep ocean with interrupted atmospheric currents",
+      "motion": "Ocean texture and atmospheric arcs circulate at different rates.",
+      "nativeParts": 8,
+      "triangles": 19658,
+      "source": "src/geometry.py: Scene.build / level 22",
+      "assets": {
+        "scene": "artwork/native/level-22.scene.json",
+        "gltf": "artwork/native/level-22.gltf",
+        "master": "artwork/masters/level-22-2048.png",
+        "web": {
+          "256": "artwork/web/level-22-256.webp",
+          "512": "artwork/web/level-22-512.webp",
+          "1024": "artwork/web/level-22-1024.webp"
+        },
+        "compact": {
+          "32": "artwork/compact/level-22-32.png",
+          "64": "artwork/compact/level-22-64.png",
+          "128": "artwork/compact/level-22-128.png",
+          "256": "artwork/compact/level-22-256.png"
+        },
+        "vectorField": "artwork/vector/level-22-field.svg",
+        "animation": "previews/level-22-motion.mp4"
+      }
+    },
+    {
+      "level": 23,
+      "name": "Molecular Chorus",
+      "subtitle": "Complexity finds a rhythm",
+      "description": "Chemistry explores endless combinations. Molecules assemble, exchange energy, form temporary bonds, and create the conditions in which more complex systems become possible.",
+      "detail": "The pictured network is symbolic rather than a chemically valid molecular diagram; it does not imply scientists know the exact pathway to life.",
+      "material": "Iridescent aqueous glass / cobalt, carbon and copper atoms / diffuse ultraviolet energy",
+      "accent": "#a8cde5",
+      "xp": 36300,
+      "next": 39675,
+      "chapter": "worlds",
+      "chapterIndex": 5,
+      "chapterName": "Worlds & Life",
+      "silhouette": "A climbing molecular chain with reactive side groups",
+      "motion": "A molecular backbone flexes while reactive groups pulse.",
+      "nativeParts": 43,
+      "triangles": 8230,
+      "source": "src/geometry.py: Scene.build / level 23",
+      "assets": {
+        "scene": "artwork/native/level-23.scene.json",
+        "gltf": "artwork/native/level-23.gltf",
+        "master": "artwork/masters/level-23-2048.png",
+        "web": {
+          "256": "artwork/web/level-23-256.webp",
+          "512": "artwork/web/level-23-512.webp",
+          "1024": "artwork/web/level-23-1024.webp"
+        },
+        "compact": {
+          "32": "artwork/compact/level-23-32.png",
+          "64": "artwork/compact/level-23-64.png",
+          "128": "artwork/compact/level-23-128.png",
+          "256": "artwork/compact/level-23-256.png"
+        },
+        "vectorField": "artwork/vector/level-23-field.svg",
+        "animation": "previews/level-23-motion.mp4"
+      }
+    },
+    {
+      "level": 24,
+      "name": "First Replicator",
+      "subtitle": "Matter begins to remember",
+      "description": "Somewhere amid many possible environments, chemical systems capable of copying and persisting emerge. The boundary between chemistry and biological evolution becomes profound.",
+      "detail": "A speculative protocell-and-template metaphor, not a historical reconstruction of the first organism or replicator.",
+      "material": "Translucent lipid membranes / pearl vesicles / bioelectric amber / sea-glass interiors",
+      "accent": "#adcdb7",
+      "xp": 39675,
+      "next": 43200,
+      "chapter": "worlds",
+      "chapterIndex": 5,
+      "chapterName": "Worlds & Life",
+      "silhouette": "Two dividing translucent protocells",
+      "motion": "Twin membranes separate and return while internal strands move.",
+      "nativeParts": 5,
+      "triangles": 10744,
+      "source": "src/geometry.py: Scene.build / level 24",
+      "assets": {
+        "scene": "artwork/native/level-24.scene.json",
+        "gltf": "artwork/native/level-24.gltf",
+        "master": "artwork/masters/level-24-2048.png",
+        "web": {
+          "256": "artwork/web/level-24-256.webp",
+          "512": "artwork/web/level-24-512.webp",
+          "1024": "artwork/web/level-24-1024.webp"
+        },
+        "compact": {
+          "32": "artwork/compact/level-24-32.png",
+          "64": "artwork/compact/level-24-64.png",
+          "128": "artwork/compact/level-24-128.png",
+          "256": "artwork/compact/level-24-256.png"
+        },
+        "vectorField": "artwork/vector/level-24-field.svg",
+        "animation": "previews/level-24-motion.mp4"
+      }
+    },
+    {
+      "level": 25,
+      "name": "Biosphere",
+      "subtitle": "A world becomes alive",
+      "description": "From chemistry to diversity: oceans, microorganisms and ecosystems begin to alter a world from within. Life becomes a planetary process, perpetually adapting and remaking its environment.",
+      "detail": "The droplet-shaped living world is a conceptual organism-landscape hybrid. Its evolution compresses vast intervals into one visual specimen.",
+      "material": "Deep-water glass / translucent jade / pearlescent water / mineral ivory / chlorophyll green",
+      "accent": "#9ddac7",
+      "xp": 43200,
+      "next": 46875,
+      "chapter": "worlds",
+      "chapterIndex": 5,
+      "chapterName": "Worlds & Life",
+      "silhouette": "A living world encased by co-evolving fronds",
+      "motion": "Canopy filaments flex around a rotating ocean substrate.",
+      "nativeParts": 19,
+      "triangles": 17020,
+      "source": "src/geometry.py: Scene.build / level 25",
+      "assets": {
+        "scene": "artwork/native/level-25.scene.json",
+        "gltf": "artwork/native/level-25.gltf",
+        "master": "artwork/masters/level-25-2048.png",
+        "web": {
+          "256": "artwork/web/level-25-256.webp",
+          "512": "artwork/web/level-25-512.webp",
+          "1024": "artwork/web/level-25-1024.webp"
+        },
+        "compact": {
+          "32": "artwork/compact/level-25-32.png",
+          "64": "artwork/compact/level-25-64.png",
+          "128": "artwork/compact/level-25-128.png",
+          "256": "artwork/compact/level-25-256.png"
+        },
+        "vectorField": "artwork/vector/level-25-field.svg",
+        "animation": "previews/level-25-motion.mp4"
+      }
+    },
+    {
+      "level": 26,
+      "name": "Awareness",
+      "subtitle": "The universe begins to notice itself",
+      "description": "From living processes, sensing, memory and internal models emerge. The world gains organisms able to attend to their surroundings and respond.",
+      "detail": "A speculative composite of a neural network and a luminous marine organism; no single moment of universal awareness is scientifically established.",
+      "material": "Vitreous neural filaments / pearlescent membranes / deep teal / electrochemical amber",
+      "accent": "#badbd2",
+      "xp": 46875,
+      "next": 50700,
+      "chapter": "continuance",
+      "chapterIndex": 6,
+      "chapterName": "Continuance",
+      "silhouette": "An asymmetric branching neural organism",
+      "motion": "Dendrites flex while traveling electrochemical impulses illuminate terminals.",
+      "nativeParts": 56,
+      "triangles": 24876,
+      "source": "src/geometry.py: Scene.build / level 26",
+      "assets": {
+        "scene": "artwork/native/level-26.scene.json",
+        "gltf": "artwork/native/level-26.gltf",
+        "master": "artwork/masters/level-26-2048.png",
+        "web": {
+          "256": "artwork/web/level-26-256.webp",
+          "512": "artwork/web/level-26-512.webp",
+          "1024": "artwork/web/level-26-1024.webp"
+        },
+        "compact": {
+          "32": "artwork/compact/level-26-32.png",
+          "64": "artwork/compact/level-26-64.png",
+          "128": "artwork/compact/level-26-128.png",
+          "256": "artwork/compact/level-26-256.png"
+        },
+        "vectorField": "artwork/vector/level-26-field.svg",
+        "animation": "previews/level-26-motion.mp4"
+      }
+    },
+    {
+      "level": 27,
+      "name": "The Signal",
+      "subtitle": "Awareness reaches beyond itself",
+      "description": "Communication allows knowledge to travel from one mind to another. A gesture becomes a message, a message becomes a record, and signals cross distance.",
+      "detail": "A poetic progression, not a claim that electromagnetic broadcast immediately followed consciousness. The object is an invented Institute transmitter.",
+      "material": "Oxidized copper / black optical ceramic / thin ivory conductors / coral signal light",
+      "accent": "#e1b5a0",
+      "xp": 50700,
+      "next": 54675,
+      "chapter": "continuance",
+      "chapterIndex": 6,
+      "chapterName": "Continuance",
+      "silhouette": "An offset monolith transmitter and outgoing waves",
+      "motion": "A resonator calibrates and sends distinct expanding transmission waves.",
+      "nativeParts": 8,
+      "triangles": 4210,
+      "source": "src/geometry.py: Scene.build / level 27",
+      "assets": {
+        "scene": "artwork/native/level-27.scene.json",
+        "gltf": "artwork/native/level-27.gltf",
+        "master": "artwork/masters/level-27-2048.png",
+        "web": {
+          "256": "artwork/web/level-27-256.webp",
+          "512": "artwork/web/level-27-512.webp",
+          "1024": "artwork/web/level-27-1024.webp"
+        },
+        "compact": {
+          "32": "artwork/compact/level-27-32.png",
+          "64": "artwork/compact/level-27-64.png",
+          "128": "artwork/compact/level-27-128.png",
+          "256": "artwork/compact/level-27-256.png"
+        },
+        "vectorField": "artwork/vector/level-27-field.svg",
+        "animation": "previews/level-27-motion.mp4"
+      }
+    },
+    {
+      "level": 28,
+      "name": "Civilization",
+      "subtitle": "Many minds begin to build together",
+      "description": "Communities accumulate tools, ideas, institutions and shared memory. Structures grow from cooperation: from shelters and workshops toward archives and observatories.",
+      "detail": "The architecture is an imagined hybrid of cities and future institutes; it is not meant to represent a single culture or historical timeline.",
+      "material": "Weathered basalt foundations / ivory ceramic towers / smoky glass / inhabited warm light",
+      "accent": "#d9c7b2",
+      "xp": 54675,
+      "next": 58800,
+      "chapter": "continuance",
+      "chapterIndex": 6,
+      "chapterName": "Continuance",
+      "silhouette": "An inhabited cluster of archive towers",
+      "motion": "Inhabited windows light in groups while skybridges carry moving illumination.",
+      "nativeParts": 159,
+      "triangles": 4206,
+      "source": "src/geometry.py: Scene.build / level 28",
+      "assets": {
+        "scene": "artwork/native/level-28.scene.json",
+        "gltf": "artwork/native/level-28.gltf",
+        "master": "artwork/masters/level-28-2048.png",
+        "web": {
+          "256": "artwork/web/level-28-256.webp",
+          "512": "artwork/web/level-28-512.webp",
+          "1024": "artwork/web/level-28-1024.webp"
+        },
+        "compact": {
+          "32": "artwork/compact/level-28-32.png",
+          "64": "artwork/compact/level-28-64.png",
+          "128": "artwork/compact/level-28-128.png",
+          "256": "artwork/compact/level-28-256.png"
+        },
+        "vectorField": "artwork/vector/level-28-field.svg",
+        "animation": "previews/level-28-motion.mp4"
+      }
+    },
+    {
+      "level": 29,
+      "name": "Continuance Institute",
+      "subtitle": "Discovery becomes an enduring purpose",
+      "description": "The Continuance Institute gathers knowledge and preserves what creators discover. Understanding is no longer an accident: it becomes a responsibility carried forward.",
+      "detail": "This is original ANEVUM fictional worldbuilding, not a real institution or a forecast of cosmological history.",
+      "material": "Bone-white optical ceramic / graphite architecture / brushed platinum / precise coral calibration",
+      "accent": "#e4ded1",
+      "xp": 58800,
+      "next": 63075,
+      "chapter": "continuance",
+      "chapterIndex": 6,
+      "chapterName": "Continuance",
+      "silhouette": "A fork-mounted archival optical instrument",
+      "motion": "Optical gimbals calibrate independently above preserved archive leaves.",
+      "nativeParts": 16,
+      "triangles": 7616,
+      "source": "src/geometry.py: Scene.build / level 29",
+      "assets": {
+        "scene": "artwork/native/level-29.scene.json",
+        "gltf": "artwork/native/level-29.gltf",
+        "master": "artwork/masters/level-29-2048.png",
+        "web": {
+          "256": "artwork/web/level-29-256.webp",
+          "512": "artwork/web/level-29-512.webp",
+          "1024": "artwork/web/level-29-1024.webp"
+        },
+        "compact": {
+          "32": "artwork/compact/level-29-32.png",
+          "64": "artwork/compact/level-29-64.png",
+          "128": "artwork/compact/level-29-128.png",
+          "256": "artwork/compact/level-29-256.png"
+        },
+        "vectorField": "artwork/vector/level-29-field.svg",
+        "animation": "previews/level-29-motion.mp4"
+      }
+    },
+    {
+      "level": 30,
+      "name": "ANEVUM",
+      "subtitle": "Creation continues beyond the beginning",
+      "description": "The universe has gained the capacity to remember, imagine, collaborate and deliberately create. In ANEVUM, the story does not end: people carry it forward together.",
+      "detail": "A fictional culmination based on ANEVUM orbital-mark geometry. The prior epochs reappear as five small signals converging upon an open aperture.",
+      "material": "Ion-cut ivory ceramic / midnight blackglass / platinum conductors / spectral memory lights",
+      "accent": "#eaddca",
+      "xp": 63075,
+      "next": 63075,
+      "chapter": "continuance",
+      "chapterIndex": 6,
+      "chapterName": "Continuance",
+      "silhouette": "An open orbital mark receiving five memory streams",
+      "motion": "Five evolutionary memory streams converge through open orbits; a new outward signal answers.",
+      "nativeParts": 9,
+      "triangles": 8674,
+      "source": "src/geometry.py: Scene.build / level 30",
+      "assets": {
+        "scene": "artwork/native/level-30.scene.json",
+        "gltf": "artwork/native/level-30.gltf",
+        "master": "artwork/masters/level-30-2048.png",
+        "web": {
+          "256": "artwork/web/level-30-256.webp",
+          "512": "artwork/web/level-30-512.webp",
+          "1024": "artwork/web/level-30-1024.webp"
+        },
+        "compact": {
+          "32": "artwork/compact/level-30-32.png",
+          "64": "artwork/compact/level-30-64.png",
+          "128": "artwork/compact/level-30-128.png",
+          "256": "artwork/compact/level-30-256.png"
+        },
+        "vectorField": "artwork/vector/level-30-field.svg",
+        "animation": "previews/level-30-motion.mp4"
+      }
+    }
+  ],
+  "renderPipeline": {
+    "nativeGeometry": "procedural 3D + glTF 2.0",
+    "material": "GGX direct lighting + procedural fields + sampled albedo/height",
+    "masters": "2048px straight-alpha PNG rendered with EGL OpenGL using the live GLSL",
+    "web": "256/512/1024px WebP; selected-only WebGL scene",
+    "textures": "four 4096px procedural height/normal/roughness families; 1254px generated obsidian albedo source",
+    "vector": "30 independently editable SVG field overlays; no embedded raster"
+  },
+  "accountWrites": false,
+  "publicDeployment": false,
+  "nativeAnimationLimit": "glTF portable loop contains node motion; phenomenon-specific deformation/emission stays in editable GLSL + scene JSON",
+  "limitations": [
+    "Real-time materials are artistic approximations; no path tracing, true participating-media transport or physical refraction.",
+    "All 30 are reconstructed; artistic approval is pending. No claim that the final long-term visual standard has been approved.",
+    "Native iPhone Safari and assistive-technology acceptance require device review.",
+    "No account, achievement, XP or production site integration."
+  ]
+}
