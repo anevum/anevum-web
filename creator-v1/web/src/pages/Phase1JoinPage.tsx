@@ -44,7 +44,7 @@ export function Phase1JoinPage(){
    if(!socialReady(provider)||busy)return;
    setBusy(true);setError("");
    try{
-     const response=await canonicalAuthClient.signIn.social({provider,callbackURL:"/join"});
+     const response=await canonicalAuthClient.signIn.social({provider,callbackURL:"/join",errorCallbackURL:"/join"});
      if(response.error)throw Error("Social sign-in could not be started.");
    }catch{
      setError("Sign-in is currently unavailable. No account was created.");
