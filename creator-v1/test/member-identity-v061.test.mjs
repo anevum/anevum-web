@@ -16,7 +16,7 @@ test('every modern public author surface uses the shared 3D mini specimen identi
  assert.match(forum,/CompactMemberIdentity/);
  assert.match(member,/CompactMemberIdentity/);
  assert.match(wall,/CompactMemberIdentity/);
- assert.match(profile,/av61-profile-level/);
+ assert.match(profile,/CompactMemberIdentity size="featured"/);
  assert.match(css,/av61-orbit-specimen/);
  assert.match(css,/prefers-reduced-motion:reduce/);
  assert.doesNotMatch(shared,/new WebGLRenderingContext|requestAnimationFrame|clientAward|userEnteredLevel/);
