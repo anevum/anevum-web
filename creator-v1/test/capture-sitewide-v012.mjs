@@ -70,7 +70,7 @@ try{
   ["project","/projects/00000000000000000000000000000001",".portal-project"],
   ["creators","/creators",".portal-creators"],["creator-channel","/creators/nova_demo",".portal-creator-channel"],
   ["community","/community",".ch7-hub"],["boards","/boards",".cnb-hub"],
-  ["levels","/levels",".levels-page"],["start","/start",".start-page"],
+  ["levels","/levels",".levels-page"],["recognition","/recognition",".av66-registry"],["start","/start",".start-page"],
   ["guide","/guide",".field-guide-page"],["status","/status",".status-list"],
   ["guest-library","/library",".member-gate"],
   ["member-account","/account",".av12-account-await"],
@@ -85,7 +85,7 @@ try{
   await client.send("Emulation.setDeviceMetricsOverride",{width,height,deviceScaleFactor:1,mobile:width<641});
   await client.send("Emulation.setEmulatedMedia",{features:[{name:"prefers-reduced-motion",value:"reduce"}]});
   const selected=width===1440||width===390?pages:pages.filter(([id])=>
-   ["home","discover","project","community","boards","levels","guest-library"].includes(id));
+   ["home","discover","project","community","boards","levels","recognition","guest-library"].includes(id));
   for(const [name,path,selector] of selected){
    if(name==="guest-library")await client.send("Network.clearBrowserCookies");
    // Simulate the real canonical staging capability only for project routes.
