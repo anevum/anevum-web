@@ -4,7 +4,7 @@ const DATA=JSON.parse(document.getElementById('workshop-data').textContent),$=id
 const mark=DATA.mark,canvas=$('specimen-canvas'),stage=$('stage'),reduced=matchMedia('(prefers-reduced-motion: reduce)');
 let selected=30,chapter=0,paused=false,expressive=false,time=0,last=0,yaw=-.16,pitch=.08,zoom=1,raf=0,visible=true,loadSerial=0,engine=null,noticeTimer,measured=[],frames=0,currentLevel=null,renderError=null;
 const decode=s=>{const b=atob(s),a=new Uint8Array(b.length);for(let i=0;i<b.length;i++)a[i]=b.charCodeAt(i);return a;};
-const uri=(data,type='image/webp')=>`data:${type};base64,${data}`;
+const uri=(data,type='image/webp')=>data.startsWith('assets/')?data:`data:${type};base64,${data}`;
 function rotationAxis(){return [0,1,0];}
 class SpecimenRenderer{
  constructor(){
@@ -25,7 +25,7 @@ class SpecimenRenderer{
   for(const p of this.parts){const [color,rough,metal,em,alpha,family]=DATA.materials[p.mat];this.uniform('uColor',...color);this.uniform('uRoughness',rough);this.uniform('uMetallic',metal);this.uniform('uEmission',em);this.uniform('uOpacity',alpha);this.uniform('uFamily',family);this.uniform('uMode',p.motion);this.uniform('uSpeed',p.speed);this.uniform('uPhase',p.phase);this.uniform('uAxis',...p.axis);this.uniform('uPivot',...p.pivot);gl.bindBuffer(gl.ARRAY_BUFFER,p.vertex);gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,p.index);for(const [n,count,offset] of [['aPosition',3,0],['aNormal',3,12],['aUV',2,24]]){const a=this.attributes[n];gl.enableVertexAttribArray(a);gl.vertexAttribPointer(a,count,gl.FLOAT,false,32,offset);}gl.depthMask(alpha>=.99);gl.drawElements(gl.TRIANGLES,p.indexCount,gl.UNSIGNED_SHORT,0);}gl.depthMask(true);this.finishFrame(side);
  }
 }
-async function sceneFor(n){const raw=decode(DATA.scenes[n-1]);if(!globalThis.DecompressionStream)throw Error('Compressed scene loading unavailable');const stream=new Blob([raw]).stream().pipeThrough(new DecompressionStream('gzip'));return JSON.parse(await new Response(stream).text());}
+async function sceneFor(n){const raw=DATA.external?new Uint8Array(await (await fetch(DATA.scenes[n-1])).arrayBuffer()):decode(DATA.scenes[n-1]);if(!globalThis.DecompressionStream)throw Error('Compressed scene loading unavailable');const stream=new Blob([raw]).stream().pipeThrough(new DecompressionStream('gzip'));return JSON.parse(await new Response(stream).text());}
 function motionAllowed(){return !reduced.matches&&!paused&&visible&&!document.hidden;}
 function schedule(){cancelAnimationFrame(raf);raf=0;last=0;if(engine&&motionAllowed())raf=requestAnimationFrame(tick);}
 function tick(now){raf=0;if(!engine||!motionAllowed())return;const delta=last?Math.min((now-last)/1000,.1):0;last=now;time+=delta;const before=performance.now();engine.draw();const cost=performance.now()-before;frames++;measured.push(cost);if(measured.length>180)measured.shift();if(frames%120===0&&measured.length>30){const mean=measured.reduce((a,b)=>a+b,0)/measured.length;if(mean>27&&engine.quality>.65)engine.quality*=.85;}raf=requestAnimationFrame(tick);}
@@ -61,5 +61,5 @@ let drag=null;canvas.addEventListener('pointerdown',e=>{drag={x:e.clientX,y:e.cl
 canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();cancelAnimationFrame(raf);canvas.hidden=true;$('render-status').textContent='Graphics context suspended · static fallback active';});canvas.addEventListener('webglcontextrestored',()=>{engine=null;selectLevel(selected);});
 reduced.addEventListener('change',syncMotion);document.addEventListener('visibilitychange',schedule);addEventListener('resize',redraw);if(globalThis.IntersectionObserver)new IntersectionObserver(entries=>{visible=entries[0].isIntersecting;if(visible)redraw();schedule();},{threshold:.05}).observe(stage);
 renderGallery();renderMembers();syncMotion();selectLevel(30);
-Object.defineProperty(window,'ANEVUM_REVIEW',{value:{selectLevel,recognition,snapshot:()=>({selected,currentLevel,chapter,paused,reducedMotion:reduced.matches,expressive,time,frames,webgl:!!engine?.ready,error:renderError,parts:engine?.parts.length||0,drawCostMs:measured.length?measured.reduce((a,b)=>a+b,0)/measured.length:0,framebuffer:[canvas.width,canvas.height],quality:engine?.quality||0,levelCount:LEVELS.length,xp30:LEVELS[29].xp,networkWrites:0})},writable:false});
+Object.defineProperty(window,'ANEVUM_REVIEW',{value:{selectLevel,recognition,captureFrame:()=>{redraw();return canvas.toDataURL('image/png');},snapshot:()=>({selected,currentLevel,chapter,paused,reducedMotion:reduced.matches,expressive,time,frames,webgl:!!engine?.ready,error:renderError,parts:engine?.parts.length||0,drawCostMs:measured.length?measured.reduce((a,b)=>a+b,0)/measured.length:0,framebuffer:[canvas.width,canvas.height],quality:engine?.quality||0,levelCount:LEVELS.length,xp30:LEVELS[29].xp,networkWrites:0})},writable:false});
 })();

@@ -104,7 +104,7 @@ class Scene:
     p=rng.normal(size=3)*[.42,.45,.25];rr=rng.uniform(.17,.37);self.sphere('Transient vacuum pocket '+str(j),c=p,s=(rr,rr*.88,rr),mat='glass' if j%2 else 'violet',rough=.06,seed=j,motion=5,speed=.55,phase=j*.8,res=24)
   elif i==4:
    for j in [-1,1]:
-    self.sheet('Opposing symmetry plane '+str(j),lambda u,v,j=j:np.stack(((u-.5)*1.5,(v-.5)*1.65,j*(.08+.36*abs(u-.5))+.15*np.sin(v*math.pi)),-1),'ivory' if j==1 else 'metal',motion=6,speed=.22,phase=j)
+    self.sheet('Opposing symmetry plane '+str(j),lambda u,v,j=j:np.stack(((u-.5)*1.8*np.sin(v*math.pi)**.4,(v-.5)*1.65,j*(.10+.40*abs(u-.5))+.13*np.cos(v*TAU)),-1),'ivory' if j==1 else 'metal',motion=6,speed=.22,phase=j)
    self.tube('Broken symmetry axis',[[0,-.95,.3],[0,.95,.3]],.008,'coral',motion=2,speed=.4)
   elif i==5:
    self.sheet('Expanding causal membrane',lambda u,v:np.stack((np.cos(u*TAU)*(v*.8+.1),np.sin(u*TAU)*(v*.8+.1),.65*np.cos(v*math.pi)-.18),-1),'copper',motion=7,speed=.35,res=48)
@@ -253,6 +253,13 @@ class Scene:
    for j in range(5):
     ang=j*TAU/5;p=np.stack(((.85-.62*t)*np.cos(ang+t*.8),(.85-.62*t)*np.sin(ang+t*.8),.16*np.sin(t*4+j)),axis=-1)
     self.tube(['Memory of form','Memory of matter','Memory of stars','Memory of worlds','Memory of life'][j],p,.008,['pearl','coral','light','blue','neural'][j],motion=42,speed=.45,phase=j)
+   # Physical memories of the earlier chapters, not five interchangeable dots.
+   self.sphere('Remembered pre-grain',c=(-.43,.32,.13),s=(.042,.063,.037),mat='obsidian',rough=.36,seed=30,res=16,motion=42,speed=.45,phase=0)
+   self.sphere('Remembered charge',c=(.39,.30,.12),s=(.041,.052,.037),mat='coral',rough=.13,res=16,motion=42,speed=.45,phase=1)
+   aa=np.linspace(0,math.pi*4,65);rr=np.linspace(.005,.075,65);self.tube('Remembered spiral',np.stack((rr*np.cos(aa)-.48,rr*np.sin(aa)*.6-.22,np.full_like(aa,.15)),-1),.004,'light',sides=4,motion=42,speed=.45,phase=2)
+   self.sphere('Remembered ocean',c=(.46,-.27,.12),s=(.061,)*3,mat='ocean',rough=.02,res=24,motion=42,speed=.45,phase=3)
+   for j in range(3):
+    self.tube('Remembered life branch '+str(j),[[.02,-.30,.14],[.015+j*.02,-.41,.14],[-.04+j*.05,-.50,.14]],.005,'neural',motion=42,speed=.45,phase=4)
    self.mote('Continuance / deliberate new light',(0,0,.12),.074,'light',motion=43,speed=.45)
    self.tube('New outward signal',[[0,.12,.12],[.03,.57,.12],[.06,1.02,.12]],np.array([.018,.008,.001]),'warm',motion=44,speed=.5)
   # Standardize framing without flattening physical depth.

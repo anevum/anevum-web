@@ -1,11 +1,16 @@
 """Headless OpenGL raster renderer; same GLSL and geometry as the live web app.
 Mesa EGL/llvmpipe is sufficient, no external rendering service or browser needed.
 """
-import os,ctypes as C,numpy as np,math,json,time,sys
+import os,ctypes as C,numpy as np,math,json,time,sys,io
 from PIL import Image,ImageFilter
 from pathlib import Path
 from geometry import Scene,MAT,ROOT
 os.environ['EGL_PLATFORM']='surfaceless'
+def save_image(im,path,**kwargs):
+ buffer=io.BytesIO();im.save(buffer,format='WEBP' if path.suffix=='.webp' else 'PNG',**kwargs);raw=buffer.getvalue();Image.open(io.BytesIO(raw)).load();temp=path.with_suffix(path.suffix+'.pending')
+ with open(temp,'wb') as f:f.write(raw);f.flush();os.fsync(f.fileno())
+ temp.replace(path)
+
 class Renderer:
  def __init__(self,size=2048):
   self.size=size;self.e=C.CDLL('libEGL.so.1');self.g=C.CDLL('libGL.so.1');e=self.e
@@ -27,6 +32,7 @@ class Renderer:
   self.g.glViewport(0,0,size,size);self.g.glEnable(0x0B71);self.g.glEnable(0x0BE2);self.g.glBlendFuncSeparate(0x0302,0x0303,1,0x0303)
   tex=C.c_uint();self.g.glGenTextures(1,C.byref(tex));self.g.glBindTexture(0x0DE1,tex.value);self.g.glTexParameteri(0x0DE1,0x2801,0x2601);self.g.glTexParameteri(0x0DE1,0x2800,0x2601)
   texture=ROOT/'artwork/textures/mineral-height-4096.png'
+  if not texture.exists():texture=ROOT/'artwork/textures/mineral-height-web.png'
   im=np.array(Image.open(texture).convert('RGBA') if texture.exists() else Image.new('RGBA',(64,64),(127,127,127,255)),np.uint8);self.g.glTexImage2D(0x0DE1,0,0x1908,im.shape[1],im.shape[0],0,0x1908,0x1401,im.ctypes.data)
   tex2=C.c_uint();self.g.glGenTextures(1,C.byref(tex2));self.g.glActiveTexture(0x84C1);self.g.glBindTexture(0x0DE1,tex2.value);self.g.glTexParameteri(0x0DE1,0x2801,0x2601);self.g.glTexParameteri(0x0DE1,0x2800,0x2601)
   im=np.array(Image.open(ROOT/'artwork/textures/obsidian-albedo-source.jpg').convert('RGBA'),np.uint8);self.g.glTexImage2D(0x0DE1,0,0x1908,im.shape[1],im.shape[0],0,0x1908,0x1401,im.ctypes.data)
@@ -64,8 +70,8 @@ class Renderer:
 if __name__=='__main__':
  ids=list(map(int,sys.argv[1:])) or list(range(1,31));r=Renderer(2048)
  for i in ids:
-  begin=time.time();s=Scene(i).build();im=r.render(s,t=0);im.save(ROOT/'artwork/masters'/f'level-{i:02}-2048.png')
-  for sz in [256,512,1024]:im.resize((sz,sz),Image.Resampling.LANCZOS).save(ROOT/'artwork/web'/f'level-{i:02}-{sz}.webp',quality=90,method=4)
+  begin=time.time();s=Scene(i).build();im=r.render(s,t=0);save_image(im,ROOT/'artwork/masters'/f'level-{i:02}-2048.png')
+  for sz in [256,512,1024]:save_image(im.resize((sz,sz),Image.Resampling.LANCZOS),ROOT/'artwork/web'/f'level-{i:02}-{sz}.webp',quality=90,method=4)
   sc=Scene(i,True).build();compact=r.render(sc,zoom=1.07)
-  for sz in [32,64,128,256]:compact.resize((sz,sz),Image.Resampling.LANCZOS).save(ROOT/'artwork/compact'/f'level-{i:02}-{sz}.png')
+  for sz in [32,64,128,256]:save_image(compact.resize((sz,sz),Image.Resampling.LANCZOS),ROOT/'artwork/compact'/f'level-{i:02}-{sz}.png')
   print('RENDER',i,im.getbbox(),round(time.time()-begin,2),flush=True)

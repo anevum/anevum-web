@@ -40,7 +40,7 @@ void main(){
  if(m==36.0){scale=1.0+.16*sin(t+ph)*e;}
  if(m==38.0){p.y+=.004*sin(p.x*5.0+t+ph);}
  if(m==40.0){delta.y=.005*sin(t+ph);}
- if(m==42.0){p.xy*=1.0-.035*sin(t+ph)*e;}
+ if(m==42.0){p.xy*=1.0-(.10+uExpressive*.25)*(.5+.5*sin(t-ph*.3));}
  if(m==43.0){scale=1.0+.1*sin(t)*e;}
  if(m==44.0){scale=1.0+.06*sin(t)*e;}
  mat3 anim=rotation(uAxis,angle);p=anim*(p-uPivot)*scale+uPivot+delta;n=anim*n;

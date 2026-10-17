@@ -1104,8 +1104,8 @@
       "chapterName": "Continuance",
       "silhouette": "An open orbital mark receiving five memory streams",
       "motion": "Five evolutionary memory streams converge through open orbits; a new outward signal answers.",
-      "nativeParts": 9,
-      "triangles": 8674,
+      "nativeParts": 16,
+      "triangles": 10358,
       "source": "src/geometry.py: Scene.build / level 30",
       "assets": {
         "scene": "artwork/native/level-30.scene.json",

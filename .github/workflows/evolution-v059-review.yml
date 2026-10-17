@@ -27,9 +27,8 @@ jobs:
         working-directory: design/evolution-v059
         run: |
           mkdir -p artwork/{native,textures,vector,masters,web,compact} docs dist previews
-          python src/textures.py
           python src/export_native.py
-          python src/render.py
+          python src/render_web.py
           python src/build.py
       - name: Test real desktop and simulated mobile Chromium
         working-directory: design/evolution-v059

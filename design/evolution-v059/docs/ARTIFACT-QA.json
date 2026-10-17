@@ -1,0 +1,6694 @@
+{
+  "session": "ANEVUM.WEB.BUILD.2026-10-17.008.EVOLUTION-HYPERRES-ARTWORK",
+  "status": "passed",
+  "passed": 1669,
+  "total": 1669,
+  "checks": [
+    {
+      "name": "Exactly 30 levels",
+      "pass": true
+    },
+    {
+      "name": "Exactly six chapters",
+      "pass": true
+    },
+    {
+      "name": "Level 30 XP",
+      "pass": true
+    },
+    {
+      "name": "Every threshold matches locked formula",
+      "pass": true
+    },
+    {
+      "name": "level-01 native glTF buffer",
+      "pass": true
+    },
+    {
+      "name": "level-01 editable named mesh parts",
+      "pass": true
+    },
+    {
+      "name": "level-01 portable native animation",
+      "pass": true
+    },
+    {
+      "name": "level-01 texture reference ../textures/obsidian-albedo-source.jpg",
+      "pass": true
+    },
+    {
+      "name": "level-01 texture reference ../textures/mineral-height-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-01 texture reference ../textures/mineral-normal-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-01 texture reference ../textures/membrane-normal-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-01 texture reference ../textures/aqueous-normal-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-01 texture reference ../textures/ceramic-metal-normal-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-01 finite geometry / Unrecorded dark / fractured monolith",
+      "pass": true
+    },
+    {
+      "name": "level-01 finite geometry / Single incipient fissure",
+      "pass": true
+    },
+    {
+      "name": "level-01 finite geometry / Mica inclusions",
+      "pass": true
+    },
+    {
+      "name": "artwork/masters/level-01-2048.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/masters/level-01-2048.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/masters/level-01-2048.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-01-256.webp dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-01-256.webp RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-01-256.webp transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-01-512.webp dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-01-512.webp RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-01-512.webp transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-01-1024.webp dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-01-1024.webp RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-01-1024.webp transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-01-32.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-01-32.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-01-32.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-01-64.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-01-64.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-01-64.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-01-128.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-01-128.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-01-128.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-01-256.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-01-256.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-01-256.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "level-01 genuine editable vector overlay",
+      "pass": true
+    },
+    {
+      "name": "level-01 vector motion accessibility",
+      "pass": true
+    },
+    {
+      "name": "level-01 actual motion preview 72 frames",
+      "pass": true
+    },
+    {
+      "name": "level-02 native glTF buffer",
+      "pass": true
+    },
+    {
+      "name": "level-02 editable named mesh parts",
+      "pass": true
+    },
+    {
+      "name": "level-02 portable native animation",
+      "pass": true
+    },
+    {
+      "name": "level-02 texture reference ../textures/obsidian-albedo-source.jpg",
+      "pass": true
+    },
+    {
+      "name": "level-02 texture reference ../textures/mineral-height-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-02 texture reference ../textures/mineral-normal-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-02 texture reference ../textures/membrane-normal-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-02 texture reference ../textures/aqueous-normal-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-02 texture reference ../textures/ceramic-metal-normal-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-02 finite geometry / Vacuum interference surface -1",
+      "pass": true
+    },
+    {
+      "name": "level-02 finite geometry / Vacuum interference surface 1",
+      "pass": true
+    },
+    {
+      "name": "level-02 finite geometry / Interference fringe 0",
+      "pass": true
+    },
+    {
+      "name": "level-02 finite geometry / Interference fringe 1",
+      "pass": true
+    },
+    {
+      "name": "level-02 finite geometry / Interference fringe 2",
+      "pass": true
+    },
+    {
+      "name": "level-02 finite geometry / Interference fringe 3",
+      "pass": true
+    },
+    {
+      "name": "level-02 finite geometry / Interference fringe 4",
+      "pass": true
+    },
+    {
+      "name": "artwork/masters/level-02-2048.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/masters/level-02-2048.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/masters/level-02-2048.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-02-256.webp dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-02-256.webp RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-02-256.webp transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-02-512.webp dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-02-512.webp RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-02-512.webp transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-02-1024.webp dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-02-1024.webp RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-02-1024.webp transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-02-32.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-02-32.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-02-32.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-02-64.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-02-64.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-02-64.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-02-128.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-02-128.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-02-128.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-02-256.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-02-256.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-02-256.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "level-02 genuine editable vector overlay",
+      "pass": true
+    },
+    {
+      "name": "level-02 vector motion accessibility",
+      "pass": true
+    },
+    {
+      "name": "level-02 actual motion preview 72 frames",
+      "pass": true
+    },
+    {
+      "name": "level-03 native glTF buffer",
+      "pass": true
+    },
+    {
+      "name": "level-03 editable named mesh parts",
+      "pass": true
+    },
+    {
+      "name": "level-03 portable native animation",
+      "pass": true
+    },
+    {
+      "name": "level-03 texture reference ../textures/obsidian-albedo-source.jpg",
+      "pass": true
+    },
+    {
+      "name": "level-03 texture reference ../textures/mineral-height-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-03 texture reference ../textures/mineral-normal-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-03 texture reference ../textures/membrane-normal-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-03 texture reference ../textures/aqueous-normal-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-03 texture reference ../textures/ceramic-metal-normal-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-03 finite geometry / Transient vacuum pocket 0",
+      "pass": true
+    },
+    {
+      "name": "level-03 finite geometry / Transient vacuum pocket 1",
+      "pass": true
+    },
+    {
+      "name": "level-03 finite geometry / Transient vacuum pocket 2",
+      "pass": true
+    },
+    {
+      "name": "level-03 finite geometry / Transient vacuum pocket 3",
+      "pass": true
+    },
+    {
+      "name": "level-03 finite geometry / Transient vacuum pocket 4",
+      "pass": true
+    },
+    {
+      "name": "level-03 finite geometry / Transient vacuum pocket 5",
+      "pass": true
+    },
+    {
+      "name": "level-03 finite geometry / Transient vacuum pocket 6",
+      "pass": true
+    },
+    {
+      "name": "level-03 finite geometry / Transient vacuum pocket 7",
+      "pass": true
+    },
+    {
+      "name": "level-03 finite geometry / Transient vacuum pocket 8",
+      "pass": true
+    },
+    {
+      "name": "level-03 finite geometry / Transient vacuum pocket 9",
+      "pass": true
+    },
+    {
+      "name": "level-03 finite geometry / Transient vacuum pocket 10",
+      "pass": true
+    },
+    {
+      "name": "level-03 finite geometry / Transient vacuum pocket 11",
+      "pass": true
+    },
+    {
+      "name": "level-03 finite geometry / Transient vacuum pocket 12",
+      "pass": true
+    },
+    {
+      "name": "level-03 finite geometry / Transient vacuum pocket 13",
+      "pass": true
+    },
+    {
+      "name": "artwork/masters/level-03-2048.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/masters/level-03-2048.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/masters/level-03-2048.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-03-256.webp dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-03-256.webp RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-03-256.webp transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-03-512.webp dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-03-512.webp RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-03-512.webp transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-03-1024.webp dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-03-1024.webp RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-03-1024.webp transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-03-32.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-03-32.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-03-32.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-03-64.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-03-64.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-03-64.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-03-128.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-03-128.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-03-128.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-03-256.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-03-256.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-03-256.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "level-03 genuine editable vector overlay",
+      "pass": true
+    },
+    {
+      "name": "level-03 vector motion accessibility",
+      "pass": true
+    },
+    {
+      "name": "level-03 actual motion preview 72 frames",
+      "pass": true
+    },
+    {
+      "name": "level-04 native glTF buffer",
+      "pass": true
+    },
+    {
+      "name": "level-04 editable named mesh parts",
+      "pass": true
+    },
+    {
+      "name": "level-04 portable native animation",
+      "pass": true
+    },
+    {
+      "name": "level-04 texture reference ../textures/obsidian-albedo-source.jpg",
+      "pass": true
+    },
+    {
+      "name": "level-04 texture reference ../textures/mineral-height-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-04 texture reference ../textures/mineral-normal-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-04 texture reference ../textures/membrane-normal-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-04 texture reference ../textures/aqueous-normal-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-04 texture reference ../textures/ceramic-metal-normal-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-04 finite geometry / Opposing symmetry plane -1",
+      "pass": true
+    },
+    {
+      "name": "level-04 finite geometry / Opposing symmetry plane 1",
+      "pass": true
+    },
+    {
+      "name": "level-04 finite geometry / Broken symmetry axis",
+      "pass": true
+    },
+    {
+      "name": "artwork/masters/level-04-2048.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/masters/level-04-2048.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/masters/level-04-2048.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-04-256.webp dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-04-256.webp RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-04-256.webp transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-04-512.webp dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-04-512.webp RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-04-512.webp transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-04-1024.webp dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-04-1024.webp RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-04-1024.webp transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-04-32.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-04-32.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-04-32.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-04-64.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-04-64.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-04-64.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-04-128.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-04-128.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-04-128.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-04-256.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-04-256.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-04-256.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "level-04 genuine editable vector overlay",
+      "pass": true
+    },
+    {
+      "name": "level-04 vector motion accessibility",
+      "pass": true
+    },
+    {
+      "name": "level-04 actual motion preview 72 frames",
+      "pass": true
+    },
+    {
+      "name": "level-05 native glTF buffer",
+      "pass": true
+    },
+    {
+      "name": "level-05 editable named mesh parts",
+      "pass": true
+    },
+    {
+      "name": "level-05 portable native animation",
+      "pass": true
+    },
+    {
+      "name": "level-05 texture reference ../textures/obsidian-albedo-source.jpg",
+      "pass": true
+    },
+    {
+      "name": "level-05 texture reference ../textures/mineral-height-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-05 texture reference ../textures/mineral-normal-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-05 texture reference ../textures/membrane-normal-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-05 texture reference ../textures/aqueous-normal-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-05 texture reference ../textures/ceramic-metal-normal-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-05 finite geometry / Expanding causal membrane",
+      "pass": true
+    },
+    {
+      "name": "level-05 finite geometry / Released horizon shards",
+      "pass": true
+    },
+    {
+      "name": "artwork/masters/level-05-2048.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/masters/level-05-2048.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/masters/level-05-2048.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-05-256.webp dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-05-256.webp RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-05-256.webp transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-05-512.webp dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-05-512.webp RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-05-512.webp transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-05-1024.webp dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-05-1024.webp RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-05-1024.webp transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-05-32.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-05-32.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-05-32.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-05-64.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-05-64.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-05-64.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-05-128.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-05-128.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-05-128.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-05-256.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-05-256.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-05-256.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "level-05 genuine editable vector overlay",
+      "pass": true
+    },
+    {
+      "name": "level-05 vector motion accessibility",
+      "pass": true
+    },
+    {
+      "name": "level-05 actual motion preview 72 frames",
+      "pass": true
+    },
+    {
+      "name": "level-06 native glTF buffer",
+      "pass": true
+    },
+    {
+      "name": "level-06 editable named mesh parts",
+      "pass": true
+    },
+    {
+      "name": "level-06 portable native animation",
+      "pass": true
+    },
+    {
+      "name": "level-06 texture reference ../textures/obsidian-albedo-source.jpg",
+      "pass": true
+    },
+    {
+      "name": "level-06 texture reference ../textures/mineral-height-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-06 texture reference ../textures/mineral-normal-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-06 texture reference ../textures/membrane-normal-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-06 texture reference ../textures/aqueous-normal-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-06 texture reference ../textures/ceramic-metal-normal-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-06 finite geometry / Turbulent charge current 0",
+      "pass": true
+    },
+    {
+      "name": "level-06 finite geometry / Turbulent charge current 1",
+      "pass": true
+    },
+    {
+      "name": "level-06 finite geometry / Turbulent charge current 2",
+      "pass": true
+    },
+    {
+      "name": "level-06 finite geometry / Turbulent charge current 3",
+      "pass": true
+    },
+    {
+      "name": "level-06 finite geometry / Turbulent charge current 4",
+      "pass": true
+    },
+    {
+      "name": "level-06 finite geometry / Turbulent charge current 5",
+      "pass": true
+    },
+    {
+      "name": "level-06 finite geometry / Turbulent charge current 6",
+      "pass": true
+    },
+    {
+      "name": "level-06 finite geometry / Turbulent charge current 7",
+      "pass": true
+    },
+    {
+      "name": "level-06 finite geometry / Turbulent charge current 8",
+      "pass": true
+    },
+    {
+      "name": "level-06 finite geometry / Turbulent charge current 9",
+      "pass": true
+    },
+    {
+      "name": "level-06 finite geometry / Turbulent charge current 10",
+      "pass": true
+    },
+    {
+      "name": "level-06 finite geometry / Charge scatter",
+      "pass": true
+    },
+    {
+      "name": "artwork/masters/level-06-2048.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/masters/level-06-2048.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/masters/level-06-2048.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-06-256.webp dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-06-256.webp RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-06-256.webp transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-06-512.webp dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-06-512.webp RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-06-512.webp transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-06-1024.webp dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-06-1024.webp RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-06-1024.webp transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-06-32.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-06-32.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-06-32.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-06-64.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-06-64.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-06-64.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-06-128.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-06-128.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-06-128.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-06-256.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-06-256.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-06-256.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "level-06 genuine editable vector overlay",
+      "pass": true
+    },
+    {
+      "name": "level-06 vector motion accessibility",
+      "pass": true
+    },
+    {
+      "name": "level-06 actual motion preview 72 frames",
+      "pass": true
+    },
+    {
+      "name": "level-07 native glTF buffer",
+      "pass": true
+    },
+    {
+      "name": "level-07 editable named mesh parts",
+      "pass": true
+    },
+    {
+      "name": "level-07 portable native animation",
+      "pass": true
+    },
+    {
+      "name": "level-07 texture reference ../textures/obsidian-albedo-source.jpg",
+      "pass": true
+    },
+    {
+      "name": "level-07 texture reference ../textures/mineral-height-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-07 texture reference ../textures/mineral-normal-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-07 texture reference ../textures/membrane-normal-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-07 texture reference ../textures/aqueous-normal-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-07 texture reference ../textures/ceramic-metal-normal-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-07 finite geometry / Color charge 0",
+      "pass": true
+    },
+    {
+      "name": "level-07 finite geometry / Color charge 1",
+      "pass": true
+    },
+    {
+      "name": "level-07 finite geometry / Color charge 2",
+      "pass": true
+    },
+    {
+      "name": "level-07 finite geometry / Confined flux tube 0",
+      "pass": true
+    },
+    {
+      "name": "level-07 finite geometry / Confined flux tube 1",
+      "pass": true
+    },
+    {
+      "name": "level-07 finite geometry / Confined flux tube 2",
+      "pass": true
+    },
+    {
+      "name": "artwork/masters/level-07-2048.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/masters/level-07-2048.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/masters/level-07-2048.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-07-256.webp dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-07-256.webp RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-07-256.webp transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-07-512.webp dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-07-512.webp RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-07-512.webp transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-07-1024.webp dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-07-1024.webp RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-07-1024.webp transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-07-32.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-07-32.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-07-32.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-07-64.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-07-64.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-07-64.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-07-128.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-07-128.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-07-128.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-07-256.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-07-256.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-07-256.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "level-07 genuine editable vector overlay",
+      "pass": true
+    },
+    {
+      "name": "level-07 vector motion accessibility",
+      "pass": true
+    },
+    {
+      "name": "level-07 actual motion preview 72 frames",
+      "pass": true
+    },
+    {
+      "name": "level-08 native glTF buffer",
+      "pass": true
+    },
+    {
+      "name": "level-08 editable named mesh parts",
+      "pass": true
+    },
+    {
+      "name": "level-08 portable native animation",
+      "pass": true
+    },
+    {
+      "name": "level-08 texture reference ../textures/obsidian-albedo-source.jpg",
+      "pass": true
+    },
+    {
+      "name": "level-08 texture reference ../textures/mineral-height-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-08 texture reference ../textures/mineral-normal-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-08 texture reference ../textures/membrane-normal-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-08 texture reference ../textures/aqueous-normal-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-08 texture reference ../textures/ceramic-metal-normal-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-08 finite geometry / Bound proton lobe 0",
+      "pass": true
+    },
+    {
+      "name": "level-08 finite geometry / Bound proton lobe 1",
+      "pass": true
+    },
+    {
+      "name": "level-08 finite geometry / Bound proton lobe 2",
+      "pass": true
+    },
+    {
+      "name": "level-08 finite geometry / Confinement seam 0",
+      "pass": true
+    },
+    {
+      "name": "level-08 finite geometry / Confinement seam 1",
+      "pass": true
+    },
+    {
+      "name": "level-08 finite geometry / Confinement seam 2",
+      "pass": true
+    },
+    {
+      "name": "level-08 finite geometry / Confinement seam 3",
+      "pass": true
+    },
+    {
+      "name": "level-08 finite geometry / Confinement seam 4",
+      "pass": true
+    },
+    {
+      "name": "level-08 finite geometry / Confinement seam 5",
+      "pass": true
+    },
+    {
+      "name": "level-08 finite geometry / Confinement seam 6",
+      "pass": true
+    },
+    {
+      "name": "level-08 finite geometry / Confinement seam 7",
+      "pass": true
+    },
+    {
+      "name": "artwork/masters/level-08-2048.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/masters/level-08-2048.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/masters/level-08-2048.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-08-256.webp dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-08-256.webp RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-08-256.webp transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-08-512.webp dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-08-512.webp RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-08-512.webp transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-08-1024.webp dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-08-1024.webp RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-08-1024.webp transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-08-32.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-08-32.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-08-32.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-08-64.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-08-64.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-08-64.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-08-128.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-08-128.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-08-128.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-08-256.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-08-256.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-08-256.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "level-08 genuine editable vector overlay",
+      "pass": true
+    },
+    {
+      "name": "level-08 vector motion accessibility",
+      "pass": true
+    },
+    {
+      "name": "level-08 actual motion preview 72 frames",
+      "pass": true
+    },
+    {
+      "name": "level-09 native glTF buffer",
+      "pass": true
+    },
+    {
+      "name": "level-09 editable named mesh parts",
+      "pass": true
+    },
+    {
+      "name": "level-09 portable native animation",
+      "pass": true
+    },
+    {
+      "name": "level-09 texture reference ../textures/obsidian-albedo-source.jpg",
+      "pass": true
+    },
+    {
+      "name": "level-09 texture reference ../textures/mineral-height-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-09 texture reference ../textures/mineral-normal-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-09 texture reference ../textures/membrane-normal-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-09 texture reference ../textures/aqueous-normal-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-09 texture reference ../textures/ceramic-metal-normal-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-09 finite geometry / Atomic nucleus",
+      "pass": true
+    },
+    {
+      "name": "level-09 finite geometry / Probability lobe -1",
+      "pass": true
+    },
+    {
+      "name": "level-09 finite geometry / Probability lobe 1",
+      "pass": true
+    },
+    {
+      "name": "level-09 finite geometry / Probability contour 0",
+      "pass": true
+    },
+    {
+      "name": "level-09 finite geometry / Probability contour 1",
+      "pass": true
+    },
+    {
+      "name": "level-09 finite geometry / Probability contour 2",
+      "pass": true
+    },
+    {
+      "name": "level-09 finite geometry / Probability contour 3",
+      "pass": true
+    },
+    {
+      "name": "artwork/masters/level-09-2048.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/masters/level-09-2048.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/masters/level-09-2048.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-09-256.webp dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-09-256.webp RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-09-256.webp transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-09-512.webp dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-09-512.webp RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-09-512.webp transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-09-1024.webp dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-09-1024.webp RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-09-1024.webp transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-09-32.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-09-32.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-09-32.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-09-64.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-09-64.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-09-64.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-09-128.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-09-128.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-09-128.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-09-256.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-09-256.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-09-256.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "level-09 genuine editable vector overlay",
+      "pass": true
+    },
+    {
+      "name": "level-09 vector motion accessibility",
+      "pass": true
+    },
+    {
+      "name": "level-09 actual motion preview 72 frames",
+      "pass": true
+    },
+    {
+      "name": "level-10 native glTF buffer",
+      "pass": true
+    },
+    {
+      "name": "level-10 editable named mesh parts",
+      "pass": true
+    },
+    {
+      "name": "level-10 portable native animation",
+      "pass": true
+    },
+    {
+      "name": "level-10 texture reference ../textures/obsidian-albedo-source.jpg",
+      "pass": true
+    },
+    {
+      "name": "level-10 texture reference ../textures/mineral-height-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-10 texture reference ../textures/mineral-normal-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-10 texture reference ../textures/membrane-normal-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-10 texture reference ../textures/aqueous-normal-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-10 texture reference ../textures/ceramic-metal-normal-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-10 finite geometry / Recombination fossil / anisotropy veil",
+      "pass": true
+    },
+    {
+      "name": "level-10 finite geometry / Redshift isotherm 0",
+      "pass": true
+    },
+    {
+      "name": "level-10 finite geometry / Redshift isotherm 1",
+      "pass": true
+    },
+    {
+      "name": "level-10 finite geometry / Redshift isotherm 2",
+      "pass": true
+    },
+    {
+      "name": "level-10 finite geometry / Redshift isotherm 3",
+      "pass": true
+    },
+    {
+      "name": "level-10 finite geometry / Redshift isotherm 4",
+      "pass": true
+    },
+    {
+      "name": "level-10 finite geometry / Redshift isotherm 5",
+      "pass": true
+    },
+    {
+      "name": "level-10 finite geometry / Redshift isotherm 6",
+      "pass": true
+    },
+    {
+      "name": "level-10 finite geometry / Redshift isotherm 7",
+      "pass": true
+    },
+    {
+      "name": "level-10 finite geometry / Redshift isotherm 8",
+      "pass": true
+    },
+    {
+      "name": "artwork/masters/level-10-2048.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/masters/level-10-2048.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/masters/level-10-2048.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-10-256.webp dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-10-256.webp RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-10-256.webp transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-10-512.webp dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-10-512.webp RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-10-512.webp transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-10-1024.webp dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-10-1024.webp RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-10-1024.webp transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-10-32.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-10-32.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-10-32.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-10-64.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-10-64.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-10-64.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-10-128.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-10-128.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-10-128.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-10-256.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-10-256.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-10-256.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "level-10 genuine editable vector overlay",
+      "pass": true
+    },
+    {
+      "name": "level-10 vector motion accessibility",
+      "pass": true
+    },
+    {
+      "name": "level-10 actual motion preview 72 frames",
+      "pass": true
+    },
+    {
+      "name": "level-11 native glTF buffer",
+      "pass": true
+    },
+    {
+      "name": "level-11 editable named mesh parts",
+      "pass": true
+    },
+    {
+      "name": "level-11 portable native animation",
+      "pass": true
+    },
+    {
+      "name": "level-11 texture reference ../textures/obsidian-albedo-source.jpg",
+      "pass": true
+    },
+    {
+      "name": "level-11 texture reference ../textures/mineral-height-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-11 texture reference ../textures/mineral-normal-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-11 texture reference ../textures/membrane-normal-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-11 texture reference ../textures/aqueous-normal-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-11 texture reference ../textures/ceramic-metal-normal-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-11 finite geometry / Cold hydrogen density bank 0",
+      "pass": true
+    },
+    {
+      "name": "level-11 finite geometry / Cold hydrogen density bank 1",
+      "pass": true
+    },
+    {
+      "name": "level-11 finite geometry / Cold hydrogen density bank 2",
+      "pass": true
+    },
+    {
+      "name": "level-11 finite geometry / Cold hydrogen density bank 3",
+      "pass": true
+    },
+    {
+      "name": "level-11 finite geometry / Unlit density knots",
+      "pass": true
+    },
+    {
+      "name": "artwork/masters/level-11-2048.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/masters/level-11-2048.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/masters/level-11-2048.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-11-256.webp dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-11-256.webp RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-11-256.webp transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-11-512.webp dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-11-512.webp RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-11-512.webp transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-11-1024.webp dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-11-1024.webp RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-11-1024.webp transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-11-32.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-11-32.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-11-32.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-11-64.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-11-64.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-11-64.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-11-128.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-11-128.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-11-128.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-11-256.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-11-256.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-11-256.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "level-11 genuine editable vector overlay",
+      "pass": true
+    },
+    {
+      "name": "level-11 vector motion accessibility",
+      "pass": true
+    },
+    {
+      "name": "level-11 actual motion preview 72 frames",
+      "pass": true
+    },
+    {
+      "name": "level-12 native glTF buffer",
+      "pass": true
+    },
+    {
+      "name": "level-12 editable named mesh parts",
+      "pass": true
+    },
+    {
+      "name": "level-12 portable native animation",
+      "pass": true
+    },
+    {
+      "name": "level-12 texture reference ../textures/obsidian-albedo-source.jpg",
+      "pass": true
+    },
+    {
+      "name": "level-12 texture reference ../textures/mineral-height-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-12 texture reference ../textures/mineral-normal-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-12 texture reference ../textures/membrane-normal-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-12 texture reference ../textures/aqueous-normal-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-12 texture reference ../textures/ceramic-metal-normal-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-12 finite geometry / Spacetime infall funnel",
+      "pass": true
+    },
+    {
+      "name": "level-12 finite geometry / Curved geodesic 0",
+      "pass": true
+    },
+    {
+      "name": "level-12 finite geometry / Curved geodesic 1",
+      "pass": true
+    },
+    {
+      "name": "level-12 finite geometry / Curved geodesic 2",
+      "pass": true
+    },
+    {
+      "name": "level-12 finite geometry / Curved geodesic 3",
+      "pass": true
+    },
+    {
+      "name": "level-12 finite geometry / Curved geodesic 4",
+      "pass": true
+    },
+    {
+      "name": "level-12 finite geometry / Curved geodesic 5",
+      "pass": true
+    },
+    {
+      "name": "level-12 finite geometry / Curved geodesic 6",
+      "pass": true
+    },
+    {
+      "name": "level-12 finite geometry / Curved geodesic 7",
+      "pass": true
+    },
+    {
+      "name": "level-12 finite geometry / Curved geodesic 8",
+      "pass": true
+    },
+    {
+      "name": "level-12 finite geometry / Curved geodesic 9",
+      "pass": true
+    },
+    {
+      "name": "level-12 finite geometry / Dark focus",
+      "pass": true
+    },
+    {
+      "name": "artwork/masters/level-12-2048.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/masters/level-12-2048.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/masters/level-12-2048.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-12-256.webp dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-12-256.webp RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-12-256.webp transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-12-512.webp dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-12-512.webp RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-12-512.webp transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-12-1024.webp dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-12-1024.webp RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-12-1024.webp transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-12-32.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-12-32.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-12-32.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-12-64.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-12-64.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-12-64.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-12-128.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-12-128.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-12-128.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-12-256.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-12-256.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-12-256.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "level-12 genuine editable vector overlay",
+      "pass": true
+    },
+    {
+      "name": "level-12 vector motion accessibility",
+      "pass": true
+    },
+    {
+      "name": "level-12 actual motion preview 72 frames",
+      "pass": true
+    },
+    {
+      "name": "level-13 native glTF buffer",
+      "pass": true
+    },
+    {
+      "name": "level-13 editable named mesh parts",
+      "pass": true
+    },
+    {
+      "name": "level-13 portable native animation",
+      "pass": true
+    },
+    {
+      "name": "level-13 texture reference ../textures/obsidian-albedo-source.jpg",
+      "pass": true
+    },
+    {
+      "name": "level-13 texture reference ../textures/mineral-height-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-13 texture reference ../textures/mineral-normal-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-13 texture reference ../textures/membrane-normal-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-13 texture reference ../textures/aqueous-normal-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-13 texture reference ../textures/ceramic-metal-normal-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-13 finite geometry / Unstable photosphere",
+      "pass": true
+    },
+    {
+      "name": "level-13 finite geometry / Coronal streamer 0",
+      "pass": true
+    },
+    {
+      "name": "level-13 finite geometry / Coronal streamer 1",
+      "pass": true
+    },
+    {
+      "name": "level-13 finite geometry / Coronal streamer 2",
+      "pass": true
+    },
+    {
+      "name": "level-13 finite geometry / Coronal streamer 3",
+      "pass": true
+    },
+    {
+      "name": "level-13 finite geometry / Coronal streamer 4",
+      "pass": true
+    },
+    {
+      "name": "level-13 finite geometry / Coronal streamer 5",
+      "pass": true
+    },
+    {
+      "name": "level-13 finite geometry / Coronal streamer 6",
+      "pass": true
+    },
+    {
+      "name": "level-13 finite geometry / Coronal streamer 7",
+      "pass": true
+    },
+    {
+      "name": "level-13 finite geometry / Coronal streamer 8",
+      "pass": true
+    },
+    {
+      "name": "level-13 finite geometry / Coronal streamer 9",
+      "pass": true
+    },
+    {
+      "name": "level-13 finite geometry / Coronal streamer 10",
+      "pass": true
+    },
+    {
+      "name": "level-13 finite geometry / Coronal streamer 11",
+      "pass": true
+    },
+    {
+      "name": "level-13 finite geometry / Coronal streamer 12",
+      "pass": true
+    },
+    {
+      "name": "level-13 finite geometry / Coronal streamer 13",
+      "pass": true
+    },
+    {
+      "name": "level-13 finite geometry / Coronal streamer 14",
+      "pass": true
+    },
+    {
+      "name": "level-13 finite geometry / Coronal streamer 15",
+      "pass": true
+    },
+    {
+      "name": "level-13 finite geometry / Coronal streamer 16",
+      "pass": true
+    },
+    {
+      "name": "level-13 finite geometry / Coronal streamer 17",
+      "pass": true
+    },
+    {
+      "name": "level-13 finite geometry / Coronal streamer 18",
+      "pass": true
+    },
+    {
+      "name": "level-13 finite geometry / Coronal streamer 19",
+      "pass": true
+    },
+    {
+      "name": "level-13 finite geometry / Coronal streamer 20",
+      "pass": true
+    },
+    {
+      "name": "level-13 finite geometry / Coronal streamer 21",
+      "pass": true
+    },
+    {
+      "name": "level-13 finite geometry / Coronal streamer 22",
+      "pass": true
+    },
+    {
+      "name": "level-13 finite geometry / Coronal streamer 23",
+      "pass": true
+    },
+    {
+      "name": "level-13 finite geometry / Coronal streamer 24",
+      "pass": true
+    },
+    {
+      "name": "level-13 finite geometry / Coronal streamer 25",
+      "pass": true
+    },
+    {
+      "name": "level-13 finite geometry / Coronal streamer 26",
+      "pass": true
+    },
+    {
+      "name": "level-13 finite geometry / Coronal streamer 27",
+      "pass": true
+    },
+    {
+      "name": "level-13 finite geometry / Coronal streamer 28",
+      "pass": true
+    },
+    {
+      "name": "level-13 finite geometry / Coronal streamer 29",
+      "pass": true
+    },
+    {
+      "name": "level-13 finite geometry / Coronal streamer 30",
+      "pass": true
+    },
+    {
+      "name": "level-13 finite geometry / Coronal streamer 31",
+      "pass": true
+    },
+    {
+      "name": "level-13 finite geometry / Coronal streamer 32",
+      "pass": true
+    },
+    {
+      "name": "level-13 finite geometry / Coronal streamer 33",
+      "pass": true
+    },
+    {
+      "name": "level-13 finite geometry / Coronal streamer 34",
+      "pass": true
+    },
+    {
+      "name": "level-13 finite geometry / Coronal streamer 35",
+      "pass": true
+    },
+    {
+      "name": "level-13 finite geometry / Coronal streamer 36",
+      "pass": true
+    },
+    {
+      "name": "level-13 finite geometry / Coronal streamer 37",
+      "pass": true
+    },
+    {
+      "name": "level-13 finite geometry / Magnetic corona arch 0",
+      "pass": true
+    },
+    {
+      "name": "level-13 finite geometry / Magnetic corona arch 1",
+      "pass": true
+    },
+    {
+      "name": "level-13 finite geometry / Magnetic corona arch 2",
+      "pass": true
+    },
+    {
+      "name": "level-13 finite geometry / Magnetic corona arch 3",
+      "pass": true
+    },
+    {
+      "name": "level-13 finite geometry / Magnetic corona arch 4",
+      "pass": true
+    },
+    {
+      "name": "level-13 finite geometry / Magnetic corona arch 5",
+      "pass": true
+    },
+    {
+      "name": "level-13 finite geometry / Magnetic corona arch 6",
+      "pass": true
+    },
+    {
+      "name": "level-13 finite geometry / Magnetic corona arch 7",
+      "pass": true
+    },
+    {
+      "name": "level-13 finite geometry / Nascent stellar radiance",
+      "pass": true
+    },
+    {
+      "name": "artwork/masters/level-13-2048.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/masters/level-13-2048.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/masters/level-13-2048.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-13-256.webp dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-13-256.webp RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-13-256.webp transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-13-512.webp dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-13-512.webp RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-13-512.webp transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-13-1024.webp dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-13-1024.webp RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-13-1024.webp transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-13-32.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-13-32.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-13-32.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-13-64.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-13-64.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-13-64.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-13-128.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-13-128.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-13-128.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-13-256.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-13-256.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-13-256.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "level-13 genuine editable vector overlay",
+      "pass": true
+    },
+    {
+      "name": "level-13 vector motion accessibility",
+      "pass": true
+    },
+    {
+      "name": "level-13 actual motion preview 72 frames",
+      "pass": true
+    },
+    {
+      "name": "level-14 native glTF buffer",
+      "pass": true
+    },
+    {
+      "name": "level-14 editable named mesh parts",
+      "pass": true
+    },
+    {
+      "name": "level-14 portable native animation",
+      "pass": true
+    },
+    {
+      "name": "level-14 texture reference ../textures/obsidian-albedo-source.jpg",
+      "pass": true
+    },
+    {
+      "name": "level-14 texture reference ../textures/mineral-height-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-14 texture reference ../textures/mineral-normal-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-14 texture reference ../textures/membrane-normal-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-14 texture reference ../textures/aqueous-normal-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-14 texture reference ../textures/ceramic-metal-normal-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-14 finite geometry / Sustained fusion ember",
+      "pass": true
+    },
+    {
+      "name": "level-14 finite geometry / Magnetic prominence 0",
+      "pass": true
+    },
+    {
+      "name": "level-14 finite geometry / Magnetic prominence 1",
+      "pass": true
+    },
+    {
+      "name": "level-14 finite geometry / Magnetic prominence 2",
+      "pass": true
+    },
+    {
+      "name": "level-14 finite geometry / Magnetic prominence 3",
+      "pass": true
+    },
+    {
+      "name": "level-14 finite geometry / Magnetic prominence 4",
+      "pass": true
+    },
+    {
+      "name": "level-14 finite geometry / Magnetic prominence 5",
+      "pass": true
+    },
+    {
+      "name": "artwork/masters/level-14-2048.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/masters/level-14-2048.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/masters/level-14-2048.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-14-256.webp dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-14-256.webp RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-14-256.webp transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-14-512.webp dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-14-512.webp RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-14-512.webp transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-14-1024.webp dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-14-1024.webp RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-14-1024.webp transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-14-32.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-14-32.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-14-32.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-14-64.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-14-64.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-14-64.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-14-128.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-14-128.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-14-128.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-14-256.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-14-256.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-14-256.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "level-14 genuine editable vector overlay",
+      "pass": true
+    },
+    {
+      "name": "level-14 vector motion accessibility",
+      "pass": true
+    },
+    {
+      "name": "level-14 actual motion preview 72 frames",
+      "pass": true
+    },
+    {
+      "name": "level-15 native glTF buffer",
+      "pass": true
+    },
+    {
+      "name": "level-15 editable named mesh parts",
+      "pass": true
+    },
+    {
+      "name": "level-15 portable native animation",
+      "pass": true
+    },
+    {
+      "name": "level-15 texture reference ../textures/obsidian-albedo-source.jpg",
+      "pass": true
+    },
+    {
+      "name": "level-15 texture reference ../textures/mineral-height-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-15 texture reference ../textures/mineral-normal-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-15 texture reference ../textures/membrane-normal-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-15 texture reference ../textures/aqueous-normal-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-15 texture reference ../textures/ceramic-metal-normal-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-15 finite geometry / Ionized nebular plume 0",
+      "pass": true
+    },
+    {
+      "name": "level-15 finite geometry / Ionized nebular plume 1",
+      "pass": true
+    },
+    {
+      "name": "level-15 finite geometry / Ionized nebular plume 2",
+      "pass": true
+    },
+    {
+      "name": "level-15 finite geometry / Ionized nebular plume 3",
+      "pass": true
+    },
+    {
+      "name": "level-15 finite geometry / Ionized nebular plume 4",
+      "pass": true
+    },
+    {
+      "name": "level-15 finite geometry / Ionized nebular plume 5",
+      "pass": true
+    },
+    {
+      "name": "level-15 finite geometry / Embedded newborn star",
+      "pass": true
+    },
+    {
+      "name": "level-15 finite geometry / Suspended nebular dust",
+      "pass": true
+    },
+    {
+      "name": "artwork/masters/level-15-2048.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/masters/level-15-2048.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/masters/level-15-2048.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-15-256.webp dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-15-256.webp RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-15-256.webp transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-15-512.webp dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-15-512.webp RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-15-512.webp transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-15-1024.webp dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-15-1024.webp RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-15-1024.webp transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-15-32.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-15-32.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-15-32.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-15-64.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-15-64.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-15-64.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-15-128.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-15-128.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-15-128.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-15-256.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-15-256.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-15-256.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "level-15 genuine editable vector overlay",
+      "pass": true
+    },
+    {
+      "name": "level-15 vector motion accessibility",
+      "pass": true
+    },
+    {
+      "name": "level-15 actual motion preview 72 frames",
+      "pass": true
+    },
+    {
+      "name": "level-16 native glTF buffer",
+      "pass": true
+    },
+    {
+      "name": "level-16 editable named mesh parts",
+      "pass": true
+    },
+    {
+      "name": "level-16 portable native animation",
+      "pass": true
+    },
+    {
+      "name": "level-16 texture reference ../textures/obsidian-albedo-source.jpg",
+      "pass": true
+    },
+    {
+      "name": "level-16 texture reference ../textures/mineral-height-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-16 texture reference ../textures/mineral-normal-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-16 texture reference ../textures/membrane-normal-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-16 texture reference ../textures/aqueous-normal-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-16 texture reference ../textures/ceramic-metal-normal-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-16 finite geometry / Iron remnant",
+      "pass": true
+    },
+    {
+      "name": "level-16 finite geometry / Nucleosynthesis ejecta 0",
+      "pass": true
+    },
+    {
+      "name": "level-16 finite geometry / Nucleosynthesis ejecta 1",
+      "pass": true
+    },
+    {
+      "name": "level-16 finite geometry / Nucleosynthesis ejecta 2",
+      "pass": true
+    },
+    {
+      "name": "level-16 finite geometry / Nucleosynthesis ejecta 3",
+      "pass": true
+    },
+    {
+      "name": "level-16 finite geometry / Nucleosynthesis ejecta 4",
+      "pass": true
+    },
+    {
+      "name": "level-16 finite geometry / Nucleosynthesis ejecta 5",
+      "pass": true
+    },
+    {
+      "name": "level-16 finite geometry / Nucleosynthesis ejecta 6",
+      "pass": true
+    },
+    {
+      "name": "level-16 finite geometry / Nucleosynthesis ejecta 7",
+      "pass": true
+    },
+    {
+      "name": "level-16 finite geometry / Nucleosynthesis ejecta 8",
+      "pass": true
+    },
+    {
+      "name": "level-16 finite geometry / Nucleosynthesis ejecta 9",
+      "pass": true
+    },
+    {
+      "name": "level-16 finite geometry / Nucleosynthesis ejecta 10",
+      "pass": true
+    },
+    {
+      "name": "level-16 finite geometry / Nucleosynthesis ejecta 11",
+      "pass": true
+    },
+    {
+      "name": "level-16 finite geometry / Nucleosynthesis ejecta 12",
+      "pass": true
+    },
+    {
+      "name": "level-16 finite geometry / Nucleosynthesis ejecta 13",
+      "pass": true
+    },
+    {
+      "name": "level-16 finite geometry / Stellar crucible mantle",
+      "pass": true
+    },
+    {
+      "name": "artwork/masters/level-16-2048.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/masters/level-16-2048.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/masters/level-16-2048.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-16-256.webp dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-16-256.webp RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-16-256.webp transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-16-512.webp dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-16-512.webp RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-16-512.webp transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-16-1024.webp dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-16-1024.webp RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-16-1024.webp transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-16-32.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-16-32.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-16-32.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-16-64.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-16-64.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-16-64.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-16-128.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-16-128.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-16-128.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-16-256.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-16-256.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-16-256.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "level-16 genuine editable vector overlay",
+      "pass": true
+    },
+    {
+      "name": "level-16 vector motion accessibility",
+      "pass": true
+    },
+    {
+      "name": "level-16 actual motion preview 72 frames",
+      "pass": true
+    },
+    {
+      "name": "level-17 native glTF buffer",
+      "pass": true
+    },
+    {
+      "name": "level-17 editable named mesh parts",
+      "pass": true
+    },
+    {
+      "name": "level-17 portable native animation",
+      "pass": true
+    },
+    {
+      "name": "level-17 texture reference ../textures/obsidian-albedo-source.jpg",
+      "pass": true
+    },
+    {
+      "name": "level-17 texture reference ../textures/mineral-height-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-17 texture reference ../textures/mineral-normal-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-17 texture reference ../textures/membrane-normal-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-17 texture reference ../textures/aqueous-normal-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-17 texture reference ../textures/ceramic-metal-normal-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-17 finite geometry / Protogalactic inflow 0",
+      "pass": true
+    },
+    {
+      "name": "level-17 finite geometry / Protogalactic inflow 1",
+      "pass": true
+    },
+    {
+      "name": "level-17 finite geometry / Protogalactic inflow 2",
+      "pass": true
+    },
+    {
+      "name": "level-17 finite geometry / Protogalactic inflow 3",
+      "pass": true
+    },
+    {
+      "name": "level-17 finite geometry / Protogalactic inflow 4",
+      "pass": true
+    },
+    {
+      "name": "level-17 finite geometry / Gathering stellar bulge",
+      "pass": true
+    },
+    {
+      "name": "level-17 finite geometry / First stellar population",
+      "pass": true
+    },
+    {
+      "name": "artwork/masters/level-17-2048.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/masters/level-17-2048.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/masters/level-17-2048.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-17-256.webp dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-17-256.webp RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-17-256.webp transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-17-512.webp dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-17-512.webp RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-17-512.webp transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-17-1024.webp dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-17-1024.webp RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-17-1024.webp transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-17-32.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-17-32.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-17-32.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-17-64.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-17-64.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-17-64.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-17-128.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-17-128.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-17-128.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-17-256.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-17-256.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-17-256.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "level-17 genuine editable vector overlay",
+      "pass": true
+    },
+    {
+      "name": "level-17 vector motion accessibility",
+      "pass": true
+    },
+    {
+      "name": "level-17 actual motion preview 72 frames",
+      "pass": true
+    },
+    {
+      "name": "level-18 native glTF buffer",
+      "pass": true
+    },
+    {
+      "name": "level-18 editable named mesh parts",
+      "pass": true
+    },
+    {
+      "name": "level-18 portable native animation",
+      "pass": true
+    },
+    {
+      "name": "level-18 texture reference ../textures/obsidian-albedo-source.jpg",
+      "pass": true
+    },
+    {
+      "name": "level-18 texture reference ../textures/mineral-height-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-18 texture reference ../textures/mineral-normal-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-18 texture reference ../textures/membrane-normal-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-18 texture reference ../textures/aqueous-normal-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-18 texture reference ../textures/ceramic-metal-normal-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-18 finite geometry / Spiral stellar arm 0",
+      "pass": true
+    },
+    {
+      "name": "level-18 finite geometry / Dark dust lane 0",
+      "pass": true
+    },
+    {
+      "name": "level-18 finite geometry / Spiral stellar arm 1",
+      "pass": true
+    },
+    {
+      "name": "level-18 finite geometry / Dark dust lane 1",
+      "pass": true
+    },
+    {
+      "name": "level-18 finite geometry / Spiral stellar arm 2",
+      "pass": true
+    },
+    {
+      "name": "level-18 finite geometry / Dark dust lane 2",
+      "pass": true
+    },
+    {
+      "name": "level-18 finite geometry / Spiral stellar arm 3",
+      "pass": true
+    },
+    {
+      "name": "level-18 finite geometry / Dark dust lane 3",
+      "pass": true
+    },
+    {
+      "name": "level-18 finite geometry / Galactic central bulge",
+      "pass": true
+    },
+    {
+      "name": "artwork/masters/level-18-2048.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/masters/level-18-2048.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/masters/level-18-2048.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-18-256.webp dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-18-256.webp RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-18-256.webp transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-18-512.webp dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-18-512.webp RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-18-512.webp transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-18-1024.webp dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-18-1024.webp RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-18-1024.webp transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-18-32.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-18-32.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-18-32.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-18-64.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-18-64.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-18-64.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-18-128.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-18-128.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-18-128.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-18-256.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-18-256.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-18-256.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "level-18 genuine editable vector overlay",
+      "pass": true
+    },
+    {
+      "name": "level-18 vector motion accessibility",
+      "pass": true
+    },
+    {
+      "name": "level-18 actual motion preview 72 frames",
+      "pass": true
+    },
+    {
+      "name": "level-19 native glTF buffer",
+      "pass": true
+    },
+    {
+      "name": "level-19 editable named mesh parts",
+      "pass": true
+    },
+    {
+      "name": "level-19 portable native animation",
+      "pass": true
+    },
+    {
+      "name": "level-19 texture reference ../textures/obsidian-albedo-source.jpg",
+      "pass": true
+    },
+    {
+      "name": "level-19 texture reference ../textures/mineral-height-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-19 texture reference ../textures/mineral-normal-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-19 texture reference ../textures/membrane-normal-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-19 texture reference ../textures/aqueous-normal-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-19 texture reference ../textures/ceramic-metal-normal-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-19 finite geometry / Matter filament 0-11",
+      "pass": true
+    },
+    {
+      "name": "level-19 finite geometry / Matter filament 0-18",
+      "pass": true
+    },
+    {
+      "name": "level-19 finite geometry / Matter filament 1-16",
+      "pass": true
+    },
+    {
+      "name": "level-19 finite geometry / Matter filament 1-23",
+      "pass": true
+    },
+    {
+      "name": "level-19 finite geometry / Matter filament 2-18",
+      "pass": true
+    },
+    {
+      "name": "level-19 finite geometry / Matter filament 3-6",
+      "pass": true
+    },
+    {
+      "name": "level-19 finite geometry / Matter filament 3-17",
+      "pass": true
+    },
+    {
+      "name": "level-19 finite geometry / Matter filament 4-25",
+      "pass": true
+    },
+    {
+      "name": "level-19 finite geometry / Matter filament 4-7",
+      "pass": true
+    },
+    {
+      "name": "level-19 finite geometry / Matter filament 5-9",
+      "pass": true
+    },
+    {
+      "name": "level-19 finite geometry / Matter filament 5-10",
+      "pass": true
+    },
+    {
+      "name": "level-19 finite geometry / Matter filament 6-15",
+      "pass": true
+    },
+    {
+      "name": "level-19 finite geometry / Matter filament 6-12",
+      "pass": true
+    },
+    {
+      "name": "level-19 finite geometry / Matter filament 8-26",
+      "pass": true
+    },
+    {
+      "name": "level-19 finite geometry / Matter filament 8-25",
+      "pass": true
+    },
+    {
+      "name": "level-19 finite geometry / Matter filament 9-22",
+      "pass": true
+    },
+    {
+      "name": "level-19 finite geometry / Matter filament 11-29",
+      "pass": true
+    },
+    {
+      "name": "level-19 finite geometry / Matter filament 12-15",
+      "pass": true
+    },
+    {
+      "name": "level-19 finite geometry / Matter filament 13-19",
+      "pass": true
+    },
+    {
+      "name": "level-19 finite geometry / Matter filament 13-18",
+      "pass": true
+    },
+    {
+      "name": "level-19 finite geometry / Matter filament 14-21",
+      "pass": true
+    },
+    {
+      "name": "level-19 finite geometry / Matter filament 16-23",
+      "pass": true
+    },
+    {
+      "name": "level-19 finite geometry / Matter filament 17-26",
+      "pass": true
+    },
+    {
+      "name": "level-19 finite geometry / Matter filament 20-28",
+      "pass": true
+    },
+    {
+      "name": "level-19 finite geometry / Matter filament 21-25",
+      "pass": true
+    },
+    {
+      "name": "level-19 finite geometry / Matter filament 24-28",
+      "pass": true
+    },
+    {
+      "name": "level-19 finite geometry / Matter filament 25-26",
+      "pass": true
+    },
+    {
+      "name": "level-19 finite geometry / Matter filament 27-29",
+      "pass": true
+    },
+    {
+      "name": "level-19 finite geometry / Galaxy-cluster nodes",
+      "pass": true
+    },
+    {
+      "name": "artwork/masters/level-19-2048.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/masters/level-19-2048.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/masters/level-19-2048.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-19-256.webp dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-19-256.webp RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-19-256.webp transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-19-512.webp dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-19-512.webp RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-19-512.webp transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-19-1024.webp dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-19-1024.webp RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-19-1024.webp transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-19-32.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-19-32.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-19-32.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-19-64.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-19-64.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-19-64.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-19-128.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-19-128.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-19-128.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-19-256.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-19-256.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-19-256.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "level-19 genuine editable vector overlay",
+      "pass": true
+    },
+    {
+      "name": "level-19 vector motion accessibility",
+      "pass": true
+    },
+    {
+      "name": "level-19 actual motion preview 72 frames",
+      "pass": true
+    },
+    {
+      "name": "level-20 native glTF buffer",
+      "pass": true
+    },
+    {
+      "name": "level-20 editable named mesh parts",
+      "pass": true
+    },
+    {
+      "name": "level-20 portable native animation",
+      "pass": true
+    },
+    {
+      "name": "level-20 texture reference ../textures/obsidian-albedo-source.jpg",
+      "pass": true
+    },
+    {
+      "name": "level-20 texture reference ../textures/mineral-height-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-20 texture reference ../textures/mineral-normal-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-20 texture reference ../textures/membrane-normal-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-20 texture reference ../textures/aqueous-normal-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-20 texture reference ../textures/ceramic-metal-normal-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-20 finite geometry / System primary",
+      "pass": true
+    },
+    {
+      "name": "level-20 finite geometry / Orbital path 0",
+      "pass": true
+    },
+    {
+      "name": "level-20 finite geometry / Independent orbiting world 0",
+      "pass": true
+    },
+    {
+      "name": "level-20 finite geometry / Orbital path 1",
+      "pass": true
+    },
+    {
+      "name": "level-20 finite geometry / Independent orbiting world 1",
+      "pass": true
+    },
+    {
+      "name": "level-20 finite geometry / Orbital path 2",
+      "pass": true
+    },
+    {
+      "name": "level-20 finite geometry / Independent orbiting world 2",
+      "pass": true
+    },
+    {
+      "name": "level-20 finite geometry / Orbital path 3",
+      "pass": true
+    },
+    {
+      "name": "level-20 finite geometry / Independent orbiting world 3",
+      "pass": true
+    },
+    {
+      "name": "level-20 finite geometry / Outer debris belt",
+      "pass": true
+    },
+    {
+      "name": "artwork/masters/level-20-2048.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/masters/level-20-2048.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/masters/level-20-2048.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-20-256.webp dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-20-256.webp RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-20-256.webp transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-20-512.webp dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-20-512.webp RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-20-512.webp transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-20-1024.webp dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-20-1024.webp RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-20-1024.webp transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-20-32.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-20-32.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-20-32.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-20-64.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-20-64.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-20-64.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-20-128.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-20-128.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-20-128.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-20-256.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-20-256.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-20-256.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "level-20 genuine editable vector overlay",
+      "pass": true
+    },
+    {
+      "name": "level-20 vector motion accessibility",
+      "pass": true
+    },
+    {
+      "name": "level-20 actual motion preview 72 frames",
+      "pass": true
+    },
+    {
+      "name": "level-21 native glTF buffer",
+      "pass": true
+    },
+    {
+      "name": "level-21 editable named mesh parts",
+      "pass": true
+    },
+    {
+      "name": "level-21 portable native animation",
+      "pass": true
+    },
+    {
+      "name": "level-21 texture reference ../textures/obsidian-albedo-source.jpg",
+      "pass": true
+    },
+    {
+      "name": "level-21 texture reference ../textures/mineral-height-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-21 texture reference ../textures/mineral-normal-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-21 texture reference ../textures/membrane-normal-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-21 texture reference ../textures/aqueous-normal-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-21 texture reference ../textures/ceramic-metal-normal-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-21 finite geometry / Molten accreting world",
+      "pass": true
+    },
+    {
+      "name": "level-21 finite geometry / Infalling planetesimal 0",
+      "pass": true
+    },
+    {
+      "name": "level-21 finite geometry / Infalling planetesimal 1",
+      "pass": true
+    },
+    {
+      "name": "level-21 finite geometry / Infalling planetesimal 2",
+      "pass": true
+    },
+    {
+      "name": "level-21 finite geometry / Infalling planetesimal 3",
+      "pass": true
+    },
+    {
+      "name": "level-21 finite geometry / Infalling planetesimal 4",
+      "pass": true
+    },
+    {
+      "name": "level-21 finite geometry / Infalling planetesimal 5",
+      "pass": true
+    },
+    {
+      "name": "level-21 finite geometry / Infalling planetesimal 6",
+      "pass": true
+    },
+    {
+      "name": "level-21 finite geometry / Infalling planetesimal 7",
+      "pass": true
+    },
+    {
+      "name": "level-21 finite geometry / Infalling planetesimal 8",
+      "pass": true
+    },
+    {
+      "name": "level-21 finite geometry / Infalling planetesimal 9",
+      "pass": true
+    },
+    {
+      "name": "level-21 finite geometry / Infalling planetesimal 10",
+      "pass": true
+    },
+    {
+      "name": "level-21 finite geometry / Infalling planetesimal 11",
+      "pass": true
+    },
+    {
+      "name": "level-21 finite geometry / Infalling planetesimal 12",
+      "pass": true
+    },
+    {
+      "name": "level-21 finite geometry / Exposed lava fracture 0",
+      "pass": true
+    },
+    {
+      "name": "level-21 finite geometry / Exposed lava fracture 1",
+      "pass": true
+    },
+    {
+      "name": "level-21 finite geometry / Exposed lava fracture 2",
+      "pass": true
+    },
+    {
+      "name": "level-21 finite geometry / Exposed lava fracture 3",
+      "pass": true
+    },
+    {
+      "name": "level-21 finite geometry / Exposed lava fracture 4",
+      "pass": true
+    },
+    {
+      "name": "artwork/masters/level-21-2048.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/masters/level-21-2048.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/masters/level-21-2048.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-21-256.webp dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-21-256.webp RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-21-256.webp transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-21-512.webp dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-21-512.webp RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-21-512.webp transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-21-1024.webp dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-21-1024.webp RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-21-1024.webp transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-21-32.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-21-32.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-21-32.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-21-64.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-21-64.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-21-64.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-21-128.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-21-128.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-21-128.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-21-256.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-21-256.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-21-256.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "level-21 genuine editable vector overlay",
+      "pass": true
+    },
+    {
+      "name": "level-21 vector motion accessibility",
+      "pass": true
+    },
+    {
+      "name": "level-21 actual motion preview 72 frames",
+      "pass": true
+    },
+    {
+      "name": "level-22 native glTF buffer",
+      "pass": true
+    },
+    {
+      "name": "level-22 editable named mesh parts",
+      "pass": true
+    },
+    {
+      "name": "level-22 portable native animation",
+      "pass": true
+    },
+    {
+      "name": "level-22 texture reference ../textures/obsidian-albedo-source.jpg",
+      "pass": true
+    },
+    {
+      "name": "level-22 texture reference ../textures/mineral-height-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-22 texture reference ../textures/mineral-normal-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-22 texture reference ../textures/membrane-normal-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-22 texture reference ../textures/aqueous-normal-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-22 texture reference ../textures/ceramic-metal-normal-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-22 finite geometry / Global liquid ocean",
+      "pass": true
+    },
+    {
+      "name": "level-22 finite geometry / Circulating atmospheric band 0",
+      "pass": true
+    },
+    {
+      "name": "level-22 finite geometry / Circulating atmospheric band 1",
+      "pass": true
+    },
+    {
+      "name": "level-22 finite geometry / Circulating atmospheric band 2",
+      "pass": true
+    },
+    {
+      "name": "level-22 finite geometry / Circulating atmospheric band 3",
+      "pass": true
+    },
+    {
+      "name": "level-22 finite geometry / Circulating atmospheric band 4",
+      "pass": true
+    },
+    {
+      "name": "level-22 finite geometry / Circulating atmospheric band 5",
+      "pass": true
+    },
+    {
+      "name": "level-22 finite geometry / High atmosphere",
+      "pass": true
+    },
+    {
+      "name": "artwork/masters/level-22-2048.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/masters/level-22-2048.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/masters/level-22-2048.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-22-256.webp dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-22-256.webp RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-22-256.webp transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-22-512.webp dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-22-512.webp RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-22-512.webp transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-22-1024.webp dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-22-1024.webp RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-22-1024.webp transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-22-32.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-22-32.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-22-32.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-22-64.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-22-64.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-22-64.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-22-128.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-22-128.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-22-128.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-22-256.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-22-256.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-22-256.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "level-22 genuine editable vector overlay",
+      "pass": true
+    },
+    {
+      "name": "level-22 vector motion accessibility",
+      "pass": true
+    },
+    {
+      "name": "level-22 actual motion preview 72 frames",
+      "pass": true
+    },
+    {
+      "name": "level-23 native glTF buffer",
+      "pass": true
+    },
+    {
+      "name": "level-23 editable named mesh parts",
+      "pass": true
+    },
+    {
+      "name": "level-23 portable native animation",
+      "pass": true
+    },
+    {
+      "name": "level-23 texture reference ../textures/obsidian-albedo-source.jpg",
+      "pass": true
+    },
+    {
+      "name": "level-23 texture reference ../textures/mineral-height-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-23 texture reference ../textures/mineral-normal-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-23 texture reference ../textures/membrane-normal-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-23 texture reference ../textures/aqueous-normal-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-23 texture reference ../textures/ceramic-metal-normal-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-23 finite geometry / Molecular group 0",
+      "pass": true
+    },
+    {
+      "name": "level-23 finite geometry / Reactive side chain 0",
+      "pass": true
+    },
+    {
+      "name": "level-23 finite geometry / Side group 0",
+      "pass": true
+    },
+    {
+      "name": "level-23 finite geometry / Molecular group 1",
+      "pass": true
+    },
+    {
+      "name": "level-23 finite geometry / Covalent backbone 1",
+      "pass": true
+    },
+    {
+      "name": "level-23 finite geometry / Molecular group 2",
+      "pass": true
+    },
+    {
+      "name": "level-23 finite geometry / Covalent backbone 2",
+      "pass": true
+    },
+    {
+      "name": "level-23 finite geometry / Molecular group 3",
+      "pass": true
+    },
+    {
+      "name": "level-23 finite geometry / Covalent backbone 3",
+      "pass": true
+    },
+    {
+      "name": "level-23 finite geometry / Reactive side chain 3",
+      "pass": true
+    },
+    {
+      "name": "level-23 finite geometry / Side group 3",
+      "pass": true
+    },
+    {
+      "name": "level-23 finite geometry / Molecular group 4",
+      "pass": true
+    },
+    {
+      "name": "level-23 finite geometry / Covalent backbone 4",
+      "pass": true
+    },
+    {
+      "name": "level-23 finite geometry / Molecular group 5",
+      "pass": true
+    },
+    {
+      "name": "level-23 finite geometry / Covalent backbone 5",
+      "pass": true
+    },
+    {
+      "name": "level-23 finite geometry / Molecular group 6",
+      "pass": true
+    },
+    {
+      "name": "level-23 finite geometry / Covalent backbone 6",
+      "pass": true
+    },
+    {
+      "name": "level-23 finite geometry / Reactive side chain 6",
+      "pass": true
+    },
+    {
+      "name": "level-23 finite geometry / Side group 6",
+      "pass": true
+    },
+    {
+      "name": "level-23 finite geometry / Molecular group 7",
+      "pass": true
+    },
+    {
+      "name": "level-23 finite geometry / Covalent backbone 7",
+      "pass": true
+    },
+    {
+      "name": "level-23 finite geometry / Molecular group 8",
+      "pass": true
+    },
+    {
+      "name": "level-23 finite geometry / Covalent backbone 8",
+      "pass": true
+    },
+    {
+      "name": "level-23 finite geometry / Molecular group 9",
+      "pass": true
+    },
+    {
+      "name": "level-23 finite geometry / Covalent backbone 9",
+      "pass": true
+    },
+    {
+      "name": "level-23 finite geometry / Reactive side chain 9",
+      "pass": true
+    },
+    {
+      "name": "level-23 finite geometry / Side group 9",
+      "pass": true
+    },
+    {
+      "name": "level-23 finite geometry / Molecular group 10",
+      "pass": true
+    },
+    {
+      "name": "level-23 finite geometry / Covalent backbone 10",
+      "pass": true
+    },
+    {
+      "name": "level-23 finite geometry / Molecular group 11",
+      "pass": true
+    },
+    {
+      "name": "level-23 finite geometry / Covalent backbone 11",
+      "pass": true
+    },
+    {
+      "name": "level-23 finite geometry / Molecular group 12",
+      "pass": true
+    },
+    {
+      "name": "level-23 finite geometry / Covalent backbone 12",
+      "pass": true
+    },
+    {
+      "name": "level-23 finite geometry / Reactive side chain 12",
+      "pass": true
+    },
+    {
+      "name": "level-23 finite geometry / Side group 12",
+      "pass": true
+    },
+    {
+      "name": "level-23 finite geometry / Molecular group 13",
+      "pass": true
+    },
+    {
+      "name": "level-23 finite geometry / Covalent backbone 13",
+      "pass": true
+    },
+    {
+      "name": "level-23 finite geometry / Molecular group 14",
+      "pass": true
+    },
+    {
+      "name": "level-23 finite geometry / Covalent backbone 14",
+      "pass": true
+    },
+    {
+      "name": "level-23 finite geometry / Molecular group 15",
+      "pass": true
+    },
+    {
+      "name": "level-23 finite geometry / Covalent backbone 15",
+      "pass": true
+    },
+    {
+      "name": "level-23 finite geometry / Reactive side chain 15",
+      "pass": true
+    },
+    {
+      "name": "level-23 finite geometry / Side group 15",
+      "pass": true
+    },
+    {
+      "name": "artwork/masters/level-23-2048.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/masters/level-23-2048.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/masters/level-23-2048.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-23-256.webp dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-23-256.webp RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-23-256.webp transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-23-512.webp dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-23-512.webp RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-23-512.webp transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-23-1024.webp dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-23-1024.webp RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-23-1024.webp transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-23-32.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-23-32.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-23-32.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-23-64.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-23-64.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-23-64.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-23-128.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-23-128.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-23-128.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-23-256.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-23-256.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-23-256.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "level-23 genuine editable vector overlay",
+      "pass": true
+    },
+    {
+      "name": "level-23 vector motion accessibility",
+      "pass": true
+    },
+    {
+      "name": "level-23 actual motion preview 72 frames",
+      "pass": true
+    },
+    {
+      "name": "level-24 native glTF buffer",
+      "pass": true
+    },
+    {
+      "name": "level-24 editable named mesh parts",
+      "pass": true
+    },
+    {
+      "name": "level-24 portable native animation",
+      "pass": true
+    },
+    {
+      "name": "level-24 texture reference ../textures/obsidian-albedo-source.jpg",
+      "pass": true
+    },
+    {
+      "name": "level-24 texture reference ../textures/mineral-height-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-24 texture reference ../textures/mineral-normal-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-24 texture reference ../textures/membrane-normal-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-24 texture reference ../textures/aqueous-normal-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-24 texture reference ../textures/ceramic-metal-normal-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-24 finite geometry / Dividing protocell -1",
+      "pass": true
+    },
+    {
+      "name": "level-24 finite geometry / Dividing protocell 1",
+      "pass": true
+    },
+    {
+      "name": "level-24 finite geometry / Replicating internal strand 0",
+      "pass": true
+    },
+    {
+      "name": "level-24 finite geometry / Replicating internal strand 1",
+      "pass": true
+    },
+    {
+      "name": "level-24 finite geometry / Intracellular vesicles",
+      "pass": true
+    },
+    {
+      "name": "artwork/masters/level-24-2048.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/masters/level-24-2048.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/masters/level-24-2048.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-24-256.webp dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-24-256.webp RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-24-256.webp transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-24-512.webp dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-24-512.webp RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-24-512.webp transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-24-1024.webp dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-24-1024.webp RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-24-1024.webp transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-24-32.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-24-32.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-24-32.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-24-64.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-24-64.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-24-64.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-24-128.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-24-128.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-24-128.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-24-256.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-24-256.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-24-256.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "level-24 genuine editable vector overlay",
+      "pass": true
+    },
+    {
+      "name": "level-24 vector motion accessibility",
+      "pass": true
+    },
+    {
+      "name": "level-24 actual motion preview 72 frames",
+      "pass": true
+    },
+    {
+      "name": "level-25 native glTF buffer",
+      "pass": true
+    },
+    {
+      "name": "level-25 editable named mesh parts",
+      "pass": true
+    },
+    {
+      "name": "level-25 portable native animation",
+      "pass": true
+    },
+    {
+      "name": "level-25 texture reference ../textures/obsidian-albedo-source.jpg",
+      "pass": true
+    },
+    {
+      "name": "level-25 texture reference ../textures/mineral-height-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-25 texture reference ../textures/mineral-normal-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-25 texture reference ../textures/membrane-normal-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-25 texture reference ../textures/aqueous-normal-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-25 texture reference ../textures/ceramic-metal-normal-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-25 finite geometry / Living world / ocean substrate",
+      "pass": true
+    },
+    {
+      "name": "level-25 finite geometry / Co-evolving canopy 0",
+      "pass": true
+    },
+    {
+      "name": "level-25 finite geometry / Photosynthetic frond 0",
+      "pass": true
+    },
+    {
+      "name": "level-25 finite geometry / Co-evolving canopy 1",
+      "pass": true
+    },
+    {
+      "name": "level-25 finite geometry / Photosynthetic frond 1",
+      "pass": true
+    },
+    {
+      "name": "level-25 finite geometry / Co-evolving canopy 2",
+      "pass": true
+    },
+    {
+      "name": "level-25 finite geometry / Photosynthetic frond 2",
+      "pass": true
+    },
+    {
+      "name": "level-25 finite geometry / Co-evolving canopy 3",
+      "pass": true
+    },
+    {
+      "name": "level-25 finite geometry / Photosynthetic frond 3",
+      "pass": true
+    },
+    {
+      "name": "level-25 finite geometry / Co-evolving canopy 4",
+      "pass": true
+    },
+    {
+      "name": "level-25 finite geometry / Photosynthetic frond 4",
+      "pass": true
+    },
+    {
+      "name": "level-25 finite geometry / Co-evolving canopy 5",
+      "pass": true
+    },
+    {
+      "name": "level-25 finite geometry / Photosynthetic frond 5",
+      "pass": true
+    },
+    {
+      "name": "level-25 finite geometry / Co-evolving canopy 6",
+      "pass": true
+    },
+    {
+      "name": "level-25 finite geometry / Photosynthetic frond 6",
+      "pass": true
+    },
+    {
+      "name": "level-25 finite geometry / Co-evolving canopy 7",
+      "pass": true
+    },
+    {
+      "name": "level-25 finite geometry / Photosynthetic frond 7",
+      "pass": true
+    },
+    {
+      "name": "level-25 finite geometry / Co-evolving canopy 8",
+      "pass": true
+    },
+    {
+      "name": "level-25 finite geometry / Photosynthetic frond 8",
+      "pass": true
+    },
+    {
+      "name": "artwork/masters/level-25-2048.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/masters/level-25-2048.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/masters/level-25-2048.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-25-256.webp dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-25-256.webp RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-25-256.webp transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-25-512.webp dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-25-512.webp RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-25-512.webp transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-25-1024.webp dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-25-1024.webp RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-25-1024.webp transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-25-32.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-25-32.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-25-32.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-25-64.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-25-64.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-25-64.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-25-128.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-25-128.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-25-128.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-25-256.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-25-256.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-25-256.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "level-25 genuine editable vector overlay",
+      "pass": true
+    },
+    {
+      "name": "level-25 vector motion accessibility",
+      "pass": true
+    },
+    {
+      "name": "level-25 actual motion preview 72 frames",
+      "pass": true
+    },
+    {
+      "name": "level-26 native glTF buffer",
+      "pass": true
+    },
+    {
+      "name": "level-26 editable named mesh parts",
+      "pass": true
+    },
+    {
+      "name": "level-26 portable native animation",
+      "pass": true
+    },
+    {
+      "name": "level-26 texture reference ../textures/obsidian-albedo-source.jpg",
+      "pass": true
+    },
+    {
+      "name": "level-26 texture reference ../textures/mineral-height-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-26 texture reference ../textures/mineral-normal-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-26 texture reference ../textures/membrane-normal-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-26 texture reference ../textures/aqueous-normal-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-26 texture reference ../textures/ceramic-metal-normal-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-26 finite geometry / Living neural soma",
+      "pass": true
+    },
+    {
+      "name": "level-26 finite geometry / Dendritic trunk 0",
+      "pass": true
+    },
+    {
+      "name": "level-26 finite geometry / Synaptic arbor 0-30",
+      "pass": true
+    },
+    {
+      "name": "level-26 finite geometry / Synaptic arbor 0-48",
+      "pass": true
+    },
+    {
+      "name": "level-26 finite geometry / Synaptic arbor 0-63",
+      "pass": true
+    },
+    {
+      "name": "level-26 finite geometry / Synaptic terminal 0",
+      "pass": true
+    },
+    {
+      "name": "level-26 finite geometry / Dendritic trunk 1",
+      "pass": true
+    },
+    {
+      "name": "level-26 finite geometry / Synaptic arbor 1-30",
+      "pass": true
+    },
+    {
+      "name": "level-26 finite geometry / Synaptic arbor 1-48",
+      "pass": true
+    },
+    {
+      "name": "level-26 finite geometry / Synaptic arbor 1-63",
+      "pass": true
+    },
+    {
+      "name": "level-26 finite geometry / Synaptic terminal 1",
+      "pass": true
+    },
+    {
+      "name": "level-26 finite geometry / Dendritic trunk 2",
+      "pass": true
+    },
+    {
+      "name": "level-26 finite geometry / Synaptic arbor 2-30",
+      "pass": true
+    },
+    {
+      "name": "level-26 finite geometry / Synaptic arbor 2-48",
+      "pass": true
+    },
+    {
+      "name": "level-26 finite geometry / Synaptic arbor 2-63",
+      "pass": true
+    },
+    {
+      "name": "level-26 finite geometry / Synaptic terminal 2",
+      "pass": true
+    },
+    {
+      "name": "level-26 finite geometry / Dendritic trunk 3",
+      "pass": true
+    },
+    {
+      "name": "level-26 finite geometry / Synaptic arbor 3-30",
+      "pass": true
+    },
+    {
+      "name": "level-26 finite geometry / Synaptic arbor 3-48",
+      "pass": true
+    },
+    {
+      "name": "level-26 finite geometry / Synaptic arbor 3-63",
+      "pass": true
+    },
+    {
+      "name": "level-26 finite geometry / Synaptic terminal 3",
+      "pass": true
+    },
+    {
+      "name": "level-26 finite geometry / Dendritic trunk 4",
+      "pass": true
+    },
+    {
+      "name": "level-26 finite geometry / Synaptic arbor 4-30",
+      "pass": true
+    },
+    {
+      "name": "level-26 finite geometry / Synaptic arbor 4-48",
+      "pass": true
+    },
+    {
+      "name": "level-26 finite geometry / Synaptic arbor 4-63",
+      "pass": true
+    },
+    {
+      "name": "level-26 finite geometry / Synaptic terminal 4",
+      "pass": true
+    },
+    {
+      "name": "level-26 finite geometry / Dendritic trunk 5",
+      "pass": true
+    },
+    {
+      "name": "level-26 finite geometry / Synaptic arbor 5-30",
+      "pass": true
+    },
+    {
+      "name": "level-26 finite geometry / Synaptic arbor 5-48",
+      "pass": true
+    },
+    {
+      "name": "level-26 finite geometry / Synaptic arbor 5-63",
+      "pass": true
+    },
+    {
+      "name": "level-26 finite geometry / Synaptic terminal 5",
+      "pass": true
+    },
+    {
+      "name": "level-26 finite geometry / Dendritic trunk 6",
+      "pass": true
+    },
+    {
+      "name": "level-26 finite geometry / Synaptic arbor 6-30",
+      "pass": true
+    },
+    {
+      "name": "level-26 finite geometry / Synaptic arbor 6-48",
+      "pass": true
+    },
+    {
+      "name": "level-26 finite geometry / Synaptic arbor 6-63",
+      "pass": true
+    },
+    {
+      "name": "level-26 finite geometry / Synaptic terminal 6",
+      "pass": true
+    },
+    {
+      "name": "level-26 finite geometry / Dendritic trunk 7",
+      "pass": true
+    },
+    {
+      "name": "level-26 finite geometry / Synaptic arbor 7-30",
+      "pass": true
+    },
+    {
+      "name": "level-26 finite geometry / Synaptic arbor 7-48",
+      "pass": true
+    },
+    {
+      "name": "level-26 finite geometry / Synaptic arbor 7-63",
+      "pass": true
+    },
+    {
+      "name": "level-26 finite geometry / Synaptic terminal 7",
+      "pass": true
+    },
+    {
+      "name": "level-26 finite geometry / Dendritic trunk 8",
+      "pass": true
+    },
+    {
+      "name": "level-26 finite geometry / Synaptic arbor 8-30",
+      "pass": true
+    },
+    {
+      "name": "level-26 finite geometry / Synaptic arbor 8-48",
+      "pass": true
+    },
+    {
+      "name": "level-26 finite geometry / Synaptic arbor 8-63",
+      "pass": true
+    },
+    {
+      "name": "level-26 finite geometry / Synaptic terminal 8",
+      "pass": true
+    },
+    {
+      "name": "level-26 finite geometry / Dendritic trunk 9",
+      "pass": true
+    },
+    {
+      "name": "level-26 finite geometry / Synaptic arbor 9-30",
+      "pass": true
+    },
+    {
+      "name": "level-26 finite geometry / Synaptic arbor 9-48",
+      "pass": true
+    },
+    {
+      "name": "level-26 finite geometry / Synaptic arbor 9-63",
+      "pass": true
+    },
+    {
+      "name": "level-26 finite geometry / Synaptic terminal 9",
+      "pass": true
+    },
+    {
+      "name": "level-26 finite geometry / Dendritic trunk 10",
+      "pass": true
+    },
+    {
+      "name": "level-26 finite geometry / Synaptic arbor 10-30",
+      "pass": true
+    },
+    {
+      "name": "level-26 finite geometry / Synaptic arbor 10-48",
+      "pass": true
+    },
+    {
+      "name": "level-26 finite geometry / Synaptic arbor 10-63",
+      "pass": true
+    },
+    {
+      "name": "level-26 finite geometry / Synaptic terminal 10",
+      "pass": true
+    },
+    {
+      "name": "artwork/masters/level-26-2048.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/masters/level-26-2048.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/masters/level-26-2048.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-26-256.webp dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-26-256.webp RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-26-256.webp transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-26-512.webp dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-26-512.webp RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-26-512.webp transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-26-1024.webp dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-26-1024.webp RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-26-1024.webp transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-26-32.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-26-32.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-26-32.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-26-64.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-26-64.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-26-64.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-26-128.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-26-128.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-26-128.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-26-256.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-26-256.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-26-256.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "level-26 genuine editable vector overlay",
+      "pass": true
+    },
+    {
+      "name": "level-26 vector motion accessibility",
+      "pass": true
+    },
+    {
+      "name": "level-26 actual motion preview 72 frames",
+      "pass": true
+    },
+    {
+      "name": "level-27 native glTF buffer",
+      "pass": true
+    },
+    {
+      "name": "level-27 editable named mesh parts",
+      "pass": true
+    },
+    {
+      "name": "level-27 portable native animation",
+      "pass": true
+    },
+    {
+      "name": "level-27 texture reference ../textures/obsidian-albedo-source.jpg",
+      "pass": true
+    },
+    {
+      "name": "level-27 texture reference ../textures/mineral-height-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-27 texture reference ../textures/mineral-normal-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-27 texture reference ../textures/membrane-normal-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-27 texture reference ../textures/aqueous-normal-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-27 texture reference ../textures/ceramic-metal-normal-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-27 finite geometry / Signal monolith",
+      "pass": true
+    },
+    {
+      "name": "level-27 finite geometry / Ivory resonator",
+      "pass": true
+    },
+    {
+      "name": "level-27 finite geometry / Parabolic reception dish",
+      "pass": true
+    },
+    {
+      "name": "level-27 finite geometry / Signal mast",
+      "pass": true
+    },
+    {
+      "name": "level-27 finite geometry / Outgoing signal wave 0",
+      "pass": true
+    },
+    {
+      "name": "level-27 finite geometry / Outgoing signal wave 1",
+      "pass": true
+    },
+    {
+      "name": "level-27 finite geometry / Outgoing signal wave 2",
+      "pass": true
+    },
+    {
+      "name": "level-27 finite geometry / Outgoing signal wave 3",
+      "pass": true
+    },
+    {
+      "name": "artwork/masters/level-27-2048.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/masters/level-27-2048.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/masters/level-27-2048.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-27-256.webp dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-27-256.webp RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-27-256.webp transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-27-512.webp dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-27-512.webp RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-27-512.webp transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-27-1024.webp dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-27-1024.webp RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-27-1024.webp transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-27-32.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-27-32.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-27-32.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-27-64.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-27-64.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-27-64.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-27-128.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-27-128.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-27-128.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-27-256.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-27-256.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-27-256.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "level-27 genuine editable vector overlay",
+      "pass": true
+    },
+    {
+      "name": "level-27 vector motion accessibility",
+      "pass": true
+    },
+    {
+      "name": "level-27 actual motion preview 72 frames",
+      "pass": true
+    },
+    {
+      "name": "level-28 native glTF buffer",
+      "pass": true
+    },
+    {
+      "name": "level-28 editable named mesh parts",
+      "pass": true
+    },
+    {
+      "name": "level-28 portable native animation",
+      "pass": true
+    },
+    {
+      "name": "level-28 texture reference ../textures/obsidian-albedo-source.jpg",
+      "pass": true
+    },
+    {
+      "name": "level-28 texture reference ../textures/mineral-height-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-28 texture reference ../textures/mineral-normal-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-28 texture reference ../textures/membrane-normal-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-28 texture reference ../textures/aqueous-normal-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-28 texture reference ../textures/ceramic-metal-normal-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Basalt city foundation",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Inhabited archive tower 0",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Recessed tower crown 0",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Vertical structural rib 0--1",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Vertical structural rib 0-1",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Communal illumination 0-0",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Communal illumination 0-1",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Communal illumination 0-2",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Communal illumination 0-3",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Communal illumination 0-4",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Communal illumination 0-5",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Communal illumination 0-6",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Communal illumination 0-7",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Communal illumination 0-8",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Communal illumination 0-9",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Inhabited archive tower 1",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Recessed tower crown 1",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Vertical structural rib 1--1",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Vertical structural rib 1-1",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Communal illumination 1-0",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Communal illumination 1-1",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Communal illumination 1-2",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Communal illumination 1-3",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Communal illumination 1-4",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Communal illumination 1-5",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Communal illumination 1-6",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Inhabited archive tower 2",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Recessed tower crown 2",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Vertical structural rib 2--1",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Vertical structural rib 2-1",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Communal illumination 2-0",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Communal illumination 2-1",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Communal illumination 2-2",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Communal illumination 2-3",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Communal illumination 2-4",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Communal illumination 2-5",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Communal illumination 2-6",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Communal illumination 2-7",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Communal illumination 2-8",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Communal illumination 2-9",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Inhabited archive tower 3",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Recessed tower crown 3",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Vertical structural rib 3--1",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Vertical structural rib 3-1",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Communal illumination 3-0",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Communal illumination 3-1",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Communal illumination 3-2",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Communal illumination 3-3",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Communal illumination 3-4",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Communal illumination 3-5",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Communal illumination 3-6",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Communal illumination 3-7",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Communal illumination 3-8",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Communal illumination 3-9",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Communal illumination 3-10",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Inhabited archive tower 4",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Recessed tower crown 4",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Vertical structural rib 4--1",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Vertical structural rib 4-1",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Communal illumination 4-0",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Communal illumination 4-1",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Communal illumination 4-2",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Communal illumination 4-3",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Communal illumination 4-4",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Communal illumination 4-5",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Communal illumination 4-6",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Communal illumination 4-7",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Communal illumination 4-8",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Communal illumination 4-9",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Communal illumination 4-10",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Communal illumination 4-11",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Inhabited archive tower 5",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Recessed tower crown 5",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Vertical structural rib 5--1",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Vertical structural rib 5-1",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Communal illumination 5-0",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Communal illumination 5-1",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Communal illumination 5-2",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Communal illumination 5-3",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Communal illumination 5-4",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Communal illumination 5-5",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Communal illumination 5-6",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Communal illumination 5-7",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Communal illumination 5-8",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Communal illumination 5-9",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Communal illumination 5-10",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Communal illumination 5-11",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Inhabited archive tower 6",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Recessed tower crown 6",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Vertical structural rib 6--1",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Vertical structural rib 6-1",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Communal illumination 6-0",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Communal illumination 6-1",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Communal illumination 6-2",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Communal illumination 6-3",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Communal illumination 6-4",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Communal illumination 6-5",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Communal illumination 6-6",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Communal illumination 6-7",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Inhabited archive tower 7",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Recessed tower crown 7",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Vertical structural rib 7--1",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Vertical structural rib 7-1",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Communal illumination 7-0",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Communal illumination 7-1",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Communal illumination 7-2",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Inhabited archive tower 8",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Recessed tower crown 8",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Vertical structural rib 8--1",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Vertical structural rib 8-1",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Communal illumination 8-0",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Communal illumination 8-1",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Communal illumination 8-2",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Communal illumination 8-3",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Communal illumination 8-4",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Communal illumination 8-5",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Communal illumination 8-6",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Communal illumination 8-7",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Communal illumination 8-8",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Communal illumination 8-9",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Inhabited archive tower 9",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Recessed tower crown 9",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Vertical structural rib 9--1",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Vertical structural rib 9-1",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Communal illumination 9-0",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Communal illumination 9-1",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Communal illumination 9-2",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Communal illumination 9-3",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Communal illumination 9-4",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Communal illumination 9-5",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Communal illumination 9-6",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Communal illumination 9-7",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Communal illumination 9-8",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Inhabited archive tower 10",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Recessed tower crown 10",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Vertical structural rib 10--1",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Vertical structural rib 10-1",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Communal illumination 10-0",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Communal illumination 10-1",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Communal illumination 10-2",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Communal illumination 10-3",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Communal illumination 10-4",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Communal illumination 10-5",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Communal illumination 10-6",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Communal illumination 10-7",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Inhabited archive tower 11",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Recessed tower crown 11",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Vertical structural rib 11--1",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Vertical structural rib 11-1",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Communal illumination 11-0",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Communal illumination 11-1",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Communal illumination 11-2",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Communal illumination 11-3",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Communal illumination 11-4",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Communal illumination 11-5",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Communal illumination 11-6",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Communication skybridge 0",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Communication skybridge 1",
+      "pass": true
+    },
+    {
+      "name": "level-28 finite geometry / Communication skybridge 2",
+      "pass": true
+    },
+    {
+      "name": "artwork/masters/level-28-2048.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/masters/level-28-2048.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/masters/level-28-2048.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-28-256.webp dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-28-256.webp RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-28-256.webp transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-28-512.webp dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-28-512.webp RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-28-512.webp transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-28-1024.webp dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-28-1024.webp RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-28-1024.webp transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-28-32.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-28-32.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-28-32.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-28-64.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-28-64.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-28-64.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-28-128.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-28-128.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-28-128.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-28-256.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-28-256.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-28-256.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "level-28 genuine editable vector overlay",
+      "pass": true
+    },
+    {
+      "name": "level-28 vector motion accessibility",
+      "pass": true
+    },
+    {
+      "name": "level-28 actual motion preview 72 frames",
+      "pass": true
+    },
+    {
+      "name": "level-29 native glTF buffer",
+      "pass": true
+    },
+    {
+      "name": "level-29 editable named mesh parts",
+      "pass": true
+    },
+    {
+      "name": "level-29 portable native animation",
+      "pass": true
+    },
+    {
+      "name": "level-29 texture reference ../textures/obsidian-albedo-source.jpg",
+      "pass": true
+    },
+    {
+      "name": "level-29 texture reference ../textures/mineral-height-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-29 texture reference ../textures/mineral-normal-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-29 texture reference ../textures/membrane-normal-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-29 texture reference ../textures/aqueous-normal-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-29 texture reference ../textures/ceramic-metal-normal-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-29 finite geometry / Blackglass archive plinth",
+      "pass": true
+    },
+    {
+      "name": "level-29 finite geometry / Ceramic instrument fork -1",
+      "pass": true
+    },
+    {
+      "name": "level-29 finite geometry / Ceramic instrument fork 1",
+      "pass": true
+    },
+    {
+      "name": "level-29 finite geometry / Calibrating optical gimbal 0",
+      "pass": true
+    },
+    {
+      "name": "level-29 finite geometry / Calibrating optical gimbal 1",
+      "pass": true
+    },
+    {
+      "name": "level-29 finite geometry / Calibrating optical gimbal 2",
+      "pass": true
+    },
+    {
+      "name": "level-29 finite geometry / Archive optic",
+      "pass": true
+    },
+    {
+      "name": "level-29 finite geometry / Registration beam",
+      "pass": true
+    },
+    {
+      "name": "level-29 finite geometry / Preserved knowledge leaf 0",
+      "pass": true
+    },
+    {
+      "name": "level-29 finite geometry / Preserved knowledge leaf 1",
+      "pass": true
+    },
+    {
+      "name": "level-29 finite geometry / Preserved knowledge leaf 2",
+      "pass": true
+    },
+    {
+      "name": "level-29 finite geometry / Preserved knowledge leaf 3",
+      "pass": true
+    },
+    {
+      "name": "level-29 finite geometry / Preserved knowledge leaf 4",
+      "pass": true
+    },
+    {
+      "name": "level-29 finite geometry / Preserved knowledge leaf 5",
+      "pass": true
+    },
+    {
+      "name": "level-29 finite geometry / Preserved knowledge leaf 6",
+      "pass": true
+    },
+    {
+      "name": "level-29 finite geometry / Preserved knowledge leaf 7",
+      "pass": true
+    },
+    {
+      "name": "artwork/masters/level-29-2048.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/masters/level-29-2048.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/masters/level-29-2048.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-29-256.webp dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-29-256.webp RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-29-256.webp transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-29-512.webp dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-29-512.webp RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-29-512.webp transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-29-1024.webp dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-29-1024.webp RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-29-1024.webp transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-29-32.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-29-32.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-29-32.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-29-64.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-29-64.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-29-64.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-29-128.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-29-128.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-29-128.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-29-256.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-29-256.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-29-256.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "level-29 genuine editable vector overlay",
+      "pass": true
+    },
+    {
+      "name": "level-29 vector motion accessibility",
+      "pass": true
+    },
+    {
+      "name": "level-29 actual motion preview 72 frames",
+      "pass": true
+    },
+    {
+      "name": "level-30 native glTF buffer",
+      "pass": true
+    },
+    {
+      "name": "level-30 editable named mesh parts",
+      "pass": true
+    },
+    {
+      "name": "level-30 portable native animation",
+      "pass": true
+    },
+    {
+      "name": "level-30 texture reference ../textures/obsidian-albedo-source.jpg",
+      "pass": true
+    },
+    {
+      "name": "level-30 texture reference ../textures/mineral-height-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-30 texture reference ../textures/mineral-normal-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-30 texture reference ../textures/membrane-normal-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-30 texture reference ../textures/aqueous-normal-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-30 texture reference ../textures/ceramic-metal-normal-4096.png",
+      "pass": true
+    },
+    {
+      "name": "level-30 finite geometry / ANEVUM / open ivory orbit",
+      "pass": true
+    },
+    {
+      "name": "level-30 finite geometry / ANEVUM / ascending platinum orbit",
+      "pass": true
+    },
+    {
+      "name": "level-30 finite geometry / Memory of form",
+      "pass": true
+    },
+    {
+      "name": "level-30 finite geometry / Memory of matter",
+      "pass": true
+    },
+    {
+      "name": "level-30 finite geometry / Memory of stars",
+      "pass": true
+    },
+    {
+      "name": "level-30 finite geometry / Memory of worlds",
+      "pass": true
+    },
+    {
+      "name": "level-30 finite geometry / Memory of life",
+      "pass": true
+    },
+    {
+      "name": "level-30 finite geometry / Remembered pre-grain",
+      "pass": true
+    },
+    {
+      "name": "level-30 finite geometry / Remembered charge",
+      "pass": true
+    },
+    {
+      "name": "level-30 finite geometry / Remembered spiral",
+      "pass": true
+    },
+    {
+      "name": "level-30 finite geometry / Remembered ocean",
+      "pass": true
+    },
+    {
+      "name": "level-30 finite geometry / Remembered life branch 0",
+      "pass": true
+    },
+    {
+      "name": "level-30 finite geometry / Remembered life branch 1",
+      "pass": true
+    },
+    {
+      "name": "level-30 finite geometry / Remembered life branch 2",
+      "pass": true
+    },
+    {
+      "name": "level-30 finite geometry / Continuance / deliberate new light",
+      "pass": true
+    },
+    {
+      "name": "level-30 finite geometry / New outward signal",
+      "pass": true
+    },
+    {
+      "name": "artwork/masters/level-30-2048.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/masters/level-30-2048.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/masters/level-30-2048.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-30-256.webp dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-30-256.webp RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-30-256.webp transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-30-512.webp dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-30-512.webp RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-30-512.webp transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-30-1024.webp dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-30-1024.webp RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/web/level-30-1024.webp transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-30-32.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-30-32.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-30-32.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-30-64.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-30-64.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-30-64.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-30-128.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-30-128.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-30-128.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-30-256.png dimensions",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-30-256.png RGBA",
+      "pass": true
+    },
+    {
+      "name": "artwork/compact/level-30-256.png transparent corners / nonempty",
+      "pass": true
+    },
+    {
+      "name": "level-30 genuine editable vector overlay",
+      "pass": true
+    },
+    {
+      "name": "level-30 vector motion accessibility",
+      "pass": true
+    },
+    {
+      "name": "level-30 actual motion preview 72 frames",
+      "pass": true
+    },
+    {
+      "name": "All 30 motion previews have measured pixel change",
+      "pass": true
+    },
+    {
+      "name": "Offline HTML completely assembled",
+      "pass": true
+    },
+    {
+      "name": "No runtime CDN dependency",
+      "pass": true
+    },
+    {
+      "name": "Reduced motion and graphics-loss fallbacks included",
+      "pass": true
+    },
+    {
+      "name": "Only selected static-scene GET path",
+      "pass": true
+    },
+    {
+      "name": "No account mutations or persistent XP",
+      "pass": true
+    },
+    {
+      "name": "Text contrast body",
+      "pass": true,
+      "ratio": 10.07
+    },
+    {
+      "name": "Text contrast muted",
+      "pass": true,
+      "ratio": 6.99
+    },
+    {
+      "name": "Text contrast gold",
+      "pass": true,
+      "ratio": 11.15
+    },
+    {
+      "name": "Text contrast primary button",
+      "pass": true,
+      "ratio": 8.43
+    }
+  ],
+  "renderPerformance": {
+    "environment": "448px headless Mesa llvmpipe; not physical-device performance",
+    "meanMs": 17.63,
+    "worstP95Ms": 48.33
+  },
+  "browserAcceptance": "See qa-browser/results.json when present; native Safari and assistive technology remain outstanding"
+}

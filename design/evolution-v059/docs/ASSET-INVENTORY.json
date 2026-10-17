@@ -1,0 +1,1875 @@
+{
+  "count": 374,
+  "assets": [
+    {
+      "path": "artwork/compact/level-01-128.png",
+      "bytes": 15111,
+      "sha256": "247ba95bffab19c6a5ac59c0836b6f8b56ec99a1481ade1d1b3e05e8dcc3d5dc"
+    },
+    {
+      "path": "artwork/compact/level-01-256.png",
+      "bytes": 53226,
+      "sha256": "252f4bb5448fdd607dff19cf3516a47129816f95cdeb66aed58b404e65add0f4"
+    },
+    {
+      "path": "artwork/compact/level-01-32.png",
+      "bytes": 1675,
+      "sha256": "8faf4d0071fb7b16e3fc30f7babf085f0c15f9a0cd4b272078d8dd82cb28dec4"
+    },
+    {
+      "path": "artwork/compact/level-01-64.png",
+      "bytes": 4690,
+      "sha256": "0a32401297151174ac9c4dfd3790f4e80f3bdee608179f12d18950c3f9fbc783"
+    },
+    {
+      "path": "artwork/compact/level-02-128.png",
+      "bytes": 20362,
+      "sha256": "029c26616e87858cd1162f8a48811adcff650d4c6de9dfd1d3bdbca79175f9a2"
+    },
+    {
+      "path": "artwork/compact/level-02-256.png",
+      "bytes": 64093,
+      "sha256": "7160edcd14983d2be3a7b8d086f6276310eb0be6ac97b6d0a014cea8b9946a8d"
+    },
+    {
+      "path": "artwork/compact/level-02-32.png",
+      "bytes": 1908,
+      "sha256": "0743962ca37571e4b560dc1dec3d0b9a4902ac4f4c59082c71747bcfe0f881da"
+    },
+    {
+      "path": "artwork/compact/level-02-64.png",
+      "bytes": 6204,
+      "sha256": "f79814c70846b200c93504c8e16c7706473606300efa2b980f3e37457d2642d8"
+    },
+    {
+      "path": "artwork/compact/level-03-128.png",
+      "bytes": 19363,
+      "sha256": "c36e75033f077076b582bf1be7862d7d2d73b293dc2b35b27f0f0a7cdc9d75b8"
+    },
+    {
+      "path": "artwork/compact/level-03-256.png",
+      "bytes": 57392,
+      "sha256": "b8a204cba2bc5c099d9150dacd30e6bfc4b14ff4c0c7b27c510d95aa249e935d"
+    },
+    {
+      "path": "artwork/compact/level-03-32.png",
+      "bytes": 2220,
+      "sha256": "52e55e7b6bf21fffc3c1c24f151410621005f69f2d0e769e38e1770cee882a17"
+    },
+    {
+      "path": "artwork/compact/level-03-64.png",
+      "bytes": 6528,
+      "sha256": "8cc10030e448ce4ddca3b4f60249531b50fef08ff3938e977178b574a30cbd50"
+    },
+    {
+      "path": "artwork/compact/level-04-128.png",
+      "bytes": 13276,
+      "sha256": "c936024a5cf26070d2bbc9d0a1b65d477b46e0237e9c281af14456fcae93c8de"
+    },
+    {
+      "path": "artwork/compact/level-04-256.png",
+      "bytes": 39975,
+      "sha256": "a5abf10d5a0e07faf9a5562f305be31b4f85e3edd8cc5d287fd91c9ecaabc9cb"
+    },
+    {
+      "path": "artwork/compact/level-04-32.png",
+      "bytes": 1965,
+      "sha256": "f712d0d2523ce2ff4bdd2cc6708e7678189771257350a17002a920da460ffd82"
+    },
+    {
+      "path": "artwork/compact/level-04-64.png",
+      "bytes": 4833,
+      "sha256": "6b621c0e192dfa52216fc9f627155dc9f916885317196285b9ac58c61285b4a9"
+    },
+    {
+      "path": "artwork/compact/level-05-128.png",
+      "bytes": 15631,
+      "sha256": "919fb4ef14dec0099090bc511878fc716a5ca9053e4fe054b38aec329b0d5fbe"
+    },
+    {
+      "path": "artwork/compact/level-05-256.png",
+      "bytes": 43488,
+      "sha256": "51989f4b94f8d94da2d91905923a4aa87ca581c685e5c0315a5e56da18ae4a17"
+    },
+    {
+      "path": "artwork/compact/level-05-32.png",
+      "bytes": 2178,
+      "sha256": "3822de25ef2d00e67e0148493122f3e593f943dc43bb9d7890477ce14420143e"
+    },
+    {
+      "path": "artwork/compact/level-05-64.png",
+      "bytes": 6018,
+      "sha256": "fd206769ffc2301c9c35d9368e196b978626ac96b5a5dce7714b7f893fd1ac3f"
+    },
+    {
+      "path": "artwork/compact/level-06-128.png",
+      "bytes": 6513,
+      "sha256": "c432ac853bbdbe3e63e00452577cacb3f60bdbe43181cc46e658a7b9f6530a0f"
+    },
+    {
+      "path": "artwork/compact/level-06-256.png",
+      "bytes": 17933,
+      "sha256": "3d3f30184a39f2cf0b08b519b774f6ce27fd69df425b166d0bfae9416dd0b4ec"
+    },
+    {
+      "path": "artwork/compact/level-06-32.png",
+      "bytes": 909,
+      "sha256": "d607c69c60bf3700405fafb26473280ae2ae2bb09f32c340983c20fb59e78480"
+    },
+    {
+      "path": "artwork/compact/level-06-64.png",
+      "bytes": 2444,
+      "sha256": "6f0d41713471c02710c15cb4f8070f37fc7e9b4251b63f40fdedc1cfd38e4980"
+    },
+    {
+      "path": "artwork/compact/level-07-128.png",
+      "bytes": 15946,
+      "sha256": "9ac228884cee3b143c389def47efb2a81922df518bba9c280ba609764b6c5a51"
+    },
+    {
+      "path": "artwork/compact/level-07-256.png",
+      "bytes": 46301,
+      "sha256": "ead76add416de90ef53f61679809dcd1758381678ebc07844f7f2e0c82ec2a3f"
+    },
+    {
+      "path": "artwork/compact/level-07-32.png",
+      "bytes": 2005,
+      "sha256": "4d2950cbb961a8ed698932d61bf5563dc7b9f9978f798a28caee9379b8663851"
+    },
+    {
+      "path": "artwork/compact/level-07-64.png",
+      "bytes": 5624,
+      "sha256": "94fa5e5ee426508922a29de33bce2b4310bb897b7441d1d25f168e32e810177f"
+    },
+    {
+      "path": "artwork/compact/level-08-128.png",
+      "bytes": 25780,
+      "sha256": "07b4d919edb4e8e6f471958324a253f742b48f0fff090aa1ec6e38fc49f36be3"
+    },
+    {
+      "path": "artwork/compact/level-08-256.png",
+      "bytes": 91574,
+      "sha256": "e5c3637264474e7997525c91c30cecbf03ae1cf1336e3b6aa10d02bc11bd759c"
+    },
+    {
+      "path": "artwork/compact/level-08-32.png",
+      "bytes": 2523,
+      "sha256": "19e27f396f6957fb4fa6536ec05a1d4eed95cf7bb7344a5a1ca502dea2c299cf"
+    },
+    {
+      "path": "artwork/compact/level-08-64.png",
+      "bytes": 7875,
+      "sha256": "550eb44b4fe3d0164aa4b7f61db8650c26d8dd722761e8c41202f359ecc818e7"
+    },
+    {
+      "path": "artwork/compact/level-09-128.png",
+      "bytes": 20666,
+      "sha256": "5f4b3233816417b86b10932d4e1d7fb3d8e7664cc3f7cda0a2dd8c1da0844fd6"
+    },
+    {
+      "path": "artwork/compact/level-09-256.png",
+      "bytes": 62326,
+      "sha256": "809e2853e9681b55a9ed1501a3096cc4854acee3f2a5132af259ba74be215f11"
+    },
+    {
+      "path": "artwork/compact/level-09-32.png",
+      "bytes": 2214,
+      "sha256": "5e414423aac71b68cacf49d3fbc1431eb095addb556da30713b469f431c58907"
+    },
+    {
+      "path": "artwork/compact/level-09-64.png",
+      "bytes": 6623,
+      "sha256": "448623956187fb5f7b8cbe91d4f1699cb417431675290c799df592d8c6aa8036"
+    },
+    {
+      "path": "artwork/compact/level-10-128.png",
+      "bytes": 17967,
+      "sha256": "67371658a82583ed9d58ead17941f1a4a88b999b6eb1cea02f326067563cca61"
+    },
+    {
+      "path": "artwork/compact/level-10-256.png",
+      "bytes": 53151,
+      "sha256": "eba207168504bb5083743638ee83031d35203b75f2b0afc243d3157dd66082fc"
+    },
+    {
+      "path": "artwork/compact/level-10-32.png",
+      "bytes": 2227,
+      "sha256": "fdea9d1d90cff6a93867e78968df23468a8e385ba5d8b72c693e69684be68d8f"
+    },
+    {
+      "path": "artwork/compact/level-10-64.png",
+      "bytes": 6175,
+      "sha256": "a6bfb23c275554a96264f147ce52a4936ced7b65b4b5a6ff1d946692114ef605"
+    },
+    {
+      "path": "artwork/compact/level-11-128.png",
+      "bytes": 13631,
+      "sha256": "4360bacd1c248f4a090d4c714996437429869c2cf52aca5b792b5b4739a705d5"
+    },
+    {
+      "path": "artwork/compact/level-11-256.png",
+      "bytes": 47073,
+      "sha256": "6be3fb7d77560a212d7f0cac73f1efc917f83bc68bed3e192676cd21472e1bc3"
+    },
+    {
+      "path": "artwork/compact/level-11-32.png",
+      "bytes": 1292,
+      "sha256": "fd283bf645e8557e8506d1cdcbd91b5fe8e8aa07b28dfad1d96b85ea96d5e841"
+    },
+    {
+      "path": "artwork/compact/level-11-64.png",
+      "bytes": 4084,
+      "sha256": "8ed9854c3daabcfca39a55aabd2715f25c42e3e33e13d60df711cd9b2f342095"
+    },
+    {
+      "path": "artwork/compact/level-12-128.png",
+      "bytes": 13101,
+      "sha256": "e92a1fef431927f207b77482c3c25c06364b65921de84abb5db5cf0150821d91"
+    },
+    {
+      "path": "artwork/compact/level-12-256.png",
+      "bytes": 39944,
+      "sha256": "a3081a95d90f7821245e3a80d4425313222dbea432314910b94ca05313176fa4"
+    },
+    {
+      "path": "artwork/compact/level-12-32.png",
+      "bytes": 1433,
+      "sha256": "b10d3fde6edae471ea52a40184d95f79bdc5a21eb2a487df85843d5066ab087a"
+    },
+    {
+      "path": "artwork/compact/level-12-64.png",
+      "bytes": 4096,
+      "sha256": "88726c5dcc3ef011c189791fa127b55e878d4288be9ac83b7ec183561984ce63"
+    },
+    {
+      "path": "artwork/compact/level-13-128.png",
+      "bytes": 31368,
+      "sha256": "1409eb7aa194a268e1b2d274c68f1e5ebec9a7550aea34b5bd14d9f90a4addcb"
+    },
+    {
+      "path": "artwork/compact/level-13-256.png",
+      "bytes": 94186,
+      "sha256": "3e3fb0f654e27f52e116c79f7183ab616f192598f119b57186a906303a57593b"
+    },
+    {
+      "path": "artwork/compact/level-13-32.png",
+      "bytes": 2772,
+      "sha256": "5ed64517004e3d8112a8041427459312dacee576e16a873f62f595dd10d29791"
+    },
+    {
+      "path": "artwork/compact/level-13-64.png",
+      "bytes": 9405,
+      "sha256": "e99038e6f64d6fd610b19a552d8c27d948ef04112eb1541a5f6b32a3a2efd9a2"
+    },
+    {
+      "path": "artwork/compact/level-14-128.png",
+      "bytes": 26140,
+      "sha256": "562055bdd4420834358efa00e7103e794bc253bcec7efa83c41994ea7939973c"
+    },
+    {
+      "path": "artwork/compact/level-14-256.png",
+      "bytes": 83318,
+      "sha256": "60ba82c2c028ba8278f109bcb89e4c26a695cc7b38ae7b145c1ef31b487cc783"
+    },
+    {
+      "path": "artwork/compact/level-14-32.png",
+      "bytes": 2532,
+      "sha256": "af9549ec81300bec934f79aa88a2c3686b58635f2c760ef5a3684cc19d9fe318"
+    },
+    {
+      "path": "artwork/compact/level-14-64.png",
+      "bytes": 8056,
+      "sha256": "04278af56648b1a54ef7ab4b1d0b5fd7412dd72b7eb6d8b22ce5153dcf24ddfa"
+    },
+    {
+      "path": "artwork/compact/level-15-128.png",
+      "bytes": 15928,
+      "sha256": "0c68e771c68b0ea70bc8f9fc574cc41bb3efa9d5157688ea951cc0fc039f6020"
+    },
+    {
+      "path": "artwork/compact/level-15-256.png",
+      "bytes": 56120,
+      "sha256": "83342885bb50e550bc4acc7db911add4146624ca9e87f8fb9dc258c596013a26"
+    },
+    {
+      "path": "artwork/compact/level-15-32.png",
+      "bytes": 1505,
+      "sha256": "cd9bf2556cf01fdde18a839a5a35f4c6c26ce22e98079c959c276a908673dee4"
+    },
+    {
+      "path": "artwork/compact/level-15-64.png",
+      "bytes": 4760,
+      "sha256": "750aadc47ace4576358b6c4acec94df807d49dd2114e35b1fe6880c63607f446"
+    },
+    {
+      "path": "artwork/compact/level-16-128.png",
+      "bytes": 18883,
+      "sha256": "0f3b0e3238a5c0d11db2230643cccad83984b411f62f213d33c4142ae809e64b"
+    },
+    {
+      "path": "artwork/compact/level-16-256.png",
+      "bytes": 53692,
+      "sha256": "b227e334bbbf2a5ab233291e9789a6d249dfdb5a6da07b48ecb66be4b06fcd0f"
+    },
+    {
+      "path": "artwork/compact/level-16-32.png",
+      "bytes": 2323,
+      "sha256": "f553af800701861c16f26ef38fe30f73f8129e80ae5aa7308362dfae9a3dd7bb"
+    },
+    {
+      "path": "artwork/compact/level-16-64.png",
+      "bytes": 6693,
+      "sha256": "71d89af226fa0ed14b50ca78434a8117b20064f152cccbf0efb9f7e41aab66e3"
+    },
+    {
+      "path": "artwork/compact/level-17-128.png",
+      "bytes": 11998,
+      "sha256": "c55bdf743c07f6de1d87cf4129f18703a53035b474fe87d36ff170e78ae3b10f"
+    },
+    {
+      "path": "artwork/compact/level-17-256.png",
+      "bytes": 33881,
+      "sha256": "4ce490173ec7301450c2a5a5769cc0c92127b6e9278109817ca5c058d14fc733"
+    },
+    {
+      "path": "artwork/compact/level-17-32.png",
+      "bytes": 1454,
+      "sha256": "491b3246713137828d14f419b88e9155441c3b1921ec99b87506fefd59a6fcd7"
+    },
+    {
+      "path": "artwork/compact/level-17-64.png",
+      "bytes": 4112,
+      "sha256": "1d17dd3c3f297a4170d3b6af56239532e93df567be0656abcb543302fb4151f4"
+    },
+    {
+      "path": "artwork/compact/level-18-128.png",
+      "bytes": 15135,
+      "sha256": "9a841f6b078f8b29c6b6df278cd0eee5c087e506236c196a7b062dc8254683e9"
+    },
+    {
+      "path": "artwork/compact/level-18-256.png",
+      "bytes": 41176,
+      "sha256": "f56aaa4d51043de37c62e193aebff380f719fce455947131ae4ba9284301f4eb"
+    },
+    {
+      "path": "artwork/compact/level-18-32.png",
+      "bytes": 1816,
+      "sha256": "9aa863fe71375a2412cd7764c933d9fab9dd4d5cd2500ff6810992e1bca9f136"
+    },
+    {
+      "path": "artwork/compact/level-18-64.png",
+      "bytes": 5241,
+      "sha256": "33568898cb10bb40a566f874b2ce5184b04b905f468405f48287028cb674b39a"
+    },
+    {
+      "path": "artwork/compact/level-19-128.png",
+      "bytes": 7653,
+      "sha256": "18f6a3a9d046addc9691d8fcef7f17efdc1e76a46a0af84aebc2407a8e803cd2"
+    },
+    {
+      "path": "artwork/compact/level-19-256.png",
+      "bytes": 21315,
+      "sha256": "001a170982dbc47a4761a02e525a50e0d13beb846e4a34cacd2d35d96d1855e6"
+    },
+    {
+      "path": "artwork/compact/level-19-32.png",
+      "bytes": 1259,
+      "sha256": "4af51ea010f6aa1c46b9f7e076ce0647926647adc7629f910c985e0d7336a9f6"
+    },
+    {
+      "path": "artwork/compact/level-19-64.png",
+      "bytes": 3138,
+      "sha256": "8e1dcecac0d76a43f119d523d717c0ad3399edc4a05b7cc6487652e5ef28855f"
+    },
+    {
+      "path": "artwork/compact/level-20-128.png",
+      "bytes": 10821,
+      "sha256": "d3d760e75db0c1ab3498ac95e42067434daa9811365b774d2883a33da5776f18"
+    },
+    {
+      "path": "artwork/compact/level-20-256.png",
+      "bytes": 26995,
+      "sha256": "839c317c25c87fe1413ff4eb04b1b4f336bea41e9c390b72381d777d3b30c4b5"
+    },
+    {
+      "path": "artwork/compact/level-20-32.png",
+      "bytes": 1509,
+      "sha256": "dd29bb5cb0636863ebc42b81122a22797f9cbaeba65cfc768c07edf222a49d22"
+    },
+    {
+      "path": "artwork/compact/level-20-64.png",
+      "bytes": 4136,
+      "sha256": "7a84dd5eab3a0340ad525d3d241ce7ad17c610b6e315944b482c8f09ccf2cb11"
+    },
+    {
+      "path": "artwork/compact/level-21-128.png",
+      "bytes": 15947,
+      "sha256": "a267074372b5069395090cd4ae3ce2c7c0492b15853186c57d8a8f65a022a004"
+    },
+    {
+      "path": "artwork/compact/level-21-256.png",
+      "bytes": 54154,
+      "sha256": "4d2332a139bb899068d96c58f01386181e5341f60997629117a399175446d558"
+    },
+    {
+      "path": "artwork/compact/level-21-32.png",
+      "bytes": 1866,
+      "sha256": "29fbbb621bbdd2393fe8ac8683d09fcaf8fe5acdac44760097befcae5758fdbf"
+    },
+    {
+      "path": "artwork/compact/level-21-64.png",
+      "bytes": 5308,
+      "sha256": "94d8b42c84d0c962c2ad44dfc36e5313001136eeb2accb6811a6d7e3dcb8a712"
+    },
+    {
+      "path": "artwork/compact/level-22-128.png",
+      "bytes": 23432,
+      "sha256": "eefa6b658afff13ba65134d1403797a25274ad06862aae88ab7182b7d0c02457"
+    },
+    {
+      "path": "artwork/compact/level-22-256.png",
+      "bytes": 79799,
+      "sha256": "f74585c9b4e080ad01b4c4416cc3eb06e07231afb171eda9f7100201d78993ad"
+    },
+    {
+      "path": "artwork/compact/level-22-32.png",
+      "bytes": 2436,
+      "sha256": "2edc4f51381ea452bcdfc5a5152299a741f1e9a69546b5d4a487f08ab531b856"
+    },
+    {
+      "path": "artwork/compact/level-22-64.png",
+      "bytes": 7431,
+      "sha256": "218340ce2795f1729eea70730d89832fd1068bd1800c4ff67d5778a0ae3ad71e"
+    },
+    {
+      "path": "artwork/compact/level-23-128.png",
+      "bytes": 15560,
+      "sha256": "24e07f1d3341fda836a3276a4671f11104650f6e6bec29dfc64f033cff8ff465"
+    },
+    {
+      "path": "artwork/compact/level-23-256.png",
+      "bytes": 44864,
+      "sha256": "b27fc6c92bef3068b8518e3234a8e5ebf0d533657b772bde594cdfd8110180f2"
+    },
+    {
+      "path": "artwork/compact/level-23-32.png",
+      "bytes": 2024,
+      "sha256": "5fe0cd95d42463aa8d9c747bde372e422897fbe639808aecf53571dbb8f300a9"
+    },
+    {
+      "path": "artwork/compact/level-23-64.png",
+      "bytes": 5559,
+      "sha256": "5cfa50aba8b2fe8e94147dfd2311cb68ab399d8c798fcc63b2ff618ab0255d7a"
+    },
+    {
+      "path": "artwork/compact/level-24-128.png",
+      "bytes": 15009,
+      "sha256": "d8e1bca3a07cd9d57c3168a4409f9794e497398a6b6d6115a6cf5b4ea42fcc2f"
+    },
+    {
+      "path": "artwork/compact/level-24-256.png",
+      "bytes": 45390,
+      "sha256": "4bed411053d919a67eeffab996c30d9b13a9058cab3d11bc71cd863d9e1888b0"
+    },
+    {
+      "path": "artwork/compact/level-24-32.png",
+      "bytes": 1811,
+      "sha256": "ba0ea8e6aac837e95b2b4f2f7dbfc9c664acf599a97be0569264cdfb4334960f"
+    },
+    {
+      "path": "artwork/compact/level-24-64.png",
+      "bytes": 5065,
+      "sha256": "dfbe5111145722eec3fa0a8560ddee51e82909cf2f596b5b558287000e36390a"
+    },
+    {
+      "path": "artwork/compact/level-25-128.png",
+      "bytes": 21602,
+      "sha256": "d5846205308804c0d61f87ef1e5e438acb5790c03890faf156f05c2f42ea0fd3"
+    },
+    {
+      "path": "artwork/compact/level-25-256.png",
+      "bytes": 70509,
+      "sha256": "7d0fa21ebc80bdf85205ded17a085fa70fa15818f50dc0ccdc890b9b52470c3a"
+    },
+    {
+      "path": "artwork/compact/level-25-32.png",
+      "bytes": 2299,
+      "sha256": "9c40718d1a9e52bbd3b118c03691acaa91e9a238dbfb2b443f1ac041090a3635"
+    },
+    {
+      "path": "artwork/compact/level-25-64.png",
+      "bytes": 6916,
+      "sha256": "8873f31016fe8922cbc13ed6481429b692c26ea00332fc834da410a5e2445243"
+    },
+    {
+      "path": "artwork/compact/level-26-128.png",
+      "bytes": 16830,
+      "sha256": "9c809eaedb8cf3567ef7503200f37622cb45f03ef07a886ef2b0acd2a7207467"
+    },
+    {
+      "path": "artwork/compact/level-26-256.png",
+      "bytes": 46546,
+      "sha256": "740c3630cf47896377f7dff87ab3f96d43d6d88004565a4541192da1e9d77313"
+    },
+    {
+      "path": "artwork/compact/level-26-32.png",
+      "bytes": 2135,
+      "sha256": "1ab55d59501611442dccebbdc01d125c634099ac9d723db2d8c5e7c0b56da5d5"
+    },
+    {
+      "path": "artwork/compact/level-26-64.png",
+      "bytes": 6069,
+      "sha256": "4ee01a65a73ed80b7da6fbeb8937956b92dc67a82aab464917322c66449d163f"
+    },
+    {
+      "path": "artwork/compact/level-27-128.png",
+      "bytes": 12165,
+      "sha256": "ba587cea38cbb145f38d97f75194a49821bc832c286add69201c141b868b1f3e"
+    },
+    {
+      "path": "artwork/compact/level-27-256.png",
+      "bytes": 37943,
+      "sha256": "d75cfe99e85030d7b9a3e12b49d56bb8eac36300b05846cbb2320489e5f556d8"
+    },
+    {
+      "path": "artwork/compact/level-27-32.png",
+      "bytes": 1672,
+      "sha256": "3ef9c794e5ab9b2eadfdaaf8e09e08e8949ff1656fe35e4745268a098805bbf7"
+    },
+    {
+      "path": "artwork/compact/level-27-64.png",
+      "bytes": 4406,
+      "sha256": "c7e94b99f42f7029897a96c8d87aad11cf8294b305ef5225b6e1e34fc065f44c"
+    },
+    {
+      "path": "artwork/compact/level-28-128.png",
+      "bytes": 19090,
+      "sha256": "5df649a33dd1649a9d7f746a19b38227eedc36975c6b8be6cd3f0c8bd0b18589"
+    },
+    {
+      "path": "artwork/compact/level-28-256.png",
+      "bytes": 60608,
+      "sha256": "ade0aaf76d5777245cd5420ba2c886962a02c784cbf26c89e5feda52fe8a8d3d"
+    },
+    {
+      "path": "artwork/compact/level-28-32.png",
+      "bytes": 2492,
+      "sha256": "37e866faea78b686ac17efe834c6a7f2e9d055762f5edf18105fba52896daa99"
+    },
+    {
+      "path": "artwork/compact/level-28-64.png",
+      "bytes": 7499,
+      "sha256": "d57cae345778dd12ff30f0f55cf8376b73a6565584ade497f57c48c765d37802"
+    },
+    {
+      "path": "artwork/compact/level-29-128.png",
+      "bytes": 16631,
+      "sha256": "0780f123ebf6048cefcfbef6656111c0f610dd7a1acaeb79321ac9da08f17077"
+    },
+    {
+      "path": "artwork/compact/level-29-256.png",
+      "bytes": 50972,
+      "sha256": "6d72f30e68f955a448d7d3671a75b9b23be7bd5c2a9870c8a6a317ad22365508"
+    },
+    {
+      "path": "artwork/compact/level-29-32.png",
+      "bytes": 1999,
+      "sha256": "3ae1ab24c9b997953aaf907d2b6718dfc2a89543d7df35e9042813897496f3b3"
+    },
+    {
+      "path": "artwork/compact/level-29-64.png",
+      "bytes": 5731,
+      "sha256": "7e4b70482d7c8cacc79322e74dbf6bace14b77594f45e87e7902a04f08c040eb"
+    },
+    {
+      "path": "artwork/compact/level-30-128.png",
+      "bytes": 14120,
+      "sha256": "65e0ba02f86519261b83a443727b77d61019e31289458bcf531f6e8285aa6865"
+    },
+    {
+      "path": "artwork/compact/level-30-256.png",
+      "bytes": 38860,
+      "sha256": "53acb83088b98c4d818d43bd475e33822634bd75e62b7b010a6426de7bfd825c"
+    },
+    {
+      "path": "artwork/compact/level-30-32.png",
+      "bytes": 1853,
+      "sha256": "cb6e865d72d54844d1fec2dcd5965a76e62cce0a08d478658a3624c483ffee11"
+    },
+    {
+      "path": "artwork/compact/level-30-64.png",
+      "bytes": 5220,
+      "sha256": "b0665c05f0b217179a88e7f5fd52f2507257f0a312104c8d9099b799b57f005a"
+    },
+    {
+      "path": "artwork/masters/level-01-2048.png",
+      "bytes": 2247619,
+      "sha256": "9450a031ad2bcf3370cfcb1780dad1ef765f746189156b3c4986564b23b9c051"
+    },
+    {
+      "path": "artwork/masters/level-02-2048.png",
+      "bytes": 1439990,
+      "sha256": "9c3b13b0bee1bbc64e9b29c92b5726328aac3ffa7f3f52f0b865385fc91401e3"
+    },
+    {
+      "path": "artwork/masters/level-03-2048.png",
+      "bytes": 1560635,
+      "sha256": "3d770c3c8cf3136d76823c9d280fd4e37a23a4c1edf530b6b8464fff691fba2d"
+    },
+    {
+      "path": "artwork/masters/level-04-2048.png",
+      "bytes": 966127,
+      "sha256": "cd5480e4d3ce0d9ce322e41643dd324a779cac0ec6e8bb86b6754072a4b5688c"
+    },
+    {
+      "path": "artwork/masters/level-05-2048.png",
+      "bytes": 1386828,
+      "sha256": "c48bda0bac88e17019293843bb74d3ca6c08ef5c87469af39d767a1315687639"
+    },
+    {
+      "path": "artwork/masters/level-06-2048.png",
+      "bytes": 367693,
+      "sha256": "2892a9c1bf0a958328bea4867a2bd69ebf4f3959452952e827382d4f71f9b7fc"
+    },
+    {
+      "path": "artwork/masters/level-07-2048.png",
+      "bytes": 1122952,
+      "sha256": "6cac47f1d02838223307958ac8a4ffab8d24e86a3d7f67fdb9ee027fc8f34df1"
+    },
+    {
+      "path": "artwork/masters/level-08-2048.png",
+      "bytes": 4009586,
+      "sha256": "7bb864e9025f1cfacc1fa4d45ccc64fa4785c85fa3a1f1d8b0e8d5fc74fc585a"
+    },
+    {
+      "path": "artwork/masters/level-09-2048.png",
+      "bytes": 1298764,
+      "sha256": "5770f9205f8fe959ef7fce09f4101495e0f736bc33aae4522324bd382af7e7ba"
+    },
+    {
+      "path": "artwork/masters/level-10-2048.png",
+      "bytes": 1305763,
+      "sha256": "2eabe86fbf68a51cf981dc19c031bd52a7e559b54b9cc858aa211700885aec13"
+    },
+    {
+      "path": "artwork/masters/level-11-2048.png",
+      "bytes": 1582678,
+      "sha256": "97540ce46c9f0cf7a2cb15a6146d23adacee474872b8711de58721f427dc4d35"
+    },
+    {
+      "path": "artwork/masters/level-12-2048.png",
+      "bytes": 1098451,
+      "sha256": "b02d088074e9f3fc1514a62e94b3ae05e903aa803c1751a7ef87195db9e62ce1"
+    },
+    {
+      "path": "artwork/masters/level-13-2048.png",
+      "bytes": 1903681,
+      "sha256": "0f1215a5a7b702af612d856f76c00f2c3fecbb6e9ecfa6450bb7793c928cfa7f"
+    },
+    {
+      "path": "artwork/masters/level-14-2048.png",
+      "bytes": 2249645,
+      "sha256": "3e1a908d3d398b6bf67688b7932149100b6d6ab712735f3c42cdd95ba97207eb"
+    },
+    {
+      "path": "artwork/masters/level-15-2048.png",
+      "bytes": 1865585,
+      "sha256": "35e1aebb08563491929be1b9efedc31fab50872ab6a5f7d0d94067c297a98c8e"
+    },
+    {
+      "path": "artwork/masters/level-16-2048.png",
+      "bytes": 1243586,
+      "sha256": "9c2f46c9701465068b0f4c36c92b1e991329c051a6c304f9e555a59c7080e8fe"
+    },
+    {
+      "path": "artwork/masters/level-17-2048.png",
+      "bytes": 641645,
+      "sha256": "1b8894f531be6c3dc5c27d7056c94a412117a3c055073def306b557779aae3d0"
+    },
+    {
+      "path": "artwork/masters/level-18-2048.png",
+      "bytes": 1104640,
+      "sha256": "58477297d39cefaed785d7c443a2c8bbe45c1a38113df03388c810f854531b19"
+    },
+    {
+      "path": "artwork/masters/level-19-2048.png",
+      "bytes": 364012,
+      "sha256": "fd5cf9b12c3920bbbc6007085e921614467385a53d4aa4e653feda0456fffdb8"
+    },
+    {
+      "path": "artwork/masters/level-20-2048.png",
+      "bytes": 333393,
+      "sha256": "e2386d71e06d20e71eca850a1dbed91c50016b26b8b1b17683fdde00dbeb8564"
+    },
+    {
+      "path": "artwork/masters/level-21-2048.png",
+      "bytes": 2257516,
+      "sha256": "94f301cab9b6a3ed43d1b913b3ca79c66ebbedfb7605721df704191b5ef740c6"
+    },
+    {
+      "path": "artwork/masters/level-22-2048.png",
+      "bytes": 2118588,
+      "sha256": "9eea2a4e41efed31eb525f0c9c27de0e81060588b776803ad5798c6cd7e9a6b6"
+    },
+    {
+      "path": "artwork/masters/level-23-2048.png",
+      "bytes": 922714,
+      "sha256": "1d670ecaac14fd44a4081961b0e15bc704275042e71c9abca5cf8de2d7af7d26"
+    },
+    {
+      "path": "artwork/masters/level-24-2048.png",
+      "bytes": 1017847,
+      "sha256": "80e3acd7dba3741b8b075d4177daeab32ab99b18fa24a27f5a733cd3057546bb"
+    },
+    {
+      "path": "artwork/masters/level-25-2048.png",
+      "bytes": 1728840,
+      "sha256": "1dc371c4c0050c5437ff8efcb020c0f56dc9b15819457aae08ab107ac117724c"
+    },
+    {
+      "path": "artwork/masters/level-26-2048.png",
+      "bytes": 894512,
+      "sha256": "b793f0a3c1bfb67ccf18d041d1aa7205b1172e6cc4fb3cc8539f394be6fa29d3"
+    },
+    {
+      "path": "artwork/masters/level-27-2048.png",
+      "bytes": 976164,
+      "sha256": "7f5794d100ea65925d12be53e94b2d43d24734f24ae7d4b1531f2eaf1ea32118"
+    },
+    {
+      "path": "artwork/masters/level-28-2048.png",
+      "bytes": 1600656,
+      "sha256": "85f701f332c4fcf4969340e3b992494c5cc9401e8bd596d02e7770e4a56bc2bd"
+    },
+    {
+      "path": "artwork/masters/level-29-2048.png",
+      "bytes": 1297791,
+      "sha256": "2ca5284977b4429a3f914ee431d2cc99e1b9453052c7d0c5302d1f9be652c461"
+    },
+    {
+      "path": "artwork/masters/level-30-2048.png",
+      "bytes": 656457,
+      "sha256": "9019fae327fd79fb0a429b21459bb43439803068aea9831cac399c1f8d9dac6a"
+    },
+    {
+      "path": "artwork/native/level-01.bin",
+      "bytes": 91812,
+      "sha256": "71cc4d008c22ecf0cbae2cdabce6d60b516a415b9c032953fcb2846200638c2b"
+    },
+    {
+      "path": "artwork/native/level-01.gltf",
+      "bytes": 5871,
+      "sha256": "ca098487cbcafb3dcd36696c23ae924189804b3abf4c570f2dd65510cf5c7715"
+    },
+    {
+      "path": "artwork/native/level-01.scene.json",
+      "bytes": 121240,
+      "sha256": "a88bf557554b15c8e850918b2d6ad15a78a2aa0c37335d428939250e3753c8ff"
+    },
+    {
+      "path": "artwork/native/level-02.bin",
+      "bytes": 225664,
+      "sha256": "45bad752cb5a4668dfd8b1fa270e31d9aee99465ebefcf0c6e7185a37672080e"
+    },
+    {
+      "path": "artwork/native/level-02.gltf",
+      "bytes": 11761,
+      "sha256": "6bfb7ee4658c7e023937099bd34c096d1956529697a3c3b9ed8774c6e1a71b4a"
+    },
+    {
+      "path": "artwork/native/level-02.scene.json",
+      "bytes": 296523,
+      "sha256": "b654a4a06b86f0102af99ce716c3021d0b321707e68d3b220a747dfbdc4ba010"
+    },
+    {
+      "path": "artwork/native/level-03.bin",
+      "bytes": 202412,
+      "sha256": "470fc22eaffc419a776aea8c7a96af9c49d442634d0de649ca756cc9a4d73b72"
+    },
+    {
+      "path": "artwork/native/level-03.gltf",
+      "bytes": 22240,
+      "sha256": "585fb7ea5bd8b67e495ece1c80f11a09356b726f085f879f649b749839c6a18d"
+    },
+    {
+      "path": "artwork/native/level-03.scene.json",
+      "bytes": 261751,
+      "sha256": "6a77b4cf9c385487b46c11646eea69a9666b5e11e0f88c720d927a3992d79f4b"
+    },
+    {
+      "path": "artwork/native/level-04.bin",
+      "bytes": 96828,
+      "sha256": "1668331b679fadcd6b66203d2bdf7b7268da5132bfb874c7d5ec3c9ff7233340"
+    },
+    {
+      "path": "artwork/native/level-04.gltf",
+      "bytes": 6027,
+      "sha256": "e359264dce4913dfbba1e6785c66e4f4b6262ce421309d02b26f5dc51d049865"
+    },
+    {
+      "path": "artwork/native/level-04.scene.json",
+      "bytes": 126993,
+      "sha256": "a951ba1202c5e125ac71f383577731d0cdbfdb0f80a3737ccaf05c9e958dda81"
+    },
+    {
+      "path": "artwork/native/level-05.bin",
+      "bytes": 132252,
+      "sha256": "80d2ec62146ccc40dc9eb419e9ac2ef55fd618e53205a8950357fcbf99adebbe"
+    },
+    {
+      "path": "artwork/native/level-05.gltf",
+      "bytes": 4551,
+      "sha256": "e63f1fd61982fbeb1f45359b69f9f52d5ed685cf93e0c4228f90f8b268d0ea1c"
+    },
+    {
+      "path": "artwork/native/level-05.scene.json",
+      "bytes": 174953,
+      "sha256": "52f8f30c3819b392b13581a20063414993f63df14a5a211f39384ceab45580e0"
+    },
+    {
+      "path": "artwork/native/level-06.bin",
+      "bytes": 838964,
+      "sha256": "0e50d6db0a74f0237753f43fcb6ef84efaac59984a249e33044d19899fd8dd58"
+    },
+    {
+      "path": "artwork/native/level-06.gltf",
+      "bytes": 18452,
+      "sha256": "87c545858bbf5195df75100916cd559328d92baa62eed6c231f8e3970b4e6bdd"
+    },
+    {
+      "path": "artwork/native/level-06.scene.json",
+      "bytes": 1111587,
+      "sha256": "bb3183a767a9e9ce9fbdbe26f9ca61f60e8a085cf3b659878e2ea12761dbdad4"
+    },
+    {
+      "path": "artwork/native/level-07.bin",
+      "bytes": 135844,
+      "sha256": "3264222fd9ba4173f8c36ad0feb1a5ce836c0ab87b4f698d1a7eb3172d46b6cb"
+    },
+    {
+      "path": "artwork/native/level-07.gltf",
+      "bytes": 10876,
+      "sha256": "3f0bcfd102527d347f919a84f31a3fcab00d50bbf8314c0bd9cf32acb8f315c7"
+    },
+    {
+      "path": "artwork/native/level-07.scene.json",
+      "bytes": 177394,
+      "sha256": "d5dbd8de379c52fd68dcd925c5a9152d2d85cb8e61696cb4687ac219828da882"
+    },
+    {
+      "path": "artwork/native/level-08.bin",
+      "bytes": 321448,
+      "sha256": "be2219de9ad7cdd1707a94a222ada629fa7e52b98554c84911492466172bd899"
+    },
+    {
+      "path": "artwork/native/level-08.gltf",
+      "bytes": 17048,
+      "sha256": "491508a3a0d0d6a1359a25db0515ee78f5a65c85140459a434a34138d770aa51"
+    },
+    {
+      "path": "artwork/native/level-08.scene.json",
+      "bytes": 421983,
+      "sha256": "962739fc6911a9dfb1cc5b0c2e12a8fdf08214addaf6c1fa7ef3103fa2972114"
+    },
+    {
+      "path": "artwork/native/level-09.bin",
+      "bytes": 280404,
+      "sha256": "f76c8bae8513a488a2fd1bf894919a543b0a1ca0d95a58d02ce866d0730370d4"
+    },
+    {
+      "path": "artwork/native/level-09.gltf",
+      "bytes": 11080,
+      "sha256": "da337f1257a4a75d2da723e0741553ae23616dbf914ea2301047e8f474a74b94"
+    },
+    {
+      "path": "artwork/native/level-09.scene.json",
+      "bytes": 368834,
+      "sha256": "9022fc4e616c61634842c3d380edb401a1031d0af9f83f11c379fbcb53dd5c52"
+    },
+    {
+      "path": "artwork/native/level-10.bin",
+      "bytes": 419172,
+      "sha256": "6b7baa9daf971c8e5088a0c80bf758d23149e9db300eea54d7b18697b9714183"
+    },
+    {
+      "path": "artwork/native/level-10.gltf",
+      "bytes": 15399,
+      "sha256": "74f07acbc6e445a72cf787ade4dc1e99aa9789ddf6f00f4ec9f07112beb5412a"
+    },
+    {
+      "path": "artwork/native/level-10.scene.json",
+      "bytes": 552551,
+      "sha256": "a65cd305ca733b9f153677d1364c50c2af5e4fbf17ab44cc7e4095a6142e9304"
+    },
+    {
+      "path": "artwork/native/level-11.bin",
+      "bytes": 49536,
+      "sha256": "69ff7b559789be353ee9205194c5840d1e1ccf199c5d2e75f1525f743090e1a9"
+    },
+    {
+      "path": "artwork/native/level-11.gltf",
+      "bytes": 8542,
+      "sha256": "ca03533831c0959d48ef0d6b8b0614eced466ecc2872f3e04e3523a214404edc"
+    },
+    {
+      "path": "artwork/native/level-11.scene.json",
+      "bytes": 62961,
+      "sha256": "4485ca9d747884c6259d6a060c209ac809cecd9f13235818a9da67d0e4e8f310"
+    },
+    {
+      "path": "artwork/native/level-12.bin",
+      "bytes": 595516,
+      "sha256": "35f47d2dbc93c4add8b40391778671c1bc4588862f8213bd578c0b5f511b62e0"
+    },
+    {
+      "path": "artwork/native/level-12.gltf",
+      "bytes": 17255,
+      "sha256": "ad82f230072e324576cb1c22f2d34a729857b2d48bf347e593e871bb16b2da2c"
+    },
+    {
+      "path": "artwork/native/level-12.scene.json",
+      "bytes": 784334,
+      "sha256": "54a9a9db334d73087d11bad5544be9533fa19eb215843fa8ab95abc4e2494af7"
+    },
+    {
+      "path": "artwork/native/level-13.bin",
+      "bytes": 713300,
+      "sha256": "a970f7fae409e1272e4270e368d7e23552a4bcec3d62504964fbed236e58d499"
+    },
+    {
+      "path": "artwork/native/level-13.gltf",
+      "bytes": 72243,
+      "sha256": "67be9436595c96d4cbee7ccd874b0d1e1a77ed60873b00c2f8ce2e13ec4d04fe"
+    },
+    {
+      "path": "artwork/native/level-13.scene.json",
+      "bytes": 923516,
+      "sha256": "11f44cff8794593b41ca11ae2ad319742c047d78760139ade2482ae84bc97360"
+    },
+    {
+      "path": "artwork/native/level-14.bin",
+      "bytes": 209876,
+      "sha256": "462c63423ae095c81ec3b1fd81764774119045674cc1df3011d960b57419bab9"
+    },
+    {
+      "path": "artwork/native/level-14.gltf",
+      "bytes": 11723,
+      "sha256": "974f5b90aec8be3c34b587da4b336bc52ebe1fc3fd71a6907c56f38de5a4e1f1"
+    },
+    {
+      "path": "artwork/native/level-14.scene.json",
+      "bytes": 275294,
+      "sha256": "11bdcde0f6953e26a91f773379801d3581268ab54b7fbc136a10f2d4c829f81e"
+    },
+    {
+      "path": "artwork/native/level-15.bin",
+      "bytes": 106144,
+      "sha256": "a641455fab7ec28e790c942bd45c0d5087fca2bf9202154a76fede9a6594426d"
+    },
+    {
+      "path": "artwork/native/level-15.gltf",
+      "bytes": 13117,
+      "sha256": "9b83da5bf93c3b80e001f7e01bf64ae71cf2f543155e6592b4ce320a1faf44b5"
+    },
+    {
+      "path": "artwork/native/level-15.scene.json",
+      "bytes": 137496,
+      "sha256": "f505a76089fabfd5dfd71e3f269ac3498a72cb4b32f52ddc3ecd7ba17062fc38"
+    },
+    {
+      "path": "artwork/native/level-16.bin",
+      "bytes": 439732,
+      "sha256": "6f63b036f24b205570ea71ab4b95f4ce9cedee99e1c82f4e9abc6abadd03bbca"
+    },
+    {
+      "path": "artwork/native/level-16.gltf",
+      "bytes": 25529,
+      "sha256": "f0257093f71d8076775b6f01a46797bfaca8b0dabadea7f0ebf4e10fbc4f3000"
+    },
+    {
+      "path": "artwork/native/level-16.scene.json",
+      "bytes": 576647,
+      "sha256": "549c7a0678c0c23cf98dbc6758c75a8adb4593518c758d253f60c023e6a271d1"
+    },
+    {
+      "path": "artwork/native/level-17.bin",
+      "bytes": 233464,
+      "sha256": "c83ff67b77e5a554b2b407d7f778bbff75c4b5b55b24f2b502e87e3cb07b757c"
+    },
+    {
+      "path": "artwork/native/level-17.gltf",
+      "bytes": 11261,
+      "sha256": "f6270f809e558acd03ec032b0b42703b715a5056c6449437e3af10801d123d43"
+    },
+    {
+      "path": "artwork/native/level-17.scene.json",
+      "bytes": 305460,
+      "sha256": "7fcc4a2a5f01cfa7b62c876e8ab50321f9fe07329cda97d8b5786889b9bf4708"
+    },
+    {
+      "path": "artwork/native/level-18.bin",
+      "bytes": 584212,
+      "sha256": "90b2a14c21778ea4d3986f471dea8506fba68fb935126d2652141e839c6952a4"
+    },
+    {
+      "path": "artwork/native/level-18.gltf",
+      "bytes": 13853,
+      "sha256": "30c20ec8447dac3b5735b134eba8583d5d8c7a0db91d18cac9327cbeeaee54ac"
+    },
+    {
+      "path": "artwork/native/level-18.scene.json",
+      "bytes": 771218,
+      "sha256": "d45f11db67f1de14eb7335ec7c20540b7ec13df2fdef027ab718276aefc2f7a6"
+    },
+    {
+      "path": "artwork/native/level-19.bin",
+      "bytes": 736096,
+      "sha256": "3ffd48a6508a0f1cf2cab06607c3922082d8cd5f723cf04ca29042cfe75e8acf"
+    },
+    {
+      "path": "artwork/native/level-19.gltf",
+      "bytes": 42300,
+      "sha256": "f741045ac1291769daa1151be39c3216aa4c4301ae76ffb67f7bf9923492a730"
+    },
+    {
+      "path": "artwork/native/level-19.scene.json",
+      "bytes": 964508,
+      "sha256": "f54ed4390caca82f55742d9b3ecc634316991375502461b4207d9de2b9a32707"
+    },
+    {
+      "path": "artwork/native/level-20.bin",
+      "bytes": 281044,
+      "sha256": "e4fba3ac9b50f9b8e45b616e686d82c8808a63440c40eb6fc2a45ea201deabd0"
+    },
+    {
+      "path": "artwork/native/level-20.gltf",
+      "bytes": 14978,
+      "sha256": "17c4b0fe1a2d455ed7d737f1f6dc3fee15fa581db8b4d2efb2f7282a15fc32a8"
+    },
+    {
+      "path": "artwork/native/level-20.scene.json",
+      "bytes": 370296,
+      "sha256": "82a7100bdeb4e25c69a1fdcf84a2f34bcb40843d6de7323df89762eee2a16639"
+    },
+    {
+      "path": "artwork/native/level-21.bin",
+      "bytes": 305492,
+      "sha256": "38317afb3c84a61c05e2a58f382c585aefbf091a36597488998ef60e286e7db4"
+    },
+    {
+      "path": "artwork/native/level-21.gltf",
+      "bytes": 28915,
+      "sha256": "b43524bd0d05f8c93f474b9362de897307cf0ea3efa7154aa45df9f535de130e"
+    },
+    {
+      "path": "artwork/native/level-21.scene.json",
+      "bytes": 395898,
+      "sha256": "557f155294f7df14128b96cb47f8ee0bbea72bf022227146bcf309c1d1792f01"
+    },
+    {
+      "path": "artwork/native/level-22.bin",
+      "bytes": 472224,
+      "sha256": "1275fecd3d1cb90e24d6a2942cfd05eb3367f42252d1d572a38fd998846b4458"
+    },
+    {
+      "path": "artwork/native/level-22.gltf",
+      "bytes": 12832,
+      "sha256": "3f2ddf541177df0b6564da60739dadfbe032d69e5607b18af016385c863c869e"
+    },
+    {
+      "path": "artwork/native/level-22.scene.json",
+      "bytes": 622804,
+      "sha256": "9a5dfc1989e6630c0c1743309a9645dad180b6732d56c2f138f16ce0648b4a31"
+    },
+    {
+      "path": "artwork/native/level-23.bin",
+      "bytes": 229732,
+      "sha256": "801099997a84b700c0a3712989367efd8f3605cd7d1d0c2a3b31122fd0522a89"
+    },
+    {
+      "path": "artwork/native/level-23.gltf",
+      "bytes": 60636,
+      "sha256": "e4d32dd001853d2774d8c11431fb1a69677e644b87a1663fc277abf498ff17ae"
+    },
+    {
+      "path": "artwork/native/level-23.scene.json",
+      "bytes": 285967,
+      "sha256": "f86f88b90584725981e953a80fcdf80e1f8f53f90bd79be875242b67955b8217"
+    },
+    {
+      "path": "artwork/native/level-24.bin",
+      "bytes": 254800,
+      "sha256": "3f3644504c2b8947c21baec6ec1078c886a2e8d09669784db3c611ce82ab8b01"
+    },
+    {
+      "path": "artwork/native/level-24.gltf",
+      "bytes": 9084,
+      "sha256": "78205d6d60d5db9dc48965f8b0f8d78ef7cd7eb29eaeee099e6b5703ae48bc68"
+    },
+    {
+      "path": "artwork/native/level-24.scene.json",
+      "bytes": 336630,
+      "sha256": "d3cd6e747d877e38ac38dd81b025c1deee72f6513ae79601a27a96f3b4447c07"
+    },
+    {
+      "path": "artwork/native/level-25.bin",
+      "bytes": 421652,
+      "sha256": "0e95f6d8d7443cf63af9101d7a849f857b5e9d7e9a32bef864b4eec600ebbc21"
+    },
+    {
+      "path": "artwork/native/level-25.gltf",
+      "bytes": 28783,
+      "sha256": "933a0db288cae613c70d6f1268a60d3eaa29afe8420c3da87bd1acce0fa1236d"
+    },
+    {
+      "path": "artwork/native/level-25.scene.json",
+      "bytes": 550844,
+      "sha256": "1761b2c9ae5110819a16ec4e757f4a83002c17a4946b73826b79ec8894aa0bc8"
+    },
+    {
+      "path": "artwork/native/level-26.bin",
+      "bytes": 646092,
+      "sha256": "c7e2716c1e1a6ab5e09c98c9048cafb4726a2af1bcf8227a5a3e9a585bc06ace"
+    },
+    {
+      "path": "artwork/native/level-26.gltf",
+      "bytes": 79757,
+      "sha256": "1ed6048d8a6539e3a8a18508ccd23710dd7f4883299e465f2c8cc69b9d760e18"
+    },
+    {
+      "path": "artwork/native/level-26.scene.json",
+      "bytes": 829080,
+      "sha256": "649a45880eb4b716b18206eb413480d0d47e3ad8fd04b17a7b88485f545130ee"
+    },
+    {
+      "path": "artwork/native/level-27.bin",
+      "bytes": 109188,
+      "sha256": "631677b9232e0a0751a0b382d3ba8a28870895c2fbe9875aba54175f3bc1af0e"
+    },
+    {
+      "path": "artwork/native/level-27.gltf",
+      "bytes": 13448,
+      "sha256": "38ca4e31142e3cdf7d099ec341466ce9a08958ef6bf1f4fd41d1b03164d8679e"
+    },
+    {
+      "path": "artwork/native/level-27.scene.json",
+      "bytes": 141524,
+      "sha256": "73e416f6299a54851f1fdfa1642dbd4d47c536b83fb00fd447ea44978c970de4"
+    },
+    {
+      "path": "artwork/native/level-28.bin",
+      "bytes": 249888,
+      "sha256": "6775703931c825d9983797e244cabcad80821f4a58dcac53f7fcd1b8bebdf478"
+    },
+    {
+      "path": "artwork/native/level-28.gltf",
+      "bytes": 198915,
+      "sha256": "af22f82ae53d697fbb4671f54eda7dd6a454d551f8f4818a8cb54c6a3f82833d"
+    },
+    {
+      "path": "artwork/native/level-28.scene.json",
+      "bytes": 280820,
+      "sha256": "4f231d209a049aee73a39083bab92c66779e1b4bb71830d543a2a89e4a672ac3"
+    },
+    {
+      "path": "artwork/native/level-29.bin",
+      "bytes": 196928,
+      "sha256": "7dc2cc8908a52afa916948dc07091ea2959e54259526cacd04f4546d06901d80"
+    },
+    {
+      "path": "artwork/native/level-29.gltf",
+      "bytes": 22598,
+      "sha256": "e92346a6ba58d4bedae9797c413b66d44350aaf47af0defb72dfae664e3a3918"
+    },
+    {
+      "path": "artwork/native/level-29.scene.json",
+      "bytes": 255292,
+      "sha256": "03cbc3523b642efb7f2de35cb4f5ced26daf95d5e46690c83ffb6041b61d1b5d"
+    },
+    {
+      "path": "artwork/native/level-30.bin",
+      "bytes": 265744,
+      "sha256": "3fc54cdd26d90f9caf4b6a80d7119f37a6b1dde3ebeb44aa44331678576902ac"
+    },
+    {
+      "path": "artwork/native/level-30.gltf",
+      "bytes": 26393,
+      "sha256": "6c08c83156f2d9c4acf00e7cad1a37b55732820436c69266de22982a9664845b"
+    },
+    {
+      "path": "artwork/native/level-30.scene.json",
+      "bytes": 344413,
+      "sha256": "bade247eb62f1a10036a920a8a4338081f7faffe4017ebb8f2319928c30d8d1b"
+    },
+    {
+      "path": "artwork/textures/aqueous-height-4096.png",
+      "bytes": 4293092,
+      "sha256": "acf9be28045b33c4025dd254e11eccd54e94a177cb65a9ecd34effb7e98ab223"
+    },
+    {
+      "path": "artwork/textures/aqueous-normal-4096.png",
+      "bytes": 11325910,
+      "sha256": "2d5d9b4e4131ca5efa0c185e0005520cba2fe694ea51a3bf4ae76a13ece281c9"
+    },
+    {
+      "path": "artwork/textures/aqueous-roughness-4096.png",
+      "bytes": 1158074,
+      "sha256": "0704e626592c632783495f30c78ccc42871ee8b12917a432fb3c7de3ca718e2a"
+    },
+    {
+      "path": "artwork/textures/ceramic-metal-height-4096.png",
+      "bytes": 1825115,
+      "sha256": "c27a0fb03bbf76e3f95c6cb161d920bdb8c2329f0f5f122d9984cae3a8bab959"
+    },
+    {
+      "path": "artwork/textures/ceramic-metal-normal-4096.png",
+      "bytes": 4844994,
+      "sha256": "8149e04d0b116babd02b8d7ffff2790bf9a02a4e89fcd2a3e6b120011f285e3a"
+    },
+    {
+      "path": "artwork/textures/ceramic-metal-roughness-4096.png",
+      "bytes": 1465834,
+      "sha256": "098829330592ec749dcf7668a2f9e7bd54cde113d64b113d4b1e29638c1630bb"
+    },
+    {
+      "path": "artwork/textures/membrane-height-4096.png",
+      "bytes": 1816874,
+      "sha256": "093266308c6f2084053f658d7575fa79282b39879e69da0efef8c1aa089e8a71"
+    },
+    {
+      "path": "artwork/textures/membrane-normal-4096.png",
+      "bytes": 4603557,
+      "sha256": "b25b5ef2eae703b5c1dfeaf9422edbea2197524201c4fcd79089209b4028f4bd"
+    },
+    {
+      "path": "artwork/textures/membrane-roughness-4096.png",
+      "bytes": 1408330,
+      "sha256": "036659a41774b100ff31a26958c053a5c40d310530cfc0fff5bd0cff0c8b05dc"
+    },
+    {
+      "path": "artwork/textures/mineral-height-4096.png",
+      "bytes": 3688104,
+      "sha256": "0d20b7396027b57031e340dc5a16ee6289c84933f09d3c13434539b8601bd0d8"
+    },
+    {
+      "path": "artwork/textures/mineral-normal-4096.png",
+      "bytes": 12171039,
+      "sha256": "61e7e93eb19c14879daedad029f637a5dd2e2541a7ee8bea89c9cd9ac08c3614"
+    },
+    {
+      "path": "artwork/textures/mineral-roughness-4096.png",
+      "bytes": 1915026,
+      "sha256": "2a69c64d83d51c55f047835ca91903ade23932ec58f2a69f70beced5422304a1"
+    },
+    {
+      "path": "artwork/textures/obsidian-albedo-source.jpg",
+      "bytes": 1047500,
+      "sha256": "f5c5c119bdafffabb451b965014cc6aaa988f504244594ff049cb87754ead75e"
+    },
+    {
+      "path": "artwork/textures/obsidian-albedo-source.png",
+      "bytes": 3929757,
+      "sha256": "cd2dfbaab7b36a4619a9f4d8d8b851105c5d42ef2b71869f768965d8eb843726"
+    },
+    {
+      "path": "artwork/vector/level-01-field.svg",
+      "bytes": 754,
+      "sha256": "cae887ac2d8d8281248de496a6931831604caf5805b6ccadab0f5fb9ea9259b1"
+    },
+    {
+      "path": "artwork/vector/level-02-field.svg",
+      "bytes": 2326,
+      "sha256": "f6fffd09e2875e7e12fe49dd4ad358099a5c1b3ff4e495ee5b91df3d2b2f940e"
+    },
+    {
+      "path": "artwork/vector/level-03-field.svg",
+      "bytes": 556,
+      "sha256": "7db1bb42f06efc25148d4b093ed0076008d5c572ff78352ac031423aa4cf00ae"
+    },
+    {
+      "path": "artwork/vector/level-04-field.svg",
+      "bytes": 628,
+      "sha256": "8a09cb0d1d5ae5aa69fc552bb3281b9e96b27c6f525cd876b08e7f21e4d211d0"
+    },
+    {
+      "path": "artwork/vector/level-05-field.svg",
+      "bytes": 556,
+      "sha256": "82a88d91a93b8f76f59d5b844f06a4e138c7559a36287c3187865534511f8e5e"
+    },
+    {
+      "path": "artwork/vector/level-06-field.svg",
+      "bytes": 556,
+      "sha256": "07ea692e596e231d20dd0fe5028340722d3c2d46418772852ca299211f1c0a5e"
+    },
+    {
+      "path": "artwork/vector/level-07-field.svg",
+      "bytes": 1540,
+      "sha256": "d6b96bb198d4321c383fccba5983053d83a1e1cbb98703011b0a9afa86b351f0"
+    },
+    {
+      "path": "artwork/vector/level-08-field.svg",
+      "bytes": 3505,
+      "sha256": "81b4c7ad0099a24286e5d6bece66c48f2b849af81002c659db81c0fe1504f9d9"
+    },
+    {
+      "path": "artwork/vector/level-09-field.svg",
+      "bytes": 556,
+      "sha256": "eb60c51ee833126d8dc68c1cc2eb862c5964ed795102205d9173927cfe0f54c7"
+    },
+    {
+      "path": "artwork/vector/level-10-field.svg",
+      "bytes": 4293,
+      "sha256": "2231cd0e931f9381b43c4bf362c534f93eefa34b617a1521d881ea07d2ad9f84"
+    },
+    {
+      "path": "artwork/vector/level-11-field.svg",
+      "bytes": 770,
+      "sha256": "e2b8ae0149dc01c041cf4b4997d3a1631649e9fc58606fc22827f3e24fc0f4d5"
+    },
+    {
+      "path": "artwork/vector/level-12-field.svg",
+      "bytes": 558,
+      "sha256": "d42a039961688f0ef7810a983022262f6a273d06f15f4062334d8be88433c651"
+    },
+    {
+      "path": "artwork/vector/level-13-field.svg",
+      "bytes": 558,
+      "sha256": "b4be0be16972b9cfb58627106e81ca9419aee7929ce961a3a7d211dab9bd754a"
+    },
+    {
+      "path": "artwork/vector/level-14-field.svg",
+      "bytes": 558,
+      "sha256": "e6b872034b526f9745f09c39a44ae22db122c77dd6ed3bdf938621c351a4d23c"
+    },
+    {
+      "path": "artwork/vector/level-15-field.svg",
+      "bytes": 558,
+      "sha256": "08133c11dcfecc4e361574b34a3533e31445ea02e4983aab0f848192f2d22614"
+    },
+    {
+      "path": "artwork/vector/level-16-field.svg",
+      "bytes": 770,
+      "sha256": "3ff8ece2a85a2612fd5804c936eb1ab8454d63205efad6f66ce4645960cd893a"
+    },
+    {
+      "path": "artwork/vector/level-17-field.svg",
+      "bytes": 770,
+      "sha256": "9d2c14a1d7768478b20ec694c72c96488cd2c19f5dcf33a508d77b05c06bdb52"
+    },
+    {
+      "path": "artwork/vector/level-18-field.svg",
+      "bytes": 558,
+      "sha256": "58b4cfa9ce50d7e37b2282462bf8471340bee125fe6415c825c4fb72270f4aad"
+    },
+    {
+      "path": "artwork/vector/level-19-field.svg",
+      "bytes": 11775,
+      "sha256": "df98c7f2ad985e77c0e6e75c0feff6f33ea77697546cb49cd43a681f3704590d"
+    },
+    {
+      "path": "artwork/vector/level-20-field.svg",
+      "bytes": 558,
+      "sha256": "823b9e152e9c1f39061db87735de4798d1e8bba0974ba51f8d35b62c6a316e91"
+    },
+    {
+      "path": "artwork/vector/level-21-field.svg",
+      "bytes": 2328,
+      "sha256": "ac5b77faf787cf75ec8c73e6f8f8d1c733296ea79eceaf2113a23ec444020fea"
+    },
+    {
+      "path": "artwork/vector/level-22-field.svg",
+      "bytes": 558,
+      "sha256": "f8e906cf56848175cde4c80c08f8809b58eb5db99f01901e390f33bbc8ee2097"
+    },
+    {
+      "path": "artwork/vector/level-23-field.svg",
+      "bytes": 2807,
+      "sha256": "7fad820c1b90833e2f843404e7df6fb6909ee0c10dbeae7d6432e0965bc1d489"
+    },
+    {
+      "path": "artwork/vector/level-24-field.svg",
+      "bytes": 558,
+      "sha256": "3c9c2a586bbb553a681baca65e5315b16a58e6b003cd72655a788d947b66315d"
+    },
+    {
+      "path": "artwork/vector/level-25-field.svg",
+      "bytes": 558,
+      "sha256": "54f42f0cc1f2fed2af4e88fcb5a11ea878b9b2eabd021ebd4d5f62c0e0cf8a79"
+    },
+    {
+      "path": "artwork/vector/level-26-field.svg",
+      "bytes": 19080,
+      "sha256": "21def03d20dddc194b865d9335677c991e95fa3ab9d25d93aa1c6b0d84f1a3c7"
+    },
+    {
+      "path": "artwork/vector/level-27-field.svg",
+      "bytes": 2258,
+      "sha256": "43f7c1c9cde7afea0792dfd6e9ee6ae95360a088c803c23fc94d9c78ca869d7c"
+    },
+    {
+      "path": "artwork/vector/level-28-field.svg",
+      "bytes": 41810,
+      "sha256": "7d6cf7eadf67f1a176d427fc686f078b4277dbd5a28a7aa74c78be5a1aef1a66"
+    },
+    {
+      "path": "artwork/vector/level-29-field.svg",
+      "bytes": 630,
+      "sha256": "81bde21e529675869ca6a682beb2f64082c3bcbd652f2c7f64de02bbfe874993"
+    },
+    {
+      "path": "artwork/vector/level-30-field.svg",
+      "bytes": 5444,
+      "sha256": "575dc46cb4c640dfbf1e6f9021c80ec73813cd12aa0bc28cb29cc07b06e8afa6"
+    },
+    {
+      "path": "artwork/web/level-01-1024.webp",
+      "bytes": 82090,
+      "sha256": "65d10322e2b6d72169d124ca791401a1f0604db45573975912633c140d886185"
+    },
+    {
+      "path": "artwork/web/level-01-256.webp",
+      "bytes": 9824,
+      "sha256": "940c3d6131f5750aad8a9cbfea8ccb2411cd286157a0c6ae91cd6815823eb4e8"
+    },
+    {
+      "path": "artwork/web/level-01-512.webp",
+      "bytes": 28428,
+      "sha256": "b62015436f3887893e2de8774b004e7b299ab485ecc67b2db4fbdf6ae333c07e"
+    },
+    {
+      "path": "artwork/web/level-02-1024.webp",
+      "bytes": 127410,
+      "sha256": "0b3ca59e6d7c57b34d0fa9ec4b20624398e22e5a62d98d0e2eaea51f6d97a783"
+    },
+    {
+      "path": "artwork/web/level-02-256.webp",
+      "bytes": 18994,
+      "sha256": "032307f262cf47089a1c9de5e54a852374baed76445dc239f6daad8634e0c4bc"
+    },
+    {
+      "path": "artwork/web/level-02-512.webp",
+      "bytes": 48548,
+      "sha256": "c8bea9780fe62578a693e99cb4fbf1bfbf4a8f7295fd3276a05181fe5e0a2460"
+    },
+    {
+      "path": "artwork/web/level-03-1024.webp",
+      "bytes": 131050,
+      "sha256": "359fe2d88da81615b5f99d6f58d85bd715bea3b803f701b668eadcd0a2d22ee6"
+    },
+    {
+      "path": "artwork/web/level-03-256.webp",
+      "bytes": 19356,
+      "sha256": "fee0adb92de3b464771103baaeb7abb7e3ab3c3c86d8998cf277a2c404a025ac"
+    },
+    {
+      "path": "artwork/web/level-03-512.webp",
+      "bytes": 49672,
+      "sha256": "bb224c3542c67c2cbc08d9554730f5f7ffcbd9d3031f5e4729a6d47422c277b0"
+    },
+    {
+      "path": "artwork/web/level-04-1024.webp",
+      "bytes": 34212,
+      "sha256": "27aacb45e886d00b37440692171c54f7534e7e10d79cb8467925b2df05f9a871"
+    },
+    {
+      "path": "artwork/web/level-04-256.webp",
+      "bytes": 6822,
+      "sha256": "eafaf82d3f5278ee478db019379251b67414151a8035194b6c4f98eda7fcdb39"
+    },
+    {
+      "path": "artwork/web/level-04-512.webp",
+      "bytes": 14910,
+      "sha256": "f31230a3a649a4bfeddf9e8f8fad2f0c30139a7569c73251d380c59536022ce6"
+    },
+    {
+      "path": "artwork/web/level-05-1024.webp",
+      "bytes": 58384,
+      "sha256": "be1d6dd76bda8bd9791ddb9cab20cf644f7315666a66c93167e9195f2e4b57b1"
+    },
+    {
+      "path": "artwork/web/level-05-256.webp",
+      "bytes": 12086,
+      "sha256": "3f2037ac4906efc88313fdc96a760dfe3bac4474086185a3c9b654af1937c840"
+    },
+    {
+      "path": "artwork/web/level-05-512.webp",
+      "bytes": 25714,
+      "sha256": "7420ca4005a991710f7c1f270e02ca0a28d6382ea146baf4d1230b7750a7e2e6"
+    },
+    {
+      "path": "artwork/web/level-06-1024.webp",
+      "bytes": 55390,
+      "sha256": "e6ed1c1641c3ce871f39b30d7543ca124ced25c5c2c15e90231d17fa9f5b77c4"
+    },
+    {
+      "path": "artwork/web/level-06-256.webp",
+      "bytes": 8736,
+      "sha256": "fdb91fe2b1c6f098a1728f61a2aaa78718bf477814a5232890996c63913b4083"
+    },
+    {
+      "path": "artwork/web/level-06-512.webp",
+      "bytes": 21950,
+      "sha256": "3a0f75865bd7229d0f74441299de50a66e22ebb45e2a3755154a5f6f9ccdbbbb"
+    },
+    {
+      "path": "artwork/web/level-07-1024.webp",
+      "bytes": 94706,
+      "sha256": "97dcca59a5438d16210fe86803df0536d3eaf15df4b2811b21af7803895a4847"
+    },
+    {
+      "path": "artwork/web/level-07-256.webp",
+      "bytes": 15988,
+      "sha256": "f3708b246240a7a9f52dae2cb727ac588b879e262d908fabe7cb70be63b03bbf"
+    },
+    {
+      "path": "artwork/web/level-07-512.webp",
+      "bytes": 37472,
+      "sha256": "e46131ac47f83b4218f118bc0a186a57211ee81cf2fbd17f1cdc984f7936daee"
+    },
+    {
+      "path": "artwork/web/level-08-1024.webp",
+      "bytes": 176468,
+      "sha256": "7342ff64f8141e710010512d90f42ced92189707ff3877b264ef02bbb1aab3cc"
+    },
+    {
+      "path": "artwork/web/level-08-256.webp",
+      "bytes": 17574,
+      "sha256": "d5186957b68444f475bf59092b8ae15099f9d2c1f9cb0c6d898daa28cc816931"
+    },
+    {
+      "path": "artwork/web/level-08-512.webp",
+      "bytes": 55198,
+      "sha256": "4150a12279c67ec9562d4905ef2e4ebcb1406603eece6a3db19b7d51ea78275b"
+    },
+    {
+      "path": "artwork/web/level-09-1024.webp",
+      "bytes": 155822,
+      "sha256": "f70d543c37d2d80954c91fe1bab9845a6cc99a0df6fc886492ff90e53d05be68"
+    },
+    {
+      "path": "artwork/web/level-09-256.webp",
+      "bytes": 23068,
+      "sha256": "57667e14128b1f290819022f74e55dffb8838a690c2c66d003450c916dd4d400"
+    },
+    {
+      "path": "artwork/web/level-09-512.webp",
+      "bytes": 59004,
+      "sha256": "77a4e9e42be6bbf4d65b623dcae45dc212f1d91bc4c157962e7b2e8a5f776f07"
+    },
+    {
+      "path": "artwork/web/level-10-1024.webp",
+      "bytes": 100416,
+      "sha256": "ba8f0fdb2a7c8b0c09f0e8d3c2eff899f36c26c7a89a20f2f8c289549aa11216"
+    },
+    {
+      "path": "artwork/web/level-10-256.webp",
+      "bytes": 16526,
+      "sha256": "506993d199531b785a9a94516821f4de3b3b06aa517e24ecb2b5e28de5bb4526"
+    },
+    {
+      "path": "artwork/web/level-10-512.webp",
+      "bytes": 41470,
+      "sha256": "09a11aec791284df2ebabd27ceb1f7594a66437223075596739145c03965ab49"
+    },
+    {
+      "path": "artwork/web/level-11-1024.webp",
+      "bytes": 148754,
+      "sha256": "690765be0df3dfdfed9a4c28d066255dd25bf1120070ed6fbd012015ca3d8810"
+    },
+    {
+      "path": "artwork/web/level-11-256.webp",
+      "bytes": 15168,
+      "sha256": "baf0fa3f43bc7461f3eec584450c735f42954d1bbfe86a344932e5a78f6cf2b8"
+    },
+    {
+      "path": "artwork/web/level-11-512.webp",
+      "bytes": 45022,
+      "sha256": "d3a5e7e8c4e249eff1163ef7e0a88f40eb60530b1c8579b577e8ee65129b1830"
+    },
+    {
+      "path": "artwork/web/level-12-1024.webp",
+      "bytes": 49950,
+      "sha256": "15a6d86e68df29f0575df0ffb119ff214113ce24f9ffdbdd1895cbb9aa8046d8"
+    },
+    {
+      "path": "artwork/web/level-12-256.webp",
+      "bytes": 8584,
+      "sha256": "a74b106d4819bbdadfdf2f77c33b639000699a4e6ec57d89f281c32ae8b40324"
+    },
+    {
+      "path": "artwork/web/level-12-512.webp",
+      "bytes": 20934,
+      "sha256": "0f0c6151f0786631b72b3c105dd4af37b69c4b4da98c99913fb29fba77accc0c"
+    },
+    {
+      "path": "artwork/web/level-13-1024.webp",
+      "bytes": 235592,
+      "sha256": "56ce2fc62d2a575f44fd7e6e20971132ab06b2a33c096cb3a34a903d3bc10e7a"
+    },
+    {
+      "path": "artwork/web/level-13-256.webp",
+      "bytes": 31970,
+      "sha256": "a57d0eeefba97ce3239c97a4d3bd6c5b4483cf4efa126f2b3599da7777d92c49"
+    },
+    {
+      "path": "artwork/web/level-13-512.webp",
+      "bytes": 88922,
+      "sha256": "99aa47d54b098b9044828b8858f2257ba74a60ef86b5b4ce8eb94af0e7e4916f"
+    },
+    {
+      "path": "artwork/web/level-14-1024.webp",
+      "bytes": 167854,
+      "sha256": "18c6458d803bbc1e4837eb3c47b6c27909ca173879229e87f2d250e5f2a76d7e"
+    },
+    {
+      "path": "artwork/web/level-14-256.webp",
+      "bytes": 24620,
+      "sha256": "14eb3e28c634c15914f8e48df03b147d5842e8e3350990aa2a365e08c2b3f689"
+    },
+    {
+      "path": "artwork/web/level-14-512.webp",
+      "bytes": 63158,
+      "sha256": "af82c89d15450d9eff35b3653ef05cc99a648480bce542767936071290d75dc4"
+    },
+    {
+      "path": "artwork/web/level-15-1024.webp",
+      "bytes": 172386,
+      "sha256": "53e6b919ae4400924b1ec1d355bf8401fdc18047736d55ae99413eb9de5cdac2"
+    },
+    {
+      "path": "artwork/web/level-15-256.webp",
+      "bytes": 17062,
+      "sha256": "fff2838ebca1c155e167a8ded11cc52937992c01559367ecfd68588b66a94481"
+    },
+    {
+      "path": "artwork/web/level-15-512.webp",
+      "bytes": 52080,
+      "sha256": "85d00ea191d544247f94f539ebd7914e0f99551db554b3227f7b2b1c2c334109"
+    },
+    {
+      "path": "artwork/web/level-16-1024.webp",
+      "bytes": 99084,
+      "sha256": "63cd32e2c5a28046ac129be92e355ea2a70caefa1cbcd78c504e103624755459"
+    },
+    {
+      "path": "artwork/web/level-16-256.webp",
+      "bytes": 18228,
+      "sha256": "5cba3a1a0d512dd9400e3b13b5315655885a348608ffd536249916defbd2d508"
+    },
+    {
+      "path": "artwork/web/level-16-512.webp",
+      "bytes": 43676,
+      "sha256": "5f496516101a4b6f281c700c0a6d09eec352df0c97cd428d30880e9b93d44059"
+    },
+    {
+      "path": "artwork/web/level-17-1024.webp",
+      "bytes": 117002,
+      "sha256": "ab3e5f986c76347ef0f94cc4245fe5b40e410befe6e4d5a3c69fa646278c9618"
+    },
+    {
+      "path": "artwork/web/level-17-256.webp",
+      "bytes": 18114,
+      "sha256": "50bf06de46b11a3f368d1fb29ca4837604c8e49784707589a6df791b9f562312"
+    },
+    {
+      "path": "artwork/web/level-17-512.webp",
+      "bytes": 44866,
+      "sha256": "fe8e5698a2eaca6d1fae6d52f3e290ee6952a639444134c3c826cdab8a0d3f4a"
+    },
+    {
+      "path": "artwork/web/level-18-1024.webp",
+      "bytes": 141348,
+      "sha256": "348bd1e910ade2d441369de2f06527c2699ab026b5982965b98728e2b7446452"
+    },
+    {
+      "path": "artwork/web/level-18-256.webp",
+      "bytes": 21244,
+      "sha256": "8fe56b2aac9ed9acb1e94f462183e9f0f34a24801a74be76cce9fa9b3586c669"
+    },
+    {
+      "path": "artwork/web/level-18-512.webp",
+      "bytes": 54202,
+      "sha256": "a2ab370726c7dcc9fe45fe5e8b534e8af57249c25fb1f879fd4846ff52384849"
+    },
+    {
+      "path": "artwork/web/level-19-1024.webp",
+      "bytes": 74342,
+      "sha256": "fd38833085f5fed9ebedf6e555f3c67948875bcaaa84d061d93ce335007b0761"
+    },
+    {
+      "path": "artwork/web/level-19-256.webp",
+      "bytes": 11674,
+      "sha256": "e009ad4d1a8ae3d59e6aee641dc81df2d9367b2feb15c9247d91fba172ca8dea"
+    },
+    {
+      "path": "artwork/web/level-19-512.webp",
+      "bytes": 28608,
+      "sha256": "2dd5d9cbb3829f2a9cb9be32a2089a8d05d927aad5adcdf41bd93d769d48a35e"
+    },
+    {
+      "path": "artwork/web/level-20-1024.webp",
+      "bytes": 74508,
+      "sha256": "669ad28a3069457661a0e75ce371c96b64505c91c904511e4bf8369090c70076"
+    },
+    {
+      "path": "artwork/web/level-20-256.webp",
+      "bytes": 15792,
+      "sha256": "2769f36d5f64bf4e72f0239dbbe2f1cef2a964b902ff33f7aaf8cf71e94a2b98"
+    },
+    {
+      "path": "artwork/web/level-20-512.webp",
+      "bytes": 35880,
+      "sha256": "0f4bfdd1d53d59cb2aa167daa9e8366943e086d91e40f76e02c10d91f9fcef51"
+    },
+    {
+      "path": "artwork/web/level-21-1024.webp",
+      "bytes": 103988,
+      "sha256": "46b418fdfce17e06d3b91b33f6264e20aa22f5d73af87c3b292e57fb9210de0c"
+    },
+    {
+      "path": "artwork/web/level-21-256.webp",
+      "bytes": 12384,
+      "sha256": "b20ab460dcf9246569ee2020cb8f2ba5704417d2ec64c8778edb09a4ead4f826"
+    },
+    {
+      "path": "artwork/web/level-21-512.webp",
+      "bytes": 34294,
+      "sha256": "816763d8741f50a484309a2b8446c46b61a5e03e2ba20cd4e66073e6c25258c0"
+    },
+    {
+      "path": "artwork/web/level-22-1024.webp",
+      "bytes": 115278,
+      "sha256": "7916ac4fd6f1018a1110e02ce949dcbf18fb5658a5b8f6ed51273e5a81eb7ffc"
+    },
+    {
+      "path": "artwork/web/level-22-256.webp",
+      "bytes": 15830,
+      "sha256": "bcaf1a1b9338dd3e46d93ad8ed83b4fd0865d7644e84b583c607c1ed3c8db15e"
+    },
+    {
+      "path": "artwork/web/level-22-512.webp",
+      "bytes": 44896,
+      "sha256": "ef4abeb21f285f51627a84ab46fbf95f4add106dcfac5c120dbb8336f84595f1"
+    },
+    {
+      "path": "artwork/web/level-23-1024.webp",
+      "bytes": 81024,
+      "sha256": "6970bc20d10e5ff0c2f3c835bba502354e6b9468d654d4f96838dad926777adf"
+    },
+    {
+      "path": "artwork/web/level-23-256.webp",
+      "bytes": 16758,
+      "sha256": "a3d1b19f40683331c773ab4c668938b0862c8d3803a75748e918ae18f2b720ee"
+    },
+    {
+      "path": "artwork/web/level-23-512.webp",
+      "bytes": 37422,
+      "sha256": "36fdd28a697e9a7d9be3dce87250cdebbc4ffea9e0a77b8b2687a1a2551fdd1d"
+    },
+    {
+      "path": "artwork/web/level-24-1024.webp",
+      "bytes": 89606,
+      "sha256": "b588d3d14cd47f1bb52da3804778de93126553f456bd8fd09bce551f2872c0b2"
+    },
+    {
+      "path": "artwork/web/level-24-256.webp",
+      "bytes": 14420,
+      "sha256": "3692944926aea10601df8917096cf62197ebc6862752edbee5a9cb45fd754f2b"
+    },
+    {
+      "path": "artwork/web/level-24-512.webp",
+      "bytes": 34768,
+      "sha256": "21fb3a54674be05672023dc593dce93ce30d3a38955c9f898370fa40af685e49"
+    },
+    {
+      "path": "artwork/web/level-25-1024.webp",
+      "bytes": 82320,
+      "sha256": "eedef1a042b5d2715f8db0ef7887f958d750c2e9506a54888881c73da9f1258f"
+    },
+    {
+      "path": "artwork/web/level-25-256.webp",
+      "bytes": 14424,
+      "sha256": "2177c3e6dfe6b80c78a1daada2ab2186bbb70ad77ea5b6240d9c8fdef2a2b423"
+    },
+    {
+      "path": "artwork/web/level-25-512.webp",
+      "bytes": 34856,
+      "sha256": "3fd3b9609f57a558f2c74fd8ae4955a00181307564d886f5f2fd296627865164"
+    },
+    {
+      "path": "artwork/web/level-26-1024.webp",
+      "bytes": 143368,
+      "sha256": "d937602011c4f47aae924d47aeb0b1b28f0ed046d083fd9203340674b96bb6a2"
+    },
+    {
+      "path": "artwork/web/level-26-256.webp",
+      "bytes": 24008,
+      "sha256": "a5839f8f543dec84016ac114e90b5b9b8c29e6442fc5933cd269d51ff70b9b82"
+    },
+    {
+      "path": "artwork/web/level-26-512.webp",
+      "bytes": 57948,
+      "sha256": "ba0cdf25b08f1650070a3e8e9cba6ca5511eb39735d36d4c7665a3dea65390de"
+    },
+    {
+      "path": "artwork/web/level-27-1024.webp",
+      "bytes": 69162,
+      "sha256": "0bce31ddb2b7abe686f7848af760e4ad2daa7f208655abeca9a0f51cb6810cda"
+    },
+    {
+      "path": "artwork/web/level-27-256.webp",
+      "bytes": 11624,
+      "sha256": "0c99b0560631486fb26a2fe559a809b2259a17a0f8f3f1d8f4aa2b1b8db8aaa7"
+    },
+    {
+      "path": "artwork/web/level-27-512.webp",
+      "bytes": 29070,
+      "sha256": "bf035f35315027aec5e54c045e3d9a8668bfb9c266c74d1306b03ad22754a7dd"
+    },
+    {
+      "path": "artwork/web/level-28-1024.webp",
+      "bytes": 74546,
+      "sha256": "92052eb2d48b666aa243a38bb901319a041ed22a6a62739baa40f6c3c0cfd601"
+    },
+    {
+      "path": "artwork/web/level-28-256.webp",
+      "bytes": 12918,
+      "sha256": "ccc87854583c8976bac1799eda364352bb34d5fec2fbb3980e46c9221673b6bb"
+    },
+    {
+      "path": "artwork/web/level-28-512.webp",
+      "bytes": 30320,
+      "sha256": "bd10dfca9bc5f066d155e0b600c401d1d464c167a9a0039ecacf7c50c9fdc454"
+    },
+    {
+      "path": "artwork/web/level-29-1024.webp",
+      "bytes": 73388,
+      "sha256": "d811e4d363629c196bb7bea7c94895fd588e0a68685d3da18cf4a7bb448aa9a8"
+    },
+    {
+      "path": "artwork/web/level-29-256.webp",
+      "bytes": 14038,
+      "sha256": "79559a3836004cfab54e767c7ce394ff4c972e766e177821203b27fcb73a590d"
+    },
+    {
+      "path": "artwork/web/level-29-512.webp",
+      "bytes": 32554,
+      "sha256": "539fca9db264d4c664e28275af1f92abfce4e478b2c48b730940b0c2c528a55c"
+    },
+    {
+      "path": "artwork/web/level-30-1024.webp",
+      "bytes": 84046,
+      "sha256": "5336cc8087d08e2404b7251d46276522a0228194d2b08765496c6e9c17c64711"
+    },
+    {
+      "path": "artwork/web/level-30-256.webp",
+      "bytes": 16606,
+      "sha256": "93dc4377113cdc72b9e9ca9207311f4fd63016ae9257513d56b4b6bc6704dfc7"
+    },
+    {
+      "path": "artwork/web/level-30-512.webp",
+      "bytes": 37812,
+      "sha256": "42eceb0ef9167ec7e6c47e85967e165b52a59025fd836871b014cea608cbb3c2"
+    }
+  ]
+}

@@ -1,7 +1,7 @@
 """Assemble the dependency-free offline workshop and complete artwork registry."""
 from pathlib import Path
 from PIL import Image
-import json,gzip,base64,io,hashlib
+import json,gzip,base64,io,hashlib,copy,shutil
 from geometry import ROOT,MAT,Scene
 SESSION='ANEVUM.WEB.BUILD.2026-10-17.008.EVOLUTION-HYPERRES-ARTWORK'
 CHAPTERS=['Before Form','First Matter','Stellar Dawn','Cosmic Architecture','Worlds & Life','Continuance']
@@ -20,7 +20,7 @@ def build():
   d['detail']=d['detail'].replace('emblem','visual metaphor');levels.append(d)
  manifest={'schema':'anevum.evolution.artwork.v059','session':SESSION,'branch':'design/evolution-hyperres-v059-20261017-008','status':'reconstruction-review-candidate-not-deployed','levelCap':30,'chapterCount':6,'xpFormula':'75*(L-1)^2','level30XP':63075,'chapters':CHAPTERS,'levels':levels,'renderPipeline':{'nativeGeometry':'procedural 3D + glTF 2.0','material':'GGX direct lighting + procedural fields + sampled albedo/height','masters':'2048px straight-alpha PNG rendered with EGL OpenGL using the live GLSL','web':'256/512/1024px WebP; selected-only WebGL scene','textures':'four 4096px procedural height/normal/roughness families; 1254px generated obsidian albedo source','vector':'30 independently editable SVG field overlays; no embedded raster'},'accountWrites':False,'publicDeployment':False,'nativeAnimationLimit':'glTF portable loop contains node motion; phenomenon-specific deformation/emission stays in editable GLSL + scene JSON','limitations':['Real-time materials are artistic approximations; no path tracing, true participating-media transport or physical refraction.','All 30 are reconstructed; artistic approval is pending. No claim that the final long-term visual standard has been approved.','Native iPhone Safari and assistive-technology acceptance require device review.','No account, achievement, XP or production site integration.']}
  (ROOT/'docs/ARTWORK-MANIFEST.json').write_text(json.dumps(manifest,indent=2))
- data={'levels':levels,'chapters':CHAPTERS,'materials':MAT,'mark':MARK,'vertex':(ROOT/'src/material.vert').read_text(),'fragment':(ROOT/'src/material.frag').read_text(),'bloomVertex':(ROOT/'src/bloom.vert').read_text(),'bloomFragment':(ROOT/'src/bloom.frag').read_text(),'scenes':[],'thumbs':[],'poster':[],'compact':[],'fields':[],'height':image64(ROOT/'artwork/textures/mineral-height-4096.png',512,'PNG'),'albedo':image64(ROOT/'artwork/textures/obsidian-albedo-source.jpg',1024,'WEBP')}
+ data={'levels':levels,'chapters':CHAPTERS,'materials':MAT,'mark':MARK,'vertex':(ROOT/'src/material.vert').read_text(),'fragment':(ROOT/'src/material.frag').read_text(),'bloomVertex':(ROOT/'src/bloom.vert').read_text(),'bloomFragment':(ROOT/'src/bloom.frag').read_text(),'scenes':[],'thumbs':[],'poster':[],'compact':[],'fields':[],'height':image64((ROOT/'artwork/textures/mineral-height-web.png') if (ROOT/'artwork/textures/mineral-height-web.png').exists() else (ROOT/'artwork/textures/mineral-height-4096.png'),512,'PNG'),'albedo':image64(ROOT/'artwork/textures/obsidian-albedo-source.jpg',1024,'WEBP')}
  for i in range(1,31):
   data['scenes'].append(b64(gzip.compress((ROOT/f'artwork/native/level-{i:02}.scene.json').read_bytes(),mtime=0)))
   data['thumbs'].append(image64(ROOT/f'artwork/web/level-{i:02}-256.webp'))
@@ -29,6 +29,14 @@ def build():
   data['fields'].append(b64((ROOT/f'artwork/vector/level-{i:02}-field.svg').read_bytes()))
  page=(ROOT/'src/app.html').read_text().replace('__CSS__',(ROOT/'src/app.css').read_text()).replace('__JS__',(ROOT/'src/app.js').read_text()).replace('__MARK__',MARK).replace('__DATA__',json.dumps(data,separators=(',',':')).replace('</','<\\/'))
  (ROOT/'ANEVUM-V059-INTERACTIVE.html').write_text(page);(ROOT/'dist/index.html').write_text(page)
- (ROOT/'docs/PAYLOAD-BUDGET.json').write_text(json.dumps({'offlineHTMLBytes':len(page.encode()),'offlineGzipBytes':len(gzip.compress(page.encode())),'compressedSceneBytes':[len(base64.b64decode(s)) for s in data['scenes']],'note':'Offline review embeds all fallbacks and scenes. Production integration should fetch the selected scene and responsive poster only, using the separate web assets.'},indent=2))
+ web=copy.deepcopy(data);web['external']=True;asset=ROOT/'dist/assets';asset.mkdir(parents=True,exist_ok=True)
+ for key,ext in [('scenes','scene.gz'),('thumbs','256.webp'),('poster','1024.webp'),('compact','compact-128.png'),('fields','field.svg')]:
+  for j,encoded in enumerate(data[key]):
+   name=f'level-{j+1:02}-{ext}';(asset/name).write_bytes(base64.b64decode(encoded));web[key][j]='assets/'+name
+ for key,ext in [('height','png'),('albedo','webp')]:
+  (asset/f'{key}.{ext}').write_bytes(base64.b64decode(data[key]));web[key]=f'assets/{key}.{ext}'
+ web_page=(ROOT/'src/app.html').read_text().replace('__CSS__',(ROOT/'src/app.css').read_text()).replace('__JS__',(ROOT/'src/app.js').read_text()).replace('__MARK__',MARK).replace('__DATA__',json.dumps(web,separators=(',',':')).replace('</','<\\/'))
+ (ROOT/'dist/index.html').write_text(web_page)
+ (ROOT/'docs/PAYLOAD-BUDGET.json').write_text(json.dumps({'offlineHTMLBytes':len(page.encode()),'webHTMLBytes':len(web_page.encode()),'webInitialSelectedSceneBytes':len(base64.b64decode(data['scenes'][29])),'offlineGzipBytes':len(gzip.compress(page.encode())),'compressedSceneBytes':[len(base64.b64decode(s)) for s in data['scenes']],'note':'Offline review embeds all fallbacks and scenes. Production integration should fetch the selected scene and responsive poster only, using the separate web assets.'},indent=2))
  print('BUILT',len(page.encode()),'bytes; gzip',len(gzip.compress(page.encode())),flush=True)
 if __name__=='__main__':build()
