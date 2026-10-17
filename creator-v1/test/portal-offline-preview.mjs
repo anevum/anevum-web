@@ -231,6 +231,17 @@ createServer((req,res)=>{
   if(u.pathname==="/__ready")return json(res,{ready:existsSync(resolve(dist,"index.html"))});
   if(u.pathname.startsWith("/creator/api/v1/"))return api(res,u);
   if(u.pathname.startsWith("/api/v1/member/"))return offlineMember(req,res,u);
+  // INSTITUTE_LAB_ASSET: local static specimen whitelist for browser QA only.
+  // Explicit filenames prevent arbitrary file access. No member write routes.
+  if(/^\/creator\/institute\/lab\/(?:specimens\.html|(?:observation-node-001|regulation-node-002)(?:-still)?\.svg|(?:observation-node-001|regulation-node-002)\.(?:html|mjs))$/.test(u.pathname)){
+    const rel=u.pathname.slice("/creator/".length);
+    const path=resolve(dist,rel);
+    if(!existsSync(path))return json(res,{error:"not-found"},404);
+    const suffix=extname(path);
+    const contentType=suffix===".svg"?"image/svg+xml":suffix===".mjs"?"text/javascript":"text/html; charset=utf-8";
+    res.writeHead(200,{"content-type":contentType,"cache-control":"no-store","x-robots-tag":"noindex,nofollow,noarchive"});
+    return res.end(readFileSync(path));
+  }
   if(u.pathname.startsWith("/creator/assets/")){
     const rel=u.pathname.slice(9);
     if(!/^assets\/(?:[a-zA-Z0-9._-]+|cinematic\/(?:hero|categories)\/[a-zA-Z0-9._-]+\.webp|cinematic-v2\/atmosphere\/[a-zA-Z0-9._-]+\.webp|community-portals\/(?:games|tools|creative|libraries)-(?:768|1536)\.webp)$/.test(rel))return json(res,{error:"not-found"},404);
