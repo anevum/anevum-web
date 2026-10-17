@@ -230,8 +230,10 @@ try{
   await evaluate('document.querySelector(".wb-inline-text").focus()');
   await c.send('Input.insertText',{text:'My first creation starts here.'});
   await until(()=>evaluate('document.querySelector(".st-save-state")?.dataset.unsaved==="true"'));
-  await evaluate('document.querySelector(".st-canvas-form button[type=submit]").click()');
+  await evaluate('window.dispatchEvent(new KeyboardEvent("keydown",{key:"s",ctrlKey:true,cancelable:true,bubbles:true}))');
   await until(()=>evaluate('document.querySelector(".st-save-state")?.dataset.unsaved==="false"'));
+  const keyboardSaved=(await (await fetch(base+'/__state')).json()).projects.find(x=>x.title==='Untitled creation');
+  assert.ok(keyboardSaved&&keyboardSaved.revision===2&&keyboardSaved.description.includes('My first creation starts here.'));
   await check(width);await screenshot('studio-v0542-writing-'+width);
   console.log('STUDIO_V054_WORKBENCH_'+width+'=PASS');
   console.log('STUDIO_V053_INTERACTIVE_'+width+'=PASS');
