@@ -133,3 +133,11 @@
 .av65-public-dossier>.av65-player-card{max-width:100%;width:max-content;min-width:min(100%,300px)}
 .av65-public-dossier>p{margin:8px 0 0;color:#e0cfdc;font-size:clamp(12px,1.1vw,15px);line-height:1.5}
 @media(max-width:640px){.av65-public-dossier>.av65-player-card{width:100%;min-width:0}.av65-public-identity{padding:0!important}}
+
+/* The same visual contract wraps legacy creator channels without asserting
+ * that an unrelated creator handle is a verified canonical member identity. */
+.av65-player-card--channel{background:linear-gradient(110deg,#171d31a9,#211a30b3);border-color:#c5a9c13b}
+.av65-channel-label{display:inline-flex;align-items:center;white-space:nowrap;border:1px solid #c2adc059;background:#272539a8;color:#d6c4d7;font:750 9px/1.2 ui-monospace,monospace;letter-spacing:.07em;border-radius:5px;padding:3px 6px}
+.av65-channel-identity{width:100%;max-width:100%;min-width:0}
+.av65-channel-identity .av61-photo .ms-portrait{border:1px solid #ab8ba95e}
+.av7-author .av65-channel-identity .av61-member-copy{min-width:0}
