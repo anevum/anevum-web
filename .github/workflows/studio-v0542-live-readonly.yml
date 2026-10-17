@@ -1,0 +1,31 @@
+name: ANEVUM Creator Studio V054.2 Live Read Only Preflight
+on:
+  push:
+    branches: [design/creator-studio-v0542-canvas-first-20261017]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: studio-v0542-live-readonly-${{ github.ref_name }}
+  cancel-in-progress: true
+jobs:
+  preflight:
+    if: github.repository == 'anevum/anevum-web'
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Confirm no write-capable tasks exist in this preflight
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          node --check creator-v1/test/studio-v0542-live-contract.mjs
+          ! grep -E 'method:[[:space:]]*["\x27](POST|PATCH|PUT|DELETE)' creator-v1/test/studio-v0542-live-contract.mjs
+      - name: Run unauthenticated hosted health and authorization checks
+        run: node creator-v1/test/studio-v0542-live-contract.mjs
