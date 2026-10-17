@@ -155,7 +155,7 @@ export function StudioWorkbench({value,onChange,disabled}:{
    {QUICK_TOOLS.map(tool=><button type="button" key={tool.type}
     disabled={disabled||rows.length>=MAX_BLOCKS} onClick={()=>addBlock(tool.type)}>
     <span aria-hidden="true">{tool.symbol}</span>{tool.name}</button>)}
-   <label className="wb-more-tools">
+   <div className="wb-more-tools">
     <span>MORE</span>
     <select aria-label="More pieces to add" disabled={disabled||rows.length>=MAX_BLOCKS}
      value={newType} onChange={e=>setNewType(e.target.value as StudioBlockType)}>
@@ -163,7 +163,7 @@ export function StudioWorkbench({value,onChange,disabled}:{
     </select>
     <button type="button" disabled={disabled||rows.length>=MAX_BLOCKS}
      onClick={()=>addBlock(newType)}>+</button>
-   </label>
+   </div>
   </div>
   {error&&<p role="alert" className="wb-error">{error}</p>}
   <div className={'wb-workspace'+(mode==='experience'?' is-experience':'')}>
