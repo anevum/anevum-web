@@ -29,49 +29,58 @@ export function StudioGuestDiscovery(){
   if(!idea.trim())return;
   try{
    await navigator.clipboard.writeText(idea);
-   setNotice('Idea copied. Paste it into Creator Studio after signing in.');
+   setNotice('Idea copied. You can bring it into Creator Studio after signing in.');
   }catch{
    scratchpad.current?.focus();scratchpad.current?.select();
-   setNotice('Clipboard access is unavailable. Your idea is selected; copy it before leaving this page.');
+   setNotice('Select and copy your idea before leaving this page.');
   }
  }
- return <div className="sl-root sl-guest">
-  <section className="sl-guest-hero">
-   <span className="st-kicker">ANEVUM / CREATOR STUDIO / OPEN DISCOVERY</span>
-   <h1>YOU CAN BE A CREATOR.</h1>
-   <p>Explore ways to make a story, game, gallery, soundtrack, or something nobody has imagined yet. No special software or finished project required.</p>
-   <div className="sl-guest-actions">
-    <Link className="st-action" to="/join">SIGN IN TO SAVE YOUR CREATIONS ↗</Link>
-    <Link className="st-link" to="/discover">EXPLORE THE COMMUNITY ↗</Link>
+ return <div className="sl-root sl-space sl-guest">
+  <section className="sl-landing-hero sl-guest-hero" aria-labelledby="sl-guest-title">
+   <div className="sl-landing-copy">
+    <span className="st-kicker">ANEVUM / CREATOR STUDIO / OPEN DISCOVERY</span>
+    <h1 id="sl-guest-title">MAKE<br/><em>SOMETHING.</em></h1>
+    <p>Games, stories, art, sound and experiences belong here. You do not need a studio, a team, or a perfect plan to begin.</p>
+    <div className="sl-landing-actions">
+     <Link className="sl-primary" to="/join">SIGN IN TO CREATE YOUR SPACE ↗</Link>
+     <Link className="sl-secondary" to="/discover">DISCOVER WHAT PEOPLE MAKE ↗</Link>
+    </div>
+    <small>Signed-in, verified creators can save private drafts. Public uploads and releases are not active yet.</small>
+   </div>
+   <div className="sl-landing-art" aria-hidden="true">
+    <span className="sl-void-halo"/><span className="sl-void-ring sl-void-ring-one"/>
+    <span className="sl-void-ring sl-void-ring-two"/><span className="sl-void-core">◈</span>
+    <span className="sl-void-coordinate">ENTER THE CREATIVE EXPANSE</span>
    </div>
   </section>
-  <section className="sl-guest-explore" aria-label="Browse beginner creation starters">
-   <span className="st-kicker">BEGIN WITH WHATEVER INSPIRES YOU</span>
-   <h2>WHAT COULD YOU MAKE?</h2>
-   <div className="sl-guest-starters">
-    {STUDIO_STARTERS.filter(item=>item.id!=='import').map(item=><article key={item.id}>
-     <StarterSymbol type={item.icon}/><span className="st-kicker">{item.eyebrow}</span>
-     <h3>{item.title}</h3><p>{item.description}</p>
+  <section className="sl-guest-explore" aria-label="Browse creative starting points">
+   <div className="sl-minor-heading">
+    <div><span className="st-kicker">NO SINGLE WAY TO CREATE</span><h2>Start with whatever moves you.</h2></div>
+   </div>
+   <div className="sl-guest-starters sl-path-grid">
+    {STUDIO_STARTERS.filter(item=>item.id!=='import').map(item=><article className="sl-path-card" key={item.id}>
+     <span className="sl-path-top"><StarterSymbol type={item.icon}/><span className="sl-path-arrow" aria-hidden="true">✦</span></span>
+     <span className="sl-path-tag">{item.eyebrow}</span>
+     <strong>{item.title}</strong><span className="sl-path-note">{item.description}</span>
+     <span className="sl-path-bottom">SIGN IN TO BEGIN</span>
     </article>)}
    </div>
   </section>
-  <section className="sl-guest-notes">
-   <div>
-    <span className="st-kicker">JUST EXPLORING?</span><h2>WRITE DOWN THE SPARK.</h2>
-    <p>This idea is held only in this browser page while it stays open. It is not sent to ANEVUM, and leaving may lose it. Copy it before signing in.</p>
-   </div>
-   <div className="sl-guest-pad">
-    <label htmlFor="sl-guest-idea">YOUR IDEA (LOCAL ONLY)</label>
+  <details className="sl-guest-spark sl-spark-drawer">
+   <summary>JUST EXPLORING? SAVE A SPARK TO YOUR CLIPBOARD <span aria-hidden="true">+</span></summary>
+   <div className="sl-guest-spark-content">
+    <p>Your words stay only on this page. Copy them before navigating away; they are not saved to an account.</p>
+    <label htmlFor="sl-guest-idea">A CREATIVE THOUGHT</label>
     <textarea id="sl-guest-idea" ref={scratchpad} rows={4} maxLength={2000} value={idea}
-     placeholder="I want to make..." onChange={e=>{setIdea(e.target.value);setNotice('');}}/>
-    <button type="button" className="st-action" disabled={!idea.trim()} onClick={()=>void copyIdea()}>
-     COPY MY IDEA</button>
+     placeholder="I want to make…" onChange={e=>{setIdea(e.target.value);setNotice('');}}/>
+    <button type="button" className="sl-primary" disabled={!idea.trim()} onClick={()=>void copyIdea()}>
+     COPY MY IDEA
+    </button>
     {notice&&<p role="status">{notice}</p>}
    </div>
-  </section>
+  </details>
  </div>;
 }
-
 
 const CANVAS_PATHS=[
  {id:'story',tag:'WORDS & WORLDS',title:'Write a story',note:'Shape chapters, passages, and reflections.',symbol:'✦',intent:'CREATE & PREVIEW'},
