@@ -31,6 +31,9 @@ Non-visible/lower-power and reduced-motion devices show current detailed posters
 HonorInsignia supplies distinct native SVG medal devices and woven service ribbons.
 
 The canonical `/member?tab=awards` page gains an owner-only `PlayerCardStudio`.
+The public `/recognition` archive now browses all 26 badge definitions, six
+ribbons and six medals with exact 'planned' versus 'available' language,
+responsive filtering and member-earned state when authenticated.
 It shows a true server-backed card preview, latest/curated/hidden badge settings,
 selection of only earned medals/ribbons, and a cosmetic aura selector. When the
 new service flag is off, the existing V061 award cabinet remains functional.
@@ -38,9 +41,10 @@ No example/preview grants are ever mixed with real profile identity.
 
 Existing public forum thread/reply and community/directory/wall data use the
 canonical public-member-card service; V065 extends their verified identity only
-when the new schema is present. The legacy Creator V1 `PublicAuthorShowcase` and
-project/creator credit systems have different trust domains and remain an explicit
-future unified-identity migration. Do not infer that a legacy project handle is
+when the new schema AND explicit release feature flag are present. The legacy Creator V1 `PublicAuthorShowcase` and creator directory now share
+the card's visual shell, explicitly labeled CREATOR CHANNEL and without an
+invented canonical member level/portrait. Project/creator credit identity
+linkage remains an explicit future data migration. Do not infer that a legacy project handle is
 the same as a verified canonical member without a signed, server-verifiable link.
 
 ## Badge and distinction catalog
@@ -48,8 +52,12 @@ the same as a verified canonical member without a signed, server-verifiable link
 Initial catalog: 26 defined badge types in eight families (origin, community,
 creation, discovery, collaboration, craft, stewardship, continuance). **Only
 `first_signal` and `world_shaper` are active/in the existing earned ledger.**
-New criteria are planned, not activated by the catalog. Manual award issuance
-is not implemented. Existing milestone grants and XP events are unchanged.
+The catalog remains a non-authoritative definition list. Server-side issuance
+now includes First Orbit (public canonical profile), First Transmission
+(independently approved forum thread), First Response (approved reply) and
+Open Channel (ten substantial approved discussions on distinct UTC days).
+All new issuance is guarded by CANONICAL_RECOGNITION_ENABLED and an installed
+D1 schema. Other criteria remain future work. Prestige issuance is not enabled. Existing milestone grants and XP events are unchanged.
 
 Prestige catalog: six ribbon types (Steadfast Signal, Maker's Service, Open Hand,
 Bridge of Worlds, Steward's Watch, Living Archive) and six rare medal types
@@ -94,7 +102,8 @@ The active production V064 Worker recorded version is
 `80c6f0d1-c35b-4524-b97d-7cffdd4063d5` (pre-change).
 **Never use `wrangler deploy --keep-vars`** against
 `anevum-apex-prelaunch-gateway`: a prior incident removed 4 secrets.
-When ready: resolve overlapping V063 styling, inspect migration and backfill
+When ready: reconcile concurrent V062/V064 branch divergence and overlapping V063
+styling before considering promotion; inspect migration and backfill
 in an isolated D1 copy, back up production, verify foreign keys, preserve
 the existing 23 Worker bindings (including opaque secrets and both D1 IDs),
 upload an unrouted candidate version, run browser/accessibility/real iPhone
@@ -103,10 +112,32 @@ Workers Versions API with exact rollback preserved.
 
 Next implementation before claiming a site-wide release:
 - Canonicalize project/creator credits after verifying identity links.
-- Add an authoritative award event worker for each planned badge, tests for
-  retries/revocations, and a documented recognition moderation/appeals console.
-- Replace older two-item "medals" terminology everywhere with "badges",
-  and add separate distinction notification kinds after issuance exists.
+- Expand issuance to other badges after proof and anti-abuse rules. Write
+  reconciliation/revocation and prestige independent-review/appeals controls.
+  The V066 first-profile/forum issuance is already idempotent, with SQL
+  conditions preventing unapproved or self-reviewed badges.
+- Add ordinary XP from approved sources only after designing its bounded,
+  server-authoritative ledger and cross-surface level calculations.
+- Finalize distinction-specific notification kinds only after prestige issuance
+  and moderation review workflows exist. Founding XP popups are now badges.
 - Add true Constellation membership/flag authorization and moderation.
 - Browser-test 320px, 390px and desktop, 20+ cards in motion/reduced motion,
   tab order, VoiceOver and Safari GPU/thermal behavior; keep poster fallback.
+
+## October 17 implementation continuation checkpoint
+
+Source branch includes an independent reviewed-forum and public-profile badge
+issuer at `canonical-auth/recognition-issuer.mjs`, integrated in canonical
+profile PATCH and moderator decision batched update. The new public archive is
+`/recognition`; both legacy creator channel directory and canonical member
+surfaces use related identity components without fabricating account bridges.
+`player-recognition-issuance-v066.test.mjs` uses actual in-memory SQLite,
+executes `0010_player_recognition.sql`, and verifies once-only issuance,
+moderator independence, no unapproved grants and sustained-conversation
+recognition. After a test-count correction the focused PR CI succeeded at
+https://github.com/anevum/anevum-web/actions/runs/39074494993.
+
+The production Worker remains V064 at the time of this checkpoint. Recognition
+is NOT active on production. The V062 base branch received concurrent new
+first-contact homepage commits; V064 optical work is divergent. Do not blindly
+merge, upload or activate the V065 branch over current production.
