@@ -39,6 +39,17 @@ test('the six outcome-based starters have unique stable IDs, real outlines and s
  assert.equal(studioStarter('nonsense'),undefined);
  assert.throws(()=>starterToDraft('nonsense',idA),/Choose an available starter/);
 });
+test('blank creation opens immediately without requiring project setup',()=>{
+ const draft=blankCanvasToDraft(idA);
+ isPrivateBackendDraft(draft);
+ assert.equal(draft.title,'Untitled creation');
+ assert.equal(draft.category,'creative');
+ assert.deepEqual(JSON.parse(draft.description.split('\n').slice(1).join('\n')).blocks,[]);
+ assert.notEqual(blankCanvasToDraft(idA).slug,blankCanvasToDraft(idB).slug);
+ const launch=source('web/src/pages/StudioLaunchpad.tsx');
+ assert.match(launch,/OPEN A BLANK CANVAS/);
+ assert.match(launch,/sl-path-card/);
+});
 test('novice first thought becomes an actual valid private project record without rights gates',()=>{
  const draft=ideaToDraft('A mysterious signal becomes a choose-your-path story.',idA);
  isPrivateBackendDraft(draft);
