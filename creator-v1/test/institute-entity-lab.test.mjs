@@ -57,3 +57,34 @@ test('Institute index links two distinct specimens with provisional names',()=>{
  assert.match(html,/Provisional entity names/);
  assert.match(html,/No live activity/i);
 });
+
+
+test('native Creator V1 route is presented without any live Institute authority',()=>{
+ const web=resolve(dirname(fileURLToPath(import.meta.url)),'../web');
+ const app=readFileSync(resolve(web,'src/App.tsx'),'utf8');
+ const page=readFileSync(resolve(web,'src/pages/InstituteLabPage.tsx'),'utf8');
+ const registry=readFileSync(resolve(web,'src/lib/institute-entities.ts'),'utf8');
+ const css=readFileSync(resolve(web,'src/pages/institute-lab.css'),'utf8');
+ const status=readFileSync(resolve(web,'src/pages/StatusPage.tsx'),'utf8');
+ assert.match(app,/path="institute\/lab"/);
+ assert.match(app,/import\("\.\/pages\/InstituteLabPage"\)/);
+ assert.match(status,/to="\/institute\/lab"/);
+ assert.match(page,/noindex,nofollow,noarchive/);
+ assert.match(page,/PRESENTATION|PREVIEW ONLY|DESIGN LAB ONLY/i);
+ assert.match(page,/prefers-reduced-motion/);
+ assert.match(page,/ArrowRight/);
+ assert.match(page,/SYNTHETIC TRANSMISSION/);
+ assert.match(page,/Official automated entity|OFFICIAL AUTOMATED ENTITY/i);
+ assert.match(registry,/presentationOnly: true/);
+ assert.match(registry,/observation-node-001/);
+ assert.match(registry,/regulation-node-002/);
+ assert.match(css,/prefers-reduced-motion/);
+ assert.ok(existsSync(resolve(root,'observation-node-001-still.svg')));
+ // This frontend is a deliberately local-only design lab; in particular it
+ // must not access staff-review endpoints, award receipts or auth sessions.
+ for(const source of [page,registry]){
+   assert.doesNotMatch(source,/fetch\s*\(|XMLHttpRequest|sendBeacon|WebSocket\s*\(/);
+   assert.doesNotMatch(source,/\/api\/v1\/member\/forum-review|\/api\/v1\/member\/progression/);
+   assert.doesNotMatch(source,/localStorage|sessionStorage|memberAuth|canonicalAuthClient/);
+ }
+});
