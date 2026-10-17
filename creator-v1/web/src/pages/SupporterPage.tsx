@@ -2,8 +2,6 @@ import {useCallback,useEffect,useState} from 'react';
 import {Link} from 'react-router-dom';
 import {canonicalAuthClient} from '../lib/canonical-beta';
 import {OrbitalMark} from '../components/OrbitalMark';
-import {SupporterRewardsStudio} from '../components/SupporterRewardsStudio';
-import {SupporterTransparency} from '../components/SupporterTransparency';
 
 type Interval='month'|'year';
 type Billing={available:boolean;supporter:boolean;status:string;until?:number|null;cancelAtPeriodEnd?:boolean;interval?:Interval|null;publicInsignia?:boolean;revision?:number;plans:{month:number;year:number}};
@@ -68,56 +66,76 @@ export function SupporterPage(){
   }catch(e){setError(e instanceof Error?e.message:'Display change unavailable.')}
   finally{setBusy(false)}
  }
+
  const enabled=Boolean(id&&billing?.available),supporter=Boolean(billing?.supporter);
  const billingReview=billing?.status==='billing-review';
- return <div className="av32-support">
-  <section className="av32-hero" aria-labelledby="av32-title">
-   <div className="av32-hero-copy"><span className="av32-index">ANEVUM / COMMUNITY CONTINUANCE / 001</span>
-    <h1 id="av32-title">Keep the <em>signal</em> alive.</h1>
-    <p>ANEVUM is an independent home for people who make, explore and share things. Supporting the network should be a choice, never the price of belonging.</p>
-    <div className="av32-ethics"><span>NO INTRUSIVE ADS</span><span>NO PURCHASED XP</span><span>NO PAY-TO-WIN</span></div>
-    <p className="av32-availability">FOUNDING SUPPORTER / <strong>PRE-LAUNCH PROPOSAL</strong></p>
+ return <main className="av32-support av45-support">
+  <section className="av45-hero" aria-labelledby="av45-title">
+   <div className="av45-hero-copy">
+    <span className="av32-index">ANEVUM / THE CONTINUANCE FUND</span>
+    <h1 id="av45-title">Keep the <em>signal</em> alive.</h1>
+    <p>Help build a home for games, art, apps and independent makers. ANEVUM stays free to explore, create and belong to.</p>
+    <div className="av45-promise"><span>NO INTRUSIVE ADS</span><span>FREE TO JOIN</span><span>CREATORS FIRST</span></div>
    </div>
-   <div className="av32-orbit" aria-hidden="true"><div className="av32-ring av32-ring-one"/><div className="av32-ring av32-ring-two"/><div className="av32-ring av32-ring-three"/><OrbitalMark/></div>
+   <div className="av45-symbol" aria-hidden="true">
+    <span className="av45-ring"/><span className="av45-ring av45-ring-alt"/>
+    <span className="av45-ring av45-ring-core"/><OrbitalMark/>
+   </div>
   </section>
-  <section className="av32-grid" aria-label="Founding supporter membership">
-   <article className="av32-panel"><span className="av32-index">01 / FREE MEMBERSHIP</span><h2>Belonging stays free.</h2>
-    <p>Every member can have a profile and wall, discover creative work, take part in community and make submissions when publishing opens. XP, sixty level artifacts and medals stay earned.</p>
-    <div className="av32-statement"><strong>Support is not an achievement.</strong><span>Payment never improves your level, earned awards, search placement, moderation privileges or creator eligibility.</span></div>
-    <Link className="av32-link" to="/join">EXPLORE MEMBERSHIP ↗</Link>
-   </article>
-   <article className="av32-panel av32-price-panel"><span className="av32-index">02 / FOUNDING SUPPORTER</span>
-    <h2>Back an independent creative universe.</h2>
-    <div className="av32-intervals" role="group" aria-label="Billing interval">
-     <button type="button" aria-pressed={interval==='month'} onClick={()=>setInterval('month')}>MONTHLY</button>
-     <button type="button" aria-pressed={interval==='year'} onClick={()=>setInterval('year')}>ANNUAL</button>
-    </div>
-    <div className="av32-price"><strong>{'$'+(interval==='month'?'5':'36')}</strong><span>USD / {interval==='month'?'MONTH':'YEAR'}</span></div>
-    <p className="av32-subprice">{interval==='year'?'Equivalent to $3 per month. One payment per year.':'Recurring monthly until cancelled.'}</p>
-    <ul className="av32-perks">
-     <li><strong>Collectible subscriber seals</strong><small>Four distinctive milestone marks, earned by verified subscription age, not XP</small></li>
-     <li><strong>Profile frames and wall auras</strong><small>Five illuminated portrait frames and five atmospheric banner treatments</small></li>
-     <li><strong>Keep the network independent</strong><small>Support hosting, development, creative infrastructure and upkeep</small></li>
+
+  <section className="av45-offer" aria-label="Founding supporter membership">
+   <div className="av45-offer-copy">
+    <span className="av32-index">01 / BECOME A FOUNDING SUPPORTER</span>
+    <h2>Help something good grow.</h2>
+    <p>Support ANEVUM's independence and collect a few beautiful ways to show you were here from the beginning. Participation, recognition through XP, and publishing remain free.</p>
+    <ul className="av45-benefits">
+     <li><strong>Collector seals</strong><small>Milestone marks that evolve over time</small></li>
+     <li><strong>Profile frames</strong><small>Distinctive orbit-inspired borders</small></li>
+     <li><strong>Wall auras</strong><small>Animated cosmic atmospheres</small></li>
     </ul>
-    <p role="status" className="av32-test-note">{billingReview?'BILLING REVIEW REQUIRED · MEMBERSHIP PRIVILEGES PAUSED':supporter?'TEST MEMBERSHIP VERIFIED':enabled?'TEST MODE ONLY · NO LIVE CHARGES':'Enrollment not open. Pricing and benefits are proposals, not a live sale.'}</p>
-    {supporter&&billing?.until&&<p>Recorded access through {new Date(billing.until).toLocaleDateString()}{billing.cancelAtPeriodEnd?' · Cancels at period end':''}.</p>}
-    {id&&checking&&<p role="status">Checking billing status…</p>}
-    {error&&<p role="alert" className="av32-error">{error}</p>}
-    <button type="button" className="av32-primary" disabled={!enabled||billingReview||busy||checking} onClick={()=>void action(supporter?'portal':'checkout')}>
-     {busy?'OPENING…':billingReview?'CONTACT SUPPORT BEFORE CONTINUING':!enabled?'CHECKOUT NOT OPEN':supporter?'TEST BILLING MANAGEMENT ↗':'TEST SUPPORTER CHECKOUT ↗'}
-    </button>
-    {billingReview&&<button className="av32-refresh" type="button" disabled={!enabled||busy||checking} onClick={()=>void action('portal')}>OPEN BILLING MANAGEMENT ↗</button>}
-    {supporter&&<label className="av32-privacy-setting"><input type="checkbox" checked={billing?.publicInsignia===true} disabled={busy||checking} onChange={e=>void updateDisplay(e.target.checked)}/><span><strong>Show my founding supporter insignia</strong><small>Off by default. Visible on your public wall only when you choose to display it and your test membership is active. This does not affect earned awards.</small></span></label>}
-    {id&&<button type="button" className="av32-refresh" disabled={checking||busy} onClick={()=>{setError('');void refresh()}}>RECHECK STATUS</button>}
-    {!id&&!isPending&&<Link className="av32-link" to="/join">JOIN OR SIGN IN ↗</Link>}
-    <p className="av32-legal">Final benefits, recurring payment terms, cancellation, refunds and tax information must be published before live enrollment. This does not offer investment returns or early financial benefits.</p>
-   </article>
+    <Link className="av45-link" to="/support/collection">Explore the supporter collection →</Link>
+   </div>
+   <aside className="av45-buy" aria-label="Membership pricing">
+    <div className="av45-buy-head"><strong>FOUNDING SUPPORTER</strong><span>PRE-LAUNCH</span></div>
+    <div className="av45-switch" role="group" aria-label="Proposed billing interval">
+     <button type="button" aria-pressed={interval==='year'} onClick={()=>setInterval('year')}>Yearly · save 40%</button>
+     <button type="button" aria-pressed={interval==='month'} onClick={()=>setInterval('month')}>Monthly</button>
+    </div>
+    <div className="av45-price"><strong>{interval==='year'?'$36':'$5'}</strong><span>/ {interval==='year'?'year':'month'}</span></div>
+    <p className="av45-frequency">{interval==='year'?'Equivalent to $3 a month. Billed once yearly.':'Billed monthly. Cancel future renewals anytime.'}</p>
+    <p className="av45-status" role="status">
+     {billingReview?'BILLING REVIEW NEEDED':supporter?'TEST MEMBERSHIP ACTIVE':enabled?'TEST CHECKOUT AVAILABLE':'PROPOSED PRICE · ENROLLMENT NOT OPEN'}
+    </p>
+    {supporter&&billing?.until&&<p className="av45-frequency">Access through {new Date(billing.until).toLocaleDateString()}{billing.cancelAtPeriodEnd?' · Renewal cancelled':''}.</p>}
+    {id&&checking&&<p className="av45-frequency" role="status">Checking membership…</p>}
+    {id&&error&&<p role="alert" className="av45-error">{error}</p>}
+    {enabled
+     ? <button className="av45-primary" type="button" disabled={busy||checking||billingReview} onClick={()=>void action(supporter?'portal':'checkout')}>
+        {busy?'Opening…':billingReview?'Membership under review':supporter?'Manage test membership ↗':'Open test checkout ↗'}
+       </button>
+     : <Link className="av45-primary" to="/join">Join ANEVUM for free →</Link>}
+    <div className="av45-action-row">
+     {id&&<button type="button" disabled={busy||checking} onClick={()=>{setError('');void refresh()}}>Refresh membership</button>}
+     {!id&&!isPending&&<Link to="/join">Already a member? Sign in</Link>}
+    </div>
+    {supporter&&<details className="av45-options"><summary>Public supporter badge</summary>
+      <label className="av32-privacy-setting"><input type="checkbox" checked={billing?.publicInsignia===true} disabled={!enabled||busy||checking} onChange={e=>void updateDisplay(e.target.checked)}/>
+       <span><strong>Show badge on my profile</strong><small>Private by default; affects cosmetics only, never XP or ranking.</small></span>
+      </label>
+    </details>}
+    <p className="av45-legal">Memberships and live payments are not open. These proposed prices and benefits will be confirmed with full terms before enrollment.</p>
+   </aside>
   </section>
-  <SupporterTransparency/>
-  <SupporterRewardsStudio memberId={id}/>
-  <section className="av32-afterword"><span className="av32-index">CONTINUANCE / PRINCIPLE 001</span>
-   <blockquote>Creativity should be funded by people who believe in it, without selling their attention.</blockquote>
-   <p>Creator sales and payouts are a separate future phase. ANEVUM will not hold creator funds or process marketplace transactions until verified publishing and payout systems are ready.</p>
+
+  <section className="av45-impact" aria-label="Where support goes">
+   <div className="av45-impact-copy"><span className="av32-index">02 / YOUR IMPACT</span><strong>What support helps build.</strong></div>
+   <div className="av45-impact-items">
+    <span>Keep ANEVUM online</span>
+    <span>Improve creator tools</span>
+    <span>Support safer community spaces</span>
+   </div>
+   <Link className="av45-link" to="/support/transparency">Open transparency report →</Link>
   </section>
- </div>;
+  <p className="av45-principle">Supporting is always optional. It never buys XP, medals, better ranking, moderator power or extra visibility.</p>
+ </main>;
 }
