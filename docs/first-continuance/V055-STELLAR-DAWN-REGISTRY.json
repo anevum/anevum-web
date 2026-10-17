@@ -1,0 +1,135 @@
+{
+  "schema": "anevum.first-continuance.v055",
+  "session": "ANEVUM.WEB.BUILD.2026-10-17.004.STELLAR-DAWN-LEVELS",
+  "status": "review-prototype-no-deployment",
+  "levelCap": 30,
+  "summitXP": 63075,
+  "thresholdFormula": "75 * (level - 1)^2",
+  "availableLevels": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    25,
+    30
+  ],
+  "chapterCoverage": [
+    {
+      "chapter": "Before Form",
+      "levels": "1-5",
+      "status": "prototype-complete"
+    },
+    {
+      "chapter": "First Matter",
+      "levels": "6-10",
+      "status": "prototype-complete"
+    },
+    {
+      "chapter": "Stellar Dawn",
+      "levels": "11-15",
+      "status": "prototype-complete"
+    },
+    {
+      "chapter": "Cosmic Architecture",
+      "levels": "16-20",
+      "status": "pending"
+    },
+    {
+      "chapter": "Worlds & Life",
+      "levels": "21-25",
+      "status": "level 25 flagship only"
+    },
+    {
+      "chapter": "Continuance",
+      "levels": "26-30",
+      "status": "level 30 flagship only"
+    }
+  ],
+  "newAndRefined": [
+    {
+      "level": 11,
+      "name": "Quiet Epoch",
+      "thresholdXP": 7500,
+      "silhouette": "Neutral-hydrogen veil; dim converging density knots",
+      "motion": "slow density-cloud compression",
+      "accent": "#adb9d8",
+      "artworkStatus": "new"
+    },
+    {
+      "level": 12,
+      "name": "Gravity Well",
+      "thresholdXP": 9075,
+      "silhouette": "Funnel-shaped warped gravitational lens",
+      "motion": "lensing arcs with inward gas streams",
+      "accent": "#abc7e0",
+      "artworkStatus": "new"
+    },
+    {
+      "level": 13,
+      "name": "Star Ignition",
+      "thresholdXP": 10800,
+      "silhouette": "Unstable blue-white photosphere and asymmetric stellar ejecta",
+      "motion": "uneven moving corona, light pulse",
+      "accent": "#d2eff6",
+      "artworkStatus": "new"
+    },
+    {
+      "level": 14,
+      "name": "Fusion Ember",
+      "thresholdXP": 12675,
+      "silhouette": "Open C-shaped stellar cutaway, incandescent mantle",
+      "motion": "circulating plasma convection",
+      "accent": "#f1b489",
+      "artworkStatus": "new"
+    },
+    {
+      "level": 15,
+      "name": "Nebula Bloom",
+      "thresholdXP": 14700,
+      "silhouette": "Ionization-front clouds, twin dark gas pillars, embedded infant stars",
+      "motion": "three independently moving cloud banks",
+      "accent": "#dba6cb",
+      "artworkStatus": "refined"
+    }
+  ],
+  "verified": {
+    "browserAssertions": 27,
+    "assetChecks": 170,
+    "formats": [
+      "native animated SVG",
+      "static SVG",
+      "compact SVG",
+      "transparent PNG 2048",
+      "WebP 256/512/1024",
+      "compact PNG 64/128/256"
+    ],
+    "browser": "desktop Chromium and emulated 390px mobile"
+  },
+  "pendingLevels": [
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23,
+    24,
+    26,
+    27,
+    28,
+    29
+  ],
+  "delivery": "ANEVUM-EVOLUTION-V055-WEB-PREVIEW.zip, ANEVUM-EVOLUTION-V055-FULL-SOURCE.zip, standalone HTML and motion-reel user artifacts; binaries not checked into GitHub"
+}
