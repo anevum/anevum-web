@@ -413,3 +413,49 @@ test('private pilot vault enforces shared 512 MiB cap, then frees space on delet
   assert.ok(after.globalUsedBytes<after.globalQuotaBytes);
  }finally{s.close();}
 });
+
+
+test('private MP4/WebM film submissions use quarantine only, never public playback',async()=>{
+ const s=setup({uploads:true});try{
+  const film={...draft,category:'video',slug:'first-film',title:'First Experimental Film',
+   demoUrl:null,sourceUrl:null};
+  const p=(await j(await s.call(ROOT,'POST','alice',{
+   clientRequestId:crypto.randomUUID(),draft:film
+  }))).project;
+  assert.equal((await s.call(ROOT+'/'+p.id+'/submit','POST','alice',{revision:1})).status,422);
+  const files=ROOT+'/'+p.id+'/assets';
+  const mp4=new Uint8Array([0,0,0,12,102,116,121,112,105,115,111,109]);
+  const id=(await j(await s.call(files,'POST','alice',{
+   name:'film.mp4',sizeBytes:mp4.length,contentType:'video/mp4'
+  }))).id;
+  assert.equal((await s.call(files+'/'+id,'PUT','alice',new TextEncoder().encode('INVALIDFILE!'))).status,422);
+  const uploaded=await s.call(files+'/'+id,'PUT','alice',mp4);
+  assert.equal(uploaded.status,200);
+  assert.equal((await j(await s.call(files))).assets[0].kind,'video');
+  const submitted=await s.call(ROOT+'/'+p.id+'/submit','POST','alice',{revision:1});
+  assert.equal(submitted.status,200);
+  assert.equal((await j(submitted)).project.status,'pending_review');
+  assert.equal((await s.call(files+'/'+id+'/file','GET','bob')).status,404);
+  assert.equal((await s.call(files+'/'+id+'/file','GET',null)).status,401);
+  const review=await j(await s.call('/api/v1/member/studio/review/'+p.id+'/manifest','GET','bob'));
+  assert.equal(review.assets[0].contentType,'video/mp4');
+  assert.equal(review.assets[0].kind,'video');
+  assert.equal('body' in review.assets[0],false);
+  const original=await s.call(files+'/'+id+'/file','GET','alice');
+  assert.equal(original.headers.get('content-type'),'application/octet-stream');
+  assert.match(original.headers.get('content-disposition'),/attachment/);
+  assert.deepEqual(new Uint8Array(await original.arrayBuffer()),mp4);
+  // Independent EBML/WebM signature case on an editable private draft.
+  const other={...draft,slug:'webm-test',category:'video',demoUrl:null,sourceUrl:null};
+  const q=(await j(await s.call(ROOT,'POST','alice',{
+   clientRequestId:crypto.randomUUID(),draft:other
+  }))).project;
+  const root=ROOT+'/'+q.id+'/assets';
+  const ebml=new Uint8Array([0x1a,0x45,0xdf,0xa3,0x81,0x00,0x00,0x00]);
+  const webmid=(await j(await s.call(root,'POST','alice',{
+   name:'render.webm',sizeBytes:ebml.length,contentType:'video/webm'
+  }))).id;
+  assert.equal((await s.call(root+'/'+webmid,'PUT','alice',ebml)).status,200);
+  assert.equal((await s.call(ROOT+'/'+q.id+'/submit','POST','alice',{revision:1})).status,200);
+ }finally{s.close();}
+});
