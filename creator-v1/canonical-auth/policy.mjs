@@ -6,10 +6,17 @@
  * email-code session and NOT the V5 member/RHEN authorization service.
  */
 export const CANONICAL_ORIGIN="https://a.anevum.com";
+export const CANONICAL_APEX_ORIGIN="https://anevum.com";
+// Explicit Worker-only mode, not inferred from the visitor Host header.
+// Existing a.anevum.com sessions and routes stay unchanged until cutover.
+export const canonicalRequestOrigin=env=>
+  env?.ANEVUM_CANONICAL_APEX_ENABLED==="true"?CANONICAL_APEX_ORIGIN:CANONICAL_ORIGIN;
 export const CANONICAL_PREFIX="/api/v1/member";
 export const CANONICAL_AUTH_PATH=CANONICAL_PREFIX+"/auth";
 export const CANONICAL_ISSUER="anevum-better-auth-staging-v1";
 export const CANONICAL_COOKIE_PREFIX="anevum_can_stage";
+export const canonicalCookiePrefix=env=>
+  env?.ANEVUM_CANONICAL_APEX_ENABLED==="true"?"anevum_can_apex":CANONICAL_COOKIE_PREFIX;
 export const REQUIRED_CANONICAL_TABLES=Object.freeze(["user","session","account","verification","rateLimit"]);
 export const AUTH_ALLOWLIST=Object.freeze({
   "GET":new Set([
@@ -99,10 +106,10 @@ export async function canonicalSchemaReady(env){
   }catch{return false;}
 }
 
-export function isCanonicalOrigin(request){
+export function isCanonicalOrigin(request,env){
   try{
     const url=new URL(request.url);
-    return url.origin===CANONICAL_ORIGIN && url.protocol==="https:" &&
+    return url.origin===canonicalRequestOrigin(env) && url.protocol==="https:" &&
       url.username===""&&url.password==="";
   }catch{return false;}
 }
@@ -111,10 +118,12 @@ export function isCanonicalOrigin(request){
  * Never forward old V5/Creator tokens. OAuth state cookies use the Better Auth
  * cookie prefix with optional __Secure- or __Host- browser prefixes.
  */
-export function withoutForeignCookies(request){
+export function withoutForeignCookies(request,env){
   const headers=new Headers(request.headers);
   const cookie=(headers.get("cookie")||"").split(";").map(s=>s.trim()).filter(Boolean)
-    .filter(x=>/^(?:__Secure-|__Host-)?anevum_can_stage\.[A-Za-z0-9_.-]+=/i.test(x));
+    .filter(x=>env?.ANEVUM_CANONICAL_APEX_ENABLED==="true"?
+      /^(?:__Secure-|__Host-)?anevum_can_apex\.[A-Za-z0-9_.-]+=/i.test(x):
+      /^(?:__Secure-|__Host-)?anevum_can_stage\.[A-Za-z0-9_.-]+=/i.test(x));
   if(cookie.length)headers.set("cookie",cookie.join("; "));
   else headers.delete("cookie");
   headers.delete("authorization");

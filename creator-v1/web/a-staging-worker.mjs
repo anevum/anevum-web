@@ -29,10 +29,11 @@ function protect(response,method,forceNoStore=false){
     status:response.status,statusText:response.statusText,headers
   });
 }
-export default {
+export function createPublicStageWorker({hostname=SITE}={}){
+return {
   async fetch(request,env,ctx){
     const url=new URL(request.url);
-    if(url.protocol!=="https:"||url.hostname!==SITE)return textResponse(404,"Not found",request.method);
+    if(url.protocol!=="https:"||url.hostname!==hostname)return textResponse(404,"Not found",request.method);
     if(request.method!=="GET"&&request.method!=="HEAD")return textResponse(405,"Staging public view is read-only",request.method);
     if(url.pathname==="/health")return protect(new Response(JSON.stringify({
       service:"anevum-creator-v1-a-staging",status:"ok",mode:"public-read-only"
@@ -52,3 +53,5 @@ export default {
     return protect(await env.ASSETS.fetch(clean),request.method);
   }
 };
+}
+export default createPublicStageWorker();
