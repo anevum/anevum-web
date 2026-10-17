@@ -1,4 +1,4 @@
-import {Link} from "react-router-dom";
+import {Link,useSearchParams} from "react-router-dom";
 import {type FormEvent,useState} from "react";
 import {useNavigate} from "react-router-dom";
 import {canonicalAuthClient,canonicalMethods} from "../lib/canonical-beta";
@@ -20,6 +20,15 @@ const METHODS=[
  */
 export function Phase1JoinPage(){
  const navigate=useNavigate();
+ const [searchParams]=useSearchParams();
+ const oauthFailure=searchParams.get("error");
+ const oauthFeedback=oauthFailure==="account_not_linked"
+   ?"This sign-in method is not connected to your existing ANEVUM member account. Use your original sign-in method below, open your member page, and connect the provider under Connected Sign-in Methods."
+   :oauthFailure==="access_denied"||oauthFailure==="oauth_access_denied"
+   ?"Provider authorization was cancelled. Your ANEVUM account is unchanged."
+   :oauthFailure
+   ?"Your provider could not finish signing you in. Try your original method; your ANEVUM account is unchanged."
+   :null;
  const capability=useResource(canonicalMethods,[]);
  const [email,setEmail]=useState("");
  const [otp,setOtp]=useState("");
@@ -31,11 +40,26 @@ export function Phase1JoinPage(){
  const emailReady=ready&&capability.data.methods.email.available===true;
  const socialReady=(key:string)=>ready&&["google","github","apple","microsoft"].includes(key)&&capability.data.methods[key as "google"|"github"|"apple"|"microsoft"]?.available===true;
  const member=session?.user;
- async function startSocial(provider:"google"|"github"|"apple"|"microsoft"){
-   if(!socialReady(provider)||busy)return;
+ const requiresEmailVerification=Boolean(member?.id&&member.emailVerified!==true);
+ const sessionEmail=typeof member?.email==="string"?member.email.trim().toLowerCase():"";
+ const emailForVerification=requiresEmailVerification?sessionEmail:email;
+ async function signOutUnverified(){
+   if(busy)return;
    setBusy(true);setError("");
    try{
-     const response=await canonicalAuthClient.signIn.social({provider,callbackURL:"/join"});
+     const result=await canonicalAuthClient.signOut();
+     if(result.error)throw Error("Sign-out failed");
+     window.location.replace("/join");
+   }catch{
+     setError("Could not sign out. Please retry.");
+     setBusy(false);
+   }
+ }
+ async function startSocial(provider:"google"|"github"|"apple"|"microsoft"){
+   if(!socialReady(provider)||busy||requiresEmailVerification)return;
+   setBusy(true);setError("");
+   try{
+     const response=await canonicalAuthClient.signIn.social({provider,callbackURL:"/member",errorCallbackURL:"/join"});
      if(response.error)throw Error("Social sign-in could not be started.");
    }catch{
      setError("Sign-in is currently unavailable. No account was created.");
@@ -44,7 +68,7 @@ export function Phase1JoinPage(){
  async function submitEmail(event:FormEvent<HTMLFormElement>){
    event.preventDefault();
    if(!emailReady||busy)return;
-   const normalized=email.trim().toLowerCase();
+   const normalized=emailForVerification.trim().toLowerCase();
    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalized)||normalized.length>254){
      setError("Enter a valid email address.");return;
    }
@@ -65,7 +89,7 @@ export function Phase1JoinPage(){
  }
  async function requestReplacementCode(){
    if(!emailReady||busy||!codeSent)return;
-   const normalized=email.trim().toLowerCase();
+   const normalized=emailForVerification.trim().toLowerCase();
    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalized)||normalized.length>254){
      setError("Enter a valid email address.");return;
    }
@@ -103,17 +127,25 @@ export function Phase1JoinPage(){
            ready?(capability.data.registration==="open"?"OPEN REGISTRATION":"INVITATION BETA"):"REGISTRATION CLOSED"}
        </span>
      </div>
-     {member&&ready?<div className="join-return">
+     {member?.emailVerified===true&&ready?<div className="join-return">
        <h2>WELCOME BACK.</h2>
        <p>You have a verified ANEVUM member session. Your profile is private until you publish it.</p>
        <div className="join-identity"><span className="join-identity-avatar" aria-hidden="true">◈</span>
          <div><strong>{member.name||"ANEVUM MEMBER"}</strong><small>CANONICAL MEMBER SESSION</small></div></div>
        <Link className="button primary join-main-action" to="/member">OPEN MY PROFILE <span aria-hidden="true">↗</span></Link>
      </div>:<>
-       <h2>{codeSent?"CHECK YOUR INBOX.":"YOUR STORY STARTS HERE."}</h2>
-       <p className="join-lead">{codeSent?"Enter the latest eight-digit code sent to your email.":"One email, one verification, and you are in. Membership is free."}</p>
+       <h2>{codeSent?"CHECK YOUR INBOX.":requiresEmailVerification?"VERIFY YOUR EMAIL.":"YOUR STORY STARTS HERE."}</h2>
+       <p className="join-lead">{codeSent?"Enter the latest eight-digit code sent to your email.":requiresEmailVerification?"Your sign-in provider did not verify your email. Confirm the email on this session before opening your ANEVUM profile.":"One email, one verification, and you are in. Membership is free."}</p>
+       {oauthFeedback&&<p role="alert" className="av12-join-error">{oauthFeedback}</p>}
+       {requiresEmailVerification&&<div className="join-service-note" role="status">
+         <strong>EMAIL VERIFICATION REQUIRED</strong>
+         <p>{sessionEmail?"Verify "+sessionEmail+" with an eight-digit code. Your existing account will remain the same.":"This provider did not supply an email address ANEVUM can verify. Sign out and use a different sign-in method."}</p>
+         <button className="button secondary" type="button" onClick={()=>void signOutUnverified()} disabled={busy}>
+           SIGN OUT / CHANGE ACCOUNT
+         </button>
+       </div>}
        {ready&&!emailReady&&<p role="status" className="join-service-note">Email sign-in is temporarily unavailable.</p>}
-       {ready&&(["google","github","apple","microsoft"] as const).some(socialReady)&&<div className="join-methods" aria-label="Other available sign-in methods">
+       {ready&&!requiresEmailVerification&&(["google","github","apple","microsoft"] as const).some(socialReady)&&<div className="join-methods" aria-label="Other available sign-in methods">
          {METHODS.filter(method=>method.key!=="email"&&socialReady(method.key)).map(method=><button
            key={method.key} className="join-method join-method-ready" type="button"
            onClick={()=>void startSocial(method.key as "google"|"github"|"apple"|"microsoft")} disabled={busy}>
@@ -121,11 +153,11 @@ export function Phase1JoinPage(){
            <span className="join-method-copy"><strong>Continue with {method.name}</strong></span>
          </button>)}
        </div>}
-       {emailReady&&<form className="av12-email-entry" onSubmit={event=>void submitEmail(event)}>
+       {emailReady&&(!requiresEmailVerification||Boolean(sessionEmail))&&<form className="av12-email-entry" onSubmit={event=>void submitEmail(event)}>
          <label htmlFor="anevum-email">{codeSent?"VERIFICATION SENT TO":"YOUR EMAIL ADDRESS"}</label>
-         <input id="anevum-email" type="email" autoComplete="email" placeholder="you@example.com" value={email}
+         <input id="anevum-email" type="email" autoComplete="email" placeholder="you@example.com" value={emailForVerification}
            onChange={event=>{setEmail(event.target.value);if(codeSent)resetCode();}}
-           disabled={busy||codeSent} required maxLength={254}/>
+           disabled={busy||codeSent} readOnly={requiresEmailVerification} required maxLength={254}/>
          {codeSent&&<>
            <label htmlFor="anevum-otp">Verification code</label>
            <input id="anevum-otp" type="text" inputMode="numeric" autoComplete="one-time-code"
@@ -136,7 +168,7 @@ export function Phase1JoinPage(){
            <button type="button" className="av12-email-reset" onClick={()=>void requestReplacementCode()} disabled={busy}>
              {busy?"REQUESTING…":"SEND A NEW CODE"}
            </button>
-           <button type="button" className="av12-email-reset" onClick={resetCode} disabled={busy}>USE A DIFFERENT EMAIL</button>
+           {!requiresEmailVerification&&<button type="button" className="av12-email-reset" onClick={resetCode} disabled={busy}>USE A DIFFERENT EMAIL</button>}
          </>}
          <button type="submit" className="av12-email-submit" disabled={busy}>
            {busy?"WORKING…":codeSent?"VERIFY & CONTINUE":"CONTINUE WITH EMAIL"}

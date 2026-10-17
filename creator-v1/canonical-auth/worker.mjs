@@ -59,7 +59,7 @@ function safeResponse(original){
   return new Response(original.body,{status:original.status,statusText:original.statusText,headers});
 }
 
-async function boundedProviderBody(request){
+async function boundedProviderBody(request,callbackURL="/member",errorCallbackURL="/join"){
   if(!/^application\/json(?:\s*;|\s*$)/i.test(request.headers.get("content-type")||""))
     return null;
   const raw=await boundedText(request,512);
@@ -69,10 +69,11 @@ async function boundedProviderBody(request){
     if(!input||typeof input!=="object"||Array.isArray(input))return null;
     // Explicit allowlist: never accept user-selected OAuth destination,
     // server identity, organization, trusted origin, scopes, or privileges.
-    if(Object.keys(input).some(x=>!["provider","callbackURL"].includes(x)))return null;
+    if(Object.keys(input).some(x=>!["provider","callbackURL","errorCallbackURL"].includes(x)))return null;
     if(!["google","github","apple","microsoft"].includes(input.provider)||
-      (input.callbackURL!==undefined&&input.callbackURL!=="/join"))return null;
-    return JSON.stringify({provider:input.provider,callbackURL:"/join"});
+      (input.callbackURL!==undefined&&input.callbackURL!==callbackURL)||
+      (input.errorCallbackURL!==undefined&&input.errorCallbackURL!==errorCallbackURL))return null;
+    return JSON.stringify({provider:input.provider,callbackURL,errorCallbackURL});
   }catch{return null;}
 }
 
@@ -169,7 +170,7 @@ export function createCanonicalStageWorker({authFactory=createCanonicalAuth}={})
         email:{available:Boolean(stageReady&&configured.email&&(configured.invited||configured.open))},
         github:{available:Boolean(stageReady&&configured.github)},passkey:{available:false},
         microsoft:{available:Boolean(stageReady&&configured.microsoft)},apple:{available:Boolean(stageReady&&configured.apple)}},
-      linking:"disabled"
+      linking:stageReady&&[configured.google,configured.github,configured.apple,configured.microsoft].some(Boolean)?"explicit":"disabled"
     });
     // Never accept new identities without their required profile schema.
     if(!stageReady)return fail(request,503);
@@ -208,12 +209,25 @@ export function createCanonicalStageWorker({authFactory=createCanonicalAuth}={})
 
     // No inherited V5/Creator legacy cookies and no Authorization.
     // Enforce same-origin CSRF boundary for both POST and PATCH profile edits.
-    if(["POST","PATCH","PUT","DELETE"].includes(request.method)&&!sameOriginMutation(request))
+    // Apple returns from appleid.apple.com via a cross-site HTML form POST.
+    // The exact enabled callback is the only exception to our same-origin mutation rule;
+    // the signed OAuth state is still checked by Better Auth.
+    const isAppleFormPost=request.method==="POST" && path===CANONICAL_AUTH_PATH+"/callback/apple" &&
+      configured.apple && /^application\/x-www-form-urlencoded(?:;|$)/i.test(request.headers.get("content-type")||"") &&
+      (!request.headers.get("origin") || request.headers.get("origin")==="https://appleid.apple.com");
+    if(["POST","PATCH","PUT","DELETE"].includes(request.method)&&!sameOriginMutation(request)&&!isAppleFormPost)
       return safeJson(request,{error:"Same-origin request required"},403);
     let clean=withoutForeignCookies(request);
     if(request.method==="POST"){
       if(url.search)return safeJson(request,{error:"Invalid request"},400);
-      if(path===CANONICAL_AUTH_PATH+"/email-otp/send-verification-otp"||
+      if(isAppleFormPost){
+        const body=await boundedText(clean,16384);
+        if(body===null)return safeJson(request,{error:"Invalid callback"},400);
+        const form=new URLSearchParams(body);
+        if(!form.get("state")||(!form.get("code")&&!form.get("error")))
+          return safeJson(request,{error:"Invalid callback"},400);
+        clean=new Request(request.url,{method:"POST",headers:clean.headers,body,redirect:"manual"});
+      }else if(path===CANONICAL_AUTH_PATH+"/email-otp/send-verification-otp"||
         path===CANONICAL_AUTH_PATH+"/sign-in/email-otp"){
         if(!configured.email||!(configured.invited||configured.open))return fail(request,503);
         const verifying=path.endsWith("/sign-in/email-otp");
@@ -246,6 +260,14 @@ export function createCanonicalStageWorker({authFactory=createCanonicalAuth}={})
           body:safeBody,
           redirect:"manual"
         });
+      }else if(path===CANONICAL_AUTH_PATH+"/link-social"){
+        if(![configured.google,configured.github,configured.apple,configured.microsoft].some(Boolean))return fail(request,503);
+        const safeBody=await boundedProviderBody(clean,"/member","/member");
+        if(!safeBody)return safeJson(request,{error:"Invalid account-linking request"},400);
+        if(!configured[JSON.parse(safeBody).provider])return fail(request,503);
+        const headers=new Headers(clean.headers);
+        headers.set("content-type","application/json");
+        clean=new Request(request.url,{method:"POST",headers,body:safeBody,redirect:"manual"});
       }else if(path===CANONICAL_AUTH_PATH+"/sign-out"){
         if(request.headers.get("content-type") &&
           !/^application\/json(?:\s*;|\s*$)/i.test(request.headers.get("content-type")))
@@ -257,6 +279,11 @@ export function createCanonicalStageWorker({authFactory=createCanonicalAuth}={})
 
     try{
       const auth=authFactory(env);
+      if(path===CANONICAL_AUTH_PATH+"/link-social"){
+        const session=await auth.api.getSession({headers:clean.headers});
+        if(!session?.user?.id||session.user.emailVerified!==true)
+          return safeJson(request,{error:"Verified sign-in required"},401);
+      }
       if(ownProfile||ownExport||ownClosure||ownSpace||ownProgression||ownSupporter||ownProjectSave||ownStudio||ownStudioReview){
         const session=await auth.api.getSession({headers:clean.headers});
         if(!session?.user)return safeJson(request,{error:"Sign-in required"},401);

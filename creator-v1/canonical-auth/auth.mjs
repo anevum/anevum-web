@@ -79,9 +79,9 @@ export function canonicalAuthOptions(env){
     account:{
       encryptOAuthTokens:true,
       storeStateStrategy:"database",
-      accountLinking:{disableImplicitLinking:true}
+      accountLinking:{enabled:true,disableImplicitLinking:true,allowDifferentEmails:false,allowUnlinkingAll:false,updateUserInfoOnLink:false}
     },
-    trustedOrigins:[CANONICAL_ORIGIN],
+    trustedOrigins:stage.apple?[CANONICAL_ORIGIN,"https://appleid.apple.com"]:[CANONICAL_ORIGIN],
     advanced:{
       useSecureCookies:true,
       cookiePrefix:CANONICAL_COOKIE_PREFIX,
@@ -93,6 +93,7 @@ export function canonicalAuthOptions(env){
       enabled:true,storage:"database",window:60,max:20,
       customRules:{
         "/sign-in/social":{window:60,max:5},
+        "/link-social":{window:60,max:3},
         "/email-otp/send-verification-otp":{window:600,max:3},
         "/sign-in/email-otp":{window:60,max:5}
       }
