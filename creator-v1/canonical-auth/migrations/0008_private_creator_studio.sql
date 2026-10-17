@@ -40,7 +40,7 @@ CREATE TABLE IF NOT EXISTS member_studio_assets (
   user_id TEXT NOT NULL REFERENCES "user"(id) ON DELETE RESTRICT,
   filename TEXT NOT NULL CHECK(length(filename) BETWEEN 1 AND 160),
   extension TEXT NOT NULL CHECK(length(extension) BETWEEN 2 AND 5),
-  kind TEXT NOT NULL CHECK(kind IN ('image','audio','document','package')),
+  kind TEXT NOT NULL CHECK(kind IN ('image','audio','video','document','package')),
   content_type TEXT NOT NULL CHECK(length(content_type) BETWEEN 3 AND 80),
   size_bytes INTEGER NOT NULL CHECK(size_bytes BETWEEN 1 AND 20971520),
   status TEXT NOT NULL CHECK(status IN ('reserved','uploading','quarantined','deleting')),
