@@ -1,0 +1,38 @@
+name: ANEVUM V062 Live WebGL Member Smoke
+on:
+  push:
+    branches: [build/evolution-miniature-native-webgl-v062-20261017-011]
+    paths: [.github/workflows/evolution-v062-native-live-qa.yml]
+permissions:
+  contents: read
+jobs:
+  verify:
+    if: github.repository == 'anevum/anevum-web'
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify native V062 code and browser smoke syntax
+        run: |
+          set -euo pipefail
+          node --check creator-v1/test/evolution-mini-live-browser-v062.mjs
+          node --check creator-v1/test/evolution-mini-browser-v062.mjs
+          test -s creator-v1/web/src/lib/evolution-mini-renderer.ts
+      - name: Inspect live member badge in desktop, mobile and reduced-motion Chrome
+        run: |
+          set -euo pipefail
+          /usr/bin/google-chrome --version
+          node creator-v1/test/evolution-mini-live-browser-v062.mjs
+      - name: Preserve visual and network diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: anevum-v062-live-native-member-evidence
+          path: qa-v062-live-member/
+          if-no-files-found: warn
+          retention-days: 14
