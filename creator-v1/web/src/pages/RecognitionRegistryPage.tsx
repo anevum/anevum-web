@@ -71,7 +71,7 @@ export function RecognitionRegistryPage(){
    distinctions.filter(d=>d.kind===cabinet.slice(0,-1)&&(!mine||honors.has(d.id))&&
    (!term||(d.name+' '+d.description+' '+d.criterion).toLocaleLowerCase().includes(term)));
  },[cabinet,family,search,mine,held,honors]);
- return <main className="av66-registry" id="recognition-registry">
+ return <section className="av66-registry" id="recognition-registry">
   <header className="av66-registry-header">
    <div className="av66-registry-eyebrow"><OrbitalMark/><span>ANEVUM / THE CONTINUANCE INSTITUTE</span><span>RECOGNITION ARCHIVE / VOL. 01</span></div>
    <h1>THE MARKS<br/><em>WE LEAVE.</em></h1>
@@ -103,5 +103,5 @@ export function RecognitionRegistryPage(){
     <p>Levels and experience are not authority. Badges cannot be purchased. Ribbons and medals are independently reviewed, subject to evidence and appeal, and never confer moderation powers.</p>
    </footer>
   </div>
- </main>;
+ </section>;
 }
