@@ -1,0 +1,56 @@
+name: ANEVUM V066 Canonical Community Entry Review
+
+# Review-only. No production Cloudflare API token, database mutation,
+# Worker deployment, or enrollment/role changes are permitted here.
+on:
+  pull_request:
+    branches:
+      - build/evolution-miniature-native-webgl-v062-20261017-011
+    paths:
+      - creator-v1/web/src/App.tsx
+      - creator-v1/web/src/pages/CanonicalForums.tsx
+      - creator-v1/test/community-entry-v066.test.mjs
+      - .github/workflows/community-entry-v066-review.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    if: github.repository == 'anevum/anevum-web'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout exact reviewed source
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+
+      - name: Verify source identity
+        env:
+          SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: test "$(git rev-parse HEAD)" = "$SOURCE_SHA"
+
+      - name: Use Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install without lifecycle scripts
+        run: npm install --ignore-scripts --no-audit --no-fund
+
+      - name: Check Creator V1 TypeScript
+        run: npm run check:creator-v1-web
+
+      - name: Build canonical frontend
+        run: npm run build:creator-v1-web
+
+      - name: Canonical forum entry and server security regressions
+        run: node --test creator-v1/test/community-entry-v066.test.mjs creator-v1/test/canonical-forums-v041.test.mjs creator-v1/test/apex-prelaunch-gateway.test.mjs
+
+      - name: No release action
+        run: |
+          echo "SOURCE_REVIEW_ONLY=PASS"
+          echo "No public forum, backend flag, D1, reviewer role or Cloudflare route was modified."
