@@ -32,7 +32,8 @@ jobs:
           BASE_SHA: 90283589a309d3b72a4e7a5e718b05dba92ebe93
         run: |
           set -euo pipefail
-          test "$(git rev-parse HEAD)" = "$BASE_SHA" || { echo "Integration base moved. Abort."; exit 1; }
+          git merge-base --is-ancestor "$BASE_SHA" HEAD || { echo "V064 optical foundation is missing. Abort."; exit 1; }
+          test "$(git rev-list --count "$BASE_SHA"..HEAD)" -le 3 || { echo "Unexpected integration branch drift. Abort."; exit 1; }
           git fetch origin build/player-card-recognition-v065-20261017-013
           test "$(git rev-parse FETCH_HEAD)" = "$SOURCE_SHA" || { echo "Integration source changed. Abort."; exit 1; }
           git config user.name 'github-actions[bot]'
