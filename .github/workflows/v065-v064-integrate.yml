@@ -16,7 +16,7 @@ jobs:
   reconcile:
     if: github.repository == 'anevum/anevum-web' && github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
-    timeout-minutes: 18
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
         with:
@@ -60,6 +60,22 @@ jobs:
           test -s creator-v1/web/src/pages/RecognitionRegistryPage.tsx
       - name: Install source-only frontend tools
         run: npm install --ignore-scripts --no-audit --no-fund
+      - name: Rebuild unchanged V064 optical and V062 native artifacts
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m pip install --quiet numpy==2.2.6 scipy==1.15.3 Pillow==11.2.1
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq libegl1 libgl1 libgl1-mesa-dri
+          cd design/evolution-v059
+          mkdir -p artwork/{native,textures,vector,masters,web,compact,micro} docs dist previews
+          python3 src/export_native.py
+          python3 src/render_web.py
+          python3 src/micro.py
+          python3 src/build.py
+          cd ../..
+          python3 creator-v1/ops/install-evolution-v060.py
+          python3 creator-v1/ops/apply-evolution-micro-v064.py
       - name: Validate integrated React app, award ledger and optical lineage
         run: |
           set -euo pipefail
@@ -67,6 +83,7 @@ jobs:
           npm run build:creator-v1-web
           node --experimental-sqlite --test creator-v1/test/player-card-recognition-v065.test.mjs creator-v1/test/player-recognition-issuance-v066.test.mjs creator-v1/test/member-identity-v061.test.mjs
           node --test creator-v1/test/evolution-v060-contract.test.mjs creator-v1/test/evolution-v062-native.test.mjs
+          test "$(find creator-v1/dist/web/evolution/assets -maxdepth 1 -type f | wc -l)" -eq 152
       - name: Commit source-only integration to the isolated branch
         shell: bash
         run: |
