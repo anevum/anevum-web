@@ -91,7 +91,7 @@ export function ContinuanceWorldStage({path}:{path:string}){
         const segments=orbit===0?7:5;
         for(let segment=0;segment<segments;segment++){
           const offset=segment*TAU/segments+seconds*(orbit===1?-.012:.009);
-          const length=(orbit===0?.18:.12)+Math.sin(segment*4.1+orbit)*.035;
+          const length=(orbit===0 ? .18 : .12)+Math.sin(segment*4.1+orbit)*.035;
           ctx.beginPath();
           ctx.ellipse(centerX,centerY,r,ry,rotation,offset,offset+length);
           ctx.strokeStyle=rgb(color,(mobile ? .055 : .095)*(1-orbit*.13));
