@@ -83,8 +83,8 @@ test('schema and flags are isolated; default on production/staging configs stays
   assert.equal((await absent.call()).status,503,'No partially migrated review service');
  }finally{absent.close();}
  const config=JSON.parse(readFileSync(new URL('../wrangler.a-progression-v031.jsonc',import.meta.url),'utf8'));
- assert.equal(config.vars?.CANONICAL_CREATOR_STUDIO_ENABLED,undefined);
- assert.equal(config.vars?.CANONICAL_CREATOR_UPLOADS_ENABLED,undefined);
+ assert.equal(config.vars?.CANONICAL_CREATOR_STUDIO_ENABLED,'true');
+ assert.equal(config.vars?.CANONICAL_CREATOR_UPLOADS_ENABLED,'false');
  assert.deepEqual(config.d1_databases.map(x=>x.binding),['COMMUNITY_DB','MEMBER_DB']);
 });
 test('canonical sessions, CSRF, origin and per-member isolation',async()=>{
