@@ -75,7 +75,7 @@ export function RecognitionRegistryPage(){
  },[cabinet,family,search,mine,held,honors]);
  return <section className="av66-registry" id="recognition-registry">
   <header className="av66-registry-header">
-   <div className="av66-registry-eyebrow"><OrbitalMark/><span>ANEVUM / THE CONTINUANCE INSTITUTE</span><span>RECOGNITION ARCHIVE / VOL. 01</span></div>
+   <div className="av66-registry-eyebrow"><OrbitalMark className="av66-registry-mark"/><span>ANEVUM / THE CONTINUANCE INSTITUTE</span><span>RECOGNITION ARCHIVE / VOL. 01</span></div>
    <h1>THE MARKS<br/><em>WE LEAVE.</em></h1>
    <p>Some marks measure progress. Others record what we have made, who we have helped, and what endures. This is ANEVUM's growing archive of achievements and distinctions.</p>
    <div className="av66-registry-nav"><Link to="/levels">EXPLORE THE 30 EVOLUTION LEVELS ↗</Link><Link to="/member?tab=awards">CUSTOMIZE YOUR PLAYER CARD ↗</Link></div>
