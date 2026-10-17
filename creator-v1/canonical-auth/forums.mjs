@@ -1,5 +1,5 @@
 import {boundedText} from './request-body.mjs';
-import {forumReviewSnapshot} from './forum-review-console.mjs';
+import {forumReviewSnapshot,forumReviewPage,parseReviewPage} from './forum-review-console.mjs';
 const HEAD={'content-type':'application/json; charset=utf-8','cache-control':'private, no-store','x-content-type-options':'nosniff'};
 const json=(data,status=200)=>Response.json(data,{status,headers:HEAD});
 const fail=(status,message)=>json({error:message},status);
@@ -91,8 +91,9 @@ export async function canonicalForums(req,env,user=null,now=Math.floor(Date.now(
    const reviewers=(env.CANONICAL_FORUM_REVIEWER_IDS||'').split(',').map(x=>x.trim()).filter(Boolean);
    if(!reviewers.includes(user.id))return fail(403,'Reviewer access required');
    if(req.method==='GET'){
-    if(url.search)return fail(400,'Unexpected filters');
-    return json(await forumReviewSnapshot(db,user.id,now));
+    if(!url.search)return json(await forumReviewSnapshot(db,user.id,now));
+    const page=parseReviewPage(url.searchParams);
+    return page?json(await forumReviewPage(db,user.id,now,page)):fail(400,'Invalid review cursor');
    }
    if(req.method!=='POST'||url.search)return fail(405,'Method not allowed');
    const v=await payload(req);
