@@ -18,7 +18,7 @@ export function StatusPage(){
  <section className="status-list" aria-label="Institute research preview">
    <article><span className="status-lamp"/><div><strong>CONTINUANCE INSTITUTE / DESIGN LAB</strong>
    <p>Two automated-entity identity prototypes. Artwork, transmission examples and moderation demonstrations are synthetic; no live bot service is operating.</p></div>
-   <Link to="/institute/lab" className="il-status-entry">EXPLORE LAB ↗</Link></article>
+   <Link to="/institute/lab" className="button">EXPLORE LAB ↗</Link></article>
  </section>
  </>;
 }
