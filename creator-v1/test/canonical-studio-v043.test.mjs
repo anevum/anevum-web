@@ -163,9 +163,12 @@ test('review queue is staff-only, independent and change-request-only',async()=>
   assert.equal((await s.call('/api/v1/member/studio/review','POST','bob',{
    projectId:c.project.id,revision:2,action:'rejected',reason:'This is now a stale review.'
   })).status,409);
-  const audit=s.f.db.prepare('SELECT action,reason FROM member_studio_review_log').all();
+  const audit=s.f.db.prepare('SELECT action,reason,submission_id FROM member_studio_review_log').all();
   assert.equal(audit.length,1);
   assert.equal(audit[0].action,'changes_requested');
+  const frozen=s.f.db.prepare('SELECT id,status FROM member_studio_submissions WHERE project_id=?').get(c.project.id);
+  assert.equal(audit[0].submission_id,frozen.id);
+  assert.equal(frozen.status,'changes_requested');
  }finally{s.close();}
 });
 test('private binary upload validates types, quotas, ownership and forced download',async()=>{
