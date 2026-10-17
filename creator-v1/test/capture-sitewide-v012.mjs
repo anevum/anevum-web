@@ -77,7 +77,7 @@ try{
   ["member-profile-editor","/account/edit",".av12-account-await"],
   // Legacy /create routes now lead into the canonical Better Auth Studio.
   // The fixture is an unauthenticated browser, so no draft or upload appears.
-  ["member-studio","/create",".st-status"],["member-draft","/create/new",".st-status"]
+  ["member-studio","/create",".sl-guest-hero"],["member-draft","/create/new",".sl-guest-hero"]
  ];
  const context=await fetch(base+"/__context-fixture?enabled=1");
  if(!context.ok)throw Error("SITEWIDE_V012_FIXTURE_UNAVAILABLE");
