@@ -144,7 +144,7 @@ export function ContinuanceWorldStage({path}:{path:string}){
       const bounds=canvas!.getBoundingClientRect();
       width=Math.max(1,bounds.width);height=Math.max(1,bounds.height);
       const maxScale=Math.sqrt(2400000/(width*height));
-      dpr=clamp(Math.min(window.devicePixelRatio||1,maxScale),.5,1.8);
+      dpr=Math.min(window.devicePixelRatio||1,maxScale,1.8);
       canvas!.width=Math.max(1,Math.round(width*dpr));
       canvas!.height=Math.max(1,Math.round(height*dpr));
       ctx.setTransform(dpr,0,0,dpr,0,0);
