@@ -4,6 +4,7 @@ import {readCreator,readCreators,readProjects} from "../lib/api";
 import {memberCreatorProfile} from "../lib/member-api";
 import {useResource} from "../lib/useResource";
 import {ProjectCard} from "../components/ProjectCard";
+import {CompactMemberIdentity} from "../components/CompactMemberIdentity";
 import {PageNav} from "../components/PageNav";
 import {PortalHeading} from "../components/PortalHeading";
 import {LevelPanel} from "../components/LevelPanel";
@@ -44,9 +45,8 @@ export function CreatorsPage(){
             <section aria-label="Published creator channels" className="portal-creator-grid">{data.data.items.map((c,i)=>
               <Link className="portal-creator-tile" to={"/creators/"+encodeURIComponent(c.handle)} key={c.handle}>
                 <span className="portal-creator-tile-top"><span>CREATOR CHANNEL</span><span>{String(i+1).padStart(2,"0")} / ORBIT</span></span>
-                <span className="portal-creator-avatar" aria-hidden="true"><span className="cw-letter-avatar">{c.displayName.slice(0,1).toUpperCase()}</span></span>
-                <span className="portal-creator-tile-name">{c.displayName}</span>
-                <span className="portal-creator-tile-meta">@{c.handle} · {c.publishedProjects} PUBLISHED {c.publishedProjects===1?"PROJECT":"PROJECTS"}</span>
+                <CompactMemberIdentity interactive={false} size="standard" className="av65-directory-channel" member={{handle:c.handle,displayName:c.displayName,avatar:false,level:null,featuredAwards:[],source:'creator-channel'}}/>
+                <span className="portal-creator-tile-meta">{c.publishedProjects} PUBLISHED {c.publishedProjects===1?"PROJECT":"PROJECTS"}</span>
                 <span className="portal-creator-tile-cta">VISIT CHANNEL <span aria-hidden="true">↗</span></span>
               </Link>
             )}</section>:
