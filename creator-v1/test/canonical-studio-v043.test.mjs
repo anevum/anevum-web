@@ -8,6 +8,7 @@ import {createCanonicalStageWorker} from '../canonical-auth/worker.mjs';
 import {canonicalStudioSchemaReady,canonicalStudioExport} from '../canonical-auth/studio.mjs';
 const ORIGIN='https://a.anevum.com',ROOT='/api/v1/member/studio/projects';
 const migration=readFileSync(new URL('../canonical-auth/migrations/0008_private_creator_studio.sql',import.meta.url),'utf8');
+const receiptMigration=readFileSync(new URL('../canonical-auth/migrations/0009_private_review_snapshots.sql',import.meta.url),'utf8');
 const alice={id:'pilot-alice',name:'Alice',email:'alice@fixture.invalid',emailVerified:true};
 const bob={id:'pilot-bob',name:'Bob',email:'bob@fixture.invalid',emailVerified:true};
 const draft={
@@ -20,7 +21,7 @@ const j=async r=>r.json();
 const methodHeaders=m=>(m==='GET'||m==='HEAD')?{}:{origin:ORIGIN,'sec-fetch-site':'same-origin'};
 function setup({enabled=true,migrate=true,uploads=false}={}){
  const f=fixture();
- if(migrate)f.db.exec(migration);
+ if(migrate){f.db.exec(migration);f.db.exec(receiptMigration);}
  for(const person of [alice,bob]){
   f.db.prepare('INSERT INTO "user"(id,name,email,emailVerified,createdAt,updatedAt) VALUES(?,?,?,1,100,100)')
    .run(person.id,person.name,person.email);
@@ -64,6 +65,7 @@ function setup({enabled=true,migrate=true,uploads=false}={}){
 const projectRequest=()=>({clientRequestId:crypto.randomUUID(),draft});
 test('schema and flags are isolated; default on production/staging configs stays OFF',async()=>{
  assert.match(migration,/member_studio_assets/);
+ assert.match(receiptMigration,/member_studio_submissions/);
  assert.match(migration,/REFERENCES "user"\(id\) ON DELETE RESTRICT/);
  assert.doesNotMatch(migration,/INSERT INTO member_studio_projects|CREATE TABLE projects|member_xp_events/);
  const f=setup({enabled:false});
@@ -76,6 +78,9 @@ test('schema and flags are isolated; default on production/staging configs stays
  const absent=setup({migrate:false});
  try{assert.equal(await canonicalStudioSchemaReady(absent.env),false);
   assert.equal((await absent.call()).status,503);
+  absent.f.db.exec(migration);
+  assert.equal(await canonicalStudioSchemaReady(absent.env),false,'0008 alone is insufficient');
+  assert.equal((await absent.call()).status,503,'No partially migrated review service');
  }finally{absent.close();}
  const config=JSON.parse(readFileSync(new URL('../wrangler.a-progression-v031.jsonc',import.meta.url),'utf8'));
  assert.equal(config.vars?.CANONICAL_CREATOR_STUDIO_ENABLED,undefined);
