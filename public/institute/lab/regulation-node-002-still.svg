@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" role="img" aria-labelledby="title desc">
+<title id="title">ANEVUM Regulation Node 002</title>
+<desc id="desc">A floating split obsidian monolith surrounds a narrow crimson signal aperture. Asymmetric black crystalline fragments drift around the central body beneath a tilted metallic horizon ring.</desc>
+<defs>
+ <radialGradient id="ambient"><stop stop-color="#a52a3a" stop-opacity=".17"/><stop offset=".47" stop-color="#63111d" stop-opacity=".06"/><stop offset="1" stop-color="#540b1a" stop-opacity="0"/></radialGradient>
+ <linearGradient id="obsidian" x1=".14" y1="0" x2=".88" y2="1"><stop stop-color="#516072"/><stop offset=".18" stop-color="#1d2735"/><stop offset=".35" stop-color="#070a11"/><stop offset=".51" stop-color="#1c2530"/><stop offset=".77" stop-color="#04070e"/><stop offset="1" stop-color="#465364"/></linearGradient>
+ <linearGradient id="facet" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#657687"/><stop offset=".19" stop-color="#172330"/><stop offset=".54" stop-color="#04060b"/><stop offset=".9" stop-color="#28313e"/><stop offset="1" stop-color="#77808a"/></linearGradient>
+ <linearGradient id="blood" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#faad99" stop-opacity="0"/><stop offset=".17" stop-color="#b4384c"/><stop offset=".48" stop-color="#ff4b62"/><stop offset=".57" stop-color="#ff7e76"/><stop offset=".83" stop-color="#a51b35"/><stop offset="1" stop-color="#e19d89" stop-opacity="0"/></linearGradient>
+ <linearGradient id="steel" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#49586a"/><stop offset=".26" stop-color="#d2c4b4"/><stop offset=".49" stop-color="#5e6b79"/><stop offset=".73" stop-color="#c7c0b6"/><stop offset="1" stop-color="#314353"/></linearGradient>
+ <filter id="glow" x="-90%" y="-90%" width="280%" height="280%"><feGaussianBlur stdDeviation="13"/></filter>
+ <filter id="fine" x="-90%" y="-90%" width="280%" height="280%"><feGaussianBlur stdDeviation="4"/></filter>
+</defs>
+<style>
+ @keyframes breathe{0%,100%{opacity:.72;transform:scale(.96)}50%{opacity:1;transform:scale(1.035)}}
+ @keyframes hover{0%,100%{transform:translateY(-5px)}50%{transform:translateY(6px)}}
+ @keyframes reverseHover{0%,100%{transform:translateY(6px)}50%{transform:translateY(-5px)}}
+ @keyframes surveil{to{transform:rotate(360deg)}}
+ @keyframes flicker{0%,88%,100%{opacity:.48}91%{opacity:1}}
+ .core{animation:breathe 5.7s ease-in-out infinite;transform-origin:400px 400px}
+ .leftshards{animation:hover 13s ease-in-out infinite}
+ .rightshards{animation:reverseHover 17s ease-in-out infinite}
+ .ring{animation:surveil 96s linear infinite;transform-origin:400px 400px}
+ .register{animation:flicker 12s ease-in-out infinite}
+ @media(prefers-reduced-motion:reduce){.core,.leftshards,.rightshards,.ring,.register{animation:none!important}}
+</style>
+
+<g stroke="#7c8b97" fill="none" opacity=".31"><circle cx="400" cy="400" r="320" stroke-width=".8" stroke-dasharray="2 14"/><circle cx="400" cy="400" r="254" stroke-width=".7" stroke-dasharray="12 6 1 22"/><path d="M400 51v56M400 693v56M51 400h57M692 400h57" stroke-width="1.5"/></g>
+<g class="ring" fill="none"><ellipse cx="400" cy="400" rx="308" ry="110" transform="rotate(-15 400 400)" stroke="#4a1c27" stroke-width="16" opacity=".38"/><ellipse cx="400" cy="400" rx="309" ry="111" transform="rotate(-15 400 400)" stroke="url(#steel)" stroke-width="4.5" opacity=".76" stroke-dasharray="710 74 220 1600"/><ellipse cx="400" cy="400" rx="303" ry="106" transform="rotate(-15 400 400)" stroke="#d0b6a9" opacity=".32" stroke-width="1" stroke-dasharray="38 84 14 130"/></g>
+<g class="leftshards" fill="url(#facet)" stroke="#667687" stroke-width="1.4">
+ <path d="M206 163l64 20 27 105-44 58-42-28-17-78z"/><path d="M170 381l73-46 37 39-23 79-80 28-24-43z"/><path d="M214 541l56-34 34 69-42 107-59-46z"/><path d="M290 87l29 48-7 77-44-24z" opacity=".75"/>
+ <path d="M238 260l26 13-13 45z" fill="#8c3346" opacity=".32" stroke="none"/>
+</g>
+<g class="rightshards" fill="url(#facet)" stroke="#69798b" stroke-width="1.4">
+ <path d="M546 135l60 50-17 127-49 28-41-48 12-96z"/><path d="M591 360l50 58-19 75-72-9-31-47z"/><path d="M536 517l71 33-19 123-66 17-31-106z"/><path d="M490 73l33 71-26 82-36-44z" opacity=".73"/>
+</g>
+<!-- Split obsidian structure: asymmetry is intentional; it is not an orbital eye. -->
+<path d="M399 89L348 159 315 334 331 512 374 676 399 710 397 560 365 432 380 307Z" fill="url(#obsidian)" stroke="#93a1a8" stroke-width="2.4"/>
+<path d="M405 95L470 180 491 316 473 513 425 686 402 710 403 573 438 427 421 302Z" fill="url(#obsidian)" stroke="#657486" stroke-width="2.4"/>
+<path d="M398 114L375 287 386 374 381 524 398 652" fill="none" stroke="#d3c8ba" stroke-width="1.5" opacity=".45"/>
+<path d="M420 144L448 286 423 388 436 488 408 659" fill="none" stroke="#aeb7bc" stroke-width="1.2" opacity=".38"/>
+<path d="M337 289L375 245 366 409 352 515 336 463Z" fill="#09121b" opacity=".72"/>
+<path d="M472 296l-42-39 20 149 9 90 18-64z" fill="#09121b" opacity=".72"/>
+<g class="core">
+ <path d="M401 231L421 370 443 400 417 430 401 573 383 430 359 400 385 370Z" fill="#f52a49" opacity=".55" filter="url(#glow)"/>
+ <path d="M401 230L419 372 441 400 418 428 401 575 383 429 362 400 385 372Z" fill="url(#blood)"/>
+ <path d="M401 283L407 391 423 400 407 409 401 514 395 409 378 400 395 391Z" fill="#ffb2aa" opacity=".82"/>
+ <path d="M400 340v121" stroke="#ffe1cc" stroke-width="2"/>
+ <circle cx="401" cy="400" r="7" fill="#fff2e6"/>
+</g>
+<g class="register" stroke="#ba5262" fill="none" opacity=".72">
+ <path d="M399 72l11 14-11 14-11-14zM400 700l9 14-9 14-9-14z"/>
+ <path d="M152 400h29M617 400h30M400 128h-21M400 674h22"/>
+</g>
+<g fill="#e0bcc0"><circle cx="145" cy="313" r="2"/><circle cx="642" cy="283" r="1.5"/><circle cx="585" cy="613" r="2"/><circle cx="261" cy="711" r="1.5"/></g>
+<style>.core,.leftshards,.rightshards,.ring,.register{animation:none!important}</style>
+</svg>
