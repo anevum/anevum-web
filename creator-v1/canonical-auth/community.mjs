@@ -1,7 +1,7 @@
 // Public, opt-in canonical member discovery. Never joins legacy identities.
 import {FOCUS_KEYS,worldFromRow} from './worlds.mjs';
 import {spaceReady} from './space.mjs';
-import {publicMemberColumns,publicMemberCard} from './public-member-card.mjs';
+import {publicMemberColumns,hydratedPublicMemberCard} from './public-member-card.mjs';
 import {readSupporterRewards} from './supporter-rewards.mjs';
 const headers={'content-type':'application/json; charset=utf-8','cache-control':'private, no-store','x-content-type-options':'nosniff'};
 const answer=(req,data,status=200)=>new Response(req.method==='HEAD'?null:JSON.stringify(data),{status,headers});
@@ -37,7 +37,7 @@ export async function canonicalCommunity(req,env){
    // Public-only recognition, no account/Stripe IDs or billing metadata
    // leave this endpoint. Absent consent or stale subscription -> no badge.
    const supporter=await readSupporterRewards(env,row.member_user_id,Date.now(),true);
-   return {...publicMemberCard(row),...worldFromRow(row),joinedAt:Number(row.joined_at),
+   return {...await hydratedPublicMemberCard(db,row),...worldFromRow(row),joinedAt:Number(row.joined_at),
      ...(supporter?{supporterAppearance:supporter.selected}:{}),
      ...(activity?{id:row.id,excerpt:row.body.length>360?row.body.slice(0,357)+'…':row.body,createdAt:Number(row.created_at),updatedAt:Number(row.updated_at)}:{})};
   }));
