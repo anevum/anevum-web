@@ -82,6 +82,14 @@
 .st-editor{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(275px,1fr);
  gap:18px;margin-top:26px;align-items:start}
 .st-editor-form{display:grid;gap:15px}
+.st-editor-modes{display:flex;flex-wrap:wrap;gap:4px;padding:4px;background:#0b1222;
+ border:1px solid rgba(190,204,231,.21);margin-bottom:3px}
+.st-editor-modes button{border:1px solid transparent;background:transparent;color:#bec8d7;
+ padding:12px 15px;min-height:44px;font:inherit;font-size:.67rem;letter-spacing:.1em;
+ font-weight:700;cursor:pointer}
+.st-editor-modes button[aria-pressed=true]{background:#b9d9d7;border-color:#d0eae5;color:#0d1929}
+.st-editor-modes button:focus-visible{outline:2px solid var(--st-cyan);outline-offset:2px}
+
 .st-editor-form .st-section-head{margin-bottom:1px}
 .st-sidebar{display:grid;gap:18px;min-width:0}
 .st-field{display:flex;flex-direction:column;gap:8px;min-width:0}
