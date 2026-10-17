@@ -109,9 +109,9 @@ export async function decideStudioReview(db,selected,reviewerId,action,reason,no
   "AND EXISTS(SELECT 1 FROM member_studio_projects WHERE id=? AND status=? AND revision=?) RETURNING id")
   .bind(action,now,selected.id,selected.user_id,selected.revision,selected.id,action,next);
  const logId=crypto.randomUUID();
- const audit=db.prepare('INSERT INTO member_studio_review_log(id,project_id,reviewer_id,action,reason,created_at) '+
-  'SELECT ?,?,?,?,?,? WHERE EXISTS(SELECT 1 FROM member_studio_submissions WHERE project_id=? '+
-  'AND project_revision=? AND status=?) RETURNING id')
+ const audit=db.prepare('INSERT INTO member_studio_review_log(id,project_id,reviewer_id,action,reason,created_at,submission_id) '+
+  'SELECT ?,?,?,?,?,?,id FROM member_studio_submissions WHERE project_id=? '+
+  'AND project_revision=? AND status=? RETURNING id')
   .bind(logId,selected.id,reviewerId,action,reason,now,selected.id,selected.revision,action);
  const batch=await db.batch([p,sub,audit]);
  return results(batch?.[0]).length===1&&results(batch?.[1]).length===1&&results(batch?.[2]).length===1;
@@ -120,6 +120,8 @@ export async function studioReviewSchemaReady(db){
  try{
   const names=await query(db,
    "SELECT name FROM sqlite_master WHERE type='table' AND name IN ('member_studio_submissions','member_studio_submission_assets')");
-  return names.length===2;
+  if(names.length!==2)return false;
+  const auditColumns=await query(db,'PRAGMA table_info(member_studio_review_log)');
+  return auditColumns.some(x=>x.name==='submission_id');
  }catch{return false;}
 }
