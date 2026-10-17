@@ -197,12 +197,28 @@ async function postCommand(req,db,env,permit,now){
   const serialized=JSON.stringify(v.data);
   if(serialized.length>16000)return fail(413,'Signal too large');
   if(!await limited(db,memberId,'signal',now,120))return fail(429,'Signaling rate limit reached');
+  if(v.signalType==='offer')await db.prepare("DELETE FROM staff_webrtc_signals WHERE created_at<?").bind(now-600).run();
   await db.prepare("INSERT INTO staff_webrtc_signals(room,sender_id,recipient_id,signal_type,signal_data,created_at) VALUES('bridge',?,?,?,?,?)")
    .bind(memberId,v.recipientId,v.signalType,serialized,now).run();
   return json({ok:true},201);
  }
  return fail(400,'Unsupported staff command');
 }
+// Routine retention: call descriptions and network ICE candidates are temporary.
+// Staff chat, review decisions and shared assignments intentionally remain durable.
+export async function cleanupStaffOps(env,now=Math.floor(Date.now()/1000)){
+ if(env?.CANONICAL_STAFF_OPS_ENABLED!=='true'||!await ready(env.MEMBER_DB))return {skipped:true};
+ const db=env.MEMBER_DB;
+ try{
+  await db.batch([
+   db.prepare("DELETE FROM staff_webrtc_signals WHERE created_at<?").bind(now-600),
+   db.prepare("DELETE FROM staff_presence WHERE last_seen_at<?").bind(now-3600),
+   db.prepare("DELETE FROM staff_ops_limits WHERE minute_bucket<?").bind(Math.floor(now/60)-1440)
+  ]);
+  return {ok:true};
+ }catch{return {ok:false}}
+}
+
 export async function canonicalStaffOps(req,env,user,now=Math.floor(Date.now()/1000)){
  if(env?.CANONICAL_STAFF_OPS_ENABLED!=='true')return fail(404,'Not found');
  if(!user?.id||user.emailVerified!==true)return fail(401,'Verified sign-in required');
