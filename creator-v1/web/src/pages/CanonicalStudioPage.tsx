@@ -9,19 +9,20 @@ import {
  type StudioReviewProject,type StudioReviewHistory,type StudioReviewManifest,type StudioReviewReceipt
 } from '../lib/canonical-studio';
 import {StudioGuestDiscovery,StudioLaunchpad} from './StudioLaunchpad';
+import {StudioWorkbench} from './StudioWorkbench';
 import './canonical-studio.css';
 
 const CATEGORY_GUIDE:Record<StudioCategory,string>={
- games:'Upload a browser-game ZIP or link an external HTTPS game. ZIPs are not playable or installed yet.',
- tools:'Upload a web app build ZIP or link an existing HTTPS application. A dedicated isolated player is planned.',
- creative:'Attach original creative work, audio, images, writing or a ZIP.',
- music:'Attach MP3 or WAV audio. Files remain in private quarantine.',
- art:'Attach PNG, JPEG, WebP or GIF artwork. Images are not rendered from quarantine.',
- video:'Attach a private MP4 or WebM (up to 20 MiB), or use an external HTTPS video link. Playback and transcoding are not enabled.',
- writing:'Attach PDF, TXT or Markdown writing.',
- learning:'Attach a PDF, Markdown, text or interactive ZIP project.',
- research:'Attach research as PDF, TXT, Markdown or ZIP.',
- other:'Attach a supported image, audio, video, document or ZIP file.'
+ games:'Outline a game or build a text-based interactive story. Playable ZIP hosting and public execution are not available yet.',
+ tools:'Plan an application or record an existing HTTPS project. Uploaded application hosting is not active.',
+ creative:'Develop a creative project using private text, scenes, choices and credits. New uploads are not active.',
+ music:'Draft music or podcast notes and credits. Audio uploads are not available yet.',
+ art:'Design a gallery and add original captions; new image uploads remain disabled.',
+ video:'Outline a film, scene or animation and record credits. Uploads and playback are not yet available.',
+ writing:'Compose a story or zine in movable private sections. Document uploads are not yet active.',
+ learning:'Build a learning project in private text and sections. Executable lessons and attachments are not available.',
+ research:'Organize findings privately with text, references and credits. Attachments are not yet active.',
+ other:'Plan your creative work privately. Uploaded assets remain unavailable until the pilot.'
 };
 const CATEGORIES:[StudioCategory,string][]=[
  ['games','Games & interactive play'],['tools','Applications & tools'],
@@ -240,7 +241,8 @@ function StudioEditor({create,uploadsReady}:{create:boolean;uploadsReady:boolean
      <small>{CATEGORY_GUIDE[draft.category]}</small>
     </label>
     {input('summary','WHAT ARE YOU MAKING?',280,3,'A short description of your idea, story, sound, game or artwork.')}
-    {input('description','YOUR IDEAS & PROJECT NOTES',8000,7,'Explore ideas, sketch scenes or list what you want to try.')}
+    <StudioWorkbench value={draft.description} disabled={locked}
+     onChange={value=>assign('description',value)}/>
     {editorView==='advanced'&&<>
     <label className="st-check"><input type="checkbox" checked={draft.freeToUse} disabled={locked}
       onChange={e=>assign('freeToUse',e.target.checked)}/> I intend this work to be free to access when publication becomes available.</label>
