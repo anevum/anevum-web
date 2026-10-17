@@ -1,0 +1,190 @@
+{
+  "schema": "anevum.first_continuance.levels.v048",
+  "status": "design-locked-not-deployed",
+  "startLevel": 1,
+  "maxLevel": 30,
+  "maxLevelXp": 63075,
+  "formula": "75*(level-1)^2",
+  "levels": [
+    {
+      "level": 1,
+      "name": "Ember Shard",
+      "chapter": "Origins",
+      "xp": 0
+    },
+    {
+      "level": 2,
+      "name": "Copper Clasp",
+      "chapter": "Origins",
+      "xp": 75
+    },
+    {
+      "level": 3,
+      "name": "Field Needle",
+      "chapter": "Origins",
+      "xp": 300
+    },
+    {
+      "level": 4,
+      "name": "Wayfinder Key",
+      "chapter": "Origins",
+      "xp": 675
+    },
+    {
+      "level": 5,
+      "name": "Lantern Zero",
+      "chapter": "Origins",
+      "xp": 1200
+    },
+    {
+      "level": 6,
+      "name": "Signal Fork",
+      "chapter": "Discovery",
+      "xp": 1875
+    },
+    {
+      "level": 7,
+      "name": "Glass Eye",
+      "chapter": "Discovery",
+      "xp": 2700
+    },
+    {
+      "level": 8,
+      "name": "Magnetic Compass",
+      "chapter": "Discovery",
+      "xp": 3675
+    },
+    {
+      "level": 9,
+      "name": "Flux Hammer",
+      "chapter": "Discovery",
+      "xp": 4800
+    },
+    {
+      "level": 10,
+      "name": "Star Cartograph",
+      "chapter": "Discovery",
+      "xp": 6075
+    },
+    {
+      "level": 11,
+      "name": "Aether Spindle",
+      "chapter": "Invention",
+      "xp": 7500
+    },
+    {
+      "level": 12,
+      "name": "Prism Cutter",
+      "chapter": "Invention",
+      "xp": 9075
+    },
+    {
+      "level": 13,
+      "name": "Relay Heart",
+      "chapter": "Invention",
+      "xp": 10800
+    },
+    {
+      "level": 14,
+      "name": "Phase Gauntlet",
+      "chapter": "Invention",
+      "xp": 12675
+    },
+    {
+      "level": 15,
+      "name": "Origin Engine",
+      "chapter": "Invention",
+      "xp": 14700
+    },
+    {
+      "level": 16,
+      "name": "Gravity Anvil",
+      "chapter": "Threshold",
+      "xp": 16875
+    },
+    {
+      "level": 17,
+      "name": "Blackglass Mirror",
+      "chapter": "Threshold",
+      "xp": 19200
+    },
+    {
+      "level": 18,
+      "name": "Meridian Spear",
+      "chapter": "Threshold",
+      "xp": 21675
+    },
+    {
+      "level": 19,
+      "name": "Rift Lock",
+      "chapter": "Threshold",
+      "xp": 24300
+    },
+    {
+      "level": 20,
+      "name": "Threshold Key",
+      "chapter": "Threshold",
+      "xp": 27075
+    },
+    {
+      "level": 21,
+      "name": "Keeper's Mask",
+      "chapter": "Continuance",
+      "xp": 30000
+    },
+    {
+      "level": 22,
+      "name": "Archive Bell",
+      "chapter": "Continuance",
+      "xp": 33075
+    },
+    {
+      "level": 23,
+      "name": "Null Anchor",
+      "chapter": "Continuance",
+      "xp": 36300
+    },
+    {
+      "level": 24,
+      "name": "Continuance Vessel",
+      "chapter": "Continuance",
+      "xp": 39675
+    },
+    {
+      "level": 25,
+      "name": "Aeon Orrery",
+      "chapter": "Continuance",
+      "xp": 43200
+    },
+    {
+      "level": 26,
+      "name": "Veil Needle",
+      "chapter": "First Light",
+      "xp": 46875
+    },
+    {
+      "level": 27,
+      "name": "Worldseed Cradle",
+      "chapter": "First Light",
+      "xp": 50700
+    },
+    {
+      "level": 28,
+      "name": "Starloom",
+      "chapter": "First Light",
+      "xp": 54675
+    },
+    {
+      "level": 29,
+      "name": "Origin Crown",
+      "chapter": "First Light",
+      "xp": 58800
+    },
+    {
+      "level": 30,
+      "name": "The First Light",
+      "chapter": "First Light",
+      "xp": 63075
+    }
+  ]
+}
