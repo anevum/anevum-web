@@ -3,7 +3,7 @@ import {Link,useNavigate,useParams} from 'react-router-dom';
 import {canonicalAuthClient,canonicalMe,type CanonicalProfile} from '../lib/canonical-beta';
 import {
  studioHealth,studioList,studioGet,studioCreate,studioUpdate,studioSubmit,studioAssets,
- studioUpload,studioCheckFile,studioDeleteAsset,studioDownloadUrl,studioReviewQueue,
+ studioUpload,studioCheckFile,studioDeleteAsset,studioDownloadUrl,studioWithdraw,studioDeleteProject,studioReviewQueue,
  studioReviewDecision,type StudioDraft,type StudioProject,type StudioAsset,type StudioCategory,
  type StudioReviewProject
 } from '../lib/canonical-studio';
@@ -175,6 +175,22 @@ function StudioEditor({create,uploadsReady}:{create:boolean;uploadsReady:boolean
    setNotice('Submission recorded for staff review. No public release was created.');
   }catch(e){setError(showError(e));setMustReload(true)}finally{setBusy(false);}
  }
+ async function withdraw(){
+  if(!project||busy||project.status!=='pending_review')return;
+  if(!window.confirm('Withdraw this project from staff review and return it to a private editable draft?'))return;
+  setBusy(true);setError('');setNotice('');
+  try{const result=await studioWithdraw(project.id,project.revision);setProject(result.project);
+   const fields=editForm(result.project);setSaved(fields);setDraft(fields);
+   setNotice('Submission withdrawn. Your work is private and editable again.');}
+  catch(e){setError(showError(e));setMustReload(true);}finally{setBusy(false);}
+ }
+ async function deleteDraft(){
+  if(!project||busy||project.status==='pending_review')return;
+  if(!window.confirm('Permanently remove this private project record? Remove its private files first. This cannot be undone.'))return;
+  setBusy(true);setError('');setNotice('');
+  try{await studioDeleteProject(project.id,project.revision);navigate('/studio',{replace:true});}
+  catch(e){setError(showError(e));setMustReload(true);}finally{setBusy(false);}
+ }
  const input=(name:'title'|'slug'|'summary'|'description'|'license'|'aiDisclosure'|'humanContribution',
   label:string,max:number,rows=0,help='')=><label className="st-field" key={name}>
    <span>{label}</span>
@@ -244,6 +260,10 @@ function StudioEditor({create,uploadsReady}:{create:boolean;uploadsReady:boolean
      <p className="st-muted">A submitted project enters a private queue. There is no automated publication, game execution, or XP reward.</p>
      {project&&<button className="st-button" disabled={!ready||dirty||locked||!editable(project)}
       onClick={()=>void submit()}>SUBMIT SAVED REVISION FOR REVIEW ↗</button>}
+     {project?.status==='pending_review'&&<button className="st-button" disabled={busy||mustReload}
+      onClick={()=>void withdraw()}>WITHDRAW FROM REVIEW</button>}
+     {project&&project.status!=='pending_review'&&<button className="st-link" disabled={busy||mustReload}
+      onClick={()=>void deleteDraft()}>DELETE PRIVATE PROJECT</button>}
     </section>
    </div>
   </div>}
