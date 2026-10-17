@@ -6,6 +6,7 @@ import {
  type StudioBlock,type StudioBlockDocument,type StudioBlockType
 } from '../lib/studio-blocks';
 import './studio-workbench.css';
+import {NativePackLab} from './NativePackLab';
 
 const TYPE_NAMES:Record<StudioBlockType,string>={
  heading:'Title',paragraph:'Writing',quote:'Quote',divider:'Break',
@@ -49,8 +50,8 @@ function PreviewBlock({block,onChoice,enabled}:{block:StudioBlock;onChoice:(id:s
  return null;
 }
 
-export function StudioWorkbench({value,onChange,disabled}:{
- value:string;onChange:(value:string)=>void;disabled:boolean;
+export function StudioWorkbench({value,onChange,disabled,title,creator}:{
+ value:string;onChange:(value:string)=>void;disabled:boolean;title:string;creator:string;
 }){
  const document=decodeStudioBlockDocument(value);
  const encoded=isStudioBlockDescription(value);
@@ -239,5 +240,7 @@ export function StudioWorkbench({value,onChange,disabled}:{
    <span>{value.length} / 8,000 CHARACTERS</span>
    <span>Save your private revision using the Studio toolbar.</span>
   </div>
+  <NativePackLab title={title} creator={creator} document={workDocument} disabled={disabled}
+   onImportDocument={change}/>
  </section>;
 }
