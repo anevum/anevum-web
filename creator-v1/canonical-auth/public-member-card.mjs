@@ -2,7 +2,7 @@
 // Query only verified members with visibility='public' at every caller.
 import {levelProgress} from './progression.mjs';
 import {MILESTONES} from './rewards.mjs';
-import {publicRecognitionSummary} from './recognition.mjs';
+import {publicRecognitionSummary,publicRecognitionMap} from './recognition.mjs';
 const awardIds=new Set(MILESTONES.map(item=>item.id));
 const ownerColumns=new Set(['t.author_id','r.author_id','p.user_id']);
 
@@ -37,4 +37,17 @@ export async function hydratedPublicMemberCard(db,row,enabled=false){
  if(!enabled)return legacy;
  const extra=await publicRecognitionSummary(db,row.member_identity_key);
  return extra?{...legacy,...extra}:legacy;
+}
+
+/** Hydrate one public forum/directory page with a bounded number of D1 reads.
+ * Accept only rows from public verified member queries, not raw user input.
+ * The server-owned user ID is never serialized in the returned card.
+ */
+export async function hydratedPublicMemberCards(db,rows,enabled=false){
+ const base=rows.map(publicMemberCard);
+ if(!enabled||!rows.length)return base;
+ const records=await publicRecognitionMap(db,rows.map(row=>row.member_identity_key));
+ return base.map((card,i)=>({
+  ...card,...(records.get(rows[i].member_identity_key)||{})
+ }));
 }
