@@ -1,0 +1,138 @@
+name: ANEVUM Apex Prelaunch Unrouted Candidate
+
+# A manual source marker on the dedicated development branch is the only
+# trigger. This workflow NEVER changes anevum.com or a.anevum.com routes.
+on:
+  push:
+    branches:
+      - build/apex-prelaunch-gateway-20261017-001
+    paths:
+      - docs/creator-platform/APEX-UNROUTED-DEPLOY-REQUEST.txt
+
+permissions:
+  contents: read
+
+concurrency:
+  group: anevum-apex-unrouted-candidate
+  cancel-in-progress: false
+
+jobs:
+  deploy_unrouted_only:
+    if: github.repository == 'anevum/anevum-web' && github.ref == 'refs/heads/build/apex-prelaunch-gateway-20261017-001'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      CF_ZONE: 8abe27259b5436af5966d3b40d9a3760
+      EXPECTED_CF_ACCOUNT: 2f7ee83107240152097efd956a4e8335
+      CANDIDATE_WORKER: anevum-apex-prelaunch-gateway
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - name: Checkout exact release source
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+          fetch-depth: 0
+
+      - name: Validate explicit unrouted-only intent
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REF" = "refs/heads/build/apex-prelaunch-gateway-20261017-001"
+          grep -Fxq 'APPROVED=UNROUTED_GATEWAY_BUILD_ONLY' docs/creator-platform/APEX-UNROUTED-DEPLOY-REQUEST.txt
+          test "${CLOUDFLARE_ACCOUNT_ID:-}" = "$EXPECTED_CF_ACCOUNT"
+          test -n "${CLOUDFLARE_API_TOKEN:-}"
+          node --input-type=module <<'NODE'
+          import assert from 'node:assert/strict';
+          import {readFileSync} from 'node:fs';
+          const c=JSON.parse(readFileSync('creator-v1/wrangler.apex-prelaunch.jsonc','utf8'));
+          assert.equal(c.name,'anevum-apex-prelaunch-gateway');
+          assert.deepEqual(c.routes,[]);
+          assert.equal(c.workers_dev,false);
+          assert.equal(c.preview_urls,false);
+          assert.equal(c.assets.run_worker_first,true);
+          assert.equal(c.vars.ANEVUM_PRELAUNCH_MODE,'gated');
+          assert.equal(c.vars.ANEVUM_LAUNCH_APPROVED,'false');
+          assert.equal(c.vars.ANEVUM_CANONICAL_APEX_ENABLED,'true');
+          assert.equal(c.vars.ANEVUM_ACCESS_AUD,'6efab9f2821297fa4c965f18813d78d7433ebf7823a8e9e6d9ecfb7e4b2ccde1');
+          assert.deepEqual(c.d1_databases.map(d=>[d.binding,d.database_id]),[
+            ['COMMUNITY_DB','fa96e36d-6257-4883-bf15-074947e11a13'],
+            ['MEMBER_DB','e1d29049-c83b-4534-8355-dc1fa36ba6d8']
+          ]);
+          for(const p of ['GOOGLE','GITHUB','APPLE','MICROSOFT']){
+            assert.equal(c.vars['CANONICAL_'+p+'_ENABLED'],'false');
+          }
+          NODE
+
+      - name: Verify existing public routes before touching Cloudflare
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p evidence/apex-unrouted
+          curl --fail --silent --show-error --max-time 20 \
+            -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+            "https://api.cloudflare.com/client/v4/zones/$CF_ZONE/workers/routes" \
+            > evidence/apex-unrouted/routes-before.json
+          jq -e '.success and
+            ([.result[] | select(.pattern=="anevum.com/*" and .script=="anevum-construction-terminal")]|length)==1 and
+            ([.result[] | select(.pattern=="a.anevum.com/*" and .script=="anevum-creator-v1-a-staging")]|length)==1
+          ' evidence/apex-unrouted/routes-before.json >/dev/null
+          echo APEX_AND_STAGE_ROUTES_UNCHANGED=PASS
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Typecheck build and run security regression suite
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm install --ignore-scripts --no-audit --no-fund
+          npm run check:creator-v1-web
+          npm run build:creator-v1-web
+          (cd creator-v1 && npm test)
+          node --check creator-v1/apex-prelaunch/gateway.mjs
+          node --check creator-v1/apex-prelaunch/preview-access.mjs
+          node --test creator-v1/test/apex-prelaunch-gateway.test.mjs
+          node creator-v1/ops/canonical-live-signup-canary.mjs
+
+      - name: Deploy NEW isolated Worker only; no hostname route changes
+        shell: bash
+        run: |
+          set -euo pipefail
+          npx wrangler deploy --config creator-v1/wrangler.apex-prelaunch.jsonc
+          echo "New unrouted Worker: $CANDIDATE_WORKER" >> "$GITHUB_STEP_SUMMARY"
+          echo "No hostname route was or will be modified by this job." >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Verify candidate and original routes after upload
+        shell: bash
+        run: |
+          set -euo pipefail
+          url="https://api.cloudflare.com/client/v4"
+          cf(){ curl --fail --silent --show-error --max-time 30 -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" "$1"; }
+          cf "$url/accounts/$EXPECTED_CF_ACCOUNT/workers/scripts/$CANDIDATE_WORKER/settings" \
+            > evidence/apex-unrouted/candidate-settings.json
+          jq -e '.success and
+            ([.result.bindings[]|select(.type=="d1" and .name=="MEMBER_DB" and ((.id//.database_id)=="e1d29049-c83b-4534-8355-dc1fa36ba6d8"))]|length)==1 and
+            ([.result.bindings[]|select(.type=="d1" and .name=="COMMUNITY_DB" and ((.id//.database_id)=="fa96e36d-6257-4883-bf15-074947e11a13"))]|length)==1 and
+            ([.result.bindings[]|select(.type=="assets" and .name=="ASSETS")]|length)==1 and
+            ([.result.bindings[]|select(.name=="ANEVUM_PRELAUNCH_MODE" and .text=="gated")]|length)==1 and
+            ([.result.bindings[]|select(.name=="ANEVUM_LAUNCH_APPROVED" and .text=="false")]|length)==1
+          ' evidence/apex-unrouted/candidate-settings.json >/dev/null
+          cf "$url/zones/$CF_ZONE/workers/routes" > evidence/apex-unrouted/routes-after.json
+          jq -e '.success and
+            ([.result[] | select(.pattern=="anevum.com/*" and .script=="anevum-construction-terminal")]|length)==1 and
+            ([.result[] | select(.pattern=="a.anevum.com/*" and .script=="anevum-creator-v1-a-staging")]|length)==1 and
+            ([.result[] | select(.script=="anevum-apex-prelaunch-gateway")]|length)==0
+          ' evidence/apex-unrouted/routes-after.json >/dev/null
+          echo "CANDIDATE_DEPLOYED_WITH_NO_LIVE_ROUTE=PASS" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Preserve sanitized candidate evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: apex-unrouted-candidate-${{ github.run_id }}
+          path: evidence/apex-unrouted/
+          if-no-files-found: warn
+          retention-days: 14
