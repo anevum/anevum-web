@@ -3,12 +3,11 @@ import {spaceReady,grantMilestones,spaceSnapshot} from "./space.mjs";
 import {supporterExportMember} from "./supporter.mjs";
 import {canonicalProjectSaveExport} from "./project-saves.mjs";
 import {canonicalStudioExport} from "./studio.mjs";
-import {canonicalConfigState,permitCanonicalUserCreation} from "./policy.mjs";
+import {canonicalConfigState,permitCanonicalUserCreation,canonicalRequestOrigin} from "./policy.mjs";
 import {normalizeWorldUpdate,worldFromRow} from "./worlds.mjs";
 import {boundedText} from "./request-body.mjs";
 // ANEVUM Phase 1 / canonical Better Auth creator identity.
 // Does NOT read legacy Creator V1 OTP tables or broker/owner entitlements.
-const STAGING_ORIGIN="https://a.anevum.com";
 const HANDLE=/^[a-z][a-z0-9_]{2,29}$/;
 const RESERVED=new Set(["anevum","admin","root","staff","moderator","mod","official","support",
   "help","account","owner","api","auth","join","signin","sign-in","security","system",
@@ -20,7 +19,7 @@ const HEADERS={"cache-control":"private, no-store","content-type":"application/j
 const answer=(req,payload,status=200)=>new Response(req.method==="HEAD"?null:JSON.stringify(payload),
  {status,headers:HEADERS});
 export function canonicalBetaConfigured(env,origin){
- return origin===STAGING_ORIGIN && canonicalConfigState(env).operational;
+ return origin===canonicalRequestOrigin(env) && canonicalConfigState(env).operational;
 }
 export function invitedCanonicalEmail(env,email){
  return permitCanonicalUserCreation(env,email);
