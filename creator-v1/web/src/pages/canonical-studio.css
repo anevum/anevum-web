@@ -26,6 +26,9 @@
  overflow-x:auto;border-bottom:1px solid var(--st-line)}
 .st-nav a{white-space:nowrap;font-size:.68rem;letter-spacing:.12em;
  color:var(--st-muted);font-weight:650;padding:4px 0 11px;border-bottom:2px solid transparent}
+.st-nav{scrollbar-width:none;overscroll-behavior-x:contain}
+.st-nav::-webkit-scrollbar{display:none}
+.st-nav a{flex:0 0 auto}
 .st-nav a:hover,.st-nav a:focus-visible,.st-nav a[aria-current=page]{color:var(--st-text);
  border-color:var(--st-rose)}
 .st-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:26px 0}
@@ -206,4 +209,33 @@
 }
 @media(prefers-reduced-motion:reduce){
  .st-project,.st-drop{transition:none}
+}
+
+/* V053.1: The creator's first action must be visible without scrolling through
+   a massive account dashboard masthead. Only the Launchpad route is compacted. */
+.st-root--launchpad .st-header{align-items:center;gap:16px;padding:4px 0 15px}
+.st-root--launchpad .st-back{margin-bottom:6px}
+.st-root--launchpad .st-header h1{font-size:clamp(1.65rem,3vw,2.85rem);
+ line-height:1.08;margin:5px 0 6px;letter-spacing:-.035em}
+.st-root--launchpad .st-header>div>p:last-child{font-size:.8rem;line-height:1.45;
+ margin:3px 0 0;max-width:640px}
+.st-root--launchpad .st-identity{padding:10px 13px;min-width:150px;gap:3px}
+.st-root--launchpad .st-identity>strong{font-size:1rem}
+.st-root--launchpad .st-nav{padding:12px 0 13px;gap:clamp(15px,2.3vw,27px)}
+.st-root--launchpad .st-nav a{padding-bottom:7px}
+@media(max-width:620px){
+ .st-root--launchpad .st-header{padding:0 2px 11px;gap:7px}
+ .st-root--launchpad .st-back{margin-bottom:2px}
+ .st-root--launchpad .st-header h1{font-size:clamp(1.65rem,7.1vw,2.05rem);
+  line-height:1.03;margin:3px 0 4px}
+ .st-root--launchpad .st-header>div>p:last-child{display:none}
+ .st-root--launchpad .st-identity{display:none}
+ .st-root--launchpad .st-nav{padding:10px 0 11px;gap:16px}
+ .st-root--launchpad .st-nav a{font-size:.62rem;padding-bottom:6px}
+}
+
+@media(max-width:620px){
+ .st-root--launchpad .st-nav{gap:22px;padding:8px 0 9px}
+ .st-root--launchpad .st-nav a{min-height:34px;display:inline-flex;align-items:center;
+  letter-spacing:.07em;font-size:.66rem;padding-bottom:5px}
 }

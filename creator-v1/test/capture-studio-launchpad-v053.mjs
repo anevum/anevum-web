@@ -141,7 +141,10 @@ try{
   await c.send('Network.setCookie',{name:'studio_v053_fake_member',value:'1',url:base+'/'});
   await visit('/studio');
   await until(()=>evaluate('!!document.querySelector(".sl-idea-form")'));
-  await check(width);await screenshot('studio-v053-launchpad-'+width);
+  await check(width);
+  const firstAction=await evaluate('(()=>{const n=document.querySelector("#sl-idea");const b=n?.getBoundingClientRect();return {top:b?.top,below:b?.top>=innerHeight-105};})()');
+  assert.ok(firstAction.top>0&&!firstAction.below,'First idea input should be visible without scrolling at '+width+' px: '+JSON.stringify(firstAction));
+  await screenshot('studio-v053-launchpad-'+width);
   await evaluate('document.querySelector("#sl-idea").focus()');
   await c.send('Input.insertText',{text:'A forgotten observatory with an interactive mystery'});
   await until(()=>evaluate('document.querySelector(".sl-idea-form button[type=submit]")?.disabled===false'));
