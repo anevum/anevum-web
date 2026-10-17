@@ -8,6 +8,14 @@ const PREFIX='/api/v1/member/studio';
 const COLLECTION=PREFIX+'/projects';
 const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
 const CATS=new Set(['games','tools','creative','music','art','video','writing','learning','research','other']);
+// Quarantined files count as *submission evidence*, not as publishable media.
+// Games/tools require a ZIP; video still needs an external public HTTPS link.
+const ELIGIBLE_ASSET_KINDS=Object.freeze({
+ games:['package'],tools:['package'],creative:['image','audio','document','package'],
+ music:['audio'],art:['image'],video:[],writing:['document'],
+ learning:['document','package'],research:['document','package'],
+ other:['image','audio','document','package']
+});
 const CTRL=/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/;
 const SLUG=/^[a-z0-9](?:[a-z0-9-]{1,88}[a-z0-9])$/;
 const HEAD={'content-type':'application/json; charset=utf-8','cache-control':'private, no-store','x-content-type-options':'nosniff','cross-origin-resource-policy':'same-origin'};
@@ -49,8 +57,8 @@ function normalize(raw){
   aiDisclosure:cleanText(raw.aiDisclosure,0,1200),humanContribution:cleanText(raw.humanContribution,0,1200)
  };
 }
-function readyToSubmit(row){
- return Boolean((row.demo_url||row.source_url) && row.license_name.trim().length>=2 &&
+function readyToSubmit(row,eligibleAttachment){
+ return Boolean((row.demo_url||row.source_url||eligibleAttachment) && row.license_name.trim().length>=2 &&
   row.ai_disclosure.trim().length>=6 && row.human_contribution.trim().length>=10);
 }
 async function body(req,cap=16000){
@@ -160,12 +168,25 @@ export async function canonicalStudio(req,env,user,now=Math.floor(Date.now()/100
    if(!value||!exactly(value,['revision'])||!Number.isSafeInteger(value.revision))return fail(400,'Invalid revision');
    if(selected.revision!==value.revision||!['draft','changes_requested'].includes(selected.status))
     return fail(409,'Project revision changed');
-   if(!readyToSubmit(selected))return fail(422,'Add a public HTTPS destination, license, and actual contribution disclosures before review');
+   const kinds=ELIGIBLE_ASSET_KINDS[selected.category]||[];
+   const hasExternal=Boolean(selected.demo_url||selected.source_url);
+   const proof=kinds.length?
+    "EXISTS(SELECT 1 FROM member_studio_assets a WHERE a.project_id=? AND a.user_id=? AND a.status='quarantined' AND a.kind IN ("+
+     kinds.map(()=>'?').join(',')+"))":"0=1";
+   const proofArgs=[id,user.id,...kinds];
+   const eligible=hasExternal?true:kinds.length?Boolean(await getOne(db,
+    'SELECT a.id FROM member_studio_assets a WHERE a.project_id=? AND a.user_id=? AND a.status=\'quarantined\' AND a.kind IN ('+
+    kinds.map(()=>'?').join(',')+') LIMIT 1',proofArgs)):false;
+   if(!readyToSubmit(selected,eligible))return fail(422,
+    'Add a matching quarantined creation file OR a public HTTPS destination, plus license and accurate contribution disclosures before review');
    if(!await pace(db,user.id,'project',now,30))return fail(429,'Too many project updates');
+   // Recheck file existence atomically with submission to defeat concurrent
+   // private file withdrawals. No object becomes public.
    const found=await rows(db,
     "UPDATE member_studio_projects SET status='pending_review',revision=revision+1,updated_at=?,submitted_at=? "+
-    "WHERE id=? AND user_id=? AND revision=? AND status IN ('draft','changes_requested') RETURNING "+COLS,
-    [now,now,id,user.id,value.revision]);
+    "WHERE id=? AND user_id=? AND revision=? AND status IN ('draft','changes_requested') "+
+    (hasExternal?'':"AND "+proof+" ")+"RETURNING "+COLS,
+    [now,now,id,user.id,value.revision,...(hasExternal?[]:proofArgs)]);
    return found.length===1?json({project:dbRow(found[0]),note:'Private review queue only; no publication or gameplay activation'}):fail(409,'Project revision changed');
   }
   if(sub)return fail(404,'Not found');
@@ -207,19 +228,44 @@ export async function canonicalStudioReview(req,env,user,now=Math.floor(Date.now
  if(env?.CANONICAL_CREATOR_STUDIO_ENABLED!=='true'||!await canonicalStudioSchemaReady(env))
   return fail(404,'Studio review not active');
  if(typeof user?.id!=='string'||user.emailVerified!==true)return fail(401,'Sign in required');
- const reviewers=(env.CANONICAL_FORUM_REVIEWER_IDS||'').split(',').map(x=>x.trim()).filter(Boolean);
+ // Studio reviewer privilege is NOT inherited from forum moderation.
+ const reviewers=(env.CANONICAL_STUDIO_REVIEWER_IDS||'').split(',').map(x=>x.trim()).filter(Boolean);
  if(!reviewers.includes(user.id))return fail(403,'Reviewer access required');
- if(new URL(req.url).search)return fail(400,'Unexpected query');
+ const url=new URL(req.url),path=url.pathname;
+ if(url.search)return fail(400,'Unexpected query');
+ const manifest=path.match(/^\/api\/v1\/member\/studio\/review\/([0-9a-f-]{36})\/manifest$/);
+ if(manifest&&!UUID.test(manifest[1]))return fail(404,'Not found');
+ if(!manifest&&path!==PREFIX+'/review')return fail(404,'Not found');
  const db=env.MEMBER_DB;
  try{
   if(req.method==='GET'){
+   if(manifest){
+    // Only vetted metadata, NEVER object keys, download credentials, file
+    // bodies or executable previews on the site origin. No self-review.
+    const project=await getOne(db,
+     "SELECT id,user_id,status,revision FROM member_studio_projects WHERE id=? AND status='pending_review'",
+     [manifest[1]]);
+    if(!project||project.user_id===user.id)return fail(404,'Submission not available for review');
+    const list=await rows(db,
+     'SELECT id,filename,kind,content_type,size_bytes,status,sha256,uploaded_at '+
+     'FROM member_studio_assets WHERE project_id=? AND user_id=? ORDER BY created_at,id LIMIT 21',
+     [project.id,project.user_id]);
+    return json({projectId:project.id,revision:Number(project.revision),
+     note:'Quarantined bytes have NOT passed malware scanning; no rendering or download is authorized.',
+     assets:list.map(x=>({id:x.id,name:x.filename,kind:x.kind,contentType:x.content_type,
+      sizeBytes:Number(x.size_bytes),status:x.status,sha256:x.sha256||null,
+      uploadedAt:x.uploaded_at===null?null:Number(x.uploaded_at)}))});
+   }
    const projects=await rows(db,
     'SELECT s.id,s.title,s.summary,s.category,s.status,s.revision,s.submitted_at,s.demo_url,s.source_url,'+
-    's.license_name,s.ai_disclosure,s.human_contribution,s.user_id,p.handle '+
+    's.license_name,s.ai_disclosure,s.human_contribution,s.user_id,p.handle,'+
+    "(SELECT COUNT(*) FROM member_studio_assets a WHERE a.project_id=s.id AND a.status='quarantined') AS attachment_count,"+
+    "(SELECT COALESCE(SUM(a.size_bytes),0) FROM member_studio_assets a WHERE a.project_id=s.id AND a.status='quarantined') AS attachment_bytes "+
     'FROM member_studio_projects s JOIN member_creator_profiles p ON p.user_id=s.user_id '+
-    "WHERE s.status='pending_review' ORDER BY s.submitted_at ASC LIMIT 50");
+    "WHERE s.status='pending_review' AND s.user_id<>? ORDER BY s.submitted_at ASC LIMIT 50",[user.id]);
    return json({projects});
   }
+  if(manifest)return fail(405,'Manifest is read-only');
   if(req.method!=='POST')return fail(405,'Method not allowed');
   const raw=await body(req,1800);
   if(!raw||!exactly(raw,['projectId','action','reason','revision'])||!UUID.test(raw.projectId)||

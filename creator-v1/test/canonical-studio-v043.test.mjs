@@ -35,7 +35,7 @@ function setup({enabled=true,migrate=true,uploads=false}={}){
  };
  const env={...f.env,CANONICAL_CREATOR_STUDIO_ENABLED:enabled?'true':'false',
   CANONICAL_CREATOR_UPLOADS_ENABLED:uploads?'true':'false',CREATOR_ASSETS:uploads?store:undefined,
-  CANONICAL_FORUM_REVIEWER_IDS:'pilot-bob'};
+  CANONICAL_STUDIO_REVIEWER_IDS:'pilot-bob'};
  let sessions=0;
  const worker=createCanonicalStageWorker({authFactory:()=>({api:{getSession:async({headers})=>{
   sessions++;

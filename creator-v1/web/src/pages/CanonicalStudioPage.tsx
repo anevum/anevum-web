@@ -4,8 +4,9 @@ import {canonicalAuthClient,canonicalMe,type CanonicalProfile} from '../lib/cano
 import {
  studioHealth,studioList,studioGet,studioCreate,studioUpdate,studioSubmit,studioAssets,
  studioUpload,studioCheckFile,studioDeleteAsset,studioDownloadUrl,studioWithdraw,studioDeleteProject,studioReviewQueue,
+ studioEligibleUpload,studioReviewManifest,
  studioReviewDecision,type StudioDraft,type StudioProject,type StudioAsset,type StudioCategory,
- type StudioReviewProject,type StudioReviewHistory
+ type StudioReviewProject,type StudioReviewHistory,type StudioReviewManifest
 } from '../lib/canonical-studio';
 import './canonical-studio.css';
 
@@ -129,6 +130,7 @@ function StudioEditor({create,uploadsReady}:{create:boolean;uploadsReady:boolean
  const id=create?null:projectId||null;
  const [project,setProject]=useState<StudioProject|null>(null);
  const [history,setHistory]=useState<StudioReviewHistory[]>([]);
+ const [assetSummary,setAssetSummary]=useState<StudioAsset[]|null>(null);
  const [draft,setDraft]=useState<StudioDraft>({...empty});
  const [saved,setSaved]=useState<StudioDraft|null>(null);
  const [loading,setLoading]=useState(!create),[busy,setBusy]=useState(false);
@@ -146,7 +148,9 @@ function StudioEditor({create,uploadsReady}:{create:boolean;uploadsReady:boolean
  },[id,create]);
  const canEdit=!project||editable(project);
  const dirty=saved===null||JSON.stringify(saved)!==JSON.stringify(draft);
- const ready=Boolean((draft.demoUrl||draft.sourceUrl)&&draft.license.trim().length>=2&&
+ const eligibleAttachment=Boolean(assetSummary?.some(a=>a.status==='quarantined'&&
+  studioEligibleUpload(draft.category,a.kind)));
+ const ready=Boolean((draft.demoUrl||draft.sourceUrl||eligibleAttachment)&&draft.license.trim().length>=2&&
   draft.aiDisclosure.trim().length>=6&&draft.humanContribution.trim().length>=10);
  function assign<K extends keyof StudioDraft>(name:K,value:StudioDraft[K]){setDraft(p=>({...p,[name]:value}));setNotice('');setError('');}
  const locked=busy||loading||mustReload||!canEdit;
@@ -225,7 +229,7 @@ function StudioEditor({create,uploadsReady}:{create:boolean;uploadsReady:boolean
     <label className="st-field"><span>WORKING DEMO URL (HTTPS)</span>
      <input type="url" value={draft.demoUrl||''} disabled={locked} maxLength={1500}
       onChange={e=>assign('demoUrl',e.target.value||null)}/>
-     <small>Optional for a draft. A real public demo OR source link is required for review until native hosting launches.</small>
+     <small>Optional. For private review you may supply a matching file in the asset vault instead. Game/app builds use ZIP; they cannot play publicly yet.</small>
     </label>
     <label className="st-field"><span>PUBLIC SOURCE CODE URL (HTTPS)</span>
      <input type="url" value={draft.sourceUrl||''} disabled={locked} maxLength={1500}
@@ -255,12 +259,12 @@ function StudioEditor({create,uploadsReady}:{create:boolean;uploadsReady:boolean
       <p>{item.reason}</p>
      </div>)}
     </section>}
-    {project&&<StudioUploader project={project} uploadsReady={uploadsReady}/>}
+    {project&&<StudioUploader project={project} uploadsReady={uploadsReady} onAssetsChanged={setAssetSummary}/>}
     <section className="st-panel">
      <p className="st-kicker">04 / REVIEW READINESS</p><h2>SUBMISSION CHECK.</h2>
      <ul className="st-checklist">
       <li data-ready={Boolean(project&&!dirty)}><span>{project&&!dirty?'✓':'○'}</span> Saved current revision</li>
-      <li data-ready={Boolean(draft.demoUrl||draft.sourceUrl)}><span>{draft.demoUrl||draft.sourceUrl?'✓':'○'}</span> Public demo or source link</li>
+      <li data-ready={Boolean(draft.demoUrl||draft.sourceUrl||eligibleAttachment)}><span>{draft.demoUrl||draft.sourceUrl||eligibleAttachment?'✓':'○'}</span> Public HTTPS link or matching private creation file</li>
       <li data-ready={draft.license.trim().length>=2}><span>{draft.license.trim().length>=2?'✓':'○'}</span> License / ownership stated</li>
       <li data-ready={draft.aiDisclosure.trim().length>=6}><span>{draft.aiDisclosure.trim().length>=6?'✓':'○'}</span> AI involvement disclosed</li>
       <li data-ready={draft.humanContribution.trim().length>=10}><span>{draft.humanContribution.trim().length>=10?'✓':'○'}</span> Human contributions credited</li>
@@ -278,7 +282,7 @@ function StudioEditor({create,uploadsReady}:{create:boolean;uploadsReady:boolean
  </>;
 }
 
-function StudioUploader({project,uploadsReady}:{project:StudioProject;uploadsReady:boolean}){
+function StudioUploader({project,uploadsReady,onAssetsChanged}:{project:StudioProject;uploadsReady:boolean;onAssetsChanged:(assets:StudioAsset[])=>void}){
  const [assets,setAssets]=useState<StudioAsset[]>([]);
  const [queue,setQueue]=useState<File[]>([]),[busy,setBusy]=useState(false),[error,setError]=useState(''),[notice,setNotice]=useState('');
  const [progress,setProgress]=useState(''),[drag,setDrag]=useState(false);
@@ -293,10 +297,10 @@ function StudioUploader({project,uploadsReady}:{project:StudioProject;uploadsRea
  useEffect(()=>{
   if(!uploadsReady)return;
   let alive=true;
-  studioAssets(project.id).then(r=>{if(alive)setAssets(r.assets)}).catch(e=>{if(alive)setError(showError(e))});
+  studioAssets(project.id).then(r=>{if(alive){setAssets(r.assets);onAssetsChanged(r.assets)}}).catch(e=>{if(alive)setError(showError(e))});
   return()=>{alive=false;controller.current?.abort();};
- },[project.id,uploadsReady]);
- async function refresh(){setAssets((await studioAssets(project.id)).assets);}
+ },[project.id,uploadsReady,onAssetsChanged]);
+ async function refresh(){const next=(await studioAssets(project.id)).assets;setAssets(next);onAssetsChanged(next);}
  function accept(files:FileList|null){
   if(!files||busy)return;
   setError('');setNotice('');
@@ -370,11 +374,19 @@ function StudioUploader({project,uploadsReady}:{project:StudioProject;uploadsRea
 function StudioReview(){
  const [projects,setProjects]=useState<StudioReviewProject[]>([]),[error,setError]=useState(''),[loading,setLoading]=useState(true);
  const [reason,setReason]=useState<Record<string,string>>({}),[busy,setBusy]=useState('');
+ const [manifests,setManifests]=useState<Record<string,StudioReviewManifest>>({});
+ const [inspection,setInspection]=useState('');
  async function refresh(){const r=await studioReviewQueue();setProjects(r.projects);}
  useEffect(()=>{const ac=new AbortController();studioReviewQueue(ac.signal).then(r=>setProjects(r.projects))
   .catch(e=>{if(!ac.signal.aborted)setError(showError(e))})
   .finally(()=>{if(!ac.signal.aborted)setLoading(false)});
   return()=>ac.abort();},[]);
+ async function inspect(p:StudioReviewProject){
+  if(inspection)return;
+  setInspection(p.id);setError('');
+  try{const manifest=await studioReviewManifest(p.id);setManifests(v=>({...v,[p.id]:manifest}));}
+  catch(e){setError(showError(e));}finally{setInspection('');}
+ }
  async function decide(p:StudioReviewProject,action:'changes_requested'|'rejected'){
   const explanation=reason[p.id]?.trim()||'';
   if(explanation.length<12){setError('Give the creator a specific explanation of at least 12 characters.');return;}
@@ -396,7 +408,18 @@ function StudioReview(){
     <dt>AI contribution</dt><dd>{p.ai_disclosure}</dd>
     <dt>Human credits</dt><dd>{p.human_contribution}</dd>
     <dt>Source</dt><dd>{p.source_url||'Not supplied'}</dd>
-    <dt>Demo</dt><dd>{p.demo_url||'Not supplied'}</dd></dl>
+    <dt>Demo</dt><dd>{p.demo_url||'Not supplied'}</dd>
+    <dt>Private files</dt><dd>{p.attachment_count} quarantined · {size(Number(p.attachment_bytes))}</dd></dl>
+   {p.attachment_count>0&&<div className="st-review-files">
+    <button className="st-link" disabled={Boolean(inspection)} onClick={()=>void inspect(p)}>INSPECT FILE METADATA ↗</button>
+    {manifests[p.id]&&<div className="st-manifest">
+     <p className="st-muted">{manifests[p.id].note}</p>
+     {manifests[p.id].assets.map(a=><div className="st-manifest-file" key={a.id}>
+      <strong>{a.name}</strong><small>{a.kind.toUpperCase()} / {size(a.sizeBytes)} / {a.status.toUpperCase()}</small>
+      <code>{a.sha256||'Hash pending'}</code>
+     </div>)}
+    </div>}
+   </div>}
    <label className="st-field"><span>REVIEW REASON (REQUIRED)</span>
     <textarea maxLength={1200} rows={3} value={reason[p.id]||''}
      onChange={e=>setReason(v=>({...v,[p.id]:e.target.value}))}/></label>

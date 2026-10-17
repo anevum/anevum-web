@@ -14,6 +14,18 @@ export interface StudioProject extends StudioDraft {
  id:string;status:StudioStatus;revision:number;createdAt:number;updatedAt:number;submittedAt:number|null;
 }
 export interface StudioReviewHistory {action:'changes_requested'|'rejected';reason:string;createdAt:number}
+export interface StudioReviewManifest {
+ projectId:string;revision:number;note:string;assets:StudioAsset[];
+}
+const UPLOAD_KINDS:Record<StudioCategory,StudioAsset['kind'][]>={
+ games:['package'],tools:['package'],creative:['image','audio','document','package'],
+ music:['audio'],art:['image'],video:[],writing:['document'],
+ learning:['document','package'],research:['document','package'],
+ other:['image','audio','document','package']
+};
+export function studioEligibleUpload(category:StudioCategory,kind:StudioAsset['kind']):boolean{
+ return UPLOAD_KINDS[category].includes(kind);
+}
 export interface StudioAsset {
  id:string;name:string;kind:'image'|'audio'|'document'|'package';
  contentType:string;sizeBytes:number;status:'reserved'|'uploading'|'quarantined'|'deleting';
@@ -107,9 +119,12 @@ export const studioDownloadUrl=(id:string,assetId:string)=>assetsPath(id,assetId
 export interface StudioReviewProject{
  id:string;title:string;summary:string;category:string;status:string;revision:number;
  submitted_at:number;demo_url:string|null;source_url:string|null;
+ attachment_count:number;attachment_bytes:number;
  license_name:string;ai_disclosure:string;human_contribution:string;user_id:string;handle:string;
 }
 export const studioReviewQueue=(signal?:AbortSignal)=>
  request<{projects:StudioReviewProject[]}>(ROOT+'/review','GET',undefined,signal);
+export const studioReviewManifest=(id:string,signal?:AbortSignal)=>
+ request<StudioReviewManifest>(ROOT+'/review/'+validId(id)+'/manifest','GET',undefined,signal);
 export const studioReviewDecision=(projectId:string,revision:number,action:'changes_requested'|'rejected',reason:string)=>
  request<{ok:boolean;status:string}>(ROOT+'/review','POST',{projectId:validId(projectId),revision,action,reason});

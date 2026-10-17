@@ -133,6 +133,12 @@
 .st-feedback strong{color:var(--st-rose);font-size:.72rem;letter-spacing:.09em;display:block}
 .st-feedback small{color:var(--st-muted);font-size:.67rem;display:block;margin-top:5px}
 .st-feedback p{line-height:1.6;overflow-wrap:anywhere;font-size:.86rem;color:var(--st-text)}
+.st-review-files{padding:4px 0 20px}
+.st-manifest{padding:14px 18px;background:#070d1b;border:1px solid var(--st-line)}
+.st-manifest-file{display:grid;gap:4px;padding:10px 0;border-top:1px solid var(--st-line)}
+.st-manifest-file>strong{font-size:.78rem;overflow-wrap:anywhere}
+.st-manifest-file>small{font-size:.67rem;color:var(--st-muted)}
+.st-manifest-file>code{white-space:normal;overflow-wrap:anywhere;color:var(--st-cyan);font-size:.68rem}
 .st-review-list{display:grid;gap:18px}
 .st-review{border:1px solid var(--st-line);padding:20px;background:#0b1322}
 .st-review h3{font-size:1.2rem}
