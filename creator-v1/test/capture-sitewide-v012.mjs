@@ -72,6 +72,7 @@ try{
   ["community","/community",".ch7-hub"],["boards","/boards",".cnb-hub"],
   ["levels","/levels",".levels-page"],["start","/start",".start-page"],
   ["guide","/guide",".field-guide-page"],["status","/status",".status-list"],
+  ["join","/join",".av12-phase1-join"],
   ["guest-library","/library",".member-gate"],
   ["member-account","/account",".av12-account-await"],
   ["member-profile-editor","/account/edit",".av12-account-await"],
@@ -85,7 +86,7 @@ try{
   await client.send("Emulation.setDeviceMetricsOverride",{width,height,deviceScaleFactor:1,mobile:width<641});
   await client.send("Emulation.setEmulatedMedia",{features:[{name:"prefers-reduced-motion",value:"reduce"}]});
   const selected=width===1440||width===390?pages:pages.filter(([id])=>
-   ["home","discover","project","community","boards","levels","guest-library"].includes(id));
+   ["home","join","discover","project","community","boards","levels","guest-library"].includes(id));
   for(const [name,path,selector] of selected){
    if(name==="guest-library")await client.send("Network.clearBrowserCookies");
    // Simulate the real canonical staging capability only for project routes.
