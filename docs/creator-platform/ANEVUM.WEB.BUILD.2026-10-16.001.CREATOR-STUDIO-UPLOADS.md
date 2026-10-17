@@ -38,7 +38,7 @@ The immediate QA target is npm run test:studio, then npm test from creator-v1. P
 
 
 ## V044 continuation / attachment-first review
-- Creators can submit a private game/tool ZIP, image-based artwork, audio, or document without needing an external site. File type must match the project category and must already have a completed quarantined upload. Video still requires a public HTTPS URL because Studio does not yet accept video files.
+- Creators can submit a private game/tool ZIP, image-based artwork, audio, or document without needing an external site. File type must match the project category and must already have a completed quarantined upload. Private MP4 and WebM video files (maximum 20 MiB each) are now accepted as film-review evidence. External HTTPS links remain supported. Video cannot be streamed, transcoded, or publicly rendered from quarantine.
 - Readiness is checked on the server and checked a second time atomically in the D1 submission update. Removing an upload never causes a public release; a reviewer sees the new private manifest state.
 - Creator Studio reviewers now use CANONICAL_STUDIO_REVIEWER_IDS, independent of forum reviewers. An independent reviewer may inspect only status/size/hash/name metadata, never execute, preview, or download quarantined bytes from the review desk.
 - The existing staging Worker scheduled callback additionally runs bounded expired-reservation / abandoned-upload recovery, but remains inert when uploads are disabled or a private R2 binding is missing.
@@ -54,3 +54,7 @@ CANONICAL_CREATOR_UPLOAD_PILOT_MEMBER_IDS (comma-separated canonical member UUID
 
 ## V046 — aggregate pilot storage guard
 Private upload reservations also enforce a 512 MiB total Studio ceiling across **all canonical member accounts**. The quota counts stored, uploading, quarantined, and reserved records until deletion or the bounded expiry cleaner releases them. The server verifies aggregate space inside the D1 reservation statement, not from a client-reported meter. The Studio displays its own account usage and the shared pilot-vault usage. The limit is intentionally lower than commercial-scale storage and must not be raised until real pricing, abuse controls, telemetry, and lifecycle verification are in place. This is a storage-only limit; it does not make packages executable, published, or approved.
+
+
+## V047: quarantined video ingest
+The private upload pilot additionally accepts MP4 (`video/mp4`) and WebM (`video/webm`) files, each capped at 20 MiB. Browser extension/MIME declaration and basic MP4/EBML header signatures are checked, then bytes are stored as private `application/octet-stream`. These checks are **not** malware scanning, decoding, file validation, moderation, or copyright clearance. Video is never embedded, rendered, streamed or played on the ANEVUM origin; safe processing and media playback remain follow-on features behind separate release gates. Video-category projects may submit a quarantined video attachment for metadata review without an external URL.
