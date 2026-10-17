@@ -3,6 +3,7 @@
 // No project in this service is public, installed, approved, or executable.
 import {boundedText} from './request-body.mjs';
 import {canonicalStudioAssets,studioUploadReady} from './studio-assets.mjs';
+import {studioReviewSchemaReady,freezeStudioReview,withdrawStudioReview,decideStudioReview,getStudioReviewReceipt,listStudioReviewReceipts} from './studio-submissions.mjs';
 
 const PREFIX='/api/v1/member/studio';
 const COLLECTION=PREFIX+'/projects';
@@ -93,6 +94,7 @@ export async function canonicalStudioSchemaReady(env){
  try{
   const names=await rows(db,"SELECT name FROM sqlite_master WHERE type='table' AND name IN ('member_studio_projects','member_studio_assets','member_studio_rate_limits','member_studio_review_log')");
   if(new Set(names.map(x=>x.name)).size!==4)return false;
+  if(!await studioReviewSchemaReady(db))return false;
   const required=[
    ['member_studio_projects',['id','user_id','revision','status','source_url','demo_url']],
    ['member_studio_assets',['project_id','user_id','status','storage_key','size_bytes','lease_until']]
@@ -115,7 +117,7 @@ export async function canonicalStudio(req,env,user,now=Math.floor(Date.now()/100
  if(typeof user?.id!=='string'||!user.id||user.emailVerified!==true)return fail(403,'Verified member required');
  const db=env.MEMBER_DB,url=new URL(req.url),path=url.pathname;
  if(url.search)return fail(400,'Unexpected query');
- const match=path.match(/^\/api\/v1\/member\/studio\/projects(?:\/([0-9a-f-]{36})(?:\/(submit|withdraw|assets)(?:\/([a-f0-9]{32})(?:\/(file))?)?)?)?$/);
+ const match=path.match(/^\/api\/v1\/member\/studio\/projects(?:\/([0-9a-f-]{36})(?:\/(submit|withdraw|submissions|assets)(?:\/([a-f0-9]{32})(?:\/(file))?)?)?)?$/);
  if(!match)return fail(404,'Not found');
  const id=match[1],sub=match[2],asset=match[3],file=match[4];
  if(id&&!UUID.test(id))return fail(404,'Not found');
@@ -151,6 +153,11 @@ export async function canonicalStudio(req,env,user,now=Math.floor(Date.now()/100
   const selected=await getOne(db,'SELECT '+COLS+' FROM member_studio_projects WHERE id=? AND user_id=?',[id,user.id]);
   if(!selected)return fail(404,'Project not found');
   if(sub==='assets')return canonicalStudioAssets(req,env,user,selected,{asset,file,now,pace});
+  if(sub==='submissions'){
+   if(req.method!=='GET')return fail(405,'Method not allowed');
+   const receipts=await listStudioReviewReceipts(db,id,user.id);
+   return json({submissions:receipts,note:'Private review history; no public release created'});
+  }
   // Withdrawal preserves the private project record while removing it from
   // the staff queue. A pending review never prevents a member from withdrawing.
   if(sub==='withdraw'){
@@ -158,11 +165,8 @@ export async function canonicalStudio(req,env,user,now=Math.floor(Date.now()/100
    const input=await body(req,500);
    if(!input||!exactly(input,['revision'])||!Number.isSafeInteger(input.revision))return fail(400,'Invalid revision');
    if(selected.revision!==input.revision||selected.status!=='pending_review')return fail(409,'Submission changed');
-   const changes=await rows(db,
-    "UPDATE member_studio_projects SET status='draft',revision=revision+1,updated_at=?,submitted_at=NULL "+
-    "WHERE id=? AND user_id=? AND status='pending_review' AND revision=? RETURNING "+COLS,
-    [now,id,user.id,input.revision]);
-   return changes.length===1?json({project:dbRow(changes[0])}):fail(409,'Submission already reviewed or withdrawn');
+   const project=await withdrawStudioReview(db,selected,user.id,now);
+   return project?json({project:dbRow(project)}):fail(409,'Submission already reviewed or withdrawn');
   }
   if(sub==='submit'){
    if(req.method!=='POST')return fail(405,'Method not allowed');
