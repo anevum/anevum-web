@@ -132,12 +132,13 @@ export async function canonicalStudioAssets(req,env,user,project,{asset=null,fil
   }
   if(file)return fail(404,'Not found');
   if(req.method==='DELETE'){
-   if(!mutable(project))return fail(409,'Project locked for review');
+   // An owner may withdraw private bytes even while the project's metadata is
+   // locked for staff review. Review cannot silently retain private files.
    if(selected.status==='uploading')return fail(409,'Upload is in progress');
    if(!await pace(db,user.id,'asset',now,60))return fail(429,'Too many asset changes');
    const n=await change(db,
     "UPDATE member_studio_assets SET status='deleting',updated_at=? WHERE id=? AND project_id=? AND user_id=? "+
-    "AND status IN ('reserved','quarantined','deleting') AND EXISTS(SELECT 1 FROM member_studio_projects WHERE id=? AND user_id=? AND status IN ('draft','changes_requested'))",
+    "AND status IN ('reserved','quarantined','deleting') AND EXISTS(SELECT 1 FROM member_studio_projects WHERE id=? AND user_id=?)",
     [now,asset,project.id,user.id,project.id,user.id]);
    if(n!==1)return fail(409,'Asset changed');
    try{await store.delete(selected.storage_key);}
