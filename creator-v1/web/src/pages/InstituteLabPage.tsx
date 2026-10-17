@@ -143,6 +143,14 @@ export function InstituteLabPage(){
         {([["identity","Identity"],["transmissions","Transmissions"],["protocol","Protocol"]] as const).map(([key,label])=>
           <button type="button" role="tab" id={"il-tab-"+key} aria-controls={"il-tabpanel-"+key}
             aria-selected={tab===key} tabIndex={tab===key?0:-1} className={tab===key?"is-active":""} key={key}
+            onKeyDown={event=>{
+              const order:LabTab[]=["identity","transmissions","protocol"];
+              const i=order.indexOf(tab);
+              const next=event.key==="ArrowRight"?order[(i+1)%order.length]:
+                event.key==="ArrowLeft"?order[(i+order.length-1)%order.length]:
+                event.key==="Home"?order[0]:event.key==="End"?order[order.length-1]:null;
+              if(next){event.preventDefault();setTab(next);document.getElementById("il-tab-"+next)?.focus();}
+            }}
             onClick={()=>setTab(key)}>{label}</button>)}
       </div>
       <div className="il-tab-panel" id={"il-tabpanel-"+tab} role="tabpanel" aria-labelledby={"il-tab-"+tab}>
