@@ -8,7 +8,7 @@ const root=resolve(dirname(fileURLToPath(import.meta.url)),'../web/public/instit
 const read=name=>readFileSync(resolve(root,name),'utf8');
 
 test('Institute Lab has nonindexable static routes and CSP-safe local modules',()=>{
- for(const name of ['index.html','observation-node-001.html','regulation-node-002.html']){
+ for(const name of ['specimens.html','observation-node-001.html','regulation-node-002.html']){
   const page=read(name);
   assert.match(page,/<html lang="en">/);
   assert.match(page,/noindex,nofollow,noarchive/);
@@ -51,7 +51,7 @@ test('Regulation demo remains synthetic and cannot call moderation services',()=
 });
 
 test('Institute index links two distinct specimens with provisional names',()=>{
- const html=read('index.html');
+ const html=read('specimens.html');
  for(const name of ['observation-node-001.html','regulation-node-002.html','observation-node-001.svg','regulation-node-002.svg'])
   assert.ok(html.includes('./'+name),name);
  assert.match(html,/Provisional entity names/);
