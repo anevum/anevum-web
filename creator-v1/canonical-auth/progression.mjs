@@ -1,6 +1,8 @@
 import ARTIFACTS from '../shared/level-artifacts.json' with {type:'json'};
 import {MILESTONES} from './rewards.mjs';
 import {boundedText} from './request-body.mjs';
+import {recognitionBadgeName} from './recognition-issuer.mjs';
+import {recognitionReady} from './recognition.mjs';
 const headers={'cache-control':'private, no-store','content-type':'application/json; charset=utf-8','x-content-type-options':'nosniff'};
 const json=(data,status=200)=>Response.json(data,{status,headers});
 const error=(status,message)=>json({error:message},status);
@@ -27,7 +29,7 @@ export async function syncRewardNotifications(db,id,now){
 }
 function notification(row){
  if(row.kind==='level')return {id:row.id,kind:'level',level:row.level,title:'Level '+row.level+' reached',detail:ARTIFACTS[row.level-1]?.name??'Your continuance expands.',createdAt:row.created_at};
- const a=MILESTONES.find(a=>a.id===row.reference);return {id:row.id,kind:'award',award:row.reference,title:a?.name??'Award earned',detail:a?`Badge earned · +${a.xp} XP`:'Recognition earned',createdAt:row.created_at};
+ const a=MILESTONES.find(a=>a.id===row.reference);return {id:row.id,kind:'award',award:row.reference,title:a?.name??recognitionBadgeName(row.reference)??'Badge earned',detail:a?`Badge earned · +${a.xp} XP`:'Verified achievement recorded · badge earned',createdAt:row.created_at};
 }
 async function body(req){if(!/^application\/json(?:\s*;|$)/i.test(req.headers.get('content-type')||''))return null;const raw=await boundedText(req,200);try{const v=JSON.parse(raw);return v&&typeof v==='object'&&!Array.isArray(v)?v:null}catch{return null}}
 export async function canonicalProgression(req,env,user,now=Math.floor(Date.now()/1000)){
@@ -41,6 +43,12 @@ export async function canonicalProgression(req,env,user,now=Math.floor(Date.now(
   if(path.endsWith('/progression')&&req.method==='GET')return json({progression:await readProgression(db,user.id),testButtonEnabled:test});
   if(path.endsWith('/notifications')&&req.method==='GET'){
    await syncRewardNotifications(db,user.id,now);
+   // Repair a notification if a committed badge grant outlived an interrupted
+   // delivery write. Grant evidence remains in the immutable recognition ledger.
+   if(env.CANONICAL_RECOGNITION_ENABLED==='true'&&await recognitionReady(db))
+    await db.prepare("INSERT OR IGNORE INTO member_reward_notifications(user_id,kind,reference,created_at) "+
+     "SELECT user_id,'award',recognition_id,earned_at FROM member_recognition_grants "+
+     "WHERE user_id=? AND kind='badge' AND revoked_at IS NULL").bind(user.id).run();
    const receipt=await db.prepare('SELECT through_id FROM member_notification_receipts WHERE user_id=?').bind(user.id).first();
    const after=Number(receipt?.through_id)||0;
    const items=await rows(db,`SELECT id,kind,reference,level,created_at FROM member_reward_notifications WHERE user_id=? AND id>? AND (kind!='level' OR (reference LIKE 'evo60-%' AND level<=30)) ORDER BY id LIMIT 24`,user.id,after);
