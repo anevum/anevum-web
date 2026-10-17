@@ -38,7 +38,14 @@ try{
   await send('Page.navigate',{url:'https://anevum.com/recognition'});
   let ready=false;
   for(let i=0;i<100;i++){if(await evaluate("!!document.querySelector('.av66-registry-mark') && !!document.querySelector('.av66-catalog-shell')")){ready=true;break;}await sleep(200);}
-  if(!ready)throw Error('Recognition route did not render: '+width);
+  if(!ready){
+   const probe=await evaluate("(()=>({href:location.href,ready:document.readyState,title:document.title,body:document.body?.innerText?.slice(0,1200),registry:document.querySelectorAll('.av66-registry').length,orbit:document.querySelectorAll('.av66-registry-mark').length,archive:document.querySelectorAll('.av66-catalog-shell').length,root:document.querySelector('#root')?.innerHTML.slice(0,400),scripts:[...document.scripts].map(x=>x.src).slice(0,4)}))()");
+   console.log('LIVE_REGISTRY_RENDER_DIAGNOSTIC',JSON.stringify(probe));
+   const shot=await send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});
+   await fs.writeFile(path.join(out,'missing-'+width+'.png'),Buffer.from(shot.data,'base64'));
+   await fs.writeFile(path.join(out,'failure.json'),JSON.stringify({width,probe,errors},null,2));
+   throw Error('Recognition route did not render: '+width);
+  }
   await sleep(550);
   const details=await evaluate("(()=>{const info=s=>{const e=document.querySelector(s);if(!e)return null;const r=e.getBoundingClientRect(),c=getComputedStyle(e);return {selector:s,tag:e.tagName,x:Math.round(r.x),y:Math.round(r.y),width:Math.round(r.width),height:Math.round(r.height),cssWidth:c.width,cssHeight:c.height,display:c.display,flex:c.flex,overflow:c.overflow,maxWidth:c.maxWidth,position:c.position}};const rules=[];const walk=a=>{for(const r of a){if(r.selectorText?.includes('.av66-registry-mark'))rules.push(r.cssText.slice(0,380));if(r.cssRules)walk(r.cssRules)}};for(const sh of document.styleSheets)try{walk(sh.cssRules)}catch{}return {viewport:[innerWidth,innerHeight],documentWidth:document.documentElement.scrollWidth,mark:info('.av66-registry-mark'),eyebrow:info('.av66-registry-eyebrow'),header:info('.av66-registry-header'),heading:info('.av66-registry-header h1'),metrics:info('.av66-registry-metrics'),archive:info('.av66-catalog-shell'),rules:rules.slice(0,8),stylesheets:document.styleSheets.length}})()");
   captures.push(details);
