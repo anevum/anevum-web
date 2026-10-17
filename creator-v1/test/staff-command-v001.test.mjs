@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {fixture} from './helpers/canonical-fixture.mjs';
-import {canonicalStaffOps,staffOpsPermission,staffRosterIds,validCanvasStroke,STAFF_OPS_PATH} from '../canonical-auth/staff-ops.mjs';
+import {canonicalStaffOps,cleanupStaffOps,staffOpsPermission,staffRosterIds,validCanvasStroke,STAFF_OPS_PATH} from '../canonical-auth/staff-ops.mjs';
 
 const origin='https://a.anevum.com';
 function req(method='GET',body,query=''){
@@ -172,5 +172,18 @@ test('IREN V001: per-minute messages are throttled and tampered request shapes r
   assert.equal((await f.call(f.owner,'POST',{kind:'invite-create',alias:'Friend',channel:'email',note:'',role:'owner'})).status,400);
   assert.equal((await f.call(f.owner,'GET',undefined,'?lane=unknown')).status,400);
   assert.equal((await f.call(f.owner,'GET',undefined,'?room=operations&room=review')).status,400);
+ }finally{f.db.close()}
+});
+
+test('IREN V001: call signaling expires and maintenance does not touch D1 when feature gate is disabled',async()=>{
+ const f=setup();
+ try{
+  assert.equal((await f.call(f.owner,'POST',{kind:'signal',recipientId:'reviewer',
+   signalType:'offer',data:{type:'offer',sdp:'temporary'}} ,'',1000)).status,201);
+  assert.equal(f.db.prepare('SELECT COUNT(*) AS n FROM staff_webrtc_signals').get().n,1);
+  assert.deepEqual(await cleanupStaffOps(f.env,2000),{ok:true});
+  assert.equal(f.db.prepare('SELECT COUNT(*) AS n FROM staff_webrtc_signals').get().n,0);
+  f.env.CANONICAL_STAFF_OPS_ENABLED='false';
+  assert.deepEqual(await cleanupStaffOps(f.env,3000),{skipped:true});
  }finally{f.db.close()}
 });
