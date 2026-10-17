@@ -31,8 +31,14 @@ type ReviewSnapshot={
  threads:PendingThread[];replies:PendingReply[];reports:OpenReport[];recent:AuditEvent[];
  totals:{threads:number;replies:number;reports:number;
   oldestThreadAt:number|null;oldestReplyAt:number|null;oldestReportAt:number|null};
- pageSize:number;auditSize:number;checkedAt:number
+ pageSize:number;auditSize:number;checkedAt:number;
+ nextCursors:Record<'threads'|'replies'|'reports'|'activity',string|null>
 };
+type PageLane='threads'|'replies'|'reports'|'activity';
+type PageResult={lane:PageLane;items:unknown[];nextCursor:string|null;checkedAt:number};
+type ExtraPages={threads:PendingThread[];replies:PendingReply[];reports:OpenReport[];activity:AuditEvent[]};
+const emptyPages=():ExtraPages=>({threads:[],replies:[],reports:[],activity:[]});
+function dedup<T extends {id:string}>(items:T[]):T[]{const seen=new Set<string>();return items.filter(x=>{if(seen.has(x.id))return false;seen.add(x.id);return true})}
 type Lane='overview'|'threads'|'replies'|'reports'|'activity';
 type Decision={kind:'thread'|'reply'|'report';id:string;action:'publish'|'reject'|'hide'|'dismiss_report';summary:string};
 const lanes:ReadonlyArray<{key:Lane;name:string;index:string}>=[
@@ -52,8 +58,8 @@ const displayTime=(seconds:number)=>new Date(seconds*1000).toLocaleString(undefi
 const uppercase=(s:string)=>s.replaceAll('_',' ').toUpperCase();
 const reasonLabel=(s:string)=>({unsafe:'SAFETY',harassment:'HARASSMENT',spam:'SPAM',other:'OTHER'} as Record<string,string>)[s]||'OTHER';
 
-async function reviewRequest<T>(method:'GET'|'POST',body?:unknown,signal?:AbortSignal):Promise<T>{
- const response=await fetch('/api/v1/member/forum-review',{
+async function reviewRequest<T>(method:'GET'|'POST',body?:unknown,signal?:AbortSignal,query=''):Promise<T>{
+ const response=await fetch('/api/v1/member/forum-review'+(query?'?'+query:''),{
   method,mode:'same-origin',credentials:'same-origin',redirect:'error',
   cache:'no-store',referrerPolicy:'same-origin',signal,
   headers:body===undefined?{Accept:'application/json'}:{Accept:'application/json','Content-Type':'application/json'},
@@ -87,19 +93,55 @@ function Workspace({memberId}:{memberId:string}){
  const [busy,setBusy]=useState(false);
  const [mutationError,setMutationError]=useState('');
  const [notice,setNotice]=useState('');
+ const [extras,setExtras]=useState<ExtraPages>(emptyPages);
+ const [cursors,setCursors]=useState<Partial<Record<PageLane,string|null>>>({});
+ const [paging,setPaging]=useState<PageLane|null>(null);
+ const [pageError,setPageError]=useState('');
  const dialog=useRef<HTMLDialogElement>(null);
  const queue=useResource(signal=>reviewRequest<ReviewSnapshot>('GET',undefined,signal),[memberId,revision]);
  const data=queue.state==='ready'?queue.data:null;
+ const combined=useMemo(()=>({
+  threads:dedup([...(data?.threads||[]),...extras.threads]),
+  replies:dedup([...(data?.replies||[]),...extras.replies]),
+  reports:dedup([...(data?.reports||[]),...extras.reports]),
+  recent:dedup([...(data?.recent||[]),...extras.activity])
+ }),[data,extras]);
  const search=query.trim().toLocaleLowerCase();
  const visible=useMemo(()=>{
   const matches=(...parts:(string|null|undefined)[])=>!search||parts.some(part=>(part||'').toLocaleLowerCase().includes(search));
   return {
-   threads:(data?.threads||[]).filter(t=>matches(t.topic,t.title,t.body,t.author.handle,t.author.displayName)),
-   replies:(data?.replies||[]).filter(r=>matches(r.threadTitle,r.body,r.author.handle,r.author.displayName)),
-   reports:(data?.reports||[]).filter(r=>matches(r.reason,r.threadTitle,r.contentPreview,r.authorHandle,r.authorDisplayName)),
-   recent:(data?.recent||[]).filter(r=>matches(r.action,r.targetKind,r.reviewerHandle))
+   threads:combined.threads.filter(t=>matches(t.topic,t.title,t.body,t.author.handle,t.author.displayName)),
+   replies:combined.replies.filter(r=>matches(r.threadTitle,r.body,r.author.handle,r.author.displayName)),
+   reports:combined.reports.filter(r=>matches(r.reason,r.threadTitle,r.contentPreview,r.authorHandle,r.authorDisplayName)),
+   recent:combined.recent.filter(r=>matches(r.action,r.targetKind,r.reviewerHandle))
   };
- },[data,search]);
+ },[combined,search]);
+ const resetPaging=()=>{setExtras(emptyPages());setCursors({});setPageError('')};
+ const cursorFor=(name:PageLane):string|null=>
+  Object.prototype.hasOwnProperty.call(cursors,name)?cursors[name]||null:data?.nextCursors?.[name]||null;
+ async function loadMore(name:PageLane){
+  const cursor=cursorFor(name);
+  if(!cursor||!data||paging||busy)return;
+  setPaging(name);setPageError('');
+  try{
+   const params=new URLSearchParams({lane:name,after:cursor}).toString();
+   const response=await reviewRequest<PageResult>('GET',undefined,undefined,params);
+   if(response.lane!==name||!Array.isArray(response.items)||
+      !(typeof response.nextCursor==='string'||response.nextCursor===null))
+    throw Error('Unexpected reviewer page response');
+   if(name==='threads')setExtras(x=>({...x,threads:dedup([...x.threads,...response.items as PendingThread[]])}));
+   if(name==='replies')setExtras(x=>({...x,replies:dedup([...x.replies,...response.items as PendingReply[]])}));
+   if(name==='reports')setExtras(x=>({...x,reports:dedup([...x.reports,...response.items as OpenReport[]])}));
+   if(name==='activity')setExtras(x=>({...x,activity:dedup([...x.activity,...response.items as AuditEvent[]])}));
+   setCursors(x=>({...x,[name]:response.nextCursor}));
+  }catch(error){setPageError(error instanceof Error?error.message:'Unable to load older records.');}
+  finally{setPaging(null)}
+ }
+ const moreButton=(name:PageLane)=>cursorFor(name)?
+  <div className="mc-page-foot">
+   <button type="button" className="mc-refresh" disabled={busy||paging!==null}
+    onClick={()=>void loadMore(name)}>{paging===name?'RETRIEVING OLDER RECORDS…':'LOAD MORE / '+uppercase(name)}</button>
+  </div>:null;
  useEffect(()=>{
   const node=dialog.current;
   if(choice&&!node?.open)node?.showModal();
