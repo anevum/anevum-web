@@ -137,6 +137,11 @@ test('review queue is staff-only, independent and change-request-only',async()=>
   assert.equal(r.status,200);
   const confirmed=await j(await s.call(ROOT+'/'+c.project.id,'GET','alice'));
   assert.equal(confirmed.project.status,'changes_requested');
+  assert.equal(confirmed.reviewHistory.length,1);
+  assert.equal(confirmed.reviewHistory[0].action,'changes_requested');
+  assert.match(confirmed.reviewHistory[0].reason,/music credits/);
+  assert.equal((await s.call(ROOT+'/'+c.project.id,'GET','bob')).status,404,
+   'Other members cannot read private review reasons');
   assert.equal((await s.call('/api/v1/member/studio/review','POST','bob',{
    projectId:c.project.id,revision:2,action:'rejected',reason:'This is now a stale review.'
   })).status,409);
