@@ -143,7 +143,7 @@ export function Phase1JoinPage(){
          <button className="button secondary" type="button" onClick={()=>void signOutUnverified()} disabled={busy}>
            SIGN OUT / CHANGE ACCOUNT
          </button>
-       </div>
+       </div>}
        {ready&&!emailReady&&<p role="status" className="join-service-note">Email sign-in is temporarily unavailable.</p>}
        {ready&&!requiresEmailVerification&&(["google","github","apple","microsoft"] as const).some(socialReady)&&<div className="join-methods" aria-label="Other available sign-in methods">
          {METHODS.filter(method=>method.key!=="email"&&socialReady(method.key)).map(method=><button
