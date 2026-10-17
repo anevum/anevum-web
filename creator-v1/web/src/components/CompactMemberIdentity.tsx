@@ -1,14 +1,23 @@
 import {Link} from 'react-router-dom';
-import {LevelEmblem,AwardEmblem,LEVEL_ARTIFACTS} from './LevelEmblem';
+import {LevelEmblem,LEVEL_ARTIFACTS} from './LevelEmblem';
+import {CelestialEmblem} from './CelestialEmblem';
+import {HonorInsignia} from './HonorInsignia';
 import {MemberPortrait} from './MemberPortrait';
 import {SupporterIdentity} from './SupporterSeal';
 import type {SupporterAppearance} from '../lib/canonical-beta';
+import {
+ BADGE_CATALOG,selectFeaturedBadges,selectedDistinctions,safePlayerAura,safeConstellation,
+ type EarnedBadge,type BadgeDisplay,type PublicDistinctions,type PlayerAura,type ConstellationIdentity
+} from '../lib/player-recognition';
 import './member-identity-v061.css';
+import './player-card-v065.css';
 
-/** A single identity contract across approved posts, replies, wall updates and public member cards.
- * Only server-verified, explicitly public level and selected earned award fields may be passed.
- * Native scene rendering stays in the inspector: 128px genuine 3D artwork renders animate
- * as lightweight miniature specimens so long feeds do not exhaust mobile WebGL contexts.
+/**
+ * Universal player identity, v065.
+ * Use in forums, threads, replies, creator/project credits, directory and walls.
+ * No award, level, aura, flag or medal is inferred from public writing or account
+ * age. Members receive only the verified/visible records passed by the API.
+ * The existing V062 LevelEmblem runs on ONE shared native canvas.
  */
 export type PublicIdentity={
  handle:string;
@@ -16,37 +25,75 @@ export type PublicIdentity={
  avatar:boolean;
  level:number|null;
  featuredAwards:string[];
+ // New public API fields; optional so existing V061 responses remain compatible.
+ earnedBadges?:EarnedBadge[];
+ badgeDisplay?:BadgeDisplay;
+ distinctions?:PublicDistinctions;
+ aura?:PlayerAura;
+ constellation?:ConstellationIdentity;
  supporterAppearance?:SupporterAppearance;
 };
-const AWARDS:Record<string,string>={
- first_signal:'First Signal',
- world_shaper:'World Shaper'
-};
+export type PlayerCardSize='inline'|'compact'|'standard'|'featured';
+const cleanName=(id:string)=>id.replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase());
 export function CompactMemberIdentity({member,href,className='',size='standard'}:{
- member:PublicIdentity;href?:string;className?:string;size?:'standard'|'compact'
+ member:PublicIdentity;href?:string;className?:string;size?:PlayerCardSize
 }){
  const level=typeof member.level==='number'&&Number.isSafeInteger(member.level)&&member.level>=1&&member.level<=30?member.level:null;
  const specimen=level===null?null:LEVEL_ARTIFACTS[level-1];
- const awards=[...new Set(member.featuredAwards.filter(id=>Object.hasOwn(AWARDS,id)))].slice(0,3);
- const url=href||'/@'+member.handle;
- return <Link to={url} className={'av61-identity av61-identity--'+size+(className?' '+className:'')}
-    aria-label={member.displayName+' @'+member.handle+(level===null?'':' · Level '+level+' '+specimen?.name)+(awards.length?' · '+awards.map(id=>AWARDS[id]).join(', '):'')}>
-   <span className="av61-portrait-zone">
-    <span className="av61-photo"><MemberPortrait name={member.displayName}
-      src={member.avatar?(href==='/member'?'/api/v1/member/media/avatar':'/api/v1/members/'+member.handle+'/media/avatar'):undefined}
-      supporterFrame={member.supporterAppearance?.frame}/></span>
-    {specimen&&<span className="av61-specimen" title={'Evolution Level '+level+' · '+specimen.name}>
-      <LevelEmblem level={level!} size={size==='compact'?38:44}/>
+ const badges=selectFeaturedBadges(member.featuredAwards||[],member.earnedBadges,member.badgeDisplay);
+ const {medal,ribbons}=selectedDistinctions(member.distinctions);
+ const aura=safePlayerAura(member.aura);
+ const constellation=safeConstellation(member.constellation);
+ const url=href||'/@'+encodeURIComponent(member.handle);
+ const label=[
+  member.displayName+' @'+member.handle,
+  level!==null?'Evolution level '+level+' '+specimen?.name:'',
+  badges.length?badges.length+' earned badges: '+badges.map(id=>BADGE_CATALOG[id]?.name||cleanName(id)).join(', '):'',
+  medal?'Medal: '+medal.name:'',
+  ribbons.length?'Ribbons: '+ribbons.map(r=>r.name).join(', '):'',
+  constellation?'Constellation: '+constellation.name:''
+ ].filter(Boolean).join(' · ');
+ return <Link to={url}
+   className={'av61-identity av61-identity--'+size+' av65-player-card av65-player-card--'+size+' av65-aura--'+aura+(className?' '+className:'')}
+   data-player-card="v065" aria-label={label}>
+  {aura!=='none'&&<span className="av65-aura-field" aria-hidden="true"/>}
+  <span className="av61-portrait-zone">
+   <span className="av61-photo"><MemberPortrait name={member.displayName}
+    src={member.avatar?(href==='/member'?'/api/v1/member/media/avatar':'/api/v1/members/'+encodeURIComponent(member.handle)+'/media/avatar'):undefined}
+    supporterFrame={member.supporterAppearance?.frame}/></span>
+   {specimen&&<span className="av61-specimen" title={'Evolution Level '+level+' · '+specimen.name}>
+    <LevelEmblem level={level!} size={size==='inline'?30:size==='compact'?38:size==='featured'?60:44}/>
+   </span>}
+  </span>
+  <span className="av61-member-copy">
+   <span className="av65-name-line"><strong className="av61-member-name">{member.displayName}</strong>
+    {constellation&&<span className="av65-constellation-flag" title={'Constellation · '+constellation.name} aria-label={'Constellation · '+constellation.name}>
+      <svg viewBox="0 0 26 26" aria-hidden="true" focusable="false">
+       <path d="M5 3h16v16l-8 5-8-5Z" fill="#242037" stroke="#bdaccd" strokeWidth="1.5"/>
+       <path d="m13 5 2.3 5.7L21 13l-5.7 2.3L13 21l-2.3-5.7L5 13l5.7-2.3Z" fill="#f0bdd0"/>
+       <circle cx="13" cy="13" r="2" fill="#faf0da"/>
+      </svg>
     </span>}
    </span>
-   <span className="av61-member-copy">
-    <strong className="av61-member-name">{member.displayName}</strong>
-    <small className="av61-member-handle">@{member.handle}</small>
-    <span className="av61-member-rewards">
-     {specimen&&<span className="av61-level-label" title={specimen.name}>LVL {String(level).padStart(2,'0')} <span className="av61-specimen-name">· {specimen.name}</span></span>}
-     {awards.length>0&&<span className="av61-award-list" aria-label="Featured earned awards">{awards.map(id=><span key={id} title={AWARDS[id]} className="av61-award"><AwardEmblem award={id}/></span>)}</span>}
-     {member.supporterAppearance&&<span className="av61-supporter"><SupporterIdentity appearance={member.supporterAppearance} compact/></span>}
-    </span>
+   <small className="av61-member-handle">@{member.handle}</small>
+   <span className="av61-member-rewards">
+    {specimen&&<span className="av61-level-label" title={specimen.name}>LVL {String(level).padStart(2,'0')} <span className="av61-specimen-name">· {specimen.name}</span></span>}
+    {badges.length>0&&<span className="av61-award-list av65-badge-rack" aria-label="Three selected or latest earned badges">
+     {badges.map(id=>{
+      const entry=BADGE_CATALOG[id];
+      return <span key={id} title={entry?entry.name+' — '+entry.description:cleanName(id)}
+       className={'av61-award av65-badge av65-badge--'+(entry?.family||'origin')}>
+        <CelestialEmblem motif={entry?.motif||'beacon'} size="tiny" state="earned" title={entry?.name||cleanName(id)}/>
+       </span>;
+     })}
+    </span>}
+    {medal&&<span className="av65-medal-slot" aria-label="Prestige medal"><HonorInsignia distinction={medal} compact={size==='compact'||size==='inline'}/></span>}
+    {ribbons.length>0&&<span className="av65-ribbon-rack" aria-label="Earned distinctions: service ribbons">
+      {ribbons.map(r=><HonorInsignia key={r.id} distinction={r} compact={size==='compact'||size==='inline'}/>)}
+    </span>}
+    {member.supporterAppearance&&<span className="av61-supporter" aria-label="Supporter appearance"><SupporterIdentity appearance={member.supporterAppearance} compact/></span>}
    </span>
-  </Link>;
+  </span>
+ </Link>;
 }
+export const PlayerCard=CompactMemberIdentity;
