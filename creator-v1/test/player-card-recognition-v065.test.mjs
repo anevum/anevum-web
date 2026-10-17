@@ -122,3 +122,29 @@ test('old entry points and opt-in privacy remain intact',()=>{
  assert.match(worker,/sameOriginMutation/);
  assert.match(worker,/canonicalRecognition\(clean,env,session\.user\)/);
 });
+
+test('26 badge engravings have independently modeled devices, not repeated generic stars',()=>{
+ const art=read('web/src/components/BadgeInsignia.tsx');
+ const catalog=read('web/src/lib/player-recognition.ts');
+ const keys=[
+  'first_signal','world_shaper','first_orbit','returning_signal',
+  'first_thread','first_reply','conversationalist','signal_booster',
+  'first_creation','maker_five','maker_twenty','revision_keeper',
+  'first_source','sound_weaver','image_maker','story_teller',
+  'playwright','first_collection','thoughtful_review','pathfinder',
+  'first_collab','cross_discipline','good_neighbor','accessibility_builder',
+  'archive_keeper','annual_return'
+ ];
+ assert.equal(new Set(keys).size,26);
+ for(const key of keys){
+  assert.ok(art.includes("case '"+key+"'"),key+' needs its own SVG device');
+  assert.ok(catalog.includes("b('"+key+"'"),key+' remains in the server-defined award catalog');
+ }
+ assert.match(art,/prefers-reduced-motion|badge-insignia-v066\.css/);
+ assert.match(art,/MATERIALS/);
+ assert.doesNotMatch(art,/Math\.random|fetch\(|new WebGL/);
+ for(const component of ['CompactMemberIdentity.tsx','PlayerCardStudio.tsx']){
+  assert.match(read('web/src/components/'+component),/BadgeInsignia/);
+ }
+ assert.match(read('web/src/pages/RecognitionRegistryPage.tsx'),/BadgeInsignia/);
+});
