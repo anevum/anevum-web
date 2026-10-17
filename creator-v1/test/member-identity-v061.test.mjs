@@ -12,7 +12,7 @@ test('every modern public author surface uses the shared 3D mini specimen identi
  assert.match(shared,/LevelEmblem level=/);
  assert.match(shared,/MemberPortrait/);
  assert.match(shared,/featuredAwards/);
- assert.ok(shared.includes("'/@'+member.handle"));
+ assert.match(shared,/const url=href\|\|'\/@'\+encodeURIComponent\(member.handle\)/);
  assert.match(forum,/CompactMemberIdentity/);
  assert.match(member,/CompactMemberIdentity/);
  assert.match(wall,/CompactMemberIdentity/);
