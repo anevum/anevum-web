@@ -11,6 +11,7 @@ import {
   stripeCheckoutSession,stripePortalSession,stripePriceMatches,subscriptionProjection
 } from '../supporter/stripe.mjs';
 import {boundedText} from './request-body.mjs';
+import {canonicalRequestOrigin} from './policy.mjs';
 
 const H={'cache-control':'private, no-store','content-type':'application/json; charset=utf-8',
   'x-content-type-options':'nosniff','x-robots-tag':'noindex, nofollow, noarchive'};
@@ -212,8 +213,8 @@ export async function supporterMember(request,env,user,{http=fetch,now=Date.now(
           ...(existingCustomer?{customer:existingCustomer.stripe_customer_id}:{customer_email:user.email}),
           'metadata[anevum_member_id]':user.id,
           'subscription_data[metadata][anevum_member_id]':user.id,
-          success_url:'https://a.anevum.com/support?checkout=returned',
-          cancel_url:'https://a.anevum.com/support?checkout=cancelled',
+          success_url:canonicalRequestOrigin(env)+'/support?checkout=returned',
+          cancel_url:canonicalRequestOrigin(env)+'/support?checkout=cancelled',
           billing_address_collection:'auto',
           // Stripe hosted Checkout can otherwise remain payable for 24h.
           // Thirty minutes limits ambiguous post-create failures; the
@@ -254,7 +255,7 @@ export async function supporterMember(request,env,user,{http=fetch,now=Date.now(
     const portal=await stripeRequest(env,'/v1/billing_portal/sessions',{
       method:'POST',idempotencyKey:key,fields:{
         customer:owner.stripe_customer_id,
-        return_url:'https://a.anevum.com/support'
+        return_url:canonicalRequestOrigin(env)+'/support'
       }
     },http);
     const checked=stripePortalSession(portal);
