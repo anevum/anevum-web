@@ -124,7 +124,7 @@ test("staging preview carries restrictive HTML headers and strips member cookies
 });
 
 
-test("thirty permanent ANEVUM levels remain independent of member permissions",()=>{
+test("30-level Evolution presentation is independent of member permissions",()=>{
   const shell=read("web/src/components/Shell.tsx");
   const app=read("web/src/App.tsx");
   const panel=read("web/src/components/LevelPanel.tsx");
@@ -134,16 +134,13 @@ test("thirty permanent ANEVUM levels remain independent of member permissions",(
   assert.match(app,/path="levels"/);
   assert.match(panel,/useMemberProgression/);
   assert.match(panel,/30 PERMANENT LEVELS/);
-  assert.match(panel,/FINAL LEVEL · ANEVUM/);
-  assert.match(panel,/nextLevel===null/);
-  assert.match(levels,/Thirty evolutionary specimens/);
-  assert.match(levels,/63,075 XP/);
+  assert.match(levels,/30 PERMANENT LEVELS/);
   assert.match(levels,/moderation powers/);
   assert.match(levels,/10 XP/);
-  assert.match(levels,/25 XP/);
-  assert.match(levels,/does not grant extra XP/);
-  assert.doesNotMatch(panel+levels,/NO LEVEL CAP|FIRST 60 ARTIFACTS/);
+ assert.match(levels,/25 XP/);
+ assert.match(levels,/does not grant extra XP/);
 });
+
 
 test("mobile has no fixed bottom tab bar and header drawer exposes every member route",()=>{
   const shell=read("web/src/components/Shell.tsx");

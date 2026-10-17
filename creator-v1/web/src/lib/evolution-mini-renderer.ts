@@ -344,6 +344,7 @@ class MiniStage {
   this.last=now;if(!this.reduced.matches)this.clock+=delta;
   const visible=[...this.slots.values()].filter(s=>s.visible&&s.element.isConnected);
   if(!visible.length){this.sleep();this.markIdle();return;}
+  if(this.failed){this.sleep();this.markIdle();return;}
   if(!this.ready){void this.boot();this.schedule();return;}
   const canvas=this.canvas!,gl=this.gl!;
   canvas.hidden=false;
