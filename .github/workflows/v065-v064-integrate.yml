@@ -38,7 +38,7 @@ jobs:
           test "$(git rev-parse FETCH_HEAD)" = "$SOURCE_SHA" || { echo "Integration source changed. Abort."; exit 1; }
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          if ! git merge -s ort -X theirs --no-commit --no-ff "$SOURCE_SHA"; then
+          if ! git merge --squash -s ort -X theirs "$SOURCE_SHA"; then
             echo "Conflicts remain, refusing any push."
             git diff --name-only --diff-filter=U
             exit 1
@@ -94,8 +94,9 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          test -f .git/MERGE_HEAD
+          test ! -f .git/MERGE_HEAD
           git add -A
+          test -z "$(git diff --cached --name-only -- .github/workflows)" || { echo "GitHub App cannot push workflow changes. Abort."; exit 1; }
           git commit -m "merge(identity): preserve V064 optical assets with V065 player recognition"
           git push origin HEAD:build/player-card-v065-v064-integrate-20261017-014
           echo "INTEGRATION_ONLY=PASS; no deployment or database migration"
