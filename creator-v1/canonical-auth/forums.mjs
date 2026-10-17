@@ -1,4 +1,5 @@
 import {boundedText} from './request-body.mjs';
+import {forumReviewSnapshot,forumReviewPage,parseReviewPage} from './forum-review-console.mjs';
 const HEAD={'content-type':'application/json; charset=utf-8','cache-control':'private, no-store','x-content-type-options':'nosniff'};
 const json=(data,status=200)=>Response.json(data,{status,headers:HEAD});
 const fail=(status,message)=>json({error:message},status);
@@ -39,16 +40,18 @@ export async function canonicalForums(req,env,user=null,now=Math.floor(Date.now(
  if(env.CANONICAL_FORUM_ENABLED!=='true')return fail(404,'Forums are not enabled');
  const db=env.MEMBER_DB;if(!await dbReady(db))return fail(503,'Forum database is not prepared');
  const url=new URL(req.url),path=url.pathname;
- if([...url.searchParams.keys()].some(x=>!['topic','after'].includes(x))||[...url.searchParams.keys()].some(x=>url.searchParams.getAll(x).length!==1))return fail(400,'Invalid filters');
- const topic=url.searchParams.get('topic');if(topic&&!TOPICS.has(topic))return fail(400,'Invalid topic');
- const after=decodeCursor(url.searchParams.get('after'));if(after===false)return fail(400,'Invalid cursor');
+ // Staff-only cursors and public forum filters have independent validation.
+ // Staff auth and reviewer grants run before page cursors are parsed.
+ const review=path==='/api/v1/member/forum-review';
+ if(!review&&([...url.searchParams.keys()].some(x=>!['topic','after'].includes(x))||[...url.searchParams.keys()].some(x=>url.searchParams.getAll(x).length!==1)))return fail(400,'Invalid filters');
+ const topic=review?null:url.searchParams.get('topic');if(topic&&!TOPICS.has(topic))return fail(400,'Invalid topic');
+ const after=review?null:decodeCursor(url.searchParams.get('after'));if(after===false)return fail(400,'Invalid cursor');
  const item=path.match(/^\/api\/v1\/community\/threads\/([a-f0-9-]{36})$/);
  const reply=path.match(/^\/api\/v1\/community\/threads\/([a-f0-9-]{36})\/replies$/);
  const react=path.match(/^\/api\/v1\/community\/threads\/([a-f0-9-]{36})\/reaction$/);
  const report=path==='/api/v1/community/reports';
  const mine=path==='/api/v1/member/forum-submissions';
  const mineId=path.match(/^\/api\/v1\/member\/forum-submissions\/([a-f0-9-]{36})$/);
- const review=path==='/api/v1/member/forum-review';
  if(!item&&!reply&&!react&&!report&&!mine&&!mineId&&!review&&path!=='/api/v1/community/threads')return fail(404,'Not found');
  if((item&&!UUID.test(item[1]))||(reply&&!UUID.test(reply[1]))||(react&&!UUID.test(react[1]))||(mineId&&!UUID.test(mineId[1])))return fail(404,'Not found');
  const publicRead=req.method==='GET'&&!mine&&!mineId&&!react&&!report&&!review;
@@ -87,16 +90,15 @@ export async function canonicalForums(req,env,user=null,now=Math.floor(Date.now(
   }
   if(review){
    // Only a server-configured verified Better Auth user ID may review content.
-   const reviewers=(env.CANONICAL_FORUM_REVIEWER_IDS||'').split(',').map(x=>x.trim()).filter(Boolean);
-   if(!reviewers.includes(user.id))return fail(403,'Reviewer access required');
+   // Preserve all existing owner-configured reviewers when adding a separately
+   // provisioned, verified second reviewer. Never replace the primary secret.
+   const reviewers=new Set([env.CANONICAL_FORUM_REVIEWER_IDS||'',
+    env.CANONICAL_FORUM_ADDITIONAL_REVIEWER_IDS||''].flatMap(value=>value.split(',').map(x=>x.trim()).filter(Boolean)));
+   if(!reviewers.has(user.id))return fail(403,'Reviewer access required');
    if(req.method==='GET'){
-    if(url.search)return fail(400,'Unexpected filters');
-    const [threads,replies,reports]=await Promise.all([
-     db.prepare("SELECT t.id,t.topic,t.title,t.body,t.created_at,p.handle,p.display_name FROM member_forum_threads t JOIN member_creator_profiles p ON p.user_id=t.author_id WHERE t.status='pending_review' ORDER BY t.created_at ASC LIMIT 50").all(),
-     db.prepare("SELECT r.id,r.thread_id,r.body,r.created_at,p.handle,p.display_name FROM member_forum_replies r JOIN member_creator_profiles p ON p.user_id=r.author_id WHERE r.status='pending_review' ORDER BY r.created_at ASC LIMIT 50").all(),
-     db.prepare("SELECT id,target_kind,target_id,reason,created_at FROM member_forum_reports WHERE resolved_at IS NULL ORDER BY created_at ASC LIMIT 50").all()
-    ]);
-    return json({threads:threads.results,replies:replies.results,reports:reports.results});
+    if(!url.search)return json(await forumReviewSnapshot(db,user.id,now));
+    const page=parseReviewPage(url.searchParams);
+    return page?json(await forumReviewPage(db,user.id,now,page)):fail(400,'Invalid review cursor');
    }
    if(req.method!=='POST'||url.search)return fail(405,'Method not allowed');
    const v=await payload(req);
@@ -120,11 +122,11 @@ export async function canonicalForums(req,env,user=null,now=Math.floor(Date.now(
     return fail(409,'Review state changed');
    if(v.action==='publish'){
     if(target.author_id===user.id)return fail(403,'Independent review is required');
-    const author=await db.prepare("SELECT visibility FROM member_creator_profiles WHERE user_id=?").bind(target.author_id).first();
-    if(author?.visibility!=='public')return fail(409,'Author is not public');
+    const author=await db.prepare("SELECT p.visibility,u.emailVerified AS verified FROM member_creator_profiles p JOIN \"user\" u ON u.id=p.user_id WHERE p.user_id=?").bind(target.author_id).first();
+    if(author?.visibility!=='public'||!author.verified)return fail(409,'Author is not public and verified');
     if(v.targetKind==='reply'){
-     const parent=await db.prepare("SELECT t.status,p.visibility FROM member_forum_replies r JOIN member_forum_threads t ON t.id=r.thread_id JOIN member_creator_profiles p ON p.user_id=t.author_id WHERE r.id=?").bind(v.targetId).first();
-     if(parent?.status!=='published'||parent?.visibility!=='public')return fail(409,'Parent thread is not public');
+     const parent=await db.prepare("SELECT t.status,p.visibility,u.emailVerified AS verified FROM member_forum_replies r JOIN member_forum_threads t ON t.id=r.thread_id JOIN member_creator_profiles p ON p.user_id=t.author_id JOIN \"user\" u ON u.id=t.author_id WHERE r.id=?").bind(v.targetId).first();
+     if(parent?.status!=='published'||parent?.visibility!=='public'||!parent.verified)return fail(409,'Parent thread is not public');
     }
    }
    const next=v.action==='publish'?'published':v.action==='reject'?'rejected':'hidden';

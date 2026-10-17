@@ -138,6 +138,37 @@ jobs:
           test -s evidence/forum-v041-review/forum-390.png
           printf '%s\n' 'Synthetic loopback forum fixture; not real member or deployed content.' > evidence/forum-v041-review/README.txt
 
+      - name: Verify V042 moderator console security, responsive case cards and audited decisions
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p evidence/moderator-v042-review
+          chrome="$(command -v google-chrome || command -v chromium-browser || command -v chromium || true)"
+          test -n "$chrome"
+          node creator-v1/test/capture-moderator-console-v042.mjs --chrome "$chrome" --output evidence/moderator-v042-review
+          test -s evidence/moderator-v042-review/acceptance.json
+          test -s evidence/moderator-v042-review/moderator-1440.png
+          test -s evidence/moderator-v042-review/moderator-390.png
+          test -s evidence/moderator-v042-review/moderator-320.png
+          test -s evidence/moderator-v042-review/moderator-report-390.png
+          test -s evidence/moderator-v042-review/moderator-confirm-390.png
+          printf '%s\n' 'Synthetic loopback-only staff session and browser fixture; no live member activity or auth secrets.' > evidence/moderator-v042-review/README.txt
+
+      - name: Verify V043 moderator pagination and independent review at desktop and phone widths
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p evidence/moderator-v043-review
+          chrome="$(command -v google-chrome || command -v chromium-browser || command -v chromium || true)"
+          test -n "$chrome"
+          node creator-v1/test/capture-moderator-pagination-v043.mjs --chrome "$chrome" --output evidence/moderator-v043-review
+          test -s evidence/moderator-v043-review/acceptance.json
+          test -s evidence/moderator-v043-review/moderator-pagination-1440.png
+          test -s evidence/moderator-v043-review/moderator-pagination-1024.png
+          test -s evidence/moderator-v043-review/moderator-pagination-390.png
+          test -s evidence/moderator-v043-review/moderator-pagination-320.png
+          printf '%s\n' '65 synthetic pending forum threads, no real sessions or staging D1 writes.' > evidence/moderator-v043-review/README.txt
+
       - name: Preserve generated public artifact for visual review
         if: always()
         shell: bash
