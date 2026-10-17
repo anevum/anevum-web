@@ -14,6 +14,7 @@ function req(method='GET',body,query=''){
 function setup(){
  const f=fixture();
  f.db.exec(readFileSync(new URL('../canonical-auth/migrations/0010_staff_command.sql',import.meta.url),'utf8'));
+ f.db.exec(readFileSync(new URL('../canonical-auth/migrations/0011_staff_roles.sql',import.meta.url),'utf8'));
  function seed(key,{verified=true,profile=true}={}){
   f.db.prepare('INSERT INTO "user"(id,name,email,emailVerified,createdAt,updatedAt) VALUES(?,?,?,?,1,1)')
    .run(key,'Fixture '+key,key+'@synthetic.invalid',verified?1:0);
@@ -23,6 +24,9 @@ function setup(){
  }
  const owner=seed('owner'),reviewer=seed('reviewer'),second=seed('second',{profile:false});
  const outsider=seed('outsider'),unverified=seed('unverified',{verified:false});
+ for(const [id,role] of [['owner','owner'],['reviewer','reviewer'],['second','reviewer'],['unverified','reviewer']])
+  f.db.prepare("INSERT INTO staff_access_grants(member_id,role,granted_by,created_at,updated_at) VALUES(?,?,?,?,?)")
+   .run(id,role,'owner',2000,2000);
  const env={...f.env,CANONICAL_STAFF_OPS_ENABLED:'true',CANONICAL_STAFF_OWNER_IDS:'owner',
   CANONICAL_FORUM_REVIEWER_IDS:'reviewer',CANONICAL_FORUM_ADDITIONAL_REVIEWER_IDS:'second,unverified'};
  const call=(member=owner,method='GET',body,query='',now=5000)=>
@@ -34,12 +38,12 @@ const parse=async response=>response.json();
 test('IREN V001: immutable ID grants, secondary reviewer, verified-session and feature flag fail closed',async()=>{
  const f=setup();
  try{
-  assert.deepEqual(staffOpsPermission(f.env,f.owner),{memberId:'owner',role:'owner'});
-  assert.deepEqual(staffOpsPermission(f.env,f.reviewer),{memberId:'reviewer',role:'reviewer'});
-  assert.deepEqual(staffOpsPermission(f.env,f.second),{memberId:'second',role:'reviewer'});
-  assert.equal(staffOpsPermission(f.env,f.outsider),null);
-  assert.equal(staffOpsPermission(f.env,f.unverified),null);
-  assert.deepEqual(staffRosterIds(f.env),['owner','reviewer','second','unverified']);
+  assert.deepEqual(await staffOpsPermission(f.env,f.owner),{memberId:'owner',role:'owner'});
+  assert.deepEqual(await staffOpsPermission(f.env,f.reviewer),{memberId:'reviewer',role:'reviewer'});
+  assert.deepEqual(await staffOpsPermission(f.env,f.second),{memberId:'second',role:'reviewer'});
+  assert.equal(await staffOpsPermission(f.env,f.outsider),null);
+  assert.equal(await staffOpsPermission(f.env,f.unverified),null);
+  assert.deepEqual(await staffRosterIds(f.env.MEMBER_DB),['owner','reviewer','second']);
   assert.equal((await f.call(null)).status,401);
   assert.equal((await f.call(f.unverified)).status,401);
   assert.equal((await f.call(f.outsider)).status,403);
@@ -49,7 +53,7 @@ test('IREN V001: immutable ID grants, secondary reviewer, verified-session and f
   f.env.CANONICAL_STAFF_OPS_ENABLED='true';
   const missing={...f.env};
   delete missing.CANONICAL_STAFF_OWNER_IDS;
-  assert.equal(staffOpsPermission(missing,f.owner),null);
+  assert.deepEqual(await staffOpsPermission(missing,f.owner),{memberId:'owner',role:'owner'});
  }finally{f.db.close()}
 });
 
@@ -58,7 +62,10 @@ test('IREN V001: owner sees verified member totals without emails; reviewers see
  try{
   const owner=await parse(await f.call(f.owner));
   const reviewer=await parse(await f.call(f.reviewer));
-  assert.deepEqual(owner.memberMetrics,{total:5,verified:4});
+  assert.equal(owner.memberMetrics.total,5);
+  assert.equal(owner.memberMetrics.verified,4);
+  assert.equal(owner.memberMetrics.profiles,4);
+  assert.equal(typeof owner.memberMetrics.new7d,'number');
   assert.equal(reviewer.memberMetrics,null);
   assert.equal(owner.roster.length,3);
   assert.equal(owner.roster.some(x=>x.id==='unverified'),false);
@@ -88,7 +95,7 @@ test('IREN V001: friend invitations are manual owner-only records and cannot pro
   const updated=await parse(await f.call(f.owner));
   assert.equal(updated.invitations[0].stage,'staff-candidate');
   assert.equal(updated.roster.length,3);
-  assert.equal(staffOpsPermission(f.env,f.outsider),null);
+  assert.equal(await staffOpsPermission(f.env,f.outsider),null);
   assert.equal((await f.call(f.reviewer,'POST',{kind:'invite-update',id,stage:'joined'})).status,403);
   assert.equal((await f.call(f.owner,'POST',{kind:'invite-update',id,stage:'staff-candidate'})).status,409);
   assert.equal((await f.call(f.owner,'POST',{kind:'invite-create',alias:'',channel:'direct',note:''})).status,400);
@@ -185,5 +192,34 @@ test('IREN V001: call signaling expires and maintenance does not touch D1 when f
   assert.equal(f.db.prepare('SELECT COUNT(*) AS n FROM staff_webrtc_signals').get().n,0);
   f.env.CANONICAL_STAFF_OPS_ENABLED='false';
   assert.deepEqual(await cleanupStaffOps(f.env,3000),{skipped:true});
+ }finally{f.db.close()}
+});
+
+
+test('IREN V002: founder grants and revokes only verified reviewer access with audit and no self-elevation',async()=>{
+ const f=setup();
+ try{
+  const unauthorized=await f.call(f.reviewer,'POST',{kind:'staff-grant',memberId:'outsider'});
+  assert.equal(unauthorized.status,403);
+  const bad=await f.call(f.owner,'POST',{kind:'staff-grant',memberId:'unverified'});
+  assert.equal(bad.status,409);
+  const self=await f.call(f.owner,'POST',{kind:'staff-grant',memberId:'owner'});
+  assert.equal(self.status,400);
+  const forbidden=await f.call(f.owner,'POST',{kind:'staff-grant',memberId:'outsider',role:'owner'});
+  assert.equal(forbidden.status,400);
+  const granted=await f.call(f.owner,'POST',{kind:'staff-grant',memberId:'outsider'});
+  assert.equal(granted.status,200);
+  assert.deepEqual(await staffOpsPermission(f.env,f.outsider),{memberId:'outsider',role:'reviewer'});
+  assert.equal((await f.call(f.outsider)).status,200);
+  const owner=await parse(await f.call(f.owner));
+  assert.equal(owner.eligibleMembers.some(p=>p.id==='outsider'),false);
+  assert.equal(owner.roster.some(p=>p.id==='outsider'&&p.role==='reviewer'),true);
+  assert.equal((await f.call(f.owner,'POST',{kind:'staff-revoke',memberId:'owner'})).status,400);
+  const revoked=await f.call(f.owner,'POST',{kind:'staff-revoke',memberId:'outsider'});
+  assert.equal(revoked.status,200);
+  assert.equal(await staffOpsPermission(f.env,f.outsider),null);
+  assert.equal((await f.call(f.outsider)).status,403);
+  const actions=f.db.prepare('SELECT action FROM staff_access_audit ORDER BY created_at,id').all().map(x=>x.action).sort();
+  assert.deepEqual(actions,['grant-reviewer','revoke-reviewer']);
  }finally{f.db.close()}
 });
