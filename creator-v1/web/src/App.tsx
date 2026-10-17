@@ -26,6 +26,8 @@ import {Phase1PublicMemberPage} from "./pages/Phase1PublicMemberPage";
 import {AnevumNotifications} from './components/AnevumNotifications';
 import {TheButtonPage} from './pages/TheButtonPage';
 import {SupporterPage} from './pages/SupporterPage';
+import SupporterTransparencyPage from './pages/SupporterTransparencyPage';
+import SupporterCollectionPage from './pages/SupporterCollectionPage';
 
 const PublicBoardsPage = lazy(() => import("./pages/PublicBoardsPage").then(mod=>({default:mod.PublicBoardsPage})));
 const pageFallback=<LoadingState label="Opening approved public boards"/>;
@@ -97,6 +99,8 @@ export default function App(){
     <Route path="thebutton" element={<TheButtonPage/>}/>
     <Route path="levels" element={<LevelsPage/>}/>
     <Route path="support" element={<SupporterPage/>}/>
+    <Route path="support/transparency" element={<SupporterTransparencyPage/>}/>
+    <Route path="support/collection" element={<SupporterCollectionPage/>}/>
     <Route path="status" element={<StatusPage/>}/>
     <Route path=":memberHandle" element={<CanonicalPublicHandle/>}/>
     <Route path="*" element={<Navigate to="/" replace/>}/>
