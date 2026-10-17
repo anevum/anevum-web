@@ -2,7 +2,6 @@
 // A small-team, direct WebRTC call, not a hosted conferencing service.
 // Camera and microphone activate only after a deliberate local click.
 import {useEffect,useRef,useState} from 'react';
-import './staff-command.css';
 
 export type StaffPeer={id:string;name:string;handle:string;role:'owner'|'reviewer'};
 type Signal={seq:number;senderId:string;signalType:'offer'|'answer'|'candidate'|'leave';data:unknown};
@@ -111,7 +110,6 @@ export function StaffBridge({myId,peers,online,expanded}:{myId:string;peers:Staf
    await bridgeRequest('POST',{kind:'presence',room:'bridge'});
    setStatus('BRIDGE ONLINE / SELECT A PEER');
    connectVideoElements();
-   if(incoming)await acceptOffer(incoming.senderId,incoming.offer);
   }catch(e){
    streamRef.current?.getTracks().forEach(track=>track.stop());
    streamRef.current=null;
@@ -148,13 +146,9 @@ export function StaffBridge({myId,peers,online,expanded}:{myId:string;peers:Staf
  handleSignalRef.current=async signal=>{
   if(signal.senderId===myId||!peers.some(p=>p.id===signal.senderId))return;
   if(signal.signalType==='offer'&&isSession(signal.data)&&signal.data.type==='offer'){
-   if(joinedRef.current){
-    try{await acceptOffer(signal.senderId,signal.data)}
-    catch{setStatus('INCOMING LINK COULD NOT BE ESTABLISHED')}
-   }else{
-    setIncoming({senderId:signal.senderId,offer:signal.data});
-    setStatus('INCOMING CALL / JOIN TO ANSWER');
-   }
+   // Joining a bridge is not consent to every incoming call. Explicit accept.
+   setIncoming({senderId:signal.senderId,offer:signal.data});
+   setStatus(joinedRef.current?'INCOMING CALL / ACCEPT OR DECLINE':'INCOMING CALL / JOIN THEN ACCEPT');
   }
   if(signal.signalType==='answer'&&isSession(signal.data)&&signal.data.type==='answer'&&
      targetRef.current===signal.senderId&&pcRef.current){
@@ -167,6 +161,7 @@ export function StaffBridge({myId,peers,online,expanded}:{myId:string;peers:Staf
    if(!pcRef.current?.remoteDescription)pendingIce.current.push(candidate);
    else try{await pcRef.current.addIceCandidate(candidate)}catch{/* older ICE */}
   }
+  if(signal.signalType==='leave'&&incoming?.senderId===signal.senderId)setIncoming(null);
   if(signal.signalType==='leave'&&targetRef.current===signal.senderId){
    pcRef.current?.close();pcRef.current=null;targetRef.current=null;
    remoteRef.current=null;setPeerId(null);setStatus('PEER LEFT / STILL IN BRIDGE');
@@ -176,7 +171,7 @@ export function StaffBridge({myId,peers,online,expanded}:{myId:string;peers:Staf
  useEffect(()=>{
   let stopped=false,inFlight=false;
   async function poll(){
-   if(inFlight||stopped)return;inFlight=true;
+   if(inFlight||stopped||(!joinedRef.current&&!expanded)||document.visibilityState==='hidden')return;inFlight=true;
    try{
     const result=await bridgeRequest('GET',undefined,'lane=signals&after='+cursorRef.current) as SignalEnvelope;
     for(const signal of result.signals||[]){
@@ -193,7 +188,7 @@ export function StaffBridge({myId,peers,online,expanded}:{myId:string;peers:Staf
    if(joinedRef.current)void bridgeRequest('POST',{kind:'presence',room:'bridge'}).catch(()=>{});
   },19000);
   return()=>{stopped=true;window.clearInterval(timer);window.clearInterval(presence)};
- },[myId]);
+ },[myId,expanded]);
  useEffect(()=>{
   connectVideoElements();
  },[expanded,joined,peerId]);
@@ -204,9 +199,17 @@ export function StaffBridge({myId,peers,online,expanded}:{myId:string;peers:Staf
   <div className="ir-pane-heading"><span className="ir-kicker">SECURE STAFF / PEER BRIDGE</span>
    <strong>{joined?'● MEDIA ACTIVE':'○ MEDIA OFF'}</strong></div>
   <p className="ir-bridge-status" role="status">{status}</p>
-  {incoming&&!joined&&<div className="ir-incoming" role="alert">
-   Incoming invitation from {nameOf(incoming.senderId)}. Join the bridge to answer.
-  </div>}
+  {incoming&&<div className="ir-incoming" role="alert">
+   Incoming call from {nameOf(incoming.senderId)}.
+   <div className="ir-incoming-actions">
+    <button type="button" disabled={!joined||working} onClick={()=>void acceptOffer(incoming.senderId,incoming.offer).catch(()=>setStatus('CALL ACCEPT FAILED'))}>ACCEPT</button>
+    <button type="button" onClick={()=>{
+      void sendSignal(incoming.senderId,'leave',{}).catch(()=>{});
+      setIncoming(null);setStatus(joined?'BRIDGE ONLINE / CALL DECLINED':'PRIVATE BRIDGE / STANDBY');
+    }}>DECLINE</button>
+   </div>
+   {!joined&&<p>Join voice or video first, then accept.</p>}
+  </div>
   <div className="ir-videos" hidden={!joined||!expanded}>
    <div><video ref={localVideoRef} muted playsInline autoPlay aria-label="Your camera"/>
     <small>LOCAL / {withVideo?'CAMERA':'AUDIO ONLY'}</small></div>
