@@ -105,7 +105,10 @@ const server=createServer((req,res)=>void fixture(req,res));
 await new Promise(r=>server.listen(port,'127.0.0.1',r));
 const child=spawn(chrome,['--headless=new','--no-sandbox','--disable-dev-shm-usage','--disable-gpu',
  '--disable-background-networking','--remote-allow-origins=*','--remote-debugging-port=0',
- '--no-first-run','--user-data-dir='+profile,'about:blank'],{stdio:'ignore'});
+ '--no-first-run','--user-data-dir='+profile,'about:blank'],{
+  stdio:'ignore',
+  detached:process.platform!=='win32' // isolate Chrome descendants for reliable teardown
+ });
 let c;
 try{
  const debugPort=await until(()=>existsSync(join(profile,'DevToolsActivePort'))?
@@ -244,8 +247,27 @@ try{
  console.log('STUDIO_V053_LOCAL_ONLY_BROWSER_QA=PASS');
 }finally{
  try{c?.close();}catch{}
- child.kill('SIGKILL');await new Promise(r=>server.close(r));
- // Chromium can still finish writing profile files after the parent exits.
- // Retry only known transient removal races; don't suppress persistent failures.
- rmSync(profile,{recursive:true,force:true,maxRetries:12,retryDelay:250});
+ // Chrome launches subprocesses which may outlive its main PID. Shut down the
+ // isolated process group, wait for the parent to exit, then remove the profile.
+ try{
+  if(process.platform!=='win32'&&child.pid)process.kill(-child.pid,'SIGKILL');
+  else child.kill('SIGKILL');
+ }catch{try{child.kill('SIGKILL');}catch{/* already exited */}}
+ if(child.exitCode===null&&child.signalCode===null){
+  await new Promise(resolve=>{
+   const timer=setTimeout(resolve,2000);
+   child.once('exit',()=>{clearTimeout(timer);resolve();});
+  });
+ }
+ await new Promise(r=>server.close(r));
+ try{
+  rmSync(profile,{recursive:true,force:true,maxRetries:5,retryDelay:200});
+ }catch(error){
+  // The browser test already asserted its actual behavior and wrote evidence.
+  // This scratch directory is ephemeral on CI, so a final process-write race
+  // should be reported without mislabeling the functional test as a failure.
+  if(error?.code==='ENOTEMPTY'||error?.code==='EBUSY')
+   console.warn('CHROME_PROFILE_CLEANUP_DEFERRED: '+error.code);
+  else throw error;
+ }
 }
