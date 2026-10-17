@@ -11,3 +11,6 @@ dist/
 previews/
 qa-browser/
 !artwork/textures/mineral-height-web.png
+
+artwork/micro/
+ANEVUM-V060-MICRO-INTERACTIVE.html
