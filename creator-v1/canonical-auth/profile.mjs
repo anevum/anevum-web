@@ -5,7 +5,6 @@ import {canonicalProjectSaveExport} from "./project-saves.mjs";
 import {canonicalStudioExport} from "./studio.mjs";
 import {canonicalConfigState,permitCanonicalUserCreation,canonicalRequestOrigin} from "./policy.mjs";
 import {normalizeWorldUpdate,worldFromRow} from "./worlds.mjs";
-import {awardPublicProfileBadge} from "./recognition-issuer.mjs";
 import {awardPublicProfileBadge} from './recognition-issuer.mjs';
 import {boundedText} from "./request-body.mjs";
 // ANEVUM Phase 1 / canonical Better Auth creator identity.
