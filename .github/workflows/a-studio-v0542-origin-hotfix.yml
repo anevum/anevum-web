@@ -1,0 +1,286 @@
+name: ANEVUM A Staging Creator Studio V054.2 iOS Origin Hotfix
+
+# Exact-head owner-authorized staging-only release. Studio private drafts ON.
+# Quarantined uploads, R2, public executable games and awards remain OFF.
+# Does not deploy apex domain or migrate databases.
+on:
+  push:
+    branches: [patch/a-studio-v0542-mobile-origin-20261017]
+    paths: ['.github/workflows/a-studio-v0542-origin-hotfix.yml']
+
+permissions:
+  contents: read
+
+concurrency:
+  group: anevum-a-studio-v0542-20261017-ios-origin-hotfix
+  cancel-in-progress: false
+
+jobs:
+  release:
+    if: github.repository == 'anevum/anevum-web' && github.ref == 'refs/heads/patch/a-studio-v0542-mobile-origin-20261017'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      CANDIDATE_SHA: ${{ github.sha }}
+      CI_VERIFIED_PARENT: f84cbf6bd1d528bba2a75ea14cffccfe7e12d7b7
+      CI_VERIFIED_INTEGRATION: eb5a2225bcb02b42e959ccce77cf48ed22b48c54
+      CI_VERIFIED_SOURCE: f84cbf6bd1d528bba2a75ea14cffccfe7e12d7b7
+      EXPECTED_ACTIVE_WORKER: b87eb430-cb18-4f8a-a8ae-864a0e7e332e
+      CF_ACCOUNT_EXPECTED: 2f7ee83107240152097efd956a4e8335
+      CF_ZONE: 8abe27259b5436af5966d3b40d9a3760
+      CF_WORKER: anevum-creator-v1-a-staging
+    steps:
+      - name: Checkout immutable release source
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 8
+          persist-credentials: false
+
+      - name: Confirm exact-source verified and application unchanged
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$CANDIDATE_SHA"
+          test "$(git rev-parse HEAD^)" = "$CI_VERIFIED_PARENT"
+          changed="$(git diff --name-only "$CI_VERIFIED_PARENT" HEAD)"
+          test "$changed" = ".github/workflows/a-studio-v0542-origin-hotfix.yml"
+          head="$(curl --fail --silent --show-error --max-time 25 -H "Authorization: Bearer $GH_TOKEN" "$GITHUB_API_URL/repos/$GITHUB_REPOSITORY/git/ref/heads/patch/a-studio-v0542-mobile-origin-20261017" | jq -r '.object.sha')"
+          test "$head" = "$CANDIDATE_SHA"
+          # All code was tested at the immutable parent, not at this release-only edit.
+          for attempt in $(seq 1 54); do
+            runs="$(curl --fail --silent --show-error --max-time 30 -H "Authorization: Bearer $GH_TOKEN" "$GITHUB_API_URL/repos/$GITHUB_REPOSITORY/actions/runs?per_page=100")"
+            if printf '%s' "$runs" | jq -e --arg sha "$CI_VERIFIED_PARENT" '[.workflow_runs[]|select(.head_sha==$sha and .name=="ANEVUM Creator Studio V054 Workbench Verify" and .status=="completed" and .conclusion=="success")]|length==1' >/dev/null; then break; fi
+            sleep 8
+          done
+          printf '%s' "$runs" | jq -e --arg sha "$CI_VERIFIED_PARENT" '[.workflow_runs[]|select(.head_sha==$sha and .name=="ANEVUM Creator Studio V054 Workbench Verify" and .status=="completed" and .conclusion=="success")]|length==1' >/dev/null
+          echo VERIFIED_IOS_ORIGIN_PATCH_CI=PASS
+          echo SOURCE_INTEGRITY_AND_DUAL_CI=PASS
+
+      - name: Validate scope, D1 migration artifacts and uploads OFF
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --input-type=module <<'NODE'
+          import assert from 'node:assert/strict';
+          import fs from 'node:fs';
+          const c=JSON.parse(fs.readFileSync('creator-v1/wrangler.a-progression-v031.jsonc','utf8'));
+          assert.equal(c.name,'anevum-creator-v1-a-staging');
+          assert.equal(c.main,'./web/a-canonical-stage.review.mjs');
+          assert.equal(c.account_id,'2f7ee83107240152097efd956a4e8335');
+          assert.deepEqual(c.routes,[]);
+          assert.equal(c.workers_dev,false);
+          assert.equal(c.preview_urls,false);
+          assert.equal(c.assets?.directory,'./dist/web');
+          assert.equal(c.assets?.binding,'ASSETS');
+          assert.equal(c.vars.CANONICAL_PUBLIC_SIGNUP_ENABLED,'true');
+          assert.equal(c.vars.CANONICAL_INVITED_SIGNUP_ENABLED,'false');
+          assert.equal(c.vars.CANONICAL_CREATOR_STUDIO_ENABLED,'true');
+          assert.equal(c.vars.CANONICAL_CREATOR_UPLOADS_ENABLED,'false');
+          assert.equal(c.vars.CANONICAL_CREATOR_UPLOAD_PILOT_MEMBER_IDS,undefined);
+          assert.equal(c.r2_buckets,undefined);
+          assert.equal(c.triggers,undefined);
+          assert.deepEqual(c.d1_databases.map(db=>[db.binding,db.database_id]),[
+            ['COMMUNITY_DB','fa96e36d-6257-4883-bf15-074947e11a13'],
+            ['MEMBER_DB','e1d29049-c83b-4534-8355-dc1fa36ba6d8']
+          ]);
+          for(const name of ['canonical-auth/forum-review-console.mjs',
+            'canonical-auth/studio.mjs','canonical-auth/studio-submissions.mjs',
+            'creator-studio/inspect-creator-zip.mjs']){
+            assert.ok(fs.statSync('creator-v1/'+name).size>100);
+          }
+          NODE
+          test "$(git hash-object creator-v1/canonical-auth/migrations/0008_private_creator_studio.sql)" = "f3e8b518d065450dbfff8bfc18f3f5ed12d56c9e"
+          test "$(git hash-object creator-v1/canonical-auth/migrations/0009_private_review_snapshots.sql)" = "bd9d65ed1b03924c0a48146685b2ce9afef6ae5a"
+          echo REVIEWED_MIGRATIONS_AND_FLAGS=PASS
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Build frontend, test member integrity and archive security
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm install --ignore-scripts --no-audit --no-fund
+          npm run check:creator-v1-web
+          npm run build:creator-v1-web
+          npm run build:creator-v1-web:staging
+          node --check creator-v1/web/a-canonical-stage.review.mjs
+          node --check creator-v1/canonical-auth/worker.mjs
+          (cd creator-v1 && npm run test:studio && npm run test:canonical-forums && npm run test:signup-activation && npm test)
+          chrome="$(command -v google-chrome || command -v chromium-browser || command -v chromium || true)"
+          test -n "$chrome"
+          mkdir -p evidence/studio-v053-browser
+          node creator-v1/test/capture-studio-launchpad-v053.mjs --chrome "$chrome" --output evidence/studio-v053-browser
+          test -s evidence/studio-v053-browser/studio-v053-resume-390.png
+          test -s evidence/studio-v053-browser/studio-v054-story-preview-390.png
+          test -s evidence/studio-v053-browser/studio-v054-choice-target-320.png
+          node -e "const fs=require('fs');const c=fs.readFileSync('creator-v1/web/src/pages/StudioWorkbench.tsx','utf8');if(!c.includes('LOCAL PREVIEW / NOT PUBLISHED')||c.includes('dangerouslySetInnerHTML'))process.exit(1)"
+          node -e "const fs=require('fs');const c=fs.readFileSync('creator-v1/test/capture-studio-launchpad-v053.mjs','utf8');if(!c.includes('First idea input should be visible'))process.exit(1)"
+          test -s creator-v1/dist/web/index.html
+          echo STUDIO_V0531_SOURCE_ACCEPTANCE=PASS
+
+      - name: Pin actual staging routes, secrets, signup and rollback Worker version
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$CLOUDFLARE_API_TOKEN"
+          test "$CLOUDFLARE_ACCOUNT_ID" = "$CF_ACCOUNT_EXPECTED"
+          umask 077
+          api="https://api.cloudflare.com/client/v4"
+          cf() { curl --fail --silent --show-error --max-time 30 -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" "$1"; }
+          cf "$api/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/$CF_WORKER/settings" > "$RUNNER_TEMP/studio-settings-before.json"
+          jq -e '
+            .success and
+            ([.result.bindings[] | select(.type=="d1")]|length)==2 and
+            ([.result.bindings[] | select(.type=="d1" and .name=="COMMUNITY_DB" and ((.id//.database_id)=="fa96e36d-6257-4883-bf15-074947e11a13"))]|length)==1 and
+            ([.result.bindings[] | select(.type=="d1" and .name=="MEMBER_DB" and ((.id//.database_id)=="e1d29049-c83b-4534-8355-dc1fa36ba6d8"))]|length)==1 and
+            ([.result.bindings[] | select(.type=="assets" and .name=="ASSETS")]|length)==1 and
+            ([.result.bindings[] | select(.type=="secret_text" and .name=="CANONICAL_BETTER_AUTH_SECRET")]|length)==1 and
+            ([.result.bindings[] | select(.type=="secret_text" and .name=="CANONICAL_RESEND_API_KEY")]|length)==1 and
+            ([.result.bindings[] | select(.type=="secret_text" and .name=="CANONICAL_FORUM_ENABLED")]|length)==1 and
+            ([.result.bindings[] | select(.type=="secret_text" and .name=="CANONICAL_FORUM_REVIEWER_IDS")]|length)==1 and
+            ([.result.bindings[] | select(.type=="plain_text" and .name=="CANONICAL_PUBLIC_SIGNUP_ENABLED" and .text=="true")]|length)==1 and
+            ([.result.bindings[] | select(.type=="plain_text" and .name=="CANONICAL_INVITED_SIGNUP_ENABLED" and .text=="false")]|length)==1 and
+            ([.result.bindings[] | select(.type=="plain_text" and .name=="CANONICAL_CREATOR_STUDIO_ENABLED" and .text=="true")]|length)==1 and
+            ([.result.bindings[] | select(.type=="plain_text" and .name=="CANONICAL_CREATOR_UPLOADS_ENABLED" and .text=="false")]|length)==1 and
+            ([.result.bindings[] | select(.type=="r2_bucket")]|length)==0
+          ' "$RUNNER_TEMP/studio-settings-before.json" >/dev/null
+          cf "$api/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/$CF_WORKER/deployments?per_page=1" > "$RUNNER_TEMP/studio-deployments-before.json"
+          jq -er '.result.deployments[0].versions[] | select(.percentage==100) | .version_id' "$RUNNER_TEMP/studio-deployments-before.json" > "$RUNNER_TEMP/studio-rollback-version.txt"
+          test "$(cat "$RUNNER_TEMP/studio-rollback-version.txt")" = "$EXPECTED_ACTIVE_WORKER" || {
+            echo "::error::Staging Worker drifted from exact V054.2 baseline. Refusing deployment."; exit 1;
+          }
+          cf "$api/zones/$CF_ZONE/workers/routes" > "$RUNNER_TEMP/studio-routes-before.json"
+          jq -e '
+            .success and
+            ([.result[] | select(.pattern=="anevum.com/*" and .script=="anevum-construction-terminal")]|length)==1 and
+            ([.result[] | select(.pattern=="a.anevum.com/*" and .script=="anevum-creator-v1-a-staging")]|length)==1
+          ' "$RUNNER_TEMP/studio-routes-before.json" >/dev/null
+          curl --fail --silent --show-error --max-time 20 https://a.anevum.com/api/v1/member/health |
+            jq -e '.status=="ready" and .registration=="open" and .progressionReady==true' >/dev/null
+          curl --fail --silent --show-error --max-time 20 https://a.anevum.com/api/v1/community/threads |
+            jq -e '(.items|type)=="array" and has("nextCursor")' >/dev/null
+          echo LIVE_SIGNUP_FORUMS_ROUTES_SECRETS_AND_ROLLBACK_PINNED=PASS
+
+      - name: Deploy staging only and rollback on any hosted validation failure
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          umask 077
+          api="https://api.cloudflare.com/client/v4"
+          old_version="$(cat "$RUNNER_TEMP/studio-rollback-version.txt")"
+          deployed=0
+          validated=0
+          rollback() {
+            if [ "$deployed" != 1 ] || [ "$validated" = 1 ]; then return; fi
+            echo "::error::V054.2 hosted acceptance failed; restoring previous staging Worker $old_version."
+            jq -nc --arg id "$old_version" \
+              '{strategy:"percentage",versions:[{version_id:$id,percentage:100}],annotations:{"workers/message":"ANEVUM V054.2 guarded Creator Studio staging rollback"}}' \
+              > "$RUNNER_TEMP/studio-rollback-request.json"
+            curl --fail --silent --show-error --max-time 30 -X POST \
+              -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" -H 'Content-Type: application/json' \
+              --data-binary @"$RUNNER_TEMP/studio-rollback-request.json" \
+              "$api/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/$CF_WORKER/deployments" \
+              > "$RUNNER_TEMP/studio-rollback-result.json" || true
+            if jq -e '.success' "$RUNNER_TEMP/studio-rollback-result.json" >/dev/null 2>&1; then
+              echo ROLLBACK_REQUEST_ACCEPTED=PASS
+            else
+              echo "::error::Automatic rollback request failed: manual Cloudflare intervention required."
+            fi
+          }
+          trap rollback EXIT
+          deployed=1
+          npx wrangler deploy --config creator-v1/wrangler.a-progression-v031.jsonc --keep-vars
+          curl --fail --silent --show-error --max-time 30 -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+            "$api/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/$CF_WORKER/settings" \
+            > "$RUNNER_TEMP/studio-settings-after.json"
+          jq -e '
+            .success and
+            ([.result.bindings[] | select(.type=="d1")]|length)==2 and
+            ([.result.bindings[] | select(.type=="d1" and .name=="COMMUNITY_DB")]|length)==1 and
+            ([.result.bindings[] | select(.type=="d1" and .name=="MEMBER_DB")]|length)==1 and
+            ([.result.bindings[] | select(.type=="assets" and .name=="ASSETS")]|length)==1 and
+            ([.result.bindings[] | select(.type=="plain_text" and .name=="CANONICAL_PUBLIC_SIGNUP_ENABLED" and .text=="true")]|length)==1 and
+            ([.result.bindings[] | select(.type=="plain_text" and .name=="CANONICAL_INVITED_SIGNUP_ENABLED" and .text=="false")]|length)==1 and
+            ([.result.bindings[] | select(.type=="plain_text" and .name=="CANONICAL_CREATOR_STUDIO_ENABLED" and .text=="true")]|length)==1 and
+            ([.result.bindings[] | select(.type=="plain_text" and .name=="CANONICAL_CREATOR_UPLOADS_ENABLED" and .text=="false")]|length)==1 and
+            ([.result.bindings[] | select(.type=="r2_bucket")]|length)==0 and
+            ([.result.bindings[] | select(.type=="secret_text" and .name=="CANONICAL_BETTER_AUTH_SECRET")]|length)==1 and
+            ([.result.bindings[] | select(.type=="secret_text" and .name=="CANONICAL_RESEND_API_KEY")]|length)==1 and
+            ([.result.bindings[] | select(.type=="secret_text" and .name=="CANONICAL_FORUM_ENABLED")]|length)==1 and
+            ([.result.bindings[] | select(.type=="secret_text" and .name=="CANONICAL_FORUM_REVIEWER_IDS")]|length)==1
+          ' "$RUNNER_TEMP/studio-settings-after.json" >/dev/null
+          # All preexisting binding names must survive exactly; the new plain
+          # text Studio flags are the only intended binding additions.
+          jq -ne --slurpfile before "$RUNNER_TEMP/studio-settings-before.json" \
+            --slurpfile after "$RUNNER_TEMP/studio-settings-after.json" \
+            '($before[0].result.bindings|map(.name)) as $old |
+             ($after[0].result.bindings|map(.name)) as $new |
+             all($old[]; . as $item | $new | index($item)!=null)' >/dev/null
+          curl --fail --silent --show-error --max-time 30 -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+            "$api/zones/$CF_ZONE/workers/routes" > "$RUNNER_TEMP/studio-routes-after.json"
+          jq -e '.success and
+            ([.result[] | select(.pattern=="anevum.com/*" and .script=="anevum-construction-terminal")]|length)==1 and
+            ([.result[] | select(.pattern=="a.anevum.com/*" and .script=="anevum-creator-v1-a-staging")]|length)==1' \
+            "$RUNNER_TEMP/studio-routes-after.json" >/dev/null
+          ready=0
+          for i in $(seq 1 18); do
+            if curl --fail --silent --show-error --max-time 15 https://a.anevum.com/api/v1/member/health |
+                jq -e '.status=="ready" and .registration=="open" and .progressionReady==true and .studioReady==true and .studioUploadsReady==false' >/dev/null 2>&1; then
+              ready=1
+              break
+            fi
+            sleep 3
+          done
+          test "$ready" = 1 || { echo "::error::Canonical Studio schema/feature was not ready"; exit 1; }
+          curl --fail --silent --show-error --max-time 20 https://a.anevum.com/api/v1/member/auth-methods |
+            jq -e '.registration=="open" and .methods.email.available==true and .methods.google.available==false' >/dev/null
+          curl --fail --silent --show-error --max-time 20 https://a.anevum.com/api/v1/community/threads |
+            jq -e '(.items|type)=="array" and has("nextCursor")' >/dev/null
+          test "$(curl --silent --show-error --max-time 20 -o /dev/null -w '%{http_code}' https://a.anevum.com/api/v1/member/forum-review)" = 401
+          test "$(curl --silent --show-error --max-time 20 -o /dev/null -w '%{http_code}' https://a.anevum.com/api/v1/member/studio/projects)" = 401
+          test "$(curl --silent --show-error --max-time 20 -o /dev/null -w '%{http_code}' https://a.anevum.com/api/v1/member/studio/review)" = 401
+          for route in studio studio/new join member community; do
+            curl --fail --silent --show-error --max-time 20 "https://a.anevum.com/$route" -o "$RUNNER_TEMP/studio-route.html"
+            grep -q 'id="root"' "$RUNNER_TEMP/studio-route.html"
+          done
+          index_js="$(grep -oE '/assets/index-[^"]+\.js' creator-v1/dist/web/index.html | head -1)"
+          test -n "$index_js"
+          curl --fail --silent --show-error --max-time 20 "https://a.anevum.com$index_js" -o "$RUNNER_TEMP/studio-hosted-index.js"
+          cmp "creator-v1/dist/web$index_js" "$RUNNER_TEMP/studio-hosted-index.js"
+          grep -Fq 'OPEN A BLANK CANVAS' "$RUNNER_TEMP/studio-hosted-index.js"
+          grep -Fq 'MAKE SOMETHING.' "$RUNNER_TEMP/studio-hosted-index.js"
+          curl --fail --silent --show-error --max-time 20 https://anevum.com/ -o "$RUNNER_TEMP/studio-apex.html"
+          grep -q 'THE TRANSMISSION' "$RUNNER_TEMP/studio-apex.html"
+          validated=1
+          echo "ANEVUM CREATOR STUDIO V054.2 STAGING DEPLOYED AND VERIFIED: $CANDIDATE_SHA" >> "$GITHUB_STEP_SUMMARY"
+          echo "Live: https://a.anevum.com/studio — private drafts ON, file uploads OFF, signup OPEN." >> "$GITHUB_STEP_SUMMARY"
+          echo "Preserved: forum moderation, existing secrets, D1 bindings, worker routes, and apex countdown." >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Record non-sensitive deployment receipt
+        if: always()
+        shell: bash
+        run: |
+          mkdir -p evidence
+          git rev-parse HEAD > evidence/a-studio-v054-release-sha.txt
+          echo "V054.2 private text-only Workbench; no R2 bucket, public user executable uploads, XP or publishing activation" > evidence/a-studio-v054-scope.txt
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: a-studio-v054-release-receipt-${{ github.run_id }}
+          path: |
+            evidence/a-studio-v054-*.txt
+            evidence/studio-v053-browser/*.png
+          retention-days: 7
+          if-no-files-found: warn
