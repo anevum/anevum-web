@@ -91,7 +91,7 @@ test('approved forum thread and response grant badges, never double reward on re
  const db=createDb();t.after(()=>db.raw.close());
  const thread=addApproved(db,{at:100000});
  let instructions=await forumApprovalBadgeStatements(db,thread);
- assert.equal(instructions.length,3);
+ assert.equal(instructions.length,4); // Two possible grants plus two idempotent notifications
  await db.batch(instructions);
  await db.batch(await forumApprovalBadgeStatements(db,thread));
  assert.equal(one(db,"SELECT COUNT(*) AS c FROM member_recognition_grants WHERE recognition_id='first_thread'").c,1);
