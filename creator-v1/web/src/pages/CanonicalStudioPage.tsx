@@ -147,7 +147,7 @@ function StudioEditor({create,uploadsReady}:{create:boolean;uploadsReady:boolean
  const dirty=saved===null||JSON.stringify(saved)!==JSON.stringify(draft);
  const ready=Boolean((draft.demoUrl||draft.sourceUrl)&&draft.license.trim().length>=2&&
   draft.aiDisclosure.trim().length>=6&&draft.humanContribution.trim().length>=10);
- const assign=<K extends keyof StudioDraft>(name:K,value:StudioDraft[K])=>{setDraft(p=>({...p,[name]:value}));setNotice('');setError('');};
+ function assign<K extends keyof StudioDraft>(name:K,value:StudioDraft[K]){setDraft(p=>({...p,[name]:value}));setNotice('');setError('');}
  const locked=busy||loading||mustReload||!canEdit;
  async function save(event:FormEvent){
   event.preventDefault();if(locked)return;
