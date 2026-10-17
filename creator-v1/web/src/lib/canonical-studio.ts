@@ -87,7 +87,8 @@ export const studioDeleteProject=(id:string,revision:number)=>request<{deleted:b
 function assetsPath(projectId:string,assetId?:string){return projectPath(projectId)+'/assets'+(assetId?'/'+validAsset(assetId):'');}
 export const studioAssets=(projectId:string,signal?:AbortSignal)=>
  request<{assets:StudioAsset[];quotaBytes:number;projectAssetLimit:number;
-  memberUsedBytes:number;projectUsedBytes:number;storageReady:boolean;uploadsReady:boolean}>(
+  memberUsedBytes:number;projectUsedBytes:number;globalUsedBytes:number;globalQuotaBytes:number;
+  storageReady:boolean;uploadsReady:boolean}>(
   assetsPath(projectId),'GET',undefined,signal);
 const LIMITS:Record<string,[string,number]>={
  png:['image/png',10],jpg:['image/jpeg',10],jpeg:['image/jpeg',10],webp:['image/webp',10],
