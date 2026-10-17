@@ -49,6 +49,7 @@ export function CanonicalStudioPage({mode='list'}:{mode?:Mode}){
  const [phase,setPhase]=useState<'loading'|'ready'|'unavailable'|'incomplete'>('loading');
  const [message,setMessage]=useState('');
  const [uploads,setUploads]=useState(false);
+ const [canReview,setCanReview]=useState(false);
  useEffect(()=>{
   if(!id||session?.user?.emailVerified!==true)return;
   let live=true;const controller=new AbortController();
@@ -62,7 +63,8 @@ export function CanonicalStudioPage({mode='list'}:{mode?:Mode}){
    // canonical API response can grant upload pilot access.
    const memberStudio=await studioList(controller.signal);
    if(!live)return;
-   setIdentity(profile.profile);setUploads(memberStudio.uploadsReady===true);setPhase('ready');
+   setIdentity(profile.profile);setUploads(memberStudio.uploadsReady===true);
+   setCanReview(memberStudio.canReview===true);setPhase('ready');
   }).catch(e=>{if(live){setMessage(showError(e));setPhase('unavailable')}});
   return()=>{live=false;controller.abort();};
  },[id,session?.user?.emailVerified]);
@@ -95,7 +97,7 @@ export function CanonicalStudioPage({mode='list'}:{mode?:Mode}){
   <nav className="st-nav" aria-label="Studio navigation">
    <Link to="/studio" aria-current={mode==='list'?'page':undefined}>MY PROJECTS</Link>
    <Link to="/studio/new" aria-current={mode==='new'?'page':undefined}>NEW SUBMISSION</Link>
-   <Link to="/studio/review" aria-current={mode==='review'?'page':undefined}>REVIEW DESK</Link>
+   {canReview&&<Link to="/studio/review" aria-current={mode==='review'?'page':undefined}>REVIEW DESK</Link>}
    <Link to="/discover">DISCOVER ↗</Link>
   </nav>
   {mode==='list'?<StudioLibrary/>:mode==='review'?<StudioReview/>:<StudioEditor create={mode==='new'} uploadsReady={uploads}/>}
