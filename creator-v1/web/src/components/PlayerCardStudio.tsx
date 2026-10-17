@@ -5,7 +5,7 @@ import {BADGE_CATALOG,DISTINCTION_CATALOG,
  type BadgeDisplay,type PlayerAura} from '../lib/player-recognition';
 import {readRecognition,saveRecognition,previewDistinctions,type RecognitionSettings} from '../lib/player-recognition-api';
 import {CompactMemberIdentity} from './CompactMemberIdentity';
-import {CelestialEmblem} from './CelestialEmblem';
+import {BadgeInsignia} from './BadgeInsignia';
 import {HonorInsignia} from './HonorInsignia';
 import './player-card-studio-v065.css';
 
@@ -109,7 +109,7 @@ export function PlayerCardStudio({profile,space,onAvailabilityChange}:{profile:C
        title={(def?.description||'Verified earned badge')+' · Earned '+new Date(item.earnedAt*1000).toLocaleDateString()}
        disabled={saving||(!checked&&badgeMode==='curated'&&badgeIds.length>=3)}
        onClick={()=>toggleBadge(item.id)}>
-       <CelestialEmblem motif={def?.motif||'beacon'} size="small" state="earned"/>
+       <BadgeInsignia badge={item.id} size="small" state="earned"/>
        <span><strong>{def?.name||item.id}</strong><small>{def?.family||'ACHIEVEMENT'}</small></span>
        <i aria-hidden="true">{checked?'PINNED':'+'}</i>
       </button>;
