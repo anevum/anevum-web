@@ -16,11 +16,11 @@ const CATEGORY_GUIDE:Record<StudioCategory,string>={
  creative:'Attach original creative work, audio, images, writing or a ZIP.',
  music:'Attach MP3 or WAV audio. Files remain in private quarantine.',
  art:'Attach PNG, JPEG, WebP or GIF artwork. Images are not rendered from quarantine.',
- video:'Direct video uploads are not active in this private pilot. Provide an HTTPS film or animation link.',
+ video:'Attach a private MP4 or WebM (up to 20 MiB), or use an external HTTPS video link. Playback and transcoding are not enabled.',
  writing:'Attach PDF, TXT or Markdown writing.',
  learning:'Attach a PDF, Markdown, text or interactive ZIP project.',
  research:'Attach research as PDF, TXT, Markdown or ZIP.',
- other:'Attach a supported image, audio, document or ZIP file.'
+ other:'Attach a supported image, audio, video, document or ZIP file.'
 };
 const CATEGORIES:[StudioCategory,string][]=[
  ['games','Games & interactive play'],['tools','Applications & tools'],
@@ -366,7 +366,7 @@ function StudioUploader({project,uploadsReady,onAssetsChanged}:{project:StudioPr
  return <section className="st-panel st-assets">
   <p className="st-kicker">FILES / PRIVATE QUARANTINE</p><h2>THE ASSET VAULT.</h2>
   {!uploadsReady&&<p className="st-muted">New uploads are paused or not provisioned. Existing private file records remain available below. Private download/removal requires the original isolated R2 binding.</p>}
-   <p className="st-muted">Images / PDF: 10 MiB. MP3 / WAV / ZIP: 20 MiB. TXT / MD: 1 MiB. 20 files per project, 100 MiB per member.</p>
+   <p className="st-muted">Images / PDF: 10 MiB. MP3 / WAV / MP4 / WebM / ZIP: 20 MiB. TXT / MD: 1 MiB. 20 files per project, 100 MiB per member.</p>
    <div className="st-storage-meter" aria-label="Creator Studio storage usage">
     <div><span>ACCOUNT STORAGE</span><strong>{size(memberBytes)} / 100 MiB</strong></div>
     <progress max={100*1048576} value={Math.min(memberBytes,100*1048576)}
@@ -380,9 +380,9 @@ function StudioUploader({project,uploadsReady,onAssetsChanged}:{project:StudioPr
     onDragLeave={()=>setDrag(false)} onDrop={dropped} role="group" aria-label="Upload private project files">
     <label htmlFor="st-files">DRAG FILES HERE OR SELECT FROM DEVICE</label>
     <input id="st-files" type="file" multiple disabled={busy}
-      accept=".png,.jpg,.jpeg,.webp,.gif,.mp3,.wav,.pdf,.txt,.md,.zip"
+      accept=".png,.jpg,.jpeg,.webp,.gif,.mp3,.wav,.mp4,.webm,.pdf,.txt,.md,.zip"
       onChange={e=>{accept(e.target.files);e.currentTarget.value='';}}/>
-    <small>ZIP archives are stored privately. They are not installed or executed.</small>
+    <small>ZIP and video files remain private and untrusted. They are not executed, streamed, transcoded or published.</small>
    </div>}
    {uploadsReady&&queue.length>0&&<div className="st-upload-queue"><h3>READY TO STORE / {queue.length} FILES</h3>
     {queue.map((f,i)=><p key={f.name+'-'+i}>{f.name} · {size(f.size)}</p>)}
