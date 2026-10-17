@@ -304,6 +304,8 @@ function StudioUploader({project,uploadsReady,onAssetsChanged}:{project:StudioPr
  const [storageReady,setStorageReady]=useState(false);
  const [memberBytes,setMemberBytes]=useState(0);
  const [projectBytes,setProjectBytes]=useState(0);
+ const [globalBytes,setGlobalBytes]=useState(0);
+ const [globalCap,setGlobalCap]=useState(512*1048576);
  const [completed,setCompleted]=useState(0);
  const [queue,setQueue]=useState<File[]>([]),[busy,setBusy]=useState(false),[error,setError]=useState(''),[notice,setNotice]=useState('');
  const [progress,setProgress]=useState(''),[drag,setDrag]=useState(false);
@@ -319,12 +321,14 @@ function StudioUploader({project,uploadsReady,onAssetsChanged}:{project:StudioPr
   let alive=true;
   // Existing assets remain visible even when new uploads are paused.
   studioAssets(project.id).then(r=>{if(alive){setAssets(r.assets);setStorageReady(r.storageReady);
-   setMemberBytes(r.memberUsedBytes);setProjectBytes(r.projectUsedBytes);onAssetsChanged(r.assets)}}).catch(e=>{if(alive)setError(showError(e))});
+   setMemberBytes(r.memberUsedBytes);setProjectBytes(r.projectUsedBytes);
+   setGlobalBytes(r.globalUsedBytes);setGlobalCap(r.globalQuotaBytes);onAssetsChanged(r.assets)}}).catch(e=>{if(alive)setError(showError(e))});
   return()=>{alive=false;controller.current?.abort();};
  },[project.id,onAssetsChanged]);
  async function refresh(){const r=await studioAssets(project.id);setAssets(r.assets);
   setStorageReady(r.storageReady);setMemberBytes(r.memberUsedBytes);
-  setProjectBytes(r.projectUsedBytes);onAssetsChanged(r.assets);}
+  setProjectBytes(r.projectUsedBytes);setGlobalBytes(r.globalUsedBytes);
+   setGlobalCap(r.globalQuotaBytes);onAssetsChanged(r.assets);}
  function accept(files:FileList|null){
   if(!files||busy)return;
   setError('');setNotice('');
@@ -368,6 +372,8 @@ function StudioUploader({project,uploadsReady,onAssetsChanged}:{project:StudioPr
     <progress max={100*1048576} value={Math.min(memberBytes,100*1048576)}
      aria-label="Account storage used"/>
     <small>THIS PROJECT: {size(projectBytes)} · {assets.length} / 20 FILES</small>
+    <div><span>PRIVATE PILOT VAULT</span><strong>{size(globalBytes)} / {size(globalCap)}</strong></div>
+    <progress max={globalCap} value={Math.min(globalBytes,globalCap)} aria-label="Pilot storage used"/>
    </div>
    {uploadsReady&&editable(project)&&<div className={'st-drop'+(drag?' is-drag':'')}
     onDragOver={e=>{e.preventDefault();if(!busy)setDrag(true);}}
