@@ -36,14 +36,14 @@ type ReviewQueue={
 };
 type PendingDecision={kind:'thread'|'reply'|'report';id:string;action:'publish'|'reject'|'hide'|'dismiss_report';label:string};
 type ReviewLane='reports'|'threads'|'replies'|'activity';
-const menu:{id:Pane;code:string;name:string;description:string}[]=[
- {id:'overview',code:'01',name:'Overview',description:'Current situation'},
- {id:'communications',code:'02',name:'Comms',description:'Staff transmissions'},
- {id:'board',code:'03',name:'Whiteboard',description:'Live drawing surface'},
- {id:'invitations',code:'04',name:'Invitations',description:'People you reached'},
- {id:'tasks',code:'05',name:'Assignments',description:'Shared team actions'},
- {id:'moderation',code:'06',name:'Review',description:'Community integrity'},
- {id:'team',code:'07',name:'Personnel',description:'Verified staff roster'}
+const menu:{id:Pane;code:string;name:string;short:string;description:string}[]=[
+ {id:'overview',code:'01',name:'Overview',short:'Overview',description:'Current situation'},
+ {id:'communications',code:'02',name:'Comms',short:'Comms',description:'Staff transmissions'},
+ {id:'board',code:'03',name:'Whiteboard',short:'Board',description:'Live drawing surface'},
+ {id:'invitations',code:'04',name:'Invitations',short:'Invites',description:'People you reached'},
+ {id:'tasks',code:'05',name:'Assignments',short:'Tasks',description:'Shared team actions'},
+ {id:'moderation',code:'06',name:'Review',short:'Review',description:'Community integrity'},
+ {id:'team',code:'07',name:'Personnel',short:'Team',description:'Verified staff roster'}
 ];
 const rooms:{id:Room;name:string}[]=[{id:'operations',name:'Operations'},{id:'review',name:'Moderation'},{id:'projects',name:'Projects'}];
 const inviteStages:InviteStage[]=['invited','responded','joined','staff-candidate','closed'];
@@ -291,7 +291,7 @@ function CommandWorkspace({memberId}:{memberId:string}){
      <div className="ir-nav-top"><span className="ir-kicker">OPERATIONS ARRAY</span><strong>07 / ACTIVE MODULES</strong></div>
      {menu.map(item=><button type="button" key={item.id} className={pane===item.id?'is-current':''}
       onClick={()=>{setPane(item.id);setNotice('')}} aria-current={pane===item.id?'page':undefined}>
-      <span className="ir-nav-index">{item.code}</span><span className="ir-nav-copy"><b>{item.name}</b><small>{item.description}</small></span>
+      <span className="ir-nav-index">{item.code}</span><span className="ir-nav-copy"><b className="ir-nav-name">{item.name}</b><b className="ir-nav-short">{item.short}</b><small>{item.description}</small></span>
       {(item.id==='moderation'&&reviewTotal!==null&&reviewTotal>0)||(item.id==='tasks'&&pendingTasks.length>0)||
        (item.id==='invitations'&&invited.length>0)?<i className="ir-nav-count">
         {item.id==='moderation'?reviewTotal:item.id==='tasks'?pendingTasks.length:invited.length}</i>:null}
