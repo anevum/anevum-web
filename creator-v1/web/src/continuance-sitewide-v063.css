@@ -1,0 +1,267 @@
+/* ANEVUM.WEB.UPDATE.2026-10-17.001.CONTINUANCE-SITEWIDE-SYSTEM
+ * Creator V1 / shared Continuance Institute presentation layer V063.
+ * Keep verified cinematic artwork, layout semantics, user data and authored motion.
+ * No external fonts or requests; visual-only, progressive enhancement.
+ */
+:root {
+  --ci-void:#060916;
+  --ci-deep:#10172a;
+  --ci-mid:#22253d;
+  --ci-violet:#d1b4ff;
+  --ci-coral:#ff968b;
+  --ci-cyan:#a5e4e6;
+  --ci-metal:#e3c9ac;
+  --ci-text:#f7eee9;
+  --ci-muted:#c4c9d9;
+  --ci-line:rgba(202,194,233,.32);
+  --ci-sheen:inset 0 1px rgba(255,255,255,.24),inset 0 0 0 1px rgba(222,207,247,.05),0 15px 36px rgba(0,0,0,.36);
+  --ci-ease:cubic-bezier(.22,.8,.24,1);
+}
+.av9-shell {
+  --av9-paper:var(--ci-text);
+  --av9-secondary:#d4d2e0;
+  --av9-muted:#bfc5d6;
+  --av9-border:var(--ci-line);
+  --av9-lavender:var(--ci-violet);
+  --av9-cyan:var(--ci-cyan);
+  --av9-display:"Iowan Old Style","Baskerville","Palatino Linotype",Georgia,serif;
+  --av9-body:"Avenir Next",Inter,"Segoe UI",system-ui,sans-serif;
+  --av9-label:"IBM Plex Mono","SFMono-Regular",Consolas,monospace;
+  color:var(--ci-text);
+  color-scheme:dark;
+  -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
+}
+.av9-shell ::selection {background:#e5b2c68a;color:#fff;}
+/* Shared type: deliberate editorial hierarchy and legible instrument labels. */
+.av9-shell :is(.levels-masthead h1,.av45-hero h1,.ch7-hero h1,
+  .st-header h1,.ms-identity h1,.av9-navigation-top h2,
+  .av8-signal-copy h1,.av9-world-deck h2,.an-series-intro h2) {
+  font-family:var(--av9-display);
+  font-weight:450;
+  font-kerning:normal;
+  letter-spacing:-.043em;
+  text-wrap:balance;
+}
+.av9-shell :is(.av9-overline,.kicker,.ch7-kicker,.st-kicker,
+  .av8-module-index,.av6-feed-record,.an-series-count span,
+  .av45-promise span,.ms-dashboard .kicker,.av9-navigation-foot) {
+  font-family:var(--av9-label);
+  letter-spacing:.105em;
+  font-variant-numeric:tabular-nums;
+}
+.av9-shell :is(.av8-signal-copy h1,.levels-masthead h1,.ch7-hero h1,.av45-hero h1) em {
+  color:#f0bfdc;
+  text-shadow:0 0 38px #a279c04f;
+}
+.av9-shell :is(.av8-signal-copy p,.levels-masthead p,.ch7-hero-copy>p,
+  .av45-hero-copy>p,.st-header>div>p:last-child) {color:#d4d4e1;}
+/* Navigation glass is shallow enough to keep the headline artwork dominant. */
+.av9-shell .site-header.av9-header {
+  border-bottom:1px solid #d0b9da52;
+  background:linear-gradient(95deg,#090d1aee,#14182cdd 57%,#0d1121eb);
+  box-shadow:0 1px #fff1,0 13px 42px #02040b9e;
+  -webkit-backdrop-filter:blur(19px) saturate(125%);
+  backdrop-filter:blur(19px) saturate(125%);
+}
+.av9-shell .av9-brand .brand-mark {filter:drop-shadow(0 0 14px #f58c9c78) drop-shadow(0 4px 8px #0009);}
+.av9-shell .av9-header-search {
+  border-color:#cdbada65;
+  background:linear-gradient(110deg,#121b30dd,#2421389e);
+  box-shadow:inset 0 1px #ffffff25,0 3px 13px #0005;
+  transition:border-color .22s ease,box-shadow .22s ease;
+}
+.av9-shell .av9-header-search:focus-within {
+  border-color:#b0eeefd0;
+  box-shadow:inset 0 1px #fff4,0 0 0 3px #85dbe31c,0 4px 19px #0008;
+}
+.av9-shell .av9-primary a {
+  transition:color .2s ease,text-shadow .2s ease,background .2s ease;
+}
+.av9-shell .av9-primary a:hover {color:#fff7f3;text-shadow:0 0 15px #c6a4e569;}
+.av9-shell .av9-navigation-sheet,.av9-shell .portal-launcher {
+  border-color:#ceb9dd64;
+  background:linear-gradient(147deg,#20243cea,#101729f7 62%,#0b1021f8);
+  box-shadow:inset 0 1px #ffffff31,0 30px 90px #000d;
+  -webkit-backdrop-filter:blur(22px);
+  backdrop-filter:blur(22px);
+}
+.av9-shell .av9-navigation-world {
+  transition:transform .24s var(--ci-ease),border-color .24s ease,box-shadow .24s ease;
+}
+.av9-shell .av9-navigation-world:hover {
+  border-color:#ddb9dd9c;
+  box-shadow:inset 0 1px #fff3,0 14px 32px #0008,0 0 23px #ba87c825;
+}
+.av9-shell .av9-navigation-links a:hover {color:#ffe4dd;}
+/* Surfaces across browse, community, creator studio, profiles, collections and support. */
+.av9-shell :is(.av8-module,.av6-feed-item,.av7-author,.av9-world-gateway,
+  .ch7-panel,.ch7-values,.ch7-status,.ch7-portals>a,
+  .cnb-hero,.cnb-project,.cnb-creator,.discussion-paper,
+  .discussion-reply,.discussion-reply-composer,
+  .st-panel,.st-identity,.st-metrics>div,
+  .ms-panel,.member-panel,.portal-box,.portal-sidebox,
+  .av45-offer,.av45-buy,.av45-hero,
+  .an-artifact-card-v034,.levels-achievements article) {
+  border-color:var(--ci-line);
+  box-shadow:var(--ci-sheen);
+}
+.av9-shell :is(.ch7-panel,.ch7-values,.ch7-status,.cnb-project,.cnb-creator,
+  .discussion-paper,.discussion-reply,.st-panel,.ms-panel,.member-panel,
+  .portal-box,.portal-sidebox,.av45-buy) {
+  background-image:radial-gradient(ellipse at 15% 0%,#9b739121,transparent 56%),
+    linear-gradient(145deg,#25263fdd 0%,#121a2ded 45%,#0b1324f4 100%);
+}
+.av9-shell :is(.av8-module,.av6-feed-item,.av7-author,.av9-world-gateway,
+  .ch7-portals>a,.cnb-project,.cnb-creator,.st-panel,.ms-panel,
+  .portal-box,.portal-sidebox,.an-artifact-card-v034) {
+  transition:border-color .26s ease,box-shadow .3s ease,transform .34s var(--ci-ease);
+}
+.av9-shell :is(.av8-module,.av6-feed-item,.av9-world-gateway,.ch7-portals>a,
+  .cnb-project,.cnb-creator,.an-artifact-card-v034):hover {
+  border-color:#d9bdd894;
+  box-shadow:inset 0 1px #fff5,0 19px 45px #0009,0 0 28px #9a7bce1d;
+}
+/* Active controls should feel machined, not like generic HTML form buttons. */
+.av9-shell :is(.button,.av9-create,.av9-menu-trigger,.ch7-button,
+  .ch7-refresh,.st-action,.st-button,.ms-dashboard button,.ms-file-button,
+  .av45-primary,.av45-switch button,.an-series-filters button,
+  .av9-header-actions>a,.av9-header-actions>button) {
+  border-color:#c6add083;
+  border-radius:12px;
+  background-image:linear-gradient(143deg,#61506b3c,#262b416b 58%,#11182b);
+  box-shadow:inset 0 1px #fff3,0 6px 17px #0006;
+  transition:transform .18s var(--ci-ease),border-color .18s ease,
+    box-shadow .24s ease,filter .18s ease,background-color .18s ease;
+}
+.av9-shell :is(.button.primary,.av9-create,.ch7-button-primary,
+  .st-action,.ms-dashboard .ms-primary,.av45-primary) {
+  background-image:linear-gradient(145deg,#f3c8d5,#d9a3bd 52%,#b996c1);
+  color:#1c1626;
+  border-color:#ffe4e4b5;
+  box-shadow:inset 0 1px #fff9,0 8px 21px #0a07118f,0 0 23px #da9bbb26;
+}
+.av9-shell :is(.button,.av9-create,.av9-menu-trigger,.ch7-button,
+  .ch7-refresh,.st-action,.st-button,.ms-dashboard button,
+  .av45-primary,.an-series-filters button):hover:not(:disabled) {
+  border-color:#fae1e1b3;
+  filter:brightness(1.07);
+  box-shadow:inset 0 1px #fff5,0 9px 24px #0009,0 0 20px #d7a8d72b;
+}
+.av9-shell :is(.button,.av9-create,.av9-menu-trigger,.ch7-button,
+  .ch7-refresh,.st-action,.st-button,.ms-dashboard button,
+  .av45-primary,.an-series-filters button):active:not(:disabled) {transform:translateY(1px) scale(.99);}
+.av9-shell :is(input:not([type=checkbox]):not([type=radio]),textarea,select) {
+  accent-color:var(--ci-violet);
+}
+.av9-shell :is(.st-root,.ch7-hub,.ms-dashboard,.member-shell,.discussion-page)
+  :is(input:not([type=checkbox]):not([type=radio]),textarea,select) {
+  border-color:#bbadd06a;
+  background-color:#111a2ae6;
+  color:#f6eef0;
+  transition:border-color .22s ease,box-shadow .22s ease;
+}
+.av9-shell :is(.st-root,.ch7-hub,.ms-dashboard,.member-shell,.discussion-page)
+  :is(input:not([type=checkbox]):not([type=radio]),textarea,select):focus-visible {
+  border-color:var(--ci-cyan);
+  box-shadow:0 0 0 3px #9be5ef24,inset 0 1px #fff2;
+}
+/* The 30 specimen collection remains the visual north star. */
+.av9-shell .an-series-intro {
+  border-color:#d9bdd47c;
+  box-shadow:inset 0 1px #fff3,0 20px 54px #0009,0 0 55px #a978bb0e;
+}
+.av9-shell .an-artifact-card-v034 {
+  background-image:radial-gradient(ellipse at 50% 19%,#8c729a39,transparent 46%),
+    radial-gradient(ellipse at 50% 100%,#6441641c,transparent 55%),
+    linear-gradient(145deg,#21283fcf,#101728ef 72%,#0a101d);
+}
+.av9-shell .an-artifact-card-v034 .level-emblem {
+  filter:drop-shadow(0 14px 16px #0008) drop-shadow(0 0 15px #c79ae834);
+}
+.av9-shell .levels-achievements article {background:linear-gradient(160deg,#2a2941b8,#10192deb);}
+.av9-shell .av45-symbol svg {filter:drop-shadow(0 0 27px #ed9fc673);}
+.av9-shell .ms-cover {box-shadow:inset 0 -20px 60px #0408146e;}
+.av9-shell .ms-portrait {box-shadow:0 0 0 2px #f2cbd37a,0 9px 22px #0008,0 0 26px #c189dc24;}
+/* Shared system notifications: compact quiet signals, memorable earned moments. */
+.an-notification-center {right:max(12px,env(safe-area-inset-right));bottom:max(12px,env(safe-area-inset-bottom));}
+.an-inbox-toggle {
+  width:42px;min-width:42px;height:42px;min-height:42px;padding:0;
+  justify-content:center;gap:0;border-radius:14px;color:var(--ci-text);
+  border-color:#d7b8d18c;
+  background:radial-gradient(circle at 30% 15%,#685b77a6,#25263f 59%,#13192b);
+  box-shadow:inset 0 1px #fff5,0 8px 25px #000a,0 0 16px #b98bb322;
+  -webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);
+}
+.an-inbox-toggle svg {width:20px;height:20px;filter:drop-shadow(0 0 5px #f8c3db58);}
+.an-inbox-toggle span {position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap;}
+.an-inbox-toggle i {
+  width:12px;height:12px;top:-4px;right:-4px;
+  border:2px solid #101525;background:var(--ci-coral);
+  box-shadow:0 0 0 2px #ff968b38,0 0 13px #ff968b83;
+}
+.an-inbox-toggle:after {background:#dcc5e3b8;}
+.an-inbox-toggle:hover {border-color:#ffdbde;box-shadow:inset 0 1px #fff7,0 8px 27px #000a,0 0 21px #e7b1d245;}
+.an-history {
+  width:min(325px,calc(100vw - 26px));max-height:min(60dvh,480px);
+  bottom:51px;border-radius:18px;border:1px solid #d6bdd583;
+  background:radial-gradient(ellipse at 80% 0%,#74577f36,transparent 58%),
+    linear-gradient(154deg,#25283ff7,#10172af9 68%,#0a1120f9);
+  box-shadow:inset 0 1px #fff4,0 18px 49px #000b;
+  -webkit-backdrop-filter:blur(22px);backdrop-filter:blur(22px);
+}
+.an-history h2 {font-family:var(--av9-display,Georgia,serif);font-size:23px;letter-spacing:-.035em;}
+.an-history article {border-color:#c5a8bc38;}
+.an-history article .level-emblem,.an-history article .celestial-emblem {filter:drop-shadow(0 0 10px #ca99d755);}
+.an-toast {
+  --ci-toast-line:#c8a5d1a8;
+  color:var(--ci-text);
+  border:1px solid var(--ci-toast-line);
+  background:radial-gradient(circle at 18% 35%,#8e689252,transparent 42%),
+    linear-gradient(115deg,#2d2a43,#151d31 69%,#0e1629);
+  box-shadow:inset 0 1px #fff5,0 14px 49px #000b,0 0 25px #aa89cb2a;
+  -webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);
+  transition:width .48s var(--ci-ease),border-color .2s ease;
+}
+.an-toast-open {width:min(385px,calc(100vw - 24px));}
+.an-toast .an-toast-mark {background:radial-gradient(circle at 34% 23%,#876b91,#25283f 73%);border-color:#e7c5d29c;box-shadow:inset 0 1px #fff4,0 0 15px #d1a2de36;}
+.an-toast .an-toast-mark>svg {filter:drop-shadow(0 0 9px #ebc7e49c);}
+.an-toast-copy small {color:#e0c5da;letter-spacing:.12em;}
+.an-toast-copy strong {color:#fff3eb;letter-spacing:-.01em;}
+.an-toast-copy p {color:#cfcedc;}
+.an-toast-level,.an-toast-award {
+  --ci-toast-line:#f5d7a9b5;
+  box-shadow:inset 0 1px #fff7,0 15px 49px #000c,0 0 34px #dab18e55;
+}
+.an-toast-level.an-toast-open,.an-toast-award.an-toast-open {width:min(445px,calc(100vw - 24px));}
+.an-toast-level .an-toast-symbol,.an-toast-award .an-toast-symbol {filter:drop-shadow(0 0 14px #edcca75f);}
+.an-toast-level .an-toast-copy small,.an-toast-award .an-toast-copy small {color:#f1d4a9;}
+.an-toast-error {--ci-toast-line:#ffaca8;}
+@media(hover:hover) and (pointer:fine){
+  .av9-shell :is(.av9-world-gateway,.ch7-portals>a,.cnb-project,.cnb-creator,.an-artifact-card-v034):hover {
+    transform:translateY(-3px) perspective(800px) rotateX(.5deg);
+  }
+}
+@media(max-width:640px){
+  .av9-shell .site-header.av9-header {-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);}
+  .av9-shell :is(.ch7-panel,.ch7-status,.st-panel,.member-panel,.portal-box) {box-shadow:inset 0 1px #fff3,0 11px 26px #0007;}
+  .an-inbox-toggle {width:40px;min-width:40px;height:40px;min-height:40px;}
+  .an-history {width:min(305px,calc(100vw - 24px));bottom:48px;padding:15px;}
+  .an-toast-open {width:calc(100vw - 24px);}
+  .an-toast-body {gap:7px;}
+  .an-toast-symbol {width:40px;}
+}
+@media(prefers-reduced-motion:reduce){
+  .av9-shell :is(.av9-navigation-world,.av9-primary a,.av9-header-search,
+    .av8-module,.av6-feed-item,.av7-author,.av9-world-gateway,
+    .ch7-panel,.cnb-project,.cnb-creator,.st-panel,.ms-panel,
+    .portal-box,.portal-sidebox,.an-artifact-card-v034,
+    .button,.st-action,.st-button,.an-series-filters button),.an-toast,.an-inbox-toggle {
+    transition:none!important;animation:none!important;
+  }
+  .av9-shell :is(.av9-world-gateway,.ch7-portals>a,.cnb-project,.cnb-creator,.an-artifact-card-v034):hover{transform:none!important;}
+}
+@media(forced-colors:active){
+  .an-inbox-toggle,.an-history,.an-toast {background:Canvas;color:CanvasText;border:1px solid CanvasText;box-shadow:none;}
+  .av9-shell :is(.av8-module,.av6-feed-item,.ch7-panel,.st-panel,.ms-panel,.portal-box){background:Canvas;color:CanvasText;border:1px solid CanvasText;box-shadow:none;}
+}
