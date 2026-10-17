@@ -73,8 +73,11 @@ may escape in responses. Public routes continue to deny camera/microphone.
 - Only configured verified members may appear in the staff roster, with a
   bounded 40-user snapshot. No in-browser role elevation.
 - Default-off retention job clears SDP/ICE call signaling older than
-  10 minutes and stale presence/limits. Keep the existing scheduled handler
-  active and validate cleanup cadence before offering calls.
+  10 minutes and stale presence/limits **when scheduled maintenance is actually
+  triggered**. Current stage Wrangler source may not configure a cron trigger:
+  verify this explicitly before enabling calls. Without a trigger, old signals
+  are only purged opportunistically on a new offer. Do not describe them as
+  automatically short-lived until retention is operational.
 
 ## Required release sequence — stop on failure
 1. Run full GitHub Actions source verification and unit/security tests, including
