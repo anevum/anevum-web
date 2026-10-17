@@ -26,6 +26,9 @@
  overflow-x:auto;border-bottom:1px solid var(--st-line)}
 .st-nav a{white-space:nowrap;font-size:.68rem;letter-spacing:.12em;
  color:var(--st-muted);font-weight:650;padding:4px 0 11px;border-bottom:2px solid transparent}
+.st-nav{scrollbar-width:none;overscroll-behavior-x:contain}
+.st-nav::-webkit-scrollbar{display:none}
+.st-nav a{flex:0 0 auto}
 .st-nav a:hover,.st-nav a:focus-visible,.st-nav a[aria-current=page]{color:var(--st-text);
  border-color:var(--st-rose)}
 .st-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:26px 0}
@@ -229,4 +232,10 @@
  .st-root--launchpad .st-identity{display:none}
  .st-root--launchpad .st-nav{padding:10px 0 11px;gap:16px}
  .st-root--launchpad .st-nav a{font-size:.62rem;padding-bottom:6px}
+}
+
+@media(max-width:620px){
+ .st-root--launchpad .st-nav{gap:22px;padding:8px 0 9px}
+ .st-root--launchpad .st-nav a{min-height:34px;display:inline-flex;align-items:center;
+  letter-spacing:.07em;font-size:.66rem;padding-bottom:5px}
 }
