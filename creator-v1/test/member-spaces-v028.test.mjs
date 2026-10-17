@@ -34,7 +34,7 @@ test('member space: real independent sessions, private media/walls, persisted se
    assert.equal((await worker.fetch(req('/api/v1/member/media/'+slot,'GET',undefined,b),env)).status,404);
    assert.equal((await worker.fetch(req('/api/v1/members/pilot_alpha/media/'+slot),env)).status,404);
   }
-  let state=await (await worker.fetch(req(space,'GET',undefined,a),env)).json();assert.equal(state.stats.xp,35);assert.equal(state.stats.level,2);assert.equal(state.stats.awards,2);
+  let state=await (await worker.fetch(req(space,'GET',undefined,a),env)).json();assert.equal(state.stats.xp,35);assert.equal(state.stats.level,1);assert.equal(state.stats.awards,2); // V060: level 2 starts at 75 XP; keep earned XP intact.
   assert.equal((await worker.fetch(req(space,'PATCH',{featuredAwards:['fake_award'],showStats:true,revision:0},a),env)).status,400);
   assert.equal((await worker.fetch(req(space,'PATCH',{featuredAwards:['world_shaper'],showStats:false,revision:0},a),env)).status,200);
   assert.equal((await worker.fetch(req(space,'PATCH',{featuredAwards:[],showStats:true,revision:0},a),env)).status,409);
