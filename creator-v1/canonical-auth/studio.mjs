@@ -107,7 +107,7 @@ export async function canonicalStudio(req,env,user,now=Math.floor(Date.now()/100
  if(typeof user?.id!=='string'||!user.id||user.emailVerified!==true)return fail(403,'Verified member required');
  const db=env.MEMBER_DB,url=new URL(req.url),path=url.pathname;
  if(url.search)return fail(400,'Unexpected query');
- const match=path.match(/^\/api\/v1\/member\/studio\/projects(?:\/([0-9a-f-]{36})(?:\/(submit|assets)(?:\/([a-f0-9]{32})(?:\/(file))?)?)?)?$/);
+ const match=path.match(/^\/api\/v1\/member\/studio\/projects(?:\/([0-9a-f-]{36})(?:\/(submit|withdraw|assets)(?:\/([a-f0-9]{32})(?:\/(file))?)?)?)?$/);
  if(!match)return fail(404,'Not found');
  const id=match[1],sub=match[2],asset=match[3],file=match[4];
  if(id&&!UUID.test(id))return fail(404,'Not found');
@@ -141,6 +141,19 @@ export async function canonicalStudio(req,env,user,now=Math.floor(Date.now()/100
   const selected=await getOne(db,'SELECT '+COLS+' FROM member_studio_projects WHERE id=? AND user_id=?',[id,user.id]);
   if(!selected)return fail(404,'Project not found');
   if(sub==='assets')return canonicalStudioAssets(req,env,user,selected,{asset,file,now,pace});
+  // Withdrawal preserves the private project record while removing it from
+  // the staff queue. A pending review never prevents a member from withdrawing.
+  if(sub==='withdraw'){
+   if(req.method!=='POST')return fail(405,'Method not allowed');
+   const input=await body(req,500);
+   if(!input||!exactly(input,['revision'])||!Number.isSafeInteger(input.revision))return fail(400,'Invalid revision');
+   if(selected.revision!==input.revision||selected.status!=='pending_review')return fail(409,'Submission changed');
+   const changes=await rows(db,
+    "UPDATE member_studio_projects SET status='draft',revision=revision+1,updated_at=?,submitted_at=NULL "+
+    "WHERE id=? AND user_id=? AND status='pending_review' AND revision=? RETURNING "+COLS,
+    [now,id,user.id,input.revision]);
+   return changes.length===1?json({project:dbRow(changes[0])}):fail(409,'Submission already reviewed or withdrawn');
+  }
   if(sub==='submit'){
    if(req.method!=='POST')return fail(405,'Method not allowed');
    const value=await body(req,500);
@@ -157,6 +170,19 @@ export async function canonicalStudio(req,env,user,now=Math.floor(Date.now()/100
   }
   if(sub)return fail(404,'Not found');
   if(req.method==='GET')return json({project:dbRow(selected),uploadsReady:studioUploadReady(env)});
+  if(req.method==='DELETE'){
+   const input=await body(req,500);
+   if(!input||!exactly(input,['revision'])||!Number.isSafeInteger(input.revision))return fail(400,'Invalid revision');
+   if(selected.revision!==input.revision||!['draft','changes_requested','rejected'].includes(selected.status))
+    return fail(409,'Project must be withdrawn from review before deletion');
+   if(!await pace(db,user.id,'project',now,30))return fail(429,'Too many project updates');
+   const result=await rows(db,
+    "DELETE FROM member_studio_projects WHERE id=? AND user_id=? AND revision=? "+
+    "AND status IN ('draft','changes_requested','rejected') AND "+
+    'NOT EXISTS(SELECT 1 FROM member_studio_assets WHERE project_id=?) RETURNING id',
+    [id,user.id,input.revision,id]);
+   return result.length===1?json({deleted:true}):fail(409,'Remove private files or withdraw review before deleting this project');
+  }
   if(req.method!=='PATCH')return fail(405,'Method not allowed');
   const incoming=await body(req);
   if(!incoming||!exactly(incoming,['revision','draft'])||!Number.isSafeInteger(incoming.revision))
