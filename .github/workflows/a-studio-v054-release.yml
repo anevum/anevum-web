@@ -22,7 +22,9 @@ jobs:
     timeout-minutes: 30
     env:
       CANDIDATE_SHA: ${{ github.sha }}
-      CI_VERIFIED_PARENT: ba166d7a22aa23b9663269695acad17ce64e5ed6
+      CI_VERIFIED_PARENT: 10327b84651e46f503377ebdbeda3b71c2beaf37
+      CI_VERIFIED_INTEGRATION: ba166d7a22aa23b9663269695acad17ce64e5ed6
+      CI_VERIFIED_SOURCE: 8c00f078b823fd97c3b40cab013c71f86943f94a
       EXPECTED_ACTIVE_WORKER: c6f651f0-9afa-4314-9aca-6c062bf1fb78
       CF_ACCOUNT_EXPECTED: 2f7ee83107240152097efd956a4e8335
       CF_ZONE: 8abe27259b5436af5966d3b40d9a3760
@@ -43,24 +45,26 @@ jobs:
           set -euo pipefail
           test "$(git rev-parse HEAD)" = "$CANDIDATE_SHA"
           test "$(git rev-parse HEAD^)" = "$CI_VERIFIED_PARENT"
+          test "$(git rev-parse HEAD~2)" = "$CI_VERIFIED_INTEGRATION"
           test "$(git diff --name-only HEAD^ HEAD)" = ".github/workflows/a-studio-v054-release.yml"
+          test "$(git diff --name-only HEAD~2 HEAD^)" = ".github/workflows/a-studio-v054-release.yml"
           head="$(curl --fail --silent --show-error --max-time 25 -H "Authorization: Bearer $GH_TOKEN" \
             "$GITHUB_API_URL/repos/$GITHUB_REPOSITORY/git/ref/heads/release/a-studio-v054-workbench-20261016" | jq -r '.object.sha')"
           test "$head" = "$CANDIDATE_SHA"
           # The previous exact source revision passed the standalone integrated test workflow.
           details="$(curl --fail --silent --show-error --max-time 25 -H "Authorization: Bearer $GH_TOKEN" \
             "$GITHUB_API_URL/repos/$GITHUB_REPOSITORY/actions/runs/39001165989")"
-          printf '%s' "$details" | jq -e --arg sha "$CI_VERIFIED_PARENT" \
+          printf '%s' "$details" | jq -e --arg sha "$CI_VERIFIED_INTEGRATION" \
             '.head_sha==$sha and .status=="completed" and .conclusion=="success"' >/dev/null
           # Sitewide Chromium captures must also pass, not merely the Studio suite.
           for attempt in $(seq 1 50); do
             full="$(curl --fail --silent --show-error --max-time 25 -H "Authorization: Bearer $GH_TOKEN" \
-              "$GITHUB_API_URL/repos/$GITHUB_REPOSITORY/actions/runs/39001180411")"
+              "$GITHUB_API_URL/repos/$GITHUB_REPOSITORY/actions/runs/39000982111")"
             state="$(printf '%s' "$full" | jq -r '.status')"
             if [ "$state" = "completed" ]; then break; fi
             sleep 6
           done
-          printf '%s' "$full" | jq -e --arg sha "$CI_VERIFIED_PARENT" \
+          printf '%s' "$full" | jq -e --arg sha "$CI_VERIFIED_SOURCE" \
             '.head_sha==$sha and .status=="completed" and .conclusion=="success"' >/dev/null
           echo PINNED_INTEGRATION_ACCEPTANCE=PASS
 
