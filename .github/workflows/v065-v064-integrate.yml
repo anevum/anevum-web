@@ -28,7 +28,7 @@ jobs:
       - name: Merge exact reviewed V065 source onto pinned V064 optical foundation
         shell: bash
         env:
-          SOURCE_SHA: 84748a2383e7ac32cc469a001129e20b2c5b58d7
+          SOURCE_SHA: 9ba30baafa9174d476ddba7d2efd50552bd78fe1
           BASE_SHA: 90283589a309d3b72a4e7a5e718b05dba92ebe93
         run: |
           set -euo pipefail
@@ -51,6 +51,11 @@ jobs:
             .github/workflows/evolution-v064-optical-qa.yml \
             .github/workflows/evolution-v064-live-smoke.yml \
             .github/workflows/evolution-v064-safe-candidate.yml
+          # The installation GitHub App cannot author .github/workflows.
+          # Retain this branch's own workflows exactly and integrate application
+          # source only. The source V065 workflow checks already ran separately.
+          git restore --source=HEAD --staged --worktree -- .github/workflows
+          test -z "$(git diff --name-only HEAD -- .github/workflows)"
           git diff --quiet "$BASE_SHA" -- docs/evolution-v064-sha256.txt design/evolution-v059/src/micro.py creator-v1/ops/apply-evolution-micro-v064.py
           test -s docs/evolution-v064-sha256.txt
           test "$(wc -l < docs/evolution-v064-sha256.txt)" -eq 30
@@ -81,6 +86,7 @@ jobs:
           set -euo pipefail
           npm run check:creator-v1-web
           npm run build:creator-v1-web
+          for f in creator-v1/canonical-auth/*.mjs; do node --check "$f"; done
           node --experimental-sqlite --test creator-v1/test/player-card-recognition-v065.test.mjs creator-v1/test/player-recognition-issuance-v066.test.mjs creator-v1/test/member-identity-v061.test.mjs
           node --test creator-v1/test/evolution-v060-contract.test.mjs creator-v1/test/evolution-v062-native.test.mjs
           test "$(find creator-v1/dist/web/evolution/assets -maxdepth 1 -type f | wc -l)" -eq 152
