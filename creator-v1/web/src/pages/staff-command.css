@@ -223,6 +223,10 @@
 .ir-bridge .ir-pane-heading strong{color:#b7aac6}
 .ir-bridge-status{min-height:15px;font-size:10px;color:#c0c0d3;margin:0;letter-spacing:.02em;overflow-wrap:anywhere}
 .ir-incoming{background:#543148;border:1px solid #d382a1;padding:9px;font-size:11px;color:#ffded9}
+.ir-incoming-actions{display:flex;gap:6px;margin-top:7px}
+.ir-incoming-actions button{background:#443047;border:1px solid #dc8ca6;border-radius:4px;padding:5px 9px;color:#fff0ed;font-size:9px;cursor:pointer}
+.ir-incoming-actions button:disabled{opacity:.5;cursor:not-allowed}
+.ir-incoming p{margin:5px 0 0;font-size:9px}
 .ir-videos{display:grid;grid-template-columns:1fr 1fr;gap:6px}
 .ir-videos[hidden]{display:none}
 .ir-videos>div{min-width:0;position:relative;border:1px solid #9a7a9655;border-radius:3px;overflow:hidden;
