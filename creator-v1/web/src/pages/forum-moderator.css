@@ -212,3 +212,9 @@
 @media(prefers-reduced-motion:reduce){
  .mc-console *, .mc-dialog *{scroll-behavior:auto!important;animation:none!important;transition:none!important;transform:none!important}
 }
+
+/* V043: paginated staff queues, no separate theme or privilege boundary. */
+.mc-page-foot{display:flex;justify-content:center;padding:23px 10px 5px;min-width:0}
+.mc-page-foot .mc-refresh{min-width:min(100%,270px);text-align:center;white-space:normal}
+.mc-page-error{padding:14px 18px;border:1px solid #ad7485;border-radius:12px;background:#392531;color:#ffdade;line-height:1.6;margin:14px 0}
+.mc-page-foot button:focus-visible{outline:2px solid #f6c9dc;outline-offset:4px}

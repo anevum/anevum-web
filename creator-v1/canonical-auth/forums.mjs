@@ -1,5 +1,5 @@
 import {boundedText} from './request-body.mjs';
-import {forumReviewSnapshot} from './forum-review-console.mjs';
+import {forumReviewSnapshot,forumReviewPage,parseReviewPage} from './forum-review-console.mjs';
 const HEAD={'content-type':'application/json; charset=utf-8','cache-control':'private, no-store','x-content-type-options':'nosniff'};
 const json=(data,status=200)=>Response.json(data,{status,headers:HEAD});
 const fail=(status,message)=>json({error:message},status);
@@ -40,16 +40,18 @@ export async function canonicalForums(req,env,user=null,now=Math.floor(Date.now(
  if(env.CANONICAL_FORUM_ENABLED!=='true')return fail(404,'Forums are not enabled');
  const db=env.MEMBER_DB;if(!await dbReady(db))return fail(503,'Forum database is not prepared');
  const url=new URL(req.url),path=url.pathname;
- if([...url.searchParams.keys()].some(x=>!['topic','after'].includes(x))||[...url.searchParams.keys()].some(x=>url.searchParams.getAll(x).length!==1))return fail(400,'Invalid filters');
- const topic=url.searchParams.get('topic');if(topic&&!TOPICS.has(topic))return fail(400,'Invalid topic');
- const after=decodeCursor(url.searchParams.get('after'));if(after===false)return fail(400,'Invalid cursor');
+ // Staff-only cursors and public forum filters have independent validation.
+ // Staff auth and reviewer grants run before page cursors are parsed.
+ const review=path==='/api/v1/member/forum-review';
+ if(!review&&([...url.searchParams.keys()].some(x=>!['topic','after'].includes(x))||[...url.searchParams.keys()].some(x=>url.searchParams.getAll(x).length!==1)))return fail(400,'Invalid filters');
+ const topic=review?null:url.searchParams.get('topic');if(topic&&!TOPICS.has(topic))return fail(400,'Invalid topic');
+ const after=review?null:decodeCursor(url.searchParams.get('after'));if(after===false)return fail(400,'Invalid cursor');
  const item=path.match(/^\/api\/v1\/community\/threads\/([a-f0-9-]{36})$/);
  const reply=path.match(/^\/api\/v1\/community\/threads\/([a-f0-9-]{36})\/replies$/);
  const react=path.match(/^\/api\/v1\/community\/threads\/([a-f0-9-]{36})\/reaction$/);
  const report=path==='/api/v1/community/reports';
  const mine=path==='/api/v1/member/forum-submissions';
  const mineId=path.match(/^\/api\/v1\/member\/forum-submissions\/([a-f0-9-]{36})$/);
- const review=path==='/api/v1/member/forum-review';
  if(!item&&!reply&&!react&&!report&&!mine&&!mineId&&!review&&path!=='/api/v1/community/threads')return fail(404,'Not found');
  if((item&&!UUID.test(item[1]))||(reply&&!UUID.test(reply[1]))||(react&&!UUID.test(react[1]))||(mineId&&!UUID.test(mineId[1])))return fail(404,'Not found');
  const publicRead=req.method==='GET'&&!mine&&!mineId&&!react&&!report&&!review;
@@ -91,8 +93,9 @@ export async function canonicalForums(req,env,user=null,now=Math.floor(Date.now(
    const reviewers=(env.CANONICAL_FORUM_REVIEWER_IDS||'').split(',').map(x=>x.trim()).filter(Boolean);
    if(!reviewers.includes(user.id))return fail(403,'Reviewer access required');
    if(req.method==='GET'){
-    if(url.search)return fail(400,'Unexpected filters');
-    return json(await forumReviewSnapshot(db,user.id,now));
+    if(!url.search)return json(await forumReviewSnapshot(db,user.id,now));
+    const page=parseReviewPage(url.searchParams);
+    return page?json(await forumReviewPage(db,user.id,now,page)):fail(400,'Invalid review cursor');
    }
    if(req.method!=='POST'||url.search)return fail(405,'Method not allowed');
    const v=await payload(req);

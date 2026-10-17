@@ -142,6 +142,95 @@ export async function forumReviewSnapshot(db,reviewerId,now){
    action:row.action,createdAt:row.created_at,
    reviewerHandle:row.reviewer_handle||null
   })),
+  nextCursors:{
+   threads:threadItems.length&&Number(totals.threads)>threadItems.length?reviewCursor('threads',list(threads).at(-1)):null,
+   replies:replyItems.length&&Number(totals.replies)>replyItems.length?reviewCursor('replies',list(replies).at(-1)):null,
+   reports:reportItems.length&&Number(totals.reports)>reportItems.length?reviewCursor('reports',list(reports).at(-1)):null,
+   activity:list(recent).length===AUDIT_SIZE?reviewCursor('activity',list(recent).at(-1)):null
+  },
   pageSize:PAGE_SIZE,auditSize:AUDIT_SIZE,checkedAt:now
  };
+}
+
+
+// V043 STAFF-ONLY KEYSET PAGINATION
+// The V042 snapshot provides the first batch. Subsequent pages use bound SQL
+// parameters instead of OFFSET while the moderation queue changes.
+const ID_RE=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const CURSOR_RE=/^(0|[1-9]\d{0,12})\.([0-9a-f-]{36})$/i;
+const REPORT_CURSOR_RE=/^([0-3])\.(0|[1-9]\d{0,12})\.([0-9a-f-]{36})$/i;
+const PRIORITY={unsafe:0,harassment:1,spam:2,other:3};
+const REVIEW_LANES=new Set(['threads','replies','reports','activity']);
+
+function reviewCursor(lane,row){
+ if(!row)return null;
+ const stamp=Number(row.created_at);
+ if(!Number.isSafeInteger(stamp)||stamp<0||!ID_RE.test(row.id))return null;
+ const basic=String(stamp)+'.'+row.id;
+ return lane==='reports'?String(PRIORITY[row.reason])+'.'+basic:basic;
+}
+export function parseReviewPage(searchParams){
+ if(!searchParams||typeof searchParams.get!=='function')return null;
+ const keys=[...searchParams.keys()];
+ if(keys.length!==2||keys.filter(x=>x==='lane').length!==1||keys.filter(x=>x==='after').length!==1)return null;
+ const lane=searchParams.get('lane'),after=searchParams.get('after');
+ if(!REVIEW_LANES.has(lane)||typeof after!=='string'||after.length>80)return null;
+ const parts=after.match(lane==='reports'?REPORT_CURSOR_RE:CURSOR_RE);
+ if(!parts||!ID_RE.test(parts.at(-1)))return null;
+ const priority=lane==='reports'?Number(parts[1]):null;
+ const stamp=Number(parts[lane==='reports'?2:1]);
+ if(!Number.isSafeInteger(stamp)||stamp<0)return null;
+ return {lane,stamp,priority,id:parts.at(-1)};
+}
+
+const threadPageSql=pendingThreadsSql
+ .replace("WHERE t.status='pending_review'","WHERE t.status='pending_review' AND (t.created_at>? OR (t.created_at=? AND t.id>?))")
+ .replace('LIMIT 50','LIMIT 51');
+const replyPageSql=pendingRepliesSql
+ .replace("WHERE r.status='pending_review'","WHERE r.status='pending_review' AND (r.created_at>? OR (r.created_at=? AND r.id>?))")
+ .replace('LIMIT 50','LIMIT 51');
+const reportPrioritySql="CASE x.reason WHEN 'unsafe' THEN 0 WHEN 'harassment' THEN 1 WHEN 'spam' THEN 2 ELSE 3 END";
+const reportPageSql=reportsSql
+ .replace('WHERE x.resolved_at IS NULL',
+   'WHERE x.resolved_at IS NULL AND ('+reportPrioritySql+'>? OR ('+reportPrioritySql+'=? AND (x.created_at>? OR (x.created_at=? AND x.id>?))))')
+ .replace('LIMIT 50','LIMIT 51');
+const activityPageSql=auditSql
+ .replace('ORDER BY l.created_at DESC,l.id DESC LIMIT 25',
+  'WHERE l.created_at<? OR (l.created_at=? AND l.id<?) ORDER BY l.created_at DESC,l.id DESC LIMIT 26');
+
+export async function forumReviewPage(db,reviewerId,now,page){
+ if(!page||!REVIEW_LANES.has(page.lane))throw Error('Invalid reviewer page request');
+ const {lane,stamp,id,priority}=page;
+ const prepared=lane==='threads'?db.prepare(threadPageSql).bind(stamp,stamp,id):
+  lane==='replies'?db.prepare(replyPageSql).bind(stamp,stamp,id):
+  lane==='reports'?db.prepare(reportPageSql).bind(priority,priority,stamp,stamp,id):
+  db.prepare(activityPageSql).bind(stamp,stamp,id);
+ const result=await prepared.all();
+ if(result?.success===false||!Array.isArray(result?.results))throw Error('Reviewer page unavailable');
+ const limit=lane==='activity'?AUDIT_SIZE:PAGE_SIZE;
+ const raw=result.results.slice(0,limit);
+ const items=raw.map(row=>lane==='threads'?({
+    id:row.id,topic:row.topic,title:row.title,body:row.body,createdAt:row.created_at,
+    author:memberCard(row),selfAuthored:row.author_id===reviewerId,
+    canPublish:row.author_id!==reviewerId&&row.visibility==='public'&&Boolean(row.email_verified)
+   }):lane==='replies'?({
+    id:row.id,threadId:row.thread_id,threadTitle:row.thread_title,threadTopic:row.thread_topic,
+    body:row.body,createdAt:row.created_at,author:memberCard(row),
+    selfAuthored:row.author_id===reviewerId,
+    canPublish:row.author_id!==reviewerId&&row.visibility==='public'&&Boolean(row.email_verified)&&
+     row.parent_status==='published'&&row.parent_visibility==='public'&&Boolean(row.parent_verified)
+   }):lane==='reports'?({
+    id:row.id,targetKind:row.target_kind,targetId:row.target_id,
+    threadId:row.thread_id||null,threadTitle:row.thread_title||null,topic:row.topic||null,
+    reason:row.reason,createdAt:row.created_at,targetStatus:row.target_status||'missing',
+    parentStatus:row.target_kind==='reply'?row.parent_status||'missing':null,
+    contentPreview:typeof row.content_body==='string'?row.content_body.slice(0,600):'',
+    authorHandle:row.author_handle||null,authorDisplayName:row.author_display_name||null,
+    authorVisibility:row.author_visibility||null,
+    canHide:row.target_status==='published'&&(row.target_kind==='thread'||row.parent_status==='published')
+   }):({
+    id:row.id,targetKind:row.target_kind,targetId:row.target_id,
+    action:row.action,createdAt:row.created_at,reviewerHandle:row.reviewer_handle||null
+   }));
+ return {lane,items,nextCursor:result.results.length>limit?reviewCursor(lane,raw.at(-1)):null,checkedAt:now};
 }

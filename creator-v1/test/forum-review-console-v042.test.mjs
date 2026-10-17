@@ -185,7 +185,8 @@ test('V042 client contracts show modal confirmation, safe rendering, and respons
  assert.match(page,/await reviewRequest\('POST',\{targetKind:choice.kind,targetId:choice.id,action:choice.action\}\)/);
  assert.match(page,/disabled=\{busy\|\|!t.canPublish\}/);
  assert.match(page,/REPORTER IDENTITY IS WITHHELD/);
- assert.match(page,/Showing the first/);
+ assert.match(page,/matching of/);
+ assert.match(page,/LOAD MORE/);
  assert.match(page,/REFRESH QUEUE/);
  assert.match(css,/prefers-reduced-motion:reduce/);
  assert.match(css,/max-width:360px/);
