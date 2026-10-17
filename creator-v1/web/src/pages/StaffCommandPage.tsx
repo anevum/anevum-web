@@ -22,7 +22,8 @@ type StaffSnapshot={
  role:'owner'|'reviewer';memberId:string;room:Room;checkedAt:number;
  invitations:Invitation[];tasks:Task[];messages:Message[];canvas:CanvasEntry[];
  history:Activity[];roster:StaffPeer[];peers:{id:string;lastSeen:number}[];
- memberMetrics:{total:number;verified:number}|null;
+ memberMetrics:{total:number;verified:number;profiles:number;new24h:number;new7d:number;new30d:number}|null;
+ eligibleMembers:{id:string;name:string;handle:string}[];
  invitationMode:'manual-only';liveMode:'short-poll';callMode:'peer-preview'
 };
 type Author={displayName:string;handle:string};
@@ -79,6 +80,38 @@ async function reviewRequest<T>(method:'GET'|'POST',body?:unknown):Promise<T>{
  if(!response.ok)throw Error(response.status===403?'Independent reviewer authorization required':data.error||'Review console unavailable');
  return data as T;
 }
+// The current apex forum-review endpoint returns V041 flat queue rows.
+ // Normalize safely while preserving V043 enriched snapshots when present.
+function normalizeReviewQueue(raw:ReviewQueue):ReviewQueue {
+ if(raw?.totals&&Array.isArray(raw.recent))return raw;
+ const threadRows=Array.isArray(raw?.threads)?raw.threads:[];
+ const replyRows=Array.isArray(raw?.replies)?raw.replies:[];
+ const reportRows=Array.isArray(raw?.reports)?raw.reports:[];
+ const threads=threadRows.map(item=>{
+  const row=item as PendingThread&{created_at?:number;handle?:string;display_name?:string};
+  return {...item,createdAt:row.createdAt??row.created_at??0,
+   author:row.author??{displayName:row.display_name||'Member',handle:row.handle||''},
+   canPublish:row.canPublish??true,selfAuthored:row.selfAuthored??false};
+ });
+ const replies=replyRows.map(item=>{
+  const row=item as PendingReply&{created_at?:number;handle?:string;display_name?:string;thread_id?:string};
+  return {...item,createdAt:row.createdAt??row.created_at??0,
+   threadTitle:row.threadTitle||'Community discussion',
+   author:row.author??{displayName:row.display_name||'Member',handle:row.handle||''},
+   canPublish:row.canPublish??true,selfAuthored:row.selfAuthored??false};
+ });
+ const reports=reportRows.map(item=>{
+  const row=item as OpenReport&{created_at?:number;target_kind?:'thread'|'reply';target_id?:string};
+  return {...item,createdAt:row.createdAt??row.created_at??0,
+   targetKind:row.targetKind??row.target_kind??'thread',
+   targetId:row.targetId??row.target_id??'',
+   threadTitle:row.threadTitle??null,contentPreview:row.contentPreview??'Open the full reviewer console for the reported content.',
+   canHide:row.canHide??false};
+ });
+ return {threads,replies,reports,recent:Array.isArray(raw.recent)?raw.recent:[],
+  totals:{threads:threads.length,replies:replies.length,reports:reports.length},
+  checkedAt:Math.floor(Date.now()/1000)};
+}
 function Badge({label,kind='neutral'}:{label:string;kind?:'neutral'|'active'|'warning'}){
  return <span className={'ir-tag ir-tag--'+kind}>{label}</span>;
 }
@@ -99,6 +132,7 @@ function CommandWorkspace({memberId}:{memberId:string}){
  const [inviteChannel,setInviteChannel]=useState('direct');
  const [inviteNote,setInviteNote]=useState('');
  const [taskName,setTaskName]=useState('');
+ const [candidate,setCandidate]=useState('');
  const [taskPriority,setTaskPriority]=useState('routine');
  const [penColor,setPenColor]=useState(colors[0]);
  const [penWidth,setPenWidth]=useState(2);
@@ -144,7 +178,7 @@ function CommandWorkspace({memberId}:{memberId:string}){
   const poll=async()=>{
    if(disposed||fetching)return;fetching=true;
    try{
-    const next=await reviewRequest<ReviewQueue>('GET');
+    const next=normalizeReviewQueue(await reviewRequest<ReviewQueue>('GET'));
     if(!disposed){setQueue(next);setReviewFault('')}
    }catch(e){if(!disposed){setReviewFault(errorOf(e));setQueue(null)}}
    finally{fetching=false}
@@ -168,7 +202,7 @@ function CommandWorkspace({memberId}:{memberId:string}){
   finally{setBusy(false)}
  };
  const refreshReview=async()=>{
-  try{setQueue(await reviewRequest<ReviewQueue>('GET'));setReviewFault('')}
+  try{setQueue(normalizeReviewQueue(await reviewRequest<ReviewQueue>('GET')));setReviewFault('')}
   catch(e){setReviewFault(errorOf(e))}
  };
  const sendMessage=(e?:FormEvent)=>{
@@ -271,6 +305,7 @@ function CommandWorkspace({memberId}:{memberId:string}){
  const invites=snapshot?.invitations||[];
  const tasks=snapshot?.tasks||[];
  const roster=snapshot?.roster||[];
+ const candidates=snapshot?.eligibleMembers||[];
  const online=snapshot?.peers.map(p=>p.id)||[];
  const counts=queue?.totals;
  const reviewTotal=counts?counts.threads+counts.replies+counts.reports:null;
@@ -335,8 +370,10 @@ function CommandWorkspace({memberId}:{memberId:string}){
        <div className="ir-overview-bottom">
         <section className="ir-surface"><div className="ir-pane-heading"><span className="ir-kicker">INSTITUTE / NETWORK</span>
          <button type="button" onClick={()=>setPane('team')}>ALL STAFF ↗</button></div>
-         {snapshot.memberMetrics?<div className="ir-signups"><div><strong>{snapshot.memberMetrics.total}</strong><small>REGISTERED USERS</small></div>
-          <div><strong>{snapshot.memberMetrics.verified}</strong><small>VERIFIED ACCOUNTS</small></div></div>:
+         {snapshot.memberMetrics?<><div className="ir-signups"><div><strong>{snapshot.memberMetrics.total}</strong><small>REGISTERED USERS</small></div>
+          <div><strong>{snapshot.memberMetrics.verified}</strong><small>VERIFIED ACCOUNTS</small></div>
+          <div><strong>{snapshot.memberMetrics.profiles}</strong><small>CREATOR PROFILES</small></div></div>
+          <p className="ir-hint">NEW: {snapshot.memberMetrics.new24h} IN 24H · {snapshot.memberMetrics.new7d} IN 7D · {snapshot.memberMetrics.new30d} IN 30D</p></>:
           <p className="ir-hint">Member-wide signup totals are visible to the founder only.</p>}
          <p className="ir-hint">Invitation stages are manual and cannot be treated as verified registrations or granted moderator access.</p>
         </section>
@@ -491,12 +528,31 @@ function CommandWorkspace({memberId}:{memberId:string}){
        <div className="ir-pane-heading"><div><span className="ir-kicker">AUTHENTICATED PERSONNEL / ROLE BOUNDARIES</span><h2>Staff directory</h2></div>
         <Badge label={roster.length+' VERIFIED'}/></div>
        <p className="ir-section-intro">Only accounts explicitly authorized by their immutable user IDs appear here. Staff roles are not purchased, earned by XP, or assigned through invitations.</p>
+       {snapshot.role==='owner'&&<form className="ir-inline-form ir-role-form" onSubmit={event=>{
+        event.preventDefault();
+        if(!candidate||busy)return;
+        const person=candidates.find(x=>x.id===candidate);
+        if(person&&window.confirm('Grant verified moderator access to '+person.name+'? This includes staff chat, whiteboard and moderation decisions.'))
+         void execute({kind:'staff-grant',memberId:candidate},()=>setCandidate(''));
+       }}>
+        <label><span>VERIFIED ACCOUNT / REVIEWER CANDIDATE</span>
+         <select value={candidate} onChange={event=>setCandidate(event.target.value)}>
+          <option value="">SELECT A VERIFIED MEMBER</option>
+          {candidates.map(p=><option key={p.id} value={p.id}>{p.name}{p.handle?' / @'+p.handle:''}</option>)}
+         </select></label>
+        <button type="submit" disabled={busy||!candidate}>AUTHORIZE REVIEWER +</button>
+       </form>}
        <div className="ir-record-list">
         {roster.length===0?<Empty title="No verified staff found" detail="Configured staff must already have verified ANEVUM accounts."/>:
         roster.map(p=><article key={p.id} className="ir-record">
          <span className="ir-person-sigil">{p.name.slice(0,1).toUpperCase()}</span>
          <div className="ir-record-copy"><strong>{p.name}</strong><small>{p.handle?'@'+p.handle:'PRIVATE PERSONNEL'} · {uppercase(p.role)}</small></div>
          <Badge label={online.includes(p.id)?'BRIDGE ONLINE':'OFFLINE'} kind={online.includes(p.id)?'active':'neutral'}/>
+         {snapshot.role==='owner'&&p.role==='reviewer'&&<button className="ir-danger ir-revoke" type="button"
+           disabled={busy} onClick={()=>{
+            if(window.confirm('Revoke moderator access from '+p.name+'? They will lose staff tools on their next request.'))
+             void execute({kind:'staff-revoke',memberId:p.id});
+           }}>REVOKE</button>}
         </article>)}
        </div>
        <section className="ir-permissions"><span className="ir-kicker">PRINCIPLE / LEAST PRIVILEGE</span>
