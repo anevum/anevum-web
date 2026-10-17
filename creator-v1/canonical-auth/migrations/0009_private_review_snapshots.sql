@@ -40,3 +40,10 @@ CREATE TABLE IF NOT EXISTS member_studio_submission_assets (
 );
 CREATE INDEX IF NOT EXISTS idx_member_studio_submission_assets
  ON member_studio_submission_assets(asset_id);
+
+-- Reviewer audit rows must identify the exact reviewed submission, not just
+-- a mutable project. Migration is applied once through the migration ledger.
+ALTER TABLE member_studio_review_log
+ ADD COLUMN submission_id TEXT REFERENCES member_studio_submissions(id) ON DELETE SET NULL;
+CREATE INDEX IF NOT EXISTS idx_member_studio_review_log_submission
+ ON member_studio_review_log(submission_id);
