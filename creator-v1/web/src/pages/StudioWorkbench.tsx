@@ -92,10 +92,11 @@ export function StudioWorkbench({value,onChange,disabled}:{
    {error&&<p className="wb-error" role="alert">{error}</p>}
   </section>;
  }
- const rows=document.blocks;
+ const workDocument:StudioBlockDocument=document;
+ const rows=workDocument.blocks;
  const present=getVisibleWorkbenchBlocks(document,scene);
  function updateBlock(id:string,field:'type'|'text'|'target',newValue:string){
-  const next=document.blocks.map(b=>{
+  const next=workDocument.blocks.map(b=>{
    if(b.id!==id)return b;
    if(field==='type'){
     const type=newValue as StudioBlockType;
@@ -103,14 +104,14 @@ export function StudioWorkbench({value,onChange,disabled}:{
    }
    return {...b,[field]:field==='target'?(newValue||null):newValue};
   });
-  change({...document,blocks:next});
+  change({...workDocument,blocks:next});
  }
  function addBlock(){
   if(rows.length>=MAX_BLOCKS){setError('Maximum of '+MAX_BLOCKS+' sections reached.');return;}
-  change({...document,blocks:[...rows,newStudioBlock(newType)]});
+  change({...workDocument,blocks:[...rows,newStudioBlock(newType)]});
  }
- function move(id:string,delta:-1|1){change(moveStudioBlock(document,id,delta));}
- function remove(id:string){change(removeStudioBlock(document,id));}
+ function move(id:string,delta:-1|1){change(moveStudioBlock(workDocument,id,delta));}
+ function remove(id:string){change(removeStudioBlock(workDocument,id));}
  function resetStory(){setScene(null);}
  return <section className="wb-root wb-builder" aria-label="Visual creative Workbench">
   <header className="wb-head">
