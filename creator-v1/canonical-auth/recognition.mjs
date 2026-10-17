@@ -68,7 +68,9 @@ export async function memberRecognitionState(db,userId){
  const savedIds=list(pref?.badge_ids_json).filter(x=>heldBadge.has(x));
  const visibleIds=mode==='hidden'?[]:mode==='curated'?uniq(savedIds).slice(0,3):badges.slice(0,3).map(x=>x.id);
  const featuredBadges=visibleIds.map(id=>badgeMap.get(id)).filter(Boolean);
- const medalId=pref?.medal_id===undefined||pref?.medal_id===null
+ // NULL means the newest earned medal; empty string means explicitly hidden.
+ const medalId=pref?.medal_id===''?'':
+  pref?.medal_id===undefined||pref?.medal_id===null
   ?(medals[0]?.id??null)
   :medalMap.has(pref.medal_id)?pref.medal_id:null;
  const ribbonIds=pref?.ribbon_ids_json===undefined||pref?.ribbon_ids_json===null||
