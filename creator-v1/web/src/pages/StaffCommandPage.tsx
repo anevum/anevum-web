@@ -2,7 +2,6 @@
 // Single viewport, independently authenticated staff operations workspace.
 // Data comes from canonical MEMBER_DB; never from demo fixtures or localStorage.
 import {useEffect,useRef,useState, type FormEvent, type PointerEvent as ReactPointerEvent} from 'react';
-import {Link} from 'react-router-dom';
 import {canonicalAuthClient} from '../lib/canonical-beta';
 import {OrbitalMark} from '../components/OrbitalMark';
 import {StaffBridge,type StaffPeer} from '../components/StaffBridge';
@@ -321,7 +320,7 @@ function CommandWorkspace({memberId}:{memberId:string}){
    <div className="ir-header-signal"><span className="ir-pulse" aria-hidden="true"/>
     <span>STAFF CHANNEL <b>{memberHasAccess?'AUTHENTICATED':loading?'NEGOTIATING':'SEALED'}</b></span></div>
    <div className="ir-header-right"><span className="ir-time">{new Date().toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'})}</span>
-    <Link to="/community">RETURN TO COMMONS <span aria-hidden="true">↗</span></Link></div>
+    <a href="/community">RETURN TO COMMONS <span aria-hidden="true">↗</span></a></div>
   </header>
   {loading&&!snapshot?<div className="ir-gate"><div className="ir-gate-symbol">◇</div><h1>Identifying staff signal.</h1>
     <p>Verifying your canonical ANEVUM membership and explicit reviewer authorization.</p></div>:
@@ -329,7 +328,7 @@ function CommandWorkspace({memberId}:{memberId:string}){
     <div className="ir-gate-symbol">◇</div><span className="ir-kicker">ACCESS / DENIED OR UNAVAILABLE</span>
     <h1>Staff clearance required.</h1><p>{fault||'The staff command service is closed.'}</p>
     <p>Invitations and ordinary member accounts never automatically grant staff access. The owner must authorize a verified member ID and enable the staff service after schema checks.</p>
-    <div><Link to="/join">SIGN IN</Link><Link to="/community/review">EXISTING REVIEW CONSOLE</Link></div>
+    <div><a href="/join">SIGN IN</a><a href="/community/review">EXISTING REVIEW CONSOLE</a></div>
    </div>:
    <div className="ir-body">
     <nav className="ir-nav" aria-label="IREN command sections">
@@ -485,7 +484,7 @@ function CommandWorkspace({memberId}:{memberId:string}){
          {uppercase(lane)} {counts&&lane!=='activity'?counts[lane]:' '}</button>)}
        </div>
        {reviewFault&&<div className="ir-error-block" role="alert"><strong>Canonical review not connected.</strong><p>{reviewFault}</p>
-        <Link to="/community/review">OPEN ESTABLISHED REVIEW CONSOLE ↗</Link></div>}
+        <a href="/community/review">OPEN ESTABLISHED REVIEW CONSOLE ↗</a></div>}
        {!queue&&!reviewFault&&<p className="ir-hint">Retrieving the authorized review window…</p>}
        <div className="ir-record-list ir-review-items">
         {queue&&reviewLane==='threads'&&(queue.threads.length===0?
@@ -522,7 +521,7 @@ function CommandWorkspace({memberId}:{memberId:string}){
            <strong>{uppercase(x.action)}</strong><span>{uppercase(x.targetKind)}</span>
            <small>{x.reviewerHandle||'STAFF'} · {stamp(x.createdAt)}</small></article>))}
        </div>
-       <p className="ir-hint">The docket shows the first authorized review window. The existing <Link to="/community/review">full reviewer console</Link> retains pagination and the complete independent-review workflow.</p>
+       <p className="ir-hint">The docket shows the first authorized review window. The existing <a href="/community/review">full reviewer console</a> retains pagination and the complete independent-review workflow.</p>
       </div>}
       {pane==='team'&&<div className="ir-list-module">
        <div className="ir-pane-heading"><div><span className="ir-kicker">AUTHENTICATED PERSONNEL / ROLE BOUNDARIES</span><h2>Staff directory</h2></div>
@@ -596,6 +595,6 @@ export function StaffCommandPage(){
  if(isPending)return <section className="ir-auth-gate"><h1>IREN / Verifying identity</h1><p>Requesting private staff clearance…</p></section>;
  if(!session?.user?.id||session.user.emailVerified!==true)return <section className="ir-auth-gate">
   <h1>IREN / Staff channel sealed</h1><p>A verified ANEVUM member account is required before staff authorization can be checked.</p>
-  <Link to="/join">SIGN IN ↗</Link></section>;
+  <a href="/join">SIGN IN ↗</a></section>;
  return <CommandWorkspace key={session.user.id} memberId={session.user.id}/>;
 }
