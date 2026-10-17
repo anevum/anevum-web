@@ -46,27 +46,34 @@ const sameOriginMutation=request=>{
   return origin===CANONICAL_ORIGIN &&
     (site===null||site==="same-origin"||site==="none");
 };
-// Some installed iOS PWAs and embedded WebKit contexts omit Origin even for
-// same-origin fetch(). Only the private Studio JSON/binary endpoint receives
-// this tightly scoped fallback; every other member mutation keeps the strict
-// canonical Origin gate above. A custom non-safelisted header cannot be sent
-// by a cross-site HTML form; foreign-script fetch() would require a CORS
-// preflight, and these endpoints do not grant cross-origin requests.
+// Private Creator Studio requests are first-party credentialed JSON fetches.
+// Older cached iOS/PWA clients do not send the marker introduced in V054.2.1.
+// For Origin-less Studio requests only, application/json is a non-CORS-safelisted
+// Content-Type: a cross-origin browser cannot send it without a preflight, which
+// this Worker never grants. Form POSTs cannot use application/json. Keep strict
+// Origin checks on auth, account, billing, profiles, forums, and review APIs.
 const sameOriginStudioMutation=request=>{
   if(sameOriginMutation(request))return true;
   try{
     if(new URL(request.url).origin!==CANONICAL_ORIGIN)return false;
     const origin=request.headers.get("origin");
     const site=request.headers.get("sec-fetch-site");
+    const mode=request.headers.get("sec-fetch-mode");
+    const destination=request.headers.get("sec-fetch-dest");
     const referer=request.headers.get("referer");
-    // Never override explicit evidence of a foreign origin.
-    if(origin!==null&&origin!==CANONICAL_ORIGIN)return false;
-    if(site==="cross-site"||(site==="same-site"&&origin!==CANONICAL_ORIGIN))return false;
-    if(referer&&new URL(referer).origin!==CANONICAL_ORIGIN)return false;
     const marker=request.headers.get("x-anevum-studio-request");
     const contentType=request.headers.get("content-type")||"";
-    return marker==="1" &&
-      /^(?:application\/json|application\/octet-stream)(?:\s*;|\s*$)/i.test(contentType);
+    const accept=request.headers.get("accept")||"";
+    // Never trust an explicit foreign/opaque origin or foreign navigation.
+    if(origin!==null&&origin!==CANONICAL_ORIGIN)return false;
+    if(site!==null&&!["same-origin","none"].includes(site)&&
+      !(site==="same-site"&&origin===CANONICAL_ORIGIN))return false;
+    if(mode==="navigate"||mode==="no-cors"||(destination&&destination!=="empty"))return false;
+    if(referer&&new URL(referer).origin!==CANONICAL_ORIGIN)return false;
+    if(!/(?:^|[,;\s])application\/json(?:[,;\s]|$)/i.test(accept))return false;
+    const json=/^application\/json(?:\s*;|\s*$)/i.test(contentType);
+    const binary=/^application\/octet-stream(?:\s*;|\s*$)/i.test(contentType);
+    return json||(binary&&marker==="1"&&origin===CANONICAL_ORIGIN);
   }catch{return false;}
 };
 const safeJson=(request,value,status=200)=>{
