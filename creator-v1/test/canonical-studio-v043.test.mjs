@@ -280,3 +280,44 @@ test('bounded cleanup of abandoned reservations and expired upload leases',async
   assert.equal((await cleanupCanonicalStudioAssets({...s.env,CANONICAL_CREATOR_UPLOADS_ENABLED:'false'},time)).cleaned,0);
  }finally{s.close();}
 });
+
+
+test('pausing NEW uploads preserves private file listing, downloads and safe erasure',async()=>{
+ const s=setup({uploads:true});try{
+  const p=(await j(await s.call(ROOT,'POST','alice',projectRequest()))).project;
+  const base=ROOT+'/'+p.id+'/assets';
+  const gif=new TextEncoder().encode('GIF89a');
+  const id=(await j(await s.call(base,'POST','alice',{name:'private.gif',sizeBytes:gif.length,contentType:'image/gif'}))).id;
+  assert.equal((await s.call(base+'/'+id,'PUT','alice',gif)).status,200);
+  s.env.CANONICAL_CREATOR_UPLOADS_ENABLED='false';
+  const listed=await s.call(base,'GET','alice');assert.equal(listed.status,200);
+  const result=await j(listed);assert.equal(result.assets.length,1);
+  assert.equal(result.storageReady,true);assert.equal(result.uploadsReady,false);
+  assert.equal((await s.call(base,'POST','alice',{name:'other.gif',sizeBytes:6,contentType:'image/gif'})).status,404);
+  assert.equal((await s.call(base+'/'+id+'/file','GET','alice')).status,200);
+  // Metadata remains available if the backing R2 binding is temporarily absent.
+  s.env.CREATOR_ASSETS=undefined;
+  const disconnected=await j(await s.call(base,'GET','alice'));
+  assert.equal(disconnected.storageReady,false);assert.equal(disconnected.assets.length,1);
+  assert.equal((await s.call(base+'/'+id+'/file','GET','alice')).status,503);
+  assert.equal((await s.call(base+'/'+id,'DELETE','alice')).status,503);
+  s.env.CREATOR_ASSETS=s.store;
+  assert.equal((await s.call(base+'/'+id,'DELETE','alice')).status,200);
+  assert.equal(s.objects.size,0);
+ }finally{s.close();}
+});
+
+test('expired private upload leases still clean up after new uploads are paused',async()=>{
+ const {cleanupCanonicalStudioAssets}=await import('../canonical-auth/studio-assets.mjs');
+ const s=setup({uploads:true});try{
+  const p=(await j(await s.call(ROOT,'POST','alice',projectRequest()))).project;
+  const base=ROOT+'/'+p.id+'/assets',now=Math.floor(Date.now()/1000);
+  const id=(await j(await s.call(base,'POST','alice',{name:'paused.zip',sizeBytes:8,contentType:'application/zip'}))).id;
+  s.f.db.prepare("UPDATE member_studio_assets SET status='uploading',lease_until=? WHERE id=?").run(now-1,id);
+  const key=s.f.db.prepare('SELECT storage_key FROM member_studio_assets WHERE id=?').get(id).storage_key;
+  await s.store.put(key,new Uint8Array([80,75,3,4,20,0,0,0]));
+  s.env.CANONICAL_CREATOR_UPLOADS_ENABLED='false';
+  assert.equal((await cleanupCanonicalStudioAssets(s.env,now)).cleaned,1);
+  assert.equal(s.objects.size,0);
+ }finally{s.close();}
+});

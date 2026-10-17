@@ -1,6 +1,6 @@
-// Private only. All uploads are quarantined, forcibly downloaded and NEVER executed.
-// CANONICAL_CREATOR_UPLOADS_ENABLED and a dedicated, isolated CREATOR_ASSETS R2
-// binding are both mandatory, independently of the Studio drafts feature.
+// Private only. Files are quarantined, never executed or published.
+// Creating/updating uploads requires the separate upload flag and an isolated R2
+// binding. Owners may still list/withdraw EXISTING files while uploads are paused.
 const MiB=1048576;
 const QUOTA=100*MiB;
 const MAX_ASSETS=20;
@@ -85,13 +85,16 @@ async function change(db,sql,args=[]){
  return Number(r?.meta?.changes??0);
 }
 const mutable=project=>project.status==='draft'||project.status==='changes_requested';
-export function studioUploadReady(env){
- return env?.CANONICAL_CREATOR_UPLOADS_ENABLED==='true'&&env?.CANONICAL_CREATOR_STUDIO_ENABLED==='true'&&
+export function studioStorageReady(env){
+ return env?.CANONICAL_CREATOR_STUDIO_ENABLED==='true'&&
    Boolean(env?.CREATOR_ASSETS?.get&&env?.CREATOR_ASSETS?.put&&env?.CREATOR_ASSETS?.delete);
 }
+export function studioUploadReady(env){
+ return env?.CANONICAL_CREATOR_UPLOADS_ENABLED==='true'&&studioStorageReady(env);
+}
 export async function canonicalStudioAssets(req,env,user,project,{asset=null,file=null,now=Math.floor(Date.now()/1000),pace}){
- if(!studioUploadReady(env))return fail(404,'Private uploads are disabled');
  const db=env.MEMBER_DB,store=env.CREATOR_ASSETS;
+ const uploadsEnabled=studioUploadReady(env),storageConnected=studioStorageReady(env);
  if(asset&&!HEX.test(asset))return fail(404,'Not found');
  try{
   if(!asset){
@@ -99,9 +102,11 @@ export async function canonicalStudioAssets(req,env,user,project,{asset=null,fil
     const assets=await rows(db,
       'SELECT '+ALL+' FROM member_studio_assets WHERE project_id=? AND user_id=? ORDER BY created_at DESC LIMIT 50',
       [project.id,user.id]);
-    return out({assets:assets.map(view),quotaBytes:QUOTA,projectAssetLimit:MAX_ASSETS});
+    return out({assets:assets.map(view),quotaBytes:QUOTA,projectAssetLimit:MAX_ASSETS,
+     storageReady:storageConnected,uploadsReady:uploadsEnabled});
    }
    if(req.method!=='POST')return fail(405,'Method not allowed');
+   if(!uploadsEnabled)return fail(404,'New private uploads are disabled');
    if(!mutable(project))return fail(409,'Project locked for review');
    const requested=await body(req);
    let v;try{v=declaration(requested);}catch{return fail(422,'Unsupported file or size');}
@@ -122,6 +127,7 @@ export async function canonicalStudioAssets(req,env,user,project,{asset=null,fil
   if(!selected)return fail(404,'File unavailable');
   if(file==='file'){
    if(!['GET','HEAD'].includes(req.method))return fail(405,'Method not allowed');
+   if(!storageConnected)return fail(503,'Private storage is disconnected; file remains recorded');
    if(selected.status!=='quarantined')return fail(409,'File is not ready');
    const object=await store.get(selected.storage_key);
    if(!object||Number(object.size)!==Number(selected.size_bytes))
@@ -132,8 +138,9 @@ export async function canonicalStudioAssets(req,env,user,project,{asset=null,fil
   }
   if(file)return fail(404,'Not found');
   if(req.method==='DELETE'){
-   // An owner may withdraw private bytes even while the project's metadata is
-   // locked for staff review. Review cannot silently retain private files.
+   // An owner may withdraw private bytes even when uploads are paused or the
+   // project's metadata is locked for review. No orphaned R2 objects.
+   if(!storageConnected)return fail(503,'Private storage is disconnected; file cannot be safely erased');
    if(selected.status==='uploading')return fail(409,'Upload is in progress');
    if(!await pace(db,user.id,'asset',now,60))return fail(429,'Too many asset changes');
    const n=await change(db,
@@ -147,6 +154,7 @@ export async function canonicalStudioAssets(req,env,user,project,{asset=null,fil
    return deleted===1?out({deleted:true}):fail(503,'Private file removal needs reconciliation');
   }
   if(req.method!=='PUT')return fail(405,'Method not allowed');
+  if(!uploadsEnabled)return fail(404,'New private uploads are disabled');
   if(!mutable(project))return fail(409,'Project locked for review');
   if(req.headers.get('content-type')!=='application/octet-stream')return fail(415,'Binary upload required');
   if(selected.status!=='reserved')return fail(409,'Upload already in progress or finished');
@@ -187,11 +195,15 @@ export async function canonicalStudioAssets(req,env,user,project,{asset=null,fil
   return out({id:asset,status:'quarantined',sha256:digest});
  }catch{return fail(503,'Private assets unavailable');}
 }
-// Must run only after a separately audited staging cron is configured.
-// Bounded reaper handles stale leases without ever publishing or rendering files.
+// Called only by the existing staging scheduled handler. Pausing new uploads
+// must not stop cleanup of billable expired reservations and abandoned R2 objects.
 export async function cleanupCanonicalStudioAssets(env,now=Math.floor(Date.now()/1000)){
- if(!studioUploadReady(env)||!env.MEMBER_DB)return {cleaned:0};
+ if(!studioStorageReady(env)||!env.MEMBER_DB)return {cleaned:0};
  const db=env.MEMBER_DB,store=env.CREATOR_ASSETS;
+ try{
+  const schema=await db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='member_studio_assets'").first();
+  if(!schema)return {cleaned:0};
+ }catch{return {cleaned:0};}
  const candidates=await rows(db,
    "SELECT id,status,storage_key FROM member_studio_assets WHERE "+
    "(status='reserved' AND created_at<?) OR "+

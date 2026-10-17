@@ -284,6 +284,7 @@ function StudioEditor({create,uploadsReady}:{create:boolean;uploadsReady:boolean
 
 function StudioUploader({project,uploadsReady,onAssetsChanged}:{project:StudioProject;uploadsReady:boolean;onAssetsChanged:(assets:StudioAsset[])=>void}){
  const [assets,setAssets]=useState<StudioAsset[]>([]);
+ const [storageReady,setStorageReady]=useState(false);
  const [queue,setQueue]=useState<File[]>([]),[busy,setBusy]=useState(false),[error,setError]=useState(''),[notice,setNotice]=useState('');
  const [progress,setProgress]=useState(''),[drag,setDrag]=useState(false);
  const controller=useRef<AbortController|null>(null);
@@ -295,12 +296,12 @@ function StudioUploader({project,uploadsReady,onAssetsChanged}:{project:StudioPr
   return()=>URL.revokeObjectURL(url);
  },[queue]);
  useEffect(()=>{
-  if(!uploadsReady)return;
   let alive=true;
-  studioAssets(project.id).then(r=>{if(alive){setAssets(r.assets);onAssetsChanged(r.assets)}}).catch(e=>{if(alive)setError(showError(e))});
+  // Existing assets remain visible even when new uploads are paused.
+  studioAssets(project.id).then(r=>{if(alive){setAssets(r.assets);setStorageReady(r.storageReady);onAssetsChanged(r.assets)}}).catch(e=>{if(alive)setError(showError(e))});
   return()=>{alive=false;controller.current?.abort();};
- },[project.id,uploadsReady,onAssetsChanged]);
- async function refresh(){const next=(await studioAssets(project.id)).assets;setAssets(next);onAssetsChanged(next);}
+ },[project.id,onAssetsChanged]);
+ async function refresh(){const r=await studioAssets(project.id);setAssets(r.assets);setStorageReady(r.storageReady);onAssetsChanged(r.assets);}
  function accept(files:FileList|null){
   if(!files||busy)return;
   setError('');setNotice('');
@@ -337,9 +338,9 @@ function StudioUploader({project,uploadsReady,onAssetsChanged}:{project:StudioPr
  function dropped(e:DragEvent<HTMLDivElement>){e.preventDefault();setDrag(false);accept(e.dataTransfer.files);}
  return <section className="st-panel st-assets">
   <p className="st-kicker">FILES / PRIVATE QUARANTINE</p><h2>THE ASSET VAULT.</h2>
-  {!uploadsReady?<p className="st-muted">Uploads are disabled until isolated Cloudflare R2 storage, a verified migration, and security checks are activated. Draft editing remains available.</p>:<>
+  {!uploadsReady&&<p className="st-muted">New uploads are paused or not provisioned. Existing private file records remain available below. Private download/removal requires the original isolated R2 binding.</p>}
    <p className="st-muted">Images / PDF: 10 MiB. MP3 / WAV / ZIP: 20 MiB. TXT / MD: 1 MiB. 20 files per project, 100 MiB per member.</p>
-   {editable(project)&&<div className={'st-drop'+(drag?' is-drag':'')}
+   {uploadsReady&&editable(project)&&<div className={'st-drop'+(drag?' is-drag':'')}
     onDragOver={e=>{e.preventDefault();if(!busy)setDrag(true);}}
     onDragLeave={()=>setDrag(false)} onDrop={dropped} role="group" aria-label="Upload private project files">
     <label htmlFor="st-files">DRAG FILES HERE OR SELECT FROM DEVICE</label>
@@ -348,7 +349,7 @@ function StudioUploader({project,uploadsReady,onAssetsChanged}:{project:StudioPr
       onChange={e=>{accept(e.target.files);e.currentTarget.value='';}}/>
     <small>ZIP archives are stored privately. They are not installed or executed.</small>
    </div>}
-   {queue.length>0&&<div className="st-upload-queue"><h3>READY TO STORE / {queue.length} FILES</h3>
+   {uploadsReady&&queue.length>0&&<div className="st-upload-queue"><h3>READY TO STORE / {queue.length} FILES</h3>
     {queue.map((f,i)=><p key={f.name+'-'+i}>{f.name} · {size(f.size)}</p>)}
     {preview&&<img className="st-local-preview" src={preview} alt="Local image preview before private upload"/>}
     {progress&&<p role="status">{progress}</p>}
@@ -360,12 +361,12 @@ function StudioUploader({project,uploadsReady,onAssetsChanged}:{project:StudioPr
    <div className="st-file-list">{assets.map(a=><div className="st-file" key={a.id}>
     <div><strong>{a.name}</strong><small>{a.kind.toUpperCase()} / {size(a.sizeBytes)} / {a.status.toUpperCase()}</small></div>
     <div className="st-file-actions">
-     {a.status==='quarantined'&&<a href={studioDownloadUrl(project.id,a.id)} download={a.name}>DOWNLOAD</a>}
-     {a.status!=='uploading'&&<button disabled={busy} onClick={()=>void remove(a)}>REMOVE</button>}
+     {storageReady&&a.status==='quarantined'&&<a href={studioDownloadUrl(project.id,a.id)} download={a.name}>DOWNLOAD</a>}
+     {storageReady&&a.status!=='uploading'&&<button disabled={busy} onClick={()=>void remove(a)}>REMOVE</button>}
     </div>
    </div>)}</div>
    {assets.length===0&&<p className="st-muted">No private attachments yet.</p>}
-  </>}
+   {!storageReady&&assets.length>0&&<p className="st-error" role="status">The private object store is disconnected. File records are retained; removal and download are safely disabled until storage is restored.</p>}
   {notice&&<p role="status" className="st-success">{notice}</p>}
   {error&&<p role="alert" className="st-error">{error}</p>}
  </section>;

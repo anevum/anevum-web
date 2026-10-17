@@ -86,7 +86,7 @@ export const studioWithdraw=(id:string,revision:number)=>request<{project:Studio
 export const studioDeleteProject=(id:string,revision:number)=>request<{deleted:boolean}>(projectPath(id),'DELETE',{revision});
 function assetsPath(projectId:string,assetId?:string){return projectPath(projectId)+'/assets'+(assetId?'/'+validAsset(assetId):'');}
 export const studioAssets=(projectId:string,signal?:AbortSignal)=>
- request<{assets:StudioAsset[];quotaBytes:number;projectAssetLimit:number}>(assetsPath(projectId),'GET',undefined,signal);
+ request<{assets:StudioAsset[];quotaBytes:number;projectAssetLimit:number;storageReady:boolean;uploadsReady:boolean}>(assetsPath(projectId),'GET',undefined,signal);
 const LIMITS:Record<string,[string,number]>={
  png:['image/png',10],jpg:['image/jpeg',10],jpeg:['image/jpeg',10],webp:['image/webp',10],
  gif:['image/gif',10],mp3:['audio/mpeg',20],wav:['audio/wav',20],pdf:['application/pdf',10],

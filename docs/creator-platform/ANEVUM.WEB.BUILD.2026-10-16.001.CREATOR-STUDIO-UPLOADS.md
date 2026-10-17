@@ -43,3 +43,7 @@ The immediate QA target is npm run test:studio, then npm test from creator-v1. P
 - Creator Studio reviewers now use CANONICAL_STUDIO_REVIEWER_IDS, independent of forum reviewers. An independent reviewer may inspect only status/size/hash/name metadata, never execute, preview, or download quarantined bytes from the review desk.
 - The existing staging Worker scheduled callback additionally runs bounded expired-reservation / abandoned-upload recovery, but remains inert when uploads are disabled or a private R2 binding is missing.
 - No new infrastructure, billable bucket, release host, or runtime was provisioned by this code revision. Game packages remain untrusted and unplayable until separate asset inspection and sandbox release gates pass.
+
+
+## V044 private storage pause semantics
+New upload reservations and binary writes stop when CANONICAL_CREATOR_UPLOADS_ENABLED is false, but a signed-in owner can still list existing file metadata. If the private CREATOR_ASSETS binding remains present, existing files can still be downloaded as forced attachments or permanently removed, including on review-locked projects. If R2 is disconnected, metadata remains readable and byte removal is blocked rather than losing the only object reference. The staging expiry reaper continues when new uploads are paused and isolated R2 is still provisioned; it remains inert when the Studio itself or the storage binding is absent.
