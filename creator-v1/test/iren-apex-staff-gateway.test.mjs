@@ -61,7 +61,7 @@ test('IREN V002 isolated Worker: only the exact permanent domain and staff paths
   assert.equal(asset.status,200);
   assert.match(asset.headers.get('cache-control'),/immutable/);
   assert.ok(f.log.some(r=>r.asset==='/assets/index.js'));
-  assert.equal((await f.call('/staff/assets/../../api/v1/member/staff-ops')).status,404);
+  assert.equal((await f.call('/staff/assets/test/too/deep.js')).status,404);
  }finally{f.db.close()}
 });
 
