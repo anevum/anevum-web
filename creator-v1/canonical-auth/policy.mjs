@@ -14,6 +14,7 @@ export const REQUIRED_CANONICAL_TABLES=Object.freeze(["user","session","account"
 export const AUTH_ALLOWLIST=Object.freeze({
   "GET":new Set([
     CANONICAL_AUTH_PATH+"/get-session",
+    CANONICAL_AUTH_PATH+"/list-accounts",
     CANONICAL_AUTH_PATH+"/callback/google",
     CANONICAL_AUTH_PATH+"/callback/github",
     CANONICAL_AUTH_PATH+"/callback/apple",
@@ -21,6 +22,8 @@ export const AUTH_ALLOWLIST=Object.freeze({
   ]),
   "POST":new Set([
     CANONICAL_AUTH_PATH+"/sign-in/social",
+    CANONICAL_AUTH_PATH+"/link-social",
+    CANONICAL_AUTH_PATH+"/callback/apple",
     CANONICAL_AUTH_PATH+"/email-otp/send-verification-otp",
     CANONICAL_AUTH_PATH+"/sign-in/email-otp",
     CANONICAL_AUTH_PATH+"/sign-out"
