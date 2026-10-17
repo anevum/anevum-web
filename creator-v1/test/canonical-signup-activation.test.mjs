@@ -16,7 +16,7 @@ test("staging signup release reuses the routed Worker and isolates member and co
     ["COMMUNITY_DB","fa96e36d-6257-4883-bf15-074947e11a13"],
     ["MEMBER_DB","e1d29049-c83b-4534-8355-dc1fa36ba6d8"]
   ]);
-  assert.equal(config.vars.CANONICAL_PUBLIC_SIGNUP_ENABLED,"false");
+  assert.equal(config.vars.CANONICAL_PUBLIC_SIGNUP_ENABLED,"true");
   assert.equal(config.vars.CANONICAL_INVITED_SIGNUP_ENABLED,"false");
   assert.equal(Object.keys(config.vars).some(x=>/SECRET|API_KEY|EMAILS$/.test(x)),false);
 });
