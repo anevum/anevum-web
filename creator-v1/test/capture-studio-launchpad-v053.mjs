@@ -228,8 +228,11 @@ try{
   await evaluate('document.querySelector(".wb-tools button:first-child").click()');
   await until(()=>evaluate('!!document.querySelector(".wb-inline-text")'));
   await evaluate('document.querySelector(".wb-inline-text").focus()');
-  await c.send('Input.insertText',{text:'My first creation starts here.'});
+  await c.send('Input.insertText',{text:'My first creation starts here.\nA second line grows naturally.'});
   await until(()=>evaluate('document.querySelector(".st-save-state")?.dataset.unsaved==="true"'));
+  const writingField=await evaluate('(()=>{const n=document.querySelector(".wb-inline-text");return {height:n.clientHeight,contentHeight:n.scrollHeight,resize:getComputedStyle(n).resize};})()');
+  assert.equal(writingField.resize,'none');
+  assert.ok(writingField.height>=writingField.contentHeight-4,'Canvas content must fit without inner scrollbars: '+JSON.stringify(writingField));
   await evaluate('window.dispatchEvent(new KeyboardEvent("keydown",{key:"s",ctrlKey:true,cancelable:true,bubbles:true}))');
   await until(()=>evaluate('document.querySelector(".st-save-state")?.dataset.unsaved==="false"'));
   const keyboardSaved=(await (await fetch(base+'/__state')).json()).projects.find(x=>x.title==='Untitled creation');
