@@ -169,7 +169,11 @@ export async function canonicalStudio(req,env,user,now=Math.floor(Date.now()/100
    return found.length===1?json({project:dbRow(found[0]),note:'Private review queue only; no publication or gameplay activation'}):fail(409,'Project revision changed');
   }
   if(sub)return fail(404,'Not found');
-  if(req.method==='GET')return json({project:dbRow(selected),uploadsReady:studioUploadReady(env)});
+  if(req.method==='GET'){
+   const history=await rows(db,
+    'SELECT action,reason,created_at FROM member_studio_review_log WHERE project_id=? ORDER BY created_at DESC LIMIT 20',[id]);
+   return json({project:dbRow(selected),uploadsReady:studioUploadReady(env),reviewHistory:history.map(x=>({action:x.action,reason:x.reason,createdAt:Number(x.created_at)}))});
+  }
   if(req.method==='DELETE'){
    const input=await body(req,500);
    if(!input||!exactly(input,['revision'])||!Number.isSafeInteger(input.revision))return fail(400,'Invalid revision');
