@@ -62,6 +62,17 @@ export function InstituteLabPage(){
   });
   const [stage,setStage]=useState<string>("idle");
   const [notice,setNotice]=useState<DemoNotice|null>(null);
+  const [noticePhase,setNoticePhase]=useState<"mark"|"open"|"close">("mark");
+  useEffect(()=>{
+    if(!notice)return;
+    setNoticePhase("mark");
+    const timers=[
+      window.setTimeout(()=>setNoticePhase("open"),450),
+      window.setTimeout(()=>setNoticePhase("close"),4800),
+      window.setTimeout(()=>setNotice(null),5400)
+    ];
+    return ()=>timers.forEach(window.clearTimeout);
+  },[notice?.id]);
   const entity=useMemo(()=>INSTITUTE_ENTITIES.find(item=>item.id===selected)!,[selected]);
   const copy=textFor[entity.id];
   const validStage=entity.visualStates.find(item=>item.id===stage)||entity.visualStates[0];
@@ -182,7 +193,7 @@ export function InstituteLabPage(){
       <Link to="/status" className="il-text-link">CURRENT PLATFORM STATUS ↗</Link>
     </section>
     <footer className="il-footer"><span>ANEVUM / INSTITUTE RESEARCH</span><span>002 CONCEPT IDENTITIES · 000 LIVE BOT ACCOUNTS</span></footer>
-    {notice&&<div className="il-notification" role="status" aria-live="polite" key={notice.id}>
+    {notice&&<div className={"il-notification is-"+noticePhase} role="status" aria-live="polite" aria-atomic="true" key={notice.id}>
       <img src={base+entity.id+"-still.svg"} alt="" aria-hidden="true"/>
       <div><span>SYNTHETIC TRANSMISSION / PREVIEW</span><strong>{notice.title}</strong><p>{notice.detail}</p></div>
       <button type="button" aria-label="Close example notification" onClick={()=>setNotice(null)}>×</button>
