@@ -169,6 +169,9 @@ test('private binary upload validates types, quotas, ownership and forced downlo
   assert.equal(exported.assets.length,1);
   assert.equal('storage_key' in exported.assets[0],false);
   assert.equal((await s.call(base+'/'+reserved,'DELETE','bob')).status,404);
+  // Submitting locks writes, never locks the owner's right to withdraw bytes.
+  assert.equal((await s.call(ROOT+'/'+p.id+'/submit','POST','alice',{revision:1})).status,200);
+  assert.equal((await s.call(base,'POST','alice',{name:'another.gif',sizeBytes:6,contentType:'image/gif'})).status,409);
   assert.equal((await s.call(base+'/'+reserved,'DELETE','alice')).status,200);
   assert.equal(s.objects.size,0);
   assert.equal((await j(await s.call(base))).assets.length,0);
