@@ -44,10 +44,17 @@ jobs:
           for n in $(seq -w 1 30); do
             curl -fLsS --retry 2 --connect-timeout 15 --max-time 30 "https://anevum.com/evolution/assets/level-$n-compact-128.png" -o "level-$n-compact-128.png"
           done
-          sha256sum -c "$GITHUB_WORKSPACE/docs/evolution-v064-sha256.txt" | tee ../optical-hash-results.txt
+          sha256sum *.png > ../live-asset-hashes.txt
+          sha256sum -c "$GITHUB_WORKSPACE/docs/evolution-v064-sha256.txt" | tee ../optical-hash-results.txt || true
+          for n in 13 28; do
+            curl -fLsS --connect-timeout 15 --max-time 30 -D "../level-$n-cache-headers.txt" -H 'Cache-Control: no-cache' "https://anevum.com/evolution/assets/level-$n-compact-128.png" -o "../level-$n-cache-bypassed.png"
+            curl -fLsS --connect-timeout 15 --max-time 30 -D "../level-$n-bust-headers.txt" "https://anevum.com/evolution/assets/level-$n-compact-128.png?v=20261017-v064-verify" -o "../level-$n-cache-busted.png"
+          done
+          sha256sum ../level-*.png | tee ../cache-probe-hashes.txt
           test "$(grep -c ': OK' ../optical-hash-results.txt)" = 30
           echo V064_ALL_30_DEPLOYED_POSTERS_HASHED_AND_IDENTICAL=PASS
       - name: Test live native WebGL member badges at desktop/mobile and reduced motion
+        if: always()
         shell: bash
         run: |
           set -euo pipefail
@@ -61,6 +68,10 @@ jobs:
           name: anevum-v064-live-smoke-evidence
           path: |
             qa-v064-live/optical-hash-results.txt
+            qa-v064-live/live-asset-hashes.txt
+            qa-v064-live/cache-probe-hashes.txt
+            qa-v064-live/level-*-cache-*.png
+            qa-v064-live/level-*-headers.txt
             qa-v064-live/auth-methods.json
             qa-v062-live-member/
           if-no-files-found: warn
