@@ -1,6 +1,6 @@
 import {Link} from 'react-router-dom';
 import {LevelEmblem,LEVEL_ARTIFACTS} from './LevelEmblem';
-import {CelestialEmblem} from './CelestialEmblem';
+import {BadgeInsignia} from './BadgeInsignia';
 import {HonorInsignia} from './HonorInsignia';
 import {MemberPortrait} from './MemberPortrait';
 import {SupporterIdentity} from './SupporterSeal';
@@ -85,7 +85,7 @@ export function CompactMemberIdentity({member,href,className='',size='standard',
       const entry=BADGE_CATALOG[id];
       return <span key={id} title={entry?entry.name+' — '+entry.description:cleanName(id)}
        className={'av61-award av65-badge av65-badge--'+(entry?.family||'origin')}>
-        <CelestialEmblem motif={entry?.motif||'beacon'} size="tiny" state="earned" title={entry?.name||cleanName(id)}/>
+        <BadgeInsignia badge={id} size="tiny" state="earned" title={entry?.name||cleanName(id)}/>
        </span>;
      })}
     </span>}
