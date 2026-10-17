@@ -29,13 +29,15 @@ function StarterSymbol({type}:{type:string}){
 export function StudioGuestDiscovery(){
  const [idea,setIdea]=useState('');
  const [notice,setNotice]=useState('');
+ const scratchpad=useRef<HTMLTextAreaElement>(null);
  async function copyIdea(){
   if(!idea.trim())return;
   try{
    await navigator.clipboard.writeText(idea);
    setNotice('Idea copied. Paste it into Creator Studio after signing in.');
   }catch{
-   setNotice('Clipboard access was unavailable. Select and copy your idea before leaving.');
+   scratchpad.current?.focus();scratchpad.current?.select();
+   setNotice('Clipboard access is unavailable. Your idea is selected; copy it before leaving this page.');
   }
  }
  return <div className="sl-root sl-guest">
@@ -65,7 +67,7 @@ export function StudioGuestDiscovery(){
    </div>
    <div className="sl-guest-pad">
     <label htmlFor="sl-guest-idea">YOUR IDEA (LOCAL ONLY)</label>
-    <textarea id="sl-guest-idea" rows={4} maxLength={2000} value={idea}
+    <textarea id="sl-guest-idea" ref={scratchpad} rows={4} maxLength={2000} value={idea}
      placeholder="I want to make..." onChange={e=>{setIdea(e.target.value);setNotice('');}}/>
     <button type="button" className="st-action" disabled={!idea.trim()} onClick={()=>void copyIdea()}>
      COPY MY IDEA</button>
@@ -106,6 +108,7 @@ export function StudioLaunchpad({uploadsReady}:{uploadsReady:boolean}){
  const visible=projects.filter(p=>(filter==='all'||p.status===filter)&&
   (!needle||[p.title,p.summary,p.category,p.slug].some(t=>t.toLocaleLowerCase().includes(needle))));
  const drafts=projects.filter(p=>p.status==='draft'||p.status==='changes_requested').length;
+ const resume=projects.find(p=>p.status==='draft'||p.status==='changes_requested')||null;
  async function create(action:string,draft:StudioDraft,id:string){
   if(busy)return;
   setError('');setBusy(action);
@@ -156,6 +159,11 @@ export function StudioLaunchpad({uploadsReady}:{uploadsReady:boolean}){
       </button>
      </div>
     </form>
+    {resume&&<Link className="sl-quick-resume" to={'/studio/'+resume.id}>
+     <span className="st-kicker">PICK UP WHERE YOU LEFT OFF</span>
+     <strong>{resume.title}</strong>
+     <span>CONTINUE PRIVATE DRAFT →</span>
+    </Link>}
     <div className="sl-prompts" aria-label="Try an idea prompt">
      <span>NEED A SPARK?</span>
      {sampleIdeas.map(prompt=><button type="button" key={prompt} disabled={Boolean(busy)}
