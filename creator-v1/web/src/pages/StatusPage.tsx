@@ -1,3 +1,4 @@
+import {Link} from "react-router-dom";
 import { readStatus } from "../lib/api";
 import { useResource } from "../lib/useResource";
 import { ErrorState, LoadingState } from "../components/States";
@@ -14,5 +15,10 @@ export function StatusPage(){
  return <><section className="page-masthead"><div><span className="kicker">BUILD STATUS / CREATOR V1</span><h1>BUILD IT.<br/><em>PROVE IT.</em></h1></div><p>ANEVUM separates implemented source, staging acceptance and public availability. A passing test is not the same thing as a live feature.</p></section>
  {data.state==="loading"&&<LoadingState/>}{data.state==="error"&&<ErrorState/>}
  {data.state==="ready"&&<><section className="metrics-rack"><div><strong>{data.data.counts.publishedProjects}</strong><span>PUBLISHED PROJECTS</span></div><div><strong>{data.data.counts.publishedCreators}</strong><span>PUBLISHED CREATORS</span></div><div><strong>{data.data.version}</strong><span>PUBLIC API</span></div><div><strong>JAN 01</strong><span>OPENING TARGET</span></div></section><section className="status-list">{rows.map(([name,state,detail])=><article key={name}><span className="status-lamp"/><div><strong>{name}</strong><p>{detail}</p></div><em>{state}</em></article>)}</section></>}
+ <section className="status-list" aria-label="Institute research preview">
+   <article><span className="status-lamp"/><div><strong>CONTINUANCE INSTITUTE / DESIGN LAB</strong>
+   <p>Two automated-entity identity prototypes. Artwork, transmission examples and moderation demonstrations are synthetic; no live bot service is operating.</p></div>
+   <Link to="/institute/lab" className="il-status-entry">EXPLORE LAB ↗</Link></article>
+ </section>
  </>;
 }
