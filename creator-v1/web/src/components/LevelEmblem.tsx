@@ -1,7 +1,7 @@
 import {useEffect,useRef,useState} from 'react';
 import artifacts from '../../../shared/level-artifacts.json';
 import {OrbitalMark} from './OrbitalMark';
-import {CelestialEmblem} from './CelestialEmblem';
+import {BadgeInsignia} from './BadgeInsignia';
 import {BADGE_CATALOG} from '../lib/player-recognition';
 import {registerAnimatedSpecimen} from '../lib/evolution-mini-renderer';
 
@@ -31,6 +31,5 @@ export function LevelEmblem({level,size=64}:{level:number;size?:number}){
  </span>;
 }
 export function AwardEmblem({award,earned=true}:{award?:string;earned?:boolean}){
- const motif=award&&BADGE_CATALOG[award]?.motif||'beacon';
- return <CelestialEmblem motif={motif} size="small" state={earned?"earned":"locked"} title={award&&BADGE_CATALOG[award]?.name||'Recognition badge'}/>;
+ return <BadgeInsignia badge={award||'first_signal'} size="small" state={earned?'earned':'locked'} title={award&&BADGE_CATALOG[award]?.name||'Recognition badge'}/>;
 }
