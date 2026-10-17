@@ -26,6 +26,55 @@ function StarterSymbol({type}:{type:string}){
  };
  return <span aria-hidden="true" className="sl-symbol">{glyphs[type]||'✦'}</span>;
 }
+export function StudioGuestDiscovery(){
+ const [idea,setIdea]=useState('');
+ const [notice,setNotice]=useState('');
+ async function copyIdea(){
+  if(!idea.trim())return;
+  try{
+   await navigator.clipboard.writeText(idea);
+   setNotice('Idea copied. Paste it into Creator Studio after signing in.');
+  }catch{
+   setNotice('Clipboard access was unavailable. Select and copy your idea before leaving.');
+  }
+ }
+ return <div className="sl-root sl-guest">
+  <section className="sl-guest-hero">
+   <span className="st-kicker">ANEVUM / CREATOR STUDIO / OPEN DISCOVERY</span>
+   <h1>YOU CAN BE A CREATOR.</h1>
+   <p>Explore ways to make a story, game, gallery, soundtrack, or something nobody has imagined yet. No special software or finished project required.</p>
+   <div className="sl-guest-actions">
+    <Link className="st-action" to="/join">SIGN IN TO SAVE YOUR CREATIONS ↗</Link>
+    <Link className="st-link" to="/discover">EXPLORE THE COMMUNITY ↗</Link>
+   </div>
+  </section>
+  <section className="sl-guest-explore" aria-label="Browse beginner creation starters">
+   <span className="st-kicker">BEGIN WITH WHATEVER INSPIRES YOU</span>
+   <h2>WHAT COULD YOU MAKE?</h2>
+   <div className="sl-guest-starters">
+    {STUDIO_STARTERS.filter(item=>item.id!=='import').map(item=><article key={item.id}>
+     <StarterSymbol type={item.icon}/><span className="st-kicker">{item.eyebrow}</span>
+     <h3>{item.title}</h3><p>{item.description}</p>
+    </article>)}
+   </div>
+  </section>
+  <section className="sl-guest-notes">
+   <div>
+    <span className="st-kicker">JUST EXPLORING?</span><h2>WRITE DOWN THE SPARK.</h2>
+    <p>This idea is held only in this browser page while it stays open. It is not sent to ANEVUM, and leaving may lose it. Copy it before signing in.</p>
+   </div>
+   <div className="sl-guest-pad">
+    <label htmlFor="sl-guest-idea">YOUR IDEA (LOCAL ONLY)</label>
+    <textarea id="sl-guest-idea" rows={4} maxLength={2000} value={idea}
+     placeholder="I want to make..." onChange={e=>{setIdea(e.target.value);setNotice('');}}/>
+    <button type="button" className="st-action" disabled={!idea.trim()} onClick={()=>void copyIdea()}>
+     COPY MY IDEA</button>
+    {notice&&<p role="status">{notice}</p>}
+   </div>
+  </section>
+ </div>;
+}
+
 export function StudioLaunchpad({uploadsReady}:{uploadsReady:boolean}){
  const navigate=useNavigate();
  const [idea,setIdea]=useState('');
