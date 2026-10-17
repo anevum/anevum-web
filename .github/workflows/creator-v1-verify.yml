@@ -70,6 +70,14 @@ jobs:
           set -euo pipefail
           npm test 2>&1 | tee ../evidence/public-tests.log
           npm run test:project-readiness 2>&1 | tee ../evidence/project-readiness-tests.log
+      - name: Guard live public email signup (read-only; never creates accounts)
+        working-directory: creator-v1
+        shell: bash
+        env:
+          ANEVUM_EXPECTED_SOCIAL: ${{ vars.ANEVUM_EXPECTED_SOCIAL || '' }}
+        run: |
+          set -euo pipefail
+          node ops/canonical-live-signup-canary.mjs
       - name: Build member interface and reject generated brand drift
         run: |
           node creator-v1/auth/build.mjs
