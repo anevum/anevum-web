@@ -11,7 +11,7 @@
  * This endpoint is disabled by default, limited to the canonical staging
  * issuer/schema in worker.mjs and requires a Cloudflare Cache API instance.
  */
-import {CANONICAL_ORIGIN} from './policy.mjs';
+import {canonicalRequestOrigin} from './policy.mjs';
 
 export const PUBLIC_TELEMETRY_PATH='/api/v1/public/supporter/metrics';
 export const PUBLIC_TELEMETRY_CACHE_SECONDS=900;
@@ -19,7 +19,7 @@ export const PUBLIC_TELEMETRY_MIN_COHORT=25;
 export const PUBLIC_TELEMETRY_COUNT_GRANULARITY=25;
 export const PUBLIC_TELEMETRY_BYTES_GRANULARITY=1048576;
 const POLICY_VERSION='v2';
-const CACHE_URL=CANONICAL_ORIGIN+PUBLIC_TELEMETRY_PATH+'?policy='+POLICY_VERSION;
+const cacheUrl=env=>canonicalRequestOrigin(env)+PUBLIC_TELEMETRY_PATH+'?policy='+POLICY_VERSION;
 const AGGREGATE_SQL='SELECT '+
  '(SELECT COUNT(*) FROM "user") AS member_count,'+
  '(SELECT COUNT(*) FROM member_creator_profiles) AS creator_count,'+
@@ -151,7 +151,7 @@ export async function publicSupporterTelemetry(
 ){
  let url;
  try{url=new URL(request.url)}catch{return errorResponse(404,'Not found')}
- if(url.origin!==CANONICAL_ORIGIN||url.pathname!==PUBLIC_TELEMETRY_PATH||
+ if(url.origin!==canonicalRequestOrigin(env)||url.pathname!==PUBLIC_TELEMETRY_PATH||
    url.search||url.hash)return errorResponse(404,'Not found');
  if(request.method!=='GET')return errorResponse(405,'Read-only endpoint');
  if(env?.CANONICAL_SUPPORTER_PUBLIC_METRICS_ENABLED!=='true')
@@ -159,7 +159,7 @@ export async function publicSupporterTelemetry(
  if(!env?.MEMBER_DB?.prepare||typeof cache?.match!=='function'||
    typeof cache?.put!=='function')return errorResponse(503,'Aggregate metrics unavailable');
  if(!Number.isSafeInteger(now)||now<0)return errorResponse(503,'Aggregate metrics unavailable');
- const key=new Request(CACHE_URL,{method:'GET'});
+ const key=new Request(cacheUrl(env),{method:'GET'});
  try{
   const cached=await cache.match(key);
   if(cached?.ok&&cached.headers.get('x-anevum-public-telemetry')===POLICY_VERSION){
