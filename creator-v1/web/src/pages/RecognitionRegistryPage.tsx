@@ -61,8 +61,8 @@ export function RecognitionRegistryPage(){
   });
   return ()=>{alive=false;c.abort()};
  },[session?.user?.id]);
- const held=useMemo(()=>new Map(ledger?.earnedBadges.map(x=>[x.id,x.earnedAt])||[]),[ledger]);
- const honors=useMemo(()=>new Map([...(ledger?.earnedRibbons||[]),...(ledger?.earnedMedals||[])].map(x=>[x.id,x.earnedAt])),[ledger]);
+ const held=useMemo(()=>new Map(ledger?.earnedBadges.map(x=>[x.id,x.earnedAt] as const)||[]),[ledger]);
+ const honors=useMemo(()=>new Map([...(ledger?.earnedRibbons||[]),...(ledger?.earnedMedals||[])].map(x=>[x.id,x.earnedAt] as const)),[ledger]);
  const items=useMemo(()=>{
   const term=search.toLocaleLowerCase().trim();
   return cabinet==='badges'?badges.filter(b=>
