@@ -4,6 +4,7 @@ import {readFileSync} from 'node:fs';
 import {DatabaseSync} from 'node:sqlite';
 import {awardPublicProfileBadge,forumApprovalBadgeStatements} from '../canonical-auth/recognition-issuer.mjs';
 import {recognitionReady,memberRecognitionState,publicRecognitionSummary} from '../canonical-auth/recognition.mjs';
+import {hydratedPublicMemberCards} from '../canonical-auth/public-member-card.mjs';
 
 const migration=readFileSync(new URL('../canonical-auth/migrations/0010_player_recognition.sql',import.meta.url),'utf8');
 let counter=0;
@@ -133,4 +134,35 @@ test('a grant with an unrelated or fabricated audit reference must fail closed',
  const info=addApproved(db,{at:120000});
  await db.batch(await forumApprovalBadgeStatements(db,{...info,reviewId:unique()}));
  assert.equal(total(db,'member_recognition_grants'),0);
+});
+
+test('25 canonical member cards share one bounded verified-recognition projection, never 25 separate ledger reads',async t=>{
+ const db=createDb();t.after(()=>db.raw.close());
+ await awardPublicProfileBadge(db,'creator',1234,true);
+ db.raw.prepare("UPDATE member_recognition_preferences SET badge_mode='automatic' WHERE user_id='creator'").run();
+ db.raw.prepare("UPDATE member_creator_profiles SET visibility='public' WHERE user_id='newcomer'").run();
+ const source=[
+  {member_identity_key:'creator',handle:'creator_sample',display_name:'First Creator',avatar:1,show_stats:1,
+   featured_json:'[]',earned_awards:null,member_xp:0},
+  {member_identity_key:'newcomer',handle:'newcomer_sample',display_name:'Second Creator',avatar:0,show_stats:0,
+   featured_json:'[]',earned_awards:null,member_xp:100}
+ ];
+ // Long forum threads frequently contain the same few authors. The
+ // per-user grant reads must remain constant regardless of card count.
+ const rows=Array.from({length:25},(_,i)=>source[i%2]);
+ let queryCount=0;
+ const originalPrepare=db.prepare.bind(db);
+ db.prepare=function(sql){queryCount++;return originalPrepare(sql)};
+ const cards=await hydratedPublicMemberCards(db,rows,true);
+ assert.equal(queryCount,4,'one schema read and three bounded recognition queries');
+ assert.equal(cards.length,25);
+ assert.deepEqual(cards[0].featuredAwards,['first_orbit']);
+ assert.equal(cards[0].level,1);
+ assert.equal(cards[1].level,null,'member level opt-out remains private');
+ assert.deepEqual(cards[1].featuredAwards,[]);
+ assert.equal(cards.every(v=>!Object.hasOwn(v,'member_identity_key')&&!Object.hasOwn(v,'user_id')&&!Object.hasOwn(v,'member_xp')),true);
+ queryCount=0;
+ const disabled=await hydratedPublicMemberCards(db,rows,false);
+ assert.equal(queryCount,0,'feature flag off cannot query additional recognition records');
+ assert.equal(disabled[0].featuredAwards.length,0);
 });
