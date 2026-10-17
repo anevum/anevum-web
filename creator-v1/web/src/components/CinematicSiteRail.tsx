@@ -15,7 +15,8 @@ const publicLinks = [
 const memberLinks = [
   {label:"Profile",to:"/member",icon:"people"},
   {label:"Library",to:"/library",icon:"library"},
-  {label:"Rewards",to:"/levels",icon:"star"}
+  {label:"Rewards",to:"/levels",icon:"star"},
+  {label:"Recognition",to:"/recognition",icon:"star"}
 ] as const;
 
 /** A presentation-only navigation layer. Authentication, post review, and
