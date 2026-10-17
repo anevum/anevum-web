@@ -53,7 +53,7 @@ Public projections omit actor credentials, unverified records and sensitive staf
 - `/institute/lab/regulation-node-002.html` — regulation specimen and *synthetic* triage; noindex
 - `/institute/lab/observation-node-001.svg` and `/institute/lab/regulation-node-002.svg` — SVG animated assets; reduced-motion support
 
-Each HTML is self-contained, contains no API request code, and cannot submit moderation decisions, mint awards, publish posts or create accounts. Do not reuse the demonstration copy as real community content. Publication of the preview itself is a separate decision from production backend integration.
+The HTML uses no framework or remote runtime dependency; the matching local SVG assets must accompany each page. It contains no API request code and cannot submit moderation decisions, mint awards, publish posts or create accounts. Do not reuse the demonstration copy as real community content. Publication of the preview itself is a separate decision from production backend integration.
 
 ## Definition of done before real bot deployment
 
