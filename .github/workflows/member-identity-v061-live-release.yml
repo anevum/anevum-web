@@ -79,6 +79,7 @@ jobs:
           npm run build:creator-v1-web
           node --check creator-v1/canonical-auth/progression.mjs
           node --check creator-v1/auth/community.mjs
+          node --check creator-v1/test/member-identity-v061.test.mjs
           node --test creator-v1/test/member-identity-v061.test.mjs creator-v1/test/member-community-v030.test.mjs creator-v1/test/canonical-forums-v041.test.mjs creator-v1/test/unbounded-levels.test.mjs creator-v1/test/evolution-v060-contract.test.mjs creator-v1/test/progression-v031.test.mjs creator-v1/test/portal-overhaul-contract.test.mjs creator-v1/test/celestial-artifacts.test.mjs
           node --test creator-v1/test/apex-prelaunch-gateway.test.mjs creator-v1/test/canonical-live-signup-canary.test.mjs creator-v1/test/supporter-v032.test.mjs
           test -f creator-v1/dist/web/evolution/index.html
