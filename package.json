@@ -21,7 +21,7 @@
     "check:creator-v1-web": "tsc --project creator-v1/web/tsconfig.json --noEmit",
     "build:creator-v1-web": "vite build --config creator-v1/web/vite.config.ts",
     "build:creator-v1-web:staging": "vite build --mode staging-path --config creator-v1/web/vite.config.ts",
-    "build:iren-apex-staff": "vite build --mode staff-path --config creator-v1/web/vite.config.ts"
+    "build:iren-apex-staff": "vite build --config creator-v1/web/vite.staff.config.ts"
   },
   "dependencies": {
     "motion": "13.4.3",
