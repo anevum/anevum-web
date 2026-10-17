@@ -1,4 +1,5 @@
 import {boundedText} from './request-body.mjs';
+import {staffOpsPermission} from './staff-ops.mjs';
 import {publicMemberColumns,publicMemberCard} from './public-member-card.mjs';
 const HEAD={'content-type':'application/json; charset=utf-8','cache-control':'private, no-store','x-content-type-options':'nosniff'};
 const json=(data,status=200)=>Response.json(data,{status,headers:HEAD});
@@ -83,9 +84,12 @@ export async function canonicalForums(req,env,user=null,now=Math.floor(Date.now(
    }
   }
   if(review){
-   // Only a server-configured verified Better Auth user ID may review content.
-   const reviewers=(env.CANONICAL_FORUM_REVIEWER_IDS||'').split(',').map(x=>x.trim()).filter(Boolean);
-   if(!reviewers.includes(user.id))return fail(403,'Reviewer access required');
+   // Preserve existing verified legacy reviewers; the apex deployment can
+   // additionally authorize active, audited canonical staff database grants.
+   const reviewers=[env.CANONICAL_FORUM_REVIEWER_IDS||'',env.CANONICAL_FORUM_ADDITIONAL_REVIEWER_IDS||'']
+    .flatMap(value=>value.split(',').map(x=>x.trim()).filter(Boolean));
+   const staff=env.CANONICAL_STAFF_OPS_ENABLED==='true'?await staffOpsPermission(env,user):null;
+   if(!reviewers.includes(user.id)&&!staff)return fail(403,'Reviewer access required');
    if(req.method==='GET'){
     if(url.search)return fail(400,'Unexpected filters');
     const [threads,replies,reports]=await Promise.all([

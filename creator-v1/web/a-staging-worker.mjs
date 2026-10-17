@@ -50,7 +50,18 @@ return {
       if(value)headers.set(name,value);
     }
     const clean=new Request(url.href,{method:request.method,headers});
-    return protect(await env.ASSETS.fetch(clean),request.method);
+    const response=protect(await env.ASSETS.fetch(clean),request.method);
+    // A narrowly scoped device permission prompt for logged-in staff UI.
+    // Every other page continues to explicitly deny mic and camera access.
+    if(env?.CANONICAL_STAFF_OPS_ENABLED==='true'&&
+       (url.pathname==='/staff'||url.pathname==='/moderators')&&
+       response.headers.get('content-type')?.toLowerCase().includes('text/html')){
+      const headers=new Headers(response.headers);
+      headers.set('permissions-policy','camera=(self), microphone=(self), geolocation=(), payment=()');
+      headers.set('cache-control','private, no-store');
+      return new Response(response.body,{status:response.status,statusText:response.statusText,headers});
+    }
+    return response;
   }
 };
 }

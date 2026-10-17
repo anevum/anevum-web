@@ -12,6 +12,7 @@ import { LevelsPage } from "./pages/LevelsPage";
 import { CommunityPage } from "./pages/CommunityPage";
 import {CommunityThread} from "./pages/CanonicalForums";
 import {ForumReviewPage} from "./pages/ForumReviewPage";
+import {StaffCommandPage} from "./pages/StaffCommandPage";
 import {CommunityPostPage} from "./pages/CommunityPostPage";
 import {CommunityPostEditorPage} from "./pages/CommunityPostEditorPage";
 import { MemberGate } from "./components/MemberGate";
@@ -80,6 +81,8 @@ export default function App(){
     <Route path="community/posts/:id" element={<CommunityPostPage/>}/>
     <Route path="community/threads/:id" element={<CommunityThread/>}/>
     <Route path="community/review" element={<ForumReviewPage/>}/>
+    <Route path="staff" element={<StaffCommandPage/>}/>
+    <Route path="moderators" element={<Navigate to="/staff" replace/>}/>
     <Route path="workspace" element={<Navigate to="/account" replace/>}/>
     <Route path="account" element={<Navigate to="/member" replace/>}/>
     <Route path="account/edit" element={<Navigate to="/member" replace/>}/>
