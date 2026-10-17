@@ -47,7 +47,7 @@ test("V004 isolated staging config keeps current provider cron, dual DB and no l
  assert.deepEqual(config.routes,[]);
  assert.equal(config.workers_dev,false);
  assert.equal(config.preview_urls,false);
- assert.equal(config.vars?.CANONICAL_PUBLIC_SIGNUP_ENABLED,"false");
+ assert.equal(config.vars?.CANONICAL_PUBLIC_SIGNUP_ENABLED,"true"); // Preserve current live A-staging open registration.
  assert.deepEqual(config.d1_databases.map(db=>db.binding),["COMMUNITY_DB","MEMBER_DB"]);
  assert.equal(config.triggers,undefined); // V041 live staging had no active billing cron; preserve it until separately enabled.
  const stage=read("web/a-staging-worker.mjs");
