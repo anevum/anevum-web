@@ -44,13 +44,14 @@ export async function forumApprovalBadgeStatements(db,{kind,targetId,reviewId,re
  const exists=
   "t.id=? AND t.status='published' AND EXISTS ("+
   "SELECT 1 FROM member_forum_review_log a WHERE a.id=? AND a.target_kind=? "+
-  "AND a.target_id=t.id AND a.action='publish' AND a.reviewer_id=?)";
+  "AND a.target_id=t.id AND a.action='publish' AND a.reviewer_id=?)"+
+   " AND t.author_id<>?";
  const first=db.prepare(
   "INSERT OR IGNORE INTO member_recognition_grants "+
   "(user_id,kind,recognition_id,earned_at,granted_by,evidence_ref,reviewed_by) "+
   "SELECT t.author_id,'badge',?,?,'canonical-forum-review',?,? FROM "+table+
   " t WHERE "+exists
- ).bind(baseId,now,evidence,reviewerId,targetId,reviewId,kind,reviewerId);
+ ).bind(baseId,now,evidence,reviewerId,targetId,reviewId,kind,reviewerId,reviewerId);
  const out=[first];
  if(kind==='thread'){
   // An approved substantive discussion on ten separate UTC dates, not
@@ -65,7 +66,7 @@ export async function forumApprovalBadgeStatements(db,{kind,targetId,reviewId,re
    "(user_id,kind,recognition_id,earned_at,granted_by,evidence_ref,reviewed_by) "+
    "SELECT t.author_id,'badge','conversationalist',?,'canonical-forum-review',?,? "+
    "FROM member_forum_threads t WHERE "+exists+" AND "+qualification
-  ).bind(now,evidence,reviewerId,targetId,reviewId,kind,reviewerId));
+  ).bind(now,evidence,reviewerId,targetId,reviewId,kind,reviewerId,reviewerId));
  }
  // Notifications only for recorded, active grants. UNIQUE makes retries safe.
  // These MUST run after the matching grant insert in the same D1 transaction.
