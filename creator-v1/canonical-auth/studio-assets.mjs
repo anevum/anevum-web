@@ -163,15 +163,25 @@ export async function canonicalStudioAssets(req,env,user,project,{asset=null,fil
    if(!storageConnected)return fail(503,'Private storage is disconnected; file cannot be safely erased');
    if(selected.status==='uploading')return fail(409,'Upload is in progress');
    if(!await pace(db,user.id,'asset',now,60))return fail(429,'Too many asset changes');
-   const n=await change(db,
-    "UPDATE member_studio_assets SET status='deleting',updated_at=? WHERE id=? AND project_id=? AND user_id=? "+
-    "AND status IN ('reserved','quarantined','deleting') AND EXISTS(SELECT 1 FROM member_studio_projects WHERE id=? AND user_id=?)",
-    [now,asset,project.id,user.id,project.id,user.id]);
+   // The asset status and review withdrawal are one D1 transaction:
+   // reviewers must never act on a manifest after its evidence changes.
+   // Owner byte erasure remains available even during pending review.
+   const results=await db.batch([
+    db.prepare("UPDATE member_studio_assets SET status='deleting',updated_at=? WHERE id=? AND project_id=? AND user_id=? "+
+      "AND status IN ('reserved','quarantined','deleting') AND EXISTS(SELECT 1 FROM member_studio_projects WHERE id=? AND user_id=?)")
+     .bind(now,asset,project.id,user.id,project.id,user.id),
+    db.prepare("UPDATE member_studio_projects SET status='draft',revision=revision+1,updated_at=?,submitted_at=NULL "+
+      "WHERE id=? AND user_id=? AND status='pending_review' AND revision=? "+
+      "AND EXISTS(SELECT 1 FROM member_studio_assets WHERE id=? AND project_id=? AND user_id=? AND status='deleting')")
+     .bind(now,project.id,user.id,project.revision,asset,project.id,user.id)
+   ]);
+   const n=Number(results?.[0]?.meta?.changes??0);
+   const withdrawnFromReview=Number(results?.[1]?.meta?.changes??0)===1;
    if(n!==1)return fail(409,'Asset changed');
    try{await store.delete(selected.storage_key);}
    catch{return fail(503,'Private file removal needs retry');}
    const deleted=await change(db,"DELETE FROM member_studio_assets WHERE id=? AND user_id=? AND status='deleting'",[asset,user.id]);
-   return deleted===1?out({deleted:true}):fail(503,'Private file removal needs reconciliation');
+   return deleted===1?out({deleted:true,withdrawnFromReview}):fail(503,'Private file removal needs reconciliation');
   }
   if(req.method!=='PUT')return fail(405,'Method not allowed');
   if(!uploadsEnabled)return fail(404,'New private uploads are disabled');
