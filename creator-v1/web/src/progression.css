@@ -169,3 +169,16 @@
     mask-image:none;
   }
 }
+
+/* V060 Evolution of Everything replaces the original sixty-piece collection. */
+.an-series-v060 .an-series-intro h2{font-size:clamp(28px,4vw,52px);line-height:1.04}
+.an-series-v060 .an-series-intro p{max-width:58ch}
+.an-series-v060 .an-specimen-open{display:inline-flex;margin-top:16px;color:#ffbda9;font-weight:800;letter-spacing:.08em;text-decoration:none}
+.an-series-v060 .an-specimen-open:hover,.an-series-v060 .an-specimen-link:hover{text-decoration:underline}
+.an-series-v060 .an-artifact-card-v034{min-height:324px;overflow:visible;position:relative}
+.an-series-v060 .an-artifact-card-v034 .an-artifact-visual{min-height:166px;overflow:visible}
+.an-series-v060 .an-artifact-card-v034 .level-emblem[data-artwork="v060-evolution"]{display:block;width:146px;height:146px;max-width:100%;object-fit:contain;filter:drop-shadow(0 22px 25px rgba(0,0,0,.48));animation:an-v035-artifact-drift 8s ease-in-out infinite}
+.an-series-v060 .an-artifact-card-v034:not(.is-earned) .level-emblem[data-artwork="v060-evolution"]{filter:saturate(.78) brightness(.82) drop-shadow(0 12px 18px rgba(0,0,0,.4))}
+.an-series-v060 .an-specimen-link{display:block;margin-top:13px;padding:10px 7px;border-top:1px solid rgba(224,210,222,.13);color:#e7cab7;text-align:center;font-size:10px;letter-spacing:.09em;font-weight:900;text-decoration:none;position:relative;z-index:2}
+@media(max-width:640px){.an-series-v060 .an-artifact-card-v034{min-height:315px}.an-series-v060 .an-artifact-card-v034 .level-emblem[data-artwork="v060-evolution"]{width:130px;height:130px}.an-series-v060 .an-series-intro h2{font-size:clamp(26px,8vw,39px)}}
+@media(prefers-reduced-motion:reduce){.an-series-v060 .level-emblem[data-artwork="v060-evolution"]{animation:none!important}}

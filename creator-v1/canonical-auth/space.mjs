@@ -3,7 +3,7 @@ import {readSupporterRewards} from './supporter-rewards.mjs';
 
 import {MILESTONES} from './rewards.mjs';
 export {MILESTONES} from './rewards.mjs';
-import {progressionReady,readProgression,syncRewardNotifications} from './progression.mjs';
+import {progressionReady,readProgression,syncRewardNotifications,levelProgress} from './progression.mjs';
 const HEADERS={'cache-control':'private, no-store','content-type':'application/json; charset=utf-8','x-content-type-options':'nosniff','cross-origin-resource-policy':'same-origin'};
 const json=(value,status=200)=>Response.json(value,{status,headers:HEADERS});
 const error=(status,message)=>json({error:message},status);
@@ -37,8 +37,8 @@ export async function spaceSnapshot(db,id){
  const awards=MILESTONES.map(item=>({...item,earnedAt:Number(earned.find(e=>e.milestone===item.id)?.earned_at)||null}));
  const xp=awards.reduce((sum,item)=>sum+(item.earnedAt?item.xp:0),0);
  const progression=await progressionReady(db)?await readProgression(db,id):null;
- const level=progression?.level??1+Math.floor(Math.sqrt(xp/25));
- const levelStart=25*(level-1)**2,nextLevel=25*level**2;
+ const derived=progression??levelProgress(xp);
+ const {level,levelStart,nextLevel}=derived;
  let featured=[];try{featured=JSON.parse(settings?.featured_json||'[]')}catch{}
  return {media:Object.fromEntries(mediaRows.map(r=>[r.slot,Number(r.version)])),
   awards,featuredAwards:featured.filter(id=>awards.some(a=>a.id===id&&a.earnedAt)),

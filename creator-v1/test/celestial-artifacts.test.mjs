@@ -27,10 +27,10 @@ test("six illustrated achievement motifs match EXACT verified server achievement
 });
 
 test("limited Series One art studies do not synthesize server items or invent an end-of-level cap",()=>{
- assert.deepEqual(seriesOneStudies.map(x=>x.level),[1,2,30,60]);
+ assert.deepEqual(seriesOneStudies.map(x=>x.level),[1,2,15,30]);
  assert.equal(new Set(seriesOneStudies.map(x=>x.name)).size,4);
  for(const study of seriesOneStudies){
-   const atThreshold=progressionFromXp(20*(study.level-1)**2);
+   const atThreshold=progressionFromXp(75*(study.level-1)**2);
    assert.equal(atThreshold.level,study.level);
    assert.equal(atThreshold.artifact,study.name);
    assert.equal(seriesOneMotif(atThreshold.level,atThreshold.artifact),study.motif);
@@ -38,10 +38,10 @@ test("limited Series One art studies do not synthesize server items or invent an
  assert.equal(seriesOneMotif(61,null),"orbital");
  assert.equal(seriesOneMotif(999,null),"orbital");
  assert.equal(seriesOneMotif(2,"wrong title"),"orbital");
- assert.equal(seriesOneMotif(-4,"Foundry Spark"),"orbital");
- assert.equal(seriesOneMotif(1.2,"Foundry Spark"),"orbital");
+ assert.equal(seriesOneMotif(-4,"Pre-Grain"),"orbital");
+ assert.equal(seriesOneMotif(1.2,"Pre-Grain"),"orbital");
  assert.equal(seriesOneMotif(1,null),"orbital");
- assert.equal(progressionFromXp(20*60**2).maxLevel,null);
+ assert.equal(progressionFromXp(75*30**2).maxLevel,30);
 });
 
 test("full-detail emblems use isolated SVG defs, original gradient/material layers and independent pixel-designed small motifs",()=>{
@@ -68,7 +68,7 @@ test("public level collection and medal states remain server-controlled",()=>{
  assert.match(levels,/useMemberProgression/);
  assert.match(levels,/earned=Boolean\(p\?\.awards/);
  assert.match(levels,/earned=\{earned\}/);
- for(const text of ['10 XP','25 XP','does not grant extra XP','FIRST 60 ARTIFACTS'])assert.ok(levels.includes(text));
+ for(const text of ['10 XP','25 XP','does not grant extra XP','30 LIVING SPECIMENS'])assert.ok(levels.includes(text));
  assert.doesNotMatch(levels,/localStorage|sessionStorage|purchaseXP/);
 });
 

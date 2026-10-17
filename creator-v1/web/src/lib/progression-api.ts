@@ -1,5 +1,5 @@
 import type {SpaceAward} from './canonical-beta';
-export type MemberProgression={xp:number;testXp:number;milestoneXp:number;level:number;levelStart:number;nextLevel:number;artifact:string|null;awards:SpaceAward[]};
+export type MemberProgression={xp:number;testXp:number;milestoneXp:number;level:number;maxLevel:number;levelStart:number;nextLevel:number|null;artifact:string|null;awards:SpaceAward[]};
 export type RewardNotice={id:number;kind:'level'|'award';level?:number;award?:string;title:string;detail:string;createdAt:number};
 export type RewardInbox={items:RewardNotice[];recent:RewardNotice[]};
 export async function progressionRequest<T>(route:'progression'|'notifications'|'notifications/ack'|'xp-test',body?:unknown,signal?:AbortSignal):Promise<T>{

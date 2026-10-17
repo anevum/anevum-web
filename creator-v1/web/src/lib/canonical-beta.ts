@@ -96,7 +96,7 @@ export const canonicalPublic=(handle:string,signal?:AbortSignal)=>
  request<CanonicalPublicResponse>("/api/v1/members/"+handle,"GET",undefined,signal,true);
 
 export type SpaceAward={id:string;name:string;detail:string;xp:number;symbol:string;earnedAt:number|null};
-export type SpaceStats={wallPosts:number;awards:number;xp:number;level:number;levelStart:number;nextLevel:number;testXp?:number;artifact?:string|null};
+export type SpaceStats={wallPosts:number;awards:number;xp:number;level:number;levelStart:number;nextLevel:number|null;testXp?:number;artifact?:string|null};
 export type SupporterAppearance={seal:'signal'|'orbit'|'constellation'|'continuance';frame:'orbital'|'rose'|'lumen'|'stellar'|'continuance';aura:'aurora'|'eclipse'|'ember'|'nebula'|'transcosmic'};
 export type MemberSpace={supporter?:boolean;supporterAppearance?:SupporterAppearance;media:{avatar?:number;banner?:number};awards:SpaceAward[];featuredAwards:string[];showStats:boolean;revision:number;stats?:SpaceStats};
 export type WallEntry={id:string;body:string;createdAt:number;updatedAt:number;revision:number};

@@ -17,10 +17,10 @@ export type EmblemMotif =
   | "spark" | "key" | "atlas" | "light" | "orbital";
 
 export const seriesOneStudies: readonly {level:number;name:string;motif:EmblemMotif;finish:string}[] = [
-  { level: 1, name: "Foundry Spark", motif: "spark", finish: "copper / first light" },
-  { level: 2, name: "Copper Key", motif: "key", finish: "etched copper / sapphire" },
-  { level: 30, name: "Midnight Atlas", motif: "atlas", finish: "astral blue / platinum" },
-  { level: 60, name: "The First Light", motif: "light", finish: "stellar gold / aurora glass" }
+  { level: 1, name: "Pre-Grain", motif: "spark", finish: "obsidian / initial fissure" },
+  { level: 2, name: "Vacuum Whisper", motif: "lens", finish: "refractive film / void interference" },
+  { level: 15, name: "Nebula Bloom", motif: "light", finish: "cyan and violet / particulate gas" },
+  { level: 30, name: "ANEVUM", motif: "orbital", finish: "blackglass / platinum / coral continuance" }
 ];
 
 const validKeys = new Map<string, EmblemMotif>(achievementArt.map(item => [item.key, item.art]));
@@ -30,7 +30,7 @@ export function achievementMotif(key:string):EmblemMotif|null {
 }
 
 export function seriesOneMotif(level:number, artifact:string|null):EmblemMotif {
-  if(!Number.isSafeInteger(level) || level < 1 || !artifact || level > 60) return "orbital";
+  if(!Number.isSafeInteger(level) || level < 1 || !artifact || level > 30) return "orbital";
   return seriesOneStudies.find(item => item.level === level && item.name === artifact)?.motif || "orbital";
 }
 

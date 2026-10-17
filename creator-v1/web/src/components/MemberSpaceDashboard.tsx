@@ -11,8 +11,8 @@ import {SupporterIdentity} from './SupporterSeal';
 type Tab='overview'|'profile'|'appearance'|'awards'|'wall';
 export function SpaceProgress({space}:{space:MemberSpace}){
  const s=space.stats;if(!s)return null;
- return <section className="ms-progress" aria-label="Member level and statistics"><div className="ms-level"><LevelEmblem level={s.level} size={72}/><div><span className="kicker">CONTINUANCE LEVEL</span><h3>{s.level===1?'First light.':'An expanding orbit.'}</h3><small>{s.xp} XP · {s.nextLevel-s.xp} to level {s.level+1}</small></div></div>
- <progress value={s.xp-s.levelStart} max={s.nextLevel-s.levelStart} aria-label="Progress toward next level"/>
+ return <section className="ms-progress" aria-label="Member level and statistics"><div className="ms-level"><LevelEmblem level={s.level} size={72}/><div><span className="kicker">CONTINUANCE LEVEL</span><h3>{s.level===1?'First light.':'An expanding orbit.'}</h3><small>{s.xp.toLocaleString()} XP · {s.nextLevel===null?'Level 30 / Continuance achieved':(s.nextLevel-s.xp).toLocaleString()+' to level '+(s.level+1)}</small></div></div>
+ <progress value={s.nextLevel===null?1:s.xp-s.levelStart} max={s.nextLevel===null?1:s.nextLevel-s.levelStart} aria-label={s.nextLevel===null?"Final evolution level achieved":"Progress toward next level"}/>
  <dl className="ms-stat-grid"><div><dt>Wall entries</dt><dd>{s.wallPosts}</dd></div><div><dt>Awards earned</dt><dd>{s.awards}</dd></div><div><dt>Member XP</dt><dd>{s.xp}</dd></div></dl></section>;
 }
 export function MemberSpaceDashboard({profile,editor,newMember=false,onSetupComplete}:{profile:CanonicalProfile;editor:ReactNode;newMember?:boolean;onSetupComplete:()=>void}){

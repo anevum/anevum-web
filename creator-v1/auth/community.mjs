@@ -1,3 +1,4 @@
+import ARTIFACTS from '../shared/level-artifacts.json' with {type:'json'};
 // ANEVUM Creator V1 — original voting and contribution progression.
 // STAGING: no pay-to-win, no admin power from levels, no unpublished project votes.
 // The authenticated member and same-origin request checks come from worker.mjs.
@@ -7,30 +8,22 @@ const reply=(request,obj,status=200)=>new Response(request.method==='HEAD'?null:
 const idPattern=/^[a-f0-9]{32}$/;
 const dailyLimit=5;
 const firstVoteXp=2;
-// The initial artifact series has 60 names; it is not a level ceiling.
-const artifactSeriesLength=60;
-const relics=[
-  'Foundry Spark','Copper Key','Blackglass Seed','Ivory Compass','Iron Moth','Brass Dial','Quartz Spool','Ember Lantern','Prism Mask','Cobalt Coil',
-  'Silver Needle','Aether Bell','Obsidian Feather','Sunken Astrolabe','Clockwork Finch','Glass Meridian','Furnace Rose','Amber Tuning Fork','Marble Eye','Paper Engine',
-  'Ceramic Ghost','Mercury Hourglass','Saffron Beacon','Gilded Gear','Basalt Crown','Lunar Caliper','Magnetic Rose','Aurora Cartridge','Bronze Orrery','Midnight Atlas',
-  'Jade Relay','Tidal Key','Hollow Star','Crystal Loom','Auric Beetle','Sundial Heart','Sable Pendant','Velvet Catalyst','Amber Gyroscope','Echo Prism',
-  'Forged Telescope','Arc Lantern','Ivory Sextant','Molten Cipher','Silver Harp','Cobalt Furnace','Night Compass','Dawn Engine','Glass Cathedral','Radiant Crucible',
-  'Solar Orrery','Gravity Spindle','Quantum Leaf','Iron Comet','Aether Vessel','Obsidian Crown','Aurora Monolith','Starforge Dial','Celestial Engine','The First Light'
-];
-// Keep the current 20x quadratic pacing pending #337 balance acceptance.
-// Levels have no fixed end; cap only unsafe number inputs, not the attainable level.
+// Evolution of Everything supersedes the archived 60-item collection.
+const artifactSeriesLength=ARTIFACTS.length;
+const relics=ARTIFACTS.map(a=>a.name);
+// Permanent thirty-level evolution; XP remains cumulative beyond final prestige.
 export function thresholdForLevel(level){
- if(!Number.isSafeInteger(level)||level<1)throw Error('Invalid level');
- return 20*(level-1)*(level-1);
+ if(!Number.isSafeInteger(level)||level<1||level>artifactSeriesLength)throw Error('Invalid level');
+ return 75*(level-1)*(level-1);
 }
 export function progressionFromXp(raw){
  const amount=Number(raw);
- const xp=Number.isFinite(amount)&&amount>0 ? Math.min(Number.MAX_SAFE_INTEGER,Math.floor(amount)):0;
- const level=Math.floor(Math.sqrt(xp/20))+1;
+ const xp=Number.isFinite(amount)&&amount>0?Math.min(Number.MAX_SAFE_INTEGER,Math.floor(amount)):0;
+ const level=Math.min(artifactSeriesLength,Math.floor(Math.sqrt(xp/75))+1);
  const floor=thresholdForLevel(level);
- const next=thresholdForLevel(level+1);
- const artifact=level<=artifactSeriesLength?relics[level-1]:null;
- return {xp,level,maxLevel:null,artifact,artifactEarned:artifact!==null,levelStartXp:floor,nextLevelXp:next,progressWithinLevel:Math.max(0,Math.min(1,(xp-floor)/(next-floor)))};
+ const next=level===artifactSeriesLength?null:thresholdForLevel(level+1);
+ const artifact=relics[level-1];
+ return {xp,level,maxLevel:artifactSeriesLength,artifact,artifactEarned:true,levelStartXp:floor,nextLevelXp:next,progressWithinLevel:next===null?1:Math.max(0,Math.min(1,(xp-floor)/(next-floor)))};
 }
 const sql=(db,text,params=[])=>{const s=db.prepare(text);return params.length?s.bind(...params):s;};
 async function list(db,text,params=[]){const r=await sql(db,text,params).all();if(r?.success===false||!Array.isArray(r?.results))throw Error('Storage unavailable');return r.results;}

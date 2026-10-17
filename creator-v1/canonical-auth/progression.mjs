@@ -8,8 +8,8 @@ const rows=async(db,sql,...args)=>{const r=await db.prepare(sql).bind(...args).a
 export async function progressionReady(db){try{return (await rows(db,"SELECT name FROM sqlite_master WHERE type='table' AND name IN ('member_xp_events','member_reward_notifications','member_notification_receipts')")).length===3}catch{return false}}
 export function levelProgress(raw){
  const xp=Number.isSafeInteger(raw)&&raw>=0?raw:0;
- const level=1+Math.floor(Math.sqrt(xp/25));
- return {xp,level,levelStart:25*(level-1)**2,nextLevel:25*level**2,artifact:ARTIFACTS[level-1]?.name??null};
+ const level=Math.min(30,1+Math.floor(Math.sqrt(xp/75)));
+ return {xp,level,maxLevel:30,levelStart:75*(level-1)**2,nextLevel:level===30?null:75*level**2,artifact:ARTIFACTS[level-1]?.name??null};
 }
 export async function readProgression(db,id){
  const earned=await rows(db,'SELECT milestone,earned_at FROM member_space_milestones WHERE user_id=?',id);
@@ -19,9 +19,9 @@ export async function readProgression(db,id){
 }
 export async function syncRewardNotifications(db,id,now){
  const p=await readProgression(db,id);
- const last=await db.prepare("SELECT COALESCE(MAX(level),1) AS level FROM member_reward_notifications WHERE user_id=? AND kind='level'").bind(id).first();
+ const last=await db.prepare("SELECT COALESCE(MAX(level),1) AS level FROM member_reward_notifications WHERE user_id=? AND kind='level' AND reference LIKE 'evo60-%' AND level<=?").bind(id,p.level).first();
  const statements=p.awards.filter(a=>a.earnedAt!==null).map(a=>db.prepare("INSERT OR IGNORE INTO member_reward_notifications(user_id,kind,reference,created_at) VALUES(?,'award',?,?)").bind(id,a.id,a.earnedAt));
- for(let level=Number(last?.level||1)+1;level<=p.level;level++)statements.push(db.prepare("INSERT OR IGNORE INTO member_reward_notifications(user_id,kind,reference,level,created_at) VALUES(?,'level',?,?,?)").bind(id,String(level),level,now));
+ for(let level=Number(last?.level||1)+1;level<=p.level;level++)statements.push(db.prepare("INSERT OR IGNORE INTO member_reward_notifications(user_id,kind,reference,level,created_at) VALUES(?,'level',?,?,?)").bind(id,'evo60-'+level,level,now));
  if(statements.length){const results=await db.batch(statements);if(results.some(r=>r.success===false))throw Error('Notification save unavailable')}
  return p;
 }
@@ -43,8 +43,8 @@ export async function canonicalProgression(req,env,user,now=Math.floor(Date.now(
    await syncRewardNotifications(db,user.id,now);
    const receipt=await db.prepare('SELECT through_id FROM member_notification_receipts WHERE user_id=?').bind(user.id).first();
    const after=Number(receipt?.through_id)||0;
-   const items=await rows(db,'SELECT id,kind,reference,level,created_at FROM member_reward_notifications WHERE user_id=? AND id>? ORDER BY id LIMIT 24',user.id,after);
-   const recent=await rows(db,'SELECT id,kind,reference,level,created_at FROM member_reward_notifications WHERE user_id=? ORDER BY id DESC LIMIT 12',user.id);
+   const items=await rows(db,'SELECT id,kind,reference,level,created_at FROM member_reward_notifications WHERE user_id=? AND id>? AND (kind!='level' OR (reference LIKE 'evo60-%' AND level<=30)) ORDER BY id LIMIT 24',user.id,after);
+   const recent=await rows(db,'SELECT id,kind,reference,level,created_at FROM member_reward_notifications WHERE user_id=? AND (kind!='level' OR (reference LIKE 'evo60-%' AND level<=30)) ORDER BY id DESC LIMIT 12',user.id);
    return json({items:items.map(notification),recent:recent.map(notification)});
   }
   if(path.endsWith('/notifications/ack')&&req.method==='POST'){

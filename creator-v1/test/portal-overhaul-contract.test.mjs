@@ -58,12 +58,12 @@ test("unlimited levels preserve server authoritative progress and first named ar
  const levels=read("web/src/pages/LevelsPage.tsx");
  const panel=read("web/src/components/LevelPanel.tsx");
  const engine=read("auth/community.mjs");
- assert.match(levels,/FIRST 60 ARTIFACTS/);
- assert.match(levels,/NO FINAL LEVEL/);
+ assert.match(levels,/30 LIVING SPECIMENS/);
+ assert.match(levels,/30 PERMANENT LEVELS/);
  assert.match(panel,/useMemberProgression/);
- assert.match(panel,/NO LEVEL CAP/);
- assert.match(engine,/maxLevel:null/);
- assert.doesNotMatch(engine,/Math\.min\(maxLevel/);
+ assert.match(panel,/30 PERMANENT LEVELS/);
+ assert.match(engine,/maxLevel:artifactSeriesLength/);
+ assert.match(engine,/Math\.min\(artifactSeriesLength/);
 });
 test("member account shows server-verified achievements and unlimited XP without guessed progress",()=>{
  const page=read("web/src/pages/MemberAccountPage.tsx");
