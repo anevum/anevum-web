@@ -118,7 +118,7 @@ export function createCanonicalStageWorker({authFactory=createCanonicalAuth}={})
       /^\/api\/v1\/member\/project-saves\/[a-f0-9]{32}$/.test(path);
     const ownStudioReview=path===CANONICAL_PREFIX+"/studio/review"||
       /^\/api\/v1\/member\/studio\/review\/[0-9a-f-]{36}\/manifest$/.test(path);
-    const ownStudio=/^\/api\/v1\/member\/studio\/projects(?:\/[0-9a-f-]{36}(?:\/(?:submit|withdraw|assets(?:\/[a-f0-9]{32}(?:\/file)?)?))?)?$/.test(path);
+    const ownStudio=/^\/api\/v1\/member\/studio\/projects(?:\/[0-9a-f-]{36}(?:\/(?:submit|withdraw|submissions|assets(?:\/[a-f0-9]{32}(?:\/file)?)?))?)?$/.test(path);
     if((ownStudio||ownStudioReview)&&env?.CANONICAL_CREATOR_STUDIO_ENABLED!=="true")return fail(request,404);
     // This is a proposed, source-only pilot. Do not expose even a GET
     // endpoint without a deliberate rollout flag and an approved D1 schema.
