@@ -12,7 +12,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: anevum-a-studio-v0542-release
+  group: anevum-a-studio-v0542-authorized-final-release
   cancel-in-progress: false
 
 jobs:
@@ -22,7 +22,7 @@ jobs:
     timeout-minutes: 30
     env:
       CANDIDATE_SHA: ${{ github.sha }}
-      CI_VERIFIED_PARENT: 374debd3037ae9a17f850d66858a2244aca307f5
+      CI_VERIFIED_PARENT: bcebfb6b80a5c60935793a62aa5106e463064b69
       CI_VERIFIED_INTEGRATION: eb5a2225bcb02b42e959ccce77cf48ed22b48c54
       CI_VERIFIED_SOURCE: d15cb13224b5b1bbbb61f4e5bfe304d115b09462
       EXPECTED_ACTIVE_WORKER: f5df3330-7db7-4718-93a4-bac0cf47579f
