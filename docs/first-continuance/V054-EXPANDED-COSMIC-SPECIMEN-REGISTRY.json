@@ -1,0 +1,165 @@
+{
+  "schema": "anevum.first_continuance.v054.visual_specimens",
+  "session": "ANEVUM.WEB.BUILD.2026-10-17.003.EARLY-COSMIC-LEVELS",
+  "status": "offline-prototype-not-deployed",
+  "lockedLevelCap": 30,
+  "formula": "75*(level-1)^2",
+  "summitXP": 63075,
+  "curatedCount": 13,
+  "consecutiveChaptersComplete": [
+    "Before Form",
+    "First Matter"
+  ],
+  "pendingLevels": [
+    11,
+    12,
+    13,
+    14,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23,
+    24,
+    26,
+    27,
+    28,
+    29
+  ],
+  "specimens": [
+    {
+      "level": 1,
+      "name": "Pre-Grain",
+      "epoch": "Before Form",
+      "silhouette": "Fissured obsidian form",
+      "motion": "near-still wobble",
+      "xp": 0,
+      "animatedSource": "artwork/animated/level-01.svg",
+      "compactSource": "artwork/compact/level-01-compact.svg"
+    },
+    {
+      "level": 2,
+      "name": "Vacuum Whisper",
+      "epoch": "Before Form",
+      "silhouette": "Paired refractive void planes",
+      "motion": "opposed vacuum fluctuations",
+      "xp": 75,
+      "animatedSource": "artwork/animated/level-02.svg",
+      "compactSource": "artwork/compact/level-02-compact.svg"
+    },
+    {
+      "level": 3,
+      "name": "Quantum Foam",
+      "epoch": "Before Form",
+      "silhouette": "Clustered transient pearlescent membranes",
+      "motion": "independent membrane expansion",
+      "xp": 300,
+      "animatedSource": "artwork/animated/level-03.svg",
+      "compactSource": "artwork/compact/level-03-compact.svg"
+    },
+    {
+      "level": 4,
+      "name": "Symmetry Field",
+      "epoch": "Before Form",
+      "silhouette": "Split complementary geometric planes",
+      "motion": "counterphase symmetry alignment",
+      "xp": 675,
+      "animatedSource": "artwork/animated/level-04.svg",
+      "compactSource": "artwork/compact/level-04-compact.svg"
+    },
+    {
+      "level": 5,
+      "name": "First Expansion",
+      "epoch": "Before Form",
+      "silhouette": "Opened copper-blackglass shock membrane",
+      "motion": "receding expansion echoes",
+      "xp": 1200,
+      "animatedSource": "artwork/animated/level-05.svg",
+      "compactSource": "artwork/compact/level-05-compact.svg"
+    },
+    {
+      "level": 6,
+      "name": "Primordial Plasma",
+      "epoch": "First Matter",
+      "silhouette": "Two intersecting luminous ion currents",
+      "motion": "fluid convection",
+      "xp": 1875,
+      "animatedSource": "artwork/animated/level-06.svg",
+      "compactSource": "artwork/compact/level-06-compact.svg"
+    },
+    {
+      "level": 7,
+      "name": "Quark Wake",
+      "epoch": "First Matter",
+      "silhouette": "Three bound glowing charge nodes",
+      "motion": "elastic flux shearing",
+      "xp": 2700,
+      "animatedSource": "artwork/animated/level-07.svg",
+      "compactSource": "artwork/compact/level-07-compact.svg"
+    },
+    {
+      "level": 8,
+      "name": "Proton Seed",
+      "epoch": "First Matter",
+      "silhouette": "Compacted angular proton volume",
+      "motion": "internal pressure breathing",
+      "xp": 3675,
+      "animatedSource": "artwork/animated/level-08.svg",
+      "compactSource": "artwork/compact/level-08-compact.svg"
+    },
+    {
+      "level": 9,
+      "name": "Proto-Atom",
+      "epoch": "First Matter",
+      "silhouette": "Cloud-orbit surfaces around atomic nucleus",
+      "motion": "probability precession",
+      "xp": 4800,
+      "animatedSource": "artwork/animated/level-09.svg",
+      "compactSource": "artwork/compact/level-09-compact.svg"
+    },
+    {
+      "level": 10,
+      "name": "Ancient Afterglow",
+      "epoch": "First Matter",
+      "silhouette": "Smoked-glass radiation fossil",
+      "motion": "moving internal relic bands",
+      "xp": 6075,
+      "animatedSource": "artwork/animated/level-10.svg",
+      "compactSource": "artwork/compact/level-10-compact.svg"
+    },
+    {
+      "level": 15,
+      "name": "Nebula Bloom",
+      "epoch": "Stellar Dawn",
+      "silhouette": "Asymmetric glowing gas banks",
+      "motion": "independent nebular drift",
+      "xp": 14700,
+      "animatedSource": "artwork/animated/level-15.svg",
+      "compactSource": "artwork/compact/level-15-compact.svg"
+    },
+    {
+      "level": 25,
+      "name": "Biosphere",
+      "epoch": "Worlds & Life",
+      "silhouette": "Living aqueous world-seed",
+      "motion": "water currents and filament pulses",
+      "xp": 43200,
+      "animatedSource": "artwork/animated/level-25.svg",
+      "compactSource": "artwork/compact/level-25-compact.svg"
+    },
+    {
+      "level": 30,
+      "name": "ANEVUM",
+      "epoch": "Continuance",
+      "silhouette": "Asymmetric optical aperture from brand DNA",
+      "motion": "orbital convergence",
+      "xp": 63075,
+      "animatedSource": "artwork/animated/level-30.svg",
+      "compactSource": "artwork/compact/level-30-compact.svg"
+    }
+  ],
+  "delivery": "ANEVUM-EVOLUTION-V054-FULL-SOURCE.zip (user-facing download); no binary files committed to GitHub in this branch"
+}
