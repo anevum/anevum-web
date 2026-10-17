@@ -1,156 +1,111 @@
-# V060 regression correction: preserve quoted SQL and resolve repository-root manifest.
-name: ANEVUM V061 Animated Member Identity Cards
+name: ANEVUM V061 Live Identity Smoke
+# Verification-only replacement for the original secret-dropping Wrangler upload job.
+# This workflow cannot deploy, mutate D1, secrets, account state, or routes.
 on:
   push:
     branches: [build/member-identity-evolution-cards-v061-20261017-010]
     paths: [.github/workflows/member-identity-v061-live-release.yml]
+  workflow_dispatch:
 permissions:
   contents: read
 concurrency:
-  group: anevum-apex-member-identity-v061-live
+  group: anevum-v061-live-smoke-readonly
   cancel-in-progress: false
 jobs:
-  replace:
+  verify:
     if: github.repository == 'anevum/anevum-web'
     runs-on: ubuntu-latest
-    timeout-minutes: 50
-    env:
-      CF_ACCOUNT_EXPECTED: 2f7ee83107240152097efd956a4e8335
-      CF_ZONE: 8abe27259b5436af5966d3b40d9a3760
-      CF_WORKER: anevum-apex-prelaunch-gateway
-      EXPECTED_LIVE_VERSION: 82d3de5e-0913-40fe-9cb3-7d6833cd2641
-      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    timeout-minutes: 9
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0
           persist-credentials: false
-      - name: Exact source and active production protection
-        env:
-          GH_TOKEN: ${{ github.token }}
-        shell: bash
-        run: |
-          set -euo pipefail
-          test "$GITHUB_REF" = "refs/heads/build/member-identity-evolution-cards-v061-20261017-010"
-          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
-          head="$(curl --fail --silent --show-error --max-time 25 -H "Authorization: Bearer $GH_TOKEN" "$GITHUB_API_URL/repos/$GITHUB_REPOSITORY/git/ref/heads/build/member-identity-evolution-cards-v061-20261017-010" | jq -r '.object.sha')"
-          test "$head" = "$GITHUB_SHA"
-          test -n "$CLOUDFLARE_API_TOKEN"
-          test "$CLOUDFLARE_ACCOUNT_ID" = "$CF_ACCOUNT_EXPECTED"
-          test -f design/evolution-v059/src/build.py
-          test -f creator-v1/ops/install-evolution-v060.py
-          api="https://api.cloudflare.com/client/v4"
-          auth="Authorization: Bearer $CLOUDFLARE_API_TOKEN"
-          curl -fsS --max-time 30 -H "$auth" "$api/zones/$CF_ZONE/workers/routes" > "$RUNNER_TEMP/v060-routes.json"
-          jq -e '.success and ([.result[] | select(.pattern=="anevum.com/*" and .script=="anevum-apex-prelaunch-gateway")]|length)==1 and ([.result[] | select(.pattern=="a.anevum.com/*" and .script=="anevum-a-community-retirement")]|length)==1' "$RUNNER_TEMP/v060-routes.json" >/dev/null
-          curl -fsS --max-time 30 -H "$auth" "$api/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/$CF_WORKER/settings" > "$RUNNER_TEMP/v060-settings.json"
-          jq -e '.success and ([.result.bindings[]|select(.type=="d1")]|length)==2 and ([.result.bindings[]|select(.type=="d1" and .name=="MEMBER_DB" and ((.id//.database_id)=="e1d29049-c83b-4534-8355-dc1fa36ba6d8"))]|length)==1 and ([.result.bindings[]|select(.type=="d1" and .name=="COMMUNITY_DB" and ((.id//.database_id)=="fa96e36d-6257-4883-bf15-074947e11a13"))]|length)==1 and ([.result.bindings[]|select(.type=="secret_text" and .name=="CANONICAL_BETTER_AUTH_SECRET")]|length)==1 and ([.result.bindings[]|select(.type=="secret_text" and .name=="CANONICAL_RESEND_API_KEY")]|length)==1 and ([.result.bindings[]|select(.type=="assets" and .name=="ASSETS")]|length)==1 and ([.result.bindings[]|select(.type=="plain_text" and .name=="ANEVUM_PRELAUNCH_MODE" and .text=="public")]|length)==1 and ([.result.bindings[]|select(.type=="plain_text" and .name=="ANEVUM_LAUNCH_APPROVED" and .text=="true")]|length)==1 and ([.result.bindings[]|select(.type=="plain_text" and .name=="CANONICAL_PUBLIC_SIGNUP_ENABLED" and .text=="true")]|length)==1' "$RUNNER_TEMP/v060-settings.json" >/dev/null
-          curl -fsS --max-time 30 -H "$auth" "$api/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/$CF_WORKER/deployments?per_page=1" > "$RUNNER_TEMP/v060-deploy-before.json"
-          jq -er '.result.deployments[0].versions[]|select(.percentage==100)|.version_id' "$RUNNER_TEMP/v060-deploy-before.json" > "$RUNNER_TEMP/v060-rollback-version"
-          test "$(cat "$RUNNER_TEMP/v060-rollback-version")" = "$EXPECTED_LIVE_VERSION" || { echo "::error::Apex Worker version drifted; no deployment"; exit 1; }
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Rebuild all thirty native 3D specimens
+      - name: Verify V061 source and route invariants
         shell: bash
         run: |
           set -euo pipefail
-          python -m pip install numpy==2.2.6 scipy==1.15.3 Pillow==11.2.1
-          sudo apt-get update -qq
-          sudo apt-get install -y -qq libegl1 libgl1 libgl1-mesa-dri
-          cd design/evolution-v059
-          mkdir -p artwork/{native,textures,vector,masters,web,compact} docs dist previews
-          python src/export_native.py
-          python src/render_web.py
-          python src/build.py
-          cd ../..
-          python creator-v1/ops/install-evolution-v060.py
-          node --check creator-v1/web/public/evolution/app.js
-      - name: Verify, package, and retire the obsolete collection
-        shell: bash
-        run: |
-          set -euo pipefail
-          npm install --ignore-scripts --no-audit --no-fund
-          npm run check:creator-v1-web
-          npm run build:creator-v1-web
-          node --check creator-v1/canonical-auth/progression.mjs
-          node --check creator-v1/auth/community.mjs
+          node --check creator-v1/canonical-auth/public-member-card.mjs
+          node --check creator-v1/canonical-auth/forums.mjs
+          node --check creator-v1/canonical-auth/community.mjs
           node --check creator-v1/test/member-identity-v061.test.mjs
-          node --test creator-v1/test/member-identity-v061.test.mjs creator-v1/test/member-community-v030.test.mjs creator-v1/test/canonical-forums-v041.test.mjs creator-v1/test/unbounded-levels.test.mjs creator-v1/test/evolution-v060-contract.test.mjs creator-v1/test/progression-v031.test.mjs creator-v1/test/portal-overhaul-contract.test.mjs creator-v1/test/celestial-artifacts.test.mjs
-          node --test creator-v1/test/apex-prelaunch-gateway.test.mjs creator-v1/test/canonical-live-signup-canary.test.mjs creator-v1/test/supporter-v032.test.mjs
-          test -f creator-v1/dist/web/evolution/index.html
-          test "$(find creator-v1/dist/web/evolution/assets -maxdepth 1 -type f | wc -l)" -eq 152
-          rm -rf creator-v1/dist/web/assets/levels
-          test ! -e creator-v1/dist/web/assets/levels
-          echo V060_LEVELS_WEB_BUILD=PASS
-      - name: Save review evidence
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: evolution-v060-integration
-          path: |
-            creator-v1/shared/level-artifacts.json
-            creator-v1/dist/web/evolution/index.html
-            creator-v1/dist/web/evolution/app.js
-          if-no-files-found: warn
-          retention-days: 14
-      - name: Deploy and rollback automatically if hosted checks fail
+          test -s creator-v1/web/src/components/CompactMemberIdentity.tsx
+          test -s creator-v1/web/src/components/member-identity-v061.css
+          echo V061_SOURCE=PASS
+      - name: Read-only public and privacy smoke
         shell: bash
         run: |
           set -euo pipefail
-          old_version="$(cat "$RUNNER_TEMP/v060-rollback-version")"
-          api="https://api.cloudflare.com/client/v4"
-          auth="Authorization: Bearer $CLOUDFLARE_API_TOKEN"
-          curl -fsS --max-time 30 -H "$auth" "$api/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/$CF_WORKER/deployments?per_page=1" > "$RUNNER_TEMP/v060-deploy-prewrite.json"
-          test "$(jq -er '.result.deployments[0].versions[]|select(.percentage==100)|.version_id' "$RUNNER_TEMP/v060-deploy-prewrite.json")" = "$old_version" || { echo "::error::Concurrent Worker deployment detected; no changes made"; exit 1; }
           node --input-type=module <<'NODE'
-          import fs from 'node:fs';
-          const p='creator-v1/wrangler.apex-prelaunch.jsonc';
-          const c=JSON.parse(fs.readFileSync(p,'utf8'));
-          if(c.name!=='anevum-apex-prelaunch-gateway'||c.routes.length||!c.assets?.run_worker_first||c.assets?.binding!=='ASSETS')throw Error('Unexpected Wrangler target');
-          c.vars.ANEVUM_PRELAUNCH_MODE='public';
-          c.vars.ANEVUM_LAUNCH_APPROVED='true';
-          c.vars.CANONICAL_PUBLIC_SIGNUP_ENABLED='true';
-          fs.writeFileSync('creator-v1/wrangler.apex-evolution-v060.jsonc',JSON.stringify(c,null,2));
-          NODE
-          deployed=0; validated=0
-          rollback() {
-            if [ "$deployed" != 1 ] || [ "$validated" = 1 ]; then return; fi
-            echo "::error::V061 hosted verification failed. Restoring prior Worker deployment."
-            jq -nc --arg id "$old_version" '{strategy:"percentage",versions:[{version_id:$id,percentage:100}],annotations:{"workers/message":"V060 Evolution safe rollback"}}' > "$RUNNER_TEMP/v060-rollback.json"
-            curl --fail --silent --show-error --max-time 30 -X POST -H "$auth" -H 'Content-Type: application/json' --data-binary @"$RUNNER_TEMP/v060-rollback.json" "$api/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/$CF_WORKER/deployments" > "$RUNNER_TEMP/v060-rollback-result.json" || true
-            jq -e '.success' "$RUNNER_TEMP/v060-rollback-result.json" >/dev/null 2>&1 || echo "::error::Manual Worker rollback may be required"
+          import assert from 'node:assert/strict';
+          const base='https://anevum.com';
+          async function get(path){
+            const response=await fetch(base+path,{
+              headers:{'Accept':'*/*','User-Agent':'ANEVUM-V061-Live-Verification'},
+              cache:'no-store',redirect:'error',signal:AbortSignal.timeout(15000)
+            });
+            return response;
           }
-          trap rollback EXIT
-          deployed=1
-          npx wrangler deploy --config creator-v1/wrangler.apex-evolution-v060.jsonc --keep-vars
-          curl -fsS --max-time 30 -H "$auth" "$api/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/$CF_WORKER/settings" > "$RUNNER_TEMP/v060-settings-after.json"
-          jq -e '.success and ([.result.bindings[]|select(.type=="d1")]|length)==2 and ([.result.bindings[]|select(.type=="assets" and .name=="ASSETS")]|length)==1 and ([.result.bindings[]|select(.type=="secret_text" and .name=="CANONICAL_BETTER_AUTH_SECRET")]|length)==1 and ([.result.bindings[]|select(.type=="secret_text" and .name=="CANONICAL_RESEND_API_KEY")]|length)==1 and ([.result.bindings[]|select(.type=="plain_text" and .name=="ANEVUM_PRELAUNCH_MODE" and .text=="public")]|length)==1 and ([.result.bindings[]|select(.type=="plain_text" and .name=="ANEVUM_LAUNCH_APPROVED" and .text=="true")]|length)==1 and ([.result.bindings[]|select(.type=="plain_text" and .name=="CANONICAL_PUBLIC_SIGNUP_ENABLED" and .text=="true")]|length)==1' "$RUNNER_TEMP/v060-settings-after.json" >/dev/null
-          curl -fsS --max-time 30 -H "$auth" "$api/zones/$CF_ZONE/workers/routes" > "$RUNNER_TEMP/v060-routes-after.json"
-          jq -e '.success and ([.result[]|select(.pattern=="anevum.com/*" and .script=="anevum-apex-prelaunch-gateway")]|length)==1 and ([.result[]|select(.pattern=="a.anevum.com/*" and .script=="anevum-a-community-retirement")]|length)==1' "$RUNNER_TEMP/v060-routes-after.json" >/dev/null
-          healthy=0
-          for n in $(seq 1 12); do
-            if curl -fsS --max-time 15 https://anevum.com/evolution/ -o "$RUNNER_TEMP/v060-gallery.html" &&
-               grep -q 'id="workshop-data"' "$RUNNER_TEMP/v060-gallery.html" &&
-               curl -fsS --max-time 15 https://anevum.com/evolution/app.js -o "$RUNNER_TEMP/v060-app.js" &&
-               grep -q 'firstLevel' "$RUNNER_TEMP/v060-app.js" &&
-               curl -fsS --max-time 15 https://anevum.com/evolution/assets/level-30-256.webp -o "$RUNNER_TEMP/v060-last.webp" &&
-               cmp creator-v1/dist/web/evolution/assets/level-30-256.webp "$RUNNER_TEMP/v060-last.webp"; then healthy=1; break; fi
-            sleep 3
-          done
-          test "$healthy" = 1
-          curl -fsS --max-time 15 https://anevum.com/levels -o "$RUNNER_TEMP/v060-levels.html"
-          grep -q 'id="root"' "$RUNNER_TEMP/v060-levels.html"
-          curl -fsS --max-time 15 https://anevum.com/api/v1/member/auth-methods | jq -e '.methods.email.available==true' >/dev/null
-          test "$(curl -sS --max-time 15 -o /dev/null -w '%{http_code}' https://anevum.com/api/v1/member/progression)" = 401
-          for n in $(seq -w 1 30); do test "$(curl -sS --max-time 15 -o /dev/null -w '%{http_code}' "https://anevum.com/evolution/assets/level-$n-compact-128.png")" = 200; done
-          legacy_type="$(curl -sS --max-time 15 -o /dev/null -w '%{content_type}' https://anevum.com/assets/levels/series-one-v037/level-60.webp)"
-          test "$legacy_type" != "image/webp"
-          validated=1
-          echo ANEVUM_MEMBER_IDENTITY_V061_RELEASE=PASS >> "$GITHUB_STEP_SUMMARY"
-          echo 'https://anevum.com/levels' >> "$GITHUB_STEP_SUMMARY"
-          echo 'https://anevum.com/evolution/' >> "$GITHUB_STEP_SUMMARY"
+          async function text(path,status=200){
+            const response=await get(path);
+            assert.equal(response.status,status,path+' status');
+            return response.text();
+          }
+          async function data(path){
+            const response=await get(path);
+            assert.equal(response.status,200,path);
+            assert.match(response.headers.get('content-type')||'',/application\/json/,path+' type');
+            return response.json();
+          }
+          const html=await text('/levels');
+          assert.match(html,/id="root"/);
+          const jsPath=html.match(/src="(\/assets\/index-[^"]+\.js)"/)?.[1];
+          const cssPath=html.match(/href="(\/assets\/index-[^"]+\.css)"/)?.[1];
+          assert.ok(jsPath&&cssPath,'Compiled React assets must be present');
+          const script=await text(jsPath);
+          const css=await text(cssPath);
+          assert.match(script,/av61-identity/,'New shared identity card is in live JS bundle');
+          for(const className of ['.av61-identity','.av61-specimen','.av61-level-label','.av61-award-list'])
+            assert.ok(css.includes(className),'Missing live style '+className);
+          assert.ok(css.includes('prefers-reduced-motion'),'Reduced motion styles');
+          assert.match(await text('/community'),/id="root"/);
+          const archive=await text('/evolution/');
+          assert.match(archive,/id="workshop-data"/);
+          const img=await get('/evolution/assets/level-02-compact-128.png');
+          assert.equal(img.status,200);
+          assert.match(img.headers.get('content-type')||'',/image\/png/);
+          const bytes=Buffer.from(await img.arrayBuffer());
+          assert.ok(bytes.subarray(0,8).equals(Buffer.from('89504e470d0a1a0a','hex')));
+          assert.ok(bytes.length>300,'3D specimen preview must not be empty');
+          const auth=await data('/api/v1/member/auth-methods');
+          assert.equal(auth.registration,'open');
+          assert.equal(auth.methods.email.available,true,'Email sign-in must remain enabled');
+          assert.equal((await get('/api/v1/member/progression')).status,401,'Private progression must remain private');
+          for(const path of ['/api/v1/community/members','/api/v1/community/activity']){
+            const payload=await data(path);
+            assert.ok(Array.isArray(payload.items),path+' items');
+            for(const item of payload.items){
+              assert.ok(typeof item.handle==='string'&&typeof item.displayName==='string');
+              assert.ok(typeof item.avatar==='boolean');
+              assert.ok(item.level===null||(Number.isInteger(item.level)&&item.level>=1&&item.level<=30),'Valid Evolution level');
+              assert.ok(Array.isArray(item.featuredAwards)&&item.featuredAwards.length<=3);
+              for(const privateField of ['email','userId','user_id','member_user_id','member_xp','password','token']){
+                assert.equal(Object.hasOwn(item,privateField),false,'Private field appeared: '+privateField);
+              }
+            }
+          }
+          const forum=await get('/api/v1/community/threads');
+          assert.ok([200,404].includes(forum.status),'Forum must either be enabled or fail closed');
+          if(forum.status===200){
+            const payload=await forum.json();
+            assert.ok(Array.isArray(payload.items));
+            for(const item of payload.items)if(item.author)assert.ok(item.author.level===null||Number.isInteger(item.author.level));
+          }
+          console.log(JSON.stringify({
+            result:'PASS',publicPaths:3,clientBundle:'V061',levelArtwork:'V060 native render',
+            memberCards:'SAFE',emailSignup:'AVAILABLE',unsignedProgression:'401',
+            forumStatus:forum.status
+          }));
+          NODE
