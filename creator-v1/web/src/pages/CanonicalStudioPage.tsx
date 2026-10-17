@@ -128,6 +128,32 @@ function StudioEditor({create,uploadsReady}:{create:boolean;uploadsReady:boolean
  },[id,create]);
  const canEdit=!project||editable(project);
  const dirty=saved===null||JSON.stringify(saved)!==JSON.stringify(draft);
+ // A private draft has no autosave. Protect changes from ordinary navigation
+ // and browser unload; never imply a revision has persisted prematurely.
+ const hasNewWork=Boolean(draft.title.trim()||draft.summary.trim()||draft.description.trim());
+ const unsavedChanges=!loading&&canEdit&&dirty&&(project!==null||(create&&hasNewWork));
+ useEffect(()=>{
+  if(!unsavedChanges)return;
+  const beforeUnload=(event:BeforeUnloadEvent)=>{event.preventDefault();event.returnValue='';};
+  const beforeNavigation=(event:MouseEvent)=>{
+   if(event.defaultPrevented||event.button!==0||event.metaKey||event.ctrlKey||event.altKey||event.shiftKey)return;
+   if(!(event.target instanceof Element))return;
+   const anchor=event.target.closest('a[href]');
+   if(!(anchor instanceof HTMLAnchorElement)||anchor.hasAttribute('download')||anchor.target==='_blank')return;
+   let destination:URL;
+   try{destination=new URL(anchor.href,window.location.href);}catch{return;}
+   if(destination.origin!==window.location.origin)return;
+   if(destination.pathname===window.location.pathname&&destination.search===window.location.search)return;
+   if(!window.confirm('You have unsaved changes in this private creation. Leave without saving?'))
+    event.preventDefault();
+  };
+  window.addEventListener('beforeunload',beforeUnload);
+  document.addEventListener('click',beforeNavigation,true);
+  return()=>{
+   window.removeEventListener('beforeunload',beforeUnload);
+   document.removeEventListener('click',beforeNavigation,true);
+  };
+ },[unsavedChanges]);
  const eligibleAttachment=Boolean(assetSummary?.some(a=>a.status==='quarantined'&&
   studioEligibleUpload(draft.category,a.kind)));
  const ready=Boolean((draft.demoUrl||draft.sourceUrl||eligibleAttachment)&&draft.license.trim().length>=2&&
@@ -200,6 +226,11 @@ function StudioEditor({create,uploadsReady}:{create:boolean;uploadsReady:boolean
       ADVANCED DETAILS</button>
     </div>
     <p className="st-muted">Your creation is a private, editable draft. Focus on the idea first; attribution, external links and review preparation can come later.</p>
+    <p className="st-save-state" role="status" data-unsaved={unsavedChanges}>
+     {busy?'SAVING PRIVATE REVISION…':unsavedChanges?
+      'UNSAVED CHANGES — SAVE BELOW BEFORE LEAVING.':
+      project?'ALL CHANGES TO THIS REVISION ARE SAVED PRIVATELY.':'NEW WORK — NOT SAVED YET.'}
+    </p>
     {input('title','PROJECT TITLE',100,0,'Give your work a name you can change later.')}
     {editorView==='advanced'&&input('slug','PROJECT URL IDENTIFIER',90,0,'Used internally for a future project URL. Lowercase letters, numbers and hyphens.')}
     <label className="st-field"><span>CREATION TYPE</span>
