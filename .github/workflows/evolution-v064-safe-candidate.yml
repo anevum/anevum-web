@@ -1,0 +1,142 @@
+name: ANEVUM V064 Optical Poster Nondeployed Candidate
+on:
+  push:
+    branches: [build/evolution-micro-posters-v064-20261017-012]
+    paths: [.github/workflows/evolution-v064-safe-candidate.yml]
+permissions:
+  contents: read
+concurrency:
+  group: anevum-v062-native-candidate
+  cancel-in-progress: false
+jobs:
+  candidate:
+    if: github.repository == 'anevum/anevum-web'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      LIVE_PREVIOUS: fda6e24a-73ab-4331-ac0e-32f7dba6b237
+      WORKER: anevum-apex-prelaunch-gateway
+      EXPECTED_ACCOUNT: 2f7ee83107240152097efd956a4e8335
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Ref and running production protection
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REF" = "refs/heads/build/evolution-micro-posters-v064-20261017-012"
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test -n "$CLOUDFLARE_API_TOKEN"
+          test "$CLOUDFLARE_ACCOUNT_ID" = "$EXPECTED_ACCOUNT"
+          head="$(curl -fsS --max-time 30 -H "Authorization: Bearer $GH_TOKEN" "$GITHUB_API_URL/repos/$GITHUB_REPOSITORY/git/ref/heads/build/evolution-micro-posters-v064-20261017-012" | jq -r '.object.sha')"
+          test "$head" = "$GITHUB_SHA"
+          api="https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/$WORKER"
+          curl -fsS --max-time 30 -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" "$api/deployments?per_page=1" > "$RUNNER_TEMP/v062-active-before.json"
+          test "$(jq -er '.result.deployments[0].versions[]|select(.percentage==100)|.version_id' "$RUNNER_TEMP/v062-active-before.json")" = "$LIVE_PREVIOUS"
+          curl -fsS --max-time 30 -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" "$api/versions?per_page=1" > "$RUNNER_TEMP/v062-version-before.json"
+          jq -er '.result.items[0].id' "$RUNNER_TEMP/v062-version-before.json" > "$RUNNER_TEMP/v062-latest-before"
+          curl -fsS --max-time 30 -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" "$api/versions/$LIVE_PREVIOUS" > "$RUNNER_TEMP/v062-good.json"
+          jq -e '
+           .success and
+           ([.result.resources.bindings[]|select(.type=="secret_text")]|length)==4 and
+           ([.result.resources.bindings[]|select(.type=="d1")]|length)==2 and
+           ([.result.resources.bindings[]|select(.type=="assets")]|length)==1
+          ' "$RUNNER_TEMP/v062-good.json" >/dev/null
+          echo V062_SOURCE_AND_CURRENT_PRODUCTION=PASS
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Generate exact V059 native artwork and compact shader delivery
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install numpy==2.2.6 scipy==1.15.3 Pillow==11.2.1
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq libegl1 libgl1 libgl1-mesa-dri
+          cd design/evolution-v059
+          mkdir -p artwork/{native,textures,vector,masters,web,compact} docs dist previews
+          python src/export_native.py
+          python src/render_web.py
+          python src/micro.py
+          python src/build.py
+          cd ../..
+          python creator-v1/ops/install-evolution-v060.py
+          python creator-v1/ops/apply-evolution-micro-v064.py
+          test -s creator-v1/web/public/evolution/mini-runtime.json
+          test "$(find creator-v1/web/public/evolution/assets -maxdepth 1 -type f | wc -l)" -eq 152
+      - name: Typecheck, build, and verify XP/identity/native contracts
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm install --ignore-scripts --no-audit --no-fund
+          npm run check:creator-v1-web
+          npm run build:creator-v1-web
+          node --test creator-v1/test/evolution-v062-native.test.mjs creator-v1/test/evolution-v060-contract.test.mjs creator-v1/test/unbounded-levels.test.mjs creator-v1/test/progression-v031.test.mjs creator-v1/test/canonical-forums-v041.test.mjs creator-v1/test/member-community-v030.test.mjs creator-v1/test/member-identity-v061.test.mjs
+          node --test creator-v1/test/apex-prelaunch-gateway.test.mjs creator-v1/test/canonical-live-signup-canary.test.mjs
+          test -s creator-v1/dist/web/evolution/mini-runtime.json
+          test -s creator-v1/dist/web/evolution/assets/level-02-scene.gz
+          npx tsc --ignoreConfig creator-v1/web/src/lib/evolution-mini-renderer.ts --target ES2022 --module ES2022 --moduleResolution bundler --lib ES2022,DOM --skipLibCheck --rootDir creator-v1/web/src/lib --outDir creator-v1/dist/native-qa
+          node --check creator-v1/dist/native-qa/evolution-mini-renderer.js
+          rm -rf creator-v1/dist/web/assets/levels
+          echo V062_NATIVE_BUILD=PASS
+      - name: Run actual native WebGL motion and reduced-motion browser QA
+        shell: bash
+        run: |
+          set -euo pipefail
+          /usr/bin/google-chrome --version
+          node --check creator-v1/test/evolution-mini-browser-v062.mjs
+          node creator-v1/test/evolution-mini-browser-v062.mjs
+      - name: Retain QA recordings and native runtime contract
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: v062-native-motion-review
+          path: |
+            qa-v062-native/
+            creator-v1/dist/web/evolution/mini-runtime.json
+            creator-v1/shared/level-artifacts.json
+          if-no-files-found: warn
+          retention-days: 14
+      - name: Prepare production Worker config without changing routes
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          const config=JSON.parse(fs.readFileSync('creator-v1/wrangler.apex-prelaunch.jsonc','utf8'));
+          if(config.name!=='anevum-apex-prelaunch-gateway'||config.routes?.length!==0||config.assets?.binding!=='ASSETS'||!config.assets?.run_worker_first)throw Error('Unexpected production Worker configuration');
+          config.vars.ANEVUM_PRELAUNCH_MODE='public';
+          config.vars.ANEVUM_LAUNCH_APPROVED='true';
+          config.vars.CANONICAL_PUBLIC_SIGNUP_ENABLED='true';
+          fs.writeFileSync('creator-v1/wrangler.apex-optical-v064.jsonc',JSON.stringify(config,null,2));
+          NODE
+      - name: Upload only a candidate Worker Version - absolutely no live deployment
+        shell: bash
+        run: |
+          set -euo pipefail
+          umask 077
+          api="https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/$WORKER"
+          auth="Authorization: Bearer $CLOUDFLARE_API_TOKEN"
+          curl -fsS --max-time 30 -H "$auth" "$api/deployments?per_page=1" > "$RUNNER_TEMP/v062-preupload-deploy.json"
+          test "$(jq -er '.result.deployments[0].versions[]|select(.percentage==100)|.version_id' "$RUNNER_TEMP/v062-preupload-deploy.json")" = "$LIVE_PREVIOUS"
+          npx wrangler versions upload --config creator-v1/wrangler.apex-optical-v064.jsonc --keep-vars --message "ANEVUM V064 optical 30-level poster fallback | verified candidate"
+          curl -fsS --max-time 30 -H "$auth" "$api/versions?per_page=1" > "$RUNNER_TEMP/v062-candidate-index.json"
+          candidate="$(jq -er '.result.items[0].id' "$RUNNER_TEMP/v062-candidate-index.json")"
+          test -n "$candidate"
+          test "$candidate" != "$(cat "$RUNNER_TEMP/v062-latest-before")"
+          curl -fsS --max-time 30 -H "$auth" "$api/versions/$candidate" > "$RUNNER_TEMP/v062-candidate.json"
+          jq -e '.success and (.result.id != null) and (((.result.resources.bindings // .result.bindings // []) | map(select(.type=="d1")) | length)==2) and (((.result.resources.bindings // .result.bindings // []) | map(select(.type=="assets")) | length)==1)' "$RUNNER_TEMP/v062-candidate.json" >/dev/null
+          curl -fsS --max-time 30 -H "$auth" "$api/deployments?per_page=1" > "$RUNNER_TEMP/v062-afterupload-deploy.json"
+          test "$(jq -er '.result.deployments[0].versions[]|select(.percentage==100)|.version_id' "$RUNNER_TEMP/v062-afterupload-deploy.json")" = "$LIVE_PREVIOUS" || { echo "::error::Upload affected live deployment unexpectedly"; exit 1; }
+          echo "V064_CANDIDATE_ID=$candidate" >> "$GITHUB_STEP_SUMMARY"
+          echo "V064_LIVE_DEPLOYMENT=UNCHANGED" >> "$GITHUB_STEP_SUMMARY"
+          echo "V064_SOURCE_SHA=$GITHUB_SHA" >> "$GITHUB_STEP_SUMMARY"
+          echo "Candidate uploaded without routing traffic. Secret bindings require independent confirmation before promotion." >> "$GITHUB_STEP_SUMMARY"
