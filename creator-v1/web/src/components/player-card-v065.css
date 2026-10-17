@@ -141,3 +141,16 @@
 .av65-channel-identity{width:100%;max-width:100%;min-width:0}
 .av65-channel-identity .av61-photo .ms-portrait{border:1px solid #ab8ba95e}
 .av7-author .av65-channel-identity .av61-member-copy{min-width:0}
+
+/* The same bounded face is usable inside an existing navigation link.
+ * It must never introduce an invalid nested anchor on project/directory cards. */
+.avp-project .avp-creator-credit>.av65-project-channel{flex:1;min-width:0;max-width:100%}
+.avp-project .avp-creator-credit>.av65-project-channel strong{line-height:1.3!important}
+.avp-project .avp-creator-credit>.av65-project-channel .av61-member-rewards{font-size:9px}
+.avp-project .avp-creator-credit>span:last-child:not(.av65-project-channel){flex:none}
+.portal-creator-tile .av65-directory-channel{width:100%;max-width:100%;min-width:0;margin:6px 0 9px;text-align:left}
+.av6-maker-list .av65-maker-index{width:auto;max-width:100%;min-width:0;flex:1 1 0}
+.av6-maker-list .av65-maker-index .av61-photo .ms-portrait{width:28px!important;height:28px!important}
+.discussion-identity>.av65-player-card,.discussion-identity>div>.av65-player-card{width:max-content;max-width:100%;min-width:0}
+.discussion-identity>div>small{display:block;margin:4px 0 0;color:#b6acc0;font:650 10px/1.3 ui-monospace,monospace}
+@media(max-width:640px){.avp-project .avp-creator-credit{max-width:100%}.portal-creator-tile .av65-directory-channel{margin-block:5px}}
