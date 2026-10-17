@@ -39,7 +39,7 @@
 .av45-price span{font:600 12px/1.4 system-ui,sans-serif;color:#e2c8d6}
 .av45-frequency{font:400 12px/1.5 system-ui,sans-serif!important;color:#cfbacc!important;margin:9px 0 15px!important}
 .av45-status{font:700 10px/1.6 ui-monospace,monospace!important;letter-spacing:.07em;color:#f0c8d5!important;margin:14px 0 3px!important}
-.av45-primary{width:100%;min-height:50px;border-radius:12px;border:1px solid #f5dfd1;background:linear-gradient(115deg,#f9e4dc,#dfc2d4);color:#211828;box-shadow:inset 0 1px #fff9,0 5px 0 #68485c,0 9px 18px #0006;font:750 12px/1.3 system-ui,sans-serif;letter-spacing:.03em;cursor:pointer}
+.av45-primary{display:flex;align-items:center;justify-content:center;width:100%;min-height:50px;border-radius:12px;border:1px solid #f5dfd1;background:linear-gradient(115deg,#f9e4dc,#dfc2d4);color:#211828;box-shadow:inset 0 1px #fff9,0 5px 0 #68485c,0 9px 18px #0006;font:750 12px/1.3 system-ui,sans-serif;letter-spacing:.03em;cursor:pointer}
 .av45-primary:disabled{cursor:not-allowed;opacity:.64;box-shadow:none}
 .av45-primary:not(:disabled):hover{filter:brightness(1.05)}
 .av45-error{color:#ffd3d2!important;font-size:12px!important;margin-top:8px!important}
