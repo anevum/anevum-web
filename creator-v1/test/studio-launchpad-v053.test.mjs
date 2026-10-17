@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {STUDIO_STARTERS,studioStarter,ideaToDraft,starterToDraft,existingWorkToDraft}
+import {STUDIO_STARTERS,studioStarter,blankCanvasToDraft,ideaToDraft,starterToDraft,existingWorkToDraft}
  from '../web/src/lib/studio-launchpad.ts';
 const idA='e9d27c5a-1111-4111-9111-111111111111';
 const idB='e9d27c5a-2222-4222-9222-222222222222';
@@ -151,7 +151,7 @@ test('the mobile/responsive Launchpad has visible focus styling and reduced moti
  assert.match(css, /@media\(prefers-reduced-motion:reduce\)/);
  assert.match(css, /focus-visible/);
  const screen=source('web/src/pages/StudioLaunchpad.tsx');
- assert.match(screen, /aria-pressed/);
+ assert.match(screen, /aria-expanded/);
  assert.match(screen, /aria-live="polite"/);
  assert.match(screen, /role="alert"/);
  assert.match(screen, /role="status"/);
