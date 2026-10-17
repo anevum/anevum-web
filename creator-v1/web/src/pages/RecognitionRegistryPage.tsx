@@ -3,7 +3,7 @@ import {Link} from 'react-router-dom';
 import {BADGE_CATALOG,DISTINCTION_CATALOG,type BadgeDefinition,type BadgeFamily,type DistinctionDefinition} from '../lib/player-recognition';
 import {readRecognition,type RecognitionSettings} from '../lib/player-recognition-api';
 import {canonicalAuthClient} from '../lib/canonical-beta';
-import {CelestialEmblem} from '../components/CelestialEmblem';
+import {BadgeInsignia} from '../components/BadgeInsignia';
 import {HonorInsignia} from '../components/HonorInsignia';
 import {OrbitalMark} from '../components/OrbitalMark';
 import './recognition-registry-v066.css';
@@ -29,7 +29,7 @@ function BadgeItem({entry,earnedAt,available=false}:{entry:BadgeDefinition;earne
  const issued=typeof earnedAt==='number'&&earnedAt>0;
  const active=entry.status==='active'||available;
  return <article className={'av66-catalog-item av66-catalog-badge'+(issued?' is-earned':'')} tabIndex={0}>
-  <div className="av66-visual-frame"><CelestialEmblem motif={entry.motif} size="medium" state={issued?'earned':'preview'}/></div>
+  <div className="av66-visual-frame"><BadgeInsignia badge={entry.id} size="medium" state={issued?'earned':'preview'}/></div>
   <div className="av66-item-copy"><span className="av66-catalog-meta">{entry.family.toUpperCase()} / {active?'ISSUABLE':'FUTURE'}</span>
    <h3>{entry.name}</h3><p>{entry.description}</p>
    <div className="av66-criterion"><strong>RECOGNITION CRITERION</strong><span>{entry.criterion}</span></div>
