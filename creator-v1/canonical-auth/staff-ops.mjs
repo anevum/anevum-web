@@ -74,16 +74,18 @@ async function readSnapshot(db,env,permit,room,now){
    rosterIds.map(()=>'?').join(',')+")").bind(...rosterIds).all()).results.filter(x=>x.verified===1).map(x=>({
     id:x.id,name:x.name,handle:x.handle,role:splitIds(env.CANONICAL_STAFF_OWNER_IDS).includes(x.id)?'owner':'reviewer'
    })):[];
- const [invites,tasks,messages,canvas,history,peers]=await Promise.all([
+ const [invites,tasks,messages,canvas,history,peers,memberMetrics]=await Promise.all([
   db.prepare("SELECT id,alias,channel,stage,note,created_at AS createdAt,updated_at AS updatedAt FROM staff_invitation_log ORDER BY updated_at DESC LIMIT 80").all(),
   db.prepare("SELECT id,title,stage,priority,updated_at AS updatedAt FROM staff_task_log ORDER BY updated_at DESC LIMIT 80").all(),
   db.prepare("SELECT m.seq,m.id,m.room,m.author_id AS authorId,m.body,m.created_at AS createdAt,COALESCE(p.display_name,u.name,'STAFF') AS author FROM staff_chat_log m JOIN \"user\" u ON u.id=m.author_id LEFT JOIN member_creator_profiles p ON p.user_id=m.author_id WHERE m.room=? ORDER BY m.seq DESC LIMIT 70").bind(room).all(),
   db.prepare("SELECT seq,id,actor_id AS authorId,event_type AS eventType,event_data AS eventData,created_at AS createdAt FROM staff_canvas_log WHERE room=? ORDER BY seq DESC LIMIT 240").bind(room).all(),
   db.prepare("SELECT a.seq,a.event_type AS eventType,a.entity_id AS entityId,a.created_at AS createdAt,COALESCE(p.handle,'STAFF') AS actor FROM staff_ops_audit a LEFT JOIN member_creator_profiles p ON p.user_id=a.actor_id ORDER BY a.seq DESC LIMIT 40").all(),
-  db.prepare("SELECT member_id AS id,last_seen_at AS lastSeen FROM staff_presence WHERE room='bridge' AND last_seen_at>? ORDER BY last_seen_at DESC").bind(now-50).all()
+  db.prepare("SELECT member_id AS id,last_seen_at AS lastSeen FROM staff_presence WHERE room='bridge' AND last_seen_at>? ORDER BY last_seen_at DESC").bind(now-50).all(),
+  permit.role==='owner'?db.prepare('SELECT COUNT(*) AS total,COALESCE(SUM(CASE WHEN emailVerified=1 THEN 1 ELSE 0 END),0) AS verified FROM "user"').first():Promise.resolve(null)
  ]);
  return {
   role:permit.role,memberId:permit.memberId,room,checkedAt:now,
+  memberMetrics:memberMetrics?{total:memberMetrics.total,verified:memberMetrics.verified}:null,
   invitationMode:'manual-only',liveMode:'short-poll',callMode:'peer-preview',
   invitations:invites.results||[],tasks:tasks.results||[],
   messages:(messages.results||[]).reverse(),
