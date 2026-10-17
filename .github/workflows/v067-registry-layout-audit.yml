@@ -1,0 +1,34 @@
+name: V067 Live Registry Geometry Audit
+on:
+  push:
+    branches: [patch/recognition-registry-layout-v067-20261017-016]
+    paths:
+      - ".github/workflows/v067-registry-layout-audit.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  observe:
+    if: github.repository == 'anevum/anevum-web'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Inspect live registry SVG geometry at four screen widths
+        run: |
+          node --check creator-v1/test/recognition-live-geometry-v067.mjs
+          node creator-v1/test/recognition-live-geometry-v067.mjs
+          cat qa-v067-recognition/geometry.json
+      - name: Preserve screenshots and bounding rectangles
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: v067-live-registry-geometry
+          path: qa-v067-recognition/
+          if-no-files-found: warn
+          retention-days: 7
