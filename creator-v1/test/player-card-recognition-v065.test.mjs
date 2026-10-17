@@ -124,8 +124,8 @@ test('old entry points and opt-in privacy remain intact',()=>{
 });
 
 test('26 badge engravings have independently modeled devices, not repeated generic stars',()=>{
- const art=read('web/src/components/BadgeInsignia.tsx');
- const catalog=read('web/src/lib/player-recognition.ts');
+ const art=source('web/src/components/BadgeInsignia.tsx');
+ const catalog=source('web/src/lib/player-recognition.ts');
  const keys=[
   'first_signal','world_shaper','first_orbit','returning_signal',
   'first_thread','first_reply','conversationalist','signal_booster',
@@ -144,7 +144,7 @@ test('26 badge engravings have independently modeled devices, not repeated gener
  assert.match(art,/MATERIALS/);
  assert.doesNotMatch(art,/Math\.random|fetch\(|new WebGL/);
  for(const component of ['CompactMemberIdentity.tsx','PlayerCardStudio.tsx']){
-  assert.match(read('web/src/components/'+component),/BadgeInsignia/);
+  assert.match(source('web/src/components/'+component),/BadgeInsignia/);
  }
- assert.match(read('web/src/pages/RecognitionRegistryPage.tsx'),/BadgeInsignia/);
+ assert.match(source('web/src/pages/RecognitionRegistryPage.tsx'),/BadgeInsignia/);
 });
