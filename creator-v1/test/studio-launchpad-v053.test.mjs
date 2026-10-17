@@ -34,7 +34,7 @@ test('the six outcome-based starters have unique stable IDs, real outlines and s
   assert.equal(draft.category,starter.category);
   assert.match(draft.description,/\n/);
   assert.equal(draft.demoUrl,null);
-  assert.equal(draft.slug.split('-').at(-1),'e9d27c5a');
+  assert.equal(draft.slug.split('-').at(-1),idA.replaceAll('-','').slice(0,16));
  }
  assert.equal(studioStarter('nonsense'),undefined);
  assert.throws(()=>starterToDraft('nonsense',idA),/Choose an available starter/);
@@ -52,7 +52,7 @@ test('a complex creative idea preserves its exact private notes, with bounded pu
  const text='The game begins in a forgotten station.\nThen we solve 5 puzzles. '+('A different ending. '.repeat(84));
  const draft=ideaToDraft(text,idA,'games');
  isPrivateBackendDraft(draft);
- assert.equal(draft.description,text);
+ assert.equal(draft.description,text.trim()); // Same whitespace normalization as the canonical API.
  assert.equal(draft.category,'games');
  assert.ok(draft.summary.length<=280);
  assert.ok(draft.title.length<=90);
@@ -61,7 +61,7 @@ test('non-Latin ideas remain safely in their private description and receive val
  const draft=ideaToDraft('宇宙の物語 ✨ これは新しい作品です',idA,'writing');
  isPrivateBackendDraft(draft);
  assert.match(draft.description,/宇宙/);
- assert.equal(draft.slug,'new-creation-e9d27c5a');
+ assert.equal(draft.slug,'new-creation-'+idA.replaceAll('-','').slice(0,16));
 });
 test('the same idea can be independently captured with distinct idempotency keys',()=>{
  const one=ideaToDraft('A short interactive story',idA);
@@ -137,7 +137,7 @@ test('private storage and release security remain gated in the staging configura
  assert.equal(cfg.vars.CANONICAL_PUBLIC_SIGNUP_ENABLED,'true');
  assert.equal(cfg.r2_buckets,undefined);
  const page=source('web/src/pages/StudioLaunchpad.tsx');
- assert.match(page,/private, editable draft/i);
+ assert.match(page,/Only you can see your draft/);
  assert.match(page,/NOT YET ACTIVE/);
  assert.match(page,/no.*publish/i);
  const studio=source('canonical-auth/studio.mjs');

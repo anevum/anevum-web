@@ -48,7 +48,7 @@ const CONTROL=/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/;
 const validId=/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
 function suffix(id:string):string {
  if(!validId.test(id))throw new Error('A valid private draft request ID is required.');
- return id.slice(0,8);
+ return id.replaceAll('-','').slice(0,16); // 64-bit suffix minimizes same-title collisions.
 }
 function safeText(input:string,min:number,max:number):string {
  if(typeof input!=='string'||CONTROL.test(input))throw new Error('Remove unsupported control characters.');
