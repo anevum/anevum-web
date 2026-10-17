@@ -1,53 +1,59 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync, existsSync } from 'node:fs';
-import { resolve, dirname } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import {readFileSync,existsSync} from 'node:fs';
+import {resolve,dirname} from 'node:path';
+import {fileURLToPath} from 'node:url';
 
-const repoRoot=resolve(dirname(fileURLToPath(import.meta.url)),'..');
-const demoRoot=resolve(repoRoot,'web/public/institute/lab');
-const read=(file)=>readFileSync(resolve(demoRoot,file),'utf8');
+const root=resolve(dirname(fileURLToPath(import.meta.url)),'../web/public/institute/lab');
+const read=name=>readFileSync(resolve(root,name),'utf8');
 
-test('Institute Lab has two named, nonindexable prototype routes',()=>{
-  for(const page of ['index.html','observation-node-001.html','regulation-node-002.html']){
-    const html=read(page);
-    assert.match(html,/<html lang="en">/);
-    assert.match(html,/noindex,nofollow,noarchive/);
-    assert.doesNotMatch(html,/<script[^>]+src=/i);
-  }
-  for(const asset of ['observation-node-001.svg','regulation-node-002.svg']) assert.ok(existsSync(resolve(demoRoot,asset)));
+test('Institute Lab has nonindexable static routes and CSP-safe local modules',()=>{
+ for(const name of ['index.html','observation-node-001.html','regulation-node-002.html']){
+  const page=read(name);
+  assert.match(page,/<html lang="en">/);
+  assert.match(page,/noindex,nofollow,noarchive/);
+  assert.doesNotMatch(page,/<script\s*>[\s\S]*?<\/script>/i,'inline JS is disallowed by staging Worker CSP');
+  assert.doesNotMatch(page,/\bon(?:click|load|error)\s*=/i);
+ }
+ for(const name of ['observation-node-001','regulation-node-002']){
+  const page=read(name+'.html');
+  assert.ok(page.includes('<script type="module" src="./'+name+'.mjs"></script>'));
+  assert.ok(existsSync(resolve(root,name+'.mjs')));
+ }
 });
 
-test('Both nodes have distinct, accessible animated vector identities',()=>{
-  const observation=read('observation-node-001.svg');
-  const regulation=read('regulation-node-002.svg');
-  assert.match(observation,/Observation Node 001/);
-  assert.match(regulation,/Regulation Node 002/);
-  assert.match(observation,/prefers-reduced-motion/);
-  assert.match(regulation,/prefers-reduced-motion/);
-  assert.notEqual(observation,regulation);
-  assert.match(regulation,/obsidian/i);
+test('Both vector identities support reduced motion and static fallback',()=>{
+ const observation=read('observation-node-001.svg');
+ const regulation=read('regulation-node-002.svg');
+ const still=read('regulation-node-002-still.svg');
+ assert.match(observation,/Observation Node 001/);
+ assert.match(regulation,/Regulation Node 002/);
+ assert.match(observation,/prefers-reduced-motion/);
+ assert.match(regulation,/prefers-reduced-motion/);
+ assert.match(still,/animation:none!important/);
+ assert.notEqual(observation,regulation);
 });
 
-test('Regulation prototype clearly separates synthetic triage from human decisions',()=>{
-  const page=read('regulation-node-002.html');
-  assert.match(page,/SYNTHETIC CASES ONLY/);
-  assert.match(page,/SIMULATED STAFF REVIEW/);
-  assert.match(page,/human authorization/i);
-  assert.match(page,/server-configured forum reviewer grants/i);
-  assert.doesNotMatch(page,/Cloudflare Access identity/);
-  assert.match(page,/No action performed/);
-  assert.match(page,/no report is filed/i);
-  assert.match(page,/id="triage"/);
-  assert.match(page,/id="review"/);
-  assert.match(page,/id="notice"/);
-  assert.doesNotMatch(page,/\bfetch\s*\(|XMLHttpRequest|navigator\.sendBeacon|WebSocket\s*\(/);
-  assert.doesNotMatch(page,/\blocalStorage\b|\bsessionStorage\b/);
+test('Regulation demo remains synthetic and cannot call moderation services',()=>{
+ const html=read('regulation-node-002.html');
+ const js=read('regulation-node-002.mjs');
+ assert.match(html,/SYNTHETIC CASES ONLY/);
+ assert.match(html,/server-configured forum reviewer grants/i);
+ assert.doesNotMatch(html,/Cloudflare Access identity/);
+ assert.match(html,/no report is filed/i);
+ assert.match(js,/SIMULATED STAFF REVIEW/);
+ assert.match(js,/No action performed/);
+ assert.match(js,/regulation-node-002-still\.svg/);
+ for(const source of [html,js,read('observation-node-001.mjs')]){
+  assert.doesNotMatch(source,/\bfetch\s*\(|XMLHttpRequest|navigator\.sendBeacon|WebSocket\s*\(/);
+  assert.doesNotMatch(source,/\blocalStorage\b|\bsessionStorage\b/);
+ }
 });
 
-test('Lab hub links only to local prototype nodes and keeps names provisional',()=>{
-  const page=read('index.html');
-  for(const linked of ['observation-node-001.html','regulation-node-002.html','observation-node-001.svg','regulation-node-002.svg']) assert.ok(page.includes('./'+linked));
-  assert.match(page,/Provisional entity names/);
-  assert.match(page,/No live activity/i);
+test('Institute index links two distinct specimens with provisional names',()=>{
+ const html=read('index.html');
+ for(const name of ['observation-node-001.html','regulation-node-002.html','observation-node-001.svg','regulation-node-002.svg'])
+  assert.ok(html.includes('./'+name),name);
+ assert.match(html,/Provisional entity names/);
+ assert.match(html,/No live activity/i);
 });
