@@ -56,7 +56,7 @@ test('V044 additive reviewer secret preserves primary access, verified secondary
   assert.equal((await approve(f,second,ownThread,1003)).status,200);
   const audit=f.db.prepare('SELECT reviewer_id,action,target_kind FROM member_forum_review_log WHERE target_id=?')
    .get(ownThread);
-  assert.deepEqual(audit,{reviewer_id:'second',action:'publish',target_kind:'thread'});
+  assert.deepEqual({...audit},{reviewer_id:'second',action:'publish',target_kind:'thread'});
   const recent=await (await canonicalForums(request('/api/v1/member/forum-review'),f.env,owner,1004)).json();
   assert.equal(recent.recent[0].reviewerHandle,null);
   const serial=JSON.stringify(recent);
