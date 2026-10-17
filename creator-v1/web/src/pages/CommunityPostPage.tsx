@@ -4,6 +4,7 @@ import {readCommunityPost} from "../lib/api";
 import {memberPostReaction,memberReactPost,memberCreateReply,memberMyReplies,MemberApiError} from "../lib/member-api";
 import {useResource} from "../lib/useResource";
 import {LoadingState,ErrorState} from "../components/States";
+import {CompactMemberIdentity} from "../components/CompactMemberIdentity";
 import "./community-discussions.css";
 
 function when(value:string){
@@ -77,8 +78,7 @@ function CommunityPostReader({id}:{id:string}){
    <header className="discussion-article-head"><span className="nfc-eyebrow">PUBLIC / APPROVED DISCUSSION · {item.topic.toUpperCase()}</span>
       <h1>{item.title}</h1>
       <div className="discussion-identity">
-        <span className="discussion-avatar">{item.authorName.charAt(0).toUpperCase()}</span>
-        <div><Link to={"/creators/"+encodeURIComponent(item.authorHandle)}>{item.authorName} / @{item.authorHandle}</Link><small>{when(item.publishedAt)} · MODERATED PUBLIC POST</small></div>
+        <div><CompactMemberIdentity size="compact" member={{handle:item.authorHandle,displayName:item.authorName,avatar:false,level:null,featuredAwards:[],source:"creator-channel"}} href={"/creators/"+encodeURIComponent(item.authorHandle)}/><small>{when(item.publishedAt)} · MODERATED PUBLIC POST</small></div>
       </div>
    </header>
    {item.project&&<nav className="discussion-project-context" aria-label="Linked published project"><span className="nfc-eyebrow">ABOUT THIS PROJECT</span><Link to={"/projects/"+encodeURIComponent(item.project.id)}>{item.project.title} ↗</Link><small>Made by {item.project.creatorName} / @{item.project.creatorHandle}. Discussion authors receive no project ownership or collaborator credit.</small></nav>}
@@ -98,8 +98,7 @@ function CommunityPostReader({id}:{id:string}){
    <section className="discussion-responses" aria-label="Approved community replies">
      <div className="discussion-section-head"><span className="nfc-eyebrow">COMMUNITY / FOLLOW-UP</span><h2>THE CONVERSATION.</h2></div>
      {replies.length?replies.map(reply=><article key={reply.id} className="discussion-reply">
-       <div className="discussion-identity"><span className="discussion-avatar">{reply.authorName.charAt(0).toUpperCase()}</span>
-         <div><Link to={"/creators/"+encodeURIComponent(reply.authorHandle)}>{reply.authorName} / @{reply.authorHandle}</Link><small>{when(reply.publishedAt)}</small></div>
+       <div className="discussion-identity"><div><CompactMemberIdentity size="compact" member={{handle:reply.authorHandle,displayName:reply.authorName,avatar:false,level:null,featuredAwards:[],source:"creator-channel"}} href={"/creators/"+encodeURIComponent(reply.authorHandle)}/><small>{when(reply.publishedAt)}</small></div>
        </div>
        <p>{reply.body}</p>
      </article>):<p className="discussion-muted">No approved replies yet. Replies are being introduced through the moderation workflow.</p>}
