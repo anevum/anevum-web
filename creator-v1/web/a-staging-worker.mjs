@@ -49,6 +49,20 @@ export default {
       if(value)headers.set(name,value);
     }
     const clean=new Request(url.href,{method:request.method,headers});
-    return protect(await env.ASSETS.fetch(clean),request.method);
+    const response=protect(await env.ASSETS.fetch(clean),request.method);
+    // A document-scoped exception permits explicit staff-initiated voice/video.
+    // It does NOT grant device access; browser permission and verified staff login
+    // are still required. All public/member pages retain camera/mic denial.
+    if(env?.CANONICAL_STAFF_OPS_ENABLED==='true'&&
+       (url.pathname==='/staff'||url.pathname==='/moderators')&&
+       response.headers.get('content-type')?.toLowerCase().includes('text/html')){
+      const staffHeaders=new Headers(response.headers);
+      staffHeaders.set('permissions-policy','camera=(self), microphone=(self), geolocation=(), payment=()');
+      staffHeaders.set('cache-control','private, no-store');
+      return new Response(response.body,{
+        status:response.status,statusText:response.statusText,headers:staffHeaders
+      });
+    }
+    return response;
   }
 };
