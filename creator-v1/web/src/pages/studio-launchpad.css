@@ -34,6 +34,13 @@
 .sl-idea-actions{margin-top:14px;display:flex;gap:13px;align-items:center;justify-content:space-between}
 .sl-idea-actions small{font-size:.71rem;line-height:1.5;max-width:290px;color:#b6bed0}
 .sl-idea-actions .st-action{flex-shrink:0;min-width:205px}
+.sl-quick-resume{display:grid;grid-template-columns:1fr auto;column-gap:14px;row-gap:4px;
+ border:1px solid rgba(183,222,209,.4);background:rgba(55,121,113,.1);
+ margin-top:18px;padding:14px 15px;color:#e9faf1!important;text-decoration:none!important;max-width:670px}
+.sl-quick-resume>.st-kicker{grid-column:1/-1}
+.sl-quick-resume strong{font-size:.88rem;line-height:1.5;overflow-wrap:anywhere}
+.sl-quick-resume>span:last-child{font-size:.62rem;letter-spacing:.07em;color:#b6f0e5;font-weight:700;align-self:center}
+.sl-quick-resume:hover,.sl-quick-resume:focus-visible{border-color:#baf3e3;background:rgba(80,156,139,.19)}
 .sl-prompts{display:flex;gap:8px;flex-wrap:wrap;margin-top:18px;align-items:center}
 .sl-prompts>span{font-size:.64rem;letter-spacing:.13em;color:#a9c8d4;white-space:nowrap;margin-right:2px}
 .sl-prompts button{background:rgba(180,159,208,.075);color:#e4d8eb;
@@ -186,6 +193,7 @@
  .sl-hero-copy>p{font-size:.88rem}
  .sl-idea-actions{flex-direction:column;align-items:stretch}
  .sl-idea-actions .st-action{width:100%}
+ .sl-quick-resume{grid-template-columns:1fr}
  .sl-prompts{display:grid;gap:7px}
  .sl-prompts button{width:100%}
  .sl-heading h2{font-size:1.7rem}
