@@ -90,8 +90,11 @@ export async function canonicalForums(req,env,user=null,now=Math.floor(Date.now(
   }
   if(review){
    // Only a server-configured verified Better Auth user ID may review content.
-   const reviewers=(env.CANONICAL_FORUM_REVIEWER_IDS||'').split(',').map(x=>x.trim()).filter(Boolean);
-   if(!reviewers.includes(user.id))return fail(403,'Reviewer access required');
+   // Preserve all existing owner-configured reviewers when adding a separately
+   // provisioned, verified second reviewer. Never replace the primary secret.
+   const reviewers=new Set([env.CANONICAL_FORUM_REVIEWER_IDS||'',
+    env.CANONICAL_FORUM_ADDITIONAL_REVIEWER_IDS||''].flatMap(value=>value.split(',').map(x=>x.trim()).filter(Boolean)));
+   if(!reviewers.has(user.id))return fail(403,'Reviewer access required');
    if(req.method==='GET'){
     if(!url.search)return json(await forumReviewSnapshot(db,user.id,now));
     const page=parseReviewPage(url.searchParams);
