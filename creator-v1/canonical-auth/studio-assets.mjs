@@ -102,7 +102,12 @@ export async function canonicalStudioAssets(req,env,user,project,{asset=null,fil
     const assets=await rows(db,
       'SELECT '+ALL+' FROM member_studio_assets WHERE project_id=? AND user_id=? ORDER BY created_at DESC LIMIT 50',
       [project.id,user.id]);
+    const usage=(await rows(db,
+     'SELECT COALESCE(SUM(size_bytes),0) AS used_bytes FROM member_studio_assets WHERE user_id=?',
+     [user.id]))[0];
     return out({assets:assets.map(view),quotaBytes:QUOTA,projectAssetLimit:MAX_ASSETS,
+     memberUsedBytes:Number(usage?.used_bytes||0),
+     projectUsedBytes:assets.reduce((sum,asset)=>sum+Number(asset.size_bytes),0),
      storageReady:storageConnected,uploadsReady:uploadsEnabled});
    }
    if(req.method!=='POST')return fail(405,'Method not allowed');

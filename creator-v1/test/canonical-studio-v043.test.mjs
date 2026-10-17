@@ -170,7 +170,11 @@ test('private binary upload validates types, quotas, ownership and forced downlo
   assert.equal((await s.call(base+'/'+reserved,'PUT','alice',new TextEncoder().encode('ABCDEF'))).status,422);
   const uploaded=await s.call(base+'/'+reserved,'PUT','alice',new TextEncoder().encode('GIF89a'));
   assert.equal(uploaded.status,200);
-  const files=(await j(await s.call(base))).assets;
+  const report=await j(await s.call(base));
+  const files=report.assets;
+  assert.equal(report.memberUsedBytes,6);
+  assert.equal(report.projectUsedBytes,6);
+  assert.equal(report.quotaBytes,100*1048576);
   assert.equal(files.length,1);assert.equal(files[0].status,'quarantined');
   assert.equal(files[0].sha256.length,64);
   const download=await s.call(base+'/'+reserved+'/file');

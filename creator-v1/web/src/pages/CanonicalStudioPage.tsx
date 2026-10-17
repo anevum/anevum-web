@@ -10,6 +10,18 @@ import {
 } from '../lib/canonical-studio';
 import './canonical-studio.css';
 
+const CATEGORY_GUIDE:Record<StudioCategory,string>={
+ games:'Upload a browser-game ZIP or link an external HTTPS game. ZIPs are not playable or installed yet.',
+ tools:'Upload a web app build ZIP or link an existing HTTPS application. A dedicated isolated player is planned.',
+ creative:'Attach original creative work, audio, images, writing or a ZIP.',
+ music:'Attach MP3 or WAV audio. Files remain in private quarantine.',
+ art:'Attach PNG, JPEG, WebP or GIF artwork. Images are not rendered from quarantine.',
+ video:'Direct video uploads are not active in this private pilot. Provide an HTTPS film or animation link.',
+ writing:'Attach PDF, TXT or Markdown writing.',
+ learning:'Attach a PDF, Markdown, text or interactive ZIP project.',
+ research:'Attach research as PDF, TXT, Markdown or ZIP.',
+ other:'Attach a supported image, audio, document or ZIP file.'
+};
 const CATEGORIES:[StudioCategory,string][]=[
  ['games','Games & interactive play'],['tools','Applications & tools'],
  ['creative','Creative experiments'],['music','Music & audio'],['art','Artwork'],
@@ -219,6 +231,7 @@ function StudioEditor({create,uploadsReady}:{create:boolean;uploadsReady:boolean
      <select value={draft.category} disabled={locked} onChange={e=>assign('category',e.target.value as StudioCategory)}>
       {CATEGORIES.map(([key,name])=><option value={key} key={key}>{name}</option>)}
      </select>
+     <small>{CATEGORY_GUIDE[draft.category]}</small>
     </label>
     {input('summary','SHORT SUMMARY',280,3,'10–280 characters; appears on the eventual project card.')}
     {input('description','ABOUT THIS CREATION',8000,6)}
@@ -285,6 +298,9 @@ function StudioEditor({create,uploadsReady}:{create:boolean;uploadsReady:boolean
 function StudioUploader({project,uploadsReady,onAssetsChanged}:{project:StudioProject;uploadsReady:boolean;onAssetsChanged:(assets:StudioAsset[])=>void}){
  const [assets,setAssets]=useState<StudioAsset[]>([]);
  const [storageReady,setStorageReady]=useState(false);
+ const [memberBytes,setMemberBytes]=useState(0);
+ const [projectBytes,setProjectBytes]=useState(0);
+ const [completed,setCompleted]=useState(0);
  const [queue,setQueue]=useState<File[]>([]),[busy,setBusy]=useState(false),[error,setError]=useState(''),[notice,setNotice]=useState('');
  const [progress,setProgress]=useState(''),[drag,setDrag]=useState(false);
  const controller=useRef<AbortController|null>(null);
@@ -298,10 +314,13 @@ function StudioUploader({project,uploadsReady,onAssetsChanged}:{project:StudioPr
  useEffect(()=>{
   let alive=true;
   // Existing assets remain visible even when new uploads are paused.
-  studioAssets(project.id).then(r=>{if(alive){setAssets(r.assets);setStorageReady(r.storageReady);onAssetsChanged(r.assets)}}).catch(e=>{if(alive)setError(showError(e))});
+  studioAssets(project.id).then(r=>{if(alive){setAssets(r.assets);setStorageReady(r.storageReady);
+   setMemberBytes(r.memberUsedBytes);setProjectBytes(r.projectUsedBytes);onAssetsChanged(r.assets)}}).catch(e=>{if(alive)setError(showError(e))});
   return()=>{alive=false;controller.current?.abort();};
  },[project.id,onAssetsChanged]);
- async function refresh(){const r=await studioAssets(project.id);setAssets(r.assets);setStorageReady(r.storageReady);onAssetsChanged(r.assets);}
+ async function refresh(){const r=await studioAssets(project.id);setAssets(r.assets);
+  setStorageReady(r.storageReady);setMemberBytes(r.memberUsedBytes);
+  setProjectBytes(r.projectUsedBytes);onAssetsChanged(r.assets);}
  function accept(files:FileList|null){
   if(!files||busy)return;
   setError('');setNotice('');
@@ -313,16 +332,16 @@ function StudioUploader({project,uploadsReady,onAssetsChanged}:{project:StudioPr
  }
  async function upload(){
   if(!uploadsReady||busy||!queue.length||!editable(project))return;
-  setBusy(true);setError('');setNotice('');
-  const ac=new AbortController();controller.current=ac;let completed=0;
+  setBusy(true);setError('');setNotice('');setCompleted(0);
+  const ac=new AbortController();controller.current=ac;let completedCount=0;
   try{
-   for(const file of queue){setProgress('UPLOADING '+(completed+1)+'/'+queue.length+' — '+file.name);
-    await studioUpload(project.id,file,ac.signal);completed++;
+   for(const file of queue){setProgress('UPLOADING '+(completedCount+1)+'/'+queue.length+' — '+file.name);
+    await studioUpload(project.id,file,ac.signal);completedCount++;setCompleted(completedCount);
    }
    setQueue([]);setNotice('Files stored in private quarantine. None were published, scanned, or made playable.');
    await refresh();
   }catch(e){
-   setQueue(v=>v.slice(completed));
+   setQueue(v=>v.slice(completedCount));
    setError(ac.signal.aborted?'Upload cancelled. Any incomplete reservation remains private until cleanup.':showError(e));
    try{await refresh();}catch{/* owner can retry */}
   }finally{controller.current=null;setProgress('');setBusy(false);}
@@ -340,6 +359,12 @@ function StudioUploader({project,uploadsReady,onAssetsChanged}:{project:StudioPr
   <p className="st-kicker">FILES / PRIVATE QUARANTINE</p><h2>THE ASSET VAULT.</h2>
   {!uploadsReady&&<p className="st-muted">New uploads are paused or not provisioned. Existing private file records remain available below. Private download/removal requires the original isolated R2 binding.</p>}
    <p className="st-muted">Images / PDF: 10 MiB. MP3 / WAV / ZIP: 20 MiB. TXT / MD: 1 MiB. 20 files per project, 100 MiB per member.</p>
+   <div className="st-storage-meter" aria-label="Creator Studio storage usage">
+    <div><span>ACCOUNT STORAGE</span><strong>{size(memberBytes)} / 100 MiB</strong></div>
+    <progress max={100*1048576} value={Math.min(memberBytes,100*1048576)}
+     aria-label="Account storage used"/>
+    <small>THIS PROJECT: {size(projectBytes)} · {assets.length} / 20 FILES</small>
+   </div>
    {uploadsReady&&editable(project)&&<div className={'st-drop'+(drag?' is-drag':'')}
     onDragOver={e=>{e.preventDefault();if(!busy)setDrag(true);}}
     onDragLeave={()=>setDrag(false)} onDrop={dropped} role="group" aria-label="Upload private project files">
@@ -352,7 +377,9 @@ function StudioUploader({project,uploadsReady,onAssetsChanged}:{project:StudioPr
    {uploadsReady&&queue.length>0&&<div className="st-upload-queue"><h3>READY TO STORE / {queue.length} FILES</h3>
     {queue.map((f,i)=><p key={f.name+'-'+i}>{f.name} · {size(f.size)}</p>)}
     {preview&&<img className="st-local-preview" src={preview} alt="Local image preview before private upload"/>}
-    {progress&&<p role="status">{progress}</p>}
+    {progress&&<><p role="status">{progress}</p>
+     <progress className="st-upload-progress" value={completed} max={queue.length||1}
+      aria-label="Completed file uploads"/></>}
     <div className="st-actions"><button className="st-button" disabled={busy} onClick={()=>void upload()}>
      {busy?'STORING…':'UPLOAD TO PRIVATE VAULT'}</button>
      {busy&&<button className="st-link" onClick={()=>controller.current?.abort()}>CANCEL</button>}
