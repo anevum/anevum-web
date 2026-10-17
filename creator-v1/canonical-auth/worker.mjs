@@ -59,7 +59,7 @@ function safeResponse(original){
   return new Response(original.body,{status:original.status,statusText:original.statusText,headers});
 }
 
-async function boundedProviderBody(request,callbackURL="/join"){
+async function boundedProviderBody(request,callbackURL="/member",errorCallbackURL="/join"){
   if(!/^application\/json(?:\s*;|\s*$)/i.test(request.headers.get("content-type")||""))
     return null;
   const raw=await boundedText(request,512);
@@ -72,8 +72,8 @@ async function boundedProviderBody(request,callbackURL="/join"){
     if(Object.keys(input).some(x=>!["provider","callbackURL","errorCallbackURL"].includes(x)))return null;
     if(!["google","github","apple","microsoft"].includes(input.provider)||
       (input.callbackURL!==undefined&&input.callbackURL!==callbackURL)||
-      (input.errorCallbackURL!==undefined&&input.errorCallbackURL!==callbackURL))return null;
-    return JSON.stringify({provider:input.provider,callbackURL,errorCallbackURL:callbackURL});
+      (input.errorCallbackURL!==undefined&&input.errorCallbackURL!==errorCallbackURL))return null;
+    return JSON.stringify({provider:input.provider,callbackURL,errorCallbackURL});
   }catch{return null;}
 }
 
@@ -262,7 +262,7 @@ export function createCanonicalStageWorker({authFactory=createCanonicalAuth}={})
         });
       }else if(path===CANONICAL_AUTH_PATH+"/link-social"){
         if(![configured.google,configured.github,configured.apple,configured.microsoft].some(Boolean))return fail(request,503);
-        const safeBody=await boundedProviderBody(clean,"/member");
+        const safeBody=await boundedProviderBody(clean,"/member","/member");
         if(!safeBody)return safeJson(request,{error:"Invalid account-linking request"},400);
         if(!configured[JSON.parse(safeBody).provider])return fail(request,503);
         const headers=new Headers(clean.headers);
