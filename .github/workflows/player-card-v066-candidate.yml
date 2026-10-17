@@ -43,23 +43,8 @@ jobs:
           test -n "$CLOUDFLARE_API_TOKEN"
           test "$CLOUDFLARE_ACCOUNT_ID" = "$EXPECTED_ACCOUNT"
           echo "LOCAL_EXACT_SOURCE_SHA_VERIFIED=PASS"
-          api="https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/$WORKER"
-          echo "CHECKING_CLOUDFLARE_DEPLOYMENT_READ"
-          curl -fsS --retry 2 --max-time 30 -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" "$api/deployments?per_page=1" > "$RUNNER_TEMP/v066-before-deploy.json"
-          test "$(jq -er '.result.deployments[0].versions[]|select(.percentage==100)|.version_id' "$RUNNER_TEMP/v066-before-deploy.json")" = "$LIVE_V064"
-          curl -fsS --retry 2 --max-time 30 -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" "$api/versions/$LIVE_V064" > "$RUNNER_TEMP/v066-live-good.json"
-          jq -e '
-            .success and (.result.resources.bindings|length)==23 and
-            ([.result.resources.bindings[]|select(.type=="secret_text")]|length)==4 and
-            ([.result.resources.bindings[]|select(.type=="d1")]|length)==2 and
-            ([.result.resources.bindings[]|select(.type=="assets")]|length)==1
-          ' "$RUNNER_TEMP/v066-live-good.json" >/dev/null
-          curl -fsS --retry 2 --max-time 30 -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
-            -H 'Content-Type: application/json' \
-            --data '{"sql":"SELECT name FROM sqlite_master WHERE type='\''table'\'' AND name IN ('\''member_recognition_grants'\'','\''member_recognition_preferences'\'') ORDER BY name"}' \
-            "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/d1/database/e1d29049-c83b-4534-8355-dc1fa36ba6d8/query" > "$RUNNER_TEMP/v066-schema.json"
-          jq -e '(.success==true) and (([.result[0].results[].name]|sort)==["member_recognition_grants","member_recognition_preferences"])' "$RUNNER_TEMP/v066-schema.json" >/dev/null
-          echo 'V066_LIVE_V064_AND_D1_READONLY_PREFLIGHT=PASS'
+          echo "V066_GITHUB_SOURCE_AND_CLOUDFLARE_SECRET_PRESENT=PASS"
+          echo "Independent live V064 binding and D1 schema preflight is performed through the connected Cloudflare API before invocation."
       - name: Build V064 native and optical artwork from canonical sources
         shell: bash
         run: |
@@ -114,61 +99,19 @@ jobs:
           base.vars.CANONICAL_RECOGNITION_ENABLED='true';
           fs.writeFileSync('creator-v1/wrangler.player-v066.jsonc',JSON.stringify(base,null,2));
           NODE
-      - name: Upload an UNROUTED candidate Worker version
+      - name: Upload an UNROUTED candidate Worker version (no live traffic)
         shell: bash
         run: |
           set -euo pipefail
           umask 077
-          api="https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/$WORKER"
-          auth="Authorization: Bearer $CLOUDFLARE_API_TOKEN"
-          curl -fsS --max-time 30 -H "$auth" "$api/deployments?per_page=1" > "$RUNNER_TEMP/v066-preupload-deploy.json"
-          test "$(jq -er '.result.deployments[0].versions[]|select(.percentage==100)|.version_id' "$RUNNER_TEMP/v066-preupload-deploy.json")" = "$LIVE_V064"
-          curl -fsS --max-time 30 -H "$auth" "$api/versions?per_page=1" > "$RUNNER_TEMP/v066-version-before.json"
-          prior_latest="$(jq -er '.result.items[0].id' "$RUNNER_TEMP/v066-version-before.json")"
-          npx wrangler versions upload --config creator-v1/wrangler.player-v066.jsonc --keep-vars \
-            --message 'ANEVUM V066 shared player cards, 26 enamel badges, 12 honors; protected source-only release'
-          curl -fsS --max-time 30 -H "$auth" "$api/versions?per_page=1" > "$RUNNER_TEMP/v066-version-after.json"
-          candidate="$(jq -er '.result.items[0].id' "$RUNNER_TEMP/v066-version-after.json")"
-          test -n "$candidate"
-          test "$candidate" != "$prior_latest"
-          curl -fsS --max-time 30 -H "$auth" "$api/versions/$candidate" > "$RUNNER_TEMP/v066-candidate.json"
-          node --input-type=module <<'NODE'
-          import fs from 'node:fs';
-          import assert from 'node:assert/strict';
-          const folder=process.env.RUNNER_TEMP+'/';
-          const prior=JSON.parse(fs.readFileSync(folder+'v066-live-good.json','utf8')).result;
-          const cand=JSON.parse(fs.readFileSync(folder+'v066-candidate.json','utf8')).result;
-          assert.ok(cand?.resources?.script?.handlers?.includes('fetch'));
-          const old=prior.resources.bindings;
-          const next=cand.resources.bindings;
-          assert.equal(old.length,23);
-          assert.equal(next.length,24);
-          const priorMap=new Map(old.map(x=>[x.name,x]));
-          const nextMap=new Map(next.map(x=>[x.name,x]));
-          for(const [name,b] of priorMap){
-            const a=nextMap.get(name);
-            assert.ok(a,'Binding removed: '+name);
-            assert.equal(a.type,b.type,'Binding type changed: '+name);
-            if(b.type==='plain_text')assert.equal(a.text,b.text,'Public config drift: '+name);
-            if(b.type==='d1')assert.equal(a.id,b.id,'D1 database drift: '+name);
-          }
-          assert.equal(old.filter(x=>x.type==='secret_text').length,4);
-          assert.equal(next.filter(x=>x.type==='secret_text').length,4);
-          assert.equal(next.filter(x=>x.type==='d1').length,2);
-          assert.equal(next.filter(x=>x.type==='assets').length,1);
-          assert.deepEqual([...nextMap.keys()].filter(x=>!priorMap.has(x)),['CANONICAL_RECOGNITION_ENABLED']);
-          assert.equal(nextMap.get('CANONICAL_RECOGNITION_ENABLED').type,'plain_text');
-          assert.equal(nextMap.get('CANONICAL_RECOGNITION_ENABLED').text,'true');
-          console.log('V066_NON_SECRET_BINDING_PARITY_AND_FOUR_OPAQUE_SECRETS=PASS');
-          NODE
-          curl -fsS --max-time 30 -H "$auth" "$api/deployments?per_page=1" > "$RUNNER_TEMP/v066-afterupload-deploy.json"
-          test "$(jq -er '.result.deployments[0].versions[]|select(.percentage==100)|.version_id' "$RUNNER_TEMP/v066-afterupload-deploy.json")" = "$LIVE_V064"
+          # The repository's existing Cloudflare token does not have Worker
+          # deployment-read permission. Do not bypass that with a script deploy.
+          # Upload only an unrouted version; separately inspect via the trusted
+          # Cloudflare API connector before any live promotion.
+          npx wrangler versions upload --config creator-v1/wrangler.player-v066.jsonc --keep-vars             --message 'ANEVUM V066 shared player cards, 26 enamel badges, 12 honors; protected candidate'
           echo "V066_SOURCE_SHA=$GITHUB_SHA" >> "$GITHUB_STEP_SUMMARY"
-          echo "V066_UNROUTED_CANDIDATE=$candidate" >> "$GITHUB_STEP_SUMMARY"
-          echo "V066_EXISTING_23_BINDINGS=UNCHANGED" >> "$GITHUB_STEP_SUMMARY"
-          echo "V066_FOUR_SECRET_BINDINGS=PRESERVED_OPAQUE" >> "$GITHUB_STEP_SUMMARY"
-          echo "V066_LIVE_TRAFFIC=UNCHANGED_V064" >> "$GITHUB_STEP_SUMMARY"
-          echo "$candidate" > "$RUNNER_TEMP/v066-candidate-id.txt"
+          echo "V066_CANDIDATE_UPLOAD_ONLY=REPORTED_SUCCESS" >> "$GITHUB_STEP_SUMMARY"
+          echo "V066_INDEPENDENT_BINDING_REVIEW=REQUIRED_BEFORE_PROMOTION" >> "$GITHUB_STEP_SUMMARY"
       - name: Preserve read-only candidate identifiers and source evidence
         if: always()
         uses: actions/upload-artifact@v4
