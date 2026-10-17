@@ -270,15 +270,18 @@ test("OAuth login accepts only bounded Google provider and fixed on-site callbac
  calls.length=0;
  let response=await stage.fetch(post("/api/v1/member/auth/sign-in/social",{provider:"google"}),env(true));
  assert.equal(response.status,200);
- assert.deepEqual(JSON.parse(calls.at(-1).body),{provider:"google",callbackURL:"/join"});
+ assert.deepEqual(JSON.parse(calls.at(-1).body),{provider:"google",callbackURL:"/join",errorCallbackURL:"/join"});
  assert.equal(calls.at(-1).authorization,null);
  assert.equal(calls.at(-1).cookie,null);
- response=await stage.fetch(post("/api/v1/member/auth/sign-in/social",{provider:"google",callbackURL:"/join"}),env(true));
+ response=await stage.fetch(post("/api/v1/member/auth/sign-in/social",{provider:"google",callbackURL:"/join",errorCallbackURL:"/join"}),env(true));
  assert.equal(response.status,200);
  for(const payload of [
   {provider:"unknown-provider"},
   {provider:"google",callbackURL:"https://other.example"},
   {provider:"google",callbackURL:"//evil.example"},
+  {provider:"google",errorCallbackURL:"https://attacker.example/steal"},
+  {provider:"google",errorCallbackURL:"/member"},
+  {provider:"google",errorCallbackURL:"//evil.example"},
   {provider:"google",callbackURL:"/account"},
   {provider:"google",callbackURL:"/join",role:"founder"},
   {provider:"google",callbackURL:"/join",userId:"legacy-user"},
@@ -345,13 +348,15 @@ test("explicit provider linking requires verified member session and bounded sam
  const verifiedHeaders={cookie:"__Secure-anevum_can_stage.session_token=valid; legacy=discard"};
  const noSession=await linkingStage.fetch(post(path,{provider:"google",callbackURL:"/member"}),env(true));
  assert.equal(noSession.status,401);
- const success=await linkingStage.fetch(post(path,{provider:"google",callbackURL:"/member"},verifiedHeaders),env(true));
+ const success=await linkingStage.fetch(post(path,{provider:"google",callbackURL:"/member",errorCallbackURL:"/member"},verifiedHeaders),env(true));
  assert.equal(success.status,200);
- assert.deepEqual(JSON.parse(calls.at(-1).body),{provider:"google",callbackURL:"/member"});
+ assert.deepEqual(JSON.parse(calls.at(-1).body),{provider:"google",callbackURL:"/member",errorCallbackURL:"/member"});
  assert.equal(calls.at(-1).cookie,"__Secure-anevum_can_stage.session_token=valid");
  for(const payload of [
    {provider:"google",callbackURL:"/join"},
    {provider:"google",callbackURL:"https://evil.example"},
+   {provider:"google",errorCallbackURL:"/join"},
+   {provider:"google",errorCallbackURL:"https://evil.example"},
    {provider:"google",callbackURL:"/member",userId:"other"},
    {provider:"google",callbackURL:"/member",scopes:["admin"]},
    {provider:"unknown"},
