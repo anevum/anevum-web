@@ -472,3 +472,95 @@ test('private MP4/WebM film submissions use quarantine only, never public playba
   assert.equal((await s.call(ROOT+'/'+q.id+'/submit','POST','alice',{revision:1})).status,200);
  }finally{s.close();}
 });
+
+
+test('V050 freezes submitted metadata and content hashes across feedback and resubmission',async()=>{
+ const s=setup({uploads:true});
+ try{
+  const work={...draft,slug:'review-receipt-game',title:'Original receiver experiment',
+   demoUrl:null,sourceUrl:null};
+  const c=await s.call(ROOT,'POST','alice',{clientRequestId:crypto.randomUUID(),draft:work});
+  assert.equal(c.status,201);
+  const id=(await j(c)).project.id, base=ROOT+'/'+id+'/assets';
+  const zip=new Uint8Array([0x50,0x4b,0x03,0x04,0x14,0,0,0]);
+  const reserved=(await j(await s.call(base,'POST','alice',{
+   name:'signal-first.zip',sizeBytes:zip.length,contentType:'application/zip'
+  }))).id;
+  assert.equal((await s.call(base+'/'+reserved,'PUT','alice',zip)).status,200);
+  const uploaded=(await j(await s.call(base))).assets[0];
+  const a=await s.call(ROOT+'/'+id+'/submit','POST','alice',{revision:1});
+  assert.equal(a.status,200);
+  const first=await j(a);
+  assert.equal(first.project.status,'pending_review');
+  assert.equal(first.attachmentCount,1);
+  assert.match(first.submissionId,/^[0-9a-f-]{36}$/);
+  const ownerPath=ROOT+'/'+id+'/submissions';
+  assert.equal((await s.call(ownerPath,'GET','bob')).status,404);
+  assert.equal((await s.call(ownerPath,'GET',null)).status,401);
+  assert.equal((await s.call(ownerPath,'POST','alice',{})).status,405);
+  const receipts=(await j(await s.call(ownerPath))).submissions;
+  assert.equal(receipts.length,1);
+  assert.equal(receipts[0].id,first.submissionId);
+  assert.equal(receipts[0].revision,2);
+  assert.equal(receipts[0].title,'Original receiver experiment');
+  assert.equal(receipts[0].assets.length,1);
+  assert.equal(receipts[0].assets[0].sha256,uploaded.sha256);
+  assert.equal('storage_key' in receipts[0].assets[0],false);
+  const staff=await j(await s.call('/api/v1/member/studio/review/'+id+'/manifest','GET','bob'));
+  assert.equal(staff.submissionId,first.submissionId);
+  assert.equal(staff.assets[0].sha256,uploaded.sha256);
+  assert.equal(staff.title,'Original receiver experiment');
+  const feedback=await s.call('/api/v1/member/studio/review','POST','bob',{
+   projectId:id,revision:2,action:'changes_requested',reason:'Add verified original credits and fix the archive ending.'
+  });
+  assert.equal(feedback.status,200);
+  assert.equal((await j(await s.call(ownerPath))).submissions[0].status,'changes_requested');
+  const updated=await s.call(ROOT+'/'+id,'PATCH','alice',{revision:3,draft:{...work,
+   title:'Signal 001 — revised reception',summary:'A revised archive with original playable reception sequence'}});
+  assert.equal(updated.status,200);
+  const second=await s.call(ROOT+'/'+id+'/submit','POST','alice',{revision:4});
+  assert.equal(second.status,200);
+  const saved=await j(second);
+  assert.equal(saved.project.revision,5);
+  assert.notEqual(saved.submissionId,first.submissionId);
+  const all=(await j(await s.call(ownerPath))).submissions;
+  assert.equal(all.length,2);
+  assert.equal(all[0].title,'Signal 001 — revised reception');
+  assert.equal(all[0].revision,5);
+  assert.equal(all[0].status,'pending_review');
+  assert.equal(all[1].title,'Original receiver experiment');
+  assert.equal(all[1].status,'changes_requested');
+  assert.equal(all[1].assets[0].sha256,uploaded.sha256);
+  assert.equal((await j(await s.call('/api/v1/member/studio/review/'+id+'/manifest','GET','bob'))).revision,5);
+  assert.equal((await s.call('/api/v1/member/studio/review','POST','bob',{
+   projectId:id,revision:2,action:'rejected',reason:'Trying to reject a stale submission'
+  })).status,409);
+  const withdrawn=await s.call(ROOT+'/'+id+'/withdraw','POST','alice',{revision:5});
+  assert.equal(withdrawn.status,200);
+  const last=(await j(await s.call(ownerPath))).submissions;
+  assert.equal(last[0].status,'withdrawn');
+  assert.equal(last[1].status,'changes_requested');
+  assert.equal((await j(await s.call('/api/v1/member/studio/review','GET','bob'))).projects.length,0);
+  const exportData=await canonicalStudioExport(s.env,alice.id);
+  assert.equal(exportData.reviewReceipts.length,2);
+  assert.equal(exportData.reviewAssetHashes.length,2);
+  assert.ok(exportData.reviewAssetHashes.every(x=>!('storage_key' in x)));
+ }finally{s.close();}
+});
+
+test('V050 cannot submit a pending upload and rejects schema without snapshot tables',async()=>{
+ const s=setup({uploads:true});try{
+  const p=(await j(await s.call(ROOT,'POST','alice',projectRequest()))).project;
+  const base=ROOT+'/'+p.id+'/assets';
+  const reservation=(await j(await s.call(base,'POST','alice',{
+   name:'pending.gif',contentType:'image/gif',sizeBytes:6
+  }))).id;
+  assert.equal((await s.call(ROOT+'/'+p.id+'/submit','POST','alice',{revision:1})).status,409);
+  assert.equal((await j(await s.call(ROOT+'/'+p.id+'/submissions'))).submissions.length,0);
+  assert.equal((await s.call(base+'/'+reservation,'DELETE','alice')).status,200);
+  assert.equal((await s.call(ROOT+'/'+p.id+'/submit','POST','alice',{revision:1})).status,200);
+  const receipt=(await j(await s.call(ROOT+'/'+p.id+'/submissions'))).submissions[0];
+  assert.equal(receipt.assets.length,0);
+  assert.equal(receipt.status,'pending_review');
+ }finally{s.close();}
+});
