@@ -125,7 +125,9 @@ export async function canonicalStudio(req,env,user,now=Math.floor(Date.now()/100
   if(!id){
    if(req.method==='GET'){
     const items=await rows(db,'SELECT '+COLS+' FROM member_studio_projects WHERE user_id=? ORDER BY updated_at DESC,id DESC LIMIT 50',[user.id]);
-    return json({projects:items.map(dbRow),uploadsReady:studioUploadReady(env,user.id)});
+    const canReview=String(env.CANONICAL_STUDIO_REVIEWER_IDS||'')
+     .split(',').map(x=>x.trim()).filter(Boolean).includes(user.id);
+    return json({projects:items.map(dbRow),uploadsReady:studioUploadReady(env,user.id),canReview});
    }
    if(req.method!=='POST')return fail(405,'Method not allowed');
    const incoming=await body(req);
