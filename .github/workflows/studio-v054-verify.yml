@@ -9,6 +9,7 @@ on:
       - design/creator-studio-v0542-canvas-first-20261017
       - release/a-studio-v0542-canvas-first-20261017
       - patch/a-studio-v0542-mobile-origin-20261017
+      - patch/a-studio-v0542-origin-reliability-20261017
   workflow_dispatch:
 
 permissions:
