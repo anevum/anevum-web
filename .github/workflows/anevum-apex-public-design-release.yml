@@ -1,0 +1,103 @@
+name: ANEVUM Apex Public Design Release
+
+on:
+  push:
+    branches: [design/continuance-join-v052-20261017]
+    paths: [docs/creator-platform/APEX-PUBLIC-DESIGN-RELEASE.txt]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: anevum-apex-live-design-deployment
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Pin public-only release contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REF" = "refs/heads/design/continuance-join-v052-20261017"
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          grep -Fxq 'APPROVED=PUBLIC_APEX_V052_UI_RELEASE_ONLY' docs/creator-platform/APEX-PUBLIC-DESIGN-RELEASE.txt
+          test "$CLOUDFLARE_ACCOUNT_ID" = "2f7ee83107240152097efd956a4e8335"
+          test -n "$CLOUDFLARE_API_TOKEN"
+          node --input-type=module <<'NODE'
+          import {readFileSync} from 'node:fs';
+          import assert from 'node:assert/strict';
+          const c=JSON.parse(readFileSync('creator-v1/wrangler.apex-live.jsonc','utf8'));
+          assert.equal(c.name,'anevum-apex-prelaunch-gateway');
+          assert.deepEqual(c.routes,[]);
+          assert.equal(c.workers_dev,false);
+          assert.equal(c.preview_urls,false);
+          assert.equal(c.keep_vars,true);
+          assert.equal(c.assets.run_worker_first,true);
+          assert.equal(c.vars.ANEVUM_PRELAUNCH_MODE,'public');
+          assert.equal(c.vars.ANEVUM_LAUNCH_APPROVED,'true');
+          assert.equal(c.vars.ANEVUM_CANONICAL_APEX_ENABLED,'true');
+          assert.equal(c.vars.CANONICAL_PUBLIC_SIGNUP_ENABLED,'true');
+          assert.equal(c.vars.CANONICAL_EMAIL_ENABLED,'true');
+          assert.deepEqual(c.d1_databases.map(x=>[x.binding,x.database_id]),[
+            ['COMMUNITY_DB','fa96e36d-6257-4883-bf15-074947e11a13'],
+            ['MEMBER_DB','e1d29049-c83b-4534-8355-dc1fa36ba6d8']
+          ]);
+          for(const p of ['GOOGLE','GITHUB','APPLE','MICROSOFT'])
+            assert.equal(c.vars['CANONICAL_'+p+'_ENABLED'],'false');
+          const s=readFileSync('creator-v1/web/src/pages/Phase1JoinPage.tsx','utf8');
+          assert.match(s,/ContinuanceEntryArtwork/);
+          assert.doesNotMatch(s,/skyward-city\.webp/);
+          NODE
+      - name: Verify exact live target and secrets without reading values
+        shell: bash
+        run: |
+          set -euo pipefail
+          api="https://api.cloudflare.com/client/v4"
+          cf(){ curl --fail --silent --show-error --max-time 25 -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" "$1"; }
+          cf "$api/zones/8abe27259b5436af5966d3b40d9a3760/workers/routes" | jq -e '
+            .success and
+            ([.result[]|select(.pattern=="anevum.com/*" and .script=="anevum-apex-prelaunch-gateway")]|length)==1 and
+            ([.result[]|select(.pattern=="a.anevum.com/*" and .script=="anevum-a-community-retirement")]|length)==1
+          ' >/dev/null
+          cf "$api/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/anevum-apex-prelaunch-gateway/settings" | jq -e '
+            .success and
+            ([.result.bindings[]|select(.type=="secret_text" and (.name=="CANONICAL_RESEND_API_KEY" or .name=="CANONICAL_BETTER_AUTH_SECRET" or .name=="CANONICAL_PROTECTED_EMAILS" or .name=="ANEVUM_PREVIEW_ALLOWED_EMAILS"))]|length)==4 and
+            ([.result.bindings[]|select(.name=="ANEVUM_PRELAUNCH_MODE" and .text=="public")]|length)==1 and
+            ([.result.bindings[]|select(.name=="ANEVUM_LAUNCH_APPROVED" and .text=="true")]|length)==1
+          ' >/dev/null
+      - name: Install, typecheck and test signup
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm install --ignore-scripts --no-audit --no-fund
+          npm run check:creator-v1-web
+          npm run build:creator-v1-web
+          node --test creator-v1/test/continuance-entry-v052.test.mjs creator-v1/test/signup-email-first-v026.test.mjs
+          (cd creator-v1 && npm run test:signup-activation)
+          node creator-v1/ops/canonical-live-signup-canary.mjs
+      - name: Deploy to existing Worker preserving secrets and release mode
+        shell: bash
+        run: |
+          set -euo pipefail
+          npx wrangler deploy --config creator-v1/wrangler.apex-live.jsonc --keep-vars
+      - name: Prove live signup and creator-studio availability after release
+        shell: bash
+        run: |
+          set -euo pipefail
+          node creator-v1/ops/canonical-live-signup-canary.mjs
+          curl --fail --silent --show-error --max-time 25 https://anevum.com/join | grep -Eq 'ANEVUM|<div id="root"'
+          curl --fail --silent --show-error --max-time 25 https://anevum.com/studio | grep -Eq 'ANEVUM|<div id="root"'
+          echo 'V052 public signup UI deployed. OAuth provider flags remain disabled.' >> "$GITHUB_STEP_SUMMARY"
