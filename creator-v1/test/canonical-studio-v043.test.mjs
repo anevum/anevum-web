@@ -130,6 +130,15 @@ test('iOS Studio missing-Origin fallback is marker-bound and never permits forei
   assert.equal(anon.status,401);
  }finally{s.close();}
 });
+test('cached iOS Studio JSON without Origin or new marker is accepted but form, foreign, and anonymous calls are denied',async()=>{
+ const s=setup();try{
+  const h={origin:null,'sec-fetch-site':null,accept:'application/json'};
+  assert.equal((await s.call(ROOT,'POST','alice',projectRequest(),{headers:h})).status,201);
+  assert.equal((await s.call(ROOT,'POST','alice',projectRequest(),{headers:{...h,'content-type':'text/plain'}})).status,403);
+  assert.equal((await s.call(ROOT,'POST','alice',projectRequest(),{headers:{...h,origin:'https://attacker.invalid','sec-fetch-site':'cross-site'}})).status,403);
+  assert.equal((await s.call(ROOT,'POST',null,projectRequest(),{headers:h})).status,401);
+ }finally{s.close();}
+});
 test('idempotent creation, revision-checked edits and no automatic publication',async()=>{
  const s=setup();try{
   const item=projectRequest();
