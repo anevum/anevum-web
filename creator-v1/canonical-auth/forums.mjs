@@ -17,7 +17,7 @@ function decodeCursor(value){
 }
 const encodeCursor=(at,id)=>btoa(JSON.stringify([Number(at),id]));
 async function payload(req){if(!/^application\/json(?:\s*;|$)/i.test(req.headers.get('content-type')||''))return null;const s=await boundedText(req,7000);try{const p=JSON.parse(s);return p&&typeof p==='object'&&!Array.isArray(p)?p:null}catch{return null}}
-const card=(db,row)=>hydratedPublicMemberCard(db,row);
+const card=(db,row,env)=>hydratedPublicMemberCard(db,row,env.CANONICAL_RECOGNITION_ENABLED==='true');
 const authorSql=`JOIN member_creator_profiles p ON p.user_id=t.author_id JOIN "user" u ON u.id=p.user_id
  LEFT JOIN member_space_settings s ON s.user_id=p.user_id
  WHERE p.visibility='public' AND u.emailVerified=1`;
@@ -30,7 +30,7 @@ const selectThread=`SELECT t.id,t.topic,t.title,t.body,t.status,t.created_at,t.p
  AND rp.visibility='public' AND ru.emailVerified=1) AS reply_count,
  (SELECT COUNT(*) FROM member_forum_reactions v WHERE v.thread_id=t.id) AS reactions
  FROM member_forum_threads t ${authorSql} AND t.status='published'`;
-const threadRow=async(db,r)=>({id:r.id,topic:r.topic,title:r.title,body:r.body,createdAt:r.created_at,publishedAt:r.published_at,updatedAt:r.updated_at,author:await card(db,r),replyCount:r.reply_count,reactions:r.reactions});
+const threadRow=async(db,r,env)=>({id:r.id,topic:r.topic,title:r.title,body:r.body,createdAt:r.created_at,publishedAt:r.published_at,updatedAt:r.updated_at,author:await card(db,r,env),replyCount:r.reply_count,reactions:r.reactions});
 async function dbReady(db){try{const r=await db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name IN ('member_forum_threads','member_forum_replies','member_forum_reactions','member_forum_reports','member_forum_review_log')").all();return r.results.length===5}catch{return false}}
 export async function canonicalForums(req,env,user=null,now=Math.floor(Date.now()/1000)){
  if(env.CANONICAL_FORUM_ENABLED!=='true')return fail(404,'Forums are not enabled');
@@ -61,11 +61,11 @@ export async function canonicalForums(req,env,user=null,now=Math.floor(Date.now(
       ' ORDER BY t.published_at DESC,t.id DESC LIMIT 21';
     const result=await db.prepare(sql).bind(...a).all();
     const rows=result.results.slice(0,20),last=rows.at(-1);
-    return json({items:await Promise.all(rows.map(row=>threadRow(db,row))),nextCursor:result.results.length>20&&last?encodeCursor(last.published_at,last.id):null});
+    return json({items:await Promise.all(rows.map(row=>threadRow(db,row,env))),nextCursor:result.results.length>20&&last?encodeCursor(last.published_at,last.id):null});
    }
    if(item){
     const row=await db.prepare(selectThread+' AND t.id=?').bind(item[1]).first();
-    return row?json({thread:await threadRow(db,row)}):fail(404,'Thread is not public');
+    return row?json({thread:await threadRow(db,row,env)}):fail(404,'Thread is not public');
    }
    if(reply){
     const parent=await db.prepare(selectThread+' AND t.id=?').bind(reply[1]).first();
@@ -78,7 +78,7 @@ export async function canonicalForums(req,env,user=null,now=Math.floor(Date.now(
       ${after?'AND (r.published_at>? OR (r.published_at=? AND r.id>?))':''}
       ORDER BY r.published_at ASC,r.id ASC LIMIT 26`).bind(reply[1],...(after?[after[0],after[0],after[1]]:[])).all();
     const visible=r.results.slice(0,25),last=visible.at(-1);
-    return json({items:await Promise.all(visible.map(async v=>({id:v.id,body:v.body,publishedAt:v.published_at,author:await card(db,v)}))),
+    return json({items:await Promise.all(visible.map(async v=>({id:v.id,body:v.body,publishedAt:v.published_at,author:await card(db,v,env)}))),
       nextCursor:r.results.length>25&&last?encodeCursor(last.published_at,last.id):null});
    }
   }
