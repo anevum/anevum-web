@@ -10,7 +10,9 @@ const RULES=Object.freeze({
  png:['image/png',10*MiB,'image'],jpg:['image/jpeg',10*MiB,'image'],
  jpeg:['image/jpeg',10*MiB,'image'],webp:['image/webp',10*MiB,'image'],
  gif:['image/gif',10*MiB,'image'],mp3:['audio/mpeg',20*MiB,'audio'],
- wav:['audio/wav',20*MiB,'audio'],pdf:['application/pdf',10*MiB,'document'],
+ wav:['audio/wav',20*MiB,'audio'],
+ mp4:['video/mp4',20*MiB,'video'],webm:['video/webm',20*MiB,'video'],
+ pdf:['application/pdf',10*MiB,'document'],
  txt:['text/plain',MiB,'document'],md:['text/markdown',MiB,'document'],
  zip:['application/zip',20*MiB,'package']
 });
@@ -64,6 +66,8 @@ function signature(bytes,declared){
  case 'webp':return starts(bytes,'RIFF')&&starts(bytes,'WEBP',8);
  case 'wav':return starts(bytes,'RIFF')&&starts(bytes,'WAVE',8);
  case 'mp3':return starts(bytes,'ID3')||(bytes[0]===255&&(bytes[1]&224)===224);
+ case 'mp4':return bytes.length>=12&&starts(bytes,'ftyp',4);
+ case 'webm':return bytes.length>=4&&bytes[0]===0x1a&&bytes[1]===0x45&&bytes[2]===0xdf&&bytes[3]===0xa3;
  case 'pdf':return starts(bytes,'%PDF-');
  case 'zip':return starts(bytes,'PK')&&bytes[2]===3&&bytes[3]===4;
  case 'txt':case 'md':
