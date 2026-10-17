@@ -230,6 +230,7 @@ test("only allowlisted Better Auth endpoints function once config and schema pas
  assert.equal(methods.methods.github.available,false);
  assert.equal(methods.linking,"explicit");
  assert.equal((await stage.fetch(req("/api/v1/member/auth/list-accounts"),active)).status,200);
+ calls.length=0; // The allowlist below must not dispatch any further requests.
  const all=[
   ["/api/v1/member/me","GET"],["/api/v1/member/creators/showcase","GET"],
   ["/api/v1/member/auth/list-users","GET"],
