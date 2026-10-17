@@ -1,7 +1,7 @@
 // Public, opt-in canonical member discovery. Never joins legacy identities.
 import {FOCUS_KEYS,worldFromRow} from './worlds.mjs';
 import {spaceReady} from './space.mjs';
-import {publicMemberColumns,hydratedPublicMemberCard} from './public-member-card.mjs';
+import {publicMemberColumns,hydratedPublicMemberCards} from './public-member-card.mjs';
 import {readSupporterRewards} from './supporter-rewards.mjs';
 const headers={'content-type':'application/json; charset=utf-8','cache-control':'private, no-store','x-content-type-options':'nosniff'};
 const answer=(req,data,status=200)=>new Response(req.method==='HEAD'?null:JSON.stringify(data),{status,headers});
@@ -33,11 +33,12 @@ export async function canonicalCommunity(req,env){
    JOIN user u ON u.id=p.user_id LEFT JOIN member_space_settings s ON s.user_id=p.user_id WHERE ${where.join(' AND ')} ORDER BY ${at} DESC,${key} DESC LIMIT 13`;
   const result=await db.prepare(sql).bind(...params).all();if(result.success===false)throw Error('Unavailable');
   const hasMore=result.results.length>12,rows=result.results.slice(0,12);
-  const items=await Promise.all(rows.map(async row=>{
+  const cards=await hydratedPublicMemberCards(db,rows,env.CANONICAL_RECOGNITION_ENABLED==='true');
+  const items=await Promise.all(rows.map(async (row,index)=>{
    // Public-only recognition, no account/Stripe IDs or billing metadata
    // leave this endpoint. Absent consent or stale subscription -> no badge.
    const supporter=await readSupporterRewards(env,row.member_user_id,Date.now(),true);
-   return {...await hydratedPublicMemberCard(db,row,env.CANONICAL_RECOGNITION_ENABLED==='true'),...worldFromRow(row),joinedAt:Number(row.joined_at),
+   return {...cards[index],...worldFromRow(row),joinedAt:Number(row.joined_at),
      ...(supporter?{supporterAppearance:supporter.selected}:{}),
      ...(activity?{id:row.id,excerpt:row.body.length>360?row.body.slice(0,357)+'…':row.body,createdAt:Number(row.created_at),updatedAt:Number(row.updated_at)}:{})};
   }));
