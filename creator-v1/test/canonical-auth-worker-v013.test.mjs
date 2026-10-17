@@ -151,10 +151,15 @@ test("Better Auth remains separate, with no implicit linking, passwords, owner r
  assert.equal(off.socialProviders.google.disableSignUp,true);
  assert.equal(off.socialProviders.google.disableImplicitSignUp,true);
  assert.equal(off.account.accountLinking.disableImplicitLinking,true);
+ assert.equal(off.account.accountLinking.enabled,true);
+ assert.equal(off.account.accountLinking.allowDifferentEmails,false);
+ assert.equal(off.account.accountLinking.allowUnlinkingAll,false);
+ assert.equal(off.account.accountLinking.updateUserInfoOnLink,false);
  assert.equal(off.account.encryptOAuthTokens,true);
  assert.equal(off.account.storeStateStrategy,"database");
  assert.equal(off.rateLimit.storage,"database");
  assert.equal(off.rateLimit.customRules["/sign-in/social"].max,5);
+ assert.equal(off.rateLimit.customRules["/link-social"].max,3);
  assert.equal(await off.databaseHooks.user.create.before({email:"pilot_one@fixture.invalid"}),false);
  const on=canonicalAuthOptions(env(true));
  assert.equal(on.socialProviders.google.disableSignUp,false);
@@ -223,9 +228,11 @@ test("only allowlisted Better Auth endpoints function once config and schema pas
  assert.equal(invitedMethods.methods.google.available,true);
  assert.equal(invitedMethods.methods.email.available,false);
  assert.equal(methods.methods.github.available,false);
+ assert.equal(methods.linking,"explicit");
+ assert.equal((await stage.fetch(req("/api/v1/member/auth/list-accounts"),active)).status,200);
  const all=[
   ["/api/v1/member/me","GET"],["/api/v1/member/creators/showcase","GET"],
-  ["/api/v1/member/auth/list-users","GET"],["/api/v1/member/auth/link-social","POST"],
+  ["/api/v1/member/auth/list-users","GET"],
   ["/api/v1/member/auth/sign-up/email","POST"],["/api/v1/member/auth/sign-in/email","POST"],
   ["/api/v1/member/auth/sign-up/social","POST"],["/api/v1/member/auth/sign-in/github","POST"],
   ["/api/v1/member/auth/delete-user","POST"],["/api/v1/member/auth/update-user","POST"],
@@ -321,6 +328,70 @@ test("Google callback permits provider navigation but never forwards foreign coo
  assert.equal(calls[0].cookie,"__Secure-anevum_can_stage.oauth_state=pilot-state");
  assert.equal(calls[0].path,"/api/v1/member/auth/callback/google");
  assert.equal((await stage.fetch(req("/api/v1/member/auth/callback/google?"+ "a".repeat(4100)),env())).status,400);
+});
+
+
+test("explicit provider linking requires verified member session and bounded same-origin request",async()=>{
+ calls.length=0;
+ const linkingStage=createCanonicalStageWorker({authFactory:()=>({
+   api:{async getSession({headers}){
+     return headers.get("cookie")?.includes("anevum_can_stage.session_token=valid")
+       ?{user:{id:"canonical-member-1",emailVerified:true}}:null;
+   }},
+   handler:fakeAuth().handler
+ })});
+ const path="/api/v1/member/auth/link-social";
+ const verifiedHeaders={cookie:"__Secure-anevum_can_stage.session_token=valid; legacy=discard"};
+ const noSession=await linkingStage.fetch(post(path,{provider:"google",callbackURL:"/member"}),env(true));
+ assert.equal(noSession.status,401);
+ const success=await linkingStage.fetch(post(path,{provider:"google",callbackURL:"/member"},verifiedHeaders),env(true));
+ assert.equal(success.status,200);
+ assert.deepEqual(JSON.parse(calls.at(-1).body),{provider:"google",callbackURL:"/member"});
+ assert.equal(calls.at(-1).cookie,"__Secure-anevum_can_stage.session_token=valid");
+ for(const payload of [
+   {provider:"google",callbackURL:"/join"},
+   {provider:"google",callbackURL:"https://evil.example"},
+   {provider:"google",callbackURL:"/member",userId:"other"},
+   {provider:"google",callbackURL:"/member",scopes:["admin"]},
+   {provider:"unknown"},
+ ]){
+   const count=calls.length;
+   const response=await linkingStage.fetch(post(path,payload,verifiedHeaders),env(true));
+   assert.equal(response.status,400,JSON.stringify(payload));
+   assert.equal(calls.length,count);
+ }
+ const wrongOrigin=await linkingStage.fetch(
+   post(path,{provider:"google",callbackURL:"/member"},{...verifiedHeaders,origin:"https://attacker.example"}),env(true));
+ assert.equal(wrongOrigin.status,403);
+ const unavailable=await linkingStage.fetch(post(path,{provider:"github"},verifiedHeaders),env(true));
+ assert.equal(unavailable.status,503);
+});
+
+test("Apple callback accepts only enabled state-bearing form POST without relaxing CSRF",async()=>{
+ calls.length=0;
+ const appleEnv={...env(true),
+   CANONICAL_APPLE_ENABLED:"true",
+   CANONICAL_APPLE_CLIENT_ID:"fixture-apple-service-id",
+   CANONICAL_APPLE_CLIENT_SECRET:"fixture-apple-client-secret"
+ };
+ assert.deepEqual(canonicalAuthOptions(appleEnv).trustedOrigins,
+   ["https://a.anevum.com","https://appleid.apple.com"]);
+ const callback="/api/v1/member/auth/callback/apple";
+ const form=(body,extraHeaders={})=>req(callback,{
+   method:"POST",
+   headers:{"content-type":"application/x-www-form-urlencoded","origin":"https://appleid.apple.com",
+     "sec-fetch-site":"cross-site",...extraHeaders},
+   body
+ });
+ assert.equal((await stage.fetch(form("code=one&state=secure-state"),appleEnv)).status,200);
+ assert.equal(calls.at(-1).path,callback);
+ assert.equal(calls.at(-1).body,"code=one&state=secure-state");
+ assert.equal((await stage.fetch(form("code=one"),appleEnv)).status,400);
+ assert.equal((await stage.fetch(form("state=secure-state"),appleEnv)).status,400);
+ assert.equal((await stage.fetch(form("code=one&state=secure-state",{origin:"https://evil.example"}),appleEnv)).status,403);
+ assert.equal((await stage.fetch(form("code=one&state=secure-state"),env(true))).status,404);
+ assert.equal((await stage.fetch(post("/api/v1/member/auth/sign-in/social",{provider:"google"},
+   {origin:"https://appleid.apple.com","sec-fetch-site":"cross-site"}),appleEnv)).status,403);
 });
 
 test("missing canonical database or schema blocks auth handler even with rollout switches",async()=>{
