@@ -64,6 +64,7 @@
 .ir-nav-index{font-size:9px;color:#e6a29a}
 .ir-nav-copy{display:flex;flex-direction:column;gap:0;min-width:0;flex:1}
 .ir-nav-copy b{font-size:12px;font-weight:650;white-space:nowrap}
+.ir-nav-short{display:none}
 .ir-nav-copy small{font-size:9px;color:#828095;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .ir-nav-count{font-size:9px;font-style:normal;min-width:17px;padding:1px 3px;text-align:center;
  color:#ffd1bf;background:#803c4b50;border:1px solid #c76a7b66;border-radius:3px}
@@ -292,6 +293,8 @@
   padding:6px 2px;gap:1px}
  .ir-nav-index{display:none}
  .ir-nav-copy b{font-size:10px;white-space:nowrap;text-align:center}
+ .ir-nav-name{display:none}
+ .ir-nav-short{display:block}
  .ir-nav-count{position:absolute;right:1px;top:1px;font-size:7px;padding:0 2px;min-width:13px}
  .ir-stage{padding:9px 10px}
  .ir-stage-header{min-height:59px;padding-bottom:9px}
