@@ -4,6 +4,38 @@
    Content, controls and factual member/project states stay real HTML.
    No remote assets or new fonts. No sweeping glare. */
 
+/* CSS-only transitional scene for the current apex build. Replaced by the
+   native V064 canvas once the full frontend bundle is released; never doubles. */
+@supports selector(:has(*)){
+  .av9-shell:not(:has(> .av64-worldstage))::before{
+    content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
+    user-select:none;opacity:.5;
+    background:
+      radial-gradient(ellipse 48% 37% at 84% 23%,#a885d02e,transparent 81%),
+      radial-gradient(ellipse 40% 46% at 12% 79%,#6b9bba16,transparent 84%),
+      radial-gradient(1px 1px at 12% 18%,#f2dfed8a 45%,transparent 75%),
+      radial-gradient(1px 1px at 74% 68%,#c7dcff82 45%,transparent 75%),
+      radial-gradient(1px 1px at 39% 76%,#ffd4c986 45%,transparent 75%);
+    background-size:100% 100%;mix-blend-mode:screen;
+  }
+  .av9-shell:has(.ch7-hub):not(:has(> .av64-worldstage))::before{
+    background:radial-gradient(ellipse 52% 42% at 87% 15%,#c97ca632,transparent 80%),
+      radial-gradient(ellipse 45% 36% at 8% 78%,#747aaf23,transparent 85%);
+  }
+  .av9-shell:has(.levels-page):not(:has(> .av64-worldstage))::before{
+    background:radial-gradient(ellipse 47% 41% at 82% 14%,#e9c48f2e,transparent 85%),
+      radial-gradient(ellipse 39% 42% at 10% 79%,#79b8bb1d,transparent 85%);
+  }
+  .av9-shell:has(.av45-support):not(:has(> .av64-worldstage))::before{
+    background:radial-gradient(ellipse 51% 34% at 82% 17%,#dc88ac35,transparent 85%),
+      radial-gradient(ellipse 35% 38% at 7% 80%,#9974b51f,transparent 85%);
+  }
+  .av9-shell:has(.st-root):not(:has(> .av64-worldstage))::before{
+    background:radial-gradient(ellipse 50% 36% at 82% 18%,#75baca2b,transparent 85%),
+      radial-gradient(ellipse 33% 40% at 8% 83%,#db8aa522,transparent 86%);
+  }
+}
+
 /* The environment is a persistent spatial layer, not part of any click target. */
 .av9-shell{isolation:isolate;--av64-glint:#f6deef;--av64-line:#c9b4db65}
 .av9-shell>.av64-worldstage{
