@@ -96,7 +96,15 @@ test('canonical sessions, CSRF, origin and per-member isolation',async()=>{
   assert.equal((await j(await s.call(ROOT,'GET','bob'))).projects.length,0);
   assert.equal((await s.call(ROOT+'/'+id,'GET','bob')).status,404);
   assert.equal((await s.call(ROOT+'/'+id,'GET',null)).status,401);
-  assert.equal((await s.call(ROOT+'/'+id+'/assets','GET','alice')).status,404);
+  const inactiveAssets=await s.call(ROOT+'/'+id+'/assets','GET','alice');
+  assert.equal(inactiveAssets.status,200);
+  const inactiveData=await j(inactiveAssets);
+  assert.deepEqual(inactiveData.assets,[]);
+  assert.equal(inactiveData.uploadsReady,false);
+  assert.equal(inactiveData.storageReady,false);
+  assert.equal((await s.call(ROOT+'/'+id+'/assets','POST','alice',{
+   name:'blocked.gif',sizeBytes:6,contentType:'image/gif'
+  })).status,404);
  }finally{s.close();}
 });
 test('idempotent creation, revision-checked edits and no automatic publication',async()=>{
