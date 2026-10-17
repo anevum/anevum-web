@@ -121,6 +121,37 @@ async function postCommand(req,db,env,permit,now){
  if(!v||typeof v!=='object'||Array.isArray(v)||typeof v.kind!=='string')return fail(400,'Invalid command');
  const memberId=permit.memberId;
  const isOwner=permit.role==='owner';
+ if(v.kind==='staff-grant'||v.kind==='staff-revoke'){
+  if(!isOwner)return fail(403,'Owner authorization required');
+  if(!exact(v,['kind','memberId'])||typeof v.memberId!=='string'||v.memberId===memberId||
+    v.memberId.length<1||v.memberId.length>128)return fail(400,'Invalid staff member');
+  if(!await limited(db,memberId,'staff-role',now,12))return fail(429,'Role change limit reached');
+  if(v.kind==='staff-grant'){
+   // Role is intentionally fixed to REVIEWER. Only existing verified accounts
+   // are selectable, and no account can elevate itself to FOUNDER.
+   const results=await db.batch([
+    db.prepare(
+     "INSERT INTO staff_access_grants(member_id,role,granted_by,created_at,updated_at,revoked_at) "+
+     "SELECT ?,'reviewer',?,?,?,NULL WHERE EXISTS(SELECT 1 FROM \"user\" WHERE id=? AND emailVerified=1) "+
+     "ON CONFLICT(member_id) DO UPDATE SET role='reviewer',granted_by=excluded.granted_by,"+
+     "updated_at=excluded.updated_at,revoked_at=NULL "+
+     "WHERE staff_access_grants.role='reviewer' AND staff_access_grants.revoked_at IS NOT NULL"
+    ).bind(v.memberId,memberId,now,now,v.memberId),
+    db.prepare("INSERT INTO staff_access_audit(id,actor_id,member_id,action,created_at) SELECT ?,?,?,'grant-reviewer',? WHERE changes()=1")
+     .bind(crypto.randomUUID(),memberId,v.memberId,now)
+   ]);
+   return results[0].meta?.changes===1?json({ok:true,role:'reviewer'}):fail(409,'Member already authorized, unverified or unavailable');
+  }
+  const results=await db.batch([
+   db.prepare(
+    "UPDATE staff_access_grants SET revoked_at=?,updated_at=?,granted_by=? "+
+    "WHERE member_id=? AND role='reviewer' AND revoked_at IS NULL"
+   ).bind(now,now,memberId,v.memberId),
+   db.prepare("INSERT INTO staff_access_audit(id,actor_id,member_id,action,created_at) SELECT ?,?,?,'revoke-reviewer',? WHERE changes()=1")
+    .bind(crypto.randomUUID(),memberId,v.memberId,now)
+  ]);
+  return results[0].meta?.changes===1?json({ok:true,revoked:true}):fail(409,'Reviewer not active or protected role');
+ }
  if(v.kind==='invite-create'){
   if(!isOwner)return fail(403,'Owner authorization required');
   if(!exact(v,['kind','alias','channel','note'])||
