@@ -49,8 +49,8 @@ jobs:
           assert.deepEqual(c.routes,[]);
           assert.equal(c.vars.CANONICAL_PUBLIC_SIGNUP_ENABLED,'true');
           assert.equal(c.vars.CANONICAL_INVITED_SIGNUP_ENABLED,'true');
-          assert.equal(c.vars.CANONICAL_CREATOR_STUDIO_ENABLED,undefined);
-          assert.equal(c.vars.CANONICAL_CREATOR_UPLOADS_ENABLED,undefined);
+          assert.equal(c.vars.CANONICAL_CREATOR_STUDIO_ENABLED,'true');
+          assert.equal(c.vars.CANONICAL_CREATOR_UPLOADS_ENABLED,'false');
           assert.deepEqual(c.d1_databases.map(x=>x.binding),['COMMUNITY_DB','MEMBER_DB']);
           assert.equal(c.r2_buckets,undefined);
           const studio=fs.readFileSync('creator-v1/canonical-auth/studio.mjs','utf8');
