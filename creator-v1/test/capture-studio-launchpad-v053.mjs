@@ -236,5 +236,7 @@ try{
 }finally{
  try{c?.close();}catch{}
  child.kill('SIGKILL');await new Promise(r=>server.close(r));
- rmSync(profile,{recursive:true,force:true});
+ // Chromium can still finish writing profile files after the parent exits.
+ // Retry only known transient removal races; don't suppress persistent failures.
+ rmSync(profile,{recursive:true,force:true,maxRetries:12,retryDelay:250});
 }
