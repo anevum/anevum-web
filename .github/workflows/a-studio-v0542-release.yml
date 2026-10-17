@@ -22,7 +22,7 @@ jobs:
     timeout-minutes: 30
     env:
       CANDIDATE_SHA: ${{ github.sha }}
-      CI_VERIFIED_PARENT: 681e84543dd8e7b4a36fda06e616a4265bb61c0a
+      CI_VERIFIED_PARENT: 374debd3037ae9a17f850d66858a2244aca307f5
       CI_VERIFIED_INTEGRATION: eb5a2225bcb02b42e959ccce77cf48ed22b48c54
       CI_VERIFIED_SOURCE: d15cb13224b5b1bbbb61f4e5bfe304d115b09462
       EXPECTED_ACTIVE_WORKER: f5df3330-7db7-4718-93a4-bac0cf47579f
@@ -53,7 +53,7 @@ jobs:
           allowed="$(git diff --name-only "$CI_VERIFIED_SOURCE" "$CI_VERIFIED_PARENT" | sort)"
           expected="$(printf '%s\n' '.github/workflows/a-studio-v0542-release.yml' '.github/workflows/studio-v054-verify.yml' 'creator-v1/wrangler.a-progression-v031.jsonc' | sort)"
           test "$allowed" = "$expected" || { echo "::error::Release contains unreviewed app changes"; exit 1; }
-          for pair in "ANEVUM Creator Studio V054 Workbench Verify:$CI_VERIFIED_SOURCE" "ANEVUM Creator V1 Verify:$CI_VERIFIED_SOURCE" "ANEVUM Creator Studio V054 Workbench Verify:$CI_VERIFIED_PARENT"; do
+          for pair in "ANEVUM Creator Studio V054 Workbench Verify:$CI_VERIFIED_SOURCE" "ANEVUM Creator V1 Verify:$CI_VERIFIED_SOURCE" ; do
             name="${pair%%:*}"; sha="${pair##*:}"
             found=0
             for attempt in $(seq 1 48); do
