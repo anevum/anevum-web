@@ -125,3 +125,11 @@
  .av65-ribbon,.av65-medal{forced-color-adjust:auto}
  .av65-player-card:focus-visible{outline-color:Highlight}
 }
+
+/* Unified canonical member world header. One visible identity, one semantic H1. */
+.av65-visually-hidden{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
+.av65-public-identity{width:100%;align-items:stretch!important;position:relative}
+.av65-public-dossier{min-width:0;width:min(100%,620px)}
+.av65-public-dossier>.av65-player-card{max-width:100%;width:max-content;min-width:min(100%,300px)}
+.av65-public-dossier>p{margin:8px 0 0;color:#e0cfdc;font-size:clamp(12px,1.1vw,15px);line-height:1.5}
+@media(max-width:640px){.av65-public-dossier>.av65-player-card{width:100%;min-width:0}.av65-public-identity{padding:0!important}}
