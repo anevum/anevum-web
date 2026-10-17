@@ -14,6 +14,11 @@ export interface StudioProject extends StudioDraft {
  id:string;status:StudioStatus;revision:number;createdAt:number;updatedAt:number;submittedAt:number|null;
 }
 export interface StudioReviewHistory {action:'changes_requested'|'rejected';reason:string;createdAt:number}
+export interface StudioReviewReceipt extends StudioDraft {
+ id:string;projectId:string;revision:number;status:'pending_review'|'withdrawn'|'changes_requested'|'rejected';
+ submittedAt:number;resolvedAt:number|null;
+ assets:Array<Pick<StudioAsset,'id'|'name'|'kind'|'contentType'|'sizeBytes'|'sha256'>>;
+}
 export interface StudioReviewManifest {
  projectId:string;revision:number;note:string;assets:StudioAsset[];
 }
@@ -83,6 +88,8 @@ export const studioCreate=(draft:StudioDraft,clientRequestId:string)=>request<{p
 export const studioUpdate=(id:string,revision:number,draft:StudioDraft)=>request<{project:StudioProject}>(projectPath(id),'PATCH',{revision,draft});
 export const studioSubmit=(id:string,revision:number)=>request<{project:StudioProject;note:string}>(projectPath(id)+'/submit','POST',{revision});
 export const studioWithdraw=(id:string,revision:number)=>request<{project:StudioProject}>(projectPath(id)+'/withdraw','POST',{revision});
+export const studioReviewReceipts=(id:string,signal?:AbortSignal)=>
+ request<{submissions:StudioReviewReceipt[];note:string}>(projectPath(id)+'/submissions','GET',undefined,signal);
 export const studioDeleteProject=(id:string,revision:number)=>request<{deleted:boolean}>(projectPath(id),'DELETE',{revision});
 function assetsPath(projectId:string,assetId?:string){return projectPath(projectId)+'/assets'+(assetId?'/'+validAsset(assetId):'');}
 export const studioAssets=(projectId:string,signal?:AbortSignal)=>
