@@ -6690,5 +6690,5 @@
     "meanMs": 17.63,
     "worstP95Ms": 48.33
   },
-  "browserAcceptance": "See qa-browser/results.json when present; native Safari and assistive technology remain outstanding"
+  "browserAcceptance": "58/58 passed; exact runtime a8fc5fa720562c61659cd1ea3ae93492beb32796; see qa-browser/results.json. Native Safari and physical-device GPU testing remain outstanding."
 }

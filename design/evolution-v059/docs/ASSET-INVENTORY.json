@@ -1,5 +1,5 @@
 {
-  "count": 374,
+  "count": 375,
   "assets": [
     {
       "path": "artwork/compact/level-01-128.png",
@@ -1250,6 +1250,11 @@
       "path": "artwork/textures/mineral-height-4096.png",
       "bytes": 3688104,
       "sha256": "0d20b7396027b57031e340dc5a16ee6289c84933f09d3c13434539b8601bd0d8"
+    },
+    {
+      "path": "artwork/textures/mineral-height-web.png",
+      "bytes": 126558,
+      "sha256": "b24c2ce97daa8a6bee9be6d77bc27328c3d88e46782913cca15f774c71c4d9ad"
     },
     {
       "path": "artwork/textures/mineral-normal-4096.png",

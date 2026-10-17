@@ -18,7 +18,7 @@ Thirty actual 3-second 24fps animation MP4s, six chapter motion reels and an 18-
 
 Open `ANEVUM-V059-INTERACTIVE.html` for the self-contained offline review. It includes all thirty specimens, six chapter filters, search, member-profile/card examples, a large native dialog inspector and the ANEVUM mark-first recognition expansion. Profiles and notifications are explicitly local examples, without real member data or XP writes.
 
-`ANEVUM-EVOLUTION-V059-WEB-REVIEW.zip` contains the lightweight static web build. Serve its `index.html` over HTTP(S). It requests one compressed 3D scene at a time and uses static derivatives in the gallery/profile cards. The standalone offline file is larger because it embeds the whole collection; it is intended for review and portability.
+`ANEVUM-EVOLUTION-V059-WEB-REVIEW.zip` contains the lightweight static web build. Serve its `index.html` over HTTP(S). It requests one compressed 3D scene at a time and uses static derivatives in the gallery/profile cards. The standalone offline file is larger because it embeds the whole collection; it is intended for review and portability. The optimized HTML is about 93 KB, with a selected Level 30 scene of about 202 KB before textures/posters. All 152 external asset references were checked. Existing-site CSP integration requires extracting inline scripts/styles into approved same-origin files or supplying the required hashes/nonces; this package does not alter the live site policy.
 
 ## Native editing and reproducibility
 
@@ -26,11 +26,11 @@ Open `ANEVUM-V059-INTERACTIVE.html` for the self-contained offline review. It in
 
 The native glTF 24-second pose loops provide portable rotation/scale/translation. Complete phenomenon-specific deformation and traveling emission are preserved in `src/material.vert`, `src/material.frag` and scene JSON. A general-purpose glTF player does not reproduce those custom shaders automatically. No `.blend` files, sculpt-history project files, fluid caches or path-traced production scenes are claimed.
 
-The GitHub branch stores the procedural sources, applied albedo, registries, complete manifest, test harness and workflow. Generated assets are delivered in the archive and can be rebuilt. The original Vesper SVG and both GitHub progression registries are retained as references. `docs/ASSET-INVENTORY.json` records per-file sizes and SHA-256 hashes.
+The GitHub branch stores the procedural sources, applied albedo, registries, complete manifest, test harness and workflow. Generated assets are delivered in the archive and can be rebuilt. Pixel-identical rendering across different GPU drivers and library versions is not promised; the included hashes identify the delivered bytes. The original Vesper SVG and both GitHub progression registries are retained as references. `docs/ASSET-INVENTORY.json` records per-file sizes and SHA-256 hashes.
 
 ## Verification
 
-`docs/ARTIFACT-QA.json` contains asset/geometry/alpha, dimensions, native animation, texture reference, offline dependency, progression and text-contrast checks. `docs/MOTION-RENDER-RESULTS.json` records all thirty measured renders and frame deltas. Browser acceptance evidence is stored separately with the exact tested GitHub commit and environment when available.
+`docs/ARTIFACT-QA.json` contains asset/geometry/alpha, dimensions, native animation, texture reference, offline dependency, progression and text-contrast checks. `docs/MOTION-RENDER-RESULTS.json` records all thirty measured renders and frame deltas. The final browser run passed **58 of 58 checks**, with no JavaScript exceptions, including all thirty rendered-frame motion comparisons, 1440/390/320px viewports, pause, reduced motion, dialog focus return, recognition and static fallback. **1,669 of 1,669 artifact checks passed**, and all 152 external web references resolved in the package. The tested runtime is `a8fc5fa720562c61659cd1ea3ae93492beb32796`; run `39049425037`. `qa-browser/` contains the actual captures and full result JSON. `docs/VERIFICATION-SUMMARY.json` records coverage and limits.
 
 Headless render timing uses Mesa llvmpipe at 448px. This is useful diagnostic evidence, not proof of 60fps on native mobile hardware. Browser testing uses desktop Chromium and simulated 390/320px widths. Native iPhone Safari, VoiceOver/screen-reader operation and battery/GPU behavior require separate real-device acceptance.
 

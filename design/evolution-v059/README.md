@@ -16,6 +16,7 @@ python src/export_native.py
 python src/render.py
 python src/build.py
 python src/motion.py
+python src/previews.py
 python src/validate.py
 ```
 
