@@ -74,7 +74,13 @@ try{
  for(const [width,height] of [[1440,900],[390,844],[320,720]]){
   await c.send('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:1,mobile:width<=390});
   await c.send('Page.navigate',{url:base+'/staff'});
-  await until(()=>evaluate("Boolean(document.querySelector('.ir-screen .ir-overview'))"));
+  try{
+   await until(()=>evaluate("Boolean(document.querySelector('.ir-screen .ir-overview'))"),14000);
+  }catch(error){
+   const diagnosis=await evaluate("({path:location.pathname,body:document.body.innerText.slice(0,1600),html:document.documentElement.outerHTML.slice(0,200)})").catch(()=>({error:'Inspection unavailable'}));
+   console.error('IREN_SYNTHETIC_BROWSER_GATE',JSON.stringify(diagnosis));
+   throw error;
+  }
   const layout=await evaluate("(()=>{const e=document.querySelector('.ir-screen');const r=e.getBoundingClientRect();return {left:r.left,top:r.top,right:r.right,bottom:r.bottom,viewportW:innerWidth,viewportH:innerHeight,locked:getComputedStyle(document.documentElement).overflow==='hidden',nav:document.querySelectorAll('.ir-nav>button').length,founder:document.body.innerText.includes('CREATOR PROFILES'),overflow:e.scrollWidth>e.clientWidth+2}})()");
   assert.equal(layout.nav,7,JSON.stringify({width,layout}));
   assert.equal(layout.locked,true,JSON.stringify({width,layout}));
@@ -96,5 +102,6 @@ try{
 }finally{
  try{c?.close()}catch{}
  browser.kill('SIGKILL');await new Promise(resolve=>server.close(resolve));
- rmSync(profile,{force:true,recursive:true});
+ try{rmSync(profile,{force:true,recursive:true,maxRetries:10,retryDelay:150})}
+ catch(error){console.warn('IREN_CHROMIUM_TEMP_CLEANUP_WARNING',String(error))}
 }
