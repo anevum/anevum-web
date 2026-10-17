@@ -8,6 +8,7 @@ import type {CosmicScene} from "./CosmicIllustration";
 import {Icon} from "./Icons";
 import {ErrorState,LoadingState} from "./States";
 import {PublicAuthorShowcase} from "./PublicAuthorShowcase";
+import {CompactMemberIdentity} from "./CompactMemberIdentity";
 
 /** A real public index, never a synthetic social feed. Private, queued and
  * unreviewed records must remain excluded by their authoritative API.
@@ -177,8 +178,7 @@ export function CommunityHomeFeed({projects,creators,state,communityEnabled}:Pro
           <div className="av6-aside-heading"><span>02 / CREATOR DIRECTORY</span><span>PUBLIC</span></div>
           <h3>Behind the work.</h3>
           {creators.length?<div className="av6-maker-list">{creators.map(c=><Link key={c.handle} to={"/creators/"+encodeURIComponent(c.handle)}>
-            <span className="av6-maker-avatar" aria-hidden="true">{(c.displayName.charAt(0)||"A").toUpperCase()}</span>
-            <span><strong>{c.displayName}</strong><small>@{c.handle}</small></span>
+            <CompactMemberIdentity interactive={false} size="inline" className="av65-maker-index" member={{handle:c.handle,displayName:c.displayName,avatar:false,level:null,featuredAwards:[],source:'creator-channel'}}/>
             <span className="av6-maker-count">{c.publishedProjects}</span>
           </Link>)}</div>:<p>Public creator channels appear after real, reviewed publications.</p>}
           <Link className="av6-aside-footer" to="/creators">FIND CREATORS <Icon name="arrow" size={14}/></Link>

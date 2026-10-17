@@ -1,7 +1,8 @@
 import {useEffect,useRef,useState} from 'react';
 import artifacts from '../../../shared/level-artifacts.json';
 import {OrbitalMark} from './OrbitalMark';
-import {CelestialEmblem} from './CelestialEmblem';
+import {BadgeInsignia} from './BadgeInsignia';
+import {BADGE_CATALOG} from '../lib/player-recognition';
 import {registerAnimatedSpecimen} from '../lib/evolution-mini-renderer';
 
 // The member server owns earned level/XP; this shared presentation consumes
@@ -29,4 +30,6 @@ export function LevelEmblem({level,size=64}:{level:number;size?:number}){
    onError={()=>setFailed(true)}/>
  </span>;
 }
-export function AwardEmblem({award,earned=true}:{award?:string;earned?:boolean}){return <CelestialEmblem motif={award==='world_shaper'?'trinity':'beacon'} size="small" state={earned?"earned":"locked"}/> }
+export function AwardEmblem({award,earned=true}:{award?:string;earned?:boolean}){
+ return <BadgeInsignia badge={award||'first_signal'} size="small" state={earned?'earned':'locked'} title={award&&BADGE_CATALOG[award]?.name||'Recognition badge'}/>;
+}

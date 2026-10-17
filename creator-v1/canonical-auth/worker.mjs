@@ -10,6 +10,7 @@ import {canonicalCommunity} from "./community.mjs";
 import {canonicalForums} from "./forums.mjs";
 import {canonicalProgression,progressionReady} from './progression.mjs';
 import {canonicalSpace} from "./space.mjs";
+import {canonicalRecognition} from './recognition.mjs';
 import {boundedText} from "./request-body.mjs";
 import {supporterMember,supporterWebhook} from "./supporter.mjs";
 import {supporterRewardsRoute} from "./supporter-rewards.mjs";
@@ -109,6 +110,8 @@ export function createCanonicalStageWorker({authFactory=createCanonicalAuth}={})
     const forumRoute=/^\/api\/v1\/community\/(?:threads(?:\/[a-f0-9-]{36}(?:\/(?:replies|reaction))?|\/?)?|reports)$/.test(path)||(/^\/api\/v1\/member\/forum-submissions(?:\/[a-f0-9-]{36})?$/.test(path)||path==="/api/v1/member/forum-review");
     const publicMetrics=path===PUBLIC_TELEMETRY_PATH;
     const ownSpace=OWN_SPACE.test(path),publicSpace=path.match(PUBLIC_SPACE);
+     const ownRecognition=path===CANONICAL_PREFIX+'/recognition';
+     if(ownRecognition&&env.CANONICAL_RECOGNITION_ENABLED!=='true')return fail(request,404);
     const ownProgression=/^\/api\/v1\/member\/(?:progression|notifications(?:\/ack)?|xp-test)$/.test(path);
     const ownSupporter=/^\/api\/v1\/member\/supporter(?:\/(?:checkout|portal|webhook|rewards))?$/.test(path);
     const supporterHook=path===CANONICAL_PREFIX+"/supporter/webhook";
@@ -124,7 +127,7 @@ export function createCanonicalStageWorker({authFactory=createCanonicalAuth}={})
     // This is a proposed, source-only pilot. Do not expose even a GET
     // endpoint without a deliberate rollout flag and an approved D1 schema.
     if(ownProjectSave&&env?.CANONICAL_PROJECT_SAVES_ENABLED!=="true")return fail(request,404);
-    if(path!==HEALTH && path!==METHODS && !publicHandle && !ownProfile && !ownExport && !ownClosure && !ownSpace && !publicSpace && !publicCommunity && !forumRoute && !publicMetrics && !ownProgression && !ownSupporter && !ownProjectSave && !ownStudio && !ownStudioReview &&
+    if(path!==HEALTH && path!==METHODS && !publicHandle && !ownProfile && !ownExport && !ownClosure && !ownSpace && !publicSpace && !ownRecognition && !publicCommunity && !forumRoute && !publicMetrics && !ownProgression && !ownSupporter && !ownProjectSave && !ownStudio && !ownStudioReview &&
       !(path.startsWith(CANONICAL_AUTH_PATH+"/") &&
         (AUTH_ALLOWLIST[request.method]?.has(path)??false)))
       return fail(request,404);
@@ -133,6 +136,7 @@ export function createCanonicalStageWorker({authFactory=createCanonicalAuth}={})
     if(publicMetrics&&request.method!=="GET")return fail(request,405);
     if(ownProfile && !["GET","POST","PATCH"].includes(request.method))return fail(request,404);
     if(ownExport && request.method!=="GET")return fail(request,404);
+     if(ownRecognition&&!['GET','PATCH'].includes(request.method))return fail(request,405);
     if(ownProjectSave && !["GET","PUT","DELETE"].includes(request.method))return fail(request,405);
     if(ownStudioReview && !["GET","POST"].includes(request.method))return fail(request,405);
     if(ownStudio && !["GET","HEAD","POST","PATCH","PUT","DELETE"].includes(request.method))return fail(request,405);
@@ -284,7 +288,7 @@ export function createCanonicalStageWorker({authFactory=createCanonicalAuth}={})
         if(!session?.user?.id||session.user.emailVerified!==true)
           return safeJson(request,{error:"Verified sign-in required"},401);
       }
-      if(ownProfile||ownExport||ownClosure||ownSpace||ownProgression||ownSupporter||ownProjectSave||ownStudio||ownStudioReview){
+      if(ownProfile||ownExport||ownClosure||ownSpace||ownRecognition||ownProgression||ownSupporter||ownProjectSave||ownStudio||ownStudioReview){
         const session=await auth.api.getSession({headers:clean.headers});
         if(!session?.user)return safeJson(request,{error:"Sign-in required"},401);
         if(ownClosure)return safeResponse(await canonicalAccountClosure(clean,env,session.user,session.session));
@@ -296,6 +300,7 @@ export function createCanonicalStageWorker({authFactory=createCanonicalAuth}={})
           ?await supporterRewardsRoute(clean,env,session.user)
           :await supporterMember(clean,env,session.user));
         if(ownSpace)return safeResponse(await canonicalSpace(clean,env,session.user));
+         if(ownRecognition)return safeResponse(await canonicalRecognition(clean,env,session.user));
         return safeResponse(ownExport?
           await canonicalExportMember(clean,env,session.user,canonicalRequestOrigin(env)):
           await canonicalCreatorMember(clean,env,session.user,canonicalRequestOrigin(env)));

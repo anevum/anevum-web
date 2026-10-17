@@ -1,5 +1,6 @@
 import {boundedText} from './request-body.mjs';
 import {readSupporterRewards} from './supporter-rewards.mjs';
+import {publicRecognitionSummary} from './recognition.mjs';
 
 import {MILESTONES} from './rewards.mjs';
 export {MILESTONES} from './rewards.mjs';
@@ -142,6 +143,10 @@ export async function canonicalSpace(req,env,user,publicHandle=null,now=Math.flo
   if(path.endsWith('/space')){
    if(req.method==='GET'){
     const data=await spaceSnapshot(db,id);
+    if(env.CANONICAL_RECOGNITION_ENABLED==='true'){
+     const verified=await publicRecognitionSummary(db,id);
+     if(verified)Object.assign(data,verified);
+    }
     if(isPublic){delete data.revision;if(!data.showStats)delete data.stats;data.awards=data.awards.filter(a=>a.earnedAt&&data.featuredAwards.includes(a.id));}
     // Public cosmetics require explicit member opt-in; private previews
     // remain visible to their authenticated owner while subscribed.

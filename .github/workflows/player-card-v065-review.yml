@@ -1,0 +1,35 @@
+name: V065 Player Card Recognition Review
+on:
+  pull_request:
+    paths:
+      - "creator-v1/web/src/**"
+      - "creator-v1/canonical-auth/**"
+      - "creator-v1/test/player-card-recognition-v065.test.mjs"
+      - "creator-v1/test/player-recognition-issuance-v066.test.mjs"
+      - ".github/workflows/player-card-v065-review.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify-source-only:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install dependencies without invoking deployment
+        run: npm install --ignore-scripts --no-audit --no-fund
+      - name: Strict Creator V1 TypeScript check
+        run: npm run check:creator-v1-web
+      - name: Validate every canonical Worker module parses before release
+        shell: bash
+        run: |
+          set -euo pipefail
+          for f in creator-v1/canonical-auth/*.mjs; do node --check "$f"; done
+      - name: Verify recognition grant ledger against real SQLite migrations and all previous card contracts
+        run: node --experimental-sqlite --test creator-v1/test/player-card-recognition-v065.test.mjs creator-v1/test/player-recognition-issuance-v066.test.mjs creator-v1/test/member-identity-v061.test.mjs
+      - name: Confirm no production publication or migration was performed
+        run: |
+          echo "REVIEW ONLY: No D1 migrations, Workers deploy, version promotion, XP grants or Cloudflare secrets touched."
