@@ -25,6 +25,7 @@ export type PublicIdentity={
  avatar:boolean;
  level:number|null;
  featuredAwards:string[];
+ source?:'canonical-member'|'creator-channel';
  // New public API fields; optional so existing V061 responses remain compatible.
  earnedBadges?:EarnedBadge[];
  badgeDisplay?:BadgeDisplay;
@@ -35,31 +36,31 @@ export type PublicIdentity={
 };
 export type PlayerCardSize='inline'|'compact'|'standard'|'featured';
 const cleanName=(id:string)=>id.replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase());
-export function CompactMemberIdentity({member,href,className='',size='standard'}:{
- member:PublicIdentity;href?:string;className?:string;size?:PlayerCardSize
+export function CompactMemberIdentity({member,href,className='',size='standard',interactive=true}:{
+ member:PublicIdentity;href?:string;className?:string;size?:PlayerCardSize;interactive?:boolean
 }){
- const level=typeof member.level==='number'&&Number.isSafeInteger(member.level)&&member.level>=1&&member.level<=30?member.level:null;
+ const channel=member.source==='creator-channel';
+ const level=!channel&&typeof member.level==='number'&&Number.isSafeInteger(member.level)&&member.level>=1&&member.level<=30?member.level:null;
  const specimen=level===null?null:LEVEL_ARTIFACTS[level-1];
- const badges=selectFeaturedBadges(member.featuredAwards||[],member.earnedBadges,member.badgeDisplay);
- const {medal,ribbons}=selectedDistinctions(member.distinctions);
- const aura=safePlayerAura(member.aura);
- const constellation=safeConstellation(member.constellation);
+ const badges=channel?[]:selectFeaturedBadges(member.featuredAwards||[],member.earnedBadges,member.badgeDisplay);
+ const {medal,ribbons}=selectedDistinctions(channel?undefined:member.distinctions);
+ const aura=safePlayerAura(channel?'none':member.aura);
+ const constellation=safeConstellation(channel?undefined:member.constellation);
  const url=href||'/@'+encodeURIComponent(member.handle);
  const label=[
-  member.displayName+' @'+member.handle,
+  member.displayName+' @'+member.handle+(channel?' · Creator channel, not linked to a canonical member identity':''),
   level!==null?'Evolution level '+level+' '+specimen?.name:'',
   badges.length?badges.length+' earned badges: '+badges.map(id=>BADGE_CATALOG[id]?.name||cleanName(id)).join(', '):'',
   medal?'Medal: '+medal.name:'',
   ribbons.length?'Ribbons: '+ribbons.map(r=>r.name).join(', '):'',
   constellation?'Constellation: '+constellation.name:''
  ].filter(Boolean).join(' · ');
- return <Link to={url}
-   className={'av61-identity av61-identity--'+size+' av65-player-card av65-player-card--'+size+' av65-aura--'+aura+(className?' '+className:'')}
-   data-player-card="v065" aria-label={label}>
+ const classNames='av61-identity av61-identity--'+size+' av65-player-card av65-player-card--'+size+' av65-aura--'+aura+(channel?' av65-player-card--channel':'')+(className?' '+className:'');
+ const face=<>
   {aura!=='none'&&<span className="av65-aura-field" aria-hidden="true"/>}
   <span className="av61-portrait-zone">
    <span className="av61-photo"><MemberPortrait name={member.displayName}
-    src={member.avatar?(href==='/member'?'/api/v1/member/media/avatar':'/api/v1/members/'+encodeURIComponent(member.handle)+'/media/avatar'):undefined}
+    src={!channel&&member.avatar?(href==='/member'?'/api/v1/member/media/avatar':'/api/v1/members/'+encodeURIComponent(member.handle)+'/media/avatar'):undefined}
     supporterFrame={member.supporterAppearance?.frame}/></span>
    {specimen&&<span className="av61-specimen" title={'Evolution Level '+level+' · '+specimen.name}>
     <LevelEmblem level={level!} size={size==='inline'?30:size==='compact'?38:size==='featured'?60:44}/>
@@ -77,6 +78,7 @@ export function CompactMemberIdentity({member,href,className='',size='standard'}
    </span>
    <small className="av61-member-handle">@{member.handle}</small>
    <span className="av61-member-rewards">
+    {channel&&<span className="av65-channel-label">CREATOR CHANNEL</span>}
     {specimen&&<span className="av61-level-label" title={specimen.name}>LVL {String(level).padStart(2,'0')} <span className="av61-specimen-name">· {specimen.name}</span></span>}
     {badges.length>0&&<span className="av61-award-list av65-badge-rack" aria-label="Three selected or latest earned badges">
      {badges.map(id=>{
@@ -94,6 +96,8 @@ export function CompactMemberIdentity({member,href,className='',size='standard'}
     {member.supporterAppearance&&<span className="av61-supporter" aria-label="Supporter appearance"><SupporterIdentity appearance={member.supporterAppearance} compact/></span>}
    </span>
   </span>
- </Link>;
+ </>;
+ return interactive?<Link to={url} className={classNames} data-player-card="v065" aria-label={label}>{face}</Link>:
+  <span className={classNames} data-player-card="v065" role="group" aria-label={label}>{face}</span>;
 }
 export const PlayerCard=CompactMemberIdentity;
