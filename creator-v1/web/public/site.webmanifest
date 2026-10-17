@@ -1,0 +1,25 @@
+{
+  "id": "/",
+  "name": "ANEVUM — Create Beyond Worlds",
+  "short_name": "ANEVUM",
+  "description": "Discover original games, apps, art and creative worlds built by independent makers.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#040811",
+  "theme_color": "#040811",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
