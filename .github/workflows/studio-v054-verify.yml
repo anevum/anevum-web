@@ -7,6 +7,7 @@ on:
       - build/creator-studio-v054-structured-workbench-20261016
       - release/a-studio-v054-workbench-20261016
       - design/creator-studio-v0542-canvas-first-20261017
+      - release/a-studio-v0542-canvas-first-20261017
   workflow_dispatch:
 
 permissions:
