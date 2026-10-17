@@ -119,6 +119,8 @@ export function StudioWorkbench({value,onChange,disabled,title,creator}:{
     onChange={e=>{onChange(e.target.value);setError('');}}/>
    <p className="wb-help">Notes remain editable. Converting is optional and limited to 2,500 characters; no media or executable files are involved.</p>
    {error&&<p role="alert" className="wb-error">{error}</p>}
+   <NativePackLab title={title} creator={creator} document={null} disabled={disabled}
+    onImportDocument={change}/>
   </section>;
  }
  const workDocument:StudioBlockDocument=document;
