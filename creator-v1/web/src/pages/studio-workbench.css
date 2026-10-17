@@ -288,3 +288,12 @@
 @media(prefers-reduced-motion:reduce){
  .wb-canvas-first *,.wb-canvas-first *::before,.wb-canvas-first *::after{scroll-behavior:auto;transition:none!important;animation:none!important}
 }
+
+/* Natural-size writing: avoid large fixed input boxes and native resize grips. */
+.wb-canvas-first .wb-inline-text{
+ resize:none;overflow:hidden;min-height:45px;max-height:none;
+}
+.wb-canvas-first .wb-kind-paragraph .wb-inline-text{min-height:53px}
+.wb-canvas-first .wb-kind-choice .wb-inline-text{min-height:53px}
+.wb-canvas-first .wb-kind-heading .wb-inline-text,
+.wb-canvas-first .wb-kind-scene .wb-inline-text{min-height:54px}
