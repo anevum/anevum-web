@@ -189,3 +189,94 @@ test('private binary upload validates types, quotas, ownership and forced downlo
   assert.equal((await j(await s.call(ROOT,'GET','alice'))).projects.length,0);
  }finally{s.close();}
 });
+
+
+test('quarantined ZIP, not an outside URL, makes a game eligible for private review',async()=>{
+ const s=setup({uploads:true});try{
+  const privateDraft={...draft,slug:'private-game-zip',sourceUrl:null,demoUrl:null};
+  const first=await s.call(ROOT,'POST','alice',{clientRequestId:crypto.randomUUID(),draft:privateDraft});
+  assert.equal(first.status,201);
+  const p=(await j(first)).project,assetRoot=ROOT+'/'+p.id+'/assets';
+  // No public URL and no uploaded work must be rejected.
+  assert.equal((await s.call(ROOT+'/'+p.id+'/submit','POST','alice',{revision:1})).status,422);
+  // Uploading an image preview alone is not a playable game package.
+  const gif=new TextEncoder().encode('GIF89a');
+  const cover=(await j(await s.call(assetRoot,'POST','alice',{name:'cover.gif',sizeBytes:gif.length,contentType:'image/gif'}))).id;
+  assert.equal((await s.call(assetRoot+'/'+cover,'PUT','alice',gif)).status,200);
+  assert.equal((await s.call(ROOT+'/'+p.id+'/submit','POST','alice',{revision:1})).status,422);
+  // ZIP file is accepted as quarantined attachment evidence only. This does
+  // not inspect, install, approve or execute archive contents.
+  const zip=new Uint8Array([0x50,0x4b,0x03,0x04,0x14,0x00,0,0]);
+  const pkg=(await j(await s.call(assetRoot,'POST','alice',{name:'game-build.zip',sizeBytes:zip.length,contentType:'application/zip'}))).id;
+  assert.equal((await s.call(assetRoot+'/'+pkg,'PUT','alice',zip)).status,200);
+  const submitted=await s.call(ROOT+'/'+p.id+'/submit','POST','alice',{revision:1});
+  assert.equal(submitted.status,200,JSON.stringify(await submitted.clone().json()));
+  const saved=await j(submitted);
+  assert.equal(saved.project.status,'pending_review');
+  assert.equal(saved.project.demoUrl,null);
+  assert.equal(saved.project.sourceUrl,null);
+  assert.match(saved.note,/no publication/);
+  // Access to the private file never becomes public after submission.
+  assert.equal((await s.call(assetRoot+'/'+pkg+'/file','GET','bob')).status,404);
+  assert.equal((await s.call(assetRoot+'/'+pkg+'/file','GET',null)).status,401);
+  assert.equal((await s.call('/api/v1/member/studio/review','GET',null)).status,401);
+  assert.equal((await s.call('/api/v1/member/studio/review','GET','alice')).status,403);
+  // Forum moderators have NO Creator Studio reviewer privilege.
+  s.env.CANONICAL_STUDIO_REVIEWER_IDS='';
+  s.env.CANONICAL_FORUM_REVIEWER_IDS=bob.id;
+  assert.equal((await s.call('/api/v1/member/studio/review','GET','bob')).status,403);
+  s.env.CANONICAL_STUDIO_REVIEWER_IDS=bob.id;
+  const queue=(await j(await s.call('/api/v1/member/studio/review','GET','bob'))).projects;
+  assert.equal(queue.length,1);
+  assert.equal(Number(queue[0].attachment_count),2);
+  assert.equal(Number(queue[0].attachment_bytes),zip.length+gif.length);
+  const manifestPath='/api/v1/member/studio/review/'+p.id+'/manifest';
+  const manifestResponse=await s.call(manifestPath,'GET','bob');
+  assert.equal(manifestResponse.status,200);
+  const manifest=await j(manifestResponse);
+  assert.equal(manifest.projectId,p.id);assert.equal(manifest.revision,2);
+  assert.equal(manifest.assets.length,2);
+  assert.ok(manifest.assets.some(x=>x.name==='game-build.zip'&&x.kind==='package'&&x.sha256.length===64));
+  assert.ok(manifest.assets.every(x=>!Object.keys(x).some(key=>/storage|object|url|body|download/i.test(key))));
+  assert.match(manifest.note,/NOT passed malware scanning/);
+  assert.equal((await s.call(manifestPath,'GET','alice')).status,403);
+  assert.equal((await s.call(manifestPath,'POST','bob',{})).status,405);
+  assert.equal((await s.call(manifestPath+'/file','GET','bob')).status,404);
+ }finally{s.close();}
+});
+
+test('owner submissions cannot appear in their own review queue',async()=>{
+ const s=setup({uploads:true});try{
+  const ownerDraft={...draft,slug:'staff-demo-project',title:'Private staff demo project'};
+  const r=await s.call(ROOT,'POST','bob',{clientRequestId:crypto.randomUUID(),draft:ownerDraft});
+  assert.equal(r.status,201);
+  const p=(await j(r)).project;
+  assert.equal((await s.call(ROOT+'/'+p.id+'/submit','POST','bob',{revision:1})).status,200);
+  const q=await j(await s.call('/api/v1/member/studio/review','GET','bob'));
+  assert.equal(q.projects.length,0);
+  assert.equal((await s.call('/api/v1/member/studio/review/'+p.id+'/manifest','GET','bob')).status,404);
+  assert.equal((await s.call('/api/v1/member/studio/review','POST','bob',{
+   projectId:p.id,action:'changes_requested',revision:2,reason:'Cannot review a project I submitted'
+  })).status,403);
+ }finally{s.close();}
+});
+
+test('bounded cleanup of abandoned reservations and expired upload leases',async()=>{
+ const {cleanupCanonicalStudioAssets}=await import('../canonical-auth/studio-assets.mjs');
+ const s=setup({uploads:true});try{
+  const p=(await j(await s.call(ROOT,'POST','alice',projectRequest()))).project;
+  const route=ROOT+'/'+p.id+'/assets';
+  const reserved=(await j(await s.call(route,'POST','alice',{name:'abandoned.gif',sizeBytes:6,contentType:'image/gif'}))).id;
+  const expired=(await j(await s.call(route,'POST','alice',{name:'aborted.zip',sizeBytes:8,contentType:'application/zip'}))).id;
+  const time=Math.floor(Date.now()/1000);
+  s.f.db.prepare('UPDATE member_studio_assets SET created_at=? WHERE id=?').run(time-90000,reserved);
+  const orphan=s.f.db.prepare('SELECT storage_key FROM member_studio_assets WHERE id=?').get(expired).storage_key;
+  s.f.db.prepare("UPDATE member_studio_assets SET status='uploading',lease_until=? WHERE id=?").run(time-100,expired);
+  await s.store.put(orphan,new Uint8Array([80,75,3,4,20,0,0,0]));
+  const report=await cleanupCanonicalStudioAssets(s.env,time);
+  assert.equal(report.cleaned,2);
+  assert.equal(s.objects.size,0);
+  assert.equal(s.f.db.prepare('SELECT COUNT(*) AS n FROM member_studio_assets').get().n,0);
+  assert.equal((await cleanupCanonicalStudioAssets({...s.env,CANONICAL_CREATOR_UPLOADS_ENABLED:'false'},time)).cleaned,0);
+ }finally{s.close();}
+});

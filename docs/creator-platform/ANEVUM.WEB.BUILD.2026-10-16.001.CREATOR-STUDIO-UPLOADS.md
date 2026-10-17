@@ -35,3 +35,11 @@ No payments, RHEN, production, signup, Stripe, account balance, XP or supporter 
 Add staff asset inspection, malware/ZIP-bomb scanner, secure content processing, immutable approved release manifest, separate registrable-origin HTML5/PWA execution sandbox, public catalogue bridge, versioning/rollback, safe media viewers, account asset export/erasure, rightsholder reports and measured bandwidth limits. Test complete SIGNAL 001 upload and play there before advertising native games.
 
 The immediate QA target is npm run test:studio, then npm test from creator-v1. Passing these synthetic tests does not mean the live deployment is authorized.
+
+
+## V044 continuation / attachment-first review
+- Creators can submit a private game/tool ZIP, image-based artwork, audio, or document without needing an external site. File type must match the project category and must already have a completed quarantined upload. Video still requires a public HTTPS URL because Studio does not yet accept video files.
+- Readiness is checked on the server and checked a second time atomically in the D1 submission update. Removing an upload never causes a public release; a reviewer sees the new private manifest state.
+- Creator Studio reviewers now use CANONICAL_STUDIO_REVIEWER_IDS, independent of forum reviewers. An independent reviewer may inspect only status/size/hash/name metadata, never execute, preview, or download quarantined bytes from the review desk.
+- The existing staging Worker scheduled callback additionally runs bounded expired-reservation / abandoned-upload recovery, but remains inert when uploads are disabled or a private R2 binding is missing.
+- No new infrastructure, billable bucket, release host, or runtime was provisioned by this code revision. Game packages remain untrusted and unplayable until separate asset inspection and sandbox release gates pass.
