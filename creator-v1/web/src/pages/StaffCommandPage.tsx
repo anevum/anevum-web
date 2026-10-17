@@ -62,7 +62,10 @@ async function staffRequest<T>(method:'GET'|'POST',body?:unknown,query='',signal
   body:body===undefined?undefined:JSON.stringify(body)
  });
  const result=await response.json().catch(()=>({error:'Staff service returned an invalid response'}));
- if(!response.ok)throw Error(response.status===403?'Verified staff permission required':result.error||'Staff service unavailable');
+ if(!response.ok){
+  const error=Object.assign(new Error(response.status===403?'Verified staff permission required':result.error||'Staff service unavailable'),{status:response.status});
+  throw error;
+ }
  return result as T;
 }
 async function reviewRequest<T>(method:'GET'|'POST',body?:unknown):Promise<T>{
@@ -125,7 +128,10 @@ function CommandWorkspace({memberId}:{memberId:string}){
    try{
     const next=await staffRequest<StaffSnapshot>('GET',undefined,'room='+room,controller.signal);
     if(!cancelled){setSnapshot(next);setFault('');setLoading(false)}
-   }catch(e){if(!cancelled){setFault(errorOf(e));setLoading(false)}}
+   }catch(e){if(!cancelled){
+    if((e as Error & {status?:number})?.status===401||(e as Error & {status?:number})?.status===403)setSnapshot(null);
+    setFault(errorOf(e));setLoading(false)
+   }}
    finally{inFlight=false}
   };
   void poll();
