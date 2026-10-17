@@ -1,0 +1,213 @@
+name: ANEVUM Supporter V045 Apex Release
+
+# One-time owner-authorized production UI release.
+# The active apex Worker, bindings, paid-feature gates and database identities
+# remain unchanged except for an updated immutable static-assets build.
+on:
+  push:
+    branches: [patch/supporter-compact-v045-20261017-001]
+    paths: [.github/workflows/apex-supporter-v045-release.yml]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: anevum-apex-public-supporter-v045
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: github.repository == 'anevum/anevum-web' && github.ref == 'refs/heads/patch/supporter-compact-v045-20261017-001'
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      CF_ZONE: 8abe27259b5436af5966d3b40d9a3760
+      EXPECTED_WORKER_VERSION: 97c4fe08-1418-4f58-b1d9-45ca6182baad
+      EXPECTED_VERIFIED_SOURCE: d3f9d9b844e1c9564701b11656bd2d8b751ba15d
+    steps:
+      - name: Checkout exact authorized supporter candidate
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+          fetch-depth: 0
+
+      - name: Verify source invariants and untouched prior CI-passing app
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          git cat-file -e "$EXPECTED_VERIFIED_SOURCE^{commit}"
+          git diff --exit-code "$EXPECTED_VERIFIED_SOURCE" "$GITHUB_SHA" -- creator-v1/web/src creator-v1/web/public creator-v1/apex-prelaunch creator-v1/canonical-auth creator-v1/supporter creator-v1/finance creator-v1/wrangler.apex-prelaunch.jsonc creator-v1/package.json creator-v1/test creator-v1/ops
+          node --input-type=module <<'NODE'
+          import assert from 'node:assert/strict';
+          import {readFileSync} from 'node:fs';
+          const p=readFileSync('creator-v1/web/src/pages/SupporterPage.tsx','utf8');
+          const a=readFileSync('creator-v1/web/src/App.tsx','utf8');
+          const canary=readFileSync('creator-v1/ops/canonical-live-signup-canary.mjs','utf8');
+          assert.match(p,/Help something good grow/);
+          assert.doesNotMatch(p,/<SupporterTransparency\/>/);
+          assert.doesNotMatch(p,/<SupporterRewardsStudio\b/);
+          assert.match(p,/ENROLLMENT NOT OPEN/);
+          assert.match(a,/path="support\/transparency"/);
+          assert.match(a,/path="support\/collection"/);
+          assert.match(canary,/origin: "https:\/\/anevum.com"/);
+          const cfg=JSON.parse(readFileSync('creator-v1/wrangler.apex-prelaunch.jsonc','utf8'));
+          assert.equal(cfg.name,'anevum-apex-prelaunch-gateway');
+          assert.deepEqual(cfg.routes,[]);
+          assert.equal(cfg.assets.binding,'ASSETS');
+          assert.equal(cfg.assets.run_worker_first,true);
+          assert.deepEqual(cfg.d1_databases.map(x=>[x.binding,x.database_id]),[
+            ['COMMUNITY_DB','fa96e36d-6257-4883-bf15-074947e11a13'],
+            ['MEMBER_DB','e1d29049-c83b-4534-8355-dc1fa36ba6d8']
+          ]);
+          NODE
+          echo SOURCE_AND_APP_GUARD=PASS
+
+      - name: Require exact current Cloudflare production version and bindings
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$CLOUDFLARE_ACCOUNT_ID" = "2f7ee83107240152097efd956a4e8335"
+          test -n "$CLOUDFLARE_API_TOKEN"
+          umask 077
+          hdr="Authorization: Bearer $CLOUDFLARE_API_TOKEN"
+          api="https://api.cloudflare.com/client/v4"
+          curl --fail --silent --show-error --max-time 25 -H "$hdr" "$api/zones/$CF_ZONE/workers/routes" > "$RUNNER_TEMP/anevum-v045-routes-before.json"
+          curl --fail --silent --show-error --max-time 25 -H "$hdr" "$api/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/anevum-apex-prelaunch-gateway/settings" > "$RUNNER_TEMP/anevum-v045-settings-before.json"
+          curl --fail --silent --show-error --max-time 25 -H "$hdr" "$api/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/anevum-apex-prelaunch-gateway/deployments?per_page=1" > "$RUNNER_TEMP/anevum-v045-deploy-before.json"
+          jq -e '
+            .success and
+            ([.result[] | select(.pattern=="anevum.com/*" and .script=="anevum-apex-prelaunch-gateway")]|length)==1 and
+            ([.result[] | select(.pattern=="a.anevum.com/*" and .script=="anevum-a-community-retirement")]|length)==1
+          ' "$RUNNER_TEMP/anevum-v045-routes-before.json" >/dev/null
+          jq -e '
+            .success and
+            ([.result.bindings[]|select(.name=="ANEVUM_PRELAUNCH_MODE" and .type=="plain_text" and .text=="public")]|length)==1 and
+            ([.result.bindings[]|select(.name=="ANEVUM_LAUNCH_APPROVED" and .type=="plain_text" and .text=="true")]|length)==1 and
+            ([.result.bindings[]|select(.name=="CANONICAL_PUBLIC_SIGNUP_ENABLED" and .type=="plain_text" and .text=="true")]|length)==1 and
+            ([.result.bindings[]|select(.name=="CANONICAL_CREATOR_STUDIO_ENABLED" and .type=="plain_text" and .text=="true")]|length)==1 and
+            ([.result.bindings[]|select(.name=="CANONICAL_CREATOR_UPLOADS_ENABLED" and .type=="plain_text" and .text=="false")]|length)==1 and
+            ([.result.bindings[]|select(.name=="CANONICAL_BETTER_AUTH_SECRET" and .type=="secret_text")]|length)==1 and
+            ([.result.bindings[]|select(.name=="CANONICAL_RESEND_API_KEY" and .type=="secret_text")]|length)==1 and
+            ([.result.bindings[]|select(.name=="CANONICAL_PROTECTED_EMAILS" and .type=="secret_text")]|length)==1 and
+            ([.result.bindings[]|select(.name=="ANEVUM_PREVIEW_ALLOWED_EMAILS" and .type=="secret_text")]|length)==1 and
+            ([.result.bindings[]|select(.name=="COMMUNITY_DB" and .type=="d1" and ((.id//.database_id)=="fa96e36d-6257-4883-bf15-074947e11a13"))]|length)==1 and
+            ([.result.bindings[]|select(.name=="MEMBER_DB" and .type=="d1" and ((.id//.database_id)=="e1d29049-c83b-4534-8355-dc1fa36ba6d8"))]|length)==1 and
+            ([.result.bindings[]|select(.name=="ASSETS" and .type=="assets")]|length)==1 and
+            ([.result.bindings[]|select(.name=="CANONICAL_SUPPORTER_COMMERCE_ENABLED")]|length)==0
+          ' "$RUNNER_TEMP/anevum-v045-settings-before.json" >/dev/null
+          jq -e --arg expected "$EXPECTED_WORKER_VERSION" '.success and .result.deployments[0].versions[0].version_id==$expected and .result.deployments[0].versions[0].percentage==100' "$RUNNER_TEMP/anevum-v045-deploy-before.json" >/dev/null
+          echo PRODUCTION_DRIFT_GUARD=PASS
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Build, verify frontend and run all local Creator V1 regressions
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm install --ignore-scripts --no-audit --no-fund
+          npm run check:creator-v1-web
+          npm run build:creator-v1-web
+          (cd creator-v1 && npm test) > "$RUNNER_TEMP/anevum-v045-tests.log" 2>&1 || { tail -n 150 "$RUNNER_TEMP/anevum-v045-tests.log"; exit 1; }
+          node creator-v1/ops/canonical-live-signup-canary.mjs
+          test -s creator-v1/dist/web/index.html
+          test -d creator-v1/dist/web/assets
+          test -z "$(find creator-v1/dist/web -name '*.map' -print -quit)"
+          echo ALL_LOCAL_AND_LIVE_CANARY_TESTS=PASS
+
+      - name: Generate a public-only configuration preserving all live flags
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --input-type=module <<'NODE'
+          import assert from 'node:assert/strict';
+          import {readFileSync,writeFileSync} from 'node:fs';
+          const path='creator-v1/wrangler.apex-prelaunch.jsonc';
+          const config=JSON.parse(readFileSync(path,'utf8'));
+          config.vars.ANEVUM_PRELAUNCH_MODE='public';
+          config.vars.ANEVUM_LAUNCH_APPROVED='true';
+          assert.equal(config.vars.CANONICAL_PUBLIC_SIGNUP_ENABLED,'true');
+          assert.equal(config.vars.CANONICAL_CREATOR_STUDIO_ENABLED,'true');
+          assert.equal(config.vars.CANONICAL_CREATOR_UPLOADS_ENABLED,'false');
+          assert.equal(config.vars.CANONICAL_EMAIL_ENABLED,'true');
+          assert.equal(config.vars.CANONICAL_INVITED_SIGNUP_ENABLED,'false');
+          assert.equal(config.vars.ANEVUM_CANONICAL_APEX_ENABLED,'true');
+          assert.equal(config.vars.CANONICAL_XP_TEST_ENABLED,'true');
+          assert.ok(!('CANONICAL_SUPPORTER_COMMERCE_ENABLED' in config.vars));
+          assert.deepEqual(config.routes,[]);
+          assert.equal(config.workers_dev,false);
+          assert.equal(config.preview_urls,false);
+          assert.equal(config.assets.binding,'ASSETS');
+          assert.equal(config.assets.run_worker_first,true);
+          writeFileSync('creator-v1/wrangler.apex-support-v045.generated.jsonc',JSON.stringify(config,null,2)+'\n');
+          NODE
+          echo SAFE_PUBLIC_BUILD_CONFIG=PASS
+
+      - name: Reconfirm no concurrent Worker deployment
+        shell: bash
+        run: |
+          set -euo pipefail
+          hdr="Authorization: Bearer $CLOUDFLARE_API_TOKEN"
+          api="https://api.cloudflare.com/client/v4"
+          curl --fail --silent --show-error --max-time 25 -H "$hdr" "$api/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/anevum-apex-prelaunch-gateway/deployments?per_page=1" > "$RUNNER_TEMP/anevum-v045-predeploy.json"
+          jq -e --arg expected "$EXPECTED_WORKER_VERSION" '.success and .result.deployments[0].versions[0].version_id==$expected and .result.deployments[0].versions[0].percentage==100' "$RUNNER_TEMP/anevum-v045-predeploy.json" >/dev/null
+
+      - name: Deploy V045 assets and same Apex Worker with existing secrets preserved
+        id: deploy
+        shell: bash
+        run: |
+          set -euo pipefail
+          npx wrangler deploy --config creator-v1/wrangler.apex-support-v045.generated.jsonc --keep-vars
+          echo V045_WORKER_AND_ASSET_UPLOAD=PASS
+
+      - name: Verify canonical hosted signup, routes, bindings and simplified UI
+        id: acceptance
+        shell: bash
+        run: |
+          set -euo pipefail
+          hdr="Authorization: Bearer $CLOUDFLARE_API_TOKEN"
+          api="https://api.cloudflare.com/client/v4"
+          curl --fail --silent --show-error --max-time 25 -H "$hdr" "$api/zones/$CF_ZONE/workers/routes" > "$RUNNER_TEMP/anevum-v045-routes-after.json"
+          curl --fail --silent --show-error --max-time 25 -H "$hdr" "$api/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/anevum-apex-prelaunch-gateway/settings" > "$RUNNER_TEMP/anevum-v045-settings-after.json"
+          jq -e -s '.[0].success and .[1].success and (.[0].result|map({pattern,script})|sort)==(.[1].result|map({pattern,script})|sort)' "$RUNNER_TEMP/anevum-v045-routes-before.json" "$RUNNER_TEMP/anevum-v045-routes-after.json" >/dev/null
+          jq -e -s '
+            .[0].success and .[1].success and
+            ([.[0].result.bindings[]|select(.type=="secret_text")|.name]|sort)==([.[1].result.bindings[]|select(.type=="secret_text")|.name]|sort) and
+            ([.[0].result.bindings[]|select(.type=="d1")|{name,id:(.id//.database_id)}]|sort_by(.name))==([.[1].result.bindings[]|select(.type=="d1")|{name,id:(.id//.database_id)}]|sort_by(.name)) and
+            ([.[0].result.bindings[]|select(.type=="plain_text")|{name,text}]|sort_by(.name))==([.[1].result.bindings[]|select(.type=="plain_text")|{name,text}]|sort_by(.name)) and
+            ([.[1].result.bindings[]|select(.type=="assets" and .name=="ASSETS")]|length)==1
+          ' "$RUNNER_TEMP/anevum-v045-settings-before.json" "$RUNNER_TEMP/anevum-v045-settings-after.json" >/dev/null
+          ready=0
+          for attempt in 1 2 3 4 5 6; do
+            if node creator-v1/ops/canonical-live-signup-canary.mjs; then ready=1; break; fi
+            sleep 4
+          done
+          test "$ready" = 1
+          curl --fail --silent --show-error --max-time 25 https://anevum.com/support > "$RUNNER_TEMP/anevum-v045-support.html"
+          chrome="$(command -v google-chrome || command -v chromium-browser || command -v chromium || true)"
+          test -n "$chrome"
+          ok=0
+          for attempt in 1 2 3 4 5 6; do
+            "$chrome" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=5000 --dump-dom https://anevum.com/support > "$RUNNER_TEMP/anevum-v045-support-dom.html" 2>/dev/null || true
+            if grep -Fq 'Help something good grow.' "$RUNNER_TEMP/anevum-v045-support-dom.html" && grep -Fq 'support/transparency' "$RUNNER_TEMP/anevum-v045-support-dom.html" && ! grep -Fq 'Know what keeps' "$RUNNER_TEMP/anevum-v045-support-dom.html"; then ok=1; break; fi
+            sleep 4
+          done
+          test "$ok" = 1
+          echo V045_APEX_RENDER_AND_PRESERVED_BINDINGS=PASS
+          echo "Deployed V045 source SHA $GITHUB_SHA to the existing public anevum.com Worker." >> "$GITHUB_STEP_SUMMARY"
+          echo "No Stripe checkout activation, changes to database records, DNS or Worker routes." >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Roll back Worker version if hosted acceptance fails
+        if: ${{ always() && (steps.deploy.outcome == 'failure' || steps.acceptance.outcome == 'failure') }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          payload=$(jq -cn --arg version "$EXPECTED_WORKER_VERSION" '{strategy:"percentage",versions:[{version_id:$version,percentage:100}],annotations:{"workers/message":"Rollback failed V045 supporter UI release to pinned prior production version"}}')
+          result=$(curl --fail --silent --show-error --max-time 25 -X POST -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" -H "Content-Type: application/json" --data "$payload" "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/anevum-apex-prelaunch-gateway/deployments")
+          echo "$result" | jq -e '.success == true' >/dev/null
+          echo V045_FAILED_RELEASE_ROLLED_BACK=PASS
