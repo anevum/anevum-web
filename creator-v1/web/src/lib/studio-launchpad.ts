@@ -1,5 +1,5 @@
 import type {StudioCategory,StudioDraft} from './canonical-studio';
-import {createStudioStarterDocument,encodeStudioBlockDocument} from './studio-blocks.ts';
+import {BLOCK_SCHEMA,createStudioStarterDocument,encodeStudioBlockDocument} from './studio-blocks.ts';
 
 // V053 intentionally creates *private project records*, not rendered templates.
 // Each template supplies an editable text scaffold for the existing Studio.
@@ -67,6 +67,12 @@ function draftBase(title:string,summary:string,description:string,category:Studi
  return {slug:safeSlug(title,id),title,summary,description,category,
   freeToUse:false,license:'',sourceUrl:null,demoUrl:null,
   aiDisclosure:'',humanContribution:''};
+}
+// A real owner-bound draft with a genuinely empty, safe creative canvas.
+// No project metadata needs to be requested before entering the workspace.
+export function blankCanvasToDraft(id:string):StudioDraft {
+ const description=encodeStudioBlockDocument({schema:BLOCK_SCHEMA,blocks:[]});
+ return draftBase('Untitled creation','A new creation taking shape in the Studio.',description,'creative',id);
 }
 export function ideaToDraft(idea:string,id:string,category:StudioCategory='creative'):StudioDraft {
  const clean=safeText(idea,2,2000);
