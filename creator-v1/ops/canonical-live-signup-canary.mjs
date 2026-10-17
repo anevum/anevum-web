@@ -1,7 +1,7 @@
 /**
  * ANEVUM canonical registration canary (READ ONLY).
  *
- * Checks the real a.anevum.com member endpoints without credentials,
+ * Checks the canonical anevum.com member endpoints without credentials,
  * account creation, cookies, inbox access, or any D1 writes.
  *
  * Usage:
@@ -15,7 +15,7 @@ import {fileURLToPath} from "node:url";
 import {resolve} from "node:path";
 
 export const CANONICAL_LIVE_AUTH = Object.freeze({
-  origin: "https://a.anevum.com",
+  origin: "https://anevum.com",
   service: "anevum-canonical-auth-staging",
   issuer: "anevum-better-auth-staging-v1",
   social: ["google", "github", "microsoft", "apple"],

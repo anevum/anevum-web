@@ -5,6 +5,7 @@ import {canonicalProjectSaveExport} from "./project-saves.mjs";
 import {canonicalStudioExport} from "./studio.mjs";
 import {canonicalConfigState,permitCanonicalUserCreation,canonicalRequestOrigin} from "./policy.mjs";
 import {normalizeWorldUpdate,worldFromRow} from "./worlds.mjs";
+import {awardPublicProfileBadge} from './recognition-issuer.mjs';
 import {boundedText} from "./request-body.mjs";
 // ANEVUM Phase 1 / canonical Better Auth creator identity.
 // Does NOT read legacy Creator V1 OTP tables or broker/owner entitlements.
@@ -164,6 +165,9 @@ export async function canonicalCreatorMember(req,env,user,origin,now=Math.floor(
       [...binds,now,user.id,payload.revision]);
   if(rows.length!==1)return failure(req,409,"Profile changed; reload before saving");
   if(await spaceReady(db))await grantMilestones(db,user.id,now);
+  if(payload.visibility==='public')try{
+   await awardPublicProfileBadge(db,user.id,now,env.CANONICAL_RECOGNITION_ENABLED==='true');
+  }catch{/* Recognition remains additive; profile save is already committed. */}
   return answer(req,{memberId:user.id,profile:privateProfile(rows[0])});
  }catch(error){
   if(/UNIQUE constraint failed|SQLITE_CONSTRAINT_UNIQUE/i.test(String(error?.message||"")))

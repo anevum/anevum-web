@@ -9,6 +9,7 @@ import { ProjectPage } from "./pages/ProjectPage";
 import { CreatorPage, CreatorsPage } from "./pages/CreatorsPage";
 import { StatusPage } from "./pages/StatusPage";
 import { LevelsPage } from "./pages/LevelsPage";
+import { RecognitionRegistryPage } from "./pages/RecognitionRegistryPage";
 import { CommunityPage } from "./pages/CommunityPage";
 import {CommunityThread} from "./pages/CanonicalForums";
 import {ForumReviewPage} from "./pages/ForumReviewPage";
@@ -98,6 +99,7 @@ export default function App(){
     </Route>
     <Route path="thebutton" element={<TheButtonPage/>}/>
     <Route path="levels" element={<LevelsPage/>}/>
+    <Route path="recognition" element={<RecognitionRegistryPage/>}/>
     <Route path="support" element={<SupporterPage/>}/>
     <Route path="support/transparency" element={<SupporterTransparencyPage/>}/>
     <Route path="support/collection" element={<SupporterCollectionPage/>}/>

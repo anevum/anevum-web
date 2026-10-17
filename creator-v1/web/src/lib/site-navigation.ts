@@ -20,7 +20,8 @@ export const PRIMARY_NAV:readonly SiteLink[]=[
 
 export const DISCOVERY_NAV:readonly SiteLink[]=[
   {key:"creators",label:"Creators",to:"/creators",icon:"people",detail:"Public creator channels"},
-  {key:"levels",label:"Levels & Awards",to:"/levels",icon:"star",detail:"Legitimately earned recognition"},
+  {key:"levels",label:"Evolution Levels",to:"/levels",icon:"star",detail:"Thirty permanent evolutionary specimens"},
+  {key:"recognition",label:"Badge Archive",to:"/recognition",icon:"star",detail:"Achievement badges, ribbons and rare medals"},
   {key:"guide",label:"Field Guide",to:"/guide",icon:"library",detail:"Guides and learning"}
 ];
 

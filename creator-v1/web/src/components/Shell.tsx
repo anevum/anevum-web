@@ -5,6 +5,7 @@ import { CosmicArtwork } from "./CosmicArtwork";
 import { Icon } from "./Icons";
 import { PortalLauncher } from "./PortalLauncher";
 import {VisualKitAtmosphere,publicVisualRoom} from "./VisualKit";
+import {ContinuanceWorldStage} from "./ContinuanceWorldStage";
 import { isEditableTarget } from "../lib/portal-destinations";
 import { canonicalAuthClient } from "../lib/canonical-beta";
 
@@ -26,7 +27,8 @@ const portalCategories = [
 ] as const;
 const directory = [
   {to:"/boards",label:"Public boards",detail:"Reviewed releases and first looks"},
-  {to:"/levels",label:"Artifacts & levels",detail:"Earned contributions and recognition"},
+  {to:"/levels",label:"Artifacts & levels",detail:"Thirty permanent evolution levels"},
+  {to:"/recognition",label:"Badge and medal archive",detail:"All defined achievements, ribbons and medals"},
   {to:"/support",label:"Support ANEVUM",detail:"Supporter benefits, infrastructure and open transparency"},
   {to:"/create",label:"Creator Studio",detail:"Invited member publishing"},
   {to:"/library",label:"My library",detail:"Your saved work, when signed in"},
@@ -82,6 +84,7 @@ export function Shell(){
   }
   const home=location.pathname==="/";
   return <div className={"site-shell site-shell--cinematic av9-shell"+(home?" site-shell--home":"")}>
+    <ContinuanceWorldStage path={location.pathname}/>
     <header className="site-header av9-header">
       <div className="header-inner av9-header-inner">
         <Link to="/" className="brand-lockup av9-brand" aria-label="ANEVUM homepage">
@@ -151,7 +154,7 @@ export function Shell(){
     <footer className="site-footer av9-footer">
       <span>ANEVUM / A WORLD OF THINGS PEOPLE MAKE</span>
       <nav aria-label="Site information"><Link to="/start">Start Here</Link><Link to="/guide">Field Guide</Link><Link to="/boards">Boards</Link><Link to="/status">Status</Link></nav>
-      <span>PUBLIC DISCOVERY IS OPEN · MEMBER ACCESS IS IN TESTING</span>
+      <span>PUBLIC DISCOVERY IS OPEN · CREATOR PUBLISHING IN TESTING</span>
     </footer>
   </div>;
 }

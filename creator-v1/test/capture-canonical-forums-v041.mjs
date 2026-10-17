@@ -127,7 +127,7 @@ try{
  }
  await goto('/community');
  await until(()=>evaluate("document.querySelectorAll('.cf-forums .cf-thread').length===20"));
- const first=await evaluate("({count:document.querySelectorAll('.cf-forums .cf-thread').length,more:!!document.querySelector('.cf-more'),secret:document.body.innerText.includes('PRIVATE THREAD MUST NEVER APPEAR'),author:!!document.querySelector('.cf-author-level .level-emblem')})");
+ const first=await evaluate("({count:document.querySelectorAll('.cf-forums .cf-thread').length,more:!!document.querySelector('.cf-more'),secret:document.body.innerText.includes('PRIVATE THREAD MUST NEVER APPEAR'),author:!!document.querySelector('.cf-author .av61-specimen .level-emblem')})");
  assert.equal(first.count,20);assert.equal(first.more,true);
  assert.equal(first.secret,false);assert.equal(first.author,true);
  result.authorCards=true;result.privateThreadExcluded=true;
@@ -136,7 +136,7 @@ try{
  result.pagination=true;
  await evaluate("document.querySelectorAll('.cf-forums .cf-thread h3 a')[24].click()");
  await until(()=>evaluate("!!document.querySelector('.cf-detail .cf-fullbody')"));
- assert.equal(await evaluate("!!document.querySelector('.cf-detail .cf-author-level')"),true);
+ assert.equal(await evaluate("!!document.querySelector('.cf-detail .cf-author .av61-specimen .level-emblem')"),true);
  result.threadNavigation=true;
  await client.send('Emulation.setDeviceMetricsOverride',{width:390,height:844,deviceScaleFactor:1,mobile:true});
  await evaluate("(()=>{const e=document.querySelector('.cf-detail');window.scrollTo(0,e.getBoundingClientRect().top+window.scrollY-82)})()");
