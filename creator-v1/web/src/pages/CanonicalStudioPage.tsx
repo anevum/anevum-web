@@ -86,20 +86,29 @@ export function CanonicalStudioPage({mode='list'}:{mode?:Mode}){
   <Link className="st-action" to="/member">OPEN MEMBER PROFILE ↗</Link>
  </section>;
  return <main className={'st-root'+(mode==='list'?' st-root--launchpad':mode==='edit'?' st-root--workbench':'')} aria-label="Creator Studio">
-  <header className="st-header">
-   <div><Link className="st-back" to="/member">← MEMBER ATLAS</Link>
-    <p className="st-kicker">ANEVUM / CONTINUANCE INSTITUTE / CREATOR STUDIO</p>
-    <h1>{mode==='review'?'SUBMISSION REVIEW.':mode==='list'?'CREATOR STUDIO.':mode==='new'?'BEGIN A NEW WORK.':'PROJECT WORKSPACE.'}</h1>
-    <p>From your first idea to your next creation. All drafts stay private until you choose to submit for review.</p>
+  {(mode==='list'||mode==='edit')?<nav className="st-compact-chrome" aria-label="Studio navigation">
+   <Link to={mode==='edit'?'/studio':'/member'}>{mode==='edit'?'← ALL CREATIONS':'← MY SPACE'}</Link>
+   <span>ANEVUM <span aria-hidden="true">/</span> CREATOR STUDIO</span>
+   <div>
+    {canReview&&mode==='list'&&<Link to="/studio/review">REVIEW DESK</Link>}
+    <Link to={mode==='edit'?'/member':'/discover'}>{mode==='edit'?'MY SPACE ↗':'DISCOVER ↗'}</Link>
    </div>
-   <div className="st-identity"><span>VERIFIED CREATOR</span><strong>@{identity?.handle}</strong><small>PRIVATE STAGING WORKSPACE</small></div>
-  </header>
-  <nav className="st-nav" aria-label="Studio navigation">
-   <Link to="/studio" aria-current={mode==='list'?'page':undefined}>LAUNCHPAD</Link>
-   <Link to="/studio/new" aria-current={mode==='new'?'page':undefined}>ADVANCED PROJECT</Link>
-   {canReview&&<Link to="/studio/review" aria-current={mode==='review'?'page':undefined}>REVIEW DESK</Link>}
-   <Link to="/discover">DISCOVER ↗</Link>
-  </nav>
+  </nav>:<>
+   <header className="st-header">
+    <div><Link className="st-back" to="/studio">← CREATOR STUDIO</Link>
+     <p className="st-kicker">ANEVUM / CONTINUANCE INSTITUTE / CREATOR STUDIO</p>
+     <h1>{mode==='review'?'SUBMISSION REVIEW.':'BEGIN A NEW WORK.'}</h1>
+     <p>All work remains private unless separately reviewed and released.</p>
+    </div>
+    <div className="st-identity"><span>VERIFIED CREATOR</span><strong>@{identity?.handle}</strong><small>PRIVATE STAGING WORKSPACE</small></div>
+   </header>
+   <nav className="st-nav" aria-label="Studio navigation">
+    <Link to="/studio">MY CREATIONS</Link>
+    <Link to="/studio/new" aria-current={mode==='new'?'page':undefined}>ADVANCED PROJECT</Link>
+    {canReview&&<Link to="/studio/review" aria-current={mode==='review'?'page':undefined}>REVIEW DESK</Link>}
+    <Link to="/discover">DISCOVER ↗</Link>
+   </nav>
+  </>}
   {mode==='list'?<StudioLaunchpad uploadsReady={uploads}/>:mode==='review'?<StudioReview/>:<StudioEditor create={mode==='new'} uploadsReady={uploads}/>}
  </main>;
 }
