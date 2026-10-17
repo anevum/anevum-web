@@ -106,6 +106,8 @@ export function CanonicalStudioPage({mode='list'}:{mode?:Mode}){
 
 function StudioLibrary(){
  const [items,setItems]=useState<StudioProject[]>([]),[error,setError]=useState(''),[loading,setLoading]=useState(true);
+ const [search,setSearch]=useState('');
+ const [statusFilter,setStatusFilter]=useState<'all'|'draft'|'pending_review'|'changes_requested'|'rejected'>('all');
  useEffect(()=>{
   const ac=new AbortController();
   studioList(ac.signal).then(r=>setItems(r.projects)).catch(e=>{if(!ac.signal.aborted)setError(showError(e))})
@@ -114,6 +116,9 @@ function StudioLibrary(){
  },[]);
  const drafts=items.filter(p=>p.status==='draft'||p.status==='changes_requested').length;
  const pending=items.filter(p=>p.status==='pending_review').length;
+ const needle=search.trim().toLocaleLowerCase();
+ const visible=items.filter(p=>(statusFilter==='all'||p.status===statusFilter)&&
+  (!needle||[p.title,p.summary,p.slug,p.category].some(v=>v.toLocaleLowerCase().includes(needle))));
  return <>
   <section className="st-metrics" aria-label="Your projects status">
    <div><span>TOTAL WORKS</span><strong>{loading?'—':items.length}</strong></div>
@@ -125,6 +130,20 @@ function StudioLibrary(){
    <div className="st-section-head"><div><p className="st-kicker">01 / PERSONAL WORKSPACE</p><h2>PROJECT RECORDS</h2></div>
     <Link className="st-action" to="/studio/new">+ CREATE PROJECT</Link></div>
    <p className="st-muted">Your project records are private. Public publication, native gameplay and XP are not enabled through Studio uploads.</p>
+   {items.length>0&&<div className="st-filters">
+    <label className="st-field"><span>SEARCH YOUR PROJECTS</span>
+     <input type="search" maxLength={100} placeholder="Title, summary, slug, category"
+      value={search} onChange={e=>setSearch(e.target.value)}/></label>
+    <label className="st-field"><span>STATUS</span>
+     <select value={statusFilter} onChange={e=>setStatusFilter(e.target.value as typeof statusFilter)}>
+      <option value="all">All projects</option>
+      <option value="draft">Draft</option>
+      <option value="pending_review">Pending review</option>
+      <option value="changes_requested">Changes requested</option>
+      <option value="rejected">Rejected</option>
+     </select></label>
+    <span className="st-filter-count">{visible.length} OF {items.length} WORKS</span>
+   </div>}
    {loading&&<p role="status">Retrieving private projects…</p>}
    {error&&<p role="alert" className="st-error">{error}</p>}
    {!loading&&!error&&items.length===0&&<div className="st-empty">
@@ -132,7 +151,8 @@ function StudioLibrary(){
     <p>Your first draft starts here. Try SIGNAL 001 or something entirely your own.</p>
     <Link className="st-action" to="/studio/new">START A PROJECT →</Link>
    </div>}
-   <div className="st-project-grid">{items.map(p=><Link className="st-project" to={'/studio/'+p.id} key={p.id}>
+   {!loading&&!error&&items.length>0&&visible.length===0&&<p role="status" className="st-muted">No projects match these filters. Adjust your search or status selection.</p>}
+   <div className="st-project-grid">{visible.map(p=><Link className="st-project" to={'/studio/'+p.id} key={p.id}>
     <div className="st-project-art" aria-hidden="true"><span>◌</span><small>{p.category.toUpperCase()}</small></div>
     <div className="st-project-body"><span className="st-kicker">REV {String(p.revision).padStart(2,'0')} / {pretty(p.status)}</span>
      <h3>{p.title}</h3><p>{p.summary}</p><small>EDITED {new Date(p.updatedAt*1000).toLocaleDateString()}</small></div>
