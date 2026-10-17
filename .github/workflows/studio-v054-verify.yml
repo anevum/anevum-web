@@ -83,6 +83,8 @@ jobs:
           mkdir -p evidence/studio-v053-browser
           node creator-v1/test/capture-studio-launchpad-v053.mjs --chrome "$chrome" --output evidence/studio-v053-browser
           test -s evidence/studio-v053-browser/studio-v053-resume-1440.png
+          test -s evidence/studio-v053-browser/studio-v054-story-preview-390.png
+          test -s evidence/studio-v053-browser/studio-v054-choice-target-320.png
           test -s evidence/studio-v053-browser/studio-v053-guest-390.png
       - name: Record non-sensitive source verification
         if: always()
