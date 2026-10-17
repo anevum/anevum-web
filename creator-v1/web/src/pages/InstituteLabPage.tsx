@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { INSTITUTE_ENTITIES, type InstituteEntity } from "../lib/institute-entities";
 import "./institute-lab.css";
@@ -40,6 +40,21 @@ const textFor:Record<EntityId,{
 const base=import.meta.env.BASE_URL.replace(/\/?$/,"/")+"institute/lab/";
 
 export function InstituteLabPage(){
+  useEffect(()=>{
+    const previousTitle=document.title;
+    document.title="Continuance Institute Lab — ANEVUM";
+    const existing=document.head.querySelector<HTMLMetaElement>('meta[name="robots"]');
+    const meta=existing||document.createElement("meta");
+    const prior=existing?.getAttribute("content");
+    if(!existing){meta.name="robots";document.head.appendChild(meta);}
+    meta.content="noindex,nofollow,noarchive";
+    return ()=>{
+      document.title=previousTitle;
+      if(!existing)meta.remove();
+      else if(prior===null||prior===undefined)meta.removeAttribute("content");
+      else meta.content=prior;
+    };
+  },[]);
   const [selected,setSelected]=useState<EntityId>("observation-node-001");
   const [tab,setTab]=useState<LabTab>("identity");
   const [motionPaused,setMotionPaused]=useState(()=>{
