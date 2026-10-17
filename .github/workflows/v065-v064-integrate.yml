@@ -1,0 +1,77 @@
+name: V065 V064 Source Integration
+# One-time source integration on an isolated branch. No Cloudflare credentials,
+# database writes, production releases, account changes or publication.
+on:
+  push:
+    branches:
+      - build/player-card-v065-v064-integrate-20261017-014
+    paths:
+      - .github/workflows/v065-v064-integrate.yml
+permissions:
+  contents: write
+concurrency:
+  group: anevum-v065-v064-source-integration
+  cancel-in-progress: false
+jobs:
+  reconcile:
+    if: github.repository == 'anevum/anevum-web' && github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Merge exact reviewed V065 source onto pinned V064 optical foundation
+        shell: bash
+        env:
+          SOURCE_SHA: 84748a2383e7ac32cc469a001129e20b2c5b58d7
+          BASE_SHA: 90283589a309d3b72a4e7a5e718b05dba92ebe93
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$BASE_SHA" || { echo "Integration base moved. Abort."; exit 1; }
+          git fetch origin build/player-card-recognition-v065-20261017-013
+          test "$(git rev-parse FETCH_HEAD)" = "$SOURCE_SHA" || { echo "Integration source changed. Abort."; exit 1; }
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          if ! git merge -s ort -X theirs --no-commit --no-ff "$SOURCE_SHA"; then
+            echo "Conflicts remain, refusing any push."
+            git diff --name-only --diff-filter=U
+            exit 1
+          fi
+          # Protect the exact V064 optical poster reproduction and hash contracts.
+          git restore --source="$BASE_SHA" --staged --worktree -- \
+            docs/evolution-v064-sha256.txt \
+            design/evolution-v059/src/micro.py \
+            creator-v1/ops/apply-evolution-micro-v064.py \
+            .github/workflows/evolution-v064-optical-qa.yml \
+            .github/workflows/evolution-v064-live-smoke.yml \
+            .github/workflows/evolution-v064-safe-candidate.yml
+          git diff --quiet "$BASE_SHA" -- docs/evolution-v064-sha256.txt design/evolution-v059/src/micro.py creator-v1/ops/apply-evolution-micro-v064.py
+          test -s docs/evolution-v064-sha256.txt
+          test "$(wc -l < docs/evolution-v064-sha256.txt)" -eq 30
+          test -s creator-v1/web/src/components/CompactMemberIdentity.tsx
+          test -s creator-v1/canonical-auth/recognition-issuer.mjs
+          test -s creator-v1/web/src/components/BadgeInsignia.tsx
+          test -s creator-v1/web/src/pages/RecognitionRegistryPage.tsx
+      - name: Install source-only frontend tools
+        run: npm install --ignore-scripts --no-audit --no-fund
+      - name: Validate integrated React app, award ledger and optical lineage
+        run: |
+          set -euo pipefail
+          npm run check:creator-v1-web
+          npm run build:creator-v1-web
+          node --experimental-sqlite --test creator-v1/test/player-card-recognition-v065.test.mjs creator-v1/test/player-recognition-issuance-v066.test.mjs creator-v1/test/member-identity-v061.test.mjs
+          node --test creator-v1/test/evolution-v060-contract.test.mjs creator-v1/test/evolution-v062-native.test.mjs
+      - name: Commit source-only integration to the isolated branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f .git/MERGE_HEAD
+          git add -A
+          git commit -m "merge(identity): preserve V064 optical assets with V065 player recognition"
+          git push origin HEAD:build/player-card-v065-v064-integrate-20261017-014
+          echo "INTEGRATION_ONLY=PASS; no deployment or database migration"
