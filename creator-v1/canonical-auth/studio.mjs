@@ -298,8 +298,15 @@ export async function canonicalStudioExport(env,userId){
  const assets=await rows(env.MEMBER_DB,
   'SELECT id,project_id,filename,kind,content_type,size_bytes,status,sha256,uploaded_at FROM member_studio_assets WHERE user_id=? ORDER BY created_at ASC LIMIT 500',
   [userId]);
+ const reviewReceipts=await rows(env.MEMBER_DB,
+  'SELECT id,project_id,project_revision,status,title,submitted_at,resolved_at FROM member_studio_submissions '+
+  'WHERE user_id=? ORDER BY submitted_at ASC LIMIT 1000',[userId]);
+ const reviewAssetHashes=await rows(env.MEMBER_DB,
+  'SELECT a.submission_id,a.asset_id,a.filename,a.kind,a.content_type,a.size_bytes,a.sha256 '+
+  'FROM member_studio_submission_assets a JOIN member_studio_submissions s ON s.id=a.submission_id '+
+  'WHERE s.user_id=? ORDER BY s.submitted_at ASC LIMIT 1000',[userId]);
  return {projects,assets:assets.map(a=>({
   id:a.id,projectId:a.project_id,name:a.filename,kind:a.kind,contentType:a.content_type,
   sizeBytes:Number(a.size_bytes),status:a.status,sha256:a.sha256,uploadedAt:a.uploaded_at
- }))};
+ })),reviewReceipts,reviewAssetHashes};
 }
