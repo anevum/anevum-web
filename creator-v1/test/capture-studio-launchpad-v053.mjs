@@ -213,6 +213,22 @@ try{
   assert.equal(await evaluate('document.querySelectorAll(".wb-preview-paper iframe,.wb-preview-paper script").length'),0);
   await evaluate('document.querySelector(".wb-preview").scrollIntoView({block:"start",behavior:"instant"})');
   await check(width);await screenshot('studio-v054-choice-target-'+width);
+  // V054.2: one-click blank creation starts with a truly empty canvas.
+  await visit('/studio');
+  await until(()=>evaluate('!!document.querySelector(".sl-landing-actions .sl-primary")'));
+  await evaluate('document.querySelector(".sl-landing-actions .sl-primary").click()');
+  await until(()=>evaluate('!!document.querySelector(".wb-blank")'));
+  const blank=(await (await fetch(base+'/__state')).json()).projects.find(x=>x.title==='Untitled creation');
+  assert.ok(blank&&blank.description.includes('"blocks":[]'));
+  await check(width);await screenshot('studio-v0542-blank-'+width);
+  await evaluate('document.querySelector(".wb-tools button:first-child").click()');
+  await until(()=>evaluate('!!document.querySelector(".wb-inline-text")'));
+  await evaluate('document.querySelector(".wb-inline-text").focus()');
+  await c.send('Input.insertText',{text:'My first creation starts here.'});
+  await until(()=>evaluate('document.querySelector(".st-save-state")?.dataset.unsaved==="true"'));
+  await evaluate('document.querySelector(".st-canvas-form button[type=submit]").click()');
+  await until(()=>evaluate('document.querySelector(".st-save-state")?.dataset.unsaved==="false"'));
+  await check(width);await screenshot('studio-v0542-writing-'+width);
   console.log('STUDIO_V054_WORKBENCH_'+width+'=PASS');
   console.log('STUDIO_V053_INTERACTIVE_'+width+'=PASS');
  }
