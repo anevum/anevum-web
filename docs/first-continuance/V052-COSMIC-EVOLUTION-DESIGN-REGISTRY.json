@@ -1,0 +1,326 @@
+{
+  "schema": "anevum.evolution-of-everything.v052.design",
+  "status": "prototype-not-deployed",
+  "session": "ANEVUM.WEB.DESIGN.2026-10-17.001.EVOLUTION-OF-EVERYTHING",
+  "levelCap": 30,
+  "finalXp": 63075,
+  "thresholdFormula": "75 * (level - 1)^2",
+  "chapters": [
+    {
+      "name": "Before Form",
+      "levels": [
+        1,
+        5
+      ]
+    },
+    {
+      "name": "First Matter",
+      "levels": [
+        6,
+        10
+      ]
+    },
+    {
+      "name": "Stellar Dawn",
+      "levels": [
+        11,
+        15
+      ]
+    },
+    {
+      "name": "Cosmic Architecture",
+      "levels": [
+        16,
+        20
+      ]
+    },
+    {
+      "name": "Worlds & Life",
+      "levels": [
+        21,
+        25
+      ]
+    },
+    {
+      "name": "Continuance",
+      "levels": [
+        26,
+        30
+      ]
+    }
+  ],
+  "levels": [
+    {
+      "level": 1,
+      "name": "Pre-Grain",
+      "chapter": "Before Form",
+      "totalXP": 0,
+      "motion": "quiescent pulse",
+      "fictional": false,
+      "speculative": true
+    },
+    {
+      "level": 2,
+      "name": "Vacuum Whisper",
+      "chapter": "Before Form",
+      "totalXP": 75,
+      "motion": "brief vacuum flashes",
+      "fictional": false,
+      "speculative": true
+    },
+    {
+      "level": 3,
+      "name": "Quantum Foam",
+      "chapter": "Before Form",
+      "totalXP": 300,
+      "motion": "turbulent microcurrents",
+      "fictional": false,
+      "speculative": true
+    },
+    {
+      "level": 4,
+      "name": "Symmetry Field",
+      "chapter": "Before Form",
+      "totalXP": 675,
+      "motion": "counterturning fields",
+      "fictional": false,
+      "speculative": true
+    },
+    {
+      "level": 5,
+      "name": "First Expansion",
+      "chapter": "Before Form",
+      "totalXP": 1200,
+      "motion": "expanding wavefronts",
+      "fictional": false,
+      "speculative": true
+    },
+    {
+      "level": 6,
+      "name": "Primordial Plasma",
+      "chapter": "First Matter",
+      "totalXP": 1875,
+      "motion": "plasma convection",
+      "fictional": false,
+      "speculative": false
+    },
+    {
+      "level": 7,
+      "name": "Quark Wake",
+      "chapter": "First Matter",
+      "totalXP": 2700,
+      "motion": "charged particle drift",
+      "fictional": false,
+      "speculative": false
+    },
+    {
+      "level": 8,
+      "name": "Proton Seed",
+      "chapter": "First Matter",
+      "totalXP": 3675,
+      "motion": "nucleon binding",
+      "fictional": false,
+      "speculative": false
+    },
+    {
+      "level": 9,
+      "name": "Proto-Atom",
+      "chapter": "First Matter",
+      "totalXP": 4800,
+      "motion": "electron orbital precession",
+      "fictional": false,
+      "speculative": false
+    },
+    {
+      "level": 10,
+      "name": "Ancient Afterglow",
+      "chapter": "First Matter",
+      "totalXP": 6075,
+      "motion": "receding afterglow",
+      "fictional": false,
+      "speculative": false
+    },
+    {
+      "level": 11,
+      "name": "Quiet Epoch",
+      "chapter": "Stellar Dawn",
+      "totalXP": 7500,
+      "motion": "occasional dim stellar sparks",
+      "fictional": false,
+      "speculative": false
+    },
+    {
+      "level": 12,
+      "name": "Gravity Well",
+      "chapter": "Stellar Dawn",
+      "totalXP": 9075,
+      "motion": "inward gravitation",
+      "fictional": false,
+      "speculative": false
+    },
+    {
+      "level": 13,
+      "name": "Star Ignition",
+      "chapter": "Stellar Dawn",
+      "totalXP": 10800,
+      "motion": "stellar ignition pulse",
+      "fictional": false,
+      "speculative": false
+    },
+    {
+      "level": 14,
+      "name": "Fusion Ember",
+      "chapter": "Stellar Dawn",
+      "totalXP": 12675,
+      "motion": "magnetic field breathing",
+      "fictional": false,
+      "speculative": false
+    },
+    {
+      "level": 15,
+      "name": "Nebula Bloom",
+      "chapter": "Stellar Dawn",
+      "totalXP": 14700,
+      "motion": "nebular drift",
+      "fictional": false,
+      "speculative": false
+    },
+    {
+      "level": 16,
+      "name": "Element Forge",
+      "chapter": "Cosmic Architecture",
+      "totalXP": 16875,
+      "motion": "outward supernova shock",
+      "fictional": false,
+      "speculative": false
+    },
+    {
+      "level": 17,
+      "name": "Galactic Seed",
+      "chapter": "Cosmic Architecture",
+      "totalXP": 19200,
+      "motion": "spiral assembly",
+      "fictional": false,
+      "speculative": false
+    },
+    {
+      "level": 18,
+      "name": "First Galaxy",
+      "chapter": "Cosmic Architecture",
+      "totalXP": 21675,
+      "motion": "slow galactic revolution",
+      "fictional": false,
+      "speculative": false
+    },
+    {
+      "level": 19,
+      "name": "Cosmic Web",
+      "chapter": "Cosmic Architecture",
+      "totalXP": 24300,
+      "motion": "signal along filaments",
+      "fictional": false,
+      "speculative": false
+    },
+    {
+      "level": 20,
+      "name": "Stellar System",
+      "chapter": "Cosmic Architecture",
+      "totalXP": 27075,
+      "motion": "planetary orbits",
+      "fictional": false,
+      "speculative": false
+    },
+    {
+      "level": 21,
+      "name": "Planetary Accretion",
+      "chapter": "Worlds & Life",
+      "totalXP": 30000,
+      "motion": "rock accretion",
+      "fictional": false,
+      "speculative": false
+    },
+    {
+      "level": 22,
+      "name": "Ocean World",
+      "chapter": "Worlds & Life",
+      "totalXP": 33075,
+      "motion": "slow planetary rotation",
+      "fictional": false,
+      "speculative": false
+    },
+    {
+      "level": 23,
+      "name": "Molecular Chorus",
+      "chapter": "Worlds & Life",
+      "totalXP": 36300,
+      "motion": "bond luminescence",
+      "fictional": false,
+      "speculative": false
+    },
+    {
+      "level": 24,
+      "name": "First Replicator",
+      "chapter": "Worlds & Life",
+      "totalXP": 39675,
+      "motion": "helix turn",
+      "fictional": false,
+      "speculative": false
+    },
+    {
+      "level": 25,
+      "name": "Biosphere",
+      "chapter": "Worlds & Life",
+      "totalXP": 43200,
+      "motion": "atmospheric cloud drift",
+      "fictional": false,
+      "speculative": false
+    },
+    {
+      "level": 26,
+      "name": "Awareness",
+      "chapter": "Continuance",
+      "totalXP": 46875,
+      "motion": "neural firing",
+      "fictional": false,
+      "speculative": false
+    },
+    {
+      "level": 27,
+      "name": "The Signal",
+      "chapter": "Continuance",
+      "totalXP": 50700,
+      "motion": "expanding transmissions",
+      "fictional": false,
+      "speculative": false
+    },
+    {
+      "level": 28,
+      "name": "Civilization",
+      "chapter": "Continuance",
+      "totalXP": 54675,
+      "motion": "gradual city illumination",
+      "fictional": false,
+      "speculative": false
+    },
+    {
+      "level": 29,
+      "name": "Continuance Institute",
+      "chapter": "Continuance",
+      "totalXP": 58800,
+      "motion": "independent gyroscope rotation",
+      "fictional": true,
+      "speculative": false
+    },
+    {
+      "level": 30,
+      "name": "ANEVUM",
+      "chapter": "Continuance",
+      "totalXP": 63075,
+      "motion": "slow halo with luminous continuance",
+      "fictional": true,
+      "speculative": false
+    }
+  ],
+  "artworkDelivery": "ANEVUM-EVOLUTION-OF-EVERYTHING-V052 packages; assets are not checked into this design-only branch",
+  "summitTitle": "ANEVUM — The First Light"
+}
