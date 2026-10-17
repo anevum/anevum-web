@@ -87,7 +87,7 @@ try{
   const selected=width===1440||width===390?pages:pages.filter(([id])=>
    ["home","discover","project","community","boards","levels","guest-library"].includes(id));
   for(const [name,path,selector] of selected){
-   if(name==="guest-library")await client.send("Network.clearBrowserCookies");
+   if(["guest-library","member-studio","member-draft"].includes(name))await client.send("Network.clearBrowserCookies");
    // Simulate the real canonical staging capability only for project routes.
    if(name==="project"){
      const healthMode=await fetch(base+"/__player-member-fixture?mode=canonical");
