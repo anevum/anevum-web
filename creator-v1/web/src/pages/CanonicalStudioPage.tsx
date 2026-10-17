@@ -5,7 +5,7 @@ import {
  studioHealth,studioList,studioGet,studioCreate,studioUpdate,studioSubmit,studioAssets,
  studioUpload,studioCheckFile,studioDeleteAsset,studioDownloadUrl,studioWithdraw,studioDeleteProject,studioReviewQueue,
  studioReviewDecision,type StudioDraft,type StudioProject,type StudioAsset,type StudioCategory,
- type StudioReviewProject
+ type StudioReviewProject,type StudioReviewHistory
 } from '../lib/canonical-studio';
 import './canonical-studio.css';
 
@@ -128,6 +128,7 @@ function StudioEditor({create,uploadsReady}:{create:boolean;uploadsReady:boolean
  const navigate=useNavigate();
  const id=create?null:projectId||null;
  const [project,setProject]=useState<StudioProject|null>(null);
+ const [history,setHistory]=useState<StudioReviewHistory[]>([]);
  const [draft,setDraft]=useState<StudioDraft>({...empty});
  const [saved,setSaved]=useState<StudioDraft|null>(null);
  const [loading,setLoading]=useState(!create),[busy,setBusy]=useState(false);
@@ -138,7 +139,7 @@ function StudioEditor({create,uploadsReady}:{create:boolean;uploadsReady:boolean
   if(create||!id)return;
   if(!uuid.test(id)){setError('Invalid project identifier');setLoading(false);return;}
   const ac=new AbortController();setLoading(true);setError('');
-  studioGet(id,ac.signal).then(({project:p})=>{if(!ac.signal.aborted){setProject(p);const fields=editForm(p);setDraft(fields);setSaved(fields);}})
+  studioGet(id,ac.signal).then(({project:p,reviewHistory})=>{if(!ac.signal.aborted){setProject(p);setHistory(reviewHistory);const fields=editForm(p);setDraft(fields);setSaved(fields);}})
    .catch(e=>{if(!ac.signal.aborted)setError(showError(e))})
    .finally(()=>{if(!ac.signal.aborted)setLoading(false)});
   return()=>ac.abort();
@@ -247,6 +248,13 @@ function StudioEditor({create,uploadsReady}:{create:boolean;uploadsReady:boolean
      <p>{draft.summary||'Your description will appear here as you work.'}</p>
      <p className="st-muted">Drafts are visible only to their verified owner. Uploaded files cannot be played publicly.</p>
     </section>
+    {history.length>0&&<section className="st-panel" aria-label="Your project review feedback">
+     <p className="st-kicker">STAFF REVIEW / PRIVATE FEEDBACK</p><h2>REVIEW DECISIONS.</h2>
+     {history.map((item,i)=><div className="st-feedback" key={i}>
+      <strong>{pretty(item.action)}</strong><small>{new Date(item.createdAt*1000).toLocaleString()}</small>
+      <p>{item.reason}</p>
+     </div>)}
+    </section>}
     {project&&<StudioUploader project={project} uploadsReady={uploadsReady}/>}
     <section className="st-panel">
      <p className="st-kicker">04 / REVIEW READINESS</p><h2>SUBMISSION CHECK.</h2>
