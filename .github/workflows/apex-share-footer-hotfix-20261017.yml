@@ -1,0 +1,59 @@
+name: ANEVUM Apex Social Preview Footer PNG
+on:
+  push:
+    branches: [patch/apex-orbit-assets-20261017-001]
+    paths: [.github/workflows/apex-share-footer-hotfix-20261017.yml]
+permissions:
+  contents: write
+concurrency:
+  group: anevum-apex-social-footer
+  cancel-in-progress: false
+jobs:
+  render:
+    if: github.repository == 'anevum/anevum-web'
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Checkout exact patch branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: true
+          fetch-depth: 0
+      - name: Render and verify corrected social preview
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m venv "$RUNNER_TEMP/anevum-share-venv"
+          "$RUNNER_TEMP/anevum-share-venv/bin/pip" install --disable-pip-version-check --quiet CairoSVG==2.8.2
+          "$RUNNER_TEMP/anevum-share-venv/bin/python" - <<'PY'
+          from pathlib import Path
+          import struct
+          import cairosvg
+          source = Path('creator-v1/web/public/anevum-social-share.svg')
+          output = Path('creator-v1/web/public/anevum-social-share-v1.png')
+          svg = source.read_text()
+          assert '>ANEVUM.COM</text>' in svg
+          assert 'A.ANEVUM.COM' not in svg
+          assert 'width="1200" height="630"' in svg
+          cairosvg.svg2png(bytestring=svg.encode(), write_to=str(output), output_width=1200, output_height=630)
+          image = output.read_bytes()
+          assert image[:8] == bytes.fromhex('89504e470d0a1a0a')
+          assert struct.unpack('>II', image[16:24]) == (1200,630)
+          assert 5000 < len(image) < 300000
+          print('SOCIAL_IMAGE_FOOTER=anevum.com; PNG=', len(image), 'bytes')
+          PY
+      - name: Commit corrected PNG only
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin patch/apex-orbit-assets-20261017-001
+          test "$(git rev-parse origin/patch/apex-orbit-assets-20261017-001)" = "$GITHUB_SHA"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add creator-v1/web/public/anevum-social-share-v1.png
+          if ! git diff --cached --quiet; then
+            git commit -m "fix(apex): render share preview with anevum.com footer"
+            git push origin HEAD:patch/apex-orbit-assets-20261017-001
+          fi
+          echo "ANEVUM_SOCIAL_PNG_RENDERED=PASS" >> "$GITHUB_STEP_SUMMARY"
