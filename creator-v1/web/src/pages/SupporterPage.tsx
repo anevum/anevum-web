@@ -102,7 +102,7 @@ export function SupporterPage(){
      <button type="button" aria-pressed={interval==='month'} onClick={()=>setInterval('month')}>Monthly</button>
     </div>
     <div className="av45-price"><strong>{interval==='year'?'$36':'$5'}</strong><span>/ {interval==='year'?'year':'month'}</span></div>
-    <p className="av45-frequency">{interval==='year'?'Equivalent to $3 a month. Billed once yearly.':'Billed monthly. Cancel future renewals anytime.'}</p>
+    <p className="av45-frequency">{interval==='year'?'Equivalent to $3 a month. Billed once yearly.':'Proposed recurring monthly option.'}</p>
     <p className="av45-status" role="status">
      {billingReview?'BILLING REVIEW NEEDED':supporter?'TEST MEMBERSHIP ACTIVE':enabled?'TEST CHECKOUT AVAILABLE':'PROPOSED PRICE · ENROLLMENT NOT OPEN'}
     </p>
@@ -115,6 +115,7 @@ export function SupporterPage(){
        </button>
      : <Link className="av45-primary" to="/join">Join ANEVUM for free →</Link>}
     <div className="av45-action-row">
+     {billingReview&&enabled&&<button type="button" disabled={busy||checking} onClick={()=>void action('portal')}>Open billing management ↗</button>}
      {id&&<button type="button" disabled={busy||checking} onClick={()=>{setError('');void refresh()}}>Refresh membership</button>}
      {!id&&!isPending&&<Link to="/join">Already a member? Sign in</Link>}
     </div>
