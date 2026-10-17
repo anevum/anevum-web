@@ -27,7 +27,7 @@ export async function syncRewardNotifications(db,id,now){
 }
 function notification(row){
  if(row.kind==='level')return {id:row.id,kind:'level',level:row.level,title:'Level '+row.level+' reached',detail:ARTIFACTS[row.level-1]?.name??'Your continuance expands.',createdAt:row.created_at};
- const a=MILESTONES.find(a=>a.id===row.reference);return {id:row.id,kind:'award',award:row.reference,title:a?.name??'Award earned',detail:a?`Medal awarded · +${a.xp} XP`:'Recognition earned',createdAt:row.created_at};
+ const a=MILESTONES.find(a=>a.id===row.reference);return {id:row.id,kind:'award',award:row.reference,title:a?.name??'Award earned',detail:a?`Badge earned · +${a.xp} XP`:'Recognition earned',createdAt:row.created_at};
 }
 async function body(req){if(!/^application\/json(?:\s*;|$)/i.test(req.headers.get('content-type')||''))return null;const raw=await boundedText(req,200);try{const v=JSON.parse(raw);return v&&typeof v==='object'&&!Array.isArray(v)?v:null}catch{return null}}
 export async function canonicalProgression(req,env,user,now=Math.floor(Date.now()/1000)){
