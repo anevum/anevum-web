@@ -13,7 +13,7 @@ export interface StudioDraft {
 export interface StudioProject extends StudioDraft {
  id:string;status:StudioStatus;revision:number;createdAt:number;updatedAt:number;submittedAt:number|null;
 }
-export interface StudioReviewHistory {action:'changes_requested'|'rejected';reason:string;createdAt:number}
+export interface StudioReviewHistory {action:'changes_requested'|'rejected';reason:string;createdAt:number;submissionId:string|null}
 export interface StudioReviewReceipt extends StudioDraft {
  id:string;projectId:string;revision:number;status:'pending_review'|'withdrawn'|'changes_requested'|'rejected';
  submittedAt:number;resolvedAt:number|null;
