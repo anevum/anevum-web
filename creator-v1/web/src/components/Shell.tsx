@@ -5,6 +5,7 @@ import { CosmicArtwork } from "./CosmicArtwork";
 import { Icon } from "./Icons";
 import { PortalLauncher } from "./PortalLauncher";
 import {VisualKitAtmosphere,publicVisualRoom} from "./VisualKit";
+import {ContinuanceWorldStage} from "./ContinuanceWorldStage";
 import { isEditableTarget } from "../lib/portal-destinations";
 import { canonicalAuthClient } from "../lib/canonical-beta";
 
@@ -82,6 +83,7 @@ export function Shell(){
   }
   const home=location.pathname==="/";
   return <div className={"site-shell site-shell--cinematic av9-shell"+(home?" site-shell--home":"")}>
+    <ContinuanceWorldStage path={location.pathname}/>
     <header className="site-header av9-header">
       <div className="header-inner av9-header-inner">
         <Link to="/" className="brand-lockup av9-brand" aria-label="ANEVUM homepage">
@@ -151,7 +153,7 @@ export function Shell(){
     <footer className="site-footer av9-footer">
       <span>ANEVUM / A WORLD OF THINGS PEOPLE MAKE</span>
       <nav aria-label="Site information"><Link to="/start">Start Here</Link><Link to="/guide">Field Guide</Link><Link to="/boards">Boards</Link><Link to="/status">Status</Link></nav>
-      <span>PUBLIC DISCOVERY IS OPEN · MEMBER ACCESS IS IN TESTING</span>
+      <span>PUBLIC DISCOVERY IS OPEN · CREATOR PUBLISHING IN TESTING</span>
     </footer>
   </div>;
 }
