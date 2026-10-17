@@ -43,7 +43,7 @@ Only verified backend writers may emit permanent events. Browser art mode, demo 
 
 ## Included preview files
 
-- `creator-v1/web/public/institute/lab/index.html` — Institute hub
+- `creator-v1/web/public/institute/lab/specimens.html` — Institute hub
 - `creator-v1/web/public/institute/lab/observation-node-001.html` — first interactive specimen
 - `creator-v1/web/public/institute/lab/regulation-node-002.html` — synthetic moderation exercise
 - `creator-v1/web/public/institute/lab/*.svg` — motion-aware artwork including a static no-motion fallback
