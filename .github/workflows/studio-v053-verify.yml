@@ -5,6 +5,7 @@ on:
   push:
     branches:
       - design/creator-studio-v053-launchpad-20261016
+      - improve/creator-studio-v0531-first-action-20261016
   workflow_dispatch:
 
 permissions:
