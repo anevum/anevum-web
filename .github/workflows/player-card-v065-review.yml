@@ -5,6 +5,7 @@ on:
       - "creator-v1/web/src/**"
       - "creator-v1/canonical-auth/**"
       - "creator-v1/test/player-card-recognition-v065.test.mjs"
+      - "creator-v1/test/player-recognition-issuance-v066.test.mjs"
       - ".github/workflows/player-card-v065-review.yml"
   workflow_dispatch:
 permissions:
@@ -22,8 +23,8 @@ jobs:
         run: npm install --ignore-scripts --no-audit --no-fund
       - name: Strict Creator V1 TypeScript check
         run: npm run check:creator-v1-web
-      - name: Verify earned recognition and existing V061 card invariants
-        run: node --test creator-v1/test/player-card-recognition-v065.test.mjs creator-v1/test/member-identity-v061.test.mjs
+      - name: Verify recognition grant ledger against real SQLite migrations and all previous card contracts
+        run: node --experimental-sqlite --test creator-v1/test/player-card-recognition-v065.test.mjs creator-v1/test/player-recognition-issuance-v066.test.mjs creator-v1/test/member-identity-v061.test.mjs
       - name: Confirm no production publication or migration was performed
         run: |
           echo "REVIEW ONLY: No D1 migrations, Workers deploy, version promotion, XP grants or Cloudflare secrets touched."
