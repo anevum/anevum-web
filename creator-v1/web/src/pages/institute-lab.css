@@ -128,6 +128,12 @@
 .il-notification strong{font-size:14px}
 .il-notification p{font-size:11px;line-height:1.5;color:var(--il-muted)}
 .il-notification>button{margin-left:auto;align-self:start;padding:2px 6px;border:0;background:transparent;font-size:21px;color:var(--il-muted)}
+.il-notification{transition:width .36s cubic-bezier(.17,.67,.18,1),border-radius .36s ease,padding .36s ease}
+.il-notification>div{flex:1;transition:opacity .2s ease .16s}
+.il-notification.is-mark,.il-notification.is-close{width:82px;height:82px;padding:5px;gap:0;border-radius:50%}
+.il-notification.is-mark>img,.il-notification.is-close>img{width:70px;height:70px}
+.il-notification.is-mark>div,.il-notification.is-close>div{opacity:0;max-width:0;overflow:hidden;flex:0;white-space:nowrap}
+.il-notification.is-mark>button,.il-notification.is-close>button{display:none}
 @keyframes il-notice-enter{from{opacity:0;transform:translateX(45px)}to{opacity:1;transform:translateX(0)}}
 @media(max-width:980px){
   .il-focus{grid-template-columns:1fr}.il-art{border-right:0;border-bottom:1px solid var(--il-line);min-height:400px}
