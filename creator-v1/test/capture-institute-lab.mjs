@@ -83,7 +83,7 @@ try{
     await client.send("Emulation.setDeviceMetricsOverride",{width,height,deviceScaleFactor:1,mobile:width<=640});
     await client.send("Emulation.setEmulatedMedia",{features:[{name:"prefers-reduced-motion",value:reduced?"reduce":"no-preference"}]});
     await client.send("Page.navigate",{url:base+"/creator/institute/lab"});
-    await until(()=>evaluate("Boolean(document.querySelector('.il-lab[data-institute-prototype]'))"));
+    await until(()=>evaluate("document.querySelector('.il-lab[data-institute-prototype]')?.dataset.entity==='observation-node-001'"));
     await until(()=>evaluate("Boolean(document.querySelector('.il-art img')?.complete && document.querySelector('.il-art img')?.naturalWidth>0)"));
     await assert("native-route-"+width,"location.pathname==='/creator/institute/lab' && !!document.querySelector('.il-profile')");
     await assert("source-noindex-"+width,"document.querySelector('meta[name=robots]')?.content.includes('noindex')");
