@@ -117,6 +117,7 @@ function StudioEditor({create,uploadsReady}:{create:boolean;uploadsReady:boolean
  const [loading,setLoading]=useState(!create),[busy,setBusy]=useState(false);
  const [error,setError]=useState(''),[notice,setNotice]=useState('');
  const [mustReload,setMustReload]=useState(false);
+ const [editorView,setEditorView]=useState<'simple'|'advanced'>(create?'advanced':'simple');
  const createId=useRef(crypto.randomUUID());
  useEffect(()=>{
   if(create||!id)return;
@@ -192,22 +193,30 @@ function StudioEditor({create,uploadsReady}:{create:boolean;uploadsReady:boolean
   {mustReload&&<button className="st-button" onClick={()=>window.location.reload()}>RELOAD CURRENT REVISION</button>}
   {!loading&&(!id||project)&&<div className="st-editor">
    <form className="st-panel st-editor-form" onSubmit={save}>
-    <div className="st-section-head"><div><p className="st-kicker">01 / WORK IDENTITY</p><h2>{project?'REFINE THE RECORD.':'GIVE YOUR WORK A NAME.'}</h2></div>
+    <div className="st-section-head"><div><p className="st-kicker">01 / CREATE & REFINE</p><h2>{project?'KEEP BUILDING YOUR IDEA.':'BEGIN YOUR CREATION.'}</h2></div>
      {project&&<span className="st-tag">{pretty(project.status)} · REV {project.revision}</span>}</div>
-    {input('title','PROJECT TITLE',100,0,'3–100 characters.')}
-    {input('slug','PROJECT SLUG',90,0,'Lowercase letters, numbers and hyphens; unique per creator.')}
+    <div className="st-editor-modes" role="group" aria-label="Creator editing mode">
+     <button type="button" aria-pressed={editorView==='simple'} onClick={()=>setEditorView('simple')}>
+      SIMPLE EDITOR</button>
+     <button type="button" aria-pressed={editorView==='advanced'} onClick={()=>setEditorView('advanced')}>
+      ADVANCED DETAILS</button>
+    </div>
+    <p className="st-muted">Your creation is a private, editable draft. Focus on the idea first; attribution, external links and review preparation can come later.</p>
+    {input('title','PROJECT TITLE',100,0,'Give your work a name you can change later.')}
+    {editorView==='advanced'&&input('slug','PROJECT URL IDENTIFIER',90,0,'Used internally for a future project URL. Lowercase letters, numbers and hyphens.')}
     <label className="st-field"><span>CREATION TYPE</span>
      <select value={draft.category} disabled={locked} onChange={e=>assign('category',e.target.value as StudioCategory)}>
       {CATEGORIES.map(([key,name])=><option value={key} key={key}>{name}</option>)}
      </select>
      <small>{CATEGORY_GUIDE[draft.category]}</small>
     </label>
-    {input('summary','SHORT SUMMARY',280,3,'10–280 characters; appears on the eventual project card.')}
-    {input('description','ABOUT THIS CREATION',8000,6)}
+    {input('summary','WHAT ARE YOU MAKING?',280,3,'A short description of your idea, story, sound, game or artwork.')}
+    {input('description','YOUR IDEAS & PROJECT NOTES',8000,7,'Explore ideas, sketch scenes or list what you want to try.')}
+    {editorView==='advanced'&&<>
     <label className="st-check"><input type="checkbox" checked={draft.freeToUse} disabled={locked}
-      onChange={e=>assign('freeToUse',e.target.checked)}/> This work is listed as free to access.</label>
+      onChange={e=>assign('freeToUse',e.target.checked)}/> I intend this work to be free to access when publication becomes available.</label>
     <hr className="st-rule"/>
-    <div className="st-section-head"><div><p className="st-kicker">02 / CONNECTIONS & RIGHTS</p><h2>PROVENANCE MATTERS.</h2></div></div>
+    <div className="st-section-head"><div><p className="st-kicker">02 / RELEASE PREPARATION</p><h2>CREDITS, LINKS & RIGHTS.</h2></div></div>
     <label className="st-field"><span>WORKING DEMO URL (HTTPS)</span>
      <input type="url" value={draft.demoUrl||''} disabled={locked} maxLength={1500}
       onChange={e=>assign('demoUrl',e.target.value||null)}/>
@@ -219,9 +228,10 @@ function StudioEditor({create,uploadsReady}:{create:boolean;uploadsReady:boolean
     {input('license','RIGHTS OR LICENSE',80,0,'Identify your actual rights; a public repository does not automatically grant reuse.')}
     {input('aiDisclosure','AI INVOLVEMENT',1200,3,'Explain any AI assistance, or write that none was used.')}
     {input('humanContribution','HUMAN CREATION & CREDITS',1200,3,'Credit your own work and collaborators.')}
+    </>}
     <div className="st-actions">
      <button className="st-action" type="submit" disabled={locked||!dirty}>
-      {busy?'SAVING PRIVATE REVISION…':project?'SAVE CHANGES':'CREATE PRIVATE DRAFT'}</button>
+      {busy?'SAVING PRIVATE REVISION…':project?'SAVE PRIVATE CHANGES':'CREATE PRIVATE DRAFT'}</button>
      <Link className="st-link" to="/studio">RETURN TO PROJECTS ↗</Link>
     </div>
     {notice&&<p role="status" className="st-success">{notice}</p>}
@@ -253,7 +263,9 @@ function StudioEditor({create,uploadsReady}:{create:boolean;uploadsReady:boolean
       <li data-ready={draft.aiDisclosure.trim().length>=6}><span>{draft.aiDisclosure.trim().length>=6?'✓':'○'}</span> AI involvement disclosed</li>
       <li data-ready={draft.humanContribution.trim().length>=10}><span>{draft.humanContribution.trim().length>=10?'✓':'○'}</span> Human contributions credited</li>
      </ul>
-     <p className="st-muted">A submitted project enters a private queue. There is no automated publication, game execution, or XP reward.</p>
+     <p className="st-muted">Preparing a release is optional. A submitted project enters a private queue; there is no automatic publication, gameplay or XP reward.</p>
+     {editorView==='simple'&&!ready&&<button type="button" className="st-link"
+      onClick={()=>setEditorView('advanced')}>OPEN RELEASE DETAILS & CREDITS ↗</button>}
      {project&&<button className="st-button" disabled={!ready||dirty||locked||!editable(project)}
       onClick={()=>void submit()}>SUBMIT SAVED REVISION FOR REVIEW ↗</button>}
      {project?.status==='pending_review'&&<button className="st-button" disabled={busy||mustReload}
