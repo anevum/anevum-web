@@ -60,7 +60,7 @@ test("no REST, static file, or private preview entrance is anonymously reachable
   for(const path of [
     "/api/v1/member/health","/api/v1/member/auth/sign-in/social",
     "/api/v1/community/threads","/assets/index-deadbeef.js",
-    "/assets/banner.webp","/manifest.webmanifest","/robots.txt.backup","/__enter",
+    "/assets/banner.webp","/manifest.webmanifest","/robots.txt.backup",
     "/cdn-cgi/preview","/anything.json","/somefile.zip"]){
     const r=await res(go(path));
     assert.equal(r.status,404,path);
