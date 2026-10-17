@@ -69,6 +69,8 @@ export const studioGet=(id:string,signal?:AbortSignal)=>request<{project:StudioP
 export const studioCreate=(draft:StudioDraft,clientRequestId:string)=>request<{project:StudioProject;replayed:boolean}>(projectPath(),'POST',{draft,clientRequestId:validId(clientRequestId)});
 export const studioUpdate=(id:string,revision:number,draft:StudioDraft)=>request<{project:StudioProject}>(projectPath(id),'PATCH',{revision,draft});
 export const studioSubmit=(id:string,revision:number)=>request<{project:StudioProject;note:string}>(projectPath(id)+'/submit','POST',{revision});
+export const studioWithdraw=(id:string,revision:number)=>request<{project:StudioProject}>(projectPath(id)+'/withdraw','POST',{revision});
+export const studioDeleteProject=(id:string,revision:number)=>request<{deleted:boolean}>(projectPath(id),'DELETE',{revision});
 function assetsPath(projectId:string,assetId?:string){return projectPath(projectId)+'/assets'+(assetId?'/'+validAsset(assetId):'');}
 export const studioAssets=(projectId:string,signal?:AbortSignal)=>
  request<{assets:StudioAsset[];quotaBytes:number;projectAssetLimit:number}>(assetsPath(projectId),'GET',undefined,signal);
