@@ -141,7 +141,7 @@ test("email methods advertise only when invite pilot is enabled and old provider
   post("/api/v1/member/auth/link-social",{provider:"google"}),
   get("/api/v1/member/creators/showcase")
  ],active);
- assert.deepEqual(blocked,[404,404,404,404,503,404,404]);
+ assert.deepEqual(blocked,[404,404,404,404,503,503,404]);
  assert.deepEqual(dispatched,[]);
 });
 
