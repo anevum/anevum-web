@@ -140,16 +140,18 @@ try{
   await screenshot('studio-v053-guest-'+width);
   await c.send('Network.setCookie',{name:'studio_v053_fake_member',value:'1',url:base+'/'});
   await visit('/studio');
-  await until(()=>evaluate('!!document.querySelector(".sl-idea-form")'));
+  await until(()=>evaluate('!!document.querySelector(".sl-landing-hero")'));
   await check(width);
-  const firstAction=await evaluate('(()=>{const n=document.querySelector("#sl-idea");const b=n?.getBoundingClientRect();return {top:b?.top,below:b?.top>=innerHeight-105};})()');
+  const firstAction=await evaluate('(()=>{const n=document.querySelector(".sl-landing-actions .sl-primary");const b=n?.getBoundingClientRect();return {top:b?.top,below:b?.top>=innerHeight-105};})()');
   assert.ok(firstAction.top>0&&!firstAction.below,'First idea input should be visible without scrolling at '+width+' px: '+JSON.stringify(firstAction));
   await screenshot('studio-v053-launchpad-'+width);
+  await evaluate('document.querySelector(".sl-spark-drawer>button").click()');
+  await until(()=>evaluate('!!document.querySelector("#sl-idea")'));
   await evaluate('document.querySelector("#sl-idea").focus()');
   await c.send('Input.insertText',{text:'A forgotten observatory with an interactive mystery'});
-  await until(()=>evaluate('document.querySelector(".sl-idea-form button[type=submit]")?.disabled===false'));
-  await evaluate('document.querySelector(".sl-idea-form button[type=submit]").click()');
-  await until(()=>evaluate('location.pathname.startsWith("/creator/studio/")&&!!document.querySelector(".st-editor-modes")'));
+  await until(()=>evaluate('document.querySelector(".sl-spark-form button[type=submit]")?.disabled===false'));
+  await evaluate('document.querySelector(".sl-spark-form button[type=submit]").click()');
+  await until(()=>evaluate('location.pathname.startsWith("/creator/studio/")&&!!document.querySelector(".st-creation-toolbar")'));
   await check(width);await screenshot('studio-v053-editor-'+width);
   const first=await (await fetch(base+'/__state')).json();
   assert.equal(first.projects.length,1);assert.equal(first.actions.filter(x=>x.method==='POST').length,1);
@@ -157,21 +159,22 @@ try{
   await evaluate('document.querySelector(".st-editor-form textarea").focus()');
   await c.send('Input.insertText',{text:' Additional mystery clue.'});
   await until(()=>evaluate('document.querySelector(".st-save-state")?.dataset.unsaved==="true"'));
-  await evaluate('window.confirm=()=>false;document.querySelector(".st-actions a[href]")?.click()');
+  await evaluate('window.confirm=()=>false;document.querySelector(".st-creation-underbar a[href]")?.click()');
   assert.match(await evaluate('location.pathname'),/^\/creator\/studio\/[a-f0-9-]{36}$/);
   await evaluate('document.querySelector(".st-editor-form button[type=submit]").click()');
   await until(()=>evaluate('document.querySelector(".st-save-state")?.dataset.unsaved==="false"'));
   const saved=await (await fetch(base+'/__state')).json();
   assert.equal(saved.projects[0].revision,2);
   assert.equal(saved.actions.filter(x=>x.method==='PATCH').length,1);
+  await evaluate('document.querySelector(".st-project-settings").open=true');
   await evaluate('document.querySelector(".st-editor-modes button:last-child").click()');
   await until(()=>evaluate('!!document.querySelector(".st-editor-form input[type=url]")'));
   await check(width);await screenshot('studio-v053-advanced-'+width);
   await visit('/studio');
-  await until(()=>evaluate('!!document.querySelector(".sl-quick-resume")&&document.querySelectorAll(".sl-work").length===1'));
+  await until(()=>evaluate('!!document.querySelector(".sl-return-action")&&document.querySelectorAll(".sl-project-card").length===1'));
   await check(width);await screenshot('studio-v053-resume-'+width);
   // V054: an actual starter now opens the structured block editor.
-  await evaluate('document.querySelector(".sl-template-inspector .st-action").click()');
+  await evaluate('document.querySelector(".sl-path-story").click()');
   await until(()=>evaluate('location.pathname.startsWith("/creator/studio/")&&!!document.querySelector(".wb-builder .wb-block")'));
   await evaluate('document.querySelector(".wb-builder").scrollIntoView({block:"start",behavior:"instant"})');
   await check(width);await screenshot('studio-v054-story-edit-'+width);
@@ -197,10 +200,9 @@ try{
   assert.equal(storySaved.revision,2);
   assert.ok(storySaved.description.includes('<img src=x onerror=alert(1)>'));
   // The branching story scene navigation is a local declarative interaction.
-  await visit('/studio');await until(()=>evaluate('document.querySelectorAll(".sl-template").length===5'));
-  await evaluate('document.querySelectorAll(".sl-template")[3].click()');
-  await until(()=>evaluate('document.querySelector(".sl-template-inspector h3")?.textContent?.includes("Branching narrative")'));
-  await evaluate('document.querySelector(".sl-template-inspector .st-action").click()');
+  await visit('/studio');await until(()=>evaluate('document.querySelectorAll(".sl-path-card").length===5'));
+  await evaluate('document.querySelector(".sl-path-choices").click()');
+
   await until(()=>evaluate('!!document.querySelector(".wb-builder")'));
   await evaluate('document.querySelector(".wb-switch button:last-child").click()');
   await until(()=>evaluate('!!document.querySelector(".wb-choice")'));
