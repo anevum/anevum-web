@@ -196,8 +196,8 @@ export async function canonicalStudio(req,env,user,now=Math.floor(Date.now()/100
   if(sub)return fail(404,'Not found');
   if(req.method==='GET'){
    const history=await rows(db,
-    'SELECT action,reason,created_at FROM member_studio_review_log WHERE project_id=? ORDER BY created_at DESC LIMIT 20',[id]);
-   return json({project:dbRow(selected),uploadsReady:studioUploadReady(env,user.id),reviewHistory:history.map(x=>({action:x.action,reason:x.reason,createdAt:Number(x.created_at)}))});
+    'SELECT action,reason,created_at,submission_id FROM member_studio_review_log WHERE project_id=? ORDER BY created_at DESC LIMIT 20',[id]);
+   return json({project:dbRow(selected),uploadsReady:studioUploadReady(env,user.id),reviewHistory:history.map(x=>({action:x.action,reason:x.reason,createdAt:Number(x.created_at),submissionId:x.submission_id}))});
   }
   if(req.method==='DELETE'){
    const input=await body(req,500);
