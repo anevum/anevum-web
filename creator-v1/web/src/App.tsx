@@ -28,6 +28,7 @@ import {TheButtonPage} from './pages/TheButtonPage';
 import {SupporterPage} from './pages/SupporterPage';
 
 const PublicBoardsPage = lazy(() => import("./pages/PublicBoardsPage").then(mod=>({default:mod.PublicBoardsPage})));
+const InstituteLabPage = lazy(() => import("./pages/InstituteLabPage").then(mod=>({default:mod.InstituteLabPage})));
 const pageFallback=<LoadingState label="Opening approved public boards"/>;
 
 /** Historical Atlas links return to the canonical public experience.
@@ -98,6 +99,7 @@ export default function App(){
     <Route path="levels" element={<LevelsPage/>}/>
     <Route path="support" element={<SupporterPage/>}/>
     <Route path="status" element={<StatusPage/>}/>
+    <Route path="institute/lab" element={<Suspense fallback={<LoadingState label="Opening the Continuance Institute design lab"/>}><InstituteLabPage/></Suspense>}/>
     <Route path=":memberHandle" element={<CanonicalPublicHandle/>}/>
     <Route path="*" element={<Navigate to="/" replace/>}/>
   </Route></Routes></AnevumNotifications>;
