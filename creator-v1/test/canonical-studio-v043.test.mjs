@@ -175,5 +175,12 @@ test('private binary upload validates types, quotas, ownership and forced downlo
   assert.equal((await s.call(base+'/'+reserved,'DELETE','alice')).status,200);
   assert.equal(s.objects.size,0);
   assert.equal((await j(await s.call(base))).assets.length,0);
+  assert.equal((await s.call(ROOT+'/'+p.id,'DELETE','alice',{revision:2})).status,409,
+   'A pending review must be withdrawn before deletion');
+  const withdrawn=await s.call(ROOT+'/'+p.id+'/withdraw','POST','alice',{revision:2});
+  assert.equal(withdrawn.status,200);
+  assert.equal((await j(withdrawn)).project.status,'draft');
+  assert.equal((await s.call(ROOT+'/'+p.id,'DELETE','alice',{revision:3})).status,200);
+  assert.equal((await j(await s.call(ROOT,'GET','alice'))).projects.length,0);
  }finally{s.close();}
 });
