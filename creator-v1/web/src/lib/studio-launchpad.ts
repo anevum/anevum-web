@@ -1,4 +1,5 @@
 import type {StudioCategory,StudioDraft} from './canonical-studio';
+import {createStudioStarterDocument,encodeStudioBlockDocument} from './studio-blocks';
 
 // V053 intentionally creates *private project records*, not rendered templates.
 // Each template supplies an editable text scaffold for the existing Studio.
@@ -78,7 +79,9 @@ export function ideaToDraft(idea:string,id:string,category:StudioCategory='creat
 export function starterToDraft(starterId:string,id:string):StudioDraft {
  const starter=studioStarter(starterId);
  if(!starter)throw new Error('Choose an available starter.');
- return draftBase(starter.seedTitle,starter.seedSummary,starter.outline,starter.category,id);
+ const visualStarter=starterId==='story'||starterId==='gallery'||starterId==='choices';
+ const outline=visualStarter?encodeStudioBlockDocument(createStudioStarterDocument(starterId)):starter.outline;
+ return draftBase(starter.seedTitle,starter.seedSummary,outline,starter.category,id);
 }
 export function existingWorkToDraft(
  titleInput:string,category:StudioCategory,id:string,urlInput=''
