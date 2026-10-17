@@ -66,7 +66,7 @@ const sameOriginStudioMutation=request=>{
     const marker=request.headers.get("x-anevum-studio-request");
     const contentType=request.headers.get("content-type")||"";
     return marker==="1" &&
-      /^(?:application\\/json|application\\/octet-stream)(?:\\s*;|\\s*$)/i.test(contentType);
+      /^(?:application\/json|application\/octet-stream)(?:\s*;|\s*$)/i.test(contentType);
   }catch{return false;}
 };
 const safeJson=(request,value,status=200)=>{
