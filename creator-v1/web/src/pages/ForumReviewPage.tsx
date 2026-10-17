@@ -301,7 +301,7 @@ function Workspace({memberId}:{memberId:string}){
      <p className="mc-scope">{'Showing '+visible.recent.length+' matching of '+combined.recent.length+' loaded audit entries.'} Load older decisions when available. Reporter identities and account IDs are never included.</p>
      {visible.recent.length===0?<p className="mc-empty">No matching audited decisions.</p>:auditCards(visible.recent)}
      {moreButton('activity')}
-    </section>
+    </section>}
     <footer className="mc-disclosure">
      <span>REVIEW WINDOW / {data.pageSize} PER QUEUE</span>
      <p>Totals include all open records; additional history loads in keyset pages of {data.pageSize} items. Search filters currently loaded records only. All approvals and removals require a separate server-authorized decision.</p>
