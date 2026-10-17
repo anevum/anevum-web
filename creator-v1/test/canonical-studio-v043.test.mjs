@@ -48,7 +48,8 @@ function setup({enabled=true,migrate=true,uploads=false}={}){
  async function call(route=ROOT,method='GET',who='alice',payload,extra={}){
   const h=new Headers({'accept':'application/json',...methodHeaders(method),
     ...(who?{cookie:'__Secure-anevum_can_stage.session_token=pilot-'+who}:{}),
-    ...(extra.headers||{})});
+    ...Object.fromEntries(Object.entries(extra.headers||{}).filter(([,value])=>value!==null))});
+  for(const [name,value] of Object.entries(extra.headers||{}))if(value===null)h.delete(name);
   let data=payload;
   if(payload!==undefined && !(payload instanceof Uint8Array) && !(payload instanceof ArrayBuffer)){
    data=JSON.stringify(payload);h.set('content-type','application/json');
