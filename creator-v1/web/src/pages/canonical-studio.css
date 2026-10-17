@@ -59,6 +59,10 @@
  text-shadow:0 0 35px rgba(230,155,214,.28)}
 .st-empty h3{letter-spacing:.02em;font-size:1.4rem}
 .st-empty p{color:var(--st-muted);margin:14px 0 24px}
+.st-filters{display:grid;grid-template-columns:minmax(0,2fr) minmax(180px,1fr) auto;gap:14px;align-items:end;margin:22px 0 18px}
+.st-filters .st-field{min-width:0}
+.st-filters .st-field input,.st-filters .st-field select{min-height:44px}
+.st-filter-count{color:var(--st-muted);font-size:.68rem;letter-spacing:.11em;white-space:nowrap;padding:14px 0}
 .st-project-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(275px,1fr));gap:13px}
 .st-project{position:relative;display:block;background:#0e1627;
  border:1px solid var(--st-line);min-width:0;overflow:hidden;transition:border-color .2s}
@@ -165,12 +169,18 @@
  .st-sidebar{grid-template-columns:repeat(2,minmax(0,1fr))}
  .st-assets{grid-column:1/-1}
 }
+@media(max-width:850px){
+ .st-filters{grid-template-columns:minmax(0,1fr) minmax(165px,1fr)}
+ .st-filter-count{grid-column:1/-1;padding:0}
+}
 @media(max-width:620px){
  .st-root{padding:14px}
  .st-header{gap:16px;padding:12px 3px 22px}
  .st-header h1{font-size:clamp(2.2rem,10.5vw,3.3rem)}
  .st-nav{gap:21px;padding:20px 0}
  .st-metrics{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:16px 0}
+ .st-filters{grid-template-columns:1fr;gap:10px}
+ .st-filter-count{grid-column:auto;padding:0 0 8px}
  .st-metrics>div{padding:14px;min-height:85px}
  .st-metrics strong{font-size:1.3rem}
  .st-sidebar{grid-template-columns:1fr}
