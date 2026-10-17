@@ -37,7 +37,7 @@ export async function canonicalCommunity(req,env){
    // Public-only recognition, no account/Stripe IDs or billing metadata
    // leave this endpoint. Absent consent or stale subscription -> no badge.
    const supporter=await readSupporterRewards(env,row.member_user_id,Date.now(),true);
-   return {...await hydratedPublicMemberCard(db,row),...worldFromRow(row),joinedAt:Number(row.joined_at),
+   return {...await hydratedPublicMemberCard(db,row,env.CANONICAL_RECOGNITION_ENABLED==='true'),...worldFromRow(row),joinedAt:Number(row.joined_at),
      ...(supporter?{supporterAppearance:supporter.selected}:{}),
      ...(activity?{id:row.id,excerpt:row.body.length>360?row.body.slice(0,357)+'…':row.body,createdAt:Number(row.created_at),updatedAt:Number(row.updated_at)}:{})};
   }));
