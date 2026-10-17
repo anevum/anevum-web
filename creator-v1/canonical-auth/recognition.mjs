@@ -48,6 +48,9 @@ export async function memberRecognitionState(db,userId){
   getRows(db,'SELECT milestone,earned_at FROM member_space_milestones WHERE user_id=?',userId),
   getRows(db,'SELECT kind,recognition_id,earned_at FROM member_recognition_grants WHERE user_id=? AND revoked_at IS NULL ORDER BY earned_at DESC',userId)
  ]);
+ return buildRecognitionState(pref,milestones,issued);
+}
+function buildRecognitionState(pref,milestones,issued){
  const badgeMap=new Map();
  for(const row of milestones)if(BADGE_IDS.has(row.milestone)&&Number(row.earned_at)>0)
   badgeMap.set(row.milestone,{id:row.milestone,earnedAt:Number(row.earned_at)});
@@ -92,7 +95,9 @@ export async function memberRecognitionState(db,userId){
  */
 export async function publicRecognitionSummary(db,userId){
  if(!await recognitionReady(db))return null;
- const state=await memberRecognitionState(db,userId);
+ return publicRecognitionFields(await memberRecognitionState(db,userId));
+}
+function publicRecognitionFields(state){
  return {
   featuredAwards:state.featuredBadges.map(x=>x.id),
   earnedBadges:state.featuredBadges,
@@ -101,6 +106,34 @@ export async function publicRecognitionSummary(db,userId){
   distinctions:{medals:state.medalId?[state.medalId]:[],ribbons:state.ribbonIds},
   aura:state.aura
  };
+}
+/** Resolve a bounded list of verified owner IDs with FOUR total D1 queries.
+ * Map keys remain server-local; no account IDs appear in public responses.
+ */
+export async function publicRecognitionMap(db,ownerIds){
+ const ids=uniq(ownerIds.filter(id=>typeof id==='string'&&id.length>=1)).slice(0,25);
+ if(!ids.length||!await recognitionReady(db))return new Map();
+ const marks=ids.map(()=>'?').join(',');
+ const [prefs,milestones,grants]=await Promise.all([
+  getRows(db,'SELECT user_id,badge_mode,badge_ids_json,medal_id,ribbon_ids_json,aura,revision FROM member_recognition_preferences WHERE user_id IN ('+marks+')',...ids),
+  getRows(db,'SELECT user_id,milestone,earned_at FROM member_space_milestones WHERE user_id IN ('+marks+')',...ids),
+  getRows(db,'SELECT user_id,kind,recognition_id,earned_at FROM member_recognition_grants WHERE revoked_at IS NULL AND user_id IN ('+marks+')',...ids)
+ ]);
+ const group=items=>{
+  const byUser=new Map();
+  for(const x of items){
+   if(!byUser.has(x.user_id))byUser.set(x.user_id,[]);
+   byUser.get(x.user_id).push(x);
+  }
+  return byUser;
+ };
+ const settings=new Map(prefs.map(p=>[p.user_id,p]));
+ const milestonesByUser=group(milestones),grantsByUser=group(grants);
+ return new Map(ids.map(id=>[
+  id,publicRecognitionFields(buildRecognitionState(
+   settings.get(id),milestonesByUser.get(id)||[],grantsByUser.get(id)||[]
+  ))
+ ]));
 }
 async function requestBody(req){
  if(!/^application\/json(?:\s*;|$)/i.test(req.headers.get('content-type')||''))return null;
