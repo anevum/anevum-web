@@ -4,6 +4,7 @@ on:
     branches: [patch/recognition-registry-layout-v067-20261017-016]
     paths:
       - ".github/workflows/v067-registry-layout-audit.yml"
+      - "creator-v1/test/recognition-live-geometry-v067.mjs"
   workflow_dispatch:
 permissions:
   contents: read
