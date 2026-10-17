@@ -24,7 +24,13 @@ Use `https://anevum.com` as the permanent canonical application origin now, but 
 - A valid preview needs **a signed JWT** in the `CF_Authorization` cookie from the exact Cloudflare Access team, an exact Access app `aud`, and an exact secret email allowlist. Caller-supplied request headers, fake cookies, query params, and localStorage are not auth.
 - `public` requires **both** `ANEVUM_PRELAUNCH_MODE=public` and `ANEVUM_LAUNCH_APPROVED=true`. Neither flag should be enabled before the final launch authorization.
 
-## Cloudflare Access configuration (not yet created)
+## Cloudflare Access configuration (created; end-to-end owner browser proof pending)
+
+On October 17, 2026, an account-scoped self-hosted Cloudflare Access app **ANEVUM Apex Countdown Private Preview** was created at the path `anevum.com/__enter*` with an exact three-email allow policy. Its audience is pinned as `ANEVUM_ACCESS_AUD` in the candidate Worker configuration. The app returns `login_required` for anonymous visitors. It has not been proven that the issued access cookie covers all platform routes, or that it interoperates with the existing separate Studio/Command Access applications.
+
+The unrouted Worker **anevum-apex-prelaunch-gateway** was successfully deployed as a candidate, with both D1 bindings, static assets, `ANEVUM_PRELAUNCH_MODE=gated`, `ANEVUM_LAUNCH_APPROVED=false` and no public Worker routes. A dedicated, high-entropy `CANONICAL_BETTER_AUTH_SECRET` was generated and stored directly as a Worker secret (the value was never displayed); a secret `ANEVUM_PREVIEW_ALLOWED_EMAILS` matches the protected Access policy. Existing `a.anevum.com` remains untouched. The essential **`CANONICAL_RESEND_API_KEY` and `CANONICAL_PROTECTED_EMAILS`** bindings are still absent, so canonical email auth on this candidate intentionally fails closed. Do not promote the route until these are provisioned and verified.
+
+## Original Cloudflare Access setup checklist (partially complete)
 
 1. Create a *self-hosted* Access application with a single scoped path `anevum.com/__enter*`. Require an allow policy for the owner's and trusted partner's exact verified email addresses; do not use Everyone or a domain-wide policy.
 2. Verify `https://anevum.com/` remains anonymously available as the countdown and `https://anevum.com/__enter` triggers an Access authentication challenge.
