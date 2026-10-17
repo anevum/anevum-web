@@ -145,7 +145,7 @@ export function ArrivalExperience({projects}:{projects:readonly Project[]}){
     <nav id="world-gateways" className="av65-doors" aria-label="Choose how to enter ANEVUM">
       {ENTRY_PORTALS.map((entry,index)=><Link key={entry.id} to={entry.destination}
         className={"av65-door av65-door--"+entry.id+(index===current?" av65-door--current":"")}
-        aria-label={entry.label+": "+entry.small} aria-current={index===current?"true":undefined}
+        aria-label={entry.label+": "+entry.small} data-preview-active={index===current?"true":undefined}
         onPointerEnter={event=>{if(event.pointerType==="mouse"||event.pointerType==="pen")setCurrent(index)}}
         onFocus={()=>setCurrent(index)}>
         <DoorArtwork scene={entry.scene}/>
