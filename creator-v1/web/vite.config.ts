@@ -4,11 +4,11 @@ import react from "@vitejs/plugin-react";
 
 export default defineConfig(({ mode }) => ({
   // Isolated path on next.anevum.com: never replace the existing staging homepage.
-  base: mode === "staff-path" ? "/staff/" : mode === "staging-path" ? "/creator/" : "/",
+  base: mode === "staging-path" ? "/creator/" : "/",
   root: fileURLToPath(new URL(".", import.meta.url)),
   plugins: [react()],
   build: {
-    outDir: fileURLToPath(new URL(mode === "staff-path" ? "../dist/staff" : mode === "staging-path" ? "../dist/react-staging" : "../dist/web", import.meta.url)),
+    outDir: fileURLToPath(new URL(mode === "staging-path" ? "../dist/react-staging" : "../dist/web", import.meta.url)),
     emptyOutDir: true,
     sourcemap: false,
     target: "es2022"
