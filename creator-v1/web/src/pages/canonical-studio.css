@@ -207,3 +207,26 @@
 @media(prefers-reduced-motion:reduce){
  .st-project,.st-drop{transition:none}
 }
+
+/* V053.1: The creator's first action must be visible without scrolling through
+   a massive account dashboard masthead. Only the Launchpad route is compacted. */
+.st-root--launchpad .st-header{align-items:center;gap:16px;padding:4px 0 15px}
+.st-root--launchpad .st-back{margin-bottom:6px}
+.st-root--launchpad .st-header h1{font-size:clamp(1.65rem,3vw,2.85rem);
+ line-height:1.08;margin:5px 0 6px;letter-spacing:-.035em}
+.st-root--launchpad .st-header>div>p:last-child{font-size:.8rem;line-height:1.45;
+ margin:3px 0 0;max-width:640px}
+.st-root--launchpad .st-identity{padding:10px 13px;min-width:150px;gap:3px}
+.st-root--launchpad .st-identity>strong{font-size:1rem}
+.st-root--launchpad .st-nav{padding:12px 0 13px;gap:clamp(15px,2.3vw,27px)}
+.st-root--launchpad .st-nav a{padding-bottom:7px}
+@media(max-width:620px){
+ .st-root--launchpad .st-header{padding:0 2px 11px;gap:7px}
+ .st-root--launchpad .st-back{margin-bottom:2px}
+ .st-root--launchpad .st-header h1{font-size:clamp(1.65rem,7.1vw,2.05rem);
+  line-height:1.03;margin:3px 0 4px}
+ .st-root--launchpad .st-header>div>p:last-child{display:none}
+ .st-root--launchpad .st-identity{display:none}
+ .st-root--launchpad .st-nav{padding:10px 0 11px;gap:16px}
+ .st-root--launchpad .st-nav a{font-size:.62rem;padding-bottom:6px}
+}

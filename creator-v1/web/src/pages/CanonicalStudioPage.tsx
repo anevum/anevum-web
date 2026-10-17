@@ -84,11 +84,11 @@ export function CanonicalStudioPage({mode='list'}:{mode?:Mode}){
   <p>Complete your account profile before creating private projects.</p>
   <Link className="st-action" to="/member">OPEN MEMBER PROFILE ↗</Link>
  </section>;
- return <main className="st-root" aria-label="Creator Studio">
+ return <main className={'st-root'+(mode==='list'?' st-root--launchpad':'')} aria-label="Creator Studio">
   <header className="st-header">
    <div><Link className="st-back" to="/member">← MEMBER ATLAS</Link>
     <p className="st-kicker">ANEVUM / CONTINUANCE INSTITUTE / CREATOR STUDIO</p>
-    <h1>{mode==='review'?'SUBMISSION REVIEW.':mode==='list'?'YOUR CREATOR STUDIO.':mode==='new'?'BEGIN A NEW WORK.':'PROJECT WORKSPACE.'}</h1>
+    <h1>{mode==='review'?'SUBMISSION REVIEW.':mode==='list'?'CREATOR STUDIO.':mode==='new'?'BEGIN A NEW WORK.':'PROJECT WORKSPACE.'}</h1>
     <p>From your first idea to your next creation. All drafts stay private until you choose to submit for review.</p>
    </div>
    <div className="st-identity"><span>VERIFIED CREATOR</span><strong>@{identity?.handle}</strong><small>PRIVATE STAGING WORKSPACE</small></div>
