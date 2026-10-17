@@ -69,6 +69,24 @@ jobs:
           (cd creator-v1 && npm run test:staff-command)
           test -s creator-v1/dist/staff/index.html
           grep -q '/staff/assets/' creator-v1/dist/staff/index.html
+      - name: Inspect IREN terminal in isolated Chromium on desktop and mobile
+        shell: bash
+        run: |
+          set -euo pipefail
+          chrome="$(command -v google-chrome || command -v chromium-browser || command -v chromium || true)"
+          test -n "$chrome"
+          mkdir -p evidence/iren-v002
+          node creator-v1/test/capture-iren-staff-v002.mjs --chrome "$chrome" --output evidence/iren-v002
+          test -s evidence/iren-v002/iren-v002-1440.png
+          test -s evidence/iren-v002/iren-v002-390.png
+          test -s evidence/iren-v002/iren-v002-320.png
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: iren-v002-mobile-desktop-${{ github.run_id }}
+          path: evidence/iren-v002/*.png
+          if-no-files-found: warn
+          retention-days: 7
       - name: Pin existing public routes
         shell: bash
         run: |
