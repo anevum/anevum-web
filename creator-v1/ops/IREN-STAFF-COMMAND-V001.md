@@ -115,3 +115,12 @@ autonomous destructive actions; Durable Objects realtime event fanout;
 durable canvases with compaction; and standalone TURN/SFU conferencing.
 Respect budget: avoid continuous high-frequency whole-table polling or
 paying for media servers before users need them.
+
+## Apex V002 integration (2026-10-17)
+- Canonical hostname: https://anevum.com. Do not deploy the retired a.anevum.com staging Worker.
+- Role authority is database table `staff_access_grants` (requires additive `0011_staff_roles.sql` after 0010), not client-visible IDs or a new role guessed from an email address.
+- Bootstrap one and only one verified founder role with documented immutable account ID after database backup and schema verification. Reviewer grants and revocations are founder-only UI actions with `staff_access_audit` entries.
+- Current legacy moderation endpoint returns the V041 flat review window. Staff UI normalizes it without altering public forum response shapes or privileged server-side independence checks. A later moderated release can upgrade the backend, separately.
+- Founder dashboard reports real registered/verified/profile counts and 24-hour/7-day/30-day new accounts. Canonical \"user\".createdAt stores ISO UTC text; do not treat it as Unix milliseconds.
+- On public apex, the normal Member, Create, Community, Support, and signup flows must remain unchanged. Staff API and microphone/camera prompts are restricted to the enabled /staff endpoint; no staff route on the anonymous navigation.
+- Confirm Cloudflare gateway remains in public mode before and after deploy, preserving its exact apex route and secrets. Release only after real verified-session, reject/forgery, button click, phone viewport, and role-revocation checks.

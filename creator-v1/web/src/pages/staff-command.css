@@ -373,3 +373,10 @@
  .ir-atmosphere,.ir-pulse,.ir-cursor,.ir-hero-orbit:before,.ir-hero-orbit:after,.ir-hero-orbit span:nth-child(3){animation:none!important}
  .ir-screen *{scroll-behavior:auto!important;transition:none!important}
 }
+
+/* Owner-only reviewer provision controls. */
+.ir-role-form select{width:100%;min-height:35px}
+.ir-role-form label{min-width:220px;flex:2}
+.ir-role-form button{min-height:35px}
+.ir-revoke{padding:6px 9px!important;font-size:9px!important;white-space:nowrap}
+@media(max-width:600px){.ir-role-form{flex-direction:column;align-items:stretch}.ir-role-form label{width:100%}.ir-revoke{padding:5px!important}}
