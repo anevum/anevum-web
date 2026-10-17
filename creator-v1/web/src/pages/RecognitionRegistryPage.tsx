@@ -21,18 +21,20 @@ const FAMILIES:({id:'all';label:string}|{id:BadgeFamily;label:string})[]=[
  {id:'collaboration',label:'Collaboration'},{id:'stewardship',label:'Stewardship'},
  {id:'continuance',label:'Continuance'}
 ];
+const ISSUABLE_WHEN_ENABLED=new Set(['first_orbit','first_thread','first_reply','conversationalist']);
 const badges=Object.values(BADGE_CATALOG);
 const distinctions=Object.values(DISTINCTION_CATALOG);
 const total=badges.length+distinctions.length;
-function BadgeItem({entry,earnedAt}:{entry:BadgeDefinition;earnedAt?:number}){
+function BadgeItem({entry,earnedAt,available=false}:{entry:BadgeDefinition;earnedAt?:number;available?:boolean}){
  const issued=typeof earnedAt==='number'&&earnedAt>0;
+ const active=entry.status==='active'||available;
  return <article className={'av66-catalog-item av66-catalog-badge'+(issued?' is-earned':'')} tabIndex={0}>
   <div className="av66-visual-frame"><CelestialEmblem motif={entry.motif} size="medium" state={issued?'earned':'preview'}/></div>
-  <div className="av66-item-copy"><span className="av66-catalog-meta">{entry.family.toUpperCase()} / {entry.status==='active'?'FOUNDING':'FUTURE'}</span>
+  <div className="av66-item-copy"><span className="av66-catalog-meta">{entry.family.toUpperCase()} / {active?'ISSUABLE':'FUTURE'}</span>
    <h3>{entry.name}</h3><p>{entry.description}</p>
    <div className="av66-criterion"><strong>RECOGNITION CRITERION</strong><span>{entry.criterion}</span></div>
   </div>
-  <span className={'av66-state'+(issued?' is-earned':'')}>{issued?'EARNED':entry.status==='active'?'AVAILABLE':'PLANNED'}</span>
+  <span className={'av66-state'+(issued?' is-earned':'')}>{issued?'EARNED':active?'AVAILABLE':'PLANNED'}</span>
  </article>;
 }
 function DistinctionItem({entry,earnedAt}:{entry:DistinctionDefinition;earnedAt?:number}){
@@ -94,7 +96,7 @@ export function RecognitionRegistryPage(){
     <button type="button" key={entry.id} aria-pressed={family===entry.id} onClick={()=>setFamily(entry.id)}>{entry.label}</button>)}
    </div>}
    <section className={'av66-catalog-grid av66-catalog-grid--'+cabinet} aria-label={CABINETS.find(x=>x.id===cabinet)?.name}>
-    {cabinet==='badges'?(items as BadgeDefinition[]).map(entry=><BadgeItem key={entry.id} entry={entry} earnedAt={held.get(entry.id)}/>):
+    {cabinet==='badges'?(items as BadgeDefinition[]).map(entry=><BadgeItem key={entry.id} entry={entry} earnedAt={held.get(entry.id)} available={retrievable&&ISSUABLE_WHEN_ENABLED.has(entry.id)}/>):
      (items as DistinctionDefinition[]).map(entry=><DistinctionItem key={entry.id} entry={entry} earnedAt={honors.get(entry.id)}/>)}
    </section>
    {!items.length&&<div className="av66-no-results"><strong>No matching marks.</strong><p>Try a different discipline, keyword or collection.</p><button type="button" onClick={()=>{setSearch('');setFamily('all');setMine(false)}}>RESET ARCHIVE FILTERS</button></div>}
