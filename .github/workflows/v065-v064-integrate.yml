@@ -99,7 +99,8 @@ jobs:
           # native textures, optical posters or build artifacts.
           test -n "$(git diff --cached --name-only)"
           test -z "$(git diff --cached --name-only -- .github/workflows)" || { echo "GitHub App cannot push workflow changes. Abort."; exit 1; }
-          git status --short | head -n 45
+          git status --short > "$RUNNER_TEMP/source-status.txt"
+          sed -n "1,45p" "$RUNNER_TEMP/source-status.txt"
           git commit -m "merge(identity): preserve V064 optical assets with V065 player recognition"
           git push origin HEAD:build/player-card-v065-v064-integrate-20261017-014
           echo "INTEGRATION_ONLY=PASS; no deployment or database migration"
