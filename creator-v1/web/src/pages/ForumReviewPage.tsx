@@ -129,10 +129,10 @@ function Workspace({memberId}:{memberId:string}){
    if(response.lane!==name||!Array.isArray(response.items)||
       !(typeof response.nextCursor==='string'||response.nextCursor===null))
     throw Error('Unexpected reviewer page response');
-   if(name==='threads')setExtras(x=>({...x,threads:dedup([...x.threads,...response.items as PendingThread[]])}));
-   if(name==='replies')setExtras(x=>({...x,replies:dedup([...x.replies,...response.items as PendingReply[]])}));
-   if(name==='reports')setExtras(x=>({...x,reports:dedup([...x.reports,...response.items as OpenReport[]])}));
-   if(name==='activity')setExtras(x=>({...x,activity:dedup([...x.activity,...response.items as AuditEvent[]])}));
+   if(name==='threads')setExtras(x=>({...x,threads:dedup([...x.threads,...(response.items as PendingThread[])])}));
+   if(name==='replies')setExtras(x=>({...x,replies:dedup([...x.replies,...(response.items as PendingReply[])])}));
+   if(name==='reports')setExtras(x=>({...x,reports:dedup([...x.reports,...(response.items as OpenReport[])])}));
+   if(name==='activity')setExtras(x=>({...x,activity:dedup([...x.activity,...(response.items as AuditEvent[])])}));
    setCursors(x=>({...x,[name]:response.nextCursor}));
   }catch(error){setPageError(error instanceof Error?error.message:'Unable to load older records.');}
   finally{setPaging(null)}
@@ -148,29 +148,29 @@ function Workspace({memberId}:{memberId:string}){
   else if(!choice&&node?.open)node.close();
  },[choice]);
  const begin=(kind:Decision['kind'],id:string,action:Decision['action'],summary:string)=>{
-  if(busy)return;
+  if(busy||paging)return;
   setMutationError('');setNotice('');setChoice({kind,id,action,summary});
  };
  async function decide(){
-  if(!choice||busy)return;
+  if(!choice||busy||paging)return;
   setBusy(true);setMutationError('');
   try{
    await reviewRequest('POST',{targetKind:choice.kind,targetId:choice.id,action:choice.action});
    setChoice(null);
-   setRevision(v=>v+1);
+   resetPaging();setRevision(v=>v+1);
    setNotice(choice.action==='publish'?'Publication recorded.':choice.action==='hide'?'Content hidden and matching reports resolved.':choice.action==='reject'?'Submission rejected.':'Report dismissed.');
   }catch(err){setMutationError(err instanceof Error?err.message:'Decision could not be saved. Refresh the queue and retry.');}
   finally{setBusy(false)}
  }
- const refresh=()=>{if(!busy){setNotice('');setRevision(v=>v+1)}};
+ const refresh=()=>{if(!busy&&!paging){setNotice('');resetPaging();setRevision(v=>v+1)}};
  const oldest=[data?.totals.oldestThreadAt,data?.totals.oldestReplyAt,data?.totals.oldestReportAt]
    .filter((x):x is number=>typeof x==='number').sort((a,b)=>a-b)[0];
  const count=(key:'threads'|'replies'|'reports')=>data?.totals[key]||0;
  const total=count('threads')+count('replies')+count('reports');
  const opening=(kind:'threads'|'replies'|'reports',shown:number)=>
-  <p className="mc-scope">{data&&data.totals[kind]>data.pageSize
-   ?'Showing the first '+data.pageSize+' of '+data.totals[kind]+' records. Resolve older items, then refresh to see the next window.'
-   :shown===0?'No matching records in this review window.':'Showing '+shown+' of '+data?.totals[kind]+' open records.'}</p>;
+  <p className="mc-scope">{'Showing '+shown+' matching of '+combined[kind].length+
+   ' loaded / '+(data?.totals[kind]||0)+' open '+kind+'. '+
+   (cursorFor(kind)?'More records available.':'Current review window loaded.')}</p>;
 
  const threadCards=(items:PendingThread[])=><div className="mc-records">{items.map(t=>
   <article className="mc-case" key={t.id}>
@@ -230,6 +230,7 @@ function Workspace({memberId}:{memberId:string}){
   </div><Link className="mc-return" to="/community">↗ BACK TO COMMONS</Link></header>
 
   {notice&&<p className="mc-feedback" role="status">{notice}</p>}
+  {pageError&&<p className="mc-form-error mc-page-error" role="alert">{pageError}</p>}
   {queue.state==='loading'&&<div className="mc-wait" role="status">AUTHENTICATING · RETRIEVING STAFF REVIEW WINDOW…</div>}
   {queue.state==='error'&&<section className="mc-denied" role="alert">
    <span>RESTRICTED ACCESS</span><h2>The review desk is unavailable.</h2>
@@ -238,7 +239,7 @@ function Workspace({memberId}:{memberId:string}){
   </section>}
   {data&&<div className="mc-layout">
    <aside className="mc-rail" aria-label="Moderator workspaces">
-    <p className="mc-rail-label">OPERATIONS / V042</p>
+    <p className="mc-rail-label">OPERATIONS / V043</p>
     <nav aria-label="Moderation navigation">{lanes.map(item=><button key={item.key} type="button"
      className={'mc-nav '+(lane===item.key?'is-active':'')} aria-current={lane===item.key?'page':undefined}
      onClick={()=>setLane(item.key)}>
@@ -255,7 +256,7 @@ function Workspace({memberId}:{memberId:string}){
     <div className="mc-summary"><div><span className="mc-eyebrow">CURRENT WORKLOAD / REAL RECORDS</span>
      <h2>{total===0?'Clear signal.':total+' awaiting review.'}</h2>
      <p>{oldest?'Oldest unresolved item · '+displayTime(oldest):'No outstanding threads, replies, or member reports.'}</p>
-    </div><button type="button" className="mc-refresh" onClick={refresh} disabled={busy}>↻ REFRESH QUEUE</button></div>
+    </div><button type="button" className="mc-refresh" onClick={refresh} disabled={busy||paging!==null}>↻ REFRESH QUEUE</button></div>
     <div className="mc-metrics" aria-label="Live moderation queue counts">
      <button type="button" onClick={()=>setLane('threads')}><span>01 / THREADS</span><strong>{count('threads')}</strong><small>AWAITING PUBLICATION</small></button>
      <button type="button" onClick={()=>setLane('replies')}><span>02 / REPLIES</span><strong>{count('replies')}</strong><small>AWAITING REVIEW</small></button>
