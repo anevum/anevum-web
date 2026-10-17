@@ -127,6 +127,7 @@ function StudioEditor({create,uploadsReady}:{create:boolean;uploadsReady:boolean
  const [mustReload,setMustReload]=useState(false);
  const [editorView,setEditorView]=useState<'simple'|'advanced'>(create?'advanced':'simple');
  const detailsRef=useRef<HTMLDetailsElement|null>(null);
+ const creationFormRef=useRef<HTMLFormElement|null>(null);
  const createId=useRef(crypto.randomUUID());
  useEffect(()=>{
   if(create||!id)return;
@@ -171,6 +172,19 @@ function StudioEditor({create,uploadsReady}:{create:boolean;uploadsReady:boolean
   draft.aiDisclosure.trim().length>=6&&draft.humanContribution.trim().length>=10);
  function assign<K extends keyof StudioDraft>(name:K,value:StudioDraft[K]){setDraft(p=>({...p,[name]:value}));setNotice('');setError('');}
  const locked=busy||loading||mustReload||!canEdit;
+ // Keyboard-first private save. requestSubmit retains native title validation
+ // and routes through the same owner-bound, revision-checked save handler.
+ useEffect(()=>{
+  const handleKeyboardSave=(event:KeyboardEvent)=>{
+   if(!(event.ctrlKey||event.metaKey)||event.altKey||event.key.toLowerCase()!=='s')return;
+   event.preventDefault();
+   if(locked||!dirty)return;
+   creationFormRef.current?.requestSubmit();
+  };
+  window.addEventListener('keydown',handleKeyboardSave);
+  return()=>window.removeEventListener('keydown',handleKeyboardSave);
+ },[locked,dirty]);
+
  async function save(event:FormEvent){
   event.preventDefault();if(locked)return;
   setBusy(true);setError('');setNotice('');
@@ -235,7 +249,7 @@ function StudioEditor({create,uploadsReady}:{create:boolean;uploadsReady:boolean
   {error&&<p role="alert" className="st-error">{error}</p>}
   {mustReload&&<button className="st-button" onClick={()=>window.location.reload()}>RELOAD CURRENT REVISION</button>}
   {!loading&&(!id||project)&&<div className="st-editor st-editor--canvas">
-   <form className="st-editor-form st-canvas-form" onSubmit={save}>
+   <form className="st-editor-form st-canvas-form" onSubmit={save} ref={creationFormRef}>
     <div className="st-creation-toolbar">
      <div className="st-creation-identity">
       <label htmlFor="st-creation-title">YOUR CREATION {project?' / REV '+project.revision:''}</label>
@@ -248,7 +262,7 @@ function StudioEditor({create,uploadsReady}:{create:boolean;uploadsReady:boolean
       <span className="st-save-state" role="status" data-unsaved={unsavedChanges}>
        {busy?'SAVING…':unsavedChanges?'● UNSAVED CHANGES':project?'✓ PRIVATE REVISION SAVED':'NOT YET SAVED'}
       </span>
-      <button className="st-action" type="submit" disabled={locked||!dirty}>
+      <button className="st-action" type="submit" title="Save private revision (Ctrl/⌘+S)" disabled={locked||!dirty}>
        {busy?'SAVING…':project?'SAVE CHANGES':'CREATE PRIVATE DRAFT'}
       </button>
      </div>
