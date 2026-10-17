@@ -7,7 +7,7 @@ const memberSource=readFileSync(new URL("../web/src/pages/Phase1MemberPage.tsx",
 test("signup opens the email form immediately and retains live server method verification",()=>{
  assert.doesNotMatch(source,/emailOpen/);
  assert.match(source,/useResource\(canonicalMethods,\[\]\)/);
- assert.match(source,/emailReady&&<form/);
+ assert.match(source,/emailReady&&\\(!requiresEmailVerification\\|\\|Boolean\\(sessionEmail\\)\\)&&<form/);
  assert.doesNotMatch(source,/join-method-unavailable/);
  assert.match(source,/METHODS\.filter\(method=>method\.key!=="email"&&socialReady/);
 });
