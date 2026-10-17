@@ -250,22 +250,22 @@ export async function canonicalStudioReview(req,env,user,now=Math.floor(Date.now
      "SELECT id,user_id,status,revision FROM member_studio_projects WHERE id=? AND status='pending_review'",
      [manifest[1]]);
     if(!project||project.user_id===user.id)return fail(404,'Submission not available for review');
-    const list=await rows(db,
-     'SELECT id,filename,kind,content_type,size_bytes,status,sha256,uploaded_at '+
-     'FROM member_studio_assets WHERE project_id=? AND user_id=? ORDER BY created_at,id LIMIT 21',
-     [project.id,project.user_id]);
-    return json({projectId:project.id,revision:Number(project.revision),
-     note:'Quarantined bytes have NOT passed malware scanning; no rendering or download is authorized.',
-     assets:list.map(x=>({id:x.id,name:x.filename,kind:x.kind,contentType:x.content_type,
-      sizeBytes:Number(x.size_bytes),status:x.status,sha256:x.sha256||null,
-      uploadedAt:x.uploaded_at===null?null:Number(x.uploaded_at)}))});
+    const receipt=await getStudioReviewReceipt(db,project,user.id);
+    if(!receipt)return fail(409,'The submitted review version is no longer available');
+    return json({projectId:receipt.projectId,revision:receipt.revision,
+     submissionId:receipt.id,submittedAt:receipt.submittedAt,
+     title:receipt.title,summary:receipt.summary,category:receipt.category,
+     note:'Frozen private review receipt. Quarantined assets have NOT passed malware scanning; no rendering or download is authorized.',
+     assets:receipt.assets.map(a=>({...a,status:'quarantined',uploadedAt:null}))});
    }
    const projects=await rows(db,
     'SELECT s.id,s.title,s.summary,s.category,s.status,s.revision,s.submitted_at,s.demo_url,s.source_url,'+
     's.license_name,s.ai_disclosure,s.human_contribution,s.user_id,p.handle,'+
-    "(SELECT COUNT(*) FROM member_studio_assets a WHERE a.project_id=s.id AND a.status='quarantined') AS attachment_count,"+
-    "(SELECT COALESCE(SUM(a.size_bytes),0) FROM member_studio_assets a WHERE a.project_id=s.id AND a.status='quarantined') AS attachment_bytes "+
+    "(SELECT COUNT(*) FROM member_studio_submission_assets a WHERE a.submission_id=snap.id) AS attachment_count,"+
+    "(SELECT COALESCE(SUM(a.size_bytes),0) FROM member_studio_submission_assets a WHERE a.submission_id=snap.id) AS attachment_bytes "+
     'FROM member_studio_projects s JOIN member_creator_profiles p ON p.user_id=s.user_id '+
+    "JOIN member_studio_submissions snap ON snap.project_id=s.id AND snap.user_id=s.user_id "+
+    "AND snap.project_revision=s.revision AND snap.status='pending_review' "+
     "WHERE s.status='pending_review' AND s.user_id<>? ORDER BY s.submitted_at ASC LIMIT 50",[user.id]);
    return json({projects});
   }
@@ -280,18 +280,10 @@ export async function canonicalStudioReview(req,env,user,now=Math.floor(Date.now
   if(!target||target.status!=='pending_review'||target.revision!==raw.revision)
    return fail(409,'Submission changed or is unavailable');
   if(target.user_id===user.id)return fail(403,'Independent review required');
-  // D1 batch is transactionally atomic: no decision without its audit record.
-  const auditId=crypto.randomUUID();
-  const statements=[
-    db.prepare("UPDATE member_studio_projects SET status=?,revision=revision+1,updated_at=? WHERE id=? AND status='pending_review' AND revision=?")
-      .bind(raw.action,now,raw.projectId,raw.revision),
-    db.prepare('INSERT INTO member_studio_review_log(id,project_id,reviewer_id,action,reason,created_at) '+
-      'SELECT ?,?,?,?,?,? WHERE EXISTS(SELECT 1 FROM member_studio_projects WHERE id=? AND status=? AND revision=?)')
-      .bind(auditId,raw.projectId,user.id,raw.action,reason,now,raw.projectId,raw.action,raw.revision+1)
-  ];
-  const result=await db.batch(statements);
-  return result[0]?.meta?.changes===1&&result[1]?.meta?.changes===1?
-    json({ok:true,status:raw.action}):fail(409,'Submission changed during review');
+  // The current project revision must match the immutable private review
+  // snapshot. Any creator withdrawal makes the old receipt non-actionable.
+  const changed=await decideStudioReview(db,{...target,id:raw.projectId},user.id,raw.action,reason,now);
+  return changed?json({ok:true,status:raw.action}):fail(409,'Submission changed during review');
  }catch{return fail(503,'Studio review unavailable');}
 }
 
