@@ -1,0 +1,38 @@
+{
+  "session": "ANEVUM.WEB.BUILD.2026-10-17.008.EVOLUTION-HYPERRES-ARTWORK",
+  "generatedTexture": {
+    "tool": "built-in imagegen",
+    "original": "artwork/textures/obsidian-albedo-source.png",
+    "applied": "artwork/textures/obsidian-albedo-source.jpg",
+    "originalDimensions": [
+      1254,
+      1254
+    ],
+    "appliedDimensions": [
+      1254,
+      1254
+    ],
+    "prompt": "Use case: stylized-concept. Asset type: a single seamless square PBR albedo material texture for use on actual 3D meshes in ANEVUM\u2019s Evolution of Everything specimen collection. Full-bleed orthographic surface texture only, no object, no lighting, no shadows, no labels, no border. An ancient black basalt and obsidian surface, physically realistic, minutely weathered and fractured, tiny cool mica inclusions, occasional very subtle warm mineral deposits inside hairline fissures. Mostly very dark charcoal, complex nonrepeating multiscale geological structure. Must tile seamlessly in both axes. Highest available texture resolution. No emblem, sphere, ring, or decoration.",
+    "limitation": "Image generation requested seamless albedo; no independent photographic PBR calibration or tile-seam certification is claimed.",
+    "sha256": "cd2dfbaab7b36a4619a9f4d8d8b851105c5d42ef2b71869f768965d8eb843726"
+  },
+  "proceduralMaps": {
+    "source": "src/textures.py",
+    "nativeSize": [
+      4096,
+      4096
+    ],
+    "families": [
+      "mineral",
+      "membrane",
+      "aqueous",
+      "ceramic-metal"
+    ],
+    "channels": [
+      "height",
+      "normal",
+      "roughness"
+    ],
+    "note": "Deterministic authored material maps, not photographs or upscaled 4K source imagery."
+  }
+}
