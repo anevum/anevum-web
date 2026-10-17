@@ -19,7 +19,7 @@ export interface StudioReviewManifest {
 }
 const UPLOAD_KINDS:Record<StudioCategory,StudioAsset['kind'][]>={
  games:['package'],tools:['package'],creative:['image','audio','document','package'],
- music:['audio'],art:['image'],video:[],writing:['document'],
+ music:['audio'],art:['image'],video:['video'],writing:['document'],
  learning:['document','package'],research:['document','package'],
  other:['image','audio','document','package']
 };
@@ -27,7 +27,7 @@ export function studioEligibleUpload(category:StudioCategory,kind:StudioAsset['k
  return UPLOAD_KINDS[category].includes(kind);
 }
 export interface StudioAsset {
- id:string;name:string;kind:'image'|'audio'|'document'|'package';
+ id:string;name:string;kind:'image'|'audio'|'video'|'document'|'package';
  contentType:string;sizeBytes:number;status:'reserved'|'uploading'|'quarantined'|'deleting';
  sha256:string|null;uploadedAt:number|null;
 }
@@ -92,20 +92,22 @@ export const studioAssets=(projectId:string,signal?:AbortSignal)=>
   assetsPath(projectId),'GET',undefined,signal);
 const LIMITS:Record<string,[string,number]>={
  png:['image/png',10],jpg:['image/jpeg',10],jpeg:['image/jpeg',10],webp:['image/webp',10],
- gif:['image/gif',10],mp3:['audio/mpeg',20],wav:['audio/wav',20],pdf:['application/pdf',10],
+ gif:['image/gif',10],mp3:['audio/mpeg',20],wav:['audio/wav',20],
+ mp4:['video/mp4',20],webm:['video/webm',20],pdf:['application/pdf',10],
  txt:['text/plain',1],md:['text/markdown',1],zip:['application/zip',20]
 };
 export function studioCheckFile(file:File):{ok:true;contentType:string;kind:string}|{ok:false;reason:string}{
  if(file.name.length<1||file.name.length>160||/[\\/\u0000-\u001f\u007f]/.test(file.name)||file.name.startsWith('.')||file.name.includes('..'))
   return {ok:false,reason:'Filename is not permitted.'};
  const ext=file.name.split('.').at(-1)?.toLowerCase()||'',rule=LIMITS[ext];
- if(!rule)return {ok:false,reason:'Supported now: PNG, JPG, WebP, GIF, MP3, WAV, PDF, TXT, MD and ZIP.'};
+ if(!rule)return {ok:false,reason:'Supported: PNG, JPG, WebP, GIF, MP3, WAV, MP4, WebM, PDF, TXT, MD and ZIP.'};
  if(file.size<1||file.size>rule[1]*1048576)return {ok:false,reason:'This file exceeds its '+rule[1]+' MiB limit.'};
  // The server validates binary signatures. Do not trust the browser MIME claim.
  if(file.type&&file.type!==rule[0]&&!(ext==='md'&&file.type==='text/plain')&&!(ext==='zip'&&file.type==='application/x-zip-compressed'))
   return {ok:false,reason:'This extension and file type do not match.'};
  const kind=['png','jpg','jpeg','webp','gif'].includes(ext)?'image':
- ['mp3','wav'].includes(ext)?'audio':ext==='zip'?'package':'document';
+ ['mp3','wav'].includes(ext)?'audio':['mp4','webm'].includes(ext)?'video':
+ ext==='zip'?'package':'document';
  return {ok:true,contentType:rule[0],kind};
 }
 export async function studioUpload(projectId:string,file:File,signal?:AbortSignal){
