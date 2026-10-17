@@ -46,6 +46,29 @@ const sameOriginMutation=request=>{
   return origin===CANONICAL_ORIGIN &&
     (site===null||site==="same-origin"||site==="none");
 };
+// Some installed iOS PWAs and embedded WebKit contexts omit Origin even for
+// same-origin fetch(). Only the private Studio JSON/binary endpoint receives
+// this tightly scoped fallback; every other member mutation keeps the strict
+// canonical Origin gate above. A custom non-safelisted header cannot be sent
+// by a cross-site HTML form; foreign-script fetch() would require a CORS
+// preflight, and these endpoints do not grant cross-origin requests.
+const sameOriginStudioMutation=request=>{
+  if(sameOriginMutation(request))return true;
+  try{
+    if(new URL(request.url).origin!==CANONICAL_ORIGIN)return false;
+    const origin=request.headers.get("origin");
+    const site=request.headers.get("sec-fetch-site");
+    const referer=request.headers.get("referer");
+    // Never override explicit evidence of a foreign origin.
+    if(origin!==null&&origin!==CANONICAL_ORIGIN)return false;
+    if(site==="cross-site"||(site==="same-site"&&origin!==CANONICAL_ORIGIN))return false;
+    if(referer&&new URL(referer).origin!==CANONICAL_ORIGIN)return false;
+    const marker=request.headers.get("x-anevum-studio-request");
+    const contentType=request.headers.get("content-type")||"";
+    return marker==="1" &&
+      /^(?:application\\/json|application\\/octet-stream)(?:\\s*;|\\s*$)/i.test(contentType);
+  }catch{return false;}
+};
 const safeJson=(request,value,status=200)=>{
   const headers={...SECURITY,"content-type":"application/json; charset=utf-8"};
   return new Response(request.method==="HEAD"?null:JSON.stringify(value),{status,headers});
@@ -208,7 +231,8 @@ export function createCanonicalStageWorker({authFactory=createCanonicalAuth}={})
 
     // No inherited V5/Creator legacy cookies and no Authorization.
     // Enforce same-origin CSRF boundary for both POST and PATCH profile edits.
-    if(["POST","PATCH","PUT","DELETE"].includes(request.method)&&!sameOriginMutation(request))
+    if(["POST","PATCH","PUT","DELETE"].includes(request.method)&&
+      !(ownStudio? sameOriginStudioMutation(request):sameOriginMutation(request)))
       return safeJson(request,{error:"Same-origin request required"},403);
     let clean=withoutForeignCookies(request);
     if(request.method==="POST"){
