@@ -1,5 +1,5 @@
 import {useEffect,useRef,useState,type FormEvent} from 'react';
-import {Link,useParams} from 'react-router-dom';
+import {Link,useLocation,useParams} from 'react-router-dom';
 import {canonicalAuthClient} from '../lib/canonical-beta';
 import {useResource} from '../lib/useResource';
 import {ForumAuthorCard as AuthorCard} from '../components/ForumAuthorCard';
@@ -38,10 +38,16 @@ function MySubmissions({memberId}:{memberId:string}){
  </section>;
 }
 export function CommunityForums(){
+ const {search}=useLocation();
+ const composeRequested=new URLSearchParams(search).get('compose')==='1';
  const {data:session}=canonicalAuthClient.useSession();
- const [topic,setTopic]=useState('all'),[revision,setRevision]=useState(0),[compose,setCompose]=useState(false);
+ const [topic,setTopic]=useState('all'),[revision,setRevision]=useState(0),[compose,setCompose]=useState(composeRequested);
  const [title,setTitle]=useState(''),[body,setBody]=useState(''),[draftTopic,setDraftTopic]=useState('community'),[busy,setBusy]=useState(false),[notice,setNotice]=useState(''),[error,setError]=useState('');
  const threads=useResource(signal=>request<ForumThreadPage>('/api/v1/community/threads'+(topic==='all'?'':'?topic='+topic),'GET',undefined,signal),[topic,revision]);
+ useEffect(()=>{if(composeRequested)setCompose(true)},[composeRequested]);
+ useEffect(()=>{
+  if(composeRequested&&threads.state==='ready')document.getElementById('cf-title')?.scrollIntoView({block:'start',behavior:'auto'});
+ },[composeRequested,threads.state]);
  const [requestId,setRequestId]=useState(()=>crypto.randomUUID());
  const streamKey=topic+'|'+revision;
  const activeStream=useRef(streamKey);activeStream.current=streamKey;
@@ -70,7 +76,13 @@ export function CommunityForums(){
   setTitle('');setBody('');setDraftTopic('community');setRequestId(crypto.randomUUID());setCompose(false);
   setNotice('Your thread is saved for staff review. It will appear publicly only when approved.');setRevision(x=>x+1);
  }catch(e){setError(e instanceof Error?e.message:'Nothing was saved')}finally{setBusy(false)}}
- if(threads.state==='error'&&threads.error instanceof ForumApiError&&threads.error.status===404)return null;
+ if(threads.state==='error'&&threads.error instanceof ForumApiError&&threads.error.status===404)
+  return <section className="cf-forums" aria-labelledby="cf-title"><div className="cf-note" role="status">
+   <span className="cf-kicker">CONTINUANCE INSTITUTE / COMMUNITY ACCESS</span>
+   <h2 id="cf-title">Community discussions are not open yet.</h2>
+   <p>The moderated forum is disabled on this site. No thread has been submitted; member walls remain available.</p>
+   <Link to="/member?tab=wall">OPEN YOUR MEMBER WALL ↗</Link>
+  </div></section>;
  return <section className="cf-forums" aria-labelledby="cf-title"><header className="cf-header"><div><span className="cf-kicker">CONTINUANCE INSTITUTE / PUBLIC COMMONS</span><h2 id="cf-title">The conversation <em>continues.</em></h2><p>Questions, ideas, feedback and creative work, organized by the people behind them.</p></div>
  <button type="button" className="cf-primary" disabled={threads.state!=='ready'} onClick={()=>{setCompose(x=>!x);setError('')}}>{compose?'CLOSE COMPOSER':'START A THREAD'}</button></header>
  <nav className="cf-topics" aria-label="Discussion topic filters">{topics.map(([id,label])=><button type="button" key={id} aria-pressed={topic===id} onClick={()=>setTopic(id)}>{label}</button>)}</nav>

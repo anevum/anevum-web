@@ -51,7 +51,9 @@ test("V007 keeps moderation and member privileges entirely on existing backend r
   assert.match(hub, /Only independently approved public records/);
   assert.doesNotMatch(hub, /fetch\(|credentials\s*:|authorization|memberCreate|memberVote|memberReact|set-cookie/i);
   assert.match(routes, /<MemberGate\/>/);
-  assert.match(routes, /path="community\/write" element={<CommunityPostEditorPage\/>}/);
+  // V066 retires the old invitation-only form and enters the same-origin, reviewed forum.
+  assert.match(routes, /path="community\/write" element={<Navigate to="\/community\?compose=1" replace\/>}/);
+  assert.doesNotMatch(routes, /path="community\/write" element={<CommunityPostEditorPage\/>}/);
 });
 
 test("V007 is full-width on phones with readable type and reduced-motion/accessibility support", () => {
