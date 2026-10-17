@@ -71,7 +71,7 @@ CREATE TABLE IF NOT EXISTS member_studio_rate_limits (
 CREATE TABLE IF NOT EXISTS member_studio_review_log (
  id TEXT PRIMARY KEY NOT NULL CHECK(length(id)=36),
  project_id TEXT NOT NULL REFERENCES member_studio_projects(id) ON DELETE CASCADE,
- reviewer_id TEXT NOT NULL REFERENCES "user"(id) ON DELETE RESTRICT,
+ reviewer_id TEXT REFERENCES "user"(id) ON DELETE SET NULL,
  action TEXT NOT NULL CHECK(action IN ('changes_requested','rejected')),
  reason TEXT NOT NULL CHECK(length(reason) BETWEEN 12 AND 1200),
  created_at INTEGER NOT NULL CHECK(created_at>0)
