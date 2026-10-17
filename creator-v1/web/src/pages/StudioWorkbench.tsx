@@ -1,4 +1,4 @@
-import {useEffect,useRef,useState} from 'react';
+import {useEffect,useLayoutEffect,useRef,useState} from 'react';
 import {
  BLOCK_TYPES,MAX_BLOCKS,decodeStudioBlockDocument,encodeStudioBlockDocument,
  isStudioBlockDescription,newStudioBlock,createStudioBlockDocumentFromNotes,
@@ -69,6 +69,16 @@ export function StudioWorkbench({value,onChange,disabled}:{
   const target=editRef.current?.querySelector<HTMLTextAreaElement>(
    '[data-block-id="'+focusTarget.current+'"]');
   if(target){target.focus();focusTarget.current=null;}
+ },[value,mode]);
+ // Textareas are backed by the validated private block schema but should feel
+ // like live writing, not fixed-size form inputs. Measure on initial load,
+ // editing, undo-like changes and return from Experience mode.
+ useLayoutEffect(()=>{
+  if(mode!=='compose')return;
+  editRef.current?.querySelectorAll<HTMLTextAreaElement>('.wb-inline-text').forEach(field=>{
+   field.style.height='auto';
+   field.style.height=field.scrollHeight+'px';
+  });
  },[value,mode]);
  function change(next:StudioBlockDocument){
   try{
@@ -199,7 +209,7 @@ export function StudioWorkbench({value,onChange,disabled}:{
      {b.type==='divider'?<hr className="wb-inline-divider"/>:
       <textarea className="wb-inline-text" data-block-id={b.id}
        aria-label={TYPE_NAMES[b.type]+' section '+(index+1)}
-       rows={b.type==='paragraph'?4:b.type==='scene'?3:2} maxLength={MAX_TEXT}
+       rows={1} maxLength={MAX_TEXT}
        value={b.text} disabled={disabled}
        onChange={e=>updateBlock(b.id,'text',e.target.value)}
        placeholder={TYPE_HINTS[b.type]}/>}
