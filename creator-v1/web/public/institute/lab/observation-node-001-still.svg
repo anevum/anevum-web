@@ -1,0 +1,104 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" role="img" aria-labelledby="node-title node-desc">
+<title id="node-title">ANEVUM Observation Node 001</title>
+<desc id="node-desc">A dark circular aperture surrounded by asymmetric ivory and metallic orbital blades, with a vertical beam and a concentrated four-point star at its center. Its slow-moving rings suggest deliberate observation.</desc>
+<defs>
+ <radialGradient id="an-ambient"><stop stop-color="#92bdcc" stop-opacity=".19"/><stop offset=".46" stop-color="#7eb6d0" stop-opacity=".055"/><stop offset="1" stop-color="#7eb6d0" stop-opacity="0"/></radialGradient>
+ <radialGradient id="an-void" cx=".37" cy=".23" r=".89"><stop offset="0" stop-color="#182731"/><stop offset=".30" stop-color="#091018"/><stop offset=".63" stop-color="#010308"/><stop offset=".87" stop-color="#02050a"/><stop offset="1" stop-color="#283747"/></radialGradient>
+ <radialGradient id="an-core" cx=".50" cy=".50" r=".5"><stop offset="0" stop-color="#effcff" stop-opacity=".30"/><stop offset=".26" stop-color="#a4d8e8" stop-opacity=".06"/><stop offset=".80" stop-color="#d6bc91" stop-opacity="0"/></radialGradient>
+ <linearGradient id="an-ivory" x1="0" y1="0" x2=".85" y2="1"><stop stop-color="#586d7d"/><stop offset=".12" stop-color="#e6e7de"/><stop offset=".26" stop-color="#f8f4e7"/><stop offset=".48" stop-color="#9bb3be"/><stop offset=".70" stop-color="#cba77d"/><stop offset=".87" stop-color="#f4e3c9"/><stop offset="1" stop-color="#5b7081"/></linearGradient>
+ <linearGradient id="an-gilt" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#698092"/><stop offset=".28" stop-color="#c4d8db"/><stop offset=".53" stop-color="#d7b98a"/><stop offset=".73" stop-color="#fcf4da"/><stop offset="1" stop-color="#756850"/></linearGradient>
+ <linearGradient id="an-axis" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#eaf2e9" stop-opacity="0"/><stop offset=".18" stop-color="#f4ece0" stop-opacity=".65"/><stop offset=".49" stop-color="#e9fbff"/><stop offset=".53" stop-color="#d5f9ff"/><stop offset=".84" stop-color="#edddbd" stop-opacity=".7"/><stop offset="1" stop-color="#e8f2f4" stop-opacity="0"/></linearGradient>
+ <linearGradient id="an-wing" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#f5efe4" stop-opacity=".90"/><stop offset=".48" stop-color="#76929e" stop-opacity=".25"/><stop offset=".76" stop-color="#e6dac7" stop-opacity=".7"/><stop offset="1" stop-color="#f9ffff" stop-opacity=".16"/></linearGradient>
+ <filter id="an-haze" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="18"/></filter>
+ <filter id="an-glow" x="-150%" y="-150%" width="400%" height="400%"><feGaussianBlur stdDeviation="5"/></filter>
+ <filter id="an-fineglow" x="-90%" y="-90%" width="280%" height="280%"><feGaussianBlur stdDeviation="1.8"/></filter>
+ <clipPath id="an-globe"><circle cx="400" cy="400" r="178"/></clipPath>
+</defs>
+<style>
+  .an-turn-outer{animation:an-spin 62s linear infinite;transform-origin:400px 400px}
+  .an-turn-inner{animation:an-spin 49s linear infinite reverse;transform-origin:400px 400px}
+  .an-rock{animation:an-rock 19s ease-in-out infinite;transform-origin:400px 400px}
+  .an-breath{animation:an-breathe 6.8s ease-in-out infinite;transform-origin:400px 400px}
+  .an-signal{animation:an-signal 8s ease-in-out infinite;transform-origin:400px 400px}
+  .an-glyph{animation:an-glyph 12s ease-in-out infinite;transform-origin:400px 400px}
+  @keyframes an-spin{to{transform:rotate(360deg)}}
+  @keyframes an-rock{0%,100%{transform:rotate(-4deg)}50%{transform:rotate(5deg)}}
+  @keyframes an-breathe{0%,100%{opacity:.65;transform:scale(.97)}50%{opacity:1;transform:scale(1.025)}}
+  @keyframes an-signal{0%,84%,100%{opacity:.28}90%{opacity:.85}}
+  @keyframes an-glyph{0%,100%{opacity:.54}50%{opacity:.95}}
+  @media(prefers-reduced-motion:reduce){.an-turn-outer,.an-turn-inner,.an-rock,.an-breath,.an-signal,.an-glyph{animation:none!important}}
+</style>
+<!-- A singular observation aperture: one core, two broken elliptical rings, one vertical registration axis. -->
+<circle cx="400" cy="400" r="375" fill="url(#an-ambient)"/>
+<g opacity=".38" fill="none" stroke="#638698">
+  <circle cx="400" cy="400" r="321" stroke-width=".65" stroke-dasharray="2 11"/>
+  <circle cx="400" cy="400" r="268" stroke-width=".65" stroke-dasharray="1 16"/>
+  <circle cx="400" cy="400" r="230" stroke-width=".7" stroke-dasharray="16 8 1 12"/>
+</g>
+<!-- Frame coordinates always anchored to center -->
+<g opacity=".75" fill="none" stroke="url(#an-gilt)" stroke-width="1.4">
+ <path d="M400 41v38M400 721v38M41 400h38M721 400h38"/>
+ <path d="M388 73h24M388 727h24M73 388v24M727 388v24" opacity=".5"/>
+</g>
+<g class="an-turn-outer" opacity=".90" fill="none">
+ <circle cx="400" cy="400" r="302" stroke="url(#an-gilt)" stroke-width="1.8" stroke-dasharray="550 50 110 1180"/>
+ <circle cx="400" cy="400" r="309" stroke="#bcd6db" opacity=".36" stroke-width=".7" stroke-dasharray="14 92 7 213"/>
+ <path d="M130 264 A305 305 0 0 1 581 153" stroke="url(#an-ivory)" stroke-width="4"/>
+ <path d="M682 507 A305 305 0 0 1 259 673" stroke="url(#an-gilt)" stroke-width="3"/>
+ <circle cx="651" cy="229" r="7" fill="#f8e5c8" stroke="#eee6d9" stroke-width="1"/>
+ <circle cx="153" cy="567" r="4.5" fill="#98c8d9" stroke="#bce9ee" stroke-width="1"/>
+</g>
+<!-- Main gyroscopic chassis -->
+<g class="an-rock">
+ <ellipse cx="400" cy="400" rx="294" ry="132" transform="rotate(-28 400 400)" fill="none" stroke="#536775" stroke-width="21" opacity=".35"/>
+ <ellipse cx="400" cy="400" rx="292" ry="129" transform="rotate(-28 400 400)" fill="none" stroke="url(#an-ivory)" stroke-width="9"/>
+ <ellipse cx="400" cy="400" rx="292" ry="129" transform="rotate(-28 400 400)" fill="none" stroke="#fff9eb" stroke-width="1.4" opacity=".9"/>
+ <ellipse cx="400" cy="400" rx="289" ry="125" transform="rotate(-28 400 400)" fill="none" stroke="#183344" stroke-width="2" opacity=".48"/>
+</g>
+<g class="an-turn-inner">
+ <ellipse cx="400" cy="400" rx="143" ry="278" transform="rotate(34 400 400)" fill="none" stroke="#647887" stroke-width="17" opacity=".24"/>
+ <ellipse cx="400" cy="400" rx="143" ry="277" transform="rotate(34 400 400)" fill="none" stroke="url(#an-gilt)" stroke-width="6.5"/>
+ <ellipse cx="400" cy="400" rx="140" ry="275" transform="rotate(34 400 400)" fill="none" stroke="#fdf4e2" stroke-width="1.2" opacity=".75"/>
+</g>
+<!-- Piercing light axes -->
+<path d="M400 72l11 62-11 55-11-55zM400 728l11-62-11-55-11 55z" fill="url(#an-ivory)" opacity=".88"/>
+<path d="M400 97v605" stroke="url(#an-axis)" stroke-width="2.3"/>
+<path d="M400 171v458" stroke="url(#an-axis)" stroke-width="11" opacity=".33" filter="url(#an-glow)"/>
+<path d="M400 117v566" stroke="#effcff" stroke-width=".65" opacity=".53"/>
+<!-- Dark aperture: surface details clipped into a physical lens -->
+<circle cx="400" cy="400" r="185" fill="#02060c" stroke="#9dbac3" stroke-opacity=".43" stroke-width="2"/>
+<circle cx="400" cy="400" r="178" fill="url(#an-void)"/>
+<g clip-path="url(#an-globe)">
+ <ellipse cx="349" cy="293" rx="137" ry="62" fill="#addfed" opacity=".09" filter="url(#an-haze)"/>
+ <ellipse cx="460" cy="545" rx="142" ry="81" fill="#bd9874" opacity=".10" filter="url(#an-haze)"/>
+ <path d="M239 359Q378 197 553 325" fill="none" stroke="#d9f7ff" stroke-opacity=".24" stroke-width="1"/>
+ <path d="M241 381Q374 228 555 353" fill="none" stroke="#acc8d3" stroke-opacity=".17" stroke-width="1"/>
+ <path d="M281 476Q404 569 531 469" fill="none" stroke="#e0b989" stroke-opacity=".23" stroke-width=".8"/>
+ <ellipse cx="400" cy="400" rx="57" ry="156" fill="none" stroke="#d3e6e7" stroke-width="1" opacity=".26"/>
+ <ellipse cx="400" cy="400" rx="103" ry="158" fill="none" stroke="#ad8b67" stroke-width=".7" opacity=".22"/>
+ <path d="M400 223v355" stroke="#eaf8ff" stroke-width="1" opacity=".20"/>
+</g>
+<circle cx="400" cy="400" r="175" fill="none" stroke="url(#an-ivory)" stroke-width="1.3" opacity=".74"/>
+<circle cx="400" cy="400" r="161" fill="none" stroke="#b5c6c7" stroke-width=".6" opacity=".25" stroke-dasharray="54 16 11 21"/>
+<path d="M400 222A178 178 0 0 1 559 319" stroke="#edf4ee" stroke-width="4" stroke-linecap="round" opacity=".65" fill="none"/>
+<path d="M400 578A178 178 0 0 1 237 477" stroke="#d4ae7e" stroke-width="3.6" stroke-linecap="round" opacity=".65" fill="none"/>
+<!-- Four-point recording flare: an optic, not a star logo -->
+<circle class="an-breath" cx="400" cy="400" r="116" fill="url(#an-core)"/>
+<g class="an-breath" opacity=".90">
+ <path d="M400 324L409 390L477 400L409 410L400 476L391 410L323 400L391 390Z" fill="#d7eef4" opacity=".38" filter="url(#an-glow)"/>
+ <path d="M400 337L407 393L461 400L407 407L400 463L393 407L339 400L393 393Z" fill="url(#an-axis)"/>
+ <path d="M400 357L403 396L442 400L403 404L400 443L397 404L358 400L397 396Z" fill="#fff5df"/>
+ <circle cx="400" cy="400" r="7" fill="#f9ffff"/>
+ <circle cx="400" cy="400" r="15" fill="none" stroke="#efdbc1" stroke-width=".8" opacity=".75"/>
+</g>
+<!-- Foreground partial orbit segment to create depth -->
+<path d="M128 486A292 129 -28 0 0 655 335" fill="none" stroke="url(#an-wing)" stroke-width="4" opacity=".68"/>
+<g class="an-glyph" stroke="url(#an-gilt)" fill="none">
+ <path d="M400 92l9 9-9 9-9-9zM400 690l9 9-9 9-9-9z" stroke-width="1.5"/>
+ <path d="M400 75v17M400 708v17" stroke-width="1"/>
+</g>
+<g class="an-signal" fill="#d5ebee">
+ <circle cx="183" cy="234" r="1.5"/><circle cx="628" cy="541" r="1.3"/><circle cx="294" cy="684" r="1.1"/><circle cx="587" cy="132" r="1"/>
+</g>
+<style>*{animation:none!important;transition:none!important}</style>
+</svg>
