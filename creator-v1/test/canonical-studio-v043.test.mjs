@@ -113,6 +113,22 @@ test('canonical sessions, CSRF, origin and per-member isolation',async()=>{
   })).status,404);
  }finally{s.close();}
 });
+test('iOS Studio missing-Origin fallback is marker-bound and never permits foreign mutations',async()=>{
+ const s=setup();
+ try{
+  const path=ROOT,body=projectRequest();
+  const accepted=await s.call(path,'POST','alice',body,{headers:{origin:null,'sec-fetch-site':null,'x-anevum-studio-request':'1'}});
+  assert.equal(accepted.status,201,'Trusted app request may omit Origin in WebKit');
+  const noMarker=await s.call(path,'POST','alice',projectRequest(),{headers:{origin:null,'sec-fetch-site':null}});
+  assert.equal(noMarker.status,403);
+  const foreign=await s.call(path,'POST','alice',projectRequest(),{headers:{origin:'https://foreign.invalid','sec-fetch-site':'cross-site','x-anevum-studio-request':'1'}});
+  assert.equal(foreign.status,403);
+  const siteCross=await s.call(path,'POST','alice',projectRequest(),{headers:{origin:null,'sec-fetch-site':'cross-site','x-anevum-studio-request':'1'}});
+  assert.equal(siteCross.status,403);
+  const anon=await s.call(path,'POST',null,projectRequest(),{headers:{origin:null,'sec-fetch-site':null,'x-anevum-studio-request':'1'}});
+  assert.equal(anon.status,401);
+ }finally{s.close();}
+});
 test('idempotent creation, revision-checked edits and no automatic publication',async()=>{
  const s=setup();try{
   const item=projectRequest();
