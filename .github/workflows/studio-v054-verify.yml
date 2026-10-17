@@ -1,0 +1,102 @@
+name: ANEVUM Creator Studio V054 Workbench Verify
+
+# Review branch only. Build and test: no Worker deployment or D1/R2 mutation.
+on:
+  push:
+    branches:
+      - build/creator-studio-v054-structured-workbench-20261016
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: studio-v054-workbench-verify
+  cancel-in-progress: true
+
+jobs:
+  launchpad:
+    if: github.repository == 'anevum/anevum-web'
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - name: Checkout exact reviewed source
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - name: Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install repository dependencies safely
+        run: npm install --ignore-scripts --no-audit --no-fund
+      - name: Check frontend types
+        run: npm run check:creator-v1-web
+      - name: Build React public and staging artifacts
+        run: |
+          npm run build:creator-v1-web
+          npm run build:creator-v1-web:staging
+      - name: Protect original Studio, signup and moderation boundaries
+        run: |
+          set -euo pipefail
+          node --input-type=module <<'NODE'
+          import assert from 'node:assert/strict';
+          import fs from 'node:fs';
+          const config=JSON.parse(fs.readFileSync('creator-v1/wrangler.a-progression-v031.jsonc','utf8'));
+          assert.equal(config.name,'anevum-creator-v1-a-staging');
+          assert.equal(config.vars.CANONICAL_PUBLIC_SIGNUP_ENABLED,'true');
+          assert.equal(config.vars.CANONICAL_CREATOR_STUDIO_ENABLED,'true');
+          assert.equal(config.vars.CANONICAL_CREATOR_UPLOADS_ENABLED,'false');
+          assert.equal(config.r2_buckets,undefined);
+          assert.deepEqual(config.routes,[]);
+          assert.equal(config.workers_dev,false);
+          assert.equal(config.preview_urls,false);
+          const app=fs.readFileSync('creator-v1/web/src/App.tsx','utf8');
+          assert.match(app,/CanonicalStudioPage/);
+          assert.match(app,/ForumReviewPage/);
+          const page=fs.readFileSync('creator-v1/web/src/pages/CanonicalStudioPage.tsx','utf8');
+          assert.match(page,/StudioLaunchpad/);
+          assert.match(page,/StudioReview/);
+          assert.match(page,/StudioWorkbench/);
+          const block=fs.readFileSync('creator-v1/web/src/lib/studio-blocks.ts','utf8');
+          assert.match(block,/ANEVUM_BLOCKS_V1/);
+          assert.match(block,/validateStudioBlockDocument/);
+          assert.doesNotMatch(fs.readFileSync('creator-v1/web/src/pages/StudioWorkbench.tsx','utf8'),
+            /dangerouslySetInnerHTML|innerHTML\s*=|document\.write/);
+          assert.match(page,/StudioUploader/);
+          NODE
+      - name: Run Studio, Workbench, moderation and privacy tests
+        working-directory: creator-v1
+        run: |
+          npm run test:studio
+          npm run test:canonical-forums
+      - name: Run complete app contract and security suite
+        working-directory: creator-v1
+        run: npm test
+      - name: Capture real Chromium guest and beginner creator journeys
+        shell: bash
+        run: |
+          set -euo pipefail
+          chrome="$(command -v google-chrome || command -v chromium-browser || command -v chromium || true)"
+          test -n "$chrome"
+          mkdir -p evidence/studio-v053-browser
+          node creator-v1/test/capture-studio-launchpad-v053.mjs --chrome "$chrome" --output evidence/studio-v053-browser
+          test -s evidence/studio-v053-browser/studio-v053-resume-1440.png
+          test -s evidence/studio-v053-browser/studio-v053-guest-390.png
+      - name: Record non-sensitive source verification
+        if: always()
+        run: |
+          mkdir -p evidence
+          git rev-parse HEAD > evidence/studio-v054-source-sha.txt
+          echo "Source-only Workbench V054: no deployment, no database migration, no upload storage or creator runtime" > evidence/studio-v054-scope.txt
+      - name: Upload verification receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: creator-studio-v054-verify-${{ github.run_id }}
+          path: |
+            evidence/studio-v054-*.txt
+            evidence/studio-v053-browser/*.png
+          if-no-files-found: warn
+          retention-days: 7
