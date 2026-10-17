@@ -295,7 +295,8 @@ function StudioUploader({project,uploadsReady}:{project:StudioProject;uploadsRea
   }finally{controller.current=null;setProgress('');setBusy(false);}
  }
  async function remove(a:StudioAsset){
-  if(busy||!editable(project))return;
+  // Private file withdrawal remains available when a draft is review-locked.
+  if(busy)return;
   if(!window.confirm('Remove the private file '+a.name+' from this project?'))return;
   setBusy(true);setError('');setNotice('');
   try{await studioDeleteAsset(project.id,a.id);await refresh();setNotice('Private file removed.');}
@@ -328,7 +329,7 @@ function StudioUploader({project,uploadsReady}:{project:StudioProject;uploadsRea
     <div><strong>{a.name}</strong><small>{a.kind.toUpperCase()} / {size(a.sizeBytes)} / {a.status.toUpperCase()}</small></div>
     <div className="st-file-actions">
      {a.status==='quarantined'&&<a href={studioDownloadUrl(project.id,a.id)} download={a.name}>DOWNLOAD</a>}
-     {editable(project)&&a.status!=='uploading'&&<button disabled={busy} onClick={()=>void remove(a)}>REMOVE</button>}
+     {a.status!=='uploading'&&<button disabled={busy} onClick={()=>void remove(a)}>REMOVE</button>}
     </div>
    </div>)}</div>
    {assets.length===0&&<p className="st-muted">No private attachments yet.</p>}
