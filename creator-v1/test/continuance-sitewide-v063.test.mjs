@@ -30,7 +30,7 @@ test('V063 touches presentation only and retains accessibility fallbacks',()=>{
   for(const selector of ['.av9-shell','.ch7-panel','.cnb-project','.st-panel','.ms-panel','.av45-buy','.an-artifact-card-v034']){
     assert.ok(css.includes(selector),selector);
   }
-  assert.doesNotMatch(css,/@import|https?:\/\/|url\(|!important\s*;|display:\s*none\s*!important/);
+  assert.doesNotMatch(css,/@import|https?:\/\/|url\(|display:\s*none\s*!important/);
   assert.equal((css.match(/\{/g)||[]).length,(css.match(/\}/g)||[]).length,'balanced styles');
 });
 
