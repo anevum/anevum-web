@@ -13,6 +13,7 @@ export interface StudioDraft {
 export interface StudioProject extends StudioDraft {
  id:string;status:StudioStatus;revision:number;createdAt:number;updatedAt:number;submittedAt:number|null;
 }
+export interface StudioReviewHistory {action:'changes_requested'|'rejected';reason:string;createdAt:number}
 export interface StudioAsset {
  id:string;name:string;kind:'image'|'audio'|'document'|'package';
  contentType:string;sizeBytes:number;status:'reserved'|'uploading'|'quarantined'|'deleting';
@@ -65,7 +66,7 @@ async function request<T>(path:string,method:'GET'|'POST'|'PATCH'|'PUT'|'DELETE'
 export const studioHealth=async(signal?:AbortSignal):Promise<StudioHealth>=>
  read<StudioHealth>(await fetch('/api/v1/member/health',{credentials:'same-origin',mode:'same-origin',cache:'no-store',redirect:'error',signal}));
 export const studioList=(signal?:AbortSignal)=>request<{projects:StudioProject[];uploadsReady:boolean}>(projectPath(), 'GET',undefined,signal);
-export const studioGet=(id:string,signal?:AbortSignal)=>request<{project:StudioProject;uploadsReady:boolean}>(projectPath(id),'GET',undefined,signal);
+export const studioGet=(id:string,signal?:AbortSignal)=>request<{project:StudioProject;uploadsReady:boolean;reviewHistory:StudioReviewHistory[]}>(projectPath(id),'GET',undefined,signal);
 export const studioCreate=(draft:StudioDraft,clientRequestId:string)=>request<{project:StudioProject;replayed:boolean}>(projectPath(),'POST',{draft,clientRequestId:validId(clientRequestId)});
 export const studioUpdate=(id:string,revision:number,draft:StudioDraft)=>request<{project:StudioProject}>(projectPath(id),'PATCH',{revision,draft});
 export const studioSubmit=(id:string,revision:number)=>request<{project:StudioProject;note:string}>(projectPath(id)+'/submit','POST',{revision});
