@@ -61,7 +61,9 @@ jobs:
           set -euo pipefail
           npm install --ignore-scripts --no-audit --no-fund
           npm run check:creator-v1-web
+          test -s creator-v1/web/vite.staff.config.ts
           npm run build:iren-apex-staff
+          test -d creator-v1/dist/staff/assets
           node --check creator-v1/staff-portal/worker.mjs
           node --check creator-v1/canonical-auth/staff-ops.mjs
           (cd creator-v1 && npm run test:staff-command)
