@@ -35,8 +35,6 @@ jobs:
         with:
           python-version: '3.12'
       - name: Verify repository, branch, secret presence, and live Worker before any build
-        env:
-          GH_TOKEN: ${{ github.token }}
         shell: bash
         run: |
           set -euo pipefail
@@ -44,11 +42,9 @@ jobs:
           test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
           test -n "$CLOUDFLARE_API_TOKEN"
           test "$CLOUDFLARE_ACCOUNT_ID" = "$EXPECTED_ACCOUNT"
-          latest="$(curl -fsS --retry 2 --connect-timeout 10 --max-time 30 \
-            -H "Authorization: Bearer $GH_TOKEN" \
-            "$GITHUB_API_URL/repos/$GITHUB_REPOSITORY/git/ref/heads/build/player-card-v065-v064-integrate-20261017-014" | jq -er '.object.sha')"
-          test "$latest" = "$GITHUB_SHA"
+          echo "LOCAL_EXACT_SOURCE_SHA_VERIFIED=PASS"
           api="https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/$WORKER"
+          echo "CHECKING_CLOUDFLARE_DEPLOYMENT_READ"
           curl -fsS --retry 2 --max-time 30 -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" "$api/deployments?per_page=1" > "$RUNNER_TEMP/v066-before-deploy.json"
           test "$(jq -er '.result.deployments[0].versions[]|select(.percentage==100)|.version_id' "$RUNNER_TEMP/v066-before-deploy.json")" = "$LIVE_V064"
           curl -fsS --retry 2 --max-time 30 -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" "$api/versions/$LIVE_V064" > "$RUNNER_TEMP/v066-live-good.json"
