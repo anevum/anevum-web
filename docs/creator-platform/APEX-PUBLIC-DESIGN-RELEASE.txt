@@ -3,3 +3,5 @@ VERSION=ANEVUM.WEB.DESIGN.2026-10-17.052.CONTINUANCE-ENTRY
 VERIFIED_CI_RUN=39047426016
 SCOPE=/join React UX and resolution-independent artwork; preserve member schema and OAuth flags
 ROLLBACK=anevum-apex-prelaunch-gateway previous Cloudflare deployment
+RETRY=2
+FIX=legacy OTP test regex aligned to the existing verified-user signup guard
