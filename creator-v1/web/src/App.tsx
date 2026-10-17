@@ -10,6 +10,8 @@ import { CreatorPage, CreatorsPage } from "./pages/CreatorsPage";
 import { StatusPage } from "./pages/StatusPage";
 import { LevelsPage } from "./pages/LevelsPage";
 import { CommunityPage } from "./pages/CommunityPage";
+import {CommunityThread} from "./pages/CanonicalForums";
+import {ForumReviewPage} from "./pages/ForumReviewPage";
 import {CommunityPostPage} from "./pages/CommunityPostPage";
 import {CommunityPostEditorPage} from "./pages/CommunityPostEditorPage";
 import { MemberGate } from "./components/MemberGate";
@@ -20,6 +22,9 @@ import { ProjectEditorPage } from "./pages/ProjectEditorPage";
 import {Phase1JoinPage} from "./pages/Phase1JoinPage";
 import {Phase1MemberPage} from "./pages/Phase1MemberPage";
 import {Phase1PublicMemberPage} from "./pages/Phase1PublicMemberPage";
+
+import {AnevumNotifications} from './components/AnevumNotifications';
+import {TheButtonPage} from './pages/TheButtonPage';
 
 const PublicBoardsPage = lazy(() => import("./pages/PublicBoardsPage").then(mod=>({default:mod.PublicBoardsPage})));
 const pageFallback=<LoadingState label="Opening approved public boards"/>;
@@ -47,7 +52,7 @@ function CanonicalPublicHandle(){
     ? <Phase1PublicMemberPage/> : <Navigate to="/" replace/>;
 }
 export default function App(){
-  return <Routes>
+  return <AnevumNotifications><Routes>
     <Route path="atlas/*" element={<LegacyAtlasRedirect/>}/>
     <Route element={<Shell/>}>
     <Route index element={<CinematicLandingPage/>}/>
@@ -64,6 +69,8 @@ export default function App(){
     <Route path="community" element={<CommunityPage/>}/>
       <Route path="boards" element={<Suspense fallback={pageFallback}><PublicBoardsPage/></Suspense>}/>
     <Route path="community/posts/:id" element={<CommunityPostPage/>}/>
+    <Route path="community/threads/:id" element={<CommunityThread/>}/>
+    <Route path="community/review" element={<ForumReviewPage/>}/>
     <Route path="workspace" element={<Navigate to="/account" replace/>}/>
     <Route path="account" element={<Navigate to="/member" replace/>}/>
     <Route path="account/edit" element={<Navigate to="/member" replace/>}/>
@@ -76,9 +83,10 @@ export default function App(){
       <Route path="library" element={<MemberLibraryPage/>}/>
 
     </Route>
+    <Route path="thebutton" element={<TheButtonPage/>}/>
     <Route path="levels" element={<LevelsPage/>}/>
     <Route path="status" element={<StatusPage/>}/>
     <Route path=":memberHandle" element={<CanonicalPublicHandle/>}/>
     <Route path="*" element={<Navigate to="/" replace/>}/>
-  </Route></Routes>;
+  </Route></Routes></AnevumNotifications>;
 }

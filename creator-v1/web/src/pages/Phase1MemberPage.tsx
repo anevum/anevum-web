@@ -164,7 +164,7 @@ function MemberEditor({memberId,memberName}:{memberId:string;memberName:string})
           {claimed?<label className="av12-visibility"><input type="checkbox" checked={publicVisible}
              onChange={e=>setPublicVisible(e.target.checked)} disabled={busy}/>
              <span><strong>Make my profile public</strong><small>Others can visit /@{persisted?.handle}.
-               Public pages show only your chosen name and biography—not your email or account ID.</small></span>
+               Your name, introduction, images, wall entries and featured awards can appear in the community. You choose whether to display your stats. Your email stays private.</small></span>
            </label>:<p className="av12-privacy-note">Your new profile is private by default. You can opt in to a public page afterward.</p>}
           <button className="av12-save-button" type="submit" disabled={busy}>
             {busy?"SAVING…":claimed?"SAVE MY PROFILE":"CREATE MY SPACE →"}

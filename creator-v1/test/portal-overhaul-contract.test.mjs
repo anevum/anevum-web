@@ -51,7 +51,7 @@ test("Community is a truthful project-and-creator hub without fabricated threads
  assert.match(page,/communityPosts === true/);
  assert.match(page,/Only independently approved public records/);
  assert.match(page,/to="\/boards"/);
- assert.match(page,/Public signup is not enabled/);
+ assert.match(page,/Visit Join for the current account options/);
  assert.doesNotMatch(page,/fakeMessage|sampleComments|createThread\(/);
 });
 test("unlimited levels preserve server authoritative progress and first named artifact series",()=>{
@@ -60,7 +60,7 @@ test("unlimited levels preserve server authoritative progress and first named ar
  const engine=read("auth/community.mjs");
  assert.match(levels,/FIRST 60 ARTIFACTS/);
  assert.match(levels,/NO FINAL LEVEL/);
- assert.match(panel,/memberProgress/);
+ assert.match(panel,/useMemberProgression/);
  assert.match(panel,/NO LEVEL CAP/);
  assert.match(engine,/maxLevel:null/);
  assert.doesNotMatch(engine,/Math\.min\(maxLevel/);

@@ -6,6 +6,9 @@ import {
 import {createCanonicalAuth} from "./auth.mjs";
 import {canonicalCreatorSchemaReady,canonicalCreatorMember,canonicalPublicCreator,canonicalExportMember} from "./profile.mjs";
 import {permitCanonicalUserCreation} from "./policy.mjs";
+import {canonicalCommunity} from "./community.mjs";
+import {canonicalForums} from "./forums.mjs";
+import {canonicalProgression,progressionReady} from './progression.mjs';
 import {canonicalSpace} from "./space.mjs";
 import {boundedText} from "./request-body.mjs";
 
@@ -94,10 +97,13 @@ export function createCanonicalStageWorker({authFactory=createCanonicalAuth}={})
     if(!isCanonicalOrigin(request))return fail(request,404);
     const url=new URL(request.url),path=url.pathname;
     const publicHandle=path.match(PUBLIC_MEMBER);
+    const publicCommunity=/^\/api\/v1\/community\/(?:members|activity)$/.test(path);
+    const forumRoute=/^\/api\/v1\/community\/(?:threads(?:\/[a-f0-9-]{36}(?:\/(?:replies|reaction))?|\/?)?|reports)$/.test(path)||(/^\/api\/v1\/member\/forum-submissions(?:\/[a-f0-9-]{36})?$/.test(path)||path==="/api/v1/member/forum-review");
     const ownSpace=OWN_SPACE.test(path),publicSpace=path.match(PUBLIC_SPACE);
+    const ownProgression=/^\/api\/v1\/member\/(?:progression|notifications(?:\/ack)?|xp-test)$/.test(path);
     const ownProfile=path===PROFILE;
     const ownExport=path===EXPORT;
-    if(path!==HEALTH && path!==METHODS && !publicHandle && !ownProfile && !ownExport && !ownSpace && !publicSpace &&
+    if(path!==HEALTH && path!==METHODS && !publicHandle && !ownProfile && !ownExport && !ownSpace && !publicSpace && !publicCommunity && !forumRoute && !ownProgression &&
       !(path.startsWith(CANONICAL_AUTH_PATH+"/") &&
         (AUTH_ALLOWLIST[request.method]?.has(path)??false)))
       return fail(request,404);
@@ -117,7 +123,12 @@ export function createCanonicalStageWorker({authFactory=createCanonicalAuth}={})
       service:"anevum-canonical-auth-staging",
       status:stageReady?"ready":"closed",
       registration:stageReady?(configured.open?"open":configured.invited?"invite-only":"closed"):"closed",
-      linkedCreatorAccounts:false
+      linkedCreatorAccounts:false,
+      // Keep the disabled service's original inert health contract unchanged.
+      // V031 staging alone includes a schema-readiness signal, no private data.
+      ...(env.CANONICAL_XP_TEST_ENABLED==='true'?{
+        progressionReady:Boolean(stageReady&&await progressionReady(env.MEMBER_DB))
+      }:{})
     });
     if(path===METHODS)return safeJson(request,{
       version:2,
@@ -134,6 +145,19 @@ export function createCanonicalStageWorker({authFactory=createCanonicalAuth}={})
     // Never forward callbacks for disabled OAuth providers.
     const callback=path.match(/^\/api\/v1\/member\/auth\/callback\/(google|github|apple|microsoft)$/);
     if(callback&&!configured[callback[1]])return fail(request,404);
+    if(publicCommunity)return safeResponse(await canonicalCommunity(request,env));
+    if(forumRoute){
+      const publicForumRead=request.method==="GET" && !path.includes("/forum-submissions") && !path.endsWith("/forum-review") && !path.endsWith("/reaction");
+      if(!publicForumRead&&!["GET","POST","DELETE"].includes(request.method))return fail(request,405);
+      if(!publicForumRead&&["POST","PATCH","PUT","DELETE"].includes(request.method)&&!sameOriginMutation(request))return safeJson(request,{error:"Same-origin request required"},403);
+      if(publicForumRead)return safeResponse(await canonicalForums(request,env));
+      try{
+        const auth=authFactory(env);
+        const clean=withoutForeignCookies(request);
+        const session=await auth.api.getSession({headers:clean.headers});
+        return safeResponse(await canonicalForums(clean,env,session?.user));
+      }catch{return fail(request,503)}
+    }
     if(publicSpace){
       if(request.method!=="GET")return fail(request,405);
       return safeResponse(await canonicalSpace(request,env,null,publicSpace[1]));
@@ -197,9 +221,10 @@ export function createCanonicalStageWorker({authFactory=createCanonicalAuth}={})
 
     try{
       const auth=authFactory(env);
-      if(ownProfile||ownExport||ownSpace){
+      if(ownProfile||ownExport||ownSpace||ownProgression){
         const session=await auth.api.getSession({headers:clean.headers});
         if(!session?.user)return safeJson(request,{error:"Sign-in required"},401);
+        if(ownProgression)return safeResponse(await canonicalProgression(clean,env,session.user));
         if(ownSpace)return safeResponse(await canonicalSpace(clean,env,session.user));
         return safeResponse(ownExport?
           await canonicalExportMember(clean,env,session.user,CANONICAL_ORIGIN):

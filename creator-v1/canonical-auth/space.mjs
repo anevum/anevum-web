@@ -1,9 +1,8 @@
 import {boundedText} from './request-body.mjs';
 
-export const MILESTONES=Object.freeze([
- {id:'first_signal',name:'First Signal',detail:'Save your first wall entry.',xp:10,symbol:'✦'},
- {id:'world_shaper',name:'World Shaper',detail:'Add an introduction, portrait and banner.',xp:25,symbol:'◈'}
-]);
+import {MILESTONES} from './rewards.mjs';
+export {MILESTONES} from './rewards.mjs';
+import {progressionReady,readProgression,syncRewardNotifications} from './progression.mjs';
 const HEADERS={'cache-control':'private, no-store','content-type':'application/json; charset=utf-8','x-content-type-options':'nosniff','cross-origin-resource-policy':'same-origin'};
 const json=(value,status=200)=>Response.json(value,{status,headers:HEADERS});
 const error=(status,message)=>json({error:message},status);
@@ -27,6 +26,7 @@ export async function grantMilestones(db,id,now){
   db.prepare("INSERT OR IGNORE INTO member_space_milestones(user_id,milestone,earned_at) SELECT ?, 'first_signal', ? WHERE EXISTS(SELECT 1 FROM member_wall_posts WHERE user_id=?)").bind(id,now,id),
   db.prepare("INSERT OR IGNORE INTO member_space_milestones(user_id,milestone,earned_at) SELECT ?, 'world_shaper', ? WHERE EXISTS(SELECT 1 FROM member_creator_profiles WHERE user_id=? AND length(bio)>0) AND (SELECT COUNT(*) FROM member_space_media WHERE user_id=?)=2").bind(id,now,id,id)
  ]);
+ if(await progressionReady(db))try{await syncRewardNotifications(db,id,now)}catch{/* Inbox reads repair derived notices without undoing the saved milestone. */}
 }
 export async function spaceSnapshot(db,id){
  const mediaRows=await rows(db,'SELECT slot,version FROM member_space_media WHERE user_id=?',id);
@@ -35,13 +35,14 @@ export async function spaceSnapshot(db,id){
  const count=await db.prepare('SELECT COUNT(*) AS count FROM member_wall_posts WHERE user_id=?').bind(id).first();
  const awards=MILESTONES.map(item=>({...item,earnedAt:Number(earned.find(e=>e.milestone===item.id)?.earned_at)||null}));
  const xp=awards.reduce((sum,item)=>sum+(item.earnedAt?item.xp:0),0);
- const level=1+Math.floor(Math.sqrt(xp/25));
+ const progression=await progressionReady(db)?await readProgression(db,id):null;
+ const level=progression?.level??1+Math.floor(Math.sqrt(xp/25));
  const levelStart=25*(level-1)**2,nextLevel=25*level**2;
  let featured=[];try{featured=JSON.parse(settings?.featured_json||'[]')}catch{}
  return {media:Object.fromEntries(mediaRows.map(r=>[r.slot,Number(r.version)])),
   awards,featuredAwards:featured.filter(id=>awards.some(a=>a.id===id&&a.earnedAt)),
   showStats:settings?.show_stats!==0,revision:Number(settings?.revision)||0,
-  stats:{wallPosts:Number(count?.count)||0,awards:earned.length,xp,level,levelStart,nextLevel}};
+  stats:{wallPosts:Number(count?.count)||0,awards:earned.length,xp:progression?.xp??xp,level,levelStart,nextLevel,...(progression?{testXp:progression.testXp,artifact:progression.artifact}: {})}};
 }
 async function wall(db,id){
  return (await rows(db,'SELECT id,body,created_at,updated_at,revision FROM member_wall_posts WHERE user_id=? ORDER BY created_at DESC,id DESC LIMIT 50',id)).map(r=>({id:r.id,body:r.body,createdAt:Number(r.created_at),updatedAt:Number(r.updated_at),revision:Number(r.revision)}));
@@ -122,7 +123,8 @@ export async function canonicalSpace(req,env,user,publicHandle=null,now=Math.flo
    }
    if(!['POST','PATCH'].includes(req.method)||Boolean(postId)!==(req.method==='PATCH'))return error(405,'Method not allowed');
    const body=await input(req);
-   if(!body||!keys(body,postId?['body','revision']:['body'])||typeof body.body!=='string'||!body.body.trim()||body.body.length>2000||/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/.test(body.body)||
+   if(!body||!keys(body,postId?['body','revision']:Object.hasOwn(body,'expectedVisibility')?['body','expectedVisibility']:['body'])||typeof body.body!=='string'||!body.body.trim()||body.body.length>2000||/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/.test(body.body)||
+     (!postId&&Object.hasOwn(body,'expectedVisibility')&&!['public','private'].includes(body.expectedVisibility))||
      (postId&&(!Number.isSafeInteger(body.revision)||body.revision<1)))return error(400,'Write an entry of 1–2,000 characters.');
    if(!await allowance(db,id,now))return error(429,'Too many changes. Try again in an hour.');
    if(postId){
@@ -131,8 +133,8 @@ export async function canonicalSpace(req,env,user,publicHandle=null,now=Math.flo
    }else{
     const count=await db.prepare('SELECT COUNT(*) AS count FROM member_wall_posts WHERE user_id=?').bind(id).first();
     if(count.count>=50)return error(409,'Your wall holds 50 entries. Remove an older entry before posting.');
-    const inserted=await rows(db,'INSERT INTO member_wall_posts(id,user_id,body,created_at,updated_at) SELECT ?,?,?,?,? WHERE (SELECT COUNT(*) FROM member_wall_posts WHERE user_id=?)<50 RETURNING id',crypto.randomUUID(),id,body.body.trim(),now,now,id);
-    if(!inserted.length)return error(409,'Your wall holds 50 entries. Remove an older entry before posting.');
+    const inserted=await rows(db,'INSERT INTO member_wall_posts(id,user_id,body,created_at,updated_at) SELECT ?,?,?,?,? WHERE (SELECT COUNT(*) FROM member_wall_posts WHERE user_id=?)<50 AND (? IS NULL OR EXISTS(SELECT 1 FROM member_creator_profiles WHERE user_id=? AND visibility=?)) RETURNING id',crypto.randomUUID(),id,body.body.trim(),now,now,id,body.expectedVisibility??null,id,body.expectedVisibility??null);
+    if(!inserted.length)return error(409,'Your wall or its visibility changed. Reload before posting.');
    }
    await grantMilestones(db,id,now);return json({ok:true},postId?200:201);
   }

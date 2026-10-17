@@ -1,0 +1,302 @@
+[
+  {
+    "level": 1,
+    "name": "Foundry Spark",
+    "icon": "/assets/levels/level-01.svg"
+  },
+  {
+    "level": 2,
+    "name": "Copper Key",
+    "icon": "/assets/levels/level-02.svg"
+  },
+  {
+    "level": 3,
+    "name": "Blackglass Seed",
+    "icon": "/assets/levels/level-03.svg"
+  },
+  {
+    "level": 4,
+    "name": "Ivory Compass",
+    "icon": "/assets/levels/level-04.svg"
+  },
+  {
+    "level": 5,
+    "name": "Iron Moth",
+    "icon": "/assets/levels/level-05.svg"
+  },
+  {
+    "level": 6,
+    "name": "Brass Dial",
+    "icon": "/assets/levels/level-06.svg"
+  },
+  {
+    "level": 7,
+    "name": "Quartz Spool",
+    "icon": "/assets/levels/level-07.svg"
+  },
+  {
+    "level": 8,
+    "name": "Ember Lantern",
+    "icon": "/assets/levels/level-08.svg"
+  },
+  {
+    "level": 9,
+    "name": "Prism Mask",
+    "icon": "/assets/levels/level-09.svg"
+  },
+  {
+    "level": 10,
+    "name": "Cobalt Coil",
+    "icon": "/assets/levels/level-10.svg"
+  },
+  {
+    "level": 11,
+    "name": "Silver Needle",
+    "icon": "/assets/levels/level-11.svg"
+  },
+  {
+    "level": 12,
+    "name": "Aether Bell",
+    "icon": "/assets/levels/level-12.svg"
+  },
+  {
+    "level": 13,
+    "name": "Obsidian Feather",
+    "icon": "/assets/levels/level-13.svg"
+  },
+  {
+    "level": 14,
+    "name": "Sunken Astrolabe",
+    "icon": "/assets/levels/level-14.svg"
+  },
+  {
+    "level": 15,
+    "name": "Clockwork Finch",
+    "icon": "/assets/levels/level-15.svg"
+  },
+  {
+    "level": 16,
+    "name": "Glass Meridian",
+    "icon": "/assets/levels/level-16.svg"
+  },
+  {
+    "level": 17,
+    "name": "Furnace Rose",
+    "icon": "/assets/levels/level-17.svg"
+  },
+  {
+    "level": 18,
+    "name": "Amber Tuning Fork",
+    "icon": "/assets/levels/level-18.svg"
+  },
+  {
+    "level": 19,
+    "name": "Marble Eye",
+    "icon": "/assets/levels/level-19.svg"
+  },
+  {
+    "level": 20,
+    "name": "Paper Engine",
+    "icon": "/assets/levels/level-20.svg"
+  },
+  {
+    "level": 21,
+    "name": "Ceramic Ghost",
+    "icon": "/assets/levels/level-21.svg"
+  },
+  {
+    "level": 22,
+    "name": "Mercury Hourglass",
+    "icon": "/assets/levels/level-22.svg"
+  },
+  {
+    "level": 23,
+    "name": "Saffron Beacon",
+    "icon": "/assets/levels/level-23.svg"
+  },
+  {
+    "level": 24,
+    "name": "Gilded Gear",
+    "icon": "/assets/levels/level-24.svg"
+  },
+  {
+    "level": 25,
+    "name": "Basalt Crown",
+    "icon": "/assets/levels/level-25.svg"
+  },
+  {
+    "level": 26,
+    "name": "Lunar Caliper",
+    "icon": "/assets/levels/level-26.svg"
+  },
+  {
+    "level": 27,
+    "name": "Magnetic Rose",
+    "icon": "/assets/levels/level-27.svg"
+  },
+  {
+    "level": 28,
+    "name": "Aurora Cartridge",
+    "icon": "/assets/levels/level-28.svg"
+  },
+  {
+    "level": 29,
+    "name": "Bronze Orrery",
+    "icon": "/assets/levels/level-29.svg"
+  },
+  {
+    "level": 30,
+    "name": "Midnight Atlas",
+    "icon": "/assets/levels/level-30.svg"
+  },
+  {
+    "level": 31,
+    "name": "Jade Relay",
+    "icon": "/assets/levels/level-31.svg"
+  },
+  {
+    "level": 32,
+    "name": "Tidal Key",
+    "icon": "/assets/levels/level-32.svg"
+  },
+  {
+    "level": 33,
+    "name": "Hollow Star",
+    "icon": "/assets/levels/level-33.svg"
+  },
+  {
+    "level": 34,
+    "name": "Crystal Loom",
+    "icon": "/assets/levels/level-34.svg"
+  },
+  {
+    "level": 35,
+    "name": "Auric Beetle",
+    "icon": "/assets/levels/level-35.svg"
+  },
+  {
+    "level": 36,
+    "name": "Sundial Heart",
+    "icon": "/assets/levels/level-36.svg"
+  },
+  {
+    "level": 37,
+    "name": "Sable Pendant",
+    "icon": "/assets/levels/level-37.svg"
+  },
+  {
+    "level": 38,
+    "name": "Velvet Catalyst",
+    "icon": "/assets/levels/level-38.svg"
+  },
+  {
+    "level": 39,
+    "name": "Amber Gyroscope",
+    "icon": "/assets/levels/level-39.svg"
+  },
+  {
+    "level": 40,
+    "name": "Echo Prism",
+    "icon": "/assets/levels/level-40.svg"
+  },
+  {
+    "level": 41,
+    "name": "Forged Telescope",
+    "icon": "/assets/levels/level-41.svg"
+  },
+  {
+    "level": 42,
+    "name": "Arc Lantern",
+    "icon": "/assets/levels/level-42.svg"
+  },
+  {
+    "level": 43,
+    "name": "Ivory Sextant",
+    "icon": "/assets/levels/level-43.svg"
+  },
+  {
+    "level": 44,
+    "name": "Molten Cipher",
+    "icon": "/assets/levels/level-44.svg"
+  },
+  {
+    "level": 45,
+    "name": "Silver Harp",
+    "icon": "/assets/levels/level-45.svg"
+  },
+  {
+    "level": 46,
+    "name": "Cobalt Furnace",
+    "icon": "/assets/levels/level-46.svg"
+  },
+  {
+    "level": 47,
+    "name": "Night Compass",
+    "icon": "/assets/levels/level-47.svg"
+  },
+  {
+    "level": 48,
+    "name": "Dawn Engine",
+    "icon": "/assets/levels/level-48.svg"
+  },
+  {
+    "level": 49,
+    "name": "Glass Cathedral",
+    "icon": "/assets/levels/level-49.svg"
+  },
+  {
+    "level": 50,
+    "name": "Radiant Crucible",
+    "icon": "/assets/levels/level-50.svg"
+  },
+  {
+    "level": 51,
+    "name": "Solar Orrery",
+    "icon": "/assets/levels/level-51.svg"
+  },
+  {
+    "level": 52,
+    "name": "Gravity Spindle",
+    "icon": "/assets/levels/level-52.svg"
+  },
+  {
+    "level": 53,
+    "name": "Quantum Leaf",
+    "icon": "/assets/levels/level-53.svg"
+  },
+  {
+    "level": 54,
+    "name": "Iron Comet",
+    "icon": "/assets/levels/level-54.svg"
+  },
+  {
+    "level": 55,
+    "name": "Aether Vessel",
+    "icon": "/assets/levels/level-55.svg"
+  },
+  {
+    "level": 56,
+    "name": "Obsidian Crown",
+    "icon": "/assets/levels/level-56.svg"
+  },
+  {
+    "level": 57,
+    "name": "Aurora Monolith",
+    "icon": "/assets/levels/level-57.svg"
+  },
+  {
+    "level": 58,
+    "name": "Starforge Dial",
+    "icon": "/assets/levels/level-58.svg"
+  },
+  {
+    "level": 59,
+    "name": "Celestial Engine",
+    "icon": "/assets/levels/level-59.svg"
+  },
+  {
+    "level": 60,
+    "name": "The First Light",
+    "icon": "/assets/levels/level-60.svg"
+  }
+]
