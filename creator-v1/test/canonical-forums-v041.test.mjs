@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {fixture} from './helpers/canonical-fixture.mjs';
 import {canonicalForums} from '../canonical-auth/forums.mjs';
+import {publicMemberCard,publicMemberColumns} from '../canonical-auth/public-member-card.mjs';
 const base='https://a.anevum.com';
 const id=()=>crypto.randomUUID();
 const req=(path,method='GET',body)=>new Request(base+path,{method,headers:{origin:base,...(body?{'content-type':'application/json'}:{})},body:body?JSON.stringify(body):undefined});
@@ -218,4 +219,17 @@ test('verified private members may report and appreciate public content without 
    requestId:id(),topic:'games',title:'Private author topic attempt',body:'This should not be published by a private member.'
   }),f.env,privateMember,1004)).status,403);
  }finally{f.db.close()}
+});
+
+test('shared compact identity never exposes a hidden level or unearned award',()=>{
+ const row={handle:'actual_member',display_name:'Actual Member',avatar:1,show_stats:1,
+  member_xp:75,featured_json:'["first_signal","world_shaper","not_an_award"]',earned_awards:'first_signal'};
+ assert.deepEqual(publicMemberCard(row),{
+  handle:'actual_member',displayName:'Actual Member',avatar:true,level:2,featuredAwards:['first_signal']
+ });
+ assert.equal(publicMemberCard({...row,show_stats:0}).level,null);
+ assert.equal(publicMemberCard({...row,member_xp:90000}).level,30);
+ assert.deepEqual(publicMemberCard({...row,featured_json:'{bad'}).featuredAwards,[]);
+ for(const owner of ['t.author_id','r.author_id','p.user_id'])assert.match(publicMemberColumns(owner),/member_xp_events/);
+ assert.throws(()=>publicMemberColumns('t.author_id; DROP TABLE user'),/Unsafe identity column/);
 });

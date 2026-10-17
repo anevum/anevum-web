@@ -15,9 +15,23 @@ test('public member discovery and wall activity include only verified opt-in pro
   seed(db,'a','alpha_world');seed(db,'b','beta_world','private');seed(db,'c','gamma_world','public',0);
   const directory=await worker.fetch(get('/api/v1/community/members'),env);assert.equal(directory.status,200);assert.match(directory.headers.get('cache-control'),/no-store/);
   const data=await directory.json();assert.deepEqual(data.items.map(p=>p.handle),['alpha_world']);assert.equal(data.items[0].avatar,false);
-  for(const field of ['email','userId','user_id','bio','visibility','revision','stats','xp','level'])assert.equal(data.items[0][field],undefined,field);
+  for(const field of ['email','userId','user_id','bio','visibility','revision','stats','xp'])assert.equal(data.items[0][field],undefined,field);
+  assert.equal(data.items[0].level,1);
+  assert.deepEqual(data.items[0].featuredAwards,[]);
   assert.ok(!JSON.stringify(data).includes('PRIVATE BIO'));
-  const feed=await (await worker.fetch(get('/api/v1/community/activity'),env)).json();assert.equal(feed.items.length,1);assert.match(feed.items[0].excerpt,/alpha_world/);
+  const feed=await (await worker.fetch(get('/api/v1/community/activity'),env)).json();assert.equal(feed.items.length,1);assert.match(feed.items[0].excerpt,/alpha_world/);assert.equal(feed.items[0].level,1);
+  // Members explicitly choose what is public. Unearned or invented awards remain hidden.
+  db.prepare("INSERT INTO member_space_settings(user_id,featured_json,show_stats) VALUES('a',?,1)").run(JSON.stringify(['first_signal','world_shaper','invented']));
+  db.prepare("INSERT INTO member_space_milestones(user_id,milestone,earned_at) VALUES('a','first_signal',100)").run();
+  const consented=await (await worker.fetch(get('/api/v1/community/activity'),env)).json();
+  assert.equal(consented.items[0].level,1);
+  assert.deepEqual(consented.items[0].featuredAwards,['first_signal']);
+  db.prepare("UPDATE member_space_settings SET show_stats=0 WHERE user_id='a'").run();
+  const hidden=await (await worker.fetch(get('/api/v1/community/activity'),env)).json();
+  assert.equal(hidden.items[0].level,null);
+  assert.deepEqual(hidden.items[0].featuredAwards,['first_signal']);
+  assert.ok(!JSON.stringify(hidden).includes('member_xp'));
+  assert.ok(!JSON.stringify(hidden).includes('PRIVATE BIO'));
   db.prepare("UPDATE member_creator_profiles SET visibility='private' WHERE user_id='a'").run();
   for(const path of ['members','activity'])assert.equal((await (await worker.fetch(get('/api/v1/community/'+path),env)).json()).items.length,0);
   assert.equal((await worker.fetch(new Request(origin+'/api/v1/community/members',{method:'POST',headers:{origin}}),env)).status,405);

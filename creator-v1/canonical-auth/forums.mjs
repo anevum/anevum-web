@@ -1,4 +1,5 @@
 import {boundedText} from './request-body.mjs';
+import {publicMemberColumns,publicMemberCard} from './public-member-card.mjs';
 const HEAD={'content-type':'application/json; charset=utf-8','cache-control':'private, no-store','x-content-type-options':'nosniff'};
 const json=(data,status=200)=>Response.json(data,{status,headers:HEAD});
 const fail=(status,message)=>json({error:message},status);
@@ -16,18 +17,14 @@ function decodeCursor(value){
 }
 const encodeCursor=(at,id)=>btoa(JSON.stringify([Number(at),id]));
 async function payload(req){if(!/^application\/json(?:\s*;|$)/i.test(req.headers.get('content-type')||''))return null;const s=await boundedText(req,7000);try{const p=JSON.parse(s);return p&&typeof p==='object'&&!Array.isArray(p)?p:null}catch{return null}}
-const card=(r)=>({handle:r.handle,displayName:r.display_name,avatar:Boolean(r.avatar),level:r.show_stats===0?null:Number(r.level)||1,featuredAwards:JSON.parse(r.featured_json||'[]').filter(x=>['first_signal','world_shaper'].includes(x)).slice(0,3)});
+const card=publicMemberCard;
 const authorSql=`JOIN member_creator_profiles p ON p.user_id=t.author_id JOIN "user" u ON u.id=p.user_id
  LEFT JOIN member_space_settings s ON s.user_id=p.user_id
  WHERE p.visibility='public' AND u.emailVerified=1`;
 const selectThread=`SELECT t.id,t.topic,t.title,t.body,t.status,t.created_at,t.published_at,t.updated_at,
- p.handle,p.display_name,s.featured_json,s.show_stats,
+ p.handle,p.display_name,${publicMemberColumns('t.author_id')},
  EXISTS(SELECT 1 FROM member_space_media m WHERE m.user_id=p.user_id AND m.slot='avatar') AS avatar,
- (1+CAST(SQRT(MAX(0,
-   (COALESCE((SELECT SUM(amount) FROM member_xp_events x WHERE x.user_id=t.author_id),0)+
-   COALESCE((SELECT SUM(CASE milestone WHEN 'first_signal' THEN 10 WHEN 'world_shaper' THEN 25 ELSE 0 END)
-   FROM member_space_milestones z WHERE z.user_id=t.author_id),0))/25.0
- )) AS INTEGER)) AS level,
+
  (SELECT COUNT(*) FROM member_forum_replies r JOIN member_creator_profiles rp ON rp.user_id=r.author_id
  JOIN "user" ru ON ru.id=rp.user_id WHERE r.thread_id=t.id AND r.status='published'
  AND rp.visibility='public' AND ru.emailVerified=1) AS reply_count,
@@ -73,9 +70,9 @@ export async function canonicalForums(req,env,user=null,now=Math.floor(Date.now(
    if(reply){
     const parent=await db.prepare(selectThread+' AND t.id=?').bind(reply[1]).first();
     if(!parent)return fail(404,'Thread is not public');
-    const r=await db.prepare(`SELECT r.id,r.body,r.published_at,p.handle,p.display_name,s.featured_json,s.show_stats,
-      EXISTS(SELECT 1 FROM member_space_media m WHERE m.user_id=p.user_id AND m.slot='avatar') AS avatar,
-      (1+CAST(SQRT(MAX(0,(COALESCE((SELECT SUM(amount) FROM member_xp_events x WHERE x.user_id=r.author_id),0)+COALESCE((SELECT SUM(CASE milestone WHEN 'first_signal' THEN 10 WHEN 'world_shaper' THEN 25 ELSE 0 END) FROM member_space_milestones z WHERE z.user_id=r.author_id),0))/25.0)) AS INTEGER)) AS level FROM member_forum_replies r JOIN member_creator_profiles p ON r.author_id=p.user_id JOIN "user" u ON u.id=p.user_id
+    const r=await db.prepare(`SELECT r.id,r.body,r.published_at,p.handle,p.display_name,${publicMemberColumns('r.author_id')},
+      EXISTS(SELECT 1 FROM member_space_media m WHERE m.user_id=p.user_id AND m.slot='avatar') AS avatar
+ FROM member_forum_replies r JOIN member_creator_profiles p ON r.author_id=p.user_id JOIN "user" u ON u.id=p.user_id
       LEFT JOIN member_space_settings s ON s.user_id=p.user_id
       WHERE r.thread_id=? AND r.status='published' AND p.visibility='public' AND u.emailVerified=1
       ${after?'AND (r.published_at>? OR (r.published_at=? AND r.id>?))':''}

@@ -1,0 +1,35 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+const read=p=>readFileSync(new URL('../'+p,import.meta.url),'utf8');
+test('every modern public author surface uses the shared 3D mini specimen identity',()=>{
+ const shared=read('web/src/components/CompactMemberIdentity.tsx');
+ const forum=read('web/src/components/ForumAuthorCard.tsx');
+ const member=read('web/src/components/MemberCommunity.tsx');
+ const wall=read('web/src/components/MemberWall.tsx');
+ const profile=read('web/src/pages/Phase1PublicMemberPage.tsx');
+ const css=read('web/src/components/member-identity-v061.css');
+ assert.match(shared,/LevelEmblem level=/);
+ assert.match(shared,/MemberPortrait/);
+ assert.match(shared,/featuredAwards/);
+ assert.match(shared,//@/);
+ assert.match(forum,/CompactMemberIdentity/);
+ assert.match(member,/CompactMemberIdentity/);
+ assert.match(wall,/CompactMemberIdentity/);
+ assert.match(profile,/av61-profile-level/);
+ assert.match(css,/av61-orbit-specimen/);
+ assert.match(css,/prefers-reduced-motion:reduce/);
+ assert.doesNotMatch(shared,/new WebGLRenderingContext|requestAnimationFrame|clientAward|userEnteredLevel/);
+});
+test('forum and wall activity derive levels from one V060 XP authority',()=>{
+ const author=read('canonical-auth/public-member-card.mjs');
+ const threads=read('canonical-auth/forums.mjs');
+ const feed=read('canonical-auth/community.mjs');
+ assert.match(author,/levelProgress\(xp\)/);
+ assert.match(author,/earned\.has\(id\)/);
+ assert.match(author,/row\.show_stats===0\?null/);
+ assert.match(threads,/publicMemberColumns\('t\.author_id'\)/);
+ assert.match(threads,/publicMemberColumns\('r\.author_id'\)/);
+ assert.match(feed,/publicMemberColumns\('p\.user_id'\)/);
+ for(const s of [threads,feed])assert.doesNotMatch(s,/SQRT\(MAX\(0|\/25\.0/);
+});

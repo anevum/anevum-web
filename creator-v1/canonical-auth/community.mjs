@@ -1,6 +1,7 @@
 // Public, opt-in canonical member discovery. Never joins legacy identities.
 import {FOCUS_KEYS,worldFromRow} from './worlds.mjs';
 import {spaceReady} from './space.mjs';
+import {publicMemberColumns,publicMemberCard} from './public-member-card.mjs';
 import {readSupporterRewards} from './supporter-rewards.mjs';
 const headers={'content-type':'application/json; charset=utf-8','cache-control':'private, no-store','x-content-type-options':'nosniff'};
 const answer=(req,data,status=200)=>new Response(req.method==='HEAD'?null:JSON.stringify(data),{status,headers});
@@ -25,18 +26,18 @@ export async function canonicalCommunity(req,env){
   if(focus){where.push('EXISTS(SELECT 1 FROM json_each(p.focus_json) WHERE value=?)');params.push(focus)}
   if(after){where.push(`(${at}<? OR (${at}=? AND ${key}<?))`);params.push(after[0],after[0],after[1])}
   const sql=`SELECT p.user_id AS member_user_id,p.handle,p.display_name,p.headline,p.world_theme,p.focus_json,p.created_at AS joined_at,
+   ${publicMemberColumns('p.user_id')},
    EXISTS(SELECT 1 FROM member_space_media m WHERE m.user_id=${owner} AND m.slot='avatar') AS avatar,
    ${activity?'w.id,w.body,w.created_at,w.updated_at':'p.created_at'}
    FROM ${activity?'member_wall_posts w JOIN member_creator_profiles p ON p.user_id=w.user_id':'member_creator_profiles p'}
-   JOIN user u ON u.id=p.user_id WHERE ${where.join(' AND ')} ORDER BY ${at} DESC,${key} DESC LIMIT 13`;
+   JOIN user u ON u.id=p.user_id LEFT JOIN member_space_settings s ON s.user_id=p.user_id WHERE ${where.join(' AND ')} ORDER BY ${at} DESC,${key} DESC LIMIT 13`;
   const result=await db.prepare(sql).bind(...params).all();if(result.success===false)throw Error('Unavailable');
   const hasMore=result.results.length>12,rows=result.results.slice(0,12);
   const items=await Promise.all(rows.map(async row=>{
    // Public-only recognition, no account/Stripe IDs or billing metadata
    // leave this endpoint. Absent consent or stale subscription -> no badge.
    const supporter=await readSupporterRewards(env,row.member_user_id,Date.now(),true);
-   return {handle:row.handle,displayName:row.display_name,...worldFromRow(row),
-     avatar:Boolean(row.avatar),joinedAt:Number(row.joined_at),
+   return {...publicMemberCard(row),...worldFromRow(row),joinedAt:Number(row.joined_at),
      ...(supporter?{supporterAppearance:supporter.selected}:{}),
      ...(activity?{id:row.id,excerpt:row.body.length>360?row.body.slice(0,357)+'…':row.body,createdAt:Number(row.created_at),updatedAt:Number(row.updated_at)}:{})};
   }));

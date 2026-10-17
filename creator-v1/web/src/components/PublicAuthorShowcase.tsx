@@ -2,7 +2,8 @@ import {useState} from "react";
 import {Link} from "react-router-dom";
 import type {Creator,PublicCreatorShowcase} from "../lib/api";
 import {CelestialEmblem} from "./CelestialEmblem";
-import {achievementMotif,seriesOneArtifactMotif} from "../lib/artifact-art";
+import {achievementMotif} from "../lib/artifact-art";
+import {LevelEmblem,LEVEL_ARTIFACTS} from './LevelEmblem';
 
 type Props={
   handle:string;
@@ -19,10 +20,11 @@ type Props={
 export function PublicAuthorShowcase({handle,name,known,showcase,variant="feed"}:Props){
   const [detail,setDetail]=useState<{title:string;body:string}|null>(null);
   const href="/creators/"+encodeURIComponent(handle);
-  const level=showcase&&Number.isSafeInteger(showcase.level)&&showcase.level>=1?showcase.level:null;
+  const level=showcase&&Number.isSafeInteger(showcase.level)&&showcase.level>=1&&showcase.level<=30?showcase.level:null;
   const currentArtifact=typeof showcase?.currentArtifact==="string"?showcase.currentArtifact:null;
-  const equipped=typeof showcase?.equippedArtifact?.name==="string"?showcase.equippedArtifact.name:null;
-  const artifact=equipped||currentArtifact;
+  const desiredArtifact=showcase?.equippedArtifact?.name;
+  const equipped=typeof desiredArtifact==="string"&&LEVEL_ARTIFACTS.some(a=>a.name===desiredArtifact&&a.level<=(level??0))?desiredArtifact:null;
+  const artifact=level!==null&&LEVEL_ARTIFACTS[level-1]?.name===currentArtifact?equipped||currentArtifact:null;
   const awards=Array.isArray(showcase?.featuredAwards)?showcase.featuredAwards.slice(0,3):[];
   const toggle=(title:string,body:string)=>setDetail(old=>old?.title===title?null:{title,body});
 
@@ -41,7 +43,7 @@ export function PublicAuthorShowcase({handle,name,known,showcase,variant="feed"}
         aria-expanded={detail?.title==="LEVEL "+level} onClick={()=>toggle("LEVEL "+level,
           "Level and current artifact are derived from verified ANEVUM progression, not member-entered scores.")}>
         <span className="av7-level-crest">
-          <CelestialEmblem motif={seriesOneArtifactMotif(currentArtifact)} size="small" state="earned"/>
+          <LevelEmblem level={level} size={46}/>
           <b>{level}</b>
         </span>
         <span className="av7-level-copy"><strong>LEVEL {String(level).padStart(2,"0")}</strong>
@@ -52,11 +54,10 @@ export function PublicAuthorShowcase({handle,name,known,showcase,variant="feed"}
       <span className="av7-section-name">{equipped?"EQUIPPED ARTIFACT":"CURRENT ARTIFACT"}</span>
       <button type="button" className="av7-artifact-button" aria-expanded={detail?.title===artifact}
         onClick={()=>toggle(artifact,equipped?
-          "This Series One artifact has been chosen for public display from items already earned by this member.":
+          "This Evolution of Everything specimen was selected from levels earned by this creator.":
           "This is the current artifact confirmed by the ANEVUM progression service. The member has not yet equipped a personal selection.")}>
-        <span className="av7-item-face" aria-hidden="true"><CelestialEmblem
-          motif={seriesOneArtifactMotif(artifact)} size="small" state="earned"/></span>
-        <span className="av7-item-meta"><strong>{artifact}</strong><small>SERIES ONE / EARNED</small></span>
+        <span className="av7-item-face" aria-hidden="true"><LevelEmblem level={level!} size={36}/></span>
+        <span className="av7-item-meta"><strong>{artifact}</strong><small>EVOLUTION / EARNED</small></span>
       </button>
     </div>}
     {awards.length>0&&<div className="av7-award-panel">
