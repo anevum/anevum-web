@@ -3,6 +3,7 @@ import {Link} from "react-router-dom";
 import type {Project} from "../lib/api";
 import {selectPlayer} from "../lib/player-registry";
 import {CosmicArtwork} from "./CosmicArtwork";
+import {CompactMemberIdentity} from "./CompactMemberIdentity";
 import "./project-player-shell.css";
 
 /** The public stage opens safe creator-hosted links. It never executes creator code. */
@@ -67,8 +68,7 @@ export function ProjectPlayerShell({project,demo,source}:{
     </section>
     <div className="avp-stage-identity">
       <Link className="avp-creator-credit" to={"/creators/"+encodeURIComponent(project.creatorHandle)}>
-        <span className="avp-creator-emblem" aria-hidden="true">✳</span>
-        <span><small>CREATED BY</small><strong>{project.creatorName} / @{project.creatorHandle}</strong></span>
+        <CompactMemberIdentity interactive={false} size="compact" className="av65-project-channel" member={{handle:project.creatorHandle,displayName:project.creatorName,avatar:false,level:null,featuredAwards:[],source:'creator-channel'}}/>
         <span aria-hidden="true">↗</span>
       </Link>
       <nav className="avp-stage-shortcuts" aria-label="Project participation">
