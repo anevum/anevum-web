@@ -14,7 +14,8 @@ test('retired icon set is not selected anywhere in the active level UI',()=>{
  for(const code of [emulator,cabinet,page,panel]){
   assert.doesNotMatch(code,/series-one-v037|THE FIRST 60|NO LEVEL CAP|FIRST 60 ARTIFACTS/);
  }
- assert.match(emulator,/v060-evolution/);
+ assert.match(emulator,/v062-native-mesh/);
+ assert.match(emulator,/registerAnimatedSpecimen/);
  assert.match(cabinet,/ENTER THE LIVING 3D ARCHIVE/);
  assert.match(page,/30 LIVING SPECIMENS/);
  assert.match(panel,/FINAL LEVEL/);

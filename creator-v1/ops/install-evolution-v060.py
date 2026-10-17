@@ -48,6 +48,27 @@ const firstLevel=levelQuery&&/^(?:[1-9]|[12][0-9]|30)$/.test(levelQuery)?Number(
 renderGallery();renderMembers();syncMotion();selectLevel(firstLevel);"""
 assert old in js
 js=js.replace(old,new,1)
+# V062. Native materials, calibrated lights, bloom and object-specific motions
+# are exported once from the exact V059 source used by the interactive archive.
+# Dynamic member cards then fetch only the scene they actually need.
+import sys
+sys.path.insert(0,str(ROOT/"design/evolution-v059/src"))
+from geometry import MAT
+runtime={
+    "version":"anevum.mini-native.v062",
+    "vertex":(ROOT/"design/evolution-v059/src/material.vert").read_text(),
+    "fragment":(ROOT/"design/evolution-v059/src/material.frag").read_text(),
+    "bloomVertex":(ROOT/"design/evolution-v059/src/bloom.vert").read_text(),
+    "materials":MAT,
+    "height":"/evolution/assets/height.png",
+    "albedo":"/evolution/assets/albedo.webp",
+    "accents":[item["accent"] for item in manifest["levels"]],
+}
+assert len(runtime["accents"])==30
+assert all(re.fullmatch(r"#[0-9a-fA-F]{6}",x) for x in runtime["accents"])
+assert all(runtime[key].strip() for key in ["vertex","fragment","bloomVertex"])
+(target/"mini-runtime.json").write_text(json.dumps(runtime,separators=(",",":")))
+assert (target/"mini-runtime.json").stat().st_size>6000
 (target/"app.css").write_text(css)
 (target/"app.js").write_text(js)
 (target/"index.html").write_text(html)

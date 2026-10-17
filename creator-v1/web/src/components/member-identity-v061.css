@@ -40,3 +40,17 @@
 .av7-level-crest .level-emblem{width:46px!important;height:46px!important;object-fit:contain}
 .av7-item-face .level-emblem{width:36px!important;height:36px!important;object-fit:contain}
 @media(prefers-reduced-motion:reduce){.av61-profile-level{animation:none}}
+
+/* V062 native mesh: the inline still image is a fallback only. Its true
+   animated geometry and per-specimen lighting are composited in one canvas. */
+.av62-native-host{display:inline-grid!important;place-items:center;position:relative;vertical-align:middle;flex:none;overflow:visible;transform:none!important;animation:none!important;will-change:auto!important}
+.av62-native-poster{display:block;width:100%;height:100%;object-fit:contain;max-width:100%;filter:inherit;pointer-events:none;transition:none}
+.av62-native-host[data-live="true"]>.av62-native-poster{visibility:hidden}
+.av61-specimen .av62-native-host,.av61-identity:hover .av61-specimen .av62-native-host,
+.an-series-v060 .level-emblem.av62-native-host,.av61-profile-level .av62-native-host{
+ transform:none!important;animation:none!important;mix-blend-mode:normal!important;
+}
+.av61-profile-level:has(.av62-native-host){animation:none!important}
+.an-series-v060 .an-artifact-visual .av62-native-host{filter:none!important}
+.an-series-v060 .an-artifact-card-v034:not(.is-earned) .av62-native-host{filter:none!important}
+@media(prefers-reduced-motion:reduce){.av62-native-host,.av62-native-host>.av62-native-poster{animation:none!important;transition:none!important}}

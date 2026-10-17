@@ -1,16 +1,32 @@
-import {useEffect,useState} from 'react';
+import {useEffect,useRef,useState} from 'react';
 import artifacts from '../../../shared/level-artifacts.json';
 import {OrbitalMark} from './OrbitalMark';
 import {CelestialEmblem} from './CelestialEmblem';
-// Visual only; the server owns XP, level thresholds, and earned awards.
+import {registerAnimatedSpecimen} from '../lib/evolution-mini-renderer';
+
+// The member server owns earned level/XP; this shared presentation consumes
+// the actual V059 mesh, materials and specimen-specific GLSL motion.
+// A high-resolution transparent image remains behind every native render
+// when WebGL is unavailable, suspended or outside the animation budget.
 export const LEVEL_ARTIFACTS=artifacts;
 export function LevelEmblem({level,size=64}:{level:number;size?:number}){
  const [failed,setFailed]=useState(false);
- useEffect(()=>setFailed(false),[level,size]);
+ const target=useRef<HTMLSpanElement|null>(null);
  const safe=Number.isSafeInteger(level)&&level>0?Math.min(30,level):1;
  const item=artifacts[safe-1];
+ useEffect(()=>setFailed(false),[safe,size]);
+ useEffect(()=>{
+  if(failed||!item||!target.current)return;
+  return registerAnimatedSpecimen(target.current,safe);
+ },[safe,size,item,failed]);
  if(!item||failed)return <span className="level-emblem level-emblem-beyond" style={{width:size,height:size}} aria-label={'Evolution level '+safe}><OrbitalMark/><small>{safe}</small></span>;
  const src=import.meta.env.BASE_URL+(size>104?item.preview:item.icon).slice(1);
- return <img className="level-emblem is-illustrated" src={src} width={size} height={size} alt={'Level '+safe+' · '+item.name} loading={size>=104?'lazy':'eager'} decoding="async" draggable={false} data-artwork="v060-evolution" onError={()=>setFailed(true)}/>;
+ return <span ref={target} className="level-emblem is-illustrated av62-native-host"
+  style={{width:size,height:size}} role="img" aria-label={'Level '+safe+' · '+item.name}
+  data-artwork="v062-native-mesh" data-level={safe}>
+  <img className="av62-native-poster" src={src} width={size} height={size}
+   alt="" loading={size>=104?'lazy':'eager'} decoding="async" draggable={false}
+   onError={()=>setFailed(true)}/>
+ </span>;
 }
-export function AwardEmblem({award,earned=true}:{award?:string;earned?:boolean}){return <CelestialEmblem motif={award==='world_shaper'?'trinity':'beacon'} size="small" state={earned?"earned":"locked"}/>}
+export function AwardEmblem({award,earned=true}:{award?:string;earned?:boolean}){return <CelestialEmblem motif={award==='world_shaper'?'trinity':'beacon'} size="small" state={earned?"earned":"locked"}/> }
