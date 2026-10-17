@@ -175,6 +175,8 @@ test('private binary upload validates types, quotas, ownership and forced downlo
   const files=report.assets;
   assert.equal(report.memberUsedBytes,6);
   assert.equal(report.projectUsedBytes,6);
+  assert.equal(report.globalUsedBytes,6);
+  assert.equal(report.globalQuotaBytes,512*1048576);
   assert.equal(report.quotaBytes,100*1048576);
   assert.equal(files.length,1);assert.equal(files[0].status,'quarantined');
   assert.equal(files[0].sha256.length,64);
@@ -359,5 +361,55 @@ test('closed canonical member allowlist gates binary upload without blocking pri
   assert.equal((await j(await s.call(ROOT,'GET','alice'))).uploadsReady,false);
   assert.equal((await s.call(ROOT,'POST','alice',
     {clientRequestId:crypto.randomUUID(),draft:{...draft,slug:'second-private-work'}})).status,201);
+ }finally{s.close();}
+});
+
+test('private pilot vault enforces shared 512 MiB cap, then frees space on deletion',async()=>{
+ const s=setup({uploads:true});
+ try{
+  const first=(await j(await s.call(ROOT,'POST','alice',projectRequest()))).project;
+  const recipient=(await j(await s.call(ROOT,'POST','bob',{
+   clientRequestId:crypto.randomUUID(),draft:{...draft,slug:'bob-vault',title:'Bob vault'}
+  }))).project;
+  const now=Math.floor(Date.now()/1000);
+  const existing=[{uid:bob.id,project:recipient.id}];
+  const addUser=s.f.db.prepare('INSERT INTO "user"(id,name,email,emailVerified,createdAt,updatedAt) VALUES(?,?,?,1,?,?)');
+  const addProject=s.f.db.prepare(
+   'INSERT INTO member_studio_projects(id,user_id,client_request_id,slug,title,summary,category,created_at,updated_at) '+
+   'VALUES(?,?,?,?,?,?,?,?,?)'
+  );
+  for(let i=0;i<5;i++){
+   const uid='vault-fixture-'+i,pid=crypto.randomUUID();
+   addUser.run(uid,'Vault tester '+i,'vault-'+i+'@fixture.invalid',now,now);
+   addProject.run(pid,uid,crypto.randomUUID(),'vault-test-'+i,'Vault test '+i,
+    'An isolated staging quota test record', 'games',now,now);
+   existing.push({uid,project:pid});
+  }
+  const addAsset=s.f.db.prepare('INSERT INTO member_studio_assets('+
+   'id,project_id,user_id,filename,extension,kind,content_type,size_bytes,status,storage_key,created_at,updated_at) '+
+   'VALUES(?,?,?,?,?,?,?,?,?,?,?,?)');
+  let remaining=512*1048576;
+  for(let i=0;i<26;i++){
+   const group=existing[Math.floor(i/5)],bytes=Math.min(20*1048576,remaining);
+   addAsset.run(i.toString(16).padStart(32,'0'),group.project,group.uid,
+    'part-'+i+'.zip','zip','package','application/zip',bytes,'reserved',
+    'private-quarantine/quota-fixture/'+i,now,now);
+   remaining-=bytes;
+  }
+  assert.equal(remaining,0);
+  const path=ROOT+'/'+first.id+'/assets';
+  const before=await j(await s.call(path));
+  assert.equal(before.globalUsedBytes,512*1048576);
+  assert.equal(before.globalQuotaBytes,512*1048576);
+  assert.equal(before.memberUsedBytes,0);
+  assert.equal((await s.call(path,'POST','alice',{name:'private.gif',sizeBytes:6,contentType:'image/gif'})).status,409);
+  assert.equal((await j(await s.call(path))).assets.length,0);
+  // Bob can remove a private reservation even when the shared vault is full.
+  assert.equal((await s.call(ROOT+'/'+recipient.id+'/assets/'+('0'.repeat(32)),'DELETE','bob')).status,200);
+  const newlyAvailable=await s.call(path,'POST','alice',{name:'private.gif',sizeBytes:6,contentType:'image/gif'});
+  assert.equal(newlyAvailable.status,201);
+  const after=await j(await s.call(path));
+  assert.equal(after.memberUsedBytes,6);
+  assert.ok(after.globalUsedBytes<after.globalQuotaBytes);
  }finally{s.close();}
 });
