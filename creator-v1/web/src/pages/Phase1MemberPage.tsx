@@ -1,5 +1,5 @@
 import {type FormEvent,useEffect,useState} from "react";
-import {Link,Navigate,useNavigate} from "react-router-dom";
+import {Link,Navigate,useNavigate,useSearchParams} from "react-router-dom";
 import {canonicalAuthClient,canonicalClaim,canonicalEdit,canonicalMe,canonicalReady,canonicalMethods,
   CanonicalBetaError,type CanonicalProfile,type WorldTheme,type FocusKey,WORLD_THEME_OPTIONS,FOCUS_OPTIONS} from "../lib/canonical-beta";
 import {useResource} from "../lib/useResource";
@@ -23,6 +23,16 @@ type SocialProvider=keyof typeof SOCIAL_PROVIDER_NAMES;
  */
 function ConnectedSignInMethods({memberId}:{memberId:string}){
   const methods=useResource(canonicalMethods,[]);
+  const [searchParams]=useSearchParams();
+  const linkFailureCode=searchParams.get("error");
+  const linkFailure=linkFailureCode==="email_doesnt_match"||linkFailureCode==="email_doesn't_match"
+    ?"This provider uses a different email address. ANEVUM does not merge identities across email addresses."
+    :linkFailureCode==="account_already_linked_to_different_user"
+    ?"That provider is already connected to another ANEVUM account. No accounts were merged."
+    :linkFailureCode
+    ?"That provider could not be linked. Your existing ANEVUM account was not changed."
+    :null;
+  const [refreshCounter,setRefreshCounter]=useState(0);
   const [linked,setLinked]=useState<string[]>([]);
   const [loading,setLoading]=useState(true);
   const [error,setError]=useState("");
@@ -34,6 +44,7 @@ function ConnectedSignInMethods({memberId}:{memberId:string}){
     if(methods.state!=="ready"||methods.data.linking!=="explicit")return;
     let mounted=true;
     setLoading(true);
+    setLinked([]);
     void canonicalAuthClient.listAccounts().then(result=>{
       if(!mounted)return;
       if(result.error){setError("Your connected sign-in methods could not be verified.");return;}
@@ -43,12 +54,12 @@ function ConnectedSignInMethods({memberId}:{memberId:string}){
       if(mounted)setError("Your connected sign-in methods could not be verified.");
     }).finally(()=>{if(mounted)setLoading(false)});
     return ()=>{mounted=false};
-  },[memberId,methods.state,methods.state==="ready"?methods.data.linking:null]);
+  },[memberId,methods.state,methods.state==="ready"?methods.data.linking:null,refreshCounter]);
   async function link(provider:SocialProvider){
     if(busy||loading||linked.includes(provider)||!available.includes(provider))return;
     setBusy(provider);setError("");
     try{
-      const result=await canonicalAuthClient.linkSocial({provider,callbackURL:"/member"});
+      const result=await canonicalAuthClient.linkSocial({provider,callbackURL:"/member",errorCallbackURL:"/member"});
       if(result.error)throw Error("Provider authorization failed");
     }catch{
       setError("Could not connect that sign-in method. Your existing member identity is unchanged.");
@@ -59,12 +70,16 @@ function ConnectedSignInMethods({memberId}:{memberId:string}){
     <span className="kicker">MEMBER IDENTITY / ACCESS METHODS</span>
     <h2 id="av12-linked-methods-title">CONNECTED SIGN-IN METHODS</h2>
     <p>Keep one ANEVUM identity. Connect a second login provider here while signed in. Matching email addresses alone never merge accounts.</p>
+    {linkFailure&&<p role="alert">{linkFailure}</p>}
     {loading?<p role="status">Checking your connected providers…</p>:
-      available.map(provider=><div key={provider} className="member-actions">
+      error?<button type="button" className="button secondary"
+        onClick={()=>{setError("");setRefreshCounter(value=>value+1);}}>
+        RETRY PROVIDER CHECK
+      </button>:available.map(provider=><div key={provider} className="member-actions">
         <strong>{SOCIAL_PROVIDER_NAMES[provider]}</strong>
         {linked.includes(provider)?<span>CONNECTED</span>:
           <button type="button" className="button secondary"
-            disabled={Boolean(busy)||Boolean(error)}
+            disabled={Boolean(busy)||loading}
             onClick={()=>void link(provider)}>
             {busy===provider?"CONNECTING…":"CONNECT "+SOCIAL_PROVIDER_NAMES[provider].toUpperCase()}
           </button>}
