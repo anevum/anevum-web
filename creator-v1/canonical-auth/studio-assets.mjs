@@ -173,10 +173,19 @@ export async function canonicalStudioAssets(req,env,user,project,{asset=null,fil
     db.prepare("UPDATE member_studio_projects SET status='draft',revision=revision+1,updated_at=?,submitted_at=NULL "+
       "WHERE id=? AND user_id=? AND status='pending_review' AND revision=? "+
       "AND EXISTS(SELECT 1 FROM member_studio_assets WHERE id=? AND project_id=? AND user_id=? AND status='deleting')")
-     .bind(now,project.id,user.id,project.revision,asset,project.id,user.id)
+     .bind(now,project.id,user.id,project.revision,asset,project.id,user.id),
+    // A stored review receipt is retained as a historical hash manifest, but
+    // becomes non-actionable when its underlying evidence changes.
+    db.prepare("UPDATE member_studio_submissions SET status='withdrawn',resolved_at=? "+
+      "WHERE project_id=? AND user_id=? AND project_revision=? AND status='pending_review' "+
+      "AND EXISTS(SELECT 1 FROM member_studio_projects WHERE id=? AND user_id=? AND status='draft' AND revision=?) "+
+      "AND EXISTS(SELECT 1 FROM member_studio_assets WHERE id=? AND project_id=? AND status='deleting')")
+     .bind(now,project.id,user.id,project.revision,project.id,user.id,project.revision+1,asset,project.id)
    ]);
    const n=Number(results?.[0]?.meta?.changes??0);
    const withdrawnFromReview=Number(results?.[1]?.meta?.changes??0)===1;
+   const snapshotWithdrawn=Number(results?.[2]?.meta?.changes??0)===1;
+   if(withdrawnFromReview&&!snapshotWithdrawn)return fail(503,'Review history needs reconciliation');
    if(n!==1)return fail(409,'Asset changed');
    try{await store.delete(selected.storage_key);}
    catch{return fail(503,'Private file removal needs retry');}
