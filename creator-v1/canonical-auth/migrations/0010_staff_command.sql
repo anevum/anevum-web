@@ -9,8 +9,8 @@ CREATE TABLE IF NOT EXISTS staff_invitation_log (
  channel TEXT NOT NULL CHECK(channel IN ('direct','email','social','other')),
  stage TEXT NOT NULL CHECK(stage IN ('invited','responded','joined','staff-candidate','closed')),
  note TEXT NOT NULL DEFAULT '' CHECK(length(note)<=240),
- created_by TEXT NOT NULL REFERENCES "user"(id) ON DELETE RESTRICT,
- updated_by TEXT NOT NULL REFERENCES "user"(id) ON DELETE RESTRICT,
+ created_by TEXT REFERENCES "user"(id) ON DELETE SET NULL,
+ updated_by TEXT REFERENCES "user"(id) ON DELETE SET NULL,
  created_at INTEGER NOT NULL,
  updated_at INTEGER NOT NULL
 );
@@ -21,8 +21,8 @@ CREATE TABLE IF NOT EXISTS staff_task_log (
  title TEXT NOT NULL CHECK(length(title) BETWEEN 4 AND 140),
  stage TEXT NOT NULL CHECK(stage IN ('open','in-progress','blocked','done')),
  priority TEXT NOT NULL CHECK(priority IN ('routine','important','urgent')),
- created_by TEXT NOT NULL REFERENCES "user"(id) ON DELETE RESTRICT,
- updated_by TEXT NOT NULL REFERENCES "user"(id) ON DELETE RESTRICT,
+ created_by TEXT REFERENCES "user"(id) ON DELETE SET NULL,
+ updated_by TEXT REFERENCES "user"(id) ON DELETE SET NULL,
  created_at INTEGER NOT NULL,
  updated_at INTEGER NOT NULL
 );
