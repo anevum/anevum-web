@@ -10,12 +10,14 @@ export default defineConfig({
   react(),
   {
    name:"iren-staff-entry",
-   enforce:"pre",
-   transformIndexHtml(html:string){
-    if(!html.includes('src="/src/main.tsx"'))throw Error("Missing canonical React entrypoint");
-    return html.replace('src="/src/main.tsx"','src="/src/staff-main.tsx"')
-     .replace('<title>ANEVUM — Create Beyond Worlds</title>','<title>IREN / ANEVUM Staff Command</title>')
-     .replace('href="#main">Skip to content','href="#iren-workspace">Skip to IREN workspace');
+   transformIndexHtml:{
+    order:"pre" as const,
+    handler(html:string){
+     // Vite may transform HTML twice. Preserve the first replacement.
+     return html.replace('src="/src/main.tsx"','src="/src/staff-main.tsx"')
+      .replace('<title>ANEVUM — Create Beyond Worlds</title>','<title>IREN / ANEVUM Staff Command</title>')
+      .replace('href="#main">Skip to content','href="#iren-workspace">Skip to IREN workspace');
+    }
    }
   }
  ],
