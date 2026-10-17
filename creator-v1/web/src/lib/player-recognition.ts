@@ -14,7 +14,7 @@ const b=(id:string,name:string,family:BadgeFamily,description:string,criterion:s
 export const BADGE_CATALOG:Readonly<Record<string,BadgeDefinition>>=Object.freeze(Object.fromEntries([
  // Existing server-issued milestones. They remain earned-only and retain their IDs.
  b('first_signal','First Signal','origin','The first trace left in the Continuance.','First accepted member wall entry','beacon','active'),
- b('world_shaper','World Shaper','origin','An identity made one's own.','Verified introduction, portrait and banner','trinity','active'),
+ b('world_shaper','World Shaper','origin',"An identity made one's own.",'Verified introduction, portrait and banner','trinity','active'),
  b('first_orbit','First Orbit','origin','The beginning of a public journey.','First opted-in public profile','atlas'),
  b('returning_signal','Returning Signal','continuance','A presence that returns.','Meaningful activity in four different weeks','chronometer'),
  b('first_thread','First Transmission','community','A conversation worth starting.','First approved discussion','beacon'),
