@@ -17,6 +17,7 @@
       radial-gradient(1px 1px at 74% 68%,#c7dcff82 45%,transparent 75%),
       radial-gradient(1px 1px at 39% 76%,#ffd4c986 45%,transparent 75%);
     background-size:100% 100%;mix-blend-mode:screen;
+    transform-origin:72% 33%;animation:av64-nebula-breath 30s ease-in-out infinite alternate;
   }
   .av9-shell:has(.ch7-hub):not(:has(> .av64-worldstage))::before{
     background:radial-gradient(ellipse 52% 42% at 87% 15%,#c97ca632,transparent 80%),
@@ -259,6 +260,7 @@
   }
 }
 @media(prefers-reduced-motion:reduce){
+  .av9-shell:not(:has(> .av64-worldstage))::before{animation:none!important;transform:none!important}
   .av64-worldstage-nebula,.av64-worldstage-crown{animation:none!important;transform:none!important}
   .av9-shell :is(.av9-world-gateway-art,.ch7-entry-art,.ch7-hero-art,
     .av9-navigation-world-art) :is(img,.cw-artwork-image){transition:none!important}
