@@ -118,7 +118,7 @@ export async function studioUpload(projectId:string,file:File,signal?:AbortSigna
  return request<{id:string;status:string;sha256:string}>(assetsPath(projectId,reserved.id),'PUT',file,signal);
 }
 export const studioDeleteAsset=(id:string,assetId:string)=>
- request<{deleted:boolean}>(assetsPath(id,assetId),'DELETE');
+ request<{deleted:boolean;withdrawnFromReview:boolean}>(assetsPath(id,assetId),'DELETE');
 export const studioDownloadUrl=(id:string,assetId:string)=>assetsPath(id,assetId)+'/file';
 
 export interface StudioReviewProject{
