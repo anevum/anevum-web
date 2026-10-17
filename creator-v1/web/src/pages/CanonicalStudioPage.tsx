@@ -109,11 +109,11 @@ export function CanonicalStudioPage({mode='list'}:{mode?:Mode}){
     <Link to="/discover">DISCOVER ↗</Link>
    </nav>
   </>}
-  {mode==='list'?<StudioLaunchpad uploadsReady={uploads}/>:mode==='review'?<StudioReview/>:<StudioEditor create={mode==='new'} uploadsReady={uploads}/>}
+  {mode==='list'?<StudioLaunchpad uploadsReady={uploads}/>:mode==='review'?<StudioReview/>:<StudioEditor create={mode==='new'} uploadsReady={uploads} creator={identity?.handle||'Creator'}/>}
  </main>;
 }
 
-function StudioEditor({create,uploadsReady}:{create:boolean;uploadsReady:boolean}){
+function StudioEditor({create,uploadsReady,creator}:{create:boolean;uploadsReady:boolean;creator:string}){
  const {projectId}=useParams();
  const navigate=useNavigate();
  const id=create?null:projectId||null;
@@ -268,6 +268,7 @@ function StudioEditor({create,uploadsReady}:{create:boolean;uploadsReady:boolean
      </div>
     </div>
     <StudioWorkbench value={draft.description} disabled={locked}
+     title={draft.title||'Untitled creation'} creator={creator}
      onChange={value=>assign('description',value)}/>
     <div className="st-creation-underbar">
      <span>PRIVATE WORKSPACE. NOTHING YOU CREATE IS PUBLIC UNTIL A SEPARATE REVIEWED RELEASE.</span>
