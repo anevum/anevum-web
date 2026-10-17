@@ -32,8 +32,9 @@ export function publicMemberCard(row){
 }
 
 /** Extend only verified opted-in public member cards. The DB identity key is\n * queried server-side and never returned to the browser. When an additive\n * migration is not yet installed, the V061 projection remains unchanged. */
-export async function hydratedPublicMemberCard(db,row){
+export async function hydratedPublicMemberCard(db,row,enabled=false){
  const legacy=publicMemberCard(row);
+ if(!enabled)return legacy;
  const extra=await publicRecognitionSummary(db,row.member_identity_key);
  return extra?{...legacy,...extra}:legacy;
 }
