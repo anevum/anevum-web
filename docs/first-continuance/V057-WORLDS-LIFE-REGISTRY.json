@@ -1,0 +1,89 @@
+{
+  "schema": "anevum.first-continuance.v057",
+  "session": "ANEVUM.WEB.BUILD.2026-10-17.006.WORLDS-AND-LIFE-LEVELS",
+  "status": "offline-prototype-not-deployed",
+  "levelCap": 30,
+  "level30XP": 63075,
+  "thresholdFormula": "75 * (level - 1) ^ 2",
+  "consecutiveLevelsIllustrated": [
+    1,
+    25
+  ],
+  "preservedFlagship": 30,
+  "inspectableCount": 26,
+  "remainingArtLevels": [
+    26,
+    27,
+    28,
+    29
+  ],
+  "epoch": "Worlds & Life",
+  "newSpecimens": [
+    {
+      "level": 21,
+      "name": "Planetary Accretion",
+      "xp": 30000,
+      "form": "broken basalt protoplanet and impact-debris streamer",
+      "motion": "fissure luminescence and slowly circulating impact fragments",
+      "review": "artistic planetary formation composite"
+    },
+    {
+      "level": 22,
+      "name": "Ocean World",
+      "xp": 33075,
+      "form": "sea-covered planet with distinct cloud and water strata",
+      "motion": "independent water circulation, drifting cloud opacity and terminator shimmer",
+      "review": "imagined ocean world, not a necessary planetary successor"
+    },
+    {
+      "level": 23,
+      "name": "Molecular Chorus",
+      "xp": 36300,
+      "form": "asymmetric branching ball-and-stick molecular network",
+      "motion": "bond intensity shifts and flexing connections",
+      "review": "symbolic molecular network, not a chemically validated molecule"
+    },
+    {
+      "level": 24,
+      "name": "First Replicator",
+      "xp": 39675,
+      "form": "parent protocell and emerging daughter vesicle",
+      "motion": "budding membranes and repeating internal strands",
+      "review": "speculative origin-of-life metaphor"
+    },
+    {
+      "level": 25,
+      "name": "Biosphere",
+      "xp": 43200,
+      "form": "transparent waterglass droplet with branching roots, ocean layers and drifting leaves",
+      "motion": "independent fluid bands, filament glow and slow leaf drift",
+      "review": "replaces earlier simple droplet concept"
+    }
+  ],
+  "assetContract": {
+    "perLevel": [
+      "animated editable SVG",
+      "static editable SVG",
+      "compact badge SVG",
+      "transparent 2048px master PNG",
+      "webp 256",
+      "webp 512",
+      "webp 1024",
+      "compact PNG 64",
+      "compact PNG 128",
+      "compact PNG 256"
+    ],
+    "totalVerified": 260,
+    "svgEmbedsRaster": false
+  },
+  "qa": {
+    "desktopMobileBrowserAssertionsPassed": 69,
+    "desktopMobileBrowserAssertionsTotal": 69,
+    "checkedAssetsPassed": 260,
+    "checkedAssetsTotal": 260,
+    "motionClip": "real Chromium SVG animation capture",
+    "zipIntegrity": "web and source passed"
+  },
+  "outputs": "ANEVUM-EVOLUTION-V057-WEB-PREVIEW.zip and ANEVUM-EVOLUTION-V057-FULL-SOURCE.zip — user artifacts, not binary files committed to GitHub",
+  "safety": "No staging/live deployment, account migration, XP adjustments, or permission changes"
+}
