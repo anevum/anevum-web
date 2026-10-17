@@ -1,7 +1,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {readFileSync} from "node:fs";
-import {webcrypto} from "node:crypto";
+import {webcrypto,createHash} from "node:crypto";
+import {COUNTDOWN_HTML} from "../apex-prelaunch/countdown.mjs";
 import {createApexPrelaunchGateway} from "../apex-prelaunch/gateway.mjs";
 import {ACCESS_ISSUER,verifiedPreviewIdentity,resetPreviewKeyCacheForTests} from
   "../apex-prelaunch/preview-access.mjs";
@@ -21,6 +22,11 @@ const router=createApexPrelaunchGateway({
 const res=(request,env=gate)=>router.fetch(request,env,{});
 const h=(r,k)=>r.headers.get(k);
 
+test("preserved public countdown exactly matches live Worker SHA-256",()=>{
+  assert.equal(COUNTDOWN_HTML.length,23819);
+  assert.equal(createHash("sha256").update(COUNTDOWN_HTML,"utf8").digest("hex"),
+    "c3528a943c119380a39c567b7a4bba34ef3bcd8f81cf693c409a8d0b8691fe74");
+});
 test("candidate Worker stays unrouted, isolated, owner-only and countdown-first",()=>{
   const cfg=JSON.parse(readFileSync(new URL("../wrangler.apex-prelaunch.jsonc",import.meta.url),"utf8"));
   assert.equal(cfg.name,"anevum-apex-prelaunch-gateway");
