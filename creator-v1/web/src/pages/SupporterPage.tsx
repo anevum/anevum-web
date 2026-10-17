@@ -69,7 +69,7 @@ export function SupporterPage(){
 
  const enabled=Boolean(id&&billing?.available),supporter=Boolean(billing?.supporter);
  const billingReview=billing?.status==='billing-review';
- return <main className="av32-support av45-support">
+ return <div className="av32-support av45-support">
   <section className="av45-hero" aria-labelledby="av45-title">
    <div className="av45-hero-copy">
     <span className="av32-index">ANEVUM / THE CONTINUANCE FUND</span>
@@ -138,5 +138,5 @@ export function SupporterPage(){
    <Link className="av45-link" to="/support/transparency">Open transparency report →</Link>
   </section>
   <p className="av45-principle">Supporting is always optional. It never buys XP, medals, better ranking, moderator power or extra visibility.</p>
- </main>;
+ </div>;
 }
