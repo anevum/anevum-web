@@ -3,6 +3,8 @@
 // binding. Owners may still list/withdraw EXISTING files while uploads are paused.
 const MiB=1048576;
 const QUOTA=100*MiB;
+// Aggregate private pilot ceiling; counts reservations before R2 writes.
+const PILOT_GLOBAL_QUOTA=512*MiB;
 const MAX_ASSETS=20;
 const RULES=Object.freeze({
  png:['image/png',10*MiB,'image'],jpg:['image/jpeg',10*MiB,'image'],
@@ -109,10 +111,12 @@ export async function canonicalStudioAssets(req,env,user,project,{asset=null,fil
       'SELECT '+ALL+' FROM member_studio_assets WHERE project_id=? AND user_id=? ORDER BY created_at DESC LIMIT 50',
       [project.id,user.id]);
     const usage=(await rows(db,
-     'SELECT COALESCE(SUM(size_bytes),0) AS used_bytes FROM member_studio_assets WHERE user_id=?',
+     'SELECT (SELECT COALESCE(SUM(size_bytes),0) FROM member_studio_assets WHERE user_id=?) AS member_bytes,'+
+     '(SELECT COALESCE(SUM(size_bytes),0) FROM member_studio_assets) AS global_bytes',
      [user.id]))[0];
     return out({assets:assets.map(view),quotaBytes:QUOTA,projectAssetLimit:MAX_ASSETS,
-     memberUsedBytes:Number(usage?.used_bytes||0),
+     globalQuotaBytes:PILOT_GLOBAL_QUOTA,
+     memberUsedBytes:Number(usage?.member_bytes||0),globalUsedBytes:Number(usage?.global_bytes||0),
      projectUsedBytes:assets.reduce((sum,asset)=>sum+Number(asset.size_bytes),0),
      storageReady:storageConnected,uploadsReady:uploadsEnabled});
    }
@@ -129,9 +133,10 @@ export async function canonicalStudioAssets(req,env,user,project,{asset=null,fil
      "SELECT ?,?,?,?,?,?,?,?,'reserved',?,?,? WHERE "+
      '(SELECT COUNT(*) FROM member_studio_assets WHERE project_id=?)<? AND '+
      '(SELECT COALESCE(SUM(size_bytes),0) FROM member_studio_assets WHERE user_id=?)+?<=? AND '+
+     '(SELECT COALESCE(SUM(size_bytes),0) FROM member_studio_assets)+?<=? AND '+
      "EXISTS(SELECT 1 FROM member_studio_projects WHERE id=? AND user_id=? AND status IN ('draft','changes_requested'))",
      [id,project.id,user.id,v.name,v.extension,v.kind,v.contentType,v.sizeBytes,key,now,now,
-      project.id,MAX_ASSETS,user.id,v.sizeBytes,QUOTA,project.id,user.id]);
+      project.id,MAX_ASSETS,user.id,v.sizeBytes,QUOTA,v.sizeBytes,PILOT_GLOBAL_QUOTA,project.id,user.id]);
    return n===1?out({id,status:'reserved'},201):fail(409,'File quota or project limit reached');
   }
   const selected=(await rows(db,'SELECT '+ALL+' FROM member_studio_assets WHERE id=? AND project_id=? AND user_id=?',[asset,project.id,user.id]))[0];
