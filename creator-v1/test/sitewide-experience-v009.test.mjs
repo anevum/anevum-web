@@ -23,31 +23,33 @@ test("V009 unifies site navigation and retains native route boundaries",()=>{
  assert.match(app,/path="account" element={<Navigate to="\/member" replace\/>}/);
  assert.match(app,/path="community\/write"/);
 });
-test("V009 homepage is assembled from verified public data and real world links",()=>{
+test("V065 homepage leads with genuine entry destinations and displays verified public content only",()=>{
  const home=read("web/src/pages/CinematicLandingPage.tsx");
- const signal=read("web/src/components/LiveSignalHero.tsx");
- const portals=read("web/src/components/WorldGatewayDeck.tsx");
+ const arrival=read("web/src/components/ArrivalExperience.tsx");
  const feed=read("web/src/components/CommunityHomeFeed.tsx");
- for(const source of [home,signal,portals])assert.doesNotThrow(()=>parse(source,{sourceType:"module",plugins:["typescript","jsx"]}));
+ for(const source of [home,arrival])assert.doesNotThrow(()=>parse(source,{sourceType:"module",plugins:["typescript","jsx"]}));
  assert.match(home,/readStatus/);
  assert.match(home,/readProjects/);
  assert.match(home,/readCreators/);
- assert.match(home,/WorldGatewayDeck/);
+ assert.match(home,/<ArrivalExperience projects=\{projects\}\/>/);
+ assert.doesNotMatch(home,/<LiveSignalHero|<LiveSignalModules|<WorldGatewayDeck/);
  assert.match(home,/CommunityHomeFeed/);
  assert.doesNotMatch(home,/<CinematicSiteRail\/>/);
- assert.match(portals,/discover\?category=games/);
- assert.match(portals,/discover\?category=tools/);
- assert.match(portals,/discover\?category=creative/);
- assert.match(portals,/discover\?category=libraries/);
- assert.match(signal,/A world made/);
- assert.match(signal,/readCommunityPosts/);
+ for(const destination of ["/discover?category=games","/discover","/community","/studio"])
+   assert.ok(arrival.includes("destination:\""+destination+"\""),destination);
+ assert.match(arrival,/onPointerEnter/);
+ assert.match(arrival,/onTouchStart/);
+ assert.match(arrival,/onTouchEnd/);
+ assert.match(arrival,/projectDetailPath/);
+ assert.match(arrival,/aria-label="Choose how to enter ANEVUM"/);
+ assert.match(home,/projects.length>0\|\|creators.length>0/);
  assert.match(feed,/readCommunityPosts/);
  assert.match(feed,/readPublicShowcases/);
  assert.match(feed,/PublicAuthorShowcase/);
  assert.match(feed,/showcaseItems/);
  assert.match(feed,/communityEnabled/);
  assert.match(feed,/state==="ready"/);
- assert.doesNotMatch(portals+signal+feed,/Math\.random|fakeUser|fakeActivity|fakeXp|dangerouslySetInnerHTML/);
+ assert.doesNotMatch(arrival+home+feed,/Math\.random|fakeUser|fakeActivity|fakeXp|dangerouslySetInnerHTML|AWAITING FIRST APPROVED RELEASE/);
 });
 test("V009 design finishes public pages without unlocking member writes",()=>{
  const main=read("web/src/main.tsx");

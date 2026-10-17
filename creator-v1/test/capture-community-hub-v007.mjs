@@ -124,26 +124,30 @@ try {
 
     // V009 HOME + CREATOR DOSSIER — compiled React, synthetic published fixture.
     await client.send("Page.navigate", {url:base+"/creator/"});
-    await until(()=>evaluate('document.readyState==="complete"&&!!document.querySelector(".av8-live-signal")&&!!document.querySelector(".av6-feed-project .av7-author")'));
+    await until(()=>evaluate('document.readyState==="complete"&&!!document.querySelector(".av65-arrival")&&!!document.querySelector(".av6-feed-project .av7-author")'));
     await until(()=>evaluate('!!document.querySelector(".av6-feed-project .av7-author .av7-artifact-panel")&&!!document.querySelector(".av6-feed-project .av7-author .av7-award-panel")'));
     await delay(600);
     const dossier=await evaluate('(()=>{const card=document.querySelector(".av6-feed-project"),a=card?.querySelector(".av7-author");return {width:innerWidth,overflow:document.documentElement.scrollWidth>innerWidth+1,dossiers:document.querySelectorAll(".av7-author").length,level:!!a?.querySelector(".av7-level-panel"),artifact:!!a?.querySelector(".av7-artifact-panel"),awards:a?.querySelectorAll(".av7-award").length,watermark:getComputedStyle(document.body,"::after").content.includes("SYNTHETIC OFFLINE REVIEW")};})()');
     if(dossier.overflow||dossier.dossiers<1||!dossier.level||!dossier.artifact||!dossier.awards||!dossier.watermark)
       throw Error("V009_DOSSIER_LAYOUT_"+width+":"+JSON.stringify(dossier));
-    // V011 final visual-flow acceptance — assert the actual rendered positions.
-    const flow=await evaluate('(()=>{const selectors=[".av8-live-signal","#world-gateways",".av11-live-index","#community-index"];const y=selectors.map(selector=>{const el=document.querySelector(selector);return el?Math.round(el.getBoundingClientRect().top+window.scrollY):null});const modules=document.querySelector(".av11-live-index .av8-module-grid");return {y,modules:modules?.children.length||0,overflow:document.documentElement.scrollWidth>innerWidth+1,portalTarget:!!document.querySelector("#world-gateways .av9-world-gateway")};})()');
-    if(flow.overflow||flow.modules!==4||!flow.portalTarget||
-      flow.y.some(value=>value===null)||
-      !(flow.y[0]<flow.y[1]&&flow.y[1]<flow.y[2]&&flow.y[2]<flow.y[3]))
-      throw Error("V011_HOMEPAGE_ORDER_"+width+":"+JSON.stringify(flow));
-    console.log("V011_HOMEPAGE_ORDER_"+width+"="+JSON.stringify(flow));
-    await screenshot("v009-home-top",width);
+    // V065 first contact acceptance — real routes, four visible action doors,
+    // no zero-count transmission widgets or manufactured community activity.
+    const flow=await evaluate('(()=>{const selectors=[".av65-stage","#world-gateways","#community-index"];const y=selectors.map(selector=>{const el=document.querySelector(selector);return el?Math.round(el.getBoundingClientRect().top+window.scrollY):null});const doors=[...document.querySelectorAll("#world-gateways .av65-door")];const hrefs=doors.map(a=>a.getAttribute("href"));const stage=document.querySelector(".av65-stage");return {y,count:doors.length,hrefs,top:stage?.getBoundingClientRect().top,doorsTop:document.querySelector("#world-gateways")?.getBoundingClientRect().top,visibleDoorCards:doors.filter(a=>a.getBoundingClientRect().top<innerHeight).length,overflow:document.documentElement.scrollWidth>innerWidth+1,announcement:!!document.querySelector(".av8-live-signal"),current:document.querySelector(".av65-arrival")?.getAttribute("data-active-portal")};})()');
+    if(flow.overflow||flow.count!==4||flow.announcement||flow.current!=="play"||
+      flow.y.some(value=>value===null)||!(flow.y[0]<flow.y[1]&&flow.y[1]<flow.y[2])||
+      !flow.hrefs.some(h=>h?.includes("/discover?category=games"))||
+      !flow.hrefs.some(h=>h?.endsWith("/community"))||
+      !flow.hrefs.some(h=>h?.endsWith("/studio"))||
+      (width<=390&&flow.visibleDoorCards<2))
+      throw Error("V065_HOMEPAGE_ENTRANCE_"+width+":"+JSON.stringify(flow));
+    console.log("V065_HOMEPAGE_ENTRANCE_"+width+"="+JSON.stringify(flow));
+    await screenshot("v065-first-contact",width);
     await evaluate('document.querySelector("#world-gateways").scrollIntoView({block:"start"})');
     await delay(250);
-    await screenshot("v011-world-gateways",width);
-    await evaluate('document.querySelector(".av11-live-index").scrollIntoView({block:"start"})');
-    await delay(250);
-    await screenshot("v011-public-index",width);
+    await screenshot("v065-entry-doors",width);
+    await evaluate('document.querySelector(".av65-preview-controls button:nth-child(2)").click()');
+    await until(()=>evaluate('document.querySelector(".av65-arrival")?.getAttribute("data-active-portal")==="discover"'));
+    await screenshot("v065-interactive-preview",width);
     await evaluate('document.querySelector(".av6-feed-project").scrollIntoView({block:"start"})');
     await delay(500);
     await screenshot("v009-creator-dossier",width);

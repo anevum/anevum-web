@@ -64,26 +64,22 @@ test("V011 emissive motion sleeps when hidden, and has static accessible fallbac
   assert.doesNotMatch(css,/overflow-x:hidden|animation:.*infinite.*glare/i);
 });
 
-test("V011 homepage prioritizes cinematic worlds ahead of public status cards",()=>{
+test("V065 cinematic arrival precedes verified community content and retires empty status filler",()=>{
   const home=source("web/src/pages/CinematicLandingPage.tsx");
-  const signal=source("web/src/components/LiveSignalHero.tsx");
-  const deck=source("web/src/components/WorldGatewayDeck.tsx");
-  const entry=home.indexOf("<LiveSignalHero ");
-  const worlds=home.indexOf("<WorldGatewayDeck/>");
-  const index=home.indexOf("<LiveSignalModules");
+  const entrance=source("web/src/components/ArrivalExperience.tsx");
+  const entry=home.indexOf("<ArrivalExperience ");
+  const forum=home.indexOf("<MemberForumHighlights/>");
   const feed=home.indexOf("<CommunityHomeFeed");
-  assert.ok(entry>=0&&entry<worlds&&worlds<index&&index<feed,
-    "homepage must introduce discovery before dashboard status modules");
-  assert.match(signal,/export function LiveSignalModules/);
-  assert.match(signal,/readCommunityPosts/);
-  assert.match(signal,/LatestReleases projects=/);
-  assert.match(signal,/RecentConversations enabled=/);
-  assert.match(signal,/MakerChannels creators=/);
-  assert.match(signal,/IndexPulse status=/);
-  assert.match(deck,/id="world-gateways"/);
-  assert.match(signal,/href="#world-gateways"/);
-  assert.match(css,/\.av11-live-index-heading/);
-  assert.match(css,/max-width:700px/);
+  assert.ok(entry>=0&&entry<forum&&forum<feed,"the first contact precedes published community content");
+  assert.doesNotMatch(home,/<LiveSignalHero|<LiveSignalModules|<WorldGatewayDeck/);
+  assert.match(entrance,/id="world-gateways"/);
+  assert.match(entrance,/className="av65-doors"/);
+  assert.match(entrance,/StageArtwork/);
+  assert.match(entrance,/DoorArtwork/);
+  assert.match(entrance,/aria-label="Choose how to enter ANEVUM"/);
+  assert.match(entrance,/projectDetailPath/);
+  assert.doesNotMatch(entrance,/AWAITING FIRST APPROVED RELEASE|SOURCE: APPROVED PUBLIC API|INDEX \/ AUTOMATIC/);
+  assert.match(css,/\.av11-live-index-heading/); // archived deep-index presentation stays available
   assert.doesNotMatch(home,/fakeMember|fakeProject|Math\.random/);
 });
 
