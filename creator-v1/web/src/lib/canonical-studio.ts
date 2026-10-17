@@ -75,7 +75,7 @@ async function request<T>(path:string,method:'GET'|'POST'|'PATCH'|'PUT'|'DELETE'
  const binary=payload instanceof File;
  const init:RequestInit={
   method,signal,credentials:'same-origin',mode:'same-origin',redirect:'error',cache:'no-store',
-  headers:{Accept:'application/json',...(method!=='GET'?{'Content-Type':binary?'application/octet-stream':'application/json'}:{})},
+  headers:{Accept:'application/json',...(method!=='GET'?{'Content-Type':binary?'application/octet-stream':'application/json','X-ANEVUM-Studio-Request':'1'}:{})},
   ...(method==='GET'?{}:{body:binary?payload:JSON.stringify(payload??{})})
  };
  return read<T>(await fetch(path,init));
