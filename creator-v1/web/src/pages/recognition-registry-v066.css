@@ -7,7 +7,7 @@
 .av66-registry>*{position:relative}
 .av66-registry-header{max-width:1330px;margin:auto;padding:35px clamp(7px,2.3vw,30px) clamp(22px,4vw,48px);overflow:hidden}
 .av66-registry-eyebrow{display:flex;align-items:center;gap:11px;color:#dfb9c7;font:700 10px/1.5 ui-monospace,monospace;letter-spacing:.15em}
-.av66-registry-eyebrow .orbital-mark{width:29px!important;height:29px!important}
+.av66-registry-eyebrow .av66-registry-mark{display:block!important;flex:0 0 29px!important;width:29px!important;height:29px!important;min-width:29px!important;max-width:29px!important;max-height:29px!important;color:#edbccc;align-self:center}
 .av66-registry-eyebrow>span:last-child{margin-left:auto;color:#9b94b0;text-align:right}
 .av66-registry-header h1{font:800 clamp(45px,7vw,105px)/.93 ui-sans-serif,system-ui,sans-serif;letter-spacing:-.065em;color:#ffede8;margin:31px 0 23px;text-shadow:0 7px 28px #0009}
 .av66-registry-header h1 em{font-weight:400;font-style:normal;color:#d3adc6}
