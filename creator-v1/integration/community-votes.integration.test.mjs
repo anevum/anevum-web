@@ -69,11 +69,11 @@ test('self-rating is rejected even for a verified creator',async()=>{
  assert.equal((await profile()).status,200);
  assert.equal(ledger().length,0);
 });
-test('first vote is one durable rating with two XP and a named physical artifact',async()=>{
+test('first vote is one durable rating with two XP and the authentic initial specimen',async()=>{
  const r=await vote(1,5);assert.equal(r.status,200,await r.clone().text());
  const p=await r.json();assert.equal(p.changed,true);assert.equal(p.rating.votes,1);assert.equal(p.rating.average,5);
  assert.deepEqual(p.rating.myVote,{score:5,revision:1});assert.equal(p.progression.xp,2);
- assert.equal(p.progression.level,1);assert.equal(p.progression.artifact,'Foundry Spark');
+ assert.equal(p.progression.level,1);assert.equal(p.progression.artifact,'Pre-Grain');
  assert.equal(ledger().length,1);assert.equal(ledger()[0].amount,2);
  assert.equal(sqlite.prepare("SELECT action FROM community_vote_events").get().action,'cast');
 });
@@ -126,19 +126,31 @@ test('moderator-hidden votes disappear from scores and cannot be edited',async()
  assert.equal((await vote(1,5,1,people[1])).status,403);
  sqlite.prepare("UPDATE community_project_votes SET status='active' WHERE member_id=? AND project_id=?").run(people[1].id,fixed(1));
 });
-test('unbounded level thresholds preserve sixty series-one collectible names',()=>{
- assert.equal(thresholdForLevel(1),0);assert.equal(thresholdForLevel(2),20);assert.equal(thresholdForLevel(3),80);
- assert.equal(progressionFromXp(0).level,1);assert.equal(progressionFromXp(19).level,1);
- assert.equal(progressionFromXp(20).level,2);assert.equal(progressionFromXp(80).level,3);
- const high=progressionFromXp(999999);
- assert.ok(high.level>60);
- assert.equal(high.maxLevel,null);
- assert.equal(high.nextLevelXp,thresholdForLevel(high.level+1));
- const objects=new Set(Array.from({length:60},(_,i)=>progressionFromXp(thresholdForLevel(i+1)).artifact));
- assert.equal(objects.size,60);
- assert.equal(progressionFromXp(thresholdForLevel(60)).artifact,'The First Light');
- assert.equal(progressionFromXp(thresholdForLevel(61)).artifact,null);
- assert.equal(progressionFromXp(thresholdForLevel(61)).artifactEarned,false);
+test('thirty permanent evolution thresholds retain unique specimens and cumulative XP',()=>{
+  assert.equal(thresholdForLevel(1),0);
+  assert.equal(thresholdForLevel(2),75);
+  assert.equal(thresholdForLevel(3),300);
+  assert.equal(thresholdForLevel(30),63075);
+  assert.equal(progressionFromXp(0).level,1);
+  assert.equal(progressionFromXp(74).level,1);
+  assert.equal(progressionFromXp(75).level,2);
+  assert.equal(progressionFromXp(299).level,2);
+  assert.equal(progressionFromXp(300).level,3);
+  const final=progressionFromXp(63075);
+  assert.equal(final.level,30);
+  assert.equal(final.maxLevel,30);
+  assert.equal(final.artifact,'ANEVUM');
+  assert.equal(final.nextLevelXp,null);
+  assert.equal(final.artifactEarned,true);
+  const high=progressionFromXp(999999);
+  assert.equal(high.level,30);
+  assert.equal(high.maxLevel,30);
+  assert.equal(high.xp,999999);
+  assert.equal(high.nextLevelXp,null);
+  assert.equal(high.artifact,'ANEVUM');
+  const specimens=new Set(Array.from({length:30},(_,i)=>progressionFromXp(thresholdForLevel(i+1)).artifact));
+  assert.equal(specimens.size,30);
+  assert.throws(()=>thresholdForLevel(31),/Invalid level/);
 });
 test('unknown and unsupported community methods stay unavailable',async()=>{
  assert.equal((await call('/community/leaderboard')).status,404);
