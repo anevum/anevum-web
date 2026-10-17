@@ -114,7 +114,9 @@ function CommandWorkspace({memberId}:{memberId:string}){
  useEffect(()=>{
   let cancelled=false,inFlight=false,lastFetched=0;
   const controller=new AbortController();
-  setLoading(true);setSnapshot(null);setFault('');
+  // Keep the verified workspace mounted across room switches so active peer
+  // calls are not disconnected by a channel change.
+  setLoading(true);setFault('');
   const poll=async()=>{
    if(inFlight||cancelled)return;
    const minAge=paneRef.current==='communications'||paneRef.current==='board'?6000:20000;
@@ -221,7 +223,7 @@ function CommandWorkspace({memberId}:{memberId:string}){
   }
  };
  useEffect(()=>{
-  canvasEventsRef.current=snapshot?.canvas||[];
+  canvasEventsRef.current=snapshot?.room===room?snapshot.canvas:[];
   if(pane!=='board')return;
   const frame=window.requestAnimationFrame(drawCanvas);
   const canvas=canvasRef.current;
@@ -258,6 +260,8 @@ function CommandWorkspace({memberId}:{memberId:string}){
   if(pane==='communications')chatEndRef.current?.scrollIntoView({block:'end'});
  },[snapshot?.messages,pane]);
 
+ const activeMessages=snapshot?.room===room?snapshot.messages:[];
+ const activeCanvas=snapshot?.room===room?snapshot.canvas:[];
  const invites=snapshot?.invitations||[];
  const tasks=snapshot?.tasks||[];
  const roster=snapshot?.roster||[];
@@ -346,8 +350,8 @@ function CommandWorkspace({memberId}:{memberId:string}){
          onClick={()=>setRoom(r.id)}>{r.name.toUpperCase()}</button>)}
        </div>
        <div className="ir-chat-log" role="log" aria-label="Staff messages">
-        {snapshot.messages.length===0?<Empty title="Quiet channel" detail="Send the first message to the staff room."/>:
-         snapshot.messages.map(m=><article key={m.id} className={'ir-message '+(m.authorId===memberId?'is-own':'')}>
+        {activeMessages.length===0?<Empty title="Quiet channel" detail="Send the first message to the staff room."/>:
+         activeMessages.map(m=><article key={m.id} className={'ir-message '+(m.authorId===memberId?'is-own':'')}>
           <div><strong>{m.author}</strong><small>{clock(m.createdAt)} · {stamp(m.createdAt)}</small></div>
           <p>{m.body}</p>
          </article>)}
@@ -372,7 +376,7 @@ function CommandWorkspace({memberId}:{memberId:string}){
          <select aria-label="Pen width" value={penWidth} onChange={e=>setPenWidth(Number(e.target.value))}>
           <option value={1}>FINE</option><option value={2}>MED</option><option value={3}>BOLD</option><option value={5}>HEAVY</option>
          </select>
-         <button type="button" className="ir-clear" disabled={busy||snapshot.canvas.length===0}
+         <button type="button" className="ir-clear" disabled={busy||activeCanvas.length===0}
           onClick={()=>{if(window.confirm('Clear the shared whiteboard for this channel?'))void execute({kind:'clear-canvas',room})}}>CLEAR ↺</button>
         </div></div>
        <div className="ir-canvas-container"><div className="ir-canvas-grid" aria-hidden="true"/>
