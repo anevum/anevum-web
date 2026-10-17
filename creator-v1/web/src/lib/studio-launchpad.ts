@@ -1,5 +1,5 @@
 import type {StudioCategory,StudioDraft} from './canonical-studio';
-import {createStudioStarterDocument,encodeStudioBlockDocument} from './studio-blocks';
+import {createStudioStarterDocument,encodeStudioBlockDocument} from './studio-blocks.ts';
 
 // V053 intentionally creates *private project records*, not rendered templates.
 // Each template supplies an editable text scaffold for the existing Studio.
