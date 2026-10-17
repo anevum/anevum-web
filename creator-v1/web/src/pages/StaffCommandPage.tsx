@@ -520,6 +520,12 @@ function CommandWorkspace({memberId}:{memberId:string}){
  </section>;
 }
 export function StaffCommandPage(){
+ // Staff Command owns the full viewport; only its internal data panes scroll.
+ useEffect(()=>{
+  const oldBody=document.body.style.overflow,oldHtml=document.documentElement.style.overflow;
+  document.body.style.overflow='hidden';document.documentElement.style.overflow='hidden';
+  return()=>{document.body.style.overflow=oldBody;document.documentElement.style.overflow=oldHtml};
+ },[]);
  const {data:session,isPending}=canonicalAuthClient.useSession();
  if(isPending)return <section className="ir-auth-gate"><h1>IREN / Verifying identity</h1><p>Requesting private staff clearance…</p></section>;
  if(!session?.user?.id||session.user.emailVerified!==true)return <section className="ir-auth-gate">
