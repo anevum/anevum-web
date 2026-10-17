@@ -45,7 +45,7 @@ function blockGuest(request){
   if(url.pathname.startsWith("/api/") || url.pathname==="/api" ||
     url.pathname.startsWith("/assets/") || url.pathname==="/assets" ||
     url.pathname.startsWith("/_") || url.pathname.startsWith("/cdn-cgi/") ||
-    /\.(?:js|mjs|css|json|wasm|map|webp|png|jpe?g|svg|gif|ico|woff2?|ttf|otf|mp4|pdf|zip)$/i.test(url.pathname))
+    url.pathname.startsWith("/.") || /\.[a-z0-9]{1,12}$/i.test(url.pathname))
     return textResponse(request.method==="HEAD"?null:"Not found",404);
   return countdown(request);
 }
