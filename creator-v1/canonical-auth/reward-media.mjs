@@ -73,11 +73,30 @@ export async function earnedRewardMedia(req,env,user=null,match=matchRewardMedia
   const raw=await env.ASSETS.fetch(new Request(upstream,{
    method:req.method,headers:{Accept:original.type},redirect:'error'
   }));
-  if(!raw||raw.status!==200||/text\/html/i.test(raw.headers.get('content-type')||''))
-   return missing(req);
+  if(!raw||raw.status!==200)return missing(req);
+  const mime=raw.headers.get('content-type')||'';
+  if(!mime.toLowerCase().startsWith(original.type.split(';')[0])&&
+   !(match.kind==='scene'&&mime.toLowerCase().includes('octet-stream')))return missing(req);
   const headers=new Headers(HEADERS);
   headers.set('content-type',original.type);
   headers.set('content-disposition','inline');
+  if(match.kind==='runtime'){
+   // Remove all other unreached specimens' accent colors and direct static
+   // texture URLs from the otherwise public V062 runtime manifest.
+   const parsed=await raw.json();
+   if(parsed.version!=='anevum.mini-native.v062'||
+    !Array.isArray(parsed.accents)||parsed.accents.length!==30||
+    typeof parsed.vertex!=='string'||typeof parsed.fragment!=='string'||
+    !parsed.materials||typeof parsed.materials!=='object')
+    return missing(req,503);
+   parsed.accents=[parsed.accents[match.level-1]];
+   const base=match.handle?
+    '/api/v1/members/'+match.handle+'/rewards/levels/'+match.level:
+    '/api/v1/member/rewards/levels/'+match.level;
+   parsed.height=base+'/height';
+   parsed.albedo=base+'/albedo';
+   return new Response(req.method==='HEAD'?null:JSON.stringify(parsed),{status:200,headers});
+  }
   return new Response(req.method==='HEAD'?null:raw.body,{status:200,headers});
  }catch{
   return missing(req,503);
