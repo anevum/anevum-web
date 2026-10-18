@@ -4,6 +4,7 @@
 import {boundedText} from './request-body.mjs';
 import {canonicalStudioAssets,studioUploadReady} from './studio-assets.mjs';
 import {studioReviewSchemaReady,freezeStudioReview,withdrawStudioReview,decideStudioReview,getStudioReviewReceipt,listStudioReviewReceipts} from './studio-submissions.mjs';
+import {studioPublicationReady,canonicalStudioPublicationConsent,publishReviewedExternalStudioMetadata} from './studio-publications.mjs';
 
 const PREFIX='/api/v1/member/studio';
 const COLLECTION=PREFIX+'/projects';
@@ -153,6 +154,7 @@ export async function canonicalStudio(req,env,user,now=Math.floor(Date.now()/100
   const selected=await getOne(db,'SELECT '+COLS+' FROM member_studio_projects WHERE id=? AND user_id=?',[id,user.id]);
   if(!selected)return fail(404,'Project not found');
   if(sub==='assets')return canonicalStudioAssets(req,env,user,selected,{asset,file,now,pace});
+  if(sub==='publication')return canonicalStudioPublicationConsent(req,env,user,id,now);
   if(sub==='submissions'){
    if(req.method!=='GET')return fail(405,'Method not allowed');
    const receipts=await listStudioReviewReceipts(db,id,user.id);
@@ -162,6 +164,9 @@ export async function canonicalStudio(req,env,user,now=Math.floor(Date.now()/100
   // the staff queue. A pending review never prevents a member from withdrawing.
   if(sub==='withdraw'){
    if(req.method!=='POST')return fail(405,'Method not allowed');
+   if(await studioPublicationReady(db)&&
+      await getOne(db,"SELECT project_id FROM member_studio_publications WHERE project_id=?",[id]))
+    return fail(409,'A published or withdrawn release must be archived separately');
    const input=await body(req,500);
    if(!input||!exactly(input,['revision'])||!Number.isSafeInteger(input.revision))return fail(400,'Invalid revision');
    if(selected.revision!==input.revision||selected.status!=='pending_review')return fail(409,'Submission changed');
@@ -244,6 +249,9 @@ export async function canonicalStudioReview(req,env,user,now=Math.floor(Date.now
  try{
   if(req.method==='GET'){
    if(manifest){
+    if(await studioPublicationReady(db)&&
+       await getOne(db,"SELECT project_id FROM member_studio_publications WHERE project_id=?",[manifest[1]]))
+      return fail(409,'Project already has a publication decision');
     // Only vetted metadata, NEVER object keys, download credentials, file
     // bodies or executable previews on the site origin. No self-review.
     const project=await getOne(db,
@@ -266,12 +274,33 @@ export async function canonicalStudioReview(req,env,user,now=Math.floor(Date.now
     'FROM member_studio_projects s JOIN member_creator_profiles p ON p.user_id=s.user_id '+
     "JOIN member_studio_submissions snap ON snap.project_id=s.id AND snap.user_id=s.user_id "+
     "AND snap.project_revision=s.revision AND snap.status='pending_review' "+
-    "WHERE s.status='pending_review' AND s.user_id<>? ORDER BY s.submitted_at ASC LIMIT 50",[user.id]);
+    "WHERE s.status='pending_review' AND s.user_id<>? "+
+    (await studioPublicationReady(db)?
+      "AND NOT EXISTS(SELECT 1 FROM member_studio_publications p2 WHERE p2.project_id=s.id) ":"")+
+    "ORDER BY s.submitted_at ASC LIMIT 50",[user.id]);
    return json({projects});
   }
   if(manifest)return fail(405,'Manifest is read-only');
   if(req.method!=='POST')return fail(405,'Method not allowed');
   const raw=await body(req,1800);
+  // External metadata publication has its OWN reviewed, consented release path.
+  // It must never grant visibility to quarantined R2 assets or executable ZIPs.
+  if(raw?.action==='publish_external_metadata'){
+   if(env.CANONICAL_STUDIO_PUBLICATION_ENABLED!=='true')
+    return fail(404,'Metadata-only publication is disabled');
+   if(!exactly(raw,['projectId','action','reason','revision','rightsChecked','contentChecked','externalLinkChecked'])||
+     !UUID.test(raw.projectId)||!Number.isSafeInteger(raw.revision)||
+     raw.rightsChecked!==true||raw.contentChecked!==true||raw.externalLinkChecked!==true)
+    return fail(400,'Explicit independent release attestations required');
+   const published=await publishReviewedExternalStudioMetadata(db,{
+    projectId:raw.projectId,revision:raw.revision,reviewerId:user.id,reason:raw.reason,
+    rightsChecked:raw.rightsChecked,contentChecked:raw.contentChecked,
+    externalLinkChecked:raw.externalLinkChecked,enabled:env.CANONICAL_RECOGNITION_ENABLED==='true',
+    now
+   });
+   return published.ok?json({ok:true,status:'published',delivery:'external-link-only'})
+    :fail(409,published.reason);
+  }
   if(!raw||!exactly(raw,['projectId','action','reason','revision'])||!UUID.test(raw.projectId)||
     !['changes_requested','rejected'].includes(raw.action)||!Number.isSafeInteger(raw.revision))
    return fail(400,'Invalid review decision');
@@ -279,6 +308,9 @@ export async function canonicalStudioReview(req,env,user,now=Math.floor(Date.now
   const target=await getOne(db,'SELECT user_id,status,revision FROM member_studio_projects WHERE id=?',[raw.projectId]);
   if(!target||target.status!=='pending_review'||target.revision!==raw.revision)
    return fail(409,'Submission changed or is unavailable');
+  if(await studioPublicationReady(db)&&
+     await getOne(db,'SELECT project_id FROM member_studio_publications WHERE project_id=?',[raw.projectId]))
+   return fail(409,'Project already has a publication decision');
   if(target.user_id===user.id)return fail(403,'Independent review required');
   // The current project revision must match the immutable private review
   // snapshot. Any creator withdrawal makes the old receipt non-actionable.
