@@ -59,6 +59,19 @@ try{
     console.log("PASS browser synthetic pilot at",w,"px");
     await page.close();
   }
+  // The distributable must also run as a file, without a host or external assets.
+  const offline=await browser.newPage({viewport:{width:390,height:844}});
+  offline.on("pageerror",e=>errors.push("offline "+e.message));
+  await offline.clock.install({time:new Date("2026-10-24T20:00:00Z")});
+  await offline.goto(new URL("./porchlight-offline.html",import.meta.url).href,{waitUntil:"load"});
+  await offline.locator("#activeCount").waitFor();
+  assert.equal((await offline.locator("#activeCount").innerText()).trim(),"4","standalone offline approved host count");
+  await offline.getByRole("button",{name:"Stage a mock host request"}).click();
+  await offline.getByRole("button",{name:"Simulate organizer approval"}).click();
+  assert.equal((await offline.locator("#activeCount").innerText()).trim(),"5","offline mock approval");
+  await offline.screenshot({path:join(directory,"porchlight-offline-proof.png"),fullPage:true});
+  await offline.close();
+  console.log("PASS offline single-file browser acceptance");
   assert.deepEqual(errors,[],"uncaught browser JS errors");
 }finally{
   if(browser)await browser.close();
