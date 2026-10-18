@@ -222,7 +222,7 @@ function StudioEditor({create,uploadsReady,publicationReady}:{create:boolean;upl
   }catch(e){setError(showError(e));setMustReload(true)}finally{setBusy(false);}
  }
  async function withdraw(){
-  if(!project||busy||project.status!=='pending_review'||publicationStatus)return;
+  if(!project||busy||project.status!=='pending_review'||publicationStatus==='published'||publicationStatus==='unknown')return;
   if(!window.confirm('Withdraw this project from staff review and return it to a private editable draft?'))return;
   setBusy(true);setError('');setNotice('');
   try{const result=await studioWithdraw(project.id,project.revision);setProject(result.project);
@@ -317,7 +317,7 @@ function StudioEditor({create,uploadsReady,publicationReady}:{create:boolean;upl
      <p className="st-muted">A submitted project enters a private queue. There is no automated publication, game execution, or XP reward.</p>
      {project&&<button className="st-button" disabled={!ready||dirty||locked||!editable(project)}
       onClick={()=>void submit()}>SUBMIT SAVED REVISION FOR REVIEW ↗</button>}
-     {project?.status==='pending_review'&&!publicationStatus&&<button className="st-button" disabled={busy||mustReload}
+     {project?.status==='pending_review'&&publicationStatus!=='published'&&publicationStatus!=='unknown'&&<button className="st-button" disabled={busy||mustReload}
       onClick={()=>void withdraw()}>WITHDRAW FROM REVIEW</button>}
      {project&&project.status!=='pending_review'&&<button className="st-link" disabled={busy||mustReload}
       onClick={()=>void deleteDraft()}>DELETE PRIVATE PROJECT</button>}
