@@ -108,9 +108,11 @@ export async function canonicalStudioSchemaReady(env){
  }catch{return false;}
 }
 export async function studioReadiness(env){
- if(env?.CANONICAL_CREATOR_STUDIO_ENABLED!=='true')return {studioReady:false,studioUploadsReady:false};
+ if(env?.CANONICAL_CREATOR_STUDIO_ENABLED!=='true')return {studioReady:false,studioUploadsReady:false,studioPublicationReady:false};
  const ready=await canonicalStudioSchemaReady(env);
- return {studioReady:ready,studioUploadsReady:Boolean(ready&&studioUploadReady(env))};
+ return {studioReady:ready,studioUploadsReady:Boolean(ready&&studioUploadReady(env)),
+  studioPublicationReady:Boolean(ready&&env.CANONICAL_STUDIO_PUBLICATION_ENABLED==='true'&&
+   await studioPublicationReady(env.MEMBER_DB))};
 }
 export async function canonicalStudio(req,env,user,now=Math.floor(Date.now()/1000)){
  if(env?.CANONICAL_CREATOR_STUDIO_ENABLED!=='true')return fail(404,'Creator Studio is not activated');
@@ -269,6 +271,10 @@ export async function canonicalStudioReview(req,env,user,now=Math.floor(Date.now
    const projects=await rows(db,
     'SELECT s.id,s.title,s.summary,s.category,s.status,s.revision,s.submitted_at,s.demo_url,s.source_url,'+
     's.license_name,s.ai_disclosure,s.human_contribution,s.user_id,p.handle,'+
+    (await studioPublicationReady(db)?
+     "(SELECT COUNT(*) FROM member_studio_publication_consents c WHERE c.project_id=s.id "+
+     "AND c.submission_id=snap.id AND c.user_id=s.user_id AND c.revoked_at IS NULL) AS metadata_consent,":
+     "0 AS metadata_consent,")+
     "(SELECT COUNT(*) FROM member_studio_submission_assets a WHERE a.submission_id=snap.id) AS attachment_count,"+
     "(SELECT COALESCE(SUM(a.size_bytes),0) FROM member_studio_submission_assets a WHERE a.submission_id=snap.id) AS attachment_bytes "+
     'FROM member_studio_projects s JOIN member_creator_profiles p ON p.user_id=s.user_id '+
