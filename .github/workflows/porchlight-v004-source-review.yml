@@ -36,4 +36,4 @@ jobs:
       - name: Isolated report and authorization tests
         run: node --experimental-sqlite --test prototypes/porchlight-v002/test/service.test.mjs prototypes/porchlight-v002/test/v003.test.mjs prototypes/porchlight-v002/test/v004.test.mjs
       - name: Review client static tests
-        run: node --test prototypes/porchlight-v003/test/ui-contract.test.mjs
+        run: node --test prototypes/porchlight-v003/test/ui-contract.test.mjs prototypes/porchlight-v003/test/v004-ui.test.mjs
