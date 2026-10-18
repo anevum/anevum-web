@@ -91,7 +91,7 @@ async function prepareFile(file) {
     throw new PackageError("Choose a ZIP or HTML build with a valid filename");
   const extension=file.name.split(".").at(-1).toLowerCase();
   if(extension!=="zip"&&extension!=="html") throw new PackageError("Upload a .zip package or .html file");
-  if(file.size<1||file.size>ZIP_LIMITS.archive) throw new PackageError("The file must be below 30 MiB",413);
+  if(file.size<1||file.size>ZIP_LIMITS.archive) throw new PackageError("The file must be at most 20 MiB",413);
   if(extension==="zip"&&!["application/zip","application/x-zip-compressed","application/octet-stream",""].includes(file.type))
     throw new PackageError("The selected file does not have a ZIP media type");
   if(extension==="html"&&!["text/html","application/octet-stream",""].includes(file.type))
