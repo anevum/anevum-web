@@ -157,6 +157,12 @@ export function Shell(){
             <span><strong>{item.label}</strong><small>{item.detail}</small></span>
             <Icon name="arrow" size={16}/>
           </Link>)}
+          <button type="button" className="av79-destination ir80-wayfinder-entry"
+            onClick={()=>{setMenuOpen(false);window.dispatchEvent(new Event("anevum:iren-open"));}}>
+            <span className="av79-destination-icon"><Icon name="star" size={21}/></span>
+            <span><strong>IREN / Field assistant</strong><small>Get help or take a guided tour at any time</small></span>
+            <span className="ir80-wayfinder-action">OPEN IREN HELP</span>
+          </button>
         </nav>
         <div className="av79-navigation-lower">
           <section aria-label="Browse by interest"><span className="av79-lower-label">EXPLORE BY INTEREST</span>
