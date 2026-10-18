@@ -56,6 +56,21 @@ jobs:
           test -s evidence/porchlight-v001/public-1440.png
           test -s evidence/porchlight-v001/organizer-390.png
 
+      - name: Package and verify no-network offline interactive review
+        run: |
+          set -euo pipefail
+          node --check safety/porchlight/review/offline-api.js
+          node --check safety/porchlight/review/build-preview.mjs
+          node --check safety/porchlight/review/offline-smoke.mjs
+          node safety/porchlight/review/build-preview.mjs evidence/porchlight-v001/porchlight-offline-review.html
+          chrome="$(command -v google-chrome || command -v chromium || true)"
+          test -n "$chrome"
+          node safety/porchlight/review/offline-smoke.mjs --chrome "$chrome" --output evidence/porchlight-v001 --file evidence/porchlight-v001/porchlight-offline-review.html
+          test -s evidence/porchlight-v001/offline-acceptance.json
+          test -s evidence/porchlight-v001/offline-review-390.png
+          test -s evidence/porchlight-v001/porchlight-offline-review.html
+          echo "PORCHLIGHT_OFFLINE_DEMO_ONLY=PASS"
+
       - name: Preserve synthetic design screenshots
         if: always()
         uses: actions/upload-artifact@v4
