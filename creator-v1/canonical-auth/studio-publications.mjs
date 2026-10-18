@@ -41,7 +41,9 @@ async function publicationEditAllowed(db,userId,now){
 const flag=env=>env?.CANONICAL_STUDIO_PUBLICATION_ENABLED==='true'
  &&env?.CANONICAL_CREATOR_STUDIO_ENABLED==='true'
  &&env?.CANONICAL_STUDIO_SAFETY_ENABLED==='true'
- &&(env?.CANONICAL_STUDIO_SAFETY_REVIEWER_IDS||'').split(',').some(x=>x.trim().length>0);
+ &&(env?.CANONICAL_STUDIO_SAFETY_REVIEWER_IDS||'').split(',').some(x=>x.trim().length>0)
+ &&env?.CANONICAL_STUDIO_APPEALS_ENABLED==='true'
+ &&String(env?.CANONICAL_STUDIO_APPEAL_REVIEWER_IDS||'').trim().length>0;
 const safeExternal=value=>{
  if(typeof value!=='string'||value.length>1500)return false;
  try{
@@ -70,6 +72,13 @@ export async function studioPublicationReady(db){
    "'member_studio_publication_takedowns','member_studio_recognition_revocations','member_studio_safety_limits')");
   return new Set(names.map(x=>x.name)).size===7;
  }catch{return false;}
+}
+export async function studioRedressSchemaReady(db){
+ try{
+  const found=await read(db,"SELECT name FROM sqlite_master WHERE type='table' AND name IN "+
+   "('member_studio_publication_appeals','member_studio_appeal_decisions','member_studio_appeal_limits')");
+  return new Set(found.map(x=>x.name)).size===3;
+ }catch{return false}
 }
 const eligibleSnapshot=async(db,projectId,userId,revision)=>{
  const s=await first(db,
@@ -101,7 +110,7 @@ export async function canonicalStudioPublicationConsent(req,env,user,projectId,n
  if(!UUID.test(projectId)||new URL(req.url).search)return fail(400,'Invalid project');
  if(!['GET','POST','DELETE'].includes(req.method))return fail(405,'Unsupported method');
  const db=env.MEMBER_DB;
- if(!await studioPublicationReady(db))return fail(503,'Publication review unavailable');
+ if(!await studioPublicationReady(db)||!await studioRedressSchemaReady(db))return fail(503,'Publication or redress review unavailable');
  try{
   const owner=await first(db,
    'SELECT id,revision FROM member_studio_projects WHERE id=? AND user_id=?',
@@ -191,7 +200,7 @@ export async function canonicalPublicStudioCreations(req,env){
  if(url.search||(!detail&&url.pathname!=='/api/v1/creations')||
   (detail&&!UUID.test(detail[1])))return fail(404,'Not found');
  const db=env.MEMBER_DB;
- if(!await studioPublicationReady(db))return fail(503,'Creation registry unavailable');
+ if(!await studioPublicationReady(db)||!await studioRedressSchemaReady(db))return fail(503,'Creation registry or redress review unavailable');
  try{
   const cols="p.project_id AS id,s.title,s.summary,s.category,s.free_to_use,"+
    "s.license_name,s.source_url,s.demo_url,pr.handle,pr.display_name,p.published_at,p.user_id AS internal_owner_id,"+
