@@ -8,6 +8,7 @@ on:
       - build/evolution-miniature-native-webgl-v062-20261017-011
     paths:
       - creator-v1/**
+      - tests/creator-v1-cinematic-v005.test.mjs
       - docs/creator-platform/ANEVUM-V067-CANONICAL-FLOW-RECONCILIATION-2026-10-17.md
       - .github/workflows/canonical-v067-review.yml
   workflow_dispatch:
@@ -55,6 +56,7 @@ jobs:
           node --test creator-v1/test/canonical-open-signup-gate-v020.test.mjs creator-v1/test/canonical-otp-resend-v023.test.mjs
           node --experimental-strip-types --test creator-v1/test/canonical-saved-works-v009.test.mjs
           node --test creator-v1/test/canonical-profile-save-error-v027.test.mjs
+          node --test tests/creator-v1-cinematic-v005.test.mjs
 
       - name: Verify new four-door homepage stays in source
         run: node --test creator-v1/test/interactive-arrival-v065.test.mjs
