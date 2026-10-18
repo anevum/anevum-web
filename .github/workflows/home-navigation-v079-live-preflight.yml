@@ -1,0 +1,121 @@
+name: ANEVUM V079 Live Release Readiness (Read Only)
+# NEVER deploy from this job. Production modification requires a separate,
+# explicit guarded release against the current version with rollback.
+on:
+  push:
+    branches:
+      - integration/home-wayfinder-v079-reconciled-20261018
+    paths:
+      - creator-v1/web/**
+      - creator-v1/test/**
+      - creator-v1/package.json
+      - tests/creator-v1-cinematic-v005.test.mjs
+      - .github/workflows/home-navigation-v079-live-preflight.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: anevum-v079-release-readonly-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  preflight:
+    if: github.repository == 'anevum/anevum-web'
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Validate immutable reconciled source lineage
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "${GITHUB_REF}" = 'refs/heads/integration/home-wayfinder-v079-reconciled-20261018'
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          git merge-base --is-ancestor ad62ec48164605f08601c4b6bafc9b1076185f51 HEAD
+          test -f creator-v1/web/src/lib/public-creator-handle.ts
+          test -f creator-v1/web/src/lib/useOwnPlayerCard.ts
+          test -f creator-v1/web/src/home-navigation-v079.css
+          test -f creator-v1/test/v079-reconciled-null-creator.test.mjs
+          node --check creator-v1/test/capture-home-navigation-v079.mjs
+          node --check creator-v1/test/capture-community-hub-v007.mjs
+          node --check creator-v1/test/capture-canonical-forums-v041.mjs
+          grep -Fq 'publicCreatorHandle(project.creatorHandle)' creator-v1/web/src/pages/CinematicLandingPage.tsx
+          grep -Fq 'publicCreatorHandle(project.creatorHandle)' creator-v1/web/src/components/ProjectCard.tsx
+          grep -Fq 'publicCreatorHandle(project.creatorHandle)' creator-v1/web/src/components/PortalLauncher.tsx
+          echo "SOURCE_BASELINE=RECONCILED_V078" >> "$GITHUB_STEP_SUMMARY"
+          echo "SOURCE_SHA=$GITHUB_SHA" >> "$GITHUB_STEP_SUMMARY"
+      - name: Check public live Worker, routes, protected bindings and credentials presence
+        shell: bash
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          test -n "$CLOUDFLARE_API_TOKEN"
+          test "$CLOUDFLARE_ACCOUNT_ID" = '2f7ee83107240152097efd956a4e8335'
+          umask 077
+          mkdir -p "$RUNNER_TEMP/anevum-v079-preflight"
+          cf() { curl --fail --silent --show-error --retry 2 --max-time 25 -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" "$1"; }
+          base="https://api.cloudflare.com/client/v4"
+          cf "$base/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/anevum-apex-prelaunch-gateway/deployments" > "$RUNNER_TEMP/anevum-v079-preflight/deployments.json"
+          cf "$base/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/anevum-apex-prelaunch-gateway/settings" > "$RUNNER_TEMP/anevum-v079-preflight/settings.json"
+          cf "$base/zones/8abe27259b5436af5966d3b40d9a3760/workers/routes" > "$RUNNER_TEMP/anevum-v079-preflight/routes.json"
+          jq -e '
+            .success and
+            ((.result.deployments // .result)[0].versions | length)==1 and
+            ((.result.deployments // .result)[0].versions[0].percentage)==100 and
+            ((.result.deployments // .result)[0].versions[0].version_id)=="50d33296-cee0-4565-93c6-a81777f23c85"
+          ' "$RUNNER_TEMP/anevum-v079-preflight/deployments.json" > /dev/null
+          jq -e '
+            .success and (.result.bindings|length)==24 and
+            any(.result.bindings[]; .name=="ASSETS" and .type=="assets") and
+            any(.result.bindings[]; .name=="MEMBER_DB" and .type=="d1" and ((.database_id//.id)=="e1d29049-c83b-4534-8355-dc1fa36ba6d8")) and
+            any(.result.bindings[]; .name=="COMMUNITY_DB" and .type=="d1" and ((.database_id//.id)=="fa96e36d-6257-4883-bf15-074947e11a13")) and
+            any(.result.bindings[]; .name=="CANONICAL_BETTER_AUTH_SECRET" and .type=="secret_text") and
+            any(.result.bindings[]; .name=="CANONICAL_RESEND_API_KEY" and .type=="secret_text") and
+            any(.result.bindings[]; .name=="CANONICAL_PROTECTED_EMAILS" and .type=="secret_text") and
+            any(.result.bindings[]; .name=="ANEVUM_PRELAUNCH_MODE" and .type=="plain_text" and .text=="public") and
+            any(.result.bindings[]; .name=="ANEVUM_LAUNCH_APPROVED" and .type=="plain_text" and .text=="true") and
+            any(.result.bindings[]; .name=="ANEVUM_CANONICAL_APEX_ENABLED" and .type=="plain_text" and .text=="true") and
+            any(.result.bindings[]; .name=="CANONICAL_SCHEMA_APPROVED" and .type=="plain_text" and .text=="true") and
+            any(.result.bindings[]; .name=="CANONICAL_RECOGNITION_ENABLED" and .type=="plain_text" and .text=="true")
+          ' "$RUNNER_TEMP/anevum-v079-preflight/settings.json" > /dev/null
+          jq -e '
+            .success and (.result|length)==23 and
+            any(.result[]; .pattern=="anevum.com/*" and .script=="anevum-native-frame-policy-v001") and
+            any(.result[]; .pattern=="anevum.com/assets/index-*" and .script=="anevum-native-project-community-v002") and
+            any(.result[]; .pattern=="anevum.com/play/*" and .script=="anevum-unified-creation-routes-v002") and
+            any(.result[]; .pattern=="anevum.com/upload*" and .script=="anevum-unified-creation-routes-v002") and
+            any(.result[]; .pattern=="anevum.com/staff*" and .script=="anevum-staff-review-navigation-v001") and
+            any(.result[]; .pattern=="anevum.com/staff/projects*" and .script=="anevum-staff-project-review-v003") and
+            any(.result[]; .pattern=="anevum.com/evolution/vectors/*" and .script=="anevum-apex-prelaunch-gateway")
+          ' "$RUNNER_TEMP/anevum-v079-preflight/routes.json" > /dev/null
+          echo 'LIVE_VERSION_50D33296=PASS' >> "$GITHUB_STEP_SUMMARY"
+          echo 'LIVE_BINDINGS_24_PRESERVED=PASS' >> "$GITHUB_STEP_SUMMARY"
+          echo 'LIVE_ROUTES_23_PRESERVED=PASS' >> "$GITHUB_STEP_SUMMARY"
+          echo 'NO_PRODUCTION_WRITE_PERFORMED=PASS' >> "$GITHUB_STEP_SUMMARY"
+      - name: Public read-only smoke without privileged cookies or account changes
+        shell: bash
+        run: |
+          set -euo pipefail
+          for route in / /discover /community /recognition /join; do
+            url="https://anevum.com$route"
+            for attempt in 1 2 3; do
+              response="$(curl -L --silent --show-error --max-time 22 -o "$RUNNER_TEMP/v079-live.html" -w '%{http_code}' "$url" || true)"
+              if test "$response" = 200 && grep -Fq 'id="root"' "$RUNNER_TEMP/v079-live.html"; then
+                break
+              fi
+              sleep 2
+            done
+            test "$response" = 200
+            grep -Fq 'id="root"' "$RUNNER_TEMP/v079-live.html"
+          done
+          echo 'LIVE_PUBLIC_ROUTES_200_REACT_ROOT=PASS' >> "$GITHUB_STEP_SUMMARY"
+      - name: Record readiness without deployment authority
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo 'RELEASE_READ_ONLY_PREFLIGHT=PASS' >> "$GITHUB_STEP_SUMMARY"
+          echo 'No deployment, database mutation, auth change, XP grant, routing change or secret write occurs in this workflow.' >> "$GITHUB_STEP_SUMMARY"
