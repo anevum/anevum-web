@@ -93,6 +93,12 @@ export function canonicalAuthOptions(env){
     rateLimit:{
       enabled:true,storage:"database",window:60,max:20,
       customRules:{
+        // Authenticated navigation, staff signal polling and service-bound
+        // session verification are read-only. A global 20/minute limit
+        // locked legitimate two-person IREN sessions during live polling.
+        // Keep per-IP throttling, but permit bounded session lookups;
+        // stricter OTP, social and token-link rules below stay untouched.
+        "/get-session":{window:60,max:120},
         "/sign-in/social":{window:60,max:5},
         "/link-social":{window:60,max:3},
         "/email-otp/send-verification-otp":{window:600,max:3},
