@@ -146,3 +146,47 @@
   .av73-static-level-icon{filter:none!important}
   .av73-static-level-icon>.av62-native-poster{filter:none!important}
 }
+
+/* Source-only builds may lack separately packaged optical exports. Keep the
+ * fallback crest in the same bounds as the original icon, never 128px outside
+ * a 5-column gallery tile or overlapping adjacent content. */
+.av73-static-level-fallback{
+  display:inline-grid!important;
+  place-items:center;
+  min-width:0;
+  max-width:100%!important;
+  max-height:100%!important;
+  aspect-ratio:1;
+  overflow:hidden!important;
+  transform:none!important;
+  animation:none!important;
+  will-change:auto!important;
+  contain:layout paint;
+}
+.an-series-v060 .an-artifact-card-v034 .an-artifact-visual .av73-static-level-fallback{
+  display:grid!important;
+  justify-self:center;
+  align-self:center;
+  width:min(128px,calc(100% - 8px))!important;
+  height:auto!important;
+  max-width:100%!important;
+  aspect-ratio:1;
+  margin:0 auto!important;
+}
+.av61-specimen .av73-static-level-fallback,
+.av61-profile-level .av73-static-level-fallback,
+.av7-level-crest .av73-static-level-fallback,
+.av7-item-face .av73-static-level-fallback{
+  max-width:100%!important;
+  max-height:100%!important;
+}
+@media(max-width:640px){
+  .an-series-v060 .an-artifact-card-v034 .an-artifact-visual .av73-static-level-fallback{
+    width:min(112px,calc(100% - 10px))!important;
+  }
+}
+@media(max-width:355px){
+  .an-series-v060 .an-artifact-card-v034 .an-artifact-visual .av73-static-level-fallback{
+    width:min(100px,calc(100% - 12px))!important;
+  }
+}
