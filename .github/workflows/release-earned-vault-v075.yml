@@ -1,4 +1,5 @@
 name: ANEVUM V075 Earned Vault Production Release
+# Release test fix: verify the live gateway protection marker literally.
 on:
   push:
     branches: [release/earned-vault-v075-20261018-001]
