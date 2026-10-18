@@ -80,7 +80,7 @@ export function CompactMemberIdentity({member,href,className='',size='standard',
    <small className="av61-member-handle">@{member.handle}</small>
    <span className="av61-member-rewards">
     {channel&&<span className="av65-channel-label">CREATOR CHANNEL</span>}
-    {specimen&&<span className="av61-level-label" title={specimen.name}>LVL {String(level).padStart(2,'0')} <span className="av61-specimen-name">· {specimen.name}</span></span>}
+    {specimen&&<span className="av61-level-label" title={'Earned evolution level '+level}>LVL {String(level).padStart(2,'0')} <span className="av61-specimen-name">· EARNED</span></span>}
     {badges.length>0&&<span className="av61-award-list av65-badge-rack" aria-label="Three selected or latest earned badges">
      {badges.map(id=>{
       const entry=BADGE_CATALOG[id];
