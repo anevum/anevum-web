@@ -34,9 +34,9 @@ test('IREN V004 founder owner bootstrap: automatic atomic audit, one verified im
   assert.equal(count(db,'staff_access_audit'),0);
 
   insert(db,'owner_candidate');
-  assert.deepEqual(db.prepare('SELECT member_id,role,granted_by,revoked_at FROM staff_access_grants').get(),
+  assert.deepEqual({...db.prepare('SELECT member_id,role,granted_by,revoked_at FROM staff_access_grants').get()},
    {member_id:'owner_candidate',role:'owner',granted_by:'owner_candidate',revoked_at:null});
-  const events=db.prepare("SELECT actor_id,member_id,action,created_at FROM staff_access_audit").all();
+  const events=db.prepare("SELECT actor_id,member_id,action,created_at FROM staff_access_audit").all().map(row=>({...row}));
   assert.deepEqual(events,[{
    actor_id:'owner_candidate',member_id:'owner_candidate',action:'bootstrap-owner',created_at:1792200000
   }]);
