@@ -48,7 +48,7 @@ test("V074 makes shared member and gallery icons optical only, never a moving mi
   assert.match(icons,/av73-static-level-icon/);
   assert.match(icons,/av73-static-level-fallback/);
   assert.match(icons,/av62-native-poster/);
-  assert.match(icons,/size>104/);
+  assert.match(icons,/size>=68/);
   assert.match(icons,/\['preview','poster','icon'\]/);
   assert.match(icons,/\['icon','preview','poster'\]/);
   assert.match(icons,/role="img"/);
