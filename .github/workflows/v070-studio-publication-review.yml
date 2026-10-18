@@ -5,6 +5,11 @@ on:
     paths:
       - "creator-v1/canonical-auth/studio-publications.mjs"
       - "creator-v1/canonical-auth/studio.mjs"
+      - "creator-v1/web/src/pages/CanonicalStudioPage.tsx"
+      - "creator-v1/web/src/pages/canonical-studio.css"
+      - "creator-v1/web/src/components/StudioPublicationPanel.tsx"
+      - "creator-v1/web/src/lib/canonical-studio.ts"
+      - "creator-v1/canonical-auth/recognition-issuer.mjs"
       - "creator-v1/canonical-auth/worker.mjs"
       - "creator-v1/apex-prelaunch/platform.mjs"
       - "creator-v1/canonical-auth/recognition-catalog.mjs"
