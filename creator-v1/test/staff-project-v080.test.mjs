@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {renderStaffOperations} from "../operations/staff-project-ui-v080.mjs";
-import {staffInventory,staffOwnerAction,controlSchemaReady} from "../operations/staff-project-control-v080.mjs";
+import {staffInventory,staffOwnerAction,staffReviewAction,controlSchemaReady} from "../operations/staff-project-control-v080.mjs";
 const id="11111111-1111-4111-8111-111111111111";
 const sample={id,title:"Single Drift",creator:"Sample maker",summary:"A safely escaped sample <script>",kind:"html",status:"published",filename:"index.html"};
 test("staff output escapes creator-controlled markup",()=>{
@@ -40,4 +40,17 @@ test("reviewer inventory only requests pending records",async()=>{
  assert.deepEqual(result.projects,[]);
  assert.ok(statements[0].includes("WHERE p.status='pending_review'"));
  assert.equal(result.controlsReady,false);
+});
+
+test("reviewer decision validation rejects invalid requests without mutations",async()=>{
+ const env={DB:{prepare(){throw Error("Must not query")}}};
+ assert.equal((await staffReviewAction(env,"reviewer","reviewer",{projectId:"invalid",action:"publish"})).status,400);
+ assert.equal((await staffReviewAction(env,"reviewer","reviewer",{projectId:id,action:"reject",reason:"no"})).status,422);
+ assert.equal((await staffReviewAction(env,"reviewer","member",{projectId:id,action:"publish"})).status,403);
+});
+test("review submission controls appear only on pending projects",()=>{
+ const html=renderStaffOperations({projects:[{...sample,status:"pending_review"}],role:"reviewer"});
+ assert.ok(html.includes('data-review="publish"'));
+ assert.ok(html.includes('data-review="reject"'));
+ assert.ok(!html.includes('data-action="delete"'));
 });
