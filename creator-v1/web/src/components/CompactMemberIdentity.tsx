@@ -64,7 +64,7 @@ export function CompactMemberIdentity({member,href,className='',size='standard',
     src={!channel&&member.avatar?(href==='/member'?'/api/v1/member/media/avatar':'/api/v1/members/'+encodeURIComponent(member.handle)+'/media/avatar'):undefined}
     supporterFrame={member.supporterAppearance?.frame}/></span>
    {specimen&&<span className="av61-specimen" title={'Evolution Level '+level+' · '+specimen.name}>
-    <LevelEmblem level={level!} size={size==='inline'?30:size==='compact'?38:size==='featured'?60:44}/>
+    <LevelEmblem level={level!} size={size==='inline'?30:size==='compact'?38:size==='featured'?60:44} handle={href==='/member'?null:member.handle}/>
    </span>}
   </span>
   <span className="av61-member-copy">
