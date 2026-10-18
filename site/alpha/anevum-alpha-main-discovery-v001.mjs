@@ -33,6 +33,10 @@ function format(data,up,method){
 export default {async fetch(req,env){
  const u=new URL(req.url);if(u.hostname!=="anevum.com")return Response.json({error:"Not found"},{status:404});
  let path=u.pathname;
+ if(path==="/__anevum_alpha_bridge_preview_health"){
+  try{const n=await env.DB.prepare("SELECT COUNT(*) n FROM anevum_alpha_projects WHERE status='published'").first();return Response.json({service:"alpha-discovery-bridge",ok:true,published:Number(n?.n||0)},{headers:{"cache-control":"no-store"}})}
+  catch{return Response.json({ok:false,error:"database unavailable"},{status:503})}
+ }
  let preview=false;
  if(path==="/__anevum_alpha_bridge_preview"){path="/api/v1/projects";preview=true;}
  if(path==="/__anevum_alpha_bridge_preview_categories"){path="/api/v1/categories";preview=true;}
@@ -51,6 +55,7 @@ export default {async fetch(req,env){
  if(!["/api/v1/projects","/api/v1/categories","/api/v1/status","/api/v1/boards"].includes(path))
   return preview?Response.json({error:"Not found"},{status:404}):native(req,env,path);
  const upstream=await native(req,env,path);
+ if(preview&&(!upstream.ok||!(upstream.headers.get("content-type")||"").includes("application/json")))return Response.json({preview:true,upstreamStatus:upstream.status,upstreamType:upstream.headers.get("content-type"),location:upstream.headers.get("location")});
  if(!["GET","HEAD"].includes(req.method)||!upstream.ok||!(upstream.headers.get("content-type")||"").includes("application/json"))return upstream;
  try{
   const data=await upstream.clone().json();if(!data||Array.isArray(data))return upstream;
