@@ -1,5 +1,5 @@
 import {Link} from 'react-router-dom';
-import {LevelEmblem,LEVEL_ARTIFACTS} from './LevelEmblem';
+import {LevelEmblem} from './LevelEmblem';
 import {BadgeInsignia} from './BadgeInsignia';
 import {HonorInsignia} from './HonorInsignia';
 import {MemberPortrait} from './MemberPortrait';
@@ -42,7 +42,7 @@ export function CompactMemberIdentity({member,href,className='',size='standard',
 }){
  const channel=member.source==='creator-channel';
  const level=!channel&&typeof member.level==='number'&&Number.isSafeInteger(member.level)&&member.level>=1&&member.level<=30?member.level:null;
- const specimen=level===null?null:LEVEL_ARTIFACTS[level-1];
+ const specimen=level!==null;
  const badges=channel?[]:selectFeaturedBadges(member.featuredAwards||[],member.earnedBadges,member.badgeDisplay);
  const {medal,ribbons}=selectedDistinctions(channel?undefined:member.distinctions);
  const aura=safePlayerAura(channel?'none':member.aura);
@@ -50,7 +50,7 @@ export function CompactMemberIdentity({member,href,className='',size='standard',
  const url=href||'/@'+encodeURIComponent(member.handle);
  const label=[
   member.displayName+' @'+member.handle+(channel?' · Creator channel, not linked to a canonical member identity':''),
-  level!==null?'Evolution level '+level+' '+specimen?.name:'',
+  level!==null?'Evolution level '+level:'',
   badges.length?badges.length+' earned badges: '+badges.map(id=>BADGE_CATALOG[id]?.name||cleanName(id)).join(', '):'',
   medal?'Medal: '+medal.name:'',
   ribbons.length?'Ribbons: '+ribbons.map(r=>r.name).join(', '):'',
@@ -63,7 +63,7 @@ export function CompactMemberIdentity({member,href,className='',size='standard',
    <span className="av61-photo"><MemberPortrait name={member.displayName}
     src={!channel&&member.avatar?(href==='/member'?'/api/v1/member/media/avatar':'/api/v1/members/'+encodeURIComponent(member.handle)+'/media/avatar'):undefined}
     supporterFrame={member.supporterAppearance?.frame}/></span>
-   {specimen&&<span className="av61-specimen" title={'Evolution Level '+level+' · '+specimen.name}>
+   {specimen&&<span className="av61-specimen" title={'Earned Evolution Level '+level}>
     <LevelEmblem level={level!} size={size==='inline'?30:size==='compact'?38:size==='featured'?60:44} handle={href==='/member'?null:member.handle}/>
    </span>}
   </span>
