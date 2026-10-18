@@ -1,0 +1,122 @@
+name: ANEVUM Porchlight V001 Isolated Source Review
+
+# No deployment credentials. No routes, workers, D1 resources, member accounts,
+# finance providers, or production state are modified.
+on:
+  pull_request:
+    paths:
+      - safety/porchlight/**
+      - .github/workflows/porchlight-v001-review.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test-isolated-pilot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - name: Read exact reviewed branch head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+
+      - name: Verify exact reviewed head
+        env:
+          SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: test "$(git rev-parse HEAD)" = "$SOURCE_SHA"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Validate browser and Worker syntax
+        run: |
+          set -euo pipefail
+          node --check safety/porchlight/worker.mjs
+          node --check safety/porchlight/public/app.js
+          node --check safety/porchlight/public/organizer.js
+          node --check safety/porchlight/test/pilot.test.mjs
+
+      - name: Verify consent, moderation, isolation, expiry and revocation in memory
+        run: node --test safety/porchlight/test/pilot.test.mjs
+
+      - name: Verify synthetic desktop and mobile browser experience
+        run: |
+          set -euo pipefail
+          chrome="$(command -v google-chrome || command -v chromium || true)"
+          test -n "$chrome"
+          mkdir -p evidence/porchlight-v001
+          node safety/porchlight/test/browser-capture.mjs --chrome "$chrome" --output evidence/porchlight-v001
+          test -s evidence/porchlight-v001/acceptance.json
+          test -s evidence/porchlight-v001/public-320.png
+          test -s evidence/porchlight-v001/public-390.png
+          test -s evidence/porchlight-v001/public-1440.png
+          test -s evidence/porchlight-v001/organizer-390.png
+
+      - name: Package and verify no-network offline interactive review
+        run: |
+          set -euo pipefail
+          node --check safety/porchlight/review/offline-api.js
+          node --check safety/porchlight/review/build-preview.mjs
+          node --check safety/porchlight/review/offline-smoke.mjs
+          node safety/porchlight/review/build-preview.mjs evidence/porchlight-v001/porchlight-offline-review.html
+          chrome="$(command -v google-chrome || command -v chromium || true)"
+          test -n "$chrome"
+          node safety/porchlight/review/offline-smoke.mjs --chrome "$chrome" --output evidence/porchlight-v001 --file evidence/porchlight-v001/porchlight-offline-review.html
+          test -s evidence/porchlight-v001/offline-acceptance.json
+          test -s evidence/porchlight-v001/offline-review-390.png
+          test -s evidence/porchlight-v001/porchlight-offline-review.html
+          echo "PORCHLIGHT_OFFLINE_DEMO_ONLY=PASS"
+
+      - name: Assemble and validate optional same-Wi-Fi phone review
+        run: |
+          set -euo pipefail
+          node --check safety/porchlight/review/phone/server.mjs
+          node --check safety/porchlight/review/phone/build-kit.mjs
+          node --check safety/porchlight/review/phone/test/server.test.mjs
+          node safety/porchlight/review/phone/build-kit.mjs evidence/porchlight-v001/porchlight-phone-review
+          node --test evidence/porchlight-v001/porchlight-phone-review/test/server.test.mjs
+          (cd evidence/porchlight-v001 && zip -qr porchlight-phone-review-v0013.zip porchlight-phone-review)
+          test -s evidence/porchlight-v001/porchlight-phone-review-v0013.zip
+          echo "PORCHLIGHT_LAN_REVIEW=FICTIONAL_ONLY_PASS"
+
+      - name: Preserve synthetic design screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: porchlight-v001-synthetic-browser
+          path: evidence/porchlight-v001/
+          retention-days: 14
+          if-no-files-found: warn
+
+      - name: Enforce no-public-release boundary
+        run: |
+          set -euo pipefail
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          import assert from 'node:assert/strict';
+          const c=JSON.parse(fs.readFileSync('safety/porchlight/wrangler.example.jsonc','utf8'));
+          assert.equal(c.name,'anevum-porchlight-v001-review');
+          assert.equal(c.workers_dev,false);
+          assert.equal(c.preview_urls,false);
+          assert.equal(c.vars.PORCHLIGHT_PUBLIC_ENABLED,'false');
+          assert.equal(c.vars.PORCHLIGHT_HOST_SUBMISSIONS_ENABLED,'false');
+          assert.equal(c.vars.PORCHLIGHT_ADMIN_ENABLED,'false');
+          assert.equal(c.d1_databases.length,1);
+          assert.equal(c.d1_databases[0].binding,'PORCHLIGHT_DB');
+          assert.equal(c.d1_databases[0].database_id,'REPLACE_WITH_SEPARATE_PORCHLIGHT_D1');
+          assert.equal(fs.existsSync('safety/porchlight/public/index.html'),true);
+          assert.equal(fs.existsSync('safety/porchlight/public/organizer.html'),true);
+          console.log('PORCHLIGHT_RELEASE_GATES_DISABLED=PASS');
+          NODE
+
+      - name: Verify no production provider secrets used
+        run: |
+          set -euo pipefail
+          test -z "${CLOUDFLARE_API_TOKEN:-}"
+          test -z "${PORCHLIGHT_RATE_KEY:-}"
+          test -z "${PORCHLIGHT_ADMIN_SHA256:-}"
+          echo "PORCHLIGHT_SOURCE_ONLY=PASS"

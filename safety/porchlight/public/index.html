@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+<head>
+ <meta charset="utf-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1">
+ <meta name="theme-color" content="#07131e">
+ <meta name="color-scheme" content="dark">
+ <meta name="description" content="ANEVUM Porchlight: an independent opt-in neighborhood event directory. Participation is voluntary and never a safety certification.">
+ <title>Porchlight | ANEVUM Community Safety Pilot</title>
+ <link rel="stylesheet" href="/app.css">
+ <script type="module" src="/app.js"></script>
+</head>
+<body>
+ <a class="skip" href="#directory">Skip to neighborhood directory</a>
+ <header class="nav">
+  <a class="brand" href="/" aria-label="ANEVUM Porchlight home"><span class="brand-logo" aria-hidden="true"><span></span></span><span><b>ANEVUM</b><small>PORCHLIGHT / CIVIC NETWORK</small></span></a>
+  <nav aria-label="Page sections"><a href="#directory">Explore</a><a href="#hosts">For hosts</a><a href="#safety">Safety</a><a href="#about">About</a></nav>
+  <span class="build-state">INDEPENDENT COMMUNITY PILOT</span>
+ </header>
+ <main>
+  <section class="hero" aria-labelledby="hero-heading">
+   <div class="hero-body">
+    <p class="eyebrow"><span class="signal" aria-hidden="true"></span> CONTINUANCE INSTITUTE / COMMUNITY SYSTEMS</p>
+    <h1 id="hero-heading">A little more light<br>on every <em>street.</em></h1>
+    <p class="lede">One neighborhood at a time. A voluntary event map where residents choose whether to participate, families can plan together, and hosts stay in control of their information.</p>
+    <div class="hero-buttons"><a class="btn primary" href="#directory">Explore the directory <span aria-hidden="true">↗</span></a><a class="btn ghost" href="#hosts">Offer your home</a></div>
+    <p class="hero-disclaimer">Not affiliated with emergency services. Listings are not independently certified safe. For emergencies, call 911.</p>
+   </div>
+   <div class="hero-visual" aria-hidden="true">
+    <div class="orbital-field"><div class="orbit orbit-a"></div><div class="orbit orbit-b"></div><div class="orbital-core"></div><div class="satellite satellite-a"></div><div class="satellite satellite-b"></div><div class="orbital-ground"></div></div>
+    <div class="visual-caption"><span>01 / COMMUNITY SIGNAL</span><span>OPT-IN &bull; PRIVACY FIRST</span></div>
+   </div>
+  </section>
+  <section id="directory" class="section directory" aria-labelledby="directory-title">
+   <div class="section-heading"><div><p class="eyebrow">01 / DISCOVER</p><h2 id="directory-title">Neighborhood directory</h2><p>Verified participation means the host approved publication—not that a location is safe.</p></div><div class="controls"><label for="event-picker">Event</label><select id="event-picker" disabled><option>Checking events…</option></select></div></div>
+   <div id="directory-status" role="status" class="notice">Connecting to the event directory…</div>
+   <div id="event-summary" class="event-summary" hidden></div>
+   <div class="directory-layout">
+    <section class="map-panel" aria-label="Opted-in host locations">
+     <div class="panel-top"><div><b>GEOGRAPHIC OVERVIEW</b><small>Schematic positions only; not a street map or safe-route guide</small></div><span class="map-pill">PUBLIC PINS ONLY</span></div>
+     <div id="schematic-map" class="schematic" role="img" aria-label="Relative positions of voluntarily published exact-address hosts. No street basemap or turn-by-turn navigation is provided.">
+      <div class="map-grid"></div><div class="map-center" aria-hidden="true"></div><div class="map-content" id="map-content"></div>
+      <p id="map-empty" class="map-empty">No approved exact-location pins to display.</p>
+     </div>
+     <div class="map-footer"><span>AREA-ONLY HOSTS APPEAR IN THE LIST</span><span>LOCATION IS NOT LIVE TRACKING</span></div>
+    </section>
+    <section class="list-panel" aria-labelledby="host-list-title">
+     <div class="panel-top"><div><b id="host-list-title">Participating hosts</b><small>Adult volunteers · individually approved</small></div><span id="host-count" class="count">0</span></div>
+     <div id="host-list" class="host-list" role="list"><div class="empty"><strong>No homes have been published.</strong><p>When hosts have opted in and an organizer approves them, they will appear here.</p></div></div>
+    </section>
+   </div>
+   <p class="footnote">All times and offers are supplied by participants and may change. Please use normal pedestrian precautions and follow posted road rules.</p>
+  </section>
+  <section id="hosts" class="section hosts-section" aria-labelledby="host-section-title">
+   <div class="section-heading"><div><p class="eyebrow">02 / JOIN AS A HOST</p><h2 id="host-section-title">Participate on your terms.</h2><p>Your listing remains private until reviewed. You can request removal using your one-time code.</p></div></div>
+   <div class="two-cards">
+    <form id="host-form" class="form-card" novalidate>
+     <h3>Offer an event stop</h3>
+     <p class="subtle">For adults authorized to list the property. Only publish information you are comfortable sharing.</p>
+     <label for="host-name">Host display name <span class="required">Required</span></label><input id="host-name" name="hostName" required minlength="2" maxlength="64" autocomplete="off" placeholder="e.g. The Green House">
+     <label for="host-email">Contact email <span class="required">Private</span></label><input id="host-email" name="contactEmail" type="email" required maxlength="160" autocomplete="email" placeholder="For organizer verification only">
+     <label for="host-address">Home address <span class="required">Private until approved</span></label><input id="host-address" name="privateAddress" required minlength="8" maxlength="160" autocomplete="street-address" placeholder="Verified by organizer, never automatically published">
+     <fieldset><legend>Choose what can appear publicly</legend>
+      <label class="choice"><input type="radio" name="visibility" value="area" checked><span>General area only — no exact location pin</span></label>
+      <label class="choice"><input type="radio" name="visibility" value="exact"><span>Exact home location after my separate confirmation and organizer review</span></label>
+     </fieldset>
+     <fieldset><legend>What will be available?</legend><div class="option-grid">
+      <label class="choice"><input type="checkbox" name="options" value="candy"><span>Candy / treats</span></label>
+      <label class="choice"><input type="checkbox" name="options" value="non_food"><span>Non-food options</span></label>
+      <label class="choice"><input type="checkbox" name="options" value="decorations"><span>Decorations</span></label>
+      <label class="choice"><input type="checkbox" name="options" value="step_free"><span>Reported step-free access</span></label>
+     </div></fieldset>
+     <label for="host-note">Note to organizer (not public)</label><textarea id="host-note" rows="3" maxlength="240" placeholder="Optional: event hours or organizer questions"></textarea>
+     <section class="privacy-notice" aria-labelledby="privacy-notice-title">
+      <p class="eyebrow" id="privacy-notice-title">HOST CONSENT NOTICE / V001.1</p>
+      <p><strong>Before you submit:</strong> The event organizer receives your submitted address, contact email, host name, and optional note for private review. Nothing is published automatically.</p>
+      <p>Only an approved listing becomes public. If you choose <strong>general area only</strong>, the public listing uses the general neighborhood and the generic name “Participating household”—never your submitted name or street address. If you expressly choose <strong>exact location</strong>, the separately approved map point and listing name become public. Neither choice represents a safety inspection.</p>
+      <p>Keep the removal code provided after submitting. It can withdraw your listing and clear private contact details without waiting for organizer approval. Event information is scheduled for deletion seven days after the event ends. Do not submit children's names, live locations, schedules, or private camera information.</p>
+      <p>This is an independently organized community event directory, not an emergency service or continuously staffed safety monitor.</p>
+     </section>
+     <div class="consent">
+      <label class="choice"><input type="checkbox" id="host-adult" required><span>I am an adult and authorized to submit this household.</span></label>
+      <label class="choice"><input type="checkbox" id="host-public" required><span>I consent to the approved public listing information and understand I can withdraw it.</span></label>
+      <label class="choice" id="exact-consent-row" hidden><input type="checkbox" id="host-exact"><span>I separately consent to publicly displaying this property's exact approved map position.</span></label>
+     </div>
+     <button class="btn primary submit" type="submit" id="host-submit">Submit for review</button>
+     <p id="host-feedback" class="form-feedback" role="status" aria-live="polite"></p>
+     <div id="receipt-panel" class="receipt" hidden><b>Keep your private removal receipt</b><p>Copy these values now. They are not sent to email or saved in this browser.</p><label for="receipt-id">Submission ID</label><input readonly id="receipt-id"><label for="receipt-code">Removal code</label><input readonly id="receipt-code"><button type="button" class="btn ghost" id="copy-receipt">Copy removal details</button></div>
+    </form>
+    <div class="form-card right-stack">
+     <form id="remove-form"><h3>Remove your listing</h3><p>Removal does not require a moderator's permission if you have your original code.</p>
+      <label for="remove-id">Submission ID</label><input id="remove-id" required placeholder="From the host receipt">
+      <label for="remove-code">Removal code</label><input id="remove-code" required placeholder="64-character private code" autocomplete="off">
+      <button class="btn secondary submit" type="submit">Remove my listing</button><p id="remove-feedback" class="form-feedback" role="status" aria-live="polite"></p>
+     </form>
+     <hr>
+     <form id="report-form"><h3>Report a listing problem</h3><p>Reports go privately to an organizer, not to other residents. If you feel threatened or need emergency help, call 911.</p>
+      <label for="report-host">Listing</label><select id="report-host" required disabled><option value="">No published hosts</option></select>
+      <label for="report-reason">Reason</label><select id="report-reason"><option value="incorrect">Incorrect information</option><option value="unwanted">Host requests removal</option><option value="privacy">Privacy concern</option><option value="accessibility">Accessibility information</option><option value="other">Other</option></select>
+      <label for="report-details">Details (private)</label><textarea id="report-details" minlength="3" maxlength="300" rows="3" required placeholder="Describe the listing problem"></textarea>
+      <button class="btn secondary submit" type="submit">Send private report</button><p id="report-feedback" class="form-feedback" role="status" aria-live="polite"></p>
+     </form>
+    </div>
+   </div>
+  </section>
+  <section id="safety" class="section" aria-labelledby="safety-title">
+   <p class="eyebrow">03 / FIELD GUIDANCE</p><h2 id="safety-title">People first. Always.</h2>
+   <div class="guide-grid">
+    <article><span class="guide-no">01</span><h3>Stay together</h3><p>Adults supervise children. Arrange a meeting point and agree on plans before leaving home.</p></article>
+    <article><span class="guide-no">02</span><h3>Be visible</h3><p>Use lights or reflective elements. Cross at marked locations and follow road rules.</p></article>
+    <article><span class="guide-no">03</span><h3>Honor boundaries</h3><p>Only visit participating hosts when appropriate. A map entry is not permission to enter a property.</p></article>
+    <article><span class="guide-no">04</span><h3>Know the limits</h3><p>This directory is not monitored emergency dispatch, professional security, or a validated safe-route service.</p></article>
+   </div>
+  </section>
+  <footer id="about"><div><b>ANEVUM / PORCHLIGHT</b><p>A voluntary community coordination pilot. Not an official public safety program or guarantee of safety.</p></div><a href="#directory">BACK TO DIRECTORY ↑</a><small>Guardian operated. No child accounts or background location tracking.</small></footer>
+ </main>
+</body>
+</html>
