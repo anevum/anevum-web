@@ -35,6 +35,9 @@ return {
     const url=new URL(request.url);
     if(url.protocol!=="https:"||url.hostname!==hostname)return textResponse(404,"Not found",request.method);
     if(request.method!=="GET"&&request.method!=="HEAD")return textResponse(405,"Staging public view is read-only",request.method);
+    // Reward-source media is not public artwork, even on isolated previews.
+    if(/^\/(?:evolution(?:\/|$)|assets\/levels(?:\/|$))/i.test(url.pathname))
+      return textResponse(404,"Not found",request.method);
     if(url.pathname==="/health")return protect(new Response(JSON.stringify({
       service:"anevum-creator-v1-a-staging",status:"ok",mode:"public-read-only"
     }),{headers:{"content-type":"application/json; charset=utf-8"}}),request.method,true);
