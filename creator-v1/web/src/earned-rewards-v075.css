@@ -219,7 +219,11 @@
 }
 .av75-model-canvas{
  display:block;position:relative;z-index:2;
- width:100%;height:100%;max-width:100%;
+ /* V076: native V059 models use square camera projection. Never stretch
+  * the full 3D canvas across a wide desktop inspector: that crops specimens. */
+ width:min(100%,55dvh,540px);height:auto;aspect-ratio:1;
+ max-width:100%;max-height:100%;
+ justify-self:center;align-self:center;
  touch-action:none;cursor:grab;
 }
 .av75-model-canvas:active{cursor:grabbing}
@@ -276,6 +280,7 @@
  .av75-reward-dialog{width:calc(100vw - 14px);max-height:calc(100dvh - 22px)}
  .av75-reward-header h2{font-size:25px}
  .av75-model-stage{height:min(47dvh,410px)}
+ .av75-model-canvas{width:min(100%,47dvh,410px)}
  .av75-reward-controls button{flex:1 1 112px}
 }
 @media(max-width:350px){
