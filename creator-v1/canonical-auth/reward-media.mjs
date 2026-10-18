@@ -6,7 +6,56 @@
  * Private owner and opted-in public-member reads resolve current XP in D1.
  */
 import {progressionReady,readProgression} from './progression.mjs';
+import ARTIFACTS from '../shared/level-artifacts.json' with {type:'json'};
 
+const OWN_INVENTORY='/api/v1/member/rewards/inventory';
+const PUBLIC_INVENTORY=/^\/api\/v1\/members\/([a-z][a-z0-9_]{2,29})\/rewards\/inventory$/;
+export const matchRewardInventory=path=>{
+ if(path===OWN_INVENTORY)return {handle:null};
+ const result=PUBLIC_INVENTORY.exec(path);
+ return result?{handle:result[1]}:null;
+};
+/** Only canonical D1 progression can enumerate unlocked specimen identity.
+ * No full level manifest, unearned titles or media URLs cross this boundary. */
+export async function earnedRewardInventory(req,env,user=null,match=matchRewardInventory(new URL(req.url).pathname)){
+ const deny=status=>Response.json({error:'Not found'},{status,headers:{
+  'cache-control':'private, no-store','x-robots-tag':'noindex, nofollow, noarchive',
+  'x-content-type-options':'nosniff'}});
+ if(!match||!['GET','HEAD'].includes(req.method)||new URL(req.url).search)return deny(404);
+ if(!env?.MEMBER_DB||!await progressionReady(env.MEMBER_DB))return deny(503);
+ try{
+  let ownerId=null;
+  if(match.handle){
+   const row=await env.MEMBER_DB.prepare(
+    "SELECT p.user_id,s.show_stats FROM member_creator_profiles p "+
+    "JOIN user u ON u.id=p.user_id "+
+    "LEFT JOIN member_space_settings s ON s.user_id=p.user_id "+
+    "WHERE p.handle=? AND p.visibility='public' AND u.emailVerified=1"
+   ).bind(match.handle).first();
+   if(!row||row.show_stats===0)return deny(404);
+   ownerId=row.user_id;
+  }else{
+   if(!user?.id||user.emailVerified!==true)return deny(401);
+   const profile=await env.MEMBER_DB.prepare(
+    'SELECT user_id FROM member_creator_profiles WHERE user_id=?'
+   ).bind(user.id).first();
+   if(!profile)return deny(404);
+   ownerId=user.id;
+  }
+  const state=await readProgression(env.MEMBER_DB,ownerId);
+  if(!Number.isSafeInteger(state.level)||state.level<1||state.level>30)return deny(503);
+  const levels=ARTIFACTS.slice(0,state.level).map(item=>({
+   level:item.level,name:item.name,subtitle:item.subtitle,motion:item.motion
+  }));
+  return new Response(req.method==='HEAD'?null:JSON.stringify({levels,currentLevel:state.level}),{
+   status:200,headers:{
+    'cache-control':'private, no-store','x-content-type-options':'nosniff',
+    'x-robots-tag':'noindex, nofollow, noarchive',
+    'content-type':'application/json; charset=utf-8'
+   }
+  });
+ }catch{return deny(503)}
+}
 const OWN=/^\/api\/v1\/member\/rewards\/levels\/([1-9]|[12][0-9]|30)\/(icon|preview|poster|scene|runtime|height|albedo)$/;
 const PUBLIC=/^\/api\/v1\/members\/([a-z][a-z0-9_]{2,29})\/rewards\/levels\/([1-9]|[12][0-9]|30)\/(icon|preview|poster|scene|runtime|height|albedo)$/;
 const HEADERS={
