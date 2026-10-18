@@ -12,6 +12,7 @@ export interface StudioDraft {
 }
 export interface StudioProject extends StudioDraft {
  id:string;status:StudioStatus;revision:number;createdAt:number;updatedAt:number;submittedAt:number|null;
+ publicationStatus?:'published'|'withdrawn'|null;
 }
 export interface StudioReviewHistory {action:'changes_requested'|'rejected';reason:string;createdAt:number;submissionId:string|null}
 export interface StudioReviewReceipt extends StudioDraft {
