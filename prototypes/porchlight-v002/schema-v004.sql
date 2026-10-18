@@ -11,6 +11,7 @@ CREATE TABLE IF NOT EXISTS porchlight_reports (
   details TEXT NOT NULL,
   status TEXT NOT NULL DEFAULT 'open' CHECK(status IN ('open','resolved')),
   revision INTEGER NOT NULL DEFAULT 1 CHECK(revision > 0),
+  mutation_id TEXT,
   created_at TEXT NOT NULL,
   resolved_by TEXT,
   resolved_at TEXT,
@@ -28,7 +29,8 @@ CREATE TABLE IF NOT EXISTS porchlight_report_audit (
   organizer_principal_id TEXT NOT NULL,
   action TEXT NOT NULL CHECK(action IN ('resolve')),
   created_at TEXT NOT NULL,
-  reason TEXT NOT NULL
+  reason TEXT NOT NULL,
+  mutation_id TEXT NOT NULL UNIQUE
 );
 CREATE INDEX IF NOT EXISTS porchlight_report_audit_event
   ON porchlight_report_audit(event_id,created_at);
