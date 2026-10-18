@@ -5,6 +5,7 @@ on:
     branches: [patch/player-recognition-catalog-v069-20261017-018]
     paths:
       - ".github/workflows/v069-recognition-live-smoke.yml"
+      - "creator-v1/test/evolution-mini-live-browser-v069.mjs"
 permissions:
   contents: read
 jobs:
@@ -51,11 +52,11 @@ jobs:
           test -s qa-v069-live-catalog/registry-1440.png
           test -s qa-v069-live-catalog/registry-390.png
           echo V069_REAL_LIVE_PUBLIC_CATALOG_AND_FIRST_FOLD=PASS
-      - name: Confirm V064 WebGL native Evolution miniatures survive V069
+      - name: Confirm native 3D specimens render after hydration on desktop and mobile
         shell: bash
         run: |
           set -euo pipefail
-          node creator-v1/test/evolution-mini-live-browser-v062.mjs
+          node creator-v1/test/evolution-mini-live-browser-v069.mjs
       - name: Retain live production evidence without user data
         if: always()
         uses: actions/upload-artifact@v4
@@ -63,6 +64,6 @@ jobs:
           name: v069-real-live-recognition-and-native-smoke
           path: |
             qa-v069-live-catalog/
-            qa-v062-live-member/
+            qa-v069-native-live/
           if-no-files-found: warn
           retention-days: 14
