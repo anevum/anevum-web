@@ -5,7 +5,6 @@ import { useResource } from "../lib/useResource";
 import { ProjectCard } from "../components/ProjectCard";
 import { PageNav } from "../components/PageNav";
 import { PortalHeading } from "../components/PortalHeading";
-import { LevelPanel } from "../components/LevelPanel";
 import { EmptyState, ErrorState, LoadingState } from "../components/States";
 
 const channels: ReadonlyArray<{id:Category;label:string;description:string;mark:string}> = [
@@ -103,9 +102,9 @@ export function DiscoverPage({immersive=false}:{immersive?:boolean}={}){
           </form>
           <div className="av73-discover-filter-heading"><strong>Filter by type</strong><span>Scroll to see all categories →</span></div>
           <nav className="portal-channel-filters" aria-label="Filter by project type">
-            <button type="button" onClick={()=>selectCategory("")} className={!category?"active":""} aria-pressed={!category}>ALL PROJECTS</button>
+            <button type="button" onClick={()=>selectCategory("")} className={!category?"active":""} aria-pressed={!category}>All work</button>
             {channels.map(x=><button key={x.id} type="button" aria-pressed={category===x.id} className={category===x.id?"active":""} onClick={()=>selectCategory(x.id)}>
-              <span aria-hidden="true">{x.mark}</span> {x.label}
+              <span aria-hidden="true">{x.mark}</span><span>{x.label}</span>{resource.state==="ready"&&<span className="av73-filter-count">{countByCategory.get(x.id)||0}</span>}
             </button>)}
           </nav>
           <div className="portal-availability-filter" role="group" aria-label="Filter by access cost">
@@ -132,34 +131,16 @@ export function DiscoverPage({immersive=false}:{immersive?:boolean}={}){
               {resource.data.projects.items.map(p=><ProjectCard key={p.id} project={p} returnTo={current}/>)}
             </section>:
             <div className="portal-true-empty">
-              <div className="portal-empty-symbol" aria-hidden="true">✳</div>
               <div><span className="kicker">NOTHING HIDDEN / NOTHING FABRICATED</span>
-                <h2>{cursor?"END OF CURRENT RELEASES":q||category||freeOnly?"NO MATCHING PROJECTS YET":"THE FIRST RELEASES ARE ON THEIR WAY."}</h2>
-                <p>ANEVUM only shows approved work. Try another portal or follow the development of the first real submissions.</p>
+                <h2>{cursor?"END OF CURRENT RELEASES":q||category||freeOnly?"NO MATCHING PROJECTS YET":"NO APPROVED PROJECTS YET"}</h2>
+                <p>Only approved work appears here. Clear your filters, try another category or read how releases are reviewed.</p>
                 <div className="portal-empty-actions"><Link to="/discover" className="button secondary">EXPLORE ALL</Link><Link to="/guide" className="button secondary">FREE FIELD GUIDE</Link><Link to="/status" className="button secondary">RELEASE STATUS</Link></div>
               </div>
             </div>}
           <PageNav route="/discover" search={params} nextCursor={resource.data.projects.nextCursor} label="Project catalogue"/>
         </>}
       </div>
-      <aside className="portal-sidebar portal-discover-side" aria-label="Discovery guide">
-        <section className="portal-sidebox">
-          <header><span className="kicker">FIND YOUR CORNER</span><h2>PORTAL DIRECTORY</h2></header>
-          <nav className="portal-directory" aria-label="Project categories">
-            {channels.map(x=><button type="button" key={x.id} onClick={()=>selectCategory(x.id)} className={x.id===category?"active":""} aria-pressed={x.id===category}>
-              <span className="portal-directory-mark">{x.mark}</span>
-              <span className="portal-directory-name"><strong>{x.label}</strong><small>{x.description}</small></span>
-              <span className="portal-directory-count">{countByCategory.get(x.id)||0}</span>
-            </button>)}
-          </nav>
-        </section>
-        <LevelPanel compact/>
-        <section className="portal-sidebox">
-          <span className="kicker">THE RULE OF THE PORTAL</span><h2>TRY IT FIRST.</h2>
-          <p>Play or try projects on the creator's own hosting. Open source code separately. A submission is not a safety endorsement, and every published project goes through review.</p>
-          <Link className="portal-sidebox-link" to="/create">SUBMIT ORIGINAL WORK →</Link>
-        </section>
-      </aside>
+
     </div>
   </div>;
 }
