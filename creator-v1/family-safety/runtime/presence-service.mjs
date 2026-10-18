@@ -12,7 +12,7 @@
  *  - presence memory MUST be scoped to the circle and contain NO history.
  *  - no public location, minors, CORS, WebSockets, native background tracking.
  */
-import { admitLocationWrite, mayReadPresence, visiblePresence, POSITION_TTL_MS } from "../presence-policy.mjs";
+import { admitLocationWrite, mayReadPresence, visiblePresence } from "../presence-policy.mjs";
 
 const ID = /^[A-Za-z0-9][A-Za-z0-9:_-]{0,127}$/;
 const noPosition = () => ({ state: "unavailable", position: null, updatedAt: null, accuracyM: null });
@@ -71,6 +71,12 @@ function mutationAllowed(request, origin, requireJson=false) {
   return true;
 }
 
+function matchesPolicy(ctx, actorId, subjectId, circleId, at) {
+  return ctx && typeof ctx==="object" && !Array.isArray(ctx) &&
+    ctx.actorId===actorId && ctx.subjectId===subjectId &&
+    ctx.circleId===circleId && ctx.now===at;
+}
+
 function pathname(path) {
   const root=path.match(/^\/v1\/circles\/([A-Za-z0-9][A-Za-z0-9:_-]{0,127})\/(.*)$/);
   if(!root) return null;
@@ -111,14 +117,18 @@ export function createPresenceService({
       if(!Number.isSafeInteger(at) || at<=0)return body({error:"temporarily_unavailable"},503);
 
       if(request.method==="GET" && route.type==="read") {
-        const ctx=await loadPolicy({circleId:route.circleId,actorId,subjectId:route.subjectId,now:at});
-        if(!mayReadPresence(ctx))return body(noPosition());
+        const ids={circleId:route.circleId,actorId,subjectId:route.subjectId};
+        const ctx=await loadPolicy({...ids,now:at});
+        if(!matchesPolicy(ctx,actorId,route.subjectId,route.circleId,at) ||
+            !mayReadPresence(ctx))return body(noPosition());
         const room=presenceForCircle(route.circleId);
-        const location=await room.read(route.subjectId,at);
-        // Read authority again immediately before delivering, since revocation
-        // may have happened during the room request. No caching of authorizations.
-        const fresh=await loadPolicy({circleId:route.circleId,actorId,subjectId:route.subjectId,now:now()});
-        return body(visiblePresence({...fresh,location,now:now()}));
+        const location=await room.read(route.subjectId,at,ctx.session?.id);
+        // Repeat authoritative policy lookup after any async room read.
+        const checkAt=now();
+        const fresh=await loadPolicy({...ids,now:checkAt});
+        if(!matchesPolicy(fresh,actorId,route.subjectId,route.circleId,checkAt))
+          return body(noPosition());
+        return body(visiblePresence({...fresh,location,now:checkAt}));
       }
 
       if(request.method==="PUT" && route.type==="self") {
@@ -127,24 +137,31 @@ export function createPresenceService({
         if(!input || Object.keys(input).sort().join(",")!=="accuracyM,lat,lng,observedAt")
           return body({error:"invalid_position"},422);
         const subjectId=actorId; // never accept subject/actor ID in the body
-        const ctx=await loadPolicy({circleId:route.circleId,actorId,subjectId,now:at});
-        const location=admitLocationWrite({...ctx,location:input});
+        const ids={circleId:route.circleId,actorId,subjectId};
+        const ctx=await loadPolicy({...ids,now:at});
+        const location=matchesPolicy(ctx,actorId,subjectId,route.circleId,at)?
+          admitLocationWrite({...ctx,location:input}):null;
         if(!location)return body({error:"forbidden"},403);
-        // Recheck at the point of write; if subject revoked in the meantime,
-        // reject rather than publishing an old, once-valid authorization.
-        const checked=await loadPolicy({circleId:route.circleId,actorId,subjectId,now:now()});
-        if(!admitLocationWrite({...checked,location:input,now:now()}))
+        const checkedAt=now();
+        const checked=await loadPolicy({...ids,now:checkedAt});
+        if(!matchesPolicy(checked,actorId,subjectId,route.circleId,checkedAt) ||
+            checked.session?.id!==ctx.session?.id ||
+            !admitLocationWrite({...checked,location:input,now:checkedAt}))
           return body({error:"forbidden"},403);
         const room=presenceForCircle(route.circleId);
-        const status=await room.write(subjectId,location,now());
+        const status=await room.write(subjectId,location,now(),checked.session.id);
         if(status==="throttled")return body({error:"slow_down"},429);
+        if(status==="revoked")return body({error:"forbidden"},403);
         if(status!=="ok")return body({error:"temporarily_unavailable"},503);
-        // A concurrent stop must purge a write that slipped in. This second
-        // verification is not an atomic revocation fence; room orchestration
-        // will be needed before accepting real tracking.
-        const after=await loadPolicy({circleId:route.circleId,actorId,subjectId,now:now()});
-        if(!admitLocationWrite({...after,location:input,now:now()})) {
-          await room.purge(subjectId);
+        // A concurrent stop must purge an in-flight position. The room also
+        // bans the revoked session id to prevent late writes reintroducing it.
+        // Full linearizable revocation still requires final staging concurrency QA.
+        const afterAt=now();
+        const after=await loadPolicy({...ids,now:afterAt});
+        if(!matchesPolicy(after,actorId,subjectId,route.circleId,afterAt) ||
+            after.session?.id!==checked.session.id ||
+            !admitLocationWrite({...after,location:input,now:afterAt})) {
+          await room.purge(subjectId,checked.session.id,now());
           return body({error:"forbidden"},403);
         }
         return noContent();
@@ -158,7 +175,8 @@ export function createPresenceService({
         if(revoked!==true)return body({error:"not_found"},404);
         // A successful stop only returns after the room has been purged.
         // If room errors, DB consent is already revoked; subsequent reads deny.
-        await presenceForCircle(route.circleId).purge(actorId);
+        const purged=await presenceForCircle(route.circleId).purge(actorId,route.sessionId,now());
+        if(purged!==true)return body({error:"temporarily_unavailable"},503);
         return noContent();
       }
 
