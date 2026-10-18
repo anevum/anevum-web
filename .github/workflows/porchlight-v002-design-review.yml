@@ -1,0 +1,58 @@
+name: ANEVUM Porchlight V002 Design Review
+# Standalone fictional demo QA; never publishes or uses cloud access tokens.
+on:
+  pull_request:
+    paths:
+      - safety/porchlight/review/v002/**
+      - .github/workflows/porchlight-v002-design-review.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test-private-fictitious-demo:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out exact reviewed head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+
+      - name: Assert exact reviewed source
+        env:
+          SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: test "$(git rev-parse HEAD)" = "$SOURCE_SHA"
+
+      - name: Install Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Verify standalone fictional demo responsive layout and workflows
+        run: |
+          set -euo pipefail
+          node --check safety/porchlight/review/v002/test/verify.mjs
+          chrome="$(command -v google-chrome || command -v chromium || true)"
+          test -n "$chrome"
+          CHROME="$chrome" PORCHLIGHT_V002_EVIDENCE=evidence/porchlight-v002 node safety/porchlight/review/v002/test/verify.mjs
+          test -s evidence/porchlight-v002/acceptance.json
+          test -s evidence/porchlight-v002/first-view-320.png
+          test -s evidence/porchlight-v002/first-view-390.png
+          test -s evidence/porchlight-v002/first-view-1440.png
+
+      - name: Archive fictitious screen evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: porchlight-v002-fictitious-design-review
+          path: evidence/porchlight-v002/
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Confirm no cloud resources changed
+        run: |
+          echo "PORCHLIGHT_V002_DESIGN_ONLY=PASS"
+          echo "No Worker deployments, D1 migrations, user accounts, payment, host pins or permissions."
