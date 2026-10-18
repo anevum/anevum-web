@@ -139,13 +139,21 @@ test("ZIP preflight rejects traversal, disallowed extensions, corrupt CRC and sy
   await assert.rejects(()=>extractEntry(broken,info.entries[0]),PackageError);
   assert.throws(()=>inspectZip(makeZip({"dist/index.html":"<html/>"})),/index.html/);
 });
-test("tokens expire and cannot be forged for another release",async()=>{
-  const release="11111111-1111-4111-8111-111111111111",other="22222222-2222-4222-8222-222222222222",secret="x".repeat(48);
-  const minted=await mintPreview(secret,release,2000000000);
-  assert.equal(await verifyPreview(secret,release,minted,2000000001),true);
-  assert.equal(await verifyPreview(secret,other,minted,2000000001),false);
-  assert.equal(await verifyPreview(secret,release,minted,2000001000),false);
-  assert.equal(await verifyPreview(secret,release,minted.replace(/.$/,"0"),2000000001),false);
+test("preview tokens are hashed in D1, expire, and cannot be reused across releases",async()=>{
+  const env=setup();
+  try{
+    const created=await (await post(env,"/api/v1/packages/upload",uploadForm(sample()))).json();
+    const release=created.release_id,other="22222222-2222-4222-8222-222222222222";
+    const minted=await mintPreview(env.DB,release,"owner-id",2000000000);
+    assert.match(minted,/^[0-9a-f]{64}$/);
+    assert.equal(await verifyPreview(env.DB,release,minted,2000000001),true);
+    assert.equal(await verifyPreview(env.DB,other,minted,2000000001),false);
+    assert.equal(await verifyPreview(env.DB,release,minted,2000001000),false);
+    const modified=minted.slice(0,-1)+(minted.endsWith("0")?"1":"0");
+    assert.equal(await verifyPreview(env.DB,release,modified,2000000001),false);
+    const stored=await env.DB.prepare("SELECT token_hash FROM anevum_package_preview_tokens WHERE release_id=?").bind(release).first();
+    assert.notEqual(stored.token_hash,minted,"No bearer token plaintext in the database");
+  }finally{env.DB.close();}
 });
 test("real multi-file workflow: private preview -> submit -> staff approve -> public play -> draft update",async()=>{
   const env=setup();
