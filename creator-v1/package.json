@@ -22,6 +22,6 @@
     "test:ux-v079": "node --experimental-strip-types --test test/home-navigation-v079.test.mjs",
     "test:level-artwork": "node --test test/level-artwork-preservation-v074.test.mjs",
     "test:earned-rewards": "node --test test/earned-reward-media-v075.test.mjs",
-    "test:staff-v080": "node --check operations/staff-project-worker-v080.mjs && node --check operations/staff-project-control-v080.mjs && node --check operations/staff-project-ui-v080.mjs && node --test test/staff-project-v080.test.mjs"
+    "test:staff-v080": "node --check operations/staff-project-worker-v080.mjs && node --check operations/staff-project-control-v080.mjs && node --check operations/staff-project-ui-v080.mjs && node --test test/staff-project-v080.test.mjs && node --test test/staff-project-v080-integration.test.mjs"
   }
 }
