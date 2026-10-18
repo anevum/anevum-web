@@ -141,13 +141,12 @@ try{
      // ever replaces the approved image; observe original image OR safe fallback.
      await evaluate('document.querySelector(".an-series-grid .an-artifact-card")?.scrollIntoView({block:"center",behavior:"instant"})');
      await delay(300);
-     const artwork=await evaluate('(()=>{const cards=[...document.querySelectorAll(".an-series-grid .an-artifact-card")],host=cards[0]?.querySelector(".av73-static-level-icon,.level-emblem-beyond"),img=host?.querySelector("img"),c=cards[0]?.getBoundingClientRect(),r=host?.getBoundingClientRect(),style=host?getComputedStyle(host):null;return {cards:cards.length,icons:document.querySelectorAll(".an-series-grid .av73-static-level-icon").length,fallbacks:document.querySelectorAll(".an-series-grid .level-emblem-beyond").length,meshes:document.querySelectorAll("canvas.av62-native-stage").length,src:img?.currentSrc||"",nativeWidth:img?.naturalWidth||0,visible:img?getComputedStyle(img).visibility:null,artwork:host?.dataset.artwork,animation:style?.animationName,fit:img?getComputedStyle(img).objectFit:null,contained:!!c&&!!r&&r.left>=c.left-1&&r.right<=c.right+1&&r.top>=c.top-1&&r.bottom<=c.bottom+1,overflow:document.documentElement.scrollWidth>innerWidth+1}})()');
+     const artwork=await evaluate('(()=>{const cards=[...document.querySelectorAll(".an-series-grid .an-artifact-card")],first=cards[0]?.querySelector(".av73-static-level-icon,.level-emblem-beyond"),c=cards[0]?.getBoundingClientRect(),r=first?.getBoundingClientRect(),hosts=[...document.querySelectorAll(".an-series-grid .av73-static-level-icon")],images=hosts.map(h=>h.querySelector("img")).filter(Boolean),loaded=images.filter(img=>img.naturalWidth>0);return {cards:cards.length,icons:hosts.length,fallbacks:document.querySelectorAll(".an-series-grid .level-emblem-beyond").length,meshes:document.querySelectorAll("canvas.av62-native-stage").length,decoded:loaded.length,validSources:images.every(img=>String(img.getAttribute("src")).includes("/evolution/assets/level-")),visibleLoaded:loaded.every(img=>getComputedStyle(img).visibility==="visible"&&getComputedStyle(img).objectFit==="contain"),staticHosts:hosts.every(h=>h.dataset.artwork==="v073-preserved-optical-icon"&&getComputedStyle(h).animationName==="none"),contained:!!c&&!!r&&r.left>=c.left-1&&r.right<=c.right+1&&r.top>=c.top-1&&r.bottom<=c.bottom+1,overflow:document.documentElement.scrollWidth>innerWidth+1}})()');
      if(artwork.cards!==30||artwork.icons+artwork.fallbacks!==30||artwork.meshes!==0||
-       (artwork.icons>0&&(!artwork.src.includes("level-01-")||artwork.visible!=="visible"||
-        artwork.artwork!=="v073-preserved-optical-icon"||artwork.fit!=="contain"))||
-       artwork.animation!=="none"||!artwork.contained||artwork.overflow)
+       !artwork.validSources||!artwork.visibleLoaded||!artwork.staticHosts||
+       !artwork.contained||artwork.overflow)
        throw Error("V074_LEVEL_ICON_ARTWORK_"+width+":"+JSON.stringify(artwork));
-     console.log("V074_LEVEL_ICON_ASSET_REVIEW_"+width+"="+JSON.stringify({decoded:artwork.nativeWidth>0,offlineFallbacks:artwork.fallbacks}));
+     console.log("V074_LEVEL_ICON_ASSET_REVIEW_"+width+"="+JSON.stringify({decoded:artwork.decoded,offlineFallbacks:artwork.fallbacks}));
      await screenshot("levels-icon-gallery-"+width);
      await evaluate('window.scrollTo({top:0,behavior:"instant"})');
    }
