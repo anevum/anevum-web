@@ -123,13 +123,18 @@ export async function earnedRewardMedia(req,env,user=null,match=matchRewardMedia
   if(!Number.isSafeInteger(state.level)||
    (match.handle?state.level!==match.level:state.level<match.level))return missing(req);
   const original=sourceFile(match.level,match.kind);
-  const upstream=new URL(original.path,url.origin);
-  const raw=await env.ASSETS.fetch(new Request(upstream,{
-   // Runtime metadata requires reading its JSON even for HEAD. The response
-   // to the caller still has no body and no content length disclosure.
-   method:match.kind==='runtime'?'GET':req.method,
-   headers:{Accept:original.type},redirect:'error'
-  }));
+  // Fetch the approved internal asset by URL. Cloudflare's ASSETS
+  // binding resolves the pathname inside the worker asset manifest.
+  // No direct client access to these paths is permitted by the gateway.
+  const upstream=new URL(original.path,'https://assets.local');
+  let raw;
+  try{
+   raw=await env.ASSETS.fetch(upstream);
+  }catch(e){
+   console.error('ANEVUM_REWARD_ASSET_BINDING_FAILED',match.kind,
+     e instanceof Error?e.name:'unknown');
+   return missing(req,502);
+  }
   if(!raw||raw.status!==200)return missing(req);
   const mime=raw.headers.get('content-type')||'';
   if(!mime.toLowerCase().startsWith(original.type.split(';')[0])&&
