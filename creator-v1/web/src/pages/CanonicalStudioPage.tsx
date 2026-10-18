@@ -510,6 +510,30 @@ function StudioReview({publicationReady}:{publicationReady:boolean}){
   try{await studioReviewDecision(p.id,p.revision,action,explanation);await refresh();}
   catch(e){setError(showError(e))}finally{setBusy('');}
  }
+ function toggleAttestation(projectId:string,key:'rightsChecked'|'contentChecked'|'externalLinkChecked',value:boolean){
+  setAttestations(prev=>({...prev,[projectId]:{
+   rightsChecked:prev[projectId]?.rightsChecked===true,
+   contentChecked:prev[projectId]?.contentChecked===true,
+   externalLinkChecked:prev[projectId]?.externalLinkChecked===true,
+   [key]:value
+  }}));
+ }
+ async function release(p:StudioReviewProject){
+  if(!publicationReady||p.attachment_count!==0||p.metadata_consent!==1)return;
+  const checks=attestations[p.id];
+  if(!checks?.rightsChecked||!checks.contentChecked||!checks.externalLinkChecked){
+   setError('Three independent attestations are required.');return;
+  }
+  const explanation=reason[p.id]?.trim()||'';
+  if(explanation.length<25){setError('Explain the rights and content verification in at least 25 characters.');return;}
+  if(!window.confirm('Publish ONLY approved external metadata and HTTPS links for '+p.title+'? This records audited evidence and may award creation badges. Private files remain quarantined.'))return;
+  setBusy(p.id);setError('');
+  try{
+   await studioReviewExternalRelease(p.id,p.revision,explanation,checks);
+   await refresh();
+   setAttestations(v=>{const rest={...v};delete rest[p.id];return rest});
+  }catch(e){setError(showError(e))}finally{setBusy('')}
+ }
  return <section className="st-panel">
   <div className="st-section-head"><div><p className="st-kicker">STAFF-ONLY / CANONICAL REVIEW</p><h2>AWAITING A DECISION.</h2></div></div>
   <p className="st-muted">{publicationReady?'Staff may release creator-consented EXTERNAL metadata only, after independent rights and link review. Uploaded files remain quarantined and cannot run here.':'This desk can request changes or reject a private submission. Publication and approval remain intentionally disabled until file scanning and the public release pipeline exist.'}</p>
@@ -538,6 +562,23 @@ function StudioReview({publicationReady}:{publicationReady:boolean}){
    <label className="st-field"><span>REVIEW REASON (REQUIRED)</span>
     <textarea maxLength={1200} rows={3} value={reason[p.id]||''}
      onChange={e=>setReason(v=>({...v,[p.id]:e.target.value}))}/></label>
+   {publicationReady&&<div className="st-release-review" aria-label="Independent external metadata release verification">
+    <p className="st-kicker">EXTERNAL METADATA / THREE ATTESTATIONS</p>
+    <p className="st-muted">{p.attachment_count>0?'This submission contains quarantined uploads and cannot be released through this metadata-only pilot.':p.metadata_consent!==1?'No author consent exists for this frozen submission.':'Creator consent is verified. Independently review rights, original content and the HTTPS destination.'}</p>
+    {([
+     ['rightsChecked','Rights, license and attribution were independently checked.'],
+     ['contentChecked','This original creation is suitable for public metadata listing.'],
+     ['externalLinkChecked','The external HTTPS work link was checked; no uploaded files are served.']
+    ] as const).map(([key,label])=><label className="st-check" key={key}>
+     <input type="checkbox" checked={attestations[p.id]?.[key]??false}
+      disabled={busy===p.id||p.attachment_count>0||p.metadata_consent!==1}
+      onChange={e=>toggleAttestation(p.id,key,e.target.checked)}/>{label}
+    </label>)}
+    <button className="st-button" type="button"
+     disabled={busy===p.id||p.attachment_count>0||p.metadata_consent!==1||
+      !attestations[p.id]?.rightsChecked||!attestations[p.id]?.contentChecked||!attestations[p.id]?.externalLinkChecked}
+     onClick={()=>void release(p)}>PUBLISH REVIEWED EXTERNAL METADATA ↗</button>
+   </div>}
    <div className="st-actions">
     <button className="st-button" disabled={busy===p.id} onClick={()=>void decide(p,'changes_requested')}>REQUEST CHANGES</button>
     <button className="st-link" disabled={busy===p.id} onClick={()=>void decide(p,'rejected')}>REJECT SUBMISSION</button>
