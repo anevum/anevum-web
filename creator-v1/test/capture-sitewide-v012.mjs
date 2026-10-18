@@ -66,7 +66,7 @@ try{
   writeFileSync(join(output,label+".png"),bytes);
  };
  const pages=[
-  ["home","/",".av73-world-deck"],["discover","/discover",".portal-discover"],
+  ["home","/",".av79-home"],["discover","/discover",".portal-discover"],
   ["project","/projects/00000000000000000000000000000001",".portal-project"],
   ["creators","/creators",".portal-creators"],["creator-channel","/creators/nova_demo",".portal-creator-channel"],
   ["community","/community",".ch7-hub"],["boards","/boards",".cnb-hub"],
@@ -313,35 +313,20 @@ try{
      if(!reset.ok)throw Error("PLAYER_V005_MEMBER_RESET_FAILED");
    }
    if(name==="home"){
-     await evaluate('document.getElementById("world-gateways").scrollIntoView({block:"start"})');
-     await until(()=>evaluate('document.querySelectorAll(".av73-world-tab").length===4&&!!document.querySelector(".av11-live-index")'));
-     const initial=await evaluate('(()=>({choices:[...document.querySelectorAll(".av73-world-tab")].map(el=>el.textContent?.trim()),selected:document.querySelector(".av73-world-tab[aria-selected=true]")?.id,art:document.querySelectorAll(".av73-world-deck img,.av73-world-deck canvas").length,panels:document.querySelectorAll("#av73-module-content").length,readable:!!document.querySelector(".av73-stage-description h2"),overflow:document.documentElement.scrollWidth>innerWidth+1}))()');
-     if(initial.choices.length!==4||initial.selected!=="av73-module-tab-discover"||initial.art!==0||initial.panels!==1||!initial.readable||initial.overflow)
-      throw Error("V073_MODULE_ENTRY_"+width+":"+JSON.stringify(initial));
-     await evaluate('document.getElementById("av73-module-tab-play").click()');
-     await until(()=>evaluate('document.querySelector("#av73-module-content .av73-action-main")?.getAttribute("href")?.includes("/discover?category=games")'));
-     await evaluate('document.getElementById("av73-module-tab-connect").click()');
-     await until(()=>evaluate('document.querySelector("#av73-module-content .av73-action-main")?.getAttribute("href")?.endsWith("/community")'));
-     await evaluate('document.getElementById("av73-module-tab-create").click()');
-     await until(()=>evaluate('document.querySelector("#av73-module-content .av73-action-main")?.getAttribute("href")?.endsWith("/studio")'));
-     await evaluate('document.getElementById("av73-module-tab-discover").click()');
-     await until(()=>evaluate('document.querySelector("#av73-module-content .av73-action-main")?.getAttribute("href")?.endsWith("/discover")'));
-     await evaluate('(()=>{const tab=document.getElementById("av73-module-tab-discover");tab.focus();tab.dispatchEvent(new KeyboardEvent("keydown",{key:"ArrowRight",bubbles:true,cancelable:true}));})()');
-     await until(()=>evaluate('document.querySelector(".av73-world-tab[aria-selected=true]")?.id==="av73-module-tab-connect"'));
-     await evaluate('document.getElementById("av73-module-tab-discover").click()');
-     await until(()=>evaluate('document.querySelector(".av73-world-tab[aria-selected=true]")?.id==="av73-module-tab-discover"'));
-     const access=await evaluate('(()=>({tabs:document.querySelectorAll(".av73-world-tab[role=tab]").length,active:document.querySelector(".av73-world-tab[aria-selected=true]")?.id,stage:document.getElementById("av73-module-content")?.getAttribute("role"),overflow:document.documentElement.scrollWidth>innerWidth+1}))()');
-     if(access.tabs!==4||access.active!=="av73-module-tab-discover"||access.stage!=="tabpanel"||access.overflow)
-      throw Error("V073_MODULE_ACCESS_"+width+":"+JSON.stringify(access));
-     await screenshot("home-collections-"+width);
-     await evaluate('document.querySelector(".av11-live-index").scrollIntoView({block:"start"})');
-     await evaluate('document.getElementById("av11-tab-creators").click()');
-     await until(()=>evaluate('document.querySelector("#av11-current-module .av8-module--makers")!==null'));
-     const activity=await evaluate('(()=>({tabs:document.querySelectorAll(".av11-module-tab[role=tab]").length,visible:document.querySelectorAll(".av11-module-stage>.av8-module").length,active:document.querySelector(".av11-module-tab[aria-selected=true]")?.id,overflow:document.documentElement.scrollWidth>innerWidth+1}))()');
-     if(activity.tabs!==4||activity.visible!==1||activity.active!=="av11-tab-creators"||activity.overflow)
-      throw Error("V073_ACTIVITY_WORKBENCH_"+width+":"+JSON.stringify(activity));
-     await screenshot("home-community-modules-"+width);
-    }
+     await until(()=>evaluate('document.querySelectorAll(".av79-gateway").length===4&&!!document.querySelector(".av79-feature")'));
+     const entrance=await evaluate('(()=>({headline:document.querySelector(".av79-hero h1")?.innerText,gateways:[...document.querySelectorAll(".av79-gateway")].map(x=>x.textContent.trim()),featured:document.querySelector(".av79-feature h3")?.textContent,creator:document.querySelector(".av79-feature [data-player-card=v078]")?.textContent,oldPanels:document.querySelectorAll(".av73-world-deck,.av11-live-index,.av6-community-index").length,categoryArt:document.querySelectorAll(".av79-home .cw-artwork,.av79-home img").length,overflow:document.documentElement.scrollWidth>innerWidth+1}))()');
+     if(!entrance.headline?.includes("Find your next")||entrance.gateways.length!==4||!entrance.featured||!entrance.creator||entrance.oldPanels!==0||entrance.categoryArt!==0||entrance.overflow)
+       throw Error("V079_HOME_ENTRY_"+width+":"+JSON.stringify(entrance));
+     await screenshot("home-discovery-"+width);
+     await evaluate('document.querySelector(".av9-menu-trigger").click()');
+     await until(()=>evaluate('document.querySelector(".av79-navigation[open]")?.querySelectorAll(".av79-destination").length===4'));
+     const wayfinder=await evaluate('(()=>{const menu=document.querySelector(".av79-navigation[open]");return {open:!!menu,destinations:[...menu.querySelectorAll(".av79-destination")].map(x=>x.textContent.trim()),images:menu.querySelectorAll("img,.cw-artwork,canvas").length,search:!!menu.querySelector(".av79-navigation-search"),playerAccess:!!menu.querySelector(".av79-navigation-join,.av79-navigation-identity"),overflow:menu.scrollWidth>menu.clientWidth+1}})()');
+     if(!wayfinder.open||wayfinder.destinations.length!==4||wayfinder.images!==0||!wayfinder.search||!wayfinder.playerAccess||wayfinder.overflow)
+       throw Error("V079_MENU_ACCESS_"+width+":"+JSON.stringify(wayfinder));
+     await screenshot("wayfinder-"+width);
+     await evaluate('document.querySelector(".av79-menu-close").click()');
+     await until(()=>evaluate('!document.querySelector(".av79-navigation[open]")'));
+   }
    results.push({page:name,width,...state});
    console.log("SITEWIDE_V012_"+name.toUpperCase()+"_"+width+"=PASS");
   }
