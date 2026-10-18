@@ -79,6 +79,55 @@ test('IREN V003: actual apex Better Auth OTP session, permission grant and logou
   assert.equal(data.memberMetrics.verified,1);
   assert.doesNotMatch(JSON.stringify(data),/first_member@fixture\.invalid/);
 
+  // Exercise two distinct genuine Better Auth sessions, not fabricated staff
+  // identities. The second member is not a moderator until a founder action.
+  const peerEmail='second_member@fixture.invalid';
+  const peerOtpSend=await canonicalWorker.fetch(post(AUTH+'/email-otp/send-verification-otp',
+   {email:peerEmail,type:'sign-in'}),env);
+  assert.equal(peerOtpSend.status,200);
+  const peerSignIn=await canonicalWorker.fetch(post(AUTH+'/sign-in/email-otp',
+   {email:peerEmail,otp:emails.get(peerEmail)}),env);
+  assert.equal(peerSignIn.status,200);
+  const peerCookie=(peerSignIn.headers.get('set-cookie')||'').split(';')[0];
+  assert.notEqual(peerCookie,cookie);
+  const peerSession=await (await canonicalWorker.fetch(get(AUTH+'/get-session',peerCookie),env)).json();
+  assert.equal(peerSession.user?.emailVerified,true);
+  assert.notEqual(peerSession.user?.id,id);
+  assert.equal((await staff.fetch(get('/api/v1/member/staff-ops',peerCookie),env)).status,403);
+
+  const promote=await staff.fetch(post('/api/v1/member/staff-ops',
+   {kind:'staff-grant',memberId:peerSession.user.id},cookie),env);
+  assert.equal(promote.status,200,'Only the founder can grant existing verified reviewer access');
+  const reviewer=await staff.fetch(get('/api/v1/member/staff-ops',peerCookie),env);
+  assert.equal(reviewer.status,200);
+  const reviewerData=await reviewer.json();
+  assert.equal(reviewerData.role,'reviewer');
+  assert.equal(reviewerData.memberMetrics,null,'Reviewer cannot inspect global member funnel');
+  assert.equal(reviewerData.eligibleMembers.length,0,'Reviewer cannot list candidates for privileged roles');
+  const reviewerEscalation=await staff.fetch(post('/api/v1/member/staff-ops',
+   {kind:'staff-grant',memberId:id},peerCookie),env);
+  assert.equal(reviewerEscalation.status,403,'Reviewer must never promote a founder');
+
+  const sentByFounder=await staff.fetch(post('/api/v1/member/staff-ops',
+   {kind:'message',room:'operations',body:'Welcome to the operations room.'},cookie),env);
+  assert.equal(sentByFounder.status,201);
+  const peerRoom=await (await staff.fetch(get('/api/v1/member/staff-ops?room=operations',peerCookie),env)).json();
+  assert.equal(peerRoom.messages.some(m=>m.body==='Welcome to the operations room.'),true);
+
+  const penStroke={points:[[0.1,0.1],[0.4,0.7]],color:'#a99aff',width:2};
+  const mark=await staff.fetch(post('/api/v1/member/staff-ops',
+   {kind:'stroke',room:'operations',stroke:penStroke},peerCookie),env);
+  assert.equal(mark.status,201);
+  const founderRoom=await (await staff.fetch(get('/api/v1/member/staff-ops?room=operations',cookie),env)).json();
+  assert.equal(founderRoom.canvas.some(c=>c.eventType==='stroke'&&c.authorId===peerSession.user.id),true);
+
+  const revoke=await staff.fetch(post('/api/v1/member/staff-ops',
+   {kind:'staff-revoke',memberId:peerSession.user.id},cookie),env);
+  assert.equal(revoke.status,200);
+  assert.equal((await staff.fetch(get('/api/v1/member/staff-ops',peerCookie),env)).status,403);
+  const actions=db.prepare("SELECT action FROM staff_access_audit ORDER BY created_at,id").all().map(x=>x.action).sort();
+  assert.deepEqual(actions,['grant-reviewer','revoke-reviewer']);
+
   const cross=await staff.fetch(new Request(staffURL,{
    method:'POST',headers:{cookie,origin:'https://external.example','content-type':'application/json'},
    body:JSON.stringify({kind:'message',room:'operations',body:'must reject'})
