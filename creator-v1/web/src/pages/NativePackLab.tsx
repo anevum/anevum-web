@@ -356,6 +356,11 @@ export function NativePackLab({title,creator,document,onImportDocument,disabled}
        </option>)}
       </select>
      </label>
+     <label className="np-label">NATIVE FILE TITLE
+      <input value={nativeTitle??title} onChange={e=>setNativeTitle(e.target.value)} maxLength={120}
+       aria-label="Title stored in the exported ANEVUM file" placeholder="Untitled creation"/>
+     </label>
+     <p className="np-small">CREDITED CREATOR / {creditedCreator??creator} <span>(local metadata, not verified authorship)</span></p>
      {kind==='game'&&<div className="np-composer">
       <label className="np-label">GAME BEGINS AT
        <select value={startScene} onChange={e=>setStartScene(e.target.value)}>
@@ -403,6 +408,17 @@ export function NativePackLab({title,creator,document,onImportDocument,disabled}
       </div>)}
      </div>}
      {(kind==='album'||kind==='series'||kind==='visual')&&<div className="np-composer">
+      {(kind==='album'||kind==='series')&&<>
+       <label className="np-label">{kind==='album'?'ALBUM COVER':'SERIES POSTER'} (OPTIONAL)
+        <input type="file" accept=".png,.jpg,.jpeg,.webp,.gif"
+         onChange={e=>{setCoverFromFile(e.target.files?.[0]);e.currentTarget.value='';}}/>
+       </label>
+       {cover&&<div className="np-cover-editor">
+        {coverUrl&&<img src={coverUrl} alt={kind==='album'?'Selected album cover':'Selected series poster'}/>}
+        <div><strong>{cover.file.name}</strong>
+         <button type="button" onClick={()=>setCover(null)}>REMOVE ARTWORK</button></div>
+       </div>}
+      </>}
       <label className="np-label">ADD ORIGINAL MEDIA FROM DEVICE
        <input type="file" multiple accept={EXTENSIONS[kind].map(e=>'.'+e).join(',')}
         onChange={e=>{pickMedia(e.target.files);e.currentTarget.value='';}}/>
@@ -437,6 +453,8 @@ export function NativePackLab({title,creator,document,onImportDocument,disabled}
        document={opened.document} urls={opened.urls}/>
       {opened.manifest.kind==='game'&&<button type="button" className="np-secondary"
         onClick={resumeGame}>CONTINUE EDITING THIS GAME →</button>}
+      {(['album','series','visual'] as PackKind[]).includes(opened.manifest.kind)&&<button type="button"
+        className="np-secondary" onClick={resumeMedia}>CONTINUE EDITING THIS {opened.manifest.kind.toUpperCase()} →</button>}
        {opened.manifest.kind==='project'&&<button type="button" className="np-secondary"
        disabled={disabled} onClick={restoreDocument}>IMPORT INTO UNSAVED CANVAS →</button>}
      </div>:<div className="np-placeholder"><span aria-hidden="true">◇</span>
@@ -448,7 +466,7 @@ export function NativePackLab({title,creator,document,onImportDocument,disabled}
      urls={gameImageUrls}/></div>}
    {(kind==='album'||kind==='series'||kind==='visual')&&media.length>0&&<div className="np-playtest">
     <p className="np-eyebrow">03 / LOCAL MEDIA PREVIEW</p>
-    <NativePackExperience kind={kind} document={currentDocument()} urls={mediaUrls}/>
+    <NativePackExperience kind={kind} document={currentDocument()} urls={previewUrls}/>
    </div>}
    {messageText&&<p role="status" className="np-message">{messageText}</p>}
    <p className="np-disclaimer">REVIEW BUILD · Data-only formats · No code execution · No
