@@ -4,6 +4,12 @@ import {readFileSync} from 'node:fs';
 import {createNativePack,openNativePack,ANEVUM_PACK_SCHEMA,PACK_KINDS,
  MAX_PACK_BYTES} from '../web/src/lib/anevum-native-pack.ts';
 const bytes=(s)=>new TextEncoder().encode(s);
+// Short signature-correct fixtures for packaging tests only; not decodable media.
+const mediaFixtures={
+ mp3:new Uint8Array([73,68,51,4,0,0,0,0,0,0]),
+ webm:new Uint8Array([26,69,223,163,159,66,134,129,1]),
+ webp:new Uint8Array([82,73,70,70,12,0,0,0,87,69,66,80,86,80,56,32])
+};
 const game={schema:'anevum.game.v1',startScene:'start',scenes:[
  {id:'start',title:'Awakening',text:'You find a strange observatory.',choices:[{label:'Enter',to:'inside'}]},
  {id:'inside',title:'Inside',text:'A new universe opens.',choices:[]}
@@ -27,9 +33,9 @@ test('ANVG game round-trip yields a real ZIP and declarative, inert document',as
 });
 test('album, episode series, visual gallery and strict Studio document round-trip',async()=>{
  for(const [kind,document,assets] of [
-  ['album',album,{'assets/signal.mp3':bytes('local test audio bytes')}],
-  ['series',series,{'assets/pilot.webm':bytes('local test video bytes')}],
-  ['visual',visual,{'assets/image.webp':bytes('local test picture bytes')}],
+  ['album',album,{'assets/signal.mp3':mediaFixtures.mp3}],
+  ['series',series,{'assets/pilot.webm':mediaFixtures.webm}],
+  ['visual',visual,{'assets/image.webp':mediaFixtures.webp}],
   ['project',project,{}]
  ]){
   const pkg=await createNativePack({kind,title:'A sample',creator:'ANEVUM',version:'1.2.0',document,assets});
@@ -38,6 +44,14 @@ test('album, episode series, visual gallery and strict Studio document round-tri
   assert.deepEqual(opened.document,document);
   assert.equal(opened.assets.size,Object.keys(assets).length);
  }
+});
+test('reject spoofed media headers even when extension appears valid',async()=>{
+ await assert.rejects(createNativePack({...opts,kind:'album',document:album,
+  assets:{'assets/signal.mp3':bytes('not mp3 audio')}}),/signature mismatch/);
+ await assert.rejects(createNativePack({...opts,kind:'series',document:series,
+  assets:{'assets/pilot.webm':bytes('not video')}}),/signature mismatch/);
+ await assert.rejects(createNativePack({...opts,kind:'visual',document:visual,
+  assets:{'assets/image.webp':bytes('<script>alert(1)</script>')}}),/signature mismatch/);
 });
 test('reject arbitrary extension, traversal, scripts and SVG packages',async()=>{
  await assert.rejects(createNativePack({...opts,kind:'unknown'}),/unknown kind/);
