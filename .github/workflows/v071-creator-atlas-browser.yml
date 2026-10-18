@@ -1,0 +1,59 @@
+name: V071 Guest Creator Atlas Visual Review
+on:
+  push:
+    branches: [build/creation-takedown-browser-v071-20261018-020]
+    paths:
+      - "creator-v1/web/src/pages/CanonicalCreationsPage.tsx"
+      - "creator-v1/web/src/pages/creation-institute-v071.css"
+      - "creator-v1/web/src/lib/creator-creations-api.ts"
+      - "creator-v1/web/src/components/Shell.tsx"
+      - "creator-v1/test/portal-offline-preview.mjs"
+      - "creator-v1/test/creator-atlas-browser-v071.mjs"
+      - ".github/workflows/v071-creator-atlas-browser.yml"
+permissions:
+  contents: read
+jobs:
+  visual-check:
+    if: github.repository == 'anevum/anevum-web'
+    runs-on: ubuntu-latest
+    timeout-minutes: 13
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Build local React portal, not a release
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm install --ignore-scripts --no-audit --no-fund
+          npm run check:creator-v1-web
+          npm run build:creator-v1-web:staging
+      - name: Verify synthetic guest Creator Atlas at four viewports
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --check creator-v1/test/portal-offline-preview.mjs
+          node --check creator-v1/test/creator-atlas-browser-v071.mjs
+          node creator-v1/test/portal-offline-preview.mjs > "$RUNNER_TEMP/v071-fixture.log" 2>&1 &
+          fixture_pid=$!
+          trap 'kill "$fixture_pid" 2>/dev/null || true' EXIT
+          ready=0
+          for i in $(seq 1 100); do
+            if curl -fsS http://127.0.0.1:4178/__ready >/dev/null 2>&1; then ready=1; break; fi
+            sleep 0.2
+          done
+          test "$ready" = 1
+          node creator-v1/test/creator-atlas-browser-v071.mjs
+          test -s qa-v071-offline-creation-atlas/creations-390.png
+          test -s qa-v071-offline-creation-atlas/creation-detail-320.png
+      - name: Archive synthetic-only visual evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: v071-guest-creator-atlas-synthetic-screenshots
+          path: qa-v071-offline-creation-atlas/
+          if-no-files-found: warn
+          retention-days: 7
