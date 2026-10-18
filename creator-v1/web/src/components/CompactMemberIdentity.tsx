@@ -67,8 +67,8 @@ export function CompactMemberIdentity({member,href,className='',size='standard',
   Number.isSafeInteger(member.progress.levelStart)&&member.progress.levelStart>=0&&
   member.progress.xp>=member.progress.levelStart&&
   ((level===30&&member.progress.nextLevel===null)||
-   (level!==30&&Number.isSafeInteger(member.progress.nextLevel)&&
-    member.progress.nextLevel>member.progress.xp))?
+   (level!==30&&typeof member.progress.nextLevel==='number'&&
+    Number.isSafeInteger(member.progress.nextLevel)&&member.progress.nextLevel>member.progress.xp))?
   member.progress:null;
  const maximum=progress?.nextLevel===null?1:progress?progress.nextLevel!-progress.levelStart:1;
  const amount=progress?.nextLevel===null?1:progress?Math.max(0,Math.min(maximum,progress.xp-progress.levelStart)):0;
