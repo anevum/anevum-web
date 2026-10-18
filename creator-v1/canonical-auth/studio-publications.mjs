@@ -30,8 +30,15 @@ const flag=env=>env?.CANONICAL_STUDIO_PUBLICATION_ENABLED==='true'
  &&env?.CANONICAL_CREATOR_STUDIO_ENABLED==='true';
 const safeExternal=value=>{
  if(typeof value!=='string'||value.length>1500)return false;
- try{const u=new URL(value);return u.protocol==='https:'&&!u.username&&!u.password
-  &&u.hostname.length>3&&!/^(?:localhost|.*\.localhost|127(?:\.\d+){3}|0\.0\.0\.0|\[::1\])$/i.test(u.hostname);
+ try{
+  const u=new URL(value),h=u.hostname.toLowerCase().replace(/\.$/,'');
+  // External means an ordinary public DNS destination, not a local
+  // router, private IP, cloud metadata host, reserved suffix or loopback.
+  // Browser reviewers should never be sent to internal network addresses.
+  return u.protocol==='https:'&&!u.username&&!u.password&&h.includes('.')&&
+   !/\s/.test(h)&&!h.startsWith('[')&&!/^[\d.]+$/.test(h)&&
+   !/(?:^|\.)(?:localhost|local|internal|test|example|invalid)$/.test(h)&&
+   h.length>4&&!u.hostname.endsWith('.');
  }catch{return false;}
 };
 const canonicalLink=value=>{
