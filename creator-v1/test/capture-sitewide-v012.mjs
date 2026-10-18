@@ -69,10 +69,10 @@ try{
   ["home","/",".av79-home"],["discover","/discover",".portal-discover"],
   ["project","/projects/00000000000000000000000000000001",".portal-project"],
   ["creators","/creators",".portal-creators"],["creator-channel","/creators/nova_demo",".portal-creator-channel"],
-  ["community","/community",".ch7-hub"],["boards","/boards",".cnb-hub"],
+  ["community","/community",".ch7-hub"],["boards","/boards",".av79-boards"],
   ["levels","/levels",".av75-levels-page"],["recognition","/recognition",".av75-recognition-page"],["start","/start",".start-page"],
   ["guide","/guide",".field-guide-page"],["status","/status",".status-list"],
-  ["guest-library","/library",".member-gate"],
+  ["guest-library","/library",".avsaved-shell"],
   ["member-account","/account",".av12-account-await"],
   ["member-profile-editor","/account/edit",".av12-account-await"],
   // Legacy /create routes now lead into the canonical Better Auth Studio.
@@ -331,7 +331,7 @@ try{
    console.log("SITEWIDE_V012_"+name.toUpperCase()+"_"+width+"=PASS");
   }
   await client.send("Page.navigate",{url:base+"/creator/atlas/boards"});
-  await until(()=>evaluate('location.pathname==="/creator/boards"&&!!document.querySelector(".cnb-hub")'));
+  await until(()=>evaluate('location.pathname==="/creator/boards"&&!!document.querySelector(".av79-boards")'));
   const archived=await evaluate('({headers:document.querySelectorAll(".site-header.av9-header").length,legacy:document.querySelectorAll(".atm-header").length})');
   if(archived.headers!==1||archived.legacy)throw Error("SITEWIDE_V012_DUPLICATE_SHELL_"+width+":"+JSON.stringify(archived));
   if(width===1440||width===390){

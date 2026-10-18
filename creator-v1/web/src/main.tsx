@@ -59,3 +59,5 @@ import "./discover-experience-v073.css";
 import "./level-icon-preservation-v074.css";
 import "./earned-rewards-v075.css";
 import "./home-navigation-v079.css";
+
+import "./sitewide-polish-v079.css";

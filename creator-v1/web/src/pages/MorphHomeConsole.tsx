@@ -1,3 +1,4 @@
+import {publicCreatorHandle} from "../lib/public-creator-handle";
 import {useEffect,useMemo,useState} from "react";
 import {Link} from "react-router-dom";
 import {CosmicArtwork} from "../components/CosmicArtwork";
@@ -101,7 +102,7 @@ export function MorphHomeConsole({onExplore}:{onExplore:()=>void}){
            <span className="nfc-spotlight-label">PUBLIC RELEASE / {lead.category.toUpperCase()}</span>
            <h3><Link to={projectPath(lead.id)}>{lead.title}</Link></h3>
            <p>{lead.summary}</p>
-           <Link to={creatorPath(lead.creatorHandle)} className="nfc-spotlight-creator">BY {lead.creatorName} · @{lead.creatorHandle}</Link>
+           {publicCreatorHandle(lead.creatorHandle)?<Link to={creatorPath(publicCreatorHandle(lead.creatorHandle)!)} className="nfc-spotlight-creator">BY {lead.creatorName} · @{lead.creatorHandle}</Link>:<span>Public creator channel not linked.</span>}
            <div className="nfc-spotlight-actions">
              <Link to={projectPath(lead.id)}>EXPLORE PROJECT <span aria-hidden="true">↗</span></Link>
              <span>{dateLabel(lead.publishedAt)}</span>

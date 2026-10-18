@@ -1,3 +1,4 @@
+import {publicCreatorHandle} from "../lib/public-creator-handle";
 import {Link,useParams} from "react-router-dom";
 import {readProject,safeExternal} from "../lib/api";
 import {useResource} from "../lib/useResource";
@@ -51,7 +52,7 @@ export function FeaturedExperiencePage(){
         </div>
       </div>
       <div className="fx-focus-meta">
-        <Link to={"/atlas/creators/"+encodeURIComponent(p.creatorHandle)}>CREATOR / @{p.creatorHandle} <span aria-hidden="true">↗</span></Link>
+        {publicCreatorHandle(p.creatorHandle)?<Link to={"/atlas/creators/"+encodeURIComponent(publicCreatorHandle(p.creatorHandle)!)}>CREATOR / @{p.creatorHandle} <span aria-hidden="true">↗</span></Link>:<span>Public creator channel not linked.</span>}
         <span>{p.freeToUse?"FREE TO USE":"CHECK CREATOR PRICING"}</span>
         <span>{dateLabel(p.publishedAt).toUpperCase()}</span>
       </div>

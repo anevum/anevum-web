@@ -1,6 +1,7 @@
 import {useState} from "react";
 import {Link} from "react-router-dom";
 import type {Project} from "../lib/api";
+import {publicCreatorHandle} from "../lib/public-creator-handle";
 import {selectPlayer} from "../lib/player-registry";
 import {CosmicArtwork} from "./CosmicArtwork";
 import {CompactMemberIdentity} from "./CompactMemberIdentity";
@@ -10,6 +11,7 @@ import "./project-player-shell.css";
 export function ProjectPlayerShell({project,demo,source}:{
   project:Project;demo:URL|null;source:URL|null;
 }){
+  const handle=publicCreatorHandle(project.creatorHandle);
   const selection=selectPlayer(project.category,Boolean(demo),Boolean(source));
   const primary=demo||source;
   const longTitle=project.title.length>50;
@@ -67,10 +69,10 @@ export function ProjectPlayerShell({project,demo,source}:{
       </div>
     </section>
     <div className="avp-stage-identity">
-      <Link className="avp-creator-credit" to={"/creators/"+encodeURIComponent(project.creatorHandle)}>
-        <CompactMemberIdentity interactive={false} size="compact" className="av65-project-channel" member={{handle:project.creatorHandle,displayName:project.creatorName,avatar:false,level:null,featuredAwards:[],source:'creator-channel'}}/>
+      {handle?<Link className="avp-creator-credit" to={"/creators/"+encodeURIComponent(handle)}>
+        <CompactMemberIdentity interactive={false} size="compact" className="av65-project-channel" member={{handle,displayName:project.creatorName,avatar:false,level:null,featuredAwards:[],source:'creator-channel'}}/>
         <span aria-hidden="true">↗</span>
-      </Link>
+      </Link>:<span className="av79-unlinked-project">Public creator channel not linked. <strong>{project.creatorName||"ANEVUM member"}</strong></span>}
       <nav className="avp-stage-shortcuts" aria-label="Project participation">
         <a href="#avp-participation">PARTICIPATE</a>
         <a href="#avp-discussion">COMMUNITY</a>

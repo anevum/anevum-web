@@ -10,7 +10,7 @@ export function safeReturnPath(raw: string | null | undefined): string {
   try { url = new URL(raw, base); } catch { return "/discover"; }
   if (url.origin !== base || url.hash) return "/discover";
   const route = url.pathname;
-  if (!(route === "/" || route === "/start" || route === "/discover" || route === "/creators" || route === "/community" || route === "/saved" || handle.test(route)))
+  if (!(route === "/" || route === "/start" || route === "/discover" || route === "/creators" || route === "/community" || route === "/saved" || route === "/boards" || handle.test(route)))
     return "/discover";
   const params = new URLSearchParams();
   if (route === "/discover" || route === "/creators") {
@@ -22,6 +22,11 @@ export function safeReturnPath(raw: string | null | undefined): string {
     const category = url.searchParams.get("category") || "";
     if (/^[a-z]{2,24}$/.test(category)) params.set("category", category);
     if (url.searchParams.get("free") === "1") params.set("free", "1");
+  }
+  if (route === "/boards") {
+    const view=url.searchParams.get("view"),category=url.searchParams.get("category");
+    if(view==="firstLooks"||view==="publishing")params.set("view",view);
+    if(category&&/^(games|tools|automation|research|creative|learning|libraries|other)$/.test(category))params.set("category",category);
   }
   if (route !== "/") {
     const cursor = url.searchParams.get("cursor") || "";

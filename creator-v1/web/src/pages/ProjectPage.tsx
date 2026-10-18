@@ -17,7 +17,7 @@ export function ProjectPage(){
   const {id=""}=useParams();
   const [params]=useSearchParams();
   const from=safeReturnPath(params.get("from"));
-  const backLabel=from==="/"?"BACK TO PORTAL":from==="/saved"?"BACK TO SAVED WORKS":from.startsWith("/creators/")?"BACK TO CREATOR":"BACK TO RESULTS";
+  const backLabel=from==="/"?"BACK TO PORTAL":from==="/saved"?"BACK TO SAVED WORKS":from.startsWith("/boards")?"BACK TO BOARDS":from.startsWith("/creators/")?"BACK TO CREATOR":"BACK TO RESULTS";
   const project=useResource(signal=>readProject(id,signal),[id]);
   if(project.state==="loading")return <LoadingState label="Preparing the published project page"/>;
   if(project.state==="error")return <ErrorState title="PROJECT NOT AVAILABLE" detail="This work may be unpublished, withdrawn, or the public catalogue is temporarily unavailable."/>;

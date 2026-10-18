@@ -1,0 +1,60 @@
+/* V079 RC: shared overlay geometry and compact creator presentation.
+   Keep the approved homepage, reward media and native player untouched. */
+.av9-shell .portal-launcher{border:1px solid #b7a5cc88;border-radius:20px;background:#0b1324;color:#f0edf8;width:min(690px,calc(100vw - 20px));max-height:calc(100dvh - 24px);overflow-y:auto;overscroll-behavior:contain;box-shadow:inset 0 1px #ffffff18,0 30px 100px #000a}
+.av9-shell .portal-launcher-content{background:radial-gradient(ellipse at 85% 0,#8b65b22b,transparent 55%),linear-gradient(145deg,#151c30,#0a1222);min-width:0}
+.av9-shell .portal-launcher-head{padding:22px 24px 16px;border-color:#a59bc03d;align-items:flex-start;gap:12px}
+.av9-shell .portal-launcher-mark{width:34px;height:34px;transform:none;background:transparent;border:0;box-shadow:none}
+.av9-shell .portal-launcher-mark svg{width:30px;height:30px;filter:none}
+.av9-shell .portal-launcher-head h2{font:400 32px/1.15 var(--av9-display,Georgia,serif);letter-spacing:-.025em;margin:6px 0}
+.av9-shell .portal-launcher-head .kicker{font:600 9px/1.5 var(--av9-label,monospace);color:#bbbad4}
+.av9-shell .portal-launcher-head p{font:400 12px/1.5 var(--av9-body,system-ui,sans-serif);color:#c3c9dc}
+.av9-shell .portal-launcher-close{width:44px;height:44px;border:1px solid #a59bc063;border-radius:50%;background:#202940;color:#e6e7f6;box-shadow:none}
+.av9-shell .portal-launcher-search{margin:16px 22px 10px;min-height:52px;border:1px solid #b3b3d281;border-radius:12px;background:#0b1425;box-shadow:inset 0 1px 6px #0003}
+.av9-shell .portal-launcher-search input{color:#f2effb;font:400 16px/1.4 var(--av9-body,system-ui,sans-serif)}
+.av9-shell .portal-launcher-search input::placeholder{color:#a6b4cf}
+.av9-shell .portal-launcher-search>svg{color:#c2cfeb}
+.av9-shell .portal-launcher-search kbd{background:transparent;border-color:#a59bc063;border-radius:5px;color:#aebbd2}
+.av9-shell .portal-launcher-hint{color:#afbad0;font-size:9px;line-height:1.6}
+.av9-shell .portal-launcher-live-status{color:#c8dcec;border-color:#a59bc03d;letter-spacing:.02em;font-weight:500;padding:10px 22px}
+.av9-shell .portal-launcher-result-top{margin-top:16px}
+.av9-shell .portal-launcher-results{max-height:none;overflow:visible;gap:7px;padding:4px 22px 18px}
+.av9-shell .portal-launcher-result{min-height:64px;border:1px solid #a59bc04a;border-radius:11px;background:#172238;color:#ebeafa;box-shadow:inset 0 1px #ffffff08;transform:none;transition:background .15s,border-color .15s}
+.av9-shell .portal-launcher-result-active,.av9-shell .portal-launcher-result:hover{border-color:#c3b6df;background:#2b3551;transform:none}
+.av9-shell .portal-launcher-result-icon{width:34px;height:34px;background:#111b30;color:#c7ccea;box-shadow:none;border:1px solid #8d9cbb66;border-radius:9px}
+.av9-shell .portal-launcher-result-copy strong{font:600 14px/1.3 var(--av9-body,system-ui,sans-serif);letter-spacing:0;overflow-wrap:anywhere}
+.av9-shell .portal-launcher-result-copy small{color:#b4c1d8;font-size:11px;overflow-wrap:anywhere}
+.av9-shell .portal-launcher-result-meta{color:#c1bcd9;font-size:8px}
+.av9-shell .portal-launcher-foot{background:#0c1425;border-color:#a59bc03d;gap:14px;padding:16px 22px;flex-wrap:wrap}
+.av9-shell .portal-launcher-foot>span{color:#a7b6d0}
+.av9-shell .portal-launcher-foot>a{color:#ddd5ef}
+.av9-shell .portal-launcher :is(a,button,input):focus-visible{outline:2px solid #bce9ff;outline-offset:3px}
+.av9-shell .portal-page-heading.av79-heading-compact{min-height:0;height:auto;padding:28px;background:linear-gradient(130deg,#1c2439,#0d1629);border-radius:18px;box-shadow:inset 0 1px #ffffff12}
+.av9-shell .av79-heading-compact .portal-page-heading-copy{padding:0;max-width:720px}
+.av9-shell .av79-heading-compact h1{font:400 clamp(34px,4vw,54px)/1.1 var(--av9-display,Georgia,serif)!important;margin:12px 0}
+.av9-shell .av79-heading-compact h1 br{display:none}
+.av9-shell .av79-heading-compact h1 em:before{content:' '}
+.av9-shell .av79-channel-banner{min-height:0;padding:26px;gap:20px;background:linear-gradient(125deg,#1c243a,#101a2e);border-color:#a59bc063;border-radius:18px}
+.av79-channel-banner .av79-channel-card{flex:none;align-self:center}
+.av79-channel-banner .portal-channel-badge{display:none}
+.av79-route-recovery>div{display:flex;flex-wrap:wrap;justify-content:center;gap:12px}
+.av9-shell :is(button,a,input,textarea,select){touch-action:manipulation}
+.av9-shell [id]{scroll-margin-top:100px}
+@media(max-width:650px){
+ .av9-shell .portal-launcher{border-radius:16px;max-height:calc(100dvh - 16px)}
+ .av9-shell .portal-launcher-head{padding:18px 16px 14px;gap:9px}
+ .av9-shell .portal-launcher-head h2{font-size:28px}
+ .av9-shell .portal-launcher-mark{display:none}
+ .av9-shell .portal-launcher-search{margin:14px 14px 10px}
+ .av9-shell .portal-launcher-results{padding:4px 14px 16px}
+ .av9-shell .portal-launcher-result-meta{display:none}
+ .av9-shell .portal-launcher-result{min-height:64px}
+ .av9-shell .portal-launcher-foot,.av9-shell .portal-launcher-live-status{padding:13px 16px}
+ .av9-shell .portal-page-heading.av79-heading-compact{padding:22px 18px}
+ .av9-shell .av79-channel-banner{padding:20px;display:flex;flex-direction:column;align-items:flex-start}
+ .av79-channel-banner .av79-channel-card{align-self:flex-start}
+ .av9-shell :is(input,textarea,select){font-size:16px}
+ .av79-utility-links>a,.av79-category-links>a{min-height:44px;display:inline-flex;align-items:center}
+ .av79-navigation-top{position:sticky;top:0;z-index:2;background:#141b2e;padding:8px 0;margin-top:-8px}
+}
+@media(prefers-reduced-motion:reduce){.av9-shell .portal-launcher *{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+@media(forced-colors:active){.av9-shell .portal-launcher :is(a,button,input){forced-color-adjust:auto;border:1px solid ButtonText}}

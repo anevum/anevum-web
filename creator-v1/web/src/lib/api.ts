@@ -11,7 +11,7 @@ export interface Project {
   freeToUse: boolean;
   license: string | null;
   publishedAt: string | null;
-  creatorHandle: string;
+  creatorHandle: string | null;
   creatorName: string;
   description?: string | null;
   aiDisclosure?: string | null;
