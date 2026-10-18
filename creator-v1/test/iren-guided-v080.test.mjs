@@ -26,19 +26,19 @@ test("Tour teaches actual page elements, supports dismissal and never exposes lo
   assert.ok(tour.includes('data-iren-anchor="'+anchor+'"')||tour.includes('[data-iren-anchor="'+anchor+'"]'),anchor);
   assert.ok((shell+member+discover+community).includes('data-iren-anchor="'+anchor+'"'),anchor);
  }
- for(const token of ['pause(','finish("skipped")','status:"completed"','status:"paused"','onKey','Escape','readProgress','writeProgress','memberId||"visitor"','anevum:member-created','anevum:iren-open','anevum:iren-tour','prefers-reduced-motion','aria-labelledby="ir80-guide-title"'])
+ for(const token of ['pause(','finish("skipped")','finish("completed")','status:"paused"','onKey','Escape','readProgress','writeProgress','memberId||"visitor"','anevum:member-created','anevum:iren-open','anevum:iren-tour','prefers-reduced-motion','aria-labelledby="ir80-guide-title"'])
   assert.ok(tour.includes(token),"Missing tour boundary: "+token);
  assert.doesNotMatch(tour,/fetch\(|dangerouslySetInnerHTML|Math\.random\(/);
  assert.match(tour,/never disclosed by this guide/);
- assert.match(editor,/!claimed\)window\.dispatchEvent/);
- assert.doesNotMatch(member,/ms-checklist/);
+ assert.match(editor,/if\(!claimed\)\{[\s\S]*?anevum:member-created/);
+ assert.doesNotMatch(member,/ms-checklist|ms-welcome|newMember/);
 });
 
 test("Compact member landing retains real server-authoritative stats and account controls",()=>{
  assert.match(member,/canonicalSpace\(\)/);
  assert.match(member,/canonicalWall\(\)/);
- assert.match(member,/data-iren-anchor="progress"/);
+ assert.match(member,/data-iren-anchor=\{space\?\.stats\?"progress":undefined\}/);
  assert.match(member,/SpaceProgress space=\{space\}/);
  assert.match(member,/profile\.visibility==='public'/);
- assert.match(member,/signOut/); // Account closure controls remain in Phase1MemberPage
+ assert.match(member,/canonicalAuthClient\.signOut/); // Account closure controls remain in Phase1MemberPage
 });
