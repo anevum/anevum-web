@@ -1,5 +1,5 @@
 // Canonical Better Auth Creator Studio. Does NOT use legacy Creator V1 identity.
-import {openNativePack} from './anevum-native-pack';
+import {openNativePack} from './anevum-native-pack.ts';
 // All server mutations bind ownership from the HttpOnly canonical session.
 const ROOT='/api/v1/member/studio';
 const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
