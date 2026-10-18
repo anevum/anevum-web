@@ -146,6 +146,10 @@ try{
   await until(()=>evaluate('!!document.querySelector(".av79-board-results")'));
   await send("Page.navigate",{url:base+"/creator/library"});
   await until(()=>evaluate('location.pathname.endsWith("/saved")&&!!document.querySelector(".avsaved-shell")'));
+  await send("Page.navigate",{url:base+"/creator/creators/missing_fixture"});
+  await until(()=>evaluate('!!document.querySelector(".av79-channel-unavailable")'));
+  await screenshot("unavailable-creator-channel");
+  if(!await evaluate('document.querySelectorAll(".av79-channel-unavailable a").length===2'))throw Error("CREATOR_RECOVERY_LINKS_MISSING");
   // Keyboard traversal stays inside the native modal; reduced-motion CSS is applied.
   await evaluate('document.querySelector(".av9-menu-trigger").click()');
   await until(()=>evaluate('!!document.querySelector(".av79-navigation[open]")'));

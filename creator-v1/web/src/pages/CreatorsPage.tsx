@@ -84,6 +84,11 @@ export function CreatorPage(){
     try{return await memberCreatorProfile(handle,signal);}catch{return null;}
   },[handle]);
   if(data.state==="loading")return <LoadingState label="Opening a real creator channel"/>;
+  if(data.state==="error"&&data.error.message==="not-found")return <section className="state-card av79-channel-unavailable" role="status">
+    <span className="state-code">PUBLIC CHANNEL UNAVAILABLE</span><h1>This creator channel is not public.</h1>
+    <p>A published creation may carry a creator credit before a public channel is linked.</p>
+    <div><Link className="button secondary" to="/discover">Explore published work</Link><Link className="button secondary" to="/creators">Find creators</Link></div>
+  </section>;
   if(data.state==="error")return <ErrorState title="CREATOR NOT AVAILABLE" detail="This creator has no available public profile, or the public catalogue cannot be reached."/>;
   const {profile,projects}=data.data;
   const path="/creators/"+encodeURIComponent(handle);

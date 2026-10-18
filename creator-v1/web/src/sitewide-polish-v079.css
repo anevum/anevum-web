@@ -58,3 +58,4 @@
 }
 @media(prefers-reduced-motion:reduce){.av9-shell .portal-launcher *{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
 @media(forced-colors:active){.av9-shell .portal-launcher :is(a,button,input){forced-color-adjust:auto;border:1px solid ButtonText}}
+.av79-channel-unavailable>div{display:flex;flex-wrap:wrap;justify-content:center;gap:12px}
