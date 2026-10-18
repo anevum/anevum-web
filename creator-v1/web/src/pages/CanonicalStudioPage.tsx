@@ -4,6 +4,7 @@ import {canonicalAuthClient,canonicalMe,type CanonicalProfile} from '../lib/cano
 import {
  studioHealth,studioList,studioGet,studioCreate,studioUpdate,studioSubmit,studioAssets,
  studioUpload,studioCheckFile,studioDeleteAsset,studioDownloadUrl,studioWithdraw,studioDeleteProject,studioReviewQueue,
+ isNativeStudioFile,
  studioEligibleUpload,studioReviewManifest,studioReviewReceipts,
  studioReviewDecision,type StudioDraft,type StudioProject,type StudioAsset,type StudioCategory,
  type StudioReviewProject,type StudioReviewHistory,type StudioReviewManifest,type StudioReviewReceipt
@@ -167,7 +168,7 @@ function StudioEditor({create,uploadsReady,creator}:{create:boolean;uploadsReady
   };
  },[unsavedChanges]);
  const eligibleAttachment=Boolean(assetSummary?.some(a=>a.status==='quarantined'&&
-  studioEligibleUpload(draft.category,a.kind)));
+  studioEligibleUpload(draft.category,a.kind,a.name)));
  const ready=Boolean((draft.demoUrl||draft.sourceUrl||eligibleAttachment)&&draft.license.trim().length>=2&&
   draft.aiDisclosure.trim().length>=6&&draft.humanContribution.trim().length>=10);
  function assign<K extends keyof StudioDraft>(name:K,value:StudioDraft[K]){setDraft(p=>({...p,[name]:value}));setNotice('');setError('');}
@@ -400,6 +401,7 @@ function StudioUploader({project,uploadsReady,onAssetsChanged,onProjectChanged}:
 }){
  const [assets,setAssets]=useState<StudioAsset[]>([]);
  const [storageReady,setStorageReady]=useState(false);
+ const [nativePacksReady,setNativePacksReady]=useState(false);
  const [memberBytes,setMemberBytes]=useState(0);
  const [projectBytes,setProjectBytes]=useState(0);
  const [globalBytes,setGlobalBytes]=useState(0);
@@ -419,12 +421,13 @@ function StudioUploader({project,uploadsReady,onAssetsChanged,onProjectChanged}:
   let alive=true;
   // Existing assets remain visible even when new uploads are paused.
   studioAssets(project.id).then(r=>{if(alive){setAssets(r.assets);setStorageReady(r.storageReady);
+   setNativePacksReady(r.nativePacksReady);
    setMemberBytes(r.memberUsedBytes);setProjectBytes(r.projectUsedBytes);
    setGlobalBytes(r.globalUsedBytes);setGlobalCap(r.globalQuotaBytes);onAssetsChanged(r.assets)}}).catch(e=>{if(alive)setError(showError(e))});
   return()=>{alive=false;controller.current?.abort();};
  },[project.id,onAssetsChanged]);
  async function refresh(){const r=await studioAssets(project.id);setAssets(r.assets);
-  setStorageReady(r.storageReady);setMemberBytes(r.memberUsedBytes);
+  setStorageReady(r.storageReady);setNativePacksReady(r.nativePacksReady);setMemberBytes(r.memberUsedBytes);
   setProjectBytes(r.projectUsedBytes);setGlobalBytes(r.globalUsedBytes);
    setGlobalCap(r.globalQuotaBytes);onAssetsChanged(r.assets);}
  function accept(files:FileList|null){
@@ -432,6 +435,10 @@ function StudioUploader({project,uploadsReady,onAssetsChanged,onProjectChanged}:
   setError('');setNotice('');
   const next=Array.from(files);
   if(next.length>8){setError('Choose no more than eight files at a time.');setQueue([]);return;}
+  if(next.some(f=>isNativeStudioFile(f.name))&&!nativePacksReady){
+   setError('Native package uploads are not enabled for this account and project. Export files locally instead.');
+   setQueue([]);return;
+  }
   const invalid=next.map(f=>({file:f,check:studioCheckFile(f)})).filter(x=>!x.check.ok);
   if(invalid.length){setError(invalid.map(x=>x.file.name+': '+(!x.check.ok?x.check.reason:'')).join(' '));setQueue([]);return;}
   setQueue(next);
@@ -442,7 +449,7 @@ function StudioUploader({project,uploadsReady,onAssetsChanged,onProjectChanged}:
   const ac=new AbortController();controller.current=ac;let completedCount=0;
   try{
    for(const file of queue){setProgress('UPLOADING '+(completedCount+1)+'/'+queue.length+' — '+file.name);
-    await studioUpload(project.id,file,ac.signal);completedCount++;setCompleted(completedCount);
+    await studioUpload(project.id,file,ac.signal,project.category);completedCount++;setCompleted(completedCount);
    }
    setQueue([]);setNotice('Files stored in private quarantine. None were published, scanned, or made playable.');
    await refresh();
@@ -477,6 +484,7 @@ function StudioUploader({project,uploadsReady,onAssetsChanged,onProjectChanged}:
  return <section className="st-panel st-assets">
   <p className="st-kicker">FILES / PRIVATE QUARANTINE</p><h2>THE ASSET VAULT.</h2>
   {!uploadsReady&&<p className="st-muted">New uploads are paused or not provisioned. Existing private file records remain available below. Private download/removal requires the original isolated R2 binding.</p>}
+  {uploadsReady&&!nativePacksReady&&<p className="st-muted">ANEVUM native packages (.anvg, .anva, .anvs, .anvw, .anvp) remain separately disabled. Only the approved private pilot can store them after content validation.</p>}
    <p className="st-muted">Images / PDF: 10 MiB. MP3 / WAV / MP4 / WebM / ZIP: 20 MiB. TXT / MD: 1 MiB. 20 files per project, 100 MiB per member.</p>
    <div className="st-storage-meter" aria-label="Creator Studio storage usage">
     <div><span>ACCOUNT STORAGE</span><strong>{size(memberBytes)} / 100 MiB</strong></div>
@@ -491,9 +499,10 @@ function StudioUploader({project,uploadsReady,onAssetsChanged,onProjectChanged}:
     onDragLeave={()=>setDrag(false)} onDrop={dropped} role="group" aria-label="Upload private project files">
     <label htmlFor="st-files">DRAG FILES HERE OR SELECT FROM DEVICE</label>
     <input id="st-files" type="file" multiple disabled={busy}
-      accept=".png,.jpg,.jpeg,.webp,.gif,.mp3,.wav,.mp4,.webm,.pdf,.txt,.md,.zip"
+      accept={'.png,.jpg,.jpeg,.webp,.gif,.mp3,.wav,.mp4,.webm,.pdf,.txt,.md,.zip'+
+       (nativePacksReady?',.anvg,.anva,.anvs,.anvw,.anvp':'')}
       onChange={e=>{accept(e.target.files);e.currentTarget.value='';}}/>
-    <small>ZIP and video files remain private and untrusted. They are not executed, streamed, transcoded or published.</small>
+    <small>Files enter private quarantine only. Native ANEVUM packs are inspected for valid format and project category, but no file is publicly published or executed.</small>
    </div>}
    {uploadsReady&&queue.length>0&&<div className="st-upload-queue"><h3>READY TO STORE / {queue.length} FILES</h3>
     {queue.map((f,i)=><p key={f.name+'-'+i}>{f.name} · {size(f.size)}</p>)}

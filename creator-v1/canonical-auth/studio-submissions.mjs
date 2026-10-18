@@ -45,16 +45,18 @@ export async function getStudioReviewReceipt(db,project,reviewerId){
   'FROM member_studio_submission_assets WHERE submission_id=? ORDER BY asset_id LIMIT 21',[row.id]);
  return {...viewSubmission(row),assets:assets.map(viewAsset)};
 }
-export async function freezeStudioReview(db,selected,ownerId,now,kinds,external){
+export async function freezeStudioReview(db,selected,ownerId,now,kinds,external,nativeExtension=null){
  // Changes happen in one D1 batch (single SQLite transaction), guaranteeing
  // a frozen metadata snapshot and matching set of completed quarantined hashes.
  const id=crypto.randomUUID(),next=Number(selected.revision)+1;
  if(!UUID.test(id)||!Number.isSafeInteger(next)||next<2)throw Error('Invalid snapshot');
- const proof=kinds.length?(
+ const proof=(kinds.length||nativeExtension)?(
   "EXISTS (SELECT 1 FROM member_studio_assets WHERE project_id=? AND user_id=? "+
-  "AND status='quarantined' AND sha256 IS NOT NULL AND kind IN ("+kinds.map(()=>'?').join(',')+"))"
+  "AND status='quarantined' AND sha256 IS NOT NULL AND ((kind IN ("+kinds.map(()=>'?').join(',')+") "+
+  "AND extension NOT IN ('anvg','anva','anvs','anvw','anvp'))"+
+  (nativeExtension?" OR (kind='package' AND extension=?)":'')+"))"
  ):'0=1';
- const proofArgs=[selected.id,ownerId,...kinds];
+ const proofArgs=[selected.id,ownerId,...kinds,...(nativeExtension?[nativeExtension]:[])];
  const eligibility=external?'1=1':proof;
  const mutation=db.prepare(
   "UPDATE member_studio_projects SET status='pending_review',revision=revision+1,updated_at=?,submitted_at=? "+

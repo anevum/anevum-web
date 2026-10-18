@@ -2,7 +2,8 @@
 // Canonical Better Auth drafts. Never infer a legacy Creator V1 session or grant XP.
 // No project in this service is public, installed, approved, or executable.
 import {boundedText} from './request-body.mjs';
-import {canonicalStudioAssets,studioUploadReady} from './studio-assets.mjs';
+import {canonicalStudioAssets,studioUploadReady,studioNativePackReady} from './studio-assets.mjs';
+import {NATIVE_PACK_EXTENSION} from './native-pack-quarantine.mjs';
 import {studioReviewSchemaReady,freezeStudioReview,withdrawStudioReview,decideStudioReview,getStudioReviewReceipt,listStudioReviewReceipts} from './studio-submissions.mjs';
 
 const PREFIX='/api/v1/member/studio';
@@ -129,7 +130,8 @@ export async function canonicalStudio(req,env,user,now=Math.floor(Date.now()/100
     const items=await rows(db,'SELECT '+COLS+' FROM member_studio_projects WHERE user_id=? ORDER BY updated_at DESC,id DESC LIMIT 50',[user.id]);
     const canReview=String(env.CANONICAL_STUDIO_REVIEWER_IDS||'')
      .split(',').map(x=>x.trim()).filter(Boolean).includes(user.id);
-    return json({projects:items.map(dbRow),uploadsReady:studioUploadReady(env,user.id),canReview});
+    return json({projects:items.map(dbRow),uploadsReady:studioUploadReady(env,user.id),
+     nativePacksReady:studioNativePackReady(env,user.id),canReview});
    }
    if(req.method!=='POST')return fail(405,'Method not allowed');
    const incoming=await body(req);
@@ -175,19 +177,31 @@ export async function canonicalStudio(req,env,user,now=Math.floor(Date.now()/100
    if(selected.revision!==value.revision||!['draft','changes_requested'].includes(selected.status))
     return fail(409,'Project revision changed');
    const kinds=ELIGIBLE_ASSET_KINDS[selected.category]||[];
+   const nativeExtension=studioNativePackReady(env,user.id)?NATIVE_PACK_EXTENSION[selected.category]||null:null;
    const hasExternal=Boolean(selected.demo_url||selected.source_url);
-   const eligible=hasExternal?true:kinds.length?Boolean(await getOne(db,
+   const eligible=hasExternal?true:(kinds.length||nativeExtension)?Boolean(await getOne(db,
     "SELECT id FROM member_studio_assets WHERE project_id=? AND user_id=? AND status='quarantined' "+
-    "AND sha256 IS NOT NULL AND kind IN ("+kinds.map(()=>'?').join(',')+") LIMIT 1",
-    [id,user.id,...kinds])):false;
+    "AND sha256 IS NOT NULL AND ((kind IN ("+kinds.map(()=>'?').join(',')+") "+
+    "AND extension NOT IN ('anvg','anva','anvs','anvw','anvp'))"+
+    (nativeExtension?" OR (kind='package' AND extension=?)":'')+") LIMIT 1",
+    [id,user.id,...kinds,...(nativeExtension?[nativeExtension]:[])])):false;
    if(!readyToSubmit(selected,eligible))return fail(422,
     'A matching completed file or HTTPS destination, license and accurate contribution disclosures are required');
+   // A file uploaded for one category cannot silently join an unrelated
+   // frozen review after its project is reclassified. No generic package
+   // rule may turn a native pack into an executable or publishable build.
+   const expectedNative=NATIVE_PACK_EXTENSION[selected.category]||'';
+   const mismatchedNative=await getOne(db,
+    "SELECT id FROM member_studio_assets WHERE project_id=? AND user_id=? "+
+    "AND extension IN ('anvg','anva','anvs','anvw','anvp') AND extension<>? LIMIT 1",
+    [id,user.id,expectedNative]);
+   if(mismatchedNative)return fail(422,'Remove native packages from the previous project category before review');
    const unfinished=await getOne(db,
     "SELECT id FROM member_studio_assets WHERE project_id=? AND user_id=? AND status<>'quarantined' LIMIT 1",
     [id,user.id]);
    if(unfinished)return fail(409,'Finish or remove incomplete uploads before submitting for review');
    if(!await pace(db,user.id,'project',now,30))return fail(429,'Too many project updates');
-   const frozen=await freezeStudioReview(db,selected,user.id,now,kinds,hasExternal);
+   const frozen=await freezeStudioReview(db,selected,user.id,now,kinds,hasExternal,nativeExtension);
    return frozen?json({project:dbRow(frozen.project),submissionId:frozen.submissionId,
     attachmentCount:frozen.assetCount,
     note:'Review snapshot locked privately; no publication, video playback or gameplay activation.'}):
@@ -197,7 +211,9 @@ export async function canonicalStudio(req,env,user,now=Math.floor(Date.now()/100
   if(req.method==='GET'){
    const history=await rows(db,
     'SELECT action,reason,created_at,submission_id FROM member_studio_review_log WHERE project_id=? ORDER BY created_at DESC LIMIT 20',[id]);
-   return json({project:dbRow(selected),uploadsReady:studioUploadReady(env,user.id),reviewHistory:history.map(x=>({action:x.action,reason:x.reason,createdAt:Number(x.created_at),submissionId:x.submission_id}))});
+   return json({project:dbRow(selected),uploadsReady:studioUploadReady(env,user.id),
+    nativePacksReady:studioNativePackReady(env,user.id),
+    reviewHistory:history.map(x=>({action:x.action,reason:x.reason,createdAt:Number(x.created_at),submissionId:x.submission_id}))});
   }
   if(req.method==='DELETE'){
    const input=await body(req,500);

@@ -1,4 +1,5 @@
 // Canonical Better Auth Creator Studio. Does NOT use legacy Creator V1 identity.
+import {openNativePack} from './anevum-native-pack.ts';
 // All server mutations bind ownership from the HttpOnly canonical session.
 const ROOT='/api/v1/member/studio';
 const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
@@ -28,9 +29,16 @@ const UPLOAD_KINDS:Record<StudioCategory,StudioAsset['kind'][]>={
  learning:['document','package'],research:['document','package'],
  other:['image','audio','document','package']
 };
-export function studioEligibleUpload(category:StudioCategory,kind:StudioAsset['kind']):boolean{
+export function studioEligibleUpload(category:StudioCategory,kind:StudioAsset['kind'],fileName?:string):boolean{
+ if(fileName&&isNativeStudioFile(fileName))
+  return kind==='package'&&Object.prototype.hasOwnProperty.call(STUDIO_NATIVE_PACK_EXTENSIONS,category)&&
+   fileName.toLowerCase().endsWith('.'+STUDIO_NATIVE_PACK_EXTENSIONS[category as NativePackStudioCategory]);
  return UPLOAD_KINDS[category].includes(kind);
 }
+export const STUDIO_NATIVE_PACK_MIME='application/vnd.anevum.pack+zip';
+export const STUDIO_NATIVE_PACK_EXTENSIONS={games:'anvg',music:'anva',video:'anvs',art:'anvw',writing:'anvp'} as const;
+export type NativePackStudioCategory=keyof typeof STUDIO_NATIVE_PACK_EXTENSIONS;
+export const isNativeStudioFile=(name:string)=>/\.(anvg|anva|anvs|anvw|anvp)$/i.test(name);
 export interface StudioAsset {
  id:string;name:string;kind:'image'|'audio'|'video'|'document'|'package';
  contentType:string;sizeBytes:number;status:'reserved'|'uploading'|'quarantined'|'deleting';
@@ -40,7 +48,8 @@ export interface StudioHealth {
  service:string;status:string;studioReady?:boolean;studioUploadsReady?:boolean;
 }
 export class StudioError extends Error{
- constructor(readonly status:number,message:string){super(message);this.name='StudioError';}
+ readonly status:number;
+ constructor(status:number,message:string){super(message);this.status=status;this.name='StudioError';}
 }
 function validId(id:string){if(!UUID.test(id))throw Error('Invalid Studio project identifier');return id;}
 function validAsset(id:string){if(!ASSET.test(id))throw Error('Invalid private file identifier');return id;}
@@ -95,30 +104,41 @@ function assetsPath(projectId:string,assetId?:string){return projectPath(project
 export const studioAssets=(projectId:string,signal?:AbortSignal)=>
  request<{assets:StudioAsset[];quotaBytes:number;projectAssetLimit:number;
   memberUsedBytes:number;projectUsedBytes:number;globalUsedBytes:number;globalQuotaBytes:number;
-  storageReady:boolean;uploadsReady:boolean}>(
+  storageReady:boolean;uploadsReady:boolean;nativePacksReady:boolean}>(
   assetsPath(projectId),'GET',undefined,signal);
 const LIMITS:Record<string,[string,number]>={
  png:['image/png',10],jpg:['image/jpeg',10],jpeg:['image/jpeg',10],webp:['image/webp',10],
  gif:['image/gif',10],mp3:['audio/mpeg',20],wav:['audio/wav',20],
  mp4:['video/mp4',20],webm:['video/webm',20],pdf:['application/pdf',10],
- txt:['text/plain',1],md:['text/markdown',1],zip:['application/zip',20]
+ txt:['text/plain',1],md:['text/markdown',1],zip:['application/zip',20],
+ anvg:[STUDIO_NATIVE_PACK_MIME,20],anva:[STUDIO_NATIVE_PACK_MIME,20],
+ anvs:[STUDIO_NATIVE_PACK_MIME,20],anvw:[STUDIO_NATIVE_PACK_MIME,20],
+ anvp:[STUDIO_NATIVE_PACK_MIME,20]
 };
 export function studioCheckFile(file:File):{ok:true;contentType:string;kind:string}|{ok:false;reason:string}{
  if(file.name.length<1||file.name.length>160||/[\\/\u0000-\u001f\u007f]/.test(file.name)||file.name.startsWith('.')||file.name.includes('..'))
   return {ok:false,reason:'Filename is not permitted.'};
  const ext=file.name.split('.').at(-1)?.toLowerCase()||'',rule=LIMITS[ext];
- if(!rule)return {ok:false,reason:'Supported: PNG, JPG, WebP, GIF, MP3, WAV, MP4, WebM, PDF, TXT, MD and ZIP.'};
+ if(!rule)return {ok:false,reason:'Supported private file types include images, audio, video, documents, ZIP and ANEVUM native packs.'};
  if(file.size<1||file.size>rule[1]*1048576)return {ok:false,reason:'This file exceeds its '+rule[1]+' MiB limit.'};
  // The server validates binary signatures. Do not trust the browser MIME claim.
- if(file.type&&file.type!==rule[0]&&!(ext==='md'&&file.type==='text/plain')&&!(ext==='zip'&&file.type==='application/x-zip-compressed'))
+ if(file.type&&file.type!==rule[0]&&!(ext==='md'&&file.type==='text/plain')&&!(ext==='zip'&&file.type==='application/x-zip-compressed')&&
+  !(isNativeStudioFile(file.name)&&['application/octet-stream','application/zip','application/x-zip-compressed'].includes(file.type)))
   return {ok:false,reason:'This extension and file type do not match.'};
  const kind=['png','jpg','jpeg','webp','gif'].includes(ext)?'image':
  ['mp3','wav'].includes(ext)?'audio':['mp4','webm'].includes(ext)?'video':
- ext==='zip'?'package':'document';
+ ext==='zip'||isNativeStudioFile(file.name)?'package':'document';
  return {ok:true,contentType:rule[0],kind};
 }
-export async function studioUpload(projectId:string,file:File,signal?:AbortSignal){
+export async function studioUpload(projectId:string,file:File,signal?:AbortSignal,category?:StudioCategory){
  const checked=studioCheckFile(file);if(!checked.ok)throw Error(checked.reason);
+ if(isNativeStudioFile(file.name)){
+  if(!category||!Object.prototype.hasOwnProperty.call(STUDIO_NATIVE_PACK_EXTENSIONS,category)||
+     !file.name.toLowerCase().endsWith('.'+STUDIO_NATIVE_PACK_EXTENSIONS[category as NativePackStudioCategory]))
+   throw Error('Native package format does not match this project category.');
+  await openNativePack(file.name,new Uint8Array(await file.arrayBuffer()));
+  if(signal?.aborted)throw Error('Upload cancelled before reservation.');
+ }
  const reserved=await request<{id:string}>(assetsPath(projectId),'POST',
   {name:file.name,sizeBytes:file.size,contentType:checked.contentType},signal);
  if(!ASSET.test(reserved.id))throw Error('Invalid upload reservation from server');

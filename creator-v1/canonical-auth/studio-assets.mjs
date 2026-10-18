@@ -1,4 +1,5 @@
 // Private only. Files are quarantined, never executed or published.
+import {NATIVE_PACK_MIME,nativePackExtension,isNativePackForCategory,inspectNativePackForQuarantine} from './native-pack-quarantine.mjs';
 // Creating/updating uploads requires the separate upload flag and an isolated R2
 // binding. Owners may still list/withdraw EXISTING files while uploads are paused.
 const MiB=1048576;
@@ -14,7 +15,10 @@ const RULES=Object.freeze({
  mp4:['video/mp4',20*MiB,'video'],webm:['video/webm',20*MiB,'video'],
  pdf:['application/pdf',10*MiB,'document'],
  txt:['text/plain',MiB,'document'],md:['text/markdown',MiB,'document'],
- zip:['application/zip',20*MiB,'package']
+ zip:['application/zip',20*MiB,'package'],
+ anvg:[NATIVE_PACK_MIME,20*MiB,'package'],anva:[NATIVE_PACK_MIME,20*MiB,'package'],
+ anvs:[NATIVE_PACK_MIME,20*MiB,'package'],anvw:[NATIVE_PACK_MIME,20*MiB,'package'],
+ anvp:[NATIVE_PACK_MIME,20*MiB,'package']
 });
 const HEX=/^[a-f0-9]{32}$/;
 const HEAD={'cache-control':'private, no-store','x-content-type-options':'nosniff',
@@ -69,7 +73,8 @@ function signature(bytes,declared){
  case 'mp4':return bytes.length>=12&&starts(bytes,'ftyp',4);
  case 'webm':return bytes.length>=4&&bytes[0]===0x1a&&bytes[1]===0x45&&bytes[2]===0xdf&&bytes[3]===0xa3;
  case 'pdf':return starts(bytes,'%PDF-');
- case 'zip':return starts(bytes,'PK')&&bytes[2]===3&&bytes[3]===4;
+ case 'zip':case 'anvg':case 'anva':case 'anvs':case 'anvw':case 'anvp':
+  return starts(bytes,'PK')&&bytes[2]===3&&bytes[3]===4;
  case 'txt':case 'md':
    try{return !/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/.test(new TextDecoder('utf-8',{fatal:true}).decode(bytes));}
    catch{return false;}
@@ -95,6 +100,9 @@ export function studioStorageReady(env){
  return env?.CANONICAL_CREATOR_STUDIO_ENABLED==='true'&&
    Boolean(env?.CREATOR_ASSETS?.get&&env?.CREATOR_ASSETS?.put&&env?.CREATOR_ASSETS?.delete);
 }
+export function studioNativePackReady(env,userId){
+ return env?.CANONICAL_CREATOR_NATIVE_PACK_UPLOADS_ENABLED==='true'&&studioUploadReady(env,userId);
+}
 export function studioUploadReady(env,userId){
  // Closed pilot until an explicitly bounded opt-in rollout is approved.
  // This is a canonical Better Auth member ID allowlist, never an email,
@@ -107,6 +115,7 @@ export function studioUploadReady(env,userId){
 export async function canonicalStudioAssets(req,env,user,project,{asset=null,file=null,now=Math.floor(Date.now()/1000),pace}){
  const db=env.MEMBER_DB,store=env.CREATOR_ASSETS;
  const uploadsEnabled=studioUploadReady(env,user.id),storageConnected=studioStorageReady(env);
+ const nativeEnabled=studioNativePackReady(env,user.id);
  if(asset&&!HEX.test(asset))return fail(404,'Not found');
  try{
   if(!asset){
@@ -122,13 +131,17 @@ export async function canonicalStudioAssets(req,env,user,project,{asset=null,fil
      globalQuotaBytes:PILOT_GLOBAL_QUOTA,
      memberUsedBytes:Number(usage?.member_bytes||0),globalUsedBytes:Number(usage?.global_bytes||0),
      projectUsedBytes:assets.reduce((sum,asset)=>sum+Number(asset.size_bytes),0),
-     storageReady:storageConnected,uploadsReady:uploadsEnabled});
+     storageReady:storageConnected,uploadsReady:uploadsEnabled,nativePacksReady:nativeEnabled});
    }
    if(req.method!=='POST')return fail(405,'Method not allowed');
    if(!uploadsEnabled)return fail(404,'New private uploads are disabled');
    if(!mutable(project))return fail(409,'Project locked for review');
    const requested=await body(req);
    let v;try{v=declaration(requested);}catch{return fail(422,'Unsupported file or size');}
+   if(nativePackExtension(v.name)){
+    if(!nativeEnabled)return fail(404,'Native package uploads are disabled');
+    if(!isNativePackForCategory(v.name,project.category))return fail(422,'Native package does not match project category');
+   }
    if(!await pace(db,user.id,'asset',now,60))return fail(429,'Too many asset changes');
    const id=hex(crypto.getRandomValues(new Uint8Array(16)));
    const key='private-quarantine/studio/'+project.id+'/'+id;
@@ -195,6 +208,10 @@ export async function canonicalStudioAssets(req,env,user,project,{asset=null,fil
   if(req.method!=='PUT')return fail(405,'Method not allowed');
   if(!uploadsEnabled)return fail(404,'New private uploads are disabled');
   if(!mutable(project))return fail(409,'Project locked for review');
+  if(nativePackExtension(selected.filename)){
+   if(!nativeEnabled)return fail(404,'Native package uploads are disabled');
+   if(!isNativePackForCategory(selected.filename,project.category))return fail(409,'Native package category changed');
+  }
   if(req.headers.get('content-type')!=='application/octet-stream')return fail(415,'Binary upload required');
   if(selected.status!=='reserved')return fail(409,'Upload already in progress or finished');
   if(!await pace(db,user.id,'asset',now,60))return fail(429,'Too many asset changes');
@@ -210,6 +227,8 @@ export async function canonicalStudioAssets(req,env,user,project,{asset=null,fil
    if(bytes.byteLength!==Number(selected.size_bytes))throw Error('Size changed');
    const declared=declaration({name:selected.filename,sizeBytes:Number(selected.size_bytes),contentType:selected.content_type});
    if(!signature(bytes,declared))throw Error('Signature mismatch');
+   if(nativePackExtension(selected.filename))
+    await inspectNativePackForQuarantine(selected.filename,bytes,project.category);
   }catch{
    await change(db,"UPDATE member_studio_assets SET status='reserved',lease_until=NULL WHERE id=? AND user_id=? AND status='uploading' AND lease_until=?",[asset,user.id,lease]);
    return fail(422,'File bytes differ from the declared type or size');
