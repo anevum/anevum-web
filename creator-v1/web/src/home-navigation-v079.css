@@ -284,6 +284,8 @@
   .av79-gateway strong{font-size:13px}
   .av79-gateway small{font-size:10px}
   .av79-feature{grid-template-columns:1fr}
+  /* Without published creator media, show the real work before any generic index poster. */
+  .av79-feature-art{display:none}
   .av79-feature-art{min-height:124px;height:124px;border-right:0;border-bottom:1px solid #9e9ec151}
   .av79-feature-wordmark{font-size:35px}
   .av79-feature-rings{left:77%;width:200px;height:200px}
