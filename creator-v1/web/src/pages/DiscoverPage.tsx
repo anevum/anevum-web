@@ -78,36 +78,42 @@ export function DiscoverPage({immersive=false}:{immersive?:boolean}={}){
   }
   const categories=resource.state==="ready"?resource.data.categories.categories:[];
   const countByCategory=new Map(categories.map(x=>[x.category,x.count]));
-  return <div className="portal-discover">
-    <PortalHeading
+  return <div className="portal-discover av73-discover">
+    {immersive?<PortalHeading
       eyebrow={world?.eyebrow||"THE PORTALS / EVERYTHING WORTH TRYING"}
       title={world?.title||"EXPLORE THE"} accent={world?.accent||"UNIVERSE."}
       description={world?.description||"Games, apps, interactive experiments and independent work. Search actual published projects, not paid placement or invented activity."}
-      index={world?.index||"DISCOVER / 001"} scene={world?.scene||"portal"}/>
+      index={world?.index||"DISCOVER / 001"} scene={world?.scene||"portal"}/>:
+      <header className="av73-discover-intro">
+        <span className="av73-discover-eyebrow">ANEVUM / DISCOVER</span>
+        <h1>{active?"Explore "+active.label:"Find something worth opening."}</h1>
+        <p>Search genuine, approved games, apps, art and shared tools. See what's actually published before deciding what to explore.</p>
+      </header>}
     <div className="portal-browse-layout">
       <div className="portal-browse-main">
         <section className="portal-box portal-search-hall" aria-label="Search and browse published projects">
           <div className="portal-box-header">
-            <div><span className="kicker">THE CATALOGUE / PUBLISHED WORK</span><h2>{world?.searchTitle||"FIND YOUR NEXT FAVORITE"}</h2></div>
-            <span className="portal-hall-stamp">{world?.stamp||"GAMES / APPS / MORE"}</span>
+            <div><span className="kicker">PUBLIC CATALOGUE</span><h2>{world?.searchTitle||"Browse published work"}</h2></div>
+            <span className="portal-hall-stamp">{world?.stamp||"Approved releases only"}</span>
           </div>
           <form className="portal-wide-search" role="search" onSubmit={search}>
             <label htmlFor="portal-project-query" className="visually-hidden">Search published projects</label>
-            <input id="portal-project-query" type="search" maxLength={100} value={draft} onChange={e=>setDraft(e.target.value)} placeholder="SEARCH THE ENTIRE PORTAL..." />
-            <button type="submit">SEARCH ↗</button>
+            <input id="portal-project-query" type="search" maxLength={100} value={draft} onChange={e=>setDraft(e.target.value)} placeholder="Search projects" />
+            <button type="submit">Search <span aria-hidden="true">↗</span></button>
           </form>
+          <div className="av73-discover-filter-heading"><strong>Filter by type</strong><span>Scroll to see all categories →</span></div>
           <nav className="portal-channel-filters" aria-label="Filter by project type">
             <button type="button" onClick={()=>selectCategory("")} className={!category?"active":""} aria-pressed={!category}>ALL PROJECTS</button>
             {channels.map(x=><button key={x.id} type="button" aria-pressed={category===x.id} className={category===x.id?"active":""} onClick={()=>selectCategory(x.id)}>
               <span aria-hidden="true">{x.mark}</span> {x.label}
             </button>)}
           </nav>
+          <div className="portal-availability-filter" role="group" aria-label="Filter by access cost">
+            <span className="kicker">ACCESS</span>
+            <button type="button" onClick={toggleFreeOnly} aria-pressed={freeOnly} className={freeOnly?"active":""}>Only marked free {freeOnly?"✓":"+"}</button>
+            <small>Based on each creator's published free-to-use declaration, not independently verified cost information.</small>
+          </div>
         </section>
-        <div className="portal-availability-filter" role="group" aria-label="Filter by access cost">
-          <span className="kicker">ACCESS / AVAILABILITY</span>
-          <button type="button" onClick={toggleFreeOnly} aria-pressed={freeOnly} className={freeOnly?"active":""}>ONLY PROJECTS MARKED FREE {freeOnly?"✓":"+"}</button>
-          <small>Based on each creator's published free-to-use declaration, not independently verified cost information.</small>
-        </div>
         {resource.state==="loading"&&<LoadingState label="Reading the live project catalogue"/>}
         {resource.state==="error"&&<ErrorState title="THE PORTAL COULD NOT LOAD" detail="Published project data is currently unavailable. No sample projects were substituted."/>}
         {resource.state==="ready"&&<>
