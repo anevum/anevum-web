@@ -32,6 +32,30 @@ CREATE TABLE IF NOT EXISTS fs_memberships (
   FOREIGN KEY(circle_id) REFERENCES fs_private_circles(circle_id) ON DELETE CASCADE
 );
 
+
+-- Single-use invitation records. Store SHA-256 digest of a strong randomly
+-- generated opaque token, never the bearer token itself or email/phone address.
+-- Pending invite does not confer circle membership or GPS viewing rights.
+CREATE TABLE IF NOT EXISTS fs_circle_invitations (
+  invitation_id TEXT PRIMARY KEY NOT NULL,
+  circle_id TEXT NOT NULL,
+  invited_by_subject_id TEXT NOT NULL,
+  invitee_subject_id TEXT NOT NULL,
+  token_digest TEXT NOT NULL UNIQUE CHECK(length(token_digest) = 64),
+  role TEXT NOT NULL CHECK(role = 'adult'),
+  state TEXT NOT NULL DEFAULT 'pending'
+    CHECK(state IN ('pending','accepted','expired','revoked')),
+  issued_at_ms INTEGER NOT NULL CHECK(issued_at_ms > 0),
+  expires_at_ms INTEGER NOT NULL,
+  accepted_at_ms INTEGER,
+  CHECK(invited_by_subject_id <> invitee_subject_id),
+  CHECK(expires_at_ms > issued_at_ms),
+  CHECK(expires_at_ms <= issued_at_ms + 86400000),
+  CHECK(accepted_at_ms IS NULL OR accepted_at_ms >= issued_at_ms),
+  FOREIGN KEY(circle_id,invited_by_subject_id)
+    REFERENCES fs_memberships(circle_id,subject_id) ON DELETE CASCADE
+);
+
 CREATE TABLE IF NOT EXISTS fs_share_sessions (
   session_id TEXT PRIMARY KEY NOT NULL,
   circle_id TEXT NOT NULL,
@@ -85,6 +109,8 @@ CREATE TABLE IF NOT EXISTS fs_access_audit (
   request_correlation_id TEXT NOT NULL
 );
 
+CREATE INDEX IF NOT EXISTS ix_fs_invite_expiry
+  ON fs_circle_invitations(circle_id,invitee_subject_id,state,expires_at_ms);
 CREATE INDEX IF NOT EXISTS ix_fs_membership_subject
   ON fs_memberships(subject_id,state);
 CREATE INDEX IF NOT EXISTS ix_fs_sessions_expiry
@@ -98,3 +124,12 @@ CREATE INDEX IF NOT EXISTS ix_fs_audit_expiry
 -- grant age relative to its session, or revocation propagation by themselves.
 -- These are enforced by the server-side policy on EVERY read/write/stream.
 -- No table here is authorized for direct public exposure.
+
+-- R1 invitation acceptance MUST be transactional:
+-- 1. Validate authenticated adult invitee session and SHA-256(token) equality.
+-- 2. UPDATE fs_circle_invitations SET state='accepted', accepted_at_ms=:now
+--    WHERE invitation_id=:id AND invitee_subject_id=:session_actor
+--      AND state='pending' AND issued_at_ms<=:now AND expires_at_ms>:now;
+-- 3. Require changes()=1; then INSERT one independently verified membership.
+-- 4. Do NOT create any fs_share_session or fs_viewer_grant during acceptance.
+-- 5. Rate limit and audit uniformly; never return account-enumeration details.
