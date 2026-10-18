@@ -145,7 +145,8 @@ async function upload(req,env,u) {
   }
   const usage=await query(env.DB,
     "SELECT COALESCE(SUM(r.archive_bytes),0) AS bytes FROM anevum_package_releases r JOIN anevum_package_projects p ON r.project_id=p.id WHERE p.owner_id=? AND r.status NOT IN ('failed','revoked') AND p.status!='deleted'",u.id);
-  if(usage.bytes+file?.size>100*MiB) return fail(409,"Creator alpha has a 100 MiB compressed upload allowance");
+  if(!file || typeof file.size !== "number") return fail(422,"Upload a ZIP or HTML project");
+  if(usage.bytes+file.size>100*MiB) return fail(409,"Creator alpha has a 100 MiB compressed upload allowance");
   const now=Math.floor(Date.now()/1000);
   const attempts=await query(env.DB,
     "INSERT INTO anevum_package_upload_limits(owner_id,window_start,attempts) VALUES(?,?,1) " +
