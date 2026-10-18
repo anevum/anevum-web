@@ -20,16 +20,17 @@ function setup(){
   .run('outsider','Outsider Test','outsider@synthetic.invalid',1,'2026-10-17T12:30:00.000Z','2026-10-17T12:30:00.000Z');
  f.db.prepare("INSERT INTO staff_access_grants(member_id,role,granted_by,created_at,updated_at) VALUES('founder','owner','founder',1234,1234)").run();
  const log=[],router=createIrenApexStaffWorker();
+ const validExpiry=new Date(Date.now()+3600*1000).toISOString();
  const env={...f.env,CANONICAL_STAFF_OPS_ENABLED:'true',CANONICAL_FORUM_ENABLED:'true',
   APEX_AUTH:{async fetch(request){
    log.push({endpoint:new URL(request.url).pathname,cookie:request.headers.get('cookie'),
     leaked:request.headers.get('authorization')!==null});
    if(request.headers.get('cookie')==='auth=owner')return Response.json({
-    session:{userId:'founder',id:'synthetic-signed-session'},user:{id:'founder',emailVerified:true}});
+    session:{userId:'founder',id:'synthetic-signed-session',expiresAt:validExpiry},user:{id:'founder',emailVerified:true}});
    if(request.headers.get('cookie')==='auth=outsider')return Response.json({
-    session:{userId:'outsider',id:'synthetic-signed-session'},user:{id:'outsider',emailVerified:true}});
+    session:{userId:'outsider',id:'synthetic-signed-session',expiresAt:validExpiry},user:{id:'outsider',emailVerified:true}});
    if(request.headers.get('cookie')==='auth=unverified')return Response.json({
-    session:{userId:'founder',id:'synthetic-signed-session'},user:{id:'founder',emailVerified:false}});
+    session:{userId:'founder',id:'synthetic-signed-session',expiresAt:validExpiry},user:{id:'founder',emailVerified:false}});
    return Response.json({session:null,user:null});
   }},
   ASSETS:{async fetch(request){
