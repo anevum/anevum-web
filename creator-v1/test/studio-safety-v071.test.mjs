@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {canonicalStudioSafety,takedownReviewedCreation,studioSafetyReady} from '../canonical-auth/studio-safety.mjs';
 import {canonicalPublicStudioCreations,canonicalStudioPublicationConsent} from '../canonical-auth/studio-publications.mjs';
 import {memberRecognitionState} from '../canonical-auth/recognition.mjs';
+import {canonicalStudio} from '../canonical-auth/studio.mjs';
 import {database,project,consent,publish,now,base,env,owner,api,scalar} from './studio-publication-evidence-v070.test.mjs';
 
 const safetyEnv=db=>({...env(db),CANONICAL_STUDIO_SAFETY_REVIEWER_IDS:'safety'});
@@ -152,4 +153,28 @@ test('V071 safety endpoint rejects caller-supplied award, user and XP arguments'
  }
  assert.deepEqual(await earned(db),['first_creation']);
  assert.equal(scalar(db,'SELECT COUNT(*) c FROM member_studio_publication_takedowns').c,0);
+});
+
+test('V071 creator cannot delete a withdrawn historical publication by first returning its private project to draft',async t=>{
+ const db=database();t.after(()=>db.raw.close());
+ const p=await released(db,1);
+ const revoked=await canonicalStudioPublicationConsent(api(p.id,'DELETE',{
+  submissionId:p.submissionId,revision:2,scope:'external_metadata_only',accepted:true
+ }),safetyEnv(db),owner('owner'),p.id,now+10);
+ assert.equal(revoked.status,200);
+ const withdraw=await canonicalStudio(new Request(base+'/api/v1/member/studio/projects/'+p.id+'/withdraw',{
+  method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({revision:2})
+ }),safetyEnv(db),owner('owner'),now+11);
+ assert.equal(withdraw.status,200,await withdraw.clone().text());
+ const w=await withdraw.json();
+ const deleted=await canonicalStudio(new Request(base+'/api/v1/member/studio/projects/'+p.id,{
+  method:'DELETE',headers:{'content-type':'application/json'},
+  body:JSON.stringify({revision:w.project.revision})
+ }),safetyEnv(db),owner('owner'),now+12);
+ assert.equal(deleted.status,409,'member project deletion may not cascade away public release audit');
+ assert.equal(scalar(db,'SELECT COUNT(*) c FROM member_studio_publications WHERE project_id=?',p.id).c,1);
+ assert.deepEqual(await earned(db),['first_creation']);
+ const decision=await takedownReviewedCreation(db,audit(p,now+13));
+ assert.equal(decision.ok,true);
+ assert.deepEqual(await earned(db),[]);
 });
