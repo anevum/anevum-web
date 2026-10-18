@@ -1,0 +1,67 @@
+name: Porchlight isolated concept review
+
+on:
+  push:
+    branches:
+      - build/porchlight-neighborhood-pilot-v002-20261017-001
+    paths:
+      - "experiments/porchlight/**"
+      - ".github/workflows/porchlight-isolated-review.yml"
+  pull_request:
+    paths:
+      - "experiments/porchlight/**"
+      - ".github/workflows/porchlight-isolated-review.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  source-and-privacy:
+    name: Offline and privacy-contract tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - run: node --check experiments/porchlight/model.mjs
+      - run: node --check experiments/porchlight/app.js
+      - run: node --check experiments/porchlight/browser-smoke.mjs
+      - run: node --check experiments/porchlight/build-standalone.mjs
+      - run: node --test experiments/porchlight/model.test.mjs experiments/porchlight/static.test.mjs
+
+  synthetic-browser:
+    name: Responsive synthetic-browser acceptance
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    needs: source-and-privacy
+    defaults:
+      run:
+        working-directory: experiments/porchlight
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - run: npm install --no-audit --no-fund --package-lock=false
+      - run: npx playwright install --with-deps chromium
+      - run: node build-standalone.mjs
+      - run: node browser-smoke.mjs
+      - name: Retain synthetic-only screenshot evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: porchlight-synthetic-responsive-captures
+          path: experiments/porchlight/porchlight-*.png
+          retention-days: 7
+          if-no-files-found: ignore
+
+      - name: Portable offline HTML for owner review
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: porchlight-portable-offline-demo
+          path: experiments/porchlight/porchlight-offline.html
+          retention-days: 7
