@@ -38,11 +38,31 @@ writeFileSync(brokenPath,Buffer.from(broken));
 const wav=new Uint8Array(16);
 wav.set([82,73,70,70,8,0,0,0,87,65,86,69,102,109,116,32]);
 const album=await createNativePack({kind:'album',title:'Signals Vol. 1',creator:'Synthetic Creator',
- version:'0.1.0',document:{schema:'anevum.album.v1',tracks:[
+ version:'0.1.0',document:{schema:'anevum.album.v1',cover:'assets/cover.png',tracks:[
   {id:'signal-one',title:'First Transmission',file:'assets/signal.wav'}
- ]},assets:{'assets/signal.wav':wav}});
+ ]},assets:{'assets/signal.wav':wav,'assets/cover.png':image}});
 const albumPath=join(temp,album.filename);
 writeFileSync(albumPath,Buffer.from(album.bytes));
+const video=new Uint8Array([0,0,0,16,102,116,121,112,105,115,111,109,0,0,0,0]);
+const series=await createNativePack({kind:'series',title:'Chronicles of Continuance',
+ creator:'Synthetic Creator',version:'0.1.0',
+ document:{schema:'anevum.series.v1',poster:'assets/poster.png',episodes:[
+  {id:'pilot',title:'Arrival',file:'assets/pilot.mp4'}
+ ]},assets:{'assets/pilot.mp4':video,'assets/poster.png':image}});
+const seriesPath=join(temp,series.filename);
+writeFileSync(seriesPath,Buffer.from(series.bytes));
+const visual=await createNativePack({kind:'visual',title:'The First Gallery',creator:'Synthetic Creator',
+ version:'0.1.0',document:{schema:'anevum.visual.v1',pages:[
+  {image:'assets/art.png',caption:'A cosmic aperture'}
+ ]},assets:{'assets/art.png':image}});
+const visualPath=join(temp,visual.filename);
+writeFileSync(visualPath,Buffer.from(visual.bytes));
+const project=await createNativePack({kind:'project',title:'A Written Passage',creator:'Synthetic Creator',
+ version:'0.1.0',document:{schema:'anevum.blocks.v1',blocks:[
+  {id:'a9b5aef1-fb0a-4dfa-86ab-010203040506',type:'paragraph',text:'A world unfolds in silence.',target:null}
+ ]}});
+const projectPath=join(temp,project.filename);
+writeFileSync(projectPath,Buffer.from(project.bytes));
 
 const mime={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8',
  '.css':'text/css; charset=utf-8','.webp':'image/webp','.svg':'image/svg+xml',
@@ -177,7 +197,23 @@ try{
  await until(()=>evaluate("document.querySelector('.np-page-loaded h2')?.textContent==='Signals Vol. 1'"));
  assert.equal(await evaluate("document.querySelectorAll('.np-media-entry audio[controls]').length"),1);
  assert.ok((await evaluate("document.querySelector('.np-media-entry strong')?.textContent")).includes('First Transmission'));
- acceptance.tests.push('Validated ANVA opens track list with native audio control');
+ assert.equal(await evaluate("document.querySelectorAll('.np-experience .np-cover').length"),1);
+ acceptance.tests.push('Validated ANVA opens track list and packaged album cover');
+ await pick(seriesPath);
+ await until(()=>evaluate("document.querySelector('.np-page-loaded h2')?.textContent==='Chronicles of Continuance'"));
+ assert.equal(await evaluate("document.querySelectorAll('.np-media-entry video[controls]').length"),1);
+ assert.equal(await evaluate("document.querySelector('.np-media-entry strong')?.textContent?.includes('Arrival')"),true);
+ assert.equal(await evaluate("document.querySelector('.np-media-entry video').getAttribute('poster')?.startsWith('blob:')"),true);
+ acceptance.tests.push('Validated ANVS displays episode player and packaged poster');
+ await pick(visualPath);
+ await until(()=>evaluate("document.querySelector('.np-page-loaded h2')?.textContent==='The First Gallery'"));
+ assert.equal(await evaluate("document.querySelector('.np-gallery figcaption')?.textContent"),'A cosmic aperture');
+ assert.equal(Boolean(await until(()=>evaluate("document.querySelector('.np-gallery img')?.naturalWidth===1"))),true);
+ acceptance.tests.push('Validated ANVW displays original image and caption');
+ await pick(projectPath);
+ await until(()=>evaluate("document.querySelector('.np-page-loaded h2')?.textContent==='A Written Passage'"));
+ assert.equal(await evaluate("document.querySelector('.np-project p:not(.np-eyebrow)')?.textContent"),'A world unfolds in silence.');
+ acceptance.tests.push('Validated ANVP renders declarative writing blocks without scripts');
  await evaluate("document.querySelector('.np-page-clear').click()");
  await until(()=>evaluate("Boolean(document.querySelector('.np-page-empty'))"));
  acceptance.tests.push('Close clears player and returns to empty local stage');
