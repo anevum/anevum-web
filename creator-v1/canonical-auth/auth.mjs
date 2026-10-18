@@ -3,7 +3,7 @@ import {emailOTP} from "better-auth/plugins";
 import {
   CANONICAL_ORIGIN,CANONICAL_AUTH_PATH,CANONICAL_COOKIE_PREFIX,
   canonicalRequestOrigin,canonicalCookiePrefix,
-  canonicalConfigState,permitCanonicalUserCreation
+  canonicalConfigState,permitCanonicalUserCreationApproved
 } from "./policy.mjs";
 
 /**
@@ -53,7 +53,7 @@ export function canonicalAuthOptions(env){
       storeOTP:"hashed",
       disableSignUp:!(stage.invited||stage.open),
       async sendVerificationOTP({email,otp,type}){
-        if(type!=="sign-in"||!permitCanonicalUserCreation(env,email))throw Error("OTP not permitted");
+        if(type!=="sign-in"||!await permitCanonicalUserCreationApproved(env,email))throw Error("OTP not permitted");
         const response=await fetch("https://api.resend.com/emails",{
           method:"POST",
           headers:{"Authorization":"Bearer "+env.CANONICAL_RESEND_API_KEY,
@@ -73,7 +73,7 @@ export function canonicalAuthOptions(env){
       user:{
         create:{
           before:async user=>
-            permitCanonicalUserCreation(env,user?.email)?{data:user}:false
+            await permitCanonicalUserCreationApproved(env,user?.email)?{data:user}:false
         }
       }
     },
