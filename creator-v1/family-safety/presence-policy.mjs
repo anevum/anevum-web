@@ -177,3 +177,55 @@ export function buildViewerGrant({ actorId, viewerId, circleId, circle, membersh
     revokedAt: null
   };
 }
+
+
+/**
+ * Private adult-circle invitations are distinct from location sharing.
+ * The caller must generate an unpredictable invitation token server-side,
+ * store only its digest, and send the raw token by a private secure channel.
+ */
+export const MAX_INVITATION_MS = 24 * 60 * 60 * 1_000;
+
+export function buildAdultCircleInvitation({ actorId, inviteeId, circleId,
+  circle, memberships, now, invitationId, tokenDigest, expiresAt } = {}) {
+  if (!validId(actorId) || !validId(inviteeId) || !validId(circleId) ||
+      actorId === inviteeId || !validId(invitationId) ||
+      !validNow(now) || !validTime(expiresAt) || expiresAt <= now ||
+      expiresAt > now + MAX_INVITATION_MS ||
+      !isRecord(circle) || circle.id !== circleId || circle.state !== "active" ||
+      !hasActiveMember(memberships, circleId, actorId) ||
+      (Array.isArray(memberships) && memberships.some(m =>
+        isRecord(m) && m.circleId === circleId && m.subjectId === inviteeId))) return null;
+  // Do NOT accept raw invitation tokens or identities in this field.
+  if (typeof tokenDigest !== "string" || !/^[a-f0-9]{64}$/.test(tokenDigest)) return null;
+  return {
+    id: invitationId,
+    circleId, invitedById: actorId, inviteeId,
+    tokenDigest,
+    role: "adult", state: "pending",
+    issuedAt: now, expiresAt, acceptedAt: null
+  };
+}
+
+/**
+ * Acceptance requires verified adult session identity and independently checked
+ * single-use invite proof. The service MUST atomically transition pending ->
+ * accepted and check affected row count = 1, otherwise reject. This pure
+ * predicate does not perform token validation or consume DB rows.
+ */
+export function canAcceptAdultCircleInvitation({
+  actorId, verifiedAdult, circleId, circle, invite,
+  digestMatches, now
+} = {}) {
+  if (!validId(actorId) || !validId(circleId) || !validNow(now) ||
+      verifiedAdult !== true || digestMatches !== true ||
+      !isRecord(circle) || circle.id !== circleId || circle.state !== "active" ||
+      !isRecord(invite) || !validId(invite.id) ||
+      invite.circleId !== circleId || invite.inviteeId !== actorId ||
+      invite.role !== "adult" || invite.state !== "pending" ||
+      invite.acceptedAt != null || !validTime(invite.issuedAt) ||
+      !validTime(invite.expiresAt) || invite.issuedAt > now ||
+      now >= invite.expiresAt ||
+      invite.expiresAt - invite.issuedAt > MAX_INVITATION_MS) return false;
+  return true;
+}
