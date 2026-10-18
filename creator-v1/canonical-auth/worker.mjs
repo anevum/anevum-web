@@ -12,7 +12,7 @@ import {canonicalProgression,progressionReady} from './progression.mjs';
 import {canonicalSpace} from "./space.mjs";
 import {canonicalRecognition} from './recognition.mjs';
 import {canonicalRecognitionCatalog} from './recognition-catalog.mjs';
-import {matchRewardMedia,earnedRewardMedia} from './reward-media.mjs';
+import {matchRewardMedia,earnedRewardMedia,matchRewardInventory,earnedRewardInventory} from './reward-media.mjs';
 import {boundedText} from "./request-body.mjs";
 import {supporterMember,supporterWebhook} from "./supporter.mjs";
 import {supporterRewardsRoute} from "./supporter-rewards.mjs";
@@ -108,8 +108,11 @@ export function createCanonicalStageWorker({authFactory=createCanonicalAuth}={})
     if(!isCanonicalOrigin(request,env))return fail(request,404);
     const url=new URL(request.url),path=url.pathname;
     const rewardMedia=matchRewardMedia(path);
+    const rewardInventory=matchRewardInventory(path);
     const ownRewardMedia=rewardMedia?.handle===null;
     const publicRewardMedia=typeof rewardMedia?.handle==='string';
+    const ownRewardInventory=rewardInventory?.handle===null;
+    const publicRewardInventory=typeof rewardInventory?.handle==='string';
     const publicHandle=path.match(PUBLIC_MEMBER);
     const publicCommunity=/^\/api\/v1\/community\/(?:members|activity)$/.test(path);
     const forumRoute=/^\/api\/v1\/community\/(?:threads(?:\/[a-f0-9-]{36}(?:\/(?:replies|reaction))?|\/?)?|reports)$/.test(path)||(/^\/api\/v1\/member\/forum-submissions(?:\/[a-f0-9-]{36})?$/.test(path)||path==="/api/v1/member/forum-review");
@@ -133,12 +136,12 @@ export function createCanonicalStageWorker({authFactory=createCanonicalAuth}={})
     // This is a proposed, source-only pilot. Do not expose even a GET
     // endpoint without a deliberate rollout flag and an approved D1 schema.
     if(ownProjectSave&&env?.CANONICAL_PROJECT_SAVES_ENABLED!=="true")return fail(request,404);
-    if(path!==HEALTH && path!==METHODS && !ownRewardMedia && !publicRewardMedia && !publicRecognitionCatalog && !publicHandle && !ownProfile && !ownExport && !ownClosure && !ownSpace && !publicSpace && !ownRecognition && !publicCommunity && !forumRoute && !publicMetrics && !ownProgression && !ownSupporter && !ownProjectSave && !ownStudio && !ownStudioReview &&
+    if(path!==HEALTH && path!==METHODS && !ownRewardMedia && !publicRewardMedia && !ownRewardInventory && !publicRewardInventory && !publicRecognitionCatalog && !publicHandle && !ownProfile && !ownExport && !ownClosure && !ownSpace && !publicSpace && !ownRecognition && !publicCommunity && !forumRoute && !publicMetrics && !ownProgression && !ownSupporter && !ownProjectSave && !ownStudio && !ownStudioReview &&
       !(path.startsWith(CANONICAL_AUTH_PATH+"/") &&
         (AUTH_ALLOWLIST[request.method]?.has(path)??false)))
       return fail(request,404);
 
-    if((publicHandle||publicSpace||rewardMedia) && !READ_METHODS.has(request.method))return fail(request,404);
+    if((publicHandle||publicSpace||rewardMedia||rewardInventory) && !READ_METHODS.has(request.method))return fail(request,404);
     if(publicMetrics&&request.method!=="GET")return fail(request,405);
     if(publicRecognitionCatalog&&!READ_METHODS.has(request.method))return fail(request,405);
     if(ownProfile && !["GET","POST","PATCH"].includes(request.method))return fail(request,404);
@@ -158,7 +161,7 @@ export function createCanonicalStageWorker({authFactory=createCanonicalAuth}={})
     const ready=configured.operational&&await canonicalSchemaReady(env);
     const profilesReady=ready&&await canonicalCreatorSchemaReady(env.MEMBER_DB);
     const stageReady=ready&&profilesReady;
-    if(rewardMedia&&!stageReady)return fail(request,503);
+    if((rewardMedia||rewardInventory)&&!stageReady)return fail(request,503);
     if(path===HEALTH)return safeJson(request,{
       service:"anevum-canonical-auth-staging",
       status:stageReady?"ready":"closed",
@@ -190,6 +193,7 @@ export function createCanonicalStageWorker({authFactory=createCanonicalAuth}={})
     const callback=path.match(/^\/api\/v1\/member\/auth\/callback\/(google|github|apple|microsoft)$/);
     if(callback&&!configured[callback[1]])return fail(request,404);
     if(publicRewardMedia)return safeResponse(await earnedRewardMedia(request,env,null,rewardMedia));
+    if(publicRewardInventory)return safeResponse(await earnedRewardInventory(request,env,null,rewardInventory));
     if(publicMetrics)return safeResponse(await publicSupporterTelemetry(request,env));
     if(publicRecognitionCatalog)return safeResponse(await canonicalRecognitionCatalog(request,env));
     if(publicCommunity)return safeResponse(await canonicalCommunity(request,env));
@@ -298,10 +302,11 @@ export function createCanonicalStageWorker({authFactory=createCanonicalAuth}={})
         if(!session?.user?.id||session.user.emailVerified!==true)
           return safeJson(request,{error:"Verified sign-in required"},401);
       }
-      if(ownRewardMedia||ownProfile||ownExport||ownClosure||ownSpace||ownRecognition||ownProgression||ownSupporter||ownProjectSave||ownStudio||ownStudioReview){
+      if(ownRewardMedia||ownRewardInventory||ownProfile||ownExport||ownClosure||ownSpace||ownRecognition||ownProgression||ownSupporter||ownProjectSave||ownStudio||ownStudioReview){
         const session=await auth.api.getSession({headers:clean.headers});
         if(!session?.user)return safeJson(request,{error:"Sign-in required"},401);
         if(ownRewardMedia)return safeResponse(await earnedRewardMedia(clean,env,session.user,rewardMedia));
+        if(ownRewardInventory)return safeResponse(await earnedRewardInventory(clean,env,session.user,rewardInventory));
         if(ownClosure)return safeResponse(await canonicalAccountClosure(clean,env,session.user,session.session));
         if(ownStudioReview)return safeResponse(await canonicalStudioReview(clean,env,session.user));
         if(ownStudio)return safeResponse(await canonicalStudio(clean,env,session.user));
