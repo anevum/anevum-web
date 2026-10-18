@@ -34,13 +34,19 @@ const safeExternal=value=>{
   &&u.hostname.length>3&&!/^(?:localhost|.*\.localhost|127(?:\.\d+){3}|0\.0\.0\.0|\[::1\])$/i.test(u.hostname);
  }catch{return false;}
 };
+const canonicalLink=value=>{
+ const u=new URL(value);
+ u.hash='';u.search='';
+ u.pathname=u.pathname.replace(/\/+$/,'')||'/';
+ return u.href;
+};
 // No implicit feature activation from an old or partially installed schema.
 export async function studioPublicationReady(db){
  try{
   if(!db?.prepare)return false;
   const names=await read(db,"SELECT name FROM sqlite_master WHERE type='table' AND name IN "+
-   "('member_studio_publication_consents','member_studio_publication_reviews','member_studio_publications')");
-  return new Set(names.map(x=>x.name)).size===3;
+   "('member_studio_publication_consents','member_studio_publication_reviews','member_studio_publications','member_studio_publication_links')");
+  return new Set(names.map(x=>x.name)).size===4;
  }catch{return false;}
 }
 const eligibleSnapshot=async(db,projectId,userId,revision)=>{
@@ -123,6 +129,8 @@ export async function canonicalStudioPublicationConsent(req,env,user,projectId,n
 
 const qualifiedPublication=
  "p.status='published' AND c.revoked_at IS NULL "+
+ "AND EXISTS(SELECT 1 FROM member_studio_publication_links l "+
+ "WHERE l.project_id=p.project_id AND l.user_id=p.user_id) "+
  "AND r.action='publish_metadata' AND r.rights_checked=1 AND r.content_checked=1 "+
  "AND r.external_link_checked=1 AND r.owner_id=p.user_id AND r.reviewer_id<>p.user_id "+
  "AND c.user_id=p.user_id AND c.project_id=p.project_id "+
@@ -189,6 +197,8 @@ export async function publishedCreationBadgeStatements(db,{projectId,reviewId,no
    " WHERE q.user_id=p.user_id AND q.status='published' AND qc.revoked_at IS NULL "+
    " AND qr.reviewer_id<>q.user_id AND qr.owner_id=q.user_id AND qr.rights_checked=1 "+
    " AND qr.content_checked=1 AND qr.external_link_checked=1 "+
+   " AND EXISTS(SELECT 1 FROM member_studio_publication_links ql "+
+   "WHERE ql.project_id=q.project_id AND ql.user_id=q.user_id) "+
    " AND NOT EXISTS(SELECT 1 FROM member_studio_submission_assets ax WHERE ax.submission_id=q.submission_id))>=?";
   out.push(db.prepare(
    "INSERT OR IGNORE INTO member_recognition_grants"+
@@ -234,11 +244,10 @@ export async function publishReviewedExternalStudioMetadata(db,{
  if(!consent)return {ok:false,reason:'Author did not consent to this frozen release'};
  // Same external project URL cannot count twice for one author, even if
  // submitted under a different Studio project slug.
- const url=snapshot.demo_url||snapshot.source_url;
+ const link=canonicalLink(snapshot.demo_url||snapshot.source_url);
  const duplicate=await first(db,
-  "SELECT 1 FROM member_studio_publications p JOIN member_studio_submissions s ON s.id=p.submission_id "+
-  "WHERE p.user_id=? AND p.status='published' AND COALESCE(s.demo_url,s.source_url)=? LIMIT 1",
-  project.user_id,url);
+  'SELECT 1 FROM member_studio_publication_links WHERE user_id=? AND canonical_link=?',
+  project.user_id,link);
  if(duplicate)return {ok:false,reason:'Identical external creation already published'};
  const id=crypto.randomUUID();
  const attestation=db.prepare(
@@ -270,8 +279,15 @@ export async function publishReviewedExternalStudioMetadata(db,{
   "AND NOT EXISTS(SELECT 1 FROM member_studio_submission_assets a WHERE a.submission_id=s.id) "+
   'ON CONFLICT(project_id) DO NOTHING RETURNING project_id'
  ).bind(now,snapshot.id,projectId,revision,id,reviewerId);
+ // Unique link claim follows the public record inside one D1 transaction.
+ // A duplicate raises a uniqueness error and rolls back ALL statements.
+ const linkClaim=db.prepare(
+  'INSERT INTO member_studio_publication_links(user_id,canonical_link,project_id) '+
+  'SELECT user_id,?,project_id FROM member_studio_publications '+
+  'WHERE project_id=? AND review_id=?'
+ ).bind(link,projectId,id);
  const badges=await publishedCreationBadgeStatements(db,{projectId,reviewId:id,now,enabled});
- const result=await db.batch([attestation,publication,...badges]);
+ const result=await db.batch([attestation,publication,linkClaim,...badges]);
  const rows=(i)=>Array.isArray(result?.[i]?.results)?result[i].results:[];
  if(rows(0).length!==1||rows(1).length!==1)return {ok:false,reason:'Publication changed during review'};
  return {ok:true,projectId,publishedAt:now,issuedFrom:'verified-publication'};
