@@ -29,7 +29,10 @@ const UPLOAD_KINDS:Record<StudioCategory,StudioAsset['kind'][]>={
  learning:['document','package'],research:['document','package'],
  other:['image','audio','document','package']
 };
-export function studioEligibleUpload(category:StudioCategory,kind:StudioAsset['kind']):boolean{
+export function studioEligibleUpload(category:StudioCategory,kind:StudioAsset['kind'],fileName?:string):boolean{
+ if(fileName&&isNativeStudioFile(fileName))
+  return kind==='package'&&Object.prototype.hasOwnProperty.call(STUDIO_NATIVE_PACK_EXTENSIONS,category)&&
+   fileName.toLowerCase().endsWith('.'+STUDIO_NATIVE_PACK_EXTENSIONS[category as NativePackStudioCategory]);
  return UPLOAD_KINDS[category].includes(kind);
 }
 export const STUDIO_NATIVE_PACK_MIME='application/vnd.anevum.pack+zip';
