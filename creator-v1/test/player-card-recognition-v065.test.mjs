@@ -59,7 +59,8 @@ test('V065 registry preserves exactly three conventional badges and distinct sca
  assert.match(card,/safeConstellation/);
  assert.match(honor,/av65-medal/);
  assert.match(honor,/av65-ribbon/);
- assert.match(renderer,/registerAnimatedSpecimen/);
+ assert.doesNotMatch(renderer,/registerAnimatedSpecimen/);
+ assert.match(renderer,/av73-static-level-icon/);
  assert.match(migration,/reviewed_by<>granted_by/);
  assert.match(migration,/CREATE TABLE IF NOT EXISTS member_recognition_grants/);
  assert.doesNotMatch(migration,/UPDATE member_xp_events|DELETE FROM member_space_milestones/);
