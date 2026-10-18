@@ -223,3 +223,16 @@
 .st-takedown-button:not(:disabled):hover{border-color:#ffbfd0;background:#633342}
 .st-takedown-button:disabled{opacity:.44;cursor:not-allowed}
 @media(prefers-reduced-motion:reduce){.st-takedown-button{transition:none}}
+
+/* V072 — Continuance Institute / author appeals and independent findings. */
+.st-appeal-desk{position:relative;background:linear-gradient(147deg,#1a162a,#0c1423 67%,#121d2a);border-color:#a995c068;overflow:hidden}
+.st-appeal-desk:before{content:'';pointer-events:none;position:absolute;inset:0 0 auto;height:2px;background:linear-gradient(90deg,#f1a9ad,#b6a8e8,#8cbac6)}
+.st-appeal-desk>.st-muted{max-width:880px;line-height:1.65}
+.st-appeal-desk .st-review{border-color:#c3accb3e;background:linear-gradient(145deg,#151729,#101b2a)}
+.st-appeal-outcome{margin:14px 0 18px;padding:15px;border-radius:7px;border:1px solid #cbb4d24d;background:#d8bee20b}
+.st-appeal-outcome strong{color:#f4d6e4;font-size:.78rem;letter-spacing:.055em}
+.st-appeal-outcome>p{overflow-wrap:anywhere;white-space:pre-wrap;line-height:1.55}
+.st-appeal-desk .st-publication-state{margin:14px 0 20px;border-color:#b19be250}
+.st-appeal-desk .st-field{margin:13px 0}
+.st-appeal-desk .st-button{max-width:100%;text-wrap:balance}
+@media(max-width:640px){.st-appeal-desk{padding:15px}.st-appeal-desk .st-review{padding:13px}.st-appeal-desk .st-button{width:100%}}

@@ -35,7 +35,8 @@ function database(){
   'canonical-auth/migrations/0009_private_review_snapshots.sql',
   'canonical-auth/migrations/0010_player_recognition.sql',
   'canonical-auth/migrations/0011_studio_publication_evidence.sql',
-  'canonical-auth/migrations/0012_studio_publication_takedowns.sql'
+  'canonical-auth/migrations/0012_studio_publication_takedowns.sql',
+  'canonical-auth/migrations/0013_studio_creation_appeals.sql'
  ])raw.exec(content(file));
  const db={
   raw,
@@ -71,6 +72,8 @@ const env=db=>({
  CANONICAL_STUDIO_PUBLICATION_ENABLED:'true',
  CANONICAL_STUDIO_SAFETY_ENABLED:'true',
  CANONICAL_STUDIO_SAFETY_REVIEWER_IDS:'safety',
+ CANONICAL_STUDIO_APPEALS_ENABLED:'true',
+ CANONICAL_STUDIO_APPEAL_REVIEWER_IDS:'other',
  CANONICAL_RECOGNITION_ENABLED:'true',
  CANONICAL_STUDIO_REVIEWER_IDS:'reviewer'
 });

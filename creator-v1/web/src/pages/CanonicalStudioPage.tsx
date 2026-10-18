@@ -10,6 +10,7 @@ import {
 } from '../lib/canonical-studio';
 import {StudioPublicationPanel} from '../components/StudioPublicationPanel';
 import {StudioSafetyDesk} from '../components/StudioSafetyDesk';
+import {StudioAppealsPanel,StudioAppealReviewDesk} from '../components/StudioAppealsPanel';
 import './canonical-studio.css';
 
 const CATEGORY_GUIDE:Record<StudioCategory,string>={
@@ -42,7 +43,7 @@ const editForm=(p:StudioProject):StudioDraft=>({
  aiDisclosure:p.aiDisclosure,humanContribution:p.humanContribution
 });
 const showError=(e:unknown)=>e instanceof Error?e.message:'Creator Studio is temporarily unavailable.';
-type Mode='list'|'new'|'edit'|'review'|'safety';
+type Mode='list'|'new'|'edit'|'review'|'safety'|'appeals'|'appeal-review';
 
 export function CanonicalStudioPage({mode='list'}:{mode?:Mode}){
  const {data:session,isPending}=canonicalAuthClient.useSession();
@@ -53,6 +54,8 @@ export function CanonicalStudioPage({mode='list'}:{mode?:Mode}){
  const [uploads,setUploads]=useState(false);
  const [canReview,setCanReview]=useState(false);
  const [canSafetyReview,setCanSafetyReview]=useState(false);
+ const [canAppealReview,setCanAppealReview]=useState(false);
+ const [appealsReady,setAppealsReady]=useState(false);
  const [publicationReady,setPublicationReady]=useState(false);
  useEffect(()=>{
   if(!id||session?.user?.emailVerified!==true)return;
@@ -69,6 +72,8 @@ export function CanonicalStudioPage({mode='list'}:{mode?:Mode}){
    if(!live)return;
    setIdentity(profile.profile);setUploads(memberStudio.uploadsReady===true);
    setCanReview(memberStudio.canReview===true);setCanSafetyReview(memberStudio.canSafetyReview===true);
+   setCanAppealReview(memberStudio.canAppealReview===true);
+   setAppealsReady(health.studioAppealsReady===true);
    setPublicationReady(health.studioPublicationReady===true);setPhase('ready');
   }).catch(e=>{if(live){setMessage(showError(e));setPhase('unavailable')}});
   return()=>{live=false;controller.abort();};
@@ -94,7 +99,7 @@ export function CanonicalStudioPage({mode='list'}:{mode?:Mode}){
   <header className="st-header">
    <div><Link className="st-back" to="/member">← MEMBER ATLAS</Link>
     <p className="st-kicker">ANEVUM / CONTINUANCE INSTITUTE / CREATOR STUDIO</p>
-    <h1>{mode==='review'?'SUBMISSION REVIEW.':mode==='safety'?'PUBLICATION SAFETY.':mode==='list'?'YOUR CREATIVE ARCHIVE.':mode==='new'?'BEGIN A NEW WORK.':'PROJECT WORKSPACE.'}</h1>
+    <h1>{mode==='review'?'SUBMISSION REVIEW.':mode==='safety'?'PUBLICATION SAFETY.':mode==='appeals'?'CREATOR APPEALS.':mode==='appeal-review'?'SECOND REVIEW.':mode==='list'?'YOUR CREATIVE ARCHIVE.':mode==='new'?'BEGIN A NEW WORK.':'PROJECT WORKSPACE.'}</h1>
     <p>Build privately, preserve versions, and prepare original work for independent review.</p>
    </div>
    <div className="st-identity"><span>VERIFIED CREATOR</span><strong>@{identity?.handle}</strong><small>PRIVATE STAGING WORKSPACE</small></div>
@@ -104,9 +109,11 @@ export function CanonicalStudioPage({mode='list'}:{mode?:Mode}){
    <Link to="/studio/new" aria-current={mode==='new'?'page':undefined}>NEW SUBMISSION</Link>
    {canReview&&<Link to="/studio/review" aria-current={mode==='review'?'page':undefined}>REVIEW DESK</Link>}
    {canSafetyReview&&<Link to="/studio/safety" aria-current={mode==='safety'?'page':undefined}>SAFETY DESK</Link>}
+   {appealsReady&&<Link to="/studio/appeals" aria-current={mode==='appeals'?'page':undefined}>MY APPEALS</Link>}
+   {canAppealReview&&<Link to="/studio/appeals/review" aria-current={mode==='appeal-review'?'page':undefined}>SECOND REVIEW</Link>}
    <Link to="/discover">DISCOVER ↗</Link>
   </nav>
-  {mode==='list'?<StudioLibrary publicationReady={publicationReady}/>:mode==='review'?canReview?<StudioReview publicationReady={publicationReady}/>:<p role="alert">Independent reviewer authority is required.</p>:mode==='safety'?canSafetyReview?<StudioSafetyDesk/>:<p role="alert">Independent safety officer authority is required.</p>:<StudioEditor create={mode==='new'} uploadsReady={uploads} publicationReady={publicationReady}/>}
+  {mode==='list'?<StudioLibrary publicationReady={publicationReady}/>:mode==='review'?canReview?<StudioReview publicationReady={publicationReady}/>:<p role="alert">Independent reviewer authority is required.</p>:mode==='safety'?canSafetyReview?<StudioSafetyDesk/>:<p role="alert">Independent safety officer authority is required.</p>:mode==='appeals'?appealsReady?<StudioAppealsPanel/>:<p role="alert">The formal appeal workflow is not yet active.</p>:mode==='appeal-review'?canAppealReview?<StudioAppealReviewDesk/>:<p role="alert">Independent second-review authority is required.</p>:<StudioEditor create={mode==='new'} uploadsReady={uploads} publicationReady={publicationReady}/>}
  </main>;
 }
 
