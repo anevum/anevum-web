@@ -60,6 +60,7 @@ jobs:
              c.main!=="./worker.mjs" || c.workers_dev!==true ||
              c.preview_urls!==false || c.assets?.directory!=="./public" ||
              c.assets?.binding!=="ASSETS" || c.assets?.run_worker_first!==true ||
+             c.assets?.html_handling!=="none" || c.assets?.not_found_handling!=="none" ||
              c.observability?.enabled!==false || c.upload_source_maps!==false)
              throw Error("Preview not isolated or worker-first gated");
           for(const key of ["routes","route","d1_databases","durable_objects",
@@ -139,6 +140,7 @@ jobs:
             if(c.name!=="anevum-family-field-synthetic-review-20261018" ||
                c.workers_dev!==true || c.preview_urls!==false ||
                c.main!=="./worker.mjs" || c.assets?.run_worker_first!==true ||
+               c.assets?.html_handling!=="none" || c.assets?.not_found_handling!=="none" ||
                c.vars?.FS_SYNTH_REVIEW_AUD!=="8b4f7da26f249d7c59e73ec7f84b2b7d605dc65253091c134947359602094a32" ||
                c.vars?.FS_SYNTH_TEAM_ISSUER!=="https://wispy-tooth-095a.cloudflareaccess.com")
               throw Error("Owner-only review binding/audience mismatch");
