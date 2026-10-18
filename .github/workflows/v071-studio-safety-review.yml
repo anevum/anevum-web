@@ -1,0 +1,50 @@
+name: V071 Independent Publication Safety and Creator Atlas Review
+on:
+  push:
+    branches: [build/creation-takedown-browser-v071-20261018-020]
+    paths:
+      - "creator-v1/canonical-auth/studio-safety.mjs"
+      - "creator-v1/canonical-auth/studio-publications.mjs"
+      - "creator-v1/canonical-auth/studio.mjs"
+      - "creator-v1/canonical-auth/worker.mjs"
+      - "creator-v1/canonical-auth/migrations/0012_studio_publication_takedowns.sql"
+      - "creator-v1/test/studio-safety-v071.test.mjs"
+      - "creator-v1/test/studio-publication-evidence-v070.test.mjs"
+      - "creator-v1/web/src/**"
+      - ".github/workflows/v071-studio-safety-review.yml"
+permissions:
+  contents: read
+jobs:
+  verify:
+    if: github.repository == 'anevum/anevum-web'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check new canonical authorization and routing syntax
+        shell: bash
+        run: |
+          set -euo pipefail
+          for source in creator-v1/canonical-auth/*.mjs creator-v1/apex-prelaunch/*.mjs; do node --check "$source"; done
+      - name: Execute SQLite safety and creation badge evidence tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --experimental-sqlite --test             creator-v1/test/studio-safety-v071.test.mjs             creator-v1/test/player-recognition-roundtrip-v069.test.mjs             creator-v1/test/player-recognition-issuance-v066.test.mjs
+      - name: Check public Creator Atlas and Studio Safety UI
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm install --ignore-scripts --no-audit --no-fund
+          npm run check:creator-v1-web
+          npm run build:creator-v1-web
+      - name: Confirm source-only safety status
+        run: |
+          echo "V071_SCHEMA_NOT_APPLIED_TO_PRODUCTION=true" >> "$GITHUB_STEP_SUMMARY"
+          echo "V071_RELEASE_FLAGS_NOT_ENABLED=true" >> "$GITHUB_STEP_SUMMARY"
+          echo "SOURCE_SHA=$GITHUB_SHA" >> "$GITHUB_STEP_SUMMARY"

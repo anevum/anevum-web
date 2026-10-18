@@ -27,6 +27,8 @@ export async function canonicalRecognitionCatalog(request,env){
   // issuance service is active. Quarantined uploads never make marks earnable.
   if(env?.CANONICAL_CREATOR_STUDIO_ENABLED==='true'&&
     env?.CANONICAL_STUDIO_PUBLICATION_ENABLED==='true'&&
+    env?.CANONICAL_STUDIO_SAFETY_ENABLED==='true'&&
+    (env?.CANONICAL_STUDIO_SAFETY_REVIEWER_IDS||'').trim()&&
     env?.CANONICAL_RECOGNITION_ENABLED==='true'&&env.MEMBER_DB&&
     await recognitionReady(env.MEMBER_DB)&&await studioPublicationReady(env.MEMBER_DB))
     active=[...active,'first_creation','maker_five','maker_twenty'];

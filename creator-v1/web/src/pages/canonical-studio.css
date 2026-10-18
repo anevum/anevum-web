@@ -208,3 +208,18 @@
 .st-release-review .st-button{width:100%;margin:8px 0 0}
 .st-release-review .st-muted{margin:6px 0 14px}
 @media(max-width:640px){.st-release-review{padding:13px}.st-publication .st-actions{display:flex;flex-direction:column;align-items:stretch}.st-publication .st-actions>*{max-width:100%}}
+
+/* V071 / independent, reviewable publication safety desk. */
+.st-safety-desk{background:linear-gradient(145deg,#161425,#0e1624 65%,#18182b);border:1px solid #bf9cba50}
+.st-safety-desk>.st-muted{max-width:830px}
+.st-safety-record{background:radial-gradient(ellipse at 90% 0,#75405d20,transparent 55%),#101725;border-color:#cfa7bd54}
+.st-safety-record>.st-kicker{color:#f3c6d8}
+.st-safety-record .st-field{margin:14px 0}
+.st-safety-record .st-check{display:flex;align-items:flex-start;gap:11px;margin:13px 0;color:#d7d1e5;font-size:.82rem;line-height:1.55}
+.st-safety-record .st-check input{width:18px;height:18px;flex:0 0 18px;margin:3px 0 0;accent-color:#ebb3c9}
+.st-safety-record small{display:block;color:#afbacd;overflow-wrap:anywhere}
+.st-safety-record small code{font-size:10px;color:#f7c6d6}
+.st-takedown-button{width:100%;min-height:45px;background:linear-gradient(110deg,#442936,#2a1c39);border-color:#f4aeb77c;color:#ffebf1}
+.st-takedown-button:not(:disabled):hover{border-color:#ffbfd0;background:#633342}
+.st-takedown-button:disabled{opacity:.44;cursor:not-allowed}
+@media(prefers-reduced-motion:reduce){.st-takedown-button{transition:none}}

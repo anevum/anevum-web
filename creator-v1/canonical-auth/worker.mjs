@@ -19,6 +19,7 @@ import {canonicalAccountClosure} from "./account-closure.mjs";
 import {publicSupporterTelemetry,PUBLIC_TELEMETRY_PATH} from "./public-supporter-telemetry.mjs";
 import {canonicalProjectSave,canonicalProjectSaveReady} from "./project-saves.mjs";
 import {canonicalStudio,canonicalStudioReview,studioReadiness} from "./studio.mjs";
+import {canonicalStudioSafety} from './studio-safety.mjs';
 import {canonicalPublicStudioCreations,canonicalStudioPublicationConsent} from './studio-publications.mjs';
 
 const HEALTH=CANONICAL_PREFIX+"/health";
@@ -124,15 +125,16 @@ export function createCanonicalStageWorker({authFactory=createCanonicalAuth}={})
     const ownClosure=path===CLOSURE;
     const ownProjectSave=path===CANONICAL_PREFIX+"/project-saves" ||
       /^\/api\/v1\/member\/project-saves\/[a-f0-9]{32}$/.test(path);
+    const ownStudioSafety=path===CANONICAL_PREFIX+'/studio/safety';
     const ownStudioPublication=/^\/api\/v1\/member\/studio\/projects\/[0-9a-f-]{36}\/publication$/.test(path);
     const ownStudioReview=path===CANONICAL_PREFIX+"/studio/review"||
       /^\/api\/v1\/member\/studio\/review\/[0-9a-f-]{36}\/manifest$/.test(path);
     const ownStudio=/^\/api\/v1\/member\/studio\/projects(?:\/[0-9a-f-]{36}(?:\/(?:submit|withdraw|submissions|assets(?:\/[a-f0-9]{32}(?:\/file)?)?))?)?$/.test(path);
-    if((ownStudio||ownStudioReview||ownStudioPublication)&&env?.CANONICAL_CREATOR_STUDIO_ENABLED!=="true")return fail(request,404);
+    if((ownStudio||ownStudioReview||ownStudioPublication||ownStudioSafety)&&env?.CANONICAL_CREATOR_STUDIO_ENABLED!=="true")return fail(request,404);
     // This is a proposed, source-only pilot. Do not expose even a GET
     // endpoint without a deliberate rollout flag and an approved D1 schema.
     if(ownProjectSave&&env?.CANONICAL_PROJECT_SAVES_ENABLED!=="true")return fail(request,404);
-    if(path!==HEALTH && path!==METHODS && !publicRecognitionCatalog && !publicCreations && !ownStudioPublication && !publicHandle && !ownProfile && !ownExport && !ownClosure && !ownSpace && !publicSpace && !ownRecognition && !publicCommunity && !forumRoute && !publicMetrics && !ownProgression && !ownSupporter && !ownProjectSave && !ownStudio && !ownStudioReview &&
+    if(path!==HEALTH && path!==METHODS && !publicRecognitionCatalog && !publicCreations && !ownStudioPublication && !ownStudioSafety && !publicHandle && !ownProfile && !ownExport && !ownClosure && !ownSpace && !publicSpace && !ownRecognition && !publicCommunity && !forumRoute && !publicMetrics && !ownProgression && !ownSupporter && !ownProjectSave && !ownStudio && !ownStudioReview &&
       !(path.startsWith(CANONICAL_AUTH_PATH+"/") &&
         (AUTH_ALLOWLIST[request.method]?.has(path)??false)))
       return fail(request,404);
@@ -141,6 +143,7 @@ export function createCanonicalStageWorker({authFactory=createCanonicalAuth}={})
     if(publicMetrics&&request.method!=="GET")return fail(request,405);
     if(publicCreations&&!READ_METHODS.has(request.method))return fail(request,405);
     if(ownStudioPublication&&!['GET','POST','DELETE'].includes(request.method))return fail(request,405);
+    if(ownStudioSafety&&!['GET','POST'].includes(request.method))return fail(request,405);
     if(publicRecognitionCatalog&&!READ_METHODS.has(request.method))return fail(request,405);
     if(ownProfile && !["GET","POST","PATCH"].includes(request.method))return fail(request,404);
     if(ownExport && request.method!=="GET")return fail(request,404);
@@ -298,10 +301,11 @@ export function createCanonicalStageWorker({authFactory=createCanonicalAuth}={})
         if(!session?.user?.id||session.user.emailVerified!==true)
           return safeJson(request,{error:"Verified sign-in required"},401);
       }
-      if(ownProfile||ownExport||ownClosure||ownSpace||ownRecognition||ownProgression||ownSupporter||ownProjectSave||ownStudio||ownStudioPublication||ownStudioReview){
+      if(ownProfile||ownExport||ownClosure||ownSpace||ownRecognition||ownProgression||ownSupporter||ownProjectSave||ownStudio||ownStudioPublication||ownStudioSafety||ownStudioReview){
         const session=await auth.api.getSession({headers:clean.headers});
         if(!session?.user)return safeJson(request,{error:"Sign-in required"},401);
         if(ownClosure)return safeResponse(await canonicalAccountClosure(clean,env,session.user,session.session));
+        if(ownStudioSafety)return safeResponse(await canonicalStudioSafety(clean,env,session.user));
         if(ownStudioReview)return safeResponse(await canonicalStudioReview(clean,env,session.user));
         if(ownStudioPublication){
          const projectId=path.split('/').at(-2);

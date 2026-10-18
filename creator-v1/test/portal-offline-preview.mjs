@@ -19,6 +19,27 @@ const work=seeds.map(([title,category,creatorHandle],i)=>({
  aiDisclosure:"Offline synthetic design fixture.",humanContribution:"No real human creator record."
 }));
 
+// V071 review-only guest creations: absolutely synthetic, never served by Cloudflare.
+const atlasFixtures=[
+  {id:'00000000-0000-4000-8000-000000008001',title:'SYNTHETIC ORBITAL GARDEN',
+   summary:'Synthetic external illustration to test dimensional cards and canonical player identity only.',
+   category:'art',handle:'atlas_test',freeToUse:true,license:'CC BY 4.0',
+   sourceUrl:'https://example.com/synthetic-orbit',demoUrl:null,publishedAt:1780000000,
+   delivery:'external-link-only',
+   creator:{handle:'atlas_test',displayName:'Atlas Test',avatar:false,level:7,
+    featuredAwards:['first_creation'],
+    earnedBadges:[{id:'first_creation',earnedAt:1780000000}],
+    badgeDisplay:{mode:'curated',ids:['first_creation']},
+    distinctions:{medals:[],ribbons:[]},aura:'nebula'}},
+  {id:'00000000-0000-4000-8000-000000008002',title:'SYNTHETIC QUANTUM CARTOGRAPHY',
+   summary:'Synthetic test record for a different creator, on small mobile screens and cards.',
+   category:'research',handle:'mapped_test',freeToUse:false,license:'All rights reserved',
+   sourceUrl:null,demoUrl:'https://example.com/synthetic-map',publishedAt:1780000100,
+   delivery:'external-link-only',
+   creator:{handle:'mapped_test',displayName:'Mapped Test',avatar:false,level:null,
+    featuredAwards:[],earnedBadges:[],badgeDisplay:{mode:'hidden',ids:[]},
+    distinctions:{medals:[],ribbons:[]},aura:'none'}}
+];
 // Synthetic-only player cases live in the loopback fixture, not the public listings.
 // No real creator or approval is inferred from these test records.
 const playerCases=new Map([
@@ -237,6 +258,15 @@ createServer((req,res)=>{
       version:1,activeBadgeIds:["first_signal","world_shaper","first_orbit","first_thread","first_reply","conversationalist"],
       activeRibbonIds:[],activeMedalIds:[]
     }));
+  }
+  if(u.pathname==="/api/v1/creations"||u.pathname.startsWith("/api/v1/creations/")){
+    if(req.method!=="GET"&&req.method!=="HEAD")return json(res,{error:"Read-only"},405);
+    if(u.search)return json(res,{error:"Invalid query"},404);
+    const selected=u.pathname==="/api/v1/creations"?null:atlasFixtures.find(x=>u.pathname.endsWith('/'+x.id));
+    if(u.pathname!=="/api/v1/creations"&&!selected)return json(res,{error:"Not found"},404);
+    const output=selected?{creation:selected}:{creations:atlasFixtures,nextCursor:null};
+    res.writeHead(200,{"content-type":"application/json; charset=utf-8","cache-control":"no-store"});
+    return res.end(req.method==="HEAD"?"":JSON.stringify(output));
   }
   if(u.pathname==="/__ready")return json(res,{ready:existsSync(resolve(dist,"index.html"))});
   if(u.pathname.startsWith("/creator/api/v1/"))return api(res,u);

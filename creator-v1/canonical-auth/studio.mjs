@@ -5,6 +5,7 @@ import {boundedText} from './request-body.mjs';
 import {canonicalStudioAssets,studioUploadReady} from './studio-assets.mjs';
 import {studioReviewSchemaReady,freezeStudioReview,withdrawStudioReview,decideStudioReview,getStudioReviewReceipt,listStudioReviewReceipts} from './studio-submissions.mjs';
 import {studioPublicationReady,canonicalStudioPublicationConsent,publishReviewedExternalStudioMetadata} from './studio-publications.mjs';
+import {approvedSafetyReviewer} from './studio-safety.mjs';
 
 const PREFIX='/api/v1/member/studio';
 const COLLECTION=PREFIX+'/projects';
@@ -118,6 +119,8 @@ export async function studioReadiness(env){
  const ready=await canonicalStudioSchemaReady(env);
  return {studioReady:ready,studioUploadsReady:Boolean(ready&&studioUploadReady(env)),
   studioPublicationReady:Boolean(ready&&env.CANONICAL_STUDIO_PUBLICATION_ENABLED==='true'&&
+   env.CANONICAL_STUDIO_SAFETY_ENABLED==='true'&&
+   (env.CANONICAL_STUDIO_SAFETY_REVIEWER_IDS||'').trim()&&
    await studioPublicationReady(env.MEMBER_DB))};
 }
 export async function canonicalStudio(req,env,user,now=Math.floor(Date.now()/1000)){
@@ -136,11 +139,13 @@ export async function canonicalStudio(req,env,user,now=Math.floor(Date.now()/100
   if(!id){
    if(req.method==='GET'){
     const items=await rows(db,'SELECT '+COLS+' FROM member_studio_projects WHERE user_id=? ORDER BY updated_at DESC,id DESC LIMIT 50',[user.id]);
+    const canSafetyReview=env.CANONICAL_STUDIO_SAFETY_ENABLED==='true'&&
+     env.CANONICAL_STUDIO_PUBLICATION_ENABLED==='true'&&approvedSafetyReviewer(env,user.id);
     const canReview=String(env.CANONICAL_STUDIO_REVIEWER_IDS||'')
      .split(',').map(x=>x.trim()).filter(Boolean).includes(user.id);
     const releases=await ownerPublicationStatuses(db,user.id);
     return json({projects:items.map(item=>({...dbRow(item),publicationStatus:releases.get(item.id)||null})),
-     uploadsReady:studioUploadReady(env,user.id),canReview});
+     uploadsReady:studioUploadReady(env,user.id),canReview,canSafetyReview});
    }
    if(req.method!=='POST')return fail(405,'Method not allowed');
    const incoming=await body(req);
@@ -222,12 +227,20 @@ export async function canonicalStudio(req,env,user,now=Math.floor(Date.now()/100
    if(!input||!exactly(input,['revision'])||!Number.isSafeInteger(input.revision))return fail(400,'Invalid revision');
    if(selected.revision!==input.revision||!['draft','changes_requested','rejected'].includes(selected.status))
     return fail(409,'Project must be withdrawn from review before deletion');
+   // A withdrawn public listing is still evidence of a previously issued
+   // achievement. Ordinary project deletion cannot erase an audited release.
+   if(await studioPublicationReady(db)&&
+      await getOne(db,'SELECT project_id FROM member_studio_publications WHERE project_id=?',[id]))
+    return fail(409,'Audited public releases cannot be deleted as private drafts');
    if(!await pace(db,user.id,'project',now,30))return fail(429,'Too many project updates');
    const result=await rows(db,
     "DELETE FROM member_studio_projects WHERE id=? AND user_id=? AND revision=? "+
     "AND status IN ('draft','changes_requested','rejected') AND "+
-    'NOT EXISTS(SELECT 1 FROM member_studio_assets WHERE project_id=?) RETURNING id',
-    [id,user.id,input.revision,id]);
+    'NOT EXISTS(SELECT 1 FROM member_studio_assets WHERE project_id=?) '+
+    (await studioPublicationReady(db)?
+      'AND NOT EXISTS(SELECT 1 FROM member_studio_publications p WHERE p.project_id=?) ':'')+
+    'RETURNING id',
+    [id,user.id,input.revision,id,...(await studioPublicationReady(db)?[id]:[])]);
    return result.length===1?json({deleted:true}):fail(409,'Remove private files or withdraw review before deleting this project');
   }
   if(req.method!=='PATCH')return fail(405,'Method not allowed');
@@ -303,7 +316,9 @@ export async function canonicalStudioReview(req,env,user,now=Math.floor(Date.now
   // External metadata publication has its OWN reviewed, consented release path.
   // It must never grant visibility to quarantined R2 assets or executable ZIPs.
   if(raw?.action==='publish_external_metadata'){
-   if(env.CANONICAL_STUDIO_PUBLICATION_ENABLED!=='true')
+   if(env.CANONICAL_STUDIO_PUBLICATION_ENABLED!=='true'||
+     env.CANONICAL_STUDIO_SAFETY_ENABLED!=='true'||
+     !(env.CANONICAL_STUDIO_SAFETY_REVIEWER_IDS||'').trim())
     return fail(404,'Metadata-only publication is disabled');
    if(!exactly(raw,['projectId','action','reason','revision','rightsChecked','contentChecked','externalLinkChecked'])||
      !UUID.test(raw.projectId)||!Number.isSafeInteger(raw.revision)||

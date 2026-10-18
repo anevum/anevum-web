@@ -18,22 +18,24 @@ function database(){
  raw.exec([
   'PRAGMA foreign_keys=ON;',
   'CREATE TABLE "user"(id TEXT PRIMARY KEY,emailVerified INTEGER NOT NULL DEFAULT 1);',
-  'CREATE TABLE member_creator_profiles(user_id TEXT PRIMARY KEY REFERENCES "user"(id),handle TEXT NOT NULL,visibility TEXT NOT NULL);',
+  'CREATE TABLE member_creator_profiles(user_id TEXT PRIMARY KEY REFERENCES "user"(id),handle TEXT NOT NULL,display_name TEXT NOT NULL,visibility TEXT NOT NULL);',
   "CREATE TABLE member_space_settings(user_id TEXT PRIMARY KEY,featured_json TEXT DEFAULT '[]',show_stats INTEGER NOT NULL DEFAULT 1);",
+  'CREATE TABLE member_space_media(user_id TEXT NOT NULL,slot TEXT NOT NULL,data BLOB,PRIMARY KEY(user_id,slot));',
   'CREATE TABLE member_space_milestones(user_id TEXT,milestone TEXT,earned_at INTEGER,PRIMARY KEY(user_id,milestone));',
   'CREATE TABLE member_xp_events(id TEXT PRIMARY KEY,user_id TEXT,amount INTEGER);',
   'CREATE TABLE member_reward_notifications(id INTEGER PRIMARY KEY AUTOINCREMENT,user_id TEXT NOT NULL,kind TEXT NOT NULL,reference TEXT NOT NULL,created_at INTEGER NOT NULL,UNIQUE(user_id,kind,reference));',
   'CREATE TABLE member_notification_receipts(user_id TEXT PRIMARY KEY,through_id INTEGER);',
   'CREATE TABLE member_creator_edit_limits(user_id TEXT PRIMARY KEY,window_start INTEGER,requests INTEGER);',
-  "INSERT INTO \"user\"(id,emailVerified) VALUES ('owner',1),('reviewer',1),('other',1),('private',1);",
-  "INSERT INTO member_creator_profiles(user_id,handle,visibility) VALUES ('owner','owner_sample','public'),('reviewer','reviewer_sample','public'),('other','other_sample','public'),('private','private_sample','private');",
-  "INSERT INTO member_space_settings(user_id) VALUES ('owner'),('reviewer'),('other'),('private');"
+  "INSERT INTO \"user\"(id,emailVerified) VALUES ('owner',1),('reviewer',1),('safety',1),('other',1),('private',1);",
+  "INSERT INTO member_creator_profiles(user_id,handle,display_name,visibility) VALUES ('owner','owner_sample','Owner Sample','public'),('reviewer','reviewer_sample','Reviewer Sample','public'),('safety','safety_sample','Safety Sample','public'),('other','other_sample','Other Sample','public'),('private','private_sample','Private Sample','private');",
+  "INSERT INTO member_space_settings(user_id) VALUES ('owner'),('reviewer'),('safety'),('other'),('private');"
  ].join('\n'));
  for(const file of [
   'canonical-auth/migrations/0008_private_creator_studio.sql',
   'canonical-auth/migrations/0009_private_review_snapshots.sql',
   'canonical-auth/migrations/0010_player_recognition.sql',
-  'canonical-auth/migrations/0011_studio_publication_evidence.sql'
+  'canonical-auth/migrations/0011_studio_publication_evidence.sql',
+  'canonical-auth/migrations/0012_studio_publication_takedowns.sql'
  ])raw.exec(content(file));
  const db={
   raw,
@@ -67,6 +69,8 @@ function database(){
 const env=db=>({
  MEMBER_DB:db,CANONICAL_CREATOR_STUDIO_ENABLED:'true',
  CANONICAL_STUDIO_PUBLICATION_ENABLED:'true',
+ CANONICAL_STUDIO_SAFETY_ENABLED:'true',
+ CANONICAL_STUDIO_SAFETY_REVIEWER_IDS:'safety',
  CANONICAL_RECOGNITION_ENABLED:'true',
  CANONICAL_STUDIO_REVIEWER_IDS:'reviewer'
 });
@@ -343,3 +347,6 @@ test('reviewer queue exposes only scoped consent and excludes published decision
  const stale=await canonicalStudioReview(new Request(base+'/api/v1/member/studio/review/'+p.id+'/manifest'),env(db),owner('reviewer'));
  assert.equal(stale.status,409);
 });
+
+// Reused by the V071 safety regression. The fixture runs against local SQLite only.
+export {database,project,consent,publish,now,base,env,owner,api,scalar};
