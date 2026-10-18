@@ -1,4 +1,4 @@
-import {useEffect,useRef,useState} from 'react';
+import {useEffect,useMemo,useRef,useState} from 'react';
 import {createNativePack,openNativePack,MAX_PACK_BYTES,
  type PackKind,type PackManifest} from '../lib/anevum-native-pack';
 import {getVisibleWorkbenchBlocks,type StudioBlockDocument} from '../lib/studio-blocks';
@@ -12,7 +12,7 @@ type AlbumDoc={schema:'anevum.album.v1';cover?:string;tracks:Track[]};
 type SeriesDoc={schema:'anevum.series.v1';poster?:string;episodes:Track[]};
 type VisualDoc={schema:'anevum.visual.v1';pages:{image:string;caption:string}[]};
 type PackDocument=GameDoc|AlbumDoc|SeriesDoc|VisualDoc|StudioBlockDocument;
-type Opened={manifest:PackManifest;document:PackDocument;urls:Record<string,string>};
+type Opened={manifest:PackManifest;document:PackDocument;assets:Map<string,Uint8Array>;urls:Record<string,string>};
 type LocalMedia={file:File;title:string};
 const DEMO_SCENES:Scene[]=[
  {id:'arrival',title:'The Observatory',text:'A signal cuts across the quiet void. The observatory doors begin to open.',
@@ -102,7 +102,11 @@ export function NativePackLab({title,creator,document,onImportDocument,disabled}
  const [kind,setKind]=useState<PackKind>('game');
  const [scenes,setScenes]=useState<Scene[]>(DEMO_SCENES);
  const [selected,setSelected]=useState('arrival');
- const nextId=useRef(2);
+ const [startScene,setStartScene]=useState('arrival');
+ const [gameImages,setGameImages]=useState<{path:string;file:File}[]>([]);
+ const [gameImageUrls,setGameImageUrls]=useState<Record<string,string>>({});
+ const liveGame=useMemo<GameDoc>(()=>({schema:'anevum.game.v1',
+  startScene:scenes.some(s=>s.id===startScene)?startScene:scenes[0].id,scenes}),[scenes,startScene]);
  const [media,setMedia]=useState<LocalMedia[]>([]);
  const [mediaUrls,setMediaUrls]=useState<Record<string,string>>({});
  const [opened,setOpened]=useState<Opened|null>(null);
@@ -117,11 +121,19 @@ export function NativePackLab({title,creator,document,onImportDocument,disabled}
   setMediaUrls(urls);
   return()=>Object.values(urls).forEach(url=>URL.revokeObjectURL(url));
  },[media]);
+ useEffect(()=>{
+  const urls:Record<string,string>={};
+  gameImages.forEach(entry=>{urls[entry.path]=URL.createObjectURL(entry.file);});
+  setGameImageUrls(urls);
+  return()=>Object.values(urls).forEach(url=>URL.revokeObjectURL(url));
+ },[gameImages]);
  useEffect(()=>()=>{
   importSeq.current++;
   ownedUrls.current.forEach(url=>URL.revokeObjectURL(url));
  },[]);
  function switchKind(next:PackKind){
+  if(busy)return;
+  if(media.length&&kind!==next&&!window.confirm('Switching formats discards your local media list unless exported. Continue?'))return;
   ownedUrls.current.forEach(url=>URL.revokeObjectURL(url));ownedUrls.current=[];
   setKind(next);setMedia([]);setOpened(null);setMessageText('');setExperienceKey(n=>n+1);
  }
@@ -130,7 +142,8 @@ export function NativePackLab({title,creator,document,onImportDocument,disabled}
  }
  function addScene(){
   if(scenes.length>=64)return setMessageText('The local game editor supports up to 64 scenes.');
-  const id='scene-'+(++nextId.current);
+  let id='scene-'+crypto.randomUUID().slice(0,8);
+  while(scenes.some(s=>s.id===id))id='scene-'+crypto.randomUUID().slice(0,8);
   setScenes(v=>[...v,{id,title:'New scene',text:'Describe what happens next.',choices:[]}]);
   setSelected(id);setMessageText('');
  }
@@ -138,6 +151,7 @@ export function NativePackLab({title,creator,document,onImportDocument,disabled}
   if(scenes.length<=1)return;
   const others=scenes.filter(s=>s.id!==selected);
   setScenes(others.map(s=>({...s,choices:s.choices.filter(c=>c.to!==selected)})));
+  if(startScene===selected)setStartScene(others[0].id);
   setSelected(others[0].id);
  }
  function addChoice(){
@@ -146,6 +160,37 @@ export function NativePackLab({title,creator,document,onImportDocument,disabled}
   const current=scenes.find(s=>s.id===selected)!;
   if(current.choices.length>=8)return setMessageText('A scene supports up to eight choices.');
   updateScene({choices:[...current.choices,{label:'Continue',to:target.id}]});
+ }
+ function setBackground(value:string){
+  setScenes(previous=>previous.map(scene=>{
+   if(scene.id!==selected)return scene;
+   if(value)return {...scene,background:value};
+   const {background:_removed,...withoutBackground}=scene;
+   return withoutBackground;
+  }));
+ }
+ function addBackgrounds(list:FileList|null){
+  if(!list)return;
+  const incoming=Array.from(list);
+  if(incoming.some(file=>!['png','jpg','jpeg','webp','gif'].includes(ext(file))||!file.size)){
+   setMessageText('Choose PNG, JPG, WebP or GIF background art.');return;
+  }
+  if(gameImages.length+incoming.length>16||
+     incoming.reduce((sum,file)=>sum+file.size,gameImages.reduce((sum,m)=>sum+m.file.size,0))>MAX_PACK_BYTES-65536){
+   setMessageText('Up to 16 background images and 20 MiB total are supported.');return;
+  }
+  setGameImages(previous=>[...previous,...incoming.map(file=>({
+   path:'assets/background-'+crypto.randomUUID().slice(0,8)+'.'+ext(file),file
+  }))]);
+  setMessageText('');
+ }
+ function removeBackground(path:string){
+  setGameImages(previous=>previous.filter(entry=>entry.path!==path));
+  setScenes(previous=>previous.map(scene=>{
+   if(scene.background!==path)return scene;
+   const {background:_removed,...withoutBackground}=scene;
+   return withoutBackground;
+  }));
  }
  function pickMedia(list:FileList|null){
   if(!list||kind==='game'||kind==='project')return;
@@ -159,7 +204,7 @@ export function NativePackLab({title,creator,document,onImportDocument,disabled}
   setMedia(all);setMessageText('');
  }
  function currentDocument():PackDocument{
-  if(kind==='game')return {schema:'anevum.game.v1',startScene:scenes[0].id,scenes};
+  if(kind==='game')return liveGame;
   if(kind==='project'){
    if(!document)throw Error('Convert your notes to Workbench blocks before exporting a .anvp document.');
    return document;
@@ -179,6 +224,8 @@ export function NativePackLab({title,creator,document,onImportDocument,disabled}
    const assets:Record<string,Uint8Array>={};
    for(let i=0;i<media.length;i++)
     assets[mediaPath(i,media[i].file)]=new Uint8Array(await media[i].file.arrayBuffer());
+   if(kind==='game')for(const image of gameImages)
+    assets[image.path]=new Uint8Array(await image.file.arrayBuffer());
    const pkg=await createNativePack({kind,title:title.trim()||'Untitled creation',
     creator:creator.trim()||'Creator',version:'0.1.0',document:currentDocument(),assets});
    download(pkg.filename,pkg.bytes);
@@ -198,13 +245,30 @@ export function NativePackLab({title,creator,document,onImportDocument,disabled}
     const mime=pack.manifest.files.find(f=>f.path===name)?.mime||'application/octet-stream';
     urls[name]=URL.createObjectURL(new Blob([Uint8Array.from(data)],{type:mime}));
    }
-   ownedUrls.current.forEach(URL.revokeObjectURL);
+   ownedUrls.current.forEach(url=>URL.revokeObjectURL(url));
    ownedUrls.current=Object.values(urls);
-   setOpened({manifest:pack.manifest,document:pack.document as PackDocument,urls});
+   setOpened({manifest:pack.manifest,document:pack.document as PackDocument,assets:pack.assets,urls});
    setExperienceKey(n=>n+1);
    setMessageText('Validated '+file.name+'. Preview is local only; no upload or publishing occurred.');
   }catch(error){if(seq===importSeq.current)setMessageText(message(error));}
   finally{if(seq===importSeq.current)setBusy(false);}
+ }
+ function resumeGame(){
+  if(!opened||opened.manifest.kind!=='game'||busy)return;
+  if(!window.confirm('Replace locally edited game scenes with this import? Export your existing work first.'))return;
+  const game=opened.document as GameDoc;
+  const images=[...opened.assets].map(([path,bytes])=>{
+   const mime=opened.manifest.files.find(f=>f.path===path)?.mime||'image/png';
+   return {path,file:new File([Uint8Array.from(bytes)],path.split('/').at(-1)||'background.png',{type:mime})};
+  });
+  if(images.some(img=>!img.file.type.startsWith('image/'))){
+   setMessageText('This pack cannot be reopened as an editable game.');return;
+  }
+  setScenes(game.scenes.map(scene=>({...scene,choices:scene.choices.map(c=>({...c}))})));
+  setStartScene(game.startScene);setSelected(game.startScene);
+  setGameImages(images);setKind('game');setMedia([]);
+  ownedUrls.current.forEach(url=>URL.revokeObjectURL(url));ownedUrls.current=[];
+  setOpened(null);setMessageText('Loaded .anvg into the game editor. Export a new file to keep your changes.');
  }
  function restoreDocument(){
   if(!opened||opened.manifest.kind!=='project'||disabled)return;
