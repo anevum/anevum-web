@@ -122,7 +122,9 @@ export async function studioReadiness(env){
   studioPublicationReady:Boolean(ready&&env.CANONICAL_STUDIO_PUBLICATION_ENABLED==='true'&&
    env.CANONICAL_STUDIO_SAFETY_ENABLED==='true'&&
    (env.CANONICAL_STUDIO_SAFETY_REVIEWER_IDS||'').trim()&&
-   await studioPublicationReady(env.MEMBER_DB)),
+   env.CANONICAL_STUDIO_APPEALS_ENABLED==='true'&&
+   String(env.CANONICAL_STUDIO_APPEAL_REVIEWER_IDS||'').trim()&&
+   await studioPublicationReady(env.MEMBER_DB)&&await studioAppealsReady(env.MEMBER_DB)),
   studioAppealsReady:Boolean(ready&&env.CANONICAL_STUDIO_APPEALS_ENABLED==='true'&&
    env.CANONICAL_STUDIO_PUBLICATION_ENABLED==='true'&&
    env.CANONICAL_STUDIO_SAFETY_ENABLED==='true'&&
@@ -328,8 +330,11 @@ export async function canonicalStudioReview(req,env,user,now=Math.floor(Date.now
   if(raw?.action==='publish_external_metadata'){
    if(env.CANONICAL_STUDIO_PUBLICATION_ENABLED!=='true'||
      env.CANONICAL_STUDIO_SAFETY_ENABLED!=='true'||
-     !(env.CANONICAL_STUDIO_SAFETY_REVIEWER_IDS||'').trim())
-    return fail(404,'Metadata-only publication is disabled');
+     !(env.CANONICAL_STUDIO_SAFETY_REVIEWER_IDS||'').trim()||
+     env.CANONICAL_STUDIO_APPEALS_ENABLED!=='true'||
+     !String(env.CANONICAL_STUDIO_APPEAL_REVIEWER_IDS||'').trim()||
+     !await studioAppealsReady(db))
+    return fail(404,'Independent appeals and publication safeguards must be active');
    if(!exactly(raw,['projectId','action','reason','revision','rightsChecked','contentChecked','externalLinkChecked'])||
      !UUID.test(raw.projectId)||!Number.isSafeInteger(raw.revision)||
      raw.rightsChecked!==true||raw.contentChecked!==true||raw.externalLinkChecked!==true)
