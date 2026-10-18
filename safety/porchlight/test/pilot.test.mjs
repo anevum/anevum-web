@@ -226,7 +226,8 @@ test('expired event records cascade out of private database after retention wind
   await newActiveEvent(settings);
   await application(settings);
   assert.equal(db.sqlite.prepare('SELECT COUNT(*) n FROM host_submissions').get().n,1);
-  await db.prepare("UPDATE events SET ends_at=? WHERE slug=?").bind(now-8*86400,eventData.slug).run();
+  await db.prepare("UPDATE events SET starts_at=?, ends_at=? WHERE slug=?")
+    .bind(now-9*86400,now-8*86400,eventData.slug).run();
   const list=await api(settings,publicApi+'/events');
   assert.deepEqual(list.result.events,[]);
   const hosts=await api(settings,publicApi+'/events/'+eventData.slug+'/hosts');
