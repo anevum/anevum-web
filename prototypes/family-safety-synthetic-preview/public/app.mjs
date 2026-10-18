@@ -2,6 +2,7 @@ import {
   createSyntheticWorld, DEFAULT_CENTER, FICTIONAL_PLACES, FICTIONAL_ROUTE,
   RUN_LENGTH_SECONDS
 } from "./synthetic-engine.mjs";
+import { SYNTHETIC_STYLE } from "./synthetic-scene.mjs";
 
 // MapLibre v6 is browser ESM, not the old maplibre-gl.js global script.
 // The build copies the pinned distribution into /vendor (same-origin).
@@ -203,26 +204,15 @@ function initMap(){
   }
   try{
     map=new maplibregl.Map({
-      container:"map",style:"https://tiles.openfreemap.org/styles/dark",
+      container:"map",style:SYNTHETIC_STYLE,
       center:DEFAULT_CENTER,zoom:15.4,pitch:64,bearing:-22,
       minZoom:3,maxZoom:20,antialias:true,attributionControl:true
     });
     map.addControl(new maplibregl.NavigationControl({showZoom:false,visualizePitch:true}),"top-right");
     map.on("load",()=>{
       mapReady=true;
-      try{
-        map.addSource("field-buildings",{type:"vector",url:"https://tiles.openfreemap.org/planet"});
-        const firstLabel=map.getStyle().layers.find(l=>l.type==="symbol"&&l.layout&&l.layout["text-field"]);
-        map.addLayer({id:"field-building-volumes",type:"fill-extrusion",source:"field-buildings",
-          "source-layer":"building",minzoom:15,filter:["!=",["get","hide_3d"],true],
-          paint:{
-            "fill-extrusion-color":["interpolate",["linear"],["coalesce",["get","render_height"],0],0,"#596b8a",25,"#7a7fa8",70,"#b589a9"],
-            "fill-extrusion-height":["interpolate",["linear"],["zoom"],15,0,15.5,["coalesce",["get","render_height"],["get","height"],8]],
-            "fill-extrusion-base":["coalesce",["get","render_min_height"],["get","min_height"],0],
-            "fill-extrusion-opacity":.83
-          },layout:{visibility:"visible"}},firstLabel?.id);
-        buildingsReady=true;
-      }catch{toast("3D building volumes are unavailable in this region/style. Map navigation is still available.");}
+      buildingsReady=!!map.getLayer("field-building-volumes");
+      if(!buildingsReady)toast("Illustrative 3D building layer failed to initialize.");
       try{
         map.addSource("field-elevation",{
           type:"raster-dem",encoding:"terrarium",tileSize:256,maxzoom:15,
@@ -236,7 +226,7 @@ function initMap(){
       render();
     });
     map.on("error",error=>{
-      if(!shownError){shownError=true;toast("Map provider data may be unavailable or incomplete. Fictional controls remain local.");}
+      if(!shownError){shownError=true;toast("The fictional map renderer may be incomplete. Scenario controls remain local.");}
       if(error?.error)console.warn("Synthetic map tile error:",error.error.message);
     });
   }catch{
