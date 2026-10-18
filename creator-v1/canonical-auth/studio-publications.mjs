@@ -256,7 +256,7 @@ export async function canonicalPublicStudioCreations(req,env){
 // Three threshold badges are idempotent on (user_id, kind, recognition_id).
 export async function publishedCreationBadgeStatements(db,{projectId,reviewId,now,enabled}){
  if(!enabled||!UUID.test(projectId)||!UUID.test(reviewId)||!await recognitionReady(db)||
-   !await studioPublicationReady(db))return [];
+   (!await studioPublicationReady(db)||!await studioRedressSchemaReady(db)))return [];
  const out=[];
  for(const [award,minimum] of [['first_creation',1],['maker_five',5],['maker_twenty',20]]){
   const proof=
@@ -309,7 +309,7 @@ export async function publishReviewedExternalStudioMetadata(db,{
   typeof reviewerId!=='string'||!reviewerId||
   typeof reason!=='string'||reason.trim().length<25||reason.length>1200||
   rightsChecked!==true||contentChecked!==true||externalLinkChecked!==true||
-  !await studioPublicationReady(db))return {ok:false,reason:'Publication authorization or evidence missing'};
+  (!await studioPublicationReady(db)||!await studioRedressSchemaReady(db)))return {ok:false,reason:'Publication authorization or independent redress evidence missing'};
  const project=await first(db,
   'SELECT p.user_id,p.status,p.revision,s.id AS submission_id '+
   'FROM member_studio_projects p JOIN member_studio_submissions s '+
