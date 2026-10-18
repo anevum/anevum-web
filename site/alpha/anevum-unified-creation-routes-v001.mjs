@@ -15,7 +15,7 @@ function brandPage(html,path){
  html=html.replace('<body>','<body class="'+(upload?'anp-upload-theme':'anp-preview-theme')+'">');
  html=html.replace('<header>','<header class="anp-sitebar">');
  html=html.replace('<strong>ANEVUM /</strong>','<a class="anp-brand" href="/"><span>ANEVUM</span><small>/ CREATOR PLATFORM</small></a>');
- html=html.replaceAll('<a href="/alpha">Alpha releases</a>','<a href="/discover">Discover</a>');
+ html=html.replaceAll('<a href="/alpha">Alpha releases</a>','<a href="/guide">Guide</a>');
  html=html.replaceAll('<a href="/alpha">Back to releases</a>','<a href="/discover">Discover</a>');
  html=html.replace('<main>','<main class="anp-workspace">');
  if(preview&&html.includes('<div class="player">')){
