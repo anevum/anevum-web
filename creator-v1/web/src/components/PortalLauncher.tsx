@@ -106,6 +106,13 @@ export function PortalLauncher({ open, onClose, routePrefix="", initialQuery="" 
   }
   function onKeyboard(event: KeyboardEvent<HTMLInputElement>) {
     if (event.nativeEvent.isComposing) return;
+    // Search inputs can consume the first Escape to clear text. The advertised
+    // shortcut must close the overlay and release the shared page scroll lock.
+    if (event.key === "Escape") {
+      event.preventDefault();
+      leave();
+      return;
+    }
     if (event.key === "ArrowDown" && entries.length) {
       event.preventDefault();
       setActive(index => (index + 1) % entries.length);

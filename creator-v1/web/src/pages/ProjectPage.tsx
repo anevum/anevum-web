@@ -45,7 +45,7 @@ export function ProjectPage(){
           <div className="portal-project-disclosure"><strong>AI INVOLVEMENT</strong><p>{p.aiDisclosure||"The creator did not provide an AI-use disclosure."}</p></div>
           <div className="portal-project-disclosure"><strong>HUMAN CONTRIBUTION</strong><p>{p.humanContribution||"The creator did not provide details of human contributions."}</p></div>
         </section>
-        <section className="portal-sidebox portal-external-warning"><span className="kicker">READ BEFORE YOU LEAVE</span><h2>{hosted?"ANEVUM PLAYER":"INDEPENDENT HOSTING"}</h2><p>{hosted?"This approved release opens in ANEVUM’s isolated player. Use the player controls to expand the experience and return to this page.":"External demos and code are hosted by their creators. Check costs and account requirements before sharing data."}</p></section>
+        <section className="portal-sidebox portal-external-warning"><span className="kicker">READ BEFORE YOU LEAVE</span><h2>{hosted?"ANEVUM PLAYER":"INDEPENDENT HOSTING"}</h2><p>{hosted?"This approved release opens in ANEVUM’s isolated player. Use the player controls to expand the experience and return to this page.":"External demos and code are hosted by their creators. ANEVUM does not certify security, ownership, licensing or payment practices. Check costs and account requirements before sharing data."}</p></section>
       </aside>
     </div>
     <nav className="avp-subnav" aria-label="Project sections">
