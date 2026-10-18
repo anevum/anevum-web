@@ -36,9 +36,9 @@ The endpoint requires:
 
 The Worker reads at most 20 MiB for a verified quarantined asset, rechecks SHA-256, opens it through V001's strict data-only package parser and discards all binary media. The response contains only capped text fields and counts; it omits all object keys, asset paths, binary bytes and direct media URLs.
 
-A successful inspection records an immutable text-only audit row containing reviewer ID, submission ID, project ID, asset ID, SHA-256 and time. No copied creator text or media bytes are stored in the audit table. A 30-successful-inspections-per-hour member cap prevents unbounded reviewer reads and repeated object retrievals.
+Before accessing R2, the Worker creates a private inspection-attempt audit row after atomically rechecking the frozen submission and enforcing a 30-attempts-per-hour reviewer limit. Corrupt/mismatched packages and failed reads still consume the quota and retain an attempt record. After an intact package has been read, and the frozen submission rechecked, the same row transitions to a successful view_text_summary action. This prevents repeated invalid reads from bypassing the cost limit. Audit rows contain only reviewer ID, submission ID, project ID, asset ID, SHA-256 and time; no creator text or media bytes are stored.
 
-The summary response is returned only after audit insert succeeds and frozen review still matches. Failed inspections do not create success rows. A reviewer cannot approve, publish, release, credit XP, copy private media, or bypass the staff review system with this endpoint.
+The text-only response is returned only after the existing attempt row is marked successful and the frozen review still matches. Failed inspections retain their auditable attempted action. A reviewer cannot approve, publish, release, credit XP, copy private media, or bypass the staff review system with this endpoint.
 
 ## New source files
 
