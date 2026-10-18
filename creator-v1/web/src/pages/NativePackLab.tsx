@@ -287,13 +287,18 @@ export function NativePackLab({title,creator,document,onImportDocument,disabled}
     <section className="np-console" aria-label="Native pack creator">
      <p className="np-eyebrow">01 / CREATE A NATIVE FILE</p>
      <label className="np-label">CREATION FORMAT
-      <select value={kind} onChange={e=>switchKind(e.target.value as PackKind)}>
+      <select value={kind} disabled={busy} onChange={e=>switchKind(e.target.value as PackKind)}>
        {(Object.keys(NAMES) as PackKind[]).map(k=><option key={k} value={k}>
         {NAMES[k]+' / .'+({game:'anvg',album:'anva',series:'anvs',visual:'anvw',project:'anvp'}[k])}
        </option>)}
       </select>
      </label>
      {kind==='game'&&<div className="np-composer">
+      <label className="np-label">GAME BEGINS AT
+       <select value={startScene} onChange={e=>setStartScene(e.target.value)}>
+        {scenes.map(s=><option key={s.id} value={s.id}>{s.title}</option>)}
+       </select>
+      </label>
       <div className="np-scene-toolbar"><label className="np-label">EDIT SCENE
        <select value={selected} onChange={e=>setSelected(e.target.value)}>
         {scenes.map(s=><option value={s.id} key={s.id}>{s.title}</option>)}
@@ -307,6 +312,21 @@ export function NativePackLab({title,creator,document,onImportDocument,disabled}
       <label className="np-label">SCENE DESCRIPTION
        <textarea rows={4} value={scene.text} maxLength={2500} onChange={e=>updateScene({text:e.target.value})}/>
       </label>
+      <label className="np-label">SCENE BACKGROUND
+       <select value={scene.background||''} onChange={e=>setBackground(e.target.value)}>
+        <option value="">No background image</option>
+        {gameImages.map(image=><option key={image.path} value={image.path}>{image.file.name}</option>)}
+       </select>
+      </label>
+      <label className="np-label">ADD BACKGROUND ART (OPTIONAL)
+       <input type="file" multiple accept=".png,.jpg,.jpeg,.webp,.gif"
+        onChange={e=>{addBackgrounds(e.target.files);e.currentTarget.value='';}}/>
+      </label>
+      {gameImages.map(image=><div className="np-media-edit" key={image.path}>
+       <span>{image.file.name}</span>
+       <button type="button" aria-label={'Remove background '+image.file.name}
+        onClick={()=>removeBackground(image.path)}>REMOVE IMAGE</button>
+      </div>)}
       <div className="np-scene-toolbar"><strong>PLAYER CHOICES</strong><button type="button" onClick={addChoice}>+ CHOICE</button></div>
       {scene.choices.map((choice,i)=><div className="np-choice-editor" key={i}>
        <input aria-label={'Choice '+(i+1)+' label'} maxLength={80} value={choice.label}
@@ -352,15 +372,17 @@ export function NativePackLab({title,creator,document,onImportDocument,disabled}
       <p>Created by {opened.manifest.creator}</p>
       <NativePackExperience key={experienceKey} kind={opened.manifest.kind}
        document={opened.document} urls={opened.urls}/>
-      {opened.manifest.kind==='project'&&<button type="button" className="np-secondary"
+      {opened.manifest.kind==='game'&&<button type="button" className="np-secondary"
+        onClick={resumeGame}>CONTINUE EDITING THIS GAME →</button>}
+       {opened.manifest.kind==='project'&&<button type="button" className="np-secondary"
        disabled={disabled} onClick={restoreDocument}>IMPORT INTO UNSAVED CANVAS →</button>}
      </div>:<div className="np-placeholder"><span aria-hidden="true">◇</span>
       <p>Select an ANEVUM file to inspect its contents and experience it in the appropriate player.</p></div>}
     </section>
    </div>
    {kind==='game'&&<div className="np-playtest"><p className="np-eyebrow">03 / LIVE GAME TEST</p>
-    <NativePackExperience key={experienceKey} kind="game" document={currentDocument()}
-     urls={{}}/></div>}
+    <NativePackExperience key={experienceKey} kind="game" document={liveGame}
+     urls={gameImageUrls}/></div>}
    {(kind==='album'||kind==='series'||kind==='visual')&&media.length>0&&<div className="np-playtest">
     <p className="np-eyebrow">03 / LOCAL MEDIA PREVIEW</p>
     <NativePackExperience kind={kind} document={currentDocument()} urls={mediaUrls}/>
