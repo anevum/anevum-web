@@ -258,3 +258,41 @@ test('catalog creation badges require a live reviewed publication feature and re
   {...env(db),CANONICAL_STUDIO_PUBLICATION_ENABLED:'false'});
  assert.ok(!(await off.json()).activeBadgeIds.includes('first_creation'));
 });
+
+test('Five Worlds and Architect of Worlds require five and twenty unique reviewed public works',async t=>{
+ const db=database();t.after(()=>db.raw.close());
+ for(let i=1;i<=20;i++){
+  const p=project(db,i,{link:'https://artist.example/art/'+i});
+  const c=await consent(db,p,now-100+i);
+  assert.equal(c.status,200,'submission '+i+' consent');
+  const release=await publish(db,p,now+i);
+  assert.equal(release.ok,true,'submission '+i+' publication');
+  const earned=(await memberRecognitionState(db,'owner')).earnedBadges.map(item=>item.id);
+  assert.equal(earned.includes('first_creation'),true,'first published creation persists');
+  assert.equal(earned.includes('maker_five'),i>=5,'five distinct reviewed creations required');
+  assert.equal(earned.includes('maker_twenty'),i>=20,'twenty distinct reviewed creations required');
+ }
+ assert.equal(scalar(db,"SELECT COUNT(*) c FROM member_recognition_grants WHERE user_id='owner' AND granted_by='canonical-studio-publication'").c,3);
+ assert.equal(scalar(db,"SELECT COUNT(*) c FROM member_reward_notifications WHERE user_id='owner' AND kind='award'").c,3);
+ assert.equal(scalar(db,"SELECT COUNT(*) c FROM member_xp_events").c,0);
+ const list=await canonicalPublicStudioCreations(new Request(base+'/api/v1/creations'),env(db));
+ assert.equal((await list.json()).creations.length,20);
+});
+test('Studio staff cannot bypass disabled publication gate or issue release evidence using unreviewed assets',async t=>{
+ const db=database();t.after(()=>db.raw.close());
+ const p=project(db);
+ assert.equal((await consent(db,p)).status,200);
+ const review=reviewBody(p.id);
+ const req=()=>new Request(base+'/api/v1/member/studio/review',{
+  method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(review)
+ });
+ const disabled=await canonicalStudioReview(req(),{
+  ...env(db),CANONICAL_STUDIO_PUBLICATION_ENABLED:'false'
+ },owner('reviewer'),now);
+ assert.equal(disabled.status,404);
+ assert.equal(scalar(db,'SELECT COUNT(*) c FROM member_studio_publications').c,0);
+ assert.equal((await publishReviewedExternalStudioMetadata(db,{
+  ...review,reviewerId:'reviewer',now,enabled:false
+ })).ok,false);
+ assert.equal(scalar(db,'SELECT COUNT(*) c FROM member_recognition_grants').c,0);
+});
