@@ -11,6 +11,18 @@
 -- Initial R1 scope: independently verified adult participants ONLY. A future
 -- release requires child safety/legal/custody and guardian enrollment review.
 
+-- Adults are provisioned only after independent real-world age/identity review.
+-- An Access login is not, by itself, proof of adulthood or circle consent.
+-- identity_hmac = HMAC-SHA256(secret, normalized verified Access email).
+-- Secret MUST NOT be stored in D1 or in source control. No raw email here.
+CREATE TABLE IF NOT EXISTS fs_verified_adults (
+  subject_id TEXT PRIMARY KEY NOT NULL,
+  identity_hmac TEXT NOT NULL UNIQUE CHECK(length(identity_hmac)=64),
+  age_verified INTEGER NOT NULL CHECK(age_verified=1),
+  state TEXT NOT NULL CHECK(state IN ('active','revoked')),
+  verified_at_ms INTEGER NOT NULL CHECK(verified_at_ms>0)
+);
+
 CREATE TABLE IF NOT EXISTS fs_private_circles (
   circle_id TEXT PRIMARY KEY NOT NULL,
   owner_subject_id TEXT NOT NULL,
@@ -113,6 +125,12 @@ CREATE INDEX IF NOT EXISTS ix_fs_invite_expiry
   ON fs_circle_invitations(circle_id,invitee_subject_id,state,expires_at_ms);
 CREATE INDEX IF NOT EXISTS ix_fs_membership_subject
   ON fs_memberships(subject_id,state);
+-- Prevent overlapping active sessions or conflicting grants from selecting
+-- arbitrary authorities in concurrent reads.
+CREATE UNIQUE INDEX IF NOT EXISTS ux_fs_active_session
+  ON fs_share_sessions(circle_id,subject_id) WHERE state='active';
+CREATE UNIQUE INDEX IF NOT EXISTS ux_fs_active_grant
+  ON fs_viewer_grants(session_id,viewer_id) WHERE state='active';
 CREATE INDEX IF NOT EXISTS ix_fs_sessions_expiry
   ON fs_share_sessions(circle_id,subject_id,state,expires_at_ms);
 CREATE INDEX IF NOT EXISTS ix_fs_viewer_grants

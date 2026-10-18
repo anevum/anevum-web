@@ -46,7 +46,7 @@ class PrivateCircleSchemaTests(unittest.TestCase):
         }
         self.assertEqual(tables, {
             "fs_private_circles","fs_memberships","fs_share_sessions",
-            "fs_viewer_grants","fs_circle_invitations","fs_access_audit"
+            "fs_viewer_grants","fs_circle_invitations","fs_access_audit","fs_verified_adults"
         })
         all_names = []
         for table in tables:
@@ -56,6 +56,42 @@ class PrivateCircleSchemaTests(unittest.TestCase):
         for banned in ("latitude","longitude","coordinates","gps","precise_position",
                        "home_address","school_address","location_history"):
             self.assertFalse(any(banned in name for name in all_names), banned)
+
+    def test_verification_registry_never_stores_raw_access_email(self):
+        self.db.execute(
+            "INSERT INTO fs_verified_adults VALUES (?,?,?,?,?)",
+            ("alice","a"*64,1,"active",T)
+        )
+        with self.assertRaises(sqlite3.IntegrityError):
+            self.db.execute(
+                "INSERT INTO fs_verified_adults VALUES (?,?,?,?,?)",
+                ("bob","a"*64,1,"active",T)
+            )
+        with self.assertRaises(sqlite3.IntegrityError):
+            self.db.execute(
+                "INSERT INTO fs_verified_adults VALUES (?,?,?,?,?)",
+                ("bob","b"*64,0,"active",T)
+            )
+        with self.assertRaises(sqlite3.IntegrityError):
+            self.db.execute(
+                "INSERT INTO fs_verified_adults VALUES (?,?,?,?,?)",
+                ("bob","email:foo@example.org",1,"active",T)
+            )
+        fields=[row[1] for row in self.db.execute("PRAGMA table_info(fs_verified_adults)")]
+        self.assertNotIn("email",fields)
+        self.assertNotIn("location",fields)
+
+    def test_one_active_session_and_viewer_grant_per_subject_and_viewer(self):
+        self.insert_session()
+        with self.assertRaises(sqlite3.IntegrityError):
+            self.insert_session(sid="sess-2")
+        self.insert_grant()
+        with self.assertRaises(sqlite3.IntegrityError):
+            self.db.execute(
+                "INSERT INTO fs_viewer_grants VALUES (?,?,?,?,?,?,?,?,?,?,?)",
+                ("grant-2","sess-1","circle-1","alice","bob",
+                 "explicit","presence:read","active",T+2000,T+100000,None)
+            )
 
     def test_member_must_be_unique_verified_adult_schema_only(self):
         with self.assertRaises(sqlite3.IntegrityError):
