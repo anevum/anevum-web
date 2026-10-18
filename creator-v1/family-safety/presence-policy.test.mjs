@@ -8,6 +8,8 @@ import {
   mayReadPresence,
   mayWritePresence,
   visiblePresence,
+  sanitizePosition,
+  admitLocationWrite,
   mayPublishCommunityLocation,
   buildViewerGrant
 } from "./presence-policy.mjs";
@@ -102,6 +104,36 @@ test("expired, future and implausibly long session and grants fail closed", () =
   ]) {
     assert.equal(mayReadPresence({ ...a, ...mutation }), false, JSON.stringify(mutation));
   }
+});
+
+test("duplicate or contradictory memberships always deny access", () => {
+  const a = context();
+  assert.equal(mayReadPresence({ ...a, memberships:[...a.memberships, adult("bob")] }),false);
+  assert.equal(mayReadPresence({
+    ...a, memberships:[...a.memberships, { ...adult("alice"), state:"removed" }]
+  }),false);
+});
+
+test("position ingress admits only the subject with valid on-time location samples", () => {
+  const a=context();
+  assert.equal(admitLocationWrite({ ...a, location:point() }),null);
+  const own={...a,actorId:"alice"};
+  assert.deepEqual(admitLocationWrite({ ...own, location:point() }),point());
+  assert.deepEqual(sanitizePosition(point(),T),point());
+  for(const location of [
+    point({lat:91}),
+    point({lng:-181}),
+    point({accuracyM:2001}),
+    point({observedAt:T+5001}),
+    point({observedAt:T-120000}),
+    point({lat:NaN}),
+    point({lng:undefined}),
+    {lat:28,lng:-81,accuracyM:"10",observedAt:T-1000},
+    {lat:28,lng:-81,accuracyM:10,observedAt:1.5}
+  ]) {
+    assert.equal(admitLocationWrite({ ...own, location }),null);
+  }
+  assert.equal(admitLocationWrite({ ...own, session:{...own.session, revokedAt:T-1}, location:point() }),null);
 });
 
 test("disabled or unverified adults, minor accounts and rejected memberships never receive locations", () => {
