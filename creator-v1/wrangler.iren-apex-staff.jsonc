@@ -30,7 +30,7 @@
     }
   ],
   "vars": {
-    "CANONICAL_STAFF_OPS_ENABLED": "false",
+    "CANONICAL_STAFF_OPS_ENABLED": "true",
     "CANONICAL_FORUM_ENABLED": "true"
   }
 }
