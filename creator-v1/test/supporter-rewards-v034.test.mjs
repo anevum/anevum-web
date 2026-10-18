@@ -141,16 +141,16 @@ test('owner-only subsequent save, stale revision rejection and no purchased XP',
   assert.equal(db.prepare('SELECT COUNT(*) AS n FROM supporter_appearance').get().n,1);
  }finally{db.close()}
 });
-test('CSRF and authenticated source router enforce private reward writes',async()=>{
+test('retired source router blocks all supporter reward writes',async()=>{
  const {db,env,users}=setup();
  try{
   const foreign=new Request(ORIGIN+'/api/v1/member/supporter/rewards',{
    method:'PATCH',headers:{'origin':'https://attacker.invalid','content-type':'application/json'},
    body:JSON.stringify({seal:'signal',frame:'orbital',aura:'aurora',revision:0})
   });
-  assert.equal((await canonicalWorker.fetch(foreign,env)).status,403);
+  assert.equal((await canonicalWorker.fetch(foreign,env)).status,404);
   const noCookies=await canonicalWorker.fetch(endpoint('PATCH',{seal:'signal',frame:'orbital',aura:'aurora',revision:0}),env);
-  assert.ok([401,403].includes(noCookies.status));
+  assert.equal(noCookies.status,404);
   const unauthorized=await supporterRewardsRoute(endpoint('PATCH',{seal:'signal',frame:'orbital',aura:'aurora',revision:0}),env,users[1],{now:NOW});
   assert.equal(unauthorized.status,409);
  }finally{db.close()}

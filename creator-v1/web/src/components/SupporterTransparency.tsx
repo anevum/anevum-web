@@ -136,7 +136,7 @@ export function SupporterTransparency(){
      <p>{finance.methodology}</p>
     </section>
    </div>}
-   {!verifiedFinance&&<p className="av38-unpublished">Income, Stripe fees, invoices and fundraising totals have not been reconciled or approved. The bars intentionally show no percentage until their sources are verified.</p>}
+   {!verifiedFinance&&<p className="av38-unpublished">Income, payment processing fees, invoices and fundraising totals have not been reconciled or approved. The bars intentionally show no percentage until their sources are verified.</p>}
    <p className="av37-footnote">Annual memberships are collected upfront, so one month of cash receipts is not recurring monthly revenue. Costs can be covered only by reconciled cash after verified outstanding tax reserves; we do not treat tax collections as ANEVUM operating money. Publishing a complete monthly run-rate requires a separate active-subscription report. Unverified or partial categories remain unavailable.</p>
   </section>
   <section aria-labelledby="av37-storage">

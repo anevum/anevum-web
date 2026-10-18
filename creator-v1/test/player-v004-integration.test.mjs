@@ -4,7 +4,7 @@ import {readFileSync} from "node:fs";
 
 const read=path=>readFileSync(new URL("../"+path,import.meta.url),"utf8");
 
-test("V004 composition preserves V040 supporter, member auth and original route",()=>{
+test("V081 preserves player integration, canonical member auth and public supporter information",()=>{
  const app=read("web/src/App.tsx");
  const page=read("web/src/pages/ProjectPage.tsx");
  const player=read("web/src/components/ProjectPlayerShell.tsx");
@@ -16,11 +16,12 @@ test("V004 composition preserves V040 supporter, member auth and original route"
  assert.match(page,/MemberEngagementPanel/);
  assert.match(page,/ContextDiscussions/);
  assert.match(player,/avp-stage--long-title/);
- assert.match(worker,/reconcileSupporterSubscriptions/);
- assert.match(worker,/reconcileSupporterCheckouts/);
+ assert.doesNotMatch(worker,/reconcileSupporterSubscriptions|reconcileSupporterCheckouts/);
+ assert.match(worker,/cleanupCanonicalStudioAssets/);
  assert.match(worker,/PUBLIC_METRICS/);
  assert.match(worker,/canonicalIdentity\.fetch/);
- assert.match(canonical,/supporterMember/);
+ assert.doesNotMatch(canonical,/supporterMember|supporterWebhook/);
+ assert.match(canonical,/V081: payment-provider migration/);
  assert.match(canonical,/publicSupporterTelemetry/);
  assert.match(read("web/src/pages/SupporterPage.tsx"),/Supporter/);
 });
@@ -40,7 +41,7 @@ test("V004 test list preserves all V040 suites and includes the unified player s
  assert.doesNotMatch(read("web/src/main.tsx"),/portal-offline-preview|playerCases/);
 });
 
-test("V004 isolated staging config keeps current provider cron, dual DB and no live routes",()=>{
+test("V081 isolated staging keeps dual DB and no live billing routes or triggers",()=>{
  const config=JSON.parse(read("wrangler.a-progression-v031.jsonc"));
  assert.equal(config.name,"anevum-creator-v1-a-staging");
  assert.equal(config.main,"./web/a-canonical-stage.review.mjs");
