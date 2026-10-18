@@ -202,6 +202,8 @@ async function upload(req,env,u) {
   } catch(e) {
     await env.MEDIA.delete(touched).catch(()=>{});
     if(e instanceof PackageError) throw e;
+    if(/UNIQUE constraint failed|FOREIGN KEY constraint failed/i.test(String(e?.message||"")))
+      return fail(409,"Another upload updated this project. Refresh and retry");
     return fail(503,"Package storage failed; no project was published");
   }
 }
