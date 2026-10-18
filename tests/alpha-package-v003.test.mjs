@@ -228,3 +228,45 @@ test("runtime refuses wrong host, unsigned private build and invalid methods",as
     assert.equal((await runtime.fetch(new Request(unsigned,{method:"POST"}),env)).status,404);
   }finally{env.DB.close();}
 });
+
+test("rejecting a first release allows owner to submit a revised ZIP",async()=>{
+  const env=setup();
+  try{
+    const created=(await (await post(env,"/api/v1/packages/upload",uploadForm(sample()))).json());
+    assert.equal((await post(env,"/api/v1/packages/projects/"+created.id+"/submit",{})).status,200);
+    const denial=await post(env,"/api/v1/packages/projects/"+created.id+"/review",{
+      action:"reject",reason:"Please replace third-party artwork before publication"
+    },"staff");
+    assert.equal(denial.status,200);
+    const playerPage=await getPage(env,"/play/v3/"+created.id+"?preview=1");
+    assert.doesNotMatch(await playerPage.text(),/<iframe/);
+    const uploadPage=await getPage(env,"/upload/v3?update="+created.id);
+    assert.match(await uploadPage.text(),/Revise project/);
+    const v2=await post(env,"/api/v1/packages/upload",uploadForm(sample(),"Cosmic Racer Updated",created.id));
+    assert.equal(v2.status,201,await v2.clone().text());
+    assert.equal((await v2.json()).version,2);
+  }finally{env.DB.close();}
+});
+test("deleted private projects immediately revoke previously signed build previews",async()=>{
+  const env=setup();
+  try{
+    const created=(await (await post(env,"/api/v1/packages/upload",uploadForm(sample()))).json());
+    const page=await getPage(env,"/play/v3/"+created.id+"?preview=1");
+    const src=iframeSrc(await page.text());
+    assert.equal((await runtime.fetch(new Request(src),env)).status,200);
+    const result=await post(env,"/api/v1/packages/projects/"+created.id+"/delete",{});
+    assert.equal(result.status,200);
+    assert.equal((await runtime.fetch(new Request(src),env)).status,404);
+    assert.equal(env.MEDIA.data.size,0);
+  }finally{env.DB.close();}
+});
+test("runtime permits ordinary asset cache-busting queries but restricts arbitrary paths",async()=>{
+  const env=setup();
+  try{
+    const created=(await (await post(env,"/api/v1/packages/upload",uploadForm(sample()))).json());
+    const src=iframeSrc(await (await getPage(env,"/play/v3/"+created.id+"?preview=1")).text());
+    const dir=src.slice(0,src.lastIndexOf("/")+1);
+    assert.equal((await runtime.fetch(new Request(dir+"game.js?v=12"),env)).status,200);
+    assert.equal((await runtime.fetch(new Request(dir+"../../other-project/game.js"),env)).status,404);
+  }finally{env.DB.close();}
+});
