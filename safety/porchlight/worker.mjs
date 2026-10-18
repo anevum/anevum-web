@@ -235,7 +235,7 @@ async function decideHost(request, env, id, now) {
   } else {
     if (host.status !== "pending") return fail("HOST_NOT_PENDING", 409);
     if (b.action === "approve") {
-      const label = safeText(b.publicLabel, 3, 120);
+      const label = host.visibility === "area" ? host.event_neighborhood : safeText(b.publicLabel, 3, 120);
       const verified = b.verifiedOutOfBand === true &&
         ["in_person", "direct_contact"].includes(b.verificationMethod);
       const positionOK = host.visibility === "area"
@@ -247,7 +247,7 @@ async function decideHost(request, env, id, now) {
       await env.PORCHLIGHT_DB.prepare(
         "UPDATE host_submissions SET status='published', public_name=?, public_label=?, " +
         "approved_lat=?, approved_lng=?, reviewed_at=?, verification_method=? WHERE id=? AND status='pending'"
-      ).bind(host.host_name, host.visibility === "exact" ? label : host.event_neighborhood, host.visibility === "exact" ? b.lat : null,
+      ).bind(host.host_name, label, host.visibility === "exact" ? b.lat : null,
         host.visibility === "exact" ? b.lng : null, now, b.verificationMethod, id).run();
     } else {
       await env.PORCHLIGHT_DB.prepare(
