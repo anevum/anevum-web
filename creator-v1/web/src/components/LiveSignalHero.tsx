@@ -1,5 +1,5 @@
 import {Link} from "react-router-dom";
-import {useEffect,useState,type CSSProperties} from "react";
+import {useEffect,useRef,useState,type CSSProperties,type KeyboardEvent} from "react";
 import {readCommunityPosts,type CommunityPost,type Creator,type Project,type Status} from "../lib/api";
 import {useResource} from "../lib/useResource";
 import {projectDetailPath} from "../lib/navigation";
@@ -96,9 +96,8 @@ function MakerChannels({creators,state}:{creators:readonly Creator[];state:Props
 }
 function IndexPulse({status,state,clock}:{status:Status|null;state:Props["state"];clock:string}){
   return <section className="av8-module av8-module--pulse" aria-label="Verified public catalogue status">
-    <ModuleHead index="04 / INDEX" title="Public signal" to="/status" action="STATUS"/>
+    <ModuleHead index="04 / INDEX" title="Index health" to="/status" action="STATUS"/>
     <div className="av8-pulse-body">
-      <div className="av8-pulse-orbit" aria-hidden="true"><span className="av8-pulse-core"/><span className="av8-pulse-ring"/><span className="av8-pulse-dot"/></div>
       <dl>
         <div><dt>INDEX STATE</dt><dd>{state==="ready"?"CONNECTED":state==="loading"?"CHECKING":"UNAVAILABLE"}</dd></div>
         {state==="ready"&&status&&<>
@@ -169,30 +168,71 @@ export function LiveSignalHero({projects,state}:Pick<Props,"projects"|"state">){
   </section>;
 }
 
-/** ANEVUM mobile-first: verified index modules follow the primary discovery
- * portals. No duplicated cards, synthetic projects or extra member API calls.
- * Reuses exactly the previously approved public-read components. */
+/** One active, useful module at a time. Public records and capability flags are
+ * still authoritative; the tabs never impersonate an active community. */
+type IndexView = "releases" | "community" | "creators" | "status";
+const indexViews: ReadonlyArray<{
+  id: IndexView; number: string; label: string; detail: string;
+}> = [
+  {id:"releases",number:"01",label:"New work",detail:"Approved releases"},
+  {id:"community",number:"02",label:"Conversations",detail:"Reviewed discussions"},
+  {id:"creators",number:"03",label:"People",detail:"Public creator channels"},
+  {id:"status",number:"04",label:"Index health",detail:"Verified availability"}
+];
+
 export function LiveSignalModules({status,projects,creators,state}:Props){
+  const [view,setView]=useState<IndexView>("releases");
+  const tabButtons=useRef<Array<HTMLButtonElement|null>>([]);
   const [time,setTime]=useState(()=>new Date());
+
   useEffect(()=>{
     const timer=window.setInterval(()=>{
       if(document.visibilityState==="visible")setTime(new Date());
     },30000);
     return()=>window.clearInterval(timer);
   },[]);
+
+  const choose=(index:number)=>{
+    setView(indexViews[index].id);
+    tabButtons.current[index]?.focus();
+  };
+  const onTabKey=(event:KeyboardEvent<HTMLButtonElement>,index:number)=>{
+    let next:number|null=null;
+    if(event.key==="ArrowDown"||event.key==="ArrowRight")next=(index+1)%indexViews.length;
+    if(event.key==="ArrowUp"||event.key==="ArrowLeft")next=(index+indexViews.length-1)%indexViews.length;
+    if(event.key==="Home")next=0;
+    if(event.key==="End")next=indexViews.length-1;
+    if(next!==null){event.preventDefault();choose(next);}
+  };
+
   return <section className="av11-live-index" aria-labelledby="av11-live-index-heading">
     <header className="av11-live-index-heading">
       <div>
-        <span className="av9-overline">CHAPTER 02 / THE VERIFIED INDEX</span>
-        <h2 id="av11-live-index-heading">Signals from <em>the community.</em></h2>
+        <span className="av9-overline">ANEVUM / CURRENT ACTIVITY</span>
+        <h2 id="av11-live-index-heading">Inside <em>the network.</em></h2>
       </div>
-      <p>What creators are publishing and discussing, drawn only from approved public records.</p>
+      <p>Choose what you want to see. Every entry comes from approved public records or a verified availability check.</p>
     </header>
-    <div className="av8-module-grid">
-      <LatestReleases projects={projects} state={state}/>
-      <RecentConversations enabled={state==="ready"&&status?.features?.communityPosts===true}/>
-      <MakerChannels creators={creators} state={state}/>
-      <IndexPulse status={status} state={state} clock={utcClock(time)}/>
+    <div className="av11-module-workbench">
+      <div className="av11-module-tabs" role="tablist" aria-label="Current activity modules" aria-orientation="vertical">
+        {indexViews.map((option,index)=><button
+          ref={element=>{tabButtons.current[index]=element;}}
+          key={option.id} id={"av11-tab-"+option.id} type="button" role="tab"
+          className="av11-module-tab" tabIndex={view===option.id?0:-1}
+          aria-selected={view===option.id} aria-controls="av11-current-module"
+          onClick={()=>setView(option.id)} onKeyDown={event=>onTabKey(event,index)}>
+          <span className="av11-module-tab-number">{option.number}</span>
+          <span className="av11-module-tab-copy"><strong>{option.label}</strong><small>{option.detail}</small></span>
+          <Icon name="arrow" size={15}/>
+        </button>)}
+      </div>
+      <div className="av11-module-stage" id="av11-current-module" role="tabpanel"
+        aria-labelledby={"av11-tab-"+view} tabIndex={0}>
+        {view==="releases"&&<LatestReleases projects={projects} state={state}/>}
+        {view==="community"&&<RecentConversations enabled={state==="ready"&&status?.features?.communityPosts===true}/>}
+        {view==="creators"&&<MakerChannels creators={creators} state={state}/>}
+        {view==="status"&&<IndexPulse status={status} state={state} clock={utcClock(time)}/>}
+      </div>
     </div>
   </section>;
 }
