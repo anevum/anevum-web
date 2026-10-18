@@ -147,5 +147,6 @@ test('26 badge engravings have independently modeled devices, not repeated gener
  for(const component of ['CompactMemberIdentity.tsx','PlayerCardStudio.tsx']){
   assert.match(source('web/src/components/'+component),/BadgeInsignia/);
  }
- assert.match(source('web/src/pages/RecognitionRegistryPage.tsx'),/BadgeInsignia/);
+ assert.match(source('web/src/pages/RecognitionRegistryPage.tsx'),/EarnedRewardVault/);
+ assert.match(source('web/src/components/EarnedRewardVault.tsx'),/BadgeInsignia/);
 });
