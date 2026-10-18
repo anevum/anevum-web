@@ -68,7 +68,7 @@ export function StudioPublicationPanel({project,onStatusChange}:{
     <small>Scope: external metadata only · Revision {project.revision}</small>
    </div>
    {!eligible&&!state.publicationStatus&&<p className="st-muted">A current frozen submission with an external HTTPS link and zero attached files is required. Remove private attachments before resubmitting; file scanning and native playback are not part of this release.</p>}
-   {!state.publicationStatus&&eligible&&<label className="st-check">
+   {!state.consented&&!state.publicationStatus&&eligible&&<label className="st-check">
     <input type="checkbox" checked={confirmed} disabled={busy}
       onChange={event=>setConfirmed(event.target.checked)}/>
     I authorize the named external links and descriptive metadata from this exact submission to appear publicly if independent staff approve its rights and contents.
