@@ -38,7 +38,7 @@ export function PublicAuthorShowcase({handle,name,known,showcase,variant="feed"}
         aria-expanded={detail?.title==="LEVEL "+level} onClick={()=>toggle("LEVEL "+level,
           "Level and current artifact are derived from verified ANEVUM progression, not member-entered scores.")}>
         <span className="av7-level-crest">
-          <LevelEmblem level={level} size={46}/>
+          <LevelEmblem level={level} size={46} handle={handle}/>
           <b>{level}</b>
         </span>
         <span className="av7-level-copy"><strong>LEVEL {String(level).padStart(2,"0")}</strong>
@@ -51,7 +51,7 @@ export function PublicAuthorShowcase({handle,name,known,showcase,variant="feed"}
         onClick={()=>toggle(artifact,equipped?
           "This Evolution of Everything specimen was selected from levels earned by this creator.":
           "This is the current artifact confirmed by the ANEVUM progression service. The member has not yet equipped a personal selection.")}>
-        <span className="av7-item-face" aria-hidden="true"><LevelEmblem level={level!} size={36}/></span>
+        <span className="av7-item-face" aria-hidden="true"><LevelEmblem level={level!} size={36} handle={handle}/></span>
         <span className="av7-item-meta"><strong>{artifact}</strong><small>EVOLUTION / EARNED</small></span>
       </button>
     </div>}
