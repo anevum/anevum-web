@@ -48,7 +48,8 @@ export interface StudioHealth {
  service:string;status:string;studioReady?:boolean;studioUploadsReady?:boolean;
 }
 export class StudioError extends Error{
- constructor(readonly status:number,message:string){super(message);this.name='StudioError';}
+ readonly status:number;
+ constructor(status:number,message:string){super(message);this.status=status;this.name='StudioError';}
 }
 function validId(id:string){if(!UUID.test(id))throw Error('Invalid Studio project identifier');return id;}
 function validAsset(id:string){if(!ASSET.test(id))throw Error('Invalid private file identifier');return id;}
