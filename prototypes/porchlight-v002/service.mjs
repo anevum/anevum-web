@@ -14,6 +14,7 @@ const JSON_HEADERS = Object.freeze({
 });
 const VERSION = 'porchlight-host-consent-v1';
 const TAGS = new Set(['candy', 'nonfood', 'decor', 'stepfree']);
+const REPORT_REASONS = new Set(['unwanted','incorrect','privacy','accessibility','other']);
 const SLUG_RE = /^[a-z0-9]{2,40}(?:-[a-z0-9]{1,40})*$/;
 const ID_RE = /^[a-zA-Z0-9:_-]{1,128}$/;
 const REQUEST_MAX_BYTES = 4096;
@@ -153,7 +154,7 @@ export function createPorchlightHandler({resolveActor, authorizeWriteQuota, now 
         if (!event || !eventVisible(event, at)) return json(200, {status: 'inactive', pins: []});
         const rows = await dbAll(db, `SELECT id, public_label, public_exact_address, public_block, display_mode, public_lat, public_lng, tags_json
           FROM porchlight_host_submissions WHERE event_id = ? AND status = 'approved' ORDER BY created_at ASC LIMIT 200`, event.id);
-        return json(200, {status: 'active', event: {title: event.title, startsAt: event.starts_at, endsAt: event.ends_at}, pins: rows.map(publicRecord)});
+        return json(200, {status: 'active', reportingAvailable: env.PORCHLIGHT_REPORTS_ENABLED === 'true', event: {title: event.title, startsAt: event.starts_at, endsAt: event.ends_at}, pins: rows.map(publicRecord)});
       }
       // Public organizer-controlled area choices. Never accept household-created public blocks.
       if (method === 'GET' && segments.length === 4 && segments[1] === 'events' && segments[3] === 'blocks') {
@@ -163,10 +164,73 @@ export function createPorchlightHandler({resolveActor, authorizeWriteQuota, now 
         const rows = await dbAll(db, 'SELECT code, public_label AS label FROM porchlight_event_blocks WHERE event_id = ? ORDER BY public_label ASC LIMIT 30', event.id);
         return json(200, {status:'active', consentVersion:VERSION, event:{title:event.title, endsAt:event.ends_at}, blocks:rows});
       }
+      // Anonymous report intake: default OFF, requires server-side quota, no resident identity.
+      if (method === 'POST' && segments.length === 4 && segments[1] === 'events' && segments[3] === 'reports') {
+        if (env.PORCHLIGHT_REPORTS_ENABLED !== 'true') fail(503, 'reports_not_configured');
+        const slug = segments[2]; if (!validSlug(slug)) fail(404, 'not_found');
+        const event = await eventBySlug(db, slug);
+        if (!event || !eventVisible(event, at)) fail(404, 'event_unavailable');
+        const payload = await parseBody(request);
+        checkKeys(payload, ['submissionId', 'reason', 'details']);
+        if (!validId(payload.submissionId) || !REPORT_REASONS.has(payload.reason)) fail(422, 'invalid_report');
+        const details = cleanText(payload.details, 240, 12);
+        if (typeof authorizeWriteQuota !== 'function') fail(503, 'abuse_prevention_unavailable');
+        const accepted = await authorizeWriteQuota({actor:null, eventId:event.id, operation:'report', request, env});
+        if (accepted !== true) fail(429, 'try_later');
+        const result = await db.prepare(
+          "INSERT INTO porchlight_reports (id,event_id,submission_id,reason,details,status,revision,created_at) " +
+          "SELECT ?, e.id, h.id, ?, ?, 'open', 1, ? " +
+          "FROM porchlight_events e JOIN porchlight_host_submissions h ON h.event_id=e.id " +
+          "WHERE e.id=? AND e.status='open' AND e.public_from<=? AND e.ends_at>? " +
+          "AND h.id=? AND h.status='approved'"
+        ).bind(createId(),payload.reason,details,at,event.id,at,at,payload.submissionId).run();
+        if (result.meta?.changes !== 1) fail(404, 'listing_unavailable');
+        return json(201, {status:'received',notice:'A private report was accepted for organizer review. This is not emergency dispatch.'});
+      }
       // All non-public routes require identity provided by a previously verified, approved adapter.
       let actor;
       try {actor = readActor(await resolveActor(request, env));}
       catch (error) {if (error instanceof HttpError) throw error; fail(503, 'identity_unavailable');}
+      // Event-scoped private report queue: never exposed on public or participant APIs.
+      if (method === 'GET' && segments.length === 5 && segments[1] === 'organizer' &&
+          segments[2] === 'events' && segments[4] === 'reports') {
+        if (env.PORCHLIGHT_REPORTS_ENABLED !== 'true') fail(503, 'reports_not_configured');
+        const slug=segments[3]; if (!validSlug(slug)) fail(404, 'not_found');
+        const event=await eventBySlug(db,slug); if (!event) fail(404, 'not_found');
+        await requireOrganizer(db,event.id,actor);
+        const reports=await dbAll(db,
+          "SELECT id, submission_id AS submissionId, reason, details, status, revision, created_at AS createdAt " +
+          "FROM porchlight_reports WHERE event_id=? AND status='open' " +
+          "ORDER BY created_at ASC LIMIT 100",event.id);
+        return json(200,{event:slug,reports});
+      }
+      if (method === 'POST' && segments.length === 5 && segments[1] === 'organizer' &&
+          segments[2] === 'reports' && segments[4] === 'resolve') {
+        if (env.PORCHLIGHT_REPORTS_ENABLED !== 'true') fail(503, 'reports_not_configured');
+        const id=segments[3]; if(!validId(id))fail(404,'not_found');
+        const row=await dbFirst(db,'SELECT id,event_id,status,revision FROM porchlight_reports WHERE id=?',id);
+        if(!row)fail(404,'not_found');
+        await requireOrganizer(db,row.event_id,actor);
+        const payload=await parseBody(request);
+        checkKeys(payload,['expectedRevision','reason']);
+        if(!Number.isSafeInteger(payload.expectedRevision)||payload.expectedRevision<1)fail(422,'revision_required');
+        const reason=cleanText(payload.reason,250,12), mutation=createId();
+        const results=await transaction(db,[
+          ["UPDATE porchlight_reports SET status='resolved',revision=revision+1, " +
+           "resolved_by=?,resolved_at=?,resolution_reason=?,mutation_id=? " +
+           "WHERE id=? AND status='open' AND revision=? " +
+           "AND EXISTS (SELECT 1 FROM porchlight_organizer_grants g " +
+           "WHERE g.event_id=porchlight_reports.event_id AND g.principal_id=? AND g.revoked_at IS NULL)",
+           [actor,at,reason,mutation,id,payload.expectedRevision,actor]],
+          ["INSERT INTO porchlight_report_audit " +
+           "(id,report_id,event_id,organizer_principal_id,action,created_at,reason,mutation_id) " +
+           "SELECT ?,r.id,r.event_id,?,'resolve',?,?,? " +
+           "FROM porchlight_reports r WHERE r.id=? AND r.mutation_id=? AND r.status='resolved'",
+           [createId(),actor,at,reason,mutation,id,mutation]],
+        ]);
+        if(results[0]?.meta?.changes!==1 || results[1]?.meta?.changes!==1)fail(409,'stale_or_unavailable');
+        return json(200,{id,status:'resolved',revision:payload.expectedRevision+1});
+      }
       // Verified provider principal and server-granted event role; never accept self-selected roles.
       if (method === 'GET' && segments.length === 2 && segments[1] === 'session') {
         const eventSlug = new URL(request.url).searchParams.get('event');
@@ -218,6 +282,8 @@ export function createPorchlightHandler({resolveActor, authorizeWriteQuota, now 
             public_label='Withdrawn household', public_block='Withheld', display_mode='block', tags_json='[]',
             review_reason=NULL, review_method=NULL
             WHERE id=? AND host_principal_id=? AND status != 'withdrawn'`, [mutation, at, id, actor]],
+          ...(env.PORCHLIGHT_REPORTS_ENABLED === 'true' ?
+            [['DELETE FROM porchlight_reports WHERE submission_id=?', [id]]] : []),
           auditInsert({id:createId(), eventId:row.event_id, actor, targetKind:'submission', targetId:id,
             action:'host_withdraw', from:row.status, to:'withdrawn', reason:'Host revoked participation consent', at, mutation}),
         ]);
@@ -285,6 +351,8 @@ export function createPorchlightHandler({resolveActor, authorizeWriteQuota, now 
             WHERE id=? AND status=? AND revision=?
               AND EXISTS (SELECT 1 FROM porchlight_organizer_grants g WHERE g.event_id=porchlight_host_submissions.event_id AND g.principal_id=? AND g.revoked_at IS NULL)${eventGuard}`,
             [to, actor, at, method, reason, mutation, at, ...Array(8).fill(to), id, from, payload.expectedRevision, actor, ...(action === 'approve' ? [at] : [])]],
+          ...(env.PORCHLIGHT_REPORTS_ENABLED === 'true' && action !== 'approve' ?
+            [['DELETE FROM porchlight_reports WHERE submission_id=?', [id]]] : []),
           auditInsert({id:createId(), eventId:row.event_id, actor, targetKind:'submission', targetId:id,
             action:`organizer_${action}`, from, to, reason, at, mutation}),
         ]);

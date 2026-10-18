@@ -23,6 +23,33 @@
 <div class="warning-banner" role="status">DEMONSTRATION ONLY &mdash; no verified homeowners, user accounts or live events are connected.</div>
 <section id="explore" class="content-section" aria-labelledby="explore-title"><div class="section-head"><div><p class="eyebrow">01 / THE DIRECTORY</p><h2 id="explore-title">Participating homes</h2><p>Only listings affirmatively shared by adults and approved by an organizer can appear. Neither approval nor participation guarantees safety.</p></div><button class="secondary-button" id="refresh-directory" type="button">Refresh</button></div>
  <div class="directory-grid"><div class="schematic" aria-label="Decorative fictional neighborhood diagram, not a navigational map" role="img"><div class="schematic-grid"></div><div class="road horizontal"></div><div class="road vertical"></div><div class="demo-house one"></div><div class="demo-house two"></div><div class="demo-house three"></div><span class="schematic-label">ILLUSTRATIVE AREA ONLY</span></div><div class="public-list"><div class="panel-heading"><h3>Published listings</h3><span id="pin-count">0 homes</span></div><div id="directory-state" class="state-line" role="status" aria-live="polite">Checking availability...</div><ul id="pin-list" class="listing"></ul><p class="note">No street map or pedestrian safety guarantees are provided in this pilot.</p></div></div>
+
+ <div class="report-panel panel" aria-labelledby="report-title">
+  <div class="panel-heading"><h3 id="report-title">Report an incorrect or unwanted listing</h3><span>Private organizer review</span></div>
+  <p class="note">Report concerns about a voluntary listing. Do not enter names of children, private medical details, or speculation about people. For emergencies, call 911. Reports do not dispatch assistance.</p>
+  <form id="report-form" novalidate>
+   <div class="report-fields">
+    <label for="report-target">Published listing
+     <select id="report-target" required disabled><option value="">No published listings available</option></select>
+    </label>
+    <label for="report-reason">Reason
+     <select id="report-reason" required>
+      <option value="">Select a reason</option>
+      <option value="unwanted">House should not be listed</option>
+      <option value="incorrect">Incorrect information</option>
+      <option value="privacy">Privacy concern</option>
+      <option value="accessibility">Accessibility information</option>
+      <option value="other">Other listing issue</option>
+     </select>
+    </label>
+   </div>
+   <label for="report-details">Brief description for organizers only
+    <textarea id="report-details" required minlength="12" maxlength="240" rows="2" placeholder="Describe the listing problem, without exposing private information."></textarea>
+   </label>
+   <button id="submit-report" class="secondary-button" type="submit" disabled>Send private report</button>
+   <p id="report-state" class="form-result" role="status" aria-live="polite">Reporting is unavailable until the isolated service is activated.</p>
+  </form>
+ </div>
 </section>
 <section id="join" class="content-section" aria-labelledby="join-title"><div class="section-head"><div><p class="eyebrow">02 / PARTICIPATION</p><h2 id="join-title">Offer a stop, on your terms.</h2><p>Adult-only household submission. The organizer receives a private address for checking authority. Publication is never automatic.</p></div></div>
  <div class="participation-grid"><article class="panel"><h3>Identity and access</h3><p id="session-state" role="status" aria-live="polite">Checking the session...</p><p class="note">This review build has no public registration. A future identity service must verify the session, email and adult eligibility. No authorization comes from browser role controls.</p></article>
@@ -38,6 +65,15 @@
 <section id="my-home" class="content-section" aria-labelledby="my-title"><div class="section-head"><div><p class="eyebrow">03 / HOUSEHOLD CONTROL</p><h2 id="my-title">My listings</h2><p>Current state is private to the verified submitting account. Withdrawal immediately removes the public listing on subsequent API reads.</p></div><button id="refresh-mine" class="secondary-button" type="button">Refresh my status</button></div><div id="my-state" class="state-line" role="status">Sign in to view submissions.</div><div id="my-list" class="entry-grid"></div></section>
 <section id="organizer" class="content-section" aria-labelledby="organizer-title"><div class="section-head"><div><p class="eyebrow">04 / ORGANIZER CONSOLE</p><h2 id="organizer-title">Review and moderation</h2><p>Private household data appears only to independently authorized event organizers. Event managers can pause all public listings.</p></div><button class="secondary-button" id="refresh-queue" type="button" disabled>Refresh private queue</button></div>
  <div class="moderation-layout"><div><p id="organizer-state" class="state-line" role="status">No authorized organizer session.</p><div id="review-queue" class="entry-grid"></div></div><form id="pause-form" class="panel" hidden><h3>Emergency depublication</h3><p class="note">Immediately hide all event listings on future public reads. This is not an emergency dispatch feature.</p><label for="pause-reason">Reason (private audit record)</label><textarea id="pause-reason" required minlength="12" maxlength="250" rows="3"></textarea><button class="danger-button" type="submit">Pause all public listings</button><p id="pause-result" class="form-result" role="status"></p></form></div>
+
+ <div class="panel reports-panel" aria-labelledby="reports-title">
+  <div class="panel-heading"><h3 id="reports-title">Private listing reports</h3>
+  <button id="refresh-reports" class="secondary-button" type="button" disabled>Refresh reports</button></div>
+  <p class="note">Review concerns privately. If a listing should be removed, use the approved-host moderation card above before resolving its report. Report notes must never be posted publicly.</p>
+  <p id="reports-state" class="state-line" role="status" aria-live="polite">Only event-authorized reviewers can access reports.</p>
+  <p id="reports-feedback" class="form-result" role="status" aria-live="polite"></p>
+  <div id="report-queue" class="entry-grid"></div>
+ </div>
 </section>
 </main>
 <footer><span>ANEVUM / PORCHLIGHT / ISOLATED SOURCE REVIEW</span><span>Voluntary participation. No child tracking, surveillance or emergency services.</span></footer>

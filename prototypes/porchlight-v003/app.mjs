@@ -51,13 +51,36 @@ const friendly = error => {
     stale_or_unavailable:'The listing has changed. Reload the queue before acting.',
     property_verification_required:'Confirm direct or in-person verification before approval.',
     try_later:'Submissions are temporarily limited. Try again later.',
+    reports_not_configured:'Private listing reports are not enabled for this event.',
+    invalid_report:'Select a published home, reason and a short explanation.',
+    listing_unavailable:'This listing is no longer available for reporting.',
     service_unavailable:'The service is unavailable. The requested change has not been confirmed.'
   };
   return messages[code] || 'The request could not be completed. Refresh the current state before retrying.';
 };
+function syncReportListings(pins, enabled) {
+  const items=Array.isArray(pins)?pins:[];
+  const select=$('report-target');
+  const previous=select.value;
+  select.replaceChildren(node('option',items.length?'Choose a published listing':'No listings available'));
+  select.firstChild.value='';
+  for (const item of items) {
+    if (!item || typeof item.id!=='string') continue;
+    const option=node('option',item.label || 'Participating home');
+    option.value=item.id;
+    select.append(option);
+  }
+  if (items.some(item=>item.id===previous)) select.value=previous;
+  select.disabled=!enabled || !items.length;
+  $('submit-report').disabled=select.disabled;
+  notice('report-state', enabled && items.length ?
+    'Reporting is available for public listings. Only organizers see your details.' :
+    'Private reporting is unavailable until the isolated service is activated.', '');
+}
 async function loadDirectory() {
   try {
     const data = await api(`${API}/events/${EVENT}/pins`);
+    syncReportListings(data.pins, data.status === 'active' && data.reportingAvailable === true);
     $('pin-count').textContent = `${data.pins.length} ${data.pins.length === 1 ? 'home' : 'homes'}`;
     const list = $('pin-list');list.replaceChildren();
     if (data.status !== 'active') {notice('directory-state','The public event directory is inactive or closed.','');return;}
@@ -69,6 +92,7 @@ async function loadDirectory() {
       list.append(item);
     }
   } catch(error) {
+    syncReportListings([],false);
     $('pin-count').textContent = 'Unavailable';$('pin-list').replaceChildren();
     notice('directory-state',friendly(error),'error');
   }
@@ -91,6 +115,7 @@ async function loadBlocks() {
 function syncSubmit() {
   $('submit-host').disabled = !(app.authenticated && app.ready);
   $('refresh-queue').disabled = !['manager','reviewer'].includes(app.role);
+  $('refresh-reports').disabled = !['manager','reviewer'].includes(app.role);
   $('pause-form').hidden = app.role !== 'manager';
 }
 async function loadSession() {
@@ -108,8 +133,8 @@ async function loadSession() {
   syncSubmit();
   if (app.authenticated) await loadMine();
   else {notice('my-state','Sign in with a verified adult account to view submissions.');$('my-list').replaceChildren();}
-  if (app.role) await loadQueue();
-  else $('review-queue').replaceChildren();
+  if (app.role) await Promise.all([loadQueue(),loadReports()]);
+  else { $('review-queue').replaceChildren(); $('report-queue').replaceChildren(); notice('reports-state','Independent organizer verification is required.'); }
 }
 async function loadMine() {
   if (!app.authenticated) {notice('my-state','Verified adult sign-in is required.');return;}
@@ -187,6 +212,80 @@ async function loadQueue() {
     for (const item of data.submissions) root.append(moderationCard(item));
   } catch(error) {notice('organizer-state',friendly(error),'error');$('review-queue').replaceChildren();}
 }
+
+function privateReportCard(report) {
+  const card=node('article',null,'entry-card');
+  const title=node('h4','Report: '+String(report.reason||'listing issue'));
+  const meta=node('p','Linked submission: '+String(report.submissionId||'unavailable')+' / Revision '+String(report.revision));
+  const info=node('p',report.details||'No description');
+  const time=node('p','Received: '+String(report.createdAt||'unknown'));
+  card.append(title,meta,info,time);
+  const form=node('form');form.noValidate=true;
+  const label=node('label','Private resolution reason (12–250 characters)');
+  const field=node('textarea');
+  field.required=true;field.minLength=12;field.maxLength=250;field.rows=2;
+  label.append(field);form.append(label);
+  const confirmButton=node('button','Mark report resolved','secondary-button');
+  confirmButton.type='submit';form.append(confirmButton);
+  const result=node('p','', 'form-result');
+  result.setAttribute('role','status');form.append(result);
+  form.addEventListener('submit',async event=>{
+    event.preventDefault();
+    if (!form.reportValidity()) return;
+    if (!confirm('Resolve this private report? Remove incorrect listings first using the organizer host queue.'))return;
+    confirmButton.disabled=true;
+    try {
+      await api(API+'/organizer/reports/'+encodeURIComponent(report.id)+'/resolve',
+        {method:'POST',body:{expectedRevision:report.revision,reason:field.value.trim()}});
+      await loadReports();
+      notice('reports-feedback','Report resolution was recorded. Review any remaining reports.','good');
+    } catch(error) {
+      result.textContent=friendly(error);
+      result.className='form-result error';
+      confirmButton.disabled=false;
+    }
+  });
+  card.append(form);
+  return card;
+}
+async function loadReports() {
+  const root=$('report-queue');
+  root.replaceChildren();
+  if (!app.role) {
+    notice('reports-state','Only independently authorized organizers can view private reports.');
+    return;
+  }
+  try {
+    const data=await api(API+'/organizer/events/'+EVENT+'/reports');
+    const reports=Array.isArray(data.reports)?data.reports:[];
+    notice('reports-state', reports.length ?
+      String(reports.length)+' unresolved private listing reports require review.' :
+      'No unresolved private listing reports.', 'good');
+    reports.forEach(item=>root.append(privateReportCard(item)));
+  } catch(error) {
+    notice('reports-state',friendly(error),'error');
+  }
+}
+$('report-form').addEventListener('submit',async event=>{
+  event.preventDefault();
+  const form=event.currentTarget;
+  if (!form.reportValidity() || $('submit-report').disabled) return;
+  const button=$('submit-report');
+  button.disabled=true;
+  try {
+    await api(API+'/events/'+EVENT+'/reports',{method:'POST',body:{
+      submissionId:$('report-target').value,
+      reason:$('report-reason').value,
+      details:$('report-details').value.trim()
+    }});
+    form.reset();
+    notice('report-state','Private report received for organizer review. For emergencies, call 911.','good');
+  }catch(error) {
+    notice('report-state',friendly(error),'error');
+  }finally {
+    button.disabled=$('report-target').disabled;
+  }
+});
 $('host-form').addEventListener('submit',async event=>{
   event.preventDefault();const form=event.currentTarget;
   if(!app.authenticated||!app.ready) return notice('host-result','Verified adult access and an open event are required.','error');
@@ -216,9 +315,10 @@ $('pause-form').addEventListener('submit',async event=>{
 $('refresh-directory').addEventListener('click',loadDirectory);
 $('refresh-mine').addEventListener('click',loadMine);
 $('refresh-queue').addEventListener('click',loadQueue);
+$('refresh-reports').addEventListener('click',loadReports);
 await Promise.all([loadDirectory(),loadBlocks(),loadSession()]);
 // Open-page public listings must not remain indefinitely stale after another host withdraws.
 window.setInterval(() => {if (!document.hidden) void loadDirectory();}, 15000);
 document.addEventListener('visibilitychange', () => {
-  if (!document.hidden) void Promise.all([loadDirectory(), app.authenticated ? loadMine() : Promise.resolve()]);
+  if (!document.hidden) void Promise.all([loadDirectory(), app.authenticated ? loadMine() : Promise.resolve(), app.role ? loadReports() : Promise.resolve()]);
 });

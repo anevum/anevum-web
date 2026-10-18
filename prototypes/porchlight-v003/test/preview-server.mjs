@@ -10,6 +10,8 @@ import {SqliteD1, ORIGIN} from '../../porchlight-v002/test/harness.mjs';
 if (process.env.PORCHLIGHT_FIXTURE_TEST_ONLY !== '1') throw Error('test_only_gate_closed');
 const dir=resolve(fileURLToPath(new URL('..',import.meta.url)));
 const db=new SqliteD1();
+// V004's reporting tables are only instantiated in this localhost test fixture.
+db.exec(readFileSync(new URL('../../porchlight-v002/schema-v004.sql',import.meta.url),'utf8'));
 const at=()=> '2026-10-29T12:00:00.000Z';
 const seed=(sql,...args)=>db.raw.prepare(sql).run(...args);
 seed(`INSERT INTO porchlight_events (id,slug,title,region_label,public_from,starts_at,ends_at,status,created_at) VALUES(?,?,?,?,?,?,?,?,?)`,
@@ -33,7 +35,7 @@ const h=createPorchlightHandler({
  authorizeWriteQuota: async ()=>true,
  now:at,
 });
-const env={PORCHLIGHT_ORIGIN:ORIGIN,PORCHLIGHT_DATA_ENABLED:'true',PORCHLIGHT_DB:db};
+const env={PORCHLIGHT_ORIGIN:ORIGIN,PORCHLIGHT_DATA_ENABLED:'true',PORCHLIGHT_REPORTS_ENABLED:'true',PORCHLIGHT_DB:db};
 const files={'/':'index.html','/index.html':'index.html','/styles.css':'styles.css','/app.mjs':'app.mjs'};
 const mime={'html':'text/html; charset=utf-8','css':'text/css; charset=utf-8','mjs':'text/javascript; charset=utf-8'};
 const staticHeaders={
