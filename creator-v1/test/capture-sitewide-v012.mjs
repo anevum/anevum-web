@@ -72,7 +72,7 @@ try{
   ["community","/community",".ch7-hub"],["boards","/boards",".cnb-hub"],
   ["levels","/levels",".levels-page"],["start","/start",".start-page"],
   ["guide","/guide",".field-guide-page"],["status","/status",".status-list"],
-  ["guest-library","/library",".member-gate"],
+  ["guest-library","/library",".avsaved-inactive"],
   ["member-account","/account",".av12-account-await"],
   ["member-profile-editor","/account/edit",".av12-account-await"],
   // Legacy /create routes now lead into the canonical Better Auth Studio.
@@ -98,7 +98,7 @@ try{
    if(result.errorText)throw Error("SITEWIDE_V012_NAVIGATION_"+name+"_"+width+":"+result.errorText);
    try{
     await until(()=>evaluate("document.readyState==='complete'&&location.pathname==="+JSON.stringify("/creator"+(path==="/account"||path==="/account/edit"?"/member":
-      name==="member-studio"?"/studio":name==="member-draft"?"/studio/new":path))+"&&!!document.querySelector("+JSON.stringify(selector)+")"));
+      name==="member-studio"?"/studio":name==="member-draft"?"/studio/new":name==="guest-library"?"/saved":path))+"&&!!document.querySelector("+JSON.stringify(selector)+")"));
    }catch(error){throw Error("SITEWIDE_V012_PAGE_MISSING_"+name+"_"+width+":"+String(error));}
    await delay(240);
    const state=await evaluate('(()=>({path:location.pathname,header:document.querySelectorAll(".site-header.av9-header").length,main:document.querySelectorAll("#main").length,cinematic:!!document.querySelector(".site-shell--cinematic.av9-shell"),overflow:document.documentElement.scrollWidth>innerWidth+1,width:innerWidth,atlas:!!document.querySelector(".atm-header,.atlas-universe-viewport"),fixture:getComputedStyle(document.body,"::after").content.includes("SYNTHETIC OFFLINE REVIEW")}))()');
@@ -136,6 +136,12 @@ try{
       !firstContact.actions.some(a=>a?.endsWith("/studio"))||
       (width<=390&&firstContact.visibleDoors<2))
       throw Error("SITEWIDE_V065_ENTRANCE_"+width+":"+JSON.stringify(firstContact));
+   }
+   if(name==="guest-library"){
+    const guestLibrary=await evaluate('(()=>({legacy:!!document.querySelector(".member-gate,.member-library-grid"),canonical:!!document.querySelector(".avsaved-shell"),items:document.querySelectorAll(".avsaved-card").length,notice:document.querySelector(".avsaved-inactive")?.textContent||""}))()');
+    if(guestLibrary.legacy||!guestLibrary.canonical||guestLibrary.items||!guestLibrary.notice)
+     throw Error("SITEWIDE_V067_LIBRARY_REDIRECT_"+width+":"+JSON.stringify(guestLibrary));
+    console.log("SITEWIDE_V067_LIBRARY_REDIRECT_"+width+"=PASS");
    }
    if(name==="levels"){
     const metrics=await evaluate('(()=>{const hero=document.querySelector(".levels-masthead"),paragraph=hero?.querySelector("p"),emblem=hero?.querySelector(".levels-emblem");return {heroWidth:hero?.getBoundingClientRect().width,textWidth:paragraph?.getBoundingClientRect().width,emblemPosition:emblem?getComputedStyle(emblem).position:null}})()');
