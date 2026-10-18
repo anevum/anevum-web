@@ -12,5 +12,8 @@
     "maplibre-gl": "6.14.0",
     "playwright-core": "1.55.1",
     "wrangler": "4.135.0"
+  },
+  "dependencies": {
+    "jose": "6.1.0"
   }
 }
