@@ -56,14 +56,34 @@ export default {
         "SELECT object_key,mime,bytes,sha256 FROM anevum_package_files WHERE release_id=? AND path=?"
       ).bind(releaseId, path).first();
       if (!asset || assetMime(path) !== asset.mime) return missing();
+      const requestedRange = request.method === "GET" ? request.headers.get("range") : null;
+      let range = null;
+      if (requestedRange) {
+        const m = requestedRange.match(/^bytes=(\\d*)-(\\d*)$/);
+        if (!m || (!m[1] && !m[2])) return new Response(null, {
+          status: 416, headers: { ...common, "content-range": "bytes */" + asset.bytes, "accept-ranges": "bytes" }
+        });
+        const suffix = !m[1], a = Number(m[1] || m[2]);
+        const b = m[2] && !suffix ? Number(m[2]) : asset.bytes - 1;
+        if (!Number.isSafeInteger(a) || !Number.isSafeInteger(b) ||
+            a < 0 || b < 0 || (!suffix && (a >= asset.bytes || b < a)) || (suffix && a === 0))
+          return new Response(null, { status: 416, headers: {
+            ...common, "content-range": "bytes */" + asset.bytes, "accept-ranges": "bytes" }
+          });
+        const start = suffix ? Math.max(0, asset.bytes - a) : a;
+        const end = suffix ? asset.bytes - 1 : Math.min(asset.bytes - 1, b);
+        range = { offset: start, length: end - start + 1 };
+      }
       const object = request.method === "HEAD"
-        ? await env.MEDIA.head(asset.object_key) : await env.MEDIA.get(asset.object_key);
+        ? await env.MEDIA.head(asset.object_key)
+        : await env.MEDIA.get(asset.object_key, range ? { range } : {});
       if (!object || object.size !== asset.bytes || object.customMetadata?.sha256 !== asset.sha256)
         return missing();
       const headers = new Headers({
         ...common,
         "content-type": asset.mime,
-        "content-length": String(asset.bytes),
+        "content-length": String(range?.length ?? asset.bytes),
+        "accept-ranges": "bytes",
         "cache-control": publicMatch ? "public, max-age=30" : "private, no-store"
       });
       if (path.endsWith(".html") || path.endsWith(".htm")) {
@@ -79,7 +99,8 @@ export default {
       } else if (/\.(?:json|js|mjs|css|txt|glsl|wgsl|vert|frag|webmanifest)$/.test(path)) {
         headers.set("content-security-policy", "default-src 'none'");
       }
-      return new Response(request.method === "HEAD" ? null : object.body, { headers });
+      if (range) headers.set("content-range", "bytes " + range.offset + "-" + (range.offset + range.length - 1) + "/" + asset.bytes);
+      return new Response(request.method === "HEAD" ? null : object.body, { status: range ? 206 : 200, headers });
     } catch {
       return new Response("Runtime temporarily unavailable", {
         status: 503, headers: { ...common, "cache-control": "no-store" }
