@@ -61,6 +61,29 @@ jobs:
           # Run auth-specific contracts and the already-green complete V069 suite instead.
           node --test creator-v1/test/canonical-real-session-v019.test.mjs creator-v1/test/canonical-auth-email-signup.test.mjs creator-v1/test/canonical-open-signup-gate-v020.test.mjs creator-v1/test/canonical-otp-resend-v023.test.mjs
           test -s creator-v1/dist/web/index.html
+      - name: Diagnose Cloudflare token and Worker read access (no secrets logged)
+        shell: bash
+        run: |
+          set -euo pipefail
+          api="https://api.cloudflare.com/client/v4"
+          check_code() {
+            curl --silent --show-error --max-time 20 --output /dev/null --write-out '%{http_code}' \
+              -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" "$1"
+          }
+          user_code="$(check_code "$api/user/tokens/verify")"
+          account_code="$(check_code "$api/accounts/$CLOUDFLARE_ACCOUNT_ID/tokens/verify")"
+          settings_code="$(check_code "$api/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/anevum-apex-prelaunch-gateway/settings")"
+          echo "CLOUDFLARE_USER_TOKEN_VERIFY_HTTP=$user_code"
+          echo "CLOUDFLARE_ACCOUNT_TOKEN_VERIFY_HTTP=$account_code"
+          echo "CLOUDFLARE_WORKER_SETTINGS_HTTP=$settings_code"
+          if [ "$user_code" != 200 ] && [ "$account_code" != 200 ]; then
+            echo "::error::GitHub Actions secret does not verify as an active Cloudflare API token. Confirm the token VALUE, not its ID, was saved."
+            exit 1
+          fi
+          if [ "$settings_code" != 200 ]; then
+            echo "::error::Token verifies but cannot inspect the ANEVUM Worker. Check account scope and Workers Scripts Read/Write permissions."
+            exit 1
+          fi
       - name: Inspect current deployment, protected recovery and public assets
         shell: bash
         run: |
