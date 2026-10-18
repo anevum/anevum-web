@@ -1,0 +1,27 @@
+name: Porchlight V003 source review (no deploy)
+
+on:
+  pull_request:
+    paths:
+      - 'prototypes/porchlight-v002/**'
+      - 'prototypes/porchlight-v003/**'
+      - '.github/workflows/porchlight-v003-source-review.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  source-only-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check V003 source
+        run: cd prototypes/porchlight-v003 && npm run check
+      - name: Run isolated authorization and privacy tests
+        run: cd prototypes/porchlight-v003 && npm test
+      - name: Verify disabled live Worker entrypoint exists
+        run: grep -q "not_configured" prototypes/porchlight-v002/service.mjs

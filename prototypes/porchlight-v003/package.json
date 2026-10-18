@@ -1,0 +1,9 @@
+{
+  "name": "anevum-porchlight-v003-source-review",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --experimental-sqlite --test ../porchlight-v002/test/service.test.mjs ../porchlight-v002/test/v003.test.mjs && node --test test/ui-contract.test.mjs",
+    "check": "node --check app.mjs && node --check ../porchlight-v002/service.mjs && node --check test/preview-server.mjs"
+  }
+}
