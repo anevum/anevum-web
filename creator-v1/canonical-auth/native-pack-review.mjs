@@ -90,6 +90,10 @@ export async function inspectFrozenNativeSummary(db,store,projectId,assetId,revi
  if(!await nativeInspectionSchemaReady(db))
   throw error(503,'Private inspection audit schema is not installed');
  if(!store?.get)throw error(503,'Private storage is not connected');
+ const recent=await db.prepare(
+  'SELECT COUNT(*) AS n FROM member_studio_native_inspections WHERE reviewer_id=? AND created_at>=?'
+ ).bind(reviewerId,now-3600).first();
+ if(Number(recent?.n||0)>=30)throw error(429,'Private inspection rate limit reached');
  const row=await db.prepare(
   'SELECT s.id AS submission_id,s.category,s.project_revision,s.user_id AS owner_id,'+
   'a.id AS asset_id,a.storage_key,a.status,a.sha256 AS live_sha,a.size_bytes AS live_size,'+
@@ -135,10 +139,11 @@ export async function inspectFrozenNativeSummary(db,store,projectId,assetId,revi
   "WHERE s.id=? AND s.project_id=? AND snap.asset_id=? AND s.status='pending_review' "+
   "AND s.user_id<>? AND a.status='quarantined' AND a.sha256=? AND snap.sha256=? "+
   'AND a.size_bytes=snap.size_bytes AND a.filename=snap.filename '+
-  'AND a.content_type=snap.content_type RETURNING id'
+  'AND a.content_type=snap.content_type '+
+  'AND (SELECT COUNT(*) FROM member_studio_native_inspections WHERE reviewer_id=? AND created_at>=?)<30 RETURNING id'
  ).bind(crypto.randomUUID(),reviewerId,digest,now,
-  row.submission_id,projectId,assetId,reviewerId,digest,digest).first();
- if(!audit?.id)throw error(409,'Private review changed before inspection audit');
+  row.submission_id,projectId,assetId,reviewerId,digest,digest,reviewerId,now-3600).first();
+ if(!audit?.id)throw error(409,'Private review changed or inspection quota was reached');
  return {projectId,revision:Number(row.project_revision),assetId,
   summary,note:summary.note};
 }
