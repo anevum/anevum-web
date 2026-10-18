@@ -109,8 +109,8 @@ export function DiscoverPage({immersive=false}:{immersive?:boolean}={}){
           </nav>
           <div className="portal-availability-filter" role="group" aria-label="Filter by access cost">
             <span className="kicker">ACCESS</span>
-            <button type="button" onClick={toggleFreeOnly} aria-pressed={freeOnly} className={freeOnly?"active":""}>Only marked free {freeOnly?"✓":"+"}</button>
-            <small>Based on each creator's published free-to-use declaration, not independently verified cost information.</small>
+            <button type="button" onClick={toggleFreeOnly} aria-pressed={freeOnly} aria-describedby="av73-free-note" className={freeOnly?"active":""}>Only marked free {freeOnly?"✓":"+"}</button>
+            <small id="av73-free-note">Based on each creator's published free-to-use declaration, not independently verified cost information.</small>
           </div>
         </section>
         {resource.state==="loading"&&<LoadingState label="Reading the live project catalogue"/>}
