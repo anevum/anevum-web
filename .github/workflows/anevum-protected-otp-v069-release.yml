@@ -1,0 +1,176 @@
+name: ANEVUM V069 Protected OTP Hotfix
+
+# Triggered once by reviewed source. Never deploy older public assets or
+# change live public launch settings, private bindings or Worker routes.
+on:
+  push:
+    branches: [patch/canonical-protected-otp-on-v069-20261018-002]
+    paths: [.github/workflows/anevum-protected-otp-v069-release.yml]
+permissions:
+  contents: read
+concurrency:
+  group: anevum-apex-protected-otp-v069
+  cancel-in-progress: false
+jobs:
+  release:
+    if: github.repository == 'anevum/anevum-web'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify tested V069 source without unreviewed changes
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$CLOUDFLARE_API_TOKEN"
+          test "$CLOUDFLARE_ACCOUNT_ID" = "2f7ee83107240152097efd956a4e8335"
+          test "$(git diff --name-only 7898e36f4c91e4145b7b0864df751dcf61307f1a HEAD)" = ".github/workflows/anevum-protected-otp-v069-release.yml"
+          node --input-type=module <<'NODE'
+          import assert from 'node:assert/strict';
+          import fs from 'node:fs';
+          const c=JSON.parse(fs.readFileSync('creator-v1/wrangler.apex-prelaunch.jsonc'));
+          assert.equal(c.name,'anevum-apex-prelaunch-gateway');
+          assert.equal(c.main,'./apex-prelaunch/gateway.mjs');
+          assert.equal(c.assets.binding,'ASSETS');
+          assert.equal(c.assets.run_worker_first,true);
+          assert.equal(c.workers_dev,false);
+          assert.deepEqual(c.d1_databases.map(x=>[x.binding,x.database_id]),[
+            ['COMMUNITY_DB','fa96e36d-6257-4883-bf15-074947e11a13'],
+            ['MEMBER_DB','e1d29049-c83b-4534-8355-dc1fa36ba6d8']
+          ]);
+          NODE
+      - name: Rebuild and test live V069 without changing it
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm install --ignore-scripts --no-audit --no-fund
+          npm run check:creator-v1-web
+          npm run build:creator-v1-web
+          (cd creator-v1 && npm run test:protected-owner-otp)
+          (cd creator-v1 && npm run test:signup-activation)
+          test -s creator-v1/dist/web/index.html
+      - name: Inspect current deployment, protected recovery and public assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          umask 077
+          api="https://api.cloudflare.com/client/v4"
+          auth="Authorization: Bearer $CLOUDFLARE_API_TOKEN"
+          worker="anevum-apex-prelaunch-gateway"
+          db="e1d29049-c83b-4534-8355-dc1fa36ba6d8"
+          curl --fail --silent --show-error --max-time 30 -H "$auth" \
+            "$api/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/$worker/settings" > "$RUNNER_TEMP/settings-before.json"
+          curl --fail --silent --show-error --max-time 30 -H "$auth" \
+            "$api/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/$worker/deployments" > "$RUNNER_TEMP/deployments-before.json"
+          curl --fail --silent --show-error --max-time 30 -H "$auth" \
+            "$api/zones/8abe27259b5436af5966d3b40d9a3760/workers/routes" > "$RUNNER_TEMP/routes-before.json"
+          curl --fail --silent --show-error --max-time 30 -H "$auth" \
+            "$api/accounts/$CLOUDFLARE_ACCOUNT_ID/d1/database/$db/time_travel/bookmark" > "$RUNNER_TEMP/bookmark-before.json"
+          sql="SELECT (SELECT COUNT(*) FROM canonical_protected_email_login_allowance WHERE email='devon@anevum.com' AND revoked_at IS NULL) AS allowed,(SELECT COUNT(*) FROM canonical_protected_email_login_audit WHERE email='devon@anevum.com' AND action='approved') AS audited,(SELECT COUNT(*) FROM staff_access_grants WHERE role='owner' AND revoked_at IS NULL) AS owners,(SELECT COUNT(*) FROM \"user\") AS members"
+          payload="$(jq -nc --arg sql "$sql" '{sql:$sql}')"
+          curl --fail --silent --show-error --max-time 30 -X POST -H "$auth" \
+            -H "Content-Type: application/json" --data "$payload" \
+            "$api/accounts/$CLOUDFLARE_ACCOUNT_ID/d1/database/$db/query" > "$RUNNER_TEMP/approval-before.json"
+          curl --fail --silent --show-error --max-time 30 \
+            -H "Accept: text/html" https://anevum.com/ > "$RUNNER_TEMP/index-before.html"
+          node --input-type=module <<'NODE'
+          import assert from 'node:assert/strict';
+          import fs from 'node:fs';
+          const root=process.env.RUNNER_TEMP;
+          const read=n=>JSON.parse(fs.readFileSync(root+'/'+n+'.json'));
+          const settings=read('settings-before'),deploy=read('deployments-before'),
+            routes=read('routes-before'),backup=read('bookmark-before'),d1=read('approval-before');
+          assert.ok(settings.success&&deploy.success&&routes.success&&backup.success&&backup.result?.bookmark&&d1.success);
+          assert.equal(deploy.result.deployments[0].versions[0].version_id,
+            'cd84468c-861a-47d5-8e64-8f8c53d51074');
+          const row=d1.result[0].results[0];
+          assert.equal(row.allowed,1);assert.equal(row.audited,1);
+          assert.equal(row.owners,1);assert.equal(row.members,2);
+          const bindings=new Map(settings.result.bindings.map(b=>[b.name,b]));
+          for(const n of ['CANONICAL_PROTECTED_EMAILS','CANONICAL_RESEND_API_KEY','CANONICAL_BETTER_AUTH_SECRET'])
+            assert.equal(bindings.get(n)?.type,'secret_text');
+          for(const [n,v] of Object.entries({
+             ANEVUM_PRELAUNCH_MODE:'public',ANEVUM_LAUNCH_APPROVED:'true',
+             ANEVUM_CANONICAL_APEX_ENABLED:'true',CANONICAL_PUBLIC_SIGNUP_ENABLED:'true',
+             CANONICAL_EMAIL_ENABLED:'true'
+          }))assert.equal(bindings.get(n)?.text,v);
+          for(const r of [
+            ['anevum.com/*','anevum-apex-prelaunch-gateway'],
+            ['anevum.com/assets/index-*','anevum-first-contact-bridge-v065-20261017'],
+            ['anevum.com/staff*','anevum-iren-apex-staff-v002']
+          ])assert.ok(routes.result.some(x=>x.pattern===r[0]&&x.script===r[1]));
+          const bundle=html=>html.match(/\/assets\/index-[a-zA-Z0-9_-]+\.js/)?.[0];
+          const live=fs.readFileSync(root+'/index-before.html','utf8'),
+            candidate=fs.readFileSync('creator-v1/dist/web/index.html','utf8');
+          assert.ok(bundle(live),'Live public asset ID missing; refusing deployment');
+          assert.equal(bundle(candidate),bundle(live),'New asset bundle differs from live V069');
+          const c=JSON.parse(fs.readFileSync('creator-v1/wrangler.apex-prelaunch.jsonc','utf8'));
+          c.vars=Object.fromEntries(settings.result.bindings.filter(x=>x.type==='plain_text').map(x=>[x.name,x.text]));
+          c.keep_vars=true;
+          delete c.routes;
+          assert.equal(c.vars.ANEVUM_PRELAUNCH_MODE,'public');
+          assert.equal(c.vars.ANEVUM_LAUNCH_APPROVED,'true');
+          fs.writeFileSync('creator-v1/wrangler.otp-live.generated.jsonc',JSON.stringify(c,null,2));
+          console.log('V069_PRIVATE_BINDINGS_ASSETS_ROUTES_BACKUP_AND_APPROVAL=PASS');
+          NODE
+      - name: Deploy hotfix preserving all public settings; revert on failed smoke
+        shell: bash
+        run: |
+          set -euo pipefail
+          umask 077
+          deployed=0
+          api="https://api.cloudflare.com/client/v4"
+          hdr="Authorization: Bearer $CLOUDFLARE_API_TOKEN"
+          rollback(){
+            rc=$?
+            trap - EXIT
+            if [ "$deployed" = 1 ] && [ "$rc" -ne 0 ]; then
+              echo "Postdeployment canary failed. Restoring prior V069 version." >&2
+              curl --silent --show-error --max-time 30 -X POST -H "$hdr" \
+                -H "Content-Type: application/json" \
+                --data '{"strategy":"percentage","versions":[{"version_id":"cd84468c-861a-47d5-8e64-8f8c53d51074","percentage":100}],"annotations":{"workers/message":"Automated protected OTP rollback after failed health check"}}' \
+                "$api/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/anevum-apex-prelaunch-gateway/deployments" > "$RUNNER_TEMP/rollback.json" || true
+              jq -e '.success' "$RUNNER_TEMP/rollback.json" >/dev/null || echo "MANUAL ROLLBACK REQUIRED" >&2
+            fi
+            exit "$rc"
+          }
+          trap rollback EXIT
+          npx wrangler deploy --config creator-v1/wrangler.otp-live.generated.jsonc \
+            --keep-vars --message "ANEVUM V069 protected mailbox OTP recovery, preserving active public assets and routing"
+          deployed=1
+          curl --fail --silent --show-error --max-time 30 -H "$hdr" \
+            "$api/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/anevum-apex-prelaunch-gateway/settings" > "$RUNNER_TEMP/settings-after.json"
+          curl --fail --silent --show-error --max-time 30 -H "$hdr" \
+            "$api/zones/8abe27259b5436af5966d3b40d9a3760/workers/routes" > "$RUNNER_TEMP/routes-after.json"
+          curl --fail --silent --show-error --max-time 30 https://anevum.com/ > "$RUNNER_TEMP/index-after.html"
+          curl --fail --silent --show-error --max-time 30 \
+            https://anevum.com/api/v1/member/auth-methods > "$RUNNER_TEMP/auth-methods-after.json"
+          node --input-type=module <<'NODE'
+          import assert from 'node:assert/strict';
+          import fs from 'node:fs';
+          const t=process.env.RUNNER_TEMP,load=n=>JSON.parse(fs.readFileSync(t+'/'+n+'.json'));
+          const normalize=x=>x.result.map(r=>({pattern:r.pattern,script:r.script})).sort((a,b)=>a.pattern.localeCompare(b.pattern));
+          assert.deepEqual(normalize(load('routes-after')),normalize(load('routes-before')));
+          const plain=x=>Object.fromEntries(x.result.bindings.filter(b=>b.type==='plain_text').map(b=>[b.name,b.text]));
+          assert.deepEqual(plain(load('settings-after')),plain(load('settings-before')));
+          for(const n of ['CANONICAL_PROTECTED_EMAILS','CANONICAL_RESEND_API_KEY','CANONICAL_BETTER_AUTH_SECRET'])
+            assert.ok(load('settings-after').result.bindings.some(b=>b.name===n&&b.type==='secret_text'));
+          const bundle=x=>x.match(/\/assets\/index-[a-zA-Z0-9_-]+\.js/)?.[0];
+          assert.equal(bundle(fs.readFileSync(t+'/index-after.html','utf8')),
+            bundle(fs.readFileSync(t+'/index-before.html','utf8')));
+          const m=load('auth-methods-after');
+          assert.equal(m.registration,'open');
+          assert.equal(m.methods?.email?.available,true);
+          console.log('ANEVUM_V069_PROTECTED_OTP_RECOVERY_DEPLOYED=PASS');
+          NODE
+          echo "Protected mailbox OTP hotfix active; V069 assets, public launch flags, secrets, D1 and routes preserved." >> "$GITHUB_STEP_SUMMARY"
