@@ -11,7 +11,7 @@ CREATE TABLE IF NOT EXISTS member_studio_native_inspections (
  reviewer_id TEXT REFERENCES "user"(id) ON DELETE SET NULL,
  asset_id TEXT NOT NULL CHECK(length(asset_id)=32),
  sha256 TEXT NOT NULL CHECK(length(sha256)=64),
- action TEXT NOT NULL DEFAULT 'view_text_summary' CHECK(action='view_text_summary'),
+ action TEXT NOT NULL DEFAULT 'attempt_text_summary' CHECK(action IN ('attempt_text_summary','view_text_summary')),
  created_at INTEGER NOT NULL CHECK(created_at>0)
 );
 
