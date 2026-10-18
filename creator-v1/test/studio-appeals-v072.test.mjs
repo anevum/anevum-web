@@ -4,8 +4,9 @@ import {readFileSync} from 'node:fs';
 import {
  canonicalStudioAppeals,studioAppealsReady,approvedAppealReviewer
 } from '../canonical-auth/studio-appeals.mjs';
-import {takedownReviewedCreation} from '../canonical-auth/studio-safety.mjs';
-import {canonicalPublicStudioCreations} from '../canonical-auth/studio-publications.mjs';
+import {takedownReviewedCreation,canonicalStudioSafety} from '../canonical-auth/studio-safety.mjs';
+import {canonicalPublicStudioCreations,canonicalStudioPublicationConsent} from '../canonical-auth/studio-publications.mjs';
+import {canonicalRecognitionCatalog} from '../canonical-auth/recognition-catalog.mjs';
 import {memberRecognitionState} from '../canonical-auth/recognition.mjs';
 import {database,project,consent,publish,now,base,env,owner,scalar} from './studio-publication-evidence-v070.test.mjs';
 
@@ -189,4 +190,31 @@ test('V072 appeals rate-limit separate from XP and staff review, and cannot bypa
  assert.equal(scalar(db,"SELECT requests FROM member_studio_appeal_limits WHERE actor_id='owner' AND action='file'").requests,3);
  assert.equal(scalar(db,'SELECT COUNT(*) c FROM member_studio_publication_appeals').c,3);
  assert.equal(scalar(db,'SELECT COUNT(*) c FROM member_xp_events').c,0);
+});
+
+test('V072 lost appeal schema blocks new public release but never disables emergency takedown',async t=>{
+ const db=database();t.after(()=>db.raw.close());
+ const p=project(db,1,{link:'https://originalworks.example.com/safe-before-appeal-failure'});
+ assert.equal((await consent(db,p)).status,200);
+ assert.equal((await publish(db,p)).ok,true);
+ db.raw.exec('DROP TABLE member_studio_appeal_decisions');
+ assert.equal(await studioAppealsReady(db),false);
+ const unavailable=await canonicalPublicStudioCreations(new Request(base+'/api/v1/creations'),appealEnv(db));
+ assert.equal(unavailable.status,503,'public atlas fails closed if redress database unavailable');
+ const permission=await canonicalStudioPublicationConsent(
+  new Request(base+'/api/v1/member/studio/projects/'+p.id+'/publication'),
+  appealEnv(db),owner('owner'),p.id
+ );
+ assert.equal(permission.status,503);
+ const catalog=await canonicalRecognitionCatalog(new Request(base+'/api/v1/public/recognition/catalog'),appealEnv(db));
+ assert.equal(catalog.status,200);
+ assert.equal((await catalog.json()).activeBadgeIds.includes('first_creation'),false);
+ const safety=await canonicalStudioSafety(post(base+'/api/v1/member/studio/safety',{
+  action:'takedown',projectId:p.id,expectedPublishedAt:now,
+  reasonCode:'malicious_link',
+  reason:'Independent safety officer verified that this link now impersonates a trusted creator.'
+ }),appealEnv(db),owner('safety'),now+90);
+ assert.equal(safety.status,200,'independent emergency safety channel must remain operational');
+ assert.equal(scalar(db,"SELECT status FROM member_studio_publications WHERE project_id=?",p.id).status,'withdrawn');
+ assert.equal(scalar(db,"SELECT COUNT(*) c FROM member_recognition_grants WHERE revoked_at IS NULL").c,0);
 });
