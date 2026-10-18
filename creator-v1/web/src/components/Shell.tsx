@@ -11,6 +11,7 @@ import { CompactMemberIdentity } from "./CompactMemberIdentity";
 import { useOwnPlayerCard } from "../lib/useOwnPlayerCard";
 import {useModalScrollLock} from "../lib/useModalScrollLock";
 import {RouteRecovery} from "./RouteRecovery";
+import {IrenGuidedContinuance} from "./IrenGuidedContinuance";
 
 /** ANEVUM V009 — one public navigation system across every Creator V1 page.
  * This component is presentation only. Private routes remain MemberGate-owned;
@@ -114,7 +115,7 @@ export function Shell(){
             aria-label="Open quick navigation" aria-keyshortcuts="Control+K Meta+K"><Icon name="search" size={20}/></button>
           <Link to={memberDestination} className="header-create av9-create"><Icon name={canonicalMember?"people":"create"} size={17}/><span>{canonicalMember?"My space":"Join"}</span></Link>
           <Link to={memberDestination} className="cw-account-link av9-account" aria-label={canonicalMember?"Open my verified member account":"Join ANEVUM or sign in"}><Icon name="people" size={20}/></Link>
-          <button ref={menuButton} className="menu-button av9-menu-trigger" type="button"
+          <button data-iren-anchor="navigation" ref={menuButton} className="menu-button av9-menu-trigger" type="button"
             aria-label={menuOpen ? "Close site navigation" : "Open site navigation"}
             aria-haspopup="dialog" aria-expanded={menuOpen} aria-controls="av79-navigation"
             onClick={()=>setMenuOpen(value=>!value)}>
@@ -170,6 +171,7 @@ export function Shell(){
         <footer className="av79-navigation-foot"><span aria-hidden="true" className="av79-footer-star"/> THE CONTINUANCE INSTITUTE <span>EXPLORE / MAKE / BELONG</span></footer>
       </div>
     </dialog>
+    <IrenGuidedContinuance memberId={canonicalMember?canonicalSession?.user?.id||null:null}/>
     <PortalLauncher open={launcherOpen} onClose={()=>setLauncherOpen(false)} initialQuery={query}/>
     <main id="main" tabIndex={-1} className="site-main av9-main">
       <VisualKitAtmosphere room={publicVisualRoom(location.pathname)}/>
