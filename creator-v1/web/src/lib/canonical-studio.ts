@@ -38,6 +38,7 @@ export interface StudioAsset {
 }
 export interface StudioHealth {
  service:string;status:string;studioReady?:boolean;studioUploadsReady?:boolean;
+ studioPublicationReady?:boolean;
 }
 export class StudioError extends Error{
  constructor(readonly status:number,message:string){super(message);this.name='StudioError';}
@@ -131,7 +132,7 @@ export const studioDownloadUrl=(id:string,assetId:string)=>assetsPath(id,assetId
 export interface StudioReviewProject{
  id:string;title:string;summary:string;category:string;status:string;revision:number;
  submitted_at:number;demo_url:string|null;source_url:string|null;
- attachment_count:number;attachment_bytes:number;
+ attachment_count:number;attachment_bytes:number;metadata_consent?:number;
  license_name:string;ai_disclosure:string;human_contribution:string;user_id:string;handle:string;
 }
 export const studioReviewQueue=(signal?:AbortSignal)=>
@@ -140,3 +141,27 @@ export const studioReviewManifest=(id:string,signal?:AbortSignal)=>
  request<StudioReviewManifest>(ROOT+'/review/'+validId(id)+'/manifest','GET',undefined,signal);
 export const studioReviewDecision=(projectId:string,revision:number,action:'changes_requested'|'rejected',reason:string)=>
  request<{ok:boolean;status:string}>(ROOT+'/review','POST',{projectId:validId(projectId),revision,action,reason});
+
+// V070: optional external METADATA-only release. This service is closed until
+// both schema and the independent Worker-only release flag are enabled.
+export type StudioPublicationState={
+ consented:boolean;
+ scope:'external_metadata_only';
+ publicationStatus:'published'|'withdrawn'|null;
+ note?:string;
+};
+const releasePath=(projectId:string)=>projectPath(projectId)+'/publication';
+const scope='external_metadata_only' as const;
+export const studioPublicationState=(projectId:string,signal?:AbortSignal)=>
+ request<StudioPublicationState>(releasePath(projectId),'GET',undefined,signal);
+export const studioPublicationConsent=(projectId:string,submissionId:string,revision:number)=>
+ request<{consented:true;submissionId:string;scope:typeof scope}>(
+ releasePath(projectId),'POST',{submissionId:validId(submissionId),revision,scope,accepted:true});
+export const studioPublicationWithdraw=(projectId:string,submissionId:string,revision:number)=>
+ request<{consented:false;publicationStatus?:'withdrawn';publicMetadataRemoved?:boolean}>(
+ releasePath(projectId),'DELETE',{submissionId:validId(submissionId),revision,scope,accepted:true});
+export const studioReviewExternalRelease=(projectId:string,revision:number,reason:string,
+ attestations:{rightsChecked:boolean;contentChecked:boolean;externalLinkChecked:boolean})=>
+ request<{ok:true;status:'published';delivery:'external-link-only'}>(
+ ROOT+'/review','POST',{projectId:validId(projectId),revision,action:'publish_external_metadata',reason,...attestations});
+
