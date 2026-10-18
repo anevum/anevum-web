@@ -1,0 +1,113 @@
+/* ANEVUM / Continuance Institute / Native Pack Lab V001.
+   Folded, accessible local-only authoring/player surface. */
+.np-lab{margin:18px 0 0;border:1px solid rgba(177,196,218,.31);
+ border-radius:9px;background:#07121f;color:#e4e9f2;overflow:hidden;
+ box-shadow:0 22px 56px rgba(0,0,0,.23)}
+.np-lab>summary{cursor:pointer;list-style:none;display:flex;align-items:center;
+ gap:15px;padding:18px clamp(15px,2.4vw,28px);min-height:70px;
+ background:radial-gradient(ellipse at 5% 0%,rgba(188,98,159,.16),transparent 55%),
+ linear-gradient(100deg,#16223a,#0b1527);color:#f3e8f3}
+.np-lab>summary::-webkit-details-marker{display:none}
+.np-lab>summary:focus-visible{outline:3px solid #a7e9e9;outline-offset:-3px}
+.np-lab>summary>span:nth-child(2){display:flex;flex:1;flex-direction:column;gap:5px}
+.np-lab>summary strong{letter-spacing:.16em;font-size:.84rem;font-weight:790}
+.np-lab>summary small{letter-spacing:.11em;font-size:.61rem;color:#aedbd8}
+.np-lab>summary>span:last-child{font-size:1.2rem;color:#d8b8d5}
+.np-lab[open]>summary>span:last-child{transform:rotate(45deg)}
+.np-emblem{width:39px;height:39px;display:grid;place-items:center;border-radius:100%;
+ background:radial-gradient(circle,#ee9b8b 5%,#5e4b91 25%,#101d38 60%);
+ border:1px solid rgba(228,165,191,.55);box-shadow:0 0 20px rgba(147,110,190,.2);font-size:1.2rem}
+.np-content{padding:clamp(15px,2.6vw,30px)}
+.np-info{color:#c3d3e3;font-size:.88rem;line-height:1.65;margin:0 0 20px}
+.np-two-col{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px;align-items:start}
+.np-console{min-width:0;padding:clamp(13px,2.3vw,22px);border:1px solid rgba(182,204,234,.22);
+ background:linear-gradient(155deg,#13243a,#091624);border-radius:8px}
+.np-eyebrow{font-size:.66rem;letter-spacing:.16em;color:#a6d9d7;
+ font-weight:770;margin:0 0 14px}
+.np-label{display:flex;flex-direction:column;gap:8px;margin:14px 0 11px;
+ font-size:.65rem;letter-spacing:.11em;font-weight:740;color:#cadce8}
+.np-label input,.np-label select,.np-label textarea,.np-choice-editor input,
+.np-choice-editor select,.np-media-edit input{width:100%;min-width:0;
+ border:1px solid rgba(176,206,223,.3);border-radius:5px;
+ background:#091626;color:#f3eff7;padding:10px 12px;
+ font:inherit;font-size:.87rem;letter-spacing:normal;line-height:1.4}
+.np-label input[type=file]{font-size:.74rem;padding:10px;cursor:pointer}
+.np-label input:focus-visible,.np-label select:focus-visible,.np-label textarea:focus-visible,
+.np-choice-editor input:focus-visible,.np-choice-editor select:focus-visible,
+.np-media-edit input:focus-visible{outline:2px solid #b1dedf;outline-offset:1px}
+.np-label textarea{min-height:100px;resize:vertical}
+.np-composer{margin:13px 0}
+.np-scene-toolbar{display:flex;flex-wrap:wrap;gap:7px;align-items:end;margin-bottom:10px}
+.np-scene-toolbar>.np-label{flex:1;min-width:140px;margin:5px 0}
+.np-scene-toolbar>strong{font-size:.71rem;color:#ebd6e6;letter-spacing:.1em;flex:1}
+.np-scene-toolbar button,.np-choice-editor button,.np-media-edit button,.np-secondary,
+.np-restart{border:1px solid rgba(179,209,231,.34);border-radius:5px;
+ background:#1b3148;color:#e0eff7;min-height:39px;padding:8px 11px;cursor:pointer;
+ font:inherit;font-size:.7rem;font-weight:730}
+.np-scene-toolbar button:hover:not(:disabled),.np-choice-editor button:hover,
+.np-media-edit button:hover,.np-secondary:hover,.np-restart:hover{background:#304563}
+.np-choice-editor{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto;gap:6px;margin:8px 0}
+.np-choice-editor button{min-width:39px}
+.np-primary{margin-top:17px;width:100%;background:linear-gradient(120deg,#d99eb6,#a3dad7);
+ color:#122033;padding:13px 15px;min-height:46px;border:0;border-radius:6px;
+ font-size:.76rem;font-weight:830;letter-spacing:.09em;cursor:pointer}
+.np-primary:disabled,.np-scene-toolbar button:disabled{opacity:.5;cursor:not-allowed}
+.np-primary:focus-visible,.np-secondary:focus-visible,.np-experience button:focus-visible{outline:3px solid #e4badd;outline-offset:2px}
+.np-small{font-size:.78rem;line-height:1.6;color:#bac9db}
+.np-media-edit{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,.8fr) auto;gap:7px;align-items:center;margin-top:9px}
+.np-media-edit span{font-size:.68rem;overflow-wrap:anywhere;color:#b9cada}
+.np-opened h3{color:#f6e9f3;font-size:1.3rem;font-weight:540;margin:0 0 5px}
+.np-opened>p:not(.np-eyebrow){color:#bfd1dc;font-size:.74rem}
+.np-placeholder{min-height:210px;display:flex;flex-direction:column;align-items:center;
+ justify-content:center;text-align:center;color:#aebfd3;padding:23px;
+ border:1px dashed rgba(185,198,226,.24);border-radius:7px}
+.np-placeholder span{font-size:3.5rem;color:#ad91bb}
+.np-placeholder p{font-size:.82rem;max-width:270px;line-height:1.6}
+.np-playtest{margin-top:15px;padding:19px;border:1px solid rgba(157,192,217,.23);
+ background:linear-gradient(135deg,#0e1c2e,#111b30);border-radius:8px}
+.np-experience{min-width:0;margin-top:12px;padding:clamp(15px,2vw,24px);
+ background:radial-gradient(circle at 90% 0%,rgba(115,72,163,.15),transparent 55%),
+ linear-gradient(140deg,#152742,#0b1728);
+ border:1px solid rgba(170,191,221,.24);border-radius:7px}
+.np-experience h4{color:#f7ebf4;font-size:clamp(1.1rem,2.1vw,1.7rem);
+ font-weight:530;margin:0 0 12px;line-height:1.2}
+.np-experience .np-story{white-space:pre-wrap;overflow-wrap:anywhere;
+ line-height:1.75;font-size:.94rem;color:#dfdee9}
+.np-choices{display:grid;gap:9px;margin-top:20px}
+.np-experience .np-choices button,.np-project>button:not(.np-restart){display:flex;
+ justify-content:space-between;align-items:center;gap:8px;
+ min-height:46px;padding:12px 14px;color:#d9f7f3;
+ background:rgba(41,101,120,.28);border:1px solid rgba(156,214,218,.43);
+ border-radius:5px;text-align:left;font:inherit;font-size:.81rem;cursor:pointer}
+.np-restart{margin-top:18px;background:transparent;font-size:.64rem}
+.np-cover{display:block;max-width:100%;max-height:360px;object-fit:contain;margin-bottom:18px;border-radius:5px}
+.np-media-entry{margin:12px 0 23px;padding-top:10px;border-top:1px solid rgba(198,213,227,.2)}
+.np-media-entry strong{display:block;margin-bottom:9px;font-size:.77rem;color:#f1deeb}
+.np-media-entry audio,.np-media-entry video{width:100%;max-height:330px}
+.np-gallery{margin:13px 0 25px}.np-gallery img{display:block;width:100%;
+ max-height:540px;object-fit:contain;background:#09131f;border-radius:5px}
+.np-gallery figcaption{margin-top:8px;line-height:1.55;color:#c6d6e3;font-size:.83rem}
+.np-project p{white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.7}
+.np-secondary{margin-top:14px;width:100%}
+.np-message{padding:12px 14px;margin:18px 0 0;border:1px solid rgba(173,211,203,.35);
+ border-radius:5px;color:#e0e8ea;line-height:1.45;overflow-wrap:anywhere;font-size:.78rem}
+.np-disclaimer{margin:15px 0 0;color:#9fb5c7;font-size:.65rem;line-height:1.7;letter-spacing:.03em}
+@media(max-width:940px){.np-two-col{grid-template-columns:1fr}}
+@media(max-width:540px){.np-content{padding:12px}.np-lab>summary{padding:13px}
+ .np-lab>summary strong{font-size:.73rem}.np-lab>summary small{font-size:.53rem}
+ .np-console{padding:13px}.np-choice-editor{grid-template-columns:1fr}
+ .np-media-edit{grid-template-columns:1fr auto}.np-media-edit span{grid-row:2;grid-column:1}
+ .np-media-edit button{grid-row:1;grid-column:2}.np-media-edit input{grid-row:1;grid-column:1}}
+@media(prefers-reduced-motion:reduce){.np-lab *{animation:none!important;transition:none!important}}
+/* V001.1 native album covers and series posters: same local-file object URLs. */
+.np-cover-editor{display:flex;align-items:center;gap:15px;min-width:0;margin:8px 0 20px;
+ padding:12px;border:1px solid rgba(181,202,229,.28);background:rgba(116,77,145,.09);border-radius:7px}
+.np-cover-editor img{display:block;width:108px;height:108px;max-width:34%;object-fit:cover;
+ border-radius:6px;background:#080e18;border:1px solid rgba(213,185,215,.22)}
+.np-cover-editor>div{display:grid;gap:10px;min-width:0;flex:1}
+.np-cover-editor strong{font-size:.74rem;color:#eddaec;overflow-wrap:anywhere;font-weight:600}
+.np-cover-editor button{justify-self:start;min-height:38px;border:1px solid rgba(180,209,226,.36);
+ background:#20324a;border-radius:5px;padding:9px 11px;color:#e3edf3;font:inherit;font-size:.65rem;
+ font-weight:740;cursor:pointer}
+.np-cover-editor button:focus-visible{outline:3px solid #ace5e9;outline-offset:2px}
+@media(max-width:480px){.np-cover-editor img{width:84px;height:84px}}
