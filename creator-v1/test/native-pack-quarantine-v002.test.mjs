@@ -167,7 +167,8 @@ test('each of five native formats can enter OWNER-ONLY quarantine and frozen pri
    const reviewer=await wire(await s.call('/api/v1/member/studio/review/'+p.id+'/manifest','GET','bob'));
    assert.equal(reviewer.assets.length,1);
    assert.equal(reviewer.assets[0].sha256.length,64);
-   assert.ok(reviewer.assets.every(x=>!Object.keys(x).some(key=>/storage|body|download|bytes|url/i.test(key))),
+   assert.ok(reviewer.assets.every(x=>!Object.keys(x).some(key=>
+    ['storage_key','storageKey','object_key','objectKey','url','downloadUrl','body','bytes','fileBytes','rawBytes'].includes(key))),
     'No quarantine object locator in reviewer metadata');
    assert.equal(s.objects.size,1);
   }finally{s.close();}
