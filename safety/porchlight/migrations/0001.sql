@@ -28,6 +28,7 @@ CREATE TABLE IF NOT EXISTS host_submissions (
   receipt_hash TEXT,
   submitted_at INTEGER NOT NULL,
   consent_at INTEGER NOT NULL,
+  consent_version TEXT NOT NULL,
   reviewed_at INTEGER,
   withdrawn_at INTEGER,
   verification_method TEXT,
@@ -54,8 +55,10 @@ CREATE TABLE IF NOT EXISTS rate_buckets (
 );
 CREATE TABLE IF NOT EXISTS audit_events (
   id TEXT PRIMARY KEY,
+  event_id TEXT NOT NULL REFERENCES events(id) ON DELETE CASCADE,
   action TEXT NOT NULL,
   record_id TEXT,
   created_at INTEGER NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_audit_created ON audit_events(created_at);
+CREATE INDEX IF NOT EXISTS idx_audit_event ON audit_events(event_id);
