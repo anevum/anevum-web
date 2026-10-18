@@ -41,8 +41,12 @@ jobs:
       - name: Validate code syntax and browser bundle
         run: |
           node --check creator-v1/test/iren-forum-full-journey-v005.test.mjs
+          node --check creator-v1/canonical-auth/forums.mjs
+          node --check creator-v1/staff-portal/worker.mjs
           npm run check:creator-v1-web
           npm run build:creator-v1-web
+          npm run build:iren-apex-staff
+          test -s creator-v1/dist/staff/index.html
       - name: Exercise actual canonical auth plus both isolated Worker routers
         run: |
           node --test creator-v1/test/iren-forum-full-journey-v005.test.mjs
