@@ -5,14 +5,16 @@ on:
     paths:
       - 'prototypes/family-safety-3d-map/**'
       - 'creator-v1/family-safety/**'
-      - 'creator-v1/family-safety/**'
       - 'docs/family-safety/**'
       - '.github/workflows/family-safety-3d-map.yml'
   push:
     branches:
       - 'build/family-safety-3d-map-*'
+      - 'build/family-safety-circle-privacy-*'
     paths:
       - 'prototypes/family-safety-3d-map/**'
+      - 'creator-v1/family-safety/**'
+      - 'docs/family-safety/**'
       - '.github/workflows/family-safety-3d-map.yml'
   workflow_dispatch:
 
