@@ -1,0 +1,43 @@
+name: V069 Recognition Catalog and Signed-In Ledger Review
+on:
+  push:
+    branches: [patch/player-recognition-catalog-v069-20261017-018]
+    paths:
+      - "creator-v1/canonical-auth/recognition-catalog.mjs"
+      - "creator-v1/canonical-auth/worker.mjs"
+      - "creator-v1/apex-prelaunch/platform.mjs"
+      - "creator-v1/web/src/pages/RecognitionRegistryPage.tsx"
+      - "creator-v1/web/src/lib/player-recognition-api.ts"
+      - "creator-v1/web/src/pages/recognition-registry-v066.css"
+      - "creator-v1/test/player-recognition-roundtrip-v069.test.mjs"
+      - ".github/workflows/v069-recognition-review.yml"
+permissions:
+  contents: read
+jobs:
+  verify:
+    if: github.repository == 'anevum/anevum-web'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Typecheck React and build public bundle
+        run: |
+          set -euo pipefail
+          npm install --ignore-scripts --no-audit --no-fund
+          npm run check:creator-v1-web
+          npm run build:creator-v1-web
+      - name: Run real SQLite recognition PATCH/GET/public projection and security tests
+        run: |
+          set -euo pipefail
+          for f in creator-v1/canonical-auth/*.mjs; do node --check "$f"; done
+          node --experimental-sqlite --test             creator-v1/test/player-recognition-roundtrip-v069.test.mjs             creator-v1/test/player-recognition-issuance-v066.test.mjs             creator-v1/test/player-card-recognition-v065.test.mjs             creator-v1/test/member-identity-v061.test.mjs
+      - name: Record exact review source commit
+        run: |
+          echo "V069_PRIVATE_CARD_SQLITE_AND_PUBLIC_CATALOG=PASS" >> "$GITHUB_STEP_SUMMARY"
+          echo "REVIEWED_SOURCE_SHA=$GITHUB_SHA" >> "$GITHUB_STEP_SUMMARY"
+          echo "NO_LIVE_WORKER_OR_DATABASE_MUTATIONS=TRUE" >> "$GITHUB_STEP_SUMMARY"
