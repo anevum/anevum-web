@@ -37,13 +37,13 @@ export default {async fetch(req,env){
  const url=new URL(req.url),path=url.pathname;
  const upstream=await env.UPSTREAM.fetch(req);
  if(req.method!=="GET"||upstream.status!==200||!(upstream.headers.get("content-type")||"").includes("text/html"))return upstream;
- if(!["/upload","/upload/","/alpha/review"].includes(path)&&!/^\/play\/[0-9a-f-]{36}\/?$/.test(path))return upstream;
+ if(!["/upload","/upload/","/alpha","/alpha/","/alpha/review"].includes(path)&&!/^\/play\/[0-9a-f-]{36}\/?$/.test(path))return upstream;
  try{
   const who=await member(req,env);
   if(!who)return upstream;
   const staff=await isStaff(req,env);
   let inject="",ids=[];
-  if(path==="/upload"||path==="/upload/"){
+  if(path==="/upload"||path==="/upload/"||path==="/alpha"||path==="/alpha/"){
    const r=await env.DB.prepare("SELECT id,title FROM anevum_alpha_projects WHERE owner_id=? AND status='pending_review' ORDER BY submitted_at DESC LIMIT 20").bind(who.id).all();
    const pending=(r.results||[]).filter(x=>UUID.test(x.id));
    if(pending.length)inject=pendingNotice(pending,staff);
