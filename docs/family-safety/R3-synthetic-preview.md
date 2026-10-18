@@ -9,7 +9,7 @@
 
 Build an inspectable, cinematic map interface before wiring any real location sharing, so the visual and interaction requirements can be judged on a phone without exposing members, minors, homes or movement history.
 
-The prototype has a synthetic 3D neighborhood scene with a tilted/rotatable map, mapped 3D building extrusions, optional raster elevation relief, animated and manually focused fictitious A/B devices, a time-limited fictional sharing session, mock signal loss, stale/unavailable semantics, hypothetical route strokes, and sample community waypoints.
+The prototype has a synthetic 3D neighborhood scene with a tilted/rotatable map, procedurally generated fictitious street and 3D building geometry, optional raster elevation relief, animated and manually focused fictitious A/B devices, a time-limited fictional sharing session, mock signal loss, stale/unavailable semantics, hypothetical route strokes, and sample community waypoints.
 
 **Every device, route, location, name, simulated consent and timer is illustrative.** In particular, a route stroke is not a routing engine, a safe road recommendation, a verified crossing, police report or an emergency service.
 
@@ -31,15 +31,15 @@ The prototype has a synthetic 3D neighborhood scene with a tilted/rotatable map,
 | Actual GPS | Disallowed; no \`navigator.geolocation\` or browser permission prompt. Served with \`Permissions-Policy: geolocation=()\`. |
 | Actual family IDs, personal data, child positions | None used; invented A/B identity and city-area coordinates only. |
 | Cloudflare D1 / Durable Objects / Workers RPC | **No bindings**, no accounts, no database reads/writes. |
-| Network endpoints | Browser requests pinned MapLibre CDN, map tiles, optional terrain tiles and fonts only. No ANEVUM account/location APIs. |
+| Network endpoints | MapLibre browser modules load from the same origin after pinned build-time staging; optional terrain tiles and fonts are external. The fictional city map itself makes no network tile requests. No ANEVUM account/location APIs. |
 | Site exposure | Cloudflare Access must authenticate each asset request; Worker fails closed if no Access audience or identity is present. |
 | Mutations | No POST/PUT/PATCH/DELETE routes. HEAD and GET only, allowlisted paths. |
-| Maps | OpenFreeMap vector tiles with imperfect OSM-based extrusions; optional Amazon-hosted Mapzen Terrarium elevation, which is subtle in Florida. No satellite photogrammetry. |
+| Maps | fully local procedurally generated fictional grid with extruded synthetic buildings; optional Amazon-hosted Mapzen Terrarium elevation, which is subtle in Florida. No satellite photogrammetry. |
 | Browser state | No cookies written by application, LocalStorage, SessionStorage, IndexedDB or location history. Cloudflare Access may set its own authentication cookies. |
 | Expires/revoke | Simulated local state. Does NOT touch R1/R2 real policy or count as proof of backend revocation. |
 | Cache | \`Cache-Control: no-store\`, \`X-Robots-Tag: noindex\`, CSP, frame protection and explicit same-origin asset gate. |
 
-Third-party map/script/elevation/font providers can see client IP and requested resources, including the viewed general map region. The demo does not collect precise device location, but that does not make tile rendering anonymous. Cloudflare Access receives the reviewer's authentication data; none of it is exposed by the preview Worker response.
+External fonts and optional elevation providers can see requests and IP; the default fictional city/map loads from same-origin assets. The demo does not collect precise device location, but that does not make tile rendering anonymous. Cloudflare Access receives the reviewer's authentication data; none of it is exposed by the preview Worker response.
 
 ## Review URL and deployment gate
 
