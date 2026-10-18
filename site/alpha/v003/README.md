@@ -27,9 +27,9 @@ The old \`/upload\`, \`/alpha\`, and \`/play/:id\` routes are unchanged. V003 is
 
 | Setting | Value |
 | --- | --- |
-| Uploaded ZIP | <=30 MiB |
-| Unpacked aggregate | <=120 MiB, streaming one file at a time |
-| Maximum unpacked entry | <=24 MiB |
+| Uploaded ZIP | <=20 MiB |
+| Unpacked aggregate | <=48 MiB, streaming one file at a time |
+| Maximum unpacked entry | <=12 MiB |
 | Maximum entries | 180 |
 | Compression ratio | <=400:1 per file |
 | Standalone HTML | <=5 MiB |
@@ -84,7 +84,7 @@ V003 validates \`runtime\`, \`entrypoint\`, and empty \`permissions\`; other fie
 - ZIP central-directory and local-header reconciliation, UTF-8 entry names, traversal checks, Unicode NFC validation, case-collision detection, compression/size limits, allowed extensions, no symlinks, and CRC32 verification reject hostile archives before publication.
 - Assets have immutable unique release-specific R2 keys plus SHA256 metadata and a matching D1 asset inventory. An archive remains in private R2; neither the bucket nor its source packages receive public URLs.
 - D1 stores project visibility separately from release status and live pointer. A draft release never overrides a live release. Staff approval atomically advances the release state and project pointer via D1 batch.
-- Runner Worker is a **different site**: \`anevum-package-alpha-v003-runtime.devonakins.workers.dev\`, not a subdomain of \`anevum.com\`. It has **no AUTH binding**. The content's CSP enforces an opaque sandbox, including when the build URL is opened directly. iframe has \`sandbox="allow-scripts allow-pointer-lock"\` without \`allow-same-origin\`.
+- Runner Worker is a **different site**: \`anevum-package-v003-runtime.devonakins.workers.dev\`, not a subdomain of \`anevum.com\`. It has **no AUTH binding**. The content's CSP enforces an opaque sandbox, including when the build URL is opened directly. iframe has \`sandbox="allow-scripts allow-pointer-lock"\` without \`allow-same-origin\`.
 - Package assets may make requests to their own runtime origin only. Remote calls, form submissions, camera, microphone, geolocation, cross-origin embeds, and third-party code loading are forbidden in V003.
 - No \`Access-Control-Allow-Credentials\` on runner. CORS response is \`*\` so module fetches work from opaque origins.
 - Preview token is HMAC-SHA256 scoped to release UUID and expiry; both Workers use the same secret binding. Public URLs require \`published\` release state and \`live_release_id\` matching.
@@ -96,8 +96,8 @@ Existing Cloudflare account, but **new staging resources**:
 
 - D1: \`anevum-package-alpha-v003-staging\` (\`fe6a2c20-ccde-451e-ab5f-3610b38d97ff\`).
 - R2: \`anevum-package-alpha-v003-staging\` (private).
-- Worker: \`anevum-package-alpha-v003-control\`.
-- Worker: \`anevum-package-alpha-v003-runtime\`.
+- Worker: \`anevum-package-v003-api\`.
+- Worker: \`anevum-package-v003-runtime\`.
 - Worker credential: \`PACKAGE_PREVIEW_KEY\` (secret_text, unique 96-character hex value, same in control/runtime; DO NOT check into Git).
 - \`AUTH\` service binding: \`anevum-apex-prelaunch-gateway\`.
 - \`PILOT_IDS\`, \`STAFF_IDS\`: copied by service configuration from v002 canonical owner pilot, not email strings.
@@ -148,3 +148,10 @@ Rollback deletes only the V003 route mappings; it must not delete canonical auth
 ## Deferred design: hosted AI apps
 
 Full-stack AI code requires a second runtime: per-project isolated backend, bounded build job, per-app secret vault, user-scoped DB, quotas, explicit network egress policy, billing and abuse monitoring. This is **not implemented** by the browser ZIP runner and must not share the ANEVUM authentication Worker or database connection.
+
+
+## Deployment verification update — 2026-10-18
+
+The `anevum-package-v003-api` Cloudflare Worker was uploaded with isolated D1 and R2 bindings, and its `workers.dev` subdomain was enabled. Cloudflare's deployment API shows a version deployed at 100%, but an external staging endpoint fetch returned HTTP 404; no passing external health or UI smoke test is established. The separate executable runtime Worker was **not** deployed in this session. Therefore, ZIP uploading, private browser playback, creator sign-in, and staff review remain **unverified in the deployed environment**, regardless of green Node integration tests. No `anevum.com` routes were moved.
+
+A real multi-file test archive `anevum-single-drift-v003.zip` was generated outside this repo and passed ZIP integrity, manifest, local-relative-dependency and size checks. Headless Chromium navigation is restricted in the working environment, so no device/browser pass is claimed.
