@@ -33,17 +33,18 @@ export default {
     const previewMatch = url.pathname.match(/^\/p\/([0-9a-f-]{36})\/([0-9]{10}\.[a-f0-9]{64})\/(.+)$/);
     if (!publicMatch && !previewMatch) return missing();
     const releaseId = (publicMatch || previewMatch)[1];
-    if (!UUID.test(releaseId) || url.search) return missing();
+    if (!UUID.test(releaseId)) return missing();
     let path;
     try { path = decodeURIComponent((publicMatch || previewMatch)[publicMatch ? 2 : 3]); }
     catch { return missing(); }
     if (!safeAssetPath(path) || !assetMime(path)) return missing();
+    if (url.search.length > 512) return missing();
     try {
       const release = await env.DB.prepare(
         "SELECT r.id, r.status AS release_status, p.status AS project_status, p.live_release_id " +
         "FROM anevum_package_releases r JOIN anevum_package_projects p ON p.id=r.project_id WHERE r.id=?"
       ).bind(releaseId).first();
-      if (!release || release.release_status === "revoked" || release.release_status === "failed") return missing();
+      if (!release || ["revoked","failed"].includes(release.release_status) || ["suspended","deleted"].includes(release.project_status)) return missing();
       const isLive = release.project_status === "published"
         && release.release_status === "published" && release.live_release_id === releaseId;
       if (publicMatch && !isLive) return missing();
