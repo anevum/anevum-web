@@ -7,6 +7,7 @@ import {fixture} from './helpers/canonical-fixture.mjs';
 import {createCanonicalStageWorker} from '../canonical-auth/worker.mjs';
 import {createNativePack} from '../web/src/lib/anevum-native-pack.ts';
 import {NATIVE_PACK_MIME,inspectNativePackForQuarantine} from '../canonical-auth/native-pack-quarantine.mjs';
+import {studioEligibleUpload} from '../web/src/lib/canonical-studio.ts';
 
 const ORIGIN='https://a.anevum.com';
 const ROOT='/api/v1/member/studio/projects';
@@ -213,6 +214,35 @@ test('category mismatch, privilege boundary and category changed after reservati
   assert.equal((await s.call(root+'/'+assetId,'PUT','bob',valid.bytes)).status,404);
   assert.equal((await s.call(root+'/'+assetId,'PUT',null,valid.bytes)).status,401);
  }finally{s.close();}
+});
+test('previous-category native asset cannot join a later submission even with external destination',async()=>{
+ const s=setup({native:true});
+ try{
+  const p=await createProject(s,'games','reclassified');
+  const item=await upload(s,p.id,await packFor('games'));
+  assert.equal(item.status,200);
+  const reclassify={...project('music','reclassified'),demoUrl:'https://example.com/public-example'};
+  const patch=await s.call(ROOT+'/'+p.id,'PATCH','alice',{revision:p.revision,draft:reclassify});
+  assert.equal(patch.status,200);
+  const revised=(await wire(patch)).project;
+  const submit=await s.call(ROOT+'/'+p.id+'/submit','POST','alice',{revision:revised.revision});
+  assert.equal(submit.status,422);
+  assert.match((await wire(submit)).error,/previous project category/);
+  assert.equal((await wire(await s.call('/api/v1/member/studio/review','GET','bob'))).projects.length,0);
+  assert.equal((await s.call(ROOT+'/'+p.id+'/assets/'+item.assetId,'DELETE','alice')).status,200);
+  const accepted=await s.call(ROOT+'/'+p.id+'/submit','POST','alice',{revision:revised.revision});
+  assert.equal(accepted.status,200,'Removing mismatched private asset allows unrelated HTTPS review');
+ }finally{s.close();}
+});
+test('creator interface refuses cross-category native evidence while retaining legacy ZIP',()=>{
+ assert.equal(studioEligibleUpload('games','package','game.anvg'),true);
+ assert.equal(studioEligibleUpload('games','package','album.anva'),false);
+ assert.equal(studioEligibleUpload('music','package','album.anva'),true);
+ assert.equal(studioEligibleUpload('video','package','series.anvs'),true);
+ assert.equal(studioEligibleUpload('art','package','gallery.anvw'),true);
+ assert.equal(studioEligibleUpload('writing','package','chapter.anvp'),true);
+ assert.equal(studioEligibleUpload('creative','package','chapter.anvp'),false);
+ assert.equal(studioEligibleUpload('games','package','legacy.zip'),true);
 });
 test('type signatures are not publishing approval and verified package metadata is not a staff permission',async()=>{
  const s=setup({native:true});
