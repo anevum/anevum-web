@@ -38,7 +38,7 @@ function ProjectRow({item}:{item:Project}){
       <h3><Link to={"/projects/"+encodeURIComponent(item.id)}>{item.title}</Link></h3>
       <p>{item.summary}</p>
       <div className="cnb-project-links">
-        <Link to={"/creators/"+encodeURIComponent(item.creatorHandle)}>@{item.creatorHandle}</Link>
+        {typeof item.creatorHandle==="string"&&/^[a-z][a-z0-9_]{2,29}$/.test(item.creatorHandle)?<Link to={"/creators/"+encodeURIComponent(item.creatorHandle)}>@{item.creatorHandle}</Link>:<span aria-label="Creator channel not linked">{item.creatorName||"ANEVUM member"}</span>}
         <Link to={"/projects/"+encodeURIComponent(item.id)}>PROJECT PASSPORT ↗</Link>
       </div>
     </div>
