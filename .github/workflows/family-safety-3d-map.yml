@@ -1,0 +1,31 @@
+name: Family Safety 3D Map Prototype
+
+on:
+  pull_request:
+    paths:
+      - 'prototypes/family-safety-3d-map/**'
+      - 'docs/family-safety/**'
+      - '.github/workflows/family-safety-3d-map.yml'
+  push:
+    branches:
+      - 'build/family-safety-3d-map-*'
+    paths:
+      - 'prototypes/family-safety-3d-map/**'
+      - '.github/workflows/family-safety-3d-map.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify-prototype:
+    name: Static and mocked-interaction privacy acceptance
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Run map behavior and consent tests
+        run: node --test prototypes/family-safety-3d-map/test.mjs

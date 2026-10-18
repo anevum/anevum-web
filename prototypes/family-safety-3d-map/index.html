@@ -1,0 +1,334 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#08101b">
+  <meta name="description" content="ANEVUM Family Safety 3D map prototype. No accounts or live family feeds; GPS data is not sent to ANEVUM. Map tile requests reveal the viewed area to the map provider.">
+  <title>ANEVUM / Family Safety Map — Isolated Prototype</title>
+  <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@6.14.0/dist/maplibre-gl.css">
+  <style>
+    :root{color-scheme:dark;--bg:#08101b;--ink:#f4f2ed;--muted:#b3bbc7;--a:#e78b7c;--violet:#a59cfc;--line:rgba(229,236,255,.17)}
+    *{box-sizing:border-box}
+    html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--ink)}
+    button{font:inherit;cursor:pointer}
+    button:focus-visible{outline:2px solid #f7b2a0;outline-offset:3px}
+    #map{position:fixed;inset:0}
+    .shade{position:fixed;inset:0;pointer-events:none;background:linear-gradient(180deg,rgba(5,9,20,.72),transparent 27%,transparent 60%,rgba(5,9,20,.54)),linear-gradient(90deg,rgba(5,9,20,.27),transparent 57%)}
+    .top{position:fixed;z-index:5;top:0;left:0;right:0;display:flex;gap:14px;align-items:center;justify-content:space-between;padding:calc(env(safe-area-inset-top) + 15px) 22px 12px;pointer-events:none}
+    .top>*{pointer-events:auto}
+    .identity{display:flex;gap:11px;align-items:center;min-width:0;padding:10px 14px;border:1px solid var(--line);border-radius:18px;background:rgba(8,13,27,.83);backdrop-filter:blur(24px);box-shadow:0 16px 40px #0007}
+    .orb{display:grid;place-items:center;width:29px;height:29px;border:2px solid var(--violet);border-left-color:transparent;border-radius:50%;transform:rotate(-25deg);position:relative}
+    .orb:after{content:"";width:10px;height:10px;border-radius:50%;background:var(--a);box-shadow:0 0 16px var(--a)}
+    .brand{font-size:14px;letter-spacing:.21em;font-weight:750}
+    .subbrand{font-size:10px;letter-spacing:.15em;color:var(--muted);text-transform:uppercase;margin-top:3px}
+    .status{font-size:11px;letter-spacing:.10em;text-transform:uppercase;color:#ccd4dc;background:rgba(6,15,23,.84);border:1px solid var(--line);padding:11px 13px;border-radius:999px;backdrop-filter:blur(18px)}
+    .status:before{content:"";display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--a);margin-right:8px;box-shadow:0 0 12px var(--a)}
+    .panel{position:fixed;z-index:4;top:113px;bottom:24px;left:22px;width:min(380px,calc(100vw - 44px));display:flex;flex-direction:column;background:linear-gradient(145deg,rgba(12,20,39,.92),rgba(12,17,28,.94));border:1px solid var(--line);border-radius:25px;backdrop-filter:blur(23px);box-shadow:0 26px 85px #000a;overflow:hidden}
+    .panel-main{padding:25px 23px 16px;overflow:auto;min-height:0}
+    .eyebrow{font-size:10px;letter-spacing:.26em;text-transform:uppercase;color:var(--a);font-weight:800}
+    h1{font-weight:600;font-size:clamp(24px,3vw,32px);letter-spacing:-.045em;line-height:1.09;margin:14px 0 11px}
+    p{margin:0;color:var(--muted);line-height:1.55;font-size:12px}
+    .seg{display:grid;grid-template-columns:1fr 1fr;gap:5px;border-radius:13px;background:rgba(255,255,255,.055);padding:5px;margin:22px 0}
+    .seg button{color:var(--muted);background:none;border:none;border-radius:10px;padding:11px 5px;font-size:12px}
+    .seg button[aria-pressed="true"]{color:white;background:linear-gradient(125deg,rgba(231,139,124,.22),rgba(165,156,252,.15));box-shadow:inset 0 0 0 1px rgba(231,139,124,.4)}
+    .section{padding:18px 0;border-top:1px solid var(--line)}
+    .section-title{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px;font-size:12px;font-weight:720;letter-spacing:.06em;text-transform:uppercase}
+    .kicker{color:var(--muted);font-size:10px;letter-spacing:.09em;font-weight:400}
+    .person{display:flex;align-items:center;gap:12px;margin:14px 0}
+    .avatar{width:38px;height:38px;display:grid;place-items:center;border:1px solid rgba(231,139,124,.35);border-radius:14px;background:linear-gradient(140deg,rgba(231,139,124,.17),rgba(165,156,252,.22));font-weight:800;color:var(--a)}
+    .person strong{display:block;font-size:12px;font-weight:650}
+    .person span{display:block;font-size:11px;color:var(--muted);margin-top:5px}
+    .mainbutton{display:flex;align-items:center;justify-content:center;gap:9px;width:100%;margin-top:15px;border:1px solid #edaa9b;border-radius:12px;color:#1c1216;background:linear-gradient(105deg,#f1b2a5,#d5baf7);padding:12px 14px;font-size:12px;font-weight:800;letter-spacing:.02em;transition:transform .18s}
+    .mainbutton:hover{transform:translateY(-2px)}
+    .secondarybutton{width:100%;margin-top:13px;padding:10px 12px;border-radius:12px;color:#e7dce9;background:rgba(165,156,252,.09);border:1px solid rgba(165,156,252,.28);font-size:11px;font-weight:650}
+    .secondarybutton[aria-pressed="true"]{background:rgba(165,156,252,.20);border-color:#ada5ff}
+    .sample-members{margin-top:10px;border:1px solid var(--line);border-radius:12px;padding:6px 11px;background:rgba(255,255,255,.028)}
+    .sample-members .person{margin:8px 0}.sample-members .avatar{width:30px;height:30px;border-radius:10px;font-size:12px}
+    .mainbutton.active{color:#f8e0de;border-color:#c58889;background:rgba(154,76,91,.22)}
+    .note{font-size:11px;line-height:1.5;color:var(--muted);margin-top:9px}
+    .hint{margin:9px 0 0;padding:12px;border-left:2px solid var(--violet);border-radius:2px 9px 9px 2px;background:rgba(165,156,252,.07);font-size:11px;color:var(--muted);line-height:1.5}
+    .check{display:flex;align-items:center;gap:10px;padding:11px 0;font-size:12px;color:#e4e4ec}
+    .check input{appearance:none;position:relative;width:33px;height:19px;border-radius:22px;background:#394054;border:1px solid #72768c;transition:.2s;flex:none}
+    .check input:after{content:"";position:absolute;top:2px;left:2px;width:13px;height:13px;border-radius:50%;background:#bec5cc;transition:.2s}
+    .check input:checked{background:#aa7e89;border-color:#efa799}
+    .check input:checked:after{transform:translateX(14px);background:white}
+    .panel-footer{padding:13px 23px 19px;border-top:1px solid var(--line);background:#060d18a8}
+    .panel-footer strong{font-size:10px;letter-spacing:.1em;color:#e6d9dc;text-transform:uppercase}
+    .panel-footer p{font-size:11px;margin-top:8px}
+    .controls{position:fixed;z-index:5;right:22px;bottom:calc(24px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:7px}
+    .controls button{width:46px;height:46px;border-radius:14px;background:rgba(8,13,27,.90);border:1px solid var(--line);color:var(--ink);font-size:20px;backdrop-filter:blur(15px);box-shadow:0 8px 24px #0008}
+    .controls button.small{font-size:12px;font-weight:740;letter-spacing:.05em}
+    .controls button[aria-pressed="true"]{background:rgba(165,156,252,.28);border-color:var(--violet)}
+    .maplibregl-ctrl-top-right{top:91px;right:18px}
+    .maplibregl-ctrl-group{background:#0b1527!important;border:1px solid var(--line)!important}
+    .maplibregl-ctrl-group button{filter:invert(1)}
+    .maplibregl-ctrl-bottom-right{bottom:0;right:80px}
+    .pin{width:26px;height:26px;display:grid;place-items:center;border-radius:50%;border:2px solid #fff;background:#b6a0ee;color:#0b1020;font-size:12px;font-weight:900;box-shadow:0 0 0 8px rgba(165,156,252,.13),0 5px 20px #000b;cursor:pointer}
+    .pin.you{background:#f0a59c;box-shadow:0 0 0 7px rgba(240,165,156,.18),0 0 20px rgba(240,165,156,.6)}
+    .pin.demo{background:#99c9c6;box-shadow:0 0 0 6px rgba(153,201,198,.12),0 5px 18px #000a}
+    #alert{position:fixed;z-index:7;left:50%;bottom:22px;transform:translateX(-50%);max-width:min(440px,92vw);padding:12px 16px;border-radius:13px;border:1px solid var(--line);background:#091222e8;color:var(--ink);font-size:12px;line-height:1.45;box-shadow:0 15px 40px #000a;display:none}
+    #alert.show{display:block}
+    @media(max-width:760px){
+      .top{padding:calc(env(safe-area-inset-top) + 10px) 12px 0;gap:7px}
+      .identity{padding:9px 10px;border-radius:13px}
+      .brand{font-size:12px}.subbrand{font-size:9px;letter-spacing:.06em}
+      .status{font-size:9px;padding:10px}
+      .panel{top:auto;bottom:calc(12px + env(safe-area-inset-bottom));left:12px;right:70px;width:auto;max-height:min(53dvh,450px);border-radius:18px}
+      .panel-main{padding:16px 16px 8px}.panel-footer{padding:10px 16px 13px}
+      h1{font-size:23px;margin:8px 0}
+      .seg{margin:11px 0}
+      .section{padding:11px 0}
+      .controls{right:12px;bottom:calc(12px + env(safe-area-inset-bottom))}
+      .controls button{width:48px;height:48px}
+      .maplibregl-ctrl-top-right{top:calc(env(safe-area-inset-top) + 75px);right:8px}
+      .maplibregl-ctrl-bottom-right{display:none}
+      #alert{bottom:calc(65px + env(safe-area-inset-bottom))}
+    }
+    @media(max-height:720px){.panel-footer{display:none}.panel{top:88px}.panel-main{padding-top:15px}}
+    @media(prefers-reduced-motion:reduce){*,*:before,*:after{transition:none!important;animation:none!important}}
+  </style>
+</head>
+<body>
+  <div id="map" aria-label="Interactive three-dimensional neighborhood map" role="region"></div>
+  <div class="shade" aria-hidden="true"></div>
+  <header class="top">
+    <div class="identity"><div class="orb" aria-hidden="true"></div><div><div class="brand">ANEVUM</div><div class="subbrand">Continuance / Family Safety</div></div></div>
+    <div class="status">Private prototype · no server tracking</div>
+  </header>
+  <aside class="panel" aria-label="Family map controls">
+    <div class="panel-main">
+      <div class="eyebrow">FIELD SYSTEM / 001</div>
+      <h1>Your world.<br>Your people.</h1>
+      <p>Navigate a dimensional neighborhood. Only verified, explicitly approved members will be visible when private circles are implemented.</p>
+      <div class="seg" aria-label="Map mode">
+        <button type="button" id="family-tab" aria-pressed="true">Family circle</button>
+        <button type="button" id="community-tab" aria-pressed="false">Neighborhood</button>
+      </div>
+      <section class="section" id="family-content" aria-label="Private family status">
+        <div class="section-title">Your private circle <span class="kicker" id="family-count">NO MEMBERS CONNECTED</span></div>
+        <div class="person"><div class="avatar">Y</div><div><strong>Your device</strong><span id="location-status">Location disabled</span></div></div>
+        <p>No family accounts or location feeds are connected in this isolated demo.</p>
+        <button type="button" class="secondarybutton" id="preview-family" aria-pressed="false">Preview two fictional family markers</button>
+        <div class="sample-members" id="sample-family-members" hidden>
+          <div class="person"><div class="avatar">A</div><div><strong>Sample device A</strong><span>Fictional map position · not a live device</span></div></div>
+          <div class="person"><div class="avatar">B</div><div><strong>Sample device B</strong><span>Fictional map position · not a live device</span></div></div>
+        </div>
+        <button type="button" class="mainbutton" id="location-button" aria-pressed="false">Show my position on this device</button>
+        <div class="note">Requires HTTPS and your permission. ANEVUM does not receive or store your GPS coordinates. The map provider still receives tile requests for the area you view. Tracking stops when the page is inactive.</div>
+      </section>
+      <section class="section" id="community-content" aria-label="Neighborhood map layers" hidden>
+        <div class="section-title">Neighborhood layer <span class="kicker">SAMPLE ONLY</span></div>
+        <p>Explore illustrative waypoints. They do not indicate actual participating homes, safe locations, events, or real-time incidents.</p>
+        <label class="check"><input id="demo-markers" type="checkbox"> Show sample community waypoints</label>
+        <div class="hint">A future production map will require verified organizer accounts, moderated reporting and protected household visibility.</div>
+      </section>
+      <section class="section">
+        <div class="section-title">Map controls <span class="kicker">INTERACTIVE 3D</span></div>
+        <label class="check"><input id="buildings-checkbox" type="checkbox" checked> 3D building volumes</label>
+        <label class="check"><input id="terrain-checkbox" type="checkbox"> Real elevation terrain (optional)</label>
+        <div class="note">Drag to move. Pinch or scroll to zoom. Use two fingers or right-click-drag to tilt and rotate. Select the map to place a local planning pin.</div>
+      </section>
+    </div>
+    <footer class="panel-footer">
+      <strong>Safety architecture boundary</strong>
+      <p>Precise location must never appear in public neighborhood feeds. Live family location needs invitations, authentication, consent, revocation and server-enforced access before launch.</p>
+    </footer>
+  </aside>
+  <div class="controls" aria-label="Map viewpoint controls">
+    <button type="button" id="zoom-in" aria-label="Zoom in" title="Zoom in">+</button>
+    <button type="button" id="zoom-out" aria-label="Zoom out" title="Zoom out">−</button>
+    <button type="button" id="tilt" class="small" aria-label="Toggle 3D viewpoint" aria-pressed="true" title="3D camera">3D</button>
+    <button type="button" id="reset" class="small" aria-label="Return to sample neighborhood" title="Reset neighborhood view">HOME</button>
+    <button type="button" id="locate" class="small" aria-label="Center on my position" title="Center on your device position">ME</button>
+  </div>
+  <div id="alert" role="status" aria-live="polite"></div>
+  <script src="https://unpkg.com/maplibre-gl@6.14.0/dist/maplibre-gl.js"></script>
+  <script>
+  (() => {
+    "use strict";
+    const center = [-81.2873, 28.2483]; // Approximate St. Cloud city center, NOT a user's home
+    const el = id => document.getElementById(id);
+    let map, watchId = null, me = null, lastLocation = null, planMarker = null, buildingReady = false;
+    let view3d = true, toastTimer = null, terrainReady = false;
+    const sampleWaypoints = [
+      {coordinates:[-81.2911,28.2495],name:"Illustrative waypoint A"},
+      {coordinates:[-81.2832,28.2466],name:"Illustrative waypoint B"}
+    ];
+    const communityPins = [], familyPins = [];
+    let familyPreview = false;
+    const sampleFamilyDevices = [
+      {coordinates:[-81.2850,28.2502],name:"Sample device A",glyph:"A"},
+      {coordinates:[-81.2898,28.2464],name:"Sample device B",glyph:"B"}
+    ];
+    function notice(message) {
+      const node=el("alert");node.textContent=message;node.classList.add("show");
+      clearTimeout(toastTimer);toastTimer=setTimeout(()=>node.classList.remove("show"),4500);
+    }
+    function marker(coords, className, label, glyph) {
+      const element=document.createElement("button");
+      element.type="button";element.className="pin " + className;
+      element.setAttribute("aria-label",label);element.textContent=glyph||(className==="you"?"●":"◇");
+      return new maplibregl.Marker({element,anchor:"center"}).setLngLat(coords).addTo(map);
+    }
+    function initialize() {
+      if (!window.maplibregl) {
+        notice("Map engine could not load. Check your connection.");
+        return;
+      }
+      map=new maplibregl.Map({
+        container:"map",
+        style:"https://tiles.openfreemap.org/styles/dark",
+        center:center,zoom:15.4,pitch:62,bearing:-18,
+        minZoom:3,maxZoom:20,antialias:true,
+        cooperativeGestures:false,
+        attributionControl:true
+      });
+      map.addControl(new maplibregl.NavigationControl({showZoom:false,visualizePitch:true}),"top-right");
+      map.on("load",() => {
+        try{
+          map.addSource("anevum-buildings",{type:"vector",url:"https://tiles.openfreemap.org/planet"});
+          const firstLabel=map.getStyle().layers.find(layer=>layer.type==="symbol" && layer.layout && layer.layout["text-field"]);
+          map.addLayer({
+            id:"anevum-3d-buildings",type:"fill-extrusion",source:"anevum-buildings", "source-layer":"building",
+            minzoom:15,filter:["!=",["get","hide_3d"],true],
+            paint:{
+              "fill-extrusion-color":["interpolate",["linear"],["coalesce",["get","render_height"],0],0,"#56647c",30,"#7778a2",90,"#c18b93"],
+              "fill-extrusion-height":["interpolate",["linear"],["zoom"],15,0,15.5,["coalesce",["get","render_height"],["get","height"],8]],
+              "fill-extrusion-base":["coalesce",["get","render_min_height"],["get","min_height"],0],
+              "fill-extrusion-opacity":0.84
+            },
+            layout:{visibility:"visible"}
+          },firstLabel&&firstLabel.id);
+          buildingReady=true;
+        }catch(error){notice("Map opened, but building volumes were not available.");}
+        try {
+          map.addSource("anevum-terrain",{
+            type:"raster-dem",encoding:"terrarium",tileSize:256,maxzoom:15,
+            tiles:["https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png"],
+            attribution:"Elevation tiles: Mapzen/Amazon Open Data"
+          });
+          terrainReady=true;
+        }catch(error){terrainReady=false;}
+      });
+      map.on("click",event=>{
+        if(event.originalEvent.target.closest && event.originalEvent.target.closest(".maplibregl-marker"))return;
+        if(planMarker)planMarker.remove();
+        planMarker=marker([event.lngLat.lng,event.lngLat.lat],"","Local waypoint");
+        notice("Planning pin placed locally. No coordinates have been sent to ANEVUM.");
+      });
+      map.on("error",e=>{if(e.error)console.warn("Map engine:",e.error.message);});
+    }
+    function setView3d(enabled) {
+      view3d=enabled;
+      el("tilt").setAttribute("aria-pressed",String(enabled));
+      el("tilt").textContent=enabled?"3D":"2D";
+      if(!map)return;
+      map.easeTo({pitch:enabled?62:0,bearing:enabled?-18:0,duration:600});
+    }
+    function switchMode(mode){
+      const family=mode==="family";
+      el("family-tab").setAttribute("aria-pressed",String(family));
+      el("community-tab").setAttribute("aria-pressed",String(!family));
+      el("family-content").hidden=!family;
+      el("community-content").hidden=family;
+      // The demo waypoints are only visible on the community tab.
+      const visible=!family&&el("demo-markers").checked;
+      communityPins.forEach(pin=>pin.getElement().style.display=visible?"":"none");
+      familyPins.forEach(pin=>pin.getElement().style.display=family&&familyPreview?"":"none");
+    }
+    function updateMe(position) {
+      const coords=[position.coords.longitude,position.coords.latitude];
+      if(!coords.every(Number.isFinite))return;
+      lastLocation={coordinates:coords,timestamp:position.timestamp,accuracy:position.coords.accuracy};
+      if(!me) me=marker(coords,"you","My location, on-device only");
+      else me.setLngLat(coords);
+      const time=new Date(position.timestamp).toLocaleTimeString([], {hour:"numeric",minute:"2-digit"});
+      el("location-status").textContent="On this device · updated "+time+" · ±"+Math.round(position.coords.accuracy)+" m";
+      notice("Your GPS position is shown only on this device. Map tile requests disclose the viewed area to the map provider.");
+    }
+    function stopLocation(message){
+      if(watchId!==null&&navigator.geolocation)navigator.geolocation.clearWatch(watchId);
+      watchId=null;
+      el("location-button").setAttribute("aria-pressed","false");
+      el("location-button").classList.remove("active");
+      el("location-button").textContent="Show my position on this device";
+      el("location-status").textContent=message||"Location disabled";
+      if(me){me.remove();me=null;}
+      lastLocation=null;
+    }
+    function startLocation(){
+      if(!navigator.geolocation){notice("This browser does not support geolocation.");return;}
+      if(!window.isSecureContext){notice("Device location requires HTTPS or localhost.");return;}
+      el("location-button").textContent="Stop showing my position";
+      el("location-button").classList.add("active");
+      el("location-button").setAttribute("aria-pressed","true");
+      el("location-status").textContent="Awaiting device permission…";
+      watchId=navigator.geolocation.watchPosition(updateMe,error=>{
+        stopLocation("Location unavailable");
+        notice(error.code===1?"Location permission denied. Nothing was recorded.":"Location unavailable: "+error.message);
+      },{enableHighAccuracy:true,maximumAge:5000,timeout:15000});
+    }
+    el("preview-family").addEventListener("click",()=>{
+      familyPreview=!familyPreview;
+      el("preview-family").setAttribute("aria-pressed",String(familyPreview));
+      el("preview-family").textContent=familyPreview?"Hide fictional family markers":"Preview two fictional family markers";
+      el("family-count").textContent=familyPreview?"FICTIONAL SAMPLE · 2":"NO MEMBERS CONNECTED";
+      el("sample-family-members").hidden=!familyPreview;
+      if(familyPreview&&familyPins.length===0&&map){
+        sampleFamilyDevices.forEach(person=>{
+          const pin=marker(person.coordinates,"demo",person.name+" — fictional location, no account connected",person.glyph);
+          pin.getElement().addEventListener("click",event=>{
+            event.stopPropagation();
+            map.flyTo({center:person.coordinates,zoom:17,pitch:view3d?62:0,duration:800});
+            notice(person.name+" is a fictional static example, not a connected person.");
+          });
+          familyPins.push(pin);
+        });
+      }
+      familyPins.forEach(pin=>pin.getElement().style.display=familyPreview?"":"none");
+      if(familyPreview)notice("Demo positions are fictional and static. No other devices are connected.");
+    });
+    el("family-tab").addEventListener("click",()=>switchMode("family"));
+    el("community-tab").addEventListener("click",()=>switchMode("community"));
+    el("demo-markers").addEventListener("change",e=>{
+      const show=e.target.checked;
+      if(show && communityPins.length===0 && map){
+        sampleWaypoints.forEach(item=>{
+          const pin=marker(item.coordinates,"demo",item.name+" — fictional demonstration");
+          pin.getElement().addEventListener("click",event=>{event.stopPropagation();notice(item.name+" — fictional demonstration, not a real-world safety report.");});
+          communityPins.push(pin);
+        });
+      }
+      communityPins.forEach(pin=>pin.getElement().style.display=show?"":"none");
+      if(show)notice("Displaying fictional waypoints. These do not represent people or actual safety data.");
+    });
+    el("location-button").addEventListener("click",()=>watchId===null?startLocation():stopLocation());
+    el("buildings-checkbox").addEventListener("change",e=>{
+      if(map&&buildingReady)map.setLayoutProperty("anevum-3d-buildings","visibility",e.target.checked?"visible":"none");
+      else if(e.target.checked)notice("3D building layer is not ready.");
+    });
+    el("terrain-checkbox").addEventListener("change",e=>{
+      if(!map||!terrainReady){e.target.checked=false;notice("Terrain data is not available yet.");return;}
+      try {map.setTerrain(e.target.checked?{source:"anevum-terrain",exaggeration:1}:null);}
+      catch(error){e.target.checked=false;notice("Terrain rendering is unavailable on this device.");}
+    });
+    el("tilt").addEventListener("click",()=>setView3d(!view3d));
+    el("zoom-in").addEventListener("click",()=>map&&map.zoomIn());
+    el("zoom-out").addEventListener("click",()=>map&&map.zoomOut());
+    el("reset").addEventListener("click",()=>map&&map.flyTo({center,zoom:15.4,pitch:view3d?62:0,bearing:view3d?-18:0,duration:950}));
+    el("locate").addEventListener("click",()=>{
+      if(!lastLocation){notice("Enable your on-device location first.");return;}
+      map.flyTo({center:lastLocation.coordinates,zoom:17.2,pitch:view3d?62:0,duration:950});
+    });
+    document.addEventListener("visibilitychange",()=>{
+      if(document.hidden && watchId!==null) {
+        stopLocation("Location paused while the page is inactive");
+      }
+    });
+    window.addEventListener("pagehide",()=>stopLocation());
+    initialize();
+  })();
+  </script>
+</body>
+</html>
