@@ -41,6 +41,10 @@
     .person span{display:block;font-size:11px;color:var(--muted);margin-top:5px}
     .mainbutton{display:flex;align-items:center;justify-content:center;gap:9px;width:100%;margin-top:15px;border:1px solid #edaa9b;border-radius:12px;color:#1c1216;background:linear-gradient(105deg,#f1b2a5,#d5baf7);padding:12px 14px;font-size:12px;font-weight:800;letter-spacing:.02em;transition:transform .18s}
     .mainbutton:hover{transform:translateY(-2px)}
+    .secondarybutton{width:100%;margin-top:13px;padding:10px 12px;border-radius:12px;color:#e7dce9;background:rgba(165,156,252,.09);border:1px solid rgba(165,156,252,.28);font-size:11px;font-weight:650}
+    .secondarybutton[aria-pressed="true"]{background:rgba(165,156,252,.20);border-color:#ada5ff}
+    .sample-members{margin-top:10px;border:1px solid var(--line);border-radius:12px;padding:6px 11px;background:rgba(255,255,255,.028)}
+    .sample-members .person{margin:8px 0}.sample-members .avatar{width:30px;height:30px;border-radius:10px;font-size:12px}
     .mainbutton.active{color:#f8e0de;border-color:#c58889;background:rgba(154,76,91,.22)}
     .note{font-size:11px;line-height:1.5;color:var(--muted);margin-top:9px}
     .hint{margin:9px 0 0;padding:12px;border-left:2px solid var(--violet);border-radius:2px 9px 9px 2px;background:rgba(165,156,252,.07);font-size:11px;color:var(--muted);line-height:1.5}
@@ -102,9 +106,14 @@
         <button type="button" id="community-tab" aria-pressed="false">Neighborhood</button>
       </div>
       <section class="section" id="family-content" aria-label="Private family status">
-        <div class="section-title">Your private circle <span class="kicker">NO MEMBERS CONNECTED</span></div>
+        <div class="section-title">Your private circle <span class="kicker" id="family-count">NO MEMBERS CONNECTED</span></div>
         <div class="person"><div class="avatar">Y</div><div><strong>Your device</strong><span id="location-status">Location disabled</span></div></div>
         <p>No family accounts or location feeds are connected in this isolated demo.</p>
+        <button type="button" class="secondarybutton" id="preview-family" aria-pressed="false">Preview two fictional family markers</button>
+        <div class="sample-members" id="sample-family-members" hidden>
+          <div class="person"><div class="avatar">A</div><div><strong>Sample device A</strong><span>Fictional map position · not a live device</span></div></div>
+          <div class="person"><div class="avatar">B</div><div><strong>Sample device B</strong><span>Fictional map position · not a live device</span></div></div>
+        </div>
         <button type="button" class="mainbutton" id="location-button" aria-pressed="false">Show my position on this device</button>
         <div class="note">Requires HTTPS and your permission. ANEVUM does not receive or store your GPS coordinates. The map provider still receives tile requests for the area you view. Tracking stops when the page is inactive.</div>
       </section>
@@ -146,15 +155,20 @@
       {coordinates:[-81.2911,28.2495],name:"Illustrative waypoint A"},
       {coordinates:[-81.2832,28.2466],name:"Illustrative waypoint B"}
     ];
-    const communityPins = [];
+    const communityPins = [], familyPins = [];
+    let familyPreview = false;
+    const sampleFamilyDevices = [
+      {coordinates:[-81.2850,28.2502],name:"Sample device A",glyph:"A"},
+      {coordinates:[-81.2898,28.2464],name:"Sample device B",glyph:"B"}
+    ];
     function notice(message) {
       const node=el("alert");node.textContent=message;node.classList.add("show");
       clearTimeout(toastTimer);toastTimer=setTimeout(()=>node.classList.remove("show"),4500);
     }
-    function marker(coords, className, label) {
+    function marker(coords, className, label, glyph) {
       const element=document.createElement("button");
       element.type="button";element.className="pin " + className;
-      element.setAttribute("aria-label",label);element.textContent=className==="you"?"●":"◇";
+      element.setAttribute("aria-label",label);element.textContent=glyph||(className==="you"?"●":"◇");
       return new maplibregl.Marker({element,anchor:"center"}).setLngLat(coords).addTo(map);
     }
     function initialize() {
@@ -221,6 +235,7 @@
       // The demo waypoints are only visible on the community tab.
       const visible=!family&&el("demo-markers").checked;
       communityPins.forEach(pin=>pin.getElement().style.display=visible?"":"none");
+      familyPins.forEach(pin=>pin.getElement().style.display=family&&familyPreview?"":"none");
     }
     function updateMe(position) {
       const coords=[position.coords.longitude,position.coords.latitude];
@@ -254,6 +269,26 @@
         notice(error.code===1?"Location permission denied. Nothing was recorded.":"Location unavailable: "+error.message);
       },{enableHighAccuracy:true,maximumAge:5000,timeout:15000});
     }
+    el("preview-family").addEventListener("click",()=>{
+      familyPreview=!familyPreview;
+      el("preview-family").setAttribute("aria-pressed",String(familyPreview));
+      el("preview-family").textContent=familyPreview?"Hide fictional family markers":"Preview two fictional family markers";
+      el("family-count").textContent=familyPreview?"FICTIONAL SAMPLE · 2":"NO MEMBERS CONNECTED";
+      el("sample-family-members").hidden=!familyPreview;
+      if(familyPreview&&familyPins.length===0&&map){
+        sampleFamilyDevices.forEach(person=>{
+          const pin=marker(person.coordinates,"demo",person.name+" — fictional location, no account connected",person.glyph);
+          pin.getElement().addEventListener("click",event=>{
+            event.stopPropagation();
+            map.flyTo({center:person.coordinates,zoom:17,pitch:view3d?62:0,duration:800});
+            notice(person.name+" is a fictional static example, not a connected person.");
+          });
+          familyPins.push(pin);
+        });
+      }
+      familyPins.forEach(pin=>pin.getElement().style.display=familyPreview?"":"none");
+      if(familyPreview)notice("Demo positions are fictional and static. No other devices are connected.");
+    });
     el("family-tab").addEventListener("click",()=>switchMode("family"));
     el("community-tab").addEventListener("click",()=>switchMode("community"));
     el("demo-markers").addEventListener("change",e=>{
