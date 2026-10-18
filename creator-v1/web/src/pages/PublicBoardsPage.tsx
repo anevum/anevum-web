@@ -61,7 +61,7 @@ export function PublicBoardsPage(){
         <button type="button" onClick={()=>setRevision(value=>value+1)}>Try again</button></div>}
       {contents&&<>
         <p className="av79-board-count" role="status">{count} {count===1?"record":"records"} shown · up to 12 per board</p>
-        {count!>0?<div className="av79-board-results">
+        {count!==null&&count>0?<div className="av79-board-results">
           {board.id==="publishing"?contents.publishingCreators.map(item=><article className="av79-board-creator" key={item.handle}>
             <CompactMemberIdentity size="compact" href={"/creators/"+encodeURIComponent(item.handle)}
               member={{handle:item.handle,displayName:item.displayName,source:"creator-channel",avatar:false,level:null,featuredAwards:[]}}/>

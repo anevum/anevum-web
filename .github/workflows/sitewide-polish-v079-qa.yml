@@ -30,6 +30,11 @@ jobs:
         run: |
           node --experimental-strip-types --test \
             creator-v1/test/sitewide-polish-v079.test.mjs \
+            creator-v1/test/connected-community.test.mjs \
+            creator-v1/test/sitewide-canonical-cleanup-v012.test.mjs \
+            creator-v1/test/react-shell-contract.test.mjs \
+            creator-v1/test/react-public-navigation.test.mjs \
+            creator-v1/test/module-experience-v073.test.mjs \
             creator-v1/test/home-navigation-v079.test.mjs \
             creator-v1/test/v079-reconciled-null-creator.test.mjs \
             creator-v1/test/null-creator-alpha-release.test.mjs \

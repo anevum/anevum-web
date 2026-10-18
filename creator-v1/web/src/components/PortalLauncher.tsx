@@ -24,6 +24,7 @@ export function PortalLauncher({ open, onClose, routePrefix="", initialQuery="" 
   const [live,setLive]=useState<{
     status:"idle"|"loading"|"ready"|"error";
     query:string;
+    partial?:boolean;
     projects:Project[];
     creators:Creator[];
   }>({status:"idle",query:"",projects:[],creators:[]});
@@ -86,7 +87,7 @@ export function PortalLauncher({ open, onClose, routePrefix="", initialQuery="" 
           setLive({status:"error",query:liveQuery,projects:[],creators:[]});
         }else{
           setLive({
-            status:"ready",query:liveQuery,
+            status:"ready",query:liveQuery,partial:projects.status==="rejected"||creators.status==="rejected",
             projects:projects.status==="fulfilled"?projects.value.items:[],
             creators:creators.status==="fulfilled"?creators.value.items:[]
           });
@@ -150,11 +151,11 @@ export function PortalLauncher({ open, onClose, routePrefix="", initialQuery="" 
       {liveEnabled&&<div className="portal-launcher-live-status" role="status" aria-live="polite">
         {live.status==="loading"?"SEARCHING REAL RELEASES AND CREATOR CHANNELS…":
          live.status==="error"?"Live directory search is temporarily unavailable. Full catalogue search is still available.":
-         live.status==="ready"?(live.projects.length+live.creators.length)+" DIRECT MATCHES FROM THE PUBLIC DIRECTORY":
+         live.status==="ready"?(live.projects.length+live.creators.length)+" DIRECT MATCHES FROM THE PUBLIC DIRECTORY"+(live.partial?" · Some directory results are unavailable.":""):
          "SEARCH PUBLIC PROJECTS AND CREATORS"}
       </div>}
       <div className="portal-launcher-result-top">
-        <span className="kicker">{query.trim() ? "MATCHING DESTINATIONS" : "POPULAR ENTRANCES"}</span>
+        <span className="kicker">{query.trim() ? "MATCHING DESTINATIONS" : "PLACES IN ANEVUM"}</span>
         <span>{entries.length} {entries.length===1?"ROUTE":"ROUTES"}</span>
       </div>
       <div id={listId+"-results"} role="listbox" className="portal-launcher-results" aria-label="Quick ANEVUM destinations">
@@ -173,7 +174,7 @@ export function PortalLauncher({ open, onClose, routePrefix="", initialQuery="" 
         ) : <div className="portal-launcher-empty" role="status">No matching page. Try Games, Guide, Creators, or Build Status.</div>}
       </div>
       <footer className="portal-launcher-foot">
-        <span>VERIFIED PUBLIC SEARCH / NO SYNTHETIC ACTIVITY</span>
+        <span>PUBLIC WORK / CREATOR CHANNELS</span>
         <Link to={insideWorkspace("/start")} onClick={leave}>NEW HERE? START HERE <Icon name="arrow" size={15}/></Link>
       </footer>
     </div>

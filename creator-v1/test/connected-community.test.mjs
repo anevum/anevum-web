@@ -88,11 +88,11 @@ test("React includes genuine board and approved-post routes, no fake ranking sig
   assert.match(api,/readPublicBoards/);
   assert.match(api,/readCommunityPost/);
   assert.match(page,/readPublicBoards\(signal\)/);
-  assert.match(page,/QUALITY MUST BE/);
-  assert.match(page,/quality or popularity leaderboards/);
+  assert.match(page,/They do not measure plays, quality or reputation/);
+  assert.match(page,/without popularity rankings/);
   assert.match(thread,/readCommunityPost\(id,signal\)/);
   assert.doesNotMatch(page+thread,/\/atlas\//);
-  assert.match(page,/\/projects\//);
+  assert.match(page,/<ProjectCard key={item.id} project={item} presentation="editorial" returnTo={returnTo}/);
   assert.match(thread,/item\.body/);
   assert.match(thread,/replies\.map/);
   assert.match(css,/@media\(max-width:640px\)/);

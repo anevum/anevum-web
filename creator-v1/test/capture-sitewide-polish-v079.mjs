@@ -66,7 +66,7 @@ try{
   ["boards","/boards",phase==="before"?".cnb-project-grid":".av79-board-results"],
   ["creators","/creators",".portal-creator-grid"], ["creator","/creators/nova_demo",".portal-creator-channel"],
   ["project","/projects/00000000000000000000000000000001",".avp-stage"],
-  ["community","/community",".ch7-hub"], ["levels","/levels",".av75-levels-page"],
+  ["community","/community",".ch7-project"], ["levels","/levels",".av75-levels-page"],
   ["rewards","/recognition",".av75-recognition-page"], ["join","/join",".join-experience"],
   ["account","/member",".av12-account-await"], ["studio","/studio",".st-status"],
   ["staff-review-gate","/studio/review",".st-status"], ["support","/support",".av45-support"],
@@ -79,11 +79,12 @@ try{
    await until(()=>evaluate('!!document.querySelector('+JSON.stringify(selector)+')'));
    // Wait for the loaded route, then collect after a painted frame.
    await evaluate('new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)))');
-   const state=await evaluate(`(()=>({main:document.querySelectorAll('main').length,header:document.querySelectorAll('.site-header').length,overflow:document.documentElement.scrollWidth>innerWidth+1,heading:document.querySelector('main h1')?.textContent||null,unlinked:[...document.querySelectorAll('main a')].filter(a=>/\/creators\/(null|undefined)(?:$|[?#])/.test(a.href)).length}))()`);
+   const state=await evaluate(String.raw`(()=>({main:document.querySelectorAll('main').length,header:document.querySelectorAll('.site-header').length,overflow:document.documentElement.scrollWidth>innerWidth+1,heading:document.querySelector('main h1')?.textContent||null,unlinked:[...document.querySelectorAll('main a')].filter(a=>/\/creators\/(null|undefined)(?:$|[?#])/.test(a.href)).length}))()`);
    if(state.main!==1||state.header!==1||(phase==="after"&&(state.overflow||state.unlinked)))throw Error("SITEWIDE_LAYOUT_"+phase+"_"+name+"_"+label+":"+JSON.stringify(state));
    if(phase==="after"&&["boards","creator"].includes(name)&&await evaluate('!!document.querySelector("main .cw-artwork")'))throw Error("DECORATIVE_CATEGORY_ART_"+name);
    await screenshot(name+"-"+label);
    evidence.push({viewport:label,page:name,...state});
+   console.log(phase+" "+label+" "+name+" PASS");
   }
   await send("Page.navigate",{url:base+"/creator/"});
   await until(()=>evaluate('!!document.querySelector(".av79-feature")'));
