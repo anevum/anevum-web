@@ -125,5 +125,12 @@ try{
  writeFileSync(join(output,'result.json'),JSON.stringify({pass:true,checkpoints},null,2));
  console.log('ANEVUM_V076_EVOLUTION_ORIGINAL_FULL_3D_BROWSER=PASS');
 }finally{
- c?.close();child.kill('SIGTERM');rmSync(profile,{recursive:true,force:true});
+ c?.close();child.kill('SIGTERM');
+ // Headless Chrome can create one last profile file while exiting; never
+ // let that ephemeral runner cleanup race overwrite validated browser QA.
+ try{rmSync(profile,{recursive:true,force:true,maxRetries:20,retryDelay:150})}
+ catch(error){
+  if(error?.code!=='ENOTEMPTY'&&error?.code!=='EBUSY')throw error;
+  console.warn('V076_CHROME_PROFILE_TEMP_CLEANUP_DEFERRED');
+ }
 }
