@@ -24,7 +24,7 @@ const menuDestinations = [
   {to:"/discover?category=games",label:"Play",detail:"Games and interactive worlds",icon:"star"},
   {to:"/discover",label:"Discover",detail:"Projects worth finding",icon:"explore"},
   {to:"/community",label:"Community",detail:"Creators and conversations",icon:"community"},
-  {to:"/studio",label:"Create",detail:"Your studio and uploads",icon:"create"}
+  {to:"/create",label:"Create",detail:"Your studio and uploads",icon:"create"}
 ] as const;
 const menuCategories = [
   {to:"/discover?category=tools",label:"Apps & tools"},
@@ -37,6 +37,7 @@ const menuUtilities = [
   {to:"/boards",label:"Boards"},
   {to:"/levels",label:"Evolution"},
   {to:"/recognition",label:"Rewards"},
+  {to:"/library",label:"My library"},
   {to:"/saved",label:"Saved"},
   {to:"/status",label:"Status"}
 ] as const;
@@ -49,7 +50,7 @@ export function Shell(){
   const location=useLocation();
   const [query,setQuery]=useState("");
   const [menuOpen,setMenuOpen]=useState(false);
-  const ownCard=useOwnPlayerCard(menuOpen||location.pathname==="/");
+  const ownCard=useOwnPlayerCard(menuOpen);
   const [launcherOpen,setLauncherOpen]=useState(false);
   const menuButton=useRef<HTMLButtonElement>(null);
   const menuDialog=useRef<HTMLDialogElement>(null);
@@ -113,7 +114,7 @@ export function Shell(){
           <Link to={memberDestination} className="cw-account-link av9-account" aria-label={canonicalMember?"Open my verified member account":"Join ANEVUM or sign in"}><Icon name="people" size={20}/></Link>
           <button ref={menuButton} className="menu-button av9-menu-trigger" type="button"
             aria-label={menuOpen ? "Close site navigation" : "Open site navigation"}
-            aria-haspopup="dialog" aria-expanded={menuOpen} aria-controls="av9-navigation"
+            aria-haspopup="dialog" aria-expanded={menuOpen} aria-controls="av79-navigation"
             onClick={()=>setMenuOpen(value=>!value)}>
             <span className="av9-menu-trigger-text">Menu</span>
             <Icon name={menuOpen?"close":"menu"} size={21}/>
@@ -157,7 +158,7 @@ export function Shell(){
         <div className="av79-navigation-lower">
           <section aria-label="Browse by interest"><span className="av79-lower-label">EXPLORE BY INTEREST</span>
             <div className="av79-category-links">{menuCategories.map(item=>
-              <Link to={item.to} key={item.to} onClick={()=>setMenuOpen(false)}>{item.label}</Link>)}</div>
+              <Link to={item.to==="/library"&&canonicalMember?"/saved":item.to} key={item.to} onClick={()=>setMenuOpen(false)}>{item.label}</Link>)}</div>
           </section>
           <section aria-label="More destinations"><span className="av79-lower-label">ALSO IN ANEVUM</span>
             <div className="av79-utility-links">{menuUtilities.map(item=>
