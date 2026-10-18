@@ -1,13 +1,14 @@
 import { NavLink, Outlet, Link, useLocation, useNavigate } from "react-router-dom";
 import { type FormEvent, useEffect, useRef, useState } from "react";
 import { OrbitalMark } from "./OrbitalMark";
-import { CosmicArtwork } from "./CosmicArtwork";
 import { Icon } from "./Icons";
 import { PortalLauncher } from "./PortalLauncher";
 import {VisualKitAtmosphere,publicVisualRoom} from "./VisualKit";
 import {ContinuanceWorldStage} from "./ContinuanceWorldStage";
 import { isEditableTarget } from "../lib/portal-destinations";
 import { canonicalAuthClient } from "../lib/canonical-beta";
+import { CompactMemberIdentity } from "./CompactMemberIdentity";
+import { useOwnPlayerCard } from "../lib/useOwnPlayerCard";
 
 /** ANEVUM V009 — one public navigation system across every Creator V1 page.
  * This component is presentation only. Private routes remain MemberGate-owned;
@@ -19,21 +20,25 @@ const desktopNav = [
   {to:"/community",label:"Community"},
   {to:"/creators",label:"Creators"}
 ] as const;
-const portalCategories = [
-  {to:"/discover?category=games",label:"Games & Play",number:"01",description:"Independent worlds and experiments",scene:"games"},
-  {to:"/discover?category=tools",label:"Apps & Tools",number:"02",description:"Useful software made by people",scene:"tools"},
-  {to:"/discover?category=creative",label:"Creative & AI",number:"03",description:"Original work and curious ideas",scene:"creative"},
-  {to:"/discover?category=libraries",label:"Open Source",number:"04",description:"Shared tools and reusable knowledge",scene:"libraries"}
+const menuDestinations = [
+  {to:"/discover?category=games",label:"Play",detail:"Games and interactive worlds",icon:"star"},
+  {to:"/discover",label:"Discover",detail:"Projects worth finding",icon:"explore"},
+  {to:"/community",label:"Community",detail:"Creators and conversations",icon:"community"},
+  {to:"/studio",label:"Create",detail:"Your studio and uploads",icon:"create"}
 ] as const;
-const directory = [
-  {to:"/boards",label:"Public boards",detail:"Reviewed releases and first looks"},
-  {to:"/levels",label:"My evolution",detail:"Inspect only the levels you have earned"},
-  {to:"/recognition",label:"My earned rewards",detail:"Verified badges, ribbons and medals"},
-  {to:"/support",label:"Support ANEVUM",detail:"Supporter benefits, infrastructure and open transparency"},
-  {to:"/create",label:"Creator Studio",detail:"Invited member publishing"},
-  {to:"/library",label:"My library",detail:"Your saved work, when signed in"},
-  {to:"/member",label:"My profile",detail:"Your verified account and public profile settings"},
-  {to:"/join",label:"Join ANEVUM",detail:"Registration availability and private profile"}
+const menuCategories = [
+  {to:"/discover?category=tools",label:"Apps & tools"},
+  {to:"/discover?category=creative",label:"Art & AI"},
+  {to:"/discover?category=libraries",label:"Open source"},
+  {to:"/discover?category=learning",label:"Learning"}
+] as const;
+const menuUtilities = [
+  {to:"/creators",label:"Creators"},
+  {to:"/boards",label:"Boards"},
+  {to:"/levels",label:"Evolution"},
+  {to:"/recognition",label:"Rewards"},
+  {to:"/saved",label:"Saved"},
+  {to:"/status",label:"Status"}
 ] as const;
 
 export function Shell(){
@@ -44,6 +49,7 @@ export function Shell(){
   const location=useLocation();
   const [query,setQuery]=useState("");
   const [menuOpen,setMenuOpen]=useState(false);
+  const ownCard=useOwnPlayerCard(menuOpen||location.pathname==="/");
   const [launcherOpen,setLauncherOpen]=useState(false);
   const menuButton=useRef<HTMLButtonElement>(null);
   const menuDialog=useRef<HTMLDialogElement>(null);
@@ -115,35 +121,50 @@ export function Shell(){
         </div>
       </div>
     </header>
-    <dialog ref={menuDialog} id="av9-navigation" className="av9-navigation"
-      aria-label="Explore ANEVUM"
+    <dialog ref={menuDialog} id="av79-navigation" className="av79-navigation"
+      aria-label="ANEVUM navigation"
       onClose={()=>{setMenuOpen(false);menuButton.current?.focus();}}
       onCancel={()=>setMenuOpen(false)}
       onClick={event=>{if(event.target===menuDialog.current)setMenuOpen(false);}}>
-      <div className="av9-navigation-sheet">
-        <header className="av9-navigation-top">
-          <div><span className="av9-overline">ANEVUM / UNIVERSAL DIRECTORY</span><h2>Choose your <em>world.</em></h2></div>
-          <button className="av9-menu-close" type="button" onClick={()=>setMenuOpen(false)}>Close <Icon name="close" size={18}/></button>
+      <div className="av79-navigation-shell">
+        <header className="av79-navigation-top">
+          <span className="av79-overline"><OrbitalMark className="av79-wayfinder-mark"/> ANEVUM / WAYFINDER</span>
+          <button className="av79-menu-close" type="button" onClick={()=>setMenuOpen(false)} aria-label="Close navigation"><Icon name="close" size={19}/></button>
         </header>
-        <div className="av9-navigation-body">
-          <section className="av9-navigation-worlds" aria-label="Worlds to explore">
-            {portalCategories.map(item=><Link to={item.to} key={item.to} className="av9-navigation-world" onClick={()=>setMenuOpen(false)}>
-              <span className="av9-navigation-world-art" aria-hidden="true"><CosmicArtwork scene={item.scene}/></span>
-              <span className="av9-navigation-world-copy"><small>{item.number} / EXPLORE</small><strong>{item.label}</strong><span>{item.description}</span></span>
-              <Icon name="arrow" size={18}/>
-            </Link>)}
-          </section>
-          <div className="av9-navigation-links">
-            <span className="av9-overline">COMMUNITY / MEMBER SPACES</span>
-            {directory.map(item=><Link key={item.to} to={item.to==="/library"&&canonicalMember?"/saved":item.to} onClick={()=>setMenuOpen(false)}>
-              <span><strong>{item.label}</strong><small>{item.detail}</small></span><Icon name="arrow" size={17}/>
-            </Link>)}
-            <button className="av9-open-switcher" type="button" onClick={()=>{setMenuOpen(false);setLauncherOpen(true);}}>
-              <Icon name="search" size={18}/> Quick switch <kbd>⌘ K</kbd>
-            </button>
-          </div>
+        <div className="av79-navigation-intro">
+          <h2>Where to <em>next?</em></h2>
+          <p>One tap to the people, work and worlds you came for.</p>
         </div>
-        <footer className="av9-navigation-foot">DISCOVER FREELY / CONTRIBUTION ACCESS REMAINS INVITATION-BASED</footer>
+        <button type="button" className="av79-navigation-search"
+          onClick={()=>{setMenuOpen(false);setLauncherOpen(true);}}>
+          <Icon name="search" size={19}/><span>Search ANEVUM</span><kbd>⌘ K</kbd>
+        </button>
+        {canonicalMember?<section className="av79-navigation-identity" aria-label="Your player card">
+          <div className="av79-navigation-label"><span>YOUR PLAYER CARD</span><Link to="/member" onClick={()=>setMenuOpen(false)}>MY SPACE <Icon name="arrow" size={13}/></Link></div>
+          {ownCard?<CompactMemberIdentity member={ownCard} href="/member" size="compact" className="av79-my-card"/>:
+            <Link className="av79-identity-loading" to="/member" onClick={()=>setMenuOpen(false)}>Open your verified member space <Icon name="arrow" size={16}/></Link>}
+        </section>:<Link to="/join" className="av79-navigation-join" onClick={()=>setMenuOpen(false)}>
+          <span><strong>Become part of ANEVUM</strong><small>Your identity, creations and earned recognition start here.</small></span>
+          <Icon name="arrow" size={18}/>
+        </Link>}
+        <nav className="av79-navigation-primary" aria-label="Main destinations">
+          {menuDestinations.map(item=><Link to={item.to} key={item.to} onClick={()=>setMenuOpen(false)} className="av79-destination">
+            <span className="av79-destination-icon"><Icon name={item.icon} size={22}/></span>
+            <span><strong>{item.label}</strong><small>{item.detail}</small></span>
+            <Icon name="arrow" size={16}/>
+          </Link>)}
+        </nav>
+        <div className="av79-navigation-lower">
+          <section aria-label="Browse by interest"><span className="av79-lower-label">EXPLORE BY INTEREST</span>
+            <div className="av79-category-links">{menuCategories.map(item=>
+              <Link to={item.to} key={item.to} onClick={()=>setMenuOpen(false)}>{item.label}</Link>)}</div>
+          </section>
+          <section aria-label="More destinations"><span className="av79-lower-label">ALSO IN ANEVUM</span>
+            <div className="av79-utility-links">{menuUtilities.map(item=>
+              <Link to={item.to} key={item.to} onClick={()=>setMenuOpen(false)}>{item.label}</Link>)}</div>
+          </section>
+        </div>
+        <footer className="av79-navigation-foot"><span aria-hidden="true" className="av79-footer-star"/> THE CONTINUANCE INSTITUTE <span>EXPLORE / MAKE / BELONG</span></footer>
       </div>
     </dialog>
     <PortalLauncher open={launcherOpen} onClose={()=>setLauncherOpen(false)}/>
