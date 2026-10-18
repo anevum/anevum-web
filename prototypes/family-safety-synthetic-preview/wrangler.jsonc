@@ -5,7 +5,9 @@
   "compatibility_date": "2026-10-18",
   "workers_dev": true,
   "preview_urls": false,
-  "observability": { "enabled": false },
+  "observability": {
+    "enabled": false
+  },
   "upload_source_maps": false,
   "assets": {
     "directory": "./public",
@@ -13,6 +15,6 @@
     "run_worker_first": true
   },
   "vars": {
-    "FS_SYNTH_REVIEW_AUD": ""
+    "FS_SYNTH_REVIEW_AUD": "8b4f7da26f249d7c59e73ec7f84b2b7d605dc65253091c134947359602094a32"
   }
 }
