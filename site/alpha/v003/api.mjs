@@ -139,6 +139,7 @@ async function upload(req,env,u) {
   const project=existingId?await getProject(env.DB,existingId):null;
   if(existingId&&(!project||project.owner_id!==u.id)) return fail(404,"Project unavailable");
   if(project&&(project.status==="suspended"||project.draft_release_id)) return fail(409,"Finish or remove the current draft before uploading an update");
+  if(project && !["published","rejected","draft"].includes(project.status)) return fail(409,"This project cannot accept a revised build");
   if(!project) {
     const count=await query(env.DB,"SELECT COUNT(*) AS n FROM anevum_package_projects WHERE owner_id=? AND status!='deleted'",u.id);
     if(count.n>=20) return fail(409,"Creator alpha allows up to 20 active projects");
@@ -332,7 +333,7 @@ export default {
         const owner=!!u&&pilot(env,u.id);
         const projects=owner?await ownerList(env.DB,u.id):[];
         const chosen=url.searchParams.get("update");
-        const updateId=owner&&projects.some(x=>x.id===chosen&&x.status==="published"&&!x.draft_release_id)?chosen:"";
+        const updateId=owner&&projects.some(x=>x.id===chosen&&["published","rejected"].includes(x.status)&&!x.draft_release_id)?chosen:"";
         return uploadScreen(projects,!!u,owner,updateId);
       }
       if(path==="/packages"||path==="/packages/")return catalogScreen(await publicList(env.DB));
