@@ -167,7 +167,7 @@ export async function canonicalStudio(req,env,user,now=Math.floor(Date.now()/100
   if(sub==='withdraw'){
    if(req.method!=='POST')return fail(405,'Method not allowed');
    if(await studioPublicationReady(db)&&
-      await getOne(db,"SELECT project_id FROM member_studio_publications WHERE project_id=?",[id]))
+      await getOne(db,"SELECT project_id FROM member_studio_publications WHERE project_id=? AND status='published'",[id]))
     return fail(409,'A published or withdrawn release must be archived separately');
    const input=await body(req,500);
    if(!input||!exactly(input,['revision'])||!Number.isSafeInteger(input.revision))return fail(400,'Invalid revision');
