@@ -315,7 +315,7 @@ export async function canonicalStudioReview(req,env,user,now=Math.floor(Date.now
   const changed=await decideStudioReview(db,{...target,id:raw.projectId},user.id,raw.action,reason,now);
   return changed?json({ok:true,status:raw.action}):fail(409,'Submission changed during review');
  }catch(e){
-  if(nativeSummary&&[403,404,409,422,503].includes(e?.status))
+  if(nativeSummary&&[403,404,409,422,429,503].includes(e?.status))
    return fail(e.status,e.message);
   return fail(503,'Studio review unavailable');
  }
