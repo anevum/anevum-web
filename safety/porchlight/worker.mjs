@@ -153,7 +153,7 @@ async function revokeSubmission(request, env, id, now) {
   await env.PORCHLIGHT_DB.prepare(
     "UPDATE host_submissions SET status='withdrawn', withdrawn_at=?, " +
     "public_name=NULL, public_label=NULL, approved_lat=NULL, approved_lng=NULL, " +
-    "contact_email=NULL, private_address=NULL, note=NULL, receipt_hash=NULL " +
+    "contact_email=NULL, private_address=NULL, note=NULL, host_name='Withdrawn host', options_json='[]', receipt_hash=NULL " +
     "WHERE id=? AND status IN ('pending','published','rejected')"
   ).bind(now, id).run();
   return response({ ok: true, status: "withdrawn", notice: "Listing removed. Private contact and address cleared." });
@@ -230,7 +230,7 @@ async function decideHost(request, env, id, now) {
   if (b.action === "withdraw") {
     await env.PORCHLIGHT_DB.prepare(
       "UPDATE host_submissions SET status='withdrawn', withdrawn_at=?, public_name=NULL, public_label=NULL, " +
-      "approved_lat=NULL, approved_lng=NULL, private_address=NULL, contact_email=NULL, note=NULL, receipt_hash=NULL WHERE id=?"
+      "approved_lat=NULL, approved_lng=NULL, private_address=NULL, contact_email=NULL, note=NULL, host_name='Withdrawn host', options_json='[]', receipt_hash=NULL WHERE id=?"
     ).bind(now, id).run();
   } else {
     if (host.status !== "pending") return fail("HOST_NOT_PENDING", 409);
@@ -285,6 +285,21 @@ async function adminRoutes(request, env, path, now) {
   }
   const decision = new RegExp("^" + ADMIN + "/hosts/([a-f0-9-]{36})/decision$").exec(path);
   if (decision && request.method === "POST") return decideHost(request, env, decision[1], now);
+  const resolution = new RegExp("^" + ADMIN + "/reports/([a-f0-9-]{36})/resolve$").exec(path);
+  if (resolution && request.method === "POST") {
+    const existing = await env.PORCHLIGHT_DB.prepare(
+      "SELECT id, status FROM reports WHERE id=?"
+    ).bind(resolution[1]).first();
+    if (!existing) return fail("REPORT_NOT_FOUND", 404);
+    if (existing.status !== "open") return fail("REPORT_ALREADY_RESOLVED", 409);
+    await env.PORCHLIGHT_DB.prepare(
+      "UPDATE reports SET status='resolved', resolved_at=? WHERE id=? AND status='open'"
+    ).bind(now, existing.id).run();
+    await env.PORCHLIGHT_DB.prepare(
+      "INSERT INTO audit_events (id, action, record_id, created_at) VALUES (?, 'report_resolved', ?, ?)"
+    ).bind(crypto.randomUUID(), existing.id, now).run();
+    return response({ ok: true, status: "resolved" });
+  }
   return fail("NOT_FOUND", 404);
 }
 async function purgeExpired(db, now) {
