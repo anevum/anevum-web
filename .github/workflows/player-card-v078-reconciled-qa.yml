@@ -47,6 +47,7 @@ jobs:
           npm install --ignore-scripts --no-audit --no-fund
           npm run check:creator-v1-web
           npm run build:creator-v1-web
+          npm run build:creator-v1-web:staging
       - name: Prove both the production crash fix and earned card permissions
         shell: bash
         run: |
@@ -81,7 +82,14 @@ jobs:
             sleep .25
           done
           chrome="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || command -v chromium-browser)"
-          timeout 55 "$chrome" --headless=new --no-sandbox --disable-dev-shm-usage --disable-gpu --disable-background-networking --virtual-time-budget=8000 --dump-dom http://127.0.0.1:4178/creator/ > "$RUNNER_TEMP/v078-unlinked.html" 2> "$RUNNER_TEMP/v078-unlinked-chrome.log"
+          test -n "$chrome"
+          mkdir -p "$RUNNER_TEMP/v078-unlinked-chrome-profile"
+          test -s creator-v1/dist/web-staging/index.html || { tail -n 50 "$RUNNER_TEMP/v078-unlinked-creator.log"; exit 1; }
+          if ! timeout 55 "$chrome" --headless=new --no-sandbox --no-first-run --user-data-dir="$RUNNER_TEMP/v078-unlinked-chrome-profile" --disable-dev-shm-usage --disable-gpu --disable-background-networking --virtual-time-budget=8000 --dump-dom http://127.0.0.1:4178/creator/ > "$RUNNER_TEMP/v078-unlinked.html" 2> "$RUNNER_TEMP/v078-unlinked-chrome.log"; then
+            tail -n 90 "$RUNNER_TEMP/v078-unlinked-creator.log" || true
+            tail -n 90 "$RUNNER_TEMP/v078-unlinked-chrome.log" || true
+            exit 1
+          fi
           grep -Fq 'UNLINKED ALPHA RELEASE' "$RUNNER_TEMP/v078-unlinked.html"
           grep -Fq 'Public creator channel not linked.' "$RUNNER_TEMP/v078-unlinked.html"
           ! grep -Fq '/creators/null' "$RUNNER_TEMP/v078-unlinked.html"
