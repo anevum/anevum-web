@@ -19,7 +19,7 @@ const grant=()=>({
 });
 const point=(at=T)=>({lat:28.2483,lng:-81.2873,accuracyM:12,observedAt:at});
 
-function fixture() {
+function fixture({onRoomRead=null}={}) {
   const clock={now:T};
   const permissions={
     circle:{...circle}, memberships:[member("alice"),member("bob"),member("carol")],
@@ -54,7 +54,7 @@ function fixture() {
     presenceForCircle: id=>{
       assert.equal(id,circle.id);
       return {
-        read:async (...args)=>room.read(...args),
+        read:async (...args)=>{const point=room.read(...args); if(onRoomRead) await onRoomRead({permissions,clock,room}); return point;},
         write:async (...args)=>{writes++;return room.write(...args);},
         purge:async (...args)=>room.purge(...args)
       };
@@ -208,6 +208,24 @@ test("stale and expired presence is reported correctly with no stale leak after 
   app.clock.now=T+60_000;
   assert.equal((await (await app.fetch(app.requestFor("GET",
     "/v1/circles/family-1/presence/alice",{actor:"bob"}))).json()).state,"unavailable");
+});
+
+test("old session GPS never leaks through a new grant during a concurrent read",async()=>{
+  let rotated=false;
+  const app=fixture({onRoomRead:async ({permissions})=>{
+    if(rotated)return;
+    rotated=true;
+    permissions.session={...permissions.session,id:"session-2",startedAt:T-20_000};
+    permissions.grant={...permissions.grant,sessionId:"session-2",issuedAt:T-10_000};
+  }});
+  assert.equal((await app.fetch(app.requestFor("PUT","/v1/circles/family-1/presence/me",{
+    actor:"alice",json:point()
+  }))).status,204);
+  const res=await app.fetch(app.requestFor("GET","/v1/circles/family-1/presence/alice",{
+    actor:"bob"
+  }));
+  assert.equal(res.status,200);
+  assert.equal((await res.json()).state,"unavailable");
 });
 
 test("malformed untrusted policy shapes fail closed",async()=>{
