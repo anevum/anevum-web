@@ -117,7 +117,8 @@ function StudioLibrary({publicationReady}:{publicationReady:boolean}){
   return()=>ac.abort();
  },[]);
  const drafts=items.filter(p=>p.status==='draft'||p.status==='changes_requested').length;
- const pending=items.filter(p=>p.status==='pending_review').length;
+ const pending=items.filter(p=>p.status==='pending_review'&&!p.publicationStatus).length;
+ const publicCount=items.filter(p=>p.publicationStatus==='published').length;
  const needle=search.trim().toLocaleLowerCase();
  const visible=items.filter(p=>(statusFilter==='all'||p.status===statusFilter)&&
   (!needle||[p.title,p.summary,p.slug,p.category].some(v=>v.toLocaleLowerCase().includes(needle))));
@@ -126,7 +127,7 @@ function StudioLibrary({publicationReady}:{publicationReady:boolean}){
    <div><span>TOTAL WORKS</span><strong>{loading?'—':items.length}</strong></div>
    <div><span>IN PROGRESS</span><strong>{loading?'—':drafts}</strong></div>
    <div><span>AWAITING REVIEW</span><strong>{loading?'—':pending}</strong></div>
-   <div><span>PUBLIC RELEASES</span><strong>{publicationReady?'EXTERNAL LINKS':'NOT YET ACTIVE'}</strong></div>
+   <div><span>PUBLIC RELEASES</span><strong>{publicationReady?(loading?'—':publicCount):'NOT YET ACTIVE'}</strong></div>
   </section>
   <section className="st-panel">
    <div className="st-section-head"><div><p className="st-kicker">01 / PERSONAL WORKSPACE</p><h2>PROJECT RECORDS</h2></div>
@@ -156,7 +157,7 @@ function StudioLibrary({publicationReady}:{publicationReady:boolean}){
    {!loading&&!error&&items.length>0&&visible.length===0&&<p role="status" className="st-muted">No projects match these filters. Adjust your search or status selection.</p>}
    <div className="st-project-grid">{visible.map(p=><Link className="st-project" to={'/studio/'+p.id} key={p.id}>
     <div className="st-project-art" aria-hidden="true"><span>◌</span><small>{p.category.toUpperCase()}</small></div>
-    <div className="st-project-body"><span className="st-kicker">REV {String(p.revision).padStart(2,'0')} / {pretty(p.status)}</span>
+    <div className="st-project-body"><span className="st-kicker">REV {String(p.revision).padStart(2,'0')} / {p.publicationStatus==='published'?'EXTERNAL RELEASE LIVE':p.publicationStatus==='withdrawn'?'RELEASE WITHDRAWN':pretty(p.status)}</span>
      <h3>{p.title}</h3><p>{p.summary}</p><small>EDITED {new Date(p.updatedAt*1000).toLocaleDateString()}</small></div>
     <span className="st-project-arrow">↗</span>
    </Link>)}</div>
@@ -253,7 +254,7 @@ function StudioEditor({create,uploadsReady,publicationReady}:{create:boolean;upl
   {!loading&&(!id||project)&&<div className="st-editor">
    <form className="st-panel st-editor-form" onSubmit={save}>
     <div className="st-section-head"><div><p className="st-kicker">01 / WORK IDENTITY</p><h2>{project?'REFINE THE RECORD.':'GIVE YOUR WORK A NAME.'}</h2></div>
-     {project&&<span className="st-tag">{pretty(project.status)} · REV {project.revision}</span>}</div>
+     {project&&<span className="st-tag">{project.publicationStatus==='published'?'EXTERNAL RELEASE LIVE':pretty(project.status)} · REV {project.revision}</span>}</div>
     {input('title','PROJECT TITLE',100,0,'3–100 characters.')}
     {input('slug','PROJECT SLUG',90,0,'Lowercase letters, numbers and hyphens; unique per creator.')}
     <label className="st-field"><span>CREATION TYPE</span>
