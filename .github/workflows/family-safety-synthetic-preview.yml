@@ -30,6 +30,14 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Stage same-origin pinned MapLibre v6 assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd prototypes/family-safety-synthetic-preview
+          npm install --ignore-scripts --no-audit --no-fund --no-save
+          npm run stage:vendor
+          test "$(node -p "require('./node_modules/maplibre-gl/package.json').version")" = "6.14.0"
       - name: Static and functional safety checks
         shell: bash
         run: |
@@ -37,6 +45,7 @@ jobs:
           node --check prototypes/family-safety-synthetic-preview/public/synthetic-engine.mjs
           node --check prototypes/family-safety-synthetic-preview/public/app.mjs
           node --check prototypes/family-safety-synthetic-preview/worker.mjs
+          node --check prototypes/family-safety-synthetic-preview/stage-vendor.mjs
           node --test prototypes/family-safety-synthetic-preview/test.mjs
       - name: Reject unsafe runtime bindings and public asset bypass
         shell: bash
@@ -63,8 +72,11 @@ jobs:
           if(!w.includes("getIdentity")||!w.includes("FS_SYNTH_REVIEW_AUD"))
             throw Error("Missing mandatory Access auth gate");
           const pdir="prototypes/family-safety-synthetic-preview/public";
-          if(fs.readdirSync(pdir).some(x=>!["index.html","styles.css","app.mjs","synthetic-engine.mjs"].includes(x)))
+          if(fs.readdirSync(pdir).some(x=>!["index.html","styles.css","app.mjs","synthetic-engine.mjs","vendor"].includes(x)))
             throw Error("Unexpected public artifact");
+          const vendor=fs.readdirSync(pdir+"/vendor");
+          if(vendor.some(x=>!["maplibre-gl.mjs","maplibre-gl-worker.mjs","maplibre-gl.css"].includes(x))||vendor.length!==3)
+            throw Error("Missing or unexpected pinned MapLibre browser assets");
           '
       - name: Capture browser screenshots for desktop and phone layouts
         shell: bash
