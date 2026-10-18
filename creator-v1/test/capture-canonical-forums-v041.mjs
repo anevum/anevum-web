@@ -171,11 +171,11 @@ try{
   assert.ok(shot.data);writeFileSync(join(out,'forum-'+width+'.png'),Buffer.from(shot.data,'base64'));
   result.widths.push({width,...layout});
  }
- // Turning the feature off must remove the new forum without hiding the legacy community.
+ // Turning the feature off must show an honest unavailable state, without exposing the composer, while preserving the hub.
  env.CANONICAL_FORUM_ENABLED='false';
  await goto('/community');
- await until(()=>evaluate("!!document.querySelector('.ch7-hub')&&!document.querySelector('.cf-forums')"));
- result.disabledHidesForum=true;
+ await until(()=>evaluate("!!document.querySelector('.ch7-hub') && !!document.querySelector('.cf-forums .cf-note') && !document.querySelector('.cf-forums .cf-thread') && !document.querySelector('.cf-forums .cf-primary')"));
+ result.disabledHidesForum=true;result.disabledShowsHonestNotice=true;
  writeFileSync(join(out,'acceptance.json'),JSON.stringify(result,null,2));
  console.log('V041_CANONICAL_FORUM_GUEST_BROWSER=PASS');
 }catch(e){console.error('V041_FORUM_BROWSER_FAILED='+String(e));throw e}
