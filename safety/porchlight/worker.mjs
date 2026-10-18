@@ -8,6 +8,7 @@ const API = "/api/v1/porchlight";
 const ADMIN = "/_private/porchlight";
 const HOST_OPTIONS = ["candy", "non_food", "decorations", "step_free"];
 const REPORT_REASONS = ["incorrect", "privacy", "unwanted", "accessibility", "other"];
+const CONSENT_VERSION = "porchlight-v001.1";
 const securityHeaders = {
   "Cache-Control": "no-store, private",
   "Content-Type": "application/json; charset=utf-8",
@@ -43,12 +44,38 @@ function assertOrigin(request) {
   return !origin || origin === new URL(request.url).origin;
 }
 async function bodyJSON(request) {
-  if (!request.headers.get("Content-Type")?.toLowerCase().startsWith("application/json"))
-    return { error: "JSON_REQUIRED" };
-  const declared = Number(request.headers.get("Content-Length") || 0);
-  if (declared > 4096) return { error: "PAYLOAD_TOO_LARGE" };
-  const raw = await request.text();
-  if (new TextEncoder().encode(raw).length > 4096) return { error: "PAYLOAD_TOO_LARGE" };
+  const type = request.headers.get("Content-Type")?.toLowerCase() || "";
+  if (!/^application\/json(?:\s*;|$)/.test(type)) return { error: "JSON_REQUIRED" };
+  const lengthHeader = request.headers.get("Content-Length");
+  if (lengthHeader != null &&
+      (!/^\d+$/.test(lengthHeader) || Number(lengthHeader) > 4096))
+    return { error: "PAYLOAD_TOO_LARGE" };
+  if (!request.body) return { error: "INVALID_JSON" };
+  const reader = request.body.getReader();
+  const chunks = [];
+  let total = 0;
+  try {
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      total += value.byteLength;
+      if (total > 4096) {
+        await reader.cancel().catch(() => {});
+        return { error: "PAYLOAD_TOO_LARGE" };
+      }
+      chunks.push(value);
+    }
+  } catch {
+    return { error: "INVALID_BODY" };
+  } finally {
+    reader.releaseLock();
+  }
+  const bytes = new Uint8Array(total);
+  let offset = 0;
+  for (const chunk of chunks) { bytes.set(chunk, offset); offset += chunk.byteLength; }
+  let raw;
+  try { raw = new TextDecoder("utf-8", { fatal: true }).decode(bytes); }
+  catch { return { error: "INVALID_JSON" }; }
   try {
     const value = JSON.parse(raw);
     if (!value || typeof value !== "object" || Array.isArray(value))
@@ -131,10 +158,10 @@ async function createSubmission(request, env, slug, now) {
   const id = crypto.randomUUID();
   await env.PORCHLIGHT_DB.prepare(
     "INSERT INTO host_submissions " +
-    "(id, event_id, host_name, private_address, contact_email, visibility, consent_exact, options_json, note, status, receipt_hash, submitted_at, consent_at) " +
-    "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?, ?)"
+    "(id, event_id, host_name, private_address, contact_email, visibility, consent_exact, options_json, note, status, receipt_hash, submitted_at, consent_at, consent_version) " +
+    "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?, ?, ?)"
   ).bind(id, event.id, name, address, contact, visibility, visibility === "exact" ? 1 : 0,
-    JSON.stringify(options), note, await hashHex(receipt), now, now).run();
+    JSON.stringify(options), note, await hashHex(receipt), now, now, CONSENT_VERSION).run();
   return response({
     ok: true, id, receipt, status: "pending",
     notice: "Pending independent organizer review. Not publicly listed. Copy the removal code now; it cannot be recovered."
@@ -146,16 +173,21 @@ async function revokeSubmission(request, env, id, now) {
   const receipt = parsed.value?.receipt;
   if (typeof receipt !== "string" || !/^[a-f0-9]{64}$/.test(receipt)) return fail("INVALID_REMOVAL_CODE", 422);
   const host = await env.PORCHLIGHT_DB.prepare(
-    "SELECT receipt_hash, status FROM host_submissions WHERE id=?"
+    "SELECT receipt_hash, status, event_id FROM host_submissions WHERE id=?"
   ).bind(id).first();
   if (!host || !host.receipt_hash || !constantEqual(await hashHex(receipt), host.receipt_hash))
     return fail("REMOVAL_CODE_NOT_RECOGNIZED", 404);
-  await env.PORCHLIGHT_DB.prepare(
+  const removed = await env.PORCHLIGHT_DB.prepare(
     "UPDATE host_submissions SET status='withdrawn', withdrawn_at=?, " +
     "public_name=NULL, public_label=NULL, approved_lat=NULL, approved_lng=NULL, " +
     "contact_email=NULL, private_address=NULL, note=NULL, host_name='Withdrawn host', options_json='[]', receipt_hash=NULL " +
     "WHERE id=? AND status IN ('pending','published','rejected')"
   ).bind(now, id).run();
+  if ((removed?.meta?.changes ?? removed?.changes ?? 0) !== 1)
+    return fail("REMOVAL_ALREADY_APPLIED", 409);
+  await env.PORCHLIGHT_DB.prepare(
+    "INSERT INTO audit_events (id, event_id, action, record_id, created_at) VALUES (?, ?, 'host_self_withdrawn', ?, ?)"
+  ).bind(crypto.randomUUID(), host.event_id, id, now).run();
   return response({ ok: true, status: "withdrawn", notice: "Listing removed. Private contact and address cleared." });
 }
 async function submitReport(request, env, slug, now) {
@@ -215,6 +247,9 @@ async function createEvent(request, env, now) {
     "VALUES (?, ?, ?, ?, ?, ?, 'draft', ?, ?, ?, ?)"
   ).bind(id, b.slug, title, neighborhood, start, end, b.centerLat, b.centerLng,
     b.radiusMeters, now).run();
+  await env.PORCHLIGHT_DB.prepare(
+    "INSERT INTO audit_events (id, event_id, action, record_id, created_at) VALUES (?, ?, 'event_drafted', ?, ?)"
+  ).bind(crypto.randomUUID(), id, id, now).run();
   return response({ ok: true, slug: b.slug, status: "draft" }, 201);
 }
 async function decideHost(request, env, id, now) {
@@ -257,8 +292,8 @@ async function decideHost(request, env, id, now) {
     }
   }
   await env.PORCHLIGHT_DB.prepare(
-    "INSERT INTO audit_events (id, action, record_id, created_at) VALUES (?, ?, ?, ?)"
-  ).bind(crypto.randomUUID(), "host_" + b.action, id, now).run();
+    "INSERT INTO audit_events (id, event_id, action, record_id, created_at) VALUES (?, ?, ?, ?, ?)"
+  ).bind(crypto.randomUUID(), host.event_id, "host_" + b.action, id, now).run();
   return response({ ok: true, status: b.action === "approve" ? "published" : b.action === "reject" ? "rejected" : "withdrawn" });
 }
 async function adminRoutes(request, env, path, now) {
@@ -274,8 +309,8 @@ async function adminRoutes(request, env, path, now) {
     await env.PORCHLIGHT_DB.prepare("UPDATE events SET status=? WHERE id=?")
       .bind(nextStatus, event.id).run();
     await env.PORCHLIGHT_DB.prepare(
-      "INSERT INTO audit_events (id, action, record_id, created_at) VALUES (?, ?, ?, ?)"
-    ).bind(crypto.randomUUID(), "event_" + nextStatus, event.id, now).run();
+      "INSERT INTO audit_events (id, event_id, action, record_id, created_at) VALUES (?, ?, ?, ?, ?)"
+    ).bind(crypto.randomUUID(), event.id, "event_" + nextStatus, event.id, now).run();
     return response({ ok: true, status: nextStatus });
   }
   const pending = new RegExp("^" + ADMIN + "/events/([a-z][a-z0-9-]{2,47})/queue$").exec(path);
@@ -293,7 +328,7 @@ async function adminRoutes(request, env, path, now) {
   const resolution = new RegExp("^" + ADMIN + "/reports/([a-f0-9-]{36})/resolve$").exec(path);
   if (resolution && request.method === "POST") {
     const existing = await env.PORCHLIGHT_DB.prepare(
-      "SELECT id, status FROM reports WHERE id=?"
+      "SELECT id, status, event_id FROM reports WHERE id=?"
     ).bind(resolution[1]).first();
     if (!existing) return fail("REPORT_NOT_FOUND", 404);
     if (existing.status !== "open") return fail("REPORT_ALREADY_RESOLVED", 409);
@@ -301,8 +336,8 @@ async function adminRoutes(request, env, path, now) {
       "UPDATE reports SET status='resolved', resolved_at=? WHERE id=? AND status='open'"
     ).bind(now, existing.id).run();
     await env.PORCHLIGHT_DB.prepare(
-      "INSERT INTO audit_events (id, action, record_id, created_at) VALUES (?, 'report_resolved', ?, ?)"
-    ).bind(crypto.randomUUID(), existing.id, now).run();
+      "INSERT INTO audit_events (id, event_id, action, record_id, created_at) VALUES (?, ?, 'report_resolved', ?, ?)"
+    ).bind(crypto.randomUUID(), existing.event_id, existing.id, now).run();
     return response({ ok: true, status: "resolved" });
   }
   return fail("NOT_FOUND", 404);
