@@ -46,9 +46,18 @@ async function getVerifiedUser(request,env){
  const cookie=request.headers.get('cookie');
  if(!cookie||cookie.length>8192)return null;
  try{
+  // The external Cloudflare request carries a trusted edge client address,
+  // while this new internal Request would otherwise lose it. Preserve it ONLY
+  // when edge metadata is present and the address has IPv4/IPv6 syntax;
+  // never forward caller-supplied forwarding/identity headers. This keeps
+  // Better Auth's per-IP /get-session limit from collapsing all IREN staff
+  // requests into one shared anonymous bucket.
+  const identityHeaders=new Headers({cookie,accept:'application/json'});
+  const edgeIp=request.cf?request.headers.get('cf-connecting-ip'):null;
+  if(edgeIp&&edgeIp.length<=45&&/^[0-9a-f:.]+$/i.test(edgeIp))
+   identityHeaders.set('cf-connecting-ip',edgeIp);
   const identityRequest=new Request(ORIGIN+AUTH_PATH,{
-   method:'GET',
-   headers:{cookie,accept:'application/json'},
+   method:'GET',headers:identityHeaders,
    redirect:'error',cache:'no-store'
   });
   const response=await env.APEX_AUTH.fetch(identityRequest);
