@@ -10,7 +10,7 @@
 - Schematic map only displays separately verified, opted-in **exact** public pins. Area-only hosts remain in the list, not on a guessed pin. Map is **not** a street basemap or safe-route guarantee.
 - Host form requests adult/household authority, public vs area-only location disclosure, venue options, and explicit consent. Submissions stay private until organizer approval.
 - Cryptographically random one-time removal receipt displayed at submission; only SHA-256 stored. Withdrawal clears address and contact immediately. Requests and private queues require no browser-side stored token.
-- Independent organizer may create/activate/close an event and explicitly review hosts via protected API. A publication requires out-of-band authority confirmation, valid event, consent and location bounds.
+- Independent organizer may create/activate/close an event and explicitly review hosts via protected API. A publication requires out-of-band authority confirmation, valid event, consent and location bounds. Critical changes and their audit events use transactional D1 batches and roll back together on error.
 - Reports privately recorded. Event closure removes public pins. Daily cleanup purges all event/host/report records 7 days after end.
 
 ## Guardrails
@@ -32,6 +32,8 @@ The captured synthetic data are **not** enrollment, hosted testing or production
 Public UI entry: `public/index.html`. Private organizer UI entry: `public/organizer.html`, with a bearer token held in memory only and no localStorage. The isolated Worker checks every staff API request server-side.
 
 **Area-only locations never appear as plotted map points.** Their public location label is derived by the server from the event's general neighborhood; an organizer cannot publish an arbitrary address label for an area-only host. Event emergency closure cannot be reopened by pressing activate.
+
+The [Halloween 2026 operator and adult consent packet](docs/HALLOWEEN-2026-PILOT-OPERATIONS.md) documents participant outreach, privacy, local escalation, emergency closure, independent acceptance and the information-only fallback. It is a draft, not legal approval.
 
 ## Configuration before a separately authorized pilot
 1. Create an isolated D1 database and replace the placeholder ID only in a private release configuration. Apply `migrations/0001.sql` **to that database alone**.
@@ -58,9 +60,9 @@ Organizer bearer token is sent only in the `Authorization` header via secured op
 ## Known V001 limitations
 - Host updates require fresh submission and withdrawal rather than an authenticated edit page.
 - QR image generation, licensed street basemap/3D buildings, reliable network routing and external agencies integration are not part of V001.
-- Private organizer reporting resolution and two-party independent organizer policy require later work.
+- The private organizer console can mark reports resolved. Two-person independent organizer authorization and a reviewed staff identity system remain future work; the one-token pilot console is NOT staff SSO.
 - Organizer credential is single purpose for this isolated pilot, not production-grade staff SSO or an ANEVUM Member role.
-- Traffic and costs should be measured before enabling public ingestion. Static info-only fallback is acceptable if the approval gate cannot pass by Oct 31.
+- Cloudflare billing/plan entitlement could not be independently verified by the connection. No new D1, Worker, route, subscription or paid map service is created by this PR; do not incur costs without founder review. Static info-only fallback is acceptable if the approval gate cannot pass by Oct 31.
 
 ## Acceptance target
 A consenting adult host submits one listing, an organizer approves it after out-of-band verification, an anonymous visitor can see **only** opted-in public fields, and the host can withdraw immediately; event end hides all pins. These are functionality goals, not verified real-world outcomes.
