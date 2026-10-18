@@ -2,6 +2,7 @@
 // This does not issue grants, reveal user IDs, XP or award evidence.
 import {recognitionReady} from './recognition.mjs';
 import {progressionReady} from './progression.mjs';
+import {studioPublicationReady} from './studio-publications.mjs';
 const headers={
  'content-type':'application/json; charset=utf-8',
  'cache-control':'private, no-store',
@@ -21,6 +22,14 @@ export async function canonicalRecognitionCatalog(request,env){
   if(env?.CANONICAL_RECOGNITION_ENABLED==='true'&&env.MEMBER_DB&&
     await recognitionReady(env.MEMBER_DB))
    active=[...active,...independentlyModerated];
+  // Creation marks remain PLANNED until an independently reviewed,
+  // author-consented public metadata release exists AND the separately gated
+  // issuance service is active. Quarantined uploads never make marks earnable.
+  if(env?.CANONICAL_CREATOR_STUDIO_ENABLED==='true'&&
+    env?.CANONICAL_STUDIO_PUBLICATION_ENABLED==='true'&&
+    env?.CANONICAL_RECOGNITION_ENABLED==='true'&&env.MEMBER_DB&&
+    await recognitionReady(env.MEMBER_DB)&&await studioPublicationReady(env.MEMBER_DB))
+    active=[...active,'first_creation','maker_five','maker_twenty'];
  }catch{
   return Response.json({error:'Catalog verification unavailable'},{status:503,headers});
  }

@@ -4,6 +4,7 @@
 import {boundedText} from './request-body.mjs';
 import {canonicalStudioAssets,studioUploadReady} from './studio-assets.mjs';
 import {studioReviewSchemaReady,freezeStudioReview,withdrawStudioReview,decideStudioReview,getStudioReviewReceipt,listStudioReviewReceipts} from './studio-submissions.mjs';
+import {studioPublicationReady,canonicalStudioPublicationConsent,publishReviewedExternalStudioMetadata} from './studio-publications.mjs';
 
 const PREFIX='/api/v1/member/studio';
 const COLLECTION=PREFIX+'/projects';
@@ -33,6 +34,12 @@ const dbRow=row=>({
  submittedAt:row.submitted_at===null?null:Number(row.submitted_at)
 });
 const COLS='id,slug,title,summary,description,category,free_to_use,license_name,source_url,demo_url,ai_disclosure,human_contribution,status,revision,created_at,updated_at,submitted_at';
+async function ownerPublicationStatuses(db,userId){
+ if(!await studioPublicationReady(db))return new Map();
+ const found=await rows(db,'SELECT project_id,status FROM member_studio_publications WHERE user_id=? ORDER BY published_at DESC LIMIT 50',[userId]);
+ return new Map(found.map(item=>[item.project_id,item.status]));
+}
+
 function cleanText(value,min,max){
  if(typeof value!=='string'||value.length>max||CTRL.test(value))throw Error('Invalid text');
  const s=value.trim();if(s.length<min)return (()=>{throw Error('Required text missing')})();return s;
@@ -107,9 +114,11 @@ export async function canonicalStudioSchemaReady(env){
  }catch{return false;}
 }
 export async function studioReadiness(env){
- if(env?.CANONICAL_CREATOR_STUDIO_ENABLED!=='true')return {studioReady:false,studioUploadsReady:false};
+ if(env?.CANONICAL_CREATOR_STUDIO_ENABLED!=='true')return {studioReady:false,studioUploadsReady:false,studioPublicationReady:false};
  const ready=await canonicalStudioSchemaReady(env);
- return {studioReady:ready,studioUploadsReady:Boolean(ready&&studioUploadReady(env))};
+ return {studioReady:ready,studioUploadsReady:Boolean(ready&&studioUploadReady(env)),
+  studioPublicationReady:Boolean(ready&&env.CANONICAL_STUDIO_PUBLICATION_ENABLED==='true'&&
+   await studioPublicationReady(env.MEMBER_DB))};
 }
 export async function canonicalStudio(req,env,user,now=Math.floor(Date.now()/1000)){
  if(env?.CANONICAL_CREATOR_STUDIO_ENABLED!=='true')return fail(404,'Creator Studio is not activated');
@@ -129,7 +138,9 @@ export async function canonicalStudio(req,env,user,now=Math.floor(Date.now()/100
     const items=await rows(db,'SELECT '+COLS+' FROM member_studio_projects WHERE user_id=? ORDER BY updated_at DESC,id DESC LIMIT 50',[user.id]);
     const canReview=String(env.CANONICAL_STUDIO_REVIEWER_IDS||'')
      .split(',').map(x=>x.trim()).filter(Boolean).includes(user.id);
-    return json({projects:items.map(dbRow),uploadsReady:studioUploadReady(env,user.id),canReview});
+    const releases=await ownerPublicationStatuses(db,user.id);
+    return json({projects:items.map(item=>({...dbRow(item),publicationStatus:releases.get(item.id)||null})),
+     uploadsReady:studioUploadReady(env,user.id),canReview});
    }
    if(req.method!=='POST')return fail(405,'Method not allowed');
    const incoming=await body(req);
@@ -153,6 +164,7 @@ export async function canonicalStudio(req,env,user,now=Math.floor(Date.now()/100
   const selected=await getOne(db,'SELECT '+COLS+' FROM member_studio_projects WHERE id=? AND user_id=?',[id,user.id]);
   if(!selected)return fail(404,'Project not found');
   if(sub==='assets')return canonicalStudioAssets(req,env,user,selected,{asset,file,now,pace});
+  if(sub==='publication')return canonicalStudioPublicationConsent(req,env,user,id,now);
   if(sub==='submissions'){
    if(req.method!=='GET')return fail(405,'Method not allowed');
    const receipts=await listStudioReviewReceipts(db,id,user.id);
@@ -162,6 +174,9 @@ export async function canonicalStudio(req,env,user,now=Math.floor(Date.now()/100
   // the staff queue. A pending review never prevents a member from withdrawing.
   if(sub==='withdraw'){
    if(req.method!=='POST')return fail(405,'Method not allowed');
+   if(await studioPublicationReady(db)&&
+      await getOne(db,"SELECT project_id FROM member_studio_publications WHERE project_id=? AND status='published'",[id]))
+    return fail(409,'A published or withdrawn release must be archived separately');
    const input=await body(req,500);
    if(!input||!exactly(input,['revision'])||!Number.isSafeInteger(input.revision))return fail(400,'Invalid revision');
    if(selected.revision!==input.revision||selected.status!=='pending_review')return fail(409,'Submission changed');
@@ -197,7 +212,10 @@ export async function canonicalStudio(req,env,user,now=Math.floor(Date.now()/100
   if(req.method==='GET'){
    const history=await rows(db,
     'SELECT action,reason,created_at,submission_id FROM member_studio_review_log WHERE project_id=? ORDER BY created_at DESC LIMIT 20',[id]);
-   return json({project:dbRow(selected),uploadsReady:studioUploadReady(env,user.id),reviewHistory:history.map(x=>({action:x.action,reason:x.reason,createdAt:Number(x.created_at),submissionId:x.submission_id}))});
+   const releases=await ownerPublicationStatuses(db,user.id);
+   return json({project:{...dbRow(selected),publicationStatus:releases.get(id)||null},
+    uploadsReady:studioUploadReady(env,user.id),
+    reviewHistory:history.map(x=>({action:x.action,reason:x.reason,createdAt:Number(x.created_at),submissionId:x.submission_id}))});
   }
   if(req.method==='DELETE'){
    const input=await body(req,500);
@@ -244,6 +262,9 @@ export async function canonicalStudioReview(req,env,user,now=Math.floor(Date.now
  try{
   if(req.method==='GET'){
    if(manifest){
+    if(await studioPublicationReady(db)&&
+       await getOne(db,"SELECT project_id FROM member_studio_publications WHERE project_id=?",[manifest[1]]))
+      return fail(409,'Project already has a publication decision');
     // Only vetted metadata, NEVER object keys, download credentials, file
     // bodies or executable previews on the site origin. No self-review.
     const project=await getOne(db,
@@ -261,17 +282,42 @@ export async function canonicalStudioReview(req,env,user,now=Math.floor(Date.now
    const projects=await rows(db,
     'SELECT s.id,s.title,s.summary,s.category,s.status,s.revision,s.submitted_at,s.demo_url,s.source_url,'+
     's.license_name,s.ai_disclosure,s.human_contribution,s.user_id,p.handle,'+
+    (await studioPublicationReady(db)?
+     "(SELECT COUNT(*) FROM member_studio_publication_consents c WHERE c.project_id=s.id "+
+     "AND c.submission_id=snap.id AND c.user_id=s.user_id AND c.revoked_at IS NULL) AS metadata_consent,":
+     "0 AS metadata_consent,")+
     "(SELECT COUNT(*) FROM member_studio_submission_assets a WHERE a.submission_id=snap.id) AS attachment_count,"+
     "(SELECT COALESCE(SUM(a.size_bytes),0) FROM member_studio_submission_assets a WHERE a.submission_id=snap.id) AS attachment_bytes "+
     'FROM member_studio_projects s JOIN member_creator_profiles p ON p.user_id=s.user_id '+
     "JOIN member_studio_submissions snap ON snap.project_id=s.id AND snap.user_id=s.user_id "+
     "AND snap.project_revision=s.revision AND snap.status='pending_review' "+
-    "WHERE s.status='pending_review' AND s.user_id<>? ORDER BY s.submitted_at ASC LIMIT 50",[user.id]);
+    "WHERE s.status='pending_review' AND s.user_id<>? "+
+    (await studioPublicationReady(db)?
+      "AND NOT EXISTS(SELECT 1 FROM member_studio_publications p2 WHERE p2.project_id=s.id) ":"")+
+    "ORDER BY s.submitted_at ASC LIMIT 50",[user.id]);
    return json({projects});
   }
   if(manifest)return fail(405,'Manifest is read-only');
   if(req.method!=='POST')return fail(405,'Method not allowed');
   const raw=await body(req,1800);
+  // External metadata publication has its OWN reviewed, consented release path.
+  // It must never grant visibility to quarantined R2 assets or executable ZIPs.
+  if(raw?.action==='publish_external_metadata'){
+   if(env.CANONICAL_STUDIO_PUBLICATION_ENABLED!=='true')
+    return fail(404,'Metadata-only publication is disabled');
+   if(!exactly(raw,['projectId','action','reason','revision','rightsChecked','contentChecked','externalLinkChecked'])||
+     !UUID.test(raw.projectId)||!Number.isSafeInteger(raw.revision)||
+     raw.rightsChecked!==true||raw.contentChecked!==true||raw.externalLinkChecked!==true)
+    return fail(400,'Explicit independent release attestations required');
+   const published=await publishReviewedExternalStudioMetadata(db,{
+    projectId:raw.projectId,revision:raw.revision,reviewerId:user.id,reason:raw.reason,
+    rightsChecked:raw.rightsChecked,contentChecked:raw.contentChecked,
+    externalLinkChecked:raw.externalLinkChecked,enabled:env.CANONICAL_RECOGNITION_ENABLED==='true',
+    now
+   });
+   return published.ok?json({ok:true,status:'published',delivery:'external-link-only'})
+    :fail(409,published.reason);
+  }
   if(!raw||!exactly(raw,['projectId','action','reason','revision'])||!UUID.test(raw.projectId)||
     !['changes_requested','rejected'].includes(raw.action)||!Number.isSafeInteger(raw.revision))
    return fail(400,'Invalid review decision');
@@ -279,6 +325,9 @@ export async function canonicalStudioReview(req,env,user,now=Math.floor(Date.now
   const target=await getOne(db,'SELECT user_id,status,revision FROM member_studio_projects WHERE id=?',[raw.projectId]);
   if(!target||target.status!=='pending_review'||target.revision!==raw.revision)
    return fail(409,'Submission changed or is unavailable');
+  if(await studioPublicationReady(db)&&
+     await getOne(db,'SELECT project_id FROM member_studio_publications WHERE project_id=?',[raw.projectId]))
+   return fail(409,'Project already has a publication decision');
   if(target.user_id===user.id)return fail(403,'Independent review required');
   // The current project revision must match the immutable private review
   // snapshot. Any creator withdrawal makes the old receipt non-actionable.

@@ -14,6 +14,7 @@ const publicStage=createPublicStageWorker({hostname:"anevum.com"});
 const MEMBER=/^\/api\/v1\/member\//;
 const PUBLIC_METRICS="/api/v1/public/supporter/metrics";
 const PUBLIC_RECOGNITION_CATALOG="/api/v1/public/recognition/catalog";
+const PUBLIC_CREATIONS=/^\/api\/v1\/creations(?:\/[0-9a-f-]{36})?$/;
 const PUBLIC_IDENTITY=/^\/api\/v1\/members\/[a-z][a-z0-9_]{2,29}(?:\/(?:space|wall|media\/(?:avatar|banner)))?$/;
 const COMMUNITY=/^\/api\/v1\/community\/(?:members|activity|threads(?:\/[a-f0-9-]{36}(?:\/(?:replies|reaction))?)?|reports)$/;
 
@@ -22,7 +23,7 @@ export async function apexPlatformFetch(request,env,ctx){
   if(url.origin!==ORIGIN||url.protocol!=="https:"||
     env?.ANEVUM_CANONICAL_APEX_ENABLED!=="true")
     return new Response("Not found",{status:404,headers:{"cache-control":"no-store"}});
-  if(url.pathname===PUBLIC_METRICS||url.pathname===PUBLIC_RECOGNITION_CATALOG||MEMBER.test(url.pathname)||
+  if(url.pathname===PUBLIC_METRICS||url.pathname===PUBLIC_RECOGNITION_CATALOG||PUBLIC_CREATIONS.test(url.pathname)||MEMBER.test(url.pathname)||
     PUBLIC_IDENTITY.test(url.pathname)||COMMUNITY.test(url.pathname))
     return canonicalIdentity.fetch(request,env,ctx);
   return publicStage.fetch(request,env,ctx);

@@ -19,6 +19,7 @@ import {canonicalAccountClosure} from "./account-closure.mjs";
 import {publicSupporterTelemetry,PUBLIC_TELEMETRY_PATH} from "./public-supporter-telemetry.mjs";
 import {canonicalProjectSave,canonicalProjectSaveReady} from "./project-saves.mjs";
 import {canonicalStudio,canonicalStudioReview,studioReadiness} from "./studio.mjs";
+import {canonicalPublicStudioCreations,canonicalStudioPublicationConsent} from './studio-publications.mjs';
 
 const HEALTH=CANONICAL_PREFIX+"/health";
 const METHODS=CANONICAL_PREFIX+"/auth-methods";
@@ -111,6 +112,7 @@ export function createCanonicalStageWorker({authFactory=createCanonicalAuth}={})
     const forumRoute=/^\/api\/v1\/community\/(?:threads(?:\/[a-f0-9-]{36}(?:\/(?:replies|reaction))?|\/?)?|reports)$/.test(path)||(/^\/api\/v1\/member\/forum-submissions(?:\/[a-f0-9-]{36})?$/.test(path)||path==="/api/v1/member/forum-review");
     const publicMetrics=path===PUBLIC_TELEMETRY_PATH;
     const publicRecognitionCatalog=path==='/api/v1/public/recognition/catalog';
+    const publicCreations=path==='/api/v1/creations'||/^\/api\/v1\/creations\/[0-9a-f-]{36}$/.test(path);
     const ownSpace=OWN_SPACE.test(path),publicSpace=path.match(PUBLIC_SPACE);
      const ownRecognition=path===CANONICAL_PREFIX+'/recognition';
      if(ownRecognition&&env.CANONICAL_RECOGNITION_ENABLED!=='true')return fail(request,404);
@@ -122,20 +124,23 @@ export function createCanonicalStageWorker({authFactory=createCanonicalAuth}={})
     const ownClosure=path===CLOSURE;
     const ownProjectSave=path===CANONICAL_PREFIX+"/project-saves" ||
       /^\/api\/v1\/member\/project-saves\/[a-f0-9]{32}$/.test(path);
+    const ownStudioPublication=/^\/api\/v1\/member\/studio\/projects\/[0-9a-f-]{36}\/publication$/.test(path);
     const ownStudioReview=path===CANONICAL_PREFIX+"/studio/review"||
       /^\/api\/v1\/member\/studio\/review\/[0-9a-f-]{36}\/manifest$/.test(path);
     const ownStudio=/^\/api\/v1\/member\/studio\/projects(?:\/[0-9a-f-]{36}(?:\/(?:submit|withdraw|submissions|assets(?:\/[a-f0-9]{32}(?:\/file)?)?))?)?$/.test(path);
-    if((ownStudio||ownStudioReview)&&env?.CANONICAL_CREATOR_STUDIO_ENABLED!=="true")return fail(request,404);
+    if((ownStudio||ownStudioReview||ownStudioPublication)&&env?.CANONICAL_CREATOR_STUDIO_ENABLED!=="true")return fail(request,404);
     // This is a proposed, source-only pilot. Do not expose even a GET
     // endpoint without a deliberate rollout flag and an approved D1 schema.
     if(ownProjectSave&&env?.CANONICAL_PROJECT_SAVES_ENABLED!=="true")return fail(request,404);
-    if(path!==HEALTH && path!==METHODS && !publicRecognitionCatalog && !publicHandle && !ownProfile && !ownExport && !ownClosure && !ownSpace && !publicSpace && !ownRecognition && !publicCommunity && !forumRoute && !publicMetrics && !ownProgression && !ownSupporter && !ownProjectSave && !ownStudio && !ownStudioReview &&
+    if(path!==HEALTH && path!==METHODS && !publicRecognitionCatalog && !publicCreations && !ownStudioPublication && !publicHandle && !ownProfile && !ownExport && !ownClosure && !ownSpace && !publicSpace && !ownRecognition && !publicCommunity && !forumRoute && !publicMetrics && !ownProgression && !ownSupporter && !ownProjectSave && !ownStudio && !ownStudioReview &&
       !(path.startsWith(CANONICAL_AUTH_PATH+"/") &&
         (AUTH_ALLOWLIST[request.method]?.has(path)??false)))
       return fail(request,404);
 
     if((publicHandle||publicSpace) && !READ_METHODS.has(request.method))return fail(request,404);
     if(publicMetrics&&request.method!=="GET")return fail(request,405);
+    if(publicCreations&&!READ_METHODS.has(request.method))return fail(request,405);
+    if(ownStudioPublication&&!['GET','POST','DELETE'].includes(request.method))return fail(request,405);
     if(publicRecognitionCatalog&&!READ_METHODS.has(request.method))return fail(request,405);
     if(ownProfile && !["GET","POST","PATCH"].includes(request.method))return fail(request,404);
     if(ownExport && request.method!=="GET")return fail(request,404);
@@ -185,6 +190,7 @@ export function createCanonicalStageWorker({authFactory=createCanonicalAuth}={})
     const callback=path.match(/^\/api\/v1\/member\/auth\/callback\/(google|github|apple|microsoft)$/);
     if(callback&&!configured[callback[1]])return fail(request,404);
     if(publicMetrics)return safeResponse(await publicSupporterTelemetry(request,env));
+    if(publicCreations)return safeResponse(await canonicalPublicStudioCreations(request,env));
     if(publicRecognitionCatalog)return safeResponse(await canonicalRecognitionCatalog(request,env));
     if(publicCommunity)return safeResponse(await canonicalCommunity(request,env));
     if(forumRoute){
@@ -292,11 +298,15 @@ export function createCanonicalStageWorker({authFactory=createCanonicalAuth}={})
         if(!session?.user?.id||session.user.emailVerified!==true)
           return safeJson(request,{error:"Verified sign-in required"},401);
       }
-      if(ownProfile||ownExport||ownClosure||ownSpace||ownRecognition||ownProgression||ownSupporter||ownProjectSave||ownStudio||ownStudioReview){
+      if(ownProfile||ownExport||ownClosure||ownSpace||ownRecognition||ownProgression||ownSupporter||ownProjectSave||ownStudio||ownStudioPublication||ownStudioReview){
         const session=await auth.api.getSession({headers:clean.headers});
         if(!session?.user)return safeJson(request,{error:"Sign-in required"},401);
         if(ownClosure)return safeResponse(await canonicalAccountClosure(clean,env,session.user,session.session));
         if(ownStudioReview)return safeResponse(await canonicalStudioReview(clean,env,session.user));
+        if(ownStudioPublication){
+         const projectId=path.split('/').at(-2);
+         return safeResponse(await canonicalStudioPublicationConsent(clean,env,session.user,projectId));
+        }
         if(ownStudio)return safeResponse(await canonicalStudio(clean,env,session.user));
         if(ownProjectSave)return safeResponse(await canonicalProjectSave(clean,env,session.user));
         if(ownProgression)return safeResponse(await canonicalProgression(clean,env,session.user));

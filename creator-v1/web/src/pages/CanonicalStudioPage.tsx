@@ -5,9 +5,10 @@ import {
  studioHealth,studioList,studioGet,studioCreate,studioUpdate,studioSubmit,studioAssets,
  studioUpload,studioCheckFile,studioDeleteAsset,studioDownloadUrl,studioWithdraw,studioDeleteProject,studioReviewQueue,
  studioEligibleUpload,studioReviewManifest,studioReviewReceipts,
- studioReviewDecision,type StudioDraft,type StudioProject,type StudioAsset,type StudioCategory,
+ studioReviewDecision,studioReviewExternalRelease,type StudioDraft,type StudioProject,type StudioAsset,type StudioCategory,
  type StudioReviewProject,type StudioReviewHistory,type StudioReviewManifest,type StudioReviewReceipt
 } from '../lib/canonical-studio';
+import {StudioPublicationPanel} from '../components/StudioPublicationPanel';
 import './canonical-studio.css';
 
 const CATEGORY_GUIDE:Record<StudioCategory,string>={
@@ -50,6 +51,7 @@ export function CanonicalStudioPage({mode='list'}:{mode?:Mode}){
  const [message,setMessage]=useState('');
  const [uploads,setUploads]=useState(false);
  const [canReview,setCanReview]=useState(false);
+ const [publicationReady,setPublicationReady]=useState(false);
  useEffect(()=>{
   if(!id||session?.user?.emailVerified!==true)return;
   let live=true;const controller=new AbortController();
@@ -64,7 +66,7 @@ export function CanonicalStudioPage({mode='list'}:{mode?:Mode}){
    const memberStudio=await studioList(controller.signal);
    if(!live)return;
    setIdentity(profile.profile);setUploads(memberStudio.uploadsReady===true);
-   setCanReview(memberStudio.canReview===true);setPhase('ready');
+   setCanReview(memberStudio.canReview===true);setPublicationReady(health.studioPublicationReady===true);setPhase('ready');
   }).catch(e=>{if(live){setMessage(showError(e));setPhase('unavailable')}});
   return()=>{live=false;controller.abort();};
  },[id,session?.user?.emailVerified]);
@@ -100,11 +102,11 @@ export function CanonicalStudioPage({mode='list'}:{mode?:Mode}){
    {canReview&&<Link to="/studio/review" aria-current={mode==='review'?'page':undefined}>REVIEW DESK</Link>}
    <Link to="/discover">DISCOVER ↗</Link>
   </nav>
-  {mode==='list'?<StudioLibrary/>:mode==='review'?<StudioReview/>:<StudioEditor create={mode==='new'} uploadsReady={uploads}/>}
+  {mode==='list'?<StudioLibrary publicationReady={publicationReady}/>:mode==='review'?<StudioReview publicationReady={publicationReady}/>:<StudioEditor create={mode==='new'} uploadsReady={uploads} publicationReady={publicationReady}/>}
  </main>;
 }
 
-function StudioLibrary(){
+function StudioLibrary({publicationReady}:{publicationReady:boolean}){
  const [items,setItems]=useState<StudioProject[]>([]),[error,setError]=useState(''),[loading,setLoading]=useState(true);
  const [search,setSearch]=useState('');
  const [statusFilter,setStatusFilter]=useState<'all'|'draft'|'pending_review'|'changes_requested'|'rejected'>('all');
@@ -115,7 +117,8 @@ function StudioLibrary(){
   return()=>ac.abort();
  },[]);
  const drafts=items.filter(p=>p.status==='draft'||p.status==='changes_requested').length;
- const pending=items.filter(p=>p.status==='pending_review').length;
+ const pending=items.filter(p=>p.status==='pending_review'&&!p.publicationStatus).length;
+ const publicCount=items.filter(p=>p.publicationStatus==='published').length;
  const needle=search.trim().toLocaleLowerCase();
  const visible=items.filter(p=>(statusFilter==='all'||p.status===statusFilter)&&
   (!needle||[p.title,p.summary,p.slug,p.category].some(v=>v.toLocaleLowerCase().includes(needle))));
@@ -124,7 +127,7 @@ function StudioLibrary(){
    <div><span>TOTAL WORKS</span><strong>{loading?'—':items.length}</strong></div>
    <div><span>IN PROGRESS</span><strong>{loading?'—':drafts}</strong></div>
    <div><span>AWAITING REVIEW</span><strong>{loading?'—':pending}</strong></div>
-   <div><span>PUBLIC RELEASES</span><strong>NOT YET ACTIVE</strong></div>
+   <div><span>PUBLIC RELEASES</span><strong>{publicationReady?(loading?'—':publicCount):'NOT YET ACTIVE'}</strong></div>
   </section>
   <section className="st-panel">
    <div className="st-section-head"><div><p className="st-kicker">01 / PERSONAL WORKSPACE</p><h2>PROJECT RECORDS</h2></div>
@@ -154,7 +157,7 @@ function StudioLibrary(){
    {!loading&&!error&&items.length>0&&visible.length===0&&<p role="status" className="st-muted">No projects match these filters. Adjust your search or status selection.</p>}
    <div className="st-project-grid">{visible.map(p=><Link className="st-project" to={'/studio/'+p.id} key={p.id}>
     <div className="st-project-art" aria-hidden="true"><span>◌</span><small>{p.category.toUpperCase()}</small></div>
-    <div className="st-project-body"><span className="st-kicker">REV {String(p.revision).padStart(2,'0')} / {pretty(p.status)}</span>
+    <div className="st-project-body"><span className="st-kicker">REV {String(p.revision).padStart(2,'0')} / {p.publicationStatus==='published'?'EXTERNAL RELEASE LIVE':p.publicationStatus==='withdrawn'?'RELEASE WITHDRAWN':pretty(p.status)}</span>
      <h3>{p.title}</h3><p>{p.summary}</p><small>EDITED {new Date(p.updatedAt*1000).toLocaleDateString()}</small></div>
     <span className="st-project-arrow">↗</span>
    </Link>)}</div>
@@ -162,7 +165,7 @@ function StudioLibrary(){
  </>;
 }
 
-function StudioEditor({create,uploadsReady}:{create:boolean;uploadsReady:boolean}){
+function StudioEditor({create,uploadsReady,publicationReady}:{create:boolean;uploadsReady:boolean;publicationReady:boolean}){
  const {projectId}=useParams();
  const navigate=useNavigate();
  const id=create?null:projectId||null;
@@ -174,6 +177,7 @@ function StudioEditor({create,uploadsReady}:{create:boolean;uploadsReady:boolean
  const [loading,setLoading]=useState(!create),[busy,setBusy]=useState(false);
  const [error,setError]=useState(''),[notice,setNotice]=useState('');
  const [mustReload,setMustReload]=useState(false);
+ const [publicationStatus,setPublicationStatus]=useState<string|null>(null);
  const createId=useRef(crypto.randomUUID());
  useEffect(()=>{
   if(create||!id)return;
@@ -219,7 +223,7 @@ function StudioEditor({create,uploadsReady}:{create:boolean;uploadsReady:boolean
   }catch(e){setError(showError(e));setMustReload(true)}finally{setBusy(false);}
  }
  async function withdraw(){
-  if(!project||busy||project.status!=='pending_review')return;
+  if(!project||busy||project.status!=='pending_review'||publicationStatus==='published'||publicationStatus==='unknown')return;
   if(!window.confirm('Withdraw this project from staff review and return it to a private editable draft?'))return;
   setBusy(true);setError('');setNotice('');
   try{const result=await studioWithdraw(project.id,project.revision);setProject(result.project);
@@ -250,7 +254,7 @@ function StudioEditor({create,uploadsReady}:{create:boolean;uploadsReady:boolean
   {!loading&&(!id||project)&&<div className="st-editor">
    <form className="st-panel st-editor-form" onSubmit={save}>
     <div className="st-section-head"><div><p className="st-kicker">01 / WORK IDENTITY</p><h2>{project?'REFINE THE RECORD.':'GIVE YOUR WORK A NAME.'}</h2></div>
-     {project&&<span className="st-tag">{pretty(project.status)} · REV {project.revision}</span>}</div>
+     {project&&<span className="st-tag">{project.publicationStatus==='published'?'EXTERNAL RELEASE LIVE':pretty(project.status)} · REV {project.revision}</span>}</div>
     {input('title','PROJECT TITLE',100,0,'3–100 characters.')}
     {input('slug','PROJECT SLUG',90,0,'Lowercase letters, numbers and hyphens; unique per creator.')}
     <label className="st-field"><span>CREATION TYPE</span>
@@ -299,6 +303,7 @@ function StudioEditor({create,uploadsReady}:{create:boolean;uploadsReady:boolean
      </div>)}
     </section>}
     {project&&<StudioReceipts projectId={project.id} revision={project.revision}/>}
+    {publicationReady&&project?.status==='pending_review'&&<StudioPublicationPanel project={project} onStatusChange={setPublicationStatus}/>}
     {project&&<StudioUploader project={project} uploadsReady={uploadsReady}
      onAssetsChanged={setAssetSummary} onProjectChanged={setProject}/>}
     <section className="st-panel">
@@ -313,7 +318,7 @@ function StudioEditor({create,uploadsReady}:{create:boolean;uploadsReady:boolean
      <p className="st-muted">A submitted project enters a private queue. There is no automated publication, game execution, or XP reward.</p>
      {project&&<button className="st-button" disabled={!ready||dirty||locked||!editable(project)}
       onClick={()=>void submit()}>SUBMIT SAVED REVISION FOR REVIEW ↗</button>}
-     {project?.status==='pending_review'&&<button className="st-button" disabled={busy||mustReload}
+     {project?.status==='pending_review'&&publicationStatus!=='published'&&publicationStatus!=='unknown'&&<button className="st-button" disabled={busy||mustReload}
       onClick={()=>void withdraw()}>WITHDRAW FROM REVIEW</button>}
      {project&&project.status!=='pending_review'&&<button className="st-link" disabled={busy||mustReload}
       onClick={()=>void deleteDraft()}>DELETE PRIVATE PROJECT</button>}
@@ -481,11 +486,12 @@ function StudioUploader({project,uploadsReady,onAssetsChanged,onProjectChanged}:
  </section>;
 }
 
-function StudioReview(){
+function StudioReview({publicationReady}:{publicationReady:boolean}){
  const [projects,setProjects]=useState<StudioReviewProject[]>([]),[error,setError]=useState(''),[loading,setLoading]=useState(true);
  const [reason,setReason]=useState<Record<string,string>>({}),[busy,setBusy]=useState('');
  const [manifests,setManifests]=useState<Record<string,StudioReviewManifest>>({});
  const [inspection,setInspection]=useState('');
+ const [attestations,setAttestations]=useState<Record<string,{rightsChecked:boolean;contentChecked:boolean;externalLinkChecked:boolean}>>({});
  async function refresh(){const r=await studioReviewQueue();setProjects(r.projects);}
  useEffect(()=>{const ac=new AbortController();studioReviewQueue(ac.signal).then(r=>setProjects(r.projects))
   .catch(e=>{if(!ac.signal.aborted)setError(showError(e))})
@@ -505,9 +511,33 @@ function StudioReview(){
   try{await studioReviewDecision(p.id,p.revision,action,explanation);await refresh();}
   catch(e){setError(showError(e))}finally{setBusy('');}
  }
+ function toggleAttestation(projectId:string,key:'rightsChecked'|'contentChecked'|'externalLinkChecked',value:boolean){
+  setAttestations(prev=>({...prev,[projectId]:{
+   rightsChecked:prev[projectId]?.rightsChecked===true,
+   contentChecked:prev[projectId]?.contentChecked===true,
+   externalLinkChecked:prev[projectId]?.externalLinkChecked===true,
+   [key]:value
+  }}));
+ }
+ async function release(p:StudioReviewProject){
+  if(!publicationReady||p.attachment_count!==0||p.metadata_consent!==1)return;
+  const checks=attestations[p.id];
+  if(!checks?.rightsChecked||!checks.contentChecked||!checks.externalLinkChecked){
+   setError('Three independent attestations are required.');return;
+  }
+  const explanation=reason[p.id]?.trim()||'';
+  if(explanation.length<25){setError('Explain the rights and content verification in at least 25 characters.');return;}
+  if(!window.confirm('Publish ONLY approved external metadata and HTTPS links for '+p.title+'? This records audited evidence and may award creation badges. Private files remain quarantined.'))return;
+  setBusy(p.id);setError('');
+  try{
+   await studioReviewExternalRelease(p.id,p.revision,explanation,checks);
+   await refresh();
+   setAttestations(v=>{const rest={...v};delete rest[p.id];return rest});
+  }catch(e){setError(showError(e))}finally{setBusy('')}
+ }
  return <section className="st-panel">
   <div className="st-section-head"><div><p className="st-kicker">STAFF-ONLY / CANONICAL REVIEW</p><h2>AWAITING A DECISION.</h2></div></div>
-  <p className="st-muted">This desk can request changes or reject a private submission. Publication and approval remain intentionally disabled until file scanning and the public release pipeline exist.</p>
+  <p className="st-muted">{publicationReady?'Staff may release creator-consented EXTERNAL metadata only, after independent rights and link review. Uploaded files remain quarantined and cannot run here.':'This desk can request changes or reject a private submission. Publication and approval remain intentionally disabled until file scanning and the public release pipeline exist.'}</p>
   {loading&&<p role="status">Checking staff permission and review queue…</p>}
   {error&&<p role="alert" className="st-error">{error}</p>}
   {!loading&&!error&&projects.length===0&&<p>No pending private project records.</p>}
@@ -533,6 +563,23 @@ function StudioReview(){
    <label className="st-field"><span>REVIEW REASON (REQUIRED)</span>
     <textarea maxLength={1200} rows={3} value={reason[p.id]||''}
      onChange={e=>setReason(v=>({...v,[p.id]:e.target.value}))}/></label>
+   {publicationReady&&<div className="st-release-review" aria-label="Independent external metadata release verification">
+    <p className="st-kicker">EXTERNAL METADATA / THREE ATTESTATIONS</p>
+    <p className="st-muted">{p.attachment_count>0?'This submission contains quarantined uploads and cannot be released through this metadata-only pilot.':p.metadata_consent!==1?'No author consent exists for this frozen submission.':'Creator consent is verified. Independently review rights, original content and the HTTPS destination.'}</p>
+    {([
+     ['rightsChecked','Rights, license and attribution were independently checked.'],
+     ['contentChecked','This original creation is suitable for public metadata listing.'],
+     ['externalLinkChecked','The external HTTPS work link was checked; no uploaded files are served.']
+    ] as const).map(([key,label])=><label className="st-check" key={key}>
+     <input type="checkbox" checked={attestations[p.id]?.[key]??false}
+      disabled={busy===p.id||p.attachment_count>0||p.metadata_consent!==1}
+      onChange={e=>toggleAttestation(p.id,key,e.target.checked)}/>{label}
+    </label>)}
+    <button className="st-button" type="button"
+     disabled={busy===p.id||p.attachment_count>0||p.metadata_consent!==1||
+      !attestations[p.id]?.rightsChecked||!attestations[p.id]?.contentChecked||!attestations[p.id]?.externalLinkChecked}
+     onClick={()=>void release(p)}>PUBLISH REVIEWED EXTERNAL METADATA ↗</button>
+   </div>}
    <div className="st-actions">
     <button className="st-button" disabled={busy===p.id} onClick={()=>void decide(p,'changes_requested')}>REQUEST CHANGES</button>
     <button className="st-link" disabled={busy===p.id} onClick={()=>void decide(p,'rejected')}>REJECT SUBMISSION</button>
